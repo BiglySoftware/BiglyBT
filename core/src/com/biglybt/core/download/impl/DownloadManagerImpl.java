@@ -1,0 +1,5897 @@
+/*
+ * File    : DownloadManagerImpl.java
+ * Created : 19-Oct-2003
+ * By      : parg
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details ( see the LICENSE file ).
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package com.biglybt.core.download.impl;
+/*
+ * Created on 30 juin 2003
+ *
+ */
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.util.*;
+
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.config.impl.TransferSpeedValidator;
+import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerFactory;
+import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.DiskManagerFileInfoSet;
+import com.biglybt.core.disk.impl.DiskManagerImpl;
+import com.biglybt.core.disk.impl.DiskManagerUtil;
+import com.biglybt.core.download.*;
+import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.global.GlobalManagerEvent;
+import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.internat.LocaleTorrentUtil;
+import com.biglybt.core.internat.LocaleUtilDecoder;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.logging.*;
+import com.biglybt.core.networkmanager.LimitedRateGroup;
+import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.PEPeerSource;
+import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
+import com.biglybt.core.tag.Taggable;
+import com.biglybt.core.tag.TaggableResolver;
+import com.biglybt.core.torrent.*;
+import com.biglybt.core.tracker.TrackerPeerSource;
+import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
+import com.biglybt.core.tracker.client.*;
+import com.biglybt.core.util.*;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.clientid.ClientIDGenerator;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadAnnounceResult;
+import com.biglybt.pif.download.DownloadScrapeResult;
+import com.biglybt.pif.download.savelocation.SaveLocationChange;
+import com.biglybt.pif.network.ConnectionManager;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
+import com.biglybt.pifimpl.local.download.DownloadImpl;
+import com.biglybt.plugin.extseed.ExternalSeedPlugin;
+import com.biglybt.plugin.tracker.dht.DHTTrackerPlugin;
+import com.biglybt.plugin.tracker.local.LocalTrackerPlugin;
+
+/**
+ * @author Olivier
+ *
+ */
+
+public class
+DownloadManagerImpl
+	extends LogRelation
+	implements DownloadManager, Taggable
+{
+	private final static long SCRAPE_DELAY_ERROR_TORRENTS = 1000 * 60 * 60 * 2;// 2 hrs
+	private final static long SCRAPE_DELAY_STOPPED_TORRENTS = 1000 * 60 * 60;  // 1 hr
+
+	private final static long SCRAPE_INITDELAY_ERROR_TORRENTS = 1000 * 60 * 10;
+	private final static long SCRAPE_INITDELAY_STOPPED_TORRENTS = 1000 * 60 * 3;
+
+	static int upload_when_busy_min_secs;
+	static int max_connections_npp_extra;
+
+	private static final ClientIDManagerImpl client_id_manager = ClientIDManagerImpl.getSingleton();
+
+	static{
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				"max.uploads.when.busy.inc.min.secs",
+			},
+			new ParameterListener()
+			{
+				@Override
+				public void
+				parameterChanged(
+					String name )
+				{
+					upload_when_busy_min_secs = COConfigurationManager.getIntParameter( "max.uploads.when.busy.inc.min.secs" );
+
+					max_connections_npp_extra = COConfigurationManager.getIntParameter( "Non-Public Peer Extra Connections Per Torrent" );
+				}
+			});
+	}
+
+	private static final String CFG_MOVE_COMPLETED_TOP = "Newly Seeding Torrents Get First Priority";
+		// DownloadManager listeners
+
+	private static final int LDT_STATECHANGED			= 1;
+	private static final int LDT_DOWNLOADCOMPLETE		= 2;
+	private static final int LDT_COMPLETIONCHANGED 		= 3;
+	private static final int LDT_POSITIONCHANGED 		= 4;
+	private static final int LDT_FILEPRIORITYCHANGED 	= 5;
+
+
+	private final AEMonitor	listeners_mon	= new AEMonitor( "DM:DownloadManager:L" );
+
+
+	static final ListenerManager<DownloadManagerListener>	listeners_aggregator 	= ListenerManager.createAsyncManager(
+			"DM:ListenAggregatorDispatcher",
+			new ListenerManagerDispatcher<DownloadManagerListener>()
+			{
+				@Override
+				public void
+				dispatch(
+					DownloadManagerListener		listener,
+					int							type,
+					Object						_value )
+				{
+					Object[]	value = (Object[])_value;
+
+					DownloadManagerImpl	dm = (DownloadManagerImpl)value[0];
+
+					if ( type == LDT_STATECHANGED ){
+
+						listener.stateChanged(dm, ((Integer)value[1]).intValue());
+
+					}else if ( type == LDT_DOWNLOADCOMPLETE ){
+
+						listener.downloadComplete(dm);
+
+					}else if ( type == LDT_COMPLETIONCHANGED ){
+
+						listener.completionChanged(dm, ((Boolean)value[1]).booleanValue());
+
+					}else if ( type == LDT_FILEPRIORITYCHANGED ){
+
+						listener.filePriorityChanged(dm, (DiskManagerFileInfo)value[1]);
+
+					}else if ( type == LDT_POSITIONCHANGED ){
+
+						listener.positionChanged( dm, ((Integer)value[1]).intValue(), ((Integer)value[2]).intValue());
+					}
+				}
+			});
+
+	static final CopyOnWriteList<DownloadManagerListener>	global_dm_listeners = new CopyOnWriteList<>();
+
+    private static final DownloadManagerListener global_dm_listener =
+		new DownloadManagerListener() {
+
+			@Override
+			public void stateChanged(DownloadManager manager, int state) {
+				for ( DownloadManagerListener listener: global_dm_listeners ){
+
+					try{
+						listener.stateChanged(manager, state);
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+			}
+
+			@Override
+			public void positionChanged(DownloadManager download, int oldPosition,
+			                            int newPosition) {
+				for ( DownloadManagerListener listener: global_dm_listeners ){
+
+					try{
+						listener.positionChanged(download, oldPosition, newPosition);
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+			}
+
+			@Override
+			public void filePriorityChanged(DownloadManager download,
+			                                DiskManagerFileInfo file){
+				for ( DownloadManagerListener listener: global_dm_listeners ){
+
+					try{
+						listener.filePriorityChanged(download, file);
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+			}
+
+			@Override
+			public void downloadComplete(DownloadManager manager){
+				for ( DownloadManagerListener listener: global_dm_listeners ){
+
+					try{
+						listener.downloadComplete(manager);
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+			}
+
+			@Override
+			public void completionChanged(DownloadManager manager, boolean bCompleted){
+				DownloadManagerState dms = manager.getDownloadState();
+
+				long time = dms.getLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME );
+
+				if ( time == -1 ){
+					if ( bCompleted ){
+						dms.setLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME, SystemTime.getCurrentTime());
+					}
+				}else if ( time > 0 ){
+					if ( !bCompleted ){
+						dms.setLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME, -1 );
+					}
+				}else{
+					if ( bCompleted ){
+
+						long completedOn = dms.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
+
+						if ( completedOn > 0 ){
+
+							dms.setLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME, completedOn );
+						}
+					}else{
+						dms.setLongAttribute( DownloadManagerState.AT_COMPLETE_LAST_TIME, -1 );
+					}
+				}
+
+				for ( DownloadManagerListener listener: global_dm_listeners ){
+
+					try{
+						listener.completionChanged(manager, bCompleted);
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+			}
+    };
+
+	public static void
+	addGlobalDownloadListener(
+		DownloadManagerListener listener )
+	{
+		global_dm_listeners.add( listener );
+	}
+
+    public static void
+    removeGlobalDownloadListener(
+        DownloadManagerListener listener )
+    {
+    	global_dm_listeners.remove( listener );
+    }
+
+
+	private final ListenerManager<DownloadManagerListener>	listeners 	= ListenerManager.createManager(
+			"DM:ListenDispatcher",
+			new ListenerManagerDispatcher<DownloadManagerListener>()
+			{
+				@Override
+				public void
+				dispatch(
+					DownloadManagerListener		listener,
+					int							type,
+					Object						value )
+				{
+					listeners_aggregator.dispatch( listener, type, value );
+				}
+			});
+
+	{
+		listeners.addListener( global_dm_listener );
+	}
+		// TrackerListeners
+
+	private static final int LDT_TL_ANNOUNCERESULT		= 1;
+	private static final int LDT_TL_SCRAPERESULT		= 2;
+
+	final ListenerManager	tracker_listeners 	= ListenerManager.createManager(
+			"DM:TrackerListenDispatcher",
+			new ListenerManagerDispatcher()
+			{
+				@Override
+				public void
+				dispatch(
+					Object		_listener,
+					int			type,
+					Object		value )
+				{
+					DownloadManagerTrackerListener	listener = (DownloadManagerTrackerListener)_listener;
+
+					if ( type == LDT_TL_ANNOUNCERESULT ){
+
+						listener.announceResult((TRTrackerAnnouncerResponse)value);
+
+					}else if ( type == LDT_TL_SCRAPERESULT ){
+
+						listener.scrapeResult((TRTrackerScraperResponse)value);
+					}
+				}
+			});
+
+	// PeerListeners
+
+	private static final int LDT_PE_PEER_ADDED		= 1;
+	private static final int LDT_PE_PEER_REMOVED	= 2;
+	private static final int LDT_PE_PM_ADDED		= 5;
+	private static final int LDT_PE_PM_REMOVED		= 6;
+
+		// one static async manager for them all
+
+	static final ListenerManager<DownloadManagerPeerListener>	peer_listeners_aggregator 	= ListenerManager.createAsyncManager(
+			"DM:PeerListenAggregatorDispatcher",
+			new ListenerManagerDispatcher<DownloadManagerPeerListener>()
+			{
+				@Override
+				public void
+				dispatch(
+					DownloadManagerPeerListener		listener,
+					int								type,
+					Object							value )
+				{
+					if ( type == LDT_PE_PEER_ADDED ){
+
+						listener.peerAdded((PEPeer)value);
+
+					}else if ( type == LDT_PE_PEER_REMOVED ){
+
+						listener.peerRemoved((PEPeer)value);
+
+					}else if ( type == LDT_PE_PM_ADDED ){
+
+						listener.peerManagerAdded((PEPeerManager)value);
+
+					}else if ( type == LDT_PE_PM_REMOVED ){
+
+						listener.peerManagerRemoved((PEPeerManager)value);
+					}
+				}
+			});
+
+	static final Object TPS_Key = new Object();
+
+	public static volatile String	dnd_subfolder;
+
+	static{
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{ "Enable Subfolder for DND Files", "Subfolder for DND Files" },
+			new ParameterListener()
+			{
+				@Override
+				public void
+				parameterChanged(
+					String parameterName)
+				{
+					boolean enable  = COConfigurationManager.getBooleanParameter( "Enable Subfolder for DND Files" );
+
+					if ( enable ){
+
+						String folder = COConfigurationManager.getStringParameter( "Subfolder for DND Files" ).trim();
+
+						if ( folder.length() > 0 ){
+
+							folder = FileUtil.convertOSSpecificChars( folder, true ).trim();
+						}
+
+						if ( folder.length() > 0 ){
+
+							dnd_subfolder = folder;
+
+						}else{
+
+							dnd_subfolder = null;
+						}
+					}else{
+
+						dnd_subfolder = null;
+					}
+				}
+			});
+	}
+
+
+
+
+	private final ListenerManager<DownloadManagerPeerListener>	peer_listeners 	= ListenerManager.createManager(
+			"DM:PeerListenDispatcher",
+			new ListenerManagerDispatcher<DownloadManagerPeerListener>()
+			{
+				@Override
+				public void
+				dispatch(
+					DownloadManagerPeerListener		listener,
+					int			type,
+					Object		value )
+				{
+					peer_listeners_aggregator.dispatch( listener, type, value );
+				}
+			});
+
+	final AEMonitor	peer_listeners_mon	= new AEMonitor( "DM:DownloadManager:PeerL" );
+
+	final Map<PEPeer,String>	current_peers 						= new IdentityHashMap<>();
+	private final Map<PEPeer,Long>	current_peers_unmatched_removal 	= new IdentityHashMap<>();
+
+		// PieceListeners
+
+	private static final int LDT_PE_PIECE_ADDED		= 3;
+	private static final int LDT_PE_PIECE_REMOVED	= 4;
+
+		// one static async manager for them all
+
+	static final ListenerManager	piece_listeners_aggregator 	= ListenerManager.createAsyncManager(
+			"DM:PieceListenAggregatorDispatcher",
+			new ListenerManagerDispatcher()
+			{
+				@Override
+				public void
+				dispatch(
+					Object		_listener,
+					int			type,
+					Object		value )
+				{
+					DownloadManagerPieceListener	listener = (DownloadManagerPieceListener)_listener;
+
+					if ( type == LDT_PE_PIECE_ADDED ){
+
+						listener.pieceAdded((PEPiece)value);
+
+					}else if ( type == LDT_PE_PIECE_REMOVED ){
+
+						listener.pieceRemoved((PEPiece)value);
+					}
+				}
+			});
+
+	private final ListenerManager	piece_listeners 	= ListenerManager.createManager(
+			"DM:PieceListenDispatcher",
+			new ListenerManagerDispatcher()
+			{
+				@Override
+				public void
+				dispatch(
+					Object		listener,
+					int			type,
+					Object		value )
+				{
+					piece_listeners_aggregator.dispatch( listener, type, value );
+				}
+			});
+
+	List<DownloadManagerTPSListener>	tps_listeners;
+
+	private final AEMonitor	piece_listeners_mon	= new AEMonitor( "DM:DownloadManager:PeiceL" );
+
+	private final List	current_pieces	= new ArrayList();
+
+	final DownloadManagerController	controller;
+	private final DownloadManagerStatsImpl	stats;
+
+	protected final AEMonitor					this_mon = new AEMonitor( "DM:DownloadManager" );
+
+	private final boolean		persistent;
+
+	/**
+	 * Pretend this download is complete while not running,
+	 * even if it has no data.  When the torrent starts up, the real complete
+	 * level will be checked (probably by DiskManager), and if the torrent
+	 * actually does have missing data at that point, the download will be thrown
+	 * into error state.
+	 * <p>
+	 * Only a forced-recheck should clear this flag.
+	 * <p>
+	 * Current Implementation:<br>
+	 * - implies that the user completed the download at one point<br>
+	 * - Checks if there's Data Missing when torrent is done (or torrent load)
+	 */
+	private boolean assumedComplete;
+
+	/**
+	 * forceStarted torrents can't/shouldn't be automatically stopped
+	 */
+
+	private int			last_informed_state	= STATE_START_OF_DAY;
+	private boolean		latest_informed_force_start;
+
+	private long		resume_time;
+
+	final GlobalManager globalManager;
+	private String torrentFileName;
+
+	private boolean	open_for_seeding;
+
+	private String	display_name	= "";
+	private String	internal_name	= "";
+
+		// for simple torrents this refers to the torrent file itself. For non-simple it refers to the
+		// folder containing the torrent's files
+
+	private File	torrent_save_location;
+
+	// Position in Queue
+	private int position = -1;
+
+	private Object[]					read_torrent_state;
+	DownloadManagerState		download_manager_state;
+
+	TOTorrent		torrent;
+	private String 			torrent_comment;
+	private String 			torrent_created_by;
+
+	TRTrackerAnnouncer 				tracker_client;
+	private final TRTrackerAnnouncerListener		tracker_client_listener =
+			new TRTrackerAnnouncerListener()
+			{
+				@Override
+				public void
+				receivedTrackerResponse(
+					TRTrackerAnnouncerResponse	response)
+				{
+					PEPeerManager pm = controller.getPeerManager();
+
+					if ( pm != null ) {
+
+						pm.processTrackerResponse( response );
+					}
+
+					tracker_listeners.dispatch( LDT_TL_ANNOUNCERESULT, response );
+				}
+
+				@Override
+				public void
+				urlChanged(
+					final TRTrackerAnnouncer	announcer,
+					final URL	 				old_url,
+					URL							new_url,
+					boolean 					explicit )
+				{
+					if ( explicit ){
+
+							// flush connected peers on explicit url change
+
+						if ( torrent.getPrivate()){
+
+							final List<PEPeer>	peers;
+
+							try{
+								peer_listeners_mon.enter();
+
+								peers = new ArrayList<>(current_peers.keySet());
+
+							}finally{
+
+								peer_listeners_mon.exit();
+							}
+
+							new AEThread2( "DM:torrentChangeFlusher", true )
+							{
+								@Override
+								public void
+								run()
+								{
+									for (int i=0;i<peers.size();i++){
+
+										PEPeer	peer = (PEPeer)peers.get(i);
+
+										peer.getManager().removePeer( peer, "Private torrent: tracker changed" );
+									}
+								}
+							}.start();
+						}
+
+						requestTrackerAnnounce( true );
+					}
+				}
+
+				@Override
+				public void
+				urlRefresh()
+				{
+					requestTrackerAnnounce( true );
+				}
+			};
+
+				// a second listener used to catch and propagate the "stopped" event
+
+	private final TRTrackerAnnouncerListener		stopping_tracker_client_listener =
+		new TRTrackerAnnouncerListener()
+		{
+			@Override
+			public void
+			receivedTrackerResponse(
+				TRTrackerAnnouncerResponse	response)
+			{
+				if(tracker_client == null)
+					response.setPeers(new TRTrackerAnnouncerResponsePeer[0]);
+				tracker_listeners.dispatch( LDT_TL_ANNOUNCERESULT, response );
+			}
+
+			@Override
+			public void
+			urlChanged(
+				TRTrackerAnnouncer	announcer,
+				URL 				old_url,
+				URL					new_url,
+				boolean 			explicit )
+			{
+			}
+
+			@Override
+			public void
+			urlRefresh()
+			{
+			}
+		};
+
+
+	private final CopyOnWriteList	activation_listeners = new CopyOnWriteList();
+
+	private final long						scrape_random_seed	= SystemTime.getCurrentTime();
+
+	private volatile Map<Object,Object>		data;
+
+	private boolean data_already_allocated = false;
+
+	private long	creation_time	= SystemTime.getCurrentTime();
+
+	private int iSeedingRank;
+
+	private boolean	dl_identity_obtained;
+	private byte[]	dl_identity;
+    private int 	dl_identity_hashcode;
+
+    private int		max_uploads	= DownloadManagerState.MIN_MAX_UPLOADS;
+    private int		max_connections;
+    private int		max_connections_when_seeding;
+    private boolean	max_connections_when_seeding_enabled;
+    private int		max_seed_connections;
+    private int		max_uploads_when_seeding	= DownloadManagerState.MIN_MAX_UPLOADS;
+    private boolean	max_uploads_when_seeding_enabled;
+
+    private int		max_upload_when_busy_bps;
+    private int		current_upload_when_busy_bps;
+    private long	last_upload_when_busy_update;
+    private long	last_upload_when_busy_dec_time;
+    private int		upload_priority_manual;
+    private int		upload_priority_auto;
+
+    private int		crypto_level 	= NetworkManager.CRYPTO_OVERRIDE_NONE;
+    private int		message_mode	= -1;
+
+	// Only call this with STATE_QUEUED, STATE_WAITING, or STATE_STOPPED unless you know what you are doing
+
+    private volatile boolean	removing;
+	private volatile boolean	destroyed;
+
+	public
+	DownloadManagerImpl(
+		GlobalManager 							_gm,
+		byte[]									_torrent_hash,
+		String 									_torrentFileName,
+		String 									_torrent_save_dir,
+		String									_torrent_save_file,
+		int   									_initialState,
+		boolean									_persistent,
+		boolean									_recovered,
+		boolean									_open_for_seeding,
+		boolean									_has_ever_been_started,
+		List									_file_priorities,
+		DownloadManagerInitialisationAdapter	_initialisation_adapter )
+	{
+		if ( 	_initialState != STATE_WAITING &&
+				_initialState != STATE_STOPPED &&
+				_initialState != STATE_QUEUED ){
+
+			Debug.out( "DownloadManagerImpl: Illegal start state, " + _initialState );
+		}
+
+		persistent			= _persistent;
+		globalManager 		= _gm;
+		open_for_seeding	= _open_for_seeding;
+
+			// TODO: move this to download state!
+
+    	if ( _file_priorities != null ){
+
+    		setUserData( "file_priorities", _file_priorities );
+    	}
+
+		stats = new DownloadManagerStatsImpl( this );
+
+		controller	= new DownloadManagerController( this );
+
+		torrentFileName = _torrentFileName;
+
+		while( _torrent_save_dir.endsWith( File.separator )){
+
+			_torrent_save_dir = _torrent_save_dir.substring(0, _torrent_save_dir.length()-1 );
+		}
+
+			// readTorrent adjusts the save dir and file to be sensible values
+
+		readTorrent( 	_torrent_save_dir, _torrent_save_file, _torrent_hash,
+						persistent && !_recovered, _open_for_seeding, _has_ever_been_started,
+						_initialState );
+
+		if ( torrent != null ){
+
+			if ( _open_for_seeding && !_recovered ){
+
+				Map<Integer,File>	linkage = TorrentUtils.getInitialLinkage( torrent );
+
+				if ( linkage.size() > 0 ){
+
+					DownloadManagerState	dms = getDownloadState();
+
+					DiskManagerFileInfo[]	files = getDiskManagerFileInfoSet().getFiles();
+
+					try{
+						dms.suppressStateSave( true );
+
+						for ( Map.Entry<Integer,File> entry: linkage.entrySet()){
+
+							int	index 	= entry.getKey();
+							File target = entry.getValue();
+
+							dms.setFileLink( index, files[index].getFile( false ), target );
+
+						}
+					}finally{
+
+						dms.suppressStateSave( false );
+					}
+				}
+			}
+
+			if ( _initialisation_adapter != null ){
+
+				try{
+					_initialisation_adapter.initialised( this, open_for_seeding );
+
+				}catch( Throwable e ){
+
+					Debug.printStackTrace(e);
+				}
+			}
+		}
+	}
+
+	@Override
+	public int
+	getTaggableType()
+	{
+		return( TT_DOWNLOAD );
+	}
+
+	@Override
+	public TaggableResolver
+	getTaggableResolver()
+	{
+		return( globalManager );
+	}
+
+	@Override
+	public String
+	getTaggableID()
+	{
+		return( dl_identity==null?null:Base32.encode(dl_identity));
+	}
+
+	private void
+	readTorrent(
+		String		torrent_save_dir,
+		String		torrent_save_file,
+		byte[]		torrent_hash,		// can be null for initial torrents
+		boolean		new_torrent,		// probably equivalend to (torrent_hash == null)????
+		boolean		for_seeding,
+		boolean		has_ever_been_started,
+		int			initial_state )
+	{
+		try{
+			display_name				= torrentFileName;	// default if things go wrong decoding it
+			internal_name				= "";
+			torrent_comment				= "";
+			torrent_created_by			= "";
+
+			try{
+
+					// this is the first thing we do and most likely to go wrong - hence its
+					// existence is used below to indicate success or not
+
+				 download_manager_state	=
+					 	DownloadManagerStateImpl.getDownloadState(
+					 			this,
+					 			torrentFileName,
+					 			torrent_hash,
+					 			initial_state == DownloadManager.STATE_STOPPED ||
+					 			initial_state == DownloadManager.STATE_QUEUED );
+
+				 readParameters();
+
+					// establish any file links
+
+				 DownloadManagerStateAttributeListener attr_listener =
+					 new DownloadManagerStateAttributeListener()
+				 	 {
+					 	private final ThreadLocal<Boolean>	links_changing =
+					 			new ThreadLocal<Boolean>()
+					 			{
+					 				@Override
+								  protected Boolean initialValue(){
+					 					return Boolean.FALSE;
+					 				}
+					 			};
+
+					 	@Override
+					  public void
+					 	attributeEventOccurred(
+							DownloadManager dm, String attribute_name, int event_type)
+					 	{
+					 		if (attribute_name.equals(DownloadManagerState.AT_FILE_LINKS2)){
+
+				 				if ( links_changing.get()){
+
+					 				System.out.println( "recursive!" );
+
+					 				return;
+					 			}
+
+					 			links_changing.set( true );
+
+					 			try{
+
+					 				setFileLinks();
+
+					 			}finally{
+
+					 				links_changing.set( false );
+					 			}
+					 		}else if (attribute_name.equals(DownloadManagerState.AT_PARAMETERS)){
+
+					 			readParameters();
+
+					 		}else if (attribute_name.equals(DownloadManagerState.AT_NETWORKS)){
+
+					 			TRTrackerAnnouncer tc = tracker_client;
+
+					 			if ( tc != null ){
+
+					 				tc.resetTrackerUrl( false );
+					 			}
+							}
+						}
+					};
+
+				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_FILE_LINKS2, DownloadManagerStateAttributeListener.WRITTEN);
+				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN);
+				 download_manager_state.addListener(attr_listener, DownloadManagerState.AT_NETWORKS, DownloadManagerStateAttributeListener.WRITTEN);
+
+				 torrent	= download_manager_state.getTorrent();
+
+				 setFileLinks();
+
+				 	// We can't have the identity of this download changing as this will screw up
+				 	// anyone who tries to maintain a unique set of downloads (e.g. the GlobalManager)
+				 	//
+
+				 if ( !dl_identity_obtained ){
+
+					 	// flag set true below
+
+					 dl_identity			= torrent_hash==null?torrent.getHash():torrent_hash;
+
+	                 this.dl_identity_hashcode = new String( dl_identity ).hashCode();
+				 }
+
+				 if ( !Arrays.equals( dl_identity, torrent.getHash())){
+
+					 torrent	= null;	// prevent this download from being used
+
+					 	// set up some kinda default else things don't work wel...
+
+					 torrent_save_location = new File( torrent_save_dir, torrentFileName );
+
+					 throw( new NoStackException( "Download identity changed - please remove and re-add the download" ));
+				 }
+
+				 read_torrent_state	= null;	// no longer needed if we saved it
+
+				 LocaleUtilDecoder	locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
+
+				 	// if its a simple torrent and an explicit save file wasn't supplied, use
+				 	// the torrent name itself
+
+				 display_name = FileUtil.convertOSSpecificChars(TorrentUtils.getLocalisedName(torrent),false);
+
+				 byte[] hash = torrent.getHash();
+
+				 internal_name = ByteFormatter.nicePrint( hash, true);
+
+				 	// now we know if its a simple torrent or not we can make some choices about
+				 	// the save dir and file. On initial entry the save_dir will have the user-selected
+				 	// save location and the save_file will be null
+
+				 File	save_dir_file	= new File( torrent_save_dir );
+
+				 // System.out.println( "before: " + torrent_save_dir + "/" + torrent_save_file );
+
+				 	// if save file is non-null then things have already been sorted out
+
+				 if ( torrent_save_file == null ){
+
+				 		// make sure we're working off a canonical save dir if possible
+
+				 	try{
+				 		if ( save_dir_file.exists()){
+
+				 			save_dir_file = save_dir_file.getCanonicalFile();
+				 		}
+				 	}catch( Throwable e ){
+
+				 		Debug.printStackTrace(e);
+				 	}
+
+				 	if ( torrent.isSimpleTorrent()){
+
+				 			// if target save location is a directory then we use that as the save
+				 			// dir and use the torrent display name as the target. Otherwise we
+				 			// use the file name
+
+				 		if ( save_dir_file.exists()){
+
+				 			if ( save_dir_file.isDirectory()){
+
+				 				torrent_save_file	= display_name;
+
+				 			}else{
+
+				 				torrent_save_dir	= save_dir_file.getParent().toString();
+
+				 				torrent_save_file	= save_dir_file.getName();
+				 			}
+				 		}else{
+
+				 				// doesn't exist, assume it refers directly to the file
+
+				 			if ( save_dir_file.getParent() == null ){
+
+				 				throw( new NoStackException( "Data location '" + torrent_save_dir + "' is invalid" ));
+
+				 			}
+
+			 				torrent_save_dir	= save_dir_file.getParent().toString();
+
+			 				torrent_save_file	= save_dir_file.getName();
+				 		}
+
+				 	}else{
+
+				 			// torrent is a folder. It is possible that the natural location
+				 			// for the folder is X/Y and that in fact 'Y' already exists and
+				 			// has been selected. If ths is the case the select X as the dir and Y
+				 			// as the file name
+
+				 		if ( save_dir_file.exists()){
+
+				 			if ( !save_dir_file.isDirectory()){
+
+				 				throw( new NoStackException( "'" + torrent_save_dir + "' is not a directory" ));
+				 			}
+
+				 			if ( save_dir_file.getName().equals( display_name )){
+				 				torrent_save_dir	= save_dir_file.getParent().toString();
+				 			}
+				 		}
+
+				 		torrent_save_file	= display_name;
+				 	}
+				 }
+
+				 torrent_save_location = new File( torrent_save_dir, torrent_save_file );
+
+				 	// final validity test must be based of potentially linked target location as file
+				 	// may have been re-targetted
+
+
+					// if this isn't a new torrent then we treat the absence of the enclosing folder
+					// as a fatal error. This is in particular to solve a problem with the use of
+				 	// externally mounted torrent data on OSX, whereby a re-start with the drive unmounted
+				 	// results in the creation of a local diretory in /Volumes that subsequently stuffs
+				 	// up recovery when the volume is mounted
+
+				 	// changed this to only report the error on non-windows platforms
+
+				if ( !(new_torrent || Constants.isWindows )){
+
+						// another exception here - if the torrent has never been started then we can
+						// fairly safely continue as its in a stopped state
+
+					if ( has_ever_been_started ){
+
+						 File	linked_target = getSaveLocation();
+
+						 if ( !linked_target.exists()){
+
+							throw (new NoStackException(
+									MessageText.getString("DownloadManager.error.datamissing")
+											+ " " + Debug.secretFileName(linked_target.toString())));
+						}
+				 	}
+				 }
+
+		 		// propagate properties from torrent to download
+
+				boolean	low_noise = TorrentUtils.getFlag( torrent, TorrentUtils.TORRENT_FLAG_LOW_NOISE );
+
+				if ( low_noise ){
+
+					download_manager_state.setFlag( DownloadManagerState.FLAG_LOW_NOISE, true );
+				}
+
+				boolean	metadata_dl = TorrentUtils.getFlag( torrent, TorrentUtils.TORRENT_FLAG_METADATA_TORRENT );
+
+				if ( metadata_dl ){
+
+					download_manager_state.setFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD, true );
+				}
+
+				 	// if this is a newly introduced torrent trash the tracker cache. We do this to
+				 	// prevent, say, someone publishing a torrent with a load of invalid cache entries
+				 	// in it and a bad tracker URL. This could be used as a DOS attack
+
+				 if ( new_torrent ){
+
+					download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME, SystemTime.getCurrentTime());
+
+					Map peer_cache = TorrentUtils.getPeerCache( torrent );
+
+					if ( peer_cache != null ){
+
+						try{
+							download_manager_state.setTrackerResponseCache( peer_cache );
+
+						}catch( Throwable e ){
+
+							Debug.out( e );
+
+							download_manager_state.setTrackerResponseCache( new HashMap());
+						}
+					}else{
+
+						download_manager_state.setTrackerResponseCache( new HashMap());
+					}
+
+				 		// also remove resume data incase someone's published a torrent with resume
+				 		// data in it
+
+				 	if ( for_seeding ){
+
+				 		DiskManagerFactory.setTorrentResumeDataNearlyComplete(download_manager_state);
+
+				 		// Prevent download being considered for on-completion moving - it's considered complete anyway.
+				 		download_manager_state.setFlag(DownloadManagerState.FLAG_MOVE_ON_COMPLETION_DONE, true);
+
+				 	}else{
+
+				 		download_manager_state.clearResumeData();
+				 	}
+
+				 		// set up the dnd-subfolder status on addition
+
+				 	if ( persistent && !for_seeding && !torrent.isSimpleTorrent()){
+
+				 		String dnd_sf = dnd_subfolder;
+
+				 		if ( dnd_sf != null ){
+
+				 			if ( torrent.getFiles().length <= DownloadManagerStateFactory.MAX_FILES_FOR_INCOMPLETE_AND_DND_LINKAGE ){
+
+				 				if ( download_manager_state.getAttribute( DownloadManagerState.AT_DND_SUBFOLDER ) == null ){
+
+				 					download_manager_state.setAttribute( DownloadManagerState.AT_DND_SUBFOLDER, dnd_sf );
+				 				}
+
+								boolean	use_prefix = COConfigurationManager.getBooleanParameter( "Use Incomplete File Prefix" );
+
+								if ( use_prefix ){
+
+					 				if ( download_manager_state.getAttribute( DownloadManagerState.AT_DND_PREFIX ) == null ){
+
+										String prefix = Base32.encode( hash ).substring( 0, 12 ).toLowerCase( Locale.US ) + "_";
+
+					 					download_manager_state.setAttribute( DownloadManagerState.AT_DND_PREFIX, prefix );
+					 				}
+								}
+            				}
+            			}
+            		}
+				 }else{
+
+					 long	add_time = download_manager_state.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
+
+					 if ( add_time == 0 ){
+
+						 // grab an initial value from torrent file - migration only
+
+						 try{
+							 add_time = new File( torrentFileName ).lastModified();
+
+						 }catch( Throwable e ){
+						 }
+
+						 if ( add_time == 0 ){
+
+							 add_time = SystemTime.getCurrentTime();
+						 }
+
+						 download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME, add_time );
+					 }
+				 }
+
+
+				 //trackerUrl = torrent.getAnnounceURL().toString();
+
+				torrent_comment = StringInterner.intern(locale_decoder.decodeString(torrent.getComment()));
+
+				if ( torrent_comment == null ){
+
+				   torrent_comment	= "";
+				}
+
+				torrent_created_by = locale_decoder.decodeString(torrent.getCreatedBy());
+
+				if ( torrent_created_by == null ){
+
+					torrent_created_by	= "";
+				}
+
+				 	// only restore the tracker response cache for non-seeds
+
+				 if ( download_manager_state.isResumeDataComplete() || for_seeding ){
+
+					 	// actually, can't think of a good reason not to restore the
+					 	// cache for seeds, after all if the tracker's down we still want
+					 	// to connect to peers to upload to
+
+					  // download_manager_state.clearTrackerResponseCache();
+
+					  stats.setDownloadCompletedBytes(getSize());
+
+					  setAssumedComplete(true);
+
+				 }else{
+
+					 setAssumedComplete(false);
+				}
+
+				if ( download_manager_state.getDisplayName() == null ){
+
+					String title = com.biglybt.core.torrent.PlatformTorrentUtils.getContentTitle( torrent );
+
+					if ( title != null && title.length() > 0 ){
+
+						download_manager_state.setDisplayName(title);
+					}
+				}
+			}catch( TOTorrentException e ){
+
+				//Debug.printStackTrace( e );
+
+				setFailed( TorrentUtils.exceptionToText( e ));
+
+			}catch( UnsupportedEncodingException e ){
+
+				Debug.printStackTrace( e );
+
+				setFailed( MessageText.getString("DownloadManager.error.unsupportedencoding"));
+
+			}catch( NoStackException e ){
+
+				Debug.outNoStack( e.getMessage());
+
+			}catch( Throwable e ){
+
+				Debug.printStackTrace( e );
+
+				setFailed( e );
+
+			}finally{
+
+				 dl_identity_obtained	= true;
+			}
+
+			if ( download_manager_state == null ){
+				read_torrent_state =
+					new Object[]{
+						torrent_save_dir, torrent_save_file, torrent_hash,
+						Boolean.valueOf(new_torrent), Boolean.valueOf(for_seeding), Boolean.valueOf(has_ever_been_started),
+						new Integer( initial_state )
+					};
+
+					// torrent's stuffed - create a dummy "null object" to simplify use
+					// by other code
+
+				download_manager_state	= DownloadManagerStateImpl.getDownloadState( this );
+
+					// make up something vaguely sensible for save location
+
+				if ( torrent_save_file == null ){
+
+					torrent_save_location = new File( torrent_save_dir );
+
+				}else{
+
+					torrent_save_location = new File( torrent_save_dir, torrent_save_file );
+				}
+
+			}else{
+
+
+					// make up something vaguely sensible for save location if we haven't got one
+
+				if ( torrent_save_file == null ){
+
+					torrent_save_location = new File( torrent_save_dir );
+				}
+
+					// make sure we know what networks to use for this download
+
+				if ( torrent != null && !download_manager_state.hasAttribute( DownloadManagerState.AT_NETWORKS )){
+
+					String[] networks = AENetworkClassifier.getNetworks( torrent, display_name );
+
+					download_manager_state.setNetworks( networks );
+				}
+			}
+		}finally{
+
+			if ( torrent_save_location != null ){
+
+				boolean	already_done = false;
+
+				String cache = download_manager_state.getAttribute( DownloadManagerState.AT_CANONICAL_SD_DMAP );
+
+				if ( cache != null ){
+
+					String key = torrent_save_location.getAbsolutePath() + "\n";
+
+					if ( cache.startsWith( key )){
+
+						torrent_save_location = new File( cache.substring( key.length()));
+
+						already_done = true;
+					}
+				}
+
+				if ( !already_done ){
+
+					String key = torrent_save_location.getAbsolutePath() + "\n";
+
+					try{
+						torrent_save_location = torrent_save_location.getCanonicalFile();
+
+					}catch( Throwable e ){
+
+						torrent_save_location = torrent_save_location.getAbsoluteFile();
+					}
+
+					download_manager_state.setAttribute(
+						DownloadManagerState.AT_CANONICAL_SD_DMAP,
+						key + torrent_save_location.getAbsolutePath());
+				}
+					// update cached stuff in case something changed
+
+				getSaveLocation();
+			}
+
+				// must be after torrent read, so that any listeners have a TOTorrent
+				// not that if things have failed above this method won't override a failed
+				// state with the initial one
+
+			controller.setInitialState( initial_state );
+		}
+	}
+
+	protected void
+	readTorrent()
+	{
+		if ( read_torrent_state == null ){
+
+			return;
+		}
+
+		readTorrent(
+				(String)read_torrent_state[0],
+				(String)read_torrent_state[1],
+				(byte[])read_torrent_state[2],
+				((Boolean)read_torrent_state[3]).booleanValue(),
+				((Boolean)read_torrent_state[4]).booleanValue(),
+				((Boolean)read_torrent_state[5]).booleanValue(),
+				((Integer)read_torrent_state[6]).intValue());
+
+	}
+
+	protected void
+	readParameters()
+	{
+		max_connections							= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_PEERS );
+		max_connections_when_seeding_enabled	= getDownloadState().getBooleanParameter( DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED );
+		max_connections_when_seeding			= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING );
+		max_seed_connections					= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_SEEDS );
+		max_uploads						 		= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_UPLOADS );
+		max_uploads_when_seeding_enabled 		= getDownloadState().getBooleanParameter( DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED );
+		max_uploads_when_seeding 				= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING );
+		max_upload_when_busy_bps				= getDownloadState().getIntParameter( DownloadManagerState.PARAM_MAX_UPLOAD_WHEN_BUSY ) * 1024;
+
+		max_uploads = Math.max( max_uploads, DownloadManagerState.MIN_MAX_UPLOADS );
+		max_uploads_when_seeding = Math.max( max_uploads_when_seeding, DownloadManagerState.MIN_MAX_UPLOADS );
+
+		upload_priority_manual					= getDownloadState().getIntParameter( DownloadManagerState.PARAM_UPLOAD_PRIORITY );
+	}
+
+	protected int[]
+	getMaxConnections( boolean mixed )
+	{
+		if ( mixed && max_connections > 0 ){
+
+			return( new int[]{ max_connections, max_connections_npp_extra });
+		}
+
+		return( new int[]{ max_connections, 0 });
+	}
+
+	protected int[]
+	getMaxConnectionsWhenSeeding( boolean mixed )
+	{
+		if ( mixed && max_connections_when_seeding > 0){
+
+			return( new int[]{ max_connections_when_seeding, max_connections_npp_extra });
+		}
+
+		return( new int[]{ max_connections_when_seeding, 0 });
+	}
+
+	protected boolean
+	isMaxConnectionsWhenSeedingEnabled()
+	{
+		return( max_connections_when_seeding_enabled );
+	}
+
+	protected int[]
+	getMaxSeedConnections( boolean mixed )
+	{
+		if ( mixed && max_seed_connections > 0 ){
+
+			return( new int[]{ max_seed_connections, max_connections_npp_extra });
+		}
+
+		return( new int[]{ max_seed_connections, 0 });
+	}
+
+	protected boolean
+	isMaxUploadsWhenSeedingEnabled()
+	{
+		return( max_uploads_when_seeding_enabled );
+	}
+
+	protected int
+	getMaxUploadsWhenSeeding()
+	{
+		return( max_uploads_when_seeding );
+	}
+
+	@Override
+	public void
+	updateAutoUploadPriority(
+		Object		key,
+		boolean		inc )
+	{
+		try{
+	  		peer_listeners_mon.enter();
+
+	  		boolean	key_exists = getUserData( key ) != null;
+
+	  		if ( inc && !key_exists ){
+
+	  			upload_priority_auto++;
+
+	  			setUserData( key, "" );
+
+	  		}else if ( !inc && key_exists ){
+
+	  			upload_priority_auto--;
+
+	  			setUserData( key, null );
+	  		}
+		}finally{
+
+			peer_listeners_mon.exit();
+		}
+	}
+
+	protected int
+	getEffectiveUploadPriority()
+	{
+		return( upload_priority_manual + upload_priority_auto );
+	}
+
+	@Override
+	public int
+	getMaxUploads()
+	{
+		return( max_uploads );
+	}
+
+	@Override
+	public void
+	setMaxUploads(
+		int	max )
+	{
+		download_manager_state.setIntParameter( DownloadManagerState.PARAM_MAX_UPLOADS, max );
+	}
+
+	public void
+	setManualUploadPriority(
+		int	priority )
+	{
+		download_manager_state.setIntParameter( DownloadManagerState.PARAM_UPLOAD_PRIORITY, priority );
+	}
+
+	@Override
+	public int
+	getEffectiveMaxUploads()
+	{
+		if ( isMaxUploadsWhenSeedingEnabled() && getState() == DownloadManager.STATE_SEEDING ){
+
+			return( getMaxUploadsWhenSeeding());
+
+		}else{
+
+			return( max_uploads );
+		}
+	}
+
+	@Override
+	public int
+	getEffectiveUploadRateLimitBytesPerSecond()
+	{
+		int	local_max_bps	= stats.getUploadRateLimitBytesPerSecond();
+		int	rate			= local_max_bps;
+
+		if ( max_upload_when_busy_bps != 0 ){
+
+			long	now = SystemTime.getCurrentTime();
+
+			if ( now < last_upload_when_busy_update || now - last_upload_when_busy_update > 5000 ){
+
+				last_upload_when_busy_update	= now;
+
+					// might need to impose the limit
+
+				String key = TransferSpeedValidator.getActiveUploadParameter( globalManager );
+
+				int	global_limit_bps = COConfigurationManager.getIntParameter( key )*1024;
+
+				if ( global_limit_bps > 0 && max_upload_when_busy_bps < global_limit_bps ){
+
+						// we have a global limit and a valid busy limit
+
+					local_max_bps = local_max_bps==0?global_limit_bps:local_max_bps;
+
+					GlobalManagerStats gm_stats = globalManager.getStats();
+
+					int	actual = gm_stats.getDataSendRateNoLAN() + gm_stats.getProtocolSendRateNoLAN();
+
+					int	move_by = ( local_max_bps - max_upload_when_busy_bps ) / 10;
+
+					if ( move_by < 1024 ){
+
+						move_by = 1024;
+					}
+
+					if ( global_limit_bps - actual <= 2*1024 ){
+
+							// close enough to impose the busy limit downwards
+
+
+						if ( current_upload_when_busy_bps == 0 ){
+
+							current_upload_when_busy_bps = local_max_bps;
+						}
+
+						int	prev_upload_when_busy_bps = current_upload_when_busy_bps;
+
+						current_upload_when_busy_bps -= move_by;
+
+						if ( current_upload_when_busy_bps < max_upload_when_busy_bps ){
+
+							current_upload_when_busy_bps = max_upload_when_busy_bps;
+						}
+
+						if ( current_upload_when_busy_bps < prev_upload_when_busy_bps ){
+
+							last_upload_when_busy_dec_time = now;
+						}
+					}else{
+
+							// not hitting limit, increase
+
+						if ( current_upload_when_busy_bps != 0 ){
+
+								// only try increment if sufficient time passed
+
+							if ( 	upload_when_busy_min_secs == 0 ||
+									now < last_upload_when_busy_dec_time ||
+									now - last_upload_when_busy_dec_time >=  upload_when_busy_min_secs*1000L ){
+
+								current_upload_when_busy_bps += move_by;
+
+								if ( current_upload_when_busy_bps >= local_max_bps ){
+
+									current_upload_when_busy_bps	= 0;
+								}
+							}
+						}
+					}
+
+					if ( current_upload_when_busy_bps > 0 ){
+
+						rate = current_upload_when_busy_bps;
+					}
+				}else{
+
+					current_upload_when_busy_bps = 0;
+				}
+			}else{
+
+				if ( current_upload_when_busy_bps > 0 ){
+
+					rate = current_upload_when_busy_bps;
+				}
+			}
+		}
+
+		return( rate );
+	}
+
+	protected void
+	setFileLinks()
+	{
+			// invalidate the cache info in case its now wrong
+
+		cached_save_location	= null;
+
+		DiskManagerFactory.setFileLinks( this, download_manager_state.getFileLinks());
+
+		controller.fileInfoChanged();
+	}
+
+	protected void
+	clearFileLinks()
+	{
+		download_manager_state.clearFileLinks();
+	}
+
+	private void
+	updateFileLinks(
+		File old_save_path, File new_save_path)
+	{
+		try {old_save_path = old_save_path.getCanonicalFile();}
+		catch (IOException ioe) {old_save_path = old_save_path.getAbsoluteFile();}
+		try {new_save_path = new_save_path.getCanonicalFile();}
+		catch (IOException ioe) {new_save_path = new_save_path.getAbsoluteFile();}
+
+		String old_path = old_save_path.getPath();
+		String new_path = new_save_path.getPath();
+
+		//System.out.println( "update_file_links: " + old_path +  " -> " + new_path );
+
+		LinkFileMap links = download_manager_state.getFileLinks();
+
+		Iterator<LinkFileMap.Entry> it = links.entryIterator();
+
+		List<Integer>	from_indexes 	= new ArrayList<>();
+		List<File>		from_links 		= new ArrayList<>();
+		List<File>		to_links		= new ArrayList<>();
+
+		while(it.hasNext()){
+
+			LinkFileMap.Entry entry = it.next();
+
+			try{
+
+				File	to			= entry.getToFile();
+
+				if ( to == null ){
+
+						// represents a deleted link, nothing to update
+
+					continue;
+				}
+
+				try{
+					to = to.getCanonicalFile();
+				}catch( Throwable e ){
+				}
+
+				int		file_index 	= entry.getIndex();
+				File	from 		= entry.getFromFile();
+
+				try{
+					from = from.getCanonicalFile();
+				}catch( Throwable e ){
+				}
+
+				String  from_s  = from.getAbsolutePath();
+				String  to_s    = to.getAbsolutePath();
+
+				updateFileLink( file_index, old_path, new_path, from_s, to_s, from_indexes, from_links, to_links );
+
+			}catch( Exception e ){
+
+				Debug.printStackTrace(e);
+			}
+		}
+
+		if ( from_links.size() > 0 ){
+
+			download_manager_state.setFileLinks( from_indexes, from_links, to_links );
+		}
+	}
+
+	// old_path -> Full location of old torrent (inclusive of save name)
+	// from_loc -> Old unmodified location of file within torrent.
+	// to_loc -> Old modified location of file (where the link points to).
+	//
+	// We have to update from_loc and to_loc.
+	// We should always be modifying from_loc. Only modify to_loc if it sits within
+	// the old path.
+
+	private void
+	updateFileLink(
+		int				file_index,
+		String 			old_path,
+		String 			new_path,
+		String 			from_loc,
+		String 			to_loc,
+		List<Integer>	from_indexes,
+		List<File> 		from_links,
+		List<File> 		to_links )
+	{
+		//System.out.println( "ufl: " + file_index + "\n  " + old_path + " - " + new_path + "\n  " + from_loc + " - " + to_loc );
+
+		if ( torrent.isSimpleTorrent()){
+
+			if ( !old_path.equals( from_loc )){
+
+				throw new RuntimeException("assert failure: old_path=" + old_path + ", from_loc=" + from_loc);
+			}
+
+			//System.out.println( "   adding " + old_path + " -> null" );
+
+			from_indexes.add( 0 );
+			from_links.add( new File(old_path));
+			to_links.add( null );
+
+				// in general links on simple torrents aren't used, instead the download's save-path is switched to the
+				// alternate location (only a single file after all this is simplest implementation). Unfortunately links can
+				// actually still be set (e.g. to add an 'incomplete' suffix to a file) so we still need to support link-rewriting
+				// properly
+
+				// so the only valid linking on a simple torrent is to rename the file, not to point to a file in an
+				// alternative directory. Thus fixing up the link becomes a case of taking the target file name from the old link
+				// and making it the target file naem of the new link within the new path's parent folder
+
+
+			String new_path_parent;
+			int pos = new_path.lastIndexOf( File.separatorChar );
+			if ( pos != -1 ){
+				new_path_parent = new_path.substring( 0, pos );
+			}else{
+				Debug.out( "new_path " + new_path + " missing file separator, not good" );
+
+				new_path_parent = new_path;
+			}
+
+			String to_loc_name;
+			pos = to_loc.lastIndexOf( File.separatorChar );
+			if ( pos != -1 ){
+				to_loc_name = to_loc.substring( pos+1 );
+			}else{
+				Debug.out( "to_loc " + to_loc + " missing file separator, not good" );
+
+				to_loc_name = to_loc;
+			}
+
+			String to_loc_to_use = new_path_parent + File.separatorChar + to_loc_name;
+
+			//System.out.println( "   adding " + new_path + " -> " + to_loc_to_use );
+			from_indexes.add( 0 );
+			from_links.add(new File(new_path));
+			to_links.add( new File(to_loc_to_use));
+
+		}else{
+
+			String from_loc_to_use = FileUtil.translateMoveFilePath( old_path, new_path, from_loc );
+
+			if ( from_loc_to_use == null ){
+
+				return;
+			}
+
+			String to_loc_to_use = FileUtil.translateMoveFilePath( old_path, new_path, to_loc );
+
+			if ( to_loc_to_use == null ){
+
+				to_loc_to_use = to_loc;
+			}
+
+				// delete old
+
+			from_indexes.add( file_index );
+			from_links.add(new File(from_loc));
+			to_links.add( null );
+
+				// add new
+
+			from_indexes.add( file_index );
+			from_links.add( new File(from_loc_to_use));
+			to_links.add( new File(to_loc_to_use));
+		}
+	}
+
+	@Override
+	public boolean
+	filesExist(
+		boolean expected_to_be_allocated )
+	{
+		return( controller.filesExist( expected_to_be_allocated ));
+	}
+
+
+	@Override
+	public boolean
+	isPersistent()
+	{
+		return( persistent );
+	}
+
+	@Override
+	public String
+	getDisplayName()
+	{
+		DownloadManagerState dms = this.getDownloadState();
+		if (dms != null) {
+			String result = dms.getDisplayName();
+			if (result != null) {return result;}
+		}
+		return( display_name );
+	}
+
+ 	@Override
+  public String
+	getInternalName()
+  	{
+ 		return( internal_name );
+  	}
+
+	@Override
+	public String
+	getErrorDetails()
+	{
+		return( controller.getErrorDetail());
+	}
+
+	@Override
+	public int
+	getErrorType()
+	{
+		return( controller.getErrorType());
+	}
+
+	@Override
+	public long
+	getSize()
+	{
+		if( torrent != null){
+
+			return torrent.getSize();
+		}
+
+		return 0;
+	}
+
+	protected void
+	setFailed()
+	{
+		setFailed((String)null );
+	}
+
+	protected void
+	setFailed(
+		Throwable 	e )
+	{
+		setFailed( Debug.getNestedExceptionMessage(e));
+	}
+
+	protected void
+	setFailed(
+		String	str )
+	{
+		controller.setFailed( str );
+	}
+
+	protected void
+	setTorrentInvalid(
+		String	str )
+	{
+		setFailed( str );
+
+		torrent	= null;
+	}
+
+
+	@Override
+	public void
+	saveResumeData()
+	{
+		if ( getState() == STATE_DOWNLOADING) {
+
+			try{
+				getDiskManager().saveResumeData( true );
+
+			}catch( Exception e ){
+
+				setFailed( "Resume data save fails: " + Debug.getNestedExceptionMessage(e));
+			}
+		}
+
+		// we don't want to update the torrent if we're seeding
+
+		if ( !assumedComplete  ){
+
+			download_manager_state.save();
+		}
+	}
+
+  	@Override
+	  public void
+  	saveDownload()
+  	{
+  		DiskManager disk_manager = controller.getDiskManager();
+
+  		if ( disk_manager != null ){
+
+  			disk_manager.saveState();
+  		}
+
+  		download_manager_state.save();
+  	}
+
+
+	@Override
+	public void
+	initialize()
+	{
+	  	// entry:  valid if waiting, stopped or queued
+	  	// exit: error, ready or on the way to error
+
+		if ( torrent == null ) {
+
+				// have a go at re-reading the torrent in case its been recovered
+
+			readTorrent();
+		}
+
+		if ( torrent == null ) {
+
+			setFailed();
+
+			return;
+		}
+
+		// If a torrent that is assumed complete, verify that it actually has the
+		// files, before we create the diskManager, which will try to allocate
+		// disk space.
+		if (assumedComplete && !filesExist( true )) {
+			// filesExist() has set state to error for us
+
+			// If the user wants to re-download the missing files, they must
+			// do a re-check, which will reset the flag.
+			return;
+		}
+
+		download_manager_state.setActive( true );
+
+		try{
+			try{
+				this_mon.enter();
+
+				if ( tracker_client != null ){
+
+					Debug.out( "DownloadManager: initialize called with tracker client still available" );
+
+					tracker_client.destroy();
+				}
+
+				tracker_client =
+					TRTrackerAnnouncerFactory.create(
+						torrent,
+						new TRTrackerAnnouncerFactory.DataProvider()
+						{
+							@Override
+							public String[]
+							getNetworks()
+							{
+								return( download_manager_state.getNetworks());
+							}
+						});
+
+				tracker_client.setTrackerResponseCache( download_manager_state.getTrackerResponseCache());
+
+				tracker_client.addListener( tracker_client_listener );
+
+			}finally{
+
+				this_mon.exit();
+			}
+
+      		// we need to set the state to "initialized" before kicking off the disk manager
+      		// initialisation as it should only report its status while in the "initialized"
+      		// state (see getState for how this works...)
+
+			try{
+				controller.initializeDiskManager( open_for_seeding );
+
+			}finally{
+
+					// only supply this the very first time the torrent starts so the controller can check
+					// that things are ok. Subsequent restarts are under user control
+
+				open_for_seeding	= false;
+			}
+
+		}catch( TRTrackerAnnouncerException e ){
+
+			setFailed( e );
+		}
+	}
+
+
+	@Override
+	public void
+	setStateWaiting()
+	{
+		checkResuming();
+
+		controller.setStateWaiting();
+	}
+
+  	public void
+  	setStateFinishing()
+  	{
+  		controller.setStateFinishing();
+  	}
+
+  	@Override
+	  public void
+  	setStateQueued()
+  	{
+  		checkResuming();
+
+  		controller.setStateQueued();
+  	}
+
+  	@Override
+	  public int
+  	getState()
+  	{
+  		return( controller.getState());
+  	}
+
+  	@Override
+	  public int
+  	getSubState()
+  	{
+  		return( controller.getSubState());
+  	}
+
+  	@Override
+	  public boolean
+  	canForceRecheck()
+  	{
+		if ( getTorrent() == null ){
+
+  				// broken torrent, can't force recheck
+
+			return( false );
+	  	}
+
+  		return( controller.canForceRecheck());
+  	}
+
+  	@Override
+	  public void
+  	forceRecheck()
+  	{
+  		controller.forceRecheck(null);
+  	}
+
+  	@Override
+	  public void
+  	forceRecheck(final ForceRecheckListener l)
+  	{
+  		controller.forceRecheck(l);
+  	}
+
+  	@Override
+	  public void
+  	setPieceCheckingEnabled(
+  		boolean enabled )
+  	{
+  		controller.setPieceCheckingEnabled( enabled );
+  	}
+
+    @Override
+    public void
+    resetFile(
+    	DiskManagerFileInfo		file )
+    {
+		int	state = getState();
+
+	  	if ( 	state == DownloadManager.STATE_STOPPED ||
+	  			state == DownloadManager.STATE_ERROR ){
+
+	  		DiskManagerFactory.clearResumeData( this, file );
+
+	  	}else{
+
+	  		Debug.out( "Download not stopped" );
+	  	}
+    }
+
+    @Override
+    public void
+    recheckFile(
+    	DiskManagerFileInfo		file )
+    {
+		int	state = getState();
+
+	  	if ( 	state == DownloadManager.STATE_STOPPED ||
+	  			state == DownloadManager.STATE_ERROR ){
+
+	  		DiskManagerFactory.recheckFile( this, file );
+
+	  	}else{
+
+	  		Debug.out( "Download not stopped" );
+	  	}
+	  }
+
+  	@Override
+	  public void
+  	startDownload()
+  	{
+  		message_mode = -1;	// reset it here
+
+ 		controller.startDownload( getTrackerClient() );
+  	}
+
+	@Override
+	public void
+	stopIt(
+		int 		state_after_stopping,
+		boolean 	remove_torrent,
+		boolean 	remove_data)
+	{
+		stopIt( state_after_stopping, remove_torrent, remove_data, false );
+	}
+
+	@Override
+	public void
+	stopIt(
+		int 		state_after_stopping,
+		boolean 	remove_torrent,
+		boolean		remove_data,
+		boolean		for_removal )
+	{
+		if ( for_removal ){
+
+			removing = true;
+		}
+
+		try {
+			boolean closing = state_after_stopping == DownloadManager.STATE_CLOSED;
+			int curState = getState();
+			boolean alreadyStopped = curState == STATE_STOPPED
+					|| curState == STATE_STOPPING || curState == STATE_ERROR;
+			boolean skipSetTimeStopped = alreadyStopped
+					|| (closing && curState == STATE_QUEUED);
+
+			if (!skipSetTimeStopped) {
+				download_manager_state.setLongAttribute(
+						DownloadManagerState.AT_TIME_STOPPED, SystemTime.getCurrentTime());
+			}
+
+			controller.stopIt(state_after_stopping, remove_torrent, remove_data,for_removal );
+
+		} finally {
+
+			download_manager_state.setActive(false);
+		}
+	}
+
+	private void
+	checkResuming()
+	{
+		globalManager.resumingDownload( this );
+	}
+
+	@Override
+	public boolean
+	pause()
+	{
+		return( globalManager.pauseDownload( this ));
+	}
+
+	@Override
+	public boolean
+	pause(
+		long	_resume_time )
+	{
+			// obviously we should manage the timer+resumption but it works as it is at the moment...
+
+			// we're not yet in a stopped state so indicate this with a negative value - it'll be corrected when the download stops
+
+		resume_time	= -_resume_time;
+
+		return( globalManager.pauseDownload( this ));
+	}
+
+	@Override
+	public long
+	getAutoResumeTime()
+	{
+		return( resume_time );
+	}
+	@Override
+	public boolean
+	isPaused()
+	{
+		return( globalManager.isPaused( this ));
+	}
+
+	@Override
+	public void
+	resume()
+	{
+		globalManager.resumeDownload( this );
+	}
+
+	@Override
+	public boolean getAssumedComplete() {
+		return assumedComplete;
+	}
+
+	@Override
+	public boolean requestAssumedCompleteMode() {
+		boolean bCompleteNoDND = controller.isDownloadComplete(false);
+
+		setAssumedComplete(bCompleteNoDND);
+		return bCompleteNoDND;
+	}
+
+	// Protected: Use requestAssumedCompleteMode outside of scope
+	protected void setAssumedComplete(boolean _assumedComplete) {
+		if (_assumedComplete) {
+			long completedOn = download_manager_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
+			if (completedOn <= 0) {
+				download_manager_state.setLongParameter(
+						DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME,
+						SystemTime.getCurrentTime());
+			}
+		}
+
+		if (assumedComplete == _assumedComplete) {
+			return;
+		}
+
+		//Logger.log(new LogEvent(this, LogIDs.CORE, "setAssumedComplete("
+		//		+ _assumedComplete + ") was " + assumedComplete));
+
+		assumedComplete = _assumedComplete;
+
+		if (!assumedComplete) {
+			controller.setStateDownloading();
+		}
+
+		// NOTE: We don't set "stats.setDownloadCompleted(1000)" anymore because
+		//       we can be in seeding mode with an unfinished torrent
+
+		if (position != -1) {
+			// we are in a new list, move to the top of the list so that we continue
+			// seeding.
+			// -1 position means it hasn't been added to the global list.  We
+			// shouldn't touch it, since it'll get a position once it's adding is
+			// complete
+
+			DownloadManager[] dms = { DownloadManagerImpl.this };
+
+			// pretend we are at the bottom of the new list
+			// so that move top will shift everything down one
+
+			position = globalManager.getDownloadManagers().size() + 1;
+
+			if (COConfigurationManager.getBooleanParameter(CFG_MOVE_COMPLETED_TOP)) {
+
+				globalManager.moveTop(dms);
+
+			} else {
+
+				globalManager.moveEnd(dms);
+			}
+
+			// we left a gap in incomplete list, fixup
+
+			globalManager.fixUpDownloadManagerPositions();
+		}
+
+		listeners.dispatch(LDT_COMPLETIONCHANGED, new Object[] {
+				this,
+			Boolean.valueOf(_assumedComplete)
+		});
+	}
+
+
+  @Override
+  public int
+  getNbSeeds()
+  {
+	  PEPeerManager peerManager = controller.getPeerManager();
+
+	  if (peerManager != null){
+
+		  return peerManager.getNbSeeds();
+	  }
+
+	  return 0;
+  }
+
+  @Override
+  public int
+  getNbPeers()
+  {
+	  PEPeerManager peerManager = controller.getPeerManager();
+
+	  if (peerManager != null){
+
+		  return peerManager.getNbPeers();
+	  }
+
+	  return 0;
+  }
+
+
+
+  	@Override
+	  public String
+  	getTrackerStatus()
+  	{
+  		TRTrackerAnnouncer tc = getTrackerClient();
+
+  		if (tc != null){
+
+  			return tc.getStatusString();
+  		}
+
+  			// no tracker, return scrape
+
+  		if (torrent != null ) {
+
+  			TRTrackerScraperResponse response = getTrackerScrapeResponse();
+
+  			if (response != null) {
+  				return response.getStatusString();
+
+  			}
+  		}
+
+  		return "";
+  	}
+
+  	@Override
+	  public TRTrackerAnnouncer
+  	getTrackerClient()
+  	{
+  		return( tracker_client );
+  	}
+
+	@Override
+	public void
+	setAnnounceResult(
+		DownloadAnnounceResult	result )
+	{
+		TRTrackerAnnouncer	cl = getTrackerClient();
+
+		if ( cl == null ){
+
+			// this can happen due to timing issues - not work debug spew for
+			// Debug.out( "setAnnounceResult called when download not running" );
+
+			return;
+		}
+
+		cl.setAnnounceResult( result );
+	}
+
+	@Override
+	public void
+	setScrapeResult(
+		DownloadScrapeResult	result )
+	{
+		if ( torrent != null && result != null ){
+
+			TRTrackerScraper	scraper = globalManager.getTrackerScraper();
+
+			TRTrackerScraperResponse current_resp = getTrackerScrapeResponse();
+
+			URL	target_url;
+
+			if ( current_resp != null ){
+
+				target_url = current_resp.getURL();
+
+			}else{
+
+				target_url = torrent.getAnnounceURL();
+			}
+
+			scraper.setScrape( torrent, target_url, result );
+		}
+	}
+
+	@Override
+	public int
+	getNbPieces()
+	{
+		if ( torrent == null ){
+
+			return(0);
+		}
+
+		return( torrent.getNumberOfPieces());
+	}
+
+
+	@Override
+	public int
+	getTrackerTime()
+	{
+		TRTrackerAnnouncer tc = getTrackerClient();
+
+		if ( tc != null){
+
+			return( tc.getTimeUntilNextUpdate());
+		}
+
+			// no tracker, return scrape
+
+		if ( torrent != null ) {
+
+			TRTrackerScraperResponse response = getTrackerScrapeResponse();
+
+			if (response != null) {
+
+				if (response.getStatus() == TRTrackerScraperResponse.ST_SCRAPING){
+
+					return( -1 );
+				}
+
+				return (int)((response.getNextScrapeStartTime() - SystemTime.getCurrentTime()) / 1000);
+			}
+		}
+
+		return( TRTrackerAnnouncer.REFRESH_MINIMUM_SECS );
+	}
+
+
+  	@Override
+	  public TOTorrent
+  	getTorrent()
+  	{
+  		return( torrent );
+  	}
+
+ 	private File	cached_save_location;
+	private File	cached_save_location_result;
+
+  	@Override
+	  public File
+	getSaveLocation()
+  	{
+  			// this can be called quite often - cache results for perf reasons
+
+  		File	save_location	= torrent_save_location;
+
+  		if ( save_location == cached_save_location  ){
+
+  			return( cached_save_location_result );
+  		}
+
+ 		File	res;
+
+ 		if ( torrent == null || torrent.isSimpleTorrent()){
+
+ 			res = download_manager_state.getFileLink( 0, save_location );
+
+ 		}else{
+
+ 			res = save_location;
+ 		}
+
+ 		if ( res == null || res.equals(save_location) ){
+
+ 			res	= save_location;
+ 		}else{
+
+ 			try{
+				res = res.getCanonicalFile();
+
+			}catch( Throwable e ){
+
+				res = res.getAbsoluteFile();
+			}
+ 		}
+
+ 		cached_save_location		= save_location;
+ 		cached_save_location_result	= res;
+
+ 		return( res );
+ 	}
+
+  	@Override
+	  public File
+  	getAbsoluteSaveLocation()
+  	{
+  		return( torrent_save_location );
+  	}
+
+	@Override
+	public void setTorrentSaveDir(String new_dir) {
+		setTorrentSaveDir(new_dir, this.getAbsoluteSaveLocation().getName());
+	}
+
+	@Override
+	public void setTorrentSaveDir(String new_dir, String dl_name) {
+		File old_location = torrent_save_location;
+		File new_location = new File(new_dir, dl_name);
+
+		if (new_location.equals(old_location)){
+			return;
+		}
+
+  		// assumption here is that the caller really knows what they are doing. You can't
+  		// just change this willy nilly, it must be synchronised with reality. For example,
+  		// the disk-manager calls it after moving files on completing
+  		// The UI can call it as long as the torrent is stopped.
+  		// Calling it while a download is active will in general result in unpredictable behaviour!
+
+		updateFileLinks( old_location, new_location);
+
+		torrent_save_location = new_location;
+
+		String key = torrent_save_location.getAbsolutePath() + "\n";
+
+		try{
+			torrent_save_location = torrent_save_location.getCanonicalFile();
+
+		}catch( Throwable e ){
+
+			torrent_save_location = torrent_save_location.getAbsoluteFile();
+		}
+
+		download_manager_state.setAttribute(
+			DownloadManagerState.AT_CANONICAL_SD_DMAP,
+			key + torrent_save_location.getAbsolutePath());
+
+		Logger.log(new LogEvent(this, LogIDs.CORE, "Torrent save directory changing from \"" + old_location.getPath() + "\" to \"" + new_location.getPath()));
+
+		// Trying to fix a problem where downloads are being moved into the program
+		// directory on my machine, and I don't know why...
+		//Debug.out("Torrent save directory changing from \"" + old_location.getPath() + "\" to \"" + new_location.getPath());
+
+		controller.fileInfoChanged();
+	}
+
+	@Override
+	public String
+	getPieceLength()
+	{
+		if ( torrent != null ){
+			return( DisplayFormatters.formatByteCountToKiBEtc(torrent.getPieceLength()));
+		}
+
+		return( "" );
+	}
+
+	@Override
+	public String
+	getTorrentFileName()
+	{
+		return torrentFileName;
+	}
+
+	@Override
+	public void
+	setTorrentFileName(
+		String string)
+	{
+		torrentFileName = string;
+	}
+
+		// this is called asynchronously when a response is received
+
+ 	@Override
+  public void
+ 	setTrackerScrapeResponse(
+  	TRTrackerScraperResponse	response )
+ 	{
+  			// this is a reasonable place to pick up the change in active url caused by this scrape
+  			// response and update the torrent's url accordingly
+
+		Object[] res = getActiveScrapeResponse();
+
+		URL	active_url = (URL)res[1];
+
+		if ( active_url != null && torrent != null ){
+
+			torrent.setAnnounceURL( active_url );
+		}
+
+		if (response != null) {
+			int state = getState();
+			if (state == STATE_ERROR || state == STATE_STOPPED) {
+				long minNextScrape;
+				if (response.getStatus() == TRTrackerScraperResponse.ST_INITIALIZING) {
+					minNextScrape = SystemTime.getCurrentTime()
+							+ (state == STATE_ERROR ? SCRAPE_INITDELAY_ERROR_TORRENTS
+									: SCRAPE_INITDELAY_STOPPED_TORRENTS);
+				} else {
+					minNextScrape = SystemTime.getCurrentTime()
+							+ (state == STATE_ERROR ? SCRAPE_DELAY_ERROR_TORRENTS
+									: SCRAPE_DELAY_STOPPED_TORRENTS);
+				}
+				if (response.getNextScrapeStartTime() < minNextScrape) {
+					response.setNextScrapeStartTime(minNextScrape);
+				}
+			} else if (!response.isValid() && response.getStatus() == TRTrackerScraperResponse.ST_INITIALIZING) {
+				long minNextScrape;
+				// Spread the scrapes out a bit.  This is extremely helpfull on large
+				// torrent lists, and trackers that do not support multi-scrapes.
+				// For trackers that do support multi-scrapes, it will really delay
+				// the scrape for all torrent in the tracker to the one that has
+				// the lowest share ratio.
+				int sr = getStats().getShareRatio();
+				minNextScrape = SystemTime.getCurrentTime()
+						+ ((sr > 10000 ? 10000 : sr + 1000) * 60);
+
+				if (response.getNextScrapeStartTime() < minNextScrape) {
+					response.setNextScrapeStartTime(minNextScrape);
+				}
+			}
+
+			// Need to notify listeners, even if scrape result is not valid, in
+			// case they parse invalid scrapes
+
+			if ( response.isValid() && response.getStatus() == TRTrackerScraperResponse.ST_ONLINE ){
+
+				long cache = ((((long)response.getSeeds())&0x00ffffffL)<<32)|(((long)response.getPeers())&0x00ffffffL);
+
+				download_manager_state.setLongAttribute( DownloadManagerState.AT_SCRAPE_CACHE, cache );
+			}
+
+			tracker_listeners.dispatch(LDT_TL_SCRAPERESULT, response);
+		}
+	}
+
+	@Override
+	public TRTrackerScraperResponse
+	getTrackerScrapeResponse()
+	{
+		Object[] res = getActiveScrapeResponse();
+
+		return((TRTrackerScraperResponse)res[0]);
+	}
+
+		/**
+		 * Returns the "first" online scrape response found, and its active URL, otherwise one of the failing
+		 * scrapes
+		 * @return
+		 */
+
+	protected Object[]
+	getActiveScrapeResponse()
+	{
+		TRTrackerScraperResponse 	response	= null;
+       	URL							active_url	= null;
+
+		TRTrackerScraper	scraper = globalManager.getTrackerScraper();
+
+		TRTrackerAnnouncer tc = getTrackerClient();
+
+		if ( tc != null ){
+
+			response = scraper.scrape( tc );
+		}
+
+		if ( response == null && torrent != null){
+
+				// torrent not running. For multi-tracker torrents we need to behave sensibly
+      			// here
+
+			TRTrackerScraperResponse	non_null_response = null;
+
+			TOTorrentAnnounceURLSet[]	sets;
+			try {
+				sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
+			} catch (Exception e) {
+				return( new Object[]{ scraper.scrape(torrent), active_url } );
+			}
+
+			if ( sets.length == 0 ){
+
+				response = scraper.scrape(torrent);
+
+			}else{
+
+				URL							backup_url 		= null;
+				TRTrackerScraperResponse	backup_response = null;
+
+					// we use a fixed seed so that subsequent scrapes will randomise
+    				// in the same order, as required by the spec. Note that if the
+    				// torrent's announce sets are edited this all works fine (if we
+    				// cached the randomised URL set this wouldn't work)
+
+				Random	scrape_random = new Random(scrape_random_seed);
+
+				for (int i=0;response==null && i<sets.length;i++){
+
+					TOTorrentAnnounceURLSet	set = sets[i];
+
+					URL[]	urls = set.getAnnounceURLs();
+
+					List	rand_urls = new ArrayList();
+
+					for (int j=0;j<urls.length;j++ ){
+
+						URL url = urls[j];
+
+						int pos = (int)(scrape_random.nextDouble() *  (rand_urls.size()+1));
+
+						rand_urls.add(pos,url);
+					}
+
+					for (int j=0;response==null && j<rand_urls.size();j++){
+
+						URL url = (URL)rand_urls.get(j);
+
+						response = scraper.scrape(torrent, url);
+
+						if ( response!= null ){
+
+							int status = response.getStatus();
+
+								// Exit if online
+
+							if (status == TRTrackerScraperResponse.ST_ONLINE) {
+
+								if ( response.isDHTBackup()){
+
+										// we'll use this if we don't find anything better
+
+									backup_url		= url;
+									backup_response	= response;
+
+									response = null;
+
+									continue;
+								}else{
+
+									active_url	= url;
+
+									break;
+								}
+							}
+
+								// Scrape 1 at a time to save on outgoing connections
+
+							if (	status == TRTrackerScraperResponse.ST_INITIALIZING ||
+									status == TRTrackerScraperResponse.ST_SCRAPING) {
+
+								break;
+							}
+
+								// treat bad scrapes as missing so we go on to
+			 					// the next tracker
+
+							if ( (!response.isValid()) || status == TRTrackerScraperResponse.ST_ERROR ){
+
+								if ( non_null_response == null ){
+
+									non_null_response	= response;
+								}
+
+								response	= null;
+							}
+						}
+					}
+				}
+
+				if ( response == null ){
+
+					if ( backup_response != null ){
+
+						response 	= backup_response;
+						active_url	= backup_url;
+
+					}else{
+
+						response = non_null_response;
+					}
+				}
+			}
+		}
+
+		return( new Object[]{ response, active_url } );
+	}
+
+
+	@Override
+	public List<TRTrackerScraperResponse>
+	getGoodTrackerScrapeResponses()
+	{
+		List<TRTrackerScraperResponse> 	responses	= new ArrayList<>();
+
+		if ( torrent != null){
+
+			TRTrackerScraper	scraper = globalManager.getTrackerScraper();
+
+
+			TOTorrentAnnounceURLSet[]	sets;
+
+			try{
+				sets = torrent.getAnnounceURLGroup().getAnnounceURLSets();
+
+			}catch( Throwable e ){
+
+				sets = new  TOTorrentAnnounceURLSet[0];
+			}
+
+			if ( sets.length == 0 ){
+
+				TRTrackerScraperResponse response = scraper.peekScrape( torrent, null );
+
+				if ( response!= null ){
+
+					int status = response.getStatus();
+
+					if ( status == TRTrackerScraperResponse.ST_ONLINE ) {
+
+						responses.add( response );
+					}
+				}
+			}else{
+
+				for (int i=0; i<sets.length;i++){
+
+					TOTorrentAnnounceURLSet	set = sets[i];
+
+					URL[]	urls = set.getAnnounceURLs();
+
+					for ( URL url: urls ){
+
+						TRTrackerScraperResponse response = scraper.peekScrape( torrent, url );
+
+						if ( response!= null ){
+
+							int status = response.getStatus();
+
+							if ( status == TRTrackerScraperResponse.ST_ONLINE ) {
+
+
+								responses.add( response );
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return( responses );
+	}
+
+
+	@Override
+	public void
+	requestTrackerAnnounce(
+		boolean	force )
+	{
+		TRTrackerAnnouncer tc = getTrackerClient();
+
+		if ( tc != null)
+
+			tc.update( force );
+	}
+
+	@Override
+	public void
+	requestTrackerScrape(
+		boolean	force )
+	{
+		if ( torrent != null ){
+
+			TRTrackerScraper	scraper = globalManager.getTrackerScraper();
+
+			scraper.scrape( torrent, force );
+		}
+	}
+
+	protected void
+	setTrackerRefreshDelayOverrides(
+		int	percent )
+	{
+		TRTrackerAnnouncer tc = getTrackerClient();
+
+		if ( tc != null ){
+
+			tc.setRefreshDelayOverrides( percent );
+		}
+	}
+
+	protected boolean
+	activateRequest(
+		int		count )
+	{
+			// activation request for a queued torrent
+
+		for (Iterator it = activation_listeners.iterator();it.hasNext();){
+
+			DownloadManagerActivationListener	listener = (DownloadManagerActivationListener)it.next();
+
+			try{
+
+				if ( listener.activateRequest( count )){
+
+					return( true );
+				}
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+			}
+		}
+
+		return( false );
+	}
+
+	@Override
+	public int
+	getActivationCount()
+	{
+		return( controller.getActivationCount());
+	}
+
+	@Override
+	public String
+	getTorrentComment()
+	{
+		return torrent_comment;
+	}
+
+	@Override
+	public String
+	getTorrentCreatedBy()
+	{
+		return torrent_created_by;
+	}
+
+	@Override
+	public long
+	getTorrentCreationDate()
+	{
+		if (torrent==null){
+			return(0);
+		}
+
+		return( torrent.getCreationDate());
+	}
+
+
+	@Override
+	public GlobalManager
+	getGlobalManager()
+	{
+		return( globalManager );
+	}
+
+	@Override
+	public DiskManager
+	getDiskManager()
+	{
+		return( controller.getDiskManager());
+	}
+
+	@Override
+	public DiskManagerFileInfoSet getDiskManagerFileInfoSet()
+	{
+		return controller.getDiskManagerFileInfoSet();
+	}
+
+	/**
+	 * @deprecated use getDiskManagerFileInfoSet() instead
+	 */
+	@Override
+	public DiskManagerFileInfo[]
+   	getDiskManagerFileInfo()
+	{
+		return( controller.getDiskManagerFileInfo());
+	}
+
+	@Override
+	public int getNumFileInfos() {
+
+		return torrent == null ? 0 : torrent.getFileCount();
+	}
+
+	@Override
+	public PEPeerManager
+	getPeerManager()
+	{
+		return( controller.getPeerManager());
+	}
+
+	@Override
+	public boolean isDownloadComplete(boolean bIncludeDND) {
+		if (!bIncludeDND) {
+			return assumedComplete;
+		}
+
+		return controller.isDownloadComplete(bIncludeDND);
+	}
+
+	@Override
+	public void
+	addListener(
+		DownloadManagerListener	listener )
+	{
+		addListener(listener, true);
+	}
+
+	@Override
+	public void
+	addListener(
+		DownloadManagerListener		listener,
+		boolean 					triggerStateChange )
+	{
+		if (listener == null) {
+			Debug.out("Warning: null listener");
+			return;
+		}
+
+		try{
+			listeners_mon.enter();
+
+			listeners.addListener(listener);
+
+			if ( triggerStateChange ){
+
+				listeners.dispatch( listener, LDT_STATECHANGED, new Object[]{ this, new Integer( getState() )});
+			}
+
+				// we DON'T dispatch a downloadComplete event here as this event is used to mark the
+				// transition between downloading and seeding, NOT purely to inform of seeding status
+
+		} catch (Throwable t) {
+
+			Debug.out("adding listener", t);
+
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
+
+	@Override
+	public void
+	removeListener(
+		DownloadManagerListener	listener )
+	{
+		try{
+			listeners_mon.enter();
+
+			listeners.removeListener(listener);
+
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
+
+	/**
+	 * Doesn't not inform if state didn't change from last inform call
+	 */
+	protected void
+	informStateChanged()
+	{
+			// whenever the state changes we'll get called
+		try{
+			listeners_mon.enter();
+
+			int		new_state 		= controller.getState();
+			boolean new_force_start	= controller.isForceStart();
+
+			if ( 	new_state != last_informed_state ||
+					new_force_start != latest_informed_force_start ){
+
+				last_informed_state	= new_state;
+
+				latest_informed_force_start	= new_force_start;
+
+				if ( resume_time < 0 ){
+
+					if ( new_state == DownloadManager.STATE_STOPPED ){
+
+						resume_time = -resume_time;
+					}
+				}else{
+
+					resume_time = 0;
+				}
+
+
+				listeners.dispatch( LDT_STATECHANGED, new Object[]{ this, new Integer( new_state )});
+			}
+
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
+
+	protected void
+	informDownloadEnded()
+	{
+		try{
+			listeners_mon.enter();
+
+			listeners.dispatch( LDT_DOWNLOADCOMPLETE, new Object[]{ this });
+
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
+
+	 void informPrioritiesChange(
+			List	files )
+		{
+			controller.filePrioritiesChanged(files);
+
+			try{
+				listeners_mon.enter();
+
+				for(int i=0;i<files.size();i++)
+					listeners.dispatch( LDT_FILEPRIORITYCHANGED, new Object[]{ this, (DiskManagerFileInfo)files.get(i) });
+
+			}finally{
+
+				listeners_mon.exit();
+			}
+
+			requestAssumedCompleteMode();
+		}
+
+
+	protected void
+	informPriorityChange(
+		DiskManagerFileInfo	file )
+	{
+		informPrioritiesChange(Collections.singletonList(file));
+	}
+
+	protected void
+	informPositionChanged(
+		int new_position )
+	{
+		try{
+			listeners_mon.enter();
+
+			int	old_position = position;
+
+			if ( new_position != old_position ){
+
+				position = new_position;
+
+				listeners.dispatch(
+					LDT_POSITIONCHANGED,
+					new Object[]{ this, new Integer( old_position ), new Integer( new_position )});
+
+				// an active torrent changed its position, scheduling needs to be updated
+				if(getState() == DownloadManager.STATE_SEEDING || getState() == DownloadManager.STATE_DOWNLOADING)
+					PeerControlSchedulerFactory.updateScheduleOrdering();
+			}
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
+
+	@Override
+	public void
+	addPeerListener(
+		DownloadManagerPeerListener	listener )
+	{
+		addPeerListener(listener, true);
+	}
+
+	@Override
+	public void
+	addPeerListener(
+		DownloadManagerPeerListener	listener,
+		boolean bDispatchForExisting )
+	{
+		try{
+			peer_listeners_mon.enter();
+
+			peer_listeners.addListener( listener );
+
+			if (!bDispatchForExisting){
+
+				return; // finally will call
+			}
+
+			for ( PEPeer peer: current_peers.keySet()){
+
+				peer_listeners.dispatch( listener, LDT_PE_PEER_ADDED, peer );
+			}
+
+			PEPeerManager	temp = controller.getPeerManager();
+
+			if ( temp != null ){
+
+				peer_listeners.dispatch( listener, LDT_PE_PM_ADDED, temp );
+			}
+
+		}finally{
+
+			peer_listeners_mon.exit();
+		}
+	}
+
+	@Override
+	public void
+	removePeerListener(
+		DownloadManagerPeerListener	listener )
+	{
+		peer_listeners.removeListener( listener );
+	}
+
+	@Override
+	public void
+	addPieceListener(
+		DownloadManagerPieceListener	listener )
+	{
+		addPieceListener(listener, true);
+	}
+
+	@Override
+	public void
+	addPieceListener(
+		DownloadManagerPieceListener	listener,
+		boolean 						bDispatchForExisting )
+	{
+		try{
+			piece_listeners_mon.enter();
+
+			piece_listeners.addListener( listener );
+
+			if (!bDispatchForExisting)
+				return; // finally will call
+
+			for (int i=0;i<current_pieces.size();i++){
+
+				piece_listeners.dispatch( listener, LDT_PE_PIECE_ADDED, current_pieces.get(i));
+			}
+
+		}finally{
+
+			piece_listeners_mon.exit();
+		}
+	}
+
+	@Override
+	public void
+	removePieceListener(
+		DownloadManagerPieceListener	listener )
+	{
+		piece_listeners.removeListener( listener );
+	}
+
+
+
+	public void
+	addPeer(
+		PEPeer 		peer )
+	{
+		try{
+			peer_listeners_mon.enter();
+
+			if ( current_peers_unmatched_removal.remove( peer ) != null ){
+
+				return;
+			}
+
+			current_peers.put( peer, "" );
+
+			peer_listeners.dispatch( LDT_PE_PEER_ADDED, peer );
+
+		}finally{
+
+			peer_listeners_mon.exit();
+		}
+	}
+
+	public void
+	removePeer(
+		PEPeer		peer )
+	{
+		try{
+			peer_listeners_mon.enter();
+
+			if ( current_peers.remove( peer ) == null ){
+
+				long	now = SystemTime.getMonotonousTime();
+
+				current_peers_unmatched_removal.put( peer, now );
+
+				if ( current_peers_unmatched_removal.size() > 100 ){
+
+					Iterator<Map.Entry<PEPeer, Long>> it = current_peers_unmatched_removal.entrySet().iterator();
+
+					while( it.hasNext()){
+
+						if ( now - it.next().getValue() > 10*1000 ){
+
+							Debug.out( "Removing expired unmatched removal record" );
+
+							it.remove();
+						}
+					}
+				}
+			}
+
+			peer_listeners.dispatch( LDT_PE_PEER_REMOVED, peer );
+
+		}finally{
+
+			peer_listeners_mon.exit();
+		}
+
+			// if we're a seed and they're a seed then no point in keeping in the announce cache
+			// if it happens to be there - avoid seed-seed connections in the future
+
+		if ( (peer.isSeed() || peer.isRelativeSeed()) && isDownloadComplete( false )){
+
+			TRTrackerAnnouncer	announcer = tracker_client;
+
+			if ( announcer != null ){
+
+				announcer.removeFromTrackerResponseCache( peer.getIp(), peer.getTCPListenPort());
+			}
+		}
+	}
+
+	@Override
+	public PEPeer[]
+	getCurrentPeers()
+	{
+		try{
+			peer_listeners_mon.enter();
+
+			return( current_peers.keySet().toArray(new PEPeer[current_peers.size()]));
+
+		}finally{
+
+			peer_listeners_mon.exit();
+
+		}
+	}
+
+	public void
+	addPiece(
+		PEPiece 	piece )
+	{
+		try{
+			piece_listeners_mon.enter();
+
+			current_pieces.add( piece );
+
+			piece_listeners.dispatch( LDT_PE_PIECE_ADDED, piece );
+
+		}finally{
+
+			piece_listeners_mon.exit();
+		}
+	}
+
+	public void
+	removePiece(
+		PEPiece		piece )
+	{
+		try{
+			piece_listeners_mon.enter();
+
+			current_pieces.remove( piece );
+
+			piece_listeners.dispatch( LDT_PE_PIECE_REMOVED, piece );
+
+		}finally{
+
+			piece_listeners_mon.exit();
+		}
+	}
+
+	@Override
+	public PEPiece[]
+	getCurrentPieces()
+	{
+		try{
+			piece_listeners_mon.enter();
+
+			return (PEPiece[])current_pieces.toArray(new PEPiece[current_pieces.size()]);
+
+		}finally{
+
+			piece_listeners_mon.exit();
+
+		}
+	}
+
+	protected void
+	informWillBeStarted(
+		PEPeerManager	pm )
+	{
+			// hack I'm afraid - sometimes we want synchronous notification of a peer manager's
+			// creation before it actually starts
+
+		List l = peer_listeners.getListenersCopy();
+
+		for (int i=0;i<l.size();i++){
+
+			try{
+				((DownloadManagerPeerListener)l.get(i)).peerManagerWillBeAdded( pm );
+
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+			}
+		}
+	}
+
+  	protected void
+  	informStarted(
+		PEPeerManager	pm )
+  	{
+		try{
+			peer_listeners_mon.enter();
+
+			peer_listeners.dispatch( LDT_PE_PM_ADDED, pm );
+		}finally{
+
+			peer_listeners_mon.exit();
+		}
+
+		TRTrackerAnnouncer tc = getTrackerClient();
+
+		if ( tc != null ){
+
+			tc.update( true );
+		}
+  	}
+
+  	protected void
+  	informStopped(
+		PEPeerManager	pm,
+		boolean			for_queue )	// can be null if controller was already stopped....
+  	{
+  		if ( pm != null ){
+
+  			try{
+  				peer_listeners_mon.enter();
+
+  				peer_listeners.dispatch( LDT_PE_PM_REMOVED, pm );
+
+  			}finally{
+
+  				peer_listeners_mon.exit();
+  			}
+  		}
+
+  		try{
+  			this_mon.enter();
+
+  			if ( tracker_client != null ){
+
+				tracker_client.addListener( stopping_tracker_client_listener );
+
+  				tracker_client.removeListener( tracker_client_listener );
+
+ 				download_manager_state.setTrackerResponseCache(	tracker_client.getTrackerResponseCache());
+
+ 				// we have serialized what we need -> can destroy retained stuff now
+ 				tracker_client.getLastResponse().setPeers(new TRTrackerAnnouncerResponsePeer[0]);
+
+ 				// currently only report this for complete downloads...
+
+ 				tracker_client.stop( for_queue && isDownloadComplete( false ));
+
+  				tracker_client.destroy();
+
+  				tracker_client = null;
+  			}
+		}finally{
+
+			this_mon.exit();
+		}
+  	}
+
+	@Override
+	public DownloadManagerStats
+	getStats()
+	{
+		return( stats );
+	}
+
+	@Override
+	public boolean
+	isForceStart()
+	{
+		return( controller.isForceStart());
+	}
+
+	@Override
+	public void
+	setForceStart(
+		boolean forceStart)
+	{
+		if ( forceStart ){
+
+			checkResuming();
+		}
+
+		controller.setForceStart( forceStart );
+	}
+
+	  /**
+	   * Is called when a download is finished.
+	   * Activates alerts for the user.
+	   *
+	   * @param never_downloaded true indicates that we never actually downloaded
+	   *                         anything in this session, but we determined that
+	   *                         the download is complete (usually via
+	   *                         startDownload())
+	   *
+	   * @author Rene Leonhardt
+	   */
+
+	protected void
+	downloadEnded(
+		boolean	never_downloaded )
+	{
+	    if ( !never_downloaded ){
+
+	    	if ( !COConfigurationManager.getBooleanParameter( "StartStopManager_bRetainForceStartWhenComplete" )){
+
+	    		if (isForceStart()){
+
+    	    		setForceStart(false);
+	    		}
+	    	}
+
+	    	setAssumedComplete(true);
+
+	    	informDownloadEnded();
+	    }
+
+	    TRTrackerAnnouncer	tc = tracker_client;
+
+	    if ( tc != null ){
+
+	    	DiskManager	dm = getDiskManager();
+
+	    		// only report "complete" if we really are complete, not a dnd completion event
+
+	    	if ( dm != null && dm.getRemaining() == 0 && !COConfigurationManager.getBooleanParameter( "peercontrol.hide.piece" )){
+
+	    		tc.complete( never_downloaded );
+	    	}
+	    }
+	}
+
+
+	@Override
+	public void
+	addDiskListener(
+		DownloadManagerDiskListener	listener )
+	{
+		controller.addDiskListener( listener );
+	}
+
+	@Override
+	public void
+	removeDiskListener(
+		DownloadManagerDiskListener	listener )
+	{
+		controller.removeDiskListener( listener );
+	}
+
+	@Override
+	public void
+    addActivationListener(
+    	DownloadManagerActivationListener listener )
+	{
+		activation_listeners.add( listener );
+	}
+
+    @Override
+    public void
+    removeActivationListener(
+    	DownloadManagerActivationListener listener )
+    {
+    	activation_listeners.remove( listener );
+    }
+
+	@Override
+	public int
+	getHealthStatus()
+	{
+		int	state = getState();
+
+		PEPeerManager	peerManager	 = controller.getPeerManager();
+
+		TRTrackerAnnouncer tc = getTrackerClient();
+
+		if( tc != null && peerManager != null && (state == STATE_DOWNLOADING || state == STATE_SEEDING)) {
+
+			int nbSeeds = getNbSeeds();
+			int nbPeers = getNbPeers();
+			int nbRemotes = peerManager.getNbRemoteTCPConnections() + peerManager.getNbRemoteUTPConnections();
+
+			TRTrackerAnnouncerResponse	announce_response = tc.getLastResponse();
+
+			int trackerStatus = announce_response.getStatus();
+
+			boolean isSeed = (state == STATE_SEEDING);
+
+			if( (nbSeeds + nbPeers) == 0) {
+
+				if( isSeed ){
+
+					return WEALTH_NO_TRACKER;	// not connected to any peer and seeding
+				}
+
+				return WEALTH_KO;        // not connected to any peer and downloading
+			}
+
+      			// read the spec for this!!!!
+      			// no_tracker =
+      			//	1) if downloading -> no tracker
+      			//	2) if seeding -> no connections		(dealt with above)
+
+			if ( !isSeed ){
+
+				if( 	trackerStatus == TRTrackerAnnouncerResponse.ST_OFFLINE ||
+						trackerStatus == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR){
+
+					return WEALTH_NO_TRACKER;
+				}
+			}
+
+			if( nbRemotes == 0 ){
+
+				TRTrackerScraperResponse scrape_response = getTrackerScrapeResponse();
+
+				if ( scrape_response != null && scrape_response.isValid()){
+
+						// if we're connected to everyone then report OK as we can't get
+						// any incoming connections!
+
+					if ( 	nbSeeds == scrape_response.getSeeds() &&
+							nbPeers == scrape_response.getPeers()){
+
+						return WEALTH_OK;
+					}
+				}
+
+				return WEALTH_NO_REMOTE;
+			}
+
+			return WEALTH_OK;
+
+		} else if (state == STATE_ERROR) {
+			return WEALTH_ERROR;
+		}else{
+
+			return WEALTH_STOPPED;
+		}
+	}
+
+	@Override
+	public int
+	getNATStatus()
+	{
+		int	state = getState();
+
+		PEPeerManager	peerManager	 = controller.getPeerManager();
+
+		TRTrackerAnnouncer tc = getTrackerClient();
+
+		if ( tc != null && peerManager != null && (state == STATE_DOWNLOADING || state == STATE_SEEDING)) {
+
+			if ( peerManager.getNbRemoteTCPConnections() > 0 || peerManager.getNbRemoteUTPConnections() > 0 ){
+
+				return( ConnectionManager.NAT_OK );
+			}
+
+			long	last_good_time = peerManager.getLastRemoteConnectionTime();
+
+			if ( last_good_time > 0 ){
+
+					// half an hour's grace
+
+				if ( SystemTime.getCurrentTime() - last_good_time < 30*60*1000 ){
+
+					return( ConnectionManager.NAT_OK );
+
+				}else{
+
+					return( ConnectionManager.NAT_PROBABLY_OK );
+				}
+			}
+
+			TRTrackerAnnouncerResponse	announce_response = tc.getLastResponse();
+
+			int trackerStatus = announce_response.getStatus();
+
+			if( 	trackerStatus == TRTrackerAnnouncerResponse.ST_OFFLINE ||
+					trackerStatus == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR){
+
+				return ConnectionManager.NAT_UNKNOWN;
+			}
+
+				// tracker's ok but no remotes - give it some time
+
+			if ( SystemTime.getCurrentTime() - peerManager.getTimeStarted( false ) < 3*60*1000 ){
+
+				return ConnectionManager.NAT_UNKNOWN;
+			}
+
+			TRTrackerScraperResponse scrape_response = getTrackerScrapeResponse();
+
+			if ( scrape_response != null && scrape_response.isValid()){
+
+					// if we're connected to everyone then report OK as we can't get
+					// any incoming connections!
+
+				if ( 	peerManager.getNbSeeds() == scrape_response.getSeeds() &&
+						peerManager.getNbPeers() == scrape_response.getPeers()){
+
+					return ConnectionManager.NAT_UNKNOWN;
+				}
+
+					// can't expect incoming if we're seeding and there are no peers
+
+				if ( state == STATE_SEEDING  && scrape_response.getPeers() == 0 ){
+
+					return ConnectionManager.NAT_UNKNOWN;
+				}
+			}else{
+
+					// no scrape and we're seeding - don't use this as sign of badness as
+					// we can't determine
+
+				if ( state == STATE_SEEDING ){
+
+					return ConnectionManager.NAT_UNKNOWN;
+				}
+			}
+
+			return ConnectionManager.NAT_BAD;
+
+		}else{
+
+			return ConnectionManager.NAT_UNKNOWN;
+		}
+	}
+
+	@Override
+	public int
+	getPosition()
+	{
+		return position;
+	}
+
+	@Override
+	public void
+	setPosition(
+		int new_position )
+	{
+		informPositionChanged( new_position );
+	}
+
+	@Override
+	public void
+	addTrackerListener(
+		DownloadManagerTrackerListener	listener )
+	{
+		tracker_listeners.addListener( listener );
+	}
+
+	@Override
+	public void
+	removeTrackerListener(
+		DownloadManagerTrackerListener	listener )
+	{
+  		tracker_listeners.removeListener( listener );
+	}
+
+	protected void
+	deleteDataFiles()
+	{
+		DownloadManagerState state = getDownloadState();
+
+		DiskManagerFactory.deleteDataFiles(
+			torrent,
+			torrent_save_location.getParent(),
+			torrent_save_location.getName(),
+			( 	state.getFlag( DownloadManagerState.FLAG_LOW_NOISE ) ||
+				state.getFlag( DownloadManagerState.FLAG_FORCE_DIRECT_DELETE )));
+
+		// Attempted fix for bug 1572356 - apparently sometimes when we perform removal of a download's data files,
+		// it still somehow gets processed by the move-on-removal rules. I'm making the assumption that this method
+		// is only called when a download is about to be removed.
+
+		state.setFlag(DownloadManagerState.FLAG_DISABLE_AUTO_FILE_MOVE, true);
+	}
+
+	protected void
+	deletePartialDataFiles()
+	{
+		DiskManagerFileInfo[] files = getDiskManagerFileInfoSet().getFiles();
+
+		String abs_root = torrent_save_location.getAbsolutePath();
+
+		for ( DiskManagerFileInfo file: files ){
+
+			if ( !file.isSkipped()){
+
+				continue;
+			}
+
+				// just to be safe...
+
+			if ( file.getDownloaded() == file.getLength()){
+
+				continue;
+			}
+
+				// user may have switched a partially completed file to DND for some reason - be safe
+				// and only delete compact files
+
+			int	storage_type = file.getStorageType() ;
+
+			if ( storage_type == DiskManagerFileInfo.ST_COMPACT || storage_type == DiskManagerFileInfo.ST_REORDER_COMPACT ){
+
+				File f = file.getFile( true );
+
+				if ( f.exists()){
+
+					if ( f.delete()){
+
+						File parent = f.getParentFile();
+
+						while ( parent != null ){
+
+							if ( parent.isDirectory() && parent.listFiles().length == 0 ){
+
+								if ( parent.getAbsolutePath().startsWith( abs_root )){
+
+									if ( !parent.delete()){
+
+										Debug.outNoStack( "Failed to remove empty directory: " + parent );
+
+										break;
+
+									}else{
+
+										parent = parent.getParentFile();
+									}
+
+								}else{
+
+									break;
+								}
+							}else{
+
+								break;
+							}
+						}
+					}else{
+
+						Debug.outNoStack( "Failed to remove partial: " + f );
+					}
+				}
+			}
+		}
+	}
+
+	protected void
+	deleteTorrentFile()
+	{
+		if ( torrentFileName != null ){
+
+			TorrentUtils.delete( new File(torrentFileName),getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ));
+		}
+	}
+
+
+	@Override
+	public DownloadManagerState
+	getDownloadState()
+	{
+		return( download_manager_state );
+	}
+
+
+	/** To retreive arbitrary objects against a download. */
+
+	@Override
+	public Object
+	getUserData(
+		Object key )
+	{
+		Map<Object,Object> data_ref = data;
+
+		if ( data_ref == null ){
+
+			return null;
+		}
+
+		return( data_ref.get(key));
+	}
+
+		/** To store arbitrary objects against a download. */
+
+	@Override
+	public void
+	setUserData(
+		Object 		key,
+		Object 		value)
+	{
+		try{
+				// copy-on-write
+
+			peer_listeners_mon.enter();
+
+			Map<Object,Object> data_ref = data;
+
+			if ( data_ref == null && value == null ){
+
+				return;
+			}
+
+			if ( value == null ){
+
+					// removal, data_ref not null here
+
+				if ( data_ref.containsKey(key)){
+
+					if ( data_ref.size() == 1 ){
+
+						data_ref = null;
+
+					}else{
+
+						data_ref = new LightHashMap<>(data_ref);
+
+						data_ref.remove( key );
+					}
+				}else{
+
+					return;
+				}
+			}else{
+
+				if ( data_ref == null ){
+
+					data_ref = new LightHashMap<>();
+
+				}else{
+
+					data_ref = new LightHashMap<>(data_ref);
+				}
+
+				data_ref.put( key, value );
+			}
+
+			data = data_ref;
+
+		}finally{
+
+			peer_listeners_mon.exit();
+		}
+	}
+
+	private static Object	TTP_KEY = new Object();
+
+	@Override
+	public Object
+	getTaggableTransientProperty(
+		String key)
+	{
+		synchronized( TTP_KEY ){
+
+			LightHashMap<String,Object>	map = (LightHashMap<String,Object>)getUserData( TTP_KEY );
+
+			if ( map == null ){
+
+				return( null );
+
+			}else{
+
+				return( map.get( key ));
+			}
+		}
+	}
+	@Override
+	public void
+	setTaggableTransientProperty(String key, Object value)
+	{
+		synchronized( TTP_KEY ){
+
+			LightHashMap<String,Object>	map = (LightHashMap<String,Object>)getUserData( TTP_KEY );
+
+			if ( map == null ){
+
+				if ( value == null ){
+
+					return;
+				}
+
+				map = new LightHashMap<>();
+
+				map.put( key, value );
+
+				setUserData( TTP_KEY, map );
+
+			}else{
+
+				if ( value == null ){
+
+					map.remove( key );
+
+					if ( map.size() == 0 ){
+
+						setUserData( TTP_KEY, null );
+					}
+				}else{
+
+					map.put( key, value );
+				}
+			}
+		}
+	}
+
+  @Override
+  public boolean
+  isDataAlreadyAllocated()
+  {
+  	return data_already_allocated;
+  }
+
+  @Override
+  public void
+  setDataAlreadyAllocated(
+  	boolean already_allocated )
+  {
+    data_already_allocated = already_allocated;
+  }
+
+  @Override
+  public void setSeedingRank(int rank) {
+    iSeedingRank = rank;
+  }
+
+  @Override
+  public int getSeedingRank() {
+    return iSeedingRank;
+  }
+
+  @Override
+  public long
+  getCreationTime()
+  {
+  	return( creation_time );
+  }
+
+  @Override
+  public void
+  setCreationTime(
+  	long		t )
+  {
+  	creation_time	= t;
+  }
+
+  @Override
+  public String
+  isSwarmMerging()
+  {
+	 return( globalManager.isSwarmMerging( this ));
+  }
+
+  @Override
+  public int
+  getExtendedMessagingMode()
+  {
+	  if ( message_mode == -1 ){
+
+		  byte[] hash = null;
+
+		  if ( torrent != null ){
+
+			  try{
+				  hash = torrent.getHash();
+
+			  }catch( Throwable e ){
+			  }
+		  }
+
+		  message_mode = (Integer)client_id_manager.getProperty( hash, ClientIDGenerator.PR_MESSAGING_MODE );
+	  }
+
+	  return( message_mode );
+  }
+
+  @Override
+  public void
+  setCryptoLevel(
+	int		level )
+  {
+	  crypto_level = level;
+  }
+
+  @Override
+  public int
+  getCryptoLevel()
+  {
+	  return( crypto_level );
+  }
+
+  @Override
+  public void
+  moveDataFiles(
+	File	new_parent_dir )
+
+  	throws DownloadManagerException
+  {
+	  moveDataFiles(new_parent_dir, null);
+  }
+
+  @Override
+  public void
+  moveDataFilesLive(
+	File new_parent_dir)
+
+  	throws DownloadManagerException
+  {
+	  moveDataFiles(new_parent_dir, null, true);
+  }
+
+  @Override
+  public void renameDownload(String new_name) throws DownloadManagerException {
+      this.moveDataFiles(null, new_name);
+  }
+
+  @Override
+  public void
+  moveDataFiles(
+	final File 		destination,
+	final String    new_name)
+
+  	throws DownloadManagerException
+  {
+	  moveDataFiles( destination, new_name, false );
+  }
+
+  public void
+  moveDataFiles(
+	final File 		destination,
+	final String    new_name,
+	final boolean	live )
+
+  	throws DownloadManagerException
+  {
+	  if (destination == null && new_name == null) {
+		  throw new NullPointerException("destination and new name are both null");
+	  }
+
+	  if (!canMoveDataFiles()) {
+		  throw new DownloadManagerException("canMoveDataFiles is false!");
+	  }
+
+
+	  /**
+	   * Test to see if the download is to be moved somewhere where it already
+	   * exists. Perhaps you might think it is slightly unnecessary to check this,
+	   * but I would prefer this test left in - we want to prevent pausing
+	   * unnecessarily pausing a running torrent (it fires off listeners, which
+	   * might try to move the download).
+	   *
+	   * This helps us avoid a situation with AzCatDest...
+	   */
+	  SaveLocationChange slc = new SaveLocationChange();
+	  slc.download_location = destination;
+	  slc.download_name = new_name;
+
+	  File current_location = getSaveLocation();
+	  if (slc.normaliseDownloadLocation(current_location).equals(current_location)) {
+		  return;
+	  }
+
+	  try{
+		  FileUtil.runAsTask(
+				new CoreOperationTask()
+				{
+					@Override
+					public void
+					run(
+						CoreOperation operation)
+					{
+						try{
+							if ( live ){
+
+								moveDataFilesSupport0( destination, new_name );
+
+							}else{
+
+								moveDataFilesSupport( destination, new_name );
+							}
+						}catch( DownloadManagerException e ){
+
+							throw( new RuntimeException( e ));
+						}
+					}
+				});
+	  }catch( RuntimeException e ){
+
+		  Throwable cause = e.getCause();
+
+		  if ( cause instanceof DownloadManagerException ){
+
+			  throw((DownloadManagerException)cause);
+		  }
+
+		  throw( e );
+	  }
+  }
+
+  void
+  moveDataFilesSupport(
+	File 	new_parent_dir,
+	String 	new_filename)
+
+  	throws DownloadManagerException
+  	{
+	  boolean is_paused = this.pause();
+	  try {moveDataFilesSupport0(new_parent_dir, new_filename);}
+	  finally {if (is_paused) {this.resume();}}
+  	}
+
+  void
+  moveDataFilesSupport0(
+	File 		new_parent_dir,
+	String 		new_filename )
+
+  	throws DownloadManagerException
+  {
+	  if (!canMoveDataFiles()){
+		  throw new DownloadManagerException("canMoveDataFiles is false!");
+	  }
+
+	  if (new_filename != null) {new_filename = FileUtil.convertOSSpecificChars(new_filename,false);}
+
+			// old file will be a "file" for simple torrents, a dir for non-simple
+
+	  File	old_file = getSaveLocation();
+
+	  try{
+		  old_file = old_file.getCanonicalFile();
+		  if (new_parent_dir != null) {new_parent_dir = new_parent_dir.getCanonicalFile();}
+
+	  }catch( Throwable e ){
+		  Debug.printStackTrace(e);
+		  throw( new DownloadManagerException( "Failed to get canonical paths", e ));
+	  }
+
+	  final File current_save_location = old_file;
+	  File new_save_location = new File(
+			  (new_parent_dir == null) ? old_file.getParentFile() : new_parent_dir,
+			  (new_filename == null) ? old_file.getName() : new_filename
+	  );
+
+	  if (current_save_location.equals(new_save_location)) {
+		  	// null operation
+		  return;
+	  }
+
+	  DiskManager	dm = getDiskManager();
+
+	  if ( dm == null || dm.getFiles() == null){
+
+		  if ( !old_file.exists()){
+
+		  	// files not created yet
+
+		  	FileUtil.mkdirs(new_save_location.getParentFile());
+
+			  setTorrentSaveDir(new_save_location.getParent().toString(), new_save_location.getName());
+
+			  return;
+		  }
+
+		  try{
+			  new_save_location	= new_save_location.getCanonicalFile();
+
+		  }catch( Throwable e ){
+
+			  Debug.printStackTrace(e);
+		  }
+
+		  if ( old_file.equals( new_save_location )){
+
+			  // nothing to do
+
+		  } else if (torrent.isSimpleTorrent()) {
+
+
+			  if (controller.getDiskManagerFileInfo()[0].setLinkAtomic(new_save_location)) {
+				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+			  } else {throw new DownloadManagerException( "rename operation failed");}
+
+			  /*
+			  // Have to keep the file name in sync if we're renaming.
+			  //if (controller.getDiskManagerFileInfo()[0].setLinkAtomic(new_save_location)) {
+			  if ( FileUtil.renameFile( old_file, new_save_location )){
+
+				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+
+			  }else{
+
+				  throw( new DownloadManagerException( "rename operation failed" ));
+			  }
+			  //} else {throw new DownloadManagerException( "rename operation failed");}
+			  */
+		  }else{
+
+			  if (FileUtil.isAncestorOf(old_file, new_save_location)) {
+
+		            Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
+							LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
+							new String[] {old_file.toString(), "Target is sub-directory of files" });
+
+		            throw( new DownloadManagerException( "rename operation failed" ));
+				}
+
+			  // The files we move must be limited to those mentioned in the torrent.
+			  final HashSet files_to_move = new HashSet();
+
+              // Required for the adding of parent directories logic.
+              files_to_move.add(null);
+              DiskManagerFileInfo[] info_files = controller.getDiskManagerFileInfo();
+              for (int i=0; i<info_files.length; i++) {
+                  File f = info_files[i].getFile(true);
+                  try {f = f.getCanonicalFile();}
+                  catch (IOException ioe) {f = f.getAbsoluteFile();}
+                  boolean added_entry = files_to_move.add(f);
+
+                  /**
+                   * Start adding all the parent directories to the
+                   * files_to_move list. Doesn't matter if we include
+                   * files which are outside of the file path, the
+                   * renameFile call won't try to move those directories
+                   * anyway.
+                   */
+                  while (added_entry) {
+                      f = f.getParentFile();
+                      added_entry = files_to_move.add(f);
+                  }
+              }
+			  FileFilter ff = new FileFilter() {
+				  @Override
+				  public boolean accept(File f) {return files_to_move.contains(f);}
+			  };
+
+			  if ( FileUtil.renameFile( old_file, new_save_location, false, ff )){
+
+				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+
+			  }else{
+
+				  throw( new DownloadManagerException( "rename operation failed" ));
+			  }
+
+			  if (  current_save_location.isDirectory()){
+
+				  TorrentUtils.recursiveEmptyDirDelete( current_save_location, false );
+			  }
+		  }
+	  }else{
+		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );
+	  }
+  }
+
+  @Override
+  public void
+  copyDataFiles(
+  	File	parent_dir )
+
+  	throws DownloadManagerException
+  {
+	  if ( parent_dir.exists()){
+
+		  if ( !parent_dir.isDirectory()){
+
+			  throw( new DownloadManagerException( "'" + parent_dir + "' is not a directory" ));
+		  }
+	  }else{
+
+		  if ( !parent_dir.mkdirs()){
+
+			  throw( new DownloadManagerException( "failed to create '" + parent_dir + "'" ));
+		  }
+	  }
+
+	  DiskManagerFileInfo[] files = controller.getDiskManagerFileInfoSet().getFiles();
+
+	  if ( torrent.isSimpleTorrent()){
+
+		  File file_from = files[0].getFile( true );
+
+		  try{
+			  File file_to = new File( parent_dir, file_from.getName());
+
+			  if ( file_to.exists()){
+
+				  if ( file_to.length() != file_from.length()){
+
+					  throw( new Exception( "target file '" + file_to + " already exists" ));
+				  }
+			  }else{
+
+				  FileUtil.copyFileWithException( file_from, file_to );
+			  }
+		  }catch( Throwable e ){
+
+			  throw( new DownloadManagerException( "copy of '" + file_from + "' failed", e ));
+		  }
+	  }else{
+
+		  try{
+			  File sl_file = getSaveLocation();
+
+			  String save_location = sl_file.getCanonicalPath();
+
+			  if ( !save_location.endsWith( File.separator )){
+
+				  save_location += File.separator;
+			  }
+
+			  parent_dir = new File( parent_dir, sl_file.getName());
+
+			  if ( !parent_dir.isDirectory()){
+
+				  parent_dir.mkdirs();
+			  }
+
+			  for ( DiskManagerFileInfo file: files ){
+
+				  if ( !file.isSkipped() && file.getDownloaded() == file.getLength()){
+
+					  File file_from = file.getFile( true );
+
+					  try{
+						  String file_path = file_from.getCanonicalPath();
+
+						  if ( file_path.startsWith( save_location )){
+
+							  File file_to = new File( parent_dir, file_path.substring( save_location.length()));
+
+							  if ( file_to.exists()){
+
+								  if ( file_to.length() != file_from.length()){
+
+									  throw( new Exception( "target file '" + file_to + " already exists" ));
+								  }
+							  }else{
+
+								  File parent = file_to.getParentFile();
+
+								  if ( !parent.exists()){
+
+									  if ( !parent.mkdirs()){
+
+										  throw( new Exception( "Failed to make directory '" + parent + "'" ));
+									  }
+								  }
+
+								  FileUtil.copyFileWithException( file_from, file_to );
+							  }
+						  }
+					  }catch( Throwable e ){
+
+						  throw( new DownloadManagerException( "copy of '" + file_from + "' failed", e ));
+					  }
+				  }
+			  }
+		  }catch( Throwable e ){
+
+			  throw( new DownloadManagerException( "copy failed", e ));
+		  }
+	  }
+  }
+
+  @Override
+  public void moveTorrentFile(File new_parent_dir) throws DownloadManagerException {
+	  this.moveTorrentFile(new_parent_dir, null);
+  }
+
+  @Override
+  public void moveTorrentFile(File new_parent_dir, String new_name) throws DownloadManagerException {
+	  SaveLocationChange slc = new SaveLocationChange();
+	  slc.torrent_location = new_parent_dir;
+	  slc.torrent_name = new_name;
+
+	  File torrent_file_now = new File(getTorrentFileName());
+	  if (!slc.isDifferentTorrentLocation(torrent_file_now)) {return;}
+
+	  boolean is_paused = this.pause();
+	  try {moveTorrentFile0(new_parent_dir, new_name);}
+	  finally {if (is_paused) {this.resume();}}
+  }
+
+
+  private void moveTorrentFile0(
+	File	new_parent_dir,
+	String  new_name)
+
+	throws DownloadManagerException
+  {
+
+	  if ( !canMoveDataFiles()){
+
+		  throw( new DownloadManagerException( "Cannot move torrent file" ));
+	  }
+
+	  setTorrentFile(new_parent_dir, new_name);
+  }
+
+  @Override
+  public void setTorrentFile(File new_parent_dir, String new_name) throws DownloadManagerException {
+
+	  File	old_file = new File( getTorrentFileName() );
+
+	  if ( !old_file.exists()){
+		  Debug.out( "torrent file doesn't exist!" );
+		  return;
+	  }
+
+	  if (new_parent_dir == null) {new_parent_dir = old_file.getParentFile();}
+	  if (new_name == null) {new_name = old_file.getName();}
+	  File new_file = new File(new_parent_dir, new_name);
+
+	  try{
+		  old_file = old_file.getCanonicalFile();
+		  new_file = new_file.getCanonicalFile();
+
+	  }catch( Throwable e ){
+
+		  Debug.printStackTrace(e);
+
+		  throw( new DownloadManagerException( "Failed to get canonical paths", e ));
+	  }
+
+	  // Nothing to do.
+	  if ( new_file.equals(old_file)) {return;}
+
+	  if (TorrentUtils.move( old_file, new_file )){
+		  setTorrentFileName( new_file.toString());
+
+	  }else{
+		  throw( new DownloadManagerException( "rename operation failed" ));
+	  }
+  }
+
+  @Override
+  public boolean isInDefaultSaveDir() {
+	  return DownloadManagerDefaultPaths.isInDefaultDownloadDir(this);
+  }
+
+  @Override
+  public boolean
+  seedPieceRecheck()
+  {
+	  PEPeerManager pm = controller.getPeerManager();
+
+	  if ( pm != null ){
+
+		  return( pm.seedPieceRecheck());
+	  }
+
+	  return( false );
+  }
+
+  @Override
+  public void
+  addRateLimiter(
+	  LimitedRateGroup	group,
+	  boolean			upload )
+  {
+	  controller.addRateLimiter( group, upload );
+  }
+
+  @Override
+  public LimitedRateGroup[]
+  getRateLimiters(
+	boolean	upload )
+  {
+	  return( controller.getRateLimiters( upload ));
+  }
+
+  @Override
+  public void
+  removeRateLimiter(
+	  LimitedRateGroup	group,
+	  boolean				upload )
+  {
+	  controller.removeRateLimiter( group, upload );
+  }
+
+  @Override
+  public boolean
+  isTrackerError()
+  {
+		TRTrackerAnnouncer announcer = getTrackerClient();
+
+		if ( announcer != null ){
+
+			TRTrackerAnnouncerResponse resp = announcer.getLastResponse();
+
+			if ( resp != null ){
+
+				if ( resp.getStatus() == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR ){
+
+					return( true );
+				}
+			}
+		}else{
+
+			TRTrackerScraperResponse resp = getTrackerScrapeResponse();
+
+			if ( resp != null ){
+
+				if ( resp.getStatus() == TRTrackerScraperResponse.ST_ERROR ){
+
+					return( true );
+				}
+			}
+		}
+
+		return( false );
+  }
+
+  @Override
+  public boolean
+  isUnauthorisedOnTracker()
+  {
+		TRTrackerAnnouncer announcer = getTrackerClient();
+
+		String	status_str = null;
+
+		if ( announcer != null ){
+
+			TRTrackerAnnouncerResponse resp = announcer.getLastResponse();
+
+			if ( resp != null ){
+
+				if ( resp.getStatus() == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR ){
+
+					status_str = resp.getStatusString();
+				}
+			}
+		}else{
+
+			TRTrackerScraperResponse resp = getTrackerScrapeResponse();
+
+			if ( resp != null ){
+
+				if ( resp.getStatus() == TRTrackerScraperResponse.ST_ERROR ){
+
+					status_str = resp.getStatusString();
+				}
+			}
+		}
+
+		if ( status_str != null ){
+
+			status_str = status_str.toLowerCase();
+
+			if ( 	status_str.contains( "not authorised" ) ||
+					status_str.contains( "not authorized" )){
+
+				return( true );
+			}
+		}
+
+		return( false );
+  }
+
+  	@Override
+	  public List<TrackerPeerSource>
+  	getTrackerPeerSources()
+  	{
+  		try{
+  			this_mon.enter();
+
+  			Object[] tps_data = (Object[])getUserData( TPS_Key );
+
+  			List<TrackerPeerSource>	tps;
+
+  			if ( tps_data == null ){
+
+  				tps = new ArrayList<>();
+
+  				TOTorrentListener tol =
+  					new TOTorrentListener()
+					{
+						@Override
+						public void
+						torrentChanged(
+							TOTorrent	torrent,
+							int 		type )
+						{
+							if ( type == TOTorrentListener.CT_ANNOUNCE_URLS ){
+
+								List<DownloadManagerTPSListener>	to_inform = null;
+
+						 		try{
+						  			this_mon.enter();
+
+						  			torrent.removeListener( this );
+
+						  			setUserData( TPS_Key, null );
+
+						  			if ( tps_listeners != null ){
+
+						  				to_inform = new ArrayList<>(tps_listeners);
+						  			}
+						  		}finally{
+
+						  			this_mon.exit();
+						  		}
+
+						  		if ( to_inform != null ){
+
+						  			for ( DownloadManagerTPSListener l: to_inform ){
+
+						  				try{
+
+						  					l.trackerPeerSourcesChanged();
+
+						  				}catch( Throwable e ){
+
+						  					Debug.out(e);
+						  				}
+						  			}
+						  		}
+							}
+						}
+					};
+
+  				setUserData( TPS_Key, new Object[]{ tps, tol });
+
+  				Download plugin_download = PluginCoreUtils.wrap( this );
+
+  				if ( isDestroyed() || plugin_download == null ){
+
+  					return( tps );
+  				}
+
+  					// tracker peer sources
+
+  				final TOTorrent t = getTorrent();
+
+  				if ( t != null ){
+
+  					t.addListener( tol );
+
+  					TOTorrentAnnounceURLSet[] sets = t.getAnnounceURLGroup().getAnnounceURLSets();
+
+  					if ( sets.length == 0 ){
+
+  						sets = new TOTorrentAnnounceURLSet[]{ t.getAnnounceURLGroup().createAnnounceURLSet( new URL[]{ torrent.getAnnounceURL()})};
+  					}
+
+  						// source per set
+
+					for ( final TOTorrentAnnounceURLSet set: sets ){
+
+						final URL[] urls = set.getAnnounceURLs();
+
+						if ( urls.length == 0 || TorrentUtils.isDecentralised( urls[0] )){
+
+							continue;
+						}
+
+						tps.add(
+							new TrackerPeerSource()
+							{
+								private TrackerPeerSource _delegate;
+
+			 					private TRTrackerAnnouncer		ta;
+			  					private long					ta_fixup;
+
+			  					private long					last_scrape_fixup_time;
+			  					private Object[]				last_scrape;
+
+								private TrackerPeerSource
+								fixup()
+								{
+									long	now = SystemTime.getMonotonousTime();
+
+									if ( now - ta_fixup > 1000 ){
+
+										TRTrackerAnnouncer current_ta = getTrackerClient();
+
+										if ( current_ta == ta ){
+
+											if ( current_ta != null && _delegate == null ){
+
+												_delegate = current_ta.getTrackerPeerSource( set );
+											}
+										}else{
+
+											if ( current_ta == null ){
+
+												_delegate = null;
+
+											}else{
+
+												_delegate = current_ta.getTrackerPeerSource( set );
+											}
+
+											ta = current_ta;
+										}
+
+										ta_fixup	= now;
+									}
+
+									return( _delegate );
+								}
+
+								protected Object[]
+								getScrape()
+								{
+									long now = SystemTime.getMonotonousTime();
+
+									if ( now - last_scrape_fixup_time > 30*1000 || last_scrape == null ){
+
+										TRTrackerScraper	scraper = globalManager.getTrackerScraper();
+
+										int	max_peers 	= -1;
+										int max_seeds 	= -1;
+										int max_comp	= -1;
+										int max_time 	= 0;
+										int	min_scrape	= Integer.MAX_VALUE;
+
+										String status_str = null;
+
+										boolean	found_usable = false;
+
+										for ( URL u: urls ){
+
+											TRTrackerScraperResponse resp = scraper.peekScrape(torrent, u );
+
+											if ( resp != null ){
+
+												if ( !resp.isDHTBackup()){
+
+													found_usable = true;
+
+													int peers 	= resp.getPeers();
+													int seeds 	= resp.getSeeds();
+													int comp	= resp.getCompleted();
+
+													if ( peers > max_peers ){
+
+														max_peers = peers;
+													}
+
+													if ( seeds > max_seeds ){
+
+														max_seeds = seeds;
+													}
+
+													if ( comp > max_comp ){
+
+														max_comp = comp;
+													}
+
+													if ( resp.getStatus() != TRTrackerScraperResponse.ST_INITIALIZING ){
+
+														status_str = resp.getStatusString();
+
+														int	time	= resp.getScrapeTime();
+
+														if ( time > max_time ){
+
+															max_time = time;
+														}
+
+														long next_scrape = resp.getNextScrapeStartTime();
+
+														if ( next_scrape > 0 ){
+
+															int	 ns = (int)(next_scrape/1000);
+
+															if ( ns < min_scrape ){
+
+																min_scrape = ns;
+															}
+														}
+													}
+												}
+											}
+										}
+
+											// don't overwrite an old status if this time around we haven't found anything usable
+
+										if ( found_usable || last_scrape == null ){
+
+											last_scrape = new Object[]{ max_seeds, max_peers, max_time, min_scrape, max_comp, status_str };
+										}
+
+										last_scrape_fixup_time = now;
+									}
+
+									return( last_scrape );
+								}
+
+								@Override
+								public int
+								getType()
+								{
+									return( TrackerPeerSource.TP_TRACKER );
+								}
+
+								@Override
+								public String
+								getName()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( urls[0].toExternalForm());
+									}
+
+									return( delegate.getName());
+								}
+
+								@Override
+								public int
+								getStatus()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( ST_STOPPED );
+									}
+
+									return( delegate.getStatus());
+								}
+
+								@Override
+								public String
+								getStatusString()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( (String)getScrape()[5] );
+									}
+
+									return( delegate.getStatusString());
+								}
+
+								@Override
+								public int
+								getSeedCount()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return((Integer)getScrape()[0] );
+									}
+
+									int seeds = delegate.getSeedCount();
+
+									if ( seeds < 0 ){
+
+										seeds = (Integer)getScrape()[0];
+									}
+
+									return( seeds );
+								}
+
+								@Override
+								public int
+								getLeecherCount()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( (Integer)getScrape()[1] );
+									}
+
+									int leechers = delegate.getLeecherCount();
+
+									if ( leechers < 0 ){
+
+										leechers = (Integer)getScrape()[1];
+									}
+
+									return( leechers );
+								}
+
+								@Override
+								public int
+								getCompletedCount()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( (Integer)getScrape()[4] );
+									}
+
+									int comp = delegate.getCompletedCount();
+
+									if ( comp < 0 ){
+
+										comp = (Integer)getScrape()[4];
+									}
+
+									return( comp );
+								}
+
+								@Override
+								public int
+								getPeers()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( -1 );
+									}
+
+									return( delegate.getPeers());
+								}
+
+								@Override
+								public int
+								getInterval()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										Object[] si = getScrape();
+
+										int	last 	= (Integer)si[2];
+										int next	= (Integer)si[3];
+
+										if ( last > 0 && next < Integer.MAX_VALUE && last < next ){
+
+											return( next - last );
+										}
+
+										return( -1 );
+									}
+
+									return( delegate.getInterval());
+								}
+
+								@Override
+								public int
+								getMinInterval()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( -1 );
+									}
+
+									return( delegate.getMinInterval());
+								}
+
+								@Override
+								public boolean
+								isUpdating()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( false );
+									}
+
+									return( delegate.isUpdating());
+								}
+
+								@Override
+								public int
+								getLastUpdate()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( (Integer)getScrape()[2] );
+									}
+
+									return( delegate.getLastUpdate());
+								}
+
+								@Override
+								public int
+								getSecondsToUpdate()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( -1 );
+									}
+
+									return( delegate.getSecondsToUpdate());
+								}
+
+								@Override
+								public boolean
+								canManuallyUpdate()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( false );
+									}
+
+									return( delegate.canManuallyUpdate());
+								}
+
+								@Override
+								public void
+								manualUpdate()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate != null ){
+
+										delegate.manualUpdate();
+									}
+								}
+
+								@Override
+								public boolean
+								canDelete()
+								{
+									return( true );
+								}
+
+								@Override
+								public void
+								delete()
+								{
+									List<List<String>> lists = TorrentUtils.announceGroupsToList( t );
+
+									List<String>	rem = new ArrayList<>();
+
+									for ( URL u: urls ){
+										rem.add( u.toExternalForm());
+									}
+
+									lists = TorrentUtils.removeAnnounceURLs2( lists, rem, false );
+
+									TorrentUtils.listToAnnounceGroups( lists, t );
+								}
+							});
+					}
+
+						// cache peer source
+
+					tps.add(
+							new TrackerPeerSourceAdapter()
+							{
+								private TrackerPeerSource _delegate;
+
+			 					private TRTrackerAnnouncer		ta;
+			 					private boolean					enabled;
+			  					private long					ta_fixup;
+
+								private TrackerPeerSource
+								fixup()
+								{
+									long	now = SystemTime.getMonotonousTime();
+
+									if ( now - ta_fixup > 1000 ){
+
+										TRTrackerAnnouncer current_ta = getTrackerClient();
+
+										if ( current_ta == ta ){
+
+											if ( current_ta != null && _delegate == null ){
+
+												_delegate = current_ta.getCacheTrackerPeerSource();
+											}
+										}else{
+
+											if ( current_ta == null ){
+
+												_delegate = null;
+
+											}else{
+
+												_delegate = current_ta.getCacheTrackerPeerSource();
+											}
+
+											ta = current_ta;
+										}
+
+										enabled = controller.isPeerSourceEnabled( PEPeerSource.PS_BT_TRACKER );
+
+										ta_fixup	= now;
+									}
+
+									return( _delegate );
+								}
+
+								@Override
+								public int
+								getType()
+								{
+									return( TrackerPeerSource.TP_TRACKER );
+								}
+
+								@Override
+								public String
+								getName()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null ){
+
+										return( MessageText.getString( "tps.tracker.cache" ));
+									}
+
+									return( delegate.getName());
+								}
+
+								@Override
+								public int
+								getStatus()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( !enabled ){
+
+										return( ST_DISABLED );
+									}
+
+									if ( delegate == null ){
+
+										return( ST_STOPPED );
+									}
+
+									return( ST_ONLINE );
+								}
+
+								@Override
+								public int
+								getPeers()
+								{
+									TrackerPeerSource delegate = fixup();
+
+									if ( delegate == null || !enabled ){
+
+										return( -1 );
+									}
+
+									return( delegate.getPeers());
+								}
+							});
+  				}
+
+	  				// http seeds
+
+	  			try{
+	  				ExternalSeedPlugin esp = DownloadManagerController.getExternalSeedPlugin();
+
+	  				if ( esp != null ){
+
+						tps.add( esp.getTrackerPeerSource( plugin_download ));
+	 				}
+	  			}catch( Throwable e ){
+	  			}
+
+	  				// dht
+
+	  			try{
+
+					PluginInterface dht_pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByClass(DHTTrackerPlugin.class);
+
+	  			    if ( dht_pi != null ){
+
+	  			    	tps.add(((DHTTrackerPlugin)dht_pi.getPlugin()).getTrackerPeerSource( plugin_download ));
+	  			    }
+				}catch( Throwable e ){
+	  			}
+
+					// LAN
+
+				try{
+
+					PluginInterface lt_pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByClass(LocalTrackerPlugin.class);
+
+					if ( lt_pi != null ){
+
+	  			    	tps.add(((LocalTrackerPlugin)lt_pi.getPlugin()).getTrackerPeerSource( plugin_download ));
+
+					}
+
+				}catch( Throwable e ){
+
+				}
+
+					// Plugin
+
+				try{
+
+					tps.add(((DownloadImpl)plugin_download).getTrackerPeerSource());
+
+				}catch( Throwable e ){
+
+				}
+
+					// PEX...
+
+				tps.add(
+					new TrackerPeerSourceAdapter()
+					{
+						private PEPeerManager		_pm;
+						private TrackerPeerSource	_delegate;
+
+						private TrackerPeerSource
+						fixup()
+						{
+							PEPeerManager pm = getPeerManager();
+
+							if ( pm == null ){
+
+								_delegate 	= null;
+								_pm			= null;
+
+							}else if ( pm != _pm ){
+
+								_pm	= pm;
+
+								_delegate = pm.getTrackerPeerSource();
+							}
+
+							return( _delegate );
+						}
+
+						@Override
+						public int
+						getType()
+						{
+							return( TP_PEX );
+						}
+
+						@Override
+						public int
+						getStatus()
+						{
+							TrackerPeerSource delegate = fixup();
+
+							if ( delegate == null ){
+
+								return( ST_STOPPED );
+
+							}else{
+
+								return( delegate.getStatus());
+							}
+						}
+
+						@Override
+						public String
+						getName()
+						{
+							TrackerPeerSource delegate = fixup();
+
+							if ( delegate == null ){
+
+								return( "" );
+
+							}else{
+
+								return( delegate.getName());
+							}
+						}
+
+						@Override
+						public int
+						getPeers()
+						{
+							TrackerPeerSource delegate = fixup();
+
+							if ( delegate == null ){
+
+								return( -1 );
+
+							}else{
+
+								return( delegate.getPeers());
+							}
+						}
+					});
+
+					// incoming
+
+				tps.add(
+						new TrackerPeerSourceAdapter()
+						{
+							private long				fixup_time;
+
+							private PEPeerManager		_pm;
+							private int					tcp;
+							private int					udp;
+							private int					utp;
+							private int					total;
+							private boolean				enabled;
+
+							private PEPeerManager
+							fixup()
+							{
+								long	now = SystemTime.getMonotonousTime();
+
+								if ( now - fixup_time > 1000 ){
+
+									PEPeerManager pm = _pm = getPeerManager();
+
+									if ( pm != null ){
+
+										tcp 	= pm.getNbRemoteTCPConnections();
+										udp		= pm.getNbRemoteUDPConnections();
+										utp		= pm.getNbRemoteUTPConnections();
+										total	= pm.getStats().getTotalIncomingConnections();
+									}
+
+									enabled = controller.isPeerSourceEnabled( PEPeerSource.PS_INCOMING );
+
+									fixup_time = now;
+								}
+
+								return( _pm );
+							}
+
+							@Override
+							public int
+							getType()
+							{
+								return( TP_INCOMING );
+							}
+
+							@Override
+							public int
+							getStatus()
+							{
+								PEPeerManager delegate = fixup();
+
+								if ( delegate == null ){
+
+									return( ST_STOPPED );
+
+								}else if ( !enabled ){
+
+									return( ST_DISABLED );
+
+								}else{
+
+									return( ST_ONLINE );
+								}
+							}
+
+							@Override
+							public String
+							getName()
+							{
+								PEPeerManager delegate = fixup();
+
+								if ( delegate == null || !enabled ){
+
+									return( "" );
+
+								}else{
+
+									return(
+										MessageText.getString(
+											"tps.incoming.details",
+											new String[]{ String.valueOf( tcp ), String.valueOf( udp + utp ), String.valueOf( total )} ));
+								}
+							}
+
+							@Override
+							public int
+							getPeers()
+							{
+								PEPeerManager delegate = fixup();
+
+								if ( delegate == null || !enabled ){
+
+									return( -1 );
+
+								}else{
+
+									return( tcp + udp );
+								}
+							}
+						});
+
+ 			}else{
+
+  				tps = (List<TrackerPeerSource>)tps_data[0];
+  			}
+
+  			return( tps );
+
+  		}finally{
+
+  			this_mon.exit();
+  		}
+  	}
+
+    @Override
+    public void
+    addTPSListener(
+    	DownloadManagerTPSListener		listener )
+    {
+    	try{
+    		this_mon.enter();
+
+    		if ( tps_listeners == null ){
+
+    			tps_listeners = new ArrayList<>(1);
+    		}
+
+    		tps_listeners.add( listener );
+
+    	}finally{
+
+    		this_mon.exit();
+    	}
+    }
+
+    @Override
+    public void
+    removeTPSListener(
+    	DownloadManagerTPSListener		listener )
+    {
+       	try{
+    		this_mon.enter();
+
+    		if ( tps_listeners != null ){
+
+    			tps_listeners.remove( listener );
+
+    			if ( tps_listeners.size() == 0 ){
+
+    				tps_listeners = null;
+
+    	  			Object[] tps_data = (Object[])getUserData( TPS_Key );
+
+    	  			if ( tps_data != null ){
+
+    	 				TOTorrent t = getTorrent();
+
+    	 				if ( t != null ){
+
+    	 					t.removeListener( (TOTorrentListener)tps_data[1] );
+    	 				}
+
+    	  				setUserData( TPS_Key, null );
+    	  			}
+    			}
+    		}
+    	}finally{
+
+    		this_mon.exit();
+    	}
+    }
+
+  private byte[]
+  getIdentity()
+  {
+ 	  return( dl_identity );
+  }
+
+   /** @retun true, if the other DownloadManager has the same hash
+    * @see java.lang.Object#equals(java.lang.Object)
+    */
+   public boolean equals(Object obj)
+   {
+ 		// check for object equivalence first!
+
+ 	if ( this == obj ){
+
+ 		return( true );
+ 	}
+
+ 	if( obj instanceof DownloadManagerImpl ) {
+
+ 	  DownloadManagerImpl other = (DownloadManagerImpl) obj;
+
+ 	  byte[] id1 = getIdentity();
+ 	  byte[] id2 = other.getIdentity();
+
+ 	  if ( id1 == null || id2 == null ){
+
+ 		return( false );	// broken torrents - treat as different so shown
+ 							// as broken
+ 	  }
+
+ 	  return( Arrays.equals( id1, id2 ));
+ 	}
+
+ 	return false;
+   }
+
+
+   public int
+   hashCode()
+   {
+	   return dl_identity_hashcode;
+   }
+
+
+	/* (non-Javadoc)
+	 * @see com.biglybt.core.logging.LogRelation#getLogRelationText()
+	 */
+	@Override
+	public String getRelationText() {
+		return "TorrentDLM: '" + getDisplayName() + "'";
+	}
+
+
+	/* (non-Javadoc)
+	 * @see com.biglybt.core.logging.LogRelation#queryForClass(java.lang.Class)
+	 */
+	@Override
+	public Object[] getQueryableInterfaces() {
+		return new Object[] { tracker_client };
+	}
+
+	public String toString() {
+		String hash = "<unknown>";
+
+		if ( torrent != null ){
+			try {
+				hash = ByteFormatter.encodeString(torrent.getHash());
+
+			} catch (Throwable e) {
+			}
+		}
+
+		String status = DisplayFormatters.formatDownloadStatus(this);
+		if (status.length() > 10) {
+			status = status.substring(0, 10);
+		}
+		return "DownloadManagerImpl#" + getPosition()
+				+ (getAssumedComplete() ? "s" : "d") + "@"
+				+ Integer.toHexString(hashCode()) + "/"
+				+ status + "/"
+				+ hash;
+	}
+
+	protected static class
+	NoStackException
+		extends Exception
+	{
+		protected
+		NoStackException(
+			String	str )
+		{
+			super( str );
+		}
+	}
+
+	@Override
+	public void
+	generateEvidence(
+		IndentWriter		writer )
+	{
+		writer.println(toString());
+
+		PEPeerManager pm = getPeerManager();
+
+		try {
+			writer.indent();
+
+			writer.println("Save Dir: "
+					+ Debug.secretFileName(getSaveLocation().toString()));
+
+			if (current_peers.size() > 0) {
+				writer.println("# Peers: " + current_peers.size());
+			}
+
+			if (current_pieces.size() > 0) {
+				writer.println("# Pieces: " + current_pieces.size());
+			}
+
+			writer.println("Listeners: DownloadManager=" + listeners.size() + "; Disk="
+				+ controller.getDiskListenerCount() + "; Peer=" + peer_listeners.size()
+				+ "; Tracker=" + tracker_listeners.size());
+
+			writer.println("SR: " + iSeedingRank);
+
+
+			String sFlags = "";
+			if (open_for_seeding) {
+				sFlags += "Opened for Seeding; ";
+			}
+
+			if (data_already_allocated) {
+				sFlags += "Data Already Allocated; ";
+			}
+
+			if (assumedComplete) {
+				sFlags += "onlySeeding; ";
+			}
+
+			if (persistent) {
+				sFlags += "persistent; ";
+			}
+
+			if (sFlags.length() > 0) {
+				writer.println("Flags: " + sFlags);
+			}
+
+			stats.generateEvidence( writer );
+
+			download_manager_state.generateEvidence( writer );
+
+			if (pm != null) {
+				pm.generateEvidence(writer);
+			}
+
+				// note, PeerManager generates DiskManager evidence
+
+			controller.generateEvidence(writer);
+
+			TRTrackerAnnouncer announcer = tracker_client;
+
+			if ( announcer != null ){
+
+				announcer.generateEvidence( writer );
+			}
+
+			TRTrackerScraperResponse scrape = getTrackerScrapeResponse();
+
+			if ( scrape == null ){
+
+				writer.println( "Scrape: null" );
+			}else{
+
+				writer.println( "Scrape: " + scrape.getString());
+			}
+		} finally {
+
+			writer.exdent();
+		}
+	}
+
+	@Override
+	public void
+	destroy(
+		boolean	is_duplicate )
+	{
+		destroyed	= true;
+
+		if ( is_duplicate ){
+
+				// minimal tear-down
+
+			controller.destroy();
+
+		}else{
+
+			try{
+		   	// Data files don't exist, so we just don't do anything.
+		    	if (!getSaveLocation().exists()) {return;}
+
+		    	DiskManager dm = this.getDiskManager();
+		    	if (dm != null) {
+		    		dm.downloadRemoved();
+		    		return;
+		    	}
+
+		    	SaveLocationChange move_details;
+		    	move_details = DownloadManagerMoveHandler.onRemoval(this);
+		    	if (move_details == null) {
+		    		return;
+		    	}
+
+		    	boolean can_move_torrent = move_details.hasTorrentChange();
+
+		    	try {
+		    		if (move_details.hasDownloadChange()) {
+		    			this.moveDataFiles(move_details.download_location, move_details.download_name);
+		    		}
+		    	}
+		    	catch (Exception e) {
+		    		can_move_torrent = false;
+		    		Logger.log(new LogAlert(this, true,
+							"Problem moving files to removed download directory", e));
+		    	}
+
+		    	// This code will silently fail if the torrent file doesn't exist.
+		    	if (can_move_torrent) {
+		  		    try {
+			    		this.moveTorrentFile(move_details.torrent_location, move_details.torrent_name);
+			    	}
+			    	catch (Exception e) {
+			    		Logger.log(new LogAlert(this, true,
+			    				"Problem moving torrent to removed download directory", e));
+			    	}
+		    	}
+			}finally{
+
+				clearFileLinks();
+
+				controller.destroy();
+			}
+		}
+	}
+
+	@Override
+	public boolean
+	isDestroyed()
+	{
+		return( destroyed || removing );
+	}
+
+	@Override
+	public int[] getStorageType(DiskManagerFileInfo[] info) {
+		String[] types = DiskManagerImpl.getStorageTypes(this);
+		int[] result = new int[info.length];
+		for (int i=0; i<info.length; i++) {
+			result[i] = DiskManagerUtil.convertDMStorageTypeFromString( types[info[i].getIndex()]);
+		}
+		return result;
+	}
+
+	@Override
+	public boolean canMoveDataFiles() {
+		if (!isPersistent()) {return false;}
+		return true;
+	}
+
+	@Override
+	public void rename(String name) throws DownloadManagerException {
+		boolean paused = this.pause();
+		try {
+			this.renameDownload(name);
+			this.getDownloadState().setAttribute(DownloadManagerState.AT_DISPLAY_NAME, name);
+			this.renameTorrentSafe(name);
+		}
+		finally {
+			if (paused) {this.resume();}
+		}
+	}
+
+	@Override
+	public void renameTorrent(String name) throws DownloadManagerException {
+		this.moveTorrentFile(null, name);
+	}
+
+	@Override
+	public void renameTorrentSafe(String name) throws DownloadManagerException {
+		String torrent_parent = new File(this.getTorrentFileName()).getParent();
+		String torrent_name = name;
+
+		File new_path = new File(torrent_parent, torrent_name + ".torrent");
+		if (new_path.exists()) {new_path = null;}
+
+		for (int i=1; i<10; i++) {
+			if (new_path != null) {break;}
+			new_path = new File(torrent_parent, torrent_name + "(" + i + ").torrent");
+			if (new_path.exists()) {new_path = null;}
+		}
+
+		if (new_path == null) {
+			throw new DownloadManagerException("cannot rename torrent file - file already exists");
+		}
+
+		this.renameTorrent(new_path.getName());
+	}
+
+	@Override
+	public void
+	requestAttention()
+	{
+		fireGlobalManagerEvent(GlobalManagerEvent.ET_REQUEST_ATTENTION);
+	}
+
+	@Override
+	public void
+	fireGlobalManagerEvent(
+		int eventType )
+	{
+		globalManager.fireGlobalManagerEvent( eventType, this );
+	}
+
+	/* (non-Javadoc)
+	 * @see com.biglybt.core.download.DownloadManager#setFilePriorities(com.biglybt.core.disk.DiskManagerFileInfo[], int)
+	 */
+	@Override
+	public void setFilePriorities(DiskManagerFileInfo[] fileInfos, int priority) {
+		// TODO: Insted of looping, which fires off a lot of events,
+		//       do it more directly, and fire needed events once, at end
+		for (DiskManagerFileInfo fileInfo : fileInfos) {
+			fileInfo.setPriority(priority);
+		}
+	}
+}

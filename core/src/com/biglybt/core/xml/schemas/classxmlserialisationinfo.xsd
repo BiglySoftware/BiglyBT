@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+/*
+ * File    : classxmlserialisationinfo.xsd
+ * Created : 5 Oct. 2003
+ * By      : Tobias Minich 
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details ( see the LICENSE file ).
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+-->
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+            xmlns:class="http://azureus.sourceforge.net/files" 
+            targetNamespace="http://azureus.sourceforge.net/files">
+
+   <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+         This XML Schema document represents information to (de)serialize a Azureus class to xml.
+      </xsd:documentation>
+   </xsd:annotation>
+
+   <xsd:element name="CLASS" type="class:classType"/>
+
+   <xsd:complexType name="classType">
+		<xsd:sequence>
+			<xsd:element name="EXPORTNAME" type="xsd:string"/>
+			<xsd:element name="FIELDS">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="FIELD" type="class:fieldType" maxOccurs="unbounded"/>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="class" type="xsd:string" use="required"/>
+   </xsd:complexType>
+   
+   <xsd:complexType name="fieldType">
+	<xsd:sequence>
+		<xsd:element name="EXPORTNAME" type="xsd:string"/>
+		<xsd:choice>
+			<!-- Directly acces a field by name -->
+			<xsd:element name="NAME" type="xsd:string"/>
+			<!-- Use the result of a function -->
+			<xsd:element name="FUNCTIONNAME" type="xsd:string"/>
+		</xsd:choice>
+		<xsd:element name="TYPE">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="String"/>
+					<xsd:enumeration value="Integer"/>
+					<xsd:enumeration value="Long"/>
+					<xsd:enumeration value="List"/>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:element>
+	</xsd:sequence>
+   </xsd:complexType>
+</xsd:schema>

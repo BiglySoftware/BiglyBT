@@ -1,0 +1,11 @@
+BIGLYBT CHANGELOG
+-----------------
+
+2017.0x.yy | Vuze 0.9.9.9
+
+CHANGE: UI    | Bigly Changes
+CHANGE: Core  | Bigly Changes
+
+
+
+Historical Change log can be found at http://wiki.vuze.com/w/ChangeLog (5.7.5.0 and below)

@@ -1,0 +1,654 @@
+/*
+ * Copyright (C) Azureus Software, Inc, All Rights Reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+package com.biglybt.ui.swt.views;
+
+import java.util.Map;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.*;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.AEDiagnosticsEvidenceGenerator;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.IndentWriter;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.ui.swt.DelayedListenerMultiCombiner;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.pif.UISWTView;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
+import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
+
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.table.TableColumnCore;
+import com.biglybt.ui.common.table.TableView;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.selectedcontent.ISelectedContent;
+import com.biglybt.ui.selectedcontent.SelectedContentListener;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
+import com.biglybt.util.MapUtils;
+
+/**
+ * Wraps a "Incomplete" torrent list and a "Complete" torrent list into
+ * one view
+ */
+public class MyTorrentsSuperView
+	implements UISWTViewCoreEventListener,
+	AEDiagnosticsEvidenceGenerator, UIPluginViewToolBarListener
+{
+	private static int SASH_WIDTH = 5;
+
+
+  private MyTorrentsView torrentview;
+  private MyTorrentsView seedingview;
+
+	private Composite form;
+
+	private MyTorrentsView lastSelectedView;
+
+
+	private Composite child1;
+
+
+	private Composite child2;
+
+
+	private final Text txtFilter;
+
+
+	private final Composite cCats;
+
+
+	private Object ds;
+
+
+	private UISWTView swtView;
+
+
+	private MyTorrentsView viewWhenDeactivated;
+
+  public MyTorrentsSuperView(Text txtFilter, Composite cCats) {
+  	this.txtFilter = txtFilter;
+		this.cCats = cCats;
+		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+			@Override
+			public void coreRunning(Core core) {
+				Utils.execSWTThread(new AERunnable() {
+					@Override
+					public void runSupport() {
+						TableColumnManager tcManager = TableColumnManager.getInstance();
+						tcManager.addColumns(getCompleteColumns());
+						tcManager.addColumns(getIncompleteColumns());
+					}
+				});
+			}
+		});
+  }
+
+
+  public Composite getComposite() {
+    return form;
+  }
+
+  public void initialize(final Composite parent) {
+    if (form != null) {
+      return;
+    }
+
+  	form = new Composite(parent, SWT.NONE);
+  	FormLayout flayout = new FormLayout();
+  	flayout.marginHeight = 0;
+  	flayout.marginWidth = 0;
+  	form.setLayout(flayout);
+  	GridData gridData;
+  	gridData = new GridData(GridData.FILL_BOTH);
+  	form.setLayoutData(gridData);
+
+
+  	GridLayout layout;
+
+
+  	child1 = new Composite(form,SWT.NONE);
+  	layout = new GridLayout();
+  	layout.numColumns = 1;
+  	layout.horizontalSpacing = 0;
+  	layout.verticalSpacing = 0;
+  	layout.marginHeight = 0;
+  	layout.marginWidth = 0;
+  	child1.setLayout(layout);
+
+  	final Sash sash = Utils.createSash( form, SASH_WIDTH );
+
+    child2 = new Composite(form,SWT.NULL);
+    layout = new GridLayout();
+    layout.numColumns = 1;
+    layout.horizontalSpacing = 0;
+    layout.verticalSpacing = 0;
+    layout.marginHeight = 0;
+    layout.marginWidth = 0;
+    child2.setLayout(layout);
+
+    FormData formData;
+
+    // More precision, times by 100
+    int weight = (int) (COConfigurationManager.getFloatParameter("MyTorrents.SplitAt"));
+		if (weight > 10000) {
+			weight = 10000;
+		} else if (weight < 100) {
+			weight *= 100;
+		}
+		// Min/max of 5%/95%
+		if (weight < 500) {
+			weight = 500;
+		} else if (weight > 9000) {
+			weight = 9000;
+		}
+		double pct = (float)weight / 10000;
+		sash.setData("PCT", new Double(pct));
+
+		// FormData for table child1
+		formData = new FormData();
+		formData.left = new FormAttachment(0, 0);
+		formData.right = new FormAttachment(100, 0);
+		formData.top = new FormAttachment(0, 0);
+		formData.bottom = new FormAttachment((int) (pct * 100), 0);
+		child1.setLayoutData(formData);
+		final FormData child1Data = formData;
+
+		// sash
+		formData = new FormData();
+		formData.left = new FormAttachment(0, 0);
+		formData.right = new FormAttachment(100, 0);
+		formData.top = new FormAttachment(child1);
+		formData.height = SASH_WIDTH;
+		sash.setLayoutData(formData);
+
+    // child2
+		formData = new FormData();
+		formData.left = new FormAttachment(0, 0);
+		formData.right = new FormAttachment(100, 0);
+		formData.bottom = new FormAttachment(100, 0);
+		formData.top = new FormAttachment(sash);
+
+		child2.setLayoutData(formData);
+
+
+		// Listeners to size the folder
+		sash.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				final boolean FASTDRAG = true;
+
+				if (FASTDRAG && e.detail == SWT.DRAG)
+					return;
+
+				child1Data.height = e.y + e.height - SASH_WIDTH;
+				form.layout();
+
+				Double l = new Double((double) child1.getBounds().height
+						/ form.getBounds().height);
+				sash.setData("PCT", l);
+				if (e.detail != SWT.DRAG) {
+					int i = (int) (l.doubleValue() * 10000);
+					COConfigurationManager.setParameter("MyTorrents.SplitAt", i);
+				}
+			}
+		});
+
+		form.addListener(SWT.Resize, new DelayedListenerMultiCombiner() {
+			@Override
+			public void handleDelayedEvent(Event e) {
+				if ( sash.isDisposed()){
+					return;
+				}
+				Double l = (Double) sash.getData("PCT");
+				if (l == null) {
+					return;
+				}
+				int newHeight = (int) (form.getBounds().height * l.doubleValue());
+				if (child1Data.height != newHeight || child1Data.bottom != null) {
+					child1Data.bottom = null;
+					child1Data.height = newHeight;
+					form.layout();
+				}
+			}
+		});
+
+		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+			@Override
+			public void coreRunning(final Core core) {
+				Utils.execSWTThread(new AERunnable() {
+					@Override
+					public void runSupport() {
+						initializeWithCore(core, parent);
+					}
+
+				});
+			}
+  	});
+
+  }
+
+  private void initializeWithCore(Core core, Composite parent) {
+    torrentview = createTorrentView(core,
+				TableManager.TABLE_MYTORRENTS_INCOMPLETE, false, getIncompleteColumns(),
+				child1);
+
+    seedingview = createTorrentView(core,
+				TableManager.TABLE_MYTORRENTS_COMPLETE, true, getCompleteColumns(),
+				child2);
+
+
+    torrentview.getComposite().addListener(SWT.FocusIn, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				seedingview.getTableView().getTabsCommon().setTvOverride(torrentview.getTableView());
+			}
+		});
+
+    seedingview.getComposite().addListener(SWT.FocusIn, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				seedingview.getTableView().getTabsCommon().setTvOverride(null);
+			}
+		});
+
+
+    	// delegate selections from the incomplete view to the sub-tabs owned by the seeding view
+
+    SelectedContentManager.addCurrentlySelectedContentListener(
+    	new SelectedContentListener()
+    	{
+    		@Override
+		    public void
+    		currentlySelectedContentChanged(
+    			ISelectedContent[] 		currentContent,
+    			String 					viewId )
+    		{
+    			if ( form.isDisposed() || torrentview == null || seedingview == null ){
+
+    				SelectedContentManager.removeCurrentlySelectedContentListener( this );
+
+    			}else{
+
+	    			TableView<?> selected_tv = SelectedContentManager.getCurrentlySelectedTableView();
+
+    				TableViewSWT<?> incomp_tv 	= torrentview.getTableView();
+       				TableViewSWT<?> comp_tv 	= seedingview.getTableView();
+
+	    			if ( incomp_tv != null && comp_tv != null && ( selected_tv == incomp_tv || selected_tv == comp_tv )){
+
+    					TableViewSWT_TabsCommon tabs = comp_tv.getTabsCommon();
+
+    					if ( tabs != null ){
+
+    						tabs.triggerTabViewsDataSourceChanged(selected_tv);
+    					}
+	    			}
+    			}
+    		}
+    	});
+
+  	initializeDone();
+  }
+
+  public void initializeDone() {
+	}
+
+
+  public void updateLanguage() {
+  	// no super call, the views will do their own
+
+    if (getComposite() == null || getComposite().isDisposed())
+      return;
+
+    if (seedingview != null) {
+    	seedingview.updateLanguage();
+    }
+    if (torrentview != null) {
+    	torrentview.updateLanguage();
+    }
+	}
+
+	public String getFullTitle() {
+    return MessageText.getString("MyTorrentsView.mytorrents");
+  }
+
+  // XXX: Is there an easier way to find out what has the focus?
+  private MyTorrentsView getCurrentView() {
+    // wrap in a try, since the controls may be disposed
+    try {
+      if (torrentview != null && torrentview.isTableFocus()) {
+        lastSelectedView = torrentview;
+      } else if (seedingview != null && seedingview.isTableFocus()) {
+      	lastSelectedView = seedingview;
+      }
+    } catch (Exception ignore) {/*ignore*/}
+
+    return lastSelectedView;
+  }
+
+	private UIPluginViewToolBarListener getActiveToolbarListener() {
+		MyTorrentsView[] viewsToCheck = {
+			getCurrentView(),
+			torrentview,
+			seedingview
+		};
+		for (int i = 0; i < viewsToCheck.length; i++) {
+			MyTorrentsView view = viewsToCheck[i];
+			if (view != null) {
+				MdiEntrySWT activeSubView = view.getTableView().getTabsCommon().getActiveSubView();
+				if (activeSubView != null) {
+					UIPluginViewToolBarListener toolBarListener = activeSubView.getToolBarListener();
+					if (toolBarListener != null) {
+						return toolBarListener;
+					}
+				}
+				if (i == 0 && view.isTableFocus()) {
+					return view;
+				}
+			}
+		}
+
+		return null;
+	}
+
+  @Override
+  public void refreshToolBarItems(Map<String, Long> list) {
+  	UIPluginViewToolBarListener currentView = getActiveToolbarListener();
+    if (currentView != null) {
+      currentView.refreshToolBarItems(list);
+    }
+  }
+
+  @Override
+  public boolean toolBarItemActivated(ToolBarItem item, long activationType, Object datasource) {
+  	UIPluginViewToolBarListener currentView = getActiveToolbarListener();
+    if (currentView != null) {
+      if (currentView.toolBarItemActivated(item, activationType, datasource)) {
+      	return true;
+      }
+    }
+    MyTorrentsView currentView2 = getCurrentView();
+    if (currentView2 != currentView && currentView2 != null) {
+      if (currentView2.toolBarItemActivated(item, activationType, datasource)) {
+      	return true;
+      }
+    }
+    return false;
+  }
+
+  public DownloadManager[] getSelectedDownloads() {
+	  MyTorrentsView currentView = getCurrentView();
+	  if (currentView == null) {return null;}
+	  return currentView.getSelectedDownloads();
+  }
+
+  @Override
+  public void
+  generate(
+	IndentWriter	writer )
+  {
+
+	  try{
+		  writer.indent();
+
+		  writer.println( "Downloading" );
+
+		  writer.indent();
+
+		  torrentview.generate( writer );
+
+	  }finally{
+
+		  writer.exdent();
+
+		  writer.exdent();
+	  }
+
+	  try{
+		  writer.indent();
+
+		  writer.println( "Seeding" );
+
+		  writer.indent();
+
+		  seedingview.generate( writer );
+
+	  }finally{
+
+		  writer.exdent();
+
+		  writer.exdent();
+	  }
+  }
+
+	private Image obfuscatedImage(Image image) {
+		if (torrentview != null) {
+			torrentview.obfuscatedImage(image);
+		}
+		if (seedingview != null) {
+			seedingview.obfuscatedImage(image);
+		}
+		return image;
+	}
+
+	public Menu getPrivateMenu() {
+		return null;
+	}
+
+	public void viewActivated() {
+		SelectedContentManager.clearCurrentlySelectedContent();
+
+		if (viewWhenDeactivated != null) {
+			viewWhenDeactivated.getComposite().setFocus();
+			viewWhenDeactivated.updateSelectedContent(true);
+		} else {
+			MyTorrentsView currentView = getCurrentView();
+			if (currentView != null ) {
+				currentView.updateSelectedContent();
+			}
+		}
+	}
+
+	public void viewDeactivated() {
+		viewWhenDeactivated = getCurrentView();
+    /*
+    MyTorrentsView currentView = getCurrentView();
+    if (currentView == null) {return;}
+    String ID = currentView.getShortTitle();
+    if (currentView instanceof MyTorrentsView) {
+    	ID = ((MyTorrentsView)currentView).getTableView().getTableID();
+    }
+
+    TableView tv = null;
+    if (currentView instanceof MyTorrentsView) {
+    	tv = ((MyTorrentsView) currentView).getTableView();
+    }
+    //SelectedContentManager.clearCurrentlySelectedContent();
+    SelectedContentManager.changeCurrentlySelectedContent(ID, null, tv);
+    */
+	}
+
+	/**
+	 * Returns the set of columns for the incomplete torrents view
+	 * Subclasses my override to return a different set of columns
+	 * @return
+	 */
+	protected TableColumnCore[] getIncompleteColumns(){
+		return TableColumnCreator.createIncompleteDM(TableManager.TABLE_MYTORRENTS_INCOMPLETE);
+	}
+
+	/**
+	 * Returns the set of columns for the completed torrents view
+	 * Subclasses my override to return a different set of columns
+	 * @return
+	 */
+	protected TableColumnCore[] getCompleteColumns(){
+		return TableColumnCreator.createCompleteDM(TableManager.TABLE_MYTORRENTS_COMPLETE);
+	}
+
+
+	/**
+	 * Returns an instance of <code>MyTorrentsView</code>
+	 * Subclasses my override to return a different instance of MyTorrentsView
+	 * @param _core
+	 * @param isSeedingView
+	 * @param columns
+	 * @param c
+	 * @return
+	 */
+	protected MyTorrentsView
+	createTorrentView(
+		Core _core,
+		String 				tableID,
+		boolean 			isSeedingView,
+		TableColumnCore[] 	columns,
+		Composite 			c )
+	{
+		MyTorrentsView view = new MyTorrentsView(_core, tableID,
+				isSeedingView, columns, txtFilter, cCats, isSeedingView );
+
+		try {
+			UISWTViewImpl swtView = new UISWTViewImpl(tableID, UISWTInstance.VIEW_MAIN, false);
+			swtView.setDatasource(ds);
+			swtView.setEventListener(view, true);
+			swtView.setDelayInitializeToFirstActivate(false);
+
+			swtView.initialize(c);
+		} catch (Exception e) {
+			Debug.out(e);
+		}
+
+		/*
+		c.addListener(SWT.Activate, new Listener() {
+			public void handleEvent(Event event) {
+				viewActivated();
+			}
+		});
+		c.addListener(SWT.Deactivate, new Listener() {
+			public void handleEvent(Event event) {
+				viewDeactivated();
+			}
+		});
+		*/
+		c.layout();
+		return view;
+	}
+
+
+	public MyTorrentsView getTorrentview() {
+		return torrentview;
+	}
+
+
+	public MyTorrentsView getSeedingview() {
+		return seedingview;
+	}
+
+	public void dataSourceChanged(Object newDataSource) {
+		ds = newDataSource;
+	}
+
+	@Override
+	public boolean eventOccurred(UISWTViewEvent event) {
+		switch (event.getType()) {
+			case UISWTViewEvent.TYPE_CREATE:
+				swtView = (UISWTView) event.getData();
+      	swtView.setToolBarListener(this);
+				swtView.setTitle(getFullTitle());
+				break;
+
+			case UISWTViewEvent.TYPE_DESTROY:
+				break;
+
+			case UISWTViewEvent.TYPE_INITIALIZE:
+				initialize((Composite) event.getData());
+				return true;
+
+			case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
+				swtView.setTitle(getFullTitle());
+				Messages.updateLanguageForControl(getComposite());
+				break;
+
+			case UISWTViewEvent.TYPE_DATASOURCE_CHANGED:
+				dataSourceChanged(event.getData());
+				break;
+
+			case UISWTViewEvent.TYPE_REFRESH:
+				break;
+
+			case UISWTViewEvent.TYPE_OBFUSCATE:
+				Object data = event.getData();
+				if (data instanceof Map) {
+					obfuscatedImage((Image) MapUtils.getMapObject((Map) data, "image",
+							null, Image.class));
+				}
+				break;
+		}
+
+		if (seedingview != null) {
+    	try {
+    		seedingview.getSWTView().triggerEvent(event.getType(), event.getData());
+    	} catch (Exception e) {
+    		Debug.out(e);
+    	}
+		}
+
+		if (torrentview != null) {
+    	try {
+    		torrentview.getSWTView().triggerEvent(event.getType(), event.getData());
+    	} catch (Exception e) {
+    		Debug.out(e);
+    	}
+		}
+
+		// both subviews will get focusgained, resulting in the last one grabbing
+		// "focus".  We restore last used focus, but only after the subviews are
+		// done being greedy
+		switch (event.getType()) {
+			case UISWTViewEvent.TYPE_FOCUSGAINED:
+				viewActivated();
+				break;
+
+			case UISWTViewEvent.TYPE_FOCUSLOST:
+				viewDeactivated();
+				break;
+		}
+
+		return true;
+	}
+
+	public UISWTView getSWTView() {
+		return swtView;
+	}
+}

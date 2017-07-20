@@ -1,0 +1,32 @@
+
+104_SDK = /Developer-3.2.6/SDKs/MacOSX10.4u.sdk
+
+105_SDK = /Developer-3.2.6/SDKs/MacOSX10.5.sdk
+105_ARCHS = -arch i386 -arch x86_64
+105_LFLAGS = -bundle -isysroot $(105_SDK) $(105_ARCHS) -framework JavaVM -framework AppKit -framework IOKit -mmacosx-version-min=10.4
+105_LFLAGS = -bundle -isysroot $(105_SDK) $(105_ARCHS) -framework JavaVM -framework AppKit -framework IOKit -mmacosx-version-min=10.4
+105_CFLAGS = -c $(105_ARCHS) -I $(104_SDK)/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/AE.framework/Versions/A/Headers
+
+106_SDK = /Developer-3.2.6/SDKs/MacOSX10.6.sdk
+106_ARCHS = -arch i386 -arch x86_64
+106_LFLAGS = -bundle -isysroot $(106_SDK) $(106_ARCHS) -framework JavaVM -framework AppKit -framework IOKit
+106_CFLAGS = -c $(106_ARCHS) -I $(104_SDK)/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/AE.framework/Versions/A/Headers
+
+
+105_OBJECTS = OSXAccess.o IONotification.o LaunchServicesWrapper.o
+104_OBJECTS = OSXAccess.o IONotification.o
+OUTLIB = libOSXAccess
+
+all:
+	echo 10.5 10.6
+
+10.5:
+	g++ $(105_CFLAGS) OSXAccess.mm IONotification.m  LaunchServicesWrapper.m
+	g++ -o $(OUTLIB)_10.5.jnilib $(105_LFLAGS) $(105_OBJECTS)
+	rm -f *.o
+
+10.6:
+	g++ $(106_CFLAGS) OSXAccess.mm IONotification.m  LaunchServicesWrapper.m
+	g++ -o $(OUTLIB)_10.6.jnilib $(106_LFLAGS) $(105_OBJECTS)
+	rm -f *.o
+

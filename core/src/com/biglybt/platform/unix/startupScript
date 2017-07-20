@@ -1,0 +1,231 @@
+#!/bin/bash
+
+######## CONFIGURATION OPTIONS ########
+AUTOUPDATE_SCRIPT=1 # change to 0 if you don't want your changes overwritten on next SCRIPT_VERSION change
+JAVA_PROGRAM_DIR=""	# use full path to java bin dir, ex. "/usr/java/j2sdk1.4.2/bin/"
+#PROGRAM_DIR="/home/username/apps/biglybt"	# use full path to BiglyBT bin dir
+
+#######################################
+
+######## YOU PROBABLY DO NOT WANT TO TOUCH ANYTHING BELOW! ########
+
+SCRIPT_VERSION=8
+START_CLASS="com.biglybt.ui.Main"
+
+MSG_LOADING="Loading BiglyBT:"
+MSG_STARTING="Starting BiglyBT..."
+MSG2="Java exec found in "
+MSG_JAVA_TOO_OLD="OOPS, your java version is too old "
+MSG_JAVA_BELOW_MIN="You need to upgrade to JRE 1.8 or newer"
+MSG5="Suitable java version found "
+MSG7="OOPS, you don't seem to have a valid JRE "
+MSG8="OOPS, unable to locate java exec in "
+MSG9=" hierarchy"
+MSG_JAVASEARCH="Java exec not found in PATH, starting auto-search..."
+MSG_AZEXIT="Exit from BiglyBT complete"
+MSG_TERMINATED="BiglyBT TERMINATED."
+MSG_RECHECK="Re-checking with GCJ (Sun Java recommended).."
+MSG_ISGCJ="Java is GCJ.. looking for Sun Java.."
+MSG_JAVABORK="Java appeared to have crashed:"
+
+SKIP_GCJ=1
+
+export GDK_BACKEND=x11
+export FT2_SUBPIXEL_HINTING=2
+
+look_for_java()
+{
+  # check if java is in path.  If it is, we do not need to search
+	if command -v java &>/dev/null; then
+		if check_version ; then
+			return 0
+		fi
+	fi
+
+	echo $MSG_JAVASEARCH
+
+
+	JAVA_CHECK_DIRS="/usr/java/latest /usr/java /usr/lib/jvm/latest /usr/lib/jvm"
+	for JAVADIR in $JAVA_CHECK_DIRS; do
+		IFS=$'\n'
+		potential_java_dirs=(`ls -1 "$JAVADIR" | sort | tac 2>/dev/null`)
+		IFS=
+		for D in "${potential_java_dirs[@]}"; do
+			if [[ -d "$JAVADIR/$D" && -x "$JAVADIR/$D/bin/java" ]]; then
+				JAVA_PROGRAM_DIR="$JAVADIR/$D/bin/"
+				echo $MSG2 $JAVA_PROGRAM_DIR
+				if check_version ; then
+					return 0
+				fi
+			fi
+		done
+	done
+
+	if [ $SKIP_GCJ ] ; then
+		echo $MSG_RECHECK
+		SKIP_GCJ=
+		if look_for_java ; then
+			return 0
+		else
+			return 1
+		fi
+	else
+		echo $MSG8 "${JAVADIR}/" $MSG9 ; echo $MSG_JAVA_BELOW_MIN
+	fi
+	return 1
+}
+
+check_version()
+{
+	if [ $SKIP_GCJ ] ; then
+		JAVA_ISGCJ=`"${JAVA_PROGRAM_DIR}java" -version 2>&1 | grep "gcj"`
+		if [ ! "$JAVA_ISGCJ x" = " x" ] ; then
+			echo $MSG_ISGCJ
+			return 1
+		fi
+	fi
+
+	JAVA_HEADER=`"${JAVA_PROGRAM_DIR}java" -version 2>&1 | head -n 1`
+	JAVA_IMPL=`echo ${JAVA_HEADER} | cut -f1 -d' '`
+  if [ "$JAVA_IMPL" = "#" ] ; then
+    echo $MSG_JAVABORK
+    ${JAVA_PROGRAM_DIR}java -version 2>&1
+    exit 1
+	else
+		VERSION=`echo ${JAVA_HEADER} | sed "s/^.* version \"\(.*\)\"/\1/"`
+		if echo $VERSION | grep "^1.[0-7]" ; then
+			echo $MSG_JAVA_TOO_OLD "[${JAVA_PROGRAM_DIR}java = ${VERSION}]" ; echo $MSG_JAVA_BELOW_MIN
+			return 1
+		else
+			echo $MSG5 "[${JAVA_PROGRAM_DIR}java = ${JAVA_IMPL} ${VERSION}]"
+			return 0
+		fi
+	fi
+}
+
+runJavaOutput()
+{
+	# assume we can write to the user's home..
+
+	RESULT=`${JAVA_PROGRAM_DIR}java ${JAVA_ARGS} \
+		-cp "${CLASSPATH}" \
+		"-Djava.library.path=${PROGRAM_DIR}" \
+		"-Dazureus.install.path=${PROGRAM_DIR}" \
+		"-Dazureus.script=$0" \
+		"-Dawt.useSystemAAFontSettings=gasp" \
+		$JAVA_PROPS \
+		"$@"`
+	if [ ! "$RESULT" = "" ]; then
+		eval "${RESULT}"
+	fi
+}
+
+exists () {
+  type "$1" >/dev/null 2>/dev/null
+}
+
+moveInSWT()
+{
+	if [ "$(echo ${PROGRAM_DIR}/swt/*.jar)" = "${PROGRAM_DIR}/swt/*.jar" ]; then
+		# No swt dir
+		return;
+	fi
+	arch=`uname -p`
+	if [ -f "${PROGRAM_DIR}/swt/swt-${arch}.jar" ]; then
+			SWTFILE="swt/swt-${arch}.jar"
+	else
+		if [ "`${JAVA_PROGRAM_DIR}java -cp \"${CLASSPATH}\" com.biglybt.platform.JavaBitMode`" = "64" ]; then
+			SWTFILE="swt/swt-x86_64.jar"
+		else
+			SWTFILE="swt/swt-x86.jar"
+		fi
+	fi
+
+	if exists "zip"; then
+		if [ -f "${PROGRAM_DIR}/swt.jar" ]; then
+			SWTVER=`unzip -cq "${PROGRAM_DIR}/swt.jar" version.txt | sed "s/^version \(.*\)/\1/"`
+		fi
+		SWTVERNEW=`unzip -cq "${PROGRAM_DIR}/${SWTFILE}" version.txt | sed "s/^version \(.*\)/\1/"`
+	else
+		SWTVERNEW="Unknown"
+	fi
+	if [[ "${SWTVERNEW}" > "${SWTVER}" ]]; then
+		echo "Using ${SWTFILE} v${SWTVERNEW}"
+		CLASSPATH="${SWTFILE}${CLASSPATH:+:${CLASSPATH}}"
+	else
+		echo "SWT v${SWTVER}"
+	fi
+}
+
+
+echo $MSG_STARTING
+
+# locate and test the java executable
+if [ "$JAVA_PROGRAM_DIR" == "" ]; then
+	if ! look_for_java ; then
+		exit 1
+	fi
+fi
+
+# get the app dir if not already defined
+if [ -z "$PROGRAM_DIR" ]; then
+		PROGRAM_DIR=`dirname "$0"`
+		PROGRAM_DIR=`cd "$PROGRAM_DIR"; pwd`
+else
+	if [ "$(echo ${PROGRAM_DIR}/*.jar)" = "${PROGRAM_DIR}/*.jar" ]; then
+		echo "You seem to have set an invalid PROGRAM_DIR, unable to continue!"
+		exit 1
+	elif [ ! -f "${PROGRAM_DIR}/BiglyBT.jar" ]; then
+		echo "Unable to locate BiglyBT.jar in $PROGRAM_DIR, aborting!"
+		exit 1
+	fi
+fi
+
+# Change path here so we can do for loop on program dirs with spaces
+cd "${PROGRAM_DIR}"
+
+# build the classpath
+for FILE in ./*.jar; do
+	CLASSPATH="${CLASSPATH:+${CLASSPATH}:}$FILE"
+done
+
+JNA_CHECK_DIRS="/usr/share/java /usr/local/share/java ${LOCALBASE}/share/java"
+for JNADIR in $JNA_CHECK_DIRS; do
+	if [ -f "${JNADIR}/jna.jar" ]; then
+		CLASSPATH="${CLASSPATH:+${CLASSPATH}:}${JNADIR}/jna.jar"
+		break
+	fi
+done
+
+moveInSWT
+
+# setup Java System Properties (no spaces in values)
+JAVA_PROPS="${JAVA_PROPS} -Dazureus.script.version=${SCRIPT_VERSION}"
+if [ ! "$JAVA_ISGCJ x" = " x" ] ; then
+	JAVA_PROPS="$JAVA_PROPS -Dgnu.gcj.runtime.VMClassLoader.library_control=never"
+fi
+
+runJavaOutput "com.biglybt.platform.unix.ScriptBeforeStartup" "$@";
+
+echo $MSG_LOADING
+
+JAVA_ARGS=$(grep -o '^[^#]*' ~/.biglybt/java.vmoptions 2>/dev/null | tr '\n' ' ')
+
+# Don't use "exec -a BiglyBT ..." here as exec quits this script after completion,
+# preventing ScriptAfterShutdown from running, which installs updates and does
+# restarts
+${JAVA_PROGRAM_DIR}java -Xmx256m ${JAVA_ARGS} \
+	-cp "${CLASSPATH}" \
+	"-Djava.library.path=${PROGRAM_DIR}" \
+	"-Dazureus.install.path=${PROGRAM_DIR}" \
+	"-Dazureus.script=$0" \
+	$JAVA_PROPS \
+	$START_CLASS \
+	$OTHER_PARAMS \
+	"$@"
+
+echo $MSG_AZEXIT
+
+runJavaOutput "com.biglybt.platform.unix.ScriptAfterShutdown" "$@";
+
+echo $MSG_TERMINATED
