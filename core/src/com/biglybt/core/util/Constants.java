@@ -43,12 +43,9 @@ Constants
 	public static final String URL_FORUMS          = "https://forums.biglybt.com/";
 	public static final String URL_WIKI            = "https://wiki.biglybt.com/";
 	public static final String AZUREUS_WIKI        = URL_WIKI + "w/";
-	public static final String URL_SUPPORT         = "https://www.biglybt.com/support/";
 	public static final String URL_GETTING_STARTED = "https://client.biglybt.com/GettingStarted.php";
 	public static final String URL_RPC             = "https://rpc.biglybt.com/rpc.php";
 	public static final String URL_RPC2            = "https://vrpc.vuze.com/vzrpc/rpc.php";
-	public static final String URL_SERVICE_XSEARCH = "https://client.vuze.com/xsearch/index.php?q=";
-	public static final String URL_SERVICE_SUBSCRIPTION = "http://client.vuze.com/xsearch/index.php?subscription=";
 	public static final String URL_DEVICES_FAQ     = URL_WIKI + "w/FAQ_Devices";
 	public static final String URL_DONATION        = "https://www.biglybt.com/donation/donate.php";
 	public static final String URL_WEBSEARCH       = "https://www.google.com/search?q=%s%20torrent&newwindow=1";
