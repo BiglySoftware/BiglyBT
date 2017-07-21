@@ -496,7 +496,12 @@ SBC_SearchResultsView
 
 			if ( image != null ){
 
-				button.setImage( image );
+				try{
+					button.setImage( image );
+					
+				}catch( Throwable e ){
+					
+				}
 			}
 
 			button.addSelectionListener(
@@ -1463,6 +1468,28 @@ SBC_SearchResultsView
 
 	public Image
 	getIcon(
+		Engine					engine,
+		ImageLoadListener		result )
+	{
+		Image x = getIconSupport( engine, result );
+		
+		if ( x != null && x.isDisposed()){
+		
+			String icon = engine.getIcon();
+			
+			if ( icon != null ){
+				
+				image_map.remove( icon );
+				
+				x = getIconSupport( engine, result );
+			}
+		}
+		
+		return( x );
+	}
+	
+	private Image
+	getIconSupport(
 		Engine					engine,
 		ImageLoadListener		result )
 	{
