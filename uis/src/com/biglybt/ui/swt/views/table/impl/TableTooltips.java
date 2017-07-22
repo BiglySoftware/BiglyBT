@@ -19,6 +19,7 @@ package com.biglybt.ui.swt.views.table.impl;
 
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -42,7 +43,7 @@ public class TableTooltips
 
 	Shell mainShell = null;
 
-	Label toolTipLabel = null;
+	CLabel toolTipLabel = null;
 
 	private final Composite composite;
 
@@ -104,7 +105,7 @@ public class TableTooltips
 
 				if (oToolTip instanceof String) {
   				String sToolTip = (String) oToolTip;
-  				toolTipLabel = new Label(toolTipShell, SWT.WRAP);
+  				toolTipLabel = new CLabel(toolTipShell, SWT.WRAP);
   				toolTipLabel.setForeground(Colors.getSystemColor(d, SWT.COLOR_INFO_FOREGROUND));
   				toolTipLabel.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
   				toolTipShell.setData("TableCellSWT", cell);
@@ -117,7 +118,7 @@ public class TableTooltips
   				}
 				} else if (oToolTip instanceof Image) {
 					Image image = (Image) oToolTip;
-  				toolTipLabel = new Label(toolTipShell, SWT.CENTER);
+  				toolTipLabel = new CLabel(toolTipShell, SWT.CENTER);
   				toolTipLabel.setForeground(Colors.getSystemColor(d, SWT.COLOR_INFO_FOREGROUND));
   				toolTipLabel.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
   				toolTipShell.setData("TableCellSWT", cell);

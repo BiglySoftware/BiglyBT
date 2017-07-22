@@ -22,6 +22,7 @@ package com.biglybt.ui.swt.views.skin.sidebar;
 
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
@@ -46,7 +47,7 @@ public class SideBarToolTips
 
 	Shell mainShell = null;
 
-	Label toolTipLabel = null;
+	CLabel toolTipLabel = null;
 
 	private final Tree tree;
 
@@ -147,7 +148,7 @@ public class SideBarToolTips
 		toolTipShell.setLayout(f);
 		toolTipShell.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
 
-		toolTipLabel = new Label(toolTipShell, SWT.WRAP);
+		toolTipLabel = new CLabel(toolTipShell, SWT.WRAP);
 		toolTipLabel.setForeground(Colors.getSystemColor(d, SWT.COLOR_INFO_FOREGROUND));
 		toolTipLabel.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
 		toolTipLabel.setText(sToolTip.replaceAll("&", "&&"));
