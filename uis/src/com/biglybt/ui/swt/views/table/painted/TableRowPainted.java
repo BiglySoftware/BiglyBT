@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views.table.painted;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Composite;
@@ -569,9 +570,9 @@ public class TableRowPainted
 			//	System.out.print(cell.getTableColumn().getName() + ", ");
 			//}
 			//System.out.println();
-			Utils.execSWTThread(new AERunnable() {
+			Utils.execSWTThread(new SWTRunnable() {
 				@Override
-				public void runSupport() {
+				public void runWithDisplay(Display display) {
 					Composite composite = getViewPainted().getComposite();
 					if (composite == null || composite.isDisposed() || !isVisible()) {
 						return;

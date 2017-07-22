@@ -2294,6 +2294,9 @@ public class TableViewPainted
 	 */
 	@Override
 	public void visibleRowsChanged() {
+		if (Utils.isDisplayDisposed()) {
+			return;
+		}
 		swt_visibleRowsChanged();
 	}
 
@@ -3309,10 +3312,10 @@ public class TableViewPainted
 			pending_rows.add( row );
 		}
 
-		Utils.execSWTThread(new AERunnable() {
+		Utils.execSWTThread(new SWTRunnable() {
 
 			@Override
-			public void runSupport() {
+			public void runWithDisplay(Display display) {
 
 				List<TableRowPainted>	rows;
 
