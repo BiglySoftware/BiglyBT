@@ -24,6 +24,7 @@ import java.util.List;
 import com.biglybt.core.util.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 import com.biglybt.core.config.COConfigurationManager;
@@ -111,7 +112,7 @@ public class Colors implements ParameterListener {
       diffLumPct = hslScheme.getLuminence() == 0 ? 0 : (float) hslDefault.getLuminence() / hslScheme.getLuminence();
 
       HSLColor hslColor = new HSLColor();
-      Color colorTables = display.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+      Color colorTables = Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND);
       int tR = colorTables.getRed();
       int tG = colorTables.getGreen();
       int tB = colorTables.getBlue();
@@ -190,7 +191,7 @@ public class Colors implements ParameterListener {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				Color colorTables = display.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+				Color colorTables = Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND);
 				HSLColor hslColor = new HSLColor();
 				hslColor.initHSLbyRGB(colorTables.getRed(), colorTables.getGreen(),
 						colorTables.getBlue());
@@ -226,7 +227,7 @@ public class Colors implements ParameterListener {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				Color colorTables = display.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+				Color colorTables = Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND);
 				HSLColor hslBG = new HSLColor();
 				hslBG.initHSLbyRGB(colorTables.getRed(), colorTables.getGreen(),
 						colorTables.getBlue());
@@ -247,7 +248,7 @@ public class Colors implements ParameterListener {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				Color colorTables = display.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+				Color colorTables = Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND);
 				HSLColor hslColor = new HSLColor();
 				hslColor.initHSLbyRGB(colorTables.getRed(), colorTables.getGreen(),
 						colorTables.getBlue());
@@ -522,4 +523,16 @@ public class Colors implements ParameterListener {
       allocateColorAltRow();
     }
   }
+
+	public static Color getSystemColor (Device d, int id) {
+		if (Utils.isGTK3) {
+			if (id == SWT.COLOR_INFO_BACKGROUND) {
+				return ColorCache.getColor(d, 0, 0,0 );
+			}
+			if (id == SWT.COLOR_INFO_FOREGROUND) {
+				return ColorCache.getColor(d, 255, 255,255 );
+			}
+		}
+		return d.getSystemColor(id);
+	}
 }

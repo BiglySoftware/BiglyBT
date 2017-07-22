@@ -22,6 +22,7 @@ import java.net.URLConnection;
 import java.util.*;
 import java.util.List;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.*;
 import org.eclipse.swt.events.DisposeEvent;
@@ -745,8 +746,8 @@ public class BrowserContext
 
 	public void fillWithRetry(String s, String s2) {
 
-		Color bg = browser.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
-		Color fg = browser.getDisplay().getSystemColor(SWT.COLOR_WIDGET_FOREGROUND);
+		Color bg = Colors.getSystemColor(browser.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND);
+		Color fg = Colors.getSystemColor(browser.getDisplay(), SWT.COLOR_WIDGET_FOREGROUND);
 
 		if ( autoReloadPending ){
 

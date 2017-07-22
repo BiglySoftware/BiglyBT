@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.components;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -83,7 +84,7 @@ public class BubbleTextBox
 			public void paintControl(PaintEvent e) {
 				Rectangle clientArea = cBubble.getClientArea();
 				if (Utils.isGTK) {
-					e.gc.setBackground(e.display.getSystemColor(SWT.COLOR_LIST_BACKGROUND));
+					e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_LIST_BACKGROUND));
 				} else {
 					e.gc.setBackground(textWidget.getBackground());
 				}
@@ -106,8 +107,7 @@ public class BubbleTextBox
 				}
 				int iconY = clientArea.y + ((clientArea.height - iconHeight + 1) / 2);
 
-				Color colorClearX = e.display.getSystemColor(
-						SWT.COLOR_WIDGET_NORMAL_SHADOW);
+				Color colorClearX = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 				e.gc.setForeground(colorClearX);
 
 				e.gc.setLineWidth(Utils.adjustPXForDPI(2));

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.biglybt.core.Core;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.graphics.Color;
@@ -364,7 +365,7 @@ public class SubscriptionWizard {
 		}
 	}
 	private void populateHeader(Composite header) {
-		header.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+		header.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
 		title = new Label(header, SWT.WRAP);
 
 		title.setFont(titleFont);
@@ -757,7 +758,7 @@ public class SubscriptionWizard {
 		torrentColumn.setWidth(Utils.adjustPXForDPI(50));
 
 		final Composite compEmpty = new Composite(composite,SWT.NONE);
-		compEmpty.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+		compEmpty.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
 		compEmpty.setBackgroundMode(SWT.INHERIT_DEFAULT);
 		FillLayout fl = new FillLayout();
 		fl.marginHeight = 15;
@@ -944,7 +945,7 @@ public class SubscriptionWizard {
 			        	  if(subs[i].isSubscribed()) isSubscribed = true;
 			          }
 			          if(isSubscribed) {
-			        	  item.setForeground(display.getSystemColor(SWT.COLOR_GRAY));
+			        	  item.setForeground(Colors.getSystemColor(display, SWT.COLOR_GRAY));
 			          }
 
 			          if(subInfo.getDownload() == download) {

@@ -34,7 +34,6 @@ public class TrayDelegateFactory
 				return (TrayDelegate) Class.forName(
 						"com.biglybt.ui.swt.systray.TrayDork").newInstance();
 			} catch (Throwable ignore) {
-				ignore.printStackTrace();
 			}
 		}
 		return new TraySWT(display);
@@ -47,7 +46,6 @@ public class TrayDelegateFactory
 						"com.biglybt.ui.swt.systray.TrayItemDork").getConstructor(
 								TrayDelegate.class).newInstance(tray);
 			} catch (Throwable ignore) {
-				ignore.printStackTrace();
 			}
 		}
 		return new TrayItemSWT(tray, SWT.NONE);

@@ -1140,7 +1140,7 @@ public class SideBarEntrySWT
 				&& !SideBar.USE_NATIVE_EXPANDER) {
 			gc.setAntialias(SWT.ON);
 			Color oldBG = gc.getBackground();
-			gc.setBackground(event.display.getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+			gc.setBackground(Colors.getSystemColor(event.display, SWT.COLOR_LIST_FOREGROUND));
 			int baseX = 22; // itemBounds.x;
 			if (treeItem.getExpanded()) {
 				int xStart = 12;

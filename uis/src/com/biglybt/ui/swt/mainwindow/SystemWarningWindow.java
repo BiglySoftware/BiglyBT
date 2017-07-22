@@ -171,8 +171,8 @@ public class SystemWarningWindow
 		//shell.setText("Warning (X of X)");
 		shell = new Shell(parent, SWT.TOOL);
 		shell.setLayout(new FormLayout());
-		shell.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-		shell.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+		shell.setBackground(Colors.getSystemColor(display, SWT.COLOR_INFO_BACKGROUND));
+		shell.setForeground(Colors.getSystemColor(display, SWT.COLOR_INFO_FOREGROUND));
 
 		Menu menu = new Menu(shell);
 		MenuItem menuItem = new MenuItem(menu, SWT.PUSH);

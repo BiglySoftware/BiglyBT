@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.devices;
 
 import com.biglybt.core.devices.Device;
 import com.biglybt.core.util.Constants;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -162,7 +163,7 @@ DevicesWizard
 	populateHeader(
 		Composite header)
 	{
-		header.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+		header.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
 
 		Label title = new Label(header, SWT.WRAP);
 

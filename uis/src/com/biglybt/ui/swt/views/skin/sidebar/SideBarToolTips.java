@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.views.skin.sidebar;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -144,11 +145,11 @@ public class SideBarToolTips
 			/* Ignore for Pre 3.0 SWT.. */
 		}
 		toolTipShell.setLayout(f);
-		toolTipShell.setBackground(d.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+		toolTipShell.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
 
 		toolTipLabel = new Label(toolTipShell, SWT.WRAP);
-		toolTipLabel.setForeground(d.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-		toolTipLabel.setBackground(d.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+		toolTipLabel.setForeground(Colors.getSystemColor(d, SWT.COLOR_INFO_FOREGROUND));
+		toolTipLabel.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
 		toolTipLabel.setText(sToolTip.replaceAll("&", "&&"));
 		// compute size on label instead of shell because label
 		// calculates wrap, while shell doesn't

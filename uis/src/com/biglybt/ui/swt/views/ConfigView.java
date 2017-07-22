@@ -21,6 +21,7 @@ import java.util.*;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreRunningListener;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -247,12 +248,12 @@ public class ConfigView implements UISWTViewEventListener {
       gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
       Utils.setLayoutData(cHeader, gridData);
 
-      cHeader.setBackground(d.getSystemColor(SWT.COLOR_LIST_SELECTION));
-      cHeader.setForeground(d.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+      cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+      cHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
 
       lHeader = new Label(cHeader, SWT.NULL);
-      lHeader.setBackground(d.getSystemColor(SWT.COLOR_LIST_SELECTION));
-      lHeader.setForeground(d.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+      lHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+      lHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
       fontData = lHeader.getFont().getFontData();
       fontData[0].setStyle(SWT.BOLD);
       int fontHeight = (int)(fontData[0].getHeight() * 1.2);
@@ -264,8 +265,8 @@ public class ConfigView implements UISWTViewEventListener {
 
 
       usermodeHint = new Label(cHeader, SWT.NULL);
-      usermodeHint.setBackground(d.getSystemColor(SWT.COLOR_LIST_SELECTION));
-      usermodeHint.setForeground(d.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+      usermodeHint.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+      usermodeHint.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
       gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER | GridData.HORIZONTAL_ALIGN_END | GridData.GRAB_HORIZONTAL);
       Utils.setLayoutData(usermodeHint, gridData);
 
@@ -919,8 +920,8 @@ public class ConfigView implements UISWTViewEventListener {
 	 */
 	private void hilightControl(Control child) {
 		child.setFont(headerFont);
-		child.setBackground(child.getDisplay().getSystemColor(SWT.COLOR_INFO_BACKGROUND));
-		child.setForeground(child.getDisplay().getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+		child.setBackground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_BACKGROUND));
+		child.setForeground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_FOREGROUND));
 	}
 
 	private void ensureSectionBuilt(TreeItem treeSection, boolean recreateIfAlreadyThere) {

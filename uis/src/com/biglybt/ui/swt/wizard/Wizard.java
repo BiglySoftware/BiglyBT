@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.wizard;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -128,7 +129,7 @@ public class Wizard {
     Utils.setShellIcon(wizardWindow);
 
     Composite cTitle = new Composite(wizardWindow, SWT.NULL);
-    Color white = display.getSystemColor(SWT.COLOR_WHITE);
+    Color white = Colors.getSystemColor(display, SWT.COLOR_WHITE);
     cTitle.setBackground(white);
     GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
     Utils.setLayoutData(cTitle, gridData);
@@ -154,7 +155,7 @@ public class Wizard {
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     Utils.setLayoutData(errorMessage, gridData);
     errorMessage.setBackground(white);
-    Color red = display.getSystemColor(SWT.COLOR_RED);
+    Color red = Colors.getSystemColor(display, SWT.COLOR_RED);
     errorMessage.setForeground(red);
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);

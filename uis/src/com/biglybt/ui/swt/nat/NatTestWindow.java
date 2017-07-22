@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.nat;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
@@ -313,7 +314,7 @@ public class NatTestWindow {
     gridData.verticalAlignment = SWT.FILL;
     gridData.horizontalSpan = 3;
     Utils.setLayoutData(textResults, gridData);
-    textResults.setBackground(panel.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+    textResults.setBackground(Colors.getSystemColor(panel.getDisplay(), SWT.COLOR_WHITE));
 
     bTestTCP.addListener(SWT.Selection, new Listener() {
       @Override

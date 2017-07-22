@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.*;
 import java.util.List;
 
+import com.biglybt.ui.swt.mainwindow.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -68,10 +69,6 @@ import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.exporttorrent.wizard.ExportTorrentWizard;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.mainwindow.IMenuConstants;
-import com.biglybt.ui.swt.mainwindow.MenuFactory;
-import com.biglybt.ui.swt.mainwindow.SelectableSpeedMenu;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.sharing.ShareUtils;
@@ -317,7 +314,7 @@ public class TorrentMenuFancy
 				int arrowSize = Utils.adjustPXForDPI(8);
 				int xStart = size.x - arrowSize;
 				int yStart = size.y - (size.y + arrowSize) / 2;
-				e.gc.setBackground(e.display.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND));
+				e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_FOREGROUND));
 				e.gc.setAntialias(SWT.ON);
 				e.gc.fillPolygon(new int[] {
 					xStart,
@@ -366,10 +363,10 @@ public class TorrentMenuFancy
 				}
 				Rectangle bounds = ((Control) e.widget).getBounds();
 
-				Color bg = e.display.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+				Color bg = Colors.getSystemColor(e.display, SWT.COLOR_LIST_BACKGROUND);
 				int arc = bounds.height / 3;
 				e.gc.setBackground(bg);
-				e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW));
+				e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_DARK_SHADOW));
 				e.gc.setAntialias(SWT.ON);
 				//System.out.println("clip=" + e.gc.getClipping());
 				e.gc.fillRoundRectangle(0, 0, bounds.width - 1, bounds.height - 1, arc,
@@ -378,7 +375,7 @@ public class TorrentMenuFancy
 				e.gc.drawRoundRectangle(0, 0, bounds.width - 1, bounds.height - 1, arc,
 						arc);
 
-				Color fg = e.display.getSystemColor(SWT.COLOR_LIST_FOREGROUND);
+				Color fg = Colors.getSystemColor(e.display, SWT.COLOR_LIST_FOREGROUND);
 				for (Control control : ((Composite) e.widget).getChildren()) {
 					control.setBackground(bg);
 					control.setForeground(fg);
@@ -420,8 +417,8 @@ public class TorrentMenuFancy
 		topArea = new Composite(shell, SWT.DOUBLE_BUFFERED);
 		detailArea = new Composite(shell, SWT.DOUBLE_BUFFERED);
 
-		topArea.setBackground(d.getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-		topArea.setForeground(d.getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+		topArea.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_BACKGROUND));
+		topArea.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_FOREGROUND));
 
 		FormData fd = Utils.getFilledFormData();
 		fd.bottom = null;
@@ -509,7 +506,7 @@ public class TorrentMenuFancy
 
 			@Override
 			public void paintControl(PaintEvent e) {
-				e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_WIDGET_BORDER));
+				e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_BORDER));
 				Rectangle clientArea = shell.getClientArea();
 				e.gc.drawRectangle(0, 0, clientArea.width - 1, clientArea.height - 1);
 			}
@@ -713,8 +710,8 @@ public class TorrentMenuFancy
 			currentMenu.setVisible(false);
 		}
 		Display d = header.composite.getDisplay();
-		header.composite.setBackground(d.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
-		header.composite.setForeground(d.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND));
+		header.composite.setBackground(Colors.getSystemColor(d, SWT.COLOR_WIDGET_BACKGROUND));
+		header.composite.setForeground(Colors.getSystemColor(d, SWT.COLOR_WIDGET_FOREGROUND));
 
 		Utils.disposeSWTObjects(detailArea.getChildren());
 		listRowInfos.clear();
@@ -782,8 +779,8 @@ public class TorrentMenuFancy
 		}
 
 		if (activatedHeader != null) {
-			activatedHeader.composite.setBackground(d.getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-			activatedHeader.composite.setForeground(d.getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+			activatedHeader.composite.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_BACKGROUND));
+			activatedHeader.composite.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_FOREGROUND));
 		}
 
 		activatedHeader = header;
@@ -1734,16 +1731,16 @@ public class TorrentMenuFancy
 				if (e.type == SWT.Paint) {
 					Point size = c.getSize();
 					if (inWidget) {
-						e.gc.setBackground(e.display.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
+						e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
 					} else {
-						e.gc.setBackground(e.display.getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
+						e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
 					}
 					e.gc.setAdvanced(true);
 					e.gc.setAntialias(SWT.ON);
 					e.gc.fillRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
-					e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW));
+					e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_DARK_SHADOW));
 					e.gc.drawRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
-					e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
+					e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
 					e.gc.drawRoundRectangle(1, 1, size.x - 3, size.y - 3, 6, 6);
 
 					Image image = ImageLoader.getInstance().getImage(
@@ -2338,8 +2335,8 @@ public class TorrentMenuFancy
 		fillLayout.marginHeight = 2;
 		composite.setLayout(fillLayout);
 		Display d = composite.getDisplay();
-		composite.setBackground(d.getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-		composite.setForeground(d.getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+		composite.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_BACKGROUND));
+		composite.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_FOREGROUND));
 
 		Label control = new Label(composite, SWT.NONE);
 		Messages.setLanguageText(control, title);

@@ -20,6 +20,7 @@ package com.biglybt.ui.swt.shells.uiswitcher;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
@@ -126,10 +127,8 @@ public class UISwitcherWindow
 						boolean selected = idx == i;
 						Composite c = buttons[i].getParent();
 						c.setBackground(
-								selected ? c.getDisplay().getSystemColor(
-										SWT.COLOR_LIST_SELECTION) : null);
-						Color fg = selected ? c.getDisplay().getSystemColor(
-								SWT.COLOR_LIST_SELECTION_TEXT) : null;
+								selected ? Colors.getSystemColor(c.getDisplay(), SWT.COLOR_LIST_SELECTION) : null);
+						Color fg = selected ? Colors.getSystemColor(c.getDisplay(), SWT.COLOR_LIST_SELECTION_TEXT) : null;
 						Control[] children = c.getChildren();
 						for (int j = 0; j < children.length; j++) {
 							Control control = children[j];

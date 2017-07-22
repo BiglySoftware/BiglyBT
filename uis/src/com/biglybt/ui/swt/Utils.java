@@ -615,7 +615,7 @@ public class Utils
 		if (item == null || item.isDisposed())
 			return;
 		Color[] colors = {
-			item.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND),
+			Colors.getSystemColor(item.getDisplay(), SWT.COLOR_LIST_BACKGROUND),
 			Colors.colorAltRow
 		};
 		Color newColor = colors[item.getParent().indexOf(item) % colors.length];
@@ -644,7 +644,7 @@ public class Utils
 		int iBottomIndex = getTableBottomIndex(table, iTopIndex);
 
 		Color[] colors = {
-			table.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND),
+			Colors.getSystemColor(table.getDisplay(), SWT.COLOR_LIST_BACKGROUND),
 			Colors.colorAltRow
 		};
 		int iFixedIndex = iTopIndex;
@@ -754,7 +754,7 @@ public class Utils
 					icon128 = image;
 //  				GC gc = new GC(icon128);
 //  				gc.setTextAntialias(SWT.ON);
-//  				gc.setForeground(shell.getDisplay().getSystemColor(SWT.COLOR_YELLOW));
+//  				gc.setForeground(Colors.getSystemColor(shell.getDisplay(), SWT.COLOR_YELLOW));
 //  				Font font = getFontWithHeight(gc.getFont(), gc, 20, SWT.BOLD);
 //  				gc.setFont(font);
 //					GCStringPrinter.printString(gc, Constants.AZUREUS_VERSION,

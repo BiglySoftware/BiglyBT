@@ -22,6 +22,7 @@ import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.UISkinnableManagerSWT;
 import com.biglybt.ui.swt.UISkinnableSWTListener;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.*;
@@ -370,7 +371,7 @@ public class MessageSlideShell
 		}
 
 		if (colorFG == null) {
-			colorFG = display.getSystemColor(SWT.COLOR_BLACK);
+			colorFG = Colors.getSystemColor(display, SWT.COLOR_BLACK);
 		}
 
 		FormLayout shellLayout = new FormLayout();
@@ -422,8 +423,8 @@ public class MessageSlideShell
 						detailsShell.setLayout(new FillLayout());
 						StyledText textDetails = new StyledText(detailsShell, SWT.READ_ONLY
 								| SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
-						textDetails.setBackground(display.getSystemColor(SWT.COLOR_LIST_BACKGROUND));
-						textDetails.setForeground(display.getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+						textDetails.setBackground(Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND));
+						textDetails.setForeground(Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
 						textDetails.setWordWrap(true);
 						textDetails.setText(sDetails);
 						detailsShell.layout();
@@ -487,7 +488,7 @@ public class MessageSlideShell
 		btnHideAll = new Button(cButtons, SWT.PUSH);
 		Messages.setLanguageText(btnHideAll, "popup.error.hideall");
 		btnHideAll.setVisible(false);
-		btnHideAll.setForeground(display.getSystemColor(SWT.COLOR_BLACK));
+		btnHideAll.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
 		// XXX SWT.Selection doesn't work on latest GTK (2.8.17) & SWT3.2 for ON_TOP
 		btnHideAll.addListener(SWT.MouseUp, new Listener() {
 			@Override
@@ -500,7 +501,7 @@ public class MessageSlideShell
 
 		if (idxHistory > 0) {
 			final Button btnPrev = new Button(cButtons, SWT.PUSH);
-			btnPrev.setForeground(display.getSystemColor(SWT.COLOR_BLACK));
+			btnPrev.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
 			btnPrev.setText(MessageText.getString("popup.previous", new String[] {
 				"" + idxHistory
 			}));
@@ -519,7 +520,7 @@ public class MessageSlideShell
 		}
 
 		btnNext = new Button(cButtons, SWT.PUSH);
-		btnNext.setForeground(display.getSystemColor(SWT.COLOR_BLACK));
+		btnNext.setForeground(Colors.getSystemColor(display, SWT.COLOR_BLACK));
 		int numAfter = historyList.size() - idxHistory - 1;
 		setButtonNextText(numAfter);
 

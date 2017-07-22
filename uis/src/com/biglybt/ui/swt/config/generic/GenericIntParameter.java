@@ -19,6 +19,7 @@
 
 package com.biglybt.ui.swt.config.generic;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.util.*;
@@ -172,8 +173,8 @@ public class GenericIntParameter
 		spinner.setSelection(value);
 		if (isZeroHidden) {
 			Display display = spinner.getDisplay();
-			spinner.setBackground(value == 0 ? display.getSystemColor(SWT.COLOR_INFO_BACKGROUND) : null);
-			spinner.setForeground(value == 0 ? display.getSystemColor(SWT.COLOR_INFO_FOREGROUND) : null);
+			spinner.setBackground(value == 0 ? Colors.getSystemColor(display, SWT.COLOR_INFO_BACKGROUND) : null);
+			spinner.setForeground(value == 0 ? Colors.getSystemColor(display, SWT.COLOR_INFO_FOREGROUND) : null);
 		}
 	}
 

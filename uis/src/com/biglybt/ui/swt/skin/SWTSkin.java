@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.biglybt.ui.IUIIntializer;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
@@ -1106,7 +1107,7 @@ public class SWTSkin
 					sConfigID, "sash", parentSkinObject);
 			addToControlMap(skinObject);
 
-			sash.setBackground(sash.getDisplay().getSystemColor(SWT.COLOR_RED));
+			sash.setBackground(Colors.getSystemColor(sash.getDisplay(), SWT.COLOR_RED));
 
 			sash.addListener(SWT.Selection, new Listener() {
 				@Override

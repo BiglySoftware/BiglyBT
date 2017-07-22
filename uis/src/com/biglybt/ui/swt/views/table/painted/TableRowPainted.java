@@ -213,15 +213,15 @@ public class TableRowPainted
   		}
 		} else {
 			Device device = gc.getDevice();
-			altColor = device.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
+			altColor = Colors.getSystemColor(device, SWT.COLOR_WIDGET_BACKGROUND);
 			if (isSelected) {
-				bg = device.getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW);
+				bg = Colors.getSystemColor(device, SWT.COLOR_WIDGET_LIGHT_SHADOW);
 			} else {
 				bg = altColor;
 			}
 			gc.setBackground(bg);
 
-			fg = device.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
+			fg = Colors.getSystemColor(device, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 		}
 		gc.setForeground(fg);
 

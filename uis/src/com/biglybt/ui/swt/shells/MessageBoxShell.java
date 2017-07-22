@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.shells;
 import java.util.*;
 import java.util.List;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.*;
 import org.eclipse.swt.events.*;
@@ -705,10 +706,10 @@ public class MessageBoxShell
 				@Override
 				public void handleEvent(Event e) {
 					Rectangle clientArea = ((Canvas) e.widget).getClientArea();
-					e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
+					e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW));
 					e.gc.drawRectangle(clientArea);
 					clientArea.y++;
-					e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
+					e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
 					e.gc.drawRectangle(clientArea);
 				}
 			});

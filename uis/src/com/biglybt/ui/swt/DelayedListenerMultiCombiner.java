@@ -20,10 +20,11 @@
 
 package com.biglybt.ui.swt;
 
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
-import com.biglybt.core.util.AERunnable;
+import com.biglybt.ui.swt.utils.SWTRunnable;
 
 /**
  * Delayed {@link Listener} that denies more triggers while one is pending
@@ -48,9 +49,9 @@ public abstract class DelayedListenerMultiCombiner
 			pending = true;
 		}
 
-		Utils.execSWTThreadLater(0, new AERunnable() {
+		Utils.execSWTThreadLater(0, new SWTRunnable() {
 			@Override
-			public void runSupport() {
+			public void runWithDisplay(Display display) {
 				synchronized( lock ){
   					pending = false;
   				}

@@ -20,6 +20,7 @@ import java.io.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
@@ -569,8 +570,8 @@ public class UIDebugGenerator
 		GC gc = new GC(image);
 		try {
 			Device device = image.getDevice();
-			gc.setBackground(device.getSystemColor(SWT.COLOR_WHITE));
-			gc.setForeground(device.getSystemColor(SWT.COLOR_RED));
+			gc.setBackground(Colors.getSystemColor(device, SWT.COLOR_WHITE));
+			gc.setForeground(Colors.getSystemColor(device, SWT.COLOR_RED));
 			gc.fillRectangle(bounds);
 			gc.drawRectangle(bounds);
 			Utils.setClipping(gc, bounds);

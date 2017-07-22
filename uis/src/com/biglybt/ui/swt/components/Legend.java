@@ -219,7 +219,7 @@ public class Legend {
 						boolean vis = !config.getBooleanParameter(keys[f_i] + ".vis", true );
 						config.setParameter(keys[f_i] + ".vis", vis );
 						listener.visibilityChange( vis, f_i );
-						lblDesc.setForeground(vis?lblDesc.getDisplay().getSystemColor( SWT.COLOR_BLACK ):Colors.grey );
+						lblDesc.setForeground(vis?Colors.getSystemColor(lblDesc.getDisplay(), SWT.COLOR_BLACK ):Colors.grey );
 					}
 				});
 

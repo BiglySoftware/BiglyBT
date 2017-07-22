@@ -318,8 +318,8 @@ public class TabbedEntry
 					parent.setBackgroundMode(SWT.INHERIT_NONE);
 
 					Composite viewComposite = soContents.getComposite();
-					//viewComposite.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
-					//viewComposite.setForeground(parent.getDisplay().getSystemColor(SWT.COLOR_WIDGET_FOREGROUND));
+					//viewComposite.setBackground(Colors.getSystemColor(parent.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND));
+					//viewComposite.setForeground(Colors.getSystemColor(parent.getDisplay(), SWT.COLOR_WIDGET_FOREGROUND));
 
 					boolean doGridLayout = true;
 					if (getControlType() == CONTROLTYPE_SKINOBJECT) {

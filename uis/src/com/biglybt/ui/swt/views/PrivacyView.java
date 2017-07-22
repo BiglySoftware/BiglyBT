@@ -27,6 +27,7 @@ import java.util.List;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.*;
@@ -224,9 +225,9 @@ public class PrivacyView
 
 			final DownloadManager f_new_dm = current_dm;
 
-			Utils.execSWTThread(new AERunnable() {
+			Utils.execSWTThread(new SWTRunnable() {
 				@Override
-				public void runSupport() {
+				public void runWithDisplay(Display display) {
 					swt_updateFields( f_old_dm, f_new_dm );
 				}
 			});

@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.*;
 import org.eclipse.swt.events.*;
@@ -191,14 +192,14 @@ public class TabbedMDI
 		tabFolder.setForeground(ColorCache.getColor(display, hsb));
 
 		tabFolder.setSelectionBackground(new Color[] {
-			display.getSystemColor(SWT.COLOR_LIST_BACKGROUND),
-			display.getSystemColor(SWT.COLOR_LIST_BACKGROUND),
-			display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND)
+			Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND),
+			Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND),
+			Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND)
 		}, new int[] {
 			10,
 			90
 		}, true);
-		tabFolder.setSelectionForeground(display.getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+		tabFolder.setSelectionForeground(Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
 
 		if (minimumCharacters > 0) {
 			tabFolder.setMinimumCharacters(minimumCharacters);

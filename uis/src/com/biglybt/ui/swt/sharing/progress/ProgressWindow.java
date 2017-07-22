@@ -24,6 +24,7 @@ package com.biglybt.ui.swt.sharing.progress;
  * @author parg
  *
  */
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Rectangle;
@@ -110,7 +111,7 @@ ProgressWindow
 
 
 			tasks = new StyledText(shell, SWT.READ_ONLY | SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
-			tasks.setBackground(dialog_display.getSystemColor(SWT.COLOR_WHITE));
+			tasks.setBackground(Colors.getSystemColor(dialog_display, SWT.COLOR_WHITE));
 
 			progress = new ProgressBar(shell, SWT.NULL);
 			progress.setMinimum(0);

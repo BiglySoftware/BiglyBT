@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.Core;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -93,7 +94,7 @@ public class ProgressPanel extends AbstractWizardPanel<NewTorrentWizard> impleme
     panel.setLayout(layout);
 
     tasks = new Text(panel, SWT.BORDER | SWT.MULTI | SWT.READ_ONLY);
-    tasks.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+    tasks.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.heightHint = 120;
     gridData.horizontalSpan = 2;

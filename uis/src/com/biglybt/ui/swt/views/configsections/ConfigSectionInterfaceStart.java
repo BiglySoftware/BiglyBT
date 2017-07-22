@@ -22,6 +22,7 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
+import com.biglybt.core.util.Constants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -92,6 +93,10 @@ public class ConfigSectionInterfaceStart implements UISWTConfigSection {
     new Label(cStart,SWT.NULL);
     new BooleanParameter(cStart, "Open Transfer Bar On Start", "ConfigView.label.open_transfer_bar_on_start");
     new BooleanParameter(cStart, "Start Minimized", "ConfigView.label.startminimized");
+
+    if (Constants.isUnix) {
+	    new BooleanParameter(cStart, "ui.useGTK2", "ConfigView.label.useGTK2");
+    }
 
 	// UI switcher window.
     Composite cUISwitcher = new Composite(cStart, SWT.NONE);

@@ -283,7 +283,7 @@ SpeedTestPanel
 
         //message text section.
         textMessages = new Text(panel, SWT.BORDER | SWT.MULTI | SWT.READ_ONLY | SWT.V_SCROLL | SWT.H_SCROLL );
-		textMessages.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+		textMessages.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
 		gridData = new GridData(GridData.FILL_BOTH);
         gridData.horizontalSpan = 4;
         gridData.heightHint = 60;
@@ -749,7 +749,7 @@ SpeedTestPanel
                 Messages.setLanguageText(encryptToggle,"SpeedTestWizard.test.panel.encrypted");
                 originalColor = encryptToggle.getForeground();
                 //Color highlightColor = ColorCache.getColor(display,178,78,127);
-                Color highlightColor = display.getSystemColor(SWT.COLOR_DARK_YELLOW);
+                Color highlightColor = Colors.getSystemColor(display, SWT.COLOR_DARK_YELLOW);
                 encryptToggle.setBackground(highlightColor);
             }else{
                 Messages.setLanguageText(encryptToggle,"SpeedTestWizard.test.panel.standard");

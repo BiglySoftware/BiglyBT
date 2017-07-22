@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -231,10 +232,8 @@ public class SBC_ActivityTableView
 		skin.layout();
 
 		viewComposite = soContents.getComposite();
-		viewComposite.setBackground(viewComposite.getDisplay().getSystemColor(
-				SWT.COLOR_WIDGET_BACKGROUND));
-		viewComposite.setForeground(viewComposite.getDisplay().getSystemColor(
-				SWT.COLOR_WIDGET_FOREGROUND));
+		viewComposite.setBackground(Colors.getSystemColor(viewComposite.getDisplay(), SWT.COLOR_WIDGET_BACKGROUND));
+		viewComposite.setForeground(Colors.getSystemColor(viewComposite.getDisplay(), SWT.COLOR_WIDGET_FOREGROUND));
 		viewComposite.setLayoutData(Utils.getFilledFormData());
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;

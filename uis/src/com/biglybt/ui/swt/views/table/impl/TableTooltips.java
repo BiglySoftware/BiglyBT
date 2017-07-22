@@ -17,6 +17,7 @@
 
 package com.biglybt.ui.swt.views.table.impl;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -97,15 +98,15 @@ public class TableTooltips
 					/* Ignore for Pre 3.0 SWT.. */
 				}
 				toolTipShell.setLayout(f);
-				toolTipShell.setBackground(d.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+				toolTipShell.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
 
 				Point size = new Point(0, 0);
 
 				if (oToolTip instanceof String) {
   				String sToolTip = (String) oToolTip;
   				toolTipLabel = new Label(toolTipShell, SWT.WRAP);
-  				toolTipLabel.setForeground(d.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-  				toolTipLabel.setBackground(d.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+  				toolTipLabel.setForeground(Colors.getSystemColor(d, SWT.COLOR_INFO_FOREGROUND));
+  				toolTipLabel.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
   				toolTipShell.setData("TableCellSWT", cell);
   				toolTipLabel.setText(sToolTip.replaceAll("&", "&&"));
   				// compute size on label instead of shell because label
@@ -117,8 +118,8 @@ public class TableTooltips
 				} else if (oToolTip instanceof Image) {
 					Image image = (Image) oToolTip;
   				toolTipLabel = new Label(toolTipShell, SWT.CENTER);
-  				toolTipLabel.setForeground(d.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-  				toolTipLabel.setBackground(d.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+  				toolTipLabel.setForeground(Colors.getSystemColor(d, SWT.COLOR_INFO_FOREGROUND));
+  				toolTipLabel.setBackground(Colors.getSystemColor(d, SWT.COLOR_INFO_BACKGROUND));
   				toolTipShell.setData("TableCellSWT", cell);
   				toolTipLabel.setImage(image);
   				size = toolTipLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT);

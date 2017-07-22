@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.biglybt.ui.skin.SkinPropertiesImpl;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.utils.ImageBytesDownloader;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
@@ -1103,9 +1104,9 @@ public class ImageLoader
 			final int SIZE = 10;
 			noImage = new Image(display, SIZE, SIZE);
 			GC gc = new GC(noImage);
-			gc.setBackground(display.getSystemColor(SWT.COLOR_YELLOW));
+			gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_YELLOW));
 			gc.fillRectangle(0, 0, SIZE, SIZE);
-			gc.setBackground(display.getSystemColor(SWT.COLOR_RED));
+			gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_RED));
 			gc.drawRectangle(0, 0, SIZE - 1, SIZE - 1);
 			gc.dispose();
 		}

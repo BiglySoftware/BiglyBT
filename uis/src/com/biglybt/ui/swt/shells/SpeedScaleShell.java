@@ -20,6 +20,7 @@ package com.biglybt.ui.swt.shells;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
@@ -134,7 +135,7 @@ public class SpeedScaleShell
 	 * @param cClickedFrom
 	 *
 	 * @param startValue
-	 * @param assumeInitiallyDown
+	 * @param _assumeInitiallyDown
 	 * @return
 	 *
 	 * @since 3.0.1.7
@@ -389,7 +390,7 @@ public class SpeedScaleShell
 				e.gc.setLineWidth(Utils.adjustPXForDPI(1));
 
 				e.gc.setForeground(
-						display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
+						Colors.getSystemColor(display, SWT.COLOR_WIDGET_NORMAL_SHADOW));
 				// left
 				e.gc.drawLine(PADDING_X0, baseLinePos - 6, PADDING_X0, baseLinePos + 6);
 				// right
@@ -399,8 +400,8 @@ public class SpeedScaleShell
 				e.gc.drawLine(PADDING_X0, baseLinePos, PADDING_X0 + WIDTH_NO_PADDING,
 						baseLinePos);
 
-				e.gc.setForeground(display.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND));
-				e.gc.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_FOREGROUND));
+				e.gc.setForeground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND));
+				e.gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_FOREGROUND));
 				// start value marker
 				e.gc.drawLine(PADDING_X0 + startX, baseLinePos - PX_5,
 						PADDING_X0 + startX, baseLinePos + PX_5);
@@ -409,8 +410,8 @@ public class SpeedScaleShell
 						MARKER_WIDTH, MARKER_HEIGHT, MARKER_HEIGHT, MARKER_HEIGHT);
 
 				// Current Value Text
-				e.gc.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
-				e.gc.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+				e.gc.setForeground(Colors.getSystemColor(display, SWT.COLOR_INFO_FOREGROUND));
+				e.gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_INFO_BACKGROUND));
 
 				e.gc.fillRectangle(0, 0, WIDTH, TEXT_HEIGHT);
 
@@ -431,16 +432,16 @@ public class SpeedScaleShell
 					Rectangle area = new Rectangle(0, y, WIDTH, OPTION_HEIGHT);
 					Color bg;
 					if (area.contains(mousePos)) {
-						bg = display.getSystemColor(SWT.COLOR_LIST_SELECTION);
+						bg = Colors.getSystemColor(display, SWT.COLOR_LIST_SELECTION);
 						e.gc.setBackground(bg);
 						e.gc.setForeground(
-								display.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+								Colors.getSystemColor(display, SWT.COLOR_LIST_SELECTION_TEXT));
 						e.gc.fillRectangle(area);
 					} else {
-						bg = display.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+						bg = Colors.getSystemColor(display, SWT.COLOR_LIST_BACKGROUND);
 						e.gc.setBackground(bg);
 						e.gc.setForeground(
-								display.getSystemColor(SWT.COLOR_LIST_FOREGROUND));
+								Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
 					}
 
 					int ovalGap = Utils.adjustPXForDPI(6);
@@ -485,7 +486,7 @@ public class SpeedScaleShell
 							extent.x + PX_5,
 							extent.y + (PX_5 - 1) + (yTypedValue - 1) > TEXT_HEIGHT
 									? TEXT_HEIGHT - yTypedValue : extent.y + (PX_5 - 1));
-					e.gc.setBackground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+					e.gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_INFO_BACKGROUND));
 					e.gc.fillRectangle(rect);
 
 					try {
@@ -493,7 +494,7 @@ public class SpeedScaleShell
 					} catch (Exception ex) {
 					}
 					//e.gc.drawRectangle(rect);
-					e.gc.setForeground(display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+					e.gc.setForeground(Colors.getSystemColor(display, SWT.COLOR_INFO_FOREGROUND));
 
 					GCStringPrinter.printString(e.gc, sValue, new Rectangle(rect.x + PX_2,
 							rect.y + PX_2, WIDTH - PX_5, OPTION_HEIGHT), true, false,
@@ -518,11 +519,11 @@ public class SpeedScaleShell
 				try {
 					gc.setLineWidth(PX_2);
 					if (!on) {
-						gc.setForeground(display.getSystemColor(SWT.COLOR_INFO_BACKGROUND));
+						gc.setForeground(Colors.getSystemColor(display, SWT.COLOR_INFO_BACKGROUND));
 					} else {
 						try {
 							gc.setForeground(
-									display.getSystemColor(SWT.COLOR_INFO_FOREGROUND));
+									Colors.getSystemColor(display, SWT.COLOR_INFO_FOREGROUND));
 							gc.setAlpha(TYPED_TEXT_ALPHA);
 						} catch (Exception e) {
 						}

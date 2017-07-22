@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.ipchecker;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -66,7 +67,7 @@ public class ProgressPanel extends AbstractWizardPanel implements ExternalIPChec
     panel.setLayout(layout);
 
     tasks = new Text(panel, SWT.BORDER | SWT.MULTI | SWT.READ_ONLY);
-    tasks.setBackground(display.getSystemColor(SWT.COLOR_WHITE));
+    tasks.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.heightHint = 120;
     Utils.setLayoutData(tasks, gridData);

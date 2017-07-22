@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.List;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.graphics.Font;
@@ -130,12 +131,12 @@ public class TorrentInfoView
 		Utils.setLayoutData(cHeader, gridData);
 
 		Display d = panel.getDisplay();
-		cHeader.setBackground(d.getSystemColor(SWT.COLOR_LIST_SELECTION));
-		cHeader.setForeground(d.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+		cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+		cHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
 
 		Label lHeader = new Label(cHeader, SWT.NULL);
-		lHeader.setBackground(d.getSystemColor(SWT.COLOR_LIST_SELECTION));
-		lHeader.setForeground(d.getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT));
+		lHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
+		lHeader.setForeground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION_TEXT));
 		FontData[] fontData = lHeader.getFont().getFontData();
 		fontData[0].setStyle(SWT.BOLD);
 		int fontHeight = (int)(fontData[0].getHeight() * 1.2);

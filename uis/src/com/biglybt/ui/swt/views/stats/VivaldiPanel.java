@@ -24,6 +24,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
@@ -141,7 +142,7 @@ public class VivaldiPanel {
 								e.width, e.height);
 					}
 				} else {
-					e.gc.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+					e.gc.setBackground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND));
 					e.gc.fillRectangle(e.x, e.y, e.width, e.height);
 					e.gc.drawText(MessageText.getString("VivaldiView.notAvailable"), 10,
 							10, true);

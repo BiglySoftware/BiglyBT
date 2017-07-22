@@ -1216,8 +1216,7 @@ public class TableViewPainted
 			defaultRowHeight = minRowHeight;
 		}
 
-		cTable.setBackground(parent.getDisplay().getSystemColor(
-				SWT.COLOR_LIST_BACKGROUND));
+		cTable.setBackground(Colors.getSystemColor(parent.getDisplay(), SWT.COLOR_LIST_BACKGROUND));
 
 		headerHeight = configMan.getIntParameter("Table.headerHeight");
 		if (headerHeight <= 0) {
@@ -1794,7 +1793,7 @@ public class TableViewPainted
 
 	private Color getColorLine() {
 		if (colorLine == null) {
-			colorLine = cTable.getDisplay().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+			colorLine = Colors.getSystemColor(cTable.getDisplay(), SWT.COLOR_LIST_BACKGROUND);
 			HSLColor hslColor = new HSLColor();
 			hslColor.initHSLbyRGB(colorLine.getRed(), colorLine.getGreen(),
 					colorLine.getBlue());
@@ -1819,13 +1818,13 @@ public class TableViewPainted
 		Color c1, c2, fg;
 
 		if (cTable.isEnabled()) {
-  		c1 = e.display.getSystemColor(SWT.COLOR_LIST_BACKGROUND);
-  		c2 = e.display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
-  		fg = e.display.getSystemColor(SWT.COLOR_LIST_FOREGROUND);
+  		c1 = Colors.getSystemColor(e.display, SWT.COLOR_LIST_BACKGROUND);
+  		c2 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_BACKGROUND);
+  		fg = Colors.getSystemColor(e.display, SWT.COLOR_LIST_FOREGROUND);
 		} else {
-			c1 = e.display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
-			c2 = e.display.getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW);
-			fg = e.display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
+			c1 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_BACKGROUND);
+			c2 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW);
+			fg = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 		}
 
 		Color line = c2;

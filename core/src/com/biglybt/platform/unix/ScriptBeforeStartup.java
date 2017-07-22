@@ -82,6 +82,11 @@ public class ScriptBeforeStartup
 			return;
 		}
 
+		boolean useGTK2 = COConfigurationManager.getBooleanParameter("ui.useGTK2");
+		if (useGTK2) {
+			sysout.println("export SWT_GTK3=0");
+		}
+
 		try {
 			Class claDisplay = Class.forName("org.eclipse.swt.widgets.Display");
 			claDisplay.newInstance();

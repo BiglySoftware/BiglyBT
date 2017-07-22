@@ -166,7 +166,7 @@ public class AboutWindow {
     }
 
     Text txtSysInfo = new Text(gSys, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
-    txtSysInfo.setBackground(display.getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+    txtSysInfo.setBackground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND));
 
     String about_text =
 

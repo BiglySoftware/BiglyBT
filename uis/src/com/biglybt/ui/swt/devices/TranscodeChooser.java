@@ -675,8 +675,8 @@ public abstract class TranscodeChooser
 		PaintListener paintListener = new PaintListener() {
 			public void paintControl(PaintEvent e) {
 				Rectangle ca = ((Composite) e.widget).getClientArea();
-				e.gc.setForeground(e.display.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW));
-				e.gc.setBackground(e.display.getSystemColor(SWT.COLOR_WIDGET_LIGHT_SHADOW));
+				e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW));
+				e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
 				e.gc.setAntialias(SWT.ON);
 				e.gc.fillRoundRectangle(ca.x, ca.y, ca.width - 1, ca.height - 1, 10, 10);
 				e.gc.drawRoundRectangle(ca.x, ca.y, ca.width - 1, ca.height - 1, 10, 10);
