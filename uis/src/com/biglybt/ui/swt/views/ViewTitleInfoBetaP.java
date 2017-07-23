@@ -41,6 +41,8 @@ public class ViewTitleInfoBetaP
 	implements ViewTitleInfo
 {
 	private static final String PARAM_LASTPOSTCOUNT = "betablog.numPosts";
+	private static final String TUMBLR_DEVBLOG = null;
+	private static final String TUMBLR_APIKEY = null;
 
 	long numNew = 0;
 
@@ -48,6 +50,9 @@ public class ViewTitleInfoBetaP
 
 	@SuppressWarnings("rawtypes")
 	public ViewTitleInfoBetaP() {
+		if (TUMBLR_DEVBLOG == null) {
+			return; // :(
+		}
 		SimpleTimer.addEvent("devblog", SystemTime.getCurrentTime(),
 				new TimerEventPerformer() {
 					@Override
@@ -58,7 +63,7 @@ public class ViewTitleInfoBetaP
 						try {
 							ResourceDownloader rd = pi.getUtilities().getResourceDownloaderFactory().create(
 									new URL(
-											"http://api.tumblr.com/v2/blog/devblog.vuze.com/info?api_key=C5a8UGiSwPflOrVecjcvwGiOWVsLFF22pC9SgUIKSuQfjAvDAY"));
+											"http://api.tumblr.com/v2/blog/" + TUMBLR_DEVBLOG +"/info?api_key=" + TUMBLR_APIKEY));
 							InputStream download = rd.download();
 							Map json = JSONUtils.decodeJSON(FileUtil.readInputStreamAsString(
 									download, 65535));
