@@ -548,7 +548,7 @@ public class SideBarEntrySWT
 					view.setPluginSkinObject(soContents);
 					view.initialize(viewComposite);
 
-					if (!PAINT_BG) {
+					if (PAINT_BG) {
 						swtItem.setText(view.getFullTitle());
 					}
 
@@ -682,7 +682,7 @@ public class SideBarEntrySWT
 					setPluginSkinObject(soContents);
 					initialize(viewComposite);
 					String fullTitle = getFullTitle();
-					if (fullTitle != null && !PAINT_BG) {
+					if (fullTitle != null && PAINT_BG) {
 						swtItem.setText(getFullTitle());
 					}
 
