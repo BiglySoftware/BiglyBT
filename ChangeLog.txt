@@ -3,9 +3,17 @@ BIGLYBT CHANGELOG
 
 2017.0x.yy | Vuze 0.9.9.9
 
-CHANGE: UI    | Bigly Changes
-CHANGE: Core  | Bigly Changes
+CHANGE:  UI    | Bigly Changes [parg, TuxPaper]
+CHANGE:  UI    | Remove VHDN/Content Network stuff, Games, DVD sidebar entries [parg, TuxPaper]
+FEATURE: UI    | "tag:" text filter for torrent views
+BUGFIX:  UI    | [*nix] Devices now show on Sidebar, just like OSX/Win, except no transcoding [TuxPaper]
+BUGFIX:  UI    | [*nix] Lots of minor fixes for GTK3 [TuxPaper]
+BUGFIX:  UI    | Search Template editor now works again [TuxPaper]
 
-
+CHANGE:  Core  | Bigly Changes [parg, TuxPaper]
+CHANGE:  Core  | Min Java is now 1.8 (which also means min OSX is now 10.7.3)
+CHANGE:  Core  | [Mac] Dropped OSX 32-bit and "Carbon UI" support [TuxPaper]
+CHANGE:  Core  | Removed Offline Downloaders from Devices [parg]
+CHANGE:  Core  | Fixed sites with specific SSL certs not working (fixes some search templates) [parg]
 
 Historical Change log can be found at http://wiki.vuze.com/w/ChangeLog (5.7.5.0 and below)
