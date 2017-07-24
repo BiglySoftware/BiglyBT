@@ -28,6 +28,7 @@ import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.List;
 
+import com.biglybt.core.util.Constants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -529,7 +530,9 @@ BasicPluginConfigImpl
 
 
 				GridData gridData = new GridData();
-				gridData.widthHint = 100;
+				if (!Constants.isUnix) {
+					gridData.widthHint = 100;
+				}
 
 				swt_param.setLayoutData( gridData );
 
