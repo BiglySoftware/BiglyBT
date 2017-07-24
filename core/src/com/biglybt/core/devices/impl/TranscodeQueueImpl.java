@@ -933,7 +933,7 @@ TranscodeQueueImpl
 
 											}else if ( state == TranscodeJob.ST_QUEUED ){
 
-												if ( job == null && j.getDownloadETA() == 0 ){
+												if ( job == null && (j.getDownloadETA() == 0 || j.getTranscodeRequirement() == TranscodeTarget.TRANSCODE_NEVER) ){
 
 													job = j;
 												}

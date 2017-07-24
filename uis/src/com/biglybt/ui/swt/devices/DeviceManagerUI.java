@@ -108,8 +108,8 @@ DeviceManagerUI
 {
 	private static final String CONFIG_SECTION_ID = "Devices";
 
-	// Not supported for Unix and OSX PPC
-	public static boolean DISABLED = Constants.isUnix | Utils.isAZ2UI();
+	public static boolean DISABLED = Utils.isAZ2UI();
+	public static boolean DISABLED_TRANSCODING = Constants.isUnix;
 
 	private static final int MIN_FILE_SIZE_FOR_XCODE	= 128*1024;
 	private static final int MAX_FILES_FOR_MULTI_XCODE	= 64;
@@ -662,114 +662,10 @@ DeviceManagerUI
 				});
 
 		// transcoding
+		if (!DISABLED_TRANSCODING) {
+			createTranscodingSection();
+		}
 
-			// default dir
-
-		String def = device_manager.getDefaultWorkingDirectory().getAbsolutePath();
-
-		final DirectoryParameter def_work_dir = configModel.addDirectoryParameter2( "device.config.xcode.workdir", "device.config.xcode.workdir", def );
-
-		def_work_dir.setValue( def );
-
-		def_work_dir.addListener(
-			new ParameterListener()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter param )
-				{
-					device_manager.setDefaultWorkingDirectory(new File( def_work_dir.getValue()));
-				}
-			});
-
-			// max xcode
-
-		final IntParameter max_xcode =
-			configModel.addIntParameter2(
-				"device.config.xcode.maxbps", "device.config.xcode.maxbps",
-				(int)(device_manager.getTranscodeManager().getQueue().getMaxBytesPerSecond()/1024),
-				0, Integer.MAX_VALUE );
-
-		max_xcode.addListener(
-			new ParameterListener()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter param)
-				{
-					device_manager.getTranscodeManager().getQueue().setMaxBytesPerSecond( max_xcode.getValue()*1024 );
-				}
-			});
-
-			// disable sleep
-
-		final BooleanParameter disable_sleep =
-			configModel.addBooleanParameter2(
-				"device.config.xcode.disable_sleep", "device.config.xcode.disable_sleep",
-				device_manager.getDisableSleep());
-
-
-		disable_sleep.addListener(
-			new ParameterListener()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter param)
-				{
-					device_manager.setDisableSleep( disable_sleep.getValue());
-				}
-			});
-
-			// itunes
-
-		final ActionParameter btnITunes = configModel.addActionParameter2("devices.button.installitunes", "UpdateWindow.columns.install");
-		btnITunes.setEnabled(false);
-		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
-			@Override
-			public void coreRunning(Core core) {
-				boolean hasItunes = core.getPluginManager().getPluginInterfaceByID(
-						"azitunes") != null;
-				btnITunes.setEnabled(!hasItunes);
-			}
-		});
-
-		btnITunes.addListener(new ParameterListener() {
-			@Override
-			public void parameterChanged(Parameter param) {
-				CoreWaiterSWT.waitForCoreRunning(new CoreRunningListener() {
-					@Override
-					public void coreRunning(Core core) {
-						try {
-							PluginInstaller installer = core.getPluginManager().getPluginInstaller();
-
-							StandardPlugin itunes_plugin = installer.getStandardPlugin("azitunes");
-
-							if ( itunes_plugin == null ){
-
-								Debug.out( "iTunes standard plugin not found");
-
-							}else{
-
-								itunes_plugin.install(false);
-							}
-						} catch (Throwable e) {
-
-							Debug.printStackTrace(e);
-						}
-					}
-				});
-			}
-		});
-
-		configModel.createGroup(
-			"device.xcode.group",
-			new Parameter[]
-			{
-					def_work_dir, max_xcode, disable_sleep, btnITunes
-			});
 
 		// media servers
 
@@ -865,13 +761,61 @@ DeviceManagerUI
 						pn_buffer, pn_min_buffer,
 				});
 
-		final BooleanParameter tivo_enable =
+		if (!DISABLED_TRANSCODING) {
+
+			final BooleanParameter tivo_enable =
 			configModel.addBooleanParameter2(
 				"device.tivo.enable", "device.tivo.enable", false );
 
-		tivo_enable.setValue(device_manager.isTiVoEnabled());
+			tivo_enable.setValue(device_manager.isTiVoEnabled());
 
-		tivo_enable.addListener(
+			tivo_enable.addListener(
+				new ParameterListener()
+				{
+					@Override
+					public void
+					parameterChanged(
+						Parameter param)
+					{
+						device_manager.setTiVoEnabled( tivo_enable.getValue());
+
+						rebuildSideBarIfExists();
+					}
+				});
+		}
+
+	}
+
+	public void createTranscodingSection() {
+		// default dir
+
+		String def = device_manager.getDefaultWorkingDirectory().getAbsolutePath();
+
+		final DirectoryParameter def_work_dir = configModel.addDirectoryParameter2( "device.config.xcode.workdir", "device.config.xcode.workdir", def );
+
+		def_work_dir.setValue( def );
+
+		def_work_dir.addListener(
+			new ParameterListener()
+			{
+				@Override
+				public void
+				parameterChanged(
+					Parameter param )
+				{
+					device_manager.setDefaultWorkingDirectory(new File( def_work_dir.getValue()));
+				}
+			});
+
+		// max xcode
+
+		final IntParameter max_xcode =
+			configModel.addIntParameter2(
+				"device.config.xcode.maxbps", "device.config.xcode.maxbps",
+				(int)(device_manager.getTranscodeManager().getQueue().getMaxBytesPerSecond()/1024),
+				0, Integer.MAX_VALUE );
+
+		max_xcode.addListener(
 			new ParameterListener()
 			{
 				@Override
@@ -879,12 +823,77 @@ DeviceManagerUI
 				parameterChanged(
 					Parameter param)
 				{
-					device_manager.setTiVoEnabled( tivo_enable.getValue());
-
-					rebuildSideBarIfExists();
+					device_manager.getTranscodeManager().getQueue().setMaxBytesPerSecond( max_xcode.getValue()*1024 );
 				}
 			});
 
+		// disable sleep
+
+		final BooleanParameter disable_sleep =
+			configModel.addBooleanParameter2(
+				"device.config.xcode.disable_sleep", "device.config.xcode.disable_sleep",
+				device_manager.getDisableSleep());
+
+
+		disable_sleep.addListener(
+			new ParameterListener()
+			{
+				@Override
+				public void
+				parameterChanged(
+					Parameter param)
+				{
+					device_manager.setDisableSleep( disable_sleep.getValue());
+				}
+			});
+
+			// itunes
+
+		final ActionParameter btnITunes = configModel.addActionParameter2("devices.button.installitunes", "UpdateWindow.columns.install");
+		btnITunes.setEnabled(false);
+		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+			@Override
+			public void coreRunning(Core core) {
+				boolean hasItunes = core.getPluginManager().getPluginInterfaceByID(
+						"azitunes") != null;
+				btnITunes.setEnabled(!hasItunes);
+			}
+		});
+
+		btnITunes.addListener(new ParameterListener() {
+			@Override
+			public void parameterChanged(Parameter param) {
+				CoreWaiterSWT.waitForCoreRunning(new CoreRunningListener() {
+					@Override
+					public void coreRunning(Core core) {
+						try {
+							PluginInstaller installer = core.getPluginManager().getPluginInstaller();
+
+							StandardPlugin itunes_plugin = installer.getStandardPlugin("azitunes");
+
+							if ( itunes_plugin == null ){
+
+								Debug.out( "iTunes standard plugin not found");
+
+							}else{
+
+								itunes_plugin.install(false);
+							}
+						} catch (Throwable e) {
+
+							Debug.printStackTrace(e);
+						}
+					}
+				});
+			}
+		});
+
+		configModel.createGroup(
+			"device.xcode.group",
+			new Parameter[]
+			{
+					def_work_dir, max_xcode, disable_sleep, btnITunes
+			});
 	}
 
 	protected void
@@ -1453,37 +1462,39 @@ DeviceManagerUI
 			}
 		}
 
-		mdiEntryOverview = mdi.getEntry(SideBar.SIDEBAR_SECTION_DEVICES);
+		if (!DISABLED_TRANSCODING) {
+			mdiEntryOverview = mdi.getEntry(SideBar.SIDEBAR_SECTION_DEVICES);
 
-		if (mdiEntryOverview == null) {
-			mdiEntryOverview = mdi.createEntryFromSkinRef(
-					SideBar.SIDEBAR_HEADER_DEVICES, SideBar.SIDEBAR_SECTION_DEVICES,
-					"devicesview", MessageText.getString("mdi.entry.about.devices"),
-					new ViewTitleInfo()
-					{
-						@Override
-						public Object
-						getTitleInfoProperty(
-							int propertyID )
+			if (mdiEntryOverview == null) {
+				mdiEntryOverview = mdi.createEntryFromSkinRef(
+						SideBar.SIDEBAR_HEADER_DEVICES, SideBar.SIDEBAR_SECTION_DEVICES,
+						"devicesview", MessageText.getString("mdi.entry.about.devices"),
+						new ViewTitleInfo()
 						{
-							if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
+							@Override
+							public Object
+							getTitleInfoProperty(
+								int propertyID )
+							{
+								if ( propertyID == TITLE_INDICATOR_TEXT_TOOLTIP ){
 
-								return( getHeaderToolTip());
-							}
-							if ( propertyID == TITLE_INDICATOR_TEXT ){
-
-								if ( last_job_count > 0 ){
-
-									return( String.valueOf( last_job_count ));
+									return( getHeaderToolTip());
 								}
+								if ( propertyID == TITLE_INDICATOR_TEXT ){
+
+									if ( last_job_count > 0 ){
+
+										return( String.valueOf( last_job_count ));
+									}
+								}
+
+								return( null );
 							}
+						},
+						null, false, "");
 
-							return( null );
-						}
-					},
-					null, false, "");
-
-			mdiEntryOverview.setImageLeftID("image.sidebar.aboutdevices");
+				mdiEntryOverview.setImageLeftID("image.sidebar.aboutdevices");
+			}
 		}
 
 		if (rebuild) {
@@ -1821,67 +1832,69 @@ DeviceManagerUI
 		});
 
 		///////// Turn On
-		deviceManagerListener = new DeviceManagerListener() {
+		if (!DISABLED_TRANSCODING) {
+			deviceManagerListener = new DeviceManagerListener() {
 
-			@Override
-			public void deviceRemoved(Device device) {
-			}
-
-			@Override
-			public void deviceManagerLoaded() {
-				device_manager.removeListener(this);
-				if (entryHeader == null || entryHeader.isDisposed()) {
-					return;
+				@Override
+				public void deviceRemoved(Device device) {
 				}
-				PluginManager pm = CoreFactory.getSingleton().getPluginManager();
-				PluginInterface pi;
-				pi = pm.getPluginInterfaceByID("vuzexcode");
-				if (device_manager.getTranscodeManager().getProviders().length == 0 || pi == null) {
-					// provider plugin not installed yet
 
-					final MdiEntryVitalityImage turnon = entryHeader.addVitalityImage("image.sidebar.turnon");
-					if (turnon != null) {
-						turnon.addListener(new MdiEntryVitalityImageListener() {
-							@Override
-							public void mdiEntryVitalityImage_clicked(int x, int y) {
-								DevicesFTUX.ensureInstalled(null);
-							}
-						});
+				@Override
+				public void deviceManagerLoaded() {
+					device_manager.removeListener(this);
+					if (entryHeader == null || entryHeader.isDisposed()) {
+						return;
+					}
+					PluginManager pm = CoreFactory.getSingleton().getPluginManager();
+					PluginInterface pi;
+					pi = pm.getPluginInterfaceByID("vuzexcode");
+					if (device_manager.getTranscodeManager().getProviders().length == 0 || pi == null) {
+						// provider plugin not installed yet
 
-						transcodeManagerListener = new TranscodeManagerListener() {
-							@Override
-							public void providerAdded(TranscodeProvider provider) {
-								// only triggers when vuzexcode is avail
-								turnon.setVisible(false);
-							}
+						final MdiEntryVitalityImage turnon = entryHeader.addVitalityImage("image.sidebar.turnon");
+						if (turnon != null) {
+							turnon.addListener(new MdiEntryVitalityImageListener() {
+								@Override
+								public void mdiEntryVitalityImage_clicked(int x, int y) {
+									DevicesFTUX.ensureInstalled(null);
+								}
+							});
 
-							@Override
-							public void providerUpdated(TranscodeProvider provider) {
-							}
+							transcodeManagerListener = new TranscodeManagerListener() {
+								@Override
+								public void providerAdded(TranscodeProvider provider) {
+									// only triggers when vuzexcode is avail
+									turnon.setVisible(false);
+								}
 
-							@Override
-							public void providerRemoved(TranscodeProvider provider) {
-							}
-						};
-						device_manager.getTranscodeManager().addListener(
-								transcodeManagerListener);
+								@Override
+								public void providerUpdated(TranscodeProvider provider) {
+								}
+
+								@Override
+								public void providerRemoved(TranscodeProvider provider) {
+								}
+							};
+							device_manager.getTranscodeManager().addListener(
+									transcodeManagerListener);
+						}
 					}
 				}
-			}
 
-			@Override
-			public void deviceChanged(Device device) {
-			}
+				@Override
+				public void deviceChanged(Device device) {
+				}
 
-			@Override
-			public void deviceAttentionRequest(Device device) {
-			}
+				@Override
+				public void deviceAttentionRequest(Device device) {
+				}
 
-			@Override
-			public void deviceAdded(Device device) {
-			}
-		};
-		device_manager.addListener(deviceManagerListener);
+				@Override
+				public void deviceAdded(Device device) {
+				}
+			};
+			device_manager.addListener(deviceManagerListener);
+		}
 
 		entryHeader.addListener(new MdiCloseListener() {
 			@Override
@@ -2259,6 +2272,10 @@ DeviceManagerUI
 	private void
 	setupTranscodeMenus()
 	{
+		if (DISABLED_TRANSCODING) {
+			return;
+		}
+
 			// top level menus
 
 		final String[] tables = {
@@ -2699,22 +2716,24 @@ DeviceManagerUI
 
 				// cache files
 
-				MenuItem alwayscache_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.always.cache");
-				alwayscache_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-				alwayscache_menu_item.setStyle(MenuItem.STYLE_CHECK);
+				if (!DISABLED_TRANSCODING) {
+					MenuItem alwayscache_menu_item = menu_manager.addMenuItem("sidebar." + key, "devices.always.cache");
+					alwayscache_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+					alwayscache_menu_item.setStyle(MenuItem.STYLE_CHECK);
 
-				alwayscache_menu_item.addFillListener(new MenuItemFillListener() {
-					@Override
-					public void menuWillBeShown(MenuItem menu, Object data) {
-						menu.setData(Boolean.valueOf(renderer.getAlwaysCacheFiles()));
-					}
-				});
-				alwayscache_menu_item.addListener(new MenuItemListener() {
-					@Override
-					public void selected(MenuItem menu, Object target) {
-		 				renderer.setAlwaysCacheFiles( (Boolean) menu.getData());
-					}
-				});
+					alwayscache_menu_item.addFillListener(new MenuItemFillListener() {
+						@Override
+						public void menuWillBeShown(MenuItem menu, Object data) {
+							menu.setData(Boolean.valueOf(renderer.getAlwaysCacheFiles()));
+						}
+					});
+					alwayscache_menu_item.addListener(new MenuItemListener() {
+						@Override
+						public void selected(MenuItem menu, Object target) {
+							renderer.setAlwaysCacheFiles( (Boolean) menu.getData());
+						}
+					});
+				}
 
 			}
 

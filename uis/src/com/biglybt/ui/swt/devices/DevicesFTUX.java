@@ -393,7 +393,7 @@ public class DevicesFTUX
 			return false;
 		}
 
-		if (device_manager.getTranscodeManager().getProviders().length == 0) {
+		if (device_manager.getTranscodeManager().getProviders().length == 0 && !DeviceManagerUI.DISABLED_TRANSCODING) {
 			Utils.execSWTThread(new AERunnable() {
 				@Override
 				public void runSupport() {

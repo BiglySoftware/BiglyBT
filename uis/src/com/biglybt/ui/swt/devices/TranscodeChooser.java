@@ -78,7 +78,7 @@ public abstract class TranscodeChooser
 
 	private Button btnNoPrompt;
 
-	private int transcodeRequirement;
+	private int transcodeRequirement = TranscodeTarget.TRANSCODE_NEVER;
 
 	private java.util.List<String> listImageIDsToRelease = new ArrayList<>();
 
