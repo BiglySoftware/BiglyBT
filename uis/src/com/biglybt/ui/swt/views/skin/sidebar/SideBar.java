@@ -530,7 +530,7 @@ public class SideBar
 						}
 
 						case SWT.Paint: {
-							System.out.println("Paint: " + event.getBounds() + ";" + event.detail + ";" + event.index + ";" + event.gc.getClipping());// + "  " + Debug.getCompressedStackTrace());
+							//System.out.println("Paint: " + event.getBounds() + ";" + event.detail + ";" + event.index + ";" + event.gc.getClipping());// + "  " + Debug.getCompressedStackTrace());
 							if (!USE_PAINT) {
 								return;
 							}
