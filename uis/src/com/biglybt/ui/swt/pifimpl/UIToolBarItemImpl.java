@@ -25,6 +25,7 @@ import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 
 import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.swt.Utils;
 
 /**
  *
@@ -135,6 +136,9 @@ public class UIToolBarItemImpl
 	// @see com.biglybt.pif.ui.toolbar.UIToolBarItem#setState(long)
 	@Override
 	public void setState(long state) {
+		if (Utils.isDisplayDisposed()) {
+			return;
+		}
 		this.state = state;
 		triggerFieldChange();
 	}

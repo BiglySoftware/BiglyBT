@@ -1140,7 +1140,9 @@ public class ToolBarView
 
 					String groupID = toolBarItem.getGroupID();
 
-					final String[] idsByGroup = tbm.getToolBarIDsByGroup(groupID);
+					// removing just one breaks somewhere
+					// disable and bulk build all the toolbar items.
+					final String[] idsByGroup = new String[0]; // tbm.getToolBarIDsByGroup(groupID);
 
 					if (idsByGroup.length <= 1) {
 						boolean b = initComplete;
