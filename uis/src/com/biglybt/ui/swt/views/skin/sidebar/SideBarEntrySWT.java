@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.views.skin.sidebar;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.List;
 
@@ -330,14 +331,26 @@ public class SideBarEntrySWT
   				if (!tree.isVisible()) {
   					return;
   				}
-  				try {
-  					Rectangle bounds = swtItem.getBounds();
-  					Rectangle treeBounds = tree.getBounds();
-  					tree.redraw(0, bounds.y, treeBounds.width, bounds.height, true);
-  				} catch (NullPointerException npe) {
-  					// ignore NPE. OSX seems to be spewing this when the tree size is 0
-  					// or is invisible or something like that
-  				}
+					if (Utils.isGTK3) {
+						// parent.clear crashes java, so call item's clear
+						//parent.clear(parent.indexOf(treeItem), true);
+						try {
+							Method m = swtItem.getClass().getDeclaredMethod("clear");
+							m.setAccessible(true);
+							m.invoke(swtItem);
+						} catch (Throwable e) {
+						}
+					} else {
+
+						try {
+							Rectangle bounds = swtItem.getBounds();
+							Rectangle treeBounds = tree.getBounds();
+							tree.redraw(0, bounds.y, treeBounds.width, bounds.height, true);
+						} catch (NullPointerException npe) {
+							// ignore NPE. OSX seems to be spewing this when the tree size is 0
+							// or is invisible or something like that
+						}
+					}
   				//tree.update();
 				} finally {
 					synchronized (SideBarEntrySWT.this) {
@@ -803,6 +816,7 @@ public class SideBarEntrySWT
 		String text = getTitle();
 		if (text == null)
 			text = "";
+
 
 		//Point size = event.gc.textExtent(text);
 		//Rectangle treeBounds = tree.getBounds();

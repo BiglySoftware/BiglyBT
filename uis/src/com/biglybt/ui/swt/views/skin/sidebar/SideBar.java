@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.List;
 
 import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.utils.ColorCache;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
@@ -513,7 +514,7 @@ public class SideBar
 						}
 						case SWT.PaintItem: {
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
-							//System.out.println("PaintItem: " + event.item + ";" + event.index + ";" + event.detail + ";" + id + ";" + event.getBounds() + ";" + event.gc.getClipping());
+							//System.out.println("PaintItem: " + event.item + ";" + event.index + ";" + event.detail + ";" + event.getBounds() + ";" + event.gc.getClipping());
 							if (entry != null) {
 								boolean selected = currentEntry == entry
 										&& entry.isSelectable();
@@ -529,7 +530,7 @@ public class SideBar
 						}
 
 						case SWT.Paint: {
-							//System.out.println("Paint: " + event.getBounds() + ";" + event.detail + ";" + event.index + ";" + event.gc.getClipping() + "  " + Debug.getCompressedStackTrace());
+							System.out.println("Paint: " + event.getBounds() + ";" + event.detail + ";" + event.index + ";" + event.gc.getClipping());// + "  " + Debug.getCompressedStackTrace());
 							if (!USE_PAINT) {
 								return;
 							}
@@ -557,7 +558,9 @@ public class SideBar
 									event.setBounds(newClip);
 									Utils.setClipping(event.gc, newClip);
 
+
 									entry.swt_paintSideBar(event);
+
 
 									y = itemBounds.y + itemBounds.height + 1;
 								} else {
@@ -782,9 +785,11 @@ public class SideBar
 				}
 			}
 		};
-		tree.addListener(SWT.MeasureItem, treeListener);
 		tree.addListener(SWT.Resize, treeListener);
-		tree.addListener(SWT.Paint, treeListener);
+		if (USE_PAINT) {
+			tree.addListener(SWT.Paint, treeListener);
+		}
+		tree.addListener(SWT.MeasureItem, treeListener);
 		tree.addListener(SWT.PaintItem, treeListener);
 		tree.addListener(SWT.EraseItem, treeListener);
 

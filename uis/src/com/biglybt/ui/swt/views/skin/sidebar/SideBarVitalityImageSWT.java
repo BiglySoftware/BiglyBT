@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.views.skin.sidebar;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -239,10 +240,22 @@ public class SideBarVitalityImageSWT
 											|| !sbEntry.swt_isVisible()) {
 										return;
 									}
-									Tree parent = treeItem.getParent();
-									parent.redraw(hitArea.x, hitArea.y + treeItem.getBounds().y,
-											hitArea.width, hitArea.height, true);
-									parent.update();
+
+									if (Utils.isGTK3) {
+										// parent.clear crashes java, so call item's clear
+										//parent.clear(parent.indexOf(treeItem), true);
+										try {
+											Method m = treeItem.getClass().getDeclaredMethod("clear");
+											m.setAccessible(true);
+											m.invoke(treeItem);
+										} catch (Throwable e) {
+										}
+									} else {
+										Tree parent = treeItem.getParent();
+										parent.redraw(hitArea.x, hitArea.y + treeItem.getBounds().y,
+												hitArea.width, hitArea.height, true);
+										parent.update();
+									}
 								}
 							}
 						});
