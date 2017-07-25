@@ -99,7 +99,19 @@ public class SWTUpdateChecker implements UpdatableComponent
 		        	    	expected_dir	= expected_dir.getCanonicalFile();
 		        	    	jar_file_dir	= jar_file_dir.getCanonicalFile();
 
-		        	    	if ( expected_dir.equals( jar_file_dir )){
+
+				            if (Constants.isUnix) {
+					            if ( expected_dir.equals( jar_file_dir )){
+					            	// For unix, when swt.jar is in the appdir, the
+						            // user put it there, so skip everything
+						            checker.failed();
+						            return;
+					            }
+					            // For unix, when swt.jar is in the appdir/swt
+					            expected_dir = new File(expected_dir, "swt");
+				            }
+
+				            if ( expected_dir.equals( jar_file_dir )){
 
 		        	    			// everything looks ok
 
