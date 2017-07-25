@@ -317,7 +317,7 @@ public class MessageText {
   getString(
 		  String key)
   {
-  	if (key == null) {
+  	if (key == null || key.length() == 0) {
 		  return "";
 	  }
 
