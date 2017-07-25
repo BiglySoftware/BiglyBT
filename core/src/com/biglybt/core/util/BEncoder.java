@@ -22,7 +22,6 @@ package com.biglybt.core.util;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -53,17 +52,7 @@ BEncoder
 
     	throws IOException
     {
-       return( encode( object, false ));
-    }
-
-    public static byte[]
-    encode(
-    	Map 	object,
-    	boolean url_encode )
-
-    	throws IOException
-    {
-    	BEncoder encoder = new BEncoder(url_encode);
+    	BEncoder encoder = new BEncoder();
 
     	encoder.encodeObject( object);
 
@@ -75,15 +64,6 @@ BEncoder
     private byte[][]	old_buffers;
 
     private final byte[]		int_buffer			= new byte[12];
-
-    private final boolean	url_encode;
-
-    private
-    BEncoder(
-    	boolean	_url_encode )
-    {
-    	url_encode	= _url_encode;
-    }
 
     private boolean
 	encodeObject(
@@ -265,11 +245,7 @@ BEncoder
             byte[] tempByteArray = (byte[])object;
             writeInt(tempByteArray.length);
             writeChar(':');
-            if ( url_encode ){
-            	writeBytes(URLEncoder.encode(new String(tempByteArray, Constants.BYTE_ENCODING), Constants.BYTE_ENCODING ).getBytes());
-            }else{
-            	writeBytes(tempByteArray);
-            }
+            writeBytes(tempByteArray);
 
        }else if ( object instanceof Integer ){
 
