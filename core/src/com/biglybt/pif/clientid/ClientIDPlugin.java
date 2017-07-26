@@ -40,8 +40,8 @@ import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 public class
 ClientIDPlugin
 {
-	private static final String CLIENT_NAME 	= Constants.AZUREUS_PROTOCOL_NAME + " " + Constants.AZUREUS_VERSION;
-	private static final String CLIENT_NAME_SM 	= Constants.AZUREUS_PROTOCOL_NAME + " (Swarm Merging) " + Constants.AZUREUS_VERSION;
+	private static final String CLIENT_NAME 	= Constants.BIGLY_PROTOCOL_NAME + " " + Constants.AZUREUS_VERSION;
+	private static final String CLIENT_NAME_SM 	= Constants.BIGLY_PROTOCOL_NAME + " (Swarm Merging) " + Constants.AZUREUS_VERSION;
 
 	private static boolean		send_os;
 
