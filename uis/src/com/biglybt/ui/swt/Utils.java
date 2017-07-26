@@ -906,7 +906,9 @@ public class Utils
 				code.run();
 				return true;
 			}
-			System.out.println("Skipping, SWT null " + Debug.getCompressedStackTrace());
+			if (Constants.isCVSVersion()) {
+				System.out.println("Skipping, SWT null " + Debug.getCompressedStackTrace());
+			}
 			return false;
 		}
 
