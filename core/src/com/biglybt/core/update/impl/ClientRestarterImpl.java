@@ -628,7 +628,7 @@ ClientRestarterImpl
 		  }
 		  if (!update_only) {
 			  s += "echo \"Restarting " + Constants.APP_NAME + "..\"\n"
-					  + "$0\n";
+					  + "cd $OLDPATH\n$0\n";
 
 		  }
   		ScriptAfterShutdown.addExtraCommand(s);

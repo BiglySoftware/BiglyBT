@@ -193,6 +193,8 @@ else
 	fi
 fi
 
+OLDPATH=$PWD
+
 # Change path here so we can do for loop on program dirs with spaces
 cd "${PROGRAM_DIR}"
 
