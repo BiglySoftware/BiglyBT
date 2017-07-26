@@ -1389,8 +1389,7 @@ public class MainWindowImpl
 
 			if ( ConfigurationChecker.isNewInstall()){
 
-				// 4813 - removed auto-speedtest on new install
-				//run_speed_test = true;
+				run_speed_test = true;
 
 			}else if ( FeatureAvailability.triggerSpeedTestV1()){
 
