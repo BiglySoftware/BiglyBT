@@ -152,10 +152,10 @@ Constants
 	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "0.9.9.9_CVS";
+	public static final String AZUREUS_VERSION  = "1.0.0.0";
 	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
 	public static final String AZUREUS_SUBVER	  = "";
-	public static final byte[] VERSION_ID       = ("-" + "AZ" + "0999" + "-").getBytes();  //MUST be 8 chars long!
+	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1000" + "-").getBytes();  //MUST be 8 chars long!
 
 	private static final boolean FORCE_NON_CVS = System.getProperty( "az.force.noncvs", "0" ).equals( "1" );
 
