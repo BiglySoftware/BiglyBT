@@ -2315,7 +2315,10 @@ public class MyTorrentsView
     	Utils.execSWTThreadLater(0, new AERunnable() {
 				@Override
 				public void runSupport() {
-					updateSelectedContent();
+					// When a torrent gets added to the top of the list, we get a
+					// positionChanged for every torrent below it.  Definitely need this
+					// rate limited
+					updateSelectedContentRateLimited();
 				}
     	});
   	}
