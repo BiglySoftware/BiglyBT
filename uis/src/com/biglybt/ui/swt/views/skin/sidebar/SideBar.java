@@ -488,6 +488,9 @@ public class SideBar
 			@Override
 			public void handleEvent(final Event event) {
 				if (Utils.isDisplayDisposed()) {
+					if (event.type == SWT.Dispose) {
+						saveCloseables();
+					}
 					return;
 				}
 				TreeItem treeItem = (TreeItem) event.item;
