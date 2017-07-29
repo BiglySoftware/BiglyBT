@@ -1514,11 +1514,28 @@ public class FileUtil {
 
     		return( false );
     	}
+    	
+    	boolean to_file_exists = to_file.exists();
 
+    	if ( to_file_exists ) {
+    	
+    			// on OSX (at leat?) to_file.exists returns true if the existing file differs in case only - if we don't find the actual file then
+    			// carry on and rename
+    		
+    		String to_name = to_file.getName();
+    		
+    		String[] existing_files = to_file.getParentFile().list();
+    		
+      	if ( !Arrays.asList( existing_files ).contains( to_name )) {
+    			
+      		to_file_exists = false;
+    		}
+    	}
+    	
         /**
          * If the destination exists, we only fail if requested.
          */
-        if (to_file.exists() && (fail_on_existing_directory || from_file.isFile() || to_file.isFile())) {
+        if (to_file_exists && (fail_on_existing_directory || from_file.isFile() || to_file.isFile())) {
 
         	Debug.out( "renameFile: target file '" + to_file + "' already exists, failing" );
 

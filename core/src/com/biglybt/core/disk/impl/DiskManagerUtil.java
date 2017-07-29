@@ -255,33 +255,49 @@ DiskManagerUtil
 
 		        }else{
 
-		        	Object	skip_delete = download_manager.getUserData( "set_link_dont_delete_existing" );
-
-		        		// user is manually re-targetting a file - this hack is to stop us from deleting the old file which
-		        		// we really have no right to go and delete
-
-		        	if ( ( skip_delete instanceof Boolean ) && (Boolean)skip_delete ){
-
-		        		 download_manager.recheckFile( file_info );
-
-		        	}else{
-
-		                if ( FileUtil.deleteWithRecycle(
-		            		existing_file,
-		            		download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ))){
-
-			                    // new file, recheck
-
-			                download_manager.recheckFile( file_info );
-
-			            }else{
+			        		// On OSX (at least) a rename of a file here all that has changed is the capitalisation results in us getting here
+			        		// as the 'to_link.exists()' returns true for the file even though case differs
+			        	
+			        	if ( 	to_link.getParent().equals( existing_file.getParent()) &&
+			        			to_link.getName().equalsIgnoreCase( existing_file.getName())){
+			        		
+			            if ( !FileUtil.renameFile( existing_file, to_link )){
 
 			                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-			                        "Failed to delete '" + existing_file.toString() + "'"));
+			                    "Failed to rename '" + existing_file.toString() + "'" ));
 
 			                return( false );
 			            }
-		        	}
+			        	}else{
+			        	
+				        	Object	skip_delete = download_manager.getUserData( "set_link_dont_delete_existing" );
+		
+				        		// user is manually re-targetting a file - this hack is to stop us from deleting the old file which
+				        		// we really have no right to go and delete
+		
+				        	if ( ( skip_delete instanceof Boolean ) && (Boolean)skip_delete ){
+		
+				        		 download_manager.recheckFile( file_info );
+		
+				        	}else{
+		
+				                if ( FileUtil.deleteWithRecycle(
+				                		existing_file,
+				                		download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ))){
+		
+					                    // new file, recheck
+		
+					                download_manager.recheckFile( file_info );
+		
+					            }else{
+		
+					                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
+					                        "Failed to delete '" + existing_file.toString() + "'"));
+		
+					                return( false );
+					            }
+				        	}
+			        }
 		        }
 		    }else{
 
