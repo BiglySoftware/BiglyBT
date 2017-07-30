@@ -53,8 +53,6 @@ OverallStatsImpl
 
   	// sizes in MB
 
-  private static final long TEN_YEARS 		= 60*60*24*365*10L;
-
   private static final int	STATS_PERIOD	= 60*1000;		// 1 min
   private static final int	SAVE_PERIOD		= 10*60*1000;	// 10 min
   private static final int	SAVE_TICKS		= SAVE_PERIOD / STATS_PERIOD;
@@ -550,10 +548,6 @@ OverallStatsImpl
 	    if( delta > 100 || delta < 0 ) { //make sure the time diff isn't borked
 	      lastUptime = current_time;
 	      return;
-	    }
-
-	    if( totalUptime > TEN_YEARS ) {  //total uptime > 10years is an error, reset
-	      totalUptime = 0;
 	    }
 
 	    if( totalUptime < 0 )  totalUptime = 0;
