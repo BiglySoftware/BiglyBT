@@ -17,22 +17,16 @@
 
 package com.biglybt.ui.swt.views.piece;
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.events.MenuEvent;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackAdapter;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
@@ -46,6 +40,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.MenuBuildUtils;
@@ -60,8 +55,6 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.ViewUtils;
-
-import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.util.MapUtils;
 
 /**
@@ -99,13 +92,17 @@ public class PieceInfoView
 
 	public static final String MSGID_PREFIX = "PieceInfoView";
 
+	private static final byte SHOW_BIG = 2;
+
+	private static final byte SHOW_SMALL = 1;
+
 	private Composite pieceInfoComposite;
 
 	private ScrolledComposite sc;
 
 	protected Canvas pieceInfoCanvas;
 
-	private Color[] blockColors;
+	private final Color[] blockColors;
 
 	private Label topLabel;
 	private String topLabelLHS = "";
@@ -190,7 +187,7 @@ public class PieceInfoView
 		}
 	}
 
-	private String getFullTitle() {
+	private static String getFullTitle() {
 		return MessageText.getString("PeersView.BlockView.title");
 	}
 
@@ -206,7 +203,7 @@ public class PieceInfoView
 		fillPieceInfoSection();
 	}
 
-	private Composite createPeerInfoPanel(Composite parent) {
+	private void createPeerInfoPanel(Composite parent) {
 		GridLayout layout;
 		GridData gridData;
 
@@ -274,12 +271,7 @@ public class PieceInfoView
 				}
 			}
 		});
-		Listener doNothingListener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-			}
-		};
-		pieceInfoCanvas.addListener(SWT.KeyDown, doNothingListener);
+		pieceInfoCanvas.addListener(SWT.KeyDown, new DoNothingListener());
 
 		pieceInfoCanvas.addListener(SWT.Resize, new Listener() {
 			@Override
@@ -430,16 +422,7 @@ public class PieceInfoView
 							force_piece.setSelection( picker.isForcePiece( piece_number ));
 
 							force_piece.addSelectionListener(
-					    		new SelectionAdapter()
-					    		{
-					    			@Override
-								    public void
-					    			widgetSelected(
-					    				SelectionEvent e)
-					    			{
-					    				picker.setForcePiece( piece_number, force_piece.getSelection());
-					    			}
-					    		});
+									new SelectionListenerForcePiece(picker, piece_number, force_piece));
 						}
 
 						final MenuItem reset_piece = new MenuItem( menu, SWT.PUSH );
@@ -451,21 +434,7 @@ public class PieceInfoView
 						reset_piece.setEnabled( can_reset );
 
 						reset_piece.addSelectionListener(
-					    	new SelectionAdapter()
-				    		{
-				    			@Override
-							    public void
-				    			widgetSelected(
-				    				SelectionEvent e)
-				    			{
-				    				dm_piece.reset();
-
-				    				if ( pm_piece != null ){
-
-				    					pm_piece.reset();
-				    				}
-				    			}
-				    		});
+								new SelectionListenerResetPiece(dm_piece, pm_piece));
 					}
 				}
 			});
@@ -489,7 +458,6 @@ public class PieceInfoView
 		fontData[0].setHeight(iFontPointHeight);
 		font = new Font(pieceInfoCanvas.getDisplay(), fontData);
 
-		return pieceInfoComposite;
 	}
 
 	private int
@@ -656,17 +624,15 @@ public class PieceInfoView
 		byte[] uploadingPieces = new byte[dm_pieces.length];
 
 		// find upload pieces
-		Iterator<PEPeer> peer_it = pm.getPeers().iterator();
-		while( peer_it.hasNext()){
-			PEPeer peer = peer_it.next();
+		for (PEPeer peer : pm.getPeers()) {
 			int[] peerRequestedPieces = peer.getIncomingRequestedPieceNumbers();
 			if (peerRequestedPieces != null && peerRequestedPieces.length > 0) {
 				int pieceNum = peerRequestedPieces[0];
-				if(uploadingPieces[pieceNum] < 2)
+				if (uploadingPieces[pieceNum] < 2)
 					uploadingPieces[pieceNum] = 2;
 				for (int j = 1; j < peerRequestedPieces.length; j++) {
 					pieceNum = peerRequestedPieces[j];
-					if(uploadingPieces[pieceNum] < 1)
+					if (uploadingPieces[pieceNum] < 1)
 						uploadingPieces[pieceNum] = 1;
 				}
 			}
@@ -684,10 +650,10 @@ public class PieceInfoView
 		int minAvailability = Integer.MAX_VALUE;
 		int minAvailability2 = Integer.MAX_VALUE;
 		if (availability != null && availability.length > 0) {
-			for (int i = 0; i < availability.length; i++) {
-				if (availability[i] != 0 && availability[i] < minAvailability) {
+			for (int anAvailability : availability) {
+				if (anAvailability != 0 && anAvailability < minAvailability) {
 					minAvailability2 = minAvailability;
-					minAvailability = availability[i];
+					minAvailability = anAvailability;
 					if (minAvailability == 1) {
 						break;
 					}
@@ -750,13 +716,13 @@ public class PieceInfoView
 				}
 
 				if (currentDLPieces[i] != null && currentDLPieces[i].hasUndownloadedBlock()) {
-					newBlockInfo[i].downloadingIndicator = true;
+					newBlockInfo[i].showDown = currentDLPieces[i].getNbRequests() == 0
+							? SHOW_SMALL : SHOW_BIG;
 				}
 
-				newBlockInfo[i].uploadingIndicator = uploadingPieces[i] > 0;
-
-				if (newBlockInfo[i].uploadingIndicator) {
-					newBlockInfo[i].uploadingIndicatorSmall = uploadingPieces[i] < 2;
+				if (uploadingPieces[i] > 0) {
+					newBlockInfo[i].showUp = uploadingPieces[i] < 2 ? SHOW_SMALL
+							: SHOW_BIG;
 				}
 
 
@@ -787,12 +753,14 @@ public class PieceInfoView
 				gcImg.setBackground(blockColors[colorIndex]);
 				gcImg.fillRectangle(iXPos + newBlockInfo[i].haveWidth, iYPos, BLOCK_FILLSIZE - newBlockInfo[i].haveWidth, BLOCK_FILLSIZE);
 
-				if (newBlockInfo[i].downloadingIndicator) {
-					drawDownloadIndicator(gcImg, iXPos, iYPos, false);
+				if (newBlockInfo[i].showDown > 0) {
+					drawDownloadIndicator(gcImg, iXPos, iYPos,
+							newBlockInfo[i].showDown == SHOW_SMALL);
 				}
 
-				if (newBlockInfo[i].uploadingIndicator) {
-					drawUploadIndicator(gcImg, iXPos, iYPos, newBlockInfo[i].uploadingIndicatorSmall);
+				if (newBlockInfo[i].showUp > 0) {
+					drawUploadIndicator(gcImg, iXPos, iYPos,
+							newBlockInfo[i].showUp == SHOW_SMALL);
 				}
 
 				if (newBlockInfo[i].availNum != -1) {
@@ -923,9 +891,8 @@ public class PieceInfoView
 		}
 	}
 
-	private Image obfuscatedImage(Image image) {
+	private void obfuscatedImage(Image image) {
 		UIDebugGenerator.obfuscateArea(image, topLabel, "");
-		return image;
 	}
 
 	// @see com.biglybt.core.download.DownloadManagerPeerListener#pieceAdded(com.biglybt.core.peer.PEPiece)
@@ -944,9 +911,9 @@ public class PieceInfoView
 		public int haveWidth;
 		int availNum;
 		boolean availDotted;
-		boolean uploadingIndicator;
-		boolean uploadingIndicatorSmall;
-		boolean downloadingIndicator;
+		/** 0 : no; 1 : Yes; 2: small */
+		byte showUp;
+		byte showDown;
 
 		/**
 		 *
@@ -959,9 +926,8 @@ public class PieceInfoView
 			return haveWidth == otherBlockInfo.haveWidth
 					&& availNum == otherBlockInfo.availNum
 					&& availDotted == otherBlockInfo.availDotted
-					&& uploadingIndicator == otherBlockInfo.uploadingIndicator
-					&& uploadingIndicatorSmall == otherBlockInfo.uploadingIndicatorSmall
-					&& downloadingIndicator == otherBlockInfo.downloadingIndicator;
+					&& showDown == otherBlockInfo.showDown
+					&& showUp == otherBlockInfo.showUp;
 		}
 	}
 
@@ -1009,4 +975,52 @@ public class PieceInfoView
     return true;
   }
 
+	private static class DoNothingListener implements Listener {
+		@Override
+		public void handleEvent(Event event) {
+		}
+	}
+
+	private static class SelectionListenerForcePiece extends SelectionAdapter {
+		private final PiecePicker picker;
+		private final int piece_number;
+		private final MenuItem force_piece;
+
+		public SelectionListenerForcePiece(PiecePicker picker, int piece_number, MenuItem force_piece) {
+			this.picker = picker;
+			this.piece_number = piece_number;
+			this.force_piece = force_piece;
+		}
+
+		@Override
+		public void
+		widgetSelected(
+			SelectionEvent e)
+		{
+			picker.setForcePiece(piece_number, force_piece.getSelection());
+		}
+	}
+
+	private static class SelectionListenerResetPiece extends SelectionAdapter {
+		private final DiskManagerPiece dm_piece;
+		private final PEPiece pm_piece;
+
+		public SelectionListenerResetPiece(DiskManagerPiece dm_piece, PEPiece pm_piece) {
+			this.dm_piece = dm_piece;
+			this.pm_piece = pm_piece;
+		}
+
+		@Override
+		public void
+		widgetSelected(
+			SelectionEvent e)
+		{
+			dm_piece.reset();
+
+			if ( pm_piece != null ){
+
+				pm_piece.reset();
+			}
+		}
+	}
 }
