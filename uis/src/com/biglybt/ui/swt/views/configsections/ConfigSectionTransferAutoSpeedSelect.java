@@ -159,18 +159,15 @@ public class ConfigSectionTransferAutoSpeedSelect
 
         String AutoSpeedClassic = MessageText.getString("ConfigTransferAutoSpeed.auto.speed.classic");
         String AutoSpeedBeta = MessageText.getString("ConfigTransferAutoSpeed.auto.speed.beta");
-        String AutoSpeedNeural = MessageText.getString("ConfigTransferAutoSpeed.auto.speed.neural");
 
         String[] modeNames = {
                 AutoSpeedClassic,
                 AutoSpeedBeta,
-                AutoSpeedNeural,
                };
 
         String[] modes = {
                 "1",
                 "2",
-                "3",
         };
 
         //versionList = new StringListParameter(modeGroup,
@@ -185,11 +182,8 @@ public class ConfigSectionTransferAutoSpeedSelect
         }else if( verNum==2 ){
             //SpeedManagerAlgorithmProviderV2
             versionList.setValue(modes[1]);
-        }else if( verNum==3 ){
-            //SpeedManagerAlgorithmProviderV2
-            versionList.setValue(modes[2]);
         }else{
-            //Default is currently version ...V1.
+            // Should not happen, as we always have a default set
             versionList.setValue(modes[0]);
             //ToDo: log this condition.
         }
@@ -602,7 +596,7 @@ public class ConfigSectionTransferAutoSpeedSelect
         return cSection;
     }//configSectionCreate
 
-    static class ConvertToLongChangeListener implements ParameterChangeListener{
+    static class ConvertToLongChangeListener extends ParameterChangeAdapter{
 
         @Override
         public void parameterChanged(Parameter p, boolean caused_internally) {
@@ -617,57 +611,6 @@ public class ConfigSectionTransferAutoSpeedSelect
                 COConfigurationManager.setParameter(SpeedManagerImpl.CONFIG_VERSION, 1);
             }
 
-        }
-
-        /**
-         * An int parameter is about to change.
-         * <p/>
-         * Not called when parameter set via COConfigurationManager.setParameter
-         *
-         * @param p -
-         * @param toValue -
-         */
-        @Override
-        public void intParameterChanging(Parameter p, int toValue) {
-
-        }
-
-        /**
-         * A boolean parameter is about to change.
-         * <p/>
-         * Not called when parameter set via COConfigurationManager.setParameter
-         *
-         * @param p -
-         * @param toValue -
-         */
-        @Override
-        public void booleanParameterChanging(Parameter p, boolean toValue) {
-
-        }
-
-        /**
-         * A String parameter is about to change.
-         * <p/>
-         * Not called when parameter set via COConfigurationManager.setParameter
-         *
-         * @param p -
-         * @param toValue -
-         */
-        @Override
-        public void stringParameterChanging(Parameter p, String toValue) {
-
-        }
-
-        /**
-         * A double/float parameter is about to change.
-         * <p/>
-         * Not called when parameter set via COConfigurationManager.setParameter
-         *
-         * @param owner -
-         * @param toValue -
-         */
-        @Override
-        public void floatParameterChanging(Parameter owner, double toValue) {
         }
     }
 

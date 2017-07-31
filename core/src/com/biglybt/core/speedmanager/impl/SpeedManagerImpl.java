@@ -39,7 +39,6 @@ import com.biglybt.core.networkmanager.admin.NetworkAdminPropertyChangeListener;
 import com.biglybt.core.speedmanager.*;
 import com.biglybt.core.speedmanager.impl.v1.SpeedManagerAlgorithmProviderV1;
 import com.biglybt.core.speedmanager.impl.v2.SpeedManagerAlgorithmProviderV2;
-import com.biglybt.core.speedmanager.impl.v3.SpeedManagerAlgorithmProviderV3;
 import com.biglybt.core.util.*;
 
 
@@ -239,6 +238,11 @@ SpeedManagerImpl
 
 								int version = COConfigurationManager.getIntParameter( name );
 
+								// Version 3 was "Neural" and has been remove
+								if (version == 3) {
+									version = 2;
+								}
+
 								if ( version != provider_version ){
 
 									provider_version = version;
@@ -398,11 +402,7 @@ SpeedManagerImpl
 				provider = new SpeedManagerAlgorithmProviderV2( this );
 			}
 
-        }else if ( provider_version == 3 ){
-
-            provider = new SpeedManagerAlgorithmProviderV3( this );
-
-        }else{
+		}else{
 
 			Debug.out( "Unknown provider version " + provider_version );
 
