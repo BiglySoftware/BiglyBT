@@ -826,7 +826,6 @@ public class ClientStatsView
 	public void peerRemoved(PEPeer peer) {
 		synchronized (mapData) {
 			ClientStatsDataSource stat = mapData.get(getID(peer));
-			if (peer.getStats().getTotalDataBytesSent() > 0)
 			if (stat != null) {
 				stat.current--;
 
