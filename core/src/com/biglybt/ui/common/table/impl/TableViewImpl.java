@@ -1249,13 +1249,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			debug("#itemsToRemove=" + itemsToRemove.size());
 		}
 
-		uiRemoveRows(itemsToRemove.toArray(new TableRowCore[0]),
-				indexesToRemove.toArray(new Integer[0]));
+		if (itemsToRemove.size() > 0) {
+			uiRemoveRows(itemsToRemove.toArray(new TableRowCore[0]),
+					indexesToRemove.toArray(new Integer[0]));
 
-		// Finally, delete the rows
-		for (Iterator<TableRowCore> iter = itemsToRemove.iterator(); iter.hasNext();) {
-			TableRowCore row = iter.next();
-			row.delete();
+			// Finally, delete the rows
+			for (Iterator<TableRowCore> iter = itemsToRemove.iterator(); iter.hasNext();) {
+				TableRowCore row = iter.next();
+				row.delete();
+			}
 		}
 
 		if (DEBUGADDREMOVE) {
