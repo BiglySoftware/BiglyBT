@@ -4677,6 +4677,15 @@ TorrentUtils
 		}
 	}
 
+	/**
+	 * Disables DNS Handling, but doesn't save it to the config
+	 */
+	public static void temporarilyDisableDNSHandling() {
+		DNS_HANDLING_ENABLE = false;
+		dns_threads.setExecutionLimit(10);
+		dns_threads.checkTimeouts();
+	}
+
 	public static void
 	main(
 		String[]	args )

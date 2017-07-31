@@ -1644,6 +1644,8 @@ public class GlobalManagerImpl
 		  stats_writer.destroy();
 	  }
 
+	  // Disable DNS Mods lookup while shutting down
+	  TorrentUtils.temporarilyDisableDNSHandling();
 	  DownloadManagerStateFactory.saveGlobalStateCache();
 
 	  try{
