@@ -30,10 +30,12 @@ import java.util.Set;
 
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationManager;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.SystemProperties;
 import com.biglybt.core.util.protocol.AzURLStreamHandlerFactory;
+import com.biglybt.core.util.spi.AENameServiceJava9;
 
 public class
 COConfigurationManager
@@ -230,8 +232,15 @@ COConfigurationManager
 			    //if ( Constants.IS_CVS_VERSION && ( Constants.isOSX || Constants.isWindows )){
 			    // everyone gets this as we use it to force prevent resolution when running socks
 
-			    System.setProperty("sun.net.spi.nameservice.provider.1","dns,aednsproxy");
-
+			  	if ( Constants.isJava9OrHigher ){
+			  		
+			  		AENameServiceJava9.init();
+			  		
+			  	}else{
+			    
+			  		System.setProperty("sun.net.spi.nameservice.provider.1","dns,aednsproxy");
+			  	}
+			  	
 			    //}
 
 			    SystemProperties.determineApplicationName();
