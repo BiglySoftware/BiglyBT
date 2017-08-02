@@ -41,8 +41,8 @@ public class ViewTitleInfoBetaP
 	implements ViewTitleInfo
 {
 	private static final String PARAM_LASTPOSTCOUNT = "betablog.numPosts";
-	private static final String TUMBLR_DEVBLOG = null;
-	private static final String TUMBLR_APIKEY = null;
+	private static final String TUMBLR_DEVBLOG = "biglybt.tumblr.com";
+	private static final String TUMBLR_APIKEY = "LTS3TRTjTmkt980WqLzZwU6JnJzHbAF0PtBApjiZZQFmN07tRA";
 
 	long numNew = 0;
 
