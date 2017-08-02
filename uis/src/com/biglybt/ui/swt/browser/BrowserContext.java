@@ -91,7 +91,8 @@ public class BrowserContext
 	private List<String> listJS = new ArrayList<>(1);
 
 	private boolean allowPopups = true;
-
+	private String[]		popoutWhitelist;
+	
 	private volatile boolean 	autoReloadPending = false;
 	private String[]			lastRetryData;
 
@@ -527,9 +528,11 @@ public class BrowserContext
 							&& !event_location.contains("/client.vuze.com/")
 							&& !isPageLoadingOrRecent) {
 						event.doit = false;
-						Utils.launch(event.location);
-						setPageLoading(false, event.location);
-
+						
+						if ( !isPopoutBlocked( event.location )) {
+							Utils.launch(event.location);
+							setPageLoading(false, event.location);
+						}
 					} else {
 						setPageLoading(true, event.location);
 					}
@@ -930,5 +933,38 @@ public class BrowserContext
 
 	public boolean allowPopups() {
 		return allowPopups;
+	}
+	
+	public void
+	setPopoutWhitelist(
+		String[]	list )
+	{
+		popoutWhitelist = list;
+	}
+	
+	private boolean
+	isPopoutBlocked(
+		String	location )
+	{
+		if ( popoutWhitelist != null ) {
+			
+			try {
+				String host = new URL( location ).getHost();
+				
+				for ( String h: popoutWhitelist ) {
+					
+					if ( host.endsWith( h )) {
+						
+						return( false );
+					}
+				}
+			}catch( Throwable e ) {
+				
+			}
+			
+			return( true );
+		}
+		
+		return( false );
 	}
 }

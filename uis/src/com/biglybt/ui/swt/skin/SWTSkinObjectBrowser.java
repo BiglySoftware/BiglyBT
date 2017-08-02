@@ -305,6 +305,12 @@ public class SWTSkinObjectBrowser
 		boolean popouts = properties.getBooleanValue(sConfigID + ".browser.allowPopouts", true);
 		context.setAllowPopups(popouts);
 
+		String[] whitelist_urls = properties.getStringArray( sConfigID + ".browser.popoutWhitelist", null);
+		
+		if ( whitelist_urls != null ) {
+			context.setPopoutWhitelist( whitelist_urls );
+		}
+		
 		context.addListener(new BrowserContext.loadingListener() {
 			@Override
 			public void browserLoadingChanged(boolean loading, String url) {
