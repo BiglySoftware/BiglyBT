@@ -130,9 +130,10 @@ AEProxyFactory
 	public static Boolean
 	testPluginHTTPProxy(
 		URL				target,
-		boolean			can_wait )
+		boolean			can_wait,
+		String			reason )
 	{
-		return( AEPluginProxyHandler.testPluginHTTPProxy( target, can_wait ));
+		return( AEPluginProxyHandler.testPluginHTTPProxy( target, can_wait, reason ));
 
 	}
 

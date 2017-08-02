@@ -31,6 +31,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.AEProxyFactory.PluginHTTPProxy;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
@@ -42,6 +43,9 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ipc.IPCInterface;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.plugin.dht.DHTPluginInterface;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UIFunctionsUserPrompter;
 
 public class
 AEPluginProxyHandler
@@ -163,6 +167,8 @@ AEPluginProxyHandler
 		String		network,
 		boolean		supports_data )
 	{
+		// purely checking avaiability, don't trigger an installation // checkPluginInstallation( network );
+		
 		long start = SystemTime.getMonotonousTime();
 
 		while( true ){
@@ -213,8 +219,10 @@ AEPluginProxyHandler
 
 	public static boolean
 	hasPluginProxy()
-	{
+	{		
 		waitForPlugins( plugin_init_max_wait );
+
+		// purely checking avaiability, don't trigger an installation // 
 
 		for ( PluginInterface pi: plugins ){
 
@@ -255,6 +263,8 @@ AEPluginProxyHandler
 		boolean					can_wait )
 	{
 		if ( isEnabled()){
+
+			checkPluginInstallation( null, reason );
 
 			String url_protocol = target.getProtocol().toLowerCase();
 
@@ -314,6 +324,8 @@ AEPluginProxyHandler
 		Map<String,Object>		properties )
 	{
 		if ( isEnabled()){
+
+			checkPluginInstallation( null, reason );
 
 			if ( properties == null ){
 
@@ -378,9 +390,12 @@ AEPluginProxyHandler
 	public static Boolean
 	testPluginHTTPProxy(
 		URL			url,
-		boolean		can_wait )
+		boolean		can_wait,
+		String		reason )
 	{
 		if ( isEnabled()){
+
+			checkPluginInstallation( null, reason );
 
 			String url_protocol = url.getProtocol().toLowerCase();
 
@@ -417,6 +432,8 @@ AEPluginProxyHandler
 		boolean		can_wait )
 	{
 		if ( isEnabled()){
+
+			checkPluginInstallation( null, reason );
 
 			String url_protocol = url.getProtocol().toLowerCase();
 
@@ -459,6 +476,8 @@ AEPluginProxyHandler
 			waitForPlugins(0);
 		}
 
+		// not required when enumerating existing providers checkPluginInstallation( null );
+
 		List<PluginInterface> pis =
 			CoreFactory.getSingleton().getPluginManager().getPluginsWithMethod(
 				"createHTTPPseudoProxy",
@@ -475,6 +494,8 @@ AEPluginProxyHandler
 		Map<String,Object>		options )
 	{
 		waitForPlugins( plugin_init_max_wait );
+
+		checkPluginInstallation( network, reason );
 
 		PluginInterface pi = getPluginProxyForNetwork( network, false );
 
@@ -509,6 +530,8 @@ AEPluginProxyHandler
 	{
 		waitForPlugins( plugin_init_max_wait );
 
+		checkPluginInstallation( network, reason );
+
 		PluginInterface pi = getPluginProxyForNetwork( network, false );
 
 		if ( pi == null ){
@@ -530,6 +553,174 @@ AEPluginProxyHandler
 		return( null );
 	}
 
+	private static void
+	checkPluginInstallation(
+		String		network,
+		String		reason )
+	{
+		// aznettor was moved from the installer so see if we need to dynamically install it
+		
+		if ( network == null || network == AENetworkClassifier.AT_TOR ) {
+			
+			if ( plugin_init_complete.isReleasedForever()) {
+				
+				if ( CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( "aznettor", false ) == null ){
+					
+					installTor( reason, "aznettor.install.via.proxy", new boolean[1], null );
+				}
+			}
+		}
+	}
+	
+	private static Object tor_install_lock = new Object();
+	
+	private static Map<String,Long>	declines = new HashMap<>();
+
+	private static boolean tor_installing;
+	
+	private static boolean
+	installTor(
+		String				extra_text,
+		String				remember_id,
+		final boolean[]		install_outcome,
+		final Runnable		callback )
+	{
+		String decline_key = remember_id;
+
+		if ( decline_key == null ){
+
+			decline_key = extra_text;
+		}
+
+		if ( decline_key == null ){
+
+			decline_key = "generic";
+		}
+
+		synchronized( tor_install_lock ){
+
+			Long decline = declines.get( decline_key );
+
+			if ( decline != null && SystemTime.getMonotonousTime() - decline < 60*1000 ){
+
+				return( false );
+			}
+
+			if ( tor_installing ){
+
+				Debug.out( "Tor Helper already installing" );
+
+				return( false );
+			}
+
+			tor_installing = true;
+		}
+
+		boolean	installing 	= false;
+
+		boolean	declined	= false;
+
+		try{
+			UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+			if ( uif == null ){
+
+				Debug.out( "UIFunctions unavailable - can't install plugin" );
+
+				return( false );
+			}
+
+			String title = MessageText.getString("aznettor.install");
+
+			String text = "";
+
+			if ( extra_text != null ){
+
+				text = extra_text + "\n\n";
+			}
+
+			text += MessageText.getString("aznettor.install.text" );
+
+			UIFunctionsUserPrompter prompter = uif.getUserPrompter(title, text, new String[] {
+				MessageText.getString("Button.yes"),
+				MessageText.getString("Button.no")
+			}, 0);
+
+			if ( remember_id != null ){
+
+				prompter.setRemember(
+					remember_id,
+					false,
+					MessageText.getString("MessageBoxWindow.nomoreprompting"));
+			}
+
+			prompter.setAutoCloseInMS(0);
+
+			prompter.open(null);
+
+			boolean	install = prompter.waitUntilClosed() == 0;
+
+			if ( install ){
+
+				installing = true;
+
+				uif.installPlugin(
+						"aznettor",
+						"aznettor.install",
+						new UIFunctions.actionListener()
+						{
+							@Override
+							public void
+							actionComplete(
+								Object		result )
+							{
+								try{
+									if ( callback != null ){
+
+										if ( result instanceof Boolean ){
+
+											install_outcome[0] = (Boolean)result;
+										}
+
+										callback.run();
+									}
+								}finally{
+
+									synchronized( tor_install_lock ){
+
+										tor_installing = false;
+									}
+								}
+							}
+						});
+
+			}else{
+
+				declined = true;
+
+				Debug.out( "Tor Helper install declined (either user reply or auto-remembered)" );
+			}
+
+			return( install );
+
+		}finally{
+
+
+			synchronized( tor_install_lock ){
+
+				if ( !installing ){
+
+					tor_installing = false;
+				}
+
+				if ( declined ){
+
+					declines.put( decline_key, SystemTime.getMonotonousTime());
+				}
+			}
+		}
+	}
+	
 	private static class
 	PluginProxyImpl
 		implements PluginProxy

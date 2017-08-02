@@ -89,7 +89,7 @@ SearchResultsTabAreaBrowser
 
 						if ( !use_proxy ){
 
-							Boolean looks_ok = AEProxyFactory.testPluginHTTPProxy( url, true );
+							Boolean looks_ok = AEProxyFactory.testPluginHTTPProxy( url, true, "Search Proxy" );
 
 							use_proxy = looks_ok != null && !looks_ok;
 						}
