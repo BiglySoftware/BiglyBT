@@ -183,7 +183,8 @@ ConcurrentHashMapWrapper<S,T>
 	public Set<S>
 	keySet()
 	{
-		Set<S>	result = map.keySet();
+		// Sidestep covariance in J8, which returns KeySetView instead of Set.  Needed for Android
+		Set<S>	result = ((Map) map).keySet();
 
 		if ( result.contains( S_NULL )){
 
