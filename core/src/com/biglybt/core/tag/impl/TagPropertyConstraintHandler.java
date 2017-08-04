@@ -734,11 +734,15 @@ TagPropertyConstraintHandler
 
 			ConstraintExpr compiled_expr = null;
 
+			tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
+			
 			try{
 				compiled_expr = compileStart( constraint, new HashMap<String,ConstraintExpr>());
 
 			}catch( Throwable e ){
 
+				tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint: " + Debug.getNestedExceptionMessage( e ));
+				
 				Debug.out( "Invalid constraint: " + constraint + " - " + Debug.getNestedExceptionMessage( e ));
 
 			}finally{
@@ -1613,12 +1617,11 @@ TagPropertyConstraintHandler
 
 					params_ok = params.length == 2 && getStringLiteral( params, 1 );
 
-					if ( params_ok ) {
-						try {
+					if ( params_ok ){
+						
+						try{
 							Pattern p = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE );
-							
-							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
-							
+														
 						}catch( Throwable e ) {
 							
 							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
@@ -1797,8 +1800,6 @@ TagPropertyConstraintHandler
 								Pattern p = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE );
 
 								params[1] = p;
-
-								tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
 								
 								return( p.matcher( s1 ).find());
 
