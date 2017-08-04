@@ -1613,6 +1613,18 @@ TagPropertyConstraintHandler
 
 					params_ok = params.length == 2 && getStringLiteral( params, 1 );
 
+					if ( params_ok ) {
+						try {
+							Pattern p = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE );
+							
+							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
+							
+						}catch( Throwable e ) {
+							
+							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
+
+						}
+					}
 				}else if ( func_name.equals( "javascript" )){
 
 					fn_type = FT_JAVASCRIPT;
@@ -1786,12 +1798,16 @@ TagPropertyConstraintHandler
 
 								params[1] = p;
 
+								tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
+								
 								return( p.matcher( s1 ).find());
 
 							}catch( Throwable e ){
 
 								Debug.out( "Invalid constraint pattern: " + params[1] );
 
+								tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
+								
 								params[1] = null;
 							}
 						}

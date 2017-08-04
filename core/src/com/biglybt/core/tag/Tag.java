@@ -28,6 +28,7 @@ Tag
 	extends com.biglybt.pif.tag.Tag
 {
 	public static final String	TP_SETTINGS_REQUESTED	= "Settings Requested";	// Boolean
+	public static final String	TP_CONSTRAINT_ERROR		= "Constraint Error";	// String
 
 		/**
 		 * Unique type denoting this species of tag

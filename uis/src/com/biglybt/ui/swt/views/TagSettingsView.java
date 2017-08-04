@@ -57,6 +57,7 @@ import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.utils.FontUtils;
 
 /**
@@ -120,7 +121,8 @@ public class TagSettingsView
 		public GenericBooleanParameter	copyOnCompleteTorrent;
 
 		public Text constraints;
-
+		public Label	constraintError;
+		
 		private GenericStringListParameter constraintMode;
 
 		public GenericIntParameter tfl_max_taggables;
@@ -1015,6 +1017,11 @@ public class TagSettingsView
 						}
 					});
 
+					params.constraintError = new Label(gConstraint, SWT.NULL );
+					params.constraintError.setForeground( Colors.colorError);
+					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 5, 1);
+					Utils.setLayoutData(params.constraintError, gd);
+					
 					btnSaveConstraint = new Button(gConstraint, SWT.PUSH);
 					btnSaveConstraint.setEnabled(false);
 					btnSaveConstraint.addListener(SWT.Selection, new Listener() {
@@ -1507,31 +1514,39 @@ public class TagSettingsView
 		if (params.copyOnCompleteFolder != null) {
 			params.copyOnCompleteFolder.update();
 		}
-		if (params.constraints != null
-				&& params.constraints.getData("skipset") == null) {
-			String text = "";
-			String mode = CM_ADD_REMOVE;
-
+		if (params.constraints != null ) {
 			Tag tag = tags[0];
-			if (tag.getTagType().hasTagTypeFeature(TagFeature.TF_PROPERTIES)
-					&& (tag instanceof TagFeatureProperties)) {
-				TagFeatureProperties tfp = (TagFeatureProperties) tag;
 
-				TagProperty propConstraint = tfp.getProperty(
-						TagFeatureProperties.PR_CONSTRAINT);
-				if (propConstraint != null) {
-					String[] stringList = propConstraint.getStringList();
-					// constraint only has one entry
-					if ( stringList.length > 0) {
-						text = stringList[0];
-					}
-					if ( stringList.length > 1 && stringList[1] != null ){
-						mode = stringList[1];
+			if ( params.constraints.getData("skipset") == null) {
+				String text = "";
+				String mode = CM_ADD_REMOVE;
+	
+				if (tag.getTagType().hasTagTypeFeature(TagFeature.TF_PROPERTIES)
+						&& (tag instanceof TagFeatureProperties)) {
+					TagFeatureProperties tfp = (TagFeatureProperties) tag;
+	
+					TagProperty propConstraint = tfp.getProperty(
+							TagFeatureProperties.PR_CONSTRAINT);
+					if (propConstraint != null) {
+						String[] stringList = propConstraint.getStringList();
+						// constraint only has one entry
+						if ( stringList.length > 0) {
+							text = stringList[0];
+						}
+						if ( stringList.length > 1 && stringList[1] != null ){
+							mode = stringList[1];
+						}
 					}
 				}
+				params.constraints.setText(text);
+				params.constraintMode.setValue( mode );
 			}
-			params.constraints.setText(text);
-			params.constraintMode.setValue( mode );
+			String error = (String)tag.getTransientProperty( Tag.TP_CONSTRAINT_ERROR );
+			if ( error == null ) {
+				params.constraintError.setText( "" );
+			}else {
+				params.constraintError.setText( error.replace('\r', ' ' ).replace( '\n', ' '));
+			}
 		}
 
 		if (params.tfl_max_taggables != null) {
