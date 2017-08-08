@@ -1,0 +1,83 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.biglybt</groupId>
+	<artifactId>biglybt-parent</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
+	<name>BiglyBT - Parent</name>
+
+	<url>http://www.biglybt.com</url>
+
+	<properties>
+        <project.build.sourceEncoding>8859_1</project.build.sourceEncoding>
+        <java.version>1.8</java.version>
+	</properties>
+	
+	<repositories>
+		<repository>
+			<id>maven-eclipse-repo</id>
+			<url>http://maven-eclipse.github.io/maven</url>
+		</repository>
+		<repository>
+			<id>maven-eclipse-repo-dev</id>
+			<url>http://maven-eclipse.github.io/dev-releases/maven</url>
+		</repository>
+	</repositories>
+
+    <prerequisites>
+        <maven>3.3.3</maven>
+    </prerequisites>
+
+	<profiles>
+		<profile>
+			<id>standard</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<modules>
+				<module>core</module>
+				<module>uis</module>
+			</modules>
+		</profile>
+	</profiles>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>io.takari.maven.plugins</groupId>
+					<artifactId>takari-lifecycle-plugin</artifactId>
+					<version>1.12.6</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.6.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>3.0.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-shade-plugin</artifactId>
+					<version>3.0.0</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<scm>
+		<connection>scm:git:git@bitbucket.org:BiglySoftware/BiglyBT.git</connection>
+		<developerConnection>scm:git:git@bitbucket.org:BiglySoftware/BiglyBT.git</developerConnection>
+		<tag>master</tag>
+		<url>https://bitbucket.org/BiglySoftware/BiglyBT</url>
+	</scm>
+
+	<issueManagement>
+		<system>bitbucket</system>
+		<url>https://bitbucket.org/BiglySoftware/BiglyBT</url>
+	</issueManagement>
+</project>
