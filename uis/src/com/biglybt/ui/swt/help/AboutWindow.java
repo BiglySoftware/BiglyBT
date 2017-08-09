@@ -22,21 +22,28 @@ package com.biglybt.ui.swt.help;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.*;
+import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.*;
-import com.biglybt.update.CorePatchLevel;
-
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mainwindow.SWTThread;
+import com.biglybt.ui.swt.mainwindow.SWTThreadAlreadyInstanciatedException;
+import com.biglybt.update.CorePatchLevel;
 
 /**
  * @author Olivier
@@ -191,12 +198,16 @@ public class AboutWindow {
 				"bugreports",
 				"forumdiscussion",
 				"wiki",
+				"!" + MessageText.getString("ConfigView.section.plugins"),
+				"!" + MessageText.getString("ConfigView.section.plugins") + " (I2P)",
 			},
 			{
 				Constants.URL_CLIENT_HOME,
 				Constants.URL_BUG_REPORTS,
 				Constants.URL_FORUMS,
 				Constants.AZUREUS_WIKI,
+				Constants.PLUGINS_WEB_SITE,
+				"http://ezhdqq3jjpsqg65l.onion"
 			}
 		};
 
