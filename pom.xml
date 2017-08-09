@@ -70,14 +70,14 @@
 	</build>
 
 	<scm>
-		<connection>scm:git:git@bitbucket.org:BiglySoftware/BiglyBT.git</connection>
-		<developerConnection>scm:git:git@bitbucket.org:BiglySoftware/BiglyBT.git</developerConnection>
+		<connection>scm:git:git@github.com:BiglySoftware/BiglyBT.git</connection>
+		<developerConnection>scm:git:git@github.com:BiglySoftware/BiglyBT.git</developerConnection>
 		<tag>master</tag>
-		<url>https://bitbucket.org/BiglySoftware/BiglyBT</url>
+		<url>https://github.com/BiglySoftware/BiglyBT</url>
 	</scm>
 
 	<issueManagement>
-		<system>bitbucket</system>
-		<url>https://bitbucket.org/BiglySoftware/BiglyBT</url>
+		<system>github</system>
+		<url>https://github.com/BiglySoftware/BiglyBT</url>
 	</issueManagement>
 </project>
