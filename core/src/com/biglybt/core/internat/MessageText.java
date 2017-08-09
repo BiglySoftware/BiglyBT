@@ -105,6 +105,7 @@ public class MessageText {
   {
 	  DEFAULT_EXPANSIONS.put( "base.product.name", 		Constants.APP_NAME );
 	  DEFAULT_EXPANSIONS.put( "base.wiki.url", 			Constants.URL_WIKI );
+	  DEFAULT_EXPANSIONS.put( "base.client.url", 			Constants.URL_CLIENT_HOME );
   }
 
   public static void loadBundle() {
