@@ -57,16 +57,6 @@
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
-                    <!-- <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>org.gudy.azureus2.ui.common.Main</mainClass>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                        </manifest>
-                        <manifestEntries>
-                            <Class-Path>swt.jar commons-cli.jar log4j.jar junit.jar</Class-Path>
-                        </manifestEntries>
-                    </archive> -->
                 </configuration>
             </plugin>
             <plugin>
@@ -85,13 +75,10 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <mainClass>com.biglybt.ui.Main</mainClass>
-                            <!-- <classpathPrefix>lib/</classpathPrefix>
-                            <classpathLayoutType>repository</classpathLayoutType> -->
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-
                         </manifest>
                         <manifestEntries>
-                            <Class-Path>swt.jar commons-cli.jar log4j.jar junit.jar</Class-Path>
+                            <Class-Path>. swt.jar commons-cli.jar log4j.jar</Class-Path>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -126,6 +113,12 @@
                             <transformers><!-- to avoid having code in the jar (safety net)-->
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.DontIncludeResourceTransformer">
                                     <resource>.java</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Main-Class>com.biglybt.ui.Main</Main-Class>
+                                        <Class-Path>. swt.jar commons-cli.jar log4j.jar</Class-Path>
+                                    </manifestEntries>
                                 </transformer>
                             </transformers>
                         </configuration>
