@@ -144,6 +144,7 @@
                                         <patternset id="pluginapi.inc">
                                             <include name="com/biglybt/pif/**" />
                                             <include name="com/biglybt/ui/swt/pif/**" />
+                                            <include name="com/biglybt/ui/common/UIInstanceBase.*" />
                                         </patternset>
                                         <jar destfile="${project.build.directory}/BiglyBT-${project.version}-pluginapi.jar" level="9" >
                                             <fileset dir="${project.basedir}/../core/target/classes">
