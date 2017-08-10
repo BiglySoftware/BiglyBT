@@ -127,4 +127,49 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>plugin-api</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.8</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <configuration>
+                                    <tasks>
+                                        <patternset id="pluginapi.inc">
+                                            <include name="com/biglybt/pif/**" />
+                                            <include name="com/biglybt/ui/swt/pif/**" />
+                                        </patternset>
+                                        <jar destfile="${project.build.directory}/BiglyBT-${project.version}-pluginapi.jar" level="9" >
+                                            <fileset dir="${project.basedir}/../core/target/classes">
+                                                <patternset refid="pluginapi.inc"/>
+                                            </fileset>
+                                            <fileset dir="${project.build.directory}/classes">
+                                                <patternset refid="pluginapi.inc"/>
+                                            </fileset>
+
+                                            <fileset dir="${project.basedir}/../core/src">
+                                                <patternset refid="pluginapi.inc"/>
+                                            </fileset>
+                                            <fileset dir="${project.basedir}/src">
+                                                <patternset refid="pluginapi.inc"/>
+                                            </fileset>
+                                        </jar>
+                                    </tasks>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
