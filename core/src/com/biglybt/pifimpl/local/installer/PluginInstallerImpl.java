@@ -1133,6 +1133,7 @@ PluginInstallerImpl
 
 		throws PluginException
 	{
+		PluginException lastException = null;
 		for ( PluginInstallerListener listener: listeners ){
 
 			try{
@@ -1140,13 +1141,18 @@ PluginInstallerImpl
 
 					return;
 				}
+			} catch (PluginException pe) {
+				lastException = pe;
 			}catch( Throwable e ){
 
 				Debug.out( e );
 			}
 		}
 
-		throw( new PluginException( "No listeners registered to perform installation of '" + plugin.getName() +" (" + reason + ")" ));
+		if (lastException != null) {
+			throw lastException;
+		}
+		throw( new PluginException( "No listeners registered to perform installation of '" + plugin.getName() +"' (" + reason + ")" ));
 	}
 
 	@Override
