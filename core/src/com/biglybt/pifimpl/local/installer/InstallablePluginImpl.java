@@ -135,6 +135,8 @@ InstallablePluginImpl
 				properties,
 			new PluginInstallationListener()
 			{
+				public boolean cancelled;
+
 				@Override
 				public void
 				completed()
@@ -146,7 +148,10 @@ InstallablePluginImpl
 				public void
 				cancelled()
 				{
-					failed( new PluginException( "Install cancelled" ));
+					cancelled = true;
+					error[0] = new PluginException( "Install cancelled" );
+
+					sem.release();
 				}
 
 				@Override
@@ -158,7 +163,7 @@ InstallablePluginImpl
 
 					sem.release();
 
-					if ( !wait_until_done ){
+					if ( !wait_until_done && !cancelled ){
 
 						Debug.out( "Install failed", e );
 					}
