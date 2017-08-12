@@ -23,6 +23,15 @@ import java.net.URLStreamHandlerFactory;
  */
 public class AzURLStreamHandlerFactory implements URLStreamHandlerFactory {
 	private static final String	packageName	= AzURLStreamHandlerFactory.class.getPackage().getName();
+	private static AzURLStreamHandlerFactory instance = null;
+	
+	public AzURLStreamHandlerFactory() {
+		instance = this;
+	}
+
+	public static AzURLStreamHandlerFactory getInstance() {
+		return instance;
+	}
 
 	@Override
 	public URLStreamHandler createURLStreamHandler(String protocol) {

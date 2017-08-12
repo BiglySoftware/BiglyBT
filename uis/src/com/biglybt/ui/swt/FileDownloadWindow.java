@@ -21,14 +21,17 @@
 package com.biglybt.ui.swt;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLStreamHandler;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.biglybt.ui.swt.progress.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Shell;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
@@ -40,9 +43,11 @@ import com.biglybt.core.torrentdownloader.TorrentDownloaderCallBackInterface;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.UrlUtils;
-import com.biglybt.ui.swt.mainwindow.TorrentOpener;
-
+import com.biglybt.core.util.protocol.AzURLStreamHandlerFactory;
+import com.biglybt.core.util.protocol.AzURLStreamHandlerSkipConnection;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.progress.*;
 
 
 /**
@@ -127,6 +132,10 @@ public class FileDownloadWindow
 
 		decoded_url = UrlUtils.decodeIfNeeded( original_url );
 
+		if (handleByProtocol()) {
+			return;
+		}
+
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
@@ -148,12 +157,46 @@ public class FileDownloadWindow
 
 		decoded_url = UrlUtils.decodeIfNeeded( original_url );
 
+		if (handleByProtocol()) {
+			return;
+		}
+
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
 				init();
 			}
 		});
+	}
+
+	private boolean handleByProtocol() {
+		/**
+		 *  All url opens trickle down to FileDownloadWindow, so right now this
+		 *  is the best place to check if the protocol can be handled without
+		 *  opening a connection.
+		 *  </p>
+		 *  However, this is not the right location, since other UI's would have to
+		 *  replicate this code.  This code should be in
+		 *  {@link com.biglybt.pif.download.DownloadManager#addDownload(URL)} and
+		 *  any calls to FileDownloadWindow that aren't coming from that function
+		 *  should be refactored to use that function (or the other addDownload
+		 *  functions).
+		 */
+		try {
+			URL checkURL = new URL(decoded_url);
+			AzURLStreamHandlerFactory instance = AzURLStreamHandlerFactory.getInstance();
+			if (instance == null) {
+				return false;
+			}
+			URLStreamHandler handler = instance.createURLStreamHandler(checkURL.getProtocol());
+			if (handler instanceof AzURLStreamHandlerSkipConnection) {
+				if (((AzURLStreamHandlerSkipConnection) handler).canProcessWithoutConnection(checkURL, true)) {
+					return true;
+				}
+			}
+		} catch (MalformedURLException e) {
+		}
+		return false;
 	}
 
 	private void init() {

@@ -25,9 +25,22 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.protocol.AzURLStreamHandlerSkipConnection;
+import com.biglybt.pif.PluginException;
+import com.biglybt.pif.installer.PluginInstaller;
+import com.biglybt.pif.installer.StandardPlugin;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerEvent;
+import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.installer.PluginInstallerImpl;
+
 public class
 Handler
 	extends URLStreamHandler
+	implements AzURLStreamHandlerSkipConnection
 {
 	@Override
 	public URLConnection
@@ -36,4 +49,46 @@ Handler
 		return new BiglyBTURLConnection(u);
 	}
 
+
+	@Override
+	public boolean canProcessWithoutConnection(URL url, boolean processUrlNow) {
+
+		String host = url.getHost();
+		if (host.equalsIgnoreCase("install-plugin") && url.getPath().length() > 1) {
+			String plugin_id = url.getPath().substring(1);
+
+			PluginInstaller installer = CoreFactory.getSingleton().getPluginManager().getPluginInstaller();
+
+			try {
+				StandardPlugin installablePlugin = installer.getStandardPlugin(plugin_id);
+				if (installablePlugin == null) {
+					UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
+
+					String details = MessageText.getString(
+							"plugininstall.notfound.desc", new String[] { plugin_id });
+
+					ui_manager.showMessageBox(
+							"plugininstall.notfound.title",
+							"!" + details + "!",
+							UIManagerEvent.MT_OK );
+					return true;
+				}
+
+				installer.requestInstall(MessageText.getString("plugininstall.biglybturl"), installablePlugin);
+			} catch (PluginException e) {
+				UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
+
+				ui_manager.showMessageBox(
+						"plugininstall.error.title",
+						"!" + e.getMessage() + "!",
+						UIManagerEvent.MT_OK );
+
+				Debug.out(e);
+			}
+
+
+			return true;
+		}
+		return false;
+	}
 }
