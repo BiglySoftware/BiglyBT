@@ -1056,7 +1056,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 
     	if ( !cancel ){
 
-    		Debug.out( log_msg );
+    		Debug.out( log_msg, e );
     	}
 
         this.error(	0, log_msg );
