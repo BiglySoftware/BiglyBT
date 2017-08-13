@@ -2201,6 +2201,22 @@ public class MenuFactory
 		});
 	}
 
+	public static MenuItem addVoteMenuItem(Menu menu) {
+		return addMenuItem(menu, MENU_ID_VOTE, new Listener() {
+			public void handleEvent(Event e) {
+				Utils.launch(Constants.URL_VOTE);
+			}
+		});
+	}
+
+	public static MenuItem addBugReportMenuItem(Menu menu) {
+		return addMenuItem(menu, MENU_ID_BUG_REPORT, new Listener() {
+			public void handleEvent(Event e) {
+				Utils.launch(Constants.URL_BUG_REPORTS);
+			}
+		});
+	}
+
 	public static MenuItem addWikiMenuItem(Menu menu) {
 		return addMenuItem(menu, MENU_ID_COMMUNITY_WIKI, new Listener() {
 			@Override

@@ -199,6 +199,10 @@ public interface IMenuConstants
 	public static final String MENU_ID_BETA_PROG 		= "MainWindow.menu.beta";
 	public static final String MENU_ID_BETA_PROG_BUG 	= "MainWindow.menu.report.beta.problem";
 
+	public static final String MENU_ID_VOTE = "MainWindow.menu.vote";
+
+	public static final String MENU_ID_BUG_REPORT = "MainWindow.menu.bugreport";
+
 	public static final String MENU_ID_PLUGINS_UNINSTALL = "MainWindow.menu.plugins.uninstallPlugins";
 
 	public static final String MENU_ID_COMMUNITY = "MainWindow.menu.community";

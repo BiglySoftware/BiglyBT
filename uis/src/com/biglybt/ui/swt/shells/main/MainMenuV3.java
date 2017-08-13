@@ -613,6 +613,9 @@ public class MainMenuV3
 						});
 
 					MenuBuildUtils.addChatMenu( communityMenu, MENU_ID_COMMUNITY_CHAT, "General: Help" );
+
+					MenuFactory.addVoteMenuItem(communityMenu);
+					MenuFactory.addBugReportMenuItem(communityMenu);
 				}
 			});
 	}

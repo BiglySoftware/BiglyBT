@@ -40,6 +40,7 @@ Constants
 	public static final String URL_PLUGINS         = "https://files.biglybt.com/plugins/";
 	public static final String URL_CLIENT_HOME     = "https://www.biglybt.com/";
 	public static final String URL_BUG_REPORTS     = "https://bugs.biglybt.com/";
+	public static final String URL_VOTE            = "https://vote.biglybt.com/";
 	public static final String URL_FORUMS          = "https://forums.biglybt.com/";
 	public static final String URL_WIKI            = "https://wiki.biglybt.com/";
 	public static final String AZUREUS_WIKI        = URL_WIKI + "w/";
