@@ -1,6 +1,8 @@
 # BiglyBT
 
-Source for BiglyBT.  
+Source for BiglyBT.
+
+In addition to the GitHub Issues page, we have a [Feature Voting Page](https://vote.biglybt.com)
 
 ***
 
