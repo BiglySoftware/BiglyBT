@@ -199,7 +199,7 @@ public class AboutWindow {
 				"forumdiscussion",
 				"wiki",
 				"!" + MessageText.getString("ConfigView.section.plugins"),
-				"!" + MessageText.getString("ConfigView.section.plugins") + " (I2P)",
+				"!" + MessageText.getString("ConfigView.section.plugins") + " (Tor)",
 			},
 			{
 				Constants.URL_CLIENT_HOME,
