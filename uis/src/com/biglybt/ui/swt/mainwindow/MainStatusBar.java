@@ -335,7 +335,7 @@ public class MainStatusBar
 		progressGridData.widthHint = 5;
 		Utils.setLayoutData(progressBar, progressGridData);
 
-		addRIP();
+		// addRIP();
 
 		/*
 		 * Progress reporting window image label
@@ -1037,6 +1037,7 @@ public class MainStatusBar
 		}
 	}
 
+	/*
 	private void addRIP() {
 
 		if ( !COConfigurationManager.getBooleanParameter( "Status Area Show RIP" )){
@@ -1116,7 +1117,8 @@ public class MainStatusBar
 			}
 		});
 	}
-
+	*/
+	
 	/**
 	 * @param cSB
 	 *

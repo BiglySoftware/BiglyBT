@@ -7901,44 +7901,4 @@ SubscriptionManagerImpl
 			subs.setCreatorRef( creator_ref );
 		}
 	}
-
-	public static void
-	main(
-		String[]	args )
-	{
-		final String 	NAME 	= "lalalal";
-		final String	URL_STR	= "http://www.vuze.com/feed/publisher/ALL/1";
-
-		try{
-			//CoreFactory.create();
-			/*
-			Subscription subs =
-				getSingleton(true).createSingletonRSS(
-						NAME,
-						new URL( URL_STR ),
-						240 );
-
-			subs.getVuzeFile().write( new File( "C:\\temp\\srss.vuze" ));
-
-			subs.remove();
-			*/
-
-			VuzeFile	vf = VuzeFileHandler.getSingleton().create();
-
-			Map	map = new HashMap();
-
-			map.put( "name", NAME );
-			map.put( "url", URL_STR );
-			map.put( "public", new Long( 0 ));
-			map.put( "check_interval_mins", new Long( 345 ));
-
-			vf.addComponent( VuzeFileComponent.COMP_TYPE_SUBSCRIPTION_SINGLETON, map );
-
-			vf.write( new File( "C:\\temp\\srss_2.vuze" ) );
-
-		}catch( Throwable e ){
-
-			e.printStackTrace();
-		}
-	}
 }
