@@ -205,9 +205,12 @@ public class Main
 			if (DEBUG_STARTUPTIME) {
 				logTime("UIConst.processArgs");
 			}
-			startServer.setDaemon(true);
-			startServer.start();
-
+			
+			if ( startServer != null ) {
+				startServer.setDaemon(true);
+				startServer.start();
+			}
+			
 			neverStarted = !core.isStarted();
 			core.addLifecycleListener(new CoreLifecycleAdapter() {
 				@Override
@@ -222,7 +225,9 @@ public class Main
 
 				@Override
 				public void stopped(Core core) {
-					startServer.stopIt();
+					if ( startServer != null ) {
+						startServer.stopIt();
+					}
 					Main.stopped = true;
 				}
 			});
