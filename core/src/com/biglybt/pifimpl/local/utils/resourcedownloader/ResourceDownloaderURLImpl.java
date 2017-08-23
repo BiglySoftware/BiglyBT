@@ -324,6 +324,78 @@ ResourceDownloaderURLImpl
 											});
 								}
 
+								if ( plugin_proxy != null ){
+
+									TrustManagerFactory tmf = SESecurityManager.getTrustManagerFactory();
+	
+									final List<X509TrustManager>	default_tms = new ArrayList<>();
+	
+									if ( tmf != null ){
+	
+										for ( TrustManager tm: tmf.getTrustManagers()){
+	
+											if ( tm instanceof X509TrustManager ){
+	
+												default_tms.add((X509TrustManager)tm);
+											}
+										}
+									}
+	
+									TrustManager[] tms_delegate =
+										SESecurityManager.getAllTrustingTrustManager(
+											new X509TrustManager() {
+												@Override
+												public X509Certificate[]
+												getAcceptedIssuers()
+												{
+													List<X509Certificate> result = new ArrayList<>();
+	
+													for ( X509TrustManager tm: default_tms ){
+	
+														result.addAll( Arrays.asList(tm.getAcceptedIssuers()));
+													}
+	
+													return( result.toArray(new X509Certificate[result.size()]));
+												}
+	
+												@Override
+												public void
+												checkClientTrusted(
+													java.security.cert.X509Certificate[] 	chain,
+													String 									authType)
+	
+													throws CertificateException
+												{
+													for ( X509TrustManager tm: default_tms ){
+	
+														tm.checkClientTrusted( chain, authType );
+													}
+												}
+	
+												@Override
+												public void
+												checkServerTrusted(
+													java.security.cert.X509Certificate[] 	chain,
+													String 									authType)
+	
+													throws CertificateException
+												{
+													for ( X509TrustManager tm: default_tms ){
+	
+														tm.checkServerTrusted(chain, authType);
+													}
+												}
+											});
+	
+									SSLContext sc = SSLContext.getInstance("SSL");
+	
+									sc.init( null, tms_delegate, RandomUtils.SECURE_RANDOM );
+	
+									SSLSocketFactory factory = sc.getSocketFactory();
+	
+									ssl_con.setSSLSocketFactory(factory);
+								}
+								
 								if ( dh_hack ){
 
 									UrlUtils.DHHackIt( ssl_con );
