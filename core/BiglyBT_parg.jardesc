@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="WINDOWS-1252" standalone="no"?>
 <jardesc>
-    <jar path="Bigly_core/BiglyBT.jar"/>
-    <options buildIfNeeded="true" compress="true" descriptionLocation="/Bigly_core/BiglyBT_parg.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <jar path="BiglyBT_core/BiglyBT.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/BiglyBT_core/BiglyBT_parg.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="false" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
     <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
     <selectedProjects/>
     <manifest generateManifest="true" manifestLocation="" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
@@ -11,7 +11,7 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
-        <javaElement handleIdentifier="=Bigly_core/src"/>
-        <javaElement handleIdentifier="=Bigly_uis/src"/>
+        <javaElement handleIdentifier="=BiglyBT_uis/src"/>
+        <javaElement handleIdentifier="=BiglyBT_core/src"/>
     </selectedElements>
 </jardesc>
