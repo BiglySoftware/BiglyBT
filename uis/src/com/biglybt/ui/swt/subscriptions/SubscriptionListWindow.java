@@ -55,6 +55,7 @@ import com.biglybt.ui.swt.widgets.AnimatedImage;
 
 public class SubscriptionListWindow implements SubscriptionLookupListener {
 
+	final private String			display_name;
 	final private byte[]			torrent_hash;
 	final private String[]			networks;
 	final private boolean			useCachedSubs;
@@ -97,6 +98,7 @@ public class SubscriptionListWindow implements SubscriptionLookupListener {
 		String[]	networks,
 		boolean 	useCachedSubs )
 	{
+		this.display_name		= display_name;
 		this.torrent_hash 		= torrent_hash;
 		this.networks			= networks;
 		this.useCachedSubs		= useCachedSubs;
@@ -315,7 +317,7 @@ public class SubscriptionListWindow implements SubscriptionLookupListener {
 				Subscription[] subs = subs_man.getKnownSubscriptions( torrent_hash );
 				complete(torrent_hash,subs);
 			}else{
-				lookup = subs_man.lookupAssociations( torrent_hash, networks, this);
+				lookup = subs_man.lookupAssociations( torrent_hash, display_name, networks, this);
 
 				lookup.setTimeout( 1*60*1000 );
 			}

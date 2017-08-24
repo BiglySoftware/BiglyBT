@@ -104,13 +104,29 @@ SubscriptionManager
 	public SubscriptionAssociationLookup
 	lookupAssociations(
 		byte[]						hash,
+		String						description,
 		SubscriptionLookupListener	listener )
 
 		throws SubscriptionException;
 
+	/**
+	 * @deprecated
+	 * @param hash
+	 * @param listener
+	 * @return
+	 * @throws SubscriptionException
+	 */
+	
 	public SubscriptionAssociationLookup
 	lookupAssociations(
 		byte[]						hash,
+		SubscriptionLookupListener	listener )
+
+		throws SubscriptionException;
+	public SubscriptionAssociationLookup
+	lookupAssociations(
+		byte[]						hash,
+		String						description,
 		String[]					networks,
 		SubscriptionLookupListener	listener )
 

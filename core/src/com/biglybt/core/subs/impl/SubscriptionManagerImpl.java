@@ -1556,6 +1556,7 @@ SubscriptionManagerImpl
 		}
 
 		lookupSubscription(
+			"URI",
 			new byte[20],
 			sid,
 			version,
@@ -3259,6 +3260,7 @@ SubscriptionManagerImpl
 					lookupAssociationsSupport(
 						dht_plugin,
 						hash,
+						newest_download.getName(),
 						new	SubscriptionLookupListener()
 						{
 							@Override
@@ -3568,19 +3570,32 @@ SubscriptionManagerImpl
 	public SubscriptionAssociationLookup
 	lookupAssociations(
 		byte[]						hash,
+		String						description,
 		String[]					networks,
 		SubscriptionLookupListener	listener )
 
 		throws SubscriptionException
 	{
-		return( lookupAssociations( selectDHTPlugin(networks), hash, listener ));
+		return( lookupAssociations( selectDHTPlugin(networks), hash, description, listener ));
 	}
 
 	@Override
 	public SubscriptionAssociationLookup
 	lookupAssociations(
-		final byte[] 							hash,
-		final SubscriptionLookupListener		listener )
+		final byte[] 						hash,
+		final SubscriptionLookupListener	listener )
+
+		throws SubscriptionException
+	{
+		return( lookupAssociations( hash, "<>", listener ));
+	}
+	
+	@Override
+	public SubscriptionAssociationLookup
+	lookupAssociations(
+		final byte[] 						hash,
+		String								description,
+		final SubscriptionLookupListener	listener )
 
 		throws SubscriptionException
 	{
@@ -3602,13 +3617,14 @@ SubscriptionManagerImpl
 			dht_plugin = dht_plugin_public;
 		}
 
-		return( lookupAssociations( dht_plugin, hash, listener ));
+		return( lookupAssociations( dht_plugin, hash, description, listener ));
 	}
 
 	private SubscriptionAssociationLookup
 	lookupAssociations(
 		DHTPluginInterface						dht_plugin,
 		final byte[] 							hash,
+		final String							description,
 		final SubscriptionLookupListener		listener )
 
 		throws SubscriptionException
@@ -3617,7 +3633,7 @@ SubscriptionManagerImpl
 
 			if ( !dht_plugin.isInitialising()){
 
-				return( lookupAssociationsSupport( dht_plugin, hash, listener ));
+				return( lookupAssociationsSupport( dht_plugin, hash, description, listener ));
 			}
 
 			final boolean[]	cancelled 	= { false };
@@ -3669,7 +3685,7 @@ SubscriptionManagerImpl
 				run()
 				{
 					try{
-						SubscriptionAssociationLookup x = lookupAssociationsSupport( f_dht_plugin, hash, listener );
+						SubscriptionAssociationLookup x = lookupAssociationsSupport( f_dht_plugin, hash, description, listener );
 
 						synchronized( actual_res ){
 
@@ -3706,6 +3722,7 @@ SubscriptionManagerImpl
 	lookupAssociationsSupport(
 		final DHTPluginInterface				dht_plugin,
 		final byte[] 							hash,
+		final String							description,
 		final SubscriptionLookupListener		_listener )
 
 		throws SubscriptionException
@@ -3908,6 +3925,7 @@ SubscriptionManagerImpl
 											boolean is_anon = dht_plugin!=dht_plugin_public;
 
 											lookupSubscription(
+												description,
 												hash,
 												sid,
 												ver,
@@ -4411,8 +4429,9 @@ SubscriptionManagerImpl
 		}
 	}
 
-	protected void
+	private void
 	lookupSubscription(
+		final String						description,
 		final byte[]						association_hash,
 		final byte[]						sid,
 		final int							version,
@@ -4520,6 +4539,7 @@ SubscriptionManagerImpl
 										run()
 										{
 											downloadSubscription(
+												description,
 												association_hash,
 												SubscriptionImpl.getPublicationHash( details ),
 												sid,
@@ -4712,8 +4732,9 @@ SubscriptionManagerImpl
 		throw( new SubscriptionException( "Subscription not found" ));
 	}
 
-	protected void
+	private void
 	downloadSubscription(
+		String								description,
 		final byte[]						association_hash,
 		byte[]								torrent_hash,
 		final byte[]						sid,
@@ -4739,6 +4760,7 @@ SubscriptionManagerImpl
 			}
 
 			downloadSubscription(
+				description,
 				(TOTorrent)res[0],
 				(InetSocketAddress)res[1],
 				sid,
@@ -6602,8 +6624,9 @@ SubscriptionManagerImpl
 		}
 	}
 
-	protected void
+	private void
 	downloadSubscription(
+		final String			description,
 		final TOTorrent			torrent,
 		final InetSocketAddress	peer,
 		byte[]					subs_id,
@@ -6652,7 +6675,7 @@ SubscriptionManagerImpl
 
 					boolean is_update = getSubscriptionFromSID( subs_id ) != null;
 
-					PlatformTorrentUtils.setContentTitle(torrent, (is_update?"Update":"Download") + " for subscription '" + name + "'" );
+					PlatformTorrentUtils.setContentTitle(torrent, "Subscription " + (is_update?"Update":"Download") + ": " + description + "(" + name + ")" );
 
 						// PlatformTorrentUtils.setContentThumbnail(torrent, thumbnail);
 
@@ -6872,6 +6895,7 @@ SubscriptionManagerImpl
 		}
 
 		downloadSubscription(
+			subs.getName( true ),
 			torrent,
 			peer,
 			subs.getShortID(),
@@ -6971,52 +6995,53 @@ SubscriptionManagerImpl
 		}
 
 		downloadSubscription(
-				((TorrentImpl)download.getTorrent()).getTorrent(),
-				null,
-				subs.getShortID(),
-				version,
-				subs.getName(false),
-				new downloadListener()
+			download.getName(),
+			((TorrentImpl)download.getTorrent()).getTorrent(),
+			null,
+			subs.getShortID(),
+			version,
+			subs.getName(false),
+			new downloadListener()
+			{
+				@Override
+				public void
+				complete(
+					File		data_file )
 				{
-					@Override
-					public void
-					complete(
-						File		data_file )
-					{
-						updateSubscription( subs, data_file );
-					}
+					updateSubscription( subs, data_file );
+				}
 
-					@Override
-					public void
-					complete(
-						Download	download,
-						File		torrent_file )
-					{
-						updateSubscription( subs, download, torrent_file, new File( download.getSavePath()));
-					}
+				@Override
+				public void
+				complete(
+					Download	download,
+					File		torrent_file )
+				{
+					updateSubscription( subs, download, torrent_file, new File( download.getSavePath()));
+				}
 
-					@Override
-					public void
-					failed(
-						Throwable	error )
-					{
-						log( "Failed to download subscription", error );
-					}
+				@Override
+				public void
+				failed(
+					Throwable	error )
+				{
+					log( "Failed to download subscription", error );
+				}
 
-					@Override
-					public Map
-					getRecoveryData()
-					{
-						return( rd );
-					}
+				@Override
+				public Map
+				getRecoveryData()
+				{
+					return( rd );
+				}
 
-					@Override
-					public boolean
-					isCancelled()
-					{
-						return( false );
-					}
-				});
+				@Override
+				public boolean
+				isCancelled()
+				{
+					return( false );
+				}
+			});
 
 		return( true );
 	}
