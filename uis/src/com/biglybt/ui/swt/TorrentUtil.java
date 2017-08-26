@@ -27,6 +27,8 @@ import java.util.List;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.ISelectedVuzeFileContent;
 import com.biglybt.ui.selectedcontent.SelectedContent;
@@ -39,6 +41,7 @@ import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
 import com.biglybt.ui.swt.maketorrent.WebSeedsEditor;
 import com.biglybt.ui.swt.maketorrent.WebSeedsEditorListener;
+import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -2343,11 +2346,14 @@ public class TorrentUtil
 		itemAddCategory.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
-				CategoryAdderWindow adderWindow = new CategoryAdderWindow(
-						composite.getDisplay());
-				Category newCategory = adderWindow.getNewCategory();
-				if (newCategory != null)
-					assignToCategory(dms, newCategory);
+				CategoryUIUtils.showCreateCategoryDialog(new TagReturner() {
+					@Override
+					public void returnedTags(Tag[] tags) {
+						if (tags.length == 1 && tags[0] instanceof Category) {
+							assignToCategory(dms, (Category) tags[0]);
+						}
+					}
+				});
 			}
 		});
 

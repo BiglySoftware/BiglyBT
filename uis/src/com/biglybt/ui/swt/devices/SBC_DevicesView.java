@@ -57,6 +57,7 @@ import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.ToolBarItem;
@@ -83,6 +84,7 @@ import com.biglybt.ui.swt.views.skin.TorrentListViewsUtils;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
+import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.util.PlayUtils;
@@ -1030,10 +1032,14 @@ public class SBC_DevicesView
 	addCategory(
 		TranscodeFile[]		files )
 	{
-		CategoryAdderWindow adderWindow = new CategoryAdderWindow(Display.getDefault());
-		Category newCategory = adderWindow.getNewCategory();
-		if (newCategory != null)
-			assignSelectedToCategory(newCategory,files);
+		CategoryUIUtils.showCreateCategoryDialog(new TagReturner() {
+			@Override
+			public void returnedTags(Tag[] tags) {
+				if (tags.length == 1 && tags[0] instanceof Category) {
+					assignSelectedToCategory((Category) tags[0], files);
+				}
+			}
+		});
 	}
 
 	private void

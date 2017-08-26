@@ -22,6 +22,7 @@ package com.biglybt.ui.swt.views.utils;
 
 import java.util.List;
 
+import com.biglybt.core.download.DownloadManagerState;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
@@ -37,10 +38,13 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
@@ -48,6 +52,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.ViewUtils;
@@ -68,30 +73,26 @@ public class CategoryUIUtils
 			public void menuHidden(MenuEvent e) {
 				bShown = false;
 
-				if (Constants.isOSX)
+				if (Constants.isOSX || e.display == null) {
 					return;
+				}
 
 				// Must dispose in an asyncExec, otherwise SWT.Selection doesn't
 				// get fired (async workaround provided by Eclipse Bug #87678)
 
-				e.widget.getDisplay().asyncExec(new AERunnable() {
+				e.display.asyncExec(new AERunnable() {
 					@Override
 					public void runSupport() {
 						if (bShown || menu.isDisposed())
 							return;
-						MenuItem[] items = menu.getItems();
-						for (int i = 0; i < items.length; i++) {
-							items[i].dispose();
-						}
+						Utils.disposeSWTObjects((Object[]) menu.getItems());
 					}
 				});
 			}
 
 			@Override
 			public void menuShown(MenuEvent e) {
-				MenuItem[] items = menu.getItems();
-				for (int i = 0; i < items.length; i++)
-					items[i].dispose();
+				Utils.disposeSWTObjects((Object[]) menu.getItems());
 
 				bShown = true;
 
@@ -112,12 +113,15 @@ public class CategoryUIUtils
 				@Override
 				public void handleEvent(Event event) {
 					GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-					List<?> managers = category.getDownloadManagers(gm.getDownloadManagers());
-					// move to array,since setcategory removed it from the category,
+					List<DownloadManager> managers = category.getDownloadManagers(gm.getDownloadManagers());
+					// move to array,since setCategory removed it from the category,
 					// which would mess up our loop
 					DownloadManager dms[] = managers.toArray(new DownloadManager[managers.size()]);
-					for (int i = 0; i < dms.length; i++) {
-						dms[i].getDownloadState().setCategory(null);
+					for (DownloadManager dm : dms) {
+						DownloadManagerState state = dm.getDownloadState();
+						if (state != null) {
+							state.setCategory(null);
+						}
 					}
 					CategoryManager.removeCategory(category);
 				}
@@ -154,16 +158,14 @@ public class CategoryUIUtils
 		}
 
 		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-		List<?> managers = category.getDownloadManagers(gm.getDownloadManagers());
+		List<DownloadManager> managers = category.getDownloadManagers(gm.getDownloadManagers());
 
 		final DownloadManager dms[] = managers.toArray(new DownloadManager[managers.size()]);
 
 		boolean start = false;
 		boolean stop = false;
 
-		for (int i = 0; i < dms.length; i++) {
-
-			DownloadManager dm = dms[i];
+		for (DownloadManager dm : dms) {
 
 			stop = stop || ManagerUtils.isStopable(dm);
 
@@ -424,8 +426,11 @@ public class CategoryUIUtils
 			public void handleEvent(Event event) {
 				UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 				if (uiFunctions != null) {
-					uiFunctions.getMDI().showEntryByID(
-							MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS, dms);
+					MultipleDocumentInterface mdi = uiFunctions.getMDI();
+					if (mdi != null) {
+						mdi.showEntryByID(
+								MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS, dms);
+					}
 				}
 			}
 		});
@@ -434,6 +439,25 @@ public class CategoryUIUtils
 
 			itemOptions.setEnabled(false);
 		}
+	}
+
+	public static void showCreateCategoryDialog(final UIFunctions.TagReturner tagReturner) {
+		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+				"CategoryAddWindow.title", "CategoryAddWindow.message");
+		entryWindow.prompt(new UIInputReceiverListener() {
+			@Override
+			public void UIInputReceiverClosed(UIInputReceiver entryWindow) {
+				if (entryWindow.hasSubmittedInput()) {
+
+					TagUIUtils.checkTagSharing( false );
+
+					Category newCategory = CategoryManager.createCategory(entryWindow.getSubmittedInput());
+					if (tagReturner != null) {
+						tagReturner.returnedTags(new Tag[] { newCategory });
+					}
+				}
+			}
+		});
 	}
 
 }

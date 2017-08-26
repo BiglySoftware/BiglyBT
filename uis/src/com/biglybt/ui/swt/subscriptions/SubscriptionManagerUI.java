@@ -28,7 +28,6 @@ import java.util.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 
 import com.biglybt.activities.LocalActivityManager;
@@ -63,6 +62,7 @@ import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
@@ -77,6 +77,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 public class
@@ -2763,14 +2764,14 @@ SubscriptionManagerUI
 	addCategory(
 		Subscription			subs )
 	{
-		CategoryAdderWindow adderWindow = new CategoryAdderWindow(Display.getDefault());
-
-		Category newCategory = adderWindow.getNewCategory();
-
-		if ( newCategory != null ){
-
-			assignSelectedToCategory( subs, newCategory );
-		}
+		CategoryUIUtils.showCreateCategoryDialog(new TagReturner() {
+			@Override
+			public void returnedTags(Tag[] tags) {
+				if (tags.length == 1 && tags[0] instanceof Category) {
+					assignSelectedToCategory(subs, (Category) tags[0]);
+				}
+			}
+		});
 	}
 
 	private static void

@@ -22,9 +22,6 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
 
-import com.biglybt.core.stats.transfer.OverallStats;
-import com.biglybt.core.stats.transfer.StatsFactory;
-import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.Core;
@@ -42,6 +39,8 @@ import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.stats.transfer.OverallStats;
+import com.biglybt.core.stats.transfer.StatsFactory;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.torrent.HasBeenOpenedListener;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
@@ -60,7 +59,6 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
-import com.biglybt.ui.swt.CategoryAdderWindow;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
@@ -345,7 +343,7 @@ public class SB_Transfers
 		menuItem.addListener(new MenuItemListener() {
 			@Override
 			public void selected(MenuItem menu, Object target) {
-				new CategoryAdderWindow(null);
+				CategoryUIUtils.showCreateCategoryDialog(null);
 			}
 		});
 

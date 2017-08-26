@@ -30,8 +30,11 @@ import java.util.List;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.widgets.*;
@@ -405,10 +408,14 @@ implements ShareManagerListener,
 	  }
 
 	  private void addCategory() {
-	    CategoryAdderWindow adderWindow = new CategoryAdderWindow(Display.getDefault());
-	    Category newCategory = adderWindow.getNewCategory();
-	    if (newCategory != null)
-	      assignSelectedToCategory(newCategory);
+		  CategoryUIUtils.showCreateCategoryDialog(new TagReturner() {
+			  @Override
+			  public void returnedTags(Tag[] tags) {
+				  if (tags.length == 1 && tags[0] instanceof Category) {
+					  assignSelectedToCategory((Category) tags[0]);
+				  }
+			  }
+		  });
 	  }
 
 	  private void assignSelectedToCategory(final Category category) {

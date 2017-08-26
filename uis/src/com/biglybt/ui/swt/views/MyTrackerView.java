@@ -46,6 +46,7 @@ import com.biglybt.core.category.CategoryManagerListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.tag.Tag;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.host.TRHostListener;
 import com.biglybt.core.tracker.host.TRHostTorrent;
@@ -61,11 +62,11 @@ import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
 import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.CategoryAdderWindow;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -76,6 +77,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.mytracker.*;
+import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 
 
 /**
@@ -91,11 +93,9 @@ public class MyTrackerView
         TableSelectionListener, TableViewSWTMenuFillListener, TableRefreshListener,
 	UIPluginViewToolBarListener
 {
-  private static TableColumnCore[] basicItems = null;
-
 	protected static final TorrentAttribute	category_attribute =
 		TorrentManagerImpl.getSingleton().getAttribute( TorrentAttribute.TA_CATEGORY );
-
+  private static TableColumnCore[] basicItems = null;
 	private Menu			menuCategory;
 
 	private TableViewSWT<TRHostTorrent> tv;
@@ -568,10 +568,14 @@ public class MyTrackerView
   }
 
   private void addCategory() {
-    CategoryAdderWindow adderWindow = new CategoryAdderWindow(Utils.getDisplay());
-    Category newCategory = adderWindow.getNewCategory();
-    if (newCategory != null)
-      assignSelectedToCategory(newCategory);
+	  CategoryUIUtils.showCreateCategoryDialog(new TagReturner() {
+		  @Override
+		  public void returnedTags(Tag[] tags) {
+			  if (tags.length == 1 && tags[0] instanceof Category) {
+				  assignSelectedToCategory((Category) tags[0]);
+			  }
+		  }
+	  });
   }
 
   private void assignSelectedToCategory(final Category category) {
