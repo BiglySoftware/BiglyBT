@@ -447,6 +447,11 @@ StreamManager
 					try{
 						DeviceManager dm = DeviceManagerFactory.getSingleton();
 
+						if ( dm == null ) {
+							
+							throw( new Exception( "sidebar (not tabbed) view required" ));
+						}
+						
 						TranscodeManager tm = dm.getTranscodeManager();
 
 						DeviceMediaRenderer dmr =

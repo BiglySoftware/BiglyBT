@@ -197,7 +197,12 @@ public class SBC_LibraryView
 			}
 		}
 
-		MainMDISetup.getSb_transfers().triggerCountRefreshListeners();
+		SB_Transfers sb_t = MainMDISetup.getSb_transfers();
+		
+		if ( sb_t != null ) {
+			
+			sb_t.triggerCountRefreshListeners();
+		}
 	}
 
 
@@ -770,7 +775,12 @@ public class SBC_LibraryView
 			});
 		}
 
-		MainMDISetup.getSb_transfers().setupViewTitleWithCore(core);
+		SB_Transfers sb_t = MainMDISetup.getSb_transfers();
+		
+		if ( sb_t != null ) {
+			
+			sb_t.setupViewTitleWithCore(core);
+		}
 	}
 
 

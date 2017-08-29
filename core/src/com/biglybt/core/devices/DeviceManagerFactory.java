@@ -89,7 +89,7 @@ DeviceManagerFactory
 					// such as enabling per-device content browse controls that end up hiding content but the
 					// user has no way of changing this!
 
-				Debug.out( "DeviceManager is only fully functional with Vuze UI - some features unavailable" );
+				Debug.out( "DeviceManager is only fully functional with BiglyBT (not classic) UI - some features unavailable" );
 
 				return( null );
 			}
