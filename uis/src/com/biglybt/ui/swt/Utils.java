@@ -190,6 +190,9 @@ public class Utils
 
 	private static Point dpi;
 
+	// Alpha and BW palette definitions from org.eclipse.ui.internal.decorators.DecorationImageBuilder
+	private static PaletteData ALPHA_PALETTE, BW_PALETTE;
+
 	public static void
 	initialize(
 		Display		display )
@@ -209,6 +212,14 @@ public class Utils
 					    at com.biglybt.ui.swt.Utils.adjustPXForDPI(Utils.java:3654)
 					    at TableColumnImpl.init(TableColumnImpl.java:184)
 					 */
+
+		RGB[] rgbs = new RGB[256];
+		for (int i = 0; i < rgbs.length; i++) {
+			rgbs[i] = new RGB(i, i, i);
+		}
+
+		ALPHA_PALETTE = new PaletteData(rgbs);
+		BW_PALETTE = new PaletteData(new RGB[] { new RGB(0, 0, 0), new RGB(255, 255, 255) });
 	}
 
 	public static boolean isAZ2UI() {
@@ -4125,6 +4136,74 @@ public class Utils
 		}
 	}
 
+	private static ImageData autoScaleImageData(Device device, final ImageData imageData, float scaleFactor) {
+		int width = imageData.width;
+		int height = imageData.height;
+		int scaledWidth = Math.round(width * scaleFactor);
+		int scaledHeight = Math.round(height * scaleFactor);
+
+		ImageData imageMaskData = null;
+
+		if (imageData.getTransparencyType() == SWT.TRANSPARENCY_ALPHA) {
+			imageMaskData = new ImageData(width, height, 8, ALPHA_PALETTE, imageData.scanlinePad, imageData.alphaData);
+		} else if (imageData.getTransparencyType() == SWT.TRANSPARENCY_PIXEL || imageData.getTransparencyType() == SWT.TRANSPARENCY_MASK) {
+			ImageData transparencyMaskData = imageData.getTransparencyMask();
+			imageMaskData = new ImageData(width, height, 1, BW_PALETTE, transparencyMaskData.scanlinePad, transparencyMaskData.data);
+		}
+
+		Image original = new Image(device, imageData);
+		Image originalMask = null;
+
+		if (imageMaskData != null) {
+			originalMask = new Image(device, imageMaskData);
+		}
+
+		/* Create a 24 bit image data with alpha channel */
+		ImageData resultData = new ImageData(scaledWidth, scaledHeight, 24, new PaletteData(0xFF, 0xFF00, 0xFF0000));
+		ImageData resultMaskData = null;
+
+		if (imageMaskData != null) {
+			resultMaskData = new ImageData(scaledWidth, scaledHeight, imageMaskData.depth, imageMaskData.palette);
+		}
+
+		Image result = new Image(device, resultData);
+		Image resultMask = null;
+
+		GC gc = new GC(result);
+		gc.setAntialias(SWT.ON);
+		gc.drawImage(original, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
+		gc.dispose();
+
+		if (resultMaskData != null) {
+			resultMask = new Image(device, resultMaskData);
+			gc = new GC(resultMask);
+			gc.setAntialias(SWT.ON);
+			gc.drawImage(originalMask, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
+			gc.dispose();
+		}
+
+		original.dispose();
+		originalMask.dispose();
+
+		ImageData scaledResult = result.getImageData();
+
+		if (resultMask != null) {
+			ImageData scaledResultMaskData = resultMask.getImageData();
+
+			// Convert 1-bit mask
+			if (scaledResultMaskData.depth == 1) {
+				scaledResult.maskPad = scaledResultMaskData.scanlinePad;
+				scaledResult.maskData = scaledResultMaskData.data;
+			} else {
+				scaledResult.alphaData = scaledResultMaskData.data;
+			}
+		}
+
+		result.dispose();
+		resultMask.dispose();
+		return scaledResult;
+	}
+
 	public static Image
 	adjustPXForDPI(
 		Display		display,
@@ -4138,9 +4217,11 @@ public class Utils
 				Rectangle bounds = image.getBounds();
 				Rectangle newBounds = Utils.adjustPXForDPI(bounds);
 
-				ImageData scaledTo = image.getImageData().scaledTo(newBounds.width, newBounds.height);
+				Image newImage = new Image(display, autoScaleImageData(display, image.getImageData(), dpi.x / DEFAULT_DPI));
 
-				Image newImage = new Image(display, scaledTo);
+//				ImageData scaledTo = image.getImageData().scaledTo(newBounds.width, newBounds.height);
+//
+//				Image newImage = new Image(display, scaledTo);
 
 				if ( scaled_imaged_check_count++ % 100 == 0 ){
 					Iterator<Image> it = scaled_images.keySet().iterator();
