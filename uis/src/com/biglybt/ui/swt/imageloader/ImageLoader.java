@@ -18,24 +18,26 @@ package com.biglybt.ui.swt.imageloader;
 
 import java.io.*;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.biglybt.ui.skin.SkinPropertiesImpl;
-import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.utils.ImageBytesDownloader;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
+
 import com.biglybt.core.util.*;
+import com.biglybt.ui.skin.SkinProperties;
+import com.biglybt.ui.skin.SkinPropertiesImpl;
 import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.Utils;
-
-import com.biglybt.ui.skin.SkinProperties;
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.utils.ImageBytesDownloader;
 
 /**
  * Loads images from a skinProperty object.
@@ -263,38 +265,44 @@ public class ImageLoader
 			String[] values, String suffix) {
 		Image[] images = null;
 
+		boolean scale = true;
+
 		int splitX = 0;
 		int locationStart = 0;
 		int useIndex = -1; // all
-		if (values[0].equals("multi") && values.length > 2) {
-			splitX = Integer.parseInt(values[1]);
-			splitX = Utils.adjustPXForDPI(splitX);
-			locationStart = 2;
-		} else if (values[0].equals("multi-index") && values.length > 3) {
-			splitX = Integer.parseInt(values[1]);
-			splitX = Utils.adjustPXForDPI(splitX);
-			useIndex = Integer.parseInt(values[2]);
-			locationStart = 3;
+		if (values.length > 1) {
+			if (values[0].equals("multi") && values.length > 2) {
+				splitX = Integer.parseInt(values[1]);
+				locationStart = 2;
+			} else if (values[0].equals("multi-index") && values.length > 3) {
+				splitX = Integer.parseInt(values[1]);
+				useIndex = Integer.parseInt(values[2]);
+				locationStart = 3;
+			} else if (values[0].equals("noscale")) {
+				scale = false;
+				locationStart = 1;
+			}
 		}
 
 		if (locationStart == 0 || splitX <= 0) {
-			images = new Image[values.length];
-			for (int i = 0; i < values.length; i++) {
-				int index = values[i].lastIndexOf('.');
+			images = new Image[values.length - locationStart];
+			for (int i = 0; i < images.length; i++) {
+				String value = values[i + locationStart];
+				int index = value.lastIndexOf('.');
 				if (index > 0) {
-					String sTryFile = values[i].substring(0, index) + suffix
-							+ values[i].substring(index);
-					images[i] = loadImage(display, cl, sTryFile, sKey);
+					String sTryFile = value.substring(0, index) + suffix
+							+ value.substring(index);
+					images[i] = loadImage(display, cl, sTryFile, sKey, scale);
 
 					if (images[i] == null) {
-						sTryFile = values[i].substring(0, index) + suffix.replace('-', '_')
-								+ values[i].substring(index);
-						images[i] = loadImage(display, cl, sTryFile, sKey);
+						sTryFile = value.substring(0, index) + suffix.replace('-', '_')
+								+ value.substring(index);
+						images[i] = loadImage(display, cl, sTryFile, sKey, scale);
 					}
 				}
 
 				if (images[i] == null) {
-					images[i] = getNoImage( sKey );
+					images[i] = getNoImage(sKey);
 				}
 			}
 		} else {
@@ -309,14 +317,14 @@ public class ImageLoader
 				if (useIndex == -1) {
 					String sTryFile = origFile.substring(0, index) + suffix
 							+ origFile.substring(index);
-					image = loadImage(display, cl, sTryFile, sKey);
+					image = loadImage(display, cl, sTryFile, sKey, scale);
 
 						// not in repo
 
 					if (image == null) {
 						sTryFile = origFile.substring(0, index) + suffix.replace('-', '_')
 								+ origFile.substring(index);
-						image = loadImage(display, cl, sTryFile, sKey);
+						image = loadImage(display, cl, sTryFile, sKey, scale);
 
 							// not in repo
 					}
@@ -330,7 +338,7 @@ public class ImageLoader
 
 					if ( image == null ){
 
-						image = loadImage(display, cl, sTryFile, sTryFile);
+						image = loadImage(display, cl, sTryFile, sTryFile, scale);
 
 						if ( isRealImage(image)){
 
@@ -347,7 +355,7 @@ public class ImageLoader
 							if (!isRealImage(image)) {
 
 								image = loadImage(display, cl, sTryFileNonDisabled,
-										sTryFileNonDisabled);
+										sTryFileNonDisabled, scale);
 
 								if ( isRealImage(image)) {
 
@@ -386,7 +394,7 @@ public class ImageLoader
 
 				}else{
 
-					image = loadImage(display, cl, values[locationStart], sKey);
+					image = loadImage(display, cl, values[locationStart], sKey, scale);
 
 					if ( isRealImage(image)) {
 
@@ -444,7 +452,7 @@ public class ImageLoader
 	}
 
 	private Image loadImage(Display display, ClassLoader cl, String res,
-			String sKey) {
+			String sKey, boolean scale) {
 		Image img = null;
 
 		//System.out.println("LoadImage " + sKey + " - " + res);
@@ -471,7 +479,7 @@ public class ImageLoader
 						if (index > 0) {
 							String sTryFile = sParentFile.substring(0, index) + sSuffix
 									+ sParentFile.substring(index);
-							img = loadImage(display, cl, sTryFile, sKey);
+							img = loadImage(display, cl, sTryFile, sKey, scale);
 
 							if (img != null) {
 								break;
@@ -479,7 +487,7 @@ public class ImageLoader
 
 							sTryFile = sParentFile.substring(0, index)
 									+ sSuffix.replace('-', '_') + sParentFile.substring(index);
-							img = loadImage(display, cl, sTryFile, sKey);
+							img = loadImage(display, cl, sTryFile, sKey, scale);
 
 							if (img != null) {
 								break;
@@ -525,7 +533,7 @@ public class ImageLoader
 						releaseImage(id);
 					}
 					//System.err.println("ImageRepository:loadImage:: Resource not found: " + res);
-				} else {
+				} else if (scale) {
 					img = Utils.adjustPXForDPI(display, img);
 				}
 			} catch (Throwable e) {

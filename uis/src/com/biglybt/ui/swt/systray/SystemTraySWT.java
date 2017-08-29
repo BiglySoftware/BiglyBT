@@ -29,7 +29,6 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuEvent;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -46,7 +45,6 @@ import com.biglybt.ui.swt.Alerts;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.SelectableSpeedMenu;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
@@ -73,6 +71,7 @@ public class SystemTraySWT
 	private final MenuBuilder menuBuilder;
 	private final ParameterListener paramTooltipListener;
 	private final ParameterListener paramToolipETAListener;
+	private final String trayIconImageID;
 	private long lastUnixVal = -1;
 
 	public static synchronized SystemTraySWT
@@ -158,8 +157,8 @@ public class SystemTraySWT
 		trayItem = TrayDelegateFactory.createTrayItem(tray);
 
 		File imageFile = new File(SystemProperties.getApplicationPath(), "biglybt-lightgray.svg");
-		String imageID = Constants.isOSX ? "osx_tray" : Constants.isUnix ? "nix_tray" : "logo16";
-		trayItem.setImage(imageID, imageFile);
+		trayIconImageID = Constants.isOSX ? "osx_tray" : Constants.isUnix ? "nix_tray" : Utils.getScaleRatio() > 1 ? "logo32" : "logo16";
+		trayItem.setImage(trayIconImageID, imageFile);
 
 		trayItem.setVisible(true);
 
@@ -457,12 +456,9 @@ public class SystemTraySWT
 					trayItem.dispose();
 				}
 
-				ImageLoader imageLoader = ImageLoader.getInstance();
-				if (Constants.isOSX) {
-					imageLoader.releaseImage("logo_grey");
-					imageLoader.releaseImage("logo_white");
-				} else {
-					imageLoader.releaseImage("logo16");
+				if (trayIconImageID != null) {
+					ImageLoader imageLoader = ImageLoader.getInstance();
+					imageLoader.releaseImage(trayIconImageID);
 				}
 			}
 		});

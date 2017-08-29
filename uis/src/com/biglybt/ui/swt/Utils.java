@@ -119,13 +119,6 @@ public class Utils
 
 	private static Image icon128;
 
-	private final static String[] shellIconNames = {
-		"logo16",
-		"logo32",
-		"logo64",
-		"logo128"
-	};
-
 	public static final Rectangle EMPTY_RECT = new Rectangle(0, 0, 0, 0);
 
 	private static int userMode;
@@ -753,14 +746,14 @@ public class Utils
 				return;
 			}
 			if (icon128 == null) {
-  			ImageLoader imageLoader = ImageLoader.getInstance();
-  			icon128 = imageLoader.getImage("logo128");
-  			if (Constants.isCVSVersion()) {
-  				final int border = 9;
+				ImageLoader imageLoader = ImageLoader.getInstance();
+				icon128 = imageLoader.getImage("logo128");
+				if (Constants.isCVSVersion()) {
+					final int border = 9;
 					Image image = Utils.createAlphaImage(shell.getDisplay(),
 							128 + (border * 2), 128 + (border * 2));
-					image = blitImage(shell.getDisplay(), icon128, null, image, new Point(border,
-							border + 1));
+					image = blitImage(shell.getDisplay(), icon128, null, image,
+							new Point(border, border + 1));
 					imageLoader.releaseImage("logo128");
 					icon128 = image;
 //  				GC gc = new GC(icon128);
@@ -773,16 +766,55 @@ public class Utils
 //									| SWT.BOTTOM);
 //  				gc.dispose();
 //  				font.dispose();
-  			}
+				}
 			}
- 			shell.setImage(icon128);
+			shell.setImage(icon128);
 			return;
 		}
 
 		try {
 			if (shellIcons == null) {
 
-				ArrayList<Image> listShellIcons = new ArrayList<>(shellIconNames.length);
+				String[] shellIconNames;
+
+				if (Constants.isWindows) {
+					// Windows, SWT sets ICON_SMALL (used for titlebar) and ICON_BIG
+					// (used for alt-tab).  It doesn't pick the best size for ICON_SMALL
+					float ratio = getScaleRatio();
+					if (ratio <= 1) {
+						shellIconNames = new String[] {
+							"logo16",
+							"logo128"
+						};
+					} else if (ratio <= 2) {
+						shellIconNames = new String[] {
+							"logo32",
+							"logo128"
+						};
+					}
+					if (ratio <= 4) {
+						shellIconNames = new String[] {
+							"logo64",
+							"logo128"
+						};
+					} else {
+						shellIconNames = new String[] {
+							"logo128",
+							"logo128"
+						};
+					}
+
+				} else {
+					shellIconNames = new String[] {
+						"logo16",
+						"logo32",
+						"logo64",
+						"logo128"
+					};
+				}
+
+				ArrayList<Image> listShellIcons = new ArrayList<>(
+						shellIconNames.length);
 
 				ImageLoader imageLoader = ImageLoader.getInstance();
 				for (int i = 0; i < shellIconNames.length; i++) {
@@ -793,7 +825,7 @@ public class Utils
 						listShellIcons.add(image);
 					}
 				}
-				shellIcons = (Image[]) listShellIcons.toArray(new Image[listShellIcons.size()]);
+				shellIcons = listShellIcons.toArray(new Image[listShellIcons.size()]);
 			}
 
 			shell.setImages(shellIcons);
@@ -3953,6 +3985,10 @@ public class Utils
 
 		comp.addListener(SWT.Resize, sash_listener );
 	    sash.addListener(SWT.Resize, sash_listener );
+	}
+
+	public static float getScaleRatio() {
+		return getDPI().x / (float) DEFAULT_DPI;
 	}
 
 	private static Point getDPI() {
