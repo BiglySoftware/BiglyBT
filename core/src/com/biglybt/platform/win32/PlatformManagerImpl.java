@@ -487,6 +487,10 @@ PlatformManagerImpl
 
 				throw( new PlatformManagerException( "Failed to read registry details", e ));
 	    	}
+	    } else if (location_id == LOC_DOWNLOADS) {
+
+	    	return new File(getLocation(LOC_DOCUMENTS), "Downloads");
+
 	    } else if (location_id == LOC_VIDEO) {
 	    	try{
 

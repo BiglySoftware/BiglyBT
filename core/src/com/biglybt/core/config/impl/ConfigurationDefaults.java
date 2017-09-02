@@ -36,6 +36,8 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.host.TRHost;
 import com.biglybt.core.tracker.server.TRTrackerServer;
 import com.biglybt.core.util.*;
+import com.biglybt.platform.PlatformManager;
+import com.biglybt.platform.PlatformManagerFactory;
 
 /**
  *
@@ -274,14 +276,21 @@ public class ConfigurationDefaults {
     def.put( CFG_TORRENTADD_OPENOPTIONS, CFG_TORRENTADD_OPENOPTIONS_ALWAYS);
     def.put( CFG_TORRENTADD_OPENOPTIONS_SEP, TRUE );
 
-	String docPath =  SystemProperties.getDocPath();
-
-	File f;
+	File f = null;
 
 	if ( Constants.isAndroid ){
-		f = new File(docPath, "Downloads");
+    try {
+      File dirDownloads = PlatformManagerFactory.getPlatformManager().getLocation(PlatformManager.LOC_DOWNLOADS);
+      if (dirDownloads != null) {
+        f = new File(dirDownloads, Constants.APP_NAME);
+      }
+    } catch (Throwable ignore) {
+    }
+    if (f == null) {
+      f = new File(SystemProperties.getDocPath(), "Downloads");
+    }
 	}else{
-		f = new File(docPath,  Constants.APP_NAME + " Downloads");
+    f = new File(SystemProperties.getDocPath(),  Constants.APP_NAME + " Downloads");
 	}
 
 	def.put("Default save path", f.getAbsolutePath());

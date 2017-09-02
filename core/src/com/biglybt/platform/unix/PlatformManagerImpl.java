@@ -472,6 +472,9 @@ public class PlatformManagerImpl implements PlatformManager
 			case LOC_DOCUMENTS:
 				return new File(System.getProperty("user.home"));
 
+			case LOC_DOWNLOADS:
+				return new File(System.getProperty("user.home"), "Downloads");
+
 			case LOC_MUSIC:
 
 			case LOC_VIDEO:
