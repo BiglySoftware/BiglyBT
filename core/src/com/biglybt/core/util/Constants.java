@@ -361,9 +361,8 @@ Constants
 	public static final boolean	isAndroid;
 
 	static{
-		String vm_name = System.getProperty( "java.vm.name", "" );
-
-		isAndroid = vm_name.equalsIgnoreCase( "Dalvik" );
+		isAndroid = System.getProperty("java.vm.name", "").equalsIgnoreCase("Dalvik")
+				|| System.getProperty("java.vendor", "").contains("Android");
 	}
 
 	// Android is roughly 1.6 (reports as 0 for java.version)
