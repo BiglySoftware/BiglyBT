@@ -224,6 +224,10 @@ public class StatsView
 			
 			pluginUI.addView(UISWTInstance.VIEW_STATISTICS, DHTView.MSGID_PREFIX
 					+ ".biglybt", DHTView.class, DHTView.DHT_TYPE_BIGLYBT);
+			
+			pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
+					VivaldiView.MSGID_PREFIX + ".biglybt", VivaldiView.class,
+					VivaldiView.DHT_TYPE_BIGLYBT);
 		}
 
 		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,

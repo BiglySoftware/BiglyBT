@@ -47,8 +47,10 @@ public class VivaldiView
   public static final int DHT_TYPE_MAIN   		= DHT.NW_AZ_MAIN;
   public static final int DHT_TYPE_CVS   	 	= DHT.NW_AZ_CVS;
   public static final int DHT_TYPE_MAIN_V6  	= DHT.NW_AZ_MAIN_V6;
+  public static final int DHT_TYPE_BIGLYBT 		= DHT.NW_BIGLYBT_MAIN;
+
   
-	public static final String MSGID_PREFIX = "VivaldiView";
+  public static final String MSGID_PREFIX = "VivaldiView";
 
   DHT dht;
   Composite panel;
@@ -139,6 +141,11 @@ public class VivaldiView
     }else if ( dht_type == DHT_TYPE_CVS ){
 
       return( "VivaldiView.title.fullcvs" );
+      
+    }else if ( dht_type == DHT_TYPE_BIGLYBT ){
+
+        return( "VivaldiView.title.biglybt" );
+        
     }else{
 
       return( "VivaldiView.title.full_v6" );
