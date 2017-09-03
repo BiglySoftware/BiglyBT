@@ -199,7 +199,7 @@ DHTPluginImpl
 			props.put( DHT.PR_CACHE_REPUBLISH_INTERVAL, new Integer( 5*60*1000 ));
 			*/
 
-			if ( _network == DHT.NW_CVS ){
+			if ( DHTFactory.isSmallNetwork(_network)){
 
 					// reduce network usage
 
@@ -505,7 +505,7 @@ DHTPluginImpl
 					// only try boostrapping off connected peers on the main network as it is unlikely
 					// any of them are running CVS and hence the boostrap will fail
 
-				if ( network == DHT.NW_MAIN || network == DHT.NW_MAIN_V6 ){
+				if ( network == DHT.NW_AZ_MAIN || network == DHT.NW_AZ_MAIN_V6 ){
 
 						// first look for peers to directly import
 
@@ -559,7 +559,7 @@ outer:
 
 					if ( peers_imported < 16 ){
 
-						List<InetSocketAddress> list = VersionCheckClient.getSingleton().getDHTBootstrap( network == DHT.NW_MAIN );
+						List<InetSocketAddress> list = VersionCheckClient.getSingleton().getDHTBootstrap( network != DHT.NW_AZ_MAIN_V6 );
 
 						for ( InetSocketAddress address: list ){
 
@@ -571,6 +571,22 @@ outer:
 
 									break;
 								}
+							}
+						}
+					}
+				}else if ( network == DHT.NW_BIGLYBT_MAIN ) {
+					
+					List<InetSocketAddress> list = VersionCheckClient.getSingleton().getDHTBootstrap( true );
+
+					for ( InetSocketAddress address: list ){
+
+						if ( importSeed( address ) != null ){
+
+							peers_imported++;
+
+							if ( peers_imported > seed_limit ){
+
+								break;
 							}
 						}
 					}

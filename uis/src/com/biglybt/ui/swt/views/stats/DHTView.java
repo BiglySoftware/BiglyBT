@@ -62,9 +62,11 @@ public class DHTView
 	implements UISWTViewEventListener
 {
 
-  public static final int DHT_TYPE_MAIN 	= DHT.NW_MAIN;
-  public static final int DHT_TYPE_CVS  	= DHT.NW_CVS;
-  public static final int DHT_TYPE_MAIN_V6 	= DHT.NW_MAIN_V6;
+  public static final int DHT_TYPE_MAIN 	= DHT.NW_AZ_MAIN;
+  public static final int DHT_TYPE_CVS  	= DHT.NW_AZ_CVS;
+  public static final int DHT_TYPE_MAIN_V6 	= DHT.NW_AZ_MAIN_V6;
+  public static final int DHT_TYPE_BIGLYBT 	= DHT.NW_BIGLYBT_MAIN;
+  
   public static final String MSGID_PREFIX = "DHTView";
 
   public static Color[] rttColours = new Color[] {
@@ -629,6 +631,11 @@ public class DHTView
 	  }else if ( dht_type == DHT_TYPE_CVS ){
 
 		  return( "DHTView.title.fullcvs" );
+		  
+	  }else if ( dht_type == DHT_TYPE_BIGLYBT ){
+
+		  return( "DHTView.title.biglybt" );
+
 	  }else{
 
 		  return( "DHTView.title.full_v6" );

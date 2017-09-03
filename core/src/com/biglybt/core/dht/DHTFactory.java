@@ -57,4 +57,18 @@ DHTFactory
 	{
 		return( new DHTImpl( transport, router, database, properties, storage_adapter, logger ));
 	}
+	
+	public static boolean
+	isSmallNetwork(
+		int		network )
+	{
+		return( network != DHT.NW_AZ_MAIN );
+	}
+	
+	public static boolean
+	isLargeNetwork(
+		int		network )
+	{
+		return( network == DHT.NW_AZ_MAIN );
+	}
 }

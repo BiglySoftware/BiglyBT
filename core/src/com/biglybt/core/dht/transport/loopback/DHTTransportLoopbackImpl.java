@@ -62,7 +62,7 @@ DHTTransportLoopbackImpl
 	public int
 	getNetwork()
 	{
-		return( DHT.NW_MAIN );
+		return( DHT.NW_AZ_MAIN );
 	}
 
 	@Override

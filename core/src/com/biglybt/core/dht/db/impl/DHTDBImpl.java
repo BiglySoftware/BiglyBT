@@ -161,7 +161,7 @@ DHTDBImpl
 
 		boolean survey_enabled = _protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_REPLICATION_CONTROL3 &&
 				(adapter == null ||
-						adapter.getNetwork() == DHT.NW_CVS ||
+						adapter.getNetwork() == DHT.NW_AZ_CVS ||
 						FeatureAvailability.isDHTRepV2Enabled());
 
 		if ( ENABLE_PRECIOUS_STUFF ){
@@ -3331,9 +3331,7 @@ DHTDBImpl
 
 		// same is currently true of the IPv6 one :(
 
-		final boolean ban_ip =
-				control.getTransport().getNetwork() != DHT.NW_CVS &&
-				!control.getTransport().isIPV6();
+		final boolean ban_ip = DHTFactory.isLargeNetwork( control.getTransport().getNetwork());
 
 		new AEThread2( "DHTDBImpl:delayed flood delete", true )
 		{

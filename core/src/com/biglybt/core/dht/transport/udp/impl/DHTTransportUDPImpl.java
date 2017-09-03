@@ -595,7 +595,20 @@ DHTTransportUDPImpl
 	public byte
 	getMinimumProtocolVersion()
 	{
-		return( getNetwork()==DHT.NW_CVS?DHTTransportUDP.PROTOCOL_VERSION_MIN_CVS:DHTTransportUDP.PROTOCOL_VERSION_MIN );
+		int net = getNetwork();
+		
+		if ( net == DHT.NW_AZ_CVS ){
+			
+			return( DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ_CVS );
+			
+		}else if ( net == DHT.NW_AZ_MAIN || net == DHT.NW_AZ_MAIN_V6 ){
+			
+			return( DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ );
+			
+		}else{
+			
+			return( DHTTransportUDP.PROTOCOL_VERSION_MIN_BIGLYBT );
+		}
 	}
 
 	@Override

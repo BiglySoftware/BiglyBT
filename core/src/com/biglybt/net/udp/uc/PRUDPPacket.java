@@ -29,6 +29,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import com.biglybt.core.dht.DHT;
+import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.RandomUtils;
 
@@ -139,6 +141,24 @@ PRUDPPacket
 
 		throws IOException;
 
+	protected byte
+	getMinimumProtocolVersion(
+		int	network )
+	{
+		if ( network == DHT.NW_AZ_CVS ) {
+			
+			return( DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ_CVS );
+			
+		}else if ( network ==DHT.NW_AZ_MAIN || network == DHT.NW_AZ_MAIN_V6 ) {
+			
+			return( DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ );
+			
+		}else{
+			
+			return( DHTTransportUDP.PROTOCOL_VERSION_MIN_BIGLYBT );
+		}
+	}
+	
 	public String
 	getString()
 	{

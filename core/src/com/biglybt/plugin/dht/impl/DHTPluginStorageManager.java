@@ -115,7 +115,7 @@ DHTPluginStorageManager
 		log			= _log;
 		data_dir	= _data_dir;
 
-		if (  network == DHT.NW_CVS ){
+		if (  DHTFactory.isSmallNetwork( network )){
 
 				// work around issue whereby puts to the CVS dht went out of control and
 				// diversified everything

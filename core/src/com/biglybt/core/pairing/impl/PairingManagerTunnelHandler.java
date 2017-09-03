@@ -225,7 +225,7 @@ PairingManagerTunnelHandler
 
 				int net = dht.getTransport().getNetwork();
 
-				if ( net == DHT.NW_MAIN ){
+				if ( net == DHT.NW_AZ_MAIN ){
 
 					DHTNATPuncher primary_puncher = dht.getNATPuncher();
 
@@ -244,7 +244,7 @@ PairingManagerTunnelHandler
 							nat_punchers_ipv4.add( puncher );
 						}
 					}
-				}else if ( net == DHT.NW_MAIN_V6 ){
+				}else if ( net == DHT.NW_AZ_MAIN_V6 ){
 
 					/*
 					 * no point in this atm as we don't support v6 tunnels

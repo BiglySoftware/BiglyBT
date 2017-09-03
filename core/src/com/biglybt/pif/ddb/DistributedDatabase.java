@@ -45,8 +45,15 @@ DistributedDatabase
 
 		// dht types
 
-	public static final int	DHT_MAIN	= 1;
+	/** @deprecated use DHT_AZ_MAIN*/
+	public static final int	DHT_MAIN		= 1;
+	
+	/** @deprecated use DHT_AZ_CVS*/
 	public static final int	DHT_CVS		= 2;
+
+	public static final int	DHT_AZ_MAIN			= 1;
+	public static final int	DHT_AZ_CVS			= 2;
+	public static final int	DHT_AZ_BIGLYBT		= 3;
 
 	public boolean
 	isAvailable();

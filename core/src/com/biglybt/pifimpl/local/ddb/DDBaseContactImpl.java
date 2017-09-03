@@ -22,6 +22,7 @@ package com.biglybt.pifimpl.local.ddb;
 import java.net.InetSocketAddress;
 import java.util.Map;
 
+import com.biglybt.core.dht.DHT;
 import com.biglybt.pif.ddb.*;
 import com.biglybt.plugin.dht.DHTPlugin;
 import com.biglybt.plugin.dht.DHTPluginContact;
@@ -80,9 +81,11 @@ DDBaseContactImpl
 
 	@Override
 	public int
-	getDHT()
+	getNetwork()
 	{
-		return( contact.getNetwork() == DHTPlugin.NW_CVS?DistributedDatabase.DHT_CVS:DistributedDatabase.DHT_MAIN );
+		int cn = contact.getNetwork();
+		
+		return( cn == DHTPlugin.NW_AZ_CVS?DistributedDatabase.DHT_AZ_CVS:(cn == DHTPlugin.NW_BIGLYBT_MAIN?DistributedDatabase.DHT_AZ_BIGLYBT:DistributedDatabase.DHT_AZ_MAIN ));
 	}
 
 	@Override

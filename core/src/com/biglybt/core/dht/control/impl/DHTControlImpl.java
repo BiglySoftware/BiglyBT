@@ -3321,7 +3321,7 @@ DHTControlImpl
 
 				DHTStorageAdapter sad = adapter.getStorageAdapter();
 
-				if ( sad != null && sad.getNetwork() != DHT.NW_CVS ){
+				if ( sad != null && DHTFactory.isLargeNetwork( sad.getNetwork())){
 
 					c_factor += ( c_factor/2 );
 				}

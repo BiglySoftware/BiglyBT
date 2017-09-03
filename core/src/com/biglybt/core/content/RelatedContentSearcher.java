@@ -387,7 +387,7 @@ RelatedContentSearcher
 
 									int	network = dht.getNetwork();
 
-									if ( public_dht && search_cvs_only && network != DHT.NW_CVS ){
+									if ( public_dht && search_cvs_only && network != DHT.NW_AZ_CVS ){
 
 										logSearch( "Search: ignoring main DHT" );
 
@@ -431,7 +431,7 @@ RelatedContentSearcher
 
 										int	network = dht.getNetwork();
 
-										if ( public_dht && search_cvs_only && network != DHT.NW_CVS ){
+										if ( public_dht && search_cvs_only && network != DHT.NW_AZ_CVS ){
 
 											logSearch( "Search: ignoring main DHT" );
 
@@ -1297,7 +1297,10 @@ RelatedContentSearcher
 							int		port	= MapUtils.importInt( m, "p", 0 );
 
 							DistributedDatabaseContact ddb_contact =
-								ddb.importContact( new InetSocketAddress( InetAddress.getByName(host), port ), DHTTransportUDP.PROTOCOL_VERSION_MIN, contact.getDHT());
+								ddb.importContact( 
+									new InetSocketAddress( 
+										InetAddress.getByName(host), port ), 
+									DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ, contact.getNetwork());
 
 							contacts.add( ddb_contact );
 						}
@@ -1452,7 +1455,7 @@ RelatedContentSearcher
 
 				boolean dup = harvest_op_requester_bloom.contains( originator_bytes );
 
-				logSearch( "Received remote request: " + BDecoder.decodeStrings( request ) + " from " + originator.getAddress() + "/" + originator.getDHT() + ", dup=" + dup + ", bs=" + harvest_op_requester_bloom.getEntryCount());
+				logSearch( "Received remote request: " + BDecoder.decodeStrings( request ) + " from " + originator.getAddress() + "/" + originator.getNetwork() + ", dup=" + dup + ", bs=" + harvest_op_requester_bloom.getEntryCount());
 
 				if ( !dup ){
 
@@ -1865,7 +1868,7 @@ RelatedContentSearcher
 
 			if ( dht_plugin instanceof DHTPlugin ){
 
-				vals = ((DHTPlugin)dht_plugin).getValues( DHTPlugin.NW_CVS,  false );
+				vals = ((DHTPlugin)dht_plugin).getValues( DHTPlugin.NW_AZ_CVS,  false );
 
 			}else{
 
@@ -2100,7 +2103,7 @@ outer:
 
 								int	network = dht.getNetwork();
 
-								if ( SEARCH_CVS_ONLY_DEFAULT && network != DHT.NW_CVS ){
+								if ( SEARCH_CVS_ONLY_DEFAULT && network != DHT.NW_AZ_CVS ){
 
 									logSearch( "Harvest: ignoring main DHT" );
 
@@ -2198,7 +2201,11 @@ outer:
 
 		}else{
 
-			return( ddb.importContact( address, DHTTransportUDP.PROTOCOL_VERSION_MIN, network==DHT.NW_CVS?DistributedDatabase.DHT_CVS:DistributedDatabase.DHT_MAIN ));
+			return( 
+				ddb.importContact( 
+					address, 
+					DHTTransportUDP.PROTOCOL_VERSION_MIN_AZ, 
+					network==DHT.NW_AZ_CVS?DistributedDatabase.DHT_AZ_CVS:DistributedDatabase.DHT_AZ_MAIN ));
 		}
 	}
 

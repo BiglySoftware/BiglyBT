@@ -43,7 +43,7 @@ DistributedDatabaseContact
 	getAddress();
 
 	public int
-	getDHT();
+	getNetwork();
 
 	public boolean
 	isAlive(

@@ -129,7 +129,7 @@ DHTUDPPacketRequest
 			network	= is.readInt();
 		}
 
-		if ( protocol_version < ( network == DHT.NW_CVS?DHTTransportUDP.PROTOCOL_VERSION_MIN_CVS:DHTTransportUDP.PROTOCOL_VERSION_MIN )){
+		if ( protocol_version < getMinimumProtocolVersion( network )){
 
 			throw( DHTUDPUtils.INVALID_PROTOCOL_VERSION_EXCEPTION );
 		}

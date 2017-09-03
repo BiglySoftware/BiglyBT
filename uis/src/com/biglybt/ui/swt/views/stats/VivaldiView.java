@@ -44,9 +44,10 @@ import com.biglybt.plugin.dht.DHTPlugin;
 public class VivaldiView
 	implements UISWTViewEventListener
 {
-  public static final int DHT_TYPE_MAIN   = DHT.NW_MAIN;
-  public static final int DHT_TYPE_CVS    = DHT.NW_CVS;
-  public static final int DHT_TYPE_MAIN_V6  = DHT.NW_MAIN_V6;
+  public static final int DHT_TYPE_MAIN   		= DHT.NW_AZ_MAIN;
+  public static final int DHT_TYPE_CVS   	 	= DHT.NW_AZ_CVS;
+  public static final int DHT_TYPE_MAIN_V6  	= DHT.NW_AZ_MAIN_V6;
+  
 	public static final String MSGID_PREFIX = "VivaldiView";
 
   DHT dht;

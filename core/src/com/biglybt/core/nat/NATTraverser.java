@@ -164,11 +164,11 @@ NATTraverser
 
 						if ( dht_plugin.isEnabled()){
 
-							DHT dht = dht_plugin.getDHT( DHT.NW_MAIN );
+							DHT dht = dht_plugin.getDHT( DHT.NW_AZ_MAIN );
 
 							if ( dht == null ){
 
-								dht = dht_plugin.getDHT( DHT.NW_CVS );
+								dht = dht_plugin.getDHT( DHT.NW_AZ_CVS );
 							}
 
 							if ( dht != null ){

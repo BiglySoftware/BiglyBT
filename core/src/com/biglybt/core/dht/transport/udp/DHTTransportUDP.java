@@ -122,12 +122,14 @@ DHTTransportUDP
 		}
 	}
 
-	public static final byte PROTOCOL_VERSION_MAIN					= Helper.getVersion( PROTOCOL_VERSION_PROC_TIME );
-	public static final byte PROTOCOL_VERSION_CVS					= Helper.getVersion( PROTOCOL_VERSION_PROC_TIME );
+	public static final byte PROTOCOL_VERSION_AZ_MAIN					= Helper.getVersion( PROTOCOL_VERSION_PROC_TIME );
+	public static final byte PROTOCOL_VERSION_AZ_CVS					= Helper.getVersion( PROTOCOL_VERSION_PROC_TIME );
 
-	public static final byte PROTOCOL_VERSION_MIN					= Helper.getVersion( PROTOCOL_VERSION_VIVALDI_OPTIONAL );
-	public static final byte PROTOCOL_VERSION_MIN_CVS				= Helper.getVersion( PROTOCOL_VERSION_VIVALDI_OPTIONAL );
+	public static final byte PROTOCOL_VERSION_MIN_AZ					= Helper.getVersion( PROTOCOL_VERSION_VIVALDI_OPTIONAL );
+	public static final byte PROTOCOL_VERSION_MIN_AZ_CVS				= Helper.getVersion( PROTOCOL_VERSION_VIVALDI_OPTIONAL );
 
+	public static final byte PROTOCOL_VERSION_BIGLYBT					= Helper.getVersion( PROTOCOL_VERSION_VIVALDI_OPTIONAL );
+	public static final byte PROTOCOL_VERSION_MIN_BIGLYBT				= Helper.getVersion( PROTOCOL_VERSION_VIVALDI_OPTIONAL );
 
 
 	public static final byte VENDOR_ID_AELITIS		= 0x00;

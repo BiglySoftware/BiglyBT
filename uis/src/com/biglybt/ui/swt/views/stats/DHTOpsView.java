@@ -42,7 +42,7 @@ import com.biglybt.plugin.dht.DHTPlugin;
 public class DHTOpsView
 	implements UISWTViewEventListener
 {
-	public static final int DHT_TYPE_MAIN   = DHT.NW_MAIN;
+	public static final int DHT_TYPE_MAIN   = DHT.NW_AZ_MAIN;
 
 	public static final String MSGID_PREFIX = "DHTOpsView";
 

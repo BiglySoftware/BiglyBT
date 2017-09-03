@@ -94,8 +94,13 @@ DHTPlugin
 	public static final byte		DT_FREQUENCY		= DHT.DT_FREQUENCY;
 	public static final byte		DT_SIZE				= DHT.DT_SIZE;
 
-	public static final int			NW_MAIN				= DHT.NW_MAIN;
-	public static final int			NW_CVS				= DHT.NW_CVS;
+	/** @deprecated Use NW_AZ_MAIN */
+	
+	public static final int			NW_MAIN				= DHT.NW_AZ_MAIN;
+	
+	public static final int			NW_AZ_MAIN			= DHT.NW_AZ_MAIN;
+	public static final int			NW_AZ_CVS			= DHT.NW_AZ_CVS;
+	public static final int			NW_BIGLYBT_MAIN		= DHT.NW_BIGLYBT_MAIN;
 
 	public static final int			MAX_VALUE_SIZE		= DHT.MAX_VALUE_SIZE;
 
@@ -104,9 +109,10 @@ DHTPlugin
 	private static final String	PLUGIN_CONFIGSECTION_ID	= "plugins.dht";
 	private static final String PLUGIN_RESOURCE_ID		= "ConfigView.section.plugins.dht";
 
-	private static final boolean	MAIN_DHT_ENABLE		= COConfigurationManager.getBooleanParameter( "dht.net.main_v4.enable", true );
-	private static final boolean	CVS_DHT_ENABLE		= COConfigurationManager.getBooleanParameter( "dht.net.cvs_v4.enable", true );
-	private static final boolean	MAIN_DHT_V6_ENABLE	= COConfigurationManager.getBooleanParameter( "dht.net.main_v6.enable", true );
+	private static final boolean	AZ_MAIN_DHT_ENABLE			= COConfigurationManager.getBooleanParameter( "dht.net.main_v4.enable", true );
+	private static final boolean	AZ_CVS_DHT_ENABLE			= COConfigurationManager.getBooleanParameter( "dht.net.cvs_v4.enable", true );
+	private static final boolean	AZ_MAIN_DHT_V6_ENABLE		= COConfigurationManager.getBooleanParameter( "dht.net.main_v6.enable", true );
+	private static final boolean	BIGLYBT_MAIN_DHT_ENABLE		= COConfigurationManager.getBooleanParameter( "dht.net.biglybt_main_v4.enable", true );
 
 
 	private PluginInterface plugin_interface;
@@ -116,6 +122,8 @@ DHTPlugin
 	private DHTPluginImpl		main_dht;
 	private DHTPluginImpl		cvs_dht;
 	private DHTPluginImpl		main_v6_dht;
+	
+	private DHTPluginImpl		biglybt_dht;
 
 	private ActionParameter		reseed;
 
@@ -932,15 +940,15 @@ DHTPlugin
 										        			}
 										        		};
 
-												if ( MAIN_DHT_ENABLE ){
+												if ( AZ_MAIN_DHT_ENABLE ){
 
 													main_dht =
 														new DHTPluginImpl(
 																	plugin_interface,
 																	CoreFactory.getSingleton().getNATTraverser(),
 																	adapter,
-																	DHTTransportUDP.PROTOCOL_VERSION_MAIN,
-																	DHT.NW_MAIN,
+																	DHTTransportUDP.PROTOCOL_VERSION_AZ_MAIN,
+																	DHT.NW_AZ_MAIN,
 																	false,
 																	override_ip,
 																	dht_data_port,
@@ -954,7 +962,7 @@ DHTPlugin
 													adapter = null;
 												}
 
-												if ( MAIN_DHT_V6_ENABLE ){
+												if ( AZ_MAIN_DHT_V6_ENABLE ){
 
 													if ( NetworkAdmin.getSingleton().hasDHTIPV6()){
 
@@ -963,8 +971,8 @@ DHTPlugin
 																plugin_interface,
 																CoreFactory.getSingleton().getNATTraverser(),
 																adapter,
-																DHTTransportUDP.PROTOCOL_VERSION_MAIN,
-																DHT.NW_MAIN_V6,
+																DHTTransportUDP.PROTOCOL_VERSION_AZ_MAIN,
+																DHT.NW_AZ_MAIN_V6,
 																true,
 																null,
 																dht_data_port,
@@ -979,15 +987,15 @@ DHTPlugin
 													}
 												}
 
-												if ( Constants.isCVSVersion() && CVS_DHT_ENABLE ){
+												if ( Constants.isCVSVersion() && AZ_CVS_DHT_ENABLE ){
 
 													cvs_dht =
 														new DHTPluginImpl(
 															plugin_interface,
 															CoreFactory.getSingleton().getNATTraverser(),
 															adapter,
-															DHTTransportUDP.PROTOCOL_VERSION_CVS,
-															DHT.NW_CVS,
+															DHTTransportUDP.PROTOCOL_VERSION_AZ_CVS,
+															DHT.NW_AZ_CVS,
 															false,
 															override_ip,
 															dht_data_port,
@@ -997,6 +1005,28 @@ DHTPlugin
 															log, dht_log );
 
 													plugins.add( cvs_dht );
+
+													adapter = null;
+												}
+
+												if ( BIGLYBT_MAIN_DHT_ENABLE ){
+
+													biglybt_dht =
+														new DHTPluginImpl(
+															plugin_interface,
+															CoreFactory.getSingleton().getNATTraverser(),
+															adapter,
+															DHTTransportUDP.PROTOCOL_VERSION_BIGLYBT,
+															DHT.NW_BIGLYBT_MAIN,
+															false,
+															override_ip,
+															dht_data_port,
+															reseed,
+															warn_user,
+															logging,
+															log, dht_log );
+
+													plugins.add( biglybt_dht );
 
 													adapter = null;
 												}
@@ -1077,7 +1107,7 @@ DHTPlugin
 	protected void
 	setPluginInfo()
 	{
-		boolean	reachable	= plugin_interface.getPluginconfig().getPluginBooleanParameter( "dht.reachable." + DHT.NW_MAIN, true );
+		boolean	reachable	= plugin_interface.getPluginconfig().getPluginBooleanParameter( "dht.reachable." + DHT.NW_AZ_MAIN, true );
 
 		plugin_interface.getPluginconfig().setPluginParameter(
 				"plugin.info",
@@ -1418,7 +1448,7 @@ DHTPlugin
 	{
 		DHTPluginImpl	dht = null;
 
-		if ( network == NW_MAIN ){
+		if ( network == NW_AZ_MAIN ){
 
 			if ( ipv6 ){
 
@@ -1427,6 +1457,16 @@ DHTPlugin
 			}else{
 
 				dht = main_dht;
+			}
+		}else if ( network == NW_BIGLYBT_MAIN ){
+			
+			if ( ipv6 ){
+
+				dht = null;
+
+			}else{
+
+				dht = biglybt_dht;
 			}
 		}else{
 
@@ -2013,7 +2053,7 @@ DHTPlugin
 
 		InetAddress contact_address = address.getAddress();
 
-		int	target_network = is_cvs?DHT.NW_CVS:DHT.NW_MAIN;
+		int	target_network = is_cvs?DHT.NW_AZ_CVS:DHT.NW_AZ_MAIN;
 
 		for ( DHTPluginImpl dht: dhts ){
 

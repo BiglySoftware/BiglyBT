@@ -121,7 +121,7 @@ PRUDPPacketReply
 
 		return( decoder.decode( handler, originator, is, action, transaction_id ));
 	}
-
+	
 	@Override
 	public String
 	getString()

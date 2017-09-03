@@ -139,7 +139,7 @@ NetStatusProtocolTester
 
 				DHT	target_dht = null;
 
-				int	target_network	= Constants.isCVSVersion()?DHT.NW_CVS:DHT.NW_MAIN;
+				int	target_network	= Constants.isCVSVersion()?DHT.NW_AZ_CVS:DHT.NW_AZ_MAIN;
 
 				for (int i=0;i<dhts.length;i++){
 

@@ -83,9 +83,15 @@ DHT
 
 	public static final String[]	DT_STRINGS = { "", "None", "Freq", "Size" };
 
+	/** @deprecated Use NW_AZ_MAIN */
+	
 	public static final int		NW_MAIN			= 0;
-	public static final int		NW_CVS			= 1;
-	public static final int		NW_MAIN_V6		= 3;
+
+	public static final int		NW_AZ_MAIN		= 0;
+	public static final int		NW_AZ_CVS		= 1;
+	public static final int		NW_AZ_MAIN_V6	= 3;
+
+	public static final int		NW_BIGLYBT_MAIN	= 4;
 
 	public void
 	put(
