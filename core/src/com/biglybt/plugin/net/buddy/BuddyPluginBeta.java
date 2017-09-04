@@ -58,13 +58,13 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 	public static final boolean BETA_CHAN_ENABLED		= System.getProperty( "az.chat.buddy.beta.chan", "1" ).equals( "1" );
 
 	public static final String	LEGACY_COMMUNITY_CHAT_KEY		= 	"General: Help";
-	public static final String	COMMUNITY_CHAT_KEY				= 	"BiglyBT: " + LEGACY_COMMUNITY_CHAT_KEY;
+	public static final String	COMMUNITY_CHAT_KEY				= 	Constants.APP_NAME + ": " + LEGACY_COMMUNITY_CHAT_KEY;
 		
 	public static final String	LEGACY_ANNOUNCE_CHAT_KEY		= 	"General: Announce";
-	public static final String	ANNOUNCE_CHAT_KEY				= 	"BiglyBT: " + LEGACY_ANNOUNCE_CHAT_KEY;
+	public static final String	ANNOUNCE_CHAT_KEY				= 	Constants.APP_NAME + ": " + LEGACY_ANNOUNCE_CHAT_KEY;
 	
 	public static final String	LEGACY_BETA_CHAT_KEY 	= 	"test:beta:chat";
-	public static final String	BETA_CHAT_KEY 			= 	"BiglyBT: Beta: Chat";
+	public static final String	BETA_CHAT_KEY 			= 	Constants.APP_NAME + ": Beta: Chat";
 
 	public static final int PRIVATE_CHAT_DISABLED			= 1;
 	public static final int PRIVATE_CHAT_PINNED_ONLY		= 2;
