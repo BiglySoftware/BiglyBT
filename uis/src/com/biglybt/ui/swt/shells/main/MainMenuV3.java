@@ -35,6 +35,7 @@ import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
@@ -612,7 +613,7 @@ public class MainMenuV3
 							}
 						});
 
-					MenuBuildUtils.addChatMenu( communityMenu, MENU_ID_COMMUNITY_CHAT, "General: Help" );
+					MenuBuildUtils.addCommunityChatMenu( communityMenu );
 
 					MenuFactory.addVoteMenuItem(communityMenu);
 					MenuFactory.addBugReportMenuItem(communityMenu);

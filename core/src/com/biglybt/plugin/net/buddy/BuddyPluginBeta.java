@@ -57,7 +57,14 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 	public static final boolean DEBUG_ENABLED			= System.getProperty( "az.chat.buddy.debug", "0" ).equals( "1" );
 	public static final boolean BETA_CHAN_ENABLED		= System.getProperty( "az.chat.buddy.beta.chan", "1" ).equals( "1" );
 
-	public static final String	BETA_CHAT_KEY = 	"test:beta:chat";
+	public static final String	LEGACY_COMMUNITY_CHAT_KEY		= 	"General: Help";
+	public static final String	COMMUNITY_CHAT_KEY				= 	"BiglyBT: " + LEGACY_COMMUNITY_CHAT_KEY;
+		
+	public static final String	LEGACY_ANNOUNCE_CHAT_KEY		= 	"General: Announce";
+	public static final String	ANNOUNCE_CHAT_KEY				= 	"BiglyBT: " + LEGACY_ANNOUNCE_CHAT_KEY;
+	
+	public static final String	LEGACY_BETA_CHAT_KEY 	= 	"test:beta:chat";
+	public static final String	BETA_CHAT_KEY 			= 	"BiglyBT: Beta: Chat";
 
 	public static final int PRIVATE_CHAT_DISABLED			= 1;
 	public static final int PRIVATE_CHAT_PINNED_ONLY		= 2;
@@ -421,7 +428,7 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 								if ( !set.contains( net + ":" + key )){
 
 									if ( 	net == AENetworkClassifier.AT_PUBLIC &&
-											key.equals(BETA_CHAT_KEY)){
+											( key.equals(BETA_CHAT_KEY) || key.equals(LEGACY_BETA_CHAT_KEY) )){
 
 										// leave
 
@@ -1235,7 +1242,21 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 									ChatInstance chat = getChat( AENetworkClassifier.AT_PUBLIC, BETA_CHAT_KEY );
 
 									chat.setKeepAlive( true );
+									
+									ChatInstance legacy_chat = getChat( AENetworkClassifier.AT_PUBLIC, LEGACY_BETA_CHAT_KEY );
+
+									legacy_chat.setKeepAlive( true );
 								}
+								
+							}
+							
+							if ( !COConfigurationManager.getBooleanParameter( "azbuddy.dchat.biglybt.chan.joined", false )) {
+									
+								COConfigurationManager.setParameter( "azbuddy.dchat.biglybt.chan.joined", true );
+								
+								ChatInstance chat = getChat( AENetworkClassifier.AT_PUBLIC, COMMUNITY_CHAT_KEY );
+									
+								chat.setFavourite( true );
 							}
 						}catch( Throwable e ){
 

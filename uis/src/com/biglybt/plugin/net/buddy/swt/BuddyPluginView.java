@@ -2435,8 +2435,8 @@ BuddyPluginView
 						final List<Button>	buttons = new ArrayList<>();
 
 						String[][] general_data = {
-								{ "label.help", 		"General: Help" },
-								{ "label.announce", 	"General: Announce" },
+								{ "label.help", 		BuddyPluginBeta.COMMUNITY_CHAT_KEY },
+								{ "label.announce", 	BuddyPluginBeta.ANNOUNCE_CHAT_KEY },
 								{ "label.beta",			BuddyPluginBeta.BETA_CHAT_KEY },
 						};
 

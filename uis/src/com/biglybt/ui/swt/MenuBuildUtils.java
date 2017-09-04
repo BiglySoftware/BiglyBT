@@ -43,11 +43,13 @@ import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
+import com.biglybt.ui.swt.shells.main.MainMenuV3;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 
 import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 
 
@@ -470,6 +472,219 @@ public class MenuBuildUtils {
 	private static AtomicBoolean	pub_chat_pending 	= new AtomicBoolean();
 	private static AtomicBoolean	anon_chat_pending 	= new AtomicBoolean();
 
+	public static void
+	addCommunityChatMenu(
+		Menu			menu )
+	{
+		final Menu chat_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+
+		final org.eclipse.swt.widgets.MenuItem chat_item = new org.eclipse.swt.widgets.MenuItem(menu, SWT.CASCADE);
+
+		Messages.setLanguageText( chat_item, MainMenuV3.MENU_ID_COMMUNITY_CHAT );
+
+		chat_item.setMenu(chat_menu);
+
+		chat_menu.addMenuListener(
+			new MenuAdapter()
+			{
+				@Override
+				public void
+				menuShown(
+					MenuEvent e)
+				{
+					for ( org.eclipse.swt.widgets.MenuItem mi: chat_menu.getItems()){
+
+						mi.dispose();
+					}
+
+					if ( !BuddyPluginUtils.isBetaChatAvailable()){
+
+						return;
+					}
+
+						// BiglyBT
+					
+					{
+						org.eclipse.swt.widgets.MenuItem chat_pub = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+	
+						Messages.setLanguageText(chat_pub, "label.public");
+	
+						chat_pub.addListener(SWT.Selection, new Listener() {
+							@Override
+							public void handleEvent(Event event){
+	
+								pub_chat_pending.set( true );
+	
+								BuddyPluginUtils.createBetaChat(
+									AENetworkClassifier.AT_PUBLIC,
+									BuddyPluginBeta.COMMUNITY_CHAT_KEY,
+									new BuddyPluginUtils.CreateChatCallback()
+									{
+										@Override
+										public void
+										complete(
+											ChatInstance	chat )
+										{
+											pub_chat_pending.set( false );
+										}
+									});
+							}});
+	
+						if ( pub_chat_pending.get()){
+	
+							chat_pub.setEnabled( false );
+							chat_pub.setText( chat_pub.getText() + " (" + MessageText.getString( "PeersView.state.pending" ) + ")" );
+						}
+	
+						if ( BuddyPluginUtils.isBetaChatAnonAvailable()){
+	
+							org.eclipse.swt.widgets.MenuItem chat_priv = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+	
+							Messages.setLanguageText(chat_priv, "label.anon");
+	
+							chat_priv.addListener(SWT.Selection, new Listener() {
+								@Override
+								public void handleEvent(Event event){
+	
+									anon_chat_pending.set( true );
+	
+									BuddyPluginUtils.createBetaChat(
+										AENetworkClassifier.AT_I2P,
+										BuddyPluginBeta.COMMUNITY_CHAT_KEY,
+										new BuddyPluginUtils.CreateChatCallback()
+										{
+											@Override
+											public void
+											complete(
+												ChatInstance	chat )
+											{
+												anon_chat_pending.set( false );
+											}
+										});
+								}});
+	
+							if ( anon_chat_pending.get()){
+	
+								chat_priv.setEnabled( false );
+								chat_priv.setText( chat_priv.getText() + " (" + MessageText.getString( "PeersView.state.pending" ) + ")" );
+	
+							}
+						}else{
+	
+							org.eclipse.swt.widgets.MenuItem chat_priv = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+	
+							chat_priv.setText( MessageText.getString("label.anon") + "..." );
+	
+							chat_priv.addListener(SWT.Selection, new Listener() {
+								@Override
+								public void handleEvent(Event event){
+	
+									I2PHelpers.installI2PHelper( null, null, null );
+								}});
+	
+							if ( I2PHelpers.isInstallingI2PHelper()){
+	
+								chat_priv.setEnabled( false );
+								chat_priv.setText( chat_priv.getText() + " (" + MessageText.getString( "PeersView.state.pending" ) + ")" );
+	
+							}
+						}
+					}
+					
+					new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.SEPARATOR );
+					
+					// Vuze
+					
+					{
+						org.eclipse.swt.widgets.MenuItem chat_pub = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+
+						chat_pub.setText( MessageText.getString( "ConfigView.section.interface.legacy") + " " + MessageText.getString( "label.public" ));
+	
+						chat_pub.addListener(SWT.Selection, new Listener() {
+							@Override
+							public void handleEvent(Event event){
+	
+								pub_chat_pending.set( true );
+	
+								BuddyPluginUtils.createBetaChat(
+									AENetworkClassifier.AT_PUBLIC,
+									BuddyPluginBeta.LEGACY_COMMUNITY_CHAT_KEY,
+									new BuddyPluginUtils.CreateChatCallback()
+									{
+										@Override
+										public void
+										complete(
+											ChatInstance	chat )
+										{
+											pub_chat_pending.set( false );
+										}
+									});
+							}});
+	
+						if ( pub_chat_pending.get()){
+	
+							chat_pub.setEnabled( false );
+							chat_pub.setText( chat_pub.getText() + " (" + MessageText.getString( "PeersView.state.pending" ) + ")" );
+						}
+	
+						if ( BuddyPluginUtils.isBetaChatAnonAvailable()){
+	
+							org.eclipse.swt.widgets.MenuItem chat_priv = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+		
+							chat_priv.setText( MessageText.getString( "ConfigView.section.interface.legacy") + " " + MessageText.getString( "label.anon" ));
+
+							chat_priv.addListener(SWT.Selection, new Listener() {
+								@Override
+								public void handleEvent(Event event){
+	
+									anon_chat_pending.set( true );
+	
+									BuddyPluginUtils.createBetaChat(
+										AENetworkClassifier.AT_I2P,
+										BuddyPluginBeta.LEGACY_COMMUNITY_CHAT_KEY,
+										new BuddyPluginUtils.CreateChatCallback()
+										{
+											@Override
+											public void
+											complete(
+												ChatInstance	chat )
+											{
+												anon_chat_pending.set( false );
+											}
+										});
+								}});
+	
+							if ( anon_chat_pending.get()){
+	
+								chat_priv.setEnabled( false );
+								chat_priv.setText( chat_priv.getText() + " (" + MessageText.getString( "PeersView.state.pending" ) + ")" );
+	
+							}
+						}else{
+	
+							org.eclipse.swt.widgets.MenuItem chat_priv = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+	
+							chat_priv.setText( MessageText.getString("label.anon") + "..." );
+	
+							chat_priv.addListener(SWT.Selection, new Listener() {
+								@Override
+								public void handleEvent(Event event){
+	
+									I2PHelpers.installI2PHelper( null, null, null );
+								}});
+	
+							if ( I2PHelpers.isInstallingI2PHelper()){
+	
+								chat_priv.setEnabled( false );
+								chat_priv.setText( chat_priv.getText() + " (" + MessageText.getString( "PeersView.state.pending" ) + ")" );
+	
+							}
+						}
+					}
+				}
+			});
+	}
+	
 	public static void
 	addChatMenu(
 		Menu			menu,

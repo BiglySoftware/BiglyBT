@@ -817,7 +817,7 @@ BuddyPluginViewInstance
 
 		Button beta_button = new Button( test_area, SWT.NULL );
 
-		setupButton( beta_button, lu.getLocalisedMessageText( "Button.open" ), AENetworkClassifier.AT_PUBLIC, BuddyPluginBeta.BETA_CHAT_KEY );
+		setupButton( beta_button, lu.getLocalisedMessageText( "Button.open" ), AENetworkClassifier.AT_PUBLIC, new String[] { BuddyPluginBeta.BETA_CHAT_KEY, BuddyPluginBeta.LEGACY_BETA_CHAT_KEY });
 
 		label = new Label( test_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
@@ -832,7 +832,7 @@ BuddyPluginViewInstance
 
 		Button beta_i2p_button = new Button( test_area, SWT.NULL );
 
-		setupButton( beta_i2p_button, lu.getLocalisedMessageText( "Button.open" ), AENetworkClassifier.AT_I2P, BuddyPluginBeta.BETA_CHAT_KEY );
+		setupButton( beta_i2p_button, lu.getLocalisedMessageText( "Button.open" ), AENetworkClassifier.AT_I2P,new String[] { BuddyPluginBeta.BETA_CHAT_KEY, BuddyPluginBeta.LEGACY_BETA_CHAT_KEY });
 
 		beta_i2p_button.setEnabled( i2p_enabled );
 
@@ -1097,7 +1097,7 @@ BuddyPluginViewInstance
 		final Button			button,
 		final String			title,
 		final String			network,
-		final String			key )
+		final String[]			keys )
 	{
 		button.setText( title );
 
@@ -1113,48 +1113,64 @@ BuddyPluginViewInstance
 
 					final Display display = composite.getDisplay();
 
+					final int[] done = {0};
+
 					new AEThread2( "async" )
 					{
 						@Override
 						public void
 						run()
+						{							
+							for ( String key: keys ){
+								
+								try{
+									final BuddyPluginBeta.ChatInstance inst = plugin.getBeta().getChat( network, key );
+	
+									display.asyncExec(
+										new Runnable()
+										{
+											@Override
+											public void
+											run()
+											{
+												if ( !display.isDisposed()){
+	
+													BuddyPluginViewBetaChat.createChatWindow( view, plugin, inst );
+													
+													done();
+												}
+											}
+										});
+	
+								}catch( Throwable e){
+	
+									display.asyncExec(
+										new Runnable()
+										{
+											@Override
+											public void
+											run()
+											{
+												if ( !button.isDisposed()){
+	
+													done();
+												}
+											}
+										});
+	
+									Debug.out( e );
+								}
+							}
+						}
+							
+						private void
+						done()
 						{
-							try{
-								final BuddyPluginBeta.ChatInstance inst = plugin.getBeta().getChat( network, key );
-
-								display.asyncExec(
-									new Runnable()
-									{
-										@Override
-										public void
-										run()
-										{
-											if ( !display.isDisposed()){
-
-												BuddyPluginViewBetaChat.createChatWindow( view, plugin, inst );
-
-												button.setEnabled( true );
-											}
-										}
-									});
-
-							}catch( Throwable e){
-
-								display.asyncExec(
-									new Runnable()
-									{
-										@Override
-										public void
-										run()
-										{
-											if ( !button.isDisposed()){
-
-												button.setEnabled( true );
-											}
-										}
-									});
-
-								Debug.out( e );
+							done[0]++;
+							
+							if ( done[0] == keys.length ) {
+								
+								button.setEnabled( true );
 							}
 						}
 					}.start();
