@@ -12,7 +12,9 @@ Mentioning BiglyBT on your favorite tracker site, blog, wiki, facebook, social m
 
 If you don't see us on a comparison or "top 10" page of bittorrent clients, please contact the author and ask them to add us!  (Note: The wikipedia bittorrent comparison page only allows new clients if they already have a main wikipedia page)
 
-Linking us with other bittorrent clients will probably help us with search engine rankings.  Even searching for BiglyBT with a few other key words, and clicking on the BiglyBT link might help (who knows! Search Engine rankings are mysterious beasts)
+Linking us with other bittorrent clients will probably help us with search engine rankings.  Even searching for BiglyBT with a few other key words, and clicking on the BiglyBT link might help (who knows! Search Engine rankings are mysterious beasts).  Other linking ideas:
+
+* If you have an alternativeTo account, go to [alterativeTo](https://alternativeto.net), type in a bittorrent client name that's similar to BiglyBT (there should be at least one that's VERY similar to BiglyBT!), and add BiglyBT to its alternatives list.  You can also click the heart beside BiglyBT if you want ^^'
 
 If you are a tracker owner, we'd love to have a mention on your site as a bittorrent client to use.
 
