@@ -49,6 +49,7 @@ import com.biglybt.pif.tracker.TrackerException;
 import com.biglybt.pif.tracker.TrackerTorrent;
 import com.biglybt.pif.tracker.web.*;
 import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.components.UITextArea;
 import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
@@ -351,7 +352,7 @@ WebPlugin
 					int		type,
 					String	message )
 				{
-					view_model.getLogArea().appendText( message+"\n");
+					log( message+"\n");
 				}
 
 				@Override
@@ -360,8 +361,21 @@ WebPlugin
 					String		str,
 					Throwable	error )
 				{
-					view_model.getLogArea().appendText( str + "\n" );
-					view_model.getLogArea().appendText( error.toString() + "\n" );
+					log( str + "\n" );
+					log( error.toString() + "\n" );
+				}
+				
+				private void
+				log(
+					String		str )
+				{
+					UITextArea area = view_model.getLogArea();
+					
+					if ( area != null ) {
+						
+						area.appendText( str );
+					}
+					
 				}
 			});
 
