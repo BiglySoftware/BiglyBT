@@ -26,6 +26,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.*;
@@ -175,6 +176,8 @@ BuddyPlugin
 
 	private LoggerChannel	logger;
 
+	private AtomicBoolean			initialization_complete = new AtomicBoolean( false );
+	
 	private BooleanParameter 		classic_enabled_param;
 	private StringParameter 		nick_name_param;
 	private StringListParameter 	online_status_param;
@@ -675,10 +678,12 @@ BuddyPlugin
 									@Override
 									public void
 									run()
-									{
+									{										
 										startup();
 
 										beta_plugin.startup();
+										
+										initialization_complete.set( true );
 									}
 								}.start();
 							}
@@ -881,6 +886,12 @@ BuddyPlugin
 
 			fireClassicInitialised( false );
 		}
+	}
+	
+	public boolean
+	isInitializationComplete()
+	{
+		return( initialization_complete.get());
 	}
 
 	public boolean

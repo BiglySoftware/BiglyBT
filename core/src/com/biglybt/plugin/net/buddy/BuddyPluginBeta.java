@@ -3450,7 +3450,14 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 
 			if ( current_pi == null ){
 
-				return( MessageText.getString( "azbuddy.dchat.status.noplugin" ));
+				if ( plugin.isInitializationComplete()){
+					
+					return( MessageText.getString( "azbuddy.dchat.status.noplugin" ));
+					
+				}else {
+					
+					return( MessageText.getString( "ManagerItem.initializing" ));
+				}
 			}
 
 			if ( current_handler == null ){

@@ -544,6 +544,8 @@ BuddyPluginViewBetaChat
 
 		final Label menu_drop = new Label( lhs, SWT.NULL );
 
+		Messages.setLanguageTooltip( menu_drop, "TagSettingsView.title" );
+		
 		FontData fontData = menu_drop.getFont().getFontData()[0];
 
 		Display display = menu_drop.getDisplay();
@@ -563,7 +565,7 @@ BuddyPluginViewBetaChat
 		Utils.setLayoutData(status, grid_data);
 		status.setText( MessageText.getString( "PeersView.state.pending" ));
 
-		Image image = ImageLoader.getInstance().getImage( "menu_down" );
+		Image image = ImageLoader.getInstance().getImage( "cog_down" );
 		menu_drop.setImage( image );
 		grid_data = new GridData();
 		grid_data.widthHint=image.getBounds().width;
