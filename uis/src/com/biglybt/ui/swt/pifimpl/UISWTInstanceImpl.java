@@ -26,6 +26,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.*;
 
+import com.biglybt.ui.common.UIInstanceBase;
 import com.biglybt.ui.swt.mainwindow.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
@@ -68,7 +69,7 @@ import com.biglybt.ui.swt.views.utils.ManagerUtils;
 @SuppressWarnings("unused")
 public class
 UISWTInstanceImpl
-	implements UIInstanceFactory, UISWTInstance, UIManagerEventListener
+	implements UIInstanceFactory, UISWTInstance, UIManagerEventListener, UIInstanceBase
 {
 	private Map<BasicPluginConfigModel,BasicPluginConfigImpl> 	config_view_map = new WeakHashMap<>();
 
@@ -570,8 +571,8 @@ UISWTInstanceImpl
 			if (uiManager != null) {
 				UIInstance[] uiInstances = uiManager.getUIInstances();
 				for (UIInstance uiInstance : uiInstances) {
-					if (uiInstance != this && (uiInstance instanceof UISWTInstance)) {
-						((UISWTInstance) uiInstance).unload(pluginInterface);
+					if (uiInstance != this && (uiInstance instanceof UISWTInstance) && (uiInstance instanceof UIInstanceBase)) {
+						((UIInstanceBase) uiInstance).unload(pluginInterface);
 					}
 				}
 			}
@@ -917,7 +918,7 @@ UISWTInstanceImpl
 
 	protected static class
 	instanceWrapper
-		implements UISWTInstance, UIToolBarManager
+		implements UISWTInstance, UIToolBarManager, UIInstanceBase
 	{
 		private WeakReference<PluginInterface>		pi_ref;
 		private UIFunctionsSWT						ui_functions;

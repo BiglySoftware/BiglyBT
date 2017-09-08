@@ -36,7 +36,7 @@ import com.biglybt.ui.common.UIInstanceBase;
  * @see com.biglybt.pif.ui.UIManagerListener
  * @see com.biglybt.pif.ui.UIManager#addUIListener(UIManagerListener)
  */
-public interface UISWTInstance extends UIInstanceBase {
+public interface UISWTInstance extends UIInstance {
 	/** ID of main view */
 	public static final String VIEW_MAIN = "Main";
 
