@@ -566,7 +566,10 @@ AEPluginProxyHandler
 				
 				if ( CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( "aznettor", false ) == null ){
 					
-					installTor( reason, "aznettor.install.via.proxy", new boolean[1], null );
+					if ( !Constants.isAndroid ) {
+					
+						installTor( reason, "aznettor.install.via.proxy", new boolean[1], null );
+					}
 				}
 			}
 		}
