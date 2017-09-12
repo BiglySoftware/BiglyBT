@@ -450,7 +450,7 @@ DeviceManagerUPnPImpl
 
 									handled = true;
 
-								}else if ( lc_info.contains( "azureus" ) || lc_info.contains( "vuze" )){
+								}else if ( lc_info.contains( "azureus" ) || lc_info.contains( "vuze" ) || lc_info.contains( "biglybt" )){
 
 									explicit_renderer = handleVuzeMSBrowser( client_address, client_info );
 

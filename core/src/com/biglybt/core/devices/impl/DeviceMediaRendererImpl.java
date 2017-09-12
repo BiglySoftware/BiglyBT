@@ -158,7 +158,7 @@ DeviceMediaRendererImpl
   					UPnPDevice upnpDevice = deviceUPnP.getUPnPDevice();
   					if (upnpDevice != null) {
     					String manufacturer = upnpDevice.getManufacturer();
-    					if (manufacturer == null || !manufacturer.startsWith("Vuze")) {
+    					if (manufacturer == null || !( manufacturer.startsWith("Vuze") || manufacturer.startsWith("BiglyBT"))){
     						log("Linked " + getName() + " to UPnP Device " + device.getName());
       					setUPnPDevice(upnpDevice);
       					setDirty();

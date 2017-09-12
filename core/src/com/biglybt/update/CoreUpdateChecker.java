@@ -808,7 +808,7 @@ CoreUpdateChecker
 
 				String app_name = SystemProperties.getApplicationName();
 
-				if ( !( app_name.equals( "Vuze" ) || app_name.equals( "Azureus" ))){
+				if ( !( app_name.equals( "Vuze" ) || app_name.equals( "Azureus" ) || app_name.equals( "BiglyBT" ))){
 
 					UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
 
