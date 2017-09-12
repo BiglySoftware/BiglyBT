@@ -201,7 +201,7 @@ CorePatchChecker
 				return;
 			}
 
-			String	patch_prefix = "Azureus2_" + Constants.getBaseVersion() + "_P";
+			String	patch_prefix = "BiglyBT_" + Constants.getBaseVersion() + "_P";
 
 			int		highest_p		= -1;
 			File	highest_p_file 	= null;
@@ -256,7 +256,7 @@ CorePatchChecker
 				InputStream pis = new FileInputStream( highest_p_file );
 
 				try{
-					patchAzureus2( instance, pis, "P" + highest_p, plugin_interface.getLogger().getChannel( "CorePatcher" ));
+					patchBiglyBT( instance, pis, "P" + highest_p, plugin_interface.getLogger().getChannel( "CorePatcher" ));
 
 					Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_INFORMATION,
 							"Patch " + highest_p_file.getName() + " ready to be applied"));
@@ -285,7 +285,7 @@ CorePatchChecker
 	}
 
 	public static void
-	patchAzureus2(
+	patchBiglyBT(
 		UpdateCheckInstance	instance,
 		InputStream			pis,
 		String				resource_tag,
@@ -297,7 +297,7 @@ CorePatchChecker
 		InputStream		is	= null;
 
 		try{
-			String resource_name = "Azureus2_" + resource_tag + ".jar";
+			String resource_name = "BiglyBT_" + resource_tag + ".jar";
 
 			UpdateInstaller	installer = instance.createInstaller();
 
@@ -307,7 +307,7 @@ CorePatchChecker
 
 			String	jarPath = installer.getInstallDir();
 
-			File jarFile = new File(jarPath, "Azureus2.jar");
+			File jarFile = new File(jarPath, "BiglyBT.jar");
 
 			is 	= new FileInputStream( jarFile );
 

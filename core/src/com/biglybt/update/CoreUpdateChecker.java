@@ -198,10 +198,6 @@ CoreUpdateChecker
 				throw( new Exception( "No update file details in reply" ));
 			}
 
-			//latest_version 		= "3.0.0.3";
-			//latest_file_name	= "http://torrent.vuze.com:88/torrents/Azureus2.5.0.0.jar.torrent";
-			//latest_file_name	= "Azureus2.5.0.0.jar.torrent";
-
 			String	msg = "Core: latest_version = '" + latest_version + "', file = '" + latest_file_name + "'";
 
 			URL		full_download_url;
@@ -668,8 +664,8 @@ CoreUpdateChecker
 
 			}else{
 
-				String	temp_jar_name 	= "Azureus2_" + version + ".jar";
-				String	target_jar_name	= "Azureus2.jar";
+				String	temp_jar_name 	= "BiglyBT_" + version + ".jar";
+				String	target_jar_name	= "BiglyBT.jar";
 
 				UpdateInstaller	installer = checker.createInstaller();
 

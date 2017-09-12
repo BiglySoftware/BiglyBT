@@ -29,8 +29,8 @@ CorePatchLevel
 {
 		// everytime a patch is issued this number must go up by one
 		// The resulting patch file must include this file and be named
-		// Azureus2_<mainline_build>_P<patch_level>.pat
-		//  e.g. Azureus2_2.0.8.5_P1.pat
+		// BiglyBT_<mainline_build>_P<patch_level>.pat
+		//  e.g. BiglyBT_2.0.8.5_P1.pat
 		// dont' reset to 1 on a new mainline, keep going up!
 
 		// Level 1: 2302 - fix for DHT version propagation problem

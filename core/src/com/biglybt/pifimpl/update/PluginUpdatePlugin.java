@@ -1063,7 +1063,7 @@ PluginUpdatePlugin
 
 				log.log( LoggerChannel.LT_INFORMATION, "    This is a built-in plugin, updating core" );
 
-				CorePatchChecker.patchAzureus2( update.getCheckInstance(), data, plugin.getPluginID() + "_" + new_version, log );
+				CorePatchChecker.patchBiglyBT( update.getCheckInstance(), data, plugin.getPluginID() + "_" + new_version, log );
 
 					// always need to restart for this
 
