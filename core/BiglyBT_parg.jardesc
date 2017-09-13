@@ -13,5 +13,6 @@
     <selectedElements exportClassFiles="true" exportJavaFiles="false" exportOutputFolder="false">
         <javaElement handleIdentifier="=BiglyBT_uis/src"/>
         <javaElement handleIdentifier="=BiglyBT_core/src"/>
+        <file path="/BiglyBT_root/ChangeLog.txt"/>
     </selectedElements>
 </jardesc>

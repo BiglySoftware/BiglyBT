@@ -1,20 +1,54 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2017.09.13 | BiglyBT 1.0.2.0
+
+FEATURE: UI    | Show small download indicator for pieces not yet downloading [TuxPaper]
+FEATURE: UI    | Show Tag constraint error messages [Parg]
+FEATURE: UI    | Added plugins website (https and Tor) to About Window [TuxPaper]
+FEATURE: UI    | Vote and Bug Report menu items added to Community menu [TuxPaper]
+FEATURE: UI    | Added BiglyBT specific chat channels [Parg]
+FEATURE: PLUG  | Auto Stopper plugin ported [akidburn]
+FEATURE: PLUG  | Global Information Status Entry plugin ported [Shusshu]
+FEATURE: PLUG  | Stopped Torrent Auto-starter plugin ported [Shusshu]
+FEATURE: Core  | Support DNS lookup intercepts in Java 9 [Parg]
+FEATURE: Core  | Now collecting potential received & discard stats when peer disconnects [TuxPaper]
+FEATURE: Core  | Maven build setup [Shusshu]
+FEATURE: Core  | Added basic BiglyBT DHT [Parg]
+
+CHANGE:  UI    | Brazilian Portuguese translation update [Havokdan]
+CHANGE:  UI    | Rate linit updating of selected content [TuxPaper]
+CHANGE:  UI    | Show beta unread post count [Parg]
+CHANGE:  UI    | Improved names of subscription download torrents [Parg]
+CHANGE:  UI    | Make chat settings icon more obvious [Parg]
+CHANGE:  Core  | Auto-install Tor Helper plugin [Parg]
+CHANGE:  Core  | Remove experimental 'neural' speed manager algorithm [TuxPaper]
+
+BUGFIX:  UI    | Fixed open sidebar entries not saving across sessions [Parg]
+BUGFIX:  UI    | Fixed beta URL [Parg]
+BUGFIX:  UI    | Better error message when streaming fails with classic UI [Parg]
+BUGFIX:  UI    | Fix icon and tray icon on HDPI/scaled monitors [TuxPaper]
+BUGFIX:  UI    | Fix 'add category' window disappearing [TuxPaper]
+BUGFIX:  Core  | Fixed renaming of files that only differ in case causing file deletion [Parg]
+BUGFIX:  Core  | Remove limit on total uptime [TuxPaper]
+BUGFIX:  Core  | Fix sort of next subscription scheduler [Parg]
+BUGFIX:  Core  | Fixed ability to run multiple BiglyBT instances [Parg]
+
 2017.07.27 | BiglyBT 1.0.0.0
 
-CHANGE:  UI    | Bigly Changes [parg, TuxPaper]
-CHANGE:  UI    | Remove VHDN/Content Network stuff, Games, DVD sidebar entries [parg, TuxPaper]
 FEATURE: UI    | "tag:" text filter for torrent views [TuxPaper]
+
+CHANGE:  UI    | BiglyBT Changes [Parg, TuxPaper]
+CHANGE:  UI    | Remove VHDN/Content Network stuff, Games, DVD sidebar entries [Parg, TuxPaper]
+CHANGE:  Core  | BiglyBT Changes [Parg, TuxPaper]
+CHANGE:  Core  | Min Java is now 1.8 (which also means min OSX is now 10.7.3)
+CHANGE:  Core  | [Mac] Dropped OSX 32-bit and "Carbon UI" support [TuxPaper]
+CHANGE:  Core  | Removed Offline Downloaders from Devices [Parg]
+CHANGE:  Core  | Fixed sites with specific SSL certs not working (fixes some search templates) [Parg]
+CHANGE:  Core  | All OSes now support a java.vmoptions in the users's config dir [TuxPaper]
+
 BUGFIX:  UI    | [*nix] Devices now show on Sidebar, just like OSX/Win, except no transcoding [TuxPaper]
 BUGFIX:  UI    | [*nix] Lots of minor fixes for GTK3 [TuxPaper]
 BUGFIX:  UI    | Search Template editor now works again [TuxPaper]
-
-CHANGE:  Core  | Bigly Changes [parg, TuxPaper]
-CHANGE:  Core  | Min Java is now 1.8 (which also means min OSX is now 10.7.3)
-CHANGE:  Core  | [Mac] Dropped OSX 32-bit and "Carbon UI" support [TuxPaper]
-CHANGE:  Core  | Removed Offline Downloaders from Devices [parg]
-CHANGE:  Core  | Fixed sites with specific SSL certs not working (fixes some search templates) [parg]
-CHANGE:  Core  | All OSes now support a java.vmoptions in the users's config dir [TuxPaper]
 
 Historical Change log can be found at http://wiki.vuze.com/w/ChangeLog (5.7.5.0 and below)
