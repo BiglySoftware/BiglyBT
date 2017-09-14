@@ -95,7 +95,7 @@ PlatformManager
 		 * Get a well-known location, if defined for the platform
 		 * @param location_id from above LOC_constants
 		 * @return
-		 * @since 2.3.0.6
+		 * @since 1.0.0.0
 		 */
 
 	public File

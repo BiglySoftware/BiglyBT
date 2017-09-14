@@ -62,7 +62,7 @@ public interface Connection {
 
   /**
    * Returns the transport object for this connection.
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public Transport getTransport();
 
@@ -70,7 +70,7 @@ public interface Connection {
    * Returns <tt>true</tt> if the connection represents an incoming
    * connection.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public boolean isIncoming();
 

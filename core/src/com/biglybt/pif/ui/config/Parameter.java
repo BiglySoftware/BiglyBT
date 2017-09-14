@@ -41,7 +41,7 @@ Parameter
 	 *
 	 * @param enabled The new enabled state
 	 *
-	 * @since 2.3.0.0
+	 * @since 1.0.0.0
 	 */
 	public void
 	setEnabled(
@@ -52,7 +52,7 @@ Parameter
 	 *
 	 * @return The enabled state
 	 *
-	 * @since 2.3.0.0
+	 * @since 1.0.0.0
 	 */
 	public boolean
 	isEnabled();
@@ -61,7 +61,7 @@ Parameter
 	 * Gets the lowest user mode required for this parameter to be displayed.
 	 *
 	 * @return MODE_ constants above
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public int
 	getMinimumRequiredUserMode();
@@ -70,7 +70,7 @@ Parameter
 	 * Sets the lowest user mode required for this parameter to be displayed.
 	 *
 	 * @param mode see MODE_ constants defined above
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 
 	public void
@@ -82,7 +82,7 @@ Parameter
 	 *
 	 * @param visible The new visibility state
 	 *
-	 * @since 2.3.0.4
+	 * @since 1.0.0.0
 	 */
 	public void
 	setVisible(
@@ -93,7 +93,7 @@ Parameter
 	 *
 	 * @return The visibility state
 	 *
-	 * @since 2.3.0.4
+	 * @since 1.0.0.0
 	 */
 	public boolean
 	isVisible();
@@ -102,7 +102,7 @@ Parameter
 	 * Controls whether or not 'parameter change' events are fired for each incremental value change
 	 * @param b
 	 *
-	 * @since 3.0.5.1
+	 * @since 1.0.0.0
 	 */
 
 	public void
@@ -113,7 +113,7 @@ Parameter
 	 *
 	 * @return
 	 *
-	 * @since 3.0.5.1
+	 * @since 1.0.0.0
 	 */
 
 	public boolean
@@ -124,7 +124,7 @@ Parameter
 	 *
 	 * @param l Listener to add
 	 *
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public void
 	addListener(
@@ -135,7 +135,7 @@ Parameter
 	 *
 	 * @param l Listener to remove.
 	 *
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public void
 	removeListener(
@@ -147,7 +147,7 @@ Parameter
 	 *
 	 * @return The label's text
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public String getLabelText();
 
@@ -157,7 +157,7 @@ Parameter
 	 *
 	 * @param sText The actual text to assign to the label
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void setLabelText(String sText);
 
@@ -168,7 +168,7 @@ Parameter
 	 * @return The language bundle key, or null if the label is using literal
 	 *          text
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public String getLabelKey();
 
@@ -178,7 +178,7 @@ Parameter
 	 *
 	 * @param sLabelKey The language bundle key to use.
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void setLabelKey(String sLabelKey);
 

@@ -35,35 +35,35 @@ public interface SWTSkinObjectText
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	int getStyle();
 
 	/**
 	 * @param style
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	void setStyle(int style);
 
 	/**
 	 * @return
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	public String getText();
 
 	/**
 	 * @param l
 	 *
-	 * @since 4.2.0.7
+	 * @since 1.0.0.0
 	 */
 	void addUrlClickedListener(SWTSkinObjectText_UrlClickedListener l);
 
 	/**
 	 * @param l
 	 *
-	 * @since 4.2.0.7
+	 * @since 1.0.0.0
 	 */
 	void removeUrlClickedListener(SWTSkinObjectText_UrlClickedListener l);
 

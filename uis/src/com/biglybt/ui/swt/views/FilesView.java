@@ -711,7 +711,7 @@ public class FilesView
   }
 
   /**
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	private boolean doAllExist(DiskManagerFileInfo[] files) {
 		for (DiskManagerFileInfo fileinfo : files) {

@@ -58,7 +58,7 @@ PeerManagerStats
 	/**
 	 * For an external process receiving bytes on behalf of this download this gives the current
 	 * rate-limited number of bytes that can be received. Update with actual send using 'received' below.
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 * @return
 	 */
 
@@ -73,7 +73,7 @@ PeerManagerStats
 	 *
 	 * @param bytes
 	 *
-	 *@since 4.4.0.7
+	 *@since 1.0.0.0
 	 */
 
 	public void permittedReceiveBytesUsed(int bytes);
@@ -81,7 +81,7 @@ PeerManagerStats
 	/**
 	 * For an external process sending bytes on behalf of this download this gives the current
 	 * rate-limited number of bytes that can be sent. Update with actual send using 'sent' below.
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 * @return
 	 */
 
@@ -96,7 +96,7 @@ PeerManagerStats
 	 *
 	 * @param bytes
 	 *
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 */
 
 	public void permittedSendBytesUsed(int bytes);

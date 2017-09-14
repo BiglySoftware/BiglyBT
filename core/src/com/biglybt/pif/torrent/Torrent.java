@@ -273,7 +273,7 @@ Torrent
 	 * Returns <tt>true</tt> if the torrent is a single file torrent,
 	 * <tt>false</tt> if it is a multi file torrent.
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public boolean isSimpleTorrent();
 

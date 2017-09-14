@@ -28,7 +28,7 @@ package com.biglybt.pif.ui.tables;
  *
  * @author TuxPaper
  * @created Jan 10, 2006
- * @since 2.3.0.7
+ * @since 1.0.0.0
  */
 public interface TableCellMouseListener {
 	/**
@@ -37,7 +37,7 @@ public interface TableCellMouseListener {
 	 *
 	 * @param event Mouse event information
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public void cellMouseTrigger(TableCellMouseEvent event);
 }

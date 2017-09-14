@@ -46,7 +46,7 @@ import com.biglybt.ui.swt.views.tableitems.mytorrents.*;
 public class TableColumnCreatorV3
 {
 	/**
-	 * @since 4.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public static TableColumnCore[] createAllDM(String tableID, boolean big) {
 		final String[] oldVisibleOrder = {
@@ -421,7 +421,7 @@ public class TableColumnCreatorV3
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private static boolean areNoneVisible(Map<String, TableColumnCore> mapTCs) {
 		boolean noneVisible = true;
@@ -437,7 +437,7 @@ public class TableColumnCreatorV3
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public static void initCoreColumns() {
 

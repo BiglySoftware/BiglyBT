@@ -579,7 +579,7 @@ COConfigurationManager
 	 * @param strings
 	 * @param parameterListener
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	public static void addParameterListener(String[] ids,
 			ParameterListener listener) {

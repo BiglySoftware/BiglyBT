@@ -75,7 +75,7 @@ public class UpdateAutoDownloader
 	/**
 	 *
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	private boolean nextUpdate() {
 		if (iterDownloaders.hasNext()) {
@@ -90,7 +90,7 @@ public class UpdateAutoDownloader
 	/**
 	 *
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	private void allDownloadsComplete() {
 		boolean bRequiresRestart = false;

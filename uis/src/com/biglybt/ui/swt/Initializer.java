@@ -321,7 +321,7 @@ public class Initializer
 	/**
 	 *
 	 *
-	 * @since 4.4.0.5
+	 * @since 1.0.0.0
 	 */
 	private void checkInstallID() {
 		String storedInstallID = COConfigurationManager.getStringParameter("install.id", null);
@@ -836,7 +836,7 @@ public class Initializer
 	/**
 	 *
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	private void initializePlatformClientMessageContext() {
 		ClientMessageContext clientMsgContext = PlatformMessenger.getClientMessageContext();

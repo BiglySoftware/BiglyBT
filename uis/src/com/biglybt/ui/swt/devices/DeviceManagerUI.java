@@ -2189,7 +2189,7 @@ DeviceManagerUI
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void addNewDevice() {
 		ManufacturerChooser mfChooser = new ManufacturerChooser();

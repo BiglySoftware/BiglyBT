@@ -69,7 +69,7 @@ TrackerWebContext
 		TrackerAuthenticationListener l );
 
 		/**
-		 * @since 3.0.2.3
+		 * @since 1.0.0.0
 		 */
 
 	public void

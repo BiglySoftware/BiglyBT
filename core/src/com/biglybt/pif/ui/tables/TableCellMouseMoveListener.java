@@ -27,7 +27,7 @@ package com.biglybt.pif.ui.tables;
  * @see TableColumn#addCellMouseListener(TableCellMouseMoveListener)
  *
  * @author TuxPaper
- * @since 3.0.1.7
+ * @since 1.0.0.0
  */
 public interface TableCellMouseMoveListener extends TableCellMouseListener {
 }

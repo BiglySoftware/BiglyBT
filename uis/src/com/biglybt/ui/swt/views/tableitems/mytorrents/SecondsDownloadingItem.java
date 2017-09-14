@@ -35,7 +35,7 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 /**
  *
  * @author TuxPaper
- * @since 2.0.8.5
+ * @since 1.0.0.0
  */
 public class SecondsDownloadingItem
        extends CoreTableColumnSWT

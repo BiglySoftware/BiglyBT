@@ -209,7 +209,7 @@ public class MessageSlideShell
 	/**
 	 * @param popupParams
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private static void addToHistory(PopupParams popupParams) {
 		monitor.enter();
@@ -669,7 +669,7 @@ public class MessageSlideShell
 	 * @param shell2
 	 * @param b
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	private void createLinkLabel(Composite shell, final PopupParams popupParams) {
 

@@ -39,7 +39,7 @@ UIInstance
 	public static final String	UIT_CONSOLE		= "console";
 
 		/**
-		 * @since 4.8.1.3
+		 * @since 1.0.0.0
 		 * @return
 		 */
 
@@ -74,7 +74,7 @@ UIInstance
 	 * ability for a plugin to ask a user in this manner, in which case
 	 * they will return <code>null</code> for this method.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public UIMessage createMessage();
 

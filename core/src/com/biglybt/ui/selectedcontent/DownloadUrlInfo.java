@@ -49,14 +49,14 @@ public class DownloadUrlInfo
 	}
 
 	/**
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public String getDownloadURL() {
 		return dlURL;
 	}
 
 	/**
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void setDownloadURL(String dlURL) {
 		this.dlURL = dlURL;
@@ -73,7 +73,7 @@ public class DownloadUrlInfo
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public Map getRequestProperties() {
 		return requestProperties;

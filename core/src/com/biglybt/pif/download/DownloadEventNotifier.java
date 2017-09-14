@@ -26,7 +26,7 @@ import com.biglybt.pif.torrent.TorrentAttribute;
  * interface which defined these methods - now
  * {@link DownloadManager#getGlobalDownloadEventNotifier} supports these methods too.
  *
- * @since 3.0.0.9
+ * @since 1.0.0.0
  * @author amc1
  */
 public interface DownloadEventNotifier {
@@ -35,7 +35,7 @@ public interface DownloadEventNotifier {
 	 * Adds a listener that will be informed of changes to a download's state.
 	 *
 	 * @param l The listener to add.
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void addListener(DownloadListener l);
 
@@ -44,7 +44,7 @@ public interface DownloadEventNotifier {
 	 * {@link #addListener(DownloadListener)} method.
 	 *
 	 * @param l The listener to remove.
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void removeListener(DownloadListener l);
 
@@ -56,7 +56,7 @@ public interface DownloadEventNotifier {
 	 * added.
 	 *
 	 * @param l The listener to add.
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void addTrackerListener(DownloadTrackerListener l);
 
@@ -66,7 +66,7 @@ public interface DownloadEventNotifier {
 	 *
 	 * @param l The listener to add.
 	 * @param immediateTrigger Whether to immediately trigger listener's events.
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 	public void addTrackerListener(DownloadTrackerListener l, boolean immediateTrigger);
 
@@ -76,7 +76,7 @@ public interface DownloadEventNotifier {
 	 * {@link #addTrackerListener(DownloadTrackerListener, boolean)} method.
 	 *
 	 * @param l The listener to remove.
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void removeTrackerListener(DownloadTrackerListener l);
 
@@ -85,7 +85,7 @@ public interface DownloadEventNotifier {
 	 * removed. This gives the implementor the opportunity to veto the removal.
 	 *
 	 * @param l The listener to add.
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void addDownloadWillBeRemovedListener(DownloadWillBeRemovedListener l);
 
@@ -95,7 +95,7 @@ public interface DownloadEventNotifier {
 	 * method.
 	 *
 	 * @param l The listener to remove.
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void removeDownloadWillBeRemovedListener(
 			DownloadWillBeRemovedListener l);
@@ -105,7 +105,7 @@ public interface DownloadEventNotifier {
 	 * torrent.
 	 *
 	 * @param l The listener to add.
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 
 	public void addActivationListener(DownloadActivationListener l);
@@ -115,7 +115,7 @@ public interface DownloadEventNotifier {
 	 * {@link #addActivationListener(DownloadActivationListener)} method.
 	 *
 	 * @param l The listener to remove.
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 
 	public void removeActivationListener(DownloadActivationListener l);
@@ -125,7 +125,7 @@ public interface DownloadEventNotifier {
 	 * added / removed for a download.
 	 *
 	 * @param l The listener to add.
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void addPeerListener(DownloadPeerListener l);
 
@@ -134,7 +134,7 @@ public interface DownloadEventNotifier {
 	 * {@link #addPeerListener(DownloadPeerListener)} method.
 	 *
 	 * @param l The listener to remove.
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void removePeerListener(DownloadPeerListener l);
 
@@ -145,7 +145,7 @@ public interface DownloadEventNotifier {
 	 * @param l The listener to add.
 	 * @param attr The torrent attribute to be notified about.
 	 * @param event_type The type of event to be notified of, as defined on {@link DownloadAttributeListener}.
-	 * @since 3.0.3.5
+	 * @since 1.0.0.0
 	 */
 	public void addAttributeListener(DownloadAttributeListener l, TorrentAttribute attr, int event_type);
 
@@ -156,7 +156,7 @@ public interface DownloadEventNotifier {
 	 * @param l The listener to remove.
 	 * @param attr The torrent attribute which it registered with.
 	 * @param event_type The type of event which it registered with.
-	 * @since 3.0.3.5
+	 * @since 1.0.0.0
 	 */
 	public void removeAttributeListener(DownloadAttributeListener l, TorrentAttribute attr, int event_type);
 
@@ -165,7 +165,7 @@ public interface DownloadEventNotifier {
 	 * completed state.
 	 *
 	 * @param l The listener to add.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void addCompletionListener(DownloadCompletionListener l);
 
@@ -174,7 +174,7 @@ public interface DownloadEventNotifier {
 	 * {@link #addCompletionListener(DownloadCompletionListener)} method.
 	 *
 	 * @param l The listener to remove.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void removeCompletionListener(DownloadCompletionListener l);
 }

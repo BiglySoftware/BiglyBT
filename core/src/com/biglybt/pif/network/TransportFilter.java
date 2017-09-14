@@ -18,7 +18,7 @@
 package com.biglybt.pif.network;
 
 /**
- * @since 3.0.5.3
+ * @since 1.0.0.0
  */
 public interface TransportFilter {
 

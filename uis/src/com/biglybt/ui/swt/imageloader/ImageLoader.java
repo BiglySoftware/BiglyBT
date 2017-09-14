@@ -259,7 +259,7 @@ public class ImageLoader
 	 * @param suffix
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private Image[] parseValuesString(ClassLoader cl, String sKey,
 			String[] values, String suffix) {
@@ -1012,7 +1012,7 @@ public class ImageLoader
 	 * @param key
 	 * @param image
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public void addImage(String key, Image image) {
 		if (!Utils.isThisThreadSWT()) {
@@ -1418,7 +1418,7 @@ public class ImageLoader
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public boolean collectGarbage() {
 		if (Utils.isDisplayDisposed()) {
@@ -1459,7 +1459,7 @@ public class ImageLoader
 	 * @param label
 	 * @param key
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public void setLabelImage(Label label, final String key) {
 		Image bg = getImage(key);

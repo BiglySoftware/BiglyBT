@@ -37,14 +37,14 @@ TorrentAttribute
 	/**
 	 * Controls the displayed name of a download.
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	public static final String  TA_DISPLAY_NAME                 = "DisplayName";
 
 	/**
 	 * The user-defined comment for a download.
 	 *
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public static final String  TA_USER_COMMENT                 = "UserComment";
 
@@ -53,7 +53,7 @@ TorrentAttribute
 	 * when moving downloads for completion or removal - this path is relative
 	 * to the default download directories.
 	 *
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public static final String  TA_RELATIVE_SAVE_PATH           = "RelativePath";
 

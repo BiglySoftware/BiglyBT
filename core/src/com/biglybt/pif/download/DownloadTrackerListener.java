@@ -33,7 +33,7 @@ public interface DownloadTrackerListener {
 	 *
 	 * @param result Information about the scrape
 	 *
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 *
 	 * @note If an announce result is returned from the tracker contains
 	 *        seed and non-seed (peer) counts, a new DownloadScrapeResult will be
@@ -52,7 +52,7 @@ public interface DownloadTrackerListener {
 	 *
 	 * @param result Information about the announce
 	 *
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void announceResult(DownloadAnnounceResult result);
 }

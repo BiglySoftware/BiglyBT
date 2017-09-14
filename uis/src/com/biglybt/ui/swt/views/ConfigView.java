@@ -916,7 +916,7 @@ public class ConfigView implements UISWTViewEventListener {
 	/**
 	 * @param child
 	 *
-	 * @since 4.5.1.1
+	 * @since 1.0.0.0
 	 */
 	private void hilightControl(Control child) {
 		child.setFont(headerFont);

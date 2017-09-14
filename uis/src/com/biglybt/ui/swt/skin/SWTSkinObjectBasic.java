@@ -318,7 +318,7 @@ public class SWTSkinObjectBasic
 	/**
 	 * @param visible
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	protected boolean setIsVisible(boolean visible, boolean walkup) {
 		if ((visible ? 1 : 0) == isVisible) {

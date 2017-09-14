@@ -46,7 +46,7 @@ LocaleUtilities
 	 * Allows plugins to dynamically pass in a resource bundle to be used
 	 * for message text translation.
 	 *
-	 * @since 3.0.2.3
+	 * @since 1.0.0.0
 	 */
 	public void integrateLocalisedMessageBundle(ResourceBundle rb);
 
@@ -54,7 +54,7 @@ LocaleUtilities
 	 * Allows plugins to dynamically pass in a properties object to be used
 	 * for message text translation.
 	 *
-	 * @since 3.0.2.3
+	 * @since 1.0.0.0
 	 */
 	public void integrateLocalisedMessageBundle(Properties p);
 
@@ -71,7 +71,7 @@ LocaleUtilities
 	 * Returns <tt>true</tt> if there exists a message string
 	 * with the given key name.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public boolean hasLocalisedMessageText(String key);
 
@@ -80,7 +80,7 @@ LocaleUtilities
 	 * <tt>null</tt> if there is no message string definition for the given
 	 * key.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public String localise(String key);
 
@@ -98,7 +98,7 @@ LocaleUtilities
 	/**
 	 * Returns the current locale being used.
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	public Locale getCurrentLocale();
 }

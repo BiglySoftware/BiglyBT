@@ -26,7 +26,7 @@ import com.biglybt.ui.common.table.TableView;
  * This interface provides access to an Azureus table row.
  *
  * @author TuxPaper
- * @since 2.0.8.5
+ * @since 1.0.0.0
  */
 public interface TableRow {
   /** Retrieve the data object associated with the current table row.
@@ -63,7 +63,7 @@ public interface TableRow {
   * @param red red value (0 - 255)
   * @param green green value (0 - 255)
   * @param blue blue value (0 - 255)
-  * @since 3.0.3.5
+  * @since 1.0.0.0
   */
   public void setForeground(int red, int green, int blue);
 
@@ -73,14 +73,14 @@ public interface TableRow {
    * @param rgb int array of red, green, and blue values.  Null to reset to
    *            default color
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public void setForeground(int[] rgb);
 
   /**
    * Change the row's foreground color to the user's defined "error" color.
    *
-  * @since 3.0.3.5
+  * @since 1.0.0.0
   */
   public void setForegroundToErrorColor();
 
@@ -113,14 +113,14 @@ public interface TableRow {
 	 *
 	 * @param listener
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public void addMouseListener(TableRowMouseListener listener);
 
 	/** Remove a previously added TableRowMouseListener
 	 *
 	 * @param listener Previously added listener
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public void removeMouseListener(TableRowMouseListener listener);
 
@@ -130,7 +130,7 @@ public interface TableRow {
 	 * @param id
 	 * @return
 	 *
-	 * @since 4.3.1.5
+	 * @since 1.0.0.0
 	 */
 	Object getData(String id);
 
@@ -140,7 +140,7 @@ public interface TableRow {
 	 * @param id
 	 * @param data
 	 *
-	 * @since 4.3.1.5
+	 * @since 1.0.0.0
 	 */
 	void setData(String id, Object data);
 

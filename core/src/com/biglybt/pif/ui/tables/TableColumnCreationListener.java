@@ -33,7 +33,7 @@ public interface TableColumnCreationListener
 	 *
 	 * @param column
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void tableColumnCreated(TableColumn column);
 }

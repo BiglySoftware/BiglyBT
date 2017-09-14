@@ -30,7 +30,7 @@ import com.biglybt.pif.ui.UIManager;
  *
  * @author amc1
  * @see com.biglybt.pif.local.ui.tables.TableManager TableManager
- * @since 3.0.0.7
+ * @since 1.0.0.0
  */
 public interface MenuManager {
 
@@ -61,7 +61,7 @@ public interface MenuManager {
 	/**
 	 * The "transfers bar".
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 */
 	public static final String MENU_TRANSFERSBAR = "transfersbar";
 
@@ -128,7 +128,7 @@ public interface MenuManager {
 	 * @param resource_key ID of the menu, which is also used to retrieve the
 	 *                     textual name from the plugin language file.
 	 * @return The newly created menu item.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
      */
     public MenuItem addMenuItem(MenuContext context, String resource_key);
 

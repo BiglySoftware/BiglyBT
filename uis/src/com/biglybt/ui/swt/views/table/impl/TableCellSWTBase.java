@@ -371,7 +371,7 @@ public abstract class TableCellSWTBase
 	/**
 	 * @param listenerObject
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private void addSWTPaintListener(TableCellSWTPaintListener listener) {
 		try {

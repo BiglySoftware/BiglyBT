@@ -558,7 +558,7 @@ DownloadManagerEnhancer
 //	 * @param hash
 //	 * @return
 //	 *
-//	 * @since 3.0.1.7
+//	 * @since 1.0.0.0
 //	 */
 //	public DownloadManager findDownloadManager(String hash) {
 //		synchronized (download_map) {

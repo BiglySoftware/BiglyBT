@@ -23,7 +23,7 @@ package com.biglybt.pif.download;
 /** Throws by various Download methods to indicate errors
  *
  * @author parg
- * @since 2.0.7.0
+ * @since 1.0.0.0
  */
 
 public class

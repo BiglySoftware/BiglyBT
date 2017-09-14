@@ -138,7 +138,7 @@ public class SpeedScaleShell
 	 * @param _assumeInitiallyDown
 	 * @return
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public boolean open(final Control cClickedFrom, final int startValue,
 			boolean _assumeInitiallyDown) {
@@ -643,7 +643,7 @@ public class SpeedScaleShell
 	 * @param x
 	 * @return
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	protected int getValueFromMousePos(int x) {
 		int x0 = x + 1;

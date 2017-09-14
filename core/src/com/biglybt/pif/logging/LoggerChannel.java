@@ -29,7 +29,7 @@ package com.biglybt.pif.logging;
  * also be fed to any functionality that operates on logging data (with
  * the exception of {@link Logger#getNullChannel(String)}).
  *
- * @since 2.0.7.0
+ * @since 1.0.0.0
  */
 public interface LoggerChannel {
 	/** Information Log Type */
@@ -45,7 +45,7 @@ public interface LoggerChannel {
 	 * Returns the name of the Logger Channel
 	 *
 	 * @return Logger channel name
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public String getName();
 
@@ -58,7 +58,7 @@ public interface LoggerChannel {
 	 *
 	 * @return Enabled state of logging
 	 *
-	 * @since 2.3.0.2
+	 * @since 1.0.0.0
 	 */
 	public boolean isEnabled();
 
@@ -66,7 +66,7 @@ public interface LoggerChannel {
 	 * This causes the channel to also write to logs/<i>name</i> files in a cyclic
 	 * fashion (c.f. the debug_1/2._log files)
 	 *
-	 * @since 2.4.0.2
+	 * @since 1.0.0.0
 	 */
 	public void setDiagnostic();
 
@@ -93,7 +93,7 @@ public interface LoggerChannel {
 	 * @param log_type LT_* constant
 	 * @param data text to log
 	 *
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void log(int log_type, String data);
 
@@ -102,7 +102,7 @@ public interface LoggerChannel {
 	 *
 	 * @param data text to log
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void log(String data);
 
@@ -111,7 +111,7 @@ public interface LoggerChannel {
 	 *
 	 * @param error Throwable object to log
 	 *
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void log(Throwable error);
 
@@ -121,7 +121,7 @@ public interface LoggerChannel {
 	 * @param data text to log
 	 * @param error Throwable object to log
 	 *
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public void log(String data, Throwable error);
 
@@ -133,7 +133,7 @@ public interface LoggerChannel {
 	 * @param log_type LT_* constant
 	 * @param data text to log
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public void log(Object[] relatedTo, int log_type, String data);
 
@@ -145,7 +145,7 @@ public interface LoggerChannel {
 	 * @param log_type LT_* constant
 	 * @param data text to log
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public void log(Object relatedTo, int log_type, String data);
 
@@ -157,7 +157,7 @@ public interface LoggerChannel {
 	 * @param data text to log
 	 * @param error Error that will be appended to the log entry
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 
 	public void log(Object relatedTo, String data, Throwable error);
@@ -170,7 +170,7 @@ public interface LoggerChannel {
 	 * @param data text to log
 	 * @param error Error that will be appended to the log entry
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public void log(Object[] relatedTo, String data, Throwable error);
 
@@ -180,7 +180,7 @@ public interface LoggerChannel {
 	 * @param relatedTo a list of what this log is related to (ex. Peer, Torrent,
 	 *                   Download, Object)
 	 * @param data text to log
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public void log(Object[] relatedTo, String data);
 
@@ -191,7 +191,7 @@ public interface LoggerChannel {
 	 *         Download, Object, etc)
 	 * @param data text to log
 	 *
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public void log(Object relatedTo, String data);
 
@@ -205,7 +205,7 @@ public interface LoggerChannel {
 	 * @param alert_type LT_* constant
 	 * @param message text to alert user with
 	 *
-	 * @since 2.0.8.0
+	 * @since 1.0.0.0
 	 */
 	public void logAlert(int alert_type, String message);
 
@@ -215,7 +215,7 @@ public interface LoggerChannel {
 	 * @param message text to alert user with
 	 * @param e Error that will be attached to the alert
 	 *
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public void logAlert(String message, Throwable e);
 
@@ -226,7 +226,7 @@ public interface LoggerChannel {
 	 * @param alert_type LT_* constant
 	 * @param message text to alert user with
 	 *
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public void logAlertRepeatable(int alert_type, String message);
 
@@ -237,7 +237,7 @@ public interface LoggerChannel {
 	 * @param message text to alert user with
 	 * @param e Error that will be attached to the alert
 	 *
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public void logAlertRepeatable(String message, Throwable e);
 
@@ -246,7 +246,7 @@ public interface LoggerChannel {
 	 *
 	 * @param l Listener to add
 	 *
-	 * @since 2.0.8.0
+	 * @since 1.0.0.0
 	 */
 	public void addListener(LoggerChannelListener l);
 
@@ -255,7 +255,7 @@ public interface LoggerChannel {
 	 *
 	 * @param l Listener to remove.
 	 *
-	 * @since 2.0.8.0
+	 * @since 1.0.0.0
 	 */
 	public void removeListener(LoggerChannelListener l);
 
@@ -264,7 +264,7 @@ public interface LoggerChannel {
 	 *
 	 * @return Logger object
 	 *
-	 * @since 2.3.0.0
+	 * @since 1.0.0.0
 	 */
 	public Logger getLogger();
 }

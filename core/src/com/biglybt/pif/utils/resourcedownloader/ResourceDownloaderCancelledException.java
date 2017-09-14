@@ -18,7 +18,7 @@
 package com.biglybt.pif.utils.resourcedownloader;
 
 /**
- * @since 3.0.5.3
+ * @since 1.0.0.0
  */
 
 public class

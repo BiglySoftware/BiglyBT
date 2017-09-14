@@ -24,7 +24,7 @@ import com.biglybt.pif.ui.config.ConfigSection;
 
 /**
  *
- * @since 2.3.0.5
+ * @since 1.0.0.0
  */
 public interface
 UISWTConfigSection

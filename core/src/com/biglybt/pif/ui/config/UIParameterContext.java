@@ -27,7 +27,7 @@ package com.biglybt.pif.ui.config;
  * <p><b>Note:</b> This interface is intended to be implemented by plugins.</p>
  *
  * @author Allan Crooks
- * @since 3.0.5.3
+ * @since 1.0.0.0
  */
 public interface UIParameterContext {
 

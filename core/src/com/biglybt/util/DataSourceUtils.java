@@ -271,7 +271,7 @@ public class DataSourceUtils
 	/**
 	 * @param ds
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public static DownloadUrlInfo getDownloadInfo(Object ds) {
 		if (ds instanceof ISelectedContent) {

@@ -22,7 +22,7 @@ import com.biglybt.pif.ui.menus.MenuManager;
 /** Allows plugins to manage Azureus UI tables.
  *
  * @author TuxPaper
- * @since 2.0.8.5
+ * @since 1.0.0.0
  */
 public interface TableManager
 {
@@ -117,7 +117,7 @@ public interface TableManager
    *
    * @return an interface object allowing modification of the table column.
    *
-   * @since 3.1.1.1
+   * @since 1.0.0.0
    */
   public void registerColumn(Class forDataSourceType, String cellID,
 			TableColumnCreationListener listener);

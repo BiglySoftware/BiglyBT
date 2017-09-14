@@ -589,7 +589,7 @@ public class PlatformTorrentUtils
 	 * @param torrent
 	 * @param string
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	public static void log(TOTorrent torrent, String string) {
 		String hash = "";
@@ -619,7 +619,7 @@ public class PlatformTorrentUtils
 	}
 
 	/**
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static String getContentTitle2(DownloadManager dm) {
 		if (dm == null) {

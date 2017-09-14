@@ -36,7 +36,7 @@ import com.biglybt.ui.common.table.impl.TableContextMenuManager;
  * There's a TableManager per plugin interface
  *
  * @author TuxPaper
- * @since 2.0.8.5
+ * @since 1.0.0.0
  */
 public class TableManagerImpl implements TableManager
 {

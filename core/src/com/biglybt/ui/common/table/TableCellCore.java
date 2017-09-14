@@ -160,7 +160,7 @@ public interface TableCellCore extends TableCell, Comparable
 
 	/**
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public boolean isMouseOver();
 
@@ -175,14 +175,14 @@ public interface TableCellCore extends TableCell, Comparable
 	/**
 	 *
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	void refreshAsync();
 
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	void redraw();
 

@@ -39,7 +39,7 @@ public interface TableColumnCore
 	 * TableColumnManager.  Some functions can not be run after a column has been
 	 * added.
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void setColumnAdded();
 
@@ -49,7 +49,7 @@ public interface TableColumnCore
 	 * @return true - Column has been added<br>
 	 *         false - Column has not been added
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public boolean getColumnAdded();
 
@@ -60,7 +60,7 @@ public interface TableColumnCore
 	 * @param bCoreDataSource true - returns a core object<br>
 	 *                        false - returns a plugin object (if available)
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void setUseCoreDataSource(boolean bCoreDataSource);
 
@@ -70,7 +70,7 @@ public interface TableColumnCore
 	 * @return true - returns a core object<br>
 	 *         false - returns a plugin object (if available)
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public boolean getUseCoreDataSource();
 
@@ -80,7 +80,7 @@ public interface TableColumnCore
 	 * @param cell the cell is being refreshed
 	 * @throws Throwable
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void invokeCellRefreshListeners(TableCell cell, boolean fastRefresh) throws Throwable;
 
@@ -89,7 +89,7 @@ public interface TableColumnCore
 	 *
 	 * @return Cell refresh listeners
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	public List getCellRefreshListeners();
 
@@ -98,7 +98,7 @@ public interface TableColumnCore
 	 *
 	 * @param cell the cell is being added
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void invokeCellAddedListeners(TableCell cell);
 
@@ -107,7 +107,7 @@ public interface TableColumnCore
 	 *
 	 * @return cell added listeners for this cell
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	public List getCellAddedListeners();
 
@@ -116,7 +116,7 @@ public interface TableColumnCore
 	 *
 	 * @param cell the cell is being disposed
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void invokeCellDisposeListeners(TableCell cell);
 
@@ -126,7 +126,7 @@ public interface TableColumnCore
 	 * @param cell Cell to get the tool tip event
 	 * @param type
 	 *
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public void invokeCellToolTipListeners(TableCellCore cell, int type);
 
@@ -135,7 +135,7 @@ public interface TableColumnCore
 	 *
 	 * @param event Mouse Event to send
 	 *
-	 * @since 2.4.0.0
+	 * @since 1.0.0.0
 	 */
 	public void invokeCellMouseListeners(TableCellMouseEvent event);
 
@@ -144,7 +144,7 @@ public interface TableColumnCore
 	 *
 	 * @param visibility Visibility state
 	 *
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 */
 	public void invokeCellVisibilityListeners(TableCellCore cell, int visibility);
 
@@ -157,7 +157,7 @@ public interface TableColumnCore
 	 *
 	 * @see TableColumnManager.ensureIntegrity()
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void setPositionNoShift(int position);
 
@@ -165,7 +165,7 @@ public interface TableColumnCore
 	 * Load width and position settings from config.
 	 * @param mapSettings map to place settings into
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void loadSettings(Map mapSettings);
 
@@ -173,7 +173,7 @@ public interface TableColumnCore
 	 * Save width and position settings to config.
 	 * @param mapSettings map to place settings into
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void saveSettings(Map mapSettings);
 
@@ -190,21 +190,21 @@ public interface TableColumnCore
 	/**
 	 * @return # of consecutive errors
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public int getConsecutiveErrCount();
 
 	/**
 	 * @param iCount # of consecutive errors
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void setConsecutiveErrCount(int iCount);
 
 	/**
 	 * @param menuItem
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void removeContextMenuItem(TableContextMenuItem menuItem);
 
@@ -212,82 +212,82 @@ public interface TableColumnCore
 	 *
 	 * @return
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public TableContextMenuItem[] getContextMenuItems(int menuStyle);
 
 	/**
 	 * @return
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	boolean hasCellRefreshListener();
 
 	/**
 	 * @return
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	long getLastSortValueChange();
 
 	/**
 	 * @param lastSortValueChange
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	void setLastSortValueChange(long lastSortValueChange);
 
 	/**
 	 * @param live
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	public void setSortValueLive(boolean live);
 
 	/**
 	 * @return
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	public boolean isSortValueLive();
 
 	/**
 	 * @param ms
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	public void addRefreshTime(long ms);
 
 	/**
 	 * @param writer
 	 *
-	 * @since 2.5.0.0
+	 * @since 1.0.0.0
 	 */
 	void generateDiagnostics(IndentWriter writer);
 
 	/**
 	 * @param tableID
 	 *
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 */
 	void setTableID(String tableID);
 
 	/**
 	 * @return
 	 *
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 */
 	boolean isSortAscending();
 
 	/**
 	 * @param bAscending
 	 *
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 */
 	void setSortAscending(boolean bAscending);
 
 	/**
-	 * @since 4.7.2.1
+	 * @since 1.0.0.0
 	 * @param bAscending
 	 */
 
@@ -296,7 +296,7 @@ public interface TableColumnCore
 	/**
 	 * @return
 	 *
-	 * @since 3.0.1.1
+	 * @since 1.0.0.0
 	 */
 	boolean hasCellMouseMoveListener();
 
@@ -311,7 +311,7 @@ public interface TableColumnCore
 	 * @param listenerID
 	 * @param listener
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	void addCellOtherListener(String listenerID, Object listener);
 
@@ -322,7 +322,7 @@ public interface TableColumnCore
 	 * @param listenerID
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	Object[] getCellOtherListeners(String listenerID);
 
@@ -330,7 +330,7 @@ public interface TableColumnCore
 	 * @param listenerID
 	 * @return
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	boolean hasCellOtherListeners(String listenerID);
 
@@ -344,7 +344,7 @@ public interface TableColumnCore
 	/**
 	 * @return
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	List<TableColumnExtraInfoListener> getColumnExtraInfoListeners();
 
@@ -357,7 +357,7 @@ public interface TableColumnCore
 	/**
 	 * @param forDataSourceType
 	 *
-	 * @since 4.6.0.1
+	 * @since 1.0.0.0
 	 */
 	public void addDataSourceType(Class<?> forDataSourceType);
 

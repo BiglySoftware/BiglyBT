@@ -86,7 +86,7 @@ public interface TableColumn {
    * @param iWidth See {@link #setWidth(int)}
    * @param iInterval See {@link #setRefreshInterval(int)}
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void initialize(int iAlignment, int iPosition,
                          int iWidth, int iInterval);
@@ -98,7 +98,7 @@ public interface TableColumn {
    * @param iPosition See {@link #setPosition(int)}
    * @param iWidth See {@link #setWidth(int)}
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void initialize(int iAlignment, int iPosition, int iWidth);
 
@@ -108,14 +108,14 @@ public interface TableColumn {
    *
    * @return the column name (identification)
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public String getName();
 
   /**
    * Returns the user's column name override if it exists
    * @return
-   * @since 5.0.0.1
+   * @since 1.0.0.0
    */
 
   public String getNameOverride();
@@ -127,7 +127,7 @@ public interface TableColumn {
    *
    * @return {@link TableManager}.TABLE_* constant(s)
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public String getTableID();
 
@@ -140,7 +140,7 @@ public interface TableColumn {
    *
    * @param type {@link #TYPE_TEXT}, {@link #TYPE_TEXT_ONLY}, {@link #TYPE_GRAPHIC}
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void setType(int type);
 
@@ -148,7 +148,7 @@ public interface TableColumn {
    *
    * @return type TYPE_TEXT, or TYPE_GRAPHIC
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public int getType();
 
@@ -158,7 +158,7 @@ public interface TableColumn {
    *
    * @param width the size in pixels, adjusting for DPI
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void setWidth(int unadjustedWidth);
 
@@ -168,7 +168,7 @@ public interface TableColumn {
    *
    * @return width in pixels
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public int getWidth();
 
@@ -183,7 +183,7 @@ public interface TableColumn {
    *
    * @param position Column Number (0 based), POSITION_INVISIBLE or POSITION_LAST
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void setPosition(int position);
 
@@ -192,7 +192,7 @@ public interface TableColumn {
    *
    * @return Column Number (0 based), POSITION_INVISIBLE or POSITION_LAST
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public int getPosition();
 
@@ -202,7 +202,7 @@ public interface TableColumn {
    *
    * @param alignment ALIGN_TRAIL, ALIGN_LEAD, or ALIGN_CENTER
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void setAlignment(int alignment);
 
@@ -210,7 +210,7 @@ public interface TableColumn {
    *
    * @return ALIGN_TRAIL, ALIGN_LEAD, or ALIGN_CENTER
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public int getAlignment();
 
@@ -221,7 +221,7 @@ public interface TableColumn {
    *                 "GUI refresh interval".  For example, specifying 4 will
    *                 result in a refresh trigger every 4 "GUI refresh intervals"
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void setRefreshInterval(int interval);
 
@@ -231,7 +231,7 @@ public interface TableColumn {
    * @return INTERVAL_* constant, or a number representing the # of GUI refresh
    *         cycles between each cell refresh call.
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public int getRefreshInterval();
 
@@ -246,7 +246,7 @@ public interface TableColumn {
    *
    * @param minwidth new minumum width
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setMinWidth(int minwidth);
 
@@ -260,7 +260,7 @@ public interface TableColumn {
    *
    * @return minumum width of the column
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public int getMinWidth();
 
@@ -271,7 +271,7 @@ public interface TableColumn {
    *
    * @param maxwidth new maximum width
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setMaxWidth(int maxwidth);
 
@@ -282,7 +282,7 @@ public interface TableColumn {
    *
    * @return maximum width of column
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public int getMaxWidth();
 
@@ -294,7 +294,7 @@ public interface TableColumn {
    * @param min New minimum column width
    * @param max New maximum column width
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setWidthLimits(int min, int max);
 
@@ -307,7 +307,7 @@ public interface TableColumn {
    *
    * @param automaxwidth
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setMaxWidthAuto(boolean automaxwidth);
 
@@ -316,7 +316,7 @@ public interface TableColumn {
    *
    * @return max width auto setting state
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public boolean isMaxWidthAuto();
 
@@ -327,7 +327,7 @@ public interface TableColumn {
    *
    * @param autowidth
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setMinWidthAuto(boolean autowidth);
 
@@ -336,7 +336,7 @@ public interface TableColumn {
    *
    * @return min width auto setting state
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public boolean isMinWidthAuto();
 
@@ -347,7 +347,7 @@ public interface TableColumn {
    *
    * @param width New preferred width
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setPreferredWidth(int width);
 
@@ -356,7 +356,7 @@ public interface TableColumn {
    *
    * @return preferred width
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public int getPreferredWidth();
 
@@ -365,7 +365,7 @@ public interface TableColumn {
    *
    * @return preferred width auto calculation state
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public boolean isPreferredWidthAuto();
 
@@ -376,7 +376,7 @@ public interface TableColumn {
    *
    * @param auto Preferred Width Auto State
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setPreferredWidthAuto(boolean auto);
 
@@ -387,7 +387,7 @@ public interface TableColumn {
    *
    * @return Column visibility
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public boolean isVisible();
 
@@ -428,7 +428,7 @@ public interface TableColumn {
    *
    * @param visible New visibility state
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setVisible(boolean visible);
 
@@ -437,14 +437,14 @@ public interface TableColumn {
    *
    * @param listener Listener Object to be called when refresh is needed.
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void addCellRefreshListener(TableCellRefreshListener listener);
   /** Removed a previously added TableCellRefreshListener
    *
    * @param listener Previously added listener
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void removeCellRefreshListener(TableCellRefreshListener listener);
 
@@ -454,7 +454,7 @@ public interface TableColumn {
    *
    * @param listener Listener Object to be called when refresh is needed.
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void addCellAddedListener(TableCellAddedListener listener);
   public void removeCellAddedListener(TableCellAddedListener listener);
@@ -464,7 +464,7 @@ public interface TableColumn {
    *
    * @param listener Listener Object to be called when refresh is needed.
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void addCellDisposeListener(TableCellDisposeListener listener);
   public void removeCellDisposeListener(TableCellDisposeListener listener);
@@ -474,7 +474,7 @@ public interface TableColumn {
    *
    * @param listener Listener Object to be called when refresh is needed.
    *
-   * @since 2.1.0.2
+   * @since 1.0.0.0
    */
   public void addCellToolTipListener(TableCellToolTipListener listener);
   public void removeCellToolTipListener(TableCellToolTipListener listener);
@@ -485,13 +485,13 @@ public interface TableColumn {
    *
    * @param listener
    *
-   * @since 2.3.0.7
+   * @since 1.0.0.0
    */
   public void addCellMouseListener(TableCellMouseListener listener);
   /** Remove a previously added TableCellMouseListener
   *
   * @param listener Previously added listener
-   * @since 2.3.0.7
+   * @since 1.0.0.0
   */
   public void removeCellMouseListener(TableCellMouseListener listener);
 
@@ -501,7 +501,7 @@ public interface TableColumn {
    *
    * @param listenerObject Object implementing some cell listeneters
    *
-   * @since 2.4.0.0
+   * @since 1.0.0.0
    */
   public void addListeners(Object listenerObject);
 
@@ -509,14 +509,14 @@ public interface TableColumn {
   /** Invalidate all cells in this column.  The cells will be forced to
    * update on the next refresh.
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void invalidateCells();
 
   /**
    * Invalidates any cells which are linked to the given data source object.
    *
-   * @since 3.0.1.5
+   * @since 1.0.0.0
    */
   public void invalidateCell(Object data_source);
 
@@ -529,7 +529,7 @@ public interface TableColumn {
 	 *
 	 * @return a newly created menu item
 	 *
-	 * @since 4.2.0.5
+	 * @since 1.0.0.0
 	 */
 	public TableContextMenuItem addContextMenuItem(String resourceKey,
 			int menuStyle);
@@ -541,7 +541,7 @@ public interface TableColumn {
 	 *
 	 * @return a newly created menu item
 	 *
-	 * @since 2.4.0.0
+	 * @since 1.0.0.0
 	 */
 	public TableContextMenuItem addContextMenuItem(String resourceKey);
 
@@ -554,7 +554,7 @@ public interface TableColumn {
 	 *
 	 * @return Obfuscated value
 	 *
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 	boolean isObfuscated();
 
@@ -564,7 +564,7 @@ public interface TableColumn {
 	 *
 	 * @param hideData new state of obfuscation
 	 *
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 	void setObfuscation(boolean hideData);
 
@@ -579,7 +579,7 @@ public interface TableColumn {
 	/**
 	 * @param listener
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	void addColumnExtraInfoListener(TableColumnExtraInfoListener listener);
 
@@ -587,7 +587,7 @@ public interface TableColumn {
 	/**
 	 * @param listener
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	void removeColumnExtraInfoListener(TableColumnExtraInfoListener listener);
 
@@ -595,19 +595,19 @@ public interface TableColumn {
 	/**
 	 * @return
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	Class getForDataSourceType();
 
 	/**
 	 *
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 */
 	public void setIconReference(String iconID, boolean showOnlyIcon);
 
 	/**
 	 *
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 */
 	public String getIconReference();
 

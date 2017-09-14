@@ -224,7 +224,7 @@ public class PlatformMessenger
 	 * @param message
 	 * @param listener
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public static void pushMessageNow(PlatformMessage message,
 			PlatformMessengerListener listener) {

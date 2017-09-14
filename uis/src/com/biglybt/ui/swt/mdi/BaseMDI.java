@@ -290,7 +290,7 @@ public abstract class BaseMDI
 	 * @param skinView
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	@Override
 	public MdiEntry getEntryBySkinView(Object skinView) {

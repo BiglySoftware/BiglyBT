@@ -55,7 +55,7 @@ public interface UISWTInputReceiver extends UIInputReceiver {
 	 * @param allow_edit <tt>true</tt> if you still want to allow the user to enter
 	 *     their own text, <tt>false</tt> if you want to restrict them to the choices
 	 *     here.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void setSelectableItems(String[] choices, int default_choice, boolean allow_edit);
 

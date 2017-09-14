@@ -109,14 +109,14 @@ public interface UIFunctionsSWT
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void closeAllDetails();
 
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public boolean hasDetailViews();
 
@@ -132,18 +132,18 @@ public interface UIFunctionsSWT
 
 	/**
 	 *
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public void openTorrentWindow();
 
 	/**
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public void openTorrentOpenOptions(Shell shell, String sPathOfFilesToOpen,
 			String[] sFilesToOpen, boolean defaultToStopped, boolean forceOpen);
 
 	/**
-	 * @since 5.6.0.1
+	 * @since 1.0.0.0
 	 * @param shell
 	 * @param sPathOfFilesToOpen
 	 * @param sFilesToOpen
@@ -160,7 +160,7 @@ public interface UIFunctionsSWT
 	 *
 	 * @param parent
 	 * @param id TODO
-	 * @since 5.6.0.1
+	 * @since 1.0.0.0
 	 */
 	public TabbedMdiInterface createTabbedMDI(Composite parent, String id);
 

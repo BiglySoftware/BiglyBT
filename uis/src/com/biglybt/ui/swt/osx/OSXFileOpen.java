@@ -55,7 +55,7 @@ public class OSXFileOpen
 	/**
 	 * Called by OSXAccess by reflection to do some SWT hooks
 	 *
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public static void initLight() {
 		try {

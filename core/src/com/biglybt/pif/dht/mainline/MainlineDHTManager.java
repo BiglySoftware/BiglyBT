@@ -22,7 +22,7 @@ package com.biglybt.pif.dht.mainline;
  * network. Plugins must implement the {@link MainlineDHTProvider} interface and
  * register with this class so that the client can indicate it provides DHT support.
  *
- * @since 3.0.4.3
+ * @since 1.0.0.0
  */
 public interface MainlineDHTManager {
 

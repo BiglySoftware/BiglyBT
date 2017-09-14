@@ -28,7 +28,7 @@ import com.biglybt.pif.download.DownloadException;
 /**
  * @author TuxPaper
  *
- * @since 2.1.0.0
+ * @since 1.0.0.0
  */
 
 public interface
@@ -104,7 +104,7 @@ DiskManagerFileInfo
 		 * returns liked file if it exists, direct otherwise
 		 * @param follow_link
 		 * @return
-		 * @since 4.3.1.5
+		 * @since 1.0.0.0
 		 */
 
 	public File
@@ -130,7 +130,7 @@ DiskManagerFileInfo
 	 *
 	 * @return
 	 *
-	 * @since 4.8.1.3
+	 * @since 1.0.0.0
 	 */
 	public int
 	getNumericPriority();

@@ -59,7 +59,7 @@ public interface MultipleDocumentInterfaceSWT
 
 	/**
 	 * @param closeableConfigFile
-	 * @since 5.6.0.1
+	 * @since 1.0.0.0
 	 */
 	void setCloseableConfigFile(String closeableConfigFile);
 }

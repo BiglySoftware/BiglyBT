@@ -474,7 +474,7 @@ public class UIDebugGenerator
 	 * @param allowEmpty
 	 * @return
 	 *
-	 * @since 4.5.0.3
+	 * @since 1.0.0.0
 	 */
 	protected static boolean emptyCheck(Text textMessage, boolean allowEmpty) {
 		if (allowEmpty) {

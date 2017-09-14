@@ -88,33 +88,33 @@ PluginConfig
 	 * {@link NetworkInterface} name (ex. eth10) <br>
 	 * NetworkInterface name with IP index in square brackets (ex. eth6[0])
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 	public static final String CORE_PARAM_STRING_LOCAL_BIND_IP							= "CORE_PARAM_STRING_LOCAL_BIND_IP";
 	public static final String CORE_PARAM_BOOLEAN_FRIENDLY_HASH_CHECKING				= "CORE_PARAM_BOOLEAN_FRIENDLY_HASH_CHECKING";
 
 	/**
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static final String GUI_PARAM_INT_SWT_REFRESH_IN_MS = "GUI_PARAM_INT_SWT_REFRESH_IN_MS";
 
 	/**
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static final String CORE_PARAM_BOOLEAN_NEW_TORRENTS_START_AS_STOPPED = "CORE_PARAM_BOOLEAN_NEW_TORRENTS_START_AS_STOPPED";
 
 	/**
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public static final String CORE_PARAM_INT_INCOMING_TCP_PORT = "Incoming TCP Port";
 
 	/**
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public static final String CORE_PARAM_INT_INCOMING_UDP_PORT = "Incoming UDP Port";
 
 	/**
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public static final String CORE_PARAM_STRING_DEFAULT_SAVE_PATH = "Default save path";
 
@@ -125,7 +125,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public boolean getCoreBooleanParameter(String key);
 
@@ -136,7 +136,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public boolean getCoreBooleanParameter(String key, boolean default_value);
 
@@ -146,7 +146,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public byte[] getCoreByteParameter(String key);
 
@@ -157,7 +157,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public byte[] getCoreByteParameter(String key, byte[] default_value);
 
@@ -178,7 +178,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public int[] getCoreColorParameter(String key);
 
@@ -200,7 +200,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public int[] getCoreColorParameter(String key, int[] default_value);
 
@@ -210,7 +210,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public float getCoreFloatParameter(String key);
 
@@ -221,7 +221,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public float getCoreFloatParameter(String key, float default_value);
 
@@ -231,7 +231,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public int getCoreIntParameter(String key);
 
@@ -242,7 +242,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public int getCoreIntParameter(String key, int default_value);
 
@@ -252,7 +252,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public long getCoreLongParameter(String key);
 
@@ -263,7 +263,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public long getCoreLongParameter(String key, long default_value);
 
@@ -273,7 +273,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public String getCoreStringParameter(String key);
 
@@ -284,7 +284,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public String getCoreStringParameter(String key, String default_value);
 
@@ -294,7 +294,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.4.2
+   * @since 1.0.0.0
    */
   public void setCoreBooleanParameter(String key, boolean value);
 
@@ -304,7 +304,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.4.2
+   * @since 1.0.0.0
    */
   public void setCoreByteParameter(String key, byte[] value);
 
@@ -319,7 +319,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public void setCoreColorParameter(String key, int[] value);
 
@@ -340,7 +340,7 @@ PluginConfig
    * @param value The new value for the parameter.
    * @param override <tt>true</tt> if the value is overridden from the default.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public void setCoreColorParameter(String key, int[] value, boolean override);
 
@@ -351,7 +351,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.4.2
+   * @since 1.0.0.0
    */
   public void setCoreFloatParameter(String key, float value);
 
@@ -361,7 +361,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.4.2
+   * @since 1.0.0.0
    */
   public void setCoreIntParameter(String key, int value);
 
@@ -371,7 +371,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.4.2
+   * @since 1.0.0.0
    */
   public void setCoreLongParameter(String key, long value);
 
@@ -381,7 +381,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.4.2
+   * @since 1.0.0.0
    */
   public void setCoreStringParameter(String key, String value);
 
@@ -392,7 +392,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public boolean getPluginBooleanParameter(String key);
 
@@ -403,7 +403,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public boolean getPluginBooleanParameter(String key, boolean default_value);
 
@@ -413,7 +413,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public byte[] getPluginByteParameter(String key);
 
@@ -424,7 +424,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 2.2.0.3
+   * @since 1.0.0.0
    */
   public byte[] getPluginByteParameter(String key, byte[] default_value);
 
@@ -445,7 +445,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public int[] getPluginColorParameter(String key);
 
@@ -467,7 +467,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public int[] getPluginColorParameter(String key, int[] default_value);
 
@@ -478,7 +478,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public float getPluginFloatParameter(String key);
 
@@ -489,7 +489,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public float getPluginFloatParameter(String key, float default_value);
 
@@ -499,7 +499,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public int getPluginIntParameter(String key);
 
@@ -510,7 +510,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public int getPluginIntParameter(String key, int default_value);
 
@@ -522,7 +522,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 2.3.0.1
+   * @since 1.0.0.0
    */
   public List getPluginListParameter(String key, List default_value);
 
@@ -532,7 +532,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public long getPluginLongParameter(String key);
 
@@ -543,7 +543,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public long getPluginLongParameter(String key, long default_value);
 
@@ -555,7 +555,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 2.3.0.1
+   * @since 1.0.0.0
    */
   public Map getPluginMapParameter(String key, Map default_value);
 
@@ -566,7 +566,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public String getPluginStringParameter(String key);
 
@@ -577,7 +577,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public String getPluginStringParameter(String key, String default_value);
 
@@ -587,7 +587,7 @@ PluginConfig
    *
    * @param key The parameter name.
    * @return The value of the parameter.
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public String[] getPluginStringListParameter(String key);
 
@@ -597,7 +597,7 @@ PluginConfig
    * @param key	The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public void setPluginParameter(String key, boolean value);
 
@@ -607,7 +607,7 @@ PluginConfig
    * @param key	The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 2.1.0.2
+   * @since 1.0.0.0
    */
   public void setPluginParameter(String key, byte[] value);
 
@@ -618,7 +618,7 @@ PluginConfig
    * @param key	The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setPluginParameter(String key, float value);
 
@@ -628,7 +628,7 @@ PluginConfig
    * @param key	The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public void setPluginParameter(String key, int value);
 
@@ -639,7 +639,7 @@ PluginConfig
    * @param value The new value for the parameter.
    * @param global Whether or not this parameter should be made externally accessible.
    *
-   * @since 2.5.0.1
+   * @since 1.0.0.0
    */
   public void setPluginParameter(String key, int value, boolean global);
 
@@ -650,7 +650,7 @@ PluginConfig
    * @param key	The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setPluginParameter(String key, long value);
 
@@ -660,7 +660,7 @@ PluginConfig
    * @param key	The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 2.0.4.2
+   * @since 1.0.0.0
    */
   public void setPluginParameter(String key, String value);
 
@@ -669,7 +669,7 @@ PluginConfig
    *
    * @param key The parameter name.
    * @param value The new value of the parameter.
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public void setPluginStringListParameter(String key, String[] value);
 
@@ -685,7 +685,7 @@ PluginConfig
    * @param value The new value for the parameter.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public void setPluginColorParameter(String key, int[] value);
 
@@ -707,7 +707,7 @@ PluginConfig
    * @param override <tt>true</tt> if the value is overridden from the default.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public void setPluginColorParameter(String key, int[] value, boolean override);
 
@@ -719,7 +719,7 @@ PluginConfig
    * @param key	The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 2.3.0.1
+   * @since 1.0.0.0
    */
   public void setPluginListParameter(String key, List value);
 
@@ -730,7 +730,7 @@ PluginConfig
    * @param key	The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 2.3.0.1
+   * @since 1.0.0.0
    */
   public void setPluginMapParameter(String key, Map value);
 
@@ -744,7 +744,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public boolean getUnsafeBooleanParameter(String key);
 
@@ -758,7 +758,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public boolean getUnsafeBooleanParameter(String key, boolean default_value);
 
@@ -771,7 +771,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public byte[] getUnsafeByteParameter(String key);
 
@@ -785,7 +785,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public byte[] getUnsafeByteParameter(String key, byte[] default_value);
 
@@ -809,7 +809,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public int[] getUnsafeColorParameter(String key);
 
@@ -834,7 +834,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public int[] getUnsafeColorParameter(String key, int[] default_value);
 
@@ -847,7 +847,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public float getUnsafeFloatParameter(String key);
 
@@ -861,7 +861,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public float getUnsafeFloatParameter(String key, float default_value);
 
@@ -874,7 +874,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public int getUnsafeIntParameter(String key);
 
@@ -888,7 +888,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public int getUnsafeIntParameter(String key, int default_value);
 
@@ -901,7 +901,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public long getUnsafeLongParameter(String key);
 
@@ -915,7 +915,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public long getUnsafeLongParameter(String key, long default_value);
 
@@ -928,7 +928,7 @@ PluginConfig
    * @param key The parameter name.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public String getUnsafeStringParameter(String key);
 
@@ -942,7 +942,7 @@ PluginConfig
    * @param default_value The default value to return if one is not defined.
    * @return The value of the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public String getUnsafeStringParameter(String key, String default_value);
 
@@ -955,7 +955,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public void setUnsafeBooleanParameter(String key, boolean value);
 
@@ -968,7 +968,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.0.7
+   * @since 1.0.0.0
    */
   public void setUnsafeByteParameter(String key, byte[] value);
 
@@ -986,7 +986,7 @@ PluginConfig
    * @param key The parameter name.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public void setUnsafeColorParameter(String key, int[] value);
 
@@ -1010,7 +1010,7 @@ PluginConfig
    * @param value The default value to return if one is not defined.
    * @param override <tt>true</tt> if the value is overridden from the default.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public void setUnsafeColorParameter(String key, int[] value, boolean override);
 
@@ -1023,7 +1023,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public void setUnsafeFloatParameter(String key, float value);
 
@@ -1036,7 +1036,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public void setUnsafeIntParameter(String key, int value);
 
@@ -1049,7 +1049,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public void setUnsafeLongParameter(String key, long value);
 
@@ -1062,7 +1062,7 @@ PluginConfig
    * @param key	The parameter name, which must be one defined from the above core constants.
    * @param value The new value for the parameter.
    *
-   * @since 3.0.0.5
+   * @since 1.0.0.0
    */
   public void setUnsafeStringParameter(String key, String value);
 
@@ -1080,7 +1080,7 @@ PluginConfig
 	 * @param key Name of the parameter.
 	 * @return <tt>true</tt> if the parameter was found and removed.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public boolean removePluginColorParameter(String key);
 
@@ -1088,7 +1088,7 @@ PluginConfig
    * @return the prefix used when storing configuration values in the config file for
    * this plugin's config parameters
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
 
 	public String
@@ -1119,7 +1119,7 @@ PluginConfig
 	 *
 	 * Unsafe methods - existence/semantics of parameters not guaranteed to be maintained across versions
 	 * If something changes and breaks your plugin, don't come complaining to me
-	 * @since 2.5.0.3
+	 * @since 1.0.0.0
 	 */
 
 	public Map
@@ -1128,7 +1128,7 @@ PluginConfig
   /**
    * make sure you save it after making changes!
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
 	public void save() throws PluginException;
 
@@ -1148,14 +1148,14 @@ PluginConfig
 	  /**
 	   * Returns true if a core parameter with the given name exists.
 	   * @param key The name of the parameter to check.
-	   * @since 2.5.0.2
+	   * @since 1.0.0.0
 	   */
 	public boolean hasParameter(String param_name);
 
 	  /**
 	   * Returns true if a plugin parameter with the given name exists.
 	   * @param key The name of the parameter to check.
-	   * @since 2.5.0.2
+	   * @since 1.0.0.0
 	   */
 	public boolean hasPluginParameter(String param_name);
 
@@ -1170,7 +1170,7 @@ PluginConfig
 	/**
 	 * @param _key
 	 *
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public void setPluginConfigKeyPrefix(String _key);
 
@@ -1208,7 +1208,7 @@ PluginConfig
 	 * the {@link com.biglybt.pif.ui.config.PluginConfigSource#registerParameter registerParameter}
 	 * to integrate the parameter properly.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 * @return The <tt>PluginConfigSource</tt> object representing the external configuration file.
 	 */
 	public com.biglybt.pif.config.PluginConfigSource enableExternalConfigSource();
@@ -1217,7 +1217,7 @@ PluginConfig
 	 * Returns the <tt>PluginConfigSource</tt> object used for this plugin configuration (or
 	 * <tt>null</tt> if an external configuration object isn't used).
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 * @return The PluginConfigSource object.
 	 */
 	public com.biglybt.pif.config.PluginConfigSource getPluginConfigSource();
@@ -1235,7 +1235,7 @@ PluginConfig
 	 * store data in.
 	 *
 	 * @param source The PluginConfigSource object to use.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void setPluginConfigSource(com.biglybt.pif.config.PluginConfigSource source);
 }

@@ -23,7 +23,7 @@ package com.biglybt.pif.download;
 /** A listener that is informed of the addition and removal of downloads
  *
  * @author parg
- * @since 2.0.7.0
+ * @since 1.0.0.0
  */
 
 public interface

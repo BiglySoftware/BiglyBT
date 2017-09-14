@@ -178,7 +178,7 @@ public class SWTSkinObjectSash
 	/**
 	 *
 	 *
-	 * @since 3.1.0.1
+	 * @since 1.0.0.0
 	 */
 	protected void initialize() {
 		SWTSkinObject skinObject;
@@ -313,7 +313,7 @@ public class SWTSkinObjectSash
 	/**
 	 * @param e
 	 *
-	 * @since 3.1.0.1
+	 * @since 1.0.0.0
 	 */
 	protected void handleShow() {
 		if ( sash.isDisposed()){

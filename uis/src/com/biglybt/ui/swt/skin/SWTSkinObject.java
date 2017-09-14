@@ -139,21 +139,21 @@ public interface SWTSkinObject
 	/**
 	 *
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 */
 	public void dispose();
 
 	/**
 	 * @param id
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	void setTooltipID(String id);
 
 	/**
 	 * @return
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	boolean getDefaultVisibility();
 
@@ -164,14 +164,14 @@ public interface SWTSkinObject
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	boolean isDisposed();
 
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	boolean isDebug();
 
@@ -179,14 +179,14 @@ public interface SWTSkinObject
 	 * @param walkup
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	String getTooltipID(boolean walkup);
 
 	/**
 	 * @param b
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void setDebug(boolean b);
 

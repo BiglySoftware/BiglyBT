@@ -421,7 +421,7 @@ public interface GlobalManager extends CoreComponent, TaggableResolver {
 	 * @param remove_data
 	 * @throws GlobalManagerDownloadRemovalVetoException
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	void removeDownloadManager(DownloadManager manager, boolean remove_torrent,
 			boolean remove_data) throws GlobalManagerDownloadRemovalVetoException;
@@ -432,12 +432,12 @@ public interface GlobalManager extends CoreComponent, TaggableResolver {
 	 * accessible. See the DHT manager classes in the plugin API for a better way
 	 * to register a provider.
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	void setMainlineDHTProvider(MainlineDHTProvider provider);
 
 	/**
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	MainlineDHTProvider getMainlineDHTProvider();
 
@@ -450,7 +450,7 @@ public interface GlobalManager extends CoreComponent, TaggableResolver {
 	 * @param manager
 	 * @return
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	boolean contains(DownloadManager manager);
 

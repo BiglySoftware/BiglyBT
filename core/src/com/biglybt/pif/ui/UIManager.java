@@ -46,7 +46,7 @@ UIManager
 	 *
 	 * @param section_name
 	 * @return BasicPluginConfigModel
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public BasicPluginConfigModel
 	createBasicPluginConfigModel(
@@ -60,7 +60,7 @@ UIManager
 	 * @param parent_section
 	 * @param section_name  see {@link com.biglybt.pif.ui.config.ConfigSection}.SECTION_*
 	 * @return BasicPluginConfigModel
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public BasicPluginConfigModel
 	createBasicPluginConfigModel(
@@ -70,7 +70,7 @@ UIManager
 	/**
 	 *
 	 * @return
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public PluginConfigModel[] getPluginConfigModels();
 
@@ -80,7 +80,7 @@ UIManager
 	 * @param name The name for the view (this should be localised text, rather
 	 *     than a message string).
 	 * @return BasicPluginViewModel
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public BasicPluginViewModel
 	createBasicPluginViewModel(
@@ -95,7 +95,7 @@ UIManager
 	 * @param use_plugin_name If set to <tt>true</tt>, the log view will be
 	 *   taken from the plugin name, if <tt>false</tt>, it will be taken from
 	 *   the channel name.
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public BasicPluginViewModel createLoggingViewModel(
 		LoggerChannel channel, boolean use_plugin_name
@@ -105,7 +105,7 @@ UIManager
 	 *
 	 * @param data
 	 * @throws UIException
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void
 	copyToClipBoard(
@@ -117,7 +117,7 @@ UIManager
 	 * Retrieve the Table Manager
 	 *
 	 * @return Table management functions
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public TableManager getTableManager();
 
@@ -126,7 +126,7 @@ UIManager
 	 * @param title_resource
 	 * @param message_resource
 	 * @param contents
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 	public void
 	showTextMessage(
@@ -140,7 +140,7 @@ UIManager
 	 * @param message
 	 * @param message_map - see UIManagerEvent.MT_x
 	 * @return selected value
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 
 	public long
@@ -154,7 +154,7 @@ UIManager
 	 * @param message_map - see UIManagerEvent.MT_x
 	 * @param params - [ remember-id (String), remember-by-default (Boolean), remember-resource (String) ]
 	 * @return selected value
-	 * @since 4.8.1.3
+	 * @since 1.0.0.0
 	 */
 
 	public long
@@ -187,7 +187,7 @@ UIManager
 		Map<String,Object>		params );
 
 		/**
-		 * @since 2.3.0.6
+		 * @since 1.0.0.0
 		 * @param url
 		 */
 
@@ -200,7 +200,7 @@ UIManager
 		/**
 		 *
 		 * @param torrent
-		 * @since 3.0.5.3
+		 * @since 1.0.0.0
 		 */
 
 	public void
@@ -214,7 +214,7 @@ UIManager
 	 *         {@link com.biglybt.pif.ui.config.ConfigSection}.SECTION_* constants
 	 * @return true-Section opened; false-Section invalid or UI does not support config views
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public boolean showConfigSection(String sectionID);
 
@@ -222,7 +222,7 @@ UIManager
 	 * Retrieve the menu manager.
 	 *
 	 * @return Menu management functions
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
     public MenuManager getMenuManager();
 
@@ -238,7 +238,7 @@ UIManager
 	 * @param factory
 	 * @throws UIException
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 
 	public void
@@ -253,7 +253,7 @@ UIManager
 	 * @param factory
 	 * @throws UIException
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 
 	public void
@@ -270,7 +270,7 @@ UIManager
 	 * <p/>
 	 * Will fire UIAttached for managers already attached
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
   	public void
   	addUIListener(
@@ -281,7 +281,7 @@ UIManager
 	 *
 	 * @param listener Listener to remove
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
  	public void
   	removeUIListener(
@@ -291,7 +291,7 @@ UIManager
 	 *
 	 * @param listener
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
  	public void
   	addUIEventListener(
@@ -301,7 +301,7 @@ UIManager
 	 *
 	 * @param listener
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
  	public void
   	removeUIEventListener(
@@ -318,7 +318,7 @@ UIManager
  	 * If you want to monitor what user interfaces are being attached / detached
  	 * from Azureus, you should add a <tt>UIListener</tt> to this object.
  	 *
- 	 * @since 3.0.0.7
+ 	 * @since 1.0.0.0
  	 */
  	public boolean hasUIInstances();
 
@@ -332,7 +332,7 @@ UIManager
  	 * If you want to monitor what user interfaces are being attached / detached
  	 * from Azureus, you should add a <tt>UIListener</tt> to this object.
  	 *
- 	 * @since 3.0.0.7
+ 	 * @since 1.0.0.0
  	 */
  	public UIInstance[] getUIInstances();
 
@@ -343,7 +343,7 @@ UIManager
  	 * any attached interfaces.
  	 *
  	 * @see UIInstance#getInputReceiver()
- 	 * @since 3.0.5.3
+ 	 * @since 1.0.0.0
  	 */
  	public UIInputReceiver getInputReceiver();
 
@@ -354,7 +354,7 @@ UIManager
  	 * any attached interfaces.
  	 *
  	 * @see UIInstance#createMessage()
- 	 * @since 3.0.5.3
+ 	 * @since 1.0.0.0
  	 */
  	public UIMessage createMessage();
 
@@ -362,7 +362,7 @@ UIManager
  	 * Opens up the file using the associated application.
  	 *
  	 * @param file The file to open.
- 	 * @since 3.0.5.3
+ 	 * @since 1.0.0.0
  	 */
  	public void openFile(File file);
 
@@ -370,7 +370,7 @@ UIManager
  	 * Shows the file in a file explorer application in its parent folder.
  	 *
  	 * @param file The file to show.
- 	 * @since 3.0.5.3
+ 	 * @since 1.0.0.0
  	 */
  	public void showFile(File file);
 

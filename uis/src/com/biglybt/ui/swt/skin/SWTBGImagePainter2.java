@@ -316,7 +316,7 @@ public class SWTBGImagePainter2
 	 * @param bgImageRightId
 	 * @param bgImageId
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public void setImages(ImageLoader imageLoader, String bgImageLeftId, String bgImageRightId,
 			String bgImageId) {

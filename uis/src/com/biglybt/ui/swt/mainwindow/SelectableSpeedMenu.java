@@ -195,7 +195,7 @@ public class SelectableSpeedMenu {
 	 * @param configKey
 	 * @return
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	private static int adjustMaxBandWidth(int maxBandwidth,
 			GlobalManager globalManager, boolean up_menu, int kInB) {
@@ -314,7 +314,7 @@ public class SelectableSpeedMenu {
 
 	/**
 	 * @param cClickedFrom
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public static void invokeSlider(Control cClickedFrom, Core core, boolean isUpSpeed) {
 		final String prefix = MessageText.getString(isUpSpeed

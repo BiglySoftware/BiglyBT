@@ -26,7 +26,7 @@ package com.biglybt.pif;
  * Most plugins will have no need to interact with this object - it is primarily
  * used by the client for plugin management.
  *
- * @since 3.1.1.1
+ * @since 1.0.0.0
  */
 public interface PluginState {
 

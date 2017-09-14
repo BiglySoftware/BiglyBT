@@ -70,7 +70,7 @@ InstallablePlugin
 		 * @param low_noise			don't prompt user
 		 * @param wait_until_done	if true blocks until process complete, otherwise it is async
 		 * @throws PluginException
-		 * @since 3.1.1.1
+		 * @since 1.0.0.0
 		 */
 
 	public void

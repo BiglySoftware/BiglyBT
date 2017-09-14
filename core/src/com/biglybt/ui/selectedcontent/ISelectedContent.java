@@ -50,7 +50,7 @@ public interface ISelectedContent
 	public void setDisplayName(String displayName);
 
 	/**
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public DownloadUrlInfo getDownloadInfo();
 

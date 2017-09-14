@@ -29,7 +29,7 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 /** Downloaded from others WHILE connected to you
  *
  * @author TuxPaper
- * @since 2.1.0.1
+ * @since 1.0.0.0
  */
 public class DLedFromOthersItem
        extends CoreTableColumnSWT

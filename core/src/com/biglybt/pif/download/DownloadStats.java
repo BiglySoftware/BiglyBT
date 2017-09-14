@@ -41,7 +41,7 @@ DownloadStats
 	 * Returns an overall string representing the state of the download
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public String
 	getStatus();
@@ -51,7 +51,7 @@ DownloadStats
 	 * *localised*
 	 * @return
    *
-   * @since 2.3.0.7
+   * @since 1.0.0.0
 	 */
 	public String
 	getStatus( boolean localised);
@@ -60,7 +60,7 @@ DownloadStats
 	 * Gives access to the directory into which the download is being saved
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public String
 	getDownloadDirectory();
@@ -69,7 +69,7 @@ DownloadStats
 	 * Gives access to the target file or directory that the download is being saved to
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public String
 	getTargetFileOrDir();
@@ -78,7 +78,7 @@ DownloadStats
 	 * returns an general status string for the tracker
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public String
 	getTrackerStatus();
@@ -88,7 +88,7 @@ DownloadStats
 	 * task (e.g. checking, downloading)
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public int
 	getCompleted();
@@ -116,7 +116,7 @@ DownloadStats
    *                       Otherwise, same as true.
    * @return 0 - 1000
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
 	 */
 	public int
 	getDownloadCompleted(boolean bLive);
@@ -143,13 +143,13 @@ DownloadStats
 	 * Gives the number of bytes downloaded
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getDownloaded();
 
 	/**
-	 * @since 5.1.0.1
+	 * @since 1.0.0.0
 	 * @param include_protocol
 	 * @return
 	 */
@@ -161,7 +161,7 @@ DownloadStats
 	/**
 	 * Gives number of bytes remaining.  *Includes* DND files
 	 *
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 */
 
 	public long
@@ -174,13 +174,13 @@ DownloadStats
 	 * Gives the number of bytes uploaded
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getUploaded();
 
 	/**
-	 * @since 5.1.0.1
+	 * @since 1.0.0.0
 	 * @param include_protocol
 	 * @return
 	 */
@@ -195,7 +195,7 @@ DownloadStats
 	 * (ex. end game mode where multiple peers send same block, et)
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getDiscarded();
@@ -204,13 +204,13 @@ DownloadStats
 	 * Gives average number of bytes downloaded in last second
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getDownloadAverage();
 
 	/**
-	 * @since 5.1.0.1
+	 * @since 1.0.0.0
 	 * @param include_protocol
 	 * @return
 	 */
@@ -222,13 +222,13 @@ DownloadStats
 	 * Gives average number of bytes uploaded in last second
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getUploadAverage();
 
 	/**
-	 * @since 5.1.0.1
+	 * @since 1.0.0.0
 	 * @param include_protocol
 	 * @return
 	 */
@@ -241,7 +241,7 @@ DownloadStats
 	 * Gives average number of bytes computed for torrent in last second
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getTotalAverage();
@@ -250,7 +250,7 @@ DownloadStats
 	 * Gives the elapsed download time as a string
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public String
 	getElapsedTime();
@@ -259,7 +259,7 @@ DownloadStats
 	 * Gives the estimated time to completion as a string
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public String
 	getETA();
@@ -273,7 +273,7 @@ DownloadStats
 	 * 	-1 = unknown eta (no peer manager) or download completed 1s ago<BR>
 	 * 315360000000L = incomplete and 0 average speed<BR>
 	 *
-	 * @since 4.2.0.3
+	 * @since 1.0.0.0
 	 */
 
 	public long
@@ -283,7 +283,7 @@ DownloadStats
 	 * Gives the number of bytes thrown away due to piece hash check fails
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getHashFails();
@@ -292,14 +292,14 @@ DownloadStats
 	 * Gives the share ratio of the torrent in 1000ths (i.e. 1000 = share ratio of 1)
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public int
 	getShareRatio();
 
   /** in ms since epoch
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getTimeStarted();
@@ -311,7 +311,7 @@ DownloadStats
    *         SystemTime.getCurrentTime().
    *         -1 is not seeding
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getTimeStartedSeeding();
@@ -320,7 +320,7 @@ DownloadStats
 	 * Gives the currently seen availability of the torrent
 	 * @return
    *
-   * @since 2.0.8.2
+   * @since 1.0.0.0
 	 */
 	public float
 	getAvailability();
@@ -332,7 +332,7 @@ DownloadStats
    *
    * @return -1 if it has never downloaded
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getSecondsDownloading();
@@ -344,7 +344,7 @@ DownloadStats
    *
    * @return -1 if it has never seeded
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 	public long
 	getSecondsOnlySeeding();
@@ -383,7 +383,7 @@ DownloadStats
 	 *
 	 * @return -1 if could not be determined
 	 *
-	 * @since 4.8.0.1
+	 * @since 1.0.0.0
 	 */
 	public long
 	getBytesUnavailable();

@@ -56,7 +56,7 @@ public interface UISWTViewEvent {
 	 * or if there's any reason you can't create, return false, and an existing
 	 * view will be used, if one is present.
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_CREATE = 0;
 
@@ -67,7 +67,7 @@ public interface UISWTViewEvent {
 	 * <p>
 	 * getData() will return an Object[] array, or null
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_DATASOURCE_CHANGED = 1;
 
@@ -77,14 +77,14 @@ public interface UISWTViewEvent {
 	 * getData() will return a SWT Composite or AWT Container for you to place
 	 * object in.
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_INITIALIZE = 2;
 
 	/**
 	 * Focus Gained
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_FOCUSGAINED = 3;
 
@@ -93,7 +93,7 @@ public interface UISWTViewEvent {
 	 * <p>
 	 * TYPE_FOCUSLOST may not be called before TYPE_DESTROY
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_FOCUSLOST = 4;
 
@@ -102,14 +102,14 @@ public interface UISWTViewEvent {
 	 * <p>
 	 * Caller is the GUI thread
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_REFRESH = 5;
 
 	/** Language has changed.  Plugins should update their text to the new
 	 * language.  To determine the new language, use Locale.getDefault()
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_LANGUAGEUPDATE = 6;
 
@@ -118,7 +118,7 @@ public interface UISWTViewEvent {
 	 * <p>
 	 * TYPE_FOCUSLOST may not be called before TYPE_DESTROY
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_DESTROY = 7;
 
@@ -127,7 +127,7 @@ public interface UISWTViewEvent {
 	 * <p>
 	 * Return false to abort close
 	 *
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public static final int TYPE_CLOSE = 8;
 
@@ -137,7 +137,7 @@ public interface UISWTViewEvent {
 	 * <P>
 	 * Currently, getData() will return a map, with "image" key containing Image
 	 *
-	 *  @since 4.7.0.3
+	 *  @since 1.0.0.0
 	 */
 	public static final int TYPE_OBFUSCATE = 9;
 
@@ -146,7 +146,7 @@ public interface UISWTViewEvent {
 	 *
 	 * @return The TYPE_* constant for this event
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public int getType();
 
@@ -155,7 +155,7 @@ public interface UISWTViewEvent {
 	 *
 	 * @return Any data for this event
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public Object getData();
 
@@ -164,7 +164,7 @@ public interface UISWTViewEvent {
 	 *
 	 * @return Information and control over the view
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public UISWTView getView();
 }

@@ -160,7 +160,7 @@ public interface MenuItem
 	 * For {@link #STYLE_MENU}, builder is called when user wants to see the
 	 * submenu items.  Setting a builder will force clear all submenu items.
 	 *
-	 * @since 5.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public void setSubmenuBuilder(MenuBuilder builder);
 
@@ -239,7 +239,7 @@ public interface MenuItem
 	 * Retrieve the menu ID that the menu item belongs to
 	 * @return {@link MenuManager}.MENU_ constant.
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	public String getMenuID();
 
@@ -253,26 +253,26 @@ public interface MenuItem
 	 * If you need to interact with this object when you are about to destroy it,
 	 * you should do it before you call the <tt>remove</tt> method.
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	public void remove();
 
 	/**
 	 * Removes all child menu items from this menu (if any exist).
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	public void removeAllChildItems();
 
 	/**
 	 * Sets whether the menu item is visible or not.
-	 * @since 3.0.2.0
+	 * @since 1.0.0.0
 	 */
 	public void setVisible(boolean visible);
 
 	/**
 	 * Returns whether the menu item is visible or not.
-	 * @since 3.0.2.0
+	 * @since 1.0.0.0
 	 */
 	public boolean isVisible();
 
@@ -283,7 +283,7 @@ public interface MenuItem
 	 * type <tt>STYLE_CHECK</tt> and if the menu item has already had a selected or
 	 * deselected state assigned to it.
 	 *
-	 * @since 3.0.2.4
+	 * @since 1.0.0.0
 	 */
 	public boolean isSelected();
 

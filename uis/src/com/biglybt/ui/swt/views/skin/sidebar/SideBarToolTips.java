@@ -97,7 +97,7 @@ public class SideBarToolTips
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private void handleHover(Point mousePos) {
 		if (toolTipShell != null && !toolTipShell.isDisposed())
@@ -195,7 +195,7 @@ public class SideBarToolTips
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private String getToolTip(Point mousePos_RelativeToItem) {
 		MdiEntryVitalityImage[] vitalityImages = mdiEntry.getVitalityImages();

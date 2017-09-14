@@ -43,7 +43,7 @@ public interface UISWTInstance extends UIInstance {
 	/**
 	 * ID of "My Torrents" view
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public static final String VIEW_MYTORRENTS 	= "MyTorrents";
 
@@ -58,28 +58,28 @@ public interface UISWTInstance extends UIInstance {
 	/**
 	 * ID of "Peers" view
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public static final String VIEW_TORRENT_PEERS = TableManager.TABLE_TORRENT_PEERS;
 
 	/**
 	 * ID of "Pieces" view
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public static final String VIEW_TORRENT_PIECES = TableManager.TABLE_TORRENT_PIECES;
 
 	/**
 	 * ID of "Files" view
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public static final String VIEW_TORRENT_FILES = TableManager.TABLE_TORRENT_FILES;
 
 	/**
 	 * ID of the top bar of az3ui
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 */
 	public static final String VIEW_TOPBAR = "TopBar";
 
@@ -97,7 +97,7 @@ public interface UISWTInstance extends UIInstance {
 	 *
 	 * @return SWT Display object that Azureus uses
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 	public Display getDisplay();
 
@@ -110,7 +110,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @param img Image to assign to the object
 	 * @return a new UISWTGraphic object
 	 *
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 	public UISWTGraphic createGraphic(Image img);
 
@@ -128,7 +128,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @note If you want the window to auto-open, use openMainView when you gain
 	 *        access to the UISWTInstance
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void addView(String sParentID, String sViewID, UISWTViewEventListener l);
 
@@ -149,7 +149,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @note If you want the window to auto-open, use openMainView when you gain
 	 *        access to the UISWTInstance
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public void addView(String sParentID, String sViewID,
 			Class<? extends UISWTViewEventListener> cla, Object initalDatasource);
@@ -162,7 +162,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @param dataSource any data you need to pass the view
 	 * @return success level
 	 *
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public boolean openView(String sParentID, String sViewID, Object dataSource);
 
@@ -175,7 +175,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @param setfocus <tt>true</tt> if you want to display the view immediately,
 	 *   <tt>false</tt> if you want to display it in the background.
 	 * @return success level
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public boolean openView(String sParentID, String sViewID, Object dataSource, boolean setfocus);
 
@@ -192,7 +192,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @param l Listener to be triggered when View Events occur
 	 * @param dataSource objects to set {@link UISWTView#getDataSource()} with
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void openMainView(String sViewID, UISWTViewEventListener l,
 			Object dataSource);
@@ -211,7 +211,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @param setfocus <tt>true</tt> if you want to display the view immediately,
 	 *   <tt>false</tt> if you want to display it in the background.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void openMainView(String sViewID, UISWTViewEventListener l,
 			Object dataSource, boolean setfocus);
@@ -225,7 +225,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @param sParentID One of VIEW_* constants
 	 * @param sViewID View ID to remove
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void removeViews(String sParentID, String sViewID);
 
@@ -235,13 +235,13 @@ public interface UISWTInstance extends UIInstance {
 	 * @param sParentID VIEW_* constant
 	 * @return list of views currently open
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public UISWTView[] getOpenViews(String sParentID);
 
 	/**
 	 *
-	 * @since 4.8.0.0
+	 * @since 1.0.0.0
 	 */
 	public UISWTViewEventListenerWrapper[]
 	getViewListeners(
@@ -250,7 +250,7 @@ public interface UISWTInstance extends UIInstance {
 	/**
 	 * Shows or hides a download bar for a given download.
 	 *
-	 * @since 3.0.0.5
+	 * @since 1.0.0.0
 	 * @param download Download to use.
 	 * @param display <tt>true</tt> to show a download bar, <tt>false</tt> to hide it.
 	 */
@@ -259,7 +259,7 @@ public interface UISWTInstance extends UIInstance {
 	/**
 	 * Shows or hides the transfers bar.
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 * @param display <tt>true</tt> to show the bar, <tt>false</tt> to hide it.
 	 */
 	public void showTransfersBar(boolean display);
@@ -267,7 +267,7 @@ public interface UISWTInstance extends UIInstance {
 	/**
 	 * Creates an entry in the status bar to display custom status information.
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 * @see UISWTStatusEntry
 	 */
 	public UISWTStatusEntry createStatusEntry();
@@ -276,7 +276,7 @@ public interface UISWTInstance extends UIInstance {
 	 * Opens the window linked to a given BasicPluginViewModel object.
 	 *
 	 * @return <tt>true</tt> if the view was opened successfully.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	@Override
 	public boolean openView(BasicPluginViewModel model);
@@ -285,7 +285,7 @@ public interface UISWTInstance extends UIInstance {
 	 * Opens the window linked to a given BasicPluginViewModel object.
 	 *
 	 * @return <tt>true</tt> if the view was opened successfully.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void openConfig(BasicPluginConfigModel model);
 
@@ -295,7 +295,7 @@ public interface UISWTInstance extends UIInstance {
 	 * @param style
 	 * @return
 	 *
-	 * @since 4.2.0.9
+	 * @since 1.0.0.0
 	 */
 	public Shell createShell(int style);
 

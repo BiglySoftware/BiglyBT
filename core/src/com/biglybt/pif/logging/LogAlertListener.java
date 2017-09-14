@@ -21,7 +21,7 @@ package com.biglybt.pif.logging;
  * Listener class to be used to be notified of alerts to display to the user.
  *
  * <p><b>Note:</b> This interface is intended to be implemented by plugins.</p>
- * @since 3.1.1.1
+ * @since 1.0.0.0
  */
 public interface LogAlertListener {
 	public void alertRaised(LogAlert alert);

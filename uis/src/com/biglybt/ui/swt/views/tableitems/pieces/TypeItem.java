@@ -26,7 +26,7 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 /**
  *
  * @author TuxPaper
- * @since 2.0.8.5
+ * @since 1.0.0.0
  * @author MjrTom
  *			2005/Oct/08: fast/slow changed to graduated, so >2 = fast now
  */

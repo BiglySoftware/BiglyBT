@@ -1146,7 +1146,7 @@ MagnetURIHandlerImpl
 	 * @param width
 	 * @param height
 	 *
-	 * @since 3.0.2.1
+	 * @since 1.0.0.0
 	 */
 	private void writeImage(OutputStream os, int width, int height) {
 

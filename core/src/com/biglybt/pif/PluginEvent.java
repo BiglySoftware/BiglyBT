@@ -23,7 +23,7 @@ package com.biglybt.pif;
 /** allow config wizard progress to be determined
  *
  * @author parg
- * @since 2.0.8.0
+ * @since 1.0.0.0
  */
 public interface
 PluginEvent
@@ -69,7 +69,7 @@ PluginEvent
 
 		/**
 		 * Data is the PluginInterface of installed plugin
-		 * @since 4.1.0.1
+		 * @since 1.0.0.0
 		 */
 	public static final int	PEV_PLUGIN_OPERATIONAL				= 8;
 

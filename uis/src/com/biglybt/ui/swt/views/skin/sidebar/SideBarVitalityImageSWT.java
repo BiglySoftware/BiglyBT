@@ -142,7 +142,7 @@ public class SideBarVitalityImageSWT
 	/**
 	 * @param bounds relative to entry
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void setHitArea(Rectangle hitArea) {
 		this.hitArea = hitArea;
@@ -187,7 +187,7 @@ public class SideBarVitalityImageSWT
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private synchronized void createTimerEvent() {
 		if (timerEvent != null) {
@@ -323,7 +323,7 @@ public class SideBarVitalityImageSWT
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public Image getImage() {
 		if (images == null || images.length == 0

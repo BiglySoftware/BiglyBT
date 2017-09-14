@@ -342,7 +342,7 @@ public class DonationWindow
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	protected static void  neverAskAgain() {
 		COConfigurationManager.setParameter("donations.donated", true);
@@ -353,7 +353,7 @@ public class DonationWindow
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public static void resetAskTime() {
 		resetAskTime(reAskEveryHours);

@@ -320,7 +320,7 @@ public class SplashWindow
 	/**
 	 *
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	private void update() {
 		if (updating && !Utils.isThisThreadSWT()) {

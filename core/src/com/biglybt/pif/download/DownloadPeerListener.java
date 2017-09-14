@@ -23,7 +23,7 @@ package com.biglybt.pif.download;
 /**
  *
  * @author parg
- * @since 2.1.0.0
+ * @since 1.0.0.0
  */
 
 import com.biglybt.pif.peers.PeerManager;

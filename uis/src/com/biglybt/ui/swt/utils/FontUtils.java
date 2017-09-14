@@ -70,7 +70,7 @@ public class FontUtils
 	 * @param heightInPixels
 	 * @return
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	public static float getFontHeightFromPX(Font baseFont, GC gc,
 			int heightInPixels) {

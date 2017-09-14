@@ -208,7 +208,7 @@ public class SideBar
 	/**
 	 *
 	 *
-	 * @since 3.1.0.1
+	 * @since 1.0.0.0
 	 */
 
 	private void addGeneralMenus() {
@@ -268,7 +268,7 @@ public class SideBar
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void flipSideBarVisibility() {
 		final SWTSkinObjectSash soSash = (SWTSkinObjectSash) skin.getSkinObject("sidebar-sash");
@@ -1161,7 +1161,7 @@ public class SideBar
 	/**
 	 * @param menuDropDown
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	protected void fillDropDownMenu(Menu menuDropDown, TreeItem[] items,
 			int indent) {
@@ -1213,7 +1213,7 @@ public class SideBar
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private void swt_updateSideBarHitAreasY(SideBarEntrySWT[] entries) {
 		for (int x = 0; x < entries.length; x++) {

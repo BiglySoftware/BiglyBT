@@ -84,7 +84,7 @@ SFPluginDetails
 	/**
 	 * @return
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	String
 	getInfoURL();

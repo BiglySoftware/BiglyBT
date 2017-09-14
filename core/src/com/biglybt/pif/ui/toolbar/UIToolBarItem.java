@@ -27,14 +27,14 @@ public interface UIToolBarItem
 	/**
 	 * Retrieve the ID of the toolbar item
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public String getID();
 
 	/**
 	 * Return the message bundle ID for the button text
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public String getTextID();
 
@@ -42,28 +42,28 @@ public interface UIToolBarItem
 	 * Sets the button's text to a messagebundle value looked up using the id
 	 *
 	 * @param id
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public void setTextID(String id);
 
 	/**
 	 * Get the ID of the image used
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public String getImageID();
 
 	/**
 	 * Sets the toolbar item to use the specified image
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public void setImageID(String id);
 
 	/**
 	 * Returns if the toolbar item is always available (enabled)
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public boolean isAlwaysAvailable();
 
@@ -79,28 +79,28 @@ public interface UIToolBarItem
 	/**
 	 * @return Group that item belongs to
 	 *
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public String getGroupID();
 
 	/**
 	 * @param groupID
 	 *
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public void setGroupID(String groupID);
 
 	/**
 	 * @param string
 	 *
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public void setToolTip(String text);
 
 	/**
 	 * @return
 	 *
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	String getToolTip();
 }

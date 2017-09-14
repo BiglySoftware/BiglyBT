@@ -119,7 +119,7 @@ public class TorrentListener
 	}
 
 	/**
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	private static boolean loadTorrentByB64(Core core,
 			BrowserMessage message, String b64) {
