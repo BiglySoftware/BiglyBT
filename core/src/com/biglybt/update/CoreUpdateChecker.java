@@ -140,7 +140,7 @@ CoreUpdateChecker
 	public String
 	getName()
 	{
-		return( "Azureus Core" );
+		return( "BiglyBT Core" );
 	}
 
 	@Override
