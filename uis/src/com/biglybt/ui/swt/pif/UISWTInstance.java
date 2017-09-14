@@ -19,6 +19,7 @@
 
 package com.biglybt.ui.swt.pif;
 
+import com.biglybt.pif.ui.UIManagerListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -28,7 +29,6 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.ui.common.UIInstanceBase;
 
 /**
  * Tools to manage a SWT Instance
