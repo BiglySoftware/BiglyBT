@@ -22,7 +22,7 @@ If you are a tracker owner, we'd love to have a mention on your site as a bittor
 
 ## Translations
 
-We have over 40 different translation files, but the vast majority of them are horribly incomplete.  If your native language isn't English, we'd love to have you contribute to the translations.  There's a plugin specificly for translating BiglyBT, or, you can use any java internationalization tool, such as the built in one within IntelliJ Idea.  Our translation files are located at [core/src/com/biglybt/internat](core/src/com/biglybt/internat)
+We have over 40 different translation files, but the vast majority of them are horribly incomplete.  If your native language isn't English, we'd love to have you contribute to the translations. Please see [TRANSLATE.md](TRANSLATE.md) for more information.
 
 ## Create Search Templates
 
