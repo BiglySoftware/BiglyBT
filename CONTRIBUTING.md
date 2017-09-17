@@ -2,6 +2,8 @@
 
 :kissing_heart: Thank you for your interest in helping the BiglyBT community.  There are many ways you can help us, whether you are a normal user, tracker owner, blogger, Java guru, or rich person wanting to give away money.
 
+If you are new to the Open Source Community and are looking for contributing 101, we highly recommend reading [How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)
+
 ## Spread the Word
 
 This is the most important contributing request from us.
