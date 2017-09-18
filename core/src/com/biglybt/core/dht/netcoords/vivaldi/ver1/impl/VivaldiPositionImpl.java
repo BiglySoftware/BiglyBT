@@ -110,7 +110,7 @@ public class VivaldiPositionImpl implements VivaldiPosition{
 
 	    float scale = delta * re;
 
-	    HeightCoordinatesImpl random_error = new HeightCoordinatesImpl((float)Math.random()/10,(float)Math.random()/10,0f);
+	    HeightCoordinatesImpl random_error = new HeightCoordinatesImpl((float)Math.random()/10,(float)Math.random()/10,(float)Math.random()/10);
 
 	    HeightCoordinatesImpl new_coordinates = (HeightCoordinatesImpl)coordinates.add(coordinates.sub(cj.add(random_error)).unity().scale(scale));
 

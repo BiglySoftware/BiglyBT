@@ -187,6 +187,8 @@ public class VivaldiPanel {
     		DHTControlContact closest = null;
 
     		int		closest_distance = Integer.MAX_VALUE;
+    		int		x_coord		 	= 0;
+    		int		y_coord			= 0;
     		float	height			= -1;
 
     		for ( Object[] entry: currentPositions ){
@@ -202,6 +204,8 @@ public class VivaldiPanel {
        			if ( distance < closest_distance ){
 
        				closest_distance 	= distance;
+       				x_coord				= e_x;
+       				y_coord				= e_y;
        				height				= (Float)entry[2];
        				closest				= (DHTControlContact)entry[3];
        			}
@@ -220,7 +224,10 @@ public class VivaldiPanel {
     				tt += ": " + details[0] + "/" + details[1];
     			}
 
-    			tt += " (h=" + (((int)(height*10000))/10000.0f) + ")";
+    			tt += " (x="+ (((int)(x_coord*10000))/10000.0f) +
+    					",y=" + (((int)(y_coord*10000))/10000.0f) + 
+    					",h=" + (((int)(height*10000))/10000.0f) + 
+    					")";
 
     			canvas.setToolTipText( tt );
 
