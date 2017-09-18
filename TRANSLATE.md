@@ -9,7 +9,7 @@ Thank you for your interesting in helping out BiglyBT.  We really need help with
 | zh_CN | Chinese | China | ~90% | |
 | bg_BG | Bulgarian | Bulgaria | ~84% | |
 | fr_FR | French | France | ~84% | |
-| es_ES | Spanish | Spain | ~81% | |
+| es_ES | Spanish | Spain | ~81% | Valtiel |
 | ca_AD | Catalan | Andorra | ~80% | |
 | ko_KR | Korean | South Korea | ~79% | |
 | ro_RO | Romanian | Romania | ~73% | |
