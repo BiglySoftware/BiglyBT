@@ -589,6 +589,37 @@ public class MenuBuildUtils {
 	
 							}
 						}
+						
+						final ChatInstance cc = BuddyPluginUtils.getCountryChat();
+						
+						org.eclipse.swt.widgets.MenuItem chat_cc = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+
+						if ( cc != null ){
+														
+							String cc_text = MessageText.getString( "menu.your.country", new String[] { (String)cc.getUserData( BuddyPluginUtils.CK_CC )});
+							
+							chat_cc.setText( cc_text );
+		
+							chat_cc.addListener(SWT.Selection, new Listener() {
+								@Override
+								public void handleEvent(Event event){
+									
+									try{
+										BuddyPluginUtils.getBetaPlugin().showChat( cc );
+										
+									}catch( Throwable e ){
+										
+										Debug.out( e );;
+									}
+								}});
+						}else {
+							
+							String cc_text = MessageText.getString( "menu.your.country", new String[] { "..."});
+							
+							chat_cc.setText( cc_text );
+
+							chat_cc.setEnabled( false );
+						}
 					}
 					
 					new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.SEPARATOR );

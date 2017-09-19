@@ -22,11 +22,17 @@
 
 package com.biglybt.plugin.net.buddy;
 
+import java.net.InetAddress;
+import java.util.Locale;
 import java.util.Map;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
+import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.torrent.Torrent;
@@ -37,6 +43,119 @@ import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 public class
 BuddyPluginUtils
 {
+	private static ChatInstance				country_chat;
+	private static Object					cc_lock = new Object();
+	private static String[]					country_info;
+	
+	public static final String CK_CC	 ="BuddyPluginUtils::CC";
+	
+	protected static void
+	betaInit(
+		BuddyPluginBeta	bpb )
+	{
+		new AEThread2( "BPU" )
+		{
+			public void
+			run()
+			{
+				while( true ) {
+					
+						// auto-create correct country chat but only if not done previously
+					
+					try{					
+						InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+						
+						if ( ia != null ){
+							
+							String[] info = PeerUtils.getCountryDetails( ia );
+							
+							if ( info != null ){
+								
+								synchronized( cc_lock ){
+									
+									info[0] = info[0].toUpperCase( Locale.US );
+									
+									String cc = info[0];
+																	
+									if ( country_chat == null || country_info == null || !country_info[0].equals( cc )){
+										
+										country_info = info;
+										
+										if ( country_chat != null ) {
+											
+											country_chat.destroy();
+											
+											country_chat = null;
+										}
+										
+										String chat_key = Constants.APP_NAME + ": Country: " + cc ;
+										
+										country_chat = getBetaPlugin().peekChatInstance( AENetworkClassifier.AT_PUBLIC, chat_key );
+										
+										if ( country_chat == null ){
+											
+											String key = "dchat.channel.cc.done." + cc;
+											
+											if ( !COConfigurationManager.getBooleanParameter( key, false )){
+												
+												country_chat = 
+													getChat( 
+														AENetworkClassifier.AT_PUBLIC,
+														chat_key );
+												
+												if ( country_chat != null ) {
+													
+													country_chat.setFavourite( true );
+													
+													COConfigurationManager.setParameter( key, true );
+												}
+											}
+										}
+										
+										if ( country_chat != null ) {
+											
+											country_chat.setUserData( CK_CC, info[1] );
+										}
+									}
+								}
+							}
+						}	
+					}catch( Throwable e ){
+					}
+					
+					try{
+						
+						Thread.sleep( 60*1000 );
+						
+					}catch( Throwable e ){
+						
+					}
+				}
+			}
+		}.start();
+	}
+	
+	public static ChatInstance
+	getCountryChat()
+	{
+		synchronized( cc_lock ){
+	
+			if ( country_chat == null && country_info != null ){
+				
+				String chat_key = Constants.APP_NAME + ": Country: " + country_info[0] ;
+				
+				country_chat = 
+						getChat( 
+							AENetworkClassifier.AT_PUBLIC,
+							chat_key );	
+				
+				country_chat.setUserData( CK_CC, country_info[1] );
+			}
+		}
+		
+		return( country_chat );
+	}
+	
 	private static BuddyPlugin
 	getPlugin()
 	{

@@ -446,6 +446,8 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 					}finally{
 
 						init_complete.releaseForever();
+						
+						BuddyPluginUtils.betaInit( BuddyPluginBeta.this );
 					}
 				}
 			});
