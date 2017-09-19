@@ -49,17 +49,17 @@ public class MainMenuV2
 		createMenus(shell);
 	}
 
-	public void linkMenuBar(Shell parent) {
-		parent.setMenuBar(menuBar);
-	}
-
 	private void createMenus(final Shell parent) {
 
 		//The Main Menu
-		menuBar = new Menu(parent, SWT.BAR);
-		parent.setMenuBar(menuBar);
+		menuBar = parent.getDisplay().getMenuBar();
+		if (menuBar == null) {
+			menuBar = new Menu(parent, SWT.BAR);
+			parent.setMenuBar(menuBar);
+		}
 
-		addFileMenu(parent);
+
+		addFileMenu();
 
 		/* ======= View, Transfers, Torrent, Tools menus =====
 		 * hig compliance for OSX dictates that more granular actions are positioned farther
@@ -68,10 +68,10 @@ public class MainMenuV2
 		 */
 		if (Constants.isOSX) {
 			addViewMenu(parent);
-			addTransferMenu(parent);
+			addTransferMenu();
 			addTorrentMenu(parent);
 		} else {
-			addTransferMenu(parent);
+			addTransferMenu();
 			addTorrentMenu(parent);
 			addViewMenu(parent);
 
@@ -128,9 +128,8 @@ public class MainMenuV2
 
 	/**
 	 * Creates the File menu and all its children
-	 * @param parent
 	 */
-	private void addFileMenu(final Shell parent) {
+	private void addFileMenu() {
 		MenuItem fileItem = MenuFactory.createFileMenuItem(menuBar);
 		Menu fileMenu = fileItem.getMenu();
 
@@ -177,9 +176,8 @@ public class MainMenuV2
 
 	/**
 	 * Creates the Transfer menu and all its children
-	 * @param parent
 	 */
-	private void addTransferMenu(final Shell parent) {
+	private void addTransferMenu() {
 		MenuFactory.createTransfersMenuItem(menuBar);
 	}
 

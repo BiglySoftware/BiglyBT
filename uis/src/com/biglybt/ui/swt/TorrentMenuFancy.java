@@ -1793,7 +1793,7 @@ public class TorrentMenuFancy
 				new FancyMenuRowInfoListener() {
 					@Override
 					public void buildMenu(Menu menu) {
-						TagUIUtils.addLibraryViewTagsSubMenu(dms, menu, detailArea);
+						TagUIUtils.addLibraryViewTagsSubMenu(dms, menu);
 					}
 				});
 
@@ -1803,7 +1803,7 @@ public class TorrentMenuFancy
 				"image.sidebar.library", new FancyMenuRowInfoListener() {
 					@Override
 					public void buildMenu(Menu menu) {
-						TorrentUtil.addCategorySubMenu(dms, menu, detailArea);
+						TorrentUtil.addCategorySubMenu(dms, menu);
 					}
 				});
 

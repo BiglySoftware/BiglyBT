@@ -2191,6 +2191,19 @@ public class Utils
 		}
 	}
 
+	public static Shell getActiveShell() {
+		// Get active shell from current display if we can
+		Display current = Display.getCurrent();
+		if (current == null) {
+			return null;
+		}
+		Shell shell = current.getActiveShell();
+		if (shell != null && !shell.isDisposed()) {
+			return shell;
+		}
+		return null;
+	}
+
 	public static Shell findAnyShell() {
 		// Pick the main shell if we can
 		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();

@@ -81,8 +81,13 @@ public class MainMenuV3
 	private void buildMenu(Shell parent) {
 
 		//The Main Menu
-		menuBar = new Menu(parent, SWT.BAR);
-		parent.setMenuBar(menuBar);
+		menuBar = parent.getDisplay().getMenuBar();
+		if (menuBar == null) {
+			menuBar = new Menu(parent, SWT.BAR);
+			parent.setMenuBar(menuBar);
+		} else {
+			Utils.disposeSWTObjects(menuBar.getItems());
+		}
 
 		addFileMenu();
 		//addViewMenu();

@@ -190,8 +190,8 @@ public class MenuFactory
 			TableViewSWT<?> tv = (TableViewSWT<?>) menu.getData("TableView");
 			Core core = CoreFactory.getSingleton();
 
-			TorrentUtil.fillTorrentMenu(menu, current_dls, core,
-					menu.getShell(), !is_detailed_view, 0, tv);
+			TorrentUtil.fillTorrentMenu(menu, current_dls, core, !is_detailed_view, 0,
+					tv);
 		}
 
 		com.biglybt.pif.ui.menus.MenuItem[] menu_items;
@@ -350,7 +350,7 @@ public class MenuFactory
 				display.asyncExec(new AERunnable() {
 					@Override
 					public void runSupport() {
-						FileDialog dialog = new FileDialog(menuParent.getShell(),
+						FileDialog dialog = new FileDialog(Utils.findAnyShell(),
 								SWT.SYSTEM_MODAL | SWT.OPEN);
 
 						dialog.setFilterPath(TorrentOpener.getFilterPathData());
@@ -389,7 +389,7 @@ public class MenuFactory
 				new Listener() {
 					@Override
 					public void handleEvent(Event e) {
-						ShareUtils.shareFile(menuParent.getShell());
+						ShareUtils.shareFile(Utils.findAnyShell());
 					}
 				});
 		return file_share_file;
@@ -400,7 +400,7 @@ public class MenuFactory
 				new Listener() {
 					@Override
 					public void handleEvent(Event e) {
-						ShareUtils.shareDir(menuParent.getShell());
+						ShareUtils.shareDir(Utils.findAnyShell());
 					}
 				});
 		return file_share_dir;
@@ -411,7 +411,7 @@ public class MenuFactory
 				MENU_ID_SHARE_DIR_CONTENT, new Listener() {
 					@Override
 					public void handleEvent(Event e) {
-						ShareUtils.shareDirContents(menuParent.getShell(), false);
+						ShareUtils.shareDirContents(Utils.findAnyShell(), false);
 					}
 				});
 		return file_share_dircontents;
@@ -423,7 +423,7 @@ public class MenuFactory
 				MENU_ID_SHARE_DIR_CONTENT_RECURSE, new Listener() {
 					@Override
 					public void handleEvent(Event e) {
-						ShareUtils.shareDirContents(menuParent.getShell(), true);
+						ShareUtils.shareDirContents(Utils.findAnyShell(), true);
 					}
 				});
 		return file_share_dircontents_rec;
@@ -457,9 +457,9 @@ public class MenuFactory
 				new Listener() {
 					@Override
 					public void handleEvent(Event event) {
-						Shell shell = menuParent.getShell();
+						Shell shell = Utils.getActiveShell();
 						if (shell != null && !shell.isDisposed()) {
-							menuParent.getShell().close();
+							shell.close();
 						}
 					}
 				});
@@ -654,7 +654,7 @@ public class MenuFactory
 						}
 
 						if (mins <= 0) {
-							MessageBox mb = new MessageBox(menu.getShell(), SWT.ICON_ERROR
+							MessageBox mb = new MessageBox(Utils.findAnyShell(), SWT.ICON_ERROR
 									| SWT.OK);
 							mb.setText(MessageText.getString("MyTorrentsView.dialog.NumberError.title"));
 							mb.setMessage(MessageText.getString("MyTorrentsView.dialog.NumberError.text"));
@@ -805,7 +805,7 @@ public class MenuFactory
 								core.getGlobalManager())) {
 							AllTransfersBar.closeAllTransfersBar();
 						} else {
-							AllTransfersBar.open(menu.getShell());
+							AllTransfersBar.open(Utils.findAnyShell());
 						}
 					}
 				});
@@ -861,7 +861,7 @@ public class MenuFactory
 
 							java.util.List<String>	profiles = slh.getProfileNames();
 
-							Menu profiles_menu = new Menu(menuParent.getShell(), SWT.DROP_DOWN);
+							Menu profiles_menu = new Menu(Utils.findAnyShell(), SWT.DROP_DOWN);
 							MenuItem profiles_item = new MenuItem( menu, SWT.CASCADE);
 							profiles_item.setMenu(profiles_menu);
 
@@ -876,7 +876,7 @@ public class MenuFactory
 
 								for ( final String p: profiles ){
 
-									Menu profile_menu = new Menu(menuParent.getShell(), SWT.DROP_DOWN);
+									Menu profile_menu = new Menu(Utils.findAnyShell(), SWT.DROP_DOWN);
 									MenuItem profile_item = new MenuItem( profiles_menu, SWT.CASCADE);
 									profile_item.setMenu(profile_menu);
 									profile_item.setText( p );
@@ -1277,7 +1277,7 @@ public class MenuFactory
 	{
 		final Shell shell = Utils.findAnyShell();
 
-		FileDialog dialog = new FileDialog( shell.getShell(), SWT.SYSTEM_MODAL | SWT.OPEN );
+		FileDialog dialog = new FileDialog( shell, SWT.SYSTEM_MODAL | SWT.OPEN );
 
 		dialog.setFilterExtensions(new String[] { "*.config", "*.torrent", "*.tor", Constants.FILE_WILDCARD });
 
@@ -1363,7 +1363,7 @@ public class MenuFactory
 	{
 		final Shell shell = Utils.findAnyShell();
 
-		FileDialog dialog = new FileDialog( shell.getShell(), SWT.SYSTEM_MODAL | SWT.OPEN );
+		FileDialog dialog = new FileDialog( shell, SWT.SYSTEM_MODAL | SWT.OPEN );
 
 		dialog.setFilterExtensions(new String[] { "*.json", Constants.FILE_WILDCARD });
 
@@ -1445,7 +1445,7 @@ public class MenuFactory
 		final Shell shell = Utils.findAnyShell();
 
 		try{
-			FileDialog dialog = new FileDialog( shell.getShell(), SWT.SYSTEM_MODAL | SWT.OPEN );
+			FileDialog dialog = new FileDialog( shell, SWT.SYSTEM_MODAL | SWT.OPEN );
 
 			dialog.setFilterExtensions(new String[] { "*.torrent", "*.tor", Constants.FILE_WILDCARD });
 
@@ -1585,7 +1585,7 @@ public class MenuFactory
 		final Shell shell = Utils.findAnyShell();
 
 		try{
-			FileDialog dialog = new FileDialog( shell.getShell(), SWT.SYSTEM_MODAL | SWT.OPEN );
+			FileDialog dialog = new FileDialog( shell, SWT.SYSTEM_MODAL | SWT.OPEN );
 
 			dialog.setFilterExtensions(new String[] { "*.torrent", "*.tor", Constants.FILE_WILDCARD });
 
@@ -1988,12 +1988,11 @@ public class MenuFactory
 	}
 
 	public static MenuItem addMinimizeWindowMenuItem(Menu menu) {
-		final Shell shell = menu.getShell();
-
 		final MenuItem item = addMenuItem(menu, MENU_ID_WINDOW_MINIMIZE,
 				new Listener() {
 					@Override
 					public void handleEvent(Event event) {
+						Shell shell = Utils.getActiveShell();
 						if (null == shell || shell.isDisposed()) {
 							event.doit = false;
 							return;
@@ -2005,6 +2004,7 @@ public class MenuFactory
 		Listener enableHandler = new Listener() {
 			@Override
 			public void handleEvent(Event event) {
+				Shell shell = Utils.getActiveShell();
 				if (null == shell || shell.isDisposed()
 						|| item.isDisposed()) {
 					event.doit = false;
@@ -2020,9 +2020,6 @@ public class MenuFactory
 		};
 
 		menu.addListener(SWT.Show, enableHandler);
-		shell.addListener(SWT.FocusIn, enableHandler);
-		shell.addListener(SWT.Iconify, enableHandler);
-		shell.addListener(SWT.Deiconify, enableHandler);
 
 		return item;
 	}
@@ -2061,7 +2058,6 @@ public class MenuFactory
 		};
 
 		menu.addListener(SWT.Show, enableHandler);
-		menu.getShell().addListener(SWT.FocusIn, enableHandler);
 
 		ShellManager.sharedManager().addWindowAddedListener(enableHandler);
 		ShellManager.sharedManager().addWindowRemovedListener(enableHandler);
@@ -2081,13 +2077,14 @@ public class MenuFactory
 	 * @param menuParent The shell menu
 	 */
 	public static void appendWindowMenuItems(final Menu menuParent) {
-		final Shell shell = menuParent.getShell();
 		final int numTopItems = menuParent.getItemCount();
 		Listener rebuild = new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				try {
-					if (menuParent.isDisposed() || shell.isDisposed())
+					Shell shell = Utils.getActiveShell();
+
+					if (menuParent.isDisposed() || shell == null || shell.isDisposed())
 						return;
 
 					final int size = ShellManager.sharedManager().getSize();
@@ -2136,17 +2133,16 @@ public class MenuFactory
 
 		ShellManager.sharedManager().addWindowAddedListener(rebuild);
 		ShellManager.sharedManager().addWindowRemovedListener(rebuild);
-		shell.addListener(SWT.FocusIn, rebuild);
 		menuParent.addListener(SWT.Show, rebuild);
 	}
 
 	public static MenuItem addZoomWindowMenuItem(Menu menuParent) {
-		final Shell shell = menuParent.getShell();
 		final MenuItem item = addMenuItem(menuParent, MENU_ID_WINDOW_ZOOM,
 				new Listener() {
 					@Override
 					public void handleEvent(Event event) {
-						if (shell.isDisposed()) {
+						Shell shell = Utils.getActiveShell();
+						if (shell == null || shell.isDisposed()) {
 							event.doit = false;
 							return;
 						}
@@ -2157,28 +2153,27 @@ public class MenuFactory
 		Listener enableHandler = new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				if ( !shell.isDisposed() && !item.isDisposed()) {
-					if (!Constants.isOSX) {
-						if (shell.getMaximized()) {
-							Messages.setLanguageText(item, MENU_ID_WINDOW_ZOOM_RESTORE);
-						} else {
-							Messages.setLanguageText(item, MENU_ID_WINDOW_ZOOM_MAXIMIZE);
-						}
-					}
-
-					if (((shell.getStyle() & SWT.MAX) != 0)) {
-						item.setEnabled(!shell.getMinimized());
+				Shell shell = Utils.getActiveShell();
+				if ( shell == null || shell.isDisposed() || item.isDisposed()) {
+					return;
+				}
+				if (!Constants.isOSX) {
+					if (shell.getMaximized()) {
+						Messages.setLanguageText(item, MENU_ID_WINDOW_ZOOM_RESTORE);
 					} else {
-						item.setEnabled(false);
+						Messages.setLanguageText(item, MENU_ID_WINDOW_ZOOM_MAXIMIZE);
 					}
+				}
+
+				if (((shell.getStyle() & SWT.MAX) != 0)) {
+					item.setEnabled(!shell.getMinimized());
+				} else {
+					item.setEnabled(false);
 				}
 			}
 		};
 
 		menuParent.addListener(SWT.Show, enableHandler);
-		shell.addListener(SWT.FocusIn, enableHandler);
-		shell.addListener(SWT.Iconify, enableHandler);
-		shell.addListener(SWT.Deiconify, enableHandler);
 
 		return item;
 	}
@@ -2230,7 +2225,7 @@ public class MenuFactory
 		return addMenuItem(menu, MENU_ID_RELEASE_NOTES, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				new WelcomeWindow(menu.getShell());
+				new WelcomeWindow(Utils.findAnyShell());
 			}
 		});
 	}
@@ -2404,7 +2399,7 @@ public class MenuFactory
 		Menu alert_menu;
 
 		if (createSubmenu) {
-  		alert_menu = new Menu( menu.getShell(), SWT.DROP_DOWN );
+  		alert_menu = new Menu( Utils.findAnyShell(), SWT.DROP_DOWN );
 
   		MenuItem alerts_item = new MenuItem( menu, SWT.CASCADE);
 
@@ -2520,7 +2515,7 @@ public class MenuFactory
 			};
 
 
-		Menu alert_menu = new Menu( menu.getShell(), SWT.DROP_DOWN );
+		Menu alert_menu = new Menu( Utils.findAnyShell(), SWT.DROP_DOWN );
 
 		MenuItem alerts_item = new MenuItem( menu, SWT.CASCADE);
 
@@ -2643,7 +2638,7 @@ public class MenuFactory
 
 	public static MenuItem createTopLevelMenuItem(Menu menuParent,
 			String localizationKey) {
-		Menu menu = new Menu(menuParent.getShell(), SWT.DROP_DOWN);
+		Menu menu = new Menu(Utils.findAnyShell(), SWT.DROP_DOWN);
 		MenuItem menuItem = new MenuItem(menuParent, SWT.CASCADE);
 		Messages.setLanguageText(menuItem, localizationKey);
 		menuItem.setMenu(menu);

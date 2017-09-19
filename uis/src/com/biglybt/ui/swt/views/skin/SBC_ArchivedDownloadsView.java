@@ -611,7 +611,7 @@ public class SBC_ArchivedDownloadsView
 											DownloadManager[] dm_list = targets.toArray( new DownloadManager[ dms.size()]);
 
 											TorrentUtil.fillTorrentMenu(
-												menu, dm_list, CoreFactory.getSingleton(), table_parent, true, 0, tv);
+												menu, dm_list, CoreFactory.getSingleton(), true, 0, tv);
 
 											menu.addMenuListener(
 												new MenuListener() {

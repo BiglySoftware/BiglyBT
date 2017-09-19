@@ -1682,7 +1682,7 @@ public class MyTorrentsView
 
 		if (hasSelection) {
 			boolean isSeedingView = Download.class.equals(forDataSourceType) || DownloadTypeComplete.class.equals(forDataSourceType);
-			TorrentUtil.fillTorrentMenu(menu, dms, core, cTablePanel, true,
+			TorrentUtil.fillTorrentMenu(menu, dms, core, true,
 					(isSeedingView) ? 2 : 1, tv);
 
 			// ---

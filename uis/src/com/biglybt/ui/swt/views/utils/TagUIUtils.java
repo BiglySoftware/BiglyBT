@@ -2580,8 +2580,7 @@ public class TagUIUtils
 	public static void
 	addLibraryViewTagsSubMenu(
 		final DownloadManager[] 	dms,
-		Menu 						menu_tags,
-		final Composite 			composite)
+		Menu 						menu_tags)
 	{
 		MenuItem[] items = menu_tags.getItems();
 

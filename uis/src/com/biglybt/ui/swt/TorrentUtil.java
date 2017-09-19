@@ -113,11 +113,12 @@ public class TorrentUtil
 
 	// selected_dl_types -> 0 (determine that automatically), +1 (downloading), +2 (seeding), +3 (mixed - not used by anything yet)
 	public static void fillTorrentMenu(final Menu menu,
-			final DownloadManager[] dms, final Core core,
-			final Composite composite, boolean include_show_details,
-			int selected_dl_types, final TableView tv) {
+																		 final DownloadManager[] dms, final Core core,
+																		 boolean include_show_details,
+																		 int selected_dl_types, final TableView tv) {
 
 		// TODO: Build submenus on the fly
+		Shell shell = Utils.findAnyShell();
 
 		final boolean isSeedingView;
 		switch (selected_dl_types) {
@@ -342,7 +343,7 @@ public class TorrentUtil
 			menuItemChangeDir.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event e) {
-					changeDirSelectedTorrents(dms, composite.getShell());
+					changeDirSelectedTorrents(dms, shell);
 				}
 			});
 		}
@@ -548,7 +549,7 @@ public class TorrentUtil
 		final MenuItem itemFiles = new MenuItem(menuAdvanced, SWT.CASCADE);
 		Messages.setLanguageText(itemFiles, "ConfigView.section.files");
 
-		final Menu menuFiles = new Menu(composite.getShell(), SWT.DROP_DOWN);
+		final Menu menuFiles = new Menu(shell, SWT.DROP_DOWN);
 		itemFiles.setMenu(menuFiles);
 
 		final MenuItem itemFileMoveData = new MenuItem(menuFiles, SWT.PUSH);
@@ -556,7 +557,7 @@ public class TorrentUtil
 		itemFileMoveData.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
-				moveDataFiles(composite.getShell(), dms);
+				moveDataFiles(shell, dms);
 			}
 		});
 		itemFileMoveData.setEnabled(fileMove);
@@ -567,7 +568,7 @@ public class TorrentUtil
 		itemFileMoveTorrent.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
-				moveTorrentFile(composite.getShell(), dms);
+				moveTorrentFile(shell, dms);
 			}
 		});
 		itemFileMoveTorrent.setEnabled(fileMove);
@@ -815,7 +816,7 @@ public class TorrentUtil
 			Utils.setMenuItemImage(itemExport, "export");
 			itemExport.setEnabled(hasSelection);
 
-			final Menu menuExport = new Menu(composite.getShell(), SWT.DROP_DOWN);
+			final Menu menuExport = new Menu(shell, SWT.DROP_DOWN);
 			itemExport.setMenu(menuExport);
 
 			// Advanced > Export > Export XML
@@ -837,7 +838,7 @@ public class TorrentUtil
 			itemExportTorrent.addListener(SWT.Selection, new ListenerDMTask(dms) {
 				@Override
 				public void run(DownloadManager[] dms) {
-					exportTorrent(dms, composite.getShell());
+					exportTorrent(dms, shell);
 				} // end run()
 			}); // end DMTask
 
@@ -877,7 +878,7 @@ public class TorrentUtil
 			final MenuItem itemPeerSource = new MenuItem(menuAdvanced, SWT.CASCADE);
 			Messages.setLanguageText(itemPeerSource, "MyTorrentsView.menu.peersource"); //$NON-NLS-1$
 
-			final Menu menuPeerSource = new Menu(composite.getShell(), SWT.DROP_DOWN);
+			final Menu menuPeerSource = new Menu(shell, SWT.DROP_DOWN);
 			itemPeerSource.setMenu(menuPeerSource);
 
 			addPeerSourceSubMenu(dms, menuPeerSource);
@@ -940,7 +941,7 @@ public class TorrentUtil
 			final MenuItem itemNetworks = new MenuItem(menuAdvanced, SWT.CASCADE);
 			Messages.setLanguageText(itemNetworks, "MyTorrentsView.menu.networks"); //$NON-NLS-1$
 
-			final Menu menuNetworks = new Menu(composite.getShell(), SWT.DROP_DOWN);
+			final Menu menuNetworks = new Menu(shell, SWT.DROP_DOWN);
 			itemNetworks.setMenu(menuNetworks);
 
 			addNetworksSubMenu(dms, menuNetworks);
@@ -1021,7 +1022,7 @@ public class TorrentUtil
 		itemPositionManual.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				repositionManual(tv, dms, composite.getShell(), isSeedingView);
+				repositionManual(tv, dms, shell, isSeedingView);
 			}
 		});
 
@@ -1063,24 +1064,24 @@ public class TorrentUtil
 
 		// Category
 
-		Menu menuCategory = new Menu(composite.getShell(), SWT.DROP_DOWN);
+		Menu menuCategory = new Menu(shell, SWT.DROP_DOWN);
 		final MenuItem itemCategory = new MenuItem(menu, SWT.CASCADE);
 		Messages.setLanguageText(itemCategory, "MyTorrentsView.menu.setCategory"); //$NON-NLS-1$
 		//itemCategory.setImage(ImageRepository.getImage("speed"));
 		itemCategory.setMenu(menuCategory);
 		itemCategory.setEnabled(hasSelection);
 
-		addCategorySubMenu(dms, menuCategory, composite);
+		addCategorySubMenu(dms, menuCategory);
 
 		// Tags
 
-		Menu menuTags = new Menu(composite.getShell(), SWT.DROP_DOWN);
+		Menu menuTags = new Menu(shell, SWT.DROP_DOWN);
 		final MenuItem itemTags = new MenuItem(menu, SWT.CASCADE);
 		Messages.setLanguageText(itemTags, "label.tags");
 		itemTags.setMenu(menuTags);
 		itemTags.setEnabled(hasSelection);
 
-		TagUIUtils.addLibraryViewTagsSubMenu(dms, menuTags, composite);
+		TagUIUtils.addLibraryViewTagsSubMenu(dms, menuTags);
 
 		// personal share
 
@@ -2283,7 +2284,7 @@ public class TorrentUtil
 	}
 
 	protected static void addCategorySubMenu(final DownloadManager[] dms,
-			Menu menuCategory, final Composite composite) {
+			Menu menuCategory) {
 		MenuItem[] items = menuCategory.getItems();
 		int i;
 		for (i = 0; i < items.length; i++) {
