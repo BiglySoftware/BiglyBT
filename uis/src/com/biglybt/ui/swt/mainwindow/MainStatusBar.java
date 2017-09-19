@@ -1122,7 +1122,7 @@ public class MainStatusBar
 	/**
 	 * @param cSB
 	 *
-	 * @since 4.0.0.1
+	 * @since 1.0.0.0
 	 */
 	private void addStatusBarMenu(Composite cSB) {
 		if (!Constants.isCVSVersion()) {
@@ -1444,7 +1444,7 @@ public class MainStatusBar
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private void updateDHTStatus() {
 		if (dhtPlugin == null) {
@@ -1528,7 +1528,7 @@ public class MainStatusBar
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private void updateNatStatus() {
 		// NAT status Section
@@ -1588,7 +1588,7 @@ public class MainStatusBar
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private void updateShareRatioStatus() {
 		// SR status section
@@ -1688,7 +1688,7 @@ public class MainStatusBar
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private void updateIPBlocked() {
 		if (!CoreFactory.isCoreRunning()) {

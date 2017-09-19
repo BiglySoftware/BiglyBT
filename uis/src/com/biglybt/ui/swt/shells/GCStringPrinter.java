@@ -261,7 +261,7 @@ public class GCStringPrinter
 	 * @param swtFlags
 	 * @return
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	private boolean __printString() {
 		size = new Point(0, 0);
@@ -560,7 +560,7 @@ public class GCStringPrinter
 	 * @param hasMoreElements
 	 * @param line
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	private LineInfo processLine(final GC gc, final LineInfo lineInfo,
 			final Rectangle printArea, final boolean fullLinesOnly,
@@ -688,7 +688,7 @@ public class GCStringPrinter
 	/**
 	 * @param int Position of part of word that didn't fit
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	private int processWord(final GC gc, final String sLine, String word,
 			final Rectangle printArea, final LineInfo lineInfo,
@@ -1518,7 +1518,7 @@ public class GCStringPrinter
 	/**
 	 * @return
 	 *
-	 * @since 4.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public String getText() {
 		return string;

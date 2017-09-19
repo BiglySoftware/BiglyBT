@@ -169,7 +169,7 @@ public class DeviceTemplateChooser
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private void noDevices() {
 		new MessageBoxShell(

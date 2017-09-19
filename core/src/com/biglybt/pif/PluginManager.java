@@ -41,14 +41,14 @@ PluginManager
    * Normally the client will only permit a single instance to run per machine.
    * Values for this key are: "true" or "false"
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
    */
 	public static final String	PR_MULTI_INSTANCE	= "MULTI_INSTANCE";
 
 	/**
 	 * Where the the client config (i.e. per-user type) state is stored
 	 * String value
-	 * @since 4.9.0.1
+	 * @since 1.0.0.0
 	 */
 
 	public static final String	PR_USER_DIRECTORY	= "USER_DIR";
@@ -57,7 +57,7 @@ PluginManager
 	 * Where the client is 'installed'. For embedded use you probably want to set config and app
 	 * dir to a shared per-user location
 	 * String value
-	 * @since 4.9.0.1
+	 * @since 1.0.0.0
 	 */
 
 	public static final String	PR_APP_DIRECTORY	= "APP_DIR";
@@ -65,7 +65,7 @@ PluginManager
 	/**
 	 * Parent folder that contains the downloads directory
 	 * String value
-	 * @since 4.9.0.1
+	 * @since 1.0.0.0
 	 */
 
 	public static final String	PR_DOC_DIRECTORY	= "DOC_DIR";
@@ -73,7 +73,7 @@ PluginManager
 	/**
 	 * Set this to "true" (String) if you want to disable any native platform support
 	 * String value
-	 * @since 4.9.0.1
+	 * @since 1.0.0.0
 	 */
 
 	public static final String	PR_DISABLE_NATIVE_SUPPORT	= "DISABLE_NATIVE";
@@ -112,7 +112,7 @@ PluginManager
    * Shuts down the client
    * @throws PluginException
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
 	public static void
 	stopClient()
@@ -127,7 +127,7 @@ PluginManager
 	 * interface. Currently only works for SWT UIs.
 	 * @throws PluginException
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 
 	public static void
@@ -142,7 +142,7 @@ PluginManager
 	 * Programatic plugin registration interface
 	 * @param plugin_class	this must implement Plugin
    *
-   * @since 2.0.6.0
+   * @since 1.0.0.0
 	 */
 
 	public static void
@@ -175,7 +175,7 @@ PluginManager
 	 * @param id
 	 * @param operational If <tt>true</tt>, only return a PluginInterface if the plugin
 	 *   is operational (i.e. is running).
-     * @since 3.1.1.1
+     * @since 1.0.0.0
 	 */
 	public abstract PluginInterface getPluginInterfaceByID(String id, boolean operational);
 
@@ -185,7 +185,7 @@ PluginManager
 	 * @param class_name
 	 * @param operational If <tt>true</tt>, only return a PluginInterface if the plugin
 	 *   is operational (i.e. is running).
-     * @since 3.1.1.1
+     * @since 1.0.0.0
 	 */
 	public abstract PluginInterface getPluginInterfaceByClass(String class_name, boolean operational);
 
@@ -195,7 +195,7 @@ PluginManager
 	 * @param class_object
 	 * @param operational If <tt>true</tt>, only return a PluginInterface if the plugin
 	 *   is operational (i.e. is running).
-     * @since 3.1.1.1
+     * @since 1.0.0.0
 	 */
 	public abstract PluginInterface getPluginInterfaceByClass(Class class_object, boolean operational);
 
@@ -204,7 +204,7 @@ PluginManager
 	 * results as plugin initialisation is non-deterministic.
 	 * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 
 	public abstract PluginInterface[]
@@ -225,7 +225,7 @@ PluginManager
 	 * results as plugin initialisation is non-deterministic.
 	 * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 
 	public abstract PluginInterface[]
@@ -247,7 +247,7 @@ PluginManager
 	}
 
 	/**
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public abstract void refreshPluginList(boolean initialise);
 
@@ -279,7 +279,7 @@ PluginManager
 	 * @param id
 	 * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 
 	public abstract PluginInterface
@@ -289,7 +289,7 @@ PluginManager
 
 	/**
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
 
 	public abstract PluginInterface

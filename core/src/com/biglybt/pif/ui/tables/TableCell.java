@@ -30,7 +30,7 @@ import com.biglybt.pif.ui.Graphic;
  * @author Oliver (Original PeerTableItem Code)
  * @author TuxPaper (Generic-izing)
  *
- * @since 2.0.8.5
+ * @since 1.0.0.0
  */
 // Modified from MyTorrentsTableItem/PeerTableItem
 public interface TableCell {
@@ -119,14 +119,14 @@ public interface TableCell {
    *            null to return color back to default
    * @return
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   boolean setForeground(int[] rgb);
 
   /**
    * Change the cell's foreground color to the user's defined "error" color.
    *
-   * @since 3.0.3.5
+   * @since 1.0.0.0
    * @return True - Color changed. <br>
    *         False - Color was already set.
    */
@@ -137,7 +137,7 @@ public interface TableCell {
    *
    * @return array containing red, green, and blue color
    *
-   * @since 2.5.0.1
+   * @since 1.0.0.0
    */
   int[] getForeground();
 
@@ -146,7 +146,7 @@ public interface TableCell {
 	 *
 	 * @return array containing red, green, and blue color.  Might be null
 	 *
-	 * @since 3.0.3.5
+	 * @since 1.0.0.0
 	 */
 	int[] getBackground();
 
@@ -200,7 +200,7 @@ public interface TableCell {
   /** Sets the cell to invalid. This will result in a refresh on the next
    * scheduled interval.
    *
-   * @since 2.3.0.7
+   * @since 1.0.0.0
    */
   public void invalidate();
 
@@ -211,7 +211,7 @@ public interface TableCell {
    * @param tooltip Object to display.  Currently, only String is supported
    *
    * @see #addToolTipListener(TableCellToolTipListener)
-   * @since 2.1.0.2
+   * @since 1.0.0.0
    */
   public void setToolTip(Object tooltip);
   /**
@@ -220,7 +220,7 @@ public interface TableCell {
    * @return tooltip object
    *
    * @see #addToolTipListener(TableCellToolTipListener)
-   * @since 2.1.0.2
+   * @since 1.0.0.0
    */
   public Object getToolTip();
 
@@ -230,7 +230,7 @@ public interface TableCell {
    * the {@link TableCellDisposeListener} is triggered.
    *
    * @return disposal state
-   * @since 2.3.0.7
+   * @since 1.0.0.0
    */
   public boolean isDisposed();
 
@@ -239,7 +239,7 @@ public interface TableCell {
    *
    * @return # of lines available, -1 if unknown
    *
-   * @since 3.0.1.1
+   * @since 1.0.0.0
    */
   public int getMaxLines();
 
@@ -308,7 +308,7 @@ public interface TableCell {
 	/**
 	 * @return
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	int getMarginHeight();
 
@@ -326,7 +326,7 @@ public interface TableCell {
 	/**
 	 * @return
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	int getMarginWidth();
 
@@ -382,13 +382,13 @@ public interface TableCell {
    *
    * @param listener
    *
-   * @since 2.3.0.7
+   * @since 1.0.0.0
    */
   public void addMouseListener(TableCellMouseListener listener);
   /** Remove a previously added TableCellMouseListener
   *
   * @param listener Previously added listener
-   * @since 2.3.0.7
+   * @since 1.0.0.0
   */
   public void removeMouseListener(TableCellMouseListener listener);
 
@@ -405,7 +405,7 @@ public interface TableCell {
    *
    * @return
    *
-   * @since 3.0.3.5
+   * @since 1.0.0.0
    */
   public Graphic getBackgroundGraphic();
 
@@ -415,14 +415,14 @@ public interface TableCell {
 	 * @return array of 2 containing x and y position position relative to cell.
 	 * 				null if cell doesn't have mouse.
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public int[] getMouseOffset();
 
 	/**
 	 * Returns text that's meant for the clipboard
 	 *
-	 * @since 4.3.1.5
+	 * @since 1.0.0.0
 	 */
 	public String getClipboardText();
 }

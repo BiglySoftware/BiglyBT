@@ -17,7 +17,7 @@ package com.biglybt.pif.ui;
 /** Like UIException, except does not require one to declare or catch it.
  *
  * @author TuxPaper
- * @since 2.0.8.5
+ * @since 1.0.0.0
  */
 
 public class

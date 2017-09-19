@@ -36,7 +36,7 @@ BasicPluginConfigModel
 	extends PluginConfigModel {
 
 	/**
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public String BLANK_RESOURCE = "_blank";
 
@@ -48,7 +48,7 @@ BasicPluginConfigModel
 	 * @param defaultValue
 	 * @return
 	 *
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public BooleanParameter
 	addBooleanParameter2(
@@ -62,7 +62,7 @@ BasicPluginConfigModel
 	 * @param resource_name
 	 * @param defaultValue
 	 * @return
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public StringParameter
 	addStringParameter2(
@@ -77,7 +77,7 @@ BasicPluginConfigModel
 	 * @param values
 	 * @param defaultValue
 	 * @return
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public StringListParameter
 	addStringListParameter2(
@@ -94,7 +94,7 @@ BasicPluginConfigModel
 	 * @param labels A list of localised message strings corresponding to each value.
 	 * @param defaultValue
 	 * @return
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public StringListParameter
 	addStringListParameter2(
@@ -111,7 +111,7 @@ BasicPluginConfigModel
 	 * @param encoding_type
 	 * @param defaultValue
 	 * @return
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public PasswordParameter
 	addPasswordParameter2(
@@ -126,7 +126,7 @@ BasicPluginConfigModel
 	 * @param resource_name
 	 * @param defaultValue
 	 * @return
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public IntParameter
 	addIntParameter2(
@@ -142,7 +142,7 @@ BasicPluginConfigModel
 	 * @param min_value Minimum allowed value
 	 * @param max_value Maximum allowed value
 	 * @return
-	 * @since 3.0.3.5
+	 * @since 1.0.0.0
 	 */
 	public IntParameter
 	addIntParameter2(
@@ -156,7 +156,7 @@ BasicPluginConfigModel
 	 *
 	 * @param resource_name
 	 * @return
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public LabelParameter
 	addLabelParameter2(
@@ -175,7 +175,7 @@ BasicPluginConfigModel
 		String		value );
 
 	/**
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 */
 	public HyperlinkParameter addHyperlinkParameter2(String resource_name, String url_location);
 
@@ -185,7 +185,7 @@ BasicPluginConfigModel
 	 * @param resource_name
 	 * @param defaultValue
 	 * @return
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public DirectoryParameter
 	addDirectoryParameter2(
@@ -199,7 +199,7 @@ BasicPluginConfigModel
 	 * @param resource_name
 	 * @param defaultValue
 	 * @return
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public FileParameter
 	addFileParameter2(
@@ -214,7 +214,7 @@ BasicPluginConfigModel
 	 * @param defaultValue
 	 * @param file_extensions Allowed list of file extensions.
 	 * @return
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public FileParameter
 	addFileParameter2(
@@ -228,7 +228,7 @@ BasicPluginConfigModel
 	 * @param label_resource_name
 	 * @param action_resource_name
 	 * @return
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public ActionParameter
 	addActionParameter2(
@@ -236,7 +236,7 @@ BasicPluginConfigModel
 		String		action_resource_name );
 
 	/**
-	 * @since 3.0.3.5
+	 * @since 1.0.0.0
 	 * @param key
 	 * @param resource_name
 	 * @param r
@@ -249,7 +249,7 @@ BasicPluginConfigModel
 	/**
 	 * Creates a {@link UIParameter} object to add to this config model object.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public UIParameter addUIParameter2(UIParameterContext context, String name);
 
@@ -262,7 +262,7 @@ BasicPluginConfigModel
 	 * @param resource_name
 	 * @param parameters
 	 * @return
-	 * @since 2.3.0.0
+	 * @since 1.0.0.0
 	 */
 	public ParameterGroup
 	createGroup(
@@ -281,7 +281,7 @@ BasicPluginConfigModel
 	/**
 	 *
 	 * @return
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 	public String
 	getSection();
@@ -289,7 +289,7 @@ BasicPluginConfigModel
 	/**
 	 *
 	 * @return
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 	public String
 	getParentSection();
@@ -298,7 +298,7 @@ BasicPluginConfigModel
 	 * Retrieve all the parameters added to this plugin config
 	 *
 	 * @return parameter list
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 	public Parameter[]
 	getParameters();
@@ -308,7 +308,7 @@ BasicPluginConfigModel
 	 * situations where the configuration section is being dynamically
 	 * created (perhaps with user input).
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void setLocalizedName(String name);
 }

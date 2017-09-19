@@ -56,7 +56,7 @@ BasicPluginViewModel
 	 *
 	 * @param id
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public void
 	setConfigSectionID(String id);
@@ -65,7 +65,7 @@ BasicPluginViewModel
 	 *
 	 * @return
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public String
 	getConfigSectionID();
@@ -81,7 +81,7 @@ BasicPluginViewModel
 	 * {@link LoggerChannelListener} instance and making it append to the
 	 * log area on this object.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 * @param channel The log channel to listen to.
 	 */
 	public void attachLoggerChannel(LoggerChannel channel);

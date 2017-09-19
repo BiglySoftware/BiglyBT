@@ -844,7 +844,7 @@ public class TableColumnSetupWindow
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void fillAvail() {
 		String selectedCat = null;
@@ -927,7 +927,7 @@ public class TableColumnSetupWindow
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void removeSelectedChosen() {
 		Object[] datasources = tvChosen.getSelectedDataSources().toArray();
@@ -948,7 +948,7 @@ public class TableColumnSetupWindow
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void moveChosenDown() {
 		TableRowCore[] selectedRows = tvChosen.getSelectedRows();
@@ -975,7 +975,7 @@ public class TableColumnSetupWindow
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void moveChosenUp() {
 		TableRowCore[] selectedRows = tvChosen.getSelectedRows();
@@ -1018,7 +1018,7 @@ public class TableColumnSetupWindow
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void apply() {
 		TableColumnManager tcm = TableColumnManager.getInstance();
@@ -1046,7 +1046,7 @@ public class TableColumnSetupWindow
 	/**
 	 * @return
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	private TableViewSWT<?> createTVChosen() {
 		final TableColumnManager tcm = TableColumnManager.getInstance();
@@ -1197,7 +1197,7 @@ public class TableColumnSetupWindow
 	/**
 	 * @return
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	private TableViewSWT<TableColumn> createTVAvail() {
 		final TableColumnManager tcm = TableColumnManager.getInstance();
@@ -1388,7 +1388,7 @@ public class TableColumnSetupWindow
 	/**
 	 * @param column
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public void chooseColumn(final TableColumnCore column,
 			TableRowCore placeAboveRow, boolean ignoreExisting) {

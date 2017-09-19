@@ -18,7 +18,7 @@ package com.biglybt.core.logging;
 
 /**
  * @author TuxPaper
- * @since 2.3.0.7
+ * @since 1.0.0.0
  */
 public interface ILogAlertListener
 {

@@ -438,7 +438,7 @@ public class SB_Transfers
 	 * @param mdi
 	 * @return
 	 *
-	 * @since 4.5.1.1
+	 * @since 1.0.0.0
 	 */
 	protected MdiEntry createSeedingEntry(MultipleDocumentInterface mdi) {
 		ViewTitleInfo titleInfoSeeding = new ViewTitleInfo() {
@@ -1635,7 +1635,7 @@ public class SB_Transfers
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 
 	void refreshAllLibraries() {

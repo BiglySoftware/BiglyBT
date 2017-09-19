@@ -193,7 +193,7 @@ public abstract class TranscodeChooser
 	/**
 	 * @param soBottomContainer2
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void initBottom() {
 		Composite composite = soBottomContainer.getComposite();
@@ -280,7 +280,7 @@ public abstract class TranscodeChooser
 	/**
 	 * @param soList
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private void createProfileList(SWTSkinObjectContainer soList) {
 		if (selectedTranscodeTarget == null && selectedDeviceTemplate == null) {
@@ -489,7 +489,7 @@ public abstract class TranscodeChooser
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	public static void addImageBox(Composite parent, Listener clickListener,
 			Listener listenerMouseInout, Object obj, String iconURL, String name) {
@@ -628,7 +628,7 @@ public abstract class TranscodeChooser
 	 *
 	 *
 	 * @param layout
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void resetProfileInfoBox(boolean layout) {
 		if (soInfoTitle != null) {
@@ -854,7 +854,7 @@ public abstract class TranscodeChooser
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private void noDevices() {
 		new MessageBoxShell(

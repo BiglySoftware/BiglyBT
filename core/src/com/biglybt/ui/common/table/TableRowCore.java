@@ -27,7 +27,7 @@ import com.biglybt.pif.ui.tables.TableRowMouseEvent;
  * some core-only functions.  The core-only functions are listed here.
  *
  * @author TuxPaper
- * @since 2.0.8.5 2004/May/14
+ * @since 1.0.0.0 2004/May/14
  */
 public interface TableRowCore extends TableRow
 {
@@ -126,7 +126,7 @@ public interface TableRowCore extends TableRow
 	/**
 	 * @param event
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	void invokeMouseListeners(TableRowMouseEvent event);
 
@@ -134,14 +134,14 @@ public interface TableRowCore extends TableRow
 	 *
 	 * @return
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public boolean isMouseOver();
 
 	/**
 	 * @param length
 	 *
-	 * @since 4.4.0.5
+	 * @since 1.0.0.0
 	 */
 	public void setSubItemCount(int length);
 
@@ -156,7 +156,7 @@ public interface TableRowCore extends TableRow
 	/**
 	 * @return
 	 *
-	 * @since 4.4.0.5
+	 * @since 1.0.0.0
 	 */
 	public boolean isInPaintItem();
 
@@ -164,14 +164,14 @@ public interface TableRowCore extends TableRow
 	 * @param indexOf
 	 * @return
 	 *
-	 * @since 4.4.0.5
+	 * @since 1.0.0.0
 	 */
 	TableRowCore linkSubItem(int indexOf);
 
 	/**
 	 * @param datasources
 	 *
-	 * @since 4.4.0.5
+	 * @since 1.0.0.0
 	 */
 	void setSubItems(Object[] datasources);
 

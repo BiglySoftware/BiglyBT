@@ -58,7 +58,7 @@ IpFilterManager
 	/**
 	 *
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	void deleteAllDescriptions();
 }

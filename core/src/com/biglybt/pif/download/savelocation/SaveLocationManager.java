@@ -51,7 +51,7 @@ import com.biglybt.pif.download.DownloadManager;
  *
  * <p><b>Note:</b> This interface is intended to be implemented by plugins.</p>
  *
- * @since 3.1.0.1
+ * @since 1.0.0.0
  */
 public interface SaveLocationManager {
 

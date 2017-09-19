@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Composite;
  * method - any plugin that wants to add a SWT object directly to a configuration
  * section should create a parameter with an object that implements this interface.
  *
- * @since 3.0.5.3
+ * @since 1.0.0.0
  */
 public interface UISWTParameterContext extends UIParameterContext {
 

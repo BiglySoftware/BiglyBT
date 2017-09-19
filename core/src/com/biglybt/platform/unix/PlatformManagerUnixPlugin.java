@@ -114,7 +114,7 @@ public class PlatformManagerUnixPlugin
 	/**
 	 *
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	private void checkStartupScript() {
 		COConfigurationManager.setIntDefault("unix.script.lastaskversion", -1);

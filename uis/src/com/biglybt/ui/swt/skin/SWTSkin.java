@@ -337,7 +337,7 @@ public class SWTSkin
 	 * @param viewID
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private SWTSkinObject createUnattachedView(String viewID, SWTSkinObject parent) {
 		String unattachedView = skinProperties.getStringValue("UnattachedView."
@@ -465,7 +465,7 @@ public class SWTSkin
 	}
 
 	/**
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void initialize(Composite skincomp, String startID) {
 		initialize(skincomp, startID, null);
@@ -630,7 +630,7 @@ public class SWTSkin
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	private void disposeSkin() {
 		ImageLoader imageLoaderInstance = ImageLoader.getInstance();
@@ -1363,7 +1363,7 @@ public class SWTSkin
 	/**
 	 * @param skinObject
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 */
 	public void removeSkinObject(SWTSkinObject skinObject) {
 		skinObject.triggerListeners(SWTSkinObjectListener.EVENT_DESTROY);
@@ -1581,7 +1581,7 @@ public class SWTSkin
 	 * @param parentSkinObject
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private SWTSkinObject createButton(SWTSkinProperties properties, String id,
 			String configID, String[] typeParams, SWTSkinObject parentSkinObject) {
@@ -1971,7 +1971,7 @@ public class SWTSkin
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void triggerLanguageChange() {
 		Object[] values = mapIDsToSOs.values().toArray();

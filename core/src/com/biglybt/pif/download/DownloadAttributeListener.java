@@ -22,7 +22,7 @@ import com.biglybt.pif.torrent.TorrentAttribute;
 /**
  * Event listener interface to be notified when particular attributes are handled.
  *
- * @since 3.0.3.5
+ * @since 1.0.0.0
  * @author Allan Crooks
  */
 public interface DownloadAttributeListener {

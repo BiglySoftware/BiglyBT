@@ -67,7 +67,7 @@ public class Alerts
 	/**
 	 * @param alert
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	protected static void showAlert(final LogAlert alert) {
 		final SWTThread instance = SWTThread.getInstance();

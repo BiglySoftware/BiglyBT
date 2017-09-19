@@ -229,7 +229,7 @@ AEWin32Access
 	/**
 	 * @return
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	public Map<File, Map>
 		getAllDrives();
@@ -240,7 +240,7 @@ AEWin32Access
 	 * @return
 	 * @throws AEWin32AccessException
 	 *
-	 * @since 4.5.0.3
+	 * @since 1.0.0.0
 	 */
 	String getLocalAppData() throws AEWin32AccessException;
 

@@ -780,7 +780,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 	/**
 	 * @return
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	private List rebuildPluginIFs() {
 		List pluginIFs = Arrays.asList(CoreFactory.getSingleton().getPluginManager().getPlugins());

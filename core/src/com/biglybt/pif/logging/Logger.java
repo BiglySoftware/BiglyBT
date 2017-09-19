@@ -25,7 +25,7 @@ import com.biglybt.pif.PluginInterface;
 /**
  * Logging utilities class
  *
- * @since 2.0.7.0
+ * @since 1.0.0.0
  */
 public interface Logger {
 
@@ -36,7 +36,7 @@ public interface Logger {
 	 * @param name Name of LoggerChannel
 	 * @return a new LoggerChannel
 	 *
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 */
 	public LoggerChannel getChannel(String name);
 
@@ -47,7 +47,7 @@ public interface Logger {
 	 * @param name Name of LoggerChannel
 	 * @return a new LoggerChannel
 	 *
-	 * @since 2.3.0.0
+	 * @since 1.0.0.0
 	 */
 	public LoggerChannel getTimeStampedChannel(String name);
 
@@ -60,7 +60,7 @@ public interface Logger {
 	 * @param name Name of LoggerChannel
 	 * @return a new LoggerChannel
 	 *
-	 * @since 2.3.0.0
+	 * @since 1.0.0.0
 	 */
 	public LoggerChannel getNullChannel(String name);
 
@@ -69,7 +69,7 @@ public interface Logger {
 	 *
 	 * @return Array of LoggerChannel objects
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public LoggerChannel[] getChannels();
 
@@ -78,7 +78,7 @@ public interface Logger {
 	 *
 	 * @return PluginInterface object
 	 *
-	 * @since 2.3.0.0
+	 * @since 1.0.0.0
 	 */
 	public PluginInterface getPluginInterface();
 
@@ -89,7 +89,7 @@ public interface Logger {
 	 *
 	 * @param listener Listener to add
 	 * @see #addAlertListener(LogAlertListener)
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void addAlertListener(LoggerAlertListener listener);
 
@@ -97,21 +97,21 @@ public interface Logger {
 	 * Remove previously added AlertListener.
 	 *
 	 * @param listener LoggerAlertListener to remove
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void removeAlertListener(LoggerAlertListener listener);
 
 	/**
 	 * Add a listener to be informed of any alerts to be displayed to users.
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void addAlertListener(LogAlertListener listener);
 
 	/**
 	 * Remove a previously added alert listener.
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void removeAlertListener(LogAlertListener listener);
 

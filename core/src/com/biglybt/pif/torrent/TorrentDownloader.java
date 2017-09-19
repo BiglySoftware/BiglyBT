@@ -59,7 +59,7 @@ TorrentDownloader
 	 * @param key "URL_Cookie" to set cookies
 	 * @param value
 	 *
-	 * @since 4.8.1.3
+	 * @since 1.0.0.0
 	 */
 	public void setRequestProperty(String key, Object value) throws TorrentException;
 

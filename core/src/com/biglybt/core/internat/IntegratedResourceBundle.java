@@ -231,7 +231,7 @@ IntegratedResourceBundle
 	 * @param def
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
   public String getString(String key, String def) {
 		String s = (String) handleGetObject(key);

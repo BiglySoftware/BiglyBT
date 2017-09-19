@@ -37,7 +37,7 @@ DownloadScrapeResult
 	 * Gives access to the associated download
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public Download
 	getDownload();
@@ -46,7 +46,7 @@ DownloadScrapeResult
 	 * A scrape result can denote either a successful or failed scrape.
 	 * @return RT_SUCCESS or RT_ERROR
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public int
 	getResponseType();	// either RT_SUCCESS or RT_ERROR
@@ -55,7 +55,7 @@ DownloadScrapeResult
 	 * Gives the number of seeds returned by the scrape
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public int
 	getSeedCount();
@@ -64,7 +64,7 @@ DownloadScrapeResult
 	 * Gives the number of non-seeds returned by the scrape
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public int
 	getNonSeedCount();
@@ -72,7 +72,7 @@ DownloadScrapeResult
   /* Gives the next scrape time
    * @return time next scrape will start in milliseconds since epoch
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
   public long
   getScrapeStartTime();
@@ -81,7 +81,7 @@ DownloadScrapeResult
    *
    * @param nextScrapeStartTime time to start in milliseconds since epoch
    *
-   * @since 2.1.0.2
+   * @since 1.0.0.0
    */
   public void setNextScrapeStartTime(long nextScrapeStartTime);
 
@@ -91,7 +91,7 @@ DownloadScrapeResult
   /**
    * returns a string representation of the scrape status
    * @return
-   * @since 2.1.0.4
+   * @since 1.0.0.0
    */
 
   public String

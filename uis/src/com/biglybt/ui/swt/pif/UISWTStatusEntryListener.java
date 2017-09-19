@@ -23,7 +23,7 @@ package com.biglybt.ui.swt.pif;
  * clicked on.
  *
  * @author amc1
- * @since 3.0.0.8
+ * @since 1.0.0.0
  * @see UISWTStatusEntry
  */
 public interface UISWTStatusEntryListener {

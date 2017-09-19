@@ -26,7 +26,7 @@ public interface UIUpdatable
 	/**
 	 * Update your UI!
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void updateUI();
 
@@ -35,7 +35,7 @@ public interface UIUpdatable
 	 *
 	 * @return some name
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public String getUpdateUIName();
 }

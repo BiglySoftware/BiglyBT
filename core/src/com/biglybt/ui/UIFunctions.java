@@ -65,7 +65,7 @@ public interface UIFunctions
 	 *
 	 * @param tryTricks: try tricks to force it to the top
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	void bringToFront(boolean tryTricks);
 
@@ -118,7 +118,7 @@ public interface UIFunctions
 	 *
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public UIUpdater getUIUpdater();
 

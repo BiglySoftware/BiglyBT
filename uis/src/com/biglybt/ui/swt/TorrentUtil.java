@@ -2765,7 +2765,7 @@ public class TorrentUtil
 	 * @param torrentFile
 	 * @return
 	 *
-	 * @since 3.0.2.3
+	 * @since 1.0.0.0
 	 */
 	public static boolean isFileTorrent( String originatingLocation, File torrentFile, String torrentName, boolean warnOnError ) {
 		String sFirstChunk = null;

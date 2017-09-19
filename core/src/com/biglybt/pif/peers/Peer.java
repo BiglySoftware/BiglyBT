@@ -257,7 +257,7 @@ Peer
 		boolean		is_priority );
 
 	  /**
-	   * @since 4.7.0.3
+	   * @since 1.0.0.0
 	   * @param limiter		create via ConnectionManager
 	   * @param is_upload		false -> download limit
 	   */

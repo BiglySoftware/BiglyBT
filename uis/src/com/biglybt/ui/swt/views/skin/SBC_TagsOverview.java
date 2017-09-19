@@ -597,7 +597,7 @@ public class SBC_TagsOverview
 	/**
 	 * @param control
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	private void initTable(Composite control) {
 

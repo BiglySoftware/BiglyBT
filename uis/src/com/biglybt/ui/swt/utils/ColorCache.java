@@ -306,7 +306,7 @@ public class ColorCache
 
 	/**
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static Color getColor(Device device, int[] rgb) {
 		if (rgb == null || rgb.length < 3) {
@@ -325,7 +325,7 @@ public class ColorCache
 
 	/**
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public static Color getColor(Device device, float[] hsb) {
 		if (hsb[0] < 0) {
@@ -352,7 +352,7 @@ public class ColorCache
 	 * @param rgb
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public static Color getColor(Device device, RGB rgb) {
 		return getColor(device, rgb.red, rgb.green, rgb.blue);

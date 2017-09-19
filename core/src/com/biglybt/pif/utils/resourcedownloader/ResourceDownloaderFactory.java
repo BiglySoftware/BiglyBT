@@ -61,12 +61,12 @@ ResourceDownloaderFactory
 	 * Creates a basic downloader, where you can force any configured proxy
 	 * to be avoided.
 	 *
-	 * @since 3.1.0.1
+	 * @since 1.0.0.0
 	 */
 	public ResourceDownloader create(URL url, boolean force_no_proxy);
 
 	/**
-	 * @since 5.2.0.1
+	 * @since 1.0.0.0
 	 */
 	public ResourceDownloader create(URL url, Proxy force_proxy );
 

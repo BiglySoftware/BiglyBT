@@ -21,7 +21,7 @@ package com.biglybt.pif.ui.menus;
  * An object to be used with {@link MenuManager#addMenuItem(MenuContext, String)}.
  *
  * <p><b>Note:</b> Only for implementation by Core, not plugins.</p>
- * @since 3.0.5.3
+ * @since 1.0.0.0
  */
 public interface MenuContext {
 }

@@ -361,7 +361,7 @@ public class TorrentListViewsUtils
 	/**
 	 * @param string
 	 *
-	 * @since 3.0.3.3
+	 * @since 1.0.0.0
 	 */
 	private static void debug(String string) {
 		if (com.biglybt.core.util.Constants.isCVSVersion()) {
@@ -460,7 +460,7 @@ public class TorrentListViewsUtils
 	 *
 	 * @param dm - DownloadManager
 	 * @return - int: 0 = ok, 1 = fail, 2 = abandon, installation in progress
-	 * @since 3.0.4.4 -
+	 * @since 1.0.0.0 -
 	 */
 	private static int
 	openInEMP(
@@ -783,7 +783,7 @@ public class TorrentListViewsUtils
 	/**
 	* @param dm
 	*
-	* @since 3.0.0.7
+	* @since 1.0.0.0
 	*/
 	private static void handleNoFileExists(final DownloadManager dm) {
 		final UIFunctionsSWT functionsSWT = UIFunctionsManagerSWT.getUIFunctionsSWT();

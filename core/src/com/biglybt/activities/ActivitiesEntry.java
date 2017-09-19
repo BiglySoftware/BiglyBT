@@ -551,7 +551,7 @@ public class ActivitiesEntry
 	 *
 	 * @return Only returns TOTorrent set via {@link #setTorrent(TOTorrent)}
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public TOTorrent getTorrent() {
 		return torrent;
@@ -563,7 +563,7 @@ public class ActivitiesEntry
 	 *
 	 * @param torrent
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void setTorrent(TOTorrent torrent) {
 		this.torrent = torrent;

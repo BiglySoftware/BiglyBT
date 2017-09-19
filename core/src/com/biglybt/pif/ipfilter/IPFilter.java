@@ -146,7 +146,7 @@ IPFilter
 
 	/**
 	 * Gets the current list of b addresses
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 * @return
 	 */
 
@@ -155,7 +155,7 @@ IPFilter
 
 	/**
 	 * returns length of banned ip list
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 * @return
 	 */
 
@@ -165,7 +165,7 @@ IPFilter
 	/**
 	 * Explicitly bans an address
 	 * @param IPAddress
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 */
 
 	public void
@@ -176,7 +176,7 @@ IPFilter
 	/**
 	 * Removes a ban on an address
 	 * @param IPAddress
-	 * @since 2.5.0.2
+	 * @since 1.0.0.0
 	 */
 
 	public void

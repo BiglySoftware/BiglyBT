@@ -106,7 +106,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
 	/**
 		 * Flags values
-		 * @since 2.3.0.5
+		 * @since 1.0.0.0
 		 */
 
 	public static final long FLAG_ONLY_EVER_SEEDED			= 0x00000001;
@@ -116,7 +116,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * Flag value - if set, it prevents any of the "move on completion" or
 	 * "move on removal" rules taking place.
 	 *
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 */
 	public static final long FLAG_DISABLE_AUTO_FILE_MOVE 	= 0x00000004;
 
@@ -125,14 +125,14 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
      * for "move on completion", and it should not be considered again for
      * it. This value is more for internal use rather than plugin use.
      *
-     * @since 2.5.0.1
+     * @since 1.0.0.0
      */
     public static final long FLAG_MOVE_ON_COMPLETION_DONE	= 0x00000008;
 
     /**
      * Flag value - if set the user won't be bothered with popups/completion events during
      * the download's life. This is used, for example, for downloads used to run speed-tests
-     * @since 3.0.1.3
+     * @since 1.0.0.0
      */
 
     public static final long FLAG_LOW_NOISE					= 0x00000010;
@@ -148,27 +148,27 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
     /**
      * Flag value - if set the data will not be delete when the download is "deleted" from
      * the v3 interface.
-     * @since 3.1.0.0
+     * @since 1.0.0.0
      */
     public static final long FLAG_DO_NOT_DELETE_DATA_ON_REMOVE = 0x00000040;
 
     /**
      * Force direct delete of download data when delete requested, rather than recoverable delete,
      * and no user prompt
-     * @since 4.3.1.5
+     * @since 1.0.0.0
      */
 
     public static final long FLAG_FORCE_DIRECT_DELETE = 0x00000080;
 
     /**
      * Used to disable IP filter rules for a download when ip-filtering is enabled
-     * @since 4.7.0.3
+     * @since 1.0.0.0
      */
 
     public static final long FLAG_DISABLE_IP_FILTER = 0x00000100;
 
     /**
-     * @since 4.7.0.4 indicates that the download is just a metadata downloader and not a 'real' one (yet)
+     * @since 1.0.0.0 indicates that the download is just a metadata downloader and not a 'real' one (yet)
      */
 
     public static final long FLAG_METADATA_DOWNLOAD = 0x00000200;
@@ -191,7 +191,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	/** get state from above ST_ set
    * @return ST_ constant
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
    */
 	public int
 	getState();
@@ -199,7 +199,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	/**
 	 * For the STOPPING state this method gives the state that is being transited too (STOPPED, QUEUED or ERROR)
 	 * @return
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 
 	public int
@@ -208,14 +208,14 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	/** When the download state is ERROR this method returns the error details
    * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
    */
 	public String
 	getErrorStateDetails();
 
 		/**
 		 * Get the flag value
-		 * @since 2.3.0.5
+		 * @since 1.0.0.0
 		 * @param flag	FLAG value from above
 		 * @return
 		 */
@@ -225,7 +225,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	/**
 	 * Set the flag value.
 	 *
-	 * @since 2.5.0.1
+	 * @since 1.0.0.0
 	 * @param flag FLAG value from above
 	 * @param set <code>true</code> to enable the flag, <code>false</code> to disable it.
 	 */
@@ -244,7 +244,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * Each download has a corresponding torrent
 	 * @return	the download's torrent
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	@Override
 	public Torrent
@@ -254,7 +254,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * See lifecycle description above
 	 * @throws DownloadException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public void
 	initialize()
@@ -265,7 +265,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * See lifecycle description above
 	 * @throws DownloadException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public void
 	start()
@@ -276,7 +276,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * See lifecycle description above
 	 * @throws DownloadException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public void
 	stop()
@@ -287,7 +287,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * See lifecycle description above
 	 * @throws DownloadException
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
 	 */
 	public void
 	stopAndQueue()
@@ -298,7 +298,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * See lifecycle description above
 	 * @throws DownloadException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public void
 	restart()
@@ -312,7 +312,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 		 * Action is performed asynchronously and will progress the download through
 		 * states PREPARING back to the relevant state
 		 * @throws DownloadException
-		 * @since 2.1.0.3
+		 * @since 1.0.0.0
 		 */
 
 	public void
@@ -325,7 +325,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * stop the download as it is under manual control
 	 * @return True if download is locked and should not be started or stopped
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public boolean
 	isStartStopLocked();
@@ -333,7 +333,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
   /** Retrieves whether the download is force started
    * @return True if download is force started.  False if not.
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
 	public boolean
 	isForceStart();
@@ -343,7 +343,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    * False - Turn forcestart state off.  Download may or may not stop, depending on
    * Start/Stop rules/limits
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
 	public void
 	setForceStart(boolean forceStart);
@@ -376,7 +376,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    * if getTorrent() returns null and you still need the name.
    * @return name of the torrent
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
 	@Override
 	public String
@@ -386,7 +386,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 *
 	 * @return File name of the torrent.
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
   public String getTorrentFileName();
 
@@ -420,7 +420,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    *
    * @param attribute
    * @param value
-   * @since 2.5.0.1
+   * @since 1.0.0.0
    */
   public void setListAttribute(TorrentAttribute attribute, String[] value);
 
@@ -484,7 +484,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    *
    * @return name of the category
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public String getCategoryName();
 
@@ -492,7 +492,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    *
    * @param sName Category name
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public void setCategory(String sName);
 
@@ -510,7 +510,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * @throws DownloadException
 	 * @throws DownloadRemovalVetoException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	@Override
 	public void
@@ -524,7 +524,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 		 * @param delete_data
 		 * @throws DownloadException
 		 * @throws DownloadRemovalVetoException
-		 * @since 2.2.0.3
+		 * @since 1.0.0.0
 		 */
 
 	public void
@@ -539,7 +539,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * Completed and Incompleted downloads have seperate position sets.  This means
 	 * we can have a position x for Completed, and position x for Incompleted.
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
 	 */
 	public int
 	getPosition();
@@ -556,7 +556,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * Sets the position in the queue
 	 * Completed and Incompleted downloads have seperate position sets
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
 	 */
 	public void
 	setPosition(
@@ -565,7 +565,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	/**
 	 * Moves the download position up one
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 	public void
 	moveUp();
@@ -573,7 +573,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	/**
 	 * Moves the download down one position
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 	public void
 	moveDown();
@@ -583,7 +583,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 		 * merely sets the position thus making it possible, for example, for two downloads to have the same
 		 * position
 		 * @param position
-		 * @since 2.3.0.7
+		 * @since 1.0.0.0
 		 */
 
 	public void
@@ -596,7 +596,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * @return
 	 * @throws DownloadRemovalVetoException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public boolean
 	canBeRemoved()
@@ -615,7 +615,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * Gives access to the last announce result received from the tracker for the download
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 
 	public DownloadAnnounceResult
@@ -625,7 +625,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * Gives access to the last scrape result received from the tracker for the download
 	 * @return a non-null DownloadScrapeResult
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public DownloadScrapeResult
 	getLastScrapeResult();
@@ -643,7 +643,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * on an increase in activation requirements. This method however gives the current view of the state
 	 * and takes into account decreases too
 	 * @return
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 
 	public DownloadActivationEvent
@@ -653,7 +653,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * Gives access to the download's statistics
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public DownloadStats
 	getStats();
@@ -664,7 +664,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * @return true - persistent<br>
 	 *         false - non-persistent
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 
 	public boolean
@@ -672,7 +672,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
     /**
      * Sets the maximum download speed in bytes per second. 0 -> unlimited
-     * @since 2.1.0.2
+     * @since 1.0.0.0
      * @param kb
      */
 
@@ -686,7 +686,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * @return upload rate in KB/s, 0 for unlimited<BR>
 	 *         Since 4.8.1.3: -1 for download disabled
 	 *
-	 * @since 2.1.0.2
+	 * @since 1.0.0.0
 	 */
 	public int getMaximumDownloadKBPerSecond();
 
@@ -722,7 +722,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
 
     	/**
-    	 * @since 4.7.0.3
+    	 * @since 1.0.0.0
     	 * @param limiter		create via ConnectionManager
     	 * @param is_upload		false -> download limit
     	 */
@@ -742,7 +742,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * as Do No Download
 	 *
 	 * @return Download Complete status
-	 * @since 2.1.0.4
+	 * @since 1.0.0.0
 	 */
 	public boolean isComplete();
 
@@ -753,7 +753,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 *                     completion state
 	 * @return Download Complete status
 	 *
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 	public boolean isComplete(boolean bIncludeDND);
 
@@ -761,7 +761,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
   		 * When a download is completed it is rechecked (if the option is enabled). This method
   		 * returns true during this phase (at which time the status will be seeding)
   		 * @return
-  		 * @since 2.3.0.6
+  		 * @since 1.0.0.0
   		 */
 
 	public boolean
@@ -796,7 +796,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
   		 * If a download is running, it will be automatically paused and resumed afterwards - be
   		 * aware that this behaviour may generate <tt>stateChanged</tt> events being fired.
 		 *
-		 * @since 2.3.0.5
+		 * @since 1.0.0.0
   		 * @param new_parent_dir
   		 * @throws DownloadException
   		 */
@@ -829,7 +829,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
   		/**
 		 * Move a download's torrent file to a new location. Download must be stopped and persistent
-		 * @since 2.3.0.5
+		 * @since 1.0.0.0
 		 * @param new_parent_dir
 		 * @throws DownloadException
 		 */
@@ -870,7 +870,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 		/**
 		 * Return the disk manager, null if its not running
 		 * @return
-		 * @since 2.3.0.1
+		 * @since 1.0.0.0
 		 */
 
 	public DiskManager
@@ -880,7 +880,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 		 * Returns info about the torrent's files. Note that this will return "stub" values if the
 		 * download isn't running (not including info such as completion status)
 		 * @return
-		 * @since 2.3.0.1
+		 * @since 1.0.0.0
 		 */
 
 	public DiskManagerFileInfo[]
@@ -890,7 +890,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * Returns file info for the given index. Note that this will return "stub" values if the
 	 * download isn't running (not including info such as completion status)
 	 * @return null if index is invalid
-	 * @since 4.3.1.5
+	 * @since 1.0.0.0
 	 */
 
   public DiskManagerFileInfo
@@ -899,13 +899,13 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
   /**
    * Return the number of DiskManagerFile objects
    * @return
-   * @since 4.6.0.5
+   * @since 1.0.0.0
    */
 	public int getDiskManagerFileCount();
 
   		/**
   		 * request a tracker announce
-  		 * @since 2.1.0.5
+  		 * @since 1.0.0.0
   		 */
 
   	public void
@@ -913,7 +913,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
   		/**
 		 * request a tracker announce
-		 * @since 2.3.0.7
+		 * @since 1.0.0.0
 		 */
 
  	public void
@@ -922,7 +922,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
 		/**
 		 * request a tracker announce
-		 * @since 2.3.0.7
+		 * @since 1.0.0.0
 		 */
 
 	public void
@@ -951,7 +951,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    * Get the local peerID advertised to the download swarm.
    * @return self peer id
    *
-   * @since 2.1.0.5
+   * @since 1.0.0.0
    */
   public byte[] getDownloadPeerId();
 
@@ -969,7 +969,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
 
 	/**
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    * @return
    */
 
@@ -979,7 +979,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    * Returns <tt>true</tt> if the client will allow the data files for the torrent
    * to be moved.
    *
-   * @since 3.0.5.1
+   * @since 1.0.0.0
    */
   public boolean canMoveDataFiles();
 
@@ -989,7 +989,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    * state, the <tt>for-completion</tt> rules in place, and the {@link SaveLocationManager}
    * object in use.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public SaveLocationChange calculateDefaultDownloadLocation();
 
@@ -998,7 +998,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    * moving torrent and data file data.
    *
    * @param slc The change to apply.
-   * @since 3.1.0.1
+   * @since 1.0.0.0
    * @throws DownloadException If there is a problem moving the data.
    */
   public void changeLocation(SaveLocationChange slc) throws DownloadException;
@@ -1007,7 +1007,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
   	 * get user-defined key/value
   	 * @param key
   	 * @return
-  	 * @since 3.0.5.3
+  	 * @since 1.0.0.0
   	 */
 
   public Object getUserData( Object key );
@@ -1023,7 +1023,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    * Simple method to start the download. Will not raise an error if it
    * didn't work, or if the download is already running.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    * @param force <tt>true</tt> to force the download to be started.
    */
   public void startDownload(boolean force);
@@ -1032,7 +1032,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
    * Simple method to stop the download. Will not raise an error if it
    * didn't work, or if the download is already stopped.
    *
-   * @since 3.0.5.3
+   * @since 1.0.0.0
    */
   public void stopDownload();
 
@@ -1045,7 +1045,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 		throws DownloadException, DownloadRemovalVetoException;
 
   /**
-   * @since 5.4.0.1
+   * @since 1.0.0.0
    * @return
    */
   public List<DistributedDatabase>
@@ -1054,7 +1054,7 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	/**
 	 * Returns the "Primary" file in the download.  Usually the largest one
 	 *
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public DiskManagerFileInfo getPrimaryFile();
 }

@@ -427,7 +427,7 @@ public class TableColumnManager {
   /**
    * Helper for getAllTableColumnCore
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	private void doAddCreate(Map mTypes, String tableID, Map<Class<?>, List> mapDST) {
 
@@ -756,7 +756,7 @@ public class TableColumnManager {
 	 * @param columnID
 	 * @param listener
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void registerColumn(Class forDataSourceType, String columnID,
 			TableColumnCreationListener listener) {

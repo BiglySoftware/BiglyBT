@@ -575,7 +575,7 @@ public class RemotePairingWindow
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void updateToolTip() {
 		SWTSkinObjectImage soImage = (SWTSkinObjectImage) skin.getSkinObject("status-image");

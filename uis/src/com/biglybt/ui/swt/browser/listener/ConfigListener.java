@@ -140,7 +140,7 @@ public class ConfigListener
 	/**
 	 *
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public static void checkForUpdates() {
 		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();

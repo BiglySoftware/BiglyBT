@@ -83,7 +83,7 @@ public class ColumnImageClickArea
 	/**
 	 * @param imageID2
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	public void setImageID(String imageID) {
 		ImageLoader imageLoader = ImageLoader.getInstance();
@@ -188,7 +188,7 @@ public class ColumnImageClickArea
 	/**
 	 * @param gcImage
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public void drawImage(TableCell cell, GC gcImage) {
 		if (!isVisible) {

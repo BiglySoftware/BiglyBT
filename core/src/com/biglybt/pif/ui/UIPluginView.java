@@ -32,7 +32,7 @@ import com.biglybt.pif.PluginInterface;
  * should implement them.
  *
  * @author TuxPaper
- * @since 2.3.0.5
+ * @since 1.0.0.0
  *
  * @see com.biglybt.ui.swt.pif.UISWTView
  */
@@ -49,32 +49,32 @@ public interface UIPluginView {
 	 *
 	 * @return ID of the view
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public String getViewID();
 
 	/**
 	 * Closes the view
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void closeView();
 
 	/**
 	 * Gets the plugin interface associated with this view, null if none defined
 	 *
-	 * @since 4.5.1.1
+	 * @since 1.0.0.0
 	 */
 	public PluginInterface getPluginInterface();
 
 	/**
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public void setToolBarListener(UIPluginViewToolBarListener l);
 
 	/**
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public UIPluginViewToolBarListener getToolBarListener();
 }

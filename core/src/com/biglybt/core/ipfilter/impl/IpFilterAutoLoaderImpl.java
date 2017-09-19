@@ -74,7 +74,7 @@ public class IpFilterAutoLoaderImpl
 	 * @param fin
 	 * @throws Exception
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	private void loadDATFilters(InputStream fin) {
 		try {
@@ -468,7 +468,7 @@ public class IpFilterAutoLoaderImpl
 	/**
 	 *
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	private void setFileReloadTimer() {
 		if (timerEventFilterReload instanceof TimerEvent) {
@@ -507,7 +507,7 @@ public class IpFilterAutoLoaderImpl
 	/**
 	 * @param url
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	void downloadFiltersAsync(URL url) {
 		ResourceDownloader rd = ResourceDownloaderFactoryImpl.getSingleton().create(
@@ -606,7 +606,7 @@ public class IpFilterAutoLoaderImpl
 	 * @param encoding
 	 * @return
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	private String readString(BufferedInputStream bin, byte[] descBytes,
 			String encoding) {

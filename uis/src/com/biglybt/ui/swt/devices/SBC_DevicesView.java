@@ -247,7 +247,7 @@ public class SBC_DevicesView
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private void initColumns(Core core) {
 		if (columnsAdded) {
@@ -442,7 +442,7 @@ public class SBC_DevicesView
 	/**
 	 * @param soAdvInfo
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private void initAdvInfo(SWTSkinObject soAdvInfo) {
 		SWTSkinButtonUtility btnAdvInfo = new SWTSkinButtonUtility(soAdvInfo);
@@ -463,7 +463,7 @@ public class SBC_DevicesView
 	/**
 	 * @param newVisibility
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void setAdditionalInfoTitle(boolean newVisibility) {
 		SWTSkinObject soArea = getSkinObject("advinfo-area");
@@ -518,7 +518,7 @@ public class SBC_DevicesView
 	/**
 	 * @param control
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private void initTranscodeQueueTable(Composite control) {
 		String tableID;
@@ -669,7 +669,7 @@ public class SBC_DevicesView
 	/**
 	 * @param menu
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void fillMenu(Menu menu) {
 
@@ -1341,7 +1341,7 @@ public class SBC_DevicesView
 	 *
 	 *
 	 * @param parent
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private void initDeviceListTable(Composite control) {
 		tvDevices = TableViewFactory.createTableViewSWT(TranscodeProvider.class, TABLE_DEVICES,

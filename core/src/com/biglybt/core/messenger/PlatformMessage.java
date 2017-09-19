@@ -168,7 +168,7 @@ public class PlatformMessage
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public boolean sendAZID() {
 		return sendAZID;

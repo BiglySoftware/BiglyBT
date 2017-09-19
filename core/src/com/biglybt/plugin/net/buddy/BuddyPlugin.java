@@ -735,7 +735,7 @@ BuddyPlugin
 	/**
 	 *
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	protected void
 	setupDisablePrompt(

@@ -54,7 +54,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 /**
  * @author TuxPaper
  *
- * @since 2.3.0.5
+ * @since 1.0.0.0
  *
  * @note Plugin's Logging View is {@link BasicPluginViewImpl}
  */

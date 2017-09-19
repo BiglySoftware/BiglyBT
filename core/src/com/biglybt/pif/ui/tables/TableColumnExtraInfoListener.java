@@ -33,7 +33,7 @@ public interface TableColumnExtraInfoListener
 	 *
 	 * @param info Use setters to set information
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public void fillTableColumnInfo(TableColumnInfo info);
 }

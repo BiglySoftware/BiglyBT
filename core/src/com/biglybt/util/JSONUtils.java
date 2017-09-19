@@ -69,7 +69,7 @@ public class JSONUtils
 	 * @param map
 	 * @return
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	public static JSONObject encodeToJSONObject(Map map) {
 		JSONObject newMap = new JSONObject((int)(map.size()*1.5));
@@ -99,7 +99,7 @@ public class JSONUtils
 	 * @param map Map to change into a JSON formatted string
 	 * @return JSON formatted string
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	public static String encodeToJSON(Map map) {
 		JSONObject jobj = encodeToJSONObject(map);
@@ -154,7 +154,7 @@ public class JSONUtils
 	 * @param value
 	 * @return
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	private static JSONArray encodeToJSONArray(Collection list) {
 		JSONArray newList = new JSONArray(list.size());

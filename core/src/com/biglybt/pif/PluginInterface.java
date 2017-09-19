@@ -56,7 +56,7 @@ public interface PluginInterface {
      *
      * @return the Application's name
      *
-     * @since 2.1.0.0
+     * @since 1.0.0.0
      */
 	public String getAzureusName();
 
@@ -75,7 +75,7 @@ public interface PluginInterface {
 	 *         [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_CVS<br>
 	 *         [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+_B[0-9]+
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
 	 */
 	public String
 	getApplicationVersion();
@@ -91,7 +91,7 @@ public interface PluginInterface {
    * The client will look-up for ConfigView.section.plugins.<i>displayName</i>; into the lang files
    * in order to find the localized displayName. (see i18n)
    *
-   * @since 2.0.6.0
+   * @since 1.0.0.0
    * @deprecated Use of this is discouraged - use {@link UIManager#createBasicPluginConfigModel(String)}
    *     to get a <tt>BasicPluginViewModel</tt> instance, and then use the methods on that to add
    *     parameters.
@@ -105,7 +105,7 @@ public interface PluginInterface {
    *
    * @param section ConfigSection to be added to the Config view
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    * @deprecated Use {@link UIManager#createBasicPluginConfigModel(String)} instead.
    */
 	public void addConfigSection(ConfigSection section);
@@ -113,7 +113,7 @@ public interface PluginInterface {
 	/**
 	 *
 	 * @param section
-	 * @since 2.3.0.5
+	 * @since 1.0.0.0
 	 */
 
 	public void removeConfigSection( ConfigSection section );
@@ -122,7 +122,7 @@ public interface PluginInterface {
    *
    * @return List of ConfigSections for this plugin
    *
-   * @since 2.5.0.1
+   * @since 1.0.0.0
    */
 	ConfigSection[] getConfigSections();
 
@@ -130,7 +130,7 @@ public interface PluginInterface {
    * Gives access to the tracker functionality
    * @return The tracker
    *
-   * @since 2.0.6.0
+   * @since 1.0.0.0
    */
   public Tracker getTracker();
 
@@ -138,7 +138,7 @@ public interface PluginInterface {
    * Gives access to the logger
    * @return The logger
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
    */
   public Logger getLogger();
 
@@ -146,7 +146,7 @@ public interface PluginInterface {
    * Gives access to the IP filter
    * @return An object that allows access to IP Filtering
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
   public IPFilter
   getIPFilter();
@@ -155,7 +155,7 @@ public interface PluginInterface {
    * Gives access to the download manager
    * @return An object that allows management of downloads
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
    */
   public DownloadManager
   getDownloadManager();
@@ -164,7 +164,7 @@ public interface PluginInterface {
    * Gives access to the sharing functionality
    * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
    */
   public ShareManager
   getShareManager()
@@ -175,7 +175,7 @@ public interface PluginInterface {
    * Gives access to the torrent manager
    * @return An object to manage torrents
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
   public TorrentManager
   getTorrentManager();
@@ -184,7 +184,7 @@ public interface PluginInterface {
    * access to various utility functions
    * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public Utilities
   getUtilities();
@@ -194,7 +194,7 @@ public interface PluginInterface {
    * structured, fashion
    * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public ShortCuts
   getShortCuts();
@@ -203,7 +203,7 @@ public interface PluginInterface {
    * access to UI extension features
    * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public UIManager
   getUIManager();
@@ -213,7 +213,7 @@ public interface PluginInterface {
    * plugins (SF ones are managed automatically)
    * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public UpdateManager
   getUpdateManager();
@@ -222,7 +222,7 @@ public interface PluginInterface {
    * gives access to the plugin properties
    * @return the properties from the file plugin.properties
    *
-   * @since 2.0.4.0
+   * @since 1.0.0.0
    */
   public Properties getPluginProperties();
 
@@ -232,7 +232,7 @@ public interface PluginInterface {
    * {@link PluginConfig#getPluginUserFile(String)} instead.
    * @return the full path the plugin is installed in
    *
-   * @since 2.0.4.0
+   * @since 1.0.0.0
    */
   public String getPluginDirectoryName();
 
@@ -247,7 +247,7 @@ public interface PluginInterface {
 
   /**
    * Returns the value of "plugin.name" if it exists in the properties file, otherwise the directory name is returned.
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public String getPluginName();
 
@@ -257,7 +257,7 @@ public interface PluginInterface {
    *
    * @return Version number as a string, or null
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public String
   getPluginVersion();
@@ -266,7 +266,7 @@ public interface PluginInterface {
    * Returns an identifier used to identify this particular plugin
    * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public String
   getPluginID();
@@ -292,7 +292,7 @@ public interface PluginInterface {
    * gives access to the ClassLoader used to load the plugin
    * @return
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
   public ClassLoader
   getPluginClassLoader();
@@ -326,7 +326,7 @@ public interface PluginInterface {
    * Gives access to the plugin itself
    * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public Plugin
   getPlugin();
@@ -345,7 +345,7 @@ public interface PluginInterface {
    * gives access to the plugin manager
    * @return
    *
-   * @since 2.1.0.0
+   * @since 1.0.0.0
    */
   public PluginManager
   getPluginManager();
@@ -353,7 +353,7 @@ public interface PluginInterface {
   	/**
   	 *
   	 * @return
-  	 * @since 2.2.0.3
+  	 * @since 1.0.0.0
   	 */
 
   public ClientIDManager
@@ -362,7 +362,7 @@ public interface PluginInterface {
 
   /**
    * Get the connection manager.
-   * @since 2.2.0.3
+   * @since 1.0.0.0
    * @return manager
    */
   public ConnectionManager getConnectionManager();
@@ -370,7 +370,7 @@ public interface PluginInterface {
 
   /**
    * Get the peer messaging manager.
-   * @since 2.2.0.3
+   * @since 1.0.0.0
    * @return manager
    */
   public MessageManager getMessageManager();
@@ -378,7 +378,7 @@ public interface PluginInterface {
 
   /**
    * Get the distributed database
-   * @since 2.2.0.3
+   * @since 1.0.0.0
    * @return
    */
   public DistributedDatabase
@@ -394,7 +394,7 @@ public interface PluginInterface {
 
   /**
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
    */
   public void
   addListener(
@@ -402,7 +402,7 @@ public interface PluginInterface {
 
   /**
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
    */
   public void
   removeListener(
@@ -420,7 +420,7 @@ public interface PluginInterface {
 
   /**
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
   public void
   addEventListener(
@@ -428,7 +428,7 @@ public interface PluginInterface {
 
   /**
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
    */
   public void
   removeEventListener(
@@ -438,7 +438,7 @@ public interface PluginInterface {
    * Returns the manager object for registering plugins that connect to the
    * Mainline DHT.
    *
-   * @since 3.0.4.3
+   * @since 1.0.0.0
    */
   public MainlineDHTManager getMainlineDHTManager();
 
@@ -447,7 +447,7 @@ public interface PluginInterface {
    * and provides various mechanisms to query and control plugins and their
    * integration with the client at a low-level.
    *
-   * @since 3.1.1.1
+   * @since 1.0.0.0
    */
   public PluginState getPluginState();
 }

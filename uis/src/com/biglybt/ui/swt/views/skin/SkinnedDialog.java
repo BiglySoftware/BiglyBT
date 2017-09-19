@@ -157,7 +157,7 @@ public class SkinnedDialog
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public void close() {
 		Utils.execSWTThread(new AERunnable() {
@@ -185,7 +185,7 @@ public class SkinnedDialog
 	/**
 	 * @param string
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public void setTitle(String string) {
 		if (!disposed && shell != null && !shell.isDisposed()) {

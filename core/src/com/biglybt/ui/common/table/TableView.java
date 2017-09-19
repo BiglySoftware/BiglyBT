@@ -302,7 +302,7 @@ public interface TableView<DATASOURCETYPE>
 	/**
 	 * @return
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	int getSelectedRowsSize();
 
@@ -310,7 +310,7 @@ public interface TableView<DATASOURCETYPE>
 	 * @param row
 	 * @return
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	int indexOf(TableRowCore row);
 
@@ -318,14 +318,14 @@ public interface TableView<DATASOURCETYPE>
 	 * @param row
 	 * @return
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	boolean isRowVisible(TableRowCore row);
 
 	/**
 	 * @return
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	TableCellCore getTableCellWithCursor();
 
@@ -334,14 +334,14 @@ public interface TableView<DATASOURCETYPE>
 	 *
 	 * @return null if mouse isn't over a row
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	TableRowCore getTableRowWithCursor();
 
 	/**
 	 * @return
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	int getRowDefaultHeight();
 
@@ -351,14 +351,14 @@ public interface TableView<DATASOURCETYPE>
 	 * @param position
 	 * @return
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	TableRowCore getRow(int position);
 
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	Class getDataSourceType();
 
@@ -366,7 +366,7 @@ public interface TableView<DATASOURCETYPE>
 	 * @param columnName
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	TableColumn getTableColumn(String columnName);
 
@@ -378,7 +378,7 @@ public interface TableView<DATASOURCETYPE>
 	 * @param tableRowImpl
 	 * @return
 	 *
-	 * @since 4.4.0.5
+	 * @since 1.0.0.0
 	 */
 	boolean isSelected(TableRow row);
 
@@ -387,35 +387,35 @@ public interface TableView<DATASOURCETYPE>
 	/**
 	 * @param visible
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	void setHeaderVisible(boolean visible);
 
 	/**
 	 * @return
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	boolean getHeaderVisible();
 
 	/**
 	 *
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	void processDataSourceQueueSync();
 
 	/**
 	 *
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	int getMaxItemShown();
 
 	/**
 	 * @param newIndex
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	void setMaxItemShown(int newIndex);
 

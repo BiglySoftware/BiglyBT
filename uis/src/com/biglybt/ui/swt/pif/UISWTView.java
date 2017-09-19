@@ -40,7 +40,7 @@ public interface UISWTView extends UIPluginView {
 	 * {@link UISWTViewEvent#TYPE_INITIALIZE} is triggered, getData() will
 	 * return a {@link org.eclipse.swt.widgets.Composite} object.
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int CONTROLTYPE_SWT = 0;
 
@@ -49,7 +49,7 @@ public interface UISWTView extends UIPluginView {
 	 * {@link UISWTViewEvent#TYPE_INITIALIZE} is triggered, getData() will
 	 * return a {@link java.awt.Component} object.
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public static final int CONTROLTYPE_AWT = 1;
 
@@ -60,7 +60,7 @@ public interface UISWTView extends UIPluginView {
 	 *
 	 * @param iControlType
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void setControlType(int iControlType);
 
@@ -68,7 +68,7 @@ public interface UISWTView extends UIPluginView {
 	 *
 	 * @return CONTROLTYPE_*
 	 *
-	 * @since 4.3.1.3
+	 * @since 1.0.0.0
 	 */
 	int getControlType();
 
@@ -85,7 +85,7 @@ public interface UISWTView extends UIPluginView {
 	 *  May return null if no data source is selected, or while processing the
 	 *  {@link UISWTViewEvent#TYPE_CREATE} event.
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	// From UIPluginView, declared here only to change JavaDoc
 	@Override
@@ -94,14 +94,14 @@ public interface UISWTView extends UIPluginView {
 	/**
 	 * Get the original datasource that was set to the view
 	 *
-	 * @since 5.5.0.0
+	 * @since 1.0.0.0
 	 */
 	public Object getInitialDataSource();
 
 	/**
 	 * Get parent view, if one exists
 	 *
-	 * @since 5.5.0.0
+	 * @since 1.0.0.0
 	 */
 	public UISWTView getParentView();
 
@@ -111,7 +111,7 @@ public interface UISWTView extends UIPluginView {
 	 * @param eventType  Event to trigger {@link UISWTViewEvent}}
 	 * @param data data to send with trigger
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void triggerEvent(int eventType, Object data);
 
@@ -124,14 +124,14 @@ public interface UISWTView extends UIPluginView {
 	 *
 	 * @param title new Title
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public void setTitle(String title);
 
 	/**
 	 * Gets the plugin interface associated with this view, null if none defined
 	 *
-	 * @since 4.5.1.1
+	 * @since 1.0.0.0
 	 */
 	@Override
 	public PluginInterface getPluginInterface();
@@ -142,14 +142,14 @@ public interface UISWTView extends UIPluginView {
 	 * <P>
 	 * This allows overriding of the default behaviour
 	 *
-	 * @since 5.6.0.1
+	 * @since 1.0.0.0
 	 */
 	public void setDestroyOnDeactivate(boolean b);
 
 	/**
 	 * Retrieve whether this view can be destroyed on  {@link UISWTViewEvent#TYPE_FOCUSLOST}
 	 *
-	 * @since 5.6.0.1
+	 * @since 1.0.0.0
 	 */
 	boolean isDestroyOnDeactivate();
 

@@ -125,7 +125,7 @@ public class UISWTStatusEntryImpl implements UISWTStatusEntry, MainStatusBar.CLa
 	/**
 	 *
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	private void releaseOldImages() {
 		if (imageIDstoDispose.size() > 0) {

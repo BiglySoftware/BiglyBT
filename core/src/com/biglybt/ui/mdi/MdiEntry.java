@@ -52,7 +52,7 @@ public interface MdiEntry extends UIPluginView
 	/**
 	 * @param l
 	 *
-	 * @since 4.1.0.3
+	 * @since 1.0.0.0
 	 */
 	void addListener(MdiCloseListener l);
 
@@ -61,7 +61,7 @@ public interface MdiEntry extends UIPluginView
 	/**
 	 * @param l
 	 *
-	 * @since 4.1.0.3
+	 * @since 1.0.0.0
 	 */
 	void removeListener(MdiCloseListener l);
 
@@ -70,14 +70,14 @@ public interface MdiEntry extends UIPluginView
 	/**
 	 * @param l
 	 *
-	 * @since 4.1.0.3
+	 * @since 1.0.0.0
 	 */
 	void addListener(MdiEntryOpenListener l);
 
 	/**
 	 * @param l
 	 *
-	 * @since 4.1.0.3
+	 * @since 1.0.0.0
 	 */
 	void removeListener(MdiEntryOpenListener l);
 

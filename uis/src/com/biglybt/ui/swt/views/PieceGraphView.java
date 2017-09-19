@@ -493,7 +493,7 @@ public class PieceGraphView
 	 * @param dm_pieces
 	 * @return
 	 *
-	 * @since 3.0.1.1
+	 * @since 1.0.0.0
 	 */
 	private double getPercentDone(int startNo, int count, DiskManagerPiece[] dm_pieces) {
 
@@ -549,7 +549,7 @@ public class PieceGraphView
 	/**
 	 *
 	 *
-	 * @since 3.1.0.1
+	 * @since 1.0.0.0
 	 */
 	private void delete() {
 		// TODO Auto-generated method stub

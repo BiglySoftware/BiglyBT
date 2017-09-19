@@ -23,7 +23,7 @@ package com.biglybt.pif.ipfilter;
 
 /**
  * @author jstockall
- * @since 2.5.0.2
+ * @since 1.0.0.0
  */
 public interface
 IPBanned

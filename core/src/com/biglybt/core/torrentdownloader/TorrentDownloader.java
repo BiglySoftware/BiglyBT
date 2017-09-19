@@ -101,13 +101,13 @@ public interface TorrentDownloader {
 		/**
 		 * @return
 		 *
-		 * @since 4.0.0.5
+		 * @since 1.0.0.0
 		 */
 		boolean isIgnoreReponseCode();
 		/**
 		 * @param ignoreReponseCode
 		 *
-		 * @since 4.0.0.5
+		 * @since 1.0.0.0
 		 */
 		void setIgnoreReponseCode(boolean ignoreReponseCode);
 }

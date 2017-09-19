@@ -82,14 +82,14 @@ Utilities
 	/**
 	 * @return Whether the OS is a unix flavor (linux, bsd, aix, etc)
 	 *
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 	boolean isUnix();
 
 	/**
 	 * @return Whether the OS is FreeBSD
 	 *
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 	boolean isFreeBSD();
 
@@ -322,7 +322,7 @@ Utilities
 	 * @return a negative integer, zero, or a positive integer as the first
 	 *          argument is less than, equal to, or greater than the second.
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public int compareVersions(String v1, String v2);
 
@@ -346,7 +346,7 @@ Utilities
 	 * UI initialisation is complete. Plugins can therefore use this to schedule initialisation
 	 * actions to occur after UI init is complete.
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 * @return
 	 */
 

@@ -116,7 +116,7 @@ DownloadManager
 		/**
 		 * @param l
 		 *
-		 * @since 3.0.0.7
+		 * @since 1.0.0.0
 		 */
 		void forceRecheck(ForceRecheckListener l);
 
@@ -553,7 +553,7 @@ DownloadManager
      * Returns <tt>true</tt> if the download is being saved to one of the default
      * save directories.
      *
-     * @since 2.5.0.2
+     * @since 1.0.0.0
      */
     public boolean isInDefaultSaveDir();
 
@@ -638,7 +638,7 @@ DownloadManager
 	 * @param listener
 	 * @param triggerStateChange
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public void
 	addListener(
@@ -729,7 +729,7 @@ DownloadManager
     public int[] getStorageType(DiskManagerFileInfo[] infos);
 
     /**
-     * @since 3.0.5.1
+     * @since 1.0.0.0
      */
     public boolean canMoveDataFiles();
 
@@ -739,19 +739,19 @@ DownloadManager
     public void rename(String new_name) throws DownloadManagerException;
 
     /**
-     * @since 3.0.5.1
+     * @since 1.0.0.0
      */
     public void renameTorrent(String new_name) throws DownloadManagerException;
 
 
 		/**
 		 * Same as renameTorrent, but appends numbers if torrent already exists
-		 * @since 4.2.0.9
+		 * @since 1.0.0.0
 		 */
 		public void renameTorrentSafe(String name) throws DownloadManagerException;
 
     /**
-     * @since 3.0.5.1
+     * @since 1.0.0.0
      */
     public void moveTorrentFile(File parent_dir, String new_name) throws DownloadManagerException;
 
@@ -760,7 +760,7 @@ DownloadManager
      * this shouldn't be used unless you know what you are doing (it requires
      * the download to be stopped!) - it is safer to use moveTorrentFile instead.
      *
-     * @since 3.0.5.3
+     * @since 1.0.0.0
      */
     public void setTorrentFile(File new_parent_dir, String new_name) throws DownloadManagerException;
 
@@ -773,7 +773,7 @@ DownloadManager
 		 *
 		 * @param fileInfos
 		 * @param type
-		 * @since 5.6.2.1
+		 * @since 1.0.0.0
 		 */
 	public void setFilePriorities(DiskManagerFileInfo[] fileInfos, int type);
 

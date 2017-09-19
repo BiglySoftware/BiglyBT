@@ -23,7 +23,7 @@ package com.biglybt.pif.logging;
  *
  * <p><b>Note:</b> Only for implementation by Core, not plugins.</p>
  *
- * @since 3.1.1.1
+ * @since 1.0.0.0
  */
 public interface LogAlert {
 

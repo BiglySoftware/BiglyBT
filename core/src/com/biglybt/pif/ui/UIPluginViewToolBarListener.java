@@ -36,7 +36,7 @@ public interface UIPluginViewToolBarListener
 	 * Fill in list with the toolbar ids and states you wish to set
 	 *
 	 * @param list
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	public void refreshToolBarItems(Map<String, Long> list);
 }

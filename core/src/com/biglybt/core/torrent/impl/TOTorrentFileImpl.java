@@ -370,7 +370,7 @@ TOTorrentFileImpl
 	/**
 	 * @return
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	public Map serializeToMap() {
 		Map	file_map = new HashMap();

@@ -151,7 +151,7 @@ TrackerTorrent
 	isPassive();
 
 		/**
-		 * @since 2.3.0.5
+		 * @since 1.0.0.0
 		 * @return
 		 */
 

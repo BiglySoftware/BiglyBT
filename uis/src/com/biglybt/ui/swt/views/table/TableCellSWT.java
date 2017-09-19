@@ -88,21 +88,21 @@ public interface TableCellSWT extends TableCellCore
 	/**
 	 * @return
 	 *
-	 * @since 3.0.3.4
+	 * @since 1.0.0.0
 	 */
 	Color getBackgroundSWT();
 
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	int getTextAlpha();
 
 	/**
 	 * @param textOpacity
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	void setTextAlpha(int textOpacity);
 

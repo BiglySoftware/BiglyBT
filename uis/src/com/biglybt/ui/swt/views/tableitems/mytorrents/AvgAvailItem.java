@@ -35,7 +35,7 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 /** Avg Avail/"Seeing Copies/peer" Column
  *
  * @author MjrTom
- * @since 2.3.0.7
+ * @since 1.0.0.0
  */
 
 public class AvgAvailItem

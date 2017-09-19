@@ -60,35 +60,35 @@ public interface TableRowSWT extends TableRowCore
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public int getFontStyle();
 
 	/**
 	 * @param bold
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public boolean setFontStyle(int style);
 
 	/**
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public int getAlpha();
 
 	/**
 	 * @param i
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public boolean setAlpha(int alpha);
 
 	/**
 	 * @param selected
 	 *
-	 * @since 4.4.0.5
+	 * @since 1.0.0.0
 	 */
 	void setWidgetSelected(boolean selected);
 

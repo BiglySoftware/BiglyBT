@@ -34,7 +34,7 @@ import com.biglybt.core.util.SystemProperties;
  * Logging tool
  *
  * @author TuxPaper
- * @since 2.3.0.7
+ * @since 1.0.0.0
  */
 
 public class LoggerImpl {

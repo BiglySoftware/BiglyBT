@@ -32,7 +32,7 @@ Plugin
 	 * This method is called when the Plugin is loaded by the client
 	 * @param pluginInterface the interface that the plugin must use to communicate with the client
    *
-   * @since 2.0.4.0
+   * @since 1.0.0.0
 	 */
 
   public void
@@ -55,6 +55,6 @@ Plugin
    *
    * 	throws PluginException;
    * @author parg
-   * @since 2.2.0.3
+   * @since 1.0.0.0
    */
 }

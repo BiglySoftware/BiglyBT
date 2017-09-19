@@ -85,7 +85,7 @@ public class RememberedDecisionsManager
 	 * @param id remember id
 	 * @param value value to store.  -1 to remove
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 */
 	public static void setRemembered(String id, int value) {
 		if (id == null) {

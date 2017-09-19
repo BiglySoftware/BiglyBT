@@ -179,7 +179,7 @@ public interface UIInputReceiver {
 	 * be triggered
 	 *
 	 * @param receiver_listener
-	 * @since 4.2.0.9
+	 * @since 1.0.0.0
 	 */
 	public void prompt(UIInputReceiverListener receiver_listener);
 
@@ -197,7 +197,7 @@ public interface UIInputReceiver {
 	/**
 	 * set the maximum number of characters the user can type
 	 *
-	 * @since 4.3.1.5
+	 * @since 1.0.0.0
 	 */
 	public void setTextLimit(int limit);
 }

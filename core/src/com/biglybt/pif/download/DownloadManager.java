@@ -49,7 +49,7 @@ DownloadManager
 	 * @param torrent_file
 	 * @throws DownloadException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public void
 	addDownload(
@@ -63,7 +63,7 @@ DownloadManager
 	 * @param url
 	 * @throws DownloadException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public void
 	addDownload(
@@ -93,7 +93,7 @@ DownloadManager
 	 * @param referer
 	 * @throws DownloadException
 	 *
-	 * @since 2.1.0.6
+	 * @since 1.0.0.0
 	 */
 	public void
 	addDownload(
@@ -104,7 +104,7 @@ DownloadManager
 		 * add a torrent from a URL and use the supplied request properties
 		 * @param url
 		 * @param request_properties
-		 * @since 3.0.5.3
+		 * @since 1.0.0.0
 		 */
 
 	public void
@@ -120,7 +120,7 @@ DownloadManager
 	 * @see #addDownload(Torrent, File, File)
 	 * @return
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
 	 */
 	public Download
 	addDownload(
@@ -142,7 +142,7 @@ DownloadManager
 	 * @param data_location null -> user default data save location if defined
 	 * @return
    * support for null params for torrent_location/data_location since 2.1.0.4
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public Download
 	addDownload(
@@ -179,7 +179,7 @@ DownloadManager
 	 * @return
 	 * @throws DownloadException
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public Download
 	addNonPersistentDownload(
@@ -212,7 +212,7 @@ DownloadManager
 	 * @param torrent
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public Download
 	getDownload(
@@ -223,7 +223,7 @@ DownloadManager
 	 * @param hash
 	 * @return
 	 * @throws DownloadException
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 
 	public Download
@@ -236,7 +236,7 @@ DownloadManager
 	 * Gets all the downloads. Returned in Download "index" order
 	 * @return
    *
-   * @since 2.0.7.0
+   * @since 1.0.0.0
 	 */
 	public Download[]
 	getDownloads();
@@ -247,14 +247,14 @@ DownloadManager
 	 *                false - Order not guaranteed.  Faster retrieval.
 	 * @return array of Download object
    *
-   * @since 2.0.8.0
+   * @since 1.0.0.0
 	 */
 	public Download[]
 	getDownloads(boolean bSorted);
 
 	/**
 	 * pause all running downloads
-	 * @since 2.1.0.5
+	 * @since 1.0.0.0
 	 *
 	 */
 
@@ -266,7 +266,7 @@ DownloadManager
 
 	/**
 	 * resume previously paused downloads
-	 * @since 2.1.0.5
+	 * @since 1.0.0.0
 	 */
 
 	public void
@@ -277,7 +277,7 @@ DownloadManager
 
 	/**
 	 * starts all non-running downloads
-	 * @since 2.1.0.5
+	 * @since 1.0.0.0
 	 */
 
 	public void
@@ -285,7 +285,7 @@ DownloadManager
 
 	/**
 	 * stops all running downloads
-	 * @since 2.1.0.5
+	 * @since 1.0.0.0
 	 */
 
 	public void
@@ -301,7 +301,7 @@ DownloadManager
 
 		/**
 		 * indicates whether or not all active downloads are in a seeding (or effective) seeding state
-		 * @since 2.3.0.5
+		 * @since 1.0.0.0
 		 * @return
 		 */
 
@@ -315,7 +315,7 @@ DownloadManager
 	 * Invoking this method is equivalent to <code>addListener(l, true)</code>.
 	 *
 	 * @param l The listener to add.
-	 * @since 2.0.7.0
+	 * @since 1.0.0.0
 	 * @see #addListener(DownloadManagerListener, boolean)
 	 */
 	public void addListener(DownloadManagerListener l);
@@ -329,7 +329,7 @@ DownloadManager
 	 *   method invoked immediately with all downloads currently managed by the client.
 	 *   <tt>false</tt> - if you only want to be notified about new downloads added after
 	 *   this method is called.
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	public void addListener(DownloadManagerListener l, boolean notify_of_current_downloads);
 
@@ -340,7 +340,7 @@ DownloadManager
 	 *   have its {@link DownloadManagerListener#downloadRemoved(Download) downloadRemoved}
 	 *   method invoked immediately with all downloads currently managed by the client,
 	 *   <tt>false</tt> otherwise.
-	 *  @since 3.0.0.7
+	 *  @since 1.0.0.0
 	 */
 	public void removeListener(DownloadManagerListener l, boolean notify_of_current_downloads);
 
@@ -350,7 +350,7 @@ DownloadManager
      * Invoking this method is equivalent to <code>removeListener(l, false)</code>.
      * @see #removeListener(DownloadManagerListener, boolean)
      * @param l The listener to remove.
-     * @since 2.0.7.0
+     * @since 1.0.0.0
      */
 	public void	removeListener(DownloadManagerListener l);
 
@@ -367,7 +367,7 @@ DownloadManager
 	 * an easy way to register listeners against all downloads handled by
 	 * the client.
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	public DownloadEventNotifier getGlobalDownloadEventNotifier();
 
@@ -382,7 +382,7 @@ DownloadManager
 	 * handles <tt>on-completion</tt> and <tt>on-removal</tt> events.
 	 *
 	 * @param manager The new manager object to use.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void setSaveLocationManager(SaveLocationManager manager);
 
@@ -391,7 +391,7 @@ DownloadManager
 	 * where downloads should be placed.
 	 *
 	 * @return The manager object currently in use.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public SaveLocationManager getSaveLocationManager();
 
@@ -400,7 +400,7 @@ DownloadManager
 	 * where downloads should be placed.
 	 *
 	 * @return The default save location manager object.
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public DefaultSaveLocationManager getDefaultSaveLocationManager();
 

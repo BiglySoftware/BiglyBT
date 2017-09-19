@@ -24,13 +24,13 @@ package com.biglybt.pif.ui.tables;
  *
  * @author TuxPaper
  * @created Jan 10, 2006
- * @since 2.3.0.7
+ * @since 1.0.0.0
  */
 public class TableCellMouseEvent extends TableRowMouseEvent {
 	/**
 	 * TableCell that the mouse trigger applies to
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public TableCell cell;
 }

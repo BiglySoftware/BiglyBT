@@ -86,7 +86,7 @@ public class DevicesFTUX
 
 	/**
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	boolean isDisposed() {
 		return shell.isDisposed();
@@ -95,7 +95,7 @@ public class DevicesFTUX
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	void setFocus(Runnable fire_on_install) {
 
@@ -244,7 +244,7 @@ public class DevicesFTUX
 	}
 
 	/**
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void doInstall(final boolean itunes) {
 		CoreWaiterSWT.waitForCoreRunning(new CoreRunningListener() {
@@ -371,7 +371,7 @@ public class DevicesFTUX
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	protected void close() {
 		Utils.execSWTThread(new AERunnable() {
@@ -385,7 +385,7 @@ public class DevicesFTUX
 	}
 
 	/**
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	public static boolean ensureInstalled( final Runnable fire_on_install ) {
 		DeviceManager device_manager = DeviceManagerFactory.getSingleton();

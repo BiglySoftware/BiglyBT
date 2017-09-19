@@ -82,14 +82,14 @@ public interface ClientMessageContext
 	 * @param params
 	 * @return
 	 *
-	 * @since 3.0.1.5
+	 * @since 1.0.0.0
 	 */
 	boolean sendBrowserMessage(String key, String op, Collection params);
 
 	/**
 	 * @param dispatcher
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	void setMessageDispatcher(BrowserMessageDispatcher dispatcher);
 

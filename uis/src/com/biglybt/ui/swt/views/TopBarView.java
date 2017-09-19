@@ -134,7 +134,7 @@ public class TopBarView
 	/**
 	 * @param skinObject
 	 *
-	 * @since 3.0.1.1
+	 * @since 1.0.0.0
 	 */
 	public void buildTopBarViews() {
 		// TODO actually use plugins..
@@ -677,7 +677,7 @@ public class TopBarView
 	/**
 	 * @param view
 	 *
-	 * @since 3.0.1.1
+	 * @since 1.0.0.0
 	 */
 	private void addTopBarView(UISWTViewCore view, Composite composite) {
 		Composite parent = new Composite(composite, SWT.None);

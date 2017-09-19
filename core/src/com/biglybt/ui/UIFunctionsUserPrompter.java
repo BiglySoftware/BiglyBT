@@ -33,7 +33,7 @@ public interface UIFunctionsUserPrompter
 	 *
 	 * @return MS before prompt auto-closes, 0 for no auto-close
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	int getAutoCloseInMS();
 
@@ -44,7 +44,7 @@ public interface UIFunctionsUserPrompter
 	 *
 	 * @return
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	String getHtml();
 
@@ -53,7 +53,7 @@ public interface UIFunctionsUserPrompter
 	 *
 	 * @return Remember ID
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	String getRememberID();
 
@@ -62,14 +62,14 @@ public interface UIFunctionsUserPrompter
 	 *
 	 * @return Remember text
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	String getRememberText();
 
 	/**
 	 * Opens the prompt.  returns when user has chosen an action, or auto-close
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	void open(UserPrompterResultListener l);
 
@@ -82,14 +82,14 @@ public interface UIFunctionsUserPrompter
 	 * prompt (certain implementations may operate differently)
 	 * @param autoCloseInMS
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	void setAutoCloseInMS(int autoCloseInMS);
 
 	/**
 	 * @param html
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	void setHtml(String html);
 
@@ -97,14 +97,14 @@ public interface UIFunctionsUserPrompter
 	 * @param rememberID
 	 * @param rememberByDefault
 	 *
-	 * @since 4.2.0.9
+	 * @since 1.0.0.0
 	 */
 	void setRemember(String rememberID, boolean rememberByDefault, String rememberText);
 
 	/**
 	 * @param rememberText
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	void setRememberText(String rememberText);
 
@@ -117,7 +117,7 @@ public interface UIFunctionsUserPrompter
 	/**
 	 * @param url
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	void setUrl(String url);
 
@@ -128,12 +128,12 @@ public interface UIFunctionsUserPrompter
 	 * @return true: auto-closed after timeout<br>
 	 *         false: user chose an option
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	boolean isAutoClosed();
 
 	/**
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 * @param resource image repository resource name (e.g. "error", "warning", "info")
 	 */
 
@@ -144,7 +144,7 @@ public interface UIFunctionsUserPrompter
 	/**
 	 * @param relatedObject
 	 *
-	 * @since 3.0.0.9
+	 * @since 1.0.0.0
 	 */
 	void setRelatedObject(Object relatedObject);
 

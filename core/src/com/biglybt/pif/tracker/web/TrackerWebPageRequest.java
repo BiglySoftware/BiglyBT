@@ -64,7 +64,7 @@ TrackerWebPageRequest
 		/**
 		 * Returns a map containing the separate headers. Keys are lowercase
 		 * @return
-		 * @since 2.3.0.7
+		 * @since 1.0.0.0
 		 */
 
 	public Map

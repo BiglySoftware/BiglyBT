@@ -37,7 +37,7 @@ public interface UISWTViewEventListener {
 	 * @param event event that occurred
 	 * @return meaning dependent upon event type
 	 *
-	 * @since 2.3.0.6
+	 * @since 1.0.0.0
 	 */
 	public boolean eventOccurred(UISWTViewEvent event);
 }

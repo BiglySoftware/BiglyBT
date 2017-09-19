@@ -50,7 +50,7 @@ public interface TableContextMenuItem
    	 * array of {@link TableRow} objects, rather than just a single object.
    	 *
    	 * @param l listener to be notified when user has selected the menu item.
-   	 * @since 2.5.0.2
+   	 * @since 1.0.0.0
    	 */
    	@Override
     public void addMultiListener(MenuItemListener l);

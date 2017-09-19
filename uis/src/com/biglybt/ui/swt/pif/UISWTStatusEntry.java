@@ -34,7 +34,7 @@ import org.eclipse.swt.graphics.Image;
  *
  * @see UISWTInstance#createStatusEntry()
  * @author amc1
- * @since 3.0.0.8
+ * @since 1.0.0.0
  */
 public interface UISWTStatusEntry {
 
@@ -92,7 +92,7 @@ public interface UISWTStatusEntry {
 	 * Returns a menu context object to allow you to add menu items to the status entry.
 	 *
 	 * @see MenuManager#addMenuItem(MenuContext, String)
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public MenuContext getMenuContext();
 

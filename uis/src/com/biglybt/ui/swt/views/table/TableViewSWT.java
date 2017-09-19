@@ -56,7 +56,7 @@ public interface TableViewSWT<DATASOURCETYPE>
 	 * @param dataSource
 	 * @return
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	TableRowSWT getRowSWT(DATASOURCETYPE dataSource);
 
@@ -88,49 +88,49 @@ public interface TableViewSWT<DATASOURCETYPE>
 	 * @param y
 	 * @return
 	 *
-	 * @since 3.0.0.7
+	 * @since 1.0.0.0
 	 */
 	TableCellCore getTableCell(int x, int y);
 
 	/**
 	 * @return Offset potision of the cursor relative to the cell the cursor is in
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	Point getTableCellMouseOffset(TableCellSWT tableCell);
 
 	/**
 	 * @param listener
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	void removeRefreshListener(TableRowRefreshListener listener);
 
 	/**
 	 * @param listener
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	void addRefreshListener(TableRowRefreshListener listener);
 
 	/**
 	 * @return
 	 *
-	 * @since 4.1.0.9
+	 * @since 1.0.0.0
 	 */
 	String getFilterText();
 
 	/**
 	 * @param filterCheck
 	 *
-	 * @since 4.1.0.9
+	 * @since 1.0.0.0
 	 */
 	void enableFilterCheck(Text txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck);
 
 	Text getFilterControl();
 
 	/**
-	 * @since 4.7.0.1
+	 * @since 1.0.0.0
 	 */
 	void disableFilterCheck();
 
@@ -139,7 +139,7 @@ public interface TableViewSWT<DATASOURCETYPE>
 	/**
 	 * @param s
 	 *
-	 * @since 4.1.0.8
+	 * @since 1.0.0.0
 	 */
 	void setFilterText(String s);
 
@@ -148,7 +148,7 @@ public interface TableViewSWT<DATASOURCETYPE>
 	 * @param min
 	 * @param max
 	 *
-	 * @since 4.1.0.9
+	 * @since 1.0.0.0
 	 */
 	boolean enableSizeSlider(Composite composite, int min, int max);
 
@@ -157,47 +157,47 @@ public interface TableViewSWT<DATASOURCETYPE>
 	/**
 	 * @param listener
 	 *
-	 * @since 4.2.0.3
+	 * @since 1.0.0.0
 	 */
 	void addRowPaintListener(TableRowSWTPaintListener listener);
 
 	/**
 	 * @param listener
 	 *
-	 * @since 4.2.0.3
+	 * @since 1.0.0.0
 	 */
 	void removeRowPaintListener(TableRowSWTPaintListener listener);
 
 	/**
 	 * @param listener
 	 *
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 */
 	void removeRowMouseListener(TableRowMouseListener listener);
 
 	/**
 	 * @param listener
 	 *
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 */
 	void addRowMouseListener(TableRowMouseListener listener);
 
 	/**
-	 * @since 4.5.0.5
+	 * @since 1.0.0.0
 	 */
 	void refilter();
 
 	/**
 	 * @param menuEnabled
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	void setMenuEnabled(boolean menuEnabled);
 
 	/**
 	 * @return
 	 *
-	 * @since 4.6.0.5
+	 * @since 1.0.0.0
 	 */
 	boolean isMenuEnabled();
 

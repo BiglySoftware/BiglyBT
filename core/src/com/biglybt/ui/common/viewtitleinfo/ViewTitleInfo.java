@@ -52,7 +52,7 @@ public interface ViewTitleInfo
 	 * @param propertyID TITLE_*
 	 * @return value, or null if you don't want to set it
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public Object getTitleInfoProperty(int propertyID);
 }

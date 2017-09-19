@@ -1030,7 +1030,7 @@ public class MainWindowImpl
 	 * @param uiInitializer
 	 * @param taskKey TODO
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	private void increaseProgress(IUIIntializer uiInitializer, String taskKey) {
 		if (uiInitializer != null) {

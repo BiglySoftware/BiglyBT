@@ -266,7 +266,7 @@ public class TorrentUIUtilsV3
 	 * @param torrent
 	 * @return
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public static void addTorrentToGM(final TOTorrent torrent) {
 		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
@@ -303,7 +303,7 @@ public class TorrentUIUtilsV3
 	 *         as well as the trigger being fired.  If the image isn't available
 	 *         null will be returned and the listener will trigger when avail
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	public static Image[] getContentImage(Object datasource, boolean big,
 			final ContentImageLoadedListener l) {
@@ -466,7 +466,7 @@ public class TorrentUIUtilsV3
 		 * @param image
 		 * @param wasReturned  Image was also returned from getContentImage
 		 *
-		 * @since 4.0.0.5
+		 * @since 1.0.0.0
 		 */
 		public void contentImageLoaded(Image image, boolean wasReturned);
 	}

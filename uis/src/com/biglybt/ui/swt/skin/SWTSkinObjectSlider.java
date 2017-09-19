@@ -290,7 +290,7 @@ public class SWTSkinObjectSlider
 	/**
 	 * @return
 	 *
-	 * @since 3.0.2.3
+	 * @since 1.0.0.0
 	 */
 	private double validatePercent(double percent, boolean triggerListeners) {
 		if (triggerListeners) {
@@ -416,7 +416,7 @@ public class SWTSkinObjectSlider
 		 * @param newPercent
 		 * @return return null if you do not wish to change the value
 		 *
-		 * @since 3.0.2.3
+		 * @since 1.0.0.0
 		 */
 		public Double selectionChanging(double oldPercent, double newPercent) {
 			return null;

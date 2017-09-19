@@ -160,7 +160,7 @@ public class SWTSkinObjectButton
 	/**
 	 * @param text
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private void setText(final String text, boolean auto) {
 		if (!auto) {

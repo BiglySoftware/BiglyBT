@@ -897,7 +897,7 @@ public class Utils
 	 * @param code Code to run
 	 * @return sucess
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static boolean execSWTThreadLater(int msLater, final Runnable code) {
 		return execSWTThread(code, msLater);
@@ -937,7 +937,7 @@ public class Utils
 	 *                >0: timerExec
 	 * @return
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	private static boolean execSWTThread(final Runnable code, final int msLater) {
 		final Display display = getDisplay(false);
@@ -2598,7 +2598,7 @@ public class Utils
 	/**
 	 * Waits until modal dialogs are disposed.  Assumes we are on SWT thread
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 */
 	public static void waitForModals() {
 		SWTThread swt = SWTThread.getInstance();
@@ -2817,7 +2817,7 @@ public class Utils
 	/**
 	 * @return
 	 *
-	 * @since 3.0.3.5
+	 * @since 1.0.0.0
 	 */
 	public static boolean anyShellHaveStyle(int styles) {
 		Display display = Display.getCurrent();
@@ -3115,7 +3115,7 @@ public class Utils
 	 * @param bg
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	public static String toColorHexString(Color bg) {
 		StringBuffer sb = new StringBuffer();

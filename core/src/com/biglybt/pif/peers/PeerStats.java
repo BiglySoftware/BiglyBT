@@ -31,7 +31,7 @@ public interface PeerStats
 	 *
 	 * @return average speed.
 	 *
-	 * @since 2.0.6.0
+	 * @since 1.0.0.0
 	 */
 	public int getDownloadAverage();
 
@@ -41,7 +41,7 @@ public interface PeerStats
 	 *
 	 * @return average speed
 	 *
-	 * @since 2.0.6.0
+	 * @since 1.0.0.0
 	 */
 	public int getReception();
 
@@ -51,7 +51,7 @@ public interface PeerStats
 	 *
 	 * @return average speed.
 	 *
-	 * @since 2.0.6.0
+	 * @since 1.0.0.0
 	 */
 	public int getUploadAverage();
 
@@ -65,7 +65,7 @@ public interface PeerStats
 	 * Get the total number of discarded bytes received from the peer.
 	 * @return total discarded
 	 *
-	 * @since 2.0.6.0
+	 * @since 1.0.0.0
 	 */
 	public long getTotalDiscarded();
 
@@ -73,7 +73,7 @@ public interface PeerStats
 	 * Get the total number of data (payload) bytes sent to the peer.
 	 * @return total
 	 *
-	 * @since 2.0.6.0
+	 * @since 1.0.0.0
 	 */
 	public long getTotalSent();
 
@@ -81,7 +81,7 @@ public interface PeerStats
 	 * Get the total number of data (payload) bytes received from the peer.
 	 * @return total
 	 *
-	 * @since 2.0.6.0
+	 * @since 1.0.0.0
 	 */
 	public long getTotalReceived();
 
@@ -89,7 +89,7 @@ public interface PeerStats
 	 * Get the estimated total upload rate of the peer.
 	 * @return estimated rate in bytes-per-second
 	 *
-	 * @since 2.0.6.0
+	 * @since 1.0.0.0
 	 */
 	public int getStatisticSentAverage();
 
@@ -97,7 +97,7 @@ public interface PeerStats
 	/**
 	 * For an external process receiving bytes on behalf of this peer this gives the current
 	 * rate-limited number of bytes that can be received. Update with actual send using 'permittedReceiveBytesUsed' below.
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 * @return
 	 */
 
@@ -108,7 +108,7 @@ public interface PeerStats
 	/**
 	 * For an external process sending bytes on behalf of this peer this gives the current
 	 * rate-limited number of bytes that can be sent. Update with actual send using 'sent' below.
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 * @return
 	 */
 
@@ -125,7 +125,7 @@ public interface PeerStats
 	 *
 	 * @param bytes
 	 *
-	 * @since 4.4.0.7
+	 * @since 1.0.0.0
 	 */
 
 	public void received(int bytes);
@@ -139,7 +139,7 @@ public interface PeerStats
 	 *
 	 * @param bytes
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 
 	public void sent(int bytes);
@@ -154,7 +154,7 @@ public interface PeerStats
 	 *
 	 * @param bytes
 	 *
-	 * @since 2.1.0.0
+	 * @since 1.0.0.0
 	 */
 	public void discarded(int bytes);
 
@@ -164,7 +164,7 @@ public interface PeerStats
 	 *
 	 * @return Amount of time in ms.
 	 *
-	 * @since 2.4.0.0
+	 * @since 1.0.0.0
 	 */
 	public long getTimeSinceConnectionEstablished();
 
@@ -176,7 +176,7 @@ public interface PeerStats
 	getDownloadRateLimit();
 
 	/**
-	 * @since 4.7.0.1
+	 * @since 1.0.0.0
 	 * @param bytes_per_sec
 	 */
 
@@ -185,7 +185,7 @@ public interface PeerStats
 		int	bytes_per_sec );
 
 	/**
-	 * @since 4.7.0.1
+	 * @since 1.0.0.0
 	 * @param bytes_per_sec
 	 */
 
@@ -193,7 +193,7 @@ public interface PeerStats
 	getUploadRateLimit();
 
 	/**
-	 * @since 4.4.0.1
+	 * @since 1.0.0.0
 	 * @return
 	 */
 	public long

@@ -78,7 +78,7 @@ public interface SkinProperties
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	void clearCache();
 
@@ -86,7 +86,7 @@ public interface SkinProperties
 	 * @param name
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	boolean hasKey(String name);
 
@@ -94,7 +94,7 @@ public interface SkinProperties
 	 * @param name
 	 * @return
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	String getReferenceID(String name);
 
@@ -102,7 +102,7 @@ public interface SkinProperties
 	 * @param subBundle
 	 * @param skinPath TODO
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	void addResourceBundle(ResourceBundle subBundle, String skinPath);
 
@@ -118,14 +118,14 @@ public interface SkinProperties
 	/**
 	 * @return
 	 *
-	 * @since 4.0.0.5
+	 * @since 1.0.0.0
 	 */
 	ClassLoader getClassLoader();
 
 	/**
 	 * @return
 	 *
-	 * @since 5.6.2.1
+	 * @since 1.0.0.0
 	 */
 	int getEmHeightPX();
 }

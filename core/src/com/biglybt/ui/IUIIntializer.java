@@ -33,7 +33,7 @@ public interface IUIIntializer
 	 *
 	 * @param listener
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 */
 	public void addListener(InitializerListener listener);
 
@@ -42,27 +42,27 @@ public interface IUIIntializer
 	 *
 	 * @param listener
 	 *
-	 * @since 3.0.1.3
+	 * @since 1.0.0.0
 	 */
 	public void removeListener(InitializerListener listener);
 
 	/**
 	 *
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	void increaseProgress();
 
 	/**
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	void abortProgress();
 
 	/**
 	 * @param currentTaskString
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	void reportCurrentTask(String currentTaskString);
 
@@ -74,7 +74,7 @@ public interface IUIIntializer
 	 * Code that will be executed in the SWT Thread before {@link #run()} is
 	 * invoked
 	 *
-	 * @since 4.2.0.1
+	 * @since 1.0.0.0
 	 */
 	public void runInSWTThread();
 

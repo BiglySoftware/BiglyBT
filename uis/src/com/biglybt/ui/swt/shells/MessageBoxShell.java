@@ -1057,7 +1057,7 @@ public class MessageBoxShell
 	/**
 	 * @return
 	 *
-	 * @since 4.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public Object getLeftImage() {
 		return imgLeft == iconImage ? null : imgLeft;
@@ -1072,7 +1072,7 @@ public class MessageBoxShell
 	 *
 	 * @param icon SWT.ICON_ERROR, ICON_INFORMATION, ICON_QUESTION, ICON_WARNING, ICON_WORKING
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public void setLeftImage(final int icon) {
 		Utils.execSWTThread(new AERunnable() {
@@ -1164,7 +1164,7 @@ public class MessageBoxShell
 	/**
 	 * @param b
 	 *
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public void setHandleHTML(boolean handleHTML) {
 		this.handleHTML = handleHTML;

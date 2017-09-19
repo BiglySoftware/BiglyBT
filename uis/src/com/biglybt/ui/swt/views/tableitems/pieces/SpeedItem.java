@@ -25,7 +25,7 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 /**
  *
  * @author MjrTom
- * @since 2.3.0.7
+ * @since 1.0.0.0
  */
 
 public class SpeedItem

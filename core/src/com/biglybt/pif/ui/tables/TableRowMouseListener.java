@@ -30,7 +30,7 @@ public interface TableRowMouseListener
 	 *
 	 * @param event Mouse event information
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public void rowMouseTrigger(TableRowMouseEvent event);
 }

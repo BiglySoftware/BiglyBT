@@ -268,7 +268,7 @@ public class MainMenuV3
 	/**
 	 * @param viewMenu
 	 *
-	 * @since 4.5.0.3
+	 * @since 1.0.0.0
 	 */
 	private void buildSimpleViewMenu(final Menu viewMenu, int accelerator) {
 		try {

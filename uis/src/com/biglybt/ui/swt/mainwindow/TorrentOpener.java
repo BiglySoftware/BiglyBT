@@ -377,7 +377,7 @@ public class TorrentOpener {
 	/**
 	 * @param torrentOptions
 	 * @return
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 *
 	 * @TODO: Remove SWT UI parts (use UIFunctions) and move out of SWT tree
 	 */
@@ -661,7 +661,7 @@ public class TorrentOpener {
 	 * @param sFileName
 	 * @param sOriginatingLocation
 	 * @return
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	// TODO: i18n
 	public static boolean mergeFileIntoTorrentInfo(String sFileName,
@@ -810,7 +810,7 @@ public class TorrentOpener {
 	 * <P>
 	 * will open url download dialog, or warning dialogs
 	 *
-	 * @since 5.0.0.1
+	 * @since 1.0.0.0
 	 */
 	public static void openTorrentsFromStrings(TorrentOpenOptions optionsToClone,
 			Shell parent, String pathPrefix, String[] torrents, String referrer,

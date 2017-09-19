@@ -26,7 +26,7 @@ import java.util.*;
 * Improvement based on AZWEB-318.
 *
 * @version 3.2.1.0 6/19/2007
-* @since 3.2.1.0 6/19/2007
+* @since 1.0.0.0 6/19/2007
 */
 public class MomentsAgoDateFormatter {
 

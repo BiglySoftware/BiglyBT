@@ -28,21 +28,21 @@ public class TableRowMouseEvent
 	/**
 	 * eventType is triggered when mouse is pressed down
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public final static int EVENT_MOUSEDOWN = 0;
 
 	/**
 	 * eventType is triggered when mouse is let go
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public final static int EVENT_MOUSEUP = 1;
 
 	/**
 	 * eventType is trigggered when mouse is double clicked
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public final static int EVENT_MOUSEDOUBLECLICK = 2;
 
@@ -60,14 +60,14 @@ public class TableRowMouseEvent
 	/**
 	 * EVENT_* constant specifying the type of event that has been triggered
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public int eventType;
 
 	/**
 	 * x position of mouse relative to table cell
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public int x;
 
@@ -84,7 +84,7 @@ public class TableRowMouseEvent
 	 * <p>
 	 * For events of type EVENT_MOUSEMOVE, button will be 0
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public int button;
 
@@ -93,7 +93,7 @@ public class TableRowMouseEvent
 	 *
 	 * @TODO Define state constants
 	 *
-	 * @since 2.3.0.7
+	 * @since 1.0.0.0
 	 */
 	public int keyboardState;
 
@@ -110,14 +110,14 @@ public class TableRowMouseEvent
 	/**
 	 * Misc data
 	 *
-	 * @since 3.0.1.7
+	 * @since 1.0.0.0
 	 */
 	public Object data;
 
 	/**
 	 * TableRow that the mouse trigger applies to
 	 *
-	 * @since 3.0.1.6
+	 * @since 1.0.0.0
 	 */
 	public TableRow row;
 }

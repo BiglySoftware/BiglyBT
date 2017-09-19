@@ -30,7 +30,7 @@ import com.biglybt.core.util.Debug;
  *        for future consideration (ie. allowing multiple LoggerImpl)
  *
  * @author TuxPaper
- * @since 2.3.0.7
+ * @since 1.0.0.0
  */
 public class Logger {
 	private static final LogIDs LOGID = LogIDs.LOGGER;

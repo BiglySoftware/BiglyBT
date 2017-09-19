@@ -66,17 +66,17 @@ Formatters
 		long		millis );
 
 	/**
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public String formatTimeOnly(long millis);
 
 	/**
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public String formatTimeOnly(long millis, boolean include_secs);
 
 	/**
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public String formatDateOnly(long millis);
 
@@ -90,7 +90,7 @@ Formatters
 	 * Format seconds remaining into an ETA value.
 	 * @param seconds
 	 * @return
-	 * @since 2.4.0.3
+	 * @since 1.0.0.0
 	 */
 	public String formatETAFromSeconds( long seconds );
 

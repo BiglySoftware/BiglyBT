@@ -46,7 +46,7 @@ package com.biglybt.pif.ui;
  * <p><b>Note:</b> Only for implementation by Azureus, not plugins.</p>
  *
  * @author Allan Crooks
- * @since 3.0.5.3
+ * @since 1.0.0.0
  */
 public interface UIMessage {
 

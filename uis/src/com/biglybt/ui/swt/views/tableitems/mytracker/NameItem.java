@@ -39,7 +39,7 @@ import com.biglybt.ui.swt.views.table.TableCellSWT;
 /**
  *
  * @author TuxPaper
- * @since 2.0.8.5
+ * @since 1.0.0.0
  */
 public class NameItem extends CoreTableColumnSWT implements
 		TableCellRefreshListener, ObfuscateCellText

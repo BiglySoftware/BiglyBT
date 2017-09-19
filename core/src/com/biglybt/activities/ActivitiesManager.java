@@ -134,7 +134,7 @@ public class ActivitiesManager
 	 *
 	 * @param delay max time to wait before running request
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static void pullActivitiesNow(long delay, String reason,
 			boolean alwaysPull) {
@@ -166,7 +166,7 @@ public class ActivitiesManager
 	 * will be able to be added again
 	 *
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static void resetRemovedEntries() {
 		removedEntries.clear();
@@ -176,7 +176,7 @@ public class ActivitiesManager
 	/**
 	 *
 	 *
-	 * @since 3.1.1.1
+	 * @since 1.0.0.0
 	 */
 	private static void saveEvents() {
 		saveEventsOnClose  = true;
@@ -185,7 +185,7 @@ public class ActivitiesManager
 	/**
 	 *
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	@SuppressWarnings({
 		"rawtypes",
@@ -368,7 +368,7 @@ public class ActivitiesManager
 	 *
 	 * @return list of entries actually added (no dups)
 	 *
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static ActivitiesEntry[] addEntries(ActivitiesEntry[] entries) {
 		long cutoffTime = getCutoffTime();
@@ -531,7 +531,7 @@ public class ActivitiesManager
 	}
 
 	/**
-	 * @since 3.0.4.3
+	 * @since 1.0.0.0
 	 */
 	public static void triggerEntryChanged(ActivitiesEntry entry) {
 		Object[] listenersArray = listeners.toArray();
@@ -543,7 +543,7 @@ public class ActivitiesManager
 	}
 
 	/**
-	 * @since 3.0.5.3
+	 * @since 1.0.0.0
 	 */
 	public static ActivitiesEntry createEntryFromMap(Map<?, ?> map,
 	                                                 boolean internalMap) {

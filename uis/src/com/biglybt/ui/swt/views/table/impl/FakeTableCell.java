@@ -322,7 +322,7 @@ public class FakeTableCell
 	/**
 	 * @param listenerObject
 	 *
-	 * @since 4.0.0.1
+	 * @since 1.0.0.0
 	 */
 	private void addSWTPaintListener(TableCellSWTPaintListener listener) {
 		try {
@@ -1223,7 +1223,7 @@ public class FakeTableCell
 	 * @param e
 	 * @return
 	 *
-	 * @since 3.0.2.1
+	 * @since 1.0.0.0
 	 */
 	protected TableCellMouseEvent buildMouseEvent(MouseEvent e, int eventType) {
 		if (isDisposed()) {

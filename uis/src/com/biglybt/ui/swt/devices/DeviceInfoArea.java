@@ -99,7 +99,7 @@ public class DeviceInfoArea
 	/**
 	 *
 	 *
-	 * @since 4.1.0.5
+	 * @since 1.0.0.0
 	 */
 	private void initDeviceView() {
 		main = new Composite( parent, SWT.NONE);
