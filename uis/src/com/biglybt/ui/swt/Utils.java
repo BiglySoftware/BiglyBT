@@ -4191,10 +4191,11 @@ public class Utils
 		int scaledWidth = Math.round(width * scaleFactor);
 		int scaledHeight = Math.round(height * scaleFactor);
 
+
 		ImageData imageMaskData = null;
 
 		if (imageData.getTransparencyType() == SWT.TRANSPARENCY_ALPHA) {
-			imageMaskData = new ImageData(width, height, 8, ALPHA_PALETTE, imageData.scanlinePad, imageData.alphaData);
+			imageMaskData = new ImageData(width, height, 8, ALPHA_PALETTE, 0, imageData.alphaData);
 		} else if (imageData.getTransparencyType() == SWT.TRANSPARENCY_PIXEL || imageData.getTransparencyType() == SWT.TRANSPARENCY_MASK) {
 			ImageData transparencyMaskData = imageData.getTransparencyMask();
 			imageMaskData = new ImageData(width, height, 1, BW_PALETTE, transparencyMaskData.scanlinePad, transparencyMaskData.data);
@@ -4289,7 +4290,7 @@ public class Utils
 
 			}catch( Throwable e ){
 
-				Debug.out( "Image DPI adjustment failed: " + Debug.getNestedExceptionMessage(e));
+				Debug.out( "Image DPI adjustment failed: " + Debug.getNestedExceptionMessage(e), e);
 			}
 		}
 
