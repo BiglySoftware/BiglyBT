@@ -1,6 +1,8 @@
 package com.biglybt.ui.swt.views;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -487,7 +489,7 @@ PeersViewBase
 						
 						swarm_peers = new HashSet<>( peers );
 						
-						Set<PEPeerManager> done_pms = new HashSet<>();
+						final Map<PEPeerManager,int[]> done_pms = new HashMap<>();
 						
 						List<DownloadManager>	dms = new ArrayList<>();
 						
@@ -495,10 +497,12 @@ PeersViewBase
 							
 							PEPeerManager pm = peer.getManager();
 							
-							if ( !done_pms.contains( pm )) {
-								
-								done_pms.add( pm );
+							int[]	count = done_pms.get( pm );
 							
+							if  ( count == null ){
+							
+								done_pms.put( pm, new int[]{1} );
+											
 								byte[] hash = pm.getHash();
 								
 								DownloadManager dm = gm.getDownloadManager( new HashWrapper( hash ));
@@ -507,8 +511,34 @@ PeersViewBase
 									
 									dms.add( dm );
 								}
+							}else{
+								
+								count[0]++;
 							}
 						}
+						
+						Collections.sort(
+							dms,
+							new Comparator<DownloadManager>()
+							{
+								@Override
+								public int 
+								compare(
+									DownloadManager o1, 
+									DownloadManager o2)
+								{
+									PEPeerManager pm1 = o1.getPeerManager();
+									PEPeerManager pm2 = o2.getPeerManager();
+									
+									int[] c1 = done_pms.get( pm1 );
+									int[] c2 = done_pms.get( pm2 );
+									
+									int n1 = c1==null?0:c1[0];
+									int n2 = c2==null?0:c2[0];
+									
+									return( n2 - n1);
+								}
+							});
 							
 						swarm_view.dataSourceChanged( dms.toArray( new DownloadManager[ dms.size()]));
 					}

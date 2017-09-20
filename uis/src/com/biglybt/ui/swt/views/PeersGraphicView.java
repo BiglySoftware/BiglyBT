@@ -209,7 +209,8 @@ public class PeersGraphicView
 	  }
   }
 
-  private final Map<DownloadManager,ManagerData>	dm_map = new IdentityHashMap<>();
+  private Object			dm_data_lock = new Object();
+  private ManagerData[]		dm_data = {};
 
   private final PeerFilter	peer_filter;
 
@@ -268,9 +269,16 @@ public class PeersGraphicView
 
 	  }else{
 
-		  synchronized( dm_map ){
+		  synchronized( dm_data_lock ){
 
-			  focus_pending_ds = dm_map.keySet().toArray( new DownloadManager[ dm_map.size()]);
+			  DownloadManager[] temp = new DownloadManager[ dm_data.length ];
+			  
+			  for ( int i=0;i<temp.length;i++ ) {
+				  
+				  temp[i] = dm_data[i].manager;
+			  }
+			  
+			  focus_pending_ds = temp;
 		  }
 
 		  dataSourceChanged( null );
@@ -299,28 +307,48 @@ public class PeersGraphicView
 
 	  List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource );
 
-	  synchronized( dm_map ){
+	  synchronized( dm_data_lock ){
 
-		  List<DownloadManager>	oldManagers = new ArrayList<>( dm_map.keySet());
-
-		  boolean	changed = false;
-
-		  for ( DownloadManager old: oldManagers ){
-
-			  if ( !newManagers.contains( old )){
-
-				  dm_map.remove(old).delete();
-
+		  Map<DownloadManager,ManagerData>	map = new IdentityHashMap<>();
+		  
+		  for ( ManagerData data: dm_data ) {
+			  
+			  map.put( data.manager, data );
+		  }
+		  
+		  ManagerData[] new_data = new ManagerData[newManagers.size()];
+		  
+		  boolean	changed = new_data.length != dm_data.length;
+		  
+		  for ( int i=0;i<new_data.length;i++) {
+			  
+			  DownloadManager dm = newManagers.get(i);
+			  
+			  ManagerData existing_data = map.remove( dm );
+			  
+			  if ( existing_data != null ) {
+				  
+				  new_data[i] = existing_data;
+				  
+				  if ( i < dm_data.length && dm_data[i] != existing_data ){
+					  
+					  changed = true;
+				  }
+			  }else{
+				  
+				  new_data[i] = new ManagerData( dm );
+				  
 				  changed = true;
 			  }
 		  }
-		  for ( DownloadManager nu: newManagers ){
-
-			  if ( !oldManagers.contains( nu )){
-
-				  dm_map.put( nu, new ManagerData( nu ));
-
-				  changed = true;
+		  
+		  if ( map.size() > 0 ){
+			  
+			  changed = true;
+			  
+			  for ( ManagerData data: map.values()) {
+				  
+				  data.delete();
 			  }
 		  }
 
@@ -328,14 +356,18 @@ public class PeersGraphicView
 
 			  return;
 		  }
+		  
+		  dm_data = new_data;
 
 		  Utils.execSWTThread(new AERunnable() {
 			  @Override
 			  public void runSupport() {
-				  if ( !dm_map.isEmpty()){
-					  Utils.disposeComposite(panel, false);
-				  } else {
-					  ViewUtils.setViewRequiresOneDownload(panel);
+				  synchronized( dm_data_lock ){
+					  if ( dm_data.length > 0 ){
+						  Utils.disposeComposite(panel, false);
+					  } else {
+						  ViewUtils.setViewRequiresOneDownload(panel);
+					  }
 				  }
 			  }
 		  });
@@ -345,16 +377,14 @@ public class PeersGraphicView
   protected void
   delete()
   {
-	synchronized( dm_map ){
+	synchronized( dm_data_lock ){
 
-		for ( Map.Entry<DownloadManager, ManagerData> dm_entry: dm_map.entrySet()){
-
-			ManagerData		data		= dm_entry.getValue();
+		for ( ManagerData data: dm_data ) {
 
 			data.delete();
 		}
 
-		dm_map.clear();
+		dm_data = new ManagerData[0];
 	}
   }
 
@@ -380,17 +410,16 @@ public class PeersGraphicView
 
 			String tt = "";
 
-			synchronized( dm_map ){
+			synchronized( dm_data_lock ){
 
-				for ( Map.Entry<DownloadManager, ManagerData> dm_entry: dm_map.entrySet()){
+				for ( ManagerData data: dm_data ){
 
-					DownloadManager manager 	= dm_entry.getKey();
-					ManagerData		data		= dm_entry.getValue();
+					DownloadManager manager 	= data.manager;
 
 					if ( 	x >= data.me_hit_x && x <= data.me_hit_x+OWN_SIZE &&
 							y >= data.me_hit_y && y <= data.me_hit_y+OWN_SIZE ){
 
-						if ( dm_map.size() > 1 ){
+						if ( dm_data.length > 1 ){
 
 							tt = manager.getDisplayName() + "\r\n";
 						}
@@ -465,12 +494,11 @@ public class PeersGraphicView
         			PEPeer 			target 			= null;
         			DownloadManager	target_manager 	= null;
 
-        			synchronized( dm_map ){
+        			synchronized( dm_data_lock ){
 
-	        			for ( Map.Entry<DownloadManager, ManagerData> dm_entry: dm_map.entrySet()){
+	        			for ( ManagerData data: dm_data ){
 
-	        				DownloadManager manager 	= dm_entry.getKey();
-	        				ManagerData		data		= dm_entry.getValue();
+	        				DownloadManager manager 	= data.manager;
 
 		    				for( Map.Entry<PEPeer,int[]> entry: data.peer_hit_map.entrySet()){
 
@@ -529,13 +557,12 @@ public class PeersGraphicView
     			int	x = event.x;
     			int y = event.y;
 
-    			synchronized( dm_map ){
+       			synchronized( dm_data_lock ){
 
-	       			for ( Map.Entry<DownloadManager, ManagerData> dm_entry: dm_map.entrySet()){
+        			for ( ManagerData data: dm_data ){
 
-	    				DownloadManager manager 	= dm_entry.getKey();
-	    				ManagerData		data		= dm_entry.getValue();
-
+        				DownloadManager manager 	= data.manager;
+        				
 						for( Map.Entry<PEPeer,int[]> entry: data.peer_hit_map.entrySet()){
 
 							int[] loc = entry.getValue();
@@ -633,13 +660,15 @@ public class PeersGraphicView
     //Comment the following line to enable the view
     //if(true) return;
 
-	synchronized( dm_map ){
+	synchronized( dm_data_lock ){
 
 	    if (panel == null || panel.isDisposed()){
 	    	return;
 	    }
 
-	    if ( dm_map.size() == 0  ){
+	    int	num_dms = dm_data.length;
+
+	    if ( num_dms == 0  ){
 	    	GC gcPanel = new GC(panel);
 	    	gcPanel.setBackground(Colors.white);
 	    	gcPanel.fillRectangle( panel.getBounds());
@@ -647,7 +676,6 @@ public class PeersGraphicView
 	    	return;
 	    }
 
-	    int	num_dms = dm_map.size();
 
 	    Point panelSize = panel.getSize();
 
@@ -694,10 +722,9 @@ public class PeersGraphicView
 
 	    Point lastOffset = null;
 
-		for ( Map.Entry<DownloadManager, ManagerData> dm_entry: dm_map.entrySet()){
+    	for ( ManagerData data: dm_data ){
 
-			DownloadManager manager 	= dm_entry.getKey();
-			ManagerData		data		= dm_entry.getValue();
+    		DownloadManager manager 	= data.manager;
 
 		    PEPeer[] sortedPeers;
 		    try {
@@ -1009,15 +1036,16 @@ public class PeersGraphicView
         	String id = "DMDetails_Swarm";
 
         	setFocused( true );	// do this before next code as it can pick up the corrent 'manager' ref
-			synchronized( dm_map ){
+        	
+			synchronized( dm_data_lock ){
 
-				if ( dm_map.isEmpty()){
+				if ( dm_data.length == 0 ){
 
 					SelectedContentManager.changeCurrentlySelectedContent(id, null);
 
 				}else{
 
-					DownloadManager manager 	= dm_map.keySet().iterator().next();
+					DownloadManager manager 	= dm_data[0].manager;
 
 	        		if (manager.getTorrent() != null) {
 	        			id += "." + manager.getInternalName();

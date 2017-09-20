@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -765,7 +766,7 @@ ViewUtils
 	getDownloadManagersFromDataSource(
 		Object dataSource )
 	{
-		Set<DownloadManager> managers = new HashSet<>();
+		Set<DownloadManager> managers = new LinkedHashSet<>();	// maintain order
 		if (dataSource instanceof Object[]) {
 			Object[] newDataSources = (Object[]) dataSource;
 			if (newDataSources.length == 1) {
