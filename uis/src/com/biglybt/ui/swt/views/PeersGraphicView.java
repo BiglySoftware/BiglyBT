@@ -73,9 +73,11 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
 
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 
@@ -563,77 +565,91 @@ public class PeersGraphicView
 
         				DownloadManager manager 	= data.manager;
         				
-						for( Map.Entry<PEPeer,int[]> entry: data.peer_hit_map.entrySet()){
+    					if ( 	x >= data.me_hit_x && x <= data.me_hit_x+OWN_SIZE &&
+    							y >= data.me_hit_y && y <= data.me_hit_y+OWN_SIZE ){
 
-							int[] loc = entry.getValue();
-
-							int	loc_x = loc[0];
-							int loc_y = loc[1];
-
-							if ( 	x >= loc_x && x <= loc_x+PEER_SIZE &&
-									y >= loc_y && y <= loc_y+PEER_SIZE ){
-
-								PEPeer target = entry.getKey();
-
-									// ugly code to locate any associated 'PeersView' that we can locate the peer in
-
-								try{
-									String dm_id = "DMDetails_" + Base32.encode( manager.getTorrent().getHash());
-
-									MdiEntry mdi_entry = UIFunctionsManager.getUIFunctions().getMDI().getEntry( dm_id );
-
-									if ( mdi_entry != null ){
-
-										mdi_entry.setDatasource(new Object[] { manager, target } );
-									}
-
-									Composite comp = panel.getParent();
-
-									while( comp != null ){
-
-										if ( comp instanceof CTabFolder ){
-
-											CTabFolder tf = (CTabFolder)comp;
-
-											CTabItem[] items = tf.getItems();
-
-											for ( CTabItem item: items ){
-
-												UISWTViewCore view = (UISWTViewCore)item.getData("TabbedEntry");
-
-												UISWTViewEventListener listener = view.getEventListener();
-
-												if ( listener instanceof UISWTViewEventListenerHolder ){
-
-													listener = ((UISWTViewEventListenerHolder)listener).getDelegatedEventListener( view );
-												}
-
-												if ( listener instanceof PeersView ){
-
-													tf.setSelection( item );
-
-													Event ev = new Event();
-
-													ev.item = item;
-
-														// manual setSelection doesn't file selection event - derp
-
-													tf.notifyListeners( SWT.Selection, ev );
-
-													((PeersView)listener).selectPeer( target );
-
-													return;
+    						UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+    						
+    						if (uiFunctions != null) {
+    							
+    							uiFunctions.getMDI().showEntryByID(
+    										MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS,
+    										manager);
+    						}
+    					}else{
+    						
+							for( Map.Entry<PEPeer,int[]> entry: data.peer_hit_map.entrySet()){
+	
+								int[] loc = entry.getValue();
+	
+								int	loc_x = loc[0];
+								int loc_y = loc[1];
+	
+								if ( 	x >= loc_x && x <= loc_x+PEER_SIZE &&
+										y >= loc_y && y <= loc_y+PEER_SIZE ){
+	
+									PEPeer target = entry.getKey();
+	
+										// ugly code to locate any associated 'PeersView' that we can locate the peer in
+	
+									try{
+										String dm_id = "DMDetails_" + Base32.encode( manager.getTorrent().getHash());
+	
+										MdiEntry mdi_entry = UIFunctionsManager.getUIFunctions().getMDI().getEntry( dm_id );
+	
+										if ( mdi_entry != null ){
+	
+											mdi_entry.setDatasource(new Object[] { manager, target } );
+										}
+	
+										Composite comp = panel.getParent();
+	
+										while( comp != null ){
+	
+											if ( comp instanceof CTabFolder ){
+	
+												CTabFolder tf = (CTabFolder)comp;
+	
+												CTabItem[] items = tf.getItems();
+	
+												for ( CTabItem item: items ){
+	
+													UISWTViewCore view = (UISWTViewCore)item.getData("TabbedEntry");
+	
+													UISWTViewEventListener listener = view.getEventListener();
+	
+													if ( listener instanceof UISWTViewEventListenerHolder ){
+	
+														listener = ((UISWTViewEventListenerHolder)listener).getDelegatedEventListener( view );
+													}
+	
+													if ( listener instanceof PeersView ){
+	
+														tf.setSelection( item );
+	
+														Event ev = new Event();
+	
+														ev.item = item;
+	
+															// manual setSelection doesn't file selection event - derp
+	
+														tf.notifyListeners( SWT.Selection, ev );
+	
+														((PeersView)listener).selectPeer( target );
+	
+														return;
+													}
 												}
 											}
+	
+											comp = comp.getParent();
 										}
-
-										comp = comp.getParent();
+									}catch( Throwable e ){
+	
 									}
-								}catch( Throwable e ){
-
+	
+									break;
 								}
-
-								break;
 							}
 						}
 	       			}

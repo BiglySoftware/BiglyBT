@@ -178,6 +178,8 @@ public class PeersView
 		String sColumnName, Menu menu) 
 	{
 		fillMenu(menu, tv, shell, manager);
+		
+		new MenuItem (menu, SWT.SEPARATOR);
 	}
 
 	@Override

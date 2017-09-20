@@ -908,8 +908,6 @@ PeersViewBase
 				});
 
 		addPeersMenu( download_specific, menu );
-
-		new MenuItem (menu, SWT.SEPARATOR);
 	}
 	
 	protected static boolean
@@ -1028,6 +1026,8 @@ PeersViewBase
 		Menu 		menu )
 	{
 		fillMenu( menu, tv, shell, null );
+		
+		new MenuItem (menu, SWT.SEPARATOR);
 	}
 	
 	private static abstract class
