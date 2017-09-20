@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -270,6 +271,9 @@ public class TabbedEntry
 		Control control = swtItem.getControl();
 		if (control == null || control.isDisposed()) {
 			Composite parent = swtItem.getParent();
+			if ( parent.isDisposed()) {
+				return false;
+			}
 			SWTSkinObject soParent = (SWTSkinObject) parent.getData("SkinObject");
 
 			String skinRef = getSkinRef();
@@ -530,7 +534,11 @@ public class TabbedEntry
 			public void runWithDisplay(Display display) {
 				if (swtItem != null && !swtItem.isDisposed()) {
 					// this will triggerCloseListeners
-					swtItem.dispose();
+					try {
+						swtItem.dispose();
+					}catch( SWTException e ){
+						// getting internal 'Widget it disposed' here, ignore
+					}
 					swtItem = null;
 				}
 			}

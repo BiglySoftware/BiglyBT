@@ -19,60 +19,60 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Shell;
 
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagListener;
 import com.biglybt.core.tag.Taggable;
-import com.biglybt.pif.peers.Peer;
+import com.biglybt.core.util.HashWrapper;
 import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.ui.common.table.TableColumnCore;
-import com.biglybt.ui.common.table.TableLifeCycleListener;
 import com.biglybt.ui.common.table.TableView;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
-import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.Messages;
+
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
-import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
-import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
-import com.biglybt.ui.swt.views.table.impl.TableViewTab;
-import com.biglybt.ui.swt.views.tableitems.peers.DownloadNameItem;
+
 
 
 public class
 PeersGeneralView
-	extends TableViewTab<PEPeer>
-	implements TagListener, TableLifeCycleListener, TableViewSWTMenuFillListener, UISWTViewCoreEventListenerEx
+	extends PeersViewBase
+	implements TagListener
 {
-	private TableViewSWT<PEPeer> tv;
-
-	private Shell shell;
-
 	private Tag	tag;
 
+	
 	public
 	PeersGeneralView(
 		Tag	_tag )
 	{
-		super( "AllPeersView" );
+		super( "AllPeersView", true );
 
 		tag = _tag;
-	}
-
-	@Override
-	public boolean
-	isCloneable()
-	{
-		return( true );
 	}
 
 	@Override
@@ -88,45 +88,23 @@ PeersGeneralView
 	{
 		return( tag.getTagName( true ));
 	}
-
+	
 	@Override
-	public TableViewSWT<PEPeer>
-	initYourTableView()
+	public TableViewSWT<PEPeer> initYourTableView()
 	{
-		TableColumnCore[] items = PeersView.getBasicColumnItems(TableManager.TABLE_ALL_PEERS);
-		TableColumnCore[] basicItems = new TableColumnCore[items.length + 1];
-		System.arraycopy(items, 0, basicItems, 0, items.length);
-		basicItems[items.length] = new DownloadNameItem(TableManager.TABLE_ALL_PEERS);
+		initYourTableView( TableManager.TABLE_ALL_PEERS, true );
 
-		tv = TableViewFactory.createTableViewSWT(Peer.class, TableManager.TABLE_ALL_PEERS,
-				getPropertiesPrefix(), basicItems, "connected_time", SWT.MULTI
-				| SWT.FULL_SELECTION | SWT.VIRTUAL);
-
-		tv.setRowDefaultHeightEM(1);
-		tv.setEnableTabViews(true,true,null);
-
-		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
-
-		if (uiFunctions != null){
-
-			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
-
-			PeersSuperView.registerPluginViews(pluginUI);
-		}
-
-		tv.addLifeCycleListener(this);
-		tv.addMenuFillListener(this);
-
-		return tv;
+		return( tv );
 	}
 
+	
 	@Override
 	public void
 	taggableAdded(
 		Tag			tag,
 		Taggable	tagged )
 	{
-		 tv.addDataSource((PEPeer)tagged);
+		addPeer((PEPeer)tagged);
 	}
 
 	@Override
@@ -144,7 +122,7 @@ PeersGeneralView
 
 				if ( !peers_in_tag.contains( peer )){
 
-					tv.removeDataSource( peer );
+					removePeer( peer );
 				}
 			}
 
@@ -152,7 +130,7 @@ PeersGeneralView
 
 				if ( !peers_in_table.contains( peer )){
 
-					tv.addDataSource( peer );
+					addPeer( peer );
 				}
 			}
 		}
@@ -164,15 +142,19 @@ PeersGeneralView
 		Tag			tag,
 		Taggable	tagged )
 	{
-		 tv.removeDataSource((PEPeer)tagged);
+		removePeer((PEPeer)tagged);
 	}
 
 	@Override
-	public void tableLifeCycleEventOccurred(TableView tv, int eventType,
-			Map<String, Object> data) {
+	public void 
+	tableLifeCycleEventOccurred(
+		TableView tv, int eventType,
+		Map<String, Object> data) 
+	{
+		super.tableLifeCycleEventOccurred(tv, eventType, data);
+		
 		switch (eventType) {
 			case EVENT_TABLELIFECYCLE_INITIALIZED:
-				shell = this.tv.getComposite().getShell();
 
 				tag.addTagListener(this, true);
 				break;
@@ -181,15 +163,6 @@ PeersGeneralView
 				tag.removeTagListener(this);
 				break;
 		}
-	}
-
-	@Override
-	public void
-	fillMenu(
-		String 		sColumnName,
-		Menu 		menu )
-	{
-		PeersView.fillMenu( menu, tv, shell, null );
 	}
 
 	@Override

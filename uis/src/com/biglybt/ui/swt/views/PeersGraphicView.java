@@ -91,7 +91,6 @@ public class PeersGraphicView
 
   public static String MSGID_PREFIX = "PeersGraphicView";
 
-  private UISWTView swtView;
   private static final int PEER_SIZE = 18;
   //private static final int PACKET_SIZE = 10;
   private static final int OWN_SIZE_DEFAULT = 75;
@@ -210,12 +209,18 @@ public class PeersGraphicView
 	  }
   }
 
-  private Map<DownloadManager,ManagerData>	dm_map = new IdentityHashMap<>();
+  private final Map<DownloadManager,ManagerData>	dm_map = new IdentityHashMap<>();
 
-
-
+  private final PeerFilter	peer_filter;
 
   public PeersGraphicView() {
+	  this( new PeerFilter() { public boolean acceptPeer(PEPeer peer) { return( true );}});
+  }
+
+  public PeersGraphicView(
+		 PeerFilter	_pf ) 
+  {
+	peer_filter = _pf;
     angles = new double[NB_ANGLES];
     //deltaPerimeters = new double[NB_ANGLES];
     rs = new double[NB_ANGLES];
@@ -252,7 +257,7 @@ public class PeersGraphicView
   private boolean comp_focused;
   private Object focus_pending_ds;
 
-  private void
+  protected void
   setFocused( boolean foc )
   {
 	  if ( foc ){
@@ -265,7 +270,7 @@ public class PeersGraphicView
 
 		  synchronized( dm_map ){
 
-			  focus_pending_ds = dm_map.values().toArray( new DownloadManager[ dm_map.size()]);
+			  focus_pending_ds = dm_map.keySet().toArray( new DownloadManager[ dm_map.size()]);
 		  }
 
 		  dataSourceChanged( null );
@@ -274,7 +279,7 @@ public class PeersGraphicView
 	  }
   }
 
-  private void dataSourceChanged(Object newDataSource) {
+  protected void dataSourceChanged(Object newDataSource) {
 	  if ( !comp_focused ){
 		  focus_pending_ds = newDataSource;
 		  return;
@@ -337,7 +342,7 @@ public class PeersGraphicView
 	  }
   }
 
-  private void
+  protected void
   delete()
   {
 	synchronized( dm_map ){
@@ -353,7 +358,7 @@ public class PeersGraphicView
 	}
   }
 
-  private Composite getComposite() {
+  protected Composite getComposite() {
     return panel;
   }
 
@@ -361,7 +366,7 @@ public class PeersGraphicView
     return "PeersGraphicView.title.full";
   }
 
-  private void initialize(Composite composite) {
+  protected void initialize(Composite composite) {
     display = composite.getDisplay();
 
     panel = new Canvas(composite,SWT.NO_BACKGROUND);
@@ -506,7 +511,7 @@ public class PeersGraphicView
 
     				menu = new Menu( panel );
 
-    				PeersView.fillMenu( menu, target, target_manager );
+    				PeersViewBase.fillMenu( menu, target, target_manager );
 
 					final Point cursorLocation = Display.getCurrent().getCursorLocation();
 
@@ -620,7 +625,7 @@ public class PeersGraphicView
 		});
   }
 
-  private void refresh() {
+  protected void refresh() {
     doRefresh();
   }
 
@@ -636,6 +641,7 @@ public class PeersGraphicView
 
 	    if ( dm_map.size() == 0  ){
 	    	GC gcPanel = new GC(panel);
+	    	gcPanel.setBackground(Colors.white);
 	    	gcPanel.fillRectangle( panel.getBounds());
 	    	gcPanel.dispose();
 	    	return;
@@ -698,11 +704,13 @@ public class PeersGraphicView
 		      data.peers_mon.enter();
 		      List<PEPeerTransport> connectedPeers = new ArrayList<>();
 		      for (PEPeer peer : data.peers) {
-		      	if (peer instanceof PEPeerTransport) {
-		      		PEPeerTransport peerTransport = (PEPeerTransport) peer;
-		      		if(peerTransport.getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED)
-		      			connectedPeers.add(peerTransport);
-		      	}
+		    	if ( peer_filter.acceptPeer(peer)) {
+			      	if (peer instanceof PEPeerTransport) {
+			      		PEPeerTransport peerTransport = (PEPeerTransport) peer;
+			      		if(peerTransport.getConnectionState() == PEPeerTransport.CONNECTION_FULLY_ESTABLISHED)
+			      			connectedPeers.add(peerTransport);
+			      	}
+		    	}
 		      }
 
 		      sortedPeers = connectedPeers.toArray(new PEPeer[connectedPeers.size()]);
@@ -969,6 +977,8 @@ public class PeersGraphicView
   }
 
 
+  	private UISWTView swtView;
+  
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
     switch (event.getType()) {
@@ -1051,5 +1061,13 @@ public class PeersGraphicView
 		Map<String, Long> states = TorrentUtil.calculateToolbarStates(
 				SelectedContentManager.getCurrentlySelectedContent(), null);
 		list.putAll(states);
+	}
+	
+	protected interface
+	PeerFilter
+	{
+		public boolean
+		acceptPeer(
+			PEPeer	peer );
 	}
 }
