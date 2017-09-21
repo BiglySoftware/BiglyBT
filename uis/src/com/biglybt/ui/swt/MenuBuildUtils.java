@@ -590,6 +590,8 @@ public class MenuBuildUtils {
 							}
 						}
 						
+							// country chat
+						
 						final ChatInstance cc = BuddyPluginUtils.getCountryChat();
 						
 						org.eclipse.swt.widgets.MenuItem chat_cc = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
@@ -609,16 +611,49 @@ public class MenuBuildUtils {
 										
 									}catch( Throwable e ){
 										
-										Debug.out( e );;
+										Debug.out( e );
 									}
 								}});
 						}else {
 							
-							String cc_text = MessageText.getString( "menu.your.country", new String[] { "..."});
+							String cc_text = MessageText.getString( "menu.your.country", new String[]{ "..." });
 							
 							chat_cc.setText( cc_text );
 
 							chat_cc.setEnabled( false );
+						}
+						
+						// language chat
+						
+						final ChatInstance lang = BuddyPluginUtils.getLanguageChat();
+						
+						org.eclipse.swt.widgets.MenuItem chat_lang = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+	
+						if ( lang != null ){
+														
+							String lang_text = MessageText.getString( "menu.your.language", new String[] { (String)lang.getUserData( BuddyPluginUtils.CK_LANG )});
+							
+							chat_lang.setText( lang_text );
+		
+							chat_lang.addListener(SWT.Selection, new Listener() {
+								@Override
+								public void handleEvent(Event event){
+									
+									try{
+										BuddyPluginUtils.getBetaPlugin().showChat( lang );
+										
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+									}
+								}});
+						}else {
+							
+							String lang_text = MessageText.getString( "menu.your.language", new String[]{ "..." });
+							
+							chat_lang.setText( lang_text );
+	
+							chat_lang.setEnabled( false );
 						}
 					}
 					

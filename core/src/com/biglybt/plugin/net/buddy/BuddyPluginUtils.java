@@ -28,11 +28,11 @@ import java.util.Map;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
-import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.torrent.Torrent;
@@ -43,11 +43,18 @@ import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 public class
 BuddyPluginUtils
 {
+	private static Object					chat_lock = new Object();
+
 	private static ChatInstance				country_chat;
-	private static Object					cc_lock = new Object();
 	private static String[]					country_info;
 	
 	public static final String CK_CC	 ="BuddyPluginUtils::CC";
+	
+	private static ChatInstance				language_chat;
+	private static String[]					language_info;
+	
+	public static final String CK_LANG	 ="BuddyPluginUtils::Lang";
+
 	
 	protected static void
 	betaInit(
@@ -71,7 +78,7 @@ BuddyPluginUtils
 							
 							if ( info != null ){
 								
-								synchronized( cc_lock ){
+								synchronized( chat_lock ){
 									
 									info[0] = info[0].toUpperCase( Locale.US );
 									
@@ -124,6 +131,74 @@ BuddyPluginUtils
 					}
 					
 					try{
+						synchronized( chat_lock ){
+							
+							Locale locale = MessageText.getCurrentLocale();
+							
+							String display_name = locale.getDisplayName();
+							
+							String lang = locale.getLanguage();
+							
+							String country = locale.getCountry();
+							
+							String variant = locale.getVariant();
+							
+							if ( country.length() > 0 ){
+								
+								lang += "_" + country;
+							}
+							
+							if ( variant.length() > 0 ){
+								
+								lang += "_" + variant;
+							}
+							
+							if ( language_chat == null || language_info == null || !language_info[0].equals( lang )){
+								
+								language_info = new String[]{ lang, display_name };
+								
+								if ( language_chat != null ) {
+									
+									language_chat.destroy();
+									
+									language_chat = null;
+								}
+								
+								String chat_key = Constants.APP_NAME + ": Language: " + lang ;
+								
+								language_chat = getBetaPlugin().peekChatInstance( AENetworkClassifier.AT_PUBLIC, chat_key );
+								
+								if ( language_chat == null ){
+									
+									String key = "dchat.channel.lang.done." + lang;
+									
+									if ( !COConfigurationManager.getBooleanParameter( key, false )){
+										
+										language_chat = 
+											getChat( 
+												AENetworkClassifier.AT_PUBLIC,
+												chat_key );
+										
+										if ( language_chat != null ) {
+											
+											language_chat.setFavourite( true );
+											
+											COConfigurationManager.setParameter( key, true );
+										}
+									}
+								}
+								
+								if ( language_chat != null ) {
+									
+									language_chat.setUserData( CK_LANG, display_name );
+								}
+							}
+						}
+							
+					}catch( Throwable e ){
+					}
+					
+					try{
 						
 						Thread.sleep( 60*1000 );
 						
@@ -138,7 +213,7 @@ BuddyPluginUtils
 	public static ChatInstance
 	getCountryChat()
 	{
-		synchronized( cc_lock ){
+		synchronized( chat_lock ){
 	
 			if ( country_chat == null && country_info != null ){
 				
@@ -154,6 +229,27 @@ BuddyPluginUtils
 		}
 		
 		return( country_chat );
+	}
+	
+	public static ChatInstance
+	getLanguageChat()
+	{
+		synchronized( chat_lock ){
+	
+			if ( language_chat == null && language_info != null ){
+				
+				String chat_key = Constants.APP_NAME + ": Language: " + language_info[0] ;
+				
+				language_chat = 
+						getChat( 
+							AENetworkClassifier.AT_PUBLIC,
+							chat_key );	
+				
+				language_chat.setUserData( CK_LANG, language_info[1] );
+			}
+		}
+		
+		return( language_chat );
 	}
 	
 	private static BuddyPlugin
