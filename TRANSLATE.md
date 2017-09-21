@@ -7,7 +7,7 @@ Thank you for your interesting in helping out BiglyBT.  We really need help with
 | pt_BR | Portuguese | Brazil | ~99% | [Havokdan](https://github.com/Havokdan) |
 | eu | Basque |  | ~98% | |
 | zh_CN | Chinese | China | ~90% | |
-| bg_BG | Bulgarian | Bulgaria | ~84% | |
+| bg_BG | Bulgarian | Bulgaria | ~84% | andreshko |
 | fr_FR | French | France | ~84% | |
 | es_ES | Spanish | Spain | ~81% | Valtiel |
 | ca_AD | Catalan | Andorra | ~80% | |
