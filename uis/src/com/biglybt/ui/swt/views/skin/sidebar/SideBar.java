@@ -651,6 +651,27 @@ public class SideBar
 								} else if (entry != null && !entry.isCollapseDisabled()
 										&& treeItem.getItemCount() > 0) {
 									cursorNo = SWT.CURSOR_HAND;
+								}else if ( entry != null ) {
+									MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
+									for (int i = 0; i < vitalityImages.length; i++) {
+										SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
+										if (vitalityImage == null || !vitalityImage.isVisible()) {
+											continue;
+										}
+										Rectangle hitArea = vitalityImage.getHitArea();
+										if (hitArea == null) {
+											continue;
+										}
+										// setHitArea needs it relative to entry
+										Rectangle itemBounds = entry.swt_getBounds();
+										int relY = event.y - (itemBounds == null ? 0 : itemBounds.y);
+
+										if (hitArea.contains(event.x, relY)) {
+											if ( vitalityImage.hasListeners()) {
+												cursorNo = SWT.CURSOR_HAND;
+											}
+										}
+									}
 								}
 							}
 
@@ -1574,7 +1595,9 @@ public class SideBar
 
 		entry.setTitle(title);
 		entry.setSkinRef(configID, params);
-		entry.setParentID(parentID);
+		if ( parentID == null || !parentID.isEmpty()){
+			entry.setParentID(parentID);
+		}
 		entry.setViewTitleInfo(titleInfo);
 		entry.setPreferredAfterID(preferredAfterID);
 

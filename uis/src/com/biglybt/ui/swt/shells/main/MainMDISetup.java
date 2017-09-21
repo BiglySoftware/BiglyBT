@@ -36,7 +36,6 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.views.skin.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
-import com.biglybt.core.config.impl.ConfigurationChecker;
 import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
 import com.biglybt.core.history.DownloadHistoryManager;
@@ -88,6 +87,7 @@ public class MainMDISetup
 
 	private static ParameterListener configBetaEnabledListener;
 	private static TRHostListener trackerHostListener;
+	private static SB_Dashboard	sb_dashboard;
 	private static SB_Transfers sb_transfers;
 	private static ShareManagerListener shareManagerListener;
 	private static SB_Vuze sb_vuze;
@@ -864,6 +864,7 @@ public class MainMDISetup
 		MdiEntry entry;
 
 		String[] preferredOrder = new String[] {
+			MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
 			MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 			MultipleDocumentInterface.SIDEBAR_HEADER_VUZE,
 			MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
@@ -877,49 +878,94 @@ public class MainMDISetup
 			mdi.registerEntry(id, new MdiEntryCreationListener() {
 				@Override
 				public MdiEntry createMDiEntry(String id) {
-					MdiEntry entry = mdi.createHeader(id, "sidebar." + id, null);
-
-					if ( entry == null ){
-
-						return( null );
-					}
-
-					entry.setDefaultExpanded(true);
-
-					if (id.equals(MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS)) {
-						entry.addListener(new MdiChildCloseListener() {
+					
+					MdiEntry entry;
+					
+					if ( id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )) {
+						
+						ViewTitleInfo title_info = new ViewTitleInfo() {
+							
 							@Override
-							public void mdiChildEntryClosed(MdiEntry parent, MdiEntry child,
-							                                boolean user) {
-								if (mdi.getChildrenOf(parent.getId()).size() == 0) {
-									parent.close(true);
+							public Object getTitleInfoProperty(int propertyID) {
+								if (propertyID == TITLE_INDICATOR_TEXT) {
+									return( "Yay" );
 								}
+
+								if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
+									return( "Dashboard man!" );
+								}
+
+								return null;
 							}
-						});
+						};
+						
+						entry = mdi.createEntryFromSkinRef(
+								"", MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+								"dashboard", "{sidebar.header.dashboard}",
+								title_info, null, false, null);
 
-						PluginInterface pi = PluginInitializer.getDefaultInterface();
-						UIManager uim = pi.getUIManager();
-						MenuManager menuManager = uim.getMenuManager();
-						MenuItem menuItem;
 
-						menuItem = menuManager.addMenuItem("sidebar."
-								+ MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
-								"label.plugin.options");
+						entry.setImageLeftID("image.sidebar.dashboard");
 
-						menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+						MdiEntryVitalityImage cog = entry.addVitalityImage("image.sidebar.cog");
+						
+						cog.setToolTip( MessageText.getString( "configure.dashboard.tooltip" ));
 
-						menuItem.addListener(new MenuItemListener() {
+						cog.addListener(new MdiEntryVitalityImageListener() {
 							@Override
-							public void selected(MenuItem menu, Object target) {
-								UIFunctions uif = UIFunctionsManager.getUIFunctions();
+							public void mdiEntryVitalityImage_clicked(int x, int y) {
+								
+							}});
+						
+						cog.setVisible(true);
 
-								if (uif != null) {
-									uif.getMDI().showEntryByID(
-											MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
-											"plugins");
+						
+					}else{
+						
+						entry = mdi.createHeader(id, "sidebar." + id, null);
+	
+						if ( entry == null ){
+	
+							return( null );
+						}
+	
+						entry.setDefaultExpanded(true);
+	
+						if (id.equals(MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS)) {
+							entry.addListener(new MdiChildCloseListener() {
+								@Override
+								public void mdiChildEntryClosed(MdiEntry parent, MdiEntry child,
+								                                boolean user) {
+									if (mdi.getChildrenOf(parent.getId()).size() == 0) {
+										parent.close(true);
+									}
 								}
-							}
-						});
+							});
+	
+							PluginInterface pi = PluginInitializer.getDefaultInterface();
+							UIManager uim = pi.getUIManager();
+							MenuManager menuManager = uim.getMenuManager();
+							MenuItem menuItem;
+	
+							menuItem = menuManager.addMenuItem("sidebar."
+									+ MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
+									"label.plugin.options");
+	
+							menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+							menuItem.addListener(new MenuItemListener() {
+								@Override
+								public void selected(MenuItem menu, Object target) {
+									UIFunctions uif = UIFunctionsManager.getUIFunctions();
+	
+									if (uif != null) {
+										uif.getMDI().showEntryByID(
+												MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+												"plugins");
+									}
+								}
+							});
+						}
 					}
 
 					return entry;
@@ -927,10 +973,13 @@ public class MainMDISetup
 			});
 		}
 
+		sb_dashboard = new SB_Dashboard(mdi);
 		sb_transfers = new SB_Transfers(mdi);
 		sb_vuze = new SB_Vuze(mdi);
 		new SB_Discovery(mdi);
 
+		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,false);
+		
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY, false);
 		mdi.loadEntryByID(
 				MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED, false);
@@ -951,6 +1000,10 @@ public class MainMDISetup
 			// In theory, there would be an mdi.dispose that disposed of SB_Transfers and everything else
 			// MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 			//mdi.dispose();
+		}
+		if (sb_dashboard != null) {
+			sb_dashboard.dispose();
+			sb_dashboard = null;
 		}
 		if (sb_transfers != null) {
 			sb_transfers.dispose();

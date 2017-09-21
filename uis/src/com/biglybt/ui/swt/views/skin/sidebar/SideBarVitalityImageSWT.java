@@ -116,6 +116,12 @@ public class SideBarVitalityImageSWT
 		listeners.add(l);
 	}
 
+	public boolean
+	hasListeners()
+	{
+		return( !listeners.isEmpty());
+	}
+	
 	@Override
 	public void triggerClickedListeners(int x, int y) {
 		Object[] list = listeners.toArray();

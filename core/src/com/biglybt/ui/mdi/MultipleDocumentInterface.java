@@ -29,6 +29,8 @@ public interface MultipleDocumentInterface
 
 	public static final String SIDEBAR_HEADER_VUZE = "header.vuze";
 
+	public static final String SIDEBAR_HEADER_DASHBOARD = "header.dashboard";
+
 	public static final String SIDEBAR_HEADER_TRANSFERS = "header.transfers";
 
 	public static final String SIDEBAR_HEADER_DISCOVERY = "header.discovery";
