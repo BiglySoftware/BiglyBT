@@ -59,6 +59,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.skin.SWTSkin;
+import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinProperties;
@@ -477,17 +478,96 @@ public class SideBarEntrySWT
 		return( false );
 	}
 
+	public Map<String,Object>
+	exportStandAlone()
+	{
+		Map<String,Object>	result = new HashMap<>();
+		
+		result.put( "skin_ref", getSkinRef());
+		
+		result.put( "skin_id", skin.getSkinID());
+		
+		result.put( "parent_id", getParentID());
+
+		result.put( "id", id );
+		
+		result.put( "data_source", getDatasourceCore());
+
+		result.put( "control_type", getControlType());
+
+		result.put( "event_listener", getEventListener());
+
+		return( result );
+	}
+	
 	public SWTSkinObjectContainer
 	buildStandAlone(
 		SWTSkinObjectContainer		soParent )
+	{
+		return(
+			buildStandAlone(
+					soParent,
+					getSkinRef(),
+					skin,
+					getParentID(),
+					id,
+					getDatasourceCore(),
+					getControlType(),
+					swtItem,
+					getEventListener()));
+	}
+	
+	public static SWTSkinObjectContainer
+	importStandAlone(
+		SWTSkinObjectContainer		soParent,
+		Map<String,Object>			map )
+	{
+		String		skin_ref = (String)map.get( "skin_ref" );
+		
+		String		skin_id	= (String)map.get( "skin_id" );
+		
+		SWTSkin	skin = SWTSkinFactory.lookupSkin( skin_id );
+		
+		String		parent_id	= (String)map.get( "parent_id" );
+		
+		String		id			= (String)map.get( "id" );
+
+		Object		data_source = null;
+		
+		int			control_type = ((Number)map.get( "control_type")).intValue();
+		
+		UISWTViewEventListener	event_listener	= null;
+		
+		return(
+				buildStandAlone(
+						soParent,
+						skin_ref,
+						skin,
+						parent_id,
+						id,
+						data_source,
+						control_type,
+						null,
+						event_listener ));
+	}
+	
+	private static SWTSkinObjectContainer
+	buildStandAlone(
+		SWTSkinObjectContainer		soParent,
+		String						skinRef,
+		SWTSkin						skin,
+		String						parentID,
+		String						id,
+		Object						datasource,
+		int							controlType,
+		TreeItem					swtItem,
+		UISWTViewEventListener		event_listener )
 	{
 		Control control = null;
 
 		//SWTSkin skin = soParent.getSkin();
 
 		Composite parent = soParent.getComposite();
-
-		String skinRef = getSkinRef();
 
 		if (skinRef != null){
 
@@ -502,8 +582,7 @@ public class SideBarEntrySWT
 						"MdiContents." + uniqueNumber++, SO_ID_ENTRY_WRAPPER,
 						soParent, null);
 
-				SWTSkinObject skinObject = skin.createSkinObject(id, skinRef,
-						soContents, getDatasourceCore());
+				SWTSkinObject skinObject = skin.createSkinObject( id, skinRef, soContents, datasource );
 
 				control = skinObject.getControl();
 				control.setLayoutData(Utils.getFilledFormData());
@@ -513,17 +592,15 @@ public class SideBarEntrySWT
 
 				return( soContents );
 
-			} finally {
+			}finally{
 				shell.setCursor(cursor);
 			}
 		}else {
 			// XXX: This needs to be merged into BaseMDIEntry.initialize
 
-			UISWTViewEventListener event_listener = getEventListener();
-
 			if ( event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)event_listener).isCloneable()){
 
-				final UISWTViewImpl view = new UISWTViewImpl( getParentID(), id, true );
+				final UISWTViewImpl view = new UISWTViewImpl( parentID, id, true );
 
 				try{
 					view.setEventListener(((UISWTViewCoreEventListenerEx)event_listener).getClone(),false);
@@ -544,7 +621,7 @@ public class SideBarEntrySWT
 
 					final Composite viewComposite = soContents.getComposite();
 					boolean doGridLayout = true;
-					if (getControlType() == CONTROLTYPE_SKINOBJECT) {
+					if ( controlType == CONTROLTYPE_SKINOBJECT) {
 						doGridLayout = false;
 					}
 					//					viewComposite.setBackground(parent.getDisplay().getSystemColor(
@@ -562,7 +639,9 @@ public class SideBarEntrySWT
 					view.initialize(viewComposite);
 
 					if (PAINT_BG) {
-						swtItem.setText(view.getFullTitle());
+						if ( swtItem != null ){
+							swtItem.setText(view.getFullTitle());
+						}
 					}
 
 					Composite iviewComposite = view.getComposite();

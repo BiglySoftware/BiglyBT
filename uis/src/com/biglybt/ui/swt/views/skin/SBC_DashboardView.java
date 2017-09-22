@@ -18,7 +18,10 @@
 
 package com.biglybt.ui.swt.views.skin;
 
+import java.util.*;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
@@ -26,6 +29,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.skin.*;
+import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 
 /**
  * @author TuxPaper
@@ -37,6 +41,8 @@ public class SBC_DashboardView
 
 	private static final String UI_NAME = "Dashboard";
 
+	private Composite dashboard_composite;
+	
 	@Override
 	public void updateUI() {
 	}
@@ -49,39 +55,63 @@ public class SBC_DashboardView
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
 
-		return null;
+		SWTSkinObject so_area = getSkinObject("dashboard-area");
+
+		dashboard_composite = (Composite)so_area.getControl();
+		
+		dashboard_composite.setLayout( new FormLayout());
+		
+		return( null );
 	}
 
 
 	@Override
 	public Object skinObjectHidden(SWTSkinObject skinObject, Object params) {
 
+		Utils.disposeComposite( dashboard_composite, false );
+		
 		return super.skinObjectHidden(skinObject, params);
 	}
 
 	@Override
-	public Object skinObjectShown(SWTSkinObject skinObject, Object params) {
+	public Object 
+	skinObjectShown(
+		SWTSkinObject 	skinObject, 
+		Object 			params ) 
+	{	
+		Object result = super.skinObjectShown(skinObject, params);
 		
-		SWTSkinObject so_area = getSkinObject("dashboard-area");
-
-		Composite area = (Composite)so_area.getControl();
+		Utils.disposeComposite( dashboard_composite, false );
 		
-		area.setLayout( new GridLayout());
+		Map<String,Object>	map = new HashMap<>();
 		
-		Utils.disposeComposite( area, false );
+		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
+		map.put( "parent_id", "header.transfers" );
+		map.put( "skin_ref", "library" );
+		map.put( "id", "Library" );
+		map.put( "control_type", 0 );
 		
-		Label lab = new Label( area, SWT.NULL );
-		lab.setLayoutData( new GridData(GridData.FILL_BOTH ));
+		SkinnedComposite skinned_cimp =	new SkinnedComposite( dashboard_composite );
 		
-		lab.setText( "What to do!!!!");
+		SWTSkin skin = skinned_cimp.getSkin();
 		
-		area.getParent().layout( true, true );
+		SideBarEntrySWT.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), map);
+			
+		Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
 		
-		return( super.skinObjectShown(skinObject, params));
+		c.setLayoutData( Utils.getFilledFormData());
+		
+		dashboard_composite.getParent().layout( true, true );
+		
+		return( result );
 	}
 
 	@Override
-	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
+	public Object 
+	skinObjectDestroyed(
+		SWTSkinObject 	skinObject, 
+		Object 			params ) 
+	{
 		return super.skinObjectDestroyed(skinObject, params);
 	}
 }

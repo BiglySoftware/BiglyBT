@@ -79,6 +79,10 @@ public class SWTSkinPropertiesClone
 	}
 
 	@Override
+	public String getSkinID(){
+		return( properties.getSkinID());
+	}
+	@Override
 	public void addProperty(String name, String value) {
 		properties.addProperty(sCloneConfigID + name, value);
 	}

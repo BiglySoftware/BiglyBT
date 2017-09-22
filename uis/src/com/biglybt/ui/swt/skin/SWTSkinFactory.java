@@ -16,6 +16,8 @@
  */
 package com.biglybt.ui.swt.skin;
 
+import java.util.*;
+
 /**
  * @author TuxPaper
  * @created Jun 1, 2006
@@ -23,10 +25,19 @@ package com.biglybt.ui.swt.skin;
  */
 public class SWTSkinFactory
 {
+	private static Map<String,SWTSkin>		skin_map = new HashMap<>();
+	
 	public static SWTSkin
 	getInstance()
 	{
-		return( SWTSkin.getDefaultInstance());
+		SWTSkin	result =  SWTSkin.getDefaultInstance();
+		
+		synchronized( skin_map ) {
+			
+			skin_map.put( result.getSkinID(), result );
+		}
+		
+		return( result );
 	}
 
 	public static SWTSkin
@@ -35,6 +46,23 @@ public class SWTSkinFactory
 		String 		skinPath,
 		String 		mainSkinFile)
 	{
-		return new SWTSkin(classLoader, skinPath, mainSkinFile);
+		SWTSkin	result =  new SWTSkin(classLoader, skinPath, mainSkinFile);
+		
+		synchronized( skin_map ) {
+			
+			skin_map.put( result.getSkinID(), result );
+		}
+		
+		return( result );
+	}
+	
+	public static SWTSkin
+	lookupSkin(
+		String		id )
+	{
+		synchronized( skin_map ) {
+			
+			return( skin_map.get( id ));
+		}
 	}
 }

@@ -56,7 +56,9 @@ public class SkinPropertiesImpl
 
 	private static final Pattern PAT_PARAM_NUM = Pattern.compile("\\{([0-9]+?)\\}");
 
-	private IntegratedResourceBundle rb;
+	private final String skin_id;
+	
+	private final IntegratedResourceBundle rb;
 
 	private final ClassLoader classLoader;
 
@@ -77,7 +79,8 @@ public class SkinPropertiesImpl
 		if (mainSkinFile.endsWith(".properties")) {
 			mainSkinFile = mainSkinFile.substring(0, mainSkinFile.length() - 11);
 		}
-		ResourceBundle bundle = ResourceBundle.getBundle(skinPath + mainSkinFile,
+		skin_id = skinPath + mainSkinFile;
+		ResourceBundle bundle = ResourceBundle.getBundle(skin_id,
 				Locale.getDefault(), classLoader);
 		rb = new IntegratedResourceBundle(bundle, Collections.EMPTY_MAP, 1200);
 		rb.setUseNullList(true);
@@ -100,6 +103,12 @@ public class SkinPropertiesImpl
 		}
 	}
 
+	public String
+	getSkinID()
+	{
+		return( skin_id );
+	}
+	
 	@Override
 	public void addResourceBundle(ResourceBundle subBundle, String skinPath) {
 		addResourceBundle( subBundle, skinPath, classLoader );

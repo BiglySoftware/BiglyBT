@@ -45,6 +45,11 @@ public class SWTSkinPropertiesParamImpl
 	}
 
 	@Override
+	public String getSkinID(){
+		return( properties.getSkinID());
+	}
+	
+	@Override
 	public void addProperty(String name, String value) {
 		properties.addProperty(name, value);
 	}

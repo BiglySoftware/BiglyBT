@@ -217,51 +217,83 @@ public class SideBar
 		PluginInterface pi = pm.getDefaultPluginInterface();
 		UIManager uim = pi.getUIManager();
 		MenuManager menuManager = uim.getMenuManager();
-		MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "menu.pop.out");
-		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		menuItem.addFillListener(
-			new MenuItemFillListener() {
-
+		
+		{
+			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "menu.add.to.dashboard");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.addFillListener(
+				new MenuItemFillListener() {
+	
+					@Override
+					public void menuWillBeShown(MenuItem menu, Object data) {
+						SideBarEntrySWT sbe = (SideBarEntrySWT)currentEntry;
+	
+						menu.setVisible( sbe != null && sbe.canBuildStandAlone());
+					}
+				});
+	
+			menuItem.addListener(new MenuItemListener() {
 				@Override
-				public void menuWillBeShown(MenuItem menu, Object data) {
+				public void selected(MenuItem menu, Object target) {
 					SideBarEntrySWT sbe = (SideBarEntrySWT)currentEntry;
-
-					menu.setVisible( sbe != null && sbe.canBuildStandAlone());
-				}
-			});
-
-		menuItem.addListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-				SideBarEntrySWT sbe = (SideBarEntrySWT)currentEntry;
-
-				if ( sbe != null ){
-					SkinnedDialog skinnedDialog =
-							new SkinnedDialog(
-									"skin3_dlg_sidebar_popout",
-									"shell",
-									null,	// standalone
-									SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-
-					SWTSkin skin = skinnedDialog.getSkin();
-
-					SWTSkinObjectContainer cont = sbe.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
-
-					if ( cont != null ){
-
-						skinnedDialog.setTitle( sbe.getTitle());
-
-						skinnedDialog.open();
-
-					}else{
-
-						skinnedDialog.close();
+	
+					if ( sbe != null ){
+						
+						Map<String,Object> map = sbe.exportStandAlone();
+	
+						System.out.println( map );
 					}
 				}
-			}
-		});
-
+			});
+		}
+		
+		{
+			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "menu.pop.out");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.addFillListener(
+				new MenuItemFillListener() {
+	
+					@Override
+					public void menuWillBeShown(MenuItem menu, Object data) {
+						SideBarEntrySWT sbe = (SideBarEntrySWT)currentEntry;
+	
+						menu.setVisible( sbe != null && sbe.canBuildStandAlone());
+					}
+				});
+	
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					SideBarEntrySWT sbe = (SideBarEntrySWT)currentEntry;
+	
+					if ( sbe != null ){
+						SkinnedDialog skinnedDialog =
+								new SkinnedDialog(
+										"skin3_dlg_sidebar_popout",
+										"shell",
+										null,	// standalone
+										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+	
+						SWTSkin skin = skinnedDialog.getSkin();
+	
+						SWTSkinObjectContainer cont = sbe.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
+	
+						if ( cont != null ){
+	
+							skinnedDialog.setTitle( sbe.getTitle());
+	
+							skinnedDialog.open();
+	
+						}else{
+	
+							skinnedDialog.close();
+						}
+					}
+				}
+			});
+		}
 	}
 
 

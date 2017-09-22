@@ -71,8 +71,8 @@ public class SWTSkin
 
 	private Map<SkinProperties, ImageLoader> mapImageLoaders = new ConcurrentHashMap<>();
 
-	private SWTSkinProperties skinProperties;
-	private boolean is_default;
+	private final SWTSkinProperties skinProperties;
+	private final boolean is_default;
 
 	private static Listener handCursorListener;
 	private static Cursor handCursor;
@@ -115,15 +115,15 @@ public class SWTSkin
 	 *
 	 */
 	protected SWTSkin() {
-		init(new SWTSkinPropertiesImpl(), true );
+		this(new SWTSkinPropertiesImpl(), true );
 	}
 
 	protected SWTSkin(ClassLoader classLoader, String skinPath, String mainSkinFile) {
-		init(new SWTSkinPropertiesImpl(classLoader, skinPath, mainSkinFile), false );
+		this(new SWTSkinPropertiesImpl(classLoader, skinPath, mainSkinFile), false );
 	}
 
-	private void init(SWTSkinProperties skinProperties, boolean is_default) {
-
+	private SWTSkin(SWTSkinProperties skinProperties, boolean is_default) {
+		
 		this.skinProperties = skinProperties;
 		this.is_default = is_default;
 		// the default skin gets the default image loader.  We don't add it to
@@ -171,6 +171,12 @@ public class SWTSkin
 		*/
 	}
 
+	public String
+	getSkinID()
+	{
+		return( skinProperties.getSkinID());
+	}
+	
 	public ImageLoader getImageLoader(SkinProperties properties) {
 		if (is_default) {
 			return ImageLoader.getInstance();

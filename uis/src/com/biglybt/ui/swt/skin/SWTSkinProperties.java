@@ -30,7 +30,9 @@ import com.biglybt.ui.skin.SkinProperties;
 public interface SWTSkinProperties
 	extends SkinProperties
 {
-
+	public String
+	getSkinID();
+	
 	/**
 	 * Retrieve a color property in as a SWT Color
 	 * @param name Property Name
