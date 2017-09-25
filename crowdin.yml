@@ -1,0 +1,4 @@
+files:
+  - source: /core/src/com/biglybt/internat/MessagesBundle.properties
+    translation: >-
+      /core/src/com/biglybt/internat/MessagesBundle_%locale_with_underscore%.properties
