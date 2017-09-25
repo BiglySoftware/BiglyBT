@@ -44,6 +44,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.xml.util.XMLEscapeWriter;
 import com.biglybt.core.xml.util.XUXmlWriter;
 import com.biglybt.pif.PluginInterface;
@@ -64,7 +65,7 @@ import com.biglybt.core.torrent.PlatformTorrentUtils;
 
 public class
 TagManagerImpl
-	implements TagManager, DownloadCompletionListener, AEDiagnosticsEvidenceGenerator
+	implements TagManager, DownloadCompletionListener, AEDiagnosticsEvidenceGenerator, DataSourceImporter
 {
 	private static final String	CONFIG_FILE 				= "tag.config";
 
@@ -705,6 +706,8 @@ TagManagerImpl
 	private
 	TagManagerImpl()
 	{
+		DataSourceResolver.registerExporter( this );
+		
 		AEDiagnostics.addWeakEvidenceGenerator( this );
 	}
 
@@ -1580,6 +1583,16 @@ TagManagerImpl
 		return( null );
 	}
 
+	@Override
+	public Object 
+	importDataSource(
+		Map map )
+	{
+		long uid = (Long)map.get( "uid");
+		
+		return( lookupTagByUID( uid ));
+	}
+	
 	@Override
 	public TaggableLifecycleHandler
 	registerTaggableResolver(

@@ -29,11 +29,13 @@ import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
+import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public abstract class
 TagBase
-	implements Tag, SimpleTimer.TimerTickReceiver
+	implements Tag, SimpleTimer.TimerTickReceiver, DataSourceResolver.ExportableDataSource
 {
 	protected static final String	AT_RATELIMIT_UP					= "rl.up";
 	protected static final String	AT_RATELIMIT_DOWN				= "rl.down";
@@ -176,6 +178,31 @@ TagBase
 		loadTransientStuff();
 	}
 
+	@Override
+	public ExportedDataSource 
+	exportDataSource()
+	{
+		return(
+			new ExportedDataSource()
+			{
+				public Class<? extends DataSourceImporter>
+				getExporter()
+				{
+					return( TagManagerImpl.class );
+				}
+				
+				public Map<String,Object>
+				getExport()
+				{
+					Map	m = new HashMap<String,Object>();
+					
+					m.put( "uid", getTagUID());
+					
+					return( m );
+				}
+			});
+	}
+	
 	public Tag
 	getTag()
 	{

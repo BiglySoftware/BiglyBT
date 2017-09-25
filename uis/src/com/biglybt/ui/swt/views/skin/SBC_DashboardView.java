@@ -20,10 +20,7 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.ui.common.updater.UIUpdatable;
@@ -85,11 +82,31 @@ public class SBC_DashboardView
 		
 		Map<String,Object>	map = new HashMap<>();
 		
+			// main library
+		
 		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
 		map.put( "parent_id", "header.transfers" );
 		map.put( "skin_ref", "library" );
 		map.put( "id", "Library" );
 		map.put( "control_type", 0 );
+		
+		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
+		map.put( "parent_id", "header.transfers" );
+		map.put( "skin_ref", "library" );
+		map.put( "id", "Tag.3.2" );
+		
+		Map ds_map = new HashMap();
+		ds_map.put( "exporter", "com.biglybt.core.tag.impl.TagManagerImpl" );
+		Map export_map = new HashMap();
+		export_map.put( "uid", new Long( 12884901890L ));
+		ds_map.put("export", export_map );
+		
+		map.put( "data_source", ds_map );
+		map.put( "control_type", 0 );
+
+
+		
+		
 		
 		SkinnedComposite skinned_cimp =	new SkinnedComposite( dashboard_composite );
 		

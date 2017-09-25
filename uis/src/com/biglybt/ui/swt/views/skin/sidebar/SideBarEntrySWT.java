@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.DataSourceResolver;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.common.updater.UIUpdatable;
@@ -491,8 +492,13 @@ public class SideBarEntrySWT
 
 		result.put( "id", id );
 		
-		result.put( "data_source", getDatasourceCore());
-
+		Object data_source = getDatasourceCore();
+		
+		if ( data_source != null ) {
+		
+			result.put( "data_source", DataSourceResolver.exportDataSource( data_source ));
+		}
+		
 		result.put( "control_type", getControlType());
 
 		result.put( "event_listener", getEventListener());
@@ -532,7 +538,9 @@ public class SideBarEntrySWT
 		
 		String		id			= (String)map.get( "id" );
 
-		Object		data_source = null;
+		Map<String,Object>		ds_map  = (Map<String,Object>)map.get( "data_source" );
+		
+		Object data_source = ds_map==null?null:DataSourceResolver.importDataSource( ds_map );
 		
 		int			control_type = ((Number)map.get( "control_type")).intValue();
 		
