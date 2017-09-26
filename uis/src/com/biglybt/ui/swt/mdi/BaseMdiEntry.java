@@ -1223,7 +1223,21 @@ public abstract class BaseMdiEntry
 		
 		result.put( "mdi", ( this instanceof SideBarEntrySWT )?"sidebar":"tabbed" );
 		
-		result.put( "title", getViewTitleInfo().getTitleInfoProperty( ViewTitleInfo.TITLE_TEXT ));
+		String title = null;
+		
+		ViewTitleInfo vti = getViewTitleInfo();
+		
+		if ( vti != null ) {
+			
+			title = (String)vti.getTitleInfoProperty( ViewTitleInfo.TITLE_TEXT );
+		}
+		
+		if ( title == null || title.length() == 0 ) {
+			
+			title = getFullTitle();
+		}
+		
+		result.put( "title", title );
 		
 		result.put( "skin_ref", getSkinRef());
 		
