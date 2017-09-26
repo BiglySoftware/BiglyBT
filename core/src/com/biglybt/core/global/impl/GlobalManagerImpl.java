@@ -63,6 +63,7 @@ import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.tracker.util.TRTrackerUtilsListener;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
 import com.biglybt.pif.network.ConnectionManager;
 
@@ -495,6 +496,8 @@ public class GlobalManagerImpl
 
   	AEDiagnostics.addWeakEvidenceGenerator( this );
 
+  	DataSourceResolver.registerExporter( this );
+  	
     stats = new GlobalManagerStatsImpl( this );
 
     try{
@@ -2950,6 +2953,15 @@ public class GlobalManagerImpl
 		return( new ArrayList<Taggable>( getDownloadManagers()));
 	}
 
+	public Object
+	importDataSource(
+		Map		map )
+	{
+		String id = (String)map.get( "id" );
+		
+		return( resolveTaggable(id));
+	}
+	
 	@Override
 	public String
 	getDisplayName(

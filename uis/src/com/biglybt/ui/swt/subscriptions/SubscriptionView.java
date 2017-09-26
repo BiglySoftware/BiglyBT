@@ -18,6 +18,8 @@
 
 package com.biglybt.ui.swt.subscriptions;
 
+import java.util.List;
+
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.skin.UISWTViewSkinAdapter;
@@ -49,6 +51,27 @@ SubscriptionView
 	getClone()
 	{
 		return( new SubscriptionView());
+	}
+	
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( SubscriptionView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
 	}
 
 	@Override

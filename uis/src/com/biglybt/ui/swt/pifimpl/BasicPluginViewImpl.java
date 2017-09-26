@@ -35,6 +35,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.components.UIPropertyChangeEvent;
 import com.biglybt.pif.ui.components.UIPropertyChangeListener;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
@@ -96,11 +97,34 @@ BasicPluginViewImpl
 		return( new BasicPluginViewImpl( model ));
 	}
 
-  public BasicPluginViewModel
-  getModel()
-  {
-	  return( model );
-  }
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( BasicPluginViewImpl.class );
+				}
+				
+				public java.util.List<Object>
+				getParameters()
+				{
+					Debug.out( "TODODODODODO");
+					
+					return( null );
+				}
+			});
+	}
+	
+	public BasicPluginViewModel
+	getModel()
+	{
+		return( model );
+	}
 
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {

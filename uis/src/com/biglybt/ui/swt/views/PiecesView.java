@@ -137,6 +137,27 @@ public class PiecesView
 	{
 		return( new PiecesView());
 	}
+	
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( PiecesView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
 
 	// @see com.biglybt.ui.swt.views.table.impl.TableViewTab#initYourTableView()
 	@Override

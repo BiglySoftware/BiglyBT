@@ -83,17 +83,20 @@ public class SBC_DashboardView
 		Map<String,Object>	map = new HashMap<>();
 		
 			// main library
-		
+		/*
 		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
 		map.put( "parent_id", "header.transfers" );
 		map.put( "skin_ref", "library" );
 		map.put( "id", "Library" );
 		map.put( "control_type", 0 );
-		
+		*/
+			// tag
+		/*
 		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
 		map.put( "parent_id", "header.transfers" );
 		map.put( "skin_ref", "library" );
 		map.put( "id", "Tag.3.2" );
+		
 		
 		Map ds_map = new HashMap();
 		ds_map.put( "exporter", "com.biglybt.core.tag.impl.TagManagerImpl" );
@@ -103,10 +106,30 @@ public class SBC_DashboardView
 		
 		map.put( "data_source", ds_map );
 		map.put( "control_type", 0 );
-
-
+		*/
 		
 		
+		
+		// {event_listener={name=com.biglybt.ui.swt.subscriptions.SubscriptionView}, skin_id=com.biglybt.ui.skin.skin3, parent_id=Subscriptions, skin_ref=null, id=Subscription_04C72453A8202FF2CDCF474BC8DFE49392330BC623362827F87EE20AA9B53ECA42D1512AAB4DF7089A66C488BBB5C3290C, data_source=data_source={exporter=com.biglybt.core.subs.impl.SubscriptionManagerImpl, export={id=BHBFNORGGHOPQS2Y}}, control_type=0}
+
+		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
+		map.put( "parent_id", "Subscriptions" );
+	
+		map.put( "id", "Subscription_04C72453A8202FF2CDCF474BC8DFE49392330BC623362827F87EE20AA9B53ECA42D1512AAB4DF7089A66C488BBB5C3290C" );
+		map.put( "control_type", 0 );
+
+		Map ds_map = new HashMap();
+		ds_map.put( "exporter", "com.biglybt.core.subs.impl.SubscriptionManagerImpl" );
+		Map export_map = new HashMap();
+		export_map.put( "id", "BHBFNORGGHOPQS2Y");
+		ds_map.put("export", export_map );
+		
+		map.put( "data_source", ds_map );
+		
+		Map el_map = new HashMap();
+		el_map.put( "name", "com.biglybt.ui.swt.subscriptions.SubscriptionView" );
+		
+		map.put( "event_listener", el_map );
 		
 		SkinnedComposite skinned_cimp =	new SkinnedComposite( dashboard_composite );
 		

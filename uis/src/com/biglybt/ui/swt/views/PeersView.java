@@ -40,6 +40,7 @@ import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
@@ -80,6 +81,27 @@ public class PeersView
 		return( new PeersView());
 	}
 
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( PeersView.class );
+				}
+				
+				public java.util.List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 	public TableViewSWT<PEPeer> 
 	initYourTableView()
 	{

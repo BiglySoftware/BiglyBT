@@ -47,7 +47,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
-
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx.CloneConstructor;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.average.MovingImmediateAverage;
 import com.biglybt.ui.common.ToolBarItem;
@@ -97,6 +97,27 @@ DownloadActivityView
 		return( new DownloadActivityView());
 	}
 
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( DownloadActivityView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 	private String
 	getFullTitle()
 	{

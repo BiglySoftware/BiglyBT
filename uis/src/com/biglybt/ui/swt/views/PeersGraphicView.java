@@ -257,6 +257,27 @@ public class PeersGraphicView
 	  return( new PeersGraphicView());
   }
 
+  @Override
+  public CloneConstructor
+  getCloneConstructor()
+  {
+	  return( 
+		  new CloneConstructor()
+		  {
+			  public Class<? extends UISWTViewCoreEventListenerEx>
+			  getCloneClass()
+			  {
+				  return( PeersGraphicView.class );
+			  }
+
+			  public List<Object>
+			  getParameters()
+			  {
+				  return( null );
+			  }
+		  });
+  }
+	
   private boolean comp_focused;
   private Object focus_pending_ds;
 

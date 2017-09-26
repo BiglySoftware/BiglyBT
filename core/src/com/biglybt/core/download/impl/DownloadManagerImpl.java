@@ -60,11 +60,14 @@ import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableResolver;
+import com.biglybt.core.tag.impl.TagManagerImpl;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
+import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.download.Download;
@@ -87,7 +90,7 @@ import com.biglybt.plugin.tracker.local.LocalTrackerPlugin;
 public class
 DownloadManagerImpl
 	extends LogRelation
-	implements DownloadManager, Taggable
+	implements DownloadManager, Taggable, DataSourceResolver.ExportableDataSource
 {
 	private final static long SCRAPE_DELAY_ERROR_TORRENTS = 1000 * 60 * 60 * 2;// 2 hrs
 	private final static long SCRAPE_DELAY_STOPPED_TORRENTS = 1000 * 60 * 60;  // 1 hr
@@ -793,6 +796,32 @@ DownloadManagerImpl
 	{
 		return( dl_identity==null?null:Base32.encode(dl_identity));
 	}
+	
+	@Override
+	public ExportedDataSource 
+	exportDataSource()
+	{
+		return(
+			new ExportedDataSource()
+			{
+				public Class<? extends DataSourceImporter>
+				getExporter()
+				{
+					return( GlobalManager.class );
+				}
+				
+				public Map<String,Object>
+				getExport()
+				{
+					Map	m = new HashMap<String,Object>();
+					
+					m.put( "id", getTaggableID());
+					
+					return( m );
+				}
+			});
+	}
+	
 
 	private void
 	readTorrent(

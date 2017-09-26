@@ -21,6 +21,10 @@ DataSourceResolver
 			result.put( "export", e.getExport());
 			
 			return( result );
+			
+		}else{
+			
+			Debug.out( "Can't export a " + data_source );
 		}
 		
 		return( null );
@@ -63,7 +67,6 @@ DataSourceResolver
 	{
 		public ExportedDataSource
 		exportDataSource();
-		
 	}
 	
 	public interface
@@ -72,7 +75,7 @@ DataSourceResolver
 		public Class<? extends DataSourceImporter>
 		getExporter();
 		
-		public Map
+		public Map<String,Object>
 		getExport();
 	}
 	
@@ -81,6 +84,6 @@ DataSourceResolver
 	{
 		public Object
 		importDataSource(
-			Map		map );
+			Map<String,Object>		map );
 	}
 }

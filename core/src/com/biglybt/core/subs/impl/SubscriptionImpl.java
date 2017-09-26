@@ -42,13 +42,16 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentCreator;
 import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
+import com.biglybt.core.util.DataSourceResolver.ExportableDataSource;
+import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.util.JSONUtils;
 
 public class
 SubscriptionImpl
-	implements Subscription
+	implements Subscription, ExportableDataSource
 {
 
 	private static final int MAX_ASSOCIATIONS;
@@ -575,6 +578,30 @@ SubscriptionImpl
 		}
 	}
 
+	public ExportedDataSource
+	exportDataSource()
+	{
+		return(
+			new ExportedDataSource()
+			{
+				public Class<? extends DataSourceImporter>
+				getExporter()
+				{
+					return( SubscriptionManagerImpl.class );
+				}
+				
+				public Map<String,Object>
+				getExport()
+				{
+					Map<String,Object> map = new HashMap<>();
+					
+					map.put( "id", getID());
+					
+					return( map );
+				}
+			});
+	}
+	
 	protected Map
 	getScheduleConfig()
 	{

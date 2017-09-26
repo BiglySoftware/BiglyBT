@@ -59,6 +59,7 @@ import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
@@ -94,7 +95,7 @@ import com.biglybt.util.UrlFilter;
 
 public class
 SubscriptionManagerImpl
-	implements SubscriptionManager, AEDiagnosticsEvidenceGenerator
+	implements SubscriptionManager, DataSourceImporter, AEDiagnosticsEvidenceGenerator
 {
 	private static final String	CONFIG_FILE = "subscriptions.config";
 	private static final String	LOGGER_NAME = "Subscriptions";
@@ -304,6 +305,8 @@ SubscriptionManagerImpl
 
 			AEDiagnostics.addWeakEvidenceGenerator( this );
 
+			DataSourceResolver.registerExporter( this );
+			
 			CustomizationManager cust_man = CustomizationManagerFactory.getSingleton();
 
 			Customization cust = cust_man.getActiveCustomization();
@@ -2890,6 +2893,13 @@ SubscriptionManagerImpl
 		return null;
 	}
 
+	public Object
+	importDataSource(
+		Map<String,Object>		map )
+	{
+		return( getSubscriptionByID((String)map.get( "id" )));
+	}
+	
 	protected SubscriptionImpl
 	getSubscriptionFromSID(
 		byte[]		sid )

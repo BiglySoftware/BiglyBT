@@ -18,6 +18,7 @@
 package com.biglybt.ui.swt.views;
 
 import java.text.DecimalFormat;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -188,6 +189,27 @@ public class GeneralView
 	  getClone()
 	  {
 		  return( new GeneralView());
+	  }
+
+	  @Override
+	  public CloneConstructor
+	  getCloneConstructor()
+	  {
+		  return( 
+			  new CloneConstructor()
+			  {
+				  public Class<? extends UISWTViewCoreEventListenerEx>
+				  getCloneClass()
+				  {
+					  return( GeneralView.class );
+				  }
+
+				  public List<Object>
+				  getParameters()
+				  {
+					  return( null );
+				  }
+			  });
 	  }
 
   public void initialize(Composite composite) {

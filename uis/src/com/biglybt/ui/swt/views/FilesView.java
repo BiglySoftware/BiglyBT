@@ -184,6 +184,27 @@ public class FilesView
 	}
 
 	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( FilesView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( Arrays.asList(  allowTabViews  ));
+				}
+			});
+	}
+	
+	@Override
 	public TableViewSWT<DiskManagerFileInfo> initYourTableView() {
 		tv = TableViewFactory.createTableViewSWT(
 				com.biglybt.pif.disk.DiskManagerFileInfo.class,

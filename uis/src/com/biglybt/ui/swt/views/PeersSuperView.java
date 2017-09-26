@@ -22,6 +22,7 @@ package com.biglybt.ui.swt.views;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.Core;
@@ -38,6 +39,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
 
@@ -73,6 +75,27 @@ public class PeersSuperView
 		return( new PeersSuperView());
 	}
 
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( PeersSuperView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 	@Override
 	public TableViewSWT<PEPeer> initYourTableView()
 	{

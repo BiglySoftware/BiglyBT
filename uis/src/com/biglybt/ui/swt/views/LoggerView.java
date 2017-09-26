@@ -167,6 +167,27 @@ public class LoggerView
 	{
 		return( new LoggerView( this ));
 	}
+	
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( LoggerView.class );
+				}
+				
+				public java.util.List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
 
 	private void initialize(Composite composite) {
 		display = composite.getDisplay();

@@ -20,6 +20,7 @@
 package com.biglybt.ui.swt.views;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagListener;
+import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.pif.ui.tables.TableManager;
@@ -54,6 +56,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
 
@@ -74,12 +77,40 @@ PeersGeneralView
 
 		tag = _tag;
 	}
+	
+	public
+	PeersGeneralView(
+		long		tag_uid )
+	{
+		this( TagManagerFactory.getTagManager().lookupTagByUID( tag_uid ));
+	}
 
 	@Override
 	public UISWTViewCoreEventListener
 	getClone()
 	{
 		return( new PeersGeneralView( tag ));
+	}
+	
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( PeersGeneralView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( Arrays.asList( tag.getTagUID()));
+				}
+			});
 	}
 
 	@Override

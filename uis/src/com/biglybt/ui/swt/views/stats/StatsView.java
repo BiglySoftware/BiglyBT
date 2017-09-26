@@ -18,6 +18,8 @@
  */
 package com.biglybt.ui.swt.views.stats;
 
+import java.util.List;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.widgets.Composite;
@@ -129,6 +131,27 @@ public class StatsView
 		return( new StatsView());
 	}
 
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( StatsView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 	private void initialize(Composite composite) {
 		parent = composite;
 

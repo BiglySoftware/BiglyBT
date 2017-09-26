@@ -151,6 +151,27 @@ public class PieceInfoView
 		return( new PieceInfoView());
 	}
 
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( PieceInfoView.class );
+				}
+				
+				public java.util.List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 	private void dataSourceChanged(Object newDataSource) {
 		//System.out.println( "dsc: dlm=" + dlm + ", new=" + (newDataSource instanceof Object[]?((Object[])newDataSource)[0]:newDataSource));
 

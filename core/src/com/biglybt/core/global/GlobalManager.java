@@ -30,13 +30,14 @@ import com.biglybt.core.tag.TaggableResolver;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerScraper;
 import com.biglybt.core.util.HashWrapper;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
 
 /**
  * The GlobalManager contains a list of all the downloads
  * (DownloadManager objects) that the client controls.
  */
-public interface GlobalManager extends CoreComponent, TaggableResolver {
+public interface GlobalManager extends CoreComponent, TaggableResolver, DataSourceImporter {
 	/**
 	 * Create and add a Download Manager to the global list
 	 *

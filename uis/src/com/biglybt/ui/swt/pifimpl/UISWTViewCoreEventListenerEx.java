@@ -22,6 +22,8 @@
 
 package com.biglybt.ui.swt.pifimpl;
 
+import java.util.List;
+
 public interface
 UISWTViewCoreEventListenerEx
 	extends UISWTViewCoreEventListener
@@ -31,4 +33,17 @@ UISWTViewCoreEventListenerEx
 
 	public UISWTViewCoreEventListener
 	getClone();
+	
+	public CloneConstructor
+	getCloneConstructor();
+	
+	public interface
+	CloneConstructor
+	{
+		public Class<? extends UISWTViewCoreEventListenerEx>
+		getCloneClass();
+		
+		public List<Object>
+		getParameters();
+	}
 }
