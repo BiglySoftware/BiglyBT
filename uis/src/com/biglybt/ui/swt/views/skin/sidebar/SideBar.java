@@ -64,6 +64,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl;
 import com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener;
+import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
@@ -240,9 +241,7 @@ public class SideBar
 	
 					if ( sbe != null ){
 						
-						Map<String,Object> map = sbe.exportStandAlone();
-	
-						System.out.println( map );
+						MainMDISetup.getSb_dashboard().addItem( sbe );
 					}
 				}
 			});

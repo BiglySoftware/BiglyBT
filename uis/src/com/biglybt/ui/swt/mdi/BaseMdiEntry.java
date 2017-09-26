@@ -1223,6 +1223,8 @@ public abstract class BaseMdiEntry
 		
 		result.put( "mdi", ( this instanceof SideBarEntrySWT )?"sidebar":"tabbed" );
 		
+		result.put( "title", getViewTitleInfo().getTitleInfoProperty( ViewTitleInfo.TITLE_TEXT ));
+		
 		result.put( "skin_ref", getSkinRef());
 		
 		result.put( "skin_id", skin.getSkinID());
@@ -1278,11 +1280,17 @@ public abstract class BaseMdiEntry
 						p_vals.add( new Long(((Boolean)p)?1:0));
 						
 					}else if ( p instanceof Long ) {
-						
+
 						p_types.add( "long" );
-						
+
 						p_vals.add( p );
 						
+					}else if ( p instanceof String ) {
+
+						p_types.add( "string" );
+
+						p_vals.add( p );
+	
 					}else {
 						
 						Debug.out( "Unsupported param type: " + p );
@@ -1364,6 +1372,12 @@ public abstract class BaseMdiEntry
 							types.add( long.class );
 							
 							args.add((Long)val );
+							
+						}else if ( type.equals( "string" )) {
+							
+							types.add( String.class );
+							
+							args.add((String)val );
 							
 						}else {
 							

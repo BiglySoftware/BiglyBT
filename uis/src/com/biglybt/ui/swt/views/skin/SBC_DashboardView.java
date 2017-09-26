@@ -27,12 +27,9 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
-import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 
-/**
- * @author TuxPaper
- */
 public class SBC_DashboardView
 	extends SkinView
 	implements UIUpdatable
@@ -82,97 +79,20 @@ public class SBC_DashboardView
 		
 		Utils.disposeComposite( dashboard_composite, false );
 		
-		Map<String,Object>	map = new HashMap<>();
+		Map<String,Object>	map = MainMDISetup.getSb_dashboard().getCurrent();
 		
-			// main library
-		/*
-		map.put( "mdi", "sidebar" );
-		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
-		map.put( "parent_id", "header.transfers" );
-		map.put( "skin_ref", "library" );
-		map.put( "id", "Library" );
-		map.put( "control_type", 0 );
-		*/
-			// tag
-		/*
-		map.put( "mdi", "sidebar" );
-		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
-		map.put( "parent_id", "header.transfers" );
-		map.put( "skin_ref", "library" );
-		map.put( "id", "Tag.3.2" );
-		
-		
-		Map ds_map = new HashMap();
-		ds_map.put( "exporter", "com.biglybt.core.tag.impl.TagManagerImpl" );
-		Map export_map = new HashMap();
-		export_map.put( "uid", new Long( 12884901890L ));
-		ds_map.put("export", export_map );
-		
-		map.put( "data_source", ds_map );
-		map.put( "control_type", 0 );
-		*/
-		
-		
-		
-		// {event_listener={name=com.biglybt.ui.swt.subscriptions.SubscriptionView}, skin_id=com.biglybt.ui.skin.skin3, parent_id=Subscriptions, skin_ref=null, id=Subscription_04C72453A8202FF2CDCF474BC8DFE49392330BC623362827F87EE20AA9B53ECA42D1512AAB4DF7089A66C488BBB5C3290C, data_source=data_source={exporter=com.biglybt.core.subs.impl.SubscriptionManagerImpl, export={id=BHBFNORGGHOPQS2Y}}, control_type=0}
-		/*
-		map.put( "mdi", "sidebar" );
-		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
-		map.put( "parent_id", "Subscriptions" );
-	
-		map.put( "id", "Subscription_04C72453A8202FF2CDCF474BC8DFE49392330BC623362827F87EE20AA9B53ECA42D1512AAB4DF7089A66C488BBB5C3290C" );
-		map.put( "control_type", 0 );
-
-		Map ds_map = new HashMap();
-		ds_map.put( "exporter", "com.biglybt.core.subs.impl.SubscriptionManagerImpl" );
-		Map export_map = new HashMap();
-		export_map.put( "id", "BHBFNORGGHOPQS2Y");
-		ds_map.put("export", export_map );
-		
-		map.put( "data_source", ds_map );
-		
-		Map el_map = new HashMap();
-		el_map.put( "name", "com.biglybt.ui.swt.subscriptions.SubscriptionView" );
-		
-		map.put( "event_listener", el_map );
-		*/
-		
-		
-		// {event_listener={name=com.biglybt.ui.swt.views.PeersGraphicView}, mdi=tabbed, skin_id=com.biglybt.ui.skin.skin3, parent_id=null, skin_ref=null, id=PeersGraphicView, data_source={exports=[{exporter=com.biglybt.core.global.GlobalManager, export={id=5OKT3IHDIAZMSRV5RYW2SOMVEYCNWDDZ}}]}, control_type=0}
-
-		map.put( "mdi", "tabbed" );
-		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
-		map.put( "id", "PeersGraphicView" );
-		map.put( "control_type", 0 );
-		
-		Map dss_map = new HashMap();
-		List dss_list = new ArrayList();
-		dss_map.put( "exports", dss_list );
-		Map ds_map = new HashMap();
-		dss_list.add( ds_map );
-		
-		ds_map.put( "exporter", "com.biglybt.core.global.impl.GlobalManagerImpl" );
-		Map export_map = new HashMap();
-		export_map.put( "id", "5OKT3IHDIAZMSRV5RYW2SOMVEYCNWDDZ");
-		ds_map.put("export", export_map );
-		
-		map.put( "data_source", dss_map );
-		
-		Map el_map = new HashMap();
-		el_map.put( "name", "com.biglybt.ui.swt.views.PeersGraphicView" );
-		
-		map.put( "event_listener", el_map );
-
-		
-		SkinnedComposite skinned_cimp =	new SkinnedComposite( dashboard_composite );
-		
-		SWTSkin skin = skinned_cimp.getSkin();
-		
-		BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), map);
+		if ( map != null ) {
 			
-		Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
-		
-		c.setLayoutData( Utils.getFilledFormData());
+			SkinnedComposite skinned_cimp =	new SkinnedComposite( dashboard_composite );
+			
+			SWTSkin skin = skinned_cimp.getSkin();
+			
+			BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), map);
+				
+			Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
+			
+			c.setLayoutData( Utils.getFilledFormData());
+		}
 		
 		dashboard_composite.getParent().layout( true, true );
 		

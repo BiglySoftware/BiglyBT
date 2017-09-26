@@ -23,6 +23,8 @@
 package com.biglybt.ui.swt.search;
 
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.DataSourceResolver;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
@@ -38,11 +40,14 @@ import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 
+import java.util.Map;
+
 import com.biglybt.core.metasearch.MetaSearchManager;
 import com.biglybt.core.metasearch.MetaSearchManagerFactory;
 
 public class
 SearchUI
+	implements DataSourceImporter
 {
 	private static final String CONFIG_SECTION_ID 	= "Search";
 
@@ -51,6 +56,8 @@ SearchUI
 	public
 	SearchUI()
 	{
+		DataSourceResolver.registerExporter( this );
+		
 		final PluginInterface	default_pi = PluginInitializer.getDefaultInterface();
 
 		ui_manager = default_pi.getUIManager();
@@ -95,6 +102,17 @@ SearchUI
 				public void UIDetached(UIInstance instance) {
 				}
 			});
+	}
+	
+	public Object
+	importDataSource(
+		Map<String,Object>		map )
+	{
+		String	term = (String)map.get( "term" );
+		
+		boolean toSubscribe = ((Long)map.get( "toSubscribe" )) != 0;
+		
+		return( new SearchResultsTabArea.SearchQuery(term, toSubscribe));
 	}
 
 	private void

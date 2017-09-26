@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.pifimpl;
 
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -59,29 +60,51 @@ public class
 BasicPluginViewImpl
 	implements UISWTViewCoreEventListenerEx, UIPropertyChangeListener
 {
+	private static final Map<String,BasicPluginViewModel>		model_map = new HashMap<>();
 
-  BasicPluginViewModel model;
+	BasicPluginViewModel model;
 
-  //GUI elements
-  Display display;
-  Composite panel;
-  ProgressBar progress;
-  BufferedLabel status;
-  BufferedLabel task;
-  StyledText log;
-  Pattern inclusionFilter;
-  Pattern exclusionFilter;
-  boolean paused;
+	//GUI elements
+	Display display;
+	Composite panel;
+	ProgressBar progress;
+	BufferedLabel status;
+	BufferedLabel task;
+	StyledText log;
+	Pattern inclusionFilter;
+	Pattern exclusionFilter;
+	boolean paused;
 
-  boolean isCreated;
+	boolean isCreated;
 
-  public
-  BasicPluginViewImpl(
-	BasicPluginViewModel 	model)
-  {
-    this.model = model;
-    isCreated = false;
-  }
+	public
+	BasicPluginViewImpl(
+			BasicPluginViewModel 	model)
+	{
+		this.model = model;
+
+		synchronized( model_map ) {
+
+			model_map.put( model.getPluginInterface().getPluginID() + "/" + model.getName(), model );
+		}
+
+		isCreated = false;
+	}
+
+	public
+	BasicPluginViewImpl(
+		String			id )
+	{	
+		synchronized( model_map ) {
+		
+			model = model_map.get( id );
+		}
+		
+		if ( model == null ) {
+			
+			throw( new RuntimeException( "Model unavailable" ));
+		}
+	}
 
 	@Override
 	public boolean
@@ -113,9 +136,9 @@ BasicPluginViewImpl
 				public java.util.List<Object>
 				getParameters()
 				{
-					Debug.out( "TODODODODODO");
+					String id = model.getPluginInterface().getPluginID() + "/" + model.getName();
 					
-					return( null );
+					return( Arrays.asList( id ));
 				}
 			});
 	}

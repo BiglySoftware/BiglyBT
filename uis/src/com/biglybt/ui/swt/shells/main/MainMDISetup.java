@@ -993,6 +993,10 @@ public class MainMDISetup
 		return sb_transfers;
 	}
 
+	public static SB_Dashboard getSb_dashboard() {
+		return sb_dashboard;
+	}
+	
 	public static void dispose() {
 		if (Utils.isAZ2UI()) {
 			// TODO

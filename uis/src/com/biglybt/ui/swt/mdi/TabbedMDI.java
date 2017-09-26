@@ -55,6 +55,7 @@ import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventCancelledException;
+import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
@@ -993,10 +994,8 @@ public class TabbedMDI
 				menuItem.addListener(new MenuItemListener() {
 					@Override
 					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-						
-						Map<String,Object> map = result.exportStandAlone();
-		
-						System.out.println( map );
+								
+						MainMDISetup.getSb_dashboard().addItem( result );
 					}
 				});
 			}

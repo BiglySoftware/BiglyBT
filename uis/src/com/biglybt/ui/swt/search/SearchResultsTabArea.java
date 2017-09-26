@@ -21,9 +21,14 @@ import com.biglybt.core.*;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
 import com.biglybt.ui.swt.skin.*;
+
+import java.util.*;
+
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
+import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.Utils;
 
@@ -76,7 +81,7 @@ public class SearchResultsTabArea
 	{
 	}
 
-	public static class SearchQuery {
+	public static class SearchQuery implements DataSourceResolver.ExportableDataSource {
 		public SearchQuery(String term, boolean toSubscribe) {
 			this.term = term;
 			this.toSubscribe = toSubscribe;
@@ -84,6 +89,31 @@ public class SearchResultsTabArea
 
 		public String term;
 		public boolean toSubscribe;
+		
+		public ExportedDataSource
+		exportDataSource()
+		{
+			return(
+				new ExportedDataSource()
+				{
+					public Class<? extends DataSourceImporter>
+					getExporter()
+					{
+						return( SearchUI.class );
+					}
+					
+					public Map<String,Object>
+					getExport()
+					{
+						Map	map = new HashMap();
+						
+						map.put( "term", term );
+						map.put( "toSubscribe", new Long( toSubscribe?1:0 ));
+						
+						return( map );
+					}
+				});
+		}
 	}
 
 	@Override
