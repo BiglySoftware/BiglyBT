@@ -19,7 +19,6 @@
 package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
-import java.util.List;
 
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
@@ -38,7 +37,6 @@ public class SBC_DashboardView
 	private static final String UI_NAME = "Dashboard";
 
 	private Composite 			dashboard_composite;
-	private SkinnedComposite	skin_comp;
 	
 	@Override
 	public void updateUI() {
@@ -65,9 +63,8 @@ public class SBC_DashboardView
 	@Override
 	public Object skinObjectHidden(SWTSkinObject skinObject, Object params) {
 
-		if ( skin_comp != null ) {
-			skin_comp.getSkin().disposeDefault();
-		}
+		// if we don't dispose then need to propagate show/hide events to sub-views
+		
 		Utils.disposeComposite( dashboard_composite, false );
 		
 		return super.skinObjectHidden(skinObject, params);
