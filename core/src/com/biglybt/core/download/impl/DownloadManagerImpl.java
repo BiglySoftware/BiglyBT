@@ -807,7 +807,7 @@ DownloadManagerImpl
 				public Class<? extends DataSourceImporter>
 				getExporter()
 				{
-					return( GlobalManager.class );
+					return( globalManager.getClass());
 				}
 				
 				public Map<String,Object>

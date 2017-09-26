@@ -37,7 +37,6 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.DataSourceResolver;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.common.updater.UIUpdatable;
@@ -57,11 +56,9 @@ import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx.CloneConstructor;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.skin.SWTSkin;
-import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinProperties;
@@ -131,8 +128,6 @@ public class SideBarEntrySWT
 	//private Color colorFocus;
 
 	private boolean showonSWTItemSet;
-
-	private final SWTSkin skin;
 
 	private SWTSkinObjectContainer soParent;
 
@@ -458,78 +453,6 @@ public class SideBarEntrySWT
 		return true;
 	}
 
-	public boolean
-	canBuildStandAlone()
-	{
-		String skinRef = getSkinRef();
-
-		if (skinRef != null){
-
-			return( true );
-
-		}else {
-
-			UISWTViewEventListener event_listener = getEventListener();
-
-			if ( event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)event_listener).isCloneable()){
-
-				return( true );
-			}
-		}
-
-		return( false );
-	}
-
-	public Map<String,Object>
-	exportStandAlone()
-	{
-		Map<String,Object>	result = new HashMap<>();
-		
-		result.put( "skin_ref", getSkinRef());
-		
-		result.put( "skin_id", skin.getSkinID());
-		
-		result.put( "parent_id", getParentID());
-
-		result.put( "id", id );
-		
-		Object data_source = getDatasourceCore();
-		
-		if ( data_source != null ) {
-		
-			if ( data_source instanceof String ) {
-			
-				result.put( "data_source", data_source );
-				
-			}else {
-			
-				result.put( "data_source", DataSourceResolver.exportDataSource( data_source ));
-			}
-		}
-		
-		result.put( "control_type", getControlType());
-
-		UISWTViewCoreEventListenerEx listener = (UISWTViewCoreEventListenerEx)getEventListener();
-		
-		if ( listener != null ) {
-		
-			CloneConstructor cc = listener.getCloneConstructor();
-		
-			String name = cc.getCloneClass().getCanonicalName();
-			
-			Map<String,Object>	map = new HashMap<>();
-			
-			map.put( "name",  name );
-			
-			List<Object>	params = cc.getParameters();
-			
-			Debug.out( "TODO" );
-			
-			result.put( "event_listener", map );
-		}
-		
-		return( result );
-	}
 	
 	public SWTSkinObjectContainer
 	buildStandAlone(
@@ -548,66 +471,8 @@ public class SideBarEntrySWT
 					getEventListener()));
 	}
 	
-	public static SWTSkinObjectContainer
-	importStandAlone(
-		SWTSkinObjectContainer		soParent,
-		Map<String,Object>			map )
-	{
-		String		skin_ref = (String)map.get( "skin_ref" );
-		
-		String		skin_id	= (String)map.get( "skin_id" );
-		
-		SWTSkin	skin = SWTSkinFactory.lookupSkin( skin_id );
-		
-		String		parent_id	= (String)map.get( "parent_id" );
-		
-		String		id			= (String)map.get( "id" );
-
-		Object		data_source =  map.get( "data_source" );
-		
-		if ( data_source != null ) {
-			
-			if ( data_source instanceof Map ) {
-		
-				Map<String,Object>		ds_map  = (Map<String,Object>)data_source;
-		
-				data_source = ds_map==null?null:DataSourceResolver.importDataSource( ds_map );
-			}
-		}
-		
-		int			control_type = ((Number)map.get( "control_type")).intValue();
-		
-		Map<String,Object>	el_map = (Map<String,Object>)map.get( "event_listener" );
-		
-		UISWTViewEventListener	event_listener	= null;
-		
-		if ( el_map != null ){
-		
-			try {
-				Class<? extends UISWTViewCoreEventListenerEx> cla = (Class<? extends UISWTViewCoreEventListenerEx>) Class.forName((String)el_map.get( "name" ));
-				
-				event_listener = cla.newInstance();
-				
-			}catch( Throwable e ) {
-				
-				e.printStackTrace();
-			}
-		}
-		
-		return(
-				buildStandAlone(
-						soParent,
-						skin_ref,
-						skin,
-						parent_id,
-						id,
-						data_source,
-						control_type,
-						null,
-						event_listener ));
-	}
 	
-	private static SWTSkinObjectContainer
+	public static SWTSkinObjectContainer
 	buildStandAlone(
 		SWTSkinObjectContainer		soParent,
 		String						skinRef,

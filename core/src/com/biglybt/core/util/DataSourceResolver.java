@@ -21,6 +21,23 @@ DataSourceResolver
 			result.put( "export", e.getExport());
 			
 			return( result );
+		
+		}else if ( data_source instanceof Object[] ){
+			
+			Object[] sources = (Object[])data_source;
+			
+			List<Map<String,Object>>	list = new ArrayList<>();
+			
+			Map<String,Object>	result = new HashMap<>();
+
+			result.put( "exports", list );
+			
+			for ( Object ds: sources ) {
+				
+				list.add( exportDataSource( ds ));
+			}
+			
+			return( result );
 			
 		}else{
 			
@@ -34,21 +51,39 @@ DataSourceResolver
 	importDataSource(
 		Map<String,Object>		map )
 	{
-		String exporter_class = (String)map.get( "exporter" );
+		List<Map<String,Object>> list = (List<Map<String,Object>>)map.get( "exports" );
 		
-		DataSourceImporter importer;
-		
-		synchronized( importer_map ) {
+		if ( list == null ) {
+				 
+			String exporter_class = (String)map.get( "exporter" );
 			
-			importer = importer_map.get( exporter_class );
-		}
-		
-		if ( importer == null ) {
+			DataSourceImporter importer;
 			
-			return( null );
+			synchronized( importer_map ) {
+				
+				importer = importer_map.get( exporter_class );
+			}
+			
+			if ( importer == null ) {
+				
+				return( null );
+			}
+			
+			return( importer.importDataSource((Map<String,Object>)map.get( "export" )));
+			
+		}else{
+			
+			Object[] data_sources = new Object[ list.size()];
+			
+			for (int i=0; i<data_sources.length; i++ ){
+				
+				Map<String,Object> m = list.get( i );
+				
+				data_sources[i] = importDataSource( m );
+			}
+			
+			return( data_sources );
 		}
-		
-		return( importer.importDataSource((Map<String,Object>)map.get( "export" )));
 	}
 	
 	

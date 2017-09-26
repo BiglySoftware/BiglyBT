@@ -41,6 +41,8 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
+import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.common.util.MenuItemManager;
@@ -973,69 +975,97 @@ public class TabbedMDI
 			PluginInterface pi = pm.getDefaultPluginInterface();
 			UIManager uim = pi.getUIManager();
 			MenuManager menuManager = uim.getMenuManager();
-			com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem(id + "._end_", "menu.pop.out");
-			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-			menuItem.addFillListener(
-				new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-
+			
+			{
+				com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( id + "._end_", "menu.add.to.dashboard");
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		
+				menuItem.addFillListener(
+					new MenuItemFillListener() {
+		
+						@Override
+						public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+		
+							menu.setVisible(result.canBuildStandAlone());
+						}
+					});
+		
+				menuItem.addListener(new MenuItemListener() {
 					@Override
-					public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-
-						menu.setVisible( result.canBuildStandAlone());
+					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+						
+						Map<String,Object> map = result.exportStandAlone();
+		
+						System.out.println( map );
 					}
 				});
-
-			menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-				@Override
-				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-
-					SkinnedDialog skinnedDialog =
-							new SkinnedDialog(
-									"skin3_dlg_sidebar_popout",
-									"shell",
-									null,	// standalone
-									SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-
-					SWTSkin skin = skinnedDialog.getSkin();
-
-					SWTSkinObjectContainer cont = result.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
-
-					if ( cont != null ){
-
-						Object ds = result.getDatasource();
-
-						if ( ds instanceof Object[]){
-
-							Object[] temp = (Object[])ds;
-
-							if ( temp.length > 0 ){
-
-								ds = temp[0];
+			}
+			
+			{
+				com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem(id + "._end_", "menu.pop.out");
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+				menuItem.addFillListener(
+					new com.biglybt.pif.ui.menus.MenuItemFillListener() {
+	
+						@Override
+						public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+	
+							menu.setVisible( result.canBuildStandAlone());
+						}
+					});
+	
+				menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
+					@Override
+					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+	
+						SkinnedDialog skinnedDialog =
+								new SkinnedDialog(
+										"skin3_dlg_sidebar_popout",
+										"shell",
+										null,	// standalone
+										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+	
+						SWTSkin skin = skinnedDialog.getSkin();
+	
+						SWTSkinObjectContainer cont = result.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
+	
+						if ( cont != null ){
+	
+							Object ds = result.getDatasource();
+	
+							if ( ds instanceof Object[]){
+	
+								Object[] temp = (Object[])ds;
+	
+								if ( temp.length > 0 ){
+	
+									ds = temp[0];
+								}
 							}
+	
+							String ds_str = "";
+	
+							if ( ds instanceof Download ){
+	
+								ds_str = ((Download)ds).getName();
+	
+							}else if ( ds instanceof DownloadManager ){
+	
+								ds_str = ((DownloadManager)ds).getDisplayName();
+							}
+	
+							skinnedDialog.setTitle( result.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
+	
+							skinnedDialog.open();
+	
+						}else{
+	
+							skinnedDialog.close();
 						}
-
-						String ds_str = "";
-
-						if ( ds instanceof Download ){
-
-							ds_str = ((Download)ds).getName();
-
-						}else if ( ds instanceof DownloadManager ){
-
-							ds_str = ((DownloadManager)ds).getDisplayName();
-						}
-
-						skinnedDialog.setTitle( result.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
-
-						skinnedDialog.open();
-
-					}else{
-
-						skinnedDialog.close();
 					}
-				}
-			});
+				});
+			}
 
 		}
 

@@ -43,12 +43,15 @@ import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.*;
-
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx.CloneConstructor;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.skin.SWTSkin;
+import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
+import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 
 public abstract class BaseMdiEntry
 	extends UISWTViewImpl
@@ -60,6 +63,8 @@ public abstract class BaseMdiEntry
 	protected String logID;
 
 	private String skinRef;
+
+	protected SWTSkin skin;
 
 	private List<MdiCloseListener> listCloseListeners = null;
 
@@ -1186,4 +1191,224 @@ public abstract class BaseMdiEntry
 		}
 	}
 
+	
+	
+	
+	public boolean
+	canBuildStandAlone()
+	{
+		String skinRef = getSkinRef();
+
+		if (skinRef != null){
+
+			return( true );
+
+		}else {
+
+			UISWTViewEventListener event_listener = getEventListener();
+
+			if ( event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)event_listener).isCloneable()){
+
+				return( true );
+			}
+		}
+
+		return( false );
+	}
+
+	public Map<String,Object>
+	exportStandAlone()
+	{
+		Map<String,Object>	result = new HashMap<>();
+		
+		result.put( "mdi", ( this instanceof SideBarEntrySWT )?"sidebar":"tabbed" );
+		
+		result.put( "skin_ref", getSkinRef());
+		
+		result.put( "skin_id", skin.getSkinID());
+		
+		result.put( "parent_id", getParentID());
+
+		result.put( "id", id );
+		
+		Object data_source = getDatasourceCore();
+		
+		if ( data_source != null ) {
+		
+			if ( data_source instanceof String ) {
+			
+				result.put( "data_source", data_source );
+				
+			}else {
+			
+				result.put( "data_source", DataSourceResolver.exportDataSource( data_source ));
+			}
+		}
+		
+		result.put( "control_type", getControlType());
+
+		UISWTViewCoreEventListenerEx listener = (UISWTViewCoreEventListenerEx)getEventListener();
+		
+		if ( listener != null ) {
+		
+			CloneConstructor cc = listener.getCloneConstructor();
+		
+			String name = cc.getCloneClass().getCanonicalName();
+			
+			Map<String,Object>	map = new HashMap<>();
+			
+			map.put( "name",  name );
+			
+			List<Object>	params = cc.getParameters();
+			
+			if ( params != null ){
+				
+				List	p_types	= new ArrayList<>();
+				List	p_vals	= new ArrayList<>();
+				
+				map.put( "p_types", p_types );
+				map.put( "p_vals", p_vals );
+				
+				for ( Object p: params ) {
+					
+					if ( p instanceof Boolean ) {
+						
+						p_types.add( "bool" );
+						
+						p_vals.add( new Long(((Boolean)p)?1:0));
+						
+					}else if ( p instanceof Long ) {
+						
+						p_types.add( "long" );
+						
+						p_vals.add( p );
+						
+					}else {
+						
+						Debug.out( "Unsupported param type: " + p );
+					}
+				}
+			}
+			
+			result.put( "event_listener", map );
+		}
+		
+		return( result );
+	}
+	
+	public abstract SWTSkinObjectContainer
+	buildStandAlone(
+		SWTSkinObjectContainer		soParent );
+	
+	public static SWTSkinObjectContainer
+	importStandAlone(
+		SWTSkinObjectContainer		soParent,
+		Map<String,Object>			map )
+	{
+		String	mdi_type = (String)map.get( "mdi" );
+		
+		String		skin_ref = (String)map.get( "skin_ref" );
+		
+		String		skin_id	= (String)map.get( "skin_id" );
+		
+		SWTSkin	skin = SWTSkinFactory.lookupSkin( skin_id );
+		
+		String		parent_id	= (String)map.get( "parent_id" );
+		
+		String		id			= (String)map.get( "id" );
+
+		Object		data_source =  map.get( "data_source" );
+		
+		if ( data_source != null ) {
+			
+			if ( data_source instanceof Map ) {
+		
+				Map<String,Object>		ds_map  = (Map<String,Object>)data_source;
+		
+				data_source = ds_map==null?null:DataSourceResolver.importDataSource( ds_map );
+			}
+		}
+		
+		int			control_type = ((Number)map.get( "control_type")).intValue();
+		
+		Map<String,Object>	el_map = (Map<String,Object>)map.get( "event_listener" );
+		
+		UISWTViewEventListener	event_listener	= null;
+		
+		if ( el_map != null ){
+		
+			try {
+				Class<? extends UISWTViewCoreEventListenerEx> cla = (Class<? extends UISWTViewCoreEventListenerEx>) Class.forName((String)el_map.get( "name" ));
+				
+				List	p_types = (List)el_map.get( "p_types" );
+				List	p_vals	= (List)el_map.get( "p_vals" );
+				
+				if ( p_types != null && !p_types.isEmpty()){
+					
+					List<Class> 	types = new ArrayList<>();
+					List<Object>	args = new ArrayList<>();
+					
+					for ( int i=0;i<p_types.size();i++) {
+						
+						String type = (String)p_types.get(i);
+						Object val	= p_vals.get(i);
+						
+						if ( type.equals( "bool" )) {
+							
+							types.add( boolean.class );
+							
+							args.add(((Long)val)!=0);
+							
+						}else if ( type.equals( "long" )) {
+							
+							types.add( long.class );
+							
+							args.add((Long)val );
+							
+						}else {
+							
+							Debug.out( "Unsupported type: " + type );
+						}
+					}
+					
+					event_listener = cla.getConstructor( types.toArray( new Class<?>[types.size()])).newInstance( args.toArray( new Object[args.size()]));
+					
+				}else {
+				
+					event_listener = cla.newInstance();
+				}
+				
+			}catch( Throwable e ) {
+				
+				Debug.out( e );
+			}
+		}
+		
+		if ( mdi_type.equals( "sidebar" )){
+			
+			return( SideBarEntrySWT.buildStandAlone(
+						soParent,
+						skin_ref,
+						skin,
+						parent_id,
+						id,
+						data_source,
+						control_type,
+						null,
+						event_listener ));
+			
+		}else {
+			return(TabbedEntry.buildStandAlone(
+					soParent,
+					skin_ref,
+					skin,
+					parent_id,
+					id,
+					data_source,
+					control_type,
+					null,
+					event_listener ));
+			
+		}
+	}
 }

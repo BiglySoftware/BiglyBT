@@ -69,8 +69,6 @@ public class TabbedEntry
 
 	private CTabItem swtItem;
 
-	private SWTSkin skin;
-
 	private boolean showonSWTItemSet;
 
 	private boolean buildonSWTItemSet;
@@ -82,39 +80,40 @@ public class TabbedEntry
 		this.skin = skin;
 	}
 
-	public boolean
-	canBuildStandAlone()
-	{
-		String skinRef = getSkinRef();
-
-		if (skinRef != null){
-
-			return( true );
-
-		}else {
-
-			UISWTViewEventListener event_listener = getEventListener();
-
-			if ( event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)event_listener).isCloneable()){
-
-				return( true );
-			}
-		}
-
-		return( false );
-	}
-
 	public SWTSkinObjectContainer
 	buildStandAlone(
 		SWTSkinObjectContainer		soParent )
+	{
+		return(
+				buildStandAlone(
+						soParent,
+						getSkinRef(),
+						skin,
+						getParentID(),
+						id,
+						getDatasourceCore(),
+						getControlType(),
+						swtItem,
+						getEventListener()));
+	}
+	
+	public static SWTSkinObjectContainer
+	buildStandAlone(
+		SWTSkinObjectContainer		soParent,
+		String						skinRef,
+		SWTSkin						skin,
+		String						parentID,
+		String						id,
+		Object						datasource,
+		int							controlType,
+		CTabItem					swtItem,
+		UISWTViewEventListener		event_listener )
 	{
 		Control control = null;
 
 		//SWTSkin skin = soParent.getSkin();
 
 		Composite parent = soParent.getComposite();
-
-		String skinRef = getSkinRef();
 
 		if ( skinRef != null ){
 
@@ -130,7 +129,7 @@ public class TabbedEntry
 						soParent, null);
 
 				SWTSkinObject skinObject = skin.createSkinObject(id, skinRef,
-						soContents, getDatasourceCore());
+						soContents, datasource );
 
 				control = skinObject.getControl();
 				control.setLayoutData(Utils.getFilledFormData());
@@ -146,11 +145,9 @@ public class TabbedEntry
 		} else {
 			// XXX: This needs to be merged into BaseMDIEntry.initialize
 
-			UISWTViewEventListener event_listener = getEventListener();
-
 			if ( event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)event_listener).isCloneable()){
 
-				final UISWTViewImpl view = new UISWTViewImpl( getParentID(), id, true );
+				final UISWTViewImpl view = new UISWTViewImpl( parentID, id, true );
 
 				try{
 					view.setEventListener(((UISWTViewCoreEventListenerEx)event_listener).getClone(),false);
@@ -171,7 +168,7 @@ public class TabbedEntry
 
 					final Composite viewComposite = soContents.getComposite();
 					boolean doGridLayout = true;
-					if (getControlType() == CONTROLTYPE_SKINOBJECT) {
+					if (controlType == CONTROLTYPE_SKINOBJECT) {
 						doGridLayout = false;
 					}
 					//					viewComposite.setBackground(parent.getDisplay().getSystemColor(
