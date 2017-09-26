@@ -20,8 +20,11 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Utils;
@@ -80,11 +83,14 @@ public class SBC_DashboardView
 		
 		Utils.disposeComposite( dashboard_composite, false );
 		
-		Map<String,Object>	map = MainMDISetup.getSb_dashboard().getCurrent();
+		List<Map<String,Object>>	list = MainMDISetup.getSb_dashboard().getCurrent();
 		
-		if ( map != null ) {
+		SashForm sf = new SashForm( dashboard_composite, SWT.HORIZONTAL );
+		sf.setLayoutData( Utils.getFilledFormData());
+		
+		for ( Map map: list ) {
 			
-			SkinnedComposite skinned_comp =	new SkinnedComposite( dashboard_composite );
+			SkinnedComposite skinned_comp =	new SkinnedComposite( sf );
 			
 			SWTSkin skin = skinned_comp.getSkin();
 			
