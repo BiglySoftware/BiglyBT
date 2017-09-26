@@ -37,7 +37,8 @@ public class SBC_DashboardView
 
 	private static final String UI_NAME = "Dashboard";
 
-	private Composite dashboard_composite;
+	private Composite 			dashboard_composite;
+	private SkinnedComposite	skin_comp;
 	
 	@Override
 	public void updateUI() {
@@ -64,6 +65,9 @@ public class SBC_DashboardView
 	@Override
 	public Object skinObjectHidden(SWTSkinObject skinObject, Object params) {
 
+		if ( skin_comp != null ) {
+			skin_comp.getSkin().disposeDefault();
+		}
 		Utils.disposeComposite( dashboard_composite, false );
 		
 		return super.skinObjectHidden(skinObject, params);
@@ -83,9 +87,9 @@ public class SBC_DashboardView
 		
 		if ( map != null ) {
 			
-			SkinnedComposite skinned_cimp =	new SkinnedComposite( dashboard_composite );
+			SkinnedComposite skinned_comp =	new SkinnedComposite( dashboard_composite );
 			
-			SWTSkin skin = skinned_cimp.getSkin();
+			SWTSkin skin = skinned_comp.getSkin();
 			
 			BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), map);
 				

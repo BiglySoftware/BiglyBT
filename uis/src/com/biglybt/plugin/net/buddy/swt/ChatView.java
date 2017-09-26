@@ -23,26 +23,62 @@
 package com.biglybt.plugin.net.buddy.swt;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.widgets.Composite;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginViewInterface;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 
 public class
 ChatView
-	implements UISWTViewCoreEventListener
+	implements UISWTViewCoreEventListenerEx
 {
 	private ChatInstance	current_chat;
 	private ChatInstance	initialized_chat;
 
 	private BuddyPluginViewInterface.View chat_view;
 
+	@Override
+	public boolean
+	isCloneable()
+	{
+		return( true );
+	}
+
+	@Override
+	public UISWTViewCoreEventListener
+	getClone()
+	{
+		return( new ChatView());
+	}
+	
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( ChatView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 	private void
 	initialize(
 		Composite	_parent_composite )

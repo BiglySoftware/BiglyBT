@@ -19,6 +19,12 @@
 package com.biglybt.plugin.net.buddy.swt;
 
 
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemListener;
+import com.biglybt.pif.ui.menus.MenuManager;
+import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatAdapter;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctionsManager;
@@ -133,6 +139,28 @@ public class ChatMDIEntry implements ViewTitleInfo
 				}
 			});
 
+		/*
+		UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
+		
+		MenuManager menu_manager = ui_manager.getMenuManager();
+
+		MenuItem menu_item;
+
+		menu_item = menu_manager.addMenuItem( "sidebar." + mdi_entry.getId(), "dasd.ad.ad." );
+		menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		menu_item.addListener(
+				new MenuItemListener() 
+				{
+					@Override
+					public void
+					selected(
+						MenuItem menu, Object target ) 
+					{
+				      	
+					}
+				});
+		*/
+		
 		chat.addListener( adapter );
 	}
 

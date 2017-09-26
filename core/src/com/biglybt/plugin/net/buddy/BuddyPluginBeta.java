@@ -40,6 +40,8 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
+import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.core.xml.util.XUXmlWriter;
 import com.biglybt.pif.PluginEvent;
 import com.biglybt.pif.PluginEventListener;
@@ -53,7 +55,7 @@ import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.I2PHelpers;
 
 public class
-BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
+BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final boolean DEBUG_ENABLED			= System.getProperty( "az.chat.buddy.debug", "0" ).equals( "1" );
 	public static final boolean BETA_CHAN_ENABLED		= System.getProperty( "az.chat.buddy.beta.chan", "1" ).equals( "1" );
 
@@ -213,6 +215,8 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 				}
 			});
 
+		DataSourceResolver.registerExporter( this );
+		
 		AEDiagnostics.addWeakEvidenceGenerator(this);
 	}
 
@@ -2018,6 +2022,26 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 		return( null );
 	}
 
+	public Object
+	importDataSource(
+		Map<String,Object>		map )
+	{
+		String	network = AENetworkClassifier.internalise((String)map.get( "network" ));
+		String	key		= (String)map.get( "key" );
+		
+		try {
+			ChatInstance chat = getChat( network, key );
+			
+			chat.addVirtualReference();
+			
+			return( chat );
+			
+		}catch( Throwable e ) {
+			
+			return( null );
+		}
+	}
+	
 	public ChatInstance
 	getChat(
 		String			network,
@@ -2530,6 +2554,7 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 
 	public class
 	ChatInstance
+		implements DataSourceResolver.ExportableDataSource
 	{
 		public static final String	OPT_INVISIBLE		= "invisible";		// Boolean
 
@@ -2593,6 +2618,7 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 		private String		instance_nick;
 
 		private int			reference_count;
+		private int			virtual_reference_count;
 
 		private ChatMessage		last_message_requiring_attention;
 		private boolean			message_outstanding;
@@ -2669,15 +2695,60 @@ BuddyPluginBeta implements AEDiagnosticsEvidenceGenerator {
 				return( BuddyPluginBeta.this.getChat( network, key ));
 			}
 		}
+		
+		public ExportedDataSource
+		exportDataSource()
+		{
+			return(
+				new ExportedDataSource(){
+					
+					@Override
+					public Class<? extends DataSourceImporter> getExporter(){
+						
+						return( BuddyPluginBeta.class );
+					}
+					
+					@Override
+					public Map<String, Object> getExport(){
+						Map<String,Object>	map = new HashMap<>();
+						
+						map.put( "network", network );
+						map.put( "key", key );
+						
+						return( map );
+					}
+				});
+		}
 
+		protected void
+		addVirtualReference()
+		{
+				// hack to deal with imported chats that get a real reference added to them when imported
+				// but there is no easy way to remove the ref once 'transferred'. So we keep the real ref in order to
+				// ensure the chat is live but then transfer that reference when we can. Not great as there's a chance
+				// the transfer fails for some reason but woreva
+			
+			synchronized( chat_lock ){
+				
+				virtual_reference_count++;
+			}
+		}
+		
 		protected void
 		addReference()
 		{
 			synchronized( chat_lock ){
 
-				reference_count++;
+				if ( virtual_reference_count > 0 ){
+					
+					virtual_reference_count--;
+					
+				}else{
+					
+					reference_count++;
+				}
 
-				// Debug.out( getName() + ": added ref -> " + reference_count );
+				//Debug.out( getName() + ": added ref -> " + reference_count );
 			}
 		}
 

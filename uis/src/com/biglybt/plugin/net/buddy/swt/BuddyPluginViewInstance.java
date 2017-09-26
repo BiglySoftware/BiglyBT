@@ -57,7 +57,6 @@ import com.biglybt.ui.swt.config.IntParameter;
 import com.biglybt.ui.swt.config.Parameter;
 import com.biglybt.ui.swt.config.ParameterChangeAdapter;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 import com.biglybt.core.security.*;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;

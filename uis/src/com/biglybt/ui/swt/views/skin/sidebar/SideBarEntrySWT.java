@@ -606,6 +606,15 @@ public class SideBarEntrySWT
 
 					view.triggerEvent(UISWTViewEvent.TYPE_FOCUSGAINED, null);
 
+					iviewComposite.addDisposeListener(
+						new DisposeListener(){
+							
+							@Override
+							public void widgetDisposed(DisposeEvent arg0){
+								view.triggerEvent(UISWTViewEvent.TYPE_DESTROY, null);
+							}
+						});
+					
 					return( soContents );
 
 				} catch (Throwable e) {

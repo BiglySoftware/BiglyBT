@@ -15,6 +15,11 @@ DataSourceResolver
 			
 			ExportedDataSource e = ((ExportableDataSource)data_source).exportDataSource();
 			
+			if ( e == null ) {
+				
+				return( null );
+			}
+			
 			Map<String,Object>	result = new HashMap<>();
 			
 			result.put( "exporter", e.getExporter().getCanonicalName());
