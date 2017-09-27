@@ -22,25 +22,36 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
 
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.BDecoder;
+import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
+import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MdiEntryVitalityImage;
+import com.biglybt.ui.mdi.MdiEntryVitalityImageListener;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 
 
 public class SB_Dashboard
 {
-
+	private final MultipleDocumentInterfaceSWT		mdi;
+	
+	private MdiEntry mdi_entry;
 	
 	private List<DashboardItem>		items = new ArrayList<>();
 
@@ -48,13 +59,75 @@ public class SB_Dashboard
 	
 	public 
 	SB_Dashboard(
-		final MultipleDocumentInterfaceSWT mdi ) 
+		final MultipleDocumentInterfaceSWT _mdi ) 
 	{
+		mdi		= _mdi;
+		
+		readConfig();
+		
+		if ( !COConfigurationManager.getBooleanParameter( "dashboard.init.0", false )){
+			
+			COConfigurationManager.setParameter( "dashboard.init.0", true );
+			
+			if ( items.isEmpty()){
+				
+				addStartupItem();
+				
+				writeConfig();
+			}
+		}
+		
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 		MenuManager menuManager = uim.getMenuManager();
 		MenuItem menuItem;
 
+		menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+				"menu.add.website");
+
+		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+
+		menuItem.addListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				
+				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+						"chat.view.enter.key.title", "chat.view.enter.key.msg");
+
+				entryWindow.prompt(new UIInputReceiverListener() {
+					@Override
+					public void UIInputReceiverClosed(UIInputReceiver receiver) {
+						if (!receiver.hasSubmittedInput()) {
+							return;
+						}
+
+						String key = receiver.getSubmittedInput().trim();
+						
+						if ( !key.isEmpty()) {
+							
+							Map<String,Object>	map = new HashMap<>();
+							
+							map.put( "mdi", "sidebar" );
+							map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
+							map.put( "parent_id", "header.dashboard" );
+							map.put( "skin_ref", "main.generic.browse" );
+							map.put( "id", "Browser: " + key );
+							map.put( "title", key );		
+							map.put( "data_source", key );
+							map.put( "control_type", 0L );
+							
+							synchronized( items ) {
+								
+								items.add( new DashboardItem( map ));
+							}
+							
+							fireChanged();
+						}
+					}});
+			}
+		});
+		
+		
 		menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
 				"Button.reset");
 
@@ -67,13 +140,42 @@ public class SB_Dashboard
 				synchronized( items ) {
 					
 					items.clear();
+					
+					addStartupItem();
 				}
 				
 				fireChanged();
 			}
 		});
+		
+		menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+				"sep1");
+		
+		menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
 	}
 
+	private void
+	addStartupItem()
+	{
+		String	starting_url = "https://github.com/BiglySoftware/BiglyBT/wiki/Dashboard";
+		
+		Map<String,Object>	map = new HashMap<>();
+		
+		map.put( "mdi", "sidebar" );
+		map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
+		map.put( "parent_id", "header.dashboard" );
+		map.put( "skin_ref", "main.generic.browse" );
+		map.put( "id", "Browser: Dashboard" );
+		map.put( "title", "Wiki: Dashboard" );		
+		map.put( "data_source", starting_url );
+		map.put( "control_type", 0L );
+		
+		synchronized( items ) {
+		
+			items.add( new DashboardItem( map ));
+		}
+	}
+	
 	public void
 	addItem(
 		BaseMdiEntry		entry )
@@ -101,6 +203,49 @@ public class SB_Dashboard
 	{
 	}
 	
+	public MdiEntry
+	setupMDIEntry()
+	{
+		ViewTitleInfo title_info = new ViewTitleInfo() {
+			
+			@Override
+			public Object getTitleInfoProperty(int propertyID) {
+				if (propertyID == TITLE_INDICATOR_TEXT) {
+					return( String.valueOf( items.size()));
+				}
+
+				if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
+					
+					return( null );
+				}
+
+				return null;
+			}
+		};
+		
+		mdi_entry = mdi.createEntryFromSkinRef(
+				"", MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+				"dashboard", "{sidebar.header.dashboard}",
+				title_info, null, false, null);
+
+
+		mdi_entry.setImageLeftID("image.sidebar.dashboard");
+
+		MdiEntryVitalityImage cog = mdi_entry.addVitalityImage("image.sidebar.cog");
+		
+		cog.setToolTip( MessageText.getString( "configure.dashboard.tooltip" ));
+
+		cog.addListener(new MdiEntryVitalityImageListener() {
+			@Override
+			public void mdiEntryVitalityImage_clicked(int x, int y) {
+				
+			}});
+		
+		cog.setVisible(true);
+		
+		return( mdi_entry );
+	}
+	
 	public void
 	addListener(
 		DashboardListener	l )
@@ -118,6 +263,11 @@ public class SB_Dashboard
 	private void
 	fireChanged()
 	{
+		if ( mdi_entry != null ) {
+			
+			mdi_entry.redraw();
+		}
+		
 		for ( DashboardListener l: listeners ){
 			
 			try {
@@ -128,7 +278,53 @@ public class SB_Dashboard
 				Debug.out( e );
 			}
 		}
+		
+		writeConfig();
 	}
+	
+	private void
+	readConfig()
+	{
+		synchronized( items ){
+			
+			Map	config = COConfigurationManager.getMapParameter( "dashboard.config", new HashMap<>());
+			
+			config = BDecoder.decodeStrings( BEncoder.cloneMap( config ));
+			
+			List<Map> item_list = (List<Map>)config.get( "items" );
+			
+			if ( item_list != null ) {
+				
+				for ( Map map: item_list ) {
+					
+					items.add( new DashboardItem( map ));
+				}
+			}
+		}
+	}
+	
+	private void
+	writeConfig()
+	{
+		synchronized( items ){
+			
+			Map config = new HashMap();
+			
+			List item_list = new ArrayList( items.size());
+			
+			config.put( "items", item_list );
+			
+			for ( DashboardItem item: items ){
+				
+				item_list.add( BEncoder.clone( item.getState()));
+			}
+			
+			COConfigurationManager.setParameter( "dashboard.config", config );
+			
+			COConfigurationManager.setDirty();
+		}
+	}
+	
 	public class
 	DashboardItem
 	{

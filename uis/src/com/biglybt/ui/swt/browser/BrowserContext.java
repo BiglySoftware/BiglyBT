@@ -988,7 +988,7 @@ public class BrowserContext
 				
 				for ( String h: popoutBlacklist ) {
 					
-					if ( host.endsWith( h )) {
+					if ( h.equals( "*" ) || host.endsWith( h )) {
 						
 						on_blacklist = true;
 						

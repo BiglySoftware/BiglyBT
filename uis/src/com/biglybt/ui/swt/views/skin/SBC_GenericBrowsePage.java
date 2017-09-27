@@ -102,6 +102,12 @@ extends SkinView
 							}
 						}
 					});
+					
+				}else if (eventType == EVENT_DATASOURCE_CHANGED){
+					
+					if ( params instanceof String ) {
+						browserSkinObject.setURL((String) params);
+					}
 				}
 				return null;
 			}

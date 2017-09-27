@@ -873,6 +873,8 @@ public class MainMDISetup
 		};
 		mdi.setPreferredOrder(preferredOrder);
 
+		sb_dashboard = new SB_Dashboard(mdi);
+		
 		for (int i = 0; i < preferredOrder.length; i++) {
 			String id = preferredOrder[i];
 			mdi.registerEntry(id, new MdiEntryCreationListener() {
@@ -883,42 +885,7 @@ public class MainMDISetup
 					
 					if ( id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )) {
 						
-						ViewTitleInfo title_info = new ViewTitleInfo() {
-							
-							@Override
-							public Object getTitleInfoProperty(int propertyID) {
-								if (propertyID == TITLE_INDICATOR_TEXT) {
-									return( "Yay" );
-								}
-
-								if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
-									return( "Dashboard man!" );
-								}
-
-								return null;
-							}
-						};
-						
-						entry = mdi.createEntryFromSkinRef(
-								"", MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-								"dashboard", "{sidebar.header.dashboard}",
-								title_info, null, false, null);
-
-
-						entry.setImageLeftID("image.sidebar.dashboard");
-
-						MdiEntryVitalityImage cog = entry.addVitalityImage("image.sidebar.cog");
-						
-						cog.setToolTip( MessageText.getString( "configure.dashboard.tooltip" ));
-
-						cog.addListener(new MdiEntryVitalityImageListener() {
-							@Override
-							public void mdiEntryVitalityImage_clicked(int x, int y) {
-								
-							}});
-						
-						cog.setVisible(true);
-
+						entry = sb_dashboard.setupMDIEntry();
 						
 					}else{
 						
@@ -973,7 +940,6 @@ public class MainMDISetup
 			});
 		}
 
-		sb_dashboard = new SB_Dashboard(mdi);
 		sb_transfers = new SB_Transfers(mdi);
 		sb_vuze = new SB_Vuze(mdi);
 		new SB_Discovery(mdi);

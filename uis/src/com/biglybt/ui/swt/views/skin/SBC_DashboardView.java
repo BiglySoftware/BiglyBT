@@ -213,7 +213,12 @@ public class SBC_DashboardView
 		SWTSkinObject 	skinObject, 
 		Object 			params ) 
 	{
-		MainMDISetup.getSb_dashboard().removeListener( this );
+		SB_Dashboard sbd = MainMDISetup.getSb_dashboard();
+		
+		if ( sbd != null ){
+			
+			sbd.removeListener( this );
+		}
 		
 		return super.skinObjectDestroyed(skinObject, params);
 	}
