@@ -311,6 +311,12 @@ public class SWTSkinObjectBrowser
 			context.setPopoutWhitelist( whitelist_urls );
 		}
 		
+		String[] blacklist_urls = properties.getStringArray( sConfigID + ".browser.popoutBlacklist", null);
+		
+		if ( blacklist_urls != null ) {
+			context.setPopoutBlacklist( blacklist_urls );
+		}
+		
 		context.addListener(new BrowserContext.loadingListener() {
 			@Override
 			public void browserLoadingChanged(boolean loading, String url) {

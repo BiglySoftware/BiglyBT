@@ -92,6 +92,7 @@ public class BrowserContext
 
 	private boolean allowPopups = true;
 	private String[]		popoutWhitelist;
+	private String[]		popoutBlacklist;
 	
 	private volatile boolean 	autoReloadPending = false;
 	private String[]			lastRetryData;
@@ -942,12 +943,22 @@ public class BrowserContext
 		popoutWhitelist = list;
 	}
 	
+	public void
+	setPopoutBlacklist(
+		String[]	list )
+	{
+		popoutBlacklist = list;
+	}
+	
 	private boolean
 	isPopoutBlocked(
 		String	location )
 	{
+		boolean on_whitelist = false;
+		boolean on_blacklist = false;
+
 		if ( popoutWhitelist != null ) {
-			
+						
 			try {
 				String host = new URL( location ).getHost();
 				
@@ -955,12 +966,41 @@ public class BrowserContext
 					
 					if ( host.endsWith( h )) {
 						
-						return( false );
+						on_whitelist = true;
+						
+						break;
 					}
 				}
 			}catch( Throwable e ) {
 				
 			}
+			
+			if ( !on_whitelist ){
+			
+				return( true );
+			}
+		}
+		
+		if ( popoutBlacklist != null ) {
+			
+			try {
+				String host = new URL( location ).getHost();
+				
+				for ( String h: popoutBlacklist ) {
+					
+					if ( host.endsWith( h )) {
+						
+						on_blacklist = true;
+						
+						break;
+					}
+				}
+			}catch( Throwable e ) {
+				
+			}
+		}
+		
+		if ( on_blacklist ){
 			
 			return( true );
 		}
