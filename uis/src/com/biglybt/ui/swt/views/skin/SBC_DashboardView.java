@@ -22,19 +22,30 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.pif.download.Download;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
+import com.biglybt.ui.swt.views.skin.SB_Dashboard.DashboardItem;
+import com.biglybt.ui.swt.views.skin.SB_Dashboard.DashboardListener;
 
 public class SBC_DashboardView
 	extends SkinView
-	implements UIUpdatable
+	implements UIUpdatable, DashboardListener
 {
 
 	private static final String UI_NAME = "Dashboard";
@@ -59,6 +70,8 @@ public class SBC_DashboardView
 		
 		dashboard_composite.setLayout( new FormLayout());
 		
+		MainMDISetup.getSb_dashboard().addListener( this );
+		
 		return( null );
 	}
 
@@ -81,20 +94,97 @@ public class SBC_DashboardView
 	{	
 		Object result = super.skinObjectShown(skinObject, params);
 		
+		build();
+		
+		return( result );
+	}
+	
+	private void
+	build()
+	{
+		if ( dashboard_composite == null ) {
+			
+			return;
+		}
+		
 		Utils.disposeComposite( dashboard_composite, false );
 		
-		List<Map<String,Object>>	list = MainMDISetup.getSb_dashboard().getCurrent();
+		List<DashboardItem>	items = MainMDISetup.getSb_dashboard().getCurrent();
 		
 		SashForm sf = new SashForm( dashboard_composite, SWT.HORIZONTAL );
+		
 		sf.setLayoutData( Utils.getFilledFormData());
 		
-		for ( Map map: list ) {
+		for ( final DashboardItem item: items ) {
 			
-			SkinnedComposite skinned_comp =	new SkinnedComposite( sf );
+			Group g = new Group( sf, SWT.NULL );
+			
+			g.setLayoutData( Utils.getFilledFormData());
+			
+			g.setLayout( new GridLayout());
+			
+			g.setText( item.getTitle());
+			
+			Menu	menu = new Menu( g );
+			
+			
+			MenuItem itemPop = new MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText(itemPop, "menu.pop.out");
+
+			itemPop.addSelectionListener(
+				new SelectionAdapter(){
+					
+					@Override
+					public void widgetSelected(SelectionEvent arg0){
+						SkinnedDialog skinnedDialog =
+								new SkinnedDialog(
+										"skin3_dlg_sidebar_popout",
+										"shell",
+										null,	// standalone
+										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+	
+						SWTSkin skin = skinnedDialog.getSkin();
+	
+						SWTSkinObjectContainer cont = BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+	
+						if ( cont != null ){
+	
+							skinnedDialog.setTitle( item.getTitle());
+	
+							skinnedDialog.open();
+	
+						}else{
+	
+							skinnedDialog.close();
+						}
+					}
+				});
+			
+			new MenuItem( menu, SWT.SEPARATOR );
+			
+			MenuItem itemRemove = new MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText(itemRemove, "MySharesView.menu.remove");
+
+			Utils.setMenuItemImage(itemRemove, "delete");
+			
+			itemRemove.addSelectionListener(
+				new SelectionAdapter(){
+				
+					@Override
+					public void widgetSelected(SelectionEvent arg0){
+						item.remove();
+					}
+				});
+			
+			g.setMenu( menu );
+			
+			SkinnedComposite skinned_comp =	new SkinnedComposite( g );
 			
 			SWTSkin skin = skinned_comp.getSkin();
 			
-			BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), map);
+			BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
 				
 			Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
 			
@@ -102,16 +192,29 @@ public class SBC_DashboardView
 		}
 		
 		dashboard_composite.getParent().layout( true, true );
-		
-		return( result );
 	}
 
+	@Override
+	public void itemsChanged(){
+		Utils.execSWTThread(
+			new Runnable()
+			{
+				public void
+				run()
+				{
+					build();
+				}
+			});		
+	}
+	
 	@Override
 	public Object 
 	skinObjectDestroyed(
 		SWTSkinObject 	skinObject, 
 		Object 			params ) 
 	{
+		MainMDISetup.getSb_dashboard().removeListener( this );
+		
 		return super.skinObjectDestroyed(skinObject, params);
 	}
 }

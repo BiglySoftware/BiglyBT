@@ -53,6 +53,7 @@ import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.BaseMDI;
@@ -230,7 +231,14 @@ public class SideBar
 					public void menuWillBeShown(MenuItem menu, Object data) {
 						SideBarEntrySWT sbe = (SideBarEntrySWT)currentEntry;
 	
-						menu.setVisible( sbe != null && sbe.canBuildStandAlone());
+						if ( sbe != null && sbe.getId().equals(  MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )) {
+							
+							menu.setVisible( false );
+							
+						}else {
+						
+							menu.setVisible( sbe != null && sbe.canBuildStandAlone());
+						}
 					}
 				});
 	

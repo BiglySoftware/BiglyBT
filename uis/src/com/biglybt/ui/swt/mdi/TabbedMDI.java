@@ -978,26 +978,29 @@ public class TabbedMDI
 			MenuManager menuManager = uim.getMenuManager();
 			
 			{
-				com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( id + "._end_", "menu.add.to.dashboard");
-				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-		
-				menuItem.addFillListener(
-					new MenuItemFillListener() {
-		
+				if ( !Utils.isAZ2UI()){
+					
+					com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( id + "._end_", "menu.add.to.dashboard");
+					menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			
+					menuItem.addFillListener(
+						new MenuItemFillListener() {
+			
+							@Override
+							public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+			
+								menu.setVisible(result.canBuildStandAlone());
+							}
+						});
+			
+					menuItem.addListener(new MenuItemListener() {
 						@Override
-						public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-		
-							menu.setVisible(result.canBuildStandAlone());
+						public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+									
+							MainMDISetup.getSb_dashboard().addItem( result );
 						}
 					});
-		
-				menuItem.addListener(new MenuItemListener() {
-					@Override
-					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-								
-						MainMDISetup.getSb_dashboard().addItem( result );
-					}
-				});
+				}
 			}
 			
 			{

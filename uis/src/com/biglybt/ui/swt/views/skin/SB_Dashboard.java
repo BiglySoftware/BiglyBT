@@ -22,6 +22,8 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
 
+import com.biglybt.core.util.CopyOnWriteList;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
@@ -40,8 +42,10 @@ public class SB_Dashboard
 {
 
 	
-	private List<Map<String,Object>>		items = new ArrayList<>();
+	private List<DashboardItem>		items = new ArrayList<>();
 
+	private CopyOnWriteList<DashboardListener>	listeners = new CopyOnWriteList<>();
+	
 	public 
 	SB_Dashboard(
 		final MultipleDocumentInterfaceSWT mdi ) 
@@ -59,7 +63,13 @@ public class SB_Dashboard
 		menuItem.addListener(new MenuItemListener() {
 			@Override
 			public void selected(MenuItem menu, Object target) {
-				items.clear();
+				
+				synchronized( items ) {
+					
+					items.clear();
+				}
+				
+				fireChanged();
 			}
 		});
 	}
@@ -72,10 +82,15 @@ public class SB_Dashboard
 		
 		System.out.println( "dbi: " + map );
 		
-		items.add( map );
+		synchronized( items ) {
+		
+			items.add( new DashboardItem( map ) );
+		}
+		
+		fireChanged();
 	}
 
-	public List<Map<String,Object>>
+	public List<DashboardItem>
 	getCurrent()
 	{
 		return( items );
@@ -84,6 +99,76 @@ public class SB_Dashboard
 	public void
 	dispose()
 	{
+	}
+	
+	public void
+	addListener(
+		DashboardListener	l )
+	{
+		listeners.add( l );
+	}
+	
+	public void
+	removeListener(
+		DashboardListener	l )
+	{
+		listeners.remove( l );
+	}
+	
+	private void
+	fireChanged()
+	{
+		for ( DashboardListener l: listeners ){
+			
+			try {
+				l.itemsChanged();
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	public class
+	DashboardItem
+	{
+		private Map<String,Object>		map;
 		
+		private
+		DashboardItem(
+			Map<String,Object>		_map )
+		{
+			map	= _map;
+		}
+		
+		public String
+		getTitle()
+		{
+			return((String)map.get( "title" ));
+		}
+		
+		public Map<String,Object>
+		getState()
+		{
+			return( map );
+		}
+		
+		public void
+		remove()
+		{
+			synchronized( items ) {
+				
+				items.remove( this );
+			}
+			
+			fireChanged();
+		}
+	}
+	
+	public interface
+	DashboardListener
+	{
+		public void
+		itemsChanged();
 	}
 }

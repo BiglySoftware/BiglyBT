@@ -46,13 +46,15 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.configsections.*;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 @SuppressWarnings("deprecation")
-public class ConfigView implements UISWTViewEventListener {
+public class ConfigView implements UISWTViewCoreEventListenerEx {
   public static final String VIEW_ID = UISWTInstance.VIEW_CONFIG;
   private static final LogIDs LOGID = LogIDs.GUI;
   public static final String sSectionPrefix = "ConfigView.section.";
@@ -82,6 +84,39 @@ public class ConfigView implements UISWTViewEventListener {
 
 	public ConfigView() {
   }
+	
+	public boolean
+	isCloneable()
+	{
+		return( true );
+	}
+
+	public UISWTViewCoreEventListener
+	getClone()
+	{
+		return( new ConfigView());
+	}
+	
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( ConfigView.class );
+				}
+				
+				public java.util.List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
 
   private void initialize(final Composite composite) {
   	// need to initalize composite now, since getComposite can
