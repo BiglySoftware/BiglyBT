@@ -41,7 +41,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-
+import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.DHTStorageAdapter;
 import com.biglybt.core.dht.control.DHTControlActivity;
@@ -59,7 +59,7 @@ import com.biglybt.plugin.dht.DHTPlugin;
  *
  */
 public class DHTView
-	implements UISWTViewEventListener
+	implements UISWTViewEventListener, IViewRequiresPeriodicUpdates
 {
 
   public static final int DHT_TYPE_MAIN 	= DHT.NW_AZ_MAIN;

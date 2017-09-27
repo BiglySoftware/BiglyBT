@@ -45,6 +45,7 @@ import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.debug.ObfuscateTab;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.SWTThread;
+import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
@@ -55,6 +56,8 @@ import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.SWTRunnable;
+import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
+import com.biglybt.ui.swt.views.stats.StatsView;
 import com.biglybt.util.MapUtils;
 
 /**
@@ -107,7 +110,7 @@ public class TabbedEntry
 		Object						datasource,
 		int							controlType,
 		CTabItem					swtItem,
-		UISWTViewEventListener		event_listener )
+		UISWTViewEventListener		original_event_listener )
 	{
 		Control control = null;
 
@@ -145,12 +148,14 @@ public class TabbedEntry
 		} else {
 			// XXX: This needs to be merged into BaseMDIEntry.initialize
 
-			if ( event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)event_listener).isCloneable()){
+			if ( original_event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)original_event_listener).isCloneable()){
 
 				final UISWTViewImpl view = new UISWTViewImpl( parentID, id, true );
 
+				final UISWTViewCoreEventListenerEx event_listener = ((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
+				
 				try{
-					view.setEventListener(((UISWTViewCoreEventListenerEx)event_listener).getClone(),false);
+					view.setEventListener( event_listener, false);
 
 				}catch( Throwable e ){
 					// shouldn't happen as we aren't asking for 'create' to occur which means it can't fail
@@ -224,6 +229,43 @@ public class TabbedEntry
 										return ("popout");
 									}
 								});
+						
+						if ( event_listener instanceof IViewRequiresPeriodicUpdates ){
+							
+							updater.addPeriodicUpdater(
+									new UIUpdatable() {
+
+										@Override
+										public void updateUI() {
+											if (viewComposite.isDisposed()) {
+												updater.removePeriodicUpdater(this);
+											} else {
+												event_listener.eventOccurred(
+													new UISWTViewEvent() {										
+														@Override
+														public UISWTView getView() {
+															return null;
+														}
+														
+														@Override
+														public int getType() {
+															return( StatsView.EVENT_PERIODIC_UPDATE );
+														}										
+														@Override
+														public Object getData() {
+														
+															return null;
+														}
+													});
+											}
+										}
+
+										@Override
+										public String getUpdateUIName() {
+											return ("popout");
+										}
+									});
+						}
 					}
 
 					soContents.setVisible( true );

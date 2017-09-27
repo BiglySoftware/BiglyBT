@@ -45,7 +45,6 @@ import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTInstance.UISWTViewEventListenerWrapper;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.IViewAlwaysInitialize;
 
@@ -125,7 +124,7 @@ public class StatsView
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new StatsView());

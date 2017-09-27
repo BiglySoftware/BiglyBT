@@ -30,7 +30,6 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.common.table.TableView;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.global.GlobalManager;
@@ -38,7 +37,6 @@ import com.biglybt.core.global.GlobalManagerListener;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
@@ -69,7 +67,7 @@ public class PeersSuperView
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new PeersSuperView());

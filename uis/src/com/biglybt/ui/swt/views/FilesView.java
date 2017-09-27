@@ -69,7 +69,6 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.ui.swt.views.file.FileInfoView;
@@ -177,7 +176,7 @@ public class FilesView
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new FilesView( allowTabViews ));

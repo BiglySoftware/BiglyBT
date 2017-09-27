@@ -74,7 +74,6 @@ import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 
 import com.biglybt.ui.common.ToolBarItem;
@@ -185,7 +184,7 @@ public class GeneralView
 	  }
 
 	  @Override
-	  public UISWTViewCoreEventListener
+	  public UISWTViewCoreEventListenerEx
 	  getClone()
 	  {
 		  return( new GeneralView());

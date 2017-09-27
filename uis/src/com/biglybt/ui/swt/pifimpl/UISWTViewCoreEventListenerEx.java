@@ -31,7 +31,7 @@ UISWTViewCoreEventListenerEx
 	public boolean
 	isCloneable();
 
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone();
 	
 	public CloneConstructor

@@ -46,7 +46,6 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.*;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.configsections.*;
 
@@ -91,7 +90,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 		return( true );
 	}
 
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new ConfigView());

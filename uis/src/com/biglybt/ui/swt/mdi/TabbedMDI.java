@@ -680,6 +680,8 @@ public class TabbedMDI
 
 		setupNewEntry(entry, id, -1, closeable);
 
+		addMenus( entry, id );
+		
 		if (l instanceof IViewAlwaysInitialize) {
 			entry.build();
 		}
@@ -972,108 +974,118 @@ public class TabbedMDI
 		final TabbedEntry result = (TabbedEntry)super.createEntryByCreationListener(id, ds, autoOpenMap);
 
 		if ( result != null ){
-			PluginManager pm = CoreFactory.getSingleton().getPluginManager();
-			PluginInterface pi = pm.getDefaultPluginInterface();
-			UIManager uim = pi.getUIManager();
-			MenuManager menuManager = uim.getMenuManager();
 			
-			{
-				if ( !Utils.isAZ2UI()){
-					
-					com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( id + "._end_", "menu.add.to.dashboard");
-					menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-			
-					menuItem.addFillListener(
-						new MenuItemFillListener() {
-			
-							@Override
-							public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-			
-								menu.setVisible(result.canBuildStandAlone());
-							}
-						});
-			
-					menuItem.addListener(new MenuItemListener() {
-						@Override
-						public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-									
-							MainMDISetup.getSb_dashboard().addItem( result );
-						}
-					});
-				}
-			}
-			
-			{
-				com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem(id + "._end_", "menu.pop.out");
-				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-	
-				menuItem.addFillListener(
-					new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-	
-						@Override
-						public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-	
-							menu.setVisible( result.canBuildStandAlone());
-						}
-					});
-	
-				menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-					@Override
-					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-	
-						SkinnedDialog skinnedDialog =
-								new SkinnedDialog(
-										"skin3_dlg_sidebar_popout",
-										"shell",
-										null,	// standalone
-										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-	
-						SWTSkin skin = skinnedDialog.getSkin();
-	
-						SWTSkinObjectContainer cont = result.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
-	
-						if ( cont != null ){
-	
-							Object ds = result.getDatasource();
-	
-							if ( ds instanceof Object[]){
-	
-								Object[] temp = (Object[])ds;
-	
-								if ( temp.length > 0 ){
-	
-									ds = temp[0];
-								}
-							}
-	
-							String ds_str = "";
-	
-							if ( ds instanceof Download ){
-	
-								ds_str = ((Download)ds).getName();
-	
-							}else if ( ds instanceof DownloadManager ){
-	
-								ds_str = ((DownloadManager)ds).getDisplayName();
-							}
-	
-							skinnedDialog.setTitle( result.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
-	
-							skinnedDialog.open();
-	
-						}else{
-	
-							skinnedDialog.close();
-						}
-					}
-				});
-			}
+			addMenus( result, id );
 
 		}
 
 		return( result );
 	}
 
+	private void
+	addMenus(
+		TabbedEntry		entry,
+		String			id )
+	{
+		PluginManager pm = CoreFactory.getSingleton().getPluginManager();
+		PluginInterface pi = pm.getDefaultPluginInterface();
+		UIManager uim = pi.getUIManager();
+		MenuManager menuManager = uim.getMenuManager();
+		
+		{
+			if ( !Utils.isAZ2UI()){
+				
+				com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem( id + "._end_", "menu.add.to.dashboard");
+				menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		
+				menuItem.addFillListener(
+					new MenuItemFillListener() {
+		
+						@Override
+						public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+		
+							menu.setVisible(entry.canBuildStandAlone());
+						}
+					});
+		
+				menuItem.addListener(new MenuItemListener() {
+					@Override
+					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+								
+						MainMDISetup.getSb_dashboard().addItem( entry );
+					}
+				});
+			}
+		}
+		
+		{
+			com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem(id + "._end_", "menu.pop.out");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+
+			menuItem.addFillListener(
+				new com.biglybt.pif.ui.menus.MenuItemFillListener() {
+
+					@Override
+					public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+
+						menu.setVisible( entry.canBuildStandAlone());
+					}
+				});
+
+			menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
+				@Override
+				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+
+					SkinnedDialog skinnedDialog =
+							new SkinnedDialog(
+									"skin3_dlg_sidebar_popout",
+									"shell",
+									null,	// standalone
+									SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+
+					SWTSkin skin = skinnedDialog.getSkin();
+
+					SWTSkinObjectContainer cont = entry.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
+
+					if ( cont != null ){
+
+						Object ds = entry.getDatasource();
+
+						if ( ds instanceof Object[]){
+
+							Object[] temp = (Object[])ds;
+
+							if ( temp.length > 0 ){
+
+								ds = temp[0];
+							}
+						}
+
+						String ds_str = "";
+
+						if ( ds instanceof Download ){
+
+							ds_str = ((Download)ds).getName();
+
+						}else if ( ds instanceof DownloadManager ){
+
+							ds_str = ((DownloadManager)ds).getDisplayName();
+						}
+
+						skinnedDialog.setTitle( entry.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
+
+						skinnedDialog.open();
+
+					}else{
+
+						skinnedDialog.close();
+					}
+				}
+			});
+		}
+	}
+	
+	
 	@Override
 	public void fillMenu(Menu menu, final MdiEntry entry, String menuID) {
 

@@ -114,7 +114,7 @@ BasicPluginViewImpl
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new BasicPluginViewImpl( model ));

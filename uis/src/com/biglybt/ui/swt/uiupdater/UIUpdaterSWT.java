@@ -78,6 +78,10 @@ public class UIUpdaterSWT
 	private int	update_count = 0;
 	private CopyOnWriteList<UIUpdaterListener>		listeners = new CopyOnWriteList<>();
 
+	private CopyOnWriteList<UIUpdatable>	perioidic_updateables = new CopyOnWriteList<>();
+	private int								pu_counter;
+	
+	
 	public static UIUpdater getInstance() {
 		synchronized( UIUpdaterSWT.class ){
 			if (updater == null) {
@@ -402,4 +406,69 @@ public class UIUpdaterSWT
 	{
 		listeners.remove( listener );
 	}
+	
+	public void 
+	addPeriodicUpdater(
+		UIUpdatable updateable )
+	{
+		synchronized( perioidic_updateables ){
+			
+			perioidic_updateables.add( updateable );
+			
+			if ( perioidic_updateables.size() == 1 ){
+				
+				final int fpu = ++pu_counter;
+				
+				new AEThread2( "pu" )
+				{
+					public void
+					run()
+					{
+						while( true ) {
+							
+							try{
+								Thread.sleep(1000);
+								
+							}catch( Throwable e ){
+							}
+							
+							synchronized( perioidic_updateables ){
+							
+								if ( pu_counter != fpu ) {
+									
+									break;
+								}
+							}
+							
+							for ( UIUpdatable u: perioidic_updateables ) {
+								
+								try {
+									u.updateUI();
+									
+								}catch( Throwable e ) {
+									
+									Debug.out( e );
+								}
+							}
+						}
+					}
+				}.start();
+			}
+		}
+	}
+	
+	public void 
+	removePeriodicUpdater(
+		UIUpdatable updateable )
+	{
+		synchronized( perioidic_updateables ){
+			
+			perioidic_updateables.remove( updateable );
+			
+			if ( perioidic_updateables.isEmpty()) {
+				
+				pu_counter++;
+			}
+		}
+	}	
 }

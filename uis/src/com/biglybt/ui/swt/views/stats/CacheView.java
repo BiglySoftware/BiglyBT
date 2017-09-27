@@ -33,7 +33,7 @@ import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-
+import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerStats;
 
@@ -41,7 +41,7 @@ import com.biglybt.core.diskmanager.cache.CacheFileManagerStats;
  *
  */
 public class CacheView
-	implements UISWTViewCoreEventListener
+	implements UISWTViewCoreEventListener, IViewRequiresPeriodicUpdates
 {
 
   public static final String MSGID_PREFIX = "CacheView";

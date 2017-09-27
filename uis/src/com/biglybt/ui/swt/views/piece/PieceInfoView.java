@@ -51,7 +51,6 @@ import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.ViewUtils;
@@ -145,7 +144,7 @@ public class PieceInfoView
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new PieceInfoView());

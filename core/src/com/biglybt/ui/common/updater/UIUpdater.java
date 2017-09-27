@@ -30,6 +30,11 @@ public interface UIUpdater
 
 	public void removeUpdater(UIUpdatable updateable );
 
+	public void addPeriodicUpdater(UIUpdatable updateable );
+
+	public void removePeriodicUpdater(UIUpdatable updateable );
+
+	
 	public void stopIt();
 
 	public void start();

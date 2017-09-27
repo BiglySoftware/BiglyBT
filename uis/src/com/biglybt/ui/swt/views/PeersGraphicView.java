@@ -68,7 +68,6 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
 
@@ -88,7 +87,7 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
  *
  */
 public class PeersGraphicView
-	implements UISWTViewCoreEventListener, UIPluginViewToolBarListener, UISWTViewCoreEventListenerEx
+	implements UIPluginViewToolBarListener, UISWTViewCoreEventListenerEx
 {
 
   public static String MSGID_PREFIX = "PeersGraphicView";
@@ -251,7 +250,7 @@ public class PeersGraphicView
   }
 
   @Override
-  public UISWTViewCoreEventListener
+  public UISWTViewCoreEventListenerEx
   getClone()
   {
 	  return( new PeersGraphicView());

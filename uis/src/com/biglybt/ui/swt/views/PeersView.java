@@ -39,7 +39,6 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -75,7 +74,7 @@ public class PeersView
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new PeersView());

@@ -29,7 +29,6 @@ import java.util.Map;
 import org.eclipse.swt.widgets.Composite;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginViewInterface;
@@ -52,7 +51,7 @@ ChatView
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new ChatView());

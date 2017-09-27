@@ -44,7 +44,6 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.ui.swt.views.piece.MyPieceDistributionView;
@@ -132,7 +131,7 @@ public class PiecesView
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new PiecesView());

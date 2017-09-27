@@ -46,7 +46,7 @@ import com.biglybt.ui.swt.components.graphics.SpeedGraphic;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-
+import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
 import com.biglybt.core.Core;
 
 /**
@@ -54,7 +54,7 @@ import com.biglybt.core.Core;
  *
  */
 public class ActivityView
-	implements ParameterListener, UISWTViewCoreEventListener
+	implements ParameterListener, UISWTViewCoreEventListener, IViewRequiresPeriodicUpdates
 {
 
   public static final String MSGID_PREFIX = "SpeedView";

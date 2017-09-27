@@ -87,8 +87,8 @@ import com.biglybt.ui.swt.components.graphics.ValueFormater;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.networkmanager.NetworkConnection;
@@ -112,7 +112,7 @@ import com.biglybt.net.udp.uc.PRUDPPacketHandlerFactory;
  *
  */
 public class TransferStatsView
-	implements UISWTViewCoreEventListener
+	implements UISWTViewCoreEventListenerEx, IViewRequiresPeriodicUpdates
 {
 	public static final String MSGID_PREFIX = "TransferStatsView";
 
@@ -182,6 +182,38 @@ public class TransferStatsView
     pingGraph = PingGraphic.getInstance();
 
   }
+  
+	public boolean
+	isCloneable()
+	{
+		return( true );
+	}
+
+	public UISWTViewCoreEventListenerEx
+	getClone()
+	{
+		return( new TransferStatsView());
+	}
+	
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return(
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( TransferStatsView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
 
   private void initialize(Composite composite) {
 

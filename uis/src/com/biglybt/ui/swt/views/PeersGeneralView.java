@@ -19,43 +19,23 @@
  */
 package com.biglybt.ui.swt.views;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Layout;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.global.GlobalManager;
+import org.eclipse.swt.widgets.Menu;
+
 import com.biglybt.core.peer.PEPeer;
-import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagListener;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.Taggable;
-import com.biglybt.core.util.HashWrapper;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.common.table.TableView;
-import com.biglybt.ui.swt.Messages;
 
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
@@ -86,7 +66,7 @@ PeersGeneralView
 	}
 
 	@Override
-	public UISWTViewCoreEventListener
+	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
 		return( new PeersGeneralView( tag ));
