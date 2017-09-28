@@ -48,6 +48,7 @@ import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.pif.UISWTViewEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventCancelledException;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
@@ -148,11 +149,12 @@ public class TabbedEntry
 		} else {
 			// XXX: This needs to be merged into BaseMDIEntry.initialize
 
-			if ( original_event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)original_event_listener).isCloneable()){
+			if ( 	( original_event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)original_event_listener).isCloneable()) ||
+					( original_event_listener instanceof UISWTViewEventListenerEx )){
 
 				final UISWTViewImpl view = new UISWTViewImpl( parentID, id, true );
 
-				final UISWTViewCoreEventListenerEx event_listener = ((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
+				final UISWTViewEventListener event_listener = original_event_listener instanceof UISWTViewEventListenerEx?((UISWTViewEventListenerEx)original_event_listener).getClone():((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
 				
 				try{
 					view.setEventListener( event_listener, false);

@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.util.Debug;
 import com.biglybt.pif.download.Download;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Messages;
@@ -117,78 +118,84 @@ public class SBC_DashboardView
 		
 		for ( final DashboardItem item: items ) {
 			
-			Group g = new Group( sf, SWT.NULL );
-			
-			g.setLayoutData( Utils.getFilledFormData());
-			
-			g.setLayout( new GridLayout());
-			
-			g.setText( item.getTitle());
-			
-			Menu	menu = new Menu( g );
-			
-			
-			MenuItem itemPop = new MenuItem( menu, SWT.PUSH );
-			
-			Messages.setLanguageText(itemPop, "menu.pop.out");
-
-			itemPop.addSelectionListener(
-				new SelectionAdapter(){
-					
-					@Override
-					public void widgetSelected(SelectionEvent arg0){
-						SkinnedDialog skinnedDialog =
-								new SkinnedDialog(
-										"skin3_dlg_sidebar_popout",
-										"shell",
-										null,	// standalone
-										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+			try {
+				Group g = new Group( sf, SWT.NULL );
+				
+				g.setLayoutData( Utils.getFilledFormData());
+				
+				g.setLayout( new GridLayout());
+				
+				g.setText( item.getTitle());
+				
+				Menu	menu = new Menu( g );
+				
+				
+				MenuItem itemPop = new MenuItem( menu, SWT.PUSH );
+				
+				Messages.setLanguageText(itemPop, "menu.pop.out");
 	
-						SWTSkin skin = skinnedDialog.getSkin();
-	
-						SWTSkinObjectContainer cont = BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
-	
-						if ( cont != null ){
-	
-							skinnedDialog.setTitle( item.getTitle());
-	
-							skinnedDialog.open();
-	
-						}else{
-	
-							skinnedDialog.close();
+				itemPop.addSelectionListener(
+					new SelectionAdapter(){
+						
+						@Override
+						public void widgetSelected(SelectionEvent arg0){
+							SkinnedDialog skinnedDialog =
+									new SkinnedDialog(
+											"skin3_dlg_sidebar_popout",
+											"shell",
+											null,	// standalone
+											SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+		
+							SWTSkin skin = skinnedDialog.getSkin();
+		
+							SWTSkinObjectContainer cont = BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+		
+							if ( cont != null ){
+		
+								skinnedDialog.setTitle( item.getTitle());
+		
+								skinnedDialog.open();
+		
+							}else{
+		
+								skinnedDialog.close();
+							}
 						}
-					}
-				});
-			
-			new MenuItem( menu, SWT.SEPARATOR );
-			
-			MenuItem itemRemove = new MenuItem( menu, SWT.PUSH );
-			
-			Messages.setLanguageText(itemRemove, "MySharesView.menu.remove");
-
-			Utils.setMenuItemImage(itemRemove, "delete");
-			
-			itemRemove.addSelectionListener(
-				new SelectionAdapter(){
+					});
 				
-					@Override
-					public void widgetSelected(SelectionEvent arg0){
-						item.remove();
-					}
-				});
-			
-			g.setMenu( menu );
-			
-			SkinnedComposite skinned_comp =	new SkinnedComposite( g );
-			
-			SWTSkin skin = skinned_comp.getSkin();
-			
-			BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+				new MenuItem( menu, SWT.SEPARATOR );
 				
-			Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
-			
-			c.setLayoutData( Utils.getFilledFormData());
+				MenuItem itemRemove = new MenuItem( menu, SWT.PUSH );
+				
+				Messages.setLanguageText(itemRemove, "MySharesView.menu.remove");
+	
+				Utils.setMenuItemImage(itemRemove, "delete");
+				
+				itemRemove.addSelectionListener(
+					new SelectionAdapter(){
+					
+						@Override
+						public void widgetSelected(SelectionEvent arg0){
+							item.remove();
+						}
+					});
+				
+				g.setMenu( menu );
+				
+				SkinnedComposite skinned_comp =	new SkinnedComposite( g );
+				
+				SWTSkin skin = skinned_comp.getSkin();
+				
+				BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+					
+				Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
+				
+				c.setLayoutData( Utils.getFilledFormData());
+				
+			}catch( Throwable e ) {
+				
+				Debug.out( e );
+			}
 		}
 		
 		dashboard_composite.getParent().layout( true, true );

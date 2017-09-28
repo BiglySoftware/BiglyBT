@@ -30,11 +30,14 @@ import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.toolbar.UIToolBarEnablerBase;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.Utils;
@@ -42,6 +45,7 @@ import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.pif.UISWTViewEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.*;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx.CloneConstructor;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
@@ -1210,6 +1214,10 @@ public abstract class BaseMdiEntry
 			if ( event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)event_listener).isCloneable()){
 
 				return( true );
+				
+			}else if ( event_listener instanceof UISWTViewEventListenerEx ) {
+				
+				return( true );
 			}
 		}
 
@@ -1277,11 +1285,11 @@ public abstract class BaseMdiEntry
 		
 		result.put( "control_type", getControlType());
 
-		UISWTViewCoreEventListenerEx listener = (UISWTViewCoreEventListenerEx)getEventListener();
+		UISWTViewEventListener listener = getEventListener();
 		
-		if ( listener != null ) {
+		if ( listener instanceof UISWTViewCoreEventListenerEx ){
 		
-			CloneConstructor cc = listener.getCloneConstructor();
+			CloneConstructor cc = ((UISWTViewCoreEventListenerEx)listener).getCloneConstructor();
 		
 			String name = cc.getCloneClass().getCanonicalName();
 			
@@ -1290,6 +1298,57 @@ public abstract class BaseMdiEntry
 			map.put( "name",  name );
 			
 			List<Object>	params = cc.getParameters();
+			
+			if ( params != null ){
+				
+				List	p_types	= new ArrayList<>();
+				List	p_vals	= new ArrayList<>();
+				
+				map.put( "p_types", p_types );
+				map.put( "p_vals", p_vals );
+				
+				for ( Object p: params ) {
+					
+					if ( p instanceof Boolean ) {
+						
+						p_types.add( "bool" );
+						
+						p_vals.add( new Long(((Boolean)p)?1:0));
+						
+					}else if ( p instanceof Long ) {
+
+						p_types.add( "long" );
+
+						p_vals.add( p );
+						
+					}else if ( p instanceof String ) {
+
+						p_types.add( "string" );
+
+						p_vals.add( p );
+	
+					}else {
+						
+						Debug.out( "Unsupported param type: " + p );
+					}
+				}
+			}
+			
+			result.put( "event_listener", map );
+			
+		}else if ( listener instanceof UISWTViewEventListenerEx ){
+			
+			com.biglybt.ui.swt.pif.UISWTViewEventListenerEx.CloneConstructor cc = ((UISWTViewEventListenerEx)listener).getCloneConstructor();
+		
+			String pi = cc.getPluginInterface().getPluginID();
+			
+			Map<String,Object>	map = new HashMap<>();
+			
+			map.put( "plugin_id",  pi );
+			
+			map.put( "ipc_method", cc.getIPCMethod());
+			
+			List<Object>	params = cc.getIPCParameters();
 			
 			if ( params != null ){
 				
@@ -1386,50 +1445,106 @@ public abstract class BaseMdiEntry
 		if ( el_map != null ){
 		
 			try {
-				Class<? extends UISWTViewCoreEventListenerEx> cla = (Class<? extends UISWTViewCoreEventListenerEx>) Class.forName((String)el_map.get( "name" ));
+				String class_name = (String)el_map.get( "name" );
 				
-				List	p_types = (List)el_map.get( "p_types" );
-				List	p_vals	= (List)el_map.get( "p_vals" );
-				
-				if ( p_types != null && !p_types.isEmpty()){
+				if ( class_name != null ){
 					
-					List<Class> 	types = new ArrayList<>();
-					List<Object>	args = new ArrayList<>();
+					Class<? extends UISWTViewCoreEventListenerEx> cla = (Class<? extends UISWTViewCoreEventListenerEx>) Class.forName( class_name );
 					
-					for ( int i=0;i<p_types.size();i++) {
+					List	p_types = (List)el_map.get( "p_types" );
+					List	p_vals	= (List)el_map.get( "p_vals" );
+					
+					if ( p_types != null && !p_types.isEmpty()){
 						
-						String type = (String)p_types.get(i);
-						Object val	= p_vals.get(i);
+						List<Class> 	types = new ArrayList<>();
+						List<Object>	args = new ArrayList<>();
 						
-						if ( type.equals( "bool" )) {
+						for ( int i=0;i<p_types.size();i++) {
 							
-							types.add( boolean.class );
+							String type = (String)p_types.get(i);
+							Object val	= p_vals.get(i);
 							
-							args.add(((Long)val)!=0);
-							
-						}else if ( type.equals( "long" )) {
-							
-							types.add( long.class );
-							
-							args.add((Long)val );
-							
-						}else if ( type.equals( "string" )) {
-							
-							types.add( String.class );
-							
-							args.add((String)val );
-							
-						}else {
-							
-							Debug.out( "Unsupported type: " + type );
+							if ( type.equals( "bool" )) {
+								
+								types.add( boolean.class );
+								
+								args.add(((Long)val)!=0);
+								
+							}else if ( type.equals( "long" )) {
+								
+								types.add( long.class );
+								
+								args.add((Long)val );
+								
+							}else if ( type.equals( "string" )) {
+								
+								types.add( String.class );
+								
+								args.add((String)val );
+								
+							}else {
+								
+								Debug.out( "Unsupported type: " + type );
+							}
 						}
+						
+						event_listener = cla.getConstructor( types.toArray( new Class<?>[types.size()])).newInstance( args.toArray( new Object[args.size()]));
+						
+					}else {
+					
+						event_listener = cla.newInstance();
 					}
+				}else{
 					
-					event_listener = cla.getConstructor( types.toArray( new Class<?>[types.size()])).newInstance( args.toArray( new Object[args.size()]));
+					String plugin_id = (String)el_map.get( "plugin_id" );
 					
-				}else {
-				
-					event_listener = cla.newInstance();
+					PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( plugin_id );
+					
+					if ( pi != null ) {
+						
+						String ipc_method = (String)el_map.get( "ipc_method" );
+						
+						List	p_types = (List)el_map.get( "p_types" );
+						List	p_vals	= (List)el_map.get( "p_vals" );
+						
+						List<Object>	args = new ArrayList<>();
+
+						if ( p_types != null && !p_types.isEmpty()){
+							
+							List<Class> 	types = new ArrayList<>();
+							
+							for ( int i=0;i<p_types.size();i++) {
+								
+								String type = (String)p_types.get(i);
+								Object val	= p_vals.get(i);
+								
+								if ( type.equals( "bool" )) {
+									
+									types.add( boolean.class );
+									
+									args.add(((Long)val)!=0);
+									
+								}else if ( type.equals( "long" )) {
+									
+									types.add( long.class );
+									
+									args.add((Long)val );
+									
+								}else if ( type.equals( "string" )) {
+									
+									types.add( String.class );
+									
+									args.add((String)val );
+									
+								}else {
+									
+									Debug.out( "Unsupported type: " + type );
+								}
+							}
+						}
+							
+						event_listener = (UISWTViewEventListener)pi.getIPC().invoke( ipc_method, args.toArray( new Object[args.size()])); 
+					}
 				}
 				
 			}catch( Throwable e ) {
