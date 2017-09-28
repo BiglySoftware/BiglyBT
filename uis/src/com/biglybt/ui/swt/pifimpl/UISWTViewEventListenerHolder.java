@@ -103,6 +103,12 @@ UISWTViewEventListenerHolder
 	{
 		return( pi==null?null:pi.get());
 	}
+	
+	public Object
+	getInitialDataSource()
+	{
+		return( datasource );
+	}
 
 	@Override
 	public boolean

@@ -1249,11 +1249,25 @@ public abstract class BaseMdiEntry
 		
 		Object data_source = getDatasourceCore();
 		
+		if ( data_source == null ) {
+		
+			data_source = getInitialDataSource();
+		}
+		
 		if ( data_source != null ) {
 		
 			if ( data_source instanceof String ) {
 			
 				result.put( "data_source", data_source );
+				
+			}else if ( data_source instanceof Integer ) {
+				
+				List	l = new ArrayList();
+				
+				l.add( "i" );
+				l.add(((Integer)data_source).longValue());
+				
+				result.put( "data_source", l );
 				
 			}else {
 			
@@ -1348,6 +1362,18 @@ public abstract class BaseMdiEntry
 				Map<String,Object>		ds_map  = (Map<String,Object>)data_source;
 		
 				data_source = ds_map==null?null:DataSourceResolver.importDataSource( ds_map );
+				
+			}else if ( data_source instanceof List ) {
+				
+				List l = (List)data_source;
+				
+				String 	type 	= (String)l.get(0);
+				Long	value 	= (Long)l.get(1);
+				
+				if ( type.equals( "i" )) {
+					
+					data_source = value.intValue();
+				}
 			}
 		}
 		

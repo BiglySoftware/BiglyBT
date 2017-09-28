@@ -43,7 +43,10 @@ UISWTViewCoreEventListenerEx
 		public Class<? extends UISWTViewCoreEventListenerEx>
 		getCloneClass();
 		
-		public List<Object>
-		getParameters();
+		public default List<Object>
+		getParameters()
+		{
+			return( null );
+		}
 	}
 }

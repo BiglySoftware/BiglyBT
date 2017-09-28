@@ -55,6 +55,7 @@ import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.pif.PluginUISWTSkinObject;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventCancelledException;
+import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -669,6 +670,9 @@ public class TabbedMDI
 
 		TabbedEntry entry = new TabbedEntry(this, skin, id, parentViewID);
 
+		if ( datasource == null && l instanceof UISWTViewEventListenerHolder ) {
+			datasource = ((UISWTViewEventListenerHolder)l).getInitialDataSource();
+		}
 		try {
 			entry.setEventListener(l, true);
 		} catch (UISWTViewEventCancelledException e) {

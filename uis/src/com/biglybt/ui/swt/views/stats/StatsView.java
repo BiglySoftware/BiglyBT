@@ -142,12 +142,6 @@ public class StatsView
 				{
 					return( StatsView.class );
 				}
-				
-				public List<Object>
-				getParameters()
-				{
-					return( null );
-				}
 			});
 	}
 	
