@@ -58,6 +58,10 @@ import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEvent;
+import com.biglybt.core.util.TimerEventPerformer;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -523,79 +527,131 @@ public class SB_Dashboard
 	}
 	*/
 	
+	private int	building = 0;
+	
+	
 	protected void
 	build(
 		Composite		dashboard_composite )
 	{
-		int[][] layout = getDashboardLayout();
-		
-		Map<Integer,DashboardItem>	item_map = new HashMap<>();
-
-		for ( DashboardItem item: items ){
+		try{
+			building++;
 			
-			item_map.put( item.getUID(),  item );
-		}
-		
-		for ( int[] row: layout ){
-			for ( int i=0;i<row.length;i++){
-				int c = row[i];
-				if ( !item_map.containsKey( c )){
-					row[i] = -1;
+			if ( dashboard_composite == null ) {
+				
+				return;
+			}
+			
+			Utils.disposeComposite( dashboard_composite, false );
+			
+			int[][] layout = getDashboardLayout();
+			
+			Map<Integer,DashboardItem>	item_map = new HashMap<>();
+	
+			for ( DashboardItem item: items ){
+				
+				item_map.put( item.getUID(),  item );
+			}
+			
+			for ( int[] row: layout ){
+				for ( int i=0;i<row.length;i++){
+					int c = row[i];
+					if ( !item_map.containsKey( c )){
+						row[i] = -1;
+					}
 				}
 			}
-		}
-		
-		final List<SashForm>	sashes 		= new ArrayList<>();
-		List<Control>			controls	= new ArrayList<>();
-		
-		build( item_map, dashboard_composite, sashes, controls, layout, 0, 0, layout.length, layout.length );
-		
-		int[][]	sash_weights = getSashWeights();
-		
-		if ( sash_weights.length == sashes.size()){
 			
-			for ( int i=0;i<sash_weights.length;i++) {
-				
-				int[]	weights = sash_weights[i];
-				
-				SashForm sf = sashes.get( i );
-				
-				if ( sf.getChildren().length == weights.length ) {
-					
-					sf.setWeights( weights );
-				}
-			}
-		}
-		
-		for ( Control c: controls ) {
+			final List<SashForm>	sashes 		= new ArrayList<>();
+			List<Control>			controls	= new ArrayList<>();
 			
-			c.addControlListener(
-				new ControlListener(){
+			build( item_map, dashboard_composite, sashes, controls, layout, 0, 0, layout.length, layout.length );
+			
+			int[][]	sash_weights = getSashWeights();
+			
+			if ( sash_weights.length == sashes.size()){
+				
+				for ( int i=0;i<sash_weights.length;i++) {
 					
-					@Override
-					public void controlResized(ControlEvent arg0){
-							
-						int[][] weights = new int[sashes.size()][];
+					int[]	weights = sash_weights[i];
+					
+					SashForm sf = sashes.get( i );
+					
+					if ( sf.getChildren().length == weights.length ) {
 						
-						for ( int i=0; i<sashes.size();i++ ){
-							
-							SashForm sf = sashes.get(i);
-							
-							if ( sf.isDisposed()) {
+						sf.setWeights( weights );
+					}
+					
+					sf.setData( weights.length );
+				}
+			}
+			
+			for ( Control c: controls ) {
+				
+				c.addControlListener(
+					new ControlListener(){
+						
+						@Override
+						public void controlResized(ControlEvent arg0){
+								
+							if ( building > 0 ) {
 								
 								return;
 							}
 							
-							weights[i] = sf.getWeights();
+							int[][] weights = new int[sashes.size()][];
+							
+							for ( int i=0; i<sashes.size();i++ ){
+								
+								SashForm sf = sashes.get(i);
+								
+								if ( sf.isDisposed()) {
+									
+									return;
+								}
+								
+								weights[i] = sf.getWeights();
+								
+								Object	d = sf.getData();
+								
+								if ( d == null || ((Integer)d) != weights[i].length ){
+									
+										// unexpected (e.g. control closed during closedown), discard weights
+									
+									return;
+								}
+							}
+							
+							setSashWeights( weights );
 						}
 						
-						setSashWeights( weights );
-					}
+						@Override
+						public void controlMoved(ControlEvent arg0){
+							// TODO Auto-generated method stub
+							
+						}
+					});
+			}
+			
+			dashboard_composite.getParent().layout( true, true );
+
+		}finally {
+			
+			SimpleTimer.addEvent(
+				"delayer",
+				SystemTime.getOffsetTime( 2500 ),
+				new TimerEventPerformer(){
 					
 					@Override
-					public void controlMoved(ControlEvent arg0){
-						// TODO Auto-generated method stub
-						
+					public void perform(TimerEvent event){
+						Utils.execSWTThread(
+							new Runnable(){
+								
+								@Override
+								public void run(){
+									building--;
+								}
+							});
 					}
 				});
 		}
