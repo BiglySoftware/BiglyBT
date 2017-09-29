@@ -1197,7 +1197,7 @@ public class SB_Dashboard
 		    cGrid.setLayoutData(gridData);
 
 		    
-			buildGrid();
+			int grid_size = buildGrid();
 			
 			final Button add_horiz = new Button( shell, SWT.CHECK );
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -1305,15 +1305,22 @@ public class SB_Dashboard
 		    });
 
 
-		    Point size = shell.computeSize(500,SWT.DEFAULT);
-		    shell.setSize(size);
-
+		    if ( grid_size < 5 ) {
+		    
+		    	Point size = shell.computeSize(500,SWT.DEFAULT);
+		    	shell.setSize(size);
+		    	
+			}else{
+				
+		    	shell.pack();
+			}
+		    
 		    Utils.centreWindow( shell );
 
 		    shell.open();
 		}
 		
-	private void
+	private int
 	buildGrid()
 	{
 	    int grid_size = existing_mapping.length > num_items?existing_mapping.length:num_items;
@@ -1426,25 +1433,26 @@ public class SB_Dashboard
 								new GCStringPrinter(gc, String.valueOf( uid_to_item_map.get( uid ) + 1 ), new Rectangle( 0,  0, bounds.width, bounds.height), 0, SWT.CENTER ).printString();
 							}
 						}
-					});
-	    	}
-	    }
-	    
-	    list.select( 0 );
-	    
-	    list.addSelectionListener(
-	    	new SelectionAdapter(){
-	    		@Override
-	    		public void widgetSelected(SelectionEvent e){
-	    		
-	    			for ( Composite[] row: cells ) {
-	    				for ( Composite c: row ) {
-	    					c.redraw();
-	    				}
-	    			}
-	    		}
-			});
+						});
+		    	}
+		    }
+		    
+		    list.select( 0 );
+		    
+		    list.addSelectionListener(
+		    	new SelectionAdapter(){
+		    		@Override
+		    		public void widgetSelected(SelectionEvent e){
+		    		
+		    			for ( Composite[] row: cells ) {
+		    				for ( Composite c: row ) {
+		    					c.redraw();
+		    				}
+		    			}
+		    		}
+				});
+		    
+		    return( grid_size );
 		}
-
 	}
 }
