@@ -584,6 +584,17 @@ public class SB_Dashboard
 					
 					sf.setData( weights.length );
 				}
+			}else{
+					// something's changed
+				
+				setSashWeights( new int[0][0] );
+				
+				for ( SashForm sf: sashes ) {
+					
+					int[]	weights = sf.getWeights();
+					
+					sf.setData( weights.length );
+				}
 			}
 			
 			for ( Control c: controls ) {
