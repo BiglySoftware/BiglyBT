@@ -18,30 +18,15 @@
 
 package com.biglybt.ui.swt.views.skin;
 
-import java.util.*;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 
-import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.util.Debug;
-import com.biglybt.pif.download.Download;
+
 import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
 import com.biglybt.ui.swt.skin.*;
-import com.biglybt.ui.swt.views.skin.SB_Dashboard.DashboardItem;
 import com.biglybt.ui.swt.views.skin.SB_Dashboard.DashboardListener;
 
 public class SBC_DashboardView
@@ -52,6 +37,11 @@ public class SBC_DashboardView
 	private static final String UI_NAME = "Dashboard";
 
 	private Composite 			dashboard_composite;
+	
+	private final boolean	destroy_when_hidden = false;
+	
+	private boolean	hidden		= false;
+	private boolean	is_built 	= false;
 	
 	@Override
 	public void updateUI() {
@@ -80,9 +70,14 @@ public class SBC_DashboardView
 	@Override
 	public Object skinObjectHidden(SWTSkinObject skinObject, Object params) {
 
-		// if we don't dispose then need to propagate show/hide events to sub-views
+		hidden	= true;
 		
-		Utils.disposeComposite( dashboard_composite, false );
+		if ( destroy_when_hidden ){
+		
+			Utils.disposeComposite( dashboard_composite, false );
+			
+			is_built = false;
+		}
 		
 		return super.skinObjectHidden(skinObject, params);
 	}
@@ -93,9 +88,18 @@ public class SBC_DashboardView
 		SWTSkinObject 	skinObject, 
 		Object 			params ) 
 	{	
+		hidden	= false;
+		
 		Object result = super.skinObjectShown(skinObject, params);
 		
-		build();
+		if ( !is_built ) {
+		
+			Utils.disposeComposite( dashboard_composite, false );
+			
+			build();
+			
+			is_built = true;
+		}
 		
 		return( result );
 	}
@@ -110,6 +114,9 @@ public class SBC_DashboardView
 		
 		Utils.disposeComposite( dashboard_composite, false );
 		
+		MainMDISetup.getSb_dashboard().build( dashboard_composite );
+		
+		/*
 		List<DashboardItem>	items = MainMDISetup.getSb_dashboard().getCurrent();
 		
 		SashForm sf = new SashForm( dashboard_composite, SWT.HORIZONTAL );
@@ -197,6 +204,7 @@ public class SBC_DashboardView
 				Debug.out( e );
 			}
 		}
+		*/
 		
 		dashboard_composite.getParent().layout( true, true );
 	}
@@ -209,6 +217,11 @@ public class SBC_DashboardView
 				public void
 				run()
 				{
+					if ( hidden ) {
+						
+						is_built = false;
+					}
+					
 					build();
 				}
 			});		

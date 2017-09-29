@@ -22,6 +22,36 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.MouseMoveListener;
+import org.eclipse.swt.events.MouseTrackAdapter;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.Shell;
+
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.BDecoder;
@@ -42,9 +72,16 @@ import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
 import com.biglybt.ui.mdi.MdiEntryVitalityImageListener;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.shells.GCStringPrinter;
+import com.biglybt.ui.swt.skin.SWTSkin;
+import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 
 
 public class SB_Dashboard
@@ -54,7 +91,9 @@ public class SB_Dashboard
 	private MdiEntry mdi_entry;
 	
 	private List<DashboardItem>		items = new ArrayList<>();
-
+	
+	private boolean	config_dirty;
+	
 	private CopyOnWriteList<DashboardListener>	listeners = new CopyOnWriteList<>();
 	
 	public 
@@ -116,10 +155,7 @@ public class SB_Dashboard
 							map.put( "data_source", key );
 							map.put( "control_type", 0L );
 							
-							synchronized( items ) {
-								
-								items.add( new DashboardItem( map ));
-							}
+							addItem( map );
 							
 							fireChanged();
 						}
@@ -141,6 +177,8 @@ public class SB_Dashboard
 					
 					items.clear();
 					
+					COConfigurationManager.setParameter( "dashboard.layout", "" );
+					 
 					addStartupItem();
 				}
 				
@@ -170,10 +208,7 @@ public class SB_Dashboard
 		map.put( "data_source", starting_url );
 		map.put( "control_type", 0L );
 		
-		synchronized( items ) {
-		
-			items.add( new DashboardItem( map ));
-		}
+		addItem( map );
 	}
 	
 	public void
@@ -181,13 +216,8 @@ public class SB_Dashboard
 		BaseMdiEntry		entry )
 	{
 		Map<String,Object> map = entry.exportStandAlone();
-		
-		System.out.println( "dbi: " + map );
-		
-		synchronized( items ) {
-		
-			items.add( new DashboardItem( map ) );
-		}
+				
+		addItem( map );
 		
 		fireChanged();
 	}
@@ -233,12 +263,16 @@ public class SB_Dashboard
 
 		MdiEntryVitalityImage cog = mdi_entry.addVitalityImage("image.sidebar.cog");
 		
-		cog.setToolTip( MessageText.getString( "configure.dashboard.tooltip" ));
+		cog.setToolTip( MessageText.getString( "configure.dashboard" ));
 
 		cog.addListener(new MdiEntryVitalityImageListener() {
 			@Override
 			public void mdiEntryVitalityImage_clicked(int x, int y) {
 				
+				synchronized( items ){
+					
+					new DBConfigWindow( new ArrayList<DashboardItem>( items ));
+				}
 			}});
 		
 		cog.setVisible(true);
@@ -260,9 +294,136 @@ public class SB_Dashboard
 		listeners.remove( l );
 	}
 	
+	private boolean
+	getAddNewHorizontal()
+	{
+		return( COConfigurationManager.getBooleanParameter( "dashboard.config.addhoriz", true ));
+	}
+	
+	private void
+	setAddNewHorizontal(
+		boolean		b )
+	{
+		COConfigurationManager.setParameter( "dashboard.config.addhoriz", b );
+	}
+	
+	private int
+	getItemUID()
+	{
+		synchronized( items ){
+			
+			int	next = COConfigurationManager.getIntParameter( "dashboard.uid.next" );
+			
+			int t = next + 1;
+			
+			if ( t < 0 ){
+				
+				t = 0;
+			}
+			
+			COConfigurationManager.setParameter( "dashboard.uid.next", t );
+			
+			return( next );
+		}
+	}
+	
+	private void
+	addItem(
+		Map		map )
+	{
+		List<Map>	list = new ArrayList<>(1);
+		
+		list.add( map );
+		
+		addItems( list );
+	}
+	
+	private void
+	addItems(
+		List<Map>	item_list )
+	{
+		synchronized( items ) {
+
+			int[][] initial_layout = getDashboardLayout();
+			
+			int[][] layout = initial_layout;
+			
+			for ( Map map: item_list ) {
+				
+				DashboardItem item = new DashboardItem( map );
+				
+				items.add( item );
+				
+				layout = ensureUIDInLayout( layout, item.getUID());
+			}
+			
+			if ( layout != initial_layout ) {
+				
+				setDashboardLayout( layout );
+			}
+		}
+	}
+	
+	private int[][]
+	ensureUIDInLayout(
+		int[][]		layout,
+		int			uid )
+	{		
+		for ( int[] row: layout ) {
+			for ( int i: row ) {
+				if ( i == uid ) {					
+					return( layout);
+				}
+			}
+		}
+	
+		boolean	add_horiz = getAddNewHorizontal();;
+		
+		int	size 		= layout.length;
+		int	new_size	= size+1;
+		
+		int[][]	new_layout = new int[new_size][new_size];
+		
+		if ( new_size == 1 ) {
+			new_layout[0][0] = uid;
+		}else{
+			for ( int i=0;i<new_size;i++){
+				
+				int[]	old_row = i<size?layout[i]:null;
+				int[]	new_row	= new_layout[i];
+				
+				for ( int j=0;j<new_size;j++){
+					if ( i < size ) {
+						if ( j < size ) {
+							new_row[j] = old_row[j];
+						}else {
+							if ( add_horiz ) {
+								new_row[j] = uid;
+							}else {
+								new_row[j] = new_row[j-1];
+							}
+						}
+					}else{
+						if ( j < size ){
+							if ( add_horiz ){
+								new_row[j] = layout[i-1][j];
+							}else {
+								new_row[j] = uid;
+							}
+						}else {
+							new_row[j] = uid;
+						}
+					}
+				}
+			}
+		}
+		
+		return( new_layout );
+	}
+	
 	private void
 	fireChanged()
-	{
+	{		
 		if ( mdi_entry != null ) {
 			
 			mdi_entry.redraw();
@@ -295,11 +456,30 @@ public class SB_Dashboard
 			
 			if ( item_list != null ) {
 				
+				// addItems( item_list );
+				// allow temporary removal of uids
+				
 				for ( Map map: item_list ) {
 					
-					items.add( new DashboardItem( map ));
+					DashboardItem item = new DashboardItem( map );
+					
+					items.add( item );
 				}
 			}
+			
+			if ( config_dirty ) {
+				
+				writeConfig();
+			}
+		}
+	}
+	
+	private void
+	configDirty()
+	{
+		synchronized( items ){
+			
+			config_dirty = true;
 		}
 	}
 	
@@ -307,6 +487,8 @@ public class SB_Dashboard
 	writeConfig()
 	{
 		synchronized( items ){
+			
+			config_dirty = false;
 			
 			Map config = new HashMap();
 			
@@ -325,6 +507,378 @@ public class SB_Dashboard
 		}
 	}
 	
+	/*
+	protected void
+	build(
+		Composite		dashboard_composite )
+	{
+		SashForm sf = new SashForm( dashboard_composite, SWT.HORIZONTAL );
+		
+		sf.setLayoutData( Utils.getFilledFormData());
+		
+		for ( DashboardItem item: items ) {
+			
+			build( sf, item );
+		}
+	}
+	*/
+	
+	protected void
+	build(
+		Composite		dashboard_composite )
+	{
+		int[][] layout = getDashboardLayout();
+		
+		Map<Integer,DashboardItem>	item_map = new HashMap<>();
+
+		for ( DashboardItem item: items ){
+			
+			item_map.put( item.getUID(),  item );
+		}
+		
+		for ( int[] row: layout ){
+			for ( int i=0;i<row.length;i++){
+				int c = row[i];
+				if ( !item_map.containsKey( c )){
+					row[i] = -1;
+				}
+			}
+		}
+		
+		final List<SashForm>	sashes 		= new ArrayList<>();
+		List<Control>			controls	= new ArrayList<>();
+		
+		build( item_map, dashboard_composite, sashes, controls, layout, 0, 0, layout.length, layout.length );
+		
+		int[][]	sash_weights = getSashWeights();
+		
+		if ( sash_weights.length == sashes.size()){
+			
+			for ( int i=0;i<sash_weights.length;i++) {
+				
+				int[]	weights = sash_weights[i];
+				
+				SashForm sf = sashes.get( i );
+				
+				if ( sf.getChildren().length == weights.length ) {
+					
+					sf.setWeights( weights );
+				}
+			}
+		}
+		
+		for ( Control c: controls ) {
+			
+			c.addControlListener(
+				new ControlListener(){
+					
+					@Override
+					public void controlResized(ControlEvent arg0){
+							
+						int[][] weights = new int[sashes.size()][];
+						
+						for ( int i=0; i<sashes.size();i++ ){
+							
+							SashForm sf = sashes.get(i);
+							
+							if ( sf.isDisposed()) {
+								
+								return;
+							}
+							
+							weights[i] = sf.getWeights();
+						}
+						
+						setSashWeights( weights );
+					}
+					
+					@Override
+					public void controlMoved(ControlEvent arg0){
+						// TODO Auto-generated method stub
+						
+					}
+				});
+		}
+	}
+	
+	private boolean
+	testBuild(
+		List<DashboardItem>			items,
+		int[][]						layout )
+	{
+		Map<Integer,DashboardItem>	item_map = new HashMap<>();
+
+		for ( DashboardItem item: items ){
+			
+			item_map.put( item.getUID(),  item );
+		}
+		
+		for ( int[] row: layout ){
+			for ( int i=0;i<row.length;i++){
+				int c = row[i];
+				if ( !item_map.containsKey( c )){
+					row[i] = -1;
+				}
+			}
+		}
+		
+		int	before = item_map.size();
+		
+		build( item_map, null, null, null, layout, 0, 0, layout.length, layout.length );
+		
+			// at least one works...
+		
+		return( item_map.size() < before );
+	}
+	
+	private void
+	build(	
+		Map<Integer,DashboardItem>	item_map,
+		Composite					comp,
+		List<SashForm>				sashes,
+		List<Control>				controls,
+		int[][]						cells,
+		int							x,
+		int							y,
+		int							width,
+		int							height )
+	{
+		//System.out.println( "Processing " + x + ", " + y + ", " + width + ", " + height );
+		
+		int		temp = -1;
+		boolean	not_same = false;
+		
+		for ( int i=y;i<y+height;i++) {
+			for ( int j=x;j<x+width;j++){
+				int val = cells[i][j];
+				if ( temp == -1 ) {
+					temp = val;
+				}else if ( temp != val ) {
+					not_same = true;
+				}
+			}
+		}
+		
+		if ( !not_same ) {
+			
+			// System.out.println( "all cells are " + temp );
+			
+			DashboardItem item = item_map.remove( temp );
+			
+			if ( item != null && comp != null ) {
+				
+				controls.add( build( comp, item ));
+			}
+			
+			return;
+		}
+		
+			// look for a way to cut into two halves without cutting through a block
+			
+		if ( height > 1 ){
+			
+			List<Integer>	splits = new ArrayList<>();
+			
+			for ( int i=y+1;i<y+height;i++){
+				
+				boolean	ok = true;
+				
+				int[] row 		= cells[i];
+				int[] prev_row	= cells[i-1];
+				
+				for ( int j=x;j<x+width;j++){
+					
+					if (prev_row[j] == row[j] && row[j] != -1 ) {
+						// splitting, no good
+						ok = false;
+						break;
+					}
+				}
+				
+				if ( ok ){
+					
+					splits.add( i );
+				}
+			}
+			
+			if ( splits.size() > 0 ){
+				
+				//System.out.println( "horizontal at " + splits + "[" + x + "-> " + (x+width-1)+ "]" );
+				
+				SashForm sf;
+				
+				if ( comp != null ){
+					
+					sf = new SashForm( comp, SWT.VERTICAL );
+				
+					sashes.add( sf );
+					
+					sf.setLayoutData( Utils.getFilledFormData());
+					
+				}else{
+					
+					sf = null;
+				}
+				
+				int	current = y;
+				
+				for ( int split: splits ){
+					
+					build( item_map, sf, sashes, controls, cells, x, current, width, split - current );
+					
+					current = split;
+				}
+				
+				build( item_map, sf, sashes, controls, cells, x, current, width, height-(current-y) );
+				
+				return;
+			}
+		}
+		
+		if ( width > 1 ){
+			
+			List<Integer>	splits = new ArrayList<>();
+
+			for ( int j=x+1;j<x+width;j++){
+				
+				boolean	ok = true;
+							
+				for ( int i=y;i<y+height;i++){
+					
+					if (cells[i][j] == cells[i][j-1] && cells[i][j] != -1){
+						// splitting, no good
+						ok = false;
+						break;
+					}
+				}
+				if ( ok ) {
+					
+					splits.add( j );
+				}
+			}
+			if ( splits.size() > 0 ){
+				
+				//System.out.println( "vertical at " + splits + "[" + y + "-> " + (y+height-1)+ "]" );
+				
+				SashForm sf;
+				
+				if ( comp != null ){
+					
+					sf = new SashForm( comp, SWT.HORIZONTAL );
+				
+					sashes.add( sf );
+					
+					sf.setLayoutData( Utils.getFilledFormData());
+					
+				
+				}else{
+					
+					sf = null;
+				}
+				int	current = x;
+				
+				for ( int split: splits ){
+
+					build( item_map, sf, sashes, controls, cells, current, y, split - current, height );
+					
+					current = split;
+				}
+				
+				build( item_map, sf, sashes, controls, cells, current, y, width-(current-x), height );
+			}
+		}
+	}
+	
+	private Composite
+	build(
+		Composite				sf,
+		final DashboardItem		item )
+	{
+		Group g = new Group( sf, SWT.NULL );
+		
+		g.setLayoutData( Utils.getFilledFormData());
+		
+		g.setLayout( new GridLayout());
+
+		try {
+			
+			g.setText( item.getTitle());
+			
+			Menu	menu = new Menu( g );
+			
+			
+			org.eclipse.swt.widgets.MenuItem itemPop = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText(itemPop, "menu.pop.out");
+
+			itemPop.addSelectionListener(
+				new SelectionAdapter(){
+					
+					@Override
+					public void widgetSelected(SelectionEvent arg0){
+						SkinnedDialog skinnedDialog =
+								new SkinnedDialog(
+										"skin3_dlg_sidebar_popout",
+										"shell",
+										null,	// standalone
+										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+	
+						SWTSkin skin = skinnedDialog.getSkin();
+	
+						SWTSkinObjectContainer cont = BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+	
+						if ( cont != null ){
+	
+							skinnedDialog.setTitle( item.getTitle());
+	
+							skinnedDialog.open();
+	
+						}else{
+	
+							skinnedDialog.close();
+						}
+					}
+				});
+			
+			new org.eclipse.swt.widgets.MenuItem( menu, SWT.SEPARATOR );
+			
+			org.eclipse.swt.widgets.MenuItem itemRemove = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText(itemRemove, "MySharesView.menu.remove");
+
+			Utils.setMenuItemImage(itemRemove, "delete");
+			
+			itemRemove.addSelectionListener(
+				new SelectionAdapter(){
+				
+					@Override
+					public void widgetSelected(SelectionEvent arg0){
+						item.remove();
+					}
+				});
+			
+			g.setMenu( menu );
+			
+			SkinnedComposite skinned_comp =	new SkinnedComposite( g );
+			
+			SWTSkin skin = skinned_comp.getSkin();
+			
+			BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+				
+			Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
+			
+			c.setLayoutData( Utils.getFilledFormData());
+			
+		}catch( Throwable e ) {
+			
+			Debug.out( e );			
+		}
+		
+		return( g );
+	}
+	
+	
+	
 	public class
 	DashboardItem
 	{
@@ -335,6 +889,25 @@ public class SB_Dashboard
 			Map<String,Object>		_map )
 		{
 			map	= _map;
+			
+			Long uid = (Long)map.get( "_uid" );
+			
+			if ( uid == null ) {
+				
+					// migration
+				
+				uid = new Long(getItemUID());
+				
+				map.put( "_uid", uid );
+				
+				configDirty();
+			}
+		}
+		
+		public int
+		getUID()
+		{
+			return(((Long)map.get( "_uid" )).intValue());
 		}
 		
 		public String
@@ -361,10 +934,461 @@ public class SB_Dashboard
 		}
 	}
 	
+	private boolean
+	setSashWeights(
+		int[][]		weights )
+	{
+		synchronized( items ){
+			
+			String str = encodeIAA( weights );
+			
+			String old_str = COConfigurationManager.getStringParameter( "dashboard.sash.weights", "" );
+			
+			if ( str.equals( old_str )){
+				
+				return( false );
+			}
+			
+			COConfigurationManager.setParameter( "dashboard.sash.weights", str );
+			
+			return( true );
+		}
+	}
+	
+	private int[][]
+	getSashWeights()
+	{
+		synchronized( items ){
+			
+			String str = COConfigurationManager.getStringParameter( "dashboard.sash.weights" );
+			
+			return( decodeIAA( str ));
+		}
+	}
+	
+	private boolean
+	setDashboardLayout(
+		int[][]		layout )
+	{
+		synchronized( items ){
+			
+			String str = encodeIAA( layout );
+			
+			String old_str = COConfigurationManager.getStringParameter( "dashboard.layout" );
+			
+			if ( str.equals( old_str )){
+				
+				return( false );
+			}
+			
+			COConfigurationManager.setParameter( "dashboard.layout", str );
+			
+			setSashWeights( new int[0][0] );
+			
+			return( true );
+		}
+	}
+	
+	private int[][]
+	getDashboardLayout()
+	{
+		synchronized( items ){
+			
+			String str = COConfigurationManager.getStringParameter( "dashboard.layout" );
+			
+			return( decodeIAA( str ));
+		}
+	}
+	
+	private String
+	encodeIAA(
+		int[][]	data )
+	{
+		String str = "";
+		
+		for ( int[] row: data ) {
+							
+			String r_str = "";
+				
+			for ( int n: row ) {
+			
+				if ( !r_str.isEmpty()){
+					
+					r_str += ",";
+				}
+				
+				r_str += n;
+			}
+			
+			if ( !str.isEmpty()){
+				
+				str += ";";
+			}
+
+			str += r_str;
+		}
+		
+		return( str );
+	}
+	
+	private int[][]
+	decodeIAA(
+		String	str )
+	{
+		if ( str.isEmpty()) {
+			
+			return( new int[0][0] );
+		}
+		
+		String[] rows = str.split( ";" );
+		
+		int[][] layout = new int[rows.length][];
+		
+		int	row_num = 0;
+		
+		for ( String row: rows ) {
+			
+			String[] cells = row.split(",");
+			
+			int[] x = new int[cells.length];
+			
+			layout[row_num++] = x;
+			
+			for ( int i=0;i<cells.length;i++) {
+				
+				try {
+					x[i] = Integer.parseInt( cells[i]);
+					
+				}catch( Throwable e ){
+					
+					Debug.out(e);
+				}
+			}
+		}
+		
+		return( layout );
+	}
+	
 	public interface
 	DashboardListener
 	{
 		public void
 		itemsChanged();
+	}
+	
+	private class
+	DBConfigWindow
+	{
+		final private Shell							shell;
+		final private org.eclipse.swt.widgets.List 	list;
+		final Composite 							cGrid;
+		final Button 								btnSave;
+		
+		final private List<DashboardItem>	items;
+		final private int					num_items;
+		final private int[]					item_uids;
+
+		final Map<Integer,Integer> uid_to_item_map = new HashMap<>();
+		
+		
+		int[][]				existing_mapping;
+		int[][] 			mapping;
+		Composite[][] 		cells;
+
+		private
+		DBConfigWindow(
+			List<DashboardItem>		_items )
+		{
+			items	= _items;
+			
+			shell = ShellFactory.createMainShell(SWT.DIALOG_TRIM | SWT.RESIZE);
+
+		    Messages.setLanguageText( shell, "configure.dashboard" );
+		    Utils.setShellIcon(shell);
+		    GridLayout layout = new GridLayout();
+		    layout.numColumns = 2;
+		    shell.setLayout(layout);
+	
+		    GridData gridData;
+		    
+		    	// item list
+		    
+		    list = new org.eclipse.swt.widgets.List(shell, SWT.SINGLE | SWT.HORIZONTAL | SWT.VERTICAL);
+		    gridData = new GridData(GridData.FILL_VERTICAL);
+		    list.setLayoutData(gridData);
+		    
+		    existing_mapping = getDashboardLayout();
+		    
+		    num_items = items.size();    
+		    
+		    item_uids = new int[num_items];
+		    
+			for ( int i=0; i< num_items; i++ ) {
+
+				DashboardItem	item = items.get(i);
+				
+				int	uid = item.getUID();
+				
+				item_uids[i] = uid;
+				
+				uid_to_item_map.put( uid, i );
+				
+				list.add( (i+1) + ") " + item.getTitle());
+			}
+			
+		    cGrid = new Composite(shell, SWT.NONE);
+		    gridData = new GridData(GridData.FILL_HORIZONTAL);
+		    cGrid.setLayoutData(gridData);
+
+		    
+			buildGrid();
+			
+			final Button add_horiz = new Button( shell, SWT.CHECK );
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
+			add_horiz.setLayoutData(gridData);
+			add_horiz.setText( MessageText.getString( "dashboard.add.right" ));
+			
+			add_horiz.setSelection( getAddNewHorizontal());
+			
+			add_horiz.addListener(SWT.Selection, new Listener() {
+			      @Override
+			      public void handleEvent(Event e) {
+			    	  setAddNewHorizontal(  add_horiz.getSelection());
+			      }});
+			
+				// line
+			
+		    Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
+		    gridData = new GridData(GridData.FILL_HORIZONTAL);
+		    gridData.horizontalSpan = 2;
+		    labelSeparator.setLayoutData(gridData);
+		    
+	    		// button row
+
+		    Composite cButtons = new Composite(shell, SWT.NONE);
+		    gridData = new GridData(GridData.FILL_HORIZONTAL);
+		    gridData.horizontalSpan = 2;
+		    cButtons.setLayoutData(gridData);
+		    GridLayout layoutButtons = new GridLayout();
+		    layoutButtons.numColumns = 5;
+		    cButtons.setLayout(layoutButtons);
+
+		    List<Button> buttons = new ArrayList<>();
+
+		    Button btnReset = new Button(cButtons,SWT.PUSH);
+		    buttons.add( btnReset );
+		    gridData = new GridData();
+		    gridData.horizontalAlignment = GridData.END;
+		    btnReset.setLayoutData(gridData);
+		    Messages.setLanguageText(btnReset,"Button.reset");
+		    btnReset.addListener(SWT.Selection, new Listener() {
+		      @Override
+		      public void handleEvent(Event e) {
+		      
+		    	  existing_mapping = new int[0][0];
+		    	 
+		    	  for (int uid: item_uids ) {
+		    		  
+		    		  existing_mapping = ensureUIDInLayout( existing_mapping, uid );
+		    	  }
+		    	  
+		    	  buildGrid();
+		    	  
+		    	  shell.layout( true, true );
+		      }
+		    });
+		    
+		    Label label = new Label(cButtons,SWT.NULL);
+		    gridData = new GridData(GridData.FILL_HORIZONTAL );
+		    label.setLayoutData(gridData);
+
+		    btnSave = new Button(cButtons,SWT.PUSH);
+		    buttons.add( btnSave );
+		    gridData = new GridData();
+		    gridData.horizontalAlignment = GridData.END;
+		    btnSave.setLayoutData(gridData);
+		    Messages.setLanguageText(btnSave,"wizard.multitracker.edit.save");
+		    btnSave.addListener(SWT.Selection, new Listener() {
+		      @Override
+		      public void handleEvent(Event e) {
+		      
+		    	if ( setDashboardLayout( mapping )) {
+		    		
+		    		fireChanged();
+		    	}
+		    	
+		        shell.dispose();
+		      }
+		    });
+
+		    Button btnCancel = new Button(cButtons,SWT.PUSH);
+		    buttons.add( btnCancel );
+		    gridData = new GridData();
+		    gridData.horizontalAlignment = GridData.END;
+		    btnCancel.setLayoutData(gridData);
+		    Messages.setLanguageText(btnCancel,"Button.cancel");
+		    btnCancel.addListener(SWT.Selection, new Listener() {
+		      @Override
+		      public void handleEvent(Event e) {
+		        shell.dispose();
+		      }
+		    });
+
+			Utils.makeButtonsEqualWidth( buttons );
+
+		    shell.setDefaultButton( btnSave );
+
+		    shell.addListener(SWT.Traverse, new Listener() {
+		    	@Override
+			    public void handleEvent(Event e) {
+		    		if ( e.character == SWT.ESC){
+		    			shell.dispose();
+		    		}
+		    	}
+		    });
+
+
+		    Point size = shell.computeSize(500,SWT.DEFAULT);
+		    shell.setSize(size);
+
+		    Utils.centreWindow( shell );
+
+		    shell.open();
+		}
+		
+	private void
+	buildGrid()
+	{
+	    int grid_size = existing_mapping.length > num_items?existing_mapping.length:num_items;
+			
+		mapping = new int[grid_size][grid_size];
+		
+		for ( int[]row: mapping ) {
+			Arrays.fill( row, -1 );
+		}			
+		
+		for ( int i=0;i<existing_mapping.length;i++) {
+			
+			int[] old_row 	= existing_mapping[i];
+			int[] new_row	= mapping[i];
+			
+			for ( int j=0; j<old_row.length;j++) {
+				
+				int uid = old_row[j];
+				
+				if ( uid_to_item_map.containsKey( uid )) {
+					
+					new_row[j] = uid;
+					
+				}else {
+					
+					new_row[j] = -1;
+				}
+			}
+		}
+		
+		cells 	= new Composite[grid_size][grid_size];
+
+		Utils.disposeComposite( cGrid, false );
+		
+	    GridLayout layoutGrid = new GridLayout(grid_size,true);
+	    layoutGrid.horizontalSpacing	= 0;
+	    layoutGrid.verticalSpacing	= 0;
+	    
+	    cGrid.setLayout(layoutGrid);
+
+	    for ( int i=0;i<grid_size;i++) {
+	    	
+	    	for ( int j=0;j<grid_size;j++ ) {
+	    		
+	    		final Canvas cell = new Canvas( cGrid, SWT.DOUBLE_BUFFERED );
+	    		GridData gridData = new GridData();
+	    		gridData.widthHint = 50;
+	    		gridData.heightHint = 50;
+	    		cell.setLayoutData(gridData);
+	    		
+	    		cells[i][j]	= cell;
+	    		
+	    		final int f_i = i;
+	    		final int f_j = j;
+	    		
+	    		cell.addMouseListener(
+	    			new MouseAdapter(){
+									
+						@Override
+						public void mouseDown(MouseEvent arg0){
+																	
+							int uid = item_uids[list.getSelectionIndex()];
+							
+							mapping[f_i][f_j]	= mapping[f_i][f_j]==uid?-1:uid;
+							
+							btnSave.setEnabled( testBuild( items, mapping.clone()));
+							
+							cell.redraw();
+						}
+					});	
+	    		
+	    		cell.addPaintListener(
+	    			new PaintListener(){
+						
+						@Override
+						public void paintControl(PaintEvent ev){
+							GC gc = ev.gc;
+
+							Rectangle bounds = cell.getBounds();
+
+							int uid = mapping[f_i][f_j];
+							
+							if ( uid != -1 && uid_to_item_map.get( uid ) == list.getSelectionIndex()) {
+								
+								gc.setBackground( Colors.dark_grey );
+								
+							}else{
+								
+								gc.setBackground( uid==-1?Colors.light_grey:Colors.grey );
+							}
+							
+							gc.fillRectangle( 0, 0, bounds.width, bounds.height );
+							
+							gc.setForeground( Colors.white );
+
+							gc.drawLine( 0, 0, 0, bounds.height-1 );
+							
+							gc.drawLine( 0, 0, bounds.width-1, 0 );
+
+							if ( f_i == grid_size - 1 ) {
+								gc.drawLine( 0, bounds.height-1 , bounds.width-1, bounds.height-1  );
+							}
+							if ( f_j == grid_size - 1 ) {
+								gc.drawLine( bounds.width-1, 0 , bounds.width-1, bounds.height-1  );
+							}
+							
+							
+							if ( uid != -1 ){
+								
+								new GCStringPrinter(gc, String.valueOf( uid_to_item_map.get( uid ) + 1 ), new Rectangle( 0,  0, bounds.width, bounds.height), 0, SWT.CENTER ).printString();
+							}
+						}
+					});
+	    	}
+	    }
+	    
+	    list.select( 0 );
+	    
+	    list.addSelectionListener(
+	    	new SelectionAdapter(){
+	    		@Override
+	    		public void widgetSelected(SelectionEvent e){
+	    		
+	    			for ( Composite[] row: cells ) {
+	    				for ( Composite c: row ) {
+	    					c.redraw();
+	    				}
+	    			}
+	    		}
+			});
+		}
+
 	}
 }
