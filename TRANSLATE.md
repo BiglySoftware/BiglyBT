@@ -21,7 +21,7 @@ Thank you for your interesting in helping out BiglyBT.  We really need help with
 | uk_UA | Ukrainian | Ukraine | ~61% | |
 | pl_PL | Polish | Poland | ~58% | |
 | sv_SE | Swedish | Sweden | ~53% | |
-| no_NO | Norwegian | Norway | ~53% | |
+| no_NO | Norwegian | Norway | ~53% | Leif |
 | hu_HU | Hungarian | Hungary | ~52% | |
 | li_NL | Limburgish | Netherlands | ~50% | |
 | nl_NL | Dutch | Netherlands | ~49% | |
