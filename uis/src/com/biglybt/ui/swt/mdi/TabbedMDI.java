@@ -1008,15 +1008,39 @@ public class TabbedMDI
 						@Override
 						public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
 		
-							menu.setVisible(entry.canBuildStandAlone());
+								// pick up the right target - due to the confusion of multiple tab instances registering
+								// the same menu entries the original registerer may well not be the one that should receive the event,
+								// rather the one specified in the event is
+							
+							TabbedEntry	target = entry;
+							
+							if ( data instanceof Object[]) {
+								Object[] odata = (Object[])data;
+								if ( odata.length == 1 && odata[0] instanceof TabbedEntry ) {
+									target = (TabbedEntry)odata[0];
+								}
+							}
+							
+							menu.setVisible(target.canBuildStandAlone());
 						}
 					});
 		
 				menuItem.addListener(new MenuItemListener() {
 					@Override
-					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-								
-						MainMDISetup.getSb_dashboard().addItem( entry );
+					public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object data ) {
+							
+						TabbedEntry	target = entry;
+						
+						if ( data instanceof Object[]) {
+							Object[] odata = (Object[])data;
+							if ( odata.length == 1 && odata[0] instanceof TabbedEntry ) {
+								target = (TabbedEntry)odata[0];
+							}
+						}else if ( data instanceof TabbedEntry ){
+							target = (TabbedEntry)data;
+						}
+						
+						MainMDISetup.getSb_dashboard().addItem( target );
 					}
 				});
 			}
@@ -1032,14 +1056,34 @@ public class TabbedMDI
 					@Override
 					public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
 
-						menu.setVisible( entry.canBuildStandAlone());
+						TabbedEntry	target = entry;
+						
+						if ( data instanceof Object[]) {
+							Object[] odata = (Object[])data;
+							if ( odata.length == 1 && odata[0] instanceof TabbedEntry ) {
+								target = (TabbedEntry)odata[0];
+							}
+						}
+						
+						menu.setVisible( target.canBuildStandAlone());
 					}
 				});
 
 			menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
 				@Override
-				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
 
+					TabbedEntry	target = entry;
+					
+					if ( data instanceof Object[]) {
+						Object[] odata = (Object[])data;
+						if ( odata.length == 1 && odata[0] instanceof TabbedEntry ) {
+							target = (TabbedEntry)odata[0];
+						}
+					}else if ( data instanceof TabbedEntry ){
+						target = (TabbedEntry)data;
+					}
+					
 					SkinnedDialog skinnedDialog =
 							new SkinnedDialog(
 									"skin3_dlg_sidebar_popout",
@@ -1049,11 +1093,11 @@ public class TabbedMDI
 
 					SWTSkin skin = skinnedDialog.getSkin();
 
-					SWTSkinObjectContainer cont = entry.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
+					SWTSkinObjectContainer cont = target.buildStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ));
 
 					if ( cont != null ){
 
-						Object ds = entry.getDatasource();
+						Object ds = target.getDatasource();
 
 						if ( ds instanceof Object[]){
 
@@ -1076,7 +1120,7 @@ public class TabbedMDI
 							ds_str = ((DownloadManager)ds).getDisplayName();
 						}
 
-						skinnedDialog.setTitle( entry.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
+						skinnedDialog.setTitle( target.getTitle() + (ds_str.length()==0?"":(" - " + ds_str )));
 
 						skinnedDialog.open();
 

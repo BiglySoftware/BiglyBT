@@ -702,21 +702,20 @@ public class PeersGraphicView
 	    	return;
 	    }
 
+	    Point panelSize = panel.getSize();
+
+	    int	pw = panelSize.x;
+	    int	ph = panelSize.y;
+
 	    int	num_dms = dm_data.length;
 
-	    if ( num_dms == 0  ){
+	    if ( num_dms == 0  || pw == 0 || ph == 0 ){
 	    	GC gcPanel = new GC(panel);
 	    	gcPanel.setBackground(Colors.white);
 	    	gcPanel.fillRectangle( panel.getBounds());
 	    	gcPanel.dispose();
 	    	return;
 	    }
-
-
-	    Point panelSize = panel.getSize();
-
-	    int	pw = panelSize.x;
-	    int	ph = panelSize.y;
 
 	    int	h_cells;
 	    int v_cells;
