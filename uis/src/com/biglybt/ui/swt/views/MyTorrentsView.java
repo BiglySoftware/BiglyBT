@@ -2743,7 +2743,12 @@ public class MyTorrentsView
 				restrictTo.add("rcm.subview.torrentdetails.name");
 			}
 		}
+		pi = pm.getPluginInterfaceByID("3dview", true);
 
+		if (pi != null) {
+			restrictTo.add("3D View");
+		}
+		
 		if ( Logger.isEnabled()){
 
 			restrictTo.add( LoggerView.MSGID_PREFIX );

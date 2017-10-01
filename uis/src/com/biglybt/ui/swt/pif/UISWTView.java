@@ -99,6 +99,14 @@ public interface UISWTView extends UIPluginView {
 	public Object getInitialDataSource();
 
 	/**
+	 * @since BiglyBT: 1.0.2.1
+	 * @return
+	 */
+	
+	public String
+	getParentID();
+	
+	/**
 	 * Get parent view, if one exists
 	 *
 	 * @since 5.5.0.0
