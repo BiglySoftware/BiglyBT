@@ -28,9 +28,6 @@ import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseListener;
-import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -363,7 +360,7 @@ public class SB_Dashboard
 			
 			if ( layout != initial_layout ) {
 				
-				setDashboardLayout( layout );
+				setDashboardLayout( layout, items.size(), false );
 			}
 		}
 	}
@@ -423,6 +420,117 @@ public class SB_Dashboard
 		}
 		
 		return( new_layout );
+	}
+	
+	private int[][]
+	compactLayout(
+		int[][]		layout,
+		int			grid_size )
+	{
+		int	layout_size = layout.length;
+		
+		if ( layout_size > grid_size && grid_size >= 4) {
+			
+			int	row_to_remove 	= -1;
+			int col_to_remove	= -1;
+			
+			for ( int i=0;i<layout_size;i++){
+				
+				int[] row 		= layout[i];
+				
+				if ( i < layout_size-1 ){
+					
+					int[] next_row 	= layout[i+1];
+					
+					boolean same = true;
+					
+					for ( int j=0;j<layout_size;j++) {
+						
+						if ( row[j] != next_row[j] ) {
+							same = false;
+							break;
+						}
+					}
+					
+					if ( same ){
+						row_to_remove = i;
+					}
+				}
+				
+				boolean	all_undef = true;
+				
+				for (int uid: row ) {
+				
+					if ( uid != -1 ) {
+						all_undef = false;
+						break;
+					}
+				}
+				
+				if ( all_undef ) {
+					row_to_remove = i;
+				}
+			}
+		
+			for ( int j=0;j<layout_size;j++){
+								
+				if ( j < layout_size-1 ){
+										
+					boolean same = true;
+					
+					for ( int i=0;i<layout_size;i++) {
+						
+						if ( layout[i][j] != layout[i][j+1] ) {
+							same = false;
+							break;
+						}
+					}
+					
+					if ( same ){
+						col_to_remove = j;
+					}
+				}
+				
+				boolean	all_undef = true;
+				
+				for ( int i=0;i<layout_size;i++) {
+				
+					if ( layout[i][j] != -1 ) {
+						all_undef = false;
+						break;
+					}
+				}
+				
+				if ( all_undef ) {
+					col_to_remove = j;
+				}
+			}
+			
+			
+			if ( row_to_remove != -1 && col_to_remove !=  -1 ){
+								
+				int[][] new_layout = new int[layout_size-1][layout_size-1];
+				
+				for ( int i=0;i<layout_size;i++) {
+					if ( i == row_to_remove) {
+						continue;
+					}
+					for (int j=0;j<layout_size;j++) {
+						if ( j == col_to_remove ) {
+							continue;
+						}
+						int	target_i = i<row_to_remove?i:i-1;
+						int	target_j = j<col_to_remove?j:j-1;
+						
+						new_layout[target_i][target_j] = layout[i][j];
+					}
+				}
+				
+				return( compactLayout( new_layout, grid_size));
+			}
+		}
+		
+		return( layout );
 	}
 	
 	private void
@@ -1035,20 +1143,32 @@ public class SB_Dashboard
 	
 	private boolean
 	setDashboardLayout(
-		int[][]		layout )
+		int[][]		layout,
+		int			grid_size,
+		boolean		compact )
 	{
 		synchronized( items ){
 			
-			String str = encodeIAA( layout );
+			String new_str = encodeIAA( layout );
 			
 			String old_str = COConfigurationManager.getStringParameter( "dashboard.layout" );
 			
-			if ( str.equals( old_str )){
+			boolean same = new_str.equals( old_str );
+				
+			if ( compact ){
+				
+				new_str = encodeIAA( compactLayout( layout, grid_size ));
+			}
+			
+			if ( !new_str.equals( old_str )){
+			
+				COConfigurationManager.setParameter( "dashboard.layout", new_str );
+			}
+			
+			if ( same ) {
 				
 				return( false );
 			}
-			
-			COConfigurationManager.setParameter( "dashboard.layout", str );
 			
 			setSashWeights( new int[0][0] );
 			
@@ -1280,7 +1400,7 @@ public class SB_Dashboard
 		      @Override
 		      public void handleEvent(Event e) {
 		      
-		    	if ( setDashboardLayout( mapping )) {
+		    	if ( setDashboardLayout( mapping, num_items, true )) {
 		    		
 		    		fireChanged();
 		    	}
