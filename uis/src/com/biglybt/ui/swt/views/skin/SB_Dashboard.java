@@ -24,6 +24,9 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.MouseAdapter;
@@ -41,6 +44,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -122,75 +126,155 @@ public class SB_Dashboard
 		MenuManager menuManager = uim.getMenuManager();
 		MenuItem menuItem;
 
-		menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-				"menu.add.website");
-
-		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		menuItem.addListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-				
-				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-						"chat.view.enter.key.title", "chat.view.enter.key.msg");
-
-				entryWindow.prompt(new UIInputReceiverListener() {
-					@Override
-					public void UIInputReceiverClosed(UIInputReceiver receiver) {
-						if (!receiver.hasSubmittedInput()) {
-							return;
-						}
-
-						String key = receiver.getSubmittedInput().trim();
-						
-						if ( !key.isEmpty()) {
-							
-							Map<String,Object>	map = new HashMap<>();
-							
-							map.put( "mdi", "sidebar" );
-							map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
-							map.put( "parent_id", "header.dashboard" );
-							map.put( "skin_ref", "main.generic.browse" );
-							map.put( "id", "Browser: " + key );
-							map.put( "title", key );		
-							map.put( "data_source", key );
-							map.put( "control_type", 0L );
-							
-							addItem( map );
-							
-							fireChanged();
-						}
-					}});
-			}
-		});
-		
-		
-		menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-				"Button.reset");
-
-		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		menuItem.addListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-				
-				synchronized( items ) {
+		{
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+					"menu.add.website");
+	
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
 					
-					items.clear();
-					
-					COConfigurationManager.setParameter( "dashboard.layout", "" );
-					 
-					addStartupItem();
+					SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+							"chat.view.enter.key.title", "chat.view.enter.key.msg");
+	
+					entryWindow.prompt(new UIInputReceiverListener() {
+						@Override
+						public void UIInputReceiverClosed(UIInputReceiver receiver) {
+							if (!receiver.hasSubmittedInput()) {
+								return;
+							}
+	
+							String key = receiver.getSubmittedInput().trim();
+							
+							if ( !key.isEmpty()) {
+								
+								Map<String,Object>	map = new HashMap<>();
+								
+								map.put( "mdi", "sidebar" );
+								map.put( "skin_id", "com.biglybt.ui.skin.skin3" );
+								map.put( "parent_id", "header.dashboard" );
+								map.put( "skin_ref", "main.generic.browse" );
+								map.put( "id", "Browser: " + key );
+								map.put( "title", key );		
+								map.put( "data_source", key );
+								map.put( "control_type", 0L );
+								
+								addItem( map );
+								
+								fireChanged();
+							}
+						}});
 				}
-				
-				fireChanged();
-			}
-		});
+			});
+		}
 		
-		menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-				"sep1");
+		{
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep0");
+			
+			
+			menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
+			
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		}
 		
-		menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
+		{
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+					"menu.export.to.clip");
+	
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					
+					String data = exportDashboard();
+					
+					Clipboard cb = new Clipboard(Utils.getDisplay());
+					
+					try {
+					
+						cb.setContents(
+							  new Object[] {data },
+							  new Transfer[] {TextTransfer.getInstance()});
+						
+					}finally {
+						cb.dispose();
+					}
+				}
+			});
+		}
+		
+		{
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+					"menu.import.from.clip");
+	
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					
+					Clipboard 		cb = new Clipboard( Utils.getDisplay());
+					
+					try {
+						TextTransfer 	transfer = TextTransfer.getInstance();
+	
+						String data = (String) cb.getContents(transfer);
+						
+						if ( data != null && !data.isEmpty()) {
+							
+							importDashboard( data );
+						}
+					}finally {
+					
+						cb.dispose();
+					}
+				}
+			});
+		}
+		
+		{
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep1");
+			
+			
+			menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
+			
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		}
+		
+		{
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
+					"Button.reset");
+	
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					
+					synchronized( items ) {
+						
+						items.clear();
+						
+						COConfigurationManager.setParameter( "dashboard.layout", "" );
+						 
+						addStartupItem();
+					}
+					
+					fireChanged();
+				}
+			});
+		}
+		
+		{		
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"sep2");
+		
+			menuItem.setStyle( MenuItem.STYLE_SEPARATOR );
+		
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		}
 	}
 
 	private void
@@ -619,21 +703,66 @@ public class SB_Dashboard
 		}
 	}
 	
-	/*
-	protected void
-	build(
-		Composite		dashboard_composite )
+
+	private String
+	exportDashboard()
 	{
-		SashForm sf = new SashForm( dashboard_composite, SWT.HORIZONTAL );
+		synchronized( items ){
 		
-		sf.setLayoutData( Utils.getFilledFormData());
+			Map	map = new HashMap();
 		
-		for ( DashboardItem item: items ) {
+			List<Map>	l_items = new ArrayList<>();
+		
+			for ( DashboardItem item: items ) {
+				
+				l_items.add( item.getState());
+			}
 			
-			build( sf, item );
+			map.put( "items", l_items );
+			
+			map.put( "layout", COConfigurationManager.getStringParameter( "dashboard.layout" ));
+		
+			map.put( "weights", COConfigurationManager.getStringParameter( "dashboard.sash.weights" ));
+			
+			return( BEncoder.encodeToJSON( map ));
 		}
 	}
-	*/
+	
+	private void
+	importDashboard(
+		String	data )
+	{
+		synchronized( items ){
+
+			Map map = BDecoder.decodeStrings( BDecoder.decodeFromJSON( data ));
+			
+			List<Map>	l_items = (List<Map>)map.get( "items" );
+			
+			List<DashboardItem>	new_items = new ArrayList<>();
+			
+			for ( Map m: l_items ) {
+				
+				new_items.add( new DashboardItem(m));
+			}
+			
+			String	layout = (String)map.get( "layout" );
+			
+			decodeIAA( layout );
+			
+			String weights = (String)map.get( "weights" );
+			
+			decodeIAA( weights );
+			
+			items.clear();
+			
+			items.addAll( new_items );
+			
+			COConfigurationManager.setParameter( "dashboard.layout", layout );
+			COConfigurationManager.setParameter( "dashboard.sash.weights", weights );
+		}
+		
+		fireChanged();
+	}
 	
 	private int	building = 0;
 	
@@ -991,6 +1120,31 @@ public class SB_Dashboard
 			
 			Menu	menu = new Menu( g );
 			
+			org.eclipse.swt.widgets.MenuItem itemReload = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText(itemReload, "Button.reload");
+
+			itemReload.addSelectionListener(
+				new SelectionAdapter(){
+					
+					@Override
+					public void widgetSelected(SelectionEvent arg0){
+						
+						Utils.disposeComposite( g, false );
+						
+						SkinnedComposite skinned_comp =	new SkinnedComposite( g );
+						
+						SWTSkin skin = skinned_comp.getSkin();
+						
+						BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+							
+						Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
+						
+						c.setLayoutData( Utils.getFilledFormData());
+						
+						g.layout( true, true );
+					}
+				});
 			
 			org.eclipse.swt.widgets.MenuItem itemPop = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
 			
