@@ -429,7 +429,7 @@ public class SB_Dashboard
 	{
 		int	layout_size = layout.length;
 		
-		if ( layout_size > grid_size && grid_size >= 4) {
+		if ( layout_size > grid_size && layout_size > 4) {
 			
 			int	row_to_remove 	= -1;
 			int col_to_remove	= -1;
