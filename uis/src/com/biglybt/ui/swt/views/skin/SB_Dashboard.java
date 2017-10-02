@@ -685,7 +685,17 @@ public class SB_Dashboard
 					
 					SashForm sf = sashes.get( i );
 					
-					if ( sf.getChildren().length == weights.length ) {
+					Control[] kids = sf.getChildren();
+					
+					int	num_groups = 0;
+					
+					for ( Control kid: kids ) {
+						if ( kid instanceof Group ){
+							num_groups++;
+						}
+					}
+					
+					if ( num_groups == weights.length ) {
 						
 						sf.setWeights( weights );
 					}

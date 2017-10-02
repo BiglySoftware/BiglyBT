@@ -224,11 +224,6 @@ public class UISWTViewImpl
 		return parentView;
 	}
 	
-	@Override
-	public String getParentID(){
-		return parentViewID;
-	}
-
 	/* (non-Javadoc)
 	 * @see com.biglybt.pif.ui.UIPluginView#getViewID()
 	 */

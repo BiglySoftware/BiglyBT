@@ -2746,7 +2746,7 @@ public class MyTorrentsView
 		pi = pm.getPluginInterfaceByID("3dview", true);
 
 		if (pi != null) {
-			restrictTo.add("3D View");
+			restrictTo.add("view3d.subtab.name");
 		}
 		
 		if ( Logger.isEnabled()){
