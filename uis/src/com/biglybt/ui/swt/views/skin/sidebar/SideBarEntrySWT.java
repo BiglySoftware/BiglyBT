@@ -526,7 +526,7 @@ public class SideBarEntrySWT
 			if ( 	( original_event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)original_event_listener).isCloneable()) ||
 					( original_event_listener instanceof UISWTViewEventListenerEx )){
 
-				final UISWTViewImpl view = new UISWTViewImpl( parentID, id, true );
+				final UISWTViewImpl view = new UISWTViewImpl( id, parentID, true );
 
 				final UISWTViewEventListener event_listener = original_event_listener instanceof UISWTViewEventListenerEx?((UISWTViewEventListenerEx)original_event_listener).getClone():((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
 
