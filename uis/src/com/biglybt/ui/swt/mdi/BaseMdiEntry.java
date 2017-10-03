@@ -21,6 +21,9 @@ package com.biglybt.ui.swt.mdi;
 import java.util.*;
 import java.util.List;
 
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UIFunctionsUserPrompter;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoListener;
@@ -36,6 +39,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.toolbar.UIToolBarEnablerBase;
@@ -1340,11 +1344,13 @@ public abstract class BaseMdiEntry
 			
 			com.biglybt.ui.swt.pif.UISWTViewEventListenerEx.CloneConstructor cc = ((UISWTViewEventListenerEx)listener).getCloneConstructor();
 		
-			String pi = cc.getPluginInterface().getPluginID();
-			
+			PluginInterface pi = cc.getPluginInterface();
+						
 			Map<String,Object>	map = new HashMap<>();
 			
-			map.put( "plugin_id",  pi );
+			map.put( "plugin_id",  pi.getPluginID() );
+			
+			map.put( "plugin_name", pi.getPluginName());
 			
 			map.put( "ipc_method", cc.getIPCMethod());
 			
@@ -1395,10 +1401,13 @@ public abstract class BaseMdiEntry
 	buildStandAlone(
 		SWTSkinObjectContainer		soParent );
 	
+	private static Set<String>	installing_pids = new HashSet<>();
+	
 	public static SWTSkinObjectContainer
 	importStandAlone(
 		SWTSkinObjectContainer		soParent,
-		Map<String,Object>			map )
+		Map<String,Object>			map,
+		Runnable					callback )
 	{
 		String	mdi_type = (String)map.get( "mdi" );
 		
@@ -1500,7 +1509,7 @@ public abstract class BaseMdiEntry
 					
 					PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( plugin_id );
 					
-					if ( pi != null ) {
+					if ( pi != null ){
 						
 						String ipc_method = (String)el_map.get( "ipc_method" );
 						
@@ -1543,7 +1552,102 @@ public abstract class BaseMdiEntry
 							}
 						}
 							
-						event_listener = (UISWTViewEventListener)pi.getIPC().invoke( ipc_method, args.toArray( new Object[args.size()])); 
+						event_listener = (UISWTViewEventListener)pi.getIPC().invoke( ipc_method, args.toArray( new Object[args.size()]));
+						
+					}else{
+						
+						boolean	try_install = false;
+						
+						synchronized( installing_pids ) {
+							
+							if ( !installing_pids.contains( plugin_id )) {
+															
+								installing_pids.add( plugin_id );
+								
+								try_install = true;
+							}
+						}
+						
+						if ( try_install ){
+							
+							boolean	went_async = false;
+							
+							try {
+								UIFunctions uif = UIFunctionsManager.getUIFunctions();
+		
+								String plugin_name = (String)el_map.get( "plugin_name" );
+								
+								String remember_id = "basemdi.import.view.install." + plugin_id;
+								
+								String	title	= MessageText.getString( "plugin.required" );
+								String	text	= MessageText.getString( "plugin.required.info", new String[]{ plugin_name });
+								
+								UIFunctionsUserPrompter prompter = 
+									uif.getUserPrompter(title, text, new String[] {
+										MessageText.getString("Button.yes"),
+										MessageText.getString("Button.no")
+									}, 0);
+		
+								if ( remember_id != null ){
+		
+									prompter.setRemember(
+										remember_id,
+										false,
+										MessageText.getString("MessageBoxWindow.nomoreprompting"));
+								}
+		
+								prompter.setAutoCloseInMS(0);
+		
+								prompter.open(null);
+		
+								boolean	install = prompter.waitUntilClosed() == 0;
+		
+								if ( install ){
+		
+									went_async = true;
+		
+									uif.installPlugin(
+										plugin_id,
+										"plugin.generic.install",
+										new UIFunctions.actionListener()
+										{
+											@Override
+											public void
+											actionComplete(
+												Object		result )
+											{
+												try{
+													if ( callback != null ){
+		
+														if ( result instanceof Boolean ){
+		
+															if ( (Boolean)result ) {				
+		
+																callback.run();
+															}
+														}
+													}
+												}finally{
+													
+													synchronized( installing_pids ) {
+														
+														installing_pids.remove( plugin_id );
+													}
+												}
+											}
+										});
+								}
+							}finally {
+								
+								if ( !went_async ) {
+									
+									synchronized( installing_pids ) {
+										
+										installing_pids.remove( plugin_id );
+									}
+								}
+							}
+						}
 					}
 				}
 				

@@ -44,7 +44,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -69,6 +68,7 @@ import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
@@ -87,10 +87,15 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 
 
 public class SB_Dashboard
 {
+	private static final String[][] examples = {
+			{ "dashboard.example.1", "d5:itemsld4:_uidi76e12:control_typei0e2:id7:Library3:mdi7:sidebar9:parent_id16:header.transfers7:skin_id25:com.biglybt.ui.skin.skin38:skin_ref7:library5:title7:Libraryed4:_uidi81e12:control_typei0e14:event_listenerd4:name43:com.biglybt.ui.swt.views.stats.ActivityViewe2:id9:SpeedView3:mdi6:tabbed7:skin_id25:com.biglybt.ui.skin.skin35:title8:Activityed4:_uidi84e12:control_typei0e14:event_listenerd10:ipc_method17:cloneViewListener9:plugin_id6:3dview11:plugin_name7:3D Viewe2:id23:view3d.most.active.name3:mdi7:sidebar9:parent_id14:header.plugins7:skin_id25:com.biglybt.ui.skin.skin35:title21:3D View (Most active)ee6:layout47:76,76,84,84;76,76,84,84;76,76,84,84;81,81,81,817:weights15:643,352;645,352e" } 
+	};
+	
 	private final MultipleDocumentInterfaceSWT		mdi;
 	
 	private MdiEntry mdi_entry;
@@ -180,8 +185,50 @@ public class SB_Dashboard
 		}
 		
 		{
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-					"menu.export.to.clip");
+			final MenuItem menuExamples = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"label.examples");
+	
+			menuExamples.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuExamples.setStyle( MenuItem.STYLE_MENU );
+			
+			menuExamples.addFillListener( 
+				new MenuItemFillListener()
+				{
+					@Override
+					public void
+					menuWillBeShown(
+						MenuItem	menu,
+						Object		_target )
+					{
+						menu.removeAllChildItems();
+						
+						for ( final String[] entry: examples ){
+							
+							MenuItem menuItem = menuManager.addMenuItem(menuExamples, entry[0]);
+					
+							menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+					
+							menuItem.addListener(new MenuItemListener() {
+								@Override
+								public void selected(MenuItem menu, Object target) {
+									
+									importDashboard( entry[1], false );
+									
+									SideBar sidebar = (SideBar) SkinViewManager.getByClass(SideBar.class);
+
+									if ( sidebar != null && sidebar.isVisible()) {
+										
+										sidebar.flipSideBarVisibility();
+									}
+								}
+							});
+						}
+					}
+				});
+		}
+		
+		{
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"menu.export.to.clip");
 	
 			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 	
@@ -207,8 +254,7 @@ public class SB_Dashboard
 		}
 		
 		{
-			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-					"menu.import.from.clip");
+			menuItem = menuManager.addMenuItem("sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,	"menu.import.from.clip");
 	
 			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 	
@@ -225,7 +271,7 @@ public class SB_Dashboard
 						
 						if ( data != null && !data.isEmpty()) {
 							
-							importDashboard( data );
+							importDashboard( data, true );
 						}
 					}finally {
 					
@@ -720,9 +766,20 @@ public class SB_Dashboard
 			
 			map.put( "items", l_items );
 			
-			map.put( "layout", COConfigurationManager.getStringParameter( "dashboard.layout" ));
+			String layout_str = COConfigurationManager.getStringParameter( "dashboard.layout" );
 		
+			layout_str = encodeIAA( compactLayout( decodeIAA( layout_str), items.size()));
+			
+			map.put( "layout", layout_str );
+			
 			map.put( "weights", COConfigurationManager.getStringParameter( "dashboard.sash.weights" ));
+			
+			try {
+				System.out.println( new String( BEncoder.encode( map ), "UTF-8" ));
+				
+			}catch( Throwable e ) {
+				
+			}
 			
 			return( BEncoder.encodeToJSON( map ));
 		}
@@ -730,35 +787,42 @@ public class SB_Dashboard
 	
 	private void
 	importDashboard(
-		String	data )
+		String	data,
+		boolean	is_json )
 	{
 		synchronized( items ){
 
-			Map map = BDecoder.decodeStrings( BDecoder.decodeFromJSON( data ));
-			
-			List<Map>	l_items = (List<Map>)map.get( "items" );
-			
-			List<DashboardItem>	new_items = new ArrayList<>();
-			
-			for ( Map m: l_items ) {
+			try {
+				Map map = BDecoder.decodeStrings( is_json?BDecoder.decodeFromJSON( data ):BDecoder.decode( data.getBytes( "UTF-8")));
 				
-				new_items.add( new DashboardItem(m));
+				List<Map>	l_items = (List<Map>)map.get( "items" );
+				
+				List<DashboardItem>	new_items = new ArrayList<>();
+				
+				for ( Map m: l_items ) {
+					
+					new_items.add( new DashboardItem(m));
+				}
+				
+				String	layout = (String)map.get( "layout" );
+				
+				decodeIAA( layout );
+				
+				String weights = (String)map.get( "weights" );
+				
+				decodeIAA( weights );
+				
+				items.clear();
+				
+				items.addAll( new_items );
+				
+				COConfigurationManager.setParameter( "dashboard.layout", layout );
+				COConfigurationManager.setParameter( "dashboard.sash.weights", weights );
+				
+			}catch( Throwable e ) {
+				
+				Debug.out( e );
 			}
-			
-			String	layout = (String)map.get( "layout" );
-			
-			decodeIAA( layout );
-			
-			String weights = (String)map.get( "weights" );
-			
-			decodeIAA( weights );
-			
-			items.clear();
-			
-			items.addAll( new_items );
-			
-			COConfigurationManager.setParameter( "dashboard.layout", layout );
-			COConfigurationManager.setParameter( "dashboard.sash.weights", weights );
 		}
 		
 		fireChanged();
@@ -818,15 +882,25 @@ public class SB_Dashboard
 					
 					int	num_groups = 0;
 					
+						// we sometimes get Sash objects listed as children so remove from count
+					
 					for ( Control kid: kids ) {
-						if ( kid instanceof Group ){
+						if ( kid instanceof Group || kid instanceof SashForm){
 							num_groups++;
 						}
 					}
 					
-					if ( num_groups == weights.length ) {
+					if ( num_groups == weights.length ){
 						
-						sf.setWeights( weights );
+						try {
+							sf.setWeights( weights );
+							
+						}catch( Throwable e ){
+							
+								// in case something borks
+							
+							Debug.out( e );
+						}
 					}
 					
 					sf.setData( weights.length );
@@ -1124,25 +1198,47 @@ public class SB_Dashboard
 			
 			Messages.setLanguageText(itemReload, "Button.reload");
 
+			final Runnable reload_action =
+				new Runnable()
+				{
+					public void
+					run()
+					{	
+						if ( Utils.isSWTThread()){
+							
+							if ( !g.isDisposed()){
+								
+								Utils.disposeComposite( g, false );
+								
+								SkinnedComposite skinned_comp =	new SkinnedComposite( g );
+								
+								SWTSkin skin = skinned_comp.getSkin();
+								
+								BaseMdiEntry.importStandAlone(
+									(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
+									item.getState(),
+									this );
+									
+								Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
+								
+								c.setLayoutData( Utils.getFilledFormData());
+								
+								g.layout( true, true );
+							}
+						}else{
+							
+							Utils.execSWTThread( this );
+						}
+					}
+				};
+					
 			itemReload.addSelectionListener(
 				new SelectionAdapter(){
 					
 					@Override
 					public void widgetSelected(SelectionEvent arg0){
-						
-						Utils.disposeComposite( g, false );
-						
-						SkinnedComposite skinned_comp =	new SkinnedComposite( g );
-						
-						SWTSkin skin = skinned_comp.getSkin();
-						
-						BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
-							
-						Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
-						
-						c.setLayoutData( Utils.getFilledFormData());
-						
-						g.layout( true, true );
+	
+						reload_action.run();
 					}
 				});
 			
@@ -1164,7 +1260,11 @@ public class SB_Dashboard
 	
 						SWTSkin skin = skinnedDialog.getSkin();
 	
-						SWTSkinObjectContainer cont = BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+						SWTSkinObjectContainer cont = 
+							BaseMdiEntry.importStandAlone(
+								(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
+								item.getState(),
+								null );
 	
 						if ( cont != null ){
 	
@@ -1202,7 +1302,7 @@ public class SB_Dashboard
 			
 			SWTSkin skin = skinned_comp.getSkin();
 			
-			BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState());
+			BaseMdiEntry.importStandAlone((SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), item.getState(), reload_action );
 				
 			Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
 			
@@ -1334,7 +1434,7 @@ public class SB_Dashboard
 				return( false );
 			}
 			
-			setSashWeights( new int[0][0] );
+				// leave sash weights as they are, they'll get reset if they no longer apply
 			
 			return( true );
 		}
