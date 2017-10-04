@@ -557,9 +557,18 @@ public class SB_Dashboard
 		int[][]		layout,
 		int			grid_size )
 	{
+		return( compactLayout( layout, grid_size, 4 ));
+	}
+	
+	private int[][]
+	compactLayout(
+		int[][]		layout,
+		int			grid_size,
+		int			min_grid_size )
+	{
 		int	layout_size = layout.length;
 		
-		if ( layout_size > grid_size && layout_size > 4) {
+		if ( layout_size > grid_size && layout_size > min_grid_size) {
 			
 			int	row_to_remove 	= -1;
 			int col_to_remove	= -1;
@@ -656,7 +665,7 @@ public class SB_Dashboard
 					}
 				}
 				
-				return( compactLayout( new_layout, grid_size));
+				return( compactLayout( new_layout, grid_size, min_grid_size ));
 			}
 		}
 		
@@ -847,6 +856,8 @@ public class SB_Dashboard
 			
 			int[][] layout = getDashboardLayout();
 			
+			layout = compactLayout(layout, 0, 0 );
+			
 			Map<Integer,DashboardItem>	item_map = new HashMap<>();
 	
 			for ( DashboardItem item: items ){
@@ -878,19 +889,9 @@ public class SB_Dashboard
 					
 					SashForm sf = sashes.get( i );
 					
-					Control[] kids = sf.getChildren();
+					int[]	sf_weights = sf.getWeights();
 					
-					int	num_groups = 0;
-					
-						// we sometimes get Sash objects listed as children so remove from count
-					
-					for ( Control kid: kids ) {
-						if ( kid instanceof Group || kid instanceof SashForm){
-							num_groups++;
-						}
-					}
-					
-					if ( num_groups == weights.length ){
+					if ( sf_weights.length == weights.length ){
 						
 						try {
 							sf.setWeights( weights );
@@ -903,7 +904,7 @@ public class SB_Dashboard
 						}
 					}
 					
-					sf.setData( weights.length );
+					sf.setData( sf_weights.length );
 				}
 			}else{
 					// something's changed

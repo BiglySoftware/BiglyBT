@@ -2942,7 +2942,14 @@ SubscriptionManagerImpl
 							
 							@Override
 							public void found(byte[] hash, Subscription subscription){
-								
+							}
+							
+							@Override
+							public void failed(byte[] hash, SubscriptionException error){
+							}
+							
+							@Override
+							public void complete(byte[] hash, Subscription[] subscriptions){
 								boolean enable_callback;
 								
 								synchronized( imported_sids ) {
@@ -2954,26 +2961,21 @@ SubscriptionManagerImpl
 								
 								synchronized( result ) {
 								
-									result[0] = subscription;
-									
-									if ( returned[0] && enable_callback ){
+									if ( subscriptions.length > 0 ){
 										
-										Runnable callback = (Runnable)map.get( "callback" );
+										result[0] = subscriptions[0];
 										
-										if ( callback != null ) {
+										if ( returned[0] && enable_callback ){
 											
-											callback.run();
+											Runnable callback = (Runnable)map.get( "callback" );
+											
+											if ( callback != null ) {
+												
+												callback.run();
+											}
 										}
 									}
 								}
-							}
-							
-							@Override
-							public void failed(byte[] hash, SubscriptionException error){
-							}
-							
-							@Override
-							public void complete(byte[] hash, Subscription[] subscriptions){
 							}
 							
 							@Override
