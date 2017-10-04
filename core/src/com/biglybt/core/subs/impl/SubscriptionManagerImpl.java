@@ -2893,11 +2893,103 @@ SubscriptionManagerImpl
 		return null;
 	}
 
+	private Set<String>	imported_sids = new HashSet<>();
+	
 	public Object
 	importDataSource(
 		Map<String,Object>		map )
 	{
-		return( getSubscriptionByID((String)map.get( "id" )));
+		String	sid = (String)map.get( "id" );
+		
+		Subscription subs = getSubscriptionByID( sid );
+		
+		if ( subs == null ) {
+			
+			Map sd = (Map)map.get( "singleton" );
+			
+			if ( sd != null ){
+				
+				String key = (String)sd.get( "key" );
+				
+				sd.put( "key", Base32.decode( key));
+				
+				try{
+					subs = createSingletonSubscription( sd, SubscriptionImpl.ADD_TYPE_IMPORT, true );
+					
+				}catch( Throwable e ) {
+				}
+			}
+			
+			if ( subs == null ) {
+			
+				int	version = ((Number)map.get( "version" )).intValue();
+				
+				boolean anon = ((Number)map.get( "anon" )).intValue() != 0;
+				
+				Subscription[] result = new Subscription[1];
+				
+				boolean[]	returned = { false };
+				
+				synchronized( result ) {
+					
+					lookupSubscription( 
+						"Import of '" + sid + "'",
+						new byte[20],
+						Base32.decode( sid ),
+						version,
+						anon,
+						new subsLookupListener(){
+							
+							@Override
+							public void found(byte[] hash, Subscription subscription){
+								
+								boolean enable_callback;
+								
+								synchronized( imported_sids ) {
+									
+									enable_callback = !imported_sids.contains( sid );
+									
+									imported_sids.add( sid );
+								}
+								
+								synchronized( result ) {
+								
+									result[0] = subscription;
+									
+									if ( returned[0] && enable_callback ){
+										
+										Runnable callback = (Runnable)map.get( "callback" );
+										
+										if ( callback != null ) {
+											
+											callback.run();
+										}
+									}
+								}
+							}
+							
+							@Override
+							public void failed(byte[] hash, SubscriptionException error){
+							}
+							
+							@Override
+							public void complete(byte[] hash, Subscription[] subscriptions){
+							}
+							
+							@Override
+							public boolean isCancelled(){
+								return false;
+							}
+						});
+					
+					subs = result[0];
+					
+					returned[0] = true;
+				}
+			}
+		}
+		
+		return( subs );
 	}
 	
 	protected SubscriptionImpl

@@ -597,6 +597,24 @@ SubscriptionImpl
 					
 					map.put( "id", getID());
 					
+					map.put( "version", version );
+					
+					map.put( "anon", is_anonymous?1L:0L );
+					
+					if ( singleton_details != null ) {
+						
+						Map sd = new HashMap( singleton_details );
+						
+						byte[] key = (byte[])sd.get( "key" );
+						
+						if ( key instanceof byte[]) {
+							
+							sd.put( "key", Base32.encode( key ));
+						}
+						
+						map.put( "singleton", sd );
+					}
+					
 					return( map );
 				}
 			});

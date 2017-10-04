@@ -142,7 +142,7 @@ public class SB_Dashboard
 				public void selected(MenuItem menu, Object target) {
 					
 					SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-							"chat.view.enter.key.title", "chat.view.enter.key.msg");
+							"enter.url", "enter.website");
 	
 					entryWindow.prompt(new UIInputReceiverListener() {
 						@Override

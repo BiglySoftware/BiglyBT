@@ -449,9 +449,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						}
 					}finally{
 
+						boolean run_init = !init_complete.isReleasedForever();
+						
 						init_complete.releaseForever();
 						
-						BuddyPluginUtils.betaInit( BuddyPluginBeta.this );
+						if ( run_init ){
+							
+							BuddyPluginUtils.betaInit( BuddyPluginBeta.this );
+						}
 					}
 				}
 			});

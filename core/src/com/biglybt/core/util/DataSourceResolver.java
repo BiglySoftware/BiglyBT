@@ -56,6 +56,8 @@ DataSourceResolver
 	importDataSource(
 		Map<String,Object>		map )
 	{
+		Object	callback = map.get( "callback" );
+		
 		List<Map<String,Object>> list = (List<Map<String,Object>>)map.get( "exports" );
 		
 		if ( list == null ) {
@@ -74,7 +76,14 @@ DataSourceResolver
 				return( null );
 			}
 			
-			return( importer.importDataSource((Map<String,Object>)map.get( "export" )));
+			Map<String,Object> i_map = new HashMap<String,Object>((Map<String,Object>)map.get( "export" ));
+			
+			if ( callback != null ) {
+				
+				i_map.put( "callback", callback );
+			}
+			
+			return( importer.importDataSource( i_map ));
 			
 		}else{
 			

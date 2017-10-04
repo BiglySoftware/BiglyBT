@@ -1429,6 +1429,13 @@ public abstract class BaseMdiEntry
 		
 				Map<String,Object>		ds_map  = (Map<String,Object>)data_source;
 		
+				if ( ds_map != null ) {
+				
+					ds_map = new HashMap<String, Object>( ds_map );
+				
+					ds_map.put( "callback", callback );
+				}
+				
 				data_source = ds_map==null?null:DataSourceResolver.importDataSource( ds_map );
 				
 			}else if ( data_source instanceof List ) {
