@@ -5424,68 +5424,82 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			if ( !( keep_alive || (have_interest && !is_private_chat ))){
 
-				destroyed = true;
+				if ( !destroyed ) {
+					
+					destroyed = true;
+	
+					for ( ChatListener l: listeners ){
 
-				if ( handler != null ){
+						try{
+							l.stateChanged( false );
 
-					if ( is_private_chat ){
+						}catch( Throwable e ){
 
-						Map<String,Object>		flags = new HashMap<>();
-
-						flags.put( FLAGS_MSG_STATUS_KEY, FLAGS_MSG_STATUS_CHAT_QUIT );
-
-						sendMessageSupport( "", flags, new HashMap<String, Object>());
+							Debug.out( e );
+						}
 					}
-
-					try{
-						Map<String,Object>		options = new HashMap<>();
-
-						options.put( "handler", handler );
-
-						Map<String,Object> reply = (Map<String,Object>)msgsync_pi.getIPC().invoke( "removeMessageHandler", new Object[]{ options } );
-
-					}catch( Throwable e ){
-
-						Debug.out( e );
-
-					}finally{
-
-						String meta_key = network + ":" + key;
-
-						ChatInstance	removed = null;
-
-						synchronized( chat_instances_map ){
-
-							ChatInstance inst = chat_instances_map.remove( meta_key );
-
-							if ( inst != null ){
-
-								removed = inst;
-
-								chat_instances_list.remove( inst );
-							}
-
-							if ( chat_instances_map.size() == 0 ){
-
-								if ( timer != null ){
-
-									timer.cancel();
-
-									timer = null;
+					
+					if ( handler != null ){
+	
+						if ( is_private_chat ){
+	
+							Map<String,Object>		flags = new HashMap<>();
+	
+							flags.put( FLAGS_MSG_STATUS_KEY, FLAGS_MSG_STATUS_CHAT_QUIT );
+	
+							sendMessageSupport( "", flags, new HashMap<String, Object>());
+						}
+	
+						try{
+							Map<String,Object>		options = new HashMap<>();
+	
+							options.put( "handler", handler );
+	
+							Map<String,Object> reply = (Map<String,Object>)msgsync_pi.getIPC().invoke( "removeMessageHandler", new Object[]{ options } );
+	
+						}catch( Throwable e ){
+	
+							Debug.out( e );
+	
+						}finally{
+	
+							String meta_key = network + ":" + key;
+	
+							ChatInstance	removed = null;
+	
+							synchronized( chat_instances_map ){
+	
+								ChatInstance inst = chat_instances_map.remove( meta_key );
+	
+								if ( inst != null ){
+	
+									removed = inst;
+	
+									chat_instances_list.remove( inst );
+								}
+	
+								if ( chat_instances_map.size() == 0 ){
+	
+									if ( timer != null ){
+	
+										timer.cancel();
+	
+										timer = null;
+									}
 								}
 							}
-						}
-
-						if ( removed != null ){
-
-							for ( ChatManagerListener l: BuddyPluginBeta.this.listeners ){
-
-								try{
-									l.chatRemoved( removed );
-
-								}catch( Throwable e ){
-
-									Debug.out( e );
+	
+							if ( removed != null ){
+	
+								for ( ChatManagerListener l: BuddyPluginBeta.this.listeners ){
+	
+									try{
+										l.chatRemoved( removed );
+	
+									}catch( Throwable e ){
+	
+										Debug.out( e );
+									}
 								}
 							}
 						}

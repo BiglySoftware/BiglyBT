@@ -347,7 +347,7 @@ public class SBC_ChatOverview
 				for (Object object : datasources) {
 					if (object instanceof ChatInstance) {
 						ChatInstance chat = (ChatInstance) object;
-						chat.destroy();
+						chat.remove();
 					}
 				}
 
@@ -375,7 +375,7 @@ public class SBC_ChatOverview
 
 			for (Object object : datasources) {
 				if (object instanceof ChatInstance ) {
-
+					canEnable = true;
 				}
 			}
 		}
@@ -775,6 +775,10 @@ public class SBC_ChatOverview
 	@Override
 	public void chatRemoved(ChatInstance chat) {
 		tv.removeDataSource(chat);
+		UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+	  	if (uiFunctions != null) {
+	  		uiFunctions.refreshIconBar();
+	  	}
 	}
 
 	@Override
