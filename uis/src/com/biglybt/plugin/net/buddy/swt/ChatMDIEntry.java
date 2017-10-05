@@ -19,12 +19,6 @@
 package com.biglybt.plugin.net.buddy.swt;
 
 
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatAdapter;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctionsManager;

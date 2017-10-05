@@ -54,6 +54,8 @@ import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.I2PHelpers;
 
+import javafx.scene.chart.Chart;
+
 public class
 BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final boolean DEBUG_ENABLED			= System.getProperty( "az.chat.buddy.debug", "0" ).equals( "1" );
@@ -659,6 +661,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String		info )
 	{
 		setStringOption( net, key, "lmi", info );
+	}
+	
+	private String
+	getDisplayName(
+		String		net,
+		String		key )
+	{
+		return( getStringOption( net, key, "dn", null ));
+	}
+
+	private void
+	setDisplayName(
+		String		net,
+		String		key,
+		String		str )
+	{
+		setStringOption( net, key, "dn", str );
 	}
 
 		// migration
@@ -2034,8 +2053,28 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String	network = AENetworkClassifier.internalise((String)map.get( "network" ));
 		String	key		= (String)map.get( "key" );
 		
-		try {
-			ChatInstance chat = getChat( network, key );
+		try{
+			ChatInstance chat = peekChatInstance( network, key );
+			
+			if ( chat != null ) {
+				
+				return( chat );
+			}
+			
+			chat = getChat( network, key );
+			
+			String dn = (String)map.get( "dn" );
+			
+			if ( dn != null ) {
+				
+				chat.setDisplayName( dn );
+			}
+			
+				// starting default is un-shared
+			
+			chat.setSharedNickname( false );
+			
+			chat.setFavourite( true );
 			
 			chat.addVirtualReference();
 			
@@ -2636,7 +2675,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private boolean		auto_mute;
 		private boolean 	enable_notification_posts;
 		private boolean		disable_new_msg_indications;
-
+		private String		display_name;
+		
 		private boolean		destroyed;
 
 		private
@@ -2665,6 +2705,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				log_messages 				= BuddyPluginBeta.this.getLogMessages( network, key );
 				auto_mute 					= BuddyPluginBeta.this.getAutoMute( network, key );
 				disable_new_msg_indications = BuddyPluginBeta.this.getDisableNewMsgIndications( network, key );
+				display_name				= BuddyPluginBeta.this.getDisplayName( network, key );
 			}
 
 			enable_notification_posts = BuddyPluginBeta.this.getEnableNotificationsPost( network, key );
@@ -2720,6 +2761,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						map.put( "network", network );
 						map.put( "key", key );
 						
+						String dn = getDisplayName();
+						
+						if ( dn != null && !dn.isEmpty()) {
+						
+							map.put( "dn", dn );
+						}
+
 						return( map );
 					}
 				});
@@ -2767,6 +2815,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		getName(
 			boolean	abbreviated )
 		{
+			String dn = display_name;
+			
+			if ( dn != null ){
+				
+				if ( network!=AENetworkClassifier.AT_PUBLIC) {
+					
+					dn = MessageText.getString( abbreviated?"label.anon.medium":"label.anon" ) + " - " + dn;
+				}
+				
+				return( dn );
+			}
+			
 			String str = key;
 
 			int pos = str.lastIndexOf( '[' );
@@ -3002,6 +3062,26 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
+		public String
+		getDisplayName()
+		{
+			return( display_name );
+		}
+
+		public void
+		setDisplayName(
+			String		str )
+		{
+			if ( str != null && str.isEmpty()) {
+				
+				str = null;
+			}
+			
+			display_name = str;
+
+			BuddyPluginBeta.this.setDisplayName( network, key, str );
+		}
+		
 		private void
 		setSpammer(
 			ChatParticipant		participant,

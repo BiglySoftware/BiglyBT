@@ -2920,14 +2920,43 @@ SubscriptionManagerImpl
 				}
 			}
 			
-			if ( subs == null ) {
+			Subscription[] result = new Subscription[]{ subs };
+
+			final Runnable apply_props =
+				new Runnable()
+				{
+					public void
+					run()
+					{
+						Subscription subs = result[0];
+						
+						if ( subs != null ) {
+							
+							Number check_mins = (Number)map.get( "h_cm" );
+							
+							SubscriptionHistory	history = subs.getHistory();
+							
+							if ( check_mins != null ){
+								
+								history.setCheckFrequencyMins( check_mins.intValue());
+							}
+							
+							List<String>	list = (List<String>)map.get( "h_dln" );
+							
+							if ( list != null ) {
+								
+								history.setDownloadNetworks( list.toArray( new String[0] ));
+							}
+						}
+					}
+				};
+				
+			if ( subs == null ){
 			
 				int	version = ((Number)map.get( "version" )).intValue();
 				
 				boolean anon = ((Number)map.get( "anon" )).intValue() != 0;
-				
-				Subscription[] result = new Subscription[1];
-				
+								
 				boolean[]	returned = { false };
 				
 				synchronized( result ) {
@@ -2965,6 +2994,8 @@ SubscriptionManagerImpl
 										
 										result[0] = subscriptions[0];
 										
+										apply_props.run();
+										
 										if ( returned[0] && enable_callback ){
 											
 											Runnable callback = (Runnable)map.get( "callback" );
@@ -2989,6 +3020,8 @@ SubscriptionManagerImpl
 					returned[0] = true;
 				}
 			}
+			
+			apply_props.run();
 		}
 		
 		return( subs );

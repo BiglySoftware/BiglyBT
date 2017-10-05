@@ -102,6 +102,8 @@ import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.sharing.ShareResourceDir;
 import com.biglybt.pif.sharing.ShareResourceFile;
 import com.biglybt.pif.torrent.Torrent;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.utils.LocaleUtilities;
@@ -109,6 +111,7 @@ import com.biglybt.pif.utils.subscriptions.SubscriptionManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.FixedURLTransfer;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
@@ -117,7 +120,7 @@ import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
-
+import com.biglybt.ui.swt.pif.UISWTInputReceiver;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -820,6 +823,60 @@ BuddyPluginViewBetaChat
 			advanced_menu_item.setMenu(advanced_menu);
 			advanced_menu_item.setText(  MessageText.getString( "MyTorrentsView.menu.advancedmenu" ));
 
+				// rename
+			
+			final MenuItem rename_mi = new MenuItem( advanced_menu, SWT.PUSH );
+			rename_mi.setText( MessageText.getString( "MyTorrentsView.menu.rename" ));
+
+			rename_mi.addSelectionListener(
+					new SelectionAdapter() {
+						@Override
+						public void
+						widgetSelected(
+							SelectionEvent e )
+						{
+							String name = chat.getDisplayName();
+							
+							if ( name == null ) {
+								name = chat.getName();
+							}
+							
+							UISWTInputReceiver entry = new SimpleTextEntryWindow();
+							entry.setPreenteredText(name, false );
+							entry.maintainWhitespace(false);
+							entry.allowEmptyInput( false );
+							
+							entry.setLocalisedTitle(MessageText.getString("label.rename",
+									new String[] {
+										name
+									}));
+							entry.prompt(new UIInputReceiverListener() {
+								@Override
+								public void UIInputReceiverClosed(UIInputReceiver entry) {
+									if (!entry.hasSubmittedInput()){
+
+										return;
+									}
+
+									String input = entry.getSubmittedInput().trim();
+
+									if ( input.length() > 0 ){
+
+										try{
+											chat.setDisplayName( input );
+
+										}catch( Throwable e ){
+
+											Debug.printStackTrace(e);
+										}
+									}
+								}
+							});
+						}
+					});
+			
+				// persist messages
+			
 			final MenuItem persist_mi = new MenuItem( advanced_menu, SWT.CHECK );
 			persist_mi.setText( MessageText.getString( "azbuddy.dchat.save.messages" ));
 

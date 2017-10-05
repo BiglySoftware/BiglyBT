@@ -156,6 +156,7 @@ SubscriptionImpl
 	private String			creator_ref;
 	private String			category;
 	private long			tag_id = -1;
+	private int				view_options;
 	private String			parent;
 
 	protected static String
@@ -470,6 +471,11 @@ SubscriptionImpl
 
 				map.put( "tag", tag_id );
 			}
+			
+			if ( view_options != 0 ){
+
+				map.put( "vo", view_options );
+			}
 
 			if ( parent != null ){
 
@@ -570,6 +576,13 @@ SubscriptionImpl
 			tag_id = l_tag_id;
 		}
 
+		Long l_vo = (Long)map.get( "vo" );
+
+		if ( l_vo != null ){
+
+			view_options = l_vo.intValue();
+		}
+		
 		byte[] b_parent = (byte[])map.get( "par" );
 
 		if ( b_parent != null ){
@@ -613,6 +626,17 @@ SubscriptionImpl
 						}
 						
 						map.put( "singleton", sd );
+					}
+					
+					SubscriptionHistory history = getHistory();
+					
+					map.put( "h_cm", history.getCheckFrequencyMins());
+					
+					String[] dl_nets = history.getDownloadNetworks();
+					
+					if ( dl_nets != null ) {
+						
+						map.put( "h_dln", Arrays.asList( dl_nets ));
 					}
 					
 					return( map );
@@ -2099,6 +2123,27 @@ SubscriptionImpl
 		return( tag_id );
 	}
 
+	public int
+	getViewOptions()
+	{
+		return( view_options );
+	}
+	
+	public void
+	setViewOptions(
+		int		_options )
+	{
+
+		if ( _options == view_options ){
+
+			return;
+		}
+
+		view_options = _options;
+
+		fireChanged(SubscriptionListener.CR_METADATA);
+	}
+	
 	@Override
 	public String
 	getParent()

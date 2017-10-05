@@ -144,9 +144,16 @@ SBC_SubscriptionResultsView
 				mdi_entry.addToolbarEnabler(this);
 			}
 		}
-
+				
 		if ( ds != null ){
 
+			if (( ds.getViewOptions() & Subscription.VO_HIDE_HEADER) != 0 ){
+				
+				SWTSkinObject top_area = getSkinObject( "toparea" );
+
+				top_area.setVisible( false );
+			}
+			
 			SWTSkinObjectText title = (SWTSkinObjectText) getSkinObject("title");
 
 			if ( title != null ){
