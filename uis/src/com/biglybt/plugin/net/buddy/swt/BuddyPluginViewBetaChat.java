@@ -58,17 +58,21 @@ import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackListener;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -112,6 +116,7 @@ import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.FixedURLTransfer;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
@@ -121,6 +126,8 @@ import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
+import com.biglybt.ui.swt.shells.GCStringPrinter;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -207,6 +214,7 @@ BuddyPluginViewBetaChat
 	private Button 					shared_nick_button;
 	private Text 					nickname;
 
+	private boolean					input_available;
 	private Text 					input_area;
 
 	private DropTarget[]			drop_targets;
@@ -466,87 +474,1943 @@ BuddyPluginViewBetaChat
 		Composite		parent )
 	{
 		view.registerUI( chat );
-
+		
+		try {
+			buildSupport( parent );
+		
+			chat.addListener( this );
+			
+		}catch( RuntimeException e ) {
+			
+			view.unregisterUI( chat );
+			
+			throw( e );
+		}
+	}
+	
+	private void
+	buildSupport(
+		Composite		parent )
+	{
+		log					= null;
+		log_styles 			= new StyleRange[0];
+		table_header		= null;
+		buddy_table			= null;
+		shared_nick_button	= null;
+		nickname			= null;
+		input_area			= null;
+		
+		messages.clear();
+		participants.clear();
+		participant_last_message_map.clear();
+		
+		try {
+			build_complete = false;
+			
+			Utils.disposeComposite( parent, false );
+			
+			buildSupport2( parent );
+			
+		}finally {
+			
+			build_complete = true;
+		}
+	}
+	
+	private void
+	buildSupport2(
+		Composite		parent )
+	{
 		boolean public_chat = !chat.isPrivateChat();
 
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		parent.setLayout(layout);
-		GridData grid_data = new GridData(GridData.FILL_BOTH );
-		Utils.setLayoutData(parent, grid_data);
-
-		Composite sash_area = new Composite( parent, SWT.NONE );
-		layout = new GridLayout();
-		layout.numColumns = 1;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		sash_area.setLayout(layout);
-
-		grid_data = new GridData(GridData.FILL_BOTH );
-		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(sash_area, grid_data);
-
-	    final SashForm sash = new SashForm(sash_area,SWT.HORIZONTAL );
-	    grid_data = new GridData(GridData.FILL_BOTH );
-	    Utils.setLayoutData(sash, grid_data);
-
-		final Composite lhs = new Composite(sash, SWT.NONE);
-
-		lhs.addDisposeListener(
-				new DisposeListener()
+		if ( chat.getViewType() == BuddyPluginBeta.VIEW_TYPE_DEFAULT || chat.isReadOnly()){
+			
+			GridLayout layout = new GridLayout();
+			layout.numColumns = 2;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			parent.setLayout(layout);
+			GridData grid_data = new GridData(GridData.FILL_BOTH );
+			Utils.setLayoutData(parent, grid_data);
+	
+			Composite sash_area = new Composite( parent, SWT.NONE );
+			layout = new GridLayout();
+			layout.numColumns = 1;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			sash_area.setLayout(layout);
+	
+			grid_data = new GridData(GridData.FILL_BOTH );
+			grid_data.horizontalSpan = 2;
+			Utils.setLayoutData(sash_area, grid_data);
+	
+		    final SashForm sash = new SashForm(sash_area,SWT.HORIZONTAL );
+		    grid_data = new GridData(GridData.FILL_BOTH );
+		    Utils.setLayoutData(sash, grid_data);
+	
+			final Composite lhs = new Composite(sash, SWT.NONE);
+	
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.marginTop = 4;
+			layout.marginLeft = 4;
+			lhs.setLayout(layout);
+			grid_data = new GridData(GridData.FILL_BOTH );
+			grid_data.widthHint = 300;
+			Utils.setLayoutData(lhs, grid_data);
+	
+			buildStatus( parent, lhs );
+	
+			final Composite ftux_stack = new Composite(lhs, SWT.NONE);
+			grid_data = new GridData(GridData.FILL_BOTH );
+			grid_data.horizontalSpan = 2;
+			Utils.setLayoutData(ftux_stack,  grid_data );
+	
+	        final StackLayout stack_layout = new StackLayout();
+	        ftux_stack.setLayout(stack_layout);
+	
+			final Composite log_holder = new Composite(ftux_stack, SWT.BORDER);
+	
+			final Composite ftux_holder = new Composite(ftux_stack, SWT.BORDER);
+	
+				// FTUX panel
+	
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.horizontalSpacing = 0;
+			layout.verticalSpacing = 0;
+			ftux_holder.setLayout(layout);
+	
+			ftux_holder.setBackground( ftux_light_bg );
+	
+				// top info
+	
+			Composite ftux_top_area = new Composite( ftux_holder, SWT.NULL );
+			layout = new GridLayout();
+			layout.numColumns = 1;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.verticalSpacing = 0;
+			ftux_top_area.setLayout(layout);
+	
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan = 2;
+			grid_data.heightHint = 30;
+			Utils.setLayoutData(ftux_top_area, grid_data);
+			ftux_top_area.setBackground( ftux_dark_bg );
+	
+	
+			Label ftux_top = new Label( ftux_top_area, SWT.WRAP );
+			grid_data = new GridData(SWT.LEFT, SWT.CENTER, true, true );
+			grid_data.horizontalIndent = 8;
+			Utils.setLayoutData(ftux_top, grid_data);
+	
+			ftux_top.setAlignment( SWT.LEFT );
+			ftux_top.setBackground( ftux_dark_bg );
+			ftux_top.setForeground( ftux_dark_fg );
+			ftux_top.setFont( big_font );
+			ftux_top.setText( MessageText.getString( "azbuddy.dchat.ftux.welcome" ));
+	
+				// middle info
+	
+			Label ftux_hack = new Label( ftux_holder, SWT.NULL );
+			grid_data = new GridData();
+			grid_data.heightHint=40;
+			grid_data.widthHint=0;
+			Utils.setLayoutData(ftux_hack, grid_data);
+	
+			final StyledText ftux_middle = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
+	
+			grid_data = new GridData(GridData.FILL_BOTH );
+			grid_data.horizontalSpan = 1;
+			grid_data.verticalIndent = 4;
+			grid_data.horizontalIndent = 16;
+			Utils.setLayoutData(ftux_middle, grid_data);
+	
+			ftux_middle.setBackground( ftux_light_bg );
+	
+			String info1_text =
+			"Chat allows you to communicate with other users directly by sending and receiving messages.\n" +
+			"It is a decentralized chat system - there are no central servers involved, all messages are passed directly between users.\n" +
+			"Consequently " + Constants.APP_NAME + " has absolutely no control over message content. In particular no mechanism exists (nor is possible) for " + Constants.APP_NAME + " to moderate or otherwise control either messages or the users that send messages.";
+	
+			String info2_text =
+			"I UNDERSTAND AND AGREE that " + Constants.APP_NAME + " has no responsibility whatsoever with my enabling this function and using chat.";
+	
+			String[] info_lines = info1_text.split( "\n" );
+	
+			for ( String line: info_lines ){
+	
+				ftux_middle.append( line );
+	
+				if ( line != info_lines[info_lines.length-1] ){
+	
+					ftux_middle.append( "\n" );
+	
+					int	pos = ftux_middle.getText().length();
+	
+						// zero width space in large font to get smaller paragraph spacing
+	
+					ftux_middle.append( "\u200B" );
+	
+					StyleRange styleRange = new StyleRange();
+					styleRange.start = pos;
+					styleRange.length = 1;
+					styleRange.font = big_font;
+	
+					ftux_middle.setStyleRange( styleRange );
+				}
+			}
+	
+				// checkbox area
+	
+			Composite ftux_check_area = new Composite( ftux_holder, SWT.NULL );
+			layout = new GridLayout();
+			layout.marginLeft = 0;
+			layout.marginWidth = 0;
+			layout.numColumns = 2;
+			ftux_check_area.setLayout(layout);
+	
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan = 2;
+			Utils.setLayoutData(ftux_check_area,  grid_data );
+			ftux_check_area.setBackground(  ftux_light_bg );
+	
+			final Button ftux_check = new Button( ftux_check_area, SWT.CHECK );
+			grid_data = new GridData();
+			grid_data.horizontalIndent = 16;
+			Utils.setLayoutData(ftux_check,  grid_data );
+			ftux_check.setBackground(  ftux_light_bg );
+	
+			Label ftux_check_test = new Label( ftux_check_area, SWT.WRAP );
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			Utils.setLayoutData(ftux_check_test, grid_data);
+	
+			ftux_check_test.setBackground( ftux_light_bg );
+			ftux_check_test.setText( info2_text );
+	
+	
+				// bottom info
+	
+			final StyledText ftux_bottom = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.WRAP | SWT.NO_FOCUS );
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan = 2;
+			grid_data.horizontalIndent = 16;
+			Utils.setLayoutData(ftux_bottom, grid_data);
+	
+			ftux_bottom.setBackground( ftux_light_bg );
+			ftux_bottom.setFont( bold_font );
+			ftux_bottom.setText( MessageText.getString( "azbuddy.dchat.ftux.footer" ) + " " );
+	
+			{
+				int	start	= ftux_bottom.getText().length();
+	
+				String url 		= MessageText.getString( "faq.legal.url" );
+				String url_text	= MessageText.getString( "label.more.dot" );
+	
+				ftux_bottom.append( url_text );
+	
+				StyleRange styleRange = new StyleRange();
+				styleRange.start = start;
+				styleRange.length = url_text.length();
+				styleRange.foreground = Colors.blue;
+				styleRange.underline = true;
+	
+				styleRange.data = url;
+	
+				ftux_bottom.setStyleRange( styleRange );
+			}
+	
+			ftux_bottom.addListener(
+					SWT.MouseUp,
+					new Listener()
+					{
+						@Override
+						public void handleEvent(Event event) {
+							int offset = ftux_bottom.getOffsetAtLocation(new Point (event.x, event.y));
+							StyleRange style = ftux_bottom.getStyleRangeAtOffset(offset);
+	
+							if ( style != null ){
+	
+								String url = (String)style.data;
+	
+								try{
+									Utils.launch( new URL( url ));
+	
+								}catch( Throwable e ){
+	
+									Debug.out( e );
+								}
+							}
+						}
+					});
+	
+			Label ftux_line = new Label( ftux_holder, SWT.SEPARATOR | SWT.HORIZONTAL );
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan = 2;
+			grid_data.verticalIndent = 4;
+			Utils.setLayoutData(ftux_line,  grid_data );
+	
+			Composite ftux_button_area = new Composite( ftux_holder, SWT.NULL );
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			ftux_button_area.setLayout(layout);
+	
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan = 2;
+			Utils.setLayoutData(ftux_button_area,  grid_data );
+			ftux_button_area.setBackground( Colors.white );
+	
+			Label filler = new Label( ftux_button_area, SWT.NULL );
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			Utils.setLayoutData(filler,  grid_data );
+			filler.setBackground( Colors.white );
+	
+			final Button ftux_accept = new Button( ftux_button_area, SWT.PUSH );
+			grid_data = new GridData();
+			grid_data.horizontalAlignment = SWT.RIGHT;
+			grid_data.widthHint = 60;
+			Utils.setLayoutData(ftux_accept, grid_data);
+	
+			ftux_accept.setText( MessageText.getString( "label.accept" ));
+	
+			ftux_accept.setEnabled( false );
+	
+			ftux_accept.addSelectionListener(
+				new SelectionAdapter() {
+	
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						beta.setFTUXAccepted( true );
+					}
+				});
+	
+			ftux_check.addSelectionListener(
+				new SelectionAdapter() {
+	
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						ftux_accept.setEnabled( ftux_check.getSelection());
+					}
+			});
+				// LOG panel
+	
+			layout = new GridLayout();
+			layout.numColumns = 1;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.marginLeft = 4;
+			log_holder.setLayout(layout);
+			//grid_data = new GridData(GridData.FILL_BOTH );
+			//grid_data.horizontalSpan = 2;
+			//Utils.setLayoutData(log_holder, grid_data);
+	
+			log = new StyledText(log_holder,SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
+			grid_data = new GridData(GridData.FILL_BOTH);
+			grid_data.horizontalSpan = 1;
+			//grid_data.horizontalIndent = 4;
+			Utils.setLayoutData(log, grid_data);
+			//log.setIndent( 4 );
+	
+			log.setEditable( false );
+	
+			log_holder.setBackground( log.getBackground());
+	
+			final Menu log_menu = new Menu( log );
+	
+			log.setMenu(  log_menu );
+	
+			log.addMenuDetectListener(
+				new MenuDetectListener() {
+	
+					@Override
+					public void
+					menuDetected(
+						MenuDetectEvent e )
+					{
+						e.doit = false;
+	
+						boolean	handled = false;
+	
+						for ( MenuItem mi: log_menu.getItems()){
+	
+							mi.dispose();
+						}
+	
+						try{
+							Point mapped = log.getDisplay().map( null, log, new Point( e.x, e.y ));
+	
+							int offset = log.getOffsetAtLocation( mapped );
+	
+							final StyleRange sr = log.getStyleRangeAtOffset(  offset );
+	
+							if ( sr != null ){
+	
+								Object data = sr.data;
+	
+								if ( data instanceof ChatParticipant ){
+	
+									ChatParticipant cp = (ChatParticipant)data;
+	
+									List<ChatParticipant> cps = new ArrayList<>();
+	
+									cps.add( cp );
+	
+									buildParticipantMenu( log_menu, cps );
+	
+									handled = true;
+	
+								}else if ( data instanceof String ){
+	
+									String url_str = (String)sr.data;
+	
+									String str = url_str;
+	
+									if ( str.length() > 50 ){
+	
+										str = str.substring( 0, 50 ) + "...";
+									}
+	
+										// magnet special case for anon chat
+	
+									if ( chat.isAnonymous() && url_str.toLowerCase( Locale.US ).startsWith( "magnet:" )){
+	
+										String[] magnet_uri = { url_str };
+	
+										Set<String> networks = UrlUtils.extractNetworks( magnet_uri );
+	
+										String i2p_only_uri = magnet_uri[0] + "&net=" + UrlUtils.encode( AENetworkClassifier.AT_I2P );
+	
+										String i2p_only_str = i2p_only_uri;
+	
+										if ( i2p_only_str.length() > 50 ){
+	
+											i2p_only_str = i2p_only_str.substring( 0, 50 ) + "...";
+										}
+	
+										i2p_only_str = lu.getLocalisedMessageText( "azbuddy.dchat.open.i2p.magnet" ) + ": " + i2p_only_str;
+	
+										final MenuItem mi_open_i2p_vuze = new MenuItem( log_menu, SWT.PUSH );
+	
+										mi_open_i2p_vuze.setText( i2p_only_str);
+										mi_open_i2p_vuze.setData( i2p_only_uri );
+	
+										mi_open_i2p_vuze.addSelectionListener(
+											new SelectionAdapter() {
+	
+												@Override
+												public void
+												widgetSelected(
+													SelectionEvent e )
+												{
+													String url_str = (String)mi_open_i2p_vuze.getData();
+	
+													if ( url_str != null ){
+	
+														TorrentOpener.openTorrent( url_str );
+													}
+												}
+											});
+	
+										if ( networks.size() == 1 && networks.iterator().next() == AENetworkClassifier.AT_I2P ){
+	
+											// already done above
+	
+										}else{
+	
+											str = lu.getLocalisedMessageText( "azbuddy.dchat.open.magnet" ) + ": " + str;
+	
+											final MenuItem mi_open_vuze = new MenuItem( log_menu, SWT.PUSH );
+	
+											mi_open_vuze.setText( str);
+											mi_open_vuze.setData( url_str );
+	
+											mi_open_vuze.addSelectionListener(
+												new SelectionAdapter() {
+	
+													@Override
+													public void
+													widgetSelected(
+														SelectionEvent e )
+													{
+														String url_str = (String)mi_open_vuze.getData();
+	
+														if ( url_str != null ){
+	
+															TorrentOpener.openTorrent( url_str );
+														}
+													}
+												});
+										}
+									}else{
+	
+	
+										str = lu.getLocalisedMessageText( "azbuddy.dchat.open.in.vuze" ) + ": " + str;
+	
+										final MenuItem mi_open_vuze = new MenuItem( log_menu, SWT.PUSH );
+	
+										mi_open_vuze.setText( str);
+										mi_open_vuze.setData( url_str );
+	
+										mi_open_vuze.addSelectionListener(
+											new SelectionAdapter() {
+	
+												@Override
+												public void
+												widgetSelected(
+													SelectionEvent e )
+												{
+													String url_str = (String)mi_open_vuze.getData();
+	
+													if ( url_str != null ){
+	
+														String lc_url_str = url_str.toLowerCase( Locale.US );
+	
+														if ( lc_url_str.startsWith( "chat:" )){
+	
+															try{
+																beta.handleURI( url_str, true );
+	
+															}catch( Throwable f ){
+	
+																Debug.out( f );
+															}
+	
+														}else{
+	
+															TorrentOpener.openTorrent( url_str );
+														}
+													}
+												}
+											});
+									}
+	
+									final MenuItem mi_open_ext = new MenuItem( log_menu, SWT.PUSH );
+	
+									mi_open_ext.setText( lu.getLocalisedMessageText( "azbuddy.dchat.open.in.browser" ));
+	
+									mi_open_ext.addSelectionListener(
+										new SelectionAdapter() {
+	
+											@Override
+											public void
+											widgetSelected(
+												SelectionEvent e )
+											{
+												String url_str = (String)mi_open_ext.getData();
+	
+												Utils.launch( url_str );
+											}
+										});
+	
+									new MenuItem( log_menu, SWT.SEPARATOR );
+	
+									if ( chat.isAnonymous() && url_str.toLowerCase( Locale.US ).startsWith( "magnet:" )){
+	
+										String[] magnet_uri = { url_str };
+	
+										Set<String> networks = UrlUtils.extractNetworks( magnet_uri );
+	
+										String i2p_only_uri = magnet_uri[0] + "&net=" + UrlUtils.encode( AENetworkClassifier.AT_I2P );
+	
+										final MenuItem mi_copy_i2p_clip = new MenuItem( log_menu, SWT.PUSH );
+	
+										mi_copy_i2p_clip.setText( lu.getLocalisedMessageText( "azbuddy.dchat.copy.i2p.magnet" ));
+										mi_copy_i2p_clip.setData( i2p_only_uri );
+	
+										mi_copy_i2p_clip.addSelectionListener(
+												new SelectionAdapter() {
+	
+													@Override
+													public void
+													widgetSelected(
+														SelectionEvent e )
+													{
+														String url_str = (String)mi_copy_i2p_clip.getData();
+	
+														if ( url_str != null ){
+	
+															ClipboardCopy.copyToClipBoard( url_str );
+														}
+													}
+												});
+	
+										if ( networks.size() == 1 && networks.iterator().next() == AENetworkClassifier.AT_I2P ){
+	
+											// already done above
+	
+										}else{
+	
+											final MenuItem mi_copy_clip = new MenuItem( log_menu, SWT.PUSH );
+	
+											mi_copy_clip.setText( lu.getLocalisedMessageText( "azbuddy.dchat.copy.magnet" ));
+											mi_copy_clip.setData( url_str );
+	
+											mi_copy_clip.addSelectionListener(
+													new SelectionAdapter() {
+	
+														@Override
+														public void
+														widgetSelected(
+															SelectionEvent e )
+														{
+															String url_str = (String)mi_copy_clip.getData();
+	
+															if ( url_str != null ){
+	
+																ClipboardCopy.copyToClipBoard( url_str );
+															}
+														}
+													});
+	
+										}
+									}else{
+	
+										final MenuItem mi_copy_clip = new MenuItem( log_menu, SWT.PUSH );
+	
+										mi_copy_clip.setText( lu.getLocalisedMessageText( "label.copy.to.clipboard" ));
+										mi_copy_clip.setData( url_str );
+	
+										mi_copy_clip.addSelectionListener(
+												new SelectionAdapter() {
+	
+													@Override
+													public void
+													widgetSelected(
+														SelectionEvent e )
+													{
+														String url_str = (String)mi_copy_clip.getData();
+	
+														if ( url_str != null ){
+	
+															ClipboardCopy.copyToClipBoard( url_str );
+														}
+													}
+												});
+									}
+	
+									if ( url_str.toLowerCase().startsWith( "http" )){
+	
+										mi_open_ext.setData( url_str );
+	
+										mi_open_ext.setEnabled( true );
+	
+									}else{
+	
+										mi_open_ext.setEnabled( false );
+									}
+	
+									handled = true;
+								}else{
+	
+									if ( Constants.isCVSVersion()){
+	
+										if ( sr instanceof MyStyleRange ){
+	
+											final MyStyleRange msr = (MyStyleRange)sr;
+	
+											MenuItem   item = new MenuItem( log_menu, SWT.NONE );
+	
+											item.setText( MessageText.getString( "label.copy.to.clipboard"));
+	
+											item.addSelectionListener(
+												new SelectionAdapter()
+												{
+													@Override
+													public void
+													widgetSelected(
+														SelectionEvent e )
+													{
+														ClipboardCopy.copyToClipBoard( msr.message.getMessage());
+													}
+												});
+	
+											handled = true;
+										}
+									}
+								}
+							}
+						}catch( Throwable f ){
+						}
+	
+						if ( !handled ){
+	
+							final String text = log.getSelectionText();
+	
+							if ( text != null && text.length() > 0 ){
+	
+								MenuItem   item = new MenuItem( log_menu, SWT.NONE );
+	
+								item.setText( MessageText.getString( "label.copy.to.clipboard"));
+	
+								item.addSelectionListener(
+									new SelectionAdapter()
+									{
+										@Override
+										public void
+										widgetSelected(
+											SelectionEvent e )
+										{
+											ClipboardCopy.copyToClipBoard( text );
+										}
+									});
+	
+								handled = true;
+							}
+						}
+	
+						if ( handled ){
+	
+							e.doit = true;
+						}
+					}
+				});
+	
+			log.addListener(
+				SWT.MouseDoubleClick,
+				new Listener()
 				{
 					@Override
 					public void
-					widgetDisposed(
-						DisposeEvent arg0 )
+					handleEvent(
+						Event e )
 					{
-						Font[] fonts = { italic_font, bold_font, big_font, small_font };
-
-						for ( Font f: fonts ){
-
-							if ( f != null ){
-
-								f.dispose();
+						try{
+							final int offset = log.getOffsetAtLocation( new Point( e.x, e.y ) );
+	
+							for ( int i=0;i<log_styles.length;i++){
+	
+								StyleRange sr = log_styles[i];
+	
+								Object data = sr.data;
+	
+								if ( data != null && offset >= sr.start && offset < sr.start + sr.length ){
+	
+									boolean anon_chat = chat.isAnonymous();
+	
+									if ( data instanceof String ){
+	
+										final String	url_str = (String)data;
+	
+										String lc_url_str = url_str.toLowerCase( Locale.US );
+	
+										if ( lc_url_str.startsWith( "chat:" )){
+	
+												// no double-click support for anon->public chats
+	
+											if ( anon_chat && !lc_url_str.startsWith( "chat:anon:" )){
+	
+												return;
+											}
+	
+											try{
+												beta.handleURI( url_str, true );
+	
+											}catch( Throwable f ){
+	
+												Debug.out( f );
+											}
+										}else{
+	
+												// no double-click support for anon->public urls
+	
+											if ( anon_chat ){
+	
+												try{
+													String host = new URL( lc_url_str ).getHost();
+	
+														// note that magnet-uris are always decoded here as public, which is what we want mostly
+	
+													if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
+	
+														return;
+	
+													}
+												}catch( Throwable f ){
+	
+													return;
+												}
+											}
+	
+											if ( 	lc_url_str.contains( ".torrent" ) ||
+													UrlUtils.parseTextForMagnets( url_str ) != null ){
+	
+												TorrentOpener.openTorrent( url_str );
+	
+											}else{
+	
+												if ( url_str.toLowerCase( Locale.US ).startsWith( "http" )){
+	
+														// without this backoff we end up with the text widget
+														// being left in a 'mouse down' state when returning to it :(
+	
+													Utils.execSWTThreadLater(
+														100,
+														new Runnable()
+														{
+															@Override
+															public void
+															run()
+															{
+																Utils.launch( url_str );
+															}
+														});
+												}else{
+	
+													TorrentOpener.openTorrent( url_str );
+												}
+											}
+										}
+	
+										log.setSelection( offset );
+	
+										e.doit = false;
+	
+									}else if ( data instanceof ChatParticipant ){
+	
+										ChatParticipant participant = (ChatParticipant)data;
+	
+										String name = participant.getName( true );
+	
+										String existing = input_area.getText();
+	
+										if ( existing.length() > 0 && !existing.endsWith( " " )){
+	
+											name = " " + name;
+										}
+	
+										input_area.append( name );
+									}
+								}
 							}
+						}catch( Throwable f ){
+	
 						}
-
-						Color[] colours = { ftux_dark_bg, ftux_dark_fg, ftux_light_bg };
-
-						for ( Color c: colours ){
-
-							if ( c != null ){
-
-								c.dispose();
-							}
-						}
-
-						if ( drop_targets != null ){
-
-							for ( DropTarget dt: drop_targets ){
-
-								dt.dispose();
-							}
-						}
-
-						closed();
 					}
 				});
+	
+			log.addMouseTrackListener(
+				new MouseTrackListener() {
+	
+					private StyleRange		old_range;
+					private StyleRange		temp_range;
+					private int				temp_index;
+	
+					@Override
+					public void mouseHover(MouseEvent e) {
+	
+						boolean active = false;
+	
+						try{
+							int offset = log.getOffsetAtLocation( new Point( e.x, e.y ) );
+	
+							for ( int i=0;i<log_styles.length;i++){
+	
+								StyleRange sr = log_styles[i];
+	
+								Object data = sr.data;
+	
+								if ( data != null && offset >= sr.start && offset < sr.start + sr.length ){
+	
+									if ( old_range != null  ){
+	
+										if ( 	temp_index < log_styles.length &&
+												log_styles[temp_index] == temp_range ){
+	
+											log_styles[ temp_index ] = old_range;
+	
+											old_range	= null;
+										}
+									}
+	
+									sr = log_styles[i];
+	
+									String tt_extra = "";
+	
+									if ( data instanceof String ){
+	
+										try{
+											URL url = new URL((String)data);
+	
+											String query = url.getQuery();
+	
+											if ( query != null ){
+	
+												String[] bits = query.split( "&" );
+	
+												int seeds 		= -1;
+												int leechers	= -1;
+	
+												for ( String bit: bits ){
+	
+													String[] temp = bit.split( "=" );
+	
+													String lhs = temp[0];
+	
+													if ( lhs.equals( "_s" )){
+	
+														seeds = Integer.parseInt( temp[1] );
+	
+													}else if ( lhs.equals( "_l" )){
+	
+														leechers = Integer.parseInt( temp[1] );
+													}
+												}
+	
+												if ( seeds != -1 && leechers != -1){
+	
+													tt_extra = ": seeds=" + seeds +", leechers=" + leechers;
+												}
+											}
+										}catch( Throwable f ){
+										}
+									}
+	
+									log.setToolTipText( MessageText.getString( "label.right.click.for.options" ) + tt_extra );
+	
+	
+									StyleRange derp;
+	
+									if ( sr instanceof MyStyleRange ){
+	
+										derp = new MyStyleRange((MyStyleRange)sr );
+									}else{
+	
+										derp = new StyleRange( sr );
+									}
+	
+									derp.start = sr.start;
+									derp.length = sr.length;
+	
+									derp.borderStyle = SWT.BORDER_DASH;
+	
+									old_range	= sr;
+									temp_range	= derp;
+									temp_index	= i;
+	
+									log_styles[i] = derp;
+	
+									log.setStyleRanges( log_styles );
+	
+									active = true;
+	
+									break;
+								}
+							}
+						}catch( Throwable f ){
+	
+						}
+	
+						if ( !active ){
+	
+							log.setToolTipText( "" );
+	
+							if ( old_range != null ){
+	
+								if ( 	temp_index < log_styles.length &&
+										log_styles[temp_index] == temp_range ){
+	
+									log_styles[ temp_index ] = old_range;
+	
+									old_range	= null;
+	
+									log.setStyleRanges( log_styles );
+								}
+							}
+						}
+					}
+	
+					@Override
+					public void mouseExit(MouseEvent e) {
+						// TODO Auto-generated method stub
+	
+					}
+	
+					@Override
+					public void mouseEnter(MouseEvent e) {
+						// TODO Auto-generated method stub
+	
+					}
+				});
+	
+	
+			log.addKeyListener(
+				new KeyAdapter()
+				{
+					@Override
+					public void
+					keyPressed(
+						KeyEvent event )
+					{
+						int key = event.character;
+	
+						if ( key <= 26 && key > 0 ){
+	
+							key += 'a' - 1;
+						}
+	
+						if ( key == 'a' && event.stateMask == SWT.MOD1 ){
+	
+							event.doit = false;
+	
+							log.selectAll();
+						}
+					}
+				});
+	
+			Composite rhs = new Composite(sash, SWT.NONE);
+			layout = new GridLayout();
+			layout.numColumns = 1;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.marginTop = 4;
+			layout.marginRight = 4;
+			rhs.setLayout(layout);
+			grid_data = new GridData(GridData.FILL_VERTICAL );
+			int rhs_width=Constants.isWindows?150:160;
+			grid_data.widthHint = rhs_width;
+			Utils.setLayoutData(rhs, grid_data);
+	
+				// options
+	
+			Composite top_right = buildHelp( rhs, 3 );
+	
+				// nick name
+	
+			Composite nick_area = new Composite(top_right, SWT.NONE);
+			layout = new GridLayout();
+			layout.numColumns = 4;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			if ( !Constants.isWindows ){
+				layout.horizontalSpacing = 2;
+				layout.verticalSpacing = 2;
+			}
+			nick_area.setLayout(layout);
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan=3;
+			Utils.setLayoutData(nick_area, grid_data);
+	
+			Label label = new Label( nick_area, SWT.NULL );
+			label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.nick" ));
+			grid_data = new GridData();
+			//grid_data.horizontalIndent=4;
+			Utils.setLayoutData(label, grid_data);
+	
+			nickname = new Text( nick_area, SWT.BORDER );
+			grid_data = new GridData( GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan=1;
+			Utils.setLayoutData(nickname,  grid_data );
+	
+			nickname.setText( chat.getNickname( false ));
+			nickname.setMessage( chat.getDefaultNickname());
+	
+			label = new Label( nick_area, SWT.NULL );
+			label.setText( lu.getLocalisedMessageText( "label.shared" ));
+			label.setToolTipText( lu.getLocalisedMessageText( "azbuddy.dchat.shared.tooltip" ));
+	
+			shared_nick_button = new Button( nick_area, SWT.CHECK );
+	
+			shared_nick_button.setSelection( chat.isSharedNickname());
+	
+			shared_nick_button.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void widgetSelected(SelectionEvent arg0) {
+	
+						boolean shared = shared_nick_button.getSelection();
+	
+						chat.setSharedNickname( shared );
+					}
+				});
+	
+			nickname.addListener(SWT.FocusOut, new Listener() {
+		        @Override
+		        public void handleEvent(Event event) {
+		        	String nick = nickname.getText().trim();
+	
+		        	if ( chat.isSharedNickname()){
+	
+		        		if ( chat.getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+	
+		        			beta.setSharedPublicNickname( nick );
+	
+		        		}else{
+	
+		        			beta.setSharedAnonNickname( nick );
+		        		}
+		        	}else{
+	
+		        		chat.setInstanceNickname( nick );
+		        	}
+		        }
+		    });
+	
+	
+			table_header = new BufferedLabel( top_right, SWT.DOUBLE_BUFFERED );
+			grid_data = new GridData( GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan=3;
+			if ( !Constants.isWindows ){
+				grid_data.horizontalIndent = 2;
+			}
+			Utils.setLayoutData(table_header,  grid_data );
+			table_header.setText(MessageText.getString( "PeersView.state.pending" ));
+	
+				// table
+	
+			buddy_table = new Table(rhs, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.VIRTUAL);
+	
+			String[] headers = {
+					"azbuddy.ui.table.name" };
+	
+			int[] sizes = { rhs_width-10 };
+	
+			int[] aligns = { SWT.LEFT };
+	
+			for (int i = 0; i < headers.length; i++){
+	
+				TableColumn tc = new TableColumn(buddy_table, aligns[i]);
+	
+				tc.setWidth(Utils.adjustPXForDPI(sizes[i]));
+	
+				Messages.setLanguageText(tc, headers[i]);
+			}
+	
+		    buddy_table.setHeaderVisible(true);
+	
+		    grid_data = new GridData(GridData.FILL_BOTH);
+		    // grid_data.heightHint = buddy_table.getHeaderHeight() * 3;
+			Utils.setLayoutData(buddy_table, grid_data);
+	
+	
+			buddy_table.addListener(
+				SWT.SetData,
+				new Listener()
+				{
+					@Override
+					public void
+					handleEvent(
+						Event event)
+					{
+						TableItem item = (TableItem)event.item;
+	
+						setItemData( item );
+					}
+				});
+	
+			final Menu menu = new Menu(buddy_table);
+	
+			buddy_table.setMenu( menu );
+	
+			menu.addMenuListener(
+				new MenuListener()
+				{
+					@Override
+					public void
+					menuShown(
+						MenuEvent e )
+					{
+						MenuItem[] items = menu.getItems();
+	
+						for (int i = 0; i < items.length; i++){
+	
+							items[i].dispose();
+						}
+	
+						final TableItem[] selection = buddy_table.getSelection();
+	
+						List<ChatParticipant>	participants = new ArrayList<>( selection.length );
+	
+						for (int i=0;i<selection.length;i++){
+	
+							TableItem item = selection[i];
+	
+							ChatParticipant	participant = (ChatParticipant)item.getData();
+	
+							if ( participant == null ){
+	
+									// item data won't be set yet for items that haven't been
+									// visible...
+	
+								participant = setItemData( item );
+							}
+	
+							if ( participant != null ){
+	
+								participants.add( participant );
+							}
+						}
+	
+						buildParticipantMenu( menu, participants );
+					}
+	
+					@Override
+					public void menuHidden(MenuEvent e) {
+					}
+				});
+	
+			buddy_table.addKeyListener(
+					new KeyAdapter()
+					{
+						@Override
+						public void
+						keyPressed(
+							KeyEvent event )
+						{
+							int key = event.character;
+	
+							if ( key <= 26 && key > 0 ){
+	
+								key += 'a' - 1;
+							}
+	
+							if ( key == 'a' && event.stateMask == SWT.MOD1 ){
+	
+								event.doit = false;
+	
+								buddy_table.selectAll();
+							}
+						}
+					});
+	
+	
+			buddy_table.addMouseListener(
+				new MouseAdapter()
+				{
+					@Override
+					public void
+					mouseDoubleClick(
+						MouseEvent e )
+					{
+						TableItem[] selection = buddy_table.getSelection();
+	
+						if ( selection.length != 1 ){
+	
+							return;
+						}
+	
+						TableItem item = selection[0];
+	
+						ChatParticipant	participant = (ChatParticipant)item.getData();
+	
+						String name = participant.getName( true );
+	
+						String existing = input_area.getText();
+	
+						if ( existing.length() > 0 && !existing.endsWith( " " )){
+	
+							name = " " + name;
+						}
+	
+						input_area.append( name );
+	
+					}
+				});
+	
+		    Utils.maintainSashPanelWidth( sash, rhs, new int[]{ 700, 300 }, "azbuddy.dchat.ui.sash.pos" );
+	
+		    /*
+		    Listener sash_listener=
+		    	new Listener()
+		    	{
+		    		private int	lhs_weight;
+		    		private int	lhs_width;
+	
+			    	public void
+					handleEvent(
+						Event ev )
+					{
+			    		if ( ev.widget == lhs ){
+	
+			    			int[] weights = sash.getWeights();
+	
+	
+			    			if ( lhs_weight != weights[0] ){
+	
+			    					// sash has moved
+	
+			    				lhs_weight = weights[0];
+	
+			    					// keep track of the width
+	
+			    				lhs_width = lhs.getBounds().width;
+			    			}
+			    		}else{
+	
+			    				// resize
+	
+			    			if ( lhs_width > 0 ){
+	
+					            int width = sash.getClientArea().width;
+	
+					            double ratio = (double)lhs_width/width;
+	
+					            lhs_weight = (int)(ratio*1000 );
+	
+					            sash.setWeights( new int[]{ lhs_weight, 1000 - lhs_weight });
+			    			}
+			    		}
+				    }
+			    };
+	
+		    lhs.addListener(SWT.Resize, sash_listener );
+		    sash.addListener(SWT.Resize, sash_listener );
+		    */
+	
+		    	// bottom area
+	
+		    Composite bottom_area = new Composite( parent, SWT.NULL );
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			bottom_area.setLayout(layout);
+	
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan = 2;
+			bottom_area.setLayoutData( grid_data );
+	
+				// Text
+	
+	
+			input_area = new Text( bottom_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan = 1;
+			grid_data.heightHint = 30;
+			grid_data.horizontalIndent = 4;
+			Utils.setLayoutData(input_area, grid_data);
+	
+			input_area.setTextLimit( MAX_MSG_LENGTH );
+	
+			input_area.addKeyListener(
+				new KeyListener()
+				{
+					private LinkedList<String>	history 	= new LinkedList<>();
+					private int					history_pos	= -1;
+	
+					private String				buffered_message = "";
+	
+					@Override
+					public void
+					keyPressed(
+						KeyEvent e)
+					{
+						if ( e.keyCode == SWT.CR ){
+	
+							e.doit = false;
+	
+							String message = input_area.getText().trim();
+	
+							if ( message.length() > 0 ){
+	
+								sendMessage(  message );
+	
+								history.addFirst( message );
+	
+								if ( history.size() > 32 ){
+	
+									history.removeLast();
+								}
+	
+								history_pos = -1;
+	
+								buffered_message = "";
+	
+								input_area.setText( "" );
+							}
+						}else if ( e.keyCode == SWT.ARROW_UP ){
+	
+							history_pos++;
+	
+							if ( history_pos < history.size()){
+	
+								if ( history_pos == 0 ){
+	
+									buffered_message = input_area.getText().trim();
+								}
+	
+								String msg = history.get( history_pos );
+	
+								input_area.setText( msg );
+	
+								input_area.setSelection( msg.length());
+	
+							}else{
+	
+								history_pos = history.size() - 1;
+							}
+	
+							e.doit = false;
+	
+						}else if ( e.keyCode == SWT.ARROW_DOWN ){
+	
+							history_pos--;
+	
+							if ( history_pos >= 0 ){
+	
+								String msg = history.get( history_pos );
+	
+								input_area.setText( msg );
+	
+								input_area.setSelection( msg.length());
+	
+							}else{
+	
+								if ( history_pos == -1 ){
+	
+									input_area.setText( buffered_message );
+	
+									if ( buffered_message.length() > 0 ){
+	
+										input_area.setSelection( buffered_message.length());
+	
+										buffered_message = "";
+									}
+								}else{
+	
+									history_pos = -1;
+								}
+							}
+	
+							e.doit = false;
+	
+						}else{
+	
+							if ( e.stateMask == SWT.MOD1 ){
+	
+								int key = e.character;
+	
+								if ( key <= 26 && key > 0 ){
+	
+									key += 'a'-1;
+								}
+	
+								if ( key == 'a' ){
+	
+									input_area.selectAll();
+								}
+							}
+						}
+					}
+	
+					@Override
+					public void
+					keyReleased(
+						KeyEvent e )
+					{
+					}
+				});
+	
+			Composite button_area = new Composite( bottom_area, SWT.NULL );
+	
+			layout = new GridLayout();
+			layout.numColumns = 1;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.marginRight = 4;
+			button_area.setLayout(layout);
+	
+			Button rss_button = new Button(button_area, SWT.PUSH);
+			Image rss_image = ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
+			rss_button.setImage(rss_image);
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.widthHint = rss_image.getBounds().width;
+			grid_data.heightHint = rss_image.getBounds().height;
+			rss_button.setLayoutData(grid_data);
+			//rss_button.setEnabled(false);
+	
+			rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
+	
+			rss_button.addSelectionListener(
+				new SelectionAdapter(){
+	
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent ev )
+					{
+						try{
+							String url = "azplug:?id=azbuddy&arg=" + UrlUtils.encode( chat.getURL() + "&format=rss");
+	
+							SubscriptionManager sm = PluginInitializer.getDefaultInterface().getUtilities().getSubscriptionManager();
+	
+							Map<String,Object>	options = new HashMap<>();
+	
+							if ( chat.isAnonymous()){
+	
+								options.put( SubscriptionManager.SO_ANONYMOUS, true );
+							}
+	
+							options.put( SubscriptionManager.SO_NAME, chat.getName());
+	
+							sm.requestSubscription( new URL( url ), options );
+	
+						}catch( Throwable e ){
+	
+							Debug.out( e );
+						}
+					}
+	
+				});
+	
+			ftux_ok = beta.getFTUXAccepted();
+	
+			if ( chat.isReadOnly()){
+	
+				input_area.setText( MessageText.getString( "azbuddy.dchat.ro" ));
+	
+				input_area.setEnabled( false );
+	
+			}else if ( !ftux_ok ){
+	
+				input_area.setEnabled( false );
+	
+			}else{
+	
+				input_area.setFocus();
+			}
+	
+			final boolean[] ftux_init_done = { false };
+	
+			beta.addFTUXStateChangeListener(
+				new FTUXStateChangeListener()
+				{
+					@Override
+					public void
+					stateChanged(
+						final boolean		_ftux_ok )
+					{
+						if ( ftux_stack.isDisposed()){
+	
+							beta.removeFTUXStateChangeListener( this );
+	
+						}else{
+	
+							Utils.execSWTThread(
+								new Runnable()
+								{
+	
+									@Override
+									public void
+									run()
+									{
+										ftux_ok = _ftux_ok;
+	
+										stack_layout.topControl = ftux_ok?log_holder:ftux_holder;
+	
+										if ( ftux_init_done[0]){
+	
+											ftux_stack.layout( true, true );
+										}
+	
+										if ( !chat.isReadOnly()){
+	
+											input_area.setEnabled( ftux_ok );
+										}
+	
+										table_resort_required = true;
+	
+										updateTable( false );
+									}
+								});
+						}
+					}
+				});
+	
+			if ( !chat.isReadOnly()){
+	
+				drop_targets = new DropTarget[]{
+					new DropTarget(log, DND.DROP_COPY),
+					new DropTarget(input_area, DND.DROP_COPY)
+				};
+	
+				for ( DropTarget drop_target: drop_targets ){
+	
+					drop_target.setTransfer(new Transfer[] {
+						FixedURLTransfer.getInstance(),
+						FileTransfer.getInstance(),
+						TextTransfer.getInstance(),
+					});
+	
+					drop_target.addDropListener(new DropTargetAdapter() {
+						@Override
+						public void dropAccept(DropTargetEvent event) {
+							event.currentDataType = FixedURLTransfer.pickBestType(event.dataTypes,
+									event.currentDataType);
+						}
+	
+						@Override
+						public void dragEnter(DropTargetEvent event) {
+						}
+	
+						@Override
+						public void dragOperationChanged(DropTargetEvent event) {
+						}
+	
+						@Override
+						public void dragOver(DropTargetEvent event) {
+	
+							if ((event.operations & DND.DROP_LINK) > 0)
+								event.detail = DND.DROP_LINK;
+							else if ((event.operations & DND.DROP_COPY) > 0)
+								event.detail = DND.DROP_COPY;
+							else if ((event.operations & DND.DROP_DEFAULT) > 0)
+								event.detail = DND.DROP_COPY;
+	
+	
+							event.feedback = DND.FEEDBACK_SELECT | DND.FEEDBACK_SCROLL | DND.FEEDBACK_EXPAND;
+						}
+	
+						@Override
+						public void dragLeave(DropTargetEvent event) {
+						}
+	
+						@Override
+						public void drop(DropTargetEvent event) {
+						
+							handleDrop( 
+								event.data,
+								new DropAccepter(){
+									
+									@Override
+									public void accept(String link){
+										
+										input_area.setText( input_area.getText() + link );
+									}
+								});
+						}
+					});
+				}
+			}
+	
+			ftux_init_done[0] = true;
+	
+			Control[] focus_controls = { log, input_area, buddy_table, nickname, shared_nick_button };
+	
+			Listener focus_listener = new Listener() {
+	
+				@Override
+				public void handleEvent(Event event) {
+					activate();
+				}
+			};
+	
+			for ( Control c: focus_controls ){
+	
+				c.addListener( SWT.FocusIn, focus_listener );
+			}
+	
+			BuddyPluginBeta.ChatParticipant[] existing_participants = chat.getParticipants();
+	
+			synchronized( participants ){
+	
+				participants.addAll( Arrays.asList( existing_participants ));
+			}
+	
+			table_resort_required = true;
+	
+			updateTable( false );
+	
+			BuddyPluginBeta.ChatMessage[] history = chat.getHistory();
+	
+			logChatMessages( history );
+	
+			boolean	can_popout = shell == null && public_chat;
 
-		layout = new GridLayout();
-		layout.numColumns = 2;
+			if ( can_popout && !ftux_ok && !auto_ftux_popout_done ){
+	
+				auto_ftux_popout_done = true;
+	
+				try{
+					createChatWindow( view, plugin, chat.getClone(), true );
+	
+				}catch( Throwable e ){
+	
+				}
+			}
+		}else{
+			
+			GridLayout layout = new GridLayout();
+			layout.numColumns = 2;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			parent.setLayout(layout);
+			GridData grid_data = new GridData(GridData.FILL_BOTH );
+			Utils.setLayoutData(parent, grid_data);
+
+			Composite status_area = new Composite( parent, SWT.NULL );
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			status_area.setLayoutData( grid_data );
+			
+			layout = new GridLayout();
+			layout.numColumns = 3;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.marginTop = 4;
+			layout.marginLeft = 4;
+			status_area.setLayout(layout);
+			
+			buildStatus( parent, status_area );
+			
+			buildHelp( status_area, 2 );
+			
+			Canvas share_area = new Canvas( parent, SWT.NO_BACKGROUND );
+			grid_data = new GridData(GridData.FILL_BOTH );
+			grid_data.horizontalSpan = 2;
+			share_area.setLayoutData( grid_data);
+			share_area.setBackground(Colors.white);
+			
+			share_area.addPaintListener(
+				new PaintListener(){
+					
+					@Override
+					public void paintControl(PaintEvent e){
+						
+						GC gc = e.gc;
+						
+						gc.setAdvanced(true);
+						gc.setAntialias(SWT.ON);
+						
+						Rectangle bounds = share_area.getBounds();
+						
+						int	width 	= bounds.width;
+						int height	= bounds.height;
+						
+						gc.setBackground( Colors.white );
+						
+						gc.fillRectangle( 0, 0, width, height );
+						
+						Rectangle text_area = new Rectangle(50,  50, width-100, height - 100 );
+						
+						gc.setLineWidth( 8 );
+						gc.setLineStyle( SWT.LINE_DOT );
+						
+						gc.setForeground( Colors.light_grey );
+						
+						gc.drawRoundRectangle( 40, 40, width - 80, height - 80, 25, 25 );
+						
+						gc.setForeground( Colors.dark_grey );
+
+						gc.setFont( big_font );
+						
+						String msg = 
+							MessageText.getString(
+								"dchat.share.dnd.info",
+								new String[] {
+									MessageText.getString(chat.getNetwork()==AENetworkClassifier.AT_PUBLIC?"label.publicly":"label.anonymously")	
+								});
+								
+						GCStringPrinter p = new GCStringPrinter(gc, msg, text_area, 0, SWT.CENTER | SWT.WRAP );
+						
+						p.printString();
+					}
+				});
+			
+			input_area = new Text( share_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
+			input_area.setVisible( false );
+			
+			drop_targets = new DropTarget[]{
+					new DropTarget(share_area, DND.DROP_COPY),
+				};
+	
+			for ( DropTarget drop_target: drop_targets ){
+
+				drop_target.setTransfer(new Transfer[] {
+					FixedURLTransfer.getInstance(),
+					FileTransfer.getInstance(),
+					TextTransfer.getInstance(),
+				});
+
+				drop_target.addDropListener(new DropTargetAdapter() {
+					@Override
+					public void dropAccept(DropTargetEvent event) {
+						event.currentDataType = FixedURLTransfer.pickBestType(event.dataTypes,
+								event.currentDataType);
+					}
+
+					@Override
+					public void dragEnter(DropTargetEvent event) {
+					}
+
+					@Override
+					public void dragOperationChanged(DropTargetEvent event) {
+					}
+
+					@Override
+					public void dragOver(DropTargetEvent event) {
+
+						if ((event.operations & DND.DROP_LINK) > 0)
+							event.detail = DND.DROP_LINK;
+						else if ((event.operations & DND.DROP_COPY) > 0)
+							event.detail = DND.DROP_COPY;
+						else if ((event.operations & DND.DROP_DEFAULT) > 0)
+							event.detail = DND.DROP_COPY;
+
+
+						event.feedback = DND.FEEDBACK_SELECT | DND.FEEDBACK_SCROLL | DND.FEEDBACK_EXPAND;
+					}
+
+					@Override
+					public void dragLeave(DropTargetEvent event) {
+					}
+
+					@Override
+					public void drop(DropTargetEvent event) {
+						
+						if ( !input_available ){
+							
+							MessageBoxShell mb = new MessageBoxShell(
+									MessageText.getString("dchat.share.dnd.wait.title"),
+									MessageText.getString("dchat.share.dnd.wait.text" ));
+
+							mb.setButtons(0, new String[] {
+									MessageText.getString("Button.ok"),
+								}, new Integer[] {
+									0,
+								});
+							
+							mb.open( null );
+							
+							return;
+						}
+						
+						MessageBoxShell mb = new MessageBoxShell(
+								MessageText.getString("dchat.share.dnd.prompt.title"),
+								MessageText.getString("dchat.share.dnd.prompt.text", new String[] {
+										MessageText.getString(chat.getNetwork()==AENetworkClassifier.AT_PUBLIC?"label.publicly":"label.anonymously")	
+								}));
+						
+						mb.setRemember(
+								"chat.dnd." + chat.getKey(), false,
+								MessageText.getString("MessageBoxWindow.nomoreprompting"));
+
+						mb.setButtons(0, new String[] {
+								MessageText.getString("Button.yes"),
+								MessageText.getString("Button.no"),
+							}, new Integer[] {
+								0,
+								1
+							});
+						mb.setRememberOnlyIfButton(0);
+
+						mb.open(new UserPrompterResultListener() {
+							@Override
+							public void prompterClosed(int result) {	
+								if ( result == 0 ) {
+									handleDrop( 
+										event.data,
+										new DropAccepter(){
+											
+											@Override
+											public void accept(String link){
+															
+												link = link.trim();
+												
+												sendMessage( link );
+												
+												String rendered = renderMessage( link );
+
+												MessageBoxShell mb = new MessageBoxShell(
+														MessageText.getString("dchat.share.dnd.shared.title"),
+														MessageText.getString("dchat.share.dnd.shared.text", new String[] { rendered }));
+
+												mb.setButtons(0, new String[] {
+														MessageText.getString("Button.ok"),
+													}, new Integer[] {
+														0,
+													});
+
+												mb.open( null );
+											}
+										});
+								}
+							}});
+						
+	
+					}
+				});
+			}
+		}
+	}
+	
+	private Composite
+	buildHelp(
+		Composite		rhs,
+		int				num_cols )
+	{
+		boolean public_chat = !chat.isPrivateChat();
+
+		Composite top_right = new Composite(rhs, SWT.NONE);
+		GridLayout layout = new GridLayout();
+		layout.numColumns = num_cols;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
-		layout.marginTop = 4;
-		layout.marginLeft = 4;
-		lhs.setLayout(layout);
-		grid_data = new GridData(GridData.FILL_BOTH );
-		grid_data.widthHint = 300;
-		Utils.setLayoutData(lhs, grid_data);
 
-		final Label menu_drop = new Label( lhs, SWT.NULL );
+		top_right.setLayout(layout);
+		if ( num_cols == 3 ) {
+			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+			//grid_data.heightHint = 50;
+			Utils.setLayoutData(top_right, grid_data);
+		}
+		boolean	can_popout = shell == null && public_chat;
 
+		if ( num_cols == 3 ) {
+			Label label = new Label( top_right, SWT.NULL );
+			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+			grid_data.horizontalSpan=can_popout?1:2;
+			Utils.setLayoutData(label, grid_data);
+		}
+		
+		LinkLabel link = new LinkLabel( top_right, "label.help", lu.getLocalisedMessageText( "azbuddy.dchat.link.url" ));
+		//grid_data.horizontalAlignment = SWT.END;
+		//link.getlabel().setLayoutData( grid_data );
+
+		if ( can_popout ){
+
+			Label pop_out = new Label( top_right, SWT.NULL );
+			Image image = ImageLoader.getInstance().getImage( "popout_window" );
+			pop_out.setImage( image );
+			GridData grid_data = new GridData();
+			grid_data.widthHint=image.getBounds().width;
+			grid_data.heightHint=image.getBounds().height;
+			Utils.setLayoutData(pop_out, grid_data);
+
+			pop_out.setCursor(pop_out.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+
+			pop_out.setToolTipText( MessageText.getString( "label.pop.out" ));
+
+			pop_out.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseUp(MouseEvent arg0) {
+					try{
+						createChatWindow( view, plugin, chat.getClone(), true );
+
+					}catch( Throwable e ){
+
+						Debug.out( e);
+					}
+				}
+			});
+
+		}
+		
+		return( top_right );
+	}
+	
+	private void
+	buildStatus(
+		Composite		main_component,
+		Composite		component )
+	{
+		boolean public_chat = !chat.isPrivateChat();
+		
+		final Label menu_drop = new Label( component, SWT.NULL );
+		
 		Messages.setLanguageTooltip( menu_drop, "TagSettingsView.title" );
 		
 		FontData fontData = menu_drop.getFont().getFontData()[0];
@@ -562,8 +2426,49 @@ BuddyPluginViewBetaChat
 		ftux_dark_fg 	= new Color( display, 0, 81, 134 );
 		ftux_light_bg 	= new Color( display, 236, 242, 246 );
 
-		status = new BufferedLabel( lhs, SWT.LEFT | SWT.DOUBLE_BUFFERED );
-		grid_data = new GridData(GridData.FILL_HORIZONTAL);
+		
+		component.addDisposeListener(
+			new DisposeListener()
+			{
+				@Override
+				public void
+				widgetDisposed(
+					DisposeEvent arg0 )
+				{
+					Font[] fonts = { italic_font, bold_font, big_font, small_font };
+
+					for ( Font f: fonts ){
+
+						if ( f != null ){
+
+							f.dispose();
+						}
+					}
+
+					Color[] colours = { ftux_dark_bg, ftux_dark_fg, ftux_light_bg };
+
+					for ( Color c: colours ){
+
+						if ( c != null ){
+
+							c.dispose();
+						}
+					}
+
+					if ( drop_targets != null ){
+
+						for ( DropTarget dt: drop_targets ){
+
+							dt.dispose();
+						}
+					}
+
+					closed();
+				}
+			});
+		
+		status = new BufferedLabel( component, SWT.LEFT | SWT.DOUBLE_BUFFERED );
+		GridData grid_data = new GridData(GridData.FILL_HORIZONTAL);
 
 		Utils.setLayoutData(status, grid_data);
 		status.setText( MessageText.getString( "PeersView.state.pending" ));
@@ -603,7 +2508,7 @@ BuddyPluginViewBetaChat
 
 		if ( public_chat ){
 
-			Menu status_clip_menu = new Menu(lhs.getShell(), SWT.DROP_DOWN);
+			Menu status_clip_menu = new Menu(component.getShell(), SWT.DROP_DOWN);
 			MenuItem status_clip_item = new MenuItem( status_menu, SWT.CASCADE);
 			status_clip_item.setMenu(status_clip_menu);
 			status_clip_item.setText(  MessageText.getString( "label.copy.to.clipboard" ));
@@ -680,7 +2585,7 @@ BuddyPluginViewBetaChat
 
 			if ( !chat.isManaged()){
 
-				Menu status_channel_menu = new Menu(lhs.getShell(), SWT.DROP_DOWN);
+				Menu status_channel_menu = new Menu(component.getShell(), SWT.DROP_DOWN);
 				MenuItem status_channel_item = new MenuItem( status_menu, SWT.CASCADE);
 				status_channel_item.setMenu(status_channel_menu);
 				status_channel_item.setText(  MessageText.getString( "azbuddy.dchat.rchans" ));
@@ -875,6 +2780,81 @@ BuddyPluginViewBetaChat
 						}
 					});
 			
+				// view type
+			
+			final Menu vt_menu = new Menu(status_menu.getShell(), SWT.DROP_DOWN);
+			
+			MenuItem vt_menu_item = new MenuItem( advanced_menu, SWT.CASCADE);
+			
+			vt_menu_item.setMenu(vt_menu);
+			
+			vt_menu_item.setText(  MessageText.getString( "menu.view.options" ));
+
+			SelectionAdapter listener =
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent e )
+					{
+						int	vt = -1;
+						
+						for ( MenuItem mi: vt_menu.getItems()){
+
+							if ( mi.getSelection()) {
+								
+								vt  = (Integer)mi.getData();
+							}
+						}
+						
+						if ( vt != -1 ) {
+							
+							chat.setViewType( vt );
+							
+							buildSupport( main_component );
+							
+							main_component.layout( true, true );
+						}
+					}
+				};
+
+			MenuItem vt_mi = new MenuItem( vt_menu, SWT.RADIO );
+			vt_mi.setText( MessageText.getString( "label.full" ));
+			vt_mi.setData( BuddyPluginBeta.VIEW_TYPE_DEFAULT );
+
+			vt_mi.addSelectionListener( listener );
+
+			vt_mi = new MenuItem( vt_menu, SWT.RADIO );
+			vt_mi.setText( MessageText.getString( "ConfigView.section.sharing" ));
+			vt_mi.setData( BuddyPluginBeta.VIEW_TYPE_SHARING );
+
+			if ( chat.isReadOnly()){
+				
+				vt_mi.setEnabled( false );
+			}
+			
+			vt_mi.addSelectionListener( listener );
+
+
+			vt_menu.addMenuListener(
+				new MenuAdapter()
+				{
+					@Override
+					public void
+					menuShown(
+						MenuEvent e )
+					{
+						int vt = chat.getViewType();
+						
+						for ( MenuItem mi: vt_menu.getItems()){
+
+							mi.setSelection( vt == (Integer)mi.getData());
+						}
+					}
+				});
+			
+			
 				// persist messages
 			
 			final MenuItem persist_mi = new MenuItem( advanced_menu, SWT.CHECK );
@@ -969,7 +2949,7 @@ BuddyPluginViewBetaChat
 					});
 		}else{
 
-			final Menu status_priv_menu = new Menu(lhs.getShell(), SWT.DROP_DOWN);
+			final Menu status_priv_menu = new Menu(component.getShell(), SWT.DROP_DOWN);
 			MenuItem status_priv_item = new MenuItem( status_menu, SWT.CASCADE);
 			status_priv_item.setMenu(status_priv_menu);
 			status_priv_item.setText(  MessageText.getString( "label.private.chat" ));
@@ -1082,1620 +3062,8 @@ BuddyPluginViewBetaChat
 						}
 					});
 		}
-
-		final Composite ftux_stack = new Composite(lhs, SWT.NONE);
-		grid_data = new GridData(GridData.FILL_BOTH );
-		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(ftux_stack,  grid_data );
-
-        final StackLayout stack_layout = new StackLayout();
-        ftux_stack.setLayout(stack_layout);
-
-		final Composite log_holder = new Composite(ftux_stack, SWT.BORDER);
-
-		final Composite ftux_holder = new Composite(ftux_stack, SWT.BORDER);
-
-			// FTUX panel
-
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.horizontalSpacing = 0;
-		layout.verticalSpacing = 0;
-		ftux_holder.setLayout(layout);
-
-		ftux_holder.setBackground( ftux_light_bg );
-
-			// top info
-
-		Composite ftux_top_area = new Composite( ftux_holder, SWT.NULL );
-		layout = new GridLayout();
-		layout.numColumns = 1;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.verticalSpacing = 0;
-		ftux_top_area.setLayout(layout);
-
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan = 2;
-		grid_data.heightHint = 30;
-		Utils.setLayoutData(ftux_top_area, grid_data);
-		ftux_top_area.setBackground( ftux_dark_bg );
-
-
-		Label ftux_top = new Label( ftux_top_area, SWT.WRAP );
-		grid_data = new GridData(SWT.LEFT, SWT.CENTER, true, true );
-		grid_data.horizontalIndent = 8;
-		Utils.setLayoutData(ftux_top, grid_data);
-
-		ftux_top.setAlignment( SWT.LEFT );
-		ftux_top.setBackground( ftux_dark_bg );
-		ftux_top.setForeground( ftux_dark_fg );
-		ftux_top.setFont( big_font );
-		ftux_top.setText( MessageText.getString( "azbuddy.dchat.ftux.welcome" ));
-
-			// middle info
-
-		Label ftux_hack = new Label( ftux_holder, SWT.NULL );
-		grid_data = new GridData();
-		grid_data.heightHint=40;
-		grid_data.widthHint=0;
-		Utils.setLayoutData(ftux_hack, grid_data);
-
-		final StyledText ftux_middle = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
-
-		grid_data = new GridData(GridData.FILL_BOTH );
-		grid_data.horizontalSpan = 1;
-		grid_data.verticalIndent = 4;
-		grid_data.horizontalIndent = 16;
-		Utils.setLayoutData(ftux_middle, grid_data);
-
-		ftux_middle.setBackground( ftux_light_bg );
-
-		String info1_text =
-		"Chat allows you to communicate with other users directly by sending and receiving messages.\n" +
-		"It is a decentralized chat system - there are no central servers involved, all messages are passed directly between users.\n" +
-		"Consequently " + Constants.APP_NAME + " has absolutely no control over message content. In particular no mechanism exists (nor is possible) for " + Constants.APP_NAME + " to moderate or otherwise control either messages or the users that send messages.";
-
-		String info2_text =
-		"I UNDERSTAND AND AGREE that " + Constants.APP_NAME + " has no responsibility whatsoever with my enabling this function and using chat.";
-
-		String[] info_lines = info1_text.split( "\n" );
-
-		for ( String line: info_lines ){
-
-			ftux_middle.append( line );
-
-			if ( line != info_lines[info_lines.length-1] ){
-
-				ftux_middle.append( "\n" );
-
-				int	pos = ftux_middle.getText().length();
-
-					// zero width space in large font to get smaller paragraph spacing
-
-				ftux_middle.append( "\u200B" );
-
-				StyleRange styleRange = new StyleRange();
-				styleRange.start = pos;
-				styleRange.length = 1;
-				styleRange.font = big_font;
-
-				ftux_middle.setStyleRange( styleRange );
-			}
-		}
-
-			// checkbox area
-
-		Composite ftux_check_area = new Composite( ftux_holder, SWT.NULL );
-		layout = new GridLayout();
-		layout.marginLeft = 0;
-		layout.marginWidth = 0;
-		layout.numColumns = 2;
-		ftux_check_area.setLayout(layout);
-
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(ftux_check_area,  grid_data );
-		ftux_check_area.setBackground(  ftux_light_bg );
-
-		final Button ftux_check = new Button( ftux_check_area, SWT.CHECK );
-		grid_data = new GridData();
-		grid_data.horizontalIndent = 16;
-		Utils.setLayoutData(ftux_check,  grid_data );
-		ftux_check.setBackground(  ftux_light_bg );
-
-		Label ftux_check_test = new Label( ftux_check_area, SWT.WRAP );
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(ftux_check_test, grid_data);
-
-		ftux_check_test.setBackground( ftux_light_bg );
-		ftux_check_test.setText( info2_text );
-
-
-			// bottom info
-
-		final StyledText ftux_bottom = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.WRAP | SWT.NO_FOCUS );
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan = 2;
-		grid_data.horizontalIndent = 16;
-		Utils.setLayoutData(ftux_bottom, grid_data);
-
-		ftux_bottom.setBackground( ftux_light_bg );
-		ftux_bottom.setFont( bold_font );
-		ftux_bottom.setText( MessageText.getString( "azbuddy.dchat.ftux.footer" ) + " " );
-
-		{
-			int	start	= ftux_bottom.getText().length();
-
-			String url 		= MessageText.getString( "faq.legal.url" );
-			String url_text	= MessageText.getString( "label.more.dot" );
-
-			ftux_bottom.append( url_text );
-
-			StyleRange styleRange = new StyleRange();
-			styleRange.start = start;
-			styleRange.length = url_text.length();
-			styleRange.foreground = Colors.blue;
-			styleRange.underline = true;
-
-			styleRange.data = url;
-
-			ftux_bottom.setStyleRange( styleRange );
-		}
-
-		ftux_bottom.addListener(
-				SWT.MouseUp,
-				new Listener()
-				{
-					@Override
-					public void handleEvent(Event event) {
-						int offset = ftux_bottom.getOffsetAtLocation(new Point (event.x, event.y));
-						StyleRange style = ftux_bottom.getStyleRangeAtOffset(offset);
-
-						if ( style != null ){
-
-							String url = (String)style.data;
-
-							try{
-								Utils.launch( new URL( url ));
-
-							}catch( Throwable e ){
-
-								Debug.out( e );
-							}
-						}
-					}
-				});
-
-		Label ftux_line = new Label( ftux_holder, SWT.SEPARATOR | SWT.HORIZONTAL );
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan = 2;
-		grid_data.verticalIndent = 4;
-		Utils.setLayoutData(ftux_line,  grid_data );
-
-		Composite ftux_button_area = new Composite( ftux_holder, SWT.NULL );
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		ftux_button_area.setLayout(layout);
-
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(ftux_button_area,  grid_data );
-		ftux_button_area.setBackground( Colors.white );
-
-		Label filler = new Label( ftux_button_area, SWT.NULL );
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(filler,  grid_data );
-		filler.setBackground( Colors.white );
-
-		final Button ftux_accept = new Button( ftux_button_area, SWT.PUSH );
-		grid_data = new GridData();
-		grid_data.horizontalAlignment = SWT.RIGHT;
-		grid_data.widthHint = 60;
-		Utils.setLayoutData(ftux_accept, grid_data);
-
-		ftux_accept.setText( MessageText.getString( "label.accept" ));
-
-		ftux_accept.setEnabled( false );
-
-		ftux_accept.addSelectionListener(
-			new SelectionAdapter() {
-
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					beta.setFTUXAccepted( true );
-				}
-			});
-
-		ftux_check.addSelectionListener(
-			new SelectionAdapter() {
-
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					ftux_accept.setEnabled( ftux_check.getSelection());
-				}
-		});
-			// LOG panel
-
-		layout = new GridLayout();
-		layout.numColumns = 1;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.marginLeft = 4;
-		log_holder.setLayout(layout);
-		//grid_data = new GridData(GridData.FILL_BOTH );
-		//grid_data.horizontalSpan = 2;
-		//Utils.setLayoutData(log_holder, grid_data);
-
-		log = new StyledText(log_holder,SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
-		grid_data = new GridData(GridData.FILL_BOTH);
-		grid_data.horizontalSpan = 1;
-		//grid_data.horizontalIndent = 4;
-		Utils.setLayoutData(log, grid_data);
-		//log.setIndent( 4 );
-
-		log.setEditable( false );
-
-		log_holder.setBackground( log.getBackground());
-
-		final Menu log_menu = new Menu( log );
-
-		log.setMenu(  log_menu );
-
-		log.addMenuDetectListener(
-			new MenuDetectListener() {
-
-				@Override
-				public void
-				menuDetected(
-					MenuDetectEvent e )
-				{
-					e.doit = false;
-
-					boolean	handled = false;
-
-					for ( MenuItem mi: log_menu.getItems()){
-
-						mi.dispose();
-					}
-
-					try{
-						Point mapped = log.getDisplay().map( null, log, new Point( e.x, e.y ));
-
-						int offset = log.getOffsetAtLocation( mapped );
-
-						final StyleRange sr = log.getStyleRangeAtOffset(  offset );
-
-						if ( sr != null ){
-
-							Object data = sr.data;
-
-							if ( data instanceof ChatParticipant ){
-
-								ChatParticipant cp = (ChatParticipant)data;
-
-								List<ChatParticipant> cps = new ArrayList<>();
-
-								cps.add( cp );
-
-								buildParticipantMenu( log_menu, cps );
-
-								handled = true;
-
-							}else if ( data instanceof String ){
-
-								String url_str = (String)sr.data;
-
-								String str = url_str;
-
-								if ( str.length() > 50 ){
-
-									str = str.substring( 0, 50 ) + "...";
-								}
-
-									// magnet special case for anon chat
-
-								if ( chat.isAnonymous() && url_str.toLowerCase( Locale.US ).startsWith( "magnet:" )){
-
-									String[] magnet_uri = { url_str };
-
-									Set<String> networks = UrlUtils.extractNetworks( magnet_uri );
-
-									String i2p_only_uri = magnet_uri[0] + "&net=" + UrlUtils.encode( AENetworkClassifier.AT_I2P );
-
-									String i2p_only_str = i2p_only_uri;
-
-									if ( i2p_only_str.length() > 50 ){
-
-										i2p_only_str = i2p_only_str.substring( 0, 50 ) + "...";
-									}
-
-									i2p_only_str = lu.getLocalisedMessageText( "azbuddy.dchat.open.i2p.magnet" ) + ": " + i2p_only_str;
-
-									final MenuItem mi_open_i2p_vuze = new MenuItem( log_menu, SWT.PUSH );
-
-									mi_open_i2p_vuze.setText( i2p_only_str);
-									mi_open_i2p_vuze.setData( i2p_only_uri );
-
-									mi_open_i2p_vuze.addSelectionListener(
-										new SelectionAdapter() {
-
-											@Override
-											public void
-											widgetSelected(
-												SelectionEvent e )
-											{
-												String url_str = (String)mi_open_i2p_vuze.getData();
-
-												if ( url_str != null ){
-
-													TorrentOpener.openTorrent( url_str );
-												}
-											}
-										});
-
-									if ( networks.size() == 1 && networks.iterator().next() == AENetworkClassifier.AT_I2P ){
-
-										// already done above
-
-									}else{
-
-										str = lu.getLocalisedMessageText( "azbuddy.dchat.open.magnet" ) + ": " + str;
-
-										final MenuItem mi_open_vuze = new MenuItem( log_menu, SWT.PUSH );
-
-										mi_open_vuze.setText( str);
-										mi_open_vuze.setData( url_str );
-
-										mi_open_vuze.addSelectionListener(
-											new SelectionAdapter() {
-
-												@Override
-												public void
-												widgetSelected(
-													SelectionEvent e )
-												{
-													String url_str = (String)mi_open_vuze.getData();
-
-													if ( url_str != null ){
-
-														TorrentOpener.openTorrent( url_str );
-													}
-												}
-											});
-									}
-								}else{
-
-
-									str = lu.getLocalisedMessageText( "azbuddy.dchat.open.in.vuze" ) + ": " + str;
-
-									final MenuItem mi_open_vuze = new MenuItem( log_menu, SWT.PUSH );
-
-									mi_open_vuze.setText( str);
-									mi_open_vuze.setData( url_str );
-
-									mi_open_vuze.addSelectionListener(
-										new SelectionAdapter() {
-
-											@Override
-											public void
-											widgetSelected(
-												SelectionEvent e )
-											{
-												String url_str = (String)mi_open_vuze.getData();
-
-												if ( url_str != null ){
-
-													String lc_url_str = url_str.toLowerCase( Locale.US );
-
-													if ( lc_url_str.startsWith( "chat:" )){
-
-														try{
-															beta.handleURI( url_str, true );
-
-														}catch( Throwable f ){
-
-															Debug.out( f );
-														}
-
-													}else{
-
-														TorrentOpener.openTorrent( url_str );
-													}
-												}
-											}
-										});
-								}
-
-								final MenuItem mi_open_ext = new MenuItem( log_menu, SWT.PUSH );
-
-								mi_open_ext.setText( lu.getLocalisedMessageText( "azbuddy.dchat.open.in.browser" ));
-
-								mi_open_ext.addSelectionListener(
-									new SelectionAdapter() {
-
-										@Override
-										public void
-										widgetSelected(
-											SelectionEvent e )
-										{
-											String url_str = (String)mi_open_ext.getData();
-
-											Utils.launch( url_str );
-										}
-									});
-
-								new MenuItem( log_menu, SWT.SEPARATOR );
-
-								if ( chat.isAnonymous() && url_str.toLowerCase( Locale.US ).startsWith( "magnet:" )){
-
-									String[] magnet_uri = { url_str };
-
-									Set<String> networks = UrlUtils.extractNetworks( magnet_uri );
-
-									String i2p_only_uri = magnet_uri[0] + "&net=" + UrlUtils.encode( AENetworkClassifier.AT_I2P );
-
-									final MenuItem mi_copy_i2p_clip = new MenuItem( log_menu, SWT.PUSH );
-
-									mi_copy_i2p_clip.setText( lu.getLocalisedMessageText( "azbuddy.dchat.copy.i2p.magnet" ));
-									mi_copy_i2p_clip.setData( i2p_only_uri );
-
-									mi_copy_i2p_clip.addSelectionListener(
-											new SelectionAdapter() {
-
-												@Override
-												public void
-												widgetSelected(
-													SelectionEvent e )
-												{
-													String url_str = (String)mi_copy_i2p_clip.getData();
-
-													if ( url_str != null ){
-
-														ClipboardCopy.copyToClipBoard( url_str );
-													}
-												}
-											});
-
-									if ( networks.size() == 1 && networks.iterator().next() == AENetworkClassifier.AT_I2P ){
-
-										// already done above
-
-									}else{
-
-										final MenuItem mi_copy_clip = new MenuItem( log_menu, SWT.PUSH );
-
-										mi_copy_clip.setText( lu.getLocalisedMessageText( "azbuddy.dchat.copy.magnet" ));
-										mi_copy_clip.setData( url_str );
-
-										mi_copy_clip.addSelectionListener(
-												new SelectionAdapter() {
-
-													@Override
-													public void
-													widgetSelected(
-														SelectionEvent e )
-													{
-														String url_str = (String)mi_copy_clip.getData();
-
-														if ( url_str != null ){
-
-															ClipboardCopy.copyToClipBoard( url_str );
-														}
-													}
-												});
-
-									}
-								}else{
-
-									final MenuItem mi_copy_clip = new MenuItem( log_menu, SWT.PUSH );
-
-									mi_copy_clip.setText( lu.getLocalisedMessageText( "label.copy.to.clipboard" ));
-									mi_copy_clip.setData( url_str );
-
-									mi_copy_clip.addSelectionListener(
-											new SelectionAdapter() {
-
-												@Override
-												public void
-												widgetSelected(
-													SelectionEvent e )
-												{
-													String url_str = (String)mi_copy_clip.getData();
-
-													if ( url_str != null ){
-
-														ClipboardCopy.copyToClipBoard( url_str );
-													}
-												}
-											});
-								}
-
-								if ( url_str.toLowerCase().startsWith( "http" )){
-
-									mi_open_ext.setData( url_str );
-
-									mi_open_ext.setEnabled( true );
-
-								}else{
-
-									mi_open_ext.setEnabled( false );
-								}
-
-								handled = true;
-							}else{
-
-								if ( Constants.isCVSVersion()){
-
-									if ( sr instanceof MyStyleRange ){
-
-										final MyStyleRange msr = (MyStyleRange)sr;
-
-										MenuItem   item = new MenuItem( log_menu, SWT.NONE );
-
-										item.setText( MessageText.getString( "label.copy.to.clipboard"));
-
-										item.addSelectionListener(
-											new SelectionAdapter()
-											{
-												@Override
-												public void
-												widgetSelected(
-													SelectionEvent e )
-												{
-													ClipboardCopy.copyToClipBoard( msr.message.getMessage());
-												}
-											});
-
-										handled = true;
-									}
-								}
-							}
-						}
-					}catch( Throwable f ){
-					}
-
-					if ( !handled ){
-
-						final String text = log.getSelectionText();
-
-						if ( text != null && text.length() > 0 ){
-
-							MenuItem   item = new MenuItem( log_menu, SWT.NONE );
-
-							item.setText( MessageText.getString( "label.copy.to.clipboard"));
-
-							item.addSelectionListener(
-								new SelectionAdapter()
-								{
-									@Override
-									public void
-									widgetSelected(
-										SelectionEvent e )
-									{
-										ClipboardCopy.copyToClipBoard( text );
-									}
-								});
-
-							handled = true;
-						}
-					}
-
-					if ( handled ){
-
-						e.doit = true;
-					}
-				}
-			});
-
-		log.addListener(
-			SWT.MouseDoubleClick,
-			new Listener()
-			{
-				@Override
-				public void
-				handleEvent(
-					Event e )
-				{
-					try{
-						final int offset = log.getOffsetAtLocation( new Point( e.x, e.y ) );
-
-						for ( int i=0;i<log_styles.length;i++){
-
-							StyleRange sr = log_styles[i];
-
-							Object data = sr.data;
-
-							if ( data != null && offset >= sr.start && offset < sr.start + sr.length ){
-
-								boolean anon_chat = chat.isAnonymous();
-
-								if ( data instanceof String ){
-
-									final String	url_str = (String)data;
-
-									String lc_url_str = url_str.toLowerCase( Locale.US );
-
-									if ( lc_url_str.startsWith( "chat:" )){
-
-											// no double-click support for anon->public chats
-
-										if ( anon_chat && !lc_url_str.startsWith( "chat:anon:" )){
-
-											return;
-										}
-
-										try{
-											beta.handleURI( url_str, true );
-
-										}catch( Throwable f ){
-
-											Debug.out( f );
-										}
-									}else{
-
-											// no double-click support for anon->public urls
-
-										if ( anon_chat ){
-
-											try{
-												String host = new URL( lc_url_str ).getHost();
-
-													// note that magnet-uris are always decoded here as public, which is what we want mostly
-
-												if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
-
-													return;
-
-												}
-											}catch( Throwable f ){
-
-												return;
-											}
-										}
-
-										if ( 	lc_url_str.contains( ".torrent" ) ||
-												UrlUtils.parseTextForMagnets( url_str ) != null ){
-
-											TorrentOpener.openTorrent( url_str );
-
-										}else{
-
-											if ( url_str.toLowerCase( Locale.US ).startsWith( "http" )){
-
-													// without this backoff we end up with the text widget
-													// being left in a 'mouse down' state when returning to it :(
-
-												Utils.execSWTThreadLater(
-													100,
-													new Runnable()
-													{
-														@Override
-														public void
-														run()
-														{
-															Utils.launch( url_str );
-														}
-													});
-											}else{
-
-												TorrentOpener.openTorrent( url_str );
-											}
-										}
-									}
-
-									log.setSelection( offset );
-
-									e.doit = false;
-
-								}else if ( data instanceof ChatParticipant ){
-
-									ChatParticipant participant = (ChatParticipant)data;
-
-									String name = participant.getName( true );
-
-									String existing = input_area.getText();
-
-									if ( existing.length() > 0 && !existing.endsWith( " " )){
-
-										name = " " + name;
-									}
-
-									input_area.append( name );
-								}
-							}
-						}
-					}catch( Throwable f ){
-
-					}
-				}
-			});
-
-		log.addMouseTrackListener(
-			new MouseTrackListener() {
-
-				private StyleRange		old_range;
-				private StyleRange		temp_range;
-				private int				temp_index;
-
-				@Override
-				public void mouseHover(MouseEvent e) {
-
-					boolean active = false;
-
-					try{
-						int offset = log.getOffsetAtLocation( new Point( e.x, e.y ) );
-
-						for ( int i=0;i<log_styles.length;i++){
-
-							StyleRange sr = log_styles[i];
-
-							Object data = sr.data;
-
-							if ( data != null && offset >= sr.start && offset < sr.start + sr.length ){
-
-								if ( old_range != null  ){
-
-									if ( 	temp_index < log_styles.length &&
-											log_styles[temp_index] == temp_range ){
-
-										log_styles[ temp_index ] = old_range;
-
-										old_range	= null;
-									}
-								}
-
-								sr = log_styles[i];
-
-								String tt_extra = "";
-
-								if ( data instanceof String ){
-
-									try{
-										URL url = new URL((String)data);
-
-										String query = url.getQuery();
-
-										if ( query != null ){
-
-											String[] bits = query.split( "&" );
-
-											int seeds 		= -1;
-											int leechers	= -1;
-
-											for ( String bit: bits ){
-
-												String[] temp = bit.split( "=" );
-
-												String lhs = temp[0];
-
-												if ( lhs.equals( "_s" )){
-
-													seeds = Integer.parseInt( temp[1] );
-
-												}else if ( lhs.equals( "_l" )){
-
-													leechers = Integer.parseInt( temp[1] );
-												}
-											}
-
-											if ( seeds != -1 && leechers != -1){
-
-												tt_extra = ": seeds=" + seeds +", leechers=" + leechers;
-											}
-										}
-									}catch( Throwable f ){
-									}
-								}
-
-								log.setToolTipText( MessageText.getString( "label.right.click.for.options" ) + tt_extra );
-
-
-								StyleRange derp;
-
-								if ( sr instanceof MyStyleRange ){
-
-									derp = new MyStyleRange((MyStyleRange)sr );
-								}else{
-
-									derp = new StyleRange( sr );
-								}
-
-								derp.start = sr.start;
-								derp.length = sr.length;
-
-								derp.borderStyle = SWT.BORDER_DASH;
-
-								old_range	= sr;
-								temp_range	= derp;
-								temp_index	= i;
-
-								log_styles[i] = derp;
-
-								log.setStyleRanges( log_styles );
-
-								active = true;
-
-								break;
-							}
-						}
-					}catch( Throwable f ){
-
-					}
-
-					if ( !active ){
-
-						log.setToolTipText( "" );
-
-						if ( old_range != null ){
-
-							if ( 	temp_index < log_styles.length &&
-									log_styles[temp_index] == temp_range ){
-
-								log_styles[ temp_index ] = old_range;
-
-								old_range	= null;
-
-								log.setStyleRanges( log_styles );
-							}
-						}
-					}
-				}
-
-				@Override
-				public void mouseExit(MouseEvent e) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void mouseEnter(MouseEvent e) {
-					// TODO Auto-generated method stub
-
-				}
-			});
-
-
-		log.addKeyListener(
-			new KeyAdapter()
-			{
-				@Override
-				public void
-				keyPressed(
-					KeyEvent event )
-				{
-					int key = event.character;
-
-					if ( key <= 26 && key > 0 ){
-
-						key += 'a' - 1;
-					}
-
-					if ( key == 'a' && event.stateMask == SWT.MOD1 ){
-
-						event.doit = false;
-
-						log.selectAll();
-					}
-				}
-			});
-
-		Composite rhs = new Composite(sash, SWT.NONE);
-		layout = new GridLayout();
-		layout.numColumns = 1;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.marginTop = 4;
-		layout.marginRight = 4;
-		rhs.setLayout(layout);
-		grid_data = new GridData(GridData.FILL_VERTICAL );
-		int rhs_width=Constants.isWindows?150:160;
-		grid_data.widthHint = rhs_width;
-		Utils.setLayoutData(rhs, grid_data);
-
-			// options
-
-		Composite top_right = new Composite(rhs, SWT.NONE);
-		layout = new GridLayout();
-		layout.numColumns = 3;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-
-		top_right.setLayout(layout);
-		grid_data = new GridData( GridData.FILL_HORIZONTAL );
-		//grid_data.heightHint = 50;
-		Utils.setLayoutData(top_right, grid_data);
-
-		boolean	can_popout = shell == null && public_chat;
-
-		Label label = new Label( top_right, SWT.NULL );
-		grid_data = new GridData( GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan=can_popout?1:2;
-		Utils.setLayoutData(label, grid_data);
-
-		LinkLabel link = new LinkLabel( top_right, "label.help", lu.getLocalisedMessageText( "azbuddy.dchat.link.url" ));
-		//grid_data.horizontalAlignment = SWT.END;
-		//link.getlabel().setLayoutData( grid_data );
-
-		if ( can_popout ){
-
-			Label pop_out = new Label( top_right, SWT.NULL );
-			image = ImageLoader.getInstance().getImage( "popout_window" );
-			pop_out.setImage( image );
-			grid_data = new GridData();
-			grid_data.widthHint=image.getBounds().width;
-			grid_data.heightHint=image.getBounds().height;
-			Utils.setLayoutData(pop_out, grid_data);
-
-			pop_out.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-
-			pop_out.setToolTipText( MessageText.getString( "label.pop.out" ));
-
-			pop_out.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseUp(MouseEvent arg0) {
-					try{
-						createChatWindow( view, plugin, chat.getClone(), true );
-
-					}catch( Throwable e ){
-
-						Debug.out( e);
-					}
-				}
-			});
-
-		}
-
-			// nick name
-
-		Composite nick_area = new Composite(top_right, SWT.NONE);
-		layout = new GridLayout();
-		layout.numColumns = 4;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		if ( !Constants.isWindows ){
-			layout.horizontalSpacing = 2;
-			layout.verticalSpacing = 2;
-		}
-		nick_area.setLayout(layout);
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan=3;
-		Utils.setLayoutData(nick_area, grid_data);
-
-		label = new Label( nick_area, SWT.NULL );
-		label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.nick" ));
-		grid_data = new GridData();
-		//grid_data.horizontalIndent=4;
-		Utils.setLayoutData(label, grid_data);
-
-		nickname = new Text( nick_area, SWT.BORDER );
-		grid_data = new GridData( GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan=1;
-		Utils.setLayoutData(nickname,  grid_data );
-
-		nickname.setText( chat.getNickname( false ));
-		nickname.setMessage( chat.getDefaultNickname());
-
-		label = new Label( nick_area, SWT.NULL );
-		label.setText( lu.getLocalisedMessageText( "label.shared" ));
-		label.setToolTipText( lu.getLocalisedMessageText( "azbuddy.dchat.shared.tooltip" ));
-
-		shared_nick_button = new Button( nick_area, SWT.CHECK );
-
-		shared_nick_button.setSelection( chat.isSharedNickname());
-
-		shared_nick_button.addSelectionListener(
-			new SelectionAdapter()
-			{
-				@Override
-				public void widgetSelected(SelectionEvent arg0) {
-
-					boolean shared = shared_nick_button.getSelection();
-
-					chat.setSharedNickname( shared );
-				}
-			});
-
-		nickname.addListener(SWT.FocusOut, new Listener() {
-	        @Override
-	        public void handleEvent(Event event) {
-	        	String nick = nickname.getText().trim();
-
-	        	if ( chat.isSharedNickname()){
-
-	        		if ( chat.getNetwork() == AENetworkClassifier.AT_PUBLIC ){
-
-	        			beta.setSharedPublicNickname( nick );
-
-	        		}else{
-
-	        			beta.setSharedAnonNickname( nick );
-	        		}
-	        	}else{
-
-	        		chat.setInstanceNickname( nick );
-	        	}
-	        }
-	    });
-
-
-		table_header = new BufferedLabel( top_right, SWT.DOUBLE_BUFFERED );
-		grid_data = new GridData( GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan=3;
-		if ( !Constants.isWindows ){
-			grid_data.horizontalIndent = 2;
-		}
-		Utils.setLayoutData(table_header,  grid_data );
-		table_header.setText(MessageText.getString( "PeersView.state.pending" ));
-
-			// table
-
-		buddy_table = new Table(rhs, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.VIRTUAL);
-
-		String[] headers = {
-				"azbuddy.ui.table.name" };
-
-		int[] sizes = { rhs_width-10 };
-
-		int[] aligns = { SWT.LEFT };
-
-		for (int i = 0; i < headers.length; i++){
-
-			TableColumn tc = new TableColumn(buddy_table, aligns[i]);
-
-			tc.setWidth(Utils.adjustPXForDPI(sizes[i]));
-
-			Messages.setLanguageText(tc, headers[i]);
-		}
-
-	    buddy_table.setHeaderVisible(true);
-
-	    grid_data = new GridData(GridData.FILL_BOTH);
-	    // grid_data.heightHint = buddy_table.getHeaderHeight() * 3;
-		Utils.setLayoutData(buddy_table, grid_data);
-
-
-		buddy_table.addListener(
-			SWT.SetData,
-			new Listener()
-			{
-				@Override
-				public void
-				handleEvent(
-					Event event)
-				{
-					TableItem item = (TableItem)event.item;
-
-					setItemData( item );
-				}
-			});
-
-		final Menu menu = new Menu(buddy_table);
-
-		buddy_table.setMenu( menu );
-
-		menu.addMenuListener(
-			new MenuListener()
-			{
-				@Override
-				public void
-				menuShown(
-					MenuEvent e )
-				{
-					MenuItem[] items = menu.getItems();
-
-					for (int i = 0; i < items.length; i++){
-
-						items[i].dispose();
-					}
-
-					final TableItem[] selection = buddy_table.getSelection();
-
-					List<ChatParticipant>	participants = new ArrayList<>( selection.length );
-
-					for (int i=0;i<selection.length;i++){
-
-						TableItem item = selection[i];
-
-						ChatParticipant	participant = (ChatParticipant)item.getData();
-
-						if ( participant == null ){
-
-								// item data won't be set yet for items that haven't been
-								// visible...
-
-							participant = setItemData( item );
-						}
-
-						if ( participant != null ){
-
-							participants.add( participant );
-						}
-					}
-
-					buildParticipantMenu( menu, participants );
-				}
-
-				@Override
-				public void menuHidden(MenuEvent e) {
-				}
-			});
-
-		buddy_table.addKeyListener(
-				new KeyAdapter()
-				{
-					@Override
-					public void
-					keyPressed(
-						KeyEvent event )
-					{
-						int key = event.character;
-
-						if ( key <= 26 && key > 0 ){
-
-							key += 'a' - 1;
-						}
-
-						if ( key == 'a' && event.stateMask == SWT.MOD1 ){
-
-							event.doit = false;
-
-							buddy_table.selectAll();
-						}
-					}
-				});
-
-
-		buddy_table.addMouseListener(
-			new MouseAdapter()
-			{
-				@Override
-				public void
-				mouseDoubleClick(
-					MouseEvent e )
-				{
-					TableItem[] selection = buddy_table.getSelection();
-
-					if ( selection.length != 1 ){
-
-						return;
-					}
-
-					TableItem item = selection[0];
-
-					ChatParticipant	participant = (ChatParticipant)item.getData();
-
-					String name = participant.getName( true );
-
-					String existing = input_area.getText();
-
-					if ( existing.length() > 0 && !existing.endsWith( " " )){
-
-						name = " " + name;
-					}
-
-					input_area.append( name );
-
-				}
-			});
-
-	    Utils.maintainSashPanelWidth( sash, rhs, new int[]{ 700, 300 }, "azbuddy.dchat.ui.sash.pos" );
-
-	    /*
-	    Listener sash_listener=
-	    	new Listener()
-	    	{
-	    		private int	lhs_weight;
-	    		private int	lhs_width;
-
-		    	public void
-				handleEvent(
-					Event ev )
-				{
-		    		if ( ev.widget == lhs ){
-
-		    			int[] weights = sash.getWeights();
-
-
-		    			if ( lhs_weight != weights[0] ){
-
-		    					// sash has moved
-
-		    				lhs_weight = weights[0];
-
-		    					// keep track of the width
-
-		    				lhs_width = lhs.getBounds().width;
-		    			}
-		    		}else{
-
-		    				// resize
-
-		    			if ( lhs_width > 0 ){
-
-				            int width = sash.getClientArea().width;
-
-				            double ratio = (double)lhs_width/width;
-
-				            lhs_weight = (int)(ratio*1000 );
-
-				            sash.setWeights( new int[]{ lhs_weight, 1000 - lhs_weight });
-		    			}
-		    		}
-			    }
-		    };
-
-	    lhs.addListener(SWT.Resize, sash_listener );
-	    sash.addListener(SWT.Resize, sash_listener );
-	    */
-
-	    	// bottom area
-
-	    Composite bottom_area = new Composite( parent, SWT.NULL );
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		bottom_area.setLayout(layout);
-
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan = 2;
-		bottom_area.setLayoutData( grid_data );
-
-			// Text
-
-
-		input_area = new Text( bottom_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan = 1;
-		grid_data.heightHint = 30;
-		grid_data.horizontalIndent = 4;
-		Utils.setLayoutData(input_area, grid_data);
-
-		input_area.setTextLimit( MAX_MSG_LENGTH );
-
-		input_area.addKeyListener(
-			new KeyListener()
-			{
-				private LinkedList<String>	history 	= new LinkedList<>();
-				private int					history_pos	= -1;
-
-				private String				buffered_message = "";
-
-				@Override
-				public void
-				keyPressed(
-					KeyEvent e)
-				{
-					if ( e.keyCode == SWT.CR ){
-
-						e.doit = false;
-
-						String message = input_area.getText().trim();
-
-						if ( message.length() > 0 ){
-
-							sendMessage(  message );
-
-							history.addFirst( message );
-
-							if ( history.size() > 32 ){
-
-								history.removeLast();
-							}
-
-							history_pos = -1;
-
-							buffered_message = "";
-
-							input_area.setText( "" );
-						}
-					}else if ( e.keyCode == SWT.ARROW_UP ){
-
-						history_pos++;
-
-						if ( history_pos < history.size()){
-
-							if ( history_pos == 0 ){
-
-								buffered_message = input_area.getText().trim();
-							}
-
-							String msg = history.get( history_pos );
-
-							input_area.setText( msg );
-
-							input_area.setSelection( msg.length());
-
-						}else{
-
-							history_pos = history.size() - 1;
-						}
-
-						e.doit = false;
-
-					}else if ( e.keyCode == SWT.ARROW_DOWN ){
-
-						history_pos--;
-
-						if ( history_pos >= 0 ){
-
-							String msg = history.get( history_pos );
-
-							input_area.setText( msg );
-
-							input_area.setSelection( msg.length());
-
-						}else{
-
-							if ( history_pos == -1 ){
-
-								input_area.setText( buffered_message );
-
-								if ( buffered_message.length() > 0 ){
-
-									input_area.setSelection( buffered_message.length());
-
-									buffered_message = "";
-								}
-							}else{
-
-								history_pos = -1;
-							}
-						}
-
-						e.doit = false;
-
-					}else{
-
-						if ( e.stateMask == SWT.MOD1 ){
-
-							int key = e.character;
-
-							if ( key <= 26 && key > 0 ){
-
-								key += 'a'-1;
-							}
-
-							if ( key == 'a' ){
-
-								input_area.selectAll();
-							}
-						}
-					}
-				}
-
-				@Override
-				public void
-				keyReleased(
-					KeyEvent e )
-				{
-				}
-			});
-
-		Composite button_area = new Composite( bottom_area, SWT.NULL );
-
-		layout = new GridLayout();
-		layout.numColumns = 1;
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.marginRight = 4;
-		button_area.setLayout(layout);
-
-		Button rss_button = new Button(button_area, SWT.PUSH);
-		Image rss_image = ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
-		rss_button.setImage(rss_image);
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.widthHint = rss_image.getBounds().width;
-		grid_data.heightHint = rss_image.getBounds().height;
-		rss_button.setLayoutData(grid_data);
-		//rss_button.setEnabled(false);
-
-		rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
-
-		rss_button.addSelectionListener(
-			new SelectionAdapter(){
-
-				@Override
-				public void
-				widgetSelected(
-					SelectionEvent ev )
-				{
-					try{
-						String url = "azplug:?id=azbuddy&arg=" + UrlUtils.encode( chat.getURL() + "&format=rss");
-
-						SubscriptionManager sm = PluginInitializer.getDefaultInterface().getUtilities().getSubscriptionManager();
-
-						Map<String,Object>	options = new HashMap<>();
-
-						if ( chat.isAnonymous()){
-
-							options.put( SubscriptionManager.SO_ANONYMOUS, true );
-						}
-
-						options.put( SubscriptionManager.SO_NAME, chat.getName());
-
-						sm.requestSubscription( new URL( url ), options );
-
-					}catch( Throwable e ){
-
-						Debug.out( e );
-					}
-				}
-
-			});
-
-		ftux_ok = beta.getFTUXAccepted();
-
-		if ( chat.isReadOnly()){
-
-			input_area.setText( MessageText.getString( "azbuddy.dchat.ro" ));
-
-			input_area.setEnabled( false );
-
-		}else if ( !ftux_ok ){
-
-			input_area.setEnabled( false );
-
-		}else{
-
-			input_area.setFocus();
-		}
-
-		final boolean[] ftux_init_done = { false };
-
-		beta.addFTUXStateChangeListener(
-			new FTUXStateChangeListener()
-			{
-				@Override
-				public void
-				stateChanged(
-					final boolean		_ftux_ok )
-				{
-					if ( ftux_stack.isDisposed()){
-
-						beta.removeFTUXStateChangeListener( this );
-
-					}else{
-
-						Utils.execSWTThread(
-							new Runnable()
-							{
-
-								@Override
-								public void
-								run()
-								{
-									ftux_ok = _ftux_ok;
-
-									stack_layout.topControl = ftux_ok?log_holder:ftux_holder;
-
-									if ( ftux_init_done[0]){
-
-										ftux_stack.layout( true, true );
-									}
-
-									if ( !chat.isReadOnly()){
-
-										input_area.setEnabled( ftux_ok );
-									}
-
-									table_resort_required = true;
-
-									updateTable( false );
-								}
-							});
-					}
-				}
-			});
-
-		if ( !chat.isReadOnly()){
-
-			drop_targets = new DropTarget[]{
-				new DropTarget(log, DND.DROP_COPY),
-				new DropTarget(input_area, DND.DROP_COPY)
-			};
-
-			for ( DropTarget drop_target: drop_targets ){
-
-				drop_target.setTransfer(new Transfer[] {
-					FixedURLTransfer.getInstance(),
-					FileTransfer.getInstance(),
-					TextTransfer.getInstance(),
-				});
-
-				drop_target.addDropListener(new DropTargetAdapter() {
-					@Override
-					public void dropAccept(DropTargetEvent event) {
-						event.currentDataType = FixedURLTransfer.pickBestType(event.dataTypes,
-								event.currentDataType);
-					}
-
-					@Override
-					public void dragEnter(DropTargetEvent event) {
-					}
-
-					@Override
-					public void dragOperationChanged(DropTargetEvent event) {
-					}
-
-					@Override
-					public void dragOver(DropTargetEvent event) {
-
-						if ((event.operations & DND.DROP_LINK) > 0)
-							event.detail = DND.DROP_LINK;
-						else if ((event.operations & DND.DROP_COPY) > 0)
-							event.detail = DND.DROP_COPY;
-						else if ((event.operations & DND.DROP_DEFAULT) > 0)
-							event.detail = DND.DROP_COPY;
-
-
-						event.feedback = DND.FEEDBACK_SELECT | DND.FEEDBACK_SCROLL | DND.FEEDBACK_EXPAND;
-					}
-
-					@Override
-					public void dragLeave(DropTargetEvent event) {
-					}
-
-					@Override
-					public void drop(DropTargetEvent event) {
-						handleDrop( event.data );
-					}
-				});
-			}
-		}
-
-		ftux_init_done[0] = true;
-
-		Control[] focus_controls = { log, input_area, buddy_table, nickname, shared_nick_button };
-
-		Listener focus_listener = new Listener() {
-
-			@Override
-			public void handleEvent(Event event) {
-				activate();
-			}
-		};
-
-		for ( Control c: focus_controls ){
-
-			c.addListener( SWT.FocusIn, focus_listener );
-		}
-
-		BuddyPluginBeta.ChatParticipant[] existing_participants = chat.getParticipants();
-
-		synchronized( participants ){
-
-			participants.addAll( Arrays.asList( existing_participants ));
-		}
-
-		table_resort_required = true;
-
-		updateTable( false );
-
-		BuddyPluginBeta.ChatMessage[] history = chat.getHistory();
-
-		logChatMessages( history );
-
-		chat.addListener( this );
-
-		build_complete	= true;
-
-		if ( can_popout && !ftux_ok && !auto_ftux_popout_done ){
-
-			auto_ftux_popout_done = true;
-
-			try{
-				createChatWindow( view, plugin, chat.getClone(), true );
-
-			}catch( Throwable e ){
-
-			}
-		}
 	}
-
+	
 	private void
 	addFriendsMenu(
 		Menu		menu )
@@ -3236,6 +3604,11 @@ BuddyPluginViewBetaChat
 	private void
 	updateTableHeader()
 	{
+		if ( buddy_table == null ) {
+			
+			return;
+		}
+		
 		int	active 	= buddy_table.getItemCount();
 		int online	= chat.getEstimatedNodes();
 
@@ -3254,6 +3627,11 @@ BuddyPluginViewBetaChat
 	updateTable(
 		boolean	async )
 	{
+		if ( buddy_table == null ) {
+			
+			return;
+		}
+		
 		if ( async ){
 
 			if ( !buddy_table.isDisposed()){
@@ -3295,12 +3673,25 @@ BuddyPluginViewBetaChat
 	handleExternalDrop(
 		String	payload )
 	{
-		handleDrop( payload );
+		handleDrop( 
+			payload,
+			new DropAccepter(){
+					
+				@Override
+				public void accept(String link){
+					if ( input_area == null ) {
+						Debug.out( "TODO" );
+					}else {
+						input_area.setText( input_area.getText() + link );
+					}
+				}
+			});
 	}
 
 	private void
 	handleDrop(
-		Object	payload )
+		Object			payload,
+		DropAccepter	accepter )
 	{
 		if ( payload instanceof String[]){
 
@@ -3319,7 +3710,7 @@ BuddyPluginViewBetaChat
 
 					if ( f.exists()){
 
-						dropFile( f );
+						dropFile( f, accepter );
 
 						hits++;
 					}
@@ -3352,7 +3743,7 @@ BuddyPluginViewBetaChat
 
 							Download download = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getShortCuts().getDownload(hash);
 
-							dropDownload( download );
+							dropDownload( download, accepter );
 
 						}else{
 
@@ -3366,7 +3757,7 @@ BuddyPluginViewBetaChat
 
 								DiskManagerFileInfo dm_file = dm_files[Integer.parseInt(files[j].trim())];
 
-								dropDownloadFile( dm_file );
+								dropDownloadFile( dm_file, accepter );
 							}
 						}
 					}catch( Throwable e ){
@@ -3384,7 +3775,7 @@ BuddyPluginViewBetaChat
 
 					if ( f.isFile()){
 
-						dropFile( f );
+						dropFile( f, accepter );
 					}
 				}
 			}else{
@@ -3393,7 +3784,7 @@ BuddyPluginViewBetaChat
 
 				if ( f.exists()){
 
-					dropFile( f );
+					dropFile( f, accepter );
 
 				}else{
 					String lc_stuff = stuff.toLowerCase( Locale.US );
@@ -3402,7 +3793,7 @@ BuddyPluginViewBetaChat
 							lc_stuff.startsWith( "https:" ) ||
 							lc_stuff.startsWith( "magnet: ")){
 
-						dropURL( stuff );
+						dropURL( stuff, accepter );
 
 					}else{
 
@@ -3416,7 +3807,7 @@ BuddyPluginViewBetaChat
 
 			if ( url != null ){
 
-				dropURL( url );
+				dropURL( url, accepter );
 
 			}else{
 
@@ -3427,14 +3818,16 @@ BuddyPluginViewBetaChat
 
 	private void
 	dropURL(
-		String	str )
+		String			str,
+		DropAccepter	accepter )
 	{
-		input_area.setText( input_area.getText() + str );
+		accepter.accept( str );
 	}
 
 	private void
 	dropFile(
-		final File	file )
+		final File				file,
+		final DropAccepter		accepter )
 	{
 		try{
 			if ( file.exists() && file.canRead()){
@@ -3501,7 +3894,7 @@ BuddyPluginViewBetaChat
 									public void
 									run()
 									{
-										dropDownload( download );
+										dropDownload( download, accepter );
 
 									}
 								});
@@ -3526,7 +3919,8 @@ BuddyPluginViewBetaChat
 
 	private void
 	dropDownload(
-		Download		download )
+		Download		download,
+		DropAccepter	accepter )
 	{
 		String magnet = UrlUtils.getMagnetURI( download, 80 );
 
@@ -3553,19 +3947,20 @@ BuddyPluginViewBetaChat
 
 		download.setForceStart( true );
 
-		input_area.setText( input_area.getText() + magnet );
+		accepter.accept( magnet );
 	}
 
 	private void
 	dropDownloadFile(
-		DiskManagerFileInfo		file )
+		DiskManagerFileInfo		file,
+		DropAccepter			accepter )
 	{
 		try{
 			Download download = file.getDownload();
 
 			if ( download.getTorrent().isSimpleTorrent()){
 
-				dropDownload( download );
+				dropDownload( download, accepter );
 
 				return;
 			}
@@ -3576,7 +3971,7 @@ BuddyPluginViewBetaChat
 					( file.getDownloaded() == file.getLength() ||
 					( download.isComplete() && !file.isSkipped()))){	// just in case cached file completion is borked
 
-				dropFile( target );
+				dropFile( target, accepter );
 
 			}else{
 
@@ -3618,11 +4013,14 @@ BuddyPluginViewBetaChat
 	protected void
 	closed()
 	{
-		chat.removeListener( this );
-
-		chat.destroy();
-
-		view.unregisterUI( chat );
+		if ( build_complete ){
+			
+			chat.removeListener( this );
+	
+			chat.destroy();
+	
+			view.unregisterUI( chat );
+		}
 	}
 
 	@Override
@@ -3630,7 +4028,9 @@ BuddyPluginViewBetaChat
 	stateChanged(
 		final boolean avail )
 	{
-		if ( buddy_table.isDisposed()){
+		input_available = avail;
+
+		if ( buddy_table == null || buddy_table.isDisposed()){
 
 			return;
 		}
@@ -3641,7 +4041,7 @@ BuddyPluginViewBetaChat
 				@Override
 				public void
 				run()
-				{
+				{					
 					if ( buddy_table.isDisposed()){
 
 						return;
@@ -3679,31 +4079,39 @@ BuddyPluginViewBetaChat
 
 					status.setText( chat.getStatus());
 
-					boolean	is_shared = chat.isSharedNickname();
-
-					if ( is_shared != shared_nick_button.getSelection()){
-
-						shared_nick_button.setSelection( is_shared );
-					}
-
-					if ( !nickname.isFocusControl()){
-
-						String old_nick = nickname.getText().trim();
-
-						String new_nick = chat.getNickname( false );
-
-						if ( !new_nick.equals( old_nick )){
-
-							nickname.setText( new_nick );
+					if ( shared_nick_button != null ) {
+						
+						boolean	is_shared = chat.isSharedNickname();
+	
+						if ( is_shared != shared_nick_button.getSelection()){
+	
+							shared_nick_button.setSelection( is_shared );
 						}
 					}
-
-					if ( table_resort_required ){
-
-						updateTable( false );
+					
+					if ( nickname != null ) {
+						if ( !nickname.isFocusControl()){
+	
+							String old_nick = nickname.getText().trim();
+	
+							String new_nick = chat.getNickname( false );
+	
+							if ( !new_nick.equals( old_nick )){
+	
+								nickname.setText( new_nick );
+							}
+						}
 					}
-
-					updateTableHeader();
+					
+					if ( buddy_table != null ){
+						
+						if ( table_resort_required ){
+	
+							updateTable( false );
+						}
+	
+						updateTableHeader();
+					}
 				}
 			});
 	}
@@ -3936,7 +4344,7 @@ BuddyPluginViewBetaChat
 			return;
 		}
 
-		if ( !log.isDisposed()){
+		if ( log != null && !log.isDisposed()){
 
 			Utils.execSWTThread(
 				new Runnable()
@@ -3960,7 +4368,7 @@ BuddyPluginViewBetaChat
 	public void
 	messagesChanged()
 	{
-		if ( !log.isDisposed()){
+		if ( log != null && !log.isDisposed()){
 
 			Utils.execSWTThread(
 				new Runnable()
@@ -4440,6 +4848,17 @@ BuddyPluginViewBetaChat
 		}
 	}
 
+	private String
+	renderMessage(
+		String		str )
+	{
+		List<StyleRange>	ranges = new ArrayList<>();
+
+		String msg = renderMessage(null, chat, null,str,  ChatMessage.MT_NORMAL, 0, ranges, null, null, null);
+		
+		return( msg );
+
+	}
 	protected static String
 	renderMessage(
 		BuddyPluginBeta		beta,
@@ -5039,5 +5458,13 @@ BuddyPluginViewBetaChat
 
 			message = other.message;
 		}
+	}
+	
+	private interface
+	DropAccepter
+	{
+		public void
+		accept(
+			String		link );
 	}
 }

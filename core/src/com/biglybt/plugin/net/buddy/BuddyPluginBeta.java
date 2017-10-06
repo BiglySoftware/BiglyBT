@@ -54,7 +54,6 @@ import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.I2PHelpers;
 
-import javafx.scene.chart.Chart;
 
 public class
 BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
@@ -91,6 +90,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final String 	FLAGS_MSG_TYPE_KEY			= "t";
 	public static final int 	FLAGS_MSG_TYPE_NORMAL		= 0;		// def
 	public static final int 	FLAGS_MSG_TYPE_ME			= 1;
+
+	public static final int VIEW_TYPE_DEFAULT			= 1;
+	public static final int VIEW_TYPE_SHARING			= 2;
 
 
 	private BuddyPlugin			plugin;
@@ -680,6 +682,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		setStringOption( net, key, "dn", str );
 	}
 
+	private int
+	getViewType(
+		String		net,
+		String		key )
+	{
+		return( getIntOption( net, key, "vt", BuddyPluginBeta.VIEW_TYPE_DEFAULT ));
+	}
+
+	private void
+	setViewType(
+		String		net,
+		String		key,
+		int			vt )
+	{
+		setIntOption( net, key, "vt", vt );
+	}
+	
 		// migration
 
 	private void
@@ -750,6 +769,33 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		return( def );
 	}
 
+	private void
+	setIntOption(
+		String		net,
+		String		key,
+		String		name,
+		int			value )
+	{
+		setGenericOption(net, key, name, value );
+	}
+
+	private int
+	getIntOption(
+		String		net,
+		String		key,
+		String		name,
+		int		def )
+	{
+		Object	obj = getGenericOption(net, key, name);
+
+		if ( obj instanceof Number ){
+
+			return(((Number)obj).intValue());
+		}
+
+		return( def );
+	}
+	
 	private void
 	setStringOption(
 		String		net,
@@ -1493,148 +1539,167 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			pw.println( "<title>" + escape( chat.getName()) + "</title>" );
 
-			long	last_modified;
-
-			if ( messages.size() == 0 ){
-
-				last_modified = SystemTime.getCurrentTime();
-
-			}else{
-
-				last_modified = messages.get( messages.size()-1).getTimeStamp();
-			}
-
-			pw.println(	"<pubDate>" + TimeFormatter.getHTTPDate( last_modified ) + "</pubDate>" );
-
-			for ( ChatMessage message: messages ){
-
-				List<Map<String,Object>>	message_links = extractLinks( message.getMessage());
-
-				if ( message_links.size() == 0 ){
-
-					continue;
+			if ( ftux_accepted ) {
+				long	last_modified;
+	
+				if ( messages.size() == 0 ){
+	
+					last_modified = SystemTime.getCurrentTime();
+	
+				}else{
+	
+					last_modified = messages.get( messages.size()-1).getTimeStamp();
 				}
-
-				String item_date = TimeFormatter.getHTTPDate( message.getTimeStamp());
-
-				for ( Map<String,Object> message_link: message_links ){
-
-					if ( message_link.containsKey( "magnet" )){
-
-						Map<String,Object> magnet = message_link;
-
-						String	hash 	= (String)magnet.get( "hash" );
-
-						if ( hash == null ){
-
-							continue;
+	
+				pw.println(	"<pubDate>" + TimeFormatter.getHTTPDate( last_modified ) + "</pubDate>" );
+	
+				for ( ChatMessage message: messages ){
+	
+					List<Map<String,Object>>	message_links = extractLinks( message.getMessage());
+	
+					if ( message_links.size() == 0 ){
+	
+						continue;
+					}
+	
+					String item_date = TimeFormatter.getHTTPDate( message.getTimeStamp());
+	
+					for ( Map<String,Object> message_link: message_links ){
+	
+						if ( message_link.containsKey( "magnet" )){
+	
+							Map<String,Object> magnet = message_link;
+	
+							String	hash 	= (String)magnet.get( "hash" );
+	
+							if ( hash == null ){
+	
+								continue;
+							}
+	
+							String	title 	= (String)magnet.get( "title" );
+	
+							if ( title == null ){
+	
+								title = hash;
+							}
+	
+							String	link	= (String)magnet.get( "link" );
+	
+							if ( link == null ){
+	
+								link = (String)magnet.get( "magnet" );
+							}
+	
+							pw.println( "<item>" );
+	
+							pw.println( "<title>" + escape( title ) + "</title>" );
+	
+							pw.println( "<guid>" + hash + "</guid>" );
+	
+							String	cdp	= (String)magnet.get( "cdp" );
+	
+							if ( cdp != null ){
+	
+								pw.println( "<link>" + escape( cdp ) + "</link>" );
+							}
+	
+							Long	size 		= (Long)magnet.get( "size" );
+							Long	seeds 		= (Long)magnet.get( "seeds" );
+							Long	leechers 	= (Long)magnet.get( "leechers" );
+							Long	date	 	= (Long)magnet.get( "date" );
+	
+							String enclosure =
+									"<enclosure " +
+										"type=\"application/x-bittorrent\" " +
+										"url=\"" + escape( link ) + "\"";
+	
+							if ( size != null ){
+	
+								enclosure += " length=\"" + size + "\"";
+							}
+	
+							enclosure += " />";
+	
+							pw.println( enclosure );
+	
+							String date_str = (date==null||date<=0)?item_date:TimeFormatter.getHTTPDate( date );
+	
+							pw.println(	"<pubDate>" + date_str + "</pubDate>" );
+	
+	
+							if ( size != null ){
+	
+								pw.println(	"<vuze:size>" + size + "</vuze:size>" );
+							}
+	
+							if ( seeds != null ){
+	
+								pw.println(	"<vuze:seeds>" + seeds + "</vuze:seeds>" );
+							}
+	
+							if ( leechers != null ){
+	
+								pw.println(	"<vuze:peers>" + leechers + "</vuze:peers>" );
+							}
+	
+							pw.println(	"<vuze:assethash>" + hash + "</vuze:assethash>" );
+	
+							pw.println( "<vuze:downloadurl>" + escape( link ) + "</vuze:downloadurl>" );
+	
+							pw.println( "</item>" );
+	
+						}else{
+	
+							String	title 	= (String)message_link.get( "title" );
+							String 	link	= (String)message_link.get( "link" );
+	
+							pw.println( "<item>" );
+	
+							pw.println( "<title>" + escape( title ) + "</title>" );
+	
+							pw.println( "<guid>" + escape( link ) + "</guid>" );
+	
+							pw.println( "<link>" + escape( link ) + "</link>" );
+	
+							pw.println(	"<pubDate>" + item_date + "</pubDate>" );
+	
+							pw.println(	"<vuze:rank></vuze:rank>" );
+	
+							String enclosure =
+									"<enclosure " +
+										"type=\"application/x-bittorrent\" " +
+										"url=\"" + escape( link ) + "\"";
+	
+	
+							enclosure += " />";
+	
+							pw.println( enclosure );
+	
+							pw.println( "</item>" );
+	
 						}
-
-						String	title 	= (String)magnet.get( "title" );
-
-						if ( title == null ){
-
-							title = hash;
-						}
-
-						String	link	= (String)magnet.get( "link" );
-
-						if ( link == null ){
-
-							link = (String)magnet.get( "magnet" );
-						}
-
-						pw.println( "<item>" );
-
-						pw.println( "<title>" + escape( title ) + "</title>" );
-
-						pw.println( "<guid>" + hash + "</guid>" );
-
-						String	cdp	= (String)magnet.get( "cdp" );
-
-						if ( cdp != null ){
-
-							pw.println( "<link>" + escape( cdp ) + "</link>" );
-						}
-
-						Long	size 		= (Long)magnet.get( "size" );
-						Long	seeds 		= (Long)magnet.get( "seeds" );
-						Long	leechers 	= (Long)magnet.get( "leechers" );
-						Long	date	 	= (Long)magnet.get( "date" );
-
-						String enclosure =
-								"<enclosure " +
-									"type=\"application/x-bittorrent\" " +
-									"url=\"" + escape( link ) + "\"";
-
-						if ( size != null ){
-
-							enclosure += " length=\"" + size + "\"";
-						}
-
-						enclosure += " />";
-
-						pw.println( enclosure );
-
-						String date_str = (date==null||date<=0)?item_date:TimeFormatter.getHTTPDate( date );
-
-						pw.println(	"<pubDate>" + date_str + "</pubDate>" );
-
-
-						if ( size != null ){
-
-							pw.println(	"<vuze:size>" + size + "</vuze:size>" );
-						}
-
-						if ( seeds != null ){
-
-							pw.println(	"<vuze:seeds>" + seeds + "</vuze:seeds>" );
-						}
-
-						if ( leechers != null ){
-
-							pw.println(	"<vuze:peers>" + leechers + "</vuze:peers>" );
-						}
-
-						pw.println(	"<vuze:assethash>" + hash + "</vuze:assethash>" );
-
-						pw.println( "<vuze:downloadurl>" + escape( link ) + "</vuze:downloadurl>" );
-
-						pw.println( "</item>" );
-
-					}else{
-
-						String	title 	= (String)message_link.get( "title" );
-						String 	link	= (String)message_link.get( "link" );
-
-						pw.println( "<item>" );
-
-						pw.println( "<title>" + escape( title ) + "</title>" );
-
-						pw.println( "<guid>" + escape( link ) + "</guid>" );
-
-						pw.println( "<link>" + escape( link ) + "</link>" );
-
-						pw.println(	"<pubDate>" + item_date + "</pubDate>" );
-
-						pw.println(	"<vuze:rank></vuze:rank>" );
-
-						String enclosure =
-								"<enclosure " +
-									"type=\"application/x-bittorrent\" " +
-									"url=\"" + escape( link ) + "\"";
-
-
-						enclosure += " />";
-
-						pw.println( enclosure );
-
-						pw.println( "</item>" );
-
 					}
 				}
-			}
+			}else {
+				
+				String link = "chat:?BiglyBT%3A%20General%3A%20Help";
+				
+				pw.println( "<item>" );
+				
+				pw.println( "<title>" + escape( "RSS items unavailable until you accept Chat terms and conditions" ) + "</title>" );
 
+				pw.println( "<guid>23232329090909</guid>" );
+
+				pw.println( "<link>" + link + "</link>" );	
+				
+				pw.println( "<vuze:downloadurl>" +link + "</vuze:downloadurl>" );
+
+				pw.println(	"<pubDate>" + TimeFormatter.getHTTPDate( SystemTime.getCurrentTime()) + "</pubDate>" );
+
+				pw.println( "</item>" );
+			}
+			
 			pw.println( "</channel>" );
 
 			pw.println( "</rss>" );
@@ -3021,6 +3086,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				}
 			}
+		}
+		
+		public int
+		getViewType()
+		{
+			return( BuddyPluginBeta.this.getViewType( network, key ));
+		}
+
+		public void
+		setViewType(
+			int		t )
+		{
+			BuddyPluginBeta.this.setViewType( network, key, t );
 		}
 
 		public boolean
