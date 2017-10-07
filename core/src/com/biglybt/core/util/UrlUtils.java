@@ -285,11 +285,9 @@ public class UrlUtils
 			name = name.substring( 0, max_name_len-3) + "...";
 		}
 
-		String magnet_uri = getMagnetURI( name, PluginCoreUtils.wrap( to_torrent ));
-
 		String[]	networks = dm.getDownloadState().getNetworks();
 
-		magnet_uri += encodeNetworks( networks );
+		String magnet_uri = getMagnetURI( name, PluginCoreUtils.wrap( to_torrent ), networks );
 
 		return( magnet_uri );
 	}
@@ -299,10 +297,24 @@ public class UrlUtils
 		String		name,
 		Torrent		torrent )
 	{
+		return( getMagnetURI( name, torrent, null ));
+	}
+	
+	public static String
+	getMagnetURI(
+		String		name,
+		Torrent		torrent,
+		String[]	networks )
+	{
 		String	magnet_str = getMagnetURI( torrent.getHash());
 
 		magnet_str += encodeName( name);
 
+		if ( networks != null ) {
+		
+			magnet_str += encodeNetworks( networks );
+		}
+		
 		List<String>	tracker_urls = new ArrayList<>();
 
 		URL announce_url = torrent.getAnnounceURL();

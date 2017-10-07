@@ -4046,6 +4046,8 @@ BuddyPluginViewBetaChat
 	{
 		String magnet = UrlUtils.getMagnetURI( download, 80 );
 
+		magnet = trimMagnet( magnet, MAX_MSG_LENGTH );
+		
 		InetSocketAddress address = chat.getMyAddress();
 
 		if ( address != null ){
@@ -4070,6 +4072,33 @@ BuddyPluginViewBetaChat
 		download.setForceStart( true );
 
 		accepter.accept( magnet );
+	}
+	
+	private String
+	trimMagnet(
+		String	magnet,
+		int		max )
+	{
+		while( magnet.length() > MAX_MSG_LENGTH ){
+			
+			int pos = magnet.lastIndexOf( '&' );
+			
+			if ( pos > 0 ) {
+				
+				String x = magnet.substring( pos+1 );
+				
+				if ( x.startsWith( "ws=" ) || x.startsWith( "tr=" )){
+					
+					magnet = magnet.substring( 0,  pos );
+					
+				}else {
+					
+					break;
+				}
+			}
+		}
+		
+		return( magnet );
 	}
 
 	private void
