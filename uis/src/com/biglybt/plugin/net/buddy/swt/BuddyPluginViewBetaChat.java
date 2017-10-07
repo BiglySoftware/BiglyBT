@@ -89,6 +89,10 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.metasearch.Engine;
+import com.biglybt.core.metasearch.impl.web.WebEngine;
+import com.biglybt.core.subs.Subscription;
+import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
@@ -2290,6 +2294,8 @@ BuddyPluginViewBetaChat
 													});
 
 												mb.open( null );
+												
+												checkSubscriptions();
 											}
 										});
 								}
@@ -2383,7 +2389,7 @@ BuddyPluginViewBetaChat
 				run()
 				{
 					try{
-						String url = "azplug:?id=azbuddy&arg=" + UrlUtils.encode( chat.getURL() + "&format=rss");
+						String url = encodeRSSURL( chat );
 
 						SubscriptionManager sm = PluginInitializer.getDefaultInterface().getUtilities().getSubscriptionManager();
 
@@ -3651,6 +3657,55 @@ BuddyPluginViewBetaChat
 		}
 	}
 
+	private void
+	checkSubscriptions()
+	{
+		Subscription[] subs = SubscriptionManagerFactory.getSingleton().getSubscriptions();
+		
+		for ( Subscription sub: subs ) {
+			
+			try{
+				Engine e = sub.getEngine();
+				
+				if ( e instanceof WebEngine ) {
+				
+					String url = ((WebEngine)e).getSearchUrl();
+					
+					if ( isRSSURL( url, chat )) {
+							
+						sub.getManager().getScheduler().downloadAsync( sub, true );
+					}
+				}
+			}catch( Throwable e ) {
+			}
+		}
+	}
+	
+	private String
+	encodeRSSURL(
+		ChatInstance	inst )
+	{
+		return( "azplug:?id=azbuddy&arg=" + UrlUtils.encode( chat.getURL() + "&format=rss" ));
+	}
+	
+	private boolean
+	isRSSURL(
+		String			url,
+		ChatInstance	chat )
+	{
+		if ( url.startsWith( "azplug:?id=azbuddy" )){
+			
+			String chat_url = encodeRSSURL( chat );
+			
+			if ( url.contains( chat_url )){
+				
+				return( true );
+			}
+		}
+		
+		return( false );
+	}
+	
 	protected void
 	addDisposeListener(
 		final DisposeListener	listener )

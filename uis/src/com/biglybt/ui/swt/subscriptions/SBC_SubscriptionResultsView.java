@@ -721,15 +721,18 @@ SBC_SubscriptionResultsView
 	{
 		if ( reason == CR_RESULTS){
 
-			reconcileResults( subs );
+			if ( tv_subs_results != null ) {
 
-			tv_subs_results.runForAllRows(
-				new TableGroupRowRunner() {
-					@Override
-					public void run(TableRowCore row) {
-						row.invalidate( true );
-					}
-				});
+				reconcileResults( subs );
+
+				tv_subs_results.runForAllRows(
+					new TableGroupRowRunner() {
+						@Override
+						public void run(TableRowCore row) {
+							row.invalidate( true );
+						}
+					});
+			}
 		}
 	}
 

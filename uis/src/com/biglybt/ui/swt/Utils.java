@@ -3894,7 +3894,11 @@ public class Utils
 			if (newParent == null) {
 				break;
 			}
-			newParent.layout(new Control[] { c });
+			try {
+				newParent.layout(new Control[] { c });
+			}catch( SWTException e ) {
+				// ignore - we sometimes get widget-disposed errors from SashForms
+			}
 			c = newParent;
 		}
 	}

@@ -2899,6 +2899,26 @@ SubscriptionManagerImpl
 	importDataSource(
 		Map<String,Object>		map )
 	{
+		Subscription result = importSubscription( map );
+		
+		if ( result != null ){
+			
+			try {
+				result.getManager().getScheduler().downloadAsync( result, true );
+				
+			}catch( Throwable e ){
+				
+				Debug.out(e);
+			}
+		}
+		
+		return( result );
+	}
+	
+	private Subscription
+	importSubscription(
+		Map<String,Object>		map )
+	{
 		String	sid = (String)map.get( "id" );
 		
 		Subscription subs = getSubscriptionByID( sid );
