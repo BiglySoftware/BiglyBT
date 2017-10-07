@@ -628,6 +628,10 @@ SubscriptionImpl
 						map.put( "singleton", sd );
 					}
 					
+					int vo = getViewOptions();
+					
+					map.put( "vo", vo );
+					
 					SubscriptionHistory history = getHistory();
 					
 					map.put( "h_cm", history.getCheckFrequencyMins());

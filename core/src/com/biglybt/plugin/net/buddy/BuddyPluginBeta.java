@@ -1591,9 +1591,15 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								link = (String)magnet.get( "magnet" );
 							}
 	
+							List<String>	nets = (List<String>)magnet.get( "networks" );
+							
+							boolean public_magnet = nets.isEmpty() || nets.contains( AENetworkClassifier.AT_PUBLIC );
+							
+							String pub_str = MessageText.getString( public_magnet?"subs.prop.is_public":"label.anon" );
+							
 							pw.println( "<item>" );
 	
-							pw.println( "<title>" + escape( title ) + "</title>" );
+							pw.println( "<title>" + escape( pub_str + ": " + title ) + "</title>" );
 	
 							pw.println( "<guid>" + hash + "</guid>" );
 	
@@ -1801,6 +1807,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					map.put( "trackers", trackers );
 
+					List<String>	nets = new ArrayList<>();
+
+					map.put( "networks", nets );
+
 					String[] bits = magnet.substring( x+1 ).split( "&" );
 
 					for ( String bit: bits ){
@@ -1832,6 +1842,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								}else if ( lhs.equals( "tr" )){
 
 									trackers.add( rhs );
+									
+								}else if ( lhs.equals( "net" )){
+
+									nets.add( AENetworkClassifier.internalise( rhs ));
 
 								}else if ( lhs.equals( "fl" )){
 
@@ -2133,6 +2147,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			if ( dn != null ) {
 				
 				chat.setDisplayName( dn );
+			}
+			
+			Number vt = (Number)map.get( "vt" );
+			
+			if ( vt != null ) {
+				
+				chat.setViewType( vt.intValue());
 			}
 			
 				// starting default is un-shared
@@ -2833,6 +2854,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							map.put( "dn", dn );
 						}
 
+						map.put( "vt", getViewType());
+						
 						return( map );
 					}
 				});

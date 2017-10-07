@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.security.KeyPair;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -2893,156 +2894,192 @@ SubscriptionManagerImpl
 		return null;
 	}
 
-	private Set<String>	imported_sids = new HashSet<>();
+	private Map<String,AtomicInteger>	imported_sids = new HashMap<>();
 	
 	public Object
 	importDataSource(
-		Map<String,Object>		map )
-	{
-		Subscription result = importSubscription( map );
-		
-		if ( result != null ){
-			
-			try {
-				result.getManager().getScheduler().downloadAsync( result, true );
-				
-			}catch( Throwable e ){
-				
-				Debug.out(e);
-			}
-		}
-		
-		return( result );
-	}
-	
-	private Subscription
-	importSubscription(
 		Map<String,Object>		map )
 	{
 		String	sid = (String)map.get( "id" );
 		
 		Subscription subs = getSubscriptionByID( sid );
 		
-		if ( subs == null ) {
+		if ( subs != null ){
 			
-			Map sd = (Map)map.get( "singleton" );
-			
-			if ( sd != null ){
+			try {
+				subs.getManager().getScheduler().downloadAsync( subs, true );
 				
-				String key = (String)sd.get( "key" );
+			}catch( Throwable e ){
 				
-				sd.put( "key", Base32.decode( key));
-				
-				try{
-					subs = createSingletonSubscription( sd, SubscriptionImpl.ADD_TYPE_IMPORT, true );
-					
-				}catch( Throwable e ) {
-				}
+				Debug.out(e);
 			}
 			
-			Subscription[] result = new Subscription[]{ subs };
+			return( subs );
+		}
+		
+			
+		Map sd = (Map)map.get( "singleton" );
+		
+		if ( sd != null ){
+			
+			String key = (String)sd.get( "key" );
+			
+			sd.put( "key", Base32.decode( key));
+			
+			try{
+				subs = createSingletonSubscription( sd, SubscriptionImpl.ADD_TYPE_IMPORT, true );
+				
+			}catch( Throwable e ) {
+			}
+		}
+		
+		Subscription[] result = new Subscription[]{ subs };
 
-			final Runnable apply_props =
-				new Runnable()
+		final Runnable apply_props =
+			new Runnable()
+			{
+				public void
+				run()
 				{
-					public void
-					run()
-					{
-						Subscription subs = result[0];
+					Subscription subs;
+					
+					synchronized( result ) {
 						
-						if ( subs != null ) {
+						subs = result[0];
+					}
+					
+					if ( subs != null ) {
+						
+						Number check_mins = (Number)map.get( "h_cm" );
+						
+						SubscriptionHistory	history = subs.getHistory();
+						
+						if ( check_mins != null ){
 							
-							Number check_mins = (Number)map.get( "h_cm" );
+							history.setCheckFrequencyMins( check_mins.intValue());
+						}
+						
+						List<String>	list = (List<String>)map.get( "h_dln" );
+						
+						if ( list != null ) {
 							
-							SubscriptionHistory	history = subs.getHistory();
+							history.setDownloadNetworks( list.toArray( new String[0] ));
+						}
+						
+						Number vo = (Number)map.get( "vo" );
+						
+						if ( vo != null ){
 							
-							if ( check_mins != null ){
-								
-								history.setCheckFrequencyMins( check_mins.intValue());
-							}
+							subs.setViewOptions( vo.intValue());
+						}
+						
+						subs.setSubscribed( true );
+						
+						try{
+							subs.getManager().getScheduler().downloadAsync( subs, true );
 							
-							List<String>	list = (List<String>)map.get( "h_dln" );
+						}catch( Throwable e ){
 							
-							if ( list != null ) {
-								
-								history.setDownloadNetworks( list.toArray( new String[0] ));
-							}
+							Debug.out(e);
 						}
 					}
-				};
-				
-			if ( subs == null ){
+				}
+			};
 			
-				int	version = ((Number)map.get( "version" )).intValue();
-				
-				boolean anon = ((Number)map.get( "anon" )).intValue() != 0;
+		if ( subs == null ){
+		
+			int	version = ((Number)map.get( "version" )).intValue();
+			
+			boolean anon = ((Number)map.get( "anon" )).intValue() != 0;
+			
+			final AESemaphore sem = new AESemaphore( "" );
+
+			boolean[]	returned = { false };
+
+			new AEThread2( "async" )
+			{
+				public void
+				run()
+				{
+					try{
+						lookupSubscription( 
+							"Import of '" + sid + "'",
+							new byte[20],
+							Base32.decode( sid ),
+							version,
+							anon,
+							new subsLookupListener(){
 								
-				boolean[]	returned = { false };
-				
-				synchronized( result ) {
-					
-					lookupSubscription( 
-						"Import of '" + sid + "'",
-						new byte[20],
-						Base32.decode( sid ),
-						version,
-						anon,
-						new subsLookupListener(){
-							
-							@Override
-							public void found(byte[] hash, Subscription subscription){
-							}
-							
-							@Override
-							public void failed(byte[] hash, SubscriptionException error){
-							}
-							
-							@Override
-							public void complete(byte[] hash, Subscription[] subscriptions){
-								boolean enable_callback;
-								
-								synchronized( imported_sids ) {
-									
-									enable_callback = !imported_sids.contains( sid );
-									
-									imported_sids.add( sid );
+								@Override
+								public void found(byte[] hash, Subscription subscription){
 								}
 								
-								synchronized( result ) {
+								@Override
+								public void failed(byte[] hash, SubscriptionException error){
+								}
 								
-									if ( subscriptions.length > 0 ){
+								@Override
+								public void complete(byte[] hash, Subscription[] subscriptions){
+									boolean enable_callback;
+									
+									synchronized( imported_sids ) {
 										
-										result[0] = subscriptions[0];
+										AtomicInteger ai = imported_sids.get( sid );
 										
-										apply_props.run();
-										
-										if ( returned[0] && enable_callback ){
+										if ( ai == null ) {
 											
-											Runnable callback = (Runnable)map.get( "callback" );
+											ai = new AtomicInteger(0);
 											
-											if ( callback != null ) {
+											imported_sids.put( sid, ai );
+										}
+										
+										enable_callback = ai.incrementAndGet() < 16;	// protect against potential of rebuild loop
+									}
+									
+									synchronized( result ) {
+									
+										if ( subscriptions.length > 0 ){
+											
+											result[0] = subscriptions[0];
+											
+											apply_props.run();
+											
+											if ( returned[0] && enable_callback ){
 												
-												callback.run();
+												Runnable callback = (Runnable)map.get( "callback" );
+												
+												if ( callback != null ) {
+													
+													callback.run();
+												}
 											}
 										}
 									}
 								}
-							}
-							
-							@Override
-							public boolean isCancelled(){
-								return false;
-							}
-						});
-					
-					subs = result[0];
-					
-					returned[0] = true;
+								
+								@Override
+								public boolean isCancelled(){
+									return false;
+								}
+							});
+					}finally{
+						
+						sem.release();
+					}
 				}
-			}
+			}.start();
 			
-			apply_props.run();
+			sem.reserve( 2500 );
+			
+			synchronized( result ){
+			
+				returned[0] = true;
+				
+				subs = result[0];
+			}
 		}
+		
+		apply_props.run();
 		
 		return( subs );
 	}

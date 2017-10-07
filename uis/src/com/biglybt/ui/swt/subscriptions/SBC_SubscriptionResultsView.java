@@ -131,11 +131,11 @@ SBC_SubscriptionResultsView
 				}
 			});
 
-		String mdi_key = "Subscription_" + ByteFormatter.encodeString(ds.getPublicKey());
-
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 
 		if ( mdi != null && ds != null ){
+
+			String mdi_key = "Subscription_" + ByteFormatter.encodeString(ds.getPublicKey());
 
 			mdi_entry = mdi.getEntry( mdi_key );
 
@@ -243,7 +243,7 @@ SBC_SubscriptionResultsView
 
 			Runnable pFilterUpdater = null;
 
-			if ( ds.isUpdateable()){
+			if ( ds != null && ds.isUpdateable()){
 
 				try{
 					filters = ds.getFilters();
