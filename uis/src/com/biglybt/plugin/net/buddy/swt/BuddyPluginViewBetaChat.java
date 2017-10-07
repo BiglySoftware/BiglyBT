@@ -57,6 +57,7 @@ import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseTrackAdapter;
 import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
@@ -499,6 +500,8 @@ BuddyPluginViewBetaChat
 		shared_nick_button	= null;
 		nickname			= null;
 		input_area			= null;
+		
+		input_available		= chat.isAvailable();
 		
 		messages.clear();
 		participants.clear();
@@ -1477,7 +1480,7 @@ BuddyPluginViewBetaChat
 	
 				// options
 	
-			Composite top_right = buildHelp( rhs, 3 );
+			Composite top_right = buildHelp( rhs );
 	
 				// nick name
 	
@@ -1915,48 +1918,7 @@ BuddyPluginViewBetaChat
 			layout.marginRight = 4;
 			button_area.setLayout(layout);
 	
-			Button rss_button = new Button(button_area, SWT.PUSH);
-			Image rss_image = ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
-			rss_button.setImage(rss_image);
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			grid_data.widthHint = rss_image.getBounds().width;
-			grid_data.heightHint = rss_image.getBounds().height;
-			rss_button.setLayoutData(grid_data);
-			//rss_button.setEnabled(false);
-	
-			rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
-	
-			rss_button.addSelectionListener(
-				new SelectionAdapter(){
-	
-					@Override
-					public void
-					widgetSelected(
-						SelectionEvent ev )
-					{
-						try{
-							String url = "azplug:?id=azbuddy&arg=" + UrlUtils.encode( chat.getURL() + "&format=rss");
-	
-							SubscriptionManager sm = PluginInitializer.getDefaultInterface().getUtilities().getSubscriptionManager();
-	
-							Map<String,Object>	options = new HashMap<>();
-	
-							if ( chat.isAnonymous()){
-	
-								options.put( SubscriptionManager.SO_ANONYMOUS, true );
-							}
-	
-							options.put( SubscriptionManager.SO_NAME, chat.getName());
-	
-							sm.requestSubscription( new URL( url ), options );
-	
-						}catch( Throwable e ){
-	
-							Debug.out( e );
-						}
-					}
-	
-				});
+			buildRSSButton( button_area );
 	
 			ftux_ok = beta.getFTUXAccepted();
 	
@@ -2157,7 +2119,7 @@ BuddyPluginViewBetaChat
 			
 			buildStatus( parent, status_area );
 			
-			buildHelp( status_area, 2 );
+			buildHelp( status_area );
 			
 			Canvas share_area = new Canvas( parent, SWT.NO_BACKGROUND );
 			grid_data = new GridData(GridData.FILL_BOTH );
@@ -2202,7 +2164,8 @@ BuddyPluginViewBetaChat
 							MessageText.getString(
 								"dchat.share.dnd.info",
 								new String[] {
-									MessageText.getString(chat.getNetwork()==AENetworkClassifier.AT_PUBLIC?"label.publicly":"label.anonymously")	
+									MessageText.getString(chat.getNetwork()==AENetworkClassifier.AT_PUBLIC?"label.publicly":"label.anonymously"),
+									chat.getName()
 								});
 								
 						GCStringPrinter p = new GCStringPrinter(gc, msg, text_area, 0, SWT.CENTER | SWT.WRAP );
@@ -2282,7 +2245,8 @@ BuddyPluginViewBetaChat
 						MessageBoxShell mb = new MessageBoxShell(
 								MessageText.getString("dchat.share.dnd.prompt.title"),
 								MessageText.getString("dchat.share.dnd.prompt.text", new String[] {
-										MessageText.getString(chat.getNetwork()==AENetworkClassifier.AT_PUBLIC?"label.publicly":"label.anonymously")	
+									MessageText.getString(chat.getNetwork()==AENetworkClassifier.AT_PUBLIC?"label.publicly":"label.anonymously"),
+									chat.getName()	
 								}));
 						
 						mb.setRemember(
@@ -2340,28 +2304,27 @@ BuddyPluginViewBetaChat
 	
 	private Composite
 	buildHelp(
-		Composite		rhs,
-		int				num_cols )
+		Composite		rhs )
 	{
-		boolean public_chat = !chat.isPrivateChat();
+		boolean public_chat 	= !chat.isPrivateChat();
+		boolean sharing_view	= chat.getViewType() == BuddyPluginBeta.VIEW_TYPE_SHARING;
+		boolean	can_popout 		= shell == null && public_chat;
 
 		Composite top_right = new Composite(rhs, SWT.NONE);
 		GridLayout layout = new GridLayout();
-		layout.numColumns = num_cols;
+		layout.numColumns = 3;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 
 		top_right.setLayout(layout);
-		if ( num_cols == 3 ) {
+		
+		if ( !sharing_view ) {
 			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			//grid_data.heightHint = 50;
 			Utils.setLayoutData(top_right, grid_data);
-		}
-		boolean	can_popout = shell == null && public_chat;
-
-		if ( num_cols == 3 ) {
+	
 			Label label = new Label( top_right, SWT.NULL );
-			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+			grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan=can_popout?1:2;
 			Utils.setLayoutData(label, grid_data);
 		}
@@ -2370,6 +2333,11 @@ BuddyPluginViewBetaChat
 		//grid_data.horizontalAlignment = SWT.END;
 		//link.getlabel().setLayoutData( grid_data );
 
+		if ( sharing_view ){
+			
+			buildRSSButton( top_right );
+		}
+		
 		if ( can_popout ){
 
 			Label pop_out = new Label( top_right, SWT.NULL );
@@ -2400,6 +2368,105 @@ BuddyPluginViewBetaChat
 		}
 		
 		return( top_right );
+	}
+	
+	private void
+	buildRSSButton(
+		Composite	parent )
+	{
+		boolean sharing_view	= chat.getViewType() == BuddyPluginBeta.VIEW_TYPE_SHARING;
+
+		Runnable create_it = 
+			new Runnable()
+			{
+				public void
+				run()
+				{
+					try{
+						String url = "azplug:?id=azbuddy&arg=" + UrlUtils.encode( chat.getURL() + "&format=rss");
+
+						SubscriptionManager sm = PluginInitializer.getDefaultInterface().getUtilities().getSubscriptionManager();
+
+						Map<String,Object>	options = new HashMap<>();
+
+						if ( chat.isAnonymous()){
+
+							options.put( SubscriptionManager.SO_ANONYMOUS, true );
+						}
+
+						options.put( SubscriptionManager.SO_NAME, chat.getName());
+
+						sm.requestSubscription( new URL( url ), options );
+
+					}catch( Throwable e ){
+
+						Debug.out( e );
+					}
+				}
+			};
+		
+		if ( sharing_view ) {
+			
+			Label rss_button = new Label(parent, SWT.NONE);
+			final Image rss_image_normal 	= ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
+			final Image rss_image_gray		= ImageLoader.getInstance().getImage("image.sidebar.subscriptions-gray");
+			rss_button.setImage(rss_image_gray);
+			GridData grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.widthHint = rss_image_gray.getBounds().width;
+			grid_data.heightHint = rss_image_gray.getBounds().height;
+			rss_button.setLayoutData(grid_data);
+	
+			rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
+	
+			rss_button.addMouseTrackListener(
+				new MouseTrackAdapter(){
+				
+					@Override
+					public void mouseExit(MouseEvent arg0){
+						rss_button.setImage(rss_image_gray);
+						rss_button.redraw();
+					}
+					
+					@Override
+					public void mouseEnter(MouseEvent arg0){
+						rss_button.setImage(rss_image_normal);
+						rss_button.redraw();
+					}
+				});
+				
+			rss_button.addMouseListener(
+				new MouseAdapter(){
+	
+					@Override
+					public void mouseUp(MouseEvent e){
+						create_it.run();
+					}
+				});
+		}else{
+			
+			Button rss_button = new Button(parent, SWT.PUSH);
+			Image rss_image = ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
+			rss_button.setImage(rss_image);
+			GridData grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			grid_data.widthHint = rss_image.getBounds().width;
+			grid_data.heightHint = rss_image.getBounds().height;
+			rss_button.setLayoutData(grid_data);
+			//rss_button.setEnabled(false);
+	
+			rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
+	
+			rss_button.addSelectionListener(
+				new SelectionAdapter(){
+	
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent ev )
+					{
+						create_it.run();
+					}
+				});
+		}
 	}
 	
 	private void
