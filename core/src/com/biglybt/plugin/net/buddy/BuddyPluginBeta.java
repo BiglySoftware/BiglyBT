@@ -942,6 +942,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		COConfigurationManager.setDirty();
 	}
 
+	private boolean
+	chatOptionsExists(
+		String		net,
+		String		key )
+	{
+		String net_key = net + ":" + encodeKey( key );
+
+		synchronized( opts_map ){
+
+			return( opts_map.containsKey( net_key ));
+		}
+	}
+	
 	private void
 	removeAllOptions(
 		String		net,
@@ -2140,25 +2153,30 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				return( chat );
 			}
 			
+			boolean	apply_options = !chatOptionsExists( network, key );
+			
 			chat = getChat( network, key );
 			
-			String dn = (String)map.get( "dn" );
-			
-			if ( dn != null ) {
+			if ( apply_options ){
 				
-				chat.setDisplayName( dn );
-			}
-			
-			Number vt = (Number)map.get( "vt" );
-			
-			if ( vt != null ) {
+				String dn = (String)map.get( "dn" );
 				
-				chat.setViewType( vt.intValue());
+				if ( dn != null ){
+					
+					chat.setDisplayName( dn );
+				}
+				
+				Number vt = (Number)map.get( "vt" );
+				
+				if ( vt != null ){
+					
+					chat.setViewType( vt.intValue());
+				}
+				
+					// starting default is un-shared
+				
+				chat.setSharedNickname( false );
 			}
-			
-				// starting default is un-shared
-			
-			chat.setSharedNickname( false );
 			
 			chat.setFavourite( true );
 			
