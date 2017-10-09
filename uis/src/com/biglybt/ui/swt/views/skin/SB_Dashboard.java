@@ -23,21 +23,27 @@ package com.biglybt.ui.swt.views.skin;
 import java.util.*;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.events.MenuDetectEvent;
+import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -54,6 +60,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.CopyOnWriteList;
@@ -95,6 +102,7 @@ public class SB_Dashboard
 	private static final String[][] examples = {
 			{ "dashboard.example.1", "d5:itemsld4:_uidi76e12:control_typei0e2:id7:Library3:mdi7:sidebar9:parent_id16:header.transfers7:skin_id25:com.biglybt.ui.skin.skin38:skin_ref7:library5:title7:Libraryed4:_uidi81e12:control_typei0e14:event_listenerd4:name43:com.biglybt.ui.swt.views.stats.ActivityViewe2:id9:SpeedView3:mdi6:tabbed7:skin_id25:com.biglybt.ui.skin.skin35:title8:Activityed4:_uidi84e12:control_typei0e14:event_listenerd10:ipc_method17:cloneViewListener9:plugin_id6:3dview11:plugin_name7:3D Viewe2:id23:view3d.most.active.name3:mdi7:sidebar9:parent_id14:header.plugins7:skin_id25:com.biglybt.ui.skin.skin35:title21:3D View (Most active)ee6:layout47:76,76,84,84;76,76,84,84;76,76,84,84;81,81,81,817:weights15:643,352;645,352e" },
 			{ "dashboard.example.2", "d5:itemsld4:_uidi76e12:control_typei0e2:id7:Library3:mdi7:sidebar9:parent_id16:header.transfers7:skin_id25:com.biglybt.ui.skin.skin38:skin_ref7:library5:title7:Libraryed4:_uidi96e12:control_typei0e11:data_sourced6:exportd2:dn12:Shares: Sent3:key27:Dashboard: Anonymous Shares7:network3:I2P2:vti2ee8:exporter44:com.biglybt.plugin.net.buddy.BuddyPluginBetae14:event_listenerd4:name41:com.biglybt.plugin.net.buddy.swt.ChatViewe2:id53:Chat_I2P:IRQXG2DCN5QXEZB2EBAW433OPFWW65LTEBJWQYLSMVZQ3:mdi7:sidebar9:parent_id12:ChatOverview7:skin_id25:com.biglybt.ui.skin.skin35:title19:Anon - Shares: Sented4:_uidi100e12:control_typei0e11:data_sourced6:exportd4:anoni1e4:h_cmi1e5:h_dlnl3:I2Pe2:id16:UHQOFCLPP5YEIFRO7:versioni2e2:voi1ee8:exporter50:com.biglybt.core.subs.impl.SubscriptionManagerImple14:event_listenerd4:name49:com.biglybt.ui.swt.subscriptions.SubscriptionViewe2:id111:Subscription_042F84BA33D7C69F5F0BBDF56771D065E56ECE405EF157C8B14389477F6260F62062DFBF5EC5FA2E4904AC0C361F8243923:mdi7:sidebar9:parent_id13:Subscriptions7:skin_id25:com.biglybt.ui.skin.skin35:title23:Anon - Shares: Receivedee6:layout48:76,96,-1,-1;76,100,-1,-1;-1,-1,-1,-1;-1,-1,-1,-17:weights15:672,325;500,500e" },
+			{ "dashboard.example.3", "d5:itemsld4:_uidi76e12:control_typei0e2:id7:Library3:mdi7:sidebar9:parent_id16:header.transfers7:skin_id25:com.biglybt.ui.skin.skin38:skin_ref7:library5:title7:Libraryed4:_uidi103e12:control_typei0e14:event_listenerd4:name39:com.biglybt.ui.swt.views.PeersSuperViewe2:id12:AllPeersView3:mdi7:sidebar9:parent_id16:header.transfers7:skin_id25:com.biglybt.ui.skin.skin35:title9:All Peersed4:_uidi104e12:control_typei0e2:id8:Activity3:mdi7:sidebar9:parent_id11:header.vuze7:skin_id25:com.biglybt.ui.skin.skin38:skin_ref8:activity5:title13:Notificationsed4:_uidi105e12:control_typei0e2:id12:ChatOverview3:mdi7:sidebar9:parent_id16:header.discovery7:skin_id25:com.biglybt.ui.skin.skin38:skin_ref9:chatsview5:title13:Chat Overviewed4:_uidi106e12:control_typei0e2:id14:RelatedContent3:mdi7:sidebar9:parent_id16:header.discovery7:skin_id25:com.biglybt.ui.skin.skin38:skin_ref7:rcmview5:title17:Swarm Discoveriesed4:_uidi107e12:control_typei0e14:event_listenerd4:name35:com.biglybt.ui.swt.views.ConfigViewe2:id10:ConfigView3:mdi7:sidebar9:parent_id14:header.plugins7:skin_id25:com.biglybt.ui.skin.skin35:title7:Optionsed4:_uidi108e12:control_typei0e14:event_listenerd4:name40:com.biglybt.ui.swt.views.stats.StatsViewe2:id9:StatsView3:mdi7:sidebar9:parent_id14:header.plugins7:skin_id25:com.biglybt.ui.skin.skin35:title10:Statisticsee6:layout188:76,103,104,105,106,107,108;76,103,104,105,106,107,108;76,103,104,105,106,107,108;76,103,104,105,106,107,108;76,103,104,105,106,107,108;76,103,104,105,106,107,108;76,103,104,105,106,107,1088:use_tabsi1e7:weights0:e" },
 	};
 	
 	private final MultipleDocumentInterfaceSWT		mdi;
@@ -437,6 +445,19 @@ public class SB_Dashboard
 		boolean		b )
 	{
 		COConfigurationManager.setParameter( "dashboard.config.addhoriz", b );
+	}
+	
+	private boolean
+	getUseTabs()
+	{
+		return( COConfigurationManager.getBooleanParameter( "dashboard.config.usetabs", false ));
+	}
+	
+	private void
+	setUseTabs(
+		boolean		b )
+	{
+		COConfigurationManager.setParameter( "dashboard.config.usetabs", b );
 	}
 	
 	private int
@@ -784,6 +805,8 @@ public class SB_Dashboard
 			
 			map.put( "weights", COConfigurationManager.getStringParameter( "dashboard.sash.weights" ));
 			
+			map.put( "use_tabs", new Long( getUseTabs()?1:0 ));
+			
 			try {
 				System.out.println( new String( BEncoder.encode( map ), "UTF-8" ));
 				
@@ -829,6 +852,12 @@ public class SB_Dashboard
 				COConfigurationManager.setParameter( "dashboard.layout", layout );
 				COConfigurationManager.setParameter( "dashboard.sash.weights", weights );
 				
+				Number l_use_tabs = (Number)map.get( "use_tabs" );
+				
+				boolean use_tabs = l_use_tabs != null && l_use_tabs.intValue() != 0; 
+				
+				setUseTabs( use_tabs );
+				
 			}catch( Throwable e ) {
 				
 				Debug.out( e );
@@ -854,7 +883,7 @@ public class SB_Dashboard
 			}
 			
 			Utils.disposeComposite( dashboard_composite, false );
-			
+						
 			int[][] layout = getDashboardLayout();
 			
 			layout = compactLayout(layout, 0, 0 );
@@ -875,10 +904,12 @@ public class SB_Dashboard
 				}
 			}
 			
+			boolean use_tabs = getUseTabs();
+			
 			final List<SashForm>	sashes 		= new ArrayList<>();
 			List<Control>			controls	= new ArrayList<>();
 			
-			build( item_map, dashboard_composite, sashes, controls, layout, 0, 0, layout.length, layout.length );
+			build( item_map, dashboard_composite, use_tabs, sashes, controls, layout, 0, 0, layout.length, layout.length );
 			
 			int[][]	sash_weights = getSashWeights();
 			
@@ -1014,17 +1045,18 @@ public class SB_Dashboard
 		
 		int	before = item_map.size();
 		
-		build( item_map, null, null, null, layout, 0, 0, layout.length, layout.length );
+		build( item_map, null, false, null, null, layout, 0, 0, layout.length, layout.length );
 		
 			// at least one works...
 		
 		return( item_map.size() < before );
 	}
 	
-	private void
+	private List<DashboardItem>
 	build(	
 		Map<Integer,DashboardItem>	item_map,
 		Composite					comp,
+		boolean						use_tabs,
 		List<SashForm>				sashes,
 		List<Control>				controls,
 		int[][]						cells,
@@ -1032,7 +1064,9 @@ public class SB_Dashboard
 		int							y,
 		int							width,
 		int							height )
-	{
+	{		
+		List<DashboardItem> result = new ArrayList<>();
+		
 		//System.out.println( "Processing " + x + ", " + y + ", " + width + ", " + height );
 		
 		int		temp = -1;
@@ -1057,14 +1091,18 @@ public class SB_Dashboard
 			
 			if ( item != null && comp != null ) {
 				
-				controls.add( build( comp, item ));
+				controls.add( build( comp, item, use_tabs ));
+				
+				result.add( item );
 			}
 			
-			return;
+			return( result );
 		}
 		
 			// look for a way to cut into two halves without cutting through a block
-			
+		
+		boolean done = false;
+		
 		if ( height > 1 ){
 			
 			List<Integer>	splits = new ArrayList<>();
@@ -1095,37 +1133,140 @@ public class SB_Dashboard
 				
 				//System.out.println( "horizontal at " + splits + "[" + x + "-> " + (x+width-1)+ "]" );
 				
-				SashForm sf;
-				
-				if ( comp != null ){
+				if ( use_tabs ){
 					
-					sf = new SashForm( comp, SWT.VERTICAL );
-				
-					sashes.add( sf );
+					CTabFolder tf;
 					
-					sf.setLayoutData( Utils.getFilledFormData());
+					if ( comp != null ){
+						tf = new CTabFolder( comp, SWT.TOP );
+						tf.setLayoutData( Utils.getFilledFormData());
+					}else {
+						tf = null;
+					}
 					
+					int	current = y;
+					
+					for ( int split: splits ){
+						
+						CTabItem 	tab_item		= null;
+						Composite 	tab_composite = null;
+						if ( tf != null ){
+							tab_item = new CTabItem(tf, SWT.NULL);
+							tab_composite = new Composite( tf, SWT.NULL );
+							tab_composite.setLayout( new FormLayout());
+							tab_item.setControl( tab_composite );
+							tab_composite.setLayoutData( Utils.getFilledFormData());
+						}
+						
+						List<DashboardItem> items = build( item_map, tab_composite, use_tabs, sashes, controls, cells, x, current, width, split - current );
+						
+						if ( items.isEmpty()){
+							tab_item.dispose();
+						}else{
+							if ( tab_item != null ){
+								tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
+							}
+							result.addAll( items );
+						}
+						
+						current = split;
+					}
+					
+					CTabItem 	tab_item		= null;
+					Composite 	tab_composite = null;
+					if ( tf != null ){
+						tab_item = new CTabItem(tf, SWT.NULL);
+						tab_composite = new Composite( tf, SWT.NULL );
+						tab_composite.setLayout( new FormLayout());
+						tab_item.setControl( tab_composite );
+						tab_composite.setLayoutData( Utils.getFilledFormData());
+					}
+					
+					List<DashboardItem> items = build( item_map, tab_composite, use_tabs, sashes, controls, cells, x, current, width, height-(current-y));
+										
+					if ( items.isEmpty()){
+						tab_item.dispose();
+					}else{
+						if ( tab_item != null ){
+							tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
+						}
+						result.addAll( items );
+					}
+					
+					if ( tf != null ){
+						tf.addMenuDetectListener(
+							new MenuDetectListener(){
+								
+								@Override
+								public void menuDetected(MenuDetectEvent event){
+									
+									final CTabItem item = tf.getItem(
+											tf.toControl( event.x, event.y ));
+									
+									if ( item != null ) {
+									
+										Menu m = item.getControl().getMenu();
+										
+										if ( m != null ) {
+											m.setVisible( true );
+										}
+									}
+								}
+							});
+						
+						tf.setSelection( 0 );
+						
+						tf.addSelectionListener(
+							new SelectionAdapter(){
+								
+								@Override
+								public void widgetSelected(SelectionEvent ev){
+									Composite c = (Composite)tf.getSelection().getControl();
+									
+									Object o = c.getData();
+									
+									if ( o instanceof Runnable ){
+										
+										((Runnable)o).run();
+										c.setData(null);
+									}
+								}
+							});
+					}
 				}else{
 					
-					sf = null;
+					SashForm sf;
+					
+					if ( comp != null ){
+						
+						sf = new SashForm( comp, SWT.VERTICAL );
+					
+						sashes.add( sf );
+						
+						sf.setLayoutData( Utils.getFilledFormData());
+						
+					}else{
+						
+						sf = null;
+					}
+					
+					int	current = y;
+					
+					for ( int split: splits ){
+						
+						result.addAll( build( item_map, sf, use_tabs, sashes, controls, cells, x, current, width, split - current ));
+						
+						current = split;
+					}
+					
+					result.addAll(( build( item_map, sf, use_tabs, sashes, controls, cells, x, current, width, height-(current-y) )));
 				}
 				
-				int	current = y;
-				
-				for ( int split: splits ){
-					
-					build( item_map, sf, sashes, controls, cells, x, current, width, split - current );
-					
-					current = split;
-				}
-				
-				build( item_map, sf, sashes, controls, cells, x, current, width, height-(current-y) );
-				
-				return;
+				done = true;
 			}
 		}
 		
-		if ( width > 1 ){
+		if ( width > 1 && !done ){
 			
 			List<Integer>	splits = new ArrayList<>();
 
@@ -1146,55 +1287,184 @@ public class SB_Dashboard
 					splits.add( j );
 				}
 			}
+			
 			if ( splits.size() > 0 ){
 				
 				//System.out.println( "vertical at " + splits + "[" + y + "-> " + (y+height-1)+ "]" );
 				
-				SashForm sf;
-				
-				if ( comp != null ){
-					
-					sf = new SashForm( comp, SWT.HORIZONTAL );
-				
-					sashes.add( sf );
-					
-					sf.setLayoutData( Utils.getFilledFormData());
-					
-				
-				}else{
-					
-					sf = null;
+				{
+					/*
+					int	current = x;
+					for ( int split: splits ){
+						
+						result.addAll((build( item_map, null, sashes, controls, cells, current, y, split - current, height )));
+						current = split;
+					}
+					result.addAll((build( item_map, null, sashes, controls, cells, current, y, width-(current-x), height )));
+					*/
 				}
-				int	current = x;
 				
-				for ( int split: splits ){
+				if ( use_tabs ) {
+					
+					CTabFolder tf;
+					
+					if ( comp != null ){
+						tf = new CTabFolder( comp, SWT.TOP | SWT.NO_BACKGROUND);
+						tf.setLayoutData( Utils.getFilledFormData());
+					}else {
+						tf = null;
+					}
+					
+					int	current = x;
+					
+					for ( int split: splits ){
+	
+						CTabItem 	tab_item		= null;
+						Composite 	tab_composite = null;
+						if ( tf != null ){
+							tab_item = new CTabItem(tf, SWT.NULL);
+							tab_composite = new Composite( tf, SWT.NULL );
+							tab_composite.setLayout( new FormLayout());
+							tab_item.setControl( tab_composite );
+							tab_composite.setLayoutData( Utils.getFilledFormData());
+						}
+						
+						List<DashboardItem> items = build( item_map, tab_composite, use_tabs, sashes, controls, cells, current, y, split - current, height );
+						if ( items.isEmpty()){
+							tab_item.dispose();
+						}else{
+							if ( tab_item != null ){
+								tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
+							}
+							result.addAll( items );
+						}
 
-					build( item_map, sf, sashes, controls, cells, current, y, split - current, height );
+						current = split;
+					}
 					
-					current = split;
+					CTabItem 	tab_item		= null;
+					Composite 	tab_composite = null;
+					if ( tf != null ){
+						tab_item = new CTabItem(tf, SWT.NULL);
+						tab_composite = new Composite( tf, SWT.NULL );
+						tab_composite.setLayout( new FormLayout());
+						tab_item.setControl( tab_composite );
+						tab_composite.setLayoutData( Utils.getFilledFormData());
+					}
+					
+					List<DashboardItem> items = build( item_map, tab_composite, use_tabs, sashes, controls, cells, current, y, width-(current-x), height );
+					
+					if ( items.isEmpty()){
+						tab_item.dispose();
+					}else{
+						if ( tab_item != null ){
+							tab_item.setText( items.get(0).getTitle() + (items.size()>1?"...":""));
+						}
+						result.addAll( items );
+					}
+					
+					if ( tf != null ){
+						tf.addMenuDetectListener(
+							new MenuDetectListener(){
+								
+								@Override
+								public void menuDetected(MenuDetectEvent event){
+									
+									final CTabItem item = tf.getItem(
+											tf.toControl( event.x, event.y ));
+									
+									if ( item != null ) {
+									
+										Menu m = item.getControl().getMenu();
+										
+										if ( m != null ) {
+											m.setVisible( true );
+										}
+									}
+								}
+							});
+						
+						tf.setSelection( 0 );
+						
+						tf.addSelectionListener(
+							new SelectionAdapter(){
+								
+								@Override
+								public void widgetSelected(SelectionEvent ev){
+									Composite c = (Composite)tf.getSelection().getControl();
+									
+									Object o = c.getData();
+									
+									if ( o instanceof Runnable ){
+										
+										((Runnable)o).run();
+										c.setData(null);
+									}
+								}
+							});
+					}
+				}else {
+					SashForm sf;
+					
+					if ( comp != null ){
+						
+						sf = new SashForm( comp, SWT.HORIZONTAL );
+					
+						sashes.add( sf );
+						
+						sf.setLayoutData( Utils.getFilledFormData());
+						
+					
+					}else{
+						
+						sf = null;
+					}
+					int	current = x;
+					
+					for ( int split: splits ){
+	
+						result.addAll((build( item_map, sf, use_tabs, sashes, controls, cells, current, y, split - current, height )));
+						
+						current = split;
+					}
+					
+					result.addAll((build( item_map, sf, use_tabs, sashes, controls, cells, current, y, width-(current-x), height )));
 				}
-				
-				build( item_map, sf, sashes, controls, cells, current, y, width-(current-x), height );
 			}
 		}
+		
+		Iterator<DashboardItem> it = result.iterator();
+		
+		while( it.hasNext()) {
+			if (it.next() == null ) {
+				it.remove();
+			}
+		}
+		
+		return( result );
 	}
 	
 	private Composite
 	build(
 		Composite				sf,
-		final DashboardItem		item )
+		final DashboardItem		item,
+		boolean					use_tabs )
 	{
-		Group g = new Group( sf, SWT.NULL );
+		Composite g = use_tabs?new Composite( sf, SWT.NULL ):new Group( sf, SWT.NULL );
 		
 		g.setLayoutData( Utils.getFilledFormData());
 		
 		g.setLayout( new GridLayout());
 
 		try {
+			if ( g instanceof Group ){
+				
+				((Group)g).setText( item.getTitle());
+			}
 			
-			g.setText( item.getTitle());
+			Composite menu_comp = use_tabs?sf:g;
 			
-			Menu	menu = new Menu( g );
+			Menu	menu = new Menu( menu_comp );
 			
 			org.eclipse.swt.widgets.MenuItem itemReload = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
 			
@@ -1233,7 +1503,9 @@ public class SB_Dashboard
 						}
 					}
 				};
-					
+				
+			sf.setData( reload_action );
+			
 			itemReload.addSelectionListener(
 				new SelectionAdapter(){
 					
@@ -1298,7 +1570,7 @@ public class SB_Dashboard
 					}
 				});
 			
-			g.setMenu( menu );
+			menu_comp.setMenu( menu );
 			
 			SkinnedComposite skinned_comp =	new SkinnedComposite( g );
 			
@@ -1543,6 +1815,7 @@ public class SB_Dashboard
 
 		final Map<Integer,Integer> uid_to_item_map = new HashMap<>();
 		
+		final boolean original_use_tabs = getUseTabs();
 		
 		int[][]				existing_mapping;
 		int[][] 			mapping;
@@ -1596,6 +1869,8 @@ public class SB_Dashboard
 		    
 			int grid_size = buildGrid();
 			
+				// add horiz
+			
 			final Button add_horiz = new Button( shell, SWT.CHECK );
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
@@ -1608,6 +1883,22 @@ public class SB_Dashboard
 			      @Override
 			      public void handleEvent(Event e) {
 			    	  setAddNewHorizontal(  add_horiz.getSelection());
+			      }});
+			
+				// use tabs
+			
+			final Button use_tabs = new Button( shell, SWT.CHECK );
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
+			use_tabs.setLayoutData(gridData);
+			use_tabs.setText( MessageText.getString( "dashboard.use.tabs" ));
+			
+			use_tabs.setSelection( getUseTabs());
+			
+			use_tabs.addListener(SWT.Selection, new Listener() {
+			      @Override
+			      public void handleEvent(Event e) {
+			    	  setUseTabs(  use_tabs.getSelection());
 			      }});
 			
 				// line
@@ -1666,7 +1957,7 @@ public class SB_Dashboard
 		      @Override
 		      public void handleEvent(Event e) {
 		      
-		    	if ( setDashboardLayout( mapping, num_items, true )) {
+		    	if ( setDashboardLayout( mapping, num_items, true ) || getUseTabs() != original_use_tabs) {
 		    		
 		    		fireChanged();
 		    	}

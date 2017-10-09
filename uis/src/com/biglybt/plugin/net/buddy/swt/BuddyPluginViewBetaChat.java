@@ -580,7 +580,7 @@ BuddyPluginViewBetaChat
 	
 			buildStatus( parent, lhs );
 	
-			Composite log_holder = buildFTUX( lhs );
+			Composite log_holder = buildFTUX( lhs, SWT.BORDER );
 			
 				// LOG panel
 	
@@ -1857,7 +1857,7 @@ BuddyPluginViewBetaChat
 			grid_data.horizontalSpan = 2;
 			ftux_parent.setLayoutData( grid_data);
 			
-			Composite share_area_holder = buildFTUX( ftux_parent );
+			Composite share_area_holder = buildFTUX( ftux_parent, SWT.NULL );
 			
 			layout = new GridLayout();
 			layout.numColumns = 1;
@@ -2051,7 +2051,8 @@ BuddyPluginViewBetaChat
 	
 	private Composite
 	buildFTUX(
-		Composite		parent )
+		Composite		parent,
+		int				style )
 	{
 		ftux_stack = new Composite(parent, SWT.NONE);
 		GridData grid_data = new GridData(GridData.FILL_BOTH );
@@ -2061,9 +2062,9 @@ BuddyPluginViewBetaChat
         final StackLayout stack_layout = new StackLayout();
         ftux_stack.setLayout(stack_layout);
 
-		final Composite log_holder = new Composite(ftux_stack, SWT.BORDER);
+		final Composite log_holder = new Composite(ftux_stack, style );
 
-		final Composite ftux_holder = new Composite(ftux_stack, SWT.BORDER);
+		final Composite ftux_holder = new Composite(ftux_stack, style );
 
 			// FTUX panel
 
@@ -4108,6 +4109,8 @@ BuddyPluginViewBetaChat
 	{
 		String magnet = UrlUtils.getMagnetURI( download, 80 );
 
+			// we can go a bit over MAX_MSG_LENGTH as underlying limit is a fair bit higher
+		
 		magnet = trimMagnet( magnet, MAX_MSG_LENGTH );
 		
 		magnet += "&xl="  + download.getTorrentSize();
@@ -4140,16 +4143,10 @@ BuddyPluginViewBetaChat
 
 			String arg = "&xsource=" + UrlUtils.encode( address_str );
 
-			if ( magnet.length() + arg.length() < MAX_MSG_LENGTH ){
-
-				magnet += arg;
-			}
+			magnet += arg;
 		}
 
-		if ( magnet.length() < MAX_MSG_LENGTH-10 ){
-
-			magnet += "[[$dn]]";
-		}
+		magnet += "[[$dn]]";
 
 		plugin.getBeta().tagDownload( download );
 

@@ -47,7 +47,10 @@ public class CompositeMinSize
 			Point size = super.computeSize(wHint, hHint, changed);
 			return betterComputeSize(this, size, wHint, hHint, changed);
 		} catch (Throwable t) {
-			Debug.out(t);
+			if ( !( t instanceof NullPointerException )){
+				// getting NPEs in CTabFolder.computeTrim :(
+				Debug.out(t);
+			}
 			return new Point(wHint == -1 ? 10 : wHint, hHint == -1 ? 10
 					: hHint);
 		}

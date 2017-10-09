@@ -3898,6 +3898,8 @@ public class Utils
 				newParent.layout(new Control[] { c });
 			}catch( SWTException e ) {
 				// ignore - we sometimes get widget-disposed errors from SashForms
+			}catch( NullPointerException e ) {
+				// ignore - we sometimes get NPEs errors from CTabFolder
 			}
 			c = newParent;
 		}
