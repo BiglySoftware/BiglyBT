@@ -5,7 +5,7 @@ import java.util.*;
 public class 
 DataSourceResolver
 {
-	private static Map<String,DataSourceImporter>	importer_map = new HashMap<>();
+	private static Map<String,Object>	importer_map = new HashMap<>();
 	
 	public static Map<String,Object>
 	exportDataSource(
@@ -56,7 +56,7 @@ DataSourceResolver
 	importDataSource(
 		Map<String,Object>		map )
 	{
-		Object	callback = map.get( "callback" );
+		Runnable	callback = (Runnable)map.get( "callback" );
 		
 		List<Map<String,Object>> list = (List<Map<String,Object>>)map.get( "exports" );
 		
@@ -68,12 +68,32 @@ DataSourceResolver
 			
 			synchronized( importer_map ) {
 				
-				importer = importer_map.get( exporter_class );
-			}
+				Object temp = importer_map.get( exporter_class );
 			
-			if ( importer == null ) {
+				if ( temp == null || temp instanceof List) {
 				
-				return( null );
+					if ( callback == null ){
+					
+						Debug.out( "No importer for '" + exporter_class + "'" );
+						
+					}else {
+						
+						if ( temp == null ) {
+							
+							temp = new ArrayList();
+							
+							importer_map.put( exporter_class, temp );
+						}
+						
+						((List)temp).add( callback );
+					}
+					
+					return( null );
+					
+				}else{
+					
+					importer = (DataSourceImporter)temp;
+				}
 			}
 			
 			Map<String,Object> i_map = new HashMap<String,Object>((Map<String,Object>)map.get( "export" ));
@@ -105,9 +125,34 @@ DataSourceResolver
 	registerExporter(
 		DataSourceImporter		exporter )
 	{
+		List<Runnable>	callbacks = null;
+		
 		synchronized( importer_map ) {
 			
-			importer_map.put( exporter.getClass().getCanonicalName(), exporter );
+			String name = exporter.getClass().getCanonicalName();
+			
+			Object temp = importer_map.get( name );
+			
+			if ( temp instanceof List ) {
+				
+				callbacks = (List<Runnable>)temp;
+			}
+			
+			importer_map.put( name, exporter );
+		}
+		
+		if ( callbacks != null ) {
+			
+			for ( Runnable r: callbacks ) {
+				
+				try{
+					r.run();
+					
+				}catch( Throwable e ) {
+					
+					Debug.out( e );
+				}
+			}
 		}
 	}
 	

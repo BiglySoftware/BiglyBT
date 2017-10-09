@@ -88,11 +88,13 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
+import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
@@ -103,10 +105,12 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.sharing.ShareResourceDir;
 import com.biglybt.pif.sharing.ShareResourceFile;
@@ -116,7 +120,9 @@ import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.utils.LocaleUtilities;
+import com.biglybt.pif.utils.search.SearchResult;
 import com.biglybt.pif.utils.subscriptions.SubscriptionManager;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
@@ -205,10 +211,14 @@ BuddyPluginViewBetaChat
 	private final BuddyPluginBeta		beta;
 	private final ChatInstance			chat;
 
+	private boolean						chat_available;
+
 	private final LocaleUtilities		lu;
 
 	private Shell 					shell;
 
+	private Composite 				ftux_stack;
+	
 	private StyledText 				log;
 	private StyleRange[]			log_styles = new StyleRange[0];
 
@@ -219,7 +229,6 @@ BuddyPluginViewBetaChat
 	private Button 					shared_nick_button;
 	private Text 					nickname;
 
-	private boolean					input_available;
 	private Text 					input_area;
 
 	private DropTarget[]			drop_targets;
@@ -480,9 +489,12 @@ BuddyPluginViewBetaChat
 	{
 		view.registerUI( chat );
 		
-		try {
+		try{
+			
+			chat_available	= chat.isAvailable();
+
 			buildSupport( parent );
-		
+					
 			chat.addListener( this );
 			
 		}catch( RuntimeException e ) {
@@ -504,9 +516,7 @@ BuddyPluginViewBetaChat
 		shared_nick_button	= null;
 		nickname			= null;
 		input_area			= null;
-		
-		input_available		= chat.isAvailable();
-		
+			
 		messages.clear();
 		participants.clear();
 		participant_last_message_map.clear();
@@ -570,240 +580,8 @@ BuddyPluginViewBetaChat
 	
 			buildStatus( parent, lhs );
 	
-			final Composite ftux_stack = new Composite(lhs, SWT.NONE);
-			grid_data = new GridData(GridData.FILL_BOTH );
-			grid_data.horizontalSpan = 2;
-			Utils.setLayoutData(ftux_stack,  grid_data );
-	
-	        final StackLayout stack_layout = new StackLayout();
-	        ftux_stack.setLayout(stack_layout);
-	
-			final Composite log_holder = new Composite(ftux_stack, SWT.BORDER);
-	
-			final Composite ftux_holder = new Composite(ftux_stack, SWT.BORDER);
-	
-				// FTUX panel
-	
-			layout = new GridLayout();
-			layout.numColumns = 2;
-			layout.marginHeight = 0;
-			layout.marginWidth = 0;
-			layout.horizontalSpacing = 0;
-			layout.verticalSpacing = 0;
-			ftux_holder.setLayout(layout);
-	
-			ftux_holder.setBackground( ftux_light_bg );
-	
-				// top info
-	
-			Composite ftux_top_area = new Composite( ftux_holder, SWT.NULL );
-			layout = new GridLayout();
-			layout.numColumns = 1;
-			layout.marginHeight = 0;
-			layout.marginWidth = 0;
-			layout.verticalSpacing = 0;
-			ftux_top_area.setLayout(layout);
-	
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			grid_data.horizontalSpan = 2;
-			grid_data.heightHint = 30;
-			Utils.setLayoutData(ftux_top_area, grid_data);
-			ftux_top_area.setBackground( ftux_dark_bg );
-	
-	
-			Label ftux_top = new Label( ftux_top_area, SWT.WRAP );
-			grid_data = new GridData(SWT.LEFT, SWT.CENTER, true, true );
-			grid_data.horizontalIndent = 8;
-			Utils.setLayoutData(ftux_top, grid_data);
-	
-			ftux_top.setAlignment( SWT.LEFT );
-			ftux_top.setBackground( ftux_dark_bg );
-			ftux_top.setForeground( ftux_dark_fg );
-			ftux_top.setFont( big_font );
-			ftux_top.setText( MessageText.getString( "azbuddy.dchat.ftux.welcome" ));
-	
-				// middle info
-	
-			Label ftux_hack = new Label( ftux_holder, SWT.NULL );
-			grid_data = new GridData();
-			grid_data.heightHint=40;
-			grid_data.widthHint=0;
-			Utils.setLayoutData(ftux_hack, grid_data);
-	
-			final StyledText ftux_middle = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
-	
-			grid_data = new GridData(GridData.FILL_BOTH );
-			grid_data.horizontalSpan = 1;
-			grid_data.verticalIndent = 4;
-			grid_data.horizontalIndent = 16;
-			Utils.setLayoutData(ftux_middle, grid_data);
-	
-			ftux_middle.setBackground( ftux_light_bg );
-	
-			String info1_text =
-			"Chat allows you to communicate with other users directly by sending and receiving messages.\n" +
-			"It is a decentralized chat system - there are no central servers involved, all messages are passed directly between users.\n" +
-			"Consequently " + Constants.APP_NAME + " has absolutely no control over message content. In particular no mechanism exists (nor is possible) for " + Constants.APP_NAME + " to moderate or otherwise control either messages or the users that send messages.";
-	
-			String info2_text =
-			"I UNDERSTAND AND AGREE that " + Constants.APP_NAME + " has no responsibility whatsoever with my enabling this function and using chat.";
-	
-			String[] info_lines = info1_text.split( "\n" );
-	
-			for ( String line: info_lines ){
-	
-				ftux_middle.append( line );
-	
-				if ( line != info_lines[info_lines.length-1] ){
-	
-					ftux_middle.append( "\n" );
-	
-					int	pos = ftux_middle.getText().length();
-	
-						// zero width space in large font to get smaller paragraph spacing
-	
-					ftux_middle.append( "\u200B" );
-	
-					StyleRange styleRange = new StyleRange();
-					styleRange.start = pos;
-					styleRange.length = 1;
-					styleRange.font = big_font;
-	
-					ftux_middle.setStyleRange( styleRange );
-				}
-			}
-	
-				// checkbox area
-	
-			Composite ftux_check_area = new Composite( ftux_holder, SWT.NULL );
-			layout = new GridLayout();
-			layout.marginLeft = 0;
-			layout.marginWidth = 0;
-			layout.numColumns = 2;
-			ftux_check_area.setLayout(layout);
-	
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			grid_data.horizontalSpan = 2;
-			Utils.setLayoutData(ftux_check_area,  grid_data );
-			ftux_check_area.setBackground(  ftux_light_bg );
-	
-			final Button ftux_check = new Button( ftux_check_area, SWT.CHECK );
-			grid_data = new GridData();
-			grid_data.horizontalIndent = 16;
-			Utils.setLayoutData(ftux_check,  grid_data );
-			ftux_check.setBackground(  ftux_light_bg );
-	
-			Label ftux_check_test = new Label( ftux_check_area, SWT.WRAP );
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(ftux_check_test, grid_data);
-	
-			ftux_check_test.setBackground( ftux_light_bg );
-			ftux_check_test.setText( info2_text );
-	
-	
-				// bottom info
-	
-			final StyledText ftux_bottom = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.WRAP | SWT.NO_FOCUS );
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			grid_data.horizontalSpan = 2;
-			grid_data.horizontalIndent = 16;
-			Utils.setLayoutData(ftux_bottom, grid_data);
-	
-			ftux_bottom.setBackground( ftux_light_bg );
-			ftux_bottom.setFont( bold_font );
-			ftux_bottom.setText( MessageText.getString( "azbuddy.dchat.ftux.footer" ) + " " );
-	
-			{
-				int	start	= ftux_bottom.getText().length();
-	
-				String url 		= MessageText.getString( "faq.legal.url" );
-				String url_text	= MessageText.getString( "label.more.dot" );
-	
-				ftux_bottom.append( url_text );
-	
-				StyleRange styleRange = new StyleRange();
-				styleRange.start = start;
-				styleRange.length = url_text.length();
-				styleRange.foreground = Colors.blue;
-				styleRange.underline = true;
-	
-				styleRange.data = url;
-	
-				ftux_bottom.setStyleRange( styleRange );
-			}
-	
-			ftux_bottom.addListener(
-					SWT.MouseUp,
-					new Listener()
-					{
-						@Override
-						public void handleEvent(Event event) {
-							int offset = ftux_bottom.getOffsetAtLocation(new Point (event.x, event.y));
-							StyleRange style = ftux_bottom.getStyleRangeAtOffset(offset);
-	
-							if ( style != null ){
-	
-								String url = (String)style.data;
-	
-								try{
-									Utils.launch( new URL( url ));
-	
-								}catch( Throwable e ){
-	
-									Debug.out( e );
-								}
-							}
-						}
-					});
-	
-			Label ftux_line = new Label( ftux_holder, SWT.SEPARATOR | SWT.HORIZONTAL );
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			grid_data.horizontalSpan = 2;
-			grid_data.verticalIndent = 4;
-			Utils.setLayoutData(ftux_line,  grid_data );
-	
-			Composite ftux_button_area = new Composite( ftux_holder, SWT.NULL );
-			layout = new GridLayout();
-			layout.numColumns = 2;
-			ftux_button_area.setLayout(layout);
-	
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			grid_data.horizontalSpan = 2;
-			Utils.setLayoutData(ftux_button_area,  grid_data );
-			ftux_button_area.setBackground( Colors.white );
-	
-			Label filler = new Label( ftux_button_area, SWT.NULL );
-			grid_data = new GridData(GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(filler,  grid_data );
-			filler.setBackground( Colors.white );
-	
-			final Button ftux_accept = new Button( ftux_button_area, SWT.PUSH );
-			grid_data = new GridData();
-			grid_data.horizontalAlignment = SWT.RIGHT;
-			grid_data.widthHint = 60;
-			Utils.setLayoutData(ftux_accept, grid_data);
-	
-			ftux_accept.setText( MessageText.getString( "label.accept" ));
-	
-			ftux_accept.setEnabled( false );
-	
-			ftux_accept.addSelectionListener(
-				new SelectionAdapter() {
-	
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						beta.setFTUXAccepted( true );
-					}
-				});
-	
-			ftux_check.addSelectionListener(
-				new SelectionAdapter() {
-	
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						ftux_accept.setEnabled( ftux_check.getSelection());
-					}
-			});
+			Composite log_holder = buildFTUX( lhs );
+			
 				// LOG panel
 	
 			layout = new GridLayout();
@@ -1923,71 +1701,16 @@ BuddyPluginViewBetaChat
 			button_area.setLayout(layout);
 	
 			buildRSSButton( button_area );
-	
-			ftux_ok = beta.getFTUXAccepted();
-	
+		
+			hookFTUXListener();
+			
 			if ( chat.isReadOnly()){
 	
 				input_area.setText( MessageText.getString( "azbuddy.dchat.ro" ));
+			}	
 	
-				input_area.setEnabled( false );
-	
-			}else if ( !ftux_ok ){
-	
-				input_area.setEnabled( false );
-	
-			}else{
-	
-				input_area.setFocus();
-			}
-	
-			final boolean[] ftux_init_done = { false };
-	
-			beta.addFTUXStateChangeListener(
-				new FTUXStateChangeListener()
-				{
-					@Override
-					public void
-					stateChanged(
-						final boolean		_ftux_ok )
-					{
-						if ( ftux_stack.isDisposed()){
-	
-							beta.removeFTUXStateChangeListener( this );
-	
-						}else{
-	
-							Utils.execSWTThread(
-								new Runnable()
-								{
-	
-									@Override
-									public void
-									run()
-									{
-										ftux_ok = _ftux_ok;
-	
-										stack_layout.topControl = ftux_ok?log_holder:ftux_holder;
-	
-										if ( ftux_init_done[0]){
-	
-											ftux_stack.layout( true, true );
-										}
-	
-										if ( !chat.isReadOnly()){
-	
-											input_area.setEnabled( ftux_ok );
-										}
-	
-										table_resort_required = true;
-	
-										updateTable( false );
-									}
-								});
-						}
-					}
-				});
-	
+			setInputAvailability( true );
+			
 			if ( !chat.isReadOnly()){
 	
 				drop_targets = new DropTarget[]{
@@ -2053,9 +1776,7 @@ BuddyPluginViewBetaChat
 					});
 				}
 			}
-	
-			ftux_init_done[0] = true;
-	
+		
 			Control[] focus_controls = { log, input_area, buddy_table, nickname, shared_nick_button };
 	
 			Listener focus_listener = new Listener() {
@@ -2125,9 +1846,27 @@ BuddyPluginViewBetaChat
 			
 			buildHelp( status_area );
 			
-			Canvas share_area = new Canvas( parent, SWT.NO_BACKGROUND );
+			Composite ftux_parent = new Composite( parent, SWT.NULL );
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			ftux_parent.setLayout(layout );
+			
 			grid_data = new GridData(GridData.FILL_BOTH );
 			grid_data.horizontalSpan = 2;
+			ftux_parent.setLayoutData( grid_data);
+			
+			Composite share_area_holder = buildFTUX( ftux_parent );
+			
+			layout = new GridLayout();
+			layout.numColumns = 1;
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			share_area_holder.setLayout(layout );
+						
+			Canvas share_area = new Canvas( share_area_holder, SWT.NO_BACKGROUND );
+			grid_data = new GridData(GridData.FILL_BOTH );
 			share_area.setLayoutData( grid_data);
 			share_area.setBackground(Colors.white);
 			
@@ -2181,6 +1920,8 @@ BuddyPluginViewBetaChat
 			input_area = new Text( share_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
 			input_area.setVisible( false );
 			
+			hookFTUXListener();
+			
 			drop_targets = new DropTarget[]{
 					new DropTarget(share_area, DND.DROP_COPY),
 				};
@@ -2229,7 +1970,7 @@ BuddyPluginViewBetaChat
 					@Override
 					public void drop(DropTargetEvent event) {
 						
-						if ( !input_available ){
+						if ( !chat_available ){
 							
 							MessageBoxShell mb = new MessageBoxShell(
 									MessageText.getString("dchat.share.dnd.wait.title"),
@@ -2295,7 +2036,7 @@ BuddyPluginViewBetaChat
 
 												mb.open( null );
 												
-												checkSubscriptions();
+												checkSubscriptions( false );
 											}
 										});
 								}
@@ -2306,6 +2047,308 @@ BuddyPluginViewBetaChat
 				});
 			}
 		}
+	}
+	
+	private Composite
+	buildFTUX(
+		Composite		parent )
+	{
+		ftux_stack = new Composite(parent, SWT.NONE);
+		GridData grid_data = new GridData(GridData.FILL_BOTH );
+		grid_data.horizontalSpan = 2;
+		Utils.setLayoutData(ftux_stack,  grid_data );
+
+        final StackLayout stack_layout = new StackLayout();
+        ftux_stack.setLayout(stack_layout);
+
+		final Composite log_holder = new Composite(ftux_stack, SWT.BORDER);
+
+		final Composite ftux_holder = new Composite(ftux_stack, SWT.BORDER);
+
+			// FTUX panel
+
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.horizontalSpacing = 0;
+		layout.verticalSpacing = 0;
+		ftux_holder.setLayout(layout);
+
+		ftux_holder.setBackground( ftux_light_bg );
+
+			// top info
+
+		Composite ftux_top_area = new Composite( ftux_holder, SWT.NULL );
+		layout = new GridLayout();
+		layout.numColumns = 1;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.verticalSpacing = 0;
+		ftux_top_area.setLayout(layout);
+
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 2;
+		grid_data.heightHint = 30;
+		Utils.setLayoutData(ftux_top_area, grid_data);
+		ftux_top_area.setBackground( ftux_dark_bg );
+
+
+		Label ftux_top = new Label( ftux_top_area, SWT.WRAP );
+		grid_data = new GridData(SWT.LEFT, SWT.CENTER, true, true );
+		grid_data.horizontalIndent = 8;
+		Utils.setLayoutData(ftux_top, grid_data);
+
+		ftux_top.setAlignment( SWT.LEFT );
+		ftux_top.setBackground( ftux_dark_bg );
+		ftux_top.setForeground( ftux_dark_fg );
+		ftux_top.setFont( big_font );
+		ftux_top.setText( MessageText.getString( "azbuddy.dchat.ftux.welcome" ));
+
+			// middle info
+
+		Label ftux_hack = new Label( ftux_holder, SWT.NULL );
+		grid_data = new GridData();
+		grid_data.heightHint=40;
+		grid_data.widthHint=0;
+		Utils.setLayoutData(ftux_hack, grid_data);
+
+		final StyledText ftux_middle = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
+
+		grid_data = new GridData(GridData.FILL_BOTH );
+		grid_data.horizontalSpan = 1;
+		grid_data.verticalIndent = 4;
+		grid_data.horizontalIndent = 16;
+		Utils.setLayoutData(ftux_middle, grid_data);
+
+		ftux_middle.setBackground( ftux_light_bg );
+
+		String info1_text =
+		"Chat allows you to communicate with other users directly by sending and receiving messages.\n" +
+		"It is a decentralized chat system - there are no central servers involved, all messages are passed directly between users.\n" +
+		"Consequently " + Constants.APP_NAME + " has absolutely no control over message content. In particular no mechanism exists (nor is possible) for " + Constants.APP_NAME + " to moderate or otherwise control either messages or the users that send messages.";
+
+		String info2_text =
+		"I UNDERSTAND AND AGREE that " + Constants.APP_NAME + " has no responsibility whatsoever with my enabling this function and using chat.";
+
+		String[] info_lines = info1_text.split( "\n" );
+
+		for ( String line: info_lines ){
+
+			ftux_middle.append( line );
+
+			if ( line != info_lines[info_lines.length-1] ){
+
+				ftux_middle.append( "\n" );
+
+				int	pos = ftux_middle.getText().length();
+
+					// zero width space in large font to get smaller paragraph spacing
+
+				ftux_middle.append( "\u200B" );
+
+				StyleRange styleRange = new StyleRange();
+				styleRange.start = pos;
+				styleRange.length = 1;
+				styleRange.font = big_font;
+
+				ftux_middle.setStyleRange( styleRange );
+			}
+		}
+
+			// checkbox area
+
+		Composite ftux_check_area = new Composite( ftux_holder, SWT.NULL );
+		layout = new GridLayout();
+		layout.marginLeft = 0;
+		layout.marginWidth = 0;
+		layout.numColumns = 2;
+		ftux_check_area.setLayout(layout);
+
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 2;
+		Utils.setLayoutData(ftux_check_area,  grid_data );
+		ftux_check_area.setBackground(  ftux_light_bg );
+
+		final Button ftux_check = new Button( ftux_check_area, SWT.CHECK );
+		grid_data = new GridData();
+		grid_data.horizontalIndent = 16;
+		Utils.setLayoutData(ftux_check,  grid_data );
+		ftux_check.setBackground(  ftux_light_bg );
+
+		Label ftux_check_test = new Label( ftux_check_area, SWT.WRAP );
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		Utils.setLayoutData(ftux_check_test, grid_data);
+
+		ftux_check_test.setBackground( ftux_light_bg );
+		ftux_check_test.setText( info2_text );
+
+
+			// bottom info
+
+		final StyledText ftux_bottom = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.WRAP | SWT.NO_FOCUS );
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 2;
+		grid_data.horizontalIndent = 16;
+		Utils.setLayoutData(ftux_bottom, grid_data);
+
+		ftux_bottom.setBackground( ftux_light_bg );
+		ftux_bottom.setFont( bold_font );
+		ftux_bottom.setText( MessageText.getString( "azbuddy.dchat.ftux.footer" ) + " " );
+
+		{
+			int	start	= ftux_bottom.getText().length();
+
+			String url 		= MessageText.getString( "faq.legal.url" );
+			String url_text	= MessageText.getString( "label.more.dot" );
+
+			ftux_bottom.append( url_text );
+
+			StyleRange styleRange = new StyleRange();
+			styleRange.start = start;
+			styleRange.length = url_text.length();
+			styleRange.foreground = Colors.blue;
+			styleRange.underline = true;
+
+			styleRange.data = url;
+
+			ftux_bottom.setStyleRange( styleRange );
+		}
+
+		ftux_bottom.addListener(
+				SWT.MouseUp,
+				new Listener()
+				{
+					@Override
+					public void handleEvent(Event event) {
+						int offset = ftux_bottom.getOffsetAtLocation(new Point (event.x, event.y));
+						StyleRange style = ftux_bottom.getStyleRangeAtOffset(offset);
+
+						if ( style != null ){
+
+							String url = (String)style.data;
+
+							try{
+								Utils.launch( new URL( url ));
+
+							}catch( Throwable e ){
+
+								Debug.out( e );
+							}
+						}
+					}
+				});
+
+		Label ftux_line = new Label( ftux_holder, SWT.SEPARATOR | SWT.HORIZONTAL );
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 2;
+		grid_data.verticalIndent = 4;
+		Utils.setLayoutData(ftux_line,  grid_data );
+
+		Composite ftux_button_area = new Composite( ftux_holder, SWT.NULL );
+		layout = new GridLayout();
+		layout.numColumns = 2;
+		ftux_button_area.setLayout(layout);
+
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 2;
+		Utils.setLayoutData(ftux_button_area,  grid_data );
+		ftux_button_area.setBackground( Colors.white );
+
+		Label filler = new Label( ftux_button_area, SWT.NULL );
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		Utils.setLayoutData(filler,  grid_data );
+		filler.setBackground( Colors.white );
+
+		final Button ftux_accept = new Button( ftux_button_area, SWT.PUSH );
+		grid_data = new GridData();
+		grid_data.horizontalAlignment = SWT.RIGHT;
+		grid_data.widthHint = 60;
+		Utils.setLayoutData(ftux_accept, grid_data);
+
+		ftux_accept.setText( MessageText.getString( "label.accept" ));
+
+		ftux_accept.setEnabled( false );
+
+		ftux_accept.addSelectionListener(
+			new SelectionAdapter() {
+
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					beta.setFTUXAccepted( true );
+				}
+			});
+
+		ftux_check.addSelectionListener(
+			new SelectionAdapter() {
+
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					ftux_accept.setEnabled( ftux_check.getSelection());
+				}
+		});
+		
+
+		return( log_holder );
+	}
+	
+	private void
+	hookFTUXListener()
+	{
+		final boolean was_ok = ftux_ok = beta.getFTUXAccepted();
+
+		final boolean[] ftux_init_done = { false };
+
+		beta.addFTUXStateChangeListener(
+			new FTUXStateChangeListener()
+			{
+				@Override
+				public void
+				stateChanged(
+					final boolean		_ftux_ok )
+				{
+					if ( ftux_stack.isDisposed()){
+
+						beta.removeFTUXStateChangeListener( this );
+
+					}else{
+
+						Utils.execSWTThread(
+							new Runnable()
+							{
+
+								@Override
+								public void
+								run()
+								{
+									ftux_ok = _ftux_ok;
+
+									Control[] kids = ftux_stack.getChildren();
+									
+									((StackLayout)ftux_stack.getLayout()).topControl = ftux_ok?kids[0]:kids[1];
+
+									if ( ftux_init_done[0]){
+
+										ftux_stack.layout( true, true );
+									}
+
+									setInputAvailability( false );
+
+									table_resort_required = true;
+
+									updateTable( false );
+									
+									if ( ftux_ok && !was_ok ){
+										
+										checkSubscriptions( true );
+									}
+								}
+							});
+					}
+				}
+			});
+		
+		ftux_init_done[0] = true;
 	}
 	
 	private Composite
@@ -3658,7 +3701,8 @@ BuddyPluginViewBetaChat
 	}
 
 	private void
-	checkSubscriptions()
+	checkSubscriptions(
+		boolean ftux_change )
 	{
 		Subscription[] subs = SubscriptionManagerFactory.getSingleton().getSubscriptions();
 		
@@ -3673,7 +3717,25 @@ BuddyPluginViewBetaChat
 					
 					if ( isRSSURL( url, chat )) {
 							
-						sub.getManager().getScheduler().downloadAsync( sub, true );
+						if ( ftux_change ){
+						
+							SubscriptionResult[] results = sub.getResults( false );
+							
+							for ( SubscriptionResult r: results ) {
+								
+								Map<Integer,Object>	properties = r.toPropertyMap();
+
+								String name = (String)properties.get( SearchResult.PR_NAME );
+								
+								if ( name.equals( BuddyPluginBeta.RSS_ITEMS_UNAVAILABLE )) {
+									
+									r.delete();
+								}
+							}
+						}else{
+							
+							sub.getManager().getScheduler().downloadAsync( sub, true );
+						}
 					}
 				}
 			}catch( Throwable e ) {
@@ -4048,6 +4110,28 @@ BuddyPluginViewBetaChat
 
 		magnet = trimMagnet( magnet, MAX_MSG_LENGTH );
 		
+		magnet += "&xl="  + download.getTorrentSize();
+		
+		DownloadScrapeResult scrape = download.getLastScrapeResult();
+
+		if ( scrape != null && scrape.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
+
+			int seeds 		= scrape.getSeedCount();
+			int leechers	 = scrape.getNonSeedCount();
+			
+			if ( seeds != -1 ){
+				magnet += "&_s="  + seeds;
+			}
+			
+			if ( leechers != -1 ){
+				magnet += "&_l="  + leechers;
+			}
+		}
+		
+		long added = PluginCoreUtils.unwrap( download ).getDownloadState().getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
+
+		magnet += "&_d="  + added;
+		
 		InetSocketAddress address = chat.getMyAddress();
 
 		if ( address != null ){
@@ -4174,35 +4258,50 @@ BuddyPluginViewBetaChat
 		}
 	}
 
+	private void
+	setInputAvailability(
+		boolean		focus )
+	{
+		boolean		avail = false;
+		
+		if ( !chat.isReadOnly()){
+			
+			if ( ftux_ok ){
+			
+				avail = chat_available;
+			}
+		}
+		
+		input_area.setEnabled( avail );
+		
+		if ( avail && focus ) {
+			
+			input_area.setFocus();
+		}
+	}
+	
 	@Override
 	public void
 	stateChanged(
 		final boolean avail )
 	{
-		input_available = avail;
-
-		if ( buddy_table == null || buddy_table.isDisposed()){
-
-			return;
-		}
-
 		Utils.execSWTThread(
 			new Runnable()
 			{
 				@Override
 				public void
 				run()
-				{					
-					if ( buddy_table.isDisposed()){
+				{		
+					chat_available	= avail;
 
-						return;
-					}
-
-					input_area.setEnabled( avail );
+					setInputAvailability( false );
 
 						// update as key may now be available
 
-					nickname.setMessage( chat.getDefaultNickname());
+					if ( nickname != null ) {
+					
+						nickname.setMessage( chat.getDefaultNickname());
+					}
 				}
 			});
 	}

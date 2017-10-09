@@ -94,6 +94,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final int VIEW_TYPE_DEFAULT			= 1;
 	public static final int VIEW_TYPE_SHARING			= 2;
 
+	public static final String RSS_ITEMS_UNAVAILABLE = "RSS items unavailable until you accept Chat terms and conditions";
 
 	private BuddyPlugin			plugin;
 	private PluginInterface		plugin_interface;
@@ -1706,7 +1707,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				pw.println( "<item>" );
 				
-				pw.println( "<title>" + escape( "RSS items unavailable until you accept Chat terms and conditions" ) + "</title>" );
+				pw.println( "<title>" + escape( RSS_ITEMS_UNAVAILABLE ) + "</title>" );
 
 				pw.println( "<guid>23232329090909</guid>" );
 
@@ -1948,7 +1949,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	{
 		ftux_accepted = accepted;
 
-		COConfigurationManager.setParameter( "azbuddy.dchat.ftux.accepted", true );
+		COConfigurationManager.setParameter( "azbuddy.dchat.ftux.accepted", accepted );
 
 		COConfigurationManager.save();
 
