@@ -194,7 +194,7 @@ PlatformManagerUpdateChecker
 
 				ResourceDownloader direct_rdl = rdf.create( new URL( target_download ));
 
-				String	torrent_download = Constants.URL_PLUGINS;
+				String	torrent_download = Constants.URL_PLUGINS_TORRENT_BASE;
 
 				int	slash_pos = target_download.lastIndexOf("/");
 

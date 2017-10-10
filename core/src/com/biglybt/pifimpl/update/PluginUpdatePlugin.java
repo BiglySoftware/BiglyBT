@@ -832,7 +832,7 @@ PluginUpdatePlugin
 							// sf_plugin_download will be something like ../plugins/safepeer_2.4.zip
 							//     torrent is safepeer_2.4.zip.torrent
 
-						String	torrent_download = Constants.URL_PLUGINS;
+						String	torrent_download = Constants.URL_PLUGINS_TORRENT_BASE;
 
 						int	slash_pos = sf_plugin_download.lastIndexOf("/");
 

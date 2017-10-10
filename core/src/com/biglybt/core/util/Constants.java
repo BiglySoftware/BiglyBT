@@ -35,9 +35,9 @@ import java.util.regex.Pattern;
 public class
 Constants
 {
-	public static final String PLUGINS_WEB_SITE    = "https://plugins.biglybt.com/";
-
-	public static final String URL_PLUGINS         = "https://files.biglybt.com/plugins/";
+	public static final String PLUGINS_WEB_SITE   				= "https://plugins.biglybt.com/";
+	public static final String URL_PLUGINS_TORRENT_BASE         = "http://version.biglybt.com/biglybt-files/plugins/";
+	
 	public static final String URL_CLIENT_HOME     = "https://www.biglybt.com/";
 	public static final String URL_BUG_REPORTS     = "https://bugs.biglybt.com/";
 	public static final String URL_VOTE            = "https://vote.biglybt.com/";
