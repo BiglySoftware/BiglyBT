@@ -120,8 +120,9 @@ public class UISWTViewImpl
 
 	private boolean destroyOnDeactivate;
 
+	private boolean	disposed;
+	
 	private Composite masterComposite;
-
 	private Set<UIPluginViewToolBarListener> setToolBarEnablers = new HashSet<>(1);
 
 	public UISWTViewImpl(String id, String parentViewID, boolean destroyOnDeactivate) {
@@ -139,6 +140,12 @@ public class UISWTViewImpl
 	public void setEventListener(UISWTViewEventListener _eventListener,
 			boolean doCreate)
 					throws UISWTViewEventCancelledException {
+		
+		if ( this.eventListener instanceof UISWTViewEventListenerHolder ){
+			
+			((UISWTViewEventListenerHolder)this.eventListener).removeListener( this );
+		}
+		
 		this.eventListener = _eventListener;
 
 		if (eventListener == null) {
@@ -150,6 +157,7 @@ public class UISWTViewImpl
 			UISWTViewEventListener delegatedEventListener = h.getDelegatedEventListener(
 					this);
 			if (delegatedEventListener != null) {
+				h.removeListener( this );
 				this.eventListener = delegatedEventListener;
 			}
 		}
@@ -300,6 +308,15 @@ public class UISWTViewImpl
 			// TODO: Better error
 			Debug.out(e);
 		}
+		
+		if ( eventType == UISWTViewEvent.TYPE_DESTROY) {
+			disposed = true;
+		}
+	}
+	
+	@Override
+	public boolean isDisposed(){
+		return( disposed );
 	}
 
 	private static String padRight(String s, int n) {

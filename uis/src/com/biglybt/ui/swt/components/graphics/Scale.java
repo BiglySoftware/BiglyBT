@@ -81,6 +81,14 @@ public class Scale {
 				"config.style.forceSIValues");
   }
 
+  public void
+  dispose()
+  {
+	  COConfigurationManager.removeWeakParameterListener( parameterListener,
+				"ui.scaled.graphics.binary.based", "config.style.useSIUnits",
+				"config.style.forceSIValues");
+  }
+  
   public boolean
   isSIIECSensitive()
   {
