@@ -33,8 +33,10 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
+import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.tracker.server.*;
 import com.biglybt.core.util.*;
 
@@ -90,6 +92,106 @@ TRTrackerServerImpl
 			});
 
 		readConfig();
+		
+		final AsyncDispatcher	network_dispatcher = new AsyncDispatcher( "tracker:netdispatch", 5000 );
+	    
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[] {
+				"Tracker Port Enable",
+				"Tracker I2P Enable",
+				"Tracker Tor Enable",
+				"Tracker Port"
+			}, 
+			new ParameterListener(){
+				
+				@Override
+				public void 
+				parameterChanged(String parameterName)
+				{					
+					network_dispatcher.dispatch(
+						new AERunnable()
+						{
+							@Override
+							public void
+							runSupport()
+							{
+								boolean	tr_enable 	= COConfigurationManager.getBooleanParameter( "Tracker Port Enable" );
+								boolean	i2p_enable 	= COConfigurationManager.getBooleanParameter( "Tracker I2P Enable" );
+								boolean	tor_enable 	= COConfigurationManager.getBooleanParameter( "Tracker Tor Enable" );
+								int		port		= COConfigurationManager.getIntParameter( "Tracker Port" );
+								
+								String old_i2p_str 	= COConfigurationManager.getStringParameter( "Tracker I2P Host Port", "" );
+								String new_i2p_str	= "";
+								
+								if ( tr_enable ){
+									
+									if ( i2p_enable ) {
+										
+										Map<String,Object>	options = new HashMap<>();
+					
+										options.put( AEProxyFactory.SP_PORT, port );
+					
+										Map<String,Object> reply =
+												AEProxyFactory.getPluginServerProxy(
+													"Tracker",
+													AENetworkClassifier.AT_I2P,
+													"tracker",
+													options );
+					
+										if ( reply != null ){
+					
+											String host = (String)reply.get( "host" );
+					
+											new_i2p_str = host + ":" + port;
+											
+										}else{
+											
+											new_i2p_str = old_i2p_str;
+										}
+									}
+									
+									if ( !old_i2p_str.equals( new_i2p_str )) {
+										
+										COConfigurationManager.setParameter( "Tracker I2P Host Port", new_i2p_str );
+									}
+									
+									String old_tor_str 	= COConfigurationManager.getStringParameter( "Tracker Tor Host Port", "" );
+									String new_tor_str	= "";
+								
+									if ( tor_enable ){
+																				
+										Map<String,Object>	options = new HashMap<>();
+					
+										options.put( AEProxyFactory.SP_PORT, port );
+					
+										Map<String,Object> reply =
+												AEProxyFactory.getPluginServerProxy(
+													"Tracker",
+													AENetworkClassifier.AT_TOR,
+													"tracker",
+													options );
+					
+										if ( reply != null ){
+					
+											String host = (String)reply.get( "host" );
+					
+											new_tor_str = host;	// NO Port - onions all on port 80
+											
+										}else{
+											
+											new_tor_str = old_tor_str;
+										}
+									}
+									
+									if ( !old_tor_str.equals( new_tor_str )) {
+										
+										COConfigurationManager.setParameter( "Tracker Tor Host Port", new_tor_str );
+									}
+
+								}
+							}
+						});
+				}});
 	}
 
 	protected static void

@@ -22,6 +22,9 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -29,9 +32,12 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Constants;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
@@ -48,8 +54,6 @@ public class
 ConfigSectionTrackerServer
 	implements UISWTConfigSection
 {
-	private static final String	CFG_PREFIX = "ConfigView.section.";
-
 	private final static int REQUIRED_MODE = 1;
 
 	@Override
@@ -189,13 +193,6 @@ ConfigSectionTrackerServer
     Label tracker_port_backup_label = new Label(gMainTab, SWT.NULL );
     Messages.setLanguageText(tracker_port_backup_label, "ConfigView.section.tracker.portbackup");
 
-    Control[] non_ssl_controls = new Control[3];
-    non_ssl_controls[0] = tracker_port.getControl();
-    non_ssl_controls[1] = tracker_port_backup.getControl();
-    non_ssl_controls[2] = tracker_port_backup_label;
-
-    nonsslEnable.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( non_ssl_controls ));
-
 
     // row
 
@@ -269,7 +266,91 @@ ConfigSectionTrackerServer
 
     sslEnable.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( ssl_controls ));
 
+    // enable I2P
+    
+    gridData = new GridData();
+    gridData.horizontalSpan = 1;
+    final BooleanParameter i2p_enable = new BooleanParameter( gMainTab, "Tracker I2P Enable", "label.enable.i2p");
+    i2p_enable.setLayoutData( gridData );
 
+    final Label i2p_dest = label = new Label(gMainTab, SWT.NULL);
+    gridData = new GridData();
+    gridData.horizontalSpan = 3;
+    label.setLayoutData(gridData);
+
+    ClipboardCopy.addCopyToClipMenu( i2p_dest );
+    
+    COConfigurationManager.addAndFireParameterListener(
+		"Tracker I2P Host Port",
+		new ParameterListener(){
+			ParameterListener l = this;
+			@Override
+			public void parameterChanged(String parameterName){
+				Utils.execSWTThread(
+					new Runnable(){
+						
+						@Override
+						public void run(){
+							if ( i2p_dest.isDisposed()) {
+								COConfigurationManager.removeParameterListener( parameterName, l );
+							}else{
+								String val = "http://" + COConfigurationManager.getStringParameter( parameterName) + "/announce";
+								i2p_dest.setText( val);
+								i2p_dest.setData( val );
+								i2p_dest.getParent().layout(true, true);
+							}
+						}
+					});
+			}
+		});
+    
+   // enable Tor
+    
+    gridData = new GridData();
+    gridData.horizontalSpan = 1;
+    final BooleanParameter tor_enable = new BooleanParameter( gMainTab, "Tracker Tor Enable", "label.enable.tor");
+    i2p_enable.setLayoutData( gridData );
+
+    final Label tor_dest = label = new Label(gMainTab, SWT.NULL);
+    gridData = new GridData();
+    gridData.horizontalSpan = 3;
+    label.setLayoutData(gridData);
+       
+    ClipboardCopy.addCopyToClipMenu( tor_dest );
+    
+    COConfigurationManager.addAndFireParameterListener(
+		"Tracker Tor Host Port",
+		new ParameterListener(){
+			ParameterListener l = this;
+			@Override
+			public void parameterChanged(String parameterName){
+				Utils.execSWTThread(
+					new Runnable(){
+						
+						@Override
+						public void run(){
+							if ( tor_dest.isDisposed()) {
+								COConfigurationManager.removeParameterListener( parameterName, l );
+							}else{
+								String val = "http://" + COConfigurationManager.getStringParameter( parameterName) + "/announce";
+								tor_dest.setText( val);
+								tor_dest.setData( val );
+								tor_dest.getParent().layout(true, true);
+							}
+						}
+					});
+			}
+		});
+    
+    Control[] non_ssl_controls = new Control[5];
+    non_ssl_controls[0] = tracker_port.getControl();
+    non_ssl_controls[1] = tracker_port_backup.getControl();
+    non_ssl_controls[2] = tracker_port_backup_label;
+    non_ssl_controls[3] = i2p_enable.getControl();
+    non_ssl_controls[4] = tor_enable.getControl();
+    
+    nonsslEnable.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( non_ssl_controls ));
+    
     // row
 
     gridData = new GridData();
