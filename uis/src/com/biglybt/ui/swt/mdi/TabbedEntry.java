@@ -98,7 +98,8 @@ public class TabbedEntry
 						getDatasourceCore(),
 						getControlType(),
 						swtItem,
-						getEventListener()));
+						getEventListener(),
+						false ));
 	}
 	
 	public static SWTSkinObjectContainer
@@ -111,7 +112,8 @@ public class TabbedEntry
 		Object						datasource,
 		int							controlType,
 		CTabItem					swtItem,
-		UISWTViewEventListener		original_event_listener )
+		UISWTViewEventListener		original_event_listener,
+		boolean						listener_is_new )
 	{
 		Control control = null;
 
@@ -154,7 +156,7 @@ public class TabbedEntry
 
 				final UISWTViewImpl view = new UISWTViewImpl( id, parentID, true );
 
-				final UISWTViewEventListener event_listener = original_event_listener instanceof UISWTViewEventListenerEx?((UISWTViewEventListenerEx)original_event_listener).getClone():((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
+				final UISWTViewEventListener event_listener = listener_is_new?original_event_listener:original_event_listener instanceof UISWTViewEventListenerEx?((UISWTViewEventListenerEx)original_event_listener).getClone():((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
 				
 				try{
 					view.setEventListener( event_listener, false);

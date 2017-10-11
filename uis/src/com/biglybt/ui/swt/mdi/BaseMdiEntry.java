@@ -1675,7 +1675,8 @@ public abstract class BaseMdiEntry
 						data_source,
 						control_type,
 						null,
-						event_listener ));
+						event_listener,
+						true ));
 			
 		}else {
 			return(TabbedEntry.buildStandAlone(
@@ -1687,7 +1688,8 @@ public abstract class BaseMdiEntry
 					data_source,
 					control_type,
 					null,
-					event_listener ));
+					event_listener,
+					true ));
 			
 		}
 	}

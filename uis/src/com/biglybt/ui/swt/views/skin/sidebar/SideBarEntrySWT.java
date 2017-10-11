@@ -472,7 +472,8 @@ public class SideBarEntrySWT
 					getDatasourceCore(),
 					getControlType(),
 					swtItem,
-					getEventListener()));
+					getEventListener(),
+					false ));
 	}
 	
 	
@@ -486,7 +487,8 @@ public class SideBarEntrySWT
 		Object						datasource,
 		int							controlType,
 		TreeItem					swtItem,
-		UISWTViewEventListener		original_event_listener )
+		UISWTViewEventListener		original_event_listener,
+		boolean						listener_is_new )
 	{
 		Control control = null;
 
