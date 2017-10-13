@@ -4863,6 +4863,9 @@ SpeedLimitHandler
 
 								download.pause();
 							}
+							
+							download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));
+							
 						}else if ( extension_type == ET_STOP_TAG ){
 
 							if ( 	state != Download.ST_ERROR &&
@@ -4870,6 +4873,8 @@ SpeedLimitHandler
 									state != Download.ST_STOPPING ){
 
 								download.stopIt( DownloadManager.STATE_STOPPED, false, false );
+								
+								download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));
 							}
 						}
 					}

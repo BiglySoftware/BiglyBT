@@ -2146,6 +2146,10 @@ public class ManagerUtils {
 
 						long target_time = SystemTime.getOffsetTime( seconds*1000);
 
+						String time_str = new SimpleDateFormat( "HH:mm:ss" ).format( new Date( target_time ));
+						
+						String reason = MessageText.getString( "label.resuming.at", new String[] { time_str });
+							
 						for ( DownloadManager dm: dms ){
 
 							if ( !isPauseable( dm )){
@@ -2155,6 +2159,8 @@ public class ManagerUtils {
 
 							if ( dm.pause( target_time )){
 
+								dm.setStopReason( reason );
+								
 								synchronized( paused ){
 
 									paused.add( dm );

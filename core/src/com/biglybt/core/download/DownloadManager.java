@@ -37,6 +37,7 @@ import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.IndentWriter;
+import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadAnnounceResult;
 import com.biglybt.pif.download.DownloadScrapeResult;
 
@@ -86,6 +87,8 @@ DownloadManager
 	public static final int ET_OTHER					= DiskManager.ET_OTHER;
 	public static final int ET_INSUFFICIENT_SPACE		= DiskManager.ET_INSUFFICIENT_SPACE;
 
+	public static final Object UD_KEY_STOP_REASON = Download.UD_KEY_STOP_REASON;
+	
     public void
     initialize();
 
@@ -161,6 +164,19 @@ DownloadManager
         boolean remove_torrent,
         boolean remove_data );
 
+    default public void
+    setStopReason(
+    	String	reason )
+    {
+    	setUserData( UD_KEY_STOP_REASON, reason );
+    }
+    
+    default public String
+    getStopReason()
+    {
+    	return( (String)getUserData( UD_KEY_STOP_REASON ));
+    }
+    
     /**
      * As above but definitely indicates that the stop is for removal (if for_removal is true) and therefore that any removal specific actions
      * such as removing partial files should be performed

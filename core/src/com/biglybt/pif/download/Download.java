@@ -187,6 +187,8 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
     public static final long FLAG_INITIAL_NETWORKS_SET	= 0x00001000;
 
+    public static final Object	UD_KEY_STOP_REASON	= new Object();
+    
 
 	/** get state from above ST_ set
    * @return ST_ constant
@@ -283,6 +285,21 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
 		throws DownloadException;
 
+	default public void
+	setStopReason(
+		String reason )
+
+		throws DownloadException
+	{
+		setUserData( UD_KEY_STOP_REASON, reason );
+	}
+
+	default public String
+	getStopReason()
+	{
+		return((String)getUserData( UD_KEY_STOP_REASON ));
+	}
+	
 	/**
 	 * See lifecycle description above
 	 * @throws DownloadException

@@ -809,6 +809,10 @@ DisplayFormatters
 			}
 			case DownloadManager.STATE_STOPPED:
 				tmp = manager.isPaused() ? ManagerItem_paused : ManagerItem_stopped;
+				String sr = manager.getStopReason();
+				if ( sr != null && !sr.isEmpty()){
+					tmp += " (" + sr + ")";
+				}
 				break;
 
 			case DownloadManager.STATE_ERROR:

@@ -1198,6 +1198,11 @@ DownloadManagerController
 	  					}
 	  				}
 	  			}
+	  			
+	  			if ( old_state == DownloadManager.STATE_STOPPED ){
+	  				
+	  				download_manager.setStopReason( null );
+	  			}
 	  		}
   		}finally{
 

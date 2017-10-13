@@ -60,7 +60,6 @@ import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableResolver;
-import com.biglybt.core.tag.impl.TagManagerImpl;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
