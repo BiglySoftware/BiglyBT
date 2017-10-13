@@ -288,8 +288,6 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	default public void
 	setStopReason(
 		String reason )
-
-		throws DownloadException
 	{
 		setUserData( UD_KEY_STOP_REASON, reason );
 	}
