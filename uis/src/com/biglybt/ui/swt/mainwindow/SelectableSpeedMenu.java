@@ -425,24 +425,25 @@ public class SelectableSpeedMenu {
 				? "GeneralView.label.maxuploadspeed"
 				: "GeneralView.label.maxdownloadspeed");
 
-		GlobalManager gm = core.getGlobalManager();
-
 		final int	kInB = DisplayFormatters.getKinB();
 
-		int maxBandwidth = 0;
+		int maxBandwidth_k = 0;
 		boolean allDisabled = true;
 		
 		for (DownloadManager dm : dms) {
 			int bandwidth = (isUpSpeed
 					? dm.getStats().getUploadRateLimitBytesPerSecond()
-					: dm.getStats().getDownloadRateLimitBytesPerSecond()) / kInB;
-			if (bandwidth > maxBandwidth || bandwidth == 0) {
-				maxBandwidth = bandwidth;
+					: dm.getStats().getDownloadRateLimitBytesPerSecond());
+			
+			int bw_k =  bandwidth / kInB;
+			if (bw_k > maxBandwidth_k || bandwidth == 0) {
+				maxBandwidth_k = bw_k;
+				allDisabled = false;
 			}else if ( bandwidth != -1 ) {
 				allDisabled = false;
 			}
 		}
-		boolean unlim = maxBandwidth == 0;
+		boolean unlim = maxBandwidth_k == 0;
 		final int num_entries = dms.length;
 
 		SpeedScaleShell speedScale = new SpeedScaleShell() {
@@ -475,7 +476,7 @@ public class SelectableSpeedMenu {
 				return prefix + ": " + speed;
 			}
 		};
-		int max = unlim ? (isUpSpeed ? 100 : 800) : maxBandwidth * 5;
+		int max = unlim ? (isUpSpeed ? 100 : 800) : maxBandwidth_k * 5;
 		if (max < 50) {
 			max = 50;
 		}
@@ -494,7 +495,7 @@ public class SelectableSpeedMenu {
 			speed_limits = parseSpeedPartitionString(COConfigurationManager.getStringParameter(
 					config_prefix + "values", ""));
 		} else {
-			speed_limits = getGenericSpeedList(6, maxBandwidth);
+			speed_limits = getGenericSpeedList(6, maxBandwidth_k);
 		}
 		if (speed_limits != null) {
 			for (int i = 0; i < speed_limits.length; i++) {
@@ -529,12 +530,12 @@ public class SelectableSpeedMenu {
 					lastValue * kInB, true), lastValue);
 		}
 
-		if (speedScale.open(cClickedFrom, allDisabled?-2:maxBandwidth, true)) {
+		if (speedScale.open(cClickedFrom, allDisabled?-2:maxBandwidth_k, true)) {
 			int value = speedScale.getValue();
 
 			if (!speedScale.wasMenuChosen() || lastValue == value) {
 				COConfigurationManager.setParameter(config_prefix + "last",
-						maxBandwidth);
+						maxBandwidth_k);
 			}
 
 			if (value >= 0) {
