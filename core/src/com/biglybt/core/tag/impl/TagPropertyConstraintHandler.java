@@ -1432,6 +1432,7 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_PAUSED		= 18;
 		private static final int FT_IS_ERROR		= 19;
 		private static final int FT_IS_MAGNET		= 20;
+		private static final int FT_IS_LOW_NOISE	= 21;
 
 
 		static final Map<String,Integer>	keyword_map = new HashMap<>();
@@ -1583,6 +1584,12 @@ TagPropertyConstraintHandler
 				}else if ( func_name.equals( "isMagnet" )){
 
 					fn_type = FT_IS_MAGNET;
+
+					params_ok = params.length == 0;
+
+				}else if ( func_name.equals( "isLowNoise" )){
+
+					fn_type = FT_IS_LOW_NOISE;
 
 					params_ok = params.length == 0;
 
@@ -1763,6 +1770,10 @@ TagPropertyConstraintHandler
 					case FT_IS_MAGNET:{
 
 						return( dm.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
+					}
+					case FT_IS_LOW_NOISE:{
+
+						return( dm.getDownloadState().getFlag(DownloadManagerState.FLAG_LOW_NOISE ));
 					}
 					case FT_IS_PAUSED:{
 
