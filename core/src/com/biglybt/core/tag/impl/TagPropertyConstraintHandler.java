@@ -945,7 +945,7 @@ TagPropertyConstraintHandler
 		apply(
 			DownloadManager			dm )
 		{
-			if ( dm.isDestroyed() || !dm.isPersistent()){
+			if ( ignoreDownload( dm )){
 
 				return;
 			}
@@ -1024,7 +1024,7 @@ TagPropertyConstraintHandler
 
 			for ( DownloadManager dm: dms ){
 
-				if ( dm.isDestroyed() || !dm.isPersistent()){
+				if ( ignoreDownload( dm )){
 
 					continue;
 				}
@@ -1064,7 +1064,23 @@ TagPropertyConstraintHandler
 			}
 		}
 
-
+		private boolean
+		ignoreDownload(
+			DownloadManager dm )
+		{
+			if ( dm.isDestroyed()) {
+				
+				return( true );
+				
+			}else if ( !dm.isPersistent()) {
+			
+				return( !dm.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
+				
+			}else{
+				
+				return( false );
+			}
+		}
 
 		private boolean
 		canAddTaggable(
@@ -1415,6 +1431,7 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_STOPPED		= 17;
 		private static final int FT_IS_PAUSED		= 18;
 		private static final int FT_IS_ERROR		= 19;
+		private static final int FT_IS_MAGNET		= 20;
 
 
 		static final Map<String,Integer>	keyword_map = new HashMap<>();
@@ -1560,6 +1577,12 @@ TagPropertyConstraintHandler
 					fn_type = FT_IS_PAUSED;
 
 					depends_on_download_state = true;
+
+					params_ok = params.length == 0;
+					
+				}else if ( func_name.equals( "isMagnet" )){
+
+					fn_type = FT_IS_MAGNET;
 
 					params_ok = params.length == 0;
 
@@ -1736,6 +1759,10 @@ TagPropertyConstraintHandler
 						int state = dm.getState();
 
 						return( state == DownloadManager.STATE_ERROR );
+					}
+					case FT_IS_MAGNET:{
+
+						return( dm.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
 					}
 					case FT_IS_PAUSED:{
 
