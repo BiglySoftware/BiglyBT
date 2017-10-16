@@ -3818,6 +3818,12 @@ public class OpenTorrentOptionsWindow
 
 			updateStartOptionsHeader();
 		}
+		
+		protected void setSequentalDownload(boolean seq) {
+			torrentOptions.bSequentialDownload = seq;
+
+			updateStartOptionsHeader();
+		}
 
 		private void updateStartOptionsHeader() {
 			if (soStartOptionsExpandItem == null) {
@@ -3866,6 +3872,11 @@ public class OpenTorrentOptionsWindow
 
 			s += "        " + MessageText.getString( "OpenTorrentOptions.header.tags", new String[]{ tag_str });
 
+			if ( torrentOptions.bSequentialDownload ) {
+			
+				s += "        " + MessageText.getString( "menu.sequential.download" );
+			}
+			
 			soStartOptionsExpandItem.setText(s);
 		}
 
@@ -4323,7 +4334,7 @@ public class OpenTorrentOptionsWindow
 			GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 			Utils.setLayoutData(cTorrentModes, Utils.getFilledFormData());
 			GridLayout layout = new GridLayout();
-			layout.numColumns = 4;
+			layout.numColumns = 5;
 			layout.marginWidth = 5;
 			layout.marginHeight = 5;
 			cTorrentModes.setLayout(layout);
@@ -4360,6 +4371,23 @@ public class OpenTorrentOptionsWindow
 				}
 			});
 
+			Button seqDL = new Button( cTorrentModes, SWT.CHECK );
+			Messages.setLanguageText(seqDL, "menu.sequential.download");
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			Utils.setLayoutData(seqDL, gridData);
+			
+			if ( Constants.isWindows ){
+				seqDL.setBackground( Colors.white );
+			}
+			
+			seqDL.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					setSequentalDownload( seqDL.getSelection());
+				}
+			});
+
+			
 			if ( TagManagerFactory.getTagManager().isEnabled()){
 
 					// tag area

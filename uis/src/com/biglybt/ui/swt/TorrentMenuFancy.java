@@ -1148,6 +1148,48 @@ public class TorrentMenuFancy
 						}
 					});
 		}
+		
+		// Sequential download
+		
+		{
+			boolean allSeq		= true;
+			boolean AllNonSeq 	= true;
+
+			for (int j = 0; j < dms.length; j++) {
+				DownloadManager dm = dms[j];
+
+				boolean seq = dm.getDownloadState().getFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD);
+
+				if (seq) {
+					AllNonSeq = false;
+				} else {
+					allSeq = false;
+				}
+			}
+
+			boolean bChecked;
+
+			if (allSeq) {
+				bChecked = true;
+			} else if (AllNonSeq) {
+				bChecked = false;
+			} else {
+				bChecked = false;
+			}
+
+			final boolean newSeq = !bChecked;
+
+			FancyRowInfo row = createRow(cParent, "menu.sequential.download",
+					null, new ListenerDMTask(dms) {
+						@Override
+						public void run(DownloadManager dm) {
+							dm.getDownloadState().setFlag(
+									DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, newSeq );
+						}
+					});
+
+			row.setSelection(bChecked);
+		}
 
 		// IP Filter Enable
 		if (userMode > 0

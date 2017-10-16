@@ -592,6 +592,11 @@ public class TorrentOpener {
 								Debug.printStackTrace(e2);
 							}
 						}
+						
+						if ( torrentOptions.bSequentialDownload ) {
+							
+							dm_state.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );
+						}
 					} finally {
 
 						dm.getDownloadState().suppressStateSave(false);

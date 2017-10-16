@@ -88,6 +88,8 @@ public class TorrentOpenOptions
 	/** @todo: getter/setters */
 	public int iQueueLocation;
 
+	public boolean bSequentialDownload;
+	
 	/** @todo: getter/setters */
 	public boolean isValid;
 
@@ -144,6 +146,7 @@ public class TorrentOpenOptions
 	public TorrentOpenOptions() {
 		iStartID = getDefaultStartMode();
 		iQueueLocation = QUEUELOCATION_BOTTOM;
+		bSequentialDownload = false;
 		isValid = true;
 		this.sDestDir = COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH);
 
@@ -168,6 +171,7 @@ public class TorrentOpenOptions
 		this.sDestSubDir = toBeCloned.sDestSubDir;
 		this.iStartID = toBeCloned.iStartID;
 		this.iQueueLocation = toBeCloned.iQueueLocation;
+		this.bSequentialDownload = toBeCloned.bSequentialDownload;
 		this.isValid = toBeCloned.isValid;
 		this.bDeleteFileOnCancel = toBeCloned.bDeleteFileOnCancel;
 		this.disableIPFilter = toBeCloned.disableIPFilter;

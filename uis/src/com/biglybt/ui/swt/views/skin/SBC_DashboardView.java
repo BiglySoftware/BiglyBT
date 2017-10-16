@@ -22,7 +22,9 @@ package com.biglybt.ui.swt.views.skin;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.Composite;
 
-
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
@@ -33,9 +35,11 @@ public class SBC_DashboardView
 	extends SkinView
 	implements UIUpdatable, DashboardListener
 {
-
 	private static final String UI_NAME = "Dashboard";
 
+	private static boolean core_running;
+	private static boolean core_running_listener_added;
+	
 	private Composite 			dashboard_composite;
 	
 	private final boolean	destroy_when_hidden = false;
@@ -106,6 +110,47 @@ public class SBC_DashboardView
 	
 	private void
 	build()
+	{
+		synchronized( SBC_DashboardView.class ){
+			
+			if ( !core_running ){
+		
+				if ( !core_running_listener_added ){
+					
+					core_running_listener_added = true;
+					
+					CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+		
+						@Override
+						public void coreRunning(Core core) {
+						
+							synchronized( SBC_DashboardView.class ){
+								
+								core_running = true;
+							}
+					
+							Utils.execSWTThread(
+									new Runnable()
+									{
+										public void
+										run()
+										{
+											buildSupport();
+										}
+									});
+							
+						}});
+				}
+				
+				return;
+			}
+		}
+
+		buildSupport();
+	}
+	
+	private void
+	buildSupport()
 	{
 		MainMDISetup.getSb_dashboard().build( dashboard_composite );
 	}

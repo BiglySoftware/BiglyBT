@@ -191,6 +191,8 @@ DownloadManagerController
 	private PeerManagerRegistration	peer_manager_registration;
 	PEPeerManager 			peer_manager;
 
+	private DownloadManagerStateAttributeListener	dm_attribute_listener;
+	
 	private List<Object[]>	external_rate_limiters_cow;
 
 	private String 	errorDetail;
@@ -346,6 +348,13 @@ DownloadManagerController
 				DownloadManagerRateController.removePeerManager( peer_manager );
 
 				peer_manager	= null;
+				
+				download_manager.getDownloadState().removeListener(
+						dm_attribute_listener,
+						DownloadManagerState.AT_FLAGS,
+						DownloadManagerStateAttributeListener.WRITTEN );
+				
+				dm_attribute_listener = null;
 			}
 
 			dm	= getDiskManager();
@@ -627,6 +636,32 @@ DownloadManagerController
 
 			peer_manager = temp;
 
+			if ( dm_attribute_listener != null ) {
+				
+				download_manager.getDownloadState().removeListener(
+						dm_attribute_listener,
+						DownloadManagerState.AT_FLAGS,
+						DownloadManagerStateAttributeListener.WRITTEN );
+			}
+			
+			dm_attribute_listener = new DownloadManagerStateAttributeListener(){
+				
+				@Override
+				public void attributeEventOccurred(DownloadManager download, String attribute, int event_type){
+					
+					boolean seq = download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD );
+					
+					temp.getPiecePicker().setSequentialDownload( seq );
+				}
+			};
+			
+			download_manager.getDownloadState().addListener(
+					dm_attribute_listener,
+					DownloadManagerState.AT_FLAGS,
+					DownloadManagerStateAttributeListener.WRITTEN );
+			
+			dm_attribute_listener.attributeEventOccurred( null, null, -1 );	// set initial state
+			
 			DownloadManagerRateController.addPeerManager( peer_manager );
 
 			SimpleTimer.addTickReceiver( this );
@@ -891,16 +926,25 @@ DownloadManagerController
 
 					if ( peer_manager != null ){
 
-					  peer_manager.stopAll();
+						peer_manager.stopAll();
 
-					  stats.saveSessionTotals();
+						stats.saveSessionTotals();
 
 						DownloadManagerState dmState = download_manager.getDownloadState();
+						
 						dmState.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME, SystemTime.getCurrentTime());
 
-					  SimpleTimer.removeTickReceiver( this );
+						SimpleTimer.removeTickReceiver( this );
 
-					  DownloadManagerRateController.removePeerManager( peer_manager );
+						DownloadManagerRateController.removePeerManager( peer_manager );
+						
+						
+						download_manager.getDownloadState().removeListener(
+								dm_attribute_listener,
+								DownloadManagerState.AT_FLAGS,
+								DownloadManagerStateAttributeListener.WRITTEN );
+						
+						dm_attribute_listener = null;
 					}
 
 						// do this even if null as it also triggers tracker actions

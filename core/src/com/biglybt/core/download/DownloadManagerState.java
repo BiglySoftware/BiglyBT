@@ -103,6 +103,7 @@ DownloadManagerState
 	public static final long FLAG_METADATA_DOWNLOAD				  		= Download.FLAG_METADATA_DOWNLOAD;
 	public static final long FLAG_ERROR_REPORTED				  		= Download.FLAG_ERROR_REPORTED;
 	public static final long FLAG_INITIAL_NETWORKS_SET					= Download.FLAG_INITIAL_NETWORKS_SET;
+	public static final long FLAG_SEQUENTIAL_DOWNLOAD					= Download.FLAG_SEQUENTIAL_DOWNLOAD;
 
 	public static final String	PARAM_MAX_PEERS							= "max.peers";
 	public static final String	PARAM_MAX_PEERS_WHEN_SEEDING			= "max.peers.when.seeding";

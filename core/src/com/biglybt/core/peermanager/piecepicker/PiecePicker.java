@@ -128,6 +128,10 @@ public interface PiecePicker
 	getPriorityProviders();
 
 	public void
+	setSequentialDownload(
+		boolean			seq );
+	
+	public void
 	addListener(
 		PiecePickerListener		listener );
 
