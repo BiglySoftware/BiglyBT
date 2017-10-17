@@ -518,7 +518,14 @@ BuddyPluginUtils
 			if ( ui != null ){
 
 				return( ui.buildView( properties, listener ));
+				
+			}else{
+				
+				Debug.out( "Can't build view - UI unavail" );
 			}
+		}else {
+			
+			Debug.out( "Can't build view - bp=" + bp );
 		}
 
 		return( null );

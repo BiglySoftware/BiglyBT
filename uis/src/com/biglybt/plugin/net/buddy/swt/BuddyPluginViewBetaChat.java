@@ -4269,11 +4269,14 @@ BuddyPluginViewBetaChat
 			}
 		}
 		
-		input_area.setEnabled( avail );
+		if ( !input_area.isDisposed()){
 		
-		if ( avail && focus ) {
+			input_area.setEnabled( avail );
+		
+			if ( avail && focus ) {
 			
-			input_area.setFocus();
+				input_area.setFocus();
+			}
 		}
 	}
 	

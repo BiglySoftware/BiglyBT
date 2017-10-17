@@ -39,7 +39,6 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -60,7 +59,6 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.CopyOnWriteList;
@@ -83,6 +81,7 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
 import com.biglybt.ui.mdi.MdiEntryVitalityImageListener;
+import com.biglybt.ui.mdi.MdiListener;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
@@ -416,6 +415,21 @@ public class SB_Dashboard
 			}});
 		
 		cog.setVisible(true);
+		
+		mdi.addListener(new MdiListener() {
+
+			@Override
+			public void mdiEntrySelected(MdiEntry newEntry,
+			                             MdiEntry oldEntry) {
+		
+				if (mdi_entry == newEntry && mdi_entry == oldEntry) { 
+						
+					fireChanged();
+						
+				}
+			}
+			public void mdiDisposed(MultipleDocumentInterface mdi) {}
+			});
 		
 		return( mdi_entry );
 	}
@@ -1581,7 +1595,16 @@ public class SB_Dashboard
 			Control c = ((SWTSkinObjectContainer)skin.getSkinObject( "content-area" )).getControl();
 			
 			c.setLayoutData( Utils.getFilledFormData());
-			
+				
+			c.addListener(
+				SWT.Show,
+				new Listener(){
+					
+					@Override
+					public void handleEvent(Event arg0){
+						g.layout( true, true );
+					}
+				});
 		}catch( Throwable e ) {
 			
 			Debug.out( e );			
