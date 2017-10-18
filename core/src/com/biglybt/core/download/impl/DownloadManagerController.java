@@ -651,7 +651,11 @@ DownloadManagerController
 					
 					boolean seq = download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD );
 					
-					temp.getPiecePicker().setSequentialDownload( seq );
+					if ( seq ){
+						temp.getPiecePicker().setSequentialAscendingFrom( 0 );
+					}else{
+						temp.getPiecePicker().clearSequential();
+					}
 				}
 			};
 			

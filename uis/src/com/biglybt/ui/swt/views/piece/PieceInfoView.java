@@ -33,6 +33,7 @@ import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.impl.DiskManagerImpl;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPieceListener;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -455,6 +456,61 @@ public class PieceInfoView
 
 						reset_piece.addSelectionListener(
 								new SelectionListenerResetPiece(dm_piece, pm_piece));
+										
+						new MenuItem( menu, SWT.SEPARATOR );
+						
+						final MenuItem seq_asc = new MenuItem( menu, SWT.PUSH );
+
+						Messages.setLanguageText( seq_asc, "label.seq.asc.from", new String[]{ String.valueOf( piece_number )});
+
+						seq_asc.addSelectionListener(
+							new SelectionAdapter()
+							{
+								@Override
+								public void widgetSelected(SelectionEvent e){
+									
+									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+									
+									picker.setReverseBlockOrder( false );
+									
+									picker.setSequentialAscendingFrom( piece_number );
+								}
+							});
+						
+						final MenuItem seq_desc = new MenuItem( menu, SWT.PUSH );
+
+						Messages.setLanguageText( seq_desc, "label.seq.desc.from", new String[]{ String.valueOf( piece_number )});
+
+						seq_desc.addSelectionListener(
+							new SelectionAdapter()
+							{
+								@Override
+								public void widgetSelected(SelectionEvent e){
+									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+									
+									picker.setReverseBlockOrder( true );
+									
+									picker.setSequentialDescendingFrom( piece_number );
+								}
+							});
+						
+						final MenuItem seq_clear = new MenuItem( menu, SWT.PUSH );
+
+						Messages.setLanguageText( seq_clear, "label.seq.clear", new String[]{ String.valueOf( piece_number )});
+
+						seq_clear.addSelectionListener(
+							new SelectionAdapter()
+							{
+								@Override
+								public void widgetSelected(SelectionEvent e){
+									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+									
+									picker.setReverseBlockOrder( false );
+									
+									picker.clearSequential();
+								}
+							});
+						
 					}
 				}
 			});
@@ -825,6 +881,15 @@ public class PieceInfoView
 					"" + dm_pieces.length
 				});
 
+		PiecePicker picker = pm.getPiecePicker();
+		
+		int seq_info = picker.getSequentialInfo();
+		
+		if ( seq_info != 0 ){
+			
+			topLabelLHS += "; seq=" + seq_info;
+		}
+		
 		updateTopLabel();
 
 		pieceInfoCanvas.redraw();

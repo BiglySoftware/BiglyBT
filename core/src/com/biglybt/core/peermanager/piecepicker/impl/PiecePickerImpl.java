@@ -172,7 +172,7 @@ implements PiecePicker
 	/** event # of user file priority settings changes */
 	protected volatile long		filePriorityChange;
 
-	protected volatile boolean		sequentialDownload = false;
+	protected volatile int			sequentialDownload 	= 0;
 	
 	/** last user parameter settings event # when priority bases were calculated */
 	private volatile long		priorityParamChange;
@@ -1399,7 +1399,7 @@ implements PiecePicker
 			Debug.printStackTrace(e);
 		}
 
-		if ( sequentialDownload && !priorityRTAexists ) {
+		if ( sequentialDownload != 0 && !priorityRTAexists ) {
 			
 			int seq_pri = PRIORITY_SEQUENTIAL_START;
 			
@@ -1407,9 +1407,27 @@ implements PiecePicker
 			
 			int	file_priority_start = nbPieces*10;
 			
-			for ( int i=nbPieces-1;i>=0;i--){
+			int	loop_start;
+			int loop_end;
+			int loop_dir;
+			
+			if ( sequentialDownload > 0 ){
 				
-				int priority = newPriorities[i];
+				loop_start 	= nbPieces;
+				loop_end	= sequentialDownload - 1;
+				loop_dir	= -1;
+			}else{
+				loop_start	= -1;
+				loop_end	= -(sequentialDownload+1);
+				loop_dir	= +1;
+			}
+		
+			int	loop_pos = loop_start;
+			
+			do{
+				loop_pos += loop_dir;
+				
+				int priority = newPriorities[loop_pos];
 				
 				if ( priority == Integer.MIN_VALUE ){
 					
@@ -1420,7 +1438,7 @@ implements PiecePicker
 				
 					if ( do_file_priorities ){
 						
-						final DiskManagerPiece dmPiece =dmPieces[i];
+						final DiskManagerPiece dmPiece =dmPieces[loop_pos];
 
 						int	highest = Integer.MIN_VALUE;
 						
@@ -1438,22 +1456,23 @@ implements PiecePicker
 						
 						if ( highest == Integer.MIN_VALUE ){
 							
-							newPriorities[i] = seq_pri;
+							newPriorities[loop_pos] = seq_pri;
 							
 						}else{
 						
 							int	rel = highest - min_file_priority;
 
-							newPriorities[i] = file_priority_start + nbPieces*rel + seq_pri;
+							newPriorities[loop_pos] = file_priority_start + nbPieces*rel + seq_pri;
 						}
 					}else{
 					
-						newPriorities[i] = seq_pri;
+						newPriorities[loop_pos] = seq_pri;
 					}
 				}
 				
 				seq_pri += 10;
-			}
+				
+			}while( loop_pos != loop_end );
 		}
 		
 		if (foundPieceToDownload !=hasNeededUndonePiece)
@@ -2115,6 +2134,8 @@ implements PiecePicker
         					avail =1;
         				}else if ( forced != null && forced.contains( i )){
         					avail = globalMinOthers;	// temp override for avail for force
+        				}else if ( sequentialDownload != 0 && globalMinOthers > 1 ) {
+        					avail = globalMinOthers;	// temp override for seq download
         				}
 
         				// is the piece active
@@ -2312,9 +2333,15 @@ implements PiecePicker
 	{
 		if (startCandidates ==null ||startCandidates.nbSet <=0)
 			return -1;
-		if (startCandidates.nbSet ==1 || sequentialDownload )
+		if (startCandidates.nbSet ==1 )
 			return startCandidates.start;
-
+		if ( sequentialDownload != 0 ){
+			if ( sequentialDownload > 0 ){
+				return startCandidates.start;
+			}else {
+				return startCandidates.end;
+			}
+		}
 		final int direction =RandomUtils.generateRandomPlusMinus1();
 		final int startI;
 		if (direction ==1)
@@ -3240,20 +3267,40 @@ implements PiecePicker
 		return( set != null && set.contains( pieceNumber ));
 	}
 
-	public void
+	private void
 	setSequentialDownload(
-		boolean	b )
+		int	val )
 	{
-		if ( sequentialDownload != b ) {
+		if ( sequentialDownload != val ) {
 			
-			sequentialDownload = b;
+			sequentialDownload = val;
 		
 			filePriorityChange++;
 		}
 	}
 	
-	public boolean
-	getSqeuantialDownload()
+	public void
+	setSequentialAscendingFrom(
+		int		start_piece )
+	{
+		setSequentialDownload( start_piece + 1 );
+	}
+	
+	public void
+	setSequentialDescendingFrom(
+		int		start_piece )
+	{
+		setSequentialDownload( -(start_piece + 1 ));
+	}
+	
+	public void
+	clearSequential()
+	{
+		setSequentialDownload( 0 );
+	}
+	
+	public int
+	getSequentialInfo()
 	{
 		return( sequentialDownload );
 	}
