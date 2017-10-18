@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Set;
 
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
@@ -43,6 +44,7 @@ import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderListener;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.torrent.TorrentImpl;
+import com.biglybt.plugin.I2PHelpers;
 
 public class
 ResourceDownloaderTorrentImpl
@@ -372,6 +374,48 @@ ResourceDownloaderTorrentImpl
 							};
 
 					download_manager.addDownloadWillBeAddedListener( dwbal );
+					
+				}else{
+					
+						// if torrent includes i2p url and i2p installed then enable network
+					
+					Set<String> hosts = TorrentUtils.getUniqueTrackerHosts( torrent );
+					
+					boolean	has_i2p = false;
+					
+					for ( String host: hosts ) {
+						
+						if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_I2P ){
+					
+							has_i2p = true;
+						}
+					}
+					
+					if ( has_i2p && I2PHelpers.isI2PInstalled()){
+						
+						dwbal =
+							new DownloadWillBeAddedListener()
+							{
+									@Override
+									public void
+									initialised(
+										Download download )
+									{
+										try{
+											if ( Arrays.equals( download.getTorrentHash(), torrent.getHash())){
+
+												PluginCoreUtils.unwrap( download ).getDownloadState().setNetworks(
+														new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P });
+											}
+										}catch( Throwable e ){
+
+											Debug.out( e );
+										}
+									}
+								};
+
+						download_manager.addDownloadWillBeAddedListener( dwbal );
+					}
 				}
 
 				if ( persistent ){
@@ -387,7 +431,6 @@ ResourceDownloaderTorrentImpl
 				if ( dwbal != null ){
 
 					download_manager.removeDownloadWillBeAddedListener( dwbal );
-
 				}
 			}
 
