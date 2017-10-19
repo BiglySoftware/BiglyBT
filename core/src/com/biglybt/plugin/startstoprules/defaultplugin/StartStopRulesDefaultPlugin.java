@@ -24,6 +24,10 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.pif.Plugin;
@@ -199,6 +203,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	private int		iDownloadTestTimeMillis;
 	private int		iDownloadReTestMillis;
 
+	private boolean	bTagFirstPriority;
+	
 	private static boolean bAlreadyInitialized = false;
 
 	// UI
@@ -213,6 +219,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	public static boolean pauseChangeFlagChecker = false;
 
+	private Tag		fp_tag;
+	
 	public static void
 	load(
 		PluginInterface		plugin_interface )
@@ -455,6 +463,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				"StartStopManager_iFirstPriority_ignoreIdleHours",
 				"ConfigView.label.seeding.firstPriority.ignoreIdleHours", 24);
 
+		configModel.addBooleanParameter2(
+				"StartStopManager_bTagFirstPriority",
+				"ConfigView.label.queue.tagfirstpriority", false );
+
+		
 		// seeding subsection
 
 		configModel.addIntParameter2("StartStopManager_iAddForSeedingDLCopyCount",
@@ -937,6 +950,31 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			iDownloadTestTimeMillis	= plugin_config.getUnsafeIntParameter("StartStopManager_Downloading_iTestTimeSecs")*1000;
 			iDownloadReTestMillis	= plugin_config.getUnsafeIntParameter("StartStopManager_Downloading_iRetestTimeMins")*60*1000;
 
+			bTagFirstPriority = plugin_config.getUnsafeBooleanParameter("StartStopManager_bTagFirstPriority");
+
+			if ( bTagFirstPriority && fp_tag == null ){
+				
+				TagManager tag_manager = TagManagerFactory.getTagManager();
+				
+				if ( tag_manager != null && tag_manager.isEnabled()){
+					
+					TagType tt = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+					
+					fp_tag = tt.getTag( "First Priority", true );
+					
+					if ( fp_tag == null ){
+						
+						try {
+							fp_tag = tt.createTag( "First Priority", true );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
+			}
+			
 			/*
 			 // limit _maxActive and maxDownloads based on TheColonel's specs
 
@@ -2655,6 +2693,30 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		}
 	}
 
+	protected boolean
+	getTagFP()
+	{
+		return( bTagFirstPriority );
+	}
+	
+	protected void
+	setFPTagStatus(
+		com.biglybt.core.download.DownloadManager		dm,
+		boolean											is_fp )
+	{
+		if ( fp_tag != null && bTagFirstPriority ){
+			
+			if ( is_fp ){
+				
+				fp_tag.addTaggable( dm );
+				
+			}else{
+				
+				fp_tag.removeTaggable( dm );
+			}
+		}
+	}
+	
 	@Override
 	public void generate(IndentWriter writer) {
 		writer.println("StartStopRules Manager");
