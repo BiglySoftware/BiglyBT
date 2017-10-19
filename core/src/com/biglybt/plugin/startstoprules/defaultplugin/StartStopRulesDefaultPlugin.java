@@ -984,19 +984,22 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					
 						try{
 							not_fp_tag = tt.createTag( "Not First Priority", true );
-							
-							TagProperty constraint = ((TagFeatureProperties)not_fp_tag).getProperty( TagFeatureProperties.PR_CONSTRAINT);
-
-							constraint.setStringList(
-								new String[]{
-									"isComplete() && !isForceStart() && !hasTag( \"First Priority\" )"
-								});
-							
+														
 						}catch( Throwable e ){
 							
 							Debug.out( e );
 						}
-					}	
+					}
+					
+					if ( not_fp_tag != null ) {
+						
+						TagProperty constraint = ((TagFeatureProperties)not_fp_tag).getProperty( TagFeatureProperties.PR_CONSTRAINT);
+
+						constraint.setStringList(
+							new String[]{
+								"isComplete() && !hasTag( \"First Priority\" )"
+							});
+					}
 				}
 			}
 			

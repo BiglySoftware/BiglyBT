@@ -318,13 +318,6 @@ ResourceDownloaderTorrentImpl
 
 			boolean anon = isAnonymous();
 
-			if ( anon ){
-
-					// meh, add in I2P update tracker...
-
-				TorrentUtils.announceGroupsInsertFirst(torrent, "http://jcgok7sfv2ycwdluzjr6s5bdca4ps6beaogilp72dzl6mopp46ya.b32.i2p:6968/announce" );
-			}
-
 			torrent.serialiseToBEncodedFile( torrent_file );
 
 				// see if already there in an error state and delete if so
