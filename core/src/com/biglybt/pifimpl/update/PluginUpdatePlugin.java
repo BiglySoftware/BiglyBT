@@ -56,6 +56,7 @@ import com.biglybt.pifimpl.update.sf.SFPluginDetails;
 import com.biglybt.pifimpl.update.sf.SFPluginDetailsLoader;
 import com.biglybt.pifimpl.update.sf.SFPluginDetailsLoaderFactory;
 import com.biglybt.pifimpl.update.sf.SFPluginDetailsLoaderListener;
+import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.update.CorePatchChecker;
 
 public class
@@ -846,6 +847,11 @@ PluginUpdatePlugin
 						}
 
 						torrent_download	+= ".torrent";
+						
+						if ( I2PHelpers.isI2PInstalled()){
+							
+							torrent_download += "?i2p=1";
+						}
 
 						ResourceDownloader torrent_rdl 		= rdf.create( new URL( torrent_download ));
 						//ResourceDownloader torrent_ap_rdl 	= rdf.createWithAutoPluginProxy( new URL( torrent_download ));
