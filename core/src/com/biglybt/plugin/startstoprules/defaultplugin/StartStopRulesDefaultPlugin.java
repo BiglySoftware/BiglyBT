@@ -25,9 +25,11 @@ import java.util.*;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.pif.Plugin;
@@ -952,7 +954,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			bTagFirstPriority = plugin_config.getUnsafeBooleanParameter("StartStopManager_bTagFirstPriority");
 
-			if ( bTagFirstPriority && fp_tag == null ){
+			if ( bTagFirstPriority ){
 				
 				TagManager tag_manager = TagManagerFactory.getTagManager();
 				
@@ -960,18 +962,41 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					
 					TagType tt = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
 					
-					fp_tag = tt.getTag( "First Priority", true );
-					
 					if ( fp_tag == null ){
 						
-						try {
-							fp_tag = tt.createTag( "First Priority", true );
+						fp_tag = tt.getTag( "First Priority", true );
+						
+						if ( fp_tag == null ){
+							
+							try {
+								fp_tag = tt.createTag( "First Priority", true );
+								
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					}
+					
+					Tag not_fp_tag = tt.getTag( "Not First Priority", true );
+					
+					if ( not_fp_tag == null ){
+					
+						try{
+							not_fp_tag = tt.createTag( "Not First Priority", true );
+							
+							TagProperty constraint = ((TagFeatureProperties)not_fp_tag).getProperty( TagFeatureProperties.PR_CONSTRAINT);
+
+							constraint.setStringList(
+								new String[]{
+									"isComplete() && !isForceStart() && !hasTag( \"First Priority\" )"
+								});
 							
 						}catch( Throwable e ){
 							
 							Debug.out( e );
 						}
-					}
+					}	
 				}
 			}
 			
