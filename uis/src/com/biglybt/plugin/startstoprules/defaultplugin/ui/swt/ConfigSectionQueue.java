@@ -260,6 +260,16 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		maxStalledSeeding.setMinimumValue(0);
 		maxStalledSeeding.setLayoutData(gridData);
 
+		label = new Label(cMinSpeedActiveCDing, SWT.NULL);
+		imageLoader.setLabelImage(label, "subitem");
+		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
+		Utils.setLayoutData(label, gridData);
+
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		new BooleanParameter(cMinSpeedActiveCDing, "StartStopManager_bMaxStalledSeedingIgnoreZP",
+				"ConfigView.label.maxStalledSeedingIgnoreZP").setLayoutData(gridData);
+
 
 		// row
 

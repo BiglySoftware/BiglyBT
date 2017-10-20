@@ -163,7 +163,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	/** Maximimum # of stalled torrents that are in seeding mode */
 	private int maxStalledSeeding;
-
+	private boolean stalledSeedingIgnoreZP;
+	
 	// count x peers as a full copy, but..
 	private int numPeersAsFullCopy;
 
@@ -415,6 +416,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				"ConfigView.label.minSpeedForActiveSeeding", 512);
 		configModel.addIntParameter2("StartStopManager_iMaxStalledSeeding",
 				"ConfigView.label.maxStalledSeeding", 5);
+		configModel.addBooleanParameter2("StartStopManager_bMaxStalledSeedingIgnoreZP",
+				"ConfigView.label.maxStalledSeedingIgnoreZP", true);
 
 
 		configModel.addBooleanParameter2("StartStopManager_bDebugLog",
@@ -890,6 +893,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				// insanity :)
 				maxStalledSeeding = 999;
 			}
+			stalledSeedingIgnoreZP = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxStalledSeedingIgnoreZP");
 			_maxActive = plugin_config.getUnsafeIntParameter("max active torrents");
 			_maxActiveWhenSeedingEnabled = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxActiveTorrentsWhenSeedingEnabled");
 			_maxActiveWhenSeeding = plugin_config.getUnsafeIntParameter("StartStopManager_iMaxActiveTorrentsWhenSeeding");
@@ -1305,8 +1309,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						if (bIsFirstP) {
 							stalledFPSeeders++;
 						}
-
-						stalledSeeders++;
+						if ( stalledSeedingIgnoreZP && dlData.lastModifiedScrapeResultPeers == 0 && dlData.lastScrapeResultOk ) {
+							// ignore 
+						}else{
+							stalledSeeders++;
+						}
 					}
 
 					if (state == Download.ST_READY || state == Download.ST_WAITING
@@ -2289,7 +2296,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		}
 
   		if (state == Download.ST_SEEDING && !bActivelySeeding) {
-  			vars.stalledSeeders++;
+  			if ( stalledSeedingIgnoreZP && numPeers == 0 && bScrapeOk ){
+  				// ignore
+  			}else{
+  				vars.stalledSeeders++;
+  			}
   		}
 
 			// Is it OK to set this download to a queued state?
