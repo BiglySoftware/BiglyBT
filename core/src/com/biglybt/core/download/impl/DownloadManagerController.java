@@ -897,22 +897,135 @@ DownloadManagerController
 
 			setState( DownloadManager.STATE_STOPPING, false );
 
-
-				// this will run synchronously but on a non-daemon thread so that it will under
-  				// normal circumstances complete, even if we're closing
-
-
-			final	AESemaphore nd_sem = new AESemaphore( "DM:DownloadManager.NDTR" );
-
-			NonDaemonTaskRunner.runAsync(
+			NonDaemonTaskRunner.run(
 				new NonDaemonTask()
 				{
 					@Override
 					public Object
 					run()
 					{
-						nd_sem.reserve();
+						try{
+							if ( peer_manager != null ){
 
+								peer_manager.stopAll();
+
+								stats.saveSessionTotals();
+
+								DownloadManagerState dmState = download_manager.getDownloadState();
+
+								dmState.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME, SystemTime.getCurrentTime());
+
+								SimpleTimer.removeTickReceiver( DownloadManagerController.this );
+
+								DownloadManagerRateController.removePeerManager( peer_manager );
+
+
+								download_manager.getDownloadState().removeListener(
+										dm_attribute_listener,
+										DownloadManagerState.AT_FLAGS,
+										DownloadManagerStateAttributeListener.WRITTEN );
+
+								dm_attribute_listener = null;
+							}
+
+							// do this even if null as it also triggers tracker actions
+
+							download_manager.informStopped( peer_manager, stateAfterStopping==DownloadManager.STATE_QUEUED );
+
+							peer_manager	= null;
+
+							DiskManager	dm = getDiskManager();
+
+							if ( dm != null ){
+
+								boolean went_async = dm.stop( closing );
+
+								if ( went_async ){
+
+									try {
+										int	wait_count = 0;
+	
+										// Delay by 10ms, hoping for really short stop
+										Thread.sleep(10);
+	
+										while( !dm.isStopped()){
+	
+											wait_count++;
+	
+											if ( wait_count > 2*60*10 ){
+	
+												Debug.out( "Download stop took too long to complete" );
+	
+												break;
+	
+											}else if ( wait_count % 200 == 0 ){
+	
+												Debug.out( "Waiting for download to stop - elapsed=" + wait_count + " sec" );
+											}
+	
+											Thread.sleep(100);
+										}
+									}catch( Throwable e ) {
+										
+										Debug.out( e );
+									}
+								}
+
+								stats.setCompleted(stats.getCompleted());
+								stats.recalcDownloadCompleteBytes();
+
+								// we don't want to update the torrent if we're seeding
+
+								if ( !download_manager.getAssumedComplete()){
+									download_manager.getDownloadState().save();
+								}
+
+								setDiskManager( null, null );
+							}
+
+						}finally{
+
+							force_start = false;
+
+							if( remove_data ){
+
+								download_manager.deleteDataFiles();
+
+							}else{
+
+								if ( for_removal && COConfigurationManager.getBooleanParameter( "Delete Partial Files On Library Removal") ){
+
+									download_manager.deletePartialDataFiles();
+								}
+							}
+
+							if( remove_torrent ){
+
+								download_manager.deleteTorrentFile();
+							}
+
+							List<ExternalSeedPeer> to_remove = new ArrayList<>();
+
+							synchronized( http_seeds ){
+
+								to_remove.addAll( http_seeds );
+
+								http_seeds.clear();
+							}
+
+							for ( ExternalSeedPeer peer: to_remove ){
+
+								peer.remove();
+							}
+
+							// only update the state if things haven't gone wrong
+
+							if ( getState() == DownloadManager.STATE_STOPPING ){
+
+								setState( stateAfterStopping, true );
+							}
+						}
+						
 						return( null );
 					}
 
@@ -925,128 +1038,7 @@ DownloadManagerController
 
 				});
 
-			try{
-				try{
 
-					if ( peer_manager != null ){
-
-						peer_manager.stopAll();
-
-						stats.saveSessionTotals();
-
-						DownloadManagerState dmState = download_manager.getDownloadState();
-						
-						dmState.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME, SystemTime.getCurrentTime());
-
-						SimpleTimer.removeTickReceiver( this );
-
-						DownloadManagerRateController.removePeerManager( peer_manager );
-						
-						
-						download_manager.getDownloadState().removeListener(
-								dm_attribute_listener,
-								DownloadManagerState.AT_FLAGS,
-								DownloadManagerStateAttributeListener.WRITTEN );
-						
-						dm_attribute_listener = null;
-					}
-
-						// do this even if null as it also triggers tracker actions
-
-					download_manager.informStopped( peer_manager, stateAfterStopping==DownloadManager.STATE_QUEUED );
-
-					peer_manager	= null;
-
-					DiskManager	dm = getDiskManager();
-
-					if ( dm != null ){
-
-						boolean went_async = dm.stop( closing );
-
-						if ( went_async ){
-
-							int	wait_count = 0;
-
-							// Delay by 10ms, hoping for really short stop
-							Thread.sleep(10);
-
-							while( !dm.isStopped()){
-
-								wait_count++;
-
-								if ( wait_count > 2*60*10 ){
-
-									Debug.out( "Download stop took too long to complete" );
-
-									break;
-
-								}else if ( wait_count % 200 == 0 ){
-
-									Debug.out( "Waiting for download to stop - elapsed=" + wait_count + " sec" );
-								}
-
-								Thread.sleep(100);
-							}
-						}
-
-						stats.setCompleted(stats.getCompleted());
-  					stats.recalcDownloadCompleteBytes();
-
-					  		// we don't want to update the torrent if we're seeding
-
-						if ( !download_manager.getAssumedComplete()){
-							download_manager.getDownloadState().save();
-						}
-
-						setDiskManager( null, null );
-					}
-
-				 }finally{
-
-				   force_start = false;
-
-				   if( remove_data ){
-
-					   download_manager.deleteDataFiles();
-
-				   }else{
-
-					   if ( for_removal && COConfigurationManager.getBooleanParameter( "Delete Partial Files On Library Removal") ){
-
-						   download_manager.deletePartialDataFiles();
-					   }
-				   }
-
-				   if( remove_torrent ){
-
-					   download_manager.deleteTorrentFile();
-				   }
-
-				   List<ExternalSeedPeer> to_remove = new ArrayList<>();
-
-				   synchronized( http_seeds ){
-
-					   to_remove.addAll( http_seeds );
-
-					   http_seeds.clear();
-				   }
-
-				   for ( ExternalSeedPeer peer: to_remove ){
-
-					   peer.remove();
-				   }
-
-				   		// only update the state if things haven't gone wrong
-
-				   if ( getState() == DownloadManager.STATE_STOPPING ){
-
-					   setState( stateAfterStopping, true );
-				   }
-				 }
-			}finally{
-
-				nd_sem.release();
-			}
 
 		}catch( Throwable e ){
 

@@ -1668,7 +1668,24 @@ public class GlobalManagerImpl
 
   @Override
   public void stopAllDownloads() {
-	  stopAllDownloads(false);
+	  try{
+		  NonDaemonTaskRunner.run(
+			new NonDaemonTask(){
+				
+				@Override
+				public Object run() throws Throwable{
+					  stopAllDownloads(false);
+					  return( null );
+				}
+				
+				@Override
+				public String getName(){
+					return( "Manual 'stop all downloads'");
+				}
+			});
+	  }catch( Throwable e ){
+		  Debug.out( e );
+	  }
   }
 
   protected void stopAllDownloads(boolean for_close ) {
@@ -1719,14 +1736,31 @@ public class GlobalManagerImpl
    */
   @Override
   public void startAllDownloads() {
-    for (Iterator iter = managers_cow.iterator(); iter.hasNext();) {
-      DownloadManager manager = (DownloadManager) iter.next();
+	  try{
+		  NonDaemonTaskRunner.run(
+			  new NonDaemonTask(){
 
-      if ( manager.getState() == DownloadManager.STATE_STOPPED ){
+				  @Override
+				  public Object run() throws Throwable{
+					  for (Iterator iter = managers_cow.iterator(); iter.hasNext();) {
+						  DownloadManager manager = (DownloadManager) iter.next();
 
-  			manager.stopIt( DownloadManager.STATE_QUEUED, false, false );
-      }
-    }
+						  if ( manager.getState() == DownloadManager.STATE_STOPPED ){
+
+							  manager.stopIt( DownloadManager.STATE_QUEUED, false, false );
+						  }
+					  }
+					  return( null );
+				  }
+
+				  @Override
+				  public String getName(){
+					  return( "Manual 'start all downloads'");
+				  }
+			  });
+	  }catch( Throwable e ){
+		  Debug.out( e );
+	  }
   }
 
   @Override
@@ -1836,7 +1870,24 @@ public class GlobalManagerImpl
   public void
   pauseDownloads()
   {
-	  pauseDownloads( false );
+	  try{
+		  NonDaemonTaskRunner.run(
+			new NonDaemonTask(){
+				
+				@Override
+				public Object run() throws Throwable{
+					  pauseDownloads( false );
+					  return( null );
+				}
+				
+				@Override
+				public String getName(){
+					return( "Manual 'pause all downloads'");
+				}
+			});
+	  }catch( Throwable e ){
+		  Debug.out( e );
+	  }
   }
 
   protected void
@@ -2046,47 +2097,64 @@ public class GlobalManagerImpl
   public void
   resumeDownloads()
   {
-	  auto_resume_disabled = false;
-
 	  try{
-		  paused_list_mon.enter();
+		  NonDaemonTaskRunner.run(
+			  new NonDaemonTask(){
 
-		  if ( auto_resume_timer != null ){
+				  @Override
+				  public Object run() throws Throwable{
+					  auto_resume_disabled = false;
 
-			  auto_resume_timer.cancel();
+					  try{
+						  paused_list_mon.enter();
 
-			  auto_resume_timer = null;
-		  }
+						  if ( auto_resume_timer != null ){
 
-		  	// copy the list as the act of resuming entries causes entries to be removed from the
-		  	// list and therefore borkerage
+							  auto_resume_timer.cancel();
 
-		  ArrayList<Object[]> copy = new ArrayList<>(paused_list);
+							  auto_resume_timer = null;
+						  }
 
-		  for( Object[] data: copy ){
+						  // copy the list as the act of resuming entries causes entries to be removed from the
+						  // list and therefore borkerage
 
-			  HashWrapper 	hash = (HashWrapper)data[0];
-			  boolean		force = ((Boolean)data[1]).booleanValue();
+						  ArrayList<Object[]> copy = new ArrayList<>(paused_list);
 
-			  DownloadManager manager = getDownloadManager( hash );
+						  for( Object[] data: copy ){
 
-			  if( manager != null && manager.getState() == DownloadManager.STATE_STOPPED ) {
+							  HashWrapper 	hash = (HashWrapper)data[0];
+							  boolean		force = ((Boolean)data[1]).booleanValue();
 
-				  if ( force ){
+							  DownloadManager manager = getDownloadManager( hash );
 
-					  manager.setForceStart(true);
+							  if( manager != null && manager.getState() == DownloadManager.STATE_STOPPED ) {
 
-				  }else{
+								  if ( force ){
 
-					  manager.stopIt( DownloadManager.STATE_QUEUED, false, false );
+									  manager.setForceStart(true);
+
+								  }else{
+
+									  manager.stopIt( DownloadManager.STATE_QUEUED, false, false );
+								  }
+							  }
+						  }
+						  paused_list.clear();
+
+					  }finally{
+
+						  paused_list_mon.exit();
+					  }
+					  return( null );
 				  }
-			  }
-		  }
-		  paused_list.clear();
 
-	  }finally{
-
-		  paused_list_mon.exit();
+				  @Override
+				  public String getName(){
+					  return( "Manual 'pause all downloads'");
+				  }
+			  });
+	  }catch( Throwable e ){
+		  Debug.out( e );
 	  }
   }
 

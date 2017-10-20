@@ -41,11 +41,11 @@ NonDaemonTaskRunner
 	protected static NonDaemonTaskRunner	singleton;
 	protected static final AEMonitor				class_mon		= new AEMonitor( "NonDaemonTaskRunner:class" );
 
-	protected final Stack			tasks		= new Stack();
-	protected final AEMonitor		tasks_mon	= new AEMonitor( "NonDaemonTaskRunner:tasks" );
-	protected final AESemaphore	task_sem	= new AESemaphore("NonDaemonTaskRunner");
+	protected final List<taskWrapper>	tasks		= new ArrayList<>();
+	protected final AEMonitor			tasks_mon	= new AEMonitor( "NonDaemonTaskRunner:tasks" );
+	protected final AESemaphore			task_sem	= new AESemaphore("NonDaemonTaskRunner");
 
-	protected final List		wait_until_idle_list	= new ArrayList();
+	protected final List<AESemaphore>		wait_until_idle_list	= new ArrayList<>();
 
 	protected AEThread2	current_thread;
 
@@ -74,29 +74,30 @@ NonDaemonTaskRunner
 
 		throws Throwable
 	{
-		return(getSingleton().runSupport( target, false ));
-	}
-
-	public static Object
-	runAsync(
-		NonDaemonTask	target )
-
-		throws Throwable
-	{
-		return(getSingleton().runSupport( target, true ));
+		return(getSingleton().runSupport( target ));
 	}
 
 	protected Object
 	runSupport(
-		NonDaemonTask	target,
-		boolean			async )
-
+		NonDaemonTask	target )
 		throws Throwable
 	{
 			// is this a recursive call? if so, run directly
-
-		if ( current_thread != null && current_thread.isCurrentThread()){
-
+		
+		boolean run_now;
+		
+		try{
+			tasks_mon.enter();
+		
+			run_now = current_thread != null && current_thread.isCurrentThread();
+		
+		}finally {
+			
+			tasks_mon.exit();
+		}
+		
+		if ( run_now ){
+			
 			return( target.run());
 		}
 
@@ -105,7 +106,7 @@ NonDaemonTaskRunner
 		try{
 			tasks_mon.enter();
 
-			tasks.push( wrapper );
+			tasks.add( wrapper );
 
 			task_sem.release();
 
@@ -150,7 +151,7 @@ NonDaemonTaskRunner
 
 									}else{
 
-										t = (taskWrapper)tasks.pop();
+										t = (taskWrapper)tasks.remove( 0 );
 									}
 								}finally{
 
@@ -171,11 +172,6 @@ NonDaemonTaskRunner
 		}finally{
 
 			tasks_mon.exit();
-		}
-
-		if ( async ){
-
-			return( null );
 		}
 
 		return( wrapper.waitForResult());
