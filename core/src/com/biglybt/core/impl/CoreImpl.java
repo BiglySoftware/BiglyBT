@@ -89,7 +89,6 @@ import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.core.vuzefile.VuzeFileProcessor;
 import com.biglybt.launcher.classloading.PrimaryClassloader;
 import com.biglybt.pif.*;
-import com.biglybt.pif.clientid.ClientIDPlugin;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentDownloader;
 import com.biglybt.pif.ui.UIManager;
@@ -101,6 +100,7 @@ import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.clientid.ClientIDPlugin;
 import com.biglybt.pifimpl.local.download.DownloadManagerImpl;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
 import com.biglybt.platform.PlatformManager;
@@ -338,10 +338,8 @@ CoreImpl
 			if (DEBUG_STARTUPTIME) {
 				logTime("Init PeerManager");
 			}
-	
-			// Used to be a plugin, but not any more...
-	
-			ClientIDPlugin.initialize( this );
+		
+			new ClientIDPlugin().initialize( this );
 	
 			pi = PluginInitializer.getSingleton( this );
 	
