@@ -552,13 +552,52 @@ public class FileUtil {
 	  try{
 		  class_mon.enter();
 
+		  byte[] encoded_data;
+		  
+		  try{
+			  encoded_data  = BEncoder.encode(data);
+			  
+		  }catch( Throwable e ){
+
+			  Debug.out( "Save of '" + file_name + "' fails", e );
+
+			  return( false );
+		  }
+		  
+		  File existing = new File(  parent_dir, file_name );
+		  
+		  if ( existing.length() == encoded_data.length ) {
+			  
+			  //System.out.println( "same length for " + file_name );
+			  
+			  try{
+				  BufferedInputStream	bin = new BufferedInputStream( new FileInputStream(existing), encoded_data.length );
+
+				  try{
+					  BDecoder	decoder = new BDecoder();
+
+					  Map	old = decoder.decodeStream( bin );
+
+					  if ( BEncoder.mapsAreIdentical( data, old )) {
+
+						  //System.out.println( "same data for " + file_name );
+
+						  return( true );
+					  }
+				  }finally{
+
+					  bin.close();
+				  }
+			  }catch( Throwable e ) {
+			  }
+		  }
+
 		  try{
 			  getReservedFileHandles();
 			  File temp = new File(  parent_dir, file_name + ".saving");
 			  BufferedOutputStream	baos = null;
 
 			  try{
-				  byte[] encoded_data = BEncoder.encode(data);
 				  FileOutputStream tempOS = new FileOutputStream( temp, false );
 				  baos = new BufferedOutputStream( tempOS, 8192 );
 				  baos.write( encoded_data );
