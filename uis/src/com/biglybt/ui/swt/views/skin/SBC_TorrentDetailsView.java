@@ -85,7 +85,7 @@ public class SBC_TorrentDetailsView
 
 	private Composite parent;
 
-	private MdiEntrySWT mdi_entry;
+	// private MdiEntrySWT mdi_entry;
 
 	private Object dataSource;
 
@@ -332,6 +332,7 @@ public class SBC_TorrentDetailsView
 			return null;
 		}
 
+		/*
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 
 		if (mdi != null) {
@@ -349,7 +350,8 @@ public class SBC_TorrentDetailsView
 			}
 
 		}
-
+		*/
+		
 		initialize((Composite) soListArea.getControl());
 		return null;
 	}

@@ -120,6 +120,8 @@ public class TorrentUtil
 		// TODO: Build submenus on the fly
 		Shell shell = Utils.findAnyShell();
 
+		Shell menu_shell = menu.getShell();
+		
 		final boolean isSeedingView;
 		switch (selected_dl_types) {
 			case 1:
@@ -377,7 +379,7 @@ public class TorrentUtil
 				if (DownloadBar.getManager().isOpen(dm)) {
 					DownloadBar.close(dm);
 				} else {
-					DownloadBar.open(dm, menu.getShell());
+					DownloadBar.open(dm,shell);
 				}
 			} // run
 		});
@@ -414,7 +416,7 @@ public class TorrentUtil
 
 		// Open in browser
 
-		final Menu menuBrowse = new Menu(menu.getShell(),SWT.DROP_DOWN);
+		final Menu menuBrowse = new Menu(menu_shell,SWT.DROP_DOWN);
 		final MenuItem itemBrowse = new MenuItem(menu, SWT.CASCADE);
 		Messages.setLanguageText(itemBrowse, "MyTorrentsView.menu.browse");
 		itemBrowse.setMenu(menuBrowse);
@@ -478,7 +480,7 @@ public class TorrentUtil
 		Messages.setLanguageText(itemAdvanced, "MyTorrentsView.menu.advancedmenu"); //$NON-NLS-1$
 		itemAdvanced.setEnabled(hasSelection);
 
-		final Menu menuAdvanced = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		final Menu menuAdvanced = new Menu(menu_shell, SWT.DROP_DOWN);
 		itemAdvanced.setMenu(menuAdvanced);
 
 		// advanced > Download Speed Menu //
@@ -490,7 +492,7 @@ public class TorrentUtil
 		long maxUpload = COConfigurationManager.getIntParameter(
 				"Max Upload Speed KBs", 0) * kInB;
 
-		ViewUtils.addSpeedMenu(menu.getShell(), menuAdvanced, true, true, true,
+		ViewUtils.addSpeedMenu(menu_shell, menuAdvanced, true, true, true,
 				hasSelection, downSpeedDisabled, downSpeedUnlimited, totalDownSpeed,
 				downSpeedSetMax, maxDownload, upSpeedDisabled, upSpeedUnlimited,
 				totalUpSpeed, upSpeedSetMax, maxUpload, dms.length, null,
@@ -536,7 +538,7 @@ public class TorrentUtil
 				});
 
 		// advanced > Tracker Menu //
-		final Menu menuTracker = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		final Menu menuTracker = new Menu(menu_shell, SWT.DROP_DOWN);
 		final MenuItem itemTracker = new MenuItem(menuAdvanced, SWT.CASCADE);
 		Messages.setLanguageText(itemTracker, "MyTorrentsView.menu.tracker");
 		itemTracker.setMenu(menuTracker);
@@ -549,7 +551,7 @@ public class TorrentUtil
 		final MenuItem itemFiles = new MenuItem(menuAdvanced, SWT.CASCADE);
 		Messages.setLanguageText(itemFiles, "ConfigView.section.files");
 
-		final Menu menuFiles = new Menu(shell, SWT.DROP_DOWN);
+		final Menu menuFiles = new Menu(menu_shell, SWT.DROP_DOWN);
 		itemFiles.setMenu(menuFiles);
 
 		final MenuItem itemFileMoveData = new MenuItem(menuFiles, SWT.PUSH);
@@ -589,7 +591,7 @@ public class TorrentUtil
 		itemLocateFiles.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
-				ManagerUtils.locateFiles( dms, menu.getShell());
+				ManagerUtils.locateFiles( dms, shell );
 			}
 		});
 
@@ -745,7 +747,7 @@ public class TorrentUtil
 			itemFindMore.addListener(SWT.Selection, new ListenerDMTask(dms) {
 				@Override
 				public void run(DownloadManager[] dms) {
-					ManagerUtils.findMoreLikeThis( dms[0], menu.getShell());
+					ManagerUtils.findMoreLikeThis( dms[0], shell );
 				}
 			});
 			itemFindMore.setSelection(isSingleSelection);
@@ -816,7 +818,7 @@ public class TorrentUtil
 			Utils.setMenuItemImage(itemExport, "export");
 			itemExport.setEnabled(hasSelection);
 
-			final Menu menuExport = new Menu(shell, SWT.DROP_DOWN);
+			final Menu menuExport = new Menu( menu_shell, SWT.DROP_DOWN);
 			itemExport.setMenu(menuExport);
 
 			// Advanced > Export > Export XML
@@ -878,7 +880,7 @@ public class TorrentUtil
 			final MenuItem itemPeerSource = new MenuItem(menuAdvanced, SWT.CASCADE);
 			Messages.setLanguageText(itemPeerSource, "MyTorrentsView.menu.peersource"); //$NON-NLS-1$
 
-			final Menu menuPeerSource = new Menu(shell, SWT.DROP_DOWN);
+			final Menu menuPeerSource = new Menu(menu_shell, SWT.DROP_DOWN);
 			itemPeerSource.setMenu(menuPeerSource);
 
 			addPeerSourceSubMenu(dms, menuPeerSource);
@@ -986,7 +988,7 @@ public class TorrentUtil
 			final MenuItem itemNetworks = new MenuItem(menuAdvanced, SWT.CASCADE);
 			Messages.setLanguageText(itemNetworks, "MyTorrentsView.menu.networks"); //$NON-NLS-1$
 
-			final Menu menuNetworks = new Menu(shell, SWT.DROP_DOWN);
+			final Menu menuNetworks = new Menu(menu_shell, SWT.DROP_DOWN);
 			itemNetworks.setMenu(menuNetworks);
 
 			addNetworksSubMenu(dms, menuNetworks);
@@ -1109,7 +1111,7 @@ public class TorrentUtil
 
 		// Category
 
-		Menu menuCategory = new Menu(shell, SWT.DROP_DOWN);
+		Menu menuCategory = new Menu(menu_shell, SWT.DROP_DOWN);
 		final MenuItem itemCategory = new MenuItem(menu, SWT.CASCADE);
 		Messages.setLanguageText(itemCategory, "MyTorrentsView.menu.setCategory"); //$NON-NLS-1$
 		//itemCategory.setImage(ImageRepository.getImage("speed"));
@@ -1120,7 +1122,7 @@ public class TorrentUtil
 
 		// Tags
 
-		Menu menuTags = new Menu(shell, SWT.DROP_DOWN);
+		Menu menuTags = new Menu(menu_shell, SWT.DROP_DOWN);
 		final MenuItem itemTags = new MenuItem(menu, SWT.CASCADE);
 		Messages.setLanguageText(itemTags, "label.tags");
 		itemTags.setMenu(menuTags);
@@ -1577,6 +1579,8 @@ public class TorrentUtil
 
 		Core core = CoreFactory.getSingleton();
 
+		Shell menu_shell = menu.getShell();
+		
 		final SpeedLimitHandler slh = SpeedLimitHandler.getSingleton(core);
 
 		boolean all_have_limit = true;
@@ -1632,7 +1636,7 @@ public class TorrentUtil
 
 		// add to profile
 
-		final Menu add_to_prof_menu = new Menu(menu.getShell(),
+		final Menu add_to_prof_menu = new Menu(menu_shell,
 				SWT.DROP_DOWN);
 		MenuItem add_to_prof_item = new MenuItem(menu, SWT.CASCADE);
 		add_to_prof_item.setMenu(add_to_prof_menu);
@@ -1668,7 +1672,7 @@ public class TorrentUtil
 
 		// remove from profile
 
-		final Menu remove_from_prof_menu = new Menu(menu.getShell(),
+		final Menu remove_from_prof_menu = new Menu(menu_shell,
 				SWT.DROP_DOWN);
 		MenuItem remove_from_prof_item = new MenuItem(menu, SWT.CASCADE);
 		remove_from_prof_item.setMenu(remove_from_prof_menu);
