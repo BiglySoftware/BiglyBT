@@ -1212,9 +1212,9 @@ public class SB_Transfers
 		}
 	}
 
-	private final Object	tag_setup_lock = new Object();
+	private final static Object	tag_setup_lock = new Object();
 
-	public MdiEntry
+	public static MdiEntry
 	setupTag(
 		final Tag tag )
 	{
