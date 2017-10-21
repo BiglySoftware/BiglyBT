@@ -1151,17 +1151,19 @@ ConfigurationManager
 	public void removeWeakParameterListener(String parameter, ParameterListener listener) {
   	synchronized (weakParameterListenerz) {
 		  List<WeakReference<ParameterListener>> list = weakParameterListenerz.get(parameter);
-		  for (Iterator<WeakReference<ParameterListener>> iterator = list.iterator(); iterator.hasNext(); ) {
-			  ParameterListener existing = iterator.next().get();
-			  if (existing == null) {
-			  	iterator.remove();
-			  } else if (existing == listener) {
-			  	iterator.remove();
-			  	break;
+		  if ( list != null ){
+			  for (Iterator<WeakReference<ParameterListener>> iterator = list.iterator(); iterator.hasNext(); ) {
+				  ParameterListener existing = iterator.next().get();
+				  if (existing == null) {
+				  	iterator.remove();
+				  } else if (existing == listener) {
+				  	iterator.remove();
+				  	break;
+				  }
 			  }
-		  }
-		  if (list.size() == 0) {
-		  	weakParameterListenerz.remove(parameter);
+			  if (list.size() == 0) {
+			  	weakParameterListenerz.remove(parameter);
+			  }
 		  }
 	  }
 	}
