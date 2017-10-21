@@ -310,8 +310,15 @@ public class UISWTViewImpl
 		}
 		
 		if ( eventType == UISWTViewEvent.TYPE_DESTROY) {
-			disposed = true;
+			setDisposed( true );
 		}
+	}
+	
+	protected void
+	setDisposed(
+		boolean	b )
+	{
+		disposed	= b;
 	}
 	
 	@Override

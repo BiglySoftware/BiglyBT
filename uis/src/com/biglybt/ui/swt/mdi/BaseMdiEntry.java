@@ -97,8 +97,6 @@ public abstract class BaseMdiEntry
 
 	private Boolean isExpanded = null;
 
-	private boolean disposed = false;
-
 	private boolean added = false;
 
 	private String imageLeftID;
@@ -166,7 +164,8 @@ public abstract class BaseMdiEntry
 		}
 
 		setCloseable(closeable);
-		disposed = true;
+		
+		setDisposed( true );
 
 		baseDispose();
 
@@ -828,11 +827,6 @@ public abstract class BaseMdiEntry
 		});
 	}
 
-	@Override
-	public boolean isDisposed() {
-		return disposed;
-	}
-
 	/* (non-Javadoc)
 	 * @see MdiEntry#getAutoOpenInfo()
 	 */
@@ -924,7 +918,7 @@ public abstract class BaseMdiEntry
 	}
 
 	public void setDisposed(boolean b) {
-		disposed = b;
+		super.setDisposed( b );
 		added = !b;
 
 		if (added) {
@@ -934,7 +928,7 @@ public abstract class BaseMdiEntry
 			}
 		}
 
-		if (disposed) {
+		if ( isDisposed()){
 			baseDispose();
 		}
 	}
@@ -1053,7 +1047,7 @@ public abstract class BaseMdiEntry
 			//writer.println("Created: " + created);
 			writer.println("Added: " + added);
 			writer.println("closeable: " + closeable);
-			writer.println("Disposed: " + disposed);
+			writer.println("Disposed: " + isDisposed());
 			writer.println("hasBeenOpened: " + hasBeenOpened);
 			//writer.println("hasFocus: " + hasFocus);
 			//writer.println("haveSentInitialize: " + haveSentInitialize);
