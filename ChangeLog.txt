@@ -1,6 +1,37 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2017.xx.yy | BiglyBT n.n.n.n
+
+FEATURE: UI    | New 'Dashboard' that allows you to build your own composite view [Parg]
+FEATURE: UI    | All-Peers view and Peer Set views now have an associated Swarms view for selected peers [Parg]
+FEATURE: UI    | Country and language specific chats [Parg]
+FEATURE: UI    | Added ability to show teh reason for a download being stopped [Parg]
+FEATURE: UI    | Added 'disabled' upload and download speed selectors [Parg]
+FEATURE: UI    | MyTracker and MyShares views now pop-outable [Parg]
+FEATURE: PLUG  | 3D Swarm view now available in download tabs [Parg]
+FEATURE: PLUG  | 3D Swarm view now has a 'most active' view [Parg]
+FEATURE: PLUG  | Tracker Templates and IRC plugin ported [Parg]
+FEATURE: PLUG  | Advanced Statistics plugin ported [Parg]
+FEATURE: PLUG  | Speed Scheduler now indicates when it pauses downloads [Parg]
+FEATURE: Core  | Built-in tracker now supports I2P and Tor directly [Parg]
+FEATURE: Core  | Added isMagnet and isLowNoise to Tag Constraints [Parg]
+FEATURE: Core  | Added sequential download option when adding a torrent [Parg]
+FEATURE: Core  | Added ability to set sequential ascending or descending from a selected piece [Parg]
+FEATURE: Core  | New option to prefer anonymous DDB operations for mixed content [Parg]
+FEATURE: Core  | Queuing option to auto-tag first and non-first priority downloads [Parg]
+FEATURE: Core  | New queuing option to ignore zero-peer torrents when calculating number stalled [Parg]
+FEATURE: Core  | Added some client id migration support [Parg]
+
+CHANGE: PLUG   | Speed Scheduler restarts downloads it has stopped when it is disabled [Parg]
+CHANGE: Core   | Switch to torrent based updates [Parg]
+CHANGE: Core   | Reduce config file writes [Parg]
+
+BUGFIX: UI     | Fix tag views not showing properly in classic UI [Parg]
+BUGFIX: UI     | Fix sharing view FTUX [Parg]
+BUGFIX: UI     | Fix category addition window vanishing [Parg]
+BUGFIX: Core   | Fix bug casing lots of threads to be created [Parg]
+
 2017.09.13 | BiglyBT 1.0.2.0
 
 FEATURE: UI    | Show small download indicator for pieces not yet downloading [TuxPaper]
