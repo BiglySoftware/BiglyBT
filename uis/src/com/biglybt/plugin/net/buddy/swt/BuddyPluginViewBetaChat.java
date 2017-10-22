@@ -1589,6 +1589,13 @@ BuddyPluginViewBetaChat
 	
 							e.doit = false;
 	
+							if (( e.stateMask & SWT.ALT ) != 0 ) {
+								
+								input_area.insert( "\n" );
+								
+								return;
+							}
+							
 							String message = input_area.getText().trim();
 	
 							if ( message.length() > 0 ){
