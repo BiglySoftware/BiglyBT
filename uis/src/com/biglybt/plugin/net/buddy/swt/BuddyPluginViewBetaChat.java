@@ -1059,7 +1059,7 @@ BuddyPluginViewBetaChat
 	
 										ChatParticipant participant = (ChatParticipant)data;
 	
-										String name = participant.getName( true );
+										String name = "@" + participant.getName( true );
 	
 										String existing = input_area.getText();
 	
@@ -1483,7 +1483,7 @@ BuddyPluginViewBetaChat
 	
 						ChatParticipant	participant = (ChatParticipant)item.getData();
 	
-						String name = participant.getName( true );
+						String name = "@" + participant.getName( true );
 	
 						String existing = input_area.getText();
 	
