@@ -1682,6 +1682,9 @@ public class ManagerUtils {
     int state = dm.getState();
     if (	state == DownloadManager.STATE_STOPPED ||
     		state == DownloadManager.STATE_STOPPING	) {
+    	if ( dm.isPaused()) {
+    		return( true );
+    	}
       return false;
     }
     return true;
@@ -1855,7 +1858,10 @@ public class ManagerUtils {
 		if (state == DownloadManager.STATE_STOPPED
 				|| state == DownloadManager.STATE_STOPPING
 				|| state == stateAfterStopped) {
-			return;
+			
+			if ( !dm.isPaused()){
+				return;
+			}
 		}
 
 		boolean stopme = true;
@@ -2042,7 +2048,18 @@ public class ManagerUtils {
 		    public void
 			runSupport()
     		{
-    			dm.stopIt( stateAfterStopped, false, false );
+    			if ( dm.isPaused()){
+    				CoreWaiterSWT.waitForCore(TriggerInThread.NEW_THREAD,
+    						new CoreRunningListener() {
+    							@Override
+    							public void coreRunning(Core core) {
+    								core.getGlobalManager().stopPausedDownload( dm );
+    							}
+    						});
+    			}else{
+    				
+    				dm.stopIt( stateAfterStopped, false, false );
+    			}
     		}
 		});
   	}

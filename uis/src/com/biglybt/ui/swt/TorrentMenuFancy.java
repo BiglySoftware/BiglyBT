@@ -792,6 +792,7 @@ public class TorrentMenuFancy
 
 		boolean start = false;
 		boolean stop = false;
+		boolean pause = false;
 		boolean recheck = false;
 		boolean barsOpened = true;
 		boolean bChangeDir = hasSelection;
@@ -806,6 +807,8 @@ public class TorrentMenuFancy
 
 			start = start || ManagerUtils.isStartable(dm);
 
+			pause = pause || ManagerUtils.isPauseable( dm );
+			
 			recheck = recheck || dm.canForceRecheck();
 
 			boolean stopped = ManagerUtils.isStopped(dm);
@@ -889,7 +892,7 @@ public class TorrentMenuFancy
 		// Pause
 		if (userMode > 0) {
 			createActionButton(dms, cQuickCommands, "v3.MainWindow.button.pause",
-					"pause", stop, new ListenerGetOffSWT() {
+					"pause", pause, new ListenerGetOffSWT() {
 						@Override
 						public void handleEventOffSWT(Event event) {
 							TorrentUtil.pauseDataSources(dms);

@@ -150,11 +150,11 @@ public class TorrentUtil
 		// Enable/Disable Logic
 		boolean bChangeDir = hasSelection;
 
-		boolean start, stop, changeUrl, barsOpened, forceStart;
+		boolean start, stop, pause, changeUrl, barsOpened, forceStart;
 		boolean forceStartEnabled, recheck, manualUpdate, fileMove, fileRescan;
 
 		changeUrl = barsOpened = manualUpdate = fileMove = fileRescan = true;
-		forceStart = forceStartEnabled = recheck = start = stop = false;
+		forceStart = forceStartEnabled = recheck = start = stop = pause = false;
 
 		boolean canSetSuperSeed = false;
 		boolean superSeedAllYes = true;
@@ -223,6 +223,8 @@ public class TorrentUtil
 
 				start = start || ManagerUtils.isStartable(dm);
 
+				pause = pause || ManagerUtils.isPauseable(dm);
+						
 				recheck = recheck || dm.canForceRecheck();
 
 				forceStartEnabled = forceStartEnabled
@@ -1226,7 +1228,7 @@ public class TorrentUtil
 					});
 				}
 			});
-			itemPause.setEnabled(stop);
+			itemPause.setEnabled(pause);
 		}
 
 		// Stop

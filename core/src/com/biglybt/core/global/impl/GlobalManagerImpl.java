@@ -1811,6 +1811,33 @@ public class GlobalManagerImpl
   }
 
   @Override
+  public void stopPausedDownload(DownloadManager dm)
+  {
+	  try {
+		  paused_list_mon.enter();
+
+		  for( int i=0; i < paused_list.size(); i++ ) {
+
+			  Object[]	data = (Object[])paused_list.get(i);
+
+			  HashWrapper hash = (HashWrapper)data[0];
+
+			  DownloadManager this_manager = getDownloadManager( hash );
+
+			  if ( this_manager == dm ){
+
+				  paused_list.remove(i);
+
+				  break;
+			  }
+		  }
+	  }finally{
+
+		  paused_list_mon.exit();
+	  }
+  }
+  
+  @Override
   public void
   pauseDownloadsForPeriod(
 	  int seconds )
