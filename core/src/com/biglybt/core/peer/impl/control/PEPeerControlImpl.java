@@ -26,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -41,6 +42,7 @@ import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peer.impl.*;
+import com.biglybt.core.peer.impl.transport.PEPeerTransportProtocol;
 import com.biglybt.core.peer.util.PeerIdentityDataID;
 import com.biglybt.core.peer.util.PeerIdentityManager;
 import com.biglybt.core.peer.util.PeerUtils;
@@ -334,6 +336,9 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private static final int		PREFER_UDP_BLOOM_SIZE	= 10000;
 	private volatile BloomFilter	prefer_udp_bloom;
 
+	private volatile boolean	upload_diabled;
+	private volatile boolean	download_diabled;
+	
 	private final LimitedRateGroup upload_limited_rate_group = new LimitedRateGroup() {
 		@Override
 		public String
@@ -343,8 +348,39 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 		@Override
 		public int getRateLimitBytesPerSecond() {
-			return adapter.getUploadRateLimitBytesPerSecond();
+			int rate = adapter.getUploadRateLimitBytesPerSecond();
+			
+			boolean disabled = rate < 0;
+			
+			if ( disabled != upload_diabled ) {
+			
+				try{					
+					peer_transports_mon.enter();
+
+					if ( disabled != upload_diabled  ){
+						
+						upload_diabled = disabled;
+						
+						for ( PEPeerTransport peer: peer_transports_cow ){
+							
+							peer.setUploadDisabled( upload_limited_rate_group, disabled );
+						}
+					}
+				}finally {
+					peer_transports_mon.exit();
+				}	
+			}
+			
+			if ( disabled ){
+				
+				return( 0 );
+				
+			}else{
+				
+				return( rate );
+			}
 		}
+		
 		@Override
 		public boolean
 		isDisabled()
@@ -368,8 +404,39 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 		@Override
 		public int getRateLimitBytesPerSecond() {
-			return adapter.getDownloadRateLimitBytesPerSecond();
+			int rate = adapter.getDownloadRateLimitBytesPerSecond();
+			
+			boolean disabled = rate < 0;
+			
+			if ( disabled != download_diabled ) {
+			
+				try{					
+					peer_transports_mon.enter();
+
+					if ( disabled != download_diabled  ){
+						
+						download_diabled = disabled;
+						
+						for ( PEPeerTransport peer: peer_transports_cow ){
+							
+							peer.setDownloadDisabled( download_limited_rate_group, disabled );
+						}
+					}
+				}finally {
+					peer_transports_mon.exit();
+				}	
+			}
+			
+			if ( disabled ){
+				
+				return( 0 );
+				
+			}else{
+				
+				return( rate );
+			}		
 		}
+		
 		@Override
 		public boolean
 		isDisabled()
@@ -2992,6 +3059,16 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 				peer_transports_cow = new_peer_transports;
 
+				if ( upload_diabled ){
+				
+					peer.setUploadDisabled( upload_limited_rate_group, true );
+				}
+				
+				if ( download_diabled ){
+					
+					peer.setDownloadDisabled( download_limited_rate_group, true );
+				}
+				
 				added = true;
 			}
 
@@ -4515,6 +4592,13 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		//every 1 second
 		if ( mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL == 0 ){
+			
+				// need to sync the rates periodically as when upload is disabled (for example) the we can end up with
+				// nothing requesting the rate in order for a change to be noticed
+			
+			upload_limited_rate_group.getRateLimitBytesPerSecond();
+			download_limited_rate_group.getRateLimitBytesPerSecond();
+			
 			final List<PEPeerTransport> peer_transports = peer_transports_cow;
 
 			int num_waiting_establishments = 0;
