@@ -314,51 +314,50 @@ public class SideBarEntrySWT
 			return;
 		}
 		synchronized (this) {
-  		if (isRedrawQueued) {
-  			return;
-  		}
-  		isRedrawQueued = true;
+			if (isRedrawQueued) {
+				return;
+			}
+			isRedrawQueued = true;
 		}
 
 		//System.out.println("redraw " + Thread.currentThread().getName() + ":" + getId() + " via " + Debug.getCompressedStackTrace());
 
 		Utils.execSWTThreadLater(0, new SWTRunnable() {
 			@Override
-			public void runWithDisplay(Display display) {
-				try {
-  				if (swtItem == null || swtItem.isDisposed()) {
-  					return;
-  				}
-  				Tree tree = swtItem.getParent();
-  				if (!tree.isVisible()) {
-  					return;
-  				}
-					if (Utils.isGTK3) {
-						// parent.clear crashes java, so call item's clear
-						//parent.clear(parent.indexOf(treeItem), true);
-						try {
-							Method m = swtItem.getClass().getDeclaredMethod("clear");
-							m.setAccessible(true);
-							m.invoke(swtItem);
-						} catch (Throwable e) {
-						}
-					} else {
-
-						try {
-							Rectangle bounds = swtItem.getBounds();
-							Rectangle treeBounds = tree.getBounds();
-							tree.redraw(0, bounds.y, treeBounds.width, bounds.height, true);
-						} catch (NullPointerException npe) {
-							// ignore NPE. OSX seems to be spewing this when the tree size is 0
-							// or is invisible or something like that
-						}
+			public void runWithDisplay(Display display) 
+			{
+				synchronized (SideBarEntrySWT.this) {
+					isRedrawQueued = false;
+				}
+				
+				if (swtItem == null || swtItem.isDisposed()) {
+					return;
+				}
+				Tree tree = swtItem.getParent();
+				if (!tree.isVisible()) {
+					return;
+				}
+				if (Utils.isGTK3) {
+					// parent.clear crashes java, so call item's clear
+					//parent.clear(parent.indexOf(treeItem), true);
+					try {
+						Method m = swtItem.getClass().getDeclaredMethod("clear");
+						m.setAccessible(true);
+						m.invoke(swtItem);
+					} catch (Throwable e) {
 					}
-  				//tree.update();
-				} finally {
-					synchronized (SideBarEntrySWT.this) {
-						isRedrawQueued = false;
+				} else {
+
+					try {
+						Rectangle bounds = swtItem.getBounds();
+						Rectangle treeBounds = tree.getBounds();
+						tree.redraw(0, bounds.y, treeBounds.width, bounds.height, true);
+					} catch (NullPointerException npe) {
+						// ignore NPE. OSX seems to be spewing this when the tree size is 0
+						// or is invisible or something like that
 					}
 				}
+				//tree.update();
 			}
 		});
 	}
