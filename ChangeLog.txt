@@ -9,6 +9,8 @@ FEATURE: UI    | Country and language specific chats [Parg]
 FEATURE: UI    | Added ability to show teh reason for a download being stopped [Parg]
 FEATURE: UI    | Added 'disabled' upload and download speed selectors [Parg]
 FEATURE: UI    | MyTracker and MyShares views now pop-outable [Parg]
+FEATURE: UI    | New file column in pieces view to show which file(s) a piece belongs to [Parg]
+FEATURE: UI    | Piece Map view hover now indicates file extent and file names in tip area at top [Parg]
 FEATURE: PLUG  | 3D Swarm view now available in download tabs [Parg]
 FEATURE: PLUG  | 3D Swarm view now has a 'most active' view [Parg]
 FEATURE: PLUG  | Tracker Templates and IRC plugin ported [Parg]
@@ -23,13 +25,17 @@ FEATURE: Core  | Queuing option to auto-tag first and non-first priority downloa
 FEATURE: Core  | New queuing option to ignore zero-peer torrents when calculating number stalled [Parg]
 FEATURE: Core  | Added some client id migration support [Parg]
 
+CHANGE: UI     | Nick names automatically prefixed with '@' when selected [Parg]
+CHANGEL UI     | Use alt+<return> to enter new lines into chat messages [Parg]
 CHANGE: PLUG   | Speed Scheduler restarts downloads it has stopped when it is disabled [Parg]
 CHANGE: Core   | Switch to torrent based updates [Parg]
 CHANGE: Core   | Reduce config file writes [Parg]
+CHANGE: Core   | Paused downloads can now be stopped [Parg]
 
 BUGFIX: UI     | Fix tag views not showing properly in classic UI [Parg]
 BUGFIX: UI     | Fix sharing view FTUX [Parg]
 BUGFIX: UI     | Fix category addition window vanishing [Parg]
+BUGFIX: UI     | Tab view rendering fixes [Parg]
 BUGFIX: Core   | Fix bug casing lots of threads to be created [Parg]
 
 2017.09.13 | BiglyBT 1.0.2.0
