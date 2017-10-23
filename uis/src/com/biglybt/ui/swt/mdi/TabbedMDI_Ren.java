@@ -137,7 +137,7 @@ public class TabbedMDI_Ren {
 							int height = textSize.y + 1;
 							int startY = bounds.y + ((bounds.height - height) / 2) + 1;
 
-							Image image = new Image( parent_gc.getDevice(), width, height );
+							Image image = new Image( parent_gc.getDevice(), width+1, height+1 );
 							
 							
 							GC gc = new GC( image );
@@ -147,7 +147,7 @@ public class TabbedMDI_Ren {
 							gc.setAntialias( SWT.ON );
 							
 							gc.setBackground( mdi.getTabFolder().getBackground());
-							gc.fillRectangle( new Rectangle( 0, 0, width, height ));
+							gc.fillRectangle( new Rectangle( 0, 0, width+1, height+1 ));
 							//gc.setBackground(((state & SWT.SELECTED) != 0 ) ? item.getParent().getSelectionBackground() : item.getParent().getBackground());
 							//gc.fillRectangle(startX - 5, startY, width + 5, height);
 
