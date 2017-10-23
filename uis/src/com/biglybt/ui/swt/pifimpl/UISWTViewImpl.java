@@ -302,6 +302,12 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public void triggerEvent(int eventType, Object data) {
+		if ( eventType == UISWTViewEvent.TYPE_FOCUSGAINED ) {
+			if ( isDestroyOnDeactivate() && isDisposed()){
+				setDisposed( false );	// come back to life?
+			}
+		}
+		
 		try {
 			triggerBooleanEvent(eventType, data);
 		} catch (Exception e) {
