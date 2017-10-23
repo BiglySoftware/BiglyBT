@@ -82,10 +82,10 @@ public class TabbedMDI_Ren {
 			 * @see org.eclipse.swt.custom.CTabFolderRenderer#draw(int, int, org.eclipse.swt.graphics.Rectangle, org.eclipse.swt.graphics.GC)
 			 */
 			@Override
-			protected void draw(int part, int state, Rectangle bounds, GC gc) {
+			protected void draw(int part, int state, Rectangle bounds, GC parent_gc) {
 				try {
 					//super.draw(part, state & ~(SWT.FOREGROUND), bounds, gc);
-					super.draw(part, state, bounds, gc);
+					super.draw(part, state, bounds, parent_gc);
 				} catch (Throwable t) {
 					Debug.out(t);
 				}
@@ -120,9 +120,9 @@ public class TabbedMDI_Ren {
 									x2 -= 20;
 								}
 							}
-							gc.setAntialias(SWT.ON);
+							//gc.setAntialias(SWT.ON); FAIL ON WINDOWS 7 AT LEAST
 
-							Point textSize = gc.textExtent(textIndicator);
+							Point textSize = parent_gc.textExtent(textIndicator);
 							//Point minTextSize = gc.textExtent("99");
 							//if (textSize.x < minTextSize.x + 2) {
 							//	textSize.x = minTextSize.x + 2;
@@ -137,6 +137,17 @@ public class TabbedMDI_Ren {
 							int height = textSize.y + 1;
 							int startY = bounds.y + ((bounds.height - height) / 2) + 1;
 
+							Image image = new Image( parent_gc.getDevice(), width, height );
+							
+							
+							GC gc = new GC( image );
+							
+							gc.setAdvanced( true );
+							
+							gc.setAntialias( SWT.ON );
+							
+							gc.setBackground( mdi.getTabFolder().getBackground());
+							gc.fillRectangle( new Rectangle( 0, 0, width, height ));
 							//gc.setBackground(((state & SWT.SELECTED) != 0 ) ? item.getParent().getSelectionBackground() : item.getParent().getBackground());
 							//gc.fillRectangle(startX - 5, startY, width + 5, height);
 
@@ -163,7 +174,7 @@ public class TabbedMDI_Ren {
 
 							Color text_color = Colors.white;
 
-							gc.fillRoundRectangle(startX, startY, width, height, textSize.y * 2 / 3,
+							gc.fillRoundRectangle(0, 0, width, height, textSize.y * 2 / 3,
 									height * 2 / 3);
 
 							if ( color != null ){
@@ -182,13 +193,19 @@ public class TabbedMDI_Ren {
 
 								gc.setBackground( default_color );
 
-								gc.drawRoundRectangle(startX, startY, width, height, textSize.y * 2 / 3,
+								gc.drawRoundRectangle(0, 0, width, height, textSize.y * 2 / 3,
 										height * 2 / 3);
 							}
 							gc.setForeground(text_color);
-							GCStringPrinter.printString(gc, textIndicator, new Rectangle(startX,
-									startY + textOffsetY, width, height), true, false, SWT.CENTER);
+							
+							GCStringPrinter.printString(gc, textIndicator, new Rectangle(0,
+									0 + textOffsetY, width, height), true, false, SWT.CENTER);
 
+							gc.dispose();
+							
+							parent_gc.drawImage( image, startX, startY );
+							
+							image.dispose();
 						}
 					}
 

@@ -533,43 +533,62 @@ public class UISWTViewImpl
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.pif.UISWTView#setTitle(java.lang.String)
-	 */
 	@Override
 	public void setTitle(String title) {
+		setTitleSupport( title );
+	}
+	
+	protected boolean setTitleSupport(String title) {
 		if (title == null) {
-			return;
+			return( false );
 		}
+		
+		boolean diff = !title.equals( setTitle );
+		
 		this.setTitle	= title;
 
 		if (title.startsWith("{") && title.endsWith("}") && title.length() > 2) {
-			setTitleID(title.substring(1, title.length() - 1));
-			return;
+			return( setTitleIDSupport(title.substring(1, title.length() - 1)));
+			
 		}
 		if (title.equals(this.title)) {
-			return;
+			return( diff );
 		}
 		if (title.contains(".") && MessageText.keyExists(title)) {
-			setTitleID(title);
-			return;
+			return( setTitleIDSupport(title));
 		}
 
+		diff |= this.title != title && ( this.title == null || title == null || !this.title.equals( title ));
+		diff |= this.titleID != null;
+		
 		this.title = title;
 		this.titleID = null;
+				
+		return( diff );
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#setTitleID(java.lang.String)
-	 */
-	public void setTitleID(String titleID) {
+	protected void setTitleID(String titleID) {
+		setTitleIDSupport( titleID );
+	}
+	
+	protected boolean setTitleIDSupport(String titleID) {
 		if (titleID != null
 				&& (MessageText.keyExists(titleID) || titleID.startsWith("!"))) {
 
-			this.setTitleID	= titleID;
-
-			this.titleID = titleID;
-			this.title = null;
+			boolean diff = title != null;
+			
+			diff |= setTitleID != titleID && ( setTitleID == null || titleID == null || !setTitleID.equals( titleID ));
+			diff |= this.titleID != titleID && ( this.titleID == null || titleID == null || !this.titleID.equals( titleID ));
+			
+			this.setTitleID		= titleID;
+			this.titleID 		= titleID;
+			this.title 			= null;
+			
+			return( diff );
+			
+		}else{
+			
+			return( false );
 		}
 	}
 

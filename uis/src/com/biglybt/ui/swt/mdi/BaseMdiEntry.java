@@ -935,9 +935,14 @@ public abstract class BaseMdiEntry
 
 	@Override
 	public void setImageLeftID(String id) {
+		boolean changed = id != imageLeftID && ( id == null || imageLeftID == null || !id.equals( imageLeftID ));
+		
 		imageLeftID = id;
 		imageLeft = null;
-		redraw();
+		
+		if ( changed ){
+			redraw();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -998,12 +1003,18 @@ public abstract class BaseMdiEntry
 		}
 
 		String imageID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_IMAGEID);
-		if (imageID != null) {
-			setImageLeftID(imageID.length() == 0 ? null : imageID);
+		
+			// don't overwrite any any existing (probably statically assigned) image id with a
+			// ViewTitleInfo that doesn't bother returning anythign better
+		
+		if ( imageID != null ){
+			if ( imageID.length() == 0 ){
+				imageID = null;
+			}
+						
+			setImageLeftID(  imageID);
 		}
-
-		redraw();
-
+		
 		String logID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_LOGID);
 		if (logID != null) {
 			setLogID(logID);
@@ -1158,10 +1169,20 @@ public abstract class BaseMdiEntry
 	 */
 	@Override
 	public void setTitle(String title) {
-		super.setTitle(title);
-		redraw();
+		if ( super.setTitleSupport(title)) {
+		
+			redraw();
+		}
 	}
 
+	@Override
+	public void setTitleID( String id ) {
+		if ( super.setTitleIDSupport( id )) {
+			
+			redraw();
+		}
+	}
+	
 	@Override
 	public void addListener(MdiSWTMenuHackListener l) {
 		synchronized (this) {

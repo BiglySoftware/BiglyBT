@@ -190,78 +190,91 @@ public class SB_Transfers
 
 
 
-	public SB_Transfers(final MultipleDocumentInterfaceSWT mdi) {
+	public SB_Transfers(final MultipleDocumentInterfaceSWT mdi, boolean vuze_ui ) {
 		statsNoLowNoise = new stats();
 		statsNoLowNoise.includeLowNoise = false;
 		statsWithLowNoise = new stats();
 		statsWithLowNoise.includeLowNoise = true;
-		refresh_limiter = new FrequencyLimitedDispatcher(
-				new AERunnable() {
-					@Override
-					public void runSupport() {
-						refreshAllLibrariesSupport();
-					}
-				}, 250);
-		refresh_limiter.setSingleThreaded();
-
-		MdiEntryCreationListener libraryCreator = new MyMdiEntryCreationListener(mdi);
-		mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY, libraryCreator);
-		mdi.registerEntry("library", libraryCreator);
-
-		mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						return createDownloadingEntry(mdi);
-					}
-				});
-
-		mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						return createSeedingEntry(mdi);
-					}
-				});
-
-		mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						return createUnopenedEntry(mdi);
-					}
-				});
-
-
-
-		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
-			@Override
-			public void coreRunning(Core core) {
-				totalStats = StatsFactory.getStats();
-				setupViewTitleWithCore(core);
-			}
-		});
-
-		hasBeenOpenedListener = new HasBeenOpenedListener() {
-			@Override
-			public void hasBeenOpenedChanged(DownloadManager dm, boolean opened) {
-				recountUnopened();
-				refreshAllLibraries();
-			}
-		};
-		PlatformTorrentUtils.addHasBeenOpenedListener(hasBeenOpenedListener);
-
-		addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY);
-
-		mdi.addListener(new MdiEntryLoadedListener() {
-			@Override
-			public void mdiEntryLoaded(MdiEntry entry) {
-				if (MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS.equals(entry.getId())) {
-					addHeaderMenu();
+		
+		if ( vuze_ui ){
+			refresh_limiter = new FrequencyLimitedDispatcher(
+					new AERunnable() {
+						@Override
+						public void runSupport() {
+							refreshAllLibrariesSupport();
+						}
+					}, 250);
+			refresh_limiter.setSingleThreaded();
+	
+			MdiEntryCreationListener libraryCreator = new MyMdiEntryCreationListener(mdi);
+			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY, libraryCreator);
+			mdi.registerEntry("library", libraryCreator);
+	
+			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL,
+					new MdiEntryCreationListener() {
+						@Override
+						public MdiEntry createMDiEntry(String id) {
+							return createDownloadingEntry(mdi);
+						}
+					});
+	
+			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD,
+					new MdiEntryCreationListener() {
+						@Override
+						public MdiEntry createMDiEntry(String id) {
+							return createSeedingEntry(mdi);
+						}
+					});
+	
+			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED,
+					new MdiEntryCreationListener() {
+						@Override
+						public MdiEntry createMDiEntry(String id) {
+							return createUnopenedEntry(mdi);
+						}
+					});
+	
+	
+	
+			CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+				@Override
+				public void coreRunning(Core core) {
+					totalStats = StatsFactory.getStats();
+					setupViewTitleWithCore(core);
 				}
-			}
-		});
-
+			});
+	
+			hasBeenOpenedListener = new HasBeenOpenedListener() {
+				@Override
+				public void hasBeenOpenedChanged(DownloadManager dm, boolean opened) {
+					recountUnopened();
+					refreshAllLibraries();
+				}
+			};
+			PlatformTorrentUtils.addHasBeenOpenedListener(hasBeenOpenedListener);
+	
+			addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY);
+	
+			mdi.addListener(new MdiEntryLoadedListener() {
+				@Override
+				public void mdiEntryLoaded(MdiEntry entry) {
+					if (MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS.equals(entry.getId())) {
+						addHeaderMenu();
+					}
+				}
+			});
+		}else{
+			
+			CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+				@Override
+				public void coreRunning(Core core) {
+					totalStats = StatsFactory.getStats();
+					setupViewTitleWithCore(core);
+				}
+			});
+			
+			hasBeenOpenedListener = null;
+		}
 
 		timerEventShowUptime = SimpleTimer.addPeriodicEvent(
 				"SBLV:updater",
@@ -327,7 +340,7 @@ public class SB_Transfers
 
 	}
 
-	protected static void addHeaderMenu() {
+	protected void addHeaderMenu() {
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 
@@ -1214,7 +1227,7 @@ public class SB_Transfers
 
 	private final static Object	tag_setup_lock = new Object();
 
-	public static MdiEntry
+	public MdiEntry
 	setupTag(
 		final Tag tag )
 	{
@@ -1288,7 +1301,11 @@ public class SB_Transfers
 					getTitleInfoProperty(
 						int pid )
 					{
-						if ( pid == TITLE_INDICATOR_TEXT ){
+						if ( pid == TITLE_TEXT ) {
+							
+							return( tag.getTagName( true ));
+							
+						}else if ( pid == TITLE_INDICATOR_TEXT ){
 
 							return( String.valueOf( tag.getTaggedCount()));
 

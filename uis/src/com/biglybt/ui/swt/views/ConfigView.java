@@ -575,6 +575,10 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 					  for ( TreeItem ti: sections.keySet()){
 
+						  if ( ti.isDisposed()){
+							  continue;
+						  }
+						  
 						  String id = (String)ti.getData( "ID" );
 
 						  if ( id != null ){

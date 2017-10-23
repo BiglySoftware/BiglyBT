@@ -855,6 +855,8 @@ public class MainMDISetup
 			}
 		});
 
+		sb_transfers = new SB_Transfers(mdi, false);
+		
 		SBC_ActivityTableView.setupSidebarEntry(mdi);
 
 		mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY);
@@ -940,7 +942,7 @@ public class MainMDISetup
 			});
 		}
 
-		sb_transfers = new SB_Transfers(mdi);
+		sb_transfers = new SB_Transfers(mdi, true);
 		sb_vuze = new SB_Vuze(mdi);
 		new SB_Discovery(mdi);
 

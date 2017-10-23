@@ -177,7 +177,7 @@ public class ChatMDIEntry implements ViewTitleInfo
 	private void
 	update()
 	{
-		mdi_entry.redraw();
+		//mdi_entry.redraw();
 
 		ViewTitleInfoManager.refreshTitleInfo( mdi_entry.getViewTitleInfo());
 	}

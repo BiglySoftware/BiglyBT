@@ -600,6 +600,7 @@ public class TabbedEntry
 
 	@Override
 	public void redraw() {
+		
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
@@ -712,7 +713,6 @@ public class TabbedEntry
 				setTitleID(titleID);
 			}
 		}
-		redraw();
 	}
 
 	// @see MdiEntry#isSelectable()
