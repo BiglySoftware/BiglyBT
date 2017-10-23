@@ -284,8 +284,6 @@ ClientIDPlugin
 		byte[]		hash,
 		String[]	lines_in )
 	{
-		Debug.out( "eh?" );
-		
 		return( lines_in );
 	}
 
