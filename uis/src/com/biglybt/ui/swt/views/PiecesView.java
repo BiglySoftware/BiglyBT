@@ -97,7 +97,8 @@ public class PiecesView
 		new WritersItem(),
 		new PriorityItem(),
 		new SpeedItem(),
-		new RequestedItem()
+		new RequestedItem(),
+		new FilesItem(),
 	};
 
 	static{

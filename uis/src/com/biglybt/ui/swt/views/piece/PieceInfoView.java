@@ -29,8 +29,11 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.impl.DiskManagerImpl;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPieceListener;
 import com.biglybt.core.download.DownloadManagerState;
@@ -108,6 +111,8 @@ public class PieceInfoView
 	private String topLabelLHS = "";
 	private String topLabelRHS = "";
 
+	private int	selectedPiece	= -1;
+	
 	private Label imageLabel;
 
 	// More delay for this view because of high workload
@@ -247,6 +252,7 @@ public class PieceInfoView
 		imageLabel.setLayoutData(gridData);
 
 		topLabel = new Label(pieceInfoComposite, SWT.NULL);
+		topLabel.setBackground(Colors.white);
 		gridData = new GridData(SWT.FILL, SWT.DEFAULT, false, false);
 		topLabel.setLayoutData(gridData);
 
@@ -339,6 +345,10 @@ public class PieceInfoView
 
 					if ( piece_number >= 0 ){
 
+						selectedPiece = piece_number;
+						
+						refreshInfoCanvas();
+						
 						DiskManager		disk_manager 	= dlm.getDiskManager();
 						PEPeerManager	pm 				= dlm.getPeerManager();
 
@@ -358,7 +368,20 @@ public class PieceInfoView
 								text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
 							}
 						}
-
+						
+						text += " - ";
+						
+						DMPieceList l = disk_manager.getPieceList( piece_number );
+						
+						for ( int i=0;i<l.size();i++) {
+		           		 
+							DMPieceMapEntry entry = l.get( i );
+							
+							DiskManagerFileInfo info = entry.getFile();
+					
+							text += (i==0?"":"; ") + info.getFile( true ).getName();
+						}
+						
 						topLabelRHS = text;
 
 					}else{
@@ -367,6 +390,12 @@ public class PieceInfoView
 					}
 
 					updateTopLabel();
+				}
+				
+				@Override
+				public void mouseExit(MouseEvent e){
+					selectedPiece = -1;
+					refreshInfoCanvas();
 				}
 			});
 
@@ -756,6 +785,32 @@ public class PieceInfoView
 				gcImg.fillRectangle(0, 0, bounds.width, iNeededHeight);
 			}
 
+			int	selectionStart 	= Integer.MAX_VALUE;
+			int selectionEnd	= Integer.MIN_VALUE;
+			
+			if ( selectedPiece != -1 ){
+			
+				DMPieceList l = dm.getPieceList( selectedPiece );
+			
+				for ( int i=0;i<l.size();i++) {
+           		 
+					DMPieceMapEntry entry = l.get( i );
+					
+					DiskManagerFileInfo info = entry.getFile();
+					
+					int first 	= info.getFirstPieceNumber();
+					int last	= info.getLastPieceNumber();
+					
+					if ( first < selectionStart ){
+						selectionStart = first;
+					}
+					
+					if ( last > selectionEnd ){
+						selectionEnd = last;
+					}
+				}
+			}
+			
 			gcImg.setFont(font);
 
 			int iCol = 0;
@@ -765,8 +820,11 @@ public class PieceInfoView
 					iRow++;
 				}
 
-				newBlockInfo[i] = new BlockInfo();
+				BlockInfo newInfo = newBlockInfo[i] = new BlockInfo();
 
+				if ( i >= selectionStart && i <= selectionEnd ){
+					newInfo.selected = true;
+				}
 				int colorIndex;
 				boolean done = dm_pieces[i].isDone();
 				int iXPos = iCol * BLOCK_SIZE + 1;
@@ -774,7 +832,7 @@ public class PieceInfoView
 
 				if (done) {
 					colorIndex = BLOCKCOLOR_HAVE;
-					newBlockInfo[i].haveWidth = BLOCK_FILLSIZE;
+					newInfo.haveWidth = BLOCK_FILLSIZE;
 				} else {
 					// !done
 					boolean partiallyDone = dm_pieces[i].getNbWritten() > 0;
@@ -787,65 +845,71 @@ public class PieceInfoView
 						else if (iNewWidth <= 0)
 							iNewWidth = 1;
 
-						newBlockInfo[i].haveWidth = iNewWidth;
+						newInfo.haveWidth = iNewWidth;
 					}
 				}
 
 				if (currentDLPieces[i] != null && currentDLPieces[i].hasUndownloadedBlock()) {
-					newBlockInfo[i].showDown = currentDLPieces[i].getNbRequests() == 0
+					newInfo.showDown = currentDLPieces[i].getNbRequests() == 0
 							? SHOW_SMALL : SHOW_BIG;
 				}
 
 				if (uploadingPieces[i] > 0) {
-					newBlockInfo[i].showUp = uploadingPieces[i] < 2 ? SHOW_SMALL
+					newInfo.showUp = uploadingPieces[i] < 2 ? SHOW_SMALL
 							: SHOW_BIG;
 				}
 
 
 				if (availability != null) {
-					newBlockInfo[i].availNum = availability[i];
+					newInfo.availNum = availability[i];
 					if (minAvailability2 == availability[i]) {
-						newBlockInfo[i].availDotted = true;
+						newInfo.availDotted = true;
 					}
 				} else {
-					newBlockInfo[i].availNum = -1;
+					newInfo.availNum = -1;
 				}
 
 				if (oldBlockInfo != null && i < oldBlockInfo.length
-						&& oldBlockInfo[i].sameAs(newBlockInfo[i])) {
+						&& oldBlockInfo[i].sameAs(newInfo)) {
 					iCol++;
 					continue;
 				}
 
-				gcImg.setBackground(pieceInfoCanvas.getBackground());
-				gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
-						BLOCK_SIZE);
-
-				colorIndex = BLOCKCOLOR_HAVE;
-				gcImg.setBackground(blockColors[colorIndex]);
-				gcImg.fillRectangle(iXPos, iYPos, newBlockInfo[i].haveWidth, BLOCK_FILLSIZE);
-
-				colorIndex = BLOCKCOLORL_NOHAVE;
-				gcImg.setBackground(blockColors[colorIndex]);
-				gcImg.fillRectangle(iXPos + newBlockInfo[i].haveWidth, iYPos, BLOCK_FILLSIZE - newBlockInfo[i].haveWidth, BLOCK_FILLSIZE);
-
-				if (newBlockInfo[i].showDown > 0) {
+				if ( newInfo.selected ){
+					gcImg.setBackground( Colors.fadedGreen);
+					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
+							BLOCK_SIZE);
+				}else {
+					gcImg.setBackground(pieceInfoCanvas.getBackground());
+					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
+							BLOCK_SIZE);
+	
+					colorIndex = BLOCKCOLOR_HAVE;
+					gcImg.setBackground(blockColors[colorIndex]);
+					gcImg.fillRectangle(iXPos, iYPos, newInfo.haveWidth, BLOCK_FILLSIZE);
+	
+					colorIndex = BLOCKCOLORL_NOHAVE;
+					gcImg.setBackground(blockColors[colorIndex]);
+					gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos, BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
+				}
+				
+				if (newInfo.showDown > 0) {
 					drawDownloadIndicator(gcImg, iXPos, iYPos,
-							newBlockInfo[i].showDown == SHOW_SMALL);
+							newInfo.showDown == SHOW_SMALL);
 				}
 
-				if (newBlockInfo[i].showUp > 0) {
+				if (newInfo.showUp > 0) {
 					drawUploadIndicator(gcImg, iXPos, iYPos,
-							newBlockInfo[i].showUp == SHOW_SMALL);
+							newInfo.showUp == SHOW_SMALL);
 				}
 
-				if (newBlockInfo[i].availNum != -1) {
-					if (minAvailability == newBlockInfo[i].availNum) {
+				if (newInfo.availNum != -1) {
+					if (minAvailability == newInfo.availNum) {
 						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
 						gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1,
 								BLOCK_FILLSIZE + 1);
 					}
-					if (minAvailability2 == newBlockInfo[i].availNum) {
+					if (minAvailability2 == newInfo.availNum) {
 						gcImg.setLineStyle(SWT.LINE_DOT);
 						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
 						gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1,
@@ -853,17 +917,16 @@ public class PieceInfoView
 						gcImg.setLineStyle(SWT.LINE_SOLID);
 					}
 
-					String sNumber = String.valueOf(newBlockInfo[i].availNum);
+					String sNumber = String.valueOf(newInfo.availNum);
 					Point size = gcImg.stringExtent(sNumber);
 
-					if (newBlockInfo[i].availNum < 100) {
+					if (newInfo.availNum < 100) {
 						int x = iXPos + (BLOCK_FILLSIZE / 2) - (size.x / 2);
 						int y = iYPos + (BLOCK_FILLSIZE / 2) - (size.y / 2);
 						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
 						gcImg.drawText(sNumber, x, y, true);
 					}
 				}
-
 
 				iCol++;
 			}
@@ -999,7 +1062,7 @@ public class PieceInfoView
 		/** 0 : no; 1 : Yes; 2: small */
 		byte showUp;
 		byte showDown;
-
+		boolean selected;
 		/**
 		 *
 		 */
@@ -1012,7 +1075,8 @@ public class PieceInfoView
 					&& availNum == otherBlockInfo.availNum
 					&& availDotted == otherBlockInfo.availDotted
 					&& showDown == otherBlockInfo.showDown
-					&& showUp == otherBlockInfo.showUp;
+					&& showUp == otherBlockInfo.showUp 
+					&& selected == otherBlockInfo.selected ;
 		}
 	}
 
