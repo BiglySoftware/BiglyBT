@@ -155,6 +155,8 @@ public class ChatMDIEntry implements ViewTitleInfo
 				});
 		*/
 		
+		mdi_entry.setImageLeftID("image.sidebar.chat-overview");
+		
 		chat.addListener( adapter );
 	}
 
