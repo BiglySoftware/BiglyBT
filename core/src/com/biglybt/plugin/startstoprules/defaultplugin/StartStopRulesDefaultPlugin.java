@@ -410,6 +410,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		configModel.addBooleanParameter2("StartStopManager_bMaxDownloadIgnoreChecking",
 				"ConfigView.label.ignoreChecking", false);
 
+		configModel.addBooleanParameter2("StartStopManager_bMaxMinDLLinked",
+				"ConfigView.label.maxmindownloadlinked", false);
+
 		configModel.addIntParameter2("StartStopManager_iMinSpeedForActiveDL",
 				"ConfigView.label.minSpeedForActiveDL", 512);
 		configModel.addIntParameter2("StartStopManager_iMinSpeedForActiveSeeding",
@@ -898,8 +901,19 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			_maxActiveWhenSeedingEnabled = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxActiveTorrentsWhenSeedingEnabled");
 			_maxActiveWhenSeeding = plugin_config.getUnsafeIntParameter("StartStopManager_iMaxActiveTorrentsWhenSeeding");
 
-			minDownloads = plugin_config.getUnsafeIntParameter("min downloads");
 			maxConfiguredDownloads = plugin_config.getUnsafeIntParameter("max downloads");
+			
+			boolean min_eq_max = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxMinDLLinked" );
+
+			if ( min_eq_max ){
+				
+				minDownloads = maxConfiguredDownloads;
+				
+			}else{
+			
+				minDownloads = plugin_config.getUnsafeIntParameter("min downloads");
+			}
+			
 			bMaxDownloadIgnoreChecking	= plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxDownloadIgnoreChecking" );
 
 			numPeersAsFullCopy = plugin_config.getUnsafeIntParameter("StartStopManager_iNumPeersAsFullCopy");

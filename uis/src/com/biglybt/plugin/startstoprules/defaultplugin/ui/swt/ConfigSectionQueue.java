@@ -146,8 +146,9 @@ public class ConfigSectionQueue implements UISWTConfigSection
 				cMaxActiveOptionsArea, "StartStopManager_iMaxActiveTorrentsWhenSeeding", 0, Integer.MAX_VALUE);
 		maxActivWhenSeeding.setLayoutData(gridData);
 
-		// row
-
+		// min downloads
+		
+		
 		label = new Label(cSection, SWT.NULL);
 		Messages.setLanguageText(label, "ConfigView.label.mindownloads");
 		gridData = new GridData();
@@ -155,6 +156,36 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		minDLs.setLayoutData(gridData);
 		minDLs.setMaximumValue(maxDLs.getValue()); //  / 2);
 
+		final Composite cMinMaxLink = new Composite(cSection, SWT.NULL);
+		layout = new GridLayout();
+		layout.numColumns = 3;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		cMinMaxLink.setLayout(layout);
+		gridData = new GridData();
+		gridData.horizontalIndent = 15;
+		gridData.horizontalSpan = 2;
+		Utils.setLayoutData(cMinMaxLink, gridData);
+		
+		label = new Label(cMinMaxLink, SWT.NULL);
+		imageLoader.setLabelImage(label, "subitem");
+		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
+		Utils.setLayoutData(label, gridData);
+
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		BooleanParameter minmaxlink = new BooleanParameter(cMinMaxLink, "StartStopManager_bMaxMinDLLinked",
+				"ConfigView.label.maxmindownloadlinked");
+		
+		minmaxlink.setLayoutData(gridData);
+		minmaxlink.addChangeListener(new ParameterChangeAdapter() {
+			@Override
+			public void parameterChanged(Parameter p, boolean caused_internally) {
+				minDLs.setEnabled( !minmaxlink.isSelected());
+			}});
+		
+		minDLs.setEnabled( !minmaxlink.isSelected());
+		
 		// change controllers for above items
 
 		maxActiveWhenSeedingEnabled.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(
