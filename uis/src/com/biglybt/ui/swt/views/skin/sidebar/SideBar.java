@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.List;
 
 import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.utils.ColorCache;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;

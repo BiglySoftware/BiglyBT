@@ -44,6 +44,7 @@ import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
@@ -1158,7 +1159,7 @@ public class SideBarEntrySWT
     		clipping.y--;
   			gc.setForeground(fgText);
   		} else {
-  			if ( treeItem.getItemCount() > 0 ){
+  			if ( treeItem.getItemCount() > 0 || id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )){
   				Font headerFont = sidebar.getHeaderFont();
   	  			if (headerFont != null && !headerFont.isDisposed()) {
   	  				gc.setFont(headerFont);
