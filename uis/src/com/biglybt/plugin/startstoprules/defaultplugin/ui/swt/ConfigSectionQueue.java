@@ -153,7 +153,7 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		gridData = new GridData();
 		final IntParameter minDLs = new IntParameter(cSection, "min downloads", 0, Integer.MAX_VALUE);
 		minDLs.setLayoutData(gridData);
-		minDLs.setMaximumValue(maxDLs.getValue() / 2);
+		minDLs.setMaximumValue(maxDLs.getValue()); //  / 2);
 
 		// change controllers for above items
 
@@ -164,7 +164,7 @@ public class ConfigSectionQueue implements UISWTConfigSection
 			@Override
 			public void parameterChanged(Parameter p, boolean caused_internally) {
 				int iMaxDLs = maxDLs.getValue();
-				minDLs.setMaximumValue(iMaxDLs / 2);
+				minDLs.setMaximumValue(iMaxDLs );//  / 2);
 
 				int iMinDLs = minDLs.getValue();
 				int iMaxActive = maxActiv.getValue();
