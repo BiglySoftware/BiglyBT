@@ -24,19 +24,24 @@ FEATURE: Core  | New option to prefer anonymous DDB operations for mixed content
 FEATURE: Core  | Queuing option to auto-tag first and non-first priority downloads [Parg]
 FEATURE: Core  | New queuing option to ignore zero-peer torrents when calculating number stalled [Parg]
 FEATURE: Core  | Added some client id migration support [Parg]
+FEATURE: Core  | Recover metadata downloads across restarts [Parg]
 
 CHANGE: UI     | Nick names automatically prefixed with '@' when selected [Parg]
 CHANGEL UI     | Use alt+<return> to enter new lines into chat messages [Parg]
+CHANGE: UI     | Added chat icon to chat sidebar entries [Parg]
 CHANGE: PLUG   | Speed Scheduler restarts downloads it has stopped when it is disabled [Parg]
 CHANGE: Core   | Switch to torrent based updates [Parg]
 CHANGE: Core   | Reduce config file writes [Parg]
 CHANGE: Core   | Paused downloads can now be stopped [Parg]
+CHANGE: Core   | Remove constraint that min simultaneous downloads <= max/2 and added option to link them [Parg]
 
 BUGFIX: UI     | Fix tag views not showing properly in classic UI [Parg]
 BUGFIX: UI     | Fix sharing view FTUX [Parg]
 BUGFIX: UI     | Fix category addition window vanishing [Parg]
 BUGFIX: UI     | Tab view rendering fixes [Parg]
+BUGFIX: UI     | Fix sidebar tooltip not always hiding [Parg]
 BUGFIX: Core   | Fix bug casing lots of threads to be created [Parg]
+BUGFIX: Core   | Don't attempt to scrape metadata downloads [Parg]
 
 2017.09.13 | BiglyBT 1.0.2.0
 
