@@ -136,7 +136,7 @@ public class TrackerChecker implements AEDiagnosticsEvidenceGenerator, SystemTim
 
     if ( trackerUrl.getHost().endsWith( ".dht" )){
     	
-    	// can't scape these (e.g. metadata downloads)
+    	// can't scrape these (e.g. metadata downloads) !
     	
     	return( null );
     }
