@@ -44,7 +44,7 @@ Constants
 	public static final String URL_FORUMS          = "https://forums.biglybt.com/";
 	public static final String URL_WIKI            = "https://wiki.biglybt.com/";
 	public static final String AZUREUS_WIKI        = URL_WIKI + "w/";
-	public static final String URL_GETTING_STARTED = "https://client.biglybt.com/GettingStarted.php";
+	public static final String URL_GETTING_STARTED = "https://biglybt.github.io/GettingStarted.html";
 	public static final String URL_RPC             = "https://rpc.biglybt.com/rpc.php";
 	public static final String URL_RPC2            = "https://vrpc.vuze.com/vzrpc/rpc.php";
 	public static final String URL_DEVICES_FAQ     = URL_WIKI + "w/FAQ_Devices";
@@ -153,7 +153,7 @@ Constants
 	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "1.0.2.1_CVS";
+	public static final String AZUREUS_VERSION  = "1.0.2.1_B20";
 	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
 	public static final String AZUREUS_SUBVER	  = "";
 	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1021" + "-").getBytes();  //MUST be 8 chars long!
