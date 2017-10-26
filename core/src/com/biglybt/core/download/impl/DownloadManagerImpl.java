@@ -4121,6 +4121,23 @@ DownloadManagerImpl
 	  return( crypto_level );
   }
 
+  private int move_progress = -1;
+  
+  public int
+  getMoveProgress()
+  {
+	  DiskManager	dm = getDiskManager();
+
+	  if ( dm != null ){
+		  
+		  return( dm.getMoveProgress());
+		  
+	  }else{
+		  
+		  return( move_progress );
+	  }
+  }
+  
   @Override
   public void
   moveDataFiles(
@@ -4243,10 +4260,10 @@ DownloadManagerImpl
 
   void
   moveDataFilesSupport0(
-	File 		new_parent_dir,
-	String 		new_filename )
+		  File 		new_parent_dir,
+		  String 		new_filename )
 
-  	throws DownloadManagerException
+				  throws DownloadManagerException
   {
 	  if (!canMoveDataFiles()){
 		  throw new DownloadManagerException("canMoveDataFiles is false!");
@@ -4254,7 +4271,7 @@ DownloadManagerImpl
 
 	  if (new_filename != null) {new_filename = FileUtil.convertOSSpecificChars(new_filename,false);}
 
-			// old file will be a "file" for simple torrents, a dir for non-simple
+	  // old file will be a "file" for simple torrents, a dir for non-simple
 
 	  File	old_file = getSaveLocation();
 
@@ -4270,11 +4287,11 @@ DownloadManagerImpl
 	  final File current_save_location = old_file;
 	  File new_save_location = new File(
 			  (new_parent_dir == null) ? old_file.getParentFile() : new_parent_dir,
-			  (new_filename == null) ? old_file.getName() : new_filename
-	  );
+					  (new_filename == null) ? old_file.getName() : new_filename
+			  );
 
 	  if (current_save_location.equals(new_save_location)) {
-		  	// null operation
+		  // null operation
 		  return;
 	  }
 
@@ -4284,9 +4301,9 @@ DownloadManagerImpl
 
 		  if ( !old_file.exists()){
 
-		  	// files not created yet
+			  // files not created yet
 
-		  	FileUtil.mkdirs(new_save_location.getParentFile());
+			  FileUtil.mkdirs(new_save_location.getParentFile());
 
 			  setTorrentSaveDir(new_save_location.getParent().toString(), new_save_location.getName());
 
@@ -4301,83 +4318,127 @@ DownloadManagerImpl
 			  Debug.printStackTrace(e);
 		  }
 
-		  if ( old_file.equals( new_save_location )){
-
-			  // nothing to do
-
-		  } else if (torrent.isSimpleTorrent()) {
-
-
-			  if (controller.getDiskManagerFileInfo()[0].setLinkAtomic(new_save_location)) {
-				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
-			  } else {throw new DownloadManagerException( "rename operation failed");}
-
-			  /*
-			  // Have to keep the file name in sync if we're renaming.
-			  //if (controller.getDiskManagerFileInfo()[0].setLinkAtomic(new_save_location)) {
-			  if ( FileUtil.renameFile( old_file, new_save_location )){
-
-				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
-
-			  }else{
-
-				  throw( new DownloadManagerException( "rename operation failed" ));
-			  }
-			  //} else {throw new DownloadManagerException( "rename operation failed");}
-			  */
-		  }else{
-
-			  if (FileUtil.isAncestorOf(old_file, new_save_location)) {
-
-		            Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
-							LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
-							new String[] {old_file.toString(), "Target is sub-directory of files" });
-
-		            throw( new DownloadManagerException( "rename operation failed" ));
+		  FileUtil.ProgressListener	pl = 
+			new FileUtil.ProgressListener()
+		  	{
+			  	private long	total_size;
+			  	private long	total_done;
+			  	
+				public void
+				setTotalSize(
+					long	size )
+				{
+					total_size = size;
 				}
+				
+				public void
+				bytesDone(
+					long	num )
+				{
+					total_done += num;
+					
+					move_progress = (int)(Math.min( 1000, (1000*total_done)/total_size ));
+				}
+				
+				public void
+				complete()
+				{
+					move_progress = 1000;
+				}
+		  	};
 
-			  // The files we move must be limited to those mentioned in the torrent.
-			  final HashSet files_to_move = new HashSet();
-
-              // Required for the adding of parent directories logic.
-              files_to_move.add(null);
-              DiskManagerFileInfo[] info_files = controller.getDiskManagerFileInfo();
-              for (int i=0; i<info_files.length; i++) {
-                  File f = info_files[i].getFile(true);
-                  try {f = f.getCanonicalFile();}
-                  catch (IOException ioe) {f = f.getAbsoluteFile();}
-                  boolean added_entry = files_to_move.add(f);
-
-                  /**
-                   * Start adding all the parent directories to the
-                   * files_to_move list. Doesn't matter if we include
-                   * files which are outside of the file path, the
-                   * renameFile call won't try to move those directories
-                   * anyway.
-                   */
-                  while (added_entry) {
-                      f = f.getParentFile();
-                      added_entry = files_to_move.add(f);
-                  }
-              }
-			  FileFilter ff = new FileFilter() {
-				  @Override
-				  public boolean accept(File f) {return files_to_move.contains(f);}
-			  };
-
-			  if ( FileUtil.renameFile( old_file, new_save_location, false, ff )){
-
-				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
-
+		  try{
+			  move_progress = 0;
+			  
+			  if ( old_file.equals( new_save_location )){
+	
+				  // nothing to do
+	
+			  } else if (torrent.isSimpleTorrent()) {
+	
+				  pl.setTotalSize( controller.getDiskManagerFileInfo()[0].getFile( true ).length());
+	
+				  if (controller.getDiskManagerFileInfo()[0].setLinkAtomic( new_save_location, pl)) {
+					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+				  } else {throw new DownloadManagerException( "rename operation failed");}
+	
+				  /*
+				  // Have to keep the file name in sync if we're renaming.
+				  //if (controller.getDiskManagerFileInfo()[0].setLinkAtomic(new_save_location)) {
+				  if ( FileUtil.renameFile( old_file, new_save_location )){
+	
+					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+	
+				  }else{
+	
+					  throw( new DownloadManagerException( "rename operation failed" ));
+				  }
+				  //} else {throw new DownloadManagerException( "rename operation failed");}
+				   */
 			  }else{
-
-				  throw( new DownloadManagerException( "rename operation failed" ));
+	
+				  if (FileUtil.isAncestorOf(old_file, new_save_location)) {
+	
+					  Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
+							  LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
+							  new String[] {old_file.toString(), "Target is sub-directory of files" });
+	
+					  throw( new DownloadManagerException( "rename operation failed" ));
+				  }
+	
+				  long	total_size = 0;
+				  
+				  // The files we move must be limited to those mentioned in the torrent.
+				  final HashSet files_to_move = new HashSet();
+	
+				  // Required for the adding of parent directories logic.
+				  files_to_move.add(null);
+				  DiskManagerFileInfo[] info_files = controller.getDiskManagerFileInfo();
+				  for (int i=0; i<info_files.length; i++) {
+					  File f = info_files[i].getFile(true);
+					  total_size += f.length();
+					  try {f = f.getCanonicalFile();}
+					  catch (IOException ioe) {f = f.getAbsoluteFile();}
+					  boolean added_entry = files_to_move.add(f);
+	
+					  /**
+					   * Start adding all the parent directories to the
+					   * files_to_move list. Doesn't matter if we include
+					   * files which are outside of the file path, the
+					   * renameFile call won't try to move those directories
+					   * anyway.
+					   */
+					  while (added_entry) {
+						  f = f.getParentFile();
+						  added_entry = files_to_move.add(f);
+					  }
+				  }
+				  FileFilter ff = new FileFilter() {
+					  @Override
+					  public boolean accept(File f) {return files_to_move.contains(f);}
+				  };
+	
+				  pl.setTotalSize( total_size );
+				  
+				  if ( FileUtil.renameFile( old_file, new_save_location, false, ff, pl )){
+	
+					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+	
+				  }else{
+	
+					  throw( new DownloadManagerException( "rename operation failed" ));
+				  }
+	
+				  if (  current_save_location.isDirectory()){
+	
+					  TorrentUtils.recursiveEmptyDirDelete( current_save_location, false );
+				  }
 			  }
-
-			  if (  current_save_location.isDirectory()){
-
-				  TorrentUtils.recursiveEmptyDirDelete( current_save_location, false );
-			  }
+		  }finally {
+			  
+			  pl.complete();
+			  
+			  move_progress = -1;
 		  }
 	  }else{
 		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );

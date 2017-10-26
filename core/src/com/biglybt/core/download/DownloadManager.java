@@ -499,6 +499,17 @@ DownloadManager
     public int
     getCryptoLevel();
 
+    	/**
+    	 * Progress of a move operation
+    	 * @return -1: not moving otherwise 0->1000
+    	 */
+    
+    public default int
+    getMoveProgress()
+    {
+    	return( -1 );
+    }
+    
         /**
          * Move data files to new location. Torrent must be in stopped/error state
          * @param new_parent_dir

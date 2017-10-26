@@ -2848,6 +2848,16 @@ DownloadManagerController
 		{
 			return( delegate.setLinkAtomic( link_destination ));
 		}
+		
+		@Override
+		public boolean
+		setLinkAtomic(
+			File						link_destination,
+			FileUtil.ProgressListener 	pl )
+		{
+			return( delegate.setLinkAtomic( link_destination, pl ));
+		}
+		
 
 		@Override
 		public File

@@ -24,7 +24,11 @@ package com.biglybt.core.util;
  import java.net.SocketTimeoutException;
  import java.net.URI;
  import java.net.URL;
- import java.util.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.FileStore;
+import java.nio.file.Files;
+import java.util.*;
  import java.util.regex.Matcher;
  import java.util.regex.Pattern;
  import java.util.zip.GZIPInputStream;
@@ -1528,25 +1532,34 @@ public class FileUtil {
 		File		to_file )
     {
         return renameFile(from_file, to_file, true);
-    	}
+   	}
 
-
+    public static boolean
+ 	renameFile(
+ 		File				from_file,
+ 		File				to_file,
+ 		ProgressListener	pl )
+    {
+         return renameFile(from_file, to_file, true, null, pl );
+    }
+    
     public static boolean
     renameFile(
         File        from_file,
         File        to_file,
         boolean     fail_on_existing_directory)
     {
-    	return renameFile(from_file, to_file, fail_on_existing_directory, null);
+    	return renameFile(from_file, to_file, fail_on_existing_directory, null, null);
     }
-
-    public static boolean renameFile(
-    	File        from_file,
-    	File        to_file,
-    	boolean     fail_on_existing_directory,
-    	FileFilter  file_filter
-    ) {
-
+        
+    public static boolean
+    renameFile(
+    	File        		from_file,
+    	File        		to_file,
+    	boolean     		fail_on_existing_directory,
+    	FileFilter  		file_filter,
+    	ProgressListener	pl )
+    {
     	if ( !from_file.exists()){
 
     		Debug.out( "renameFile: source file '" + from_file + "' doesn't exist, failing" );
@@ -1606,7 +1619,7 @@ public class FileUtil {
 				File	tf = new File( to_file, ff.getName());
 
     			try{
-     				if ( renameFile( ff, tf, fail_on_existing_directory, file_filter )){
+     				if ( renameFile( ff, tf, fail_on_existing_directory, file_filter, pl )){
 
     					last_ok++;
 
@@ -1658,7 +1671,7 @@ public class FileUtil {
 
     			try{
     				// null - We don't want to use the file filter, it only refers to source paths.
-                    if ( !renameFile( tf, ff, false, null )){
+                    if ( !renameFile( tf, ff, false, null, null )){
     					Debug.out( "renameFile: recovery - failed to move file '" + tf.toString()
 										+ "' to '" + ff.toString() + "'" );
     				}
@@ -1679,42 +1692,52 @@ public class FileUtil {
 
         		boolean	move_if_same_drive = COConfigurationManager.getBooleanParameter("Move If On Same Drive");
 
-    			if ( move_if_same_drive ){
+     			if ( move_if_same_drive ){
 
-    					// FileSystem class available from Java 7, boo, just do a hack for windowz
-
-    				if ( Constants.isWindows ){
-
+ 					try{
+    					FileStore fs1 = Files.getFileStore( from_file.toPath());
+    					
+    						// to_file must exist to find its filestore
+    					
+    					boolean created_to_file = false;
+    					
     					try{
-	    					String str1 = from_file.getCanonicalPath();
-	    					String str2 = to_file.getCanonicalPath();
-
-	       					char drive1 = ':';
-	       					char drive2 = ' ';
-
-	    					if ( str1.length() > 2 && str1.charAt(1) == ':' ){
-
-	    						drive1 = Character.toLowerCase( str1.charAt( 0 ));
+	    					if ( !to_file.exists()){
+	    						
+	    						to_file.createNewFile();
+	    						
+	    						created_to_file = true;
 	    					}
-	       					if ( str2.length() > 2 && str2.charAt(1) == ':' ){
-
-	    						drive2 = Character.toLowerCase( str2.charAt( 0 ));
-	    					}
-
-	       					if ( drive1 == drive2 ){
-
+	    					
+	    					FileStore fs2 = Files.getFileStore( to_file.toPath());
+	
+	       					if ( fs1.equals( fs2 )){
+	
 	       						copy_and_delete = false;
 	       					}
-    					}catch( Throwable e ){
-
+    					}finally {
+    						
+    						if ( created_to_file ){
+    							
+    							to_file.delete();
+    						}
     					}
-    				}
+					}catch( Throwable e ){
+					}
     			}
     		}
 
 			if ( 	(!copy_and_delete) &&
 					from_file.renameTo( to_file )){
 
+				if ( pl != null ){
+					try{
+						pl.bytesDone( to_file.length());
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+				
 				return( true );
 
 			}else{
@@ -1722,36 +1745,59 @@ public class FileUtil {
 
 					// can't rename across file systems under Linux - try copy+delete
 
-				FileInputStream		fis = null;
-
-				FileOutputStream	fos = null;
-
+				RandomAccessFile 	from_raf 	= null;
+				RandomAccessFile 	to_raf		= null;
+				DirectByteBuffer	buffer		= null;
+				
 				try{
-					fis = new FileInputStream( from_file );
+					final int BUFFER_SIZE = 128*1024;
+					
+					buffer = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_EXTERNAL, BUFFER_SIZE );
 
-					fos = new FileOutputStream( to_file );
+					ByteBuffer bb = buffer.getBuffer( DirectByteBuffer.SS_EXTERNAL  );
+					
+					from_raf 	= new RandomAccessFile( from_file, "r" );
+					to_raf 		= new RandomAccessFile( to_file, "rw" );
 
-					byte[]	buffer = new byte[65536];
+					FileChannel from_fc = from_raf.getChannel();
+					FileChannel to_fc 	= to_raf.getChannel();
+					
+					long	rem = from_fc.size();
+					
+					while( rem > 0 ){
 
-					while( true ){
-
-						int	len = fis.read( buffer );
-
-						if ( len <= 0 ){
-
-							break;
+						int	to_read = (int)Math.min( rem, BUFFER_SIZE );
+						
+						bb.position( 0 );
+						bb.limit( to_read );
+						
+						while( bb.hasRemaining()) {
+						
+							from_fc.read( bb );
 						}
+						
+						bb.position( 0 );
 
-						fos.write( buffer, 0, len );
+						to_fc.write( bb );
+						
+						rem -= to_read;
+						
+						if ( pl != null ){
+							try{
+								pl.bytesDone( to_read );
+							}catch( Throwable e ){
+								Debug.out( e );
+							}
+						}
 					}
 
-					fos.close();
+					from_raf.close();
 
-					fos	= null;
+					from_raf	= null;
 
-					fis.close();
+					to_raf.close();
 
-					fis = null;
+					to_raf = null;
 
 					if ( !from_file.delete()){
 						Debug.out( "renameFile: failed to delete '"
@@ -1773,24 +1819,29 @@ public class FileUtil {
 
 				}finally{
 
-					if ( fis != null ){
+					if ( from_raf != null ){
 
 						try{
-							fis.close();
+							from_raf.close();
 
 						}catch( Throwable e ){
 						}
 					}
 
-					if ( fos != null ){
+					if ( to_raf != null ){
 
 						try{
-							fos.close();
+							to_raf.close();
 
 						}catch( Throwable e ){
 						}
 					}
 
+					if ( buffer != null ){
+						
+						buffer.returnToPool();
+					}
+					
 						// if we've failed then tidy up any partial copy that has been performed
 
 					if ( !success ){
@@ -2471,6 +2522,21 @@ public class FileUtil {
 
 			return( script_encoding );
 		}
+	}
+	
+	public interface
+	ProgressListener
+	{
+		public void
+		setTotalSize(
+			long	size );
+		
+		public void
+		bytesDone(
+			long	num );
+		
+		public void
+		complete();
 	}
 
 }
