@@ -170,8 +170,14 @@ public class MainMDISetup
 			public void parameterChanged(String parameterName) {
 				boolean enabled = COConfigurationManager.getBooleanParameter("Beta Programme Enabled");
 				if (enabled) {
-					mdi.loadEntryByID(
+					
+					boolean closed  = COConfigurationManager.getBooleanParameter("Beta Programme Sidebar Closed");
+					
+					if ( !closed ){
+					
+						mdi.loadEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_BETAPROGRAM, false);
+					}
 				}
 			}
 		};
