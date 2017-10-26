@@ -47,6 +47,9 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.BooleanParameter;
 import com.biglybt.ui.swt.config.ChangeSelectionActionPerformer;
 import com.biglybt.ui.swt.config.IntParameter;
+import com.biglybt.ui.swt.config.Parameter;
+import com.biglybt.ui.swt.config.ParameterChangeAdapter;
+import com.biglybt.ui.swt.config.ParameterChangeListener;
 import com.biglybt.ui.swt.config.StringParameter;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -268,15 +271,58 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 			}
 		});
 
+		Composite gPeriod = new Composite(gDefaultDir, SWT.NONE);
+		layout = new GridLayout();
+		layout.numColumns = 6;
+		layout.marginLeft = 0;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		layout.marginTop = 0;
+		layout.marginBottom = 0;
+		gPeriod.setLayout(layout);
+		gridData = new GridData(GridData.FILL_HORIZONTAL);
+		gridData.horizontalSpan = 3;
+		gPeriod.setLayoutData(gridData);
 
-		Label lbl_backup_days = new Label(gDefaultDir, SWT.NULL);
+		Label lbl_backup_days = new Label(gPeriod, SWT.NULL);
 		Messages.setLanguageText(lbl_backup_days, "br.backup.auto.everydays" );
 
-		IntParameter backup_everydays = new IntParameter( gDefaultDir, "br.backup.auto.everydays", 1, Integer.MAX_VALUE );
+		IntParameter backup_everydays = new IntParameter( gPeriod, "br.backup.auto.everydays", 0, Integer.MAX_VALUE );
 		gridData = new GridData();
 		gridData.horizontalSpan = 2;
 		backup_everydays.setLayoutData( gridData );
 
+		Label lbl_backup_hours = new Label(gPeriod, SWT.NULL);
+		Messages.setLanguageText(lbl_backup_hours, "br.backup.auto.everyhours" );
+
+		IntParameter backup_everyhours = new IntParameter( gPeriod, "br.backup.auto.everyhours", 1, Integer.MAX_VALUE );
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		backup_everyhours.setLayoutData( gridData );
+	
+			// for whatever reason if you set enable synchronously it gets reset :(
+		
+		Utils.execSWTThreadLater(
+			1,
+			new Runnable()
+			{
+				public void
+				run()
+				{
+					backup_everyhours.setEnabled( backup_everydays.getValue() == 0 );
+				}
+			});
+		
+		
+		backup_everydays.addChangeListener(
+				new ParameterChangeAdapter(){			
+					@Override
+					public void parameterChanged(Parameter p, boolean caused_internally){
+											
+						backup_everyhours.setEnabled( backup_everydays.getValue() == 0 );
+					}
+				});
+		
 		Label lbl_backup_retain = new Label(gDefaultDir, SWT.NULL);
 		Messages.setLanguageText(lbl_backup_retain, "br.backup.auto.retain" );
 
@@ -308,7 +354,7 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 			        }
 				});
 
-	  auto_backup_enable.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(gDefaultDir));
+	    auto_backup_enable.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(gDefaultDir));
 
 	    	// restore
 
