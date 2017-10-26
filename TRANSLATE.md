@@ -5,7 +5,7 @@ Thank you for your interesting in helping out BiglyBT.  We really need help with
 | Locale | Language | Country | % Translated | Active Translator(s) |
 |:---|:---|:---|---:|:---|
 | pt_BR | Portuguese | Brazil | ~99% | [Havokdan](https://github.com/Havokdan) |
-| eu | Basque |  | ~98% | |
+| eu | Basque |  | ~98% | azpidatziak |
 | zh_CN | Chinese | China | ~90% | |
 | bg_BG | Bulgarian | Bulgaria | ~84% | andreshko |
 | fr_FR | French | France | ~84% | |
