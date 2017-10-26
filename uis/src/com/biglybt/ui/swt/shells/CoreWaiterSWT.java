@@ -39,7 +39,9 @@ public class CoreWaiterSWT
 		SWT_THREAD, ANY_THREAD, NEW_THREAD
 	}
 
-	static Shell shell;
+	private static boolean	startupAbandoned;
+	
+	private static Shell shell;
 
 	public static void waitForCoreRunning(final CoreRunningListener l) {
 		waitForCore(TriggerInThread.SWT_THREAD, l);
@@ -94,7 +96,24 @@ public class CoreWaiterSWT
 
 	}
 
-	protected static void showWaitWindow() {
+	public static void
+	startupAbandoned()
+	{
+		Utils.execSWTThread(new AERunnable() {
+			@Override
+			public void runSupport() {
+				startupAbandoned = true;
+			
+				if ( shell != null ) {
+					shell.dispose();
+				}
+			}});
+	}
+	
+	private static void showWaitWindow() {
+		if ( startupAbandoned ) {
+			return;
+		}
 		if (shell != null && !shell.isDisposed()) {
 			shell.forceActive();
 			return;

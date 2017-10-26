@@ -254,18 +254,6 @@ public class SplashWindow
 		}
 	}
 
-	public static void create(final Display display, final IUIIntializer initializer) {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (display == null || display.isDisposed())
-					return;
-
-				new SplashWindow(display, initializer);
-			}
-		});
-	}
-
 	/*
 	 * Should be called by the GUI thread
 	 */

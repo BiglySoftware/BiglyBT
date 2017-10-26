@@ -66,6 +66,7 @@ import com.biglybt.ui.swt.pifimpl.UIToolBarManagerImpl;
 import com.biglybt.ui.swt.progress.ProgressReportingManager;
 import com.biglybt.ui.swt.progress.ProgressWindow;
 import com.biglybt.ui.swt.search.SearchUI;
+import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.shells.main.MainWindowFactory;
 import com.biglybt.ui.swt.skin.SWTSkin;
@@ -551,6 +552,8 @@ public class Initializer
 
 		}else{
 
+			CoreWaiterSWT.startupAbandoned();
+			
 			final AESemaphore sem = new AESemaphore( "waiter" );
 
 			Utils.execSWTThread(
