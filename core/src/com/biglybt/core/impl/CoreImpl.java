@@ -25,6 +25,7 @@ import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.*;
 import com.biglybt.core.backup.BackupManagerFactory;
@@ -1607,9 +1608,11 @@ CoreImpl
 			return;
 		}
 
+		final AtomicLong last_progress = new AtomicLong( SystemTime.getMonotonousTime());
+		
 		SimpleTimer.addEvent(
 			"ShutFail",
-			SystemTime.getOffsetTime( 30*1000 ),
+			SystemTime.getOffsetTime( 60*1000 ),
 			new TimerEventPerformer()
 			{
 				boolean	die_die_die;
@@ -1618,7 +1621,20 @@ CoreImpl
 				public void
 				perform(
 					TimerEvent event )
-				{
+				{	
+					last_progress.set( SystemTime.getMonotonousTime());
+					
+						// hang around while things are making progress
+					
+					while( SystemTime.getMonotonousTime() - last_progress.get() < 30*1000 ){
+						
+						try{
+							Thread.sleep(5000);
+							
+						}catch( Throwable e ){
+						}
+					}
+					
 					AEDiagnostics.dumpThreads();
 
 					if ( die_die_die ){
@@ -1699,6 +1715,8 @@ CoreImpl
 
 					Debug.printStackTrace(e);
 				}
+				
+				last_progress.set( SystemTime.getMonotonousTime());
 			}
 
 			if (Logger.isEnabled())
@@ -1720,6 +1738,8 @@ CoreImpl
 							Object		value )
 						{
 							((CoreLifecycleListener)listener).stopping( CoreImpl.this );
+							
+							last_progress.set( SystemTime.getMonotonousTime());
 						}
 					},
 					10*1000 );
@@ -1729,6 +1749,8 @@ CoreImpl
 
 			NonDaemonTaskRunner.waitUntilIdle();
 
+			last_progress.set( SystemTime.getMonotonousTime());
+			
 			if (Logger.isEnabled())
 				Logger.log(new LogEvent(LOGID, "Stopping global manager"));
 
@@ -1736,6 +1758,8 @@ CoreImpl
 				global_manager.stopGlobalManager();
 			}
 
+			last_progress.set( SystemTime.getMonotonousTime());
+			
 			if (Logger.isEnabled())
 				Logger.log(new LogEvent(LOGID, "Invoking synchronous 'stopped' listeners"));
 
@@ -1747,6 +1771,8 @@ CoreImpl
 
 					Debug.printStackTrace(e);
 				}
+				
+				last_progress.set( SystemTime.getMonotonousTime());
 			}
 
 			if (Logger.isEnabled())
@@ -1764,6 +1790,8 @@ CoreImpl
 							Object		value )
 						{
 							((CoreLifecycleListener)listener).stopped( CoreImpl.this );
+							
+							last_progress.set( SystemTime.getMonotonousTime());
 						}
 					},
 					10*1000 );
@@ -1773,6 +1801,8 @@ CoreImpl
 
 			NonDaemonTaskRunner.waitUntilIdle();
 
+			last_progress.set( SystemTime.getMonotonousTime());
+			
 				// shut down diags - this marks the shutdown as tidy and saves the config
 
 			AEDiagnostics.markClean();
