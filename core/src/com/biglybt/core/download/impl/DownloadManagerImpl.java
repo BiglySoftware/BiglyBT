@@ -4213,6 +4213,17 @@ DownloadManagerImpl
 		  FileUtil.runAsTask(
 				new CoreOperationTask()
 				{
+					private ProgressCallback callback = 
+						new ProgressCallback()
+						{
+							@Override
+							public int 
+							getProgress()
+							{
+								return( getMoveProgress());
+							}
+						};
+		  
 					@Override
 					public void
 					run(
@@ -4231,6 +4242,13 @@ DownloadManagerImpl
 
 							throw( new RuntimeException( e ));
 						}
+					}
+					
+					@Override
+					public ProgressCallback 
+					getProgressCallback()
+					{
+						return( callback );
 					}
 				});
 	  }catch( RuntimeException e ){

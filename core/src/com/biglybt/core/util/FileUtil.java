@@ -26,6 +26,7 @@ package com.biglybt.core.util;
  import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.util.*;
@@ -1696,39 +1697,19 @@ public class FileUtil {
 
  					try{
     					FileStore fs1 = Files.getFileStore( from_file.toPath());
+    					FileStore fs2 = Files.getFileStore( to_file_parent.toPath());
     					
-    						// to_file must exist to find its filestore
-    					
-    					boolean created_to_file = false;
-    					
-    					try{
-	    					if ( !to_file.exists()){
-	    						
-	    						to_file.createNewFile();
-	    						
-	    						created_to_file = true;
-	    					}
-	    					
-	    					FileStore fs2 = Files.getFileStore( to_file.toPath());
+	       				if ( fs1.equals( fs2 )){
 	
-	       					if ( fs1.equals( fs2 )){
-	
-	       						copy_and_delete = false;
-	       					}
-    					}finally {
-    						
-    						if ( created_to_file ){
-    							
-    							to_file.delete();
-    						}
-    					}
+	       					copy_and_delete = false;
+	       				}
 					}catch( Throwable e ){
 					}
     			}
     		}
 
 			if ( 	(!copy_and_delete) &&
-					from_file.renameTo( to_file )){
+					transfer( from_file, to_file, pl )){
 
 				if ( pl != null ){
 					try{
@@ -1745,8 +1726,8 @@ public class FileUtil {
 
 					// can't rename across file systems under Linux - try copy+delete
 
-				RandomAccessFile 	from_raf 	= null;
-				RandomAccessFile 	to_raf		= null;
+				FileInputStream 	from_is 	= null;
+				FileOutputStream 	to_os		= null;
 				DirectByteBuffer	buffer		= null;
 				
 				try{
@@ -1756,11 +1737,11 @@ public class FileUtil {
 
 					ByteBuffer bb = buffer.getBuffer( DirectByteBuffer.SS_EXTERNAL  );
 					
-					from_raf 	= new RandomAccessFile( from_file, "r" );
-					to_raf 		= new RandomAccessFile( to_file, "rw" );
+					from_is 	= new FileInputStream( from_file );
+					to_os 		= new FileOutputStream( to_file );
 
-					FileChannel from_fc = from_raf.getChannel();
-					FileChannel to_fc 	= to_raf.getChannel();
+					FileChannel from_fc = from_is.getChannel();
+					FileChannel to_fc 	= to_os.getChannel();
 					
 					long	rem = from_fc.size();
 					
@@ -1791,13 +1772,13 @@ public class FileUtil {
 						}
 					}
 
-					from_raf.close();
+					from_is.close();
 
-					from_raf	= null;
+					from_is	= null;
 
-					to_raf.close();
+					to_os.close();
 
-					to_raf = null;
+					to_os = null;
 
 					if ( !from_file.delete()){
 						Debug.out( "renameFile: failed to delete '"
@@ -1819,19 +1800,19 @@ public class FileUtil {
 
 				}finally{
 
-					if ( from_raf != null ){
+					if ( from_is != null ){
 
 						try{
-							from_raf.close();
+							from_is.close();
 
 						}catch( Throwable e ){
 						}
 					}
 
-					if ( to_raf != null ){
+					if ( to_os != null ){
 
 						try{
-							to_raf.close();
+							to_os.close();
 
 						}catch( Throwable e ){
 						}
@@ -1856,6 +1837,145 @@ public class FileUtil {
     	}
     }
 
+    private static boolean
+    transfer(
+    	File				from_file,
+    	File				to_file,
+    	ProgressListener	pl )
+    {
+    	if ( pl == null ){
+    		
+    		return( from_file.renameTo( to_file ));
+    	}
+    	
+    		// documentation claims that transferFrom has the potential to be much more efficient than doing the read/writes
+    		// ourselves but I'm not convinced...
+    	
+		FileInputStream 	from_is 	= null;
+		FileOutputStream 	to_os		= null;
+		DirectByteBuffer	buffer		= null;
+		
+		boolean	success = false;
+		
+		try{			
+			from_is 	= new FileInputStream( from_file );
+			to_os 		= new FileOutputStream( to_file );
+
+			FileChannel from_fc = from_is.getChannel();
+			FileChannel to_fc 	= to_os.getChannel();
+			
+			long	size = from_fc.size();
+			
+			long done = 
+				to_fc.transferFrom(
+					new ReadableByteChannel(){
+						
+						@Override
+						public boolean 
+						isOpen()
+						{
+							return( from_fc.isOpen());
+						}
+						
+						@Override
+						public void 
+						close() 
+							throws IOException
+						{
+							from_fc.close();
+						}
+						
+						@Override
+						public int 
+						read(
+							ByteBuffer dst ) 
+						
+							throws IOException
+						{
+							int	read = from_fc.read( dst );
+							
+							if ( pl != null ){
+								try{
+									pl.bytesDone( read );
+								}catch( Throwable e ){
+									Debug.out( e );
+								}
+							}
+							
+							return( read );
+						}
+					},
+					0,
+					size );
+
+			if ( done != size ){
+				
+				throw( new Exception( "Incorrect byte count transferred: " + done + "/" + size ));
+			}
+			
+			from_is.close();
+
+			from_is	= null;
+
+			to_os.close();
+
+			to_os = null;
+
+			if ( !from_file.delete()){
+				Debug.out( "renameFile: failed to delete '"
+								+ from_file.toString() + "'" );
+
+				return( false );
+			}
+
+			success	= true;
+
+			return( true );
+
+		}catch( Throwable e ){
+
+			Debug.out( "renameFile: failed to rename '" + from_file.toString()
+							+ "' to '" + to_file.toString() + "'", e );
+
+			return( false );
+
+		}finally{
+
+			if ( from_is != null ){
+
+				try{
+					from_is.close();
+
+				}catch( Throwable e ){
+				}
+			}
+
+			if ( to_os != null ){
+
+				try{
+					to_os.close();
+
+				}catch( Throwable e ){
+				}
+			}
+
+			if ( buffer != null ){
+				
+				buffer.returnToPool();
+			}
+			
+				// if we've failed then tidy up any partial copy that has been performed
+
+			if ( !success ){
+
+				if ( to_file.exists()){
+
+					to_file.delete();
+				}
+			}
+		}
+    }
+    
     public static boolean
     writeStringAsFile(
     	File		file,
