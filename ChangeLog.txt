@@ -6,7 +6,7 @@ BIGLYBT CHANGELOG
 FEATURE: UI    | New 'Dashboard' that allows you to build your own composite view [Parg]
 FEATURE: UI    | All-Peers view and Peer Set views now have an associated Swarms view for selected peers [Parg]
 FEATURE: UI    | Country and language specific chats [Parg]
-FEATURE: UI    | Added ability to show teh reason for a download being stopped [Parg]
+FEATURE: UI    | Added ability to show the reason for a download being stopped [Parg]
 FEATURE: UI    | Added 'disabled' upload and download speed selectors [Parg]
 FEATURE: UI    | MyTracker and MyShares views now pop-outable [Parg]
 FEATURE: UI    | New file column in pieces view to show which file(s) a piece belongs to [Parg]
@@ -16,7 +16,7 @@ FEATURE: PLUG  | 3D Swarm view now available in download tabs [Parg]
 FEATURE: PLUG  | 3D Swarm view now has a 'most active' view [Parg]
 FEATURE: PLUG  | Tracker Templates and IRC plugin ported [Parg]
 FEATURE: PLUG  | Advanced Statistics plugin ported [Parg]
-FEATURE: PLUG  | Command Runnder plugin parted [Parg]
+FEATURE: PLUG  | Command Runner plugin ported [Parg]
 FEATURE: PLUG  | Speed Scheduler now indicates when it pauses downloads [Parg]
 FEATURE: Core  | Built-in tracker now supports I2P and Tor directly [Parg]
 FEATURE: Core  | Added isMagnet and isLowNoise to Tag Constraints [Parg]
@@ -51,6 +51,7 @@ BUGFIX: Core   | Fix bug casing lots of threads to be created [Parg]
 BUGFIX: Core   | Don't attempt to scrape metadata downloads [Parg]
 BUGFIX: Core   | Fix deadlock in duplicate startup detection [Parg]
 
+
 2017.09.13 | BiglyBT 1.0.2.0
 
 FEATURE: UI    | Show small download indicator for pieces not yet downloading [TuxPaper]
@@ -84,6 +85,7 @@ BUGFIX:  Core  | Remove limit on total uptime [TuxPaper]
 BUGFIX:  Core  | Fix sort of next subscription scheduler [Parg]
 BUGFIX:  Core  | Fixed ability to run multiple BiglyBT instances [Parg]
 
+
 2017.07.27 | BiglyBT 1.0.0.0
 
 FEATURE: UI    | "tag:" text filter for torrent views [TuxPaper]
@@ -101,4 +103,4 @@ BUGFIX:  UI    | [*nix] Devices now show on Sidebar, just like OSX/Win, except n
 BUGFIX:  UI    | [*nix] Lots of minor fixes for GTK3 [TuxPaper]
 BUGFIX:  UI    | Search Template editor now works again [TuxPaper]
 
-Historical Change log can be found at http://wiki.vuze.com/w/ChangeLog (5.7.5.0 and below)
+Historical Change log can be found at http://wiki.vuze.com/w/ChangeLog (5.7.6.0 and below)
