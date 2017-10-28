@@ -4373,7 +4373,7 @@ public class OpenTorrentOptionsWindow
 
 			Button seqDL = new Button( cTorrentModes, SWT.CHECK );
 			Messages.setLanguageText(seqDL, "menu.sequential.download");
-			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER);
 			Utils.setLayoutData(seqDL, gridData);
 			
 			if ( Constants.isWindows ){
@@ -4396,7 +4396,7 @@ public class OpenTorrentOptionsWindow
 				Utils.setLayoutData(tagLeft,  new GridData(GridData.VERTICAL_ALIGN_CENTER ));
 				Composite tagRight 	= new Composite( cTorrentModes, SWT.NULL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL );
-				gridData.horizontalSpan=3;
+				gridData.horizontalSpan = 4;
 				Utils.setLayoutData(tagRight, gridData);
 
 				layout = new GridLayout();
@@ -4421,7 +4421,9 @@ public class OpenTorrentOptionsWindow
 				tagButtonsArea.setLayoutData( gridData);
 
 				RowLayout tagLayout = new RowLayout();
-				tagLayout.pack = false;
+				tagLayout.pack = true;
+				tagLayout.justify = false;
+				tagLayout.fill = false;
 				tagLayout.spacing = 5;
 				Utils.setLayout(tagButtonsArea, tagLayout);
 
