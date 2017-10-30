@@ -674,9 +674,13 @@ public class TabbedMDI
 			datasource = ((UISWTViewEventListenerHolder)l).getInitialDataSource();
 		}
 		try {
+			// hack - seteventlistener will create view it needs to have item available now, not a little later
+			addItem(entry );
+			
 			entry.setEventListener(l, true);
 		} catch (UISWTViewEventCancelledException e) {
 			entry.close(true);
+			removeItem(entry,false);
 			return null;
 		}
 		entry.setDatasource(datasource);

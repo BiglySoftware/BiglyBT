@@ -837,14 +837,20 @@ public abstract class BaseMDI
 
 	@Override
 	public void removeItem(MdiEntry entry) {
+		removeItem( entry, true );
+	}
+	
+	protected void removeItem(MdiEntry entry, boolean removeChildren ) {
 		String id = entry.getId();
 		synchronized (mapIdToEntry) {
 			mapIdToEntry.remove(id);
 
-			removeChildrenOf(id);
+			if ( removeChildren ){
+				removeChildrenOf(id);
+			}
 		}
 	}
-
+	
 	private void removeChildrenOf(String id) {
 		if (id == null) {
 			return;
