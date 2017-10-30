@@ -139,6 +139,8 @@ public class TabbedMDI
 	@Override
 	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
 
+		saveCloseables();
+		
 		MdiEntry[] entries = getEntries();
 		for (MdiEntry entry : entries) {
 			entry.close(true);
@@ -366,13 +368,6 @@ public class TabbedMDI
   			}
   		});
 		}
-
-		tabFolder.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				saveCloseables();
-			}
-		});
 
 		tabFolder.getTabHeight();
 		final Menu menu = new Menu( tabFolder );
