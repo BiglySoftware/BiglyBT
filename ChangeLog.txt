@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2017.xx.yy | BiglyBT n.n.n.n
+2017.xx.yy | BiglyBT 1.n.n.n
 
 FEATURE: UI    | New 'Dashboard' that allows you to build your own composite view [Parg]
 FEATURE: UI    | All-Peers view and Peer Set views now have an associated Swarms view for selected peers [Parg]
@@ -29,12 +29,15 @@ FEATURE: Core  | Added some client id migration support [Parg]
 FEATURE: Core  | Recover metadata downloads across restarts [Parg]
 FEATURE: Core  | Option for hour-based config backups [Parg]
 
+CHANGE: UI     | Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | Basque translation update [Azpidatziak]
 CHANGE: UI     | Nick names automatically prefixed with '@' when selected [Parg]
 CHANGE: UI     | Use alt+<return> to enter new lines into chat messages [Parg]
 CHANGE: UI     | Added chat icon to chat sidebar entries [Parg]
 CHANGE: UI     | Large file sizes now in bold in Files and Archive views in line with Library views [Parg]
 CHANGE: UI     | New 'getting started' page [Parg]
 CHANGE: UI     | Don't auto-open beta sidebar view if user manually closes it [Parg]
+CHANGE: UI     | Referrer option in download window now requires manal selection as defaulting was causing confusion [Parg]
 CHANGE: PLUG   | Speed Scheduler restarts downloads it has stopped when it is disabled [Parg]
 CHANGE: Core   | Switch to torrent based updates [Parg]
 CHANGE: Core   | Reduce config file writes [Parg]
