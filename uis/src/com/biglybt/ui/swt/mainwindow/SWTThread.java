@@ -346,6 +346,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 
   public void terminate() {
     terminated = true;
+    Utils.setTerminated();
     // must dispose here in case another window has take over the
     // readAndDispatch/sleep loop
     if (!display.isDisposed()) {
