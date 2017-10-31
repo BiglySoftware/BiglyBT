@@ -1558,6 +1558,8 @@ CoreImpl
 
 		throws CoreException
 	{
+		Logger.setClosing();
+		
 		AEDiagnostics.flushPendingLogs();
 
 		boolean	wait_and_return = false;

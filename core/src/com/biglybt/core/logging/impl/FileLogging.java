@@ -17,8 +17,10 @@
 package com.biglybt.core.logging.impl;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -50,6 +52,17 @@ public class FileLogging implements ILogEventListener {
 
 	private static final String CFG_ENABLELOGTOFILE = "Logging Enable";
 
+	private static boolean closing;
+	
+	protected static void
+	setClosing()
+	{
+		synchronized( Logger.class ) {
+		
+			closing	= true;
+		}
+	}
+	
 	private boolean bLogToFile = false;
 	private boolean bLogToFileErrorPrinted = false;
 
@@ -181,6 +194,15 @@ public class FileLogging implements ILogEventListener {
 				logFilePrinter.print(dateStr);
 				logFilePrinter.print(str);
 				logFilePrinter.flush();
+				
+				if ( closing ){
+					
+					try{
+						logFileOS.getFD().sync();
+						
+					}catch( Throwable e ){
+					}
+				}
 			}
 
 			checkAndSwapLog();
@@ -188,6 +210,7 @@ public class FileLogging implements ILogEventListener {
 	}
 
 	private SimpleDateFormat format;
+	private FileOutputStream logFileOS;
 	private PrintWriter logFilePrinter;
 
 	private void checkAndSwapLog()
@@ -227,7 +250,11 @@ public class FileLogging implements ILogEventListener {
 		{
 			try
 			{
-				logFilePrinter = new PrintWriter(new FileWriter(logFile, true));
+				logFileOS = new FileOutputStream( logFile, true );
+				
+				OutputStreamWriter osw = new OutputStreamWriter( logFileOS, "UTF-8" );
+				
+				logFilePrinter = new PrintWriter( osw );
 			} catch (IOException e)
 			{
 				if (!bLogToFileErrorPrinted) {

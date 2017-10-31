@@ -130,6 +130,12 @@ public class LoggerImpl {
 	public boolean isEnabled() {
 		return bEventLoggingEnabled;
 	}
+	
+	public void
+	setClosing()
+	{
+		FileLogging.setClosing();
+	}
 
 	/**
 	 * Redirects any incoming text to the logger
