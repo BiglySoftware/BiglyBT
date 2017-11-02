@@ -19,6 +19,8 @@
 package com.biglybt.plugin.net.buddy.swt;
 
 
+import java.util.Arrays;
+
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatAdapter;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctionsManager;
@@ -39,6 +41,9 @@ public class ChatMDIEntry implements ViewTitleInfo
 	private ChatView		view;
 	private String			drop_outstanding;
 
+	private String 			last_text;
+	private int[]			last_colour;
+	
 	private final ChatAdapter adapter =
 		new ChatAdapter()
 		{
@@ -179,8 +184,24 @@ public class ChatMDIEntry implements ViewTitleInfo
 	private void
 	update()
 	{
-		//mdi_entry.redraw();
-
+		String 	text	= (String)getTitleInfoProperty( ViewTitleInfo.TITLE_INDICATOR_TEXT );
+		int[] 	colour 	= (int[])getTitleInfoProperty( ViewTitleInfo.TITLE_INDICATOR_COLOR );
+		
+		boolean changed = text != last_text && ( text == null || last_text == null || !text.equals( last_text ));
+		
+		if ( !changed ){
+			
+			changed = colour != last_colour && ( colour == null || last_colour == null || !Arrays.equals( colour, last_colour ));
+		}
+		
+		if ( changed ){
+		
+			last_text	= text;
+			last_colour	= colour;
+			
+			mdi_entry.redraw();
+		}
+		
 		ViewTitleInfoManager.refreshTitleInfo( mdi_entry.getViewTitleInfo());
 	}
 
