@@ -350,25 +350,48 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
     // must dispose here in case another window has take over the
     // readAndDispatch/sleep loop
     if (!display.isDisposed()) {
-    	display.asyncExec(new Runnable() {
-		    @Override
-		    public void run() {
-			    try {
-				    Shell[] shells = display.getShells();
-				    for (int i = 0; i < shells.length; i++) {
-					    try {
-						    Shell shell = shells[i];
-						    shell.dispose();
-					    } catch (Throwable t) {
-						    Debug.out(t);
+    	
+    	Runnable disposer = 
+    		new Runnable() {
+			    @Override
+			    public void run() {
+				    try {
+					    Shell[] shells = display.getShells();
+					    for (int i = 0; i < shells.length; i++) {
+						    try {
+							    Shell shell = shells[i];
+							    shell.dispose();
+						    } catch (Throwable t) {
+							    Debug.out(t);
+						    }
 					    }
+				    } catch (Throwable t) {
+					    Debug.out(t);
 				    }
-			    } catch (Throwable t) {
-				    Debug.out(t);
+				    display.dispose();
 			    }
-			    display.dispose();
-		    }
-	    });
+    	};
+
+    		// for 1.2 there is a bug https://bugs.eclipse.org/bugs/show_bug.cgi?id=526758 causing crash on exit
+    	
+		if ( Constants.isWindows8OrHigher ){
+			
+			display.asyncExec(
+				new Runnable()
+				{
+					public void
+					run()
+					{
+						if ( !display.isDisposed()){
+							
+							display.timerExec( 2500,disposer );
+						}
+					}
+				});
+		}else{
+			
+			display.asyncExec( disposer );
+    	}
     }
   }
 
