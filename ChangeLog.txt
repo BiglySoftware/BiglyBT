@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2017.xx.yy | BiglyBT 1.n.n.n
+2017.11.03 | BiglyBT 1.2.0.0
 
 FEATURE: UI    | New 'Dashboard' that allows you to build your own composite view [Parg]
 FEATURE: UI    | All-Peers view and Peer Set views now have an associated Swarms view for selected peers [Parg]
