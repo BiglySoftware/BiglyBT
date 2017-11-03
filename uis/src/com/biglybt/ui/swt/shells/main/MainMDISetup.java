@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -300,30 +301,52 @@ public class MainMDISetup
 									}
 								};
 
+
+						MdiEntry mdi_entry = mdi.createEntryFromSkinRef(
+								MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
+								MultipleDocumentInterface.SIDEBAR_SECTION_CHAT, "chatsview",
+								"{mdi.entry.chatsoverview}", title_info, null, true, null);
+
+						mdi_entry.setImageLeftID("image.sidebar.chat-overview");
+
+								
 						final TimerEventPeriodic	timer =
 							SimpleTimer.addPeriodicEvent(
 									"sb:chatup",
 									5*1000,
 									new TimerEventPerformer()
 									{
+										private String 			last_text;
+										private int[]			last_colour;
 
 										@Override
 										public void
 										perform(
 											TimerEvent event)
 										{
+											String 	text	= (String)title_info.getTitleInfoProperty( ViewTitleInfo.TITLE_INDICATOR_TEXT );
+											int[] 	colour 	= (int[])title_info.getTitleInfoProperty( ViewTitleInfo.TITLE_INDICATOR_COLOR );
+											
+											boolean changed = text != last_text && ( text == null || last_text == null || !text.equals( last_text ));
+											
+											if ( !changed ){
+												
+												changed = colour != last_colour && ( colour == null || last_colour == null || !Arrays.equals( colour, last_colour ));
+											}
+											
+											if ( changed ){
+											
+												last_text	= text;
+												last_colour	= colour;
+												
+												mdi_entry.redraw();
+											}
+											
 											ViewTitleInfoManager.refreshTitleInfo( title_info );
 										}
 									});
 
-						MdiEntry entry = mdi.createEntryFromSkinRef(
-								MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
-								MultipleDocumentInterface.SIDEBAR_SECTION_CHAT, "chatsview",
-								"{mdi.entry.chatsoverview}", title_info, null, true, null);
-
-						entry.setImageLeftID("image.sidebar.chat-overview");
-
-						entry.addListener(
+						mdi_entry.addListener(
 							new MdiCloseListener() {
 
 								@Override
@@ -335,7 +358,7 @@ public class MainMDISetup
 								}
 							});
 
-						return entry;
+						return mdi_entry;
 					}
 				});
 
