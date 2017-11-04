@@ -368,7 +368,12 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				    } catch (Throwable t) {
 					    Debug.out(t);
 				    }
-				    display.dispose();
+				    
+				    	// while crash is occurring we can just avoid the dispose completely and let the VM death trash things
+				    
+				    if ( !Constants.isWindows8OrHigher ){
+				    	display.dispose();
+				    }
 			    }
     	};
 
