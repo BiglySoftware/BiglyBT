@@ -153,7 +153,7 @@ Constants
 	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "1.2.0.1_B01";
+	public static final String AZUREUS_VERSION  = "1.2.0.1_CVS";
 	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
 	public static final String AZUREUS_SUBVER	  = "";
 	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1201" + "-").getBytes();  //MUST be 8 chars long!
