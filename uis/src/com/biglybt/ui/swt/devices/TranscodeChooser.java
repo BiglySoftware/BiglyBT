@@ -96,6 +96,10 @@ public abstract class TranscodeChooser
 
 	public TranscodeChooser(TranscodeTarget tt) {
 		selectedTranscodeTarget = tt;
+		
+		if ( selectedTranscodeTarget != null ){
+			transcodeRequirement = selectedTranscodeTarget.getTranscodeRequirement();
+		}
 	}
 
 	public TranscodeChooser(TranscodeProfile[] transcodeProfiles) {
@@ -430,9 +434,10 @@ public abstract class TranscodeChooser
 						if (btnNoPrompt != null) {
 							if (btnNoPrompt.getSelection()) {
 								if ( transcodeRequirement == TranscodeTarget.TRANSCODE_NEVER ){
-									selectedTranscodeTarget.setTranscodeRequirement( TranscodeTarget.TRANSCODE_NEVER );
+									selectedTranscodeTarget.setTranscodeRequirement( transcodeRequirement );
 								}else{
 									selectedTranscodeTarget.setDefaultTranscodeProfile(selectedProfile);
+									selectedTranscodeTarget.setTranscodeRequirement( transcodeRequirement );
 								}
 							}
 						}
@@ -442,8 +447,6 @@ public abstract class TranscodeChooser
 				}
 			}
 		};
-
-		GridData gridData;
 
 		int	total_images = 0;
 
