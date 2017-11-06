@@ -313,29 +313,36 @@ PeerNATTraverser
 
 			}else{
 
-				LinkedList	requests = (LinkedList)initiators.get( initiator );
-
-				if ( requests == null ){
-
-					// we get here when download stopped at same time
-					// Debug.out( "initiator not found" );
-
-					bad	= true;
-
+				if ( AERunStateHandler.isDHTSleeping()){
+					
+					bad = true;
+					
 				}else{
-
-					PeerNATTraversal	traversal = new PeerNATTraversal( initiator, target, adapter );
-
-					requests.addLast( traversal );
-
-					pending_requests.addLast( traversal );
-
-		          	if (Logger.isEnabled()){
-						Logger.log(
-							new LogEvent(
-								LOGID,
-								"created NAT traversal for " + initiator.getDisplayName() + "/" + target ));
-		          	}
+					
+					LinkedList	requests = (LinkedList)initiators.get( initiator );
+	
+					if ( requests == null ){
+	
+						// we get here when download stopped at same time
+						// Debug.out( "initiator not found" );
+	
+						bad	= true;
+	
+					}else{
+	
+						PeerNATTraversal	traversal = new PeerNATTraversal( initiator, target, adapter );
+	
+						requests.addLast( traversal );
+	
+						pending_requests.addLast( traversal );
+	
+			          	if (Logger.isEnabled()){
+							Logger.log(
+								new LogEvent(
+									LOGID,
+									"created NAT traversal for " + initiator.getDisplayName() + "/" + target ));
+			          	}
+					}
 				}
 			}
 		}

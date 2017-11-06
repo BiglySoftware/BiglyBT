@@ -510,8 +510,8 @@ public class OpenTorrentOptionsWindow
 						protected void clicked(int intValue) {
 							if (intValue == SWT.OK) {
 								okPressed();
-							}else if (dlg != null){
-								dlg.close();
+							}else{
+								cancelPressed();
 							}
 						}
 					};
@@ -726,6 +726,11 @@ public class OpenTorrentOptionsWindow
 	private void
 	cancelPressed()
 	{
+		for ( final OpenTorrentInstance instance: new ArrayList<>( open_instances )){
+			
+			instance.cancelPressed();
+		}
+		
 		if ( dlg != null ){
 
 			dlg.close();
@@ -6278,6 +6283,12 @@ public class OpenTorrentOptionsWindow
 			}
 		}
 
+		private void
+		cancelPressed()
+		{
+			torrentOptions.cancel();
+		}
+		
 		private boolean
 		okPressed(
 			String dataDirPassed)

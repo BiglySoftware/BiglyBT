@@ -800,7 +800,7 @@ public class TorrentOpener {
 			return false;
 		}
 
-		torrentOptions.bDeleteFileOnCancel = bDeleteFileOnCancel;
+		torrentOptions.setDeleteFileOnCancel( bDeleteFileOnCancel );
 		torrentOptions.sFileName = torrentFile.getAbsolutePath();
 		torrentOptions.setTorrent(torrent);
 		torrentOptions.sOriginatingLocation = sOriginatingLocation;

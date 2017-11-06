@@ -712,7 +712,7 @@ MagnetPlugin
 									
 									TorrentOpenOptions torrentOptions = new TorrentOpenOptions();
 									
-									torrentOptions.bDeleteFileOnCancel	= true;
+									torrentOptions.setDeleteFileOnCancel( true );
 									torrentOptions.sFileName			= torrent_file.getAbsolutePath();
 									torrentOptions.setTorrent( torrent );
 									

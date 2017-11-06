@@ -94,8 +94,9 @@ public class TorrentOpenOptions
 	public boolean isValid;
 
 	/** @todo: getter/setters */
-	public boolean bDeleteFileOnCancel;
-
+	private boolean bDeleteFileOnCancel;
+	private boolean bDeleteFileOnCancelSet;
+	
 	private TorrentOpenFileOptions[] files = null;
 
 	/** @todo: getter/setters */
@@ -138,6 +139,7 @@ public class TorrentOpenOptions
 			boolean bDeleteFileOnCancel) {
 		this();
 		this.bDeleteFileOnCancel = bDeleteFileOnCancel;
+		bDeleteFileOnCancelSet = true;
 		this.sFileName = sFileName;
 		this.sOriginatingLocation = sFileName;
 		this.setTorrent(torrent);
@@ -174,6 +176,7 @@ public class TorrentOpenOptions
 		this.bSequentialDownload = toBeCloned.bSequentialDownload;
 		this.isValid = toBeCloned.isValid;
 		this.bDeleteFileOnCancel = toBeCloned.bDeleteFileOnCancel;
+		bDeleteFileOnCancelSet = toBeCloned.bDeleteFileOnCancelSet;
 		this.disableIPFilter = toBeCloned.disableIPFilter;
 		// this.torrent = ... // no clone
 		// this.initial_linkage_map = ... // no clone
@@ -224,6 +227,20 @@ public class TorrentOpenOptions
 		return( manualRename );
 	}
 
+	public void
+	setDeleteFileOnCancel(
+		boolean		b )
+	{
+		bDeleteFileOnCancel = b;
+		bDeleteFileOnCancelSet = true;
+	}
+	
+	public boolean
+	getDeleteFileOnCancel()
+	{
+		return( bDeleteFileOnCancel );
+	}
+	
 	public String
 	getSubDir()
 	{
@@ -917,5 +934,39 @@ public class TorrentOpenOptions
 	getCompleteAction()
 	{
 		return( complete_action );
+	}
+	
+	public void
+	cancel()
+	{
+		if ( bDeleteFileOnCancel || !bDeleteFileOnCancelSet ){
+			
+			if ( sFileName != null ){
+			
+				try{
+					File torrentFile = new File(sFileName);
+				
+					if ( bDeleteFileOnCancel ){
+						
+						torrentFile.delete();
+						
+					}else{
+						
+							// if no explicit instructions then only delete if in configured save directory
+						
+						if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")) {
+					
+							String save_dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
+							
+							if ( torrentFile.getParentFile().getAbsolutePath().equals( new File(save_dir).getAbsolutePath())){
+								
+								torrentFile.delete();
+							}
+						}
+					}
+				}catch( Throwable e ){
+				}
+			}
+		}
 	}
 }

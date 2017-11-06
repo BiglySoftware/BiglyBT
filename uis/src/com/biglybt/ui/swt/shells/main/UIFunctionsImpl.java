@@ -1277,7 +1277,7 @@ public class UIFunctionsImpl
 					});
 				}
 
-				if ( torrentOptions.bDeleteFileOnCancel ){
+				if ( torrentOptions.getDeleteFileOnCancel()){
 
 					File torrentFile = new File(torrentOptions.sFileName);
 
@@ -1299,7 +1299,7 @@ public class UIFunctionsImpl
 
 							archived.destubbify();
 
-							if ( torrentOptions.bDeleteFileOnCancel ){
+							if ( torrentOptions.getDeleteFileOnCancel()){
 
 								File torrentFile = new File(torrentOptions.sFileName);
 
