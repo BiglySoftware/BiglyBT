@@ -73,6 +73,31 @@ AERunStateHandler
 		return( ( current_mode & RS_DHT_SLEEPING ) != 0 );
 	}
 
+	public static void
+	setDHTSleeping(
+		boolean	b )
+	{
+		setState( RS_DHT_SLEEPING, b );
+	}
+	
+	private static void
+	setState(
+		long		flag,
+		boolean		on )
+	{
+		long new_mode = current_mode;
+		
+		if ( on ){
+			
+			new_mode |= flag;
+		}else {
+			
+			new_mode &= ~flag;
+		}
+		
+		setResourceMode( new_mode );
+	}
+	
 	public static long
 	getResourceMode()
 	{
