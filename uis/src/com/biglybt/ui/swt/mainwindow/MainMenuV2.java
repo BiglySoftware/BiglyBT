@@ -56,6 +56,8 @@ public class MainMenuV2
 		if (menuBar == null) {
 			menuBar = new Menu(parent, SWT.BAR);
 			parent.setMenuBar(menuBar);
+		}else{
+			Utils.disposeSWTObjects((Object[])menuBar.getItems());
 		}
 
 
