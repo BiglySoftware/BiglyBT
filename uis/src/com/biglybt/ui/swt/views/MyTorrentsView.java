@@ -210,7 +210,9 @@ public class MyTorrentsView
 	private Composite filterParent;
 
 	protected boolean neverShowCatOrTagButtons;
-
+	private boolean	showCatButtons;
+	private boolean	showTagButtons;
+	
 	private boolean rebuildListOnFocusGain = false;
 
 	private Menu oldMenu;
@@ -2182,6 +2184,9 @@ public class MyTorrentsView
 			bDNDalwaysIncomplete = COConfigurationManager.getBooleanParameter("DND Always In Incomplete");
 		}
 
+		showCatButtons = COConfigurationManager.getBooleanParameter( "Library.ShowCatButtons" );
+		showTagButtons = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons" );
+
 		if (parameterName != null &&
 				( 	parameterName.equals("Library.ShowCatButtons") ||
 					parameterName.equals("Library.ShowTagButtons" ) ||
@@ -2381,6 +2386,23 @@ public class MyTorrentsView
 	tagChanged(
 		Tag			tag )
 	{
+		if ( neverShowCatOrTagButtons || !( showCatButtons || showTagButtons )){
+			
+			return;
+		}
+		
+		int tt = tag.getTagType().getTagType();
+		
+		if ( tt == TagType.TT_DOWNLOAD_CATEGORY && !showCatButtons ){
+			
+			return;
+			
+		}else  if ( tt == TagType.TT_DOWNLOAD_MANUAL && !showTagButtons ){
+			
+			return;
+		}
+
+		
 			// we can get a lot of hits here, limit tab rebuilds somewhat
 
 		synchronized( pending_tag_changes ){
