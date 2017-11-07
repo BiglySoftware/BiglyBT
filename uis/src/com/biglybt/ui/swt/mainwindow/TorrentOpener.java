@@ -800,7 +800,13 @@ public class TorrentOpener {
 			return false;
 		}
 
-		torrentOptions.setDeleteFileOnCancel( bDeleteFileOnCancel );
+			// only explicitly set the delete-on-cancel state if we really know we need to (we made a copy)
+			// otherwise leave default behaviour to decide whether to delete on cancel or not
+		
+		if (bDeleteFileOnCancel ){
+			torrentOptions.setDeleteFileOnCancel( bDeleteFileOnCancel );
+		}
+		
 		torrentOptions.sFileName = torrentFile.getAbsolutePath();
 		torrentOptions.setTorrent(torrent);
 		torrentOptions.sOriginatingLocation = sOriginatingLocation;

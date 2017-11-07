@@ -376,7 +376,7 @@ public class OpenTorrentOptionsWindow
 
 															if ( act == TorrentOpenOptions.CA_REJECT ){
 
-																w.removeInstance( inst );
+																w.removeInstance( inst, true );
 
 																num_reject++;
 
@@ -641,6 +641,8 @@ public class OpenTorrentOptionsWindow
 
 								for ( OpenTorrentInstance inst: open_instances ){
 
+									inst.cancelPressed();
+									
 									t_man.optionsRemoved( inst.getOptions());
 								}
 							}
@@ -706,6 +708,8 @@ public class OpenTorrentOptionsWindow
 
 				active_windows.remove( hash );
 
+				torrentOptions.cancel();
+				
 				t_man.optionsRemoved( torrentOptions );
 			}
 		}
@@ -772,7 +776,7 @@ public class OpenTorrentOptionsWindow
 						}
 					});
 
-				removeInstance( instance );
+				removeInstance( instance, false );
 			}
 		}
 
@@ -956,7 +960,7 @@ public class OpenTorrentOptionsWindow
 
 					OpenTorrentInstance	instance = (OpenTorrentInstance)obj;
 
-					removeInstance( instance );
+					removeInstance( instance, true );
 				}
 			}});
 
@@ -1146,7 +1150,7 @@ public class OpenTorrentOptionsWindow
 
 										OpenTorrentInstance	instance = (OpenTorrentInstance)obj;
 
-										removeInstance( instance );
+										removeInstance( instance, true );
 									}
 								}
 							});
@@ -1362,7 +1366,8 @@ public class OpenTorrentOptionsWindow
 
 	private void
 	removeInstance(
-		OpenTorrentInstance		instance )
+		OpenTorrentInstance		instance,
+		boolean					is_removal )
 	{
 		TorrentManagerImpl t_man = TorrentManagerImpl.getSingleton();
 
@@ -1415,6 +1420,11 @@ public class OpenTorrentOptionsWindow
 
 		refreshTVTorrentIndexes();
 
+		if ( is_removal ){
+			
+			instance.cancelPressed();
+		}
+		
 		instance.dispose();
 	}
 
