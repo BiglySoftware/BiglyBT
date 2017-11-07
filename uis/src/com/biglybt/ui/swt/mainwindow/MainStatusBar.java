@@ -2310,10 +2310,13 @@ public class MainStatusBar
 					/*
 					 * The new window is opened only if there is not one already showing the same reporter
 					 */
-					if (!ProgressReporterWindow.isOpened(final_reporter)) {
-						if ( !ProgressReporterWindow.isOpened(final_reporter)){
-									ProgressReporterWindow.open(final_reporter,
-											ProgressReporterWindow.NONE);
+					
+					if ( !COConfigurationManager.getBooleanParameter( "suppress_file_download_dialog" )){
+						if (!ProgressReporterWindow.isOpened(final_reporter)) {
+							if ( !ProgressReporterWindow.isOpened(final_reporter)){
+										ProgressReporterWindow.open(final_reporter,
+												ProgressReporterWindow.NONE);
+							}
 						}
 					}
 				}
