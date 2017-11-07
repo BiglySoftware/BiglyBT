@@ -1681,8 +1681,12 @@ MagnetPlugin
 									for (int i=0;i<sources.length;i++){
 
 										try{
-											contactFound( db.importContact(sources[i]));
-
+											InetSocketAddress source = sources[i];
+											
+											if ( AENetworkClassifier.categoriseAddress( source ) == AENetworkClassifier.AT_PUBLIC ){
+											
+												contactFound( db.importContact(sources[i]));
+											}
 										}catch( Throwable e ){
 
 											Debug.printStackTrace(e);
