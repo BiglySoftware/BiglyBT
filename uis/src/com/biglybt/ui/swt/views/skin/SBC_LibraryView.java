@@ -39,8 +39,6 @@ import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.stats.transfer.OverallStats;
-import com.biglybt.core.stats.transfer.StatsFactory;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
@@ -789,15 +787,17 @@ public class SBC_LibraryView
 	 */
 	@Override
 	public void refreshToolBarItems(Map<String, Long> list) {
-		long stateSmall = UIToolBarItem.STATE_ENABLED;
-		long stateBig = UIToolBarItem.STATE_ENABLED;
-		if (viewMode == MODE_BIGTABLE) {
-			stateBig |= UIToolBarItem.STATE_DOWN;
-		} else {
-			stateSmall |= UIToolBarItem.STATE_DOWN;
+		if ( isVisible()){
+			long stateSmall = UIToolBarItem.STATE_ENABLED;
+			long stateBig = UIToolBarItem.STATE_ENABLED;
+			if (viewMode == MODE_BIGTABLE) {
+				stateBig |= UIToolBarItem.STATE_DOWN;
+			} else {
+				stateSmall |= UIToolBarItem.STATE_DOWN;
+			}
+			list.put("modeSmall", stateSmall);
+			list.put("modeBig", stateBig);
 		}
-		list.put("modeSmall", stateSmall);
-		list.put("modeBig", stateBig);
 	}
 
 	/* (non-Javadoc)
