@@ -404,12 +404,16 @@ public class SB_Dashboard
 		
 		cog.setToolTip( MessageText.getString( "configure.dashboard" ));
 
+		final long[] cog_click_time = { 0 };
+		
 		cog.addListener(new MdiEntryVitalityImageListener() {
 			@Override
 			public void mdiEntryVitalityImage_clicked(int x, int y) {
-				
+								
 				synchronized( items ){
-					
+				
+					cog_click_time[0]	= SystemTime.getMonotonousTime();
+
 					new DBConfigWindow( new ArrayList<DashboardItem>( items ));
 				}
 			}});
@@ -424,8 +428,26 @@ public class SB_Dashboard
 		
 				if (mdi_entry == newEntry && mdi_entry == oldEntry) { 
 						
-					fireChanged();
-						
+					SimpleTimer.addEvent(
+						"changed",
+						SystemTime.getOffsetTime( 250 ),
+						new TimerEventPerformer(){
+							
+							@Override
+							public void perform(TimerEvent event){
+							
+								synchronized( items ){
+								
+									if ( SystemTime.getMonotonousTime() - cog_click_time[0] < 250 ){
+										
+										return;
+									}
+								}
+								
+								fireChanged();
+
+							}
+						});
 				}
 			}
 			public void mdiDisposed(MultipleDocumentInterface mdi) {}
