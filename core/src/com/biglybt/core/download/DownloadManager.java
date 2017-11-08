@@ -775,7 +775,7 @@ DownloadManager
 		 * Same as renameTorrent, but appends numbers if torrent already exists
 		 * @since 4.2.0.9
 		 */
-		public void renameTorrentSafe(String name) throws DownloadManagerException;
+	public void renameTorrentSafe(String name) throws DownloadManagerException;
 
     /**
      * @since 3.0.5.1
@@ -791,6 +791,17 @@ DownloadManager
      */
     public void setTorrentFile(File new_parent_dir, String new_name) throws DownloadManagerException;
 
+    /**
+     * @since 1.2.0.1
+     * @param event_type
+     */
+    
+    public boolean
+    canExportDownload();
+    
+    public void
+    exportDownload( File parent_dir ) throws DownloadManagerException;
+    
     public void
     fireGlobalManagerEvent(
     	int		event_type );

@@ -60,6 +60,7 @@ ProgressWindow
 					CoreOperation operation )
 				{
 					if ( 	( 	operation.getOperationType() == CoreOperation.OP_FILE_MOVE ||
+								operation.getOperationType() == CoreOperation.OP_DOWNLOAD_EXPORT ||
 								operation.getOperationType() == CoreOperation.OP_PROGRESS )&&
 							Utils.isThisThreadSWT()){
 
@@ -92,11 +93,19 @@ ProgressWindow
 	{
 		final RuntimeException[] error = {null};
 
-		resource = operation.getOperationType()== CoreOperation.OP_FILE_MOVE?"progress.window.msg.filemove":"progress.window.msg.progress";
-
+		int	op_type = operation.getOperationType();
+		
+		if ( op_type == CoreOperation.OP_FILE_MOVE ){
+			resource = "progress.window.msg.filemove";
+		}else if ( op_type == CoreOperation.OP_DOWNLOAD_EXPORT ){
+			resource = "progress.window.msg.dlexport";
+		}else{
+			resource = "progress.window.msg.progress";
+		}
+		
 		new DelayedEvent(
 				"ProgWin",
-				operation.getOperationType()== CoreOperation.OP_FILE_MOVE?1000:10,
+				operation.getOperationType()== CoreOperation.OP_PROGRESS?10:1000,
 				new AERunnable()
 				{
 					@Override

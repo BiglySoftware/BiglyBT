@@ -285,58 +285,77 @@ public class TorrentOpener {
 		}
 	}
 
+  public static String getFilterPathExport() {
+	    String before = COConfigurationManager.getStringParameter("previous.filter.dir.export", "");
+	    return( before );
+  }
+
+  public static String setFilterPathExport( String path ) {
+	  if( path != null && path.length() > 0 ) {
+		  File test = new File( path );
+		  if( !test.isDirectory() ) test = test.getParentFile();
+		  String now = "";
+		  if( test != null ) now = test.getAbsolutePath();
+		  String before = COConfigurationManager.getStringParameter("previous.filter.dir.export");
+		  if( before == null || before.length() == 0 || !before.equals( now ) ) {
+			  COConfigurationManager.setParameter( "previous.filter.dir.export", now );
+			  COConfigurationManager.save();
+		  }
+	  }
+	  return path;
+  }
 
   public static String getFilterPathData() {
-    String before = COConfigurationManager.getStringParameter("previous.filter.dir.data");
-    if( before != null && before.length() > 0 ) {
-      return before;
-    }
-    String def;
-		try {
-			def = COConfigurationManager.getDirectoryParameter("Default save path");
-	    return def;
-		} catch (IOException e) {
-			return "";
-		}
+	  String before = COConfigurationManager.getStringParameter("previous.filter.dir.data");
+	  if( before != null && before.length() > 0 ) {
+		  return before;
+	  }
+	  String def;
+	  try {
+		  def = COConfigurationManager.getDirectoryParameter("Default save path");
+		  return def;
+	  } catch (IOException e) {
+		  return "";
+	  }
   }
 
   public static String getFilterPathTorrent() {
-    String before = COConfigurationManager.getStringParameter("previous.filter.dir.torrent");
-    if( before != null && before.length() > 0 ) {
-      return before;
-    }
-    return COConfigurationManager.getStringParameter("General_sDefaultTorrent_Directory");
+	  String before = COConfigurationManager.getStringParameter("previous.filter.dir.torrent");
+	  if( before != null && before.length() > 0 ) {
+		  return before;
+	  }
+	  return COConfigurationManager.getStringParameter("General_sDefaultTorrent_Directory");
   }
 
   public static String setFilterPathData( String path ) {
-    if( path != null && path.length() > 0 ) {
-      File test = new File( path );
-      if( !test.isDirectory() ) test = test.getParentFile();
-      String now = "";
-      if( test != null ) now = test.getAbsolutePath();
-      String before = COConfigurationManager.getStringParameter("previous.filter.dir.data");
-      if( before == null || before.length() == 0 || !before.equals( now ) ) {
-        COConfigurationManager.setParameter( "previous.filter.dir.data", now );
-        COConfigurationManager.save();
-      }
-    }
-    return path;
+	  if( path != null && path.length() > 0 ) {
+		  File test = new File( path );
+		  if( !test.isDirectory() ) test = test.getParentFile();
+		  String now = "";
+		  if( test != null ) now = test.getAbsolutePath();
+		  String before = COConfigurationManager.getStringParameter("previous.filter.dir.data");
+		  if( before == null || before.length() == 0 || !before.equals( now ) ) {
+			  COConfigurationManager.setParameter( "previous.filter.dir.data", now );
+			  COConfigurationManager.save();
+		  }
+	  }
+	  return path;
   }
 
   public static String setFilterPathTorrent( String path ) {
-    if( path != null && path.length() > 0 ) {
-      File test = new File( path );
-      if( !test.isDirectory() ) test = test.getParentFile();
-      String now = "";
-      if( test != null ) now = test.getAbsolutePath();
-      String before = COConfigurationManager.getStringParameter("previous.filter.dir.torrent");
-      if( before == null || before.length() == 0 || !before.equals( now ) ) {
-        COConfigurationManager.setParameter( "previous.filter.dir.torrent", now );
-        COConfigurationManager.save();
-      }
-      return now;
-    }
-    return path;
+	  if( path != null && path.length() > 0 ) {
+		  File test = new File( path );
+		  if( !test.isDirectory() ) test = test.getParentFile();
+		  String now = "";
+		  if( test != null ) now = test.getAbsolutePath();
+		  String before = COConfigurationManager.getStringParameter("previous.filter.dir.torrent");
+		  if( before == null || before.length() == 0 || !before.equals( now ) ) {
+			  COConfigurationManager.setParameter( "previous.filter.dir.torrent", now );
+			  COConfigurationManager.save();
+		  }
+		  return now;
+	  }
+	  return path;
   }
 
 

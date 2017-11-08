@@ -2133,11 +2133,19 @@ public class FileUtil {
 	runAsTask(
 		CoreOperationTask task )
 	{
-		Core core = CoreFactory.getSingleton();
-
-		core.createOperation( CoreOperation.OP_FILE_MOVE, task );
+		runAsTask( CoreOperation.OP_FILE_MOVE, task );
 	}
 
+	public static void
+	runAsTask(
+		int					op_type,
+		CoreOperationTask 	task )
+	{
+		Core core = CoreFactory.getSingleton();
+
+		core.createOperation( op_type, task );
+	}
+	
 	/**
 	 * Makes Directories as long as the directory isn't directly in Volumes (OSX)
 	 * @param f

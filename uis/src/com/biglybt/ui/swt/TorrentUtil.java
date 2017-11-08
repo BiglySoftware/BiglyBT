@@ -151,9 +151,9 @@ public class TorrentUtil
 		boolean bChangeDir = hasSelection;
 
 		boolean start, stop, pause, changeUrl, barsOpened, forceStart;
-		boolean forceStartEnabled, recheck, manualUpdate, fileMove, fileRescan;
+		boolean forceStartEnabled, recheck, manualUpdate, fileMove, fileExport, fileRescan;
 
-		changeUrl = barsOpened = manualUpdate = fileMove = fileRescan = true;
+		changeUrl = barsOpened = manualUpdate = fileMove = fileExport = fileRescan = true;
 		forceStart = forceStartEnabled = recheck = start = stop = pause = false;
 
 		boolean canSetSuperSeed = false;
@@ -237,6 +237,8 @@ public class TorrentUtil
 				allStopped &= stopped;
 
 				fileMove = fileMove && dm.canMoveDataFiles();
+				
+				fileExport = fileExport && dm.canExportDownload();
 
 				if (userMode < 2) {
 					TRTrackerAnnouncer trackerClient = dm.getTrackerClient();
@@ -330,6 +332,7 @@ public class TorrentUtil
 			start = false;
 			stop = false;
 			fileMove = false;
+			fileExport = false;
 			fileRescan = false;
 			upSpeedDisabled = true;
 			downSpeedDisabled = true;
@@ -565,7 +568,7 @@ public class TorrentUtil
 			}
 		});
 		itemFileMoveData.setEnabled(fileMove);
-
+		
 		final MenuItem itemFileMoveTorrent = new MenuItem(menuFiles, SWT.PUSH);
 		Messages.setLanguageText(itemFileMoveTorrent,
 				"MyTorrentsView.menu.movetorrent");
@@ -577,6 +580,17 @@ public class TorrentUtil
 		});
 		itemFileMoveTorrent.setEnabled(fileMove);
 
+		final MenuItem itemFileExport = new MenuItem(menuFiles, SWT.PUSH);
+		Messages.setLanguageText(itemFileExport, "MyTorrentsView.menu.exportdownload");
+		itemFileExport.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				exportDownloads(shell, dms);
+			}
+		});
+		itemFileExport.setEnabled(fileExport);
+
+		
 		final MenuItem itemCheckFilesExist = new MenuItem(menuFiles, SWT.PUSH);
 		Messages.setLanguageText(itemCheckFilesExist,
 				"MyTorrentsView.menu.checkfilesexist");
@@ -2287,6 +2301,46 @@ public class TorrentUtil
 		}
 	}
 
+	protected static void exportDownloads(Shell shell, DownloadManager[] dms) {
+		if (dms != null && dms.length > 0) {
+
+			DirectoryDialog dd = new DirectoryDialog(shell);
+
+			String filter_path = TorrentOpener.getFilterPathExport();
+
+			// If we don't have a decent path, default to the path of the first
+			// torrent.
+			if (filter_path == null || filter_path.trim().length() == 0) {
+				filter_path = new File(dms[0].getTorrentFileName()).getParent();
+			}
+
+			dd.setFilterPath(filter_path);
+
+			dd.setText(MessageText.getString("MyTorrentsView.menu.exportdownload.dialog"));
+
+			String path = dd.open();
+
+			if (path != null) {
+
+				TorrentOpener.setFilterPathExport(path);
+
+				File target = new File(path);
+
+				for (int i = 0; i < dms.length; i++) {
+
+					try {
+						dms[i].exportDownload(target);
+
+					} catch (Throwable e) {
+
+						Logger.log(new LogAlert(dms[i], LogAlert.REPEATABLE,
+								"Download export operation failed", e));
+					}
+				}
+			}
+		}
+	}
+	
 	public static void repositionManual(final TableView tv,
 			final DownloadManager[] dms, final Shell shell,
 			final boolean isSeedingView) {

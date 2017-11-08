@@ -4573,6 +4573,83 @@ DownloadManagerImpl
 	  }
   }
 
+  private void
+  copyTorrentFile(
+	 File	parent_dir ) throws DownloadManagerException
+  {
+	  File	file = new File( getTorrentFileName() );
+
+	  if ( !file.exists()){
+		  
+		  throw( new DownloadManagerException( "Torrent file '" + file + "' doesn't exist" ));
+	  }
+	  
+	  try{
+		  FileUtil.copyFileWithException( file, new File( parent_dir, file.getName()));
+		  
+	  }catch( Throwable e ){
+		  
+		  throw( new DownloadManagerException( "Failed to copy torrent file", e ));
+	  }
+  }
+  
+  public boolean
+  canExportDownload()
+  {
+	  return( getAssumedComplete());
+  }
+  
+  public void
+  exportDownload( File parent_dir ) throws DownloadManagerException
+  {
+	  if ( !canExportDownload()){
+		  
+		  throw( new DownloadManagerException( "Not in correct state" ));
+	  }
+	  
+	  try{
+		  FileUtil.runAsTask(
+			  CoreOperation.OP_DOWNLOAD_EXPORT,
+			  new CoreOperationTask()
+			  {
+				  @Override
+				  public void
+				  run(
+						  CoreOperation operation)
+				  {
+					  try{
+						  copyDataFiles( parent_dir );
+
+						  copyTorrentFile( parent_dir );
+
+					  }catch( Throwable e ){
+
+						  throw( new RuntimeException( e ));
+					  }
+				  }
+
+				  @Override
+				  public ProgressCallback 
+				  getProgressCallback()
+				  {
+					  return( null );
+				  }
+			  });
+		  
+	  }catch( Throwable e ){
+		  
+		  Throwable f = e.getCause();
+		  
+		  if ( f instanceof DownloadManagerException ){
+			  
+			  throw((DownloadManagerException)f);
+		  }
+		  
+		  throw( new DownloadManagerException( "Export failed", e ));
+	  }
+
+  }
+  
   @Override
   public void moveTorrentFile(File new_parent_dir) throws DownloadManagerException {
 	  this.moveTorrentFile(new_parent_dir, null);
