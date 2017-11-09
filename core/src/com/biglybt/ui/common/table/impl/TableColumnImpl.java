@@ -1695,7 +1695,9 @@ public class TableColumnImpl
 		} else {
 			iPreferredWidth = width;
 		}
-
+		if ( iPreferredWidth == 665 ) {
+			System.out.println( "" );
+		}
 		// Commented out because size hasn't changed!
 		//if (bColumnAdded && bVisible) {
 		//	triggerColumnSizeChange();

@@ -28,6 +28,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.biglybt.core.config.COConfigurationManager;
@@ -238,7 +239,9 @@ public class ColumnThumbAndName
 
 		Rectangle cellBounds = cell.getBounds();
 
-		int textX = cellBounds.x;
+		int	originalBoundxsX = cellBounds.x;
+		
+		int textX = originalBoundxsX;
 
 		TableRowCore rowCore = cell.getTableRowCore();
 		if (rowCore != null) {
@@ -316,7 +319,7 @@ public class ColumnThumbAndName
 		if (!showIcon) {
 			cellBounds.x += 2;
 			cellBounds.width -= 4;
-			cellPaintName(cell, gc, cellBounds, cellBounds.x);
+			cellPaintName(cell, gc, cellBounds, cellBounds.x, originalBoundxsX);
 			return;
 		}
 
@@ -438,12 +441,15 @@ public class ColumnThumbAndName
 			}
 		}
 
-		cellPaintName(cell, gc, cellBounds, textX);
+		cellPaintName(cell, gc, cellBounds, textX, originalBoundxsX);
 	}
 
 	private void cellPaintFileInfo(GC gc, final TableCellSWT cell,
 			DiskManagerFileInfo fileInfo) {
 		Rectangle cellBounds = cell.getBounds();
+		
+		int	originalBoundxsX = cellBounds.x;
+		
 		//System.out.println(cellArea);
 		int padding = 5 + (true ? cellBounds.height : 0);
 		cellBounds.x += padding;
@@ -591,13 +597,25 @@ public class ColumnThumbAndName
 		cellBounds.width -= (textX - cellBounds.x);
 		cellBounds.x = textX;
 
-		boolean over = GCStringPrinter.printString(gc, s, cellBounds, true, false,
+		GCStringPrinter sp = new GCStringPrinter(gc, s, cellBounds, true, false,
 				SWT.LEFT | SWT.WRAP);
+		
+		boolean over = sp.printString();
+		
+		Point p = sp.getCalculatedPreferredSize();
+		
+		int pref = ( textX - originalBoundxsX ) +  p.x + 10;
+		
+		TableColumn tableColumn = cell.getTableColumn();
+		if (tableColumn != null && tableColumn.getPreferredWidth() < pref) {
+			tableColumn.setPreferredWidth(pref);
+		}
+		
 		cell.setToolTip(over ? null : s);
 	}
 
 	private void cellPaintName(TableCell cell, GC gc, Rectangle cellBounds,
-			int textX) {
+			int textX, int originalBoundxsX ) {
 		String name = null;
 		Object ds = cell.getDataSource();
 		if (ds instanceof DiskManagerFileInfo) {
@@ -609,11 +627,22 @@ public class ColumnThumbAndName
 		if (name == null)
 			name = "";
 
-		boolean over = GCStringPrinter.printString(gc, name, new Rectangle(textX,
+		GCStringPrinter sp = new GCStringPrinter(gc, name, new Rectangle(textX,
 				cellBounds.y, cellBounds.x + cellBounds.width - textX,
 				cellBounds.height), true, true, getTableID().endsWith( ".big" )?SWT.WRAP:SWT.NULL );
+		
+		boolean fit = sp.printString();
 
-		String tooltip = over?"":name;
+		Point p = sp.getCalculatedPreferredSize();
+			
+		int pref = ( textX - originalBoundxsX ) +  p.x + 10;
+		
+		TableColumn tableColumn = cell.getTableColumn();
+		if (tableColumn != null && tableColumn.getPreferredWidth() < pref) {
+			tableColumn.setPreferredWidth(pref);
+		}
+		
+		String tooltip = fit?"":name;
 
 		if (dm != null) {
 			try{
