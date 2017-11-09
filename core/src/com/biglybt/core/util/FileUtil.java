@@ -1571,37 +1571,50 @@ public class FileUtil {
     	boolean to_file_exists = to_file.exists();
 
     	if ( to_file_exists ) {
-    	
-    			// on OSX (at leat?) to_file.exists returns true if the existing file differs in case only - if we don't find the actual file then
-    			// carry on and rename
-    		
+
+    		// on OSX (at least?) to_file.exists returns true if the existing file differs in case only - if we don't find the actual file then
+    		// carry on and rename
+
     		String to_name = to_file.getName();
-    		
+
     		String[] existing_files = to_file.getParentFile().list();
-    		
-      	if ( !Arrays.asList( existing_files ).contains( to_name )) {
-    			
-      		to_file_exists = false;
+
+    		if ( !Arrays.asList( existing_files ).contains( to_name )) {
+
+    			to_file_exists = false;
     		}
     	}
     	
         /**
          * If the destination exists, we only fail if requested.
          */
-        if (to_file_exists && (fail_on_existing_directory || from_file.isFile() || to_file.isFile())) {
+    	
+        if ( to_file_exists && ( fail_on_existing_directory || from_file.isFile() || to_file.isFile())) {
 
         	Debug.out( "renameFile: target file '" + to_file + "' already exists, failing" );
 
             return( false );
         }
+        
     	File to_file_parent = to_file.getParentFile();
-    	if (!to_file_parent.exists()) {FileUtil.mkdirs(to_file_parent);}
+    	
+    	if ( !to_file_parent.exists()){
+    		
+    		FileUtil.mkdirs(to_file_parent);
+    	}
 
     	if ( from_file.isDirectory()){
 
     		File[] files = null;
-    		if (file_filter != null) {files = from_file.listFiles(file_filter);}
-    		else {files = from_file.listFiles();}
+    		
+    		if ( file_filter != null ){
+    			
+    			files = from_file.listFiles(file_filter);
+    			
+    		}else{
+    			
+    			files = from_file.listFiles();
+    		}
 
     		if ( files == null ){
 
@@ -1612,7 +1625,10 @@ public class FileUtil {
 
     		int	last_ok = 0;
 
-    		if (!to_file.exists()) {to_file.mkdir();}
+    		if ( !to_file.exists()){
+    			
+    			to_file.mkdir();
+    		}
 
     		for (int i=0;i<files.length;i++){
 
@@ -1656,6 +1672,7 @@ public class FileUtil {
     			}else{
 
     				if ( !from_file.delete()){
+    					
     					Debug.out( "renameFile: failed to delete '" + from_file.toString() + "'" );
     				}
     			}
@@ -1672,6 +1689,7 @@ public class FileUtil {
 
     			try{
     				// null - We don't want to use the file filter, it only refers to source paths.
+    				
                     if ( !renameFile( tf, ff, false, null, null )){
     					Debug.out( "renameFile: recovery - failed to move file '" + tf.toString()
 										+ "' to '" + ff.toString() + "'" );
@@ -1687,156 +1705,209 @@ public class FileUtil {
 
     	}else{
 
-    		boolean	copy_and_delete = COConfigurationManager.getBooleanParameter("Copy And Delete Data Rather Than Move");
+    		boolean	same_drive = false;
+    		
+			try{
+				FileStore fs1 = Files.getFileStore( from_file.toPath());
+				FileStore fs2 = Files.getFileStore( to_file_parent.toPath());
+				
+   				if ( fs1.equals( fs2 )){
 
-    		if ( copy_and_delete ){
+   					same_drive = true;
+   				}
+			}catch( Throwable e ){
+			}
+			
+    		boolean	use_copy = COConfigurationManager.getBooleanParameter("Copy And Delete Data Rather Than Move");
+
+    		if ( use_copy ){
 
         		boolean	move_if_same_drive = COConfigurationManager.getBooleanParameter("Move If On Same Drive");
 
-     			if ( move_if_same_drive ){
+     			if ( move_if_same_drive && same_drive ){
 
- 					try{
-    					FileStore fs1 = Files.getFileStore( from_file.toPath());
-    					FileStore fs2 = Files.getFileStore( to_file_parent.toPath());
-    					
-	       				if ( fs1.equals( fs2 )){
-	
-	       					copy_and_delete = false;
-	       				}
-					}catch( Throwable e ){
-					}
+     				use_copy = false;
     			}
     		}
 
-			if ( 	(!copy_and_delete) &&
-					transfer( from_file, to_file, pl )){
-
-				if ( pl != null ){
-					try{
-						pl.bytesDone( to_file.length());
-					}catch( Throwable e ){
-						Debug.out( e );
-					}
-				}
-				
-				return( true );
-
-			}else{
-				boolean		success	= false;
-
-					// can't rename across file systems under Linux - try copy+delete
-
-				FileInputStream 	from_is 	= null;
-				FileOutputStream 	to_os		= null;
-				DirectByteBuffer	buffer		= null;
-				
-				try{
-					final int BUFFER_SIZE = 128*1024;
-					
-					buffer = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_EXTERNAL, BUFFER_SIZE );
-
-					ByteBuffer bb = buffer.getBuffer( DirectByteBuffer.SS_EXTERNAL  );
-					
-					from_is 	= new FileInputStream( from_file );
-					to_os 		= new FileOutputStream( to_file );
-
-					FileChannel from_fc = from_is.getChannel();
-					FileChannel to_fc 	= to_os.getChannel();
-					
-					long	rem = from_fc.size();
-					
-					while( rem > 0 ){
-
-						int	to_read = (int)Math.min( rem, BUFFER_SIZE );
-						
-						bb.position( 0 );
-						bb.limit( to_read );
-						
-						while( bb.hasRemaining()) {
-						
-							from_fc.read( bb );
-						}
-						
-						bb.position( 0 );
-
-						to_fc.write( bb );
-						
-						rem -= to_read;
-						
-						if ( pl != null ){
-							try{
-								pl.bytesDone( to_read );
-							}catch( Throwable e ){
-								Debug.out( e );
-							}
-						}
-					}
-
-					from_is.close();
-
-					from_is	= null;
-
-					to_os.close();
-
-					to_os = null;
-
-					if ( !from_file.delete()){
-						Debug.out( "renameFile: failed to delete '"
-										+ from_file.toString() + "'" );
-
-						throw( new Exception( "Failed to delete '" + from_file.toString() + "'"));
-					}
-
-					success	= true;
-
-					return( true );
-
-				}catch( Throwable e ){
-
-					Debug.out( "renameFile: failed to rename '" + from_file.toString()
-									+ "' to '" + to_file.toString() + "'", e );
-
-					return( false );
-
-				}finally{
-
-					if ( from_is != null ){
-
-						try{
-							from_is.close();
-
-						}catch( Throwable e ){
-						}
-					}
-
-					if ( to_os != null ){
-
-						try{
-							to_os.close();
-
-						}catch( Throwable e ){
-						}
-					}
-
-					if ( buffer != null ){
-						
-						buffer.returnToPool();
-					}
-					
-						// if we've failed then tidy up any partial copy that has been performed
-
-					if ( !success ){
-
-						if ( to_file.exists()){
-
-							to_file.delete();
-						}
-					}
-				}
-			}
+    		if ( !use_copy ){
+    			
+    			if ( pl != null && !same_drive ){
+    				
+    				use_copy = true;	// so we get incremental progress reports
+    			}
+    		}
+    		
+    		if ( use_copy ){
+    			
+    			return( reallyCopyFile( from_file, to_file, pl ));
+    			
+    		}else{
+    			
+    			if ( from_file.renameTo( to_file )){
+    				
+    				if ( pl != null ){
+    					
+    					try{
+    						
+    						pl.bytesDone( to_file.length());
+    						
+    					}catch( Throwable e ){
+    						
+    						Debug.out( e );
+    					}
+    				}
+    				
+    				return( true );
+    				
+    			}else{
+    				
+    					// attempt to copy
+    				
+    				return( reallyCopyFile( from_file, to_file, pl ));
+    			}
+    		}
     	}
     }
 
+    private static boolean
+    reallyCopyFile(
+    	File				from_file,
+    	File				to_file,
+    	ProgressListener	pl )
+    {
+    	boolean		success	= false;
+
+    	// can't rename across file systems under Linux - try copy+delete
+
+    	FileInputStream 	from_is 	= null;
+    	FileOutputStream 	to_os		= null;
+    	DirectByteBuffer	buffer		= null;
+
+    	long total_reported = 0;
+    	
+    	try{
+    		final int BUFFER_SIZE = 128*1024;
+
+    		buffer = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_EXTERNAL, BUFFER_SIZE );
+
+    		ByteBuffer bb = buffer.getBuffer( DirectByteBuffer.SS_EXTERNAL  );
+
+    		from_is 	= new FileInputStream( from_file );
+    		to_os 		= new FileOutputStream( to_file );
+
+    		FileChannel from_fc = from_is.getChannel();
+    		FileChannel to_fc 	= to_os.getChannel();
+
+    		long	rem = from_fc.size();
+
+    		while( rem > 0 ){
+
+    			int	to_read = (int)Math.min( rem, BUFFER_SIZE );
+
+    			bb.position( 0 );
+    			bb.limit( to_read );
+
+    			while( bb.hasRemaining()) {
+
+    				from_fc.read( bb );
+    			}
+
+    			bb.position( 0 );
+
+    			to_fc.write( bb );
+
+    			rem -= to_read;
+
+    			if ( pl != null ){
+    				
+    				try{
+    					total_reported += to_read;
+    					
+    					pl.bytesDone( to_read );
+    					
+    				}catch( Throwable e ){
+    					
+    					Debug.out( e );
+    				}
+    			}
+    		}
+
+    		from_is.close();
+
+    		from_is	= null;
+
+    		to_os.close();
+
+    		to_os = null;
+
+    		if ( !from_file.delete()){
+    			Debug.out( "renameFile: failed to delete '"
+    					+ from_file.toString() + "'" );
+
+    			throw( new Exception( "Failed to delete '" + from_file.toString() + "'"));
+    		}
+
+    		success	= true;
+
+    		return( true );
+
+    	}catch( Throwable e ){
+
+    		Debug.out( "renameFile: failed to rename '" + from_file.toString()
+    		+ "' to '" + to_file.toString() + "'", e );
+
+    		return( false );
+
+    	}finally{
+
+    		if ( from_is != null ){
+
+    			try{
+    				from_is.close();
+
+    			}catch( Throwable e ){
+    			}
+    		}
+
+    		if ( to_os != null ){
+
+    			try{
+    				to_os.close();
+
+    			}catch( Throwable e ){
+    			}
+    		}
+
+    		if ( buffer != null ){
+
+    			buffer.returnToPool();
+    		}
+
+    		// if we've failed then tidy up any partial copy that has been performed
+
+    		if ( !success ){
+
+    			if ( pl != null ){
+    				
+    				try{
+    					pl.bytesDone( -total_reported );
+    					
+    				}catch( Throwable e ){
+    					
+    					Debug.out( e );
+    				}
+    			}
+    			
+    			if ( to_file.exists()){
+
+    				to_file.delete();
+    			}
+    		}
+    	}
+    }
+    
+    /*
     private static boolean
     transfer(
     	File				from_file,
@@ -1853,7 +1924,6 @@ public class FileUtil {
     	
 		FileInputStream 	from_is 	= null;
 		FileOutputStream 	to_os		= null;
-		DirectByteBuffer	buffer		= null;
 		
 		boolean	success = false;
 		
@@ -1958,11 +2028,6 @@ public class FileUtil {
 				}catch( Throwable e ){
 				}
 			}
-
-			if ( buffer != null ){
-				
-				buffer.returnToPool();
-			}
 			
 				// if we've failed then tidy up any partial copy that has been performed
 
@@ -1975,6 +2040,7 @@ public class FileUtil {
 			}
 		}
     }
+    */
     
     public static boolean
     writeStringAsFile(
