@@ -367,38 +367,40 @@ public class TableRowPainted
 		
 		TableCellPainted cell = (TableCellPainted)getTableCellCore( col_name  );
 
-		if ( cell.getBoundsRaw() == null ){
-			
-			cell.setBoundsRaw( new Rectangle( 0, 0, 1000, getHeight() ));
-		}
-		
-		cell.refresh( true, true, true );
-		
-		Image image = new Image(Utils.getDisplay(), 1000, getHeight());
-		
-		GC gc = new GC(image);
-		
-		try{
-			swt_paintCell( gc, image.getBounds(), (TableCellSWTBase)cell, null );
-		
-			if ( isExpanded()){
+		if ( cell != null ){
+			if ( cell.getBoundsRaw() == null ){
 				
-				synchronized (subRows_sync) {
+				cell.setBoundsRaw( new Rectangle( 0, 0, 1000, getHeight() ));
+			}
+			
+			cell.refresh( true, true, true );
+			
+			Image image = new Image(Utils.getDisplay(), 1000, getHeight());
+			
+			GC gc = new GC(image);
+			
+			try{
+				swt_paintCell( gc, image.getBounds(), (TableCellSWTBase)cell, null );
+			
+				if ( isExpanded()){
 					
-					if (subRows != null) {
+					synchronized (subRows_sync) {
 						
-						for ( TableRowPainted subrow : subRows) {
-														
-							subrow.swt_fakeRedraw( col_name );
+						if (subRows != null) {
+							
+							for ( TableRowPainted subrow : subRows) {
+															
+								subrow.swt_fakeRedraw( col_name );
+							}
 						}
 					}
 				}
-			}
-		}finally{
+			}finally{
+				
+				gc.dispose();
 			
-			gc.dispose();
-		
-			image.dispose();
+				image.dispose();
+			}
 		}
 	}
 	
