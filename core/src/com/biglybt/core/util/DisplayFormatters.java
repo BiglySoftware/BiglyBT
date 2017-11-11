@@ -413,6 +413,14 @@ DisplayFormatters
 		return( force_si_values?1024:(use_si_units?1024:1000));
 	}
 
+	public static long
+	getMinB()
+	{
+		long k = getKinB();
+		
+		return( k * k );
+	}
+	
 	public static
 	String formatByteCountToKiBEtc(
 		long	n,

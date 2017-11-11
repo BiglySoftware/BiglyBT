@@ -31,6 +31,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
@@ -48,6 +50,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.views.configsections.ConfigSectionStartShutdown;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 /**
  * @author TuxPaper
@@ -144,17 +147,34 @@ public class ViewQuickConfig
 
 		IntParameter maxDLs = new IntParameter( composite, "max downloads" );
 
-			// temporary rates
+		addTemporaryRates( composite );
+		
+		addTemporaryData( composite );
+		
+		Utils.execSWTThreadLater(
+				100,
+				new Runnable() {
 
+					@Override
+					public void run() {
+						composite.traverse( SWT.TRAVERSE_TAB_NEXT);
+					}
+				});
+	}
+	
+	private void
+	addTemporaryRates(
+		Composite	composite )
+	{
 		Group temp_rates = new Group( composite, SWT.NULL );
 		Messages.setLanguageText( temp_rates, "label.temporary.rates" );
 
-		gridData = new GridData(GridData.FILL_HORIZONTAL);
+		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 4;
 
 		Utils.setLayoutData(temp_rates, gridData);
 
-		layout = new GridLayout(10, false);
+		GridLayout layout = new GridLayout(10, false);
 		layout.marginWidth 	= 0;
 		layout.marginHeight = 0;
 
@@ -163,7 +183,7 @@ public class ViewQuickConfig
 		//label = new Label(temp_rates, SWT.NULL);
 		//Messages.setLanguageText( label, "label.temporary.rates" );
 
-		label = new Label(temp_rates, SWT.NULL);
+		Label label = new Label(temp_rates, SWT.NULL);
 		gridData = new GridData();
 		gridData.horizontalIndent=4;
 		Utils.setLayoutData(label, gridData);
@@ -340,18 +360,252 @@ public class ViewQuickConfig
 					activate.setEnabled( tempMins.getValue() > 0 );
 				}
 			});
-
-		Utils.execSWTThreadLater(
-			100,
-			new Runnable() {
-
-				@Override
-				public void run() {
-					composite.traverse( SWT.TRAVERSE_TAB_NEXT);
-				}
-			});
 	}
 
+	private void
+	addTemporaryData(
+		Composite	composite )
+	{
+		Group temp_rates = new Group( composite, SWT.NULL );
+		Messages.setLanguageText( temp_rates, "label.temporary.data" );
+
+		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+		gridData.horizontalSpan = 4;
+
+		Utils.setLayoutData(temp_rates, gridData);
+
+		GridLayout layout = new GridLayout(10, false);
+		layout.marginWidth 	= 0;
+		layout.marginHeight = 0;
+
+		temp_rates.setLayout(layout);
+
+		//label = new Label(temp_rates, SWT.NULL);
+		//Messages.setLanguageText( label, "label.temporary.rates" );
+
+		Label label = new Label(temp_rates, SWT.NULL);
+		gridData = new GridData();
+		gridData.horizontalIndent=4;
+		Utils.setLayoutData(label, gridData);
+		Messages.setLanguageText( label, "label.upload.mb", new String[]{ DisplayFormatters.getUnit( DisplayFormatters.UNIT_MB )});
+
+		final IntParameter tempULLimit = new IntParameter( temp_rates, "global.upload.limit.temp.mb", 0, Integer.MAX_VALUE );
+
+		label = new Label(temp_rates, SWT.NULL);
+		Messages.setLanguageText( label, "label.download.mb", new String[]{ DisplayFormatters.getUnit( DisplayFormatters.UNIT_MB )});
+
+		final IntParameter tempDLLimit = new IntParameter( temp_rates, "global.download.limit.temp.mb", 0, Integer.MAX_VALUE );
+
+		final Button activate = new Button( temp_rates, SWT.TOGGLE );
+		Messages.setLanguageText( activate, "label.activate" );
+
+		final BufferedLabel remLabel = new BufferedLabel(temp_rates, SWT.DOUBLE_BUFFERED );
+		gridData = new GridData();
+		gridData.widthHint = 150;
+		Utils.setLayoutData(remLabel,  gridData );
+
+		activate.addSelectionListener(
+			new SelectionAdapter(){
+
+				private CoreLifecycleAdapter listener;
+
+				private TimerEventPeriodic event;
+
+				private long	end_upload;
+				private long	end_download;
+				
+
+				@Override
+				public void
+				widgetSelected( SelectionEvent e)
+				{
+					if ( activate.getSelection()){
+
+						listener =
+							new CoreLifecycleAdapter()
+							{
+								@Override
+								public void
+								stopping(
+									Core core )
+								{
+									deactivate( true );
+								}
+							};
+
+						Core core = CoreFactory.getSingleton();
+						
+						core.addLifecycleListener( listener );
+
+						Messages.setLanguageText( activate, "FileView.BlockView.Active" );
+
+						final GlobalManagerStats stats = core.getGlobalManager().getStats();
+						
+						tempULLimit.setEnabled( false );
+						tempDLLimit.setEnabled( false );
+
+						long u_limit = tempULLimit.getValue();
+						
+						if ( u_limit > 0 ){
+							
+							end_upload = (stats.getTotalDataBytesSent() + stats.getTotalProtocolBytesSent()) + u_limit*DisplayFormatters.getMinB();
+						}
+						
+						long d_limit = tempDLLimit.getValue();
+						
+						if ( d_limit > 0 ){
+							
+							end_download = (stats.getTotalDataBytesReceived() + stats.getTotalProtocolBytesReceived()) +  d_limit*DisplayFormatters.getMinB();
+						}
+						
+						event = SimpleTimer.addPeriodicEvent(
+							"TempData",
+							5000,
+							new TimerEventPerformer() {
+
+								@Override
+								public void perform(TimerEvent e) {
+
+									Utils.execSWTThread(
+										new Runnable(){
+
+											@Override
+											public void run() {
+
+												if ( event == null ){
+
+													return;
+												}
+
+												long	rem_up 		= 0;
+												long	rem_down	= 0;
+												
+												if ( end_upload > 0 ){
+													
+													rem_up = end_upload - (stats.getTotalDataBytesSent() + stats.getTotalProtocolBytesSent());
+												}
+
+												if ( end_download > 0 ){
+													
+													rem_down = end_download - (stats.getTotalDataBytesReceived() + stats.getTotalProtocolBytesReceived());
+												}
+								
+												if ( end_upload > 0 &&  rem_up <= 0 ){
+													
+													java.util.List<DownloadManager> dms = core.getGlobalManager().getDownloadManagers();
+													
+													for ( DownloadManager dm: dms ){
+														
+														if ( !dm.isForceStart()) {
+															
+															int state = dm.getState();
+															
+															if ( 	state != DownloadManager.STATE_STOPPED &&
+																	state != DownloadManager.STATE_ERROR &&
+																	!dm.isPaused()){
+															
+																ManagerUtils.stop(dm, null );
+															}
+														}
+													}
+												}
+												
+												if ( end_download > 0 &&  rem_down <= 0 ){
+													
+													java.util.List<DownloadManager> dms = core.getGlobalManager().getDownloadManagers();
+													
+													for ( DownloadManager dm: dms ){
+														
+														if ( !dm.isForceStart()) {
+															
+															int state = dm.getState();
+															
+															if ( 	state != DownloadManager.STATE_STOPPED &&
+																	state != DownloadManager.STATE_ERROR &&
+																	!dm.isPaused()){
+															
+																if ( !dm.isDownloadComplete( false )){
+																
+																	ManagerUtils.stop(dm, null );
+																}
+															}
+														}
+													}
+												}
+												if (( rem_up <= 0 && rem_down <= 0 ) || composite.isDisposed()){
+
+													deactivate( false );
+
+												}else{
+
+													remLabel.setText( 
+															MessageText.getString( 
+																"TableColumn.header.remaining") + ": " + 
+																	DisplayFormatters.formatByteCountToKiBEtc(rem_up<0?0:rem_up ) + "/" + 
+																	DisplayFormatters.formatByteCountToKiBEtc(rem_down<0?0:rem_down ));
+													
+													temp_rates.layout( new Control[] { remLabel.getControl()});
+												}
+											}
+										});
+								}
+							});
+					}else{
+
+						deactivate( false );
+					}
+				}
+
+				private void
+				deactivate(
+					boolean	closing )
+				{
+				    if ( !closing ){
+
+					    if ( listener != null ){
+
+					    	CoreFactory.getSingleton().removeLifecycleListener( listener );
+
+					    	listener = null;
+					    }
+
+					    if ( !composite.isDisposed()){
+
+						    Messages.setLanguageText( activate, "label.activate" );
+							activate.setSelection( false );
+
+							tempULLimit.setEnabled( true );
+							tempDLLimit.setEnabled( true );
+							remLabel.setText( "" );
+					    }
+				    }
+
+					if ( event != null ){
+						event.cancel();
+						event = null;
+					}
+				}
+			});
+
+		activate.setEnabled( tempULLimit.getValue() > 0 || tempDLLimit.getValue() > 0 );
+
+		ParameterChangeAdapter adapter = 
+			new ParameterChangeAdapter()
+			{
+				@Override
+				public void
+				parameterChanged(
+					Parameter p,
+					boolean caused_internally)
+				{
+					activate.setEnabled( tempULLimit.getValue() > 0 || tempDLLimit.getValue() > 0 );
+				}
+			};
+			
+		tempULLimit.addChangeListener( adapter );
+		tempDLLimit.addChangeListener( adapter );
+	}
+	
 	private void delete() {
 		Utils.disposeComposite(composite);
 	}
