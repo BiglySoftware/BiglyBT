@@ -147,6 +147,14 @@ public class ViewQuickConfig
 
 		IntParameter maxDLs = new IntParameter( composite, "max downloads" );
 
+		maxDLs.addChangeListener(
+			new ParameterChangeAdapter(){
+				@Override
+				public void parameterChanged(Parameter p, boolean caused_internally){
+					COConfigurationManager.setDirty();
+				}
+			});
+		
 		addTemporaryRates( composite );
 		
 		addTemporaryData( composite );
@@ -448,14 +456,22 @@ public class ViewQuickConfig
 						
 						if ( u_limit > 0 ){
 							
-							end_upload = (stats.getTotalDataBytesSent() + stats.getTotalProtocolBytesSent()) + u_limit*DisplayFormatters.getMinB();
+							end_upload = stats.getTotalDataProtocolBytesSent() + u_limit*DisplayFormatters.getMinB();
+							
+						}else{
+							
+							end_upload = 0;
 						}
 						
 						long d_limit = tempDLLimit.getValue();
 						
 						if ( d_limit > 0 ){
 							
-							end_download = (stats.getTotalDataBytesReceived() + stats.getTotalProtocolBytesReceived()) +  d_limit*DisplayFormatters.getMinB();
+							end_download = stats.getTotalDataProtocolBytesReceived() +  d_limit*DisplayFormatters.getMinB();
+							
+						}else{
+							
+							end_download = 0;
 						}
 						
 						event = SimpleTimer.addPeriodicEvent(
@@ -482,12 +498,12 @@ public class ViewQuickConfig
 												
 												if ( end_upload > 0 ){
 													
-													rem_up = end_upload - (stats.getTotalDataBytesSent() + stats.getTotalProtocolBytesSent());
+													rem_up = end_upload - stats.getTotalDataProtocolBytesSent();
 												}
 
 												if ( end_download > 0 ){
 													
-													rem_down = end_download - (stats.getTotalDataBytesReceived() + stats.getTotalProtocolBytesReceived());
+													rem_down = end_download - stats.getTotalDataProtocolBytesReceived();
 												}
 								
 												if ( end_upload > 0 &&  rem_up <= 0 ){
@@ -577,6 +593,8 @@ public class ViewQuickConfig
 							tempULLimit.setEnabled( true );
 							tempDLLimit.setEnabled( true );
 							remLabel.setText( "" );
+							
+							temp_rates.layout( true );
 					    }
 				    }
 
