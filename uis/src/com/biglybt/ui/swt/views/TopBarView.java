@@ -306,7 +306,7 @@ public class TopBarView
 					}
 				});
 
-				Messages.setLanguageTooltip( listPlugins, "label.right.click.for.options" );
+				Messages.setLanguageTooltip( listPlugins, "label.right.click.for.options.tooltip" );
 
 				final Menu menu = new Menu( listPlugins );
 

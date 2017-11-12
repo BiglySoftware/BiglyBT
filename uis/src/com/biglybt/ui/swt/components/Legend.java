@@ -163,7 +163,7 @@ public class Legend {
 			final Canvas cColor = new Canvas(colorSet, SWT.BORDER);
 			cColor.setData("Index", new Integer(i));
 
-			Messages.setLanguageTooltip( cColor, "label.click.to.change" );
+			Messages.setLanguageTooltip( cColor, "label.click.to.change.tooltip" );
 
 			// XXX Use paint instead of setBackgrond, because OSX does translucent
 			// crap
@@ -209,7 +209,7 @@ public class Legend {
 
 			if ( listener != null ){
 
-				Messages.setLanguageTooltip( lblDesc, "label.click.to.showhide" );
+				Messages.setLanguageTooltip( lblDesc, "label.click.to.showhide.tooltip" );
 
 				final int f_i = i;
 

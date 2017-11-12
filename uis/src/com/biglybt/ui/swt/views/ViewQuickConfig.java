@@ -213,7 +213,7 @@ public class ViewQuickConfig
 		Messages.setLanguageText( activate, "label.activate" );
 
 		final BufferedLabel remLabel = new BufferedLabel(temp_rates, SWT.DOUBLE_BUFFERED );
-		gridData = new GridData();
+		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.widthHint = 150;
 		Utils.setLayoutData(remLabel,  gridData );
 
@@ -408,8 +408,8 @@ public class ViewQuickConfig
 		Messages.setLanguageText( activate, "label.activate" );
 
 		final BufferedLabel remLabel = new BufferedLabel(temp_rates, SWT.DOUBLE_BUFFERED );
-		gridData = new GridData();
-		gridData.widthHint = 150;
+		gridData = new GridData(GridData.FILL_HORIZONTAL);
+		gridData.widthHint = 200;
 		Utils.setLayoutData(remLabel,  gridData );
 
 		activate.addSelectionListener(
