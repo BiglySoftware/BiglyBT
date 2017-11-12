@@ -1726,6 +1726,9 @@ public class TorrentUtil
 	protected static void addTrackerTorrentMenu(final Menu menuTracker,
 			final DownloadManager[] dms, boolean changeUrl, boolean manualUpdate,
 			boolean allStopped, final boolean use_open_containing_folder) {
+		
+		Shell shell = Utils.findAnyShell();
+		
 		boolean hasSelection = dms.length > 0;
 
 		final MenuItem itemChangeTracker = new MenuItem(menuTracker, SWT.PUSH);
@@ -2116,6 +2119,66 @@ public class TorrentUtil
 		});
 		itemTorrentDL.setEnabled(dms.length == 1);
 
+			// switch torrent
+		
+		final MenuItem itemTorrentSwitch = new MenuItem(menuTracker, SWT.PUSH);
+		Messages.setLanguageText(itemTorrentSwitch, "MyTorrentsView.menu.torrent.switch");
+		itemTorrentSwitch.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				final TOTorrent torrent = dms[0].getTorrent();
+				if ( torrent == null ){
+					return;
+				}
+				
+				try{
+					byte[] existing_hash = torrent.getHash();
+					
+					FileDialog dialog = new FileDialog( shell, SWT.OPEN | SWT.MULTI);
+
+					dialog.setText(MessageText.getString("dialog.select.torrent.file"));
+					
+					dialog.setFilterExtensions(new String[] {
+							"*.torrent"
+						});
+						dialog.setFilterNames(new String[] {
+							"*.torrent"
+						});
+						
+					String path = dialog.open();
+					
+					if (path == null){
+						return;
+					}
+					
+					File file = new File( path );
+					
+					byte[] replacement_hash = TOTorrentFactory.deserialiseFromBEncodedFile( file ).getHash();
+					
+					if ( !Arrays.equals( existing_hash,  replacement_hash )){
+						
+						throw( new Exception( "Hash mismatch: old=" + ByteFormatter.encodeString( existing_hash ) + ", new=" + ByteFormatter.encodeString( replacement_hash )));
+					}
+					
+					dms[0].setTorrentFileName( file.getAbsolutePath());
+					
+				}catch( Throwable e ){
+					
+					MessageBox mb = new MessageBox( shell, SWT.ICON_ERROR | SWT.OK);
+					mb.setText(MessageText.getString("MyTorrentsView.menu.torrent.switch.fail"));
+					mb.setMessage(
+						MessageText.getString(
+							"MyTorrentsView.menu.torrent.switch.fail.text",
+							new String[] { Debug.getNestedExceptionMessage( e ) }));
+
+					mb.open();
+				}
+			}
+		});
+		
+		itemTorrentSwitch.setEnabled(dms.length == 1 && dms[0].isPersistent());
+
 			// set source
 
 		final MenuItem itemTorrentSource = new MenuItem(menuTracker, SWT.PUSH);
@@ -2131,7 +2194,7 @@ public class TorrentUtil
 				String msg_key_prefix = "MyTorrentsView.menu.edit_source.";
 				SimpleTextEntryWindow text_entry = new SimpleTextEntryWindow();
 
-				text_entry.setParentShell( menuTracker.getShell());
+				text_entry.setParentShell( shell );
 				text_entry.setTitle(msg_key_prefix + "title");
 				text_entry.setMessage(msg_key_prefix + "message");
 				text_entry.setPreenteredText(TorrentUtils.getObtainedFrom( torrent ), false);
@@ -2159,7 +2222,7 @@ public class TorrentUtil
 
 			@Override
 			public void handleEvent(Event event) {
-				FileDialog fDialog = new FileDialog(menuTracker.getShell(), SWT.OPEN | SWT.MULTI);
+				FileDialog fDialog = new FileDialog( shell, SWT.OPEN | SWT.MULTI);
 
 				fDialog.setText(MessageText.getString("MainWindow.dialog.choose.thumb"));
 				String path = fDialog.open();

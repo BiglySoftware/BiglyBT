@@ -521,6 +521,8 @@ public class ViewQuickConfig
 																	!dm.isPaused()){
 															
 																ManagerUtils.stop(dm, null );
+																
+																dm.setStopReason( MessageText.getString( "label.temporary.data" ));
 															}
 														}
 													}
@@ -543,6 +545,8 @@ public class ViewQuickConfig
 																if ( !dm.isDownloadComplete( false )){
 																
 																	ManagerUtils.stop(dm, null );
+																	
+																	dm.setStopReason( MessageText.getString( "label.temporary.data" ));
 																}
 															}
 														}
