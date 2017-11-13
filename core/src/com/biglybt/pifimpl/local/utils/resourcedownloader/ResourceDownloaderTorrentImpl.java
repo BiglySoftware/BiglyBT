@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Set;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFactory;
@@ -435,8 +436,8 @@ ResourceDownloaderTorrentImpl
 
 			download.setFlag(Download.FLAG_DISABLE_AUTO_FILE_MOVE, true);
 
-			// seems reasonable to me but whatever: http://forum.vuze.com/thread.jspa?threadID=111012
-			if ( false ){
+			if ( COConfigurationManager.getBooleanParameter( "Ip Filter Disable For Updates" )){
+				
 				download.setFlag(Download.FLAG_DISABLE_IP_FILTER, true);
 			}
 

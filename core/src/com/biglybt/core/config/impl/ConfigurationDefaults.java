@@ -241,6 +241,7 @@ public class ConfigurationDefaults {
     def.put("Ip Filter Enabled", TRUE);
     def.put("Ip Filter Allow",FALSE);
     def.put("Ip Filter Enable Banning", TRUE);
+    def.put("Ip Filter Disable For Updates", FALSE);
     def.put("Ip Filter Ban Block Limit", new Long(4));
     def.put("Ip Filter Ban Discard Ratio", "5.0" );
     def.put("Ip Filter Ban Discard Min KB", new Long(128));

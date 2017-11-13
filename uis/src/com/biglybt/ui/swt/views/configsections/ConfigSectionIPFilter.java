@@ -215,9 +215,12 @@ public class ConfigSectionIPFilter implements UISWTConfigSection {
 
 	gridData = new GridData();
 
-  BooleanParameter persist_bad_data_banning = new BooleanParameter(gFilter, "Ip Filter Banning Persistent");
-  persist_bad_data_banning.setLayoutData( gridData );
-  Messages.setLanguageText(persist_bad_data_banning.getControl(), "ConfigView.section.ipfilter.persistblocking");
+	BooleanParameter persist_bad_data_banning = new BooleanParameter(gFilter, "Ip Filter Banning Persistent");
+	persist_bad_data_banning.setLayoutData( gridData );
+	Messages.setLanguageText(persist_bad_data_banning.getControl(), "ConfigView.section.ipfilter.persistblocking");
+
+	BooleanParameter disableForUpdates = new BooleanParameter(gFilter, "Ip Filter Disable For Updates");
+	Messages.setLanguageText(disableForUpdates.getControl(), "ConfigView.section.ipfilter.disable.for.updates");
 
     Group gBlockBanning = new Group(gFilter, SWT.NULL);
     Messages.setLanguageText(gBlockBanning, "ConfigView.section.ipfilter.peerblocking.group");
