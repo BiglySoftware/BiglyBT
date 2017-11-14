@@ -3231,16 +3231,7 @@ BuddyPluginViewBetaChat
 									widgetSelected(
 										SelectionEvent event )
 									{
-										String key = plugin.getPublicKey();
-
-										String uri = "chat:friend:?key=" + key;
-
-										String my_nick = chat.getNickname( false );
-
-										if ( my_nick.length() > 0 ){
-
-											uri += "[[" + UrlUtils.encode( "Friend Key for " + my_nick ) + "]]";
-										}
+										String uri = getFriendURI();
 
 										input_area.append( uri  );
 									}
@@ -3281,6 +3272,23 @@ BuddyPluginViewBetaChat
 					}
 				}
 			});
+	}
+	
+	private String
+	getFriendURI()
+	{
+		String key = plugin.getPublicKey();
+
+		String uri = "chat:friend:?key=" + key;
+
+		String my_nick = chat.getNickname( false );
+
+		if ( my_nick.length() > 0 ){
+
+			uri += "[[" + UrlUtils.encode( "Friend Key for " + my_nick ) + "]]";
+		}
+		
+		return( uri );
 	}
 
 	private void
@@ -3578,6 +3586,49 @@ BuddyPluginViewBetaChat
 					}
 				});
 
+			final MenuItem send_fk_item = new MenuItem(menu, SWT.PUSH);
+
+			send_fk_item.setText( lu.getLocalisedMessageText( "label.send.friend.key" ) );
+
+			send_fk_item.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent e)
+					{
+						if ( !plugin.isClassicEnabled()){
+							
+							plugin.setClassicEnabled( true );
+						}
+						
+						for ( ChatParticipant participant: participants ){
+
+							if ( TEST_LOOPBACK_CHAT || !Arrays.equals( participant.getPublicKey(), chat_pk )){
+
+								try{
+									ChatInstance chat = participant.createPrivateChat();
+
+									createChatWindow( view, plugin, chat);
+
+									String message = 
+											"Right-click on " + getFriendURI() + 
+											" and open to install my key.\n\nThen send me your's by selecting 'Friends->Insert Friend Key' from the chat menu top-left and hit return in the text area." +
+											"\n\nSee " + MessageText.getString( "azbuddy.classic.link.url" ) + " for more details.";
+									
+									chat.sendMessage(message, null);
+									
+								}catch( Throwable f ){
+
+									Debug.out( f );
+								}
+							}
+						}
+					}
+				});
+
+			
 			boolean	pc_enable = false;
 
 			if ( chat_pk != null ){
@@ -3592,6 +3643,7 @@ BuddyPluginViewBetaChat
 			}
 
 			private_chat_item.setEnabled( pc_enable || TEST_LOOPBACK_CHAT );
+			send_fk_item.setEnabled((pc_enable || TEST_LOOPBACK_CHAT ) && !chat.isAnonymous());
 		}
 
 		if ( participants.size() == 1 ){
@@ -3808,7 +3860,7 @@ BuddyPluginViewBetaChat
 			lu.getLocalisedMessageText(
 				"azbuddy.dchat.user.status",
 					new String[]{
-						online >=100?"100+":String.valueOf( online ),
+						online<0?"...":(online >=100?"100+":String.valueOf( online )),
 						String.valueOf( active )
 					});
 
