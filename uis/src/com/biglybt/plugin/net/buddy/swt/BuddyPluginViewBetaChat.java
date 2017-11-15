@@ -222,7 +222,7 @@ BuddyPluginViewBetaChat
 	private StyledText 				log;
 	private StyleRange[]			log_styles = new StyleRange[0];
 
-	private BufferedLabel			table_header;
+	private BufferedLabel			table_header_left;
 	private Table					buddy_table;
 	private BufferedLabel		 	status;
 
@@ -511,7 +511,7 @@ BuddyPluginViewBetaChat
 	{
 		log					= null;
 		log_styles 			= new StyleRange[0];
-		table_header		= null;
+		table_header_left	= null;
 		buddy_table			= null;
 		shared_nick_button	= null;
 		nickname			= null;
@@ -1337,15 +1337,33 @@ BuddyPluginViewBetaChat
 		    });
 	
 	
-			table_header = new BufferedLabel( top_right, SWT.DOUBLE_BUFFERED );
+			table_header_left = new BufferedLabel( top_right, SWT.DOUBLE_BUFFERED );
 			grid_data = new GridData( GridData.FILL_HORIZONTAL );
-			grid_data.horizontalSpan=3;
+			grid_data.horizontalSpan=2;
 			if ( !Constants.isWindows ){
 				grid_data.horizontalIndent = 2;
 			}
-			Utils.setLayoutData(table_header,  grid_data );
-			table_header.setText(MessageText.getString( "PeersView.state.pending" ));
+			Utils.setLayoutData(table_header_left,  grid_data );
+			table_header_left.setText(MessageText.getString( "PeersView.state.pending" ));
 	
+			LinkLabel link = 
+				new LinkLabel(
+					top_right, 
+					"Views.plugins.azbuddy.title",
+					new Runnable(){
+						
+						@Override
+						public void run(){
+					
+							if ( !plugin.isClassicEnabled()){
+								
+								plugin.setClassicEnabled( true );
+							}					
+
+							beta.selectClassicTab();
+						}
+					});
+			
 				// table
 	
 			buddy_table = new Table(rhs, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.VIRTUAL);
@@ -3864,7 +3882,7 @@ BuddyPluginViewBetaChat
 						String.valueOf( active )
 					});
 
-		table_header.setText( msg );
+		table_header_left.setText( msg );
 	}
 
 	protected void

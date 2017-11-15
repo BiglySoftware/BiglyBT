@@ -130,7 +130,7 @@ BuddyPluginViewInstance
 
 		classic_item = new CTabItem(tab_folder, SWT.NULL);
 
-		classic_item.setText( lu.getLocalisedMessageText(  "label.classic" ));
+		classic_item.setText( lu.getLocalisedMessageText(  "label.friends" ));
 
 		Composite classic_area = new Composite( tab_folder, SWT.NULL );
 		classic_item.setControl( classic_area );

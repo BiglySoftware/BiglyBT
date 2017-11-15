@@ -1391,6 +1391,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		return( AEPluginProxyHandler.hasPluginProxyForNetwork( AENetworkClassifier.AT_I2P, false ));
 	}
 
+	public void
+	selectClassicTab()
+	{
+		plugin.getSWTUI().selectClassicTab();
+	}
+	
 	public InputStream
 	handleURI(
 		String		url_str,
@@ -1455,6 +1461,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		if ( protocol.startsWith( "chat:friend" )){
 
+			if ( !plugin.isClassicEnabled()){
+				
+				plugin.setClassicEnabled( true );
+			}
+			
 			if ( !key.equals( plugin.getPublicKey())){
 
 				plugin.addBuddy(key, BuddyPlugin.SUBSYSTEM_AZ2 );

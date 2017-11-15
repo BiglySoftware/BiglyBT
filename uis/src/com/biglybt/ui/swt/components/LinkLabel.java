@@ -56,6 +56,28 @@ LinkLabel
 	    makeLinkedLabel(linkLabel, link);
 	}
 
+	public
+	LinkLabel(
+		Composite		composite,
+		String			resource,
+		Runnable		runnable )
+	{
+		this( composite, new GridData(), resource, runnable );
+	}
+
+	public
+	LinkLabel(
+		Composite		composite,
+		GridData		gridData,
+		String			resource,
+		Runnable		runnable )
+	{
+	    linkLabel = new Label(composite, SWT.NULL);
+	    Messages.setLanguageText(linkLabel,resource);
+	    linkLabel.setLayoutData( gridData );
+	    makeLinkedLabel(linkLabel, runnable);
+	}
+	
 	public Label
 	getlabel()
 	{
@@ -95,5 +117,21 @@ LinkLabel
 	public static void updateLinkedLabel(Label label, String hyperlink) {
 		label.setData(hyperlink);
 		label.setToolTipText(hyperlink);
+	}
+	
+	public static void makeLinkedLabel(Label label, Runnable runnable) {
+		
+	    label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+	    label.setForeground(Colors.blue);
+	    label.addMouseListener(new MouseAdapter() {
+	      @Override
+	      public void mouseDoubleClick(MouseEvent arg0) {
+	      	runnable.run();
+	      }
+	      @Override
+	      public void mouseUp(MouseEvent arg0) {
+	    	  runnable.run();
+	      }
+	    });
 	}
 }

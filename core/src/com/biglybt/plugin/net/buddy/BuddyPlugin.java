@@ -426,7 +426,7 @@ BuddyPlugin
 			});
 
 		config.createGroup(
-			"label.classic",
+			"label.friends",
 			new Parameter[]{
 					classic_enabled_param, nick_name_param, online_status_param,
 					protocol_speed, enable_chat_notifications, cat_pub, tracker_enable, tracker_so_enable,
