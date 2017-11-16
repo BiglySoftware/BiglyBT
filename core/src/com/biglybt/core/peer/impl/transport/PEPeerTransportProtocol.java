@@ -1249,14 +1249,38 @@ implements PEPeerTransport
 			defaultV6 = na.hasIPV6Potential(true) ? na.getDefaultPublicAddressV6() : null;
 		}
 
-		String peer_name = Constants.BIGLY_PROTOCOL_NAME;
+		//String peer_name = Constants.BIGLY_PROTOCOL_NAME;
 
+		String client_name = (String)ClientIDManagerImpl.getSingleton().getProperty(  manager.getHash(), ClientIDGenerator.PR_CLIENT_NAME );
+		
+		int pos = client_name.indexOf( ' ' );
+		
+		String	peer_name;
+		String	peer_version;
+		
+		if ( pos == -1 ){
+			
+			Debug.out( "Unsupported client name: " + client_name );
+			
+			peer_name 		= Constants.BIGLY_PROTOCOL_NAME;
+			
+			peer_version	= Constants.AZUREUS_VERSION;
+			
+		}else {
+			
+			peer_name = client_name.substring( 0,  pos );
+			
+			pos = client_name.lastIndexOf( ' ' );
+			
+			peer_version = client_name.substring( pos+1 );
+		}
+		
 		AZHandshake az_handshake = new AZHandshake(
 				AZPeerIdentityManager.getAZPeerIdentity(),
 				mySessionID,
 				peerSessionID,
 				peer_name,
-				Constants.AZUREUS_VERSION,
+				peer_version,
 				local_tcp_port,
 				local_udp_port,
 				local_udp2_port,

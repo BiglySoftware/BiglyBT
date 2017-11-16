@@ -48,6 +48,10 @@ public class
 ClientIDPlugin
 	implements Plugin, ClientIDGenerator
 {
+		// client names need to be of the form <name> <version>
+		// or <name> <whatever> <version>
+		// as PEPeerTransportProtocol depends on this
+	
 	private static final String BIGLY_NAME				= Constants.BIGLY_PROTOCOL_NAME;
 	private static final String BIGLY_VERSION			= Constants.AZUREUS_VERSION;
 	
