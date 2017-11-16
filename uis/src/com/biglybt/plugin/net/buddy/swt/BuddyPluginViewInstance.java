@@ -1379,7 +1379,7 @@ BuddyPluginViewInstance
 
 		final Text control_val_pk = new Text( controls, SWT.NULL );
 		gridData = new GridData();
-		gridData.widthHint = 400;
+		//gridData.widthHint = 400;
 		Utils.setLayoutData(control_val_pk, gridData);
 
 		control_val_pk.setEditable( false );
@@ -1427,7 +1427,7 @@ BuddyPluginViewInstance
 
 		}else{
 
-			control_val_pk.setText( Base32.encode( public_key ));
+			control_val_pk.setText( truncate( Base32.encode( public_key )));
 		}
 
 	    Messages.setLanguageText(control_val_pk, "ConfigView.copy.to.clipboard.tooltip", true);
@@ -1477,7 +1477,7 @@ BuddyPluginViewInstance
 
 									}else{
 
-										control_val_pk.setText( Base32.encode( public_key ));
+										control_val_pk.setText( truncate( Base32.encode( public_key )));
 									}
 
 									controls.layout();
@@ -2676,6 +2676,16 @@ BuddyPluginViewInstance
 			      new Transfer[] {TextTransfer.getInstance()});
 	}
 
+	private String
+	truncate(
+		String	str )
+	{
+		if ( str.length() > 23 ){
+			return( str.substring( 0, 20 ) + "... ");
+		}else {
+			return( str );
+		}
+	}
 	protected void
 	updateTable()
 	{
