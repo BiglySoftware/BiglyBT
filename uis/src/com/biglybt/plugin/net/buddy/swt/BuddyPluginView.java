@@ -400,12 +400,7 @@ BuddyPluginView
 
 
 			buddyPluginAdapter = new BuddyPluginAdapter() {
-				@Override
-				public void
-				initialised(
-						boolean		available )
-				{
-				}
+
 
 				@Override
 				public void
@@ -432,29 +427,8 @@ BuddyPluginView
 						updateStatus();
 					}
 				}
-
-				@Override
-				public void
-				buddyChanged(
-						BuddyPluginBuddy	buddy )
-				{
-				}
-
-				@Override
-				public void
-				messageLogged(
-						String		str,
-						boolean		error )
-				{
-				}
-
-				@Override
-				public void
-				enabledStateChanged(
-						boolean enabled )
-				{
-				}
 			};
+			
 			plugin.addListener(buddyPluginAdapter);
 
 			crypto = CryptoManagerFactory.getSingleton();

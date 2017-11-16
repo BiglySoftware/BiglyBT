@@ -689,9 +689,10 @@ outer:
 	@Override
 	public void
 	enabledStateChanged(
-		boolean 	_enabled )
+		boolean 	classic_enabled,
+		boolean		beta_enabled )
 	{
-		plugin_enabled = _enabled;
+		plugin_enabled = classic_enabled;
 
 		checkEnabledState();
 	}

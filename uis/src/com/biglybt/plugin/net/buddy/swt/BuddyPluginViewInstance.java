@@ -82,10 +82,14 @@ BuddyPluginViewInstance
 	private Table 				buddy_table;
 	private StyledText 			log;
 
-	private CTabFolder  		tab_folder ;
+	private CTabFolder  		tab_folder;
+	
 	private CTabItem 			classic_item;
 
-
+	private boolean				classic_enabled;
+	private boolean				beta_enabled;
+	
+	
 	private Text 	public_nickname;
 	private Text 	anon_nickname;
 
@@ -137,6 +141,48 @@ BuddyPluginViewInstance
 
 		createClassic( classic_area );
 
+		plugin.addListener(
+			new BuddyPluginAdapter()
+			{
+				@Override
+				public void enabledStateChanged(boolean _classic_enabled, boolean _beta_enabled){
+					
+					if ( composite.isDisposed()){
+						
+						plugin.removeListener( this );
+						
+					}else{
+						
+						Utils.execSWTThread(
+							new Runnable()
+							{
+								@Override
+								public void
+								run()
+								{
+									if ( _classic_enabled != classic_enabled ){
+										
+										Utils.disposeComposite( classic_area, false );
+										
+										createClassic( classic_area );
+										
+										classic_area.layout( true, true );
+									}
+									
+								if ( _beta_enabled != beta_enabled ){
+										
+										Utils.disposeComposite( beta_area, false );
+										
+										createBeta( beta_area );
+										
+										beta_area.layout( true, true );
+									}
+								}
+							});
+					}
+				}
+			});
+		
 		tab_folder.setSelection(beta_item);
 	}
 
@@ -157,6 +203,8 @@ BuddyPluginViewInstance
 	createBeta(
 		Composite main )
 	{
+		Utils.disposeComposite( main, false );
+		
 		final BuddyPluginBeta plugin_beta = plugin.getBeta();
 
 		GridLayout layout = new GridLayout();
@@ -166,11 +214,32 @@ BuddyPluginViewInstance
 		GridData grid_data = new GridData(GridData.FILL_BOTH );
 		Utils.setLayoutData(main, grid_data);
 
-		if ( !plugin.isBetaEnabled()){
+		beta_enabled = plugin.isBetaEnabled();
+		
+		if ( !beta_enabled ){
 
 			Label control_label = new Label( main, SWT.NULL );
 			control_label.setText( lu.getLocalisedMessageText( "azbuddy.disabled" ));
 
+			Label label = new Label( main, SWT.NULL );
+			grid_data = new GridData(GridData.FILL_HORIZONTAL );
+			label.setLayoutData( grid_data); 
+			
+			final Button config_button = new Button( main, SWT.NULL );
+			config_button.setText( lu.getLocalisedMessageText( "plugins.basicview.config" ));
+
+			config_button.addSelectionListener(
+					new SelectionAdapter()
+					{
+						@Override
+						public void
+						widgetSelected(
+							SelectionEvent e )
+						{
+							plugin.showConfig();
+						}
+					});
+			
 			return;
 		}
 
@@ -182,7 +251,7 @@ BuddyPluginViewInstance
 
 		Composite info_area = new Composite( main, SWT.NULL );
 		layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 4;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		info_area.setLayout(layout);
@@ -197,7 +266,24 @@ BuddyPluginViewInstance
 		new LinkLabel(info_area, "ConfigView.label.please.visit.here", lu.getLocalisedMessageText( "azbuddy.dchat.link.url" ));
 
 		label = new Label( info_area, SWT.NULL );
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		label.setLayoutData( grid_data); 
+		
+		final Button config_button = new Button( info_area, SWT.NULL );
+		config_button.setText( lu.getLocalisedMessageText( "plugins.basicview.config" ));
 
+		config_button.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent e )
+					{
+						plugin.showConfig();
+					}
+				});
+		
 			// install plugin
 
 		label = new Label( info_area, SWT.NULL );
@@ -266,6 +352,11 @@ BuddyPluginViewInstance
 				}
 			});
 
+		label = new Label( info_area, SWT.NULL );
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 2;
+		label.setLayoutData( grid_data); 
+		
 		checkMsgSyncPlugin();
 
 			// UI
@@ -1176,6 +1267,7 @@ BuddyPluginViewInstance
 				}
 			});
 	}
+	
 	private void
 	createClassic(
 		Composite main )
@@ -1191,7 +1283,7 @@ BuddyPluginViewInstance
 
 		Composite info_area = new Composite( main, SWT.NULL );
 		layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 4;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		info_area.setLayout(layout);
@@ -1206,8 +1298,27 @@ BuddyPluginViewInstance
 		new LinkLabel(info_area, "ConfigView.label.please.visit.here", lu.getLocalisedMessageText( "azbuddy.classic.link.url" ));
 
 		label = new Label( info_area, SWT.NULL );
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		label.setLayoutData( grid_data );
+		
+		final Button config_button = new Button( info_area, SWT.NULL );
+		config_button.setText( lu.getLocalisedMessageText( "plugins.basicview.config" ));
 
-		if ( !plugin.isClassicEnabled()){
+		config_button.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent e )
+					{
+						plugin.showConfig();
+					}
+				});
+
+		classic_enabled = plugin.isClassicEnabled();
+		
+		if ( !classic_enabled ){
 
 			Label control_label = new Label( main, SWT.NULL );
 			control_label.setText( lu.getLocalisedMessageText( "azbuddy.disabled" ));
@@ -1219,7 +1330,7 @@ BuddyPluginViewInstance
 
 		final Composite controls = new Composite(main, SWT.NONE);
 		layout = new GridLayout();
-		layout.numColumns = 6;
+		layout.numColumns = 5;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		controls.setLayout(layout);
@@ -1391,21 +1502,6 @@ BuddyPluginViewInstance
 				}
 			}
 		});
-
-		final Button config_button = new Button( controls, SWT.NULL );
-		config_button.setText( lu.getLocalisedMessageText( "plugins.basicview.config" ));
-
-		config_button.addSelectionListener(
-				new SelectionAdapter()
-				{
-					@Override
-					public void
-					widgetSelected(
-						SelectionEvent e )
-					{
-						plugin.showConfig();
-					}
-				});
 
 			// table and log
 
@@ -2762,7 +2858,7 @@ BuddyPluginViewInstance
 	@Override
 	public void
 	enabledStateChanged(
-		boolean enabled )
+		boolean claassic_enabled, boolean beta_enabled )
 	{
 	}
 
