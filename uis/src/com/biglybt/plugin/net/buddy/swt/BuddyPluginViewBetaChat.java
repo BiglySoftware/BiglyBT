@@ -106,7 +106,6 @@ import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
@@ -141,7 +140,6 @@ import com.biglybt.ui.swt.pif.UISWTInputReceiver;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 
-import jdk.nashorn.internal.runtime.regexp.joni.Regex;
 
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
@@ -3634,11 +3632,8 @@ BuddyPluginViewBetaChat
 
 									createChatWindow( view, plugin, chat);
 
-									String message = 
-											"Right-click on " + getFriendURI() + 
-											" and open to install my key.\n\nThen send me your's by selecting 'Friends->Insert Friend Key' from the chat menu top-left and hit return in the text area." +
-											"\n\nSee " + MessageText.getString( "azbuddy.classic.link.url" ) + " for more details.";
-									
+									String message = "!azbuddy.send.friend.key.msg[" + UrlUtils.encode( getFriendURI()) + "]!";
+																		
 									chat.sendMessage(message, null);
 									
 								}catch( Throwable f ){
@@ -5232,6 +5227,10 @@ BuddyPluginViewBetaChat
 		    				 
 		    				 params = rem.split( "," );
 		    				 
+		    				 for ( int i=0;i<params.length;i++){
+		    					 
+		    					 params[0] = UrlUtils.decode( params[0]);
+		    				 }
 		    			 }else{
 		    				 
 		    				 resource 	= str;
