@@ -2681,7 +2681,7 @@ BuddyPluginViewInstance
 		String	str )
 	{
 		if ( str.length() > 23 ){
-			return( str.substring( 0, 20 ) + "... ");
+			return( str.substring( 0, 20 ) + "..." );
 		}else {
 			return( str );
 		}

@@ -32,6 +32,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.*;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.security.CryptoHandler;
 import com.biglybt.core.security.CryptoManagerFactory;
 import com.biglybt.core.security.CryptoManagerKeyListener;
@@ -511,29 +512,30 @@ BuddyPlugin
 
 							final BuddyPluginBuddy	buddy = (BuddyPluginBuddy)buddies.get(i);
 
-							if ( buddy.isOnline( true )){
+							boolean online = buddy.isOnline( true );
 
-								TableContextMenuItem item =
-									plugin_interface.getUIManager().getTableManager().addContextMenuItem(
-										parent,
-										"!" + buddy.getName() + "!");
+							TableContextMenuItem item =
+								plugin_interface.getUIManager().getTableManager().addContextMenuItem(
+									parent,
+									"!" + buddy.getName() + (online?"":(" - " +  MessageText.getString( "label.disconnected" ))) + "!");
 
-								item.addMultiListener(
-									new MenuItemListener()
+							item.addMultiListener(
+								new MenuItemListener()
+								{
+									@Override
+									public void
+									selected(
+										MenuItem 	menu,
+										Object 		target )
 									{
-										@Override
-										public void
-										selected(
-											MenuItem 	menu,
-											Object 		target )
-										{
-											for ( Torrent torrent: torrents ){
+										for ( Torrent torrent: torrents ){
 
-												az2_handler.sendAZ2Torrent( torrent, buddy );
-											}
+											az2_handler.sendAZ2Torrent( torrent, buddy );
 										}
-									});
-							}
+									}
+								});
+							
+							item.setEnabled( online );
 						}
 
 						menu.setEnabled( true );

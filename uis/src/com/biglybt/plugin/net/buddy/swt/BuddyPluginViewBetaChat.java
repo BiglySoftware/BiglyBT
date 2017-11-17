@@ -104,6 +104,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.RandomUtils;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.UrlUtils;
@@ -139,6 +140,9 @@ import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+
+import jdk.nashorn.internal.runtime.regexp.joni.Regex;
+
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -5186,6 +5190,79 @@ BuddyPluginViewBetaChat
 		return( msg );
 
 	}
+
+	private static String
+	expandResources(
+		String		text )
+	{
+			// resource ids are of the form !key.x...[arg1,arg2...]!
+		
+		if ( !text.contains( "!" )) {
+			
+			return( text );
+		}
+		
+		try{	
+			Pattern p = RegExUtil.getCachedPattern( "BPVBC:resource", "!([^\\s]+)!");
+	
+			Matcher m = p.matcher( text );
+	
+			boolean result = m.find();
+	
+			if ( result ){
+	
+				StringBuffer sb = new StringBuffer();
+	
+		    	while( result ){
+	
+		    		 String str = m.group(1);
+	
+		    		 if ( str.contains( "." )){
+		    			 
+		    			 int pos = str.indexOf( '[' );
+		    			 
+		    			 String 	resource;
+		    			 String[]	params;
+		    			 
+		    			 if ( pos != -1 && str.endsWith( "]" )){
+		    				 
+		    				 resource = str.substring( 0, pos );
+		    				 		    				 
+		    				 String rem = str.substring( pos+1, str.length()-1 );
+		    				 
+		    				 params = rem.split( "," );
+		    				 
+		    			 }else{
+		    				 
+		    				 resource 	= str;
+		    				 params		= null;
+		    			 }
+	
+		    			 if ( params == null ){
+		    			 
+		    				 str = MessageText.getString( resource );
+		    				 
+		    			 }else{
+		    				 
+		    				 str = MessageText.getString( resource, params );
+		    			 }
+		    		 }
+		    		 
+		    		 m.appendReplacement(sb, Matcher.quoteReplacement( str ));
+	
+		    		 result = m.find();
+		    	 }
+	
+				m.appendTail(sb);
+	
+				text = sb.toString();
+			}
+		}catch( Throwable e ){
+		}
+		
+		return( text );
+	}
+	
 	protected static String
 	renderMessage(
 		BuddyPluginBeta		beta,
@@ -5199,6 +5276,8 @@ BuddyPluginViewBetaChat
 		Color				info_colour,
 		Font				bold_font )
 	{
+		original_msg = expandResources( original_msg );
+				
 		String msg = original_msg;
 
 		try{
