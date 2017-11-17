@@ -56,6 +56,7 @@ import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.IntParameter;
 import com.biglybt.ui.swt.config.Parameter;
 import com.biglybt.ui.swt.config.ParameterChangeAdapter;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 import com.biglybt.core.security.*;
@@ -1377,46 +1378,22 @@ BuddyPluginViewInstance
 		final Label control_lab_pk = new Label( controls, SWT.NULL );
 		control_lab_pk.setText( lu.getLocalisedMessageText( "azbuddy.ui.mykey" ) + " ");
 
-		final Text control_val_pk = new Text( controls, SWT.NULL );
+		final Label control_val_pk = new Label( controls, SWT.NULL );
 		gridData = new GridData();
-		//gridData.widthHint = 400;
 		Utils.setLayoutData(control_val_pk, gridData);
 
-		control_val_pk.setEditable( false );
-		control_val_pk.setBackground( control_lab_pk.getBackground());
-
-		control_val_pk.addKeyListener(
-			new KeyListener()
-			{
-				@Override
-				public void
-				keyPressed(
-					KeyEvent event)
-				{
-					int	key = event.character;
-
-					if (key <= 26 && key > 0){
-
-						key += 'a' - 1;
+		ClipboardCopy.addCopyToClipMenu(
+				control_val_pk,
+				new ClipboardCopy.copyToClipProvider(){
+					
+					@Override
+					public String getText(){
+						return((String)control_val_pk.getData("key"));
 					}
-
-					if ( event.stateMask == SWT.MOD1 && key == 'a' ){
-
-						control_val_pk.setSelection( 0, control_val_pk.getText().length());
-					}
-				}
-
-				@Override
-				public void
-				keyReleased(
-					KeyEvent event)
-				{
-				}
-			});
-
-
-
-
+				});
+		
+		control_val_pk.setData( "key", "" );
+		
     	final CryptoManager crypt_man = CryptoManagerFactory.getSingleton();
 
 		byte[]	public_key = crypt_man.getECCHandler().peekPublicKey();
@@ -1426,8 +1403,10 @@ BuddyPluginViewInstance
 		    Messages.setLanguageText(control_val_pk, "ConfigView.section.security.publickey.undef");
 
 		}else{
-
-			control_val_pk.setText( truncate( Base32.encode( public_key )));
+			String str = Base32.encode( public_key );
+			
+			control_val_pk.setData( "key", str );
+			control_val_pk.setText( truncate( str ));
 		}
 
 	    Messages.setLanguageText(control_val_pk, "ConfigView.copy.to.clipboard.tooltip", true);
@@ -1446,7 +1425,7 @@ BuddyPluginViewInstance
 	    	protected void
 	    	copyToClipboard()
 	    	{
-    			new Clipboard(control_val_pk.getDisplay()).setContents(new Object[] {control_val_pk.getText()}, new Transfer[] {TextTransfer.getInstance()});
+    			new Clipboard(control_val_pk.getDisplay()).setContents(new Object[] {control_val_pk.getData( "key" )}, new Transfer[] {TextTransfer.getInstance()});
 	    	}
 	    });
 
@@ -1474,10 +1453,13 @@ BuddyPluginViewInstance
 									if ( public_key == null ){
 
 										Messages.setLanguageText(control_val_pk, "ConfigView.section.security.publickey.undef");
-
+										control_val_pk.setData( "key", "" );
 									}else{
 
-										control_val_pk.setText( truncate( Base32.encode( public_key )));
+										String str =  Base32.encode( public_key );
+										
+										control_val_pk.setText( truncate( str ));
+										control_val_pk.setData( "key", str );
 									}
 
 									controls.layout();
