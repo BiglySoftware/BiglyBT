@@ -8040,11 +8040,11 @@ SubscriptionManagerImpl
 	}
 
 	@Override
-	public void
+	public Subscription
 	subscribeToSubscription(
 			String uri )
 
-			throws Exception
+		throws Exception
 	{
 		SubscriptionManager manager = SubscriptionManagerFactory.getSingleton();
 
@@ -8084,10 +8084,12 @@ SubscriptionManagerImpl
 
 			subs.requestAttention();
 		}
+		
+		return( subs );
 	}
 
 	@Override
-	public void
+	public Subscription
 	subscribeToRSS(
 			String		name,
 			URL 		url,
@@ -8119,5 +8121,9 @@ SubscriptionManagerImpl
 
 			subs.setCreatorRef( creator_ref );
 		}
+		
+		subs.requestAttention();
+		
+		return( subs );
 	}
 }
