@@ -35,6 +35,7 @@ import com.biglybt.ui.swt.views.table.TableCellSWT;
 
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 /**
  *
@@ -89,22 +90,77 @@ public class StatusItem
 
 		int state = dm.getState();
 
+		long	sort_value;
+		
 		String	text;
 
 		if ( showTrackerErrors && dm.isUnauthorisedOnTracker() && state != DownloadManager.STATE_ERROR ){
 
 			text = dm.getTrackerStatus();
 
+			sort_value = 1100;
+			
 		}else{
 
 			text = DisplayFormatters.formatDownloadStatus(dm);
+			
+			if ( dm.isForceStart() && ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING )){
+				
+				sort_value = 1000;
+				
+			}else{
+				
+				switch( state ){
+					case DownloadManager.STATE_SEEDING:{
+						sort_value		= 900;
+						break;
+					}
+					case DownloadManager.STATE_DOWNLOADING:{
+						sort_value		= 800;
+						break;
+					}
+					case DownloadManager.STATE_QUEUED:{
+						sort_value		= 700;
+						break;
+					}
+					case DownloadManager.STATE_STOPPED:{
+						if ( dm.isPaused()){
+							sort_value		= 600;
+						}else{
+							sort_value		= 500;
+						}
+						break;
+					}
+					default:{
+						sort_value	= 0;
+					}
+				}
+			}
 		}
 
-		if ( cell.setText( text ) || !cell.isValid()) {
+		sort_value += state;
+		sort_value	<<= 32;
+		
+		if ( dm.isDownloadComplete( false )){
+			
+			Download dl = PluginCoreUtils.wrap( dm );
+			
+			if ( dl != null ){
+				
+				sort_value += dl.getSeedingRank();
+			}
+		}else{
+			
+			sort_value += dm.getPosition();
+		}
+		
+		if ( cell.setSortValue( sort_value ) || !cell.isValid()){
 
+			cell.setText(text);
+			
 			boolean clickable = false;
 
-			if ( cell instanceof TableCellSWT ){
+			if (cell instanceof TableCellSWT){
 
 				int cursor_id;
 
