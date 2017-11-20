@@ -30,6 +30,8 @@ import java.net.URL;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.tag.Tag;
@@ -52,21 +54,27 @@ import com.biglybt.pif.ddb.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.sharing.ShareException;
+import com.biglybt.pif.sharing.ShareManager;
+import com.biglybt.pif.sharing.ShareResource;
 import com.biglybt.pif.sharing.ShareResourceDir;
 import com.biglybt.pif.sharing.ShareResourceFile;
 import com.biglybt.pif.torrent.Torrent;
+import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.Parameter;
+import com.biglybt.pif.ui.config.StringListParameter;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.utils.LocaleListener;
+import com.biglybt.pif.utils.LocaleUtilities;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderAdapter;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderException;
@@ -98,6 +106,14 @@ MagnetPlugin
 	private static final String	PLUGIN_NAME				= "Magnet URI Handler";
 	private static final String PLUGIN_CONFIGSECTION_ID = "plugins.magnetplugin";
 
+	public static final String[] SOURCE_VALUES 	= { "0", "1", "2" };
+
+	public static final String[] SOURCE_KEYS = {
+		"never", "shares", "always"
+	};
+	
+	public static final String[] SOURCE_STRINGS = new String[ SOURCE_KEYS.length ];
+
 	private PluginInterface		plugin_interface;
 
 	private CopyOnWriteList		listeners = new CopyOnWriteList();
@@ -106,11 +122,12 @@ MagnetPlugin
 
 	private static final int	PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT 	= 10*60;	// needs to be fairly large as non-public downloads can take a while...
 
-	private BooleanParameter secondary_lookup;
-	private BooleanParameter md_lookup;
-	private IntParameter	 md_lookup_delay;
-	private IntParameter	 timeout_param;
-	private BooleanParameter magnet_recovery;
+	private BooleanParameter 	secondary_lookup;
+	private BooleanParameter 	md_lookup;
+	private IntParameter	 	md_lookup_delay;
+	private IntParameter	 	timeout_param;
+	private StringListParameter	sources_param;
+	private BooleanParameter	magnet_recovery;
 
 	private Map<String,BooleanParameter> net_params = new HashMap<>();
 
@@ -132,6 +149,22 @@ MagnetPlugin
 
 		MagnetURIHandler uri_handler = MagnetURIHandler.getSingleton();
 
+		final LocaleUtilities lu = plugin_interface.getUtilities().getLocaleUtilities();
+
+		lu.addListener(
+			new LocaleListener()
+			{
+				@Override
+				public void
+				localeChanged(
+					Locale		l )
+				{
+					updateLocale(lu);
+				}
+			});
+
+		updateLocale(lu);
+		
 		BasicPluginConfigModel	config =
 			plugin_interface.getUIManager().createBasicPluginConfigModel( ConfigSection.SECTION_PLUGINS,
 					PLUGIN_CONFIGSECTION_ID);
@@ -146,6 +179,8 @@ MagnetPlugin
 
 		timeout_param		= config.addIntParameter2( "MagnetPlugin.timeout.secs", "MagnetPlugin.timeout.secs", PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT );
 
+		sources_param 		= config.addStringListParameter2( "MagnetPlugin.add.sources", "MagnetPlugin.add.sources", SOURCE_VALUES, SOURCE_STRINGS, SOURCE_VALUES[1] );
+				
 		magnet_recovery		= config.addBooleanParameter2( "MagnetPlugin.recover.magnets", "MagnetPlugin.recover.magnets", true );
 
 		Parameter[] nps = new Parameter[ AENetworkClassifier.AT_NETWORKS.length ];
@@ -202,8 +237,9 @@ MagnetPlugin
 						String name;
 						Object ds = row.getDataSource();
 
-						Download download = null;
-
+						Download 		download 	= null;
+						ShareResource	share 		= null;
+						
 						if (ds instanceof ShareResourceFile) {
 							try {
 								torrent = ((ShareResourceFile) ds).getItem().getTorrent();
@@ -211,6 +247,9 @@ MagnetPlugin
 								continue;
 							}
 							name = ((ShareResourceFile) ds).getName();
+							
+							share = (ShareResource)ds;
+							
 						}else if (ds instanceof ShareResourceDir) {
 								try {
 									torrent = ((ShareResourceDir) ds).getItem().getTorrent();
@@ -218,6 +257,8 @@ MagnetPlugin
 									continue;
 								}
 								name = ((ShareResourceDir) ds).getName();
+								
+								share = (ShareResource)ds;
 						} else if (ds instanceof Download) {
 							download = (Download)ds;
 							torrent = download.getTorrent();
@@ -226,7 +267,39 @@ MagnetPlugin
 							continue;
 						}
 
-
+						Set<String>	networks = new HashSet<>();
+						
+						if ( share != null ){
+							
+							Map<String,String>	properties  = share.getProperties();
+							
+							String nets = properties.get( ShareManager.PR_NETWORKS );
+	
+							if ( nets != null ){
+	
+								String[] bits = nets.split( "," );
+	
+								for ( String bit: bits ){
+	
+									bit = AENetworkClassifier.internalise( bit.trim());
+	
+									if ( bit != null ){
+	
+										networks.add( bit );
+									}
+								}
+							}
+						}
+						
+						if ( download != null ){
+							
+							TorrentAttribute ta = plugin_interface.getTorrentManager().getAttribute( TorrentAttribute.TA_NETWORKS );
+							
+							String[]	nets = download.getListAttribute( ta );
+							
+							networks.addAll( Arrays.asList( nets ));
+						}
+												
 						String cb_data = download==null?UrlUtils.getMagnetURI( name, torrent ):UrlUtils.getMagnetURI( download);
 
 						if ( download != null ){
@@ -242,6 +315,43 @@ MagnetPlugin
 							}
 						}
 
+						String sources = sources_param.getValue();
+
+						boolean add_sources = sources.equals( "2" ) || ( sources.equals( "1" ) && share != null );
+
+						if ( add_sources ){
+							
+							if ( networks.isEmpty()){
+								
+								for ( String net: AENetworkClassifier.AT_NETWORKS ){
+									
+									if ( isNetworkEnabled( net )){
+										
+										networks.add( net );
+									}
+								}
+							}
+							
+							if ( networks.contains( AENetworkClassifier.AT_PUBLIC ) && !cb_data.contains( "xsource=" )){
+								
+								InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+
+								InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
+								
+								int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+
+								if ( ip != null && port > 0 ){
+									
+									cb_data += "&xsource=" + UrlUtils.encode( ip.getHostAddress() + ":" + port );
+								}
+								
+								if ( ip_v6 != null && port > 0 ){
+									
+									cb_data += "&xsource=" + UrlUtils.encode( ip_v6.getHostAddress() + ":" + port );
+								}
+							}
+						}
+						
 						// removed this as well - nothing wrong with allowing magnet copy
 						// for private torrents - they still can't be tracked if you don't
 						// have permission
@@ -580,6 +690,21 @@ MagnetPlugin
 				});
 	}
 
+	protected void
+	updateLocale(
+		LocaleUtilities	lu )
+	{
+		for ( int i=0;i<SOURCE_STRINGS.length;i++){
+
+			SOURCE_STRINGS[i] = lu.getLocalisedMessageText( "MagnetPlugin.add.sources." + SOURCE_KEYS[i] );
+		}
+
+		if ( sources_param != null ){
+
+			sources_param.setLabels( SOURCE_STRINGS );
+		}
+	}
+	
 	private void
 	recoverDownloads()
 	{

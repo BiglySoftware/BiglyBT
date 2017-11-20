@@ -39,7 +39,6 @@ import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.IdentityHashSet;
