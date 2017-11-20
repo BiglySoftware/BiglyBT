@@ -267,30 +267,37 @@ MagnetPlugin
 							continue;
 						}
 
+						boolean	is_share = false;
+
 						Set<String>	networks = new HashSet<>();
 						
 						if ( share != null ){
 							
+							is_share = true;
+							
 							Map<String,String>	properties  = share.getProperties();
 							
-							String nets = properties.get( ShareManager.PR_NETWORKS );
-	
-							if ( nets != null ){
-	
-								String[] bits = nets.split( "," );
-	
-								for ( String bit: bits ){
-	
-									bit = AENetworkClassifier.internalise( bit.trim());
-	
-									if ( bit != null ){
-	
-										networks.add( bit );
+							if ( properties != null ){
+								
+								String nets = properties.get( ShareManager.PR_NETWORKS );
+		
+								if ( nets != null ){
+		
+									String[] bits = nets.split( "," );
+		
+									for ( String bit: bits ){
+		
+										bit = AENetworkClassifier.internalise( bit.trim());
+		
+										if ( bit != null ){
+		
+											networks.add( bit );
+										}
 									}
 								}
 							}
 						}
-						
+												
 						if ( download != null ){
 							
 							TorrentAttribute ta = plugin_interface.getTorrentManager().getAttribute( TorrentAttribute.TA_NETWORKS );
@@ -298,6 +305,16 @@ MagnetPlugin
 							String[]	nets = download.getListAttribute( ta );
 							
 							networks.addAll( Arrays.asList( nets ));
+							
+							try{
+								byte[] hash = download.getTorrentHash();
+								
+								if ( plugin_interface.getShareManager().lookupShare( hash ) != null ){
+									
+									is_share = true;
+								}								
+							}catch( Throwable e ){								
+							}
 						}
 												
 						String cb_data = download==null?UrlUtils.getMagnetURI( name, torrent ):UrlUtils.getMagnetURI( download);
@@ -317,7 +334,7 @@ MagnetPlugin
 
 						String sources = sources_param.getValue();
 
-						boolean add_sources = sources.equals( "2" ) || ( sources.equals( "1" ) && share != null );
+						boolean add_sources = sources.equals( "2" ) || ( sources.equals( "1" ) && is_share );
 
 						if ( add_sources ){
 							
