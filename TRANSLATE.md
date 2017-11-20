@@ -1,71 +1,77 @@
 # Translating BiglyBT
 
-Thank you for your interesting in helping out BiglyBT.  We really need help with translating BiglyBT to as many languages possible.  Translating BiglyBT is no small task.  We have over 4000 translation strings, and many of the 40 language we bundle are very incomplete.  Here's a breakdown of the completion level of each language in v1.0.2.0:
+Thank you for your interesting in helping out BiglyBT.  We really need help with translating BiglyBT to as many languages possible.  Translating BiglyBT is no small task.  We have over 4000 translation strings, and many of the 40 language we bundle are very incomplete.  Here's a breakdown of the completion level of each language in v1.2.0.0:
 
 | Locale | Language | Country | % Translated | Active Translator(s) |
 |:---|:---|:---|---:|:---|
 | pt_BR | Portuguese | Brazil | ~99% | [Havokdan](https://github.com/Havokdan) |
-| eu | Basque |  | ~98% | azpidatziak |
-| zh_CN | Chinese | China | ~90% | |
-| bg_BG | Bulgarian | Bulgaria | ~84% | andreshko |
-| fr_FR | French | France | ~84% | |
-| es_ES | Spanish | Spain | ~81% | Valtiel |
-| ca_AD | Catalan | Andorra | ~80% | |
-| ko_KR | Korean | South Korea | ~79% | |
-| ro_RO | Romanian | Romania | ~73% | |
-| ru_RU | Russian | Russia | ~68% | |
-| cs_CZ | Czech | Czech Republic | ~68% | |
-| fi_FI | Finnish | Finland | ~64% | |
-| de_DE | German | Germany | ~63% | |
-| it_IT | Italian | Italy | ~63% | |
-| uk_UA | Ukrainian | Ukraine | ~61% | |
-| pl_PL | Polish | Poland | ~58% | |
-| sv_SE | Swedish | Sweden | ~53% | |
-| no_NO | Norwegian | Norway | ~53% | Leif |
-| hu_HU | Hungarian | Hungary | ~52% | |
-| li_NL | Limburgish | Netherlands | ~50% | |
-| nl_NL | Dutch | Netherlands | ~49% | |
-| sr_LATIN | Serbian | LATIN | ~49% | |
-| sr | Serbian |  | ~47% | |
-| ja_JP | Japanese | Japan | ~47% | |
-| lt_LT | Lithuanian | Lithuania | ~45% | |
-| da_DK | Danish | Denmark | ~44% | |
-| zh_TW | Chinese | Taiwan | ~41% | |
-| pt_PT | Portuguese | Portugal | ~40% | |
-| tr_TR | Turkish | Turkey | ~36% | |
-| sk_SK | Slovak | Slovakia | ~31% | |
-| th_TH | Thai | Thailand | ~29% | |
-| fy_NL | Frisian | Netherlands | ~28% | |
-| ka_GE | Georgian | Georgia | ~27% | |
-| bs_BA | Bosnian | Bosnia and Herzegovina | ~24% | |
-| el_GR | Greek | Greece | ~24% | |
-| in_ID | Indonesian | Indonesia | ~24% | |
-| sl_SI | Slovenian | Slovenia | ~22% | |
-| iw_IL | Hebrew | Israel | ~19% | |
-| oc | Occitan |  | ~16% | |
-| gl_ES | Gallegan | Spain | ~12% | |
-| ms_SG | Malay | Singapore | ~11% | |
-| ar_SA | Arabic | Saudi Arabia | ~9% | |
-| mk_MK | Macedonian | Macedonia | ~6% | |
-| hy_AM | Armenian | Armenia | ~4% | |
-| km_KH | Khmer | Cambodia | ~1% | |
-
+| eu | Basque |  | ~99% | azpidatziak |
+| zh_CN | Chinese | China | ~88% |  |
+| bg_BG | Bulgarian | Bulgaria | ~83% | andreshko |
+| es_ES | Spanish | Spain | ~80% | Valtiel |
+| ca_AD | Catalan | Andorra | ~79% |  |
+| ko_KR | Korean | South Korea | ~78% |  |
+| fr_FR | French | France | ~77% |  |
+| ro_RO | Romanian | Romania | ~72% |  |
+| ru_RU | Russian | Russia | ~67% |  |
+| cs_CZ | Czech | Czech Republic | ~66% |  |
+| fi_FI | Finnish | Finland | ~63% |  |
+| de_DE | German | Germany | ~62% |  |
+| it_IT | Italian | Italy | ~62% |  |
+| uk_UA | Ukrainian | Ukraine | ~60% |  |
+| pl_PL | Polish | Poland | ~57% |  |
+| sv_SE | Swedish | Sweden | ~52% |  |
+| no_NO | Norwegian | Norway | ~52% | Leif |
+| hu_HU | Hungarian | Hungary | ~51% |  |
+| li_NL | Limburgish | Netherlands | ~49% |  |
+| nl_NL | Dutch | Netherlands | ~48% |  |
+| sr_LATIN | Serbian | LATIN | ~48% |  |
+| sr | Serbian |  | ~46% |  |
+| ja_JP | Japanese | Japan | ~46% |  |
+| lt_LT | Lithuanian | Lithuania | ~44% |  |
+| da_DK | Danish | Denmark | ~43% |  |
+| zh_TW | Chinese | Taiwan | ~40% |  |
+| pt_PT | Portuguese | Portugal | ~40% |  |
+| tr_TR | Turkish | Turkey | ~36% |  |
+| sk_SK | Slovak | Slovakia | ~30% |  |
+| th_TH | Thai | Thailand | ~29% |  |
+| fy_NL | Frisian | Netherlands | ~27% |  |
+| ka_GE | Georgian | Georgia | ~26% |  |
+| in_ID | Indonesian | Indonesia | ~24% |  |
+| bs_BA | Bosnian | Bosnia and Herzegovina | ~23% |  |
+| el_GR | Greek | Greece | ~23% |  |
+| sl_SI | Slovenian | Slovenia | ~21% |  |
+| iw_IL | Hebrew | Israel | ~19% |  |
+| oc | Occitan |  | ~16% |  |
+| gl_ES | Gallegan | Spain | ~12% |  |
+| ms_SG | Malay | Singapore | ~11% |  |
+| ar_SA | Arabic | Saudi Arabia | ~9% |  |
+| mk_MK | Macedonian | Macedonia | ~6% |  |
+| hy_AM | Armenian | Armenia | ~4% |  |
+| km_KH | Khmer | Cambodia | ~1% |  
 
 Preferably, we'd love it if your native language wasn't English, however, anyone fluent in another language is very much appreciated.
 
 ## How to Translate
 
-The Language files are "Java Properties" files, located in [core/src/com/biglybt/internat](core/src/com/biglybt/internat).  You can use your favorite translation tool, or, you can use one of the two ways below:
+The Language files are "Java Properties" files, located in [core/src/com/biglybt/internat](core/src/com/biglybt/internat).  You can use your favorite translation tool, or, you can use one of the ways below:
+
+### Crowdin
+
+Visit our [BiglyBT Project Page on Crowdin](https://crowdin.com/projects/BiglyBT).  Crowdin is one of the best collaborative online localization tools, and has handy features such as suggesting translations from other projects with similar strings.
+
 
 ### BiglyBT Internationization Plugin
 
-This is the recommended way, as it will also try to pull in plugins that need translations.  Install the [Internationalize BiglyBT Plugin](https://plugins.biglybt.com/#i18nAZ) (If it doesn't prompt to launch BiglyBT, you can copy and paste the URL into the search bar of BiglyBT).
+The advantage to using our plugin is that it will also try to pull in plugins that need translations.  Install the [Internationalize BiglyBT Plugin](https://plugins.biglybt.com/#i18nAZ) (If it doesn't prompt to launch BiglyBT, you can copy and paste the URL into the search bar of BiglyBT).
 
 ### IntelliJ
 
 IntelliJ Idea IDE has an ok 2-panel translation tool, and there are many tutorials out there on how to setup IntelliJ with a GitHub project.  Once setup, you can open MessagesBundle.properties, and switch to the "Resource Bundle" tab.  Unfortunately it doesn't filter on just one language, so it can be a bit annoying to use.
 
 ## Submitting Translations
+
+If you are using Crowdin, you don't have to submit translations beyond typing them into the crowdin interface.  The process to get the strings into BiglyBT is automated.
 
 ### Github Clone way
 
