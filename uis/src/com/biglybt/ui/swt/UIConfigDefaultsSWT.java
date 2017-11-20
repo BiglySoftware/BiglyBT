@@ -165,5 +165,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter( "Search View Switch Hidden", false );
 
 		def.addParameter( "tag.add.customize.default.checked", true );
+		
+		def.addParameter( "PeersView.status.prioritysort", true );
 	}
 }

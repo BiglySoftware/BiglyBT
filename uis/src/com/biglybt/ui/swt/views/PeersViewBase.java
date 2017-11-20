@@ -1,5 +1,6 @@
 package com.biglybt.ui.swt.views;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,8 +35,11 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.IdentityHashSet;
@@ -60,6 +64,7 @@ import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
@@ -605,10 +610,10 @@ PeersViewBase
 	
 	private static void
 	fillMenu(
-			final Menu 				menu,
-			final PEPeer[]			peers,
-			final Shell 			shell,
-			DownloadManager 		download_specific )
+		final Menu 				menu,
+		final PEPeer[]			peers,
+		final Shell 			shell,
+		DownloadManager 		download_specific )
 	{
 		boolean hasSelection = (peers.length > 0);
 
@@ -907,34 +912,102 @@ PeersViewBase
 					}
 				});
 
-		addPeersMenu( download_specific, menu );
+		addPeersMenu( download_specific, "", menu );
 	}
 	
 	protected static boolean
 	addPeersMenu(
 		final DownloadManager 	man,
+		String					column_name,
 		Menu					menu )
 	{
+		new MenuItem( menu, SWT.SEPARATOR);
 
+		MenuItem copy_me_item = new MenuItem( menu, SWT.PUSH );
+
+		Messages.setLanguageText( copy_me_item, "menu.copy.my.peer");
+
+		copy_me_item.addListener(
+			SWT.Selection,
+			new Listener()
+			{
+				@Override
+				public void
+				handleEvent(
+						Event event)
+				{
+					InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+
+					InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
+					
+					int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+					
+					String	str = "";
+						
+					if ( ip != null ){
+						
+						str = ip.getHostAddress() + ":" + port;
+					}
+					
+					if ( ip_v6 != null ){
+						
+						str += (str.isEmpty()?"":",") + ip_v6.getHostAddress() + ":" + port;
+					}
+					
+					if ( str.isEmpty()){
+						
+						str = "<none>";
+					}
+					
+					ClipboardCopy.copyToClipBoard( str );
+				}
+			});
+		
 		if ( man == null ){
 
-			return( false );
+			return( true );
 		}
 
 		PEPeerManager pm = man.getPeerManager();
 
 		if ( pm == null ){
 
-			return( false );
+			return( true );
 		}
 
 		if ( TorrentUtils.isReallyPrivate(man.getTorrent())){
 
-			return( false );
+			return( true );
 		}
+		
+		MenuItem copy_all_peers= new MenuItem( menu, SWT.PUSH );
 
-		new MenuItem( menu, SWT.SEPARATOR);
+		Messages.setLanguageText( copy_all_peers, "menu.copy.all.peers");
 
+		copy_all_peers.addListener(
+			SWT.Selection,
+			new Listener()
+			{
+				@Override
+				public void
+				handleEvent(
+						Event event)
+				{
+					List<PEPeer> peers = pm.getPeers();
+					
+					String str = "";
+					
+					for ( PEPeer peer: peers ){
+						
+						String address = peer.getIp() + ":" + peer.getTCPListenPort();
+						
+						str += (str.isEmpty()?"":",") + address;
+					}
+					
+					ClipboardCopy.copyToClipBoard( str );
+				}
+			});
+		
 		MenuItem add_peers_item = new MenuItem( menu, SWT.PUSH );
 
 		Messages.setLanguageText( add_peers_item, "menu.add.peers");
@@ -1030,9 +1103,21 @@ PeersViewBase
 		new MenuItem (menu, SWT.SEPARATOR);
 	}
 	
+	@Override
+	public void 
+	addThisColumnSubMenu(
+		String 	sColumnName, 
+		Menu 	menuThisColumn)
+	{
+		if ( addPeersMenu( null, sColumnName, menuThisColumn )){
+
+			new MenuItem( menuThisColumn, SWT.SEPARATOR );
+		}
+	}
+	
 	private static abstract class
 	PeersRunner
-	implements Listener
+		implements Listener
 	{
 		private PEPeer[]		peers;
 

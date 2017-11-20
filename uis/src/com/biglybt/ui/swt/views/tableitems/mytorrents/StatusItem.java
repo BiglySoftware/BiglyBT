@@ -25,6 +25,8 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.UrlUtils;
@@ -51,6 +53,21 @@ public class StatusItem
 	public static final String COLUMN_ID = "status";
 
 	private final static Object CLICK_KEY = new Object();
+	
+	private static boolean	priority_sort;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+				"PeersView.status.prioritysort",
+				new ParameterListener(){
+					
+					@Override
+					public void parameterChanged(String parameterName){
+						priority_sort = COConfigurationManager.getBooleanParameter( parameterName );
+					}
+				});
+	}
+	
 	private static final int[] BLUE = Utils.colorToIntArray( Colors.blue );
 
 	private boolean changeRowFG;
@@ -151,11 +168,22 @@ public class StatusItem
 			}
 		}else{
 			
-			sort_value += dm.getPosition();
+			sort_value -= dm.getPosition();
 		}
 		
-		if ( cell.setSortValue( sort_value ) || !cell.isValid()){
-
+		boolean update;
+		
+		if ( priority_sort ){
+		
+			update = cell.setSortValue( sort_value );
+			
+		}else{
+			
+			update = cell.setSortValue( text );
+		}
+		
+		if ( update || !cell.isValid()){
+			
 			cell.setText(text);
 			
 			boolean clickable = false;

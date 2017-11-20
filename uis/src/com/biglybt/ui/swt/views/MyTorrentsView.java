@@ -1647,6 +1647,24 @@ public class MyTorrentsView
 				});
 				break;
 			}
+			case "status": {
+				boolean priority_sort = COConfigurationManager.getBooleanParameter("PeersView.status.prioritysort");
+
+				final MenuItem item = new MenuItem(menuThisColumn, SWT.CHECK);
+				Messages.setLanguageText(item, "MyTorrentsView.menu.status.prioritysort");
+				item.setSelection(priority_sort);
+
+				item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						boolean priority_sort = item.getSelection();
+						COConfigurationManager.setParameter("PeersView.status.prioritysort",priority_sort);
+						tv.columnInvalidate("status");
+						tv.refreshTable(false);
+					}
+				});
+				break;
+			}
 		}
 	}
 
