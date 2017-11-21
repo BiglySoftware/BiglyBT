@@ -115,6 +115,22 @@ public class OpenTorrentWindow
 
 		soTextArea = (SWTSkinObjectTextbox) skin.getSkinObject("text-area");
 		Text tb = ((Text) soTextArea.getControl());
+		
+		Clipboard clipboard = new Clipboard(Display.getDefault());
+
+		String sClipText = (String) clipboard.getContents(TextTransfer.getInstance());
+		
+		if ( sClipText != null && !sClipText.trim().isEmpty()){
+			
+			sClipText = sClipText.trim();
+			
+			if ( addTorrentsFromTextList( sClipText, true ) > 0 ){
+		
+				tb.setText( sClipText );
+				
+				tb.setSelection( 0, sClipText.length());
+			}
+		}
 		tb.setFocus();
 		tb.addModifyListener(new ModifyListener() {
 			@Override
