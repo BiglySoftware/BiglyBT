@@ -26,12 +26,16 @@ import java.util.List;
 
 import com.biglybt.core.util.*;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MenuAdapter;
+import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -290,6 +294,44 @@ public class FilesViewMenuUtil
 		itemDelete.setData("Priority", PRIORITY_DELETE);
 		Messages.setLanguageText(itemDelete, "wizard.multitracker.delete"); // lazy but we're near release
 
+		if ( all_files.size() == 1 ){
+			DiskManagerFileInfo file = all_files.get(0);
+			final MenuItem itemSequential = new MenuItem(menu, SWT.CHECK);
+			Messages.setLanguageText(itemSequential, "menu.sequential.file");
+			
+			PEPeerManager pm = file.getDownloadManager().getPeerManager();
+			
+			if ( pm == null || file.getDownloaded() == file.getLength() || file.isSkipped()){
+				itemSequential.setEnabled( false );
+			}else{
+				PiecePicker pp = pm.getPiecePicker();
+		
+				int info = pp.getSequentialInfo();
+							
+				itemSequential.setSelection( file.getFirstPieceNumber() == info - 1 );
+				
+				itemSequential.addListener(
+					SWT.Selection,
+					new Listener()
+					{
+						@Override
+						public void
+						handleEvent(
+							Event arg )
+						{
+							if ( itemSequential.getSelection()){
+								
+								pp.setSequentialAscendingFrom( file.getFirstPieceNumber());
+								
+							}else{
+								
+								pp.clearSequential();
+							}
+						}
+					});
+			}
+		}
+		
 		new MenuItem(menu, SWT.SEPARATOR);
 
 		if (!hasSelection) {
