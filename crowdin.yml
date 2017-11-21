@@ -1,0 +1,3 @@
+files:
+  - source: '**/Messages.properties'
+    translation: '%original_path%/Messages_%locale_with_underscore%.properties'
