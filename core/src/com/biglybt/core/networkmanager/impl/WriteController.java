@@ -235,15 +235,19 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 
     net_man = NetworkManager.getSingleton();
 
+    int	tick_count = 0;
+    
     while( true ) {
 
       process_loop_time = SystemTime.getMonotonousTime();
 
+      tick_count++;
+      
       try {
         if( check_high_first ) {
           check_high_first = false;
           if( !doHighPriorityWrite() ) {
-            if( !doNormalPriorityWrite() ) {
+            if( !doNormalPriorityWrite( tick_count ) ) {
               if ( write_waiter.waitForEvent( hasConnections()?IDLE_SLEEP_TIME:1000 )){
             	  wait_count++;
               }
@@ -252,7 +256,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
         }
         else {
           check_high_first = true;
-          if( !doNormalPriorityWrite() ) {
+          if( !doNormalPriorityWrite( tick_count ) ) {
             if( !doHighPriorityWrite() ) {
             	if ( write_waiter.waitForEvent( hasConnections()?IDLE_SLEEP_TIME:1000 )){
             		wait_count++;
@@ -384,9 +388,10 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
   }
 
   private boolean
-  doNormalPriorityWrite()
+  doNormalPriorityWrite(
+	 int tick_count )
   {
-    int result = processNextReadyNormalPriorityEntity();
+    int result = processNextReadyNormalPriorityEntity( tick_count );
 
     if ( result > 0 ){
 
@@ -449,14 +454,43 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 
 
   private int
-  processNextReadyNormalPriorityEntity()
+  processNextReadyNormalPriorityEntity(
+		int	tick_count )
   {
-	  ArrayList<RateControlledEntity> boosted_ref = boosted_priority_entities;
+	  ArrayList<RateControlledEntity> boosted_ref 	= boosted_priority_entities;
+	  ArrayList<RateControlledEntity> normal_ref	= normal_priority_entities;
 
-	  final int boosted_size = boosted_ref.size();
-
+	  final int boosted_size 	= boosted_ref.size();
+	  final int	normal_size		= normal_ref.size();
+	  
+	  boolean	frozen = false;
+	  
+	  boolean do_boosting = boosted_size > 0;
+	  
+	  if ( do_boosting ){
+		  
+		  if ( normal_size > 0 ){
+			  
+			  int ratio = boosted_size / normal_size;
+			  
+			  if ( ratio > 5 ){
+				  
+				  ratio = 5;
+				  
+			  }else if ( ratio < 2 ){
+				  
+				  ratio = 2;
+			  }
+			  
+			  if ( tick_count % ratio == 0 ){
+				  
+				  do_boosting = false;
+			  }
+		  }
+	  }
+	  	  
 	  try{
-		  if ( boosted_size > 0 ){
+		  if ( do_boosting ){
 
 			  if ( process_loop_time - booster_process_time >= 1000 ){
 
@@ -476,69 +510,44 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 			  }
 
 			  int	total_gifts 		= 0;
-			  int	total_normal_writes	= 0;
+			  int	total_normal_writes	= booster_normal_written;	// current accumulated normal writes
 
 			  for (int i=0;i<booster_gifts.length;i++){
 
 				  total_gifts			+= booster_gifts[i];
 				  total_normal_writes 	+= booster_normal_writes[i];
 			  }
-
+			  
 			  int	effective_gift = total_gifts - total_normal_writes;
 
 			  if ( effective_gift > 0 ){
 
-				  ArrayList<RateControlledEntity> normal_ref = normal_priority_entities;
-
-				  int normal_size = normal_ref.size();
-
 				  int num_checked = 0;
 
-				  int position = next_normal_position;
-
-				  List<RateControlledEntity> ready = new ArrayList<>();
-
-				  while( num_checked < normal_size ) {
-					  position = position >= normal_size ? 0 : position;
-					  RateControlledEntity entity = normal_ref.get( position );
-					  position++;
+				  int gift_remaining = effective_gift;
+				  
+				  while( num_checked < normal_size && gift_remaining > 0 ) {
+					  next_normal_position = next_normal_position >= normal_size ? 0 : next_normal_position;  //make circular
+					  RateControlledEntity entity = (RateControlledEntity)normal_ref.get( next_normal_position );
+					  next_normal_position++;
 					  num_checked++;
-					  if( entity.canProcess( write_waiter )) {
-						 next_normal_position = position;
-						 ready.add( entity );
+					  if ( entity.canProcess( write_waiter )){
+
+						  int gift_used = entity.doProcessing( write_waiter, gift_remaining );
+
+						  if ( gift_used > 0 ){
+							  
+							  booster_normal_written += gift_used;
+
+							  gift_remaining -= gift_used;
+						  }
 					  }
 				  }
-
-				  int	num_ready = ready.size();
-
-				  if ( num_ready > 0 ){
-
-					  int	gift_used = 0;
-
-					  for ( RateControlledEntity r: ready ){
-
-						  int	permitted = effective_gift / num_ready;
-
-						  if ( permitted <= 0 ){
-
-							  permitted = 1;
-						  }
-
-						  if ( r.canProcess( write_waiter )){
-
-							  int	done = r.doProcessing( write_waiter, permitted );
-
-							  if ( done > 0 ){
-
-								  booster_normal_written += done;
-
-								  gift_used += done;
-							  }
-						  }
-
-						  num_ready--;
-					  }
-
+				  
+				  int gift_used = effective_gift - gift_remaining;
+				  
+				  if ( gift_used > 0 ){
+	
 					  for ( int i=booster_stat_index; gift_used > 0 && i<booster_stat_index+booster_gifts.length; i++){
 
 						  int	avail = booster_gifts[i%booster_gifts.length];
@@ -564,13 +573,17 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  next_boost_position++;
 				  num_checked++;
 				  if( entity.canProcess( write_waiter ) ) {  //is ready
-					  return( entity.doProcessing( write_waiter, 0 ));
+					  int boosted = entity.doProcessing( write_waiter, 0 );
+					  					  
+					  return( boosted );
 				  }
 			  }
 
 			  	// give remaining normal peers a chance to use the bandwidth boosted peers couldn't, but prevent
 			  	// more from being allocated while doing so to prevent them from grabbing more than they should
 
+			  frozen = true;
+			  
 			  net_man.getUploadProcessor().setRateLimiterFreezeState( true );
 
 		  }else{
@@ -578,12 +591,8 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 			  booster_normal_written = 0;
 		  }
 
-		  ArrayList<RateControlledEntity> normal_ref = normal_priority_entities;
-
-		  int normal_size = normal_ref.size();
-
 		  int num_checked = 0;
-
+		  
 		  while( num_checked < normal_size ) {
 			  next_normal_position = next_normal_position >= normal_size ? 0 : next_normal_position;  //make circular
 			  RateControlledEntity entity = (RateControlledEntity)normal_ref.get( next_normal_position );
@@ -596,7 +605,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 
 					  booster_normal_written += bytes;
 				  }
-
+				  
 				  return( bytes );
 			  }
 		  }
@@ -605,7 +614,7 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 
 	  }finally{
 
-		  if ( boosted_size > 0 ){
+		  if ( frozen ){
 
 			  net_man.getUploadProcessor().setRateLimiterFreezeState( false );
 		  }
