@@ -21,6 +21,9 @@
 package com.biglybt.core.tracker.client;
 
 
+import java.util.List;
+import java.util.Map;
+
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.impl.TRTrackerAnnouncerFactoryImpl;
 
@@ -70,6 +73,13 @@ TRTrackerAnnouncerFactory
 		TRTrackerAnnouncerFactoryImpl.removeListener(l);
 	}
 
+	public static List<TRTrackerAnnouncerResponsePeer>
+	getCachedPeers(
+		Map		map )
+	{
+		return( TRTrackerAnnouncerFactoryImpl.getCachedPeers(map));
+	}
+	
 
 	public interface
 	DataProvider

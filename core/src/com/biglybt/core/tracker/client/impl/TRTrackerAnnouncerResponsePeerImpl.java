@@ -124,7 +124,7 @@ TRTrackerAnnouncerResponsePeerImpl
 		return( up_speed&0xffff );
 	}
 
-	protected String
+	public String
 	getKey()
 	{
 		return( address + ":" + tcp_port );

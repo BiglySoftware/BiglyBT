@@ -3012,7 +3012,7 @@ TRTrackerBTAnnouncerImpl
 
 					    		int		tcp_port 	= ((tcp_bytes[0]&0xff) << 8 ) + (tcp_bytes[1]&0xff );
 
-					    		byte[]	peer_peer_id = TRTrackerAnnouncerImpl.getAnonymousPeerId( ip, tcp_port );
+					    		byte[]	peer_peer_id = TRTrackerAnnouncerFactoryImpl.getAnonymousPeerId( ip, tcp_port );
 
 					    		int		udp_port 	= 0;
 
@@ -3185,7 +3185,7 @@ TRTrackerBTAnnouncerImpl
 
 									// Debug.out(ip + ": tracker did not give peerID in reply");
 
-									peer_peer_id = TRTrackerAnnouncerImpl.getAnonymousPeerId( ip, peer_port );
+									peer_peer_id = TRTrackerAnnouncerFactoryImpl.getAnonymousPeerId( ip, peer_port );
 
 									// System.out.println("generated peer id" + new String(peerId) + "/" + ByteFormatter.nicePrint( peerId, true ));
 								}else{
@@ -3313,7 +3313,7 @@ TRTrackerBTAnnouncerImpl
 					    			continue;
 					    		}
 
-					    		byte[]	peer_peer_id = TRTrackerAnnouncerImpl.getAnonymousPeerId( ip, tcp_port );
+					    		byte[]	peer_peer_id = TRTrackerAnnouncerFactoryImpl.getAnonymousPeerId( ip, tcp_port );
 
 					    		short 	protocol;
 					    		int		udp_port;
@@ -3412,7 +3412,7 @@ TRTrackerBTAnnouncerImpl
 								continue;
 							}
 
-							byte[] peer_peer_id = TRTrackerAnnouncerImpl.getAnonymousPeerId( ip, tcp_port );
+							byte[] peer_peer_id = TRTrackerAnnouncerFactoryImpl.getAnonymousPeerId( ip, tcp_port );
 
 							short protocol = DownloadAnnounceResultPeer.PROTOCOL_NORMAL;
 

@@ -30,8 +30,11 @@ import java.net.URL;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.tag.Tag;
@@ -42,6 +45,8 @@ import com.biglybt.core.torrent.TOTorrentAnnounceURLGroup;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerFactory;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponsePeer;
 import com.biglybt.core.util.*;
 import com.biglybt.net.magneturi.MagnetURIHandler;
 import com.biglybt.net.magneturi.MagnetURIHandlerException;
@@ -127,6 +132,7 @@ MagnetPlugin
 	private IntParameter	 	md_lookup_delay;
 	private IntParameter	 	timeout_param;
 	private StringListParameter	sources_param;
+	private IntParameter	 	sources_extra_param;
 	private BooleanParameter	magnet_recovery;
 
 	private Map<String,BooleanParameter> net_params = new HashMap<>();
@@ -180,6 +186,8 @@ MagnetPlugin
 		timeout_param		= config.addIntParameter2( "MagnetPlugin.timeout.secs", "MagnetPlugin.timeout.secs", PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT );
 
 		sources_param 		= config.addStringListParameter2( "MagnetPlugin.add.sources", "MagnetPlugin.add.sources", SOURCE_VALUES, SOURCE_STRINGS, SOURCE_VALUES[1] );
+		
+		sources_extra_param	= config.addIntParameter2( "MagnetPlugin.add.sources.extra", "MagnetPlugin.add.sources.extra", 0 );
 				
 		magnet_recovery		= config.addBooleanParameter2( "MagnetPlugin.recover.magnets", "MagnetPlugin.recover.magnets", true );
 
@@ -241,24 +249,26 @@ MagnetPlugin
 						ShareResource	share 		= null;
 						
 						if (ds instanceof ShareResourceFile) {
+							ShareResourceFile sf = (ShareResourceFile)ds;
 							try {
-								torrent = ((ShareResourceFile) ds).getItem().getTorrent();
+								torrent = sf.getItem().getTorrent();
 							} catch (ShareException e) {
 								continue;
 							}
-							name = ((ShareResourceFile) ds).getName();
+							name = sf.getName();
 							
-							share = (ShareResource)ds;
+							share = sf;
 							
 						}else if (ds instanceof ShareResourceDir) {
+							ShareResourceDir sd = (ShareResourceDir)ds;
 								try {
-									torrent = ((ShareResourceDir) ds).getItem().getTorrent();
+									torrent = sd.getItem().getTorrent();
 								} catch (ShareException e) {
 									continue;
 								}
-								name = ((ShareResourceDir) ds).getName();
+								name = sd.getName();
 								
-								share = (ShareResource)ds;
+								share = sd;
 						} else if (ds instanceof Download) {
 							download = (Download)ds;
 							torrent = download.getTorrent();
@@ -365,6 +375,94 @@ MagnetPlugin
 								if ( ip_v6 != null && port > 0 ){
 									
 									cb_data += "&xsource=" + UrlUtils.encode( ip_v6.getHostAddress() + ":" + port );
+								}
+																	
+								int	extra = sources_extra_param.getValue();
+									
+								if ( extra > 0 ){
+									
+									if ( download == null ){
+										
+										if ( torrent != null ){
+											
+											download = plugin_interface.getDownloadManager().getDownload( torrent );
+										}
+									}
+									
+									if ( download != null ){
+										
+										Set<String>	added = new HashSet<>();
+										
+										DownloadManager dm = PluginCoreUtils.unwrap( download );
+										
+										PEPeerManager pm = dm.getPeerManager();
+										
+										if ( pm != null ){
+											
+											List<PEPeer> peers = pm.getPeers();
+											
+											for ( PEPeer peer: peers ){
+												
+												String peer_ip = peer.getIp();
+												
+												if ( AENetworkClassifier.categoriseAddress( peer_ip ) == AENetworkClassifier.AT_PUBLIC ){
+												
+													int peer_port = peer.getTCPListenPort();
+													
+													if ( peer_port > 0 ){
+																													
+														cb_data += "&xsource=" + UrlUtils.encode( peer_ip + ":" + peer_port );
+														
+														added.add( peer_ip );
+														
+														extra--;
+														
+														if ( extra == 0 ){
+															
+															break;
+														}
+													}
+												}
+											}
+										}
+										
+										if ( extra > 0 ){
+											
+											Map response_cache = dm.getDownloadState().getTrackerResponseCache();
+										
+											if ( response_cache != null ){
+											
+												List<TRTrackerAnnouncerResponsePeer> peers = TRTrackerAnnouncerFactory.getCachedPeers( response_cache );
+												
+												for ( TRTrackerAnnouncerResponsePeer peer: peers ){
+													
+													String peer_ip = peer.getAddress();
+													
+													if ( AENetworkClassifier.categoriseAddress( peer_ip ) == AENetworkClassifier.AT_PUBLIC ){
+													
+														if ( !added.contains( peer_ip )){
+															
+															int peer_port = peer.getPort();
+															
+															if ( peer_port > 0 ){
+																															
+																cb_data += "&xsource=" + UrlUtils.encode( peer_ip + ":" + peer_port );
+																
+																added.add( peer_ip );
+																
+																extra--;
+																
+																if ( extra == 0 ){
+																	
+																	break;
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
 								}
 							}
 						}
