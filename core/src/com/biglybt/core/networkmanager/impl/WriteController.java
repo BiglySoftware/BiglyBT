@@ -467,6 +467,10 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 	  
 	  boolean do_boosting = boosted_size > 0;
 	  
+	  /*
+	   * This attempt to not impact on non-boosted uploaders so much fails as they still manage to swamp lonely
+	   * boosted uploaders :(
+	   
 	  if ( do_boosting ){
 		  
 		  if ( normal_size > 0 ){
@@ -488,7 +492,8 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 			  }
 		  }
 	  }
-	  	  
+	  */
+	  
 	  try{
 		  if ( do_boosting ){
 
@@ -507,6 +512,22 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  }
 
 				  booster_normal_written = 0;
+				  
+				  /*
+				  int max_normal = 0;
+				  
+				  for ( RateControlledEntity e: normal_ref ){
+					  
+					  int max = e.getRateHandler().getCurrentNumBytesAllowed()[0];
+					  
+					  if ( max > max_normal ){
+						  
+						  max_normal = max;
+					  }
+				  }
+				  
+				  System.out.println( "max_normal=" + max_normal );
+				  */
 			  }
 
 			  int	total_gifts 		= 0;
@@ -536,6 +557,8 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 						  int gift_used = entity.doProcessing( write_waiter, gift_remaining );
 
 						  if ( gift_used > 0 ){
+							  
+							  //  System.out.println( "gifted: " + gift_used );
 							  
 							  booster_normal_written += gift_used;
 
@@ -574,8 +597,12 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  num_checked++;
 				  if( entity.canProcess( write_waiter ) ) {  //is ready
 					  int boosted = entity.doProcessing( write_waiter, 0 );
-					  					  
-					  return( boosted );
+					  	
+					  if ( boosted > 0 ){
+						  //  System.out.println( "boosted: " + boosted );
+						  
+						  return( boosted );
+					  }
 				  }
 			  }
 
