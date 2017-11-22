@@ -165,6 +165,12 @@ public class NetworkManager {
   }
 
 
+  public List<WriteController>
+  getWriteControllers()
+  {
+	  return( write_controllers );
+  }
+  
   private TransferProcessor upload_processor;
 
   private TransferProcessor download_processor;

@@ -28,6 +28,8 @@ import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.average.AverageFactory;
+import com.biglybt.core.util.average.MovingImmediateAverage;
 
 
 /**
@@ -70,10 +72,18 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 
 
   private long	booster_process_time;
-	private int	booster_normal_written;
+  private int	booster_normal_written;
+  private int	booster_boost_written;
   private int	booster_stat_index;
   private final int[]	booster_normal_writes 	= new int[5];
   private final int[]	booster_gifts 			= new int[5];
+
+  private MovingImmediateAverage	booster_boost_average 	= AverageFactory.MovingImmediateAverage( 5 );
+  private MovingImmediateAverage	booster_normal_average 	= AverageFactory.MovingImmediateAverage( 5 );
+  private MovingImmediateAverage	booster_boost_avail_average 	= AverageFactory.MovingImmediateAverage( 5 );
+  private MovingImmediateAverage	booster_normal_avail_average 	= AverageFactory.MovingImmediateAverage( 5 );
+  private MovingImmediateAverage	booster_boost_data_average 	= AverageFactory.MovingImmediateAverage( 5 );
+  private MovingImmediateAverage	booster_normal_data_average 	= AverageFactory.MovingImmediateAverage( 5 );
 
   private int aggressive_np_normal_priority_count;
   private int aggressive_np_high_priority_count;
@@ -122,6 +132,28 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
     AEDiagnostics.addWeakEvidenceGenerator(this);
   }
 
+  public String
+  getBiasDetails()
+  {
+	  if ( boosted_priority_entities.size() == 0 ){
+		  
+		  return( "" );
+		  
+	  }else{
+		  
+		  return(
+			"n=" + normal_priority_entities.size()+" "+
+				DisplayFormatters.formatByteCountToKiBEtc((long)booster_normal_data_average.getAverage()) + "," +
+				DisplayFormatters.formatByteCountToKiBEtcPerSec((long)booster_normal_average.getAverage()) + "," +
+				DisplayFormatters.formatByteCountToKiBEtcPerSec((long)booster_normal_avail_average.getAverage()) + ";" +
+			"b=" + boosted_priority_entities.size()+" "+
+				DisplayFormatters.formatByteCountToKiBEtc((long)booster_boost_data_average.getAverage()) + "," +
+				DisplayFormatters.formatByteCountToKiBEtcPerSec((long)booster_boost_average.getAverage()) + "," +
+				DisplayFormatters.formatByteCountToKiBEtcPerSec((long)booster_boost_avail_average.getAverage()) + ";" +
+			"h=" + high_priority_entities.size());
+	  }
+  }
+  
 	@Override
 	public void
 	generate(
@@ -511,23 +543,53 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 					  booster_stat_index = 0;
 				  }
 
-				  booster_normal_written = 0;
+				  booster_boost_average.update(booster_boost_written);
+				  booster_normal_average.update(booster_normal_written);
 				  
-				  /*
-				  int max_normal = 0;
+				  booster_normal_written 	= 0;
+				  booster_boost_written		= 0;
+				  
+				  int max_normal 	= 0;
+				  int normal_data	= 0;
 				  
 				  for ( RateControlledEntity e: normal_ref ){
 					  
-					  int max = e.getRateHandler().getCurrentNumBytesAllowed()[0];
-					  
-					  if ( max > max_normal ){
+					  if ( e.canProcess( write_waiter )){
 						  
-						  max_normal = max;
+						  normal_data += e.getBytesReadyToWrite();
+						  
+						  int max = e.getRateHandler().getCurrentNumBytesAllowed()[0];
+						  
+						  if ( max > max_normal ){
+							  
+							  max_normal = max;
+						  }
 					  }
 				  }
 				  
-				  System.out.println( "max_normal=" + max_normal );
-				  */
+				  booster_normal_data_average.update( normal_data );
+				  booster_normal_avail_average.update( max_normal );
+				  
+				  int max_booster 	= 0;
+				  int booster_data	= 0;
+				  
+				  for ( RateControlledEntity e: boosted_ref ){
+					  
+					  if ( e.canProcess( write_waiter )){
+						  
+						  booster_data += e.getBytesReadyToWrite();
+						  
+						  int max = e.getRateHandler().getCurrentNumBytesAllowed()[0];
+						  
+						  if ( max > max_booster ){
+							  
+							  max_booster = max;
+						  }
+					  }
+				  }
+				  
+				  booster_boost_data_average.update( booster_data );
+				  booster_boost_avail_average.update( max_booster );
 			  }
 
 			  int	total_gifts 		= 0;
@@ -598,8 +660,13 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  if( entity.canProcess( write_waiter ) ) {  //is ready
 					  int boosted = entity.doProcessing( write_waiter, 0 );
 					  	
+					  	// if no progress is made we give others a chance otherwise this non-progress
+					  	// can prevent us from ever getting onto the normal entities below
+					  
 					  if ( boosted > 0 ){
 						  //  System.out.println( "boosted: " + boosted );
+						  
+						  booster_boost_written += boosted;
 						  
 						  return( boosted );
 					  }
@@ -615,7 +682,8 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 
 		  }else{
 
-			  booster_normal_written = 0;
+			  booster_normal_written 	= 0;
+			  booster_boost_written		= 0;
 		  }
 
 		  int num_checked = 0;
