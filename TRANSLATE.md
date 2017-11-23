@@ -41,7 +41,7 @@ Thank you for your interesting in helping out BiglyBT.  We really need help with
 | bs_BA | Bosnian | Bosnia and Herzegovina | ~23% |  |
 | el_GR | Greek | Greece | ~23% |  |
 | sl_SI | Slovenian | Slovenia | ~21% |  |
-| iw_IL | Hebrew | Israel | ~19% |  |
+| iw_IL | Hebrew | Israel | ~19% | AlmogK |
 | oc | Occitan |  | ~16% |  |
 | gl_ES | Gallegan | Spain | ~12% |  |
 | ms_SG | Malay | Singapore | ~11% |  |
