@@ -356,15 +356,17 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 			    @Override
 			    public void run() {
 				    try {
-					    Shell[] shells = display.getShells();
-					    for (int i = 0; i < shells.length; i++) {
-						    try {
-							    Shell shell = shells[i];
-							    shell.dispose();
-						    } catch (Throwable t) {
-							    Debug.out(t);
+				    	if ( !display.isDisposed()){
+						    Shell[] shells = display.getShells();
+						    for (int i = 0; i < shells.length; i++) {
+							    try {
+								    Shell shell = shells[i];
+								    shell.dispose();
+							    } catch (Throwable t) {
+								    Debug.out(t);
+							    }
 						    }
-					    }
+				    	}
 				    } catch (Throwable t) {
 					    Debug.out(t);
 				    }
@@ -372,7 +374,9 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				    	// while crash is occurring we can just avoid the dispose completely and let the VM death trash things
 				    
 				    if ( !Constants.isWindows8OrHigher ){
-				    	display.dispose();
+				    	if ( !display.isDisposed()){
+				    		display.dispose();
+				    	}
 				    }
 			    }
     	};

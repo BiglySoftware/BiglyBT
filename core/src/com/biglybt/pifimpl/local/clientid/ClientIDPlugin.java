@@ -116,6 +116,17 @@ ClientIDPlugin
 		
 	}
 	
+	public Properties
+	getInitialProperties()
+	{
+		Properties properties = new Properties();
+		
+		properties.setProperty( "plugin.version", 	"1.0" );
+		properties.setProperty( "plugin.name", 		"Client Identification" );
+
+		return( properties );
+	}
+	
 	public void
 	initialize(
 		Core _core )
@@ -296,9 +307,6 @@ ClientIDPlugin
 	initialize(
 		PluginInterface 	pi )
 	{
-		pi.getPluginProperties().setProperty( "plugin.version", 	"1.0" );
-		pi.getPluginProperties().setProperty( "plugin.name", 		"Client Identification" );
-
 		pi.addListener(
 			new PluginAdapter(){
 				
