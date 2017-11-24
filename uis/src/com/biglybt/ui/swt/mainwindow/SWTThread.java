@@ -375,7 +375,10 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				    
 				    if ( !Constants.isWindows8OrHigher ){
 				    	if ( !display.isDisposed()){
-				    		display.dispose();
+				    		try{
+				    			display.dispose();
+				    		}catch( Throwable e ){
+				    		}
 				    	}
 				    }
 			    }

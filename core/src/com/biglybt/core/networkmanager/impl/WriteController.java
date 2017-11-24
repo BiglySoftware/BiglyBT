@@ -591,6 +591,33 @@ public class WriteController implements CoreStatsProvider, AEDiagnosticsEvidence
 				  booster_boost_data_average.update( booster_data );
 				  booster_boost_avail_average.update( max_booster );
 			  }
+		  }
+		  
+		  if ( do_boosting && booster_boost_data_average.getAverage() == 0 ){
+			
+			  	// no data queued for boosted peers on average so don't bother attempting to
+			  	// do anything. crank through one just to keep things turning over
+			  
+			  next_boost_position = next_boost_position >= boosted_size ? 0 : next_boost_position;  //make circular
+			  
+			  RateControlledEntity entity = boosted_ref.get( next_boost_position );
+			  
+			  next_boost_position++;
+			  
+			  if ( entity.canProcess( write_waiter )){ 
+				  
+				  int boosted = entity.doProcessing( write_waiter, 0 );
+				  
+				  if ( boosted > 0 ){
+					  
+					  booster_boost_written += boosted;
+				  }
+			  }
+			  
+			  do_boosting = false;
+		  }
+		  
+		  if ( do_boosting ){
 
 			  int	total_gifts 		= 0;
 			  int	total_normal_writes	= booster_normal_written;	// current accumulated normal writes
