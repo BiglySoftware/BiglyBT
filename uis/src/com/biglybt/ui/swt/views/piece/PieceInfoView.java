@@ -47,6 +47,10 @@ import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEvent;
+import com.biglybt.core.util.TimerEventPerformer;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -92,6 +96,8 @@ public class PieceInfoView
 	private final static int BLOCKCOLOR_NEXT = 3;
 
 	private final static int BLOCKCOLOR_AVAILCOUNT = 4;
+	
+	private final static int BLOCKCOLOR_SHOWFILE = 5;
 
 	public static final String MSGID_PREFIX = "PieceInfoView";
 
@@ -111,7 +117,12 @@ public class PieceInfoView
 	private String topLabelLHS = "";
 	private String topLabelRHS = "";
 
-	private int	selectedPiece	= -1;
+	private int		selectedPiece					= -1;
+	private int		selectedPieceShowFilePending	= -1;
+	private boolean	selectedPieceShowFile;
+	
+	private Color	file_color;
+	private Color	file_color_faded;
 	
 	private Label imageLabel;
 
@@ -138,7 +149,8 @@ public class PieceInfoView
 			Colors.white,
 			Colors.red,
 			Colors.fadedRed,
-			Colors.black
+			Colors.black,
+			Colors.fadedGreen
 		};
 	}
 
@@ -333,6 +345,20 @@ public class PieceInfoView
 
 		sc.setContent(pieceInfoCanvas);
 
+		pieceInfoCanvas.addMouseMoveListener(
+			new MouseMoveListener(){
+				
+				@Override
+				public void mouseMove(MouseEvent event){
+					int piece_number = getPieceNumber( event.x, event.y );
+					
+					if ( piece_number != selectedPiece ){
+						
+						selectedPieceShowFilePending = -1;
+					}
+				}
+			});
+		
 		pieceInfoCanvas.addMouseTrackListener(
 			new MouseTrackAdapter()
 			{
@@ -345,7 +371,32 @@ public class PieceInfoView
 
 					if ( piece_number >= 0 ){
 
-						selectedPiece = piece_number;
+						selectedPiece 					= piece_number;
+						selectedPieceShowFilePending	= piece_number;
+						
+						SimpleTimer.addEvent(
+							"ShowFile",
+							SystemTime.getOffsetTime( 1000 ),
+							new TimerEventPerformer(){
+								
+								@Override
+								public void perform(TimerEvent event){										
+									Utils.execSWTThread(
+										new Runnable(){
+											
+											@Override
+											public void run(){
+												
+												if ( selectedPieceShowFilePending == piece_number ){
+
+													selectedPieceShowFile = true;
+													
+													refreshInfoCanvas();
+												}	
+											}
+										});
+									}
+							});
 						
 						refreshInfoCanvas();
 						
@@ -394,7 +445,9 @@ public class PieceInfoView
 				
 				@Override
 				public void mouseExit(MouseEvent e){
-					selectedPiece = -1;
+					selectedPiece 			= -1;
+					selectedPieceShowFile 	= false;
+					
 					refreshInfoCanvas();
 				}
 			});
@@ -552,7 +605,8 @@ public class PieceInfoView
 					"PiecesView.BlockView.NoHave",
 					"PeersView.BlockView.Transfer",
 					"PeersView.BlockView.NextRequest",
-					"PeersView.BlockView.AvailCount"
+					"PeersView.BlockView.AvailCount",
+					"PeersView.BlockView.ShowFile"
 				}, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 2, 1));
 
 		int iFontPixelsHeight = 10;
@@ -790,23 +844,26 @@ public class PieceInfoView
 			
 			if ( selectedPiece != -1 ){
 			
-				DMPieceList l = dm.getPieceList( selectedPiece );
-			
-				for ( int i=0;i<l.size();i++) {
-           		 
-					DMPieceMapEntry entry = l.get( i );
+				if ( selectedPieceShowFile ){
 					
-					DiskManagerFileInfo info = entry.getFile();
-					
-					int first 	= info.getFirstPieceNumber();
-					int last	= info.getLastPieceNumber();
-					
-					if ( first < selectionStart ){
-						selectionStart = first;
-					}
-					
-					if ( last > selectionEnd ){
-						selectionEnd = last;
+					DMPieceList l = dm.getPieceList( selectedPiece );
+				
+					for ( int i=0;i<l.size();i++) {
+	           		 
+						DMPieceMapEntry entry = l.get( i );
+						
+						DiskManagerFileInfo info = entry.getFile();
+						
+						int first 	= info.getFirstPieceNumber();
+						int last	= info.getLastPieceNumber();
+						
+						if ( first < selectionStart ){
+							selectionStart = first;
+						}
+						
+						if ( last > selectionEnd ){
+							selectionEnd = last;
+						}
 					}
 				}
 			}
@@ -825,13 +882,13 @@ public class PieceInfoView
 				if ( i >= selectionStart && i <= selectionEnd ){
 					newInfo.selected = true;
 				}
-				int colorIndex;
+
 				boolean done = dm_pieces[i].isDone();
 				int iXPos = iCol * BLOCK_SIZE + 1;
 				int iYPos = iRow * BLOCK_SIZE + 1;
 
 				if (done) {
-					colorIndex = BLOCKCOLOR_HAVE;
+				
 					newInfo.haveWidth = BLOCK_FILLSIZE;
 				} else {
 					// !done
@@ -876,20 +933,30 @@ public class PieceInfoView
 				}
 
 				if ( newInfo.selected ){
-					gcImg.setBackground( Colors.fadedGreen);
+					Color fc = blockColors[BLOCKCOLOR_SHOWFILE ];
+					
+					gcImg.setBackground( fc );
 					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
 							BLOCK_SIZE);
+					
+					if ( fc != file_color ){
+						
+						file_color 			= fc;
+						file_color_faded 	= Colors.getInstance().getLighterColor( fc, 75 );
+					}
+					
+					gcImg.setBackground(file_color_faded);
+					gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos, BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
+
 				}else {
 					gcImg.setBackground(pieceInfoCanvas.getBackground());
 					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
 							BLOCK_SIZE);
 	
-					colorIndex = BLOCKCOLOR_HAVE;
-					gcImg.setBackground(blockColors[colorIndex]);
+					gcImg.setBackground(blockColors[BLOCKCOLOR_HAVE]);
 					gcImg.fillRectangle(iXPos, iYPos, newInfo.haveWidth, BLOCK_FILLSIZE);
 	
-					colorIndex = BLOCKCOLORL_NOHAVE;
-					gcImg.setBackground(blockColors[colorIndex]);
+					gcImg.setBackground(blockColors[BLOCKCOLORL_NOHAVE]);
 					gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos, BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
 				}
 				

@@ -322,6 +322,7 @@ BuddyPluginView
 		private final BuddyPluginAdapter buddyPluginAdapter;
 		private final CryptoManagerKeyListener cryptoManagerKeyListener;
 		private UISWTStatusEntry	label;
+		private String				label_text;
 		private UISWTStatusEntry	status;
 		private BuddyPluginTracker	tracker;
 
@@ -338,7 +339,8 @@ BuddyPluginView
 			status	= ui_instance.createStatusEntry();
 			label 	= ui_instance.createStatusEntry();
 
-			label.setText( MessageText.getString( "azbuddy.tracker.bbb.status.title" ));
+			label.setText( label_text = MessageText.getString( "azbuddy.tracker.bbb.status.title" ));
+			
 			label.setTooltipText( MessageText.getString( "azbuddy.tracker.bbb.status.title.tooltip" ));
 
 			tracker = plugin.getTracker();
@@ -501,6 +503,30 @@ BuddyPluginView
 				status.setVisible( true );
 				label.setVisible( true );
 
+				List<BuddyPluginBuddy> buddies = plugin.getBuddies();
+				
+				int	num_online 		= 0;
+				int num_connected	= 0;
+				
+				for ( BuddyPluginBuddy b: buddies ){
+					
+					if ( b.isOnline( false )){
+						num_online++;
+					}
+					if (b.isConnected()){
+						num_connected++;
+					}
+				}
+				
+				String new_label_text = MessageText.getString( "azbuddy.tracker.bbb.status.title" ) + " [" + num_connected + "/" + num_online + "]";
+				
+				if ( !new_label_text.equals( label_text )){
+					
+					label.setText( new_label_text); 
+					
+					label_text = new_label_text;
+				}
+				
 				if ( has_buddies && !crypto_ok ){
 
 					status.setImage( iconNLI );
