@@ -741,9 +741,9 @@ TagPropertyConstraintHandler
 
 			}catch( Throwable e ){
 
-				tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint: " + Debug.getNestedExceptionMessage( e ));
+				Debug.out( e );
 				
-				Debug.out( "Invalid constraint: " + constraint + " - " + Debug.getNestedExceptionMessage( e ));
+				setError( "Invalid constraint: " + Debug.getNestedExceptionMessage( e ));
 
 			}finally{
 
@@ -751,6 +751,15 @@ TagPropertyConstraintHandler
 			}
 		}
 
+		private void
+		setError(
+			String		str )
+		{
+			tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, str );
+			
+			Debug.out( str );
+		}
+		
 		private boolean
 		dependOnDownloadState()
 		{
@@ -1120,13 +1129,13 @@ TagPropertyConstraintHandler
 		{
 			List<Tag> dm_tags = handler.tag_manager.getTagsForTaggable( dm );
 
-			return( expr.eval( dm, dm_tags ));
+			return( (Boolean)expr.eval( dm, dm_tags ));
 		}
 
 		private interface
 		ConstraintExpr
 		{
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags );
@@ -1140,7 +1149,7 @@ TagPropertyConstraintHandler
 			implements ConstraintExpr
 		{
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
@@ -1156,7 +1165,7 @@ TagPropertyConstraintHandler
 			}
 		}
 
-		private static class
+		private class
 		ConstraintExprParams
 			implements  ConstraintExpr
 		{
@@ -1170,7 +1179,7 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
@@ -1184,9 +1193,14 @@ TagPropertyConstraintHandler
 				if ( value.length() == 0 ){
 
 					return( new String[0]);
-
+					
 				}else if ( !value.contains( "," )){
 
+					if ( value.contains( "(" )){
+						
+						return( new Object[]{  compileStart(value, new HashMap<String,ConstraintExpr>())});
+					}
+					
 					return( new Object[]{ value });
 
 				}else{
@@ -1195,7 +1209,7 @@ TagPropertyConstraintHandler
 
 					boolean in_quote = false;
 
-					List<String>	params = new ArrayList<>(16);
+					List<Object>	params = new ArrayList<>(16);
 
 					StringBuilder current_param = new StringBuilder( value.length());
 
@@ -1228,6 +1242,12 @@ TagPropertyConstraintHandler
 
 					params.add( current_param.toString());
 
+					for ( int i=0;i<params.size();i++){
+						String p = (String)params.get( i );
+						if ( p.contains( "(" )){
+							params.set(i,compileStart(p, new HashMap<String,ConstraintExpr>()));
+						}
+					}
 					return( params.toArray( new Object[ params.size()]));
 				}
 			}
@@ -1254,12 +1274,12 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
 			{
-				return( !expr.eval( dm, tags ));
+				return( ! (Boolean)expr.eval( dm, tags ));
 			}
 
 			@Override
@@ -1284,14 +1304,14 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
 			{
 				for ( ConstraintExpr expr: exprs ){
 
-					if ( expr.eval( dm, tags )){
+					if (  (Boolean)expr.eval( dm, tags )){
 
 						return( true );
 					}
@@ -1329,14 +1349,14 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
 			{
 				for ( ConstraintExpr expr: exprs ){
 
-					if ( !expr.eval( dm, tags )){
+					if ( ! (Boolean)expr.eval( dm, tags )){
 
 						return( false );
 					}
@@ -1379,16 +1399,16 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
 			{
-				boolean res = exprs[0].eval( dm, tags );
+				boolean res =  (Boolean)exprs[0].eval( dm, tags );
 
 				for ( int i=1;i<exprs.length;i++){
 
-					res = res ^ exprs[i].eval( dm, tags );
+					res = res ^  (Boolean)exprs[i].eval( dm, tags );
 				}
 
 				return( res );
@@ -1433,7 +1453,7 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_ERROR		= 19;
 		private static final int FT_IS_MAGNET		= 20;
 		private static final int FT_IS_LOW_NOISE	= 21;
-
+		private static final int FT_COUNT_TAG		= 22;
 
 		static final Map<String,Integer>	keyword_map = new HashMap<>();
 
@@ -1666,6 +1686,12 @@ TagPropertyConstraintHandler
 
 					depends_on_download_state = true;	// dunno so let's assume so
 
+				}else if ( func_name.equals( "countTag" )){
+
+					fn_type = FT_COUNT_TAG;
+
+					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+
 				}else{
 
 					throw( new RuntimeException( "Unsupported function '" + func_name + "'" ));
@@ -1679,7 +1705,7 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
@@ -1698,6 +1724,23 @@ TagPropertyConstraintHandler
 						}
 
 						return( false );
+					}
+					case FT_COUNT_TAG:{
+						
+						String tag_name = (String)params[0];
+						
+						List<Tag> fred = handler.tag_manager.lookupTagsByName( tag_name );
+						
+						if ( fred.isEmpty()){
+							
+							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Tag '" + tag_name + "' not found" );
+							
+							return( 0 );
+							
+						}else{
+							
+							return( fred.get(0).getTaggedCount());
+						}
 					}
 					case FT_HAS_NET:{
 
@@ -1792,8 +1835,8 @@ TagPropertyConstraintHandler
 					case FT_EQ:
 					case FT_NEQ:{
 
-						Number n1 = getNumeric( dm, params, 0 );
-						Number n2 = getNumeric( dm, params, 1 );
+						Number n1 = getNumeric( dm, tags, params, 0 );
+						Number n2 = getNumeric( dm, tags, params, 1 );
 
 						switch( fn_type ){
 
@@ -1843,9 +1886,7 @@ TagPropertyConstraintHandler
 
 							}catch( Throwable e ){
 
-								Debug.out( "Invalid constraint pattern: " + params[1] );
-
-								tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
+								setError( "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
 								
 								params[1] = null;
 							}
@@ -1914,7 +1955,7 @@ TagPropertyConstraintHandler
 
 				}else{
 
-					Debug.out( "Invalid constraint string: " + str );
+					setError( "Invalid constraint string: " + str );
 
 					String result = "\"\"";
 
@@ -1927,6 +1968,7 @@ TagPropertyConstraintHandler
 			private Number
 			getNumeric(
 				DownloadManager		dm,
+				List<Tag>			tags,
 				Object[]			args,
 				int					index )
 			{
@@ -1935,8 +1977,13 @@ TagPropertyConstraintHandler
 				if ( arg instanceof Number ){
 
 					return((Number)arg);
+					
+				}else if ( arg instanceof ConstraintExpr ){
+					
+					return((Number)((ConstraintExpr)arg).eval(dm, tags));
 				}
 
+				
 				String str = (String)arg;
 
 				Number result = 0;
@@ -1960,7 +2007,7 @@ TagPropertyConstraintHandler
 
 						if ( kw == null ){
 
-							Debug.out( "Invalid constraint keyword: " + str );
+							setError(  "Invalid constraint keyword: " + str );
 
 							return( result );
 						}
@@ -2181,7 +2228,7 @@ TagPropertyConstraintHandler
 
 							default:{
 
-								Debug.out( "Invalid constraint keyword: " + str );
+								setError( "Invalid constraint keyword: " + str );
 
 								return( result );
 							}
@@ -2189,7 +2236,7 @@ TagPropertyConstraintHandler
 					}
 				}catch( Throwable e){
 
-					Debug.out( "Invalid constraint numeric: " + str );
+					setError( "Invalid constraint numeric: " + str );
 
 					return( result );
 

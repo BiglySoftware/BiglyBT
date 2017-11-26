@@ -326,6 +326,8 @@ BuddyPluginView
 		private UISWTStatusEntry	status;
 		private BuddyPluginTracker	tracker;
 
+		private TimerEventPeriodic	tick_event;
+		
 		private TimerEventPeriodic	update_event;
 
 		private CryptoManager	crypto;
@@ -503,6 +505,23 @@ BuddyPluginView
 				status.setVisible( true );
 				label.setVisible( true );
 
+				if ( tick_event == null ){
+					
+					tick_event = SimpleTimer.addPeriodicEvent(
+							"Buddy:GuiUpdater2",
+							20*1000,
+							new TimerEventPerformer()
+							{
+								@Override
+								public void
+								perform(
+									TimerEvent event )
+								{
+									updateStatus();
+								}
+							});
+				}
+				
 				List<BuddyPluginBuddy> buddies = plugin.getBuddies();
 				
 				int	num_online 		= 0;
@@ -593,6 +612,13 @@ BuddyPluginView
 
 				disableUpdates();
 
+				if ( tick_event != null ){
+					
+					tick_event.cancel();
+					
+					tick_event = null;
+				}
+				
 				status.setVisible( false );
 				label.setVisible( false );
 			}

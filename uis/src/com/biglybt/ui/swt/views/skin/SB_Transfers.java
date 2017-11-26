@@ -80,8 +80,9 @@ import com.biglybt.ui.swt.views.utils.TagUIUtils;
  */
 public class SB_Transfers
 {
-	private static final Object AUTO_CLOSE_KEY 	= new Object();
-	private static final Object TAG_DATA_KEY	= new Object();
+	private static final Object AUTO_CLOSE_KEY 		= new Object();
+	private static final Object TAG_DATA_KEY		= new Object();
+	private static final Object TAG_INDICATOR_KEY	= new Object();
 
 	private static final String ID_VITALITY_ACTIVE = "image.sidebar.vitality.dl";
 
@@ -1199,7 +1200,18 @@ public class SB_Transfers
 
 			entry.setTitle( tag_title );
 		}
+		
+		Integer num = (Integer)entry.getUserData( TAG_INDICATOR_KEY );
 
+		int tag_count = tag.getTaggedCount();
+		
+		if ( num == null || num != tag_count ){
+			
+			entry.setUserData( TAG_INDICATOR_KEY, tag_count );
+			
+			entry.redraw();
+		}
+		
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 
 		Object[] tag_data = (Object[])entry.getUserData( TAG_DATA_KEY );

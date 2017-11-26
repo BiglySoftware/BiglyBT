@@ -1582,6 +1582,26 @@ TagManagerImpl
 
 		return( null );
 	}
+	
+	@Override
+	public List<Tag> 
+	lookupTagsByName(
+		String tag_name)
+	{
+		List<Tag> result = new ArrayList<>();
+		
+		for ( TagType tt: tag_types ){
+			
+			Tag tag = tt.getTag( tag_name, true );
+			
+			if ( tag != null ){
+				
+				result.add( tag );
+			}
+		}
+		
+		return( result );
+	}
 
 	@Override
 	public Object 
