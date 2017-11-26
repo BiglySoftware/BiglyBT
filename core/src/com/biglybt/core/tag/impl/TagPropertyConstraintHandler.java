@@ -1472,6 +1472,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_HOUR_OF_DAY 		= 12;
 		private static final int	KW_DAY_OF_WEEK 		= 13;
 		private static final int	KW_TAG_AGE 			= 14;
+		private static final int	KW_COMPLETED_AGE 	= 15;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1503,6 +1504,8 @@ TagPropertyConstraintHandler
 			keyword_map.put( "day_of_week", KW_DAY_OF_WEEK );
 			keyword_map.put( "tagage", KW_TAG_AGE );
 			keyword_map.put( "tag_age", KW_TAG_AGE );
+			keyword_map.put( "completedage", KW_COMPLETED_AGE );
+			keyword_map.put( "completed_age", KW_COMPLETED_AGE );
 
 		}
 
@@ -2049,6 +2052,19 @@ TagPropertyConstraintHandler
 								}
 
 								return(( SystemTime.getCurrentTime() - added )/1000 );		// secs
+							}
+							case KW_COMPLETED_AGE:{
+
+								result = null;	// don't cache this!
+
+								long comp = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME );
+
+								if ( comp <= 0 ){
+
+									return( 0 );
+								}
+
+								return(( SystemTime.getCurrentTime() - comp )/1000 );		// secs
 							}
 							case KW_DOWNLOADING_FOR:{
 
