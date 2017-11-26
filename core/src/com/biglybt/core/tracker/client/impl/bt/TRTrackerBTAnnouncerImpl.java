@@ -2734,8 +2734,14 @@ TRTrackerBTAnnouncerImpl
 						// roll back 10 seconds to make sure we announce before the tracker
 						// times us out.  This is done after min_interval in order not to
 						// mess up the "ignore useless values"
-						if (time_to_wait > 30)
+						if (time_to_wait > 30){
 							time_to_wait -= 10;
+						}
+						
+						if ( metaData.containsKey( "failure reason")){
+							
+							throw( new Exception( "Tracker reported 'failure reason'" ));
+						}
 
 					} catch (Exception e) {
 
