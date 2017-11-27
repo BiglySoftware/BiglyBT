@@ -84,6 +84,15 @@ public class UIConst
 				"shutdown an existing instance of BiglyBT");
 		options.addOption(builder.build());
 
+		builder = Option.builder().longOpt("open").desc(
+				"show the BiglyBT interface");
+		options.addOption(builder.build());
+
+		builder = Option.builder().longOpt("share").desc(
+				"share a resource");
+		options.addOption(builder.build());
+
+		
 		if (Constants.isWindows) {
 			builder = Option.builder("console").desc(
 					"(Windows) keeps a console window open while " + Constants.APP_NAME + " is running");

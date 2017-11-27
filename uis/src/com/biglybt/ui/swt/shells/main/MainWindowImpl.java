@@ -588,9 +588,9 @@ public class MainWindowImpl
 					if (disposedOrDisposing) {
 						return;
 					}
-					if (systemTraySWT != null
-							&& COConfigurationManager.getBooleanParameter("Enable System Tray")
-							&& COConfigurationManager.getBooleanParameter("Close To Tray")) {
+					if (	COConfigurationManager.getBooleanParameter("Close To Tray") && 
+							( 	( systemTraySWT != null && COConfigurationManager.getBooleanParameter("Enable System Tray")) || 
+								COConfigurationManager.getBooleanParameter("System Tray Disabled Override"))){						
 
 						minimizeToTray(event);
 					} else {
@@ -613,9 +613,10 @@ public class MainWindowImpl
 					if (disposedOrDisposing) {
 						return;
 					}
-					if (systemTraySWT != null
-							&& COConfigurationManager.getBooleanParameter("Enable System Tray")
-							&& COConfigurationManager.getBooleanParameter("Minimize To Tray")) {
+					
+					if (	COConfigurationManager.getBooleanParameter("Minimize To Tray") && 
+							( 	( systemTraySWT != null && COConfigurationManager.getBooleanParameter("Enable System Tray")) || 
+								COConfigurationManager.getBooleanParameter("System Tray Disabled Override"))){						
 
 						minimizeToTray(event);
 					}

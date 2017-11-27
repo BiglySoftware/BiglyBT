@@ -577,6 +577,7 @@ public class ConfigurationDefaults {
 
     def.put( "File.truncate.if.too.large", FALSE);
     def.put( "Enable System Tray", TRUE);
+    def.put( "System Tray Disabled Override", FALSE);
     def.put( "Show Status In Window Title", FALSE );
     def.put( "config.style.table.defaultSortOrder", ZERO);
     def.put( "Ignore.peer.ports", "0" );

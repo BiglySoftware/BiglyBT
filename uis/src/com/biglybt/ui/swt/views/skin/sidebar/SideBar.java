@@ -1408,6 +1408,10 @@ public class SideBar
 
 	protected void _setupNewEntry(SideBarEntrySWT entry, String id,
 			boolean expandParent, boolean closeable) {
+		if ( tree.isDisposed()){
+			return;
+		}
+		
 		String parentID = entry.getParentID();
 		MdiEntry parent = getEntry(parentID);
 		TreeItem parentTreeItem = null;
