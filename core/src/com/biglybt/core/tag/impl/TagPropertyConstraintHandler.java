@@ -30,6 +30,8 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.impl.PEPeerControl;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
@@ -1473,6 +1475,8 @@ TagPropertyConstraintHandler
 		private static final int	KW_DAY_OF_WEEK 		= 13;
 		private static final int	KW_TAG_AGE 			= 14;
 		private static final int	KW_COMPLETED_AGE 	= 15;
+		private static final int	KW_PEER_MAX_COMP 	= 16;
+		private static final int	KW_PEER_AVERAGE_COMP 	= 17;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1507,6 +1511,11 @@ TagPropertyConstraintHandler
 			keyword_map.put( "completedage", KW_COMPLETED_AGE );
 			keyword_map.put( "completed_age", KW_COMPLETED_AGE );
 
+			keyword_map.put( "peermaxcompletion", KW_PEER_MAX_COMP );
+			keyword_map.put( "peer_max_completion", KW_PEER_MAX_COMP );
+			keyword_map.put( "peeraveragecompletion", KW_PEER_AVERAGE_COMP );
+			keyword_map.put( "peer_average_completion", KW_PEER_AVERAGE_COMP );
+			
 		}
 
 		private class
@@ -2065,6 +2074,32 @@ TagPropertyConstraintHandler
 								}
 
 								return(( SystemTime.getCurrentTime() - comp )/1000 );		// secs
+							}
+							case KW_PEER_MAX_COMP:{
+
+								result = null;	// don't cache this!
+
+								PEPeerManager pm = dm.getPeerManager();
+								
+								if ( pm == null ){
+									
+									return( 0 );
+								}
+								
+								return(	new Float( pm.getMaxCompletionInThousandNotation()/10.0f ));
+							}
+							case KW_PEER_AVERAGE_COMP:{
+
+								result = null;	// don't cache this!
+
+								PEPeerManager pm = dm.getPeerManager();
+								
+								if ( pm == null ){
+									
+									return( 0 );
+								}
+								
+								return(	new Float( pm.getAverageCompletionInThousandNotation()/10.0f ));
 							}
 							case KW_DOWNLOADING_FOR:{
 

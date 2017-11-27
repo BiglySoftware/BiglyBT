@@ -26,7 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -42,7 +42,6 @@ import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peer.impl.*;
-import com.biglybt.core.peer.impl.transport.PEPeerTransportProtocol;
 import com.biglybt.core.peer.util.PeerIdentityDataID;
 import com.biglybt.core.peer.util.PeerIdentityManager;
 import com.biglybt.core.peer.util.PeerUtils;
@@ -5516,34 +5515,63 @@ DiskManagerCheckRequestListener, IPFilterListener
 	@Override
 	public int getAverageCompletionInThousandNotation()
 	{
-		final ArrayList peer_transports = peer_transports_cow;
+		ArrayList<PEPeerTransport> peer_transports = peer_transports_cow;
 
-		if (peer_transports !=null)
+		final long total =disk_mgr.getTotalLength();
+
+		final int my_completion = total == 0
+		? 1000
+				: (int) ((1000 * (total - disk_mgr.getRemainingExcludingDND())) / total);
+
+		int sum = my_completion == 1000 ? 0 : my_completion;  //add in our own percentage if not seeding
+		int num = my_completion == 1000 ? 0 : 1;
+
+		for (int i =0; i <peer_transports.size(); i++ )
 		{
-			final long total =disk_mgr.getTotalLength();
+			final PEPeer peer =peer_transports.get(i);
 
-			final int my_completion = total == 0
-			? 1000
-					: (int) ((1000 * (total - disk_mgr.getRemainingExcludingDND())) / total);
-
-			int sum = my_completion == 1000 ? 0 : my_completion;  //add in our own percentage if not seeding
-			int num = my_completion == 1000 ? 0 : 1;
-
-			for (int i =0; i <peer_transports.size(); i++ )
+			if (peer.getPeerState() ==PEPeer.TRANSFERING &&!peer.isSeed())
 			{
-				final PEPeer peer =(PEPeer) peer_transports.get(i);
-
-				if (peer.getPeerState() ==PEPeer.TRANSFERING &&!peer.isSeed())
-				{
-					num++;
-					sum += peer.getPercentDoneInThousandNotation();
-				}
+				num++;
+				sum += peer.getPercentDoneInThousandNotation();
 			}
-
-			return num > 0 ? sum / num : 0;
 		}
 
-		return -1;
+		return num > 0 ? sum / num : 0;
+	}
+	
+	@Override
+	public int getMaxCompletionInThousandNotation()
+	{
+		ArrayList<PEPeerTransport> peer_transports = peer_transports_cow;
+		
+		int	max = 0;
+		
+		boolean we_seed = isSeeding();
+		
+		for ( int i =0; i<peer_transports.size(); i++ ){
+		
+			final PEPeer peer = peer_transports.get(i);
+
+			if ( peer.getPeerState() == PEPeer.TRANSFERING ){
+							
+				int done =  peer.getPercentDoneInThousandNotation();
+				
+				if ( done == 1000 && we_seed ){
+					
+					// generally if we're seeeding we shouldn't connect to seeds so ignore them
+					
+				}else{
+					
+					if ( done > max ){
+					
+						max = done;
+					}
+				}
+			}
+		}
+
+		return max;
 	}
 
 	@Override

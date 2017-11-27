@@ -467,7 +467,12 @@ MainWindowDelayStub
 	setHideAll(
 		boolean hide)
 	{
-		log( "setHideAll" );
+		if ( !hide ){
+			
+			fixup( new Fixup(){
+				@Override
+				public void fix(MainWindow mw){ mw.setHideAll( hide ); }});
+		};
 	}
 
 	@Override
