@@ -162,6 +162,8 @@ public class MainWindowImpl
 	private navigationListener navigationListener;
 	private UISkinnableSWTListener uiSkinnableSWTListener;
 
+	private volatile boolean	hide_all;
+	
 	/**
 	 * Old Initializer.  Core is required to be started
 	 *
@@ -1533,6 +1535,8 @@ public class MainWindowImpl
 	setHideAll(
 		final boolean hide )
 	{
+		hide_all = hide;
+		
 		Utils.execSWTThread(
 			new AERunnable()
 			{
@@ -1561,6 +1565,12 @@ public class MainWindowImpl
 			});
 	}
 
+	public boolean
+	getHideAll()
+	{
+		return( hide_all );
+	}
+	
 	private void setVisible(final boolean visible) {
 		setVisible(visible, true);
 	}

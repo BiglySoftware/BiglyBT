@@ -804,6 +804,13 @@ UIManagerImpl
 		fireEvent( pi, UIManagerEvent.ET_HIDE_ALL, hidden );
 	}
 
+	@Override
+	public void
+	toggleEverythingHidden()
+	{
+		fireEvent( pi, UIManagerEvent.ET_HIDE_ALL_TOGGLE, null );
+	}
+	
 	public static void
 	unload(
 		PluginInterface	pi )

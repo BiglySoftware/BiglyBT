@@ -373,4 +373,10 @@ UIManager
  	public Object getDataSource();
 
  	public void setEverythingHidden( boolean hidden );
+ 	
+ 	/**
+ 	 * @since BiglyBT 1.2.0.1
+ 	 */
+ 	
+ 	public void toggleEverythingHidden();
 }

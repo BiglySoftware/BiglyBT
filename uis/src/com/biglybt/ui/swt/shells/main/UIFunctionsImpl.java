@@ -1154,6 +1154,11 @@ public class UIFunctionsImpl
 	{
 		mainWindow.setHideAll( hidden );
 	}
+	
+	@Override
+	public boolean getHideAll(){
+		return( mainWindow.getHideAll());
+	}
 
 	@Override
 	public boolean

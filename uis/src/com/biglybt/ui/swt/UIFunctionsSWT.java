@@ -130,6 +130,8 @@ public interface UIFunctionsSWT
 
 	public void setHideAll( boolean hidden );
 
+	public boolean getHideAll();
+	
 	/**
 	 *
 	 * @since 5.0.0.1

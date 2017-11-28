@@ -67,6 +67,9 @@ MainWindow
 		boolean	hide );
 
 	public boolean
+	getHideAll();
+	
+	public boolean
 	dispose(
 		boolean for_restart,
 		boolean close_already_in_progress );
