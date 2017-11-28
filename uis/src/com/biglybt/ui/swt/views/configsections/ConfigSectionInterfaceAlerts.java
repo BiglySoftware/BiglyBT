@@ -175,60 +175,89 @@ public class ConfigSectionInterfaceAlerts
 
 			// popups group
 
-		Group gPopup = new Group(cSection, SWT.NULL);
-		Messages.setLanguageText( gPopup, "label.popups" );
-		layout = new GridLayout();
-		layout.numColumns = 2;
-		gPopup.setLayout(layout);
-		gPopup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		{
+			Group gPopup = new Group(cSection, SWT.NULL);
+			Messages.setLanguageText( gPopup, "label.popups" );
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			gPopup.setLayout(layout);
+			gPopup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+	
+			BooleanParameter popup_dl_added = new BooleanParameter(gPopup,
+					"Popup Download Added", "ConfigView.label.popupdownloadadded");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			popup_dl_added.setLayoutData(gridData);
+	
+			BooleanParameter popup_dl_completed = new BooleanParameter(gPopup,
+					"Popup Download Finished", "ConfigView.label.popupdownloadfinished");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			popup_dl_completed.setLayoutData(gridData);
+	
+			BooleanParameter popup_dl_error = new BooleanParameter(gPopup,
+					"Popup Download Error", "ConfigView.label.popupdownloaderror");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			popup_dl_error.setLayoutData(gridData);
+	
+			BooleanParameter popup_file_completed = new BooleanParameter(gPopup,
+					"Popup File Finished", "ConfigView.label.popupfilefinished");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			popup_file_completed.setLayoutData(gridData);
+			
+				// disable sliding
+			
+			BooleanParameter disable_sliding = new BooleanParameter(gPopup,
+					"GUI_SWT_DisableAlertSliding", "ConfigView.section.style.disableAlertSliding");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			disable_sliding.setLayoutData(gridData);
+	
+				// Timestamps for popup alerts.
+			BooleanParameter show_alert_timestamps = new BooleanParameter(gPopup,
+					"Show Timestamp For Alerts", "ConfigView.label.popup.timestamp");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			show_alert_timestamps.setLayoutData(gridData);
+	
+				// Auto-hide popup setting.
+			Label label = new Label(gPopup, SWT.WRAP);
+			Messages.setLanguageText(label, "ConfigView.label.popup.autohide");
+			label.setLayoutData(new GridData());
+			IntParameter auto_hide_alert = new IntParameter(gPopup,
+					"Message Popup Autoclose in Seconds", 0, 86400);
+			gridData = new GridData();
+			gridData.horizontalSpan = 1;
+			auto_hide_alert.setLayoutData(gridData);
+		}
+		
+			// notify group 
 
-		BooleanParameter popup_dl_added = new BooleanParameter(gPopup,
-				"Popup Download Added", "ConfigView.label.popupdownloadadded");
-		gridData = new GridData();
-		gridData.horizontalSpan = 2;
-		popup_dl_added.setLayoutData(gridData);
-
-		BooleanParameter popup_dl_completed = new BooleanParameter(gPopup,
-				"Popup Download Finished", "ConfigView.label.popupdownloadfinished");
-		gridData = new GridData();
-		gridData.horizontalSpan = 2;
-		popup_dl_completed.setLayoutData(gridData);
-
-		BooleanParameter popup_dl_error = new BooleanParameter(gPopup,
-				"Popup Download Error", "ConfigView.label.popupdownloaderror");
-		gridData = new GridData();
-		gridData.horizontalSpan = 2;
-		popup_dl_error.setLayoutData(gridData);
-
-		BooleanParameter popup_file_completed = new BooleanParameter(gPopup,
-				"Popup File Finished", "ConfigView.label.popupfilefinished");
-		gridData = new GridData();
-		gridData.horizontalSpan = 2;
-		popup_file_completed.setLayoutData(gridData);
-
-		BooleanParameter disable_sliding = new BooleanParameter(gPopup,
-				"GUI_SWT_DisableAlertSliding", "ConfigView.section.style.disableAlertSliding");
-		gridData = new GridData();
-		gridData.horizontalSpan = 2;
-		disable_sliding.setLayoutData(gridData);
-
-		// Timestamps for popup alerts.
-		BooleanParameter show_alert_timestamps = new BooleanParameter(gPopup,
-				"Show Timestamp For Alerts", "ConfigView.label.popup.timestamp");
-		gridData = new GridData();
-		gridData.horizontalSpan = 2;
-		show_alert_timestamps.setLayoutData(gridData);
-
-		// Auto-hide popup setting.
-		Label label = new Label(gPopup, SWT.WRAP);
-		Messages.setLanguageText(label, "ConfigView.label.popup.autohide");
-		label.setLayoutData(new GridData());
-		IntParameter auto_hide_alert = new IntParameter(gPopup,
-				"Message Popup Autoclose in Seconds", 0, 86400);
-		gridData = new GridData();
-		gridData.horizontalSpan = 1;
-		auto_hide_alert.setLayoutData(gridData);
-
+		{
+			Group nPopup = new Group(cSection, SWT.NULL);
+			Messages.setLanguageText( nPopup, "label.native.notify" );
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			nPopup.setLayout(layout);
+			nPopup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+	
+			BooleanParameter popup_dl_completed = new BooleanParameter(nPopup,
+					"Notify Download Finished", "ConfigView.label.nativedownloadfinished");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			popup_dl_completed.setLayoutData(gridData);
+	
+			BooleanParameter popup_dl_error = new BooleanParameter(nPopup,
+					"Notify Download Error", "ConfigView.label.nativedownloaderror");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			popup_dl_error.setLayoutData(gridData);
+	
+		}	
+		
+		
 		return cSection;
 	}
 

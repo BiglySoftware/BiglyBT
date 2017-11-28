@@ -19,6 +19,11 @@ package com.biglybt.ui.swt;
 
 import java.applet.Applet;
 import java.applet.AudioClip;
+import java.awt.Image;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.TrayIcon.MessageType;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
@@ -86,6 +91,8 @@ UserAlerts
 
     private boolean startup = true;
 
+    private TrayIcon	native_tray_icon;
+    
 	public
 	UserAlerts(
 		GlobalManager	global_manager )
@@ -354,7 +361,11 @@ UserAlerts
   		final String popup_enabler;
   		final String popup_def_text;
 
+  		final String native_enabler;
+  		final String native_text;
+  		
   		if ( download ){
+  			
 	 		sound_enabler 	= "Play Download Finished";
 	  		sound_file		= "Play Download Finished File";
 
@@ -364,7 +375,11 @@ UserAlerts
 	  		popup_enabler   = "Popup Download Finished";
 	  		popup_def_text  = "popup.download.finished";
 
+	  		native_enabler 	= "Notify Download Finished";
+	  		native_text		= "notify.download.finished";
+	  		
   		}else{
+  			
 	 		sound_enabler 	= "Play File Finished";
 	  		sound_file		= "Play File Finished File";
 
@@ -373,6 +388,9 @@ UserAlerts
 
 	  		popup_enabler   = "Popup File Finished";
 	  		popup_def_text  = "popup.file.finished";
+	  		
+	  		native_enabler 	= null;
+	  		native_text		= null;
   		}
 
   		Map 	dl_file_alerts = dm_state.getMapAttribute( DownloadManagerState.AT_DL_FILE_ALERTS );
@@ -382,9 +400,11 @@ UserAlerts
   		boolean do_speech 	= Constants.isOSX	&& ( COConfigurationManager.getBooleanParameter(speech_enabler) || isDLFEnabled( dl_file_alerts, dlf_prefix, speech_enabler ));
   		boolean do_sound 	= COConfigurationManager.getBooleanParameter( sound_enabler, false) || isDLFEnabled( dl_file_alerts, dlf_prefix, sound_enabler );
 
+    	boolean do_native 	= native_enabler != null && COConfigurationManager.getBooleanParameter(native_enabler);
+
   		doStuff(
   			relatedObject, item_name,
-  			do_popup, popup_def_text, false,
+  			do_popup, popup_def_text, false, do_native, native_text,
   			do_speech, speech_text,
   			do_sound, sound_file );
   	}
@@ -409,6 +429,9 @@ UserAlerts
   		final String popup_enabler   = "Popup Download Error";
   		final String popup_def_text  = "popup.download.error";
 
+  		final String native_enabler 	= "Notify Download Error";
+  		final String native_text		= "notify.download.error";
+  		
 		long now = SystemTime.getMonotonousTime();
 
     	boolean do_popup 	= 	COConfigurationManager.getBooleanParameter(popup_enabler);
@@ -420,6 +443,8 @@ UserAlerts
     	boolean do_sound	= 	COConfigurationManager.getBooleanParameter( sound_enabler, false) &&
     							( last_error_sound == 0 || now - last_error_sound > 5000 );
 
+    	boolean do_native 	= 	COConfigurationManager.getBooleanParameter(native_enabler);
+
     	if ( do_speech ){
     		last_error_speech = now;
     	}
@@ -429,7 +454,7 @@ UserAlerts
 
  		doStuff(
   			relatedObject, item_name,
-  			do_popup, popup_def_text, true,
+  			do_popup, popup_def_text, true, do_native, native_text,
   			do_speech, speech_text,
   			do_sound, sound_file );
   	}
@@ -446,7 +471,7 @@ UserAlerts
 
 		doStuff(
   			null, null,
-  			do_popup, null, false,
+  			do_popup, null, false, false, null,
   			do_speech, "Play Notification Added Announcement Text",
   			do_sound, "Play Notification Added File" );
   	}
@@ -458,6 +483,8 @@ UserAlerts
   		boolean			do_popup,
   		String			popup_def_text,
   		boolean			popup_is_error,
+  		boolean			do_native_tray,
+  		String			native_text,
   		boolean			do_speech,
   		final String	speech_text,
   		boolean			do_sound,
@@ -572,6 +599,32 @@ UserAlerts
 		        	}.start();
 		        }
 	    	}
+			
+			if ( do_native_tray ){
+				
+				if ( native_tray_icon == null ){
+					
+					if ( SystemTray.isSupported()){
+						
+						SystemTray st = SystemTray.getSystemTray();
+						
+						Image image = Toolkit.getDefaultToolkit().createImage(getClass().getResource( "/com/biglybt/ui/icons/a32info.png" ));
+						
+						native_tray_icon = new TrayIcon(image, "");
+						
+						native_tray_icon.setImageAutoSize(true);
+						
+						native_tray_icon.setToolTip("BiglyBT Native Tray");
+				        
+				        st.add( native_tray_icon );
+					}
+				}
+			
+				if ( native_tray_icon != null ){
+				        					
+					native_tray_icon.displayMessage( MessageText.getString( native_text ), item_name, popup_is_error?MessageType.ERROR:MessageType.INFO );
+				}
+			}
   		}catch( Throwable e ){
 
   			Debug.printStackTrace( e );
@@ -643,6 +696,18 @@ UserAlerts
 		}catch( Throwable e ){
 
 			Debug.printStackTrace( e );
+		}
+		
+		if ( native_tray_icon != null ){
+			
+			try{
+				SystemTray st = SystemTray.getSystemTray();
+			
+				st.remove( native_tray_icon );
+				
+			}catch( Throwable e ){
+				
+			}
 		}
   	}
 

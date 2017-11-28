@@ -255,6 +255,10 @@ public class ConfigurationDefaults {
 
     def.put("Start On Login", FALSE );
     def.put("Start In Low Resource Mode", FALSE );
+    def.put("LRMS UI", TRUE );
+    def.put("LRMS UDP Peers", TRUE );
+    def.put("LRMS DHT Sleep", TRUE );
+    
     def.put("Auto Register App", FALSE );
 
     def.put("Pause Downloads On Exit", FALSE );
@@ -382,6 +386,7 @@ public class ConfigurationDefaults {
     def.put( "Popup Download Finished", FALSE);
     def.put( "Popup File Finished", FALSE);
     def.put( "Popup Download Added", FALSE);
+    def.put( "Notify Download Finished", FALSE);
     def.put( "Show Timestamp For Alerts", FALSE);
     def.put( "Request Attention On New Download", TRUE );
     def.put( "Activate Window On External Download", TRUE );

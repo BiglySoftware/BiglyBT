@@ -49,7 +49,26 @@ AERunStateHandler
 
 	private static final boolean	start_low = COConfigurationManager.getBooleanParameter( "Start In Low Resource Mode" );
 
-	private static long	current_mode = start_low?RS_ALL_LOW:RS_ALL_ACTIVE;
+	private static long	current_mode;
+	
+	static{
+		if ( start_low ){
+			
+			if ( COConfigurationManager.getBooleanParameter( "LRMS UI" )){
+				current_mode |= RS_DELAYED_UI;
+			}
+			if ( COConfigurationManager.getBooleanParameter( "LRMS UDP Peers" )){
+				current_mode |= RS_UDP_NET_ONLY;
+			}
+			if ( COConfigurationManager.getBooleanParameter( "LRMS DHT Sleep" )){
+				current_mode |= RS_DHT_SLEEPING;
+			}
+			
+		}else{
+			
+			current_mode = RS_ALL_ACTIVE;
+		}
+	}
 
 	private static final AsyncDispatcher	dispatcher = new AsyncDispatcher(2500);
 
