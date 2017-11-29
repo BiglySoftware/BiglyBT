@@ -33,16 +33,16 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 
 
-public class SwarmMaxCompletion
+public class LeecherMaxCompletion
        extends CoreTableColumnSWT
        implements TableCellRefreshListener
 {
 	public static final Class DATASOURCE_TYPE = Download.class;
 
 
-  public static final String COLUMN_ID = "swarm_max_completion";
+  public static final String COLUMN_ID = "leecher_max_completion";
 
-	public SwarmMaxCompletion(String sTableID) {
+	public LeecherMaxCompletion(String sTableID) {
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
     setRefreshInterval(INTERVAL_GRAPHIC);
     setMinWidthAuto(true);
@@ -67,7 +67,7 @@ public class SwarmMaxCompletion
     	PEPeerManager pm = dm.getPeerManager();
 
     	if( pm != null ) {
-    		average = pm.getMaxCompletionInThousandNotation( false );
+    		average = pm.getMaxCompletionInThousandNotation( true );
     	}
     }
 

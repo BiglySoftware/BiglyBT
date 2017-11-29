@@ -372,7 +372,7 @@ PEPeerManager
    * @return
    */
   
-  public int getMaxCompletionInThousandNotation();
+  public int getMaxCompletionInThousandNotation( boolean never_include_seeds );
   
 	/**
 	 * Locate an existing transport via peer id byte identity.

@@ -1477,6 +1477,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_COMPLETED_AGE 	= 15;
 		private static final int	KW_PEER_MAX_COMP 	= 16;
 		private static final int	KW_PEER_AVERAGE_COMP 	= 17;
+		private static final int	KW_LEECHER_MAX_COMP 	= 18;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1513,6 +1514,12 @@ TagPropertyConstraintHandler
 
 			keyword_map.put( "peermaxcompletion", KW_PEER_MAX_COMP );
 			keyword_map.put( "peer_max_completion", KW_PEER_MAX_COMP );
+			
+			keyword_map.put( "leechmaxcompletion", KW_LEECHER_MAX_COMP );
+			keyword_map.put( "leech_max_completion", KW_LEECHER_MAX_COMP );
+			keyword_map.put( "leechermaxcompletion", KW_LEECHER_MAX_COMP );
+			keyword_map.put( "leecher_max_completion", KW_LEECHER_MAX_COMP );
+			
 			keyword_map.put( "peeraveragecompletion", KW_PEER_AVERAGE_COMP );
 			keyword_map.put( "peer_average_completion", KW_PEER_AVERAGE_COMP );
 			
@@ -2086,8 +2093,22 @@ TagPropertyConstraintHandler
 									return( 0 );
 								}
 								
-								return(	new Float( pm.getMaxCompletionInThousandNotation()/10.0f ));
+								return(	new Float( pm.getMaxCompletionInThousandNotation( false )/10.0f ));
 							}
+							case KW_LEECHER_MAX_COMP:{
+
+								result = null;	// don't cache this!
+
+								PEPeerManager pm = dm.getPeerManager();
+								
+								if ( pm == null ){
+									
+									return( 0 );
+								}
+								
+								return(	new Float( pm.getMaxCompletionInThousandNotation( true )/10.0f ));
+							}
+
 							case KW_PEER_AVERAGE_COMP:{
 
 								result = null;	// don't cache this!

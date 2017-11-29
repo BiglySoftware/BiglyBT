@@ -5541,13 +5541,15 @@ DiskManagerCheckRequestListener, IPFilterListener
 	}
 	
 	@Override
-	public int getMaxCompletionInThousandNotation()
+	public int getMaxCompletionInThousandNotation( boolean never_include_seeds )
 	{
 		ArrayList<PEPeerTransport> peer_transports = peer_transports_cow;
 		
 		int	max = 0;
 		
-		boolean we_seed = isSeeding();
+			// generally if we're seeeding we shouldn't connect to seeds so ignore them
+
+		boolean ignore_seeds = isSeeding() || never_include_seeds;
 		
 		for ( int i =0; i<peer_transports.size(); i++ ){
 		
@@ -5557,10 +5559,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 							
 				int done =  peer.getPercentDoneInThousandNotation();
 				
-				if ( done == 1000 && we_seed ){
-					
-					// generally if we're seeeding we shouldn't connect to seeds so ignore them
-					
+				if ( done == 1000 && ignore_seeds ){
+										
 				}else{
 					
 					if ( done > max ){
