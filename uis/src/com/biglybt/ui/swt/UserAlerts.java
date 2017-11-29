@@ -20,10 +20,14 @@ package com.biglybt.ui.swt;
 import java.applet.Applet;
 import java.applet.AudioClip;
 import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.Toolkit;
 import java.awt.TrayIcon;
 import java.awt.TrayIcon.MessageType;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
@@ -92,6 +96,7 @@ UserAlerts
     private boolean startup = true;
 
     private TrayIcon	native_tray_icon;
+    private int			native_message_count;
     
 	public
 	UserAlerts(
@@ -614,8 +619,46 @@ UserAlerts
 						
 						native_tray_icon.setImageAutoSize(true);
 						
-						native_tray_icon.setToolTip("BiglyBT Native Tray");
+						native_tray_icon.setToolTip( MessageText.getString( "label.product.alerts" ));
 				        
+						try{
+							PopupMenu menu = new PopupMenu();
+							
+							native_tray_icon.setPopupMenu( menu );
+							
+							MenuItem mi = new MenuItem( MessageText.getString( "sharing.progress.hide" ));
+							
+							mi.addActionListener(
+								new ActionListener(){
+									
+									@Override
+									public void actionPerformed(ActionEvent event){
+										try{
+											this_mon.enter();
+											
+											try{
+												SystemTray st = SystemTray.getSystemTray();
+											
+												st.remove( native_tray_icon );
+												
+												native_tray_icon = null;
+												
+											}catch( Throwable e ){										
+											}
+										}finally{
+											
+											this_mon.exit();
+										}
+									}
+								});
+							
+							menu.add( mi );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+						
 				        st.add( native_tray_icon );
 					}
 				}
@@ -623,6 +666,42 @@ UserAlerts
 				if ( native_tray_icon != null ){
 				        					
 					native_tray_icon.displayMessage( MessageText.getString( native_text ), item_name, popup_is_error?MessageType.ERROR:MessageType.INFO );
+					
+					/* Unfortunately removing the icon also removes any messages associated with it
+					 * that may be in the notification area (on Windows 10 for example)
+					 
+					final int mine = ++native_message_count;
+					
+					SimpleTimer.addEvent(
+						"iconhider",
+						SystemTime.getOffsetTime( 30*1000 ),
+						new TimerEventPerformer(){
+							
+							@Override
+							public void perform(TimerEvent event){
+								try{
+									this_mon.enter();
+									
+									if ( native_message_count == mine ){
+										
+										try{
+											SystemTray st = SystemTray.getSystemTray();
+										
+											st.remove( native_tray_icon );
+											
+											native_tray_icon = null;
+											
+										}catch( Throwable e ){										
+										}
+									}
+									
+								}finally{
+									
+									this_mon.exit();
+								}
+							}
+						});
+					*/
 				}
 			}
   		}catch( Throwable e ){
