@@ -477,7 +477,12 @@ DownloadManagerImpl
 				}
 			});
 
-	List<DownloadManagerTPSListener>	tps_listeners;
+	private Object 			init_lock = new Object();
+	private boolean			initialised;
+	private List<Runnable>	post_init_tasks = new ArrayList<>();
+	
+	
+	private List<DownloadManagerTPSListener>	tps_listeners;
 
 	private final AEMonitor	piece_listeners_mon	= new AEMonitor( "DM:DownloadManager:PeiceL" );
 
@@ -697,80 +702,102 @@ DownloadManagerImpl
 		List									_file_priorities,
 		DownloadManagerInitialisationAdapter	_initialisation_adapter )
 	{
-		if ( 	_initialState != STATE_WAITING &&
-				_initialState != STATE_STOPPED &&
-				_initialState != STATE_QUEUED ){
-
-			Debug.out( "DownloadManagerImpl: Illegal start state, " + _initialState );
-		}
-
-		persistent			= _persistent;
-		globalManager 		= _gm;
-		open_for_seeding	= _open_for_seeding;
-
-			// TODO: move this to download state!
-
-    	if ( _file_priorities != null ){
-
-    		setUserData( "file_priorities", _file_priorities );
-    	}
-
-		stats = new DownloadManagerStatsImpl( this );
-
-		controller	= new DownloadManagerController( this );
-
-		torrentFileName = _torrentFileName;
-
-		while( _torrent_save_dir.endsWith( File.separator )){
-
-			_torrent_save_dir = _torrent_save_dir.substring(0, _torrent_save_dir.length()-1 );
-		}
-
-			// readTorrent adjusts the save dir and file to be sensible values
-
-		readTorrent( 	_torrent_save_dir, _torrent_save_file, _torrent_hash,
-						persistent && !_recovered, _open_for_seeding, _has_ever_been_started,
-						_initialState );
-
-		if ( torrent != null ){
-
-			if ( _open_for_seeding && !_recovered ){
-
-				Map<Integer,File>	linkage = TorrentUtils.getInitialLinkage( torrent );
-
-				if ( linkage.size() > 0 ){
-
-					DownloadManagerState	dms = getDownloadState();
-
-					DiskManagerFileInfo[]	files = getDiskManagerFileInfoSet().getFiles();
-
-					try{
-						dms.suppressStateSave( true );
-
-						for ( Map.Entry<Integer,File> entry: linkage.entrySet()){
-
-							int	index 	= entry.getKey();
-							File target = entry.getValue();
-
-							dms.setFileLink( index, files[index].getFile( false ), target );
-
+		List<Runnable>	to_run;
+		
+		synchronized( init_lock ){
+			
+			if ( 	_initialState != STATE_WAITING &&
+					_initialState != STATE_STOPPED &&
+					_initialState != STATE_QUEUED ){
+	
+				Debug.out( "DownloadManagerImpl: Illegal start state, " + _initialState );
+			}
+	
+			persistent			= _persistent;
+			globalManager 		= _gm;
+			open_for_seeding	= _open_for_seeding;
+	
+				// TODO: move this to download state!
+	
+	    	if ( _file_priorities != null ){
+	
+	    		setUserData( "file_priorities", _file_priorities );
+	    	}
+	
+			stats = new DownloadManagerStatsImpl( this );
+	
+			controller	= new DownloadManagerController( this );
+	
+			torrentFileName = _torrentFileName;
+	
+			while( _torrent_save_dir.endsWith( File.separator )){
+	
+				_torrent_save_dir = _torrent_save_dir.substring(0, _torrent_save_dir.length()-1 );
+			}
+	
+				// readTorrent adjusts the save dir and file to be sensible values
+	
+			readTorrent( 	_torrent_save_dir, _torrent_save_file, _torrent_hash,
+							persistent && !_recovered, _open_for_seeding, _has_ever_been_started,
+							_initialState );
+	
+			if ( torrent != null ){
+	
+				if ( _open_for_seeding && !_recovered ){
+	
+					Map<Integer,File>	linkage = TorrentUtils.getInitialLinkage( torrent );
+	
+					if ( linkage.size() > 0 ){
+	
+						DownloadManagerState	dms = getDownloadState();
+	
+						DiskManagerFileInfo[]	files = getDiskManagerFileInfoSet().getFiles();
+	
+						try{
+							dms.suppressStateSave( true );
+	
+							for ( Map.Entry<Integer,File> entry: linkage.entrySet()){
+	
+								int	index 	= entry.getKey();
+								File target = entry.getValue();
+	
+								dms.setFileLink( index, files[index].getFile( false ), target );
+	
+							}
+						}finally{
+	
+							dms.suppressStateSave( false );
 						}
-					}finally{
-
-						dms.suppressStateSave( false );
 					}
 				}
 			}
+			
+			initialised = true;
+			
+			to_run = post_init_tasks;
+			
+			post_init_tasks = null;
+		}
+		
+		for ( Runnable r: to_run ){
+			
+			try{
+				r.run();
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		if ( torrent != null && _initialisation_adapter != null ){
+	
+			try{
+				_initialisation_adapter.initialised( this, open_for_seeding );
 
-			if ( _initialisation_adapter != null ){
+			}catch( Throwable e ){
 
-				try{
-					_initialisation_adapter.initialised( this, open_for_seeding );
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace(e);
-				}
+				Debug.printStackTrace(e);
 			}
 		}
 	}
@@ -2231,9 +2258,76 @@ DownloadManagerImpl
 		if (_assumedComplete) {
 			long completedOn = download_manager_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
 			if (completedOn <= 0) {
-				download_manager_state.setLongParameter(
-						DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME,
-						SystemTime.getCurrentTime());
+				long now =SystemTime.getCurrentTime();
+				
+				download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, now );
+				
+				long last_file = download_manager_state.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME );
+				
+				if ( last_file <= 0 ){
+				
+					Runnable set_it = 
+						new Runnable()
+						{
+							public void
+							run()
+							{
+					
+									// get a sensible value from actual files - useful when adding-for-seeding
+							
+								long	last_mod = 0;
+								
+								DiskManagerFileInfo[] files = getDiskManagerFileInfoSet().getFiles();
+								
+								for ( DiskManagerFileInfo file: files ){
+									
+									if ( !file.isSkipped()){
+										
+										File f = file.getFile( true );
+										
+										if ( f.length() == file.getLength()){
+											
+											long mod = f.lastModified();
+											
+											if ( mod > last_mod ){
+												
+												last_mod = mod;
+											}
+										}
+									}
+								}
+								
+								if ( last_mod == 0 ){
+									
+									last_mod = now;
+								}
+								
+								download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, last_mod );
+								
+								if ( open_for_seeding && last_mod < now ){
+									
+										// update with more useful value
+									
+									download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, last_mod );
+								}
+							}
+						};
+						
+					synchronized( init_lock ){
+						
+						if ( !initialised ){
+							
+							post_init_tasks.add( set_it );
+							
+							set_it = null;
+						}
+					}
+					
+					if ( set_it != null ){
+						
+						set_it.run();
+					}
+				}
 			}
 		}
 
