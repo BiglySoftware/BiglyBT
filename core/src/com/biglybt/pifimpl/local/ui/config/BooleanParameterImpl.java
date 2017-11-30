@@ -21,6 +21,8 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.impl.ConfigurationDefaults;
+import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pifimpl.local.PluginConfigImpl;
 
@@ -33,9 +35,6 @@ BooleanParameterImpl
 	extends 	ParameterImpl
 	implements 	BooleanParameter
 {
-
-	private boolean default_value;
-
 	public
 	BooleanParameterImpl(
 		PluginConfigImpl	config,
@@ -44,13 +43,16 @@ BooleanParameterImpl
 		boolean 		defaultValue)
 	{
 		super( config, key, label);
-		this.default_value = defaultValue;
 		config.notifyParamExists(getKey());
 		COConfigurationManager.setBooleanDefault( getKey(), defaultValue );
 	}
 
 	public boolean getDefaultValue() {
-		return this.default_value;
+		try {
+			return ConfigurationDefaults.getInstance().getBooleanParameter(getKey());
+		} catch (ConfigurationParameterNotFoundException e) {
+			return false;
+		}
 	}
 
 	@Override
@@ -68,8 +70,6 @@ BooleanParameterImpl
 	setDefaultValue(
 		boolean		defaultValue )
 	{
-		default_value	= defaultValue;
-
 		COConfigurationManager.setBooleanDefault( getKey(), defaultValue );
 	}
 }
