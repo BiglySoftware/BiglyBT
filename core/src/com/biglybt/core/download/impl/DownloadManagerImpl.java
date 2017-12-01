@@ -2304,7 +2304,7 @@ DownloadManagerImpl
 								
 								download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, last_mod );
 								
-								if ( open_for_seeding && last_mod < now ){
+								if ( last_mod < now ){
 									
 										// update with more useful value
 									
