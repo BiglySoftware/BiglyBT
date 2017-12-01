@@ -101,6 +101,31 @@ public class SB_Transfers
 	private ParameterListener paramTagsInSidebarListener;
 	private ParameterListener paramCatInSidebarListener;
 
+	private Set<MdiEntry>				redraw_pending = new HashSet<>();
+		
+	private FrequencyLimitedDispatcher	redraw_disp = 
+		new FrequencyLimitedDispatcher(
+			new AERunnable(){
+				
+				@Override
+				public void runSupport(){
+					
+					List<MdiEntry> to_do;
+					
+					synchronized( redraw_pending ){
+						
+						to_do = new ArrayList<MdiEntry>( redraw_pending );
+						
+						redraw_pending.clear();
+					}
+					
+					for ( MdiEntry e: to_do ){
+						
+						e.redraw();
+					}
+				}
+			}, 500 );
+	
 	public static class stats
 	{
 		int numSeeding = 0;
@@ -1209,7 +1234,15 @@ public class SB_Transfers
 			
 			entry.setUserData( TAG_INDICATOR_KEY, tag_count );
 			
-			entry.redraw();
+			synchronized( redraw_pending ){
+				
+				if ( !redraw_pending.contains( entry )){
+					
+					redraw_pending.add( entry );
+					
+					redraw_disp.dispatch();
+				}
+			}
 		}
 		
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
