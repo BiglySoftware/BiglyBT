@@ -412,41 +412,47 @@ public class SBC_TorrentDetailsView
 			if (ds == null) {
 				return null;
 			}
-			entry = (BaseMdiEntry) mdi.createEntryFromSkinRef(SideBar.SIDEBAR_HEADER_TRANSFERS, id,
-					"torrentdetails", "", null, ds, true, null);
+			
+			entry = (BaseMdiEntry)mdi.getEntry( id );
+			
+			if ( entry == null ){
+			
+				entry = (BaseMdiEntry) mdi.createEntryFromSkinRef(SideBar.SIDEBAR_HEADER_TRANSFERS, id,
+							"torrentdetails", "", null, ds, true, null);
 
-			entry.addListeners(this);
-			entry.setViewTitleInfo(this);
-
-			CoreFactory.addCoreRunningListener(
-					new CoreRunningListener() {
-						@Override
-						public void coreRunning(Core core) {
-							GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-							gmListener = new GlobalManagerAdapter() {
-								@Override
-								public void downloadManagerRemoved(DownloadManager dm) {
-									Object ds = entry.getDatasourceCore();
-									DownloadManager manager = DataSourceUtils.getDM(ds);
-									if (dm.equals(manager)) {
-										Utils.execSWTThread(new AERunnable() {
-											@Override
-											public void runSupport() {
-												entry.closeView();
-											}
-										});
+				entry.addListeners(this);
+				entry.setViewTitleInfo(this);
+			
+				CoreFactory.addCoreRunningListener(
+						new CoreRunningListener() {
+							@Override
+							public void coreRunning(Core core) {
+								GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+								gmListener = new GlobalManagerAdapter() {
+									@Override
+									public void downloadManagerRemoved(DownloadManager dm) {
+										Object ds = entry.getDatasourceCore();
+										DownloadManager manager = DataSourceUtils.getDM(ds);
+										if (dm.equals(manager)) {
+											Utils.execSWTThread(new AERunnable() {
+												@Override
+												public void runSupport() {
+													entry.closeView();
+												}
+											});
+										}
 									}
-								}
-							};
-							gm.addListener(gmListener, false);
-						}
-					});
-
-			UIUpdater updater = UIUpdaterSWT.getInstance();
-			if (updater != null) {
-				updater.addUpdater(this);
+								};
+								gm.addListener(gmListener, false);
+							}
+						});
+	
+				UIUpdater updater = UIUpdaterSWT.getInstance();
+				if (updater != null) {
+					updater.addUpdater(this);
+				}
 			}
-
+			
 			return entry;
 		}
 
@@ -502,6 +508,9 @@ public class SBC_TorrentDetailsView
 					: manager.getStats().getPercentDoneExcludingDND();
 			if (lastCompleted != completed) {
 				ViewTitleInfoManager.refreshTitleInfo(this);
+				if ( entry != null ){
+					entry.redraw();
+				}
 				lastCompleted = completed;
 			}
 		}
