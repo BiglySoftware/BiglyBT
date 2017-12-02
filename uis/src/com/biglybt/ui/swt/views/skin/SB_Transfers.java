@@ -124,7 +124,7 @@ public class SB_Transfers
 						e.redraw();
 					}
 				}
-			}, 500 );
+			}, 2500 );
 	
 	public static class stats
 	{
