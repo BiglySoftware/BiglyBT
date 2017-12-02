@@ -908,6 +908,24 @@ public class TorrentOpener {
 					Debug.printStackTrace(e);
 				}
 
+				// this is the best place to work out if the file is already in the 'save torrents' folder and therefore
+				// shouldn't be deleted if the add-process is cancelled. Other places in the call tree suffer from the
+				// fact that the file may already have been copied into the folder (e.g. URL download process)
+				// not great but it works for now...
+				
+				try{
+					File torrentDir = new File(COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory"));
+
+					if ( 	COConfigurationManager.getBooleanParameter("Save Torrent Files") && 
+							torrentDir.exists() && 
+							file.getParentFile().equals( torrentDir )){
+						
+						torrentOptions.setDeleteFileOnCancel( false );
+					}
+				}catch( Throwable e ){
+					
+				}
+				
 				UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
 				if (TorrentOpener.mergeFileIntoTorrentInfo(file.getAbsolutePath(),
