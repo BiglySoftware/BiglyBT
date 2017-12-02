@@ -914,6 +914,30 @@ PeersViewBase
 		addPeersMenu( download_specific, "", menu );
 	}
 	
+	private static String
+	getMyPeerDetails()
+	{
+		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+
+		InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
+		
+		int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+		
+		String	str = "";
+			
+		if ( ip != null ){
+			
+			str = ip.getHostAddress() + ":" + port;
+		}
+		
+		if ( ip_v6 != null ){
+			
+			str += (str.isEmpty()?"":",") + ip_v6.getHostAddress() + ":" + port;
+		}
+		
+		return( str );
+	}
+	
 	protected static boolean
 	addPeersMenu(
 		final DownloadManager 	man,
@@ -935,27 +959,11 @@ PeersViewBase
 				handleEvent(
 						Event event)
 				{
-					InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
-
-					InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
-					
-					int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
-					
-					String	str = "";
-						
-					if ( ip != null ){
-						
-						str = ip.getHostAddress() + ":" + port;
-					}
-					
-					if ( ip_v6 != null ){
-						
-						str += (str.isEmpty()?"":",") + ip_v6.getHostAddress() + ":" + port;
-					}
+					String str = getMyPeerDetails();
 					
 					if ( str.isEmpty()){
 						
-						str = "<none>";
+						str = "<no peers>";
 					}
 					
 					ClipboardCopy.copyToClipBoard( str );
@@ -994,13 +1002,18 @@ PeersViewBase
 				{
 					List<PEPeer> peers = pm.getPeers();
 					
-					String str = "";
+					String str = getMyPeerDetails();
 					
 					for ( PEPeer peer: peers ){
 						
 						String address = peer.getIp() + ":" + peer.getTCPListenPort();
 						
 						str += (str.isEmpty()?"":",") + address;
+					}
+					
+					if ( str.isEmpty()){
+						
+						str = "<no peers>";
 					}
 					
 					ClipboardCopy.copyToClipBoard( str );
