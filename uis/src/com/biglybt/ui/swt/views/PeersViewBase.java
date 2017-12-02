@@ -925,14 +925,17 @@ PeersViewBase
 		
 		String	str = "";
 			
-		if ( ip != null ){
+		if ( port > 0 ){
 			
-			str = ip.getHostAddress() + ":" + port;
-		}
-		
-		if ( ip_v6 != null ){
+			if ( ip != null ){
+				
+				str = ip.getHostAddress() + ":" + port;
+			}
 			
-			str += (str.isEmpty()?"":",") + ip_v6.getHostAddress() + ":" + port;
+			if ( ip_v6 != null ){
+				
+				str += (str.isEmpty()?"":",") + ip_v6.getHostAddress() + ":" + port;
+			}
 		}
 		
 		return( str );
@@ -963,7 +966,7 @@ PeersViewBase
 					
 					if ( str.isEmpty()){
 						
-						str = "<no peers>";
+						str = "<no usable peers>";
 					}
 					
 					ClipboardCopy.copyToClipBoard( str );
@@ -1006,14 +1009,19 @@ PeersViewBase
 					
 					for ( PEPeer peer: peers ){
 						
-						String address = peer.getIp() + ":" + peer.getTCPListenPort();
+						int port = peer.getTCPListenPort();
 						
-						str += (str.isEmpty()?"":",") + address;
+						if ( port > 0 ){
+							
+							String address = peer.getIp() + ":" + port;
+							
+							str += (str.isEmpty()?"":",") + address;
+						}
 					}
 					
 					if ( str.isEmpty()){
 						
-						str = "<no peers>";
+						str = "<no usable peers>";
 					}
 					
 					ClipboardCopy.copyToClipBoard( str );
