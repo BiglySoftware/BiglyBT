@@ -323,8 +323,15 @@ public class ColumnProgressETA
 			return;
 		}
 
-		DownloadManager dm = (DownloadManager) cell.getDataSource();
+		DownloadManager dm = (DownloadManager)ds;
 
+		String tooltip = null;
+		
+		if ( dm.getState() == DownloadManager.STATE_QUEUED ){
+			
+			tooltip = MessageText.getString( "ManagerItem.queued.tooltip" );
+		}
+		
 		int percentDone = getPercentDone(ds);
 		long eta = showETA ? getETA(cell) : 0;
 
@@ -447,11 +454,17 @@ public class ColumnProgressETA
 		gc.setFont(fontText);
 		if (showSecondLine && sStatusLine != null) {
 			gc.setForeground(fgFirst);
-			boolean over = GCStringPrinter.printString(gc, sStatusLine,
+			boolean fit = GCStringPrinter.printString(gc, sStatusLine,
 					new Rectangle(cellBounds.x, yStart + yRelProgressFillEnd,
 							cellBounds.width, newHeight - yRelProgressFillEnd),
 					true, false, SWT.CENTER);
-			cell.setToolTip(over ? sStatusLine : null);
+			if ( !fit ){
+				if ( tooltip == null ){
+					tooltip = sStatusLine;
+				}else{
+					tooltip = sStatusLine + ": " + tooltip;
+				}
+			}
 			gc.setForeground(fgOriginal);
 		}
 
@@ -491,9 +504,18 @@ public class ColumnProgressETA
 		if (!showSecondLine && sStatusLine != null) {
 			boolean fit = GCStringPrinter.printString(gc, sStatusLine,
 					area.intersection(cellBounds), true, false, SWT.RIGHT);
-			cell.setToolTip(fit ? null : sStatusLine);
+						
+			if ( !fit ){
+				if ( tooltip == null ){
+					tooltip = sStatusLine;
+				}else{
+					tooltip = sStatusLine + ": " + tooltip;
+				}
+			}
 		}
 
+		cell.setToolTip( tooltip );
+		
 		gc.setFont(null);
 	}
 

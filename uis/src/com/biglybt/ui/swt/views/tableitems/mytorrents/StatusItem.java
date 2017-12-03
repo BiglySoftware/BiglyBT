@@ -28,6 +28,7 @@ import org.eclipse.swt.graphics.Color;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.Utils;
@@ -111,6 +112,8 @@ public class StatusItem
 		
 		String	text;
 
+		String tooltip = null;
+		
 		if ( showTrackerErrors && dm.isUnauthorisedOnTracker() && state != DownloadManager.STATE_ERROR ){
 
 			text = dm.getTrackerStatus();
@@ -138,6 +141,7 @@ public class StatusItem
 					}
 					case DownloadManager.STATE_QUEUED:{
 						sort_value		= 700;
+						tooltip = MessageText.getString( "ManagerItem.queued.tooltip" );
 						break;
 					}
 					case DownloadManager.STATE_STOPPED:{
@@ -184,7 +188,9 @@ public class StatusItem
 		
 		if ( update || !cell.isValid()){
 			
-			cell.setText(text);
+			cell.setText( text );
+			
+			cell.setToolTip( tooltip );
 			
 			boolean clickable = false;
 
