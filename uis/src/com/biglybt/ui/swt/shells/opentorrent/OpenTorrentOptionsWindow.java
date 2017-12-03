@@ -327,6 +327,8 @@ public class OpenTorrentOptionsWindow
 						}
 					});
 
+					torrentOptions.cancel();
+					
 					return( existing );
 				}
 
