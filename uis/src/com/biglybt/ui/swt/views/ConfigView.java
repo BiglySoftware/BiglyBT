@@ -45,6 +45,7 @@ import com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.configsections.*;
@@ -1160,22 +1161,45 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   }
 
   private void initSaveButton() {
-    GridData gridData;
-    final Button save = new Button(cConfig, SWT.PUSH);
-    Messages.setLanguageText(save, "ConfigView.button.save"); //$NON-NLS-1$
-    gridData = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
-    gridData.horizontalSpan = 2;
-    gridData.widthHint = 80;
-    Utils.setLayoutData(save, gridData);
+	  Composite cButtons = new Composite(cConfig, SWT.NONE);
+	  GridLayout gridLayout = new GridLayout();
+	  gridLayout.verticalSpacing = gridLayout.marginHeight = 0;
+	  //gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
+	  gridLayout.numColumns = 2;
+	  cButtons.setLayout(gridLayout);
+	  Utils.setLayoutData(cButtons, new GridData(GridData.FILL_HORIZONTAL));
+	  GridData gridData;
+	  
+	  LinkLabel ll = new LinkLabel(
+			  cButtons,
+			  "label.help",
+			  new Runnable()
+			  {
+				  @Override
+				  public void run(){
+					  Utils.launch( Constants.URL_WIKI );
+				  }
+			  });
+	  
+	  
+	  gridData = new GridData(GridData.FILL_HORIZONTAL);
+	  ll.getlabel().setLayoutData( gridData );
+	  
+	  final Button save = new Button(cButtons, SWT.PUSH);
+	  Messages.setLanguageText(save, "ConfigView.button.save"); //$NON-NLS-1$
+	  gridData = new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING);
+	  gridData.horizontalSpan = 1;
+	  gridData.widthHint = 80;
+	  Utils.setLayoutData(save, gridData);
 
-    save.addSelectionListener(new SelectionAdapter() {
-      @Override
-      public void widgetSelected(SelectionEvent event) {
-				// force focusout on osx
-				save.setFocus();
-				save();
-			}
-		});
+	  save.addSelectionListener(new SelectionAdapter() {
+		  @Override
+		  public void widgetSelected(SelectionEvent event) {
+			  // force focusout on osx
+			  save.setFocus();
+			  save();
+		  }
+	  });
   }
 
   private void initApplyCloseButton() {
