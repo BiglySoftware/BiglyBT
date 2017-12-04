@@ -167,6 +167,45 @@ AETemporaryFileHandler
 
 		return( File.createTempFile( PREFIX, SUFFIX, parent_dir ));
 	}
+	
+	public static synchronized File
+	createSemiTempFile(
+		String	preferred_name )
+
+		throws IOException
+	{
+		preferred_name = FileUtil.convertOSSpecificChars( preferred_name, false );
+		
+		File result = createSemiTempFile();
+		
+		if ( preferred_name.length() > 0 ){
+			
+			File dir = result.getParentFile();
+			
+			for ( int i=0;i<10;i++){
+				
+				File file = new File( dir, preferred_name );
+				
+				if ( !file.exists()){
+					
+					try{
+						if ( file.createNewFile()){
+							
+							result.delete();
+							
+							return( file );
+						}
+					}catch( Throwable e ){
+						
+					}
+				}
+				
+				preferred_name = "_" + preferred_name;
+			}
+		}
+		
+		return( result );
+	}
 
 	public static File
 	createSemiTempFile()
