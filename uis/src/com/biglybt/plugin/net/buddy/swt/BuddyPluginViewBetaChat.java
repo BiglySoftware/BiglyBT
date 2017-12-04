@@ -152,7 +152,8 @@ BuddyPluginViewBetaChat
 	private static final boolean TEST_LOOPBACK_CHAT = System.getProperty( "az.chat.loopback.enable", "0" ).equals( "1" );
 	private static final boolean DEBUG_ENABLED		= BuddyPluginBeta.DEBUG_ENABLED;
 
-	private static final int	MAX_MSG_LENGTH	= 400;
+	private static final int	MAX_MSG_CHUNK_LENGTH	= 400;
+	private static final int	MAX_MSG_OVERALL_LENGTH	= 2048;
 
 	private static final Set<BuddyPluginViewBetaChat>	active_windows = new HashSet<>();
 
@@ -1590,7 +1591,7 @@ BuddyPluginViewBetaChat
 			grid_data.horizontalIndent = 4;
 			Utils.setLayoutData(input_area, grid_data);
 	
-			input_area.setTextLimit( MAX_MSG_LENGTH );
+			input_area.setTextLimit( MAX_MSG_OVERALL_LENGTH );
 	
 			input_area.addKeyListener(
 				new KeyListener()
@@ -4187,7 +4188,7 @@ BuddyPluginViewBetaChat
 
 			// we can go a bit over MAX_MSG_LENGTH as underlying limit is a fair bit higher
 		
-		magnet = trimMagnet( magnet, MAX_MSG_LENGTH );
+		magnet = trimMagnet( magnet, MAX_MSG_CHUNK_LENGTH );
 		
 		magnet += "&xl="  + download.getTorrentSize();
 		
@@ -4236,7 +4237,7 @@ BuddyPluginViewBetaChat
 		String	magnet,
 		int		max )
 	{
-		while( magnet.length() > MAX_MSG_LENGTH ){
+		while( magnet.length() > MAX_MSG_CHUNK_LENGTH ){
 			
 			int pos = magnet.lastIndexOf( '&' );
 			
@@ -4589,7 +4590,54 @@ BuddyPluginViewBetaChat
 		}catch( Throwable e ){
 		}
 
-		chat.sendMessage( text, new HashMap<String, Object>());
+		while( text.length() > MAX_MSG_CHUNK_LENGTH ){
+			
+			char[]	chars = text.toCharArray();
+			
+			int	pos = MAX_MSG_CHUNK_LENGTH-1;
+			
+			boolean chunked = false;
+			
+				// don't allow chunks to get too small
+			
+			while( pos > MAX_MSG_CHUNK_LENGTH/2 ){
+				
+				if ( chars[pos] == ' ' ){
+					
+					String chunk = text.substring( 0, pos ).trim();
+					
+					if ( !chunk.isEmpty()){
+						
+						chat.sendMessage( chunk, new HashMap<String, Object>());
+					}
+					
+					text = text.substring( pos ).trim();
+					
+					chunked = true;
+					
+					break;
+				}
+				
+				pos--;
+			}
+			
+			if ( !chunked ){
+				
+				String chunk = text.substring( 0, MAX_MSG_CHUNK_LENGTH ).trim();
+				
+				if ( !chunk.isEmpty()){
+				
+					chat.sendMessage( chunk, new HashMap<String, Object>());
+				}
+				
+				text = text.substring( MAX_MSG_CHUNK_LENGTH ).trim();
+			}
+		}
+		
+		if ( text.length() > 0 ){
+			
+			chat.sendMessage( text, new HashMap<String, Object>());
+		}
 	}
 
 	private static String
