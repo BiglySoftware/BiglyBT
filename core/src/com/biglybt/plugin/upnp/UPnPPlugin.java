@@ -34,6 +34,7 @@ import com.biglybt.net.natpmp.NatPMPDeviceFactory;
 import com.biglybt.net.natpmp.upnp.NatPMPUPnP;
 import com.biglybt.net.natpmp.upnp.NatPMPUPnPFactory;
 import com.biglybt.net.upnp.*;
+import com.biglybt.net.upnp.services.UPnPWANCommonInterfaceConfig;
 import com.biglybt.net.upnp.services.UPnPWANConnection;
 import com.biglybt.net.upnp.services.UPnPWANConnectionListener;
 import com.biglybt.net.upnp.services.UPnPWANConnectionPortMapping;
@@ -1171,7 +1172,7 @@ UPnPPlugin
 
 			}else if ( 	service_type.equalsIgnoreCase( "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1")){
 
-				/* useless stats
+				/*
 				try{
 					UPnPWANCommonInterfaceConfig	config = (UPnPWANCommonInterfaceConfig)s.getSpecificService();
 
@@ -1183,6 +1184,9 @@ UPnPPlugin
 									plugin_interface.getUtilities().getFormatters().formatByteCountToKiBEtcPerSec(speeds[0]/8) + ", up=" +
 									plugin_interface.getUtilities().getFormatters().formatByteCountToKiBEtcPerSec(speeds[1]/8));
 					}
+					
+					System.out.println( "Total Sent: " + config.getTotalBytesSent());
+					System.out.println( "Total Received: " + config.getTotalBytesReceived());
 				}catch( Throwable e ){
 
 					log.log(e);

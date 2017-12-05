@@ -1170,18 +1170,8 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	  Utils.setLayoutData(cButtons, new GridData(GridData.FILL_HORIZONTAL));
 	  GridData gridData;
 	  
-	  LinkLabel ll = new LinkLabel(
-			  cButtons,
-			  "label.help",
-			  new Runnable()
-			  {
-				  @Override
-				  public void run(){
-					  Utils.launch( Constants.URL_WIKI );
-				  }
-			  });
-	  
-	  
+	  LinkLabel ll = new LinkLabel( cButtons, "label.help", Constants.URL_WIKI );
+	    
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  ll.getlabel().setLayoutData( gridData );
 	  
