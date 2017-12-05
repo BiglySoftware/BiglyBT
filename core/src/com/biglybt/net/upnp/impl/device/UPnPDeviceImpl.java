@@ -287,6 +287,15 @@ UPnPDeviceImpl
 	public UPnPDeviceImage[]
 	getImages()
 	{
+		if ( images.isEmpty()){
+			
+			UPnPDevice root = getRootDevice().getDevice();
+			
+			if ( root != this ){
+				
+				return( root.getImages());
+			}
+		}
 		return images.toArray(new UPnPDeviceImage[0]);
 	}
 

@@ -540,6 +540,16 @@ DeviceImpl
 		return image_id;
 	}
 
+	public List<String>
+	getImageIDs()
+	{
+		if ( image_id == null ){
+			return( Collections.EMPTY_LIST );
+		}
+		
+		return( Arrays.asList( image_id ));
+	}
+	
 	@Override
 	public void setImageID(String id) {
 		if (!StringCompareUtils.equals(id, image_id)) {

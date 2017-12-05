@@ -3348,17 +3348,20 @@ DeviceManagerUI
 		}
 	}
 
-	protected static String
-	getDeviceImageID(
+	protected static String[]
+	getDeviceImageIDs(
 		Device		device )
 	{
-		String imageID = device.getImageID();
-		if (imageID != null) {
-			return imageID;
+		List<String> imageIDs = device.getImageIDs();
+		
+		if ( !imageIDs.isEmpty()){
+			
+			return(imageIDs.toArray( new String[ imageIDs.size()]));
 		}
 
-		if (!(device instanceof DeviceMediaRenderer)) {
-			return "" + DeviceMediaRenderer.RS_OTHER;
+		if (!(device instanceof DeviceMediaRenderer)){
+			
+			return new String[]{ "" + DeviceMediaRenderer.RS_OTHER };
 		}
 
 		int	species = ((DeviceMediaRenderer)device).getRendererSpecies();
@@ -3427,7 +3430,7 @@ DeviceManagerUI
 			}
 		}
 
-		return( id );
+		return( new String[]{ id });
 	}
 
 	private static void
@@ -5510,27 +5513,49 @@ DeviceManagerUI
 
 			} else if (propertyID == TITLE_IMAGEID) {
 				String imageID = null;
-				final String id = getDeviceImageID( device );
+				
+				String[] ids = getDeviceImageIDs( device );
 
-				if ( id != null ){
+				if ( ids.length > 0 ){
 
-					imageID = "image.sidebar.device." + id + ".small";
+					imageID = "image.sidebar.device." + ids[0] + ".small";
 
-					if (id.startsWith("http")) {
-						if (ImageLoader.getInstance().imageAdded_NoSWT(id)) {
-							imageID = id;
-						} else {
-  						Utils.execSWTThreadLater(0, new AERunnable() {
-  							@Override
-							  public void runSupport() {
-  								ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
-  									@Override
-									  public void imageDownloaded(Image image, boolean returnedImmediately) {
-  										ViewTitleInfoManager.refreshTitleInfo( deviceView.this );
-  									}
-  								});
-  							}
-  						});
+					if (ids[0].startsWith("http")) {
+						
+						boolean found = false;
+
+						for ( String id: ids ){
+													
+							Image[] existing = ImageLoader.getInstance().imageAdded_NoSWT(id);
+								
+							if ( existing != null ){
+								
+								found = true;
+								
+								imageID = id;
+							
+								if ( existing.length > 0 ){
+									
+									break;
+								}
+							}
+						}
+						
+						if ( !found ){
+							
+	  						Utils.execSWTThreadLater(0, new AERunnable() {
+	  							@Override
+								  public void runSupport() {
+	  								for ( String id: ids ){
+	  									ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
+	  										@Override
+	  										public void imageDownloaded(Image image, boolean returnedImmediately) {
+	  											ViewTitleInfoManager.refreshTitleInfo( deviceView.this );
+	  										}	
+	  									});
+	  								}
+	  							}
+	  						});
 						}
 					}
 				}

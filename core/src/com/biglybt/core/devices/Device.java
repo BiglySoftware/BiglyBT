@@ -23,6 +23,7 @@ package com.biglybt.core.devices;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.List;
 
 import com.biglybt.core.vuzefile.VuzeFile;
 
@@ -165,6 +166,9 @@ Device
 
 	public String
 	getImageID();
+
+	public List<String>
+	getImageIDs();
 
 	public void
 	setImageID(String id);
