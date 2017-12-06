@@ -56,8 +56,6 @@ import com.biglybt.core.devices.DeviceManager.DeviceManufacturer;
 import com.biglybt.core.devices.DeviceManager.UnassociatedDevice;
 import com.biglybt.core.download.DiskManagerFileInfoFile;
 import com.biglybt.core.download.DiskManagerFileInfoURL;
-import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.download.StreamManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
@@ -92,6 +90,7 @@ import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.plugin.net.buddy.swt.ChatView;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
@@ -108,6 +107,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.skin.SkinView;
@@ -211,13 +211,10 @@ DeviceManagerUI
 
 	private static final int	MAX_MS_DISPLAY_LINE_DEFAULT = 5000;
 
-	private int	max_ms_display_lines;
-
 	private DeviceManagerListener device_manager_listener_setupui;
 
 	private TranscodeQueueListener transcodeQueueListener;
 	private com.biglybt.core.config.ParameterListener configListener;
-	private com.biglybt.core.config.ParameterListener configMaxLinesListener;
 	private DeviceManagerListener deviceManagerListener;
 	private TranscodeManagerListener transcodeManagerListener;
 	private com.biglybt.core.config.ParameterListener parameterListener;
@@ -235,18 +232,6 @@ DeviceManagerUI
 		if (DISABLED) {
 			return;
 		}
-
-		configMaxLinesListener = new com.biglybt.core.config.ParameterListener() {
-			@Override
-			public void
-			parameterChanged(
-					String name) {
-				max_ms_display_lines = COConfigurationManager.getIntParameter(name, MAX_MS_DISPLAY_LINE_DEFAULT);
-			}
-		};
-		COConfigurationManager.addAndFireParameterListener(
-				"Plugin.default.device.config.ms.maxlines",
-				configMaxLinesListener);
 
 		ui_manager.addUIListener(
 				new UIManagerListener()
@@ -4086,12 +4071,6 @@ DeviceManagerUI
 			}
 		}
 
-		if (configMaxLinesListener != null) {
-			COConfigurationManager.removeParameterListener(
-					"Plugin.default.device.config.ms.maxlines",
-					configMaxLinesListener);
-			configMaxLinesListener = null;
-		}
 		if (parameterListener != null) {
 			COConfigurationManager.removeWeakParameterListener(parameterListener,
 					CONFIG_VIEW_TYPE, CONFIG_VIEW_HIDE_REND_GENERIC,
@@ -4402,9 +4381,9 @@ DeviceManagerUI
 	  }
 	}
 
-	protected class
+	public static class
 	deviceView
-		implements 	ViewTitleInfo, TranscodeTargetListener, UISWTViewEventListener
+		implements 	ViewTitleInfo, TranscodeTargetListener, UISWTViewCoreEventListenerEx
 	{
 		private String			parent_key;
 		private Device			device;
@@ -4412,15 +4391,51 @@ DeviceManagerUI
 		private Composite		parent_composite;
 		private Composite		composite;
 
-		private int last_indicator;
-		private UISWTView swtView;
+		private int 		last_indicator;
+		private UISWTView 	swtView;
 
 		private Runnable	refresher;
 		
 		protected
 		deviceView(
-			String			_parent_key,
-			Device			_device )
+			String			parent_key,
+			Device			device )
+		{
+			init( parent_key, device );
+		}
+
+		public
+		deviceView(
+			String	_parent_key,
+			String	_device_id )
+		{
+			Device[] devices = DeviceManagerFactory.getSingleton().getDevices();
+			
+			Device device = null;
+			
+			for ( Device d: devices ){
+				
+				if ( d.getID().equals( _device_id )){
+					
+					device = d;
+					
+					break;
+				}
+			}
+			
+			if ( device == null ){
+				
+				throw( new RuntimeException( "Device with ID '" + _device_id + "' not found" ));
+			}
+			
+			init( _parent_key, device );
+		}
+		
+		
+		private void
+		init(
+			String		_parent_key,
+			Device		_device )
 		{
 			parent_key	= _parent_key;
 			device		= _device;
@@ -4432,7 +4447,42 @@ DeviceManagerUI
 				renderer.addListener( this );
 			}
 		}
+		
+		@Override
+		public boolean
+		isCloneable()
+		{
+			return( true );
+		}
 
+		@Override
+		public UISWTViewCoreEventListenerEx
+		getClone()
+		{
+			return( new deviceView( parent_key, device));
+		}
+		
+		@Override
+		public CloneConstructor
+		getCloneConstructor()
+		{
+			return( 
+				new CloneConstructor()
+				{
+					public Class<? extends UISWTViewCoreEventListenerEx>
+					getCloneClass()
+					{
+						return( deviceView.class );
+					}
+					
+					public List<Object>
+					getParameters()
+					{
+						return( Arrays.asList( new String[]{ parent_key, device.getID()}));
+					}
+				});
+		}
+		
 		public void
 		initialize(
 			Composite _parent_composite )
@@ -4883,6 +4933,7 @@ DeviceManagerUI
 						{
 							boolean	went_async = false;
 
+							int max_ms_display_lines = COConfigurationManager.getIntParameter( "Plugin.default.device.config.ms.maxlines", MAX_MS_DISPLAY_LINE_DEFAULT);
 							try{
 								refresh.setEnabled( false );
 
@@ -4911,7 +4962,7 @@ DeviceManagerUI
 										run()
 										{
 											try{
-												String client_name = device_manager.getLocalServiceName();
+												String client_name = DeviceManagerFactory.getSingleton().getLocalServiceName();
 
 												UPNPMSBrowser browser =
 													UPNPMSBrowserFactory.create(
@@ -5226,18 +5277,20 @@ DeviceManagerUI
 			
 			composite.setLayout( layout );
 			
+			/*
 			Label label = new Label( composite, SWT.NULL );
 			GridData gd = new GridData( GridData.FILL_HORIZONTAL );
 			gd.horizontalSpan = 5;
 			label.setLayoutData( gd );
 			
 			label.setText( device.getName());
+			*/
 			
 			Label max_up_info = new Label( composite, SWT.NULL );
 			Messages.setLanguageText( max_up_info, "SpeedTestWizard.finish.panel.max.upload" );
 			
 			Label max_up = new Label( composite, SWT.NULL );
-			gd = new GridData();
+			GridData gd = new GridData();
 			gd.widthHint = 80;
 			max_up.setLayoutData( gd );
 			

@@ -1310,7 +1310,7 @@ public abstract class BaseMdiEntry
 		
 			CloneConstructor cc = ((UISWTViewCoreEventListenerEx)listener).getCloneConstructor();
 		
-			String name = cc.getCloneClass().getCanonicalName();
+			String name = cc.getCloneClass().getName();
 			
 			Map<String,Object>	map = new HashMap<>();
 			
