@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.List;
 
 import com.biglybt.ui.swt.UIExitUtilsSWT.canCloseListener;
+import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.components.graphics.MultiPlotGraphic;
 import com.biglybt.ui.swt.components.graphics.ValueFormater;
@@ -63,6 +64,8 @@ import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.average.AverageFactory;
+import com.biglybt.core.util.average.MovingAverage;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.net.upnp.UPnPDevice;
@@ -144,8 +147,8 @@ DeviceManagerUI
 	private static final boolean	SHOW_OD_VITALITY 		= true;
 
 	private static Color[]	colors = {
-			Colors.fadedGreen, 
-			Colors.blues[Colors.BLUES_DARKEST] };
+			Colors.fadedGreen, Colors.fadedGreen, 
+			Colors.blues[Colors.BLUES_DARKEST], Colors.blues[Colors.BLUES_DARKEST] };
 	
 	//private static final String[] to_copy_indicator_colors = { "#000000", "#000000", "#168866", "#1c5620" };
 
@@ -5286,26 +5289,33 @@ DeviceManagerUI
 			label.setText( device.getName());
 			*/
 			
-			Label max_up_info = new Label( composite, SWT.NULL );
-			Messages.setLanguageText( max_up_info, "SpeedTestWizard.finish.panel.max.upload" );
+			Label max_up_down_info = new Label( composite, SWT.NULL );
+			Messages.setLanguageText( max_up_down_info, "label.connection.max.up.down" );
 			
-			Label max_up = new Label( composite, SWT.NULL );
+			Label max_up_down = new Label( composite, SWT.NULL );
 			GridData gd = new GridData();
-			gd.widthHint = 80;
-			max_up.setLayoutData( gd );
-			
-			Label max_down_info = new Label( composite, SWT.NULL );
-			Messages.setLanguageText( max_down_info, "SpeedTestWizard.finish.panel.max.download" );
-	
-			Label max_down = new Label( composite, SWT.NULL );
-			gd = new GridData();
-			gd.widthHint = 80;
-			max_down.setLayoutData( gd );
+			gd.widthHint = 150;
+			max_up_down.setLayoutData( gd );
 			
 			Label pad = new Label( composite, SWT.NULL );
 			pad.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
-			
+
+			Label total_up_down_info = new Label( composite, SWT.NULL );
+			Messages.setLanguageText( total_up_down_info, "label.total.up.down" );
+	
+			BufferedLabel total_up_down = new BufferedLabel( composite, SWT.DOUBLE_BUFFERED );
+			gd = new GridData();
+			gd.widthHint = 120;
+			total_up_down.setLayoutData( gd );
+						
 			final int update_secs = 5;
+			
+			MovingAverage up_average = AverageFactory.MovingAverage( 60/update_secs );
+			MovingAverage down_average = AverageFactory.MovingAverage( 60/update_secs );
+			
+			long[]	total_sent_received_initial = { 0, 0 };
+			long[]	total_sent_received			= { 0, 0 };
+			long[]	total_sent_received_wrapped	= { 0, 0 };
 			
 		    ValueFormater formatter =
 			    	new ValueFormater()
@@ -5323,7 +5333,7 @@ DeviceManagerUI
 			    final ValueSourceImpl[] sources = {
 			    	new ValueSourceImpl( "Up", 0, colors, true, false, false )
 			    	{
-			    		long	last_value = 0;
+			    		long	last_value = -1;
 			    		
 			    		@Override
 					    public int
@@ -5332,17 +5342,50 @@ DeviceManagerUI
 			    			try{
 			    				long sent = config.getTotalBytesSent();
 			    				
+			    				total_sent_received[0] = sent;
+			    				
 			    				int result;
 			    				
-			    				if ( last_value == 0 ){
+			    				if ( last_value == -1 ){
 			    					
 			    					result = 0;
+			    					
+			    					if ( sent < 0x0100000000L ){
+			    						
+			    							// assume wrapping is occurring
+			    						
+			    						total_sent_received_initial[0] = sent;
+			    					}
 			    				}else{
 			    					
-			    					result = (int)( sent - last_value );
+			    					if ( sent < last_value ){
+			    						
+			    							// wrapped
+			    						
+			    						long	boundary = 0;
+			    						
+			    						if ( last_value <= 0x007fffffffL ){
+			    						
+			    							boundary = 0x0080000000L;
+			    								
+			    						}else{
+			    							
+			    							boundary = 0x0100000000L;
+			    						}
+			    						
+			    						total_sent_received_wrapped[0] += boundary;
+			    						
+			    						result = (int)( boundary - last_value + sent );
+			    						
+			    					}else{
+			    						
+			    						result = (int)( sent - last_value );
+			    					}
 			    				}
 			    				
 			    				last_value = sent;
+			    				
+			    				up_average.update( result );
 			    				
 			    				return( result );
 			    				
@@ -5352,28 +5395,68 @@ DeviceManagerUI
 			    			}
 			    		}
 			    	},
-			    	new ValueSourceImpl( "Down", 1, colors, false, false, false )
+			    	new ValueSourceImpl( "Up Smooth", 1, colors, true, false, true )
 			    	{
-			    		long	last_value = 0;
+			    		@Override
+					    public int
+			    		getValue()
+			    		{
+			    			return((int)up_average.getAverage());
+			    		}
+			    	},
+			    	new ValueSourceImpl( "Down", 2, colors, false, false, false )
+			    	{
+			    		long	last_value = -1;
 			    		
 			    		@Override
 					    public int
 			    		getValue()
 			    		{
 			    			try{
-			    				long sent = config.getTotalBytesReceived();
+			    				long received = config.getTotalBytesReceived();
+			    				
+			    				total_sent_received[1] = received;
 			    				
 			    				int result;
 			    				
-			    				if ( last_value == 0 ){
+			    				if ( last_value == -1 ){
 			    					
 			    					result = 0;
+			    					
+			    					if ( received < 0x0100000000L ){
+			    						
+			    						total_sent_received_initial[1] = received;
+			    					}
 			    				}else{
 			    					
-			    					result = (int)( sent - last_value );
+			    					if ( received < last_value ){
+			    						
+			    							// wrapped
+			    						
+			    						long	boundary = 0;
+			    						
+			    						if ( last_value <= 0x007fffffffL ){
+			    						
+			    							boundary = 0x0080000000L;
+			    								
+			    						}else{
+			    							
+			    							boundary = 0x0100000000L;
+			    						}
+			    						
+			    						total_sent_received_wrapped[1] += boundary;
+			    						
+			    						result = (int)( boundary - last_value + received );
+			    						
+			    					}else{
+			    						
+			    						result = (int)( received - last_value );
+			    					}
 			    				}
 			    				
-			    				last_value = sent;
+			    				last_value = received;
+			    				
+			    				down_average.update( result );
 			    				
 			    				return( result );
 			    				
@@ -5381,6 +5464,15 @@ DeviceManagerUI
 			    				
 			    				return( 0 );
 			    			}
+			    		}
+			    	},
+			    	new ValueSourceImpl( "Down Smooth", 3, colors, false, false, true )
+			    	{
+				    	@Override
+					    public int
+			    		getValue()
+			    		{
+				    		return((int)down_average.getAverage());
 			    		}
 			    	},
 			    };
@@ -5390,7 +5482,9 @@ DeviceManagerUI
 
 			String[] color_configs = new String[] {
 					"DeviceManagerUI.legend.up",
+					"DeviceManagerUI.legend.up.smooth",
 					"DeviceManagerUI.legend.down",
+					"DeviceManagerUI.legend.down.smooth",
 				};
 
 			Legend.LegendListener legend_listener =
@@ -5464,8 +5558,9 @@ DeviceManagerUI
 									public void 
 									run()
 									{
-										max_down.setText( DisplayFormatters.formatByteCountToKiBEtcPerSec( result[0]/8 ));
-										max_up.setText( DisplayFormatters.formatByteCountToKiBEtcPerSec( result[1]/8 ));
+										max_up_down.setText( 
+											DisplayFormatters.formatByteCountToBitsPerSec( result[1]/8 ) + ", " +
+											DisplayFormatters.formatByteCountToBitsPerSec( result[0]/8 ));
 									}
 								});
 					}catch( Throwable e ){
@@ -5476,8 +5571,7 @@ DeviceManagerUI
 								public void 
 								run()
 								{
-									max_up.setText( "<Unknown>");
-									max_down.setText( "<Unknown>");
+									max_up_down.setText( MessageText.getString( "SpeedView.stats.unknown" ));
 								}
 							});
 					}
@@ -5492,6 +5586,11 @@ DeviceManagerUI
 					@Override
 					public void run(){
 						mpg.refresh( false );
+						
+						total_up_down.setText( 
+							DisplayFormatters.formatByteCountToKiBEtc( total_sent_received[0] - total_sent_received_initial[0] + total_sent_received_wrapped[0] ) + ", " +
+							DisplayFormatters.formatByteCountToKiBEtc( total_sent_received[1] - total_sent_received_initial[1] + total_sent_received_wrapped[1]  ));
+
 					}
 				};
 				
