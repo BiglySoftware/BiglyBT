@@ -79,6 +79,7 @@ DownloadManagerState
 	public static final String AT_AGGREGATE_SCRAPE_CACHE	= "agsc";			// string <update_time_mins>,<seeds>,<leechers>
 	public static final String AT_COMPLETE_LAST_TIME		= "complt";			// long - last time download reported complete, -1 if reported incomplete, 0 if unknown
 	public static final String AT_LAST_ADDED_TO_ACTIVE_TAG	= "last.act.tag";	// long - last time added to active tag
+	public static final String AT_MOVE_ON_COMPLETE_DIR		= "moc.dir";		// String - explicit move-on-complete folder
 
 	public static Object[][] ATTRIBUTE_DEFAULTS = {
 		{ AT_VERSION,								new Integer( -1 )},

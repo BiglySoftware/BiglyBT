@@ -151,10 +151,10 @@ public class TorrentUtil
 		boolean bChangeDir = hasSelection;
 
 		boolean start, stop, pause, changeUrl, barsOpened, forceStart;
-		boolean forceStartEnabled, recheck, manualUpdate, fileMove, fileExport, fileRescan;
+		boolean forceStartEnabled, recheck, manualUpdate, fileMove, canSetMOC, canClearMOC, fileExport, fileRescan;
 
-		changeUrl = barsOpened = manualUpdate = fileMove = fileExport = fileRescan = true;
-		forceStart = forceStartEnabled = recheck = start = stop = pause = false;
+		changeUrl = barsOpened = manualUpdate = fileMove = canSetMOC = fileExport = fileRescan = true;
+		forceStart = forceStartEnabled = recheck = start = stop = pause = canClearMOC = false;
 
 		boolean canSetSuperSeed = false;
 		boolean superSeedAllYes = true;
@@ -269,15 +269,21 @@ public class TorrentUtil
 					}
 				}
 
+				boolean incomplete = !dm.isDownloadComplete(true);
+
 				DownloadManagerState dm_state = dm.getDownloadState();
 
+				String moc_dir = dm_state.getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+				
+				canSetMOC &= incomplete;
+				canClearMOC |= (moc_dir != null && moc_dir.length() > 0 );
+						
 				boolean scan = dm_state.getFlag(
 						DownloadManagerState.FLAG_SCAN_INCOMPLETE_PIECES);
 
 				// include DND files in incomplete stat, since a recheck may
 				// find those files have been completed
-				boolean incomplete = !dm.isDownloadComplete(true);
-
+				
 				allScanSelected = incomplete && allScanSelected && scan;
 				allScanNotSelected = incomplete && allScanNotSelected && !scan;
 
@@ -334,6 +340,7 @@ public class TorrentUtil
 			fileMove = false;
 			fileExport = false;
 			fileRescan = false;
+			canSetMOC = false;
 			upSpeedDisabled = true;
 			downSpeedDisabled = true;
 			changeUrl = false;
@@ -580,6 +587,46 @@ public class TorrentUtil
 		});
 		itemFileMoveTorrent.setEnabled(fileMove);
 
+			// move on complete
+		
+		final Menu moc_menu = new Menu( shell, SWT.DROP_DOWN);
+
+		MenuItem moc_item = new MenuItem( menuFiles, SWT.CASCADE);
+
+		Messages.setLanguageText( moc_item, "label.move.on.comp" );
+
+		moc_item.setMenu( moc_menu );
+
+		MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
+
+		Messages.setLanguageText( clear_item, "Button.clear" );
+
+		clear_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				clearMOC(shell, dms);
+			}
+		});
+
+		clear_item.setEnabled( canClearMOC );
+		
+		MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
+
+		Messages.setLanguageText( set_item, "label.set" );
+		
+		set_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				setMOC(shell, dms);
+			}
+		});
+		
+		set_item.setEnabled( canSetMOC );
+		
+		moc_item.setEnabled( canClearMOC || canSetMOC );
+		
+			// file export
+		
 		final MenuItem itemFileExport = new MenuItem(menuFiles, SWT.PUSH);
 		Messages.setLanguageText(itemFileExport, "MyTorrentsView.menu.exportdownload");
 		itemFileExport.addListener(SWT.Selection, new ListenerDMTask(dms) {
@@ -2364,6 +2411,49 @@ public class TorrentUtil
 		}
 	}
 
+	protected static void clearMOC(Shell shell, DownloadManager[] dms) {
+		if (dms != null && dms.length > 0) {
+
+			for (int i = 0; i < dms.length; i++) {
+	
+				dms[i].getDownloadState().setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, null );
+			}
+		}
+	}
+	
+	protected static void setMOC(Shell shell, DownloadManager[] dms) {
+		if (dms != null && dms.length > 0) {
+
+			DirectoryDialog dd = new DirectoryDialog(shell);
+
+			String filter_path = TorrentOpener.getFilterPathData();
+
+			// If we don't have a decent path, default to the path of the first
+			// torrent.
+			if (filter_path == null || filter_path.trim().length() == 0) {
+				filter_path = new File(dms[0].getTorrentFileName()).getParent();
+			}
+
+			dd.setFilterPath(filter_path);
+
+			dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+			String path = dd.open();
+
+			if ( path != null ){
+
+				TorrentOpener.setFilterPathData(path);
+
+				File target = new File(path);
+
+				for (int i = 0; i < dms.length; i++) {
+
+					dms[i].getDownloadState().setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, target.getAbsolutePath());
+				}
+			}
+		}
+	}
+	
 	protected static void exportDownloads(Shell shell, DownloadManager[] dms) {
 		if (dms != null && dms.length > 0) {
 
