@@ -5341,9 +5341,7 @@ DeviceManagerUI
 			    		{
 			    			try{
 			    				long sent = config.getTotalBytesSent();
-			    				
-			    				System.out.println( "sent=" + sent );
-			    				
+			    							    				
 			    				total_sent_received[0] = sent;
 			    				
 			    				int result;
