@@ -117,6 +117,8 @@ public class TorrentOpenOptions
 	private int max_up;
 	private int max_down;
 
+	private File	move_on_complete;
+	
 	private boolean	hide_errors;
 
 	public static final int CA_NONE			= 0;
@@ -191,9 +193,11 @@ public class TorrentOpenOptions
 				updatedTrackers.add(new ArrayList<>(l));
 			}
 		}
-		this.max_up 		= toBeCloned.max_up;
-		this.max_down 		= toBeCloned.max_down;
-		this.hide_errors	= toBeCloned.hide_errors;
+		this.max_up 			= toBeCloned.max_up;
+		this.max_down 			= toBeCloned.max_down;
+		this.move_on_complete	= toBeCloned.move_on_complete;
+		
+		this.hide_errors		= toBeCloned.hide_errors;
 	}
 
 	public static int getDefaultStartMode() {
@@ -496,6 +500,20 @@ public class TorrentOpenOptions
 	{
 		return( max_down );
 	}
+	
+	public File
+	getMoveOnComplete()
+	{
+		return( move_on_complete );
+	}
+	
+	public void
+	setMoveOnComplete(
+		File	f )
+	{
+		move_on_complete = f;
+	}
+	
 	public void
 	setHideErrors(
 		boolean		h )

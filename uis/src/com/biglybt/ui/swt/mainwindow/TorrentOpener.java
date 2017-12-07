@@ -616,6 +616,14 @@ public class TorrentOpener {
 							
 							dm_state.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );
 						}
+						
+						File moc = torrentOptions.getMoveOnComplete();
+						
+						if ( moc != null ){
+							
+							dm_state.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
+						}
+						
 					} finally {
 
 						dm.getDownloadState().suppressStateSave(false);
