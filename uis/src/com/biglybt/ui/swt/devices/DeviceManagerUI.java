@@ -5342,6 +5342,8 @@ DeviceManagerUI
 			    			try{
 			    				long sent = config.getTotalBytesSent();
 			    				
+			    				System.out.println( "sent=" + sent );
+			    				
 			    				total_sent_received[0] = sent;
 			    				
 			    				int result;
@@ -5358,7 +5360,7 @@ DeviceManagerUI
 			    					}
 			    				}else{
 			    					
-			    					if ( sent < last_value ){
+			    					if ( sent < last_value && last_value - sent > 0x003fffffffL ){
 			    						
 			    							// wrapped
 			    						
@@ -5381,6 +5383,11 @@ DeviceManagerUI
 			    						
 			    						result = (int)( sent - last_value );
 			    					}
+			    				}
+			    				
+			    				if ( result < 0 ){
+			    					
+			    					result = 0;
 			    				}
 			    				
 			    				last_value = sent;
@@ -5429,7 +5436,7 @@ DeviceManagerUI
 			    					}
 			    				}else{
 			    					
-			    					if ( received < last_value ){
+			    					if ( received < last_value && last_value - received > 0x003fffffffL ){
 			    						
 			    							// wrapped
 			    						
@@ -5452,6 +5459,11 @@ DeviceManagerUI
 			    						
 			    						result = (int)( received - last_value );
 			    					}
+			    				}
+			    				
+			    				if ( result < 0 ){
+			    					
+			    					result = 0;
 			    				}
 			    				
 			    				last_value = received;
