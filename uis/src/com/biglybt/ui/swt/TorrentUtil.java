@@ -604,7 +604,7 @@ public class TorrentUtil
 		clear_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
-				clearMOC(shell, dms);
+				clearMOC(dms);
 			}
 		});
 
@@ -2411,7 +2411,7 @@ public class TorrentUtil
 		}
 	}
 
-	protected static void clearMOC(Shell shell, DownloadManager[] dms) {
+	protected static void clearMOC(DownloadManager[] dms) {
 		if (dms != null && dms.length > 0) {
 
 			for (int i = 0; i < dms.length; i++) {

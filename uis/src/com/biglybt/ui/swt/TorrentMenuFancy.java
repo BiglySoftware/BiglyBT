@@ -2346,7 +2346,7 @@ public class TorrentMenuFancy
 							clear_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
 								@Override
 								public void run(DownloadManager[] dms) {
-									TorrentUtil.clearMOC(shell, dms);
+									TorrentUtil.clearMOC(dms);
 								}
 							});
 
