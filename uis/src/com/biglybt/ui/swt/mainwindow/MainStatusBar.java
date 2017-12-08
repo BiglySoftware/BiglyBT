@@ -61,6 +61,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.Alerts.AlertHistoryListener;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.nat.NatTestWindow;
 import com.biglybt.ui.swt.progress.*;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
@@ -121,8 +122,9 @@ public class MainStatusBar
 
 	private int last_sr_status = -1;
 
-	private int lastNATstatus = -1;
-
+	private int 	lastNATstatus 	= -1;
+	private String 	lastNATInfo		= "";
+	
 	private String lastNATimageID = null;
 
 	private int lastDHTstatus = -1;
@@ -420,6 +422,21 @@ public class MainStatusBar
 		natStatus = new CLabelPadding(statusBar, borderFlag);
 		natStatus.setText("");
 
+		final Menu natStatusMenu = new Menu(statusBar.getShell(), SWT.POP_UP);
+		natStatus.setMenu( natStatusMenu );
+		
+		MenuItem nat_test = new MenuItem( natStatusMenu, SWT.PUSH );
+		Messages.setLanguageText( nat_test, "MainWindow.menu.tools.nattest" );
+		nat_test.addSelectionListener(
+			new SelectionAdapter(){
+				
+				@Override
+				public void widgetSelected(SelectionEvent arg0){
+						new NatTestWindow();
+				}
+			});
+				
+		
 		Utils.addAndFireParameterListener(mapConfigListeners, true,
 				"Status Area Show NAT", new ParameterListener() {
 					@Override
@@ -1536,9 +1553,16 @@ public class MainStatusBar
 			return;
 		}
 
-		int nat_status = connection_manager.getNATStatus();
+		Object[] o_status = connection_manager.getNATStatusEx();
 
-		if (lastNATstatus != nat_status) {
+		int nat_status 	= (Integer)o_status[0];
+		String nat_info = (String)o_status[1];
+		
+		if ( nat_info == null ){
+			nat_info = "";
+		}
+		
+		if (lastNATstatus != nat_status || !lastNATInfo.equals( nat_info )) {
 			String imgID;
 			String tooltipID;
 			String statusID;
@@ -1579,9 +1603,20 @@ public class MainStatusBar
 				lastNATimageID = imgID;
 			}
 
-			natStatus.setToolTipText(MessageText.getString(tooltipID));
+			String tt = MessageText.getString(tooltipID);
+			
+			tt= tt.replaceAll( " \\(TCP\\)", "" );
+			
+			if ( !nat_info.isEmpty() ){
+				tt += "\n" + nat_info;
+			}
+			natStatus.setToolTipText( tt );
+			lastNATInfo		= nat_info;
+			
 			natStatus.setText(MessageText.getString(statusID));
-			lastNATstatus = nat_status;
+			
+			lastNATstatus 	= nat_status;
+			
 		}
 	}
 

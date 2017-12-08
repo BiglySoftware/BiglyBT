@@ -2470,8 +2470,10 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 					if ( pc.isTCP() ) {
 
-						new_tcp_incoming++;
-
+						if ( pc.getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+						
+							new_tcp_incoming++;
+						}
 					}else{
 
 						String protocol = pc.getProtocol();
