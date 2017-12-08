@@ -126,6 +126,21 @@ public class SB_Transfers
 				}
 			}, 2500 );
 	
+	private void
+	requestRedraw(
+		MdiEntry	entry )
+	{
+		synchronized( redraw_pending ){
+			
+			if ( !redraw_pending.contains( entry )){
+				
+				redraw_pending.add( entry );
+				
+				redraw_disp.dispatch();
+			}
+		}
+	}
+	
 	public static class stats
 	{
 		int numSeeding = 0;
@@ -1234,15 +1249,7 @@ public class SB_Transfers
 			
 			entry.setUserData( TAG_INDICATOR_KEY, tag_count );
 			
-			synchronized( redraw_pending ){
-				
-				if ( !redraw_pending.contains( entry )){
-					
-					redraw_pending.add( entry );
-					
-					redraw_disp.dispatch();
-				}
-			}
+			requestRedraw( entry );
 		}
 		
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
@@ -1746,6 +1753,8 @@ public class SB_Transfers
 				}
 			}
 			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+			
+			requestRedraw( entry );
 		}
 
 		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD);
@@ -1769,6 +1778,8 @@ public class SB_Transfers
 		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
 		if (entry != null) {
 			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+			
+			requestRedraw( entry );
 		}
 	}
 
