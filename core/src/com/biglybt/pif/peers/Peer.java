@@ -47,6 +47,7 @@ Peer
 	public final static Object PR_PRIORITY_CONNECTION 	= new Object();
 	public final static Object PR_PROTOCOL				= new Object();
 	public final static Object PR_PROTOCOL_QUALIFIER	= new Object();
+	public final static Object PR_FORCE_CONNECTION		= new Object();
 
 	public void
 	bindConnection(
@@ -92,6 +93,9 @@ Peer
 	public boolean
 	isLANLocal();
 
+	public void
+	resetLANLocalStatus();
+	
 	public boolean[] getAvailable();
 	/**
 	 * @param pieceNumber int

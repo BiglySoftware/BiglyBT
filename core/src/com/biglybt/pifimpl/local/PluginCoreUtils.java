@@ -579,6 +579,13 @@ PluginCoreUtils
 		return( ((TrackerTorrentImpl)torrent).getHostTorrent().getTrackerTorrent());
 	}
 
+	public static Peer
+	wrap(
+		PEPeer		peer )
+	{
+		return( PeerManagerImpl.getPeerForPEPeer( peer ));
+	}
+		
 	public static PEPeer
 	unwrap(
 		Peer		peer )

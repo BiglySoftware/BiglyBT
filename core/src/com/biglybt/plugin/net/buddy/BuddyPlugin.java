@@ -64,6 +64,7 @@ import com.biglybt.pif.messaging.generic.GenericMessageHandler;
 import com.biglybt.pif.messaging.generic.GenericMessageRegistration;
 import com.biglybt.pif.network.ConnectionManager;
 import com.biglybt.pif.network.RateLimiter;
+import com.biglybt.pif.peers.Peer;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
@@ -981,6 +982,42 @@ BuddyPlugin
 		return( latest_publish.getOnlineStatus());
 	}
 
+	public boolean
+	isPartialBuddy(
+		Download	download,
+		Peer		peer )
+	{
+		BuddyPluginTracker tracker = getTracker();
+		
+		return( tracker.isPartialBuddy( download, peer ));
+	}
+	
+	public void
+	setPartialBuddy(
+		Download	download,
+		Peer		peer,
+		boolean		b )
+	{
+		if ( b ){
+			
+			if ( !isClassicEnabled()){
+				
+				setClassicEnabled( true );
+			}
+		}
+		
+		BuddyPluginTracker tracker = getTracker();
+		
+		if ( b ){
+			
+			tracker.addPartialBuddy( download, peer );
+			
+		}else{
+			
+			tracker.removePartialBuddy( download, peer );
+		}
+	}
+	
 	public BooleanParameter
 	getEnableChatNotificationsParameter()
 	{

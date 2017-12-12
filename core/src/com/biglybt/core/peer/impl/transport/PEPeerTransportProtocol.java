@@ -5464,6 +5464,13 @@ implements PEPeerTransport
 		if( connection == null )  return( AddressUtils.isLANLocalAddress( ip ) == AddressUtils.LAN_LOCAL_YES );
 		return connection.isLANLocal();
 	}
+	
+	@Override
+	public void resetLANLocalStatus(){
+		if ( connection != null ){
+			connection.resetLANLocalStatus();
+		}
+	}
 
 	@Override
 	public boolean

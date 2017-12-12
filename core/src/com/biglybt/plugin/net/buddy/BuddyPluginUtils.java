@@ -252,7 +252,7 @@ BuddyPluginUtils
 		return( language_chat );
 	}
 	
-	private static BuddyPlugin
+	public static BuddyPlugin
 	getPlugin()
 	{
 		PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( "azbuddy", true );
