@@ -716,9 +716,7 @@ outer:
 			
 			dls.add( download );
 		}
-		
-		plugin.logMessage( "Partial buddy added: " + download.getName() + "/" + pb );
-		
+				
 		try{
 			if ( plugin.getPeersAreLANLocal() && !peer.isLANLocal()){
 				
@@ -730,6 +728,10 @@ outer:
 			
 			Debug.out( e );;
 		}
+		
+		markBuddyPeer( download, peer );
+		
+		plugin.logMessage( "Partial buddy added: " + download.getName() + "/" + pb );
 	}
 	
 	public boolean
@@ -768,9 +770,7 @@ outer:
 				partial_buddies.remove( pb );
 			}
 		}
-		
-		unmarkBuddyPeer( peer );
-		
+				
 		try{
 			if ( plugin.getPeersAreLANLocal() && peer.isLANLocal()){
 				
@@ -783,6 +783,8 @@ outer:
 			Debug.out( e );;
 		}
 		
+		unmarkBuddyPeer( peer );
+
 		plugin.logMessage( "Partial buddy removed: " + download.getName() + "/" + pb );
 	}
 	
