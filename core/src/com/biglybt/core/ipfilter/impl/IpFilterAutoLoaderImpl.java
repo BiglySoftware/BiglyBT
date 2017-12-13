@@ -51,7 +51,8 @@ public class IpFilterAutoLoaderImpl
 {
 	static final LogIDs LOGID = LogIDs.CORE;
 
-	public static final String CFG_AUTOLOAD_LAST = "Ip Filter Autoload Last Date";
+	public static final String CFG_AUTOLOAD_LAST 	= "Ip Filter Autoload Last Date";
+	public static final String CFG_AUTOLOAD_DAYS 	= "Ip Filter Autoload Days";
 
 	public static final String CFG_AUTOLOAD_FILE = "Ip Filter Autoload File";
 
@@ -66,6 +67,7 @@ public class IpFilterAutoLoaderImpl
 	public IpFilterAutoLoaderImpl(IpFilterImpl ipFilter) {
 		this.ipFilter = ipFilter;
 		COConfigurationManager.setLongDefault(CFG_AUTOLOAD_LAST, 0);
+		COConfigurationManager.setLongDefault(CFG_AUTOLOAD_DAYS, 7);
 		COConfigurationManager.setStringDefault(CFG_AUTOLOAD_FILE, "");
 	}
 
@@ -580,7 +582,13 @@ public class IpFilterAutoLoaderImpl
 			}
 		}
 
-		long nextDL = lastDL + (86400000L * 7);
+		int	reloadPeriod = COConfigurationManager.getIntParameter( CFG_AUTOLOAD_DAYS );
+		
+		if ( reloadPeriod < 1 ){
+			reloadPeriod = 1;
+		}
+		
+		long nextDL = lastDL + (86400000L * reloadPeriod);
 
 		if (timerEventFilterReload instanceof TimerEvent) {
 			((TimerEvent) timerEventFilterReload).cancel();

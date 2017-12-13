@@ -419,7 +419,7 @@ DownloadManager
      * @return
      */
 
-     public int
+     public Object[]
      getNATStatus();
 
         /**

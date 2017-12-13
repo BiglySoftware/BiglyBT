@@ -1278,4 +1278,64 @@ DeviceUPnPImpl
 		}
 		return imageID;
 	}
+	
+	@Override
+	public List<String> getImageIDs() {
+		List<String> imageIDs = super.getImageIDs();
+		// commented out existing imageid check so upnp device image overrides
+		if (/*imageID == null && */ device_may_be_null != null && isAlive()) {
+			UPnPDeviceImage[] images = device_may_be_null.getImages();
+			if (images.length > 0) {
+								
+				URL location = getLocation();
+				
+				if (location != null) {
+				
+					List<String> urls = new ArrayList<>();
+
+					String url = "http://" + location.getHost() + ":" + location.getPort();
+					String imageUrl = images[0].getLocation();
+					for (UPnPDeviceImage imageInfo : images) {
+						String mime = imageInfo.getLocation();
+						if (mime != null && mime.contains("png")) {
+							imageUrl = imageInfo.getLocation();
+							break;
+						}
+					}
+					if (!imageUrl.startsWith("/")) {
+						url += "/";
+					}
+					url += imageUrl;
+					
+					urls.add( url );
+					
+					// bug in BT smart hub that returns absolute URL that shoudl be relative to add that in
+					
+					String loc_str = location.toExternalForm();
+					
+					int pos = loc_str.lastIndexOf( '/' );
+					
+					if ( pos != -1 ){
+					
+						loc_str = loc_str.substring( 0, pos + 1 );
+					
+						if ( imageUrl.startsWith( "/" )){
+							
+							imageUrl = imageUrl.substring( 1 );
+						}
+						
+						loc_str += imageUrl;
+						
+						if ( !urls.contains( loc_str )){
+						
+							urls.add( loc_str );
+						}
+					}
+					
+					return urls;
+				}
+			}
+		}
+		return imageIDs;
+	}
 }

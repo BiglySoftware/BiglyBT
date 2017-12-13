@@ -2252,7 +2252,7 @@ DownloadManagerController
 	public boolean
 	isNATHealthy()
 	{
-		return( download_manager.getNATStatus() == ConnectionManager.NAT_OK );
+		return( ((Integer)download_manager.getNATStatus()[0]) == ConnectionManager.NAT_OK );
 	}
 
 	@Override

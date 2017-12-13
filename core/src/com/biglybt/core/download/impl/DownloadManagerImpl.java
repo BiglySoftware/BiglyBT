@@ -3765,7 +3765,7 @@ DownloadManagerImpl
 	}
 
 	@Override
-	public int
+	public Object[]
 	getNATStatus()
 	{
 		int	state = getState();
@@ -3774,82 +3774,106 @@ DownloadManagerImpl
 
 		TRTrackerAnnouncer tc = getTrackerClient();
 
+		final int		nat_status;
+		final String 	nat_info;
+		
 		if ( tc != null && peerManager != null && (state == STATE_DOWNLOADING || state == STATE_SEEDING)) {
 
-			if ( peerManager.getNbRemoteTCPConnections() > 0 || peerManager.getNbRemoteUTPConnections() > 0 ){
+			int	rem_tcp = peerManager.getNbRemoteTCPConnections();
+			int rem_utp	= peerManager.getNbRemoteUTPConnections();
+			
+			if ( rem_tcp > 0 || rem_utp > 0 ){
 
-				return( ConnectionManager.NAT_OK );
-			}
-
-			long	last_good_time = peerManager.getLastRemoteConnectionTime();
-
-			if ( last_good_time > 0 ){
-
-					// half an hour's grace
-
-				if ( SystemTime.getCurrentTime() - last_good_time < 30*60*1000 ){
-
-					return( ConnectionManager.NAT_OK );
-
-				}else{
-
-					return( ConnectionManager.NAT_PROBABLY_OK );
-				}
-			}
-
-			TRTrackerAnnouncerResponse	announce_response = tc.getLastResponse();
-
-			int trackerStatus = announce_response.getStatus();
-
-			if( 	trackerStatus == TRTrackerAnnouncerResponse.ST_OFFLINE ||
-					trackerStatus == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR){
-
-				return ConnectionManager.NAT_UNKNOWN;
-			}
-
-				// tracker's ok but no remotes - give it some time
-
-			if ( SystemTime.getCurrentTime() - peerManager.getTimeStarted( false ) < 3*60*1000 ){
-
-				return ConnectionManager.NAT_UNKNOWN;
-			}
-
-			TRTrackerScraperResponse scrape_response = getTrackerScrapeResponse();
-
-			if ( scrape_response != null && scrape_response.isValid()){
-
-					// if we're connected to everyone then report OK as we can't get
-					// any incoming connections!
-
-				if ( 	peerManager.getNbSeeds() == scrape_response.getSeeds() &&
-						peerManager.getNbPeers() == scrape_response.getPeers()){
-
-					return ConnectionManager.NAT_UNKNOWN;
-				}
-
-					// can't expect incoming if we're seeding and there are no peers
-
-				if ( state == STATE_SEEDING  && scrape_response.getPeers() == 0 ){
-
-					return ConnectionManager.NAT_UNKNOWN;
-				}
+				nat_status 	= ConnectionManager.NAT_OK;
+				nat_info	= "Has remote " + (rem_tcp>0?"TCP":"uTP") + " connections";
 			}else{
 
-					// no scrape and we're seeding - don't use this as sign of badness as
-					// we can't determine
+				long	last_good_time = peerManager.getLastRemoteConnectionTime();
+	
+				if ( last_good_time > 0 ){
+	
+						// half an hour's grace
+	
+					if ( SystemTime.getCurrentTime() - last_good_time < 30*60*1000 ){
+	
+						nat_status 	= ConnectionManager.NAT_OK;
+						nat_info	= "Had a recent remote connection";
+	
+					}else{
+	
+						nat_status = ConnectionManager.NAT_PROBABLY_OK;
+						nat_info	= "Had a remote connection at some point";
+					}
+				}else{
+	
+					TRTrackerAnnouncerResponse	announce_response = tc.getLastResponse();
+		
+					int trackerStatus = announce_response.getStatus();
+		
+					if( 	trackerStatus == TRTrackerAnnouncerResponse.ST_OFFLINE ||
+							trackerStatus == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR){
+		
+						nat_status 	= ConnectionManager.NAT_UNKNOWN;
+						nat_info	= "Tracker offline";
+						
+					}else if ( SystemTime.getCurrentTime() - peerManager.getTimeStarted( false ) < 3*60*1000 ){
+						
+						// tracker's ok but no remotes - give it some time
 
-				if ( state == STATE_SEEDING ){
+						nat_status 	= ConnectionManager.NAT_UNKNOWN;
+						nat_info	= "Tracker OK but not remote connections yet"; 
+						
+					}else{
+		
+						TRTrackerScraperResponse scrape_response = getTrackerScrapeResponse();
+			
+						if ( scrape_response != null && scrape_response.isValid()){
+			
+								// if we're connected to everyone then report OK as we can't get
+								// any incoming connections!
+			
+							if ( 	peerManager.getNbSeeds() == scrape_response.getSeeds() &&
+									peerManager.getNbPeers() == scrape_response.getPeers()){
+			
+								nat_status 	= ConnectionManager.NAT_UNKNOWN;
+								nat_info	= "Connected to all known peers, hard to tell"; 
+								
+							}else if ( state == STATE_SEEDING  && scrape_response.getPeers() == 0 ){
+			
+								// can't expect incoming if we're seeding and there are no peers
 
-					return ConnectionManager.NAT_UNKNOWN;
+								nat_status 	= ConnectionManager.NAT_UNKNOWN;
+								nat_info	= "Seeding and no peers, status can't be determined"; 
+							}else{
+								
+								nat_status 	= ConnectionManager.NAT_BAD;
+								nat_info	= "There are peers, we should get some remote connections"; 
+							}
+						}else{
+			
+								// no scrape and we're seeding - don't use this as sign of badness as
+								// we can't determine
+			
+							if ( state == STATE_SEEDING ){
+			
+								nat_status 	= ConnectionManager.NAT_UNKNOWN;
+								nat_info	= "Tracker info unavailable and we're seeding, hard to tell"; 
+							}else{
+								
+								nat_status 	= ConnectionManager.NAT_BAD;
+								nat_info	= "Tracker info unavailable, assuming bad"; 
+							}
+						}
+					}
 				}
 			}
-
-			return ConnectionManager.NAT_BAD;
-
 		}else{
 
-			return ConnectionManager.NAT_UNKNOWN;
+			nat_status 	= ConnectionManager.NAT_UNKNOWN;
+			nat_info	= "Download not running, can't determine status";
 		}
+		
+		return( new Object[]{ nat_status, nat_info });
 	}
 
 	@Override

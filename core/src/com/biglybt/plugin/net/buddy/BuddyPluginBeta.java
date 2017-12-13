@@ -3556,7 +3556,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					}
 				}
 
-				if ( getKey().startsWith( "General: ")){
+				String key = getKey();
+				
+				if ( key.startsWith( "General: ") || key.startsWith( Constants.APP_NAME + ": General: " )){
 
 					sendLocalMessage( "!*" + MessageText.getString( "azbuddy.dchat.welcome.general" ) + "*!", null, ChatMessage.MT_INFO );
 				}

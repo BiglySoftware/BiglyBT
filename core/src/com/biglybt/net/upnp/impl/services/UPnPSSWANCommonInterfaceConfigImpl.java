@@ -83,4 +83,74 @@ UPnPSSWANCommonInterfaceConfigImpl
 			return( res );
 		}
 	}
+	
+	@Override
+	public long
+	getTotalBytesSent()
+
+		throws UPnPException
+	{
+		UPnPAction act = service.getAction( "getTotalBytesSent" );
+
+		if ( act == null ){
+
+			throw( new UPnPException( "getTotalBytesSent not supported" ));
+
+		}else{
+
+			UPnPActionInvocation inv = act.getInvocation();
+
+			UPnPActionArgument[]	args = inv.invoke();
+
+			for (int i=0;i<args.length;i++){
+
+				UPnPActionArgument	arg = args[i];
+
+				String	name = arg.getName();
+
+				if ( name.equalsIgnoreCase("NewTotalBytesSent")){
+
+					return( Long.parseLong( arg.getValue()));
+
+				}
+			}
+
+			throw( new UPnPException( "getTotalBytesSent failed to return result" ));
+		}
+	}
+	
+	@Override
+	public long
+	getTotalBytesReceived()
+
+		throws UPnPException
+	{
+		UPnPAction act = service.getAction( "getTotalBytesReceived" );
+
+		if ( act == null ){
+
+			throw( new UPnPException( "getTotalBytesReceived not supported" ));
+
+		}else{
+
+			UPnPActionInvocation inv = act.getInvocation();
+
+			UPnPActionArgument[]	args = inv.invoke();
+
+			for (int i=0;i<args.length;i++){
+
+				UPnPActionArgument	arg = args[i];
+
+				String	name = arg.getName();
+
+				if ( name.equalsIgnoreCase("NewTotalBytesReceived")){
+
+					return( Long.parseLong( arg.getValue()));
+
+				}
+			}
+
+			throw( new UPnPException( "getTotalBytesReceived failed to return result" ));
+		}
+	}
 }

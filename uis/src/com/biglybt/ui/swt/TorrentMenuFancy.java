@@ -2288,6 +2288,8 @@ public class TorrentMenuFancy
 		boolean fileMove 		= true;
 		boolean locateFiles 	= false;
 		boolean	exportFiles		= true;
+		boolean	canSetMOC		= dms.length > 0;
+		boolean canClearMOC		= false;
 		
 		for (int i = 0; i < dms.length; i++) {
 			DownloadManager dm = dms[i];
@@ -2300,7 +2302,17 @@ public class TorrentMenuFancy
 			if ( !dm.isDownloadComplete( false )){
 				locateFiles = true;
 			}
+			
+			boolean incomplete = !dm.isDownloadComplete(true);
+
+			DownloadManagerState dm_state = dm.getDownloadState();
+
+			String moc_dir = dm_state.getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+			
+			canSetMOC &= incomplete;
+			canClearMOC |= (moc_dir != null && moc_dir.length() > 0 );
 		}
+		
 		if (fileMove) {
 			createRow(detailArea, "MyTorrentsView.menu.movedata", null,
 					new ListenerDMTask(dms) {
@@ -2310,6 +2322,52 @@ public class TorrentMenuFancy
 						}
 					});
 		}
+		
+		if ( canSetMOC || canClearMOC ){
+			
+			boolean f_canSetMOC = canSetMOC;
+			boolean f_canClearMOC = canClearMOC;
+			
+			createMenuRow(
+					detailArea,
+					"label.move.on.comp",
+					null,
+					new FancyMenuRowInfoListener()
+					{
+						@Override
+						public void
+						buildMenu(
+							Menu moc_menu )
+						{
+							MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
+
+							Messages.setLanguageText( clear_item, "Button.clear" );
+
+							clear_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
+								@Override
+								public void run(DownloadManager[] dms) {
+									TorrentUtil.clearMOC(dms);
+								}
+							});
+
+							clear_item.setEnabled( f_canClearMOC );
+							
+							MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
+
+							Messages.setLanguageText( set_item, "label.set" );
+							
+							set_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
+								@Override
+								public void run(DownloadManager[] dms) {
+									TorrentUtil.setMOC(parentShell, dms);
+								}
+							});
+							
+							set_item.setEnabled( f_canSetMOC );
+						}
+					});
+		}
+		
 		if (exportFiles) {
 			createRow(detailArea, "MyTorrentsView.menu.exportdownload", null,
 					new ListenerDMTask(dms) {

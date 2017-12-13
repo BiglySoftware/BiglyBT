@@ -39,6 +39,7 @@ import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.IdentityHashSet;
@@ -50,7 +51,10 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.plugin.net.buddy.BuddyPlugin;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.TableColumnCore;
@@ -631,6 +635,8 @@ PeersViewBase
 
 		final IdentityHashSet<DownloadManager>	download_managers = new IdentityHashSet<>();
 
+		Map<PEPeer,DownloadManager>	peer_dm_map = new HashMap<>();
+		
 		if ( hasSelection ){
 
 			for (int i = 0; i < peers.length; i++) {
@@ -645,6 +651,8 @@ PeersViewBase
 
 						if ( dm != null ){
 
+							peer_dm_map.put( peer, dm );
+							
 							download_managers.add( dm );
 						}
 					}
@@ -744,6 +752,54 @@ PeersViewBase
 			}
 		}
 
+		BuddyPlugin bp = BuddyPluginUtils.getPlugin();
+		
+		if ( bp != null ){
+							
+			boolean has_pb = false;
+			
+			boolean	has_public = false;
+			
+			for ( PEPeer peer: peers ){
+				
+				if ( AENetworkClassifier.categoriseAddress( peer.getIp()) == AENetworkClassifier.AT_PUBLIC ){
+					
+					has_public = true;
+					
+					DownloadManager dm = peer_dm_map.get( peer );
+					
+					if ( dm != null && bp.isPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ))){
+						
+						has_pb = true;
+					}
+				}
+			}
+			
+			MenuItem boost_item = new MenuItem( menu, SWT.CHECK );
+			Messages.setLanguageText(boost_item, "PeersView.menu.boost");
+			boost_item.setSelection( has_pb );
+			
+			boost_item.setEnabled( has_public );
+			
+			boost_item.addListener(SWT.Selection, new PeersRunner(peers) {
+				@Override
+				public void run(PEPeer peer) {
+					
+					boolean sel = boost_item.getSelection();
+					
+					if ( AENetworkClassifier.categoriseAddress( peer.getIp()) == AENetworkClassifier.AT_PUBLIC ){
+						
+						DownloadManager dm = peer_dm_map.get( peer );
+	
+						if ( dm != null ){
+						
+							bp.setPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ), sel );
+						}
+					}
+				}
+			});
+		}
+		
 		final MenuItem kick_item = new MenuItem(menu, SWT.PUSH);
 
 		Messages.setLanguageText(kick_item, "PeersView.menu.kick");

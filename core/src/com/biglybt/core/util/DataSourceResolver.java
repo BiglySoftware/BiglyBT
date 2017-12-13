@@ -2,6 +2,8 @@ package com.biglybt.core.util;
 
 import java.util.*;
 
+import com.biglybt.core.devices.Device;
+
 public class 
 DataSourceResolver
 {
@@ -43,6 +45,12 @@ DataSourceResolver
 			}
 			
 			return( result );
+			
+		}else if ( data_source instanceof Device ){
+			
+			// not required as resolved internally
+			
+			return( null );
 			
 		}else{
 			

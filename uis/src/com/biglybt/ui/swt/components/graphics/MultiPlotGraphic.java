@@ -55,9 +55,18 @@ MultiPlotGraphic
 		ValueSource[]	sources,
 		ValueFormater 	formatter )
 	{
-	    return(  new MultiPlotGraphic( new Scale(), sources, formatter ));
+	    return(  new MultiPlotGraphic( new Scale(), sources, formatter, DEFAULT_ENTRIES ));
 	}
 
+	public static MultiPlotGraphic
+	getInstance(
+		int				num_entries,
+		ValueSource[]	sources,
+		ValueFormater 	formatter )
+	{
+	    return(  new MultiPlotGraphic( new Scale(), sources, formatter, num_entries ));
+	}
+	
 	private ValueSource[]	value_sources;
 
 	private int internalLoop;
@@ -75,28 +84,31 @@ MultiPlotGraphic
 
 	private TimerEventPeriodic	update_event;
 
+
 	private
 	MultiPlotGraphic(
 		Scale 			scale,
 		ValueSource[]	sources,
-		ValueFormater 	formater)
+		ValueFormater 	formater,
+		int				num_entries )
 	{
 		super( scale,formater );
 
 		value_sources	= sources;
 
+		maxEntries		= num_entries;
+		
 		init( null );
 
 	    COConfigurationManager.addAndFireParameterListeners(
 	    	new String[]{ "Graphics Update", "Stats Graph Dividers" }, this );
 	}
-
+	
 	private void
 	init(
 		int[][]	history )
 	{
 		nbValues		= 0;
-		maxEntries		= DEFAULT_ENTRIES;
 		all_values		= new int[value_sources.length][maxEntries];
 		currentPosition	= 0;
 
@@ -173,6 +185,14 @@ MultiPlotGraphic
 	setActive(
 		boolean	active )
 	{
+		setActive( active, 1000 );
+	}
+	
+	public void
+	setActive(
+		boolean	active,
+		int		period_millis )
+	{
 		if ( active ){
 
 			if ( update_event != null ){
@@ -182,7 +202,7 @@ MultiPlotGraphic
 
 		  	update_event = SimpleTimer.addPeriodicEvent(
 		  		"MPG:updater",
-		  		1000,
+		  		period_millis,
 		  		new TimerEventPerformer()
 		  		{
 		  			@Override

@@ -106,6 +106,8 @@ BuddyPluginTracker
 	private Set<BuddyPluginBuddy>				online_buddies 			= new HashSet<>();
 	private Map<String,List<BuddyPluginBuddy>>	online_buddy_ips		= new HashMap<>();
 
+	private Map<PartialBuddy,List<Download>>	partial_buddies			= new HashMap<>();
+	
 	private Set<Download>	tracked_downloads		= new HashSet<>();
 	private int				download_set_id;
 
@@ -269,6 +271,8 @@ BuddyPluginTracker
 
 		Map<BuddyPluginBuddy,List<Download>>	peers_to_check = new HashMap<>();
 
+		Map<PartialBuddy,List<Download>>		partials_to_check = new HashMap<>();
+		
 		Set<Download> active_set = new HashSet<>();
 
 		synchronized( online_buddies ){
@@ -309,6 +313,11 @@ BuddyPluginTracker
 						peers_to_check.put( buddy, check_peers );
 					}
 				}
+			}
+			
+			for ( List<Download>	dls: partial_buddies.values()){
+									
+				active_set.addAll( dls );
 			}
 		}
 
@@ -398,18 +407,14 @@ BuddyPluginTracker
 
 						if ( lan && !peer.isLANLocal()){
 
-								// just in case
-
 							AddressUtils.addLANRateLimitAddress( ip );
 
-							pm.removePeer( peer );
-
-						}else{
-
-							connected = true;
-
-							break;
+							peer.resetLANLocalStatus();
 						}
+
+						connected = true;
+
+						break;
 					}
 				}
 
@@ -627,19 +632,26 @@ BuddyPluginTracker
 	isBuddy(
 		Peer		peer )
 	{
+		PartialBuddy pb = new PartialBuddy(peer);
+
 		String	peer_ip = peer.getIp();
 
-		List ips = AddressUtils.getLANAddresses( peer_ip );
+		List<String> ips = AddressUtils.getLANAddresses( peer_ip );
 
 		synchronized( online_buddies ){
 
+			if ( partial_buddies.containsKey( pb )){
+				
+				return( BUDDY_YES );
+			}
+			
 			int	result = BUDDY_NO;
 
 outer:
 			for (int i=0;i<ips.size();i++){
 
-				String ip = (String)ips.get(i);
-
+				String ip = ips.get(i);
+				
 				List<BuddyPluginBuddy> buddies = online_buddy_ips.get( ip  );
 
 				if ( buddies != null ){
@@ -678,6 +690,104 @@ outer:
 		}
 	}
 
+	public void
+	addPartialBuddy(
+		Download	download,
+		Peer		peer )
+	{
+		PartialBuddy pb = new PartialBuddy(peer);
+		
+		synchronized( online_buddies ){
+			
+			List<Download>	dls = partial_buddies.get( pb );
+				
+			if ( dls == null ){
+				
+				dls = new ArrayList<>();
+				
+				partial_buddies.put( pb, dls );
+				
+			}
+			
+			if ( dls.contains( download )){
+				
+				return;
+			}
+			
+			dls.add( download );
+		}
+				
+		try{
+			if ( plugin.getPeersAreLANLocal() && !peer.isLANLocal()){
+				
+				AddressUtils.addLANRateLimitAddress( InetAddress.getByName( pb.ip ));
+				
+				peer.resetLANLocalStatus();
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );;
+		}
+		
+		markBuddyPeer( download, peer );
+		
+		plugin.logMessage( "Partial buddy added: " + download.getName() + "/" + pb );
+	}
+	
+	public boolean
+	isPartialBuddy(
+		Download	download,
+		Peer		peer )
+	{
+		PartialBuddy pb = new PartialBuddy(peer);
+		
+		synchronized( online_buddies ){
+			
+			List<Download>	dls = partial_buddies.get( pb );
+			
+			return( dls != null && dls.contains( download ));
+		}		
+	}
+	
+	public void
+	removePartialBuddy(
+		Download	download,
+		Peer		peer )
+	{
+		PartialBuddy pb = new PartialBuddy(peer);
+		
+		synchronized( online_buddies ){
+			
+			List<Download>	dls = partial_buddies.get( pb );
+				
+			if ( dls == null || !dls.remove( download )){
+				
+				return;
+			}
+		
+			if ( dls.isEmpty()){
+			
+				partial_buddies.remove( pb );
+			}
+		}
+				
+		try{
+			if ( plugin.getPeersAreLANLocal() && peer.isLANLocal()){
+				
+				AddressUtils.removeLANRateLimitAddress( InetAddress.getByName( pb.ip ));
+				
+				peer.resetLANLocalStatus();
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );;
+		}
+		
+		unmarkBuddyPeer( peer );
+
+		plugin.logMessage( "Partial buddy removed: " + download.getName() + "/" + pb );
+	}
+	
 	@Override
 	public void
 	messageLogged(
@@ -1194,6 +1304,13 @@ outer:
 
 				peer.setPriorityConnection( true );
 
+				try{
+					PluginCoreUtils.unwrap( peer ).updateAutoUploadPriority(  PEER_KEY, true );
+					
+				}catch( Throwable e ){
+					
+				}
+				
 				log( download.getName() + ": adding buddy peer " + peer.getIp());
 
 				peer.addListener(
@@ -1266,6 +1383,13 @@ outer:
 			peer.setUserData( PEER_KEY, null );
 
 			peer.setPriorityConnection( false );
+			
+			try{
+				PluginCoreUtils.unwrap( peer ).updateAutoUploadPriority(  PEER_KEY, false );
+				
+			}catch( Throwable e ){
+				
+			}
 		}
 
 		if ( state_changed ){
@@ -2472,6 +2596,52 @@ outer:
 		getID()
 		{
 			return( id );
+		}
+	}
+	
+	private static class
+	PartialBuddy
+	{
+		private final String		ip;
+		private final int			tcp_port;
+		private final int			udp_port;
+		
+		private
+		PartialBuddy(
+			Peer		peer )
+		{
+			ip			= peer.getIp();
+			tcp_port	= peer.getTCPListenPort();
+			udp_port	= peer.getUDPListenPort();
+		}
+		
+		@Override
+		public boolean 
+		equals(Object obj)
+		{
+			if ( obj instanceof PartialBuddy ){
+				
+				PartialBuddy other = (PartialBuddy)obj;
+				
+				return( other.tcp_port == tcp_port && other.udp_port == udp_port && ip.equals( other.ip));
+				
+			}else{
+				
+				return( false );
+			}
+		}
+		
+		@Override
+		public int 
+		hashCode()
+		{
+			return( ip.hashCode() + tcp_port + udp_port );
+		}
+		
+		public String
+		toString()
+		{
+			return( ip + "/" + tcp_port + "/" + udp_port );
 		}
 	}
 }

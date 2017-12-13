@@ -406,6 +406,10 @@ ExternalSeedPeer
 	}
 
 	@Override
+	public void resetLANLocalStatus(){		
+	}
+	
+	@Override
 	public final boolean[]
 	getAvailable()
 	{

@@ -53,12 +53,15 @@ NetworkConnectionImpl
   boolean 	is_connected;
   private byte		is_lan_local	= AddressUtils.LAN_LOCAL_MAYBE;
 
+  private int		enhanced_partition_id = -1;
+  
   final OutgoingMessageQueueImpl outgoing_message_queue;
   private final IncomingMessageQueueImpl incoming_message_queue;
 
   Transport	transport;
 
-  volatile ConnectionAttempt	connection_attempt;
+  volatile ConnectionAttempt			connection_attempt;
+  private boolean						started;
   private volatile boolean				closed;
 
   private Map<Object,Object>			user_data;
@@ -255,6 +258,8 @@ NetworkConnectionImpl
   public void
   startMessageProcessing()
   {
+	started = true;
+	
   	NetworkManager.getSingleton().startTransferProcessing( this );
   }
 
@@ -262,9 +267,14 @@ NetworkConnectionImpl
   @Override
   public void enableEnhancedMessageProcessing(boolean enable, int partition_id ) {
     if( enable ) {
+    	enhanced_partition_id = partition_id;
+    	
     	NetworkManager.getSingleton().upgradeTransferProcessing( this, partition_id );
+    	
     }else{
-      NetworkManager.getSingleton().downgradeTransferProcessing( this );
+    	enhanced_partition_id = -1;
+    	
+    	NetworkManager.getSingleton().downgradeTransferProcessing( this );
     }
   }
 
@@ -339,6 +349,32 @@ NetworkConnectionImpl
 		return( is_lan_local == AddressUtils.LAN_LOCAL_YES );
 	}
 
+	@Override
+	public void 
+	resetLANLocalStatus(){
+		if ( is_lan_local != AddressUtils.LAN_LOCAL_MAYBE ){
+			
+			NetworkManager nm = NetworkManager.getSingleton();
+									
+			if ( started ){
+				
+				nm.stopTransferProcessing( this );
+			}
+			
+			is_lan_local = AddressUtils.LAN_LOCAL_MAYBE;
+			
+			if ( started ){
+				
+				nm.startTransferProcessing( this );
+			}
+			
+			if ( enhanced_partition_id != -1 ){
+			
+				nm.upgradeTransferProcessing( this, enhanced_partition_id );
+			}
+		}
+	}
+	
 	@Override
 	public String
 	getString()

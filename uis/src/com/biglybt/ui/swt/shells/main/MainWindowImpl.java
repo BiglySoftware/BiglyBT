@@ -671,6 +671,8 @@ public class MainWindowImpl
 							&& (event.stateMask & (SWT.MOD1 + SWT.SHIFT)) == SWT.MOD1
 									+ SWT.SHIFT) {
 						shell.setFullScreen(!shell.getFullScreen());
+					}else if ( event.keyCode == SWT.F1 ){
+						Utils.launch( Constants.URL_WIKI );
 					}
 				}
 			});

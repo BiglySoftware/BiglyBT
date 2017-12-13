@@ -1093,7 +1093,19 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		byte	crypto_level = PeerItemFactory.CRYPTO_LEVEL_1;
 
-		if( !isAlreadyConnected( peer_item ) ) {
+		boolean force = false;
+		
+		if ( user_data != null ){
+
+			Boolean f = (Boolean)user_data.get( Peer.PR_FORCE_CONNECTION );
+			
+			if ( f != null ){
+				
+				force = f;
+			}
+		}
+		
+		if ( force || !isAlreadyConnected( peer_item ) ) {
 
 			String fail_reason;
 
@@ -1265,8 +1277,9 @@ DiskManagerCheckRequestListener, IPFilterListener
 			return( "Peer source '" + peer_source + "' is not enabled" );
 		}
 
-		boolean	is_priority_connection = false;
-
+		boolean	is_priority_connection 	= false;
+		boolean	force					= false;
+		
 		if ( user_data != null ){
 
 			Boolean pc = (Boolean)user_data.get( Peer.PR_PRIORITY_CONNECTION );
@@ -1275,8 +1288,15 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 				is_priority_connection = true;
 			}
+			
+			Boolean f = (Boolean)user_data.get( Peer.PR_FORCE_CONNECTION );
+			
+			if ( f != null ){
+				
+				force = f;
+			}
 		}
-
+	
 		//make sure we need a new connection
 
 		boolean max_reached = getMaxNewConnectionsAllowed( net_cat ) == 0;	// -1 -> unlimited
@@ -1295,7 +1315,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		//make sure not already connected to the same IP address; allow loopback connects for co-located proxy-based connections and testing
 
-		final boolean same_allowed = COConfigurationManager.getBooleanParameter( "Allow Same IP Peers" ) || address.equals( "127.0.0.1" );
+		final boolean same_allowed = force || COConfigurationManager.getBooleanParameter( "Allow Same IP Peers" ) || address.equals( "127.0.0.1" );
 
 		if( !same_allowed && PeerIdentityManager.containsIPAddress( _hash, address ) ){
 
@@ -2470,8 +2490,10 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 					if ( pc.isTCP() ) {
 
-						new_tcp_incoming++;
-
+						if ( pc.getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+						
+							new_tcp_incoming++;
+						}
 					}else{
 
 						String protocol = pc.getProtocol();

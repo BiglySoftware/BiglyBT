@@ -256,6 +256,7 @@ public class GlobalManagerImpl
 
 	private boolean	force_start_non_seed_exists;
 	private int 	nat_status				= ConnectionManager.NAT_UNKNOWN;
+	private String	nat_info_prefix, nat_info;
 	private long	nat_status_last_good	= -1;
 	private boolean	nat_status_probably_ok;
 
@@ -3475,42 +3476,103 @@ public class GlobalManagerImpl
 		int	num_ok			= 0;
 		int num_probably_ok	= 0;
 		int	num_bad			= 0;
+		int	num_unknown		= 0;
 
+		String[]	infos 		= { "", "", "", "" };
+		int[]		extra		= { 0, 0, 0, 0  };
+		
         for (Iterator it=managers_cow.iterator();it.hasNext();) {
 
         	DownloadManager manager = (DownloadManager)it.next();
 
-        	int	status = manager.getNATStatus();
+        	Object[] o_status = manager.getNATStatus();
 
+        	int status 		= (Integer)o_status[0];
+        	String	info 	= (String)o_status[1];
+        	
+        	int	index;
+        	
         	if ( status == ConnectionManager.NAT_OK ){
 
+        		index = 0;
+        		
         		num_ok++;
 
         	}else if ( status == ConnectionManager.NAT_PROBABLY_OK ){
 
+        		index = 1;
+        		
         		num_probably_ok++;
 
         	}else if ( status == ConnectionManager.NAT_BAD ){
 
+        		index = 2;
+        		
             	num_bad++;
+            	
+
+        	}else if ( status == ConnectionManager.NAT_UNKNOWN ){
+
+        		index = 3;
+        		
+        		num_unknown++;
+            	
+        	}else{
+        		
+        		continue;
+        	}
+        	
+        	String str = infos[index];
+        	        	
+       		if ( str.length() < 250 ){
+        			
+       			String name = manager.getDisplayName();
+       			
+       			if ( name.length() > 23 ){
+       				name = name.substring( 0,  20) + "...";
+       			}
+       			
+        		str += (str.isEmpty()?"":"\n") + name + ": " + info;
+        		
+        		infos[index] = str;
+        		
+        	}else{
+        		
+        		extra[index]++;
+        	}
+        }
+        
+        for ( int i=0;i<infos.length;i++){
+        	int e = extra[i];
+        	
+        	if ( e > 0 ){
+        		infos[i] += "\n(" + e + " more)";
         	}
         }
 
         long now = SystemTime.getMonotonousTime();
 
+        nat_info_prefix = null;
+        
         if ( num_ok > 0 ){
 
         	nat_status = ConnectionManager.NAT_OK;
 
         	nat_status_last_good = now;
 
+        	nat_info = infos[0];
+        	
         }else if ( nat_status_last_good != -1 && now - nat_status_last_good < 30*60*1000 ){
 
         	nat_status = ConnectionManager.NAT_OK;
 
+        	nat_info_prefix = "Has been good within the last hour: ";
+        	
         }else if ( nat_status_last_good != -1 && SystemTime.getCurrentTime() - TCPNetworkManager.getSingleton().getLastIncomingNonLocalConnectionTime() < 30*60*1000 ){
 
         	nat_status = ConnectionManager.NAT_OK;
+        	
+        	nat_info_prefix = "Last incoming connection received less than an hour ago: ";
 
         }else if ( num_probably_ok > 0 || nat_status_probably_ok ){
 
@@ -3518,21 +3580,37 @@ public class GlobalManagerImpl
 
         	nat_status_probably_ok	= true;
 
+        	if ( num_probably_ok > 0 ){
+        		
+        		nat_info = infos[1];
+        	}
         }else if ( num_bad > 0 ){
 
         	nat_status = ConnectionManager.NAT_BAD;
 
+        	nat_info = infos[2];
+        	
         }else{
 
         	nat_status = ConnectionManager.NAT_UNKNOWN;
+        	
+        	nat_info = infos[3];
         }
 	}
 
 	@Override
-	public int
+	public Object[]
 	getNATStatus()
 	{
-		return( nat_status );
+		String info 	= nat_info;
+		String prefix	= nat_info_prefix;
+		
+		if ( prefix != null ){
+			
+			info = prefix + info;
+		}
+		
+		return( new Object[]{ nat_status, info });
 	}
 
 	protected void

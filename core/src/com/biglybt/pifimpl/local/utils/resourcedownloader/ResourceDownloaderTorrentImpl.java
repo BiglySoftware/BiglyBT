@@ -304,7 +304,7 @@ ResourceDownloaderTorrentImpl
 				// going to use it across the client restarts to hold the download data and
 				// to seed it afterwards. Therefore we don't use AETemporaryFileHandler.createTempFile!!!!
 
-			final File	torrent_file 	= AETemporaryFileHandler.createSemiTempFile();
+			final File	torrent_file 	= AETemporaryFileHandler.createSemiTempFile( name + ".torrent" );
 
 			if ( download_dir != null && !download_dir.exists()){
 

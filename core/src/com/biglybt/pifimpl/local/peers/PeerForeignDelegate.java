@@ -679,6 +679,10 @@ PeerForeignDelegate
 	}
 
 	@Override
+	public void resetLANLocalStatus(){
+	}
+	
+	@Override
 	public boolean
 	sendRequestHint(
 		int		piece_number,
