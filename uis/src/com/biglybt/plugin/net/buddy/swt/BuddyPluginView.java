@@ -87,7 +87,6 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx.CloneConstructor;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.CoreFactory;
@@ -147,7 +146,17 @@ BuddyPluginView
 		UIInstance		_ui_instance,
 		String			_VIEW_ID )
 	{
-		init( _plugin, _ui_instance, _VIEW_ID );
+		this( _plugin, _ui_instance, _VIEW_ID, true );
+	}
+	
+	public
+	BuddyPluginView(
+		BuddyPlugin		_plugin,
+		UIInstance		_ui_instance,
+		String			_VIEW_ID,
+		boolean			_main_view )
+	{
+		init( _plugin, _ui_instance, _VIEW_ID, _main_view );
 	}
 	
 	public boolean
@@ -159,7 +168,7 @@ BuddyPluginView
 	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
-		return( new BuddyPluginView( plugin, ui_instance, VIEW_ID ));
+		return( new BuddyPluginView( plugin, ui_instance, VIEW_ID, false ));
 	}
 	
 	public CloneConstructor
@@ -196,7 +205,7 @@ BuddyPluginView
 				
 				if ( ui.getUIType() == UIInstance.UIT_SWT ){
 					
-					init( bp, ui, _VIEW_ID );
+					init( bp, ui, _VIEW_ID, false );
 					
 					return;
 				}
@@ -210,77 +219,85 @@ BuddyPluginView
 	init(
 		BuddyPlugin		_plugin,
 		UIInstance		_ui_instance,
-		String			_VIEW_ID )
+		String			_VIEW_ID,
+		boolean			_main_view )
 	{
 		plugin			= _plugin;
 		ui_instance		= (UISWTInstance)_ui_instance;
 		VIEW_ID			= _VIEW_ID;
 
-		buddyPluginAZ2Listener = new BuddyPluginAZ2Listener() {
-			@Override
-			public void
-			chatCreated(
-					final BuddyPluginAZ2.chatInstance chat )
-			{
-				final Display display = ui_instance.getDisplay();
-
-				if ( !display.isDisposed()){
-
-					display.asyncExec(
-							new Runnable()
-							{
-								@Override
-								public void
-								run()
+		if ( _main_view ){
+			
+			buddyPluginAZ2Listener = new BuddyPluginAZ2Listener() {
+				@Override
+				public void
+				chatCreated(
+						final BuddyPluginAZ2.chatInstance chat )
+				{
+					final Display display = ui_instance.getDisplay();
+	
+					if ( !display.isDisposed()){
+	
+						display.asyncExec(
+								new Runnable()
 								{
-									if ( !display.isDisposed()){
-
-										new BuddyPluginViewChat( plugin, display, chat );
+									@Override
+									public void
+									run()
+									{
+										if ( !display.isDisposed()){
+	
+											new BuddyPluginViewChat( plugin, display, chat );
+										}
 									}
-								}
-							});
-				}
-			}
-
-			@Override
-			public void
-			chatDestroyed(
-					BuddyPluginAZ2.chatInstance		chat )
-			{
-			}
-		};
-		plugin.getAZ2Handler().addListener(buddyPluginAZ2Listener);
-
-
-		buddyStatusInit = SimpleTimer.addEvent("BuddyStatusInit", SystemTime.getOffsetTime(1000),
-				new TimerEventPerformer() {
-					@Override
-					public void
-					perform(
-							TimerEvent event) {
-						//UISWTStatusEntry label = ui_instance.createStatusEntry();
-						//label.setText(MessageText.getString("azbuddy.tracker.bbb.status.title"));
-
-						statusUpdater = new statusUpdater(ui_instance);
+								});
 					}
-				});
-
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				ImageLoader imageLoader = ImageLoader.getInstance();
-
-				iconNLI 	= imageLoader.getImage( "bbb_nli" );
-				iconIDLE 	= imageLoader.getImage( "bbb_idle" );
-				iconIN 		= imageLoader.getImage( "bbb_in" );
-				iconOUT 	= imageLoader.getImage( "bbb_out" );
-				iconINOUT 	= imageLoader.getImage( "bbb_inout" );
-			}
-		});
-
+				}
+	
+				@Override
+				public void
+				chatDestroyed(
+						BuddyPluginAZ2.chatInstance		chat )
+				{
+				}
+			};
+			
+			plugin.getAZ2Handler().addListener(buddyPluginAZ2Listener);
+	
+		
+			buddyStatusInit = SimpleTimer.addEvent("BuddyStatusInit", SystemTime.getOffsetTime(1000),
+					new TimerEventPerformer() {
+						@Override
+						public void
+						perform(
+								TimerEvent event) {
+							//UISWTStatusEntry label = ui_instance.createStatusEntry();
+							//label.setText(MessageText.getString("azbuddy.tracker.bbb.status.title"));
+	
+							statusUpdater = new statusUpdater(ui_instance);
+						}
+					});
+	
+			Utils.execSWTThread(new AERunnable() {
+				@Override
+				public void runSupport() {
+					ImageLoader imageLoader = ImageLoader.getInstance();
+	
+					iconNLI 	= imageLoader.getImage( "bbb_nli" );
+					iconIDLE 	= imageLoader.getImage( "bbb_idle" );
+					iconIN 		= imageLoader.getImage( "bbb_in" );
+					iconOUT 	= imageLoader.getImage( "bbb_out" );
+					iconINOUT 	= imageLoader.getImage( "bbb_inout" );
+				}
+			});
+		}
+		
 		ui_instance.addView(	UISWTInstance.VIEW_MAIN, VIEW_ID, this );
 
-		checkBetaInit();
+		if ( _main_view ){
+		
+			checkBetaInit();
+		}
 	}
 	
 	protected UISWTInstance

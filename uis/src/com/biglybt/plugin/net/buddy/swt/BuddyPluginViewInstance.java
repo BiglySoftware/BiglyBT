@@ -41,6 +41,8 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginConfig;
@@ -186,7 +188,21 @@ BuddyPluginViewInstance
 				}
 			});
 		
-		tab_folder.setSelection(beta_item);
+		int sel = COConfigurationManager.getIntParameter( "buddy.plugin.ui.selected.tab", 0 );
+		
+		tab_folder.setSelection(sel==0?beta_item:classic_item);
+		
+		tab_folder.addSelectionListener(
+			new SelectionAdapter(){
+			
+				@Override
+				public void widgetSelected(SelectionEvent arg0){
+					int	index = tab_folder.getSelectionIndex();
+					
+					COConfigurationManager.setParameter( "buddy.plugin.ui.selected.tab", index );
+				}
+			});
+
 	}
 
 	protected void
