@@ -25,6 +25,7 @@ import java.applet.AudioClip;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -85,6 +86,8 @@ import com.biglybt.ui.swt.pif.UISWTStatusEntryListener;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx.CloneConstructor;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.CoreFactory;
@@ -114,10 +117,11 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
 BuddyPluginView
-	implements UISWTViewEventListener, BuddyPluginViewInterface
+	implements UISWTViewCoreEventListenerEx, BuddyPluginViewInterface
 {
-	private final TimerEvent buddyStatusInit;
-	private final BuddyPluginAZ2Listener buddyPluginAZ2Listener;
+	private  TimerEvent 			buddyStatusInit;
+	private BuddyPluginAZ2Listener buddyPluginAZ2Listener;
+	
 	private BuddyPlugin		plugin;
 	private UISWTInstance	ui_instance;
 	private String			VIEW_ID;
@@ -139,6 +143,71 @@ BuddyPluginView
 
 	public
 	BuddyPluginView(
+		BuddyPlugin		_plugin,
+		UIInstance		_ui_instance,
+		String			_VIEW_ID )
+	{
+		init( _plugin, _ui_instance, _VIEW_ID );
+	}
+	
+	public boolean
+	isCloneable()
+	{
+		return( true );
+	}
+
+	public UISWTViewCoreEventListenerEx
+	getClone()
+	{
+		return( new BuddyPluginView( plugin, ui_instance, VIEW_ID ));
+	}
+	
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return(
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( BuddyPluginView.class );
+				}
+		
+				public List<Object>
+				getParameters()
+				{
+					return( Arrays.asList( VIEW_ID ));
+				}
+			});
+	}
+	
+	public
+	BuddyPluginView(
+		String	_VIEW_ID )
+	{
+		BuddyPlugin bp = BuddyPluginUtils.getPlugin();
+		
+		if ( bp != null ){
+			
+			UIInstance[] instances = bp.getPluginInterface().getUIManager().getUIInstances();
+			
+			for ( UIInstance ui: instances ){
+				
+				if ( ui.getUIType() == UIInstance.UIT_SWT ){
+					
+					init( bp, ui, _VIEW_ID );
+					
+					return;
+				}
+			}
+		}
+		
+		throw( new RuntimeException( "View currently unavailable" ));
+	}
+	
+	private void
+	init(
 		BuddyPlugin		_plugin,
 		UIInstance		_ui_instance,
 		String			_VIEW_ID )
@@ -213,7 +282,7 @@ BuddyPluginView
 
 		checkBetaInit();
 	}
-
+	
 	protected UISWTInstance
 	getUISWTInstance()
 	{
