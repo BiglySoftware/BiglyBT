@@ -67,20 +67,21 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
 BuddyPluginViewInstance
-	implements BuddyPluginListener, BuddyPluginBuddyRequestListener
+	implements BuddyPluginListener, PartialBuddyListener, BuddyPluginBuddyRequestListener
 {
 	private static final int LOG_NORMAL 	= 1;
 	private static final int LOG_SUCCESS 	= 2;
 	private static final int LOG_ERROR 		= 3;
 
 	private final BuddyPluginView		view;
-	private final BuddyPlugin plugin;
+	private final BuddyPlugin 			plugin;
 	private final UIInstance			ui_instance;
 	private final LocaleUtilities		lu;
 	private final BuddyPluginTracker	tracker;
 
 	private Composite			composite;
 	private Table 				buddy_table;
+	private Table 				partial_buddy_table;
 	private StyledText 			log;
 
 	private CTabFolder  		tab_folder;
@@ -94,7 +95,8 @@ BuddyPluginViewInstance
 	private Text 	public_nickname;
 	private Text 	anon_nickname;
 
-	private List<BuddyPluginBuddy>	buddies = new ArrayList<>();
+	private List<BuddyPluginBuddy>	buddies 		= new ArrayList<>();
+	private List<PartialBuddy>		partial_buddies = new ArrayList<>();
 
 	private Button	plugin_install_button;
 
@@ -1597,6 +1599,55 @@ BuddyPluginViewInstance
 
 			// table
 
+		Comparator<BuddyPluginBuddy> comparator = addBuddyTable( child1 );
+
+		Label pblab = new Label( child1, SWT.NULL );
+		pblab.setText( "Partial Friends" );
+		
+		Comparator<PartialBuddy> pbcomparator = addPartialBuddyTable( child1 );
+		
+			// log area
+
+		log = new StyledText(child2,SWT.READ_ONLY | SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
+		grid_data = new GridData(GridData.FILL_BOTH);
+		grid_data.horizontalSpan = 1;
+		grid_data.horizontalIndent = 4;
+		Utils.setLayoutData(log, grid_data);
+		log.setIndent( 4 );
+
+		buddies = plugin.getBuddies();
+
+		for (int i=0;i<buddies.size();i++){
+
+			buddyAdded(buddies.get(i));
+		}
+
+		Collections.sort( buddies, comparator );
+
+		partial_buddies = plugin.getPartialBuddies();
+
+		for (int i=0;i<partial_buddies.size();i++){
+
+			partialBuddyAdded( partial_buddies.get(i));
+		}
+
+		Collections.sort( partial_buddies, pbcomparator );
+		
+		plugin.addListener( this );
+
+		plugin.addPartialBuddyListener( this );
+		
+		plugin.addRequestListener( this );
+
+		init_complete	= true;
+
+		updateTable();
+	}
+	
+	private Comparator<BuddyPluginBuddy>
+	addBuddyTable(
+		Composite	child1 )
+	{
 		buddy_table = new Table(child1, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
 		final String[] headers = {
@@ -1686,7 +1737,7 @@ BuddyPluginViewInstance
 	    	columns[i].addListener(SWT.Selection,sort_listener);
 	    }
 
-	    gridData = new GridData(GridData.FILL_BOTH);
+	    GridData gridData = new GridData(GridData.FILL_BOTH);
 	    gridData.heightHint = buddy_table.getHeaderHeight() * 3;
 		Utils.setLayoutData(buddy_table, gridData);
 
@@ -1994,12 +2045,14 @@ BuddyPluginViewInstance
 
 			// disconnect message
 
+		final  MenuItem disconnect_msg_item;
+		
 		if ( Constants.isCVSVersion()){
-			final  MenuItem send_msg_item = new MenuItem(menu, SWT.PUSH);
+			disconnect_msg_item = new MenuItem(menu, SWT.PUSH);
 
-			send_msg_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.disconnect" ) );
+			disconnect_msg_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.disconnect" ) );
 
-			send_msg_item.addSelectionListener(
+			disconnect_msg_item.addSelectionListener(
 				new SelectionAdapter()
 				{
 					@Override
@@ -2017,6 +2070,8 @@ BuddyPluginViewInstance
 						}
 					}
 				});
+		}else{
+			disconnect_msg_item = null;
 		}
 
 			// send message
@@ -2590,6 +2645,9 @@ BuddyPluginViewInstance
 
 					remove_item.setEnabled( selection.length > 0 );
 					get_pk_item.setEnabled( available && selection.length > 0 );
+					if (disconnect_msg_item != null ){
+						disconnect_msg_item.setEnabled( selection.length > 0 );
+					}
 					send_msg_item.setEnabled(available && selection.length > 0);
 					chat_item.setEnabled(available && selection.length > 0);
 					ping_item.setEnabled(available && selection.length > 0);
@@ -2598,6 +2656,7 @@ BuddyPluginViewInstance
 					decrypt_item.setEnabled(true);
 					sign_item.setEnabled(true);
 					verify_item.setEnabled(true);
+					cat_item.setEnabled(selection.length > 0);
 				}
 
 				@Override
@@ -2607,34 +2666,157 @@ BuddyPluginViewInstance
 				{
 				}
 			});
-
-			// log area
-
-		log = new StyledText(child2,SWT.READ_ONLY | SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
-		grid_data = new GridData(GridData.FILL_BOTH);
-		grid_data.horizontalSpan = 1;
-		grid_data.horizontalIndent = 4;
-		Utils.setLayoutData(log, grid_data);
-		log.setIndent( 4 );
-
-		buddies = plugin.getBuddies();
-
-		for (int i=0;i<buddies.size();i++){
-
-			buddyAdded((BuddyPluginBuddy)buddies.get(i));
-		}
-
-		Collections.sort( buddies, comparator );
-
-		plugin.addListener( this );
-
-		plugin.addRequestListener( this );
-
-		init_complete	= true;
-
-		updateTable();
+		
+		return( comparator );
 	}
 
+	private Comparator<PartialBuddy>
+	addPartialBuddyTable(
+		Composite	child1 )
+	{
+		partial_buddy_table = new Table(child1, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.VIRTUAL);
+
+		final String[] headers = {
+				"azbuddy.ui.pbtable.peer",
+				"azbuddy.ui.pbtable.downloads" };
+
+		int[] sizes = {
+			250, 400  };
+
+		int[] aligns = {
+				SWT.LEFT, SWT.LEFT };
+
+		for (int i = 0; i < headers.length; i++){
+
+			TableColumn tc = new TableColumn(partial_buddy_table, aligns[i]);
+
+			tc.setWidth(Utils.adjustPXForDPI(sizes[i]));
+
+			Messages.setLanguageText(tc, headers[i]);
+		}
+
+	    partial_buddy_table.setHeaderVisible(true);
+
+	    TableColumn[] columns = partial_buddy_table.getColumns();
+	    columns[0].setData(new Integer(PBFilterComparator.FIELD_PEER));
+	    columns[1].setData(new Integer(PBFilterComparator.FIELD_DOWNLOADS));
+
+	    final PBFilterComparator comparator = new PBFilterComparator();
+
+	    Listener sort_listener =
+	    	new Listener()
+	    	{
+		    	@Override
+			    public void
+		    	handleEvent(
+		    		Event e )
+		    	{
+		    		TableColumn tc = (TableColumn) e.widget;
+
+		    		int field = ((Integer) tc.getData()).intValue();
+
+		    		comparator.setField( field );
+
+		    		Collections.sort( partial_buddies,comparator);
+
+		    		updateTable();
+		    	}
+	    	};
+
+	    for (int i=0;i<columns.length;i++){
+
+	    	columns[i].addListener(SWT.Selection,sort_listener);
+	    }
+
+	    GridData gridData = new GridData(GridData.FILL_BOTH);
+	    gridData.heightHint = partial_buddy_table.getHeaderHeight() * 3;
+		Utils.setLayoutData(partial_buddy_table, gridData);
+
+
+		partial_buddy_table.addListener(
+			SWT.SetData,
+			new Listener()
+			{
+				@Override
+				public void
+				handleEvent(
+					Event event)
+				{
+					TableItem item = (TableItem)event.item;
+
+					int index = partial_buddy_table.indexOf(item);
+
+					if ( index < 0 || index >= partial_buddies.size()){
+
+						return;
+					}
+
+					PartialBuddy	buddy = partial_buddies.get(index);
+
+					item.setText(0, buddy.ip );
+
+					item.setText(1, buddy.getDownloadsSummary());
+
+					item.setData( buddy );
+				}
+			});
+
+
+
+
+		final Menu menu = new Menu(partial_buddy_table);
+
+		final MenuItem remove_item = new MenuItem(menu, SWT.PUSH);
+
+		remove_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.remove" ));
+
+		remove_item.addSelectionListener(
+			new SelectionAdapter()
+			{
+				@Override
+				public void
+				widgetSelected(
+					SelectionEvent e)
+				{
+					TableItem[] selection = partial_buddy_table.getSelection();
+
+					for (int i=0;i<selection.length;i++){
+
+						PartialBuddy buddy = (PartialBuddy)selection[i].getData();
+
+						buddy.remove();
+					}
+				}
+			});
+		
+		partial_buddy_table.setMenu( menu );
+
+		menu.addMenuListener(
+			new MenuListener()
+			{
+				@Override
+				public void
+				menuShown(
+					MenuEvent arg0 )
+				{
+					boolean	available = plugin.isAvailable();
+
+					TableItem[] selection = partial_buddy_table.getSelection();
+
+					remove_item.setEnabled( selection.length > 0 );
+				}
+
+				@Override
+				public void
+				menuHidden(
+					MenuEvent arg0 )
+				{
+				}
+			});
+		
+		return( comparator );
+	}
+	
 	protected String
 	readFromClipboard()
 	{
@@ -2679,6 +2861,17 @@ BuddyPluginViewInstance
 		}
 	}
 
+	protected void
+	updatePartialBuddyTable()
+	{
+		if ( init_complete ){
+
+			partial_buddy_table.setItemCount( partial_buddies.size());
+			partial_buddy_table.clearAll();
+			partial_buddy_table.redraw();
+		}
+	}
+	
 	@Override
 	public void
 	initialised(
@@ -2840,6 +3033,89 @@ BuddyPluginViewInstance
 
 	@Override
 	public void
+	partialBuddyAdded(
+		final PartialBuddy	buddy )
+	{
+		if ( partial_buddy_table.isDisposed()){
+
+			return;
+		}
+
+
+		if ( !partial_buddies.contains( buddy )){
+
+			partial_buddy_table.getDisplay().asyncExec(
+					new Runnable()
+					{
+						@Override
+						public void
+						run()
+						{
+							if ( !partial_buddy_table.isDisposed()){
+
+								if ( !partial_buddies.contains( buddy )){
+
+									partial_buddies.add( buddy );
+
+									updatePartialBuddyTable();
+								}
+							}
+						}
+					});
+		}
+	}
+
+	@Override
+	public void
+	partialBuddyRemoved(
+		final PartialBuddy	buddy )
+	{
+		if ( !partial_buddy_table.isDisposed()){
+
+			partial_buddy_table.getDisplay().asyncExec(
+					new Runnable()
+					{
+						@Override
+						public void
+						run()
+						{
+							if ( !partial_buddy_table.isDisposed()){
+
+								if ( partial_buddies.remove( buddy )){
+
+									updatePartialBuddyTable();
+								}
+							}
+						}
+					});
+		}
+	}
+
+	@Override
+	public void
+	partialBuddyChanged(
+		final PartialBuddy	buddy )
+	{
+		if ( !partial_buddy_table.isDisposed()){
+
+			partial_buddy_table.getDisplay().asyncExec(
+					new Runnable()
+					{
+						@Override
+						public void
+						run()
+						{
+							if ( !partial_buddy_table.isDisposed()){
+
+								updatePartialBuddyTable();
+							}
+						}
+					});
+		}
+	}
+	
+	@Override
+	public void
 	messageLogged(
 		String		str,
 		boolean		error )
@@ -2991,8 +3267,9 @@ BuddyPluginViewInstance
 
 		plugin.removeListener( this );
 
+		plugin.removePartialBuddyListener( this );
+		
 		plugin.removeRequestListener( this );
-
 	}
 
 	protected class
@@ -3098,6 +3375,43 @@ BuddyPluginViewInstance
 			int newField )
 		{
 			if(field == newField) ascending = ! ascending;
+
+			field = newField;
+		}
+	}
+	
+	protected class
+	PBFilterComparator
+		implements Comparator<PartialBuddy>
+	{
+		boolean ascending = false;
+
+		static final int FIELD_PEER				= 0;
+		static final int FIELD_DOWNLOADS 		= 1;
+		
+
+		int field = FIELD_PEER;
+
+		@Override
+		public int
+		compare(
+			PartialBuddy	 b1,
+			PartialBuddy	 b2)
+		{
+			int	res = 0;
+
+			if(field == FIELD_PEER){
+				 res = b1.ip.compareTo( b2.ip );
+			}
+
+			return(( ascending ? 1 : -1) * res );
+		}
+
+		public void
+		setField(
+			int newField )
+		{
+			if (field == newField) ascending = ! ascending;
 
 			field = newField;
 		}

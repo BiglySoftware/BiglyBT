@@ -215,7 +215,8 @@ BuddyPlugin
 
 	private CopyOnWriteList<BuddyPluginListener>				listeners 			= new CopyOnWriteList<>();
 	private CopyOnWriteList<BuddyPluginBuddyRequestListener>	request_listeners	= new CopyOnWriteList<>();
-
+	private CopyOnWriteList<PartialBuddyListener>				pb_listeners		= new CopyOnWriteList<>();
+	
 	private SESecurityManager	sec_man;
 
 	private GenericMessageRegistration	msg_registration;
@@ -3340,6 +3341,12 @@ BuddyPlugin
 			return(new ArrayList<>(buddies));
 		}
 	}
+	
+	public List<PartialBuddy>
+	getPartialBuddies()
+	{
+		return( buddy_tracker.getPartialBuddies());
+	}
 
 	public boolean
 	isAvailable()
@@ -3428,7 +3435,69 @@ BuddyPlugin
 	{
 		listeners.remove( listener );
 	}
+	
+	public void
+	addPartialBuddyListener(
+		PartialBuddyListener		l )
+	{
+		pb_listeners.add( l );
+	}
 
+	public void
+	removePartialBuddyListener(
+		PartialBuddyListener		l )
+	{
+		pb_listeners.remove( l );
+	}
+	
+	public void
+	partialBuddyAdded(
+		PartialBuddy	pb )
+	{
+		for ( PartialBuddyListener l: pb_listeners ){
+			
+			try{
+				l.partialBuddyAdded( pb );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	public void
+	partialBuddyChanged(
+		PartialBuddy	pb )
+	{
+		for ( PartialBuddyListener l: pb_listeners ){
+			
+			try{
+				l.partialBuddyChanged( pb );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	public void
+	partialBuddyRemoved(
+		PartialBuddy	pb )
+	{
+		for ( PartialBuddyListener l: pb_listeners ){
+			
+			try{
+				l.partialBuddyRemoved( pb );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
 	protected Map
 	requestReceived(
 		BuddyPluginBuddy		from_buddy,

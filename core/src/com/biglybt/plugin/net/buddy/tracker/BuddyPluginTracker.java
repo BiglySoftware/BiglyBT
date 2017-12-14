@@ -43,6 +43,7 @@ import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginAZ2TrackerListener;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
 import com.biglybt.plugin.net.buddy.BuddyPluginListener;
+import com.biglybt.plugin.net.buddy.PartialBuddy;
 
 public class
 BuddyPluginTracker
@@ -106,7 +107,7 @@ BuddyPluginTracker
 	private Set<BuddyPluginBuddy>				online_buddies 			= new HashSet<>();
 	private Map<String,List<BuddyPluginBuddy>>	online_buddy_ips		= new HashMap<>();
 
-	private Map<PartialBuddy,List<Download>>	partial_buddies			= new HashMap<>();
+	private Map<String,PartialBuddyData>		partial_buddies			= new HashMap<>();
 	
 	private Set<Download>	tracked_downloads		= new HashSet<>();
 	private int				download_set_id;
@@ -315,9 +316,9 @@ BuddyPluginTracker
 				}
 			}
 			
-			for ( List<Download>	dls: partial_buddies.values()){
+			for ( PartialBuddyData pbd: partial_buddies.values()){
 									
-				active_set.addAll( dls );
+				active_set.addAll( pbd.downloads );
 			}
 		}
 
@@ -632,7 +633,7 @@ BuddyPluginTracker
 	isBuddy(
 		Peer		peer )
 	{
-		PartialBuddy pb = new PartialBuddy(peer);
+		PartialBuddy pb = new PartialBuddy( this, peer );
 
 		String	peer_ip = peer.getIp();
 
@@ -690,24 +691,51 @@ outer:
 		}
 	}
 
+	public List<PartialBuddy>
+	getPartialBuddies()
+	{
+		synchronized( online_buddies ){
+			
+			List<PartialBuddy>	result = new ArrayList<>( partial_buddies.size());
+			
+			for ( PartialBuddyData pbd: partial_buddies.values()){
+				
+				result.add( pbd.pb );
+			}
+			
+			return( result );
+		}
+	}
+	
 	public void
 	addPartialBuddy(
 		Download	download,
 		Peer		peer )
 	{
-		PartialBuddy pb = new PartialBuddy(peer);
+		PartialBuddy pb = new PartialBuddy( this, peer );
+		
+		String key = pb.getKey();
+		
+		boolean	is_new = false;
 		
 		synchronized( online_buddies ){
 			
-			List<Download>	dls = partial_buddies.get( pb );
+			PartialBuddyData pbd = partial_buddies.get( key );
+			
+			if ( pbd == null ){
 				
-			if ( dls == null ){
+				pbd = new PartialBuddyData( pb );
 				
-				dls = new ArrayList<>();
+				partial_buddies.put( key, pbd );
 				
-				partial_buddies.put( pb, dls );
+				is_new = true;
 				
+			}else{
+				
+				pb = pbd.pb;
 			}
+			
+			List<Download>	dls = pbd.downloads;
 			
 			if ( dls.contains( download )){
 				
@@ -717,21 +745,30 @@ outer:
 			dls.add( download );
 		}
 				
-		try{
-			if ( plugin.getPeersAreLANLocal() && !peer.isLANLocal()){
-				
-				AddressUtils.addLANRateLimitAddress( InetAddress.getByName( pb.ip ));
-				
-				peer.resetLANLocalStatus();
-			}
-		}catch( Throwable e ){
+		if ( is_new ){
 			
-			Debug.out( e );;
+			try{
+				if ( plugin.getPeersAreLANLocal() && !peer.isLANLocal()){
+					
+					AddressUtils.addLANRateLimitAddress( InetAddress.getByName( pb.ip ));
+					
+					peer.resetLANLocalStatus();
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );;
+			}
+			
+			markBuddyPeer( download, peer );
+			
+			plugin.logMessage( "Partial buddy added: " + download.getName() + " - " + pb );
+
+			plugin.partialBuddyAdded( pb );
+			
+		}else{
+			
+			plugin.partialBuddyChanged( pb );
 		}
-		
-		markBuddyPeer( download, peer );
-		
-		plugin.logMessage( "Partial buddy added: " + download.getName() + "/" + pb );
 	}
 	
 	public boolean
@@ -739,14 +776,105 @@ outer:
 		Download	download,
 		Peer		peer )
 	{
-		PartialBuddy pb = new PartialBuddy(peer);
+		PartialBuddy pb = new PartialBuddy( this, peer );
 		
 		synchronized( online_buddies ){
 			
-			List<Download>	dls = partial_buddies.get( pb );
-			
-			return( dls != null && dls.contains( download ));
+			PartialBuddyData pbd = partial_buddies.get( pb.getKey());
+						
+			return( pbd != null && pbd.downloads.contains( download ));
 		}		
+	}
+	
+	public String
+	getDownloadsSummary(
+		PartialBuddy pb )
+	{
+		PartialBuddyData pbd;
+		
+		synchronized( online_buddies ){
+			
+			pbd = partial_buddies.get( pb.getKey());
+			
+			if ( pbd == null ){
+				
+				return( "" );
+			}
+		}
+		
+		String str = "";
+		
+		for ( Download dl: pbd.downloads ){
+			
+			str += (str.isEmpty()?"":", ") + dl.getName();
+		}
+		
+		return( str );
+	}
+	
+	public void
+	removePartialBuddy(
+		PartialBuddy	pb )
+	{
+		String key = pb.getKey();
+	
+		PartialBuddyData pbd;
+		
+		synchronized( online_buddies ){
+			
+			pbd = partial_buddies.remove( key );
+			
+			if ( pbd == null ){
+				
+				return;
+			}
+		}
+		
+		boolean do_lan = plugin.getPeersAreLANLocal();
+		
+		try{
+			if ( do_lan ){
+				
+				AddressUtils.removeLANRateLimitAddress( InetAddress.getByName( pb.ip ));
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );;
+		}
+		
+		List<Peer>	peers = new ArrayList<>();
+		
+		for ( Download download: pbd.downloads ){
+
+			PeerManager pm = download.getPeerManager();
+
+			if ( pm != null ){
+
+				Peer[] ps = pm.getPeers();
+
+				for ( Peer p: ps ){
+
+					if ( key.equals( new PartialBuddy( this, p ).getKey())){
+
+						peers.add( p );
+					}
+				}
+			}
+		}
+		
+		for ( Peer peer: peers ){
+		
+			unmarkBuddyPeer( peer );
+			
+			if ( do_lan && peer.isLANLocal()){
+			
+				peer.resetLANLocalStatus();
+			}
+		}
+		
+		plugin.logMessage( "Partial buddy removed: " + pb );
+		
+		plugin.partialBuddyRemoved( pb );
 	}
 	
 	public void
@@ -754,38 +882,55 @@ outer:
 		Download	download,
 		Peer		peer )
 	{
-		PartialBuddy pb = new PartialBuddy(peer);
+		PartialBuddy pb = new PartialBuddy( this, peer );
+		
+		String key = pb.getKey();
+		
+		boolean removed = false;
 		
 		synchronized( online_buddies ){
 			
-			List<Download>	dls = partial_buddies.get( pb );
+			PartialBuddyData pbd = partial_buddies.get( key );
 				
-			if ( dls == null || !dls.remove( download )){
+			if ( pbd == null || !pbd.downloads.remove( download )){
 				
 				return;
 			}
 		
-			if ( dls.isEmpty()){
+			pb = pbd.pb;
 			
-				partial_buddies.remove( pb );
-			}
-		}
-				
-		try{
-			if ( plugin.getPeersAreLANLocal() && peer.isLANLocal()){
-				
-				AddressUtils.removeLANRateLimitAddress( InetAddress.getByName( pb.ip ));
-				
-				peer.resetLANLocalStatus();
-			}
-		}catch( Throwable e ){
+			if ( pbd.downloads.isEmpty()){
 			
-			Debug.out( e );;
+				partial_buddies.remove( key );
+				
+				removed = true;
+			}
 		}
 		
-		unmarkBuddyPeer( peer );
-
-		plugin.logMessage( "Partial buddy removed: " + download.getName() + "/" + pb );
+		if ( removed ){
+			
+			try{
+				if ( plugin.getPeersAreLANLocal() && peer.isLANLocal()){
+					
+					AddressUtils.removeLANRateLimitAddress( InetAddress.getByName( pb.ip ));
+					
+					peer.resetLANLocalStatus();
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );;
+			}
+			
+			unmarkBuddyPeer( peer );
+	
+			plugin.logMessage( "Partial buddy removed: " + download.getName() + " - " + pb );
+			
+			plugin.partialBuddyRemoved( pb );
+			
+		}else{
+			
+			plugin.partialBuddyChanged( pb );
+		}
 	}
 	
 	@Override
@@ -2600,48 +2745,17 @@ outer:
 	}
 	
 	private static class
-	PartialBuddy
+	PartialBuddyData
 	{
-		private final String		ip;
-		private final int			tcp_port;
-		private final int			udp_port;
+		private final PartialBuddy		pb;
+		private final List<Download>	downloads;
 		
 		private
-		PartialBuddy(
-			Peer		peer )
+		PartialBuddyData(
+			PartialBuddy		_pb )
 		{
-			ip			= peer.getIp();
-			tcp_port	= peer.getTCPListenPort();
-			udp_port	= peer.getUDPListenPort();
-		}
-		
-		@Override
-		public boolean 
-		equals(Object obj)
-		{
-			if ( obj instanceof PartialBuddy ){
-				
-				PartialBuddy other = (PartialBuddy)obj;
-				
-				return( other.tcp_port == tcp_port && other.udp_port == udp_port && ip.equals( other.ip));
-				
-			}else{
-				
-				return( false );
-			}
-		}
-		
-		@Override
-		public int 
-		hashCode()
-		{
-			return( ip.hashCode() + tcp_port + udp_port );
-		}
-		
-		public String
-		toString()
-		{
-			return( ip + "/" + tcp_port + "/" + udp_port );
+			pb			= _pb;
+			downloads	= new ArrayList<>();
 		}
 	}
 }
