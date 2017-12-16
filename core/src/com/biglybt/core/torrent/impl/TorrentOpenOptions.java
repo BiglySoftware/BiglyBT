@@ -88,12 +88,15 @@ public class TorrentOpenOptions
 	/** @todo: getter/setters */
 	public int iQueueLocation;
 
+	public boolean bSequentialDownload;
+	
 	/** @todo: getter/setters */
 	public boolean isValid;
 
 	/** @todo: getter/setters */
-	public boolean bDeleteFileOnCancel;
-
+	private boolean bDeleteFileOnCancel;
+	private boolean bDeleteFileOnCancelSet;
+	
 	private TorrentOpenFileOptions[] files = null;
 
 	/** @todo: getter/setters */
@@ -114,6 +117,8 @@ public class TorrentOpenOptions
 	private int max_up;
 	private int max_down;
 
+	private File	move_on_complete;
+	
 	private boolean	hide_errors;
 
 	public static final int CA_NONE			= 0;
@@ -136,6 +141,7 @@ public class TorrentOpenOptions
 			boolean bDeleteFileOnCancel) {
 		this();
 		this.bDeleteFileOnCancel = bDeleteFileOnCancel;
+		bDeleteFileOnCancelSet = true;
 		this.sFileName = sFileName;
 		this.sOriginatingLocation = sFileName;
 		this.setTorrent(torrent);
@@ -144,6 +150,7 @@ public class TorrentOpenOptions
 	public TorrentOpenOptions() {
 		iStartID = getDefaultStartMode();
 		iQueueLocation = QUEUELOCATION_BOTTOM;
+		bSequentialDownload = false;
 		isValid = true;
 		this.sDestDir = COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH);
 
@@ -168,8 +175,10 @@ public class TorrentOpenOptions
 		this.sDestSubDir = toBeCloned.sDestSubDir;
 		this.iStartID = toBeCloned.iStartID;
 		this.iQueueLocation = toBeCloned.iQueueLocation;
+		this.bSequentialDownload = toBeCloned.bSequentialDownload;
 		this.isValid = toBeCloned.isValid;
 		this.bDeleteFileOnCancel = toBeCloned.bDeleteFileOnCancel;
+		bDeleteFileOnCancelSet = toBeCloned.bDeleteFileOnCancelSet;
 		this.disableIPFilter = toBeCloned.disableIPFilter;
 		// this.torrent = ... // no clone
 		// this.initial_linkage_map = ... // no clone
@@ -184,9 +193,11 @@ public class TorrentOpenOptions
 				updatedTrackers.add(new ArrayList<>(l));
 			}
 		}
-		this.max_up 		= toBeCloned.max_up;
-		this.max_down 		= toBeCloned.max_down;
-		this.hide_errors	= toBeCloned.hide_errors;
+		this.max_up 			= toBeCloned.max_up;
+		this.max_down 			= toBeCloned.max_down;
+		this.move_on_complete	= toBeCloned.move_on_complete;
+		
+		this.hide_errors		= toBeCloned.hide_errors;
 	}
 
 	public static int getDefaultStartMode() {
@@ -220,6 +231,20 @@ public class TorrentOpenOptions
 		return( manualRename );
 	}
 
+	public void
+	setDeleteFileOnCancel(
+		boolean		b )
+	{
+		bDeleteFileOnCancel = b;
+		bDeleteFileOnCancelSet = true;
+	}
+	
+	public boolean
+	getDeleteFileOnCancel()
+	{
+		return( bDeleteFileOnCancel );
+	}
+	
 	public String
 	getSubDir()
 	{
@@ -475,6 +500,20 @@ public class TorrentOpenOptions
 	{
 		return( max_down );
 	}
+	
+	public File
+	getMoveOnComplete()
+	{
+		return( move_on_complete );
+	}
+	
+	public void
+	setMoveOnComplete(
+		File	f )
+	{
+		move_on_complete = f;
+	}
+	
 	public void
 	setHideErrors(
 		boolean		h )
@@ -913,5 +952,39 @@ public class TorrentOpenOptions
 	getCompleteAction()
 	{
 		return( complete_action );
+	}
+	
+	public void
+	cancel()
+	{
+		if ( bDeleteFileOnCancel || !bDeleteFileOnCancelSet ){
+			
+			if ( sFileName != null ){
+			
+				try{
+					File torrentFile = new File(sFileName);
+				
+					if ( bDeleteFileOnCancel ){
+						
+						torrentFile.delete();
+						
+					}else{
+						
+							// if no explicit instructions then only delete if in configured save directory
+						
+						if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")) {
+					
+							String save_dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
+							
+							if ( torrentFile.getParentFile().getAbsolutePath().equals( new File(save_dir).getAbsolutePath())){
+								
+								torrentFile.delete();
+							}
+						}
+					}
+				}catch( Throwable e ){
+				}
+			}
+		}
 	}
 }

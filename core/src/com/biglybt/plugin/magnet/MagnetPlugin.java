@@ -20,7 +20,9 @@
 package com.biglybt.plugin.magnet;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NoRouteToHostException;
 import java.net.Proxy;
@@ -28,6 +30,11 @@ import java.net.URL;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.tag.Tag;
@@ -37,6 +44,9 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLGroup;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentFactory;
+import com.biglybt.core.torrent.impl.TorrentOpenOptions;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerFactory;
+import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponsePeer;
 import com.biglybt.core.util.*;
 import com.biglybt.net.magneturi.MagnetURIHandler;
 import com.biglybt.net.magneturi.MagnetURIHandlerException;
@@ -49,26 +59,34 @@ import com.biglybt.pif.ddb.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.sharing.ShareException;
+import com.biglybt.pif.sharing.ShareManager;
+import com.biglybt.pif.sharing.ShareResource;
 import com.biglybt.pif.sharing.ShareResourceDir;
 import com.biglybt.pif.sharing.ShareResourceFile;
 import com.biglybt.pif.torrent.Torrent;
+import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.Parameter;
+import com.biglybt.pif.ui.config.StringListParameter;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.utils.LocaleListener;
+import com.biglybt.pif.utils.LocaleUtilities;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderAdapter;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderException;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderFactory;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
 
 /**
  * @author parg
@@ -81,6 +99,7 @@ MagnetPlugin
 {
 	public static final int	FL_NONE					= 0x00000000;
 	public static final int	FL_DISABLE_MD_LOOKUP	= 0x00000001;
+	public static final int	FL_NO_MD_LOOKUP_DELAY	= 0x00000002;
 
 	private static final String	SECONDARY_LOOKUP 			= "http://magnet.vuze.com/";
 	private static final int	SECONDARY_LOOKUP_DELAY		= 20*1000;
@@ -92,6 +111,14 @@ MagnetPlugin
 	private static final String	PLUGIN_NAME				= "Magnet URI Handler";
 	private static final String PLUGIN_CONFIGSECTION_ID = "plugins.magnetplugin";
 
+	public static final String[] SOURCE_VALUES 	= { "0", "1", "2" };
+
+	public static final String[] SOURCE_KEYS = {
+		"never", "shares", "always"
+	};
+	
+	public static final String[] SOURCE_STRINGS = new String[ SOURCE_KEYS.length ];
+
 	private PluginInterface		plugin_interface;
 
 	private CopyOnWriteList		listeners = new CopyOnWriteList();
@@ -100,10 +127,13 @@ MagnetPlugin
 
 	private static final int	PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT 	= 10*60;	// needs to be fairly large as non-public downloads can take a while...
 
-	private BooleanParameter secondary_lookup;
-	private BooleanParameter md_lookup;
-	private IntParameter	 md_lookup_delay;
-	private IntParameter	 timeout_param;
+	private BooleanParameter 	secondary_lookup;
+	private BooleanParameter 	md_lookup;
+	private IntParameter	 	md_lookup_delay;
+	private IntParameter	 	timeout_param;
+	private StringListParameter	sources_param;
+	private IntParameter	 	sources_extra_param;
+	private BooleanParameter	magnet_recovery;
 
 	private Map<String,BooleanParameter> net_params = new HashMap<>();
 
@@ -125,6 +155,22 @@ MagnetPlugin
 
 		MagnetURIHandler uri_handler = MagnetURIHandler.getSingleton();
 
+		final LocaleUtilities lu = plugin_interface.getUtilities().getLocaleUtilities();
+
+		lu.addListener(
+			new LocaleListener()
+			{
+				@Override
+				public void
+				localeChanged(
+					Locale		l )
+				{
+					updateLocale(lu);
+				}
+			});
+
+		updateLocale(lu);
+		
 		BasicPluginConfigModel	config =
 			plugin_interface.getUIManager().createBasicPluginConfigModel( ConfigSection.SECTION_PLUGINS,
 					PLUGIN_CONFIGSECTION_ID);
@@ -138,6 +184,12 @@ MagnetPlugin
 		md_lookup.addEnabledOnSelection( md_lookup_delay );
 
 		timeout_param		= config.addIntParameter2( "MagnetPlugin.timeout.secs", "MagnetPlugin.timeout.secs", PLUGIN_DOWNLOAD_TIMEOUT_SECS_DEFAULT );
+
+		sources_param 		= config.addStringListParameter2( "MagnetPlugin.add.sources", "MagnetPlugin.add.sources", SOURCE_VALUES, SOURCE_STRINGS, SOURCE_VALUES[1] );
+		
+		sources_extra_param	= config.addIntParameter2( "MagnetPlugin.add.sources.extra", "MagnetPlugin.add.sources.extra", 0 );
+				
+		magnet_recovery		= config.addBooleanParameter2( "MagnetPlugin.recover.magnets", "MagnetPlugin.recover.magnets", true );
 
 		Parameter[] nps = new Parameter[ AENetworkClassifier.AT_NETWORKS.length ];
 
@@ -193,22 +245,30 @@ MagnetPlugin
 						String name;
 						Object ds = row.getDataSource();
 
-						Download download = null;
-
+						Download 		download 	= null;
+						ShareResource	share 		= null;
+						
 						if (ds instanceof ShareResourceFile) {
+							ShareResourceFile sf = (ShareResourceFile)ds;
 							try {
-								torrent = ((ShareResourceFile) ds).getItem().getTorrent();
+								torrent = sf.getItem().getTorrent();
 							} catch (ShareException e) {
 								continue;
 							}
-							name = ((ShareResourceFile) ds).getName();
+							name = sf.getName();
+							
+							share = sf;
+							
 						}else if (ds instanceof ShareResourceDir) {
+							ShareResourceDir sd = (ShareResourceDir)ds;
 								try {
-									torrent = ((ShareResourceDir) ds).getItem().getTorrent();
+									torrent = sd.getItem().getTorrent();
 								} catch (ShareException e) {
 									continue;
 								}
-								name = ((ShareResourceDir) ds).getName();
+								name = sd.getName();
+								
+								share = sd;
 						} else if (ds instanceof Download) {
 							download = (Download)ds;
 							torrent = download.getTorrent();
@@ -217,7 +277,56 @@ MagnetPlugin
 							continue;
 						}
 
+						boolean	is_share = false;
 
+						Set<String>	networks = new HashSet<>();
+						
+						if ( share != null ){
+							
+							is_share = true;
+							
+							Map<String,String>	properties  = share.getProperties();
+							
+							if ( properties != null ){
+								
+								String nets = properties.get( ShareManager.PR_NETWORKS );
+		
+								if ( nets != null ){
+		
+									String[] bits = nets.split( "," );
+		
+									for ( String bit: bits ){
+		
+										bit = AENetworkClassifier.internalise( bit.trim());
+		
+										if ( bit != null ){
+		
+											networks.add( bit );
+										}
+									}
+								}
+							}
+						}
+												
+						if ( download != null ){
+							
+							TorrentAttribute ta = plugin_interface.getTorrentManager().getAttribute( TorrentAttribute.TA_NETWORKS );
+							
+							String[]	nets = download.getListAttribute( ta );
+							
+							networks.addAll( Arrays.asList( nets ));
+							
+							try{
+								byte[] hash = download.getTorrentHash();
+								
+								if ( plugin_interface.getShareManager().lookupShare( hash ) != null ){
+									
+									is_share = true;
+								}								
+							}catch( Throwable e ){								
+							}
+						}
+												
 						String cb_data = download==null?UrlUtils.getMagnetURI( name, torrent ):UrlUtils.getMagnetURI( download);
 
 						if ( download != null ){
@@ -233,6 +342,131 @@ MagnetPlugin
 							}
 						}
 
+						String sources = sources_param.getValue();
+
+						boolean add_sources = sources.equals( "2" ) || ( sources.equals( "1" ) && is_share );
+
+						if ( add_sources ){
+							
+							if ( networks.isEmpty()){
+								
+								for ( String net: AENetworkClassifier.AT_NETWORKS ){
+									
+									if ( isNetworkEnabled( net )){
+										
+										networks.add( net );
+									}
+								}
+							}
+							
+							if ( networks.contains( AENetworkClassifier.AT_PUBLIC ) && !cb_data.contains( "xsource=" )){
+								
+								InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+
+								InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
+								
+								int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+
+								if ( ip != null && port > 0 ){
+									
+									cb_data += "&xsource=" + UrlUtils.encode( ip.getHostAddress() + ":" + port );
+								}
+								
+								if ( ip_v6 != null && port > 0 ){
+									
+									cb_data += "&xsource=" + UrlUtils.encode( ip_v6.getHostAddress() + ":" + port );
+								}
+																	
+								int	extra = sources_extra_param.getValue();
+									
+								if ( extra > 0 ){
+									
+									if ( download == null ){
+										
+										if ( torrent != null ){
+											
+											download = plugin_interface.getDownloadManager().getDownload( torrent );
+										}
+									}
+									
+									if ( download != null ){
+										
+										Set<String>	added = new HashSet<>();
+										
+										DownloadManager dm = PluginCoreUtils.unwrap( download );
+										
+										PEPeerManager pm = dm.getPeerManager();
+										
+										if ( pm != null ){
+											
+											List<PEPeer> peers = pm.getPeers();
+											
+											for ( PEPeer peer: peers ){
+												
+												String peer_ip = peer.getIp();
+												
+												if ( AENetworkClassifier.categoriseAddress( peer_ip ) == AENetworkClassifier.AT_PUBLIC ){
+												
+													int peer_port = peer.getTCPListenPort();
+													
+													if ( peer_port > 0 ){
+																													
+														cb_data += "&xsource=" + UrlUtils.encode( peer_ip + ":" + peer_port );
+														
+														added.add( peer_ip );
+														
+														extra--;
+														
+														if ( extra == 0 ){
+															
+															break;
+														}
+													}
+												}
+											}
+										}
+										
+										if ( extra > 0 ){
+											
+											Map response_cache = dm.getDownloadState().getTrackerResponseCache();
+										
+											if ( response_cache != null ){
+											
+												List<TRTrackerAnnouncerResponsePeer> peers = TRTrackerAnnouncerFactory.getCachedPeers( response_cache );
+												
+												for ( TRTrackerAnnouncerResponsePeer peer: peers ){
+													
+													String peer_ip = peer.getAddress();
+													
+													if ( AENetworkClassifier.categoriseAddress( peer_ip ) == AENetworkClassifier.AT_PUBLIC ){
+													
+														if ( !added.contains( peer_ip )){
+															
+															int peer_port = peer.getPort();
+															
+															if ( peer_port > 0 ){
+																															
+																cb_data += "&xsource=" + UrlUtils.encode( peer_ip + ":" + peer_port );
+																
+																added.add( peer_ip );
+																
+																extra--;
+																
+																if ( extra == 0 ){
+																	
+																	break;
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+						
 						// removed this as well - nothing wrong with allowing magnet copy
 						// for private torrents - they still can't be tracked if you don't
 						// have permission
@@ -352,11 +586,11 @@ MagnetPlugin
 				@Override
 				public byte[]
 				download(
-					final MagnetURIHandlerProgressListener muh_listener,
-					final byte[]								hash,
-					final String								args,
-					final InetSocketAddress[]					sources,
-					final long									timeout )
+					MagnetURIHandlerProgressListener 	muh_listener,
+					byte[]								hash,
+					String								args,
+					InetSocketAddress[]					sources,
+					long								timeout )
 
 					throws MagnetURIHandlerException
 				{
@@ -383,59 +617,7 @@ MagnetPlugin
 						Debug.printStackTrace(e);
 					}
 
-					return( MagnetPlugin.this.download(
-							muh_listener == null ? null : new MagnetPluginProgressListener()
-							{
-								@Override
-								public void
-								reportSize(
-									long	size )
-								{
-									muh_listener.reportSize( size );
-								}
-
-								@Override
-								public void
-								reportActivity(
-									String	str )
-								{
-									muh_listener.reportActivity( str );
-								}
-
-								@Override
-								public void
-								reportCompleteness(
-									int		percent )
-								{
-									muh_listener.reportCompleteness( percent );
-								}
-
-								@Override
-								public void
-								reportContributor(
-									InetSocketAddress	address )
-								{
-								}
-
-								@Override
-								public boolean
-								cancelled()
-								{
-									return( muh_listener.cancelled());
-								}
-
-								@Override
-								public boolean
-								verbose()
-								{
-									return( muh_listener.verbose());
-								}
-							},
-							hash,
-							args,
-							sources,
-							timeout,
-							0 ));
+					return( recoverableDownload( muh_listener, hash, args, sources, timeout, false ));
 				}
 
 				@Override
@@ -498,38 +680,6 @@ MagnetPlugin
 				}
 			});
 
-		plugin_interface.addListener(
-			new PluginListener()
-			{
-				@Override
-				public void
-				initializationComplete()
-				{
-						// make sure DDB is initialised as we need it to register its
-						// transfer types
-
-					AEThread2 t =
-						new AEThread2( "MagnetPlugin:init", true )
-						{
-							@Override
-							public void
-							run()
-							{
-								plugin_interface.getDistributedDatabase();
-							}
-						};
-
-					t.start();
-				}
-
-				@Override
-				public void
-				closedownInitiated(){}
-
-				@Override
-				public void
-				closedownComplete(){}
-			});
 
 		plugin_interface.getUIManager().addUIListener(
 				new UIManagerListener()
@@ -574,6 +724,8 @@ MagnetPlugin
 			}
 		}
 
+		final AESemaphore delete_done = new AESemaphore( "delete waiter" );
+		
 		if ( to_delete.size() > 0 ){
 
 			AEThread2 t =
@@ -583,29 +735,403 @@ MagnetPlugin
 					public void
 					run()
 					{
-						for ( Download download: to_delete ){
-
-							try{
-								download.stop();
-
-							}catch( Throwable e ){
+						try{
+							for ( Download download: to_delete ){
+	
+								try{
+									download.stop();
+	
+								}catch( Throwable e ){
+								}
+	
+								try{
+									download.remove( true, true );
+	
+								}catch( Throwable e ){
+	
+									Debug.out( e );
+								}
 							}
-
-							try{
-								download.remove( true, true );
-
-							}catch( Throwable e ){
-
-								Debug.out( e );
-							}
+						}finally{
+							
+							delete_done.release();
 						}
 					}
 				};
 
 			t.start();
+
+		}else {
+
+			delete_done.release();
 		}
+		
+		
+		plugin_interface.addListener(
+				new PluginListener()
+				{
+					@Override
+					public void
+					initializationComplete()
+					{
+							// make sure DDB is initialised as we need it to register its
+							// transfer types
+
+						AEThread2 t =
+							new AEThread2( "MagnetPlugin:init", true )
+							{
+								@Override
+								public void
+								run()
+								{
+									delete_done.reserve();
+									
+									recoverDownloads();
+									
+									plugin_interface.getDistributedDatabase();
+								}
+							};
+
+						t.start();
+					}
+
+					@Override
+					public void
+					closedownInitiated(){}
+
+					@Override
+					public void
+					closedownComplete(){}
+				});
 	}
 
+	protected void
+	updateLocale(
+		LocaleUtilities	lu )
+	{
+		for ( int i=0;i<SOURCE_STRINGS.length;i++){
+
+			SOURCE_STRINGS[i] = lu.getLocalisedMessageText( "MagnetPlugin.add.sources." + SOURCE_KEYS[i] );
+		}
+
+		if ( sources_param != null ){
+
+			sources_param.setLabels( SOURCE_STRINGS );
+		}
+	}
+	
+	private void
+	recoverDownloads()
+	{
+		Map<String,Map> active;
+	
+		synchronized( download_activities ){
+			
+			active = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
+		
+			if ( active.size() > 0 ){
+				
+				active = BEncoder.cloneMap( active );
+				
+				COConfigurationManager.setParameter( "MagnetPlugin.active.magnets", new HashMap());
+			}
+		}
+		
+		boolean recover = magnet_recovery.getValue();
+
+		if ( recover ){
+		
+			for ( Map map: active.values()){
+					
+				//System.out.println( "Recovering: " + map );
+					
+				try{
+					byte[]	hash = (byte[])map.get( "hash" );
+					
+					String args = new String((byte[])map.get( "args" ), "UTF-8" );
+					
+					InetSocketAddress[] sources = new InetSocketAddress[0];
+					
+					List<Map> l_sources = (List<Map>)map.get( "sources" );
+					
+					if ( l_sources != null && !l_sources.isEmpty()){
+						
+						List<InetSocketAddress> l_ias = new ArrayList<>();
+						
+						for ( Map m: l_sources ){
+							
+							try{
+								int	port = ((Number)m.get( "port" )).intValue();
+								
+								if ( map.containsKey( "host" )){
+									
+									String unresolved_host = new String((byte[])map.get( "host"), "UTF-8" );
+									
+									l_ias.add( InetSocketAddress.createUnresolved( unresolved_host, port ));
+									
+								}else{
+									
+									byte[] address = (byte[])map.get( "address" );
+									
+									l_ias.add( new InetSocketAddress( InetAddress.getByAddress( address), port ));
+								}
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+						
+						sources = l_ias.toArray( new InetSocketAddress[l_ias.size()]);
+					}
+					
+					long timeout = (Long)map.get( "timeout" );
+					
+					final InetSocketAddress[] f_sources = sources;
+					
+					new AEThread2( "Magnet Recovery")
+					{
+						public void
+						run()
+						{
+							try{
+								byte[] result = recoverableDownload( null, hash, args, f_sources, timeout, true );
+								
+								if ( result != null ){
+									
+									TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( result );
+									
+									String	torrent_name = FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( torrent ) + ".torrent", false );
+									
+									File torrent_file;
+									
+									String dir = null;
+									
+								    if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")){
+								    	
+										dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
+										
+										if ( dir != null ){
+											
+											if ( dir.length() > 0 ){
+												
+												File f = new File( dir );
+												
+												if ( !f.exists()){
+													
+													f.mkdirs();
+												}
+												
+												if ( !( f.isDirectory() && f.canWrite())){
+												
+													dir = null;
+												}
+											}else{
+												
+												dir = null;
+											}
+										}
+								    }
+								    
+								    if ( dir != null ){
+								    	
+								    	torrent_file = new File( dir, torrent_name );
+								    	
+								    }else {
+								    	
+								    	torrent_file = new File( AETemporaryFileHandler.getTempDirectory(), torrent_name );
+								    }
+								    
+								    if ( torrent_file.exists()){
+								    	
+								    	torrent_file = AETemporaryFileHandler.createTempFile();
+								    }
+								      
+								    torrent.serialiseToBEncodedFile( torrent_file );
+									
+									UIFunctions uif = UIFunctionsManager.getUIFunctions();
+									
+									TorrentOpenOptions torrentOptions = new TorrentOpenOptions();
+									
+									torrentOptions.setDeleteFileOnCancel( true );
+									torrentOptions.sFileName			= torrent_file.getAbsolutePath();
+									torrentOptions.setTorrent( torrent );
+									
+									uif.addTorrentWithOptions( false, torrentOptions );
+								}
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					}.start();				
+								
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}
+	}
+	
+	private byte[]
+	recoverableDownload(
+		final MagnetURIHandlerProgressListener 		muh_listener,
+		final byte[]								hash,
+		final String								args,
+		final InetSocketAddress[]					sources,
+		final long									timeout,
+		boolean										is_recovering )
+	
+		throws MagnetURIHandlerException
+	{
+		boolean recover = magnet_recovery.getValue();
+		
+		String hash_str = Base32.encode( hash );
+		
+		//System.out.println( "Starts: " + args );
+		
+		try{		
+			if ( recover ){
+
+				Map map = new HashMap();
+				
+				map.put( "hash", hash );
+				map.put( "args", args );
+				
+				List<Map> l_sources = new ArrayList<>();
+				
+				map.put( "sources", l_sources );
+				
+				if ( sources != null && sources.length > 0 ){
+					
+					for ( InetSocketAddress isa: sources ){
+						
+						try{
+							Map m = new HashMap();
+													
+							m.put( "port", isa.getPort());
+							
+							if ( isa.isUnresolved()){
+								
+								map.put( "host", isa.getHostName());
+								
+							}else{
+								
+								InetAddress ia = isa.getAddress();
+								
+								map.put( "address", ia.getAddress());
+							}
+							
+							l_sources.add( m );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				}
+				
+				map.put( "timeout", timeout );
+				
+				synchronized( download_activities ){
+				
+					Map active = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
+				
+					active.put( hash_str, map );
+					
+					COConfigurationManager.setParameter( "MagnetPlugin.active.magnets", active );
+				}
+				
+				COConfigurationManager.setDirty();
+			}
+			
+			byte[] result = 
+				download(
+					muh_listener == null ? null : new MagnetPluginProgressListener()
+					{
+						@Override
+						public void
+						reportSize(
+							long	size )
+						{
+							muh_listener.reportSize( size );
+						}
+	
+						@Override
+						public void
+						reportActivity(
+							String	str )
+						{
+							muh_listener.reportActivity( str );
+						}
+	
+						@Override
+						public void
+						reportCompleteness(
+							int		percent )
+						{
+							muh_listener.reportCompleteness( percent );
+						}
+	
+						@Override
+						public void
+						reportContributor(
+							InetSocketAddress	address )
+						{
+						}
+	
+						@Override
+						public boolean
+						cancelled()
+						{
+							return( muh_listener.cancelled());
+						}
+	
+						@Override
+						public boolean
+						verbose()
+						{
+							return( muh_listener.verbose());
+						}
+					},
+					hash,
+					args,
+					sources,
+					timeout,
+					is_recovering?MagnetPlugin.FL_NO_MD_LOOKUP_DELAY:MagnetPlugin.FL_NONE );
+			
+			//System.out.println( "Done: " + args );
+			
+			return( result );
+			
+		}catch( Throwable e ) {
+			
+			//System.out.println( "Failed: " + args );
+			
+			if ( e instanceof MagnetURIHandlerException ){
+				
+				throw((MagnetURIHandlerException)e);
+				
+			}else{
+	
+				throw( new MagnetURIHandlerException( "Magnet download failed", e ));
+			}
+		}finally {
+			
+			if ( recover ){
+				
+				synchronized( download_activities ){
+					
+					Map active = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
+				
+					active.remove( hash_str );
+				}
+				
+				COConfigurationManager.setDirty();
+			}
+		}
+	}
+	
 	public boolean
 	isNetworkEnabled(
 		String		net )
@@ -1001,9 +1527,10 @@ MagnetPlugin
 			md_enabled = md_lookup.getValue() && FeatureAvailability.isMagnetMDEnabled();
 		}
 
-		final byte[][]		result_holder 	= { null };
-		final Throwable[] 	result_error 	= { null };
-
+		final byte[][]		result_holder 		= { null };
+		final Throwable[] 	result_error 		= { null };
+		final boolean[]		manually_cancelled	= { false };
+		
 		TimerEvent							md_delay_event = null;
 		final MagnetPluginMDDownloader[]	md_downloader = { null };
 
@@ -1186,7 +1713,16 @@ MagnetPlugin
 
 		if ( md_enabled ){
 
-			int	delay_millis = md_lookup_delay.getValue()*1000;
+			int	delay_millis;
+			
+			if ((flags & FL_NO_MD_LOOKUP_DELAY ) != 0 ){
+				
+				delay_millis = 0;
+				
+			}else{
+				
+				delay_millis = md_lookup_delay.getValue()*1000;
+			}
 
 			md_delay_event =
 				SimpleTimer.addEvent(
@@ -1258,7 +1794,8 @@ MagnetPlugin
 									@Override
 									public void
 									failed(
-										Throwable e )
+										boolean			mc,
+										Throwable	 	e )
 									{
 										if ( listener != null ){
 											listener.reportActivity( getMessageText( "report.error", Debug.getNestedExceptionMessage(e)));
@@ -1266,6 +1803,8 @@ MagnetPlugin
 
 										synchronized( result_holder ){
 
+											manually_cancelled[0] = mc;
+											
 											result_error[0] = e;
 										}
 									}
@@ -1382,8 +1921,12 @@ MagnetPlugin
 									for (int i=0;i<sources.length;i++){
 
 										try{
-											contactFound( db.importContact(sources[i]));
-
+											InetSocketAddress source = sources[i];
+											
+											if ( AENetworkClassifier.categoriseAddress( source ) == AENetworkClassifier.AT_PUBLIC ){
+											
+												contactFound( db.importContact(sources[i]));
+											}
 										}catch( Throwable e ){
 
 											Debug.printStackTrace(e);
@@ -1532,6 +2075,11 @@ MagnetPlugin
 									if ( result_holder[0] != null ){
 
 										return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+									}
+									
+									if ( manually_cancelled[0] ){
+									
+										throw( new Exception( "Manually cancelled" ));
 									}
 								}
 
@@ -1763,6 +2311,11 @@ MagnetPlugin
 
 										return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
 									}
+									
+									if ( manually_cancelled[0] ){
+										
+										throw( new Exception( "Manually cancelled" ));
+									}
 								}
 
 								if ( got_sem ){
@@ -1814,6 +2367,11 @@ MagnetPlugin
 								if ( result_holder[0] != null ){
 
 									return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+								}
+								
+								if ( manually_cancelled[0] ){
+									
+									throw( new Exception( "Manually cancelled" ));
 								}
 							}
 

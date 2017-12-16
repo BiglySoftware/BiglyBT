@@ -20,6 +20,8 @@
 
 package com.biglybt.pif;
 
+import java.util.Properties;
+
 /**
  * Defines the plugin interface to implement in order to create a Plugin
  * @author Olivier
@@ -41,6 +43,12 @@ Plugin
 
   	throws PluginException;
 
+  public default Properties
+  getInitialProperties()
+  {
+	  return( new Properties());
+  }
+  
   /**
    * This method is invoke by reflection, if it exists. It couldn't be added to the interface as
    * doing so would have broken existing plugins.

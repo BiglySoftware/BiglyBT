@@ -106,6 +106,9 @@ public class ScaledGraphic extends BackGroundGraphic {
     super.dispose();
     if(bufferScale != null && ! bufferScale.isDisposed())
       bufferScale.dispose();
+    if ( scale != null ) {
+    	scale.dispose();
+    }
   }
 
 }

@@ -285,58 +285,77 @@ public class TorrentOpener {
 		}
 	}
 
+  public static String getFilterPathExport() {
+	    String before = COConfigurationManager.getStringParameter("previous.filter.dir.export", "");
+	    return( before );
+  }
+
+  public static String setFilterPathExport( String path ) {
+	  if( path != null && path.length() > 0 ) {
+		  File test = new File( path );
+		  if( !test.isDirectory() ) test = test.getParentFile();
+		  String now = "";
+		  if( test != null ) now = test.getAbsolutePath();
+		  String before = COConfigurationManager.getStringParameter("previous.filter.dir.export");
+		  if( before == null || before.length() == 0 || !before.equals( now ) ) {
+			  COConfigurationManager.setParameter( "previous.filter.dir.export", now );
+			  COConfigurationManager.save();
+		  }
+	  }
+	  return path;
+  }
 
   public static String getFilterPathData() {
-    String before = COConfigurationManager.getStringParameter("previous.filter.dir.data");
-    if( before != null && before.length() > 0 ) {
-      return before;
-    }
-    String def;
-		try {
-			def = COConfigurationManager.getDirectoryParameter("Default save path");
-	    return def;
-		} catch (IOException e) {
-			return "";
-		}
+	  String before = COConfigurationManager.getStringParameter("previous.filter.dir.data");
+	  if( before != null && before.length() > 0 ) {
+		  return before;
+	  }
+	  String def;
+	  try {
+		  def = COConfigurationManager.getDirectoryParameter("Default save path");
+		  return def;
+	  } catch (IOException e) {
+		  return "";
+	  }
   }
 
   public static String getFilterPathTorrent() {
-    String before = COConfigurationManager.getStringParameter("previous.filter.dir.torrent");
-    if( before != null && before.length() > 0 ) {
-      return before;
-    }
-    return COConfigurationManager.getStringParameter("General_sDefaultTorrent_Directory");
+	  String before = COConfigurationManager.getStringParameter("previous.filter.dir.torrent");
+	  if( before != null && before.length() > 0 ) {
+		  return before;
+	  }
+	  return COConfigurationManager.getStringParameter("General_sDefaultTorrent_Directory");
   }
 
   public static String setFilterPathData( String path ) {
-    if( path != null && path.length() > 0 ) {
-      File test = new File( path );
-      if( !test.isDirectory() ) test = test.getParentFile();
-      String now = "";
-      if( test != null ) now = test.getAbsolutePath();
-      String before = COConfigurationManager.getStringParameter("previous.filter.dir.data");
-      if( before == null || before.length() == 0 || !before.equals( now ) ) {
-        COConfigurationManager.setParameter( "previous.filter.dir.data", now );
-        COConfigurationManager.save();
-      }
-    }
-    return path;
+	  if( path != null && path.length() > 0 ) {
+		  File test = new File( path );
+		  if( !test.isDirectory() ) test = test.getParentFile();
+		  String now = "";
+		  if( test != null ) now = test.getAbsolutePath();
+		  String before = COConfigurationManager.getStringParameter("previous.filter.dir.data");
+		  if( before == null || before.length() == 0 || !before.equals( now ) ) {
+			  COConfigurationManager.setParameter( "previous.filter.dir.data", now );
+			  COConfigurationManager.save();
+		  }
+	  }
+	  return path;
   }
 
   public static String setFilterPathTorrent( String path ) {
-    if( path != null && path.length() > 0 ) {
-      File test = new File( path );
-      if( !test.isDirectory() ) test = test.getParentFile();
-      String now = "";
-      if( test != null ) now = test.getAbsolutePath();
-      String before = COConfigurationManager.getStringParameter("previous.filter.dir.torrent");
-      if( before == null || before.length() == 0 || !before.equals( now ) ) {
-        COConfigurationManager.setParameter( "previous.filter.dir.torrent", now );
-        COConfigurationManager.save();
-      }
-      return now;
-    }
-    return path;
+	  if( path != null && path.length() > 0 ) {
+		  File test = new File( path );
+		  if( !test.isDirectory() ) test = test.getParentFile();
+		  String now = "";
+		  if( test != null ) now = test.getAbsolutePath();
+		  String before = COConfigurationManager.getStringParameter("previous.filter.dir.torrent");
+		  if( before == null || before.length() == 0 || !before.equals( now ) ) {
+			  COConfigurationManager.setParameter( "previous.filter.dir.torrent", now );
+			  COConfigurationManager.save();
+		  }
+		  return now;
+	  }
+	  return path;
   }
 
 
@@ -592,6 +611,19 @@ public class TorrentOpener {
 								Debug.printStackTrace(e2);
 							}
 						}
+						
+						if ( torrentOptions.bSequentialDownload ) {
+							
+							dm_state.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );
+						}
+						
+						File moc = torrentOptions.getMoveOnComplete();
+						
+						if ( moc != null ){
+							
+							dm_state.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
+						}
+						
 					} finally {
 
 						dm.getDownloadState().suppressStateSave(false);
@@ -795,7 +827,13 @@ public class TorrentOpener {
 			return false;
 		}
 
-		torrentOptions.bDeleteFileOnCancel = bDeleteFileOnCancel;
+			// only explicitly set the delete-on-cancel state if we really know we need to (we made a copy)
+			// otherwise leave default behaviour to decide whether to delete on cancel or not
+		
+		if (bDeleteFileOnCancel ){
+			torrentOptions.setDeleteFileOnCancel( bDeleteFileOnCancel );
+		}
+		
 		torrentOptions.sFileName = torrentFile.getAbsolutePath();
 		torrentOptions.setTorrent(torrent);
 		torrentOptions.sOriginatingLocation = sOriginatingLocation;
@@ -878,6 +916,24 @@ public class TorrentOpener {
 					Debug.printStackTrace(e);
 				}
 
+				// this is the best place to work out if the file is already in the 'save torrents' folder and therefore
+				// shouldn't be deleted if the add-process is cancelled. Other places in the call tree suffer from the
+				// fact that the file may already have been copied into the folder (e.g. URL download process)
+				// not great but it works for now...
+				
+				try{
+					File torrentDir = new File(COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory"));
+
+					if ( 	COConfigurationManager.getBooleanParameter("Save Torrent Files") && 
+							torrentDir.exists() && 
+							file.getParentFile().equals( torrentDir )){
+						
+						torrentOptions.setDeleteFileOnCancel( false );
+					}
+				}catch( Throwable e ){
+					
+				}
+				
 				UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
 				if (TorrentOpener.mergeFileIntoTorrentInfo(file.getAbsolutePath(),

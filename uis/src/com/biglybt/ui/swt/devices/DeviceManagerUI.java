@@ -27,16 +27,25 @@ import java.util.*;
 import java.util.List;
 
 import com.biglybt.ui.swt.UIExitUtilsSWT.canCloseListener;
+import com.biglybt.ui.swt.components.BufferedLabel;
+import com.biglybt.ui.swt.components.Legend;
+import com.biglybt.ui.swt.components.graphics.MultiPlotGraphic;
+import com.biglybt.ui.swt.components.graphics.ValueFormater;
+import com.biglybt.ui.swt.components.graphics.ValueSource;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
@@ -55,8 +64,14 @@ import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.average.AverageFactory;
+import com.biglybt.core.util.average.MovingAverage;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
+import com.biglybt.net.upnp.UPnPDevice;
+import com.biglybt.net.upnp.UPnPRootDevice;
+import com.biglybt.net.upnp.UPnPService;
+import com.biglybt.net.upnp.services.UPnPWANCommonInterfaceConfig;
 import com.biglybt.net.upnpms.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
@@ -78,6 +93,7 @@ import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.plugin.net.buddy.swt.ChatView;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
@@ -90,9 +106,11 @@ import com.biglybt.ui.swt.devices.add.ManufacturerChooser;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.imageloader.ImageLoader.ImageDownloaderListener;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.skin.SkinView;
@@ -128,6 +146,10 @@ DeviceManagerUI
 	private static final boolean	SHOW_RENDERER_VITALITY 	= false;
 	private static final boolean	SHOW_OD_VITALITY 		= true;
 
+	private static Color[]	colors = {
+			Colors.fadedGreen, Colors.fadedGreen, 
+			Colors.blues[Colors.BLUES_DARKEST], Colors.blues[Colors.BLUES_DARKEST] };
+	
 	//private static final String[] to_copy_indicator_colors = { "#000000", "#000000", "#168866", "#1c5620" };
 
 	private DeviceManager			device_manager;
@@ -192,13 +214,10 @@ DeviceManagerUI
 
 	private static final int	MAX_MS_DISPLAY_LINE_DEFAULT = 5000;
 
-	private int	max_ms_display_lines;
-
 	private DeviceManagerListener device_manager_listener_setupui;
 
 	private TranscodeQueueListener transcodeQueueListener;
 	private com.biglybt.core.config.ParameterListener configListener;
-	private com.biglybt.core.config.ParameterListener configMaxLinesListener;
 	private DeviceManagerListener deviceManagerListener;
 	private TranscodeManagerListener transcodeManagerListener;
 	private com.biglybt.core.config.ParameterListener parameterListener;
@@ -216,18 +235,6 @@ DeviceManagerUI
 		if (DISABLED) {
 			return;
 		}
-
-		configMaxLinesListener = new com.biglybt.core.config.ParameterListener() {
-			@Override
-			public void
-			parameterChanged(
-					String name) {
-				max_ms_display_lines = COConfigurationManager.getIntParameter(name, MAX_MS_DISPLAY_LINE_DEFAULT);
-			}
-		};
-		COConfigurationManager.addAndFireParameterListener(
-				"Plugin.default.device.config.ms.maxlines",
-				configMaxLinesListener);
 
 		ui_manager.addUIListener(
 				new UIManagerListener()
@@ -1504,192 +1511,193 @@ DeviceManagerUI
 		}
 
 		categories.clear();
-
-		if (side_bar_view_type == SBV_FULL) {
-			buildCategories();
-		}
+		
+		buildCategories( side_bar_view_type == SBV_FULL);
 
 		sidebar_built = true;
 
 		return mdiEntryOverview;
 	}
 
-	private void buildCategories() {
-		MenuManager menu_manager = ui_manager.getMenuManager();
-		// renderers
-
-		categoryView renderers_category = addDeviceCategory(
-				Device.DT_MEDIA_RENDERER, "device.renderer.view.title",
-				"image.sidebar.device.renderer");
-
-		categories.add(renderers_category);
-
-		MenuItem re_menu_item = menu_manager.addMenuItem("sidebar."
-				+ renderers_category.getKey(), "device.show");
-
-		re_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-		re_menu_item.addListener(show_listener);
-		re_menu_item.addFillListener(show_fill_listener);
-
-		re_menu_item = menu_manager.addMenuItem( "sidebar." + renderers_category.getKey(), "sep_re");
-		re_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		re_menu_item.setStyle( MenuItem.STYLE_SEPARATOR );
-
-		re_menu_item = menu_manager.addMenuItem(
-				"sidebar." + renderers_category.getKey(),
-				"device.renderer.remove_all");
-		re_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		re_menu_item.addListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-
-				new AEThread2( "doit" )
-				{
-					@Override
-					public void
-					run()
+	private void buildCategories( boolean full ) {
+		
+		if ( full ){
+			MenuManager menu_manager = ui_manager.getMenuManager();
+			// renderers
+	
+			categoryView renderers_category = addDeviceCategory(
+					Device.DT_MEDIA_RENDERER, "device.renderer.view.title",
+					"image.sidebar.device.renderer");
+	
+			categories.add(renderers_category);
+	
+			MenuItem re_menu_item = menu_manager.addMenuItem("sidebar."
+					+ renderers_category.getKey(), "device.show");
+	
+			re_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			re_menu_item.addListener(show_listener);
+			re_menu_item.addFillListener(show_fill_listener);
+	
+			re_menu_item = menu_manager.addMenuItem( "sidebar." + renderers_category.getKey(), "sep_re");
+			re_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			re_menu_item.setStyle( MenuItem.STYLE_SEPARATOR );
+	
+			re_menu_item = menu_manager.addMenuItem(
+					"sidebar." + renderers_category.getKey(),
+					"device.renderer.remove_all");
+			re_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			re_menu_item.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+	
+					new AEThread2( "doit" )
 					{
-						UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
-
-						long res = ui_manager.showMessageBox(
-								"device.mediaserver.remove_all.title",
-								"device.renderer.remove_all.desc",
-								UIManagerEvent.MT_YES | UIManagerEvent.MT_NO );
-
-						if ( res == UIManagerEvent.MT_YES ){
-
-							Device[] devices = device_manager.getDevices();
-
-							for ( Device d: devices ){
-
-								if ( d.getType() == Device.DT_MEDIA_RENDERER ){
-
-									if ( d.canRemove()){
-
-										d.remove();
+						@Override
+						public void
+						run()
+						{
+							UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
+	
+							long res = ui_manager.showMessageBox(
+									"device.mediaserver.remove_all.title",
+									"device.renderer.remove_all.desc",
+									UIManagerEvent.MT_YES | UIManagerEvent.MT_NO );
+	
+							if ( res == UIManagerEvent.MT_YES ){
+	
+								Device[] devices = device_manager.getDevices();
+	
+								for ( Device d: devices ){
+	
+									if ( d.getType() == Device.DT_MEDIA_RENDERER ){
+	
+										if ( d.canRemove()){
+	
+											d.remove();
+										}
 									}
 								}
 							}
 						}
-					}
-				}.start();
-			}
-		});
-		// media servers
-
-		categoryView media_servers_category = addDeviceCategory(
-				Device.DT_CONTENT_DIRECTORY, "device.mediaserver.view.title",
-				"image.sidebar.device.mediaserver");
-
-		categories.add(media_servers_category);
-
-		MenuItem ms_menu_item = menu_manager.addMenuItem("sidebar."
-				+ media_servers_category.getKey(), "device.show");
-		ms_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		ms_menu_item.addListener(show_listener);
-		ms_menu_item.addFillListener(show_fill_listener);
-
-		ms_menu_item = menu_manager.addMenuItem(
-				"sidebar." + media_servers_category.getKey(),
-				"device.mediaserver.configure");
-		ms_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		ms_menu_item.addListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-				UIFunctions uif = UIFunctionsManager.getUIFunctions();
-
-				if (uif != null) {
-					uif.getMDI().showEntryByID(
-							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
-							"upnpmediaserver.name");
+					}.start();
 				}
-			}
-		});
-
-		ms_menu_item = menu_manager.addMenuItem( "sidebar." + media_servers_category.getKey(), "sep_ms");
-		ms_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		ms_menu_item.setStyle( MenuItem.STYLE_SEPARATOR );
-
-		ms_menu_item = menu_manager.addMenuItem(
-				"sidebar." + media_servers_category.getKey(),
-				"device.mediaserver.remove_all");
-		ms_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		ms_menu_item.addListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-
-				new AEThread2( "doit" )
-				{
-					@Override
-					public void
-					run()
+			});
+			// media servers
+	
+			categoryView media_servers_category = addDeviceCategory(
+					Device.DT_CONTENT_DIRECTORY, "device.mediaserver.view.title",
+					"image.sidebar.device.mediaserver");
+	
+			categories.add(media_servers_category);
+	
+			MenuItem ms_menu_item = menu_manager.addMenuItem("sidebar."
+					+ media_servers_category.getKey(), "device.show");
+			ms_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			ms_menu_item.addListener(show_listener);
+			ms_menu_item.addFillListener(show_fill_listener);
+	
+			ms_menu_item = menu_manager.addMenuItem(
+					"sidebar." + media_servers_category.getKey(),
+					"device.mediaserver.configure");
+			ms_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			ms_menu_item.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					UIFunctions uif = UIFunctionsManager.getUIFunctions();
+	
+					if (uif != null) {
+						uif.getMDI().showEntryByID(
+								MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+								"upnpmediaserver.name");
+					}
+				}
+			});
+	
+			ms_menu_item = menu_manager.addMenuItem( "sidebar." + media_servers_category.getKey(), "sep_ms");
+			ms_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			ms_menu_item.setStyle( MenuItem.STYLE_SEPARATOR );
+	
+			ms_menu_item = menu_manager.addMenuItem(
+					"sidebar." + media_servers_category.getKey(),
+					"device.mediaserver.remove_all");
+			ms_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			ms_menu_item.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+	
+					new AEThread2( "doit" )
 					{
-						UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
-
-						long res = ui_manager.showMessageBox(
-								"device.mediaserver.remove_all.title",
-								"device.mediaserver.remove_all.desc",
-								UIManagerEvent.MT_YES | UIManagerEvent.MT_NO );
-
-						if ( res == UIManagerEvent.MT_YES ){
-
-							Device[] devices = device_manager.getDevices();
-
-							for ( Device d: devices ){
-
-								if ( d.getType() == Device.DT_CONTENT_DIRECTORY ){
-
-									if ( d.canRemove()){
-
-										d.remove();
+						@Override
+						public void
+						run()
+						{
+							UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
+	
+							long res = ui_manager.showMessageBox(
+									"device.mediaserver.remove_all.title",
+									"device.mediaserver.remove_all.desc",
+									UIManagerEvent.MT_YES | UIManagerEvent.MT_NO );
+	
+							if ( res == UIManagerEvent.MT_YES ){
+	
+								Device[] devices = device_manager.getDevices();
+	
+								for ( Device d: devices ){
+	
+									if ( d.getType() == Device.DT_CONTENT_DIRECTORY ){
+	
+										if ( d.canRemove()){
+	
+											d.remove();
+										}
 									}
 								}
 							}
 						}
-					}
-				}.start();
-			}
-		});
-
-		// routers
-
-		categoryView routers_category = addDeviceCategory(
-				Device.DT_INTERNET_GATEWAY, "device.router.view.title",
-				"image.sidebar.device.router");
-
-		categories.add(routers_category);
-
-		MenuItem rt_menu_item = menu_manager.addMenuItem("sidebar."
-				+ routers_category.getKey(), "device.show");
-		rt_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		rt_menu_item.addListener(show_listener);
-		rt_menu_item.addFillListener(show_fill_listener);
-
-		rt_menu_item = menu_manager.addMenuItem(
-				"sidebar." + routers_category.getKey(), "device.router.configure");
-		rt_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		rt_menu_item.addListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-				UIFunctions uif = UIFunctionsManager.getUIFunctions();
-
-				if (uif != null) {
-
-					uif.getMDI().showEntryByID(
-							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
-							"UPnP");
+					}.start();
 				}
-			}
-		});
-
+			});
+	
+			// routers
+	
+			categoryView routers_category = addDeviceCategory(
+					Device.DT_INTERNET_GATEWAY, "device.router.view.title",
+					"image.sidebar.device.router");
+	
+			categories.add(routers_category);
+	
+			MenuItem rt_menu_item = menu_manager.addMenuItem("sidebar."
+					+ routers_category.getKey(), "device.show");
+			rt_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			rt_menu_item.addListener(show_listener);
+			rt_menu_item.addFillListener(show_fill_listener);
+	
+			rt_menu_item = menu_manager.addMenuItem(
+					"sidebar." + routers_category.getKey(), "device.router.configure");
+			rt_menu_item.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			rt_menu_item.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					UIFunctions uif = UIFunctionsManager.getUIFunctions();
+	
+					if (uif != null) {
+	
+						uif.getMDI().showEntryByID(
+								MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+								"UPnP");
+					}
+				}
+			});
+		}
+		
 		// internet
 
 		categoryView internet_category = addDeviceCategory(Device.DT_INTERNET,
@@ -2514,8 +2522,16 @@ DeviceManagerUI
 			}
 		}else{
 
-			if ( type != Device.DT_MEDIA_RENDERER ){
+			if ( type == Device.DT_MEDIA_RENDERER ){
 
+				// accept all these
+				
+			}else if ( type == Device.DT_INTERNET_GATEWAY ){
+				
+				// show routers and internet as top level devices as of 1201_B20
+				
+			}else{
+				
 				return;
 			}
 
@@ -3320,17 +3336,20 @@ DeviceManagerUI
 		}
 	}
 
-	protected static String
-	getDeviceImageID(
+	protected static String[]
+	getDeviceImageIDs(
 		Device		device )
 	{
-		String imageID = device.getImageID();
-		if (imageID != null) {
-			return imageID;
+		List<String> imageIDs = device.getImageIDs();
+		
+		if ( !imageIDs.isEmpty()){
+			
+			return(imageIDs.toArray( new String[ imageIDs.size()]));
 		}
 
-		if (!(device instanceof DeviceMediaRenderer)) {
-			return "" + DeviceMediaRenderer.RS_OTHER;
+		if (!(device instanceof DeviceMediaRenderer)){
+			
+			return new String[]{ "" + DeviceMediaRenderer.RS_OTHER };
 		}
 
 		int	species = ((DeviceMediaRenderer)device).getRendererSpecies();
@@ -3399,7 +3418,7 @@ DeviceManagerUI
 			}
 		}
 
-		return( id );
+		return( new String[]{ id });
 	}
 
 	private static void
@@ -4055,12 +4074,6 @@ DeviceManagerUI
 			}
 		}
 
-		if (configMaxLinesListener != null) {
-			COConfigurationManager.removeParameterListener(
-					"Plugin.default.device.config.ms.maxlines",
-					configMaxLinesListener);
-			configMaxLinesListener = null;
-		}
 		if (parameterListener != null) {
 			COConfigurationManager.removeWeakParameterListener(parameterListener,
 					CONFIG_VIEW_TYPE, CONFIG_VIEW_HIDE_REND_GENERIC,
@@ -4371,9 +4384,9 @@ DeviceManagerUI
 	  }
 	}
 
-	protected class
+	public static class
 	deviceView
-		implements 	ViewTitleInfo, TranscodeTargetListener, UISWTViewEventListener
+		implements 	ViewTitleInfo, TranscodeTargetListener, UISWTViewCoreEventListenerEx
 	{
 		private String			parent_key;
 		private Device			device;
@@ -4381,13 +4394,51 @@ DeviceManagerUI
 		private Composite		parent_composite;
 		private Composite		composite;
 
-		private int last_indicator;
-		private UISWTView swtView;
+		private int 		last_indicator;
+		private UISWTView 	swtView;
 
+		private Runnable	refresher;
+		
 		protected
 		deviceView(
-			String			_parent_key,
-			Device			_device )
+			String			parent_key,
+			Device			device )
+		{
+			init( parent_key, device );
+		}
+
+		public
+		deviceView(
+			String	_parent_key,
+			String	_device_id )
+		{
+			Device[] devices = DeviceManagerFactory.getSingleton().getDevices();
+			
+			Device device = null;
+			
+			for ( Device d: devices ){
+				
+				if ( d.getID().equals( _device_id )){
+					
+					device = d;
+					
+					break;
+				}
+			}
+			
+			if ( device == null ){
+				
+				throw( new RuntimeException( "Device with ID '" + _device_id + "' not found" ));
+			}
+			
+			init( _parent_key, device );
+		}
+		
+		
+		private void
+		init(
+			String		_parent_key,
+			Device		_device )
 		{
 			parent_key	= _parent_key;
 			device		= _device;
@@ -4399,7 +4450,42 @@ DeviceManagerUI
 				renderer.addListener( this );
 			}
 		}
+		
+		@Override
+		public boolean
+		isCloneable()
+		{
+			return( true );
+		}
 
+		@Override
+		public UISWTViewCoreEventListenerEx
+		getClone()
+		{
+			return( new deviceView( parent_key, device));
+		}
+		
+		@Override
+		public CloneConstructor
+		getCloneConstructor()
+		{
+			return( 
+				new CloneConstructor()
+				{
+					public Class<? extends UISWTViewCoreEventListenerEx>
+					getCloneClass()
+					{
+						return( deviceView.class );
+					}
+					
+					public List<Object>
+					getParameters()
+					{
+						return( Arrays.asList( new String[]{ parent_key, device.getID()}));
+					}
+				});
+		}
+		
 		public void
 		initialize(
 			Composite _parent_composite )
@@ -4408,16 +4494,16 @@ DeviceManagerUI
 
 			composite = new Composite( parent_composite, SWT.NULL );
 
-			FormLayout layout = new FormLayout();
-
-			layout.marginTop	= 4;
-			layout.marginLeft	= 4;
-			layout.marginRight	= 4;
-			layout.marginBottom	= 4;
-
-			composite.setLayout( layout );
-
 			if ( device instanceof DeviceContentDirectory ){
+
+				FormLayout layout = new FormLayout();
+
+				layout.marginTop	= 4;
+				layout.marginLeft	= 4;
+				layout.marginRight	= 4;
+				layout.marginBottom	= 4;
+
+				composite.setLayout( layout );
 
 				Label  ms_label = new Label( composite, SWT.NULL );
 				ms_label.setText( "Media Server: " + device.getName());
@@ -4850,6 +4936,7 @@ DeviceManagerUI
 						{
 							boolean	went_async = false;
 
+							int max_ms_display_lines = COConfigurationManager.getIntParameter( "Plugin.default.device.config.ms.maxlines", MAX_MS_DISPLAY_LINE_DEFAULT);
 							try{
 								refresh.setEnabled( false );
 
@@ -4878,7 +4965,7 @@ DeviceManagerUI
 										run()
 										{
 											try{
-												String client_name = device_manager.getLocalServiceName();
+												String client_name = DeviceManagerFactory.getSingleton().getLocalServiceName();
 
 												UPNPMSBrowser browser =
 													UPNPMSBrowserFactory.create(
@@ -5123,21 +5210,454 @@ DeviceManagerUI
 					});
 			}else{
 
-				FormData data = new FormData();
+				try{
+					if ( device instanceof DeviceUPnP ){
+						
+						final Runnable ref = refresher = 
+							new Runnable()
+							{
+								boolean force = false;
+								
+								@Override
+								public void run(){
+									
+									UPnPService service = findService( (DeviceUPnP)device, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1" );
+									
+									if ( service != null ){
+										
+										UPnPWANCommonInterfaceConfig	config = (UPnPWANCommonInterfaceConfig)service.getSpecificService();
 
-				data.left 	= new FormAttachment(0,0);
-				data.right 	= new FormAttachment(100,0);
-				data.top 	= new FormAttachment(composite,0);
-				data.bottom = new FormAttachment(100,0);
+										refresher = null;
+										
+										createDeviceUPnP( config, force );
+										
+									}else{
+										
+										force = true;
+									}
+								}
+							};
+									
+						refresher.run();
+						
+						if ( refresher != ref ){
+							
+							return;
+						}
+					}
+				}catch( Throwable e ){
+					
+				}
+				
+				GridLayout layout = new GridLayout();
+
+				layout.marginTop	= 4;
+				layout.marginLeft	= 4;
+				layout.marginRight	= 4;
+				layout.marginBottom	= 4;
+
+				composite.setLayout( layout );
 
 				Label label = new Label( composite, SWT.NULL );
 
 				label.setText( "Nothing to show for " + device.getName());
 
-				label.setLayoutData( data );
+				label.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
 			}
 		}
 
+		private void
+		createDeviceUPnP(
+			UPnPWANCommonInterfaceConfig	config,
+			boolean							force )
+		{			
+			if ( force ){
+				
+				Utils.disposeComposite( composite, false );
+			}
+			
+			GridLayout	layout = new GridLayout( 5, false );
+			
+			composite.setLayout( layout );
+			
+			/*
+			Label label = new Label( composite, SWT.NULL );
+			GridData gd = new GridData( GridData.FILL_HORIZONTAL );
+			gd.horizontalSpan = 5;
+			label.setLayoutData( gd );
+			
+			label.setText( device.getName());
+			*/
+			
+			Label max_up_down_info = new Label( composite, SWT.NULL );
+			Messages.setLanguageText( max_up_down_info, "label.connection.max.up.down" );
+			
+			Label max_up_down = new Label( composite, SWT.NULL );
+			GridData gd = new GridData();
+			gd.widthHint = 150;
+			max_up_down.setLayoutData( gd );
+			
+			Label pad = new Label( composite, SWT.NULL );
+			pad.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
+
+			Label total_up_down_info = new Label( composite, SWT.NULL );
+			Messages.setLanguageText( total_up_down_info, "label.total.up.down" );
+	
+			BufferedLabel total_up_down = new BufferedLabel( composite, SWT.DOUBLE_BUFFERED );
+			gd = new GridData();
+			gd.widthHint = 120;
+			total_up_down.setLayoutData( gd );
+						
+			final int update_secs = 5;
+			
+			MovingAverage up_average = AverageFactory.MovingAverage( 60/update_secs );
+			MovingAverage down_average = AverageFactory.MovingAverage( 60/update_secs );
+			
+			long[]	total_sent_received_initial = { 0, 0 };
+			long[]	total_sent_received			= { 0, 0 };
+			long[]	total_sent_received_wrapped	= { 0, 0 };
+			
+		    ValueFormater formatter =
+			    	new ValueFormater()
+			    	{
+			        	@Override
+				        public String
+			        	format(
+			        		int value)
+			        	{
+			        		return DisplayFormatters.formatByteCountToKiBEtcPerSec( value/update_secs );
+			        	}
+			    	};
+
+
+			    final ValueSourceImpl[] sources = {
+			    	new ValueSourceImpl( "Up", 0, colors, true, false, false )
+			    	{
+			    		long	last_value = -1;
+			    		
+			    		@Override
+					    public int
+			    		getValue()
+			    		{
+			    			try{
+			    				long sent = config.getTotalBytesSent();
+			    							    				
+			    				total_sent_received[0] = sent;
+			    				
+			    				int result;
+			    				
+			    				if ( last_value == -1 ){
+			    					
+			    					result = 0;
+			    					
+			    					if ( sent < 0x0100000000L ){
+			    						
+			    							// assume wrapping is occurring
+			    						
+			    						total_sent_received_initial[0] = sent;
+			    					}
+			    				}else{
+			    					
+			    					if ( sent < last_value && last_value - sent > 0x003fffffffL ){
+			    						
+			    							// wrapped
+			    						
+			    						long	boundary = 0;
+			    						
+			    						if ( last_value <= 0x007fffffffL ){
+			    						
+			    							boundary = 0x0080000000L;
+			    								
+			    						}else{
+			    							
+			    							boundary = 0x0100000000L;
+			    						}
+			    						
+			    						total_sent_received_wrapped[0] += boundary;
+			    						
+			    						result = (int)( boundary - last_value + sent );
+			    						
+			    					}else{
+			    						
+			    						result = (int)( sent - last_value );
+			    					}
+			    				}
+			    				
+			    				if ( result < 0 ){
+			    					
+			    					result = 0;
+			    				}
+			    				
+			    				last_value = sent;
+			    				
+			    				up_average.update( result );
+			    				
+			    				return( result );
+			    				
+			    			}catch( Throwable e ){
+			    				
+			    				return( 0 );
+			    			}
+			    		}
+			    	},
+			    	new ValueSourceImpl( "Up Smooth", 1, colors, true, false, true )
+			    	{
+			    		@Override
+					    public int
+			    		getValue()
+			    		{
+			    			return((int)up_average.getAverage());
+			    		}
+			    	},
+			    	new ValueSourceImpl( "Down", 2, colors, false, false, false )
+			    	{
+			    		long	last_value = -1;
+			    		
+			    		@Override
+					    public int
+			    		getValue()
+			    		{
+			    			try{
+			    				long received = config.getTotalBytesReceived();
+			    				
+			    				total_sent_received[1] = received;
+			    				
+			    				int result;
+			    				
+			    				if ( last_value == -1 ){
+			    					
+			    					result = 0;
+			    					
+			    					if ( received < 0x0100000000L ){
+			    						
+			    						total_sent_received_initial[1] = received;
+			    					}
+			    				}else{
+			    					
+			    					if ( received < last_value && last_value - received > 0x003fffffffL ){
+			    						
+			    							// wrapped
+			    						
+			    						long	boundary = 0;
+			    						
+			    						if ( last_value <= 0x007fffffffL ){
+			    						
+			    							boundary = 0x0080000000L;
+			    								
+			    						}else{
+			    							
+			    							boundary = 0x0100000000L;
+			    						}
+			    						
+			    						total_sent_received_wrapped[1] += boundary;
+			    						
+			    						result = (int)( boundary - last_value + received );
+			    						
+			    					}else{
+			    						
+			    						result = (int)( received - last_value );
+			    					}
+			    				}
+			    				
+			    				if ( result < 0 ){
+			    					
+			    					result = 0;
+			    				}
+			    				
+			    				last_value = received;
+			    				
+			    				down_average.update( result );
+			    				
+			    				return( result );
+			    				
+			    			}catch( Throwable e ){
+			    				
+			    				return( 0 );
+			    			}
+			    		}
+			    	},
+			    	new ValueSourceImpl( "Down Smooth", 3, colors, false, false, true )
+			    	{
+				    	@Override
+					    public int
+			    		getValue()
+			    		{
+				    		return((int)down_average.getAverage());
+			    		}
+			    	},
+			    };
+			    
+			MultiPlotGraphic mpg = MultiPlotGraphic.getInstance( 1800/update_secs, sources, formatter );
+
+
+			String[] color_configs = new String[] {
+					"DeviceManagerUI.legend.up",
+					"DeviceManagerUI.legend.up.smooth",
+					"DeviceManagerUI.legend.down",
+					"DeviceManagerUI.legend.down.smooth",
+				};
+
+			Legend.LegendListener legend_listener =
+				new Legend.LegendListener()
+				{
+					private int	hover_index = -1;
+
+					@Override
+					public void
+					hoverChange(
+						boolean 	entry,
+						int 		index )
+					{
+						if ( hover_index != -1 ){
+
+							sources[hover_index].setHover( false );
+						}
+
+						if ( entry ){
+
+							hover_index = index;
+
+							sources[index].setHover( true );
+						}
+
+						mpg.refresh( true );
+					}
+
+					@Override
+					public void
+					visibilityChange(
+						boolean	visible,
+						int		index )
+					{
+						sources[index].setVisible( visible );
+
+						mpg.refresh( true );
+					}
+				};
+
+
+		    Composite gSpeed = new Composite(composite,SWT.NULL);
+		    gd = new GridData(GridData.FILL_BOTH);
+		    gd.horizontalSpan = 5;
+		    
+		    gSpeed.setLayoutData(gd);
+		    gSpeed.setLayout(new GridLayout());
+
+			gd = new GridData(GridData.FILL_HORIZONTAL);
+			gd.horizontalSpan = 5;
+			
+			Legend.createLegendComposite(composite, colors, color_configs, null, gd, true, legend_listener );
+
+		    Canvas speedCanvas = new Canvas(gSpeed,SWT.NO_BACKGROUND);
+		    gd = new GridData(GridData.FILL_BOTH);
+		    speedCanvas.setLayoutData(gd);
+
+			mpg.initialize( speedCanvas, false );					
+			
+			new AEThread2( "upnp:stats" )
+			{
+				public void 
+				run()
+				{
+					try{
+						long[] result = config.getCommonLinkProperties();
+						
+						Utils.execSWTThread(
+								new Runnable()
+								{
+									public void 
+									run()
+									{
+										max_up_down.setText( 
+											DisplayFormatters.formatByteCountToBitsPerSec( result[1]/8 ) + ", " +
+											DisplayFormatters.formatByteCountToBitsPerSec( result[0]/8 ));
+									}
+								});
+					}catch( Throwable e ){
+						
+						Utils.execSWTThread(
+							new Runnable()
+							{
+								public void 
+								run()
+								{
+									max_up_down.setText( MessageText.getString( "SpeedView.stats.unknown" ));
+								}
+							});
+					}
+				}
+			}.start();
+			
+			mpg.setActive( true, update_secs*1000 );
+			
+			refresher = 
+				new Runnable()
+				{
+					@Override
+					public void run(){
+						mpg.refresh( false );
+						
+						total_up_down.setText( 
+							DisplayFormatters.formatByteCountToKiBEtc( total_sent_received[0] - total_sent_received_initial[0] + total_sent_received_wrapped[0] ) + ", " +
+							DisplayFormatters.formatByteCountToKiBEtc( total_sent_received[1] - total_sent_received_initial[1] + total_sent_received_wrapped[1]  ));
+
+					}
+				};
+				
+			if ( force ){
+				
+				composite.getParent().layout( true, true );
+			}
+		}
+		
+		private UPnPService
+		findService(
+			DeviceUPnP	device,
+			String		type )
+		{
+			UPnPDevice upnp_device = ((DeviceUPnP)device).getUPnPDevice();
+			
+			if ( upnp_device == null ){
+				
+				return( null );
+			}
+			
+			UPnPRootDevice root = upnp_device.getRootDevice();
+								
+			return( findService( root.getDevice(), type ));
+		}
+		
+		private UPnPService
+		findService(
+			UPnPDevice	device,
+			String		type )
+		{
+			for ( UPnPService service: device.getServices()){
+				
+				if ( service.getServiceType().equalsIgnoreCase( type )){
+					
+					return( service );
+				}
+			}
+			
+			UPnPDevice[] kids = device.getSubDevices();
+			
+			if ( kids != null ){
+				
+				for ( UPnPDevice kid: kids ){
+					
+					UPnPService s = findService ( kid, type );
+					
+					if ( s != null ){
+						
+						return( s );
+					}
+				}
+			}
+			
+			return( null );
+		}
+		
 		public Composite
 		getComposite()
 		{
@@ -5155,27 +5675,49 @@ DeviceManagerUI
 
 			} else if (propertyID == TITLE_IMAGEID) {
 				String imageID = null;
-				final String id = getDeviceImageID( device );
+				
+				String[] ids = getDeviceImageIDs( device );
 
-				if ( id != null ){
+				if ( ids.length > 0 ){
 
-					imageID = "image.sidebar.device." + id + ".small";
+					imageID = "image.sidebar.device." + ids[0] + ".small";
 
-					if (id.startsWith("http")) {
-						if (ImageLoader.getInstance().imageAdded_NoSWT(id)) {
-							imageID = id;
-						} else {
-  						Utils.execSWTThreadLater(0, new AERunnable() {
-  							@Override
-							  public void runSupport() {
-  								ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
-  									@Override
-									  public void imageDownloaded(Image image, boolean returnedImmediately) {
-  										ViewTitleInfoManager.refreshTitleInfo( deviceView.this );
-  									}
-  								});
-  							}
-  						});
+					if (ids[0].startsWith("http")) {
+						
+						boolean found = false;
+
+						for ( String id: ids ){
+													
+							Image[] existing = ImageLoader.getInstance().imageAdded_NoSWT(id);
+								
+							if ( existing != null ){
+								
+								found = true;
+								
+								imageID = id;
+							
+								if ( existing.length > 0 ){
+									
+									break;
+								}
+							}
+						}
+						
+						if ( !found ){
+							
+	  						Utils.execSWTThreadLater(0, new AERunnable() {
+	  							@Override
+								  public void runSupport() {
+	  								for ( String id: ids ){
+	  									ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
+	  										@Override
+	  										public void imageDownloaded(Image image, boolean returnedImmediately) {
+	  											ViewTitleInfoManager.refreshTitleInfo( deviceView.this );
+	  										}	
+	  									});
+	  								}
+	  							}
+	  						});
 						}
 					}
 				}
@@ -5250,6 +5792,15 @@ DeviceManagerUI
 			}
 		}
 
+		private void
+		refresh()
+		{
+			if ( refresher != null ){
+				
+				refresher.run();
+			}
+		}
+		
 		protected void
 		refreshTitles()
 		{
@@ -5327,6 +5878,7 @@ DeviceManagerUI
 	      	break;
 
 	      case UISWTViewEvent.TYPE_REFRESH:
+	    	refresh();
 	        break;
 	    }
 
@@ -5464,6 +6016,104 @@ DeviceManagerUI
 
 				mdi.showEntryByID(sb_entry.getId());
 			}
+		}
+	}
+	
+	private abstract static class
+	ValueSourceImpl
+		implements ValueSource
+	{
+		private String			name;
+		private int				index;
+		private Color[]			colours;
+		private boolean			is_up;
+		private boolean			trimmable;
+
+		private boolean			is_hover;
+		private boolean			is_invisible;
+		private boolean			is_dotted;
+
+		private
+		ValueSourceImpl(
+			String					_name,
+			int						_index,
+			Color[]					_colours,
+			boolean					_is_up,
+			boolean					_trimmable,
+			boolean					_is_dotted )
+		{
+			name			= _name;
+			index			= _index;
+			colours			= _colours;
+			is_up			= _is_up;
+			trimmable		= _trimmable;
+			is_dotted		= _is_dotted;
+		}
+
+		@Override
+		public String
+		getName()
+		{
+			return( name );
+		}
+
+		@Override
+		public Color
+		getLineColor()
+		{
+			return( colours[index] );
+		}
+
+		@Override
+		public boolean
+		isTrimmable()
+		{
+			return( trimmable );
+		}
+
+		private void
+		setHover(
+			boolean	h )
+		{
+			is_hover = h;
+		}
+
+		private void
+		setVisible(
+			boolean	visible )
+		{
+			is_invisible = !visible;
+		}
+
+		@Override
+		public int
+		getStyle()
+		{
+			if ( is_invisible ){
+
+				return( STYLE_INVISIBLE );
+			}
+
+			int	style = is_up?STYLE_UP:STYLE_DOWN;
+
+			if ( is_hover ){
+
+				style |= STYLE_BOLD;
+			}
+
+			if ( is_dotted ){
+
+				style |= STYLE_HIDE_LABEL;
+			}
+
+			return( style );
+		}
+
+		@Override
+		public int
+		getAlpha()
+		{
+			return( is_dotted?128:255 );
 		}
 	}
 }

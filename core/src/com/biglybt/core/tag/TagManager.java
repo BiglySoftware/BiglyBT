@@ -59,6 +59,10 @@ TagManager
 	lookupTagByUID(
 		long	tag_uid );
 
+	public List<Tag>
+	lookupTagsByName(
+		String		tag_name );
+	
 	public TaggableLifecycleHandler
 	registerTaggableResolver(
 		TaggableResolver	resolver );

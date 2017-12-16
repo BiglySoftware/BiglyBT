@@ -47,6 +47,7 @@ UIManagerEvent
 	public static final int ET_FILE_SHOW                        = 23;       // data is File
 	public static final int ET_FILE_OPEN                        = 24;       // data is File
 	public static final int ET_HIDE_ALL			                = 27;       // data is Boolean
+	public static final int ET_HIDE_ALL_TOGGLE	                = 28;       // no data
 
 
 	public static final int ET_CALLBACK_MSG_SELECTION			= 100;		// data is Long - MT_OK etc

@@ -2388,7 +2388,7 @@ public class MenuFactory
 	public static void
 	addAlertsMenu(
 		Menu					menu,
-		boolean	createSubmenu,
+		boolean					createSubmenu,
 		final DownloadManager[]	dms )
 	{
 		if ( dms.length == 0 ){
@@ -2399,13 +2399,13 @@ public class MenuFactory
 		Menu alert_menu;
 
 		if (createSubmenu) {
-  		alert_menu = new Menu( Utils.findAnyShell(), SWT.DROP_DOWN );
+			alert_menu = new Menu( menu.getShell(), SWT.DROP_DOWN );
 
-  		MenuItem alerts_item = new MenuItem( menu, SWT.CASCADE);
+			MenuItem alerts_item = new MenuItem( menu, SWT.CASCADE);
 
-  		Messages.setLanguageText( alerts_item, "ConfigView.section.interface.alerts" );
+			Messages.setLanguageText( alerts_item, "ConfigView.section.interface.alerts" );
 
-  		alerts_item.setMenu(alert_menu);
+			alerts_item.setMenu(alert_menu);
 		} else {
 			alert_menu = menu;
 		}

@@ -246,7 +246,7 @@ AENameServiceJava9
 	checkI2PInstall(
 		final String	host_name )
 	{
-		synchronized( AENameServiceDescriptor.class ){
+		synchronized( AENameServiceJava9.class ){
 
 			if ( i2p_checked ){
 

@@ -29,7 +29,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Set;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFactory;
@@ -43,6 +45,7 @@ import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderListener;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.torrent.TorrentImpl;
+import com.biglybt.plugin.I2PHelpers;
 
 public class
 ResourceDownloaderTorrentImpl
@@ -301,7 +304,7 @@ ResourceDownloaderTorrentImpl
 				// going to use it across the client restarts to hold the download data and
 				// to seed it afterwards. Therefore we don't use AETemporaryFileHandler.createTempFile!!!!
 
-			final File	torrent_file 	= AETemporaryFileHandler.createSemiTempFile();
+			final File	torrent_file 	= AETemporaryFileHandler.createSemiTempFile( name + ".torrent" );
 
 			if ( download_dir != null && !download_dir.exists()){
 
@@ -315,13 +318,6 @@ ResourceDownloaderTorrentImpl
 			TorrentUtils.setFlag( torrent, TorrentUtils.TORRENT_FLAG_LOW_NOISE, true );
 
 			boolean anon = isAnonymous();
-
-			if ( anon ){
-
-					// meh, add in I2P update tracker...
-
-				TorrentUtils.announceGroupsInsertFirst(torrent, "http://crs2nugpvoqygnpabqbopwyjqettwszth6ubr2fh7whstlos3a6q.b32.i2p:17979/announce" );
-			}
 
 			torrent.serialiseToBEncodedFile( torrent_file );
 
@@ -372,6 +368,48 @@ ResourceDownloaderTorrentImpl
 							};
 
 					download_manager.addDownloadWillBeAddedListener( dwbal );
+					
+				}else{
+					
+						// if torrent includes i2p url and i2p installed then enable network
+					
+					Set<String> hosts = TorrentUtils.getUniqueTrackerHosts( torrent );
+					
+					boolean	has_i2p = false;
+					
+					for ( String host: hosts ) {
+						
+						if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_I2P ){
+					
+							has_i2p = true;
+						}
+					}
+					
+					if ( has_i2p && I2PHelpers.isI2PInstalled()){
+						
+						dwbal =
+							new DownloadWillBeAddedListener()
+							{
+									@Override
+									public void
+									initialised(
+										Download download )
+									{
+										try{
+											if ( Arrays.equals( download.getTorrentHash(), torrent.getHash())){
+
+												PluginCoreUtils.unwrap( download ).getDownloadState().setNetworks(
+														new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P });
+											}
+										}catch( Throwable e ){
+
+											Debug.out( e );
+										}
+									}
+								};
+
+						download_manager.addDownloadWillBeAddedListener( dwbal );
+					}
 				}
 
 				if ( persistent ){
@@ -387,7 +425,6 @@ ResourceDownloaderTorrentImpl
 				if ( dwbal != null ){
 
 					download_manager.removeDownloadWillBeAddedListener( dwbal );
-
 				}
 			}
 
@@ -399,8 +436,8 @@ ResourceDownloaderTorrentImpl
 
 			download.setFlag(Download.FLAG_DISABLE_AUTO_FILE_MOVE, true);
 
-			// seems reasonable to me but whatever: http://forum.vuze.com/thread.jspa?threadID=111012
-			if ( false ){
+			if ( COConfigurationManager.getBooleanParameter( "Ip Filter Disable For Updates" )){
+				
 				download.setFlag(Download.FLAG_DISABLE_IP_FILTER, true);
 			}
 

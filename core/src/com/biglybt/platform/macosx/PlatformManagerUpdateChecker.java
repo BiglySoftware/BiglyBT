@@ -55,6 +55,7 @@ import com.biglybt.pifimpl.update.sf.SFPluginDetailsLoaderFactory;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.plugin.I2PHelpers;
 
 public class
 PlatformManagerUpdateChecker
@@ -194,7 +195,7 @@ PlatformManagerUpdateChecker
 
 				ResourceDownloader direct_rdl = rdf.create( new URL( target_download ));
 
-				String	torrent_download = Constants.URL_PLUGINS;
+				String	torrent_download = Constants.URL_PLUGINS_TORRENT_BASE;
 
 				int	slash_pos = target_download.lastIndexOf("/");
 
@@ -209,6 +210,11 @@ PlatformManagerUpdateChecker
 
 				torrent_download	+= ".torrent";
 
+				if ( I2PHelpers.isI2PInstalled()){
+					
+					torrent_download += "?i2p=1";
+				}
+				
 				ResourceDownloader torrent_rdl = rdf.create( new URL( torrent_download ));
 
 				torrent_rdl	= rdf.getSuffixBasedDownloader( torrent_rdl );

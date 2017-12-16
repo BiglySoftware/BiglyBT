@@ -1154,6 +1154,11 @@ public class UIFunctionsImpl
 	{
 		mainWindow.setHideAll( hidden );
 	}
+	
+	@Override
+	public boolean getHideAll(){
+		return( mainWindow.getHideAll());
+	}
 
 	@Override
 	public boolean
@@ -1277,7 +1282,7 @@ public class UIFunctionsImpl
 					});
 				}
 
-				if ( torrentOptions.bDeleteFileOnCancel ){
+				if ( torrentOptions.getDeleteFileOnCancel()){
 
 					File torrentFile = new File(torrentOptions.sFileName);
 
@@ -1299,7 +1304,7 @@ public class UIFunctionsImpl
 
 							archived.destubbify();
 
-							if ( torrentOptions.bDeleteFileOnCancel ){
+							if ( torrentOptions.getDeleteFileOnCancel()){
 
 								File torrentFile = new File(torrentOptions.sFileName);
 

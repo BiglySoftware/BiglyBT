@@ -60,9 +60,9 @@ public class Main
 
 	private static CommandLine commands;
 
-	private static boolean stopping;
+	private static volatile boolean stopping;
 
-	private static boolean stopped;
+	private static volatile boolean stopped;
 
 	private static long lastDebugTime;
 

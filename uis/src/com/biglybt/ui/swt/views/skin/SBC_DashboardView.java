@@ -22,7 +22,9 @@ package com.biglybt.ui.swt.views.skin;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.Composite;
 
-
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.shells.main.MainMDISetup;
@@ -33,9 +35,11 @@ public class SBC_DashboardView
 	extends SkinView
 	implements UIUpdatable, DashboardListener
 {
-
 	private static final String UI_NAME = "Dashboard";
 
+	private static boolean core_running;
+	private static boolean core_running_listener_added;
+	
 	private Composite 			dashboard_composite;
 	
 	private final boolean	destroy_when_hidden = false;
@@ -68,7 +72,10 @@ public class SBC_DashboardView
 
 
 	@Override
-	public Object skinObjectHidden(SWTSkinObject skinObject, Object params) {
+	public Object 
+	skinObjectHidden(
+		SWTSkinObject 	skinObject, 
+		Object 			params) {
 
 		hidden	= true;
 		
@@ -97,8 +104,6 @@ public class SBC_DashboardView
 			Utils.disposeComposite( dashboard_composite, false );
 			
 			build();
-			
-			is_built = true;
 		}
 		
 		return( result );
@@ -107,7 +112,70 @@ public class SBC_DashboardView
 	private void
 	build()
 	{
-		MainMDISetup.getSb_dashboard().build( dashboard_composite );
+		synchronized( SBC_DashboardView.class ){
+			
+			if ( !core_running ){
+		
+				Core core = CoreFactory.getSingleton();
+				
+				if ( core.isStarted()){
+					
+					core_running = true;
+					
+				}else{
+					
+					if ( !core_running_listener_added ){
+						
+						core_running_listener_added = true;
+						
+						core.addLifecycleListener(
+							new CoreLifecycleAdapter() 
+							{
+								@Override
+								public boolean
+								requiresPluginInitCompleteBeforeStartedEvent()
+								{
+									return( true );
+								}
+								
+								@Override
+								public void started(Core core){
+		
+									synchronized( SBC_DashboardView.class ){
+										
+										core_running = true;
+									}
+							
+									Utils.execSWTThread(
+											new Runnable()
+											{
+												public void
+												run()
+												{
+													buildSupport();
+												}
+											});
+								}
+							});
+					}
+				
+					return;
+				}
+			}
+		}
+
+		buildSupport();
+	}
+	
+	private void
+	buildSupport()
+	{
+		if ( !hidden ) {
+		
+			MainMDISetup.getSb_dashboard().build( dashboard_composite );
+		
+			is_built = true;
+		}
 	}
 
 	@Override

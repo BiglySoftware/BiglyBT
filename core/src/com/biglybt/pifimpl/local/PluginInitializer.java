@@ -1813,7 +1813,7 @@ PluginInitializer
 						plugin.getClass().getClassLoader(),
 						null,
 						plugin_config_key,
-						new Properties(),
+						plugin.getInitialProperties(),
 						"",
 						plugin_id,
 						null );

@@ -104,6 +104,8 @@ public class ViewTitleInfoBetaP
 
 						final ViewTitleInfoBetaP viewTitleInfo = new ViewTitleInfoBetaP();
 
+						COConfigurationManager.setParameter("Beta Programme Sidebar Closed", false );
+
 						MdiEntry entry = mdi.createEntryFromSkinRef(
 								MultipleDocumentInterface.SIDEBAR_HEADER_VUZE,
 								MultipleDocumentInterface.SIDEBAR_SECTION_BETAPROGRAM,
@@ -116,6 +118,11 @@ public class ViewTitleInfoBetaP
 							@Override
 							public void mdiEntryClosed(MdiEntry entry, boolean userClosed) {
 								viewTitleInfo.clearIndicator();
+								
+								if ( userClosed ){
+								
+									COConfigurationManager.setParameter("Beta Programme Sidebar Closed", true );
+								}
 							}
 						});
 

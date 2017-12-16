@@ -194,6 +194,7 @@ public class ConfigSectionSeedingFirstPriority
     layout.verticalSpacing = 6;
 	cIgnoreFP.setLayout(layout);
     gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
+    gridData.horizontalSpan = 2;
 	Utils.setLayoutData(cIgnoreFP, gridData);
     Messages.setLanguageText(cIgnoreFP, "ConfigView.label.seeding.firstPriority.ignore");
 
@@ -248,6 +249,10 @@ public class ConfigSectionSeedingFirstPriority
 	label = new Label(cArea1, SWT.NULL);
 	Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.ignore.info");
 
+	new BooleanParameter(
+			cFirstPriorityArea,
+            "StartStopManager_bTagFirstPriority",
+            "ConfigView.label.queue.tagfirstpriority");
 
     return cFirstPriorityArea;
   }

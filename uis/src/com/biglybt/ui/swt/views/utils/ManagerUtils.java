@@ -1682,6 +1682,9 @@ public class ManagerUtils {
     int state = dm.getState();
     if (	state == DownloadManager.STATE_STOPPED ||
     		state == DownloadManager.STATE_STOPPING	) {
+    	if ( dm.isPaused()) {
+    		return( true );
+    	}
       return false;
     }
     return true;
@@ -1855,7 +1858,10 @@ public class ManagerUtils {
 		if (state == DownloadManager.STATE_STOPPED
 				|| state == DownloadManager.STATE_STOPPING
 				|| state == stateAfterStopped) {
-			return;
+			
+			if ( !dm.isPaused()){
+				return;
+			}
 		}
 
 		boolean stopme = true;
@@ -2042,7 +2048,18 @@ public class ManagerUtils {
 		    public void
 			runSupport()
     		{
-    			dm.stopIt( stateAfterStopped, false, false );
+    			if ( dm.isPaused()){
+    				CoreWaiterSWT.waitForCore(TriggerInThread.NEW_THREAD,
+    						new CoreRunningListener() {
+    							@Override
+    							public void coreRunning(Core core) {
+    								core.getGlobalManager().stopPausedDownload( dm );
+    							}
+    						});
+    			}else{
+    				
+    				dm.stopIt( stateAfterStopped, false, false );
+    			}
     		}
 		});
   	}
@@ -2146,6 +2163,10 @@ public class ManagerUtils {
 
 						long target_time = SystemTime.getOffsetTime( seconds*1000);
 
+						String time_str = new SimpleDateFormat( "HH:mm:ss" ).format( new Date( target_time ));
+						
+						String reason = MessageText.getString( "label.resuming.at", new String[] { time_str });
+							
 						for ( DownloadManager dm: dms ){
 
 							if ( !isPauseable( dm )){
@@ -2155,6 +2176,8 @@ public class ManagerUtils {
 
 							if ( dm.pause( target_time )){
 
+								dm.setStopReason( reason );
+								
 								synchronized( paused ){
 
 									paused.add( dm );

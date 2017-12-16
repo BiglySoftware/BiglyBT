@@ -33,6 +33,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.*;
@@ -40,6 +41,7 @@ import com.biglybt.core.ipfilter.impl.IpFilterAutoLoaderImpl;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -215,9 +217,12 @@ public class ConfigSectionIPFilter implements UISWTConfigSection {
 
 	gridData = new GridData();
 
-  BooleanParameter persist_bad_data_banning = new BooleanParameter(gFilter, "Ip Filter Banning Persistent");
-  persist_bad_data_banning.setLayoutData( gridData );
-  Messages.setLanguageText(persist_bad_data_banning.getControl(), "ConfigView.section.ipfilter.persistblocking");
+	BooleanParameter persist_bad_data_banning = new BooleanParameter(gFilter, "Ip Filter Banning Persistent");
+	persist_bad_data_banning.setLayoutData( gridData );
+	Messages.setLanguageText(persist_bad_data_banning.getControl(), "ConfigView.section.ipfilter.persistblocking");
+
+	BooleanParameter disableForUpdates = new BooleanParameter(gFilter, "Ip Filter Disable For Updates");
+	Messages.setLanguageText(disableForUpdates.getControl(), "ConfigView.section.ipfilter.disable.for.updates");
 
     Group gBlockBanning = new Group(gFilter, SWT.NULL);
     Messages.setLanguageText(gBlockBanning, "ConfigView.section.ipfilter.peerblocking.group");
@@ -383,10 +388,77 @@ public class ConfigSectionIPFilter implements UISWTConfigSection {
     fd.right = new FormAttachment(browse, -5);
     pathParameter.setLayoutData(fd);
 
-    Label lblAutoLoadInfo = new Label(gAutoLoad, SWT.WRAP);
-    Messages.setLanguageText(lblAutoLoadInfo, "ConfigView.section.ipfilter.autoload.info");
+    	// reload period
+    
+    Label l_reload_period = new Label(gAutoLoad, SWT.NULL);
+    Messages.setLanguageText(l_reload_period, "ConfigView.section.ipfilter.autoload.period");
+
+    int	initial_reload_period = COConfigurationManager.getIntParameter( IpFilterAutoLoaderImpl.CFG_AUTOLOAD_DAYS );
+    
+    IntParameter reload_period = new IntParameter(gAutoLoad, IpFilterAutoLoaderImpl.CFG_AUTOLOAD_DAYS, 1, 31);
+  
+    reload_period.addChangeListener(
+    	new ParameterChangeAdapter()
+    	{
+    		private boolean	added_listener = false;
+    		
+    		@Override
+    		public void 
+    		parameterChanged(Parameter p, boolean caused_internally) 
+    		{
+    			if ( !added_listener ){
+    				
+    				added_listener = true;
+    				
+    				COConfigurationManager.addListener(
+    					new COConfigurationListener(){
+							
+							@Override
+							public void configurationSaved(){
+								
+								COConfigurationManager.removeListener( this );
+								
+								added_listener = false;
+								
+								int period = reload_period.getValue();
+								
+								if ( period != initial_reload_period ){
+									
+									Utils.getOffOfSWTThread(new AERunnable() {
+										@Override
+										public void runSupport() {
+											try{
+												ipFilterManager.getIPFilter().reload();
+												
+											}catch( Throwable e ){
+												Debug.out( e );
+											}
+										}
+									});
+								}
+							}
+						});
+    			}
+    		}
+    	});
+    
     fd = new FormData();
     fd.top = new FormAttachment(btnLoadNow, 3);
+    fd.left = new FormAttachment(0, 20);
+    Utils.setLayoutData(l_reload_period, fd);
+
+    fd = new FormData();
+    fd.top = new FormAttachment(btnLoadNow, 3);
+    fd.left = new FormAttachment(l_reload_period, 5);
+    Utils.setLayoutData(reload_period.getControl(), fd);
+
+    	// reload info
+    
+    Label lblAutoLoadInfo = new Label(gAutoLoad, SWT.WRAP);
+    Messages.setLanguageText(lblAutoLoadInfo, "ConfigView.section.ipfilter.autoload.info");
+    
+    fd = new FormData();
+    fd.top = new FormAttachment(reload_period.getControl(), 3);
     fd.left = new FormAttachment(0, 0);
     fd.right = new FormAttachment(100, 0);
     Utils.setLayoutData(lblAutoLoadInfo, fd);

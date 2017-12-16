@@ -97,7 +97,7 @@ public interface UISWTView extends UIPluginView {
 	 * @since 5.5.0.0
 	 */
 	public Object getInitialDataSource();
-
+	
 	/**
 	 * Get parent view, if one exists
 	 *
@@ -153,4 +153,5 @@ public interface UISWTView extends UIPluginView {
 	 */
 	boolean isDestroyOnDeactivate();
 
+	boolean isDisposed();
 }

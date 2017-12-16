@@ -25,4 +25,17 @@ CoreOperationTask
 	public void
 	run(
 		CoreOperation operation );
+	
+	public default ProgressCallback
+	getProgressCallback()
+	{
+		return( null );
+	}
+	
+	public interface
+	ProgressCallback
+	{
+		public int
+		getProgress();
+	}
 }

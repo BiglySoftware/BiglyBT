@@ -27,7 +27,6 @@ package com.biglybt.core.util;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -35,17 +34,17 @@ import com.biglybt.core.logging.Logger;
 
 public class
 NonDaemonTaskRunner
-{
+{	
 	public static final int	LINGER_PERIOD	= 2500;
 
 	protected static NonDaemonTaskRunner	singleton;
 	protected static final AEMonitor				class_mon		= new AEMonitor( "NonDaemonTaskRunner:class" );
 
-	protected final Stack			tasks		= new Stack();
-	protected final AEMonitor		tasks_mon	= new AEMonitor( "NonDaemonTaskRunner:tasks" );
-	protected final AESemaphore	task_sem	= new AESemaphore("NonDaemonTaskRunner");
+	protected final List<taskWrapper>	tasks		= new ArrayList<>();
+	protected final AEMonitor			tasks_mon	= new AEMonitor( "NonDaemonTaskRunner:tasks" );
+	protected final AESemaphore			task_sem	= new AESemaphore("NonDaemonTaskRunner");
 
-	protected final List		wait_until_idle_list	= new ArrayList();
+	protected final List<AESemaphore>		wait_until_idle_list	= new ArrayList<>();
 
 	protected AEThread2	current_thread;
 
@@ -74,29 +73,30 @@ NonDaemonTaskRunner
 
 		throws Throwable
 	{
-		return(getSingleton().runSupport( target, false ));
-	}
-
-	public static Object
-	runAsync(
-		NonDaemonTask	target )
-
-		throws Throwable
-	{
-		return(getSingleton().runSupport( target, true ));
+		return(getSingleton().runSupport( target ));
 	}
 
 	protected Object
 	runSupport(
-		NonDaemonTask	target,
-		boolean			async )
-
+		NonDaemonTask	target )
 		throws Throwable
 	{
 			// is this a recursive call? if so, run directly
-
-		if ( current_thread != null && current_thread.isCurrentThread()){
-
+		
+		boolean run_now;
+		
+		try{
+			tasks_mon.enter();
+		
+			run_now = current_thread != null && current_thread.isCurrentThread();
+		
+		}finally {
+			
+			tasks_mon.exit();
+		}
+		
+		if ( run_now ){
+			
 			return( target.run());
 		}
 
@@ -105,7 +105,7 @@ NonDaemonTaskRunner
 		try{
 			tasks_mon.enter();
 
-			tasks.push( wrapper );
+			tasks.add( wrapper );
 
 			task_sem.release();
 
@@ -150,7 +150,7 @@ NonDaemonTaskRunner
 
 									}else{
 
-										t = (taskWrapper)tasks.pop();
+										t = (taskWrapper)tasks.remove( 0 );
 									}
 								}finally{
 
@@ -173,11 +173,6 @@ NonDaemonTaskRunner
 			tasks_mon.exit();
 		}
 
-		if ( async ){
-
-			return( null );
-		}
-
 		return( wrapper.waitForResult());
 	}
 
@@ -185,7 +180,7 @@ NonDaemonTaskRunner
 	taskWrapper
 	{
 		protected final NonDaemonTask		task;
-		protected final AESemaphore		sem;
+		protected final AESemaphore			sem;
 
 		protected Object	  	result;
 		protected Throwable  	exception;
@@ -202,6 +197,8 @@ NonDaemonTaskRunner
 		run()
 		{
 			try{
+				if (Logger.isEnabled())	Logger.log(new LogEvent(LogIDs.CORE, "Starting non-daemon task: " + task.getName()));
+				
 				result = task.run();
 
 			}catch( Throwable e ){
@@ -209,6 +206,8 @@ NonDaemonTaskRunner
 				exception	= e;
 
 			}finally{
+
+				if (Logger.isEnabled())	Logger.log(new LogEvent(LogIDs.CORE, "Completed non-daemon task: " + task.getName()));
 
 				sem.release();
 			}
@@ -228,6 +227,12 @@ NonDaemonTaskRunner
 
 			return( result );
 		}
+		
+		protected String
+		getName()
+		{
+			return( task.getName());
+		}
 	}
 
 	public static void
@@ -243,6 +248,18 @@ NonDaemonTaskRunner
 
 		try{
 			tasks_mon.enter();
+
+			if ( Logger.isEnabled()){
+				
+				String str = "";
+				
+				for (taskWrapper t: tasks ){
+					
+					str += (str.isEmpty()?"":",") + t.getName();
+				}
+				
+				Logger.log(new LogEvent(LogIDs.CORE, "Non-daemon wait for idle: thread=" + current_thread + ", tasks=" + str ));
+			}
 
 			if ( current_thread == null ){
 
@@ -260,7 +277,7 @@ NonDaemonTaskRunner
 
 		while( true ){
 
-			if ( sem.reserve( 10000 )){
+			if ( sem.reserve( 2500 )){
 
 				break;
 			}
@@ -269,6 +286,15 @@ NonDaemonTaskRunner
 
 				try{
 					tasks_mon.enter();
+
+					String str = "";
+					
+					for (taskWrapper t: tasks ){
+						
+						str += (str.isEmpty()?"":",") + t.getName();
+					}
+					
+					Logger.log(new LogEvent(LogIDs.CORE, "Non-daemon wait for idle 2: thread=" + current_thread + ", tasks=" + str ));
 
 					for (int i=0;i<wait_until_idle_list.size();i++){
 

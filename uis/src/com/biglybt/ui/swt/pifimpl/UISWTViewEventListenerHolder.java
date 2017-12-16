@@ -23,7 +23,10 @@ package com.biglybt.ui.swt.pifimpl;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+
+import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginInterface;
@@ -161,6 +164,22 @@ UISWTViewEventListenerHolder
 					} else {
 						eventListener = mapSWTViewToEventListener.get(event.getView());
 					}
+				
+					Iterator<Map.Entry<UISWTView,UISWTViewEventListener>> it = mapSWTViewToEventListener.entrySet().iterator();
+					
+					while( it.hasNext()){
+						Map.Entry<UISWTView,UISWTViewEventListener> entry = it.next();
+						UISWTView v = entry.getKey();
+						if ( v instanceof UISWTViewImpl ) {
+							UISWTViewImpl impl = (UISWTViewImpl)v;
+							
+							if ( impl.isDisposed()) {
+								Debug.out( "removing orphan from event holder: " + impl );
+								
+								it.remove();
+							}
+						}
+					}
 				}
 			}
 
@@ -191,6 +210,20 @@ UISWTViewEventListenerHolder
 		}
 	}
 
+	public void
+	removeListener(
+		UISWTView	view )
+	{
+		synchronized( this ){
+			if (mapSWTViewToEventListener !=  null) {
+		
+				if ( mapSWTViewToEventListener.remove(view) == null ){
+					
+					Debug.out( "Failed to remove view" );
+				}
+			}
+		}	
+	}
 
 	@Override
 	public String getViewID() {

@@ -157,6 +157,24 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 				BooleanParameter start_in_lr_mode = new BooleanParameter(gStartStop, "Start In Low Resource Mode", "ConfigView.label.start.inlrm");
 
 				start_in_lr_mode.setLayoutData(gridData);
+				
+				Composite lr_comp = new Composite( gStartStop, SWT.NULL );
+				gridData = new GridData();
+				gridData.horizontalSpan = 2;
+				gridData.horizontalIndent = 20;
+				Utils.setLayoutData(lr_comp,  gridData );
+				
+				layout = new GridLayout(3, false);
+				lr_comp.setLayout(layout);
+				
+				BooleanParameter lr_ui 			= new BooleanParameter(lr_comp, "LRMS UI", 			"lrms.deactivate.ui");
+				BooleanParameter lr_udp_net 	= new BooleanParameter(lr_comp, "LRMS UDP Peers", 	"lrms.udp.peers");
+				BooleanParameter lr_dht_sleep 	= new BooleanParameter(lr_comp, "LRMS DHT Sleep", 	"lrms.dht.sleep");
+
+				//start_in_lr_mode.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( lr_ui ));
+				lr_ui.setEnabled( false );	// this must always be selected as it is coming out of the deactivated UI mode that enable the others as well
+				start_in_lr_mode.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( lr_udp_net ));
+				start_in_lr_mode.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( lr_dht_sleep ));
 			}
 		}
 

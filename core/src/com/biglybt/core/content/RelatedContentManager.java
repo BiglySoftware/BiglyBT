@@ -98,6 +98,21 @@ RelatedContentManager
 		MAX_CONCURRENT_PUBLISH = max_conc_pub;
 	}
 
+	private static boolean prefer_i2p;
+	
+	static{	
+		COConfigurationManager.addAndFireParameterListener(
+			"Plugin.DHT.dht.prefer.i2p",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String name){
+				
+					prefer_i2p = COConfigurationManager.getBooleanParameter( name, false );
+				}
+			});
+	}
+	
 	private static final int	TEMPORARY_SPACE_DELTA	= 50;
 
 	private static final int	MAX_RANK	= 100;
@@ -225,6 +240,7 @@ RelatedContentManager
 
 	final 	CopyOnWriteList<RelatedContentSearcher>	searchers = new CopyOnWriteList<>();
 	private boolean	added_i2p_searcher;
+	private RelatedContentSearcher	mix_searcher;
 
 	private static final int MAX_TRANSIENT_CACHE	= 256;
 
@@ -541,6 +557,32 @@ RelatedContentManager
 		}
 	}
 
+	private RelatedContentSearcher
+	checkMixSearcher()
+	{
+		synchronized( searchers ){
+
+			if ( mix_searcher == null ){
+
+				List<DistributedDatabase> ddbs = 
+					DDBaseImpl.getDDBs( new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P });
+	
+				for ( DistributedDatabase ddb: ddbs ){
+	
+					if ( ddb.getNetwork() == AENetworkClassifier.AT_I2P ){
+	
+						DHTPluginInterface i2p_mix_dht = ddb.getDHTPlugin();
+	
+						mix_searcher = new RelatedContentSearcher( RelatedContentManager.this, transfer_type, i2p_mix_dht, false );
+					}
+				}
+			}
+			
+			return( mix_searcher );
+		}
+	}
+
+	
 	public boolean
 	isEnabled()
 	{
@@ -622,8 +664,10 @@ RelatedContentManager
 		byte		networks )
 	{
 		DHTPluginInterface	result = null;
-
-		if ((networks & NET_PUBLIC ) != 0 ){
+		
+		if (	(networks & NET_PUBLIC ) != 0 &&
+				(	( !prefer_i2p ) ||
+					( networks & NET_I2P ) == 0 )){
 
 			result = public_dht_plugin;
 
@@ -3407,8 +3451,17 @@ RelatedContentManager
 		if ( target_net == AENetworkClassifier.AT_I2P ){
 
 			checkI2PSearcher( true );
+			
+		}else if ( prefer_i2p ) {
+			
+			RelatedContentSearcher searcher = checkMixSearcher();
+			
+			if ( searcher != null ) {
+				
+				return( searcher.searchRCM( search_parameters, observer ));
+			}
 		}
-
+		
 		for ( RelatedContentSearcher searcher: searchers ){
 
 			String net = searcher.getDHTPlugin().getNetwork();

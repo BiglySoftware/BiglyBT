@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.List;
 
 import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.utils.ColorCache;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
@@ -1409,6 +1408,10 @@ public class SideBar
 
 	protected void _setupNewEntry(SideBarEntrySWT entry, String id,
 			boolean expandParent, boolean closeable) {
+		if ( tree.isDisposed()){
+			return;
+		}
+		
 		String parentID = entry.getParentID();
 		MdiEntry parent = getEntry(parentID);
 		TreeItem parentTreeItem = null;

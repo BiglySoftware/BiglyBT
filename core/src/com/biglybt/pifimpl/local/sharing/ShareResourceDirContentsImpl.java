@@ -303,6 +303,40 @@ ShareResourceDirContentsImpl
 	}
 
 	@Override
+	protected ShareResource 
+	lookupShare(
+		byte[] torrent_hash)
+	{
+		for (int i=0;i<children.length;i++){
+
+			try{
+				if ( children[i] instanceof ShareResourceImpl ){
+
+					ShareResource res = ((ShareResourceImpl)children[i]).lookupShare(torrent_hash);
+					
+					if ( res != null ){
+						
+						return( res );
+					}
+				}else{
+
+					ShareResource res = ((shareNode)children[i]).lookupShare(torrent_hash);
+
+					if ( res != null ){
+						
+						return( res );
+					}
+				}
+			}catch( Throwable e ){
+
+				Debug.printStackTrace( e );
+			}
+		}
+		
+		return( null );
+	}
+	
+	@Override
 	protected void
 	serialiseResource(
 		Map		map )
@@ -478,6 +512,35 @@ ShareResourceDirContentsImpl
 		getAttributes()
 		{
 			return( new TorrentAttribute[0]);
+		}
+		
+		protected ShareResource 
+		lookupShare(byte[] torrent_hash)
+		{
+			for (int i=0;i<node_children.length;i++){
+
+				Object	o = node_children[i];
+
+				if ( o instanceof ShareResourceImpl ){
+
+					ShareResource res = ((ShareResourceImpl)o).lookupShare(torrent_hash);
+					
+					if ( res != null ){
+						
+						return( res );
+					}
+				}else{
+
+					ShareResource res = ((shareNode)o).lookupShare(torrent_hash);
+					
+					if ( res != null ){
+						
+						return( res );
+					}
+				}
+			}
+			
+			return( null );
 		}
 
 		@Override

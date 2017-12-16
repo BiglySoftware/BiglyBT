@@ -792,6 +792,7 @@ public class TorrentMenuFancy
 
 		boolean start = false;
 		boolean stop = false;
+		boolean pause = false;
 		boolean recheck = false;
 		boolean barsOpened = true;
 		boolean bChangeDir = hasSelection;
@@ -806,6 +807,8 @@ public class TorrentMenuFancy
 
 			start = start || ManagerUtils.isStartable(dm);
 
+			pause = pause || ManagerUtils.isPauseable( dm );
+			
 			recheck = recheck || dm.canForceRecheck();
 
 			boolean stopped = ManagerUtils.isStopped(dm);
@@ -889,7 +892,7 @@ public class TorrentMenuFancy
 		// Pause
 		if (userMode > 0) {
 			createActionButton(dms, cQuickCommands, "v3.MainWindow.button.pause",
-					"pause", stop, new ListenerGetOffSWT() {
+					"pause", pause, new ListenerGetOffSWT() {
 						@Override
 						public void handleEventOffSWT(Event event) {
 							TorrentUtil.pauseDataSources(dms);
@@ -1147,6 +1150,48 @@ public class TorrentMenuFancy
 							TorrentUtil.addPeerSourceSubMenu(dms, menu);
 						}
 					});
+		}
+		
+		// Sequential download
+		
+		{
+			boolean allSeq		= true;
+			boolean AllNonSeq 	= true;
+
+			for (int j = 0; j < dms.length; j++) {
+				DownloadManager dm = dms[j];
+
+				boolean seq = dm.getDownloadState().getFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD);
+
+				if (seq) {
+					AllNonSeq = false;
+				} else {
+					allSeq = false;
+				}
+			}
+
+			boolean bChecked;
+
+			if (allSeq) {
+				bChecked = true;
+			} else if (AllNonSeq) {
+				bChecked = false;
+			} else {
+				bChecked = false;
+			}
+
+			final boolean newSeq = !bChecked;
+
+			FancyRowInfo row = createRow(cParent, "menu.sequential.download",
+					null, new ListenerDMTask(dms) {
+						@Override
+						public void run(DownloadManager dm) {
+							dm.getDownloadState().setFlag(
+									DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, newSeq );
+						}
+					});
+
+			row.setSelection(bChecked);
 		}
 
 		// IP Filter Enable
@@ -2240,18 +2285,34 @@ public class TorrentMenuFancy
 					}
 				});
 
-		boolean fileMove = true;
-		boolean locateFiles = false;
-
+		boolean fileMove 		= true;
+		boolean locateFiles 	= false;
+		boolean	exportFiles		= true;
+		boolean	canSetMOC		= dms.length > 0;
+		boolean canClearMOC		= false;
+		
 		for (int i = 0; i < dms.length; i++) {
 			DownloadManager dm = dms[i];
 			if (!dm.canMoveDataFiles()) {
 				fileMove = false;
 			}
+			if ( !dm.canExportDownload()){
+				exportFiles = false;
+			}
 			if ( !dm.isDownloadComplete( false )){
 				locateFiles = true;
 			}
+			
+			boolean incomplete = !dm.isDownloadComplete(true);
+
+			DownloadManagerState dm_state = dm.getDownloadState();
+
+			String moc_dir = dm_state.getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+			
+			canSetMOC &= incomplete;
+			canClearMOC |= (moc_dir != null && moc_dir.length() > 0 );
 		}
+		
 		if (fileMove) {
 			createRow(detailArea, "MyTorrentsView.menu.movedata", null,
 					new ListenerDMTask(dms) {
@@ -2261,7 +2322,61 @@ public class TorrentMenuFancy
 						}
 					});
 		}
+		
+		if ( canSetMOC || canClearMOC ){
+			
+			boolean f_canSetMOC = canSetMOC;
+			boolean f_canClearMOC = canClearMOC;
+			
+			createMenuRow(
+					detailArea,
+					"label.move.on.comp",
+					null,
+					new FancyMenuRowInfoListener()
+					{
+						@Override
+						public void
+						buildMenu(
+							Menu moc_menu )
+						{
+							MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
 
+							Messages.setLanguageText( clear_item, "Button.clear" );
+
+							clear_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
+								@Override
+								public void run(DownloadManager[] dms) {
+									TorrentUtil.clearMOC(dms);
+								}
+							});
+
+							clear_item.setEnabled( f_canClearMOC );
+							
+							MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
+
+							Messages.setLanguageText( set_item, "label.set" );
+							
+							set_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
+								@Override
+								public void run(DownloadManager[] dms) {
+									TorrentUtil.setMOC(parentShell, dms);
+								}
+							});
+							
+							set_item.setEnabled( f_canSetMOC );
+						}
+					});
+		}
+		
+		if (exportFiles) {
+			createRow(detailArea, "MyTorrentsView.menu.exportdownload", null,
+					new ListenerDMTask(dms) {
+						@Override
+						public void run(DownloadManager[] dms) {
+							TorrentUtil.exportDownloads(parentShell, dms);
+						}
+					});
+		}
 		createRow(detailArea, "MyTorrentsView.menu.checkfilesexist", null,
 				new ListenerDMTask(dms) {
 					@Override

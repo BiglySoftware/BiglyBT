@@ -413,6 +413,14 @@ DisplayFormatters
 		return( force_si_values?1024:(use_si_units?1024:1000));
 	}
 
+	public static long
+	getMinB()
+	{
+		long k = getKinB();
+		
+		return( k * k );
+	}
+	
 	public static
 	String formatByteCountToKiBEtc(
 		long	n,
@@ -808,7 +816,23 @@ DisplayFormatters
 				break;
 			}
 			case DownloadManager.STATE_STOPPED:
-				tmp = manager.isPaused() ? ManagerItem_paused : ManagerItem_stopped;
+				
+				int	mp = manager.getMoveProgress();
+				
+				if ( mp != -1 ){
+					
+					 tmp = ManagerItem_moving + ": "	+ formatPercentFromThousands( mp );
+					 
+				}else{
+					
+					tmp = manager.isPaused() ? ManagerItem_paused : ManagerItem_stopped;
+
+					String sr = manager.getStopReason();
+					if ( sr != null && !sr.isEmpty()){
+						tmp += " (" + sr + ")";
+					}
+				}
+				
 				break;
 
 			case DownloadManager.STATE_ERROR:

@@ -10,7 +10,7 @@ JAVA_PROPS="-Djava.net.preferIPv4Stack=true"
 
 ######## YOU PROBABLY DO NOT WANT TO TOUCH ANYTHING BELOW! ########
 
-SCRIPT_VERSION=8
+SCRIPT_VERSION=9
 START_CLASS="com.biglybt.ui.Main"
 
 MSG_LOADING="Loading BiglyBT:"
@@ -239,7 +239,7 @@ echo $MSG_LOADING
 # Don't use "exec -a BiglyBT ..." here as exec quits this script after completion,
 # preventing ScriptAfterShutdown from running, which installs updates and does
 # restarts
-${JAVA_PROGRAM_DIR}java -Xmx256m ${JAVA_ARGS} \
+${JAVA_PROGRAM_DIR}java -Xmx256m \
 	-cp "${CLASSPATH}" \
 	"-Djava.library.path=${PROGRAM_DIR}" \
 	"-Dazureus.install.path=${PROGRAM_DIR}" \

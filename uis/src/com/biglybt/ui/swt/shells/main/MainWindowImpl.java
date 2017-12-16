@@ -162,6 +162,8 @@ public class MainWindowImpl
 	private navigationListener navigationListener;
 	private UISkinnableSWTListener uiSkinnableSWTListener;
 
+	private volatile boolean	hide_all;
+	
 	/**
 	 * Old Initializer.  Core is required to be started
 	 *
@@ -588,9 +590,9 @@ public class MainWindowImpl
 					if (disposedOrDisposing) {
 						return;
 					}
-					if (systemTraySWT != null
-							&& COConfigurationManager.getBooleanParameter("Enable System Tray")
-							&& COConfigurationManager.getBooleanParameter("Close To Tray")) {
+					if (	COConfigurationManager.getBooleanParameter("Close To Tray") && 
+							( 	( systemTraySWT != null && COConfigurationManager.getBooleanParameter("Enable System Tray")) || 
+								COConfigurationManager.getBooleanParameter("System Tray Disabled Override"))){						
 
 						minimizeToTray(event);
 					} else {
@@ -613,9 +615,10 @@ public class MainWindowImpl
 					if (disposedOrDisposing) {
 						return;
 					}
-					if (systemTraySWT != null
-							&& COConfigurationManager.getBooleanParameter("Enable System Tray")
-							&& COConfigurationManager.getBooleanParameter("Minimize To Tray")) {
+					
+					if (	COConfigurationManager.getBooleanParameter("Minimize To Tray") && 
+							( 	( systemTraySWT != null && COConfigurationManager.getBooleanParameter("Enable System Tray")) || 
+								COConfigurationManager.getBooleanParameter("System Tray Disabled Override"))){						
 
 						minimizeToTray(event);
 					}
@@ -668,6 +671,8 @@ public class MainWindowImpl
 							&& (event.stateMask & (SWT.MOD1 + SWT.SHIFT)) == SWT.MOD1
 									+ SWT.SHIFT) {
 						shell.setFullScreen(!shell.getFullScreen());
+					}else if ( event.keyCode == SWT.F1 ){
+						Utils.launch( Constants.URL_WIKI );
 					}
 				}
 			});
@@ -1532,6 +1537,8 @@ public class MainWindowImpl
 	setHideAll(
 		final boolean hide )
 	{
+		hide_all = hide;
+		
 		Utils.execSWTThread(
 			new AERunnable()
 			{
@@ -1560,6 +1567,12 @@ public class MainWindowImpl
 			});
 	}
 
+	public boolean
+	getHideAll()
+	{
+		return( hide_all );
+	}
+	
 	private void setVisible(final boolean visible) {
 		setVisible(visible, true);
 	}

@@ -89,6 +89,7 @@ public class GCStringPrinter
 	private int printFlags;
 
 	private Point size;
+	private Point preferredSize;
 
 	private Color urlColor;
 
@@ -147,7 +148,8 @@ public class GCStringPrinter
 
 		public int imageIndexes[];
 
-		public Point outputLineExtent = new Point(0, 0);
+		public Point outputLineExtent 			= new Point(0, 0);
+		public Point outputLinePreferredExtent 	= new Point(0, 0);
 
 		public LineInfo(String originalLine, int relStartPos) {
 			this.originalLine = originalLine;
@@ -265,6 +267,8 @@ public class GCStringPrinter
 	 */
 	private boolean __printString() {
 		size = new Point(0, 0);
+		preferredSize = new Point(0, 0);
+		
 		isWordCut = false;
 
 		if (string == null) {
@@ -507,6 +511,7 @@ public class GCStringPrinter
 				}
 			}
 		} finally {
+
 			if (lines.size() > 0) {
 				// rebuild full text to get the exact y-extent of the output
 				// this may be different (but shouldn't be!) than the height of each
@@ -526,6 +531,8 @@ public class GCStringPrinter
 				for (LineInfo lineInfo : lines) {
 					size.x = Math.max(lineInfo.outputLineExtent.x, size.x);
 					size.y += lineInfo.outputLineExtent.y;
+					
+					preferredSize.x = Math.max(lineInfo.outputLinePreferredExtent.x, preferredSize.x);
 				}
 
 				if ((swtFlags & (SWT.BOTTOM)) != 0) {
@@ -544,6 +551,8 @@ public class GCStringPrinter
 						}
 					}
 				}
+				
+				preferredSize.y = size.y;
 			}
 
 			if (!skipClip && !noDraw) {
@@ -552,7 +561,7 @@ public class GCStringPrinter
 
 		}
 
-		cutoff |= size.y > printArea.height;
+		cutoff |= size.y > printArea.height | preferredSize.x > size.x;
 		return !cutoff;
 	}
 
@@ -569,6 +578,7 @@ public class GCStringPrinter
 		if (lineInfo.originalLine.length() == 0) {
 			lineInfo.lineOutputed = "";
 			lineInfo.outputLineExtent = new Point(0, gc.stringExtent(GOOD_STRING).y);
+			lineInfo.outputLinePreferredExtent = new Point( 0, lineInfo.outputLineExtent.y );
 			return lineInfo;
 		}
 
@@ -578,6 +588,7 @@ public class GCStringPrinter
 		boolean b = images != null || lineInfo.originalLine.length() > MAX_LINE_LEN;
 		if (!b) {
 			Point outputLineExtent = gc.stringExtent(lineInfo.originalLine);
+			lineInfo.outputLinePreferredExtent = new Point( outputLineExtent.x, outputLineExtent.y );
 			b = outputLineExtent.x > printArea.width;
 			if (!b) {
 				lineInfo.outputLineExtent = outputLineExtent;
@@ -1462,6 +1473,10 @@ public class GCStringPrinter
 
 	public Point getCalculatedSize() {
 		return size;
+	}
+
+	public Point getCalculatedPreferredSize() {
+		return preferredSize;
 	}
 
 	public Color getUrlColor() {

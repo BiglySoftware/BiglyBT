@@ -22,8 +22,9 @@ package com.biglybt.core;
 public interface
 CoreOperation
 {
-	public static final int	OP_FILE_MOVE		= 2;
-	public static final int	OP_PROGRESS			= 3;
+	public static final int	OP_FILE_MOVE			= 2;
+	public static final int	OP_PROGRESS				= 3;
+	public static final int	OP_DOWNLOAD_EXPORT		= 4;
 
 	public int
 	getOperationType();

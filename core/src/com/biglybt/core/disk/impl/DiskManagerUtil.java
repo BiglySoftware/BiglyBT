@@ -216,11 +216,12 @@ DiskManagerUtil
 
 	static boolean
 	setFileLink(
-	    DownloadManager         download_manager,
-	    DiskManagerFileInfo[]   info,
-	    DiskManagerFileInfo     file_info,
-	    File                    from_file,
-	    File                    to_link )
+	    DownloadManager         	download_manager,
+	    DiskManagerFileInfo[]   	info,
+	    DiskManagerFileInfo    		file_info,
+	    File                   		from_file,
+	    File                   		to_link,
+	    FileUtil.ProgressListener	pl )
 	{
 	    if ( to_link != null ){
 
@@ -303,7 +304,7 @@ DiskManagerUtil
 
 		        if ( existing_file.exists()){
 
-		            if ( !FileUtil.renameFile( existing_file, to_link )){
+		            if ( !FileUtil.renameFile( existing_file, to_link, pl )){
 
 		                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
 		                    "Failed to rename '" + existing_file.toString() + "'" ));
@@ -1058,9 +1059,18 @@ DiskManagerUtil
 	                	setLinkAtomic(
 	                		File    link_destination )
 	                	{
-	                		return( setFileLink( download_manager, res, this, lazyGetFile(), link_destination ));
+	                		return( setFileLink( download_manager, res, this, lazyGetFile(), link_destination, null ));
 	                	}
 
+	                	@Override
+		                public boolean
+	                	setLinkAtomic(
+	                		File    						link_destination,
+	                		FileUtil.ProgressListener		pl )
+	                	{
+	                		return( setFileLink( download_manager, res, this, lazyGetFile(), link_destination , pl));
+	                	}
+	                	
 	                	@Override
 		                public File
 	                	getLink()

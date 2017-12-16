@@ -131,11 +131,11 @@ SBC_SubscriptionResultsView
 				}
 			});
 
-		String mdi_key = "Subscription_" + ByteFormatter.encodeString(ds.getPublicKey());
-
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 
 		if ( mdi != null && ds != null ){
+
+			String mdi_key = "Subscription_" + ByteFormatter.encodeString(ds.getPublicKey());
 
 			mdi_entry = mdi.getEntry( mdi_key );
 
@@ -144,9 +144,16 @@ SBC_SubscriptionResultsView
 				mdi_entry.addToolbarEnabler(this);
 			}
 		}
-
+				
 		if ( ds != null ){
 
+			if (( ds.getViewOptions() & Subscription.VO_HIDE_HEADER) != 0 ){
+				
+				SWTSkinObject top_area = getSkinObject( "toparea" );
+
+				top_area.setVisible( false );
+			}
+			
 			SWTSkinObjectText title = (SWTSkinObjectText) getSkinObject("title");
 
 			if ( title != null ){
@@ -236,7 +243,7 @@ SBC_SubscriptionResultsView
 
 			Runnable pFilterUpdater = null;
 
-			if ( ds.isUpdateable()){
+			if ( ds != null && ds.isUpdateable()){
 
 				try{
 					filters = ds.getFilters();
@@ -714,15 +721,18 @@ SBC_SubscriptionResultsView
 	{
 		if ( reason == CR_RESULTS){
 
-			reconcileResults( subs );
+			if ( tv_subs_results != null ) {
 
-			tv_subs_results.runForAllRows(
-				new TableGroupRowRunner() {
-					@Override
-					public void run(TableRowCore row) {
-						row.invalidate( true );
-					}
-				});
+				reconcileResults( subs );
+
+				tv_subs_results.runForAllRows(
+					new TableGroupRowRunner() {
+						@Override
+						public void run(TableRowCore row) {
+							row.invalidate( true );
+						}
+					});
+			}
 		}
 	}
 

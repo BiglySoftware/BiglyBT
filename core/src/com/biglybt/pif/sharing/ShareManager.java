@@ -48,6 +48,11 @@ ShareManager
 	public ShareResource[]
 	getShares();
 
+	public ShareResource
+	lookupShare(
+		byte[]		torrent_hash )
+	
+		throws ShareException;
 		/**
 		 * returns null if share not defined
 		 * @param file_or_dir

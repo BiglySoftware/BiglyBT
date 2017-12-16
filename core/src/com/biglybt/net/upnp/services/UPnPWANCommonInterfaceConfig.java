@@ -31,4 +31,14 @@ UPnPWANCommonInterfaceConfig
 	getCommonLinkProperties()
 
 		throws UPnPException;
+	
+	public long
+	getTotalBytesSent()
+	
+		throws UPnPException;
+	
+	public long
+	getTotalBytesReceived()
+	
+		throws UPnPException;
 }

@@ -1027,6 +1027,15 @@ public class GeneralView
 	 				}
 	 			}
 	 		}
+	    }else if ( valid ){
+	    
+	    	for (int i=0;i<nbPieces;i++){
+	    		if ( oldPiecesState[i] != 0 ){
+	    			valid = false;
+	    			break;
+	    		}
+	    	}
+	    	
 	    }
 
 	    piecesStateCache	= newPiecesState;

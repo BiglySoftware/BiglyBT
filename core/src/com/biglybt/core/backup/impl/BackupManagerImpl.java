@@ -294,38 +294,65 @@ BackupManagerImpl
 
 			long	now_local = now_utc + offset;
 
-			long	DAY = 24*60*60*1000L;
+			long	HOUR 	= 60*60*1000L;
+			long	DAY 	= 24*HOUR;
+			
+			long	local_day_index 	= now_local/DAY;
+			long	local_hour_index 	= now_local/HOUR;
 
-			long	local_day_index = now_local/DAY;
-
-			long	last_auto_backup_day = COConfigurationManager.getLongParameter( "br.backup.auto.last_backup_day", 0 );
+			long	last_auto_backup_day 	= COConfigurationManager.getLongParameter( "br.backup.auto.last_backup_day", 0 );
+			long	last_auto_backup_hour 	= COConfigurationManager.getLongParameter( "br.backup.auto.last_backup_hour", 0 );
 
 			if ( last_auto_backup_day > local_day_index ){
 
 				last_auto_backup_day = local_day_index;
 			}
 
-			long	backup_every_days = COConfigurationManager.getLongParameter( "br.backup.auto.everydays" );
+			if ( last_auto_backup_hour > local_hour_index ){
 
-			backup_every_days = Math.max( 1, backup_every_days );
+				last_auto_backup_hour = local_hour_index;
+			}
+			
+			long	backup_every_days 	= COConfigurationManager.getLongParameter( "br.backup.auto.everydays" );
+			long	backup_every_hours 	= COConfigurationManager.getLongParameter( "br.backup.auto.everyhours" );
 
-			long	utc_next_backup =  ( last_auto_backup_day + backup_every_days ) * DAY;
+			backup_every_days = Math.max( 0, backup_every_days );
 
+			long	utc_next_backup;
+			
+			long	check_period;
+			
+			if ( backup_every_days == 0 ){
+
+				backup_every_hours = Math.max( 1, backup_every_hours );
+
+				utc_next_backup =  ( last_auto_backup_hour + backup_every_hours ) * HOUR;
+
+				check_period = 10*60*1000;
+				
+			}else{
+				
+				utc_next_backup =  ( last_auto_backup_day + backup_every_days ) * DAY;
+				
+				check_period = 4*60*60*1000;
+			}
+			
 			long	time_to_next_backup = utc_next_backup - now_local;
 
 			if ( time_to_next_backup <= 0 || force ){
 
-				if ( now_utc - last_auto_backup >= 4*60*60*1000 || force ){
+				if ( now_utc - last_auto_backup >= check_period || force ){
 
 					do_backup = true;
 
 					last_auto_backup	= now_utc;
 
 					COConfigurationManager.setParameter( "br.backup.auto.last_backup_day", local_day_index );
+					COConfigurationManager.setParameter( "br.backup.auto.last_backup_hour", local_hour_index );
 
 				}else{
 
-					time_to_next_backup	= 4*60*60*1000;
+					time_to_next_backup	= check_period;
 				}
 			}
 

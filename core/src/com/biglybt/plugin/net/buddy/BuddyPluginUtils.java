@@ -252,7 +252,7 @@ BuddyPluginUtils
 		return( language_chat );
 	}
 	
-	private static BuddyPlugin
+	public static BuddyPlugin
 	getPlugin()
 	{
 		PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( "azbuddy", true );
@@ -518,7 +518,14 @@ BuddyPluginUtils
 			if ( ui != null ){
 
 				return( ui.buildView( properties, listener ));
+				
+			}else{
+				
+				Debug.out( "Can't build view - UI unavail" );
 			}
+		}else {
+			
+			Debug.out( "Can't build view - bp=" + bp );
 		}
 
 		return( null );

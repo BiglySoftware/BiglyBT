@@ -25,6 +25,7 @@ import java.util.Map;
 import com.biglybt.core.dht.nat.DHTNATPuncher;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.dht.transport.DHTTransportReplyHandlerAdapter;
+import com.biglybt.core.util.AERunStateHandler;
 import com.biglybt.plugin.dht.DHTPluginContact;
 import com.biglybt.plugin.dht.DHTPluginOperationListener;
 import com.biglybt.plugin.dht.DHTPluginProgressListener;
@@ -147,6 +148,11 @@ DHTPluginContactImpl
 	public Map
 	openTunnel()
 	{
+		if ( AERunStateHandler.isDHTSleeping()){
+			
+			return( null );
+		}
+		
 		DHTNATPuncher puncher = plugin.getDHT().getNATPuncher();
 
 		if ( puncher == null ){
@@ -162,6 +168,11 @@ DHTPluginContactImpl
 		DHTPluginContact[]	rendezvous,
 		Map					client_data )
 	{
+		if ( AERunStateHandler.isDHTSleeping()){
+			
+			return( null );
+		}
+		
 		DHTNATPuncher puncher = plugin.getDHT().getNATPuncher();
 
 		if ( puncher == null ){

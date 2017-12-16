@@ -504,6 +504,12 @@ UISWTInstanceImpl
 
 				break;
 			}
+			case UIManagerEvent.ET_HIDE_ALL_TOGGLE: {
+				
+				uiFunctions.setHideAll(!uiFunctions.getHideAll());
+
+				break;
+			}
 			default:
 			{
 				done	= false;

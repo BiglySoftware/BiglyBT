@@ -120,8 +120,9 @@ public class UISWTViewImpl
 
 	private boolean destroyOnDeactivate;
 
+	private boolean	disposed;
+	
 	private Composite masterComposite;
-
 	private Set<UIPluginViewToolBarListener> setToolBarEnablers = new HashSet<>(1);
 
 	public UISWTViewImpl(String id, String parentViewID, boolean destroyOnDeactivate) {
@@ -139,6 +140,12 @@ public class UISWTViewImpl
 	public void setEventListener(UISWTViewEventListener _eventListener,
 			boolean doCreate)
 					throws UISWTViewEventCancelledException {
+		
+		if ( this.eventListener instanceof UISWTViewEventListenerHolder ){
+			
+			((UISWTViewEventListenerHolder)this.eventListener).removeListener( this );
+		}
+		
 		this.eventListener = _eventListener;
 
 		if (eventListener == null) {
@@ -150,6 +157,7 @@ public class UISWTViewImpl
 			UISWTViewEventListener delegatedEventListener = h.getDelegatedEventListener(
 					this);
 			if (delegatedEventListener != null) {
+				h.removeListener( this );
 				this.eventListener = delegatedEventListener;
 			}
 		}
@@ -223,7 +231,7 @@ public class UISWTViewImpl
 	public UISWTView getParentView() {
 		return parentView;
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see com.biglybt.pif.ui.UIPluginView#getViewID()
 	 */
@@ -294,12 +302,34 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public void triggerEvent(int eventType, Object data) {
+		if ( eventType == UISWTViewEvent.TYPE_FOCUSGAINED ) {
+			if ( isDestroyOnDeactivate() && isDisposed()){
+				setDisposed( false );	// come back to life?
+			}
+		}
+		
 		try {
 			triggerBooleanEvent(eventType, data);
 		} catch (Exception e) {
 			// TODO: Better error
 			Debug.out(e);
 		}
+		
+		if ( eventType == UISWTViewEvent.TYPE_DESTROY) {
+			setDisposed( true );
+		}
+	}
+	
+	protected void
+	setDisposed(
+		boolean	b )
+	{
+		disposed	= b;
+	}
+	
+	@Override
+	public boolean isDisposed(){
+		return( disposed );
 	}
 
 	private static String padRight(String s, int n) {
@@ -509,43 +539,62 @@ public class UISWTViewImpl
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.pif.UISWTView#setTitle(java.lang.String)
-	 */
 	@Override
 	public void setTitle(String title) {
+		setTitleSupport( title );
+	}
+	
+	protected boolean setTitleSupport(String title) {
 		if (title == null) {
-			return;
+			return( false );
 		}
+		
+		boolean diff = !title.equals( setTitle );
+		
 		this.setTitle	= title;
 
 		if (title.startsWith("{") && title.endsWith("}") && title.length() > 2) {
-			setTitleID(title.substring(1, title.length() - 1));
-			return;
+			return( setTitleIDSupport(title.substring(1, title.length() - 1)));
+			
 		}
 		if (title.equals(this.title)) {
-			return;
+			return( diff );
 		}
 		if (title.contains(".") && MessageText.keyExists(title)) {
-			setTitleID(title);
-			return;
+			return( setTitleIDSupport(title));
 		}
 
+		diff |= this.title != title && ( this.title == null || title == null || !this.title.equals( title ));
+		diff |= this.titleID != null;
+		
 		this.title = title;
 		this.titleID = null;
+				
+		return( diff );
 	}
 
-	/* (non-Javadoc)
-	 * @see MdiEntry#setTitleID(java.lang.String)
-	 */
-	public void setTitleID(String titleID) {
+	protected void setTitleID(String titleID) {
+		setTitleIDSupport( titleID );
+	}
+	
+	protected boolean setTitleIDSupport(String titleID) {
 		if (titleID != null
 				&& (MessageText.keyExists(titleID) || titleID.startsWith("!"))) {
 
-			this.setTitleID	= titleID;
-
-			this.titleID = titleID;
-			this.title = null;
+			boolean diff = title != null;
+			
+			diff |= setTitleID != titleID && ( setTitleID == null || titleID == null || !setTitleID.equals( titleID ));
+			diff |= this.titleID != titleID && ( this.titleID == null || titleID == null || !this.titleID.equals( titleID ));
+			
+			this.setTitleID		= titleID;
+			this.titleID 		= titleID;
+			this.title 			= null;
+			
+			return( diff );
+			
+		}else{
+			
+			return( false );
 		}
 	}
 

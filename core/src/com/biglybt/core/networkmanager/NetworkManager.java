@@ -29,6 +29,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.global.GlobalManagerListener;
 import com.biglybt.core.networkmanager.impl.*;
 import com.biglybt.core.networkmanager.impl.http.HTTPNetworkManager;
@@ -139,7 +140,7 @@ public class NetworkManager {
     		});
   }
 
-
+  private Core		core;
 
   private final List<WriteController> 	write_controllers;
   private final List<ReadController> 	read_controllers;
@@ -165,6 +166,12 @@ public class NetworkManager {
   }
 
 
+  public List<WriteController>
+  getWriteControllers()
+  {
+	  return( write_controllers );
+  }
+  
   private TransferProcessor upload_processor;
 
   private TransferProcessor download_processor;
@@ -256,7 +263,7 @@ public class NetworkManager {
 	  }
   }
 
-  public void initialize(Core core) {
+  public void initialize(Core _core) {
 	  upload_processor = new TransferProcessor(
 			  TransferProcessor.TYPE_UPLOAD,
 			  new LimitedRateGroup()
@@ -381,22 +388,17 @@ public class NetworkManager {
 	HTTPNetworkManager.getSingleton();
 
 	refreshRates();
-    core.getGlobalManager().addListener( new GlobalManagerListener() {
-      @Override
-      public void downloadManagerAdded(DownloadManager dm ){}
-      @Override
-      public void downloadManagerRemoved(DownloadManager dm ){}
-      @Override
-      public void destroyInitiated(){}
-      @Override
-      public void destroyed(){}
 
+    _core.getGlobalManager().addListener( new GlobalManagerAdapter() {
+    
       @Override
       public void seedingStatusChanged(boolean seeding_only, boolean b ) {
         seeding_only_mode = seeding_only;
         refreshRates();
       }
     });
+    
+    core	= _core;
   }
 
 
@@ -539,11 +541,13 @@ public class NetworkManager {
   {
 	  Set<NetworkConnectionBase>	result = new HashSet<>();
 
-	  result.addAll( lan_upload_processor.getConnections());
-	  result.addAll( lan_download_processor.getConnections());
-	  result.addAll( upload_processor.getConnections());
-	  result.addAll( download_processor.getConnections());
-
+	  if ( core != null ){
+		  result.addAll( lan_upload_processor.getConnections());
+		  result.addAll( lan_download_processor.getConnections());
+		  result.addAll( upload_processor.getConnections());
+		  result.addAll( download_processor.getConnections());
+	  }
+	  
 	  return( result );
   }
 

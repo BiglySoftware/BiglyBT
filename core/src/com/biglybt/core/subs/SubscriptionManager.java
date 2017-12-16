@@ -233,12 +233,12 @@ SubscriptionManager
 	removeListener(
 		SubscriptionManagerListener	listener );
 
-	public void
+	public Subscription
 	subscribeToSubscription(
 		String uri )
 		throws Exception;
 
-	public void
+	public Subscription
 	subscribeToRSS(
 			String		name,
 			URL 		url,

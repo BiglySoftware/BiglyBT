@@ -43,6 +43,11 @@ ChatView
 
 	private BuddyPluginViewInterface.View chat_view;
 
+	public
+	ChatView()
+	{	
+	}
+	
 	@Override
 	public boolean
 	isCloneable()

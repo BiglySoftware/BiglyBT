@@ -507,7 +507,7 @@ public class TransferStatsView
 
 	  label = new Label(blahPanel,SWT.NONE);
 	  Messages.setLanguageText(label,"SpeedView.stats.upbias");
-	  uploadBiaser = new BufferedLabel(blahPanel,SWT.NONE);
+	  uploadBiaser = new BufferedLabel(blahPanel,SWT.DOUBLE_BUFFERED);
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  gridData.horizontalSpan = 7;
 	  Utils.setLayoutData(uploadBiaser, gridData);

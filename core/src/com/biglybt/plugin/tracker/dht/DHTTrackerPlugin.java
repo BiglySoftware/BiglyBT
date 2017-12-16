@@ -532,16 +532,23 @@ DHTTrackerPlugin
 
 		boolean	is_decentralised = false;
 
+		URL announce_url = torrent.getAnnounceURL();
+		
 		if ( torrent != null ){
 
-			is_decentralised = TorrentUtils.isDecentralised( torrent.getAnnounceURL());
+			is_decentralised = TorrentUtils.isDecentralised( announce_url );
 		}
 
 			// bail on our low noise ones, these don't require decentralised tracking unless that's what they are
 
 		if ( download.getFlag( Download.FLAG_LOW_NOISE ) && !is_decentralised ){
 
-			return;
+				// make an excpetion for update torrents for the moment
+			
+			if ( !announce_url.getHost().endsWith( ".amazonaws.com" )){
+			
+				return;
+			}
 		}
 
 		if ( track_only_decentralsed ){

@@ -241,6 +241,7 @@ public class ConfigurationDefaults {
     def.put("Ip Filter Enabled", TRUE);
     def.put("Ip Filter Allow",FALSE);
     def.put("Ip Filter Enable Banning", TRUE);
+    def.put("Ip Filter Disable For Updates", FALSE);
     def.put("Ip Filter Ban Block Limit", new Long(4));
     def.put("Ip Filter Ban Discard Ratio", "5.0" );
     def.put("Ip Filter Ban Discard Min KB", new Long(128));
@@ -254,6 +255,10 @@ public class ConfigurationDefaults {
 
     def.put("Start On Login", FALSE );
     def.put("Start In Low Resource Mode", FALSE );
+    def.put("LRMS UI", TRUE );
+    def.put("LRMS UDP Peers", TRUE );
+    def.put("LRMS DHT Sleep", TRUE );
+    
     def.put("Auto Register App", FALSE );
 
     def.put("Pause Downloads On Exit", FALSE );
@@ -381,6 +386,7 @@ public class ConfigurationDefaults {
     def.put( "Popup Download Finished", FALSE);
     def.put( "Popup File Finished", FALSE);
     def.put( "Popup Download Added", FALSE);
+    def.put( "Notify Download Finished", FALSE);
     def.put( "Show Timestamp For Alerts", FALSE);
     def.put( "Request Attention On New Download", TRUE );
     def.put( "Activate Window On External Download", TRUE );
@@ -434,7 +440,7 @@ public class ConfigurationDefaults {
     def.put( "Tracker Separate Peer IDs", FALSE);
     def.put( "Tracker Client Connect Timeout", new Long(120));
     def.put( "Tracker Client Read Timeout", SIXTY );
-	def.put( "Tracker Client Send OS and Java Version", TRUE);
+	def.put( "Tracker Client Send OS and Java Version", FALSE);
 	def.put( "Tracker Client Show Warnings", TRUE);
 	def.put( "Tracker Client Min Announce Interval", ZERO);
 	def.put( "Tracker Client Numwant Limit", new Long(100));
@@ -576,6 +582,7 @@ public class ConfigurationDefaults {
 
     def.put( "File.truncate.if.too.large", FALSE);
     def.put( "Enable System Tray", TRUE);
+    def.put( "System Tray Disabled Override", FALSE);
     def.put( "Show Status In Window Title", FALSE );
     def.put( "config.style.table.defaultSortOrder", ZERO);
     def.put( "Ignore.peer.ports", "0" );

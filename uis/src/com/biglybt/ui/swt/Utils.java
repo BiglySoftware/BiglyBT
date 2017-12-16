@@ -131,6 +131,8 @@ public class Utils
 
 	private static ParameterListener configUIListener;
 
+	private static boolean	terminated;
+	
 	static void initStatic() {
 		if (DEBUG_SWTEXEC) {
 			System.out.println("==== debug.swtexec=1, performance may be affected ====");
@@ -215,6 +217,12 @@ public class Utils
 		BW_PALETTE = new PaletteData(new RGB[] { new RGB(0, 0, 0), new RGB(255, 255, 255) });
 	}
 
+	public static void
+	setTerminated()
+	{
+		terminated	= true;
+	}
+	
 	public static boolean isAZ2UI() {
 		return isAZ2;
 	}
@@ -949,7 +957,7 @@ public class Utils
 				code.run();
 				return true;
 			}
-			if (Constants.isCVSVersion()) {
+			if (Constants.isCVSVersion() && !terminated ) {
 				System.out.println("Skipping, SWT null " + Debug.getCompressedStackTrace());
 			}
 			return false;
@@ -3894,7 +3902,13 @@ public class Utils
 			if (newParent == null) {
 				break;
 			}
-			newParent.layout(new Control[] { c });
+			try {
+				newParent.layout(new Control[] { c });
+			}catch( SWTException e ) {
+				// ignore - we sometimes get widget-disposed errors from SashForms
+			}catch( NullPointerException e ) {
+				// ignore - we sometimes get NPEs errors from CTabFolder
+			}
 			c = newParent;
 		}
 	}

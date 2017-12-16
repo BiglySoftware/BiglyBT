@@ -157,7 +157,7 @@ DHTRouterNodeImpl
 
 		}else{
 
-			if ( replacements.size() == max_rep_per_node ){
+			if ( replacements.size() >= max_rep_per_node ){
 
 					// if this replacement is known to be alive, replace any existing
 					// replacements that haven't been known to be alive
@@ -177,14 +177,17 @@ DHTRouterNodeImpl
 
 							replacements.remove(i);
 
-							break;
+							if ( replacements.size() < max_rep_per_node ){
+								
+								break;
+							}
 						}
 					}
 
 						// no unknown existing replacements but this is "newer" than the existing
 						// ones so replace the oldest one
 
-					if ( replacements.size() == max_rep_per_node ){
+					if ( replacements.size() >= max_rep_per_node ){
 
 						DHTRouterContactImpl removed = (DHTRouterContactImpl) replacements.remove(0);
 
@@ -206,7 +209,10 @@ DHTRouterNodeImpl
 
 							replacements.remove(i);
 
-							break;
+							if ( replacements.size() < max_rep_per_node ){
+								
+								break;
+							}
 						}
 					}
 				}
@@ -216,7 +222,7 @@ DHTRouterNodeImpl
 			}
 		}
 
-		if ( replacements.size() == max_rep_per_node ){
+		if ( replacements.size() >= max_rep_per_node ){
 
 				// no room, drop the contact
 

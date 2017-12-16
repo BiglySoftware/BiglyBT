@@ -658,7 +658,7 @@ CoreUpdateChecker
 
 			rd.reportActivity( "Data verified successfully" );
 
-			if ( filename.toLowerCase().endsWith( ".zip.torrent" )){
+			if ( filename.toLowerCase().contains( ".zip.torrent" )){	// might have ?blah so use 'contains'
 
 				handleZIPUpdate( checker, data );
 

@@ -70,10 +70,22 @@ GlobalManagerStats
 
 	public long getTotalProtocolBytesReceived();
 
+	public default long
+	getTotalDataProtocolBytesReceived()
+	{
+		return(getTotalDataBytesReceived()+getTotalProtocolBytesReceived());
+	}
+	
 	public long getTotalDataBytesSent();
 
 	public long getTotalProtocolBytesSent();
 
+	public default long
+	getTotalDataProtocolBytesSent()
+	{
+		return(getTotalDataBytesSent()+getTotalProtocolBytesSent());
+	}
+	
   	public long getTotalSwarmsPeerRate( boolean downloading, boolean seeding );
 
 		// set methods
