@@ -120,6 +120,8 @@ public class TorrentUtil
 		// TODO: Build submenus on the fly
 		Shell shell = Utils.findAnyShell();
 
+		Shell menu_shell = menu.getShell();
+		
 		final boolean isSeedingView;
 		switch (selected_dl_types) {
 			case 1:
@@ -148,11 +150,11 @@ public class TorrentUtil
 		// Enable/Disable Logic
 		boolean bChangeDir = hasSelection;
 
-		boolean start, stop, changeUrl, barsOpened, forceStart;
-		boolean forceStartEnabled, recheck, manualUpdate, fileMove, fileRescan;
+		boolean start, stop, pause, changeUrl, barsOpened, forceStart;
+		boolean forceStartEnabled, recheck, manualUpdate, fileMove, canSetMOC, canClearMOC, fileExport, fileRescan;
 
-		changeUrl = barsOpened = manualUpdate = fileMove = fileRescan = true;
-		forceStart = forceStartEnabled = recheck = start = stop = false;
+		changeUrl = barsOpened = manualUpdate = fileMove = canSetMOC = fileExport = fileRescan = true;
+		forceStart = forceStartEnabled = recheck = start = stop = pause = canClearMOC = false;
 
 		boolean canSetSuperSeed = false;
 		boolean superSeedAllYes = true;
@@ -221,6 +223,8 @@ public class TorrentUtil
 
 				start = start || ManagerUtils.isStartable(dm);
 
+				pause = pause || ManagerUtils.isPauseable(dm);
+						
 				recheck = recheck || dm.canForceRecheck();
 
 				forceStartEnabled = forceStartEnabled
@@ -233,6 +237,8 @@ public class TorrentUtil
 				allStopped &= stopped;
 
 				fileMove = fileMove && dm.canMoveDataFiles();
+				
+				fileExport = fileExport && dm.canExportDownload();
 
 				if (userMode < 2) {
 					TRTrackerAnnouncer trackerClient = dm.getTrackerClient();
@@ -263,15 +269,21 @@ public class TorrentUtil
 					}
 				}
 
+				boolean incomplete = !dm.isDownloadComplete(true);
+
 				DownloadManagerState dm_state = dm.getDownloadState();
 
+				String moc_dir = dm_state.getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+				
+				canSetMOC &= incomplete;
+				canClearMOC |= (moc_dir != null && moc_dir.length() > 0 );
+						
 				boolean scan = dm_state.getFlag(
 						DownloadManagerState.FLAG_SCAN_INCOMPLETE_PIECES);
 
 				// include DND files in incomplete stat, since a recheck may
 				// find those files have been completed
-				boolean incomplete = !dm.isDownloadComplete(true);
-
+				
 				allScanSelected = incomplete && allScanSelected && scan;
 				allScanNotSelected = incomplete && allScanNotSelected && !scan;
 
@@ -326,7 +338,9 @@ public class TorrentUtil
 			start = false;
 			stop = false;
 			fileMove = false;
+			fileExport = false;
 			fileRescan = false;
+			canSetMOC = false;
 			upSpeedDisabled = true;
 			downSpeedDisabled = true;
 			changeUrl = false;
@@ -377,7 +391,7 @@ public class TorrentUtil
 				if (DownloadBar.getManager().isOpen(dm)) {
 					DownloadBar.close(dm);
 				} else {
-					DownloadBar.open(dm, menu.getShell());
+					DownloadBar.open(dm,shell);
 				}
 			} // run
 		});
@@ -414,7 +428,7 @@ public class TorrentUtil
 
 		// Open in browser
 
-		final Menu menuBrowse = new Menu(menu.getShell(),SWT.DROP_DOWN);
+		final Menu menuBrowse = new Menu(menu_shell,SWT.DROP_DOWN);
 		final MenuItem itemBrowse = new MenuItem(menu, SWT.CASCADE);
 		Messages.setLanguageText(itemBrowse, "MyTorrentsView.menu.browse");
 		itemBrowse.setMenu(menuBrowse);
@@ -478,7 +492,7 @@ public class TorrentUtil
 		Messages.setLanguageText(itemAdvanced, "MyTorrentsView.menu.advancedmenu"); //$NON-NLS-1$
 		itemAdvanced.setEnabled(hasSelection);
 
-		final Menu menuAdvanced = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		final Menu menuAdvanced = new Menu(menu_shell, SWT.DROP_DOWN);
 		itemAdvanced.setMenu(menuAdvanced);
 
 		// advanced > Download Speed Menu //
@@ -490,7 +504,7 @@ public class TorrentUtil
 		long maxUpload = COConfigurationManager.getIntParameter(
 				"Max Upload Speed KBs", 0) * kInB;
 
-		ViewUtils.addSpeedMenu(menu.getShell(), menuAdvanced, true, true, true,
+		ViewUtils.addSpeedMenu(menu_shell, menuAdvanced, true, true, true,
 				hasSelection, downSpeedDisabled, downSpeedUnlimited, totalDownSpeed,
 				downSpeedSetMax, maxDownload, upSpeedDisabled, upSpeedUnlimited,
 				totalUpSpeed, upSpeedSetMax, maxUpload, dms.length, null,
@@ -536,7 +550,7 @@ public class TorrentUtil
 				});
 
 		// advanced > Tracker Menu //
-		final Menu menuTracker = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		final Menu menuTracker = new Menu(menu_shell, SWT.DROP_DOWN);
 		final MenuItem itemTracker = new MenuItem(menuAdvanced, SWT.CASCADE);
 		Messages.setLanguageText(itemTracker, "MyTorrentsView.menu.tracker");
 		itemTracker.setMenu(menuTracker);
@@ -549,7 +563,7 @@ public class TorrentUtil
 		final MenuItem itemFiles = new MenuItem(menuAdvanced, SWT.CASCADE);
 		Messages.setLanguageText(itemFiles, "ConfigView.section.files");
 
-		final Menu menuFiles = new Menu(shell, SWT.DROP_DOWN);
+		final Menu menuFiles = new Menu(menu_shell, SWT.DROP_DOWN);
 		itemFiles.setMenu(menuFiles);
 
 		final MenuItem itemFileMoveData = new MenuItem(menuFiles, SWT.PUSH);
@@ -561,7 +575,7 @@ public class TorrentUtil
 			}
 		});
 		itemFileMoveData.setEnabled(fileMove);
-
+		
 		final MenuItem itemFileMoveTorrent = new MenuItem(menuFiles, SWT.PUSH);
 		Messages.setLanguageText(itemFileMoveTorrent,
 				"MyTorrentsView.menu.movetorrent");
@@ -573,6 +587,57 @@ public class TorrentUtil
 		});
 		itemFileMoveTorrent.setEnabled(fileMove);
 
+			// move on complete
+		
+		final Menu moc_menu = new Menu( shell, SWT.DROP_DOWN);
+
+		MenuItem moc_item = new MenuItem( menuFiles, SWT.CASCADE);
+
+		Messages.setLanguageText( moc_item, "label.move.on.comp" );
+
+		moc_item.setMenu( moc_menu );
+
+		MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
+
+		Messages.setLanguageText( clear_item, "Button.clear" );
+
+		clear_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				clearMOC(dms);
+			}
+		});
+
+		clear_item.setEnabled( canClearMOC );
+		
+		MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
+
+		Messages.setLanguageText( set_item, "label.set" );
+		
+		set_item.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				setMOC(shell, dms);
+			}
+		});
+		
+		set_item.setEnabled( canSetMOC );
+		
+		moc_item.setEnabled( canClearMOC || canSetMOC );
+		
+			// file export
+		
+		final MenuItem itemFileExport = new MenuItem(menuFiles, SWT.PUSH);
+		Messages.setLanguageText(itemFileExport, "MyTorrentsView.menu.exportdownload");
+		itemFileExport.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				exportDownloads(shell, dms);
+			}
+		});
+		itemFileExport.setEnabled(fileExport);
+
+		
 		final MenuItem itemCheckFilesExist = new MenuItem(menuFiles, SWT.PUSH);
 		Messages.setLanguageText(itemCheckFilesExist,
 				"MyTorrentsView.menu.checkfilesexist");
@@ -589,7 +654,7 @@ public class TorrentUtil
 		itemLocateFiles.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
 			public void run(DownloadManager[] dms) {
-				ManagerUtils.locateFiles( dms, menu.getShell());
+				ManagerUtils.locateFiles( dms, shell );
 			}
 		});
 
@@ -745,7 +810,7 @@ public class TorrentUtil
 			itemFindMore.addListener(SWT.Selection, new ListenerDMTask(dms) {
 				@Override
 				public void run(DownloadManager[] dms) {
-					ManagerUtils.findMoreLikeThis( dms[0], menu.getShell());
+					ManagerUtils.findMoreLikeThis( dms[0], shell );
 				}
 			});
 			itemFindMore.setSelection(isSingleSelection);
@@ -816,7 +881,7 @@ public class TorrentUtil
 			Utils.setMenuItemImage(itemExport, "export");
 			itemExport.setEnabled(hasSelection);
 
-			final Menu menuExport = new Menu(shell, SWT.DROP_DOWN);
+			final Menu menuExport = new Menu( menu_shell, SWT.DROP_DOWN);
 			itemExport.setMenu(menuExport);
 
 			// Advanced > Export > Export XML
@@ -878,12 +943,57 @@ public class TorrentUtil
 			final MenuItem itemPeerSource = new MenuItem(menuAdvanced, SWT.CASCADE);
 			Messages.setLanguageText(itemPeerSource, "MyTorrentsView.menu.peersource"); //$NON-NLS-1$
 
-			final Menu menuPeerSource = new Menu(shell, SWT.DROP_DOWN);
+			final Menu menuPeerSource = new Menu(menu_shell, SWT.DROP_DOWN);
 			itemPeerSource.setMenu(menuPeerSource);
 
 			addPeerSourceSubMenu(dms, menuPeerSource);
 		}
 
+		// Sequential download
+		
+		{
+
+			final MenuItem dl_seq_enable = new MenuItem(menuAdvanced, SWT.CHECK);
+			Messages.setLanguageText(dl_seq_enable, "menu.sequential.download");
+
+			dl_seq_enable.addListener(SWT.Selection, new ListenerDMTask(dms) {
+				@Override
+				public void run(DownloadManager dm) {
+					dm.getDownloadState().setFlag(
+							DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD,
+							dl_seq_enable.getSelection());
+				}
+			});
+
+			boolean allSeq		= true;
+			boolean AllNonSeq 	= true;
+
+			for (int j = 0; j < dms.length; j++) {
+				DownloadManager dm = dms[j];
+
+				boolean seq = dm.getDownloadState().getFlag(
+						DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD);
+
+				if (seq) {
+					AllNonSeq = false;
+				} else {
+					allSeq = false;
+				}
+			}
+
+			boolean bChecked;
+
+			if (allSeq) {
+				bChecked = true;
+			} else if (AllNonSeq) {
+				bChecked = false;
+			} else {
+				bChecked = false;
+			}
+
+			dl_seq_enable.setSelection(bChecked);
+		}
+		
 		// IP Filter Enable
 		if (userMode > 0) {
 
@@ -941,7 +1051,7 @@ public class TorrentUtil
 			final MenuItem itemNetworks = new MenuItem(menuAdvanced, SWT.CASCADE);
 			Messages.setLanguageText(itemNetworks, "MyTorrentsView.menu.networks"); //$NON-NLS-1$
 
-			final Menu menuNetworks = new Menu(shell, SWT.DROP_DOWN);
+			final Menu menuNetworks = new Menu(menu_shell, SWT.DROP_DOWN);
 			itemNetworks.setMenu(menuNetworks);
 
 			addNetworksSubMenu(dms, menuNetworks);
@@ -1064,7 +1174,7 @@ public class TorrentUtil
 
 		// Category
 
-		Menu menuCategory = new Menu(shell, SWT.DROP_DOWN);
+		Menu menuCategory = new Menu(menu_shell, SWT.DROP_DOWN);
 		final MenuItem itemCategory = new MenuItem(menu, SWT.CASCADE);
 		Messages.setLanguageText(itemCategory, "MyTorrentsView.menu.setCategory"); //$NON-NLS-1$
 		//itemCategory.setImage(ImageRepository.getImage("speed"));
@@ -1075,7 +1185,7 @@ public class TorrentUtil
 
 		// Tags
 
-		Menu menuTags = new Menu(shell, SWT.DROP_DOWN);
+		Menu menuTags = new Menu(menu_shell, SWT.DROP_DOWN);
 		final MenuItem itemTags = new MenuItem(menu, SWT.CASCADE);
 		Messages.setLanguageText(itemTags, "label.tags");
 		itemTags.setMenu(menuTags);
@@ -1179,7 +1289,7 @@ public class TorrentUtil
 					});
 				}
 			});
-			itemPause.setEnabled(stop);
+			itemPause.setEnabled(pause);
 		}
 
 		// Stop
@@ -1532,6 +1642,8 @@ public class TorrentUtil
 
 		Core core = CoreFactory.getSingleton();
 
+		Shell menu_shell = menu.getShell();
+		
 		final SpeedLimitHandler slh = SpeedLimitHandler.getSingleton(core);
 
 		boolean all_have_limit = true;
@@ -1587,7 +1699,7 @@ public class TorrentUtil
 
 		// add to profile
 
-		final Menu add_to_prof_menu = new Menu(menu.getShell(),
+		final Menu add_to_prof_menu = new Menu(menu_shell,
 				SWT.DROP_DOWN);
 		MenuItem add_to_prof_item = new MenuItem(menu, SWT.CASCADE);
 		add_to_prof_item.setMenu(add_to_prof_menu);
@@ -1623,7 +1735,7 @@ public class TorrentUtil
 
 		// remove from profile
 
-		final Menu remove_from_prof_menu = new Menu(menu.getShell(),
+		final Menu remove_from_prof_menu = new Menu(menu_shell,
 				SWT.DROP_DOWN);
 		MenuItem remove_from_prof_item = new MenuItem(menu, SWT.CASCADE);
 		remove_from_prof_item.setMenu(remove_from_prof_menu);
@@ -1661,6 +1773,9 @@ public class TorrentUtil
 	protected static void addTrackerTorrentMenu(final Menu menuTracker,
 			final DownloadManager[] dms, boolean changeUrl, boolean manualUpdate,
 			boolean allStopped, final boolean use_open_containing_folder) {
+		
+		Shell shell = Utils.findAnyShell();
+		
 		boolean hasSelection = dms.length > 0;
 
 		final MenuItem itemChangeTracker = new MenuItem(menuTracker, SWT.PUSH);
@@ -2051,6 +2166,66 @@ public class TorrentUtil
 		});
 		itemTorrentDL.setEnabled(dms.length == 1);
 
+			// switch torrent
+		
+		final MenuItem itemTorrentSwitch = new MenuItem(menuTracker, SWT.PUSH);
+		Messages.setLanguageText(itemTorrentSwitch, "MyTorrentsView.menu.torrent.switch");
+		itemTorrentSwitch.addListener(SWT.Selection, new Listener() {
+
+			@Override
+			public void handleEvent(Event event) {
+				final TOTorrent torrent = dms[0].getTorrent();
+				if ( torrent == null ){
+					return;
+				}
+				
+				try{
+					byte[] existing_hash = torrent.getHash();
+					
+					FileDialog dialog = new FileDialog( shell, SWT.OPEN | SWT.MULTI);
+
+					dialog.setText(MessageText.getString("dialog.select.torrent.file"));
+					
+					dialog.setFilterExtensions(new String[] {
+							"*.torrent"
+						});
+						dialog.setFilterNames(new String[] {
+							"*.torrent"
+						});
+						
+					String path = dialog.open();
+					
+					if (path == null){
+						return;
+					}
+					
+					File file = new File( path );
+					
+					byte[] replacement_hash = TOTorrentFactory.deserialiseFromBEncodedFile( file ).getHash();
+					
+					if ( !Arrays.equals( existing_hash,  replacement_hash )){
+						
+						throw( new Exception( "Hash mismatch: old=" + ByteFormatter.encodeString( existing_hash ) + ", new=" + ByteFormatter.encodeString( replacement_hash )));
+					}
+					
+					dms[0].setTorrentFileName( file.getAbsolutePath());
+					
+				}catch( Throwable e ){
+					
+					MessageBox mb = new MessageBox( shell, SWT.ICON_ERROR | SWT.OK);
+					mb.setText(MessageText.getString("MyTorrentsView.menu.torrent.switch.fail"));
+					mb.setMessage(
+						MessageText.getString(
+							"MyTorrentsView.menu.torrent.switch.fail.text",
+							new String[] { Debug.getNestedExceptionMessage( e ) }));
+
+					mb.open();
+				}
+			}
+		});
+		
+		itemTorrentSwitch.setEnabled(dms.length == 1 && dms[0].isPersistent());
+
 			// set source
 
 		final MenuItem itemTorrentSource = new MenuItem(menuTracker, SWT.PUSH);
@@ -2066,7 +2241,7 @@ public class TorrentUtil
 				String msg_key_prefix = "MyTorrentsView.menu.edit_source.";
 				SimpleTextEntryWindow text_entry = new SimpleTextEntryWindow();
 
-				text_entry.setParentShell( menuTracker.getShell());
+				text_entry.setParentShell( shell );
 				text_entry.setTitle(msg_key_prefix + "title");
 				text_entry.setMessage(msg_key_prefix + "message");
 				text_entry.setPreenteredText(TorrentUtils.getObtainedFrom( torrent ), false);
@@ -2094,7 +2269,7 @@ public class TorrentUtil
 
 			@Override
 			public void handleEvent(Event event) {
-				FileDialog fDialog = new FileDialog(menuTracker.getShell(), SWT.OPEN | SWT.MULTI);
+				FileDialog fDialog = new FileDialog( shell, SWT.OPEN | SWT.MULTI);
 
 				fDialog.setText(MessageText.getString("MainWindow.dialog.choose.thumb"));
 				String path = fDialog.open();
@@ -2236,6 +2411,89 @@ public class TorrentUtil
 		}
 	}
 
+	protected static void clearMOC(DownloadManager[] dms) {
+		if (dms != null && dms.length > 0) {
+
+			for (int i = 0; i < dms.length; i++) {
+	
+				dms[i].getDownloadState().setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, null );
+			}
+		}
+	}
+	
+	protected static void setMOC(Shell shell, DownloadManager[] dms) {
+		if (dms != null && dms.length > 0) {
+
+			DirectoryDialog dd = new DirectoryDialog(shell);
+
+			String filter_path = TorrentOpener.getFilterPathData();
+
+			// If we don't have a decent path, default to the path of the first
+			// torrent.
+			if (filter_path == null || filter_path.trim().length() == 0) {
+				filter_path = new File(dms[0].getTorrentFileName()).getParent();
+			}
+
+			dd.setFilterPath(filter_path);
+
+			dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+			String path = dd.open();
+
+			if ( path != null ){
+
+				TorrentOpener.setFilterPathData(path);
+
+				File target = new File(path);
+
+				for (int i = 0; i < dms.length; i++) {
+
+					dms[i].getDownloadState().setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, target.getAbsolutePath());
+				}
+			}
+		}
+	}
+	
+	protected static void exportDownloads(Shell shell, DownloadManager[] dms) {
+		if (dms != null && dms.length > 0) {
+
+			DirectoryDialog dd = new DirectoryDialog(shell);
+
+			String filter_path = TorrentOpener.getFilterPathExport();
+
+			// If we don't have a decent path, default to the path of the first
+			// torrent.
+			if (filter_path == null || filter_path.trim().length() == 0) {
+				filter_path = new File(dms[0].getTorrentFileName()).getParent();
+			}
+
+			dd.setFilterPath(filter_path);
+
+			dd.setText(MessageText.getString("MyTorrentsView.menu.exportdownload.dialog"));
+
+			String path = dd.open();
+
+			if (path != null) {
+
+				TorrentOpener.setFilterPathExport(path);
+
+				File target = new File(path);
+
+				for (int i = 0; i < dms.length; i++) {
+
+					try {
+						dms[i].exportDownload(target);
+
+					} catch (Throwable e) {
+
+						Logger.log(new LogAlert(dms[i], LogAlert.REPEATABLE,
+								"Download export operation failed", e));
+					}
+				}
+			}
+		}
+	}
+	
 	public static void repositionManual(final TableView tv,
 			final DownloadManager[] dms, final Shell shell,
 			final boolean isSeedingView) {

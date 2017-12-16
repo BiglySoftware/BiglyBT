@@ -115,6 +115,22 @@ public class OpenTorrentWindow
 
 		soTextArea = (SWTSkinObjectTextbox) skin.getSkinObject("text-area");
 		Text tb = ((Text) soTextArea.getControl());
+		
+		Clipboard clipboard = new Clipboard(Display.getDefault());
+
+		String sClipText = (String) clipboard.getContents(TextTransfer.getInstance());
+		
+		if ( sClipText != null && !sClipText.trim().isEmpty()){
+			
+			sClipText = sClipText.trim();
+			
+			if ( addTorrentsFromTextList( sClipText, true ) > 0 ){
+		
+				tb.setText( sClipText );
+				
+				tb.setSelection( 0, sClipText.length());
+			}
+		}
 		tb.setFocus();
 		tb.addModifyListener(new ModifyListener() {
 			@Override
@@ -140,8 +156,10 @@ public class OpenTorrentWindow
 
 		soReferArea = skin.getSkinObject("refer-area");
 
-		last_referrer = COConfigurationManager.getStringParameter(
-				CONFIG_REFERRER_DEFAULT, "");
+		last_referrer = COConfigurationManager.getStringParameter(CONFIG_REFERRER_DEFAULT, "");
+		if ( last_referrer == null ){
+			last_referrer = "";
+		}
 
 		so = skin.getSkinObject("refer-combo");
 		if (so instanceof SWTSkinObjectContainer) {
@@ -149,15 +167,16 @@ public class OpenTorrentWindow
 					SWT.BORDER);
 			referrer_combo.setLayoutData(Utils.getFilledFormData());
 			referrers = COConfigurationManager.getStringListParameter("url_open_referrers");
+			
+			if ( !last_referrer.isEmpty()){
+				referrer_combo.add(last_referrer);
+			}
+			
 			for (String referrer : referrers) {
-				referrer_combo.add(referrer);
+				if ( !referrer.equals( last_referrer)){
+					referrer_combo.add(referrer);
+				}
 			}
-
-			if (last_referrer != null) {
-
-				referrer_combo.setText(last_referrer);
-			}
-
 		}
 
 		SWTSkinObject soButtonArea = skin.getSkinObject("button-area");

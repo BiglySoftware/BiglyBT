@@ -52,6 +52,8 @@ ConnectionManager
   	 */
   public int getNATStatus();
 
+  public Object[] getNATStatusEx();
+  
   /**
    * @since 3.0.5.3
    */

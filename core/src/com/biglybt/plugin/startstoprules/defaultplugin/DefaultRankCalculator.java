@@ -182,7 +182,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	// Class variables
 
 	protected final Download dl;
-
+	private final DownloadManager	core_dm;
 	private boolean bActivelyDownloading;
 
 	private long lDLActivelyChangedOn;
@@ -238,7 +238,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		rules = _rules;
 		dl = _dl;
 
-		DownloadManager core_dm = PluginCoreUtils.unwrap( dl );
+		core_dm = PluginCoreUtils.unwrap( dl );
 
 		DownloadManagerState dm_state = core_dm.getDownloadState();
 
@@ -278,8 +278,6 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		String 				attribute,
 		int 				event_type)
 	{
-		DownloadManager core_dm = PluginCoreUtils.unwrap( dl );
-
 		DownloadManagerState dm_state = core_dm.getDownloadState();
 
 		dlSpecificMinShareRatio = dm_state.getIntParameter( DownloadManagerState.PARAM_MIN_SHARE_RATIO );
@@ -293,8 +291,6 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	protected void
 	destroy()
 	{
-		DownloadManager core_dm = PluginCoreUtils.unwrap( dl );
-
 		DownloadManagerState dm_state = core_dm.getDownloadState();
 
 		dm_state.removeListener( this, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN );
@@ -819,8 +815,14 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	 * @return FP State
 	 */
 	public boolean isFirstPriority() {
-		boolean bFP = pisFirstPriority();
+		
+		boolean bFP = pisFirstPriority( false );
 
+		if ( rules.getTagFP()){
+			
+			rules.setFPTagStatus( core_dm, pisFirstPriority( true ));
+		}
+		
 		if (bIsFirstPriority != bFP) {
 			bIsFirstPriority = bFP;
 			rules.requestProcessCycle(null);
@@ -831,7 +833,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		return bIsFirstPriority;
 	}
 
-	private boolean pisFirstPriority() {
+	private boolean pisFirstPriority( boolean is_test ) {
 		if (rules.bDebugLog)
 			sExplainFP = "FP if "
 					+ (iFirstPriorityType == FIRSTPRIORITY_ALL ? "all" : "any")
@@ -843,11 +845,13 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 			return false;
 		}
 
-		int state = dl.getState();
-		if (state == Download.ST_ERROR || state == Download.ST_STOPPED) {
-			if (rules.bDebugLog)
-				sExplainFP += "Not FP: Download is ERROR or STOPPED\n";
-			return false;
+		if ( !is_test ) {
+			int state = dl.getState();
+			if (state == Download.ST_ERROR || state == Download.ST_STOPPED) {
+				if (rules.bDebugLog)
+					sExplainFP += "Not FP: Download is ERROR or STOPPED\n";
+				return false;
+			}
 		}
 
 		// FP only applies to completed

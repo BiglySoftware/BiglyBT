@@ -65,6 +65,7 @@ public class SideBarToolTips
 		tree.addListener(SWT.Dispose, this);
 		tree.addListener(SWT.KeyDown, this);
 		tree.addListener(SWT.MouseMove, this);
+		tree.addListener(SWT.MouseExit, this);
 		tree.addListener(SWT.MouseHover, this);
 		mainShell.addListener(SWT.Deactivate, this);
 		tree.addListener(SWT.Deactivate, this);

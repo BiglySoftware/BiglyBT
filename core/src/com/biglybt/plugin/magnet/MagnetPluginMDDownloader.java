@@ -91,14 +91,14 @@ MagnetPluginMDDownloader
 
 			if ( started ){
 
-				listener.failed( new Exception( "Already started" ));
+				listener.failed( false, new Exception( "Already started" ));
 
 				return;
 			}
 
 			if ( cancelled || completed ){
 
-				listener.failed( new Exception( "Already cancelled/completed" ));
+				listener.failed( false, new Exception( "Already cancelled/completed" ));
 
 				return;
 			}
@@ -181,9 +181,10 @@ MagnetPluginMDDownloader
 		DownloadManager download_manager = plugin_interface.getDownloadManager();
 
 		Download download	= null;
-
-		final Throwable[] error = { null };
-
+			
+		final Throwable[] 	error 				= { null };
+		final boolean[]		manually_removed 	= { false };
+		
 		final ByteArrayOutputStream	result = new ByteArrayOutputStream(32*1024);
 
 		TOTorrentAnnounceURLSet[]	url_sets = null;
@@ -758,6 +759,8 @@ MagnetPluginMDDownloader
 
 								error[0] = new Exception( "Download manually removed" );
 
+								manually_removed[0] = true;
+								
 								running_sem.releaseForever();
 							}
 						}
@@ -883,7 +886,7 @@ MagnetPluginMDDownloader
 						}
 					}catch( Throwable e ){
 
-						listener.failed( e );
+						listener.failed( manually_removed[0],  e );
 
 						Debug.out( e );
 
@@ -899,7 +902,7 @@ MagnetPluginMDDownloader
 
 			if ( !was_cancelled ){
 
-				listener.failed( e );
+				listener.failed( manually_removed[0], e );
 
 				Debug.out( e );
 			}
@@ -982,6 +985,7 @@ MagnetPluginMDDownloader
 
 		public void
 		failed(
-			Throwable e );
+			boolean		manually_cancelled,
+			Throwable 	e );
 	}
 }

@@ -70,8 +70,6 @@ public class DateFileCompletedItem
 
 		if ( value <= 0 ){
 
-				// migration for old downloads, remove sometime (currently 5301)
-
 			value = dm.getDownloadState().getLongParameter(	DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
 		}
 

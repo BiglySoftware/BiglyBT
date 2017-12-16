@@ -252,6 +252,17 @@ DiskManagerFileInfoImpl
 
 		return( false );
 	}
+	
+	@Override
+	public boolean
+	setLinkAtomic(
+		File						link_destination,
+		FileUtil.ProgressListener	pl )
+	{
+		Debug.out( "setLink: download must be stopped" );
+
+		return( false );
+	}
 
 	@Override
 	public File

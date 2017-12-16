@@ -94,9 +94,17 @@ public class ConnectionManagerImpl implements ConnectionManager {
   public int
   getNATStatus()
   {
+	  return( ((Integer)core.getGlobalManager().getNATStatus()[0]));
+  }
+
+  @Override
+  public Object[]
+  getNATStatusEx()
+  {
 	  return( core.getGlobalManager().getNATStatus());
   }
 
+  
   @Override
   public TransportCipher createTransportCipher(String algorithm, int mode, SecretKeySpec key_spec, AlgorithmParameterSpec params) throws TransportException {
 	  try {

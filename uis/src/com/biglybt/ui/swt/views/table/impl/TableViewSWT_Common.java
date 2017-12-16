@@ -46,6 +46,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
+import com.biglybt.ui.swt.views.table.painted.TableCellPainted;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 
 import com.biglybt.ui.common.table.impl.TableColumnManager;
@@ -1110,6 +1111,38 @@ public class TableViewSWT_Common
 						}
 					});
 
+				}
+			});
+			
+			final MenuItem itemPrefSize = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemPrefSize, "table.columns.pref.size");
+			itemPrefSize.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event e) {
+	
+					Utils.execSWTThread(
+						new Runnable(){
+							
+							@Override
+							public void run(){
+								column.setPreferredWidth( -1 );
+								
+								tv.runForAllRows(new TableGroupRowRunner() {
+									@Override
+									public void run(TableRowCore row) {																				
+										row.fakeRedraw( column.getName());							
+									}
+								});
+								
+								int pref = column.getPreferredWidth();
+																
+								if ( pref != -1 ){
+								
+									column.setWidth( pref );
+								}
+							}
+						});
+					
 				}
 			});
 		}

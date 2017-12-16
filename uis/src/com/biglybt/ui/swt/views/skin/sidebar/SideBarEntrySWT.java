@@ -44,6 +44,7 @@ import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MdiEntryVitalityImage;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.skin.SkinConstants;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
@@ -314,51 +315,50 @@ public class SideBarEntrySWT
 			return;
 		}
 		synchronized (this) {
-  		if (isRedrawQueued) {
-  			return;
-  		}
-  		isRedrawQueued = true;
+			if (isRedrawQueued) {
+				return;
+			}
+			isRedrawQueued = true;
 		}
 
 		//System.out.println("redraw " + Thread.currentThread().getName() + ":" + getId() + " via " + Debug.getCompressedStackTrace());
 
 		Utils.execSWTThreadLater(0, new SWTRunnable() {
 			@Override
-			public void runWithDisplay(Display display) {
-				try {
-  				if (swtItem == null || swtItem.isDisposed()) {
-  					return;
-  				}
-  				Tree tree = swtItem.getParent();
-  				if (!tree.isVisible()) {
-  					return;
-  				}
-					if (Utils.isGTK3) {
-						// parent.clear crashes java, so call item's clear
-						//parent.clear(parent.indexOf(treeItem), true);
-						try {
-							Method m = swtItem.getClass().getDeclaredMethod("clear");
-							m.setAccessible(true);
-							m.invoke(swtItem);
-						} catch (Throwable e) {
-						}
-					} else {
-
-						try {
-							Rectangle bounds = swtItem.getBounds();
-							Rectangle treeBounds = tree.getBounds();
-							tree.redraw(0, bounds.y, treeBounds.width, bounds.height, true);
-						} catch (NullPointerException npe) {
-							// ignore NPE. OSX seems to be spewing this when the tree size is 0
-							// or is invisible or something like that
-						}
+			public void runWithDisplay(Display display) 
+			{
+				synchronized (SideBarEntrySWT.this) {
+					isRedrawQueued = false;
+				}
+				
+				if (swtItem == null || swtItem.isDisposed()) {
+					return;
+				}
+				Tree tree = swtItem.getParent();
+				if (!tree.isVisible()) {
+					return;
+				}
+				if (Utils.isGTK3) {
+					// parent.clear crashes java, so call item's clear
+					//parent.clear(parent.indexOf(treeItem), true);
+					try {
+						Method m = swtItem.getClass().getDeclaredMethod("clear");
+						m.setAccessible(true);
+						m.invoke(swtItem);
+					} catch (Throwable e) {
 					}
-  				//tree.update();
-				} finally {
-					synchronized (SideBarEntrySWT.this) {
-						isRedrawQueued = false;
+				} else {
+
+					try {
+						Rectangle bounds = swtItem.getBounds();
+						Rectangle treeBounds = tree.getBounds();
+						tree.redraw(0, bounds.y, treeBounds.width, bounds.height, true);
+					} catch (NullPointerException npe) {
+						// ignore NPE. OSX seems to be spewing this when the tree size is 0
+						// or is invisible or something like that
 					}
 				}
+				//tree.update();
 			}
 		});
 	}
@@ -472,7 +472,8 @@ public class SideBarEntrySWT
 					getDatasourceCore(),
 					getControlType(),
 					swtItem,
-					getEventListener()));
+					getEventListener(),
+					false ));
 	}
 	
 	
@@ -486,7 +487,8 @@ public class SideBarEntrySWT
 		Object						datasource,
 		int							controlType,
 		TreeItem					swtItem,
-		UISWTViewEventListener		original_event_listener )
+		UISWTViewEventListener		original_event_listener,
+		boolean						listener_is_new )
 	{
 		Control control = null;
 
@@ -526,7 +528,7 @@ public class SideBarEntrySWT
 			if ( 	( original_event_listener instanceof UISWTViewCoreEventListenerEx && ((UISWTViewCoreEventListenerEx)original_event_listener).isCloneable()) ||
 					( original_event_listener instanceof UISWTViewEventListenerEx )){
 
-				final UISWTViewImpl view = new UISWTViewImpl( parentID, id, true );
+				final UISWTViewImpl view = new UISWTViewImpl( id, parentID, true );
 
 				final UISWTViewEventListener event_listener = original_event_listener instanceof UISWTViewEventListenerEx?((UISWTViewEventListenerEx)original_event_listener).getClone():((UISWTViewCoreEventListenerEx)original_event_listener).getClone();
 
@@ -1157,7 +1159,7 @@ public class SideBarEntrySWT
     		clipping.y--;
   			gc.setForeground(fgText);
   		} else {
-  			if ( treeItem.getItemCount() > 0 ){
+  			if ( treeItem.getItemCount() > 0 || id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )){
   				Font headerFont = sidebar.getHeaderFont();
   	  			if (headerFont != null && !headerFont.isDisposed()) {
   	  				gc.setFont(headerFont);

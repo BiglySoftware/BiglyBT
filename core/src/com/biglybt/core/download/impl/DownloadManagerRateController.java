@@ -21,6 +21,7 @@
 package com.biglybt.core.download.impl;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.Core;
@@ -29,6 +30,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.impl.WriteController;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerManagerStats;
 import com.biglybt.core.speedmanager.SpeedManager;
@@ -144,27 +146,39 @@ DownloadManagerRateController
 	public static String
 	getString()
 	{
+		String result;
+		
 		if ( enable ){
 
-			String	str = "reserved=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( slack_bytes_per_sec );
+			result = "reserved=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( slack_bytes_per_sec );
 
 			if ( enable_limit_handling ){
 
-				str += ", limit=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( rate_limit );
+				result += ", limit=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( rate_limit );
 
-				str += 	", last[choke=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( latest_choke ) +
+				result += 	", last[choke=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( latest_choke ) +
 						", ratio=" + DisplayFormatters.formatDecimal(last_incomplete_average/last_complete_average, 2) + "]";
 
-				return( str );
-
-			}else{
-
-				return( str );
 			}
 		}else{
 
-			return( "Disabled" );
+			result = "Disabled";
 		}
+		
+		List<WriteController> wcs = NetworkManager.getSingleton().getWriteControllers();
+		
+		String wc_str = "";
+		
+		for ( WriteController wc: wcs ){
+			
+			String str = wc.getBiasDetails();
+			
+			wc_str += (wc_str.isEmpty()?"":",") + str;
+		}
+		
+		result += " [" + wc_str + "]";
+		
+		return( result );
 	}
 
 	public static void

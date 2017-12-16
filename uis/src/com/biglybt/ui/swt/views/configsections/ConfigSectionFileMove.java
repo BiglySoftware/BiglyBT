@@ -112,20 +112,17 @@ public class ConfigSectionFileMove implements UISWTConfigSection
 			gridData.horizontalSpan = 2;
 			copyDontMove.setLayoutData(gridData);
 
-			if ( Constants.isWindows ){
+			BooleanParameter moveIfSameDrive = new BooleanParameter(gFile,
+					"Move If On Same Drive",
+					"ConfigView.label.moveifsamedrive");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			gridData.horizontalIndent = 25;
+			moveIfSameDrive.setLayoutData(gridData);
 
-				BooleanParameter moveIfSameDrive = new BooleanParameter(gFile,
-						"Move If On Same Drive",
-						"ConfigView.label.moveifsamedrive");
-				gridData = new GridData();
-				gridData.horizontalSpan = 2;
-				gridData.horizontalIndent = 25;
-				moveIfSameDrive.setLayoutData(gridData);
-
-				IAdditionalActionPerformer derp = new ChangeSelectionActionPerformer(
-						moveIfSameDrive);
-				copyDontMove.setAdditionalActionPerformer(derp);
-			}
+			IAdditionalActionPerformer derp = new ChangeSelectionActionPerformer(
+					moveIfSameDrive);
+			copyDontMove.setAdditionalActionPerformer(derp);
 		}
 
 		BooleanParameter subdirIsDefault = new BooleanParameter(gFile,

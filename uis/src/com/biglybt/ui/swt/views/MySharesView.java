@@ -58,6 +58,7 @@ import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.sharing.ShareUtils;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -87,7 +88,7 @@ extends TableViewTab<ShareResource>
 implements ShareManagerListener,
 		TableLifeCycleListener, TableViewSWTMenuFillListener,
         TableRefreshListener, TableSelectionListener, ViewTitleInfo2,
-		UIPluginViewToolBarListener
+		UIPluginViewToolBarListener, UISWTViewCoreEventListenerEx
 {
   private static final TableColumnCore[] basicItems = {
     new NameItem(),
@@ -127,6 +128,38 @@ implements ShareManagerListener,
 		tv.addSelectionListener(this, false);
 	}
 
+	public boolean
+	isCloneable()
+	{
+		return( true );
+	}
+
+	public UISWTViewCoreEventListenerEx
+	getClone()
+	{
+		return( new MySharesView());
+	}
+	
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( MySharesView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 	@Override
 	public TableViewSWT initYourTableView() {
   	return tv;

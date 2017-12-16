@@ -95,7 +95,7 @@ PeerForeignNetworkConnection
 	public int
 	getMssSize()
 	{
-		return( NetworkManager.getMinMssSize() );
+		return( NetworkManager.getMinMssSize());
 	}
 
 	@Override
@@ -112,6 +112,12 @@ PeerForeignNetworkConnection
 		return( false );
 	}
 
+	@Override
+	public void 
+	resetLANLocalStatus()
+	{
+	}
+	
 	@Override
 	public String
 	getString()

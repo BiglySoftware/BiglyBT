@@ -207,8 +207,6 @@ public class PeersSuperView
 	@Override
 	public void seedingStatusChanged(boolean seeding_only_mode, boolean b) {}
 	@Override
-	public void addThisColumnSubMenu(String columnName, Menu menuThisColumn) {}
-	@Override
 	public void peerManagerAdded(PEPeerManager manager){}
 	@Override
 	public void peerManagerRemoved(PEPeerManager manager) {}

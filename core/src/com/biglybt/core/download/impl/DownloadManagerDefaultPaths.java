@@ -22,6 +22,7 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeature;
 import com.biglybt.core.tag.TagFeatureFileLocation;
@@ -53,13 +54,13 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 		@Override
 		public SaveLocationChange onCompletion(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
-			MovementInformation mi = getTagMovementInformation( dm, COMPLETION_DETAILS );
+			MovementInformation mi = getDownloadOrTagMovementInformation( dm, COMPLETION_DETAILS );
 			return determinePaths(dm, mi, for_move, false);
 		}
 		@Override
 		public SaveLocationChange testOnCompletion(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
-			MovementInformation mi = getTagMovementInformation( dm, COMPLETION_DETAILS );
+			MovementInformation mi = getDownloadOrTagMovementInformation( dm, COMPLETION_DETAILS );
 			return determinePaths(dm, mi, for_move, true );
 		}
 		@Override
@@ -183,91 +184,129 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
     }
 
     static MovementInformation
-    getTagMovementInformation(
+    getDownloadOrTagMovementInformation(
     	DownloadManager			dm,
     	MovementInformation		def_mi )
     {
-    	List<Tag> dm_tags = TagManagerFactory.getTagManager().getTagsForTaggable( dm );
+		boolean	move_data 		= true;
+		boolean	move_torrent 	= false;
 
-    	if ( dm_tags == null || dm_tags.size() == 0 ){
+		File move_to_target = null;
+		
+		String	context_str = "";
+		String	mi_str		= "";
+		
+    	DownloadManagerState state = dm.getDownloadState();
+    	
+    	String explicit_target = state.getAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR );
+    	
+    	if ( explicit_target != null && explicit_target.length() > 0 ){
+    		
+    		File move_to = new File( explicit_target );
+    		
+    		if ( !move_to.exists()){
 
-    		return( def_mi );
+				move_to.mkdirs();
+			}
+
+			if ( move_to.isDirectory() && move_to.canWrite()){
+
+				move_to_target = move_to;
+
+				context_str = "Download-specific move-on-complete directory";
+				
+				mi_str		= "Download-specific Move on Completion";
+				
+			}else{
+
+				logInfo( "Ignoring invalid download move-to location: " + move_to, dm );
+			}
     	}
+    	
+    	if ( move_to_target == null ){
+    		
+	    	List<Tag> dm_tags = TagManagerFactory.getTagManager().getTagsForTaggable( dm );
+	
+	    	if ( dm_tags != null ){
+	
+		    	List<Tag>	applicable_tags = new ArrayList<>();
+		
+		    	for ( Tag tag: dm_tags ){
+		
+		    		if ( tag.getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+		
+		    			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+		
+		    			if ( fl.supportsTagMoveOnComplete()){
+		
+			    			File move_to = fl.getTagMoveOnCompleteFolder();
+		
+			    			if ( move_to != null ){
+		
+			    				if ( !move_to.exists()){
+		
+			    					move_to.mkdirs();
+			    				}
+		
+			    				if ( move_to.isDirectory() && move_to.canWrite()){
+		
+			    					applicable_tags.add( tag );
+		
+			    				}else{
+		
+			    					logInfo( "Ignoring invalid tag move-to location: " + move_to, dm );
+			    				}
+			    			}
+		    			}
+		    		}
+		    	}	    	
+	
+		    	if ( !applicable_tags.isEmpty()){
+		
+			    	if ( applicable_tags.size() > 1 ){
+			
+			    		Collections.sort(
+			    			applicable_tags,
+			    			new Comparator<Tag>()
+			    			{
+			    				@Override
+							    public int
+			    				compare(
+			    					Tag o1,
+			    					Tag o2)
+			    				{
+			    					return( o1.getTagID() - o2.getTagID());
+			    				}
+			    			});
+			
+			    		String str = "";
+			
+			    		for ( Tag tag: applicable_tags ){
+			
+			    			str += (str.length()==0?"":", ") + tag.getTagName( true );
+			    		}
+			
+			    		logInfo( "Multiple applicable tags found: " + str + " - selecting first", dm );
+			    	}
+			
+			    	Tag tag_target = applicable_tags.get(0);
+			
+					TagFeatureFileLocation fl = (TagFeatureFileLocation)tag_target;
+			
+					move_to_target = fl.getTagMoveOnCompleteFolder();
+					
+					long	options = fl.getTagMoveOnCompleteOptions();
+		
+					move_data 		= ( options&TagFeatureFileLocation.FL_DATA ) != 0;
+					move_torrent 	= ( options&TagFeatureFileLocation.FL_TORRENT ) != 0;
+					
+					context_str = "Tag '" + tag_target.getTagName( true ) + "' move-on-complete directory";
+					mi_str		= "Tag Move on Completion";
+		    	}
+	    	}
+    	}   	
 
-    	List<Tag>	applicable_tags = new ArrayList<>();
-
-    	for ( Tag tag: dm_tags ){
-
-    		if ( tag.getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
-
-    			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
-
-    			if ( fl.supportsTagMoveOnComplete()){
-
-	    			File move_to = fl.getTagMoveOnCompleteFolder();
-
-	    			if ( move_to != null ){
-
-	    				if ( !move_to.exists()){
-
-	    					move_to.mkdirs();
-	    				}
-
-	    				if ( move_to.isDirectory() && move_to.canWrite()){
-
-	    					applicable_tags.add( tag );
-
-	    				}else{
-
-	    					logInfo( "Ignoring invalid tag move-to location: " + move_to, dm );
-	    				}
-	    			}
-    			}
-    		}
-    	}
-
-    	if ( applicable_tags.size() == 0 ){
-
-    		return( def_mi );
-
-    	}else if ( applicable_tags.size() > 1 ){
-
-    		Collections.sort(
-    			applicable_tags,
-    			new Comparator<Tag>()
-    			{
-    				@Override
-				    public int
-    				compare(
-    					Tag o1,
-    					Tag o2)
-    				{
-    					return( o1.getTagID() - o2.getTagID());
-    				}
-    			});
-
-    		String str = "";
-
-    		for ( Tag tag: applicable_tags ){
-
-    			str += (str.length()==0?"":", ") + tag.getTagName( true );
-    		}
-
-    		logInfo( "Multiple applicable tags found: " + str + " - selecting first", dm );
-    	}
-
-    	Tag tag_target = applicable_tags.get(0);
-
-		TagFeatureFileLocation fl = (TagFeatureFileLocation)tag_target;
-
-		File move_to = fl.getTagMoveOnCompleteFolder();
-
-		if ( move_to != null ){
-
-			long	options = fl.getTagMoveOnCompleteOptions();
-
-			boolean	move_data 		= ( options&TagFeatureFileLocation.FL_DATA ) != 0;
-			boolean	move_torrent 	= ( options&TagFeatureFileLocation.FL_TORRENT ) != 0;
+		if ( move_to_target != null ){
 
 	    	SourceSpecification source = new SourceSpecification();
 
@@ -275,8 +314,11 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 	    		// enabled overall move-on-complete otherwise this is confusing
 
 	    	if ( def_mi.target.getBoolean( "enabled", false ) ){
+	    		
 	    		source.setBoolean( "default dir", "Move Only When In Default Save Dir" );
+	    		
 	    		source.setBoolean( "default subdir", SUBDIR_PARAM );
+	    		
 	    	}else{
 	    		source.setBoolean( "default dir", false );
 	    	}
@@ -288,34 +330,39 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 			if ( move_data ){
 
 				dest.setBoolean( "enabled", true );
-				dest.setString( "target_raw", move_to.getAbsolutePath());
+				
+				dest.setString( "target_raw", move_to_target.getAbsolutePath());
 
 			}else{
 
 				dest.setBoolean( "enabled", def_mi.target.getBoolean( "enabled", false ));
 			}
 
-			dest.setContext( "Tag '" + tag_target.getTagName( true ) + "' move-on-complete directory" );
+			dest.setContext( context_str );
 
 			if ( move_torrent ){
 
 				dest.setBoolean("torrent", true );
-				dest.setString("torrent_path_raw", move_to.getAbsolutePath());
+				
+				dest.setString("torrent_path_raw", move_to_target.getAbsolutePath());
 
 			}else{
 
 				dest.setBoolean("torrent", "Move Torrent When Done");
+				
 				dest.setString("torrent_path", "Move Torrent When Done Directory");
 			}
 
 			TransferSpecification trans = new TransferSpecification();
 
-			MovementInformation tag_mi = new MovementInformation(source, dest, trans, "Tag Move on Completion");
+			MovementInformation mi = new MovementInformation(source, dest, trans, mi_str );
 
-	    	return( tag_mi );
+	    	return( mi );
+	    	
+		}else{
+
+			return( def_mi );
 		}
-
-		return( def_mi );
     }
 
     private static interface ContextDescriptor {

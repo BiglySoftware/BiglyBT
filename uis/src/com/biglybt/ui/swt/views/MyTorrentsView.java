@@ -210,7 +210,9 @@ public class MyTorrentsView
 	private Composite filterParent;
 
 	protected boolean neverShowCatOrTagButtons;
-
+	private boolean	showCatButtons;
+	private boolean	showTagButtons;
+	
 	private boolean rebuildListOnFocusGain = false;
 
 	private Menu oldMenu;
@@ -1645,6 +1647,24 @@ public class MyTorrentsView
 				});
 				break;
 			}
+			case "status": {
+				boolean priority_sort = COConfigurationManager.getBooleanParameter("PeersView.status.prioritysort");
+
+				final MenuItem item = new MenuItem(menuThisColumn, SWT.CHECK);
+				Messages.setLanguageText(item, "MyTorrentsView.menu.status.prioritysort");
+				item.setSelection(priority_sort);
+
+				item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						boolean priority_sort = item.getSelection();
+						COConfigurationManager.setParameter("PeersView.status.prioritysort",priority_sort);
+						tv.columnInvalidate("status");
+						tv.refreshTable(false);
+					}
+				});
+				break;
+			}
 		}
 	}
 
@@ -2182,6 +2202,9 @@ public class MyTorrentsView
 			bDNDalwaysIncomplete = COConfigurationManager.getBooleanParameter("DND Always In Incomplete");
 		}
 
+		showCatButtons = COConfigurationManager.getBooleanParameter( "Library.ShowCatButtons" );
+		showTagButtons = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons" );
+
 		if (parameterName != null &&
 				( 	parameterName.equals("Library.ShowCatButtons") ||
 					parameterName.equals("Library.ShowTagButtons" ) ||
@@ -2381,6 +2404,23 @@ public class MyTorrentsView
 	tagChanged(
 		Tag			tag )
 	{
+		if ( neverShowCatOrTagButtons || !( showCatButtons || showTagButtons )){
+			
+			return;
+		}
+		
+		int tt = tag.getTagType().getTagType();
+		
+		if ( tt == TagType.TT_DOWNLOAD_CATEGORY && !showCatButtons ){
+			
+			return;
+			
+		}else  if ( tt == TagType.TT_DOWNLOAD_MANUAL && !showTagButtons ){
+			
+			return;
+		}
+
+		
 			// we can get a lot of hits here, limit tab rebuilds somewhat
 
 		synchronized( pending_tag_changes ){
@@ -2743,7 +2783,12 @@ public class MyTorrentsView
 				restrictTo.add("rcm.subview.torrentdetails.name");
 			}
 		}
+		pi = pm.getPluginInterfaceByID("3dview", true);
 
+		if (pi != null) {
+			restrictTo.add("view3d.subtab.name");
+		}
+		
 		if ( Logger.isEnabled()){
 
 			restrictTo.add( LoggerView.MSGID_PREFIX );

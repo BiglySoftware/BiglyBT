@@ -84,7 +84,7 @@ WebPlugin
 	public static final String	PR_ENABLE_UPNP				= "EnableUPNP";					// Boolean
 
 	public static final String	PROPERTIES_MIGRATED		= "Properties Migrated";
-	public static final String	CONFIG_MIGRATED			= "Config Migrated";
+	//public static final String	CONFIG_MIGRATED			= "Config Migrated";
 	public static final String	PAIRING_MIGRATED		= "Pairing Migrated";
 	public static final String	PAIRING_SESSION_KEY		= "Pairing Session Key";
 
@@ -400,6 +400,9 @@ WebPlugin
 			}
 		}
 
+
+		/* removed 2017/12/01 - no longer needed 
+	
 		boolean	save_needed = false;
 
 		if ( !plugin_config.getPluginBooleanParameter( CONFIG_MIGRATED, false )){
@@ -504,7 +507,8 @@ WebPlugin
 
 			plugin_config.save();
 		}
-
+		*/
+		
 		Boolean	disablable = (Boolean)properties.get( PR_DISABLABLE );
 
 		final BooleanParameter	param_enable;

@@ -35,6 +35,7 @@ import com.biglybt.core.tracker.host.TRHostTorrent;
 import com.biglybt.core.tracker.server.TRTrackerServerTorrent;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.pif.disk.DiskManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
@@ -207,6 +208,17 @@ PluginCoreUtils
 					return( true );
 				}
 
+				@Override
+				public boolean
+				setLinkAtomic(
+					File 						link_destination,
+					FileUtil.ProgressListener	pl )
+				{
+					info.setLink( link_destination );
+
+					return( true );
+				}
+				
 				@Override
 				public File
 				getLink()
@@ -567,6 +579,13 @@ PluginCoreUtils
 		return( ((TrackerTorrentImpl)torrent).getHostTorrent().getTrackerTorrent());
 	}
 
+	public static Peer
+	wrap(
+		PEPeer		peer )
+	{
+		return( PeerManagerImpl.getPeerForPEPeer( peer ));
+	}
+		
 	public static PEPeer
 	unwrap(
 		Peer		peer )

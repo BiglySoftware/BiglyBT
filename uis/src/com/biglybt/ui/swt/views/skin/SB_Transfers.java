@@ -80,8 +80,9 @@ import com.biglybt.ui.swt.views.utils.TagUIUtils;
  */
 public class SB_Transfers
 {
-	private static final Object AUTO_CLOSE_KEY 	= new Object();
-	private static final Object TAG_DATA_KEY	= new Object();
+	private static final Object AUTO_CLOSE_KEY 		= new Object();
+	private static final Object TAG_DATA_KEY		= new Object();
+	private static final Object TAG_INDICATOR_KEY	= new Object();
 
 	private static final String ID_VITALITY_ACTIVE = "image.sidebar.vitality.dl";
 
@@ -100,6 +101,46 @@ public class SB_Transfers
 	private ParameterListener paramTagsInSidebarListener;
 	private ParameterListener paramCatInSidebarListener;
 
+	private Set<MdiEntry>				redraw_pending = new HashSet<>();
+		
+	private FrequencyLimitedDispatcher	redraw_disp = 
+		new FrequencyLimitedDispatcher(
+			new AERunnable(){
+				
+				@Override
+				public void runSupport(){
+					
+					List<MdiEntry> to_do;
+					
+					synchronized( redraw_pending ){
+						
+						to_do = new ArrayList<MdiEntry>( redraw_pending );
+						
+						redraw_pending.clear();
+					}
+					
+					for ( MdiEntry e: to_do ){
+						
+						e.redraw();
+					}
+				}
+			}, 2500 );
+	
+	private void
+	requestRedraw(
+		MdiEntry	entry )
+	{
+		synchronized( redraw_pending ){
+			
+			if ( !redraw_pending.contains( entry )){
+				
+				redraw_pending.add( entry );
+				
+				redraw_disp.dispatch();
+			}
+		}
+	}
+	
 	public static class stats
 	{
 		int numSeeding = 0;
@@ -190,78 +231,91 @@ public class SB_Transfers
 
 
 
-	public SB_Transfers(final MultipleDocumentInterfaceSWT mdi) {
+	public SB_Transfers(final MultipleDocumentInterfaceSWT mdi, boolean vuze_ui ) {
 		statsNoLowNoise = new stats();
 		statsNoLowNoise.includeLowNoise = false;
 		statsWithLowNoise = new stats();
 		statsWithLowNoise.includeLowNoise = true;
-		refresh_limiter = new FrequencyLimitedDispatcher(
-				new AERunnable() {
-					@Override
-					public void runSupport() {
-						refreshAllLibrariesSupport();
-					}
-				}, 250);
-		refresh_limiter.setSingleThreaded();
-
-		MdiEntryCreationListener libraryCreator = new MyMdiEntryCreationListener(mdi);
-		mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY, libraryCreator);
-		mdi.registerEntry("library", libraryCreator);
-
-		mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						return createDownloadingEntry(mdi);
-					}
-				});
-
-		mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						return createSeedingEntry(mdi);
-					}
-				});
-
-		mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED,
-				new MdiEntryCreationListener() {
-					@Override
-					public MdiEntry createMDiEntry(String id) {
-						return createUnopenedEntry(mdi);
-					}
-				});
-
-
-
-		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
-			@Override
-			public void coreRunning(Core core) {
-				totalStats = StatsFactory.getStats();
-				setupViewTitleWithCore(core);
-			}
-		});
-
-		hasBeenOpenedListener = new HasBeenOpenedListener() {
-			@Override
-			public void hasBeenOpenedChanged(DownloadManager dm, boolean opened) {
-				recountUnopened();
-				refreshAllLibraries();
-			}
-		};
-		PlatformTorrentUtils.addHasBeenOpenedListener(hasBeenOpenedListener);
-
-		addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY);
-
-		mdi.addListener(new MdiEntryLoadedListener() {
-			@Override
-			public void mdiEntryLoaded(MdiEntry entry) {
-				if (MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS.equals(entry.getId())) {
-					addHeaderMenu();
+		
+		if ( vuze_ui ){
+			refresh_limiter = new FrequencyLimitedDispatcher(
+					new AERunnable() {
+						@Override
+						public void runSupport() {
+							refreshAllLibrariesSupport();
+						}
+					}, 250);
+			refresh_limiter.setSingleThreaded();
+	
+			MdiEntryCreationListener libraryCreator = new MyMdiEntryCreationListener(mdi);
+			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY, libraryCreator);
+			mdi.registerEntry("library", libraryCreator);
+	
+			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL,
+					new MdiEntryCreationListener() {
+						@Override
+						public MdiEntry createMDiEntry(String id) {
+							return createDownloadingEntry(mdi);
+						}
+					});
+	
+			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD,
+					new MdiEntryCreationListener() {
+						@Override
+						public MdiEntry createMDiEntry(String id) {
+							return createSeedingEntry(mdi);
+						}
+					});
+	
+			mdi.registerEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED,
+					new MdiEntryCreationListener() {
+						@Override
+						public MdiEntry createMDiEntry(String id) {
+							return createUnopenedEntry(mdi);
+						}
+					});
+	
+	
+	
+			CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+				@Override
+				public void coreRunning(Core core) {
+					totalStats = StatsFactory.getStats();
+					setupViewTitleWithCore(core);
 				}
-			}
-		});
-
+			});
+	
+			hasBeenOpenedListener = new HasBeenOpenedListener() {
+				@Override
+				public void hasBeenOpenedChanged(DownloadManager dm, boolean opened) {
+					recountUnopened();
+					refreshAllLibraries();
+				}
+			};
+			PlatformTorrentUtils.addHasBeenOpenedListener(hasBeenOpenedListener);
+	
+			addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY);
+	
+			mdi.addListener(new MdiEntryLoadedListener() {
+				@Override
+				public void mdiEntryLoaded(MdiEntry entry) {
+					if (MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS.equals(entry.getId())) {
+						addHeaderMenu();
+					}
+				}
+			});
+		}else{
+			
+			CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+				@Override
+				public void coreRunning(Core core) {
+					totalStats = StatsFactory.getStats();
+					setupViewTitleWithCore(core);
+				}
+			});
+			
+			hasBeenOpenedListener = null;
+		}
 
 		timerEventShowUptime = SimpleTimer.addPeriodicEvent(
 				"SBLV:updater",
@@ -327,7 +381,7 @@ public class SB_Transfers
 
 	}
 
-	protected static void addHeaderMenu() {
+	protected void addHeaderMenu() {
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 
@@ -1186,7 +1240,18 @@ public class SB_Transfers
 
 			entry.setTitle( tag_title );
 		}
+		
+		Integer num = (Integer)entry.getUserData( TAG_INDICATOR_KEY );
 
+		int tag_count = tag.getTaggedCount();
+		
+		if ( num == null || num != tag_count ){
+			
+			entry.setUserData( TAG_INDICATOR_KEY, tag_count );
+			
+			requestRedraw( entry );
+		}
+		
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 
 		Object[] tag_data = (Object[])entry.getUserData( TAG_DATA_KEY );
@@ -1212,7 +1277,7 @@ public class SB_Transfers
 		}
 	}
 
-	private final Object	tag_setup_lock = new Object();
+	private final static Object	tag_setup_lock = new Object();
 
 	public MdiEntry
 	setupTag(
@@ -1288,7 +1353,11 @@ public class SB_Transfers
 					getTitleInfoProperty(
 						int pid )
 					{
-						if ( pid == TITLE_INDICATOR_TEXT ){
+						if ( pid == TITLE_TEXT ) {
+							
+							return( tag.getTagName( true ));
+							
+						}else if ( pid == TITLE_INDICATOR_TEXT ){
 
 							return( String.valueOf( tag.getTaggedCount()));
 
@@ -1684,6 +1753,8 @@ public class SB_Transfers
 				}
 			}
 			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+			
+			requestRedraw( entry );
 		}
 
 		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_CD);
@@ -1707,6 +1778,8 @@ public class SB_Transfers
 		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
 		if (entry != null) {
 			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+			
+			requestRedraw( entry );
 		}
 	}
 

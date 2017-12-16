@@ -269,44 +269,6 @@ TRTrackerAnnouncerImpl
 		return( peer_id );
 	}
 
- 	public static byte[]
-	getAnonymousPeerId(
-		String	my_ip,
-		int		my_port )
-	{
-  		byte[] anon_peer_id = new byte[20];
-
-  		// unique initial two bytes to identify this as fake
-
-  		anon_peer_id[0] = (byte)'[';
-  		anon_peer_id[1] = (byte)']';
-
-  		try{
-	  		byte[]	ip_bytes 	= my_ip.getBytes( Constants.DEFAULT_ENCODING );
-	  		int		ip_len		= ip_bytes.length;
-
-	  		if ( ip_len > 18 ){
-
-	  			ip_len = 18;
-	  		}
-
-	  		System.arraycopy( ip_bytes, 0, anon_peer_id, 2, ip_len );
-
-	  		int	port_copy = my_port;
-
-	  		for (int j=2+ip_len;j<20;j++){
-
-	  			anon_peer_id[j] = (byte)(port_copy&0xff);
-
-	  			port_copy >>= 8;
-	  		}
-  		}catch( UnsupportedEncodingException e ){
-
-  			Debug.printStackTrace( e );
-  		}
-
-  		return( anon_peer_id );
-   }
 
 		// NOTE: tracker_cache is cleared out in DownloadManager when opening a torrent for the
 		// first time as a DOS prevention measure
@@ -404,49 +366,14 @@ TRTrackerAnnouncerImpl
 				return( 0 );
 			}
 
-			List	peers = (List)map.get( "tracker_peers" );
-
-			if ( peers == null ){
-
-				return( 0 );
-			}
-
 			try{
 				tracker_peer_cache_mon.enter();
 
-				for (int i=0;i<peers.size();i++){
+				List<TRTrackerAnnouncerResponsePeer>	peers = TRTrackerAnnouncerFactoryImpl.getCachedPeers( map );
 
-					Map	peer = (Map)peers.get(i);
-
-					byte[]	src_bytes = (byte[])peer.get("src");
-					String	peer_source = src_bytes==null?PEPeerSource.PS_BT_TRACKER:new String(src_bytes);
-					String	peer_ip_address = new String((byte[])peer.get("ip"));
-					int		peer_tcp_port	= ((Long)peer.get("port")).intValue();
-					byte[]	peer_peer_id	= getAnonymousPeerId( peer_ip_address, peer_tcp_port );
-					Long	l_protocol		= (Long)peer.get( "prot" );
-					short	protocol		= l_protocol==null?DownloadAnnounceResultPeer.PROTOCOL_NORMAL:l_protocol.shortValue();
-					Long	l_udp_port		= (Long)peer.get("udpport");
-					int		peer_udp_port	= l_udp_port==null?0:l_udp_port.intValue();
-					Long	l_http_port		= (Long)peer.get("httpport");
-					int		peer_http_port	= l_http_port==null?0:l_http_port.intValue();
-					Long	l_az_ver		= (Long)peer.get("azver");
-					byte	az_ver			= l_az_ver==null?TRTrackerAnnouncer.AZ_TRACKER_VERSION_1:l_az_ver.byteValue();
-
-					//System.out.println( "recovered " + ip_address + ":" + port );
-
-					TRTrackerAnnouncerResponsePeerImpl	entry =
-						new TRTrackerAnnouncerResponsePeerImpl(
-							peer_source,
-							peer_peer_id,
-							peer_ip_address,
-							peer_tcp_port,
-							peer_udp_port,
-							peer_http_port,
-							protocol,
-							az_ver,
-							(short)0 );
-
-					tracker_peer_cache.put( entry.getKey(), entry );
+				for ( TRTrackerAnnouncerResponsePeer peer: peers ){
+					
+					tracker_peer_cache.put( peer.getKey(), peer );
 				}
 
 				return( tracker_peer_cache.size());

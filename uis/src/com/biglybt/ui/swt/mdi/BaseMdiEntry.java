@@ -21,6 +21,9 @@ package com.biglybt.ui.swt.mdi;
 import java.util.*;
 import java.util.List;
 
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UIFunctionsUserPrompter;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoListener;
@@ -36,6 +39,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.toolbar.UIToolBarEnablerBase;
@@ -92,8 +96,6 @@ public abstract class BaseMdiEntry
 	private boolean closeable;
 
 	private Boolean isExpanded = null;
-
-	private boolean disposed = false;
 
 	private boolean added = false;
 
@@ -162,7 +164,8 @@ public abstract class BaseMdiEntry
 		}
 
 		setCloseable(closeable);
-		disposed = true;
+		
+		setDisposed( true );
 
 		baseDispose();
 
@@ -824,11 +827,6 @@ public abstract class BaseMdiEntry
 		});
 	}
 
-	@Override
-	public boolean isDisposed() {
-		return disposed;
-	}
-
 	/* (non-Javadoc)
 	 * @see MdiEntry#getAutoOpenInfo()
 	 */
@@ -920,7 +918,7 @@ public abstract class BaseMdiEntry
 	}
 
 	public void setDisposed(boolean b) {
-		disposed = b;
+		super.setDisposed( b );
 		added = !b;
 
 		if (added) {
@@ -930,16 +928,21 @@ public abstract class BaseMdiEntry
 			}
 		}
 
-		if (disposed) {
+		if ( isDisposed()){
 			baseDispose();
 		}
 	}
 
 	@Override
 	public void setImageLeftID(String id) {
+		boolean changed = id != imageLeftID && ( id == null || imageLeftID == null || !id.equals( imageLeftID ));
+		
 		imageLeftID = id;
 		imageLeft = null;
-		redraw();
+		
+		if ( changed ){
+			redraw();
+		}
 	}
 
 	/* (non-Javadoc)
@@ -1000,12 +1003,18 @@ public abstract class BaseMdiEntry
 		}
 
 		String imageID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_IMAGEID);
-		if (imageID != null) {
-			setImageLeftID(imageID.length() == 0 ? null : imageID);
+		
+			// don't overwrite any any existing (probably statically assigned) image id with a
+			// ViewTitleInfo that doesn't bother returning anythign better
+		
+		if ( imageID != null ){
+			if ( imageID.length() == 0 ){
+				imageID = null;
+			}
+						
+			setImageLeftID(  imageID);
 		}
-
-		redraw();
-
+		
 		String logID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_LOGID);
 		if (logID != null) {
 			setLogID(logID);
@@ -1049,7 +1058,7 @@ public abstract class BaseMdiEntry
 			//writer.println("Created: " + created);
 			writer.println("Added: " + added);
 			writer.println("closeable: " + closeable);
-			writer.println("Disposed: " + disposed);
+			writer.println("Disposed: " + isDisposed());
 			writer.println("hasBeenOpened: " + hasBeenOpened);
 			//writer.println("hasFocus: " + hasFocus);
 			//writer.println("haveSentInitialize: " + haveSentInitialize);
@@ -1160,10 +1169,20 @@ public abstract class BaseMdiEntry
 	 */
 	@Override
 	public void setTitle(String title) {
-		super.setTitle(title);
-		redraw();
+		if ( super.setTitleSupport(title)) {
+		
+			redraw();
+		}
 	}
 
+	@Override
+	public void setTitleID( String id ) {
+		if ( super.setTitleIDSupport( id )) {
+			
+			redraw();
+		}
+	}
+	
 	@Override
 	public void addListener(MdiSWTMenuHackListener l) {
 		synchronized (this) {
@@ -1291,7 +1310,7 @@ public abstract class BaseMdiEntry
 		
 			CloneConstructor cc = ((UISWTViewCoreEventListenerEx)listener).getCloneConstructor();
 		
-			String name = cc.getCloneClass().getCanonicalName();
+			String name = cc.getCloneClass().getName();
 			
 			Map<String,Object>	map = new HashMap<>();
 			
@@ -1340,11 +1359,13 @@ public abstract class BaseMdiEntry
 			
 			com.biglybt.ui.swt.pif.UISWTViewEventListenerEx.CloneConstructor cc = ((UISWTViewEventListenerEx)listener).getCloneConstructor();
 		
-			String pi = cc.getPluginInterface().getPluginID();
-			
+			PluginInterface pi = cc.getPluginInterface();
+						
 			Map<String,Object>	map = new HashMap<>();
 			
-			map.put( "plugin_id",  pi );
+			map.put( "plugin_id",  pi.getPluginID() );
+			
+			map.put( "plugin_name", pi.getPluginName());
 			
 			map.put( "ipc_method", cc.getIPCMethod());
 			
@@ -1395,10 +1416,13 @@ public abstract class BaseMdiEntry
 	buildStandAlone(
 		SWTSkinObjectContainer		soParent );
 	
+	private static Set<String>	installing_pids = new HashSet<>();
+	
 	public static SWTSkinObjectContainer
 	importStandAlone(
 		SWTSkinObjectContainer		soParent,
-		Map<String,Object>			map )
+		Map<String,Object>			map,
+		Runnable					callback )
 	{
 		String	mdi_type = (String)map.get( "mdi" );
 		
@@ -1420,6 +1444,13 @@ public abstract class BaseMdiEntry
 		
 				Map<String,Object>		ds_map  = (Map<String,Object>)data_source;
 		
+				if ( ds_map != null ) {
+				
+					ds_map = new HashMap<String, Object>( ds_map );
+				
+					ds_map.put( "callback", callback );
+				}
+				
 				data_source = ds_map==null?null:DataSourceResolver.importDataSource( ds_map );
 				
 			}else if ( data_source instanceof List ) {
@@ -1500,7 +1531,7 @@ public abstract class BaseMdiEntry
 					
 					PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( plugin_id );
 					
-					if ( pi != null ) {
+					if ( pi != null ){
 						
 						String ipc_method = (String)el_map.get( "ipc_method" );
 						
@@ -1543,7 +1574,102 @@ public abstract class BaseMdiEntry
 							}
 						}
 							
-						event_listener = (UISWTViewEventListener)pi.getIPC().invoke( ipc_method, args.toArray( new Object[args.size()])); 
+						event_listener = (UISWTViewEventListener)pi.getIPC().invoke( ipc_method, args.toArray( new Object[args.size()]));
+						
+					}else{
+						
+						boolean	try_install = false;
+						
+						synchronized( installing_pids ) {
+							
+							if ( !installing_pids.contains( plugin_id )) {
+															
+								installing_pids.add( plugin_id );
+								
+								try_install = true;
+							}
+						}
+						
+						if ( try_install ){
+							
+							boolean	went_async = false;
+							
+							try {
+								UIFunctions uif = UIFunctionsManager.getUIFunctions();
+		
+								String plugin_name = (String)el_map.get( "plugin_name" );
+								
+								String remember_id = "basemdi.import.view.install." + plugin_id;
+								
+								String	title	= MessageText.getString( "plugin.required" );
+								String	text	= MessageText.getString( "plugin.required.info", new String[]{ plugin_name });
+								
+								UIFunctionsUserPrompter prompter = 
+									uif.getUserPrompter(title, text, new String[] {
+										MessageText.getString("Button.yes"),
+										MessageText.getString("Button.no")
+									}, 0);
+		
+								if ( remember_id != null ){
+		
+									prompter.setRemember(
+										remember_id,
+										false,
+										MessageText.getString("MessageBoxWindow.nomoreprompting"));
+								}
+		
+								prompter.setAutoCloseInMS(0);
+		
+								prompter.open(null);
+		
+								boolean	install = prompter.waitUntilClosed() == 0;
+		
+								if ( install ){
+		
+									went_async = true;
+		
+									uif.installPlugin(
+										plugin_id,
+										"plugin.generic.install",
+										new UIFunctions.actionListener()
+										{
+											@Override
+											public void
+											actionComplete(
+												Object		result )
+											{
+												try{
+													if ( callback != null ){
+		
+														if ( result instanceof Boolean ){
+		
+															if ( (Boolean)result ) {				
+		
+																callback.run();
+															}
+														}
+													}
+												}finally{
+													
+													synchronized( installing_pids ) {
+														
+														installing_pids.remove( plugin_id );
+													}
+												}
+											}
+										});
+								}
+							}finally {
+								
+								if ( !went_async ) {
+									
+									synchronized( installing_pids ) {
+										
+										installing_pids.remove( plugin_id );
+									}
+								}
+							}
+						}
 					}
 				}
 				
@@ -1564,7 +1690,8 @@ public abstract class BaseMdiEntry
 						data_source,
 						control_type,
 						null,
-						event_listener ));
+						event_listener,
+						true ));
 			
 		}else {
 			return(TabbedEntry.buildStandAlone(
@@ -1576,7 +1703,8 @@ public abstract class BaseMdiEntry
 					data_source,
 					control_type,
 					null,
-					event_listener ));
+					event_listener,
+					true ));
 			
 		}
 	}

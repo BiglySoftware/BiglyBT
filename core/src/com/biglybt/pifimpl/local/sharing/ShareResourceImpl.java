@@ -426,6 +426,7 @@ ShareResourceImpl
 			throw( new ShareException( "ShareResource::getFingerPrint: fails", e ));
 		}
 	}
+	
 	protected String
 	getNewTorrentLocation()
 
@@ -466,6 +467,9 @@ ShareResourceImpl
 		return( manager.getTorrentFile(item));
 	}
 
+	protected abstract ShareResource 
+	lookupShare(byte[] torrent_hash);
+	
 	protected abstract void
 	checkConsistency()
 

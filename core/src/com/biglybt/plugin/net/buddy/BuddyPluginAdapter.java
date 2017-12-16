@@ -63,7 +63,8 @@ BuddyPluginAdapter
 	@Override
 	public void
 	enabledStateChanged(
-		boolean enabled)
+		boolean classic_enabled,
+		boolean	beta_enabled )
 	{
 	}
 

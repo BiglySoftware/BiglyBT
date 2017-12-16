@@ -2,10 +2,12 @@ package com.biglybt.core.util;
 
 import java.util.*;
 
+import com.biglybt.core.devices.Device;
+
 public class 
 DataSourceResolver
 {
-	private static Map<String,DataSourceImporter>	importer_map = new HashMap<>();
+	private static Map<String,Object>	importer_map = new HashMap<>();
 	
 	public static Map<String,Object>
 	exportDataSource(
@@ -44,6 +46,12 @@ DataSourceResolver
 			
 			return( result );
 			
+		}else if ( data_source instanceof Device ){
+			
+			// not required as resolved internally
+			
+			return( null );
+			
 		}else{
 			
 			Debug.out( "Can't export a " + data_source );
@@ -56,6 +64,8 @@ DataSourceResolver
 	importDataSource(
 		Map<String,Object>		map )
 	{
+		Runnable	callback = (Runnable)map.get( "callback" );
+		
 		List<Map<String,Object>> list = (List<Map<String,Object>>)map.get( "exports" );
 		
 		if ( list == null ) {
@@ -66,15 +76,42 @@ DataSourceResolver
 			
 			synchronized( importer_map ) {
 				
-				importer = importer_map.get( exporter_class );
-			}
+				Object temp = importer_map.get( exporter_class );
 			
-			if ( importer == null ) {
+				if ( temp == null || temp instanceof List) {
 				
-				return( null );
+					if ( callback == null ){
+					
+						Debug.out( "No importer for '" + exporter_class + "'" );
+						
+					}else {
+						
+						if ( temp == null ) {
+							
+							temp = new ArrayList();
+							
+							importer_map.put( exporter_class, temp );
+						}
+						
+						((List)temp).add( callback );
+					}
+					
+					return( null );
+					
+				}else{
+					
+					importer = (DataSourceImporter)temp;
+				}
 			}
 			
-			return( importer.importDataSource((Map<String,Object>)map.get( "export" )));
+			Map<String,Object> i_map = new HashMap<String,Object>((Map<String,Object>)map.get( "export" ));
+			
+			if ( callback != null ) {
+				
+				i_map.put( "callback", callback );
+			}
+			
+			return( importer.importDataSource( i_map ));
 			
 		}else{
 			
@@ -96,9 +133,34 @@ DataSourceResolver
 	registerExporter(
 		DataSourceImporter		exporter )
 	{
+		List<Runnable>	callbacks = null;
+		
 		synchronized( importer_map ) {
 			
-			importer_map.put( exporter.getClass().getCanonicalName(), exporter );
+			String name = exporter.getClass().getCanonicalName();
+			
+			Object temp = importer_map.get( name );
+			
+			if ( temp instanceof List ) {
+				
+				callbacks = (List<Runnable>)temp;
+			}
+			
+			importer_map.put( name, exporter );
+		}
+		
+		if ( callbacks != null ) {
+			
+			for ( Runnable r: callbacks ) {
+				
+				try{
+					r.run();
+					
+				}catch( Throwable e ) {
+					
+					Debug.out( e );
+				}
+			}
 		}
 	}
 	

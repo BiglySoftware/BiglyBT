@@ -376,7 +376,7 @@ PluginInstallerImpl
 
   				String	name 	= detail.getId();
 
-  				if ( name.equals( id )){
+  				if ( name.equalsIgnoreCase( id )){
 
 	  				String	version = "";
 

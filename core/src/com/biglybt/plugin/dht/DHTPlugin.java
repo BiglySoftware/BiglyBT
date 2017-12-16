@@ -141,7 +141,8 @@ DHTPlugin
 
 	private boolean[]           ipfilter_logging = new boolean[1];
 	private BooleanParameter	warn_user;
-
+	private BooleanParameter	prefer_i2p;
+	
 	private UPnPMapping upnp_mapping;
 
 	private LoggerChannel		log;
@@ -224,6 +225,28 @@ DHTPlugin
 
 		warn_user = config.addBooleanParameter2( "dht.warn.user", "dht.warn.user", true );
 
+		prefer_i2p = config.addBooleanParameter2( "dht.prefer.i2p", "dht.prefer.i2p", false );
+
+		BooleanParameter sleeping = config.addBooleanParameter2( "dht.is.sleeping", "dht.is.sleeping", false );
+		
+		AERunStateHandler.addListener(
+			new AERunStateHandler.RunStateChangeListener(){
+				
+				@Override
+				public void runStateChanged(long run_state){
+					sleeping.setValue( AERunStateHandler.isDHTSleeping());
+				}
+			}, true );
+		
+		sleeping.addListener(
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(Parameter param){
+					AERunStateHandler.setDHTSleeping( sleeping.getValue());
+				}
+			});
+		
 		final BooleanParameter	advanced = config.addBooleanParameter2( "dht.advanced", "dht.advanced", false );
 
 		LabelParameter	advanced_label = config.addLabelParameter2( "dht.advanced.label" );

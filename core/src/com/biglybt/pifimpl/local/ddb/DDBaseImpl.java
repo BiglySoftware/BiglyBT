@@ -22,11 +22,14 @@ package com.biglybt.pifimpl.local.ddb;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.util.*;
@@ -51,6 +54,21 @@ DDBaseImpl
 
 	private Map<HashWrapper,DistributedDatabaseTransferHandler>			transfer_map = new HashMap<>();
 
+	private static boolean prefer_i2p;
+	
+	static{	
+		COConfigurationManager.addAndFireParameterListener(
+			"Plugin.DHT.dht.prefer.i2p",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String name){
+				
+					prefer_i2p = COConfigurationManager.getBooleanParameter( name, false );
+				}
+			});
+	}
+	
 	public static DDBaseImpl
 	getSingleton(
 		Core core )
@@ -122,6 +140,19 @@ DDBaseImpl
 				}
 			}
 		}
+		
+		if ( prefer_i2p && result.size() > 1 ){
+			
+			Iterator<DistributedDatabase> it = result.iterator();
+				
+			while( it.hasNext()){
+				
+				if ( it.next().getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+					
+					it.remove();
+				}
+			}
+		}
 
 		return( result );
 	}
@@ -188,6 +219,19 @@ DDBaseImpl
 			}
 		}
 
+		if ( prefer_i2p && result.size() > 1 ){
+			
+			Iterator<DistributedDatabase> it = result.iterator();
+				
+			while( it.hasNext()){
+				
+				if ( it.next().getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+					
+					it.remove();
+				}
+			}
+		}
+		
 		return( result );
 	}
 

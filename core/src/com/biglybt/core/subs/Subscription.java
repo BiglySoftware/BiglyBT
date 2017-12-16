@@ -192,6 +192,16 @@ Subscription
 	setTagID(
 		long	tag_id );
 
+	public static final int VO_FULL			= 0x00;
+	public static final int VO_HIDE_HEADER	= 0x01;
+	
+	public int
+	getViewOptions();
+	
+	public void
+	setViewOptions(
+		int		options );
+	
 	public String
 	getParent();
 

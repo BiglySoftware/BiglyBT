@@ -25,6 +25,7 @@ import java.applet.AudioClip;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -85,6 +86,7 @@ import com.biglybt.ui.swt.pif.UISWTStatusEntryListener;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.CoreFactory;
@@ -114,10 +116,11 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
 BuddyPluginView
-	implements UISWTViewEventListener, BuddyPluginViewInterface
+	implements UISWTViewCoreEventListenerEx, BuddyPluginViewInterface
 {
-	private final TimerEvent buddyStatusInit;
-	private final BuddyPluginAZ2Listener buddyPluginAZ2Listener;
+	private  TimerEvent 			buddyStatusInit;
+	private BuddyPluginAZ2Listener buddyPluginAZ2Listener;
+	
 	private BuddyPlugin		plugin;
 	private UISWTInstance	ui_instance;
 	private String			VIEW_ID;
@@ -143,77 +146,160 @@ BuddyPluginView
 		UIInstance		_ui_instance,
 		String			_VIEW_ID )
 	{
+		this( _plugin, _ui_instance, _VIEW_ID, true );
+	}
+	
+	public
+	BuddyPluginView(
+		BuddyPlugin		_plugin,
+		UIInstance		_ui_instance,
+		String			_VIEW_ID,
+		boolean			_main_view )
+	{
+		init( _plugin, _ui_instance, _VIEW_ID, _main_view );
+	}
+	
+	public boolean
+	isCloneable()
+	{
+		return( true );
+	}
+
+	public UISWTViewCoreEventListenerEx
+	getClone()
+	{
+		return( new BuddyPluginView( plugin, ui_instance, VIEW_ID, false ));
+	}
+	
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return(
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( BuddyPluginView.class );
+				}
+		
+				public List<Object>
+				getParameters()
+				{
+					return( Arrays.asList( VIEW_ID ));
+				}
+			});
+	}
+	
+	public
+	BuddyPluginView(
+		String	_VIEW_ID )
+	{
+		BuddyPlugin bp = BuddyPluginUtils.getPlugin();
+		
+		if ( bp != null ){
+			
+			UIInstance[] instances = bp.getPluginInterface().getUIManager().getUIInstances();
+			
+			for ( UIInstance ui: instances ){
+				
+				if ( ui.getUIType() == UIInstance.UIT_SWT ){
+					
+					init( bp, ui, _VIEW_ID, false );
+					
+					return;
+				}
+			}
+		}
+		
+		throw( new RuntimeException( "View currently unavailable" ));
+	}
+	
+	private void
+	init(
+		BuddyPlugin		_plugin,
+		UIInstance		_ui_instance,
+		String			_VIEW_ID,
+		boolean			_main_view )
+	{
 		plugin			= _plugin;
 		ui_instance		= (UISWTInstance)_ui_instance;
 		VIEW_ID			= _VIEW_ID;
 
-		buddyPluginAZ2Listener = new BuddyPluginAZ2Listener() {
-			@Override
-			public void
-			chatCreated(
-					final BuddyPluginAZ2.chatInstance chat )
-			{
-				final Display display = ui_instance.getDisplay();
-
-				if ( !display.isDisposed()){
-
-					display.asyncExec(
-							new Runnable()
-							{
-								@Override
-								public void
-								run()
+		if ( _main_view ){
+			
+			buddyPluginAZ2Listener = new BuddyPluginAZ2Listener() {
+				@Override
+				public void
+				chatCreated(
+						final BuddyPluginAZ2.chatInstance chat )
+				{
+					final Display display = ui_instance.getDisplay();
+	
+					if ( !display.isDisposed()){
+	
+						display.asyncExec(
+								new Runnable()
 								{
-									if ( !display.isDisposed()){
-
-										new BuddyPluginViewChat( plugin, display, chat );
+									@Override
+									public void
+									run()
+									{
+										if ( !display.isDisposed()){
+	
+											new BuddyPluginViewChat( plugin, display, chat );
+										}
 									}
-								}
-							});
-				}
-			}
-
-			@Override
-			public void
-			chatDestroyed(
-					BuddyPluginAZ2.chatInstance		chat )
-			{
-			}
-		};
-		plugin.getAZ2Handler().addListener(buddyPluginAZ2Listener);
-
-
-		buddyStatusInit = SimpleTimer.addEvent("BuddyStatusInit", SystemTime.getOffsetTime(1000),
-				new TimerEventPerformer() {
-					@Override
-					public void
-					perform(
-							TimerEvent event) {
-						//UISWTStatusEntry label = ui_instance.createStatusEntry();
-						//label.setText(MessageText.getString("azbuddy.tracker.bbb.status.title"));
-
-						statusUpdater = new statusUpdater(ui_instance);
+								});
 					}
-				});
-
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				ImageLoader imageLoader = ImageLoader.getInstance();
-
-				iconNLI 	= imageLoader.getImage( "bbb_nli" );
-				iconIDLE 	= imageLoader.getImage( "bbb_idle" );
-				iconIN 		= imageLoader.getImage( "bbb_in" );
-				iconOUT 	= imageLoader.getImage( "bbb_out" );
-				iconINOUT 	= imageLoader.getImage( "bbb_inout" );
-			}
-		});
-
+				}
+	
+				@Override
+				public void
+				chatDestroyed(
+						BuddyPluginAZ2.chatInstance		chat )
+				{
+				}
+			};
+			
+			plugin.getAZ2Handler().addListener(buddyPluginAZ2Listener);
+	
+		
+			buddyStatusInit = SimpleTimer.addEvent("BuddyStatusInit", SystemTime.getOffsetTime(1000),
+					new TimerEventPerformer() {
+						@Override
+						public void
+						perform(
+								TimerEvent event) {
+							//UISWTStatusEntry label = ui_instance.createStatusEntry();
+							//label.setText(MessageText.getString("azbuddy.tracker.bbb.status.title"));
+	
+							statusUpdater = new statusUpdater(ui_instance);
+						}
+					});
+	
+			Utils.execSWTThread(new AERunnable() {
+				@Override
+				public void runSupport() {
+					ImageLoader imageLoader = ImageLoader.getInstance();
+	
+					iconNLI 	= imageLoader.getImage( "bbb_nli" );
+					iconIDLE 	= imageLoader.getImage( "bbb_idle" );
+					iconIN 		= imageLoader.getImage( "bbb_in" );
+					iconOUT 	= imageLoader.getImage( "bbb_out" );
+					iconINOUT 	= imageLoader.getImage( "bbb_inout" );
+				}
+			});
+		}
+		
 		ui_instance.addView(	UISWTInstance.VIEW_MAIN, VIEW_ID, this );
 
-		checkBetaInit();
+		if ( _main_view ){
+		
+			checkBetaInit();
+		}
 	}
-
+	
 	protected UISWTInstance
 	getUISWTInstance()
 	{
@@ -322,9 +408,12 @@ BuddyPluginView
 		private final BuddyPluginAdapter buddyPluginAdapter;
 		private final CryptoManagerKeyListener cryptoManagerKeyListener;
 		private UISWTStatusEntry	label;
+		private String				label_text;
 		private UISWTStatusEntry	status;
 		private BuddyPluginTracker	tracker;
 
+		private TimerEventPeriodic	tick_event;
+		
 		private TimerEventPeriodic	update_event;
 
 		private CryptoManager	crypto;
@@ -338,7 +427,8 @@ BuddyPluginView
 			status	= ui_instance.createStatusEntry();
 			label 	= ui_instance.createStatusEntry();
 
-			label.setText( MessageText.getString( "azbuddy.tracker.bbb.status.title" ));
+			label.setText( label_text = MessageText.getString( "azbuddy.tracker.bbb.status.title" ));
+			
 			label.setTooltipText( MessageText.getString( "azbuddy.tracker.bbb.status.title.tooltip" ));
 
 			tracker = plugin.getTracker();
@@ -400,12 +490,7 @@ BuddyPluginView
 
 
 			buddyPluginAdapter = new BuddyPluginAdapter() {
-				@Override
-				public void
-				initialised(
-						boolean		available )
-				{
-				}
+
 
 				@Override
 				public void
@@ -432,29 +517,8 @@ BuddyPluginView
 						updateStatus();
 					}
 				}
-
-				@Override
-				public void
-				buddyChanged(
-						BuddyPluginBuddy	buddy )
-				{
-				}
-
-				@Override
-				public void
-				messageLogged(
-						String		str,
-						boolean		error )
-				{
-				}
-
-				@Override
-				public void
-				enabledStateChanged(
-						boolean enabled )
-				{
-				}
 			};
+			
 			plugin.addListener(buddyPluginAdapter);
 
 			crypto = CryptoManagerFactory.getSingleton();
@@ -527,6 +591,47 @@ BuddyPluginView
 				status.setVisible( true );
 				label.setVisible( true );
 
+				if ( tick_event == null ){
+					
+					tick_event = SimpleTimer.addPeriodicEvent(
+							"Buddy:GuiUpdater2",
+							20*1000,
+							new TimerEventPerformer()
+							{
+								@Override
+								public void
+								perform(
+									TimerEvent event )
+								{
+									updateStatus();
+								}
+							});
+				}
+				
+				List<BuddyPluginBuddy> buddies = plugin.getBuddies();
+				
+				int	num_online 		= 0;
+				int num_connected	= 0;
+				
+				for ( BuddyPluginBuddy b: buddies ){
+					
+					if ( b.isOnline( false )){
+						num_online++;
+					}
+					if (b.isConnected()){
+						num_connected++;
+					}
+				}
+				
+				String new_label_text = MessageText.getString( "azbuddy.tracker.bbb.status.title" ) + " [" + num_connected + "/" + num_online + "]";
+				
+				if ( !new_label_text.equals( label_text )){
+					
+					label.setText( new_label_text); 
+					
+					label_text = new_label_text;
+				}
+				
 				if ( has_buddies && !crypto_ok ){
 
 					status.setImage( iconNLI );
@@ -593,6 +698,13 @@ BuddyPluginView
 
 				disableUpdates();
 
+				if ( tick_event != null ){
+					
+					tick_event.cancel();
+					
+					tick_event = null;
+				}
+				
 				status.setVisible( false );
 				label.setVisible( false );
 			}

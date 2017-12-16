@@ -60,7 +60,6 @@ import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableResolver;
-import com.biglybt.core.tag.impl.TagManagerImpl;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
@@ -478,7 +477,12 @@ DownloadManagerImpl
 				}
 			});
 
-	List<DownloadManagerTPSListener>	tps_listeners;
+	private Object 			init_lock = new Object();
+	private boolean			initialised;
+	private List<Runnable>	post_init_tasks = new ArrayList<>();
+	
+	
+	private List<DownloadManagerTPSListener>	tps_listeners;
 
 	private final AEMonitor	piece_listeners_mon	= new AEMonitor( "DM:DownloadManager:PeiceL" );
 
@@ -698,80 +702,102 @@ DownloadManagerImpl
 		List									_file_priorities,
 		DownloadManagerInitialisationAdapter	_initialisation_adapter )
 	{
-		if ( 	_initialState != STATE_WAITING &&
-				_initialState != STATE_STOPPED &&
-				_initialState != STATE_QUEUED ){
-
-			Debug.out( "DownloadManagerImpl: Illegal start state, " + _initialState );
-		}
-
-		persistent			= _persistent;
-		globalManager 		= _gm;
-		open_for_seeding	= _open_for_seeding;
-
-			// TODO: move this to download state!
-
-    	if ( _file_priorities != null ){
-
-    		setUserData( "file_priorities", _file_priorities );
-    	}
-
-		stats = new DownloadManagerStatsImpl( this );
-
-		controller	= new DownloadManagerController( this );
-
-		torrentFileName = _torrentFileName;
-
-		while( _torrent_save_dir.endsWith( File.separator )){
-
-			_torrent_save_dir = _torrent_save_dir.substring(0, _torrent_save_dir.length()-1 );
-		}
-
-			// readTorrent adjusts the save dir and file to be sensible values
-
-		readTorrent( 	_torrent_save_dir, _torrent_save_file, _torrent_hash,
-						persistent && !_recovered, _open_for_seeding, _has_ever_been_started,
-						_initialState );
-
-		if ( torrent != null ){
-
-			if ( _open_for_seeding && !_recovered ){
-
-				Map<Integer,File>	linkage = TorrentUtils.getInitialLinkage( torrent );
-
-				if ( linkage.size() > 0 ){
-
-					DownloadManagerState	dms = getDownloadState();
-
-					DiskManagerFileInfo[]	files = getDiskManagerFileInfoSet().getFiles();
-
-					try{
-						dms.suppressStateSave( true );
-
-						for ( Map.Entry<Integer,File> entry: linkage.entrySet()){
-
-							int	index 	= entry.getKey();
-							File target = entry.getValue();
-
-							dms.setFileLink( index, files[index].getFile( false ), target );
-
+		List<Runnable>	to_run;
+		
+		synchronized( init_lock ){
+			
+			if ( 	_initialState != STATE_WAITING &&
+					_initialState != STATE_STOPPED &&
+					_initialState != STATE_QUEUED ){
+	
+				Debug.out( "DownloadManagerImpl: Illegal start state, " + _initialState );
+			}
+	
+			persistent			= _persistent;
+			globalManager 		= _gm;
+			open_for_seeding	= _open_for_seeding;
+	
+				// TODO: move this to download state!
+	
+	    	if ( _file_priorities != null ){
+	
+	    		setUserData( "file_priorities", _file_priorities );
+	    	}
+	
+			stats = new DownloadManagerStatsImpl( this );
+	
+			controller	= new DownloadManagerController( this );
+	
+			torrentFileName = _torrentFileName;
+	
+			while( _torrent_save_dir.endsWith( File.separator )){
+	
+				_torrent_save_dir = _torrent_save_dir.substring(0, _torrent_save_dir.length()-1 );
+			}
+	
+				// readTorrent adjusts the save dir and file to be sensible values
+	
+			readTorrent( 	_torrent_save_dir, _torrent_save_file, _torrent_hash,
+							persistent && !_recovered, _open_for_seeding, _has_ever_been_started,
+							_initialState );
+	
+			if ( torrent != null ){
+	
+				if ( _open_for_seeding && !_recovered ){
+	
+					Map<Integer,File>	linkage = TorrentUtils.getInitialLinkage( torrent );
+	
+					if ( linkage.size() > 0 ){
+	
+						DownloadManagerState	dms = getDownloadState();
+	
+						DiskManagerFileInfo[]	files = getDiskManagerFileInfoSet().getFiles();
+	
+						try{
+							dms.suppressStateSave( true );
+	
+							for ( Map.Entry<Integer,File> entry: linkage.entrySet()){
+	
+								int	index 	= entry.getKey();
+								File target = entry.getValue();
+	
+								dms.setFileLink( index, files[index].getFile( false ), target );
+	
+							}
+						}finally{
+	
+							dms.suppressStateSave( false );
 						}
-					}finally{
-
-						dms.suppressStateSave( false );
 					}
 				}
 			}
+			
+			initialised = true;
+			
+			to_run = post_init_tasks;
+			
+			post_init_tasks = null;
+		}
+		
+		for ( Runnable r: to_run ){
+			
+			try{
+				r.run();
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		if ( torrent != null && _initialisation_adapter != null ){
+	
+			try{
+				_initialisation_adapter.initialised( this, open_for_seeding );
 
-			if ( _initialisation_adapter != null ){
+			}catch( Throwable e ){
 
-				try{
-					_initialisation_adapter.initialised( this, open_for_seeding );
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace(e);
-				}
+				Debug.printStackTrace(e);
 			}
 		}
 	}
@@ -2232,9 +2258,76 @@ DownloadManagerImpl
 		if (_assumedComplete) {
 			long completedOn = download_manager_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
 			if (completedOn <= 0) {
-				download_manager_state.setLongParameter(
-						DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME,
-						SystemTime.getCurrentTime());
+				long now =SystemTime.getCurrentTime();
+				
+				download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, now );
+				
+				long last_file = download_manager_state.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME );
+				
+				if ( last_file <= 0 ){
+				
+					Runnable set_it = 
+						new Runnable()
+						{
+							public void
+							run()
+							{
+					
+									// get a sensible value from actual files - useful when adding-for-seeding
+							
+								long	last_mod = 0;
+								
+								DiskManagerFileInfo[] files = getDiskManagerFileInfoSet().getFiles();
+								
+								for ( DiskManagerFileInfo file: files ){
+									
+									if ( !file.isSkipped()){
+										
+										File f = file.getFile( true );
+										
+										if ( f.length() == file.getLength()){
+											
+											long mod = f.lastModified();
+											
+											if ( mod > last_mod ){
+												
+												last_mod = mod;
+											}
+										}
+									}
+								}
+								
+								if ( last_mod == 0 ){
+									
+									last_mod = now;
+								}
+								
+								download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, last_mod );
+								
+								if ( last_mod < now ){
+									
+										// update with more useful value
+									
+									download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, last_mod );
+								}
+							}
+						};
+						
+					synchronized( init_lock ){
+						
+						if ( !initialised ){
+							
+							post_init_tasks.add( set_it );
+							
+							set_it = null;
+						}
+					}
+					
+					if ( set_it != null ){
+						
+						set_it.run();
+					}
+				}
 			}
 		}
 
@@ -3672,7 +3765,7 @@ DownloadManagerImpl
 	}
 
 	@Override
-	public int
+	public Object[]
 	getNATStatus()
 	{
 		int	state = getState();
@@ -3681,82 +3774,106 @@ DownloadManagerImpl
 
 		TRTrackerAnnouncer tc = getTrackerClient();
 
+		final int		nat_status;
+		final String 	nat_info;
+		
 		if ( tc != null && peerManager != null && (state == STATE_DOWNLOADING || state == STATE_SEEDING)) {
 
-			if ( peerManager.getNbRemoteTCPConnections() > 0 || peerManager.getNbRemoteUTPConnections() > 0 ){
+			int	rem_tcp = peerManager.getNbRemoteTCPConnections();
+			int rem_utp	= peerManager.getNbRemoteUTPConnections();
+			
+			if ( rem_tcp > 0 || rem_utp > 0 ){
 
-				return( ConnectionManager.NAT_OK );
-			}
-
-			long	last_good_time = peerManager.getLastRemoteConnectionTime();
-
-			if ( last_good_time > 0 ){
-
-					// half an hour's grace
-
-				if ( SystemTime.getCurrentTime() - last_good_time < 30*60*1000 ){
-
-					return( ConnectionManager.NAT_OK );
-
-				}else{
-
-					return( ConnectionManager.NAT_PROBABLY_OK );
-				}
-			}
-
-			TRTrackerAnnouncerResponse	announce_response = tc.getLastResponse();
-
-			int trackerStatus = announce_response.getStatus();
-
-			if( 	trackerStatus == TRTrackerAnnouncerResponse.ST_OFFLINE ||
-					trackerStatus == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR){
-
-				return ConnectionManager.NAT_UNKNOWN;
-			}
-
-				// tracker's ok but no remotes - give it some time
-
-			if ( SystemTime.getCurrentTime() - peerManager.getTimeStarted( false ) < 3*60*1000 ){
-
-				return ConnectionManager.NAT_UNKNOWN;
-			}
-
-			TRTrackerScraperResponse scrape_response = getTrackerScrapeResponse();
-
-			if ( scrape_response != null && scrape_response.isValid()){
-
-					// if we're connected to everyone then report OK as we can't get
-					// any incoming connections!
-
-				if ( 	peerManager.getNbSeeds() == scrape_response.getSeeds() &&
-						peerManager.getNbPeers() == scrape_response.getPeers()){
-
-					return ConnectionManager.NAT_UNKNOWN;
-				}
-
-					// can't expect incoming if we're seeding and there are no peers
-
-				if ( state == STATE_SEEDING  && scrape_response.getPeers() == 0 ){
-
-					return ConnectionManager.NAT_UNKNOWN;
-				}
+				nat_status 	= ConnectionManager.NAT_OK;
+				nat_info	= "Has remote " + (rem_tcp>0?"TCP":"uTP") + " connections";
 			}else{
 
-					// no scrape and we're seeding - don't use this as sign of badness as
-					// we can't determine
+				long	last_good_time = peerManager.getLastRemoteConnectionTime();
+	
+				if ( last_good_time > 0 ){
+	
+						// half an hour's grace
+	
+					if ( SystemTime.getCurrentTime() - last_good_time < 30*60*1000 ){
+	
+						nat_status 	= ConnectionManager.NAT_OK;
+						nat_info	= "Had a recent remote connection";
+	
+					}else{
+	
+						nat_status = ConnectionManager.NAT_PROBABLY_OK;
+						nat_info	= "Had a remote connection at some point";
+					}
+				}else{
+	
+					TRTrackerAnnouncerResponse	announce_response = tc.getLastResponse();
+		
+					int trackerStatus = announce_response.getStatus();
+		
+					if( 	trackerStatus == TRTrackerAnnouncerResponse.ST_OFFLINE ||
+							trackerStatus == TRTrackerAnnouncerResponse.ST_REPORTED_ERROR){
+		
+						nat_status 	= ConnectionManager.NAT_UNKNOWN;
+						nat_info	= "Tracker offline";
+						
+					}else if ( SystemTime.getCurrentTime() - peerManager.getTimeStarted( false ) < 3*60*1000 ){
+						
+						// tracker's ok but no remotes - give it some time
 
-				if ( state == STATE_SEEDING ){
+						nat_status 	= ConnectionManager.NAT_UNKNOWN;
+						nat_info	= "Tracker OK but not remote connections yet"; 
+						
+					}else{
+		
+						TRTrackerScraperResponse scrape_response = getTrackerScrapeResponse();
+			
+						if ( scrape_response != null && scrape_response.isValid()){
+			
+								// if we're connected to everyone then report OK as we can't get
+								// any incoming connections!
+			
+							if ( 	peerManager.getNbSeeds() == scrape_response.getSeeds() &&
+									peerManager.getNbPeers() == scrape_response.getPeers()){
+			
+								nat_status 	= ConnectionManager.NAT_UNKNOWN;
+								nat_info	= "Connected to all known peers, hard to tell"; 
+								
+							}else if ( state == STATE_SEEDING  && scrape_response.getPeers() == 0 ){
+			
+								// can't expect incoming if we're seeding and there are no peers
 
-					return ConnectionManager.NAT_UNKNOWN;
+								nat_status 	= ConnectionManager.NAT_UNKNOWN;
+								nat_info	= "Seeding and no peers, status can't be determined"; 
+							}else{
+								
+								nat_status 	= ConnectionManager.NAT_BAD;
+								nat_info	= "There are peers, we should get some remote connections"; 
+							}
+						}else{
+			
+								// no scrape and we're seeding - don't use this as sign of badness as
+								// we can't determine
+			
+							if ( state == STATE_SEEDING ){
+			
+								nat_status 	= ConnectionManager.NAT_UNKNOWN;
+								nat_info	= "Tracker info unavailable and we're seeding, hard to tell"; 
+							}else{
+								
+								nat_status 	= ConnectionManager.NAT_BAD;
+								nat_info	= "Tracker info unavailable, assuming bad"; 
+							}
+						}
+					}
 				}
 			}
-
-			return ConnectionManager.NAT_BAD;
-
 		}else{
 
-			return ConnectionManager.NAT_UNKNOWN;
+			nat_status 	= ConnectionManager.NAT_UNKNOWN;
+			nat_info	= "Download not running, can't determine status";
 		}
+		
+		return( new Object[]{ nat_status, nat_info });
 	}
 
 	@Override
@@ -4122,6 +4239,23 @@ DownloadManagerImpl
 	  return( crypto_level );
   }
 
+  private int move_progress = -1;
+  
+  public int
+  getMoveProgress()
+  {
+	  DiskManager	dm = getDiskManager();
+
+	  if ( dm != null ){
+		  
+		  return( dm.getMoveProgress());
+		  
+	  }else{
+		  
+		  return( move_progress );
+	  }
+  }
+  
   @Override
   public void
   moveDataFiles(
@@ -4197,6 +4331,17 @@ DownloadManagerImpl
 		  FileUtil.runAsTask(
 				new CoreOperationTask()
 				{
+					private ProgressCallback callback = 
+						new ProgressCallback()
+						{
+							@Override
+							public int 
+							getProgress()
+							{
+								return( getMoveProgress());
+							}
+						};
+		  
 					@Override
 					public void
 					run(
@@ -4215,6 +4360,13 @@ DownloadManagerImpl
 
 							throw( new RuntimeException( e ));
 						}
+					}
+					
+					@Override
+					public ProgressCallback 
+					getProgressCallback()
+					{
+						return( callback );
 					}
 				});
 	  }catch( RuntimeException e ){
@@ -4244,10 +4396,10 @@ DownloadManagerImpl
 
   void
   moveDataFilesSupport0(
-	File 		new_parent_dir,
-	String 		new_filename )
+		  File 		new_parent_dir,
+		  String 		new_filename )
 
-  	throws DownloadManagerException
+				  throws DownloadManagerException
   {
 	  if (!canMoveDataFiles()){
 		  throw new DownloadManagerException("canMoveDataFiles is false!");
@@ -4255,7 +4407,7 @@ DownloadManagerImpl
 
 	  if (new_filename != null) {new_filename = FileUtil.convertOSSpecificChars(new_filename,false);}
 
-			// old file will be a "file" for simple torrents, a dir for non-simple
+	  // old file will be a "file" for simple torrents, a dir for non-simple
 
 	  File	old_file = getSaveLocation();
 
@@ -4271,11 +4423,11 @@ DownloadManagerImpl
 	  final File current_save_location = old_file;
 	  File new_save_location = new File(
 			  (new_parent_dir == null) ? old_file.getParentFile() : new_parent_dir,
-			  (new_filename == null) ? old_file.getName() : new_filename
-	  );
+					  (new_filename == null) ? old_file.getName() : new_filename
+			  );
 
 	  if (current_save_location.equals(new_save_location)) {
-		  	// null operation
+		  // null operation
 		  return;
 	  }
 
@@ -4285,9 +4437,9 @@ DownloadManagerImpl
 
 		  if ( !old_file.exists()){
 
-		  	// files not created yet
+			  // files not created yet
 
-		  	FileUtil.mkdirs(new_save_location.getParentFile());
+			  FileUtil.mkdirs(new_save_location.getParentFile());
 
 			  setTorrentSaveDir(new_save_location.getParent().toString(), new_save_location.getName());
 
@@ -4302,83 +4454,127 @@ DownloadManagerImpl
 			  Debug.printStackTrace(e);
 		  }
 
-		  if ( old_file.equals( new_save_location )){
-
-			  // nothing to do
-
-		  } else if (torrent.isSimpleTorrent()) {
-
-
-			  if (controller.getDiskManagerFileInfo()[0].setLinkAtomic(new_save_location)) {
-				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
-			  } else {throw new DownloadManagerException( "rename operation failed");}
-
-			  /*
-			  // Have to keep the file name in sync if we're renaming.
-			  //if (controller.getDiskManagerFileInfo()[0].setLinkAtomic(new_save_location)) {
-			  if ( FileUtil.renameFile( old_file, new_save_location )){
-
-				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
-
-			  }else{
-
-				  throw( new DownloadManagerException( "rename operation failed" ));
-			  }
-			  //} else {throw new DownloadManagerException( "rename operation failed");}
-			  */
-		  }else{
-
-			  if (FileUtil.isAncestorOf(old_file, new_save_location)) {
-
-		            Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
-							LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
-							new String[] {old_file.toString(), "Target is sub-directory of files" });
-
-		            throw( new DownloadManagerException( "rename operation failed" ));
+		  FileUtil.ProgressListener	pl = 
+			new FileUtil.ProgressListener()
+		  	{
+			  	private long	total_size;
+			  	private long	total_done;
+			  	
+				public void
+				setTotalSize(
+					long	size )
+				{
+					total_size = size;
 				}
+				
+				public void
+				bytesDone(
+					long	num )
+				{
+					total_done += num;
+					
+					move_progress = (int)(Math.min( 1000, (1000*total_done)/total_size ));
+				}
+				
+				public void
+				complete()
+				{
+					move_progress = 1000;
+				}
+		  	};
 
-			  // The files we move must be limited to those mentioned in the torrent.
-			  final HashSet files_to_move = new HashSet();
-
-              // Required for the adding of parent directories logic.
-              files_to_move.add(null);
-              DiskManagerFileInfo[] info_files = controller.getDiskManagerFileInfo();
-              for (int i=0; i<info_files.length; i++) {
-                  File f = info_files[i].getFile(true);
-                  try {f = f.getCanonicalFile();}
-                  catch (IOException ioe) {f = f.getAbsoluteFile();}
-                  boolean added_entry = files_to_move.add(f);
-
-                  /**
-                   * Start adding all the parent directories to the
-                   * files_to_move list. Doesn't matter if we include
-                   * files which are outside of the file path, the
-                   * renameFile call won't try to move those directories
-                   * anyway.
-                   */
-                  while (added_entry) {
-                      f = f.getParentFile();
-                      added_entry = files_to_move.add(f);
-                  }
-              }
-			  FileFilter ff = new FileFilter() {
-				  @Override
-				  public boolean accept(File f) {return files_to_move.contains(f);}
-			  };
-
-			  if ( FileUtil.renameFile( old_file, new_save_location, false, ff )){
-
-				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
-
+		  try{
+			  move_progress = 0;
+			  
+			  if ( old_file.equals( new_save_location )){
+	
+				  // nothing to do
+	
+			  } else if (torrent.isSimpleTorrent()) {
+	
+				  pl.setTotalSize( controller.getDiskManagerFileInfo()[0].getFile( true ).length());
+	
+				  if (controller.getDiskManagerFileInfo()[0].setLinkAtomic( new_save_location, pl)) {
+					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+				  } else {throw new DownloadManagerException( "rename operation failed");}
+	
+				  /*
+				  // Have to keep the file name in sync if we're renaming.
+				  //if (controller.getDiskManagerFileInfo()[0].setLinkAtomic(new_save_location)) {
+				  if ( FileUtil.renameFile( old_file, new_save_location )){
+	
+					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+	
+				  }else{
+	
+					  throw( new DownloadManagerException( "rename operation failed" ));
+				  }
+				  //} else {throw new DownloadManagerException( "rename operation failed");}
+				   */
 			  }else{
-
-				  throw( new DownloadManagerException( "rename operation failed" ));
+	
+				  if (FileUtil.isAncestorOf(old_file, new_save_location)) {
+	
+					  Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
+							  LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
+							  new String[] {old_file.toString(), "Target is sub-directory of files" });
+	
+					  throw( new DownloadManagerException( "rename operation failed" ));
+				  }
+	
+				  long	total_size = 0;
+				  
+				  // The files we move must be limited to those mentioned in the torrent.
+				  final HashSet files_to_move = new HashSet();
+	
+				  // Required for the adding of parent directories logic.
+				  files_to_move.add(null);
+				  DiskManagerFileInfo[] info_files = controller.getDiskManagerFileInfo();
+				  for (int i=0; i<info_files.length; i++) {
+					  File f = info_files[i].getFile(true);
+					  total_size += f.length();
+					  try {f = f.getCanonicalFile();}
+					  catch (IOException ioe) {f = f.getAbsoluteFile();}
+					  boolean added_entry = files_to_move.add(f);
+	
+					  /**
+					   * Start adding all the parent directories to the
+					   * files_to_move list. Doesn't matter if we include
+					   * files which are outside of the file path, the
+					   * renameFile call won't try to move those directories
+					   * anyway.
+					   */
+					  while (added_entry) {
+						  f = f.getParentFile();
+						  added_entry = files_to_move.add(f);
+					  }
+				  }
+				  FileFilter ff = new FileFilter() {
+					  @Override
+					  public boolean accept(File f) {return files_to_move.contains(f);}
+				  };
+	
+				  pl.setTotalSize( total_size );
+				  
+				  if ( FileUtil.renameFile( old_file, new_save_location, false, ff, pl )){
+	
+					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
+	
+				  }else{
+	
+					  throw( new DownloadManagerException( "rename operation failed" ));
+				  }
+	
+				  if (  current_save_location.isDirectory()){
+	
+					  TorrentUtils.recursiveEmptyDirDelete( current_save_location, false );
+				  }
 			  }
-
-			  if (  current_save_location.isDirectory()){
-
-				  TorrentUtils.recursiveEmptyDirDelete( current_save_location, false );
-			  }
+		  }finally {
+			  
+			  pl.complete();
+			  
+			  move_progress = -1;
 		  }
 	  }else{
 		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );
@@ -4495,6 +4691,83 @@ DownloadManagerImpl
 	  }
   }
 
+  private void
+  copyTorrentFile(
+	 File	parent_dir ) throws DownloadManagerException
+  {
+	  File	file = new File( getTorrentFileName() );
+
+	  if ( !file.exists()){
+		  
+		  throw( new DownloadManagerException( "Torrent file '" + file + "' doesn't exist" ));
+	  }
+	  
+	  try{
+		  FileUtil.copyFileWithException( file, new File( parent_dir, file.getName()));
+		  
+	  }catch( Throwable e ){
+		  
+		  throw( new DownloadManagerException( "Failed to copy torrent file", e ));
+	  }
+  }
+  
+  public boolean
+  canExportDownload()
+  {
+	  return( getAssumedComplete());
+  }
+  
+  public void
+  exportDownload( File parent_dir ) throws DownloadManagerException
+  {
+	  if ( !canExportDownload()){
+		  
+		  throw( new DownloadManagerException( "Not in correct state" ));
+	  }
+	  
+	  try{
+		  FileUtil.runAsTask(
+			  CoreOperation.OP_DOWNLOAD_EXPORT,
+			  new CoreOperationTask()
+			  {
+				  @Override
+				  public void
+				  run(
+						  CoreOperation operation)
+				  {
+					  try{
+						  copyDataFiles( parent_dir );
+
+						  copyTorrentFile( parent_dir );
+
+					  }catch( Throwable e ){
+
+						  throw( new RuntimeException( e ));
+					  }
+				  }
+
+				  @Override
+				  public ProgressCallback 
+				  getProgressCallback()
+				  {
+					  return( null );
+				  }
+			  });
+		  
+	  }catch( Throwable e ){
+		  
+		  Throwable f = e.getCause();
+		  
+		  if ( f instanceof DownloadManagerException ){
+			  
+			  throw((DownloadManagerException)f);
+		  }
+		  
+		  throw( new DownloadManagerException( "Export failed", e ));
+	  }
+
+  }
+  
   @Override
   public void moveTorrentFile(File new_parent_dir) throws DownloadManagerException {
 	  this.moveTorrentFile(new_parent_dir, null);

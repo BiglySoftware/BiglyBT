@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
@@ -334,6 +335,9 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private static final int		PREFER_UDP_BLOOM_SIZE	= 10000;
 	private volatile BloomFilter	prefer_udp_bloom;
 
+	private volatile boolean	upload_diabled;
+	private volatile boolean	download_diabled;
+	
 	private final LimitedRateGroup upload_limited_rate_group = new LimitedRateGroup() {
 		@Override
 		public String
@@ -343,8 +347,39 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 		@Override
 		public int getRateLimitBytesPerSecond() {
-			return adapter.getUploadRateLimitBytesPerSecond();
+			int rate = adapter.getUploadRateLimitBytesPerSecond();
+			
+			boolean disabled = rate < 0;
+			
+			if ( disabled != upload_diabled ) {
+			
+				try{					
+					peer_transports_mon.enter();
+
+					if ( disabled != upload_diabled  ){
+						
+						upload_diabled = disabled;
+						
+						for ( PEPeerTransport peer: peer_transports_cow ){
+							
+							peer.setUploadDisabled( upload_limited_rate_group, disabled );
+						}
+					}
+				}finally {
+					peer_transports_mon.exit();
+				}	
+			}
+			
+			if ( disabled ){
+				
+				return( 0 );
+				
+			}else{
+				
+				return( rate );
+			}
 		}
+		
 		@Override
 		public boolean
 		isDisabled()
@@ -368,8 +403,39 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 		@Override
 		public int getRateLimitBytesPerSecond() {
-			return adapter.getDownloadRateLimitBytesPerSecond();
+			int rate = adapter.getDownloadRateLimitBytesPerSecond();
+			
+			boolean disabled = rate < 0;
+			
+			if ( disabled != download_diabled ) {
+			
+				try{					
+					peer_transports_mon.enter();
+
+					if ( disabled != download_diabled  ){
+						
+						download_diabled = disabled;
+						
+						for ( PEPeerTransport peer: peer_transports_cow ){
+							
+							peer.setDownloadDisabled( download_limited_rate_group, disabled );
+						}
+					}
+				}finally {
+					peer_transports_mon.exit();
+				}	
+			}
+			
+			if ( disabled ){
+				
+				return( 0 );
+				
+			}else{
+				
+				return( rate );
+			}		
 		}
+		
 		@Override
 		public boolean
 		isDisabled()
@@ -1027,7 +1093,19 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		byte	crypto_level = PeerItemFactory.CRYPTO_LEVEL_1;
 
-		if( !isAlreadyConnected( peer_item ) ) {
+		boolean force = false;
+		
+		if ( user_data != null ){
+
+			Boolean f = (Boolean)user_data.get( Peer.PR_FORCE_CONNECTION );
+			
+			if ( f != null ){
+				
+				force = f;
+			}
+		}
+		
+		if ( force || !isAlreadyConnected( peer_item ) ) {
 
 			String fail_reason;
 
@@ -1199,8 +1277,9 @@ DiskManagerCheckRequestListener, IPFilterListener
 			return( "Peer source '" + peer_source + "' is not enabled" );
 		}
 
-		boolean	is_priority_connection = false;
-
+		boolean	is_priority_connection 	= false;
+		boolean	force					= false;
+		
 		if ( user_data != null ){
 
 			Boolean pc = (Boolean)user_data.get( Peer.PR_PRIORITY_CONNECTION );
@@ -1209,8 +1288,15 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 				is_priority_connection = true;
 			}
+			
+			Boolean f = (Boolean)user_data.get( Peer.PR_FORCE_CONNECTION );
+			
+			if ( f != null ){
+				
+				force = f;
+			}
 		}
-
+	
 		//make sure we need a new connection
 
 		boolean max_reached = getMaxNewConnectionsAllowed( net_cat ) == 0;	// -1 -> unlimited
@@ -1229,7 +1315,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		//make sure not already connected to the same IP address; allow loopback connects for co-located proxy-based connections and testing
 
-		final boolean same_allowed = COConfigurationManager.getBooleanParameter( "Allow Same IP Peers" ) || address.equals( "127.0.0.1" );
+		final boolean same_allowed = force || COConfigurationManager.getBooleanParameter( "Allow Same IP Peers" ) || address.equals( "127.0.0.1" );
 
 		if( !same_allowed && PeerIdentityManager.containsIPAddress( _hash, address ) ){
 
@@ -2404,8 +2490,10 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 					if ( pc.isTCP() ) {
 
-						new_tcp_incoming++;
-
+						if ( pc.getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+						
+							new_tcp_incoming++;
+						}
 					}else{
 
 						String protocol = pc.getProtocol();
@@ -2992,6 +3080,16 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 				peer_transports_cow = new_peer_transports;
 
+				if ( upload_diabled ){
+				
+					peer.setUploadDisabled( upload_limited_rate_group, true );
+				}
+				
+				if ( download_diabled ){
+					
+					peer.setDownloadDisabled( download_limited_rate_group, true );
+				}
+				
 				added = true;
 			}
 
@@ -4515,6 +4613,13 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		//every 1 second
 		if ( mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL == 0 ){
+			
+				// need to sync the rates periodically as when upload is disabled (for example) the we can end up with
+				// nothing requesting the rate in order for a change to be noticed
+			
+			upload_limited_rate_group.getRateLimitBytesPerSecond();
+			download_limited_rate_group.getRateLimitBytesPerSecond();
+			
 			final List<PEPeerTransport> peer_transports = peer_transports_cow;
 
 			int num_waiting_establishments = 0;
@@ -5432,34 +5537,63 @@ DiskManagerCheckRequestListener, IPFilterListener
 	@Override
 	public int getAverageCompletionInThousandNotation()
 	{
-		final ArrayList peer_transports = peer_transports_cow;
+		ArrayList<PEPeerTransport> peer_transports = peer_transports_cow;
 
-		if (peer_transports !=null)
+		final long total =disk_mgr.getTotalLength();
+
+		final int my_completion = total == 0
+		? 1000
+				: (int) ((1000 * (total - disk_mgr.getRemainingExcludingDND())) / total);
+
+		int sum = my_completion == 1000 ? 0 : my_completion;  //add in our own percentage if not seeding
+		int num = my_completion == 1000 ? 0 : 1;
+
+		for (int i =0; i <peer_transports.size(); i++ )
 		{
-			final long total =disk_mgr.getTotalLength();
+			final PEPeer peer =peer_transports.get(i);
 
-			final int my_completion = total == 0
-			? 1000
-					: (int) ((1000 * (total - disk_mgr.getRemainingExcludingDND())) / total);
-
-			int sum = my_completion == 1000 ? 0 : my_completion;  //add in our own percentage if not seeding
-			int num = my_completion == 1000 ? 0 : 1;
-
-			for (int i =0; i <peer_transports.size(); i++ )
+			if (peer.getPeerState() ==PEPeer.TRANSFERING &&!peer.isSeed())
 			{
-				final PEPeer peer =(PEPeer) peer_transports.get(i);
-
-				if (peer.getPeerState() ==PEPeer.TRANSFERING &&!peer.isSeed())
-				{
-					num++;
-					sum += peer.getPercentDoneInThousandNotation();
-				}
+				num++;
+				sum += peer.getPercentDoneInThousandNotation();
 			}
-
-			return num > 0 ? sum / num : 0;
 		}
 
-		return -1;
+		return num > 0 ? sum / num : 0;
+	}
+	
+	@Override
+	public int getMaxCompletionInThousandNotation( boolean never_include_seeds )
+	{
+		ArrayList<PEPeerTransport> peer_transports = peer_transports_cow;
+		
+		int	max = 0;
+		
+			// generally if we're seeeding we shouldn't connect to seeds so ignore them
+
+		boolean ignore_seeds = isSeeding() || never_include_seeds;
+		
+		for ( int i =0; i<peer_transports.size(); i++ ){
+		
+			final PEPeer peer = peer_transports.get(i);
+
+			if ( peer.getPeerState() == PEPeer.TRANSFERING ){
+							
+				int done =  peer.getPercentDoneInThousandNotation();
+				
+				if ( done == 1000 && ignore_seeds ){
+										
+				}else{
+					
+					if ( done > max ){
+					
+						max = done;
+					}
+				}
+			}
+		}
+
+		return max;
 	}
 
 	@Override

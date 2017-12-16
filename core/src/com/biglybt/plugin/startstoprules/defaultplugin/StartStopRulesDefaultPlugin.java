@@ -24,6 +24,12 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagFeatureProperties;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.pif.Plugin;
@@ -157,7 +163,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	/** Maximimum # of stalled torrents that are in seeding mode */
 	private int maxStalledSeeding;
-
+	private boolean stalledSeedingIgnoreZP;
+	
 	// count x peers as a full copy, but..
 	private int numPeersAsFullCopy;
 
@@ -199,6 +206,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	private int		iDownloadTestTimeMillis;
 	private int		iDownloadReTestMillis;
 
+	private boolean	bTagFirstPriority;
+	
 	private static boolean bAlreadyInitialized = false;
 
 	// UI
@@ -213,6 +222,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 	public static boolean pauseChangeFlagChecker = false;
 
+	private Tag		fp_tag;
+	
 	public static void
 	load(
 		PluginInterface		plugin_interface )
@@ -399,12 +410,17 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		configModel.addBooleanParameter2("StartStopManager_bMaxDownloadIgnoreChecking",
 				"ConfigView.label.ignoreChecking", false);
 
+		configModel.addBooleanParameter2("StartStopManager_bMaxMinDLLinked",
+				"ConfigView.label.maxmindownloadlinked", false);
+
 		configModel.addIntParameter2("StartStopManager_iMinSpeedForActiveDL",
 				"ConfigView.label.minSpeedForActiveDL", 512);
 		configModel.addIntParameter2("StartStopManager_iMinSpeedForActiveSeeding",
 				"ConfigView.label.minSpeedForActiveSeeding", 512);
 		configModel.addIntParameter2("StartStopManager_iMaxStalledSeeding",
 				"ConfigView.label.maxStalledSeeding", 5);
+		configModel.addBooleanParameter2("StartStopManager_bMaxStalledSeedingIgnoreZP",
+				"ConfigView.label.maxStalledSeedingIgnoreZP", true);
 
 
 		configModel.addBooleanParameter2("StartStopManager_bDebugLog",
@@ -455,6 +471,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				"StartStopManager_iFirstPriority_ignoreIdleHours",
 				"ConfigView.label.seeding.firstPriority.ignoreIdleHours", 24);
 
+		configModel.addBooleanParameter2(
+				"StartStopManager_bTagFirstPriority",
+				"ConfigView.label.queue.tagfirstpriority", false );
+
+		
 		// seeding subsection
 
 		configModel.addIntParameter2("StartStopManager_iAddForSeedingDLCopyCount",
@@ -875,12 +896,24 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				// insanity :)
 				maxStalledSeeding = 999;
 			}
+			stalledSeedingIgnoreZP = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxStalledSeedingIgnoreZP");
 			_maxActive = plugin_config.getUnsafeIntParameter("max active torrents");
 			_maxActiveWhenSeedingEnabled = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxActiveTorrentsWhenSeedingEnabled");
 			_maxActiveWhenSeeding = plugin_config.getUnsafeIntParameter("StartStopManager_iMaxActiveTorrentsWhenSeeding");
 
-			minDownloads = plugin_config.getUnsafeIntParameter("min downloads");
 			maxConfiguredDownloads = plugin_config.getUnsafeIntParameter("max downloads");
+			
+			boolean min_eq_max = plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxMinDLLinked" );
+
+			if ( min_eq_max ){
+				
+				minDownloads = maxConfiguredDownloads;
+				
+			}else{
+			
+				minDownloads = plugin_config.getUnsafeIntParameter("min downloads");
+			}
+			
 			bMaxDownloadIgnoreChecking	= plugin_config.getUnsafeBooleanParameter("StartStopManager_bMaxDownloadIgnoreChecking" );
 
 			numPeersAsFullCopy = plugin_config.getUnsafeIntParameter("StartStopManager_iNumPeersAsFullCopy");
@@ -937,6 +970,57 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			iDownloadTestTimeMillis	= plugin_config.getUnsafeIntParameter("StartStopManager_Downloading_iTestTimeSecs")*1000;
 			iDownloadReTestMillis	= plugin_config.getUnsafeIntParameter("StartStopManager_Downloading_iRetestTimeMins")*60*1000;
 
+			bTagFirstPriority = plugin_config.getUnsafeBooleanParameter("StartStopManager_bTagFirstPriority");
+
+			if ( bTagFirstPriority ){
+				
+				TagManager tag_manager = TagManagerFactory.getTagManager();
+				
+				if ( tag_manager != null && tag_manager.isEnabled()){
+					
+					TagType tt = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+					
+					if ( fp_tag == null ){
+						
+						fp_tag = tt.getTag( "First Priority", true );
+						
+						if ( fp_tag == null ){
+							
+							try {
+								fp_tag = tt.createTag( "First Priority", true );
+								
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					}
+					
+					Tag not_fp_tag = tt.getTag( "Not First Priority", true );
+					
+					if ( not_fp_tag == null ){
+					
+						try{
+							not_fp_tag = tt.createTag( "Not First Priority", true );
+														
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+					
+					if ( not_fp_tag != null ) {
+						
+						TagProperty constraint = ((TagFeatureProperties)not_fp_tag).getProperty( TagFeatureProperties.PR_CONSTRAINT);
+
+						constraint.setStringList(
+							new String[]{
+								"isComplete() && !hasTag( \"First Priority\" )"
+							});
+					}
+				}
+			}
+			
 			/*
 			 // limit _maxActive and maxDownloads based on TheColonel's specs
 
@@ -1239,8 +1323,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						if (bIsFirstP) {
 							stalledFPSeeders++;
 						}
-
-						stalledSeeders++;
+						if ( stalledSeedingIgnoreZP && dlData.lastModifiedScrapeResultPeers == 0 && dlData.lastScrapeResultOk ) {
+							// ignore 
+						}else{
+							stalledSeeders++;
+						}
 					}
 
 					if (state == Download.ST_READY || state == Download.ST_WAITING
@@ -2223,7 +2310,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		}
 
   		if (state == Download.ST_SEEDING && !bActivelySeeding) {
-  			vars.stalledSeeders++;
+  			if ( stalledSeedingIgnoreZP && numPeers == 0 && bScrapeOk ){
+  				// ignore
+  			}else{
+  				vars.stalledSeeders++;
+  			}
   		}
 
 			// Is it OK to set this download to a queued state?
@@ -2655,6 +2746,30 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		}
 	}
 
+	protected boolean
+	getTagFP()
+	{
+		return( bTagFirstPriority );
+	}
+	
+	protected void
+	setFPTagStatus(
+		com.biglybt.core.download.DownloadManager		dm,
+		boolean											is_fp )
+	{
+		if ( fp_tag != null && bTagFirstPriority ){
+			
+			if ( is_fp ){
+				
+				fp_tag.addTaggable( dm );
+				
+			}else{
+				
+				fp_tag.removeTaggable( dm );
+			}
+		}
+	}
+	
 	@Override
 	public void generate(IndentWriter writer) {
 		writer.println("StartStopRules Manager");

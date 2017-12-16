@@ -66,6 +66,7 @@ import com.biglybt.ui.swt.pifimpl.UIToolBarManagerImpl;
 import com.biglybt.ui.swt.progress.ProgressReportingManager;
 import com.biglybt.ui.swt.progress.ProgressWindow;
 import com.biglybt.ui.swt.search.SearchUI;
+import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.shells.main.MainWindowFactory;
 import com.biglybt.ui.swt.skin.SWTSkin;
@@ -411,9 +412,12 @@ public class Initializer
 
 				} else if (component instanceof PluginInterface) {
 					PluginInterface pi = (PluginInterface) component;
+					String name = pi.getPluginName();
+					String version = pi.getPluginVersion();
+					
 					// text says initializing, but it's actually initialized.  close enough
 					String s = MessageText.getString("splash.plugin.init") + " "
-							+ pi.getPluginName() + " v" + pi.getPluginVersion();
+							+ name + (version==null?"":(" v" + version));
 					reportCurrentTask(s);
 				}
 			}
@@ -551,6 +555,8 @@ public class Initializer
 
 		}else{
 
+			CoreWaiterSWT.startupAbandoned();
+			
 			final AESemaphore sem = new AESemaphore( "waiter" );
 
 			Utils.execSWTThread(

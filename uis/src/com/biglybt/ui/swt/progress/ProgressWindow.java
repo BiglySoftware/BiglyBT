@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
@@ -37,8 +38,7 @@ import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DelayedEvent;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
-
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationListener;
 import com.biglybt.core.CoreOperationTask;
@@ -60,6 +60,7 @@ ProgressWindow
 					CoreOperation operation )
 				{
 					if ( 	( 	operation.getOperationType() == CoreOperation.OP_FILE_MOVE ||
+								operation.getOperationType() == CoreOperation.OP_DOWNLOAD_EXPORT ||
 								operation.getOperationType() == CoreOperation.OP_PROGRESS )&&
 							Utils.isThisThreadSWT()){
 
@@ -81,19 +82,30 @@ ProgressWindow
 
 	private final 	String	 resource;
 	private Image[] spinImages;
-	protected int curSpinIndex = 0;
+	private int curSpinIndex = 0;
 
+	private ProgressBar progress_bar;
+
+	
 	protected
 	ProgressWindow(
 		final CoreOperation operation )
 	{
 		final RuntimeException[] error = {null};
 
-		resource = operation.getOperationType()== CoreOperation.OP_FILE_MOVE?"progress.window.msg.filemove":"progress.window.msg.progress";
-
+		int	op_type = operation.getOperationType();
+		
+		if ( op_type == CoreOperation.OP_FILE_MOVE ){
+			resource = "progress.window.msg.filemove";
+		}else if ( op_type == CoreOperation.OP_DOWNLOAD_EXPORT ){
+			resource = "progress.window.msg.dlexport";
+		}else{
+			resource = "progress.window.msg.progress";
+		}
+		
 		new DelayedEvent(
 				"ProgWin",
-				operation.getOperationType()== CoreOperation.OP_FILE_MOVE?1000:10,
+				operation.getOperationType()== CoreOperation.OP_PROGRESS?10:1000,
 				new AERunnable()
 				{
 					@Override
@@ -116,7 +128,7 @@ ProgressWindow
 												Shell shell = com.biglybt.ui.swt.components.shell.ShellFactory.createMainShell(
 														( SWT.DIALOG_TRIM ));	// parg: removed modal - people complain about this locking the UI, let it be on their own heads if they go and screw with things then
 
-												showDialog( shell );
+												showDialog( shell, operation );
 											}
 										}
 									}
@@ -214,7 +226,7 @@ ProgressWindow
 
 		if ( _delay_millis <= 0 ){
 
-			showDialog( shell );
+			showDialog( shell, null );
 
 		}else{
 
@@ -240,7 +252,7 @@ ProgressWindow
 
 												if ( !task_complete ){
 
-													showDialog( shell );
+													showDialog( shell, null );
 												}
 											}
 										}
@@ -254,12 +266,15 @@ ProgressWindow
 
 	protected void
 	showDialog(
-		Shell		_shell )
+		Shell			_shell,
+		CoreOperation	_core_op )
 	{
 		shell	= _shell;
 
 		shell.setText( MessageText.getString( "progress.window.title" ));
 
+		final CoreOperationTask.ProgressCallback progress = _core_op==null?null:_core_op.getTask().getProgressCallback();
+		
 		Utils.setShellIcon(shell);
 
 		/*
@@ -280,8 +295,10 @@ ProgressWindow
 		layout.numColumns = 2;
 		shell.setLayout(layout);
 
+		shell.setBackground( Colors.white );
+		
 		spinImages = ImageLoader.getInstance().getImages("working");
-
+		
 		if ( spinImages == null || spinImages.length == 0 ){
 
 			new Label( shell, SWT.NULL );
@@ -289,8 +306,9 @@ ProgressWindow
 		}else{
 
 			final Rectangle spinBounds = spinImages[0].getBounds();
+			
 		    final Canvas	canvas =
-		    	new Canvas( shell, SWT.NULL )
+		    	new Canvas( shell, SWT.DOUBLE_BUFFERED )
 		    	{
 		    		@Override
 				    public Point computeSize(int wHint, int hHint, boolean changed )
@@ -299,31 +317,39 @@ ProgressWindow
 		    		}
 		    	};
 
-		    	canvas.addPaintListener(new PaintListener() {
-						@Override
-						public void paintControl(PaintEvent e) {
-							e.gc.drawImage(spinImages[curSpinIndex ], 0, 0);
+	    	canvas.addPaintListener(new PaintListener() {
+					@Override
+					public void paintControl(PaintEvent e) {
+						e.gc.drawImage(spinImages[curSpinIndex ], 0, 0);
+						
+						if ( progress != null && progress_bar != null ){
+							
+							int p =  progress.getProgress();
+							
+							progress_bar.setSelection( p );
 						}
-					});
+					}
+				});
 
-		    	Utils.execSWTThreadLater(100, new AERunnable() {
-						@Override
-						public void runSupport() {
-							if (canvas == null || canvas.isDisposed()) {
-								return;
-							}
-
-							canvas.redraw();
-							canvas.update();
-							if (curSpinIndex == spinImages.length - 1) {
-								curSpinIndex = 0;
-							} else {
-								curSpinIndex++;
-							}
-							Utils.execSWTThreadLater(100, this);
+	    	Utils.execSWTThreadLater(100, new AERunnable() {
+					@Override
+					public void runSupport() {
+						if (canvas == null || canvas.isDisposed()) {
+							return;
 						}
-					});
 
+						canvas.redraw();
+						//canvas.update();
+						if (curSpinIndex == spinImages.length - 1) {
+							curSpinIndex = 0;
+						} else {
+							curSpinIndex++;
+						}
+						Utils.execSWTThreadLater(100, this);
+					}
+				});
+
+	    	canvas.setBackground( Colors.white );
 		}
 
 
@@ -332,7 +358,20 @@ ProgressWindow
 		label.setText(MessageText.getString( resource ));
 		GridData gridData = new GridData();
 		label.setLayoutData(gridData);
-
+		label.setBackground( Colors.white );
+		
+		if ( progress != null ){
+		
+			progress_bar = new ProgressBar(shell,SWT.HORIZONTAL );
+			progress_bar.setMinimum(0);
+			progress_bar.setMaximum(1000);
+			progress_bar.setBackground( Colors.white );
+			gridData = new GridData( GridData.FILL_HORIZONTAL );
+			gridData.horizontalSpan = 2;
+			
+			progress_bar.setLayoutData( gridData );
+		}
+		
 		shell.pack();
 
 		Composite parent = shell.getParent();

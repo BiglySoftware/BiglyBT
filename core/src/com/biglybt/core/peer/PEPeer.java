@@ -384,6 +384,9 @@ PEPeer
 	public boolean
 	isLANLocal();
 
+	public void
+	resetLANLocalStatus();
+	
 		/**
 		 * Send a request hint to the peer.
 		 * @param piece_number

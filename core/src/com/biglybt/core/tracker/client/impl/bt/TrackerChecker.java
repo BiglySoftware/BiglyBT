@@ -134,6 +134,13 @@ public class TrackerChecker implements AEDiagnosticsEvidenceGenerator, SystemTim
       return( null );
     }
 
+    if ( trackerUrl.getHost().endsWith( ".dht" )){
+    	
+    	// can't scrape these (e.g. metadata downloads) !
+    	
+    	return( null );
+    }
+    
     TRTrackerScraperResponseImpl data = null;
 
     	// DON'T USE URL as a key in the trackers map, use the string version. If you

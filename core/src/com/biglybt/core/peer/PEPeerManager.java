@@ -367,6 +367,13 @@ PEPeerManager
    */
   public int getAverageCompletionInThousandNotation();
 
+  /**
+   * Max completion of connected peers (doesn't factor in our completion)
+   * @return
+   */
+  
+  public int getMaxCompletionInThousandNotation( boolean never_include_seeds );
+  
 	/**
 	 * Locate an existing transport via peer id byte identity.
 	 * @param peer_id to look for

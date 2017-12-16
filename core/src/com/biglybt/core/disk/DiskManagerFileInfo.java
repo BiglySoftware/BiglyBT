@@ -24,6 +24,7 @@ import java.io.IOException;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.FileUtil;
 
 /**
  * @author Olivier
@@ -59,6 +60,8 @@ DiskManagerFileInfo
 		File	link_destination );
 
 	public boolean setLinkAtomic(File link_destination);
+
+	public boolean setLinkAtomic(File link_destination, FileUtil.ProgressListener pl );
 
 		// gets the current link, null if none
 

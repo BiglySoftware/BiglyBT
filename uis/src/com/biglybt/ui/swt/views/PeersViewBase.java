@@ -1,5 +1,6 @@
 package com.biglybt.ui.swt.views;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,8 +35,11 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.IdentityHashSet;
@@ -47,7 +51,10 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.plugin.net.buddy.BuddyPlugin;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.TableColumnCore;
@@ -60,6 +67,7 @@ import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
@@ -605,10 +613,10 @@ PeersViewBase
 	
 	private static void
 	fillMenu(
-			final Menu 				menu,
-			final PEPeer[]			peers,
-			final Shell 			shell,
-			DownloadManager 		download_specific )
+		final Menu 				menu,
+		final PEPeer[]			peers,
+		final Shell 			shell,
+		DownloadManager 		download_specific )
 	{
 		boolean hasSelection = (peers.length > 0);
 
@@ -627,6 +635,8 @@ PeersViewBase
 
 		final IdentityHashSet<DownloadManager>	download_managers = new IdentityHashSet<>();
 
+		Map<PEPeer,DownloadManager>	peer_dm_map = new HashMap<>();
+		
 		if ( hasSelection ){
 
 			for (int i = 0; i < peers.length; i++) {
@@ -641,6 +651,8 @@ PeersViewBase
 
 						if ( dm != null ){
 
+							peer_dm_map.put( peer, dm );
+							
 							download_managers.add( dm );
 						}
 					}
@@ -740,6 +752,54 @@ PeersViewBase
 			}
 		}
 
+		BuddyPlugin bp = BuddyPluginUtils.getPlugin();
+		
+		if ( bp != null ){
+							
+			boolean has_pb = false;
+			
+			boolean	has_public = false;
+			
+			for ( PEPeer peer: peers ){
+				
+				if ( AENetworkClassifier.categoriseAddress( peer.getIp()) == AENetworkClassifier.AT_PUBLIC ){
+					
+					has_public = true;
+					
+					DownloadManager dm = peer_dm_map.get( peer );
+					
+					if ( dm != null && bp.isPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ))){
+						
+						has_pb = true;
+					}
+				}
+			}
+			
+			MenuItem boost_item = new MenuItem( menu, SWT.CHECK );
+			Messages.setLanguageText(boost_item, "PeersView.menu.boost");
+			boost_item.setSelection( has_pb );
+			
+			boost_item.setEnabled( has_public );
+			
+			boost_item.addListener(SWT.Selection, new PeersRunner(peers) {
+				@Override
+				public void run(PEPeer peer) {
+					
+					boolean sel = boost_item.getSelection();
+					
+					if ( AENetworkClassifier.categoriseAddress( peer.getIp()) == AENetworkClassifier.AT_PUBLIC ){
+						
+						DownloadManager dm = peer_dm_map.get( peer );
+	
+						if ( dm != null ){
+						
+							bp.setPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ), sel );
+						}
+					}
+				}
+			});
+		}
+		
 		final MenuItem kick_item = new MenuItem(menu, SWT.PUSH);
 
 		Messages.setLanguageText(kick_item, "PeersView.menu.kick");
@@ -907,34 +967,123 @@ PeersViewBase
 					}
 				});
 
-		addPeersMenu( download_specific, menu );
+		addPeersMenu( download_specific, "", menu );
+	}
+	
+	private static String
+	getMyPeerDetails()
+	{
+		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+
+		InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
+		
+		int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+		
+		String	str = "";
+			
+		if ( port > 0 ){
+			
+			if ( ip != null ){
+				
+				str = ip.getHostAddress() + ":" + port;
+			}
+			
+			if ( ip_v6 != null ){
+				
+				str += (str.isEmpty()?"":",") + ip_v6.getHostAddress() + ":" + port;
+			}
+		}
+		
+		return( str );
 	}
 	
 	protected static boolean
 	addPeersMenu(
 		final DownloadManager 	man,
+		String					column_name,
 		Menu					menu )
 	{
+		new MenuItem( menu, SWT.SEPARATOR);
 
+		MenuItem copy_me_item = new MenuItem( menu, SWT.PUSH );
+
+		Messages.setLanguageText( copy_me_item, "menu.copy.my.peer");
+
+		copy_me_item.addListener(
+			SWT.Selection,
+			new Listener()
+			{
+				@Override
+				public void
+				handleEvent(
+						Event event)
+				{
+					String str = getMyPeerDetails();
+					
+					if ( str.isEmpty()){
+						
+						str = "<no usable peers>";
+					}
+					
+					ClipboardCopy.copyToClipBoard( str );
+				}
+			});
+		
 		if ( man == null ){
 
-			return( false );
+			return( true );
 		}
 
 		PEPeerManager pm = man.getPeerManager();
 
 		if ( pm == null ){
 
-			return( false );
+			return( true );
 		}
 
 		if ( TorrentUtils.isReallyPrivate(man.getTorrent())){
 
-			return( false );
+			return( true );
 		}
+		
+		MenuItem copy_all_peers= new MenuItem( menu, SWT.PUSH );
 
-		new MenuItem( menu, SWT.SEPARATOR);
+		Messages.setLanguageText( copy_all_peers, "menu.copy.all.peers");
 
+		copy_all_peers.addListener(
+			SWT.Selection,
+			new Listener()
+			{
+				@Override
+				public void
+				handleEvent(
+						Event event)
+				{
+					List<PEPeer> peers = pm.getPeers();
+					
+					String str = getMyPeerDetails();
+					
+					for ( PEPeer peer: peers ){
+						
+						int port = peer.getTCPListenPort();
+						
+						if ( port > 0 ){
+							
+							String address = peer.getIp() + ":" + port;
+							
+							str += (str.isEmpty()?"":",") + address;
+						}
+					}
+					
+					if ( str.isEmpty()){
+						
+						str = "<no usable peers>";
+					}
+					
+					ClipboardCopy.copyToClipBoard( str );
+				}
+			});
+		
 		MenuItem add_peers_item = new MenuItem( menu, SWT.PUSH );
 
 		Messages.setLanguageText( add_peers_item, "menu.add.peers");
@@ -1030,9 +1179,21 @@ PeersViewBase
 		new MenuItem (menu, SWT.SEPARATOR);
 	}
 	
+	@Override
+	public void 
+	addThisColumnSubMenu(
+		String 	sColumnName, 
+		Menu 	menuThisColumn)
+	{
+		if ( addPeersMenu( null, sColumnName, menuThisColumn )){
+
+			new MenuItem( menuThisColumn, SWT.SEPARATOR );
+		}
+	}
+	
 	private static abstract class
 	PeersRunner
-	implements Listener
+		implements Listener
 	{
 		private PEPeer[]		peers;
 

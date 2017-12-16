@@ -154,50 +154,83 @@ public class ConfigSectionInterface
 
 		new BooleanParameter(gBarTrans, "Transfer Bar Show Icon Area");
 
-		Group gSysTray = new Group(cDisplay, SWT.NULL);
-		Messages.setLanguageText(gSysTray, "ConfigView.label.systray");
-		layout = new GridLayout();
-		gSysTray.setLayout(layout);
-		Utils.setLayoutData(gSysTray, new GridData(GridData.FILL_HORIZONTAL));
-
-		BooleanParameter est = new BooleanParameter(gSysTray, "Enable System Tray",
-				"ConfigView.section.interface.enabletray");
-		est.addChangeListener(new ParameterChangeAdapter() {
-			@Override
-			public void booleanParameterChanging(Parameter p, boolean toValue) {
-				if (toValue) {
-					SystemTraySWT.getTray();
-				} else {
-					SystemTraySWT.getTray().dispose();
+		{
+				// sys tray
+			
+			Group gSysTray = new Group(cDisplay, SWT.NULL);
+			Messages.setLanguageText(gSysTray, "ConfigView.label.systray");
+			layout = new GridLayout();
+			layout.numColumns = 2;
+			gSysTray.setLayout(layout);
+			Utils.setLayoutData(gSysTray, new GridData(GridData.FILL_HORIZONTAL));
+	
+			BooleanParameter est = new BooleanParameter(gSysTray, "Enable System Tray",
+					"ConfigView.section.interface.enabletray");
+			est.addChangeListener(new ParameterChangeAdapter() {
+				@Override
+				public void booleanParameterChanging(Parameter p, boolean toValue) {
+					if (toValue) {
+						SystemTraySWT.getTray();
+					} else {
+						SystemTraySWT.getTray().dispose();
+					}
 				}
-			}
-		});
-
-		BooleanParameter ctt = new BooleanParameter(gSysTray, "Close To Tray",
-				"ConfigView.label.closetotray");
-		BooleanParameter mtt = new BooleanParameter(gSysTray, "Minimize To Tray",
-				"ConfigView.label.minimizetotray");
-		BooleanParameter esttt = new BooleanParameter(gSysTray,
-				"ui.systray.tooltip.enable", "ConfigView.label.enableSystrayToolTip");
-
-		BooleanParameter estttd = new BooleanParameter(gSysTray,
-				"ui.systray.tooltip.next.eta.enable",
-				"ConfigView.label.enableSystrayToolTipNextETA");
-		gridData = new GridData();
-		gridData.horizontalIndent = 25;
-		estttd.setLayoutData(gridData);
-		est.setAdditionalActionPerformer(
-				new ChangeSelectionActionPerformer(ctt.getControls()));
-		est.setAdditionalActionPerformer(
-				new ChangeSelectionActionPerformer(mtt.getControls()));
-		est.setAdditionalActionPerformer(
-				new ChangeSelectionActionPerformer(esttt.getControls()));
-		est.setAdditionalActionPerformer(
-				new ChangeSelectionActionPerformer(estttd.getControls()));
-
-		esttt.setAdditionalActionPerformer(
-				new ChangeSelectionActionPerformer(estttd.getControls()));
-
+			});
+			
+			BooleanParameter stdo = new BooleanParameter(gSysTray, "System Tray Disabled Override",
+					"ConfigView.label.closetotrayoverride");
+	
+			BooleanParameter ctt = new BooleanParameter(gSysTray, "Close To Tray",
+					"ConfigView.label.closetotray");
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
+			ctt.setLayoutData( gridData );
+			
+			BooleanParameter mtt = new BooleanParameter(gSysTray, "Minimize To Tray",
+					"ConfigView.label.minimizetotray");
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
+			mtt.setLayoutData( gridData );
+			
+			BooleanParameter esttt = new BooleanParameter(gSysTray,
+					"ui.systray.tooltip.enable", "ConfigView.label.enableSystrayToolTip");
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
+			esttt.setLayoutData( gridData );
+			
+			BooleanParameter estttd = new BooleanParameter(gSysTray,
+					"ui.systray.tooltip.next.eta.enable",
+					"ConfigView.label.enableSystrayToolTipNextETA");
+			
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
+			gridData.horizontalIndent = 25;
+			estttd.setLayoutData(gridData);
+			
+			est.setAdditionalActionPerformer(
+					new ChangeSelectionActionPerformer(stdo.getControls(), true));
+			
+			
+			IAdditionalActionPerformer st_enabler = new GenericActionPerformer(
+					new Control[] {}) {
+				@Override
+				public void performAction() {
+					boolean st_enabled 	= est.isSelected();
+					boolean override 	= stdo.isSelected();
+					boolean dl_stats	= esttt.isSelected();
+					
+					ctt.setEnabled(st_enabled || override );
+					mtt.setEnabled( st_enabled || override );
+					esttt.setEnabled(st_enabled);
+					estttd.setEnabled(st_enabled && dl_stats );
+				}
+			};
+			
+			est.setAdditionalActionPerformer( st_enabler );
+			stdo.setAdditionalActionPerformer( st_enabler );
+			esttt.setAdditionalActionPerformer( st_enabler );
+		}
+		
 		/**
 		 * Default download / upload limits available in the UI.
 		 */

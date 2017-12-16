@@ -530,6 +530,25 @@ ShareManagerImpl
 		}
 	}
 
+	@Override
+	public ShareResource 
+	lookupShare(byte[] torrent_hash) 
+			
+		throws ShareException
+	{
+		for ( ShareResourceImpl	sr: shares.values()){
+			
+			ShareResource x = sr.lookupShare( torrent_hash );
+			
+			if ( x != null ){
+				
+				return( x );
+			}
+		}
+		
+		return( null );
+	}
+	
 	private boolean
 	getBooleanProperty(
 		Map<String,String>	properties,

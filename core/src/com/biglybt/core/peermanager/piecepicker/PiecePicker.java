@@ -126,7 +126,25 @@ public interface PiecePicker
 
 	public List
 	getPriorityProviders();
-
+	
+	public void
+	setSequentialAscendingFrom(
+		int		start_piece );
+	
+	public void
+	setSequentialDescendingFrom(
+		int		start_piece );
+	
+	public void
+	clearSequential();
+	
+	/**
+	 * @return 0 - inactive; +ve -> ascending from (n-1) -ve -> descending from (-n+1)
+	 */
+	
+	public int
+	getSequentialInfo();
+	
 	public void
 	addListener(
 		PiecePickerListener		listener );

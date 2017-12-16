@@ -186,4 +186,12 @@ public interface TableRowCore extends TableRow
 	public void setSortColumn(String columnID);
 
 	public TableCellCore getSortColumnCell(String hint);
+	
+	/**
+	 * forces the cell to be refreshed/repainted onto an off-screen area so that any side-effects of the process
+	 * (e.g. preferred width) can be updated
+	 * @param cell
+	 */
+	
+	public void fakeRedraw( String column_name );
 }

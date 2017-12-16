@@ -32,6 +32,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.*;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.security.CryptoHandler;
 import com.biglybt.core.security.CryptoManagerFactory;
 import com.biglybt.core.security.CryptoManagerKeyListener;
@@ -63,6 +64,7 @@ import com.biglybt.pif.messaging.generic.GenericMessageHandler;
 import com.biglybt.pif.messaging.generic.GenericMessageRegistration;
 import com.biglybt.pif.network.ConnectionManager;
 import com.biglybt.pif.network.RateLimiter;
+import com.biglybt.pif.peers.Peer;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
@@ -213,7 +215,8 @@ BuddyPlugin
 
 	private CopyOnWriteList<BuddyPluginListener>				listeners 			= new CopyOnWriteList<>();
 	private CopyOnWriteList<BuddyPluginBuddyRequestListener>	request_listeners	= new CopyOnWriteList<>();
-
+	private CopyOnWriteList<PartialBuddyListener>				pb_listeners		= new CopyOnWriteList<>();
+	
 	private SESecurityManager	sec_man;
 
 	private GenericMessageRegistration	msg_registration;
@@ -426,7 +429,7 @@ BuddyPlugin
 			});
 
 		config.createGroup(
-			"label.classic",
+			"label.friends",
 			new Parameter[]{
 					classic_enabled_param, nick_name_param, online_status_param,
 					protocol_speed, enable_chat_notifications, cat_pub, tracker_enable, tracker_so_enable,
@@ -511,29 +514,30 @@ BuddyPlugin
 
 							final BuddyPluginBuddy	buddy = (BuddyPluginBuddy)buddies.get(i);
 
-							if ( buddy.isOnline( true )){
+							boolean online = buddy.isOnline( true );
 
-								TableContextMenuItem item =
-									plugin_interface.getUIManager().getTableManager().addContextMenuItem(
-										parent,
-										"!" + buddy.getName() + "!");
+							TableContextMenuItem item =
+								plugin_interface.getUIManager().getTableManager().addContextMenuItem(
+									parent,
+									"!" + buddy.getName() + (online?"":(" - " +  MessageText.getString( "label.disconnected" ))) + "!");
 
-								item.addMultiListener(
-									new MenuItemListener()
+							item.addMultiListener(
+								new MenuItemListener()
+								{
+									@Override
+									public void
+									selected(
+										MenuItem 	menu,
+										Object 		target )
 									{
-										@Override
-										public void
-										selected(
-											MenuItem 	menu,
-											Object 		target )
-										{
-											for ( Torrent torrent: torrents ){
+										for ( Torrent torrent: torrents ){
 
-												az2_handler.sendAZ2Torrent( torrent, buddy );
-											}
+											az2_handler.sendAZ2Torrent( torrent, buddy );
 										}
-									});
-							}
+									}
+								});
+							
+							item.setEnabled( online );
 						}
 
 						menu.setEnabled( true );
@@ -643,10 +647,9 @@ BuddyPlugin
 					if ( param != null ){
 
 						setClassicEnabledInternal( classic_enabled );
+						
 						fireEnabledStateChanged();
 					}
-
-					boolean beta_enabled = beta_enabled_param.getValue();
 				}
 			};
 
@@ -980,6 +983,42 @@ BuddyPlugin
 		return( latest_publish.getOnlineStatus());
 	}
 
+	public boolean
+	isPartialBuddy(
+		Download	download,
+		Peer		peer )
+	{
+		BuddyPluginTracker tracker = getTracker();
+		
+		return( tracker.isPartialBuddy( download, peer ));
+	}
+	
+	public void
+	setPartialBuddy(
+		Download	download,
+		Peer		peer,
+		boolean		b )
+	{
+		if ( b ){
+			
+			if ( !isClassicEnabled()){
+				
+				setClassicEnabled( true );
+			}
+		}
+		
+		BuddyPluginTracker tracker = getTracker();
+		
+		if ( b ){
+			
+			tracker.addPartialBuddy( download, peer );
+			
+		}else{
+			
+			tracker.removePartialBuddy( download, peer );
+		}
+	}
+	
 	public BooleanParameter
 	getEnableChatNotificationsParameter()
 	{
@@ -3302,6 +3341,12 @@ BuddyPlugin
 			return(new ArrayList<>(buddies));
 		}
 	}
+	
+	public List<PartialBuddy>
+	getPartialBuddies()
+	{
+		return( buddy_tracker.getPartialBuddies());
+	}
 
 	public boolean
 	isAvailable()
@@ -3390,7 +3435,69 @@ BuddyPlugin
 	{
 		listeners.remove( listener );
 	}
+	
+	public void
+	addPartialBuddyListener(
+		PartialBuddyListener		l )
+	{
+		pb_listeners.add( l );
+	}
 
+	public void
+	removePartialBuddyListener(
+		PartialBuddyListener		l )
+	{
+		pb_listeners.remove( l );
+	}
+	
+	public void
+	partialBuddyAdded(
+		PartialBuddy	pb )
+	{
+		for ( PartialBuddyListener l: pb_listeners ){
+			
+			try{
+				l.partialBuddyAdded( pb );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	public void
+	partialBuddyChanged(
+		PartialBuddy	pb )
+	{
+		for ( PartialBuddyListener l: pb_listeners ){
+			
+			try{
+				l.partialBuddyChanged( pb );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
+	public void
+	partialBuddyRemoved(
+		PartialBuddy	pb )
+	{
+		for ( PartialBuddyListener l: pb_listeners ){
+			
+			try{
+				l.partialBuddyRemoved( pb );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
 	protected Map
 	requestReceived(
 		BuddyPluginBuddy		from_buddy,
@@ -3511,14 +3618,15 @@ BuddyPlugin
 	protected void
  	fireEnabledStateChanged()
  	{
-		final boolean enabled = !plugin_interface.getPluginState().isDisabled() && isClassicEnabled();
+		final boolean classic_enabled 	= !plugin_interface.getPluginState().isDisabled() && isClassicEnabled();
+		final boolean beta_enabled 		= !plugin_interface.getPluginState().isDisabled() && isBetaEnabled();
 
  		List	 listeners_ref = listeners.getList();
 
  		for (int i=0;i<listeners_ref.size();i++){
 
  			try{
- 				((BuddyPluginListener)listeners_ref.get(i)).enabledStateChanged( enabled );
+ 				((BuddyPluginListener)listeners_ref.get(i)).enabledStateChanged( classic_enabled, beta_enabled );
 
  			}catch( Throwable e ){
 

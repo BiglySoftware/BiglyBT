@@ -413,7 +413,12 @@ UPnPPluginService
 
 				}else{
 
-					log.log( "Mapping " + service_mapping.getString() + " not removed as interest remains" );
+						// don't log during closedown as the remaining interests should be removed too
+					
+					if ( !end_of_day ){
+						
+						log.log( "Mapping " + service_mapping.getString() + " not removed as interest remains" );
+					}
 				}
 			}
 		}

@@ -444,6 +444,7 @@ public class CategoryUIUtils
 	public static void showCreateCategoryDialog(final UIFunctions.TagReturner tagReturner) {
 		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
 				"CategoryAddWindow.title", "CategoryAddWindow.message");
+		entryWindow.setParentShell( Utils.findAnyShell());
 		entryWindow.prompt(new UIInputReceiverListener() {
 			@Override
 			public void UIInputReceiverClosed(UIInputReceiver entryWindow) {

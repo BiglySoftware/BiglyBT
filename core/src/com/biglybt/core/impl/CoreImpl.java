@@ -25,6 +25,7 @@ import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.*;
 import com.biglybt.core.backup.BackupManagerFactory;
@@ -89,7 +90,6 @@ import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.core.vuzefile.VuzeFileProcessor;
 import com.biglybt.launcher.classloading.PrimaryClassloader;
 import com.biglybt.pif.*;
-import com.biglybt.pif.clientid.ClientIDPlugin;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentDownloader;
 import com.biglybt.pif.ui.UIManager;
@@ -101,6 +101,7 @@ import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.clientid.ClientIDPlugin;
 import com.biglybt.pifimpl.local.download.DownloadManagerImpl;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
 import com.biglybt.platform.PlatformManager;
@@ -235,553 +236,565 @@ CoreImpl
 
 	protected CoreImpl()
 	{
-		create_time = SystemTime.getCurrentTime();
-
-		if(!SUPPRESS_CLASSLOADER_ERRORS && !(this.getClass().getClassLoader() instanceof PrimaryClassloader))
-			System.out.println("###\nWarning: Core not instantiated through a PrimaryClassloader, this can lead to restricted functionality or bugs in future versions\n###");
-
-		if (DEBUG_STARTUPTIME) {
-			lastDebugTime = System.currentTimeMillis();
-		}
-
-		COConfigurationManager.initialise();
-
-		if (DEBUG_STARTUPTIME) {
-			logTime("ConfigMan.init");
-		}
-
-		MessageText.loadBundle();
-
-		if (DEBUG_STARTUPTIME) {
-			logTime("MessageText");
-		}
-
-		AEDiagnostics.startup( COConfigurationManager.getBooleanParameter( "diags.enable.pending.writes", false ));
-
-		COConfigurationManager.setParameter( "diags.enable.pending.writes", false );
-
-		AEDiagnostics.markDirty();
-
-		AETemporaryFileHandler.startup();
-
-		AEThread2.setOurThread();
-
-			// set up a backwards pointer from config -> app dir so we can derive one from the other. It'll get saved on closedown, no need to do so now
-
-		COConfigurationManager.setParameter( "azureus.application.directory", new File( SystemProperties.getApplicationPath()).getAbsolutePath());
-		COConfigurationManager.setParameter( "azureus.user.directory", new File( SystemProperties.getUserPath()).getAbsolutePath());
-
-		crypto_manager = CryptoManagerFactory.getSingleton();
-
-		PlatformManagerFactory.getPlatformManager().addListener(
-			new PlatformManagerListener()
-			{
-				@Override
-				public int
-				eventOccurred(
-					int		type )
-				{
-					if ( type == ET_SHUTDOWN ){
-
-						if (Logger.isEnabled()){
-							Logger.log(new LogEvent(LOGID, "Platform manager requested shutdown"));
-						}
-
-						COConfigurationManager.save();
-
-						requestStop();
-
-						return( 0 );
-
-					}else if ( type == ET_SUSPEND ){
-
-						if (Logger.isEnabled()){
-							Logger.log(new LogEvent(LOGID, "Platform manager requested suspend"));
-						}
-
-						COConfigurationManager.save();
-
-					}else if ( type == ET_RESUME ){
-
-						if (Logger.isEnabled()){
-							Logger.log(new LogEvent(LOGID, "Platform manager requested resume"));
-						}
-
-						announceAll( true );
-					}
-
-					return( -1 );
-				}
-			});
-
-			//ensure early initialization
-
-		CustomizationManagerFactory.getSingleton().initialize();
-
-		AEProxySelectorFactory.getSelector();
-
-		if (DEBUG_STARTUPTIME) {
-			logTime("Init1");
-		}
-
-
-		NetworkManager.getSingleton();
-
-		if (DEBUG_STARTUPTIME) {
-			logTime("Init NetworkManager");
-		}
-
-		PeerManager.getSingleton();
-
-		if (DEBUG_STARTUPTIME) {
-			logTime("Init PeerManager");
-		}
-
-		// Used to be a plugin, but not any more...
-
-		ClientIDPlugin.initialize( this );
-
-		pi = PluginInitializer.getSingleton( this );
-
-		if (DEBUG_STARTUPTIME) {
-			logTime("Init PluginInitializer");
-		}
-
-		instance_manager =
-			ClientInstanceManagerFactory.getSingleton(
-				new ClientInstanceManagerAdapter()
+		try{
+			
+			create_time = SystemTime.getCurrentTime();
+	
+			if(!SUPPRESS_CLASSLOADER_ERRORS && !(this.getClass().getClassLoader() instanceof PrimaryClassloader))
+				System.out.println("###\nWarning: Core not instantiated through a PrimaryClassloader, this can lead to restricted functionality or bugs in future versions\n###");
+	
+			if (DEBUG_STARTUPTIME) {
+				lastDebugTime = System.currentTimeMillis();
+			}
+	
+			COConfigurationManager.initialise();
+	
+			if (DEBUG_STARTUPTIME) {
+				logTime("ConfigMan.init");
+			}
+	
+			MessageText.loadBundle();
+	
+			if (DEBUG_STARTUPTIME) {
+				logTime("MessageText");
+			}
+	
+			AEDiagnostics.startup( COConfigurationManager.getBooleanParameter( "diags.enable.pending.writes", false ));
+	
+			COConfigurationManager.setParameter( "diags.enable.pending.writes", false );
+	
+			AEDiagnostics.markDirty();
+	
+			AETemporaryFileHandler.startup();
+	
+			AEThread2.setOurThread();
+	
+				// set up a backwards pointer from config -> app dir so we can derive one from the other. It'll get saved on closedown, no need to do so now
+	
+			COConfigurationManager.setParameter( "azureus.application.directory", new File( SystemProperties.getApplicationPath()).getAbsolutePath());
+			COConfigurationManager.setParameter( "azureus.user.directory", new File( SystemProperties.getUserPath()).getAbsolutePath());
+	
+			crypto_manager = CryptoManagerFactory.getSingleton();
+	
+			PlatformManagerFactory.getPlatformManager().addListener(
+				new PlatformManagerListener()
 				{
 					@Override
-					public String
-					getID()
+					public int
+					eventOccurred(
+						int		type )
 					{
-						return( COConfigurationManager.getStringParameter( "ID", "" ));
-					}
-
-					@Override
-					public InetAddress
-					getPublicAddress()
-					{
-						return( PluginInitializer.getDefaultInterface().getUtilities().getPublicAddress());
-					}
-
-					@Override
-					public int[]
-					getPorts()
-					{
-						return( new int[]{
-							TCPNetworkManager.getSingleton().getTCPListeningPortNumber(),
-							UDPNetworkManager.getSingleton().getUDPListeningPortNumber(),
-							UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber()});
-
-					}
-					@Override
-					public VCPublicAddress
-					getVCPublicAddress()
-					{
-						return(
-							new VCPublicAddress()
-							{
-								private final VersionCheckClient vcc = VersionCheckClient.getSingleton();
-
-								@Override
-								public String
-								getAddress()
-								{
-									return( vcc.getExternalIpAddress( true, false ));
-								}
-
-								@Override
-								public long
-								getCacheTime()
-								{
-									return( vcc.getSingleton().getCacheTime( false ));
-								}
-							});
-					}
-
-					@Override
-					public ClientInstanceTracked.TrackTarget
-					track(
-						byte[]		hash )
-					{
-						List	dms = getGlobalManager().getDownloadManagers();
-
-						Iterator	it = dms.iterator();
-
-						DownloadManager	matching_dm = null;
-
-						try{
-							while( it.hasNext()){
-
-								DownloadManager	dm = (DownloadManager)it.next();
-
-								TOTorrent	torrent = dm.getTorrent();
-
-								if ( torrent == null ){
-
-									continue;
-								}
-
-								byte[]	sha1_hash = (byte[])dm.getUserData( "AZInstanceManager::sha1_hash" );
-
-								if ( sha1_hash == null ){
-
-									sha1_hash	= new SHA1Simple().calculateHash( torrent.getHash());
-
-									dm.setUserData( "AZInstanceManager::sha1_hash", sha1_hash );
-								}
-
-								if ( Arrays.equals( hash, sha1_hash )){
-
-									matching_dm	= dm;
-
-									break;
-								}
+						if ( type == ET_SHUTDOWN ){
+	
+							if (Logger.isEnabled()){
+								Logger.log(new LogEvent(LOGID, "Platform manager requested shutdown"));
 							}
-						}catch( Throwable e ){
-
-							Debug.printStackTrace(e);
+	
+							COConfigurationManager.save();
+	
+							requestStop();
+	
+							return( 0 );
+	
+						}else if ( type == ET_SUSPEND ){
+	
+							if (Logger.isEnabled()){
+								Logger.log(new LogEvent(LOGID, "Platform manager requested suspend"));
+							}
+	
+							COConfigurationManager.save();
+	
+						}else if ( type == ET_RESUME ){
+	
+							if (Logger.isEnabled()){
+								Logger.log(new LogEvent(LOGID, "Platform manager requested resume"));
+							}
+	
+							announceAll( true );
 						}
-
-						if ( matching_dm == null ){
-
-							return( null );
+	
+						return( -1 );
+					}
+				});
+	
+				//ensure early initialization
+	
+			CustomizationManagerFactory.getSingleton().initialize();
+	
+			AEProxySelectorFactory.getSelector();
+	
+			if (DEBUG_STARTUPTIME) {
+				logTime("Init1");
+			}
+	
+	
+			NetworkManager.getSingleton();
+	
+			if (DEBUG_STARTUPTIME) {
+				logTime("Init NetworkManager");
+			}
+	
+			PeerManager.getSingleton();
+	
+			if (DEBUG_STARTUPTIME) {
+				logTime("Init PeerManager");
+			}
+		
+			new ClientIDPlugin().initialize( this );
+	
+			pi = PluginInitializer.getSingleton( this );
+	
+			if (DEBUG_STARTUPTIME) {
+				logTime("Init PluginInitializer");
+			}
+	
+			instance_manager =
+				ClientInstanceManagerFactory.getSingleton(
+					new ClientInstanceManagerAdapter()
+					{
+						@Override
+						public String
+						getID()
+						{
+							return( COConfigurationManager.getStringParameter( "ID", "" ));
 						}
-
-						if ( !matching_dm.getDownloadState().isPeerSourceEnabled( PEPeerSource.PS_PLUGIN )){
-
-							return( null );
+	
+						@Override
+						public InetAddress
+						getPublicAddress()
+						{
+							return( PluginInitializer.getDefaultInterface().getUtilities().getPublicAddress());
 						}
-
-						int	dm_state = matching_dm.getState();
-
-						if ( dm_state == DownloadManager.STATE_ERROR || dm_state == DownloadManager.STATE_STOPPED ){
-
-							return( null );
+	
+						@Override
+						public int[]
+						getPorts()
+						{
+							return( new int[]{
+								TCPNetworkManager.getSingleton().getTCPListeningPortNumber(),
+								UDPNetworkManager.getSingleton().getUDPListeningPortNumber(),
+								UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber()});
+	
 						}
-
-						try{
-
-							final Object target = DownloadManagerImpl.getDownloadStatic( matching_dm );
-
-							final boolean	is_seed = matching_dm.isDownloadComplete(true);
-
+						@Override
+						public VCPublicAddress
+						getVCPublicAddress()
+						{
 							return(
-								new ClientInstanceTracked.TrackTarget()
+								new VCPublicAddress()
 								{
+									private final VersionCheckClient vcc = VersionCheckClient.getSingleton();
+	
 									@Override
-									public Object
-									getTarget()
+									public String
+									getAddress()
 									{
-										return( target );
+										return( vcc.getExternalIpAddress( true, false ));
 									}
-
+	
 									@Override
-									public boolean
-									isSeed()
+									public long
+									getCacheTime()
 									{
-										return( is_seed );
+										return( vcc.getSingleton().getCacheTime( false ));
 									}
 								});
-
-						}catch( Throwable e ){
-
+						}
+	
+						@Override
+						public ClientInstanceTracked.TrackTarget
+						track(
+							byte[]		hash )
+						{
+							List	dms = getGlobalManager().getDownloadManagers();
+	
+							Iterator	it = dms.iterator();
+	
+							DownloadManager	matching_dm = null;
+	
+							try{
+								while( it.hasNext()){
+	
+									DownloadManager	dm = (DownloadManager)it.next();
+	
+									TOTorrent	torrent = dm.getTorrent();
+	
+									if ( torrent == null ){
+	
+										continue;
+									}
+	
+									byte[]	sha1_hash = (byte[])dm.getUserData( "AZInstanceManager::sha1_hash" );
+	
+									if ( sha1_hash == null ){
+	
+										sha1_hash	= new SHA1Simple().calculateHash( torrent.getHash());
+	
+										dm.setUserData( "AZInstanceManager::sha1_hash", sha1_hash );
+									}
+	
+									if ( Arrays.equals( hash, sha1_hash )){
+	
+										matching_dm	= dm;
+	
+										break;
+									}
+								}
+							}catch( Throwable e ){
+	
+								Debug.printStackTrace(e);
+							}
+	
+							if ( matching_dm == null ){
+	
+								return( null );
+							}
+	
+							if ( !matching_dm.getDownloadState().isPeerSourceEnabled( PEPeerSource.PS_PLUGIN )){
+	
+								return( null );
+							}
+	
+							int	dm_state = matching_dm.getState();
+	
+							if ( dm_state == DownloadManager.STATE_ERROR || dm_state == DownloadManager.STATE_STOPPED ){
+	
+								return( null );
+							}
+	
+							try{
+	
+								final Object target = DownloadManagerImpl.getDownloadStatic( matching_dm );
+	
+								final boolean	is_seed = matching_dm.isDownloadComplete(true);
+	
+								return(
+									new ClientInstanceTracked.TrackTarget()
+									{
+										@Override
+										public Object
+										getTarget()
+										{
+											return( target );
+										}
+	
+										@Override
+										public boolean
+										isSeed()
+										{
+											return( is_seed );
+										}
+									});
+	
+							}catch( Throwable e ){
+	
+								return( null );
+							}
+						}
+	
+						@Override
+						public DHTPlugin
+						getDHTPlugin()
+						{
+							PluginInterface pi = getPluginManager().getPluginInterfaceByClass( DHTPlugin.class );
+	
+							if ( pi != null ){
+	
+								return( (DHTPlugin)pi.getPlugin());
+							}
+	
 							return( null );
 						}
-					}
-
-					@Override
-					public DHTPlugin
-					getDHTPlugin()
-					{
-						PluginInterface pi = getPluginManager().getPluginInterfaceByClass( DHTPlugin.class );
-
-						if ( pi != null ){
-
-							return( (DHTPlugin)pi.getPlugin());
-						}
-
-						return( null );
-					}
-
-					@Override
-					public UPnPPlugin
-					getUPnPPlugin()
-					{
-						PluginInterface pi = getPluginManager().getPluginInterfaceByClass( UPnPPlugin.class );
-
-						if ( pi != null ){
-
-							return((UPnPPlugin)pi.getPlugin());
-						}
-
-						return( null );
-					}
-
-					@Override
-					public void
-					addListener(
-						final StateListener listener)
-					{
-						CoreImpl.this.addLifecycleListener(
-							new CoreLifecycleAdapter()
-							{
-								@Override
-								public void
-								started(
-									Core core)
-								{
-									listener.started();
-								}
-
-								@Override
-								public void
-								stopping(
-									Core core )
-								{
-									listener.stopped();
-								}
-							});
-					}
-				});
-
-		if (DEBUG_STARTUPTIME) {
-			logTime("Init instance_manager");
-		}
-
-		if ( COConfigurationManager.getBooleanParameter( "speedmanager.enable", true )){
-
-			speed_manager	=
-				SpeedManagerFactory.createSpeedManager(
-						this,
-						new SpeedManagerAdapter()
+	
+						@Override
+						public UPnPPlugin
+						getUPnPPlugin()
 						{
-							private static final int UPLOAD_SPEED_ADJUST_MIN_KB_SEC		= 10;
-							private static final int DOWNLOAD_SPEED_ADJUST_MIN_KB_SEC	= 300;
-
-							private boolean setting_limits;
-
-							@Override
-							public int
-							getCurrentProtocolUploadSpeed(
-								int	average_period )
-							{
-								if ( global_manager != null ){
-
-									GlobalManagerStats stats = global_manager.getStats();
-
-									return( stats.getProtocolSendRateNoLAN( average_period ));
-
-								}else{
-
-									return(0);
-								}
+							PluginInterface pi = getPluginManager().getPluginInterfaceByClass( UPnPPlugin.class );
+	
+							if ( pi != null ){
+	
+								return((UPnPPlugin)pi.getPlugin());
 							}
-
-							@Override
-							public int
-							getCurrentDataUploadSpeed(
-								int	average_period )
+	
+							return( null );
+						}
+	
+						@Override
+						public void
+						addListener(
+							final StateListener listener)
+						{
+							CoreImpl.this.addLifecycleListener(
+								new CoreLifecycleAdapter()
+								{
+									@Override
+									public void
+									started(
+										Core core)
+									{
+										listener.started();
+									}
+	
+									@Override
+									public void
+									stopping(
+										Core core )
+									{
+										listener.stopped();
+									}
+								});
+						}
+					});
+	
+			if (DEBUG_STARTUPTIME) {
+				logTime("Init instance_manager");
+			}
+	
+			if ( COConfigurationManager.getBooleanParameter( "speedmanager.enable", true )){
+	
+				speed_manager	=
+					SpeedManagerFactory.createSpeedManager(
+							this,
+							new SpeedManagerAdapter()
 							{
-								if ( global_manager != null ){
-
-									GlobalManagerStats stats = global_manager.getStats();
-
-									return( stats.getDataSendRateNoLAN( average_period ));
-
-								}else{
-
-									return(0);
-								}
-							}
-
-	                        @Override
-	                        public int
-	                        getCurrentProtocolDownloadSpeed(
-	                        	int	average_period )
-	                        {
-	                            if( global_manager != null ){
-	                                GlobalManagerStats stats = global_manager.getStats();
-	                                return (stats.getProtocolReceiveRateNoLAN( average_period ) );
-	                            }else{
-	                                return(0);
-	                            }
-	                        }
-
-	                        @Override
-	                        public int
-	                        getCurrentDataDownloadSpeed(
-	                        	int	average_period )
-	                        {
-	                            if( global_manager != null ){
-	                                GlobalManagerStats stats = global_manager.getStats();
-	                                return (stats.getDataReceiveRateNoLAN( average_period ) );
-	                            }else{
-	                                return(0);
-	                            }
-	                        }
-
-	                        @Override
-	                        public int
-							getCurrentUploadLimit()
-							{
-								String key = TransferSpeedValidator.getActiveUploadParameter( global_manager );
-
-								int	k_per_second = COConfigurationManager.getIntParameter( key );
-
-								int	bytes_per_second;
-
-								if ( k_per_second == 0 ){
-
-									bytes_per_second = Integer.MAX_VALUE;
-
-								}else{
-
-									bytes_per_second = k_per_second*1024;
-								}
-
-								return( bytes_per_second );
-							}
-
-							@Override
-							public void
-							setCurrentUploadLimit(
-								int		bytes_per_second )
-							{
-								if ( bytes_per_second != getCurrentUploadLimit()){
-
-									String key = TransferSpeedValidator.getActiveUploadParameter( global_manager );
-
-									int	k_per_second;
-
-									if ( bytes_per_second == Integer.MAX_VALUE ){
-
-										k_per_second	= 0;
-
+								private static final int UPLOAD_SPEED_ADJUST_MIN_KB_SEC		= 10;
+								private static final int DOWNLOAD_SPEED_ADJUST_MIN_KB_SEC	= 300;
+	
+								private boolean setting_limits;
+	
+								@Override
+								public int
+								getCurrentProtocolUploadSpeed(
+									int	average_period )
+								{
+									if ( global_manager != null ){
+	
+										GlobalManagerStats stats = global_manager.getStats();
+	
+										return( stats.getProtocolSendRateNoLAN( average_period ));
+	
 									}else{
-
-										k_per_second = (bytes_per_second+1023)/1024;
+	
+										return(0);
 									}
-
-									if ( k_per_second > 0 ){
-
-										k_per_second = Math.max( k_per_second, UPLOAD_SPEED_ADJUST_MIN_KB_SEC );
+								}
+	
+								@Override
+								public int
+								getCurrentDataUploadSpeed(
+									int	average_period )
+								{
+									if ( global_manager != null ){
+	
+										GlobalManagerStats stats = global_manager.getStats();
+	
+										return( stats.getDataSendRateNoLAN( average_period ));
+	
+									}else{
+	
+										return(0);
 									}
-
-									COConfigurationManager.setParameter( key, k_per_second );
 								}
-							}
-
-							@Override
-							public int
-							getCurrentDownloadLimit()
-							{
-								return( TransferSpeedValidator.getGlobalDownloadRateLimitBytesPerSecond());
-							}
-
-							@Override
-							public void
-							setCurrentDownloadLimit(
-								int		bytes_per_second )
-							{
-								if ( bytes_per_second == Integer.MAX_VALUE ){
-
-									bytes_per_second = 0;
+	
+		                        @Override
+		                        public int
+		                        getCurrentProtocolDownloadSpeed(
+		                        	int	average_period )
+		                        {
+		                            if( global_manager != null ){
+		                                GlobalManagerStats stats = global_manager.getStats();
+		                                return (stats.getProtocolReceiveRateNoLAN( average_period ) );
+		                            }else{
+		                                return(0);
+		                            }
+		                        }
+	
+		                        @Override
+		                        public int
+		                        getCurrentDataDownloadSpeed(
+		                        	int	average_period )
+		                        {
+		                            if( global_manager != null ){
+		                                GlobalManagerStats stats = global_manager.getStats();
+		                                return (stats.getDataReceiveRateNoLAN( average_period ) );
+		                            }else{
+		                                return(0);
+		                            }
+		                        }
+	
+		                        @Override
+		                        public int
+								getCurrentUploadLimit()
+								{
+									String key = TransferSpeedValidator.getActiveUploadParameter( global_manager );
+	
+									int	k_per_second = COConfigurationManager.getIntParameter( key );
+	
+									int	bytes_per_second;
+	
+									if ( k_per_second == 0 ){
+	
+										bytes_per_second = Integer.MAX_VALUE;
+	
+									}else{
+	
+										bytes_per_second = k_per_second*1024;
+									}
+	
+									return( bytes_per_second );
 								}
-
-								if ( bytes_per_second > 0 ){
-
-									bytes_per_second = Math.max( bytes_per_second, DOWNLOAD_SPEED_ADJUST_MIN_KB_SEC*1024 );
+	
+								@Override
+								public void
+								setCurrentUploadLimit(
+									int		bytes_per_second )
+								{
+									if ( bytes_per_second != getCurrentUploadLimit()){
+	
+										String key = TransferSpeedValidator.getActiveUploadParameter( global_manager );
+	
+										int	k_per_second;
+	
+										if ( bytes_per_second == Integer.MAX_VALUE ){
+	
+											k_per_second	= 0;
+	
+										}else{
+	
+											k_per_second = (bytes_per_second+1023)/1024;
+										}
+	
+										if ( k_per_second > 0 ){
+	
+											k_per_second = Math.max( k_per_second, UPLOAD_SPEED_ADJUST_MIN_KB_SEC );
+										}
+	
+										COConfigurationManager.setParameter( key, k_per_second );
+									}
 								}
-
-								TransferSpeedValidator.setGlobalDownloadRateLimitBytesPerSecond( bytes_per_second );
-							}
-
-							@Override
-							public Object
-							getLimits()
-							{
-								String up_key 	= TransferSpeedValidator.getActiveUploadParameter( global_manager );
-								String down_key	= TransferSpeedValidator.getDownloadParameter();
-
-								return(
-									new Object[]{
-										up_key,
-										new Integer( COConfigurationManager.getIntParameter( up_key )),
-										down_key,
-										new Integer( COConfigurationManager.getIntParameter( down_key )),
-									});
-							}
-
-							@Override
-							public void
-							setLimits(
-								Object		limits,
-								boolean		do_up,
-								boolean		do_down )
-							{
-								if ( limits == null ){
-
-									return;
+	
+								@Override
+								public int
+								getCurrentDownloadLimit()
+								{
+									return( TransferSpeedValidator.getGlobalDownloadRateLimitBytesPerSecond());
 								}
-								try{
-									if ( setting_limits ){
-
+	
+								@Override
+								public void
+								setCurrentDownloadLimit(
+									int		bytes_per_second )
+								{
+									if ( bytes_per_second == Integer.MAX_VALUE ){
+	
+										bytes_per_second = 0;
+									}
+	
+									if ( bytes_per_second > 0 ){
+	
+										bytes_per_second = Math.max( bytes_per_second, DOWNLOAD_SPEED_ADJUST_MIN_KB_SEC*1024 );
+									}
+	
+									TransferSpeedValidator.setGlobalDownloadRateLimitBytesPerSecond( bytes_per_second );
+								}
+	
+								@Override
+								public Object
+								getLimits()
+								{
+									String up_key 	= TransferSpeedValidator.getActiveUploadParameter( global_manager );
+									String down_key	= TransferSpeedValidator.getDownloadParameter();
+	
+									return(
+										new Object[]{
+											up_key,
+											new Integer( COConfigurationManager.getIntParameter( up_key )),
+											down_key,
+											new Integer( COConfigurationManager.getIntParameter( down_key )),
+										});
+								}
+	
+								@Override
+								public void
+								setLimits(
+									Object		limits,
+									boolean		do_up,
+									boolean		do_down )
+								{
+									if ( limits == null ){
+	
 										return;
 									}
-
-									setting_limits	= true;
-
-									Object[]	bits = (Object[])limits;
-
-									if ( do_up ){
-
-										COConfigurationManager.setParameter((String)bits[0], ((Integer)bits[1]).intValue());
+									try{
+										if ( setting_limits ){
+	
+											return;
+										}
+	
+										setting_limits	= true;
+	
+										Object[]	bits = (Object[])limits;
+	
+										if ( do_up ){
+	
+											COConfigurationManager.setParameter((String)bits[0], ((Integer)bits[1]).intValue());
+										}
+	
+										if ( do_down ){
+	
+											COConfigurationManager.setParameter((String)bits[2], ((Integer)bits[3]).intValue());
+										}
+	
+									}finally{
+	
+										setting_limits	= false;
+	
 									}
-
-									if ( do_down ){
-
-										COConfigurationManager.setParameter((String)bits[2], ((Integer)bits[3]).intValue());
-									}
-
-								}finally{
-
-									setting_limits	= false;
-
 								}
-							}
-						});
-			if (DEBUG_STARTUPTIME) {
-				logTime("SpeedManager");
+							});
+				if (DEBUG_STARTUPTIME) {
+					logTime("SpeedManager");
+				}
 			}
-		}
-
-		nat_traverser = new NATTraverser( this );
-
-		PeerNATTraverser.initialise( this );
-
-		BackupManagerFactory.getManager( this );
-
-
-		if (DEBUG_STARTUPTIME) {
-			logTime("BackupManagerFactory,NATTraverser");
-		}
-			// one off explicit GC to clear up initialisation mem
-
-		SimpleTimer.addEvent(
-				"Core:gc",
-				SystemTime.getOffsetTime(60*1000),
-				new TimerEventPerformer()
-				{
-					@Override
-					public void
-					perform(
-						TimerEvent event)
+	
+			nat_traverser = new NATTraverser( this );
+	
+			PeerNATTraverser.initialise( this );
+	
+			BackupManagerFactory.getManager( this );
+	
+	
+			if (DEBUG_STARTUPTIME) {
+				logTime("BackupManagerFactory,NATTraverser");
+			}
+				// one off explicit GC to clear up initialisation mem
+	
+			SimpleTimer.addEvent(
+					"Core:gc",
+					SystemTime.getOffsetTime(60*1000),
+					new TimerEventPerformer()
 					{
-						System.gc();
-					}
-				});
+						@Override
+						public void
+						perform(
+							TimerEvent event)
+						{
+							System.gc();
+						}
+					});
+			
+		}catch( Throwable e ) {
+		
+			Debug.out( "Initialisation failed", e );
+			
+			if ( e instanceof RuntimeException ){
+				
+				throw((RuntimeException)e);
+			}
+			
+			throw( new RuntimeException( e ));
+		}
 	}
 
 	private static void logTime(String s) {
@@ -1545,6 +1558,8 @@ CoreImpl
 
 		throws CoreException
 	{
+		Logger.setClosing();
+		
 		AEDiagnostics.flushPendingLogs();
 
 		boolean	wait_and_return = false;
@@ -1595,9 +1610,11 @@ CoreImpl
 			return;
 		}
 
+		final AtomicLong last_progress = new AtomicLong( SystemTime.getMonotonousTime());
+		
 		SimpleTimer.addEvent(
 			"ShutFail",
-			SystemTime.getOffsetTime( 30*1000 ),
+			SystemTime.getOffsetTime( 60*1000 ),
 			new TimerEventPerformer()
 			{
 				boolean	die_die_die;
@@ -1606,7 +1623,20 @@ CoreImpl
 				public void
 				perform(
 					TimerEvent event )
-				{
+				{	
+					last_progress.set( SystemTime.getMonotonousTime());
+					
+						// hang around while things are making progress
+					
+					while( SystemTime.getMonotonousTime() - last_progress.get() < 30*1000 ){
+						
+						try{
+							Thread.sleep(5000);
+							
+						}catch( Throwable e ){
+						}
+					}
+					
 					AEDiagnostics.dumpThreads();
 
 					if ( die_die_die ){
@@ -1687,6 +1717,8 @@ CoreImpl
 
 					Debug.printStackTrace(e);
 				}
+				
+				last_progress.set( SystemTime.getMonotonousTime());
 			}
 
 			if (Logger.isEnabled())
@@ -1708,11 +1740,19 @@ CoreImpl
 							Object		value )
 						{
 							((CoreLifecycleListener)listener).stopping( CoreImpl.this );
+							
+							last_progress.set( SystemTime.getMonotonousTime());
 						}
 					},
 					10*1000 );
 
+			if (Logger.isEnabled())
+				Logger.log(new LogEvent(LOGID, "Waiting for quiescence pre gm stop"));
 
+			NonDaemonTaskRunner.waitUntilIdle();
+
+			last_progress.set( SystemTime.getMonotonousTime());
+			
 			if (Logger.isEnabled())
 				Logger.log(new LogEvent(LOGID, "Stopping global manager"));
 
@@ -1720,6 +1760,8 @@ CoreImpl
 				global_manager.stopGlobalManager();
 			}
 
+			last_progress.set( SystemTime.getMonotonousTime());
+			
 			if (Logger.isEnabled())
 				Logger.log(new LogEvent(LOGID, "Invoking synchronous 'stopped' listeners"));
 
@@ -1731,6 +1773,8 @@ CoreImpl
 
 					Debug.printStackTrace(e);
 				}
+				
+				last_progress.set( SystemTime.getMonotonousTime());
 			}
 
 			if (Logger.isEnabled())
@@ -1748,15 +1792,19 @@ CoreImpl
 							Object		value )
 						{
 							((CoreLifecycleListener)listener).stopped( CoreImpl.this );
+							
+							last_progress.set( SystemTime.getMonotonousTime());
 						}
 					},
 					10*1000 );
 
 			if (Logger.isEnabled())
-				Logger.log(new LogEvent(LOGID, "Waiting for quiescence"));
+				Logger.log(new LogEvent(LOGID, "Waiting for quiescence post gm stop"));
 
 			NonDaemonTaskRunner.waitUntilIdle();
 
+			last_progress.set( SystemTime.getMonotonousTime());
+			
 				// shut down diags - this marks the shutdown as tidy and saves the config
 
 			AEDiagnostics.markClean();

@@ -30,6 +30,8 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.impl.PEPeerControl;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
@@ -741,9 +743,9 @@ TagPropertyConstraintHandler
 
 			}catch( Throwable e ){
 
-				tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint: " + Debug.getNestedExceptionMessage( e ));
+				Debug.out( e );
 				
-				Debug.out( "Invalid constraint: " + constraint + " - " + Debug.getNestedExceptionMessage( e ));
+				setError( "Invalid constraint: " + Debug.getNestedExceptionMessage( e ));
 
 			}finally{
 
@@ -751,6 +753,15 @@ TagPropertyConstraintHandler
 			}
 		}
 
+		private void
+		setError(
+			String		str )
+		{
+			tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, str );
+			
+			Debug.out( str );
+		}
+		
 		private boolean
 		dependOnDownloadState()
 		{
@@ -945,7 +956,7 @@ TagPropertyConstraintHandler
 		apply(
 			DownloadManager			dm )
 		{
-			if ( dm.isDestroyed() || !dm.isPersistent()){
+			if ( ignoreDownload( dm )){
 
 				return;
 			}
@@ -1024,7 +1035,7 @@ TagPropertyConstraintHandler
 
 			for ( DownloadManager dm: dms ){
 
-				if ( dm.isDestroyed() || !dm.isPersistent()){
+				if ( ignoreDownload( dm )){
 
 					continue;
 				}
@@ -1064,7 +1075,23 @@ TagPropertyConstraintHandler
 			}
 		}
 
-
+		private boolean
+		ignoreDownload(
+			DownloadManager dm )
+		{
+			if ( dm.isDestroyed()) {
+				
+				return( true );
+				
+			}else if ( !dm.isPersistent()) {
+			
+				return( !dm.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
+				
+			}else{
+				
+				return( false );
+			}
+		}
 
 		private boolean
 		canAddTaggable(
@@ -1104,13 +1131,13 @@ TagPropertyConstraintHandler
 		{
 			List<Tag> dm_tags = handler.tag_manager.getTagsForTaggable( dm );
 
-			return( expr.eval( dm, dm_tags ));
+			return( (Boolean)expr.eval( dm, dm_tags ));
 		}
 
 		private interface
 		ConstraintExpr
 		{
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags );
@@ -1124,7 +1151,7 @@ TagPropertyConstraintHandler
 			implements ConstraintExpr
 		{
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
@@ -1140,7 +1167,7 @@ TagPropertyConstraintHandler
 			}
 		}
 
-		private static class
+		private class
 		ConstraintExprParams
 			implements  ConstraintExpr
 		{
@@ -1154,7 +1181,7 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
@@ -1168,9 +1195,14 @@ TagPropertyConstraintHandler
 				if ( value.length() == 0 ){
 
 					return( new String[0]);
-
+					
 				}else if ( !value.contains( "," )){
 
+					if ( value.contains( "(" )){
+						
+						return( new Object[]{  compileStart(value, new HashMap<String,ConstraintExpr>())});
+					}
+					
 					return( new Object[]{ value });
 
 				}else{
@@ -1179,7 +1211,7 @@ TagPropertyConstraintHandler
 
 					boolean in_quote = false;
 
-					List<String>	params = new ArrayList<>(16);
+					List<Object>	params = new ArrayList<>(16);
 
 					StringBuilder current_param = new StringBuilder( value.length());
 
@@ -1212,6 +1244,12 @@ TagPropertyConstraintHandler
 
 					params.add( current_param.toString());
 
+					for ( int i=0;i<params.size();i++){
+						String p = (String)params.get( i );
+						if ( p.contains( "(" )){
+							params.set(i,compileStart(p, new HashMap<String,ConstraintExpr>()));
+						}
+					}
 					return( params.toArray( new Object[ params.size()]));
 				}
 			}
@@ -1238,12 +1276,12 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
 			{
-				return( !expr.eval( dm, tags ));
+				return( ! (Boolean)expr.eval( dm, tags ));
 			}
 
 			@Override
@@ -1268,14 +1306,14 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
 			{
 				for ( ConstraintExpr expr: exprs ){
 
-					if ( expr.eval( dm, tags )){
+					if (  (Boolean)expr.eval( dm, tags )){
 
 						return( true );
 					}
@@ -1313,14 +1351,14 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
 			{
 				for ( ConstraintExpr expr: exprs ){
 
-					if ( !expr.eval( dm, tags )){
+					if ( ! (Boolean)expr.eval( dm, tags )){
 
 						return( false );
 					}
@@ -1363,16 +1401,16 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
 			{
-				boolean res = exprs[0].eval( dm, tags );
+				boolean res =  (Boolean)exprs[0].eval( dm, tags );
 
 				for ( int i=1;i<exprs.length;i++){
 
-					res = res ^ exprs[i].eval( dm, tags );
+					res = res ^  (Boolean)exprs[i].eval( dm, tags );
 				}
 
 				return( res );
@@ -1415,7 +1453,9 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_STOPPED		= 17;
 		private static final int FT_IS_PAUSED		= 18;
 		private static final int FT_IS_ERROR		= 19;
-
+		private static final int FT_IS_MAGNET		= 20;
+		private static final int FT_IS_LOW_NOISE	= 21;
+		private static final int FT_COUNT_TAG		= 22;
 
 		static final Map<String,Integer>	keyword_map = new HashMap<>();
 
@@ -1434,6 +1474,10 @@ TagPropertyConstraintHandler
 		private static final int	KW_HOUR_OF_DAY 		= 12;
 		private static final int	KW_DAY_OF_WEEK 		= 13;
 		private static final int	KW_TAG_AGE 			= 14;
+		private static final int	KW_COMPLETED_AGE 	= 15;
+		private static final int	KW_PEER_MAX_COMP 	= 16;
+		private static final int	KW_PEER_AVERAGE_COMP 	= 17;
+		private static final int	KW_LEECHER_MAX_COMP 	= 18;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1465,7 +1509,20 @@ TagPropertyConstraintHandler
 			keyword_map.put( "day_of_week", KW_DAY_OF_WEEK );
 			keyword_map.put( "tagage", KW_TAG_AGE );
 			keyword_map.put( "tag_age", KW_TAG_AGE );
+			keyword_map.put( "completedage", KW_COMPLETED_AGE );
+			keyword_map.put( "completed_age", KW_COMPLETED_AGE );
 
+			keyword_map.put( "peermaxcompletion", KW_PEER_MAX_COMP );
+			keyword_map.put( "peer_max_completion", KW_PEER_MAX_COMP );
+			
+			keyword_map.put( "leechmaxcompletion", KW_LEECHER_MAX_COMP );
+			keyword_map.put( "leech_max_completion", KW_LEECHER_MAX_COMP );
+			keyword_map.put( "leechermaxcompletion", KW_LEECHER_MAX_COMP );
+			keyword_map.put( "leecher_max_completion", KW_LEECHER_MAX_COMP );
+			
+			keyword_map.put( "peeraveragecompletion", KW_PEER_AVERAGE_COMP );
+			keyword_map.put( "peer_average_completion", KW_PEER_AVERAGE_COMP );
+			
 		}
 
 		private class
@@ -1562,6 +1619,18 @@ TagPropertyConstraintHandler
 					depends_on_download_state = true;
 
 					params_ok = params.length == 0;
+					
+				}else if ( func_name.equals( "isMagnet" )){
+
+					fn_type = FT_IS_MAGNET;
+
+					params_ok = params.length == 0;
+
+				}else if ( func_name.equals( "isLowNoise" )){
+
+					fn_type = FT_IS_LOW_NOISE;
+
+					params_ok = params.length == 0;
 
 				}else if ( func_name.equals( "canArchive" )){
 
@@ -1636,6 +1705,12 @@ TagPropertyConstraintHandler
 
 					depends_on_download_state = true;	// dunno so let's assume so
 
+				}else if ( func_name.equals( "countTag" )){
+
+					fn_type = FT_COUNT_TAG;
+
+					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+
 				}else{
 
 					throw( new RuntimeException( "Unsupported function '" + func_name + "'" ));
@@ -1649,7 +1724,7 @@ TagPropertyConstraintHandler
 			}
 
 			@Override
-			public boolean
+			public Object
 			eval(
 				DownloadManager		dm,
 				List<Tag>			tags )
@@ -1668,6 +1743,23 @@ TagPropertyConstraintHandler
 						}
 
 						return( false );
+					}
+					case FT_COUNT_TAG:{
+						
+						String tag_name = (String)params[0];
+						
+						List<Tag> fred = handler.tag_manager.lookupTagsByName( tag_name );
+						
+						if ( fred.isEmpty()){
+							
+							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Tag '" + tag_name + "' not found" );
+							
+							return( 0 );
+							
+						}else{
+							
+							return( fred.get(0).getTaggedCount());
+						}
 					}
 					case FT_HAS_NET:{
 
@@ -1737,6 +1829,14 @@ TagPropertyConstraintHandler
 
 						return( state == DownloadManager.STATE_ERROR );
 					}
+					case FT_IS_MAGNET:{
+
+						return( dm.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
+					}
+					case FT_IS_LOW_NOISE:{
+
+						return( dm.getDownloadState().getFlag(DownloadManagerState.FLAG_LOW_NOISE ));
+					}
 					case FT_IS_PAUSED:{
 
 						return( dm.isPaused());
@@ -1754,8 +1854,8 @@ TagPropertyConstraintHandler
 					case FT_EQ:
 					case FT_NEQ:{
 
-						Number n1 = getNumeric( dm, params, 0 );
-						Number n2 = getNumeric( dm, params, 1 );
+						Number n1 = getNumeric( dm, tags, params, 0 );
+						Number n2 = getNumeric( dm, tags, params, 1 );
 
 						switch( fn_type ){
 
@@ -1805,9 +1905,7 @@ TagPropertyConstraintHandler
 
 							}catch( Throwable e ){
 
-								Debug.out( "Invalid constraint pattern: " + params[1] );
-
-								tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
+								setError( "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
 								
 								params[1] = null;
 							}
@@ -1876,7 +1974,7 @@ TagPropertyConstraintHandler
 
 				}else{
 
-					Debug.out( "Invalid constraint string: " + str );
+					setError( "Invalid constraint string: " + str );
 
 					String result = "\"\"";
 
@@ -1889,6 +1987,7 @@ TagPropertyConstraintHandler
 			private Number
 			getNumeric(
 				DownloadManager		dm,
+				List<Tag>			tags,
 				Object[]			args,
 				int					index )
 			{
@@ -1897,8 +1996,13 @@ TagPropertyConstraintHandler
 				if ( arg instanceof Number ){
 
 					return((Number)arg);
+					
+				}else if ( arg instanceof ConstraintExpr ){
+					
+					return((Number)((ConstraintExpr)arg).eval(dm, tags));
 				}
 
+				
 				String str = (String)arg;
 
 				Number result = 0;
@@ -1922,7 +2026,7 @@ TagPropertyConstraintHandler
 
 						if ( kw == null ){
 
-							Debug.out( "Invalid constraint keyword: " + str );
+							setError(  "Invalid constraint keyword: " + str );
 
 							return( result );
 						}
@@ -1964,6 +2068,59 @@ TagPropertyConstraintHandler
 								}
 
 								return(( SystemTime.getCurrentTime() - added )/1000 );		// secs
+							}
+							case KW_COMPLETED_AGE:{
+
+								result = null;	// don't cache this!
+
+								long comp = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME );
+
+								if ( comp <= 0 ){
+
+									return( 0 );
+								}
+
+								return(( SystemTime.getCurrentTime() - comp )/1000 );		// secs
+							}
+							case KW_PEER_MAX_COMP:{
+
+								result = null;	// don't cache this!
+
+								PEPeerManager pm = dm.getPeerManager();
+								
+								if ( pm == null ){
+									
+									return( 0 );
+								}
+								
+								return(	new Float( pm.getMaxCompletionInThousandNotation( false )/10.0f ));
+							}
+							case KW_LEECHER_MAX_COMP:{
+
+								result = null;	// don't cache this!
+
+								PEPeerManager pm = dm.getPeerManager();
+								
+								if ( pm == null ){
+									
+									return( 0 );
+								}
+								
+								return(	new Float( pm.getMaxCompletionInThousandNotation( true )/10.0f ));
+							}
+
+							case KW_PEER_AVERAGE_COMP:{
+
+								result = null;	// don't cache this!
+
+								PEPeerManager pm = dm.getPeerManager();
+								
+								if ( pm == null ){
+									
+									return( 0 );
+								}
+								
+								return(	new Float( pm.getAverageCompletionInThousandNotation()/10.0f ));
 							}
 							case KW_DOWNLOADING_FOR:{
 
@@ -2143,7 +2300,7 @@ TagPropertyConstraintHandler
 
 							default:{
 
-								Debug.out( "Invalid constraint keyword: " + str );
+								setError( "Invalid constraint keyword: " + str );
 
 								return( result );
 							}
@@ -2151,7 +2308,7 @@ TagPropertyConstraintHandler
 					}
 				}catch( Throwable e){
 
-					Debug.out( "Invalid constraint numeric: " + str );
+					setError( "Invalid constraint numeric: " + str );
 
 					return( result );
 

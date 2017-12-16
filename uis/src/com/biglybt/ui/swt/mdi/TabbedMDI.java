@@ -139,6 +139,8 @@ public class TabbedMDI
 	@Override
 	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
 
+		saveCloseables();
+		
 		MdiEntry[] entries = getEntries();
 		for (MdiEntry entry : entries) {
 			entry.close(true);
@@ -366,13 +368,6 @@ public class TabbedMDI
   			}
   		});
 		}
-
-		tabFolder.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				saveCloseables();
-			}
-		});
 
 		tabFolder.getTabHeight();
 		final Menu menu = new Menu( tabFolder );
@@ -674,9 +669,13 @@ public class TabbedMDI
 			datasource = ((UISWTViewEventListenerHolder)l).getInitialDataSource();
 		}
 		try {
+			// hack - seteventlistener will create view it needs to have item available now, not a little later
+			addItem(entry );
+			
 			entry.setEventListener(l, true);
 		} catch (UISWTViewEventCancelledException e) {
 			entry.close(true);
+			removeItem(entry,false);
 			return null;
 		}
 		entry.setDatasource(datasource);

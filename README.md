@@ -1,10 +1,15 @@
 # BiglyBT
 
-Source for BiglyBT.
+Source for BiglyBT, open source bittorrent client.
 
-In addition to the GitHub Issues page, we have a [Feature Voting Page](https://vote.biglybt.com)
+* [Ways to Contribute](CONTRIBUTING.md)
+* [Translation Information](TRANSLATE.md)
+* [Feature Voting Page](https://vote.biglybt.com)
 
-***
+## Donations
+Bitcoin Cash (BCH)/Bitcoin Blockstream (BTC): 1BiGLYBT38ttJhvZkjGc5mCw5uKoRHcUmr
+
+## Setting up Dev Environment
 
 Getting the basics to compile from source is pretty straightforward:
 
@@ -16,7 +21,7 @@ Getting the basics to compile from source is pretty straightforward:
 
 Intellij will do all these steps for you with its wizard, and the only change you need to make is to remove one of the swt.jar files it found.
 
-***
+## Running in Dev Environment
 
 Running is only few more steps:
 

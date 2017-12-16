@@ -117,7 +117,7 @@ public class ViewQuickNotifications
 
 			c.addMouseListener( listener );
 
-			Messages.setLanguageTooltip( c, "label.click.to.view" );
+			Messages.setLanguageTooltip( c, "label.click.to.view.tooltip" );
 		}
 
 		notification_text.addPaintListener(

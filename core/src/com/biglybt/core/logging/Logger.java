@@ -81,6 +81,12 @@ public class Logger {
 	public static boolean isEnabled() {
 		return loggerImpl.isEnabled();
 	}
+	
+	public static void
+	setClosing()
+	{
+		loggerImpl.setClosing();
+	}
 
 	/**
 	 * Log an event

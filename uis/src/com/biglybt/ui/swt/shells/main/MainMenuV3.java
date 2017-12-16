@@ -86,7 +86,7 @@ public class MainMenuV3
 			menuBar = new Menu(parent, SWT.BAR);
 			parent.setMenuBar(menuBar);
 		} else {
-			Utils.disposeSWTObjects(menuBar.getItems());
+			Utils.disposeSWTObjects((Object[])menuBar.getItems());
 		}
 
 		addFileMenu();

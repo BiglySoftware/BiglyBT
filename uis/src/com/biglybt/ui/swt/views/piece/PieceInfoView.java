@@ -29,10 +29,14 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.core.disk.impl.DiskManagerImpl;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
+import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPieceListener;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -43,6 +47,10 @@ import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEvent;
+import com.biglybt.core.util.TimerEventPerformer;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -88,6 +96,8 @@ public class PieceInfoView
 	private final static int BLOCKCOLOR_NEXT = 3;
 
 	private final static int BLOCKCOLOR_AVAILCOUNT = 4;
+	
+	private final static int BLOCKCOLOR_SHOWFILE = 5;
 
 	public static final String MSGID_PREFIX = "PieceInfoView";
 
@@ -107,6 +117,13 @@ public class PieceInfoView
 	private String topLabelLHS = "";
 	private String topLabelRHS = "";
 
+	private int		selectedPiece					= -1;
+	private int		selectedPieceShowFilePending	= -1;
+	private boolean	selectedPieceShowFile;
+	
+	private Color	file_color;
+	private Color	file_color_faded;
+	
 	private Label imageLabel;
 
 	// More delay for this view because of high workload
@@ -132,7 +149,8 @@ public class PieceInfoView
 			Colors.white,
 			Colors.red,
 			Colors.fadedRed,
-			Colors.black
+			Colors.black,
+			Colors.fadedGreen
 		};
 	}
 
@@ -246,6 +264,7 @@ public class PieceInfoView
 		imageLabel.setLayoutData(gridData);
 
 		topLabel = new Label(pieceInfoComposite, SWT.NULL);
+		topLabel.setBackground(Colors.white);
 		gridData = new GridData(SWT.FILL, SWT.DEFAULT, false, false);
 		topLabel.setLayoutData(gridData);
 
@@ -326,6 +345,20 @@ public class PieceInfoView
 
 		sc.setContent(pieceInfoCanvas);
 
+		pieceInfoCanvas.addMouseMoveListener(
+			new MouseMoveListener(){
+				
+				@Override
+				public void mouseMove(MouseEvent event){
+					int piece_number = getPieceNumber( event.x, event.y );
+					
+					if ( piece_number != selectedPiece ){
+						
+						selectedPieceShowFilePending = -1;
+					}
+				}
+			});
+		
 		pieceInfoCanvas.addMouseTrackListener(
 			new MouseTrackAdapter()
 			{
@@ -338,6 +371,35 @@ public class PieceInfoView
 
 					if ( piece_number >= 0 ){
 
+						selectedPiece 					= piece_number;
+						selectedPieceShowFilePending	= piece_number;
+						
+						SimpleTimer.addEvent(
+							"ShowFile",
+							SystemTime.getOffsetTime( 1000 ),
+							new TimerEventPerformer(){
+								
+								@Override
+								public void perform(TimerEvent event){										
+									Utils.execSWTThread(
+										new Runnable(){
+											
+											@Override
+											public void run(){
+												
+												if ( selectedPieceShowFilePending == piece_number ){
+
+													selectedPieceShowFile = true;
+													
+													refreshInfoCanvas();
+												}	
+											}
+										});
+									}
+							});
+						
+						refreshInfoCanvas();
+						
 						DiskManager		disk_manager 	= dlm.getDiskManager();
 						PEPeerManager	pm 				= dlm.getPeerManager();
 
@@ -357,7 +419,20 @@ public class PieceInfoView
 								text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
 							}
 						}
-
+						
+						text += " - ";
+						
+						DMPieceList l = disk_manager.getPieceList( piece_number );
+						
+						for ( int i=0;i<l.size();i++) {
+		           		 
+							DMPieceMapEntry entry = l.get( i );
+							
+							DiskManagerFileInfo info = entry.getFile();
+					
+							text += (i==0?"":"; ") + info.getFile( true ).getName();
+						}
+						
 						topLabelRHS = text;
 
 					}else{
@@ -366,6 +441,14 @@ public class PieceInfoView
 					}
 
 					updateTopLabel();
+				}
+				
+				@Override
+				public void mouseExit(MouseEvent e){
+					selectedPiece 			= -1;
+					selectedPieceShowFile 	= false;
+					
+					refreshInfoCanvas();
 				}
 			});
 
@@ -455,6 +538,61 @@ public class PieceInfoView
 
 						reset_piece.addSelectionListener(
 								new SelectionListenerResetPiece(dm_piece, pm_piece));
+										
+						new MenuItem( menu, SWT.SEPARATOR );
+						
+						final MenuItem seq_asc = new MenuItem( menu, SWT.PUSH );
+
+						Messages.setLanguageText( seq_asc, "label.seq.asc.from", new String[]{ String.valueOf( piece_number )});
+
+						seq_asc.addSelectionListener(
+							new SelectionAdapter()
+							{
+								@Override
+								public void widgetSelected(SelectionEvent e){
+									
+									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+									
+									picker.setReverseBlockOrder( false );
+									
+									picker.setSequentialAscendingFrom( piece_number );
+								}
+							});
+						
+						final MenuItem seq_desc = new MenuItem( menu, SWT.PUSH );
+
+						Messages.setLanguageText( seq_desc, "label.seq.desc.from", new String[]{ String.valueOf( piece_number )});
+
+						seq_desc.addSelectionListener(
+							new SelectionAdapter()
+							{
+								@Override
+								public void widgetSelected(SelectionEvent e){
+									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+									
+									picker.setReverseBlockOrder( true );
+									
+									picker.setSequentialDescendingFrom( piece_number );
+								}
+							});
+						
+						final MenuItem seq_clear = new MenuItem( menu, SWT.PUSH );
+
+						Messages.setLanguageText( seq_clear, "label.seq.clear", new String[]{ String.valueOf( piece_number )});
+
+						seq_clear.addSelectionListener(
+							new SelectionAdapter()
+							{
+								@Override
+								public void widgetSelected(SelectionEvent e){
+									download_manager.getDownloadState().setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, false);
+									
+									picker.setReverseBlockOrder( false );
+									
+									picker.clearSequential();
+								}
+							});
+						
 					}
 				}
 			});
@@ -467,7 +605,8 @@ public class PieceInfoView
 					"PiecesView.BlockView.NoHave",
 					"PeersView.BlockView.Transfer",
 					"PeersView.BlockView.NextRequest",
-					"PeersView.BlockView.AvailCount"
+					"PeersView.BlockView.AvailCount",
+					"PeersView.BlockView.ShowFile"
 				}, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 2, 1));
 
 		int iFontPixelsHeight = 10;
@@ -700,6 +839,35 @@ public class PieceInfoView
 				gcImg.fillRectangle(0, 0, bounds.width, iNeededHeight);
 			}
 
+			int	selectionStart 	= Integer.MAX_VALUE;
+			int selectionEnd	= Integer.MIN_VALUE;
+			
+			if ( selectedPiece != -1 ){
+			
+				if ( selectedPieceShowFile ){
+					
+					DMPieceList l = dm.getPieceList( selectedPiece );
+				
+					for ( int i=0;i<l.size();i++) {
+	           		 
+						DMPieceMapEntry entry = l.get( i );
+						
+						DiskManagerFileInfo info = entry.getFile();
+						
+						int first 	= info.getFirstPieceNumber();
+						int last	= info.getLastPieceNumber();
+						
+						if ( first < selectionStart ){
+							selectionStart = first;
+						}
+						
+						if ( last > selectionEnd ){
+							selectionEnd = last;
+						}
+					}
+				}
+			}
+			
 			gcImg.setFont(font);
 
 			int iCol = 0;
@@ -709,16 +877,19 @@ public class PieceInfoView
 					iRow++;
 				}
 
-				newBlockInfo[i] = new BlockInfo();
+				BlockInfo newInfo = newBlockInfo[i] = new BlockInfo();
 
-				int colorIndex;
+				if ( i >= selectionStart && i <= selectionEnd ){
+					newInfo.selected = true;
+				}
+
 				boolean done = dm_pieces[i].isDone();
 				int iXPos = iCol * BLOCK_SIZE + 1;
 				int iYPos = iRow * BLOCK_SIZE + 1;
 
 				if (done) {
-					colorIndex = BLOCKCOLOR_HAVE;
-					newBlockInfo[i].haveWidth = BLOCK_FILLSIZE;
+				
+					newInfo.haveWidth = BLOCK_FILLSIZE;
 				} else {
 					// !done
 					boolean partiallyDone = dm_pieces[i].getNbWritten() > 0;
@@ -731,65 +902,81 @@ public class PieceInfoView
 						else if (iNewWidth <= 0)
 							iNewWidth = 1;
 
-						newBlockInfo[i].haveWidth = iNewWidth;
+						newInfo.haveWidth = iNewWidth;
 					}
 				}
 
 				if (currentDLPieces[i] != null && currentDLPieces[i].hasUndownloadedBlock()) {
-					newBlockInfo[i].showDown = currentDLPieces[i].getNbRequests() == 0
+					newInfo.showDown = currentDLPieces[i].getNbRequests() == 0
 							? SHOW_SMALL : SHOW_BIG;
 				}
 
 				if (uploadingPieces[i] > 0) {
-					newBlockInfo[i].showUp = uploadingPieces[i] < 2 ? SHOW_SMALL
+					newInfo.showUp = uploadingPieces[i] < 2 ? SHOW_SMALL
 							: SHOW_BIG;
 				}
 
 
 				if (availability != null) {
-					newBlockInfo[i].availNum = availability[i];
+					newInfo.availNum = availability[i];
 					if (minAvailability2 == availability[i]) {
-						newBlockInfo[i].availDotted = true;
+						newInfo.availDotted = true;
 					}
 				} else {
-					newBlockInfo[i].availNum = -1;
+					newInfo.availNum = -1;
 				}
 
 				if (oldBlockInfo != null && i < oldBlockInfo.length
-						&& oldBlockInfo[i].sameAs(newBlockInfo[i])) {
+						&& oldBlockInfo[i].sameAs(newInfo)) {
 					iCol++;
 					continue;
 				}
 
-				gcImg.setBackground(pieceInfoCanvas.getBackground());
-				gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
-						BLOCK_SIZE);
+				if ( newInfo.selected ){
+					Color fc = blockColors[BLOCKCOLOR_SHOWFILE ];
+					
+					gcImg.setBackground( fc );
+					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
+							BLOCK_SIZE);
+					
+					if ( fc != file_color ){
+						
+						file_color 			= fc;
+						file_color_faded 	= Colors.getInstance().getLighterColor( fc, 75 );
+					}
+					
+					gcImg.setBackground(file_color_faded);
+					gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos, BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
 
-				colorIndex = BLOCKCOLOR_HAVE;
-				gcImg.setBackground(blockColors[colorIndex]);
-				gcImg.fillRectangle(iXPos, iYPos, newBlockInfo[i].haveWidth, BLOCK_FILLSIZE);
-
-				colorIndex = BLOCKCOLORL_NOHAVE;
-				gcImg.setBackground(blockColors[colorIndex]);
-				gcImg.fillRectangle(iXPos + newBlockInfo[i].haveWidth, iYPos, BLOCK_FILLSIZE - newBlockInfo[i].haveWidth, BLOCK_FILLSIZE);
-
-				if (newBlockInfo[i].showDown > 0) {
+				}else {
+					gcImg.setBackground(pieceInfoCanvas.getBackground());
+					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
+							BLOCK_SIZE);
+	
+					gcImg.setBackground(blockColors[BLOCKCOLOR_HAVE]);
+					gcImg.fillRectangle(iXPos, iYPos, newInfo.haveWidth, BLOCK_FILLSIZE);
+	
+					gcImg.setBackground(blockColors[BLOCKCOLORL_NOHAVE]);
+					gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos, BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
+				}
+				
+				if (newInfo.showDown > 0) {
 					drawDownloadIndicator(gcImg, iXPos, iYPos,
-							newBlockInfo[i].showDown == SHOW_SMALL);
+							newInfo.showDown == SHOW_SMALL);
 				}
 
-				if (newBlockInfo[i].showUp > 0) {
+				if (newInfo.showUp > 0) {
 					drawUploadIndicator(gcImg, iXPos, iYPos,
-							newBlockInfo[i].showUp == SHOW_SMALL);
+							newInfo.showUp == SHOW_SMALL);
 				}
 
-				if (newBlockInfo[i].availNum != -1) {
-					if (minAvailability == newBlockInfo[i].availNum) {
+				if (newInfo.availNum != -1) {
+					if (minAvailability == newInfo.availNum) {
 						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
 						gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1,
 								BLOCK_FILLSIZE + 1);
 					}
-					if (minAvailability2 == newBlockInfo[i].availNum) {
+					if (minAvailability2 == newInfo.availNum) {
 						gcImg.setLineStyle(SWT.LINE_DOT);
 						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
 						gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1,
@@ -797,17 +984,16 @@ public class PieceInfoView
 						gcImg.setLineStyle(SWT.LINE_SOLID);
 					}
 
-					String sNumber = String.valueOf(newBlockInfo[i].availNum);
+					String sNumber = String.valueOf(newInfo.availNum);
 					Point size = gcImg.stringExtent(sNumber);
 
-					if (newBlockInfo[i].availNum < 100) {
+					if (newInfo.availNum < 100) {
 						int x = iXPos + (BLOCK_FILLSIZE / 2) - (size.x / 2);
 						int y = iYPos + (BLOCK_FILLSIZE / 2) - (size.y / 2);
 						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
 						gcImg.drawText(sNumber, x, y, true);
 					}
 				}
-
 
 				iCol++;
 			}
@@ -825,6 +1011,15 @@ public class PieceInfoView
 					"" + dm_pieces.length
 				});
 
+		PiecePicker picker = pm.getPiecePicker();
+		
+		int seq_info = picker.getSequentialInfo();
+		
+		if ( seq_info != 0 ){
+			
+			topLabelLHS += "; seq=" + seq_info;
+		}
+		
 		updateTopLabel();
 
 		pieceInfoCanvas.redraw();
@@ -934,7 +1129,7 @@ public class PieceInfoView
 		/** 0 : no; 1 : Yes; 2: small */
 		byte showUp;
 		byte showDown;
-
+		boolean selected;
 		/**
 		 *
 		 */
@@ -947,7 +1142,8 @@ public class PieceInfoView
 					&& availNum == otherBlockInfo.availNum
 					&& availDotted == otherBlockInfo.availDotted
 					&& showDown == otherBlockInfo.showDown
-					&& showUp == otherBlockInfo.showUp;
+					&& showUp == otherBlockInfo.showUp 
+					&& selected == otherBlockInfo.selected ;
 		}
 	}
 

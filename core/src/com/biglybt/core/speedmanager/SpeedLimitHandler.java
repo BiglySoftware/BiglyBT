@@ -3925,7 +3925,7 @@ SpeedLimitHandler
 					int	download_up_limit 	= download.getStats().getUploadRateLimitBytesPerSecond();
 					int	download_down_limit = download.getStats().getDownloadRateLimitBytesPerSecond();
 
-			    	if ( download_up_limit > 0 || download_down_limit > 0 ){
+			    	if ( download_up_limit > 0 || download_up_limit < 0 || download_down_limit > 0 || download_down_limit < 0 ){
 
 			    		download_limits.put( Base32.encode( hash ), new int[]{ download_up_limit, download_down_limit });
 			    	}
@@ -4005,7 +4005,7 @@ SpeedLimitHandler
 						int	download_up_limit 	= download.getStats().getUploadRateLimitBytesPerSecond();
 						int	download_down_limit = download.getStats().getDownloadRateLimitBytesPerSecond();
 
-				    	if ( download_up_limit > 0 || download_down_limit > 0 ){
+						if ( download_up_limit > 0 || download_up_limit < 0 || download_down_limit > 0 || download_down_limit < 0 ){
 
 				    		download_limits.put(hash, new int[]{ download_up_limit, download_down_limit });
 				    	}
@@ -4863,6 +4863,9 @@ SpeedLimitHandler
 
 								download.pause();
 							}
+							
+							download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));
+							
 						}else if ( extension_type == ET_STOP_TAG ){
 
 							if ( 	state != Download.ST_ERROR &&
@@ -4870,6 +4873,8 @@ SpeedLimitHandler
 									state != Download.ST_STOPPING ){
 
 								download.stopIt( DownloadManager.STATE_STOPPED, false, false );
+								
+								download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));
 							}
 						}
 					}

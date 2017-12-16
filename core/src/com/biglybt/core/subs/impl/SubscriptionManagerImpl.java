@@ -25,6 +25,7 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.security.KeyPair;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -2893,11 +2894,194 @@ SubscriptionManagerImpl
 		return null;
 	}
 
+	private Map<String,AtomicInteger>	imported_sids = new HashMap<>();
+	
 	public Object
 	importDataSource(
 		Map<String,Object>		map )
 	{
-		return( getSubscriptionByID((String)map.get( "id" )));
+		String	sid = (String)map.get( "id" );
+		
+		Subscription subs = getSubscriptionByID( sid );
+		
+		if ( subs != null ){
+			
+			try {
+				subs.getManager().getScheduler().downloadAsync( subs, true );
+				
+			}catch( Throwable e ){
+				
+				Debug.out(e);
+			}
+			
+			return( subs );
+		}
+		
+			
+		Map sd = (Map)map.get( "singleton" );
+		
+		if ( sd != null ){
+			
+			String key = (String)sd.get( "key" );
+			
+			sd.put( "key", Base32.decode( key));
+			
+			try{
+				subs = createSingletonSubscription( sd, SubscriptionImpl.ADD_TYPE_IMPORT, true );
+				
+			}catch( Throwable e ) {
+			}
+		}
+		
+		Subscription[] result = new Subscription[]{ subs };
+
+		final Runnable apply_props =
+			new Runnable()
+			{
+				public void
+				run()
+				{
+					Subscription subs;
+					
+					synchronized( result ) {
+						
+						subs = result[0];
+					}
+					
+					if ( subs != null ) {
+						
+						Number check_mins = (Number)map.get( "h_cm" );
+						
+						SubscriptionHistory	history = subs.getHistory();
+						
+						if ( check_mins != null ){
+							
+							history.setCheckFrequencyMins( check_mins.intValue());
+						}
+						
+						List<String>	list = (List<String>)map.get( "h_dln" );
+						
+						if ( list != null ) {
+							
+							history.setDownloadNetworks( list.toArray( new String[0] ));
+						}
+						
+						Number vo = (Number)map.get( "vo" );
+						
+						if ( vo != null ){
+							
+							subs.setViewOptions( vo.intValue());
+						}
+						
+						subs.setSubscribed( true );
+						
+						try{
+							subs.getManager().getScheduler().downloadAsync( subs, true );
+							
+						}catch( Throwable e ){
+							
+							Debug.out(e);
+						}
+					}
+				}
+			};
+			
+		if ( subs == null ){
+		
+			int	version = ((Number)map.get( "version" )).intValue();
+			
+			boolean anon = ((Number)map.get( "anon" )).intValue() != 0;
+			
+			final AESemaphore sem = new AESemaphore( "" );
+
+			boolean[]	returned = { false };
+
+			new AEThread2( "async" )
+			{
+				public void
+				run()
+				{
+					try{
+						lookupSubscription( 
+							"Import of '" + sid + "'",
+							new byte[20],
+							Base32.decode( sid ),
+							version,
+							anon,
+							new subsLookupListener(){
+								
+								@Override
+								public void found(byte[] hash, Subscription subscription){
+								}
+								
+								@Override
+								public void failed(byte[] hash, SubscriptionException error){
+								}
+								
+								@Override
+								public void complete(byte[] hash, Subscription[] subscriptions){
+									boolean enable_callback;
+									
+									synchronized( imported_sids ) {
+										
+										AtomicInteger ai = imported_sids.get( sid );
+										
+										if ( ai == null ) {
+											
+											ai = new AtomicInteger(0);
+											
+											imported_sids.put( sid, ai );
+										}
+										
+										enable_callback = ai.incrementAndGet() < 16;	// protect against potential of rebuild loop
+									}
+									
+									synchronized( result ) {
+									
+										if ( subscriptions.length > 0 ){
+											
+											result[0] = subscriptions[0];
+											
+											apply_props.run();
+											
+											if ( returned[0] && enable_callback ){
+												
+												Runnable callback = (Runnable)map.get( "callback" );
+												
+												if ( callback != null ) {
+													
+													callback.run();
+												}
+											}
+										}
+									}
+								}
+								
+								@Override
+								public boolean isCancelled(){
+									return false;
+								}
+							});
+					}finally{
+						
+						sem.release();
+					}
+				}
+			}.start();
+			
+			sem.reserve( 2500 );
+			
+			synchronized( result ){
+			
+				returned[0] = true;
+				
+				subs = result[0];
+			}
+		}
+		
+		apply_props.run();
+		
+		return( subs );
 	}
 	
 	protected SubscriptionImpl
@@ -7856,11 +8040,11 @@ SubscriptionManagerImpl
 	}
 
 	@Override
-	public void
+	public Subscription
 	subscribeToSubscription(
 			String uri )
 
-			throws Exception
+		throws Exception
 	{
 		SubscriptionManager manager = SubscriptionManagerFactory.getSingleton();
 
@@ -7900,10 +8084,12 @@ SubscriptionManagerImpl
 
 			subs.requestAttention();
 		}
+		
+		return( subs );
 	}
 
 	@Override
-	public void
+	public Subscription
 	subscribeToRSS(
 			String		name,
 			URL 		url,
@@ -7935,5 +8121,9 @@ SubscriptionManagerImpl
 
 			subs.setCreatorRef( creator_ref );
 		}
+		
+		subs.requestAttention();
+		
+		return( subs );
 	}
 }

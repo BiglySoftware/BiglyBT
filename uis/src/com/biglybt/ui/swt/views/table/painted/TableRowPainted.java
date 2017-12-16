@@ -27,7 +27,6 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
-import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableColumn;
@@ -345,6 +344,66 @@ public class TableRowPainted
 		gc.setForeground(origFG);
 	}
 
+	public void fakeRedraw( String col_name ) {
+		
+		if ( !Utils.isSWTThread()) {
+			Utils.execSWTThread(
+				new Runnable()
+				{
+					public void
+					run()
+					{
+						swt_fakeRedraw( col_name );
+					}
+				});
+		}else{
+			swt_fakeRedraw( col_name );
+		}
+	}
+	
+	private void swt_fakeRedraw( String col_name ) {
+		
+		setShown( true, true );
+		
+		TableCellPainted cell = (TableCellPainted)getTableCellCore( col_name  );
+
+		if ( cell != null ){
+			if ( cell.getBoundsRaw() == null ){
+				
+				cell.setBoundsRaw( new Rectangle( 0, 0, 1000, getHeight() ));
+			}
+			
+			cell.refresh( true, true, true );
+			
+			Image image = new Image(Utils.getDisplay(), 1000, getHeight());
+			
+			GC gc = new GC(image);
+			
+			try{
+				swt_paintCell( gc, image.getBounds(), (TableCellSWTBase)cell, null );
+			
+				if ( isExpanded()){
+					
+					synchronized (subRows_sync) {
+						
+						if (subRows != null) {
+							
+							for ( TableRowPainted subrow : subRows) {
+															
+								subrow.swt_fakeRedraw( col_name );
+							}
+						}
+					}
+				}
+			}finally{
+				
+				gc.dispose();
+			
+				image.dispose();
+			}
+		}
+	}
+	
 	private boolean swt_paintCell(GC gc, Rectangle cellBounds,
 			TableCellSWTBase cell, Color shadowColor) {
 		// Only called from swt_PaintGC, so we can assume GC, cell are valid
@@ -500,12 +559,12 @@ public class TableRowPainted
 						cell.setDefaultToolTip(text);
 					}
 
-					Point size = sp.getCalculatedSize();
-					size.x += ofsx;
+					Point psize = sp.getCalculatedPreferredSize();
+					psize.x += ofsx;
 
 					TableColumn tableColumn = cell.getTableColumn();
-					if (tableColumn != null && tableColumn.getPreferredWidth() < size.x) {
-						tableColumn.setPreferredWidth(size.x);
+					if (tableColumn != null && tableColumn.getPreferredWidth() < psize.x) {
+						tableColumn.setPreferredWidth(psize.x);
 					}
 
 					if (imageBounds != null) {
@@ -519,6 +578,9 @@ public class TableRowPainted
 							gc.setAdvanced( false );
 						}
 						if ((style & SWT.RIGHT) != 0) {
+							Point size = sp.getCalculatedSize();
+							size.x += ofsx;
+
 							int drawToX = cellBounds.x + cellBounds.width - size.x;
 							gc.drawImage(image, drawToX, drawToY);
 						} else {
@@ -988,6 +1050,7 @@ public class TableRowPainted
 		if (isRowDisposed()) {
 			return null;
 		}
+	
 		synchronized (lock) {
 			if (mTableCells == null) {
 				if (cellSort != null && !cellSort.isDisposed()

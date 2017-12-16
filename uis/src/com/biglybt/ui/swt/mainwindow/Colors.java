@@ -535,4 +535,57 @@ public class Colors implements ParameterListener {
 		}
 		return d.getSystemColor(id);
 	}
+	
+	public Color
+	getFadedColor(
+		Color	c )
+	{
+		HSLColor hslColor = new HSLColor();
+		hslColor.initHSLbyRGB(c.getRed(), c.getGreen(), c.getBlue());
+		
+		int iSat = hslColor.getSaturation();
+		int luminence = hslColor.getLuminence();
+		if (luminence < 20) {
+			if (iSat > 10) {
+				hslColor.setSaturation(iSat / 2);
+				hslColor.brighten(1.25f);
+			}
+		} else {
+			if (iSat > 10) {
+				hslColor.setSaturation(iSat / 2);
+				hslColor.brighten(0.75f);
+			} 
+		}
+
+		return( ColorCache.getColor(display, hslColor.getRed(),	hslColor.getGreen(), hslColor.getBlue()));
+	}
+	
+	public Color
+	getLighterColor(
+		Color	c,
+		int		percent )
+	{
+		HSLColor hslColor = new HSLColor();
+		hslColor.initHSLbyRGB(c.getRed(), c.getGreen(), c.getBlue());
+		
+		int lum = hslColor.getLuminence();
+		
+		int new_lum = (int)( lum * (1.0f + ((float)percent)/100));
+		
+		if ( new_lum < 240){
+			
+			hslColor.setLuminence( new_lum );
+			
+		}else{
+			
+			hslColor.setLuminence( 240 );
+			
+			int sat = hslColor.getSaturation();
+			
+			hslColor.setSaturation( sat / 2);
+		}
+
+		return( ColorCache.getColor(display, hslColor.getRed(),	hslColor.getGreen(), hslColor.getBlue()));
+	}
+	
 }

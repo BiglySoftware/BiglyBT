@@ -675,6 +675,8 @@ public class Debug {
 			}else{
 				System.out.println( str );
 			}
+			writeEmergencyLog( str );
+			
 		}else{
 			diag_logger.logAndOut( str, stderr );
 		}
@@ -688,8 +690,37 @@ public class Debug {
 
 		if ( diag_logger == null ){
 			e.printStackTrace();
+			
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter( sw );
+			
+			e.printStackTrace( pw );
+			pw.close();
+			
+			writeEmergencyLog( sw.toString());
+			
 		}else{
 			diag_logger.logAndOut( e );
+		}
+	}
+	
+	private static void
+	writeEmergencyLog(
+		String		str )
+	{
+		File f = new File( "biglybt_error.log" );	// user.dir relative
+		
+		try{
+			PrintWriter pw = new PrintWriter( new FileWriter( f, true ));
+			
+			try{
+				pw.println( str );
+				
+			}finally {
+				
+				pw.close();
+			}
+		}catch( Throwable e ){ 
 		}
 	}
 

@@ -181,17 +181,23 @@ PeerImpl
 		return( delegate.getPort());
 	}
 
-  @Override
-  public int getTCPListenPort() {  return delegate.getTCPListenPort();  }
-  @Override
-  public int getUDPListenPort() {  return delegate.getUDPListenPort();  }
-  @Override
-  public int getUDPNonDataListenPort() { return delegate.getUDPNonDataListenPort(); }
+	@Override
+	public int getTCPListenPort() {  return delegate.getTCPListenPort();  }
+	@Override
+	public int getUDPListenPort() {  return delegate.getUDPListenPort();  }
+	@Override
+	public int getUDPNonDataListenPort() { return delegate.getUDPNonDataListenPort(); }
 
-  @Override
-  public boolean isLANLocal() {
-	  return( delegate.isLANLocal());
-  }
+	@Override
+	public boolean isLANLocal() {
+		return( delegate.isLANLocal());
+	}
+
+	@Override
+	public void resetLANLocalStatus(){
+		delegate.resetLANLocalStatus();
+	}
+	
 	@Override
 	public final boolean[] getAvailable()
 	{

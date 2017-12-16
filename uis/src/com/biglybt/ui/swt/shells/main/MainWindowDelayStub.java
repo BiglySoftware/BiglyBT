@@ -24,6 +24,9 @@ import java.util.Map;
 
 import com.biglybt.core.*;
 import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerEvent;
+import com.biglybt.pif.ui.UIManagerEventListener;
 import com.biglybt.ui.*;
 import com.biglybt.ui.common.table.impl.TableColumnImpl;
 import com.biglybt.ui.common.updater.UIUpdater;
@@ -41,6 +44,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
+import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.UIExitUtilsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.*;
@@ -72,9 +76,43 @@ MainWindowDelayStub
 
 	private volatile UIFunctionsSWT delayed_uif = new UIFunctionsSWTImpl();
 
+	private UIManagerEventListener ui_listener = 
+			new UIManagerEventListener()
+			{
+				public boolean
+				eventOccurred(
+					UIManagerEvent	event )
+				{
+					boolean show = false;
+					
+					if ( event.getType() == UIManagerEvent.ET_HIDE_ALL ){
+						
+						show = !(Boolean)event.getData();
+						
+					}else if ( event.getType() == UIManagerEvent.ET_HIDE_ALL_TOGGLE ){
+						
+						show = true;
+					}
+					
+					if ( show ){
+						
+						new AEThread2( "show ")
+						{
+							public void 
+							run()
+							{
+								checkMainWindow();
+							}
+						}.start();
+					}
+					
+					return( false );
+				}
+			};
+			
 	public
 	MainWindowDelayStub(
-		Core _core,
+		Core 					_core,
 		Display 				_display,
 		IUIIntializer			_uiInitializer )
 	{
@@ -151,6 +189,11 @@ MainWindowDelayStub
 									checkMainWindow();
 								}
 							}, false );
+						
+						UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
+		
+						ui_manager.addUIEventListener( ui_listener );
+						
 					}finally{
 
 						sem.release();
@@ -227,6 +270,10 @@ MainWindowDelayStub
 
 			if ( main_window == null ){
 
+				UIManager ui_manager = PluginInitializer.getDefaultInterface().getUIManager();
+				
+				ui_manager.removeUIEventListener( ui_listener );
+				
 				final AESemaphore wait_sem = new AESemaphore( "cmw" );
 
 				CoreLifecycleListener listener =
@@ -467,9 +514,20 @@ MainWindowDelayStub
 	setHideAll(
 		boolean hide)
 	{
-		log( "setHideAll" );
+		if ( !hide ){
+			
+			fixup( new Fixup(){
+				@Override
+				public void fix(MainWindow mw){ mw.setHideAll( hide ); }});
+		};
 	}
 
+	public boolean
+	getHideAll()
+	{
+		return( true );
+	}
+	
 	@Override
 	public Rectangle
 	getMetrics(
@@ -956,6 +1014,12 @@ MainWindowDelayStub
 			log( "setHideAll" );
 		}
 
+		public boolean
+		getHideAll()
+		{
+			return( true );
+		}
+		
 		@Override
 		public void
 		showErrorMessage(

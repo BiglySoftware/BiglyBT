@@ -54,6 +54,7 @@ import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.I2PHelpers;
 
+
 public class
 BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final boolean DEBUG_ENABLED			= System.getProperty( "az.chat.buddy.debug", "0" ).equals( "1" );
@@ -90,6 +91,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final int 	FLAGS_MSG_TYPE_NORMAL		= 0;		// def
 	public static final int 	FLAGS_MSG_TYPE_ME			= 1;
 
+	public static final int VIEW_TYPE_DEFAULT			= 1;
+	public static final int VIEW_TYPE_SHARING			= 2;
+
+	public static final String RSS_ITEMS_UNAVAILABLE = "RSS items unavailable until you accept Chat terms and conditions";
 
 	private BuddyPlugin			plugin;
 	private PluginInterface		plugin_interface;
@@ -449,9 +454,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						}
 					}finally{
 
+						boolean run_init = !init_complete.isReleasedForever();
+						
 						init_complete.releaseForever();
 						
-						BuddyPluginUtils.betaInit( BuddyPluginBeta.this );
+						if ( run_init ){
+							
+							BuddyPluginUtils.betaInit( BuddyPluginBeta.this );
+						}
 					}
 				}
 			});
@@ -655,7 +665,41 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	{
 		setStringOption( net, key, "lmi", info );
 	}
+	
+	private String
+	getDisplayName(
+		String		net,
+		String		key )
+	{
+		return( getStringOption( net, key, "dn", null ));
+	}
 
+	private void
+	setDisplayName(
+		String		net,
+		String		key,
+		String		str )
+	{
+		setStringOption( net, key, "dn", str );
+	}
+
+	private int
+	getViewType(
+		String		net,
+		String		key )
+	{
+		return( getIntOption( net, key, "vt", BuddyPluginBeta.VIEW_TYPE_DEFAULT ));
+	}
+
+	private void
+	setViewType(
+		String		net,
+		String		key,
+		int			vt )
+	{
+		setIntOption( net, key, "vt", vt );
+	}
+	
 		// migration
 
 	private void
@@ -726,6 +770,33 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		return( def );
 	}
 
+	private void
+	setIntOption(
+		String		net,
+		String		key,
+		String		name,
+		int			value )
+	{
+		setGenericOption(net, key, name, value );
+	}
+
+	private int
+	getIntOption(
+		String		net,
+		String		key,
+		String		name,
+		int		def )
+	{
+		Object	obj = getGenericOption(net, key, name);
+
+		if ( obj instanceof Number ){
+
+			return(((Number)obj).intValue());
+		}
+
+		return( def );
+	}
+	
 	private void
 	setStringOption(
 		String		net,
@@ -872,6 +943,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		COConfigurationManager.setDirty();
 	}
 
+	private boolean
+	chatOptionsExists(
+		String		net,
+		String		key )
+	{
+		String net_key = net + ":" + encodeKey( key );
+
+		synchronized( opts_map ){
+
+			return( opts_map.containsKey( net_key ));
+		}
+	}
+	
 	private void
 	removeAllOptions(
 		String		net,
@@ -1307,6 +1391,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		return( AEPluginProxyHandler.hasPluginProxyForNetwork( AENetworkClassifier.AT_I2P, false ));
 	}
 
+	public void
+	selectClassicTab()
+	{
+		plugin.getSWTUI().selectClassicTab();
+	}
+	
 	public InputStream
 	handleURI(
 		String		url_str,
@@ -1371,6 +1461,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		if ( protocol.startsWith( "chat:friend" )){
 
+			if ( !plugin.isClassicEnabled()){
+				
+				plugin.setClassicEnabled( true );
+			}
+			
 			if ( !key.equals( plugin.getPublicKey())){
 
 				plugin.addBuddy(key, BuddyPlugin.SUBSYSTEM_AZ2 );
@@ -1469,148 +1564,173 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			pw.println( "<title>" + escape( chat.getName()) + "</title>" );
 
-			long	last_modified;
-
-			if ( messages.size() == 0 ){
-
-				last_modified = SystemTime.getCurrentTime();
-
-			}else{
-
-				last_modified = messages.get( messages.size()-1).getTimeStamp();
-			}
-
-			pw.println(	"<pubDate>" + TimeFormatter.getHTTPDate( last_modified ) + "</pubDate>" );
-
-			for ( ChatMessage message: messages ){
-
-				List<Map<String,Object>>	message_links = extractLinks( message.getMessage());
-
-				if ( message_links.size() == 0 ){
-
-					continue;
+			if ( ftux_accepted ) {
+				long	last_modified;
+	
+				if ( messages.size() == 0 ){
+	
+					last_modified = SystemTime.getCurrentTime();
+	
+				}else{
+	
+					last_modified = messages.get( messages.size()-1).getTimeStamp();
 				}
-
-				String item_date = TimeFormatter.getHTTPDate( message.getTimeStamp());
-
-				for ( Map<String,Object> message_link: message_links ){
-
-					if ( message_link.containsKey( "magnet" )){
-
-						Map<String,Object> magnet = message_link;
-
-						String	hash 	= (String)magnet.get( "hash" );
-
-						if ( hash == null ){
-
-							continue;
+	
+				pw.println(	"<pubDate>" + TimeFormatter.getHTTPDate( last_modified ) + "</pubDate>" );
+	
+				for ( ChatMessage message: messages ){
+	
+					List<Map<String,Object>>	message_links = extractLinks( message.getMessage());
+	
+					if ( message_links.size() == 0 ){
+	
+						continue;
+					}
+	
+					String item_date = TimeFormatter.getHTTPDate( message.getTimeStamp());
+	
+					for ( Map<String,Object> message_link: message_links ){
+	
+						if ( message_link.containsKey( "magnet" )){
+	
+							Map<String,Object> magnet = message_link;
+	
+							String	hash 	= (String)magnet.get( "hash" );
+	
+							if ( hash == null ){
+	
+								continue;
+							}
+	
+							String	title 	= (String)magnet.get( "title" );
+	
+							if ( title == null ){
+	
+								title = hash;
+							}
+	
+							String	link	= (String)magnet.get( "link" );
+	
+							if ( link == null ){
+	
+								link = (String)magnet.get( "magnet" );
+							}
+	
+							List<String>	nets = (List<String>)magnet.get( "networks" );
+							
+							boolean public_magnet = nets.isEmpty() || nets.contains( AENetworkClassifier.AT_PUBLIC );
+							
+							String pub_str = MessageText.getString( public_magnet?"subs.prop.is_public":"label.anon" );
+							
+							pw.println( "<item>" );
+	
+							pw.println( "<title>" + escape( pub_str + ": " + title ) + "</title>" );
+	
+							pw.println( "<guid>" + hash + "</guid>" );
+	
+							String	cdp	= (String)magnet.get( "cdp" );
+	
+							if ( cdp != null ){
+	
+								pw.println( "<link>" + escape( cdp ) + "</link>" );
+							}
+	
+							Long	size 		= (Long)magnet.get( "size" );
+							Long	seeds 		= (Long)magnet.get( "seeds" );
+							Long	leechers 	= (Long)magnet.get( "leechers" );
+							Long	date	 	= (Long)magnet.get( "date" );
+	
+							String enclosure =
+									"<enclosure " +
+										"type=\"application/x-bittorrent\" " +
+										"url=\"" + escape( link ) + "\"";
+	
+							if ( size != null ){
+	
+								enclosure += " length=\"" + size + "\"";
+							}
+	
+							enclosure += " />";
+	
+							pw.println( enclosure );
+	
+							String date_str = (date==null||date<=0)?item_date:TimeFormatter.getHTTPDate( date );
+	
+							pw.println(	"<pubDate>" + date_str + "</pubDate>" );
+	
+	
+							if ( size != null ){
+	
+								pw.println(	"<vuze:size>" + size + "</vuze:size>" );
+							}
+	
+							if ( seeds != null ){
+	
+								pw.println(	"<vuze:seeds>" + seeds + "</vuze:seeds>" );
+							}
+	
+							if ( leechers != null ){
+	
+								pw.println(	"<vuze:peers>" + leechers + "</vuze:peers>" );
+							}
+	
+							pw.println(	"<vuze:assethash>" + hash + "</vuze:assethash>" );
+	
+							pw.println( "<vuze:downloadurl>" + escape( link ) + "</vuze:downloadurl>" );
+	
+							pw.println( "</item>" );
+	
+						}else{
+	
+							String	title 	= (String)message_link.get( "title" );
+							String 	link	= (String)message_link.get( "link" );
+	
+							pw.println( "<item>" );
+	
+							pw.println( "<title>" + escape( title ) + "</title>" );
+	
+							pw.println( "<guid>" + escape( link ) + "</guid>" );
+	
+							pw.println( "<link>" + escape( link ) + "</link>" );
+	
+							pw.println(	"<pubDate>" + item_date + "</pubDate>" );
+	
+							pw.println(	"<vuze:rank></vuze:rank>" );
+	
+							String enclosure =
+									"<enclosure " +
+										"type=\"application/x-bittorrent\" " +
+										"url=\"" + escape( link ) + "\"";
+	
+	
+							enclosure += " />";
+	
+							pw.println( enclosure );
+	
+							pw.println( "</item>" );
+	
 						}
-
-						String	title 	= (String)magnet.get( "title" );
-
-						if ( title == null ){
-
-							title = hash;
-						}
-
-						String	link	= (String)magnet.get( "link" );
-
-						if ( link == null ){
-
-							link = (String)magnet.get( "magnet" );
-						}
-
-						pw.println( "<item>" );
-
-						pw.println( "<title>" + escape( title ) + "</title>" );
-
-						pw.println( "<guid>" + hash + "</guid>" );
-
-						String	cdp	= (String)magnet.get( "cdp" );
-
-						if ( cdp != null ){
-
-							pw.println( "<link>" + escape( cdp ) + "</link>" );
-						}
-
-						Long	size 		= (Long)magnet.get( "size" );
-						Long	seeds 		= (Long)magnet.get( "seeds" );
-						Long	leechers 	= (Long)magnet.get( "leechers" );
-						Long	date	 	= (Long)magnet.get( "date" );
-
-						String enclosure =
-								"<enclosure " +
-									"type=\"application/x-bittorrent\" " +
-									"url=\"" + escape( link ) + "\"";
-
-						if ( size != null ){
-
-							enclosure += " length=\"" + size + "\"";
-						}
-
-						enclosure += " />";
-
-						pw.println( enclosure );
-
-						String date_str = (date==null||date<=0)?item_date:TimeFormatter.getHTTPDate( date );
-
-						pw.println(	"<pubDate>" + date_str + "</pubDate>" );
-
-
-						if ( size != null ){
-
-							pw.println(	"<vuze:size>" + size + "</vuze:size>" );
-						}
-
-						if ( seeds != null ){
-
-							pw.println(	"<vuze:seeds>" + seeds + "</vuze:seeds>" );
-						}
-
-						if ( leechers != null ){
-
-							pw.println(	"<vuze:peers>" + leechers + "</vuze:peers>" );
-						}
-
-						pw.println(	"<vuze:assethash>" + hash + "</vuze:assethash>" );
-
-						pw.println( "<vuze:downloadurl>" + escape( link ) + "</vuze:downloadurl>" );
-
-						pw.println( "</item>" );
-
-					}else{
-
-						String	title 	= (String)message_link.get( "title" );
-						String 	link	= (String)message_link.get( "link" );
-
-						pw.println( "<item>" );
-
-						pw.println( "<title>" + escape( title ) + "</title>" );
-
-						pw.println( "<guid>" + escape( link ) + "</guid>" );
-
-						pw.println( "<link>" + escape( link ) + "</link>" );
-
-						pw.println(	"<pubDate>" + item_date + "</pubDate>" );
-
-						pw.println(	"<vuze:rank></vuze:rank>" );
-
-						String enclosure =
-								"<enclosure " +
-									"type=\"application/x-bittorrent\" " +
-									"url=\"" + escape( link ) + "\"";
-
-
-						enclosure += " />";
-
-						pw.println( enclosure );
-
-						pw.println( "</item>" );
-
 					}
 				}
-			}
+			}else {
+				
+				String link = "chat:?BiglyBT%3A%20General%3A%20Help";
+				
+				pw.println( "<item>" );
+				
+				pw.println( "<title>" + escape( RSS_ITEMS_UNAVAILABLE ) + "</title>" );
 
+				pw.println( "<guid>23232329090909</guid>" );
+
+				pw.println( "<link>" + link + "</link>" );	
+				
+				pw.println( "<vuze:downloadurl>" +link + "</vuze:downloadurl>" );
+
+				pw.println(	"<pubDate>" + TimeFormatter.getHTTPDate( SystemTime.getCurrentTime()) + "</pubDate>" );
+
+				pw.println( "</item>" );
+			}
+			
 			pw.println( "</channel>" );
 
 			pw.println( "</rss>" );
@@ -1712,6 +1832,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					map.put( "trackers", trackers );
 
+					List<String>	nets = new ArrayList<>();
+
+					map.put( "networks", nets );
+
 					String[] bits = magnet.substring( x+1 ).split( "&" );
 
 					for ( String bit: bits ){
@@ -1743,6 +1867,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								}else if ( lhs.equals( "tr" )){
 
 									trackers.add( rhs );
+									
+								}else if ( lhs.equals( "net" )){
+
+									nets.add( AENetworkClassifier.internalise( rhs ));
 
 								}else if ( lhs.equals( "fl" )){
 
@@ -1832,7 +1960,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	{
 		ftux_accepted = accepted;
 
-		COConfigurationManager.setParameter( "azbuddy.dchat.ftux.accepted", true );
+		COConfigurationManager.setParameter( "azbuddy.dchat.ftux.accepted", accepted );
 
 		COConfigurationManager.save();
 
@@ -2029,8 +2157,40 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String	network = AENetworkClassifier.internalise((String)map.get( "network" ));
 		String	key		= (String)map.get( "key" );
 		
-		try {
-			ChatInstance chat = getChat( network, key );
+		try{
+			ChatInstance chat = peekChatInstance( network, key );
+			
+			if ( chat != null ) {
+				
+				return( chat );
+			}
+			
+			boolean	apply_options = !chatOptionsExists( network, key );
+			
+			chat = getChat( network, key );
+			
+			if ( apply_options ){
+				
+				String dn = (String)map.get( "dn" );
+				
+				if ( dn != null ){
+					
+					chat.setDisplayName( dn );
+				}
+				
+				Number vt = (Number)map.get( "vt" );
+				
+				if ( vt != null ){
+					
+					chat.setViewType( vt.intValue());
+				}
+				
+					// starting default is un-shared
+				
+				chat.setSharedNickname( false );
+			}
+			
+			chat.setFavourite( true );
 			
 			chat.addVirtualReference();
 			
@@ -2631,7 +2791,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private boolean		auto_mute;
 		private boolean 	enable_notification_posts;
 		private boolean		disable_new_msg_indications;
-
+		private String		display_name;
+		
 		private boolean		destroyed;
 
 		private
@@ -2660,6 +2821,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				log_messages 				= BuddyPluginBeta.this.getLogMessages( network, key );
 				auto_mute 					= BuddyPluginBeta.this.getAutoMute( network, key );
 				disable_new_msg_indications = BuddyPluginBeta.this.getDisableNewMsgIndications( network, key );
+				display_name				= BuddyPluginBeta.this.getDisplayName( network, key );
 			}
 
 			enable_notification_posts = BuddyPluginBeta.this.getEnableNotificationsPost( network, key );
@@ -2715,6 +2877,15 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						map.put( "network", network );
 						map.put( "key", key );
 						
+						String dn = getDisplayName();
+						
+						if ( dn != null && !dn.isEmpty()) {
+						
+							map.put( "dn", dn );
+						}
+
+						map.put( "vt", getViewType());
+						
 						return( map );
 					}
 				});
@@ -2762,6 +2933,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		getName(
 			boolean	abbreviated )
 		{
+			String dn = display_name;
+			
+			if ( dn != null ){
+				
+				if ( network!=AENetworkClassifier.AT_PUBLIC) {
+					
+					dn = MessageText.getString( abbreviated?"label.anon.medium":"label.anon" ) + " - " + dn;
+				}
+				
+				return( dn );
+			}
+			
 			String str = key;
 
 			int pos = str.lastIndexOf( '[' );
@@ -2957,6 +3140,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				}
 			}
 		}
+		
+		public int
+		getViewType()
+		{
+			return( BuddyPluginBeta.this.getViewType( network, key ));
+		}
+
+		public void
+		setViewType(
+			int		t )
+		{
+			BuddyPluginBeta.this.setViewType( network, key, t );
+		}
 
 		public boolean
 		getDisableNewMsgIndications()
@@ -2997,6 +3193,26 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
+		public String
+		getDisplayName()
+		{
+			return( display_name );
+		}
+
+		public void
+		setDisplayName(
+			String		str )
+		{
+			if ( str != null && str.isEmpty()) {
+				
+				str = null;
+			}
+			
+			display_name = str;
+
+			BuddyPluginBeta.this.setDisplayName( network, key, str );
+		}
+		
 		private void
 		setSpammer(
 			ChatParticipant		participant,
@@ -3340,7 +3556,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					}
 				}
 
-				if ( getKey().startsWith( "General: ")){
+				String key = getKey();
+				
+				if ( key.startsWith( "General: ") || key.startsWith( Constants.APP_NAME + ": General: " )){
 
 					sendLocalMessage( "!*" + MessageText.getString( "azbuddy.dchat.welcome.general" ) + "*!", null, ChatMessage.MT_INFO );
 				}
@@ -5419,68 +5637,82 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			if ( !( keep_alive || (have_interest && !is_private_chat ))){
 
-				destroyed = true;
+				if ( !destroyed ) {
+					
+					destroyed = true;
+	
+					for ( ChatListener l: listeners ){
 
-				if ( handler != null ){
+						try{
+							l.stateChanged( false );
 
-					if ( is_private_chat ){
+						}catch( Throwable e ){
 
-						Map<String,Object>		flags = new HashMap<>();
-
-						flags.put( FLAGS_MSG_STATUS_KEY, FLAGS_MSG_STATUS_CHAT_QUIT );
-
-						sendMessageSupport( "", flags, new HashMap<String, Object>());
+							Debug.out( e );
+						}
 					}
-
-					try{
-						Map<String,Object>		options = new HashMap<>();
-
-						options.put( "handler", handler );
-
-						Map<String,Object> reply = (Map<String,Object>)msgsync_pi.getIPC().invoke( "removeMessageHandler", new Object[]{ options } );
-
-					}catch( Throwable e ){
-
-						Debug.out( e );
-
-					}finally{
-
-						String meta_key = network + ":" + key;
-
-						ChatInstance	removed = null;
-
-						synchronized( chat_instances_map ){
-
-							ChatInstance inst = chat_instances_map.remove( meta_key );
-
-							if ( inst != null ){
-
-								removed = inst;
-
-								chat_instances_list.remove( inst );
-							}
-
-							if ( chat_instances_map.size() == 0 ){
-
-								if ( timer != null ){
-
-									timer.cancel();
-
-									timer = null;
+					
+					if ( handler != null ){
+	
+						if ( is_private_chat ){
+	
+							Map<String,Object>		flags = new HashMap<>();
+	
+							flags.put( FLAGS_MSG_STATUS_KEY, FLAGS_MSG_STATUS_CHAT_QUIT );
+	
+							sendMessageSupport( "", flags, new HashMap<String, Object>());
+						}
+	
+						try{
+							Map<String,Object>		options = new HashMap<>();
+	
+							options.put( "handler", handler );
+	
+							Map<String,Object> reply = (Map<String,Object>)msgsync_pi.getIPC().invoke( "removeMessageHandler", new Object[]{ options } );
+	
+						}catch( Throwable e ){
+	
+							Debug.out( e );
+	
+						}finally{
+	
+							String meta_key = network + ":" + key;
+	
+							ChatInstance	removed = null;
+	
+							synchronized( chat_instances_map ){
+	
+								ChatInstance inst = chat_instances_map.remove( meta_key );
+	
+								if ( inst != null ){
+	
+									removed = inst;
+	
+									chat_instances_list.remove( inst );
+								}
+	
+								if ( chat_instances_map.size() == 0 ){
+	
+									if ( timer != null ){
+	
+										timer.cancel();
+	
+										timer = null;
+									}
 								}
 							}
-						}
-
-						if ( removed != null ){
-
-							for ( ChatManagerListener l: BuddyPluginBeta.this.listeners ){
-
-								try{
-									l.chatRemoved( removed );
-
-								}catch( Throwable e ){
-
-									Debug.out( e );
+	
+							if ( removed != null ){
+	
+								for ( ChatManagerListener l: BuddyPluginBeta.this.listeners ){
+	
+									try{
+										l.chatRemoved( removed );
+	
+									}catch( Throwable e ){
+	
+										Debug.out( e );
+									}
 								}
 							}
 						}

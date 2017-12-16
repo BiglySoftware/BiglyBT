@@ -92,6 +92,8 @@ implements PiecePicker
 
     private static final int PRIORITY_REQUEST_HINT	= 3000;
 
+    private static final int PRIORITY_SEQUENTIAL_START = 100000;
+    
 	/** priority at and above which pieces require real-time scheduling */
 
 	private static final int PRIORITY_REALTIME		= 9999999;
@@ -170,6 +172,8 @@ implements PiecePicker
 	/** event # of user file priority settings changes */
 	protected volatile long		filePriorityChange;
 
+	protected volatile int			sequentialDownload 	= 0;
+	
 	/** last user parameter settings event # when priority bases were calculated */
 	private volatile long		priorityParamChange;
 	/** last user priority event # when priority bases were calculated */
@@ -1395,6 +1399,82 @@ implements PiecePicker
 			Debug.printStackTrace(e);
 		}
 
+		if ( sequentialDownload != 0 && !priorityRTAexists ) {
+			
+			int seq_pri = PRIORITY_SEQUENTIAL_START;
+			
+			boolean do_file_priorities = min_file_priority != max_file_priority;
+			
+			int	file_priority_start = nbPieces*10;
+			
+			int	loop_start;
+			int loop_end;
+			int loop_dir;
+			
+			if ( sequentialDownload > 0 ){
+				
+				loop_start 	= nbPieces;
+				loop_end	= sequentialDownload - 1;
+				loop_dir	= -1;
+			}else{
+				loop_start	= -1;
+				loop_end	= -(sequentialDownload+1);
+				loop_dir	= +1;
+			}
+		
+			int	loop_pos = loop_start;
+			
+			do{
+				loop_pos += loop_dir;
+				
+				int priority = newPriorities[loop_pos];
+				
+				if ( priority == Integer.MIN_VALUE ){
+					
+					continue;
+				}
+				
+				if ( priority != PRIORITY_FORCED ){
+				
+					if ( do_file_priorities ){
+						
+						final DiskManagerPiece dmPiece =dmPieces[loop_pos];
+
+						int	highest = Integer.MIN_VALUE;
+						
+						final DMPieceList pieceList =pieceMap.getPieceList(dmPiece.getPieceNumber());
+						final int pieceListSize =pieceList.size();
+						for (int j =0; j <pieceListSize; j++){
+							final DiskManagerFileInfoImpl fileInfo =pieceList.get(j).getFile();
+							final long downloaded =fileInfo.getDownloaded();
+							final long length =fileInfo.getLength();
+							if (length >0 &&downloaded <length &&!fileInfo.isSkipped()){
+								
+								highest = Math.max( highest, fileInfo.getPriority());
+							}
+						}
+						
+						if ( highest == Integer.MIN_VALUE ){
+							
+							newPriorities[loop_pos] = seq_pri;
+							
+						}else{
+						
+							int	rel = highest - min_file_priority;
+
+							newPriorities[loop_pos] = file_priority_start + nbPieces*rel + seq_pri;
+						}
+					}else{
+					
+						newPriorities[loop_pos] = seq_pri;
+					}
+				}
+				
+				seq_pri += 10;
+				
+			}while( loop_pos != loop_end );
+		}
+		
 		if (foundPieceToDownload !=hasNeededUndonePiece)
 		{
 			hasNeededUndonePiece =foundPieceToDownload;
@@ -2054,6 +2134,8 @@ implements PiecePicker
         					avail =1;
         				}else if ( forced != null && forced.contains( i )){
         					avail = globalMinOthers;	// temp override for avail for force
+        				}else if ( sequentialDownload != 0 && globalMinOthers > 1 ) {
+        					avail = globalMinOthers;	// temp override for seq download
         				}
 
         				// is the piece active
@@ -2251,9 +2333,15 @@ implements PiecePicker
 	{
 		if (startCandidates ==null ||startCandidates.nbSet <=0)
 			return -1;
-		if (startCandidates.nbSet ==1)
+		if (startCandidates.nbSet ==1 )
 			return startCandidates.start;
-
+		if ( sequentialDownload != 0 ){
+			if ( sequentialDownload > 0 ){
+				return startCandidates.start;
+			}else {
+				return startCandidates.end;
+			}
+		}
 		final int direction =RandomUtils.generateRandomPlusMinus1();
 		final int startI;
 		if (direction ==1)
@@ -3179,6 +3267,44 @@ implements PiecePicker
 		return( set != null && set.contains( pieceNumber ));
 	}
 
+	private void
+	setSequentialDownload(
+		int	val )
+	{
+		if ( sequentialDownload != val ) {
+			
+			sequentialDownload = val;
+		
+			filePriorityChange++;
+		}
+	}
+	
+	public void
+	setSequentialAscendingFrom(
+		int		start_piece )
+	{
+		setSequentialDownload( start_piece + 1 );
+	}
+	
+	public void
+	setSequentialDescendingFrom(
+		int		start_piece )
+	{
+		setSequentialDownload( -(start_piece + 1 ));
+	}
+	
+	public void
+	clearSequential()
+	{
+		setSequentialDownload( 0 );
+	}
+	
+	public int
+	getSequentialInfo()
+	{
+		return( sequentialDownload );
+	}
+	
 	@Override
 	public void
 	setGlobalRequestHint(

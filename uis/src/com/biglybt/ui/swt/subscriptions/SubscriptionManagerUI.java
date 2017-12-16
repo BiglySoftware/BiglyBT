@@ -2197,6 +2197,51 @@ SubscriptionManagerUI
 				}
 			});
 
+				// view options
+			
+			menuItem = menu_creator.createMenu( "menu.view.options");
+
+			menuItem.setStyle( MenuItem.STYLE_MENU );
+
+			menuItem.addFillListener(
+				new MenuItemFillListener()
+				{
+					@Override
+					public void
+					menuWillBeShown(
+						MenuItem 	menu,
+						Object 		data )
+					{
+						menu.removeAllChildItems();
+
+						int vo = subs.getViewOptions();
+						
+						MenuItem m = menu_manager.addMenuItem( menu, "label.full" );
+
+						m.setStyle( MenuItem.STYLE_RADIO );
+
+						m.setData(Boolean.valueOf( vo == Subscription.VO_FULL ));
+
+						m.addListener(new SubsMenuItemListener() {
+							@Override
+							public void selected(final Subscription subs) {
+								subs.setViewOptions( Subscription.VO_FULL);
+							}});
+						
+						m = menu_manager.addMenuItem( menu, "label.no.header" );
+
+						m.setStyle( MenuItem.STYLE_RADIO );
+
+						m.setData(Boolean.valueOf( vo == Subscription.VO_HIDE_HEADER ));
+						
+						m.addListener(new SubsMenuItemListener() {
+							@Override
+							public void selected(final Subscription subs) {
+								subs.setViewOptions( Subscription.VO_HIDE_HEADER);
+							}});
+					}
+				});
+			
 				// chat
 
 			final String key = SubscriptionUtils.getSubscriptionChatKey( subs );

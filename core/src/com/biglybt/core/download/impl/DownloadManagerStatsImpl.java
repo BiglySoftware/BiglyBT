@@ -626,44 +626,53 @@ DownloadManagerStatsImpl
 		}
 	}
 
+	private void
+	checkShareRatioProgress()
+	{
+		synchronized( this ){
+			
+			if ( last_sr_progress == -1 ){
+	
+				long temp = download_manager.getDownloadState().getLongAttribute( DownloadManagerState.AT_SHARE_RATIO_PROGRESS );
+	
+				last_sr_progress = (int)temp;
+			}
+	
+			if ( share_ratio_progress_interval <= 0 ){
+	
+					// reset
+	
+				if ( last_sr_progress != 0 ){
+	
+					last_sr_progress = 0;
+	
+					download_manager.getDownloadState().setLongAttribute( DownloadManagerState.AT_SHARE_RATIO_PROGRESS, 0 );
+				}
+			}else{
+	
+				int current_sr = getShareRatio();
+	
+				current_sr = ( current_sr / share_ratio_progress_interval) * share_ratio_progress_interval;
+	
+				if ( current_sr != last_sr_progress ){
+	
+					last_sr_progress = current_sr;
+	
+					long data = ((SystemTime.getCurrentTime()/1000)<<32) + last_sr_progress;
+	
+					download_manager.getDownloadState().setLongAttribute( DownloadManagerState.AT_SHARE_RATIO_PROGRESS, data );
+				}
+			}
+		}
+	}
+	
 	protected void
 	timerTick(
 		int		tick_count )
 	{
 		if ( tick_count % 15 == 0 ){
 
-			if ( last_sr_progress == -1 ){
-
-				long temp = download_manager.getDownloadState().getLongAttribute( DownloadManagerState.AT_SHARE_RATIO_PROGRESS );
-
-				last_sr_progress = (int)temp;
-			}
-
-			if ( share_ratio_progress_interval <= 0 ){
-
-					// reset
-
-				if ( last_sr_progress != 0 ){
-
-					last_sr_progress = 0;
-
-					download_manager.getDownloadState().setLongAttribute( DownloadManagerState.AT_SHARE_RATIO_PROGRESS, 0 );
-				}
-			}else{
-
-				int current_sr = getShareRatio();
-
-				current_sr = ( current_sr / share_ratio_progress_interval) * share_ratio_progress_interval;
-
-				if ( current_sr != last_sr_progress ){
-
-					last_sr_progress = current_sr;
-
-					long data = ((SystemTime.getCurrentTime()/1000)<<32) + last_sr_progress;
-
-					download_manager.getDownloadState().setLongAttribute( DownloadManagerState.AT_SHARE_RATIO_PROGRESS, data );
-				}
-			}
+			checkShareRatioProgress();
 		}
 
 		if ( !history_retention_required ){
@@ -1088,6 +1097,8 @@ DownloadManagerStatsImpl
 	protected void
 	saveSessionTotals()
 	{
+		checkShareRatioProgress();
+		
 		  	// re-base the totals from current totals and session totals
 
 		saved_data_bytes_downloaded 	= getTotalDataBytesReceived();

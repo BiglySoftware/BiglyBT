@@ -483,6 +483,8 @@ BEncoder
     {
     	if ( o instanceof Integer ){
        		o = new Long(((Integer)o).longValue());
+    	}else if ( o instanceof Byte ){
+           		o = new Long((((Byte)o)&0x000000ff));
       	}else if ( o instanceof Boolean ){
        		o = new Long(((Boolean)o).booleanValue()?1:0);
      	}else if ( o instanceof Float ){

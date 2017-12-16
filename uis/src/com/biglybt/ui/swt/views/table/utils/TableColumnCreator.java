@@ -220,14 +220,18 @@ public class TableColumnCreator
 		c.put(DownSpeedLimitItem.COLUMN_ID, new cInfo(DownSpeedLimitItem.class, DownSpeedLimitItem.DATASOURCE_TYPE));
 		c.put(SwarmAverageSpeed.COLUMN_ID, new cInfo(SwarmAverageSpeed.class, SwarmAverageSpeed.DATASOURCE_TYPE));
 		c.put(SwarmAverageCompletion.COLUMN_ID, new cInfo(SwarmAverageCompletion.class, SwarmAverageCompletion.DATASOURCE_TYPE));
+		c.put(SwarmMaxCompletion.COLUMN_ID, new cInfo(SwarmMaxCompletion.class, SwarmMaxCompletion.DATASOURCE_TYPE));
+		c.put(LeecherMaxCompletion.COLUMN_ID, new cInfo(LeecherMaxCompletion.class, LeecherMaxCompletion.DATASOURCE_TYPE));
 		c.put(BadAvailTimeItem.COLUMN_ID, new cInfo(BadAvailTimeItem.class, BadAvailTimeItem.DATASOURCE_TYPE));
 		c.put(ColumnFileCount.COLUMN_ID, new cInfo(ColumnFileCount.class, ColumnFileCount.DATASOURCE_TYPE));
 		c.put(ColumnTorrentSpeed.COLUMN_ID, new cInfo(ColumnTorrentSpeed.class, ColumnTorrentSpeed.DATASOURCE_TYPE));
+		c.put(MoveOnCompleteItem.COLUMN_ID, new cInfo(MoveOnCompleteItem.class, MoveOnCompleteItem.DATASOURCE_TYPE));
 
 		c.put(DateCompletedItem.COLUMN_ID, new cInfo(DateCompletedItem.class, DateCompletedItem.DATASOURCE_TYPE));
 		c.put(DateFileCompletedItem.COLUMN_ID, new cInfo(DateFileCompletedItem.class, DateFileCompletedItem.DATASOURCE_TYPE));
 		c.put(DateAddedItem.COLUMN_ID, new cInfo(DateAddedItem.class, DateAddedItem.DATASOURCE_TYPE));
 		c.put(DateLastActiveItem.COLUMN_ID, new cInfo(DateLastActiveItem.class, DateLastActiveItem.DATASOURCE_TYPE));
+		
 		c.put(IPFilterItem.COLUMN_ID, new cInfo(IPFilterItem.class, IPFilterItem.DATASOURCE_TYPE));
 		c.put(AlertsItem.COLUMN_ID, new cInfo(AlertsItem.class, AlertsItem.DATASOURCE_TYPE));
 		c.put(TorrentCreateDateItem.COLUMN_ID, new cInfo(TorrentCreateDateItem.class, TorrentCreateDateItem.DATASOURCE_TYPE));

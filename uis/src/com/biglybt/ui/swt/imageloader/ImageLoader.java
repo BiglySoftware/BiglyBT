@@ -1130,8 +1130,14 @@ public class ImageLoader
 		return exists;
 	}
 
-	public boolean imageAdded_NoSWT(String name) {
-		return _mapImages.containsKey(name);
+	public Image[] imageAdded_NoSWT(String name) {
+		ImageLoaderRefInfo info = _mapImages.get(name);
+		
+		if ( info != null ){
+			return( info.getImages());
+		}
+		
+		return( null );
 	}
 
 	public boolean imageAdded(String name) {

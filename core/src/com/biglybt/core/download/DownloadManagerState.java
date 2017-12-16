@@ -79,6 +79,7 @@ DownloadManagerState
 	public static final String AT_AGGREGATE_SCRAPE_CACHE	= "agsc";			// string <update_time_mins>,<seeds>,<leechers>
 	public static final String AT_COMPLETE_LAST_TIME		= "complt";			// long - last time download reported complete, -1 if reported incomplete, 0 if unknown
 	public static final String AT_LAST_ADDED_TO_ACTIVE_TAG	= "last.act.tag";	// long - last time added to active tag
+	public static final String AT_MOVE_ON_COMPLETE_DIR		= "moc.dir";		// String - explicit move-on-complete folder
 
 	public static Object[][] ATTRIBUTE_DEFAULTS = {
 		{ AT_VERSION,								new Integer( -1 )},
@@ -103,6 +104,7 @@ DownloadManagerState
 	public static final long FLAG_METADATA_DOWNLOAD				  		= Download.FLAG_METADATA_DOWNLOAD;
 	public static final long FLAG_ERROR_REPORTED				  		= Download.FLAG_ERROR_REPORTED;
 	public static final long FLAG_INITIAL_NETWORKS_SET					= Download.FLAG_INITIAL_NETWORKS_SET;
+	public static final long FLAG_SEQUENTIAL_DOWNLOAD					= Download.FLAG_SEQUENTIAL_DOWNLOAD;
 
 	public static final String	PARAM_MAX_PEERS							= "max.peers";
 	public static final String	PARAM_MAX_PEERS_WHEN_SEEDING			= "max.peers.when.seeding";

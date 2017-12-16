@@ -244,6 +244,8 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 */
 	public boolean pauseDownload(DownloadManager dm);
 
+	public void stopPausedDownload( DownloadManager dm );
+	
 	/**
 	 * Resume a previously paused DownloadManager
 	 * @param dm DownloadManager to resume
@@ -376,7 +378,7 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 * See plugin ConnectionManager.NAT_ constants for return values
 	 * @return ConnectionManager.NAT_*
 	 */
-	public int getNATStatus();
+	public Object[] getNATStatus();
 
 		/**
 		 * Any adapters added will get a chance to see/set the initial state of downloads as they are

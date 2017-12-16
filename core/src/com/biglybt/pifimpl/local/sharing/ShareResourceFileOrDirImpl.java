@@ -44,6 +44,7 @@ import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.sharing.ShareException;
 import com.biglybt.pif.sharing.ShareItem;
+import com.biglybt.pif.sharing.ShareResource;
 import com.biglybt.pif.sharing.ShareResourceDeletionVetoException;
 import com.biglybt.pif.sharing.ShareResourceWillBeDeletedListener;
 import com.biglybt.pif.torrent.TorrentAttribute;
@@ -412,6 +413,23 @@ ShareResourceFileOrDirImpl
 		item.serialiseItem( map );
 	}
 
+	@Override
+	protected ShareResource 
+	lookupShare(byte[] torrent_hash){
+		try{
+			if ( Arrays.equals( item.getTorrent().getHash(), torrent_hash )){
+				
+				return( this );
+			}
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return( null );
+	}
+	
 	@Override
 	protected void
 	deleteInternal()

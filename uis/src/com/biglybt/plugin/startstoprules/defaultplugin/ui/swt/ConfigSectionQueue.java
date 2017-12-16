@@ -146,15 +146,46 @@ public class ConfigSectionQueue implements UISWTConfigSection
 				cMaxActiveOptionsArea, "StartStopManager_iMaxActiveTorrentsWhenSeeding", 0, Integer.MAX_VALUE);
 		maxActivWhenSeeding.setLayoutData(gridData);
 
-		// row
-
+		// min downloads
+		
+		
 		label = new Label(cSection, SWT.NULL);
 		Messages.setLanguageText(label, "ConfigView.label.mindownloads");
 		gridData = new GridData();
 		final IntParameter minDLs = new IntParameter(cSection, "min downloads", 0, Integer.MAX_VALUE);
 		minDLs.setLayoutData(gridData);
-		minDLs.setMaximumValue(maxDLs.getValue() / 2);
+		minDLs.setMaximumValue(maxDLs.getValue()); //  / 2);
 
+		final Composite cMinMaxLink = new Composite(cSection, SWT.NULL);
+		layout = new GridLayout();
+		layout.numColumns = 3;
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		cMinMaxLink.setLayout(layout);
+		gridData = new GridData();
+		gridData.horizontalIndent = 15;
+		gridData.horizontalSpan = 2;
+		Utils.setLayoutData(cMinMaxLink, gridData);
+		
+		label = new Label(cMinMaxLink, SWT.NULL);
+		imageLoader.setLabelImage(label, "subitem");
+		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
+		Utils.setLayoutData(label, gridData);
+
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		BooleanParameter minmaxlink = new BooleanParameter(cMinMaxLink, "StartStopManager_bMaxMinDLLinked",
+				"ConfigView.label.maxmindownloadlinked");
+		
+		minmaxlink.setLayoutData(gridData);
+		minmaxlink.addChangeListener(new ParameterChangeAdapter() {
+			@Override
+			public void parameterChanged(Parameter p, boolean caused_internally) {
+				minDLs.setEnabled( !minmaxlink.isSelected());
+			}});
+		
+		minDLs.setEnabled( !minmaxlink.isSelected());
+		
 		// change controllers for above items
 
 		maxActiveWhenSeedingEnabled.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(
@@ -164,7 +195,7 @@ public class ConfigSectionQueue implements UISWTConfigSection
 			@Override
 			public void parameterChanged(Parameter p, boolean caused_internally) {
 				int iMaxDLs = maxDLs.getValue();
-				minDLs.setMaximumValue(iMaxDLs / 2);
+				minDLs.setMaximumValue(iMaxDLs );//  / 2);
 
 				int iMinDLs = minDLs.getValue();
 				int iMaxActive = maxActiv.getValue();
@@ -259,6 +290,16 @@ public class ConfigSectionQueue implements UISWTConfigSection
 				cMinSpeedActiveCDing, "StartStopManager_iMaxStalledSeeding", 0, Integer.MAX_VALUE);
 		maxStalledSeeding.setMinimumValue(0);
 		maxStalledSeeding.setLayoutData(gridData);
+
+		label = new Label(cMinSpeedActiveCDing, SWT.NULL);
+		imageLoader.setLabelImage(label, "subitem");
+		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
+		Utils.setLayoutData(label, gridData);
+
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		new BooleanParameter(cMinSpeedActiveCDing, "StartStopManager_bMaxStalledSeedingIgnoreZP",
+				"ConfigView.label.maxStalledSeedingIgnoreZP").setLayoutData(gridData);
 
 
 		// row

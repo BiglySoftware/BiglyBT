@@ -175,12 +175,4 @@ PeersGeneralView
 				break;
 		}
 	}
-
-	@Override
-	public void
-	addThisColumnSubMenu(
-			String 	columnName,
-			Menu 	menuThisColumn )
-	{
-	}
 }

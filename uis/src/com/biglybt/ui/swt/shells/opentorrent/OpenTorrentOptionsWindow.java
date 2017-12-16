@@ -327,6 +327,8 @@ public class OpenTorrentOptionsWindow
 						}
 					});
 
+					torrentOptions.cancel();
+					
 					return( existing );
 				}
 
@@ -376,7 +378,7 @@ public class OpenTorrentOptionsWindow
 
 															if ( act == TorrentOpenOptions.CA_REJECT ){
 
-																w.removeInstance( inst );
+																w.removeInstance( inst, true );
 
 																num_reject++;
 
@@ -510,8 +512,8 @@ public class OpenTorrentOptionsWindow
 						protected void clicked(int intValue) {
 							if (intValue == SWT.OK) {
 								okPressed();
-							}else if (dlg != null){
-								dlg.close();
+							}else{
+								cancelPressed();
 							}
 						}
 					};
@@ -641,6 +643,8 @@ public class OpenTorrentOptionsWindow
 
 								for ( OpenTorrentInstance inst: open_instances ){
 
+									inst.cancelPressed();
+									
 									t_man.optionsRemoved( inst.getOptions());
 								}
 							}
@@ -706,6 +710,8 @@ public class OpenTorrentOptionsWindow
 
 				active_windows.remove( hash );
 
+				torrentOptions.cancel();
+				
 				t_man.optionsRemoved( torrentOptions );
 			}
 		}
@@ -726,6 +732,11 @@ public class OpenTorrentOptionsWindow
 	private void
 	cancelPressed()
 	{
+		for ( final OpenTorrentInstance instance: new ArrayList<>( open_instances )){
+			
+			instance.cancelPressed();
+		}
+		
 		if ( dlg != null ){
 
 			dlg.close();
@@ -767,7 +778,7 @@ public class OpenTorrentOptionsWindow
 						}
 					});
 
-				removeInstance( instance );
+				removeInstance( instance, false );
 			}
 		}
 
@@ -951,7 +962,7 @@ public class OpenTorrentOptionsWindow
 
 					OpenTorrentInstance	instance = (OpenTorrentInstance)obj;
 
-					removeInstance( instance );
+					removeInstance( instance, true );
 				}
 			}});
 
@@ -1141,7 +1152,7 @@ public class OpenTorrentOptionsWindow
 
 										OpenTorrentInstance	instance = (OpenTorrentInstance)obj;
 
-										removeInstance( instance );
+										removeInstance( instance, true );
 									}
 								}
 							});
@@ -1357,7 +1368,8 @@ public class OpenTorrentOptionsWindow
 
 	private void
 	removeInstance(
-		OpenTorrentInstance		instance )
+		OpenTorrentInstance		instance,
+		boolean					is_removal )
 	{
 		TorrentManagerImpl t_man = TorrentManagerImpl.getSingleton();
 
@@ -1410,6 +1422,11 @@ public class OpenTorrentOptionsWindow
 
 		refreshTVTorrentIndexes();
 
+		if ( is_removal ){
+			
+			instance.cancelPressed();
+		}
+		
 		instance.dispose();
 	}
 
@@ -1955,9 +1972,11 @@ public class OpenTorrentOptionsWindow
 
 			SWTSkinObject so1 = skin.getSkinObject("saveto-textarea");
 			SWTSkinObject so2 = skin.getSkinObject("saveto-browse");
-			if ((so1 instanceof SWTSkinObjectContainer)
-					&& (so2 instanceof SWTSkinObjectButton)) {
-				setupSaveLocation((SWTSkinObjectContainer) so1, (SWTSkinObjectButton) so2);
+			SWTSkinObject so3 = skin.getSkinObject("saveto-more");
+			if (	(so1 instanceof SWTSkinObjectContainer) &&
+					(so2 instanceof SWTSkinObjectButton) &&
+					(so3 instanceof SWTSkinObjectContainer)){
+				setupSaveLocation((SWTSkinObjectContainer) so1, (SWTSkinObjectButton) so2, (SWTSkinObjectContainer)so3);
 			}
 
 			so = skin.getSkinObject("expanditem-saveto");
@@ -3772,8 +3791,12 @@ public class OpenTorrentOptionsWindow
 			}
 			String dirText = cmbDataDir.getText();
 
+			File moc = null;
+			
 			for ( TorrentOpenOptions too: torrentOptionsMulti ){
 				too.setParentDir( dirText);
+				
+				moc = too.getMoveOnComplete();
 			}
 
 			checkSeedingMode();
@@ -3794,6 +3817,10 @@ public class OpenTorrentOptionsWindow
 			if (soExpandItemSaveTo != null) {
 				String s = MessageText.getString("OpenTorrentOptions.header.saveto",
 						new String[] { dirText });
+				
+				if ( moc != null ){
+					s += "; " + MessageText.getString( "label.move.on.comp" );
+				}
 				soExpandItemSaveTo.setText(s);
 			}
 			diskFreeInfoRefreshPending = true;
@@ -3815,6 +3842,12 @@ public class OpenTorrentOptionsWindow
 
 		protected void setSelectedQueueLocation(int iLocation) {
 			torrentOptions.iQueueLocation = iLocation;
+
+			updateStartOptionsHeader();
+		}
+		
+		protected void setSequentalDownload(boolean seq) {
+			torrentOptions.bSequentialDownload = seq;
 
 			updateStartOptionsHeader();
 		}
@@ -3866,6 +3899,11 @@ public class OpenTorrentOptionsWindow
 
 			s += "        " + MessageText.getString( "OpenTorrentOptions.header.tags", new String[]{ tag_str });
 
+			if ( torrentOptions.bSequentialDownload ) {
+			
+				s += "        " + MessageText.getString( "menu.sequential.download" );
+			}
+			
 			soStartOptionsExpandItem.setText(s);
 		}
 
@@ -4158,8 +4196,10 @@ public class OpenTorrentOptionsWindow
 		}
 
 		private void setupSaveLocation(SWTSkinObjectContainer soInputArea,
-				SWTSkinObjectButton soBrowseButton) {
+				SWTSkinObjectButton soBrowseButton, SWTSkinObjectContainer soMoreArea) 
+		{	
 			cmbDataDir = new Combo(soInputArea.getComposite(), SWT.NONE);
+			
 			Utils.setLayoutData(cmbDataDir, Utils.getFilledFormData());
 
 			cmbDataDir.addKeyListener(
@@ -4313,6 +4353,130 @@ public class OpenTorrentOptionsWindow
 					}
 				}
 			});
+			
+			Composite more_outer = soMoreArea.getComposite();
+			
+			Composite more_comp = new Composite( more_outer, SWT.NULL );
+			more_comp.setLayoutData( Utils.getFilledFormData());
+			
+			more_comp.setLayout( new GridLayout(2,false));
+			
+			Label more_label = new Label( more_comp, SWT.NULL );
+			
+			more_label.setText( MessageText.getString( "label.more" ));
+			
+			Label more_icon = new Label( more_comp, SWT.NULL );
+			
+			Image image = ImageLoader.getInstance().getImage( "menu_down" );
+			more_icon.setImage( image );
+			GridData grid_data = new GridData();
+			grid_data.widthHint=image.getBounds().width;
+			grid_data.heightHint=image.getBounds().height;
+			grid_data.verticalAlignment = SWT.CENTER;
+			Utils.setLayoutData(more_icon, grid_data);
+
+			final Menu more_menu = new Menu( more_comp );
+
+			for ( Control l: new Control[]{ more_comp,  more_label, more_icon }){
+				
+				l.setCursor(more_comp.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+	
+				l.setMenu( more_menu );
+	
+				l.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseDown(MouseEvent event) {
+						try{
+							Point p = more_menu.getDisplay().map( l, null, event.x, event.y );
+	
+							more_menu.setLocation( p );
+	
+							more_menu.setVisible(true);
+	
+						}catch( Throwable e ){
+	
+							Debug.out( e);
+						}
+					}
+				});
+			}
+			
+			final Menu moc_menu = new Menu( shell, SWT.DROP_DOWN);
+
+			MenuItem moc_item = new MenuItem( more_menu, SWT.CASCADE);
+
+			Messages.setLanguageText( moc_item, "label.move.on.comp" );
+
+			moc_item.setMenu( moc_menu );
+
+			MenuItem clear_item = new MenuItem( moc_menu, SWT.PUSH);
+
+			Messages.setLanguageText( clear_item, "Button.clear" );
+			
+			clear_item.addListener(SWT.Selection, new Listener(){
+				@Override
+				public void handleEvent(Event arg0){
+					for ( TorrentOpenOptions to: torrentOptionsMulti ){
+						
+						to.setMoveOnComplete( null );
+					}
+					
+					cmbDataDirChanged();
+				}});
+	
+			moc_menu.addMenuListener(
+				new MenuListener(){
+					
+					@Override
+					public void menuShown(MenuEvent arg0){
+						boolean has_moc = false;
+						
+						for ( TorrentOpenOptions to: torrentOptionsMulti ){
+							
+							has_moc |= to.getMoveOnComplete() != null;
+						}
+						clear_item.setEnabled( has_moc );
+
+					}
+					
+					@Override
+					public void menuHidden(MenuEvent arg0){
+						// TODO Auto-generated method stub
+						
+					}
+				});
+			
+			MenuItem set_item = new MenuItem( moc_menu, SWT.PUSH);
+
+			Messages.setLanguageText( set_item, "label.set" );
+			
+			set_item.addListener(SWT.Selection, new Listener(){
+				@Override
+				public void handleEvent(Event arg0){
+					DirectoryDialog dd = new DirectoryDialog(shell);
+
+					String filter_path = TorrentOpener.getFilterPathData();
+
+					dd.setFilterPath(filter_path);
+
+					dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+					String path = dd.open();
+
+					if ( path != null ){
+
+						TorrentOpener.setFilterPathData(path);
+
+						File target = new File(path);
+						
+						for ( TorrentOpenOptions to: torrentOptionsMulti ){
+							
+							to.setMoveOnComplete( target );
+						}
+						
+						cmbDataDirChanged();
+					}
+				}});
 		}
 
 		private void setupStartOptions(SWTSkinObjectExpandItem so) {
@@ -4323,7 +4487,7 @@ public class OpenTorrentOptionsWindow
 			GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 			Utils.setLayoutData(cTorrentModes, Utils.getFilledFormData());
 			GridLayout layout = new GridLayout();
-			layout.numColumns = 4;
+			layout.numColumns = 5;
 			layout.marginWidth = 5;
 			layout.marginHeight = 5;
 			cTorrentModes.setLayout(layout);
@@ -4360,6 +4524,23 @@ public class OpenTorrentOptionsWindow
 				}
 			});
 
+			Button seqDL = new Button( cTorrentModes, SWT.CHECK );
+			Messages.setLanguageText(seqDL, "menu.sequential.download");
+			gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER);
+			Utils.setLayoutData(seqDL, gridData);
+			
+			if ( Constants.isWindows ){
+				seqDL.setBackground( Colors.white );
+			}
+			
+			seqDL.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					setSequentalDownload( seqDL.getSelection());
+				}
+			});
+
+			
 			if ( TagManagerFactory.getTagManager().isEnabled()){
 
 					// tag area
@@ -4368,7 +4549,7 @@ public class OpenTorrentOptionsWindow
 				Utils.setLayoutData(tagLeft,  new GridData(GridData.VERTICAL_ALIGN_CENTER ));
 				Composite tagRight 	= new Composite( cTorrentModes, SWT.NULL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL );
-				gridData.horizontalSpan=3;
+				gridData.horizontalSpan = 4;
 				Utils.setLayoutData(tagRight, gridData);
 
 				layout = new GridLayout();
@@ -4393,7 +4574,9 @@ public class OpenTorrentOptionsWindow
 				tagButtonsArea.setLayoutData( gridData);
 
 				RowLayout tagLayout = new RowLayout();
-				tagLayout.pack = false;
+				tagLayout.pack = true;
+				tagLayout.justify = false;
+				tagLayout.fill = false;
 				tagLayout.spacing = 5;
 				Utils.setLayout(tagButtonsArea, tagLayout);
 
@@ -6248,6 +6431,12 @@ public class OpenTorrentOptionsWindow
 			}
 		}
 
+		private void
+		cancelPressed()
+		{
+			torrentOptions.cancel();
+		}
+		
 		private boolean
 		okPressed(
 			String dataDirPassed)
