@@ -2489,6 +2489,7 @@ BuddyPluginViewBetaChat
 			final Image rss_image_normal 	= ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
 			final Image rss_image_gray		= ImageLoader.getInstance().getImage("image.sidebar.subscriptions-gray");
 			rss_button.setImage(rss_image_gray);
+			rss_button.setCursor(parent.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 			GridData grid_data = new GridData(GridData.FILL_HORIZONTAL );
 			grid_data.widthHint = rss_image_gray.getBounds().width;
 			grid_data.heightHint = rss_image_gray.getBounds().height;
