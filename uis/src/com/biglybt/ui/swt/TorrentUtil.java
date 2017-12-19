@@ -556,7 +556,7 @@ public class TorrentUtil
 		itemTracker.setMenu(menuTracker);
 		itemExplore.setEnabled(hasSelection);
 		addTrackerTorrentMenu(menuTracker, dms, changeUrl, manualUpdate,
-				allStopped, use_open_containing_folder);
+				allStopped, use_open_containing_folder, fileMove );
 
 		// advanced > files
 
@@ -1772,7 +1772,7 @@ public class TorrentUtil
 
 	protected static void addTrackerTorrentMenu(final Menu menuTracker,
 			final DownloadManager[] dms, boolean changeUrl, boolean manualUpdate,
-			boolean allStopped, final boolean use_open_containing_folder) {
+			boolean allStopped, final boolean use_open_containing_folder, boolean canMove) {
 		
 		Shell shell = Utils.findAnyShell();
 		
@@ -2166,6 +2166,20 @@ public class TorrentUtil
 		});
 		itemTorrentDL.setEnabled(dms.length == 1);
 
+			// move torrent
+		
+		final MenuItem itemFileMoveTorrent = new MenuItem(menuTracker, SWT.PUSH);
+		Messages.setLanguageText(itemFileMoveTorrent,
+				"MyTorrentsView.menu.movetorrent");
+		itemFileMoveTorrent.addListener(SWT.Selection,
+				new ListenerDMTask(dms) {
+					@Override
+					public void run(DownloadManager[] dms) {
+						TorrentUtil.moveTorrentFile(shell, dms);
+					}
+				});
+		itemFileMoveTorrent.setEnabled(canMove);
+		
 			// switch torrent
 		
 		final MenuItem itemTorrentSwitch = new MenuItem(menuTracker, SWT.PUSH);

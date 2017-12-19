@@ -156,6 +156,38 @@ public class MenuFactory
 		return createTopLevelMenuItem(menuParent, MENU_ID_VIEW);
 	}
 
+	public static void createCommunityMenuItem( Menu menuParent) {
+		final Menu communityMenu = createTopLevelMenuItem(menuParent,	MENU_ID_COMMUNITY).getMenu();
+
+		MenuBuildUtils.addMaintenanceListenerForMenu(communityMenu,
+				new MenuBuildUtils.MenuBuilder() {
+					@Override
+					public void buildMenu(Menu menu, MenuEvent menuEvent) {
+
+					MenuFactory.addMenuItem(communityMenu, MENU_ID_COMMUNITY_FORUMS,
+						new Listener() {
+							@Override
+							public void handleEvent(Event e) {
+								Utils.launch(Constants.URL_FORUMS);
+							}
+						});
+
+					MenuFactory.addMenuItem(communityMenu, MENU_ID_COMMUNITY_WIKI,
+						new Listener() {
+							@Override
+							public void handleEvent(Event e) {
+								Utils.launch(Constants.URL_WIKI);
+							}
+						});
+
+					MenuBuildUtils.addCommunityChatMenu( communityMenu );
+
+					MenuFactory.addVoteMenuItem(communityMenu);
+					MenuFactory.addBugReportMenuItem(communityMenu);
+				}
+			});
+	}
+	
 	public static Menu createTorrentMenuItem(final Menu menuParent) {
 		final Menu torrentMenu = createTopLevelMenuItem(menuParent,
 				MENU_ID_TORRENT).getMenu();

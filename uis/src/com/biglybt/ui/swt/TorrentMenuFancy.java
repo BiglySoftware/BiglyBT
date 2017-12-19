@@ -1052,7 +1052,8 @@ public class TorrentMenuFancy
 							boolean changeUrl = hasSelection;
 							boolean manualUpdate = true;
 							boolean allStopped = true;
-
+							boolean canMove = true;
+									
 							int userMode = COConfigurationManager.getIntParameter("User Mode");
 							final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
 
@@ -1061,6 +1062,7 @@ public class TorrentMenuFancy
 
 								allStopped &= stopped;
 
+								canMove = canMove && dm.canMoveDataFiles();
 								if (userMode < 2) {
 									TRTrackerAnnouncer trackerClient = dm.getTrackerClient();
 
@@ -1074,7 +1076,7 @@ public class TorrentMenuFancy
 							}
 
 							TorrentUtil.addTrackerTorrentMenu(menu, dms, changeUrl,
-									manualUpdate, allStopped, use_open_containing_folder);
+									manualUpdate, allStopped, use_open_containing_folder, canMove );
 						}
 
 					});
@@ -1303,18 +1305,6 @@ public class TorrentMenuFancy
 							}
 
 							boolean fileRescan = allScanSelected || allScanNotSelected;
-
-							final MenuItem itemFileMoveTorrent = new MenuItem(menu, SWT.PUSH);
-							Messages.setLanguageText(itemFileMoveTorrent,
-									"MyTorrentsView.menu.movetorrent");
-							itemFileMoveTorrent.addListener(SWT.Selection,
-									new ListenerDMTask(dms) {
-										@Override
-										public void run(DownloadManager[] dms) {
-											TorrentUtil.moveTorrentFile(parentShell, dms);
-										}
-									});
-							itemFileMoveTorrent.setEnabled(fileMove);
 
 							final MenuItem itemFileRescan = new MenuItem(menu, SWT.CHECK);
 							Messages.setLanguageText(itemFileRescan,
