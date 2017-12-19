@@ -314,6 +314,8 @@ public class MainMenuV3
 				}
 			}
 
+			MenuFactory.addViewToolbarMenuItem(viewMenu);
+			
 			/////////
 
 			MenuItem itemStatusBar = MenuFactory.createTopLevelMenuItem(viewMenu,

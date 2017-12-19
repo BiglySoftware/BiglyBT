@@ -795,7 +795,7 @@ public class MenuFactory
 	}
 
 	public static MenuItem addViewToolbarMenuItem(Menu menu) {
-		final MenuItem item = addMenuItem(menu, SWT.CHECK, MENU_ID_TOOLBAR,
+		final MenuItem item = addMenuItem(menu, SWT.CHECK, isAZ3?MENU_ID_SEARCH_BAR:MENU_ID_TOOLBAR,
 				new Listener() {
 					@Override
 					public void handleEvent(Event e) {
