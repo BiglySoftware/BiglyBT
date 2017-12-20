@@ -41,6 +41,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Control;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
@@ -72,7 +73,7 @@ import org.eclipse.swt.widgets.Display;
 public class ToolBarView
 	extends SkinView
 	implements SelectedContentListener, ToolBarManagerListener,
-        ToolBarItem.ToolBarItemListener
+        ToolBarItem.ToolBarItemListener, ParameterListener
 {
 	private static boolean DEBUG = false;
 
@@ -108,8 +109,7 @@ public class ToolBarView
 	// @see SkinView#showSupport(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
-		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals(
-				"az2");
+		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals( "az2");
 
 		if (uiClassic && !"global-toolbar".equals(skinObject.getViewID())) {
 			skinObject.setVisible(false);
@@ -139,11 +139,24 @@ public class ToolBarView
 
 		if (firstTimeEver) {
 			firstTimeEver = false;
+			if ( !uiClassic ){
+				COConfigurationManager.addParameterListener( "IconBar.enabled", this );
+			}
 			setupToolBarItems(uiClassic);
 		}
 		tbm.addListener(this);
 
-		if (uiClassic) {
+		build();
+		
+		return( null );
+	}
+	
+	private void
+	build()
+	{
+		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals( "az2");
+		
+		if ( uiClassic || !COConfigurationManager.getBooleanParameter( "IconBar.enabled" )) {
 			bulkSetupItems("classic", "toolbar.area.sitem");
 		}
 		bulkSetupItems(UIToolBarManager.GROUP_MAIN, "toolbar.area.sitem");
@@ -170,14 +183,13 @@ public class ToolBarView
 				}
 			}
 		}
-
-		return null;
 	}
 
 	private void setupToolBarItems(boolean uiClassic) {
 		ToolBarItem item;
 
-		if (uiClassic) {
+		{	// always add these items, whether they are shown or not is decided later
+			
 			// ==OPEN
 			item = createItem(this, "open", "image.toolbar.open", "Button.add.torrent");
 			item.setDefaultActivationListener(new UIToolBarActivationListener() {
@@ -451,6 +463,49 @@ public class ToolBarView
 	}
 
 	@Override
+	public void parameterChanged(String parameterName){
+		Utils.execSWTThread(
+			new Runnable()
+			{
+				@Override
+				public void run(){
+					
+					SWTSkinObject parent = null;
+						
+					Set<String>	groups = new HashSet<>();
+					
+					for ( ToolBarItemSO so: mapToolBarItemToSO.values()){
+					
+						if ( parent == null ){
+						
+							parent = so.getSO().getParent();
+						}
+						
+						groups.add( so.getBase().getGroupID());
+					}
+					
+					if ( parent != null ){
+						
+						for ( String group: groups ){
+							SWTSkinObjectContainer groupSO = getGroupSO(group);
+							SWTSkinObject[] children = groupSO.getChildren();
+							for (SWTSkinObject so : children) {
+								so.dispose();
+							}
+							groupSO.dispose();
+						}
+						
+						mapToolBarItemToSO.clear();
+						
+						build();
+						
+						Utils.relayout( parent.getControl());
+					}
+				}
+			});
+	}
+	
+	@Override
 	public void currentlySelectedContentChanged(
 			ISelectedContent[] currentContent, String viewID) {
 		//System.err.println("currentlySelectedContentChanged " + viewID + ";" + currentContent + ";" + getMainSkinObject() + this + " via " + Debug.getCompressedStackTrace());
@@ -504,6 +559,8 @@ public class ToolBarView
 	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
 		tbm.removeListener(this);
 
+		COConfigurationManager.removeParameterListener( "IconBar.enabled", this );
+		
 		return super.skinObjectDestroyed(skinObject, params);
 	}
 
