@@ -5044,7 +5044,7 @@ BuddyPluginViewBetaChat
 
 				final int start = initial_log_length + appended.length();
 
-				String rendered_msg = renderMessage( beta, chat, message, original_msg, message_type, start, new_ranges, info_font, info_colour, bold_font );
+				String rendered_msg = renderMessage( beta, chat, message, original_msg, message_type, start, new_ranges, info_font, info_colour, bold_font, italic_font );
 
 				appended.append( rendered_msg );
 
@@ -5229,7 +5229,7 @@ BuddyPluginViewBetaChat
 	{
 		List<StyleRange>	ranges = new ArrayList<>();
 
-		String msg = renderMessage(null, chat, null,str,  ChatMessage.MT_NORMAL, 0, ranges, null, null, null);
+		String msg = renderMessage(null, chat, null,str,  ChatMessage.MT_NORMAL, 0, ranges, null, null, null, null );
 		
 		return( msg );
 
@@ -5311,6 +5311,61 @@ BuddyPluginViewBetaChat
 		return( text );
 	}
 	
+	private static String
+	expandEmphasis(
+		String		text )
+	{
+			// *dadasd*
+		
+		if ( !(text.contains( "*" ) || text.contains( "_" ) || text.contains( "<" ) || text.contains( "[" ))){
+			
+			return( text );
+		}
+		
+		try{	
+			Pattern p = RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|<b>|\\[b\\]|<i>|\\[i\\])([^\\n]+?)(?:[\\*_]{1,2}|</b>|\\[/b\\]|</i>|\\[/i\\])");
+	
+			Matcher m = p.matcher( text );
+	
+			boolean result = m.find();
+	
+			if ( result ){
+	
+				StringBuffer sb = new StringBuffer();
+	
+		    	while( result ){
+	
+		    		if ( sb.toString().endsWith( "]]" )){
+		    			
+		    			sb.append( " " );
+		    		}
+		    				
+		    		String match	= m.group(1);
+		    		
+		    		boolean is_italic = match.length()==1 || match.toLowerCase(Locale.US).contains( "i" );
+		    		
+		    		String str 		= m.group(2);
+		    		 
+		    		m.appendReplacement(sb, Matcher.quoteReplacement( "chat:" + (is_italic?"italic":"bold") + "[[" + UrlUtils.encode( str ) + "]]"));
+	
+		    		result = m.find();
+		    	}
+	
+		    	if ( sb.toString().endsWith( "]]" )){
+	    			
+	    			sb.append( " " );
+	    		}
+		    	
+				m.appendTail(sb);
+	
+				text = sb.toString();
+			}
+		}catch( Throwable e ){
+		}
+		
+		return( text );
+	}
+	
 	protected static String
 	renderMessage(
 		BuddyPluginBeta		beta,
@@ -5322,10 +5377,16 @@ BuddyPluginViewBetaChat
 		List<StyleRange>	new_ranges,
 		Font				info_font,
 		Color				info_colour,
-		Font				bold_font )
+		Font				bold_font,
+		Font				italic_font )
 	{
 		original_msg = expandResources( original_msg );
-				
+		
+		if ( bold_font != null ){
+		
+			original_msg = expandEmphasis( original_msg );
+		}
+		
 		String msg = original_msg;
 
 		try{
@@ -5785,6 +5846,8 @@ BuddyPluginViewBetaChat
 
 								boolean	will_work = true;
 
+								Font	fail_font = bold_font;
+								
 								try{
 
 									String lc_url = url_str.toLowerCase( Locale.US );
@@ -5804,8 +5867,14 @@ BuddyPluginViewBetaChat
 												will_work = false;
 											}
 										}
-									}else if ( lc_url.startsWith( "chat:nick" )){
+									}else if ( lc_url.startsWith( "chat:nick" ) || lc_url.startsWith( "chat:bold" )){
 
+										will_work = false;
+										
+									}else if ( lc_url.startsWith( "chat:italic" )){
+										
+										fail_font = italic_font;
+										
 										will_work = false;
 									}
 								}catch( Throwable e ){
@@ -5833,7 +5902,7 @@ BuddyPluginViewBetaChat
 									StyleRange styleRange 	= new MyStyleRange( message );
 									styleRange.start 		= this_style_start;
 									styleRange.length 		= this_style_length;
-									styleRange.font 		= bold_font;
+									styleRange.font 		= fail_font;
 
 									new_ranges.add( styleRange);
 								}
