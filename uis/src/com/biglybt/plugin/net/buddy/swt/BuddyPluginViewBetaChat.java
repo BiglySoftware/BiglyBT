@@ -55,6 +55,8 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
@@ -63,6 +65,8 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -232,7 +236,7 @@ BuddyPluginViewBetaChat
 	private Button 					shared_nick_button;
 	private Text 					nickname;
 
-	private Text 					input_area;
+	private StyledText				input_area;
 
 	private DropTarget[]			drop_targets;
 
@@ -1584,15 +1588,42 @@ BuddyPluginViewBetaChat
 				// Text
 	
 	
-			input_area = new Text( bottom_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
+			input_area = new StyledText( bottom_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
 			grid_data = new GridData(GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan = 1;
 			grid_data.heightHint = 30;
 			grid_data.horizontalIndent = 4;
 			Utils.setLayoutData(input_area, grid_data);
 	
+			input_area.setIndent( 4 );
+			
 			input_area.setTextLimit( MAX_MSG_OVERALL_LENGTH );
 	
+			input_area.addVerifyListener(
+				new VerifyListener(){
+					
+					@Override
+					public void verifyText(VerifyEvent ev){
+							
+							// annoying issue if return hit with a selection that causes the selection to be replaced with
+							// a new line and then text submitted - not really wanted
+							// also ctrl+i by default maps to \t
+						
+						if ( !input_area.getSelectionText().isEmpty()){
+						
+							if ( ev.text.contains( "\n" )){
+							
+								ev.doit = false;
+							}		
+						}
+						
+						if ( ev.text.equals( "\t" )){
+								
+							ev.doit = false;
+						}
+					}
+				});
+			
 			input_area.addKeyListener(
 				new KeyListener()
 				{
@@ -1706,6 +1737,20 @@ BuddyPluginViewBetaChat
 								if ( key == 'a' ){
 	
 									input_area.selectAll();
+									
+								}else if ( key == 'b' || key == 'i' ){
+									
+									String emp = key == 'b'?"**":"*";
+									
+									String 	sel = input_area.getSelectionText();
+									
+									if ( !sel.isEmpty()){
+										
+										int[] range = input_area.getSelectionRanges();
+										
+										input_area.replaceTextRange( range[0], range[1], emp + sel + emp );
+										input_area.setSelection( range[0], range[0] + range[1] + emp.length()*2 );
+									}
 								}
 							}
 						}
@@ -1945,7 +1990,7 @@ BuddyPluginViewBetaChat
 					}
 				});
 			
-			input_area = new Text( share_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
+			input_area = new StyledText( share_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
 			input_area.setVisible( false );
 			
 			hookFTUXListener();
@@ -5335,7 +5380,17 @@ BuddyPluginViewBetaChat
 	
 		    	while( result ){
 	
-		    		if ( sb.toString().endsWith( "]]" )){
+		    		String existing = sb.toString();
+		    		
+		    		int start = m.start(1);
+		    		
+		    		boolean pad = false;
+		    		
+		    		if ( start > 0 && !Character.isWhitespace( text.charAt( start-1 ))){
+		    		
+		    			pad = true;
+		    			
+		    		}else if ( existing.endsWith( "]]" )){
 		    			
 		    			sb.append( " " );
 		    		}
@@ -5346,7 +5401,7 @@ BuddyPluginViewBetaChat
 		    		
 		    		String str 		= m.group(2);
 		    		 
-		    		m.appendReplacement(sb, Matcher.quoteReplacement( "chat:" + (is_italic?"italic":"bold") + "[[" + UrlUtils.encode( str ) + "]]"));
+		    		m.appendReplacement(sb, Matcher.quoteReplacement( (pad?" ":"") + "chat:" + (is_italic?"italic":"bold") + "[[" + UrlUtils.encode( str ) + "]]"));
 	
 		    		result = m.find();
 		    	}
