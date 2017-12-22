@@ -80,6 +80,8 @@ public class SBC_ActivityTableView
 	private static int[] COLOR_UNVIEWED_ENTRIES = { 132, 16, 58 };
 	private static ActivitiesListener activitiesListener;
 
+	private static MdiEntry	mdi_entry;
+	
 	private TableViewSWT<ActivitiesEntry> view;
 
 	private String tableID;
@@ -511,17 +513,28 @@ public class SBC_ActivityTableView
 		activitiesListener = new ActivitiesListener() {
 			@Override
 			public void vuzeNewsEntryChanged(ActivitiesEntry entry) {
-				ViewTitleInfoManager.refreshTitleInfo(titleInfoActivityView);
+				refresh();
 			}
 
 			@Override
 			public void vuzeNewsEntriesRemoved(ActivitiesEntry[] entries) {
-				ViewTitleInfoManager.refreshTitleInfo(titleInfoActivityView);
+				refresh();
 			}
 
 			@Override
 			public void vuzeNewsEntriesAdded(ActivitiesEntry[] entries) {
+				refresh();
+			}
+			
+			private void
+			refresh()
+			{
 				ViewTitleInfoManager.refreshTitleInfo(titleInfoActivityView);
+				
+				if ( mdi_entry != null ){
+					
+					mdi_entry.redraw();
+				}
 			}
 		};
 		ActivitiesManager.addListener(activitiesListener);
@@ -529,10 +542,12 @@ public class SBC_ActivityTableView
 		MdiEntryCreationListener creationListener = new MdiEntryCreationListener() {
 			@Override
 			public MdiEntry createMDiEntry(String id) {
-				return mdi.createEntryFromSkinRef(MultipleDocumentInterface.SIDEBAR_HEADER_VUZE,
+				mdi_entry =  mdi.createEntryFromSkinRef(MultipleDocumentInterface.SIDEBAR_HEADER_VUZE,
 						MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES, "activity",
 						"{sidebar." + MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES
 								+ "}", titleInfoActivityView, null, false, null);
+				
+				return( mdi_entry );
 			}
 		};
 		mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES, creationListener);
