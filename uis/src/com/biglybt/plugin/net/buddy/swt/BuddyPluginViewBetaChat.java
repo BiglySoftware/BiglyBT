@@ -1748,8 +1748,20 @@ BuddyPluginViewBetaChat
 										
 										int[] range = input_area.getSelectionRanges();
 										
-										input_area.replaceTextRange( range[0], range[1], emp + sel + emp );
-										input_area.setSelection( range[0], range[0] + range[1] + emp.length()*2 );
+										int emp_len = emp.length();
+										
+										if ( sel.startsWith( emp ) && sel.endsWith( emp ) && sel.length() >= emp_len * 2 ){
+											
+											input_area.replaceTextRange( range[0], range[1], sel.substring(emp_len, sel.length() - emp_len ));
+											
+											input_area.setSelection( range[0], range[0] + range[1] - emp_len*2 );
+											
+										}else{
+											
+											input_area.replaceTextRange( range[0], range[1], emp + sel + emp );
+											
+											input_area.setSelection( range[0], range[0] + range[1] + emp_len*2 );
+										}
 									}
 								}
 							}
@@ -5368,7 +5380,7 @@ BuddyPluginViewBetaChat
 		}
 		
 		try{	
-			Pattern p = RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|<b>|\\[b\\]|<i>|\\[i\\])([^\\n]+?)(?:[\\*_]{1,2}|</b>|\\[/b\\]|</i>|\\[/i\\])");
+			Pattern p = RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|(?:[<\\[]([bi]+)[>\\]]))([^\\n]+?)(?:\\1|(?:[<\\[]/\\2[>\\]]))" );
 	
 			Matcher m = p.matcher( text );
 	
@@ -5389,8 +5401,9 @@ BuddyPluginViewBetaChat
 		    		if ( start > 0 && !Character.isWhitespace( text.charAt( start-1 ))){
 		    		
 		    			pad = true;
-		    			
-		    		}else if ( existing.endsWith( "]]" )){
+		    		}
+		    		
+		    		if ( existing.endsWith( "]]" )){
 		    			
 		    			sb.append( " " );
 		    		}
@@ -5399,7 +5412,7 @@ BuddyPluginViewBetaChat
 		    		
 		    		boolean is_italic = match.length()==1 || match.toLowerCase(Locale.US).contains( "i" );
 		    		
-		    		String str 		= m.group(2);
+		    		String str 		= m.group(3);
 		    		 
 		    		m.appendReplacement(sb, Matcher.quoteReplacement( (pad?" ":"") + "chat:" + (is_italic?"italic":"bold") + "[[" + UrlUtils.encode( str ) + "]]"));
 	
