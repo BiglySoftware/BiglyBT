@@ -1621,6 +1621,14 @@ BuddyPluginViewBetaChat
 								
 							ev.doit = false;
 						}
+						
+						if ( ev.text.equals( "\n" ) || ev.text.equals( "\r\n" )){
+							
+							if (( ev.stateMask & SWT.ALT ) == 0 ){
+							
+								ev.doit = false;
+							}
+						}
 					}
 				});
 			
