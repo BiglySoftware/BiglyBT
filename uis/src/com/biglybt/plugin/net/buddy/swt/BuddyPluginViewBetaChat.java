@@ -5434,14 +5434,7 @@ BuddyPluginViewBetaChat
 		Color				info_colour,
 		Font				bold_font,
 		Font				italic_font )
-	{
-		original_msg = expandResources( original_msg );
-		
-		if ( bold_font != null ){
-		
-			original_msg = expandEmphasis( original_msg );
-		}
-		
+	{	
 		String msg = original_msg;
 
 		try{
@@ -5654,10 +5647,22 @@ BuddyPluginViewBetaChat
 
 						String str = (String)obj;
 
+						if ( message_type == ChatMessage.MT_NORMAL ){
+							
+							str = expandResources( str );
+							
+							if ( bold_font != null ){
+							
+								str = expandEmphasis( str );
+							}
+						}
+						
 						if ( params.size() > 0 ){
 
-							segments.set( i, expand( params, str, true ));
+							str = expand( params, str, true );
 						}
+						
+						segments.set( i, str );
 					}
 				}
 
