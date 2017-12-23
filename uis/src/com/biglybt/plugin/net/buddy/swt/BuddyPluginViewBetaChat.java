@@ -236,7 +236,7 @@ BuddyPluginViewBetaChat
 	private Button 					shared_nick_button;
 	private Text 					nickname;
 
-	private StyledText				input_area;
+	private Text					input_area;
 
 	private DropTarget[]			drop_targets;
 
@@ -1588,14 +1588,14 @@ BuddyPluginViewBetaChat
 				// Text
 	
 	
-			input_area = new StyledText( bottom_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
+			input_area = new Text( bottom_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
 			grid_data = new GridData(GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan = 1;
 			grid_data.heightHint = 30;
 			grid_data.horizontalIndent = 4;
 			Utils.setLayoutData(input_area, grid_data);
 	
-			input_area.setIndent( 4 );
+			//input_area.setIndent( 4 );
 			
 			input_area.setTextLimit( MAX_MSG_OVERALL_LENGTH );
 	
@@ -1604,30 +1604,11 @@ BuddyPluginViewBetaChat
 					
 					@Override
 					public void verifyText(VerifyEvent ev){
-							
-							// annoying issue if return hit with a selection that causes the selection to be replaced with
-							// a new line and then text submitted - not really wanted
-							// also ctrl+i by default maps to \t
-						
-						if ( !input_area.getSelectionText().isEmpty()){
-						
-							if ( ev.text.contains( "\n" )){
-							
-								ev.doit = false;
-							}		
-						}
+							// ctrl+i by default maps to \t
 						
 						if ( ev.text.equals( "\t" )){
 								
 							ev.doit = false;
-						}
-						
-						if ( ev.text.equals( "\n" ) || ev.text.equals( "\r\n" )){
-							
-							if (( ev.stateMask & SWT.ALT ) == 0 ){
-							
-								ev.doit = false;
-							}
 						}
 					}
 				});
@@ -1752,8 +1733,20 @@ BuddyPluginViewBetaChat
 									
 									String 	sel = input_area.getSelectionText();
 									
+									Point p = input_area.getSelection();
+
+									// unfortunately double-click to select grabs trailing spaces so trim back
+									
+									while( sel.endsWith( " " )){
+										
+										sel = sel.substring( 0, sel.length() - 1 );
+										
+										p.y--;
+									}
+									
 									if ( !sel.isEmpty()){
 										
+										/*
 										int[] range = input_area.getSelectionRanges();
 										
 										int emp_len = emp.length();
@@ -1770,6 +1763,27 @@ BuddyPluginViewBetaChat
 											
 											input_area.setSelection( range[0], range[0] + range[1] + emp_len*2 );
 										}
+										*/
+																				
+										int emp_len = emp.length();
+										
+										String text = input_area.getText();
+										
+										Point loc = input_area.getCaretLocation();
+										
+										if ( sel.startsWith( emp ) && sel.endsWith( emp ) && sel.length() >= emp_len * 2 ){
+										
+											input_area.setText( text.substring( 0,  p.x ) + sel.substring(emp_len, sel.length() - emp_len ) + text.substring( p.y ));
+											
+											p.y -= emp_len*2;
+										}else{
+											
+											input_area.setText( text.substring( 0,  p.x ) + emp + sel+ emp  + text.substring( p.y ));
+											
+											p.y += emp_len*2;
+										}
+										
+										input_area.setSelection( p );
 									}
 								}
 							}
@@ -2010,7 +2024,7 @@ BuddyPluginViewBetaChat
 					}
 				});
 			
-			input_area = new StyledText( share_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
+			input_area = new Text( share_area, SWT.MULTI | SWT.V_SCROLL | SWT.WRAP | SWT.BORDER);
 			input_area.setVisible( false );
 			
 			hookFTUXListener();
