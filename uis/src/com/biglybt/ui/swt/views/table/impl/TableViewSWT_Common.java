@@ -44,6 +44,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.painted.TableCellPainted;
@@ -472,6 +473,24 @@ public class TableViewSWT_Common
 					System.out.println("force sort");
 					tv.resetLastSortedOn();
 					tv.sortColumn(true);
+					break;
+				case 'v':
+					if ( event.widget != filter.widget ){
+						
+						Clipboard clipboard = new Clipboard(Display.getDefault());
+						
+						try{
+							String text = (String) clipboard.getContents(TextTransfer.getInstance());
+	
+							if (text != null && text.length() <= 2048) {
+								
+								TorrentOpener.openTorrentsFromClipboard(text);
+							}
+						}finally{
+							
+							clipboard.dispose();
+						}
+					}
 					break;
 			}
 

@@ -314,6 +314,8 @@ public class MainMenuV3
 				}
 			}
 
+			MenuFactory.addViewToolbarMenuItem(viewMenu);
+			
 			/////////
 
 			MenuItem itemStatusBar = MenuFactory.createTopLevelMenuItem(viewMenu,
@@ -476,6 +478,12 @@ public class MainMenuV3
 			Debug.out("Error creating View Menu", e);
 		}
 	}
+	
+	private void
+	addCommunityMenu()
+	{
+		MenuFactory.createCommunityMenuItem(menuBar);
+	}
 
 	/**
 	 * Creates the Tools menu and all its children
@@ -585,45 +593,6 @@ public class MainMenuV3
 			return menuBar;
 		}
 		return MenuFactory.findMenu(menuBar, id);
-	}
-
-	private void addCommunityMenu() {
-		MenuItem item = MenuFactory.createTopLevelMenuItem(menuBar,	MENU_ID_COMMUNITY);
-
-		final Menu communityMenu = item.getMenu();
-
-		communityMenu.addListener(
-			SWT.Show,
-			new Listener()
-			{
-				@Override
-				public void
-				handleEvent( Event event)
-				{
-					Utils.disposeSWTObjects( communityMenu.getItems());
-
-					MenuFactory.addMenuItem(communityMenu, MENU_ID_COMMUNITY_FORUMS,
-						new Listener() {
-							@Override
-							public void handleEvent(Event e) {
-								Utils.launch(Constants.URL_FORUMS);
-							}
-						});
-
-					MenuFactory.addMenuItem(communityMenu, MENU_ID_COMMUNITY_WIKI,
-						new Listener() {
-							@Override
-							public void handleEvent(Event e) {
-								Utils.launch(Constants.URL_WIKI);
-							}
-						});
-
-					MenuBuildUtils.addCommunityChatMenu( communityMenu );
-
-					MenuFactory.addVoteMenuItem(communityMenu);
-					MenuFactory.addBugReportMenuItem(communityMenu);
-				}
-			});
 	}
 
 	//====================================

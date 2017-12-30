@@ -55,6 +55,8 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
@@ -63,6 +65,8 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -232,7 +236,7 @@ BuddyPluginViewBetaChat
 	private Button 					shared_nick_button;
 	private Text 					nickname;
 
-	private Text 					input_area;
+	private Text					input_area;
 
 	private DropTarget[]			drop_targets;
 
@@ -1591,8 +1595,24 @@ BuddyPluginViewBetaChat
 			grid_data.horizontalIndent = 4;
 			Utils.setLayoutData(input_area, grid_data);
 	
+			//input_area.setIndent( 4 );
+			
 			input_area.setTextLimit( MAX_MSG_OVERALL_LENGTH );
 	
+			input_area.addVerifyListener(
+				new VerifyListener(){
+					
+					@Override
+					public void verifyText(VerifyEvent ev){
+							// ctrl+i by default maps to \t
+						
+						if ( ev.text.equals( "\t" )){
+								
+							ev.doit = false;
+						}
+					}
+				});
+			
 			input_area.addKeyListener(
 				new KeyListener()
 				{
@@ -1706,6 +1726,65 @@ BuddyPluginViewBetaChat
 								if ( key == 'a' ){
 	
 									input_area.selectAll();
+									
+								}else if ( key == 'b' || key == 'i' ){
+									
+									String emp = key == 'b'?"**":"*";
+									
+									String 	sel = input_area.getSelectionText();
+									
+									Point p = input_area.getSelection();
+
+									// unfortunately double-click to select grabs trailing spaces so trim back
+									
+									while( sel.endsWith( " " )){
+										
+										sel = sel.substring( 0, sel.length() - 1 );
+										
+										p.y--;
+									}
+									
+									if ( !sel.isEmpty()){
+										
+										/*
+										int[] range = input_area.getSelectionRanges();
+										
+										int emp_len = emp.length();
+										
+										if ( sel.startsWith( emp ) && sel.endsWith( emp ) && sel.length() >= emp_len * 2 ){
+											
+											input_area.replaceTextRange( range[0], range[1], sel.substring(emp_len, sel.length() - emp_len ));
+											
+											input_area.setSelection( range[0], range[0] + range[1] - emp_len*2 );
+											
+										}else{
+											
+											input_area.replaceTextRange( range[0], range[1], emp + sel + emp );
+											
+											input_area.setSelection( range[0], range[0] + range[1] + emp_len*2 );
+										}
+										*/
+																				
+										int emp_len = emp.length();
+										
+										String text = input_area.getText();
+										
+										Point loc = input_area.getCaretLocation();
+										
+										if ( sel.startsWith( emp ) && sel.endsWith( emp ) && sel.length() >= emp_len * 2 ){
+										
+											input_area.setText( text.substring( 0,  p.x ) + sel.substring(emp_len, sel.length() - emp_len ) + text.substring( p.y ));
+											
+											p.y -= emp_len*2;
+										}else{
+											
+											input_area.setText( text.substring( 0,  p.x ) + emp + sel+ emp  + text.substring( p.y ));
+											
+											p.y += emp_len*2;
+										}
+										
+										input_area.setSelection( p );
+									}
 								}
 							}
 						}
@@ -2489,6 +2568,7 @@ BuddyPluginViewBetaChat
 			final Image rss_image_normal 	= ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
 			final Image rss_image_gray		= ImageLoader.getInstance().getImage("image.sidebar.subscriptions-gray");
 			rss_button.setImage(rss_image_gray);
+			rss_button.setCursor(parent.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 			GridData grid_data = new GridData(GridData.FILL_HORIZONTAL );
 			grid_data.widthHint = rss_image_gray.getBounds().width;
 			grid_data.heightHint = rss_image_gray.getBounds().height;
@@ -5043,7 +5123,7 @@ BuddyPluginViewBetaChat
 
 				final int start = initial_log_length + appended.length();
 
-				String rendered_msg = renderMessage( beta, chat, message, original_msg, message_type, start, new_ranges, info_font, info_colour, bold_font );
+				String rendered_msg = renderMessage( beta, chat, message, original_msg, message_type, start, new_ranges, info_font, info_colour, bold_font, italic_font );
 
 				appended.append( rendered_msg );
 
@@ -5228,7 +5308,7 @@ BuddyPluginViewBetaChat
 	{
 		List<StyleRange>	ranges = new ArrayList<>();
 
-		String msg = renderMessage(null, chat, null,str,  ChatMessage.MT_NORMAL, 0, ranges, null, null, null);
+		String msg = renderMessage(null, chat, null,str,  ChatMessage.MT_NORMAL, 0, ranges, null, null, null, null );
 		
 		return( msg );
 
@@ -5310,6 +5390,72 @@ BuddyPluginViewBetaChat
 		return( text );
 	}
 	
+	private static String
+	expandEmphasis(
+		String		text )
+	{
+			// *dadasd*
+		
+		if ( !(text.contains( "*" ) || text.contains( "_" ) || text.contains( "<" ) || text.contains( "[" ))){
+			
+			return( text );
+		}
+		
+		try{	
+			Pattern p = RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|(?:[<\\[]([bi]+)[>\\]]))([^\\n]+?)(?:\\1|(?:[<\\[]/\\2[>\\]]))" );
+	
+			Matcher m = p.matcher( text );
+	
+			boolean result = m.find();
+	
+			if ( result ){
+	
+				StringBuffer sb = new StringBuffer();
+	
+		    	while( result ){
+	
+		    		String existing = sb.toString();
+		    		
+		    		int start = m.start(1);
+		    		
+		    		boolean pad = false;
+		    		
+		    		if ( start > 0 && !Character.isWhitespace( text.charAt( start-1 ))){
+		    		
+		    			pad = true;
+		    		}
+		    		
+		    		if ( existing.endsWith( "]]" )){
+		    			
+		    			sb.append( " " );
+		    		}
+		    				
+		    		String match	= m.group(1);
+		    		
+		    		boolean is_italic = match.length()==1 || match.toLowerCase(Locale.US).contains( "i" );
+		    		
+		    		String str 		= m.group(3);
+		    		 
+		    		m.appendReplacement(sb, Matcher.quoteReplacement( (pad?" ":"") + "chat:" + (is_italic?"italic":"bold") + "[[" + UrlUtils.encode( str ) + "]]"));
+	
+		    		result = m.find();
+		    	}
+	
+		    	if ( sb.toString().endsWith( "]]" )){
+	    			
+	    			sb.append( " " );
+	    		}
+		    	
+				m.appendTail(sb);
+	
+				text = sb.toString();
+			}
+		}catch( Throwable e ){
+		}
+		
+		return( text );
+	}
+	
 	protected static String
 	renderMessage(
 		BuddyPluginBeta		beta,
@@ -5321,10 +5467,9 @@ BuddyPluginViewBetaChat
 		List<StyleRange>	new_ranges,
 		Font				info_font,
 		Color				info_colour,
-		Font				bold_font )
-	{
-		original_msg = expandResources( original_msg );
-				
+		Font				bold_font,
+		Font				italic_font )
+	{	
 		String msg = original_msg;
 
 		try{
@@ -5537,10 +5682,22 @@ BuddyPluginViewBetaChat
 
 						String str = (String)obj;
 
+						if ( message_type == ChatMessage.MT_NORMAL ){
+							
+							str = expandResources( str );
+							
+							if ( bold_font != null ){
+							
+								str = expandEmphasis( str );
+							}
+						}
+						
 						if ( params.size() > 0 ){
 
-							segments.set( i, expand( params, str, true ));
+							str = expand( params, str, true );
 						}
+						
+						segments.set( i, str );
 					}
 				}
 
@@ -5784,6 +5941,8 @@ BuddyPluginViewBetaChat
 
 								boolean	will_work = true;
 
+								Font	fail_font = bold_font;
+								
 								try{
 
 									String lc_url = url_str.toLowerCase( Locale.US );
@@ -5803,8 +5962,14 @@ BuddyPluginViewBetaChat
 												will_work = false;
 											}
 										}
-									}else if ( lc_url.startsWith( "chat:nick" )){
+									}else if ( lc_url.startsWith( "chat:nick" ) || lc_url.startsWith( "chat:bold" )){
 
+										will_work = false;
+										
+									}else if ( lc_url.startsWith( "chat:italic" )){
+										
+										fail_font = italic_font;
+										
 										will_work = false;
 									}
 								}catch( Throwable e ){
@@ -5832,7 +5997,7 @@ BuddyPluginViewBetaChat
 									StyleRange styleRange 	= new MyStyleRange( message );
 									styleRange.start 		= this_style_start;
 									styleRange.length 		= this_style_length;
-									styleRange.font 		= bold_font;
+									styleRange.font 		= fail_font;
 
 									new_ranges.add( styleRange);
 								}

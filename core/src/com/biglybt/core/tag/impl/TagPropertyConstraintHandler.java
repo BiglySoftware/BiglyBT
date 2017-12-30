@@ -31,7 +31,6 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.peer.impl.PEPeerControl;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
@@ -1478,6 +1477,9 @@ TagPropertyConstraintHandler
 		private static final int	KW_PEER_MAX_COMP 	= 16;
 		private static final int	KW_PEER_AVERAGE_COMP 	= 17;
 		private static final int	KW_LEECHER_MAX_COMP 	= 18;
+		private static final int	KW_SIZE				 	= 19;
+		private static final int	KW_SIZE_MB			 	= 20;
+		private static final int	KW_SIZE_GB			 	= 21;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1522,6 +1524,12 @@ TagPropertyConstraintHandler
 			
 			keyword_map.put( "peeraveragecompletion", KW_PEER_AVERAGE_COMP );
 			keyword_map.put( "peer_average_completion", KW_PEER_AVERAGE_COMP );
+			
+			keyword_map.put( "size", KW_SIZE );
+			keyword_map.put( "sizemb", KW_SIZE_MB );
+			keyword_map.put( "size_mb", KW_SIZE_MB );
+			keyword_map.put( "sizegb", KW_SIZE_GB );
+			keyword_map.put( "size_gb", KW_SIZE_GB );
 			
 		}
 
@@ -2031,9 +2039,10 @@ TagPropertyConstraintHandler
 							return( result );
 						}
 
+						result = null;	// don't cache any results below as they are variable
+						
 						switch( kw ){
 							case KW_SHARE_RATIO:{
-								result = null;	// don't cache this!
 
 								int sr = dm.getStats().getShareRatio();
 
@@ -2048,8 +2057,6 @@ TagPropertyConstraintHandler
 							}
 							case KW_PERCENT:{
 
-								result = null;	// don't cache this!
-
 									// 0->1000
 
 								int percent = dm.getStats().getPercentDoneExcludingDND();
@@ -2057,8 +2064,6 @@ TagPropertyConstraintHandler
 								return( new Float( percent/10.0f ));
 							}
 							case KW_AGE:{
-
-								result = null;	// don't cache this!
 
 								long added = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
 
@@ -2071,8 +2076,6 @@ TagPropertyConstraintHandler
 							}
 							case KW_COMPLETED_AGE:{
 
-								result = null;	// don't cache this!
-
 								long comp = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME );
 
 								if ( comp <= 0 ){
@@ -2084,8 +2087,6 @@ TagPropertyConstraintHandler
 							}
 							case KW_PEER_MAX_COMP:{
 
-								result = null;	// don't cache this!
-
 								PEPeerManager pm = dm.getPeerManager();
 								
 								if ( pm == null ){
@@ -2096,8 +2097,6 @@ TagPropertyConstraintHandler
 								return(	new Float( pm.getMaxCompletionInThousandNotation( false )/10.0f ));
 							}
 							case KW_LEECHER_MAX_COMP:{
-
-								result = null;	// don't cache this!
 
 								PEPeerManager pm = dm.getPeerManager();
 								
@@ -2111,8 +2110,6 @@ TagPropertyConstraintHandler
 
 							case KW_PEER_AVERAGE_COMP:{
 
-								result = null;	// don't cache this!
-
 								PEPeerManager pm = dm.getPeerManager();
 								
 								if ( pm == null ){
@@ -2124,19 +2121,13 @@ TagPropertyConstraintHandler
 							}
 							case KW_DOWNLOADING_FOR:{
 
-								result = null;	// don't cache this!
-
 								return( dm.getStats().getSecondsDownloading());
 							}
 							case KW_SEEDING_FOR:{
 
-								result = null;	// don't cache this!
-
 								return( dm.getStats().getSecondsOnlySeeding());
 							}
 							case KW_LAST_ACTIVE:{
-
-								result = null;	// don't cache this!
 
 								DownloadManagerState dms = dm.getDownloadState();
 
@@ -2151,8 +2142,6 @@ TagPropertyConstraintHandler
 							}
 							case KW_RESUME_IN:{
 
-								result = null;	// don't cache this!
-
 								long resume_millis = dm.getAutoResumeTime();
 
 								long	now = SystemTime.getCurrentTime();
@@ -2166,8 +2155,6 @@ TagPropertyConstraintHandler
 							}
 							case KW_MIN_OF_HOUR:{
 
-								result = null;	// don't cache this!
-
 								long	now = SystemTime.getCurrentTime();
 
 								GregorianCalendar cal = new GregorianCalendar();
@@ -2177,8 +2164,6 @@ TagPropertyConstraintHandler
 								return( cal.get( Calendar.MINUTE ));
 							}
 							case KW_HOUR_OF_DAY:{
-
-								result = null;	// don't cache this!
 
 								long	now = SystemTime.getCurrentTime();
 
@@ -2190,8 +2175,6 @@ TagPropertyConstraintHandler
 							}
 							case KW_DAY_OF_WEEK:{
 
-								result = null;	// don't cache this!
-
 								long	now = SystemTime.getCurrentTime();
 
 								GregorianCalendar cal = new GregorianCalendar();
@@ -2202,13 +2185,9 @@ TagPropertyConstraintHandler
 							}
 							case KW_SWARM_MERGE:{
 
-								result = null;	// don't cache this!
-
 								return( dm.getDownloadState().getLongAttribute( DownloadManagerState.AT_MERGED_DATA ));
 							}
 							case KW_SEED_COUNT:{
-
-								result = null;	// don't cache this!
 
 								TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
 
@@ -2223,8 +2202,6 @@ TagPropertyConstraintHandler
 							}
 							case KW_PEER_COUNT:{
 
-								result = null;	// don't cache this!
-
 								TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
 
 								int	peers = dm.getNbSeeds();
@@ -2237,8 +2214,6 @@ TagPropertyConstraintHandler
 								return( Math.max( 0, peers ));
 							}
 							case KW_SEED_PEER_RATIO:{
-
-								result = null;	// don't cache this!
 
 								TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
 
@@ -2279,8 +2254,6 @@ TagPropertyConstraintHandler
 							}
 							case KW_TAG_AGE:{
 
-								result = null;	// don't cache this!
-
 								long tag_added = tag.getTaggableAddedTime( dm );
 
 								if ( tag_added <= 0 ){
@@ -2298,6 +2271,18 @@ TagPropertyConstraintHandler
 								return( age );
 							}
 
+							case KW_SIZE:{
+								
+								return( dm.getSize());
+							}
+							case KW_SIZE_MB:{
+								
+								return( dm.getSize()/(1024*1024L));
+							}
+							case KW_SIZE_GB:{
+								
+								return( dm.getSize()/(1024*1024*1024L));
+							}
 							default:{
 
 								setError( "Invalid constraint keyword: " + str );

@@ -47,7 +47,15 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Open Details", false);
 		def.addParameter("Open Seeding Details", false);
 		def.addParameter("IconBar.enabled", true);
-
+		
+		def.addParameter("IconBar.visible.play", true);
+		def.addParameter("IconBar.visible.run", true);
+		def.addParameter("IconBar.visible.top", true);
+		def.addParameter("IconBar.visible.up", true);
+		def.addParameter("IconBar.visible.down", true);
+		def.addParameter("IconBar.visible.bottom", true);
+		def.addParameter("IconBar.start.stop.separate", false );
+		
 		def.addParameter("DefaultDir.BestGuess", false);
 		def.addParameter("DefaultDir.AutoUpdate", true);
 		def.addParameter("DefaultDir.AutoSave.AutoRename", true);

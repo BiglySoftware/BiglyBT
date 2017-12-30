@@ -102,10 +102,6 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 		new BooleanParameter(gVarious, "Show Download Basket", "ConfigView.section.style.showdownloadbasket");
 
-		if (!isAZ3) {
-			new BooleanParameter(gVarious, "IconBar.enabled", "ConfigView.section.style.showiconbar");
-		}
-
 		new BooleanParameter(gVarious, "suppress_file_download_dialog", "ConfigView.section.interface.display.suppress.file.download.dialog");
 
 		new BooleanParameter(gVarious, "Suppress Sharing Dialog", "ConfigView.section.interface.display.suppress.sharing.dialog");
@@ -196,7 +192,54 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 					new ChangeSelectionActionPerformer(forceDPI.getControl()));
 		}
 
+			// toolbar
+		
+		{
+			Group gToolBar = new Group(cSection, SWT.NULL);
+			Messages.setLanguageText(gToolBar, "MainWindow.menu.view.iconbar" );
+			
+			int gToolBarSpan = 4 + (isAZ3?1:2);
+			layout = new GridLayout();
+			layout.numColumns = gToolBarSpan;
+			gToolBar.setLayout(layout);
+			Utils.setLayoutData(gToolBar, new GridData(GridData.FILL_HORIZONTAL));
 
+			BooleanParameter enabled = null;
+			
+			if (!isAZ3) {
+				enabled = new BooleanParameter(gToolBar, "IconBar.enabled", "ConfigView.section.style.showiconbar");
+				
+				GridData gd = new GridData();
+				gd.horizontalSpan = gToolBarSpan;
+				
+				enabled.setLayoutData( gd );
+			}
+
+			if ( isAZ3 ){
+				new BooleanParameter(gToolBar, "IconBar.visible.play", "iconBar.stream");
+			}
+			
+			new BooleanParameter(gToolBar, "IconBar.visible.run", "iconBar.run");
+			
+			if ( !isAZ3 ){
+				new BooleanParameter(gToolBar, "IconBar.visible.top", "iconBar.top");
+			}
+			
+			new BooleanParameter(gToolBar, "IconBar.visible.up", "iconBar.up");
+			
+			new BooleanParameter(gToolBar, "IconBar.visible.down", "iconBar.down");
+			
+			if ( !isAZ3 ){
+				new BooleanParameter(gToolBar, "IconBar.visible.bottom", "iconBar.bottom");
+			}
+			
+			BooleanParameter sss = new BooleanParameter(gToolBar, "IconBar.start.stop.separate", "ConfigView.section.style.start.stop.separate");
+			
+			GridData gd = new GridData();
+			gd.horizontalSpan = gToolBarSpan;
+			
+			sss.setLayoutData( gd );
+		}
 
 			// sidebar
 

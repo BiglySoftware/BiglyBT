@@ -153,6 +153,8 @@ public interface IMenuConstants
 	public static final String MENU_ID_MY_SHARES = "MainWindow.menu.view.myshares";
 
 	public static final String MENU_ID_TOOLBAR = "MainWindow.menu.view.iconbar";
+	
+	public static final String MENU_ID_SEARCH_BAR = "MainWindow.menu.view.searchbar";
 
 	public static final String MENU_ID_TRANSFER_BAR = "MainWindow.menu.view.open_global_transfer_bar";
 

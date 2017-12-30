@@ -41,6 +41,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Control;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
@@ -72,12 +73,14 @@ import org.eclipse.swt.widgets.Display;
 public class ToolBarView
 	extends SkinView
 	implements SelectedContentListener, ToolBarManagerListener,
-        ToolBarItem.ToolBarItemListener
+        ToolBarItem.ToolBarItemListener, ParameterListener
 {
 	private static boolean DEBUG = false;
 
 	private static toolbarButtonListener buttonListener;
 
+	private SWTSkinObject	mySkinObject;
+	
 	private Map<UIToolBarItem, ToolBarItemSO> mapToolBarItemToSO = new HashMap<>();
 
 	private boolean showText = true;
@@ -93,6 +96,8 @@ public class ToolBarView
 
 	private boolean firstTimeEver = true;
 
+	private Set<String>	visible_items = new HashSet<>();
+	
 	public ToolBarView() {
 		tbm = (UIToolBarManagerCore) UIToolBarManagerImpl.getInstance();
 	}
@@ -108,8 +113,10 @@ public class ToolBarView
 	// @see SkinView#showSupport(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
-		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals(
-				"az2");
+		
+		mySkinObject = skinObject;
+		
+		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals( "az2");
 
 		if (uiClassic && !"global-toolbar".equals(skinObject.getViewID())) {
 			skinObject.setVisible(false);
@@ -137,25 +144,84 @@ public class ToolBarView
 		buttonListener = new toolbarButtonListener();
 
 
-		if (firstTimeEver) {
+		if (firstTimeEver){
+			
 			firstTimeEver = false;
+			
+			if ( !uiClassic ){
+				
+				COConfigurationManager.addParameterListener( "IconBar.enabled", this );
+			}
+			
 			setupToolBarItems(uiClassic);
 		}
+		
 		tbm.addListener(this);
 
-		if (uiClassic) {
+		build();
+		
+		return( null );
+	}
+	
+	private void
+	build()
+	{
+		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals( "az2");
+		
+		UIToolBarItem[] items = tbm.getAllToolBarItems();
+		
+		removeItemListeners();
+		
+		visible_items.clear();
+		
+		COConfigurationManager.addParameterListener( "IconBar.start.stop.separate", this );
+		
+		boolean start_top_sep = COConfigurationManager.getBooleanParameter( "IconBar.start.stop.separate", false );
+		
+		for ( UIToolBarItem item: items ){
+			
+			String id = item.getID();
+		
+			String key = "IconBar.visible." + id;
+			
+			COConfigurationManager.addParameterListener( key , this );
+			
+			if ( COConfigurationManager.getBooleanParameter( key, true )){
+			
+				if ( start_top_sep && ( id.equals( "startstop" ))){
+					
+					continue;
+				}
+				
+				if ( !start_top_sep && ( id.equals( "start" ) || id.equals( "stop" ))){
+					
+					continue;
+				}
+				
+				visible_items.add( id );
+			}
+		}
+		
+		if ( uiClassic || !COConfigurationManager.getBooleanParameter( "IconBar.enabled" )) {
+			
 			bulkSetupItems("classic", "toolbar.area.sitem");
 		}
+		
 		bulkSetupItems(UIToolBarManager.GROUP_MAIN, "toolbar.area.sitem");
+		
 		bulkSetupItems("views", "toolbar.area.vitem");
 
 		String[] groupIDs = tbm.getGroupIDs();
+		
 		for (String groupID : groupIDs) {
-			if ("classic".equals(groupID)
-					|| UIToolBarManager.GROUP_MAIN.equals(groupID)
-					|| "views".equals(groupID)) {
+			
+			if (	"classic".equals(groupID) ||
+					UIToolBarManager.GROUP_MAIN.equals(groupID) || 
+					"views".equals(groupID)){
+				
 				continue;
 			}
+			
 			bulkSetupItems(groupID, "toolbar.area.sitem");
 		}
 
@@ -170,14 +236,62 @@ public class ToolBarView
 				}
 			}
 		}
-
-		return null;
 	}
 
+	private void
+	rebuild()
+	{
+		Utils.execSWTThread(
+			new Runnable()
+			{
+				@Override
+				public void run(){
+
+					SWTSkinObject parent = null;
+
+					Set<String>	groups = new HashSet<>();
+
+					for ( ToolBarItemSO so: mapToolBarItemToSO.values()){
+
+						if ( parent == null ){
+
+							parent = so.getSO().getParent();
+						}
+
+						groups.add( so.getBase().getGroupID());
+					}
+
+					if ( parent == null ){
+						
+						parent = mySkinObject;
+					}
+
+					if ( parent != null ){
+						
+						for ( String group: groups ){
+							SWTSkinObjectContainer groupSO = getGroupSO(group);
+							SWTSkinObject[] children = groupSO.getChildren();
+							for (SWTSkinObject so : children) {
+								so.dispose();
+							}
+							groupSO.dispose();
+						}
+
+						mapToolBarItemToSO.clear();
+
+						build();
+
+						Utils.relayout( parent.getControl());
+					}
+				}
+			});
+	}
+	
 	private void setupToolBarItems(boolean uiClassic) {
 		ToolBarItem item;
 
-		if (uiClassic) {
+		{	// always add these items, whether they are shown or not is decided later
+			
 			// ==OPEN
 			item = createItem(this, "open", "image.toolbar.open", "Button.add.torrent");
 			item.setDefaultActivationListener(new UIToolBarActivationListener() {
@@ -238,6 +352,8 @@ public class ToolBarView
 				}
 			});
 			tbm.addToolBarItem(item, false);
+			
+			
 		}
 
 		// ==run
@@ -369,42 +485,35 @@ public class ToolBarView
 			});
 			tbm.addToolBarItem(item, false);
 		}
-		/*
-				// ==start
-				item = createItemSO(this, "start", "image.toolbar.start", "iconBar.start");
-				item.setDefaultActivation(new UIToolBarActivationListener() {
-					public boolean toolBarItemActivated(ToolBarItem item, long activationType) {
-						if (activationType != ACTIVATIONTYPE_NORMAL) {
-							return false;
-						}
-						DownloadManager[] dms = SelectedContentManager.getDMSFromSelectedContent();
-						if (dms != null) {
-							TorrentUtil.queueDataSources(dms, true);
-							return true;
-						}
-						return false;
-					}
-				});
-				addToolBarItem(item, "toolbar.area.sitem", so2nd);
-				//SWTSkinObjectContainer so = (SWTSkinObjectContainer) item.getSkinButton().getSkinObject();
-				//so.setDebugAndChildren(true);
-				addSeperator(so2nd);
+	
+		// ==start
+		item = createItem(this, "start", "image.toolbar.startstop.start", "iconBar.start");
+		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(
+				UIToolBarActivationListener.ACTIVATIONTYPE_NORMAL) {
+			@Override
+			public void toolBarItemActivated_OffSWT(ToolBarItem item,
+					long activationType, Object datasource) {
+				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
+				TorrentUtil.queueDataSources(selected,true);
+			}
+		});
+		
+		tbm.addToolBarItem(item, false);
 
-				// ==stop
-				item = createItemSO(this, "stop", "image.toolbar.stop", "iconBar.stop");
-				item.setDefaultActivation(new UIToolBarActivationListener() {
-					public boolean toolBarItemActivated(ToolBarItem item, long activationType) {
-						if (activationType != ACTIVATIONTYPE_NORMAL) {
-							return false;
-						}
-		 				ISelectedContent[] currentContent = SelectedContentManager.getCurrentlySelectedContent();
-						TorrentUtil.stopDataSources(currentContent);
-						return true;
-					}
-				});
-				addToolBarItem(item, "toolbar.area.sitem", so2nd);
-				addSeperator(so2nd);
-		*/
+		// ==stop
+		item = createItem(this, "stop", "image.toolbar.startstop.stop", "iconBar.stop");
+		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(
+				UIToolBarActivationListener.ACTIVATIONTYPE_NORMAL) {
+			@Override
+			public void toolBarItemActivated_OffSWT(ToolBarItem item,
+					long activationType, Object datasource) {
+				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
+				TorrentUtil.stopDataSources(selected);
+			}
+		});
+		
+		tbm.addToolBarItem(item, false);
+		
 		// ==startstop
 		item = createItem(this, "startstop", "image.toolbar.startstop.start",
 				"iconBar.startstop");
@@ -450,6 +559,11 @@ public class ToolBarView
 		}
 	}
 
+	@Override
+	public void parameterChanged(String parameterName){
+		rebuild();
+	}
+	
 	@Override
 	public void currentlySelectedContentChanged(
 			ISelectedContent[] currentContent, String viewID) {
@@ -499,11 +613,25 @@ public class ToolBarView
 		return super.skinObjectHidden(skinObject, params);
 	}
 
+	private void
+	removeItemListeners()
+	{
+		for ( String id: visible_items ){
+			COConfigurationManager.removeParameterListener( "IconBar.visible." + id , this );
+		}
+		
+		COConfigurationManager.removeParameterListener( "IconBar.start.stop.separate", this );
+	}
+	
 	// @see SkinView#skinObjectDestroyed(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
 		tbm.removeListener(this);
 
+		removeItemListeners();
+		
+		COConfigurationManager.removeParameterListener( "IconBar.enabled", this );
+		
 		return super.skinObjectDestroyed(skinObject, params);
 	}
 
@@ -877,36 +1005,50 @@ public class ToolBarView
 	}
 
 	private void bulkSetupItems(String groupID, String templatePrefix) {
-		String[] idsByGroup = tbm.getToolBarIDsByGroup(groupID);
+		String[] idsByGroupAll = tbm.getToolBarIDsByGroup(groupID);
 		SWTSkinObjectContainer groupSO = getGroupSO(groupID);
 		SWTSkinObject[] children = groupSO.getChildren();
 		for (SWTSkinObject so : children) {
 			so.dispose();
 		}
 
-		for (int i = 0; i < idsByGroup.length; i++) {
-			String itemID = idsByGroup[i];
-			UIToolBarItem item = tbm.getToolBarItem(itemID);
-			if (item instanceof ToolBarItem) {
-
-
-				int position = 0;
-				int size = idsByGroup.length;
-				if (size == 1) {
-					position = SWT.SINGLE;
-				} else if (i == 0) {
-					position = SWT.LEFT;
-				} else if (i == size - 1) {
-					addSeperator(groupID);
-					position = SWT.RIGHT;
-				} else {
-					addSeperator(groupID);
-				}
-				createItemSO((ToolBarItem) item, templatePrefix, position);
+		List<String> idsByGroup = new ArrayList<>();
+		
+		for ( String id: idsByGroupAll ){
+			
+			if ( visible_items.contains( id )){
+				
+				idsByGroup.add( id );
 			}
 		}
+		
+		int size = idsByGroup.size();
 
-		addNonToolBar("toolbar.area.sitem.left2", groupID);
+		if ( size > 0 ){
+			
+			for (int i = 0; i < size; i++) {
+				String itemID = idsByGroup.get(i);
+				UIToolBarItem item = tbm.getToolBarItem(itemID);
+				if (item instanceof ToolBarItem) {
+	
+	
+					int position = 0;
+					if (size == 1) {
+						position = SWT.SINGLE;
+					} else if (i == 0) {
+						position = SWT.LEFT;
+					} else if (i == size - 1) {
+						addSeperator(groupID);
+						position = SWT.RIGHT;
+					} else {
+						addSeperator(groupID);
+					}
+					createItemSO((ToolBarItem) item, templatePrefix, position);
+				}
+			}
+	
+			addNonToolBar("toolbar.area.sitem.left2", groupID);
+		}
 	}
 
 	private Control getLastControl(String groupID) {

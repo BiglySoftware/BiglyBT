@@ -191,6 +191,58 @@ public class TorrentOpener {
 		});
 	}
 
+  public static void
+  openTorrentsFromClipboard(
+		  String text )
+  {
+	  final String[] splitters = {
+			  "\r\n",
+			  "\n",
+			  "\r",
+			  "\t"
+	  };
+
+	  String[] lines = null;
+
+	  for (String splitter : splitters) {
+		  if (text.contains(splitter)) {
+			  lines = text.split(splitter);
+			  break;
+		  }
+	  }
+
+	  if ( lines == null ){
+
+		  lines = new String[]{ text };
+	  }
+
+	  for ( int i=0; i<lines.length; i++ ){
+
+		  String line = lines[i].trim();
+
+		  if ( line.startsWith("\"") && line.endsWith("\"")){
+
+			  if (line.length() < 3){
+
+				  line = "";
+
+			  }else{
+
+				  line = line.substring(1, line.length() - 2);
+			  }
+		  }
+
+		  if ( UrlUtils.isURL( line )){
+
+			  Map<String,Object>	options = new HashMap<>();
+
+			  options.put( UIFunctions.OTO_HIDE_ERRORS, true );
+
+			  TorrentOpener.openTorrent( line, options );
+		  }
+	  }
+  }
+  
   public static void openDroppedTorrents(DropTargetEvent event, boolean deprecated_sharing_param ){
 	  	Object data = event.data;
 
