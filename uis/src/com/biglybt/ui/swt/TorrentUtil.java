@@ -118,10 +118,12 @@ public class TorrentUtil
 {
 	private static final String TU_GROUP			= "tu.group";
 	
-	public static final String	TU_ITEM_RECHECK		= "tui.recheck";
+	public static final String	TU_ITEM_RECHECK			= "tui.recheck";
+	public static final String	TU_ITEM_CHECK_FILES		= "tui.checkfiles";
 	
 	private static final String[] TU_ITEMS = {
 			TU_ITEM_RECHECK,
+			TU_ITEM_CHECK_FILES,
 	};
 	
 	private static boolean	initialised;
@@ -194,6 +196,36 @@ public class TorrentUtil
 									}});
 								
 								addItem( tbm, refresh_item );
+								
+									// check files exist
+								
+								UIToolBarItem cfe_item = tbm.createToolBarItem( TU_ITEM_CHECK_FILES );
+								
+								cfe_item.setGroupID( TU_GROUP );
+								
+								cfe_item.setImageID( "filesexist" );
+								
+								cfe_item.setToolTipID( "MyTorrentsView.menu.checkfilesexist" );
+								
+								cfe_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										List<DownloadManager>	dms = getDMs( datasource );
+										
+										for ( DownloadManager dm: dms ){
+											
+											dm.filesExist( true );
+										}
+										
+										return( true );
+									}});
+								
+								addItem( tbm, cfe_item );
 							}
 						}
 					}
@@ -3401,6 +3433,8 @@ public class TorrentUtil
 		boolean canStop = false;
 		boolean canRemoveFileInfo = false;
 		boolean canRunFileInfo = false;
+		boolean canCheckExist = false;
+		
 		boolean hasDM = false;
 
 		boolean canRecheck = false;
@@ -3413,6 +3447,9 @@ public class TorrentUtil
 			boolean canMoveUp = false;
 			boolean canMoveDown = false;
 			boolean canDownload = false;
+			
+			canCheckExist = true;
+			
 			GlobalManager gm = null;
 			for (int i = 0; i < currentContent.length; i++) {
 				ISelectedContent content = currentContent[i];
@@ -3427,6 +3464,12 @@ public class TorrentUtil
 					gm = dm.getGlobalManager();
 				}
 
+				int state = dm.getState();
+				
+				canCheckExist &= (	state == DownloadManager.STATE_ERROR ||
+									state == DownloadManager.STATE_STOPPED || 
+									state == DownloadManager.STATE_QUEUED );
+				
 				int fileIndex = content.getFileIndex();
 				if (fileIndex == -1) {
 					if (!canMoveUp && gm.isMoveableUp(dm)) {
@@ -3567,6 +3610,7 @@ public class TorrentUtil
 		}
 
 		mapNewToolbarStates.put( TU_ITEM_RECHECK, canRecheck ? UIToolBarItem.STATE_ENABLED : 0);
+		mapNewToolbarStates.put( TU_ITEM_CHECK_FILES, canCheckExist ? UIToolBarItem.STATE_ENABLED : 0);
 
 		return mapNewToolbarStates;
 	}

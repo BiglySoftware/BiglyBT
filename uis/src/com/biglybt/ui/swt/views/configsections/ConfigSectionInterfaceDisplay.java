@@ -199,7 +199,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			Group gToolBar = new Group(cSection, SWT.NULL);
 			Messages.setLanguageText(gToolBar, "MainWindow.menu.view.iconbar" );
 			
-			int gToolBarSpan = 5 + (isAZ3?1:2);
+			int gToolBarSpan = 6 + (isAZ3?1:2);
 			layout = new GridLayout();
 			layout.numColumns = gToolBarSpan;
 			gToolBar.setLayout(layout);
@@ -235,6 +235,8 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			}
 			
 			new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_RECHECK, "MyTorrentsView.menu.recheck");
+			
+			new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_CHECK_FILES, "MyTorrentsView.menu.checkfilesexist");
 
 			BooleanParameter sss = new BooleanParameter(gToolBar, "IconBar.start.stop.separate", "ConfigView.section.style.start.stop.separate");
 			
