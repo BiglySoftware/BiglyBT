@@ -42,6 +42,7 @@ import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
@@ -198,7 +199,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			Group gToolBar = new Group(cSection, SWT.NULL);
 			Messages.setLanguageText(gToolBar, "MainWindow.menu.view.iconbar" );
 			
-			int gToolBarSpan = 4 + (isAZ3?1:2);
+			int gToolBarSpan = 5 + (isAZ3?1:2);
 			layout = new GridLayout();
 			layout.numColumns = gToolBarSpan;
 			gToolBar.setLayout(layout);
@@ -233,6 +234,8 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 				new BooleanParameter(gToolBar, "IconBar.visible.bottom", "iconBar.bottom");
 			}
 			
+			new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_RECHECK, "MyTorrentsView.menu.recheck");
+
 			BooleanParameter sss = new BooleanParameter(gToolBar, "IconBar.start.stop.separate", "ConfigView.section.style.start.stop.separate");
 			
 			GridData gd = new GridData();

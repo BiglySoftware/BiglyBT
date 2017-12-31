@@ -73,9 +73,14 @@ import com.biglybt.pif.download.DownloadStub.DownloadStubEx;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.UIPluginView;
 import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.exporttorrent.wizard.ExportTorrentWizard;
 import com.biglybt.ui.swt.minibar.DownloadBar;
@@ -97,6 +102,7 @@ import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UserPrompterResultListener;
+import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
@@ -110,7 +116,147 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
  */
 public class TorrentUtil
 {
-
+	private static final String TU_GROUP			= "tu.group";
+	
+	public static final String	TU_ITEM_RECHECK		= "tui.recheck";
+	
+	private static final String[] TU_ITEMS = {
+			TU_ITEM_RECHECK,
+	};
+	
+	private static boolean	initialised;
+	
+	public static synchronized void
+	init()
+	{
+		if ( initialised ){
+			
+			return;
+		}
+		
+		initialised = true;
+		
+		for ( String id: TU_ITEMS ){
+		
+			String key = "IconBar.visible." + id;
+		
+			if ( !COConfigurationManager.hasParameter( key, false )){
+		
+				COConfigurationManager.setParameter( key, false );
+			}
+		}
+		
+		UIManager ui_manager = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getUIManager();
+		
+		ui_manager.addUIListener(
+				new UIManagerListener()
+				{
+					private List<UIToolBarItem>	items = new ArrayList<>();
+					
+					@Override
+					public void
+					UIAttached(
+						UIInstance		instance )
+					{
+						if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
+							
+							UIToolBarManager tbm = instance.getToolBarManager();
+							
+							if ( tbm != null ){
+								
+								UIToolBarItem refresh_item = tbm.createToolBarItem( TU_ITEM_RECHECK );
+							
+								refresh_item.setGroupID( TU_GROUP );
+								
+								refresh_item.setImageID( "recheck" );
+								
+								refresh_item.setToolTipID( "MyTorrentsView.menu.recheck" );
+								
+								refresh_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										List<DownloadManager>	dms = getDMs( datasource );
+										
+										for ( DownloadManager dm: dms ){
+											
+											if ( dm.canForceRecheck()){
+												
+												dm.forceRecheck();
+											}
+										}
+										
+										return( true );
+									}});
+								
+								addItem( tbm, refresh_item );
+							}
+						}
+					}
+					
+					private List<DownloadManager>
+					getDMs(
+						Object		ds )
+					{
+						List<DownloadManager>	result = new ArrayList<>();
+						
+						if ( ds instanceof Download ){
+							
+							result.add( PluginCoreUtils.unwrap((Download)ds));
+							
+						}else if ( ds instanceof Object[]){
+							
+							Object[] objs = (Object[])ds;
+							
+							for ( Object obj: objs ){
+								
+								if ( obj instanceof Download ){
+									
+									result.add( PluginCoreUtils.unwrap((Download)obj));
+								}
+							}
+						}
+						
+						return( result );
+					}
+					
+					private void
+					addItem(
+						UIToolBarManager		tbm,
+						UIToolBarItem			item )
+					{
+						items.add( item );
+						
+						tbm.addToolBarItem( item );
+					}
+					
+					@Override
+					public void
+					UIDetached(
+						UIInstance		instance )
+					{
+						if ( instance.getUIType().equals(UIInstance.UIT_SWT )){
+							
+							UIToolBarManager tbm = instance.getToolBarManager();
+							
+							if ( tbm != null){
+								
+								for ( UIToolBarItem item: items ){
+									
+									tbm.removeToolBarItem( item.getID());
+								}
+							}
+							
+							items.clear();
+						}
+					}
+				});
+	}
+	
 	// selected_dl_types -> 0 (determine that automatically), +1 (downloading), +2 (seeding), +3 (mixed - not used by anything yet)
 	public static void fillTorrentMenu(final Menu menu,
 																		 final DownloadManager[] dms, final Core core,
@@ -3257,6 +3403,8 @@ public class TorrentUtil
 		boolean canRunFileInfo = false;
 		boolean hasDM = false;
 
+		boolean canRecheck = false;
+		
 		if (currentContent.length > 0 && hasRealDM) {
 
 				// well, in fact, we can have hasRealDM set to true here (because tv isn't null) and actually not have a real dm.
@@ -3323,25 +3471,23 @@ public class TorrentUtil
 						}
 					}
 				}
+				
+				canRecheck = canRecheck || dm.canForceRecheck();
 			}
 
 			boolean canRemove = hasDM || canRemoveFileInfo;
+			
+			mapNewToolbarStates.put("remove", canRemove ? UIToolBarItem.STATE_ENABLED : 0);
 
-			mapNewToolbarStates.put("remove", canRemove ? UIToolBarItem.STATE_ENABLED
-					: 0);
-
-			mapNewToolbarStates.put("download", canDownload ? UIToolBarItem.STATE_ENABLED
-					: 0);
+			mapNewToolbarStates.put("download", canDownload ? UIToolBarItem.STATE_ENABLED : 0);
 
 			// actually we roll the dm indexes when > 1 selected and we get
 			// to the top/bottom, so only enforce this for single selection :)
 
 			if (currentContent.length == 1) {
-				mapNewToolbarStates.put("up", canMoveUp ? UIToolBarItem.STATE_ENABLED
-						: 0);
-				mapNewToolbarStates.put("down", canMoveDown
-						? UIToolBarItem.STATE_ENABLED : 0);
-			}
+				mapNewToolbarStates.put("up", canMoveUp ? UIToolBarItem.STATE_ENABLED : 0);
+				mapNewToolbarStates.put("down", canMoveDown	? UIToolBarItem.STATE_ENABLED : 0);
+			}			
 		}
 
 		boolean canRun = has1Selection
@@ -3419,6 +3565,8 @@ public class TorrentUtil
 				mapNewToolbarStates.put("down", 0L);
 			}
 		}
+
+		mapNewToolbarStates.put( TU_ITEM_RECHECK, canRecheck ? UIToolBarItem.STATE_ENABLED : 0);
 
 		return mapNewToolbarStates;
 	}

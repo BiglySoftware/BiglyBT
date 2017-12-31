@@ -103,4 +103,21 @@ public interface UIToolBarItem
 	 * @since 5.0.0.1
 	 */
 	String getToolTip();
+	
+	/**
+	 * @since BiglyBT 1.2.0.1
+	 * @param id
+	 */
+	
+	public void
+	setToolTipID(
+		String		id );
+	
+	/**
+	 * @since BiglyBT 1.2.0.1
+	 * @param id
+	 */
+	
+	public String
+	getToolTipID();
 }

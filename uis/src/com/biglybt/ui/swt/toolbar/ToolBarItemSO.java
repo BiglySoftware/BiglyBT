@@ -100,7 +100,7 @@ public class ToolBarItemSO
 	public void updateUI() {
 		if (skinButton != null) {
 			skinButton.setImage(base.getImageID());
-			String tt = base.getTooltipID();
+			String tt = base.getToolTipID();
 			if ( tt == null ){
 				String temp = base.getTextID();
 

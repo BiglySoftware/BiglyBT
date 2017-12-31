@@ -170,11 +170,11 @@ public class UIToolBarItemImpl
 
 	// @see ToolBarItem#getTooltipID()
 	@Override
-	public String getTooltipID() {
+	public String getToolTipID() {
 		return tooltipID;
 	}
 
-	public void setTooltipID(String tooltipID) {
+	public void setToolTipID(String tooltipID) {
 		this.tooltipID = tooltipID;
 	}
 
