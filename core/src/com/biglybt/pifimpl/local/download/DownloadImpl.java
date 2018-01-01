@@ -376,6 +376,16 @@ DownloadImpl
 	}
 
 	@Override
+	public void setStopReason(String reason) {
+		setUserData( UD_KEY_STOP_REASON, reason );
+	}
+
+	@Override
+	public String getStopReason() {
+		return((String)getUserData( UD_KEY_STOP_REASON ));
+	}
+
+	@Override
 	public void
 	stopAndQueue()
 

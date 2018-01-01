@@ -291,18 +291,12 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 
 		throws DownloadException;
 
-	default public void
+	public void
 	setStopReason(
-		String reason )
-	{
-		setUserData( UD_KEY_STOP_REASON, reason );
-	}
+		String reason );
 
-	default public String
-	getStopReason()
-	{
-		return((String)getUserData( UD_KEY_STOP_REASON ));
-	}
+	public String
+	getStopReason();
 	
 	/**
 	 * See lifecycle description above
