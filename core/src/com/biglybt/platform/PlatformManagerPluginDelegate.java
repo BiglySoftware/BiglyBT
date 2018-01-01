@@ -24,7 +24,6 @@ import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.update.UpdatableComponent;
 import com.biglybt.pif.update.UpdateChecker;
-import com.biglybt.platform.unix.PlatformManagerUnixPlugin;
 
 /**
  * @author TuxPaper
@@ -48,24 +47,30 @@ public class PlatformManagerPluginDelegate
 	@Override
 	public void initialize(PluginInterface pluginInterface)
 			throws PluginException {
-		PlatformManager platform = PlatformManagerFactory.getPlatformManager();
-
-		int platformType = platform.getPlatformType();
-		if ( platformType == PlatformManager.PT_WINDOWS ){
-			com.biglybt.platform.win32.PlatformManagerUpdateChecker plugin = new com.biglybt.platform.win32.PlatformManagerUpdateChecker();
-			plugin.initialize(pluginInterface);
-		}else if ( platformType == PlatformManager.PT_MACOSX ){
-			com.biglybt.platform.macosx.PlatformManagerUpdateChecker plugin = new com.biglybt.platform.macosx.PlatformManagerUpdateChecker();
-			plugin.initialize(pluginInterface);
-		}else if ( platformType == PlatformManager.PT_UNIX ){
-			PlatformManagerUnixPlugin plugin = new PlatformManagerUnixPlugin();
-			plugin.initialize(pluginInterface);
-		}else{
-			Properties pluginProperties = pluginInterface.getPluginProperties();
-			pluginProperties.setProperty("plugin.name", "Platform-Specific Support");
-			pluginProperties.setProperty("plugin.version", "1.0");
-			pluginProperties.setProperty("plugin.version.info",
-					"Not required for this platform");
+		try {
+			PlatformManager platform = PlatformManagerFactory.getPlatformManager();
+	
+			int platformType = platform.getPlatformType();
+			if ( platformType == PlatformManager.PT_WINDOWS ){
+				Plugin plugin = (Plugin) Class.forName("com.biglybt.platform.win32.PlatformManagerUpdateChecker").newInstance();
+				plugin.initialize(pluginInterface);
+			}else if ( platformType == PlatformManager.PT_MACOSX ){
+				Plugin plugin = (Plugin) Class.forName("com.biglybt.platform.macosx.PlatformManagerUpdateChecker").newInstance();
+				plugin.initialize(pluginInterface);
+			}else if ( platformType == PlatformManager.PT_UNIX ){
+				Plugin plugin = (Plugin) Class.forName("com.biglybt.platform.unix.PlatformManagerUnixPlugin").newInstance();
+				plugin.initialize(pluginInterface);
+			}else{
+				Properties pluginProperties = pluginInterface.getPluginProperties();
+				pluginProperties.setProperty("plugin.name", "Platform-Specific Support");
+				pluginProperties.setProperty("plugin.version", "1.0");
+				pluginProperties.setProperty("plugin.version.info",
+						"Not required for this platform");
+			}
+		} catch (PluginException t) {
+			throw t;
+		} catch (Throwable t) {
+			throw new PluginException(t);
 		}
 	}
 
