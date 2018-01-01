@@ -164,18 +164,12 @@ DownloadManager
         boolean remove_torrent,
         boolean remove_data );
 
-    default public void
+    public void
     setStopReason(
-    	String	reason )
-    {
-    	setUserData( UD_KEY_STOP_REASON, reason );
-    }
+    	String	reason );
     
-    default public String
-    getStopReason()
-    {
-    	return( (String)getUserData( UD_KEY_STOP_REASON ));
-    }
+    public String
+    getStopReason();
     
     /**
      * As above but definitely indicates that the stop is for removal (if for_removal is true) and therefore that any removal specific actions
@@ -504,11 +498,8 @@ DownloadManager
     	 * @return -1: not moving otherwise 0->1000
     	 */
     
-    public default int
-    getMoveProgress()
-    {
-    	return( -1 );
-    }
+    public int
+    getMoveProgress();
     
         /**
          * Move data files to new location. Torrent must be in stopped/error state
