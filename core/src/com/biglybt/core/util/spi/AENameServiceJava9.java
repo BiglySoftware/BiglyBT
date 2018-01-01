@@ -10,6 +10,7 @@ import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.PluginInterface;
@@ -20,7 +21,7 @@ AENameServiceJava9
 {	
 	private static final String 		TEST_HOST	= "dns.test.client.vuze.com";
 
-	public static void
+	public static boolean
 	init()
 	{
 		try{
@@ -47,10 +48,14 @@ AENameServiceJava9
 
 			f.set( null, proxy );
 			
+			return true;
 		}catch( Throwable e ){
 			
-			e.printStackTrace();
+			if (!Constants.isAndroid) {
+				e.printStackTrace();
+			}
 		}
+		return false;
 	}
 	
 	private static boolean 				config_listener_added;
