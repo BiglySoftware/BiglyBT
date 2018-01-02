@@ -2154,6 +2154,45 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	importDataSource(
 		Map<String,Object>		map )
 	{
+		Runnable callback = (Runnable)map.get( "callback" );
+		
+		if ( callback != null && plugin.getSWTUI() == null ){
+		
+				// bit of a hack to deal with attempt to build a chat window during initialisation (e.g. initial dashboard view)
+				// when we're not completely initialised. back off
+			
+			TimerEventPeriodic[] event = { null };
+			
+			long start = SystemTime.getMonotonousTime();
+			
+			synchronized( event ){
+				event[0] = 
+					SimpleTimer.addPeriodicEvent(
+						"initwait",
+						1000,
+						new TimerEventPerformer(){
+							
+							@Override
+							public void perform(TimerEvent e){
+							
+								synchronized( event ){
+									
+									if ( plugin.getSWTUI() != null ){
+										
+										callback.run();
+										
+										event[0].cancel();
+										
+									}else if ( SystemTime.getMonotonousTime() - start > 30*1000 ){
+										
+										event[0].cancel();
+									}
+								}
+							}
+						});
+			}
+		}
+		
 		String	network = AENetworkClassifier.internalise((String)map.get( "network" ));
 		String	key		= (String)map.get( "key" );
 		
