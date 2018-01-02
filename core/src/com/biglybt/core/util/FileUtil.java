@@ -27,8 +27,6 @@ package com.biglybt.core.util;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.FileStore;
-import java.nio.file.Files;
 import java.util.*;
  import java.util.regex.Matcher;
  import java.util.regex.Pattern;
@@ -1708,9 +1706,22 @@ public class FileUtil {
     		boolean	same_drive = false;
     		
 			try{
+				/*
 				FileStore fs1 = Files.getFileStore( from_file.toPath());
 				FileStore fs2 = Files.getFileStore( to_file_parent.toPath());
-				
+				*/
+
+				Class claPath = Class.forName("java.nio.file.Path");
+				Class claFiles = Class.forName("java.nio.file.Files");
+				Method mPath_getFileStore = claFiles.getMethod("getFileStore", claPath);
+
+				Method mToPath = from_file.getClass().getMethod("toPath");
+				/* Path */ Object from_file_toPath = mToPath.invoke(from_file);
+				/* Path */ Object to_file_parent_toPath = mToPath.invoke(to_file_parent);
+
+				/* FileStore */ Object fs1 = mPath_getFileStore.invoke(null, from_file_toPath);
+				/* FileStore */ Object fs2 = mPath_getFileStore.invoke(null, to_file_parent_toPath);
+
    				if ( fs1.equals( fs2 )){
 
    					same_drive = true;
