@@ -237,6 +237,11 @@ public class NameItem extends CoreTableColumnSWT implements
 			public void run(CoreOperation operation) {
 				result[0] = fileInfo.setLink(target);
 			}
+
+			@Override
+			public ProgressCallback getProgressCallback() {
+				return null;
+			}
 		});
 		if(paused)
 			fileInfo.getDownloadManager().resume();

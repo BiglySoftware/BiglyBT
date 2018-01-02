@@ -1160,6 +1160,11 @@ public class FilesViewMenuUtil
 
 			FileUtil.runAsTask(new CoreOperationTask() {
 				@Override
+				public ProgressCallback getProgressCallback() {
+					return null;
+				}
+
+				@Override
 				public void run(CoreOperation operation) {
 					boolean went_async = false;
 
