@@ -1706,7 +1706,7 @@ public class FileUtil {
     		boolean	same_drive = false;
     		
 			try{
-				/*
+				/* FileStore is minSDK 26 on Android
 				FileStore fs1 = Files.getFileStore( from_file.toPath());
 				FileStore fs2 = Files.getFileStore( to_file_parent.toPath());
 				*/
