@@ -504,6 +504,13 @@ public class TableViewSWT_Common
 				} else if (event.character == 13) {
 					tv.refilter();
 				}
+			}else{
+				if ( event.keyCode == SWT.CR ){
+					
+					runDefaultAction( 0 );
+					
+					return;
+				}
 			}
 		}
 

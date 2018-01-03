@@ -236,6 +236,11 @@ public class UIDebugGenerator
 											Debug.printStackTrace(e);
 										}
 									}
+
+									@Override
+									public ProgressCallback getProgressCallback() {
+										return null;
+									}
 								});
 					}
 				});

@@ -181,6 +181,13 @@ public class StatusItem
 		
 			update = cell.setSortValue( sort_value );
 			
+			if ( !update ){
+				
+				if ( !cell.getText().equals( text )){
+					
+					update = true;
+				}
+			}
 		}else{
 			
 			update = cell.setSortValue( text );

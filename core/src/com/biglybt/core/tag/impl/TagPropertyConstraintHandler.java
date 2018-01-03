@@ -28,6 +28,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.peer.PEPeerManager;
@@ -45,6 +46,8 @@ public class
 TagPropertyConstraintHandler
 	implements TagTypeListener, DownloadListener
 {
+	private static final Object DM_FILE_FILE_NAMES = new Object();
+	
 	private final Core core;
 	private final TagManagerImpl	tag_manager;
 
@@ -1480,6 +1483,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_SIZE				 	= 19;
 		private static final int	KW_SIZE_MB			 	= 20;
 		private static final int	KW_SIZE_GB			 	= 21;
+		private static final int	KW_FILE_COUNT		 	= 22;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1531,19 +1535,22 @@ TagPropertyConstraintHandler
 			keyword_map.put( "sizegb", KW_SIZE_GB );
 			keyword_map.put( "size_gb", KW_SIZE_GB );
 			
+			keyword_map.put( "filecount", KW_FILE_COUNT );
+			keyword_map.put( "file_count", KW_FILE_COUNT );
 		}
 
 		private class
 		ConstraintExprFunction
 			implements  ConstraintExpr
 		{
-
 			private	final String 				func_name;
 			private final ConstraintExprParams	params_expr;
 			private final Object[]				params;
 
 			private final int	fn_type;
 
+			private IdentityHashMap<DownloadManager, Object[]>	matches_cache = new IdentityHashMap<>();
+						
 			private
 			ConstraintExprFunction(
 				String 					_func_name,
@@ -1885,41 +1892,79 @@ TagPropertyConstraintHandler
 					}
 					case FT_CONTAINS:{
 
-						String	s1 = getString( dm, params, 0 );
-						String	s2 = getString( dm, params, 1 );
+						String[]	s1s = getStrings( dm, params, 0 );
+						
+						String		s2 = getString( dm, params, 1 );
 
-						return( s1.contains( s2 ));
+						for ( String s1: s1s ){
+						
+							if ( s1.contains( s2 )){
+								
+								return( true );
+							}
+						}
+						
+						return( false );
 					}
 					case FT_MATCHES:{
 
-						String	s1 = getString( dm, params, 0 );
+						String[]	s1s = getStrings( dm, params, 0 );
 
 						if ( params[1] == null ){
 
 							return( false );
 
-						}else if ( params[1] instanceof Pattern ){
-
-							return(((Pattern)params[1]).matcher( s1 ).find());
-
 						}else{
-
-							try{
-								Pattern p = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE );
-
-								params[1] = p;
+							
+							Pattern pattern;
+							
+							if ( params[1] instanceof Pattern ){
+						
+								pattern = (Pattern)params[1];
 								
-								return( p.matcher( s1 ).find());
+							}else{
+	
+								try{
+									pattern = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE );
+	
+									params[1] = pattern;							
 
-							}catch( Throwable e ){
+								}catch( Throwable e ){
 
-								setError( "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
+									setError( "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
 								
-								params[1] = null;
+									params[1] = null;
+									
+									return( false );
+								}
 							}
+							
+							Object[] cache = matches_cache.get( dm );
+							
+							if ( cache != null ){
+								
+								if ( cache[0] == s1s && cache[1] == pattern ){
+									
+									return((Boolean)cache[2]);
+								}
+							}
+														
+							boolean result = false;
+							
+							for ( String s1: s1s ){
+							
+								if ( pattern.matcher( s1 ).find()){
+									
+									result = true;
+									
+									break;
+								}
+							}
+							
+							matches_cache.put( dm, new Object[]{ s1s, pattern, result });
+							
+							return( result );
 						}
-
-						return( false );
 					}
 					case FT_JAVASCRIPT:{
 
@@ -1992,6 +2037,54 @@ TagPropertyConstraintHandler
 				}
 			}
 
+			private String[]
+			getStrings(
+				DownloadManager		dm,
+				Object[]			args,
+				int					index )
+			{
+				String str = (String)args[index];
+
+				if ( str.startsWith( "\"" ) && str.endsWith( "\"" )){
+
+					return( new String[]{ str.substring( 1, str.length() - 1 )});
+
+				}else if ( str.equals( "name" )){
+
+					return( new String[]{ dm.getDisplayName()});
+
+				}else if ( str.equals( "file_names" ) || str.equals( "filenames" )){
+					
+					String[] result = (String[])dm.getUserData( DM_FILE_FILE_NAMES );
+					
+					if ( result == null ){
+						
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+						
+						result = new String[files.length];
+						
+						for ( int i=0;i<files.length;i++){
+							
+							result[i] = files[i].getFile( false ).getName();
+						}
+						
+						dm.setUserData( DM_FILE_FILE_NAMES, result );
+					}
+					
+					return( result );
+					
+				}else{
+
+					setError( "Invalid constraint string: " + str );
+
+					String result = "\"\"";
+
+					args[index] = result;
+
+					return( new String[]{ result });
+				}
+			}
+			
 			private Number
 			getNumeric(
 				DownloadManager		dm,
@@ -2282,6 +2375,10 @@ TagPropertyConstraintHandler
 							case KW_SIZE_GB:{
 								
 								return( dm.getSize()/(1024*1024*1024L));
+							}
+							case KW_FILE_COUNT:{
+								
+								return( dm.getNumFileInfos());
 							}
 							default:{
 
