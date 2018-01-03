@@ -111,8 +111,14 @@ implements PiecePicker
 	private static final long RTA_END_GAME_MODE_SIZE_TRIGGER	= 16 * DiskManager.BLOCK_SIZE;
 	private static final long END_GAME_MODE_RESERVED_TRIGGER	= 5 * 1024*1024;
 	private static final long END_GAME_MODE_SIZE_TRIGGER		= 20 * 1024*1024;
+	
+	private static final long RTA_END_GAME_MODE_SIZE_TRIGGER_BLOCKS	= RTA_END_GAME_MODE_SIZE_TRIGGER / DiskManager.BLOCK_SIZE;
+	private static final long END_GAME_MODE_RESERVED_TRIGGER_BLOCKS	= END_GAME_MODE_RESERVED_TRIGGER / DiskManager.BLOCK_SIZE;
+	private static final long END_GAME_MODE_SIZE_TRIGGER_BLOCKS		= END_GAME_MODE_SIZE_TRIGGER / DiskManager.BLOCK_SIZE;
+	
 	private static final long END_GAME_MODE_TIMEOUT				= 60 * END_GAME_MODE_SIZE_TRIGGER / DiskManager.BLOCK_SIZE;
-
+	
+	
 	protected static volatile boolean	firstPiecePriority	=COConfigurationManager.getBooleanParameter("Prioritize First Piece" );
 	protected static volatile boolean	completionPriority	=COConfigurationManager.getBooleanParameter("Prioritize Most Completed Files");
 	/** event # of user settings controlling priority changes */
@@ -2401,94 +2407,224 @@ implements PiecePicker
 			return;
 		}
 
-		int active_pieces 	= 0;
-		int reserved_pieces	= 0;
-
-		for (int i =0; i <nbPieces; i++){
-
-			final DiskManagerPiece dmPiece =dmPieces[i];
-
-				// If the piece isn't even Needed, or doesn't need more downloading, simply continue
-
-			if (!dmPiece.isDownloadable()){
-
-				continue;
-			}
-
-			final PEPiece pePiece = pePieces[i];
-
-			if ( pePiece != null ){
-
-				if ( pePiece.isDownloaded()){
-
+			// test a block-based version as logic should be piece-size dependent
+		
+		if ( Constants.IS_CVS_VERSION ){
+			
+				// when doing RTA we don't want EGM to kick in too early as it interfers with progressive
+				// playback by increasing discard. So we use a smaller trigger value to limit the impact
+		
+			boolean	use_rta_egm = rta_providers.size() > 0;
+		
+			long	trigger_blocks	= use_rta_egm?RTA_END_GAME_MODE_SIZE_TRIGGER_BLOCKS:END_GAME_MODE_SIZE_TRIGGER_BLOCKS;
+	
+		
+			int active_blocks 	= 0;
+			int reserved_blocks	= 0;
+	
+			for (int i =0; i <nbPieces; i++){
+	
+				final DiskManagerPiece dmPiece =dmPieces[i];
+	
+					// If the piece isn't even Needed, or doesn't need more downloading, simply continue
+	
+				if (!dmPiece.isDownloadable()){
+	
 					continue;
 				}
-
-				if ( dmPiece.isNeeded()){
-
-						// If the piece is being downloaded (fully requested), count it and continue
-
-					if ( pePiece.isRequested() ){
-
-						active_pieces++ ;
-
+	
+				final PEPiece pePiece = pePieces[i];
+	
+				if ( pePiece != null ){
+	
+					if ( pePiece.isDownloaded()){
+	
 						continue;
 					}
-
-						// https://jira.vuze.com/browse/SUP-154
-						// If we have a piece reserved to a slow peer then this can prevent end-game
-						// mode from being entered and result poopy end-of-dl speeds
-
-					if ( pePiece.getReservedBy() != null ){
-
-						reserved_pieces++;
-
-						if ( reserved_pieces * diskManager.getPieceLength() > END_GAME_MODE_RESERVED_TRIGGER ){
-
-							return;
+	
+					if ( dmPiece.isNeeded()){
+	
+							// If the piece is being downloaded (fully requested), count it and continue
+	
+						if ( pePiece.isRequested() ){
+	
+							boolean written[] = dmPiece.getWritten();
+	
+							if ( written == null ){
+	
+								if (!dmPiece.isDone()){
+	
+									active_blocks += pePiece.getNbBlocks();
+								}
+							}else{
+	
+								for (int j =0; j <written.length; j++ ){
+	
+									if (!written[j]){
+										
+										active_blocks++;
+									}
+								}
+							}
+							
+							if ( active_blocks > trigger_blocks ){
+								
+								return;
+							}
+	
+							continue;
 						}
-
-						continue;
+	
+							// https://jira.vuze.com/browse/SUP-154
+							// If we have a piece reserved to a slow peer then this can prevent end-game
+							// mode from being entered and result poopy end-of-dl speeds
+	
+						if ( pePiece.getReservedBy() != null ){
+	
+							boolean written[] = dmPiece.getWritten();
+	
+							if ( written ==null){
+	
+								if (!dmPiece.isDone()){
+	
+									reserved_blocks += pePiece.getNbBlocks();
+								}
+							}else{
+	
+								for (int j =0; j <written.length; j++ ){
+	
+									if (!written[j]){
+										
+										reserved_blocks++;
+									}
+								}
+							}
+	
+							if ( reserved_blocks  > END_GAME_MODE_RESERVED_TRIGGER_BLOCKS ){
+	
+								return;
+							}
+	
+							continue;
+						}
 					}
 				}
+	
+					// Else, some piece is Needed, not downloaded/fully requested; this isn't end game mode
+	
+				return;
 			}
-
-				// Else, some piece is Needed, not downloaded/fully requested; this isn't end game mode
-
-			return;
-		}
-
-			// when doing RTA we don't want EGM to kick in too early as it interfers with progressive
-			// playback by increasing discard. So we use a smaller trigger value to limit the impact
-
-		boolean	use_rta_egm = rta_providers.size() > 0;
-
-		long	remaining = active_pieces * (long)diskManager.getPieceLength();
-
-		long	trigger	= use_rta_egm?RTA_END_GAME_MODE_SIZE_TRIGGER:END_GAME_MODE_SIZE_TRIGGER;
-
-			// only flip into end-game mode if < trigger size left
-
-		if ( remaining <= trigger ){
-
+	
 			try{
 				endGameModeChunks_mon.enter();
-
+	
 				endGameModeChunks = new ArrayList();
-
+	
 				timeEndGameModeEntered = mono_now;
-
+	
 				endGameMode = true;
-
+	
 				computeEndGameModeChunks();
-
+	
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(diskManager.getTorrent(), LOGID, "Entering end-game mode: "
 							+peerControl.getDisplayName()));
 			// System.out.println("End-Game Mode activated");
 			}finally{
-
+	
 				endGameModeChunks_mon.exit();
+			}
+		}else{
+			
+			int active_pieces 	= 0;
+			int reserved_pieces	= 0;
+	
+			for (int i =0; i <nbPieces; i++){
+	
+				final DiskManagerPiece dmPiece =dmPieces[i];
+	
+					// If the piece isn't even Needed, or doesn't need more downloading, simply continue
+	
+				if (!dmPiece.isDownloadable()){
+	
+					continue;
+				}
+	
+				final PEPiece pePiece = pePieces[i];
+	
+				if ( pePiece != null ){
+	
+					if ( pePiece.isDownloaded()){
+	
+						continue;
+					}
+	
+					if ( dmPiece.isNeeded()){
+	
+							// If the piece is being downloaded (fully requested), count it and continue
+	
+						if ( pePiece.isRequested() ){
+	
+							active_pieces++ ;
+	
+							continue;
+						}
+	
+							// https://jira.vuze.com/browse/SUP-154
+							// If we have a piece reserved to a slow peer then this can prevent end-game
+							// mode from being entered and result poopy end-of-dl speeds
+	
+						if ( pePiece.getReservedBy() != null ){
+	
+							reserved_pieces++;
+	
+							if ( reserved_pieces * diskManager.getPieceLength() > END_GAME_MODE_RESERVED_TRIGGER ){
+	
+								return;
+							}
+	
+							continue;
+						}
+					}
+				}
+	
+					// Else, some piece is Needed, not downloaded/fully requested; this isn't end game mode
+	
+				return;
+			}
+	
+				// when doing RTA we don't want EGM to kick in too early as it interfers with progressive
+				// playback by increasing discard. So we use a smaller trigger value to limit the impact
+	
+			boolean	use_rta_egm = rta_providers.size() > 0;
+	
+			long	remaining = active_pieces * (long)diskManager.getPieceLength();
+	
+			long	trigger	= use_rta_egm?RTA_END_GAME_MODE_SIZE_TRIGGER:END_GAME_MODE_SIZE_TRIGGER;
+	
+				// only flip into end-game mode if < trigger size left
+	
+			if ( remaining <= trigger ){
+	
+				try{
+					endGameModeChunks_mon.enter();
+	
+					endGameModeChunks = new ArrayList();
+	
+					timeEndGameModeEntered = mono_now;
+	
+					endGameMode = true;
+	
+					computeEndGameModeChunks();
+	
+					if (Logger.isEnabled())
+						Logger.log(new LogEvent(diskManager.getTorrent(), LOGID, "Entering end-game mode: "
+								+peerControl.getDisplayName()));
+				// System.out.println("End-Game Mode activated");
+				}finally{
+	
+					endGameModeChunks_mon.exit();
+				}
 			}
 		}
 	}
