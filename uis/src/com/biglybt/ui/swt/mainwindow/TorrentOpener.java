@@ -191,7 +191,7 @@ public class TorrentOpener {
 		});
 	}
 
-  public static void
+  public static boolean
   openTorrentsFromClipboard(
 		  String text )
   {
@@ -216,6 +216,8 @@ public class TorrentOpener {
 		  lines = new String[]{ text };
 	  }
 
+	  boolean opened = false;
+	  
 	  for ( int i=0; i<lines.length; i++ ){
 
 		  String line = lines[i].trim();
@@ -239,8 +241,12 @@ public class TorrentOpener {
 			  options.put( UIFunctions.OTO_HIDE_ERRORS, true );
 
 			  TorrentOpener.openTorrent( line, options );
+			  
+			  opened = true;
 		  }
 	  }
+	  
+	  return( opened );
   }
   
   public static void openDroppedTorrents(DropTargetEvent event, boolean deprecated_sharing_param ){

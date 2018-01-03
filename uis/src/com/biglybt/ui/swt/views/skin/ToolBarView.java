@@ -36,6 +36,8 @@ import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinObjectText;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Control;
@@ -47,12 +49,14 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AERunnableBoolean;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.toolbar.*;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pifimpl.UIToolBarItemImpl;
 import com.biglybt.ui.swt.pifimpl.UIToolBarManagerCore;
 import com.biglybt.ui.swt.pifimpl.UIToolBarManagerImpl;
@@ -298,9 +302,39 @@ public class ToolBarView
 				public boolean toolBarItemActivated(ToolBarItem item,
 				                                    long activationType, Object datasource) {
 					if (activationType != ACTIVATIONTYPE_NORMAL) {
-						return false;
+						
+						Boolean result = Utils.execSWTThreadWithBool(
+							"open",
+							new AERunnableBoolean(){
+								
+								@Override
+								public boolean runSupport(){
+									Clipboard clipboard = new Clipboard(Display.getDefault());
+									
+									try{
+										String text = (String) clipboard.getContents(TextTransfer.getInstance());
+				
+										if (text != null && text.length() <= 2048) {
+											
+											if ( TorrentOpener.openTorrentsFromClipboard(text)){
+											
+												return( true );
+											}
+										}
+									}finally{
+										
+										clipboard.dispose();
+									}
+									
+									return false;
+								}
+							}, 1000 );
+						
+						return( result != null && result );
 					}
+					
 					UIFunctionsManagerSWT.getUIFunctionsSWT().openTorrentWindow();
+					
 					return true;
 				}
 			});
@@ -487,13 +521,12 @@ public class ToolBarView
 	
 		// ==start
 		item = createItem(this, "start", "image.toolbar.startstop.start", "iconBar.start");
-		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(
-				UIToolBarActivationListener.ACTIVATIONTYPE_NORMAL) {
+		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT() {
 			@Override
 			public void toolBarItemActivated_OffSWT(ToolBarItem item,
 					long activationType, Object datasource) {
 				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
-				TorrentUtil.queueDataSources(selected,true);
+				TorrentUtil.queueDataSources(selected,true,activationType == ACTIVATIONTYPE_HELD);
 			}
 		});
 		
@@ -501,13 +534,12 @@ public class ToolBarView
 
 		// ==stop
 		item = createItem(this, "stop", "image.toolbar.startstop.stop", "iconBar.stop");
-		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(
-				UIToolBarActivationListener.ACTIVATIONTYPE_NORMAL) {
+		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(){
 			@Override
 			public void toolBarItemActivated_OffSWT(ToolBarItem item,
 					long activationType, Object datasource) {
 				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
-				TorrentUtil.stopDataSources(selected);
+				TorrentUtil.stopDataSources(selected,activationType == ACTIVATIONTYPE_HELD);
 			}
 		});
 		
@@ -516,13 +548,12 @@ public class ToolBarView
 		// ==startstop
 		item = createItem(this, "startstop", "image.toolbar.startstop.start",
 				"iconBar.startstop");
-		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(
-				UIToolBarActivationListener.ACTIVATIONTYPE_NORMAL) {
+		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(){
 			@Override
 			public void toolBarItemActivated_OffSWT(ToolBarItem item,
 					long activationType, Object datasource) {
 				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
-				TorrentUtil.stopOrStartDataSources(selected);
+				TorrentUtil.stopOrStartDataSources(selected,activationType == ACTIVATIONTYPE_HELD);
 			}
 		});
 		tbm.addToolBarItem(item, false);
