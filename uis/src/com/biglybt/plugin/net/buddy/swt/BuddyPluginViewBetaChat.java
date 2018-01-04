@@ -55,8 +55,6 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
@@ -4670,6 +4668,44 @@ BuddyPluginViewBetaChat
 		}catch( Throwable e ){
 		}
 
+			// we want to avoid splitting emphasized text such as <b>blah blah</b>
+		
+		boolean	hacked = false;
+		
+		Pattern p = getEmphasisPattern();
+		
+		Matcher m = p.matcher( text );
+
+		boolean result = m.find();
+
+		if ( result ){
+
+			StringBuffer sb = new StringBuffer();
+
+	    	while( result ){
+	    				
+	    		String match	= m.group(1);
+	    		
+	    		boolean is_italic = match.length()==1 || match.toLowerCase(Locale.US).contains( "i" );
+	    		
+	    		String str 		= m.group(3);
+	    		 
+	    		str = str.replaceAll( " ", "\\\\u00a0" );
+	    		
+	    		hacked = true;
+	    		
+	    		String emphasis = is_italic?"*":"**";
+	    		
+	    		m.appendReplacement(sb, Matcher.quoteReplacement( emphasis + str + emphasis ));
+
+	    		result = m.find();
+	    	}   	
+	    	
+			m.appendTail(sb);
+
+			text = sb.toString();
+		}
+		
 		while( text.length() > MAX_MSG_CHUNK_LENGTH ){
 			
 			char[]	chars = text.toCharArray();
@@ -4687,6 +4723,11 @@ BuddyPluginViewBetaChat
 					String chunk = text.substring( 0, pos ).trim();
 					
 					if ( !chunk.isEmpty()){
+						
+						if ( hacked ){
+							
+							chunk = chunk.replaceAll( "\\\\u00a0", " " );
+						}
 						
 						chat.sendMessage( chunk, new HashMap<String, Object>());
 					}
@@ -4707,6 +4748,11 @@ BuddyPluginViewBetaChat
 				
 				if ( !chunk.isEmpty()){
 				
+					if ( hacked ){
+						
+						chunk = chunk.replaceAll( "\\\\u00a0", " " );
+					}
+					
 					chat.sendMessage( chunk, new HashMap<String, Object>());
 				}
 				
@@ -4715,6 +4761,11 @@ BuddyPluginViewBetaChat
 		}
 		
 		if ( text.length() > 0 ){
+			
+			if ( hacked ){
+				
+				text = text.replaceAll( "\\\\u00a0", " " );
+			}
 			
 			chat.sendMessage( text, new HashMap<String, Object>());
 		}
@@ -5390,6 +5441,12 @@ BuddyPluginViewBetaChat
 		return( text );
 	}
 	
+	private static Pattern
+	getEmphasisPattern()
+	{
+		return( RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|(?:[<\\[]([bi]+)[>\\]]))([^\\n]+?)(?:\\1|(?:[<\\[]/\\2[>\\]]))" ));
+	}
+	
 	private static String
 	expandEmphasis(
 		String		text )
@@ -5402,7 +5459,7 @@ BuddyPluginViewBetaChat
 		}
 		
 		try{	
-			Pattern p = RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|(?:[<\\[]([bi]+)[>\\]]))([^\\n]+?)(?:\\1|(?:[<\\[]/\\2[>\\]]))" );
+			Pattern p = getEmphasisPattern();
 	
 			Matcher m = p.matcher( text );
 	
