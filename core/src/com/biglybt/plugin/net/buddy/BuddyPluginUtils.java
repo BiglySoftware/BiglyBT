@@ -23,6 +23,8 @@
 package com.biglybt.plugin.net.buddy;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -521,7 +523,9 @@ BuddyPluginUtils
 				
 			}else{
 				
-				Debug.out( "Can't build view - UI unavail" );
+				ViewWrapper	wrapper = new ViewWrapper( bp, properties,  listener );
+				
+				return( wrapper );
 			}
 		}else {
 			
@@ -587,5 +591,133 @@ BuddyPluginUtils
 		return( key );
 	}
 
+	private static class
+	ViewWrapper
+		implements BuddyPluginViewInterface.View
+	{
+		private Map<String,Object>						properties;
+		private BuddyPluginViewInterface.ViewListener 	listener;
 
+		private BuddyPluginViewInterface.View		delegate;
+		
+		private boolean			activated;
+		private List<String>	drops = new ArrayList<>();
+		private boolean 		destroyed;
+		
+		private
+		ViewWrapper(
+			BuddyPlugin								bp,
+			Map<String,Object>						_properties,
+			BuddyPluginViewInterface.ViewListener 	_listener )
+		{
+			properties	= _properties;
+			listener	= _listener;
+			
+			bp.addSWTUIWaiter(
+				new Runnable()
+				{
+					public void
+					run()
+					{
+						BuddyPluginViewInterface ui = bp.getSWTUI();
+
+						if ( ui != null ){
+
+							setDelegate(ui);
+						}
+					}
+				});
+		}
+		
+		private void
+		setDelegate(
+			BuddyPluginViewInterface		ui )
+		{
+			synchronized( this ){
+				
+				if ( destroyed ){
+					
+					return;
+				}
+			
+				delegate = ui.buildView( properties, listener );
+				
+				if ( delegate != null ){
+					
+					if ( activated ){
+						
+						delegate.activate();
+					}
+					
+					for ( String drop: drops ){
+						
+						delegate.handleDrop( drop );
+					}
+					
+					drops.clear();
+					
+				}else{
+					
+					Debug.out( "Failed to build view" );
+				}
+			}
+		}
+		
+		public void
+		activate()
+		{
+			synchronized( this ){
+				
+				if ( destroyed ){
+					
+					return;
+				}
+							
+				if ( delegate != null ){
+					
+					delegate.activate();
+					
+				}else{
+					
+					activated = true;
+				}
+			}
+		}
+
+		public void
+		handleDrop(
+			String		drop )
+		{
+			synchronized( this ){
+				
+				if ( destroyed ){
+					
+					return;
+				}
+								
+				if ( delegate != null ){
+					
+					delegate.handleDrop( drop );
+					
+				}else{
+					
+					drops.add( drop );
+				}
+			}
+		}
+
+		public void
+		destroy()
+		{
+			synchronized( this ){
+				
+				destroyed = true;
+				
+				if ( delegate != null ){
+					
+					delegate.destroy();
+				}
+			}
+		}
+	}
 }

@@ -1877,49 +1877,70 @@ BuddyPluginView
 		Map<String,Object>		properties,
 		ViewListener			listener )
 	{
-		Composite	swt_composite = (Composite)properties.get( BuddyPluginViewInterface.VP_SWT_COMPOSITE );
-
-		ChatInstance	chat = (ChatInstance)properties.get( BuddyPluginViewInterface.VP_CHAT );
-
-		if ( chat != null ){
-
-			final BuddyPluginViewBetaChat view = new BuddyPluginViewBetaChat( BuddyPluginView.this, plugin, chat, swt_composite );
-
-			return(
-				new View()
+		boolean is_swt = Utils.isSWTThread();
+		
+		AERunnableObject runnable = 
+			new AERunnableObject()
+			{
+				public Object
+				runSupport()
 				{
-					@Override
-					public void
-					activate()
-					{
-						view.activate();
+					Composite	swt_composite = (Composite)properties.get( BuddyPluginViewInterface.VP_SWT_COMPOSITE );
+
+					try{				
+						ChatInstance	chat = (ChatInstance)properties.get( BuddyPluginViewInterface.VP_CHAT );
+				
+						if ( chat != null ){
+				
+							final BuddyPluginViewBetaChat view = new BuddyPluginViewBetaChat( BuddyPluginView.this, plugin, chat, swt_composite );
+				
+							return(
+								new View()
+								{
+									@Override
+									public void
+									activate()
+									{
+										view.activate();
+									}
+				
+									@Override
+									public void
+									handleDrop(
+										String drop)
+									{
+										view.handleExternalDrop( drop );
+									}
+				
+									@Override
+									public void
+									destroy()
+									{
+										view.close();
+									}
+								});
+						}else{
+							BetaSubViewHolder view = new BetaSubViewHolder();
+				
+							DownloadAdapter	download = (DownloadAdapter)properties.get( BuddyPluginViewInterface.VP_DOWNLOAD );
+				
+							view.initialise( swt_composite, download, listener );
+				
+							return( view );
+						}
+					}finally{
+						
+						if ( !is_swt ){
+							
+							Utils.relayout( swt_composite );
+						}
 					}
-
-					@Override
-					public void
-					handleDrop(
-						String drop)
-					{
-						view.handleExternalDrop( drop );
-					}
-
-					@Override
-					public void
-					destroy()
-					{
-						view.close();
-					}
-				});
-		}else{
-			BetaSubViewHolder view = new BetaSubViewHolder();
-
-
-			DownloadAdapter	download = (DownloadAdapter)properties.get( BuddyPluginViewInterface.VP_DOWNLOAD );
-
-			view.initialise( swt_composite, download, listener );
-
-			return( view );
-		}
+				}
+			};
+			
+		Object result = is_swt?runnable.runSupport():Utils.execSWTThreadWithObject( "chatbuild", runnable, 10*1000 );
+		
+		return((View)result);
 	}
 
 	private class
