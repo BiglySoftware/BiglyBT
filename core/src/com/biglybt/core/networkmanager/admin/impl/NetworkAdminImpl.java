@@ -2770,7 +2770,8 @@ addressLoop:
 
 		Set<NetworkConnectionBase> connections = NetworkManager.getSingleton().getConnections();
 
-		Map<InetAddress,int[]>	lookup_map 	= new HashMap<>();
+		Map<InetAddress,int[]>	public_lookup_map 		= new HashMap<>();
+		Map<String,int[]>		non_public_lookup_map 	= new HashMap<>();
 
 		for ( NetworkConnectionBase connection: connections ){
 
@@ -2780,33 +2781,61 @@ addressLoop:
 
 				Transport transport = (Transport)tb;
 
-				TransportStartpoint start = transport.getTransportStartpoint();
+				InetSocketAddress notional_address = connection.getEndpoint().getNotionalAddress();
 
-				if ( start != null ){
+				String ip    = AddressUtils.getHostAddress( notional_address );
 
-					InetSocketAddress socket_address = start.getProtocolStartpoint().getAddress();
-
-					if ( socket_address != null ){
-
-						InetAddress address = socket_address.getAddress();
-
-						int[]	counts = lookup_map.get( address );
-
-						if ( counts == null ){
-
-							counts = new int[2];
-
-							lookup_map.put( address, counts );
+				String network	= AENetworkClassifier.categoriseAddress( ip );
+				
+				if ( network == AENetworkClassifier.AT_PUBLIC ){
+					
+					TransportStartpoint start = transport.getTransportStartpoint();
+	
+					if ( start != null ){
+	
+						InetSocketAddress socket_address = start.getProtocolStartpoint().getAddress();
+	
+						if ( socket_address != null ){
+	
+							InetAddress address = socket_address.getAddress();
+	
+							int[]	counts = public_lookup_map.get( address );
+	
+							if ( counts == null ){
+	
+								counts = new int[2];
+	
+								public_lookup_map.put( address, counts );
+							}
+	
+							if ( connection.isIncoming()){
+	
+								counts[0]++;
+	
+							}else{
+	
+								counts[1]++;
+							}
 						}
+					}
+				}else{
+					
+					int[]	counts = non_public_lookup_map.get( network );
+					
+					if ( counts == null ){
 
-						if ( connection.isIncoming()){
+						counts = new int[2];
 
-							counts[0]++;
+						non_public_lookup_map.put( network, counts );
+					}
 
-						}else{
+					if ( connection.isIncoming()){
 
-							counts[1]++;
-						}
+						counts[0]++;
+
+					}else{
+
+						counts[1]++;
 					}
 				}
 			}
@@ -2834,7 +2863,7 @@ addressLoop:
 
 		boolean	unbound_connections = false;
 
-		if ( lookup_map.size() == 0 ){
+		if ( public_lookup_map.size() + non_public_lookup_map.size() == 0 ){
 
 			str += "\n" + MessageText.getString( "label.no.connections" );
 
@@ -2842,7 +2871,7 @@ addressLoop:
 
 			String con_str = "";
 
-			for ( Map.Entry<InetAddress,int[]> entry: lookup_map.entrySet()){
+			for ( Map.Entry<InetAddress,int[]> entry: public_lookup_map.entrySet()){
 
 				InetAddress address = entry.getKey();
 				int[]		counts	= entry.getValue();
@@ -2870,6 +2899,18 @@ addressLoop:
 				con_str += (con_str.length()==0?"":"; ") + s.toLowerCase();
 			}
 
+			for ( Map.Entry<String,int[]> entry: non_public_lookup_map.entrySet()){
+
+				String		net 	= entry.getKey();
+				int[]		counts	= entry.getValue();
+
+				String s = net;
+
+				s += " - " + MessageText.getString( "label.in" ) + "=" + counts[0] + ", " + MessageText.getString( "label.out" ) + "=" + counts[1];
+
+				con_str += (con_str.length()==0?"":"; ") + s.toLowerCase();
+			}
+			
 			str += "\n" + MessageText.getString( "label.connections" ) + ": " + con_str;
 		}
 
