@@ -49,8 +49,9 @@ import com.biglybt.core.util.*;
 public class PiecePickerImpl
 implements PiecePicker
 {
-	private static final boolean	LOG_RTA	= false;
-
+	private static final boolean	LOG_RTA				= false;
+	private static final boolean 	EGM_IS_BLOCK_BASED	= true;
+	
 	private static final LogIDs LOGID = LogIDs.PIECES;
 
 	/** min ms for recalculating availability - reducing this has serious ramifications */
@@ -116,7 +117,7 @@ implements PiecePicker
 	private static final long END_GAME_MODE_RESERVED_TRIGGER_BLOCKS	= END_GAME_MODE_RESERVED_TRIGGER / DiskManager.BLOCK_SIZE;
 	private static final long END_GAME_MODE_SIZE_TRIGGER_BLOCKS		= END_GAME_MODE_SIZE_TRIGGER / DiskManager.BLOCK_SIZE;
 	
-	private static final long END_GAME_MODE_TIMEOUT				= 60 * END_GAME_MODE_SIZE_TRIGGER / DiskManager.BLOCK_SIZE;
+	private static final long END_GAME_MODE_TIMEOUT				= 120*1000;
 	
 	
 	protected static volatile boolean	firstPiecePriority	=COConfigurationManager.getBooleanParameter("Prioritize First Piece" );
@@ -2409,7 +2410,7 @@ implements PiecePicker
 
 			// test a block-based version as logic should be piece-size dependent
 		
-		if ( Constants.IS_CVS_VERSION ){
+		if ( EGM_IS_BLOCK_BASED ){
 			
 				// when doing RTA we don't want EGM to kick in too early as it interfers with progressive
 				// playback by increasing discard. So we use a smaller trigger value to limit the impact

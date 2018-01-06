@@ -4684,19 +4684,18 @@ BuddyPluginViewBetaChat
 
 	    	while( result ){
 	    				
-	    		String match	= m.group(1);
+	    		String match_start	= m.group(1);
+	    		String emp_text 	= m.group(3);	    		
+	    		String match_end 	= m.group(4);	    		
+	    			    		
+	    		if ( emp_text.contains( " " )){
 	    		
-	    		boolean is_italic = match.length()==1 || match.toLowerCase(Locale.US).contains( "i" );
+		    		emp_text = emp_text.replaceAll( " ", "\\\\u00a0" );
+
+	    			hacked = true;
+	    		}
 	    		
-	    		String str 		= m.group(3);
-	    		 
-	    		str = str.replaceAll( " ", "\\\\u00a0" );
-	    		
-	    		hacked = true;
-	    		
-	    		String emphasis = is_italic?"*":"**";
-	    		
-	    		m.appendReplacement(sb, Matcher.quoteReplacement( emphasis + str + emphasis ));
+	    		m.appendReplacement(sb, Matcher.quoteReplacement( match_start + emp_text + match_end ));
 
 	    		result = m.find();
 	    	}   	
@@ -5444,7 +5443,7 @@ BuddyPluginViewBetaChat
 	private static Pattern
 	getEmphasisPattern()
 	{
-		return( RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|(?:[<\\[]([bi]+)[>\\]]))([^\\n]+?)(?:\\1|(?:[<\\[]/\\2[>\\]]))" ));
+		return( RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|(?:[<\\[]([bi])[>\\]]))([^\\n]+?)(\\1|(?:[<\\[]/\\2[>\\]]))" ));
 	}
 	
 	private static String

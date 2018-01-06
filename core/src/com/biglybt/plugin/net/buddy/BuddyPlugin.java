@@ -263,7 +263,8 @@ BuddyPlugin
 	private BuddyPluginBeta		beta_plugin;
 
 	private BuddyPluginViewInterface	swt_ui;
-
+	private List<Runnable>				swt_ui_waiters = new ArrayList<>();
+	
 	public static void
 	load(
 		PluginInterface		plugin_interface )
@@ -597,11 +598,26 @@ BuddyPlugin
 					if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
 
 						try{
-							swt_ui = (BuddyPluginViewInterface)Class.forName("com.biglybt.plugin.net.buddy.swt.BuddyPluginView").getConstructor(
-								new Class[]{ BuddyPlugin.class, UIInstance.class, String.class } ).newInstance(
-									new Object[]{ BuddyPlugin.this, instance, VIEW_ID } );
+							synchronized( swt_ui_waiters ){
+								
+								swt_ui = (BuddyPluginViewInterface)Class.forName("com.biglybt.plugin.net.buddy.swt.BuddyPluginView").getConstructor(
+									new Class[]{ BuddyPlugin.class, UIInstance.class, String.class } ).newInstance(
+										new Object[]{ BuddyPlugin.this, instance, VIEW_ID } );
 
-							// new BuddyPluginView( BuddyPlugin.this, swt_ui, VIEW_ID );
+								for ( Runnable r: swt_ui_waiters ){
+									
+									try{
+										
+										r.run();
+										
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+									}
+								}
+								
+								swt_ui_waiters.clear();
+							}
 
 						}catch( Throwable e ){
 							e.printStackTrace();
@@ -3656,6 +3672,23 @@ BuddyPlugin
 		return( swt_ui );
 	}
 
+	protected void
+	addSWTUIWaiter(
+		Runnable	r )
+	{
+		synchronized( swt_ui_waiters ){
+			
+			if ( swt_ui != null ){
+				
+				r.run();
+				
+			}else{
+				
+				swt_ui_waiters.add( r );
+			}
+		}
+	}
+	
 	protected void
 	rethrow(
 		String		reason,
