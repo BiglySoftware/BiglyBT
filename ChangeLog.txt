@@ -33,6 +33,7 @@ FEATURE: UI    | Added force-recheck and files-exists toolbar icons (hidden by d
 FEATURE: UI    | Hitting 'enter' in Library views now involes the default action [Parg]
 FEATURE: UI    | Added long-press actions to start (force), stop (pause) and open (ctrl+v but note this is only the open button shown on the toolbar in non-classic mode when the ‘search bar’ is disabled) [Parg]
 FEATURE: Plug  | Boss Key plugin ported [Parg]
+FEATURE: Plug  | Categorized Destination plugin ported [Parg]
 FEATURE: Core  | Added 'countTag' function to Tag Constraints [Parg]
 FEATURE: Core  | Added 'completed_age', 'peer_max_completion' and 'peer_average_completion' variables to Tag Constraints [Parg]
 FEATURE: Core  | Added 'size', 'size_mb' and 'size_gb' to Tag Constraints [Parg]
