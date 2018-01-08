@@ -3,7 +3,6 @@ BIGLYBT CHANGELOG
 
 2018.01.08 | BiglyBT 1.4.0.0
 
-
 FEATURE: UI    | Table column option to size to preferred width [Parg]
 FEATURE: UI    | Added options to copy all peer addresses to clipboard for a download [Parg]
 FEATURE: UI    | Added option to copy your own peer address to clipboard in peer views [Parg]
@@ -68,6 +67,8 @@ BUGFIX: Core   | Fix 'transcode always' option not being remembered [Parg]
 BUGFIX: Core   | Fix file move to be performant across same file system [Parg]
 BUGFIX: Core   | Update share-ratio-progress when download is stopped [Parg]
 
+
+
 2017.11.03 | BiglyBT 1.2.0.0
 
 FEATURE: UI    | New 'Dashboard' that allows you to build your own composite view [Parg]
@@ -122,6 +123,7 @@ BUGFIX: Core   | Don't attempt to scrape metadata downloads [Parg]
 BUGFIX: Core   | Fix deadlock in duplicate startup detection [Parg]
 
 
+
 2017.09.13 | BiglyBT 1.0.2.0
 
 FEATURE: UI    | Show small download indicator for pieces not yet downloading [TuxPaper]
@@ -154,6 +156,7 @@ BUGFIX:  Core  | Fixed renaming of files that only differ in case causing file d
 BUGFIX:  Core  | Remove limit on total uptime [TuxPaper]
 BUGFIX:  Core  | Fix sort of next subscription scheduler [Parg]
 BUGFIX:  Core  | Fixed ability to run multiple BiglyBT instances [Parg]
+
 
 
 2017.07.27 | BiglyBT 1.0.0.0
