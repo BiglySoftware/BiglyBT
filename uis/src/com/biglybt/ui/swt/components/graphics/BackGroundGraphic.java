@@ -101,9 +101,18 @@ public class BackGroundGraphic implements Graphic {
 			}
 		});
 	}
+	
+	addMenuItems( menu );
+	
 	canvas.setMenu( menu );
   }
 
+  protected void
+  addMenuItems(
+	Menu	menu )
+  {
+  }
+  
   @Override
   public void refresh(boolean force) {
   }

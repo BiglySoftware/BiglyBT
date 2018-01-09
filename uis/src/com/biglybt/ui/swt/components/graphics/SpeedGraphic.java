@@ -28,8 +28,12 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Utils;
@@ -151,6 +155,36 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 	    return new SpeedGraphic(scale,formatter);
   }
 
+  @Override
+  protected void
+  addMenuItems(
+	Menu	menu )
+  {
+	  new MenuItem( menu, SWT.SEPARATOR );
+	  
+	  MenuItem mi_reset = new MenuItem( menu, SWT.PUSH );
+
+	  mi_reset.setText(  MessageText.getString( "label.clear.history" ));
+
+	  mi_reset.addListener(SWT.Selection, new Listener() {
+		  @Override
+		  public void handleEvent(Event e) {
+			  try{
+			   	this_mon.enter();
+			   	
+			   	nbValues		= 0;
+			   	currentPosition	= 0;
+			   			
+			  }finally{
+				  
+				this_mon.exit();
+			  }
+			  
+			  refresh( true );
+		  }
+	  });
+  }
+  
   public void addIntsValue(int[] new_values) {
     try{
     	this_mon.enter();
