@@ -69,7 +69,9 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.stats.transfer.OverallStats;
 import com.biglybt.core.stats.transfer.StatsFactory;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AddressUtils;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
@@ -1177,106 +1179,131 @@ public class TransferStatsView
 
 							  if ( transport != null ){
 
-								  if ( transport.isTCP()){
+								  InetSocketAddress notional_address = nc.getEndpoint().getNotionalAddress();
 
-									  TransportStartpoint start = transport.getTransportStartpoint();
+								  String ip    = AddressUtils.getHostAddress( notional_address );
 
-									  if ( start != null ){
+								  String network	= AENetworkClassifier.categoriseAddress( ip );
 
-										  InetSocketAddress socket_address = start.getProtocolStartpoint().getAddress();
-
-										  if ( socket_address != null ){
-
-											  InetAddress	address = socket_address.getAddress();
-
-											  String name;
-
-											  if ( address.isAnyLocalAddress()){
-
-												  name = "* (TCP)";
-
-											  }else{
-
-												  name = ip_to_name_map.get( address );
+								  if ( network == AENetworkClassifier.AT_PUBLIC ){
+									
+									  if ( transport.isTCP()){
+	
+										  TransportStartpoint start = transport.getTransportStartpoint();
+	
+										  if ( start != null ){
+	
+											  InetSocketAddress socket_address = start.getProtocolStartpoint().getAddress();
+	
+											  if ( socket_address != null ){
+	
+												  InetAddress	address = socket_address.getAddress();
+	
+												  String name;
+	
+												  if ( address.isAnyLocalAddress()){
+	
+													  name = "* (TCP)";
+	
+												  }else{
+	
+													  name = ip_to_name_map.get( address );
+												  }
+	
+												  if ( name == null ){
+	
+													  name = na.classifyRoute( address);
+	
+													  ip_to_name_map.put( address, name );
+												  }
+	
+												  if ( transport.isSOCKS()){
+	
+													  name += " (SOCKS)";
+												  }
+	
+												  RouteInfo	info = name_to_route_map.get( name );
+	
+												  if ( info == null ){
+	
+													  info = new RouteInfo( name );
+	
+													  name_to_route_map.put( name, info );
+	
+													  route_last_seen.put( name, now );
+												  }
+	
+												  info.update( p );
+	
+												  done = true;
 											  }
-
+										  }
+									  }else{
+	
+										  if ( udp_bind_ip != null ){
+	
+											  RouteInfo	info;
+	
+											  String name = ip_to_name_map.get( udp_bind_ip );
+	
 											  if ( name == null ){
-
-												  name = na.classifyRoute( address);
-
-												  ip_to_name_map.put( address, name );
-											  }
-
-											  if ( transport.isSOCKS()){
-
-												  name += " (SOCKS)";
-											  }
-
-											  RouteInfo	info = name_to_route_map.get( name );
-
-											  if ( info == null ){
-
-												  info = new RouteInfo( name );
-
-												  name_to_route_map.put( name, info );
-
+	
+												  name = na.classifyRoute( udp_bind_ip);
+	
+												  ip_to_name_map.put( udp_bind_ip, name );
+	
+												  info = name_to_route_map.get( name );
+	
 												  route_last_seen.put( name, now );
+	
+												  if ( info == null ){
+	
+													  info = new RouteInfo( name );
+	
+													  name_to_route_map.put( name, info );
+												  }
+	
+											  }else{
+	
+												  info = name_to_route_map.get( name );
 											  }
-
+	
 											  info.update( p );
-
+	
+											  done = true;
+	
+										  }else{
+	
+											  if ( udp_info == null ){
+	
+												  udp_info 		= new RouteInfo( "* (UDP)" );
+	
+												  name_to_route_map.put( udp_info.getName(), udp_info );
+	
+												  route_last_seen.put( udp_info.getName(), now );
+											  }
+	
+											  udp_info.update( p );
+	
 											  done = true;
 										  }
 									  }
 								  }else{
+									  
+									  RouteInfo	info = name_to_route_map.get( network );
+										
+									  if ( info == null ){
 
-									  if ( udp_bind_ip != null ){
+										  info = new RouteInfo( network );
 
-										  RouteInfo	info;
+										  name_to_route_map.put( network, info );
 
-										  String name = ip_to_name_map.get( udp_bind_ip );
-
-										  if ( name == null ){
-
-											  name = na.classifyRoute( udp_bind_ip);
-
-											  ip_to_name_map.put( udp_bind_ip, name );
-
-											  info = name_to_route_map.get( name );
-
-											  route_last_seen.put( name, now );
-
-											  if ( info == null ){
-
-												  info = new RouteInfo( name );
-
-												  name_to_route_map.put( name, info );
-											  }
-
-										  }else{
-
-											  info = name_to_route_map.get( name );
-										  }
-
-										  info.update( p );
-
-										  done = true;
-
-									  }else{
-
-										  if ( udp_info == null ){
-
-											  udp_info 		= new RouteInfo( "* (UDP)" );
-
-											  name_to_route_map.put( udp_info.getName(), udp_info );
-
-											  route_last_seen.put( udp_info.getName(), now );
-										  }
-
-										  udp_info.update( p );
-
-										  done = true;
+										  route_last_seen.put( network, now );
 									  }
+
+									  info.update( p );
+
+									  done = true;
 								  }
 							  }
 						  }
