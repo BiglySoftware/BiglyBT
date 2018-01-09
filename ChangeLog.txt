@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2018.xx.yy | BiglyBT 1.4.0.1
+
 2018.01.08 | BiglyBT 1.4.0.0
 
 FEATURE: UI    | Table column option to size to preferred width [Parg]
