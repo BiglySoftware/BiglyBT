@@ -174,7 +174,10 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			   	
 			   	nbValues		= 0;
 			   	currentPosition	= 0;
-			   			
+		 		
+			   	for ( int i=0;i<all_values.length;i++ ){
+			   		all_values[i] = new int[all_values[i].length];
+			   	}	
 			  }finally{
 				  
 				this_mon.exit();
