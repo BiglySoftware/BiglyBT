@@ -31,6 +31,10 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AEJavaManagement;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -201,6 +205,27 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 			gridData.horizontalSpan = 2;
 			BooleanParameter no_sleep_se = new BooleanParameter(gSleep, "Prevent Sleep FP Seeding", "ConfigView.label.sleep.fpseed");
 			no_sleep_se.setLayoutData(gridData);
+			
+			TagManager tm = TagManagerFactory.getTagManager();
+			
+			if ( tm.isEnabled()){
+			
+				List<Tag> tag_list = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
+
+				String[] tags = new String[tag_list.size()+1];
+				
+				tags[0] = "";
+				
+				for ( int i=0;i<tag_list.size();i++){
+					
+					tags[i+1] = tag_list.get( i ).getTagName( true );
+				}
+				
+				label = new Label(gSleep, SWT.NULL);
+				Messages.setLanguageText(label, "ConfigView.label.sleep.tag");
+				
+				new StringListParameter(gSleep, "Prevent Sleep Tag", "", tags, tags );
+			}
 		}
 
 		if ( userMode > 0 ){

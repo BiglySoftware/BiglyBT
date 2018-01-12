@@ -76,6 +76,9 @@ import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.speedmanager.SpeedManager;
 import com.biglybt.core.speedmanager.SpeedManagerAdapter;
 import com.biglybt.core.speedmanager.SpeedManagerFactory;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
@@ -2163,6 +2166,7 @@ CoreImpl
 				new String[]{
 					"Prevent Sleep Downloading",
 					"Prevent Sleep FP Seeding",
+					"Prevent Sleep Tag",
 				},
 				new ParameterListener()
 				{
@@ -2180,6 +2184,16 @@ CoreImpl
 
 							boolean	active = dl || se;
 
+							if ( !active ){
+								
+								String tag = COConfigurationManager.getStringParameter( "Prevent Sleep Tag" );
+																
+								if ( !tag.trim().isEmpty()){
+								
+									active = true;
+								}
+							}
+							
 							try{
 								setPreventComputerSleep( PlatformManagerFactory.getPlatformManager(), active, "config change" );
 
@@ -2242,7 +2256,7 @@ CoreImpl
 				{
 					String	dl_act = COConfigurationManager.getStringParameter( "On Downloading Complete Do" );
 					String	se_act = COConfigurationManager.getStringParameter( "On Seeding Complete Do" );
-
+										
 					int		restart_after = COConfigurationManager.getIntParameter( "Auto Restart When Idle" );
 
 					synchronized( this ){
@@ -2307,6 +2321,17 @@ CoreImpl
 		boolean ps_downloading 	= COConfigurationManager.getBooleanParameter( "Prevent Sleep Downloading" );
 		boolean ps_fp_seed	 	= COConfigurationManager.getBooleanParameter( "Prevent Sleep FP Seeding" );
 
+		String tag_name = COConfigurationManager.getStringParameter( "Prevent Sleep Tag" );
+
+		Tag	ps_tag = null;
+		
+		tag_name = tag_name.trim();
+		
+		if ( !tag_name.isEmpty()){
+		
+			ps_tag = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTag( tag_name, true );
+		}
+		
 		String	declining_subsystems = "";
 
 		for ( PowerManagementListener l: power_listeners ){
@@ -2322,13 +2347,18 @@ CoreImpl
 				Debug.out( e );
 			}
 		}
+		
+		PlatformManager platform = PlatformManagerFactory.getPlatformManager();
 
-		if ( declining_subsystems.length() == 0 && !( ps_downloading || ps_fp_seed )){
+		if ( declining_subsystems.length() == 0 && !( ps_downloading || ps_fp_seed || ps_tag != null )){
 
+			if ( platform.getPreventComputerSleep()){
+				
+				setPreventComputerSleep( platform, false, "configuration change" );
+			}
+			
 			return;
 		}
-
-		PlatformManager platform = PlatformManagerFactory.getPlatformManager();
 
 		boolean	prevent_sleep 	= false;
 		String	prevent_reason	= null;
@@ -2338,6 +2368,11 @@ CoreImpl
 			prevent_sleep 	= true;
 			prevent_reason 	= "subsystems declined sleep: " +  declining_subsystems;
 
+		}else if ( ps_tag != null && ps_tag.getTaggedCount() > 0 ){
+			
+			prevent_sleep 	= true;
+			prevent_reason 	= "tag '" + tag_name + "' has entries";
+			
 		}else{
 
 			List<DownloadManager> managers = getGlobalManager().getDownloadManagers();

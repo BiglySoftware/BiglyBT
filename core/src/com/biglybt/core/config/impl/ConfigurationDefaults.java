@@ -269,6 +269,8 @@ public class ConfigurationDefaults {
     def.put("Prompt To Abort Shutdown", TRUE );
     def.put("Prevent Sleep Downloading", TRUE );
     def.put("Prevent Sleep FP Seeding", FALSE );
+    def.put("Prevent Sleep Tag", "" );
+
     def.put("Auto Restart When Idle", ZERO );
 
     def.put( "Download History Enabled", TRUE );
