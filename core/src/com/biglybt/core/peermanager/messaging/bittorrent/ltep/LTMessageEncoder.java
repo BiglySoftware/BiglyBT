@@ -30,6 +30,7 @@ import com.biglybt.core.peermanager.messaging.MessageStreamEncoder;
 import com.biglybt.core.peermanager.messaging.bittorrent.BTLTMessage;
 import com.biglybt.core.peermanager.messaging.bittorrent.BTMessageFactory;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 
 /**
  * @author Allan Crooks
@@ -103,7 +104,12 @@ public class LTMessageEncoder implements MessageStreamEncoder {
 						ext_value = (int)ext_value_bytes[0];
 					}
 					else {
-						throw new RuntimeException("extension id byte array format length != 1: " + ext_value_bytes.length);
+						//throw new RuntimeException("extension id byte array format length != 1: " + ext_value_bytes.length);
+						// seeing some of these, just log and ignore for the moment
+						
+						Debug.outNoStack( "Invalid LT extension: name=" + ext_name + ", value=" + new String(ext_value_bytes));
+						
+						continue;
 					}
 				}
 				else {
