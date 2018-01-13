@@ -80,6 +80,8 @@ import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
+import com.biglybt.ui.swt.skin.SWTSkinButtonUtility;
+import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -221,7 +223,7 @@ public class MyTorrentsView
 
 	private Class<?> forDataSourceType;
 
-	private SelectionListener buttonSelectionListener;
+	private Listener buttonListener;
 
 	private Listener buttonHoverListener;
 
@@ -831,13 +833,121 @@ public class MyTorrentsView
 
 		allTags = tags;
 
-		if (buttonSelectionListener == null) {
-			buttonSelectionListener = new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					boolean add = (e.stateMask == SWT.MOD1);
+		if ( buttonListener == null) {
+			
+			buttonListener = new Listener(){
+				
+				boolean bDownPressed;
 
-					Button curButton = (Button) e.widget;
+				private TimerEvent timerEvent;
+
+				@Override
+				public void handleEvent(Event event) {
+					
+					Button curButton = (Button)event.widget;
+
+					if (event.type == SWT.MouseDown) {
+						if (timerEvent == null) {
+							timerEvent = SimpleTimer.addEvent("MouseHold",
+									SystemTime.getOffsetTime(1000), new TimerEventPerformer() {
+										@Override
+										public void perform(TimerEvent te) {
+											timerEvent = null;
+
+											if (!bDownPressed) {
+												return;
+											}
+											bDownPressed = false;
+
+											// held
+											
+											Utils.execSWTThread(
+												new Runnable()
+												{
+													public void
+													run()
+													{
+														Object[] ds = tv.getSelectedDataSources().toArray();
+
+														Tag tag = (Tag) curButton.getData("Tag");
+
+														if (tag instanceof Category) {
+															TorrentUtil.assignToCategory(ds, (Category) tag);
+															return;
+														}
+
+														boolean doAdd = false;
+														for (Object obj : ds) {
+
+															if (obj instanceof DownloadManager) {
+
+																DownloadManager dm = (DownloadManager) obj;
+
+																if (!tag.hasTaggable(dm)) {
+																	doAdd = true;
+																	break;
+																}
+															}
+														}
+
+														for (Object obj : ds) {
+
+															if (obj instanceof DownloadManager) {
+
+																DownloadManager dm = (DownloadManager) obj;
+
+																if (doAdd) {
+																	tag.addTaggable(dm);
+																} else {
+																	tag.removeTaggable(dm);
+																}
+															}
+														}
+														
+														setSelection( curButton.getParent());
+														
+														curButton.setEnabled( false );
+														
+														SimpleTimer.addEvent("ButtonEnable",
+															SystemTime.getOffsetTime(10), new TimerEventPerformer() {
+																@Override
+																public void perform(TimerEvent te) {
+																	Utils.execSWTThread(
+																		new Runnable()
+																		{
+																			public void
+																			run()
+																			{
+																				curButton.setEnabled( true );
+																			}
+																		});
+																}
+														});
+													}
+												});
+										}
+									});
+						}
+						bDownPressed = true;
+						return;
+					} else {
+						
+						if (timerEvent != null) {
+							timerEvent.cancel();
+							timerEvent = null;
+						}
+						if (!bDownPressed) {
+							
+							setSelection( curButton.getParent());
+							
+							return;
+						}
+					}
+
+					bDownPressed = false;
+
+					boolean add = (event.stateMask & SWT.MOD1) != 0;
+
 					boolean isEnabled = curButton.getSelection();
 
 					Tag tag = (Tag) curButton.getData("Tag");
@@ -864,8 +974,14 @@ public class MyTorrentsView
 							});
 						}
 					}
-
-					Control[] controls = curButton.getParent().getChildren();
+					
+					setSelection( curButton.getParent());
+				}
+				
+				private void
+				setSelection( Composite parent)
+				{
+					Control[] controls = parent.getChildren();
 					for (int i = 0; i < controls.length; i++) {
 						if (!(controls[i] instanceof Button)) {
 							continue;
@@ -876,7 +992,6 @@ public class MyTorrentsView
 					}
 				}
 			};
-
 			buttonHoverListener = new Listener() {
 				@Override
 				public void handleEvent(Event event) {
@@ -1042,6 +1157,7 @@ public class MyTorrentsView
 					}
 				}
 			};
+			
 		}
 
 		for ( final Tag tag: tags ){
@@ -1087,7 +1203,8 @@ public class MyTorrentsView
 				button.setSelection(true);
 			}
 
-			button.addSelectionListener(buttonSelectionListener);
+			button.addListener(SWT.MouseUp, buttonListener );
+			button.addListener(SWT.MouseDown, buttonListener);
 
 
 			button.addListener(SWT.MouseHover, buttonHoverListener);
