@@ -18,7 +18,9 @@
 package com.biglybt.core.util;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -35,19 +37,62 @@ public class TimeFormatter {
 
 	static final String[] TIME_SUFFIXES_2 	= { "sec", "min", "hr", "day", "wk", "mo", "yr" };
 
-	public static final String[] DATEFORMATS_DESC = new String[] {
-		"EEEE, MMMM d, yyyy GG",
-		"EEEE, MMMM d, yyyy",
-		"EEE, MMMM d, yyyy",
-		"MMMM d, ''yy",
-		"EEE, MMM d, ''yy",
-		"MMM d, yyyy",
-		"MMM d, ''yy",
-		"yyyy/MM/dd",
-		"''yy/MM/dd",
-		"MMM dd",
-		"MM/dd",
-	};
+	public static final String[] DATEFORMATS_DESC;
+	
+	static{
+		String[] defs = new String[] {
+			"EEEE, MMMM d, yyyy GG",
+			"EEEE, MMMM d, yyyy",
+			"EEE, MMMM d, yyyy",
+			"MMMM d, ''yy",
+			"EEE, MMM d, ''yy",
+			"MMM d, yyyy",
+			"MMM d, ''yy",
+			"yyyy/MM/dd",
+			"''yy/MM/dd",
+			"MMM dd",
+			"MM/dd",
+		};
+		
+		String formats = MessageText.getString( "column.date.formats" );
+		
+		if ( formats != null ){
+			
+			String[] bits = formats.split( ";" );
+			
+			List<String> list = new ArrayList<>( bits.length);
+			
+			for ( String bit: bits ){
+				
+				bit = bit.trim();
+				
+				if ( bit.length() > 0 ){
+					
+					try{
+						new SimpleDateFormat( bit );
+					
+						list.add( bit );
+						
+					}catch( Throwable e ){
+						
+						System.err.println( "Invalid date format: " + bit );
+					}
+				}
+			}
+			
+			if ( list.size() > 0 ){
+				
+				DATEFORMATS_DESC = list.toArray(new String[list.size()]);
+				
+			}else{
+				
+				DATEFORMATS_DESC = defs;
+			}
+		}else{
+			
+			DATEFORMATS_DESC = defs;
+		}
+	}
 
 	private static final SimpleDateFormat http_date_format =
 		new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US );
