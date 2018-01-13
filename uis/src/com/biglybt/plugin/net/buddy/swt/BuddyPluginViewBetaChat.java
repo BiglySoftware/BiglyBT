@@ -1639,7 +1639,7 @@ BuddyPluginViewBetaChat
 	
 							if ( message.length() > 0 ){
 	
-								sendMessage(  message );
+								sendMessage(  message, true );
 	
 								history.addFirst( message );
 	
@@ -2125,7 +2125,7 @@ BuddyPluginViewBetaChat
 															
 												link = link.trim();
 												
-												sendMessage( link );
+												sendMessage( link, false );
 												
 												String rendered = renderMessage( link );
 
@@ -4633,7 +4633,8 @@ BuddyPluginViewBetaChat
 
 	protected void
 	sendMessage(
-		String		text )
+		String		text,
+		boolean		do_chunking )
 	{
 		//logChatMessage( plugin.getNickname(), Colors.green, text );
 
@@ -4667,62 +4668,88 @@ BuddyPluginViewBetaChat
 			}
 		}catch( Throwable e ){
 		}
-
-			// we want to avoid splitting emphasized text such as <b>blah blah</b>
-		
-		boolean	hacked = false;
-		
-		Pattern p = getEmphasisPattern();
-		
-		Matcher m = p.matcher( text );
-
-		boolean result = m.find();
-
-		if ( result ){
-
-			StringBuffer sb = new StringBuffer();
-
-	    	while( result ){
-	    				
-	    		String match_start	= m.group(1);
-	    		String emp_text 	= m.group(3);	    		
-	    		String match_end 	= m.group(4);	    		
-	    			    		
-	    		if ( emp_text.contains( " " )){
-	    		
-		    		emp_text = emp_text.replaceAll( " ", "\\\\u00a0" );
-
-	    			hacked = true;
-	    		}
-	    		
-	    		m.appendReplacement(sb, Matcher.quoteReplacement( match_start + emp_text + match_end ));
-
-	    		result = m.find();
-	    	}   	
-	    	
-			m.appendTail(sb);
-
-			text = sb.toString();
-		}
-		
-		while( text.length() > MAX_MSG_CHUNK_LENGTH ){
-			
-			char[]	chars = text.toCharArray();
-			
-			int	pos = MAX_MSG_CHUNK_LENGTH-1;
-			
-			boolean chunked = false;
-			
-				// don't allow chunks to get too small
-			
-			while( pos > MAX_MSG_CHUNK_LENGTH/2 ){
 				
-				if ( chars[pos] == ' ' ){
+		if ( do_chunking ){
+
+				// we want to avoid splitting emphasized text such as <b>blah blah</b>
+
+			boolean	hacked = false;
+
+			Pattern p = getEmphasisPattern();
+			
+			Matcher m = p.matcher( text );
+	
+			boolean result = m.find();
+	
+			if ( result ){
+	
+				StringBuffer sb = new StringBuffer();
+	
+		    	while( result ){
+		    				
+		    		String match_start	= m.group(1);
+		    		String emp_text 	= m.group(3);	    		
+		    		String match_end 	= m.group(4);	    		
+		    			    		
+		    		if ( emp_text.contains( " " )){
+		    		
+			    		emp_text = emp_text.replaceAll( " ", "\\\\u00a0" );
+	
+		    			hacked = true;
+		    		}
+		    		
+		    		m.appendReplacement(sb, Matcher.quoteReplacement( match_start + emp_text + match_end ));
+	
+		    		result = m.find();
+		    	}   	
+		    	
+				m.appendTail(sb);
+	
+				text = sb.toString();
+			}	
+			
+			while( text.length() > MAX_MSG_CHUNK_LENGTH ){
+				
+				char[]	chars = text.toCharArray();
+				
+				int	pos = MAX_MSG_CHUNK_LENGTH-1;
+				
+				boolean chunked = false;
+				
+					// don't allow chunks to get too small
+				
+				while( pos > MAX_MSG_CHUNK_LENGTH/2 ){
 					
-					String chunk = text.substring( 0, pos ).trim();
+					if ( chars[pos] == ' ' ){
+						
+						String chunk = text.substring( 0, pos ).trim();
+						
+						if ( !chunk.isEmpty()){
+							
+							if ( hacked ){
+								
+								chunk = chunk.replaceAll( "\\\\u00a0", " " );
+							}
+							
+							chat.sendMessage( chunk, new HashMap<String, Object>());
+						}
+						
+						text = text.substring( pos ).trim();
+						
+						chunked = true;
+						
+						break;
+					}
+					
+					pos--;
+				}
+				
+				if ( !chunked ){
+					
+					String chunk = text.substring( 0, MAX_MSG_CHUNK_LENGTH ).trim();
 					
 					if ( !chunk.isEmpty()){
-						
+					
 						if ( hacked ){
 							
 							chunk = chunk.replaceAll( "\\\\u00a0", " " );
@@ -4731,40 +4758,20 @@ BuddyPluginViewBetaChat
 						chat.sendMessage( chunk, new HashMap<String, Object>());
 					}
 					
-					text = text.substring( pos ).trim();
-					
-					chunked = true;
-					
-					break;
+					text = text.substring( MAX_MSG_CHUNK_LENGTH ).trim();
 				}
-				
-				pos--;
 			}
 			
-			if ( !chunked ){
+			if ( text.length() > 0 ){
 				
-				String chunk = text.substring( 0, MAX_MSG_CHUNK_LENGTH ).trim();
-				
-				if ( !chunk.isEmpty()){
-				
-					if ( hacked ){
-						
-						chunk = chunk.replaceAll( "\\\\u00a0", " " );
-					}
+				if ( hacked ){
 					
-					chat.sendMessage( chunk, new HashMap<String, Object>());
+					text = text.replaceAll( "\\\\u00a0", " " );
 				}
-				
-				text = text.substring( MAX_MSG_CHUNK_LENGTH ).trim();
 			}
 		}
 		
 		if ( text.length() > 0 ){
-			
-			if ( hacked ){
-				
-				text = text.replaceAll( "\\\\u00a0", " " );
-			}
 			
 			chat.sendMessage( text, new HashMap<String, Object>());
 		}
