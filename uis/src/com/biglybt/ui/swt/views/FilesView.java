@@ -110,6 +110,7 @@ public class FilesView
     new FirstPieceItem(),
     new PieceCountItem(),
     new RemainingPiecesItem(),
+    new PiecesDoneAndCountItem(),
     new ProgressGraphItem(),
     new ModeItem(),
     new PriorityItem(),
