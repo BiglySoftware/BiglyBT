@@ -30,6 +30,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
@@ -120,8 +121,8 @@ public class TagSettingsView
 		public GenericBooleanParameter	copyOnCompleteData;
 		public GenericBooleanParameter	copyOnCompleteTorrent;
 
-		public Text constraints;
-		public Label	constraintError;
+		public Text		 	constraints;
+		public Label		constraintError;
 		
 		private GenericStringListParameter constraintMode;
 
@@ -1341,7 +1342,8 @@ public class TagSettingsView
 			swt_updateFields();
 		}
 		cMainComposite.layout();
-		sc.setMinSize(cMainComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		Rectangle r = sc.getClientArea();
+		sc.setMinSize(cMainComposite.computeSize(r.width, SWT.DEFAULT));
 	}
 
 	private void
