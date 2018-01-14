@@ -73,6 +73,13 @@ TagFeatureProperties
 		public Long
 		getLong();
 
+		public boolean
+		isEnabled();
+		
+		public void
+		setEnabled(
+			boolean	enabled );
+		
 		public String
 		getString();
 

@@ -488,6 +488,8 @@ TagPropertyConstraintHandler
 
 		synchronized( constrained_tags ){
 
+			boolean enabled = property.isEnabled();
+			
 			String[] value = property.getStringList();
 
 			String 	constraint;
@@ -514,12 +516,16 @@ TagPropertyConstraintHandler
 
 				TagConstraint con = constrained_tags.get( tag );
 
-				if ( con != null && con.getConstraint().equals( constraint ) && con.getOptions().equals( options )){
+				
+				if (	con != null && 
+						con.getConstraint().equals( constraint ) && 
+						con.getOptions().equals( options ) &&
+						con.isEnabled() == enabled ){
 
 					return;
 				}
 
-				con = new TagConstraint( this, tag, constraint, options );
+				con = new TagConstraint( this, tag, constraint, options, enabled );
 
 				constrained_tags.put( tag, con );
 
@@ -696,7 +702,7 @@ TagPropertyConstraintHandler
 	compileConstraint(
 		String		expr )
 	{
-		return( new TagConstraint( this, null, expr, null ).expr );
+		return( new TagConstraint( this, null, expr, null, true ).expr );
 	}
 
 	private static class
@@ -705,7 +711,8 @@ TagPropertyConstraintHandler
 		private final TagPropertyConstraintHandler	handler;
 		private final Tag							tag;
 		private final String						constraint;
-
+		private final boolean						enabled;
+		
 		private final boolean		auto_add;
 		private final boolean		auto_remove;
 
@@ -718,12 +725,14 @@ TagPropertyConstraintHandler
 			TagPropertyConstraintHandler	_handler,
 			Tag								_tag,
 			String							_constraint,
-			String							options )
+			String							options,
+			boolean							_enabled )
 		{
 			handler		= _handler;
 			tag			= _tag;
 			constraint	= _constraint;
-
+			enabled		= _enabled;
+			
 			if ( options == null ){
 
 				auto_add	= true;
@@ -755,6 +764,11 @@ TagPropertyConstraintHandler
 			}
 		}
 
+		private boolean
+		isEnabled()
+		{
+			return( enabled );
+		}
 		private void
 		setError(
 			String		str )
@@ -1131,9 +1145,16 @@ TagPropertyConstraintHandler
 		testConstraint(
 			DownloadManager	dm )
 		{
-			List<Tag> dm_tags = handler.tag_manager.getTagsForTaggable( dm );
-
-			return( (Boolean)expr.eval( dm, dm_tags ));
+			if ( enabled ){
+				
+				List<Tag> dm_tags = handler.tag_manager.getTagsForTaggable( dm );
+	
+				return( (Boolean)expr.eval( dm, dm_tags ));
+				
+			}else{
+				
+				return( false );
+			}
 		}
 
 		private interface

@@ -123,8 +123,8 @@ public class TagSettingsView
 
 		public Text		 	constraints;
 		public Label		constraintError;
-		
-		private GenericStringListParameter constraintMode;
+		public GenericBooleanParameter 		constraintEnabled;
+		public GenericStringListParameter 	constraintMode;
 
 		public GenericIntParameter tfl_max_taggables;
 
@@ -992,7 +992,8 @@ public class TagSettingsView
 				if (propConstraint != null) {
 					Group gConstraint = new Group(cMainComposite, SWT.NONE);
 					Messages.setLanguageText(gConstraint, "tag.property.constraint");
-					gridLayout = new GridLayout(5, false);
+					int columns = 6;
+					gridLayout = new GridLayout(columns, false);
 					gConstraint.setLayout(gridLayout);
 
 					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 4, 1);
@@ -1000,7 +1001,7 @@ public class TagSettingsView
 
 					params.constraints = new Text(gConstraint,
 							SWT.WRAP | SWT.BORDER | SWT.MULTI);
-					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 5, 1);
+					gd = new GridData(SWT.FILL, SWT.NONE, true, false, columns, 1);
 					gd.heightHint = 40;
 					Utils.setLayoutData(params.constraints, gd);
 					params.constraints.addKeyListener(new KeyListener() {
@@ -1020,7 +1021,7 @@ public class TagSettingsView
 
 					params.constraintError = new Label(gConstraint, SWT.NULL );
 					params.constraintError.setForeground( Colors.colorError);
-					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 5, 1);
+					gd = new GridData(SWT.FILL, SWT.NONE, true, false, columns, 1);
 					Utils.setLayoutData(params.constraintError, gd);
 					
 					btnSaveConstraint = new Button(gConstraint, SWT.PUSH);
@@ -1067,7 +1068,21 @@ public class TagSettingsView
 						}
 					});
 					Messages.setLanguageText(btnResetConstraint, "Button.reset");
+				
+					params.constraintEnabled = new GenericBooleanParameter(
+							new BooleanParameterAdapter() {
+								@Override
+								public Boolean getBooleanValue(String key) {
+									return(propConstraint.isEnabled());
+								}
 
+								@Override
+								public void setBooleanValue(String key, boolean value) {
+									propConstraint.setEnabled( value );
+								
+								}
+							}, gConstraint, null, "label.enabled");
+					
 					Label constraintMode = new Label(gConstraint, SWT.NULL );
 					Messages.setLanguageText(constraintMode, "label.scope");
 

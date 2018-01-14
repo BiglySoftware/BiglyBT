@@ -62,7 +62,7 @@ TagBase
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION	= "rl.maxaggsr.a";
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY	= "rl.maxaggsr.p";
 	protected static final String	AT_PROPERTY_PREFIX				= "pp.";
-	protected static final String	AT_EOA_PREFIX					= "eoa.";
+	//protected static final String	AT_EOA_PREFIX					= "eoa.";	// meh, should be used but copy/paste error resulted in AT_PROPERTY_PREFIX being used instead 
 	protected static final String	AT_BYTES_UP						= "b.up";
 	protected static final String	AT_BYTES_DOWN					= "b.down";
 	protected static final String	AT_DESCRIPTION					= "desc";
@@ -1895,7 +1895,7 @@ TagBase
  		}
 
  		@Override
-	  public Tag
+ 		public Tag
  		getTag()
  		{
  			return( TagBase.this );
@@ -1923,6 +1923,35 @@ TagBase
 			}
 		}
 
+		@Override
+		public boolean
+		isEnabled()
+		{
+			return( readBooleanAttribute( AT_PROPERTY_PREFIX + "enabled." + name, true ));
+		}
+		
+		@Override
+		public void
+		setEnabled(
+			boolean	enabled )
+		{
+			if ( writeBooleanAttribute( AT_PROPERTY_PREFIX + "enabled." + name, enabled )){
+
+				for ( TagPropertyListener l: listeners ){
+
+					try{
+						l.propertyChanged( this );
+
+					}catch( Throwable e ){
+
+						Debug.out( e );
+					}
+				}
+
+				tag_type.fireChanged( TagBase.this );
+			}
+		}
+		
 		@Override
 		public void
 		setStringList(
