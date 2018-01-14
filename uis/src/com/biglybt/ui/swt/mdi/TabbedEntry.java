@@ -441,6 +441,12 @@ public class TabbedEntry
 		return true;
 	}
 
+	public boolean
+	isReallyDisposed()
+	{
+		return( swtItem == null || swtItem.isDisposed());
+	}
+	
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#show()
 	 */

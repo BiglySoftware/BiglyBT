@@ -101,6 +101,8 @@ public interface MdiEntry extends UIPluginView
 
 	public boolean isDisposed();
 
+	public boolean isReallyDisposed();
+	
 	public ViewTitleInfo getViewTitleInfo();
 
 	public void setViewTitleInfo(ViewTitleInfo viewTitleInfo);

@@ -706,7 +706,9 @@ public abstract class BaseMDI
 
 				MdiEntry entry = getEntry(id);
 
-				if ( entry != null && entry.isAdded()){
+					// entries that are 'dispose-on-focus-lost' will report as 'not added' if this has occurred
+				
+				if ( entry != null && ( entry.isAdded() || !entry.isReallyDisposed())){
 
 					mapAutoOpen.put(id, entry.getAutoOpenInfo());
 
