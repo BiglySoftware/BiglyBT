@@ -161,6 +161,8 @@ BuddyPluginViewBetaChat
 
 	private static boolean auto_ftux_popout_done	= false;
 
+	private static Map<String,String>	text_cache = new HashMap<>();
+	
 	protected static void
 	createChatWindow(
 		BuddyPluginView	view,
@@ -1653,6 +1655,8 @@ BuddyPluginViewBetaChat
 								buffered_message = "";
 	
 								input_area.setText( "" );
+								
+								text_cache.put( chat.getNetAndKey(), "" );
 							}
 						}else if ( e.keyCode == SWT.ARROW_UP ){
 	
@@ -1766,9 +1770,7 @@ BuddyPluginViewBetaChat
 										int emp_len = emp.length();
 										
 										String text = input_area.getText();
-										
-										Point loc = input_area.getCaretLocation();
-										
+																				
 										if ( sel.startsWith( emp ) && sel.endsWith( emp ) && sel.length() >= emp_len * 2 ){
 										
 											input_area.setText( text.substring( 0,  p.x ) + sel.substring(emp_len, sel.length() - emp_len ) + text.substring( p.y ));
@@ -1796,6 +1798,26 @@ BuddyPluginViewBetaChat
 					}
 				});
 	
+			input_area.addDisposeListener(
+				new DisposeListener(){
+					
+					@Override
+					public void widgetDisposed(DisposeEvent arg0){
+						String text = input_area.getText();
+						
+						text_cache.put( chat.getNetAndKey(), text );
+					}
+				});
+			
+			String cached_text = text_cache.get( chat.getNetAndKey());
+			
+			if ( cached_text != null && !cached_text.isEmpty()){
+				
+				input_area.setText( cached_text );
+				
+				input_area.setSelection( cached_text.length());
+			}
+			
 			Composite button_area = new Composite( bottom_area, SWT.NULL );
 	
 			layout = new GridLayout();
