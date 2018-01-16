@@ -1066,16 +1066,7 @@ BuddyPluginViewBetaChat
 	
 										ChatParticipant participant = (ChatParticipant)data;
 	
-										String name = "@" + participant.getName( true );
-	
-										String existing = input_area.getText();
-	
-										if ( existing.length() > 0 && !existing.endsWith( " " )){
-	
-											name = " " + name;
-										}
-	
-										input_area.append( name );
+										addNickString( participant );
 									}
 								}
 							}
@@ -1508,16 +1499,7 @@ BuddyPluginViewBetaChat
 	
 						ChatParticipant	participant = (ChatParticipant)item.getData();
 	
-						String name = "@" + participant.getName( true );
-	
-						String existing = input_area.getText();
-	
-						if ( existing.length() > 0 && !existing.endsWith( " " )){
-	
-							name = " " + name;
-						}
-	
-						input_area.append( name );
+						addNickString( participant );
 	
 					}
 				});
@@ -4985,6 +4967,41 @@ BuddyPluginViewBetaChat
 		}
 	}
 
+	private void
+	addNickString(
+		ChatParticipant	participant )
+	{
+		String name = "@" + participant.getName( true );
+		
+		String existing = input_area.getText();
+
+		int caret = input_area.getCaretPosition();
+					
+		if ( caret > 0 ){
+			
+			char prev = existing.charAt( caret-1 );
+				
+			if ( prev != ' ' ){
+					
+				name = " " + name;
+			}
+		}
+		
+		if ( caret < existing.length()){
+				
+			char next = existing.charAt( caret );
+				
+			if ( next != ' ' ){
+					
+				name = name + " ";
+			}
+		}
+		
+		input_area.setSelection( caret, caret );
+		
+		input_area.insert( name );
+	}
+	
 	private void
 	logChatMessages(
 		ChatMessage[]		all_messages )
