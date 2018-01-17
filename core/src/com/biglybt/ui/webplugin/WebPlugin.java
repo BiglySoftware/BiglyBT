@@ -26,6 +26,7 @@ package com.biglybt.ui.webplugin;
  */
 
 import java.io.*;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -91,6 +92,9 @@ WebPlugin
 	public static final String	CONFIG_PASSWORD_ENABLE			= "Password Enable";
 	public static final boolean	CONFIG_PASSWORD_ENABLE_DEFAULT	= false;
 
+	public static final String	CONFIG_NO_PW_WHITELIST			= "Password Disabled Whitelist";
+	public static final String	CONFIG_NO_PW_WHITELIST_DEFAULT	= "localhost, 127.0.0.1, [::1], $";
+			
 	public static final String	CONFIG_PAIRING_ENABLE			= "Pairing Enable";
 	public static final boolean	CONFIG_PAIRING_ENABLE_DEFAULT	= true;
 
@@ -171,6 +175,7 @@ WebPlugin
 	private BooleanParameter		pw_enable;
 	private StringParameter			p_user_name;
 	private PasswordParameter		p_password;
+	private StringParameter			p_no_pw_whitelist;
 
 	private BooleanParameter		param_auto_auth;
 	private IntParameter			param_port_or;
@@ -771,9 +776,17 @@ WebPlugin
 							PasswordParameter.ET_SHA1,
 							CONFIG_PASSWORD_DEFAULT );
 
+		p_no_pw_whitelist =
+				config_model.addStringParameter2(
+								CONFIG_NO_PW_WHITELIST,
+								"webui.nopwwhitelist",
+								CONFIG_NO_PW_WHITELIST_DEFAULT );
+		
 		pw_enable.addEnabledOnSelection( p_user_name );
 		pw_enable.addEnabledOnSelection( p_password );
 
+		pw_enable.addDisabledOnSelection(  p_no_pw_whitelist );
+		
 		ParameterListener auth_change_listener =
 			new ParameterListener()
 			{
@@ -807,7 +820,7 @@ WebPlugin
 			"webui.group.access",
 			new Parameter[]{
 				a_label1, param_mode, a_label2, param_access,
-				pw_enable, p_user_name, p_password,
+				pw_enable, p_user_name, p_password, p_no_pw_whitelist,
 			});
 
 		if ( p_sid != null ){
@@ -1641,8 +1654,73 @@ WebPlugin
 
 						if ( !pw_enable.getValue()){
 
-							result = true;
-
+							String whitelist = p_no_pw_whitelist.getValue().trim();
+							
+							if ( whitelist.equals( "*" )){
+							
+								result = true;
+								
+							}else{
+								
+								String host = getHeaderField( headers, "host" );
+								
+								if ( host.startsWith( "[" )){
+									
+									int	pos = host.lastIndexOf( ']' );
+									
+									if ( pos != -1 ){
+										
+										host = host.substring( 0, pos+1 );
+									}
+								}else{
+									
+									int pos = host.lastIndexOf( ':' );
+									
+									if ( pos != -1 ){
+										
+										host = host.substring( 0,  pos );
+									}
+								}
+								
+								
+								String[] allowed = whitelist.split( "," );
+								
+								result = false;
+								
+								for ( String a: allowed ){
+								
+									a = a.trim();
+									
+									if ( a.equals( "$" )){
+									
+										InetAddress bind = getServerBindIP();
+										
+										if ( bind != null ){
+											
+											if ( bind instanceof Inet6Address ){
+												
+												a = "[" + bind.getHostAddress() + "]";
+												
+											}else{
+												
+												a = bind.getHostAddress();
+											}
+										}
+									}
+									
+									if ( host.equals( a.trim())){
+										
+										result = true;
+										
+										break;
+									}
+								}
+								
+								if ( !result ){
+									
+									log.log( "Access denied: No password and host '" + host + "' not in whitelist" );
+								}
+							}
 						}else{
 
 							if ( auto_auth ){
@@ -1782,20 +1860,21 @@ WebPlugin
 						String	headers,
 						String	field )
 					{
-						String lc_headers = headers.toLowerCase();
-
-						int p1 = lc_headers.indexOf( field.toLowerCase() + ":" );
-
-						if ( p1 != -1 ){
-
-							int	p2 = lc_headers.indexOf( '\n', p1 );
-
-							if ( p2 != -1 ){
-
-								return( headers.substring( p1+field.length()+1, p2 ).trim());
+						String[] lines = headers.split( "\n" );
+						
+						for ( String line: lines ){
+							
+							int	pos = line.indexOf( ':' );
+							
+							if ( pos != -1 ){
+								
+								if ( line.substring( 0, pos ).equalsIgnoreCase( field )){
+									
+									return( line.substring( pos+1 ).trim());
+								}
 							}
 						}
-
+						
 						return( null );
 					}
 				});
