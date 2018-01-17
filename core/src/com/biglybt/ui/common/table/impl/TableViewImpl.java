@@ -266,10 +266,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	 * @param selectedRows
 	 */
 	public void triggerDefaultSelectedListeners(TableRowCore[] selectedRows,
-			int keyMask) {
+			int keyMask, int origin ) {
 		for (Iterator iter = listenersSelection.iterator(); iter.hasNext();) {
 			TableSelectionListener l = (TableSelectionListener) iter.next();
-			l.defaultSelected(selectedRows, keyMask);
+			l.defaultSelected(selectedRows, keyMask, origin );
 		}
 	}
 

@@ -353,6 +353,32 @@ public class ConfigSectionInterfaceTables
 
 			web_in_browser.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( web_in_browser_anon ));
 
+				// enter action
+			
+			label = new Label(cLibrary, SWT.NULL);
+			Messages.setLanguageText(label, "ConfigView.label.dm.enteraction");
+
+			String[] enterOptions = {
+				"ConfigView.option.dm.enter.sameasdblclick",
+				"ConfigView.option.dm.dblclick.play",
+				"ConfigView.option.dm.dblclick.details",
+				"ConfigView.option.dm.dblclick.show",
+				"ConfigView.option.dm.dblclick.launch",
+				"ConfigView.option.dm.dblclick.launch.qv",
+				"ConfigView.option.dm.dblclick.open.browser",
+			};
+
+			String enterLabels[] = new String[enterOptions.length];
+			String enterValues[] = new String[enterOptions.length];
+
+			for (int i = 0; i < enterOptions.length; i++) {
+
+				enterLabels[i] = MessageText.getString(enterOptions[i]);
+				enterValues[i] = "" + (i-1);
+			}
+			
+			new StringListParameter(cLibrary, "list.dm.enteraction", enterLabels, enterValues);
+			
 				// Launch helpers
 
 			Group cLaunch = new Group(cLibrary, SWT.NULL);

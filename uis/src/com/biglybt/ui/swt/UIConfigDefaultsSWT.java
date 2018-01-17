@@ -148,7 +148,8 @@ public class UIConfigDefaultsSWT
 			def.addParameter(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_CD + ".viewmode", 1);
 		}
 
-
+		def.addParameter( "list.dm.dblclick", "-1" );
+		
 		def.addParameter( "browser.external.id", "system" );
 		def.addParameter( "browser.internal.disable", false );
 		def.addParameter( "browser.internal.proxy.id", "none" );

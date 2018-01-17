@@ -60,6 +60,7 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
@@ -545,7 +546,7 @@ public class FilesView
 
 	// @see TableSelectionListener#defaultSelected(TableRowCore[])
 	@Override
-	public void defaultSelected(TableRowCore[] rows, int stateMask) {
+	public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
 		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) tv.getFirstSelectedDataSource();
 
 		if ( fileInfo == null ){
@@ -565,7 +566,25 @@ public class FilesView
 
 		String mode = COConfigurationManager.getStringParameter("list.dm.dblclick");
 
+		if ( origin == 1 ){
+			String enter_mode = COConfigurationManager.getStringParameter("list.dm.enteraction");
+			if ( !enter_mode.equals( "-1" )){
+				mode = enter_mode;
+			}
+		}
+		
 		switch (mode) {
+			case "1":{
+
+				DownloadManager dm = fileInfo.getDownloadManager();
+				
+				if ( dm != null ){
+				
+					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, dm );
+				}
+				
+				break;
+			}
 			case "2":
 
 				boolean openMode = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");

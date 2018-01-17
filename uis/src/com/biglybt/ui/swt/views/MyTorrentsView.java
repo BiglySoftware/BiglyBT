@@ -1661,9 +1661,9 @@ public class MyTorrentsView
 
   // @see TableSelectionListener#defaultSelected(TableRowCore[])
   @Override
-  public void defaultSelected(TableRowCore[] rows, int keyMask) {
+  public void defaultSelected(TableRowCore[] rows, int keyMask, int origin) {
   	if (defaultSelectedListener != null) {
-  		defaultSelectedListener.defaultSelected(rows, keyMask);
+  		defaultSelectedListener.defaultSelected(rows, keyMask, origin );
   		return;
   	}
   	showSelectedDetails();

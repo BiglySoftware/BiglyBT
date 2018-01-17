@@ -195,16 +195,16 @@ public class SBC_LibraryTableView
 						if (seedingview != null) {
 							seedingview.overrideDefaultSelected(new TableSelectionAdapter() {
 								@Override
-								public void defaultSelected(TableRowCore[] rows, int stateMask) {
-									doDefaultClick(rows, stateMask, false);
+								public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
+									doDefaultClick(rows, stateMask, false, origin );
 								}
 							});
 							MyTorrentsView torrentview = getTorrentview();
 							if (torrentview != null) {
 								torrentview.overrideDefaultSelected(new TableSelectionAdapter() {
 									@Override
-									public void defaultSelected(TableRowCore[] rows, int stateMask) {
-										doDefaultClick(rows, stateMask, false);
+									public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
+										doDefaultClick(rows, stateMask, false, origin );
 									}
 								});
 							}
@@ -216,8 +216,8 @@ public class SBC_LibraryTableView
 			if (torrentView != null) {
 				torrentView.overrideDefaultSelected(new TableSelectionAdapter() {
 					@Override
-					public void defaultSelected(TableRowCore[] rows, int stateMask) {
-						doDefaultClick(rows, stateMask, false);
+					public void defaultSelected(TableRowCore[] rows, int stateMask, int origin) {
+						doDefaultClick(rows, stateMask, false, origin );
 					}
 				});
 			}
@@ -292,7 +292,8 @@ public class SBC_LibraryTableView
 	doDefaultClick(
 		final TableRowCore[] 	rows,
 		final int 				stateMask,
-		final boolean 			neverPlay)
+		final boolean 			neverPlay,
+		int						origin )
 	{
 		if ( rows == null || rows.length != 1 ){
 			return;
@@ -327,6 +328,13 @@ public class SBC_LibraryTableView
 		}
 
 		String mode = COConfigurationManager.getStringParameter("list.dm.dblclick");
+
+		if ( origin == 1 ){
+			String enter_mode = COConfigurationManager.getStringParameter("list.dm.enteraction");
+			if ( !enter_mode.equals( "-1" )){
+				mode = enter_mode;
+			}
+		}
 
 		if (mode.equals("1")) {
 

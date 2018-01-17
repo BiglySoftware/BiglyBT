@@ -143,7 +143,7 @@ public class TableViewSWT_Common
 					&& lastMouseUpPos.x == e.x && lastMouseUpPos.y == e.y) {
 				// Fake double click because Cocoa SWT 3650 doesn't always trigger
 				// DefaultSelection listener on a Tree on dblclick (works find in Table)
-				runDefaultAction(e.stateMask);
+				runDefaultAction(e.stateMask, 0 );
 				return;
 			}
 			lastMouseUpEventTime = time;
@@ -378,7 +378,7 @@ public class TableViewSWT_Common
 				&& System.currentTimeMillis() - lCancelSelectionTriggeredOn < 200) {
 			e.doit = false;
 		} else {
-			runDefaultAction(e.stateMask);
+			runDefaultAction(e.stateMask, 0);
 		}
 	}
 
@@ -507,7 +507,7 @@ public class TableViewSWT_Common
 			}else{
 				if ( event.keyCode == SWT.CR || event.keyCode == SWT.KEYPAD_CR){
 					
-					runDefaultAction( 0 );
+					runDefaultAction( 0, 1 );
 					
 					return;
 				}
@@ -677,7 +677,7 @@ public class TableViewSWT_Common
 				});
 	}
 
-	public void runDefaultAction(int stateMask) {
+	public void runDefaultAction(int stateMask, int origin ) {
 		// Don't allow mutliple run defaults in quick succession
 		if (lastSelectionTriggeredOn > 0
 				&& System.currentTimeMillis() - lastSelectionTriggeredOn < 200) {
@@ -688,7 +688,7 @@ public class TableViewSWT_Common
 		if (System.currentTimeMillis() - lCancelSelectionTriggeredOn > 200) {
 			lastSelectionTriggeredOn = System.currentTimeMillis();
 			TableRowCore[] selectedRows = tv.getSelectedRows();
-			tv.triggerDefaultSelectedListeners(selectedRows, stateMask);
+			tv.triggerDefaultSelectedListeners(selectedRows, stateMask, origin );
 		}
 	}
 

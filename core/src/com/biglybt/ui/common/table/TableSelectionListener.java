@@ -31,7 +31,15 @@ public interface TableSelectionListener
 
 	public void focusChanged(TableRowCore focus);
 
-	public void defaultSelected(TableRowCore[] rows, int stateMask);
+	default public void defaultSelected(TableRowCore[] rows, int stateMask )
+	{
+		System.err.println( new Exception( "eh?" ));
+	}
+
+	default public void defaultSelected(TableRowCore[] rows, int stateMask, int orgin )
+	{
+		defaultSelected( rows, stateMask );
+	}
 
 	public void mouseEnter(TableRowCore row);
 

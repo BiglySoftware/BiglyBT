@@ -227,7 +227,7 @@ public interface TableViewSWT<DATASOURCETYPE>
 	TableViewSWTFilter getSWTFilter();
 
 	void triggerDefaultSelectedListeners(TableRowCore[] selectedRows,
-			int stateMask);
+			int stateMask, int origin );
 
 	void sortColumn(boolean bForceDataRefresh);
 

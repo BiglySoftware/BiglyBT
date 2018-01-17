@@ -91,9 +91,9 @@ public class MyTorrentsView_Big
 
 	// @see com.biglybt.ui.swt.views.MyTorrentsView#defaultSelected(TableRowCore[])
 	@Override
-	public void defaultSelected(TableRowCore[] rows, int stateMask) {
+	public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
 		boolean neverPlay = DownloadTypeIncomplete.class.equals(getForDataSourceType());
-		SBC_LibraryTableView.doDefaultClick(rows, stateMask, neverPlay);
+		SBC_LibraryTableView.doDefaultClick(rows, stateMask, neverPlay, origin );
 	}
 
 	@Override
