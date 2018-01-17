@@ -1608,7 +1608,7 @@ BuddyPluginViewBetaChat
 					keyPressed(
 						KeyEvent e)
 					{
-						if ( e.keyCode == SWT.CR ){
+						if ( e.keyCode == SWT.CR || e.keyCode == SWT.KEYPAD_CR){
 	
 							e.doit = false;
 	

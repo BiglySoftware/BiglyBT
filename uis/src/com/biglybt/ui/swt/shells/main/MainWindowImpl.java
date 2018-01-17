@@ -2144,7 +2144,7 @@ public class MainWindowImpl
 					text.setText("");
 					return;
 				}
-				if (event.character == SWT.CR) {
+				if (event.character == SWT.CR || event.keyCode == SWT.KEYPAD_CR) {
 					if ( event.doit){
 						String expression = text.getText();
 

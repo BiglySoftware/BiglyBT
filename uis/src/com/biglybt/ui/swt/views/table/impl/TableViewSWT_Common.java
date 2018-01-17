@@ -505,7 +505,7 @@ public class TableViewSWT_Common
 					tv.refilter();
 				}
 			}else{
-				if ( event.keyCode == SWT.CR ){
+				if ( event.keyCode == SWT.CR || event.keyCode == SWT.KEYPAD_CR){
 					
 					runDefaultAction( 0 );
 					
