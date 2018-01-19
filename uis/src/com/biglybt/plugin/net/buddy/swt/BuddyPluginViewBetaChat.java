@@ -3610,6 +3610,8 @@ BuddyPluginViewBetaChat
 				widgetSelected(
 					SelectionEvent e)
 				{
+					boolean	changed = false;
+					
 					for ( ChatParticipant participant: participants ){
 
 						if ( !participant.isPinned()){
@@ -3619,8 +3621,16 @@ BuddyPluginViewBetaChat
 								participant.setPinned( true );
 
 								setProperties( participant );
+								
+								changed = true;
 							}
 						}
+					}
+					
+
+					if ( changed ){
+
+						messagesChanged();
 					}
 				}
 			});
@@ -3639,6 +3649,8 @@ BuddyPluginViewBetaChat
 				widgetSelected(
 					SelectionEvent e)
 				{
+					boolean	changed = false;
+					
 					for ( ChatParticipant participant: participants ){
 
 						if ( participant.isPinned()){
@@ -3646,7 +3658,15 @@ BuddyPluginViewBetaChat
 							participant.setPinned( false );
 
 							setProperties( participant );
+							
+							changed = true;
 						}
+					}
+					
+
+					if ( changed ){
+
+						messagesChanged();
 					}
 				}
 			});
