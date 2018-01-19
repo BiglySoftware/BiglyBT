@@ -4973,6 +4973,8 @@ BuddyPluginViewBetaChat
 	{
 		String name = "@" + participant.getName( true );
 		
+		name = name.replaceAll( " ", "\\\\u00a0" );
+		
 		String existing = input_area.getText();
 
 		int caret = input_area.getCaretPosition();
@@ -5818,6 +5820,8 @@ BuddyPluginViewBetaChat
 						try{
 							String my_nick = chat.getNickname( true );
 
+							my_nick = my_nick.replaceAll( " ", "\u00a0" );
+							
 							if ( 	my_nick.length() > 0 &&
 									segment_str.contains( my_nick ) &&
 									message_type ==  ChatMessage.MT_NORMAL ){
