@@ -47,8 +47,9 @@ TrackerWebPageResponseImpl
 {
 	private static final String	NL			= "\r\n";
 
-	private ByteArrayOutputStream	baos = new ByteArrayOutputStream(2048);
-
+	private ByteArrayOutputStream	baos 		= new ByteArrayOutputStream(2048);
+	private boolean					baos_set	= false;
+	
 	private String				content_type = "text/html";
 
 	private int					reply_status	= 200;
@@ -103,6 +104,13 @@ TrackerWebPageResponseImpl
 		content_type	= type;
 	}
 
+	@Override
+	public String 
+	getContentType()
+	{
+		return( content_type );
+	}
+	
 	@Override
 	public void
 	setReplyStatus(
@@ -222,6 +230,14 @@ TrackerWebPageResponseImpl
 	{
 		return( baos );
 	}
+	
+	public void
+	setOutputStream(
+		ByteArrayOutputStream	_baos )
+	{
+		baos		= _baos;
+		baos_set	= true;
+	}
 
 	@Override
 	public OutputStream
@@ -229,6 +245,11 @@ TrackerWebPageResponseImpl
 
 		throws IOException
 	{
+		if ( baos_set ){
+			
+			throw( new IOException( "OutputStream already set" ));
+		}
+		
 		raw_output = true;
 
 		return( request.getOutputStream());

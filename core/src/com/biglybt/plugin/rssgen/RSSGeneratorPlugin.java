@@ -27,7 +27,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import org.json.jsonjava.JSONJava;
+
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.SystemProperties;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
@@ -268,7 +271,7 @@ RSSGeneratorPlugin
 
 			PrintWriter pw = new PrintWriter(new OutputStreamWriter( response.getOutputStream(), "UTF-8" ));
 
-			pw.println( "<HTML><HEAD><TITLE>Vuze Feeds etc.</TITLE></HEAD><BODY>" );
+			pw.println( "<HTML><HEAD><TITLE>" + Constants.APP_NAME + " Feeds etc.</TITLE></HEAD><BODY>" );
 
 			synchronized( providers ){
 
@@ -295,25 +298,59 @@ RSSGeneratorPlugin
 
 		}else{
 
-			int	pos = url.indexOf( '/' );
+			String provider_url = url;
+			
+			int	pos = provider_url.indexOf( '/' );
 
 			if ( pos != -1 ){
 
-				url = url.substring( 0, pos );
+				provider_url = provider_url.substring( 0, pos );
 			}
 
 			Provider provider;
 
 			synchronized( providers ){
 
-				provider = providers.get( url );
+				provider = providers.get( provider_url );
 			}
 
 			if ( provider != null && provider.isEnabled()){
 
-				if ( provider.generate(request, response)){
-
-					return( true );
+				pos = url.indexOf( '?' );
+				
+				if ( pos != -1 && url.substring( pos ).contains( "format=json" )){
+				
+					ByteArrayOutputStream	baos = new ByteArrayOutputStream(4096);
+					
+					response.setOutputStream( baos );
+					
+					if ( provider.generate(request, response)){
+	
+						if ( response.getContentType().startsWith( "application/xml" )){
+							
+							String xml = new String( baos.toByteArray(), "UTF-8" );
+							
+							String json = new JSONJava.XML().toJSONObject( xml ).toString();
+							
+							byte[] jb = json.getBytes( "UTF-8" );
+							
+							ByteArrayOutputStream baos2 = new ByteArrayOutputStream( jb.length );
+							
+							baos2.write( jb );
+							
+							response.setOutputStream( baos2 );
+							
+							response.setContentType( "application/json; charset=UTF-8" );
+						}
+						
+						return( true );
+					}
+				}else{
+					
+					if ( provider.generate(request, response)){
+						
+						return( true );
+					}
 				}
 			}
 		}

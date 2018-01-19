@@ -20,6 +20,8 @@
 
 package com.biglybt.pif.tracker.web;
 
+import java.io.ByteArrayOutputStream;
+
 /**
  * @author parg
  *
@@ -38,9 +40,16 @@ TrackerWebPageResponse
 	getOutputStream();
 
 	public void
+	setOutputStream(
+		ByteArrayOutputStream	os );
+	
+	public void
 	setReplyStatus(
 		int		status );
 
+	public String
+	getContentType();
+	
 	public void
 	setContentType(
 		String		type );

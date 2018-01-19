@@ -29,6 +29,7 @@ import java.net.URL;
 import java.util.Date;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.UrlUtils;
@@ -116,7 +117,7 @@ SubscriptionRSSFeed
 
 				response.setContentType( "text/html; charset=UTF-8" );
 
-				pw.println( "<HTML><HEAD><TITLE>Vuze Subscription Feeds</TITLE></HEAD><BODY>" );
+				pw.println( "<HTML><HEAD><TITLE>" + Constants.APP_NAME + " Subscription Feeds</TITLE></HEAD><BODY>" );
 
 				for ( Subscription s: subs ){
 
@@ -173,7 +174,7 @@ SubscriptionRSSFeed
 					feed_url = UrlUtils.setHost( url, host );
 				}
 
-				response.setContentType( "application/xml" );
+				response.setContentType( "application/xml; charset=UTF-8" );
 
 				pw.println( "<?xml version=\"1.0\" encoding=\"utf-8\"?>" );
 
@@ -192,7 +193,7 @@ SubscriptionRSSFeed
 				pw.println( "<link>http://vuze.com</link>" );
 				pw.println( "<atom:link href=\"" + escape( feed_url.toExternalForm()) + "\" rel=\"self\" type=\"application/rss+xml\" />" );
 
-				pw.println( "<description>Vuze RSS Feed for subscription " + escape( subscription.getName()) + "</description>" );
+				pw.println( "<description>" + Constants.APP_NAME + " RSS Feed for subscription " + escape( subscription.getName()) + "</description>" );
 
 				pw.println("<itunes:image href=\"http://www.vuze.com/img/vuze_icon_128.png\"/>");
 				pw.println("<image><url>http://www.vuze.com/img/vuze_icon_128.png</url><title>" + channel_title + "</title><link>http://vuze.com</link></image>");

@@ -1662,63 +1662,124 @@ WebPlugin
 								
 							}else{
 								
-								String host = getHeaderField( headers, "host" );
+								String 	actual_host = getHeaderField( headers, "host" );
 								
-								if ( host.startsWith( "[" )){
+								int		actual_port = protocol == Tracker.PR_HTTP?80:443;
+								
+								String 	referrer = getHeaderField( headers, "referer" );
+								
+								String 	original_host = actual_host;
+								
+								if ( actual_host.startsWith( "[" )){
 									
-									int	pos = host.lastIndexOf( ']' );
+									int	pos = actual_host.lastIndexOf( ']' );
 									
 									if ( pos != -1 ){
 										
-										host = host.substring( 0, pos+1 );
+										String rem = actual_host.substring( pos+1 );
+										
+										actual_host = actual_host.substring( 0, pos+1 );
+										
+										pos = rem.indexOf( ':' );
+										
+										if ( pos != -1 ){
+											
+											actual_port = Integer.parseInt( rem.substring( pos+1 ).trim());
+										}
 									}
 								}else{
 									
-									int pos = host.lastIndexOf( ':' );
+									int pos = actual_host.indexOf( ':' );
 									
 									if ( pos != -1 ){
 										
-										host = host.substring( 0,  pos );
+										actual_port = Integer.parseInt( actual_host.substring( pos+1 ).trim());
+										
+										actual_host = actual_host.substring( 0,  pos );
 									}
 								}
-								
 								
 								String[] allowed = whitelist.split( "," );
 								
 								result = false;
 								
-								for ( String a: allowed ){
+								String msg	= "";
 								
-									a = a.trim();
+								if ( actual_port != port ){
 									
-									if ( a.equals( "$" )){
+									msg = "port mismatch: " + port + "/" + actual_port;
 									
-										InetAddress bind = getServerBindIP();
+								}else{
+																
+									for ( String a: allowed ){
+									
+										a = a.trim();
 										
-										if ( bind != null ){
+										if ( a.equals( "$" )){
+										
+											InetAddress bind = getServerBindIP();
 											
-											if ( bind instanceof Inet6Address ){
+											if ( bind != null ){
 												
-												a = "[" + bind.getHostAddress() + "]";
-												
-											}else{
-												
-												a = bind.getHostAddress();
+												if ( bind instanceof Inet6Address ){
+													
+													a = "[" + bind.getHostAddress() + "]";
+													
+												}else{
+													
+													a = bind.getHostAddress();
+												}
 											}
+										}
+										
+										if ( actual_host.equals( a.trim())){
+											
+											result = true;
+											
+											break;
 										}
 									}
 									
-									if ( host.equals( a.trim())){
+									if ( !result ){
 										
-										result = true;
+										msg = "host '" + original_host + "' not in whitelist";
 										
-										break;
+									}else{
+										
+										if ( referrer != null ){
+											
+											result = false;
+											
+											try{
+												
+												URL url = new URL( referrer );
+												
+												int ref_port = url.getPort();
+												
+												if ( ref_port == -1 ){
+													
+													ref_port = url.getDefaultPort();
+												}
+												
+												if ( ref_port == port ){
+														
+													result = true;
+												}
+											}catch( Throwable e ){
+											}
+											
+											if ( !result ){
+												
+												msg = "referrer mismatch: " + referrer;
+											}
+										}
 									}
 								}
 								
 								if ( !result ){
 									
-									log.log( "Access denied: No password and host '" + host + "' not in whitelist" );
+									
+									log.log( "Access denied: No password and " + msg );
 								}
 							}
 						}else{
@@ -2431,7 +2492,7 @@ WebPlugin
 					return( null );
 				}
 			};
-		final ByteArrayOutputStream	baos = new ByteArrayOutputStream();
+		final ByteArrayOutputStream[]	baos = { new ByteArrayOutputStream()};
 
 		final Map	reply_headers	= new HashMap();
 
@@ -2442,9 +2503,17 @@ WebPlugin
 				public OutputStream
 				getOutputStream()
 				{
-					return( baos );
+					return( baos[0] );
 				}
 
+				@Override
+				public void 
+				setOutputStream(
+					ByteArrayOutputStream os)
+				{	
+					baos[0] = os;
+				}
+				
 				@Override
 				public void
 				setReplyStatus(
@@ -2461,6 +2530,12 @@ WebPlugin
 					reply_headers.put( "Content-Type", type );
 				}
 
+				public String
+				getContentType()
+				{
+					return( (String)reply_headers.get( "Content-Type" ));
+				}
+				
 				@Override
 				public void
 				setLastModified(
@@ -2566,7 +2641,7 @@ WebPlugin
 
 			if ( generate2( request, response, true )){
 
-				bytes = baos.toByteArray();
+				bytes = baos[0].toByteArray();
 
 			}else{
 

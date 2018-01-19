@@ -237,7 +237,7 @@ TagManagerImpl
 
 					response.setContentType( "text/html; charset=UTF-8" );
 
-					pw.println( "<HTML><HEAD><TITLE>Vuze Tag Feeds</TITLE></HEAD><BODY>" );
+					pw.println( "<HTML><HEAD><TITLE>" + Constants.APP_NAME + " Tag Feeds</TITLE></HEAD><BODY>" );
 
 					Map<String,String>	lines = new TreeMap<>();
 

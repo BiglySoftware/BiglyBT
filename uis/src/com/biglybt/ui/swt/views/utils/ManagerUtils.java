@@ -1068,7 +1068,7 @@ public class ManagerUtils {
 
 								os.write((
 								"  <hr></pre>" + NL +
-								"  <address>Vuze Web Server at " + host + " Port " + getServerPort() +"</address>" + NL +
+								"  <address>" + Constants.APP_NAME + " Web Server at " + host + " Port " + getServerPort() +"</address>" + NL +
 								" </body>" + NL +
 								"</html>" ).getBytes( "UTF-8" ));
 
