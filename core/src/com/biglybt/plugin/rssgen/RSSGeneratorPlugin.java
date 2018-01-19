@@ -330,7 +330,30 @@ RSSGeneratorPlugin
 							
 							String xml = new String( baos.toByteArray(), "UTF-8" );
 							
-							String json = new JSONJava.XML().toJSONObject( xml ).toString();
+							JSONJava.JSONObject obj = new JSONJava.XML().toJSONObject( xml );
+							
+							try{
+								JSONJava.JSONObject rss = obj.getJSONObject( "rss" );
+							
+								JSONJava.JSONObject channel = rss.getJSONObject( "channel" );
+								
+								Object items = channel.get( "item" );
+								
+								if ( items instanceof JSONJava.JSONArray ){
+									
+								}else{
+									
+									JSONJava.JSONArray item_array = new JSONJava.JSONArray();
+									
+									item_array.put( 0, items );
+									
+									channel.put( "item", item_array );
+								}
+							}catch( Throwable e ){
+								
+							}
+							
+							String json = obj.toString();
 							
 							byte[] jb = json.getBytes( "UTF-8" );
 							
