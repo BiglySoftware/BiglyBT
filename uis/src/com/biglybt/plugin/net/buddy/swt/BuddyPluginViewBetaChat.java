@@ -5755,6 +5755,11 @@ BuddyPluginViewBetaChat
 
 							int	hpos = str.lastIndexOf( "[[" );
 
+							if ( hpos < qpos ){
+								
+								hpos = -1;
+							}
+							
 							String[]	bits = str.substring( qpos+1, hpos==-1?str.length():hpos ).split( "&" );
 
 							for ( String bit: bits ){

@@ -1667,9 +1667,7 @@ WebPlugin
 								int		actual_port = protocol == Tracker.PR_HTTP?80:443;
 								
 								String 	referrer = getHeaderField( headers, "referer" );
-								
-								String 	original_host = actual_host;
-								
+																
 								if ( actual_host.startsWith( "[" )){
 									
 									int	pos = actual_host.lastIndexOf( ']' );
@@ -1742,7 +1740,7 @@ WebPlugin
 									
 									if ( !result ){
 										
-										msg = "host '" + original_host + "' not in whitelist";
+										msg = "host '" + actual_host + "' not in whitelist";
 										
 									}else{
 										
