@@ -1791,6 +1791,8 @@ WebPlugin
 
 							if ( !user.equals( p_user_name.getValue())){
 
+								log.log( "Access denied: Incorrect user name: " + user );
+								
 								result = false;
 
 							}else{
@@ -1807,6 +1809,11 @@ WebPlugin
 								}
 
 								result = Arrays.equals( hash, p_password.getValue());
+								
+								if ( !result ){
+									
+									log.log( "Access denied: Incorrect password" );
+								}
 							}
 						}
 

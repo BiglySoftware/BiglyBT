@@ -787,8 +787,14 @@ public class UISWTViewImpl
 					}
 				}
 			}
+			
 			composite.layout();
 			composite.setLayoutDeferred(false);
+			
+				// issues with scroll bars not sizing correctly in Library view - is fixed by doign this...
+			
+			Utils.relayoutUp( composite );
+			
 			composite.setRedraw(true);
 		}
 	}
