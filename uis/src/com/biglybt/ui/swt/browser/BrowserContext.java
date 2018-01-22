@@ -318,7 +318,7 @@ public class BrowserContext
 			@Override
 			public void changed(LocationEvent event) {
 				Browser browser = (Browser) event.widget;
-				if (browser.isDisposed() || browser.getShell().isDisposed()) {
+				if (browser == null || browser.isDisposed() || browser.getShell().isDisposed()) {
 					return;
 				}
 				debug("browser.changed " + event.location);
