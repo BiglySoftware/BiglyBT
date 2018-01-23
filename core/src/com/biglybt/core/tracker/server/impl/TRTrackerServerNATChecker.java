@@ -180,6 +180,11 @@ TRTrackerServerNATChecker
 			return( false );
 		}
 
+		if ( AENetworkClassifier.categoriseAddress( host ) != AENetworkClassifier.AT_PUBLIC ){
+			
+			return( false );
+		}
+		
 		try{
 			check_queue_mon.enter();
 

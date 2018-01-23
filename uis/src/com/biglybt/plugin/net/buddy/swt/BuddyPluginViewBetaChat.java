@@ -154,8 +154,10 @@ BuddyPluginViewBetaChat
 	private static final boolean TEST_LOOPBACK_CHAT = System.getProperty( "az.chat.loopback.enable", "0" ).equals( "1" );
 	private static final boolean DEBUG_ENABLED		= BuddyPluginBeta.DEBUG_ENABLED;
 
-	private static final int	MAX_MSG_CHUNK_LENGTH	= 400;
-	private static final int	MAX_MSG_OVERALL_LENGTH	= 2048;
+	private static final int	MAX_MSG_CHUNK_ENABLE	= 500;	// won't chunk if not exceeded
+	private static final int	MAX_MSG_CHUNK_LENGTH	= 400;	// chunk size
+	private static final int	MAX_MSG_OVERALL_LENGTH	= 2048;	// max user can enter in input field
+	
 
 	private static final Set<BuddyPluginViewBetaChat>	active_windows = new HashSet<>();
 
@@ -1785,9 +1787,13 @@ BuddyPluginViewBetaChat
 					
 					@Override
 					public void widgetDisposed(DisposeEvent arg0){
-						String text = input_area.getText();
 						
-						text_cache.put( chat.getNetAndKey(), text );
+						if ( input_area != null ){
+							
+							String text = input_area.getText();
+							
+							text_cache.put( chat.getNetAndKey(), text );
+						}
 					}
 				});
 			
@@ -4693,7 +4699,7 @@ BuddyPluginViewBetaChat
 		}catch( Throwable e ){
 		}
 				
-		if ( do_chunking ){
+		if ( do_chunking && text.length() > MAX_MSG_CHUNK_ENABLE ){
 
 				// we want to avoid splitting emphasized text such as <b>blah blah</b>
 
