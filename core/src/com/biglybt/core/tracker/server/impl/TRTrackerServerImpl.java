@@ -605,7 +605,7 @@ TRTrackerServerImpl
 		String				user,
 		String				password )
 	{
-		headers = headers.trim() + "\r\nX-Real-IP: " + remote_ip.getAddress().getHostAddress() + "\r\n\r\n";
+		headers = headers.trim() + "\r\nX-Real-IP: " + AddressUtils.getHostAddress( remote_ip ) + "\r\n\r\n";
 
 		for (int i=0;i<auth_listeners.size();i++){
 

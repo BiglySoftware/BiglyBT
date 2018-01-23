@@ -28,6 +28,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 import com.biglybt.core.networkmanager.VirtualChannelSelector;
+import com.biglybt.core.proxy.AEProxyAddressMapper;
+import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.tracker.server.impl.tcp.TRTrackerServerProcessorTCP;
 import com.biglybt.core.tracker.server.impl.tcp.TRTrackerServerTCP;
 import com.biglybt.core.util.AESemaphore;
@@ -50,6 +52,9 @@ TRNonBlockingServerProcessor
 	private static final int			READ_BUFFER_INCREMENT	= 1024;
 	private static final int			READ_BUFFER_LIMIT		= 32*1024;	// needs to be reasonable size to handle scrapes with plugin generated per-hash content
 
+	private static final AEProxyAddressMapper proxy_address_mapper = AEProxyFactory.getAddressMapper();
+
+	  
 	private final SocketChannel				socket_channel;
 
 	private VirtualChannelSelector.VirtualSelectorListener 	read_listener;
@@ -394,11 +399,17 @@ TRNonBlockingServerProcessor
 				};
 
 			try{
+				InetSocketAddress remote_sa = (InetSocketAddress)socket_channel.socket().getRemoteSocketAddress();
+				
+				AEProxyAddressMapper.AppliedPortMapping applied_mapping = proxy_address_mapper.applyPortMapping( remote_sa.getAddress(), remote_sa.getPort());
+
+				remote_sa = applied_mapping.getAddress();
+			    
 				ByteArrayOutputStream	response =
 					process( 	request_header,
 								lc_request_header,
 								url,
-								(InetSocketAddress)socket_channel.socket().getRemoteSocketAddress(),
+								remote_sa,
 								getServer().getRestrictNonBlocking(),
 								new ByteArrayInputStream(new byte[0]),
 								async_control );

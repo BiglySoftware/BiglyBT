@@ -313,7 +313,7 @@ TRTrackerServerProcessorTCP
 
 				DHTNetworkPosition	network_position = null;
 
-				String		real_ip_address		= remote_address.getAddress().getHostAddress();
+				String		real_ip_address		= AddressUtils.getHostAddress( remote_address );
 				String		client_ip_address	= real_ip_address;
 
 				while(pos < str.length()){
