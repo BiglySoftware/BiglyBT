@@ -3896,10 +3896,15 @@ public class Utils
 		return parent;
 	}
 
+	public static final String RELAYOUT_UP_STOP_HERE	= "com.biglybt.ui.swt.Utils.RELAYOUT_UP_STOP_HERE";
+	
 	public static void relayoutUp(Composite c) {
 		while (c != null && !c.isDisposed()) {
 			Composite newParent = c.getParent();
 			if (newParent == null) {
+				break;
+			}
+			if ( newParent.getData( RELAYOUT_UP_STOP_HERE ) != null ){
 				break;
 			}
 			try {

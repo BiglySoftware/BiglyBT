@@ -1492,6 +1492,8 @@ public class SB_Dashboard
 		
 		g.setLayout( new GridLayout());
 
+		g.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
+		
 		try {
 			if ( g instanceof Group ){
 				
