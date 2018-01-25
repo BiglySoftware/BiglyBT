@@ -56,6 +56,7 @@ public class TableColumnCreatorV3
 			SizeItem.COLUMN_ID,
 			ColumnProgressETA.COLUMN_ID,
 			"azsubs.ui.column.subs",
+			"azbuddy.ui.column.msgpending",
 			StatusItem.COLUMN_ID,
 			ColumnTorrentSpeed.COLUMN_ID,
 			SeedsItem.COLUMN_ID,
@@ -73,6 +74,7 @@ public class TableColumnCreatorV3
 			//DateCompletedItem.COLUMN_ID,
 			"RatingColumn",
 			"azsubs.ui.column.subs",
+			"azbuddy.ui.column.msgpending",
 			DateAddedItem.COLUMN_ID
 		};
 
@@ -157,6 +159,7 @@ public class TableColumnCreatorV3
 			SeedsItem.COLUMN_ID,
 			PeersItem.COLUMN_ID,
 			"azsubs.ui.column.subs",
+			"azbuddy.ui.column.msgpending",
 		};
 		final String[] defaultVisibleOrder = {
 			RankItem.COLUMN_ID,
@@ -168,6 +171,7 @@ public class TableColumnCreatorV3
 			ETAItem.COLUMN_ID,
 			"RatingColumn",
 			"azsubs.ui.column.subs",
+			"azbuddy.ui.column.msgpending",
 			DateAddedItem.COLUMN_ID
 		};
 
@@ -241,6 +245,7 @@ public class TableColumnCreatorV3
 			ColumnThumbAndName.COLUMN_ID,
 			"RatingColumn",
 			"azsubs.ui.column.subs",
+			"azbuddy.ui.column.msgpending",
 			SizeItem.COLUMN_ID,
 			StatusItem.COLUMN_ID,
 			ShareRatioItem.COLUMN_ID,
@@ -255,6 +260,7 @@ public class TableColumnCreatorV3
 			ColumnTorrentSpeed.COLUMN_ID,
 			"RatingColumn",
 			"azsubs.ui.column.subs",
+			"azbuddy.ui.column.msgpending",
 			DateCompletedItem.COLUMN_ID
 		};
 
@@ -300,6 +306,7 @@ public class TableColumnCreatorV3
 			ColumnUnopened.COLUMN_ID,
 			ColumnThumbAndName.COLUMN_ID,
 			"azsubs.ui.column.subs",
+			"azbuddy.ui.column.msgpending",
 			SizeItem.COLUMN_ID,
 			ColumnProgressETA.COLUMN_ID,
 			StatusItem.COLUMN_ID,
@@ -312,6 +319,7 @@ public class TableColumnCreatorV3
 			SizeItem.COLUMN_ID,
 			"RatingColumn",
 			"azsubs.ui.column.subs",
+			"azbuddy.ui.column.msgpending",
 			DateCompletedItem.COLUMN_ID,
 		};
 

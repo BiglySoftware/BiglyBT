@@ -381,6 +381,20 @@ BuddyPluginUtils
 
 		return( null );
 	}
+	
+	public static List<ChatInstance>
+	peekChatInstances(
+		Download		download )
+	{	
+		BuddyPlugin bp = getPlugin();
+
+		if ( bp != null && bp.isBetaEnabled()){
+			
+			return( bp.getBeta().peekChatInstances(download));
+		}
+		
+		return( new ArrayList<ChatInstance>());
+	}
 
 	private static AsyncDispatcher peek_dispatcher = new AsyncDispatcher( "peeker" );
 

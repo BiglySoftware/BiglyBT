@@ -73,6 +73,12 @@ import com.biglybt.pif.ui.menus.MenuContext;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
+import com.biglybt.pif.ui.tables.TableCell;
+import com.biglybt.pif.ui.tables.TableCellMouseEvent;
+import com.biglybt.pif.ui.tables.TableCellMouseListener;
+import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
@@ -87,6 +93,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.CoreFactory;
@@ -140,6 +147,9 @@ BuddyPluginView
 	private statusUpdater statusUpdater;
 	private TaggableLifecycleAdapter taggableLifecycleAdapter;
 
+	private TableColumnCreationListener		columnMessagePending;
+	private final List<TableColumn> columns = new ArrayList<>();
+	
 	public
 	BuddyPluginView(
 		BuddyPlugin		_plugin,
@@ -1112,6 +1122,125 @@ BuddyPluginView
 
 				ui_instance.addView(table_id, "azbuddy.ui.menu.chat",	listener );
 			}
+			
+			TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
+			
+			TableCellRefreshListener	msg_refresh_listener =
+					new TableCellRefreshListener()
+					{
+						@Override
+						public void
+						refresh(
+							TableCell _cell )
+						{
+							TableCellSWT cell = (TableCellSWT)_cell;
+
+							Download	dl = (Download)cell.getDataSource();
+
+							if ( dl == null ){
+
+								return;
+							}
+							
+							List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
+
+							boolean	is_pending = false;
+							
+							for ( ChatInstance instance: instances ){
+								
+								if ( instance.getMessageOutstanding()){
+									
+									is_pending = true;
+								}
+							}
+
+							Image	graphic;
+							String	tooltip;
+							int		sort_order;
+
+							if ( is_pending ){
+								
+								graphic 	= bs_chat_gray_text;
+								tooltip		= MessageText.getString( "TableColumn.header.chat.msg.out" );
+								sort_order	= 1;
+								
+							}else{
+								
+								graphic 	= null;
+								tooltip		= MessageText.getString( "label.no.messages" );
+								sort_order	= 0;
+							}
+
+							cell.setMarginHeight(0);
+							cell.setGraphic( graphic );
+							cell.setToolTip( tooltip );
+
+							cell.setSortValue( sort_order );
+
+							cell.setCursorID( graphic==null?SWT.CURSOR_ARROW:SWT.CURSOR_HAND );
+						}
+					};
+
+				TableCellMouseListener	msg_mouse_listener =
+					new TableCellMouseListener()
+					{
+						@Override
+						public void
+						cellMouseTrigger(
+							TableCellMouseEvent event )
+						{					
+							if ( event.eventType == TableCellMouseEvent.EVENT_MOUSEUP ){
+
+								TableCell cell = event.cell;
+
+								Download	dl = (Download)cell.getDataSource();
+
+								if ( dl != null ){
+									
+									List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
+									
+									for ( ChatInstance instance: instances ){
+										
+										if ( instance.getMessageOutstanding()){
+											
+											try{
+												BuddyPluginUtils.getBetaPlugin().showChat( instance  );
+												
+											}catch( Throwable e ){
+												
+												Debug.out( e );
+											}
+										}
+									}
+								}
+							}
+						}
+					};
+			
+			
+			
+			columnMessagePending = new TableColumnCreationListener() {
+				@Override
+				public void tableColumnCreated(TableColumn result) {
+					result.setAlignment(TableColumn.ALIGN_CENTER);
+					result.setPosition(TableColumn.POSITION_LAST);
+					result.setWidth(32);
+					result.setRefreshInterval(TableColumn.INTERVAL_INVALID_ONLY);
+					result.setType(TableColumn.TYPE_GRAPHIC);
+
+					result.addCellRefreshListener(msg_refresh_listener);
+					result.addCellMouseListener(msg_mouse_listener);
+					result.setIconReference("dchat_gray", true);
+					
+					synchronized( columns ){
+						
+						columns.add(result);
+					}
+				}
+			};
+			
+			table_manager.registerColumn( Download.class, "azbuddy.ui.column.msgpending", columnMessagePending );
+			
 		}else{
 
 			for ( String table_id: views ){
@@ -1131,6 +1260,20 @@ BuddyPluginView
 			}
 
 			beta_subviews.clear();
+			
+			if ( columnMessagePending != null) {
+				
+				TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
+				
+				table_manager.unregisterColumn(Download.class, "azbuddy.ui.column.msgpending",	columnMessagePending);
+				
+				columnMessagePending = null;
+				
+				synchronized( columns ){
+					
+					columns.clear();
+				}
+			}
 		}
 	}
 
@@ -1330,6 +1473,14 @@ BuddyPluginView
 		Control				comp_maybe_null,
 		ChatMessage			pending_message )
 	{
+		synchronized( columns ){
+
+			for ( TableColumn column : columns ){
+
+				column.invalidateCells();
+			}
+		}
+		
 		synchronized( pending_msg_map ){
 
 			String key = chat.getNetAndKey();

@@ -2438,6 +2438,32 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		return( null );
 	}
+	
+	public List<ChatInstance>
+	peekChatInstances(
+		Download		download )
+	{
+		List<ChatInstance>	result = new ArrayList<>();
+				
+		String	key = BuddyPluginUtils.getChatKey( download );
+
+		if ( key != null ){
+
+			String[] networks = PluginCoreUtils.unwrap( download ).getDownloadState().getNetworks();
+
+			for ( String net: networks ){
+
+				ChatInstance ci = peekChatInstance( net, key );
+
+				if ( ci != null ){
+					
+					result.add( ci );
+				}
+			}
+		}
+		
+		return( result );
+	}
 
 		/**
 		 * returns existing chat if found without adding a reference to it. If create_if_missing supplied
