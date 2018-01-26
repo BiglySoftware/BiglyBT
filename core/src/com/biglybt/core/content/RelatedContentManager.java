@@ -807,6 +807,8 @@ RelatedContentManager
 
 						byte[][] keys = getKeys( download );
 
+						int first_seen = (int)(state.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME )/1000);
+						
 						DownloadInfo info =
 							new DownloadInfo(
 								version,
@@ -819,6 +821,7 @@ RelatedContentManager
 								keys[1],
 								getTags( download ),
 								nets,
+								first_seen,
 								0,
 								false,
 								torrent.getSize(),
@@ -1786,11 +1789,13 @@ RelatedContentManager
 			Long _nets = (Long)map.get( "o" );
 
 			byte nets = _nets==null?NET_PUBLIC:_nets.byteValue();
-
+			
+			int first_seen = (int)(SystemTime.getCurrentTime()/1000);
+			
 			return(
 				new DownloadInfo(
 						version,
-						from_hash, hash, title, rand, tracker, tracker_keys, ws_keys, tags, nets, level, explicit, size,
+						from_hash, hash, title, rand, tracker, tracker_keys, ws_keys, tags, nets, first_seen, level, explicit, size,
 						published==null?0:published.intValue(),
 						seeds_leechers));
 
@@ -4721,6 +4726,7 @@ RelatedContentManager
 
 				MapUtils.exportBooleanAsLong( info_map, "u", info.isUnread());
 				MapUtils.exportIntArrayAsByteArray( info_map, "l", info.getRandList());
+				MapUtils.exportInt( info_map, "f", info.getFirstSeenSecs());
 				MapUtils.exportInt( info_map, "s", info.getLastSeenSecs());
 				MapUtils.exportInt( info_map, "e", info.getLevel());
 			}
@@ -4774,9 +4780,11 @@ RelatedContentManager
 
 			byte nets = _nets==null?NET_PUBLIC:_nets.byteValue();
 
+			int first_seen = MapUtils.importInt( info_map, "f", 0 );
+
 			if ( cc == null ){
 
-				 DownloadInfo info = new DownloadInfo( version, hash, hash, title, rand, tracker, tracker_keys, ws_keys, tags, nets, 0, false, size, date, seeds_leechers );
+				 DownloadInfo info = new DownloadInfo( version, hash, hash, title, rand, tracker, tracker_keys, ws_keys, tags, nets, first_seen, 0, false, size, date, seeds_leechers );
 
 				 info.setChangedLocallyOn( lastChangedLocally );
 
@@ -4792,7 +4800,7 @@ RelatedContentManager
 
 				int	level = MapUtils.importInt( info_map, "e", 0 );
 
-				DownloadInfo info = new DownloadInfo( version, hash, title, rand, tracker, tracker_keys, ws_keys, tags, nets, unread, rand_list, last_seen, level, size, date, seeds_leechers, cc );
+				DownloadInfo info = new DownloadInfo( version, hash, title, rand, tracker, tracker_keys, ws_keys, tags, nets, unread, rand_list, first_seen, last_seen, level, size, date, seeds_leechers, cc );
 
 				info.setChangedLocallyOn( lastChangedLocally );
 
@@ -4897,6 +4905,8 @@ RelatedContentManager
 	{
 		final private int		rand;
 
+		final private int 		first_seen;
+		
 		private boolean			unread	= true;
 		private int[]			rand_list;
 		private int				last_seen;
@@ -4919,6 +4929,7 @@ RelatedContentManager
 			byte[]		_ws_keys,
 			String[]	_tags,
 			byte		_nets,
+			int			_first_seen,
 			int			_level,
 			boolean		_explicit,
 			long		_size,
@@ -4927,6 +4938,7 @@ RelatedContentManager
 		{
 			super( _version, _related_to, _title, _hash, _tracker, _tracker_keys, _ws_keys, _tags, _nets, _size, _date, _seeds_leechers);
 
+			first_seen	= _first_seen;
 			rand		= _rand;
 			level		= _level;
 			explicit	= _explicit;
@@ -4947,6 +4959,7 @@ RelatedContentManager
 			byte			_nets,
 			boolean			_unread,
 			int[]			_rand_list,
+			int				_first_seen,
 			int				_last_seen,
 			int				_level,
 			long			_size,
@@ -4956,6 +4969,7 @@ RelatedContentManager
 		{
 			super( _version, _title, _hash, _tracker, _tracker_keys, _ws_keys, _tags, _nets, _size, _date, _seeds_leechers);
 
+			first_seen	= _first_seen;
 			rand		= _rand;
 			unread		= _unread;
 			rand_list	= _rand_list;
@@ -5212,6 +5226,13 @@ RelatedContentManager
 			return( last_seen );
 		}
 
+		@Override
+		public int
+		getFirstSeenSecs()
+		{
+			return( first_seen );
+		}
+		
 		protected void
 		setUnreadInternal(
 			boolean	_unread )
