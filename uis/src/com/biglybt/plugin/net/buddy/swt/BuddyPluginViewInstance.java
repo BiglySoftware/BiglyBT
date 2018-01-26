@@ -1618,7 +1618,8 @@ BuddyPluginViewInstance
 		Comparator<BuddyPluginBuddy> comparator = addBuddyTable( child1 );
 
 		Label pblab = new Label( child1, SWT.NULL );
-		pblab.setText( "Partial Friends" );
+		
+		pblab.setText( lu.getLocalisedMessageText( "label.partial.friends" ));
 		
 		Comparator<PartialBuddy> pbcomparator = addPartialBuddyTable( child1 );
 		
@@ -1658,6 +1659,8 @@ BuddyPluginViewInstance
 		init_complete	= true;
 
 		updateTable();
+		
+		updatePartialBuddyTable();
 	}
 	
 	private Comparator<BuddyPluginBuddy>
