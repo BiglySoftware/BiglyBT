@@ -113,12 +113,14 @@ public class ConfigSectionInterfaceTables
 			int[] sortOrderValues = {
 				0,
 				1,
-				2
+				2,
+				3
 			};
 			String[] sortOrderLabels = {
 				MessageText.getString("ConfigView.section.style.defaultSortOrder.asc"),
 				MessageText.getString("ConfigView.section.style.defaultSortOrder.desc"),
-				MessageText.getString("ConfigView.section.style.defaultSortOrder.flip")
+				MessageText.getString("ConfigView.section.style.defaultSortOrder.flip"),
+				MessageText.getString("ConfigView.section.style.defaultSortOrder.same")
 			};
 			new IntListParameter(cGeneral, "config.style.table.defaultSortOrder",
 					sortOrderLabels, sortOrderValues);

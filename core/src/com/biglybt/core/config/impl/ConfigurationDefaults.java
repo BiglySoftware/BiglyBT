@@ -586,7 +586,7 @@ public class ConfigurationDefaults {
     def.put( "Enable System Tray", TRUE);
     def.put( "System Tray Disabled Override", FALSE);
     def.put( "Show Status In Window Title", FALSE );
-    def.put( "config.style.table.defaultSortOrder", ZERO);
+    def.put( "config.style.table.defaultSortOrder", 3 );
     def.put( "Ignore.peer.ports", "0" );
     def.put( "Security.JAR.tools.dir", "" );
     def.put( "security.cert.auto.install", TRUE );

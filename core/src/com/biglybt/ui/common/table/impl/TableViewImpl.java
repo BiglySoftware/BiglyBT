@@ -1937,8 +1937,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
   					sortColumn.setSortAscending(true);
   				} else if (iSortDirection == 1) {
   					sortColumn.setSortAscending(false);
-  				} else {
+  				} else if (iSortDirection == 2) {
   					sortColumn.setSortAscending(!sortColumn.isSortAscending());
+  				}else{
+  					//same
   				}
 
   				TableColumnManager.getInstance().setDefaultSortColumnName(tableID, sortColumn.getName(), true );
