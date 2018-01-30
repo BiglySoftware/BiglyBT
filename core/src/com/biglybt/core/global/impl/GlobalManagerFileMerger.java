@@ -207,11 +207,16 @@ GlobalManagerFileMerger
 
 				for ( DownloadManager dm: dms ){
 
+					/* 
+					 * not sure why we were ignoring shares, one might share a local file in order to help
+					 * out a 'normal' download
+					 * 
 					if ( !dm.isPersistent()){
 
 						continue;
 					}
-
+					*/
+					
 					DownloadManagerState state = dm.getDownloadState();
 
 					if ( 	state.getFlag( DownloadManagerState.FLAG_LOW_NOISE ) ||

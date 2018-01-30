@@ -401,6 +401,23 @@ UtilitiesImpl
 	    }
 	}
 
+	public void
+	createProcess(
+		File		working_dirctory,
+		String[]	command,
+		String[]	env )
+	
+		throws PluginException
+	{
+		try{
+			GeneralUtils.createProcessBuilder( working_dirctory, command, env ).start();
+			
+	    }catch( Throwable f ){
+
+	    	throw( new PluginException("Failed to create process", f ));
+	    }
+	}
+	
 	@Override
 	public ResourceDownloaderFactory
 	getResourceDownloaderFactory()

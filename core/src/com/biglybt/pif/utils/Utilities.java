@@ -198,6 +198,14 @@ Utilities
 
 		throws PluginException;
 
+	public void
+	createProcess(
+		File		working_dirctory,
+		String[]	command,
+		String[]	env )
+
+		throws PluginException;
+	
 	public ResourceDownloaderFactory
 	getResourceDownloaderFactory();
 

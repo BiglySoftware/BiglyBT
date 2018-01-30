@@ -145,7 +145,8 @@ implements PiecePicker
 	private final List<PEPiece>	rarestStartedPieces; //List of pieces started as rarest first
 
 	protected final AEMonitor availabilityMon = new AEMonitor("PiecePicker:avail");
-	private final AEMonitor endGameModeChunks_mon =new AEMonitor("PiecePicker:EGM");
+	
+	private final Object endGameModeChunkLock = new Object();
 
 	protected volatile int	nbPiecesDone;
 
@@ -204,8 +205,9 @@ implements PiecePicker
 	private volatile boolean	endGameModeAbandoned;
 	private volatile long		timeEndGameModeEntered;
 	/** The list of chunks needing to be downloaded (the mechanism change when entering end-game mode) */
-	private List 				endGameModeChunks;
-
+	private List<EndGameModeChunk> 		endGameModeChunks;
+	private Map<Long,EndGameModeChunk>	endGameModeChunkMap;
+	
 	private long				lastProviderRecalcTime;
 	private final CopyOnWriteList		rta_providers = new CopyOnWriteList();
 	private long[]				provider_piece_rtas;
@@ -337,7 +339,11 @@ implements PiecePicker
 		diskManager.addListener(diskManagerListener);
 	}
 
-
+	@Override
+	public PEPeerManager getPeerManager(){
+		return( peerControl);
+	}
+	
 	@Override
 	public final void addHavePiece(final PEPeer peer, final int pieceNumber)
 	{
@@ -1552,7 +1558,7 @@ implements PiecePicker
 
 			//create piece manually
 
-			pePiece =new PEPieceImpl(pt.getManager(), dmPieces[pieceNumber], peerSpeed >>1);
+			pePiece =new PEPieceImpl(this, dmPieces[pieceNumber], peerSpeed >>1);
 
 			// Assign the created piece to the pieces array.
 			peerControl.addPiece(pePiece, pieceNumber, pt);
@@ -1880,7 +1886,7 @@ implements PiecePicker
 
 						// create piece manually
 
-						pePiece = new PEPieceImpl( pt.getManager(), dmPieces[piece_min_rta_index], peerSpeed >>1 );
+						pePiece = new PEPieceImpl( this, dmPieces[piece_min_rta_index], peerSpeed >>1 );
 
 						// Assign the created piece to the pieces array.
 
@@ -2516,11 +2522,12 @@ implements PiecePicker
 				return;
 			}
 	
-			try{
-				endGameModeChunks_mon.enter();
+			synchronized( endGameModeChunkLock ){
 	
-				endGameModeChunks = new ArrayList();
+				endGameModeChunks = new ArrayList<>();
 	
+				endGameModeChunkMap	= new HashMap<>();
+				
 				timeEndGameModeEntered = mono_now;
 	
 				endGameMode = true;
@@ -2530,10 +2537,8 @@ implements PiecePicker
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(diskManager.getTorrent(), LOGID, "Entering end-game mode: "
 							+peerControl.getDisplayName()));
-			// System.out.println("End-Game Mode activated");
-			}finally{
-	
-				endGameModeChunks_mon.exit();
+				// System.out.println("End-Game Mode activated");
+			
 			}
 		}else{
 			
@@ -2607,11 +2612,12 @@ implements PiecePicker
 	
 			if ( remaining <= trigger ){
 	
-				try{
-					endGameModeChunks_mon.enter();
+				synchronized( endGameModeChunkLock ){
 	
-					endGameModeChunks = new ArrayList();
+					endGameModeChunks = new ArrayList<>();
 	
+					endGameModeChunkMap = new HashMap<>();
+					
 					timeEndGameModeEntered = mono_now;
 	
 					endGameMode = true;
@@ -2622,9 +2628,7 @@ implements PiecePicker
 						Logger.log(new LogEvent(diskManager.getTorrent(), LOGID, "Entering end-game mode: "
 								+peerControl.getDisplayName()));
 				// System.out.println("End-Game Mode activated");
-				}finally{
-	
-					endGameModeChunks_mon.exit();
+				
 				}
 			}
 		}
@@ -2632,8 +2636,7 @@ implements PiecePicker
 
 	private void computeEndGameModeChunks()
 	{
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			for (int i =0; i <nbPieces; i++ ){
 
@@ -2650,7 +2653,7 @@ implements PiecePicker
 
 				if (pePiece ==null){
 
-					pePiece = new PEPieceImpl(peerControl,dmPiece,0);
+					pePiece = new PEPieceImpl(this,dmPiece,0);
 
 					peerControl.addPiece(pePiece,i, null);
 				}
@@ -2663,21 +2666,27 @@ implements PiecePicker
 
 						for (int j =0; j <pePiece.getNbBlocks(); j++ ){
 
-							endGameModeChunks.add(new EndGameModeChunk(pePiece, j));
+							EndGameModeChunk chunk = new EndGameModeChunk(pePiece, j);
+							
+							endGameModeChunks.add( chunk );
+							
+							endGameModeChunkMap.put( new Long( i << 32 | j ), chunk );
 						}
 					}
 				}else{
 
 					for (int j =0; j <written.length; j++ ){
 
-						if (!written[j])
-							endGameModeChunks.add(new EndGameModeChunk(pePiece, j));
+						if (!written[j]){
+							EndGameModeChunk chunk = new EndGameModeChunk(pePiece, j);
+							
+							endGameModeChunks.add( chunk );
+						
+							endGameModeChunkMap.put( new Long( i << 32 | j ), chunk );
+						}
 					}
 				}
 			}
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
@@ -2707,18 +2716,20 @@ implements PiecePicker
 			return;
 		}
 
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			final int nbChunks =pePiece.getNbBlocks();
 
+			int piece_number = pePiece.getPieceNumber();
+			
 			for (int i =0; i <nbChunks; i++ ){
 
-				endGameModeChunks.add(new EndGameModeChunk(pePiece, i));
+				EndGameModeChunk chunk = new EndGameModeChunk(pePiece, i);
+				
+				endGameModeChunks.add( chunk );
+				
+				endGameModeChunkMap.put( new Long( piece_number << 32 | i ), chunk );
 			}
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
@@ -2737,8 +2748,7 @@ implements PiecePicker
 
 			// Ok, we try one, if it doesn't work, we'll try another next time
 
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			final int nbChunks =endGameModeChunks.size();
 
@@ -2754,6 +2764,8 @@ implements PiecePicker
 
 					endGameModeChunks.remove(chunk);
 
+					endGameModeChunkMap.remove( new Long( pieceNumber << 32 | chunk.getBlockNumber()));
+					
 					return 0;
 				}
 
@@ -2768,6 +2780,8 @@ implements PiecePicker
 
 						pt.setLastPiece(pieceNumber);
 
+						chunk.requested();
+						
 						return( 1 );
 
 					}else{
@@ -2783,10 +2797,6 @@ implements PiecePicker
 				// cleanup anyway and allow a proper re-entry into endgame mode if neccessary
 
 			leaveEndGameMode();
-
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 
 		return 0;
@@ -2803,8 +2813,7 @@ implements PiecePicker
 			return;
 		}
 
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			final Iterator iter =endGameModeChunks.iterator();
 
@@ -2815,11 +2824,10 @@ implements PiecePicker
 				if ( chunk.equals(pieceNumber, offset)){
 
 					iter.remove();
+					
+					endGameModeChunkMap.remove( new Long( pieceNumber << 32 | chunk.getBlockNumber()));
 				}
 			}
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
@@ -2832,24 +2840,20 @@ implements PiecePicker
 			return;
 		}
 
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			endGameModeChunks.clear();
 
+			endGameModeChunkMap.clear();
+			
 			endGameMode = false;
-
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
 	protected void
 	leaveEndGameMode()
 	{
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			if ( endGameMode ){
 
@@ -2863,11 +2867,10 @@ implements PiecePicker
 
 				endGameModeChunks.clear();
 
+				endGameModeChunkMap.clear();
+				
 				timeEndGameModeEntered = 0;
 			}
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
@@ -2876,8 +2879,7 @@ implements PiecePicker
 	{
 		if ( !endGameModeAbandoned ){
 
-			try{
-				endGameModeChunks_mon.enter();
+			synchronized( endGameModeChunkLock ){
 
 				endGameModeAbandoned = true;
 
@@ -2888,10 +2890,6 @@ implements PiecePicker
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(diskManager.getTorrent(), LOGID, "Abandoning end-game mode: "
 							+peerControl.getDisplayName()));
-
-			}finally{
-
-				endGameModeChunks_mon.exit();
 			}
 		}
 	}
@@ -3440,6 +3438,49 @@ implements PiecePicker
 	getSequentialInfo()
 	{
 		return( sequentialDownload );
+	}
+	
+	public String
+	getEGMInfo()
+	{
+		if ( endGameModeAbandoned ){
+			
+			return( "abandoned" );
+			
+		}else if ( endGameMode ){
+			
+			synchronized( endGameModeChunkLock ){
+			
+				long elapsed = SystemTime.getMonotonousTime()- timeEndGameModeEntered;
+					 
+				String str = "rem=" + (END_GAME_MODE_TIMEOUT-elapsed)/1000 + "s";
+
+				str += ",chunks=" + endGameModeChunks.size();
+				
+				return( str );
+			}
+		}else{
+			
+			return( null );
+		}
+	}
+	
+	@Override
+	public int 
+	getEGMRequestCount(
+		int piece_number, int block_number)
+	{
+		synchronized( endGameModeChunkLock ){
+		
+			EndGameModeChunk chunk = endGameModeChunkMap.get( new Long( piece_number << 32 | block_number ));
+			
+			if ( chunk == null ){
+				
+				return( 0 );
+			}
+			
+			return( chunk.getRequestCount());
+		}
 	}
 	
 	@Override

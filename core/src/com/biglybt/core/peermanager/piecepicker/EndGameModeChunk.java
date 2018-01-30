@@ -35,6 +35,8 @@ public class EndGameModeChunk
 	private final int	offset;
 	private final int	length;
 
+	private int request_count;
+	
 	public EndGameModeChunk(PEPiece pePiece, int blockNum)
 	{
 		//this.piece = piece;
@@ -73,5 +75,17 @@ public class EndGameModeChunk
 	public int getLength()
 	{
 		return length;
+	}
+	
+	public void
+	requested()
+	{
+		request_count++;
+	}
+	
+	public int
+	getRequestCount()
+	{
+		return( request_count );
 	}
 }

@@ -26,11 +26,11 @@ import org.eclipse.swt.graphics.Image;
 
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -59,12 +59,15 @@ public class BlocksItem
 	private static final int COLOR_DOWNLOADED = 2;
 
 	private static final int COLOR_INCACHE = 3;
+	
+	private static final int COLOR_EGM = 4;
 
 	public static final Color[] colors = new Color[] {
 		Colors.blues[Colors.BLUES_MIDLIGHT],
 		Colors.blues[Colors.BLUES_DARKEST],
 		Colors.red,
-		Colors.grey
+		Colors.grey,
+		Colors.fadedGreen,
 	};
 
 	private static CacheFileManagerStats cacheStats = null;
@@ -125,6 +128,8 @@ public class BlocksItem
 			@Override
 			public void runSupport() {
 
+				PiecePicker picker = pePiece.getPiecePicker();
+				
 				long lNumBlocks = pePiece.getNbBlocks();
 
 				int newWidth = cell.getWidth();
@@ -158,10 +163,10 @@ public class BlocksItem
 					iPixelsPerBlock = (int) ((x1 + 1) / (lNumBlocks / blocksPerPixel));
 				}
 
-				pxRes = (int) (x1 - ((lNumBlocks / blocksPerPixel) * iPixelsPerBlock)); // kolik mi zbyde
+				pxRes = (int) (x1 - ((lNumBlocks / blocksPerPixel) * iPixelsPerBlock)); 
 				if (pxRes <= 0)
 					pxRes = 1;
-				pxBlockStep = (lNumBlocks * factor) / pxRes; // kolikaty blok na +1 k sirce
+				pxBlockStep = (lNumBlocks * factor) / pxRes;
 				long addBlocks = (lNumBlocks * factor) / pxBlockStep;
 				if ((addBlocks * iPixelsPerBlock) > pxRes)
 					pxBlockStep += 1;
@@ -187,6 +192,8 @@ public class BlocksItem
 						* i, i++)
 					;
 
+				boolean	egm = picker.isInEndGameMode();
+				
 				boolean[] isCached = cacheStats == null ? new boolean[(int)lNumBlocks]
 						: cacheStats.getBytesInCache(torrent, offsets, lengths);
 
@@ -194,16 +201,18 @@ public class BlocksItem
 					int nextWidth = iPixelsPerBlock;
 
 					blockStep += blocksPerPixel * factor;
-					if (blockStep >= pxBlockStep) { // pokud jsem prelezl dany pocet bloku, zvys tomuhle sirku
+					if (blockStep >= pxBlockStep) { 
 						nextWidth += (int) (blockStep / pxBlockStep);
 						blockStep -= pxBlockStep;
 					}
 
-					if (i >= lNumBlocks - blocksPerPixel) { // pokud je posledni, at zasahuje az na konec
+					if (i >= lNumBlocks - blocksPerPixel) { 
 						nextWidth = x1 - drawnWidth;
 					}
 					color = Colors.white;
 
+					int num = -1;
+					
 					if ((written == null && piece_written)
 							|| (written != null && written[i])) {
 
@@ -215,7 +224,24 @@ public class BlocksItem
 
 					} else if (pePiece.isRequested(i)) {
 
-						color = colors[COLOR_REQUESTED];
+						if ( egm ){
+							
+							int req_count = picker.getEGMRequestCount( pieceNumber, i );
+							
+							if ( req_count < 2 ){
+								
+								color = colors[COLOR_REQUESTED];
+								
+							}else{
+								
+								color = colors[COLOR_EGM ];
+								
+								num = req_count;
+							}
+						}else{
+							
+							color = colors[COLOR_REQUESTED];
+						}
 					}
 
 					gcImage.setBackground(color);
@@ -224,9 +250,13 @@ public class BlocksItem
 					if (isCached[i]) {
 						gcImage.setBackground(colors[COLOR_INCACHE]);
 						gcImage.fillRectangle(drawnWidth + 1, 1, nextWidth, 3);
-
 					}
 
+					if ( num >= 0 ){
+						gcImage.setForeground( Colors.black );
+						gcImage.drawString( String.valueOf( num ),drawnWidth + 1, 0, true ); 
+					}
+					
 					drawnWidth += nextWidth;
 
 				}

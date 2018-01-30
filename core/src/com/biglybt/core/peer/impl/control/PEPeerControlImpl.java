@@ -541,7 +541,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 			final DiskManagerPiece dmPiece =dm_pieces[i];
 			if (!dmPiece.isDone() &&dmPiece.getNbWritten() >0)
 			{
-				addPiece(new PEPieceImpl(this, dmPiece, 0), i, true, null );
+				addPiece(new PEPieceImpl(piecePicker, dmPiece, 0), i, true, null );
 			}
 		}
 

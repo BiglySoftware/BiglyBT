@@ -1020,6 +1020,13 @@ public class PieceInfoView
 			topLabelLHS += "; seq=" + seq_info;
 		}
 		
+		String egm_info = picker.getEGMInfo();
+		
+		if ( egm_info != null ){
+			
+			topLabelLHS += "; EGM=" + egm_info;
+		}
+		
 		updateTopLabel();
 
 		pieceInfoCanvas.redraw();
