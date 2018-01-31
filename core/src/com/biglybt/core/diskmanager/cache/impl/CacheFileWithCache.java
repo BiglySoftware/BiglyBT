@@ -1779,6 +1779,13 @@ CacheFileWithCache
 	}
 
 	@Override
+	public long
+	getLastModified()
+	{
+		return( file.getLastModified());
+	}
+	
+	@Override
 	public void
 	delete()
 

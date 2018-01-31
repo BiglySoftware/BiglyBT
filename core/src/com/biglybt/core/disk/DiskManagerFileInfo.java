@@ -84,6 +84,8 @@ DiskManagerFileInfo
 
 	public long getDownloaded();
 
+	public long getLastModified();
+	
 	public String getExtension();
 
 	public int getFirstPieceNumber();

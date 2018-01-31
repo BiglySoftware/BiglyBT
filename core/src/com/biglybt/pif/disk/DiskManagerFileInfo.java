@@ -91,6 +91,9 @@ DiskManagerFileInfo
 	public long
 	getDownloaded();
 
+	public long
+	getLastModified();
+	
 	/**
 	 * Size when file is complete
 	 */

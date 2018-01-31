@@ -157,4 +157,7 @@ FMFile
 
 	public boolean
 	isClone();
+	
+	public long
+	getLastModified();
 }

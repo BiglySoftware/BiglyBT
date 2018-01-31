@@ -189,6 +189,9 @@ CacheFile
 	public long
 	getSessionBytesWritten();
 
+	public long
+	getLastModified();
+	
 	public void
 	delete()
 

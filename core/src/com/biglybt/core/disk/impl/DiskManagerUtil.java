@@ -725,6 +725,11 @@ DiskManagerUtil
 		            	}
 
 		            	@Override
+		            	public long getLastModified(){
+		            		return( getFile( true ).lastModified());
+		            	}
+		            	
+		            	@Override
 			            public void
 		            	setDownloaded(
 		            		long    l )

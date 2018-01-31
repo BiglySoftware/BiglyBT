@@ -197,6 +197,13 @@ DiskManagerFileInfoImpl
 	return downloaded;
   }
 
+  @Override
+  public long 
+  getLastModified()
+  {
+	  return( cache_file.getLastModified());
+  }
+	
   /**
    * @return
    */

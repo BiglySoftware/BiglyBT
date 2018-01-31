@@ -2895,6 +2895,12 @@ DownloadManagerController
 		{
 			return( delegate.getDownloaded());
 		}
+		
+		@Override
+		public long getLastModified()
+		{
+			return( delegate.getLastModified());
+		}
 
 		@Override
 		public String

@@ -730,6 +730,13 @@ CacheFileWithoutCacheMT
 	}
 
 	@Override
+	public long
+	getLastModified()
+	{
+		return( base_file.getLastModified());
+	}
+	
+	@Override
 	public void
 	delete()
 

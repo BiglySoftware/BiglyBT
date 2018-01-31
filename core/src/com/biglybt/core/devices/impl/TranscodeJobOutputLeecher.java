@@ -133,6 +133,12 @@ TranscodeJobOutputLeecher
 	}
 
 	@Override
+	public long getLastModified(){
+		
+		return save_to.lastModified();
+	}
+	
+	@Override
 	public long
 	getLength()
 	{

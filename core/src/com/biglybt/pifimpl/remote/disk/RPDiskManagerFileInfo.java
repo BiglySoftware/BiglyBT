@@ -163,6 +163,15 @@ RPDiskManagerFileInfo
 	{
 		return( downloaded );
 	}
+	
+	
+	@Override
+	public long getLastModified(){
+		
+		notSupported();
+		
+		return( 0 );
+	}
 
 	@Override
 	public long getLength()

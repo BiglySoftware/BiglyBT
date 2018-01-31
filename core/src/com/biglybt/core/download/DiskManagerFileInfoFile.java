@@ -121,6 +121,13 @@ DiskManagerFileInfoFile
 	}
 
 	@Override
+	public long 
+	getLastModified()
+	{
+		return( file.lastModified());
+	}
+	
+	@Override
 	public long
 	getLength()
 	{

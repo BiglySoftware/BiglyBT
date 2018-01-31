@@ -256,6 +256,12 @@ PluginCoreUtils
 				}
 
 				@Override
+				public long getLastModified()
+				{
+					return( info.getLastModified());
+				}
+				
+				@Override
 				public String
 				getExtension()
 				{
