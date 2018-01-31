@@ -129,6 +129,7 @@ DownloadManagerImpl
 	private static final int LDT_COMPLETIONCHANGED 		= 3;
 	private static final int LDT_POSITIONCHANGED 		= 4;
 	private static final int LDT_FILEPRIORITYCHANGED 	= 5;
+	private static final int LDT_FILELOCATIONCHANGED 	= 6;
 
 
 	private final AEMonitor	listeners_mon	= new AEMonitor( "DM:DownloadManager:L" );
@@ -168,6 +169,10 @@ DownloadManagerImpl
 					}else if ( type == LDT_POSITIONCHANGED ){
 
 						listener.positionChanged( dm, ((Integer)value[1]).intValue(), ((Integer)value[2]).intValue());
+						
+					}else if ( type == LDT_FILELOCATIONCHANGED ){
+
+						listener.fileLocationChanged( dm, (DiskManagerFileInfo)value[1]);
 					}
 				}
 			});
@@ -215,6 +220,19 @@ DownloadManagerImpl
 				}
 			}
 
+			@Override
+			public void fileLocationChanged(DownloadManager download,
+			                                DiskManagerFileInfo file){
+				for ( DownloadManagerListener listener: global_dm_listeners ){
+
+					try{
+						listener.fileLocationChanged(download, file);
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+			}
+			
 			@Override
 			public void downloadComplete(DownloadManager manager){
 				for ( DownloadManagerListener listener: global_dm_listeners ){
@@ -2650,6 +2668,8 @@ DownloadManagerImpl
 		//Debug.out("Torrent save directory changing from \"" + old_location.getPath() + "\" to \"" + new_location.getPath());
 
 		controller.fileInfoChanged();
+		
+		informLocationChange( null );
 	}
 
 	@Override
@@ -3220,25 +3240,55 @@ DownloadManagerImpl
 		}
 	}
 
-	 void informPrioritiesChange(
-			List	files )
-		{
-			controller.filePrioritiesChanged(files);
+	protected void 
+	informPrioritiesChange(
+		List	files )
+	{
+		controller.filePrioritiesChanged(files);
 
-			try{
-				listeners_mon.enter();
+		try{
+			listeners_mon.enter();
 
-				for(int i=0;i<files.size();i++)
-					listeners.dispatch( LDT_FILEPRIORITYCHANGED, new Object[]{ this, (DiskManagerFileInfo)files.get(i) });
+			for(int i=0;i<files.size();i++)
+				listeners.dispatch( LDT_FILEPRIORITYCHANGED, new Object[]{ this, (DiskManagerFileInfo)files.get(i) });
 
-			}finally{
+		}finally{
 
-				listeners_mon.exit();
-			}
-
-			requestAssumedCompleteMode();
+			listeners_mon.exit();
 		}
 
+		requestAssumedCompleteMode();
+	}
+
+	protected void
+	informLocationChange(
+		int	file_index )
+	{
+		try{
+			listeners_mon.enter();
+
+			listeners.dispatch( LDT_FILELOCATIONCHANGED, new Object[]{ this, getDiskManagerFileInfoSet().getFiles()[file_index] });
+
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
+	
+	protected void
+	informLocationChange(
+		DiskManagerFileInfo	file )
+	{
+		try{
+			listeners_mon.enter();
+
+			listeners.dispatch( LDT_FILELOCATIONCHANGED, new Object[]{ this, file });
+
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
 
 	protected void
 	informPriorityChange(

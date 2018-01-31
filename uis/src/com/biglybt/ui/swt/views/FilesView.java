@@ -449,6 +449,32 @@ public class FilesView
 			tv.refilter();
 		}
 	}
+	
+	@Override
+	public void 
+	fileLocationChanged(
+		DownloadManager 		download, 
+		DiskManagerFileInfo 	file )
+	{
+		if ( file == null ){
+			
+			tv.columnInvalidate("path", true);
+			tv.columnInvalidate("pathname", true);
+		
+			tv.refreshTable(false);
+			
+		}else{
+			
+			TableRowCore row = tv.getRow( file );
+			
+			if ( row != null ){
+				
+				row.invalidate( true );
+				
+				row.refresh( true );
+			}
+		}
+	}
 
 	@Override
 	public boolean

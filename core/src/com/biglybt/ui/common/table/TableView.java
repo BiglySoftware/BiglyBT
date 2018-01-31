@@ -90,6 +90,8 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	void columnInvalidate(String sColumnName);
 
+	void columnInvalidate(String sColumnName, boolean forceRefresh );
+
 	/**
 	 * @param tableColumn
 	 */

@@ -2547,7 +2547,7 @@ public class MenuFactory
 			};
 
 
-		Menu alert_menu = new Menu( Utils.findAnyShell(), SWT.DROP_DOWN );
+		Menu alert_menu = new Menu( menu.getShell(), SWT.DROP_DOWN );
 
 		MenuItem alerts_item = new MenuItem( menu, SWT.CASCADE);
 

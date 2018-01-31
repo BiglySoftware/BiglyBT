@@ -1578,13 +1578,18 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	// see common.TableView
 	@Override
 	public void columnInvalidate(final String sColumnName) {
+		columnInvalidate(sColumnName,false);
+	}
+
+	@Override
+	public void columnInvalidate(final String sColumnName, boolean mustRefresh ) {
 		TableColumnCore tc = TableColumnManager.getInstance().getTableColumnCore(
 				getTableID(), sColumnName);
 		if (tc != null) {
-			columnInvalidate(tc, tc.getType() == TableColumnCore.TYPE_TEXT_ONLY);
+			columnInvalidate(tc, tc.getType() == TableColumnCore.TYPE_TEXT_ONLY || mustRefresh );
 		}
 	}
-
+	
 	public void columnInvalidate(TableColumnCore tableColumn,
 			final boolean bMustRefresh) {
 		final String sColumnName = tableColumn.getName();

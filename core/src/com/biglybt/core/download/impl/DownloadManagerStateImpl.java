@@ -1821,6 +1821,8 @@ DownloadManagerStateImpl
 		}
 
 		setListAttribute( AT_FILE_LINKS2, list );
+		
+		download_manager.informLocationChange( source_index );
 	}
 
 	@Override
@@ -1888,6 +1890,8 @@ DownloadManagerStateImpl
 		}
 
 		setListAttribute( AT_FILE_LINKS2, list );
+		
+		download_manager.informLocationChange( null );
 	}
 
 	@Override
@@ -1928,9 +1932,9 @@ DownloadManagerStateImpl
 			}
 
 			setListAttribute( AT_FILE_LINKS2, list );
+			
+			download_manager.informLocationChange( null );
 		}
-
-		//System.out.println( "clearFileLinks" );
 	}
 
 	@Override

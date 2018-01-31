@@ -56,4 +56,15 @@ DownloadManagerListener
 
   public void
   filePriorityChanged( DownloadManager download, DiskManagerFileInfo file );
+  
+  /**
+   * 
+   * @param download
+   * @param file	null - overall location change (e.g. move download)
+   */
+  
+  default public void
+  fileLocationChanged( DownloadManager download, DiskManagerFileInfo file )
+  {
+  }
 }
