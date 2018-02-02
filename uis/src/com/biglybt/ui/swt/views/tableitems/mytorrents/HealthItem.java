@@ -22,10 +22,10 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.utils.ColorCache;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 
 import com.biglybt.core.download.DownloadManager;
@@ -37,7 +37,6 @@ import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 
 import com.biglybt.core.CoreFactory;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.*;
@@ -161,10 +160,10 @@ public class HealthItem
 			gc.setAdvanced(true);
 			gc.setAntialias(SWT.ON);
 			if (isShare) {
-				gc.setForeground(ColorCache.getColor(gc.getDevice(), color));
+				gc.setForeground(Colors.getInstance().getFadedColor( ColorCache.getColor(gc.getDevice(), color)));
 				gc.fillGradientRectangle(bounds.x, bounds.y, bounds.width, bounds.height, true);
 			} else {
-				gc.setBackground(ColorCache.getColor(gc.getDevice(), color));
+				gc.setBackground(Colors.getInstance().getFadedColor( ColorCache.getColor(gc.getDevice(), color)));
 				gc.fillRoundRectangle(bounds.x, bounds.y, bounds.width, bounds.height, bounds.height, bounds.height);
 			}
 		}
