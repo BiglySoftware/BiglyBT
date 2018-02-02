@@ -444,6 +444,11 @@ TrackerWebPageResponseImpl
 
 		throws IOException
 	{
+		// strip parameters from relative_url
+		int paramPos = relative_url.indexOf('?');
+		if (paramPos >= 0) {
+			relative_url = relative_url.substring(0, paramPos);
+		}
 		String	target = root_dir + relative_url.replace('/',File.separatorChar);
 
 		File canonical_file = new File(target).getCanonicalFile();
