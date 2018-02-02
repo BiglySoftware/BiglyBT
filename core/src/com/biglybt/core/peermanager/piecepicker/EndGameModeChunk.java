@@ -35,7 +35,7 @@ public class EndGameModeChunk
 	private final int	offset;
 	private final int	length;
 
-	private int request_count;
+	private int request_count = 1;	// when we enter egm everything is already requested
 	
 	public EndGameModeChunk(PEPiece pePiece, int blockNum)
 	{

@@ -205,8 +205,8 @@ implements PiecePicker
 	private volatile boolean	endGameModeAbandoned;
 	private volatile long		timeEndGameModeEntered;
 	/** The list of chunks needing to be downloaded (the mechanism change when entering end-game mode) */
-	private List<EndGameModeChunk> 		endGameModeChunks;
-	private Map<Long,EndGameModeChunk>	endGameModeChunkMap;
+	private LinkedList<EndGameModeChunk> 	endGameModeChunks;
+	private Map<Long,EndGameModeChunk>		endGameModeChunkMap;
 	
 	private long				lastProviderRecalcTime;
 	private final CopyOnWriteList		rta_providers = new CopyOnWriteList();
@@ -1089,11 +1089,14 @@ implements PiecePicker
 								allocated = findPieceInEndGameMode(pt, maxRequests);
 							}
 
-							if ( allocated == 0 )
+							if ( allocated == 0 ){
+								
 								break;
-							else
+								
+							}else{
+								
 								total_allocated += allocated;
-
+							}
 						}
 					}finally{
 
@@ -2524,7 +2527,7 @@ implements PiecePicker
 	
 			synchronized( endGameModeChunkLock ){
 	
-				endGameModeChunks = new ArrayList<>();
+				endGameModeChunks = new LinkedList<>();
 	
 				endGameModeChunkMap	= new HashMap<>();
 				
@@ -2614,7 +2617,7 @@ implements PiecePicker
 	
 				synchronized( endGameModeChunkLock ){
 	
-					endGameModeChunks = new ArrayList<>();
+					endGameModeChunks = new LinkedList<>();
 	
 					endGameModeChunkMap = new HashMap<>();
 					
@@ -2670,7 +2673,7 @@ implements PiecePicker
 							
 							endGameModeChunks.add( chunk );
 							
-							endGameModeChunkMap.put( new Long( i << 32 | j ), chunk );
+							endGameModeChunkMap.put( new Long( ((long)i) << 32 | j ), chunk );
 						}
 					}
 				}else{
@@ -2678,14 +2681,20 @@ implements PiecePicker
 					for (int j =0; j <written.length; j++ ){
 
 						if (!written[j]){
+							
 							EndGameModeChunk chunk = new EndGameModeChunk(pePiece, j);
 							
 							endGameModeChunks.add( chunk );
 						
-							endGameModeChunkMap.put( new Long( i << 32 | j ), chunk );
+							endGameModeChunkMap.put( new Long( ((long)i) << 32 | j ), chunk );
 						}
 					}
 				}
+			}
+			
+			if ( reverse_block_order ){
+				
+				Collections.reverse( endGameModeChunks );
 			}
 		}
 	}
@@ -2722,13 +2731,13 @@ implements PiecePicker
 
 			int piece_number = pePiece.getPieceNumber();
 			
-			for (int i =0; i <nbChunks; i++ ){
+			for (int i=0; i <nbChunks; i++ ){
 
 				EndGameModeChunk chunk = new EndGameModeChunk(pePiece, i);
 				
 				endGameModeChunks.add( chunk );
 				
-				endGameModeChunkMap.put( new Long( piece_number << 32 | i ), chunk );
+				endGameModeChunkMap.put( new Long(((long)piece_number) << 32 | i ), chunk );
 			}
 		}
 	}
@@ -2746,60 +2755,56 @@ implements PiecePicker
 			return 0;
 		}
 
-			// Ok, we try one, if it doesn't work, we'll try another next time
-
 		synchronized( endGameModeChunkLock ){
 
-			final int nbChunks =endGameModeChunks.size();
-
-			if (nbChunks >0){
-
-				final int random =RandomUtils.generateRandomIntUpto(nbChunks);
-
-				final EndGameModeChunk chunk =(EndGameModeChunk) endGameModeChunks.get(random);
-
-				final int pieceNumber =chunk.getPieceNumber();
-
-				if (dmPieces[pieceNumber].isWritten(chunk.getBlockNumber())){
-
-					endGameModeChunks.remove(chunk);
-
-					endGameModeChunkMap.remove( new Long( pieceNumber << 32 | chunk.getBlockNumber()));
-					
-					return 0;
-				}
-
-				final PEPiece	pePiece = pePieces[pieceNumber];
-
-				if ( pt.isPieceAvailable(pieceNumber) && pePiece != null ){
-
-					if ( ( !pt.isSnubbed() || availability[pieceNumber] <=peerControl.getNbPeersSnubbed()) &&
-							pt.request(pieceNumber, chunk.getOffset(), chunk.getLength(),false) != null ){
-
-						pePiece.setRequested(pt, chunk.getBlockNumber());
-
-						pt.setLastPiece(pieceNumber);
-
-						chunk.requested();
+			Iterator<EndGameModeChunk>	it = endGameModeChunks.iterator();
 						
-						return( 1 );
+			while( it.hasNext()){
 
-					}else{
+				EndGameModeChunk chunk = it.next();
 
+				int pieceNumber = chunk.getPieceNumber();
 
-						return( 0 );
+				if ( dmPieces[pieceNumber].isWritten(chunk.getBlockNumber())){
+
+					it.remove();
+
+					endGameModeChunkMap.remove( new Long(((long)pieceNumber) << 32 | chunk.getBlockNumber()));
+				
+				}else{
+
+					PEPiece	pePiece = pePieces[pieceNumber];
+
+					if ( pt.isPieceAvailable(pieceNumber) && pePiece != null ){
+
+						if ( ( !pt.isSnubbed() || availability[pieceNumber] <=peerControl.getNbPeersSnubbed()) &&
+								pt.request(pieceNumber, chunk.getOffset(), chunk.getLength(),false) != null ){
+	
+							pePiece.setRequested(pt, chunk.getBlockNumber());
+	
+							pt.setLastPiece(pieceNumber);
+	
+							chunk.requested();
+							
+								// stick it at the end
+							
+							it.remove();
+							
+							endGameModeChunks.add( chunk );
+														
+							return( 1 );
+						}
 					}
 				}
 			}
-
-				// we're here because there are no endgame mode chunks left
-				// either the torrent is done or something unusual happened
-				// cleanup anyway and allow a proper re-entry into endgame mode if neccessary
-
-			leaveEndGameMode();
+						
+			if ( endGameModeChunks.isEmpty()){
+				
+				leaveEndGameMode();
+			}
+			
+			return( 0 );
 		}
-
-		return 0;
 	}
 
 	@Override
@@ -2825,7 +2830,7 @@ implements PiecePicker
 
 					iter.remove();
 					
-					endGameModeChunkMap.remove( new Long( pieceNumber << 32 | chunk.getBlockNumber()));
+					endGameModeChunkMap.remove( new Long( ((long)(pieceNumber)) << 32 | chunk.getBlockNumber()));
 				}
 			}
 		}
@@ -3472,7 +3477,7 @@ implements PiecePicker
 	{
 		synchronized( endGameModeChunkLock ){
 		
-			EndGameModeChunk chunk = endGameModeChunkMap.get( new Long( piece_number << 32 | block_number ));
+			EndGameModeChunk chunk = endGameModeChunkMap.get( new Long( ((long)piece_number) << 32 | block_number ));
 			
 			if ( chunk == null ){
 				
