@@ -420,9 +420,14 @@ TRTrackerServerProcessorTCP
 
 								throw( new Exception( "IP override address must be resolved by the client" ));
 							}
-						}
+						}else if ( AENetworkClassifier.categoriseAddress( client_ip_address  ) == AENetworkClassifier.AT_I2P ){
+						
+							// ignore ip override as it is probably a full destination whereas the real originator is the .b32 equivalent
+							
+						}else{
 
-						client_ip_address = rhs;
+							client_ip_address = rhs;
+						}
 
 					}else if ( lhs.equals( "uploaded" )){
 
