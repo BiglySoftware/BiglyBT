@@ -326,7 +326,7 @@ public class ConfigSectionLogging implements UISWTConfigSection {
 		Messages.setLanguageText(l_debug_file_size, "ConfigView.section.logging.debugfilesize");
 		l_debug_file_size.setLayoutData(new GridData());
 		
-	    new IntParameter(cDebugFiles, "Logger.DebugFiles.SizeKB");
+	    new IntParameter(cDebugFiles, "Logger.DebugFiles.SizeKB", 10, Integer.MAX_VALUE);
 	    new Label(cDebugFiles, SWT.NULL).setLayoutData( new GridData( GridData.FILL_HORIZONTAL));
     }
     
