@@ -310,6 +310,26 @@ public class ConfigSectionLogging implements UISWTConfigSection {
     udp_transport.setLayoutData(gridData);
     */
 
+    if (userMode > 0 ){
+    	
+	    Composite cDebugFiles = new Composite(gLogging, SWT.NULL);
+	    layout = new GridLayout();
+	    layout.marginHeight = 0;
+	    layout.marginWidth = 0;
+	    layout.numColumns = 3;
+	    cDebugFiles.setLayout(layout);
+	    gridData = new GridData(GridData.FILL_HORIZONTAL);
+	    gridData.horizontalSpan = 2;
+	    cDebugFiles.setLayoutData(gridData);
+	    
+	    Label l_debug_file_size = new Label(cDebugFiles, SWT.NULL);
+		Messages.setLanguageText(l_debug_file_size, "ConfigView.section.logging.debugfilesize");
+		l_debug_file_size.setLayoutData(new GridData());
+		
+	    new IntParameter(cDebugFiles, "Logger.DebugFiles.SizeKB", 10, Integer.MAX_VALUE);
+	    new Label(cDebugFiles, SWT.NULL).setLayoutData( new GridData( GridData.FILL_HORIZONTAL));
+    }
+    
     if (userMode > 1){
 
 	    	// advanced option

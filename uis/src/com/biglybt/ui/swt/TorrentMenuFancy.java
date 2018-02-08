@@ -1984,26 +1984,43 @@ public class TorrentMenuFancy
 
 		// personal share
 		if (isSeedingView) {
-			createRow(detailArea, "MyTorrentsView.menu.create_personal_share", null,
-					new ListenerDMTask(dms, false) {
-						@Override
-						public void run(DownloadManager dm) {
-							File file = dm.getSaveLocation();
+			boolean	can_share_pers = dms.length > 0;
 
-							Map<String, String> properties = new HashMap<>();
+			for ( DownloadManager dm: dms ){
 
-							properties.put(ShareManager.PR_PERSONAL, "true");
+				File file = dm.getSaveLocation();
 
-							if (file.isFile()) {
-
-								ShareUtils.shareFile(file.getAbsolutePath(), properties);
-
-							} else if (file.isDirectory()) {
-
-								ShareUtils.shareDir(file.getAbsolutePath(), properties);
+				if ( !file.exists()){
+					
+					can_share_pers = false;
+					
+					break;
+				}
+			}
+			
+			if ( can_share_pers ){
+				
+				createRow(detailArea, "MyTorrentsView.menu.create_personal_share", null,
+						new ListenerDMTask(dms, false) {
+							@Override
+							public void run(DownloadManager dm) {
+								File file = dm.getSaveLocation();
+	
+								Map<String, String> properties = new HashMap<>();
+	
+								properties.put(ShareManager.PR_PERSONAL, "true");
+	
+								if (file.isFile()) {
+	
+									ShareUtils.shareFile(file.getAbsolutePath(), properties);
+	
+								} else if (file.isDirectory()) {
+	
+									ShareUtils.shareDir(file.getAbsolutePath(), properties);
+								}
 							}
-						}
-					});
+						});
+			}
 		}
 
 	}
