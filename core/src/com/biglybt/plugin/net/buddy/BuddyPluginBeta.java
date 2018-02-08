@@ -122,6 +122,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	private boolean					shared_anon_endpoint;
 	private boolean					sound_enabled;
 	private String					sound_file;
+	
+	private boolean					flash_enabled;
 
 	private Map<String,Map<String,Object>>		opts_map;
 
@@ -155,6 +157,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		shared_anon_endpoint	= COConfigurationManager.getBooleanParameter( "azbuddy.chat.share_i2p_endpoint", true );
 		sound_enabled			= COConfigurationManager.getBooleanParameter( "azbuddy.chat.notif.sound.enable", false );
 		sound_file			 	= COConfigurationManager.getStringParameter( "azbuddy.chat.notif.sound.file", "" );
+
+		flash_enabled			= COConfigurationManager.getBooleanParameter( "azbuddy.chat.notif.flash.enable", true );
 
 		opts_map				= COConfigurationManager.getMapParameter( "azbuddy.dchat.optsmap", new HashMap<String,Map<String,Object>>());	// should migrate others to use this...
 
@@ -1112,6 +1116,28 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			plugin.fireUpdated();
 		}
+	}
+	
+	public void
+	setFlashEnabled(
+		boolean		b )
+	{
+		if ( b !=  flash_enabled ){
+
+			flash_enabled	= b;
+
+			COConfigurationManager.setParameter( "azbuddy.chat.notif.flash.enable", b );
+
+			COConfigurationManager.setDirty();
+
+			plugin.fireUpdated();
+		}
+	}
+	
+	public boolean
+	getFlashEnabled()
+	{
+		return( flash_enabled );
 	}
 
 	private void
@@ -6224,6 +6250,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					String my_nick = participant.getChat().getNickname( true );
 
+					my_nick = my_nick.replaceAll( " ", "\u00a0" );
+					
 					int	nick_len = my_nick.length();
 
 					List<Integer> hits = new ArrayList<>();

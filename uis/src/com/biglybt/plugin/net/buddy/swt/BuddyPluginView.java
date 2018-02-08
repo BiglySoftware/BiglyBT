@@ -801,6 +801,7 @@ BuddyPluginView
 	private Image				bs_chat_gray;
 	private Image				bs_chat_gray_text;
 	private Image				bs_chat_green;
+	private Image				bs_chat_red;
 
 	private void
 	checkBetaInit()
@@ -856,6 +857,7 @@ BuddyPluginView
 					bs_chat_gray		= imageLoader.getImage( "dchat_gray" );
 					bs_chat_gray_text 	= imageLoader.getImage( "dchat_gray_text" );
 					bs_chat_green 		= imageLoader.getImage( "dchat_green" );
+					bs_chat_red 		= imageLoader.getImage( "dchat_red" );
 
 					setBetaStatus( bs_chat_gray );
 
@@ -1542,8 +1544,9 @@ BuddyPluginView
 
 										Iterator<Map.Entry<String,Object[]>> it = pending_msg_map.entrySet().iterator();
 
-										boolean	has_new = false;
-
+										boolean	has_new 	= false;
+										boolean has_mine	= false;
+										
 										while( it.hasNext()){
 
 											Map.Entry<String,Object[]> map_entry = it.next();
@@ -1558,6 +1561,11 @@ BuddyPluginView
 
 											}else{
 
+												if ( chat.hasUnseenMessageWithNick()){
+													
+													has_mine = true;
+												}
+												
 												HashSet<Control> comps = ((HashSet<Control>)entry[1]);
 
 												Iterator<Control>	control_it = comps.iterator();
@@ -1625,7 +1633,14 @@ BuddyPluginView
 
 											beta_status.setTooltipText( tt_text );
 
-											setBetaStatus( tick_count%2==0?bs_chat_gray_text:bs_chat_green);
+											Image image = has_mine?bs_chat_red:bs_chat_green;
+											
+											if ( plugin.getBeta().getFlashEnabled() && tick_count%2==0 ){
+											
+												image = bs_chat_gray_text;
+											}
+											
+											setBetaStatus( image );
 										}
 
 										prev_instances = current_instances;

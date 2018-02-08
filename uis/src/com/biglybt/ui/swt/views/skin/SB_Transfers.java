@@ -560,16 +560,24 @@ public class SB_Transfers
 
 					int	current = statsNoLowNoise.numIncomplete;
 
-					if (current > 0)
+					if (current > 0){
 						return current + ""; // + " of " + numIncomplete;
-				}
-
-				if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
+					}
+				}else if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
 					return MessageText.getString("sidebar.LibraryDL.tooltip",
 							new String[] {
 								"" + statsNoLowNoise.numIncomplete,
 								"" + statsNoLowNoise.numDownloading
 							});
+				}else if (propertyID == TITLE_INDICATOR_COLOR) {
+					
+					if ( statsNoLowNoise.numDownloading > 0 ){
+						return( new int[]{ 96, 160, 96 });
+					}else if ( statsNoLowNoise.numErrorInComplete > 0 ){
+						return( new int[]{ 132, 16, 58 } );
+					}else{
+						return( null );
+					}
 				}
 
 				return null;
@@ -1743,7 +1751,8 @@ public class SB_Transfers
 					continue;
 				}
 				if (imageID.equals(ID_VITALITY_ACTIVE)) {
-					vitalityImage.setVisible(statsNoLowNoise.numDownloading > 0);
+					//replace this annoying spinner with color change
+					//vitalityImage.setVisible(statsNoLowNoise.numDownloading > 0);
 
 				} else if (imageID.equals(ID_VITALITY_ALERT)) {
 					vitalityImage.setVisible(statsNoLowNoise.numErrorInComplete > 0);

@@ -587,15 +587,15 @@ BuddyPluginViewInstance
 
 		noti_area.setText( lu.getLocalisedMessageText( "v3.MainWindow.tab.events" ));
 
-		final Button noti_enable = new Button( noti_area, SWT.CHECK );
+		final Button sound_enable = new Button( noti_area, SWT.CHECK );
 
-		noti_enable.setText( lu.getLocalisedMessageText( "azbuddy.dchat.noti.sound" ));
+		sound_enable.setText( lu.getLocalisedMessageText( "azbuddy.dchat.noti.sound" ));
 
-		boolean	sound_enabled = plugin_beta.getSoundEnabled();
+		boolean sound_enabled =  plugin_beta.getSoundEnabled();
+		
+		sound_enable.setSelection( sound_enabled );
 
-		noti_enable.setSelection( sound_enabled );
-
-		noti_enable.addSelectionListener(
+		sound_enable.addSelectionListener(
 				new SelectionAdapter()
 				{
 					@Override
@@ -603,10 +603,9 @@ BuddyPluginViewInstance
 					widgetSelected(
 						SelectionEvent ev )
 					{
-						plugin_beta.setSoundEnabled( noti_enable.getSelection());
+						plugin_beta.setSoundEnabled( sound_enable.getSelection());
 					}
 				});
-
 
 		final Text noti_file = new Text( noti_area, SWT.BORDER );
 		grid_data = new GridData();
@@ -706,7 +705,25 @@ BuddyPluginViewInstance
 			noti_file.setEnabled( false );
 			noti_browse.setEnabled( false );
 		}
+		
+		final Button flash_enable = new Button( noti_area, SWT.CHECK );
+	
+		flash_enable.setText( lu.getLocalisedMessageText( "azbuddy.dchat.noti.flash" ));
+	
+		flash_enable.setSelection( plugin_beta.getFlashEnabled());
 
+		flash_enable.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent ev )
+					{
+						plugin_beta.setFlashEnabled( flash_enable.getSelection());
+					}
+				});
+	
 			// private chats
 
 		Group private_chat_area = new Group( main, SWT.NULL );
