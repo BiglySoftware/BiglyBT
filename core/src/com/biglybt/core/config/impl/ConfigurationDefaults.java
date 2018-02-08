@@ -324,6 +324,7 @@ public class ConfigurationDefaults {
       for (int j = 0; j <= 3; j++)
         def.put("bLog" + logComponents[i] + "-" + j, TRUE);
     def.put("Logger.DebugFiles.Enabled", TRUE);
+    def.put("Logger.DebugFiles.SizeKB", 256 );
     def.put("Logger.DebugFiles.Enabled.Force", FALSE );
     def.put("Logging Enable UDP Transport", FALSE);
 

@@ -54,6 +54,8 @@ AEDiagnostics
     public static final boolean TRACE_TCP_TRANSPORT_STATS       = false;
     public static final boolean TRACE_CONNECTION_DROPS          = false;
 
+	private static final int	MAX_FILE_SIZE_DEFAULT;	// get two of these per logger type
+	private static int[]		MAX_FILE_SIZE_ACTUAL = { 0 };
 
 	static{
 		if ( ALWAYS_PASS_HASH_CHECKS ){
@@ -94,10 +96,9 @@ AEDiagnostics
 			}
 		} catch (Throwable t) {
 		}
-		MAX_FILE_SIZE = maxFileSize;
+		MAX_FILE_SIZE_ACTUAL[0] = MAX_FILE_SIZE_DEFAULT = maxFileSize;
 	}
 
-	private static final int	MAX_FILE_SIZE;	// get two of these per logger type
 
 	private static final String	CONFIG_KEY	= "diagnostics.tidy_close";
 
@@ -156,6 +157,7 @@ AEDiagnostics
 				new String[]{
 					"Logger.Enabled",
 					"Logger.DebugFiles.Enabled",
+					"Logger.DebugFiles.SizeKB",
 				},
 				new ParameterListener()
 				{
@@ -172,6 +174,16 @@ AEDiagnostics
 
 							boolean skipCVSCheck = System.getProperty("skip.loggers.enabled.cvscheck", "0").equals("1");
 							loggers_enabled = (!skipCVSCheck && Constants.IS_CVS_VERSION) || COConfigurationManager.getBooleanParameter( "Logger.DebugFiles.Enabled.Force" );
+						}
+						
+						if ( System.getProperty("diag.logsize", null) == null ){
+							
+							int kb = COConfigurationManager.getIntParameter("Logger.DebugFiles.SizeKB", 0 )*1024;
+							
+							if ( kb > 0 ){
+								
+								MAX_FILE_SIZE_ACTUAL[0] = kb;
+							}
 						}
 					}
 				});
@@ -333,7 +345,7 @@ AEDiagnostics
 
 			startup( false );
 
-			logger	= new AEDiagnosticsLogger( debug_dir, name, MAX_FILE_SIZE, !enable_pending_writes );
+			logger	= new AEDiagnosticsLogger( debug_dir, name, MAX_FILE_SIZE_ACTUAL, !enable_pending_writes );
 
 			loggers.put( name, logger );
 		}
