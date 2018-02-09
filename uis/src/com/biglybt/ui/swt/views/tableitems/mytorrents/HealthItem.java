@@ -160,10 +160,10 @@ public class HealthItem
 			gc.setAdvanced(true);
 			gc.setAntialias(SWT.ON);
 			if (isShare) {
-				gc.setForeground(Colors.getInstance().getFadedColor( ColorCache.getColor(gc.getDevice(), color)));
+				gc.setForeground(Colors.getInstance().getSlightlyFadedColor( ColorCache.getColor(gc.getDevice(), color)));
 				gc.fillGradientRectangle(bounds.x, bounds.y, bounds.width, bounds.height, true);
 			} else {
-				gc.setBackground(Colors.getInstance().getFadedColor( ColorCache.getColor(gc.getDevice(), color)));
+				gc.setBackground(Colors.getInstance().getSlightlyFadedColor( ColorCache.getColor(gc.getDevice(), color)));
 				gc.fillRoundRectangle(bounds.x, bounds.y, bounds.width, bounds.height, bounds.height, bounds.height);
 			}
 		}
