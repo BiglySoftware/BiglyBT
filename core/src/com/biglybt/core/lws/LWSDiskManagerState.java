@@ -418,6 +418,16 @@ LWSDiskManagerState
     }
 
     @Override
+    public int getFileFlags(int file_index){
+    	return 0;
+    }
+    
+    @Override
+    public void setFileFlags(int file_index, int flags){
+    	
+    }
+    
+    @Override
     public void
     discardFluff()
     {

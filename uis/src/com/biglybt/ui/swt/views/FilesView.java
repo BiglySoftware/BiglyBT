@@ -681,6 +681,7 @@ public class FilesView
 
 			FilesViewMenuUtil.fillMenu(
 				tv,
+				sColumnName,
 				menu,
 				new DownloadManager[]{ managers.get(0) },
 				new DiskManagerFileInfo[][]{ files });
@@ -723,7 +724,7 @@ public class FilesView
 				files_list[i] = list.toArray( new DiskManagerFileInfo[list.size()]);
 			}
 
-			FilesViewMenuUtil.fillMenu(tv, menu, manager_list, files_list );
+			FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list );
 		}
 	}
 

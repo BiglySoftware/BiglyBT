@@ -80,7 +80,8 @@ DownloadManagerState
 	public static final String AT_COMPLETE_LAST_TIME		= "complt";			// long - last time download reported complete, -1 if reported incomplete, 0 if unknown
 	public static final String AT_LAST_ADDED_TO_ACTIVE_TAG	= "last.act.tag";	// long - last time added to active tag
 	public static final String AT_MOVE_ON_COMPLETE_DIR		= "moc.dir";		// String - explicit move-on-complete folder
-
+	public static final String AT_FILE_FLAGS				= "ff";
+	
 	public static Object[][] ATTRIBUTE_DEFAULTS = {
 		{ AT_VERSION,								new Integer( -1 )},
 		{ AT_TIME_SINCE_DOWNLOAD,					new Integer( -1 )},
@@ -106,6 +107,9 @@ DownloadManagerState
 	public static final long FLAG_INITIAL_NETWORKS_SET					= Download.FLAG_INITIAL_NETWORKS_SET;
 	public static final long FLAG_SEQUENTIAL_DOWNLOAD					= Download.FLAG_SEQUENTIAL_DOWNLOAD;
 
+	public static final int	FILE_FLAG_NOT_NEW		= 0x00000001;
+	
+	
 	public static final String	PARAM_MAX_PEERS							= "max.peers";
 	public static final String	PARAM_MAX_PEERS_WHEN_SEEDING			= "max.peers.when.seeding";
 	public static final String	PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED	= "max.peers.when.seeding.enabled";
@@ -326,6 +330,15 @@ DownloadManagerState
 	public LinkFileMap
 	getFileLinks();
 
+	public int
+	getFileFlags(
+		int		file_index );
+	
+	public void
+	setFileFlags(
+		int		file_index,
+		int		flags );
+	
 	/**
 	 * @return
 	 */

@@ -1808,6 +1808,7 @@ public class MyTorrentsView
   		if (listFileInfos.size() > 0) {
   			FilesViewMenuUtil.fillMenu(
   					tv,
+  					sColumnName,
   					menu,
   					new DownloadManager[]{ firstFileDM },
   					new DiskManagerFileInfo[][]{ listFileInfos.toArray(new DiskManagerFileInfo[0])});

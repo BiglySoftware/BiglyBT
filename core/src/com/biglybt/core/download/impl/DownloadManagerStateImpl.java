@@ -2058,6 +2058,54 @@ DownloadManagerStateImpl
 	}
 
 	@Override
+	public int getFileFlags(int file_index){
+		Map map  = getMapAttribute( AT_FILE_FLAGS );
+		
+		if ( map == null ){
+			
+			return(0);
+		}
+		
+		String key = String.valueOf( file_index );
+		
+		Number result = (Integer)map.get( key );
+		
+		return( result==null?0:result.intValue());
+	}
+
+	@Override
+	public void setFileFlags(int file_index, int flags){
+		Map map  = getMapAttribute( AT_FILE_FLAGS );
+		
+		if ( map == null ){
+			
+			map = new HashMap();
+			
+		}else{
+			
+			map = BEncoder.cloneMap( map );
+		}
+		
+		String key = String.valueOf( file_index );
+
+		if ( flags == 0 ){
+			
+			map.remove( key );
+			
+			if ( map.isEmpty()){
+				
+				map = null;
+			}
+		}else{
+			
+			map.put( key,  flags );
+			
+		}
+		
+		setMapAttribute( AT_FILE_FLAGS, map );
+	}
+	    
+	@Override
 	public boolean
 	isOurContent()
 	{
@@ -3112,6 +3160,16 @@ DownloadManagerStateImpl
 			return( new LinkFileMap());
 		}
 
+		@Override
+		public int getFileFlags(int file_index){
+			return 0;
+		}
+
+		@Override
+		public void setFileFlags(int file_index, int flags){
+
+		}
+		    
 		@Override
 		public void
 		setActive(boolean active )

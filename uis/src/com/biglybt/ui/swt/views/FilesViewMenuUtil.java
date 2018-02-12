@@ -26,8 +26,6 @@ import java.util.List;
 
 import com.biglybt.core.util.*;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MenuAdapter;
-import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -46,6 +44,7 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.columns.torrent.ColumnUnopened;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.sharing.ShareUtils;
@@ -77,6 +76,7 @@ public class FilesViewMenuUtil
 	public static void
 	fillMenu(
 		final TableView<?> 				tv,
+		String							columnName,
 		final Menu 						menu,
 		final DownloadManager[] 		manager_list,
 		final DiskManagerFileInfo[][] 	files_list )
@@ -600,6 +600,38 @@ public class FilesViewMenuUtil
 		itemSkipped.addListener(SWT.Selection, priorityListener);
 		itemDelete.addListener(SWT.Selection, priorityListener);
 
+		if ( columnName.equals( ColumnUnopened.COLUMN_ID )){
+						
+			final MenuItem toggle = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(toggle, "label.toggle.new.marker");
+
+			toggle.addListener(
+					SWT.Selection,
+					new Listener()
+					{
+						@Override
+						public void
+						handleEvent(
+							Event arg )
+						{
+							for (int i = 0; i < all_files.size(); i++) {
+
+								DiskManagerFileInfo file = all_files.get(i);
+								
+								DownloadManager dm = file.getDownloadManager();
+								
+								int ff = dm.getDownloadState().getFileFlags( file.getIndex());
+								
+								ff ^= DownloadManagerState.FILE_FLAG_NOT_NEW;
+								
+								dm.getDownloadState().setFileFlags( file.getIndex(), ff );
+							}
+						}
+					});
+			
+			new MenuItem( menu, SWT.SEPARATOR );
+		}
+		
 		com.biglybt.pif.ui.menus.MenuItem[] menu_items = MenuItemManager.getInstance().getAllAsArray(
 				MenuManager.MENU_FILE_CONTEXT);
 		if (menu_items.length > 0) {

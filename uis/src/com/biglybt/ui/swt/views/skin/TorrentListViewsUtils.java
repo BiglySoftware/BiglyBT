@@ -321,11 +321,11 @@ public class TorrentListViewsUtils
 						Integer file_index = mapPositionToFileInfo.get(selectedIndex[0]);
 
 						if (file_index != null) {
-  						int open_result = openInEMP(dm,file_index,complete_only,referal);
+							int open_result = openInEMP(dm,file_index,complete_only,referal);
 
-  						if ( open_result == 0 ){
-  							PlatformTorrentUtils.setHasBeenOpened(dm, true);
-  						}
+							if ( open_result == 0 ){
+								PlatformTorrentUtils.setHasBeenOpened(dm, file_index, true);
+							}
 						}
 					}
 				});
@@ -339,7 +339,7 @@ public class TorrentListViewsUtils
 			int open_result = openInEMP(dm,file_index,complete_only,referal);
 
 			if ( open_result == 0 ){
-				PlatformTorrentUtils.setHasBeenOpened(dm, true);
+				PlatformTorrentUtils.setHasBeenOpened(dm, file_index, true);
 				return;
 			}else if ( open_result == 2 ){
 				debug( "Open in EMP abandoned" );

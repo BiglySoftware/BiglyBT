@@ -23,14 +23,15 @@ package com.biglybt.ui.swt.columns.torrent;
 
 import org.eclipse.swt.graphics.Image;
 
+import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
@@ -46,8 +47,11 @@ public class ColumnUnopened
 	implements TableCellAddedListener, TableCellRefreshListener,
 	TableCellMouseListener
 {
-	public static final Class<?> DATASOURCE_TYPE = Download.class;
-
+	public static final Class<?>[] DATASOURCE_TYPES = {
+			Download.class,
+			com.biglybt.pif.disk.DiskManagerFileInfo.class
+		};
+	
 	public static final String COLUMN_ID = "unopened";
 
 	@Override
@@ -64,7 +68,8 @@ public class ColumnUnopened
 
 	public ColumnUnopened(String tableID) {
 		super(COLUMN_ID, tableID);
-
+		addDataSourceTypes(DATASOURCE_TYPES);
+		
 		synchronized( ColumnUnopened.class ){
 
 			if (graphicCheck == null) {
@@ -108,6 +113,18 @@ public class ColumnUnopened
 						boolean x = PlatformTorrentUtils.getHasBeenOpened( dm );
 
 						PlatformTorrentUtils.setHasBeenOpened(dm, !x );
+						
+					}else if ( _ds instanceof DiskManagerFileInfo ){
+						
+						DiskManagerFileInfo file = (DiskManagerFileInfo)_ds;
+						
+						DownloadManager dm = file.getDownloadManager();
+						
+						int ff = dm.getDownloadState().getFileFlags( file.getIndex());
+						
+						ff ^= DownloadManagerState.FILE_FLAG_NOT_NEW;
+						
+						dm.getDownloadState().setFileFlags( file.getIndex(), ff );
 					}
 				}
 			}
@@ -126,40 +143,78 @@ public class ColumnUnopened
 	// @see com.biglybt.pif.ui.tables.TableCellRefreshListener#refresh(com.biglybt.pif.ui.tables.TableCell)
 	@Override
 	public void refresh(TableCell cell) {
-		DownloadManager dm = (DownloadManager) cell.getDataSource();
-		if (dm == null) {
+		Object ds = cell.getDataSource();
+		if (ds==null) {
 			return;
 		}
-		int sortVal;
-		boolean complete = dm.getAssumedComplete();
-		boolean hasBeenOpened = false;
-		if (complete) {
-			hasBeenOpened = PlatformTorrentUtils.getHasBeenOpened(dm);
-			sortVal = hasBeenOpened ? 1 : 0;
-		} else {
-			sortVal = isSortAscending()?2:-1;
-		}
-
-		if (!cell.setSortValue(sortVal) && cell.isValid()) {
-			if(complete) {
+		if ( ds instanceof DownloadManager ){
+			DownloadManager dm = (DownloadManager)ds;
+			
+			int sortVal;
+			boolean complete = dm.getAssumedComplete();
+			boolean hasBeenOpened = false;
+			if (complete) {
+				hasBeenOpened = PlatformTorrentUtils.getHasBeenOpened(dm);
+				sortVal = hasBeenOpened ? 1 : 0;
+			} else {
+				sortVal = isSortAscending()?2:-1;
+			}
+	
+			if (!cell.setSortValue(sortVal) && cell.isValid()) {
+				if(complete) {
+					return;
+				}
+			}
+			if (!cell.isShown()) {
 				return;
 			}
-		}
-		if (!cell.isShown()) {
-			return;
-		}
-
-		if (complete) {
-			cell.setGraphic(hasBeenOpened ? graphicUnCheck : graphicCheck);
-		} else {
-			if(dm.getState() == DownloadManager.STATE_DOWNLOADING) {
-				int i = TableCellRefresher.getRefreshIndex(1, graphicsProgress.length);
-				cell.setGraphic(graphicsProgress[i]);
-				TableCellRefresher.addCell(this, cell);
+	
+			if (complete) {
+				cell.setGraphic(hasBeenOpened ? graphicUnCheck : graphicCheck);
 			} else {
-				cell.setGraphic(null);
+				if(dm.getState() == DownloadManager.STATE_DOWNLOADING) {
+					int i = TableCellRefresher.getRefreshIndex(1, graphicsProgress.length);
+					cell.setGraphic(graphicsProgress[i]);
+					TableCellRefresher.addCell(this, cell);
+				} else {
+					cell.setGraphic(null);
+				}
+	
 			}
-
+		}else{
+			DiskManagerFileInfo file = (DiskManagerFileInfo)ds;
+			
+			int sortVal;
+			boolean complete = file.getLength() == file.getDownloaded();
+			
+			boolean hasBeenOpened = false;
+			if (complete) {
+				
+				DownloadManager dm = file.getDownloadManager();
+				
+				int ff = dm.getDownloadState().getFileFlags( file.getIndex());
+				
+				hasBeenOpened = ( ff & DownloadManagerState.FILE_FLAG_NOT_NEW ) != 0;
+					
+				sortVal = hasBeenOpened ? 1 : 0;
+			} else {
+				sortVal = isSortAscending()?2:-1;
+			}
+	
+			if (!cell.setSortValue(sortVal) && cell.isValid()) {
+				if(complete) {
+					return;
+				}
+			}
+			if (!cell.isShown()) {
+				return;
+			}
+	
+			if (complete) {
+				cell.setGraphic(hasBeenOpened ? graphicUnCheck : graphicCheck);
+			} else {
+				cell.setGraphic( null );
+			}
 		}
 	}
 
@@ -167,12 +222,41 @@ public class ColumnUnopened
 	@Override
 	public void cellMouseTrigger(TableCellMouseEvent event) {
 		if (event.eventType == TableRowMouseEvent.EVENT_MOUSEUP && event.button == 1) {
-			DownloadManager dm = (DownloadManager) event.cell.getDataSource();
-			boolean complete = dm.getAssumedComplete();
-			if(!complete) return;
-			boolean hasBeenOpened = !PlatformTorrentUtils.getHasBeenOpened(dm);
-			PlatformTorrentUtils.setHasBeenOpened(dm, hasBeenOpened);
+			
+			Object ds = event.cell.getDataSource();
+			
+			boolean hasBeenOpened;
+			
+			if ( ds instanceof DownloadManager ){
+				DownloadManager dm = (DownloadManager) event.cell.getDataSource();
+				
+				boolean complete = dm.getAssumedComplete();
+				
+				if(!complete) return;
+				
+				hasBeenOpened = !PlatformTorrentUtils.getHasBeenOpened(dm);
+				
+				PlatformTorrentUtils.setHasBeenOpened(dm, hasBeenOpened);
+			}else{
+			
+				DiskManagerFileInfo file = (DiskManagerFileInfo)ds;
+				
+				boolean complete = file.getLength() == file.getDownloaded();
+				
+				if(!complete) return;
+				
+				DownloadManager dm = file.getDownloadManager();
+				
+				int ff = dm.getDownloadState().getFileFlags( file.getIndex());
+												
+				ff ^= DownloadManagerState.FILE_FLAG_NOT_NEW;
+				
+				hasBeenOpened = ( ff & DownloadManagerState.FILE_FLAG_NOT_NEW ) != 0;
+
+				dm.getDownloadState().setFileFlags( file.getIndex(), ff );
+			}
 			event.cell.setGraphic(hasBeenOpened ? graphicUnCheck : graphicCheck);
+			
 			event.cell.invalidate();
 		}
 	}

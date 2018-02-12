@@ -228,6 +228,8 @@ public class ManagerUtils {
 								public void
 								run()
 								{
+									PlatformTorrentUtils.setHasBeenOpened( file.getDownloadManager(), file.getIndex(), true);
+
 									File this_file = file.getFile(true);
 
 									File parent_file = (open_containing_folder_mode) ? this_file.getParentFile() : null;

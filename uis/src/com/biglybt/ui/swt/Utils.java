@@ -49,6 +49,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
@@ -1178,6 +1179,8 @@ public class Utils
 							public void
 							run()
 							{
+								PlatformTorrentUtils.setHasBeenOpened( fileInfo.getDownloadManager(), fileInfo.getIndex(), true);
+								
 								launch(fileInfo.getFile(true).toString());
 							}
 						});

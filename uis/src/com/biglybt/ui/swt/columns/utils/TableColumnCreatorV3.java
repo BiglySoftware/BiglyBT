@@ -455,7 +455,7 @@ public class TableColumnCreatorV3
 		final Map<String, cInfo> c = new LightHashMap<>(7);
 
 		c.put(ColumnUnopened.COLUMN_ID, new cInfo(ColumnUnopened.class,
-				ColumnUnopened.DATASOURCE_TYPE));
+				ColumnUnopened.DATASOURCE_TYPES));
 		c.put(ColumnThumbAndName.COLUMN_ID, new cInfo(ColumnThumbAndName.class,
 				ColumnThumbAndName.DATASOURCE_TYPES));
 		c.put(ColumnStream.COLUMN_ID, new cInfo(ColumnStream.class,
