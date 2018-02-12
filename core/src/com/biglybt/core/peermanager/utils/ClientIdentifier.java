@@ -18,6 +18,7 @@
 package com.biglybt.core.peermanager.utils;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.ByteFormatter;
 
 public class ClientIdentifier {
@@ -299,7 +300,7 @@ public class ClientIdentifier {
 	  private static int test_count = 1;
 	  private static void assertDecode(String client_name, String peer_id, String handshake_name, String handshake_version, byte[] handshake_reserved, String type) throws Exception {
 		  byte[] byte_peer_id = BTPeerIDByteDecoder.peerIDStringToBytes(peer_id);
-		  String peer_id_client = BTPeerIDByteDecoder.decode(byte_peer_id);
+		  String peer_id_client = BTPeerIDByteDecoder.decode(byte_peer_id,AENetworkClassifier.AT_PUBLIC);
 
 		  String decoded_client;
 		  if (type.equals("AZMP")) {decoded_client = identifyAZMP(peer_id_client, handshake_name, handshake_version, byte_peer_id);}

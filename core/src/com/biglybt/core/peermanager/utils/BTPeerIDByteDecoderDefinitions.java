@@ -129,7 +129,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		return (String)mainline_style_code_map.get(peer_id.substring(0, 1));
 	}
 
-	public static String getAzStyleClientVersion(String client_name, String peer_id) {
+	public static String getAzStyleClientVersion(String client_name, String peer_id, String net ) {
 		String version_scheme = (String)az_client_version_map.get(client_name);
 		if (version_scheme == NO_VERSION) {return null;}
 		try {
@@ -138,7 +138,7 @@ public class BTPeerIDByteDecoderDefinitions {
 			);
 		}
 		catch (Exception e) {
-			BTPeerIDByteDecoder.logUnknownClient(peer_id);
+			BTPeerIDByteDecoder.logUnknownClient(peer_id, net);
 			return null;
 		}
 	}
@@ -154,7 +154,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		return null;
 	}
 
-	public static String getSubstringStyleClientVersion(ClientData client_data, String peer_id, byte[] peer_id_bytes) {
+	public static String getSubstringStyleClientVersion(ClientData client_data, String peer_id, byte[] peer_id_bytes, String net) {
 		VersionNumberData verdata = client_data.version_data;
 		if (verdata == null) {return null;}
 
@@ -178,7 +178,7 @@ public class BTPeerIDByteDecoderDefinitions {
 			else {return client_data.client_name + verdata.fmt.replaceFirst("%s", version_string);}
 		}
 		catch (Exception e) {
-			BTPeerIDByteDecoder.logUnknownClient(peer_id);
+			BTPeerIDByteDecoder.logUnknownClient(peer_id, net);
 			return null;
 		}
 	}

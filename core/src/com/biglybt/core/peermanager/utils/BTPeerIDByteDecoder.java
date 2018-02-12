@@ -99,7 +99,7 @@ public class BTPeerIDByteDecoder {
 
 	// I don't expect this to grow too big, and it won't grow if there's no logging going on.
 	private static final HashSet logged_ids = new HashSet();
-	static void logUnknownClient(byte[] peer_id_bytes) {logUnknownClient(peer_id_bytes, true);}
+	
 	static void logUnknownClient(byte[] peer_id_bytes, boolean to_debug_out) {
 
 		if (!client_logging_allowed) {return;}
@@ -123,12 +123,12 @@ public class BTPeerIDByteDecoder {
 
 	}
 
-	static void logUnknownClient(String peer_id) {
-		try {logUnknownClient(peer_id.getBytes(Constants.BYTE_ENCODING));}
+	static void logUnknownClient(String peer_id, String net ) {
+		try {logUnknownClient(peer_id.getBytes(Constants.BYTE_ENCODING), net==AENetworkClassifier.AT_PUBLIC);}
 		catch (UnsupportedEncodingException uee) {}
 	}
 
-	public static String decode0(byte[] peer_id_bytes) {
+	public static String decode0(byte[] peer_id_bytes, String net) {
 
 		String peer_id = null;
 		try {peer_id = new String(peer_id_bytes, Constants.BYTE_ENCODING);}
@@ -156,7 +156,7 @@ public class BTPeerIDByteDecoder {
 		if (BTPeerIDByteDecoderUtils.isAzStyle(peer_id)) {
 			client = BTPeerIDByteDecoderDefinitions.getAzStyleClientName(peer_id);
 			if (client != null) {
-				String client_with_version = BTPeerIDByteDecoderDefinitions.getAzStyleClientVersion(client, peer_id);
+				String client_with_version = BTPeerIDByteDecoderDefinitions.getAzStyleClientVersion(client, peer_id, net);
 
 				/**
 				 * Hack for fake ZipTorrent clients - there seems to be some clients
@@ -238,7 +238,7 @@ public class BTPeerIDByteDecoder {
 		BTPeerIDByteDecoderDefinitions.ClientData client_data = BTPeerIDByteDecoderDefinitions.getSubstringStyleClient(peer_id);
 		if (client_data != null) {
 			client = client_data.client_name;
-			String client_with_version = BTPeerIDByteDecoderDefinitions.getSubstringStyleClientVersion(client_data, peer_id, peer_id_bytes);
+			String client_with_version = BTPeerIDByteDecoderDefinitions.getSubstringStyleClientVersion(client_data, peer_id, peer_id_bytes, net);
 			if (client_with_version != null) {return client_with_version;}
 			return client;
 		}
@@ -257,12 +257,12 @@ public class BTPeerIDByteDecoder {
 	 * Decodes the given peerID, returning an identification string.
 	 */
 	public static String
-	decode(byte[] peer_id)
+	decode(byte[] peer_id, String net )
 	{
 		if ( peer_id.length > 0 ){
 
 			try {
-				String client = decode0(peer_id);
+				String client = decode0(peer_id, net);
 
 				if (client != null ){
 
@@ -280,7 +280,7 @@ public class BTPeerIDByteDecoder {
 
 				boolean is_shadow_style = BTPeerIDByteDecoderUtils.isShadowStyle(peer_id_as_string);
 
-				logUnknownClient(peer_id, !(is_az_style || is_shadow_style));
+				logUnknownClient(peer_id, !(net != AENetworkClassifier.AT_PUBLIC || is_az_style || is_shadow_style));
 
 				if (is_az_style) {
 					return BTPeerIDByteDecoderDefinitions.formatUnknownAzStyleClient(peer_id_as_string);
@@ -449,7 +449,7 @@ public class BTPeerIDByteDecoder {
 		System.out.println("   Peer ID: " + peer_id_as_string + "   Client: " + client_result);
 
 		// Do not log any clients.
-		String decoded_result = decode(peer_id);
+		String decoded_result = decode(peer_id,AENetworkClassifier.AT_PUBLIC);
 		if (client_result.equals(decoded_result)) {return;}
 		throw new RuntimeException("assertion failure - expected \"" + client_result + "\", got \"" + decoded_result + "\": " + peer_id_as_string);
 	}

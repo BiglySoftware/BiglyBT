@@ -41,8 +41,8 @@ public class PeerClassifier {
    * @param peer_id peerID sent in handshake
    * @return description
    */
-  public static String getClientDescription( byte[] peer_id ) {
-    return BTPeerIDByteDecoder.decode( peer_id );
+  public static String getClientDescription( byte[] peer_id, String net ) {
+    return BTPeerIDByteDecoder.decode( peer_id, net );
   }
 
 

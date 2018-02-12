@@ -2533,7 +2533,7 @@ implements PEPeerTransport
 		peer_id = handshake.getPeerId();
 
 		// Decode a client identification string from the given peerID
-		this.client_peer_id = this.client = StringInterner.intern(PeerClassifier.getClientDescription( peer_id ));
+		this.client_peer_id = this.client = StringInterner.intern(PeerClassifier.getClientDescription( peer_id, network ));
 
 		//make sure the client type is not banned
 		if( !PeerClassifier.isClientTypeAllowed( client ) ) {
