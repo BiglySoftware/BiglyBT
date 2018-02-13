@@ -2933,7 +2933,9 @@ public class TableViewPainted
 				break;
 			}
 		}
-		if (!focusInSelection) {
+		if (focusInSelection) {
+			reaffirmSelection();
+		}else{
 			setFocusedRow(newSelectionArray.length == 0 ? null : newSelectionArray[0]);
 		}
 	}

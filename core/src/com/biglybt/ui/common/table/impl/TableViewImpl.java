@@ -2079,6 +2079,22 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 	}
+	
+	protected void
+	reaffirmSelection()
+	{
+		List<TableRowCore> oldSelectionList = new ArrayList<>();
+
+		synchronized (rows_sync) {
+			if (selectedRows.size() == 0 ){
+				return;
+			}
+
+			oldSelectionList.addAll(selectedRows);
+		}
+		
+		triggerSelectionListeners(oldSelectionList.toArray(new TableRowCore[0]));
+	}
 
 	public abstract boolean isSingleSelection();
 
