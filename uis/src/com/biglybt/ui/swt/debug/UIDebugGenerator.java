@@ -17,6 +17,7 @@
 package com.biglybt.ui.swt.debug;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -36,13 +37,13 @@ import com.biglybt.core.logging.impl.FileLogging;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.util.DataSourceUtils;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 
@@ -65,7 +66,10 @@ public class UIDebugGenerator
 		public String email;
 	}
 
-	public static void generate(final String sourceRef, String additionalText) {
+	public static void 
+	generate(
+		final String sourceRef, String additionalText) 
+	{
 		final GeneratedResults gr = generate(null,
 				new DebugPrompterListener() {
 					@Override
@@ -104,8 +108,11 @@ public class UIDebugGenerator
 		public boolean promptUser(GeneratedResults gr);
 	}
 
-	public static GeneratedResults generate(File[] extraLogDirs,
-			DebugPrompterListener debugPrompterListener) {
+	public static java.util.List<Image>
+	getShellImages()
+	{
+		java.util.List<Image> result = new ArrayList<>();
+				
 		Display display = Display.getCurrent();
 		if (display == null) {
 			return null;
@@ -116,26 +123,9 @@ public class UIDebugGenerator
 			activeShell.setCursor(display.getSystemCursor(SWT.CURSOR_WAIT));
 		}
 
-		// make sure display is up to date
-		while (display.readAndDispatch()) {
-		}
-
 		Shell[] shells = display.getShells();
 		if (shells == null || shells.length == 0) {
 			return null;
-		}
-
-		final File path = new File(SystemProperties.getUserPath(), "debug");
-		if (!path.isDirectory()) {
-			path.mkdir();
-		} else {
-			try {
-				File[] files = path.listFiles();
-				for (int i = 0; i < files.length; i++) {
-					files[i].delete();
-				}
-			} catch (Exception e) {
-			}
 		}
 
 		for (int i = 0; i < shells.length; i++) {
@@ -146,6 +136,10 @@ public class UIDebugGenerator
 				if (shell.isDisposed() || !shell.isVisible()) {
 					continue;
 				}
+
+				shell.moveAbove( null );
+				
+				Utils.ensureDisplayUpdated( display );
 
 				if (shell.getData("class") instanceof ObfuscateShell) {
 					ObfuscateShell shellClass = (ObfuscateShell) shell.getData("class");
@@ -169,26 +163,122 @@ public class UIDebugGenerator
 				}
 
 				if (image != null) {
-					File file = new File(path, "image-" + i + ".vpg");
-					String sFileName = file.getAbsolutePath();
-
-					ImageLoader imageLoader = new ImageLoader();
-					imageLoader.data = new ImageData[] {
-						image.getImageData()
-					};
-					imageLoader.save(sFileName, SWT.IMAGE_JPEG);
+					result.add( image );
 				}
 
-			} catch (Exception e) {
+			} catch (Throwable  e) {
 				Logger.log(new LogEvent(LogIDs.GUI, "Creating Obfuscated Image", e));
 			}
 		}
 
-		GeneratedResults gr = new GeneratedResults();
-
 		if (activeShell != null) {
 			activeShell.setCursor(null);
 		}
+		
+		return( result );
+	}
+	
+	public static Image generateObfuscatedImage( Shell shell ) {
+		// 3.2 TODO: Obfuscate! (esp advanced view)
+
+		Rectangle shellBounds = shell.getBounds();
+		Rectangle shellClientArea = shell.getClientArea();
+
+		Display display = shell.getDisplay();
+		if (display.isDisposed()) {
+			return null;
+		}
+		Image fullImage = new Image(display, shellBounds.width, shellBounds.height);
+		Image subImage = new Image(display, shellClientArea.width, shellClientArea.height);
+
+		GC gc = new GC(display);
+		try {
+			gc.copyArea(fullImage, shellBounds.x, shellBounds.y);
+		} finally {
+			gc.dispose();
+		}
+		GC gcShell = new GC(shell);
+		try {
+			gcShell.copyArea(subImage, 0, 0);
+		} finally {
+			gcShell.dispose();
+		}
+		GC gcFullImage = new GC(fullImage);
+		try {
+			Point location = shell.toDisplay(0, 0);
+			gcFullImage.drawImage(subImage, location.x - shellBounds.x, location.y
+					- shellBounds.y);
+		} finally {
+			gcFullImage.dispose();
+		}
+		subImage.dispose();
+
+		Control[] children = shell.getChildren();
+		for (Control control : children) {
+			SWTSkinObject so = (SWTSkinObject) control.getData("SkinObject");
+			if (so instanceof ObfuscateImage) {
+				ObfuscateImage oi = (ObfuscateImage) so;
+				oi.obfuscatedImage(fullImage);
+			}
+		}
+
+		Rectangle monitorClientArea = shell.getMonitor().getClientArea();
+		Rectangle trimmedShellBounds = shellBounds.intersection(monitorClientArea);
+
+		if (!trimmedShellBounds.equals(shellBounds)) {
+			subImage = new Image(display, trimmedShellBounds.width,
+					trimmedShellBounds.height);
+			GC gcCrop = new GC(subImage);
+			try {
+				gcCrop.drawImage(fullImage, shellBounds.x - trimmedShellBounds.x,
+						shellBounds.y - trimmedShellBounds.y);
+			} finally {
+				gcCrop.dispose();
+				fullImage.dispose();
+				fullImage = subImage;
+			}
+		}
+
+		return fullImage;
+	}
+	
+	public static GeneratedResults 
+	generate(
+		File[] extraLogDirs,
+		DebugPrompterListener debugPrompterListener) 
+	{
+		final File path = new File(SystemProperties.getUserPath(), "debug");
+		if (!path.isDirectory()) {
+			path.mkdir();
+		} else {
+			try {
+				File[] files = path.listFiles();
+				for (int i = 0; i < files.length; i++) {
+					files[i].delete();
+				}
+			} catch (Exception e) {
+			}
+		}
+
+		java.util.List<Image> shell_images = getShellImages();
+		
+		for ( int i=0;i<shell_images.size();i++){
+			
+			Image image = shell_images.get( i );
+			
+			File file = new File(path, "image-" + i + ".vpg");
+			String sFileName = file.getAbsolutePath();
+	
+			ImageLoader imageLoader = new ImageLoader();
+			imageLoader.data = new ImageData[] {
+				image.getImageData()
+			};
+			imageLoader.save(sFileName, SWT.IMAGE_JPEG);
+		}
+		
+		GeneratedResults gr = new GeneratedResults();
+
+
 
 		if (debugPrompterListener != null) {
 			if (!debugPrompterListener.promptUser(gr)) {

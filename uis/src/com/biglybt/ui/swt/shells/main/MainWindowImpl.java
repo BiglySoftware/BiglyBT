@@ -2360,67 +2360,7 @@ public class MainWindowImpl
 
 	@Override
 	public Image generateObfuscatedImage() {
-		// 3.2 TODO: Obfuscate! (esp advanced view)
-
-		Rectangle shellBounds = shell.getBounds();
-		Rectangle shellClientArea = shell.getClientArea();
-
-		Display display = shell.getDisplay();
-		if (display.isDisposed()) {
-			return null;
-		}
-		Image fullImage = new Image(display, shellBounds.width, shellBounds.height);
-		Image subImage = new Image(display, shellClientArea.width, shellClientArea.height);
-
-		GC gc = new GC(display);
-		try {
-			gc.copyArea(fullImage, shellBounds.x, shellBounds.y);
-		} finally {
-			gc.dispose();
-		}
-		GC gcShell = new GC(shell);
-		try {
-			gcShell.copyArea(subImage, 0, 0);
-		} finally {
-			gcShell.dispose();
-		}
-		GC gcFullImage = new GC(fullImage);
-		try {
-			Point location = shell.toDisplay(0, 0);
-			gcFullImage.drawImage(subImage, location.x - shellBounds.x, location.y
-					- shellBounds.y);
-		} finally {
-			gcFullImage.dispose();
-		}
-		subImage.dispose();
-
-		Control[] children = shell.getChildren();
-		for (Control control : children) {
-			SWTSkinObject so = (SWTSkinObject) control.getData("SkinObject");
-			if (so instanceof ObfuscateImage) {
-				ObfuscateImage oi = (ObfuscateImage) so;
-				oi.obfuscatedImage(fullImage);
-			}
-		}
-
-		Rectangle monitorClientArea = shell.getMonitor().getClientArea();
-		Rectangle trimmedShellBounds = shellBounds.intersection(monitorClientArea);
-
-		if (!trimmedShellBounds.equals(shellBounds)) {
-			subImage = new Image(display, trimmedShellBounds.width,
-					trimmedShellBounds.height);
-			GC gcCrop = new GC(subImage);
-			try {
-				gcCrop.drawImage(fullImage, shellBounds.x - trimmedShellBounds.x,
-						shellBounds.y - trimmedShellBounds.y);
-			} finally {
-				gcCrop.dispose();
-				fullImage.dispose();
-				fullImage = subImage;
-			}
-		}
-
-		return fullImage;
+		return( UIDebugGenerator.generateObfuscatedImage( shell ));
 	}
 
 	// @see MdiListener#mdiEntrySelected(MdiEntry, MdiEntry)

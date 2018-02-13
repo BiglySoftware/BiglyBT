@@ -64,6 +64,7 @@ import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
 import com.biglybt.ui.swt.skin.SWTSkinProperties;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -568,6 +569,22 @@ public class SideBarEntrySWT
 					view.setPluginSkinObject(soContents);
 					view.initialize(viewComposite);
 
+					soContents.addListener(
+							new SWTSkinObjectListener(){
+								
+								@Override
+								public Object eventOccured(SWTSkinObject skinObject, int eventType, Object params){
+									if ( eventType == SWTSkinObjectListener.EVENT_OBFUSCATE ){
+										Map data = new HashMap();
+										data.put( "image", (Image)params );
+										data.put( "obfuscateTitle",false );
+										
+										view.triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, data);
+									}
+									return null;
+								}
+							});
+					
 					if (PAINT_BG) {
 						if ( swtItem != null ){
 							swtItem.setText(view.getFullTitle());

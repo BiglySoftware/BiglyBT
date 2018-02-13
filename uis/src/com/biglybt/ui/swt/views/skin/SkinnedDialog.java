@@ -28,12 +28,15 @@ import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.debug.ObfuscateShell;
+import com.biglybt.ui.swt.debug.UIDebugGenerator;
 
 /**
  * Creates a dialog (shell) and fills it with a skinned layout
@@ -43,6 +46,7 @@ import com.biglybt.ui.swt.components.shell.ShellFactory;
  *
  */
 public class SkinnedDialog
+	implements ObfuscateShell
 {
 	private final String shellSkinObjectID;
 
@@ -83,6 +87,8 @@ public class SkinnedDialog
 		mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
 		shell = ShellFactory.createShell(parent, style);
 
+		shell.setData( "class", this );
+		
 		Utils.setShellIcon(shell);
 
 		SWTSkin skin = SWTSkinFactory.getNonPersistentInstance(cla, skinPath,
@@ -124,6 +130,11 @@ public class SkinnedDialog
 		disposed = false;
 	}
 
+	@Override
+	public Image generateObfuscatedImage() {
+		return( UIDebugGenerator.generateObfuscatedImage( shell ));
+	}
+	
 	protected void setSkin(SWTSkin _skin) {
 		skin = _skin;
 	}

@@ -4405,7 +4405,23 @@ public class Utils
 		mapListeners.clear();
 	}
 
-
+	public static void
+	ensureDisplayUpdated( Display display )
+	{
+		long start = SystemTime.getMonotonousTime();
+		
+		// make sure display is up to date
+		while (display.readAndDispatch()) {
+			
+			if ( SystemTime.getMonotonousTime() - start > 5000 ){
+				
+				// hmmm, somert wrong
+				
+				return;
+			}
+		}
+	}
+	
 	public static void dispose() {
 		shellIcons = null;
 		icon128 = null;

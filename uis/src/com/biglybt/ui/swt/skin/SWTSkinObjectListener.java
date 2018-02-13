@@ -63,6 +63,8 @@ public interface SWTSkinObjectListener
 	public static int EVENT_LANGUAGE_CHANGE = 6;
 
 	public static int EVENT_DATASOURCE_CHANGED = 7;
+	
+	public static int EVENT_OBFUSCATE = 8;
 
 
 	/**
@@ -76,7 +78,8 @@ public interface SWTSkinObjectListener
 		"Created",
 		"Create Request",
 		"Lang Change",
-		"DS Change"
+		"DS Change",
+		"Obfuscate"
 	};
 
 	/**

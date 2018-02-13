@@ -55,6 +55,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
@@ -194,6 +195,22 @@ public class TabbedEntry
 					view.setPluginSkinObject(soContents);
 					view.initialize(viewComposite);
 
+					soContents.addListener(
+						new SWTSkinObjectListener(){
+							
+							@Override
+							public Object eventOccured(SWTSkinObject skinObject, int eventType, Object params){
+								if ( eventType == SWTSkinObjectListener.EVENT_OBFUSCATE ){
+									Map data = new HashMap();
+									data.put( "image", (Image)params );
+									data.put( "obfuscateTitle",false );
+									
+									view.triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, data);
+								}
+								return null;
+							}
+						});
+					
 					//swtItem.setText(view.getFullTitle());
 
 					Composite iviewComposite = view.getComposite();

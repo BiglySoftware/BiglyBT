@@ -1121,6 +1121,7 @@ public class SWTSkinObjectBasic
 		if (!isVisible()) {
 			return image;
 		}
+		triggerListeners( SWTSkinObjectListener.EVENT_OBFUSCATE , image );
 		Point ourOfs = Utils.getLocationRelativeToShell(control);
 		if (obfuscatedImageGenerator == null) {
 			if (skinView instanceof ObfuscateImage) {
