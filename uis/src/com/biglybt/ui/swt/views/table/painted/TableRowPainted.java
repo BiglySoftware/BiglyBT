@@ -238,16 +238,21 @@ public class TableRowPainted
 			}
 			if (mTableCells != null) {
 				for (TableColumn tc : visibleColumns) {
+					
 					TableCellCore cell = mTableCells.get(tc.getName());
+					
 					int w = tc.getWidth();
-					if (!(cell instanceof TableCellPainted) || cell.isDisposed()) {
-						gc.fillRectangle(x, rowStartY, w, getHeight());
-						x += w;
-						continue;
-					}
-					TableCellPainted cellSWT = (TableCellPainted) cell;
+					
 					Rectangle r = new Rectangle(x, rowStartY, w, getHeight());
-					cellSWT.setBoundsRaw(r);
+
+					TableCellPainted cellSWT = null;
+					
+					if ( cell instanceof TableCellPainted && !cell.isDisposed()) {
+						
+						cellSWT = (TableCellPainted) cell;
+						
+						cellSWT.setBoundsRaw(r);
+					}
 					if (drawBounds.intersects(r)) {
 						//paintedRow = true;
 						gc.setAlpha(255);
@@ -268,6 +273,14 @@ public class TableRowPainted
 							}
 						}
 						gc.setAlpha(rowAlpha);
+						
+						if ( cellSWT == null ){
+							
+							x += w;
+							
+							continue;
+						}
+						
 						if (swt_paintCell(gc, cellSWT.getBounds(), cellSWT, shadowColor)) {
 							// row color may have changed; this would update the color
 							// for all new cells.  However, setting color triggers a
