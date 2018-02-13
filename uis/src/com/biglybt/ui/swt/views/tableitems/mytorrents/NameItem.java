@@ -39,6 +39,7 @@ import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.debug.ObfuscateCellText;
+import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 
@@ -172,19 +173,7 @@ public class NameItem extends CoreTableColumnSWT implements
 
 	@Override
 	public String getObfuscatedText(TableCell cell) {
-		String name = null;
-		DownloadManager dm = (DownloadManager) cell.getDataSource();
-		if (dm != null) {
-			name = dm.toString();
-			int i = name.indexOf('#');
-			if (i > 0) {
-				name = name.substring(i + 1);
-			}
-		}
-
-		if (name == null)
-			name = "";
-		return name;
+		return( UIDebugGenerator.obfuscateDownloadName((DownloadManager) cell.getDataSource()));
 	}
 
 	@Override

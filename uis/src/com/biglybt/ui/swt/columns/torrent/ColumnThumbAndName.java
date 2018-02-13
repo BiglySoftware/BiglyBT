@@ -53,6 +53,7 @@ import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateCellText;
+import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.utils.TorrentUIUtilsV3;
@@ -659,24 +660,12 @@ public class ColumnThumbAndName
 
 	@Override
 	public String getObfuscatedText(TableCell cell) {
-		String name = null;
 		Object ds = cell.getDataSource();
 		if (ds instanceof DiskManagerFileInfo) {
-			DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
-			return fileInfo.getIndex() + ": " + Debug.secretFileName(fileInfo.getFile(true).getName());
+			return( UIDebugGenerator.obfuscateFileName((DiskManagerFileInfo)ds ));
+		}else{
+			return( UIDebugGenerator.obfuscateDownloadName( ds ));
 		}
-		DownloadManager dm = (DownloadManager) ds;
-		if (dm != null) {
-			name = dm.toString();
-			int i = name.indexOf('#');
-			if (i > 0) {
-				name = name.substring(i + 1);
-			}
-		}
-
-		if (name == null)
-			name = "";
-		return name;
 	}
 
 	@Override

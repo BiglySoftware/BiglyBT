@@ -76,6 +76,7 @@ public class IpItem
 
   @Override
   public String getObfuscatedText(TableCell cell) {
-  	return cell.getText().substring(0, 3);
+	String text = cell.getText();
+  	return text.length() > 3?text.substring(0, 3):text;
   }
 }

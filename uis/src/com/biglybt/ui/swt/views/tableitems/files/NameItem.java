@@ -37,6 +37,7 @@ import com.biglybt.core.util.FileUtil;
 import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateCellText;
+import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
@@ -185,10 +186,7 @@ public class NameItem extends CoreTableColumnSWT implements
 
 	@Override
 	public String getObfuscatedText(TableCell cell) {
-		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
-		String name = (fileInfo == null) ? "" : fileInfo.getIndex() + ": "
-				+ Debug.secretFileName(fileInfo.getFile(true).getName());
-		return name;
+		return( UIDebugGenerator.obfuscateFileName((DiskManagerFileInfo) cell.getDataSource()));
 	}
 
 	@Override

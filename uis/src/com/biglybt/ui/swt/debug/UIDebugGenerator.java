@@ -27,17 +27,23 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.logging.impl.FileLogging;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
+import com.biglybt.util.DataSourceUtils;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 
 import com.biglybt.core.*;
@@ -602,5 +608,52 @@ public class UIDebugGenerator
 		bounds.y = location.y;
 
 		obfuscateArea(image, bounds, text);
+	}
+	
+	public static String
+	obfuscateDownloadName(
+		Object		ds )
+	{
+		return( obfuscateDownloadName( DataSourceUtils.getDM( ds )));
+	}
+	
+	public static String
+	obfuscateDownloadName(
+		PEPeer	peer )
+	{
+		if (peer == null) return( "" );
+		PEPeerManager manager = peer.getManager();
+		if (manager == null) return( "" );
+		String name = manager.getDisplayName();
+		if ( name.length() > 3 ){
+			return( name.substring( 0,  3));
+		}else{
+			return( name );
+		}
+		
+	}
+	public static String
+	obfuscateDownloadName(
+		DownloadManager	dm )
+	{
+		String name = null;
+		if (dm != null) {
+			name = dm.toString();
+			int i = name.indexOf('#');
+			if (i > 0) {
+				name = name.substring(i + 1);
+			}
+		}
+
+		if (name == null)
+			name = "";
+		return name;
+	}
+	
+	public static String
+	obfuscateFileName(
+		DiskManagerFileInfo	fileInfo )
+	{
+		return fileInfo.getIndex() + ": " + Debug.secretFileName(fileInfo.getFile(true).getName());
 	}
 }

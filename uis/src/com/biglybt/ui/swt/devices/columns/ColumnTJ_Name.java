@@ -22,7 +22,7 @@ package com.biglybt.ui.swt.devices.columns;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.ui.swt.debug.ObfuscateCellText;
-
+import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.core.devices.TranscodeFile;
 import com.biglybt.util.DataSourceUtils;
 
@@ -78,19 +78,7 @@ public class ColumnTJ_Name
 
 	@Override
 	public String getObfuscatedText(TableCell cell) {
-		String name = null;
-		DownloadManager dm = DataSourceUtils.getDM(cell.getDataSource());
-		if (dm != null) {
-			name = dm.toString();
-			int i = name.indexOf('#');
-			if (i > 0) {
-				name = name.substring(i + 1);
-			}
-		}
-
-		if (name == null)
-			name = "";
-		return name;
+		return( UIDebugGenerator.obfuscateDownloadName(cell.getDataSource()));
 	}
 
 	@Override

@@ -1300,7 +1300,7 @@ public class GeneralView
 			return image;
 		}
 		UIDebugGenerator.obfuscateArea(image, (Control) fileName.getWidget(),
-				manager == null ? "" : manager.toString());
+				manager == null ? "" : UIDebugGenerator.obfuscateDownloadName( manager ));
 		UIDebugGenerator.obfuscateArea(image, (Control) saveIn.getWidget(),
 				Debug.secretFileName(saveIn.getText()));
 		return image;
