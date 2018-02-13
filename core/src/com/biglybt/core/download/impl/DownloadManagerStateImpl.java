@@ -2068,7 +2068,7 @@ DownloadManagerStateImpl
 		
 		String key = String.valueOf( file_index );
 		
-		Number result = (Integer)map.get( key );
+		Number result = (Number)map.get( key );
 		
 		return( result==null?0:result.intValue());
 	}
