@@ -1655,7 +1655,19 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		removeAllTableRows();
 		processDataSourceQueueSync();
 
-		if (columnAddedOrRemoved) {
+		boolean	orderChanged = false;
+		
+		if ( columnsOrdered.length > 1 && !columnAddedOrRemoved ){
+			
+			for ( int i=0;i<columnsOrdered.length-2;i++){
+				if ( columnsOrdered[i].getPosition() > columnsOrdered[i+1].getPosition()){
+					
+					orderChanged = true;
+					break;
+				}
+			}
+		}
+		if (columnAddedOrRemoved || orderChanged) {
 			tableColumns = TableColumnManager.getInstance().getAllTableColumnCoreAsArray(
 					getDataSourceType(), tableID);
 			ArrayList<TableColumnCore> listVisibleColumns = new ArrayList<>();

@@ -1076,6 +1076,7 @@ public class TableViewSWT_Common
 							((TableStructureModificationListener) tv).tableStructureChanged(
 									true, null);
 						}
+						TableStructureEventDispatcher.getInstance(tableID).tableStructureChanged(true, null);
 					}
 				});
 			}
