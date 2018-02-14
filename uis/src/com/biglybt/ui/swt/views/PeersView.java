@@ -316,6 +316,44 @@ public class PeersView
 		}
 	}
 
+	protected void
+	updateSelectedContent()
+	{
+		Object[] dataSources = tv.getSelectedDataSources(true);
+
+		if ( dataSources.length == 0 ){
+			
+			String id = "DMDetails_Peers";
+	
+			setFocused( true );	// do this here to pick up correct manager before rest of code
+	
+			if (manager != null) {
+				if (manager.getTorrent() != null) {
+					id += "." + manager.getInternalName();
+				} else {
+					id += ":" + manager.getSize();
+				}
+				SelectedContentManager.changeCurrentlySelectedContent(id,
+						new SelectedContent[] {
+								new SelectedContent(manager)
+				});
+			} else {
+				SelectedContentManager.changeCurrentlySelectedContent(id, null);
+			}
+		}else{
+			
+			SelectedContent[] sc = new SelectedContent[dataSources.length];
+			
+			for ( int i=0;i<sc.length;i++){
+				
+				sc[i] = new SelectedContent();
+			}
+			
+			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
+					sc, tv);
+		}
+	}
+	
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 		switch (event.getType()) {
@@ -331,23 +369,7 @@ public class PeersView
 			break;
 		}
 		case UISWTViewEvent.TYPE_FOCUSGAINED:
-			String id = "DMDetails_Peers";
-
-			setFocused( true );	// do this here to pick up corrent manager before rest of code
-
-			if (manager != null) {
-				if (manager.getTorrent() != null) {
-					id += "." + manager.getInternalName();
-				} else {
-					id += ":" + manager.getSize();
-				}
-				SelectedContentManager.changeCurrentlySelectedContent(id,
-						new SelectedContent[] {
-								new SelectedContent(manager)
-				});
-			} else {
-				SelectedContentManager.changeCurrentlySelectedContent(id, null);
-			}
+			updateSelectedContent();
 
 			break;
 		case UISWTViewEvent.TYPE_FOCUSLOST:

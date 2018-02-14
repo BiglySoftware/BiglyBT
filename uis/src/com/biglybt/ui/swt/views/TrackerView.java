@@ -66,7 +66,7 @@ import com.biglybt.ui.swt.UIFunctionsSWT;
 public class TrackerView
 	extends TableViewTab<TrackerPeerSource>
 	implements 	TableLifeCycleListener, TableDataSourceChangedListener,
-				DownloadManagerTPSListener, TableViewSWTMenuFillListener
+				DownloadManagerTPSListener, TableViewSWTMenuFillListener, TableSelectionListener
 {
 	private static boolean registeredCoreSubViews = false;
 
@@ -113,6 +113,7 @@ public class TrackerView
 		tv.addLifeCycleListener(this);
 		tv.addMenuFillListener(this);
 		tv.addTableDataSourceChangedListener(this, true);
+		tv.addSelectionListener(this, false);
 
 		tv.setEnableTabViews(enable_tabs,true,null);
 
@@ -454,20 +455,13 @@ public class TrackerView
 		tv.processDataSourceQueueSync();
 	}
 
-	@Override
-	public boolean eventOccurred(UISWTViewEvent event) {
-	    switch (event.getType()) {
+	protected void
+	updateSelectedContent()
+	{
+		Object[] dataSources = tv.getSelectedDataSources(true);
 
-	      case UISWTViewEvent.TYPE_CREATE:{
-	    	  if ( event instanceof UISWTViewEventImpl ){
+		if ( dataSources.length == 0 ){
 
-	    		  String parent = ((UISWTViewEventImpl)event).getParentID();
-
-	    		  enable_tabs = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
-	    	  }
-	    	  break;
-	      }
-	      case UISWTViewEvent.TYPE_FOCUSGAINED:
 	      	String id = "DMDetails_Sources";
 	      	if (manager != null) {
 	      		if (manager.getTorrent() != null) {
@@ -482,7 +476,60 @@ public class TrackerView
 					} else {
 						SelectedContentManager.changeCurrentlySelectedContent(id, null);
 					}
+		}else{
+			
+			SelectedContent[] sc = new SelectedContent[dataSources.length];
+			
+			for ( int i=0;i<sc.length;i++){
+				
+				sc[i] = new SelectedContent();
+			}
+			
+			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
+					sc, tv);
+		}
 
+	}
+	
+	@Override
+	public void deselected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+
+	@Override
+	public void focusChanged(TableRowCore focus) {
+	}
+
+	@Override
+	public void selected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+	
+	@Override
+	public void mouseEnter(TableRowCore row){
+	}
+
+	@Override
+	public void mouseExit(TableRowCore row){
+	}
+	
+	@Override
+	public boolean eventOccurred(UISWTViewEvent event) {
+	    switch (event.getType()) {
+
+	      case UISWTViewEvent.TYPE_CREATE:{
+	    	  if ( event instanceof UISWTViewEventImpl ){
+
+	    		  String parent = ((UISWTViewEventImpl)event).getParentID();
+
+	    		  enable_tabs = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
+	    	  }
+	    	  break;
+	      }
+	      case UISWTViewEvent.TYPE_FOCUSGAINED:
+	    	  
+	    	updateSelectedContent();
+	    	
 	      	break;
 
 	      case UISWTViewEvent.TYPE_FOCUSLOST:

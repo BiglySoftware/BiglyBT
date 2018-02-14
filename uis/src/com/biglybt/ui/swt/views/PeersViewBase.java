@@ -59,6 +59,8 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableLifeCycleListener;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableSelectionListener;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
@@ -130,7 +132,7 @@ import com.biglybt.ui.swt.views.tableitems.peers.UpSpeedLimitItem;
 public abstract class 
 PeersViewBase
 	extends TableViewTab<PEPeer>
-	implements UISWTViewCoreEventListenerEx, TableLifeCycleListener, TableViewSWTMenuFillListener
+	implements UISWTViewCoreEventListenerEx, TableLifeCycleListener, TableViewSWTMenuFillListener, TableSelectionListener
 {
 	static TableColumnCore[] getBasicColumnItems(String table_id) {
 		return new TableColumnCore[] {
@@ -350,6 +352,8 @@ PeersViewBase
 		tv.addLifeCycleListener(this);
 		
 		tv.addMenuFillListener(this);
+		
+		tv.addSelectionListener(this, false);
 		
 		return tv;
 	}	
@@ -1189,6 +1193,31 @@ PeersViewBase
 
 			new MenuItem( menuThisColumn, SWT.SEPARATOR );
 		}
+	}
+	
+	protected abstract void
+	updateSelectedContent();
+	
+	@Override
+	public void deselected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+
+	@Override
+	public void focusChanged(TableRowCore focus) {
+	}
+
+	@Override
+	public void selected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+	
+	@Override
+	public void mouseEnter(TableRowCore row){
+	}
+
+	@Override
+	public void mouseExit(TableRowCore row){
 	}
 	
 	private static abstract class

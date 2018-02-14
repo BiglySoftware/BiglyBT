@@ -59,6 +59,8 @@ import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableDataSourceChangedListener;
 import com.biglybt.ui.common.table.TableLifeCycleListener;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableSelectionListener;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
@@ -81,6 +83,7 @@ public class PiecesView
 	TableDataSourceChangedListener,
 	TableLifeCycleListener,
 	TableViewSWTMenuFillListener,
+	TableSelectionListener,
 	UISWTViewCoreEventListenerEx
 {
 	private static boolean registeredCoreSubViews = false;
@@ -177,6 +180,7 @@ public class PiecesView
 		tv.addTableDataSourceChangedListener(this, true);
 		tv.addMenuFillListener(this);
 		tv.addLifeCycleListener(this);
+		tv.addSelectionListener(this, false);
 
 		return tv;
 	}
@@ -518,6 +522,65 @@ public class PiecesView
 		return manager;
 	}
 
+	protected void
+	updateSelectedContent()
+	{
+		Object[] dataSources = tv.getSelectedDataSources(true);
+
+		if ( dataSources.length == 0 ){
+
+	      	String id = "DMDetails_Pieces";
+	      	
+	      	if (manager != null) {
+	      		if (manager.getTorrent() != null) {
+	      			id += "." + manager.getInternalName();
+	      		} else {
+	      			id += ":" + manager.getSize();
+	      		}
+	      		SelectedContentManager.changeCurrentlySelectedContent(id,
+	      				new SelectedContent[] {
+	      						new SelectedContent(manager)
+	      		});
+	      	} else {
+	      		SelectedContentManager.changeCurrentlySelectedContent(id, null);
+	      	}
+		}else{
+			
+			SelectedContent[] sc = new SelectedContent[dataSources.length];
+			
+			for ( int i=0;i<sc.length;i++){
+				
+				sc[i] = new SelectedContent();
+			}
+			
+			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
+					sc, tv);
+		}
+
+	}
+	
+	@Override
+	public void deselected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+
+	@Override
+	public void focusChanged(TableRowCore focus) {
+	}
+
+	@Override
+	public void selected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+	
+	@Override
+	public void mouseEnter(TableRowCore row){
+	}
+
+	@Override
+	public void mouseExit(TableRowCore row){
+	}
+	
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 	    switch (event.getType()) {
@@ -532,24 +595,11 @@ public class PiecesView
 	    	  break;
 	      }
 	      case UISWTViewEvent.TYPE_FOCUSGAINED:
-	      	String id = "DMDetails_Pieces";
 
 	      	setFocused( true );	// do this here to pick up corrent manager before rest of code
 
-	      	if (manager != null) {
-	      		if (manager.getTorrent() != null) {
-	  					id += "." + manager.getInternalName();
-	      		} else {
-	      			id += ":" + manager.getSize();
-	      		}
-						SelectedContentManager.changeCurrentlySelectedContent(id,
-								new SelectedContent[] {
-									new SelectedContent(manager)
-						});
-					} else {
-						SelectedContentManager.changeCurrentlySelectedContent(id, null);
-					}
-
+	      	updateSelectedContent();
+	      	
 		    break;
 	      case UISWTViewEvent.TYPE_FOCUSLOST:
 	    	  setFocused( false );

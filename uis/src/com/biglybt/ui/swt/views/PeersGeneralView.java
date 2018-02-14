@@ -175,4 +175,7 @@ PeersGeneralView
 				break;
 		}
 	}
+	
+	protected void
+	updateSelectedContent(){}
 }
