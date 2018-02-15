@@ -743,7 +743,7 @@ public class ConsoleInput extends Thread {
 			out.println("Saving aliases to: " + aliasesFile.getCanonicalPath());
 			FileOutputStream fo = new FileOutputStream(aliasesFile);
 			try{
-				aliases.store(fo, "This aliases file was automatically written by Azureus");
+				aliases.store(fo, "This aliases file was automatically written by " + Constants.AZUREUS_NAME);
 			}finally{
 				fo.close();
 			}

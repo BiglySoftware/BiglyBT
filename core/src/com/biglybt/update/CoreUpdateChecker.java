@@ -339,22 +339,24 @@ CoreUpdateChecker
 				}
 			}
 
+			String update_name = "Core " + Constants.AZUREUS_NAME + " Version";
+			
 			String[]	desc;
 
 			if ( info == null ){
 
-				desc = new String[]{"Core Azureus Version" };
+				desc = new String[]{ update_name };
 
 			}else{
 
-				desc = new String[]{"Core Azureus Version", info };
+				desc = new String[]{update_name, info };
 			}
 
 
 
 			final Update update =
 				checker.addUpdate(
-						"Core Azureus Version",
+						update_name,
 						desc,
 						current_version,
 						latest_version,
@@ -808,7 +810,10 @@ CoreUpdateChecker
 
 				String app_name = SystemProperties.getApplicationName();
 
-				if ( !( app_name.equals( "Vuze" ) || app_name.equals( "Azureus" ) || app_name.equals( "BiglyBT" ))){
+				if ( !( app_name.equals( "Vuze" ) || 
+						app_name.equals( "Azureus" ) || 
+						app_name.equals( "BiglyBT" ) || 
+						app_name.equals( Constants.AZUREUS_NAME ))){
 
 					UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
 
