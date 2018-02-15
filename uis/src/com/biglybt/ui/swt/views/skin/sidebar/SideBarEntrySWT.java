@@ -569,6 +569,10 @@ public class SideBarEntrySWT
 					view.setPluginSkinObject(soContents);
 					view.initialize(viewComposite);
 
+						// without this some views get messed up layouts (chat view for example)
+					
+					viewComposite.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
+
 					soContents.addListener(
 							new SWTSkinObjectListener(){
 								
