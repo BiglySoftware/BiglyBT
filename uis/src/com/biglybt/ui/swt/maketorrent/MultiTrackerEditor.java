@@ -31,6 +31,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.core.util.TrackersUtil;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
@@ -42,6 +43,7 @@ import com.biglybt.ui.UserPrompterResultListener;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -231,7 +233,11 @@ public class MultiTrackerEditor {
 
 					configList.removeAll();
 
-					for ( String str: multiTrackers.keySet()){
+					List<String> names = new ArrayList<String>(multiTrackers.keySet());
+					
+					Collections.sort(names, new FormattersImpl().getAlphanumericComparator( true ));
+							
+					for ( String str: names ){
 
 						configList.add( str );
 					}
