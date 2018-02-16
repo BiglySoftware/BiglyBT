@@ -961,7 +961,8 @@ TorrentUtils
 
 					// hmm, no valid urls at all
 
-				torrent.setAnnounceURL( new URL( NO_VALID_URL_URL ));
+				
+				torrent.setAnnounceURL( getDecentralisedURL( torrent ));
 
 			}else{
 
