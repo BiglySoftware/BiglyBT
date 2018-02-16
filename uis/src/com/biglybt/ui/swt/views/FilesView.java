@@ -145,8 +145,9 @@ public class FilesView
 
   public boolean hide_dnd_files;
 
-	private volatile long selection_size;
-	private volatile long selection_done;
+  private volatile long selection_size;
+  private volatile long selection_size_with_dnd;
+  private volatile long selection_done;
 
   MenuItem path_item;
 
@@ -540,8 +541,9 @@ public class FilesView
 	}
 
 	public void updateSelectedContent() {
-		long	total_size 	= 0;
-		long	total_done	= 0;
+		long	total_size 			= 0;
+		long	total_dnd 			= 0;
+		long	total_done			= 0;
 
 		Object[] dataSources = tv.getSelectedDataSources(true);
 		List<SelectedContent> listSelected = new ArrayList<>(dataSources.length);
@@ -550,8 +552,9 @@ public class FilesView
 				DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) ds;
 				listSelected.add(new SelectedContent(fileInfo.getDownloadManager(),
 						fileInfo.getIndex()));
-				if ( !fileInfo.isSkipped()){
-
+				if ( fileInfo.isSkipped()){
+					total_dnd += fileInfo.getLength();
+				}else{
 					total_size 	+= fileInfo.getLength();
 					total_done	+= fileInfo.getDownloaded();
 				}
@@ -560,8 +563,9 @@ public class FilesView
 
 
 
-		selection_size	= total_size;
-		selection_done	= total_done;
+		selection_size			= total_size;
+		selection_size_with_dnd	= total_dnd + total_size;
+		selection_done			= total_done;
 
 		updateHeader();
 
@@ -1148,13 +1152,21 @@ public class FilesView
 				MessageText.getString(
 				"label.num_selected", new String[]{ String.valueOf( selection_count )});
 
-		if ( selection_size > 0 ){
+		if ( selection_size_with_dnd > 0 ){
 
-			if ( selection_size == selection_done ){
-
-				str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + ")";
+			if ( selection_size == selection_size_with_dnd ){
+				
+				if ( selection_size == selection_done ){
+	
+					str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + ")";
+					
+				}else{
+					
+					str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_done ) + "/" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + ")";
+	
+				}
 			}else{
-				str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_done ) + "/" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + ")";
+				str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_done ) + "/" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + "/" + DisplayFormatters.formatByteCountToKiBEtc( selection_size_with_dnd ) + ")";
 
 			}
 		}
