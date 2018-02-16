@@ -2020,7 +2020,23 @@ BuddyPluginViewInstance
 		buddy_table.addListener(SWT.MouseMove, tt_table_listener);
 		buddy_table.addListener(SWT.MouseHover, tt_table_listener);
 
-
+		buddy_table.addKeyListener(
+			new KeyAdapter()
+			{
+				@Override
+				public void keyPressed(KeyEvent event) {
+					if (event.stateMask == SWT.MOD1) {
+						int key = event.character;
+						if (key <= 26 && key > 0) {
+							key += 'a' - 1;
+						}
+						if ( key == 'a' ){
+							buddy_table.selectAll();
+							event.doit = false;
+						}
+					}
+				}
+			});
 
 		final Menu menu = new Menu(buddy_table);
 
@@ -2827,6 +2843,24 @@ BuddyPluginViewInstance
 		
 		partial_buddy_table.setMenu( menu );
 
+		partial_buddy_table.addKeyListener(
+				new KeyAdapter()
+				{
+					@Override
+					public void keyPressed(KeyEvent event) {
+						if (event.stateMask == SWT.MOD1) {
+							int key = event.character;
+							if (key <= 26 && key > 0) {
+								key += 'a' - 1;
+							}
+							if ( key == 'a' ){
+								partial_buddy_table.selectAll();
+								event.doit = false;
+							}
+						}
+					}
+				});
+		
 		menu.addMenuListener(
 			new MenuListener()
 			{
