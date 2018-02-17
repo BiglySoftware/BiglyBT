@@ -571,12 +571,16 @@ public class SB_Transfers
 							});
 				}else if (propertyID == TITLE_INDICATOR_COLOR) {
 					
-					if ( statsNoLowNoise.numDownloading > 0 ){
-						return( new int[]{ 96, 160, 96 });
-					}else if ( statsNoLowNoise.numErrorInComplete > 0 ){
-						return( new int[]{ 132, 16, 58 } );
-					}else{
+					if ( COConfigurationManager.getBooleanParameter("LibraryDL.UseDefaultIndicatorColor")){
 						return( null );
+					}else{
+						if ( statsNoLowNoise.numDownloading > 0 ){
+							return( new int[]{ 96, 160, 96 });
+						}else if ( statsNoLowNoise.numErrorInComplete > 0 ){
+							return( new int[]{ 132, 16, 58 } );
+						}else{
+							return( null );
+						}
 					}
 				}
 
@@ -598,6 +602,29 @@ public class SB_Transfers
 		vitalityImage = entry.addVitalityImage(ID_VITALITY_ALERT);
 		vitalityImage.setVisible(false);
 
+		String parentID = "sidebar." + SideBar.SIDEBAR_SECTION_LIBRARY_DL;
+
+		MenuManager menu_manager = PluginInitializer.getDefaultInterface().getUIManager().getMenuManager();
+		
+		MenuItem mi = menu_manager.addMenuItem( parentID, "menu.use.default.indicator.color" );
+		mi.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		mi.setStyle( MenuItem.STYLE_CHECK );
+		mi.setData( COConfigurationManager.getBooleanParameter("LibraryDL.UseDefaultIndicatorColor"));
+		
+		mi.addListener(
+			new MenuItemListener()
+			{
+				@Override
+				public void
+				selected(
+					MenuItem mi, Object target )
+				{
+					COConfigurationManager.setParameter("LibraryDL.UseDefaultIndicatorColor", mi.isSelected());
+					
+					entry.redraw();
+				}
+			});
+		
 		return entry;
 	}
 

@@ -90,6 +90,7 @@ public class UIConfigDefaultsSWTv3
 
 		defaults.addParameter("Library.viewmode", startAdvanced ? 1 : 0);
 		defaults.addParameter("LibraryDL.viewmode", startAdvanced ? 1 : 0);
+		defaults.addParameter("LibraryDL.UseDefaultIndicatorColor", false );
 		defaults.addParameter("LibraryUnopened.viewmode", startAdvanced ? 1 : 0);
 		defaults.addParameter("LibraryCD.viewmode", startAdvanced ? 1 : 0);
 		defaults.addParameter("Library.EnableSimpleView", 1 );
