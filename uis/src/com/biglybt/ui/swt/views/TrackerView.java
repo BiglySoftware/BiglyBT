@@ -172,6 +172,8 @@ public class TrackerView
 										}
 									}});
 						}
+						
+						e.doit = false;
 					}
 				}});
 		

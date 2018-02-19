@@ -658,6 +658,8 @@ public class SBC_ChatOverview
 													}
 												}}});
 								}
+								
+								e.doit = false;
 							}
 						}
 					});

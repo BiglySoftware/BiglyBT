@@ -60,11 +60,12 @@ import com.biglybt.ui.swt.config.Parameter;
 import com.biglybt.ui.swt.config.ParameterChangeAdapter;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
-
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.core.security.*;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
@@ -2034,6 +2035,46 @@ BuddyPluginViewInstance
 							buddy_table.selectAll();
 							event.doit = false;
 						}
+					}else if ( event.stateMask == 0 && event.keyCode == SWT.DEL ){
+
+						TableItem[] selection = buddy_table.getSelection();
+
+						String str = "";
+						
+						for (int i=0;i<selection.length;i++){
+							
+							BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
+							
+							str += (str.isEmpty()?"":", ") + buddy.getName();
+						}
+						
+						MessageBoxShell mb =
+								new MessageBoxShell(
+									MessageText.getString("message.confirm.delete.title"),
+									MessageText.getString("message.confirm.delete.text",
+											new String[] { str	}),
+									new String[] {
+										MessageText.getString("Button.yes"),
+										MessageText.getString("Button.no")
+									},
+									1 );
+
+							mb.open(new UserPrompterResultListener() {
+								@Override
+								public void prompterClosed(int result) {
+									if (result == 0) {
+										for (int i=0;i<selection.length;i++){
+				
+											BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
+				
+											buddy.remove();
+										}
+										
+										buddy_table.setSelection( new int[0] );
+									}
+								}});
+						
+						event.doit = false;
 					}
 				}
 			});
@@ -2857,6 +2898,46 @@ BuddyPluginViewInstance
 								partial_buddy_table.selectAll();
 								event.doit = false;
 							}
+						}else if ( event.stateMask == 0 && event.keyCode == SWT.DEL ){
+
+							TableItem[] selection = partial_buddy_table.getSelection();
+
+							String str = "";
+							
+							for (int i=0;i<selection.length;i++){
+								
+								PartialBuddy buddy = (PartialBuddy)selection[i].getData();
+								
+								str += (str.isEmpty()?"":", ") + buddy.ip;
+							}
+							
+							MessageBoxShell mb =
+									new MessageBoxShell(
+										MessageText.getString("message.confirm.delete.title"),
+										MessageText.getString("message.confirm.delete.text",
+												new String[] { str	}),
+										new String[] {
+											MessageText.getString("Button.yes"),
+											MessageText.getString("Button.no")
+										},
+										1 );
+
+								mb.open(new UserPrompterResultListener() {
+									@Override
+									public void prompterClosed(int result) {
+										if (result == 0) {
+											for (int i=0;i<selection.length;i++){
+					
+												PartialBuddy buddy = (PartialBuddy)selection[i].getData();
+					
+												buddy.remove();
+											}
+											
+											partial_buddy_table.setSelection( new int[0] );
+										}
+									}});
+							
+							event.doit = false;
 						}
 					}
 				});
@@ -2869,8 +2950,6 @@ BuddyPluginViewInstance
 				menuShown(
 					MenuEvent arg0 )
 				{
-					boolean	available = plugin.isAvailable();
-
 					TableItem[] selection = partial_buddy_table.getSelection();
 
 					remove_item.setEnabled( selection.length > 0 );
