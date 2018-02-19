@@ -29,6 +29,8 @@ import java.util.TreeMap;
 
 import com.biglybt.ui.mdi.MdiCloseListener;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
@@ -36,6 +38,8 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
+
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Debug;
@@ -50,12 +54,14 @@ import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableRowCore;
@@ -589,6 +595,73 @@ public class SBC_ChatOverview
 
 			tv.addMenuFillListener( this );
 			tv.addSelectionListener(this, false);
+
+			tv.addKeyListener(
+					new KeyAdapter(){
+						@Override
+						public void
+						keyPressed(
+							KeyEvent e )
+						{
+							if ( e.stateMask == 0 && e.keyCode == SWT.DEL ){
+								
+								Object[] datasources = tv.getSelectedDataSources().toArray();
+
+								if ( datasources.length > 0 ){
+
+									List<ChatInstance> chats = new ArrayList<>();
+									
+									String str = "";
+									
+									for (Object object : datasources){
+										
+										if  (object instanceof ChatInstance ){
+
+											ChatInstance chat = (ChatInstance)object;
+											
+											chats.add( chat );
+											
+											if ( chats.size() == 1 ){
+												
+												str = chat.getDisplayName();
+												
+												if ( str == null ){
+													
+													str = chat.getName();
+												}
+											}else if ( chats.size() == 2 ){
+												
+												str += ", ...";
+											}
+										}
+									}
+									
+									MessageBoxShell mb =
+											new MessageBoxShell(
+												MessageText.getString("message.confirm.delete.title"),
+												MessageText.getString("message.confirm.delete.text",
+														new String[] { str	}),
+												new String[] {
+													MessageText.getString("Button.yes"),
+													MessageText.getString("Button.no")
+												},
+												1 );
+
+										mb.open(new UserPrompterResultListener() {
+											@Override
+											public void prompterClosed(int result) {
+												if (result == 0) {
+												
+													for ( ChatInstance chat: chats ){
+														
+														chat.remove();
+													}
+												}}});
+								}
+							}
+						}
+					});
+
 
 			tv.initialize(table_parent);
 		}

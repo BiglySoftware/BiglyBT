@@ -19,6 +19,7 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -26,12 +27,16 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.table.*;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerTPSListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.AERunnable;
@@ -45,6 +50,7 @@ import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.table.TableSelectedRowsListener;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -115,6 +121,61 @@ public class TrackerView
 		tv.addTableDataSourceChangedListener(this, true);
 		tv.addSelectionListener(this, false);
 
+		tv.addKeyListener(
+			new KeyAdapter(){
+				@Override
+				public void
+				keyPressed(
+					KeyEvent e )
+				{
+					if ( e.stateMask == 0 && e.keyCode == SWT.DEL ){
+						
+						Object[] datasources = tv.getSelectedDataSources().toArray();
+							
+						List<TrackerPeerSource> pss = new ArrayList<>();
+						
+						String str = ""; 
+								
+						for ( Object object : datasources ){
+
+							TrackerPeerSource ps = (TrackerPeerSource)object;
+							
+							if ( ps.canDelete()){
+								
+								pss.add( ps );
+								
+								str += (str.isEmpty()?"":", ") + ps.getName();
+							}
+						}
+						
+						if ( !pss.isEmpty()){
+							
+							MessageBoxShell mb =
+									new MessageBoxShell(
+										MessageText.getString("message.confirm.delete.title"),
+										MessageText.getString("message.confirm.delete.text",
+												new String[] { str	}),
+										new String[] {
+											MessageText.getString("Button.yes"),
+											MessageText.getString("Button.no")
+										},
+										1 );
+
+								mb.open(new UserPrompterResultListener() {
+									@Override
+									public void prompterClosed(int result) {
+										if (result == 0) {
+											for ( TrackerPeerSource ps: pss ){
+												
+												ps.delete();
+											}
+										}
+									}});
+						}
+					}
+				}});
+		
+								
 		tv.setEnableTabViews(enable_tabs,true,null);
 
 		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
