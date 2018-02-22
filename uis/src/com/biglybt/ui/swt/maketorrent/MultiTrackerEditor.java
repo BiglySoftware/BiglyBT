@@ -31,8 +31,11 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.core.util.TrackersUtil;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
@@ -422,7 +425,7 @@ public class MultiTrackerEditor {
     gridData.horizontalSpan = 3;
     cButtons.setLayoutData(gridData);
     GridLayout layoutButtons = new GridLayout();
-    layoutButtons.numColumns = 4;
+    layoutButtons.numColumns = 5;
     cButtons.setLayout(layoutButtons);
 
     List<Button> buttons = new ArrayList<>();
@@ -511,6 +514,39 @@ public class MultiTrackerEditor {
       }
     });
 
+    final Button btnAddTrackerList = new Button(cButtons,SWT.PUSH);
+    buttons.add( btnAddTrackerList );
+    gridData = new GridData();
+    gridData.horizontalAlignment = GridData.END;
+    btnAddTrackerList.setLayoutData(gridData);
+    Messages.setLanguageText(btnAddTrackerList,"wizard.multitracker.add.trackerlist");
+    btnAddTrackerList.addListener(SWT.Selection, new Listener() {
+      @Override
+      public void handleEvent(Event e) {
+    	  
+			SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+					"enter.url", "enter.trackerlist.url");
+
+			entryWindow.prompt(new UIInputReceiverListener() {
+				@Override
+				public void UIInputReceiverClosed(UIInputReceiver receiver) {
+					if (!receiver.hasSubmittedInput()) {
+						return;
+					}
+
+					String url = receiver.getSubmittedInput().trim();
+					
+					if ( !url.isEmpty()) {
+						
+						TreeItem group = newGroup();
+						
+						TreeItem itemTracker = newTracker(group,"trackerlist:" + url.trim());						
+					}
+				}
+			});
+    	  
+      }});
+      
     Label label = new Label(cButtons,SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL );
     label.setLayoutData(gridData);
@@ -729,6 +765,17 @@ public class MultiTrackerEditor {
               editTreeItem(itemTracker);
             }
           });
+          
+          item = new MenuItem(menu,SWT.NULL);
+          Messages.setLanguageText(item,"wizard.multitracker.edit.newlist");
+          item.addListener(SWT.Selection, new Listener() {
+            @Override
+            public void handleEvent(Event arg0) {
+              TreeItem itemTracker = newTracker(treeItem,"trackerlist:http://");
+              editTreeItem(itemTracker);
+            }
+          });
+          
           /*
           new MenuItem(menu,SWT.SEPARATOR);
 
@@ -827,6 +874,7 @@ public class MultiTrackerEditor {
 
   		if ( 	prot.equals( "http") ||
   				prot.equals( "https" ) ||
+  				prot.equals( "trackerlist") ||
   				prot.equals( "ws") ||
   				prot.equals( "wss") ||
   				prot.equals( "udp") ||

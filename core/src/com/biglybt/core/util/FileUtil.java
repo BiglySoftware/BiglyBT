@@ -2059,8 +2059,17 @@ public class FileUtil {
     	File		file,
     	String		text )
     {
+    	return( writeStringAsFile( file, text, "UTF-8" ));
+    }
+
+    public static boolean
+    writeStringAsFile(
+    	File		file,
+    	String		text,
+    	String		charset )
+    {
     	try{
-    		return( writeBytesAsFile2( file.getAbsolutePath(), text.getBytes( "UTF-8" )));
+    		return( writeBytesAsFile2( file.getAbsolutePath(), text.getBytes( charset )));
 
     	}catch( Throwable e ){
 
@@ -2069,7 +2078,7 @@ public class FileUtil {
     		return( false );
     	}
     }
-
+    
     public static void
     writeBytesAsFile(
     	String filename,

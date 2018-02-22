@@ -856,7 +856,86 @@ TorrentUtils
 
 		return( groups );
 	}
-
+	
+	private static List<List<String>>
+	expandTrackerLists(
+		List<List<String>>	groups )
+	{
+		List<List<String>> result = new ArrayList<>();
+		
+		Set<String>	tracker_lists = new HashSet<>();
+		
+		Set<String>	existing = new HashSet<>();
+		
+		for ( List<String> group: groups ){
+		
+			List<String>	new_group = new ArrayList<>();
+			
+			for ( String url: group ){
+				
+				if ( url.startsWith( "trackerlist:" )){
+					
+					tracker_lists.add( url );
+					
+				}else{
+					
+					new_group.add( url );
+											
+					existing.add( UrlUtils.getCanonicalString( url ));
+				}
+			}
+			
+			if ( !new_group.isEmpty()){
+				
+				result.add( new_group );
+			}
+		}
+		
+		if ( !tracker_lists.isEmpty()){
+			
+			for ( String tl: tracker_lists ){
+				
+				try{
+					InputStream is = ResourceDownloaderFactoryImpl.getSingleton().create( new URL( tl )).download();
+				
+					try{
+						String list = FileUtil.readInputStreamAsString( is, 32*1024, "UTF-8" );
+						
+						String[] bits = list.split( "\n" );
+						
+						for ( String bit: bits ){
+							
+							bit = bit.trim();
+							
+							if ( !bit.isEmpty()){
+								
+								bit = UrlUtils.getCanonicalString( bit );
+								
+								if ( !existing.contains( bit )){
+									
+									existing.add( bit );
+										
+									List<String> new_group = new ArrayList<>();
+									
+									new_group.add( bit );
+									
+									result.add( new_group );
+								}
+							}
+						}					
+					}finally{
+						
+						is.close();
+					}
+				}catch( Throwable e ){
+					
+				}
+			}
+		}
+		
+		return( result );
+	}
+	
 		/**
 		 * This method DOES NOT MODIFY THE TORRENT
 		 * @param groups
@@ -869,6 +948,8 @@ TorrentUtils
 		List<List<String>>		groups,
 		TOTorrent				torrent )
 	{
+		groups = expandTrackerLists( groups );
+
 		List<TOTorrentAnnounceURLSet> sets = new ArrayList<>();
 
 		for ( List<String> group: groups ){
@@ -898,6 +979,8 @@ TorrentUtils
 		List<List<String>>		groups,
 		TOTorrent				torrent )
 	{
+		groups = expandTrackerLists( groups );
+		
 			// if the new groups no longer contain the main announce url then we replace this with the first in the groups. The primary reason for this
 			// is that the DNS TXT record munging code always considers the announce-url as input to the generation of (potentially) modified URLs and if we
 			// leave the announce-url there it will magically re-appear
@@ -1295,7 +1378,7 @@ TorrentUtils
 		removeSet.add( NO_VALID_URL_URL );	// this results in removal of this dummy url if present
 		for ( List<String> l: remove_urls ){
 			for ( String s: l ){
-				removeSet.add( s.toLowerCase( Locale.US ));
+				removeSet.add( UrlUtils.getCanonicalString( s.toLowerCase( Locale.US )));
 			}
 		}
 		Iterator<List<String>> it1 = base_urls.iterator();
@@ -1309,6 +1392,8 @@ TorrentUtils
 				}else{
 					url = url.toLowerCase( Locale.US );
 
+					url = UrlUtils.getCanonicalString( url );
+					
 					if ( use_prefix_match ){
 
 						for ( String s: removeSet ){
@@ -4220,9 +4305,11 @@ TorrentUtils
 
 					DNSTXTPortInfo	first_port 	= ports.get(0);
 
-					if ( url_port != first_port.getPort()){
+					int target_port = first_port.getPort();
+					
+					if ( url_port != target_port ){
 
-						url = UrlUtils.setPort( url, first_port.getPort());
+						url = UrlUtils.setPort( url, target_port==url.getDefaultPort()?0:target_port );
 					}
 
 					if ( url_is_tcp == first_port.isTCP()){
@@ -4276,9 +4363,11 @@ TorrentUtils
 
 						URL	mod_url = url;
 
-						if ( url_port != port.getPort()){
+						int target_port = port.getPort();
+						
+						if ( url_port != target_port ){
 
-							mod_url = UrlUtils.setPort( mod_url, port.getPort());
+							mod_url = UrlUtils.setPort( mod_url, target_port==mod_url.getDefaultPort()?0:target_port );
 						}
 
 						if ( url_is_tcp != port.isTCP()){
@@ -4375,9 +4464,11 @@ TorrentUtils
 							int		url_port 	= url.getPort();
 							boolean url_is_tcp 	= url.getProtocol().toLowerCase().startsWith( "http" );
 
-							if ( url_port != port.getPort()){
+							int target_port = port.getPort();
+							
+							if ( url_port != target_port ){
 
-								url = UrlUtils.setPort( url, port.getPort());
+								url = UrlUtils.setPort( url, target_port==url.getDefaultPort()?0:target_port );
 							}
 
 							if ( url_is_tcp != port.isTCP()){

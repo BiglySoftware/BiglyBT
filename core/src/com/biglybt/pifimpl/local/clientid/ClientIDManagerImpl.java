@@ -357,9 +357,24 @@ ClientIDManagerImpl
 
 			URL		url 	= (URL)properties.get( ClientIDGenerator.PR_URL );
 
-			boolean	is_ssl = url.getProtocol().toLowerCase().equals( "https" );
-
 			try{
+				String protocol = url.getProtocol();
+				
+				String prefix = "";
+				
+				if ( protocol.equalsIgnoreCase( "trackerlist" )){
+					
+						// hack to prevent direct use of tracker lists
+					
+					String temp = url.toExternalForm();
+					
+					url = new URL( temp.substring( temp.indexOf( ":" ) +1 ));
+					
+					prefix = "trackerlist:";
+				}
+				
+				boolean	is_ssl = url.getProtocol().toLowerCase().equals( "https" );
+
 				String	url_str = url.toString();
 
 				String	target_host = url.getHost();
@@ -406,7 +421,7 @@ ClientIDManagerImpl
 					new_url += rem.substring(0,q_pos+1) + details + "&" + rem.substring(q_pos+1);
 				}
 
-				properties.put( ClientIDGenerator.PR_URL, new URL( new_url ));
+				properties.put( ClientIDGenerator.PR_URL, new URL( prefix + new_url ));
 
 			}catch( Throwable e ){
 
