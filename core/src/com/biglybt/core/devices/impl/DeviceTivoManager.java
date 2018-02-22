@@ -370,12 +370,11 @@ DeviceTivoManager
 				if ( last_port > 0 ){
 
 					try{
-						ServerSocket ss = new ServerSocket( last_port );
+						try( ServerSocket ss = new ServerSocket( last_port )){
 
-						ss.setReuseAddress( true );
+							ss.setReuseAddress( true );
 
-						ss.close();
-
+						}
 					}catch( Throwable e ){
 
 						last_port = 0;
