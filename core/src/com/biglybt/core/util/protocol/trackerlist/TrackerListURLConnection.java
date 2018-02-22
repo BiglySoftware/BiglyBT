@@ -29,6 +29,7 @@ import java.util.*;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pifimpl.local.utils.resourcedownloader.ResourceDownloaderFactoryImpl;
 
 
@@ -171,9 +172,11 @@ TrackerListURLConnection
 		
 		if ( do_cache ){
 			
+			long cache_time = cache_file.exists()?60*60*1000:5*60*1000;
+			
 			Long last = last_downloads.get( key );
 
-			if ( last != null && now - last < 60*60*1000 ){
+			if ( last != null && now - last < cache_time ){
 
 				if ( cache_file.exists()){
 						
@@ -197,10 +200,18 @@ TrackerListURLConnection
 		}
 			
 		try{
-			InputStream is = ResourceDownloaderFactoryImpl.getSingleton().create( url ).download();
+			ResourceDownloader rd = ResourceDownloaderFactoryImpl.getSingleton().create( url );
 					
+			rd.setProperty( "URL_Connect_Timeout", 20*1000 );
+
+			rd.setProperty( "URL_Read_Timeout", 10*1000 );
+
+			InputStream is = rd.download();
+
 			try{
 				String result = FileUtil.readInputStreamAsString( is, 32*1024, "UTF-8" );
+				
+					// in the future mebe deal with various formats here
 				
 				if ( do_cache ){
 					
