@@ -219,9 +219,11 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 	    gridData = new GridData();
 	    gridData.widthHint = width_hint;
-	    if (text_entry_text != null)
+	    if (text_entry_text != null){
 	    	gridData.minimumHeight = text_entry_text.getLineHeight() * line_height;
-	    gridData.heightHint = gridData.minimumHeight;
+	    	gridData.heightHint = gridData.minimumHeight;
+	    }
+	    
 	    Utils.setLayoutData(text_entry, gridData);
 
 	    Composite panel = new Composite(shell, SWT.NULL);
