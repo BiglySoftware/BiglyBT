@@ -1736,6 +1736,36 @@ WebPlugin
 											
 											break;
 										}
+
+										// Support ranges (copied from code in setupAccess)
+										IPRange ip_range	= plugin_interface.getIPFilter().createRange(true);
+										
+										String aTrimmed = a.trim();
+
+										int	sep = aTrimmed.indexOf("-");
+
+										if ( sep == -1 ){
+
+											ip_range.setStartIP( aTrimmed );
+
+											ip_range.setEndIP( aTrimmed );
+
+										}else{
+
+											ip_range.setStartIP( aTrimmed.substring(0,sep).trim());
+
+											ip_range.setEndIP( aTrimmed.substring( sep+1 ).trim());
+										}
+
+										ip_range.checkValid();
+
+										if (ip_range.isValid() && ip_range.isInRange(actual_host)){
+
+											result = true;
+
+											break;
+										}
+
 									}
 									
 									if ( !result ){
