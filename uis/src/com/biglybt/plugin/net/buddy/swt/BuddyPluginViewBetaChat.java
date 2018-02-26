@@ -4905,12 +4905,24 @@ BuddyPluginViewBetaChat
 		}
 	}
 
+	private boolean change_pending;
+	
 	@Override
 	public void
 	messagesChanged()
 	{
 		if ( log != null && !log.isDisposed()){
 
+			synchronized( this ){
+				
+				if ( change_pending ){
+					
+					return;
+				}
+				
+				change_pending = true;
+			}
+			
 			Utils.execSWTThread(
 				new Runnable()
 				{
@@ -4918,6 +4930,11 @@ BuddyPluginViewBetaChat
 					public void
 					run()
 					{
+						synchronized( BuddyPluginViewBetaChat.this ){
+							
+							change_pending = false;
+						}
+						
 						if ( log.isDisposed()){
 
 							return;
@@ -5353,7 +5370,9 @@ BuddyPluginViewBetaChat
 				int max_lines 	= beta.getMaxUILines();
 				int max_chars	= beta.getMaxUICharsKB() * 1024;
 
-				while ( messages.size() > max_lines || log.getText().length() > max_chars ){
+				int	total_to_remove = 0;
+				
+				while ( messages.size() > max_lines || log.getText().length() - total_to_remove > max_chars ){
 
 					if ( it == null ){
 
@@ -5369,7 +5388,12 @@ BuddyPluginViewBetaChat
 
 					it.remove();
 
-					log.replaceTextRange( 0,  to_remove, "" );
+					total_to_remove += to_remove;
+				}
+				
+				if ( total_to_remove > 0 ){
+					
+					log.replaceTextRange( 0,  total_to_remove, "" );
 
 					log_styles = log.getStyleRanges();
 				}
