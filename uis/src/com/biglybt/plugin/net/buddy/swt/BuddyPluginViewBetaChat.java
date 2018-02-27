@@ -101,6 +101,7 @@ import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.AddressUtils;
+import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -5070,8 +5071,40 @@ BuddyPluginViewBetaChat
 
 				continue;
 			}
+			
+			byte[] raw_message = message.getRawMessage();
+			
+			boolean use_raw_message = false;
+			
+			if ( raw_message != null && raw_message.length > 3 ){
+				
+				if ( raw_message[0] == 'd' && Character.isDigit( raw_message[1] ) && raw_message[raw_message.length-1] == 'e' ){
+					
+					try{
+						Map m = BDecoder.decode( raw_message );
+						
+						use_raw_message = true;
+						
+					}catch( Throwable e ){
+						
+					}
+				}
+			}
 
-			String original_msg		= message.getMessage();
+			String original_msg;
+			
+			if ( use_raw_message ){
+				
+				original_msg = Base32.encode( raw_message );
+				
+				if ( original_msg.length() > 20 ){
+					
+					original_msg = original_msg.substring( 0, 20 ) + "...";
+				}
+			}else{
+				
+				original_msg = message.getMessage();
+			}
 
 			if ( !message.isIgnored() && original_msg.length() > 0 ){
 
