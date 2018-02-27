@@ -40,12 +40,13 @@ public class SystemProperties {
 		// note this is also used in the restart code....
 
 	public static final String SYS_PROP_CONFIG_OVERRIDE = "azureus.config.path";
-  /**
-   * Path separator charactor.
-   */
-  public static final String SEP = System.getProperty("file.separator");
+	/**
+	 * Path separator charactor.
+	 */
+	public static final String SEP = System.getProperty("file.separator");
 
-  public static final String	AZ_APP_ID	= "az";
+	public static final String	AZ_APP_ID	= "az";
+	
 	public static final String SYSPROP_PORTABLE_ENABLE = "azureus.portable.enable";
 	public static final String SYSPROP_CONFIG_PATH = "azureus.config.path";
 	public static final String SYSPROP_INSTALL_PATH = "azureus.install.path";
@@ -92,6 +93,68 @@ public class SystemProperties {
 	public static final String SYSPROP_FOLDER_DOWNLOAD = "azureus.folder.download";
 	public static final String SYSPROP_FOLDER_TORRENT = "azureus.folder.torrent";
 
+	private static final String[] SYSPROP_ALL = {
+			SYSPROP_PORTABLE_ENABLE,
+			SYSPROP_CONFIG_PATH,
+			SYSPROP_INSTALL_PATH,
+			SYSPROP_PORTABLE_ROOT,
+			SYSPROP_JAVA_PROTOCOL_HANDLER_PKGS,
+			SYSPROP_INTERNAL_BROWSER_DISABLE,
+			SYSPROP_RCM_PUBLISH_DISABLE,
+			SYSPROP_RCM_MAX_CONCURRENT_PUBLISH,
+			SYSPROP_RCM_SEARCH_CVS_ONLY,
+			SYSPROP_FILE_PIECE_REORDER_FORCE,
+			SYSPROP_IO_USEMMAP,
+			SYSPROP_DISABLEDOWNLOADS,
+			SYSPROP_INSTANCE_LOCK_DISABLE,
+			SYSPROP_LOADPLUGINS,
+			SYSPROP_SKIP_SWTCHECK,
+			SYSPROP_OVERRIDELOG,
+			SYSPROP_LOG_STDOUT,
+			SYSPROP_SPEED_TEST_CHALLENGE_JAR_PATH,
+			SYSPROP_LAZY_BITFIELD,
+			SYSPROP_SECURITY_MANAGER_INSTALL,
+			SYSPROP_SUBS_MAX_ASSOCIATIONS,
+			SYSPROP_SUBS_MAX_CONCURRENT_ASSOC_PUBLISH,
+			SYSPROP_LOG_DOS,
+			SYSPROP_NATIVELAUNCHER,
+			SYSPROP_INSTANCE_PORT,
+			SYSPROP_PRODUCT_NAME,
+			SYSPROP_INFER_APP_NAME,
+			SYSPROP_JAVAWS,
+			SYSPROP_TIME_USE_RAW_PROVIDER,
+			SYSPROP_DYNAMIC_PLUGINS,
+			SYSPROP_DOC_PATH,
+			SYSPROP_PLATFORM_MANAGER_DISABLE,
+			SYSPROP_CONSOLE_NOISY,
+			SYSPROP_LOW_RESOURCE_MODE,
+			SYSPROP_SAFEMODE,
+			SYSPROP_OVERRIDELOGDIR,
+			SYSPROP_SECURITY_MANAGER_PERMITEXIT,
+			SYSPROP_SCRIPT_VERSION,
+			SYSPROP_APP_TIMEZONE,
+			SYSPROP_APP_NAME,
+			SYSPROP_APP_SCRIPT,
+			SYSPROP_WINDOW_TITLE,
+			SYSPROP_CONSOLE_MULTIUSER,
+			SYSPROP_FOLDER_DOWNLOAD,
+			SYSPROP_FOLDER_TORRENT,
+	};
+	
+	static{
+		for ( String prop: SYSPROP_ALL ){
+			if ( prop.startsWith( "azureus." )){
+				if ( System.getProperty( prop ) == null ){
+					String bbt_prop = "biglybt." + prop.substring( 8 );
+					String val = System.getProperty( bbt_prop, null );
+					if ( val != null ){
+						System.setProperty( prop, val );
+					}
+				}
+			}
+		}
+	}
+	
 	public static String APPLICATION_NAME 		= "BiglyBT";
   private static String APPLICATION_ID 			= AZ_APP_ID;
   private static String APPLICATION_VERSION		= Constants.AZUREUS_VERSION;
