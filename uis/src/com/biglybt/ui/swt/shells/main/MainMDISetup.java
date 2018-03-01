@@ -691,77 +691,92 @@ public class MainMDISetup
 				});
 
 		try {
-			final ShareManager share_manager = pi.getShareManager();
-			if (share_manager.getShares().length > 0) {
-				mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES);
-			} else {
-				shareManagerListener = new ShareManagerListener() {
-
-					@Override
-					public void resourceModified(ShareResource old_resource,
-					                             ShareResource new_resource) {
-					}
-
-					@Override
-					public void resourceDeleted(ShareResource resource) {
-					}
-
-					@Override
-					public void resourceAdded(ShareResource resource) {
-						share_manager.removeListener(this);
-						mdi.loadEntryByID(
-								MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES, false);
-					}
-
-					@Override
-					public void reportProgress(int percent_complete) {
-					}
-
-					@Override
-					public void reportCurrentTask(String task_description) {
-					}
-				};
-				share_manager.addListener(shareManagerListener);
+			if ( !COConfigurationManager.getBooleanParameter( "my.shares.view.auto.open.done", false )){
+				
+				final ShareManager share_manager = pi.getShareManager();
+				if (share_manager.getShares().length > 0) {
+					// stop showing this by default
+					// mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES);
+				} else {
+					shareManagerListener = new ShareManagerListener() {
+						boolean done = false;
+						@Override
+						public void resourceModified(ShareResource old_resource,
+						                             ShareResource new_resource) {
+						}
+	
+						@Override
+						public void resourceDeleted(ShareResource resource) {
+						}
+	
+						@Override
+						public void resourceAdded(ShareResource resource) {
+							if (done) {
+								return;
+							}
+							done = true;
+							share_manager.removeListener(this);
+							
+							COConfigurationManager.setParameter( "my.shares.view.auto.open.done", true );
+							
+							mdi.loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES, false);
+						}
+	
+						@Override
+						public void reportProgress(int percent_complete) {
+						}
+	
+						@Override
+						public void reportCurrentTask(String task_description) {
+						}
+					};
+					share_manager.addListener(shareManagerListener);
+				}
 			}
-
-
 		} catch (Throwable t) {
 		}
 
-		// Load Tracker View on first host of file
-		TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
-		trackerHostListener = new TRHostListener() {
-			boolean done = false;
-
-			@Override
-			public void torrentRemoved(TRHostTorrent t) {
-			}
-
-			@Override
-			public void torrentChanged(TRHostTorrent t) {
-			}
-
-			@Override
-			public void torrentAdded(TRHostTorrent t) {
-				if (done) {
-					return;
-				}
+		try{
+			if ( !COConfigurationManager.getBooleanParameter( "my.tracker.view.auto.open.done", false )){
+	
+				// Load Tracker View on first host of file
 				TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
-				trackerHost.removeListener(this);
-				done = true;
-				mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER,
-						false);
+				trackerHostListener = new TRHostListener() {
+					boolean done = false;
+		
+					@Override
+					public void torrentRemoved(TRHostTorrent t) {
+					}
+		
+					@Override
+					public void torrentChanged(TRHostTorrent t) {
+					}
+		
+					@Override
+					public void torrentAdded(TRHostTorrent t) {
+						if (done) {
+							return;
+						}
+						done = true;
+						trackerHost.removeListener(this);
+						
+						COConfigurationManager.setParameter( "my.tracker.view.auto.open.done", true );
+						
+						mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER,	false);
+					}
+		
+					@Override
+					public boolean handleExternalRequest(InetSocketAddress client_address,
+					                                     String user, String url, URL absolute_url, String header, InputStream is,
+					                                     OutputStream os, AsyncController async)
+							throws IOException {
+						return false;
+					}
+				};
+				trackerHost.addListener(trackerHostListener);
 			}
-
-			@Override
-			public boolean handleExternalRequest(InetSocketAddress client_address,
-			                                     String user, String url, URL absolute_url, String header, InputStream is,
-			                                     OutputStream os, AsyncController async)
-					throws IOException {
-				return false;
-			}
-		};
-		trackerHost.addListener(trackerHostListener);
+		} catch (Throwable t) {
+		}
 
 		UIManager uim = pi.getUIManager();
 		if (uim != null) {
