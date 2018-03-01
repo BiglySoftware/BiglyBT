@@ -26,8 +26,10 @@ import com.biglybt.activities.LocalActivityManager;
 import com.biglybt.activities.LocalActivityManager.LocalActivityCallback;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.util.*;
 import com.biglybt.core.vuzefile.VuzeFile;
+import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.util.MapUtils;
 
 public abstract class
@@ -135,6 +137,45 @@ TagWithState
 		boolean		do_contents )
 	{
 		exportDetails( map, do_contents );
+		
+		if ( getTagType().hasTagTypeFeature( TagFeature.TF_PROPERTIES )){
+			
+			TagFeatureProperties tfp = (TagFeatureProperties)this;
+	
+			TagProperty prop = tfp.getProperty( TagFeatureProperties.PR_TRACKER_TEMPLATES );
+	
+			if ( prop != null ){
+	
+				String[] bits = prop.getStringList();
+	
+				if ( bits == null || bits.length == 0 ){
+	
+					return;
+				}
+				
+				Map<String,List<List<String>>> templates = TrackersUtil.getInstance().getMultiTrackers();
+				
+				for ( String bit: bits ){
+					
+					String[] temp = bit.split( ":" );
+
+					String t_name = temp[1];
+
+					List<List<String>> template_trackers = templates.get( t_name );
+					
+					if ( template_trackers != null ){
+						
+						Map tt_map = new HashMap();
+						
+						tt_map.put( "name", t_name );
+						
+						tt_map.put( "template", template_trackers );
+						
+						vf.addComponent( VuzeFileComponent.COMP_TYPE_TRACKER_TEMPLATE, tt_map );
+					}
+				}
+			}
+		}
 	}
 	
 	protected void

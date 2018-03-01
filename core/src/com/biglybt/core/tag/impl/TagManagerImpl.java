@@ -732,6 +732,40 @@ TagManagerImpl
 
 							VuzeFileComponent[] comps = vf.getComponents();
 
+								// do tracker templates first as maybe needed by Tag... If other uses of templates 
+								// are added then we need to address the dependency issue in a more generic way
+							
+							for (int j=0;j<comps.length;j++){
+
+								VuzeFileComponent comp = comps[j];
+
+								int	type = comp.getType();
+
+								if ( type == VuzeFileComponent.COMP_TYPE_TRACKER_TEMPLATE ){
+
+									Map map = comp.getContent();
+											
+									map = BDecoder.decodeStrings( map );
+									
+									String tt_name = (String)map.get( "name");
+									
+									List<List<String>>	tt_template = (List<List<String>>)map.get( "template" );
+									
+									Map<String,List<List<String>>> m_t = TrackersUtil.getInstance().getMultiTrackers();
+									
+									if ( m_t.containsKey( tt_name )){
+										
+										Debug.out( "Tracker template '" + tt_name + "' already exists, ignoring import" );
+										
+									}else{
+										
+										TrackersUtil.getInstance().addMultiTracker( tt_name, tt_template );
+										
+										comp.setProcessed();
+									}
+								}
+							}
+							
 							for (int j=0;j<comps.length;j++){
 
 								VuzeFileComponent comp = comps[j];
