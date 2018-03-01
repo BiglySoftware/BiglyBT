@@ -22,6 +22,8 @@ package com.biglybt.core.tag;
 
 import java.util.Set;
 
+import com.biglybt.core.vuzefile.VuzeFile;
+
 
 public interface
 Tag
@@ -160,6 +162,9 @@ Tag
 	public void
 	requestAttention();
 
+	public VuzeFile
+	getVuzeFile();
+	
 	public void
 	addTagListener(
 		TagListener	listener,

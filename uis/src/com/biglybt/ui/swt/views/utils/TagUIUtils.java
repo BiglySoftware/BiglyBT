@@ -41,6 +41,8 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.util.*;
+import com.biglybt.core.vuzefile.VuzeFile;
+import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -886,6 +888,19 @@ public class TagUIUtils
 			createNonAutoMenuItems(menu, tag, tag_type, menuShowHide);
 		}
 
+		if ( tag_type.getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+
+			MenuItem itemExport = new MenuItem(menu, SWT.PUSH);
+			
+			Messages.setLanguageText(itemExport,"Subscription.menu.export");
+			itemExport.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					export(tag);
+				}
+			});
+		}
+		
 		MenuItem menuSettings = new MenuItem(menu, SWT.PUSH);
 		Messages.setLanguageText(menuSettings, "TagSettingsView.title");
 		menuSettings.addListener(SWT.Selection, new Listener() {
@@ -2394,7 +2409,7 @@ public class TagUIUtils
 				});
 			}
 		});
-
+		
 		MenuItem itemDelete = new MenuItem(menu, SWT.PUSH);
 
 		Utils.setMenuItemImage(itemDelete, "delete");
@@ -3136,5 +3151,50 @@ public class TagUIUtils
 		shell.setText( tag.getTagName(true));
 
 		shell.open();
+	}
+	
+	protected static void
+	export(
+		final Tag			tag )
+	{
+		Utils.execSWTThread(
+			new AERunnable()
+			{
+				@Override
+				public void
+				runSupport()
+				{
+					FileDialog dialog =
+						new FileDialog( Utils.findAnyShell(), SWT.SYSTEM_MODAL | SWT.SAVE );
+
+					dialog.setFilterPath( TorrentOpener.getFilterPathData() );
+
+					dialog.setText(MessageText.getString("tag.export.select.template.file"));
+
+					dialog.setFilterExtensions(VuzeFileHandler.getVuzeFileFilterExtensions());
+
+					dialog.setFilterNames(VuzeFileHandler.getVuzeFileFilterExtensions());
+
+					String path = TorrentOpener.setFilterPathData( dialog.open());
+
+					if ( path != null ){
+
+						if ( !VuzeFileHandler.isAcceptedVuzeFileName( path )){
+
+							path = VuzeFileHandler.getVuzeFileName( path );
+						}
+
+						try{
+							VuzeFile vf = tag.getVuzeFile();
+
+							vf.write( new File( path ));
+
+						}catch( Throwable e ){
+
+							Debug.out( e );
+						}
+					}
+				}
+			});
 	}
 }

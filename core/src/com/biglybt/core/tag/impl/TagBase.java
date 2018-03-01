@@ -31,6 +31,7 @@ import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
+import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public abstract class
@@ -1875,6 +1876,12 @@ TagBase
  			}
  		}
  	}
+ 	
+	public VuzeFile
+	getVuzeFile()
+	{
+		return( getManager().getVuzeFile( this ));
+	}
 
  	private class
  	TagPropertyImpl

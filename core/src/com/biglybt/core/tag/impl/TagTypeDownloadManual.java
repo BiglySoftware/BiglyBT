@@ -98,4 +98,21 @@ TagTypeDownloadManual
 
 		return( new_tag );
 	}
+	
+	protected TagDownloadWithState
+	importTag(
+		Map		details,
+		Map		config )
+	{
+		int tag_id = next_tag_id.incrementAndGet();
+		
+		getTagManager().setConf( getTagType(), tag_id, config );
+
+		TagDownloadWithState new_tag = new TagDownloadWithState( this, tag_id, details, true, true, true, true, TagFeatureRunState.RSC_START_STOP_PAUSE );
+
+		new_tag.setSupportsTagTranscode( true );
+		new_tag.setSupportsFileLocation( true );
+
+		return( new_tag );
+	}
 }

@@ -27,6 +27,7 @@ import com.biglybt.activities.LocalActivityManager.LocalActivityCallback;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.util.*;
+import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.util.MapUtils;
 
 public abstract class
@@ -127,6 +128,15 @@ TagWithState
 		}
 	}
 
+	protected void
+	exportDetails(
+		VuzeFile	vf,
+		Map			map,
+		boolean		do_contents )
+	{
+		exportDetails( map, do_contents );
+	}
+	
 	protected void
 	exportDetails(
 		Map			map,

@@ -45,6 +45,10 @@ import com.biglybt.core.tag.*;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
+import com.biglybt.core.vuzefile.VuzeFile;
+import com.biglybt.core.vuzefile.VuzeFileComponent;
+import com.biglybt.core.vuzefile.VuzeFileHandler;
+import com.biglybt.core.vuzefile.VuzeFileProcessor;
 import com.biglybt.core.xml.util.XMLEscapeWriter;
 import com.biglybt.core.xml.util.XUXmlWriter;
 import com.biglybt.pif.PluginInterface;
@@ -56,7 +60,10 @@ import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
 import com.biglybt.pif.tracker.web.TrackerWebPageResponse;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.utils.ScriptProvider;
+import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.rssgen.RSSGeneratorPlugin;
@@ -709,6 +716,52 @@ TagManagerImpl
 		DataSourceResolver.registerExporter( this );
 		
 		AEDiagnostics.addWeakEvidenceGenerator( this );
+		
+		VuzeFileHandler.getSingleton().addProcessor(
+				new VuzeFileProcessor()
+				{
+					@Override
+					public void
+					process(
+						VuzeFile[]		files,
+						int				expected_types )
+					{
+						for (int i=0;i<files.length;i++){
+
+							VuzeFile	vf = files[i];
+
+							VuzeFileComponent[] comps = vf.getComponents();
+
+							for (int j=0;j<comps.length;j++){
+
+								VuzeFileComponent comp = comps[j];
+
+								int	type = comp.getType();
+
+								if ( type == VuzeFileComponent.COMP_TYPE_TAG ){
+									
+									Tag tag = importVuzeFile( comp.getContent());
+									
+									if ( tag != null ){
+									
+										comp.setProcessed();
+										
+										UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
+
+										String details = MessageText.getString(
+												"tag.import.ok.desc",
+												new String[]{ tag.getTagName( true )});
+
+										ui_manager.showMessageBox(
+												"tag.import.ok.title",
+												"!" + details + "!",
+												UIManagerEvent.MT_OK );
+									}
+								}
+							}
+						}
+					}
+				});
 	}
 
 	@Override
@@ -2120,6 +2173,36 @@ TagManagerImpl
 		return( conf );
 	}
 
+	protected void
+	setConf(
+		int			tag_type,
+		int			tag_id,
+		Map			conf )
+	{
+		Map m = getConfig();
+
+		String tt_key = String.valueOf( tag_type );
+
+		Map tt = (Map)m.get( tt_key );
+
+		if ( tt == null ){
+
+			tt = new HashMap();
+
+			m.put( tt_key, tt );
+		}
+
+		String t_key = String.valueOf( tag_id );
+
+		Map t = new HashMap();
+
+		tt.put( t_key, t );
+
+		t.put( "c", conf );
+		
+		setDirty();
+	}
+	
 	protected Boolean
 	readBooleanAttribute(
 		TagTypeBase	tag_type,
@@ -2670,6 +2753,51 @@ TagManagerImpl
 		}
 	}
 
+	private Tag
+	importVuzeFile(
+		Map		content )
+	{
+		TagTypeDownloadManual tt = (TagTypeDownloadManual)getTagType( TagType.TT_DOWNLOAD_MANUAL );
+		
+		TagDownloadWithState tag = tt.importTag((Map)content.get( "tag" ), (Map)content.get( "config" ));
+				
+		tt.addTag( tag );
+		
+		return( tag );
+	}
+	
+	public VuzeFile
+	getVuzeFile(
+		TagBase	tag )
+	{
+		if ( tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+			
+			TagWithState tws = (TagWithState)tag;
+			
+			VuzeFile	vf = VuzeFileHandler.getSingleton().create();
+	
+			Map	map = new HashMap();
+		
+			Map tag_map = new HashMap();
+
+			tws.exportDetails( vf, tag_map,  false );
+			
+			Map conf = getConf( tag.getTagType(), tag, false );
+			
+			map.put( "tag", tag_map );
+			
+			map.put( "config", conf );
+		
+			vf.addComponent( VuzeFileComponent.COMP_TYPE_TAG, map );
+	
+			return( vf );
+			
+		}else{
+			
+			return( null );
+		}
+	}
+	
 	@Override
 	public void
 	generate(

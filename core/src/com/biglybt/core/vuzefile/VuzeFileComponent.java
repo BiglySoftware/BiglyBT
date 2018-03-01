@@ -38,6 +38,7 @@ VuzeFileComponent
 	public static final int COMP_TYPE_DEVICE					= 0x00000200;
 	public static final int COMP_TYPE_CONFIG_SETTINGS			= 0x00000400;
 	public static final int COMP_TYPE_ADD_TORRENT				= 0x00000800;
+	public static final int COMP_TYPE_TAG						= 0x00001000;
 
 	public int
 	getType();
