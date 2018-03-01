@@ -106,6 +106,7 @@ public class BadAvailTimeItem
 
 			if ( value == -2 ){
 				text = now_string;
+				value = Long.MAX_VALUE;
 			}else{
 				text = "";
 			}
