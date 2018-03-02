@@ -22,6 +22,8 @@ package com.biglybt.core.tag;
 
 import java.util.List;
 
+import com.biglybt.core.vuzefile.VuzeFile;
+
 public interface
 TagManager
 {
@@ -67,6 +69,10 @@ TagManager
 	registerTaggableResolver(
 		TaggableResolver	resolver );
 
+	public VuzeFile
+	exportTags(
+		List<Tag>		tags );
+	
 	public void
 	addTagManagerListener(
 		TagManagerListener		listener,

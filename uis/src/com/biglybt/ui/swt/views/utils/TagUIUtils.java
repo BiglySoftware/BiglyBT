@@ -896,7 +896,7 @@ public class TagUIUtils
 			itemExport.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					export(tag);
+					export( Arrays.asList( tag));
 				}
 			});
 		}
@@ -2529,6 +2529,16 @@ public class TagUIUtils
 			}
 		});
 
+		MenuItem itemExport = new MenuItem(menu, SWT.PUSH);
+		
+		Messages.setLanguageText(itemExport,"Subscription.menu.export");
+		itemExport.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				export(tags);
+			}
+		});
+		
 		com.biglybt.pif.ui.menus.MenuItem[] items = MenuItemManager.getInstance().getAllAsArray(
 				MenuManager.MENU_TAG_CONTEXT);
 
@@ -3155,7 +3165,7 @@ public class TagUIUtils
 	
 	protected static void
 	export(
-		final Tag			tag )
+		final List<Tag>			tags )
 	{
 		Utils.execSWTThread(
 			new AERunnable()
@@ -3185,7 +3195,7 @@ public class TagUIUtils
 						}
 
 						try{
-							VuzeFile vf = tag.getVuzeFile();
+							VuzeFile vf = TagManagerFactory.getTagManager().exportTags( tags );
 
 							vf.write( new File( path ));
 

@@ -2833,6 +2833,38 @@ TagManagerImpl
 	}
 	
 	@Override
+	public VuzeFile 
+	exportTags(
+		List<Tag> tags)
+	{
+		VuzeFile	vf = VuzeFileHandler.getSingleton().create();
+		
+		for ( Tag tag: tags ){
+			
+			if ( tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+				
+				TagWithState tws = (TagWithState)tag;
+	
+				Map	map = new HashMap();
+			
+				Map tag_map = new HashMap();
+		
+				tws.exportDetails( vf, tag_map,  false );
+				
+				Map conf = getConf( tws.getTagType(), tws, false );
+				
+				map.put( "tag", tag_map );
+				
+				map.put( "config", conf );
+			
+				vf.addComponent( VuzeFileComponent.COMP_TYPE_TAG, map );
+			}
+		}
+
+		return( vf );
+	}
+	
+	@Override
 	public void
 	generate(
 		IndentWriter		writer )
