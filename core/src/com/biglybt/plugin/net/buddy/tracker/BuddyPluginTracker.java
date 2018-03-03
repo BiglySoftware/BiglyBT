@@ -748,11 +748,24 @@ outer:
 		if ( is_new ){
 			
 			try{
-				if ( plugin.getPeersAreLANLocal() && !peer.isLANLocal()){
+				if ( plugin.getPeersAreLANLocal()){
 					
 					AddressUtils.addLANRateLimitAddress( InetAddress.getByName( pb.ip ));
 					
-					peer.resetLANLocalStatus();
+					if ( !peer.isLANLocal()){
+					
+						peer.resetLANLocalStatus();
+					}
+					
+					Peer[] peers = download.getPeerManager().getPeers( pb.ip );
+				
+					for ( Peer p: peers ){
+						
+						if ( p != peer && !p.isLANLocal()){
+							
+							p.resetLANLocalStatus();
+						}
+					}
 				}
 			}catch( Throwable e ){
 				
