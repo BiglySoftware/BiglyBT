@@ -38,6 +38,7 @@ public class BadAvailTimeItem
 
 	public static final String COLUMN_ID = "bad_avail_time";
 	private static String	now_string;
+	private static String	distributed_string;
 
 	static{
 
@@ -50,7 +51,8 @@ public class BadAvailTimeItem
 					Locale old_locale,
 					Locale new_locale )
 				{
-					now_string = MessageText.getString( "SpeedView.stats.now" );
+					now_string			= MessageText.getString( "SpeedView.stats.now" );
+					distributed_string 	= MessageText.getString( "label.distributed" );
 				}
 			});
 	}
@@ -74,6 +76,8 @@ public class BadAvailTimeItem
 		DownloadManager dm = (DownloadManager) cell.getDataSource();
 		long value = dm==null?-1:dm.getStats().getAvailWentBadTime();
 
+		int seeds = 0;
+		
 		if ( value == 0 ){
 
 				// zero means no recorded last bad availability time (bad=transition from >=1 -> < 1)
@@ -95,6 +99,8 @@ public class BadAvailTimeItem
 
 			}else{
 
+				seeds	= pm.getNbSeeds();
+				
 				value = -2;
 			}
 		}
@@ -105,8 +111,19 @@ public class BadAvailTimeItem
 			String text;
 
 			if ( value == -2 ){
-				text = now_string;
-				value = Long.MAX_VALUE;
+				
+				if ( dm.isDownloadComplete( false )){
+
+					text = now_string;
+					
+					value = Long.MAX_VALUE;
+					
+				}else{
+					
+					text = now_string + " (" + (seeds==0?distributed_string:String.valueOf( seeds )) + ")";
+					
+					value = Long.MAX_VALUE-1000000+seeds;
+				}
 			}else{
 				text = "";
 			}
