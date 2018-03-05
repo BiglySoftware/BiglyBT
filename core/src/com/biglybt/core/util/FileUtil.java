@@ -28,6 +28,11 @@ package com.biglybt.core.util;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
  import java.util.regex.Matcher;
  import java.util.regex.Pattern;
@@ -1551,9 +1556,63 @@ public class FileUtil {
     {
     	return renameFile(from_file, to_file, fail_on_existing_directory, null, null);
     }
-        
+    
     public static boolean
     renameFile(
+   		File        		from_file,
+   		File        		to_file,
+   		boolean     		fail_on_existing_directory,
+   		FileFilter  		file_filter,
+   		ProgressListener	pl )
+    {
+		FileTime from_last_modified = null;
+		FileTime from_last_access	= null;
+		FileTime from_created		= null;
+		
+   		try{
+			BasicFileAttributeView from_attributes_view 	= Files.getFileAttributeView( from_file.toPath(), BasicFileAttributeView.class);
+
+			BasicFileAttributes from_attributes = from_attributes_view.readAttributes();
+
+			from_last_modified 	= from_attributes.lastModifiedTime();
+			from_last_access	= from_attributes.lastAccessTime();
+			from_created		= from_attributes.creationTime();
+			
+		}catch( Throwable e ){
+		}
+   		
+    	boolean result = renameFileSupport( from_file, to_file, fail_on_existing_directory, file_filter, pl );
+
+    	if ( result ){
+
+    			// try to maintain the file times if they now differ 
+    		
+    		try{
+    			BasicFileAttributeView to_attributes_view 		= Files.getFileAttributeView( to_file.toPath(), BasicFileAttributeView.class);
+
+     			BasicFileAttributes to_attributes 	= to_attributes_view.readAttributes();
+
+    			FileTime to_last_modified 	= to_attributes.lastModifiedTime();
+    			FileTime to_last_access		= to_attributes.lastAccessTime();
+    			FileTime to_created			= to_attributes.creationTime();
+
+    			if (	from_last_modified.equals( to_last_modified ) && 
+    					from_last_access.equals( to_last_access ) && 
+    					from_created.equals( to_created )){
+
+    			}else{
+    				
+    				to_attributes_view.setTimes( from_last_modified, from_last_access, from_created );
+    			}
+    		}catch( Throwable e ){
+    		}
+    	}
+
+    	return( result );
+    }
+        
+    private static boolean
+    renameFileSupport(
     	File        		from_file,
     	File        		to_file,
     	boolean     		fail_on_existing_directory,
