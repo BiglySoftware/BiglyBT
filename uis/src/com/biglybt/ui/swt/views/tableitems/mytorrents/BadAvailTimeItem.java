@@ -38,7 +38,7 @@ public class BadAvailTimeItem
 
 	public static final String COLUMN_ID = "bad_avail_time";
 	private static String	now_string;
-	private static String	distributed_string;
+	//private static String	distributed_string;
 
 	static{
 
@@ -52,7 +52,7 @@ public class BadAvailTimeItem
 					Locale new_locale )
 				{
 					now_string			= MessageText.getString( "SpeedView.stats.now" );
-					distributed_string 	= MessageText.getString( "label.distributed" );
+					//distributed_string 	= MessageText.getString( "label.distributed" );
 				}
 			});
 	}
@@ -120,7 +120,7 @@ public class BadAvailTimeItem
 					
 				}else{
 					
-					text = now_string + " (" + (seeds==0?distributed_string:String.valueOf( seeds )) + ")";
+					text = now_string + " " + seeds;
 					
 					value = Long.MAX_VALUE-1000000+seeds;
 				}
