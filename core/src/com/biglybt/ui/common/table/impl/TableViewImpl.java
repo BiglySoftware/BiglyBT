@@ -1204,7 +1204,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		ArrayList<TableRowCore> itemsToRemove = new ArrayList<>();
 		ArrayList<Integer> indexesToRemove = new ArrayList<>();
 
-		int numRemovedHavingSelection = 0;
+		ArrayList<TableRowCore> removedWithSelection = new ArrayList<>();
 		synchronized (rows_sync) {
   		for (int i = 0; i < dataSources.length; i++) {
   			if (dataSources[i] == null) {
@@ -1227,14 +1227,13 @@ public abstract class TableViewImpl<DATASOURCETYPE>
     				}
   				}
 
-  				if (item.isSelected()) {
-  					numRemovedHavingSelection++;
-  				}
   				itemsToRemove.add(item);
   				mapDataSourceToRow.remove(dataSources[i]);
   				triggerListenerRowRemoved(item);
   				sortedRows.remove(item);
-  				selectedRows.remove(item);
+  				if ( selectedRows.remove(item)){
+  					removedWithSelection.add( item );
+  				}
 
   				rows_removed++;
   			}
@@ -1258,6 +1257,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				TableRowCore row = iter.next();
 				row.delete();
 			}
+		}
+		
+		if ( !removedWithSelection.isEmpty()){
+			
+			triggerDeselectionListeners(removedWithSelection.toArray( new TableRowCore[removedWithSelection.size()] ));
 		}
 
 		if (DEBUGADDREMOVE) {

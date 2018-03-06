@@ -311,7 +311,15 @@ public class MyTorrentsSuperView
 
     					if ( tabs != null ){
 
-    						tabs.triggerTabViewsDataSourceChanged(selected_tv);
+    						Utils.execSWTThread(
+    							new Runnable()
+    							{
+    								public void
+    								run()
+    								{
+    									tabs.triggerTabViewsDataSourceChanged(selected_tv);
+    								}
+    							});
     					}
 	    			}
     			}
