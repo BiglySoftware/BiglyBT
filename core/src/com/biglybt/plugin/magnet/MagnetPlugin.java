@@ -526,16 +526,17 @@ MagnetPlugin
 				}
 			};
 
-		final TableContextMenuItem menu1 = plugin_interface.getUIManager().getTableManager().addContextMenuItem(TableManager.TABLE_MYTORRENTS_INCOMPLETE, "MagnetPlugin.contextmenu.exporturi" );
-		final TableContextMenuItem menu2 = plugin_interface.getUIManager().getTableManager().addContextMenuItem(TableManager.TABLE_MYTORRENTS_COMPLETE, 	"MagnetPlugin.contextmenu.exporturi" );
-		final TableContextMenuItem menu3 = plugin_interface.getUIManager().getTableManager().addContextMenuItem(TableManager.TABLE_MYSHARES, 	"MagnetPlugin.contextmenu.exporturi" );
+		List<TableContextMenuItem>	menus = new ArrayList<>();
+		
+		for ( String table: TableManager.TABLE_MYTORRENTS_ALL ){
+				
+			TableContextMenuItem menu = plugin_interface.getUIManager().getTableManager().addContextMenuItem(table, "MagnetPlugin.contextmenu.exporturi" );
 
-		menu1.addMultiListener( listener );
-		menu1.setHeaderCategory(MenuItem.HEADER_SOCIAL);
-		menu2.addMultiListener( listener );
-		menu2.setHeaderCategory(MenuItem.HEADER_SOCIAL);
-		menu3.addMultiListener( listener );
-		menu3.setHeaderCategory(MenuItem.HEADER_SOCIAL);
+			menu.addMultiListener( listener );
+			menu.setHeaderCategory(MenuItem.HEADER_SOCIAL);
+			
+			menus.add( menu );
+		}
 
 		uri_handler.addListener(
 			new MagnetURIHandlerListener()
@@ -694,7 +695,7 @@ MagnetPlugin
 							try{
 								Class.forName("com.biglybt.plugin.magnet.swt.MagnetPluginUISWT").getConstructor(
 									new Class[]{ UIInstance.class, TableContextMenuItem[].class }).newInstance(
-										new Object[]{ instance, new TableContextMenuItem[]{ menu1, menu2, menu3 }} );
+										new Object[]{ instance, menus.toArray( new TableContextMenuItem[menus.size()])} );
 
 							}catch( Throwable e ){
 
