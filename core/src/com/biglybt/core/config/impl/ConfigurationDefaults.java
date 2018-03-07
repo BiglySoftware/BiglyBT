@@ -530,6 +530,7 @@ public class ConfigurationDefaults {
     def.put( "Sharing Torrent Comment", "" );
     def.put( "Sharing Permit DHT", TRUE);
     def.put( "Sharing Torrent Private", FALSE);
+    def.put( "Sharing Disable RCM", FALSE);
     def.put( "Sharing Is Persistent", FALSE);
 
     def.put( "File.Decoder.Prompt", FALSE );

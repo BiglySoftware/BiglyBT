@@ -82,20 +82,36 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 	String[]	protocols = {"HTTP","HTTPS","UDP","DHT" };
     String[]	descs = {"HTTP","HTTPS (SSL)", "UDP", "Decentralised" };
 
-	new StringListParameter(gSharing, "Sharing Protocol", "DHT", descs, protocols );
+    StringListParameter protocol = new StringListParameter(gSharing, "Sharing Protocol", "DHT", descs, protocols );
 
 	// row
 
-	GridData grid_data = new GridData();
+	GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 	grid_data.horizontalSpan = 2;
 	final BooleanParameter private_torrent =
 		new BooleanParameter(gSharing, 	"Sharing Torrent Private",
                          			"ConfigView.section.sharing.privatetorrent");
 	private_torrent.setLayoutData(grid_data);
 
+	ParameterChangeAdapter protocol_cl = 
+		new ParameterChangeAdapter()
+		{
+			@Override
+			public void
+			parameterChanged(
+				Parameter p,
+				boolean caused_internally )
+			{
+				private_torrent.setEnabled( !protocol.getValue().equals( "DHT" ));
+			}
+		};
+		
+	protocol_cl.parameterChanged( protocol, true );
+	
+	protocol.addChangeListener( protocol_cl );
 
 	// row
-    gridData = new GridData();
+    gridData = new GridData( GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 2;
 	final BooleanParameter permit_dht =
 		new BooleanParameter(gSharing, "Sharing Permit DHT",
@@ -122,14 +138,23 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 		});
 
     	// row
-    gridData = new GridData();
+    gridData = new GridData( GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 2;
     new BooleanParameter(gSharing, "Sharing Add Hashes",
                          "wizard.createtorrent.extrahashes").setLayoutData( gridData );
 
+	// row
+
+	grid_data = new GridData( GridData.FILL_HORIZONTAL );
+	grid_data.horizontalSpan = 2;
+	final BooleanParameter disable_rcm =
+		new BooleanParameter(gSharing, 	"Sharing Disable RCM",
+                         			"ConfigView.section.sharing.disable_rcm");
+	disable_rcm.setLayoutData( gridData );
+	
 
     	// row
-    gridData = new GridData();
+    gridData = new GridData( GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 2;
     BooleanParameter rescan_enable =
     	new BooleanParameter(gSharing, "Sharing Rescan Enable",

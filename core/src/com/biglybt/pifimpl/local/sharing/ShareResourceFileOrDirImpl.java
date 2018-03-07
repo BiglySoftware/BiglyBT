@@ -289,6 +289,11 @@ ShareResourceFileOrDirImpl
 				TorrentUtils.setDecentralised( to_torrent );
 			}
 
+			if ( COConfigurationManager.getBooleanParameter( "Sharing Disable RCM" )){
+			
+				TorrentUtils.setFlag( to_torrent, TorrentUtils.TORRENT_FLAG_DISABLE_RCM, true );
+			}
+			
 			DownloadManagerState	download_manager_state =
 				DownloadManagerStateFactory.getDownloadState( to_torrent );
 

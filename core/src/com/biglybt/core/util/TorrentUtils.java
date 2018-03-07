@@ -114,6 +114,7 @@ TorrentUtils
 
 	public static final int TORRENT_FLAG_LOW_NOISE			= 0x00000001;
 	public static final int TORRENT_FLAG_METADATA_TORRENT	= 0x00000002;
+	public static final int TORRENT_FLAG_DISABLE_RCM		= 0x00000004;
 
 	private static final String		TORRENT_AZ_PROP_DHT_BACKUP_ENABLE		= "dht_backup_enable";
 	private static final String		TORRENT_AZ_PROP_DHT_BACKUP_REQUESTED	= "dht_backup_requested";

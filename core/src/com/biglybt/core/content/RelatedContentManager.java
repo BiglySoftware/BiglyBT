@@ -749,7 +749,7 @@ RelatedContentManager
 
 					TOTorrent to_torrent = PluginCoreUtils.unwrap( torrent );
 
-					if ( !TorrentUtils.isReallyPrivate( to_torrent )){
+					if ( !( TorrentUtils.isReallyPrivate( to_torrent ) || TorrentUtils.getFlag( to_torrent, TorrentUtils.TORRENT_FLAG_DISABLE_RCM ))){
 
 						DownloadManagerState state = PluginCoreUtils.unwrap( download ).getDownloadState();
 
