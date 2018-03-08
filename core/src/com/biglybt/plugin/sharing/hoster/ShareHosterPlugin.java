@@ -28,6 +28,7 @@ package com.biglybt.plugin.sharing.hoster;
 import java.io.File;
 import java.util.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
@@ -326,12 +327,27 @@ ShareHosterPlugin
 		final List<String>	networks 	= new ArrayList<>();
 		final List<Tag>		tags		= new ArrayList<>();
 
+		if ( !COConfigurationManager.getBooleanParameter( "Sharing Network Selection Global" )){
+
+			for ( String net: AENetworkClassifier.AT_NETWORKS ){
+				
+				String config_name = "Sharing Network Selection Default." + net;
+				
+				if ( COConfigurationManager.getBooleanParameter( config_name )){
+					
+					networks.add( net );
+				}
+			}
+		}
+		
 		if ( properties != null ){
 
 			String nets = properties.get( ShareManager.PR_NETWORKS );
 
 			if ( nets != null ){
 
+				networks.clear();
+				
 				String[] bits = nets.split( "," );
 
 				for ( String bit: bits ){

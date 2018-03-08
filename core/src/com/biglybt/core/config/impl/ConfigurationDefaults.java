@@ -507,6 +507,10 @@ public class ConfigurationDefaults {
     def.put( "Tracker Network Selection Default.Public", TRUE);
     def.put( "Tracker Network Selection Default.I2P", TRUE);
     def.put( "Tracker Network Selection Default.Tor", TRUE);
+    def.put( "Sharing Network Selection Global", TRUE );
+    def.put( "Sharing Network Selection Default.Public", TRUE );
+    def.put( "Sharing Network Selection Default.I2P", FALSE );
+    def.put( "Sharing Network Selection Default.Tor", FALSE );
 
     def.put( "Peer Source Selection Default.Tracker", TRUE);
     def.put( "Peer Source Selection Default.DHT", TRUE);

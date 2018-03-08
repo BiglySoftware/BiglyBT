@@ -22,11 +22,15 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
+import java.util.ArrayList;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -92,50 +96,42 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 		new BooleanParameter(gSharing, 	"Sharing Torrent Private",
                          			"ConfigView.section.sharing.privatetorrent");
 	private_torrent.setLayoutData(grid_data);
-
-	ParameterChangeAdapter protocol_cl = 
-		new ParameterChangeAdapter()
-		{
-			@Override
-			public void
-			parameterChanged(
-				Parameter p,
-				boolean caused_internally )
-			{
-				private_torrent.setEnabled( !protocol.getValue().equals( "DHT" ));
-			}
-		};
-		
-	protocol_cl.parameterChanged( protocol, true );
 	
-	protocol.addChangeListener( protocol_cl );
-
 	// row
     gridData = new GridData( GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 2;
-	final BooleanParameter permit_dht =
+	final BooleanParameter permit_dht_backup =
 		new BooleanParameter(gSharing, "Sharing Permit DHT",
                          "ConfigView.section.sharing.permitdht");
-	permit_dht.setLayoutData( gridData );
+	permit_dht_backup.setLayoutData( gridData );
 
-	private_torrent.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( permit_dht.getControls(), true ));
 
-	private_torrent.addChangeListener(
-		new ParameterChangeAdapter()
-		{
-			@Override
-			public void
-			parameterChanged(
-				Parameter p,
-				boolean caused_internally )
+	ParameterChangeAdapter protocol_cl = 
+			new ParameterChangeAdapter()
 			{
-				if ( private_torrent.isSelected() ){
+				@Override
+				public void
+				parameterChanged(
+					Parameter p,
+					boolean caused_internally )
+				{
+					boolean not_dht = !protocol.getValue().equals( "DHT" );
+					
+					private_torrent.setEnabled( not_dht );
+					
+					permit_dht_backup.setEnabled( not_dht && !private_torrent.isSelected());
+					
+					if ( private_torrent.isSelected() ){
 
-					permit_dht.setSelected( false );
+						permit_dht_backup.setSelected( false );
+					}
 				}
-			}
-
-		});
+			};
+			
+	protocol_cl.parameterChanged( protocol, true );
+	
+	protocol.addChangeListener( protocol_cl );
+	private_torrent.addChangeListener( protocol_cl );
 
     	// row
     gridData = new GridData( GridData.FILL_HORIZONTAL );
@@ -199,6 +195,52 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 
     persistent.setLayoutData( gridData );
 
+	/////////////////////// NETWORKS GROUP ///////////////////
+
+	Group networks_group = new Group(gSharing, SWT.NULL);
+	Messages.setLanguageText(networks_group,
+			"ConfigView.section.connection.group.networks");
+	GridLayout networks_layout = new GridLayout();
+	networks_group.setLayout(networks_layout);
+
+	gridData = new GridData(GridData.FILL_HORIZONTAL);
+	gridData.horizontalSpan = 2;
+	Utils.setLayoutData(networks_group, gridData);
+
+	BooleanParameter network_global = new BooleanParameter( networks_group, "Sharing Network Selection Global", "label.use.global.defaults");
+
+	java.util.List<BooleanParameter> net_params = new ArrayList<>();
+	
+	for ( String net: AENetworkClassifier.AT_NETWORKS ){
+				
+		String config_name = "Sharing Network Selection Default." + net;
+		String msg_text = "ConfigView.section.connection.networks." + net;
+		
+		BooleanParameter network = new BooleanParameter( networks_group, config_name, msg_text);
+
+		gridData = new GridData();
+		gridData.horizontalIndent = 25;
+		Utils.setLayoutData(network.getControl(),  gridData );
+		
+		net_params.add( network );
+	}
+
+	ParameterChangeAdapter net_listener = 
+			new ParameterChangeAdapter(){	
+			@Override
+			public void parameterChanged(Parameter x, boolean caused_internally){
+				for ( BooleanParameter p: net_params ){
+					
+					p.setEnabled( !network_global.isSelected());
+				}
+			}
+		};
+	
+	net_listener.parameterChanged( null,  false );
+		
+	network_global.addChangeListener( net_listener );
+
+    
     return gSharing;
 
   }
