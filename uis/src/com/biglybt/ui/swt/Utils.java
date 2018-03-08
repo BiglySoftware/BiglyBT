@@ -3044,23 +3044,28 @@ public class Utils
 
 		for ( Button button: buttons ){
 
-			width = Math.max( width, button.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x );
+			if ( button != null ){
+			
+				width = Math.max( width, button.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x );
+			}
 		}
 
 		for ( Button button: buttons ){
-			Object	data = button.getLayoutData();
-			if ( data != null ){
-				if ( data instanceof GridData ){
-					((GridData)data).widthHint = width;
-				}else if ( data instanceof FormData ){
-					((FormData)data).width = width;
+			if ( button != null ){
+				Object	data = button.getLayoutData();
+				if ( data != null ){
+					if ( data instanceof GridData ){
+						((GridData)data).widthHint = width;
+					}else if ( data instanceof FormData ){
+						((FormData)data).width = width;
+					}else{
+						Debug.out( "Expected GridData/FormData" );
+					}
 				}else{
-					Debug.out( "Expected GridData/FormData" );
+					data = new GridData();
+					((GridData) data).widthHint = width;
+					button.setLayoutData( data );
 				}
-			}else{
-				data = new GridData();
-				((GridData) data).widthHint = width;
-				button.setLayoutData( data );
 			}
 		}
 	}

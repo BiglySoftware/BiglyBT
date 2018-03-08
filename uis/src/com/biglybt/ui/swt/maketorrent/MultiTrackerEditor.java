@@ -475,34 +475,37 @@ public class MultiTrackerEditor {
 					closed()
 					{
 						try{
-					    	  String new_text = viewer.getText();
-
-					    	  if ( !old_text.equals( new_text )){
-
-					    		  String[] lines = new_text.split( "\n" );
-
-					    		  StringBuilder valid_text = new StringBuilder( new_text.length()+1 );
-
-					    		  for ( String line: lines ){
-
-					    			  line = line.trim();
-
-					    			  if ( line.length() > 0 ){
-
-					    				  if ( !validURL( line )){
-
-					    					  continue;
-					    				  }
-					    			  }
-
-					    			  valid_text.append( line );
-					    			  valid_text.append( "\n" );
-					    		  }
-
-					    		  trackers = TorrentUtils.announceTextToGroups( valid_text.toString());
-
-					    		  refresh();
-					    	  }
+							if ( viewer.getOKPressed()){
+								
+						    	  String new_text = viewer.getText();
+	
+						    	  if ( !old_text.equals( new_text )){
+	
+						    		  String[] lines = new_text.split( "\n" );
+	
+						    		  StringBuilder valid_text = new StringBuilder( new_text.length()+1 );
+	
+						    		  for ( String line: lines ){
+	
+						    			  line = line.trim();
+	
+						    			  if ( line.length() > 0 ){
+	
+						    				  if ( !validURL( line )){
+	
+						    					  continue;
+						    				  }
+						    			  }
+	
+						    			  valid_text.append( line );
+						    			  valid_text.append( "\n" );
+						    		  }
+	
+						    		  trackers = TorrentUtils.announceTextToGroups( valid_text.toString());
+	
+						    		  refresh();
+						    	  }
+							}
 						}finally{
 
 							computeSaveEnable();

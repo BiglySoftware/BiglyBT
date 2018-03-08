@@ -1081,20 +1081,23 @@ public class MenuFactory
 															public void
 															closed()
 															{
-																String text = viewer.getText();
-
-																String[] lines = text.split( "\n" );
-
-																java.util.List<String> updated_lines = new ArrayList<>( Arrays.asList( lines ));
-
-																java.util.List<String> result = slh.setSchedule( updated_lines );
-
-																if ( result != null && result.size() > 0 ){
-
-																	showText(
-																			"MainWindow.menu.speed_limits.schedule.title",
-																			"MainWindow.menu.speed_limits.schedule.err",
-																			result );
+																if ( viewer.getOKPressed()){
+																	
+																	String text = viewer.getText();
+	
+																	String[] lines = text.split( "\n" );
+	
+																	java.util.List<String> updated_lines = new ArrayList<>( Arrays.asList( lines ));
+	
+																	java.util.List<String> result = slh.setSchedule( updated_lines );
+	
+																	if ( result != null && result.size() > 0 ){
+	
+																		showText(
+																				"MainWindow.menu.speed_limits.schedule.title",
+																				"MainWindow.menu.speed_limits.schedule.err",
+																				result );
+																	}
 																}
 															}
 														});
