@@ -3568,10 +3568,24 @@ TorrentUtils
 				return( false );
 			}
 		}
+		
+		File parent = f.getParentFile();
 
 		File active_dir = FileUtil.getUserFile( "active" );
 
-		return( !active_dir.equals( f.getParentFile()));
+		if ( active_dir.equals( parent )){
+			
+			return( false );
+		}
+		
+		File shares_dir = FileUtil.getUserFile( "shares" );
+
+		if ( shares_dir.equals( parent ) || shares_dir.equals( parent.getParentFile())){
+			
+			return( false );
+		}
+		
+		return( true );
 	}
 
 	/**
