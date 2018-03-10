@@ -651,7 +651,7 @@ RSSEngine
 
 						}
 					}
-
+					
 						// override existing values with explicit <torrent> entry if present
 
 					try{
@@ -764,6 +764,17 @@ RSSEngine
 						e.printStackTrace();
 					}
 
+					if ( result.getSize() <= 0 ){
+						
+						SimpleXMLParserDocumentNode n = node.getChild( "size" );
+
+						if ( n != null ){
+
+							result.setSizeFromHTML( n.getValue().trim());
+						}
+					}
+
+							
 					if ( item_hash != null && result.getHash() == null ){
 
 						result.setHash( item_hash );
