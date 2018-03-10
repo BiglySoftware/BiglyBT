@@ -327,8 +327,12 @@ ShareHosterPlugin
 		final List<String>	networks 	= new ArrayList<>();
 		final List<Tag>		tags		= new ArrayList<>();
 
+		boolean force_networks = false;
+		
 		if ( !COConfigurationManager.getBooleanParameter( "Sharing Network Selection Global" )){
 
+			force_networks = true;
+			
 			for ( String net: AENetworkClassifier.AT_NETWORKS ){
 				
 				String config_name = "Sharing Network Selection Default." + net;
@@ -346,6 +350,8 @@ ShareHosterPlugin
 
 			if ( nets != null ){
 
+				force_networks = true;
+				
 				networks.clear();
 				
 				String[] bits = nets.split( "," );
@@ -390,7 +396,7 @@ ShareHosterPlugin
 
 		DownloadWillBeAddedListener dwbal = null;
 
-		if ( networks.size() > 0 ){
+		if ( networks.size() > 0 || force_networks ){
 
 			dwbal =
 				new DownloadWillBeAddedListener()
