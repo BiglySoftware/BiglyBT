@@ -105,9 +105,37 @@ ConfigSectionTrackerClient
 
     scrape.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( scrape_stopped.getControls()));
 
-    new BooleanParameter(scrapeGroup, "Tracker Client Scrape Single Only",
+    BooleanParameter	dont_scrape_never_Started =
+        	new BooleanParameter(scrapeGroup, "Tracker Client Scrape Never Started Disable",
+        							"ConfigView.section.tracker.client.scrapesneverstarteddisable");
+
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalIndent = 25;
+    Utils.setLayoutData( dont_scrape_never_Started.getControl(), gridData );
+
+    BooleanParameter aggregate = new BooleanParameter(scrapeGroup, "Tracker Client Scrape Single Only",
     							"ConfigView.section.tracker.client.scrapesingleonly");
 
+    ParameterChangeListener pcl = 
+    		new ParameterChangeAdapter()
+    		{
+		    	@Override
+		    	public void parameterChanged(Parameter p, boolean caused_internally){
+		
+		    		boolean enabled = scrape.isSelected();
+		    		boolean stopped = scrape_stopped.isSelected();
+		    		
+		    		scrape_stopped.setEnabled( enabled );
+		    		dont_scrape_never_Started.setEnabled( enabled && stopped );
+		    		aggregate.setEnabled( enabled );
+		    	}
+    		};
+    		
+	scrape.addChangeListener( pcl );
+	scrape_stopped.addChangeListener( pcl );
+	dont_scrape_never_Started.addChangeListener( pcl );
+    aggregate.addChangeListener( pcl );
+    		
     	/////////////// INFO GROUP
 
     Group infoGroup = new Group(gMainTab,SWT.NULL);

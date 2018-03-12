@@ -169,6 +169,7 @@ public class GlobalManagerImpl
 			});
 
 	static boolean enable_stopped_scrapes;
+	static boolean disable_never_started_scrapes;
 
 	static boolean 	enable_no_space_dl_restarts;
 	static int		no_space_dl_restart_check_period_millis;
@@ -177,6 +178,7 @@ public class GlobalManagerImpl
 		 COConfigurationManager.addAndFireParameterListeners(
 			new String[]{
 				"Tracker Client Scrape Stopped Enable",
+				"Tracker Client Scrape Never Started Disable",
 				"Insufficient Space Download Restart Enable",
 				"Insufficient Space Download Restart Period"
 			},
@@ -184,7 +186,9 @@ public class GlobalManagerImpl
 				@Override
 				public void parameterChanged(String parameterName) {
 					enable_stopped_scrapes = COConfigurationManager.getBooleanParameter( "Tracker Client Scrape Stopped Enable" );
-
+					
+					disable_never_started_scrapes = COConfigurationManager.getBooleanParameter( "Tracker Client Scrape Never Started Disable" );
+					
 					enable_no_space_dl_restarts = COConfigurationManager.getBooleanParameter( "Insufficient Space Download Restart Enable" );
 
 					if ( enable_no_space_dl_restarts ){
@@ -594,7 +598,10 @@ public class GlobalManagerImpl
 
     			if ( stats.getTotalDataBytesReceived() == 0 && stats.getPercentDoneExcludingDND() == 0 ){
 
-    				return( false );
+    				if ( disable_never_started_scrapes ){
+    				
+    					return( false );
+    				}
     			}
 
     			return( true );

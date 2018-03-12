@@ -495,6 +495,7 @@ public class ConfigurationDefaults {
     def.put( "Tracker Client Scrape Enable", TRUE);
     def.put( "Tracker Client Scrape Total Disable", FALSE );
     def.put( "Tracker Client Scrape Stopped Enable", TRUE);
+    def.put( "Tracker Client Scrape Never Started Disable", TRUE);
     def.put( "Tracker Client Scrape Single Only", FALSE);
     def.put( "Tracker Server Full Scrape Enable", TRUE );
     def.put( "Tracker Server Not Found Redirect", "" );
