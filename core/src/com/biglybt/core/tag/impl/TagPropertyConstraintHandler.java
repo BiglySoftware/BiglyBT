@@ -1505,6 +1505,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_SIZE_MB			 	= 20;
 		private static final int	KW_SIZE_GB			 	= 21;
 		private static final int	KW_FILE_COUNT		 	= 22;
+		private static final int	KW_AVAILABILITY		 	= 23;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1558,6 +1559,8 @@ TagPropertyConstraintHandler
 			
 			keyword_map.put( "filecount", KW_FILE_COUNT );
 			keyword_map.put( "file_count", KW_FILE_COUNT );
+			
+			keyword_map.put( "availability", KW_AVAILABILITY );
 		}
 
 		private class
@@ -2401,6 +2404,20 @@ TagPropertyConstraintHandler
 								
 								return( dm.getNumFileInfos());
 							}
+							case KW_AVAILABILITY:{
+
+								PEPeerManager pm = dm.getPeerManager();
+								
+								if ( pm == null ){
+									
+									return( -1f );
+								}
+								
+								float avail = pm.getMinAvailability();
+								
+								return(	new Float( avail ));
+							}
+
 							default:{
 
 								setError( "Invalid constraint keyword: " + str );
