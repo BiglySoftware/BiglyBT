@@ -34,6 +34,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableCellSWTBase;
 import com.biglybt.ui.swt.views.table.impl.TableRowSWTBase;
@@ -89,9 +90,24 @@ public class TableRowPainted
 		if (height == 0) {
 			setHeight(tv.getRowDefaultHeight(), false);
 		}
+		
+		if ( dataSource instanceof TableRowSWTChildController ){
+			
+			TableRowSWTChildController c = (TableRowSWTChildController)dataSource;
+			
+			setExpanded( c.isExpanded(), false );
+			
+			Object[] kids = c.getChildDataSources();
+			
+			if ( kids != null && kids.length > 0 ){
+				
+				setSubItems( kids, false );
+			}
+		}
+		
 		initializing = false;
 		if (triggerHeightChange) {
-			heightChanged(0, height);
+			heightChanged(0, getFullHeight());
 		}
 	}
 
@@ -838,6 +854,11 @@ public class TableRowPainted
 
 	@Override
 	public void setSubItemCount(int length) {
+		setSubItemCount( length, true );
+	}
+	
+	private void setSubItemCount(int length, boolean triggerHeightListener ) {
+
 		numSubItems = length;
 		if (isExpanded() && subDataSources.length == length) {
 			if (DEBUG_SUBS) {
@@ -851,12 +872,15 @@ public class TableRowPainted
 			for (int i = 0; i < newSubRows.length; i++) {
 				newSubRows[i] = new TableRowPainted(this, tv, subDataSources[i], false);
 				newSubRows[i].setTableItem(i, false);
-				h += newSubRows[i].getHeight();
+				h += newSubRows[i].getFullHeight();
 			}
 
 			int oldHeight = getFullHeight();
 			subRowsHeight = h;
-			getViewPainted().rowHeightChanged(this, oldHeight, getFullHeight());
+			if ( triggerHeightListener ){
+				getViewPainted().rowHeightChanged(this, oldHeight, getFullHeight());
+			}
+			
 			getViewPainted().triggerListenerRowAdded(newSubRows);
 
 			subRows = newSubRows;
@@ -879,11 +903,15 @@ public class TableRowPainted
 
 	@Override
 	public void setSubItems(Object[] datasources) {
+		setSubItems( datasources, true );
+	}
+	
+	private void setSubItems(Object[] datasources, boolean triggerHeightListeners) {
 		deleteExistingSubRows();
 		synchronized (subRows_sync) {
 			subDataSources = datasources;
 			subRowsHeight = 0;
-			setSubItemCount(datasources.length);
+			setSubItemCount(datasources.length, triggerHeightListeners);
 		}
 	}
 
@@ -926,6 +954,10 @@ public class TableRowPainted
 
 	@Override
 	public void setExpanded(boolean b) {
+		setExpanded( b, true );
+	}
+	
+	private void setExpanded(boolean b, boolean triggerHeightChange ) {
 		if ( canExpand() ){
 			int oldHeight = getFullHeight();
 			super.setExpanded(b);
@@ -945,7 +977,7 @@ public class TableRowPainted
 						newSubRows[i] = new TableRowPainted(this, tv, subDataSources[i],
 								false);
 						newSubRows[i].setTableItem(i, false);
-						h += newSubRows[i].getHeight();
+						h += newSubRows[i].getFullHeight();
 					}
 
 					subRowsHeight = h;
@@ -953,13 +985,24 @@ public class TableRowPainted
 					subRows = newSubRows;
 				}
 
-				getViewPainted().rowHeightChanged(this, oldHeight, getFullHeight());
-
+				if ( triggerHeightChange ){
+					
+					getViewPainted().rowHeightChanged(this, oldHeight, getFullHeight());
+				}
+				
 				if (newSubRows != null) {
 					getViewPainted().triggerListenerRowAdded(newSubRows);
 				}
 
 			}
+			
+			Object ds = getDataSource( true );
+			
+			if ( ds instanceof TableRowSWTChildController ){
+				
+				((TableRowSWTChildController)ds).setExpanded( b );
+			}
+			
 			if (isVisible()) {
 				getViewPainted().visibleRowsChanged();
 				getViewPainted().redrawTable();

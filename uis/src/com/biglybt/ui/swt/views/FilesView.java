@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -36,7 +37,9 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.DiskManagerFileInfoListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
@@ -46,15 +49,19 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
@@ -73,6 +80,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.ui.swt.views.file.FileInfoView;
+import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -144,6 +152,7 @@ public class FilesView
   private boolean	enable_tabs = true;
 
   public boolean hide_dnd_files;
+  public boolean tree_view;
 
   private volatile long selection_size;
   private volatile long selection_size_with_dnd;
@@ -154,6 +163,7 @@ public class FilesView
   TableViewSWT<DiskManagerFileInfo> tv;
 	private final boolean allowTabViews;
 	Button btnShowDND;
+	Button btnTreeView;
 	Label lblHeader;
 
 	private boolean	disableTableWhenEmpty	= true;
@@ -298,6 +308,8 @@ public class FilesView
 		cTop.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		cTop.setLayout(new FormLayout());
 
+			// hide dnd
+		
 		btnShowDND = new Button(cTop, SWT.CHECK);
 		Messages.setLanguageText(btnShowDND, "FilesView.hide.dnd");
 		btnShowDND.addSelectionListener(new SelectionListener() {
@@ -315,6 +327,31 @@ public class FilesView
 
 		btnShowDND.setSelection(hide_dnd_files);
 
+			// tree view
+		
+		btnTreeView = new Button(cTop, SWT.CHECK);
+		Messages.setLanguageText(btnTreeView, "OpenTorrentWindow.tree.view");
+		btnTreeView.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				tree_view = btnTreeView.getSelection();
+				
+				COConfigurationManager.setParameter("FilesView.use.tree", tree_view);
+				
+				force_refresh = true;
+				
+				tableRefresh();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
+
+		tree_view = COConfigurationManager.getBooleanParameter("FilesView.use.tree");
+
+		btnTreeView.setSelection(tree_view);
+		
 		lblHeader = new Label(cTop, SWT.CENTER);
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
@@ -332,6 +369,11 @@ public class FilesView
 		fd = new FormData();
 		fd.top = new FormAttachment(bubbleTextBox.getParent(), 10, SWT.CENTER);
 		fd.left = new FormAttachment(btnShowDND, 10);
+		btnTreeView.setLayoutData(fd);
+		
+		fd = new FormData();
+		fd.top = new FormAttachment(bubbleTextBox.getParent(), 10, SWT.CENTER);
+		fd.left = new FormAttachment(btnTreeView, 10);
 		fd.right = new FormAttachment(bubbleTextBox.getParent(), -10);
 		lblHeader.setLayoutData(fd);
 
@@ -745,64 +787,12 @@ public class FilesView
 	    if (tv.isDisposed())
 	      return;
 
-	    DiskManagerFileInfo files[] = getFileInfo();
-
-	    if (files != null && (this.force_refresh || !doAllExist(files))) {
-	    	this.force_refresh = false;
-
-	    	List<DiskManagerFileInfo> datasources = tv.getDataSources();
-	    	if(datasources.size() == files.length)
-	    	{
-	    		// check if we actually have to replace anything
-	    		ArrayList<DiskManagerFileInfo> toAdd = new ArrayList<>(Arrays.asList(files));
-		    	ArrayList<DiskManagerFileInfo> toRemove = new ArrayList<>();
-			    for (DiskManagerFileInfo info : datasources) {
-				    if (files[info.getIndex()] == info)
-					    toAdd.set(info.getIndex(), null);
-				    else
-					    toRemove.add(info);
-			    }
-		    	tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[toRemove.size()]));
-		    	tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[toAdd.size()]));
-		    	tv.tableInvalidate();
-	    	} else
-	    	{
-		    	tv.removeAllTableRows();
-
-		    	DiskManagerFileInfo filesCopy[] = new DiskManagerFileInfo[files.length];
-			    System.arraycopy(files, 0, filesCopy, 0, files.length);
-
-			    tv.addDataSources(filesCopy);
-	    	}
-
-		    tv.processDataSourceQueue();
-	    }
+	    updateTable();
+	    
   	} finally {
   		refreshing = false;
   	}
   }
-
-  /**
-	 * @since 3.0.0.7
-	 */
-	private boolean doAllExist(DiskManagerFileInfo[] files) {
-		for (DiskManagerFileInfo fileinfo : files) {
-			if (tv.isFiltered(fileinfo)) {
-				// We can't just use tv.dataSourceExists(), since it does a .equals()
-				// comparison, and we want a reference comparison
-
-				TableRowCore row = tv.getRow(fileinfo);
-				if (row == null) {
-					return false;
-				}
-				// reference comparison
-				if (row.getDataSource(true) != fileinfo) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
 
   /* SubMenu for column specific tasks.
    */
@@ -866,30 +856,6 @@ public class FilesView
 		}
 	}
 
-
-  private DiskManagerFileInfo[]
-  getFileInfo()
-  {
-	  if (managers.size() == 0 ){
-
-		  return null;
-
-	  }else if ( managers.size() == 1 ){
-
-		  return( managers.get(0).getDiskManagerFileInfoSet().getFiles());
-
-	  }else{
-
-		  List<DiskManagerFileInfo>	temp = new ArrayList<>();
-
-		  for ( DownloadManager dm: managers ){
-
-			  temp.addAll( Arrays.asList( dm.getDiskManagerFileInfoSet().getFiles()));
-		  }
-
-		  return( temp.toArray( new DiskManagerFileInfo[ temp.size()]));
-	  }
-  }
 
   // Used to notify us of when we need to refresh - normally for external changes to the
   // file links.
@@ -1180,4 +1146,441 @@ public class FilesView
 	{
 		disableTableWhenEmpty	= b;
 	}
+	
+	private void
+	updateTable()
+	{
+		if ( !tree_view ){
+			
+			updateFlatView();
+			
+		}else{
+			
+			updateTreeView();
+		}
+	}
+	
+	private FilesViewNode	current_root;
+	
+	private void
+	updateTreeView()
+	{
+		if ( managers.size() == 0 || managers.size() > 1 ){
+			
+			if ( tv.getRowCount() > 0 ){
+				
+				tv.removeAllTableRows();
+				
+				tv.processDataSourceQueue();
+			}
+			
+			current_root = null;
+			
+		}else{
+			
+			DownloadManager dm =  managers.get(0);
+			
+			DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
+
+			if ( force_refresh || current_root == null || current_root.dm != dm ||  tv.getRowCount() == 0 ){
+
+				force_refresh = false;
+
+				tv.removeAllTableRows();
+
+				char file_separator = File.separatorChar;
+
+				FilesViewNode root = current_root = new FilesViewNode( dm, dm.getDisplayName(), null );
+
+				for ( DiskManagerFileInfo file: files ){
+
+					FilesViewNode node = root;
+
+					TOTorrentFile t_file = file.getTorrentFile();
+
+					String path = t_file.getRelativePath();
+
+					int	pos = 0;
+				
+
+					while( true ){
+
+						int p = path.indexOf( file_separator, pos );
+
+						String	bit;
+
+						if ( p == -1 ){
+
+							node.addFile( file );
+
+							break;
+							
+						}else{
+
+							bit = path.substring( pos, p );
+
+							pos = p+1;
+						
+							FilesViewNode n = node.getChild( bit );
+
+							if ( n == null ){
+	
+								n = new FilesViewNode( dm, bit, node );
+	
+								node.addChild( n );
+							}
+							node = n;
+						}
+					}
+				}			
+
+				tv.addDataSource( root );
+
+				tv.processDataSourceQueueSync();
+			}
+		}
+	}
+	
+	private static Comparator tree_comp = new FormattersImpl().getAlphanumericComparator( true );
+
+	public static class
+	FilesViewNode
+		implements DiskManagerFileInfo, TableRowSWTChildController
+	{
+		private final DownloadManager				dm;
+		private final String						name;
+		private final FilesViewNode					parent;
+		private final Map<String,FilesViewNode>		kids = new TreeMap<String,FilesViewNode>( tree_comp );
+		private final List<DiskManagerFileInfo>		files = new ArrayList<>();
+		
+		private boolean				expanded	= true;
+		
+		private
+		FilesViewNode(
+			DownloadManager			_dm,
+			String					_name,
+			FilesViewNode			_parent )
+		{
+			dm		= _dm;
+			name	= _name;
+			parent	= _parent;
+		}
+		
+		private FilesViewNode
+		getChild(
+			String	name )
+		{
+			return( kids.get(name));
+		}
+
+		private void
+		addChild(
+			FilesViewNode		child )
+		{
+			kids.put( child.getName(), child );
+		}
+		
+		private String
+		getName()
+		{
+			return( name );
+		}
+		
+		public boolean
+		isExpanded()
+		{
+			return( expanded );
+		}
+		
+		public void
+		setExpanded(
+			boolean	e )
+		{
+			expanded = e;
+		}
+		
+		private void
+		addFile(
+			DiskManagerFileInfo		f )
+		{
+			files.add( f );
+		}
+		
+		public Object[]
+		getChildDataSources()
+		{
+			if ( kids.isEmpty()){
+				return( files.toArray());
+			}else{
+				return( kids.values().toArray());
+			}
+		}
+		
+		public void 
+		setPriority(int p)
+		{
+		}
+
+		public void setSkipped(boolean b)
+		{	
+		}
+
+
+		public boolean
+		setLink(
+			File	link_destination )
+		{
+			return( false );
+		}
+
+		public boolean 
+		setLinkAtomic(File link_destination)
+		{
+			return( false );
+		}
+
+		public boolean 
+		setLinkAtomic(File link_destination, FileUtil.ProgressListener pl )
+		{
+			return( false );
+		}
+
+		public File
+		getLink()
+		{
+			return( null );
+		}
+
+		public boolean 
+		setStorageType(int type )
+		{
+			return( false );
+		}
+
+		public int
+		getStorageType()
+		{
+			return( -1 );
+		}
+
+		public int 
+		getAccessMode()
+		{
+			return( -1 );
+		}
+
+		public long 
+		getDownloaded()
+		{
+			return( -1 );
+		}
+
+		public long 
+		getLastModified()
+		{
+			return( -1 );
+		}
+		
+		public String 
+		getExtension()
+		{
+			return( "" );
+		}
+
+		public int 
+		getFirstPieceNumber()
+		{
+			return( -1 );
+		}
+
+		public int 
+		getLastPieceNumber()
+		{
+			return( -1 );
+		}
+
+		public long 
+		getLength()
+		{
+			return( -1 );
+		}
+
+		public int 
+		getNbPieces()
+		{
+			return( -1 );
+		}
+
+		public int 
+		getPriority()
+		{
+			return( -1 );
+		}
+
+		public boolean 
+		isSkipped()
+		{
+			return( false );
+		}
+
+		public int	
+		getIndex()
+		{
+			return( -1 );
+		}
+
+		public DownloadManager	
+		getDownloadManager()
+		{
+			return( dm );
+		}
+
+		public DiskManager 
+		getDiskManager()
+		{
+			return( dm.getDiskManager());
+		}
+
+		public File 
+		getFile( boolean follow_link )
+		{
+			return( new File( name ));
+		}
+
+		public TOTorrentFile
+		getTorrentFile()
+		{
+			return( null );
+		}
+
+		public DirectByteBuffer
+		read(
+			long	offset,
+			int		length )
+
+			throws IOException
+		{
+			throw( new IOException( "Not implemented" ));
+		}
+
+		public void
+		flushCache()
+
+			throws	Exception
+		{
+		}
+
+		public int
+		getReadBytesPerSecond()
+		{
+			return( -1 );
+		}
+
+		public int
+		getWriteBytesPerSecond()
+		{
+			return( -1 );
+		}
+
+		public long
+		getETA()
+		{
+			return( -1 );
+		}
+
+		public void
+		close()
+		{}
+
+		public void
+		addListener(
+			DiskManagerFileInfoListener	listener )
+		{}
+
+		public void
+		removeListener(
+			DiskManagerFileInfoListener	listener )
+		{}
+	}
+	
+	private void
+	updateFlatView()
+	{
+	    DiskManagerFileInfo files[] = getFileInfo();
+
+	    if (files != null && (this.force_refresh || !doAllExist(files))) {
+	    	this.force_refresh = false;
+
+	    	List<DiskManagerFileInfo> datasources = tv.getDataSources();
+	    	if(datasources.size() == files.length)
+	    	{
+	    		// check if we actually have to replace anything
+	    		ArrayList<DiskManagerFileInfo> toAdd = new ArrayList<>(Arrays.asList(files));
+		    	ArrayList<DiskManagerFileInfo> toRemove = new ArrayList<>();
+			    for (DiskManagerFileInfo info : datasources) {
+				    if (files[info.getIndex()] == info)
+					    toAdd.set(info.getIndex(), null);
+				    else
+					    toRemove.add(info);
+			    }
+		    	tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[toRemove.size()]));
+		    	tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[toAdd.size()]));
+		    	tv.tableInvalidate();
+	    	} else
+	    	{
+		    	tv.removeAllTableRows();
+
+		    	DiskManagerFileInfo filesCopy[] = new DiskManagerFileInfo[files.length];
+			    System.arraycopy(files, 0, filesCopy, 0, files.length);
+
+			    tv.addDataSources(filesCopy);
+	    	}
+
+		    tv.processDataSourceQueue();
+	    }
+	}
+	
+	private DiskManagerFileInfo[]
+			getFileInfo()
+	{
+		if (managers.size() == 0 ){
+
+			return null;
+
+		}else if ( managers.size() == 1 ){
+
+			return( managers.get(0).getDiskManagerFileInfoSet().getFiles());
+
+		}else{
+
+			List<DiskManagerFileInfo>	temp = new ArrayList<>();
+
+			for ( DownloadManager dm: managers ){
+
+				temp.addAll( Arrays.asList( dm.getDiskManagerFileInfoSet().getFiles()));
+			}
+
+			return( temp.toArray( new DiskManagerFileInfo[ temp.size()]));
+		}
+	}
+	  
+	private boolean doAllExist(DiskManagerFileInfo[] files) {
+		for (DiskManagerFileInfo fileinfo : files) {
+			if (tv.isFiltered(fileinfo)) {
+				// We can't just use tv.dataSourceExists(), since it does a .equals()
+				// comparison, and we want a reference comparison
+
+				TableRowCore row = tv.getRow(fileinfo);
+				if (row == null) {
+					return false;
+				}
+				// reference comparison
+				if (row.getDataSource(true) != fileinfo) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 }

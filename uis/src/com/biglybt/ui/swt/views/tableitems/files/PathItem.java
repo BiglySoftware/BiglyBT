@@ -119,18 +119,21 @@ public class PathItem
 
     if (show_full_path) {
 
-	      try {
-	          path = file.getParentFile().getCanonicalPath();
-	      }
-	      catch( IOException e ) {
-	          path = file.getParentFile().getAbsolutePath();
-	      }
-
-	      if ( !path.endsWith( File.separator )){
-
-	    	  path += File.separator;
-	      }
-
+    	File parent = file.getParentFile();
+    	
+    	if ( parent != null ){
+		      try {
+		          path = parent.getCanonicalPath();
+		      }
+		      catch( IOException e ) {
+		          path = file.getParentFile().getAbsolutePath();
+		      }
+	
+		      if ( !path.endsWith( File.separator )){
+	
+		    	  path += File.separator;
+		      }
+    	}
     }else{
 
     	path = file.getAbsolutePath().substring(dl_save_path.length());
