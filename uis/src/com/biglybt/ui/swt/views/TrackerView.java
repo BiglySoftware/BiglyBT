@@ -29,6 +29,8 @@ import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
@@ -89,6 +91,12 @@ public class TrackerView
 		new LastUpdateItem(TableManager.TABLE_TORRENT_TRACKERS),
 	};
 
+	static{
+		TableColumnManager tcManager = TableColumnManager.getInstance();
+
+		tcManager.setDefaultColumnNames( TableManager.TABLE_TORRENT_TRACKERS, basicItems );
+	}
+	
 	public static final String MSGID_PREFIX = "TrackerView";
 
 	private DownloadManager 	manager;
