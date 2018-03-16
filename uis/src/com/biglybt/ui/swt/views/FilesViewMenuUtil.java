@@ -174,7 +174,7 @@ public class FilesViewMenuUtil
 
 		itemBrowseURL.setEnabled( all_files.size()==1 );
 
-		menuBrowse.setEnabled(hasSelection);
+		itemBrowse.setEnabled(hasSelection);
 
 			// rename/retarget
 
@@ -352,6 +352,7 @@ public class FilesViewMenuUtil
 			itemRenameOrRetargetBatch.setEnabled(false);
 			itemRename.setEnabled(false);
 			itemRetarget.setEnabled(false);
+			itemRevertFiles.setEnabled(false);
 			itemLocateFiles.setEnabled(false);
 			itemfindMore.setEnabled(false);
 			if ( itemClearLinks != null ){

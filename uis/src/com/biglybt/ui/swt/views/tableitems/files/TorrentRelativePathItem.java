@@ -22,6 +22,7 @@ import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.torrent.TOTorrentFile;
 
 
 public class TorrentRelativePathItem
@@ -46,6 +47,7 @@ public class TorrentRelativePathItem
   @Override
   public void refresh(TableCell cell) {
     DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
-    cell.setText( fileInfo==null?"":fileInfo.getTorrentFile().getRelativePath());
+    TOTorrentFile torrentFile = fileInfo==null?null:fileInfo.getTorrentFile();
+    cell.setText( torrentFile==null?"":torrentFile.getRelativePath());
   }
 }

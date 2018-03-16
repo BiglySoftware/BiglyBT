@@ -719,10 +719,16 @@ public class FilesView
 
 			Object[] data_sources = tv.getSelectedDataSources().toArray();
 
-			DiskManagerFileInfo[] files = new DiskManagerFileInfo[data_sources.length];
+			List<DiskManagerFileInfo> files = new ArrayList<>();
 
 			for ( int i=0;i<data_sources.length;i++ ){
-				files[i] = (DiskManagerFileInfo)data_sources[i];
+				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
+				
+				if ( file instanceof FilesView.FilesViewNodeInner ){
+					continue;
+				}
+				
+				files.add( file );
 			}
 
 			FilesViewMenuUtil.fillMenu(
@@ -730,7 +736,7 @@ public class FilesView
 				sColumnName,
 				menu,
 				new DownloadManager[]{ managers.get(0) },
-				new DiskManagerFileInfo[][]{ files });
+				new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) });
 		}else{
 
 			Object[] data_sources = tv.getSelectedDataSources().toArray();
@@ -743,6 +749,10 @@ public class FilesView
 
 				DiskManagerFileInfo file = (DiskManagerFileInfo)ds;
 
+				if ( file instanceof FilesView.FilesViewNodeInner ){
+					continue;
+				}
+				
 				DownloadManager dm = file.getDownloadManager();
 
 				List<DiskManagerFileInfo> list = map.get(dm);
@@ -1160,7 +1170,7 @@ public class FilesView
 		}
 	}
 	
-	private FilesViewNode	current_root;
+	private FilesViewNodeInner	current_root;
 	
 	private void
 	updateTreeView()
@@ -1190,11 +1200,11 @@ public class FilesView
 
 				char file_separator = File.separatorChar;
 
-				FilesViewNode root = current_root = new FilesViewNode( dm, dm.getDisplayName(), null );
+				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, dm.getDisplayName(), null );
 
 				for ( DiskManagerFileInfo file: files ){
 
-					FilesViewNode node = root;
+					FilesViewNodeInner node = root;
 
 					TOTorrentFile t_file = file.getTorrentFile();
 
@@ -1211,7 +1221,7 @@ public class FilesView
 
 						if ( p == -1 ){
 
-							node.addFile( file );
+							node.addFile( new FilesViewNodeLeaf( file, node ));
 
 							break;
 							
@@ -1221,11 +1231,11 @@ public class FilesView
 
 							pos = p+1;
 						
-							FilesViewNode n = node.getChild( bit );
+							FilesViewNodeInner n = node.getChild( bit );
 
 							if ( n == null ){
 	
-								n = new FilesViewNode( dm, bit, node );
+								n = new FilesViewNodeInner( dm, bit, node );
 	
 								node.addChild( n );
 							}
@@ -1243,30 +1253,47 @@ public class FilesView
 	
 	private static Comparator tree_comp = new FormattersImpl().getAlphanumericComparator( true );
 
-	public static class
-	FilesViewNode
-		implements DiskManagerFileInfo, TableRowSWTChildController
+	public interface
+	FilesViewTreeNode
+	{
+		public int
+		getDepth();
+		
+		public boolean
+		isLeaf();
+	}
+	
+	private static class
+	FilesViewNodeInner
+		implements DiskManagerFileInfo, FilesViewTreeNode, TableRowSWTChildController
 	{
 		private final DownloadManager				dm;
 		private final String						name;
-		private final FilesViewNode					parent;
-		private final Map<String,FilesViewNode>		kids = new TreeMap<String,FilesViewNode>( tree_comp );
-		private final List<DiskManagerFileInfo>		files = new ArrayList<>();
+		private final FilesViewNodeInner					parent;
+		private final Map<String,FilesViewNodeInner>		kids = new TreeMap<String,FilesViewNodeInner>( tree_comp );
+		private final List<FilesViewNodeLeaf>		files = new ArrayList<>();
 		
 		private boolean				expanded	= true;
 		
 		private
-		FilesViewNode(
+		FilesViewNodeInner(
 			DownloadManager			_dm,
 			String					_name,
-			FilesViewNode			_parent )
+			FilesViewNodeInner		_parent )
 		{
 			dm		= _dm;
 			name	= _name;
 			parent	= _parent;
 		}
 		
-		private FilesViewNode
+		@Override
+		public boolean 
+		isLeaf()
+		{
+			return( false );
+		}
+		
+		private FilesViewNodeInner
 		getChild(
 			String	name )
 		{
@@ -1275,7 +1302,7 @@ public class FilesView
 
 		private void
 		addChild(
-			FilesViewNode		child )
+				FilesViewNodeInner		child )
 		{
 			kids.put( child.getName(), child );
 		}
@@ -1299,9 +1326,19 @@ public class FilesView
 			expanded = e;
 		}
 		
+		public int
+		getDepth()
+		{
+			if ( parent == null ){
+				return( 0 );
+			}else{
+				return( parent.getDepth() + 1 );
+			}
+		}
+		
 		private void
 		addFile(
-			DiskManagerFileInfo		f )
+				FilesViewNodeLeaf		f )
 		{
 			files.add( f );
 		}
@@ -1503,6 +1540,233 @@ public class FilesView
 		{}
 	}
 	
+	private static class
+	FilesViewNodeLeaf
+		implements DiskManagerFileInfo, FilesViewTreeNode
+	{
+		private final FilesViewNodeInner		parent;
+		private final DiskManagerFileInfo		delegate;
+		
+		private
+		FilesViewNodeLeaf(
+			DiskManagerFileInfo	_delegate,
+			FilesViewNodeInner	_parent )
+		{
+			delegate	= _delegate;
+			parent		= _parent;
+		}
+		
+		@Override
+		public boolean 
+		isLeaf()
+		{
+			return( true );
+		}
+		
+		public int
+		getDepth()
+		{
+			return( parent.getDepth() + 1 );
+		}
+		
+		public void 
+		setPriority(int p)
+		{
+			delegate.setPriority(p);
+		}
+		
+
+		public void setSkipped(boolean b)
+		{	
+			delegate.setSkipped(b);
+		}
+
+
+		public boolean
+		setLink(
+			File	link_destination )
+		{
+			return( delegate.setLink(link_destination));
+		}
+
+		public boolean 
+		setLinkAtomic(File link_destination)
+		{
+			return( delegate.setLinkAtomic(link_destination));
+		}
+
+		public boolean 
+		setLinkAtomic(File link_destination, FileUtil.ProgressListener pl )
+		{
+			return( delegate.setLinkAtomic(link_destination, pl));
+		}
+
+		public File
+		getLink()
+		{
+			return( delegate.getLink());
+		}
+
+		public boolean 
+		setStorageType(int type )
+		{
+			return( delegate.setStorageType(type));
+		}
+
+		public int
+		getStorageType()
+		{
+			return( delegate.getStorageType());
+		}
+
+		public int 
+		getAccessMode()
+		{
+			return( delegate.getAccessMode());
+		}
+
+		public long 
+		getDownloaded()
+		{
+			return( delegate.getDownloaded());
+		}
+
+		public long 
+		getLastModified()
+		{
+			return( delegate.getLastModified());
+		}
+		
+		public String 
+		getExtension()
+		{
+			return( delegate.getExtension());
+		}
+
+		public int 
+		getFirstPieceNumber()
+		{
+			return( delegate.getFirstPieceNumber());
+		}
+
+		public int 
+		getLastPieceNumber()
+		{
+			return( delegate.getLastPieceNumber());
+		}
+
+		public long 
+		getLength()
+		{
+			return( delegate.getLength());
+		}
+
+		public int 
+		getNbPieces()
+		{
+			return( delegate.getNbPieces());
+		}
+
+		public int 
+		getPriority()
+		{
+			return( delegate.getPriority());
+		}
+
+		public boolean 
+		isSkipped()
+		{
+			return( delegate.isSkipped());
+		}
+
+		public int	
+		getIndex()
+		{
+			return( delegate.getIndex());
+		}
+
+		public DownloadManager	
+		getDownloadManager()
+		{
+			return( delegate.getDownloadManager());
+		}
+
+		public DiskManager 
+		getDiskManager()
+		{
+			return( delegate.getDiskManager());
+		}
+
+		public File 
+		getFile( boolean follow_link )
+		{
+			return( delegate.getFile(follow_link));
+		}
+
+		public TOTorrentFile
+		getTorrentFile()
+		{
+			return( delegate.getTorrentFile());
+		}
+
+		public DirectByteBuffer
+		read(
+			long	offset,
+			int		length )
+
+			throws IOException
+		{
+			return( delegate.read(offset, length));
+		}
+
+		public void
+		flushCache()
+
+			throws	Exception
+		{
+			delegate.flushCache();
+		}
+
+		public int
+		getReadBytesPerSecond()
+		{
+			return( delegate.getReadBytesPerSecond());
+		}
+
+		public int
+		getWriteBytesPerSecond()
+		{
+			return( delegate.getWriteBytesPerSecond());
+		}
+
+		public long
+		getETA()
+		{
+			return( delegate.getETA());
+		}
+
+		public void
+		close()
+		{
+			delegate.close();
+		}
+
+		public void
+		addListener(
+			DiskManagerFileInfoListener	listener )
+		{
+			delegate.addListener(listener);
+		}
+
+		public void
+		removeListener(
+			DiskManagerFileInfoListener	listener )
+		{
+			delegate.removeListener(listener);
+		}
+	}
+	
+		
 	private void
 	updateFlatView()
 	{
