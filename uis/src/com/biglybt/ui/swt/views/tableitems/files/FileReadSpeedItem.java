@@ -69,6 +69,6 @@ public class FileReadSpeedItem
 			return;
 		}
 
-		cell.setText( speed==0?"":DisplayFormatters.formatByteCountToKiBEtcPerSec( speed ));
+		cell.setText( speed<=0?"":DisplayFormatters.formatByteCountToKiBEtcPerSec( speed ));
 	}
 }

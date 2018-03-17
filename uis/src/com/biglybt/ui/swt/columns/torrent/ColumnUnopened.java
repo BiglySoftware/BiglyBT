@@ -185,7 +185,9 @@ public class ColumnUnopened
 			DiskManagerFileInfo file = (DiskManagerFileInfo)ds;
 			
 			int sortVal;
-			boolean complete = file.getLength() == file.getDownloaded();
+			long len = file.getLength();
+			
+			boolean complete = len > 0 && len == file.getDownloaded();
 			
 			boolean hasBeenOpened = false;
 			if (complete) {

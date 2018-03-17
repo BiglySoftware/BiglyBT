@@ -57,7 +57,7 @@ public class SizeItem
       return;
     }
 
-    cell.setText(DisplayFormatters.formatByteCountToKiBEtc(value));
+    cell.setText(value<0?"":DisplayFormatters.formatByteCountToKiBEtc(value));
     
 	if (Utils.getUserMode() > 0 && (cell instanceof TableCellSWT)) {
 		if (value >= 0x40000000l) {
