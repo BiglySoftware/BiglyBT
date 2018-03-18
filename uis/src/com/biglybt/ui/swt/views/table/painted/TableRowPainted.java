@@ -60,12 +60,13 @@ public class TableRowPainted
 
 	private Object subRows_sync;
 
-	private int subRowsHeight;
+	private int subRowsHeightUseAccessors;
 
 	private TableCellCore cellSort;
 
-	private int height = 0;
-
+	private int 	heightUseAccessors = 0;
+	private boolean	isHidden;
+	
 	private boolean initializing = true;
 
 	private Color colorFG = null;
@@ -87,9 +88,9 @@ public class TableRowPainted
 					sortColumn.getPosition());
 		}
 
-		if (height == 0) {
-			setHeight(tv.getRowDefaultHeight(), false);
-		}
+		isHidden = parentRow != null && tv.getFilterSubRows() && !tv.isFiltered( dataSource );
+		
+		setHeight(tv.getRowDefaultHeight(), false);
 		
 		if ( dataSource instanceof TableRowSWTChildController ){
 			
@@ -111,6 +112,72 @@ public class TableRowPainted
 		}
 	}
 
+	public boolean
+	refilter()
+	{		
+		boolean changed = false;
+		
+		synchronized( subRows_sync ){
+				
+			if ( subRows != null ){
+				
+				for ( TableRowPainted subrow : subRows) {
+					
+					if ( subrow.refilter()){
+						
+						changed = true;
+					}
+				}
+			}
+			
+			Object ds = getDataSource( true );
+			
+			boolean newHidden = !getViewPainted().isFiltered( ds );
+		
+			if ( newHidden != isHidden ){
+			
+				TableRowCore row = this;
+				
+				boolean	expanded = true;
+				
+				while( expanded ){
+					
+					row = row.getParentRowCore();
+					
+					if ( row == null ){
+						
+						break;
+					}
+					
+					expanded = row.isExpanded();
+				}
+				
+				int	old_height = getHeight();
+				
+				isHidden = newHidden;
+
+				int	new_height = getHeight();
+
+				if ( expanded ){										
+					
+					heightChanged( old_height, new_height);
+				
+					changed = true;
+					
+				}else{
+				
+					row = getParentRowCore();
+					
+					if ( row instanceof TableRowPainted){
+						((TableRowPainted) row).subRowHeightChanged( old_height, new_height);
+					}
+				}
+			}
+		}
+		
+		return( changed );
+	}
+	
 	private void buildCells() {
 		//debug("buildCells " + Debug.getCompressedStackTrace());
 		TableColumnCore[] visibleColumns = getView().getVisibleColumns();
@@ -175,7 +242,7 @@ public class TableRowPainted
 	 */
 	public void swt_paintGC(GC gc, Rectangle drawBounds, int rowStartX,
 			int rowStartY, int pos, boolean isTableSelected, boolean isTableEnabled) {
-		if (isRowDisposed() || gc == null || gc.isDisposed() || drawBounds == null) {
+		if (isRowDisposed() || gc == null || gc.isDisposed() || drawBounds == null || isHidden ) {
 			return;
 		}
 		// done by caller
@@ -757,9 +824,12 @@ public class TableRowPainted
 
 	@Override
 	public int getFullHeight() {
+		if ( isHidden ){
+			return( 0 );
+		}
 		int h = getHeight();
 		if (numSubItems > 0 && isExpanded()) {
-			h += subRowsHeight;
+			h += subRowsHeightUseAccessors;
 		}
 		return h;
 	}
@@ -775,12 +845,27 @@ public class TableRowPainted
 		getViewPainted().rowHeightChanged(this, oldHeight, newHeight);
 		TableRowCore row = getParentRowCore();
 		if (row instanceof TableRowPainted) {
-			((TableRowPainted) row).subRowHeightChanged(this, oldHeight, newHeight);
+			((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
 		}
 	}
 
-	public void subRowHeightChanged(TableRowCore row, int oldHeight, int newHeight) {
-		subRowsHeight += (newHeight - oldHeight);
+	private void
+	setSubRowsHeight(
+		int		h )
+	{
+		subRowsHeightUseAccessors = h;
+	}
+	
+	protected void subRowHeightChanged( int oldHeight, int newHeight) {
+		int old = subRowsHeightUseAccessors;
+		subRowsHeightUseAccessors += (newHeight - oldHeight);
+		
+		if ( old != subRowsHeightUseAccessors && isExpanded() ){
+			TableRowCore row = getParentRowCore();
+			if (row instanceof TableRowPainted) {
+				((TableRowPainted) row).subRowHeightChanged( old, subRowsHeightUseAccessors);
+			}
+		}
 	}
 
 	public boolean setDrawOffset(Point drawOffset) {
@@ -876,9 +961,18 @@ public class TableRowPainted
 			}
 
 			int oldHeight = getFullHeight();
-			subRowsHeight = h;
+			
+			setSubRowsHeight( h );
+			
+			int newHeight = getFullHeight();
+			
+			TableRowCore row = getParentRowCore();
+			if (row instanceof TableRowPainted) {
+				((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
+			}
+			
 			if ( triggerHeightListener ){
-				getViewPainted().rowHeightChanged(this, oldHeight, getFullHeight());
+				getViewPainted().rowHeightChanged(this, oldHeight, newHeight );
 			}
 			
 			getViewPainted().triggerListenerRowAdded(newSubRows);
@@ -910,7 +1004,7 @@ public class TableRowPainted
 		deleteExistingSubRows();
 		synchronized (subRows_sync) {
 			subDataSources = datasources;
-			subRowsHeight = 0;
+			setSubRowsHeight( 0 );
 			setSubItemCount(datasources.length, triggerHeightListeners);
 		}
 	}
@@ -963,8 +1057,11 @@ public class TableRowPainted
 			super.setExpanded(b);
 			synchronized (subRows_sync) {
 				TableRowPainted[] newSubRows = null;
-				if (b && (subRows == null || subRows.length != numSubItems)
-						&& subDataSources != null && subDataSources.length == numSubItems) {
+				if (	b &&
+						(subRows == null || subRows.length != numSubItems) &&
+						subDataSources != null && 
+						subDataSources.length == numSubItems) 
+				{
 					if (DEBUG_SUBS) {
 						debug("building subrows " + numSubItems);
 					}
@@ -980,14 +1077,21 @@ public class TableRowPainted
 						h += newSubRows[i].getFullHeight();
 					}
 
-					subRowsHeight = h;
+					setSubRowsHeight( h );
 
 					subRows = newSubRows;
 				}
 
+				int newHeight = getFullHeight();
+				
+				TableRowCore row = getParentRowCore();
+				if (row instanceof TableRowPainted) {
+					((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
+				}
+				
 				if ( triggerHeightChange ){
 					
-					getViewPainted().rowHeightChanged(this, oldHeight, getFullHeight());
+					getViewPainted().rowHeightChanged(this, oldHeight, newHeight);
 				}
 				
 				if (newSubRows != null) {
@@ -1074,7 +1178,10 @@ public class TableRowPainted
 	 */
 	@Override
 	public int getHeight() {
-		return height == 0 ? getView().getRowDefaultHeight() : height;
+		if ( isHidden ){
+			return( 0 );
+		}
+		return heightUseAccessors == 0 ? getView().getRowDefaultHeight() : heightUseAccessors;
 	}
 
 	/* (non-Javadoc)
@@ -1089,13 +1196,16 @@ public class TableRowPainted
 	}
 
 	public boolean setHeight(int newHeight, boolean trigger) {
-		if (height == newHeight) {
+		if (heightUseAccessors == newHeight) {
 			return false;
 		}
-		int oldHeight = height;
-		height = newHeight;
+		int oldHeight = heightUseAccessors;
+		heightUseAccessors = newHeight;
 		if (trigger && !initializing) {
-			heightChanged(oldHeight, newHeight);
+			int heightToReport = isHidden?0:newHeight;
+			if ( oldHeight != heightToReport ){
+				heightChanged(oldHeight, heightToReport);
+			}
 		}
 
 		return true;

@@ -188,15 +188,17 @@ public class NameItem extends CoreTableColumnSWT implements
 		
 		if (rowCore != null) {
 			int depth;
+			boolean is_leaf;
 			if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
 				FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)fileInfo;
 				depth = node.getDepth();
-				
-				if ( !node.isLeaf()){
+				is_leaf = node.isLeaf();
+				if ( !is_leaf ){
 					showIcon = false;
 				}
 			}else{
 				depth = 0;
+				is_leaf = true;
 			}
 			
 			int numSubItems = rowCore.getSubItemCount();
@@ -212,12 +214,17 @@ public class NameItem extends CoreTableColumnSWT implements
 
 				show_twisty = false;
 
-			}else if (numSubItems > 1 ){
+			}else if (numSubItems > 1 || !is_leaf ){
 
 				show_twisty = true;
 			}else{
 
 				show_twisty = false;
+			}
+			
+			if (!NEVER_SHOW_TWISTY) {
+				cellBounds.x += paddingX;
+				cellBounds.width -= paddingX;
 			}
 			
 			if (show_twisty){
@@ -249,14 +256,14 @@ public class NameItem extends CoreTableColumnSWT implements
 					});
 				}
 				gc.setBackground(bg);
-				Rectangle hitArea = new Rectangle(paddingX, middleY - halfHeight
+				Rectangle hitArea = new Rectangle(paddingX*2, middleY - halfHeight
 						- cellBounds.y, width, (halfHeight * 4) + 1);
 				rowCore.setData(ID_EXPANDOHITAREA, hitArea);
 			}
 
 			if (!NEVER_SHOW_TWISTY) {
-				cellBounds.x += paddingX * 2 + width;
-				cellBounds.width -= paddingX * 2 + width;
+				cellBounds.x += paddingX  + width;
+				cellBounds.width -= paddingX + width;
 			}
 		}
 

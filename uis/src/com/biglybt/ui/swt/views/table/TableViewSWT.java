@@ -126,6 +126,8 @@ public interface TableViewSWT<DATASOURCETYPE>
 	 * @since 4.1.0.9
 	 */
 	void enableFilterCheck(Text txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck);
+	
+	void enableFilterCheck(Text txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck, boolean filterSubRows);
 
 	Text getFilterControl();
 

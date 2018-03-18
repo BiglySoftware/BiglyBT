@@ -586,6 +586,24 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				debug("filter: unfilteredArray is " + unfilteredArray.length);
 			}
 
+			if (getFilterSubRows()){
+				
+				boolean changed = false;
+				for (Iterator<TableRowCore> iter = sortedRows.iterator(); iter.hasNext();) {
+					TableRowCore row = iter.next();
+					for ( TableRowCore sr: row.getSubRowsWithNull()){
+						if (sr.refilter()){
+							
+							changed = true;
+						}
+					}
+				}
+				
+				if ( changed ){
+					redrawTable();
+				}
+			}
+			
 			Set<DATASOURCETYPE> existing = new HashSet<>(
 					getDataSources());
 			List<DATASOURCETYPE> listRemoves = new ArrayList<>();
@@ -631,6 +649,12 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		return( filter.checker.filterCheck( ds, filter.text, filter.regex ));
 	}
 
+	protected abstract boolean
+	getFilterSubRows();
+	
+	protected abstract void
+	redrawTable();
+	
 	protected void debug(String s) {
 		AEDiagnosticsLogger diag_logger = AEDiagnostics.getLogger("table");
 		diag_logger.log(SystemTime.getCurrentTime() + ":" + getTableID() + ": " + s);

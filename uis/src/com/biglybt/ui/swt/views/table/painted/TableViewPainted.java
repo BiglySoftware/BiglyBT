@@ -173,6 +173,8 @@ public class TableViewPainted
 
 	private Canvas sCanvasImage;
 
+	private boolean	filterSubRows;
+	
 	private class
 	RefreshTableRunnable
 		extends AERunnable
@@ -2093,10 +2095,20 @@ public class TableViewPainted
 		return new Point(x, y);
 	}
 
-	// @see com.biglybt.ui.swt.views.table.TableViewSWT#enableFilterCheck(org.eclipse.swt.widgets.Text, TableViewFilterCheck)
 	@Override
-	public void enableFilterCheck(Text txtFilter,
-	                              TableViewFilterCheck<Object> filterCheck) {
+	public void 
+	enableFilterCheck(Text txtFilter, TableViewFilterCheck<Object> filterCheck) {
+		enableFilterCheck( txtFilter, filterCheck, false );
+	}
+	@Override
+	public void 
+	enableFilterCheck(
+		Text txtFilter,
+	    TableViewFilterCheck<Object> filterCheck,
+	    boolean						 filterSubRows ) 
+	{
+		this.filterSubRows = filterSubRows;
+		
 		TableViewSWTFilter<?> filter = getSWTFilter();
 		if (filter != null) {
 			if (filter.widget != null && !filter.widget.isDisposed()) {
@@ -2133,6 +2145,12 @@ public class TableViewPainted
 		refilter();
 	}
 
+	protected boolean
+	getFilterSubRows()
+	{
+		return( filterSubRows );
+	}
+	
 	@Override
 	public Text
 	getFilterControl()

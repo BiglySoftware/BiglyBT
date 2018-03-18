@@ -377,7 +377,7 @@ public class FilesView
 		fd.right = new FormAttachment(bubbleTextBox.getParent(), -10);
 		lblHeader.setLayoutData(fd);
 
-		tv.enableFilterCheck(bubbleTextBox.getTextWidget(), this);
+		tv.enableFilterCheck(bubbleTextBox.getTextWidget(), this, true );
 
 		Composite tableParent = new Composite(parent, SWT.NONE);
 
@@ -542,6 +542,13 @@ public class FilesView
 			return( true );
 		}
 
+		if ( tree_view && ds instanceof FilesViewNodeInner ){
+			
+				// don't filter intermediate tree nodes
+			
+			return( true );
+		}
+		
 		try {
 			File file = ds.getFile(true);
 
@@ -1221,7 +1228,7 @@ public class FilesView
 
 						if ( p == -1 ){
 
-							node.addFile( new FilesViewNodeLeaf( file, node ));
+							node.addFile( new FilesViewNodeLeaf( path, file, node ));
 
 							break;
 							
@@ -1231,7 +1238,7 @@ public class FilesView
 
 							pos = p+1;
 						
-							FilesViewNodeInner n = node.getChild( bit );
+							FilesViewNodeInner n = (FilesViewNodeInner)node.getChild( bit );
 
 							if ( n == null ){
 	
@@ -1256,6 +1263,9 @@ public class FilesView
 	public interface
 	FilesViewTreeNode
 	{
+		public String
+		getName();
+		
 		public int
 		getDepth();
 		
@@ -1267,11 +1277,10 @@ public class FilesView
 	FilesViewNodeInner
 		implements DiskManagerFileInfo, FilesViewTreeNode, TableRowSWTChildController
 	{
-		private final DownloadManager				dm;
-		private final String						name;
+		private final DownloadManager						dm;
+		private final String								name;
 		private final FilesViewNodeInner					parent;
-		private final Map<String,FilesViewNodeInner>		kids = new TreeMap<String,FilesViewNodeInner>( tree_comp );
-		private final List<FilesViewNodeLeaf>		files = new ArrayList<>();
+		private final Map<String,FilesViewTreeNode>			kids = new TreeMap<>( tree_comp );
 		
 		private boolean				expanded	= true;
 		
@@ -1293,7 +1302,7 @@ public class FilesView
 			return( false );
 		}
 		
-		private FilesViewNodeInner
+		private FilesViewTreeNode
 		getChild(
 			String	name )
 		{
@@ -1302,12 +1311,12 @@ public class FilesView
 
 		private void
 		addChild(
-				FilesViewNodeInner		child )
+			FilesViewNodeInner		child )
 		{
 			kids.put( child.getName(), child );
 		}
 		
-		private String
+		public String
 		getName()
 		{
 			return( name );
@@ -1338,19 +1347,15 @@ public class FilesView
 		
 		private void
 		addFile(
-				FilesViewNodeLeaf		f )
+			FilesViewNodeLeaf		f )
 		{
-			files.add( f );
+			kids.put( f.getName(), f );
 		}
 		
 		public Object[]
 		getChildDataSources()
 		{
-			if ( kids.isEmpty()){
-				return( files.toArray());
-			}else{
-				return( kids.values().toArray());
-			}
+			return( kids.values().toArray());
 		}
 		
 		public void 
@@ -1544,18 +1549,27 @@ public class FilesView
 	FilesViewNodeLeaf
 		implements DiskManagerFileInfo, FilesViewTreeNode
 	{
+		private final String					name;
 		private final FilesViewNodeInner		parent;
 		private final DiskManagerFileInfo		delegate;
 		
 		private
 		FilesViewNodeLeaf(
+			String				_name,
 			DiskManagerFileInfo	_delegate,
 			FilesViewNodeInner	_parent )
 		{
+			name		= _name;
 			delegate	= _delegate;
 			parent		= _parent;
 		}
 		
+		@Override
+		public String
+		getName()
+		{
+			return( name );
+		}
 		@Override
 		public boolean 
 		isLeaf()
@@ -1782,7 +1796,7 @@ public class FilesView
 	    		ArrayList<DiskManagerFileInfo> toAdd = new ArrayList<>(Arrays.asList(files));
 		    	ArrayList<DiskManagerFileInfo> toRemove = new ArrayList<>();
 			    for (DiskManagerFileInfo info : datasources) {
-				    if (files[info.getIndex()] == info)
+				    if (info.getIndex() != -1 && files[info.getIndex()] == info)
 					    toAdd.set(info.getIndex(), null);
 				    else
 					    toRemove.add(info);

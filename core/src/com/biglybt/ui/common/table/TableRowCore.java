@@ -117,6 +117,8 @@ public interface TableRowCore extends TableRow
 
 	public void redraw(boolean doChildren);
 
+	public boolean refilter();
+	
 	/**
 	 * @return
 	 */
