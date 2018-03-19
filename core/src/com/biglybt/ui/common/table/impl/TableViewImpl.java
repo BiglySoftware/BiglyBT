@@ -601,6 +601,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				
 				if ( changed ){
 					redrawTable();
+					tableMutated();
 				}
 			}
 			
@@ -938,7 +939,48 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			}
 		}
 	}
+	
+	@Override
+	public int[] 
+	getRowAndSubRowCount()
+	{
+		int[]	result= { 0, 0 };
 		
+		synchronized (rows_sync) {
+			
+			getRowAndSubRowCount( sortedRows.toArray( new TableRowCore[sortedRows.size()]), result, false);
+		}
+		
+		return( result );
+	}
+		
+	private void
+	getRowAndSubRowCount(
+		TableRowCore[]	rows,
+		int[]			result,
+		boolean			isHidden )
+	{
+		for ( TableRowCore row: rows ){
+			
+			result[0]++;
+			
+			boolean	hidden = isHidden || row.isHidden();
+			
+			if ( !hidden ){
+				
+				result[1]++;
+				
+				if ( !row.isExpanded()){
+					
+					hidden = true;
+				}
+			}
+			
+			getRowAndSubRowCount( row.getSubRowsWithNull(), result, hidden );
+		}
+	}
+	
+					
 	// @see TableView#getRow(java.lang.Object)
 	@Override
 	public TableRowCore getRow(DATASOURCETYPE dataSource) {

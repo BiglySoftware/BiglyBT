@@ -1086,27 +1086,37 @@ public class FilesView
 			}
 			return;
 		}
-		int total = 0;
 
-		for ( DownloadManager manager: managers ){
-			total += manager.getNumFileInfos();
+		int	total_rows		= 0;
+		int	visible_rows;
+		
+		if ( tree_view ){
+			
+			int[]	nums = tv.getRowAndSubRowCount();
+			
+			total_rows 		= nums[0];
+			visible_rows	= nums[1];
+		}else{
+			for ( DownloadManager manager: managers ){
+				total_rows += manager.getNumFileInfos();
+			}
+
+			visible_rows = tv.getRowCount();
 		}
-
-		int numInList = tv.getRowCount();
-
+		
 		String s;
-
+	
 		s = MessageText.getString("library.unopened.header"
-				+ (total > 1 ? ".p" : ""), new String[] {
-					String.valueOf(total)
-				});
-		if (total != numInList) {
+				+ (total_rows > 1 ? ".p" : ""), new String[] {
+					String.valueOf(total_rows)
+					});
+		if (total_rows != visible_rows) {
 			s = MessageText.getString("v3.MainWindow.xofx", new String[] {
-				String.valueOf(numInList),
+				String.valueOf(visible_rows),
 				s
 			});
 		}
-
+		
 		s += getSelectionText();
 
 		final String sHeader = s;

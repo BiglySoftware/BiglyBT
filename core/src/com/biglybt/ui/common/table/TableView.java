@@ -423,6 +423,8 @@ public interface TableView<DATASOURCETYPE>
 
 	int getRowCount();
 
+	int[] getRowAndSubRowCount();
+	
 	void resetLastSortedOn();
 
 	TableColumnCore[] getAllColumns();
