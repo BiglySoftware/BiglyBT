@@ -55,6 +55,7 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.IdentityHashSet;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
@@ -1182,7 +1183,9 @@ public class FilesView
 	private void
 	updateTreeView()
 	{
-		if ( managers.size() == 0 || managers.size() > 1 ){
+		int	num_managers = managers.size();
+		
+		if ( num_managers == 0 ){
 			
 			if ( tv.getRowCount() > 0 ){
 				
@@ -1193,12 +1196,10 @@ public class FilesView
 			
 			current_root = null;
 			
-		}else{
+		}else if ( num_managers == 1 ){
 			
 			DownloadManager dm =  managers.get(0);
 			
-			DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
-
 			if ( force_refresh || current_root == null || current_root.dm != dm ||  tv.getRowCount() == 0 ){
 
 				force_refresh = false;
@@ -1208,6 +1209,8 @@ public class FilesView
 				char file_separator = File.separatorChar;
 
 				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, dm.getDisplayName(), null );
+
+				DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
 
 				for ( DiskManagerFileInfo file: files ){
 
@@ -1252,6 +1255,104 @@ public class FilesView
 				}			
 
 				tv.addDataSource( root );
+
+				tv.processDataSourceQueueSync();
+			}
+		}else{
+			
+			if ( current_root != null ){
+				
+				Object[] kids = current_root.getChildDataSources();
+				
+				if ( kids.length != num_managers ){
+					
+					force_refresh = true;
+					
+				}else{
+					
+					Set<DownloadManager> kids_set = new IdentityHashSet<>();
+				
+					for ( Object k: kids ){
+						
+						kids_set.add(((FilesViewNodeInner)k).getDownloadManager());
+					}
+					
+					for ( int i=0;i<num_managers;i++){
+						
+						if ( !kids_set.contains( managers.get(i))){
+							
+							force_refresh = true;
+						}
+					}
+				}
+			}
+		
+			if ( force_refresh || current_root == null || tv.getRowCount() == 0 ){
+				
+				current_root = new FilesViewNodeInner( null, MessageText.getString( "label.downloads" ), null );
+				
+				force_refresh = false;
+
+				tv.removeAllTableRows();
+
+				char file_separator = File.separatorChar;
+
+				int num = 0;
+				
+				for ( DownloadManager dm: managers ){
+				
+					num++;
+					
+					FilesViewNodeInner root =  new FilesViewNodeInner( dm, "(" + num + ") " + dm.getDisplayName(), current_root );
+	
+					current_root.addChild( root );
+					
+					DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
+
+					for ( DiskManagerFileInfo file: files ){
+	
+						FilesViewNodeInner node = root;
+	
+						TOTorrentFile t_file = file.getTorrentFile();
+	
+						String path = t_file.getRelativePath();
+	
+						int	pos = 0;
+					
+	
+						while( true ){
+	
+							int p = path.indexOf( file_separator, pos );
+	
+							String	bit;
+	
+							if ( p == -1 ){
+	
+								node.addFile( new FilesViewNodeLeaf( path, file, node ));
+	
+								break;
+								
+							}else{
+	
+								bit = path.substring( pos, p );
+	
+								pos = p+1;
+							
+								FilesViewNodeInner n = (FilesViewNodeInner)node.getChild( bit );
+	
+								if ( n == null ){
+		
+									n = new FilesViewNodeInner( dm, bit, node );
+		
+									node.addChild( n );
+								}
+								node = n;
+							}
+						}
+					}			
+				}
+				
+				tv.addDataSource( current_root );
 
 				tv.processDataSourceQueueSync();
 			}
@@ -1480,7 +1581,7 @@ public class FilesView
 		public DiskManager 
 		getDiskManager()
 		{
-			return( dm.getDiskManager());
+			return( dm==null?null:dm.getDiskManager());
 		}
 
 		public File 

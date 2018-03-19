@@ -119,6 +119,9 @@ public interface TableRowCore extends TableRow
 
 	public boolean refilter();
 	
+	public boolean
+	isHidden();
+	
 	/**
 	 * @return
 	 */
@@ -178,6 +181,8 @@ public interface TableRowCore extends TableRow
 	void setSubItems(Object[] datasources);
 
 	TableRowCore[] getSubRowsWithNull();
+
+	TableRowCore[] getSubRowsRecursive( boolean includeHidden );
 
 	void removeSubRow(Object datasource);
 

@@ -23,6 +23,7 @@
 package com.biglybt.ui.swt.views.tableitems.files;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.peer.PEPeerManager;
 
 import com.biglybt.pif.ui.tables.TableCell;
@@ -78,7 +79,8 @@ public class FileAvailabilityItem
     	sText = "-";
     	cell.setSortValue(Long.MAX_VALUE);
     }else{
-	    PEPeerManager pm = file.getDownloadManager().getPeerManager();
+    	DownloadManager dm = file.getDownloadManager();
+	    PEPeerManager pm = dm==null?null:dm.getPeerManager();
 	    if (pm != null) {
 	      float f = pm.getMinAvailability( file.getIndex());
 	      if (!cell.setSortValue((long)(f * 1000)) && cell.isValid())

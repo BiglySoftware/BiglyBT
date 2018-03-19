@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.views.table.painted;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -176,6 +177,12 @@ public class TableRowPainted
 		}
 		
 		return( changed );
+	}
+	
+	public boolean
+	isHidden()
+	{
+		return( isHidden );
 	}
 	
 	private void buildCells() {
@@ -1016,6 +1023,38 @@ public class TableRowPainted
 		}
 	}
 
+	@Override
+	public TableRowCore[] getSubRowsRecursive(boolean includeHidden){
+		synchronized (subRows_sync) {
+			
+			List<TableRowCore>	result = new ArrayList<>();
+			
+			getSubRowsRecursive( result, getSubRowsWithNull(), includeHidden );
+			
+			return( result.toArray( new TableRowCore[ result.size()]));
+		}
+	}
+	
+	private void
+	getSubRowsRecursive(
+		List<TableRowCore>	result,
+		TableRowCore[]		rows,
+		boolean 			includeHidden )
+	{
+		for ( TableRowCore row: rows ){
+			
+			if ( includeHidden || !row.isHidden()){
+			
+				result.add( row );
+			
+				if ( includeHidden || row.isExpanded()){
+				
+					getSubRowsRecursive( result, row.getSubRowsWithNull(), includeHidden);
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void removeSubRow(Object datasource) {
 		synchronized (subRows_sync) {

@@ -550,54 +550,116 @@ public class TableViewPainted
 			return;
 		}
 		TableRowCore[] selectedRows = getSelectedRows();
-		TableRowCore firstRow = selectedRows.length > 0 ? selectedRows[0]
-				: getRow(0);
-		TableRowCore parentFirstRow = firstRow;
-		while (parentFirstRow.getParentRowCore() != null) {
-			parentFirstRow = parentFirstRow.getParentRowCore();
-		}
-		TableRowCore parentClickedRow = clickedRow;
-		while (parentClickedRow.getParentRowCore() != null) {
-			parentClickedRow = parentClickedRow.getParentRowCore();
-		}
-		int startPos;
-		int endPos;
-		if (parentFirstRow == parentClickedRow) {
-			startPos = parentFirstRow == firstRow ? -1 : firstRow.getIndex();
-			endPos = parentClickedRow == clickedRow ? -1 : clickedRow.getIndex();
-		} else {
-			startPos = indexOf(parentFirstRow);
-			endPos = indexOf(parentClickedRow);
-			if (endPos == -1 || startPos == -1) {
+		TableRowCore firstRow = selectedRows.length > 0 ? selectedRows[0]: getRow(0);
+		
+		ArrayList<TableRowCore> rowsToSelect;
+		
+		if ( getFilterSubRows()){
+			
+			TableRowCore[] rows = getRowsAndSubRows( false );
+			
+			int startPos 	= -1;
+			int endPos		= -1;
+			
+			for ( int i=0;i<rows.length;i++){
+				TableRowCore row = rows[i];
+				if ( row == firstRow ){
+					startPos = i;
+				}
+				if ( row == clickedRow ){
+					endPos = i;
+				}
+			}
+			
+			if ( startPos == -1 || endPos == -1 ){
 				return;
 			}
-		}
-		ArrayList<TableRowCore> rowsToSelect = new ArrayList<>(Arrays.asList(selectedRows));
-		TableRowCore curRow = firstRow;
-		do {
-			if (!rowsToSelect.contains(curRow)) {
+			
+			if ( endPos < startPos ){
+				int temp = endPos;
+				endPos = startPos;
+				startPos = temp;
+			}
+
+			rowsToSelect = new ArrayList<>( endPos - startPos + 1);
+			for ( int i=startPos;i<=endPos;i++){
+				rowsToSelect.add( rows[i] );
+			}
+			
+		}else{
+				// broken for full table support
+			
+			TableRowCore parentFirstRow = firstRow;
+			while (parentFirstRow.getParentRowCore() != null) {
+				parentFirstRow = parentFirstRow.getParentRowCore();
+			}
+			TableRowCore parentClickedRow = clickedRow;
+			while (parentClickedRow.getParentRowCore() != null) {
+				parentClickedRow = parentClickedRow.getParentRowCore();
+			}
+			int startPos;
+			int endPos;
+			if (parentFirstRow == parentClickedRow) {
+				startPos = parentFirstRow == firstRow ? -1 : firstRow.getIndex();
+				endPos = parentClickedRow == clickedRow ? -1 : clickedRow.getIndex();
+			} else {
+				startPos = indexOf(parentFirstRow);
+				endPos = indexOf(parentClickedRow);
+				if (endPos == -1 || startPos == -1) {
+					return;
+				}
+			}
+			rowsToSelect = new ArrayList<>(Arrays.asList(selectedRows));
+			TableRowCore curRow = firstRow;
+			do {
+				if (!rowsToSelect.contains(curRow)) {
+					rowsToSelect.add(curRow);
+				}
+				TableRowCore newRow = (startPos < endPos) ? getNextRow(curRow) : getPreviousRow(curRow);
+	
+					// prevent infinite loop if things go wonky (which they have been soon to do!)
+				if ( newRow == curRow ){
+					break;
+				}else{
+					curRow = newRow;
+				}
+	
+			} while (curRow != clickedRow && curRow != null);
+			if (curRow != null && !rowsToSelect.contains(curRow)) {
 				rowsToSelect.add(curRow);
 			}
-			TableRowCore newRow = (startPos < endPos) ? getNextRow(curRow) : getPreviousRow(curRow);
-
-				// prevent infinite loop if things go wonky (which they have been soon to do!)
-			if ( newRow == curRow ){
-				break;
-			}else{
-				curRow = newRow;
-			}
-
-		} while (curRow != clickedRow && curRow != null);
-		if (curRow != null && !rowsToSelect.contains(curRow)) {
-			rowsToSelect.add(curRow);
 		}
+		
 		setSelectedRows(rowsToSelect.toArray(new TableRowCore[0]));
 		setFocusedRow(clickedRow);
 	}
 
 	protected TableRowCore getPreviousRow(TableRowCore relativeToRow) {
-		TableRowCore rowToSelect = null;
-		if (relativeToRow != null) {
+		
+		if (relativeToRow == null) {
+			return( getRow(0));
+		}
+		
+		if ( getFilterSubRows()){
+			
+				// inefficient...
+			
+			TableRowCore[] rows = getRowsAndSubRows( false );
+						
+			for ( int i=rows.length-1;i>0;i--){
+			
+				if ( rows[i] == relativeToRow ){
+					
+					return( rows[i-1] );
+				}
+			}
+			
+			return( getRow(0) );
+			
+		}else{
+				// existing logic below broken for 'full table' - can't be bothered to fix it
+			TableRowCore rowToSelect = null;
+			
 			TableRowCore parentRow = relativeToRow.getParentRowCore();
 			if (parentRow == null) {
 				TableRowCore row = getRow(indexOf(relativeToRow) - 1);
@@ -614,18 +676,40 @@ public class TableViewPainted
 					rowToSelect = parentRow;
 				}
 			}
+	
+			if  ( rowToSelect == null ){
+				return( getRow(0));
+			}
+			return rowToSelect;
 		}
-		if (rowToSelect == null) {
-			rowToSelect = getRow(0);
-		}
-		return rowToSelect;
 	}
 
 	protected TableRowCore getNextRow(TableRowCore relativeToRow) {
-		TableRowCore rowToSelect = null;
 		if (relativeToRow == null) {
-			rowToSelect = getRow(0);
-		} else {
+			return( getRow(0));
+		}
+
+		if ( getFilterSubRows()){
+			
+				// inefficient...
+			
+			TableRowCore[] rows = getRowsAndSubRows( false );
+						
+			for ( int i=0;i<rows.length-1;i++){
+			
+				if ( rows[i] == relativeToRow ){
+											
+					return( rows[i+1] );
+				}
+			}
+			
+			return( rows[rows.length-1]);
+			
+		}else{
+				// existing logic below broken for 'full table' - can't be bothered to fix it
+			
+			TableRowCore rowToSelect = null;
+	
 			if (relativeToRow.isExpanded() && relativeToRow.getSubItemCount() > 0) {
 				TableRowCore[] subRowsWithNull = relativeToRow.getSubRowsWithNull();
 				for (TableRowCore row : subRowsWithNull) {
@@ -641,7 +725,7 @@ public class TableViewPainted
 				TableRowCore parentRow = relativeToRow.getParentRowCore();
 				if (parentRow != null) {
 					rowToSelect = parentRow.getSubRow(relativeToRow.getIndex() + 1);
-
+	
 					if (rowToSelect == null) {
 						rowToSelect = getRow(parentRow.getIndex() + 1);
 					}
@@ -649,8 +733,9 @@ public class TableViewPainted
 					rowToSelect = getRow(relativeToRow.getIndex() + 1);
 				}
 			}
+	
+			return rowToSelect;
 		}
-		return rowToSelect;
 	}
 
 	/* (non-Javadoc)
@@ -3236,12 +3321,12 @@ public class TableViewPainted
 						if (row == parentFocusedRow) {
 							if (parentFocusedRow != rowToShow) {
 								y += row.getHeight();
-								TableRowCore[] subRowsWithNull = parentFocusedRow.getSubRowsWithNull();
+								TableRowCore[] subRowsWithNull = parentFocusedRow.getSubRowsRecursive( false );
 								for (TableRowCore subrow : subRowsWithNull) {
 									if (subrow == rowToShow) {
 										break;
 									}
-									y += ((TableRowPainted) subrow).getFullHeight();
+									y += ((TableRowPainted) subrow).getHeight();
 								}
 							}
 							break;

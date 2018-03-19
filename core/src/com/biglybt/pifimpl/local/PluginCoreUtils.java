@@ -506,8 +506,9 @@ PluginCoreUtils
 					DiskManagerFileInfo fileInfo = (com.biglybt.core.disk.DiskManagerFileInfo) datasource;
 					if (fileInfo != null) {
 						try {
+							DownloadManager dm = fileInfo.getDownloadManager();
 							return new com.biglybt.pifimpl.local.disk.DiskManagerFileInfoImpl(
-									DownloadManagerImpl.getDownloadStatic(fileInfo.getDownloadManager()),
+									dm==null?null:DownloadManagerImpl.getDownloadStatic(dm),
 									fileInfo);
 						} catch (DownloadException e) { /* Ignore */
 						}

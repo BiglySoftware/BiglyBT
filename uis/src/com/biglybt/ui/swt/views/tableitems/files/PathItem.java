@@ -90,6 +90,9 @@ public class PathItem
 
   	DownloadManager dm = fileInfo.getDownloadManager();
 
+  	if ( dm == null ){
+  		return( "" );
+  	}
    	File dl_save_path_file = dm.getAbsoluteSaveLocation();
 
    	TOTorrent torrent = dm.getTorrent();

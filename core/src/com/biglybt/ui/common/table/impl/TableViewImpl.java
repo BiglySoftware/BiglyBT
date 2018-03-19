@@ -909,6 +909,36 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 	}
 
+	protected TableRowCore[] getRowsAndSubRows( boolean includeHidden ) {
+		synchronized (rows_sync) {
+			List<TableRowCore>	result = new ArrayList<>();
+			
+			getRowsAndSubRows( result, sortedRows.toArray( new TableRowCore[sortedRows.size()]), includeHidden );
+			
+			return( result.toArray( new TableRowCore[ result.size()]));
+		}
+	}
+	
+	private void
+	getRowsAndSubRows(
+		List<TableRowCore>	result,
+		TableRowCore[]		rows,
+		boolean 			includeHidden )
+	{
+		for ( TableRowCore row: rows ){
+			
+			if ( includeHidden || !row.isHidden()){
+			
+				result.add( row );
+			
+				if ( includeHidden || row.isExpanded()){
+				
+					getRowsAndSubRows( result, row.getSubRowsWithNull(), includeHidden);
+				}
+			}
+		}
+	}
+		
 	// @see TableView#getRow(java.lang.Object)
 	@Override
 	public TableRowCore getRow(DATASOURCETYPE dataSource) {
@@ -2148,7 +2178,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	@Override
 	public void selectAll() {
-		setSelectedRows(getRows(), true);
+		setSelectedRows( getFilterSubRows()?getRowsAndSubRows( false ):getRows(), true);
 	}
 
 	public String getFilterText() {
