@@ -910,7 +910,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 	}
 
-	protected TableRowCore[] getRowsAndSubRows( boolean includeHidden ) {
+	public TableRowCore[] getRowsAndSubRows( boolean includeHidden ) {
 		synchronized (rows_sync) {
 			List<TableRowCore>	result = new ArrayList<>();
 			

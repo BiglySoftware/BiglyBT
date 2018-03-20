@@ -493,6 +493,29 @@ public class FilesView
 
 			tv.refilter();
 		}
+		
+		if ( tree_view ){
+			
+			file = tree_file_map.get( file.getTorrentFile());
+		}
+		
+		if ( file != null ){
+			
+			TableRowCore[] rows = tv.getVisibleRows();
+			
+			for ( TableRowCore row: rows ){
+				
+				if ( row.getDataSource( true ) == file ){
+				
+					while( row != null ){
+						
+						row.redraw();
+					
+						row = row.getParentRowCore();
+					}
+				}
+			}
+		}
 	}
 	
 	@Override
@@ -1190,6 +1213,7 @@ public class FilesView
 	}
 	
 	private FilesViewNodeInner	current_root;
+	private Map<TOTorrentFile,FilesViewNodeLeaf>	tree_file_map = new IdentityHashMap<>();
 	
 	private void
 	updateTreeView()
@@ -1221,6 +1245,8 @@ public class FilesView
 
 				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, dm.getDisplayName(), null );
 
+				tree_file_map.clear();
+				
 				DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
 
 				for ( DiskManagerFileInfo file: files ){
@@ -1242,8 +1268,12 @@ public class FilesView
 
 						if ( p == -1 ){
 
-							node.addFile( new FilesViewNodeLeaf( path, file, node ));
+							FilesViewNodeLeaf leaf = new FilesViewNodeLeaf( path, file, node );
+							
+							node.addFile( leaf );
 
+							tree_file_map.put( t_file, leaf );
+							
 							break;
 							
 						}else{
@@ -1302,6 +1332,8 @@ public class FilesView
 				
 				current_root = new FilesViewNodeInner( null, MessageText.getString( "label.downloads" ), null );
 				
+				tree_file_map.clear();
+				
 				force_refresh = false;
 
 				tv.removeAllTableRows();
@@ -1339,8 +1371,12 @@ public class FilesView
 	
 							if ( p == -1 ){
 	
-								node.addFile( new FilesViewNodeLeaf( path, file, node ));
+								FilesViewNodeLeaf leaf = new FilesViewNodeLeaf( path, file, node );
+								
+								node.addFile( leaf );
 	
+								tree_file_map.put( t_file, leaf );
+								
 								break;
 								
 							}else{
@@ -1383,6 +1419,19 @@ public class FilesView
 		
 		public boolean
 		isLeaf();
+		
+		public int
+		getSkippedState();
+		
+		public void
+		setSkipped(
+			boolean		b );
+		
+		public long
+		getLength();
+		
+		public long
+		getDownloaded();
 	}
 	
 	private static class
@@ -1395,6 +1444,8 @@ public class FilesView
 		private final Map<String,FilesViewTreeNode>			kids = new TreeMap<>( tree_comp );
 		
 		private boolean				expanded	= true;
+		
+		private long	size;
 		
 		private
 		FilesViewNodeInner(
@@ -1475,8 +1526,14 @@ public class FilesView
 		{
 		}
 
-		public void setSkipped(boolean b)
+		public void 
+		setSkipped(
+			boolean b )
 		{	
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				kid.setSkipped( b );
+			}
 		}
 
 
@@ -1526,7 +1583,14 @@ public class FilesView
 		public long 
 		getDownloaded()
 		{
-			return( -1 );
+			long	temp = 0;
+			
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				temp += kid.getDownloaded();
+			}
+			
+			return( temp );
 		}
 
 		public long 
@@ -1556,7 +1620,19 @@ public class FilesView
 		public long 
 		getLength()
 		{
-			return( -1 );
+			if ( size == 0 ){
+			
+				long	temp = 0;
+				
+				for ( FilesViewTreeNode kid: kids.values()){
+					
+					temp += kid.getLength();
+				}
+				
+				size = temp;
+			}
+			
+			return( size );
 		}
 
 		public int 
@@ -1575,6 +1651,34 @@ public class FilesView
 		isSkipped()
 		{
 			return( false );
+		}
+		
+		public int
+		getSkippedState()
+		{
+			boolean	all_skipped 	= true;
+			boolean all_not_skipped	= true;
+			
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				int	state = kid.getSkippedState();
+				
+				if ( state == 0 ){
+					all_not_skipped = false;
+				}else if ( state == 1 ){
+					all_skipped = false;
+				}else{
+					return( 2 );
+				}
+			}
+			
+			if ( all_skipped ){
+				return( 0 );
+			}else if ( all_not_skipped ){
+				return(  1 );
+			}else{
+				return( 2 );
+			}
 		}
 
 		public int	
@@ -1803,6 +1907,16 @@ public class FilesView
 		isSkipped()
 		{
 			return( delegate.isSkipped());
+		}
+		
+		public int
+		getSkippedState()
+		{
+			if ( delegate.isSkipped()){
+				return( 0 );
+			}else{
+				return( 1 );
+			}
 		}
 
 		public int	

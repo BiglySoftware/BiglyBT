@@ -188,12 +188,16 @@ public class NameItem extends CoreTableColumnSWT implements
 		if (rowCore != null) {
 			int depth;
 			boolean is_leaf;
+			int	is_skipped = -1;
+			
 			if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
 				FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)fileInfo;
 				depth = node.getDepth();
 				is_leaf = node.isLeaf();
 				if ( !is_leaf ){
 					showIcon = false;
+					
+					is_skipped = node.getSkippedState();
 				}
 			}else{
 				depth = 0;
@@ -268,6 +272,7 @@ public class NameItem extends CoreTableColumnSWT implements
 			ImageLoader im = ImageLoader.getInstance();
 			
 			String check_key;
+			boolean is_ro = false;
 			
 			if ( is_leaf ){
 				if (fileInfo.isSkipped()){
@@ -275,13 +280,26 @@ public class NameItem extends CoreTableColumnSWT implements
 				}else{
 					if ( fileInfo.getLength() == fileInfo.getDownloaded()){
 						check_key = "check_ro_yes";
+						is_ro = true;
 					}else{
 						check_key = "check_yes";
 					}
 				}
 			}else{
-				check_key = "check_ro_yes";
+				if ( is_skipped == 0 ){
+					check_key = "check_no";
+				}else if ( is_skipped == 1 ){
+					if ( fileInfo.getLength() == fileInfo.getDownloaded()){
+						check_key = "check_ro_yes";
+						is_ro = true;
+					}else{
+						check_key = "check_yes";
+					}
+				}else{
+					check_key = "check_maybe";
+				}
 			}
+			
 			Image check = im.getImage(check_key);
 			
 			Rectangle checkSize = check.getBounds();
@@ -292,9 +310,11 @@ public class NameItem extends CoreTableColumnSWT implements
 			
 			im.releaseImage(check_key );
 			
-			Rectangle hitArea = new Rectangle( cellBounds.x+2 - originalBoundxsX, checkYOffset, checkSize.width, checkSize.height);
-			
-			rowCore.setData(ID_CHECKHITAREA, hitArea);
+			if ( !is_ro ){
+				Rectangle hitArea = new Rectangle( cellBounds.x+2 - originalBoundxsX, checkYOffset, checkSize.width, checkSize.height);
+				
+				rowCore.setData(ID_CHECKHITAREA, hitArea);
+			}
 			
 			cellBounds.x += checkSize.width+4;
 			cellBounds.width -= checkSize.width+4;
@@ -464,18 +484,22 @@ public class NameItem extends CoreTableColumnSWT implements
 			if (row == null) {
 				return;
 			}
+			
+			boolean inArea = false;
 			Object data = row.getData(ID_EXPANDOHITAREA);
 			if (data instanceof Rectangle) {
 				Rectangle hitArea = (Rectangle) data;
 				boolean inExpando = hitArea.contains(event.x, event.y);
 
-				if (event.eventType == TableCellMouseEvent.EVENT_MOUSEMOVE) {
-					((TableCellCore) event.cell).setCursorID(inExpando ? SWT.CURSOR_HAND
-							: SWT.CURSOR_ARROW);
-				} else if (inExpando) { // mousedown
-					if (row instanceof TableRowCore) {
-						TableRowCore rowCore = (TableRowCore) row;
-						rowCore.setExpanded(!rowCore.isExpanded());
+				if ( inExpando ){
+					inArea = true;
+				
+					if (event.eventType == TableCellMouseEvent.EVENT_MOUSEDOWN) {
+			
+						if (row instanceof TableRowCore) {
+							TableRowCore rowCore = (TableRowCore) row;
+							rowCore.setExpanded(!rowCore.isExpanded());
+						}
 					}
 				}
 			}
@@ -485,19 +509,47 @@ public class NameItem extends CoreTableColumnSWT implements
 				Rectangle hitArea = (Rectangle) data;
 				boolean inCheck = hitArea.contains(event.x, event.y);
 
-				if (event.eventType == TableCellMouseEvent.EVENT_MOUSEMOVE) {
-					((TableCellCore) event.cell).setCursorID(inCheck ? SWT.CURSOR_HAND
-							: SWT.CURSOR_ARROW);
-				} else if (inCheck) { // mousedown
-					if (row instanceof TableRowCore) {
-						TableRowCore rowCore = (TableRowCore) row;
-						if ( rowCore != null ){
-							final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)event.cell.getDataSource();
-						
-							fileInfo.setSkipped( !fileInfo.isSkipped());
+				if ( inCheck ){
+					inArea = true;
+					if (event.eventType == TableCellMouseEvent.EVENT_MOUSEDOWN) {
+						if (row instanceof TableRowCore) {
+							TableRowCore rowCore = (TableRowCore) row;
+							if ( rowCore != null ){
+								final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)event.cell.getDataSource();
+							
+								if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
+									
+									FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)fileInfo;
+									
+									if ( !node.isLeaf()){
+								
+										int old_skipped = node.getSkippedState();
+										
+										boolean new_skipped;
+										
+										if ( old_skipped == 0 ){
+											new_skipped = false;
+										}else if ( old_skipped == 1 ){
+											new_skipped = true;
+										}else{
+											new_skipped = true;
+										}
+										
+										node.setSkipped( new_skipped );
+										
+										return;
+									}
+								}
+								
+								fileInfo.setSkipped( !fileInfo.isSkipped());
+							}
 						}
 					}
 				}
+			}
+			
+			if (event.eventType == TableCellMouseEvent.EVENT_MOUSEMOVE) {
+				((TableCellCore) event.cell).setCursorID(inArea ? SWT.CURSOR_HAND : SWT.CURSOR_ARROW);
 			}
 		}
 	}

@@ -786,7 +786,16 @@ public class TableViewPainted
 		return cTable == null || cTable.isDisposed();
 	}
 
-
+	@Override 
+	public TableRowCore[]
+	getVisibleRows()
+	{
+		synchronized( visibleRows_sync ){
+			
+			return( visibleRows.toArray( new TableRowCore[ visibleRows.size()]));
+		}
+	}
+	
 	@Override
 	public void refreshTable(final boolean bForceSort) {
 		refreshTableRunnable.setForceSort(bForceSort);

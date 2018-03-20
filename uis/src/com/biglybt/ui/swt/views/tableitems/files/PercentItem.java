@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views.tableitems.files;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 /**
@@ -51,6 +52,8 @@ public class PercentItem
 	public void refresh(TableCell cell) {
 
 		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
+
+		boolean internal = fileInfo instanceof FilesView.FilesViewTreeNode && !((FilesView.FilesViewTreeNode)fileInfo).isLeaf();
 
 		long percent = 0;
 
@@ -84,7 +87,18 @@ public class PercentItem
 			return;
 		}
 
-		cell.setText(percent < 0 ? ""
-				: DisplayFormatters.formatPercentFromThousands((int) percent));
+		String text;
+		
+		if ( percent < 0 ){
+			text = "";
+		}else{
+			text = DisplayFormatters.formatPercentFromThousands((int) percent);
+			
+			if ( internal ){
+				
+				text = "(" + text + ")";
+			}
+		}
+		cell.setText( text );
 	}
 }

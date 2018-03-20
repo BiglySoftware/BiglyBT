@@ -22,6 +22,7 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 
@@ -51,13 +52,32 @@ public class SizeItem
   @Override
   public void refresh(TableCell cell) {
     DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)cell.getDataSource();
+    
+    boolean internal = fileInfo instanceof FilesView.FilesViewTreeNode && !((FilesView.FilesViewTreeNode)fileInfo).isLeaf();
+    
     long value = (fileInfo == null) ? 0 : fileInfo.getLength();
 
     if( !cell.setSortValue( value ) && cell.isValid() ) {
       return;
     }
 
-    cell.setText(value<0?"":DisplayFormatters.formatByteCountToKiBEtc(value));
+    String text;
+    
+    if ( value < 0 ){
+    	
+    	text = "";
+    	
+    }else{
+    	
+    	text = DisplayFormatters.formatByteCountToKiBEtc(value);
+    	
+    	if ( internal ){
+    		
+    		text = "(" + text + ")";
+    	}
+    }
+    
+    cell.setText( text );
     
 	if (Utils.getUserMode() > 0 && (cell instanceof TableCellSWT)) {
 		if (value >= 0x40000000l) {
