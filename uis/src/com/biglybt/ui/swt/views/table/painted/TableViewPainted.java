@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views.table.painted;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
@@ -174,6 +175,9 @@ public class TableViewPainted
 	private Canvas sCanvasImage;
 
 	private boolean	filterSubRows;
+	
+	private AtomicInteger	mutationCount 	= new AtomicInteger(0);
+	private int				lastMC			= -1;
 	
 	private class
 	RefreshTableRunnable
@@ -1756,6 +1760,20 @@ public class TableViewPainted
 		});
 	}
 
+	protected void
+	rowCreated()
+	{
+		mutationCount.incrementAndGet();
+	}
+	
+	public void
+	tableMutated()
+	{
+		super.tableMutated();
+		
+		mutationCount.incrementAndGet();
+	}
+	
 	@Override
 	public void tableStructureChanged(final boolean columnAddedOrRemoved,
 			final Class forPluginDataSourceType) {
@@ -1803,30 +1821,42 @@ public class TableViewPainted
 
 		boolean isTableSelected = isTableSelected();
 		boolean isTableEnabled = cTable.isEnabled();
+		
+		int mut = mutationCount.get();
+		
+		if ( mut != lastMC ){			
+			numberAllVisibleRows();
+			lastMC = mut;
+		}
+		
 		for (TableRowPainted row : visibleRows) {
 			TableRowPainted paintedRow = row;
-			if (pos == -1) {
-				pos = row.getIndex();
-			} else {
-				pos++;
-			}
-			Point drawOffset = paintedRow.getDrawOffset();
-			int rowStartX = 0;
-			if (DIRECT_DRAW) {
-				rowStartX = -drawOffset.x;
-			}
-			int rowStartY = drawOffset.y - clientArea.y;
 			int rowHeight = paintedRow.getHeight();
-			//debug("Paint " + drawBounds.x + "x" + drawBounds.y + " " + drawBounds.width + "x" + drawBounds.height + "; Row=" +row.getIndex() + ";clip=" + gc.getClipping() +";drawOffset=" + drawOffset);
-			if (drawBounds.intersects(rowStartX, rowStartY, 9999, rowHeight)) {
-				// ensure full row height
-				int diffY2 = (rowStartY + rowHeight) - (drawBounds.y + drawBounds.height);
-				if (diffY2 > 0 ) {
-					drawBounds.height += diffY2;
-					Utils.setClipping(gc, drawBounds);
+			
+			if ( rowHeight > 0 ){
+				if (pos == -1) {
+					pos	= row.getVisibleRowIndex();
+				} else {
+					pos++;
 				}
-				paintedRow.swt_paintGC(gc, drawBounds, rowStartX, rowStartY, pos,
-						isTableSelected, isTableEnabled);
+				Point drawOffset = paintedRow.getDrawOffset();
+				int rowStartX = 0;
+				if (DIRECT_DRAW) {
+					rowStartX = -drawOffset.x;
+				}
+				int rowStartY = drawOffset.y - clientArea.y;
+				
+				//debug("Paint " + drawBounds.x + "x" + drawBounds.y + " " + drawBounds.width + "x" + drawBounds.height + "; Row=" +row.getIndex() + ";clip=" + gc.getClipping() +";drawOffset=" + drawOffset);
+				if (drawBounds.intersects(rowStartX, rowStartY, 9999, rowHeight)) {
+					// ensure full row height
+					int diffY2 = (rowStartY + rowHeight) - (drawBounds.y + drawBounds.height);
+					if (diffY2 > 0 ) {
+						drawBounds.height += diffY2;
+						Utils.setClipping(gc, drawBounds);
+					}
+					paintedRow.swt_paintGC(gc, drawBounds, rowStartX, rowStartY, pos,
+							isTableSelected, isTableEnabled);
+				}
 			}
 			oldRow = row;
 		}

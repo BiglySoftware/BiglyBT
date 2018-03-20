@@ -600,8 +600,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				}
 				
 				if ( changed ){
-					redrawTable();
 					tableMutated();
+					redrawTable();
 				}
 			}
 			
@@ -938,6 +938,54 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				}
 			}
 		}
+	}
+	
+	protected void
+	numberAllVisibleRows()
+	{
+		synchronized( rows_sync ){
+			int	pos = 0;
+			for ( TableRowCore row: sortedRows ){
+				
+				if ( row.isHidden()){
+					
+					continue;
+				}
+				
+				row.setVisibleRowIndex( pos++ );
+				
+				if ( row.isExpanded()){
+					
+					TableRowCore[] kids = row.getSubRowsWithNull();
+					
+					pos = numberAllVisibleRows( kids, pos );
+				}
+			}
+		}
+	}
+	
+	private int
+	numberAllVisibleRows(
+		TableRowCore[]		rows,
+		int					pos )
+	{
+		for ( TableRowCore row: rows ){
+			if ( row.isHidden()){
+				
+				continue;
+			}
+			
+			row.setVisibleRowIndex( pos++ );
+			
+			if ( row.isExpanded()){
+				
+				TableRowCore[] kids = row.getSubRowsWithNull();
+				
+				pos = numberAllVisibleRows( kids, pos );
+			}
+		}
+		
+		return( pos );
 	}
 	
 	@Override
@@ -1367,7 +1415,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	}
 
-	private void
+	public void
 	tableMutated()
 	{
 		filter f = filter;

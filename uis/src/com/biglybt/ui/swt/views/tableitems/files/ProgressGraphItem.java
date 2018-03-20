@@ -32,6 +32,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
+import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 
@@ -112,6 +113,12 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 		@Override
 		public void refresh(TableCell cell, boolean sortOnly) {
 			final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
+
+			if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
+				if (!((FilesView.FilesViewTreeNode)fileInfo).isLeaf()){
+					return;
+				}
+			}
 			final DiskManager manager = fileInfo == null ? null : fileInfo.getDiskManager();
 
 			int percentDone = 0;

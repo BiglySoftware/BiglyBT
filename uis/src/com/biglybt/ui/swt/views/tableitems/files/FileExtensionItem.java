@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.views.tableitems.files;
 
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -51,6 +52,11 @@ public class FileExtensionItem
   }
 
   private static String determineFileExt(DiskManagerFileInfo fileInfo) {
+	  if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
+		  if (!((FilesView.FilesViewTreeNode)fileInfo).isLeaf()){
+			  return( "" );
+		  }
+	  }
 	String name = (fileInfo == null) ? "" : fileInfo.getFile(true).getName();
 
 	DownloadManager dm = fileInfo==null?null:fileInfo.getDownloadManager();

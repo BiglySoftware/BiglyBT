@@ -111,6 +111,8 @@ public class TableRowPainted
 		if (triggerHeightChange) {
 			heightChanged(0, getFullHeight());
 		}
+		
+		tv.rowCreated();
 	}
 
 	public boolean
@@ -978,11 +980,14 @@ public class TableRowPainted
 				((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
 			}
 			
+			TableViewPainted tvp = getViewPainted();
+
 			if ( triggerHeightListener ){
-				getViewPainted().rowHeightChanged(this, oldHeight, newHeight );
+					
+				tvp.rowHeightChanged(this, oldHeight, newHeight );
 			}
 			
-			getViewPainted().triggerListenerRowAdded(newSubRows);
+			tvp.triggerListenerRowAdded(newSubRows);
 
 			subRows = newSubRows;
 		}
@@ -1146,9 +1151,17 @@ public class TableRowPainted
 				((TableRowSWTChildController)ds).setExpanded( b );
 			}
 			
+			TableViewPainted tvp = getViewPainted();
+
+			if ( triggerHeightChange ){
+			
+				tvp.tableMutated();
+			}
+			
 			if (isVisible()) {
-				getViewPainted().visibleRowsChanged();
-				getViewPainted().redrawTable();
+
+				tvp.visibleRowsChanged();
+				tvp.redrawTable();
 			}
 		}
 	}

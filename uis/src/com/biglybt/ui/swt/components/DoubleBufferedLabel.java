@@ -36,14 +36,17 @@ public class
 DoubleBufferedLabel
 	extends Canvas implements PaintListener
 {
-	private String text = "";
-
+	private String 	text = "";
+	private int		style;
+	
 	public DoubleBufferedLabel(
 		Composite 	parent,
 		int 		style )
 	{
 		super( parent, style | SWT.DOUBLE_BUFFERED );
 
+		this.style = style;
+				
 			// only support GridLayout I'm afraid...
 
 		GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_CENTER | GridData.VERTICAL_ALIGN_FILL);
@@ -80,9 +83,9 @@ DoubleBufferedLabel
 		Rectangle clientArea = getClientArea();
 
 		GCStringPrinter sp =
-			new GCStringPrinter(e.gc, getText(), clientArea, true, true, SWT.LEFT);
+			new GCStringPrinter(e.gc, getText(), clientArea, true, true, style);
 
-		sp.printString(e.gc, clientArea, SWT.LEFT);
+		sp.printString(e.gc, clientArea, style);
 	}
 
 

@@ -82,16 +82,20 @@ public class FileAvailabilityItem
     	DownloadManager dm = file.getDownloadManager();
 	    PEPeerManager pm = dm==null?null:dm.getPeerManager();
 	    if (pm != null) {
-	      float f = pm.getMinAvailability( file.getIndex());
-	      if (!cell.setSortValue((long)(f * 1000)) && cell.isValid())
-	        return;
-
-	        sText = String.valueOf((int)(f * iTimesBy));
-	        if (numZeros - sText.length() > 0)
-	          sText = zeros.substring(0, numZeros - sText.length()) + sText;
-	        sText = sText.substring(0, sText.length() - numZeros + 1) + "." +
-	                sText.substring(sText.length() - numZeros + 1);
-
+	      int index = file.getIndex();
+	      if ( index >= 0 ){
+		      float f = pm.getMinAvailability( index);
+		      if (!cell.setSortValue((long)(f * 1000)) && cell.isValid())
+		        return;
+	
+		        sText = String.valueOf((int)(f * iTimesBy));
+		        if (numZeros - sText.length() > 0)
+		          sText = zeros.substring(0, numZeros - sText.length()) + sText;
+		        sText = sText.substring(0, sText.length() - numZeros + 1) + "." +
+		                sText.substring(sText.length() - numZeros + 1);
+	      }else{
+	    	  cell.setSortValue(0 );
+	      }
 	    } else {
 	      cell.setSortValue(0);
 	    }

@@ -66,6 +66,12 @@ public interface TableRowCore extends TableRow
 	@Override
 	public int getIndex();
 
+	public void
+	setVisibleRowIndex( int index );
+		
+	public int
+	getVisibleRowIndex();
+	
 	/** Adjust cell height.  Don't use if any other column/cell uses setImage()
 	 *
 	 * @param iHeight new Row Height.  Will not reduce row's height (SWT)

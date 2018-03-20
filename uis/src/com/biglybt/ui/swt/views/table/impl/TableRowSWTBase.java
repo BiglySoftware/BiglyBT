@@ -57,6 +57,8 @@ public abstract class TableRowSWTBase
 
 	private int lastIndex = -1;
 
+	private int visibleRowIndex;
+	
 	protected Map<String, TableCellCore> mTableCells;
 
 	private boolean bDisposed;
@@ -272,6 +274,18 @@ public abstract class TableRowSWTBase
 		return tv.indexOf(this);
 	}
 
+	public void
+	setVisibleRowIndex( int index )
+	{
+		visibleRowIndex = index;
+	}
+		
+	public int
+	getVisibleRowIndex()
+	{
+		return( visibleRowIndex );
+	}
+	
 	/* (non-Javadoc)
 	 * @see TableRowCore#getTableCellCore(java.lang.String)
 	 */

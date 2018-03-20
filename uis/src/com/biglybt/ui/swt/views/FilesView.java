@@ -76,6 +76,7 @@ import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
+import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
@@ -165,7 +166,7 @@ public class FilesView
 	private final boolean allowTabViews;
 	Button btnShowDND;
 	Button btnTreeView;
-	Label lblHeader;
+	BufferedLabel lblHeader;
 
 	private boolean	disableTableWhenEmpty	= true;
 
@@ -353,7 +354,7 @@ public class FilesView
 
 		btnTreeView.setSelection(tree_view);
 		
-		lblHeader = new Label(cTop, SWT.CENTER);
+		lblHeader = new BufferedLabel(cTop, SWT.CENTER | SWT.DOUBLE_BUFFERED);
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 		bubbleTextBox.getTextWidget().setMessage(MessageText.getString("TorrentDetailsView.filter"));

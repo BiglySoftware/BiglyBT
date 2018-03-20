@@ -22,6 +22,7 @@ import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 /**
@@ -59,12 +60,17 @@ public class RemainingPiecesItem
     int remaining = 0;
 
     if( fileInfo != null && dm != null ) {
-      int start = fileInfo.getFirstPieceNumber();
-      int end = start + fileInfo.getNbPieces();
-      DiskManagerPiece[] pieces = dm.getPieces();
-      for( int i = start; i < end; i++ ) {
-        if( !pieces[ i ].isDone() )  remaining++;
-      }
+    	if ( fileInfo instanceof FilesView.FilesViewTreeNode && !((FilesView.FilesViewTreeNode)fileInfo).isLeaf()){
+	
+    		remaining	= -1;
+    	}else{
+    		int start = fileInfo.getFirstPieceNumber();
+    		int end = start + fileInfo.getNbPieces();
+    		DiskManagerPiece[] pieces = dm.getPieces();
+    		for( int i = start; i < end; i++ ) {
+    			if( !pieces[ i ].isDone() )  remaining++;
+    		}
+    	}
     }else{
 
 		remaining	= -1;	// unknown

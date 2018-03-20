@@ -86,6 +86,6 @@ public class PiecesDoneAndCountItem
       return;
     }
 
-    cell.setText( done < 0?"": MessageText.getString( "v3.MainWindow.xofx", new String[]{ String.valueOf( done ), String.valueOf( total ) } ));
+    cell.setText( done < 0 || total < 0 ?"": MessageText.getString( "v3.MainWindow.xofx", new String[]{ String.valueOf( done ), String.valueOf( total ) } ));
   }
 }

@@ -52,7 +52,6 @@ import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
-import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.*;
@@ -70,8 +69,8 @@ public class NameItem extends CoreTableColumnSWT implements
 	TableCellSWTPaintListener, TableCellMouseMoveListener,
 	TableCellInplaceEditorListener
 {
-	private static final String ID_EXPANDOHITAREA = "expandoHitArea";
-	private static final String ID_EXPANDOHITAREASHOW = "expandoHitAreaShow";
+	private static final String ID_EXPANDOHITAREA 	= "expandoHitArea";
+	private static final String ID_CHECKHITAREA		= "checkHitArea";
 
 	private static boolean NEVER_SHOW_TWISTY;
 	
@@ -260,11 +259,46 @@ public class NameItem extends CoreTableColumnSWT implements
 						- cellBounds.y, width, (halfHeight * 4) + 1);
 				rowCore.setData(ID_EXPANDOHITAREA, hitArea);
 			}
-
+			
 			if (!NEVER_SHOW_TWISTY) {
 				cellBounds.x += paddingX  + width;
 				cellBounds.width -= paddingX + width;
 			}
+			
+			ImageLoader im = ImageLoader.getInstance();
+			
+			String check_key;
+			
+			if ( is_leaf ){
+				if (fileInfo.isSkipped()){
+					check_key = "check_no";
+				}else{
+					if ( fileInfo.getLength() == fileInfo.getDownloaded()){
+						check_key = "check_ro_yes";
+					}else{
+						check_key = "check_yes";
+					}
+				}
+			}else{
+				check_key = "check_ro_yes";
+			}
+			Image check = im.getImage(check_key);
+			
+			Rectangle checkSize = check.getBounds();
+			
+			int checkYOffset = (cellBounds.height - checkSize.height )/2 +1;
+			
+			gc.drawImage(check, cellBounds.x+2, cellBounds.y + checkYOffset);
+			
+			im.releaseImage(check_key );
+			
+			Rectangle hitArea = new Rectangle( cellBounds.x+2 - originalBoundxsX, checkYOffset, checkSize.width, checkSize.height);
+			
+			rowCore.setData(ID_CHECKHITAREA, hitArea);
+			
+			cellBounds.x += checkSize.width+4;
+			cellBounds.width -= checkSize.width+4;
+
 		}
 
 		if (!showIcon) {
@@ -442,6 +476,26 @@ public class NameItem extends CoreTableColumnSWT implements
 					if (row instanceof TableRowCore) {
 						TableRowCore rowCore = (TableRowCore) row;
 						rowCore.setExpanded(!rowCore.isExpanded());
+					}
+				}
+			}
+			
+			data = row.getData(ID_CHECKHITAREA);
+			if (data instanceof Rectangle) {
+				Rectangle hitArea = (Rectangle) data;
+				boolean inCheck = hitArea.contains(event.x, event.y);
+
+				if (event.eventType == TableCellMouseEvent.EVENT_MOUSEMOVE) {
+					((TableCellCore) event.cell).setCursorID(inCheck ? SWT.CURSOR_HAND
+							: SWT.CURSOR_ARROW);
+				} else if (inCheck) { // mousedown
+					if (row instanceof TableRowCore) {
+						TableRowCore rowCore = (TableRowCore) row;
+						if ( rowCore != null ){
+							final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)event.cell.getDataSource();
+						
+							fileInfo.setSkipped( !fileInfo.isSkipped());
+						}
 					}
 				}
 			}
