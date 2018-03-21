@@ -48,9 +48,10 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	/** Any of the First Priority rules must match */
 	public static final int FIRSTPRIORITY_ANY = 1;
 
-	public static final int	DOWNLOAD_ORDER_INDEX		= 0;
-	public static final int	DOWNLOAD_ORDER_SEED_COUNT	= 1;
-	public static final int	DOWNLOAD_ORDER_SPEED		= 2;
+	public static final int	DOWNLOAD_ORDER_INDEX				= 0;
+	public static final int	DOWNLOAD_ORDER_SEED_COUNT			= 1;
+	public static final int	DOWNLOAD_ORDER_SPEED				= 2;
+	public static final int	DOWNLOAD_ORDER_REVERSE_SEED_COUNT	= 3;
 
 	/**
 	 * Force torrent to be "Actively Seeding/Downloading" for this many ms upon

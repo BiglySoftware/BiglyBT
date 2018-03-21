@@ -1687,7 +1687,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			return;
 
-		}else if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT ){
+		}else if ( 	iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT || 
+					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SEED_COUNT){
 
 			Collections.sort(
 				downloads,
@@ -1708,8 +1709,15 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 							result = s2.getNonSeedCount() - s1.getNonSeedCount();
 						}
+						
+						if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT ){
 
-						return( result );
+							return( result );
+							
+						}else{
+							
+							return( -result );
+						}
 					}
 				});
 

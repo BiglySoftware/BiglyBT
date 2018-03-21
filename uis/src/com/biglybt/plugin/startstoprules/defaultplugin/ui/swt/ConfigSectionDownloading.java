@@ -117,12 +117,14 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 	String orderLabels[] =
 		{	MessageText.getString("label.order"),
 			MessageText.getString("label.seed.count"),
+			MessageText.getString("label.reverse.seed.count"),
 			MessageText.getString("label.speed"),
 		};
 
 	int orderValues[] =
 		{ 	DefaultRankCalculator.DOWNLOAD_ORDER_INDEX,
 			DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT,
+			DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SEED_COUNT,
 			DefaultRankCalculator.DOWNLOAD_ORDER_SPEED
 		};
 
