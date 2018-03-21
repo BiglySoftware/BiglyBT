@@ -186,6 +186,13 @@ DoubleBufferedLabel
 
 		this.text = text;
 
+			// if we start off blank we can end up with zero height which causes subsequent updates to fail to display...
+		
+		if ( getBounds().height == 0 ){
+		
+			getParent().layout( true );
+		}
+		
 		redraw();
 	}
 }

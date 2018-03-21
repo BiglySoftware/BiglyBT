@@ -76,7 +76,7 @@ public class DoneItem
     	
     	if ( internal ){
     		
-    		text = "(" + text + ")";
+    		//text = "(" + text + ")";
     	}
     }
     

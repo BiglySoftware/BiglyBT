@@ -41,7 +41,9 @@ public class FontUtils
 	private static Method mFontData_GetHeightF;
 
 	private static Font fontBold;
-
+	private static Font fontItalic;
+	private static Font fontBoldItalic;
+	
 	static {
 		try {
 			mFontData_SetHeight = FontData.class.getDeclaredMethod("setHeight",
@@ -330,6 +332,7 @@ public class FontUtils
 	}
 
 	public static Font getAnyFontBold(GC gc) {
+	
 		if (fontBold == null || fontBold.isDisposed()) {
 			FontData[] fontData = gc.getFont().getFontData();
 			for (int i = 0; i < fontData.length; i++) {
@@ -341,10 +344,42 @@ public class FontUtils
 		return fontBold;
 	}
 
+	public static Font getAnyFontItalic(GC gc) {
+		if (fontItalic == null || fontItalic.isDisposed()) {
+			FontData[] fontData = gc.getFont().getFontData();
+			for (int i = 0; i < fontData.length; i++) {
+				FontData fd = fontData[i];
+				fd.setStyle(SWT.ITALIC);
+			}
+			fontItalic = new Font(gc.getDevice(), fontData);
+		}
+		return fontItalic;
+	}
+	
+	public static Font getAnyFontBoldItalic(GC gc) {
+		if (fontBoldItalic == null || fontBoldItalic.isDisposed()) {
+			FontData[] fontData = gc.getFont().getFontData();
+			for (int i = 0; i < fontData.length; i++) {
+				FontData fd = fontData[i];
+				fd.setStyle(SWT.BOLD | SWT.ITALIC);
+			}
+			fontBoldItalic = new Font(gc.getDevice(), fontData);
+		}
+		return fontBoldItalic;
+	}
+	
 	public static void dispose() {
 		if (fontBold != null) {
 			fontBold.dispose();
 			fontBold = null;
+		}
+		if (fontItalic != null) {
+			fontItalic.dispose();
+			fontItalic = null;
+		}
+		if (fontBoldItalic != null) {
+			fontBoldItalic.dispose();
+			fontBoldItalic = null;
 		}
 	}
 

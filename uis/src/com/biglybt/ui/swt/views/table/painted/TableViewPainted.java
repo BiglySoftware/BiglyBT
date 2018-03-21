@@ -1819,7 +1819,17 @@ public class TableViewPainted
 		if (cTable == null || cTable.isDisposed()) {
 			return;
 		}
-
+		
+		int mut = mutationCount.get();
+		
+		if ( mut != lastMC ){			
+			boolean changed = numberAllVisibleRows();
+			if ( changed ){
+				drawBounds = canvasImage.getBounds();
+			}
+			lastMC = mut;
+		}
+		
 		int end = drawBounds.y + drawBounds.height;
 
 		gc.setFont(cTable.getFont());
@@ -1830,13 +1840,6 @@ public class TableViewPainted
 
 		boolean isTableSelected = isTableSelected();
 		boolean isTableEnabled = cTable.isEnabled();
-		
-		int mut = mutationCount.get();
-		
-		if ( mut != lastMC ){			
-			numberAllVisibleRows();
-			lastMC = mut;
-		}
 		
 		for (TableRowPainted row : visibleRows) {
 			TableRowPainted paintedRow = row;

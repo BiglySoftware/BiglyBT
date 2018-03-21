@@ -61,6 +61,8 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.ui.tables.TableRowRefreshListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
@@ -82,6 +84,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.ui.swt.views.file.FileInfoView;
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -244,6 +247,24 @@ public class FilesView
 		tv.addLifeCycleListener(this);
 		tv.addKeyListener(this);
 
+		tv.addRefreshListener( 
+			new TableRowRefreshListener(){
+				
+				@Override
+				public void 
+				rowRefresh(TableRow row){
+					if ( row instanceof TableRowSWT ){
+						Object ds =  ((TableRowSWT)row).getDataSource( true );
+		
+						if ( ds instanceof FilesViewNodeInner ){
+							
+							((TableRowSWT)row).setFontStyle( SWT.ITALIC );
+							((TableRowSWT)row).setAlpha( 220 );
+						}
+					}
+				}
+			});
+		
 		return tv;
 	}
 
@@ -1432,6 +1453,10 @@ public class FilesView
 		
 		public long
 		getDownloaded();
+		
+		public void
+		getPieceInfo(
+			int[]	data );
 	}
 	
 	private static class
@@ -1446,6 +1471,7 @@ public class FilesView
 		private boolean				expanded	= true;
 		
 		private long	size;
+		private int[]	pieceInfo;
 		
 		private
 		FilesViewNodeInner(
@@ -1608,15 +1634,56 @@ public class FilesView
 		public int 
 		getFirstPieceNumber()
 		{
-			return( -1 );
+			if ( dm == null ){
+				return( -1 );
+			}
+			
+			if ( pieceInfo == null ){
+				getPieceInfo();
+			}
+			return( pieceInfo[0] );
 		}
 
 		public int 
 		getLastPieceNumber()
 		{
-			return( -1 );
+			if ( dm == null ){
+				return( -1 );
+			}
+			
+			if ( pieceInfo == null ){
+				getPieceInfo();
+			}
+			return( pieceInfo[1] );
 		}
 
+		private void
+		getPieceInfo()
+		{
+			int[] temp = { Integer.MAX_VALUE, 0 };
+			getPieceInfo(temp);
+			pieceInfo = temp;
+		}
+		
+		public void
+		getPieceInfo(
+			int[]	data )
+		{
+			for ( FilesViewTreeNode kid: kids.values()){
+				kid.getPieceInfo(data);
+			}
+		}
+		
+		public int 
+		getNbPieces()
+		{
+			if ( dm == null ){
+				return( -1 );
+			}
+			
+			return( getLastPieceNumber() - getFirstPieceNumber() + 1 );
+		}
+		
 		public long 
 		getLength()
 		{
@@ -1633,12 +1700,6 @@ public class FilesView
 			}
 			
 			return( size );
-		}
-
-		public int 
-		getNbPieces()
-		{
-			return( -1 );
 		}
 
 		public int 
@@ -1885,6 +1946,22 @@ public class FilesView
 			return( delegate.getLastPieceNumber());
 		}
 
+		public void
+		getPieceInfo(
+			int[]	data )
+		{
+			int first 	= getFirstPieceNumber();
+			int last	= getLastPieceNumber();
+			
+			if ( first < data[0] ){
+				data[0] = first;
+			}
+			
+			if ( last > data[1] ){
+				data[1] = last;
+			}
+		}
+		
 		public long 
 		getLength()
 		{

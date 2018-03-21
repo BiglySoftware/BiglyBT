@@ -66,7 +66,7 @@ public interface TableRowCore extends TableRow
 	@Override
 	public int getIndex();
 
-	public void
+	public boolean
 	setVisibleRowIndex( int index );
 		
 	public int

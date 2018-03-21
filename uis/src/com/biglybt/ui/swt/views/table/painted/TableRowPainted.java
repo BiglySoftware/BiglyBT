@@ -532,6 +532,10 @@ public class TableRowPainted
 				oldFont = gc.getFont();
 				gc.setFont(FontUtils.getAnyFontBold(gc));
 				gcChanged = true;
+			}else if (fontStyle == SWT.ITALIC) {
+				oldFont = gc.getFont();
+				gc.setFont(FontUtils.getAnyFontItalic(gc));
+				gcChanged = true;
 			}
 
 			if (!cell.isUpToDate()) {
@@ -621,7 +625,13 @@ public class TableRowPainted
 					gc.setAlpha(textOpacity);
 					gcChanged = true;
 				} else if (textOpacity > 255) {
-					gc.setFont(FontUtils.getAnyFontBold(gc));
+					boolean is_italic = ( gc.getFont().getFontData()[0].getStyle() & SWT.ITALIC ) != 0; 
+					if ( is_italic ){
+						gc.setFont(FontUtils.getAnyFontBoldItalic(gc));
+					}else{
+						gc.setFont(FontUtils.getAnyFontBold(gc));
+					}
+					
 					//gc.setTextAntialias(SWT.ON);
 					//gc.setAlpha(textOpacity & 255);
 					gcChanged = true;

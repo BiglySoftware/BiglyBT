@@ -526,7 +526,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 			int numSubRows = rows[i].getSubItemCount();
 			if (numSubRows > 0) {
-				TableRowCore[] subRows = rows[i].getSubRowsWithNull();
+				TableRowCore[] subRows = rows[i].getSubRowsRecursive(false);
 				for (TableRowCore subRow : subRows) {
 					if (subRow != null) {
 						runner.run(subRow, isRowVisible(subRow));
@@ -940,9 +940,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 	}
 	
-	protected void
+	protected boolean
 	numberAllVisibleRows()
 	{
+		boolean changed = false;
 		synchronized( rows_sync ){
 			int	pos = 0;
 			for ( TableRowCore row: sortedRows ){
@@ -952,16 +953,24 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					continue;
 				}
 				
-				row.setVisibleRowIndex( pos++ );
+				if (row.setVisibleRowIndex( pos++ )){
+					changed = true;
+				}
 				
 				if ( row.isExpanded()){
 					
 					TableRowCore[] kids = row.getSubRowsWithNull();
 					
 					pos = numberAllVisibleRows( kids, pos );
+					
+					if ( pos < 0 ){
+						changed = true;
+						pos = -1;
+					}
 				}
 			}
 		}
+		return( changed );
 	}
 	
 	private int
@@ -969,23 +978,31 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		TableRowCore[]		rows,
 		int					pos )
 	{
+		boolean changed = false;
 		for ( TableRowCore row: rows ){
 			if ( row.isHidden()){
 				
 				continue;
 			}
 			
-			row.setVisibleRowIndex( pos++ );
+			if (row.setVisibleRowIndex( pos++ )){
+				changed = true;
+			}
 			
 			if ( row.isExpanded()){
 				
 				TableRowCore[] kids = row.getSubRowsWithNull();
 				
 				pos = numberAllVisibleRows( kids, pos );
+				
+				if ( pos < 0 ){
+					changed = true;
+					pos = -1;
+				}
 			}
 		}
 		
-		return( pos );
+		return( changed?-pos:pos );
 	}
 	
 	@Override
@@ -1466,7 +1483,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 
 			boolean needsUpdate = false;
-
+			boolean	orderChanged = false;
+			
 			synchronized (rows_sync) {
 				if (bForceDataRefresh && sortColumn != null) {
 					String sColumnID = sortColumn.getName();
@@ -1501,6 +1519,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					TableRowCore row = sortedRows.get(i);
 					boolean visible = row.isVisible();
 					if (row.setTableItem(i, visible)) {
+						orderChanged=true;
 						if (visible) {
 							needsUpdate = true;
 						}
@@ -1513,6 +1532,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				debug("Sort: numMoves= " + iNumMoves + ";needUpdate?" + needsUpdate);
 			}
 
+			if (orderChanged) {
+				tableMutated();
+				
+			}	
 			if (needsUpdate) {
 				visibleRowsChanged();
 			}

@@ -73,7 +73,7 @@ public class SizeItem
     	
     	if ( internal ){
     		
-    		text = "(" + text + ")";
+    		//text = "(" + text + ")";
     	}
     }
     

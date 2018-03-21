@@ -96,7 +96,7 @@ public class PercentItem
 			
 			if ( internal ){
 				
-				text = "(" + text + ")";
+				//text = "(" + text + ")";
 			}
 		}
 		cell.setText( text );

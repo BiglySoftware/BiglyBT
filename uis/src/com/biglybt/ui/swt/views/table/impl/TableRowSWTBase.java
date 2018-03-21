@@ -57,7 +57,7 @@ public abstract class TableRowSWTBase
 
 	private int lastIndex = -1;
 
-	private int visibleRowIndex;
+	private int visibleRowIndex = -1;
 	
 	protected Map<String, TableCellCore> mTableCells;
 
@@ -274,10 +274,15 @@ public abstract class TableRowSWTBase
 		return tv.indexOf(this);
 	}
 
-	public void
+	public boolean
 	setVisibleRowIndex( int index )
 	{
-		visibleRowIndex = index;
+		if ( index != visibleRowIndex ){
+			visibleRowIndex = index;
+			invalidate();
+			return( true );
+		}
+		return(false);
 	}
 		
 	public int
