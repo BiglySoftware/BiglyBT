@@ -57,7 +57,13 @@ public class FirstPieceItem
 
     	if ( sort_value >= 0 ){
 
-    		sort_value = (sort_value << 32) + fileInfo.getIndex();
+    		int index = fileInfo.getIndex();
+    		
+    		if ( index < 0 ){
+    			index = 0;
+    		}
+    		
+    		sort_value = (sort_value << 32) + index;
     	}
     }
 
