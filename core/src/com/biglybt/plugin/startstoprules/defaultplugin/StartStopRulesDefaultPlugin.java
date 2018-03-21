@@ -1730,6 +1730,45 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					drc.dl.moveTo( i+1 );
 				}
 			}
+		}else if ( 	iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SIZE || 
+					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SIZE){
+
+			Collections.sort(
+				downloads,
+				new Comparator<DefaultRankCalculator>()
+				{
+					@Override
+					public int
+					compare(
+						DefaultRankCalculator d1,
+						DefaultRankCalculator d2)
+					{
+						long l1 = d1.getCoreDownloadObject().getStats().getSizeExcludingDND();
+						long l2 = d2.getCoreDownloadObject().getStats().getSizeExcludingDND();
+	
+						int result = Long.compare( l2, l1 );
+						
+						if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SIZE ){
+	
+							return( result );
+							
+						}else{
+							
+							return( -result );
+						}
+					}
+				});
+	
+			for ( int i=0;i<downloads.size();i++){
+	
+				DefaultRankCalculator drc = downloads.get(i);
+	
+				System.out.println( "" + i + " -> " + drc.dl.getName() + ", " + drc.dl.getTorrentSize());
+				if ( drc.dl.getPosition() != (i+1)){
+	
+					drc.dl.moveTo( i+1 );
+				}
+			}
 		}else{
 
 				// speed ordering

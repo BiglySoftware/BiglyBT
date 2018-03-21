@@ -118,6 +118,8 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 		{	MessageText.getString("label.order"),
 			MessageText.getString("label.seed.count"),
 			MessageText.getString("label.reverse.seed.count"),
+			MessageText.getString("TableColumn.header.size"),
+			MessageText.getString("label.reverse.size"),
 			MessageText.getString("label.speed"),
 		};
 
@@ -125,6 +127,8 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 		{ 	DefaultRankCalculator.DOWNLOAD_ORDER_INDEX,
 			DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT,
 			DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SEED_COUNT,
+			DefaultRankCalculator.DOWNLOAD_ORDER_SIZE,
+			DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SIZE,
 			DefaultRankCalculator.DOWNLOAD_ORDER_SPEED
 		};
 

@@ -52,6 +52,8 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	public static final int	DOWNLOAD_ORDER_SEED_COUNT			= 1;
 	public static final int	DOWNLOAD_ORDER_SPEED				= 2;
 	public static final int	DOWNLOAD_ORDER_REVERSE_SEED_COUNT	= 3;
+	public static final int	DOWNLOAD_ORDER_SIZE					= 4;
+	public static final int	DOWNLOAD_ORDER_REVERSE_SIZE			= 5;
 
 	/**
 	 * Force torrent to be "Actively Seeding/Downloading" for this many ms upon
@@ -406,6 +408,10 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		return dl;
 	}
 
+	public DownloadManager getCoreDownloadObject(){
+		return( core_dm );
+	}
+	
 	public boolean isForceActive() {
 		DownloadStats stats = dl.getStats();
 		return SystemTime.getCurrentTime() - stats.getTimeStarted() <= FORCE_ACTIVE_FOR;
