@@ -31,6 +31,7 @@ import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 
@@ -51,6 +52,7 @@ public class PathItem
 		  @Override
 		  public void parameterChanged(String parameterName) {
 			  show_full_path = COConfigurationManager.getBooleanParameter( "FilesView.show.full.path" );
+			  invalidateCells();
 		  }
 	  };
 	  COConfigurationManager.addWeakParameterListener(configShowFullPathListener, true,
@@ -85,6 +87,13 @@ public class PathItem
     	return "";
     }
 
+    if ( fileInfo instanceof FilesView.FilesViewTreeNode ){
+		FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)fileInfo;
+		if ( !node.isLeaf()){
+			return( "" );
+		}
+    }
+    
    	boolean has_link = fileInfo.getLink() != null;
    	boolean show_full_path = _show_file_path;
 
@@ -138,23 +147,28 @@ public class PathItem
 		      }
     	}
     }else{
-
-    	path = file.getAbsolutePath().substring(dl_save_path.length());
-    	if (path.length() == 0) {
-    		path = File.separator;
-    	}
-    	else {
-    		if (path.charAt(0) == File.separatorChar) {
-    			path = path.substring(1);
-    		}
-    		int	pos = path.lastIndexOf(File.separator);
-
-    		if (pos > 0 ) {
-    			path = File.separator + path.substring( 0, pos );
-    		}
-    		else {
-    			path = File.separator;
-    		}
+    	String apath = file.getAbsolutePath();
+    	
+    	if ( !apath.startsWith( dl_save_path )){
+    		path = apath;
+    	}else{
+	    	path = apath.substring(dl_save_path.length());
+	    	if (path.length() == 0) {
+	    		path = File.separator;
+	    	}
+	    	else {
+	    		if (path.charAt(0) == File.separatorChar) {
+	    			path = path.substring(1);
+	    		}
+	    		int	pos = path.lastIndexOf(File.separator);
+	
+	    		if (pos > 0 ) {
+	    			path = File.separator + path.substring( 0, pos );
+	    		}
+	    		else {
+	    			path = File.separator;
+	    		}
+	    	}
       }
     }
 

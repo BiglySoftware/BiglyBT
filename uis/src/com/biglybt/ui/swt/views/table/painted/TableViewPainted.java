@@ -1825,7 +1825,10 @@ public class TableViewPainted
 		if ( mut != lastMC ){			
 			boolean changed = numberAllVisibleRows();
 			if ( changed ){
-				drawBounds = canvasImage.getBounds();
+					// not actually sure we need this any more
+				if ( canvasImage != null ){
+					drawBounds = canvasImage.getBounds();
+				}
 			}
 			lastMC = mut;
 		}

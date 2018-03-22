@@ -51,6 +51,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.DisplayFormatters;
@@ -375,7 +376,9 @@ public class FilesView
 
 		btnTreeView.setSelection(tree_view);
 		
-		lblHeader = new BufferedLabel(cTop, SWT.CENTER | SWT.DOUBLE_BUFFERED);
+			// dunno why but doesnt draw on Linux with double-buffering
+		
+		lblHeader = new BufferedLabel(cTop, SWT.CENTER | ( Constants.isLinux?0: SWT.DOUBLE_BUFFERED));
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
 		bubbleTextBox.getTextWidget().setMessage(MessageText.getString("TorrentDetailsView.filter"));
@@ -784,12 +787,15 @@ public class FilesView
 				files.add( file );
 			}
 
-			FilesViewMenuUtil.fillMenu(
-				tv,
-				sColumnName,
-				menu,
-				new DownloadManager[]{ managers.get(0) },
-				new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) });
+			if ( !files.isEmpty()){
+				
+				FilesViewMenuUtil.fillMenu(
+					tv,
+					sColumnName,
+					menu,
+					new DownloadManager[]{ managers.get(0) },
+					new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) });
+			}
 		}else{
 
 			Object[] data_sources = tv.getSelectedDataSources().toArray();
@@ -833,7 +839,9 @@ public class FilesView
 				files_list[i] = list.toArray( new DiskManagerFileInfo[list.size()]);
 			}
 
-			FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list );
+			if ( files_list.length > 0 ){
+				FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list );
+			}
 		}
 	}
 

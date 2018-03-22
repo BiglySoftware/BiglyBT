@@ -2338,7 +2338,7 @@ DeviceManagerUI
 							DiskManagerFileInfo file = (DiskManagerFileInfo)obj;
 
 							try{
-								if ( file.getDownload().getState() == Download.ST_ERROR ){
+								if ( file.getIndex() < 0 || file.getDownload().getState() == Download.ST_ERROR ){
 
 									enabled = false;
 								}
