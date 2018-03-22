@@ -965,7 +965,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					
 					if ( pos < 0 ){
 						changed = true;
-						pos = -1;
+						pos = -pos;
 					}
 				}
 			}
@@ -997,7 +997,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				
 				if ( pos < 0 ){
 					changed = true;
-					pos = -1;
+					pos = -pos;
 				}
 			}
 		}
