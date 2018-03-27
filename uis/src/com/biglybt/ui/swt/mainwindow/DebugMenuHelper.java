@@ -29,6 +29,7 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.plugin.startstoprules.defaultplugin.StartStopRulesDefaultPlugin;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 
@@ -59,7 +60,7 @@ public class DebugMenuHelper
 		}
 
 		item = new MenuItem(menu, SWT.CASCADE);
-		item.setText("&Debug");
+		Messages.setLanguageText(item, "MainWindow.menu.debug" );
 		Menu menuDebug = new Menu(menu.getParent(), SWT.DROP_DOWN);
 		item.setMenu(menuDebug);
 

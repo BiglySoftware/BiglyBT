@@ -625,7 +625,8 @@ public class TagUIUtils
 				eoa_item.setMenu( eoa_menu );
 
 				int[]	action_ids =
-					{ 	TagFeatureExecOnAssign.ACTION_DESTROY,
+					{ 	TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE,
+						TagFeatureExecOnAssign.ACTION_DESTROY,
 						TagFeatureExecOnAssign.ACTION_START,
 						TagFeatureExecOnAssign.ACTION_FORCE_START,
 						TagFeatureExecOnAssign.ACTION_NOT_FORCE_START,
@@ -636,7 +637,8 @@ public class TagUIUtils
 
 
 				String[] action_keys =
-					{ 	"v3.MainWindow.button.delete",
+					{ 	"label.apply.options.template",
+						"v3.MainWindow.button.delete",
 						"v3.MainWindow.button.start",
 						"v3.MainWindow.button.forcestart",
 						"v3.MainWindow.button.notforcestart",
@@ -651,7 +653,34 @@ public class TagUIUtils
 
 					if ( tf_eoa.supportsAction( action_id )){
 
-						if ( action_id == TagFeatureExecOnAssign.ACTION_SCRIPT ){
+						if ( action_id == TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE ){
+							
+							final MenuItem opts_item = new MenuItem( eoa_menu, SWT.CHECK);
+							
+							opts_item.setText( 
+								MessageText.getString( action_keys[i] ) + "..." );
+							
+							opts_item.setSelection( tf_eoa.getOptionsTemplateHandler().isActive());
+							
+							opts_item.addListener( SWT.Selection, new Listener(){
+								@Override
+								public void
+								handleEvent(Event event)
+								{
+									UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+									
+									if (uiFunctions != null){
+										
+										uiFunctions.getMDI().showEntryByID(
+												
+											MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS,
+												tf_eoa.getOptionsTemplateHandler());
+									}
+								}});
+							
+							new MenuItem( eoa_menu, SWT.SEPARATOR);
+							
+						}else if ( action_id == TagFeatureExecOnAssign.ACTION_SCRIPT ){
 
 							final MenuItem action_item = new MenuItem( eoa_menu, SWT.PUSH);
 

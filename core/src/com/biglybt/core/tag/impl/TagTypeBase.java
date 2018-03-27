@@ -602,6 +602,24 @@ TagTypeBase
 		manager.writeStringAttribute( this, tag, attr, value );
 	}
 
+	protected Map<String,Object>
+	readMapAttribute(
+		TagBase				tag,
+		String				attr,
+		Map<String,Object>	def )
+	{
+		return( manager.readMapAttribute( this, tag, attr, def ));
+	}
+
+	protected void
+	writeMapAttribute(
+		TagBase				tag,
+		String				attr,
+		Map<String,Object>	value )
+	{
+		manager.writeMapAttribute( this, tag, attr, value );
+	}
+	
 	protected String[]
 	readStringListAttribute(
 		TagBase		tag,

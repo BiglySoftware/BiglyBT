@@ -522,6 +522,23 @@ TagDownloadWithState
 					}
 
 				}
+				if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE )){
+
+					OptionsTemplateHandler handler = getOptionsTemplateHandler();
+
+					if ( handler.isActive()){
+						rs_async.dispatch(
+							new AERunnable()
+							{
+								@Override
+								public void
+								runSupport()
+								{
+									handler.applyTo( dm );
+								}
+							});
+					}
+				}
 			}
 		}else{
 
@@ -1545,7 +1562,8 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_NOT_FORCE_START |
 					TagFeatureExecOnAssign.ACTION_STOP |
 					TagFeatureExecOnAssign.ACTION_PAUSE |
-					TagFeatureExecOnAssign.ACTION_SCRIPT );
+					TagFeatureExecOnAssign.ACTION_SCRIPT |
+					TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE );
 
 		}else if ( getTagType().getTagType() == TagType.TT_DOWNLOAD_STATE ){
 

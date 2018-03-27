@@ -124,4 +124,18 @@ DownloadManagerStateFactory
 	{
 		DownloadManagerStateImpl.removeGlobalListener( l, attribute, event_type );
 	}
+		
+	public static Integer
+	getIntParameterDefault(
+		String	name )
+	{
+		return( DownloadManagerStateImpl.getIntParameterDefault( name ));
+	}
+	
+	public static Boolean
+	getBooleanParameterDefault(
+		String	name )
+	{
+		return( DownloadManagerStateImpl.getBooleanParameterDefault( name ));
+	}
 }

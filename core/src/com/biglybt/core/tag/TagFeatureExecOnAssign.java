@@ -22,6 +22,9 @@
 
 package com.biglybt.core.tag;
 
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerOptionsHandler;
+
 public interface
 TagFeatureExecOnAssign
 	extends TagFeature
@@ -35,6 +38,7 @@ TagFeatureExecOnAssign
 	public static final int ACTION_SCRIPT			= 0x0020;
 	public static final int ACTION_PAUSE			= 0x0040;
 	public static final int ACTION_RESUME			= 0x0080;
+	public static final int ACTION_APPLY_OPTIONS_TEMPLATE	= 0x0100;
 
 	public int
 	getSupportedActions();
@@ -58,4 +62,19 @@ TagFeatureExecOnAssign
 	public void
 	setActionScript(
 		String		script );
+	
+	public OptionsTemplateHandler
+	getOptionsTemplateHandler();
+	
+	public interface
+	OptionsTemplateHandler
+		extends DownloadManagerOptionsHandler
+	{
+		public boolean
+		isActive();
+		
+		public void
+		applyTo(
+			DownloadManager		dm );
+	}
 }

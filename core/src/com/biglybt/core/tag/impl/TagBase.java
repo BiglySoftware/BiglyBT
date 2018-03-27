@@ -24,8 +24,14 @@ import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerOptionsHandler;
+import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.DownloadManagerStateAttributeListener;
+import com.biglybt.core.download.DownloadManagerStateFactory;
+import com.biglybt.core.download.DownloadManagerOptionsHandler.ParameterChangeListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagFeatureExecOnAssign.OptionsTemplateHandler;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
 import com.biglybt.core.util.*;
@@ -33,6 +39,7 @@ import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.util.MapUtils;
 
 public abstract class
 TagBase
@@ -70,6 +77,7 @@ TagBase
 	protected static final String	AT_MAX_TAGGABLES				= "max.t";
 	protected static final String	AT_REMOVAL_STRATEGY				= "max.t.r";
 	protected static final String	AT_EOS_SCRIPT					= "eos.scr";
+	protected static final String	AT_EOS_OPTIONS_TEMPLATE			= "eos.ot";
 	protected static final String	AT_NOTIFICATION_POST			= "noti.post";
 	protected static final String	AT_LIMIT_ORDERING				= "max.t.o";
 
@@ -1108,6 +1116,240 @@ TagBase
 		setActionEnabled( TagFeatureExecOnAssign.ACTION_SCRIPT, script.length() > 0 );
 	}
 
+	public OptionsTemplateHandler
+	getOptionsTemplateHandler()
+	{
+		return(
+			new OptionsTemplateHandler()
+			{
+				private CopyOnWriteList<ParameterChangeListener>	listeners = new CopyOnWriteList<>();
+
+				
+				@Override
+				public boolean 
+				isActive()
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( map != null && !map.isEmpty());
+				}
+				
+				private void
+				update(
+					Map<String,Object>		map )
+				{
+					if ( map != null && map.isEmpty()){
+						
+						map = null;
+					}
+					
+					writeMapAttribute( AT_EOS_OPTIONS_TEMPLATE, map );
+					
+					if ( map == null ){
+						
+						setActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE, false );
+						
+					}else{
+					
+						setActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE, true );
+					}
+				}
+				
+				public String
+				getName()
+				{
+					return( MessageText.getString( "label.options.template" ) + " : " + getTagName( true ));
+				}
+				
+				public int
+				getUploadRateLimitBytesPerSecond()
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( MapUtils.getMapInt(map, "gen_up", 0 ));
+				}
+				
+				public void
+				setUploadRateLimitBytesPerSecond(
+					int		limit )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, new HashMap<>());
+					
+					if ( limit == 0 ){
+						map.remove( "gen_up" );
+					}else{
+						map.put( "gen_up", limit );
+					}
+					
+					update( map );
+				}
+				
+				public int
+				getDownloadRateLimitBytesPerSecond()
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( MapUtils.getMapInt(map, "gen_down", 0 ));
+				}
+				
+				public void
+				setDownloadRateLimitBytesPerSecond(
+					int		limit )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, new HashMap<>());
+					
+					if ( limit == 0 ){
+						map.remove( "gen_down" );
+					}else{
+						map.put( "gen_down", limit );
+					}
+					
+					update( map );					
+				}
+
+				public int
+				getIntParameter(
+					String		name )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( MapUtils.getMapInt(map, name, DownloadManagerStateFactory.getIntParameterDefault(name) ));
+				}
+				
+				public void
+				setIntParameter(
+					String		name,
+					int			value )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, new HashMap<>());
+					
+					if ( value == DownloadManagerStateFactory.getIntParameterDefault(name)){
+						
+						map.remove( name );
+						
+					}else{
+						
+						map.put( name, new Long( value ));
+					}
+					
+					update( map );
+				}
+				
+				public boolean
+				getBooleanParameter(
+					String		name )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( MapUtils.getMapBoolean( map, name, DownloadManagerStateFactory.getBooleanParameterDefault(name) ));
+				}
+				
+				public void
+				setBooleanParameter(
+					String		name,
+					boolean		value )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, new HashMap<>());
+				
+					if ( value == DownloadManagerStateFactory.getBooleanParameterDefault(name)){
+						
+						map.remove( name );
+						
+					}else{
+						
+						map.put( name, value?1:0 );
+					}
+					
+					update( map );
+				}
+				
+				public void
+				setParameterDefault(
+					String		key )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					if ( map != null ){
+						
+						map.remove( key );
+						
+						update( map );
+						
+						for ( ParameterChangeListener l: listeners ){
+							try{
+								l.parameterChanged( this );
+							}catch( Throwable e ){
+								Debug.out( e );
+							}
+						}
+					}
+				}
+				
+				public DownloadManager
+				getDownloadManager()
+				{
+					return( null );
+				}
+		
+				@Override
+				public void addListener(ParameterChangeListener listener){
+					listeners.add( listener );
+				}
+				
+				@Override
+				public void removeListener(ParameterChangeListener listener){
+					listeners.remove( listener );
+				}
+				
+				
+				@Override
+				public void 
+				applyTo(
+					DownloadManager dm )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					if ( map == null ){
+						
+						return;
+					}
+					
+					if ( map.containsKey( "gen_up" )){
+						
+						int up = MapUtils.getMapInt(map, "gen_up", 0 );
+						
+						dm.getStats().setUploadRateLimitBytesPerSecond( up );
+					}
+					
+					if ( map.containsKey( "gen_down" )){
+						
+						int up = MapUtils.getMapInt(map, "gen_down", 0 );
+						
+						dm.getStats().setDownloadRateLimitBytesPerSecond( up );
+					}
+					
+					DownloadManagerState state = dm.getDownloadState();
+					
+					for ( String name: map.keySet()){
+						
+						if ( name.startsWith( "gen_" )){
+							
+							continue;
+						}
+						
+						if ( DownloadManagerStateFactory.getBooleanParameterDefault( name ) != null ){
+							
+							state.setBooleanParameter(name, MapUtils.getMapBoolean(map, name, false ));
+							
+						}else if ( DownloadManagerStateFactory.getIntParameterDefault( name ) != null ){
+							
+							state.setIntParameter( name, MapUtils.getMapInt(map, name, 0 ));
+						}
+					}
+				}
+			});
+	}
+	
 		// notifications
 
 	public int
@@ -1439,6 +1681,22 @@ TagBase
 		tag_type.writeStringAttribute( this, attr, value );
 	}
 
+	protected Map<String,Object>
+	readMapAttribute(
+		String				attr,
+		Map<String,Object>	def )
+	{
+		return( tag_type.readMapAttribute( this, attr, def ));
+	}
+
+	protected void
+	writeMapAttribute(
+		String				attr,
+		Map<String,Object>	value )
+	{
+		tag_type.writeMapAttribute( this, attr, value );
+	}
+	
 	protected String[]
 	readStringListAttribute(
 		String		attr,

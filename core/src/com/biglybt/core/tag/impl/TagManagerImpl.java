@@ -2408,6 +2408,73 @@ TagManagerImpl
 		}
 	}
 
+	protected Map<String,Object>
+	readMapAttribute(
+		TagTypeBase			tag_type,
+		TagBase				tag,
+		String				attr,
+		Map<String,Object>	def )
+	{
+		try{
+			synchronized( this ){
+
+				Map conf = getConf( tag_type, tag, false );
+
+				if ( conf == null ){
+
+					return( def );
+				}
+
+				Map m = (Map)conf.get( attr );
+				
+				if ( m == null ){
+					
+					return( def );
+				}
+				
+				return( BEncoder.cloneMap( m ));
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+
+			return( def );
+		}
+	}
+
+	protected void
+	writeMapAttribute(
+		TagTypeBase			tag_type,
+		TagBase				tag,
+		String				attr,
+		Map<String,Object>	value )
+	{
+		try{
+			synchronized( this ){
+
+				Map conf = getConf( tag_type, tag, true );
+
+				Map old = (Map)conf.get( attr );
+
+				if ( old == value ){
+
+					return;
+
+				}else if ( old != null && value != null && BEncoder.mapsAreIdentical( old, value )){
+
+					return;
+				}
+
+				conf.put( attr, value );
+
+				setDirty();
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+		}
+	}
+	
 	protected String[]
 	readStringListAttribute(
 		TagTypeBase		tag_type,

@@ -103,6 +103,96 @@ DownloadManagerStateImpl
 		TorrentUtils.registerMapFluff( new String[] {TRACKER_CACHE_KEY,RESUME_KEY} );
 	}
 
+	private static Object
+	getDefaultOverride(
+		String		name,
+		Object		value )
+	{
+			// default overrides
+	
+			// **** note - if you add to these make sure you extend the parameter listeners
+			// registered as well (see static initialiser at top)
+	
+		if ( name == PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED ){
+	
+			if ( COConfigurationManager.getBooleanParameter( "enable.seedingonly.maxuploads" )){
+	
+				value = Boolean.TRUE;
+			}
+	
+		}else if ( name == PARAM_MAX_UPLOADS_WHEN_SEEDING ){
+	
+			int	def = COConfigurationManager.getIntParameter( "Max Uploads Seeding" );
+	
+			value = new Integer( def );
+	
+		}else if ( name == PARAM_MAX_UPLOADS ){
+	
+			int	def = COConfigurationManager.getIntParameter("Max Uploads" );
+	
+			value = new Integer( def );
+	
+		}else if ( name == PARAM_MAX_PEERS ){
+	
+			int	def = COConfigurationManager.getIntParameter( "Max.Peer.Connections.Per.Torrent" );
+	
+			value = new Integer( def );
+	
+		}else if ( name == PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED ){
+	
+			if ( COConfigurationManager.getBooleanParameter( "Max.Peer.Connections.Per.Torrent.When.Seeding.Enable" )){
+	
+				value = Boolean.TRUE;
+			}
+	
+		}else if ( name == PARAM_MAX_PEERS_WHEN_SEEDING ){
+	
+			int	def = COConfigurationManager.getIntParameter( "Max.Peer.Connections.Per.Torrent.When.Seeding" );
+	
+			value = new Integer( def );
+	
+		}else if ( name == PARAM_MAX_SEEDS ){
+	
+			value = new Integer(COConfigurationManager.getIntParameter( "Max Seeds Per Torrent" ));
+	
+		}else if ( name == PARAM_RANDOM_SEED ){
+	
+			long	rand = random.nextLong();
+		
+			value = new Long( rand );
+		}
+		
+		return( value );
+	}
+	
+	public static Integer
+	getIntParameterDefault(
+		String	name )
+	{
+		Object value = default_parameters.get( name );
+		
+		if ( value != null ){
+			
+			value = getDefaultOverride( name, value );
+		}
+		
+		return( value instanceof Number?((Number)value).intValue():null );
+	}
+	
+	public static Boolean
+	getBooleanParameterDefault(
+		String	name )
+	{
+		Object value = default_parameters.get( name );
+		
+		if ( value != null ){
+			
+			value = getDefaultOverride( name, value );
+		}
+		
+		return( value instanceof Boolean?(Boolean)value: null );
+	}
+	
 	private static final AEMonitor	class_mon	= new AEMonitor( "DownloadManagerState:class" );
 
 	static final Map<HashWrapper,DownloadManagerStateImpl>		state_map 					= new HashMap<>();
@@ -1141,60 +1231,11 @@ DownloadManagerStateImpl
 
 				}else{
 
-						// default overrides
+					value = getDefaultOverride( name, value );
+					
+					if ( name == PARAM_RANDOM_SEED ){
 
-						// **** note - if you add to these make sure you extend the parameter listeners
-						// registered as well (see static initialiser at top)
-
-					if ( name == PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED ){
-
-						if ( COConfigurationManager.getBooleanParameter( "enable.seedingonly.maxuploads" )){
-
-							value = Boolean.TRUE;
-						}
-
-					}else if ( name == PARAM_MAX_UPLOADS_WHEN_SEEDING ){
-
-						int	def = COConfigurationManager.getIntParameter( "Max Uploads Seeding" );
-
-						value = new Integer( def );
-
-					}else if ( name == PARAM_MAX_UPLOADS ){
-
-						int	def = COConfigurationManager.getIntParameter("Max Uploads" );
-
-						value = new Integer( def );
-
-					}else if ( name == PARAM_MAX_PEERS ){
-
-						int	def = COConfigurationManager.getIntParameter( "Max.Peer.Connections.Per.Torrent" );
-
-						value = new Integer( def );
-
-					}else if ( name == PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED ){
-
-						if ( COConfigurationManager.getBooleanParameter( "Max.Peer.Connections.Per.Torrent.When.Seeding.Enable" )){
-
-							value = Boolean.TRUE;
-						}
-
-					}else if ( name == PARAM_MAX_PEERS_WHEN_SEEDING ){
-
-						int	def = COConfigurationManager.getIntParameter( "Max.Peer.Connections.Per.Torrent.When.Seeding" );
-
-						value = new Integer( def );
-
-					}else if ( name == PARAM_MAX_SEEDS ){
-
-						value = new Integer(COConfigurationManager.getIntParameter( "Max Seeds Per Torrent" ));
-
-					}else if ( name == PARAM_RANDOM_SEED ){
-
-						long	rand = random.nextLong();
-
-						setLongParameter( name, rand );
-
-						value = new Long( rand );
+						setLongParameter( name, (Long)value );
 					}
 				}
 			}

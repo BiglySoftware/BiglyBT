@@ -579,7 +579,9 @@ public class TableViewPainted
 				return;
 			}
 			
-			if ( endPos < startPos ){
+			boolean reverse = endPos < startPos;
+			
+			if ( reverse ){
 				int temp = endPos;
 				endPos = startPos;
 				startPos = temp;
@@ -590,6 +592,9 @@ public class TableViewPainted
 				rowsToSelect.add( rows[i] );
 			}
 			
+			if ( reverse ){
+				Collections.reverse( rowsToSelect );
+			}
 		}else{
 				// broken for full table support
 			

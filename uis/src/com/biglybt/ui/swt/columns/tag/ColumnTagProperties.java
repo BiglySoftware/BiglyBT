@@ -99,7 +99,8 @@ ColumnTagProperties
 				String actions_str = "";
 
 				int[]	action_ids =
-					{ 	TagFeatureExecOnAssign.ACTION_DESTROY,
+					{	TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE,
+					 	TagFeatureExecOnAssign.ACTION_DESTROY,
 						TagFeatureExecOnAssign.ACTION_START,
 						TagFeatureExecOnAssign.ACTION_FORCE_START,
 						TagFeatureExecOnAssign.ACTION_NOT_FORCE_START,
@@ -109,7 +110,8 @@ ColumnTagProperties
 						TagFeatureExecOnAssign.ACTION_RESUME };
 
 				String[] action_keys =
-					{ 	"v3.MainWindow.button.delete",
+					{ 	"label.apply.options.template",
+						"v3.MainWindow.button.delete",
 						"v3.MainWindow.button.start",
 						"v3.MainWindow.button.forcestart",
 						"v3.MainWindow.button.notforcestart",
