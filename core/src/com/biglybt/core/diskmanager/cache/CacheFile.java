@@ -165,6 +165,13 @@ CacheFile
 
 		throws CacheFileManagerException;
 
+	public void
+	flushCache(
+		long		offset,
+		int			length )
+
+		throws CacheFileManagerException;
+	
 		/**
 		 * flushes the cache and discards entries
 		 * @throws CacheFileManagerException

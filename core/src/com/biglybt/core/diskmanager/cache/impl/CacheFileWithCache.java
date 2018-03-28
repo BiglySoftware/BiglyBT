@@ -1708,6 +1708,24 @@ CacheFileWithCache
 		}
 	}
 
+	public void
+	flushCache(
+		long		file_position,
+		int			length )
+
+		throws CacheFileManagerException
+	{
+		try{
+			flushCache( file_position, length, false, -1, 0, -1 );
+			
+			file.flush();
+
+		}catch( FMFileManagerException e ){
+
+			manager.rethrow(this,e);
+		}
+	}
+	
 	@Override
 	public void
 	clearCache()

@@ -407,6 +407,16 @@ CacheFileWithoutCache
 		}
 	}
 
+	public void
+	flushCache(
+		long		offset,
+		int			length )
+
+		throws CacheFileManagerException
+	{
+		flushCache();
+	}
+	
 	@Override
 	public void
 	clearCache()
