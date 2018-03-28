@@ -41,13 +41,15 @@ import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
+import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.core.proxy.AEProxyFactory;
 
 
@@ -267,7 +269,39 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 			new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
 			label = new Label(gSideBar, SWT.NULL);
+			
+			BooleanParameter showNew = new BooleanParameter(gSideBar, "Show New In Side Bar", "sidebar.show.new");
+			label = new Label(gSideBar, SWT.NULL);
+			
+			showNew.addChangeListener(
+				new ParameterChangeAdapter(){
+					
+					@Override
+					public void parameterChanged(Parameter p, boolean caused_internally){
+						if ( showNew.isSelected()){
+							UIFunctionsManager.getUIFunctions().getMDI().loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED, false );
+						}else{
+							UIFunctionsManager.getUIFunctions().getMDI().closeEntry(  MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED );
+						}
+					}
+				});
+			
+			BooleanParameter showDL = new BooleanParameter(gSideBar, "Show Downloading In Side Bar", "sidebar.show.downloading");
+			
+			label = new Label(gSideBar, SWT.NULL);
 
+			showDL.addChangeListener(
+					new ParameterChangeAdapter(){
+						
+						@Override
+						public void parameterChanged(Parameter p, boolean caused_internally){
+							if ( showDL.isSelected()){
+								UIFunctionsManager.getUIFunctions().getMDI().loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_DL, false );
+							}else{
+								UIFunctionsManager.getUIFunctions().getMDI().closeEntry(  MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_DL );
+							}
+						}
+					});
 		}
 
 			// status bar

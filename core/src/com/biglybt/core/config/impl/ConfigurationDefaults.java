@@ -734,6 +734,8 @@ public class ConfigurationDefaults {
     def.put( "Show Side Bar", TRUE );
     def.put( "Side Bar Top Level Gap", ONE );
     def.put( "Show Options In Side Bar", FALSE );
+    def.put( "Show New In Side Bar", TRUE );
+    def.put( "Show Downloading In Side Bar", TRUE );
 
     def.put( "Share Ratio Progress Interval", 1000L );	// thousandths
 

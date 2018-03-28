@@ -439,8 +439,9 @@ public class SB_Transfers
 		MdiEntry infoLibraryUn = mdi.createEntryFromSkinRef(
 				SideBar.SIDEBAR_HEADER_TRANSFERS,
 				SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED, "library",
-				"{sidebar.LibraryUnopened}", null, null, false,
+				"{sidebar.LibraryUnopened}", null, null, true,
 				SideBar.SIDEBAR_SECTION_LIBRARY);
+		
 		infoLibraryUn.setImageLeftID("image.sidebar.unopened");
 
 		addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
@@ -454,6 +455,23 @@ public class SB_Transfers
 				return null;
 			}
 		});
+		
+		infoLibraryUn.addListener(
+			new MdiCloseListener(){
+				
+				@Override
+				public void 
+				mdiEntryClosed(
+					MdiEntry entry, 
+					boolean userClosed)
+				{
+					if ( userClosed ){
+						
+						COConfigurationManager.setParameter( "Show New In Side Bar", false );
+					}
+				}
+			});
+		
 		return infoLibraryUn;
 	}
 
@@ -590,12 +608,25 @@ public class SB_Transfers
 		MdiEntry entry = mdi.createEntryFromSkinRef(
 				SideBar.SIDEBAR_HEADER_TRANSFERS, SideBar.SIDEBAR_SECTION_LIBRARY_DL,
 				"library", "{sidebar.LibraryDL}",
-				titleInfoDownloading, null, false, null);
+				titleInfoDownloading, null, true, null);
 
 		entry_holder[0] = entry;
 
 		entry.setImageLeftID("image.sidebar.downloading");
 
+		entry.addListener(
+			new MdiCloseListener(){
+				
+				@Override
+				public void 
+				mdiEntryClosed(MdiEntry entry, boolean userClosed){
+				
+					if ( userClosed ){
+						COConfigurationManager.setParameter( "Show Downloading In Side Bar", false );
+					}
+				}
+			});
+		
 		MdiEntryVitalityImage vitalityImage = entry.addVitalityImage(ID_VITALITY_ACTIVE);
 		vitalityImage.setVisible(false);
 
@@ -1756,8 +1787,10 @@ public class SB_Transfers
 		if (mdi == null) {
 			return;
 		}
+		
+		boolean showDownloading = COConfigurationManager.getBooleanParameter( "Show Downloading In Side Bar" );
 
-		if (statsNoLowNoise.numIncomplete > 0) {
+		if (showDownloading && statsNoLowNoise.numIncomplete > 0) {
 			MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
 			if (entry == null) {
 				mdi.loadEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY_DL, false);

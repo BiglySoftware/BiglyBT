@@ -1763,7 +1763,6 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	
 				DefaultRankCalculator drc = downloads.get(i);
 	
-				System.out.println( "" + i + " -> " + drc.dl.getName() + ", " + drc.dl.getTorrentSize());
 				if ( drc.dl.getPosition() != (i+1)){
 	
 					drc.dl.moveTo( i+1 );

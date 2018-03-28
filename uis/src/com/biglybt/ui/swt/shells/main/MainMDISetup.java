@@ -907,7 +907,6 @@ public class MainMDISetup
 	}
 
 	private static void setupSidebarVuzeUI(final MultipleDocumentInterfaceSWT mdi) {
-		MdiEntry entry;
 
 		String[] preferredOrder = new String[] {
 			MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
@@ -988,16 +987,22 @@ public class MainMDISetup
 
 		sb_transfers = new SB_Transfers(mdi, true);
 		sb_vuze = new SB_Vuze(mdi);
+		
 		new SB_Discovery(mdi);
 
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,false);
 		
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY, false);
-		mdi.loadEntryByID(
-				MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED, false);
-		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS,
-				false);
+		
+		if ( COConfigurationManager.getBooleanParameter( "Show New In Side Bar" )){
+		
+			mdi.loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED, false);
+		}
+		
+		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS, false);
+		
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_DEVICES, false);
+		
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES, false);
 	}
 
