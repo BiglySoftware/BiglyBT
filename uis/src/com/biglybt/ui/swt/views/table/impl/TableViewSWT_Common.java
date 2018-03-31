@@ -47,7 +47,6 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
-import com.biglybt.ui.swt.views.table.painted.TableCellPainted;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 
 import com.biglybt.ui.common.table.impl.TableColumnManager;
@@ -1224,7 +1223,8 @@ public class TableViewSWT_Common
 		});
 		at_item.setSelection(column.doesAutoTooltip());
 
-
+		at_item.setEnabled( !TableTooltips.tooltips_disabled );
+		
 		// Add Plugin Context menus..
 		TableContextMenuItem[] items = column.getContextMenuItems(TableColumnCore.MENU_STYLE_HEADER);
 		if (items.length > 0) {

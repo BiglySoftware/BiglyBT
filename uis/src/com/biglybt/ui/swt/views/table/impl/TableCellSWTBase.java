@@ -1168,12 +1168,12 @@ public abstract class TableCellSWTBase
 
 	@Override
 	public Object getToolTip() {
-		return oToolTip;
+		return TableTooltips.tooltips_disabled?null:oToolTip;
 	}
 
 	@Override
 	public Object getDefaultToolTip() {
-		return defaultToolTip;
+		return TableTooltips.tooltips_disabled?null:defaultToolTip;
 	}
 
 	@Override

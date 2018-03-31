@@ -1621,7 +1621,7 @@ public class TableViewPainted
 							cHeaderArea.setCursor(e.display.getSystemCursor(cursorID));
 							TableColumnCore column = getTableColumnByOffset(e.x);
 
-							if (column == null) {
+							if (column == null || TableTooltips.tooltips_disabled){
 								cHeaderArea.setToolTipText(null);
 							} else {
 								String info = MessageText.getString(

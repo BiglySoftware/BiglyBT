@@ -28,7 +28,8 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
-
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.ui.common.table.TableCellCore;
 
 /**
@@ -39,6 +40,20 @@ import com.biglybt.ui.common.table.TableCellCore;
 public class TableTooltips
 	implements Listener
 {
+	public static boolean tooltips_disabled = true;
+
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Table.tooltip.disable",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String parameterName){
+					tooltips_disabled = COConfigurationManager.getBooleanParameter( "Table.tooltip.disable" );
+				}
+			});
+	}
+	
 	Shell toolTipShell = null;
 
 	Shell mainShell = null;
@@ -49,6 +64,7 @@ public class TableTooltips
 
 	private final TableViewSWT tv;
 
+	
 	/**
 	 * Initialize
 	 */

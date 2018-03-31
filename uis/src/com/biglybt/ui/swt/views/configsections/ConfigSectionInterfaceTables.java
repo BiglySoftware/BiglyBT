@@ -249,6 +249,10 @@ public class ConfigSectionInterfaceTables
 					public void widgetDefaultSelected(SelectionEvent e) {
 					}
 				});
+				
+				new BooleanParameter(cGeneral, "Table.tooltip.disable", "ConfigView.section.table.disable.tooltips").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
+						true, false, 2, 1));
+
 			}
 		}
 

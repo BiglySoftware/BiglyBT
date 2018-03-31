@@ -194,11 +194,19 @@ public class ColumnUnopened
 				
 				DownloadManager dm = file.getDownloadManager();
 				
-				int ff = dm.getDownloadState().getFileFlags( file.getIndex());
-				
-				hasBeenOpened = ( ff & DownloadManagerState.FILE_FLAG_NOT_NEW ) != 0;
+				if ( dm == null ){
 					
-				sortVal = hasBeenOpened ? 1 : 0;
+					hasBeenOpened = false;
+					
+					sortVal = 0;
+					
+				}else{
+					int ff = dm.getDownloadState().getFileFlags( file.getIndex());
+					
+					hasBeenOpened = ( ff & DownloadManagerState.FILE_FLAG_NOT_NEW ) != 0;
+						
+					sortVal = hasBeenOpened ? 1 : 0;
+				}
 			} else {
 				sortVal = isSortAscending()?2:-1;
 			}

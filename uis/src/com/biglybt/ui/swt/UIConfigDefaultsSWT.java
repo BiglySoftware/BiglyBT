@@ -138,6 +138,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter("ui.toolbar.uiswitcher", false);
 		def.addParameter("Table.extendedErase", false);
 		def.addParameter("Table.useTree", false);
+		def.addParameter("Table.tooltip.disable", false);
 
 		if ("az2".equalsIgnoreCase(COConfigurationManager.getStringParameter("ui", "az3"))) {
 			def.addParameter("v3.Show Welcome", false);
