@@ -529,7 +529,11 @@ public class FilesView
 			
 			for ( TableRowCore row: rows ){
 				
-				if ( row.getDataSource( true ) == file ){
+				DiskManagerFileInfo row_file = (DiskManagerFileInfo)row.getDataSource( true );
+				
+				if ( 	row_file == file || 
+						( 	row_file.getIndex() == file.getIndex() && 
+							row_file.getDownloadManager() == file.getDownloadManager())){
 				
 					while( row != null ){
 						
