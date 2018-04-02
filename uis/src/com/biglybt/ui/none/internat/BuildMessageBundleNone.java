@@ -96,7 +96,7 @@ public class BuildMessageBundleNone {
 		fisFullDefault.close();
 
 		String s = FileUtil.readFileAsString(fileNoneDefault, -1);
-		String[] lines = s.split("[\r\n]");
+		String[] lines = s.split("\r?\n");
 		s = "";
 		File[] files = dirFullMB.listFiles(new FilenameFilter() {
 			@Override
