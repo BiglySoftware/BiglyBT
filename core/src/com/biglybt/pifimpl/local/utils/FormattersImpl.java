@@ -167,97 +167,94 @@ FormattersImpl
 	getAlphanumericComparator(
 		final boolean	ignore_case )
 	{
+		return( getAlphanumericComparator2( ignore_case ));
+	}
+	
+	public static Comparator<String>
+	getAlphanumericComparator2(
+		final boolean	ignore_case )
+	{
 		return(
-			new Comparator()
+			new Comparator<String>()
 			{
 				@Override
 				public int
 				compare(
-					Object	o1,
-					Object	o2 )
+					String	s1,
+					String	s2 )
 				{
-					if ( 	o1 instanceof String &&
-							o2 instanceof String ){
+					int	l1 = s1.length();
+					int	l2 = s2.length();
 
-						String	s1 = (String)o1;
-						String	s2 = (String)o2;
+					int	c1_pos	= 0;
+					int c2_pos	= 0;
 
-						int	l1 = s1.length();
-						int	l2 = s2.length();
+					while( c1_pos < l1 && c2_pos < l2 ){
 
-						int	c1_pos	= 0;
-						int c2_pos	= 0;
+						char	c1 = s1.charAt( c1_pos++ );
+						char	c2 = s2.charAt( c2_pos++ );
 
-						while( c1_pos < l1 && c2_pos < l2 ){
+						if ( Character.isDigit(c1) && Character.isDigit(c2)){
 
-							char	c1 = s1.charAt( c1_pos++ );
-							char	c2 = s2.charAt( c2_pos++ );
+							int	n1_pos = c1_pos-1;
+							int n2_pos = c2_pos-1;
 
-							if ( Character.isDigit(c1) && Character.isDigit(c2)){
+							while( c1_pos < l1 ){
 
-								int	n1_pos = c1_pos-1;
-								int n2_pos = c2_pos-1;
+								if ( !Character.isDigit( s1.charAt( c1_pos ))){
 
-								while( c1_pos < l1 ){
-
-									if ( !Character.isDigit( s1.charAt( c1_pos ))){
-
-										break;
-									}
-
-									c1_pos++;
+									break;
 								}
 
-								while(c2_pos<l2){
+								c1_pos++;
+							}
 
-									if ( !Character.isDigit( s2.charAt( c2_pos ))){
+							while(c2_pos<l2){
 
-										break;
-									}
+								if ( !Character.isDigit( s2.charAt( c2_pos ))){
 
-									c2_pos++;
+									break;
 								}
 
-								int	n1_length = c1_pos - n1_pos;
-								int n2_length = c2_pos - n2_pos;
+								c2_pos++;
+							}
 
-								if ( n1_length != n2_length ){
+							int	n1_length = c1_pos - n1_pos;
+							int n2_length = c2_pos - n2_pos;
 
-									return( n1_length - n2_length );
-								}
+							if ( n1_length != n2_length ){
 
-								for (int i=0;i<n1_length;i++){
+								return( n1_length - n2_length );
+							}
 
-									char	nc1 = s1.charAt( n1_pos++ );
-									char	nc2 = s2.charAt( n2_pos++ );
+							for (int i=0;i<n1_length;i++){
 
-									if ( nc1 != nc2 ){
+								char	nc1 = s1.charAt( n1_pos++ );
+								char	nc2 = s2.charAt( n2_pos++ );
 
-										return( nc1 - nc2 );
-									}
-								}
-							}else{
+								if ( nc1 != nc2 ){
 
-								if ( ignore_case ){
-
-									 c1 = Character.toLowerCase( c1 );
-
-									 c2 = Character.toLowerCase( c2 );
-								}
-
-								if ( c1 != c2 ){
-
-									return( c1 - c2 );
+									return( nc1 - nc2 );
 								}
 							}
+						}else{
+
+							if ( ignore_case ){
+
+								 c1 = Character.toLowerCase( c1 );
+
+								 c2 = Character.toLowerCase( c2 );
+							}
+
+							if ( c1 != c2 ){
+
+								return( c1 - c2 );
+							}
 						}
-
-						return( l1 - l2);
-
-					}else{
-
-						return( 0 );
 					}
+
+					return( l1 - l2);
+
 				}
 			});
 	}

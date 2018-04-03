@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
@@ -37,6 +38,7 @@ import com.biglybt.pif.ui.UIRuntimeException;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.ui.tables.TableContextMenuItemImpl;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsManager.UIFCallback;
@@ -77,7 +79,22 @@ public class TableColumnImpl
 
 		return( uiFunctions.adjustPXForDPI( px ));
 	}
-
+	
+	private static Comparator<String> intuitiveComparator = FormattersImpl.getAlphanumericComparator2( true );
+	private static boolean	intiutiveSorting;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Table.sort.intuitive",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String parameterName){
+					intiutiveSorting = COConfigurationManager.getBooleanParameter( "Table.sort.intuitive"  );
+				}
+			});	
+	}
+	
 	/** Internal Name/ID of the column **/
 	private String sName;
 
@@ -1481,11 +1498,19 @@ public class TableColumnImpl
 			boolean c0isString = c0 instanceof String;
 			boolean c1isString = c1 instanceof String;
 			if (c0isString && c1isString) {
-				if (bSortAscending) {
-					return ((String) c0).compareToIgnoreCase((String) c1);
+				if ( intiutiveSorting ){		
+					if (bSortAscending) {
+						return ( intuitiveComparator.compare( (String)c0, (String)c1 ));
+					}
+	
+					return ( intuitiveComparator.compare( (String)c1, (String)c0 ));
+				}else{
+					if (bSortAscending) {
+						return ((String) c0).compareToIgnoreCase((String) c1);
+					}
+	
+					return ((String) c1).compareToIgnoreCase((String) c0);
 				}
-
-				return ((String) c1).compareToIgnoreCase((String) c0);
 			}
 
 			int val;

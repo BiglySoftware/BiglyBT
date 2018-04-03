@@ -125,6 +125,9 @@ public class ConfigSectionInterfaceTables
 			new IntListParameter(cGeneral, "config.style.table.defaultSortOrder",
 					sortOrderLabels, sortOrderValues);
 
+			new BooleanParameter(cGeneral, "Table.sort.intuitive", "ConfigView.section.table.sort.intuitive").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
+					true, false, 2, 1));
+			
 			if (userMode > 0) {
 				label = new Label(cGeneral, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.section.style.guiUpdate");
