@@ -5878,9 +5878,12 @@ BuddyPluginViewBetaChat
 							
 							str = expandResources( str );
 							
-							if ( bold_font != null ){
+							if ( bold_font != null && message != null ){
 							
-								str = expandEmphasis( str );
+								if ( message.getFlagOrigin() == BuddyPluginBeta.FLAGS_MSG_ORIGIN_USER ){
+								
+									str = expandEmphasis( str );
+								}
 							}
 						}
 						
