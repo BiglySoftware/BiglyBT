@@ -2275,14 +2275,23 @@ DownloadManagerImpl
 
 	@Override
 	public boolean requestAssumedCompleteMode() {
+		return( requestAssumedCompleteMode( false ));
+	}
+	
+	protected boolean requestAssumedCompleteMode( boolean filePriorityChanged ) {
+
 		boolean bCompleteNoDND = controller.isDownloadComplete(false);
 
-		setAssumedComplete(bCompleteNoDND);
+		setAssumedComplete(bCompleteNoDND, filePriorityChanged );
 		return bCompleteNoDND;
 	}
 
 	// Protected: Use requestAssumedCompleteMode outside of scope
 	protected void setAssumedComplete(boolean _assumedComplete) {
+		setAssumedComplete( _assumedComplete, false );
+	}
+	
+	protected void setAssumedComplete(boolean _assumedComplete, boolean filePriorityChanged ) {
 		if (_assumedComplete) {
 			long completedOn = download_manager_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
 			if (completedOn <= 0) {
@@ -2356,6 +2365,13 @@ DownloadManagerImpl
 						set_it.run();
 					}
 				}
+			}
+		}else{
+			if ( filePriorityChanged ){
+				
+					// download no longer complete due to user switching file from DND - reset
+				
+				download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, 0 );
 			}
 		}
 
@@ -3257,7 +3273,7 @@ DownloadManagerImpl
 			listeners_mon.exit();
 		}
 
-		requestAssumedCompleteMode();
+		requestAssumedCompleteMode( true );
 	}
 
 	protected void
