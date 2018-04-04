@@ -351,7 +351,7 @@ DownloadManagerStateImpl
 
 		if ( saved_state == null ){
 
-			TorrentUtils.copyToFile( original_torrent, saved_file );
+			copyTorrentToActive( original_torrent, saved_file );
 
 			saved_state = TorrentUtils.readDelegateFromFile( saved_file, false );
 		}
@@ -434,7 +434,7 @@ DownloadManagerStateImpl
 					// and do stuff like write it somewhere else which would screw us
 					// up)
 
-				TorrentUtils.copyToFile( original_torrent, saved_file );
+				copyTorrentToActive( original_torrent, saved_file );
 
 				saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
 			}
@@ -450,6 +450,41 @@ DownloadManagerStateImpl
 		return( res );
 	}
 
+	private static void
+	copyTorrentToActive(
+		TOTorrent		torrent_file,
+		File			state_file )
+	
+		throws TOTorrentException
+	{
+		TorrentUtils.copyToFile( torrent_file, state_file );
+		
+		if (	COConfigurationManager.getBooleanParameter("Save Torrent Files") && 
+				COConfigurationManager.getBooleanParameter("Delete Saved Torrent Files")){
+			
+			try{
+				String file_str = TorrentUtils.getTorrentFileName( torrent_file  );
+				
+				if ( file_str != null ){
+					
+					File file = new File( file_str );
+					
+					File torrentDir = new File(COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory"));
+	
+					if ( torrentDir.isDirectory() && torrentDir.equals( file.getParentFile())){
+						
+						file.delete();
+						
+						new File( file.getAbsolutePath() + ".bak" ).delete();
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
 	protected static File
 	getStateFile(
 		byte[]		torrent_hash )
@@ -3823,7 +3858,7 @@ DownloadManagerStateImpl
 				// and do stuff like write it somewhere else which would screw us
 				// up)
 
-			TorrentUtils.copyToFile( original_torrent, saved_file );
+			copyTorrentToActive( original_torrent, saved_file );
 
 			return( TorrentUtils.readDelegateFromFile( saved_file, discard_pieces ));
 		}

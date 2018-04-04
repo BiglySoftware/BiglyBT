@@ -413,7 +413,7 @@ public class ConfigurationDefaults {
     def.put( "Save Torrent Files", TRUE );
     def.put( "General_sDefaultTorrent_Directory", SystemProperties.getUserPath()+"torrents");
     def.put( "Delete Original Torrent Files", FALSE );
-
+    def.put( "Delete Saved Torrent Files", FALSE );
 
     def.put( "Bind IP", "" );
     def.put( "Check Bind IP On Start", TRUE );

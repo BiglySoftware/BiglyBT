@@ -145,6 +145,18 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     new BooleanParameter(gSaveTorrents, "Save Torrent Backup",
                         "ConfigView.label.savetorrentbackup").setLayoutData(gridData);
 
+   	// Delete saved torrents
+        
+    if ( userMode > 1 ){	
+    	   
+    	BooleanParameter deleteSaved = new BooleanParameter(gSaveTorrents, "Delete Saved Torrent Files",
+                   "ConfigView.label.deletesavedtorrents");
+    	
+    	gridData = new GridData();
+        gridData.horizontalSpan = 2;
+        deleteSaved.setLayoutData(gridData);
+    }
+    
     Control[] controls = new Control[]{ gSaveTorrents };
     IAdditionalActionPerformer grayPathAndButton1 = new ChangeSelectionActionPerformer(controls);
     saveTorrents.setAdditionalActionPerformer(grayPathAndButton1);
@@ -154,7 +166,10 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     BooleanParameter deleteTorrents = new BooleanParameter(cTorrent, "Delete Original Torrent Files",
                                                          "ConfigView.label.deletetorrents");
 
-
+    gridData = new GridData();
+    gridData.horizontalSpan = 2;
+    deleteTorrents.setLayoutData(gridData);
+    
     	// add stopped
 
     gridData = new GridData();
