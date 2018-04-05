@@ -311,9 +311,9 @@ public class FullUpdateWindow
 
 				Utils.centreWindow(shell);
 
-				browser.setUrl( "http://www.vuze.com/download" );
+				browser.setUrl( Constants.URL_CLIENT_HOME );
 
-				browser.setText( "Update available, please go to www.vuze.com to update." );
+				browser.setText( "Update available, please go to www.biglybt.com to update." );
 
 				shell.open();
 			}

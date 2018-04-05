@@ -556,7 +556,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 		    Utils.setLayoutData(test_url, new GridData(GridData.FILL_HORIZONTAL));
 
-		    test_url.setText( "http://www.vuze.com/" );
+		    test_url.setText( Constants.URL_CLIENT_HOME );
 
 		    test_button.addListener(SWT.Selection,
 		    		new Listener()

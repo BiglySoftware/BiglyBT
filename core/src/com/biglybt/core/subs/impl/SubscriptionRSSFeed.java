@@ -190,13 +190,13 @@ SubscriptionRSSFeed
 				String channel_title = "Vuze Subscription: " + escape( subscription.getName());
 
 				pw.println( "<title>" + channel_title + "</title>" );
-				pw.println( "<link>http://vuze.com</link>" );
+				pw.println( "<link>http://biglybt.com</link>" );
 				pw.println( "<atom:link href=\"" + escape( feed_url.toExternalForm()) + "\" rel=\"self\" type=\"application/rss+xml\" />" );
 
 				pw.println( "<description>" + Constants.APP_NAME + " RSS Feed for subscription " + escape( subscription.getName()) + "</description>" );
 
-				pw.println("<itunes:image href=\"http://www.vuze.com/img/vuze_icon_128.png\"/>");
-				pw.println("<image><url>http://www.vuze.com/img/vuze_icon_128.png</url><title>" + channel_title + "</title><link>http://vuze.com</link></image>");
+				pw.println("<itunes:image href=\"https://www.biglybt.com/img/biglybt128.png\"/>");
+				pw.println("<image><url>https://www.biglybt.com/img/biglybt128.png</url><title>" + channel_title + "</title><link>http://biglybt.com</link></image>");
 
 
 				SubscriptionResult[] results = subscription.getResults();

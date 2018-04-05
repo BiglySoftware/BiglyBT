@@ -211,7 +211,7 @@ DeviceManagerRSSFeed
 				((DeviceMediaRendererImpl)device).browseReceived();
 			}
 
-			String channel_title = "Vuze Device: " + escape( device.getName());
+			String channel_title = Constants.APP_NAME + " Device: " + escape( device.getName());
 
 			boolean	html = request.getURL().contains( "format=html" );
 
@@ -284,13 +284,13 @@ DeviceManagerRSSFeed
 					pw.println( "<channel>" );
 
 					pw.println( "<title>" + channel_title + "</title>" );
-					pw.println( "<link>http://vuze.com</link>" );
+					pw.println( "<link>http://biglybt.com</link>" );
 					pw.println( "<atom:link href=\"" + feed_url.toExternalForm() + "\" rel=\"self\" type=\"application/rss+xml\" />" );
 
 					pw.println( "<description>" + Constants.APP_NAME + " RSS Feed for device " + escape( device.getName()) + "</description>" );
 
-					pw.println("<itunes:image href=\"http://www.vuze.com/img/vuze_icon_128.png\"/>");
-					pw.println("<image><url>http://www.vuze.com/img/vuze_icon_128.png</url><title>" + channel_title + "</title><link>http://vuze.com</link></image>");
+					pw.println("<itunes:image href=\"http://biglybt.com/img/biglybt128.png\"/>");
+					pw.println("<image><url>https://www.biglybt.com/img/biglybt128.png</url><title>" + channel_title + "</title><link>http://biglybt.com</link></image>");
 
 
 
