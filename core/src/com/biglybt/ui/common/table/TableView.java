@@ -312,6 +312,8 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	int getSelectedRowsSize();
 
+	public void scrollVertically( int distance );
+	
 	/**
 	 * @param row
 	 * @return

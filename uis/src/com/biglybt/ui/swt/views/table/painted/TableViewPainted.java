@@ -3395,6 +3395,28 @@ public class TableViewPainted
 		});
 	}
 
+	@Override
+	public void scrollVertically(int distance){
+		Utils.execSWTThread(new AERunnable() {
+			@Override
+			public void runSupport() {
+				if (isDisposed()) {
+					return;
+				}
+				int pos = vBar.getSelection();
+				if ( distance > 0 ){
+					pos += distance;
+					pos = Math.min( pos,vBar.getMaximum());
+					vBar.setSelection( pos );
+				}else{
+					pos += distance;
+					pos = Math.max( pos,vBar.getMinimum());
+					vBar.setSelection( pos );
+				}
+				swt_vBarChanged();
+			}});
+	}
+		
 	boolean qdRowHeightChanged = false;
 	public void rowHeightChanged(final TableRowCore row, int oldHeight,
 			int newHeight) {

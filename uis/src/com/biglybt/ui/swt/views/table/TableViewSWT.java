@@ -50,6 +50,8 @@ public interface TableViewSWT<DATASOURCETYPE>
 
 	public Composite getComposite();
 
+	public Rectangle getClientArea();
+	
 	TableRowCore getRow(DropTargetEvent event);
 
 	/**

@@ -199,9 +199,8 @@ public class MyTorrentsView
   private Tag[]		currentTags;
   private List<Tag>	allTags;
 
-  // table item index, where the drag has started
-  private int drag_drop_line_start = -1;
-  private TableRowCore[] drag_drop_rows = null;
+  	private long drag_drop_location_start = -1;
+  	private TableRowCore[] drag_drop_rows = null;
 
 	private boolean bDNDalwaysIncomplete;
 	private TableViewSWT<DownloadManager> tv;
@@ -1080,7 +1079,7 @@ public class MyTorrentsView
 				@Override
 				public void dragOver(DropTargetEvent e) {
 
-					if (drag_drop_line_start >= 0) {
+					if (drag_drop_location_start >= 0) {
 						boolean doAdd = false;
 
 						Control curButton = ((DropTarget) e.widget).getControl();
@@ -1112,8 +1111,8 @@ public class MyTorrentsView
 				public void drop(DropTargetEvent e) {
 					e.detail = DND.DROP_NONE;
 
-					if (drag_drop_line_start >= 0) {
-						drag_drop_line_start = -1;
+					if (drag_drop_location_start >= 0) {
+						drag_drop_location_start = -1;
 						drag_drop_rows = null;
 
 						Object[] ds = tv.getSelectedDataSources().toArray();
@@ -1853,11 +1852,11 @@ public class MyTorrentsView
 						if (rows.length != 0) {
 							event.doit = true;
 							//System.out.println("DragStart");
-							drag_drop_line_start = rows[0].getIndex();
+							drag_drop_location_start = getRowLocation( rows[0] );
 							drag_drop_rows = rows;
 						} else {
 							event.doit = false;
-							drag_drop_line_start = -1;
+							drag_drop_location_start = -1;
 							drag_drop_rows = null;
 						}
 
@@ -1916,7 +1915,11 @@ public class MyTorrentsView
 				});
 
 				dropTarget.addDropListener(new DropTargetAdapter() {
-					Point enterPoint = null;
+					Point			enterPoint = null;
+					long			lastScrollTime;
+					int				scrollDelay;
+					TableRowCore	lastScrollRow;
+					
 					@Override
 					public void dropAccept(DropTargetEvent event) {
 						event.currentDataType = FixedURLTransfer.pickBestType(event.dataTypes,
@@ -1927,7 +1930,11 @@ public class MyTorrentsView
 					public void dragEnter(DropTargetEvent event) {
 						// no event.data on dragOver, use drag_drop_line_start to determine
 						// if ours
-						if (drag_drop_line_start < 0) {
+					
+						lastScrollTime = 0;
+						
+						if (drag_drop_location_start < 0) {
+						
 							if (event.detail != DND.DROP_COPY) {
 								if ((event.operations & DND.DROP_LINK) > 0)
 									event.detail = DND.DROP_LINK;
@@ -1937,7 +1944,7 @@ public class MyTorrentsView
 						} else if (TextTransfer.getInstance().isSupportedType(
 								event.currentDataType)) {
 							event.detail = tv.getTableRowWithCursor() == null ? DND.DROP_NONE : DND.DROP_MOVE;
-							event.feedback = DND.FEEDBACK_SCROLL;
+							event.feedback = DND.FEEDBACK_NONE; // DND.FEEDBACK_SCROLL;
 							enterPoint = new Point(event.x, event.y);
 						}
 					}
@@ -1952,30 +1959,97 @@ public class MyTorrentsView
 
 					@Override
 					public void dragOver(DropTargetEvent event) {
-						if (drag_drop_line_start >= 0) {
+						if (drag_drop_location_start >= 0) {
+							/*
 							if (drag_drop_rows.length > 0
 									&& !(drag_drop_rows[0].getDataSource(true) instanceof DownloadManager)) {
 								event.detail = DND.DROP_NONE;
 								return;
 							}
+							*/
 							TableRowCore row = tv.getTableRowWithCursor();
 							if (row instanceof TableRowPainted) {
-								boolean dragging_down = row.getIndex() > drag_drop_line_start;
+								boolean dragging_down = getRowLocation( row ) > drag_drop_location_start;
 	  							Rectangle bounds = ((TableRowPainted) row).getBounds();
 	  							tv.getComposite().redraw();
 	  							tv.getComposite().update();
-	  							GC gc = new GC(tv.getComposite());
-	  							gc.setLineWidth(2);
-	  							int y_pos = bounds.y;
+	  							Rectangle clientArea = tv.getClientArea();
+	  						
+	  							int y_pos = bounds.y - clientArea.y;
+	  									  						
 	  							if ( dragging_down ){
 	  								y_pos +=bounds.height;
 	  							}
+	  							
+		  						int scrollDirection = 0;
+		  						
+	  							if ( y_pos + row.getHeight()*2 >= clientArea.height ){
+	  								
+	  								scrollDirection = 1;
+	  								
+	  							}else if ( y_pos - row.getHeight()*2 <= 0 ){
+	  								
+	  								scrollDirection = -1;
+	  							}
+	  							
+	  							GC gc = new GC(tv.getComposite());
+	  							gc.setLineWidth(2);
 	  							gc.drawLine(bounds.x, y_pos, bounds.x + bounds.width, y_pos );
 	  							gc.dispose();
+	  							
+	  							if ( scrollDirection != 0 ){
+	  								
+		  							long now = SystemTime.getMonotonousTime();
+		  							
+		  							if ( lastScrollTime == 0 ){
+		  								
+		  								lastScrollTime 	= now;
+		  								scrollDelay		= 400;
+		  								
+		  								lastScrollRow	= row;
+		  								
+		  							}else if ( now - lastScrollTime > scrollDelay ){
+		  								
+		  								lastScrollTime = now;
+		  								
+		  								if ( scrollDelay > 100 ){
+		  									scrollDelay -= 50;
+		  								}
+		  								
+			  							TableRowCore[] rows = tv.getRowsAndSubRows(false);
+			  							
+			  							for ( int i=0;i<rows.length;i++){
+			  								
+			  								if ( rows[i] == lastScrollRow ){
+			  									
+			  									if ( scrollDirection > 0 ){
+			  										
+				  									if ( i < rows.length - 1 ){
+				  										
+				  										lastScrollRow = rows[i+1];
+				  													  										
+				  										tv.scrollVertically( lastScrollRow.getHeight());
+				  									}
+			  									}else{
+			  										if ( i > 0 ){
+				  										
+				  										lastScrollRow = rows[i-1];
+				  													  										
+				  										tv.scrollVertically( -lastScrollRow.getHeight());
+			  										}
+			  									}
+			  									
+			  									break;
+			  								}
+			  							}
+		  							}
+	  							}else{
+	  								lastScrollTime = 0;
+	  							}
 							}
 							event.detail = row == null ? DND.DROP_NONE : DND.DROP_MOVE;
-							event.feedback = DND.FEEDBACK_SCROLL
-									| ((enterPoint != null && enterPoint.y > event.y)
+							event.feedback = // DND.FEEDBACK_SCROLL |
+									 ((enterPoint != null && enterPoint.y > event.y)
 											? DND.FEEDBACK_INSERT_BEFORE : DND.FEEDBACK_INSERT_AFTER);
 						}
 					}
@@ -1997,7 +2071,7 @@ public class MyTorrentsView
 
 						event.detail = DND.DROP_NONE;
 						// Torrent file from shell dropped
-						if (drag_drop_line_start >= 0) { // event.data == null
+						if (drag_drop_location_start >= 0) { // event.data == null
 							event.detail = DND.DROP_NONE;
 							TableRowCore row = tv.getRow(event);
 							if (row == null)
@@ -2005,13 +2079,13 @@ public class MyTorrentsView
 							if (row.getParentRowCore() != null) {
 								row = row.getParentRowCore();
 							}
-							int drag_drop_line_end = row.getIndex();
-							if (drag_drop_line_end != drag_drop_line_start) {
+							long end_location = getRowLocation( row );
+							if (end_location >> 32  != drag_drop_location_start >> 32 ) {
 								DownloadManager dm = (DownloadManager) row.getDataSource(true);
 								moveRowsTo(drag_drop_rows, dm.getPosition());
 								event.detail = DND.DROP_MOVE;
 							}
-							drag_drop_line_start = -1;
+							drag_drop_location_start = -1;
 							drag_drop_rows = null;
 						}
 					}
@@ -2023,6 +2097,24 @@ public class MyTorrentsView
 		}
 	}
 
+	private long
+	getRowLocation(
+		TableRowCore	row )
+	{
+		long result = row.getIndex();
+		
+		if ( row.getDataSource( true ) instanceof DiskManagerFileInfo ){
+			
+			result = (((long)row.getParentRowCore().getIndex())<<32 ) + result;
+			
+		}else{
+			
+			result <<= 32;
+		}
+		
+		return( result );
+	}
+	
   private void moveRowsTo(TableRowCore[] rows, int iNewPos) {
     if (rows == null || rows.length == 0) {
       return;
