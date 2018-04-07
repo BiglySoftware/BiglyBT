@@ -91,6 +91,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
+import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 import com.biglybt.ui.swt.views.tableitems.files.*;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.AlertsItem;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
@@ -361,6 +362,11 @@ public class FilesView
 				tree_view = btnTreeView.getSelection();
 				
 				COConfigurationManager.setParameter("FilesView.use.tree", tree_view);
+				
+				if ( tree_view ){
+					
+					TableColumnSWTUtils.changeColumnVisiblity( tv, tv.getTableColumn( "name" ), true );
+				}
 				
 				force_refresh = true;
 				
