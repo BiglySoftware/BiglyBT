@@ -171,6 +171,8 @@ public interface MultipleDocumentInterface
 	 */
 	public int getEntriesCount();
 
+	public boolean isInitialized();
+	
 	public boolean isDisposed();
 
 }

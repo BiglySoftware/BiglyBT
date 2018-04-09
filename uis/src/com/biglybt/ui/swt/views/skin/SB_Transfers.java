@@ -101,6 +101,8 @@ public class SB_Transfers
 	private ParameterListener paramTagsInSidebarListener;
 	private ParameterListener paramCatInSidebarListener;
 
+	private long last_dl_entry_load;
+	
 	private Set<MdiEntry>				redraw_pending = new HashSet<>();
 		
 	private FrequencyLimitedDispatcher	redraw_disp = 
@@ -1787,20 +1789,40 @@ public class SB_Transfers
 		if (mdi == null) {
 			return;
 		}
-		
-		boolean showDownloading = COConfigurationManager.getBooleanParameter( "Show Downloading In Side Bar" );
 
-		if (showDownloading && statsNoLowNoise.numIncomplete > 0) {
-			MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
-			if (entry == null) {
-				mdi.loadEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY_DL, false);
-			}
-		} else {
-			MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
-			if (entry != null) {
-				entry.close(true);
+			// don't mess with things until MDI initialized as it might be auto-opening views
+		
+		if ( mdi.isInitialized()){
+			
+			boolean showDownloading = COConfigurationManager.getBooleanParameter( "Show Downloading In Side Bar" );
+	
+			if ( showDownloading && statsNoLowNoise.numIncomplete > 0){
+				
+				MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+				
+				if (entry == null) {
+					long now = SystemTime.getMonotonousTime();
+					
+						// prevent rapid show/hides and also trt and work around bug where 2 Downloading entries have
+						// been seen to get created (lame fix I know)
+					
+					if ( now - last_dl_entry_load > 5000 ){
+						
+						last_dl_entry_load = now;
+					
+						System.out.println( "Creating DL" );
+						
+						mdi.loadEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY_DL, false);
+					}
+				}
+			} else {
+				MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+				if (entry != null) {
+					entry.close(true);
+				}
 			}
 		}
+		
 		MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
 		if (entry != null) {
 			MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();

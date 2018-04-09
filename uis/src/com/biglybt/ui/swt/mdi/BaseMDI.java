@@ -87,6 +87,8 @@ public abstract class BaseMDI
 
 	private String closeableConfigFile = "sidebarauto.config";
 
+	private volatile boolean initialized;
+	
 	@Override
 	public void addListener(MdiListener l) {
 		synchronized (listeners) {
@@ -480,6 +482,8 @@ public abstract class BaseMDI
 
 							}finally{
 
+								initialized = true;
+								
 								wait_sem.release();
 							}
 						}
@@ -1053,5 +1057,9 @@ public abstract class BaseMDI
 		}
 	}
 
+	@Override
+	public boolean isInitialized(){
+		return initialized;
+	}
 
 }
