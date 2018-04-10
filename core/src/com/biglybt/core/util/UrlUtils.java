@@ -108,6 +108,36 @@ public class UrlUtils
 	}
 
 	public static String
+	getURLForm(
+		InetAddress		address,
+		int				port )
+	{
+		if ( address instanceof Inet6Address ){
+			
+			return( "[" + address.getHostAddress() + "]:" + port );
+			
+		}else{
+			
+			return(address.getHostAddress() + ":" + port );
+		}
+	}
+	
+	public static String
+	getURLForm(
+		String			address,
+		int				port )
+	{
+		if ( address.indexOf( ':' ) != -1 ){
+			
+			return( "[" + address + "]:" + port );
+			
+		}else{
+			
+			return( address + ":" + port );
+		}
+	}
+	
+	public static String
 	getMagnetURI(
 		byte[]		hash,
 		String		name,

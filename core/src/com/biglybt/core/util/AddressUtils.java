@@ -525,6 +525,27 @@ AddressUtils
 	}
 
 	public static String
+	getHostAddressForURL(
+		InetSocketAddress	address )
+	{
+		if ( address.isUnresolved()){
+
+			return( address.getHostName());
+
+		}else{
+			
+			if ( address.getAddress() instanceof Inet6Address ){
+
+				return( "[" + address.getAddress().getHostAddress() + "]" );
+				
+			}else{
+				
+				return( address.getAddress().getHostAddress());
+			}
+		}
+	}
+	
+	public static String
 	getHostNameNoResolve(
 		InetSocketAddress	address )
 	{

@@ -369,12 +369,12 @@ MagnetPlugin
 
 								if ( ip != null && port > 0 ){
 									
-									cb_data += "&xsource=" + UrlUtils.encode( ip.getHostAddress() + ":" + port );
+									cb_data += "&xsource=" +  UrlUtils.encode( UrlUtils.getURLForm( ip,  port ));
 								}
 								
 								if ( ip_v6 != null && port > 0 ){
 									
-									cb_data += "&xsource=" + UrlUtils.encode( ip_v6.getHostAddress() + ":" + port );
+									cb_data += "&xsource=" +  UrlUtils.encode( UrlUtils.getURLForm( ip_v6,  port ));
 								}
 																	
 								int	extra = sources_extra_param.getValue();
@@ -411,7 +411,7 @@ MagnetPlugin
 													
 													if ( peer_port > 0 ){
 																													
-														cb_data += "&xsource=" + UrlUtils.encode( peer_ip + ":" + peer_port );
+														cb_data += "&xsource=" +  UrlUtils.encode( UrlUtils.getURLForm( peer_ip, peer_port ));
 														
 														added.add( peer_ip );
 														
@@ -446,7 +446,7 @@ MagnetPlugin
 															
 															if ( peer_port > 0 ){
 																															
-																cb_data += "&xsource=" + UrlUtils.encode( peer_ip + ":" + peer_port );
+																cb_data += "&xsource=" + UrlUtils.encode( UrlUtils.getURLForm( peer_ip, peer_port ));
 																
 																added.add( peer_ip );
 																

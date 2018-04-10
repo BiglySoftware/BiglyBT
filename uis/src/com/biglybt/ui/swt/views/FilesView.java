@@ -688,7 +688,7 @@ public class FilesView
 	public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
 		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) tv.getFirstSelectedDataSource();
 
-		if ( fileInfo == null ){
+		if ( fileInfo == null || fileInfo.getIndex() == -1 ){
 
 			return;
 		}

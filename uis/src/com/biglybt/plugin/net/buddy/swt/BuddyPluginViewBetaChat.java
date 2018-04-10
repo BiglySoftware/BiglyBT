@@ -4325,7 +4325,7 @@ BuddyPluginViewBetaChat
 
 		if ( address != null ){
 
-			String address_str = AddressUtils.getHostAddress(address) + ":" + address.getPort();
+			String address_str = AddressUtils.getHostAddressForURL(address) + ":" + address.getPort();
 
 			String arg = "&xsource=" + UrlUtils.encode( address_str );
 

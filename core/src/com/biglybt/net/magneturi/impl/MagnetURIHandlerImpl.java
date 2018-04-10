@@ -610,7 +610,7 @@ MagnetURIHandlerImpl
 
 					String	source = (String)source_params.get(i);
 
-					int	p = source.indexOf(':');
+					int	p = source.lastIndexOf(':');
 
 					if ( p != -1 ){
 
@@ -625,6 +625,13 @@ MagnetURIHandlerImpl
 								host = host.substring(1);
 							}
 
+							if ( host.startsWith( "[" )){
+								
+									// IPv6 literal
+								
+								host = host.substring( 1,  host.length() - 1 );
+							}
+							
 							InetSocketAddress	sa = new InetSocketAddress( host, port );
 
 							sources.add( sa );
