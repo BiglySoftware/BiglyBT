@@ -1227,7 +1227,7 @@ public class MainStatusBar
 					+ Constants.AZUREUS_VERSION + ")!";
 			setStatusImageKey(STATUS_ICON_WARN);
 		} else if (!Constants.isOSX && COConfigurationManager.getStringParameter("ui").equals("az2")) { //don't show official version numbers for OSX L&F
-			statusTextKey = Constants.APP_NAME + " " + Constants.AZUREUS_VERSION;
+			statusTextKey = "!" + Constants.APP_NAME + " " + Constants.AZUREUS_VERSION + "!";
 			setStatusImageKey(null);
 		}
 
