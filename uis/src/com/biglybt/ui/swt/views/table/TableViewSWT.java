@@ -245,6 +245,10 @@ public interface TableViewSWT<DATASOURCETYPE>
 
 	boolean isTabViewsEnabled();
 
+	public void setExpandEnabled( boolean b );
+	
+	public boolean isExpandEnabled();
+	
 	boolean getTabViewsExpandedByDefault();
 
 	String[] getTabViewsRestrictedTo();

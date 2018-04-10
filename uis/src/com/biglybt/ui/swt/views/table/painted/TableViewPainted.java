@@ -30,6 +30,7 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
@@ -91,6 +92,8 @@ public class TableViewPainted
 	private static final int DEFAULT_HEADER_HEIGHT = 27;
 
 	private static final boolean DEBUG_REDRAW_CLIP = false;
+
+	private static final boolean expand_enabled_default = COConfigurationManager.getBooleanParameter("Table.useTree");
 
 	private Composite cTable;
 
@@ -175,6 +178,8 @@ public class TableViewPainted
 	private Canvas sCanvasImage;
 
 	private boolean	filterSubRows;
+	
+	private boolean expandEnabled = expand_enabled_default;
 	
 	private AtomicInteger	mutationCount 	= new AtomicInteger(0);
 	private int				lastMC			= -1;
@@ -1032,6 +1037,16 @@ public class TableViewPainted
 	public boolean canHaveSubItems() {
 		return true;
 	}
+	
+	public void setExpandEnabled( boolean b )
+	{
+		expandEnabled = b;
+	}
+	
+	public boolean isExpandEnabled(){
+		return( expandEnabled );
+	}
+	
 
 	/* (non-Javadoc)
 	 * @see TableView#setHeaderVisible(boolean)

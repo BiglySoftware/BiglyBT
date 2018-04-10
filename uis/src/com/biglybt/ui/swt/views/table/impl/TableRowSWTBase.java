@@ -44,9 +44,6 @@ public abstract class TableRowSWTBase
 {
 	public static boolean DEBUG_ROW_PAINT = false;
 
-	private static final boolean expand_enabled = COConfigurationManager.getBooleanParameter("Table.useTree");
-
-
 	protected Object lock;
 
 	private final TableViewSWT tv;
@@ -522,7 +519,7 @@ public abstract class TableRowSWTBase
 	public boolean
 	canExpand()
 	{
-		return( expand_enabled );
+		return( tv.isExpandEnabled());
 	}
 
 	/* (non-Javadoc)

@@ -233,6 +233,9 @@ public class FilesView
 		if (allowTabViews) {
 	  		tv.setEnableTabViews(enable_tabs,true,null);
 		}
+		
+		tv.setExpandEnabled( true );
+		
 		basicItems = new TableColumnCore[0];
 
   		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
