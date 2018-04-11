@@ -147,7 +147,10 @@ public class UISWTStatusEntryImpl implements UISWTStatusEntry, MainStatusBar.CLa
 			if ( scaled_image != null ){
 				scaled_image.dispose();
 				scaled_image = null;
-			}
+			}			
+			if ( original_image != null && original_image.isDisposed()){
+				original_image = null;
+			}			
 			if ( original_image != null &&  Utils.adjustPXForDPIRequired( original_image )){
 				scaled_image = Utils.adjustPXForDPI( label.getDisplay(), original_image );
 			}
