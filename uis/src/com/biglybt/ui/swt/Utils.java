@@ -1851,7 +1851,8 @@ public class Utils
 	}
 
 	public static boolean linkShellMetricsToConfig(final Shell shell,
-			final String sConfigPrefix) {
+			final String sConfigPrefix) 
+	{
 		boolean isMaximized = COConfigurationManager.getBooleanParameter(sConfigPrefix
 				+ ".maximized");
 
@@ -1873,10 +1874,12 @@ public class Utils
 				if (i == 4) {
 					Rectangle shellBounds = new Rectangle(values[0], values[1],
 							values[2], values[3]);
+					
 					if (shellBounds.width > 100 && shellBounds.height > 50) {
-  					shell.setBounds(shellBounds);
-  					verifyShellRect(shell, true);
-  					bDidResize = true;
+				
+						shell.setBounds(shellBounds);
+						verifyShellRect(shell, true);
+						bDidResize = true;
 					}
 				}
 			} catch (Exception e) {

@@ -293,7 +293,8 @@ FMFileImpl
 	@Override
 	public void
 	moveFile(
-		File		new_unlinked_file )
+		File						new_unlinked_file,
+		FileUtil.ProgressListener	pl )
 
 		throws FMFileManagerException
 	{
@@ -343,7 +344,7 @@ FMFileImpl
 
 			createDirs( new_linked_file );
 
-			if ( !linked_file.exists() || FileUtil.renameFile( linked_file, new_linked_file )) {
+			if ( !linked_file.exists() || FileUtil.renameFile( linked_file, new_linked_file, pl )) {
 
 				linked_file		= new_linked_file;
 				canonical_path	= new_canonical_path;

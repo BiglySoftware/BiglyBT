@@ -59,6 +59,7 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.FileUtil.ProgressListener;
 import com.biglybt.pif.download.savelocation.SaveLocationChange;
 import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.platform.PlatformManager;
@@ -204,8 +205,9 @@ DiskManagerImpl
     private boolean				checking_enabled = true;
 
     private volatile boolean	move_in_progress;
-    volatile int		move_progress;
-
+    private volatile int		move_progress;
+    private volatile int		move_state = ProgressListener.ST_NORMAL;
+    
         // DiskManager listeners
 
     private static final int LDT_STATECHANGED           = 1;
@@ -2082,6 +2084,21 @@ DiskManagerImpl
     	return( -1 );
     }
 
+    @Override
+    public void 
+    setMoveState(
+    	int state)
+    {
+    	if ( move_in_progress ){
+    		
+    		move_state	= state;
+    		
+    	}else{
+    		
+    		move_state	= ProgressListener.ST_NORMAL;
+    	}
+    }
+    
 	@Override
 	public void
 	setPieceCheckingEnabled(
@@ -2330,13 +2347,15 @@ DiskManagerImpl
             if (move_files) {
             	try{
             		move_progress		= 0;
+            		move_state			= ProgressListener.ST_NORMAL;
             		move_in_progress 	= true;
-
+            		
             		files_moved = moveDataFiles0(loc_change, change_to_read_only, op_status );
 
             	}finally{
 
-            		move_in_progress = false;
+            		move_in_progress 	= false;
+            		move_state			= ProgressListener.ST_NORMAL;
             	}
             }
 
@@ -2847,6 +2866,26 @@ DiskManagerImpl
         		new_root_dir = move_to_dir + File.separator + (new_name==null?move_from_name:new_name );
         	}
 
+        	FileUtil.ProgressListener pl = 
+        			new ProgressListener(){
+						
+						@Override
+						public void setTotalSize(long size){
+						}
+						
+						@Override
+						public int getState(){
+							return( move_state );
+						}
+						
+						@Override
+						public void complete(){
+						}
+						
+						@Override
+						public void bytesDone(long num){
+						}
+					};
 	        try{
 
 		        for (int i=0; i < files.length; i++){
@@ -2857,7 +2896,7 @@ DiskManagerImpl
 
 		              long initial_done_bytes = done_bytes;
 
-		              files[i].moveFile( new_root_dir, new_file, link_only[i] );
+		              files[i].moveFile( new_root_dir, new_file, link_only[i], pl );
 
 		              synchronized( progress_lock ){
 
@@ -2894,7 +2933,7 @@ DiskManagerImpl
 		              for (int j=0;j<i;j++){
 
 		                  try{
-		                      files[j].moveFile( old_root_dir, old_files[j],  link_only[j]);
+		                      files[j].moveFile( old_root_dir, old_files[j], link_only[j], null );
 
 		                  }catch( CacheFileManagerException f ){
 
@@ -2907,6 +2946,13 @@ DiskManagerImpl
 		                  }
 		              }
 
+		              File new_loc = new File( new_root_dir );
+		              
+		              if ( new_loc.isDirectory()){
+
+		  	        	TorrentUtils.recursiveEmptyDirDelete( new_loc, false );
+		  	          }
+		              
 		              return false;
 		            }
 		        }

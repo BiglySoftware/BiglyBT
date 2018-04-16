@@ -1330,14 +1330,15 @@ CacheFileWithCache
 	@Override
 	public void
 	moveFile(
-		File		new_file )
+		File						new_file,
+		FileUtil.ProgressListener	pl )
 
 		throws CacheFileManagerException
 	{
 		try{
 			flushCachePublic( true, -1 );
 
-			file.moveFile( new_file );
+			file.moveFile( new_file, pl );
 
 		}catch( FMFileManagerException e ){
 

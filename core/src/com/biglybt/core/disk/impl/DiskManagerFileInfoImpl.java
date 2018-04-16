@@ -135,15 +135,16 @@ DiskManagerFileInfoImpl
 
   public void
   moveFile(
-	String	new_root_dir,
-  	File	new_absolute_file,
-  	boolean	link_only )
+	String						new_root_dir,
+  	File						new_absolute_file,
+  	boolean						link_only,
+  	FileUtil.ProgressListener	pl )
 
   	throws CacheFileManagerException
   {
 	  if ( !link_only ){
 
-		  cache_file.moveFile( new_absolute_file );
+		  cache_file.moveFile( new_absolute_file, pl );
 	  }
 
 	 root_dir	= new_root_dir.endsWith(File.separator)?new_root_dir:(new_root_dir + File.separator);
@@ -464,7 +465,7 @@ DiskManagerFileInfoImpl
 	    							try{
 	    								dm_state.setFileLink( file_index, file, new_file );
 
-										cache_file.moveFile( new_file );
+										cache_file.moveFile( new_file, null );
 
 										ok = true;
 
@@ -531,7 +532,7 @@ DiskManagerFileInfoImpl
 
 										dm_state.setFileLink( file_index, file, new_link );
 
-										cache_file.moveFile( new_link );
+										cache_file.moveFile( new_link, null );
 
 									}else if ( prefix_removed ){
 
@@ -539,13 +540,13 @@ DiskManagerFileInfoImpl
 
 										dm_state.setFileLink( file_index, file, new_link );
 
-										cache_file.moveFile( new_link );
+										cache_file.moveFile( new_link, null );
 
 									}else{
 
 										dm_state.setFileLink( file_index, file, null );
 
-										cache_file.moveFile( file );
+										cache_file.moveFile( file, null );
 									}
 
 									File[] files = new_parent.listFiles();

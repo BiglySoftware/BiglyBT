@@ -568,6 +568,10 @@ LWSDiskManager
     	return( -1 );
     }
 
+    @Override
+    public void setMoveState(int state){
+    }
+    
 	@Override
 	public boolean
 	checkBlockConsistencyForWrite(

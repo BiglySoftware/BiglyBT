@@ -20,16 +20,25 @@
 package com.biglybt.ui.swt.progress;
 
 import com.biglybt.core.Core;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.ProgressBar;
 import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.internat.MessageText;
@@ -42,6 +51,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.core.CoreOperation;
 import com.biglybt.core.CoreOperationListener;
 import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.CoreOperationTask.ProgressCallback;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
@@ -86,6 +96,8 @@ ProgressWindow
 
 	private ProgressBar progress_bar;
 
+	private boolean	task_paused;
+	private boolean	task_cancelled;
 	
 	protected
 	ProgressWindow(
@@ -126,7 +138,7 @@ ProgressWindow
 											if ( !task_complete ){
 
 												Shell shell = com.biglybt.ui.swt.components.shell.ShellFactory.createMainShell(
-														( SWT.DIALOG_TRIM ));	// parg: removed modal - people complain about this locking the UI, let it be on their own heads if they go and screw with things then
+														( SWT.DIALOG_TRIM | SWT.RESIZE ));	// parg: removed modal - people complain about this locking the UI, let it be on their own heads if they go and screw with things then
 
 												showDialog( shell, operation );
 											}
@@ -273,7 +285,11 @@ ProgressWindow
 
 		shell.setText( MessageText.getString( "progress.window.title" ));
 
-		final CoreOperationTask.ProgressCallback progress = _core_op==null?null:_core_op.getTask().getProgressCallback();
+		CoreOperationTask task = _core_op==null?null:_core_op.getTask();
+		
+		CoreOperationTask.ProgressCallback progress = task==null?null:task.getProgressCallback();
+		
+		boolean alreadyPositioned = Utils.linkShellMetricsToConfig( shell, "com.biglybt.ui.swt.progress.ProgressWindnow" );
 		
 		Utils.setShellIcon(shell);
 
@@ -296,6 +312,36 @@ ProgressWindow
 		shell.setLayout(layout);
 
 		shell.setBackground( Colors.white );
+		
+		if ( task != null ){
+			
+			String name = task.getName();
+			
+			if ( name != null ){
+				Label lName = new Label(shell, SWT.NONE);
+
+				FontData fontData = lName.getFont().getFontData()[0];
+				
+				Font bold_font 	= new Font( shell.getDisplay(), new FontData( fontData.getName(), fontData.getHeight(), SWT.BOLD ));
+				
+				lName.setText( name );
+				GridData gridData = new GridData( GridData.FILL_HORIZONTAL );
+				gridData.horizontalSpan = 2;
+				lName.setLayoutData(gridData);
+				lName.setBackground( Colors.white );
+				
+				lName.setFont( bold_font );
+				
+				lName.addDisposeListener(
+					new DisposeListener(){
+						
+						@Override
+						public void widgetDisposed(DisposeEvent arg0){
+							bold_font.dispose();
+						}
+					});
+			}
+		}
 		
 		spinImages = ImageLoader.getInstance().getImages("working");
 		
@@ -324,9 +370,12 @@ ProgressWindow
 						
 						if ( progress != null && progress_bar != null ){
 							
-							int p =  progress.getProgress();
-							
-							progress_bar.setSelection( p );
+							if ( !task_cancelled ){
+								
+								int p =  progress.getProgress();
+								
+								progress_bar.setSelection( p );
+							}
 						}
 					}
 				});
@@ -362,29 +411,139 @@ ProgressWindow
 		
 		if ( progress != null ){
 		
-			progress_bar = new ProgressBar(shell,SWT.HORIZONTAL );
+			Composite compProg = new Composite(shell,SWT.BORDER);
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.grabExcessHorizontalSpace = true;
+			gridData.horizontalSpan = 2;
+			Utils.setLayoutData(compProg, gridData);
+			GridLayout layoutProgress = new GridLayout();
+			layoutProgress.numColumns = 1;
+			layoutProgress.marginWidth = layoutProgress.marginHeight = 0;
+			compProg.setLayout(layoutProgress);
+			compProg.setBackground( Colors.white );
+			
+			progress_bar = new ProgressBar(compProg,SWT.HORIZONTAL );
 			progress_bar.setMinimum(0);
 			progress_bar.setMaximum(1000);
 			progress_bar.setBackground( Colors.white );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
-			gridData.horizontalSpan = 2;
-			
-			progress_bar.setLayoutData( gridData );
+			gridData.widthHint = 400;
+			Utils.setLayoutData( progress_bar, gridData );
+		
+			if ( progress.getSupportedTaskStates() != ProgressCallback.ST_NONE ){
+				
+				Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
+				gridData = new GridData(GridData.FILL_HORIZONTAL);
+				gridData.horizontalSpan = 2;
+				Utils.setLayoutData(labelSeparator, gridData);
+		
+					// buttons
+		
+				Composite comp = new Composite(shell,SWT.NULL);
+				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
+				gridData.grabExcessHorizontalSpace = true;
+				gridData.horizontalSpan = 2;
+				Utils.setLayoutData(comp, gridData);
+				GridLayout layoutButtons = new GridLayout();
+				layoutButtons.numColumns = 3;
+				comp.setLayout(layoutButtons);
+				comp.setBackground( Colors.white );
+		
+				List<Button> buttons = new ArrayList<>();
+		
+				Button bPause = new Button(comp,SWT.PUSH);
+				bPause.setText(MessageText.getString("v3.MainWindow.button.pause"));
+				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
+				gridData.grabExcessHorizontalSpace = true;
+				//gridData.widthHint = 70;
+				Utils.setLayoutData(bPause, gridData);
+				buttons.add( bPause );
+		
+				Button bResume = new Button(comp,SWT.PUSH);
+				bResume.setText(MessageText.getString("v3.MainWindow.button.resume"));
+				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
+				gridData.grabExcessHorizontalSpace = false;
+				//gridData.widthHint = 70;
+				Utils.setLayoutData(bResume, gridData);
+				buttons.add( bResume );
+
+				
+				Button bCancel = new Button(comp,SWT.PUSH);
+				bCancel.setText(MessageText.getString("UpdateWindow.cancel"));
+				gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
+				gridData.grabExcessHorizontalSpace = false;
+				//gridData.widthHint = 70;
+				Utils.setLayoutData(bCancel, gridData);
+				buttons.add( bCancel );
+
+				Utils.makeButtonsEqualWidth( buttons );
+				
+				bResume.setEnabled( false );
+				
+				bPause.addListener(SWT.Selection,new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						task_paused	= true;
+						bPause.setEnabled( false );
+						bResume.setEnabled( true );
+						shell.setDefaultButton( bResume );
+						progress.setTaskState( ProgressCallback.ST_PAUSE );
+					}
+				});
+				
+				bResume.addListener(SWT.Selection,new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						task_paused	= false;
+						bPause.setEnabled( true );
+						bResume.setEnabled( false );
+						shell.setDefaultButton( bPause );
+						progress.setTaskState( ProgressCallback.ST_RESUME );
+					}
+				});
+		
+				bCancel.addListener(SWT.Selection,new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						bPause.setEnabled( false );
+						bResume.setEnabled( false );
+						bCancel.setEnabled( false );
+						progress.setTaskState( ProgressCallback.ST_CANCEL );
+					}
+				});
+				
+				shell.setDefaultButton( bPause );
+				
+				shell.addDisposeListener(
+					new DisposeListener(){
+						
+						@Override
+						public void widgetDisposed(DisposeEvent arg0){
+							if ( task_paused ){
+								progress.setTaskState( ProgressCallback.ST_RESUME );
+							}
+						}
+					});
+			}
 		}
+	
 		
 		shell.pack();
 
-		Composite parent = shell.getParent();
-
-		if ( parent != null ){
-
-			Utils.centerWindowRelativeTo( shell, parent );
-
-		}else{
-
-			Utils.centreWindow( shell );
+		if ( !alreadyPositioned ){
+			
+			Composite parent = shell.getParent();
+	
+			if ( parent != null ){
+	
+				Utils.centerWindowRelativeTo( shell, parent );
+	
+			}else{
+	
+				Utils.centreWindow( shell );
+			}
 		}
-
+		
 		shell.open();
 	}
 

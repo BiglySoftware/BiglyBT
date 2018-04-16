@@ -1654,6 +1654,32 @@ public class FileUtil {
             return( false );
         }
         
+		if ( pl != null ){
+			
+			while( true ){
+				
+				int state =  pl.getState();
+				
+				if ( state == ProgressListener.ST_PAUSED ){
+		
+					try{
+						Thread.sleep(250);
+					}catch( Throwable e ){
+					}
+					
+				}else if ( state == ProgressListener.ST_CANCELLED ){
+					
+					Debug.out( "renameFile: Cancelled" );
+					
+					return( false );
+					
+				}else{
+					
+					break;
+				}
+			}
+		}	
+        
     	File to_file_parent = to_file.getParentFile();
     	
     	if ( !to_file_parent.exists()){
@@ -1874,6 +1900,31 @@ public class FileUtil {
 
     		while( rem > 0 ){
 
+    			if ( pl != null ){
+    				
+    				while( true ){
+    					
+    					int state =  pl.getState();
+    					
+    					if ( state == ProgressListener.ST_PAUSED ){
+    			
+    						try{
+    							Thread.sleep(250);
+    							
+    						}catch( Throwable e ){
+    						}
+    						
+    					}else if ( state == ProgressListener.ST_CANCELLED ){
+    						
+    						throw( new IOException( "Cancelled" ));
+    						   						
+    					}else{
+    						
+    						break;
+    					}
+    				}
+    			}
+    			
     			int	to_read = (int)Math.min( rem, BUFFER_SIZE );
 
     			bb.position( 0 );
@@ -2801,6 +2852,10 @@ public class FileUtil {
 	public interface
 	ProgressListener
 	{
+		public int ST_NORMAL	= 1;
+		public int ST_PAUSED	= 2;
+		public int ST_CANCELLED	= 3;
+		
 		public void
 		setTotalSize(
 			long	size );
@@ -2808,6 +2863,9 @@ public class FileUtil {
 		public void
 		bytesDone(
 			long	num );
+		
+		public int
+		getState();
 		
 		public void
 		complete();

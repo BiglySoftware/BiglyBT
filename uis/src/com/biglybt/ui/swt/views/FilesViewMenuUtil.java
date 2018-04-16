@@ -1516,6 +1516,11 @@ public class FilesViewMenuUtil
 		try{
 
 			FileUtil.runAsTask(new CoreOperationTask() {
+				
+				@Override
+				public String getName(){
+					return fileInfo.getFile( true ).getName();
+				}
 				@Override
 				public ProgressCallback getProgressCallback() {
 					return null;

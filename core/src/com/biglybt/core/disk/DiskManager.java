@@ -265,6 +265,10 @@ DiskManager
 	public int
 	getMoveProgress();
 
+	public void
+	setMoveState(
+		int	state );
+	
 		/**
 		 * method for checking that the block details are sensible
 		 * @param pieceNumber

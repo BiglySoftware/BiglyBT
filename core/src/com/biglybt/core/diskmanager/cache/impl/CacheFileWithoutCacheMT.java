@@ -28,6 +28,7 @@ import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.FileUtil;
 
 public class
 CacheFileWithoutCacheMT
@@ -80,7 +81,8 @@ CacheFileWithoutCacheMT
 	@Override
 	public void
 	moveFile(
-		File		new_file )
+		File						new_file,
+		FileUtil.ProgressListener	pl )
 
 		throws CacheFileManagerException
 	{
@@ -129,7 +131,7 @@ CacheFileWithoutCacheMT
 
 						files_use_count = new int[]{ files_use_count[0] };
 
-						base_file.moveFile( new_file );
+						base_file.moveFile( new_file, pl );
 
 						break;
 					}

@@ -583,6 +583,11 @@ public class NameItem extends CoreTableColumnSWT implements
 		FileUtil.runAsTask(new CoreOperationTask()
 		{
 			@Override
+			public String getName(){
+				// TODO Auto-generated method stub
+				return fileInfo.getFile(true).getName();
+			}
+			@Override
 			public void run(CoreOperation operation) {
 				result[0] = fileInfo.setLink(target);
 			}

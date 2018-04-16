@@ -22,6 +22,9 @@ package com.biglybt.core;
 public interface
 CoreOperationTask
 {
+	public String
+	getName();
+	
 	public void
 	run(
 		CoreOperation operation );
@@ -32,7 +35,19 @@ CoreOperationTask
 	public interface
 	ProgressCallback
 	{
+		public int ST_NONE		= 0x0000;
+		public int ST_PAUSE		= 0x0001;
+		public int ST_RESUME	= 0x0002;
+		public int ST_CANCEL	= 0x0004;
+		
 		public int
 		getProgress();
+		
+		public int
+		getSupportedTaskStates();
+		
+		public void
+		setTaskState(
+			int		state );
 	}
 }

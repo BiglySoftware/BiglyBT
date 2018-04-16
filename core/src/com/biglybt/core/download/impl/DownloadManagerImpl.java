@@ -67,6 +67,7 @@ import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
+import com.biglybt.core.util.FileUtil.ProgressListener;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.download.Download;
@@ -4315,7 +4316,8 @@ DownloadManagerImpl
 	  return( crypto_level );
   }
 
-  private int move_progress = -1;
+  private volatile int move_progress	= -1;
+  private volatile int move_state		= ProgressListener.ST_NORMAL;
   
   public int
   getMoveProgress()
@@ -4329,6 +4331,22 @@ DownloadManagerImpl
 	  }else{
 		  
 		  return( move_progress );
+	  }
+  }
+  
+  private void
+  setMoveState(
+	int	state )
+  {
+	  DiskManager	dm = getDiskManager();
+
+	  if ( dm != null ){
+		  		  
+		  dm.setMoveState( state );
+		  
+	  }else{
+		  
+		 move_state = state;
 	  }
   }
   
@@ -4407,6 +4425,11 @@ DownloadManagerImpl
 		  FileUtil.runAsTask(
 				new CoreOperationTask()
 				{
+					@Override
+					public String getName(){
+						return( getDisplayName());
+					}
+					
 					private ProgressCallback callback = 
 						new ProgressCallback()
 						{
@@ -4415,6 +4438,32 @@ DownloadManagerImpl
 							getProgress()
 							{
 								return( getMoveProgress());
+							}
+							
+							@Override
+							public int 
+							getSupportedTaskStates()
+							{
+								return( ProgressCallback.ST_PAUSE |  ProgressCallback.ST_RESUME );
+							}
+							
+							@Override
+							public void 
+							setTaskState(
+								int state )
+							{
+								if ( state == ProgressCallback.ST_PAUSE ){
+									
+									setMoveState( ProgressListener.ST_PAUSED );
+									
+								}else if ( state == ProgressCallback.ST_RESUME ){
+									
+									setMoveState( ProgressListener.ST_NORMAL );
+
+								}else if ( state == ProgressCallback.ST_CANCEL ){
+									
+									setMoveState( ProgressListener.ST_CANCELLED );
+								}
 							}
 						};
 		  
@@ -4549,7 +4598,14 @@ DownloadManagerImpl
 				{
 					total_done += num;
 					
-					move_progress = (int)(Math.min( 1000, (1000*total_done)/total_size ));
+					move_progress = total_size==0?0:(int)(Math.min( 1000, (1000*total_done)/total_size ));
+				}
+				
+				@Override
+				public int 
+				getState()
+				{
+					return( move_state );
 				}
 				
 				public void
@@ -4638,6 +4694,11 @@ DownloadManagerImpl
 	
 				  }else{
 	
+					  if ( new_save_location.isDirectory()){
+							
+						  TorrentUtils.recursiveEmptyDirDelete( new_save_location, false );
+					  }
+					  
 					  throw( new DownloadManagerException( "rename operation failed" ));
 				  }
 	
@@ -4651,6 +4712,7 @@ DownloadManagerImpl
 			  pl.complete();
 			  
 			  move_progress = -1;
+			  move_state	= ProgressListener.ST_NORMAL;
 		  }
 	  }else{
 		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );
@@ -4806,6 +4868,11 @@ DownloadManagerImpl
 			  CoreOperation.OP_DOWNLOAD_EXPORT,
 			  new CoreOperationTask()
 			  {
+				  @Override
+					public String getName(){
+						return( getDisplayName());
+				  }
+				  
 				  @Override
 				  public void
 				  run(

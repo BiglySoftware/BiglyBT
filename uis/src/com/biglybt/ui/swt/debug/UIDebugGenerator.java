@@ -316,6 +316,11 @@ public class UIDebugGenerator
 					public void coreRunning(Core core) {
 						core.createOperation(CoreOperation.OP_PROGRESS,
 								new CoreOperationTask() {
+									
+									@Override
+									public String getName(){
+										return null;
+									}
 									@Override
 									public void run(CoreOperation operation) {
 										try {
