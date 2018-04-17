@@ -206,6 +206,7 @@ DiskManagerImpl
 
     private volatile boolean	move_in_progress;
     private volatile int		move_progress;
+    private volatile File		move_subtask;
     private volatile int		move_state = ProgressListener.ST_NORMAL;
     
         // DiskManager listeners
@@ -2085,6 +2086,18 @@ DiskManagerImpl
     }
 
     @Override
+    public File 
+    getMoveSubTask()
+    {
+    	if ( move_in_progress ){
+
+    		return( move_subtask );
+    	}
+
+    	return( null );
+    }
+    
+    @Override
     public void 
     setMoveState(
     	int state)
@@ -2347,6 +2360,7 @@ DiskManagerImpl
             if (move_files) {
             	try{
             		move_progress		= 0;
+            		move_subtask		= null;
             		move_state			= ProgressListener.ST_NORMAL;
             		move_in_progress 	= true;
             		
@@ -2355,6 +2369,7 @@ DiskManagerImpl
             	}finally{
 
             		move_in_progress 	= false;
+            		move_subtask		= null;
             		move_state			= ProgressListener.ST_NORMAL;
             	}
             }
@@ -2399,609 +2414,698 @@ DiskManagerImpl
 	  return false;
   }
 
-    private boolean moveDataFiles0(SaveLocationChange loc_change, final boolean change_to_read_only, OperationStatus op_status ) throws Exception  {
-
-    		// there is a time race condition here between a piece being marked as complete and the
-    		// associated file actions being taken (switch to read only, do the 'incomplete file suffix' nonsense)
-    		// and the peer controller noting that the download is complete and kicking off these actions.
-    		// in order to ensure that the completion actions are done prior to us running here we do:
-
-    	try{
-            file_piece_mon.enter();
-
-    	}finally{
-
-    		file_piece_mon.exit();
-    	}
-
-    	File move_to_dir_name = loc_change.download_location;
-    	if (move_to_dir_name == null) {move_to_dir_name = download_manager.getAbsoluteSaveLocation().getParentFile();}
-
-    	final String move_to_dir = move_to_dir_name.toString();
-    	final String new_name = loc_change.download_name;
-
-    		// consider the two cases:
-    		//		simple torrent:  /temp/simple.avi
-    		// 		complex torrent: /temp/complex[/other.avi]
-
-    		// we are moving the files to the "move_to_arg" /M and possibly renaming to "wibble.x"
-    		//		/temp/simple.avi, null	->  /M/simple.avi
-    		//		/temp, "wibble.x"		->	/M/wibble.x
-
-    		//		/temp/complex[/other.avi], null		->	/M/complex[/other.avi]
-    		//		/temp, "wibble.x"					->	/M/wibble.x[/other.avi]
-
-
-    	if ( files == null ){return false;}
-
-        if (isFileDestinationIsItself(loc_change)) {return false;}
-
-        final boolean[]	got_there = { false };
-
-        if ( op_status != null ){
-
-       		op_status.gonnaTakeAWhile(
-        		new GettingThere()
-        		{
-        			@Override
-			        public boolean
-        			hasGotThere()
-        			{
-        				synchronized( got_there ){
-
-        					return( got_there[0] );
-        				}
-        			}
-        		});
-        }
-
-        try{
-	    	boolean simple_torrent = download_manager.getTorrent().isSimpleTorrent();
-
-	    		// absolute save location does not follow links
-	    		// 		for simple: /temp/simple.avi
-	    		//		for complex: /temp/complex
-
-	        final File save_location = download_manager.getAbsoluteSaveLocation();
-
-	        	// It is important that we are able to get the canonical form of the directory to
-	        	// move to, because later code determining new file paths will break otherwise.
-
-	        final String move_from_name	= save_location.getName();
-	        final String move_from_dir	= save_location.getParentFile().getCanonicalFile().getPath();
-
-	        final File[]    new_files   = new File[files.length];
-
-	        File[]    old_files   = new File[files.length];
-	        boolean[] link_only   = new boolean[files.length];
-
-	        long	total_bytes 		= 0;
-
-	        final long[]	file_lengths_to_move	 	= new long[files.length];
-
-	        for (int i=0; i < files.length; i++) {
-
-	            File old_file = files[i].getFile(false);
-
-	            File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, old_file );
-
-	            if ( !linked_file.equals(old_file)){
-
-	                if ( simple_torrent ){
-
-	                    // simple torrent, only handle a link if its a simple rename
-
-	                    if ( linked_file.getParentFile().getCanonicalPath().equals( save_location.getParentFile().getCanonicalPath())){
-
-	                        old_file  = linked_file;
-
-	                    }else{
-
-	                        link_only[i] = true;
-	                    }
-
-	                }else{
-	                      // if we are linked to a file outside of the torrent's save directory then we don't
-	                      // move the file
-
-	                    if ( linked_file.getCanonicalPath().startsWith( save_location.getCanonicalPath())){
-
-	                        old_file  = linked_file;
-
-	                    }else{
-
-	                        link_only[i] = true;
-	                    }
-	                }
-	            }
-
-	            /**
-	             * We are trying to calculate the relative path of the file within the original save
-	             * directory, and then use that to calculate the new save path of the file in the new
-	             * save directory.
-	             *
-	             * We have three cases which we may deal with:
-	             *   1) Where the file in the torrent has never been moved (therefore, old_file will
-	             *      equals linked_file),
-	             *   2) Where the file in the torrent has been moved somewhere elsewhere inside the save
-	             *      path (old_file will not equal linked_file, but we will overwrite the value of
-	             *      old_file with linked_file),
-	             *   3) Where the file in the torrent has been moved outside of the download path - meaning
-	             *      we set link_only[i] to true. This is just to update the internal reference of where
-	             *      the file should be - it doesn't move the file at all.
-	             *
-	             * Below, we will determine a new path for the file, but only in terms of where it should be
-	             * inside the new download save location - if the file currently exists outside of the save
-	             * location, we will not move it.
-	             */
-
-	            old_files[i] = old_file;
-
-	            /**
-	             * move_from_dir should be canonical (see earlier code).
-	             *
-	             * Need to get canonical form of the old file, because that's what we are using for determining
-	             * the relative path.
-	             */
-
-	            String old_parent_path = old_file.getCanonicalFile().getParent();
-
-	            String sub_path;
-
-	            /**
-	             * Calculate the sub path of where the file lives compared to the new save location.
-	             *
-	             * The code here has changed from what it used to be to fix bug 1636342:
-	             *   https://sourceforge.net/tracker/?func=detail&atid=575154&aid=1636342&group_id=84122
-	             */
-
-	            if ( old_parent_path.startsWith(move_from_dir)){
-
-	            	sub_path = old_parent_path.substring(move_from_dir.length());
-
-	            }else{
-
-	            	logMoveFileError(move_to_dir, "Could not determine relative path for file - " + old_parent_path);
-
-	            	throw new IOException("relative path assertion failed: move_from_dir=\"" + move_from_dir + "\", old_parent_path=\"" + old_parent_path + "\"");
-	            }
-
-	              //create the destination dir
-
-	            if ( sub_path.startsWith( File.separator )){
-
-	                sub_path = sub_path.substring(1);
-	            }
-
-	            	// We may be doing a rename, and if this is a simple torrent, we have to keep the names in sync.
-
-	            File new_file;
-
-	            if ( new_name == null ){
-
-	            	new_file = new File( new File( move_to_dir, sub_path ), old_file.getName());
-
-	            }else{
-
-	            		// renaming
-
-	            	if ( simple_torrent ){
-
-	                   	new_file = new File( new File( move_to_dir, sub_path ), new_name );
-
-	            	}else{
-
-	            			// subpath includes the old dir name, replace this with new
-
-	            		int	pos = sub_path.indexOf( File.separator );
-	            		String	new_path;
-	            		if (pos == -1) {
-	            			new_path = new_name;
-	            		}
-	            		else {
-	            			// Assertion check.
-	            			String sub_sub_path = sub_path.substring(pos);
-	            			String expected_old_name = sub_path.substring(0, pos);
-	            			new_path = new_name + sub_sub_path;
-	            			boolean assert_expected_old_name = expected_old_name.equals(save_location.getName());
-	            			if (!assert_expected_old_name) {
-	            				Debug.out("Assertion check for renaming file in multi-name torrent " + (assert_expected_old_name ? "passed" : "failed") + "\n" +
-	            						"  Old parent path: " + old_parent_path + "\n" +
-	            						"  Subpath: " + sub_path + "\n" +
-	            						"  Sub-subpath: " + sub_sub_path + "\n" +
-	            						"  Expected old name: " + expected_old_name + "\n" +
-	            						"  Torrent pre-move name: " + save_location.getName() + "\n" +
-	            						"  New torrent name: " + new_name + "\n" +
-	            						"  Old file: " + old_file + "\n" +
-	            						"  Linked file: " + linked_file + "\n" +
-	            						"\n" +
-	            						"  Move-to-dir: " + move_to_dir + "\n" +
-	            						"  New path: " + new_path + "\n" +
-	            						"  Old file [name]: " + old_file.getName() + "\n"
-	            						);
-	            			}
-	            		}
-
-
-	                   	new_file = new File( new File( move_to_dir, new_path ), old_file.getName());
-	            	}
-	            }
-
-	            new_files[i]  = new_file;
-
-	            if ( !link_only[i] ){
-
-		            total_bytes += file_lengths_to_move[i] = old_file.length();
-
-	                if ( new_file.exists()){
-
-	                    String msg = "" + linked_file.getName() + " already exists in MoveTo destination dir";
-
-	                    Logger.log(new LogEvent(this, LOGID, LogEvent.LT_ERROR, msg));
-
-	                    Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
-	                              LogAlert.AT_ERROR, "DiskManager.alert.movefileexists"),
-	                              new String[] { old_file.getName() });
-
-
-	                    Debug.out(msg);
-
-	                    return false;
-	                }
-
-	                FileUtil.mkdirs(new_file.getParentFile());
-	            }
-	        }
-
-	        String	abs_path = move_to_dir_name.getAbsolutePath();
-
-	        String	_average_config_key = null;
-
-	        try{
-	        	_average_config_key = "dm.move.target.abps." + Base32.encode( abs_path.getBytes( "UTF-8" ));
-
-	        }catch( Throwable e ){
-
-	        	Debug.out(e );
-	        }
-
-	        final String average_config_key	= _average_config_key;
-
-	        	// lazy here for rare case where all non-zero length files are links
-
-	        if ( total_bytes == 0 ){
-
-	        	total_bytes = 1;
-	        }
-
-	        long	done_bytes = 0;
-
-	        final Object	progress_lock = new Object();
-	        final int[] 	current_file_index 	= { 0 };
-	        final long[]	current_file_bs		= { 0 };
-	        final long		f_total_bytes		= total_bytes;
-
-	        final long[]	last_progress_bytes		= { 0 };
-	        final long[]	last_progress_update 	= { SystemTime.getMonotonousTime() };
-
-	        TimerEventPeriodic timer_event1 =
-	        	SimpleTimer.addPeriodicEvent(
-	        		"MoveFile:speedster",
-	        		1000,
-	        		new TimerEventPerformer()
-	        		{
-	        			private final long	start_time = SystemTime.getMonotonousTime();
-
-	        			private long	last_update_processed;
-
-	        			private long	estimated_speed = 1*1024*1024;	// 1MB/sec default
-
-	        			{
-	        				if ( average_config_key != null ){
-
-	        					long val = COConfigurationManager.getLongParameter( average_config_key, 0 );
-
-	        					if ( val > 0 ){
-
-	        						estimated_speed = val;
-	        					}
-	        				}
-	        			}
-
-	        			@Override
-				        public void
-	        			perform(
-	        				TimerEvent event )
-	        			{
-	        				synchronized( progress_lock ){
-
-	        					int file_index = current_file_index[0];
-
-	  		              		if ( file_index >= new_files.length ){
-
-	  		              			return;
-	  		              		}
-
-	        					long 	now			= SystemTime.getMonotonousTime();
-
-	        					long	last_update = last_progress_update[0];
-        						long	bytes_moved = last_progress_bytes[0];
-
-	        					if ( last_update != last_update_processed ){
-
-	        						last_update_processed = last_update;
-
-	        						if ( bytes_moved > 10*1024*1024 ){
-
-		        							// a usable amount of progress
-
-		        						long	elapsed = now - start_time;
-
-		        						estimated_speed = ( bytes_moved * 1000 ) / elapsed;
-
-		        						// System.out.println( "estimated speed: " + estimated_speed );
-	        						}
-	        					}
-
-	        					long	secs_since_last_update  = ( now - last_update ) / 1000;
-
-	        					if ( secs_since_last_update > 2 ){
-
-	        							// looks like we're not getting useful updates, add some in based on
-	        							// elapsed time and average rate
-
-	        						long	file_start_overall		= current_file_bs[0];
-	        						long	file_end_overall 		= file_start_overall + file_lengths_to_move[ file_index ];
-	        						long	bytes_of_file_remaining	= file_end_overall - bytes_moved;
-
-	        						long	pretend_bytes = 0;
-
-	        						long	current_speed	 	= estimated_speed;
-	        						long	current_remaining	= bytes_of_file_remaining;
-	        						long	current_added		= 0;
-
-	        						int		percentage_to_slow_at	= 80;
-
-	        						// System.out.println( "injection pretend progress" );
-
-	        						for (int i=0;i<secs_since_last_update;i++){
-
-	        							current_added += current_speed;
-	        							pretend_bytes += current_speed;
-
-	        							// System.out.println( "    pretend=" + pretend_bytes + ", rate=" + percentage_to_slow_at + ", speed=" + current_speed );
-
-	        							if ( current_added > percentage_to_slow_at*current_remaining/100 ){
-
-	        								percentage_to_slow_at = 50;
-
-	        								current_speed = current_speed / 2;
-
-	        								current_remaining = bytes_of_file_remaining - pretend_bytes;
-
-	        								current_added = 0;
-
-	        								if ( current_speed < 1024 ){
-
-	        									current_speed = 1024;
-	        								}
-	        							}
-
-	        							if ( pretend_bytes >= bytes_of_file_remaining ){
-
-	        								pretend_bytes = bytes_of_file_remaining;
-
-	        								break;
-	        							}
-	        						}
-
-	        						long	pretend_bytes_moved = bytes_moved + pretend_bytes;
-
-	  		              			move_progress = (int)( 1000*pretend_bytes_moved/f_total_bytes);
-
-	  		              			// System.out.println( "pretend prog: " + move_progress );
-	        					}
-	        				}
-	        			}
-	        		});
-
-	        TimerEventPeriodic timer_event2 =
-	        	SimpleTimer.addPeriodicEvent(
-	        		"MoveFile:observer",
-	        		500,
-	        		new TimerEventPerformer()
-	        		{
-	        			@Override
-				        public void
-	        			perform(
-	        				TimerEvent event )
-	        			{
-	        				int			index;
-	        				File		file;
-
-	  		              	synchronized( progress_lock ){
-
-	  		              		index = current_file_index[0];
-
-	  		              		if ( index >= new_files.length ){
-
-	  		              			return;
-	  		              		}
-
-	  		              			// unfortunately file.length() blocks on my NAS until the operation is complete :(
-
-	  		              		file = new_files[index];
-	  		              	}
-
-	  		              	long	file_length = file.length();
-
-	  		              	synchronized( progress_lock ){
-
-	  		              		if ( index == current_file_index[0]){
-
-	  		              			long	done_bytes = current_file_bs[0] + file_length;
-
-	  		              			move_progress = (int)( 1000*done_bytes/f_total_bytes);
-
-	  		              			last_progress_bytes[0]	= done_bytes;
-	  		              			last_progress_update[0]	= SystemTime.getMonotonousTime();
-	  		              		}
-	  		              	}
-	        			}
-	        		});
-
-        	long	start = SystemTime.getMonotonousTime();
-
-        	String	old_root_dir;
-        	String	new_root_dir;
-
-        	if ( simple_torrent ){
-
-        		old_root_dir = move_from_dir;
-        		new_root_dir = move_to_dir;
-
-        	}else{
-
-        		old_root_dir = move_from_dir + File.separator + move_from_name;
-        		new_root_dir = move_to_dir + File.separator + (new_name==null?move_from_name:new_name );
-        	}
-
-        	FileUtil.ProgressListener pl = 
-        			new ProgressListener(){
-						
-						@Override
-						public void setTotalSize(long size){
-						}
-						
-						@Override
-						public int getState(){
-							return( move_state );
-						}
-						
-						@Override
-						public void complete(){
-						}
-						
-						@Override
-						public void bytesDone(long num){
-						}
-					};
-	        try{
-
-		        for (int i=0; i < files.length; i++){
-
-		            File new_file = new_files[i];
-
-		            try{
-
-		              long initial_done_bytes = done_bytes;
-
-		              files[i].moveFile( new_root_dir, new_file, link_only[i], pl );
-
-		              synchronized( progress_lock ){
-
-		            	  current_file_index[0] = i+1;
-
-		            	  done_bytes = initial_done_bytes + file_lengths_to_move[i];
-
-		            	  current_file_bs[0] = done_bytes;
-
-			              move_progress = (int)( 1000*done_bytes/total_bytes);
-
-			              last_progress_bytes[0]	= done_bytes;
-		            	  last_progress_update[0]	= SystemTime.getMonotonousTime();
-		              }
-
-		              if ( change_to_read_only ){
-
-		                  files[i].setAccessMode(DiskManagerFileInfo.READ);
-		              }
-
-		            }catch( CacheFileManagerException e ){
-
-		              String msg = "Failed to move " + old_files[i].toString() + " to destination " + new_root_dir + ": " + new_file + "/" + link_only[i];
-
-		              Logger.log(new LogEvent(this, LOGID, LogEvent.LT_ERROR, msg));
-
-		              Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
-		                              LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
-		                              new String[] { old_files[i].toString(),
-		                                      Debug.getNestedExceptionMessage(e) });
-
-		                  // try some recovery by moving any moved files back...
-
-		              for (int j=0;j<i;j++){
-
-		                  try{
-		                      files[j].moveFile( old_root_dir, old_files[j], link_only[j], null );
-
-		                  }catch( CacheFileManagerException f ){
-
-		                      Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
-		                                      LogAlert.AT_ERROR,
-		                                      "DiskManager.alert.movefilerecoveryfails"),
-		                                      new String[] { old_files[j].toString(),
-		                                              Debug.getNestedExceptionMessage(f) });
-
-		                  }
-		              }
-
-		              File new_loc = new File( new_root_dir );
-		              
-		              if ( new_loc.isDirectory()){
-
-		  	        	TorrentUtils.recursiveEmptyDirDelete( new_loc, false );
-		  	          }
-		              
-		              return false;
-		            }
-		        }
-	        }finally{
-
-	        	timer_event1.cancel();
-	        	timer_event2.cancel();
-	        }
-
-	        long	elapsed_secs = ( SystemTime.getMonotonousTime() - start )/1000;
-
-	        if ( total_bytes > 10*1024*1024 && elapsed_secs > 10 ){
-
-	        	long	bps = total_bytes / elapsed_secs;
-
-	        	if ( average_config_key != null ){
-
-					COConfigurationManager.setParameter( average_config_key, bps );
-	        	}
-	        }
-
-	        //remove the old dir
-
-	        if (  save_location.isDirectory()){
-
-	        	TorrentUtils.recursiveEmptyDirDelete( save_location, false );
-	        }
-
-	        // NOTE: this operation FIXES up any file links
-
-	        if ( new_name == null ){
-
-	           	download_manager.setTorrentSaveDir( move_to_dir );
-
-	        }else{
-
-	        	download_manager.setTorrentSaveDir( move_to_dir, new_name );
-	        }
-
-	        return true;
-
-        }finally{
-
-        	synchronized( got_there ){
-
-        		got_there[0] = true;
-        	}
-        }
-    }
+	  private boolean 
+	  moveDataFiles0(
+			  SaveLocationChange loc_change, 
+			  final boolean change_to_read_only, 
+			  OperationStatus op_status ) 
+	
+					  throws Exception  
+	  {
+	
+		  // there is a time race condition here between a piece being marked as complete and the
+		  // associated file actions being taken (switch to read only, do the 'incomplete file suffix' nonsense)
+		  // and the peer controller noting that the download is complete and kicking off these actions.
+		  // in order to ensure that the completion actions are done prior to us running here we do:
+	
+		  try{
+			  file_piece_mon.enter();
+	
+		  }finally{
+	
+			  file_piece_mon.exit();
+		  }
+	
+		  File move_to_dir_name = loc_change.download_location;
+		  if (move_to_dir_name == null) {move_to_dir_name = download_manager.getAbsoluteSaveLocation().getParentFile();}
+	
+		  final String move_to_dir = move_to_dir_name.toString();
+		  final String new_name = loc_change.download_name;
+	
+		  // consider the two cases:
+		  //		simple torrent:  /temp/simple.avi
+		  // 		complex torrent: /temp/complex[/other.avi]
+	
+		  // we are moving the files to the "move_to_arg" /M and possibly renaming to "wibble.x"
+		  //		/temp/simple.avi, null	->  /M/simple.avi
+		  //		/temp, "wibble.x"		->	/M/wibble.x
+	
+		  //		/temp/complex[/other.avi], null		->	/M/complex[/other.avi]
+		  //		/temp, "wibble.x"					->	/M/wibble.x[/other.avi]
+	
+	
+		  if ( files == null ){return false;}
+	
+		  if (isFileDestinationIsItself(loc_change)) {return false;}
+	
+		  final boolean[]	got_there = { false };
+	
+		  if ( op_status != null ){
+	
+			  op_status.gonnaTakeAWhile(
+					  new GettingThere()
+					  {
+						  @Override
+						  public boolean
+						  hasGotThere()
+						  {
+							  synchronized( got_there ){
+	
+								  return( got_there[0] );
+							  }
+						  }
+					  });
+		  }
+	
+		  try{
+			  boolean simple_torrent = download_manager.getTorrent().isSimpleTorrent();
+	
+			  // absolute save location does not follow links
+			  // 		for simple: /temp/simple.avi
+			  //		for complex: /temp/complex
+	
+			  final File save_location = download_manager.getAbsoluteSaveLocation();
+	
+			  // It is important that we are able to get the canonical form of the directory to
+			  // move to, because later code determining new file paths will break otherwise.
+	
+			  final String move_from_name	= save_location.getName();
+			  final String move_from_dir	= save_location.getParentFile().getCanonicalFile().getPath();
+	
+			  final File[]    new_files   = new File[files.length];
+	
+			  File[]    old_files   = new File[files.length];
+			  boolean[] link_only   = new boolean[files.length];
+	
+			  long	total_bytes 		= 0;
+	
+			  final long[]	file_lengths_to_move	 	= new long[files.length];
+	
+			  for (int i=0; i < files.length; i++) {
+	
+				  File old_file = files[i].getFile(false);
+	
+				  File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, old_file );
+	
+				  if ( !linked_file.equals(old_file)){
+	
+					  if ( simple_torrent ){
+	
+						  // simple torrent, only handle a link if its a simple rename
+	
+						  if ( linked_file.getParentFile().getCanonicalPath().equals( save_location.getParentFile().getCanonicalPath())){
+	
+							  old_file  = linked_file;
+	
+						  }else{
+	
+							  link_only[i] = true;
+						  }
+	
+					  }else{
+						  // if we are linked to a file outside of the torrent's save directory then we don't
+						  // move the file
+	
+						  if ( linked_file.getCanonicalPath().startsWith( save_location.getCanonicalPath())){
+	
+							  old_file  = linked_file;
+	
+						  }else{
+	
+							  link_only[i] = true;
+						  }
+					  }
+				  }
+	
+				  /**
+				   * We are trying to calculate the relative path of the file within the original save
+				   * directory, and then use that to calculate the new save path of the file in the new
+				   * save directory.
+				   *
+				   * We have three cases which we may deal with:
+				   *   1) Where the file in the torrent has never been moved (therefore, old_file will
+				   *      equals linked_file),
+				   *   2) Where the file in the torrent has been moved somewhere elsewhere inside the save
+				   *      path (old_file will not equal linked_file, but we will overwrite the value of
+				   *      old_file with linked_file),
+				   *   3) Where the file in the torrent has been moved outside of the download path - meaning
+				   *      we set link_only[i] to true. This is just to update the internal reference of where
+				   *      the file should be - it doesn't move the file at all.
+				   *
+				   * Below, we will determine a new path for the file, but only in terms of where it should be
+				   * inside the new download save location - if the file currently exists outside of the save
+				   * location, we will not move it.
+				   */
+	
+				  old_files[i] = old_file;
+	
+				  /**
+				   * move_from_dir should be canonical (see earlier code).
+				   *
+				   * Need to get canonical form of the old file, because that's what we are using for determining
+				   * the relative path.
+				   */
+	
+				  String old_parent_path = old_file.getCanonicalFile().getParent();
+	
+				  String sub_path;
+	
+				  /**
+				   * Calculate the sub path of where the file lives compared to the new save location.
+				   *
+				   * The code here has changed from what it used to be to fix bug 1636342:
+				   *   https://sourceforge.net/tracker/?func=detail&atid=575154&aid=1636342&group_id=84122
+				   */
+	
+				  if ( old_parent_path.startsWith(move_from_dir)){
+	
+					  sub_path = old_parent_path.substring(move_from_dir.length());
+	
+				  }else{
+	
+					  logMoveFileError(move_to_dir, "Could not determine relative path for file - " + old_parent_path);
+	
+					  throw new IOException("relative path assertion failed: move_from_dir=\"" + move_from_dir + "\", old_parent_path=\"" + old_parent_path + "\"");
+				  }
+	
+				  //create the destination dir
+	
+				  if ( sub_path.startsWith( File.separator )){
+	
+					  sub_path = sub_path.substring(1);
+				  }
+	
+				  // We may be doing a rename, and if this is a simple torrent, we have to keep the names in sync.
+	
+				  File new_file;
+	
+				  if ( new_name == null ){
+	
+					  new_file = new File( new File( move_to_dir, sub_path ), old_file.getName());
+	
+				  }else{
+	
+					  // renaming
+	
+					  if ( simple_torrent ){
+	
+						  new_file = new File( new File( move_to_dir, sub_path ), new_name );
+	
+					  }else{
+	
+						  // subpath includes the old dir name, replace this with new
+	
+						  int	pos = sub_path.indexOf( File.separator );
+						  String	new_path;
+						  if (pos == -1) {
+							  new_path = new_name;
+						  }
+						  else {
+							  // Assertion check.
+							  String sub_sub_path = sub_path.substring(pos);
+							  String expected_old_name = sub_path.substring(0, pos);
+							  new_path = new_name + sub_sub_path;
+							  boolean assert_expected_old_name = expected_old_name.equals(save_location.getName());
+							  if (!assert_expected_old_name) {
+								  Debug.out("Assertion check for renaming file in multi-name torrent " + (assert_expected_old_name ? "passed" : "failed") + "\n" +
+										  "  Old parent path: " + old_parent_path + "\n" +
+										  "  Subpath: " + sub_path + "\n" +
+										  "  Sub-subpath: " + sub_sub_path + "\n" +
+										  "  Expected old name: " + expected_old_name + "\n" +
+										  "  Torrent pre-move name: " + save_location.getName() + "\n" +
+										  "  New torrent name: " + new_name + "\n" +
+										  "  Old file: " + old_file + "\n" +
+										  "  Linked file: " + linked_file + "\n" +
+										  "\n" +
+										  "  Move-to-dir: " + move_to_dir + "\n" +
+										  "  New path: " + new_path + "\n" +
+										  "  Old file [name]: " + old_file.getName() + "\n"
+										  );
+							  }
+						  }
+	
+	
+						  new_file = new File( new File( move_to_dir, new_path ), old_file.getName());
+					  }
+				  }
+	
+				  new_files[i]  = new_file;
+	
+				  if ( !link_only[i] ){
+	
+					  total_bytes += file_lengths_to_move[i] = old_file.length();
+	
+					  if ( new_file.exists()){
+	
+						  String msg = "" + linked_file.getName() + " already exists in MoveTo destination dir";
+	
+						  Logger.log(new LogEvent(this, LOGID, LogEvent.LT_ERROR, msg));
+	
+						  Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
+								  LogAlert.AT_ERROR, "DiskManager.alert.movefileexists"),
+								  new String[] { old_file.getName() });
+	
+	
+						  Debug.out(msg);
+	
+						  return false;
+					  }
+	
+					  FileUtil.mkdirs(new_file.getParentFile());
+				  }
+			  }
+	
+			  String	abs_path = move_to_dir_name.getAbsolutePath();
+	
+			  String	_average_config_key = null;
+	
+			  try{
+				  _average_config_key = "dm.move.target.abps." + Base32.encode( abs_path.getBytes( "UTF-8" ));
+	
+			  }catch( Throwable e ){
+	
+				  Debug.out(e );
+			  }
+	
+			  final String average_config_key	= _average_config_key;
+	
+			  // lazy here for rare case where all non-zero length files are links
+	
+			  if ( total_bytes == 0 ){
+	
+				  total_bytes = 1;
+			  }
+	
+			  long	done_bytes = 0;
+	
+			  final Object	progress_lock = new Object();
+			  final int[] 	current_file_index 	= { 0 };
+			  final long[]	current_file_bs		= { 0 };
+			  final long		f_total_bytes		= total_bytes;
+	
+			  final long[]	last_progress_bytes		= { 0 };
+			  final long[]	last_progress_update 	= { SystemTime.getMonotonousTime() };
+	
+			  final boolean[]	move_failed = { false };
+	
+			  TimerEventPeriodic timer_event1 =
+				  SimpleTimer.addPeriodicEvent(
+					  "MoveFile:speedster",
+					  1000,
+					  new TimerEventPerformer()
+					  {
+						  private final long	start_time = SystemTime.getMonotonousTime();
+
+						  private long	last_update_processed;
+
+						  private long	estimated_speed = 1*1024*1024;	// 1MB/sec default
+
+						  {
+							  if ( average_config_key != null ){
+
+								  long val = COConfigurationManager.getLongParameter( average_config_key, 0 );
+
+								  if ( val > 0 ){
+
+									  estimated_speed = val;
+								  }
+							  }
+						  }
+
+						  @Override
+						  public void
+						  perform(
+								  TimerEvent event )
+						  {
+							  synchronized( progress_lock ){
+
+								  if ( move_failed[0] ){
+
+									  return;
+								  }
+
+								  int file_index = current_file_index[0];
+
+								  if ( file_index >= new_files.length ){
+
+									  return;
+								  }
+
+								  long 	now			= SystemTime.getMonotonousTime();
+
+								  long	last_update = last_progress_update[0];
+								  long	bytes_moved = last_progress_bytes[0];
+
+								  if ( last_update != last_update_processed ){
+
+									  last_update_processed = last_update;
+
+									  if ( bytes_moved > 10*1024*1024 ){
+
+										  // a usable amount of progress
+
+										  long	elapsed = now - start_time;
+
+										  estimated_speed = ( bytes_moved * 1000 ) / elapsed;
+
+										  // System.out.println( "estimated speed: " + estimated_speed );
+									  }
+								  }
+
+								  long	secs_since_last_update  = ( now - last_update ) / 1000;
+
+								  if ( secs_since_last_update > 2 ){
+
+									  // looks like we're not getting useful updates, add some in based on
+									  // elapsed time and average rate
+
+									  long	file_start_overall		= current_file_bs[0];
+									  long	file_end_overall 		= file_start_overall + file_lengths_to_move[ file_index ];
+									  long	bytes_of_file_remaining	= file_end_overall - bytes_moved;
+
+									  long	pretend_bytes = 0;
+
+									  long	current_speed	 	= estimated_speed;
+									  long	current_remaining	= bytes_of_file_remaining;
+									  long	current_added		= 0;
+
+									  int		percentage_to_slow_at	= 80;
+
+									  // System.out.println( "injection pretend progress" );
+
+									  for (int i=0;i<secs_since_last_update;i++){
+
+										  current_added += current_speed;
+										  pretend_bytes += current_speed;
+
+										  // System.out.println( "    pretend=" + pretend_bytes + ", rate=" + percentage_to_slow_at + ", speed=" + current_speed );
+
+										  if ( current_added > percentage_to_slow_at*current_remaining/100 ){
+
+											  percentage_to_slow_at = 50;
+
+											  current_speed = current_speed / 2;
+
+											  current_remaining = bytes_of_file_remaining - pretend_bytes;
+
+											  current_added = 0;
+
+											  if ( current_speed < 1024 ){
+
+												  current_speed = 1024;
+											  }
+										  }
+
+										  if ( pretend_bytes >= bytes_of_file_remaining ){
+
+											  pretend_bytes = bytes_of_file_remaining;
+
+											  break;
+										  }
+									  }
+
+									  long	pretend_bytes_moved = bytes_moved + pretend_bytes;
+
+									  move_progress = (int)( 1000*pretend_bytes_moved/f_total_bytes);
+
+									  // System.out.println( "pretend prog: " + move_progress );
+								  }
+							  }
+						  }
+					  });
+	
+			  TimerEventPeriodic timer_event2 =
+				  SimpleTimer.addPeriodicEvent(
+					  "MoveFile:observer",
+					  500,
+					  new TimerEventPerformer()
+					  {
+						  @Override
+						  public void
+						  perform(
+								  TimerEvent event )
+						  {
+							  int			index;
+							  File		file;
+
+							  synchronized( progress_lock ){
+
+								  if ( move_failed[0] ){
+
+									  return;
+								  }
+
+								  index = current_file_index[0];
+
+								  if ( index >= new_files.length ){
+
+									  return;
+								  }
+
+								  // unfortunately file.length() blocks on my NAS until the operation is complete :(
+
+								  file = new_files[index];
+							  }
+
+							  long	file_length = file.length();
+
+							  synchronized( progress_lock ){
+
+								  if ( move_failed[0] ){
+
+									  return;
+								  }
+
+								  if ( index == current_file_index[0]){
+
+									  long	done_bytes = current_file_bs[0] + file_length;
+
+									  move_progress = (int)( 1000*done_bytes/f_total_bytes);
+
+									  last_progress_bytes[0]	= done_bytes;
+									  last_progress_update[0]	= SystemTime.getMonotonousTime();
+								  }
+							  }
+						  }
+					  });
+	
+			  long	start = SystemTime.getMonotonousTime();
+	
+			  String	old_root_dir;
+			  String	new_root_dir;
+	
+			  if ( simple_torrent ){
+	
+				  old_root_dir = move_from_dir;
+				  new_root_dir = move_to_dir;
+	
+			  }else{
+	
+				  old_root_dir = move_from_dir + File.separator + move_from_name;
+				  new_root_dir = move_to_dir + File.separator + (new_name==null?move_from_name:new_name );
+			  }
+	
+			  FileUtil.ProgressListener pl = 
+					  new ProgressListener(){
+	
+				  @Override
+				  public void setTotalSize(long size){
+				  }
+	
+				  @Override
+				  public void setCurrentFile(File file){
+				  }
+	
+				  @Override
+				  public int getState(){
+					  return( move_state );
+				  }
+	
+				  @Override
+				  public void complete(){
+				  }
+	
+				  @Override
+				  public void bytesDone(long num){
+				  }
+			  };
+			  
+			  try{
+				  for (int i=0; i < files.length; i++){
+	
+					  File new_file = new_files[i];
+	
+					  long initial_done_bytes = done_bytes;
+
+					  try{
+	
+						  // one day we should move all this progress estimation crap into FileUtil but hey
+	
+						  move_subtask		=  old_files[i];
+	
+						  files[i].moveFile( new_root_dir, new_file, link_only[i], pl );
+	
+						  synchronized( progress_lock ){
+	
+							  current_file_index[0] = i+1;
+	
+							  done_bytes = initial_done_bytes + file_lengths_to_move[i];
+	
+							  current_file_bs[0] = done_bytes;
+	
+							  move_progress = (int)( 1000*done_bytes/total_bytes);
+	
+							  last_progress_bytes[0]	= done_bytes;
+							  last_progress_update[0]	= SystemTime.getMonotonousTime();
+						  }
+	
+						  if ( change_to_read_only ){
+	
+							  files[i].setAccessMode(DiskManagerFileInfo.READ);
+						  }
+	
+					  }catch( CacheFileManagerException e ){
+	
+						  synchronized( progress_lock ){
+	
+							  move_failed[0] = true;
+						  }
+	
+	
+						  String msg = "Failed to move " + old_files[i].toString() + " to destination " + new_root_dir + ": " + new_file + "/" + link_only[i];
+	
+						  Logger.log(new LogEvent(this, LOGID, LogEvent.LT_ERROR, msg));
+	
+						  Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
+								  LogAlert.AT_ERROR, "DiskManager.alert.movefilefails"),
+								  new String[] { old_files[i].toString(),
+										  Debug.getNestedExceptionMessage(e) });
+	
+						  // try some recovery by moving any moved files back...
+							  
+						  long	bytes_moved = 0;
+						  
+						  for (int j=0;j<i;j++){
+						  
+							  bytes_moved += file_lengths_to_move[j];
+						  }
+						  					  
+						  for (int j=0;j<i;j++){
+	
+							  move_subtask		=  old_files[j];
+							  move_progress 	= (int)( 1000*bytes_moved/total_bytes);
+								
+  						  	  long bytes_this_file =  file_lengths_to_move[j];
+
+  						  	  final long bytes_moved_at_start = bytes_moved;
+  						  	  
+  						  	  FileUtil.ProgressListener pl_undo = 
+  						  		  new ProgressListener(){
+
+	  						  		  private long total_done = 0;
+	
+	  						  		  @Override
+	  						  		  public void setTotalSize(long size){
+	  						  		  }
+	
+	  						  		  @Override
+	  						  		  public void setCurrentFile(File file){
+	  						  		  }
+	
+	  						  		  @Override
+	  						  		  public int getState(){
+	  						  			  return( ST_NORMAL );
+	  						  		  }
+	
+	  						  		  @Override
+	  						  		  public void complete(){
+	  						  		  }
+	
+	  						  		  @Override
+	  						  		  public void bytesDone(long num){
+	  						  			total_done += num;
+	
+	  						  			  if ( total_done > bytes_this_file){
+	
+	  						  				  total_done = bytes_this_file;
+	  						  			  }
+	
+	  						  			  move_progress = (int)( 1000*(bytes_moved_at_start-total_done)/f_total_bytes); 
+	  						  		  }
+	  						  	  };
+							  
+							  try{
+								  files[j].moveFile( old_root_dir, old_files[j], link_only[j], pl_undo );
+	
+							  }catch( Throwable f ){
+	
+								  Logger.logTextResource(new LogAlert(this, LogAlert.REPEATABLE,
+										  LogAlert.AT_ERROR,
+										  "DiskManager.alert.movefilerecoveryfails"),
+										  new String[] { old_files[j].toString(),
+												  Debug.getNestedExceptionMessage(f) });
+	
+							  }
+							  
+							  bytes_moved -= bytes_this_file;
+						  }
+	
+						  File new_loc = new File( new_root_dir );
+	
+						  if ( new_loc.isDirectory()){
+	
+							  TorrentUtils.recursiveEmptyDirDelete( new_loc, false );
+						  }
+	
+						  return false;
+					  }
+				  }
+			  }finally{
+	
+				  timer_event1.cancel();
+				  timer_event2.cancel();
+			  }
+	
+			  long	elapsed_secs = ( SystemTime.getMonotonousTime() - start )/1000;
+	
+			  if ( total_bytes > 10*1024*1024 && elapsed_secs > 10 ){
+	
+				  long	bps = total_bytes / elapsed_secs;
+	
+				  if ( average_config_key != null ){
+	
+					  COConfigurationManager.setParameter( average_config_key, bps );
+				  }
+			  }
+	
+			  //remove the old dir
+	
+			  if (  save_location.isDirectory()){
+	
+				  TorrentUtils.recursiveEmptyDirDelete( save_location, false );
+			  }
+	
+			  // NOTE: this operation FIXES up any file links
+	
+			  if ( new_name == null ){
+	
+				  download_manager.setTorrentSaveDir( move_to_dir );
+	
+			  }else{
+	
+				  download_manager.setTorrentSaveDir( move_to_dir, new_name );
+			  }
+	
+			  return true;
+	
+		  }finally{
+	
+			  synchronized( got_there ){
+	
+				  got_there[0] = true;
+			  }
+		  }
+	  }
 
     private void moveTorrentFile(SaveLocationChange loc_change) {
     	if (!loc_change.hasTorrentChange()) {return;}

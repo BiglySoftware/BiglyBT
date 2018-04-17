@@ -39,9 +39,13 @@ CoreOperationTask
 		public int ST_PAUSE		= 0x0001;
 		public int ST_RESUME	= 0x0002;
 		public int ST_CANCEL	= 0x0004;
+		public int ST_SUBTASKS	= 0x0008;
 		
 		public int
 		getProgress();
+		
+		public String
+		getSubTaskName();
 		
 		public int
 		getSupportedTaskStates();

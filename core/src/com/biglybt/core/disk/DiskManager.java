@@ -265,6 +265,9 @@ DiskManager
 	public int
 	getMoveProgress();
 
+	public File
+	getMoveSubTask();
+	
 	public void
 	setMoveState(
 		int	state );

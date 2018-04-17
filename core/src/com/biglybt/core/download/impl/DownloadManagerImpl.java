@@ -4316,8 +4316,9 @@ DownloadManagerImpl
 	  return( crypto_level );
   }
 
-  private volatile int move_progress	= -1;
-  private volatile int move_state		= ProgressListener.ST_NORMAL;
+  private volatile int 		move_progress	= -1;
+  private volatile String	move_subtask	= "";
+  private volatile int 		move_state		= ProgressListener.ST_NORMAL;
   
   public int
   getMoveProgress()
@@ -4331,6 +4332,30 @@ DownloadManagerImpl
 	  }else{
 		  
 		  return( move_progress );
+	  }
+  }
+  
+  private String
+  getMoveSubTask()
+  {
+	  DiskManager	dm = getDiskManager();
+
+	  if ( dm != null ){
+		  
+		  File f = dm.getMoveSubTask();
+		  
+		  if ( f == null ){
+			  
+			  return( "" );
+			  
+		  }else{
+			  
+			  return( f.getName());
+		  }
+		  
+	  }else{
+		  
+		  return( move_subtask );
 	  }
   }
   
@@ -4441,10 +4466,21 @@ DownloadManagerImpl
 							}
 							
 							@Override
+							public String 
+							getSubTaskName()
+							{
+								return( getMoveSubTask());
+							}
+							
+							@Override
 							public int 
 							getSupportedTaskStates()
 							{
-								return( ProgressCallback.ST_PAUSE |  ProgressCallback.ST_RESUME );
+								return( 
+									ProgressCallback.ST_PAUSE |  
+									ProgressCallback.ST_RESUME |
+									ProgressCallback.ST_CANCEL |
+									ProgressCallback.ST_SUBTASKS );
 							}
 							
 							@Override
@@ -4592,6 +4628,14 @@ DownloadManagerImpl
 					total_size = size;
 				}
 				
+				@Override
+				public void 
+				setCurrentFile(
+					File file )
+				{
+					move_subtask = file.getName();
+				}
+				
 				public void
 				bytesDone(
 					long	num )
@@ -4617,6 +4661,7 @@ DownloadManagerImpl
 
 		  try{
 			  move_progress = 0;
+			  move_subtask	= "";
 			  
 			  if ( old_file.equals( new_save_location )){
 	
@@ -4712,6 +4757,7 @@ DownloadManagerImpl
 			  pl.complete();
 			  
 			  move_progress = -1;
+			  move_subtask	= "";
 			  move_state	= ProgressListener.ST_NORMAL;
 		  }
 	  }else{

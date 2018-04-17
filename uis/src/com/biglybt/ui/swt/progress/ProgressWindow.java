@@ -95,9 +95,9 @@ ProgressWindow
 	private int curSpinIndex = 0;
 
 	private ProgressBar progress_bar;
-
+	private Label		subtask_label;
+	
 	private boolean	task_paused;
-	private boolean	task_cancelled;
 	
 	protected
 	ProgressWindow(
@@ -289,7 +289,7 @@ ProgressWindow
 		
 		CoreOperationTask.ProgressCallback progress = task==null?null:task.getProgressCallback();
 		
-		boolean alreadyPositioned = Utils.linkShellMetricsToConfig( shell, "com.biglybt.ui.swt.progress.ProgressWindnow" );
+		boolean alreadyPositioned = Utils.linkShellMetricsToConfig( shell, "com.biglybt.ui.swt.progress.ProgressWindow" + "." + _core_op.getOperationType());
 		
 		Utils.setShellIcon(shell);
 
@@ -318,6 +318,7 @@ ProgressWindow
 			String name = task.getName();
 			
 			if ( name != null ){
+				
 				Label lName = new Label(shell, SWT.NONE);
 
 				FontData fontData = lName.getFont().getFontData()[0];
@@ -340,6 +341,18 @@ ProgressWindow
 							bold_font.dispose();
 						}
 					});
+				
+				
+				if ( progress != null && (  progress.getSupportedTaskStates() & ProgressCallback.ST_SUBTASKS ) != 0 ){
+					
+					subtask_label = new Label(shell, SWT.NONE);
+					
+					gridData = new GridData( GridData.FILL_HORIZONTAL );
+					gridData.horizontalSpan = 2;
+					gridData.horizontalIndent = 25;
+					Utils.setLayoutData( subtask_label, gridData);
+					subtask_label.setBackground( Colors.white );
+				}
 			}
 		}
 		
@@ -369,12 +382,21 @@ ProgressWindow
 						e.gc.drawImage(spinImages[curSpinIndex ], 0, 0);
 						
 						if ( progress != null && progress_bar != null ){
+															
+							int p =  progress.getProgress();
+								
+							progress_bar.setSelection( p );
 							
-							if ( !task_cancelled ){
+							if ( subtask_label != null ){
+							
+								String st = progress.getSubTaskName();
 								
-								int p =  progress.getProgress();
+								if ( st == null ){
+									
+									st = "";
+								}
 								
-								progress_bar.setSelection( p );
+								subtask_label.setText( st );
 							}
 						}
 					}
@@ -430,7 +452,9 @@ ProgressWindow
 			gridData.widthHint = 400;
 			Utils.setLayoutData( progress_bar, gridData );
 		
-			if ( progress.getSupportedTaskStates() != ProgressCallback.ST_NONE ){
+			int states = progress.getSupportedTaskStates();
+			
+			if ( states != ProgressCallback.ST_NONE ){
 				
 				Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL);

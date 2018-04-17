@@ -1774,7 +1774,57 @@ public class FileUtil {
     			try{
     				// null - We don't want to use the file filter, it only refers to source paths.
     				
-                    if ( !renameFile( tf, ff, false, null, null )){
+                    if ( !renameFile( 
+                    		tf, 
+                    		ff, 
+                    		false, 
+                    		null, 
+                    		new ProgressListener()
+                    		{
+                    			public void
+                    			setTotalSize(
+                    				long	size )
+                    			{
+                    			}
+                    			
+                    			@Override
+                    			public void 
+                    			setCurrentFile(File file)
+                    			{
+                    				if ( pl != null ){
+                    					try{
+                    						pl.setCurrentFile( file );
+                    					}catch( Throwable e ){
+                    						Debug.out( e );
+                    					}
+                    				}
+                    			}
+                    			public void
+                    			bytesDone(
+                    				long	num )
+                    			{
+                    				if ( pl != null ){
+                    					try{
+                    						pl.bytesDone( -num );
+                    					}catch( Throwable e ){
+                    						Debug.out( e );
+                    					}
+                    				}
+                    			}
+                    			
+                    			public int
+                    			getState()
+                    			{
+                    				return( ST_NORMAL );
+                    			}
+                    			
+                    			public void
+                    			complete()
+                    			{
+                    				
+                    			}
+                    		}))
+                    {
     					Debug.out( "renameFile: recovery - failed to move file '" + tf.toString()
 										+ "' to '" + ff.toString() + "'" );
     				}
@@ -1841,6 +1891,18 @@ public class FileUtil {
     			
     		}else{
     			
+    			if ( pl != null ){
+					
+					try{
+						
+						pl.setCurrentFile( from_file );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+    			
     			if ( from_file.renameTo( to_file )){
     				
     				if ( pl != null ){
@@ -1873,6 +1935,18 @@ public class FileUtil {
     	File				to_file,
     	ProgressListener	pl )
     {
+    	if ( pl != null ){
+			
+			try{
+				
+				pl.setCurrentFile( from_file );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+    	
     	boolean		success	= false;
 
     	// can't rename across file systems under Linux - try copy+delete
@@ -2859,6 +2933,10 @@ public class FileUtil {
 		public void
 		setTotalSize(
 			long	size );
+		
+		public void
+		setCurrentFile(
+			File	file );
 		
 		public void
 		bytesDone(

@@ -3283,7 +3283,7 @@ BuddyPluginViewBetaChat
 					});
 
 			final MenuItem sis_mi = new MenuItem( status_menu, SWT.PUSH );
-			sis_mi.setText( MessageText.getString( "label.show.in.sidebar" ));
+			sis_mi.setText( MessageText.getString( Utils.isAZ2UI()?"label.show.in.tab":"label.show.in.sidebar" ));
 
 			sis_mi.addSelectionListener(
 					new SelectionAdapter() {

@@ -206,7 +206,7 @@ public class FilesViewMenuUtil
 		Messages.setLanguageText(itemRetarget, "FilesView.menu.retarget");
 		itemRetarget.setData("rename", Boolean.valueOf(false));
 		itemRetarget.setData("retarget", Boolean.valueOf(true));
-		itemRename.setData("batch", Boolean.valueOf(false));
+		itemRetarget.setData("batch", Boolean.valueOf(false));
 
 
 		// revert

@@ -569,6 +569,13 @@ LWSDiskManager
     }
 
     @Override
+    public File 
+    getMoveSubTask()
+    {
+    	return( null );
+    }
+    
+    @Override
     public void setMoveState(int state){
     }
     
