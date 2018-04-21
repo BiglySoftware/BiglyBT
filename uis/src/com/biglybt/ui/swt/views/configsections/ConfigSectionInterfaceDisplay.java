@@ -49,7 +49,6 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
-import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.core.proxy.AEProxyFactory;
 
 
