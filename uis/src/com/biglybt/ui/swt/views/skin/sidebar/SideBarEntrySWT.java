@@ -146,6 +146,7 @@ public class SideBarEntrySWT
 	private long 	attention_start = -1;
 	private boolean	attention_flash_on;
 
+	private Boolean	closeWasUserInitiated;
 
 	public SideBarEntrySWT(SideBar sidebar, SWTSkin _skin, String id,
 			String parentViewID) {
@@ -423,6 +424,17 @@ public class SideBarEntrySWT
 		});
 	}
 
+	public boolean 
+	close(boolean force, boolean userInitiated ) {
+		if (!super.close(force)) {
+			return false;
+		}
+		
+		closeWasUserInitiated = userInitiated;
+		
+		return( close( force ));
+	}
+		
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#close()
 	 */
@@ -1399,18 +1411,29 @@ public class SideBarEntrySWT
 		mdi.removeItem(SideBarEntrySWT.this);
 
 		SWTThread instance = SWTThread.getInstance();
+		
 		boolean user = instance != null && !instance.isTerminated();
-		if (user) {
-			// It's not a user close if the parent is making the children (this entry)
-			// close.  parent will be marked disposed, so use that as a check.
-  		String parentID = getParentID();
-  		if (parentID != null) {
-  			MdiEntry entry = mdi.getEntry(parentID);
-  			if (entry != null && entry.isDisposed()) {
-  				user = false;
-  			}
-  		}
+		
+		if ( user ){
+			
+			if ( closeWasUserInitiated != null ){
+				
+				user = closeWasUserInitiated;
+				
+			}else{
+			
+					// It's not a user close if the parent is making the children (this entry)
+					// close.  parent will be marked disposed, so use that as a check.
+		  		String parentID = getParentID();
+		  		if (parentID != null) {
+		  			MdiEntry entry = mdi.getEntry(parentID);
+		  			if (entry != null && entry.isDisposed()) {
+		  				user = false;
+		  			}
+		  		}
+			}
 		}
+		
 		triggerCloseListeners(user);
 
 		SWTSkinObject so = getSkinObject();

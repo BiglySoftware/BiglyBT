@@ -1818,7 +1818,7 @@ public class SB_Transfers
 			} else {
 				MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
 				if (entry != null) {
-					entry.close(true);
+					entry.close(true, false);
 				}
 			}
 		}

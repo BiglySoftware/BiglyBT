@@ -80,6 +80,8 @@ public class TabbedEntry
 
 	private static long uniqueNumber = 0;
 
+	private Boolean	closeWasUserInitiated;
+	
 	public TabbedEntry(TabbedMDI mdi, SWTSkin skin, String id, String parentViewID) {
 		super(mdi, id, parentViewID);
 		this.skin = skin;
@@ -597,6 +599,18 @@ public class TabbedEntry
 	public MdiEntryVitalityImage[] getVitalityImages() {
 		return new MdiEntryVitalityImage[0];
 	}
+	
+	public boolean 
+	close(boolean force, boolean userInitiated ) {
+		if (!super.close(force)) {
+			return false;
+		}
+		
+		closeWasUserInitiated = userInitiated;
+		
+		return( close( force ));
+	}
+	
 
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#close()
@@ -677,7 +691,18 @@ public class TabbedEntry
 		setSwtItem(null);
 
 		SWTThread instance = SWTThread.getInstance();
-		triggerCloseListeners(instance != null && !instance.isTerminated());
+		
+		boolean user = instance != null && !instance.isTerminated();
+		
+		if ( user ){
+			
+			if ( closeWasUserInitiated != null ){
+				
+				user = closeWasUserInitiated;
+			}
+		}
+		
+		triggerCloseListeners( user );
 
 		try {
 			setEventListener(null, false);

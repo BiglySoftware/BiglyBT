@@ -114,6 +114,8 @@ public interface MdiEntry extends UIPluginView
 	public MdiEntryVitalityImage[] getVitalityImages();
 
 	public boolean close(boolean forceClose);
+	
+	public boolean close(boolean forceClose, boolean userInitiated );
 
 	public void updateUI();
 
