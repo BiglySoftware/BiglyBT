@@ -1538,6 +1538,9 @@ public class SWTSkin
 			} else if (sType.equals("combo")) {
 				skinObject = createCombo(properties, sID, sConfigID, sTypeParams,
 						parentSkinObject);
+			} else if (sType.equals("list")) {
+				skinObject = createList(properties, sID, sConfigID, sTypeParams,
+						parentSkinObject);
 			} else if (sType.equals("tabfolder")) {
 				skinObject = createTabFolder(properties, sID, sConfigID, sTypeParams,
 						parentSkinObject);
@@ -1681,6 +1684,16 @@ public class SWTSkin
 		return skinObject;
 	}
 
+	private SWTSkinObject createList(SWTSkinProperties properties, String id,
+			String configID, String[] typeParams, SWTSkinObject parentSkinObject) {
+
+		SWTSkinObject skinObject = new SWTSkinObjectList(this, properties, id,
+				configID, parentSkinObject);
+		addToControlMap(skinObject);
+
+		return skinObject;
+	}
+	
 	private SWTSkinObject createTabFolder(SWTSkinProperties properties, String id,
 			String configID, String[] typeParams, SWTSkinObject parentSkinObject) {
 		String[] sItems = properties.getStringArray(configID + ".widgets");

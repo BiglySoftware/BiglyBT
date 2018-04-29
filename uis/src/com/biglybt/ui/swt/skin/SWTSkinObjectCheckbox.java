@@ -152,4 +152,16 @@ public class SWTSkinObjectCheckbox
 			}
 		});
 	}
+	
+	public void setEnabled(boolean b) {
+		
+		Utils.execSWTThread(new AERunnable() {
+			@Override
+			public void runSupport() {
+				if (button != null && !button.isDisposed()) {
+					button.setEnabled(b);
+				}
+			}
+		});
+	}
 }

@@ -63,25 +63,34 @@ public class SkinnedDialog
 	public SkinnedDialog(String skinFile, String shellSkinObjectID) {
 		this(skinFile, shellSkinObjectID, SWT.DIALOG_TRIM | SWT.RESIZE);
 	}
-
+	
 	public SkinnedDialog(String skinFile, String shellSkinObjectID, int style) {
-		this(SkinnedDialog.class.getClassLoader(), "com/biglybt/ui/skin/",
-				skinFile, shellSkinObjectID, style);
+		this(SkinnedDialog.class.getClassLoader(), skinFile, shellSkinObjectID, style);
+	}
+
+	public SkinnedDialog(ClassLoader loader, String skinFile, String shellSkinObjectID, int style) {
+		this( loader, "com/biglybt/ui/skin/", skinFile, shellSkinObjectID, style);
 	}
 
 	public SkinnedDialog(String skinFile, String shellSkinObjectID, Shell parent, int style) {
-		this(SkinnedDialog.class.getClassLoader(), "com/biglybt/ui/skin/",
-				skinFile, shellSkinObjectID, parent, style);
+		this(SkinnedDialog.class.getClassLoader(), skinFile, shellSkinObjectID, parent, style);
 	}
 
+	public SkinnedDialog(ClassLoader loader, String skinFile, String shellSkinObjectID, Shell parent, int style) {
+		this( loader, "com/biglybt/ui/skin/", skinFile, shellSkinObjectID, parent, style);
+	}
+	
 	public SkinnedDialog(ClassLoader cla, String skinPath, String skinFile,
 			String shellSkinObjectID, int style) {
 		this( cla, skinPath, skinFile, shellSkinObjectID, UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell(), style );
 	}
 
-	public SkinnedDialog(ClassLoader cla, String skinPath, String skinFile,
-			String shellSkinObjectID, Shell parent, int style)
+	public SkinnedDialog(ClassLoader cla, String skinPath, String skinFile,	String shellSkinObjectID, Shell parent, int style)
 	{
+		if ( cla == null ){
+			cla = SkinnedDialog.class.getClassLoader();
+		}
+		
 		this.shellSkinObjectID = shellSkinObjectID;
 
 		mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
