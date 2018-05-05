@@ -1,4 +1,7 @@
 
+msgid ""
+"X-Crowdin-SourceKey: msgstr\n"
+
 msgid "test"
 msgstr "Test In English"
 
