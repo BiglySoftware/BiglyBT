@@ -1,0 +1,54 @@
+msgid ""
+msgstr ""
+"Test In English\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: crowdin.com\n"
+"X-Crowdin-Project: biglybt\n"
+"X-Crowdin-Language: ka\n"
+"X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
+"Project-Id-Version: biglybt\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Last-Translator: BiglyBT <bt@biglybt.com>\n"
+"Language-Team: Georgian\n"
+"Language: ka_GE\n"
+"PO-Revision-Date: 2018-05-04 21:53-0400\n"
+
+msgid "test"
+msgstr ""
+
+msgid "onlyEng"
+msgstr ""
+
+msgid "donation_line1"
+msgstr ""
+
+msgid "donation_title"
+msgstr ""
+
+msgid "donation_monthly_title"
+msgstr ""
+
+msgid "donation_onetime_title"
+msgstr ""
+
+msgid "donation_bitcoin_title"
+msgstr ""
+
+msgid "donation_monthly_description"
+msgstr ""
+
+msgid "donation_monthly_per_month"
+msgstr ""
+
+msgid "donation_onetime_amount"
+msgstr ""
+
+msgid "donation_onetime_description"
+msgstr ""
+
+msgid "donation_bitcoin_description"
+msgstr ""
+
+msgid "donation_bitcoin_addresses"
+msgstr ""
+
