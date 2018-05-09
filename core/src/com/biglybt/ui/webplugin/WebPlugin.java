@@ -1300,7 +1300,7 @@ WebPlugin
 				return;
 			}
 
-			final int port	= param_port.getValue();
+			int requested_port	= param_port.getValue();
 
 			String protocol_str = param_protocol.getValue().trim();
 
@@ -1379,7 +1379,7 @@ WebPlugin
 				int			existing_port		= url.getPort()==-1?url.getDefaultPort():url.getPort();
 				InetAddress existing_bind_ip 	= tracker_context.getBindIP();
 
-				if ( 	existing_port == port &&
+				if ( 	( existing_port == requested_port || requested_port == 0 ) &&
 						existing_protocol.equalsIgnoreCase( protocol_str ) &&
 						sameAddress( bind_ip, existing_bind_ip )){
 
@@ -1390,8 +1390,6 @@ WebPlugin
 
 				tracker_context = null;
 			}
-
-
 
 			int	protocol = protocol_str.equalsIgnoreCase( "HTTP")?Tracker.PR_HTTP:Tracker.PR_HTTPS;
 
@@ -1405,7 +1403,7 @@ WebPlugin
 			}
 
 			log.log( 	LoggerChannel.LT_INFORMATION,
-						"Server initialisation: port=" + port +
+						"Server initialisation: port=" + requested_port +
 						(bind_ip == null?"":(", bind=" + bind_str + "->" + bind_ip + ")")) +
 						", protocol=" + protocol_str +
 						(root_dir.length()==0?"":(", root=" + root_dir )) +
@@ -1414,8 +1412,10 @@ WebPlugin
 			tracker_context =
 				plugin_interface.getTracker().createWebContext(
 						Constants.APP_NAME + " - " + plugin_interface.getPluginName(),
-						port, protocol, bind_ip, tc_properties );
+						requested_port, protocol, bind_ip, tc_properties );
 
+			int server_port = getServerPort();
+			
 			Boolean prop_enable_i2p = (Boolean)properties.get( PR_ENABLE_I2P );
 
 			if ( prop_enable_i2p == null || prop_enable_i2p ){
@@ -1429,7 +1429,7 @@ WebPlugin
 						{
 							Map<String,Object>	options = new HashMap<>();
 
-							options.put( AEProxyFactory.SP_PORT, port );
+							options.put( AEProxyFactory.SP_PORT, server_port );
 
 							Map<String,Object> reply =
 									AEProxyFactory.getPluginServerProxy(
@@ -1471,7 +1471,7 @@ WebPlugin
 						{
 							Map<String,Object>	options = new HashMap<>();
 
-							options.put( AEProxyFactory.SP_PORT, port );
+							options.put( AEProxyFactory.SP_PORT, server_port );
 
 							Map<String,Object> reply =
 									AEProxyFactory.getPluginServerProxy(
@@ -1703,9 +1703,9 @@ WebPlugin
 								
 								String msg	= "";
 								
-								if ( actual_port != port ){
+								if ( actual_port != server_port ){
 									
-									msg = "port mismatch: " + port + "/" + actual_port;
+									msg = "port mismatch: " + server_port + "/" + actual_port;
 									
 								}else{
 																
@@ -1789,7 +1789,7 @@ WebPlugin
 													ref_port = url.getDefaultPort();
 												}
 												
-												if ( ref_port == port ){
+												if ( ref_port == server_port ){
 														
 													result = true;
 												}
