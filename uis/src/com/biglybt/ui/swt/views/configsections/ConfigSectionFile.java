@@ -770,7 +770,7 @@ public class ConfigSectionFile
 			Messages.setLanguageText(gIgnoredFiles,
 					"ConfigView.section.file.ignore.section");
 			layout = new GridLayout();
-			layout.numColumns = 2;
+			layout.numColumns = 3;
 			layout.marginHeight = 5;
 			gIgnoredFiles.setLayout(layout);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -784,8 +784,20 @@ public class ConfigSectionFile
 					"ConfigView.section.file.torrent.autoskipfiles");
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
 			new StringParameter(gIgnoredFiles, "File.Torrent.AutoSkipExtensions").setLayoutData(gridData);
 
+			// torrent add auto-skip file names
+
+			Label lSkipFileNames = new Label(gIgnoredFiles, SWT.NULL);
+			Messages.setLanguageText(lSkipFileNames,
+					"ConfigView.section.file.torrent.autoskipfilenames");
+
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 1;
+			new StringParameter(gIgnoredFiles, "File.Torrent.AutoSkipFiles").setLayoutData(gridData);
+			new BooleanParameter(gIgnoredFiles, "File.Torrent.AutoSkipFiles.RegExp", "label.regexps");
+			
 				// torrent add auto-skip min size
 
 			Label lSkipFilesMinSize = new Label(gIgnoredFiles, SWT.NULL);
@@ -793,7 +805,8 @@ public class ConfigSectionFile
 					"ConfigView.section.file.torrent.autoskipfilesminsize");
 
 			new IntParameter(gIgnoredFiles, "File.Torrent.AutoSkipMinSizeKB", 0, Integer.MAX_VALUE );
-
+			new Label( gIgnoredFiles, SWT.NULL );
+			
 				// torrent create/delete ignore files
 
 			Label lIgnoreFiles = new Label(gIgnoredFiles, SWT.NULL);
@@ -801,6 +814,7 @@ public class ConfigSectionFile
 					"ConfigView.section.file.torrent.ignorefiles");
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
 			new StringParameter(gIgnoredFiles, "File.Torrent.IgnoreFiles",
 					TOTorrent.DEFAULT_IGNORE_FILES).setLayoutData(gridData);
 
@@ -813,6 +827,7 @@ public class ConfigSectionFile
 						"ConfigView.section.file.char.conversions");
 
 				gridData = new GridData(GridData.FILL_HORIZONTAL);
+				gridData.horizontalSpan = 2;
 				new StringParameter(gFile, "File.Character.Conversions",
 						ConfigurationDefaults.DEFAULT_FILE_CONVERSION_CHARS).setLayoutData(gridData);
 			}

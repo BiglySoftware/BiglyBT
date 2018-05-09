@@ -430,6 +430,8 @@ public class ConfigurationDefaults {
     def.put( "long.term.stats.enable", TRUE );
     def.put( "Stats Smoothing Secs", new Long( 2*60 ));
     def.put( "File.Torrent.AutoSkipExtensions", "" );
+    def.put( "File.Torrent.AutoSkipFiles", "" );
+    def.put( "File.Torrent.AutoSkipFiles.RegExp", FALSE );
     def.put( "File.Torrent.AutoSkipMinSizeKB", ZERO );
     def.put( "File.Torrent.IgnoreFiles", TOTorrent.DEFAULT_IGNORE_FILES );
     def.put( "File.save.peers.max", new Long( TRTrackerAnnouncer.DEFAULT_PEERS_TO_CACHE ) );

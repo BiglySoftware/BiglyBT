@@ -147,9 +147,10 @@ TorrentUtils
 			}
 		};
 
-	private static volatile Set<String>		ignore_files_set;
-	private static volatile Set<String>		skip_extensions_set;
-
+	private static Set<String>		ignore_files_set;
+	private static Set<String>		skip_extensions_set;
+	private static Set<Object>		skip_file_set;
+	
 	private static boolean bSaveTorrentBackup;
 
 	private static final CopyOnWriteList<torrentAttributeListener>			torrent_attribute_listeners 	= new CopyOnWriteList<>();
@@ -2424,7 +2425,94 @@ TorrentUtils
 		return( skip_extensions_set );
 	}
 
+	public static Set<Object>
+	getSkipFileSet()
+	{
+		return(getSkipFileSetSupport(false));
+	}
 
+	private static synchronized Set<Object>
+	getSkipFileSetSupport(
+		boolean	force )
+	{
+		if ( skip_file_set == null || force ){
+
+			Set<Object>		new_skip_set	= new HashSet<>();
+
+			String	skip_list 	= COConfigurationManager.getStringParameter( "File.Torrent.AutoSkipFiles" );
+			boolean	regexpr		= COConfigurationManager.getBooleanParameter( "File.Torrent.AutoSkipFiles.RegExp" );
+
+			skip_list = skip_list.replace( ',', ';' );
+
+			if ( skip_file_set == null ){
+
+					// first time - add the listener
+
+				COConfigurationManager.addParameterListener(
+					new String[]{ "File.Torrent.AutoSkipFiles", "File.Torrent.AutoSkipFiles.RegExp" },
+					new ParameterListener()
+					{
+						@Override
+						public void
+						parameterChanged(
+							String parameterName)
+						{
+							getSkipFileSetSupport( true );
+						}
+					});
+			}
+
+			int	pos = 0;
+
+			while( true ){
+
+				int	p1 = skip_list.indexOf( ";", pos );
+
+				String	bit;
+
+				if ( p1 == -1 ){
+
+					bit = skip_list.substring(pos);
+
+				}else{
+
+					bit	= skip_list.substring( pos, p1 );
+
+					pos	= p1+1;
+				}
+
+				bit = bit.trim();
+				
+				if ( !bit.isEmpty()){
+					
+					if ( regexpr ){
+						
+						try{
+							
+							new_skip_set.add( Pattern.compile( bit, Pattern.CASE_INSENSITIVE ));
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}else{
+						
+						new_skip_set.add( bit.toLowerCase());	// default locale here
+					}
+				}
+
+				if ( p1 == -1 ){
+
+					break;
+				}
+			}
+
+			skip_file_set = new_skip_set;
+		}
+
+		return( skip_file_set );
+	}
+	
 		// ignore files
 
 	public static Set<String>

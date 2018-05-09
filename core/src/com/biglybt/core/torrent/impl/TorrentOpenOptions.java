@@ -19,6 +19,7 @@ package com.biglybt.core.torrent.impl;
 
 import java.io.File;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
@@ -532,7 +533,8 @@ public class TorrentOpenOptions
 			TOTorrentFile[] tfiles = torrent.getFiles();
 			files = new TorrentOpenFileOptions[tfiles.length];
 
-			Set<String>	skip_extensons = TorrentUtils.getSkipExtensionsSet();
+			Set<String>	skip_extensons 	= TorrentUtils.getSkipExtensionsSet();
+			Set<Object>	skip_files 		= TorrentUtils.getSkipFileSet();
 
 			long	skip_min_size = COConfigurationManager.getLongParameter( "File.Torrent.AutoSkipMinSizeKB" )*1024L;
 
@@ -557,6 +559,34 @@ public class TorrentOpenOptions
 						String	ext = orgFileName.substring( pos+1 );
 
 						wanted = !skip_extensons.contains( ext );
+					}
+				}
+				
+				if ( wanted && !skip_files.isEmpty()){
+				
+					if ( skip_files.contains(orgFileName.toLowerCase())){
+						
+						wanted = false;
+						
+					}else{
+						
+						for ( Object o: skip_files ){
+							
+							if ( o instanceof Pattern ){
+							
+								try{
+									if ( ((Pattern)o).matcher( orgFileName ).matches()){
+										
+										wanted = false;
+										
+										break;
+									}
+								}catch( Throwable e ){
+									
+									Debug.out( e );
+								}
+							}
+						}
 					}
 				}
 
