@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.peer.PEPeerManager;
@@ -271,8 +272,6 @@ BuddyPluginTracker
 		}
 
 		Map<BuddyPluginBuddy,List<Download>>	peers_to_check = new HashMap<>();
-
-		Map<PartialBuddy,List<Download>>		partials_to_check = new HashMap<>();
 		
 		Set<Download> active_set = new HashSet<>();
 
@@ -475,13 +474,32 @@ BuddyPluginTracker
 
 		Map	diff_map = new HashMap();
 
+		Set<Download>	downloads_with_remote_incomplete = new HashSet<>();
+		
 		for (int i=0;i<online.size();i++){
 
 			BuddyPluginBuddy	buddy = (BuddyPluginBuddy)online.get(i);
 
 			BuddyTrackingData buddy_data = getBuddyData( buddy );
 
-			buddy_data.updateLocal( downloads, downloads_id, diff_map );
+			buddy_data.updateLocal( downloads, downloads_id, diff_map, downloads_with_remote_incomplete );
+		}
+		
+		Set<Download>	temp = new HashSet<>( downloads );
+		
+		if ( plugin.getFPEnabled()){
+			
+			for ( Download d: downloads_with_remote_incomplete ){
+				
+				temp.remove( d );
+				
+				PluginCoreUtils.unwrap( d ).getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, true );
+			}
+		}
+		
+		for ( Download d: temp ){
+						
+			PluginCoreUtils.unwrap( d ).getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
 		}
 	}
 
@@ -2010,7 +2028,8 @@ outer:
 		updateLocal(
 			Set<Download>		downloads,
 			int					id,
-			Map					diff_map )
+			Map					diff_map,
+			Set<Download>		downloads_with_remote_incomplete )
 		{
 			if ( consecutive_fails > 0 ){
 
@@ -2059,6 +2078,11 @@ outer:
 
 						buddyDownloadData	bdd = entry.getValue();
 
+						if ( !bdd.isRemoteComplete()){
+							
+							downloads_with_remote_incomplete.add( d );
+						}
+						
 						boolean	local_complete = d.isComplete( false );
 
 						if ( local_complete != bdd.isLocalComplete()){

@@ -154,6 +154,9 @@ DownloadManagerState
 		{ PARAM_MAX_SHARE_RATIO, 					new Integer( 0 ) },
 	};
 
+	public static final int	TRANSIENT_FLAG_FRIEND_FP	= 0x00000001;
+	
+			
 	public TOTorrent
 	getTorrent();
 
@@ -175,6 +178,18 @@ DownloadManagerState
 	public long
 	getFlags();
 
+	public void
+	setTransientFlag(
+		long		flag,
+		boolean		set );
+
+	public boolean
+	getTransientFlag(
+		long		flag );
+
+	public long
+	getTransientFlags();
+	
 		/**
 		 * Reset to default value
 		 * @param name

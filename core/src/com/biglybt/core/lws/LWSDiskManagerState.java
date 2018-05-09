@@ -125,7 +125,11 @@ LWSDiskManagerState
 		long		flag,
 		boolean		set )
 	{
-		flags |= flag;
+		if ( set ){
+			flags |= flag;
+		}else{
+			flags &= ~flag;
+		}
 	}
 
 	@Override
@@ -143,6 +147,26 @@ LWSDiskManagerState
 		return( flags );
 	}
 
+	public void
+	setTransientFlag(
+		long		flag,
+		boolean		set )
+	{
+	}
+
+	public boolean
+	getTransientFlag(
+		long		flag )
+	{
+		return( false );
+	}
+
+	public long
+	getTransientFlags()
+	{
+		return( 0 );
+	}
+	
 	@Override
 	public boolean
 	isOurContent()

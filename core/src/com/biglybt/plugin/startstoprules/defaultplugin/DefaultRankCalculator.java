@@ -846,6 +846,16 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 					+ (iFirstPriorityType == FIRSTPRIORITY_ALL ? "all" : "any")
 					+ " criteria match:\n";
 
+		DownloadManagerState dm_state = core_dm.getDownloadState();
+		
+		if ( dm_state.getTransientFlag(DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP )){
+			
+			if (rules.bDebugLog)
+				sExplainFP += "Is FP: Friend(s) have interest\n";
+			
+			return( true );
+		}
+		
 		if (!dl.isPersistent()) {
 			if (rules.bDebugLog)
 				sExplainFP += "Not FP: Download not persistent\n";

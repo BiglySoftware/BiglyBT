@@ -273,6 +273,8 @@ DownloadManagerStateImpl
 			}
 		};
 
+	private int transient_flags;
+		
 	private static DownloadManagerState
 	getDownloadState(
 		DownloadManagerImpl				download_manager,
@@ -1209,6 +1211,33 @@ DownloadManagerStateImpl
 		return( getLongAttribute( AT_FLAGS ));
 	}
 
+	public void
+	setTransientFlag(
+		long		flag,
+		boolean		set )
+	{
+		if ( set ){
+			
+			transient_flags |= flag;
+		}else{
+			
+			transient_flags &= ~flag;
+		}
+	}
+
+	public boolean
+	getTransientFlag(
+		long		flag )
+	{
+		return(( transient_flags & flag ) != 0 );
+	}
+
+	public long
+	getTransientFlags()
+	{
+		return( transient_flags );
+	}
+	
 	@Override
 	public boolean parameterExists(String name) {
 		return parameters.containsKey(name);
@@ -2974,6 +3003,26 @@ DownloadManagerStateImpl
 			return 0;
 		}
 
+		public void
+		setTransientFlag(
+			long		flag,
+			boolean		set )
+		{
+		}
+
+		public boolean
+		getTransientFlag(
+			long		flag )
+		{
+			return( false );
+		}
+
+		public long
+		getTransientFlags()
+		{
+			return( 0 );
+		}
+		
 		@Override
 		public void
 		setParameterDefault(
