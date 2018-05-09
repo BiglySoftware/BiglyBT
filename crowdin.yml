@@ -1,3 +1,5 @@
 files:
   - source: '**/Messages.properties'
     translation: /%original_path%/Messages_%locale_with_underscore%.properties
+  - source: /website/en/LC_MESSAGES/**.po
+    translation: /website/%two_letters_code%/LC_MESSAGES/%original_file_name%
