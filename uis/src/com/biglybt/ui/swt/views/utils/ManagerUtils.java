@@ -49,7 +49,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
@@ -101,7 +100,6 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
@@ -111,7 +109,6 @@ import com.biglybt.ui.swt.skin.SWTSkinCheckboxListener;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectButton;
 import com.biglybt.ui.swt.skin.SWTSkinObjectCheckbox;
-import com.biglybt.ui.swt.skin.SWTSkinObjectCombo;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinObjectList;
 import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
@@ -121,13 +118,11 @@ import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.webplugin.WebPlugin;
 
 import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagException;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
 
 /**
  * @author Olivier
