@@ -293,12 +293,24 @@ public class TorrentMenuFancy
 			public void handleEvent(Event event) {
 				FancyRowInfo rowInfo = findRowInfo(event.widget);
 				if (rowInfo != null) {
+				
+					Rectangle row_bounds =  rowInfo.getRow().getBounds();
+					
 					if (!rowInfo.keepMenu()) {
 						shell.dispose();
 					}
 
-					if (rowInfo.getListener() != null) {
-						rowInfo.getListener().handleEvent(event);
+					if ( rowInfo.getListener() != null) {
+						
+							// make sure we are still in the area of the row 
+						
+						row_bounds.x = row_bounds.y = 0;
+						
+						if ( row_bounds.contains( event.x, event.y )){
+
+							rowInfo.getListener().handleEvent(event);
+							
+						}
 					}
 				} else {
 					shell.dispose();

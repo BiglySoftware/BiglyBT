@@ -468,7 +468,9 @@ public class SB_Transfers
 					boolean userClosed)
 				{
 					if ( userClosed ){
-						
+						if ( Constants.isCVSVersion()){
+							Debug.out( "New entry closed by user" );
+						}
 						COConfigurationManager.setParameter( "Show New In Side Bar", false );
 					}
 				}
@@ -624,6 +626,10 @@ public class SB_Transfers
 				mdiEntryClosed(MdiEntry entry, boolean userClosed){
 				
 					if ( userClosed ){
+						if ( Constants.isCVSVersion()){
+							Debug.out( "Downloading entry closed by user" );
+						}
+						
 						COConfigurationManager.setParameter( "Show Downloading In Side Bar", false );
 					}
 				}
@@ -1809,9 +1815,7 @@ public class SB_Transfers
 					if ( now - last_dl_entry_load > 5000 ){
 						
 						last_dl_entry_load = now;
-					
-						System.out.println( "Creating DL" );
-						
+											
 						mdi.loadEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY_DL, false);
 					}
 				}
@@ -1821,6 +1825,8 @@ public class SB_Transfers
 					entry.close(true, false);
 				}
 			}
+		}else{
+			refreshAllLibraries();
 		}
 		
 		MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
