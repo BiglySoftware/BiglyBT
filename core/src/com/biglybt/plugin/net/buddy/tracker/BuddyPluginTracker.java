@@ -2105,8 +2105,8 @@ outer:
 
 					msg.put( "seeding", new Long( seeding_only?1:0 ));
 
-					msg.put( "change", 		change_details[0] );
-					msg.put( "change_s", 	change_details[1] );
+					msg.put( "changed", 		change_details[0] );
+					msg.put( "changed_s", 	change_details[1] );
 
 					sendTrackerMessage( REQUEST_TRACKER_CHANGE, msg );
 				}
@@ -2391,10 +2391,20 @@ outer:
 
 				reply_type	= REPLY_TRACKER_STATUS;
 
-				Map downloads = importFullIDs((byte[])msg_in.get( "changed" ), (byte[])msg_in.get( "changed_s" ));
+					// bug - message was incorrectly being send with "change" and "change_s" 
+				
+				if ( msg_in.containsKey( "change" )){
+					
+					Map downloads = importFullIDs((byte[])msg_in.get( "change" ), (byte[])msg_in.get( "change_s" ));
 
-				updateCommonDownloads( downloads, true );
+					updateCommonDownloads( downloads, true );
 
+				}else{
+					
+					Map downloads = importFullIDs((byte[])msg_in.get( "changed" ), (byte[])msg_in.get( "changed_s" ));
+
+					updateCommonDownloads( downloads, true );
+				}
 			}else if ( type == REQUEST_TRACKER_ADD ){
 
 				reply_type	= REPLY_TRACKER_ADD;
