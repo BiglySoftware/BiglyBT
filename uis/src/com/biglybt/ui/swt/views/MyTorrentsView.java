@@ -80,8 +80,6 @@ import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.skin.SWTSkinButtonUtility;
-import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -631,6 +629,7 @@ public class MyTorrentsView
   @Override
   public Composite createTableViewPanel(Composite composite) {
 
+	composite.setData( "MyTorrentsView.instance", this );
     GridData gridData;
     cTableParentPanel = new Composite(composite, SWT.NONE);
     GridLayout layout = new GridLayout();
@@ -3240,6 +3239,20 @@ public class MyTorrentsView
 		}
 	}
 
+	public void
+	collapseAll()
+	{
+		TableRowCore[] rows = tv.getRows();
+		
+		for ( TableRowCore row: rows ){
+			
+			if ( row.isExpanded()){
+				
+				row.setExpanded( false );
+			}
+		}
+	}
+	
 	protected Class<?> getForDataSourceType() {
 		return forDataSourceType;
 	}

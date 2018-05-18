@@ -22,6 +22,8 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
 
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.Core;
@@ -62,10 +64,12 @@ import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MdiSWTMenuHackListener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
+import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.PeersGeneralView;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
@@ -295,9 +299,7 @@ public class SB_Transfers
 				}
 			};
 			PlatformTorrentUtils.addHasBeenOpenedListener(hasBeenOpenedListener);
-	
-			addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY);
-	
+		
 			mdi.addListener(new MdiEntryLoadedListener() {
 				@Override
 				public void mdiEntryLoaded(MdiEntry entry) {
@@ -446,7 +448,8 @@ public class SB_Transfers
 		
 		infoLibraryUn.setImageLeftID("image.sidebar.unopened");
 
-		addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
+		addGeneralLibraryMenus(infoLibraryUn,SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
+		
 		infoLibraryUn.setViewTitleInfo(new ViewTitleInfo() {
 			@Override
 			public Object getTitleInfoProperty(int propertyID) {
@@ -479,7 +482,13 @@ public class SB_Transfers
 		return infoLibraryUn;
 	}
 
-	private void addMenuUnwatched(String id) {
+	private static void addGeneralLibraryMenus( MdiEntry entry, String id ){
+		addMenuUnwatched( id );
+		
+		addMenuCollapseAll( entry, id );
+	}
+	
+	private static void addMenuUnwatched(String id) {
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 		MenuManager menuManager = uim.getMenuManager();
@@ -502,6 +511,51 @@ public class SB_Transfers
 									if (!PlatformTorrentUtils.getHasBeenOpened(dm)
 											&& dm.getAssumedComplete()) {
 										PlatformTorrentUtils.setHasBeenOpened(dm, true);
+									}
+								}
+							}
+						});
+			}
+		});
+	}
+	
+	private static void addMenuCollapseAll( MdiEntry entry, String id ){
+		PluginInterface pi = PluginInitializer.getDefaultInterface();
+		UIManager uim = pi.getUIManager();
+		MenuManager menuManager = uim.getMenuManager();
+		MenuItem menuItem = menuManager.addMenuItem("sidebar." + id, "menu.collapse.all");
+		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		menuItem.addListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				CoreWaiterSWT.waitForCore(TriggerInThread.ANY_THREAD,
+						new CoreRunningListener() {
+							@Override
+							public void coreRunning(Core core) {
+								Composite comp = ((MdiEntrySWT)entry).getComposite();
+								process( comp );
+							}	
+							
+							private void
+							process(
+								Composite	comp )
+							{
+									// don't like this but meh
+								
+								Object obj = comp.getData( "MyTorrentsView.instance" );
+								
+								if ( obj != null ){
+									
+									((MyTorrentsView)obj).collapseAll();
+								}
+								
+								Control[] kids = comp.getChildren();
+								
+								for ( Control k: kids ){
+									
+									if ( k instanceof Composite ){
+										
+										process((Composite)k);
 									}
 								}
 							}
@@ -536,11 +590,13 @@ public class SB_Transfers
 		};
 
 		MdiEntry entry = mdi.createEntryFromSkinRef(
-				SideBar.SIDEBAR_HEADER_TRANSFERS, SideBar.SIDEBAR_SECTION_LIBRARY_DL,
+				SideBar.SIDEBAR_HEADER_TRANSFERS, SideBar.SIDEBAR_SECTION_LIBRARY_CD,
 				"library", "{sidebar.LibraryDL}",
 				titleInfoSeeding, null, false, null);
 		entry.setImageLeftID("image.sidebar.downloading");
 
+		addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY_CD);
+		
 		MdiEntryVitalityImage vitalityImage = entry.addVitalityImage(ID_VITALITY_ALERT);
 		vitalityImage.setVisible(false);
 
@@ -618,6 +674,8 @@ public class SB_Transfers
 
 		entry.setImageLeftID("image.sidebar.downloading");
 
+		addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+		
 		entry.addListener(
 			new MdiCloseListener(){
 				
@@ -1214,6 +1272,8 @@ public class SB_Transfers
 		if (entry != null) {
 			entry.setImageLeftID("image.sidebar.library");
 
+			addGeneralLibraryMenus( entry, id );
+			
 			entry.addListener(new MdiEntryDropListener() {
 				@Override
 				public boolean mdiEntryDrop(MdiEntry entry, Object payload) {
@@ -1470,6 +1530,9 @@ public class SB_Transfers
 				entry = mdi.createEntryFromSkinRef(
 						MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, id, "library",
 						name, viewTitleInfo, tag, closable, prev_id);
+				
+				addGeneralLibraryMenus( entry, id );
+				
 			}else{
 
 				entry = mdi.createEntryFromEventListener(
@@ -2109,6 +2172,9 @@ public class SB_Transfers
 							+ SideBar.SIDEBAR_SECTION_LIBRARY + "}", null, null, false,
 					"");
 			entry.setImageLeftID("image.sidebar.library");
+			
+			addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY);
+
 			return entry;
 		}
 	}
