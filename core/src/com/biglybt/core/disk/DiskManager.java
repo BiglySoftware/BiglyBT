@@ -46,6 +46,7 @@ DiskManager
 	public static final int ET_NONE						= 0;
 	public static final int ET_OTHER					= 1;
 	public static final int ET_INSUFFICIENT_SPACE		= 2;
+	public static final int ET_STOP_DURING_INIT			= 3;
 
 		// CHANGE THIS AND YOU MUST CHANGE NORMAL_REQUEST_SIZE in PeerReadRequest (plugin interface)
 

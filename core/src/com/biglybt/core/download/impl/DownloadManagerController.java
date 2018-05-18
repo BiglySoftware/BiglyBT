@@ -1142,7 +1142,14 @@ DownloadManagerController
 
 		}else if (diskManagerState == DiskManager.FAULTY){
 
-			return DownloadManager.STATE_ERROR;
+			if ( dm.getErrorType() == DiskManager.ET_STOP_DURING_INIT ){
+				
+				return DownloadManager.STATE_STOPPED;
+				
+			}else{
+			
+				return DownloadManager.STATE_ERROR;
+			}
 		}
 
 		return DownloadManager.STATE_ERROR;
@@ -1777,14 +1784,20 @@ DownloadManagerController
 		int			type,
 		String		reason )
 	{
-		if ( reason != null ){
-
-			errorDetail = reason;
+		if( type == DownloadManager.ET_STOP_DURING_INIT ){
+			
+			stopIt( DownloadManager.STATE_STOPPED, false, false, false );
+			
+		}else{
+			if ( reason != null ){
+	
+				errorDetail = reason;
+			}
+	
+			errorType	= type;
+	
+			stopIt( DownloadManager.STATE_ERROR, false, false, false );
 		}
-
-		errorType	= type;
-
-		stopIt( DownloadManager.STATE_ERROR, false, false, false );
 	}
 
 	public boolean

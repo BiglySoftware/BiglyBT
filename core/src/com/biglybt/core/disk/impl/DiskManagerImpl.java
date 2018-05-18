@@ -518,7 +518,9 @@ DiskManagerImpl
 
             //allocate / check every file
 
-        int[] alloc_result = allocateFiles();
+        boolean[] stop_after_start = { false };
+        
+        int[] alloc_result = allocateFiles( stop_after_start );
 
         int	newFiles 		= alloc_result[0];
         int	notNeededFiles	= alloc_result[1];
@@ -575,8 +577,18 @@ DiskManagerImpl
         	// flag for an update of the 'downloaded' values for skipped files
 
         skipped_file_set_changed = true;
+        
+        if ( stop_after_start[0] ){
+        	        	
+        	errorType = ET_STOP_DURING_INIT;
+        	
+        	setState( FAULTY );
+        	 
+        }else{
+        	
+            setState( READY );
 
-        setState( READY );
+        }
     }
 
     @Override
@@ -958,7 +970,8 @@ DiskManagerImpl
     }
 
     private int[]
-    allocateFiles()
+    allocateFiles(
+    	boolean[] stop_after_start )
     {
     	int[] fail_result = { -1, -1 };
 
@@ -1137,7 +1150,7 @@ DiskManagerImpl
                         	if ( !compact ){
 	                        		// file is too small
 
-	                         	if ( !allocateFile( fileInfo, data_file, existing_length, target_length )){
+	                         	if ( !allocateFile( fileInfo, data_file, existing_length, target_length, stop_after_start )){
 
 	                      			// aborted
 
@@ -1173,7 +1186,7 @@ DiskManagerImpl
 
                     try{
 
-                    	if ( !allocateFile( fileInfo, data_file, -1, target_length )){
+                    	if ( !allocateFile( fileInfo, data_file, -1, target_length, stop_after_start )){
 
                       			// aborted
 
@@ -1238,7 +1251,8 @@ DiskManagerImpl
     	DiskManagerFileInfoImpl		fileInfo,
     	File						data_file,
     	long						existing_length,	// -1 if not exists
-    	long						target_length )
+    	long						target_length,
+    	boolean[]					stop_after_start )
 
     	throws Throwable
     {
@@ -1325,6 +1339,13 @@ DiskManagerImpl
 	        	try {
 	        		successfulAlloc = writer.zeroFile( fileInfo, target_length );
 
+	        		if ( successfulAlloc ){
+	        			
+	        			if ( COConfigurationManager.getBooleanParameter("Zero New Stop")){
+	        				
+	        				stop_after_start[0] = true;
+	        			}
+	        		}
 	        	}catch( Throwable e ){
 	        			// in case an error occured set the error message before we set it to FAULTY in the finally clause, the exception handler further down is too late
 

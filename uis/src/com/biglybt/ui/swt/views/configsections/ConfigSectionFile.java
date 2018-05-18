@@ -264,16 +264,31 @@ public class ConfigSectionFile
 		}
 
 		BooleanParameter zeroNew = null;
+		BooleanParameter zeroNewStop = null;
 
-		sCurConfigID = "Zero New";
-		allConfigIDs.add(sCurConfigID);
 		if (userMode > 0) {
 			// zero new files
+			sCurConfigID = "Zero New";
+			allConfigIDs.add(sCurConfigID);
+
 			zeroNew = new BooleanParameter(gFile, sCurConfigID,
 					"ConfigView.label.zeronewfiles");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
 			zeroNew.setLayoutData(gridData);
+
+			sCurConfigID = "Zero New Stop";
+			allConfigIDs.add(sCurConfigID);
+
+			zeroNewStop = new BooleanParameter(gFile, sCurConfigID,
+					"ConfigView.label.zeronewfiles.stop");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			gridData.horizontalIndent = 25;
+			zeroNewStop.setLayoutData(gridData);
+			
+			zeroNew.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(
+					zeroNewStop));
 		}
 
 		BooleanParameter pieceReorder = null;
