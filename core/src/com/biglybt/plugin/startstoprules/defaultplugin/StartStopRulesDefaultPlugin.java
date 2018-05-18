@@ -24,6 +24,8 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.tag.TagManager;
@@ -39,6 +41,7 @@ import com.biglybt.pif.PluginListener;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.*;
 import com.biglybt.pif.logging.LoggerChannel;
+import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
@@ -662,6 +665,19 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			}
 		}
 	}
+	
+	private class StartStopDownloadStateAttributeListener implements DownloadManagerStateAttributeListener
+	{
+		@Override
+		public void attributeEventOccurred(com.biglybt.core.download.DownloadManager download, String attribute,
+				int event_type){
+			DefaultRankCalculator dlData = downloadDataMap.get(PluginCoreUtils.wrap( download ));
+			
+			if ( dlData != null ){
+				requestProcessCycle( dlData );
+			}
+		}
+	}
 
 	/** Update SeedingRank when a new scrape result comes in.
 	 */
@@ -748,10 +764,13 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 		private DownloadActivationListener download_activation_listener;
 
+		private StartStopDownloadStateAttributeListener download_state_attribute_listener;
+		
 		public StartStopDMListener() {
 			download_tracker_listener = new StartStopDMTrackerListener();
 			download_listener = new StartStopDownloadListener();
 			download_activation_listener = new StartStopDownloadActivationListener();
+			download_state_attribute_listener = new StartStopDownloadStateAttributeListener();
 		}
 
 		@Override
@@ -767,6 +786,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				download.addListener(download_listener);
 				download.addTrackerListener(download_tracker_listener, false);
 				download.addActivationListener(download_activation_listener);
+				
+				dlData.getCoreDownloadObject().getDownloadState().addListener(
+						download_state_attribute_listener, DownloadManagerState.AT_TRANSIENT_FLAGS, DownloadManagerStateAttributeListener.WRITTEN );
 			}
 
 			if (dlData != null) {
@@ -785,7 +807,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			download.removeActivationListener(download_activation_listener);
 
 			DefaultRankCalculator dlData = downloadDataMap.remove( download );
+			
 			if ( dlData != null ) {
+				dlData.getCoreDownloadObject().getDownloadState().removeListener(
+						download_state_attribute_listener, DownloadManagerState.AT_TRANSIENT_FLAGS, DownloadManagerStateAttributeListener.WRITTEN );
+
 				sortedArrayCache = null;
 				dlData.destroy();
 			}

@@ -1216,12 +1216,24 @@ DownloadManagerStateImpl
 		long		flag,
 		boolean		set )
 	{
+		long old_value = transient_flags;
+		
+		long new_value;
+		
 		if ( set ){
 			
-			transient_flags |= flag;
+			new_value = old_value | flag;
+			
 		}else{
 			
-			transient_flags &= ~flag;
+			new_value = old_value & ~flag;
+		}
+		
+		if ( old_value != new_value ){
+			
+			transient_flags = (int)new_value;
+			
+			informWritten( AT_TRANSIENT_FLAGS );
 		}
 	}
 

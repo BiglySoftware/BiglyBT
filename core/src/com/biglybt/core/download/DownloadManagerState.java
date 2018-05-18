@@ -82,6 +82,9 @@ DownloadManagerState
 	public static final String AT_MOVE_ON_COMPLETE_DIR		= "moc.dir";		// String - explicit move-on-complete folder
 	public static final String AT_FILE_FLAGS				= "ff";
 	
+	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
+
+	
 	public static Object[][] ATTRIBUTE_DEFAULTS = {
 		{ AT_VERSION,								new Integer( -1 )},
 		{ AT_TIME_SINCE_DOWNLOAD,					new Integer( -1 )},

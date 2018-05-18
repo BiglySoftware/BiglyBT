@@ -2489,15 +2489,20 @@ outer:
 
 				downloadData download_data = (downloadData)download.getUserData( BuddyPluginTracker.class );
 
-				if ( download_data != null ){
-
-					System.arraycopy(
-						download_data.getID().getBytes(),
-						0,
-						res,
-						i * SHORT_ID_SIZE,
-						SHORT_ID_SIZE );
+				if ( download_data == null ){
+   					
+						// might have been removed if we have un-tracked the download. temporarily create a new one so
+						// we can communicate removal correctly.
+					
+					download_data = new downloadData( download );
 				}
+				
+				System.arraycopy(
+					download_data.getID().getBytes(),
+					0,
+					res,
+					i * SHORT_ID_SIZE,
+					SHORT_ID_SIZE );
 			}
 
 			return( res );
@@ -2541,17 +2546,22 @@ outer:
 
    				downloadData download_data = (downloadData)download.getUserData( BuddyPluginTracker.class );
 
-   				if ( download_data != null ){
-
-   					System.arraycopy(
-   						download_data.getID().getBytes(),
-   						0,
-   						hashes,
-   						i * FULL_ID_SIZE,
-   						FULL_ID_SIZE );
-
-   					states[i] = download.isComplete( false )?(byte)0x01:(byte)0x00;
+   				if ( download_data == null ){
+   					
+   						// might have been removed if we have un-tracked the download. temporarily create a new one so
+   						// we can communicate removal correctly.
+   					
+   					download_data = new downloadData( download );
    				}
+
+				System.arraycopy(
+					download_data.getID().getBytes(),
+					0,
+					hashes,
+					i * FULL_ID_SIZE,
+					FULL_ID_SIZE );
+
+				states[i] = download.isComplete( false )?(byte)0x01:(byte)0x00;
    			}
 
    			return( new byte[][]{ hashes, states });
