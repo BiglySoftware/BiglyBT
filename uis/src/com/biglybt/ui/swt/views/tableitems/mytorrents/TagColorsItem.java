@@ -28,15 +28,22 @@ import java.util.List;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
+
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
+import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
-
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
@@ -49,7 +56,7 @@ import com.biglybt.ui.swt.utils.ColorCache;
  */
 public class TagColorsItem
        extends CoreTableColumnSWT
-       implements TableCellRefreshListener, TableCellSWTPaintListener
+       implements TableCellRefreshListener, TableCellSWTPaintListener, ParameterListener
 {
 	private static TagManager tag_manager = TagManagerFactory.getTagManager();
 
@@ -57,6 +64,10 @@ public class TagColorsItem
 
 	public static final String COLUMN_ID = "tag_colors";
 
+	private static String CFG_SHOW_DEF_COLOURS = "TagColorsItem.showdefcolours";
+	
+	private static boolean show_default_colours;
+	
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
 		info.addCategories(new String[] { CAT_CONTENT });
@@ -66,8 +77,54 @@ public class TagColorsItem
 	public TagColorsItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_LEAD, 70, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
+				
+		show_default_colours	 = COConfigurationManager.getBooleanParameter(CFG_SHOW_DEF_COLOURS);
+
+		COConfigurationManager.addWeakParameterListener(this, false, CFG_SHOW_DEF_COLOURS);
+
+		
+		TableContextMenuItem menuShowIcon = addContextMenuItem(
+				"menu.show.default.colors", MENU_STYLE_HEADER);
+		menuShowIcon.setStyle(TableContextMenuItem.STYLE_CHECK);
+		menuShowIcon.addFillListener(new MenuItemFillListener() {
+			@Override
+			public void menuWillBeShown(MenuItem menu, Object data) {
+				menu.setData(Boolean.valueOf(show_default_colours));
+			}
+		});
+
+		menuShowIcon.addMultiListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				COConfigurationManager.setParameter(CFG_SHOW_DEF_COLOURS,
+						((Boolean) menu.getData()).booleanValue());
+			}
+		});
 	}
 
+	@Override
+	public void remove() {
+		super.remove();
+	}
+
+	@Override
+	public void reset() {
+		super.reset();
+
+		COConfigurationManager.removeParameter( CFG_SHOW_DEF_COLOURS );
+	}
+
+
+	@Override
+	public void parameterChanged(String parameterName) {
+		setShowDefaultColours( COConfigurationManager.getBooleanParameter(CFG_SHOW_DEF_COLOURS));
+	}
+
+	public void setShowDefaultColours(boolean b) {
+		show_default_colours = b;
+		invalidateCells();
+	}
+	
 	@Override
 	public void refresh(TableCell cell) {
 		String sTags = null;
@@ -109,7 +166,7 @@ public class TagColorsItem
 
 				int[] rgb = tag.getColor();
 
-				if ( rgb != null && rgb.length == 3 ){
+				if ( rgb != null && rgb.length == 3 && ( show_default_colours || !tag.isColorDefault())){
 
 					colors.add( ColorCache.getColor( gc.getDevice(), rgb ));
 				}
@@ -165,4 +222,6 @@ public class TagColorsItem
 			}
 		}
 	}
+	
+	
 }

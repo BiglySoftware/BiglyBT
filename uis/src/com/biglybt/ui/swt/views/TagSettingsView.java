@@ -369,17 +369,20 @@ public class TagSettingsView
 			if (tagColor == null) {
 				tagColor = new int[] { 0, 0, 0 };
 			}
-			params.tagColor = new ColorParameter(cSection1, null, tagColor[0], tagColor[1],
-					tagColor[2]) {
+			
+			
+			params.tagColor = new ColorParameter(cSection1, null, tagColor[0], tagColor[1],	tagColor[2], true) {
 				// @see com.biglybt.ui.swt.config.ColorParameter#newColorChosen(org.eclipse.swt.graphics.RGB)
 				@Override
 				public void newColorChosen(RGB newColor) {
+					int[] nc = newColor == null?null: new int[] {
+	  						newColor.red,
+	  						newColor.green,
+	  						newColor.blue };
+	  						
 					for (Tag tag : tags) {
-  					tag.setColor(new int[] {
-  						newColor.red,
-  						newColor.green,
-  						newColor.blue
-  					});
+						
+		  				tag.setColor( nc );
 					}
 				}
 			};

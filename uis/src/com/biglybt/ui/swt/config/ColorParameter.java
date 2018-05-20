@@ -23,6 +23,8 @@ package com.biglybt.ui.swt.config;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -35,8 +37,12 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 
@@ -59,8 +65,14 @@ public class ColorParameter extends Parameter implements ParameterListener {
   private int b;
 
   public ColorParameter(final Composite composite,
+          final String name,
+          int _r, int _g, int _b) {
+	  this( composite, name, _r, _g, _b, false );
+  }
+  
+  public ColorParameter(final Composite composite,
                         final String name,
-                        int _r, int _g, int _b) {
+                        int _r, int _g, int _b, boolean hasDefault) {
   	super(name);
     sParamName = name;
     colorChooser = new Button(composite,SWT.PUSH);
@@ -76,7 +88,24 @@ public class ColorParameter extends Parameter implements ParameterListener {
     }
     updateButtonColor(composite.getDisplay(), r, g, b);
 
-
+    if ( hasDefault ){
+	    Menu menu = new Menu( colorChooser );
+	    
+	    colorChooser.setMenu( menu );
+	    
+	    MenuItem mi = new MenuItem( menu, SWT.PUSH );
+	    
+	    mi.setText( MessageText.getString( "ConfigView.section.style.colorOverrides.reset" ));
+	    
+	    mi.addSelectionListener(
+	    	new SelectionAdapter(){
+	    		@Override
+	    		public void widgetSelected(SelectionEvent e){
+	    			 newColorChosen( null );
+	    		}	
+			});
+    }
+    
     colorChooser.addListener(SWT.Dispose, new Listener() {
       @Override
       public void handleEvent(Event e) {

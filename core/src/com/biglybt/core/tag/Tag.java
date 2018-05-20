@@ -118,6 +118,9 @@ Tag
 	setColor(
 		int[]		rgb );
 
+	public boolean
+	isColorDefault();
+	
 	public void
 	addTaggable(
 		Taggable	t );
