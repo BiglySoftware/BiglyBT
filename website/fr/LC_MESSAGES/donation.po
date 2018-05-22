@@ -1,3 +1,0 @@
-
-msgid "test"
-msgstr "Test In FR"
