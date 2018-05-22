@@ -54,4 +54,3 @@ msgstr "Sugerimos uma doação de %1, ou %2. :)"
 
 msgid "donation_bitcoin_addresses"
 msgstr "Endereço BCH/BTC:"
-
