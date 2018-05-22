@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: eu-nocc\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2018-05-09 11:01-0400\n"
+"PO-Revision-Date: 2018-05-18 11:53-0400\n"
 
 msgid "test"
 msgstr ""
@@ -53,5 +53,5 @@ msgid "donation_bitcoin_description"
 msgstr ""
 
 msgid "donation_bitcoin_addresses"
-msgstr ""
+msgstr "BCH/BTC Helbidea:"
 
