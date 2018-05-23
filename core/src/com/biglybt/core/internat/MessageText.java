@@ -580,7 +580,8 @@ public class MessageText {
         String locale = sBundle.substring(prefix.length() + 1, sBundle.length() - extension.length());
         //System.out.println("Locale: " + locale);
         String[] sLocalesSplit = locale.split("_", 3);
-        if (sLocalesSplit.length > 0 && sLocalesSplit[0].length() == 2) {
+				if (sLocalesSplit.length > 0 && (sLocalesSplit[0].length() == 2
+						|| sLocalesSplit[0].length() == 3)) {
           if (sLocalesSplit.length == 3) {
           	foundLocalesList.add( new Locale(sLocalesSplit[0], sLocalesSplit[1], sLocalesSplit[2]));
           } else if (sLocalesSplit.length == 2 && sLocalesSplit[1].length() == 2) {
