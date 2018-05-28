@@ -534,6 +534,10 @@ public class TableRowPainted
 				gcChanged = true;
 			}else if (fontStyle == SWT.ITALIC) {
 				oldFont = gc.getFont();
+					// On Windows 10 for some reason some people get pixelated italic fonts as it seems text antialias default is off :( 
+				if ( Constants.isWindows ){
+					gc.setTextAntialias(SWT.ON);
+				}
 				gc.setFont(FontUtils.getAnyFontItalic(gc));
 				gcChanged = true;
 			}
