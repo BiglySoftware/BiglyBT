@@ -53,6 +53,7 @@ TagBase
 	protected static final String	AT_CAN_BE_PUBLIC				= "canpub";
 	protected static final String	AT_ORIGINAL_NAME				= "oname";
 	protected static final String	AT_IMAGE_ID						= "img.id";
+	protected static final String	AT_IMAGE_FILE					= "img.file";
 	protected static final String	AT_COLOR_ID						= "col.rgb";
 	protected static final String	AT_RSS_ENABLE					= "rss.enable";
 	protected static final String	AT_RATELIMIT_UP_PRI				= "rl.uppri";
@@ -489,8 +490,24 @@ TagBase
 		String		id )
 	{
 		writeStringAttribute( AT_IMAGE_ID, id );
+		
+		tag_type.fireChanged( this );
 	}
 
+	@Override
+	public String getImageFile(){
+		return( readStringAttribute( AT_IMAGE_FILE, null ));
+	}
+	
+	@Override
+	public void 
+	setImageFile(String id)
+	{
+		writeStringAttribute( AT_IMAGE_FILE, id );
+		
+		tag_type.fireChanged( this );
+	}
+	
 	private int[]
 	decodeRGB(
 		String str )

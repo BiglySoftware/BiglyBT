@@ -44,6 +44,7 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.ColorParameter;
+import com.biglybt.ui.swt.config.IconParameter;
 import com.biglybt.ui.swt.config.generic.GenericBooleanParameter;
 import com.biglybt.ui.swt.config.generic.GenericFloatParameter;
 import com.biglybt.ui.swt.config.generic.GenericIntParameter;
@@ -86,6 +87,8 @@ public class TagSettingsView
 		private Control cName;
 
 		private ColorParameter tagColor;
+		
+		private IconParameter tagIcon;
 
 		private GenericIntParameter maxDownloadSpeed;
 
@@ -276,6 +279,7 @@ public class TagSettingsView
 			int isTagVisible = -1;
 			int canBePublic = -1;
 			int[] tagColor = tags[0].getColor();
+			String tagIconFile = tags[0].getImageFile();
 			boolean tagsAreTagFeatureRateLimit = true;
 			Set<String> listTagTypes = new HashSet<>();
 			for (Tag tag : tags) {
@@ -291,10 +295,16 @@ public class TagSettingsView
 				canBePublic = updateIntBoolean(tag.canBePublic(), canBePublic);
 
 				if (tagColor != null) {
-  				int[] color = tag.getColor();
-  				if (!Arrays.areEqual(tagColor, color)) {
-  					tagColor = null;
-  				}
+	  				int[] color = tag.getColor();
+	  				if (!Arrays.areEqual(tagColor, color)) {
+	  					tagColor = null;
+	  				}
+				}
+				if ( tagIconFile != null ){
+					String next = tag.getImageFile();
+					if ( next == null || !next.equals( tagIconFile )){
+						tagIconFile = null;
+					}
 				}
 			}
 			String tagTypes = GeneralUtils.stringJoin(listTagTypes, ", ");
@@ -309,7 +319,7 @@ public class TagSettingsView
 			cMainComposite.setLayout(gridLayout);
 
 			Composite cSection1 = new Composite(cMainComposite, SWT.NONE);
-			gridLayout = new GridLayout(4, false);
+			gridLayout = new GridLayout(6, false);
 			gridLayout.marginHeight = 0;
 			cSection1.setLayout(gridLayout);
 			gd = new GridData(SWT.FILL, SWT.FILL, true, false);
@@ -327,7 +337,7 @@ public class TagSettingsView
 			label = new Label(cSection1, SWT.NONE);
 			FontUtils.setFontHeight(label, 12, SWT.BOLD);
 			gd = new GridData();
-			gd.horizontalSpan = 4;
+			gd.horizontalSpan = 6;
 			Utils.setLayoutData(label, gd);
 			label.setText(tagTypes);
 
@@ -372,7 +382,6 @@ public class TagSettingsView
 			
 			
 			params.tagColor = new ColorParameter(cSection1, null, tagColor[0], tagColor[1],	tagColor[2], true) {
-				// @see com.biglybt.ui.swt.config.ColorParameter#newColorChosen(org.eclipse.swt.graphics.RGB)
 				@Override
 				public void newColorChosen(RGB newColor) {
 					int[] nc = newColor == null?null: new int[] {
@@ -387,6 +396,20 @@ public class TagSettingsView
 				}
 			};
 
+			label = new Label(cSection1, SWT.NONE);
+			Messages.setLanguageText(label, "TableColumn.header.Thumbnail");
+			
+			params.tagIcon = new IconParameter(cSection1, null, tagIconFile, true) {
+				@Override
+				public void newIconChosen(String file) {
+					
+					for (Tag tag : tags) {
+						
+		  				tag.setImageFile( file );
+					}
+				}
+			};
+			
 			// Field: Visible
 
 			params.viewInSideBar = new GenericBooleanParameter(
@@ -1361,7 +1384,7 @@ public class TagSettingsView
 		}
 		cMainComposite.layout();
 		Rectangle r = sc.getClientArea();
-		sc.setMinSize(cMainComposite.computeSize(r.width, SWT.DEFAULT));
+		sc.setMinSize(cMainComposite.computeSize(r.width - 16, SWT.DEFAULT));
 	}
 
 	private void

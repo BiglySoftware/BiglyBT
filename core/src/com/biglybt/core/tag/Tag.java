@@ -111,6 +111,13 @@ Tag
 	setImageID(
 		String		id );
 
+	public String
+	getImageFile();
+
+	public void
+	setImageFile(
+		String		id );
+	
 	public int[]
 	getColor();
 

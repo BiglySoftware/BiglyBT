@@ -20,8 +20,10 @@
 
 package com.biglybt.ui.swt.views.skin;
 
+import java.io.File;
 import java.util.*;
 
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
@@ -64,6 +66,7 @@ import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MdiSWTMenuHackListener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
@@ -87,6 +90,7 @@ public class SB_Transfers
 	private static final Object AUTO_CLOSE_KEY 		= new Object();
 	private static final Object TAG_DATA_KEY		= new Object();
 	private static final Object TAG_INDICATOR_KEY	= new Object();
+	private static final Object TAG_IMAGE_KEY		= new Object();
 
 	private static final String ID_VITALITY_ACTIVE = "image.sidebar.vitality.dl";
 
@@ -1375,6 +1379,8 @@ public class SB_Transfers
 			entry.setTitle( tag_title );
 		}
 		
+		setTagIcon( tag, entry );
+		
 		Integer num = (Integer)entry.getUserData( TAG_INDICATOR_KEY );
 
 		int tag_count = tag.getTaggedCount();
@@ -1568,17 +1574,8 @@ public class SB_Transfers
 			}
 
 			if (entry != null) {
-				String image_id = tag.getImageID();
 
-				if ( image_id != null ){
-					entry.setImageLeftID( image_id );
-				}else if ( tag.getTagType().getTagType() == TagType.TT_PEER_IPSET ){
-					entry.setImageLeftID("image.sidebar.tag-red");
-				}else if ( tag.getTagType().isTagTypePersistent()){
-					entry.setImageLeftID("image.sidebar.tag-green");
-				}else{
-					entry.setImageLeftID("image.sidebar.tag-blue");
-				}
+				setTagIcon( tag, entry );
 			}
 
 			if (entry instanceof SideBarEntrySWT) {
@@ -1708,6 +1705,74 @@ public class SB_Transfers
 		}
 	}
 
+	private void
+	setTagIcon(
+		Tag			tag,
+		MdiEntry	entry )
+	{
+		String image_file = tag.getImageFile();
+		
+		if ( image_file == null ){
+			
+			image_file = "";
+		}
+		
+		String existing = (String)entry.getUserData( TAG_IMAGE_KEY );
+		
+		if ( existing == image_file || ( existing != null && existing.equals( image_file ))){
+			
+			return;
+		}
+		
+		entry.setUserData( TAG_IMAGE_KEY, image_file );
+		
+		if ( !image_file.isEmpty()){
+			
+			String fif = image_file;
+					
+			Utils.execSWTThread(
+				new Runnable(){
+					
+					@Override
+					public void run(){
+						try{
+							String resource = new File( fif ).toURI().toURL().toExternalForm();
+							
+							ImageLoader.getInstance().getUrlImage(
+								resource, 
+								new ImageLoader.ImageDownloaderListener(){
+									
+									@Override
+									public void imageDownloaded(Image image, boolean returnedImmediately){
+										((MdiEntrySWT)entry).setImageLeftID( resource );
+										
+									}
+								});
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
+				});
+		
+		}else{
+			
+			((MdiEntrySWT)entry).setImageLeft( null );
+			
+			String image_id = tag.getImageID();
+
+			if ( image_id != null ){
+				entry.setImageLeftID( image_id );
+			}else if ( tag.getTagType().getTagType() == TagType.TT_PEER_IPSET ){
+				entry.setImageLeftID("image.sidebar.tag-red");
+			}else if ( tag.getTagType().isTagTypePersistent()){
+				entry.setImageLeftID("image.sidebar.tag-green");
+			}else{
+				entry.setImageLeftID("image.sidebar.tag-blue");
+			}
+		}
+	}
 
 		// -------------------
 
