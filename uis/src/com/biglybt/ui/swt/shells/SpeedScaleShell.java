@@ -40,7 +40,8 @@ import com.biglybt.ui.swt.Utils;
 public class SpeedScaleShell
 {
 	private static final boolean MOUSE_ONLY_UP_EXITS = true;
-
+	private static final int AD_ACCEPT_DELAY = 100;
+	
 	private int OPTION_HEIGHT = 15;
 
 	private int TEXT_HEIGHT = 32;
@@ -142,6 +143,7 @@ public class SpeedScaleShell
 	 */
 	public boolean open(final Control cClickedFrom, final int startValue,
 			boolean _assumeInitiallyDown) {
+		long openTime = SystemTime.getMonotonousTime();
 		value = startValue;
 		this.assumeInitiallyDown = _assumeInitiallyDown;
 		if (assumeInitiallyDown) {
@@ -224,6 +226,10 @@ public class SpeedScaleShell
 		final MouseMoveListener mouseMoveListener = new MouseMoveListener() {
 			@Override
 			public void mouseMove(MouseEvent e) {
+				long now = SystemTime.getMonotonousTime();
+				if ( assumeInitiallyDown && now - openTime < AD_ACCEPT_DELAY ){
+					return;
+				}
 				Point ptOnDisplay = ((Control) e.widget).toDisplay(e.x, e.y);
 				Point ptOnComposite = composite.toControl(ptOnDisplay);
 				lastMoveHadMouseDown = false;
@@ -290,6 +296,7 @@ public class SpeedScaleShell
 
 			@Override
 			public void mouseUp(MouseEvent e) {
+				boolean temp = assumeInitiallyDown;
 				Point ptOnDisplay = ((Control) e.widget).toDisplay(e.x, e.y);
 				Point ptOnComposite = composite.toControl(ptOnDisplay);
 				if (assumeInitiallyDown && e.widget == composite) {
@@ -308,6 +315,11 @@ public class SpeedScaleShell
 					bMouseDown = true;
 				}
 				if (bMouseDown) {
+					long now = SystemTime.getMonotonousTime();
+					if ( temp && now - openTime < AD_ACCEPT_DELAY ){
+						return;
+					}
+					
 					if (ptOnComposite.y > HEIGHT - SCALER_HEIGHT) {
 						setValue(getValueFromMousePos(ptOnComposite.x));
 						setCancelled(false);
