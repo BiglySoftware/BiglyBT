@@ -22,24 +22,21 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
-import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.config.ParameterListener;
+
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.pif.download.Download;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemFillListener;
-import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
-import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
@@ -47,25 +44,21 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
-import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 /** Display Category torrent belongs to.
  *
  * @author TuxPaper
  */
-public class TagColorsItem
+public class TagIconsItem
        extends CoreTableColumnSWT
-       implements TableCellRefreshListener, TableCellSWTPaintListener, ParameterListener
+       implements TableCellRefreshListener, TableCellSWTPaintListener
 {
 	private static TagManager tag_manager = TagManagerFactory.getTagManager();
 
 	public static final Class DATASOURCE_TYPE = Download.class;
 
-	public static final String COLUMN_ID = "tag_colors";
-
-	private static String CFG_SHOW_DEF_COLOURS = "TagColorsItem.showdefcolours";
-	
-	private static boolean show_default_colours;
+	public static final String COLUMN_ID = "tag_icons";
 	
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
@@ -73,55 +66,9 @@ public class TagColorsItem
 	}
 
 	/** Default Constructor */
-	public TagColorsItem(String sTableID) {
+	public TagIconsItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_LEAD, 70, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
-				
-		show_default_colours	 = COConfigurationManager.getBooleanParameter(CFG_SHOW_DEF_COLOURS);
-
-		COConfigurationManager.addWeakParameterListener(this, false, CFG_SHOW_DEF_COLOURS);
-
-		
-		TableContextMenuItem menuShowIcon = addContextMenuItem(
-				"menu.show.default.colors", MENU_STYLE_HEADER);
-		menuShowIcon.setStyle(TableContextMenuItem.STYLE_CHECK);
-		menuShowIcon.addFillListener(new MenuItemFillListener() {
-			@Override
-			public void menuWillBeShown(MenuItem menu, Object data) {
-				menu.setData(Boolean.valueOf(show_default_colours));
-			}
-		});
-
-		menuShowIcon.addMultiListener(new MenuItemListener() {
-			@Override
-			public void selected(MenuItem menu, Object target) {
-				COConfigurationManager.setParameter(CFG_SHOW_DEF_COLOURS,
-						((Boolean) menu.getData()).booleanValue());
-			}
-		});
-	}
-
-	@Override
-	public void remove() {
-		super.remove();
-	}
-
-	@Override
-	public void reset() {
-		super.reset();
-
-		COConfigurationManager.removeParameter( CFG_SHOW_DEF_COLOURS );
-	}
-
-
-	@Override
-	public void parameterChanged(String parameterName) {
-		setShowDefaultColours( COConfigurationManager.getBooleanParameter(CFG_SHOW_DEF_COLOURS));
-	}
-
-	public void setShowDefaultColours(boolean b) {
-		show_default_colours = b;
-		invalidateCells();
 	}
 	
 	@Override
@@ -154,8 +101,7 @@ public class TagColorsItem
 
 		DownloadManager dm = (DownloadManager)cell.getDataSource();
 
-		List<Color> colors = new ArrayList<>();
-
+		List<String> files = new ArrayList<>();
 
 		if (dm != null) {
 
@@ -163,19 +109,19 @@ public class TagColorsItem
 
 			for ( Tag tag: tags ){
 
-				int[] rgb = tag.getColor();
-
-				if ( rgb != null && rgb.length == 3 && ( show_default_colours || !tag.isColorDefault())){
-
-					colors.add( ColorCache.getColor( gc.getDevice(), rgb ));
+				String file = tag.getImageFile();
+				
+				if ( file != null ){
+					
+					files.add( file );
 				}
 			}
 		}
 
-		int	num_colors = colors.size();
+		int	num_files = files.size();
 
-		if ( num_colors > 0 ){
-
+		if ( num_files > 0 ){
+						
 			Rectangle bounds = cell.getBounds();
 
 			bounds.x+=1;
@@ -183,44 +129,54 @@ public class TagColorsItem
 			bounds.width-=1;
 			bounds.height-=1;
 
-			if ( num_colors == 1 ){
+			int w = bounds.width / num_files;			
+			
+			List<Image> 	images 	= new ArrayList<>();
+			List<String> 	keys 	= new ArrayList<>();
+						
+			for ( String file: files ){
+				
+				try{
+					String resource = new File( file ).toURI().toURL().toExternalForm();		
+				
+					ImageLoader.getInstance().getUrlImage(
+							  resource, 
+							  new Point( w-1, bounds.height),
+							  new ImageLoader.ImageDownloaderListener(){
+			
+								  @Override
+								  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+									  							  
+									 if ( image != null && returnedImmediately ){
 
-				gc.setBackground( colors.get(0));
-
-				gc.fillRectangle( bounds );
-
-			}else{
-
-				int	width = bounds.width;
-				int	chunk = width/num_colors;
-
-				if ( chunk == 0 ){
-					chunk = 1;
+										 images.add( image );
+										 
+										 keys.add( key );
+									 }
+								  }
+							  });
+					
+				}catch( Throwable e ){
 				}
-
-				bounds.width = chunk;
-
-				for ( int i=0;i<num_colors;i++){
-
-					if ( i == num_colors-1 ){
-
-						int	rem = width - ( chunk * (num_colors-1 ));
-
-						if ( rem > 0 ){
-
-							bounds.width = rem;
-						}
-					}
-
-					gc.setBackground( colors.get(i));
-
-					gc.fillRectangle( bounds );
-
-					bounds.x += chunk;
+			}
+			
+			if ( images.size() > 0 ){
+				
+				int	width_per_image = bounds.width / images.size();
+				
+				for ( int i=0;i<images.size();i++){
+				
+					Image image = images.get(i);
+					
+					int iw = image.getBounds().width;
+					
+					gc.drawImage( image,  bounds.x + (width_per_image-iw)/2, bounds.y );
+	
+					bounds.x += width_per_image;
+	
+					ImageLoader.getInstance().releaseImage( keys.get(i));
 				}
 			}
 		}
 	}
-	
-	
 }
