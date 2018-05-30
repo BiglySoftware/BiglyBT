@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.*;
 
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
@@ -1740,11 +1741,12 @@ public class SB_Transfers
 							
 							ImageLoader.getInstance().getUrlImage(
 								resource, 
+								new Point( 20, 14 ),
 								new ImageLoader.ImageDownloaderListener(){
 									
 									@Override
-									public void imageDownloaded(Image image, boolean returnedImmediately){
-										((MdiEntrySWT)entry).setImageLeftID( resource );
+									public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+										((MdiEntrySWT)entry).setImageLeftID( key );
 										
 									}
 								});

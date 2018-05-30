@@ -680,7 +680,7 @@ public class SWTSkinObjectImage2
 				final ImageLoader imageLoader = skin.getImageLoader(properties);
 				imageLoader.getUrlImage(url, new ImageDownloaderListener() {
 					@Override
-					public void imageDownloaded(Image image, boolean returnedImmediately) {
+					public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
 						setCanvasImage(url, null);
 						imageLoader.releaseImage(url);
 					}

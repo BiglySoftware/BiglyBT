@@ -1194,7 +1194,7 @@ public class ImageLoader
 
 		if (imageExists(imageKey)) {
 			Image image = getImage(imageKey);
-			l.imageDownloaded(image, true);
+			l.imageDownloaded(image, imageKey, true);
 			return image;
 		}
 
@@ -1224,7 +1224,7 @@ public class ImageLoader
 							}
 						}
 						putRefInfoToImageMap(imageKey, new ImageLoaderRefInfo(image));
-						l.imageDownloaded(image, true);
+						l.imageDownloaded(image, imageKey, true);
 						return image;
 					} finally {
 						fis.close();
@@ -1251,7 +1251,7 @@ public class ImageLoader
 									// downloaded
 								if (imageExists(f_imageKey)) {
 									Image image = getImage(f_imageKey);
-									l.imageDownloaded(image, false);
+									l.imageDownloaded(image, imageKey, false);
 									return;
 								}
 								FileUtil.writeBytesAsFile(cache_file.getAbsolutePath(), imageBytes);
@@ -1271,7 +1271,7 @@ public class ImageLoader
   									}
   								}
   								putRefInfoToImageMap(f_imageKey, new ImageLoaderRefInfo(image));
-  								l.imageDownloaded(image, false);
+  								l.imageDownloaded(image, imageKey, false);
 								} catch (SWTException swte) {
 									//  org.eclipse.swt.SWTException: Unsupported or unrecognized format
 									System.err.println(swte.getMessage() + " for " + f_imageKey + " at " + cache_file);
@@ -1325,7 +1325,7 @@ public class ImageLoader
 
 	public static interface ImageDownloaderListener
 	{
-		public void imageDownloaded(Image image, boolean returnedImmediately);
+		public void imageDownloaded(Image image, String key, boolean returnedImmediately);
 	}
 
 	// @see com.biglybt.core.util.AEDiagnosticsEvidenceGenerator#generate(com.biglybt.core.util.IndentWriter)

@@ -585,7 +585,7 @@ public abstract class TranscodeChooser
 			Image image = imageLoader.getUrlImage(iconURL,
 					new ImageLoader.ImageDownloaderListener() {
 						@Override
-						public void imageDownloaded(Image image, boolean returnedImmediately) {
+						public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
 							if (!returnedImmediately) {
 								if (lblImage.isDisposed()) {
 									return;

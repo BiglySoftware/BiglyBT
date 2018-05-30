@@ -5711,7 +5711,7 @@ DeviceManagerUI
 	  								for ( String id: ids ){
 	  									ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
 	  										@Override
-	  										public void imageDownloaded(Image image, boolean returnedImmediately) {
+	  										public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
 	  											ViewTitleInfoManager.refreshTitleInfo( deviceView.this );
 	  										}	
 	  									});

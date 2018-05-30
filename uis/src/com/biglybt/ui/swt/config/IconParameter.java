@@ -154,12 +154,12 @@ public class IconParameter extends Parameter implements ParameterListener {
 					  new ImageLoader.ImageDownloaderListener(){
 	
 						  @Override
-						  public void imageDownloaded(Image image, boolean returnedImmediately){
+						  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
 							  							  
 							  iconChooser.setImage(image);
 							  
 							  if ( image != null ){
-								  imgResource = resource;
+								  imgResource = key;
 							  }
 						  }
 					  });

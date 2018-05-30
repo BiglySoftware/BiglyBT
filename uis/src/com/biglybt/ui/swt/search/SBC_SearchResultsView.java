@@ -1517,7 +1517,7 @@ SBC_SearchResultsView
 					new ImageDownloaderListener() {
 
 						@Override
-						public void imageDownloaded(Image image, boolean returnedImmediately) {
+						public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
 
 							f_x[0]	= image;
 
