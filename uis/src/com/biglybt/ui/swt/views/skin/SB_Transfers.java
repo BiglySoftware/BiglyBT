@@ -1382,17 +1382,18 @@ public class SB_Transfers
 		
 		setTagIcon( tag, entry );
 		
-		Integer num = (Integer)entry.getUserData( TAG_INDICATOR_KEY );
+		Object[] tik = (Object[])entry.getUserData( TAG_INDICATOR_KEY );
 
-		int tag_count = tag.getTaggedCount();
+		int 	tag_count 	= tag.getTaggedCount();
+		int[] 	tag_colour	= tag.getColor();
 		
-		if ( num == null || num != tag_count ){
+		if ( tik == null || (Integer)tik[0] != tag_count || !Arrays.equals((int[])tik[1], tag_colour )){
 			
-			entry.setUserData( TAG_INDICATOR_KEY, tag_count );
+			entry.setUserData( TAG_INDICATOR_KEY, new Object[]{ tag_count, tag_colour });
 			
 			requestRedraw( entry );
 		}
-		
+			
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 
 		Object[] tag_data = (Object[])entry.getUserData( TAG_DATA_KEY );
