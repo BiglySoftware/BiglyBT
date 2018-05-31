@@ -40,7 +40,7 @@ import com.biglybt.ui.swt.Utils;
 public class SpeedScaleShell
 {
 	private static final boolean MOUSE_ONLY_UP_EXITS = true;
-	private static final int AD_ACCEPT_DELAY = 100;
+	private static final int AD_ACCEPT_DELAY = 500;
 	
 	private int OPTION_HEIGHT = 15;
 
@@ -224,12 +224,35 @@ public class SpeedScaleShell
 		});
 
 		final MouseMoveListener mouseMoveListener = new MouseMoveListener() {
-			@Override
+			private MouseEvent pending_event;
+
+			@Override			
 			public void mouseMove(MouseEvent e) {
 				long now = SystemTime.getMonotonousTime();
-				if ( assumeInitiallyDown && now - openTime < AD_ACCEPT_DELAY ){
+				long rem = now - openTime;
+				if ( assumeInitiallyDown &&  rem < AD_ACCEPT_DELAY ){
+					pending_event = e;
+					SimpleTimer.addEvent("updater",
+							SystemTime.getOffsetTime(CLOSE_DELAY), new TimerEventPerformer() {
+						@Override
+						public void perform(TimerEvent event) {
+							Utils.execSWTThread(new AERunnable() {
+								@Override
+								public void runSupport() {
+									if ( pending_event == e ){
+										pending_event = null;
+										if ( !composite.isDisposed()){
+											mouseMove(e);
+										}
+									}
+								}
+							});
+						}
+					});
+					
 					return;
 				}
+				pending_event = null;
 				Point ptOnDisplay = ((Control) e.widget).toDisplay(e.x, e.y);
 				Point ptOnComposite = composite.toControl(ptOnDisplay);
 				lastMoveHadMouseDown = false;
