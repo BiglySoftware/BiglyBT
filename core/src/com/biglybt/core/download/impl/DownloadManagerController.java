@@ -3057,6 +3057,12 @@ DownloadManagerController
 		}
 
 		@Override
+		public void recheck()
+		{
+			delegate.recheck();
+		}
+		
+		@Override
 		public void
 		close()
 		{

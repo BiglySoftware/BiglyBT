@@ -208,6 +208,11 @@ public class FilesViewMenuUtil
 		itemRetarget.setData("retarget", Boolean.valueOf(true));
 		itemRetarget.setData("batch", Boolean.valueOf(false));
 
+		// recheck
+
+		final MenuItem itemRecheckFiles = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(itemRecheckFiles, "label.recheck");
+
 
 		// revert
 
@@ -353,6 +358,7 @@ public class FilesViewMenuUtil
 			itemRename.setEnabled(false);
 			itemRetarget.setEnabled(false);
 			itemRevertFiles.setEnabled(false);
+			itemRecheckFiles.setEnabled(false);
 			itemLocateFiles.setEnabled(false);
 			itemfindMore.setEnabled(false);
 			if ( itemClearLinks != null ){
@@ -542,6 +548,16 @@ public class FilesViewMenuUtil
 			itemfindMore.setEnabled( all_files.size() == 1 );
 		}
 
+		
+		itemRecheckFiles.setEnabled( true );
+		itemRecheckFiles.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+
+				recheckFiles( all_files );
+			}
+		});
+		
 		itemRevertFiles.setEnabled( any_relocated );
 		itemRevertFiles.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -1137,6 +1153,65 @@ public class FilesViewMenuUtil
 		}
 	}
 
+	public static void recheckFiles(List<DiskManagerFileInfo> file_list ) {
+
+		if (file_list == null || file_list.size() == 0) {
+			return;
+		}
+
+		Map<DownloadManager, ArrayList<DiskManagerFileInfo>> mapDMtoDMFI = new IdentityHashMap<>();
+
+		for ( DiskManagerFileInfo file: file_list ){
+
+			DownloadManager dm = file.getDownloadManager();
+			ArrayList<DiskManagerFileInfo> listFileInfos = mapDMtoDMFI.get(dm);
+			if (listFileInfos == null) {
+				listFileInfos = new ArrayList<>(1);
+				mapDMtoDMFI.put(dm, listFileInfos);
+			}
+			listFileInfos.add(file);
+		}
+
+		for (DownloadManager dm : mapDMtoDMFI.keySet()) {
+			ArrayList<DiskManagerFileInfo> list = mapDMtoDMFI.get(dm);
+			DiskManagerFileInfo[] fileInfos = list.toArray(new DiskManagerFileInfo[0]);
+
+			boolean was_force 	= dm.isForceStart();
+			boolean was_paused 	= dm.isPaused();
+			
+			int state = dm.getState();
+			
+			boolean was_stopped = (state == DownloadManager.STATE_STOPPED || state == DownloadManager.STATE_STOPPING || state == DownloadManager.STATE_ERROR );
+			
+			if ( !was_stopped ){
+				
+				dm.pause();
+			}
+
+			for ( DiskManagerFileInfo file: fileInfos ){
+				
+				file.recheck();
+			}
+			
+				// to actually do a file-level recheck the download need to be started after requesting the
+				// recheck(s)
+			
+			if ( was_paused ){
+
+				dm.resume();
+				
+			}else{
+				
+				dm.stopIt( DownloadManager.STATE_QUEUED, false, false );
+			}
+			
+			if ( was_force ){
+				
+				dm.setForceStart( true );
+			}
+		}
+	}
+	
 	public static void changePriority(Object type, final List<DiskManagerFileInfo> file_list ) {
 
 		if (file_list == null || file_list.size() == 0) {

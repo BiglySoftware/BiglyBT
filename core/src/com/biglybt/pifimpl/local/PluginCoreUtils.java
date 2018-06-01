@@ -394,6 +394,11 @@ PluginCoreUtils
 				}
 
 				@Override
+				public void recheck()
+				{
+				}
+				
+				@Override
 				public void
 				close()
 				{

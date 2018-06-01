@@ -114,7 +114,9 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 		public void refresh(TableCell cell, boolean sortOnly) {
 			final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
 			
-			final DiskManager manager = fileInfo == null ? null : fileInfo.getDiskManager();
+			DownloadManager dm = fileInfo==null?null:fileInfo.getDownloadManager();
+			
+			final DiskManager manager = dm == null ? null : dm.getDiskManager();
 
 			int percentDone = 0;
 			int sortOrder;

@@ -133,6 +133,9 @@ DiskManagerFileInfo
 	getETA();
 
 	public void
+	recheck();
+	
+	public void
 	close();
 
 	public void

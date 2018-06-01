@@ -82,12 +82,20 @@ public class TagIconsItem
 
 				for ( Tag t: tags ){
 
-					String str = t.getTagName( true );
-
-					if ( sTags == null ){
-						sTags = str;
-					}else{
-						sTags += ", " + str;
+					String file = t.getImageFile();
+					
+					if ( file != null ){
+						
+						String str = t.getTagName( true );
+	
+						if ( sTags == null ){
+							
+							sTags = str;
+							
+						}else{
+							
+							sTags += ", " + str;
+						}
 					}
 				}
 			}

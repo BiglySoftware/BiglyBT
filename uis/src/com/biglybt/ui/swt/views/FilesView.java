@@ -1469,6 +1469,9 @@ public class FilesView
 		setSkipped(
 			boolean		b );
 		
+		public void
+		recheck();
+		
 		public long
 		getLength();
 		
@@ -1827,6 +1830,12 @@ public class FilesView
 		{
 			return( -1 );
 		}
+		
+		@Override
+		public void 
+		recheck()
+		{
+		}
 
 		public void
 		close()
@@ -2081,6 +2090,12 @@ public class FilesView
 		getETA()
 		{
 			return( delegate.getETA());
+		}
+		
+		@Override
+		public void recheck()
+		{
+			delegate.recheck();
 		}
 
 		public void

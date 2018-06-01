@@ -1219,6 +1219,12 @@ DiskManagerUtil
 	                	}
 
 	                	@Override
+	                	public void recheck()
+	                	{
+	                		DiskManagerFactory.recheckFile( getDownloadManager(), this );
+	                	}
+	                	
+	                	@Override
 		                public void
 	                	close()
 	                	{
