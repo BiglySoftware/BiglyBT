@@ -32,7 +32,6 @@ import com.biglybt.pif.ui.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.FixedURLTransfer;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
@@ -1763,21 +1762,56 @@ public class MyTorrentsView
 				break;
 			}
 			case "status": {
-				boolean priority_sort = COConfigurationManager.getBooleanParameter("PeersView.status.prioritysort");
-
-				final MenuItem item = new MenuItem(menuThisColumn, SWT.CHECK);
-				Messages.setLanguageText(item, "MyTorrentsView.menu.status.prioritysort");
-				item.setSelection(priority_sort);
-
-				item.addListener(SWT.Selection, new Listener() {
+				
+				final Menu menuSort = new Menu(menuThisColumn.getShell(),SWT.DROP_DOWN);
+				
+				final MenuItem itemSort = new MenuItem(menuThisColumn, SWT.CASCADE);
+				
+				Messages.setLanguageText(itemSort, "menu.sort.order");
+				
+				itemSort.setMenu(menuSort);
+				
+				
+				int order = COConfigurationManager.getIntParameter( "MyTorrents.status.sortorder" );
+								
+				MenuItem itemAlpha = new MenuItem(menuSort, SWT.RADIO);
+				Messages.setLanguageText(itemAlpha, "menu.sort.alphabetic");
+				
+				MenuItem itemPriority = new MenuItem(menuSort, SWT.RADIO);
+				Messages.setLanguageText(itemPriority, "MyTorrentsView.menu.status.prioritysort");
+				
+				MenuItem itemStatus = new MenuItem(menuSort, SWT.RADIO);
+				Messages.setLanguageText(itemStatus, "menu.sort.status");
+				
+				if ( order == 0 ){
+					itemAlpha.setSelection(true);
+				}else if ( order == 1 ){
+					itemPriority.setSelection(true);
+				}else{
+					itemStatus.setSelection(true);
+				}
+										
+				Listener listener = new Listener() {
 					@Override
 					public void handleEvent(Event e) {
-						boolean priority_sort = item.getSelection();
-						COConfigurationManager.setParameter("PeersView.status.prioritysort",priority_sort);
+						int new_order;
+						if ( itemAlpha.getSelection()){
+							new_order = 0;
+						}else if ( itemPriority.getSelection()){
+							new_order = 1;
+						}else{
+							new_order = 2;
+						}
+						COConfigurationManager.setParameter("MyTorrents.status.sortorder", new_order );
 						tv.columnInvalidate("status");
 						tv.refreshTable(false);
 					}
-				});
+				};
+				
+				itemAlpha.addListener(SWT.Selection, listener );
+				itemPriority.addListener(SWT.Selection, listener );
+				itemStatus.addListener(SWT.Selection, listener );
+
 				break;
 			}
 		}

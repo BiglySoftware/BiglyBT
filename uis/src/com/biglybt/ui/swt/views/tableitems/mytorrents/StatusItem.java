@@ -27,8 +27,10 @@ import org.eclipse.swt.graphics.Color;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.Utils;
@@ -55,16 +57,17 @@ public class StatusItem
 
 	private final static Object CLICK_KEY = new Object();
 	
-	private static boolean	priority_sort;
+	private static int	sort_order;
 	
 	static{
+		
 		COConfigurationManager.addAndFireParameterListener(
-				"PeersView.status.prioritysort",
+				"MyTorrents.status.sortorder",
 				new ParameterListener(){
 					
 					@Override
 					public void parameterChanged(String parameterName){
-						priority_sort = COConfigurationManager.getBooleanParameter( parameterName );
+						sort_order = COConfigurationManager.getIntParameter( parameterName );
 					}
 				});
 	}
@@ -124,60 +127,162 @@ public class StatusItem
 
 			text = DisplayFormatters.formatDownloadStatus(dm);
 			
-			if ( dm.isForceStart() && ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING )){
+			boolean forced = dm.isForceStart() && ( state == DownloadManager.STATE_DOWNLOADING || state == DownloadManager.STATE_SEEDING );
+			
+			if ( sort_order == 1 ){
 				
-				sort_value = 1000;
-				
-			}else{
-				
-				switch( state ){
-					case DownloadManager.STATE_SEEDING:{
-						sort_value		= 900;
-						break;
-					}
-					case DownloadManager.STATE_DOWNLOADING:{
-						sort_value		= 800;
-						break;
-					}
-					case DownloadManager.STATE_QUEUED:{
-						sort_value		= 700;
-						tooltip = MessageText.getString( "ManagerItem.queued.tooltip" );
-						break;
-					}
-					case DownloadManager.STATE_STOPPED:{
-						if ( dm.isPaused()){
-							sort_value		= 600;
-						}else{
-							sort_value		= 500;
+				if ( forced ){
+					
+					sort_value = 1000;
+					
+				}else{
+					
+					switch( state ){
+					
+						case DownloadManager.STATE_SEEDING:{
+							sort_value		= 900;
+							break;
 						}
-						break;
-					}
-					default:{
-						sort_value	= 0;
+						case DownloadManager.STATE_DOWNLOADING:{
+							sort_value		= 800;
+							break;
+						}
+						case DownloadManager.STATE_QUEUED:{
+							sort_value		= 700;
+							tooltip = MessageText.getString( "ManagerItem.queued.tooltip" );
+							break;
+						}
+						case DownloadManager.STATE_STOPPED:{
+							if ( dm.isPaused()){
+								sort_value		= 600;
+							}else{
+								sort_value		= 500;
+							}
+							break;
+						}
+						default:{
+							sort_value	= 0;
+						}
 					}
 				}
+			}else if ( sort_order == 2 ){
+					
+				PEPeerManager pm = dm.getPeerManager();
+				
+				boolean super_seeding = pm != null && pm.isSuperSeedMode();
+				
+				if ( forced ){
+					
+					sort_value = 800;
+					
+				}else if ( dm.isPaused()){
+					
+					sort_value = 600;
+					
+				}else if ( super_seeding ){
+					
+					sort_value = 825;
+					
+				}else{
+					switch( state ){
+						case DownloadManager.STATE_WAITING:{
+							sort_value = 100;
+							break;
+						}
+						case DownloadManager.STATE_INITIALIZING:{
+							sort_value = 100;
+							break;
+						}
+						case DownloadManager.STATE_INITIALIZED:{
+							sort_value = 100;
+							break;
+						}
+						case DownloadManager.STATE_ALLOCATING:{
+							sort_value = 200;
+							break;
+						}
+						case DownloadManager.STATE_CHECKING:{
+							sort_value = 900;
+							break;
+						}
+						case DownloadManager.STATE_READY:{
+							sort_value = 300;
+							break;
+						}
+						case DownloadManager.STATE_DOWNLOADING:{
+							sort_value = 400;
+							break;
+						}
+						case DownloadManager.STATE_FINISHING:{
+							sort_value = 400;
+							break;
+						}
+						case DownloadManager.STATE_SEEDING:{
+							DiskManager diskManager = dm.getDiskManager();
+							if ( diskManager != null && diskManager.getCompleteRecheckStatus() != -1 ){
+								sort_value = 900;
+							}else{
+								sort_value = 850;
+							}
+							
+							break;
+						}
+						case DownloadManager.STATE_STOPPING:{
+							sort_value = 500;
+							break;
+						}
+						case DownloadManager.STATE_STOPPED:{
+							sort_value = 500;
+							break;
+						}
+						case DownloadManager.STATE_QUEUED:{
+							sort_value = 700;
+							break;
+						}
+						case DownloadManager.STATE_ERROR:{
+							sort_value = 1000;
+							break;
+						}
+						default:{
+							sort_value = 999;
+							break;
+						}
+					}
+				}
+			}else{
+				
+				sort_value = 0;	// not used
 			}
 		}
 
-		sort_value += state;
-		sort_value	<<= 32;
-		
-		if ( dm.isDownloadComplete( false )){
+		if ( sort_order == 1 ){
 			
-			Download dl = PluginCoreUtils.wrap( dm );
+				// priority based - mix in actual state and priority
 			
-			if ( dl != null ){
+			sort_value += state;
+			sort_value	<<= 32;
+			
+			if ( dm.isDownloadComplete( false )){
 				
-				sort_value += dl.getSeedingRank();
+				Download dl = PluginCoreUtils.wrap( dm );
+				
+				if ( dl != null ){
+					
+					sort_value += dl.getSeedingRank();
+				}
+			}else{
+				
+				sort_value -= dm.getPosition();
 			}
-		}else{
-			
-			sort_value -= dm.getPosition();
 		}
 		
 		boolean update;
 		
-		if ( priority_sort ){
+		if ( sort_order == 0 ){
+			
+			update = cell.setSortValue( text );
+			
+		}else{
 		
 			update = cell.setSortValue( sort_value );
 			
@@ -188,9 +293,6 @@ public class StatusItem
 					update = true;
 				}
 			}
-		}else{
-			
-			update = cell.setSortValue( text );
 		}
 		
 		if ( update || !cell.isValid()){

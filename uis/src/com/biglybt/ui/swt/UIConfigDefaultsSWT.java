@@ -177,6 +177,18 @@ public class UIConfigDefaultsSWT
 
 		def.addParameter( "tag.add.customize.default.checked", true );
 		
-		def.addParameter( "PeersView.status.prioritysort", true );
+		def.addParameter( "MyTorrents.status.sortorder", 0 );
+		
+		if ( COConfigurationManager.hasParameter("PeersView.status.prioritysort", true )){
+			
+			boolean priority_sort = COConfigurationManager.getBooleanParameter("PeersView.status.prioritysort");
+			
+			COConfigurationManager.removeParameter( "PeersView.status.prioritysort" );
+			
+			if ( priority_sort ){
+				
+				COConfigurationManager.setParameter("MyTorrents.status.sortorder", 1 );
+			}
+		}
 	}
 }
