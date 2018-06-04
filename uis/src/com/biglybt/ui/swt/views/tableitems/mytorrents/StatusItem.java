@@ -22,6 +22,9 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 
@@ -57,19 +60,20 @@ public class StatusItem
 
 	private final static Object CLICK_KEY = new Object();
 	
-	private static int	sort_order;
+	private static Map<String,Integer>	sort_orders = new HashMap<>();
 	
 	static{
-		
-		COConfigurationManager.addAndFireParameterListener(
-				"MyTorrents.status.sortorder",
-				new ParameterListener(){
-					
-					@Override
-					public void parameterChanged(String parameterName){
-						sort_order = COConfigurationManager.getIntParameter( parameterName );
-					}
-				});
+		for ( String tid: TableManager.TABLE_MYTORRENTS_ALL ){
+			COConfigurationManager.addAndFireParameterListener(
+					"MyTorrents.status.sortorder." + tid,
+					new ParameterListener(){
+						
+						@Override
+						public void parameterChanged(String parameterName){
+							sort_orders.put(tid, COConfigurationManager.getIntParameter( parameterName ));
+						}
+					});
+		}
 	}
 	
 	private static final int[] BLUE = Utils.colorToIntArray( Colors.blue );
@@ -109,6 +113,8 @@ public class StatusItem
 			return;
 		}
 
+		int sort_order = sort_orders.get( getTableID());
+		
 		int state = dm.getState();
 
 		long	sort_value;

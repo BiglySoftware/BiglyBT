@@ -1771,8 +1771,9 @@ public class MyTorrentsView
 				
 				itemSort.setMenu(menuSort);
 				
+				String tid = tv.getTableID();
 				
-				int order = COConfigurationManager.getIntParameter( "MyTorrents.status.sortorder" );
+				int order = COConfigurationManager.getIntParameter( "MyTorrents.status.sortorder." + tid);
 								
 				MenuItem itemAlpha = new MenuItem(menuSort, SWT.RADIO);
 				Messages.setLanguageText(itemAlpha, "menu.sort.alphabetic");
@@ -1802,7 +1803,7 @@ public class MyTorrentsView
 						}else{
 							new_order = 2;
 						}
-						COConfigurationManager.setParameter("MyTorrents.status.sortorder", new_order );
+						COConfigurationManager.setParameter("MyTorrents.status.sortorder." + tid, new_order );
 						tv.columnInvalidate("status");
 						tv.refreshTable(false);
 					}

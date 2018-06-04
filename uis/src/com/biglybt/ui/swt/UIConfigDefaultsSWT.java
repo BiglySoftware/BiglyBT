@@ -20,7 +20,7 @@ package com.biglybt.ui.swt;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.util.Constants;
-
+import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 
 /**
@@ -188,6 +188,23 @@ public class UIConfigDefaultsSWT
 			if ( priority_sort ){
 				
 				COConfigurationManager.setParameter("MyTorrents.status.sortorder", 1 );
+			}
+		}
+		
+		int tid_def = 0;
+		
+		if ( COConfigurationManager.hasParameter("MyTorrents.status.sortorder", true )){
+			
+			tid_def = COConfigurationManager.getIntParameter("MyTorrents.status.sortorder");
+			
+			COConfigurationManager.removeParameter( "MyTorrents.status.sortorder" );
+		}
+				
+		for ( String tid: TableManager.TABLE_MYTORRENTS_ALL ){
+			def.addParameter( "MyTorrents.status.sortorder." + tid, 0 );
+			
+			if ( tid_def != 0 ){
+				COConfigurationManager.setParameter( "MyTorrents.status.sortorder." + tid, tid_def );
 			}
 		}
 	}
