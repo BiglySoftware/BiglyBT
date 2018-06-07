@@ -233,15 +233,7 @@ MetaSearchManagerImpl
 		PluginInterface		pi,
 		SearchProvider 		provider )
 	{
-		String	id = pi.getPluginID() + "." + provider.getProperty( SearchProvider.PR_NAME );
-
-		try{
-			meta_search.importFromPlugin( id, provider );
-
-		}catch( Throwable e ){
-
-			Debug.out( "Failed to add search provider '" + id + "' (" + provider + ")", e );
-		}
+		meta_search.addProvider(pi, provider);
 	}
 
 	@Override
@@ -250,43 +242,14 @@ MetaSearchManagerImpl
 		PluginInterface		pi,
 		SearchProvider 		provider )
 	{
-		String	id = pi.getPluginID() + "." + provider.getProperty( SearchProvider.PR_NAME );
-
-		try{
-			Engine[] engines = meta_search.getEngines( false, false );
-
-			for ( Engine engine: engines ){
-
-				if ( engine instanceof PluginEngine ){
-
-					PluginEngine pe = (PluginEngine)engine;
-
-					if ( pe.getProvider() == provider ){
-
-						engine.delete();
-					}
-				}
-			}
-		}catch( Throwable e ){
-
-			Debug.out( "Failed to remove search provider '" + id + "' (" + provider + ")", e );
-		}
+		meta_search.removeProvider(pi, provider);
 	}
 
 	@Override
 	public SearchProvider[]
   	getProviders()
 	{
-		Engine[] engines = meta_search.getEngines( true, false );
-
-		SearchProvider[] result = new SearchProvider[engines.length];
-
-		for (int i=0;i<engines.length;i++){
-
-			result[i] = new engineInfo( engines[i] );
-		}
-
-		return( result );
+		return( meta_search.getProviders());
 	}
 
 	@Override

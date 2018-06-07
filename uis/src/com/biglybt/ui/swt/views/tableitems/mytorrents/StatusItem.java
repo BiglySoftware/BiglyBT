@@ -117,11 +117,20 @@ public class StatusItem
 		
 		int state = dm.getState();
 
+		String tooltip;
+
+		if ( state == DownloadManager.STATE_QUEUED && Utils.getUserMode() == 0 ){
+			
+			tooltip = MessageText.getString( "ManagerItem.queued.tooltip" );
+			
+		}else{
+			
+			tooltip = null;
+		}
+		
 		long	sort_value;
 		
 		String	text;
-
-		String tooltip = null;
 		
 		if ( showTrackerErrors && dm.isUnauthorisedOnTracker() && state != DownloadManager.STATE_ERROR ){
 
@@ -155,7 +164,6 @@ public class StatusItem
 						}
 						case DownloadManager.STATE_QUEUED:{
 							sort_value		= 700;
-							tooltip = MessageText.getString( "ManagerItem.queued.tooltip" );
 							break;
 						}
 						case DownloadManager.STATE_STOPPED:{

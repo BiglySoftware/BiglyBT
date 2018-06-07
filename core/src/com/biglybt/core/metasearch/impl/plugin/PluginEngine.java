@@ -31,10 +31,12 @@ import com.biglybt.core.metasearch.impl.EngineImpl;
 import com.biglybt.core.metasearch.impl.MetaSearchImpl;
 import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.Debug;
+import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.utils.search.SearchInstance;
 import com.biglybt.pif.utils.search.SearchObserver;
 import com.biglybt.pif.utils.search.SearchProvider;
 import com.biglybt.pif.utils.search.SearchResult;
+import com.biglybt.util.MapUtils;
 
 public class
 PluginEngine
@@ -74,17 +76,20 @@ PluginEngine
 	}
 
 	private SearchProvider			provider;
-
+	private String					plugin_id;
+	
 	public
 	PluginEngine(
 		MetaSearchImpl		_meta_search,
 		long				_id,
+		PluginInterface		_pi,
 		SearchProvider		_provider )
 	{
 		super( _meta_search, Engine.ENGINE_TYPE_PLUGIN, _id, 0, 1.0f, (String)_provider.getProperty( SearchProvider.PR_NAME ));
 
 		provider	= _provider;
-
+		plugin_id	= _pi.getPluginID();
+				
 		setSource( ENGINE_SOURCE_LOCAL );
 	}
 
@@ -97,6 +102,8 @@ PluginEngine
 	{
 		super( _meta_search, _map );
 
+		plugin_id = MapUtils.getMapString( _map, "plugin_id", null );
+		
 			// recovery from when incorrectly defaulted to 0.0
 
 		if ( getRankBias() == 0.0f ){
@@ -127,14 +134,25 @@ PluginEngine
 
 		super.exportToBencodedMap( res, generic );
 
+		if ( plugin_id != null ){
+			
+			MapUtils.setMapString( res, "plugin_id", plugin_id );
+		}
+		
 		return( res );
 	}
 
 	public void
 	setProvider(
+		PluginInterface		_pi,
 		SearchProvider		_provider )
 	{
 		provider	= _provider;
+		
+		if ( plugin_id == null ){
+			
+			plugin_id = _pi.getPluginID();
+		}
 	}
 
 	public SearchProvider
@@ -143,6 +161,12 @@ PluginEngine
 		return( provider );
 	}
 
+	public String
+	getPluginID()
+	{
+		return( plugin_id );
+	}
+	
 	protected boolean
 	useAccuracyForRank()
 	{

@@ -49,6 +49,7 @@ import com.biglybt.core.messenger.config.PlatformSubscriptionsMessenger;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.MetaSearchListener;
 import com.biglybt.core.metasearch.MetaSearchManagerFactory;
+import com.biglybt.core.metasearch.impl.plugin.PluginEngine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.metasearch.impl.web.rss.RSSEngine;
 import com.biglybt.core.security.CryptoECCUtils;
@@ -1848,7 +1849,19 @@ SubscriptionManagerImpl
 				}
 			}
 
-			String	json = SubscriptionImpl.getSkeletonJSON( engine, term, networks_str, 60 );
+			int period = 60;
+			
+			if ( engine instanceof PluginEngine ){
+				
+				String pid = ((PluginEngine)engine).getPluginID();
+				
+				if ( pid != null && pid.equals( "aercm" )){
+					
+					period = 5;
+				}
+			}
+			
+			String	json = SubscriptionImpl.getSkeletonJSON( engine, term, networks_str, period );
 
 			String	name 	= (String)search_parameters.get( SearchProvider.SP_SEARCH_NAME );
 

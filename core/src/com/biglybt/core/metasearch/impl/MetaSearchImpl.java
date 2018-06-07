@@ -30,6 +30,7 @@ import java.util.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.messenger.config.PlatformMetaSearchMessenger;
 import com.biglybt.core.metasearch.*;
+import com.biglybt.core.metasearch.impl.MetaSearchManagerImpl.engineInfo;
 import com.biglybt.core.metasearch.impl.plugin.PluginEngine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.metasearch.impl.web.rss.RSSEngine;
@@ -37,6 +38,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
+import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderFactory;
@@ -106,92 +108,143 @@ MetaSearchImpl
 		return( EngineImpl.importFromJSONString( this, type, id, last_updated, rank_bias, name, content ));
 	}
 
-	public EngineImpl
-	importFromPlugin(
-		String				_pid,
-		SearchProvider		provider )
-
-		throws IOException
+	protected void
+	addProvider(
+		PluginInterface		pi,
+		SearchProvider 		provider )
 	{
-		synchronized( this ){
-
-				// unfortunately pid can be internationalised and thus musn't be used as a key to
-				// a bencoded-map as it can lead of nastyness. Delete any existing entries that have
-				// got out of control
-
-			Iterator<String>	it = plugin_map.keySet().iterator();
-
-			while( it.hasNext()){
-
-				if ( it.next().length() > 1024 ){
-
-					Debug.out( "plugin_map corrupted, resetting" );
-
-					plugin_map.clear();
-
-					break;
+		try{
+			synchronized( this ){
+	
+					// unfortunately pid can be internationalised and thus musn't be used as a key to
+					// a bencoded-map as it can lead of nastyness. Delete any existing entries that have
+					// got out of control
+	
+				String _pid = pi.getPluginID() + "." + provider.getProperty( SearchProvider.PR_NAME );				
+				
+				Iterator<String>	it = plugin_map.keySet().iterator();
+	
+				while( it.hasNext()){
+	
+					if ( it.next().length() > 1024 ){
+	
+						Debug.out( "plugin_map corrupted, resetting" );
+	
+						plugin_map.clear();
+	
+						break;
+					}
 				}
-			}
-
-			String pid = Base32.encode( _pid.getBytes( "UTF-8" ));
-
-			Long	l_id = plugin_map.get( pid );
-
-			long	id;
-
-			if ( l_id == null ){
-
-				id = manager.getLocalTemplateID();
-
-				plugin_map.put( pid, new Long( id ));
-
-				configDirty();
-
-			}else{
-
-				id = l_id.longValue();
-			}
-
-			EngineImpl engine = (EngineImpl)getEngine( id );
-
-			if ( engine == null ){
-
-				engine = new PluginEngine( this, id, provider );
-
-				engine.setSource( Engine.ENGINE_SOURCE_LOCAL );
-
-				engine.setSelectionState( Engine.SEL_STATE_MANUAL_SELECTED );
-
-				addEngine( engine );
-
-			}else{
-
-				if ( engine instanceof PluginEngine ){
-
-					((PluginEngine)engine).setProvider( provider );
-
+	
+				String pid = Base32.encode( _pid.getBytes( "UTF-8" ));
+	
+				Long	l_id = plugin_map.get( pid );
+	
+				long	id;
+	
+				if ( l_id == null ){
+	
+					id = manager.getLocalTemplateID();
+	
+					plugin_map.put( pid, new Long( id ));
+	
+					configDirty();
+	
 				}else{
-
-					Debug.out( "Inconsistent: plugin must be a PluginEngine!" );
-
-					plugin_map.remove( pid );
-
-					removeEngine( engine );
-
-					throw( new IOException( "Inconsistent" ));
+	
+					id = l_id.longValue();
+				}
+	
+				EngineImpl engine = (EngineImpl)getEngine( id );
+	
+				if ( engine == null ){
+	
+					engine = new PluginEngine( this, id, pi, provider );
+	
+					engine.setSource( Engine.ENGINE_SOURCE_LOCAL );
+	
+					engine.setSelectionState( Engine.SEL_STATE_MANUAL_SELECTED );
+	
+					addEngine( engine );
+	
+				}else{
+	
+					if ( engine instanceof PluginEngine ){
+	
+						((PluginEngine)engine).setProvider( pi, provider );
+	
+					}else{
+	
+						Debug.out( "Inconsistent: plugin must be a PluginEngine!" );
+	
+						plugin_map.remove( pid );
+	
+						removeEngine( engine );
+	
+						throw( new IOException( "Inconsistent" ));
+					}
 				}
 			}
+		}catch( Throwable e ){
 
-			return( engine );
+			String	id = pi.getPluginID() + "." + provider.getProperty( SearchProvider.PR_NAME );
+
+			Debug.out( "Failed to add search provider '" + id + "' (" + provider + ")", e );
 		}
 	}
 
+	protected void
+	removeProvider(
+		PluginInterface		pi,
+		SearchProvider 		provider )
+	{
+		try{
+			Engine[] engines = getEngines( false, false );
+
+			for ( Engine engine: engines ){
+
+				if ( engine instanceof PluginEngine ){
+
+					PluginEngine pe = (PluginEngine)engine;
+
+					if ( pe.getProvider() == provider ){
+
+						engine.delete();
+					}
+				}
+			}
+		}catch( Throwable e ){
+
+			String	id = pi.getPluginID() + "." + provider.getProperty( SearchProvider.PR_NAME );
+
+
+			Debug.out( "Failed to remove search provider '" + id + "' (" + provider + ")", e );
+		}
+	}
+
+	protected SearchProvider[]
+  	getProviders()
+	{
+		Engine[] engines = getEngines( true, false );
+
+		SearchProvider[] result = new SearchProvider[engines.length];
+
+		for (int i=0;i<engines.length;i++){
+
+			result[i] = new engineInfo( engines[i] );
+		}
+
+		return( result );
+	}
+	
 	public SearchProvider
 	resolveProvider(
 		PluginEngine	for_engine )
 	{
 		List<EngineImpl> l = engines.getList();
 
+		String 	pid = for_engine.getPluginID();
+		
 		for ( EngineImpl e: l ){
 
 			if ( e instanceof PluginEngine ){
@@ -204,6 +257,11 @@ MetaSearchImpl
 
 					if ( pe.getName().equals( for_engine.getName())){
 
+						return( provider );
+					}
+					
+					if ( pid != null && pid.equals( for_engine.getPluginID())){
+						
 						return( provider );
 					}
 				}
