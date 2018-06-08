@@ -481,8 +481,12 @@ DownloadManagerStatsImpl
 	{
 		boolean running = download_manager.getPeerManager() != null;
 
+		boolean forced = false;
+		
 		if ( running ){
 
+			forced = download_manager.isForceStart();
+			
 			download_manager.stopIt( DownloadManager.STATE_STOPPED, false, false );
 		}
 
@@ -507,6 +511,11 @@ DownloadManagerStatsImpl
 		if ( running ){
 
 			download_manager.setStateWaiting();
+			
+			if ( forced ){
+				
+				download_manager.setForceStart( true );
+			}
 		}
 	}
 
