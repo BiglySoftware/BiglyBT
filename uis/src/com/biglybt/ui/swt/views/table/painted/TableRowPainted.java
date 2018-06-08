@@ -650,7 +650,6 @@ public class TableRowPainted
 					GCStringPrinter sp = new GCStringPrinter(gc, text, cellBounds, true,
 							cellBounds.height > 20, style);
 
-					boolean fit;
 					if (shadowColor != null) {
 						Color oldFG = gc.getForeground();
 						gc.setForeground(shadowColor);
@@ -665,12 +664,12 @@ public class TableRowPainted
 
 						cellBounds.x -= 1;
 						cellBounds.y -= 1;
-						fit = sp.printString2(gc, cellBounds, style);
+						sp.printString2(gc, cellBounds, style);
 					} else {
-						fit = sp.printString();
+						sp.printString();
 					}
 
-					if (fit) {
+					if ( !sp.isTruncated()) {
 
 						cell.setDefaultToolTip(null);
 					} else {

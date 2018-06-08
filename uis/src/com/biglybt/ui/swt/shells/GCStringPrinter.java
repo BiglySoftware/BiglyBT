@@ -75,7 +75,8 @@ public class GCStringPrinter
 	private static final int MAX_WORD_LEN = 4000;
 
 	private boolean cutoff;
-
+	private boolean truncated;
+	
 	private boolean isWordCut;
 
 	private GC gc;
@@ -561,6 +562,8 @@ public class GCStringPrinter
 
 		}
 
+		truncated = cutoff;
+		
 		cutoff |= size.y > printArea.height | preferredSize.x > size.x;
 		return !cutoff;
 	}
@@ -1518,6 +1521,10 @@ public class GCStringPrinter
 		return cutoff;
 	}
 
+	public boolean isTruncated(){
+		return truncated;
+	}
+	
 	public void setImages(Image[] images) {
 		this.images = images;
 	}
