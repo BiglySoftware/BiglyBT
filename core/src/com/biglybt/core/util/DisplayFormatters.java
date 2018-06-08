@@ -796,7 +796,8 @@ DisplayFormatters
 
 						if ( done != -1 ){
 
-							tmp = ManagerItem_seeding + " + " + ManagerItem_checking + ": "	+ formatPercentFromThousands(done);
+							// tmp = ManagerItem_seeding + " + " + ManagerItem_checking + ": "	+ formatPercentFromThousands(done);
+							tmp = formatPercentFromThousands(done) + " " + ManagerItem_checking + "; " + ManagerItem_seeding;
 						}
 					}
 				}
@@ -933,9 +934,14 @@ DisplayFormatters
 				  done = 1000;
 				}
 
-		  		tmp = MessageText.getDefaultLocaleString("ManagerItem.seeding") + " + " +
-		  				MessageText.getDefaultLocaleString("ManagerItem.checking") +
-		  				": " + formatPercentFromThousands( done );
+		  		//tmp = MessageText.getDefaultLocaleString("ManagerItem.seeding") + " + " +
+		  		//		MessageText.getDefaultLocaleString("ManagerItem.checking") +
+		  		//		": " + formatPercentFromThousands( done );
+		  		
+		  		tmp = formatPercentFromThousands( done ) + " " + 
+		  				MessageText.getDefaultLocaleString("ManagerItem.checking") + "; " + 
+		  				MessageText.getDefaultLocaleString("ManagerItem.seeding");
+		  		
 		  	}
 		  	else if(manager.getPeerManager()!= null && manager.getPeerManager().isSuperSeedMode()){
 
