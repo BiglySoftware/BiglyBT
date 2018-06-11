@@ -41,6 +41,8 @@ TagDownloadWithState
 	extends TagWithState
 	implements TagDownload
 {
+	private static Object	FP_DL_KEY = new Object();
+	
 	private int upload_rate_limit;
 	private int download_rate_limit;
 
@@ -62,8 +64,9 @@ TagDownloadWithState
 	private int		max_aggregate_share_ratio;
 	private int		max_aggregate_share_ratio_action;
 	private boolean	max_aggregate_share_ratio_priority;
-
-
+	private boolean	fp_seeding;
+	private boolean fp_seeding_ever;
+	
 	private boolean	supports_xcode;
 	private boolean	supports_file_location;
 
@@ -244,6 +247,7 @@ TagDownloadWithState
 		max_aggregate_share_ratio			= readLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR, 0L ).intValue();
 		max_aggregate_share_ratio_action	= readLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION, (long)TagFeatureRateLimit.SR_AGGREGATE_ACTION_DEFAULT ).intValue();
 		max_aggregate_share_ratio_priority	= readBooleanAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY, TagFeatureRateLimit.AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY_DEFAULT );
+		fp_seeding							= readBooleanAttribute( AT_RATELIMIT_FP_SEEDING, false );
 
 		addTagListener(
 			new TagListener()
@@ -377,6 +381,13 @@ TagDownloadWithState
 			if ( upload_priority > 0 ){
 
 				dm.updateAutoUploadPriority( UPLOAD_PRIORITY_ADDED_KEY, false );
+			}
+			
+			if ( fp_seeding ){
+				
+				fp_seeding = false;
+				
+				checkFPSeeding();
 			}
 		}
 
@@ -1147,6 +1158,32 @@ TagDownloadWithState
 		checkAggregateShareRatio();
 	}
 
+	@Override
+	public boolean
+	getFirstPrioritySeeding()
+	{
+		return( fp_seeding );
+	}
+
+	@Override
+	public void
+	setFirstPrioritySeeding(
+		boolean		b )
+	{
+		if ( b == fp_seeding ){
+
+			return;
+		}
+
+		fp_seeding	= b;
+
+		writeBooleanAttribute( AT_RATELIMIT_FP_SEEDING, b );
+
+		getTagType().fireChanged( this );
+
+		checkFPSeeding();
+	}
+	
 	private void
 	updateStuff()
 	{
@@ -1362,6 +1399,64 @@ TagDownloadWithState
 		}
 	}
 
+	private void
+	checkFPSeeding()
+	{
+		if ( fp_seeding ){
+							
+			fp_seeding_ever = true;
+		}
+
+		if ( !fp_seeding_ever ){
+			
+			return;
+		}
+		
+		Set<DownloadManager> dms = new HashSet<>(getTaggedDownloads());
+
+		Iterator<DownloadManager> it = dms.iterator();
+
+			// don't pause incomplete downloads!
+
+		while( it.hasNext()){
+
+			DownloadManager dm = it.next();
+
+			synchronized( FP_DL_KEY ){
+				
+				Map<DownloadManager,String> map = (Map<DownloadManager,String>)dm.getUserData( FP_DL_KEY );
+				
+				if ( fp_seeding ){
+					
+					if ( map == null ){
+						
+						map = new IdentityHashMap<>();
+						
+						dm.setUserData( FP_DL_KEY, map );
+						
+						dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, true );
+					}
+					
+					map.put( dm, "" );
+					
+				}else{
+					
+					if ( map != null ){
+						
+						map.remove( dm );
+						
+						if ( map.isEmpty()){
+							
+							dm.setUserData( FP_DL_KEY, null );
+							
+							dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, false );
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	@Override
 	protected void
 	sync()
@@ -1372,6 +1467,8 @@ TagDownloadWithState
 
 		checkMaximumTaggables();
 
+		checkFPSeeding();
+		
 		super.sync();
 	}
 

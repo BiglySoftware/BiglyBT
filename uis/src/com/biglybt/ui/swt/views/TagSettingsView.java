@@ -99,6 +99,8 @@ public class TagSettingsView
 		private GenericBooleanParameter isPublic;
 
 		public GenericBooleanParameter uploadPriority;
+		
+		public GenericBooleanParameter firstPrioritySeeding;
 
 		public GenericFloatParameter min_sr;
 
@@ -476,10 +478,16 @@ public class TagSettingsView
 				boolean supportsTagDownloadLimit = true;
 				boolean supportsTagUploadLimit = true;
 				boolean hasTagUploadPriority = true;
+				boolean supportsFPSeeding = true;
 				for (TagFeatureRateLimit rl : rls) {
 					supportsTagDownloadLimit &= rl.supportsTagDownloadLimit();
 					supportsTagUploadLimit &= rl.supportsTagUploadLimit();
 					hasTagUploadPriority &= rl.getTagUploadPriority() >= 0;
+					
+					if ( rl.getTag().getTagType().getTagType() != TagType.TT_DOWNLOAD_MANUAL ){
+					
+						supportsFPSeeding = false;
+					}
 				}
 
 				String k_unit = DisplayFormatters.getRateUnitBase10(
@@ -800,7 +808,34 @@ public class TagSettingsView
 
 					updateTagSRParams( params );
 				}
+				
+				cols_used = 0;
+				
+				if (supportsFPSeeding) {
+					params.firstPrioritySeeding = new GenericBooleanParameter(
+							new BooleanParameterAdapter() {
+								@Override
+								public Boolean getBooleanValue(String key) {
+									int value = -1;
+									for (TagFeatureRateLimit rl : rls) {
+										value = updateIntBoolean(rl.getFirstPrioritySeeding(), value);
+									}
+									return value == 2 ? null : value == 1;
+								}
+
+								@Override
+								public void setBooleanValue(String key, boolean value) {
+									for (TagFeatureRateLimit rl : rls) {
+										rl.setFirstPrioritySeeding(value);
+									}
+								}
+							}, gTransfer, null, "label.first.priority.seeding");
+					gd = new GridData();
+					gd.horizontalSpan = 6 - cols_used;
+					params.firstPrioritySeeding.setLayoutData(gd);
+				}
 			}
+			
 			/////////////////////////////////
 
 			if (numTags == 1 && (tags[0] instanceof TagFeatureFileLocation)) {

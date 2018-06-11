@@ -848,10 +848,12 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 
 		DownloadManagerState dm_state = core_dm.getDownloadState();
 		
-		if ( dm_state.getTransientFlag(DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP )){
+		if ( 	( dm_state.getTransientFlags() & 
+					( 	DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP | 
+						DownloadManagerState.TRANSIENT_FLAG_TAG_FP )) != 0 ){
 			
 			if (rules.bDebugLog)
-				sExplainFP += "Is FP: Friend(s) have interest\n";
+				sExplainFP += "Is FP: Friend(s) have interest or Tag is FP\n";
 			
 			return( true );
 		}
