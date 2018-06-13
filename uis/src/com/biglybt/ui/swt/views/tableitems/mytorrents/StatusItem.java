@@ -74,6 +74,18 @@ public class StatusItem
 						}
 					});
 		}
+		
+			// tag settings view (for example) has its own table-id so handle these cases by lumping together
+		
+		COConfigurationManager.addAndFireParameterListener(
+				"MyTorrents.status.sortorder." + "other",
+				new ParameterListener(){
+					
+					@Override
+					public void parameterChanged(String parameterName){
+						sort_orders.put("other", COConfigurationManager.getIntParameter( parameterName ));
+					}
+				});
 	}
 	
 	private static final int[] BLUE = Utils.colorToIntArray( Colors.blue );
@@ -113,7 +125,12 @@ public class StatusItem
 			return;
 		}
 
-		int sort_order = sort_orders.get( getTableID());
+		Integer sort_order = sort_orders.get( getTableID());
+		
+		if ( sort_order == null ){
+			
+			sort_order = sort_orders.get( "other" );
+		}
 		
 		int state = dm.getState();
 
