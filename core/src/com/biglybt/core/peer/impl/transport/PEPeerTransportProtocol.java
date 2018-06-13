@@ -2132,9 +2132,7 @@ implements PEPeerTransport
 				if (!closing)
 				{   // may have unchoked us, gotten a request, then choked without filling it - snub them
 					// if they actually have data coming in, they'll be unsnubbed as soon as it writes
-					final long timeSinceGoodData =getTimeSinceGoodDataReceived();
-					if (timeSinceGoodData ==-1 ||timeSinceGoodData >60 *1000)
-						setSnubbed(true);
+					manager.checkSnubbing( this );
 				}
 				for (int i = requested.size() - 1; i >= 0; i--) {
 					final DiskManagerReadRequest request =(DiskManagerReadRequest) requested.remove(i);
@@ -3785,7 +3783,7 @@ implements PEPeerTransport
 				manager.discarded( this, length );
 
 				if( manager.isInEndGameMode() ) {  //we're probably in end-game mode then
-					if (last_good_data_time !=-1 &&now -last_good_data_time <=60 *1000)
+					if (last_good_data_time !=-1 &&now -last_good_data_time <= PEPeerControl.SNUB_MILLIS )
 						setSnubbed(false);
 					last_good_data_time =now;
 					requests_discarded_endgame++;
@@ -5095,7 +5093,7 @@ implements PEPeerTransport
 
 							manager.writeBlock( piece_number, 0, data, this, false);
 
-							if ( last_good_data_time !=-1 && now -last_good_data_time <=60 *1000 ){
+							if ( last_good_data_time !=-1 && now -last_good_data_time <= PEPeerControl.SNUB_MILLIS ){
 
 								setSnubbed( false );
 							}

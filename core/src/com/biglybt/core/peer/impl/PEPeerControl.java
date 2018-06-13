@@ -37,6 +37,8 @@ public interface
 PEPeerControl
 	extends PEPeerManager
 {
+	public static final int		SNUB_MILLIS 						= 60 *1000;
+
 	public boolean
 	validateReadRequest(
 		PEPeerTransport	originator,
@@ -105,6 +107,10 @@ PEPeerControl
 	public void decNbPeersSnubbed();
 	public void setNbPeersSnubbed(int n);
 	public int getNbPeersSnubbed();
+	
+	public void 
+	checkSnubbing(
+		PEPeerTransport	peer );
 
 	public void
 	badPieceReported(

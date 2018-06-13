@@ -111,7 +111,14 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private static final int	CHECK_REASON_BAD_PIECE_CHECK	= 5;
 
 	private static final int	SEED_CHECK_WAIT_MARKER	= 65526;
-
+	
+	private static final long	REQ_TIMEOUT_DATA_AGE_SEED_MILLIS	= 120*1000;
+	private static final long	REQ_TIMEOUT_DATA_AGE_LEECH_MILLIS	= 60*1000;
+	
+	private static final long	REQ_TIMEOUT_OLDEST_REQ_AGE_MILLIS	= 120*1000;
+	
+	private static final long	RESERVED_PIECE_TIMEOUT_MILLIS = 120*1000;
+	
 		// config
 
 	private static boolean 	disconnect_seeds_when_seeding;
@@ -1427,11 +1434,11 @@ DiskManagerCheckRequestListener, IPFilterListener
 			// yet needing requests still/again
 			if (pePiece !=null)
 			{
-				final long timeSinceActivity =pePiece.getTimeSinceLastActivity()/1000;
+				final long timeSinceActivityMillis = pePiece.getTimeSinceLastActivity();
 
 				int pieceSpeed =pePiece.getSpeed();
 				// block write speed slower than piece speed
-				if (pieceSpeed > 0 && timeSinceActivity*pieceSpeed*0.25 > DiskManager.BLOCK_SIZE/1024)
+				if (pieceSpeed > 0 && (timeSinceActivityMillis/1000)*pieceSpeed*0.25 > DiskManager.BLOCK_SIZE/1024)
 				{
 					if(pePiece.getNbUnrequested() > 2)
 						pePiece.setSpeed(pieceSpeed-1);
@@ -1440,8 +1447,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 				}
 
 
-				if(timeSinceActivity > 120)
-				{
+				if(timeSinceActivityMillis > RESERVED_PIECE_TIMEOUT_MILLIS){
 					pePiece.setSpeed(0);
 					// has reserved piece gone stagnant?
 					final String reservingPeer =pePiece.getReservedBy();
@@ -2063,21 +2069,30 @@ DiskManagerCheckRequestListener, IPFilterListener
 				if (expired !=null &&expired.size() >0)
 				{   // now we know there's a request that's > 60 seconds old
 					final boolean isSeed =pc.isSeed();
-					// snub peers that haven't sent any good data for a minute
-					final long timeSinceGoodData =pc.getTimeSinceGoodDataReceived();
-					if (timeSinceGoodData <0 ||timeSinceGoodData >60 *1000)
-						pc.setSnubbed(true);
-
+					
+					checkSnubbing( pc );
+					
 					//Only cancel first request if more than 2 mins have passed
 					DiskManagerReadRequest request =(DiskManagerReadRequest) expired.get(0);
 
-					final long timeSinceData =pc.getTimeSinceLastDataMessageReceived();
-					final boolean noData =(timeSinceData <0) ||timeSinceData >(1000 *(isSeed ?120 :60));
-					final long timeSinceOldestRequest = now - request.getTimeCreated(now);
+					long timeSinceData =pc.getTimeSinceLastDataMessageReceived();
+					
+					long dataTimeout 	= isSeed?REQ_TIMEOUT_DATA_AGE_SEED_MILLIS:REQ_TIMEOUT_DATA_AGE_LEECH_MILLIS;
+					long requestTimeout	= REQ_TIMEOUT_OLDEST_REQ_AGE_MILLIS;
+							
+					if ( pc.getNetwork() != AENetworkClassifier.AT_PUBLIC ){
+						
+						dataTimeout 	*= 2;
+						requestTimeout 	*= 2;
+					}
+					
+					boolean noData = timeSinceData < 0 || timeSinceData > dataTimeout;					
+					
+					long timeSinceOldestRequest = now - request.getTimeCreated(now);
 
 
 					//for every expired request
-					for (int j = (timeSinceOldestRequest >120 *1000 && noData)  ? 0 : 1; j < expired.size(); j++)
+					for (int j = (timeSinceOldestRequest > requestTimeout && noData)  ? 0 : 1; j < expired.size(); j++)
 					{
 						//get the request object
 						request =(DiskManagerReadRequest) expired.get(j);
@@ -2098,6 +2113,41 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 	}
 
+	@Override
+	public void
+	checkSnubbing(
+		PEPeerTransport	peer )
+	{
+			// snub peers that haven't sent any good data for a minute
+		
+		long timeSinceGoodData = peer.getTimeSinceGoodDataReceived();
+		
+		boolean pub = peer.getNetwork() == AENetworkClassifier.AT_PUBLIC;
+		
+		if ( pub ){
+			
+			if ( timeSinceGoodData < 0 || timeSinceGoodData > SNUB_MILLIS ){
+				
+				peer.setSnubbed( true );
+			}
+		}else{
+			
+				// experimental stuff for non-public peers
+			
+			int	connected = _seeds + _peers;
+			
+			if ( connected < 8 ){
+				
+				return;
+			}
+			
+			if ( timeSinceGoodData < 0 || timeSinceGoodData > SNUB_MILLIS * 2 ){
+				
+				peer.setSnubbed( true );
+			}
+		}
+	}
+	
 	private void
 	updateTrackerAnnounceInterval()
 	{
