@@ -276,6 +276,11 @@ TagDownloadWithState
 
 						updateMaxShareRatio( manager, max_share_ratio );
 					}
+					
+					if ( fp_seeding ){
+						
+						updateFPSeeding( manager, true );
+					}
 				}
 
 				@Override
@@ -308,6 +313,11 @@ TagDownloadWithState
 					if ( max_share_ratio > 0 ){
 
 						updateMaxShareRatio( manager, 0 );
+					}
+					
+					if ( fp_seeding ){
+						
+						updateFPSeeding( manager, false );
 					}
 				}
 
@@ -385,9 +395,7 @@ TagDownloadWithState
 			
 			if ( fp_seeding ){
 				
-				fp_seeding = false;
-				
-				checkFPSeeding();
+				updateFPSeeding( dm, false );
 			}
 		}
 
@@ -1422,35 +1430,49 @@ TagDownloadWithState
 
 			DownloadManager dm = it.next();
 
-			synchronized( FP_DL_KEY ){
+			updateFPSeeding( dm, fp_seeding );
+		}
+	}
+	
+	private void
+	updateFPSeeding(
+		DownloadManager		dm,
+		boolean				fp_seed )
+	
+	{
+		if ( fp_seed ){
+			
+			fp_seeding_ever = true;
+		}
+		
+		synchronized( FP_DL_KEY ){
+			
+			Map<DownloadManager,String> map = (Map<DownloadManager,String>)dm.getUserData( FP_DL_KEY );
+			
+			if ( fp_seed ){
 				
-				Map<DownloadManager,String> map = (Map<DownloadManager,String>)dm.getUserData( FP_DL_KEY );
+				if ( map == null ){
+					
+					map = new IdentityHashMap<>();
+					
+					dm.setUserData( FP_DL_KEY, map );
+					
+					dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, true );
+				}
 				
-				if ( fp_seeding ){
+				map.put( dm, "" );
+				
+			}else{
+				
+				if ( map != null ){
 					
-					if ( map == null ){
-						
-						map = new IdentityHashMap<>();
-						
-						dm.setUserData( FP_DL_KEY, map );
-						
-						dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, true );
-					}
+					map.remove( dm );
 					
-					map.put( dm, "" );
-					
-				}else{
-					
-					if ( map != null ){
+					if ( map.isEmpty()){
 						
-						map.remove( dm );
+						dm.setUserData( FP_DL_KEY, null );
 						
-						if ( map.isEmpty()){
-							
-							dm.setUserData( FP_DL_KEY, null );
-							
-							dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, false );
-						}
+						dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, false );
 					}
 				}
 			}

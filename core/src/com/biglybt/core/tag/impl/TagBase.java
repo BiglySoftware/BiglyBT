@@ -24,11 +24,8 @@ import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.download.DownloadManager;
-import com.biglybt.core.download.DownloadManagerOptionsHandler;
 import com.biglybt.core.download.DownloadManagerState;
-import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.download.DownloadManagerStateFactory;
-import com.biglybt.core.download.DownloadManagerOptionsHandler.ParameterChangeListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureExecOnAssign.OptionsTemplateHandler;
