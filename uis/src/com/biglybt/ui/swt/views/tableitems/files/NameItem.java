@@ -470,6 +470,18 @@ public class NameItem extends CoreTableColumnSWT implements
 		cell.setToolTip(tooltip.length()==0?null:tooltip);
 	}
 	
+	@Override
+	public String getClipboardText(TableCell cell) {
+		final DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
+		
+		String name = (fileInfo == null) ? "" : fileInfo.getFile(true).getName();
+		
+		if ( name == null ){
+			
+			name = "";
+		}
+		return( name );
+	}
 	
 	@Override
 	public String getObfuscatedText(TableCell cell) {
