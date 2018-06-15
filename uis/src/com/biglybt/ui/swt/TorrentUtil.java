@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
@@ -120,10 +121,12 @@ public class TorrentUtil
 	
 	public static final String	TU_ITEM_RECHECK			= "tui.recheck";
 	public static final String	TU_ITEM_CHECK_FILES		= "tui.checkfiles";
+	public static final String	TU_ITEM_SHOW_SIDEBAR	= "tui.showsidebar";
 	
 	private static final String[] TU_ITEMS = {
 			TU_ITEM_RECHECK,
 			TU_ITEM_CHECK_FILES,
+			TU_ITEM_SHOW_SIDEBAR,
 	};
 	
 	private static boolean	initialised;
@@ -155,12 +158,16 @@ public class TorrentUtil
 				{
 					private List<UIToolBarItem>	items = new ArrayList<>();
 					
+					private boolean attached;
+					
 					@Override
 					public void
 					UIAttached(
 						UIInstance		instance )
 					{
 						if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
+							
+							attached = true;
 							
 							UIToolBarManager tbm = instance.getToolBarManager();
 							
@@ -226,6 +233,59 @@ public class TorrentUtil
 									}});
 								
 								addItem( tbm, cfe_item );
+								
+									// show sidebar 
+								
+								UIToolBarItem ssb_item = tbm.createToolBarItem( TU_ITEM_SHOW_SIDEBAR);
+								
+								ssb_item.setGroupID( TU_GROUP );
+								
+								ssb_item.setImageID( "sidebar" );
+													
+								COConfigurationManager.addAndFireParameterListener( 
+									"Show Side Bar",
+									new ParameterListener(){
+										
+										@Override
+										public void parameterChanged(String name ){
+											
+											if ( attached ){
+													
+												if ( COConfigurationManager.getBooleanParameter( "IconBar.visible." + TU_ITEM_SHOW_SIDEBAR )){
+													
+													UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+													
+												  	if ( uiFunctions != null ){
+												  		
+												  		uiFunctions.refreshIconBar();
+												  	}
+												}
+											}else{
+												
+												COConfigurationManager.removeParameterListener( name, this );
+											}
+	
+										}
+									});
+																
+								ssb_item.setToolTipID( "v3.MainWindow.menu.view.sidebar" );
+								
+								ssb_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										boolean ss = COConfigurationManager.getBooleanParameter( "Show Side Bar" );
+										
+										COConfigurationManager.setParameter( "Show Side Bar", !ss );
+										
+										return( true );
+									}});
+								
+								addItem( tbm, ssb_item );
 							}
 						}
 					}
@@ -272,6 +332,8 @@ public class TorrentUtil
 						UIInstance		instance )
 					{
 						if ( instance.getUIType().equals(UIInstance.UIT_SWT )){
+							
+							attached = false;
 							
 							UIToolBarManager tbm = instance.getToolBarManager();
 							
@@ -3636,6 +3698,10 @@ public class TorrentUtil
 
 		mapNewToolbarStates.put( TU_ITEM_RECHECK, canRecheck ? UIToolBarItem.STATE_ENABLED : 0);
 		mapNewToolbarStates.put( TU_ITEM_CHECK_FILES, canCheckExist ? UIToolBarItem.STATE_ENABLED : 0);
+		
+		boolean ss = COConfigurationManager.getBooleanParameter( "Show Side Bar" );
+		
+		mapNewToolbarStates.put( TU_ITEM_SHOW_SIDEBAR, UIToolBarItem.STATE_ENABLED | (ss?UIToolBarItem.STATE_DOWN:0));
 
 		return mapNewToolbarStates;
 	}

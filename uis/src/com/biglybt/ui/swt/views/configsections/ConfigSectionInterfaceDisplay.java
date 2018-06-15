@@ -200,13 +200,15 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			Group gToolBar = new Group(cSection, SWT.NULL);
 			Messages.setLanguageText(gToolBar, "MainWindow.menu.view.iconbar" );
 			
-			int gToolBarSpan = 6 + (isAZ3?1:2);
+			int gToolBarSpan = 5 + (isAZ3?2:2);
 			layout = new GridLayout();
 			layout.numColumns = gToolBarSpan;
 			gToolBar.setLayout(layout);
 			Utils.setLayoutData(gToolBar, new GridData(GridData.FILL_HORIZONTAL));
 
 			BooleanParameter enabled = null;
+			
+				// row 1
 			
 			if (!isAZ3) {
 				enabled = new BooleanParameter(gToolBar, "IconBar.enabled", "ConfigView.section.style.showiconbar");
@@ -217,6 +219,8 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 				enabled.setLayoutData( gd );
 			}
 
+				// row 2
+			
 			if ( isAZ3 ){
 				new BooleanParameter(gToolBar, "IconBar.visible.play", "iconBar.stream");
 			}
@@ -238,7 +242,13 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_RECHECK, "MyTorrentsView.menu.recheck");
 			
 			new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_CHECK_FILES, "MyTorrentsView.menu.checkfilesexist");
-
+			
+			if ( isAZ3 ){
+				new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_SHOW_SIDEBAR, "v3.MainWindow.menu.view.sidebar");
+			}
+			
+				// row 3
+			
 			BooleanParameter sss = new BooleanParameter(gToolBar, "IconBar.start.stop.separate", "ConfigView.section.style.start.stop.separate");
 			
 			GridData gd = new GridData();
