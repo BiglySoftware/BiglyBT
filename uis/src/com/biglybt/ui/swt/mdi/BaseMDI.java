@@ -65,7 +65,7 @@ public abstract class BaseMDI
 	extends SkinView
 	implements MultipleDocumentInterfaceSWT, UIUpdatable
 {
-	protected MdiEntrySWT currentEntry;
+	private MdiEntrySWT currentEntry;
 
 	private Map<String, MdiEntryCreationListener> mapIdToCreationListener = new LightHashMap<>();
 	private Map<String, MdiEntryCreationListener2> mapIdToCreationListener2 = new LightHashMap<>();
@@ -257,6 +257,13 @@ public abstract class BaseMDI
 		return currentEntry;
 	}
 
+	protected void
+	setCurrentEntry(
+		MdiEntrySWT		entry )
+	{
+		currentEntry = entry;
+	}
+	
 	@Override
 	public MdiEntry[] getEntries() {
 		return getEntries( new MdiEntry[0]);
