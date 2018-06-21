@@ -5797,6 +5797,8 @@ SubscriptionManagerImpl
 
 													Map<String,Object>	options = new HashMap<>();
 
+													chat.setSharedNickname( false );
+													
 													chat.sendMessage( f_msg, flags, options );
 
 												}
