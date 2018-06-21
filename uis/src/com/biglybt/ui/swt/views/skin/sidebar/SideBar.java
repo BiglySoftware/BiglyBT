@@ -1557,7 +1557,6 @@ public class SideBar
 	
 	@Override
 	public void showEntry(MdiEntry newEntry) {
-		System.out.println( "show: " + newEntry.getId() );
 		if (tree.isDisposed()) {
 			return;
 		}
