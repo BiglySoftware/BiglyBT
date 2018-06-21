@@ -1339,11 +1339,14 @@ DiskManagerImpl
 	        	try {
 	        		successfulAlloc = writer.zeroFile( fileInfo, target_length );
 
-	        		if ( successfulAlloc ){
-	        			
+	        		if ( successfulAlloc && !stop_after_start[0] ){
+	        				        			
 	        			if ( COConfigurationManager.getBooleanParameter("Zero New Stop")){
-	        				
-	        				stop_after_start[0] = true;
+	        			
+		        			if ( !download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+
+		        				stop_after_start[0] = true;
+		        			}
 	        			}
 	        		}
 	        	}catch( Throwable e ){
