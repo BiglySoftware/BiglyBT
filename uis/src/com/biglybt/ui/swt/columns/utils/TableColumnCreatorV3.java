@@ -130,13 +130,13 @@ public class TableColumnCreatorV3
 			List<String> listOldOrder = Arrays.asList(oldOrder);
 			if (listOldOrder.containsAll(listCurrentOrder)) {
 				// exactly the same items (perhaps in different order) -- upgrade to new list
-				System.out.println("upgradeColumns: SAME -> UPGRADING!");
+				//System.out.println("upgradeColumns: SAME -> UPGRADING!");
 				setVisibility(mapTCs, newOrder, true);
 			}
 		} else if (listCurrentOrder.size() > oldOrder.length) {
 			List<String> listNewOrder = Arrays.asList(newOrder);
 			if (listCurrentOrder.containsAll(listNewOrder)) {
-				System.out.println("upgradeColumns: has all old plus -> UPGRADING!");
+				//System.out.println("upgradeColumns: has all old plus -> UPGRADING!");
 				// Current visible has all of old order, plus some added ones
 				// make all new columns visible (keep old ones visible too)
 				for (String id : newOrder) {
