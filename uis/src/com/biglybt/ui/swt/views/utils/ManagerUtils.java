@@ -2547,10 +2547,25 @@ public class ManagerUtils {
 						roots = new String[]{ so_exp_text.getText().trim() };
 					}
 					
-					locateFiles( dms, dm_files, shell, roots, mode_link.getSelection());
-				}
+					boolean linking = mode_link.getSelection();
+					
+					dialog.close();
+					
+					Utils.execSWTThreadLater(
+						1,
+						new Runnable()
+						{
+							public void
+							run()
+							{
+								locateFiles( dms, dm_files, shell, roots, linking );
+							}
+						});
+					
+				}else{
 
-				dialog.close();
+					dialog.close();
+				}
 			}
 		};
 		
@@ -2817,7 +2832,7 @@ public class ManagerUtils {
 
 		viewer.setEditable( false );
 
-		viewer.setOKEnabled( true );
+		viewer.setOKEnabled( false );
 
 		new AEThread2( "FileLocator" )
 		{
@@ -2850,7 +2865,7 @@ public class ManagerUtils {
 
 					long bfm_start = SystemTime.getMonotonousTime();
 					
-					long[] last_log = { bfm_start };
+					long[] last_log = { bfm_start, 0 };
 
 					for ( String root: search_roots ){
 						
@@ -3425,6 +3440,22 @@ download_loop:
 				}catch( Throwable e ){
 
 					log( viewer, "\r\n" + new SimpleDateFormat().format( new Date()) + ": Failed: " + Debug.getNestedExceptionMessage( e ) + "\r\n" );
+				}finally{
+					
+					Utils.execSWTThread(
+						new Runnable()
+						{
+							public void
+							run()
+							{
+								if ( !viewer.isDisposed()){
+									
+									viewer.setCancelEnabled( false );
+								
+									viewer.setOKEnabled( true );
+								}
+							}
+						});
 				}
 			}
 		}.start();
@@ -3476,15 +3507,24 @@ download_loop:
 
 			for ( File f: files ){
 
-				if ( quit[0] ){
-
-					return( total_files );
+				synchronized( quit ){
+					if ( quit[0] ){
+	
+						return( total_files );
+					}
 				}
-
+				
 				long	now = SystemTime.getMonotonousTime();
 
 				if ( now - last_log[0] > 250 ){
 
+					if ( last_log[1]++ > 80 ){
+						
+						log( viewer, "\r\n" );
+						
+						last_log[1] = 1;
+					}
+					
 					log( viewer, "." );
 
 					last_log[0] = now;

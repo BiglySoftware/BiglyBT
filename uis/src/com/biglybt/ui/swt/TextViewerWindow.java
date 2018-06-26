@@ -47,6 +47,7 @@ public class TextViewerWindow {
   private final Composite buttonArea;
   
   private Button ok;
+  private Button cancel;
   
   private boolean	cancel_enabled;
   
@@ -207,8 +208,6 @@ public class TextViewerWindow {
 	  Label label = new Label(buttonArea, SWT.NONE);
 	  GridData gridData = new GridData( GridData.FILL_HORIZONTAL );
 	  Utils.setLayoutData(label, gridData);
-
-	  Button cancel;
 	  
 	  if ( cancel_enabled ){
 		  if (Constants.isOSX) {
@@ -325,6 +324,15 @@ public class TextViewerWindow {
 	boolean	enabled )
   {
 	  ok.setEnabled( enabled );
+  }
+  
+  public void
+  setCancelEnabled(
+	boolean	enabled )
+  {
+	  if ( cancel != null ){
+		  cancel.setEnabled( enabled );
+	  }
   }
 
   public void

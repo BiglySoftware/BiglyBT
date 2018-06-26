@@ -1902,7 +1902,11 @@ public class SideBar
 					// for some reason if we don't force this we can get spurious other selection events that
 					// cause the desired entry to be switched away from :(
 				
-				next.getTreeItem().getParent().setSelection( next.getTreeItem());
+				try{
+					next.getTreeItem().getParent().setSelection( next.getTreeItem());
+					
+				}catch( Throwable e ){
+				}
 			}
 		}
 	}
