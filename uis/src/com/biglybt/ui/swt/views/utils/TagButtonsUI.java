@@ -18,11 +18,13 @@
 
 package com.biglybt.ui.swt.views.utils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -33,7 +35,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
-
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -201,6 +203,41 @@ implements PaintListener
 
 			button.addListener(SWT.MenuDetect, menuDetectListener);
 			button.addPaintListener(this);
+			
+			String iconFile = tag.getImageFile();
+
+			if ( iconFile != null ){
+				
+				try{
+					String resource = new File( iconFile ).toURI().toURL().toExternalForm();
+												
+					ImageLoader.getInstance().getUrlImage(
+							  resource, 
+							  new Point( 20, 14 ),
+							  new ImageLoader.ImageDownloaderListener(){
+			
+								  @Override
+								  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+									  							  
+									 if ( image != null && returnedImmediately ){
+											
+										 button.setImage(image);
+										 
+										 button.addDisposeListener(
+											new DisposeListener(){
+												
+												@Override
+												public void widgetDisposed(DisposeEvent e){
+													ImageLoader.getInstance().releaseImage( key );
+												}
+											});
+										
+									 }
+								  }
+							  });
+				}catch( Throwable e ){
+				}
+			}
 		}
 	}
 

@@ -4738,6 +4738,9 @@ public class OpenTorrentOptionsWindow
 					if ( tag.canBePublic() && !tag.isTagAuto()[0]){
 
 						Composite p = new Composite(parent, SWT.DOUBLE_BUFFERED);
+						
+						String iconFile = tag.getImageFile();
+						
 						GridLayout layout = new GridLayout(1, false);
 						layout.marginHeight = 3;
 						if (Constants.isWindows) {
@@ -4751,7 +4754,7 @@ public class OpenTorrentOptionsWindow
 						}
 						p.setLayout(layout);
 						p.addPaintListener(paintListener);
-
+						
 						final Button button = new Button(p, SWT.CHECK);
 
 						if ( Constants.isWindows ){
@@ -4831,7 +4834,36 @@ public class OpenTorrentOptionsWindow
 									updateStartOptionsHeader();
 								}
 							});
-
+						
+					if ( iconFile != null ){
+														
+						String resource = new File( iconFile ).toURI().toURL().toExternalForm();
+													
+						ImageLoader.getInstance().getUrlImage(
+								  resource, 
+								  new Point( 20, 14 ),
+								  new ImageLoader.ImageDownloaderListener(){
+				
+									  @Override
+									  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+										  							  
+										 if ( image != null && returnedImmediately ){
+												
+											 button.setImage(image);
+											 
+											 button.addDisposeListener(
+												new DisposeListener(){
+													
+													@Override
+													public void widgetDisposed(DisposeEvent e){
+														ImageLoader.getInstance().releaseImage( key );
+													}
+												});
+											
+										 }
+									  }
+								  });
+						}
 					}
 				}
 
