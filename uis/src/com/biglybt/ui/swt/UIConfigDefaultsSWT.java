@@ -148,6 +148,8 @@ public class UIConfigDefaultsSWT
 			def.addParameter(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY + ".viewmode", 1);
 			def.addParameter(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_DL + "DL.viewmode", 1);
 			def.addParameter(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_CD + ".viewmode", 1);
+			
+			def.addParameter("Library.ShowTabsInTorrentView", 0 );
 		}
 
 		def.addParameter( "list.dm.dblclick", "-1" );

@@ -2997,7 +2997,7 @@ public class MyTorrentsView
 			// config??
 
 		boolean	enable_tab_views =
-			!Utils.isAZ2UI() &&
+			//!Utils.isAZ2UI() &&
 			supportsTabs &&
 			COConfigurationManager.getBooleanParameter( "Library.ShowTabsInTorrentView" );
 
