@@ -452,10 +452,12 @@ TrackerWebPageResponseImpl
 		String	target = root_dir + relative_url.replace('/',File.separatorChar);
 
 		File canonical_file = new File(target).getCanonicalFile();
+		
+		File canonical_root = new File(root_dir).getCanonicalFile();
 
 			// make sure some fool isn't trying to use ../../ to escape from web dir
 
-		if ( !canonical_file.toString().toLowerCase().startsWith( root_dir.toLowerCase())){
+		if ( !canonical_file.toString().toLowerCase().startsWith( canonical_root.toString().toLowerCase())){
 
 			return( false );
 		}
