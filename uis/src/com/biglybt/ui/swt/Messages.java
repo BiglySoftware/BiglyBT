@@ -36,6 +36,8 @@ import java.util.regex.Pattern;
  */
 public class Messages {
 
+  private static final String RESOURCE_KEY = "com.biglybt.ui.swt.Messages:res";
+  
   private static final Pattern HIG_ELLIP_EXP = Pattern.compile("([\\.]{3})"); // rec. hig style on some platforms
 	private static Listener hoverListener;
 
@@ -159,7 +161,7 @@ public class Messages {
 
   private static void
   setLanguageText(Widget widget,  String key, String[] params, boolean setTooltipOnly) {
-  	widget.setData(key);
+  	widget.setData(RESOURCE_KEY,key);
   	if(!setTooltipOnly)
       updateLanguageFromData(widget, params);
   	widget.removeListener(SWT.MouseHover, hoverListener);
@@ -167,7 +169,7 @@ public class Messages {
   }
 
 	private static void updateToolTipFromData(Widget widget, boolean showKey) {
-		String key = (String) widget.getData();
+		String key = (String) widget.getData(RESOURCE_KEY);
 		if (key == null) {
 			return;
 		}
@@ -217,10 +219,10 @@ public class Messages {
   		return;
   	}
 
-      if (widget.getData() != null) {
+      if (widget.getData(RESOURCE_KEY) != null) {
         String key = null;
         try {
-          key = (String) widget.getData();
+          key = (String) widget.getData(RESOURCE_KEY);
         } catch(ClassCastException e) {
         }
 
@@ -231,10 +233,10 @@ public class Messages {
 
         if ( params == null ){
 
-        	message = MessageText.getString((String) widget.getData());
+        	message = MessageText.getString((String) widget.getData(RESOURCE_KEY));
         }else{
 
-           	message = MessageText.getString((String) widget.getData(), params);
+           	message = MessageText.getString((String) widget.getData(RESOURCE_KEY), params);
         }
 
         if (widget instanceof MenuItem) {
@@ -247,7 +249,7 @@ public class Messages {
             menuItem.setText(indent ? "  " + message : message);
 
             if(menuItem.getAccelerator() != 0) // opt-in only for now; remove this conditional check to allow accelerators for arbitrary MenuItem objects
-                KeyBindings.setAccelerator(menuItem, (String)menuItem.getData()); // update keybinding
+                KeyBindings.setAccelerator(menuItem, (String)menuItem.getData(RESOURCE_KEY)); // update keybinding
         }
         else if (widget instanceof TableColumn) {
         	TableColumn tc = ((TableColumn) widget);
@@ -291,7 +293,7 @@ public class Messages {
   		return;
   	}
 
-  	widget.setData(key);
+  	widget.setData(RESOURCE_KEY,key);
     updateTooltipLanguageFromData(widget);
   }
 
@@ -299,8 +301,8 @@ public class Messages {
   	if (widget == null || widget.isDisposed()) {
   		return;
   	}
-		if (widget.getData() != null) {
-			String sToolTip = MessageText.getString((String) widget.getData());
+		if (widget.getData(RESOURCE_KEY) != null) {
+			String sToolTip = MessageText.getString((String) widget.getData(RESOURCE_KEY));
 			if (widget instanceof CLabel)
 				((CLabel) widget).setToolTipText(sToolTip);
 			else if (widget instanceof Label)
