@@ -31,6 +31,8 @@ import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.*;
 
@@ -59,6 +61,7 @@ import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
+import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 
 public abstract class BaseMdiEntry
@@ -1417,6 +1420,38 @@ public abstract class BaseMdiEntry
 		SWTSkinObjectContainer		soParent );
 	
 	private static Set<String>	installing_pids = new HashSet<>();
+	
+	public static void
+	popoutStandAlone(
+		String						title,
+		Map<String,Object>			state )
+	{
+		SkinnedDialog skinnedDialog =
+				new SkinnedDialog(
+						"skin3_dlg_sidebar_popout",
+						"shell",
+						null,	// standalone
+						SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
+
+		SWTSkin skin = skinnedDialog.getSkin();
+
+		SWTSkinObjectContainer cont = 
+			BaseMdiEntry.importStandAlone(
+				(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
+				state,
+				null );
+
+		if ( cont != null ){
+
+			skinnedDialog.setTitle( title );
+
+			skinnedDialog.open();
+
+		}else{
+
+			skinnedDialog.close();
+		}
+	}
 	
 	public static SWTSkinObjectContainer
 	importStandAlone(

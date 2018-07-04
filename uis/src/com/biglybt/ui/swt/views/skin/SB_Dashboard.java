@@ -1561,31 +1561,8 @@ public class SB_Dashboard
 					
 					@Override
 					public void widgetSelected(SelectionEvent arg0){
-						SkinnedDialog skinnedDialog =
-								new SkinnedDialog(
-										"skin3_dlg_sidebar_popout",
-										"shell",
-										null,	// standalone
-										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-	
-						SWTSkin skin = skinnedDialog.getSkin();
-	
-						SWTSkinObjectContainer cont = 
-							BaseMdiEntry.importStandAlone(
-								(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
-								item.getState(),
-								null );
-	
-						if ( cont != null ){
-	
-							skinnedDialog.setTitle( item.getTitle());
-	
-							skinnedDialog.open();
-	
-						}else{
-	
-							skinnedDialog.close();
-						}
+						
+						BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState());
 					}
 				});
 			

@@ -68,6 +68,7 @@ import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
+import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.views.FilesView;
@@ -2898,6 +2899,47 @@ public class TagUIUtils
 						}
 					}
 				});
+			}
+		});
+		
+		MenuItem item_pop = new MenuItem( menu_tags, SWT.PUSH);
+
+		Messages.setLanguageText(item_pop, "menu.tagging.view");
+		item_pop.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event){
+								
+				String data = "{\"mdi\":\"tabbed\",\"event_listener\":{\"name\":\"com.biglybt.ui.swt.views.TaggingView\"},\"id\":\"TaggingView\",\"control_type\":0,\"skin_id\":\"com.biglybt.ui.skin.skin3\"}";
+				
+				Map<String,Object> map = BDecoder.decodeStrings( BDecoder.decodeFromJSON( data ));
+
+				Map<String,Object> dms_exports = DataSourceResolver.exportDataSource( dms );
+
+				map.put( "data_source", dms_exports );
+				
+				String title;
+				
+				if ( dms.length == 1 ){
+					
+					title = MessageText.getString( "authenticator.torrent" ) + " : " + dms[0].getDisplayName().replaceAll("&", "&&");
+					
+				}else{
+					String	str = "";
+
+					for (int i=0;i<Math.min( 3, dms.length ); i ++ ){
+
+						str += (i==0?"":", ") + dms[i].getDisplayName().replaceAll("&", "&&");
+					}
+
+					if ( dms.length > 3 ){
+
+						str += "...";
+					}
+
+					title = dms.length + " " + MessageText.getString( "ConfigView.section.torrents" ) + " : " + str;
+				}
+				
+				BaseMdiEntry.popoutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map );
 			}
 		});
 	}

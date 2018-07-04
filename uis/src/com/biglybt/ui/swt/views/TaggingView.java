@@ -41,7 +41,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI.TagButtonTrigger;
@@ -58,7 +58,7 @@ import com.biglybt.ui.UIFunctions.TagReturner;
  *
  */
 public class TaggingView
-	implements UISWTViewCoreEventListener, TagTypeListener
+	implements UISWTViewCoreEventListenerEx, TagTypeListener
 {
 	public static final String MSGID_PREFIX = "TaggingView";
 
@@ -76,6 +76,42 @@ public class TaggingView
 
 	public TaggingView() {
 	}
+	
+	@Override
+	public boolean
+	isCloneable()
+	{
+		return( true );
+	}
+
+	@Override
+	public UISWTViewCoreEventListenerEx
+	getClone()
+	{
+		return( new TaggingView());
+	}
+
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( TaggingView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 
 	// @see com.biglybt.ui.swt.pif.UISWTViewEventListener#eventOccurred(com.biglybt.ui.swt.pif.UISWTViewEvent)
 	@Override
