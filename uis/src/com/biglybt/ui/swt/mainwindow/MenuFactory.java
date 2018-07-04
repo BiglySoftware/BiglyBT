@@ -2751,8 +2751,12 @@ public class MenuFactory
 			MenuItem item = (MenuItem) menu;
 			if (item.getData(KEY_MENU_ID) instanceof String) {
 				String localizationKey = (String) item.getData(KEY_MENU_ID);
-				item.setText(MessageText.getString(localizationKey));
-				KeyBindings.setAccelerator(item, localizationKey);
+				if ( MessageText.keyExists( localizationKey )){
+					item.setText(MessageText.getString(localizationKey));
+					KeyBindings.setAccelerator(item, localizationKey);
+				}else{
+					Messages.updateLanguageForControl(item);
+				}
 				updateMenuText(item.getMenu());
 			} else {
 				Messages.updateLanguageForControl(item);
