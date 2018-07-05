@@ -1562,7 +1562,7 @@ public class SB_Dashboard
 					@Override
 					public void widgetSelected(SelectionEvent arg0){
 						
-						BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState());
+						BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState(), null );
 					}
 				});
 			

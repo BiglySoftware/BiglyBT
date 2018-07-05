@@ -1895,6 +1895,21 @@ public class Utils
 		return bDidResize;
 	}
 
+	public static boolean hasShellMetricsConfig( String sConfigPrefix )
+	{
+		if ( COConfigurationManager.doesParameterNonDefaultExist( sConfigPrefix + ".maximized")){
+			
+			return( true );
+		}
+		
+		if ( COConfigurationManager.doesParameterNonDefaultExist( sConfigPrefix + ".rectangle")){
+			
+			return( true );
+		}
+		
+		return( false );
+	}
+	
 	private static class ShellMetricsResizeListener
 		implements Listener
 	{

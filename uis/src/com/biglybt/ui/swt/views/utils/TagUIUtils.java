@@ -2939,7 +2939,7 @@ public class TagUIUtils
 					title = dms.length + " " + MessageText.getString( "ConfigView.section.torrents" ) + " : " + str;
 				}
 				
-				BaseMdiEntry.popoutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map );
+				BaseMdiEntry.popoutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map, "TagUIUtils:TaggingView" );
 			}
 		});
 	}

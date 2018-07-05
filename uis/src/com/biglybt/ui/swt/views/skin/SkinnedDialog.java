@@ -29,6 +29,7 @@ import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.util.AERunnable;
@@ -160,7 +161,12 @@ public class SkinnedDialog
 		skin.layout();
 
 		if (idShellMetrics != null) {
+			boolean had_metrics = Utils.hasShellMetricsConfig( idShellMetrics );
 			Utils.linkShellMetricsToConfig(shell, idShellMetrics);
+			if ( !had_metrics ){
+				Utils.centerWindowRelativeTo(shell, mainShell);
+				Utils.verifyShellRect(shell, true);
+			}
 		} else {
 			Utils.centerWindowRelativeTo(shell, mainShell);
 			Utils.verifyShellRect(shell, true);
@@ -212,7 +218,7 @@ public class SkinnedDialog
 			shell.setText(string);
 		}
 	}
-
+	
 	/**
 	 * @return the shell
 	 */
