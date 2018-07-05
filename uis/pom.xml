@@ -104,7 +104,7 @@
                             </artifactSet>
                             <filters>
                                 <filter>
-                                    <artifact>com.giblybt:biglybt-core</artifact>
+                                    <artifact>com.biglybt:biglybt-core</artifact>
                                     <includes>
                                         <include>**</include>
                                     </includes>
