@@ -56,6 +56,7 @@ import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.disk.DiskManagerEvent;
 import com.biglybt.pif.disk.DiskManagerListener;
 import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -1895,6 +1896,21 @@ public class Utils
 		return bDidResize;
 	}
 
+	public static boolean hasShellMetricsConfig( String sConfigPrefix )
+	{
+		if ( COConfigurationManager.doesParameterNonDefaultExist( sConfigPrefix + ".maximized")){
+			
+			return( true );
+		}
+		
+		if ( COConfigurationManager.doesParameterNonDefaultExist( sConfigPrefix + ".rectangle")){
+			
+			return( true );
+		}
+		
+		return( false );
+	}
+	
 	private static class ShellMetricsResizeListener
 		implements Listener
 	{
@@ -4430,6 +4446,39 @@ public class Utils
 		}
 	}
 	
+	public static void
+	setPeronalShare(
+		Map<String, String> properties )
+	{
+		UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+		if ( uif != null ){
+			
+			UIFunctionsUserPrompter prompter = 
+				uif.getUserPrompter( 
+					MessageText.getString( "personal.share.prompt.title"), 
+					MessageText.getString( "personal.share.prompt.text"), 
+					new String[] {
+							MessageText.getString("Button.ok"),
+					}, 
+					0);
+		
+			prompter.setRemember(
+					"personal.share.info",
+					false,
+					MessageText.getString("MessageBoxWindow.nomoreprompting"));
+			
+
+			prompter.setAutoCloseInMS(0);
+
+			prompter.open(null);
+
+			prompter.waitUntilClosed();
+		}
+		
+		properties.put(ShareManager.PR_PERSONAL, "true");
+	}
+
 	public static void dispose() {
 		shellIcons = null;
 		icon128 = null;

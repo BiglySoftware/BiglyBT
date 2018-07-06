@@ -590,8 +590,8 @@ public class FilesViewMenuUtil
 			public void handleEvent(Event event) {
 				Map<String,String>	properties = new HashMap<>();
 
-				properties.put( ShareManager.PR_PERSONAL, "true" );
-
+				Utils.setPeronalShare( properties );
+				
 				for (int i = 0; i < all_files.size(); i++) {
 
 					DiskManagerFileInfo file_info = all_files.get(i);

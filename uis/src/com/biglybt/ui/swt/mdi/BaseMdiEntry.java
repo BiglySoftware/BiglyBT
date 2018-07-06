@@ -34,6 +34,7 @@ import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
@@ -1424,7 +1425,8 @@ public abstract class BaseMdiEntry
 	public static void
 	popoutStandAlone(
 		String						title,
-		Map<String,Object>			state )
+		Map<String,Object>			state,
+		String						configPrefix )
 	{
 		SkinnedDialog skinnedDialog =
 				new SkinnedDialog(
@@ -1445,7 +1447,7 @@ public abstract class BaseMdiEntry
 
 			skinnedDialog.setTitle( title );
 
-			skinnedDialog.open();
+			skinnedDialog.open( configPrefix, true );
 
 		}else{
 

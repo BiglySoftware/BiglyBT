@@ -1446,7 +1446,7 @@ public class TorrentUtil
 
 					Map<String, String> properties = new HashMap<>();
 
-					properties.put(ShareManager.PR_PERSONAL, "true");
+					Utils.setPeronalShare( properties );;
 
 					if (file.isFile()) {
 
