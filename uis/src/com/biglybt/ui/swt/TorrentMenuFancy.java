@@ -2019,9 +2019,9 @@ public class TorrentMenuFancy
 								File file = dm.getSaveLocation();
 	
 								Map<String, String> properties = new HashMap<>();
-	
-								properties.put(ShareManager.PR_PERSONAL, "true");
-	
+		
+								Utils.setPeronalShare( properties );
+								
 								if (file.isFile()) {
 	
 									ShareUtils.shareFile(file.getAbsolutePath(), properties);

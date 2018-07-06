@@ -4230,8 +4230,9 @@ BuddyPluginViewBetaChat
 
 							networks_str += (networks_str.length()==0?"":",") + net;
 						}
-
-						properties.put( ShareManager.PR_PERSONAL, "true" );
+						
+						Utils.setPeronalShare( properties );
+						
 						properties.put( ShareManager.PR_NETWORKS, networks_str );
 						properties.put( ShareManager.PR_USER_DATA, "buddyplugin:share" );
 
