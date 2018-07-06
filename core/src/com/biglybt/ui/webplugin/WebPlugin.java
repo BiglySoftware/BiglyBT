@@ -1846,8 +1846,9 @@ WebPlugin
 									msg = "host '" + client_address + "' not in whitelist";
 									
 								}else{
-									
-									if ( referrer != null && verifyReferrer()){
+
+									// Android Hack
+									if ( referrer != null && verifyReferrer() && !referrer.startsWith("http://search.vuze.com/") ){
 																				
 										if ( !port_ok ){
 											
