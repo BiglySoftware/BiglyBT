@@ -377,7 +377,7 @@ TrackerWebPageResponseImpl
 
 				gzos.write( reply_bytes );
 
-				gzos.finish();
+				gzos.close();
 
 				reply_bytes = temp.toByteArray();
 
