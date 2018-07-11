@@ -41,6 +41,12 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 
 public class TextViewerWindow {
+	
+  private boolean reuseWindow;
+  
+  private boolean modal;
+  private boolean defer_modal;
+  
   private final Shell shell;
   private final Text txtInfo;
   
@@ -81,8 +87,11 @@ public class TextViewerWindow {
 
   public
   TextViewerWindow(
-	Shell parent_shell, String sTitleID, String sMessageID, String sText, boolean modal, boolean defer_modal )
+	Shell parent_shell, String sTitleID, String sMessageID, String sText, boolean _modal, boolean _defer_modal )
   {
+	modal = _modal;
+	defer_modal = _defer_modal;
+	
     if ( modal ){
 
     	if ( parent_shell == null ){
@@ -165,7 +174,8 @@ public class TextViewerWindow {
 		public void handleEvent(Event e) {
 			if ( e.character == SWT.ESC){
 				if ( ok.isEnabled()){
-					shell.dispose();
+					
+					closeWindow();
 				}
 			}
 		}
@@ -179,6 +189,9 @@ public class TextViewerWindow {
 			widgetDisposed(
 				DisposeEvent arg0)
 			{
+				if ( reuseWindow ){
+					Debug.out( "What?" );
+				}
 				if ( np_font != null ){
 					np_font.dispose();
 					np_font = null;
@@ -200,6 +213,36 @@ public class TextViewerWindow {
     }
   }
 
+  public void
+  setReuseWindow()
+  {
+	  reuseWindow = true;
+	  
+	  shell.addListener (
+			SWT.Close, new Listener () 
+			{
+				public void handleEvent (Event event) {
+					event.doit = false;
+					closeWindow();
+				}
+			});
+  }
+  
+  public void
+  reset()
+  {
+	  listeners.clear();
+	  
+	  txtInfo.setText( "" );
+	  shell.setVisible( true );  
+
+	  Utils.centreWindow( shell );
+	  
+	    if ( modal && !defer_modal ){
+	    	goModal();
+	    }
+  }
+  
   private void
   buildButtons()
   {
@@ -234,7 +277,7 @@ public class TextViewerWindow {
 			  try {
 				  ok_pressed = true;
 
-				  shell.dispose();
+				  closeWindow();
 			  }
 			  catch (Exception e) {
 				  Debug.printStackTrace( e );
@@ -247,7 +290,7 @@ public class TextViewerWindow {
 			  @Override
 			  public void handleEvent(Event event) {
 				  try {
-					  shell.dispose();
+					  closeWindow();
 				  }
 				  catch (Exception e) {
 					  Debug.printStackTrace( e );
@@ -259,12 +302,30 @@ public class TextViewerWindow {
 	  buttonArea.layout( true, true );
   }
 
+  private void 
+  closeWindow()
+  {
+	  if ( reuseWindow ){
+		  shell.setVisible( false );
+		  
+			for ( TextViewerWindowListener l: listeners ){
+
+				l.closed();
+			}
+	  }else{
+		  if ( !shell.isDisposed()){
+		  
+			  shell.dispose();
+		  }
+	  }
+  }
+  
   public void
   goModal()
   {
 	    Display display = Utils.getDisplay();
 
-	  	while (!shell.isDisposed()){
+	  	while ( shell.isVisible() && !shell.isDisposed()){
     		if (!display.readAndDispatch()) display.sleep();
 	  	}
   }
@@ -357,10 +418,7 @@ public class TextViewerWindow {
   public void
   close()
   {
-	  if ( !shell.isDisposed()){
-
-		  shell.dispose();
-	  }
+	 closeWindow();
   }
   public interface
   TextViewerWindowListener

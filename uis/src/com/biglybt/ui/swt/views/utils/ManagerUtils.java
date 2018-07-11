@@ -2816,6 +2816,14 @@ public class ManagerUtils {
 		dialog.open();	
 	}
 	
+		// Bug in Windows 10 causing crash in SWT/OS when window closes:
+		// https://bugs.eclipse.org/bugs/show_bug.cgi?id=536376
+		// https://github.com/BiglySoftware/BiglyBT/issues/502
+		// in the absence of any help from SWT team currently hacked to re-use window :(
+	
+	private static List<TextViewerWindow>	lf_windows 	= new ArrayList<>();
+	private static final boolean			lf_reuse	= Constants.isWindows10OrHigher;
+	
 	private static void
 	locateFiles(
 		final DownloadManager[]			dms,
@@ -2824,12 +2832,35 @@ public class ManagerUtils {
 		String[]						search_roots,
 		boolean							is_linking )
 	{
+		TextViewerWindow _viewer = null;
 		
-		TextViewerWindow viewer =
-				new TextViewerWindow(
-						MessageText.getString( "locatefiles.view.title" ),
-						null, "", true, true );
+		synchronized( lf_windows ){
+			
+			if ( lf_reuse ){
+			
+				if ( !lf_windows.isEmpty()){
+					
+					_viewer = lf_windows.remove( 0 );
+				}				
+			}
+			
+			if ( _viewer == null ){
+		
+				_viewer = new TextViewerWindow( MessageText.getString( "locatefiles.view.title" ), null, "", false, false );
+				
+			}else{
+				
+				_viewer.reset();
+			}
+		}
 
+		final TextViewerWindow viewer = _viewer;
+		
+		if ( lf_reuse ){
+			
+			viewer.setReuseWindow();
+		}
+		
 		viewer.setEditable( false );
 
 		viewer.setOKEnabled( false );
@@ -2856,6 +2887,14 @@ public class ManagerUtils {
 								synchronized( quit ){
 									quit[0] = true;
 								}
+								
+								synchronized( lf_windows ){
+									
+									if ( lf_reuse ){
+										
+										lf_windows.add( viewer );
+									}
+								};
 							}
 						});
 
@@ -3460,7 +3499,7 @@ download_loop:
 			}
 		}.start();
 
-		viewer.goModal();
+		// viewer.goModal(); - don't make it modal as it breaks the re-use window hack
 	}
 
 	private static void

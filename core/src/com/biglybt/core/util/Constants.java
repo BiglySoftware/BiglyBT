@@ -153,7 +153,7 @@ Constants
 	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "1.5.0.1_B15";
+	public static final String AZUREUS_VERSION  = "1.5.0.1_B18";
 	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
 	public static final String AZUREUS_SUBVER	  = "";
 	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1501" + "-").getBytes();  //MUST be 8 chars long!
@@ -186,6 +186,7 @@ Constants
 	public static final boolean isWindowsVistaOrHigher;
 	public static final boolean isWindows7OrHigher;
 	public static final boolean isWindows8OrHigher;
+	public static final boolean isWindows10OrHigher;
 
 
 	// Common Patterns
@@ -250,6 +251,7 @@ Constants
 				isWindowsVistaOrHigher 	= false;
 				isWindows7OrHigher		= false;
 				isWindows8OrHigher		= false;
+				isWindows10OrHigher		= false;
 
 			}else{
 				float f_ver = ver.floatValue();
@@ -258,6 +260,7 @@ Constants
 				isWindowsVistaOrHigher 	= f_ver >= 6;
 				isWindows7OrHigher	 	= f_ver >= 6.1f;
 				isWindows8OrHigher	 	= f_ver >= 6.2f;
+				isWindows10OrHigher		= f_ver >= 10.0f;
 
 				if ( isWindowsVista ){
 
@@ -315,6 +318,8 @@ Constants
 			isWindowsVistaOrHigher 	= false;
 			isWindows7OrHigher 		= false;
 			isWindows8OrHigher 		= false;
+			isWindows10OrHigher		= false;
+
 		}
 	}
 
