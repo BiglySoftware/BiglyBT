@@ -84,6 +84,11 @@ public class UIConst
 				"shutdown an existing instance of BiglyBT");
 		options.addOption(builder.build());
 
+		builder = Option.builder().longOpt("restart").desc(
+				"restart an existing instance of BiglyBT");
+		options.addOption(builder.build());
+
+		
 		builder = Option.builder().longOpt("open").desc(
 				"show the BiglyBT interface");
 		options.addOption(builder.build());
