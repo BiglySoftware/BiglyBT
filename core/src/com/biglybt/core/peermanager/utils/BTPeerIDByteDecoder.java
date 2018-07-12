@@ -607,6 +607,8 @@ public class BTPeerIDByteDecoder {
 		assertDecode( "\u00B5Torrent 3.4.0", "2D55543334302D000971FDE48C3688D2023506FC" );
 
 		assertDecode( "BitTorrent 7.9.1", "2D42543739312D00A5792226709266A467EAD700" );
+		
+		assertDecode( "BitTorrent 7.10.1", "2D42543761312D00A5792226709266A467EAD700" );
 
 		assertDecode( "Tixati 1.1.0.7", "-TX1107-811513660630" );
 

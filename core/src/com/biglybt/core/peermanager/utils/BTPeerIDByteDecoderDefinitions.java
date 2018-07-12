@@ -60,6 +60,7 @@ public class BTPeerIDByteDecoderDefinitions {
 	static final String VER_BLOCK = "abcde"; // Is given as a block in the peer ID, we show the same block
 	static final String VER_DOTTED_BLOCK = "a.b.c.d.e"; // Is given as a dotted block in the peer ID, we show the block in the same dotted format.
 	static final String VER_BYTE_BLOCK_DOTTED_CHAR = "abcde -> a.b.c.d.e"; // Is given a block in the peer ID, but should be displayed in a dotted format.
+	static final String VER_BYTE_BLOCK_DOTTED_NUM  = "abcde -> n.o.p.q.r"; // Is given a block in the peer ID, but should be displayed in a dotted format but converted to digits a->10,b->11 etc.
 	static final String VER_TWOBYTE_BLOCK_DOTTED_CHAR = "abcde -> ab.cd"; // Is given a block in the peer ID, but should be displayed in a dotted format.
 	static final String VER_BITS_ON_WHEELS = "BOW-STYLE";
 	static final String VER_TWO_BYTE_THREE_PART = "ab -> a . b/10 . b%10";
@@ -460,7 +461,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		addVersionedClient(client, VER_BYTE_BLOCK_DOTTED_CHAR, 3);
 
 		client = addSimpleClient("BitTorrent", "-BT");		// BitTorrent 7.9.1 appeared with this: -BTnnn-
-		addVersionedClient(client, VER_BYTE_BLOCK_DOTTED_CHAR, 3);
+		addVersionedClient(client, VER_BYTE_BLOCK_DOTTED_NUM, 3);
 
 		client = addSimpleClient("BitLord", "-BL");
 		addVersionedClient(client, VER_BITLORD, 6, 3);

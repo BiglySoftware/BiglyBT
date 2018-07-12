@@ -329,6 +329,21 @@ class BTPeerIDByteDecoderUtils {
 			}
 			return result;
 		}
+		else if ( version_scheme == BTPeerIDByteDecoderDefinitions.VER_BYTE_BLOCK_DOTTED_NUM) {
+			
+			String result = "";
+			for (int i=0; i<version_data.length(); i++) {
+				char c = version_data.charAt(i);
+				String str;
+				if ( c >= (int)'a' ){
+					str = String.valueOf( c - (int)'a' + 10 );
+				}else{
+					str = String.valueOf((char)c);
+				}
+				result = result.isEmpty()?str:joinAsDotted(result, str );
+			}
+			return result;
+		}
 		else if ( version_scheme == BTPeerIDByteDecoderDefinitions.VER_TWOBYTE_BLOCK_DOTTED_CHAR) {
 			String result = "";
 			for (int i=0;i<version_data.length();i+=2 ){
