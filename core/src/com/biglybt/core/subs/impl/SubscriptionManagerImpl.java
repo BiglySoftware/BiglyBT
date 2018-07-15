@@ -1983,7 +1983,7 @@ SubscriptionManagerImpl
 
 			String protocol = url.getProtocol().toLowerCase();
 
-			if ( ! ( protocol.equals( "azplug" ) || protocol.equals( "file" ) || protocol.equals( "vuze" ))){
+			if ( ! ( protocol.equals( "tor" ) || protocol.equals( "azplug" ) || protocol.equals( "file" ) || protocol.equals( "vuze" ))){
 
 				throw( new SubscriptionException( "Invalid URL '" + url + "'" ));
 			}
