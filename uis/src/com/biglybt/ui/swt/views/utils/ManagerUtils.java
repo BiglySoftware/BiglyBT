@@ -3014,7 +3014,8 @@ public class ManagerUtils {
 
 							int	no_candidates 		= 0;
 							int	already_complete	= 0;
-
+							int skipped				= 0;
+							
 							int	link_or_copy_count = 0;
 
 							try{
@@ -3042,6 +3043,13 @@ download_loop:
 
 										already_complete++;
 
+										continue;
+									}
+									
+									if ( file.isSkipped()){
+										
+										skipped++;
+										
 										continue;
 									}
 
@@ -3324,7 +3332,7 @@ download_loop:
 								}
 							}
 
-							logLine( viewer, "    Matched=" + links_or_copies_established.size() + ", complete=" + already_complete + ", no candidates=" + no_candidates + ", remaining=" + unmatched_files.size() + " (total=" + files.length + ")");
+							logLine( viewer, "    Matched=" + links_or_copies_established.size() + ", complete=" + already_complete + ", ignored as not selected for download=" + skipped + ", no candidates=" + no_candidates + ", remaining=" + unmatched_files.size() + " (total=" + files.length + ")");
 
 							if ( links_or_copies_established.size() > 0 && unmatched_files.size() > 0 ){
 
