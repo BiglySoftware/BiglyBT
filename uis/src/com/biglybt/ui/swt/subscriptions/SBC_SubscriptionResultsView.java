@@ -33,6 +33,8 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
+import com.biglybt.core.subs.SubscriptionDownloadListener;
+import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionListener;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.SubscriptionResultFilter;
@@ -446,6 +448,63 @@ SBC_SubscriptionResultsView
 						}
 					}
 				});
+				
+				label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
+				label.setLayoutData(new RowData(-1, sepHeight));
+				
+				Button more = new Button( vFilters,SWT.PUSH );
+				more.setText( MessageText.getString( "Subscription.menu.forcecheck" ));
+				more.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+
+						try{
+							more.setEnabled( false );
+							
+							ds.getManager().getScheduler().download( 
+								ds, 
+								true,
+								new SubscriptionDownloadListener(){
+									
+									public void
+									complete(
+										Subscription		subs )
+									{
+										done();
+									}
+
+									public void
+									failed(
+										Subscription			subs,
+										SubscriptionException	error )
+									{
+										done();
+									}
+									
+									private void
+									done()
+									{
+										Utils.execSWTThread(
+											new Runnable(){
+												
+												@Override
+												public void run(){
+													if ( !more.isDisposed()){
+														
+														more.setEnabled( true );
+													}
+												}
+											});
+									}
+								});
+
+						}catch( Throwable e ){
+
+							Debug.out( e );
+						}
+					}
+				});
+				
 			}
 
 			parent.layout(true);
