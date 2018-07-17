@@ -2274,6 +2274,13 @@ public class GlobalManagerImpl
 			  return;
 		  }
 
+		  boolean pause_active = COConfigurationManager.getBooleanParameter( "Pause Downloads On Start After Resume", false );
+
+		  if ( pause_active ){
+			  
+			  COConfigurationManager.removeParameter( "Pause Downloads On Start After Resume" );
+		  }
+
 
 		  try{
 			  DownloadManagerStateFactory.loadGlobalStateCache();
@@ -2287,6 +2294,8 @@ public class GlobalManagerImpl
 				  }
 
 				  Map map = FileUtil.readResilientConfigFile("downloads.config");
+
+				  ArrayList pause_data = (ArrayList)map.get( "pause_data" );
 
 				  boolean debug = Boolean.getBoolean("debug");
 
@@ -2309,6 +2318,36 @@ public class GlobalManagerImpl
 					  currentDownload++;
 					  Map mDownload = (Map) iter.next();
 
+					  if ( pause_active ){
+						  
+						  try{
+							  int 		state 	= ((Number)mDownload.get( "state" )).intValue();
+							  boolean 	fs 		= ((Number)mDownload.get( "forceStart" )).intValue() != 0;
+							  
+							  if ( state != DownloadManager.STATE_STOPPED ){
+								  
+								  mDownload.put( "state", new Long( DownloadManager.STATE_STOPPED ));
+								  mDownload.remove( "forceStart" );
+								  
+								  byte[] key = (byte[])mDownload.get( "torrent_hash" );
+								  
+								  if ( pause_data == null ){
+									  
+									  pause_data = new ArrayList();
+								  }
+								  
+								  Map m = new HashMap();
+								  
+								  m.put( "hash", key );
+								  m.put( "force", new Long( fs?1:0 ));
+								  
+								  pause_data.add( m );
+							  }
+							  
+						  }catch( Throwable e ){
+							  Debug.printStackTrace( e );
+						  }
+					  }
 					  DownloadManager dm =
 						  loadDownload(
 								  mDownload,
@@ -2335,7 +2374,6 @@ public class GlobalManagerImpl
 				  COConfigurationManager.setParameter("Set Completion Flag For Completed Downloads On Start", false);
 
 				  //load pause/resume state
-				  ArrayList pause_data = (ArrayList)map.get( "pause_data" );
 				  if( pause_data != null ) {
 					  try {  paused_list_mon.enter();
 					  for( int i=0; i < pause_data.size(); i++ ) {

@@ -325,7 +325,7 @@ public class TextViewerWindow {
   {
 	    Display display = Utils.getDisplay();
 
-	  	while ( shell.isVisible() && !shell.isDisposed()){
+	  	while ( (!shell.isDisposed()) && shell.isVisible()){
     		if (!display.readAndDispatch()) display.sleep();
 	  	}
   }

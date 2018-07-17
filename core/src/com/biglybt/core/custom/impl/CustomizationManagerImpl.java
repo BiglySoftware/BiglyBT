@@ -667,6 +667,29 @@ CustomizationManagerImpl
 		return((Customization[])result.toArray(new Customization[result.size()]));
 	}
 
+	public File
+	getNewUserCustomizationFile(
+		String		prefix )
+	{
+		File	user_dir = FileUtil.getUserFile("custom");
+		
+		if ( !user_dir.exists()){
+		
+			user_dir.mkdirs();
+		}
+		
+		String name = prefix + ".config";
+		
+		File config = new File( user_dir, name );
+		
+		config.delete();
+		
+		new File( user_dir, name + ".applied" ).delete();
+		new File( user_dir, name + ".bad" ).delete();
+		
+		return( config );
+	}
+	
 	public static void
 	main(
 		String[]		args )

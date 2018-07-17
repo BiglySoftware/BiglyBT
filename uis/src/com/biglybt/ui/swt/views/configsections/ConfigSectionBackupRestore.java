@@ -520,6 +520,12 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 			        }
 			    });
 
+	    
+	    BooleanParameter chkRestorePause = new BooleanParameter(gRestore, "br.restore.autopause", "br.restore.autopause");
+		gridData = new GridData(GridData.FILL_HORIZONTAL);
+		gridData.horizontalSpan = 2;
+		chkRestorePause.setLayoutData(gridData);
+		
 		return( cBR );
 	}
 
