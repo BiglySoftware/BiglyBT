@@ -2768,6 +2768,8 @@ SubscriptionManagerUI
 
 					m.setData(Boolean.valueOf(assigned_category != null && assigned_category.equals(cat.getName())));
 
+					TagUIUtils.setMenuIcon( m, cat );
+							
 					m.addListener(
 						new MenuItemListener()
 						{
@@ -2938,6 +2940,8 @@ SubscriptionManagerUI
 
 				m.setData(Boolean.valueOf(assigned_tag == tag));
 
+				TagUIUtils.setMenuIcon( m, tag );
+				
 				m.addListener(
 					new MenuItemListener()
 					{

@@ -3525,6 +3525,8 @@ DeviceManagerUI
 
 				m.setData(Boolean.valueOf(assigned_tag == tag));
 
+				TagUIUtils.setMenuIcon( m, tag );
+				
 				m.addListener(
 					new MenuItemListener()
 					{

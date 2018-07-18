@@ -80,6 +80,7 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.mytracker.*;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 
 /**
@@ -539,6 +540,8 @@ public class MyTrackerView
           itemCategory.setText(categories[i].getName());
           itemCategory.setData("Category", categories[i]);
 
+          TagUIUtils.setMenuIcon( itemCategory, categories[i] ); 
+          
           itemCategory.addListener(SWT.Selection, new Listener() {
             @Override
             public void handleEvent(Event event) {

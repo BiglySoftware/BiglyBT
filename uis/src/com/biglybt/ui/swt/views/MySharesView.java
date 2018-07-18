@@ -35,6 +35,8 @@ import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.widgets.*;
@@ -414,6 +416,7 @@ implements ShareManagerListener,
 	          itemCategory.setText(categories[i].getName());
 	          itemCategory.setData("Category", categories[i]);
 
+	          TagUIUtils.setMenuIcon( itemCategory, categories[i] ); 
 	          itemCategory.addListener(SWT.Selection, new Listener() {
 	            @Override
 	            public void handleEvent(Event event) {

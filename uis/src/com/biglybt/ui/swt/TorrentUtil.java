@@ -2841,6 +2841,7 @@ public class TorrentUtil
 				if (category.getType() == Category.TYPE_USER) {
 					final MenuItem itemCategory = new MenuItem(menuCategory, SWT.PUSH);
 					itemCategory.setText(category.getName());
+					TagUIUtils.setMenuIcon( itemCategory, categories[i] ); 
 					itemCategory.addListener(SWT.Selection, new ListenerDMTask(dms) {
 						@Override
 						public void run(DownloadManager dm) {

@@ -1002,6 +1002,8 @@ public class SBC_DevicesView
 					itemCategory.setText(categories[i].getName());
 					itemCategory.setData("Category", categories[i]);
 
+					TagUIUtils.setMenuIcon( itemCategory, categories[i] );
+					
 					itemCategory.addListener(SWT.Selection, new Listener() {
 						@Override
 						public void handleEvent(Event event) {
@@ -1233,6 +1235,8 @@ public class SBC_DevicesView
 
 					t_i.setSelection( selected );
 
+					TagUIUtils.setMenuIcon( t_i, t );
+					
 					t_i.addListener(SWT.Selection, new Listener() {
 						@Override
 						public void handleEvent(Event event) {

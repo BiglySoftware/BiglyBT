@@ -28,6 +28,9 @@ import com.biglybt.pif.ui.UIInstance;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.*;
 
@@ -64,11 +67,13 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
 import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.views.FilesView;
@@ -284,6 +289,8 @@ public class TagUIUtils
 
 								m.setData(Boolean.valueOf(tag.isVisible()));
 
+								setMenuIcon( m, tag );
+								
 								m.addListener(
 									new MenuItemListener()
 									{
@@ -511,6 +518,83 @@ public class TagUIUtils
 
 	}
 
+	public static void
+	setMenuIcon(
+		com.biglybt.pif.ui.menus.MenuItem		m,
+		Tag										tag )
+	{
+		String image_file = tag.getImageFile();
+		
+		if ( image_file != null ){
+			
+			try{
+				String resource = new File( image_file ).toURI().toURL().toExternalForm();
+														
+				ImageLoader.getInstance().getUrlImage(
+						  resource, 
+						  new Point( 16, 16 ),
+						  new ImageLoader.ImageDownloaderListener(){
+		
+							  @Override
+							  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+								  							  
+								 if ( image != null && returnedImmediately ){
+									 															 
+									 m.setGraphic( new UISWTGraphicImpl( image ));
+									 
+									 // dunno when to :( ImageLoader.getInstance().releaseImage( key );
+								 }
+							  }
+						  });
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+	}
+	
+	public static void
+	setMenuIcon(
+		MenuItem		m,
+		Tag				tag )
+	{
+		String image_file = tag.getImageFile();
+		
+		if ( image_file != null ){
+			
+			try{
+				String resource = new File( image_file ).toURI().toURL().toExternalForm();
+														
+				ImageLoader.getInstance().getUrlImage(
+						  resource, 
+						  new Point( 16, 16 ),
+						  new ImageLoader.ImageDownloaderListener(){
+		
+							  @Override
+							  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+								  							  
+								 if ( image != null && returnedImmediately ){
+									 															 
+									m.setImage( image );
+									 
+									m.addDisposeListener(
+										new DisposeListener(){
+											
+											@Override
+											public void widgetDisposed(DisposeEvent e){
+												ImageLoader.getInstance().releaseImage( key );
+											}
+										});
+								 }
+							  }
+						  });
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+	}
+	
 	public static void
 	checkTagSharing(
 		boolean		start_of_day )
@@ -2272,6 +2356,8 @@ public class TagUIUtils
 
 					Messages.setLanguageText(showTag, t.getTagName( false ));
 
+					setMenuIcon( showTag, t );
+					
 					showTag.addListener(SWT.Selection, new Listener() {
 						@Override
 						public void handleEvent(Event event){
@@ -2852,6 +2938,8 @@ public class TagUIUtils
 						t_i.setText( tag_name );
 					}
 
+					TagUIUtils.setMenuIcon( t_i, t );
+					
 					t_i.addListener(SWT.Selection, new Listener() {
 						@Override
 						public void handleEvent(Event event) {
