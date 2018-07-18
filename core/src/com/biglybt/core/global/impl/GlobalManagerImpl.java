@@ -2279,6 +2279,8 @@ public class GlobalManagerImpl
 		  if ( pause_active ){
 			  
 			  COConfigurationManager.removeParameter( "Pause Downloads On Start After Resume" );
+			  
+			  COConfigurationManager.setParameter( "br.restore.autopause", true );
 		  }
 
 
