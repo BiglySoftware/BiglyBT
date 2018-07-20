@@ -207,4 +207,8 @@ public interface TableRowCore extends TableRow
 	 */
 	
 	public void fakeRedraw( String column_name );
+	
+	public void
+	setRequestAttention(
+		boolean	on );
 }

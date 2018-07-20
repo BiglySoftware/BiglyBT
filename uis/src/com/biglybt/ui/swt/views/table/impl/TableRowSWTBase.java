@@ -76,6 +76,7 @@ public abstract class TableRowSWTBase
 
 	private boolean expanded;
 
+	private boolean isAttention;
 
 	public TableRowSWTBase(Object lock, TableRowCore parentRow, TableViewSWT tv,
 			Object dataSource) {
@@ -578,6 +579,17 @@ public abstract class TableRowSWTBase
 		return tv.getTableID();
 	}
 
+	@Override
+	public void setRequestAttention(boolean on){
+		isAttention = on;
+	}
+	
+	public boolean
+	isRequestAttention()
+	{
+		return( isAttention );
+	}
+	
 	/* (non-Javadoc)
 	 * @see com.biglybt.ui.swt.views.table.TableRowSWT#setForeground(org.eclipse.swt.graphics.Color)
 	 */

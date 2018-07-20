@@ -4812,38 +4812,141 @@ TorrentUtils
 			return( (is_tcp?"TCP" :"UDP ") + port );
 		}
 	}
-
+	
+	private static CopyOnWriteList<PotentialTorrentDeletionListener>		ptd_listeners 	= new CopyOnWriteList<>();
+	private static Map<DownloadManager, Integer>							ptd_map			= new IdentityHashMap<>();
+	private static Map<PotentialTorrentDeletionListener,DownloadManager[]>	ptdl_last		= new HashMap<>();
+	
 	public static void
-	startTorrentDelete()
+	startTorrentDelete(
+		DownloadManager[]		dms )
 	{
-		long val = torrent_delete_level.incrementAndGet();
+		torrent_delete_level.incrementAndGet();
 
-		//System.out.println( "delete level++ -> " + val );
+		synchronized( ptd_map ){
+			
+			for ( DownloadManager dm: dms ){
+				
+				if ( dm == null ){
+					
+					continue;
+				}
+				
+				Integer num = ptd_map.get( dm );
+				
+				if ( num == null ){
+					
+					ptd_map.put( dm, 1 );
+					
+				}else{
+					
+					ptd_map.put( dm, num + 1 );
+				}
+			}
+			
+			DownloadManager[] new_dms = ptd_map.keySet().toArray( new DownloadManager[ ptd_map.size()] );
+			
+			for ( PotentialTorrentDeletionListener l: ptd_listeners ){
+				
+				DownloadManager[] old_dms = ptdl_last.get( l );
+				
+				ptdl_last.put( l, new_dms );
+				
+				l.potentialDeletionChanged( old_dms==null?new DownloadManager[0]:old_dms, new_dms );
+			}
+		}
 	}
 
 	public static void
-	endTorrentDelete()
+	endTorrentDelete(
+		DownloadManager[]		dms )
 	{
-		long val = torrent_delete_level.decrementAndGet();
+		torrent_delete_level.decrementAndGet();
 
-		//System.out.println( "delete level-- -> " + val );
+		synchronized( ptd_map ){
+			
+			for ( DownloadManager dm: dms ){
+				
+				if ( dm == null ){
+					
+					continue;
+				}
+
+				Integer num = ptd_map.get( dm );
+				
+				if ( num != null ){
+															
+					if ( num == 1 ){
+						
+						ptd_map.remove( dm );
+						
+					}else{
+					
+						ptd_map.put( dm, num - 1 );
+					}
+				}
+			}
+			
+			DownloadManager[] new_dms = ptd_map.keySet().toArray( new DownloadManager[ ptd_map.size()] );
+			
+			for ( PotentialTorrentDeletionListener l: ptd_listeners ){
+				
+				DownloadManager[] old_dms = ptdl_last.get( l );
+				
+				ptdl_last.put( l, new_dms );
+				
+				l.potentialDeletionChanged( old_dms==null?new DownloadManager[0]:old_dms, new_dms );
+			}
+		}
 	}
 
 	public static void
 	runTorrentDelete(
-		Runnable 	target )
+		DownloadManager[]		dms,
+		Runnable 				target )
 	{
+		DownloadManager[] current_dms = dms.clone();
+		
 		try{
-			startTorrentDelete();
+			startTorrentDelete( current_dms );
 
 			target.run();
 
 		}finally{
 
-			endTorrentDelete();
+			endTorrentDelete( current_dms );
 		}
 	}
 
+	public interface
+	PotentialTorrentDeletionListener
+	{
+		public void
+		potentialDeletionChanged(
+			DownloadManager[]		old_dms,
+			DownloadManager[]		new_dms );	
+	}
+	
+	public static void
+	addPotentialTorrentDeletionListener(
+		PotentialTorrentDeletionListener		l )
+	{
+		ptd_listeners.add( l );
+	}
+	
+	public static void
+	removePotentialTorrentDeletionListener(
+		PotentialTorrentDeletionListener		l )
+	{	
+		ptd_listeners.remove( l );
+	
+		synchronized( ptd_map ){
+
+			ptdl_last.remove( l );
+		}
+	}
+	
+	
 	public static boolean
 	isTorrentDeleting()
 	{

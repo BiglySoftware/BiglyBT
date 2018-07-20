@@ -1930,7 +1930,9 @@ public class ManagerUtils {
 		  final int stateAfterStopped, final boolean bDeleteTorrent,
 		  final boolean bDeleteData, final AERunnable deleteFailed) {
 
-	  TorrentUtils.startTorrentDelete();
+	  DownloadManager[] dms = { dm };
+	  
+	  TorrentUtils.startTorrentDelete( dms );
 
 	  final boolean[] endDone = { false };
 
@@ -2041,7 +2043,7 @@ public class ManagerUtils {
 
 						  if ( !endDone[0] ){
 
-							  TorrentUtils.endTorrentDelete();
+							  TorrentUtils.endTorrentDelete( dms );
 
 							  endDone[0] = true;
 						  }
@@ -2056,7 +2058,7 @@ public class ManagerUtils {
 
 			  if ( !endDone[0] ){
 
-				  TorrentUtils.endTorrentDelete();
+				  TorrentUtils.endTorrentDelete( dms );
 
 				  endDone[0] = true;
 			  }

@@ -64,6 +64,7 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.TorrentUtils.PotentialTorrentDeletionListener;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.download.Download;
@@ -128,7 +129,8 @@ public class MyTorrentsView
                   TableRowRefreshListener,
                   TableCountChangeListener,
                   TableExpansionChangeListener,
-                  UIPluginViewToolBarListener
+                  UIPluginViewToolBarListener,
+                  PotentialTorrentDeletionListener
 {
 	private static final LogIDs LOGID = LogIDs.GUI;
 
@@ -449,6 +451,7 @@ public class MyTorrentsView
 		    ttManual.addTagTypeListener(MyTorrentsView.this, false);
 		    ttCat.addTagTypeListener(MyTorrentsView.this, false);
 
+		    TorrentUtils.addPotentialTorrentDeletionListener( MyTorrentsView.this );
 		    globalManager.addListener(MyTorrentsView.this, false);
 		    globalManager.addEventListener( gm_event_listener );
 		    DownloadManager[] dms = globalManager.getDownloadManagers().toArray(new DownloadManager[0]);
@@ -613,7 +616,7 @@ public class MyTorrentsView
     TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
     ttManual.removeTagTypeListener(MyTorrentsView.this);
     ttCat.removeTagTypeListener(MyTorrentsView.this);
-
+    TorrentUtils.removePotentialTorrentDeletionListener( this );
     globalManager.removeListener(this);
     globalManager.removeEventListener( gm_event_listener );
 	  COConfigurationManager.removeParameterListener("DND Always In Incomplete", this);
@@ -2925,7 +2928,39 @@ public class MyTorrentsView
 		tv.removeDataSource( manager );
 	}
 
-
+	public void
+	potentialDeletionChanged(
+		DownloadManager[]		old_dms,
+		DownloadManager[]		new_dms )
+	{
+		Utils.execSWTThread(
+			new Runnable()
+			{
+				public void
+				run()
+				{
+					for ( DownloadManager dm: old_dms ){
+						
+						TableRowCore row = tv.getRow( dm );
+						
+						if ( row != null ){
+							
+							row.setRequestAttention( false );
+						}
+					}
+					
+					for ( DownloadManager dm: new_dms ){
+						
+						TableRowCore row = tv.getRow( dm );
+						
+						if ( row != null ){
+							
+							row.setRequestAttention( true );
+						}
+					}
+				}
+			});
+	}
 
   // globalmanagerlistener Functions
   // @see com.biglybt.core.global.GlobalManagerListener#downloadManagerAdded(com.biglybt.core.download.DownloadManager)

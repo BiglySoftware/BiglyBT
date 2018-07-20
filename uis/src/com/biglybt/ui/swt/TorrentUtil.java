@@ -3716,6 +3716,7 @@ public class TorrentUtil
 			final AERunnable deleteFailed, final boolean forcePrompt) {
 
 		TorrentUtils.runTorrentDelete(
+			dms,
 			new Runnable()
 			{
 				@Override
@@ -3809,7 +3810,9 @@ public class TorrentUtil
 
 				final int index = i;
 
-				TorrentUtils.startTorrentDelete();
+				DownloadManager[] current_dms = dms.clone();
+				
+				TorrentUtils.startTorrentDelete( current_dms );
 
 				final boolean[] endDone = { false };
 
@@ -3831,7 +3834,7 @@ public class TorrentUtil
 
 									if ( !endDone[0] ){
 
-										TorrentUtils.endTorrentDelete();
+										TorrentUtils.endTorrentDelete( current_dms );
 
 										endDone[0] = true;
 									}
@@ -3847,7 +3850,7 @@ public class TorrentUtil
 
 						if ( !endDone[0] ){
 
-							TorrentUtils.endTorrentDelete();
+							TorrentUtils.endTorrentDelete( dms );
 
 							endDone[0] = true;
 						}
@@ -3867,6 +3870,7 @@ public class TorrentUtil
 			final boolean deleteTorrent) {
 
 		TorrentUtils.runTorrentDelete(
+				dms,
 				new Runnable()
 				{
 					@Override

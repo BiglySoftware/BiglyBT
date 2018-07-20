@@ -264,6 +264,7 @@ public class TableRowPainted
 			return;
 		}
 
+		boolean isAttention = isRequestAttention();
 		boolean isSelected = isSelected();
 		boolean isSelectedNotFocused = isSelected && !isTableSelected;
 
@@ -276,33 +277,33 @@ public class TableRowPainted
 		Color altColor;
 		Color bg;
 		if (isTableEnabled) {
-  		altColor = Colors.alternatingColors[pos >= 0 ? pos % 2 : 0];
-  		if (altColor == null) {
-  			altColor = gc.getDevice().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
-  		}
-  		if (isSelected) {
-  			Color color;
-  			color = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION);
-  			gc.setBackground(color);
-  		} else {
-  			gc.setBackground(altColor);
-  		}
-
-  		bg = getBackground();
-  		if (bg == null) {
-  			bg = gc.getBackground();
-  		} else {
-  			gc.setBackground(bg);
-  		}
-
-  		if (isSelected) {
-  			shadowColor = fg;
-  			fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
-  		} else {
-  			if (fg == null) {
-  				fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_FOREGROUND);
-  			}
-  		}
+	  		altColor = Colors.alternatingColors[pos >= 0 ? pos % 2 : 0];
+	  		if (altColor == null) {
+	  			altColor = gc.getDevice().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+	  		}
+	  		if (isSelected) {
+	  			Color color;
+	  			color = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION);
+	  			gc.setBackground(color);
+	  		} else {
+	  			gc.setBackground(altColor);
+	  		}
+	
+	  		bg = getBackground();
+	  		if (bg == null) {
+	  			bg = gc.getBackground();
+	  		} else {
+	  			gc.setBackground(bg);
+	  		}
+	
+	  		if (isSelected) {
+	  			shadowColor = fg;
+	  			fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
+	  		} else {
+	  			if (fg == null) {
+	  				fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_FOREGROUND);
+	  			}
+	  		}
 		} else {
 			Device device = gc.getDevice();
 			altColor = Colors.getSystemColor(device, SWT.COLOR_WIDGET_BACKGROUND);
@@ -315,6 +316,12 @@ public class TableRowPainted
 
 			fg = Colors.getSystemColor(device, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 		}
+		
+		if ( isAttention ){
+			bg = Colors.fadedRed;
+			gc.setBackground( bg );
+		}
+		
 		gc.setForeground(fg);
 
 		int rowAlpha = getAlpha();
