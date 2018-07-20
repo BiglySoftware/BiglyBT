@@ -581,7 +581,12 @@ public abstract class TableRowSWTBase
 
 	@Override
 	public void setRequestAttention(boolean on){
-		isAttention = on;
+		if ( on != isAttention ){
+		
+			isAttention = on;
+			
+			redraw();
+		}
 	}
 	
 	public boolean
