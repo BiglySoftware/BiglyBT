@@ -24,6 +24,7 @@ FEATURE: Core  | Option to stop download after file allocation+zeroing [Parg]
 FEATURE: Core  | Individual file recheck option [Parg]
 FEATURE: Core  | Tag setting to make assigned downloads first-priority seeds [Parg]
 FEATURE: Core  | Option to pause active downloads after a config restore [Parg]
+FEATURE: Core  | Option to disable torrent transfer via the BiglyBT DHT [Parg]
 
 CHANGE: UI     | Switched text for seeding+checking [Parg]
 CHANGE: UI     | Enable the option to show sub-tabs in classic UI [Parg]

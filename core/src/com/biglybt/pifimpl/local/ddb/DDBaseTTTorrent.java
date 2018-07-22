@@ -131,6 +131,7 @@ DDBaseTTTorrent
 
 		throws DistributedDatabaseException
 	{
+		
 			// We use sha1(hash) as the key for torrent downloads
 			// and encrypt the torrent content using the hash as the basis for a key. This
 			// prevents someone without the hash from downloading the torrent
@@ -233,6 +234,14 @@ DDBaseTTTorrent
 
 				return( null );
 
+			}
+
+			if ( !ddb.isTorrentXferEnabled()){
+				
+
+				ddb.log( "TorrentDownload: request from " + originator + "  for '" + download.getName() + "' denied as torrent transfer is disabled" );
+
+				return( null );
 			}
 
 			Torrent	torrent = download.getTorrent();
