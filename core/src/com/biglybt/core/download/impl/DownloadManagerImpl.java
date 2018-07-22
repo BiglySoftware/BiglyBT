@@ -2406,15 +2406,31 @@ DownloadManagerImpl
 
 			position = globalManager.getDownloadManagers().size() + 1;
 
-			if (COConfigurationManager.getBooleanParameter(CFG_MOVE_COMPLETED_TOP)) {
-
-				globalManager.moveTop(dms);
-
-			} else {
-
-				globalManager.moveEnd(dms);
+			if ( _assumedComplete ){
+				
+				if (COConfigurationManager.getBooleanParameter( CFG_MOVE_COMPLETED_TOP )){
+	
+					globalManager.moveTop(dms);
+	
+				} else {
+	
+					globalManager.moveEnd(dms);
+				}
+			}else{
+				
+					// moved back to downloading - use the open-torrent-options default to decide where to put the download
+					// actually we don't persist the location so set at end until someone complains
+				
+				if ( false ){
+					
+					globalManager.moveTop(dms);
+					
+				}else{
+					
+					globalManager.moveEnd(dms);
+				}
 			}
-
+			
 			// we left a gap in incomplete list, fixup
 
 			globalManager.fixUpDownloadManagerPositions();
