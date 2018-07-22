@@ -3534,7 +3534,7 @@ download_loop:
 				{
 					if ( !viewer.isDisposed()){
 
-						viewer.append( str );
+						viewer.append2( str );
 					}
 				}
 			});
