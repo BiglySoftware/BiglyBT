@@ -35,6 +35,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -95,6 +96,20 @@ public class SideBarEntrySWT
 
 	private static final boolean ALWAYS_IMAGE_GAP = true;
 
+	private static int CLOSE_IMAGE_POSITION = 0;
+	
+	static{
+		
+		COConfigurationManager.addAndFireParameterListener(
+			"Side Bar Close Position",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String name ){
+					CLOSE_IMAGE_POSITION = COConfigurationManager.getIntParameter( name );
+				}
+			});
+	}
 	/*
 	private static final String[] default_indicator_colors = {
 		"#000000",
@@ -949,9 +964,43 @@ public class SideBarEntrySWT
 			}
 			itemBounds.x = indent;
 		}
-		int x1IndicatorOfs = SIDEBAR_SPACING;
+		int x1IndicatorOfs;
 		int x0IndicatorOfs = itemBounds.x;
 
+		if  ( CLOSE_IMAGE_POSITION == 2 ){
+			
+				// never 
+			
+			x1IndicatorOfs = 0;
+			
+		}else if ( CLOSE_IMAGE_POSITION == 1 ){
+			
+				// on right 
+			
+			x1IndicatorOfs = 0;
+			
+			if (isCloseable()) {
+				Image img = selected ? imgCloseSelected : imgClose;
+				Rectangle closeArea = img.getBounds();
+				closeArea.x = treeArea.width - closeArea.width - SIDEBAR_SPACING
+						- x1IndicatorOfs;
+				closeArea.y = itemBounds.y + (itemBounds.height - closeArea.height) / 2;
+				x1IndicatorOfs += closeArea.width + SIDEBAR_SPACING;
+
+				//gc.setBackground(treeItem.getBackground());
+				//gc.fillRectangle(closeArea);
+
+				gc.drawImage(img, closeArea.x, closeArea.y);
+				treeItem.setData("closeArea", closeArea);
+			}else{
+				x1IndicatorOfs += imgClose.getBounds().width + SIDEBAR_SPACING;
+			}
+		}else{
+			
+			x1IndicatorOfs = SIDEBAR_SPACING;
+		}
+		
+		
 		//System.out.println(System.currentTimeMillis() + "] refresh " + getId() + "; " + itemBounds + ";clip=" + event.gc.getClipping() + ";eb=" + event.getBounds());
 		if (viewTitleInfo != null) {
 			String textIndicator = null;
@@ -1051,21 +1100,24 @@ public class SideBarEntrySWT
 		//	x1IndicatorOfs = 30;
 		//}
 
-		if (isCloseable()) {
-			Image img = selected ? imgCloseSelected : imgClose;
-			Rectangle closeArea = img.getBounds();
-			closeArea.x = treeArea.width - closeArea.width - SIDEBAR_SPACING
-					- x1IndicatorOfs;
-			closeArea.y = itemBounds.y + (itemBounds.height - closeArea.height) / 2;
-			x1IndicatorOfs += closeArea.width + SIDEBAR_SPACING;
-
-			//gc.setBackground(treeItem.getBackground());
-			//gc.fillRectangle(closeArea);
-
-			gc.drawImage(img, closeArea.x, closeArea.y);
-			treeItem.setData("closeArea", closeArea);
+		if ( CLOSE_IMAGE_POSITION == 0 ){
+			
+			if (isCloseable()) {
+				Image img = selected ? imgCloseSelected : imgClose;
+				Rectangle closeArea = img.getBounds();
+				closeArea.x = treeArea.width - closeArea.width - SIDEBAR_SPACING
+						- x1IndicatorOfs;
+				closeArea.y = itemBounds.y + (itemBounds.height - closeArea.height) / 2;
+				x1IndicatorOfs += closeArea.width + SIDEBAR_SPACING;
+	
+				//gc.setBackground(treeItem.getBackground());
+				//gc.fillRectangle(closeArea);
+	
+				gc.drawImage(img, closeArea.x, closeArea.y);
+				treeItem.setData("closeArea", closeArea);
+			}
 		}
-
+		
 		MdiEntryVitalityImage[] vitalityImages = getVitalityImages();
 		for (int i = 0; i < vitalityImages.length; i++) {
 			SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];

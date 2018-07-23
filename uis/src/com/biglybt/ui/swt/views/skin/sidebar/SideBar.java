@@ -222,6 +222,48 @@ public class SideBar
 		MenuManager menuManager = uim.getMenuManager();
 		
 		{
+			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "UpdateWindow.close");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+				
+			menuItem.addFillListener(
+				new MenuItemFillListener() {
+	
+					@Override
+					public void menuWillBeShown(MenuItem menu, Object data) {
+						SideBarEntrySWT sbe = (SideBarEntrySWT)getCurrentEntrySWT();
+	
+						if ( sbe != null && !sbe.isCloseable()){
+							
+							menu.setVisible( false );
+							
+						}else {
+						
+							if ( COConfigurationManager.getIntParameter( "Side Bar Close Position" ) == 2 ){
+								
+								menu.setVisible( true );
+								
+							}else{
+								
+								menu.setVisible( false);
+							}
+						}
+					}
+				});
+	
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					SideBarEntrySWT sbe = (SideBarEntrySWT)getCurrentEntrySWT();
+	
+					if ( sbe != null ){
+						
+						sbe.close( true, true );
+					}
+				}
+			});
+		}
+		
+		{
 			MenuItem menuItem = menuManager.addMenuItem("sidebar._end_", "menu.add.to.dashboard");
 			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
 	
@@ -423,11 +465,9 @@ public class SideBar
 			Debug.out(e);
 		}
 
-		COConfigurationManager.removeParameterListener("Show Side Bar",
-				configShowSideBarListener);
-		COConfigurationManager.removeParameterListener(
-				"config.skin.color.sidebar.bg", configBGColorListener);
-
+		COConfigurationManager.removeParameterListener("Show Side Bar", configShowSideBarListener);
+		COConfigurationManager.removeParameterListener(	"config.skin.color.sidebar.bg", configBGColorListener);
+		COConfigurationManager.removeParameterListener(	"Side Bar Close Position", configBGColorListener);
 
 		if (swtViewListener != null) {
 			try {
@@ -474,9 +514,9 @@ public class SideBar
 						});
 			}
 		};
-		COConfigurationManager.addParameterListener(
-			"config.skin.color.sidebar.bg",
-				configBGColorListener);
+		
+		COConfigurationManager.addParameterListener( "config.skin.color.sidebar.bg", configBGColorListener );
+		COConfigurationManager.addParameterListener( "Side Bar Close Position", configBGColorListener );
 
 		tree.setBackground(bg);
 		tree.setForeground(fg);

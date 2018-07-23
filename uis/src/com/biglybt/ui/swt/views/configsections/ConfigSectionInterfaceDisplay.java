@@ -25,6 +25,7 @@ package com.biglybt.ui.swt.views.configsections;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import com.biglybt.core.CoreFactory;
 import org.eclipse.swt.SWT;
@@ -276,8 +277,10 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 			new IntParameter(gSideBar, "Side Bar Top Level Gap", 0, 5 );
 
-			new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
-			label = new Label(gSideBar, SWT.NULL);
+			BooleanParameter sso = new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
+			GridData gd = new GridData();
+			gd.horizontalSpan = 2;
+			sso.setLayoutData( gd );
 			
 			BooleanParameter showNew = new BooleanParameter(gSideBar, "Show New In Side Bar", "sidebar.show.new");
 			label = new Label(gSideBar, SWT.NULL);
@@ -311,6 +314,20 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 							}
 						}
 					});
+			
+			label = new Label(gSideBar, SWT.NULL);
+			Messages.setLanguageText(label, "sb.close.icon.position" );
+			
+			String[] cp_labs = {
+					MessageText.getString( "sb.close.indicator.left" ),
+					MessageText.getString( "sb.close.right" ),
+					MessageText.getString( "sb.close.never" ),
+			};
+			
+			
+		    IntListParameter cp_param = 
+		    		new IntListParameter(gSideBar, "Side Bar Close Position", 0, cp_labs, new int[]{ 0, 1, 2 });
+
 		}
 
 			// status bar
