@@ -3841,7 +3841,7 @@ public class OpenTorrentOptionsWindow
 		}
 
 		protected void setSelectedQueueLocation(int iLocation) {
-			torrentOptions.iQueueLocation = iLocation;
+			torrentOptions.setQueueLocation( iLocation );
 
 			updateStartOptionsHeader();
 		}
@@ -3859,7 +3859,7 @@ public class OpenTorrentOptionsWindow
 
 			String optionText = MessageText.getString(MSGKEY_STARTMODES[torrentOptions.getStartMode()])
 					+ ", "
-					+ MessageText.getString(MSGKEY_QUEUELOCATIONS[torrentOptions.iQueueLocation]);
+					+ MessageText.getString(MSGKEY_QUEUELOCATIONS[torrentOptions.getQueueLocation()]);
 
 			String s = MessageText.getString("OpenTorrentOptions.header.startoptions",
 					new String[] {
@@ -6279,7 +6279,7 @@ public class OpenTorrentOptionsWindow
 				sItemsText[i] = sText;
 			}
 			cmbQueueLocation.setItems(sItemsText);
-			cmbQueueLocation.select(torrentOptions.iQueueLocation);
+			cmbQueueLocation.select(torrentOptions.getQueueLocation());
 		}
 
 		private void updateSize() {

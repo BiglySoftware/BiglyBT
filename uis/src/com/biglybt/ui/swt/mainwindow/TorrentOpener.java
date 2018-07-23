@@ -717,7 +717,7 @@ public class TorrentOpener {
 						return;
 					}
 
-					if (torrentOptions.iQueueLocation == TorrentOpenOptions.QUEUELOCATION_TOP) {
+					if (torrentOptions.getQueueLocation() == TorrentOpenOptions.QUEUELOCATION_TOP) {
 						gm.moveTop(new DownloadManager[] {
 							dm
 						});

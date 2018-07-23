@@ -44,10 +44,11 @@ import com.biglybt.plugin.I2PHelpers;
  */
 public class TorrentOpenOptions
 {
-	private final static String PARAM_DEFSAVEPATH = "Default save path";
+	private final static String PARAM_DEFSAVEPATH 		= "Default save path";
+	private final static String PARAM_MOVEWHENDONE 		= "Move Completed When Done";
+	private final static String PARAM_QUEUEPOSITION 	= "Add Torrent Queue Position";
 
-	private final static String PARAM_MOVEWHENDONE = "Move Completed When Done";
-
+	
 	public final static int QUEUELOCATION_BOTTOM = 1;
 
 	public final static int QUEUELOCATION_TOP = 0;
@@ -86,8 +87,7 @@ public class TorrentOpenOptions
 
 	private int iStartID;
 
-	/** @todo: getter/setters */
-	public int iQueueLocation;
+	private int iQueueLocation;
 
 	public boolean bSequentialDownload;
 	
@@ -150,7 +150,7 @@ public class TorrentOpenOptions
 
 	public TorrentOpenOptions() {
 		iStartID = getDefaultStartMode();
-		iQueueLocation = QUEUELOCATION_BOTTOM;
+		iQueueLocation = COConfigurationManager.getIntParameter( PARAM_QUEUEPOSITION, QUEUELOCATION_BOTTOM );
 		bSequentialDownload = false;
 		isValid = true;
 		this.sDestDir = COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH);
@@ -289,7 +289,22 @@ public class TorrentOpenOptions
 	{
 		iStartID = m;
 	}
+	
+	public int
+	getQueueLocation()
+	{
+		return( iQueueLocation );
+	}
 
+	public void
+	setQueueLocation(
+		int		l )
+	{
+		iQueueLocation = l;
+		
+		COConfigurationManager.setParameter( PARAM_QUEUEPOSITION, l );
+	}
+	
 	public Map<String, Boolean>
 	getEnabledNetworks()
 	{

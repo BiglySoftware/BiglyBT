@@ -2419,9 +2419,10 @@ DownloadManagerImpl
 			}else{
 				
 					// moved back to downloading - use the open-torrent-options default to decide where to put the download
-					// actually we don't persist the location so set at end until someone complains
+					
+				int qp = COConfigurationManager.getIntParameter( "Add Torrent Queue Position", 1 );
 				
-				if ( false ){
+				if ( qp == 0 ){
 					
 					globalManager.moveTop(dms);
 					
