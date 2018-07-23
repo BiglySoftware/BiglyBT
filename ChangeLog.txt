@@ -29,6 +29,7 @@ FEATURE: Core  | Option to disable torrent transfer via the BiglyBT DHT [Parg]
 CHANGE: UI     | Switched text for seeding+checking [Parg]
 CHANGE: UI     | Enable the option to show sub-tabs in classic UI [Parg]
 CHANGE: UI     | Added prompt when creating personal share for info [Parg]
+CHANGE: UI     | Open torrent options now remembers queue position [Parg]
 CHANGE: Core   | Changes with snubbing and request timeouts for non-public peers [Parg]
 CHANGE: Core   | ignore do-not-download/delete priority files when searching for existing [Parg]
 
