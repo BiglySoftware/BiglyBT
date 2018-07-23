@@ -14,43 +14,43 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: eu-nocc\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2018-05-22 04:52-0400\n"
+"PO-Revision-Date: 2018-07-23 08:45\n"
 
 msgid "test"
-msgstr ""
+msgstr "Aztertu Ingeleraz"
 
 msgid "onlyEng"
-msgstr ""
+msgstr "Ingeleraz bakarrik"
 
 msgid "donation_line1"
-msgstr ""
+msgstr "BiglyBT softwarearen dohaineko software bat bada ere, asko kostatzen da garatzea eta mantentzea. Erabiltzetik onura atertzen duzula uste baduzu, mesedez kontuan izan gu sostengatzea hurrengo moduetako baten bidez:"
 
 msgid "donation_title"
-msgstr ""
+msgstr "Sostengatu BiglyBT"
 
 msgid "donation_monthly_title"
-msgstr ""
+msgstr "Hilero Mila esker"
 
 msgid "donation_onetime_title"
-msgstr ""
+msgstr "Aldi Bakarreko Eskaintza"
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
-msgstr ""
+msgstr "Eman garatzaileei kafe bat hilero"
 
 msgid "donation_monthly_per_month"
-msgstr ""
+msgstr "/mo"
 
 msgid "donation_onetime_amount"
-msgstr ""
+msgstr "Kopurua (%1):"
 
 msgid "donation_onetime_description"
-msgstr ""
+msgstr "Edozein kopuru eskertzen da :)"
 
 msgid "donation_bitcoin_description"
-msgstr ""
+msgstr "Gomendatzen dugun dirulaguntza da %1, edo %2. :)"
 
 msgid "donation_bitcoin_addresses"
 msgstr "BCH/BTC Helbidea:"
