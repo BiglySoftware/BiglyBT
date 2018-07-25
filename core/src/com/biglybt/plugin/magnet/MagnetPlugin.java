@@ -951,7 +951,7 @@ MagnetPlugin
 									
 									UIFunctions uif = UIFunctionsManager.getUIFunctions();
 									
-									TorrentOpenOptions torrentOptions = new TorrentOpenOptions();
+									TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
 									
 									torrentOptions.setDeleteFileOnCancel( true );
 									torrentOptions.sFileName			= torrent_file.getAbsolutePath();

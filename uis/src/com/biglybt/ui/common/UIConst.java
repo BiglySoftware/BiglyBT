@@ -29,9 +29,6 @@ import com.biglybt.ui.Main;
 import org.apache.commons.cli.*;
 import org.apache.commons.cli.Option.Builder;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreException;
-import com.biglybt.core.global.GlobalManager;
 
 /**
  * @author tobi
@@ -97,6 +94,11 @@ public class UIConst
 				"share a resource");
 		options.addOption(builder.build());
 
+		builder = Option.builder().longOpt("savepath").argName("path").hasArg().desc(
+				"specify the. Absolute save location for the torrent(s)");
+		options.addOption(builder.build());
+		
+		
 		
 		if (Constants.isWindows) {
 			builder = Option.builder("console").desc(

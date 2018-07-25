@@ -135,8 +135,8 @@ public class TorrentDownloaderFactory {
     return create(null, url, null, null, false);
   }
 
-  public static void initManager(GlobalManager gm, boolean logged, boolean autostart, String downloaddir) {
-    TorrentDownloaderManager.getInstance().init(gm, logged, autostart, downloaddir);
+  public static void initManager(GlobalManager gm, boolean logged, boolean autostart ) {
+    TorrentDownloaderManager.getInstance().init(gm, logged, autostart);
   }
 
   public static TorrentDownloader downloadManaged(String url, String fileordir, boolean logged) {
@@ -154,6 +154,10 @@ public class TorrentDownloaderFactory {
   public static TorrentDownloader downloadManaged(String url) {
     return TorrentDownloaderManager.getInstance().download(url);
   }
+  
+  public static TorrentDownloader downloadToLocationManaged(String url, String save_path) {
+	    return TorrentDownloaderManager.getInstance().downloadToLocation(url,save_path );
+	  }
 
   	private static class
   	TorrentDownloadRetrier

@@ -216,11 +216,11 @@ public class OpenTorrentOptionsWindow
 						COConfigurationManager.setParameter( "User Mode", 2 );
 
 						if (torrent1 != null) {
-							addTorrent(	new TorrentOpenOptions(null, torrent1, false));
+							addTorrent(	new TorrentOpenOptions(null, torrent1, false, null));
 						}
 
 						if (torrent2 != null) {
-							addTorrent(	new TorrentOpenOptions(null, torrent2, false));
+							addTorrent(	new TorrentOpenOptions(null, torrent2, false, null));
 						}
 					}
 

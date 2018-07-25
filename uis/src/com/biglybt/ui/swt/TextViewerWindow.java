@@ -345,7 +345,13 @@ public class TextViewerWindow {
   {
 	  txtInfo.append( str );
 
-	  txtInfo.setSelection( txtInfo.getTextLimit());
+	  if ( str.contains( "\n" )){
+	  
+		  	// only scroll if the newly added text contains a new-line
+		  	// otherwise things get twitchy
+		  
+		  txtInfo.setSelection( txtInfo.getTextLimit());
+	  }
   }
 
   public boolean

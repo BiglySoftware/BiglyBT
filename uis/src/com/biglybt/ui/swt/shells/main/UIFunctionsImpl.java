@@ -1520,7 +1520,7 @@ public class UIFunctionsImpl
 	public void openTorrentOpenOptions(Shell shell, String sPathOfFilesToOpen,
 	                                   String[] sFilesToOpen, boolean defaultToStopped, boolean forceOpen) {
 
-		TorrentOpenOptions torrentOptions = new TorrentOpenOptions();
+		TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
 		if (defaultToStopped) {
 			torrentOptions.setStartMode( TorrentOpenOptions.STARTMODE_STOPPED );
 		}
@@ -1547,7 +1547,7 @@ public class UIFunctionsImpl
 		Boolean _hideErrors		 	= (Boolean)options.get( UIFunctions.OTO_HIDE_ERRORS );
 		boolean	hideErrors			= _hideErrors!=null?_hideErrors:UIFunctions.OTO_HIDE_ERRORS_DEFAULT;
 
-		TorrentOpenOptions torrentOptions = new TorrentOpenOptions();
+		TorrentOpenOptions torrentOptions = new TorrentOpenOptions( options );
 		if (defaultToStopped) {
 			torrentOptions.setStartMode( TorrentOpenOptions.STARTMODE_STOPPED );
 		}

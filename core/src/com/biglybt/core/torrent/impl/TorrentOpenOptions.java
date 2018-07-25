@@ -34,6 +34,7 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 import com.biglybt.plugin.I2PHelpers;
+import com.biglybt.ui.UIFunctions;
 
 
 /**
@@ -138,9 +139,14 @@ public class TorrentOpenOptions
 	 * @param torrent
 	 * @param bDeleteFileOnCancel
 	 */
-	public TorrentOpenOptions(String sFileName, TOTorrent torrent,
-			boolean bDeleteFileOnCancel) {
-		this();
+	public 
+	TorrentOpenOptions(
+		String 					sFileName, 
+		TOTorrent 				torrent,
+		boolean 				bDeleteFileOnCancel,
+		Map<String,Object>		options ) 
+	{
+		this( options );
 		this.bDeleteFileOnCancel = bDeleteFileOnCancel;
 		bDeleteFileOnCancelSet = true;
 		this.sFileName = sFileName;
@@ -148,13 +154,25 @@ public class TorrentOpenOptions
 		this.setTorrent(torrent);
 	}
 
-	public TorrentOpenOptions() {
+	public 
+	TorrentOpenOptions(
+		Map<String,Object>		options ) 
+	{
 		iStartID = getDefaultStartMode();
 		iQueueLocation = COConfigurationManager.getIntParameter( PARAM_QUEUEPOSITION, QUEUELOCATION_BOTTOM );
 		bSequentialDownload = false;
 		isValid = true;
-		this.sDestDir = COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH);
-
+		
+		if ( options != null ){
+			
+			sDestDir = (String)options.get( UIFunctions.OTO_DEFAULT_SAVE_PATH );
+		}
+		
+		if ( sDestDir == null ){
+		
+			sDestDir = COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH);
+		}
+		
 		for (int i = 0; i < AENetworkClassifier.AT_NETWORKS.length; i++) {
 
 			String nn = AENetworkClassifier.AT_NETWORKS[i];
@@ -169,7 +187,7 @@ public class TorrentOpenOptions
 	 * clones everything except files and torrent
 	 * @param toBeCloned
 	 */
-	public TorrentOpenOptions(TorrentOpenOptions toBeCloned) {
+	private TorrentOpenOptions(TorrentOpenOptions toBeCloned) {
 		this.sOriginatingLocation = toBeCloned.sOriginatingLocation;
 		this.sFileName = toBeCloned.sFileName;
 		this.sDestDir = toBeCloned.sDestDir;
@@ -201,6 +219,12 @@ public class TorrentOpenOptions
 		this.hide_errors		= toBeCloned.hide_errors;
 	}
 
+	public TorrentOpenOptions
+	getClone()
+	{
+		return( new TorrentOpenOptions( this ));
+	}
+	
 	public static int getDefaultStartMode() {
 		return (COConfigurationManager.getBooleanParameter("Default Start Torrents Stopped"))
 				? STARTMODE_STOPPED : STARTMODE_QUEUED;

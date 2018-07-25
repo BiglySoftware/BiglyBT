@@ -371,7 +371,7 @@ public class FileDownloadWindow
 				if (listener == null) {
 
 					if (torrentOptions == null) {
-						torrentOptions =  new TorrentOpenOptions();
+						torrentOptions =  new TorrentOpenOptions( null );
 					}
 					if (TorrentOpener.mergeFileIntoTorrentInfo(
 							downloader.getFile().getAbsolutePath(), original_url,

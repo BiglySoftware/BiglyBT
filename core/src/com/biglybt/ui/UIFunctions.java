@@ -195,6 +195,9 @@ public interface UIFunctions
 
 	public static final String 	OTO_HIDE_ERRORS					= "hideErrors";			// Boolean
 	public static final boolean OTO_HIDE_ERRORS_DEFAULT			= false;
+	
+	public static final String 	OTO_DEFAULT_SAVE_PATH			= "defaultSavePath";	// String
+	public static final String	OTO_DEFAULT_SAVE_PATH_DEFAULT	= null;
 
 	/**
 	 * Opens the Torrent Add Options Window, if configured to

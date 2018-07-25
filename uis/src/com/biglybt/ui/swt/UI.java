@@ -19,7 +19,9 @@ package com.biglybt.ui.swt;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.ui.common.UIConst;
 import org.apache.commons.cli.CommandLine;
@@ -171,6 +173,42 @@ public class UI
 		if (commands.hasOption("open")) {
 			showMainWindow = true;
 		}
+		
+		String save_path = null;
+		
+		if ( commands.hasOption("savepath" )){
+			
+			save_path = commands.getOptionValue( "savepath" );
+			
+			File f = new File( save_path );
+			
+			if ( f.exists()){
+				
+				if ( f.isFile()){
+										
+					Logger.log(new LogAlert(LogAlert.REPEATABLE, LogAlert.AT_ERROR,
+								"StartServer: --savepath value ' + f.getAbsolutePath() + ' is a file, ignoring"));
+					
+					save_path = null;
+				}
+			}else{
+				
+				f.mkdirs();
+				
+				if ( !f.exists()){
+					
+					Logger.log(new LogAlert(LogAlert.REPEATABLE, LogAlert.AT_ERROR,
+							"StartServer: --savepath value ' + f.getAbsolutePath() + ' can't be created, ignoring"));
+
+					save_path = null;
+				}
+			}
+			
+			if ( save_path != null ){
+				
+				save_path = f.getAbsolutePath();
+			}
+		}
 
 		String[] rest = commands.getArgs();
 
@@ -231,7 +269,8 @@ public class UI
 
 					queued_torrents.add(new Object[] {
 						filename,
-						Boolean.valueOf(open)
+						Boolean.valueOf(open),
+						save_path,
 					});
 
 					queued = true;
@@ -243,7 +282,7 @@ public class UI
 
 			if (!queued) {
 
-				handleFile(filename, open);
+				handleFile(filename, open, save_path);
 			}
 		}
 
@@ -253,12 +292,19 @@ public class UI
 		return args;
 	}
 
-	protected void handleFile(String file_name, boolean open) {
+	protected void handleFile(String file_name, boolean open, String save_path ) {
 		try {
 
 			if (open) {
 
-				TorrentOpener.openTorrent(file_name);
+				Map<String,Object> options = new HashMap<String, Object>();
+				
+				if ( save_path != null ){
+					
+					options.put( UIFunctions.OTO_DEFAULT_SAVE_PATH, save_path );
+				}
+				
+				TorrentOpener.openTorrent(file_name, options );
 
 			} else {
 
@@ -300,8 +346,9 @@ public class UI
 
 			String file_name = (String) entry[0];
 			boolean open = ((Boolean) entry[1]).booleanValue();
-
-			handleFile(file_name, open);
+			String save_path = (String)entry[2];
+			
+			handleFile(file_name, open, save_path );
 		}
 		queued_torrents = null;
 	}

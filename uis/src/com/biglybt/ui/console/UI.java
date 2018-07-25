@@ -29,6 +29,7 @@ import org.apache.log4j.varia.DenyAllFilter;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.torrent.HasBeenOpenedListener;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.SystemProperties;
@@ -175,9 +176,43 @@ public class UI
 				}
 			}
 
+			String save_path = null;
+			
+			if ( commands.hasOption("savepath" )){
+				
+				save_path = commands.getOptionValue( "savepath" );
+				
+				File f = new File( save_path );
+				
+				if ( f.exists()){
+					
+					if ( f.isFile()){
+						
+						Logger.getLogger("biglybt").error( "--savepath value '" + f.getAbsolutePath() + "' is a file, ignoring ");
+						
+						save_path = null;
+					}
+				}else{
+					
+					f.mkdirs();
+					
+					if ( !f.exists()){
+						
+						Logger.getLogger("biglybt").error( "--savepath value '" + f.getAbsolutePath() + "' can't be created, ignoring ");
+
+						save_path = null;
+					}
+				}
+				
+				if ( save_path != null ){
+					
+					save_path = f.getAbsolutePath();
+				}
+			}
+			
 			String[] rest = commands.getArgs();
 			for (String arg : rest) {
-				openTorrent(arg);
+				openTorrent(arg, save_path );
 			}
 		} else {
 			Logger.getLogger("biglybt").error("No commands to process");
@@ -269,8 +304,7 @@ public class UI
 		} catch (UIException e) {
 			e.printStackTrace();
 		}
-		TorrentDownloaderFactory.initManager(core.getGlobalManager(), true, true,
-				COConfigurationManager.getStringParameter("Default save path"));
+		TorrentDownloaderFactory.initManager(core.getGlobalManager(), true, true );
 
 		if (created_console && System.getProperty(
 				SystemProperties.SYSPROP_CONSOLE_MULTIUSER) != null) {
@@ -291,7 +325,7 @@ public class UI
 		return;
 	}
 
-	public void openTorrent(String fileName) {
+	public void openTorrent(String fileName, String save_path) {
 		String uc_filename = fileName.toUpperCase(Locale.US);
 
 		boolean is_remote = uc_filename.startsWith("HTTP://")
@@ -306,11 +340,20 @@ public class UI
 
 				console.out.println("Downloading torrent from url: " + fileName);
 
-				console.downloadRemoteTorrent(fileName);
+				if ( save_path == null ){
+					console.downloadRemoteTorrent(fileName);
+				}else{
+					console.downloadRemoteTorrent(fileName, save_path );
+				}
 			} else {
 
 				console.out.println("Open Torrent " + fileName);
-				console.downloadTorrent(fileName);
+				
+				if ( save_path == null ){
+					console.downloadTorrent(fileName);
+				}else{
+					console.downloadTorrent(fileName,save_path);
+				}
 			}
 			return;
 		} else {
@@ -321,7 +364,16 @@ public class UI
 			if (console != null) {
 				console.out.println("Downloading torrent from url: " + fileName);
 			}
-			TorrentDownloaderFactory.downloadManaged(fileName);
+			
+			if ( save_path == null ){
+			
+				TorrentDownloaderFactory.downloadManaged(fileName);
+				
+			}else{
+				
+				TorrentDownloaderFactory.downloadToLocationManaged(fileName, save_path );
+			}
+			
 			return;
 		}
 
@@ -338,8 +390,7 @@ public class UI
 		}
 		if (core.getGlobalManager() != null) {
 			try {
-				String downloadDir = COConfigurationManager.getDirectoryParameter(
-						"Default save path");
+				String downloadDir = save_path!=null?save_path:COConfigurationManager.getDirectoryParameter("Default save path");
 				if (console != null) {
 					console.out.println(
 							"Adding torrent: " + fileName + " and saving to " + downloadDir);
@@ -387,7 +438,7 @@ public class UI
 			}
 			case UIManagerEvent.ET_OPEN_TORRENT_VIA_FILE: // data is File
 			{
-				openTorrent(((File) data).toString());
+				openTorrent(((File) data).toString(), null );
 
 				break;
 			}

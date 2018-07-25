@@ -1415,7 +1415,7 @@ public class ManagerUtils {
 
 								UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
-								TorrentOpenOptions torrent_options = new TorrentOpenOptions( torrent_file.getAbsolutePath(), torrent, false );
+								TorrentOpenOptions torrent_options = new TorrentOpenOptions( torrent_file.getAbsolutePath(), torrent, false, null  );
 
 								torrent_options.setTorrent( torrent );
 
@@ -3569,7 +3569,7 @@ download_loop:
 
 					if ( last_log[1]++ > 80 ){
 						
-						log( viewer, "\r\n" );
+						logLine( viewer, "" );
 						
 						last_log[1] = 1;
 					}
