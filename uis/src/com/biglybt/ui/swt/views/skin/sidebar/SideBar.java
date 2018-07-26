@@ -522,23 +522,29 @@ public class SideBar
 		tree.setForeground(fg);
 		FontData[] fontData = tree.getFont().getFontData();
 
-		int fontHeight;
 
 		if (Utils.isGTK3) {
-			fontHeight = fontData[0].getHeight();
+			
+			fontData[0].setStyle(SWT.BOLD);
+			
+			fontHeader = new Font(tree.getDisplay(), fontData);
+			font = tree.getFont();
+			
 		} else {
+			int fontHeight;
+
 			fontHeight = (Constants.isOSX ? 11 : 12)
 				+ (tree.getItemHeight() > 18 ? tree.getItemHeight() - 18 : 0);
 
 			if (Constants.isUnix && tree.getItemHeight() >= 38) {
 				fontHeight = 13;
 			}
+			
+			fontData[0].setStyle(SWT.BOLD);
+			FontUtils.getFontHeightFromPX(tree.getDisplay(), fontData, null, fontHeight);
+			fontHeader = new Font(tree.getDisplay(), fontData);
+			font = FontUtils.getFontWithHeight(tree.getFont(), null, fontHeight);
 		}
-
-		fontData[0].setStyle(SWT.BOLD);
-		FontUtils.getFontHeightFromPX(tree.getDisplay(), fontData, null, fontHeight);
-		fontHeader = new Font(tree.getDisplay(), fontData);
-		font = FontUtils.getFontWithHeight(tree.getFont(), null, fontHeight);
 
 		tree.setFont(font);
 
