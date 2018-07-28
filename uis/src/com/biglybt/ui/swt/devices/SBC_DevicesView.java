@@ -389,6 +389,8 @@ public class SBC_DevicesView
 			ColumnTJ_Completion.COLUMN_ID,
 		};
 		tcm.setDefaultColumnNames(TABLE_DEVICE_LIBRARY, defaultQColumns);
+		tcm.setDefaultColumnNames(TABLE_DEVICE_LIBRARY + ":type=1", defaultQColumns);
+		
 	}
 
 	// @see SkinView#skinObjectShown(SWTSkinObject, java.lang.Object)

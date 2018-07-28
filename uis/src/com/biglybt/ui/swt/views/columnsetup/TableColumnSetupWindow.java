@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.table.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
@@ -44,6 +45,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -631,29 +633,46 @@ public class TableColumnSetupWindow
   		btnReset.addSelectionListener(new SelectionAdapter() {
   			@Override
 			  public void widgetSelected(SelectionEvent e) {
-  				String[] defaultColumnNames = tcm.getDefaultColumnNames(forTableID);
-  				if (defaultColumnNames != null) {
-  					List<TableColumnCore> defaultColumns = new ArrayList<>();
-  					for (String name : defaultColumnNames) {
-  						TableColumnCore column = tcm.getTableColumnCore(forTableID, name);
-  						if (column != null) {
-  							defaultColumns.add(column);
-  						}
+  				MessageBoxShell mb =
+						new MessageBoxShell(
+							MessageText.getString("table.columns.reset.dialog.title"),
+							MessageText.getString("table.columns.reset.dialog.text"),
+							new String[] {
+								MessageText.getString("Button.yes"),
+								MessageText.getString("Button.no")
+							},
+							1 );
+
+				mb.open(new UserPrompterResultListener() {
+					@Override
+					public void prompterClosed(int result) {
+						if (result == 0) {
+			  				String[] defaultColumnNames = tcm.getDefaultColumnNames(forTableID);
+			  				if (defaultColumnNames != null) {
+			  					List<TableColumnCore> defaultColumns = new ArrayList<>();
+			  					for (String name : defaultColumnNames) {
+			  						TableColumnCore column = tcm.getTableColumnCore(forTableID, name);
+			  						if (column != null) {
+			  							defaultColumns.add(column);
+			  						}
+									}
+			  					if (defaultColumns.size() > 0) {
+			  						for (TableColumnCore tc : mapNewVisibility.keySet()) {
+											mapNewVisibility.put(tc, Boolean.FALSE);
+										}
+			  						tvChosen.removeAllTableRows();
+			  						columnsChosen = defaultColumns.toArray(new TableColumnCore[0]);
+			  						for (int i = 0; i < columnsChosen.length; i++) {
+			  							mapNewVisibility.put(columnsChosen[i], Boolean.TRUE);
+											columnsChosen[i].setPositionNoShift(i);
+											tvChosen.addDataSource(columnsChosen[i]);
+			  						}
+			  						doReset = true;
+			  					}
+			  				}
 						}
-  					if (defaultColumns.size() > 0) {
-  						for (TableColumnCore tc : mapNewVisibility.keySet()) {
-								mapNewVisibility.put(tc, Boolean.FALSE);
-							}
-  						tvChosen.removeAllTableRows();
-  						columnsChosen = defaultColumns.toArray(new TableColumnCore[0]);
-  						for (int i = 0; i < columnsChosen.length; i++) {
-  							mapNewVisibility.put(columnsChosen[i], Boolean.TRUE);
-								columnsChosen[i].setPositionNoShift(i);
-								tvChosen.addDataSource(columnsChosen[i]);
-  						}
-  						doReset = true;
-  					}
-  				}
+					}
+				});
   			}
   		});
 		}

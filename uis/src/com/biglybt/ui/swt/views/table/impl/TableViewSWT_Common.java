@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.table.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
@@ -33,11 +34,14 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
+import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
@@ -45,6 +49,7 @@ import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
@@ -1170,9 +1175,26 @@ public class TableViewSWT_Common
 		itemResetColumns.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				String tableID = tv.getTableID();
-				TableColumnManager tcm = TableColumnManager.getInstance();
-				tcm.resetColumns(tv.getDataSourceType(), tableID);
+				
+				MessageBoxShell mb =
+						new MessageBoxShell(
+							MessageText.getString("table.columns.reset.dialog.title"),
+							MessageText.getString("table.columns.reset.dialog.text"),
+							new String[] {
+								MessageText.getString("Button.yes"),
+								MessageText.getString("Button.no")
+							},
+							1 );
+
+				mb.open(new UserPrompterResultListener() {
+					@Override
+					public void prompterClosed(int result) {
+						if (result == 0) {
+							String tableID = tv.getTableID();
+							TableColumnManager tcm = TableColumnManager.getInstance();
+							tcm.resetColumns(tv.getDataSourceType(), tableID);
+						}
+					}});
 			}
 		});
 
