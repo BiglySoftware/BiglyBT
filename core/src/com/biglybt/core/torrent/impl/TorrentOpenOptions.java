@@ -30,6 +30,9 @@ import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
@@ -954,6 +957,27 @@ public class TorrentOpenOptions
 				}
 			}
 
+			List<String> it = TorrentUtils.getInitialTags( torrent );
+			
+			if ( !it.isEmpty()){
+				
+				try{
+					TagManager tm = TagManagerFactory.getTagManager();
+					
+					for ( String tag: it ){
+						
+						Tag t = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTag( tag,  true );
+						
+						if ( t != null ){
+							
+							initialTags.add( t );
+						}
+					}
+					
+				}catch( Throwable e ){
+				}
+			}
+			
 			renameDuplicates();
 		}
 	}

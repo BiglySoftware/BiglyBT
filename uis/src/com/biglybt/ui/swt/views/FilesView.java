@@ -121,6 +121,7 @@ public class FilesView
     new PathItem(),
     new PathNameItem(),
     new SizeItem(),
+    new SizeBytesItem(),
     new DoneItem(),
     new PercentItem(),
     new FirstPieceItem(),

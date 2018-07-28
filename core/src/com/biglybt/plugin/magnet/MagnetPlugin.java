@@ -337,7 +337,10 @@ MagnetPlugin
 
 								if ( tag.isPublic()){
 
-									cb_data += "&tag=" + UrlUtils.encode( tag.getTagName( true ));
+									if ( !tag.isTagAuto()[0]){
+									
+										cb_data += "&tag=" + UrlUtils.encode( tag.getTagName( true ));
+									}
 								}
 							}
 						}
@@ -608,7 +611,7 @@ MagnetPlugin
 
 								byte[] torrent_data = torrent.writeToBEncodedData();
 
-								torrent_data = addTrackersAndWebSeedsEtc( torrent_data, args, new HashSet<String>());
+								torrent_data = addTrackersAndWebSeedsEtc( torrent_data, args, new HashSet<String>(), new ArrayList<String>());
 
 								return( torrent_data);
 							}
@@ -618,7 +621,7 @@ MagnetPlugin
 						Debug.printStackTrace(e);
 					}
 
-					return( recoverableDownload( muh_listener, hash, args, sources, timeout, false ));
+					return( recoverableDownload( muh_listener, hash, args, sources, null, timeout, false ));
 				}
 
 				@Override
@@ -798,7 +801,10 @@ MagnetPlugin
 
 					@Override
 					public void
-					closedownInitiated(){}
+					closedownInitiated()
+					{
+						updateRecoverableDownloads();
+					}
 
 					@Override
 					public void
@@ -885,6 +891,16 @@ MagnetPlugin
 						sources = l_ias.toArray( new InetSocketAddress[l_ias.size()]);
 					}
 					
+					List<String> l_tags = null;
+					
+					try{
+						l_tags = BDecoder.decodeStrings((List)map.get( "tags" ));
+						
+					}catch( Throwable e ){
+					}
+					
+					List<String> f_tags = l_tags;
+					
 					long timeout = (Long)map.get( "timeout" );
 					
 					final InetSocketAddress[] f_sources = sources;
@@ -895,7 +911,7 @@ MagnetPlugin
 						run()
 						{
 							try{
-								byte[] result = recoverableDownload( null, hash, args, f_sources, timeout, true );
+								byte[] result = recoverableDownload( null, hash, args, f_sources, f_tags, timeout, true );
 								
 								if ( result != null ){
 									
@@ -974,12 +990,87 @@ MagnetPlugin
 		}
 	}
 	
+	private void
+	updateRecoverableDownloads()
+	{
+		boolean recover = magnet_recovery.getValue();
+		
+		if ( recover ){
+			
+			synchronized( download_activities ){
+				
+				Map<String,Map> active = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
+			
+				if ( active.size() > 0 ){
+					
+					active = BEncoder.cloneMap( active );
+					
+					boolean do_update = false;
+					
+					for ( Map map: active.values()){
+						
+						//System.out.println( "Recovering: " + map );
+							
+						try{
+							byte[]	hash = (byte[])map.get( "hash" );
+							
+							Download download = plugin_interface.getDownloadManager().getDownload( hash );
+							
+							if ( download != null ){
+								
+								com.biglybt.core.download.DownloadManager		core_dm = PluginCoreUtils.unwrap( download );
+
+								List<Tag> tags = TagManagerFactory.getTagManager().getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, core_dm );
+								
+								List<String> tag_names = new ArrayList<>();
+
+								if ( !tags.isEmpty()){
+																		
+									for ( Tag t: tags ){
+										
+										if ( !t.isTagAuto()[0]){
+										
+											tag_names.add( t.getTagName( true ));
+										}
+									}
+								}
+								
+								if ( !tag_names.isEmpty()){
+									
+									map.put( "tags", tag_names );
+									
+									do_update = true;
+									
+								}else{
+									
+									if ( map.remove( "tags" ) != null ){
+										
+										do_update = true;
+									}
+								}
+								
+							}
+						}catch( Throwable e ){
+							
+						}
+					}
+					
+					if ( do_update ){
+					
+						COConfigurationManager.setParameter( "MagnetPlugin.active.magnets", active );
+					}
+				}
+			}
+		}
+	}
+	
 	private byte[]
 	recoverableDownload(
 		final MagnetURIHandlerProgressListener 		muh_listener,
 		final byte[]								hash,
 		final String								args,
 		final InetSocketAddress[]					sources,
+		List<String>								tags,
 		final long									timeout,
 		boolean										is_recovering )
 	
@@ -1030,6 +1121,11 @@ MagnetPlugin
 							Debug.out( e );
 						}
 					}
+				}
+				
+				if ( tags != null ){
+					
+					map.put( "tags", tags );
 				}
 				
 				map.put( "timeout", timeout );
@@ -1098,6 +1194,7 @@ MagnetPlugin
 					hash,
 					args,
 					sources,
+					tags,
 					timeout,
 					is_recovering?MagnetPlugin.FL_NO_MD_LOOKUP_DELAY:MagnetPlugin.FL_NONE );
 			
@@ -1181,47 +1278,54 @@ MagnetPlugin
 		byte[]								hash,
 		String								args,
 		InetSocketAddress[]					sources,
+		List<String>						tags,
 		long								timeout,
 		int									flags )
 
 		throws MagnetURIHandlerException
 	{
-		DownloadResult result = downloadSupport( listener, hash, args, sources, timeout, flags );
+		DownloadResult result = downloadSupport( listener, hash, args, sources, tags, timeout, flags );
 
 		if ( result == null ){
 
 			return( null );
 		}
 
-		return( addTrackersAndWebSeedsEtc( result, args  ));
+		return( addTrackersAndWebSeedsEtc( result, args, tags  ));
 	}
 
 	private byte[]
 	addTrackersAndWebSeedsEtc(
 		DownloadResult		result,
-		String				args )
+		String				args,
+		List<String>		tags )
 	{
 		byte[]		torrent_data 	= result.getTorrentData();
 		Set<String>	networks		= result.getNetworks();
 
-		return( addTrackersAndWebSeedsEtc( torrent_data, args, networks ));
+		return( addTrackersAndWebSeedsEtc( torrent_data, args, networks, tags ));
 	}
 
 	private byte[]
 	addTrackersAndWebSeedsEtc(
-		byte[]			torrent_data,
-		String			args,
-		Set<String>		networks )
+		byte[]				torrent_data,
+		String				args,
+		Set<String>			networks,
+		List<String>		initial_tags )
 	{
+		if ( initial_tags == null ){
+			
+			initial_tags = new ArrayList<>();
+		}
+		
 		List<String>	new_web_seeds 	= new ArrayList<>();
 		List<String>	new_trackers 	= new ArrayList<>();
 
 		Set<String>	tags			= new HashSet<>();
-
+		
 		if ( args != null ){
 
 			String[] bits = args.split( "&" );
-
 
 			for ( String bit: bits ){
 
@@ -1253,7 +1357,7 @@ MagnetPlugin
 			}
 		}
 
-		if ( new_web_seeds.size() > 0 || new_trackers.size() > 0 || networks.size() > 0 ){
+		if ( new_web_seeds.size() > 0 || new_trackers.size() > 0 || networks.size() > 0 || !initial_tags.isEmpty()){
 
 			try{
 				TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( torrent_data );
@@ -1367,6 +1471,13 @@ MagnetPlugin
 					update_torrent = true;
 				}
 
+				if ( !initial_tags.isEmpty()){
+					
+					TorrentUtils.setInitialTags( torrent, new ArrayList<>(initial_tags));
+
+					update_torrent = true;
+				}
+				
 				if ( update_torrent ){
 
 					torrent_data = BEncoder.encode( torrent.serialiseToMap());
@@ -1435,6 +1546,7 @@ MagnetPlugin
  		byte[]							hash,
  		String							args,
  		InetSocketAddress[]				sources,
+ 		List<String>					tags,
  		long							timeout,
  		int								flags )
 
@@ -1463,7 +1575,7 @@ MagnetPlugin
 
 	 		try{
 
-	 			activity.setResult( _downloadSupport( listener, hash, args, sources, timeout, flags ));
+	 			activity.setResult( _downloadSupport( listener, hash, args, sources, tags, timeout, flags ));
 
 	 		}catch( Throwable e ){
 
@@ -1488,6 +1600,7 @@ MagnetPlugin
 		final byte[]							hash,
 		final String							args,
 		final InetSocketAddress[]				sources,
+		List<String>							tags,
 		long									_timeout,
 		int										flags )
 
@@ -1745,7 +1858,7 @@ MagnetPlugin
 									return;
 								}
 
-								md_downloader[0] = mdd = new MagnetPluginMDDownloader( MagnetPlugin.this, plugin_interface, hash, networks_enabled, sources, args );
+								md_downloader[0] = mdd = new MagnetPluginMDDownloader( MagnetPlugin.this, plugin_interface, hash, networks_enabled, sources, tags, args );
 							}
 
 							if ( listener != null ){
