@@ -2233,12 +2233,7 @@ public class MyTorrentsView
 						e.doit = false;
 					}
 					break;
-				case 'c': // CTRL+C
-					if (e.widget != txtFilter) {
-						tv.clipboardSelected();
-						e.doit = false;
-					}
-					break;
+				
 				case 'i': // CTRL+I Info/Details
 					showSelectedDetails();
 					e.doit = false;

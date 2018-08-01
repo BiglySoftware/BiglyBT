@@ -770,6 +770,9 @@ public class TableViewPainted
 		TableRowCore[] rows = getSelectedRows();
 		for (TableRowCore row : rows) {
 			sToClipboard += "\n";
+			TableRowPainted p_row = (TableRowPainted)row;
+			p_row.setShown( true, true );
+			p_row.refresh( true, true );
 			for (int j = 0; j < visibleColumns.length; j++) {
 				TableColumnCore column = visibleColumns[j];
 				if (j != 0) {

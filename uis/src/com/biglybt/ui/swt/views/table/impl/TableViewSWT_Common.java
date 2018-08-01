@@ -450,9 +450,15 @@ public class TableViewSWT_Common
 						filter.widget.selectAll();
 						event.doit = false;
 					}
+					break;
 				}
-				break;
-
+				case 'c': { // CTRL+C
+				
+					tv.clipboardSelected();
+					event.doit = false;
+					
+					break;
+				}
 				case '+': {
 					if (Constants.isUnix) {
 						tv.expandColumns();
