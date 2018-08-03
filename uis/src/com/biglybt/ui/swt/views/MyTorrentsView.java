@@ -195,7 +195,8 @@ public class MyTorrentsView
   private TimerEventPeriodic	txtFilterUpdateEvent;
 
 
-  private Tag[]		currentTags;
+  private Object	currentTagsLock = new Object();
+  private Tag[]		_currentTags;
   private List<Tag>	allTags;
 
   	private long drag_drop_location_start = -1;
@@ -338,12 +339,15 @@ public class MyTorrentsView
     core		= _core;
     this.globalManager 	= core.getGlobalManager();
 
-
-    if (currentTags == null) {
-			currentTags = new Tag[] {
-				CategoryManager.getCategory(Category.TYPE_ALL)
-			};
+    synchronized( currentTagsLock ){
+	
+	    if (_currentTags == null) {
+				_currentTags = new Tag[] {
+					CategoryManager.getCategory(Category.TYPE_ALL)
+				};
+	    }
     }
+    
     tv.addLifeCycleListener(this);
     tv.setMainPanelCreator(this);
     tv.addSelectionListener(this, false);
@@ -440,11 +444,14 @@ public class MyTorrentsView
 				}, MyTorrentsView.this);
 
 
-		    if ( currentTags != null ){
-		    	for (Tag tag : currentTags) {
-		    		tag.addTagListener(MyTorrentsView.this, false);
-					}
+		    synchronized( currentTagsLock ){
+			    if ( _currentTags != null ){
+			    	for (Tag tag : _currentTags) {
+			    		tag.addTagListener(MyTorrentsView.this, false);
+						}
+			    }
 		    }
+		    
 		    TagManager tagManager = TagManagerFactory.getTagManager();
 		    TagType ttManual = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
 		    TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
@@ -606,11 +613,14 @@ public class MyTorrentsView
 			dm.removeListener(this);
 		}
 
-		if (currentTags != null) {
-			for (Tag tag : currentTags) {
+    synchronized( currentTagsLock ){
+		if (_currentTags != null) {
+			for (Tag tag : _currentTags) {
 				tag.removeTagListener(this);
 			}
 		}
+    }
+    
     TagManager tagManager = TagManagerFactory.getTagManager();
     TagType ttManual = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
     TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
@@ -961,12 +971,15 @@ public class MyTorrentsView
 							if (tag.equals(catAll)) {
 								setCurrentTags(new Tag[] { catAll });
 							} else {
-  							Tag[] newTags = new Tag[currentTags.length + 1];
-  							System.arraycopy(currentTags, 0, newTags, 0, currentTags.length);
-  							newTags[currentTags.length] = tag;
-
-  							newTags = (Tag[]) removeFromArray(newTags, catAll);
-  							setCurrentTags(newTags);
+								synchronized( currentTagsLock ){
+									Tag[] newTags = new Tag[_currentTags.length + 1];
+		  							System.arraycopy(_currentTags, 0, newTags, 0, _currentTags.length);
+		  							newTags[_currentTags.length] = tag;
+		
+		  							newTags = (Tag[]) removeFromArray(newTags, catAll);
+								
+		  							setCurrentTags(newTags);
+								}
 							}
 						} else {
 							setCurrentTags(new Tag[] {
@@ -1249,7 +1262,7 @@ public class MyTorrentsView
 	}
 
 	public boolean isOurDownloadManager(DownloadManager dm) {
-		if (!isInTags(dm, currentTags)) {
+		if (!isInCurrentTags(dm )) {
 			return false;
 		}
 
@@ -2709,45 +2722,49 @@ public class MyTorrentsView
 	tagRemoved(
 		Tag			tag )
 	{
-		if (currentTags == null) {
-			return;
+		synchronized( currentTagsLock ){
+			if (_currentTags == null) {
+				return;
+			}
+	
+			removeTagFromCurrent(tag);
 		}
-
-		removeTagFromCurrent(tag);
 		createTabs();
 	}
 
 
 	private void removeTagFromCurrent(Tag tag) {
-		boolean found = false;
-		for (int i = 0; i < currentTags.length; i++) {
-			Tag curTag = currentTags[i];
-			if (curTag.equals(tag)) {
-				Tag[] tags;
-				if (currentTags.length == 1) {
-					tags = new Tag[] {
-						CategoryManager.getCategory(Category.TYPE_ALL)
-					};
-				} else {
-  				tags = new Tag[currentTags.length - 1];
-  				if (i > 0) {
-  					System.arraycopy(currentTags, 0, tags, 0, i);
-  				}
-  				if (tags.length - i > 0) {
-  					System.arraycopy(currentTags, i + 1, tags, 0, tags.length - i);
-  				}
+		synchronized( currentTagsLock ){
+			boolean found = false;
+			for (int i = 0; i < _currentTags.length; i++) {
+				Tag curTag = _currentTags[i];
+				if (curTag.equals(tag)) {
+					Tag[] tags;
+					if (_currentTags.length == 1) {
+						tags = new Tag[] {
+								CategoryManager.getCategory(Category.TYPE_ALL)
+						};
+					} else {
+						tags = new Tag[_currentTags.length - 1];
+						if (i > 0) {
+							System.arraycopy(_currentTags, 0, tags, 0, i);
+						}
+						if (tags.length - i > 0) {
+							System.arraycopy(_currentTags, i + 1, tags, i, tags.length - i);
+						}
+					}
+
+					setCurrentTags(tags);
+					found = true;
+					break;
 				}
-
-				setCurrentTags(tags);
-				found = true;
-				break;
 			}
-		}
-
-		if (!found) {
-			// always activate as deletion of this one might have
-			// affected the current view
-			setCurrentTags(currentTags);
+	
+			if (!found) {
+				// always activate as deletion of this one might have
+				// affected the current view
+				setCurrentTags(_currentTags);
+			}
 		}
 	}
 
@@ -2760,7 +2777,7 @@ public class MyTorrentsView
 					System.arraycopy(array, 0, newArray, 0, i);
 				}
 				if (newArray.length - i > 0) {
-					System.arraycopy(array, i + 1, newArray, 0, newArray.length - i);
+					System.arraycopy(array, i + 1, newArray, i, newArray.length - i);
 				}
 
 				return newArray;
@@ -2773,44 +2790,51 @@ public class MyTorrentsView
 			// tags
 
 	public Tag[] getCurrentTags() {
-		return currentTags;
+		synchronized( currentTagsLock ){
+			if ( _currentTags == null ){
+				return( null );
+			}
+			return _currentTags.clone();
+		}
 	}
 
 	protected void setCurrentTags(Tag[] tags) {
-		if (currentTags != null) {
-			for (Tag tag : currentTags) {
-				tag.removeTagListener(this);
-			}
-		}
-
-		currentTags = tags;
-		if (currentTags != null) {
-			Set<Tag> to_remove = null;
-			for (Tag tag : currentTags) {
-				if ( tag.getTaggableTypes() != Taggable.TT_DOWNLOAD ){
-						// hmm, not a download related tag (e.g. peer-set), remove from the set. We can get this in the
-						// TagsOverview 'torrents' sub-view when peer-sets are selected in the main tag table
-					if (  to_remove == null ){
-						to_remove = new HashSet<>();
-					}
-					to_remove.add( tag );
-				}else{
-					tag.addTagListener(this, false);
+		synchronized( currentTagsLock ){
+			if (_currentTags != null) {
+				for (Tag tag : _currentTags) {
+					tag.removeTagListener(this);
 				}
 			}
-			if ( to_remove != null ){
-				Tag[] updated_tags = new Tag[currentTags.length-to_remove.size()];
-
-				int	pos = 0;
-				for (Tag tag : currentTags) {
-					if ( !to_remove.contains( tag )){
-						updated_tags[pos++] = tag;
+	
+			_currentTags = tags;
+			if (_currentTags != null) {
+				Set<Tag> to_remove = null;
+				for (Tag tag : _currentTags) {
+					if ( tag.getTaggableTypes() != Taggable.TT_DOWNLOAD ){
+							// hmm, not a download related tag (e.g. peer-set), remove from the set. We can get this in the
+							// TagsOverview 'torrents' sub-view when peer-sets are selected in the main tag table
+						if (  to_remove == null ){
+							to_remove = new HashSet<>();
+						}
+						to_remove.add( tag );
+					}else{
+						tag.addTagListener(this, false);
 					}
 				}
-				currentTags = updated_tags;
+				if ( to_remove != null ){
+					Tag[] updated_tags = new Tag[_currentTags.length-to_remove.size()];
+	
+					int	pos = 0;
+					for (Tag tag : _currentTags) {
+						if ( !to_remove.contains( tag )){
+							updated_tags[pos++] = tag;
+						}
+					}
+					_currentTags = updated_tags;
+				}
 			}
 		}
-
+		
   		tv.processDataSourceQueue();
   		Object[] managers = globalManager.getDownloadManagers().toArray();
   		List<DownloadManager> listRemoves = new ArrayList<>();
@@ -2838,28 +2862,29 @@ public class MyTorrentsView
   	}
 
   	private boolean
-  	isInTags(
-  		DownloadManager		manager,
-  		Tag[] 				tags )
+  	isInCurrentTags(
+  		DownloadManager		manager )
   	{
-  		if ( tags == null ){
-  			return true;
-  		}
-
-  		if (currentTagsAny) {
-    		for (Tag tag : tags) {
-  				if (tag.hasTaggable(manager)) {
-  					return true;
-  				}
-  			}
-    		return false;
-  		} else {
-    		for (Tag tag : tags) {
-  				if (!tag.hasTaggable(manager)) {
-  					return false;
-  				}
-  			}
-    		return true;
+  		synchronized( currentTagsLock ){
+	  		if ( _currentTags == null ){
+	  			return true;
+	  		}
+	
+	  		if (currentTagsAny) {
+	    		for (Tag tag : _currentTags) {
+	  				if (tag.hasTaggable(manager)) {
+	  					return true;
+	  				}
+	  			}
+	    		return false;
+	  		} else {
+	    		for (Tag tag : _currentTags) {
+	  				if (!tag.hasTaggable(manager)) {
+	  					return false;
+	  				}
+	  			}
+	    		return true;
+	  		}
   		}
   	}
 
@@ -2867,7 +2892,7 @@ public class MyTorrentsView
   	isInCurrentTag(
   		DownloadManager 	manager )
   	{
-  		return( isInTags(manager, currentTags ));
+  		return( isInCurrentTags( manager ));
   	}
 
 	@Override
@@ -3323,12 +3348,14 @@ public class MyTorrentsView
 	}
 
 	private boolean isCurrent(Tag tag) {
-		if (currentTags != null) {
-  		for (Tag curTag : currentTags) {
-  			if (tag.equals(curTag)) {
-  				return true;
-  			}
-  		}
+		synchronized( currentTagsLock ){
+			if (_currentTags != null) {
+	  		for (Tag curTag : _currentTags) {
+	  			if (tag.equals(curTag)) {
+	  				return true;
+	  			}
+	  		}
+			}
 		}
 		return false;
 	}
@@ -3342,6 +3369,8 @@ public class MyTorrentsView
 			return;
 		}
 		this.currentTagsAny = currentTagsAny;
-		setCurrentTags(currentTags);
+		synchronized( currentTagsLock ){
+			setCurrentTags(_currentTags);
+		}
 	}
 }
