@@ -440,7 +440,10 @@ public class MyTorrentsView
 		    COConfigurationManager.addAndFireParameterListeners(new String[] {
 					"DND Always In Incomplete",
 					"User Mode",
-					"Library.ShowCatButtons", "Library.ShowTagButtons", "Library.ShowTagButtons.CompOnly",
+					"Library.ShowCatButtons", 
+					"Library.ShowTagButtons", 
+					"Library.ShowTagButtons.CompOnly",
+					"Library.ShowTagButtons.Inclusive",
 				}, MyTorrentsView.this);
 
 
@@ -634,6 +637,7 @@ public class MyTorrentsView
     COConfigurationManager.removeParameterListener("Library.ShowCatButtons", this);
     COConfigurationManager.removeParameterListener("Library.ShowTagButtons", this);
     COConfigurationManager.removeParameterListener("Library.ShowTagButtons.CompOnly", this);
+    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.Inclusive", this);
   }
 
 
@@ -2460,12 +2464,27 @@ public class MyTorrentsView
 		showCatButtons = COConfigurationManager.getBooleanParameter( "Library.ShowCatButtons" );
 		showTagButtons = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons" );
 
-		if (parameterName != null &&
-				( 	parameterName.equals("Library.ShowCatButtons") ||
+		if ( !neverShowCatOrTagButtons ){
+			
+			currentTagsAny = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.Inclusive" );
+		}
+		
+		if (parameterName != null ){
+			
+			if ( 	parameterName.equals("Library.ShowCatButtons") ||
 					parameterName.equals("Library.ShowTagButtons" ) ||
-					parameterName.equals("Library.ShowTagButtons.CompOnly" ))){
+					parameterName.equals("Library.ShowTagButtons.CompOnly" )){
 
-			createTabs();
+				createTabs();
+			}
+			
+			if ( parameterName.equals( "Library.ShowTagButtons.Inclusive" )){
+			
+				synchronized( currentTagsLock ){
+				
+					setCurrentTags(_currentTags);
+				}
+			}
 		}
 	}
 

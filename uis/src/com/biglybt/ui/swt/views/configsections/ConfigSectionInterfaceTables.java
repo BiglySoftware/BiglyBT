@@ -306,7 +306,16 @@ public class ConfigSectionInterfaceTables
 			gridData.horizontalIndent = 25;
 			show_tag_comp_only.setLayoutData( gridData );
 
+
+			BooleanParameter tag_inclusive =new BooleanParameter(cLibrary, "Library.ShowTagButtons.Inclusive", "ConfigView.section.style.ShowTagButtons.Inclusive");
+
+			gridData = new GridData(SWT.FILL,SWT.LEFT, true, false, 2, 1);
+			gridData.horizontalIndent = 25;
+			tag_inclusive.setLayoutData( gridData );
+
+			
 			show_tag.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( show_tag_comp_only ));
+			show_tag.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( tag_inclusive ));
 
 			//if (isAZ3) {
 
