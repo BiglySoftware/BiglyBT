@@ -1506,6 +1506,8 @@ TagPropertyConstraintHandler
 		private static final int	KW_SIZE_GB			 	= 21;
 		private static final int	KW_FILE_COUNT		 	= 22;
 		private static final int	KW_AVAILABILITY		 	= 23;
+		private static final int	KW_UP_IDLE			 	= 24;
+		private static final int	KW_DOWN_IDLE		 	= 25;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1561,6 +1563,12 @@ TagPropertyConstraintHandler
 			keyword_map.put( "file_count", KW_FILE_COUNT );
 			
 			keyword_map.put( "availability", KW_AVAILABILITY );
+			
+			keyword_map.put( "upidle", KW_UP_IDLE );
+			keyword_map.put( "up_idle", KW_UP_IDLE );
+			keyword_map.put( "downidle", KW_DOWN_IDLE );
+			keyword_map.put( "down_idle", KW_DOWN_IDLE );
+
 		}
 
 		private class
@@ -2417,7 +2425,32 @@ TagPropertyConstraintHandler
 								
 								return(	new Float( avail ));
 							}
-
+							case KW_UP_IDLE:{
+								
+								long secs = dm.getStats().getTimeSinceLastDataSentInSeconds();
+								
+								if ( secs < 0 ){
+									
+									return( Long.MAX_VALUE );
+									
+								}else{
+									
+									return( secs );
+								}
+							}
+							case KW_DOWN_IDLE:{
+								
+								long secs = dm.getStats().getTimeSinceLastDataReceivedInSeconds();
+								
+								if ( secs < 0 ){
+									
+									return( Long.MAX_VALUE );
+									
+								}else{
+									
+									return( secs );
+								}
+							}
 							default:{
 
 								setError( "Invalid constraint keyword: " + str );
