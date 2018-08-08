@@ -25,13 +25,13 @@ package com.biglybt.core.util;
  *
  */
 public abstract class
-ListenerManagerDispatcherWithException
-	extends ListenerManagerDispatcher
+ListenerManagerDispatcherWithException<T>
+	extends ListenerManagerDispatcher<T>
 {
 	@Override
 	public void
 	dispatch(
-		Object		_listener,
+		T			listener,
 		int			type,
 		Object		value )
 	{
@@ -40,7 +40,7 @@ ListenerManagerDispatcherWithException
 
 	public abstract void
 	dispatchWithException(
-		Object		_listener,
+		T			listener,
 		int			type,
 		Object		value )
 

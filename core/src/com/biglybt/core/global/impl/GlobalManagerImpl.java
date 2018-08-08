@@ -63,7 +63,6 @@ import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.tracker.util.TRTrackerUtilsListener;
 import com.biglybt.core.util.*;
-import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
 import com.biglybt.pif.network.ConnectionManager;
 
@@ -90,9 +89,9 @@ public class GlobalManagerImpl
     private static final int LDT_SEEDING_ONLY           = 5;
     private static final int LDT_EVENT		            = 6;
 
-	private final ListenerManager	listeners_and_event_listeners 	= ListenerManager.createAsyncManager(
+	private final ListenerManager<Object>	listeners_and_event_listeners 	= ListenerManager.createAsyncManager(
 		"GM:ListenDispatcher",
-		new ListenerManagerDispatcher()
+		new ListenerManagerDispatcher<Object>()
 		{
 			@Override
 			public void
@@ -145,21 +144,20 @@ public class GlobalManagerImpl
 
 	private static final int LDT_MANAGER_WBR			= 1;
 
-	private final ListenerManager	removal_listeners 	= ListenerManager.createManager(
+	private final ListenerManager<GlobalManagerDownloadWillBeRemovedListener>	removal_listeners 	= 
+		ListenerManager.createManager(
 			"GM:DLWBRMListenDispatcher",
-			new ListenerManagerDispatcherWithException()
+			new ListenerManagerDispatcherWithException<GlobalManagerDownloadWillBeRemovedListener>()
 			{
 				@Override
 				public void
 				dispatchWithException(
-					Object		_listener,
-					int			type,
-					Object		value )
+					GlobalManagerDownloadWillBeRemovedListener		target,
+					int												type,
+					Object											value )
 
 					throws GlobalManagerDownloadRemovalVetoException
 				{
-					GlobalManagerDownloadWillBeRemovedListener	target = (GlobalManagerDownloadWillBeRemovedListener)_listener;
-
 					DownloadManager dm = (DownloadManager) ((Object[])value)[0];
 					boolean remove_torrent = ((Boolean) ((Object[])value)[1]).booleanValue();
 					boolean remove_data = ((Boolean) ((Object[])value)[2]).booleanValue();
@@ -247,7 +245,6 @@ public class GlobalManagerImpl
 
 	private volatile boolean 	isStopping;
 	private volatile boolean	destroyed;
-	private volatile boolean 	needsSaving = false;
 	volatile long		needsSavingCozStateChanged;
 
 	private boolean seeding_only_mode 				= false;
@@ -264,7 +261,7 @@ public class GlobalManagerImpl
 	private long	nat_status_last_good	= -1;
 	private boolean	nat_status_probably_ok;
 
-   private final CopyOnWriteList	dm_adapters = new CopyOnWriteList();
+   private final CopyOnWriteList<DownloadManagerInitialisationAdapter>	dm_adapters = new CopyOnWriteList<>();
 
    /** delay loading of torrents */
    DelayedEvent loadTorrentsDelay = null;
@@ -332,7 +329,7 @@ public class GlobalManagerImpl
 
 	        if (( loopFactor % saveResumeLoopCount == 0 )){
 
-	        	saveDownloads( true );
+	        	saveDownloads();
 
 	        }else if ( loadingComplete && loopFactor > initSaveResumeLoopCount ){
 
@@ -360,7 +357,7 @@ public class GlobalManagerImpl
 
 	        		if ( do_save ){
 
-	        			saveDownloads( true );
+	        			saveDownloads();
 	        		}
 	        	}
 	        }
@@ -1033,7 +1030,7 @@ public class GlobalManagerImpl
 					optionalHash, fName, savePath, saveFile, initialState, persistent, for_seeding,
 					file_priorities, adapter);
 
-			manager = addDownloadManager(new_manager, true, true);
+			manager = addDownloadManager(new_manager, true);
 
 			// if a different manager is returned then an existing manager for
 			// this torrent exists and the new one isn't needed (yuck)
@@ -1071,13 +1068,13 @@ public class GlobalManagerImpl
 			manager = DownloadManagerFactory.create(this, optionalHash,
 					torrent_file_name, savePath, saveFile, initialState, persistent, for_seeding,
 					file_priorities, adapter);
-			manager = addDownloadManager(manager, true, true);
+			manager = addDownloadManager(manager, true);
 		} catch (Exception e) {
 			// get here on duplicate files, no need to treat as error
 			manager = DownloadManagerFactory.create(this, optionalHash,
 					torrent_file_name, savePath, saveFile, initialState, persistent, for_seeding,
 					file_priorities, adapter);
-			manager = addDownloadManager(manager, true, true);
+			manager = addDownloadManager(manager, true);
 		} finally {
 			if (deleteDest) {
   			fDest.delete();
@@ -1121,8 +1118,7 @@ public class GlobalManagerImpl
    protected DownloadManager
    addDownloadManager(
    		DownloadManager 	download_manager,
-		boolean 			save,
-		boolean notifyListeners)
+		boolean				notifyListeners)
    {
     if (!isStopping) {
     	// make sure we have existing ones loaded so that existing check works
@@ -1413,10 +1409,6 @@ public class GlobalManagerImpl
         }
       }
 
-      if (save){
-        saveDownloads(false);
-      }
-
       return( download_manager );
     }
     else {
@@ -1593,8 +1585,6 @@ public class GlobalManagerImpl
 
 	  manager.removeListener(this);
 
-	  saveDownloads( false );
-
 	  DownloadManagerState dms = manager.getDownloadState();
 
 	  if ( dms.getCategory() != null){
@@ -1680,11 +1670,11 @@ public class GlobalManagerImpl
 
 		  stopAllDownloads( true );
 
-		  saveDownloads( true );
+		  saveDownloads();
 
 	  }else{
 
-		  saveDownloads( true );
+		  saveDownloads();
 
 		  stopAllDownloads( true );
 	  }
@@ -2487,28 +2477,17 @@ public class GlobalManagerImpl
   public void
   saveState()
   {
-	  saveDownloads( true );
+	  saveDownloads();
   }
 
   protected void
-  saveDownloads(
-  	boolean	immediate )
+  saveDownloads()
   {
-	  if ( !immediate ){
-
-		  needsSaving	= true;
-
-		  return;
-	  }
-
 	  if (!loadingComplete) {
-		  needsSaving = true;
+
 		  return;
 	  }
 
-	  //    if(Boolean.getBoolean("debug")) return;
-
-	  needsSaving 					= false;
 	  needsSavingCozStateChanged 	= 0;
 
 	  if (this.cripple_downloads_config) {
@@ -2716,7 +2695,7 @@ public class GlobalManagerImpl
 						  this, torrent_hash, fileName, torrent_save_dir, torrent_save_file,
 						  state, true, true, has_ever_been_started, file_priorities );
 
-			  if ( addDownloadManager( dm, false, false ) == dm ){
+			  if ( addDownloadManager( dm, false ) == dm ){
 
 				  return( dm );
 			  }
