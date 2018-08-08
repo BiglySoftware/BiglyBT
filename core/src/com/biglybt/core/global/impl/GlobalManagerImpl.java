@@ -206,13 +206,13 @@ public class GlobalManagerImpl
 	}
 
 
-	volatile List<DownloadManager> 		managers_cow	= new ArrayList<>();
-	private final AEMonitor							managers_mon	= new AEMonitor( "GM:Managers" );
-
-	final Map		manager_map			= new HashMap();
-
+	private Object								managers_lock		= new Object();
+	private volatile DownloadManager[] 			managers_list_cow	= new DownloadManager[0];
+	final Map<HashWrapper,DownloadManager>		manager_hash_map	= new HashMap<>();
+	final Map<DownloadManager, DownloadManager> manager_id_set		= new HashMap<>();
+	
 	private final GlobalMangerProgressListener	progress_listener;
-	private long							lastListenerUpdate;
+	private long								lastListenerUpdate;
 
 	private final Checker checker;
 	private final GlobalManagerStatsImpl		stats;
@@ -338,7 +338,7 @@ public class GlobalManagerImpl
 
 	        	if ( needsSavingCozStateChanged > 0 ){
 
-	        		int num_downloads = managers_cow.size();
+	        		int num_downloads = managers_list_cow.length;
 
 	        		boolean	do_save = false;
 
@@ -387,10 +387,9 @@ public class GlobalManagerImpl
 
         	if ( loopFactor % saveResumeLoopCount == 0 ) {
 
-		        for (Iterator it=managers_cow.iterator();it.hasNext();) {
+    			DownloadManager[] managers = managers_list_cow;
 
-		        	DownloadManager manager = (DownloadManager)it.next();
-
+		        for ( DownloadManager manager: managers ){
 
 		        	manager.saveResumeData();
 		       	}
@@ -408,10 +407,10 @@ public class GlobalManagerImpl
 
         			List<DownloadManager>	eligible = new ArrayList<>();
 
-    		        for (Iterator<DownloadManager> it=managers_cow.iterator();it.hasNext();) {
-
-    		        	DownloadManager manager = it.next();
-
+        			DownloadManager[] managers = managers_list_cow;
+        			
+        			for ( DownloadManager manager: managers ){
+  
     		        	if ( 	manager.getState() == DownloadManager.STATE_ERROR &&
     		        			(!manager.isDownloadComplete( false )) &&
     		        			(!manager.isPaused()) &&
@@ -761,9 +760,14 @@ public class GlobalManagerImpl
 		    public void scrapeReceived(TRTrackerScraperResponse response) {
     			HashWrapper	hash = response.getHash();
 
-   				DownloadManager manager = (DownloadManager)manager_map.get( hash );
-   				if ( manager != null ) {
-   					manager.setTrackerScrapeResponse( response );
+    			synchronized( managers_lock ){
+    				
+	   				DownloadManager manager = manager_hash_map.get( hash );
+	   				
+	   				if ( manager != null ){
+	   					
+	   					manager.setTrackerScrapeResponse( response );
+	    			}
     			}
     		}
     	});
@@ -793,11 +797,9 @@ public class GlobalManagerImpl
     		{
 				Logger.log( new LogEvent(LOGID, "Announce details have changed, updating trackers" ));
 
-				List	managers = managers_cow;
-
-				for (int i=0;i<managers.size();i++){
-
-					DownloadManager	manager = (DownloadManager)managers.get(i);
+				DownloadManager[] managers = managers_list_cow;
+				
+				for ( DownloadManager manager: managers ){
 
 					manager.requestTrackerAnnounce( true );
 				}
@@ -813,11 +815,9 @@ public class GlobalManagerImpl
     		{
 				Logger.log( new LogEvent(LOGID, "Announce URL details have changed, updating trackers" ));
 
-				List	managers = managers_cow;
-
-				for (int i=0;i<managers.size();i++){
-
-					DownloadManager	manager = (DownloadManager)managers.get(i);
+				DownloadManager[] managers = managers_list_cow;
+				
+				for ( DownloadManager manager: managers ){
 
 					TRTrackerAnnouncer client = manager.getTrackerClient();
 
@@ -1128,14 +1128,11 @@ public class GlobalManagerImpl
     	// make sure we have existing ones loaded so that existing check works
     	loadExistingTorrentsNow(false);
 
-      try{
-      	managers_mon.enter();
+      synchronized( managers_lock ){
 
-      	int	existing_index = managers_cow.indexOf( download_manager );
+      	DownloadManager existing = manager_id_set.get(download_manager);
 
-        if (existing_index != -1) {
-
-        	DownloadManager existing = managers_cow.get(existing_index);
+        if ( existing != null ){
 
         	download_manager.destroy( true );
 
@@ -1324,35 +1321,48 @@ public class GlobalManagerImpl
         boolean isCompleted = download_manager.isDownloadComplete(false);
 
         if (download_manager.getPosition() == -1) {
-	        int endPosition = 0;
-	        for (int i = 0; i < managers_cow.size(); i++) {
-	          DownloadManager dm = managers_cow.get(i);
-	          boolean dmIsCompleted = dm.isDownloadComplete(false);
-	          if (dmIsCompleted == isCompleted)
-	            endPosition++;
-	        }
-	        download_manager.setPosition(endPosition + 1);
-	      }
 
-	      // Even though when the DownloadManager was created, onlySeeding was
-	      // most likely set to true for completed torrents (via the Initializer +
-	      // readTorrent), there's a chance that the torrent file didn't have the
-	      // resume data.  If it didn't, but we marked it as complete in our
-	      // downloads config file, we should set to onlySeeding
-	      download_manager.requestAssumedCompleteMode();
+        	int endPosition = 0;
 
-	      List<DownloadManager>	new_download_managers = new ArrayList<>(managers_cow);
+        	for ( DownloadManager dm: managers_list_cow ){
 
-	      new_download_managers.add(download_manager);
+        		boolean dmIsCompleted = dm.isDownloadComplete(false);
 
-	      managers_cow	= new_download_managers;
+        		if (dmIsCompleted == isCompleted){
+
+        			endPosition++;
+        		}
+        	}
+
+        	download_manager.setPosition(endPosition + 1);
+        }
+
+        // Even though when the DownloadManager was created, onlySeeding was
+        // most likely set to true for completed torrents (via the Initializer +
+        // readTorrent), there's a chance that the torrent file didn't have the
+        // resume data.  If it didn't, but we marked it as complete in our
+        // downloads config file, we should set to onlySeeding
+
+        download_manager.requestAssumedCompleteMode();
+
+        int len = managers_list_cow.length;
+
+        DownloadManager[]	new_download_managers = new DownloadManager[ len+1 ];
+
+        System.arraycopy( managers_list_cow, 0, new_download_managers, 0, len );
+
+        new_download_managers[len] = download_manager;
+
+        managers_list_cow	= new_download_managers;
+
+        manager_id_set.put( download_manager,  download_manager );
 
         TOTorrent	torrent = download_manager.getTorrent();
 
         if ( torrent != null ){
 
         	try{
-        		manager_map.put( new HashWrapper(torrent.getHash()), download_manager );
+        		manager_hash_map.put( new HashWrapper(torrent.getHash()), download_manager );
 
         	}catch( TOTorrentException e ){
 
@@ -1401,9 +1411,6 @@ public class GlobalManagerImpl
               }
             }
         }
-      }finally{
-
-      	managers_mon.exit();
       }
 
       if (save){
@@ -1421,7 +1428,17 @@ public class GlobalManagerImpl
 
   @Override
   public List<DownloadManager> getDownloadManagers() {
-    return managers_cow;
+	 
+	  List<DownloadManager> result = Arrays.asList( managers_list_cow );
+	  
+	  if ( Constants.isCVSVersion()){
+		  
+		  return(  Collections.unmodifiableList( result ));	// check that nobody modifies things
+		  
+	  }else{
+		  
+		  return( result );
+	  }
   }
 
   @Override
@@ -1440,7 +1457,10 @@ public class GlobalManagerImpl
   public DownloadManager
   getDownloadManager(HashWrapper	hw)
   {
-      return (DownloadManager)manager_map.get( hw );
+	  synchronized( managers_lock ){
+      
+		  return( manager_hash_map.get( hw ));
+	  }
   }
 
   @Override
@@ -1489,89 +1509,113 @@ public class GlobalManagerImpl
 
   	throws GlobalManagerDownloadRemovalVetoException
   {
-	  	// simple protection against people calling this twice
+	  // simple protection against people calling this twice
 
-	  if ( !managers_cow.contains( manager )){
+	  synchronized( managers_lock ){
 
-		  return;
+		  if ( !manager_id_set.containsKey( manager )){
+
+			  return;
+		  }
 	  }
 
-  	canDownloadManagerBeRemoved( manager, remove_torrent, remove_data );
+	  canDownloadManagerBeRemoved( manager, remove_torrent, remove_data );
 
-  	manager.stopIt(DownloadManager.STATE_STOPPED, remove_torrent, remove_data, true );
+	  manager.stopIt(DownloadManager.STATE_STOPPED, remove_torrent, remove_data, true );
 
-    try{
-    	managers_mon.enter();
+	  synchronized( managers_lock ){
 
-    	List new_download_managers	= new ArrayList( managers_cow );
+		  if ( !manager_id_set.containsKey( manager )){
 
-    	new_download_managers.remove(manager);
+			  return;
+		  }
 
-    	managers_cow	= new_download_managers;
+		  int	len = managers_list_cow.length;
 
-    	TOTorrent	torrent = manager.getTorrent();
+		  for ( int i=0; i<len; i++ ){
 
-    	if ( torrent != null ){
+			  if ( managers_list_cow[i].equals( manager )){
 
-    		try{
-    			manager_map.remove(new HashWrapper(torrent.getHash()));
+				  DownloadManager[] new_download_managers	= new DownloadManager[len-1];
 
-    		}catch( TOTorrentException e ){
+				  if ( i > 0 ){ 
+					  
+					  System.arraycopy( managers_list_cow, 0, new_download_managers, 0, i );
+				  }
+				  
+				  if (  new_download_managers.length - i > 0 ){
+					  
+					  System.arraycopy(managers_list_cow, i + 1, new_download_managers, i, new_download_managers.length - i);
+				  }
 
-    			Debug.printStackTrace( e );
-    		}
-    	}
+				  managers_list_cow = new_download_managers;
 
-    }finally{
+				  break;
+			  }
+		  }
 
-    	managers_mon.exit();
-    }
 
-    	// when we remove a download manager from the client this is the time to remove it from the record of
-    	// created torrents if present
+		  manager_id_set.remove( manager );
 
-    TOTorrent	torrent = manager.getTorrent();
+		  TOTorrent	torrent = manager.getTorrent();
 
-    if ( torrent != null ){
+		  if ( torrent != null ){
 
-    	TorrentUtils.removeCreatedTorrent( torrent );
-    }
+			  try{
+				  manager_hash_map.remove(new HashWrapper(torrent.getHash()));
 
-	manager.destroy( false );
+			  }catch( TOTorrentException e ){
 
-    fixUpDownloadManagerPositions();
+				  Debug.printStackTrace( e );
+			  }
+		  }
+	  }
 
-    listeners_and_event_listeners.dispatch( LDT_MANAGER_REMOVED, manager );
+	  // when we remove a download manager from the client this is the time to remove it from the record of
+	  // created torrents if present
 
-    TorrentUtils.setTorrentDeleted();
+	  TOTorrent	torrent = manager.getTorrent();
 
-    taggable_life_manager.taggableDestroyed( manager );
+	  if ( torrent != null ){
 
-    manager.removeListener(this);
+		  TorrentUtils.removeCreatedTorrent( torrent );
+	  }
 
-    saveDownloads( false );
+	  manager.destroy( false );
 
-    DownloadManagerState dms = manager.getDownloadState();
+	  fixUpDownloadManagerPositions();
 
-    if ( dms.getCategory() != null){
+	  listeners_and_event_listeners.dispatch( LDT_MANAGER_REMOVED, manager );
 
-    	dms.setCategory(null);
-    }
+	  TorrentUtils.setTorrentDeleted();
 
-     if ( manager.getTorrent() != null ) {
+	  taggable_life_manager.taggableDestroyed( manager );
 
-      trackerScraper.remove(manager.getTorrent());
-    }
+	  manager.removeListener(this);
 
-    if ( host_support != null ){
+	  saveDownloads( false );
 
-    	host_support.torrentRemoved( manager.getTorrentFileName(), manager.getTorrent());
-    }
+	  DownloadManagerState dms = manager.getDownloadState();
 
-    	// delete the state last as passivating a hosted torrent may require access to
-    	// the existing torrent state
+	  if ( dms.getCategory() != null){
 
-    dms.delete();
+		  dms.setCategory(null);
+	  }
+
+	  if ( manager.getTorrent() != null ) {
+
+		  trackerScraper.remove(manager.getTorrent());
+	  }
+
+	  if ( host_support != null ){
+
+		  host_support.torrentRemoved( manager.getTorrentFileName(), manager.getTorrent());
+	  }
+
+	  // delete the state last as passivating a hosted torrent may require access to
+	  // the existing torrent state
+
+	  dms.delete();
   }
 
   /* Puts GlobalManager in a stopped state.
@@ -1580,8 +1624,7 @@ public class GlobalManagerImpl
   @Override
   public void
   stopGlobalManager() {
-	  try{
-		  managers_mon.enter();
+	 synchronized( managers_lock ){
 
 		  if ( isStopping ){
 
@@ -1589,10 +1632,6 @@ public class GlobalManagerImpl
 		  }
 
 		  isStopping	= true;
-
-	  }finally{
-
-		  managers_mon.exit();
 	  }
 
 	  stats.save();
@@ -1659,16 +1698,13 @@ public class GlobalManagerImpl
 	  TorrentUtils.temporarilyDisableDNSHandling();
 	  DownloadManagerStateFactory.saveGlobalStateCache();
 
-	  try{
-		  managers_mon.enter();
+	  synchronized( managers_lock ){
 
-		  managers_cow	= new ArrayList<>();
+		  managers_list_cow	= new DownloadManager[0];
 
-		  manager_map.clear();
-
-	  }finally{
-
-		  managers_mon.exit();
+		  manager_id_set.clear();
+		  
+		  manager_hash_map.clear();
 	  }
 
 	  informDestroyed();
@@ -1750,8 +1786,9 @@ public class GlobalManagerImpl
 
 				  @Override
 				  public Object run() throws Throwable{
-					  for (Iterator iter = managers_cow.iterator(); iter.hasNext();) {
-						  DownloadManager manager = (DownloadManager) iter.next();
+						DownloadManager[] managers = managers_list_cow;
+						
+						for ( DownloadManager manager: managers ){
 
 						  if ( manager.getState() == DownloadManager.STATE_STOPPED ){
 
@@ -2032,9 +2069,9 @@ public class GlobalManagerImpl
 	public boolean
 	canPauseDownloads()
 	{
-		for( Iterator i = managers_cow.iterator(); i.hasNext(); ) {
-
-			DownloadManager manager = (DownloadManager)i.next();
+		DownloadManager[] managers = managers_list_cow;
+		
+		for ( DownloadManager manager: managers ){
 
 			if ( canPauseDownload( manager )){
 
@@ -2234,7 +2271,7 @@ public class GlobalManagerImpl
   	private List<DownloadManager>
   	sortForStop()
 	{
-  		List<DownloadManager>	managers = new ArrayList<>(managers_cow);
+  		List<DownloadManager>	managers = new ArrayList<>( getDownloadManagers());
 
   		Collections.sort(
   			managers,
@@ -2404,8 +2441,7 @@ public class GlobalManagerImpl
 				  // Someone could have mucked with the config file and set weird positions,
 				  // so fix them up.
 				  fixUpDownloadManagerPositions();
-				  Logger.log(new LogEvent(LOGID, "Loaded " + managers_cow.size()
-						  + " torrents"));
+				  Logger.log(new LogEvent(LOGID, "Loaded " + managers_list_cow.length + " torrents"));
 
 			  }catch( Throwable e ){
 				  // there's been problems with corrupted download files stopping AZ from starting
@@ -2430,8 +2466,7 @@ public class GlobalManagerImpl
   }
 
   private void triggerAddListener(List downloadsToAdd) {
-		try {
-			managers_mon.enter();
+		synchronized( managers_lock ){
 			List listenersCopy = listeners_and_event_listeners.getListenersCopy();
 
 			for (int j = 0; j < listenersCopy.size(); j++) {
@@ -2445,9 +2480,6 @@ public class GlobalManagerImpl
 					}
 				}
 			}
-		} finally {
-
-			managers_mon.exit();
 		}
   }
 
@@ -2469,12 +2501,12 @@ public class GlobalManagerImpl
 		  return;
 	  }
 
-  	if (!loadingComplete) {
-  		needsSaving = true;
-  		return;
-  	}
+	  if (!loadingComplete) {
+		  needsSaving = true;
+		  return;
+	  }
 
-    //    if(Boolean.getBoolean("debug")) return;
+	  //    if(Boolean.getBoolean("debug")) return;
 
 	  needsSaving 					= false;
 	  needsSavingCozStateChanged 	= 0;
@@ -2483,67 +2515,65 @@ public class GlobalManagerImpl
 		  return;
 	  }
 
-  	try{
-  		managers_mon.enter();
+	  synchronized( managers_lock ){
 
-  		List<DownloadManager>	managers_temp = new ArrayList<>(managers_cow);
+		  DownloadManager[]	managers_temp = managers_list_cow.clone();
 
-	    Collections.sort(
-	    	managers_temp,
-	    	new Comparator ()
-	    	{
-	    		@Override
-			    public final int
-	    		compare(Object a, Object b) {
-	    			return ((DownloadManager) a).getPosition() - ((DownloadManager) b).getPosition();
-	    		}
-	    	});
+		  Arrays.sort(
+				  managers_temp,
+				  new Comparator<DownloadManager>()
+				  {
+					  @Override
+					  public final int
+					  compare(DownloadManager a, DownloadManager b) {
+						  return ( a.getPosition() - b.getPosition());
+					  }
+				  });
 
-	    managers_cow = managers_temp;
+		  managers_list_cow = managers_temp;
 
-	    if (Logger.isEnabled())
-				Logger.log(new LogEvent(LOGID, "Saving Download List ("
-						+ managers_cow.size() + " items)"));
-	    Map map = new HashMap();
-	    List list = new ArrayList(managers_cow.size());
-	    for (int i = 0; i < managers_cow.size(); i++) {
-	      DownloadManager dm = managers_cow.get(i);
+		  if (Logger.isEnabled()){
+			  Logger.log(new LogEvent(LOGID, "Saving Download List ("	+ managers_temp.length + " items)"));
+		  }
 
-	      Map dmMap = exportDownloadStateToMapSupport( dm, true );
+		  Map map = new HashMap();
 
-		  list.add(dmMap);
-	    }
+		  List<Map> list = new ArrayList<>(managers_temp.length);
 
-	    map.put("downloads", list);
+		  for ( DownloadManager dm: managers_temp ){
 
-      //save pause/resume state
-      try {  paused_list_mon.enter();
-	      if( !paused_list.isEmpty() ) {
-	        ArrayList pause_data = new ArrayList();
-	        for( int i=0; i < paused_list.size(); i++ ) {
-	        	Object[] data = (Object[])paused_list.get(i);
+			  Map dmMap = exportDownloadStateToMapSupport( dm, true );
 
-	        	HashWrapper hash 	= (HashWrapper)data[0];
-	        	Boolean		force 	= (Boolean)data[1];
+			  list.add(dmMap);
+		  }
 
-	        	Map	m = new HashMap();
+		  map.put("downloads", list);
 
-	        	m.put( "hash", hash.getHash());
-	        	m.put( "force", new Long(force.booleanValue()?1:0));
+		  //save pause/resume state
+		  try {  paused_list_mon.enter();
+		  if( !paused_list.isEmpty() ) {
+			  ArrayList pause_data = new ArrayList();
+			  for( int i=0; i < paused_list.size(); i++ ) {
+				  Object[] data = (Object[])paused_list.get(i);
 
-	        	pause_data.add( m );
-	        }
-	        map.put( "pause_data", pause_data );
-	      }
-      }
-      finally {  paused_list_mon.exit();  }
+				  HashWrapper hash 	= (HashWrapper)data[0];
+				  Boolean		force 	= (Boolean)data[1];
+
+				  Map	m = new HashMap();
+
+				  m.put( "hash", hash.getHash());
+				  m.put( "force", new Long(force.booleanValue()?1:0));
+
+				  pause_data.add( m );
+			  }
+			  map.put( "pause_data", pause_data );
+		  }
+		  }
+		  finally {  paused_list_mon.exit();  }
 
 
-	    FileUtil.writeResilientConfigFile("downloads.config", map );
-  	}finally{
-
-  		managers_mon.exit();
-  	}
+		  FileUtil.writeResilientConfigFile("downloads.config", map );
+	  }
   }
 
   public DownloadManager
@@ -2871,8 +2901,10 @@ public class GlobalManagerImpl
 
 	@Override
 	public boolean contains(DownloadManager manager) {
-    if (managers_cow != null && manager != null) {
-      return managers_cow.contains(manager);
+    if ( manager != null) {
+        synchronized( managers_lock ){
+        	return( manager_id_set.containsKey( manager ));
+        }
     }
     return false;
   }
@@ -2891,8 +2923,8 @@ public class GlobalManagerImpl
   @Override
   public int downloadManagerCount(boolean bCompleted) {
     int numInGroup = 0;
-    for (Iterator it = managers_cow.iterator();it.hasNext();) {
-      DownloadManager dm = (DownloadManager)it.next();
+    DownloadManager[] managers = managers_list_cow;
+    for ( DownloadManager dm: managers ){
       if (dm.isDownloadComplete(false) == bCompleted)
         numInGroup++;
     }
@@ -2925,147 +2957,140 @@ public class GlobalManagerImpl
   @Override
   public void moveTop(DownloadManager[] manager) {
 
-      try{
-      	managers_mon.enter();
+	  synchronized( managers_lock ){
 
-      	int newPosition = 1;
-        for (int i = 0; i < manager.length; i++)
-        	moveTo(manager[i], newPosition++);
-      }finally{
+		  int newPosition = 1;
+		  for (int i = 0; i < manager.length; i++)
+			  moveTo(manager[i], newPosition++);
 
-      	managers_mon.exit();
-      }
+	  }
   }
 
   @Override
   public void moveEnd(DownloadManager[] manager) {
-       try{
-      	managers_mon.enter();
+	 synchronized( managers_lock ){
 
-        int endPosComplete = 0;
-        int endPosIncomplete = 0;
-        for (int j = 0; j < managers_cow.size(); j++) {
-          DownloadManager dm = (DownloadManager) managers_cow.get(j);
-          if (dm.isDownloadComplete(false))
-            endPosComplete++;
-          else
-            endPosIncomplete++;
-        }
-        for (int i = manager.length - 1; i >= 0; i--) {
-          if (manager[i].isDownloadComplete(false) && endPosComplete > 0) {
-            moveTo(manager[i], endPosComplete--);
-          } else if (endPosIncomplete > 0) {
-            moveTo(manager[i], endPosIncomplete--);
-          }
-        }
-      }finally{
-      	managers_mon.exit();
-      }
+		  int endPosComplete = 0;
+		  int endPosIncomplete = 0;
+		  for ( DownloadManager dm: managers_list_cow ){
+			  if (dm.isDownloadComplete(false))
+				  endPosComplete++;
+			  else
+				  endPosIncomplete++;
+		  }
+		  for (int i = manager.length - 1; i >= 0; i--) {
+			  if (manager[i].isDownloadComplete(false) && endPosComplete > 0) {
+				  moveTo(manager[i], endPosComplete--);
+			  } else if (endPosIncomplete > 0) {
+				  moveTo(manager[i], endPosIncomplete--);
+			  }
+		  }
+	  }
   }
 
   @Override
-  public void moveTo(DownloadManager manager, int newPosition) {
-    boolean curCompleted = manager.isDownloadComplete(false);
+  public void
+  moveTo(
+		  DownloadManager manager, 
+		  int newPosition) 
+  {
+	  boolean curCompleted = manager.isDownloadComplete(false);
 
-    if (newPosition < 1 || newPosition > downloadManagerCount(curCompleted))
-      return;
+	  if (newPosition < 1 || newPosition > downloadManagerCount(curCompleted))
+		  return;
 
-      try{
-      	managers_mon.enter();
+	  synchronized( managers_lock ){
 
-        int curPosition = manager.getPosition();
-        if (newPosition > curPosition) {
-          // move [manager] down
-          // move everything between [curPosition+1] and [newPosition] up(-) 1
-          int numToMove = newPosition - curPosition;
-          for (int i = 0; i < managers_cow.size(); i++) {
-            DownloadManager dm = (DownloadManager) managers_cow.get(i);
-            boolean dmCompleted = (dm.isDownloadComplete(false));
-            if (dmCompleted == curCompleted) {
-              int dmPosition = dm.getPosition();
-              if ((dmPosition > curPosition) && (dmPosition <= newPosition)) {
-                dm.setPosition(dmPosition - 1);
-                numToMove--;
-                if (numToMove <= 0)
-                  break;
-              }
-            }
-          }
+		  int curPosition = manager.getPosition();
+		  if (newPosition > curPosition) {
+			  // move [manager] down
+			  // move everything between [curPosition+1] and [newPosition] up(-) 1
+			  int numToMove = newPosition - curPosition;
+			  for ( DownloadManager dm: managers_list_cow ){
+				  boolean dmCompleted = (dm.isDownloadComplete(false));
+				  if (dmCompleted == curCompleted) {
+					  int dmPosition = dm.getPosition();
+					  if ((dmPosition > curPosition) && (dmPosition <= newPosition)) {
+						  dm.setPosition(dmPosition - 1);
+						  numToMove--;
+						  if (numToMove <= 0)
+							  break;
+					  }
+				  }
+			  }
 
-          manager.setPosition(newPosition);
-        }
-        else if (newPosition < curPosition && curPosition > 1) {
-          // move [manager] up
-          // move everything between [newPosition] and [curPosition-1] down(+) 1
-          int numToMove = curPosition - newPosition;
+			  manager.setPosition(newPosition);
+		  }
+		  else if (newPosition < curPosition && curPosition > 1) {
+			  // move [manager] up
+			  // move everything between [newPosition] and [curPosition-1] down(+) 1
+			  int numToMove = curPosition - newPosition;
 
-          for (int i = 0; i < managers_cow.size(); i++) {
-            DownloadManager dm = (DownloadManager) managers_cow.get(i);
-            boolean dmCompleted = (dm.isDownloadComplete(false));
-            int dmPosition = dm.getPosition();
-            if ((dmCompleted == curCompleted) &&
-                (dmPosition >= newPosition) &&
-                (dmPosition < curPosition)
-               ) {
-              dm.setPosition(dmPosition + 1);
-              numToMove--;
-              if (numToMove <= 0)
-                break;
-            }
-          }
-          manager.setPosition(newPosition);
-        }
-      }finally{
-
-      	managers_mon.exit();
-      }
+			  for ( DownloadManager dm: managers_list_cow ){
+				  boolean dmCompleted = (dm.isDownloadComplete(false));
+				  int dmPosition = dm.getPosition();
+				  if ((dmCompleted == curCompleted) &&
+						  (dmPosition >= newPosition) &&
+						  (dmPosition < curPosition)
+						  ) {
+					  dm.setPosition(dmPosition + 1);
+					  numToMove--;
+					  if (numToMove <= 0)
+						  break;
+				  }
+			  }
+			  manager.setPosition(newPosition);
+		  }
+	  }
   }
 
 	@Override
-	public void fixUpDownloadManagerPositions() {
-      try{
-      	managers_mon.enter();
+	public void 
+	fixUpDownloadManagerPositions() 
+	{
+		synchronized( managers_lock ){
 
-      	int posComplete = 1;
-      	int posIncomplete = 1;
+			int posComplete = 1;
+			int posIncomplete = 1;
 
-  		List<DownloadManager>	managers_temp = new ArrayList<>(managers_cow);
+			DownloadManager[]	managers_temp = managers_list_cow.clone();
 
-      	Collections.sort(
-      		managers_temp,
-      		new Comparator()
-      		{
-	          @Override
-	          public final int compare (Object a, Object b) {
-	            int i = ((DownloadManager)a).getPosition() - ((DownloadManager)b).getPosition();
-	            if (i != 0) {
-	            	return i;
-	            }
+			Arrays.sort(
+				managers_temp,
+				new Comparator<DownloadManager>()
+				{
+					@Override
+					public final int compare (DownloadManager a, DownloadManager b) {
+						int i = a.getPosition() - b.getPosition();
+						if (i != 0) {
+							return i;
+						}
 
-	            // non persistent before persistent
-	            if (((DownloadManager)a).isPersistent()) {
-	            	return 1;
-	            } else if (((DownloadManager)b).isPersistent()) {
-	            	return -1;
-	            }
+						// non persistent before persistent
+						if (a.isPersistent()) {
+							return 1;
+						} else if (b.isPersistent()) {
+							return -1;
+						}
 
-	            return 0;
-	          }
-	        } );
+						return 0;
+					}
+				} );
 
-      	managers_cow = managers_temp;
+			managers_list_cow = managers_temp;
 
-        for (int i = 0; i < managers_cow.size(); i++) {
-          DownloadManager dm = (DownloadManager) managers_cow.get(i);
-          if (dm.isDownloadComplete(false))
-          	dm.setPosition(posComplete++);
-         	else
-          	dm.setPosition(posIncomplete++);
-        }
-      }finally{
-
-      	managers_mon.exit();
-      }
+			for ( DownloadManager dm: managers_temp ){
+				
+				if (dm.isDownloadComplete(false)){
+					
+					dm.setPosition(posComplete++);
+					
+				}else{
+					
+					dm.setPosition(posIncomplete++);
+				}
+			}
+		}
     }
 
 
@@ -3203,18 +3228,13 @@ public class GlobalManagerImpl
 			}
 
 			// Don't use Dispatch.. async is bad (esp for plugin initialization)
-			try{
-				managers_mon.enter();
+			
+			synchronized( managers_lock ){
+				
+				for ( DownloadManager manager: managers_list_cow ){
 
-		    List managers = managers_cow;
-
-				for (int i=0;i<managers.size();i++){
-
-				  listener.downloadManagerAdded((DownloadManager)managers.get(i));
+				  listener.downloadManagerAdded( manager );
 				}
-			}finally{
-
-				managers_mon.exit();
 			}
 		}
 	}
@@ -3334,13 +3354,11 @@ public class GlobalManagerImpl
 
 		  if ( force_start_non_seed_exists ){
 
-			  List managers = managers_cow;
+			  DownloadManager[] managers = managers_list_cow;
 
-			  for( int i=0; i < managers.size(); i++ ) {
+			  for( DownloadManager manager: managers ){
 
-				  DownloadManager dm = (DownloadManager)managers.get( i );
-
-				  if ( dm.isForceStart() && dm.getState() == DownloadManager.STATE_DOWNLOADING  ){
+				  if ( manager.isForceStart() && manager.getState() == DownloadManager.STATE_DOWNLOADING  ){
 
 					  exists = true;
 
@@ -3375,23 +3393,21 @@ public class GlobalManagerImpl
     boolean seeding_set 			= false;
     boolean	potentially_seeding	= false;
 
-    List managers = managers_cow;
+	  DownloadManager[] managers = managers_list_cow;
 
-    for( int i=0; i < managers.size(); i++ ) {
+	  for( DownloadManager manager: managers ){
 
-        DownloadManager dm = (DownloadManager)managers.get( i );
+        PEPeerManager pm = manager.getPeerManager();
 
-        PEPeerManager pm = dm.getPeerManager();
+        int	state = manager.getState();
 
-        int	state = dm.getState();
-
-        if ( dm.getDiskManager() == null || pm == null ){
+        if ( manager.getDiskManager() == null || pm == null ){
 
         		// download not running
 
         	if ( state == DownloadManager.STATE_QUEUED ){
 
-        		if ( dm.isDownloadComplete( false )){
+        		if ( manager.isDownloadComplete( false )){
 
         			potentially_seeding = true;
         		} else {
@@ -3494,11 +3510,9 @@ public class GlobalManagerImpl
 
 			long	total = 0;
 
-			List	managers = managers_cow;
+			  DownloadManager[] managers = managers_list_cow;
 
-			for (int i=0;i<managers.size();i++){
-
-				DownloadManager	manager = (DownloadManager)managers.get(i);
+			  for( DownloadManager manager: managers ){
 
 				boolean	is_seeding = manager.getState() == DownloadManager.STATE_SEEDING;
 
@@ -3528,9 +3542,9 @@ public class GlobalManagerImpl
 		String[]	infos 		= { "", "", "", "" };
 		int[]		extra		= { 0, 0, 0, 0  };
 		
-        for (Iterator it=managers_cow.iterator();it.hasNext();) {
+		  DownloadManager[] managers = managers_list_cow;
 
-        	DownloadManager manager = (DownloadManager)it.next();
+		  for( DownloadManager manager: managers ){
 
         	Object[] o_status = manager.getNATStatus();
 
@@ -3663,22 +3677,22 @@ public class GlobalManagerImpl
 	protected void
 	seedPieceRecheck()
 	{
-		List	managers = managers_cow;
+		DownloadManager[] managers = managers_list_cow;
 
-		if ( next_seed_piece_recheck_index >= managers.size()){
+		if ( next_seed_piece_recheck_index >= managers.length){
 
 			next_seed_piece_recheck_index	= 0;
 		}
 
-		for (int i=next_seed_piece_recheck_index;i<managers.size();i++){
+		for (int i=next_seed_piece_recheck_index;i<managers.length;i++){
 
-			DownloadManager manager = (DownloadManager)managers.get(i);
+			DownloadManager manager = managers[i];
 
 			if ( seedPieceRecheck( manager )){
 
 				next_seed_piece_recheck_index = i+1;
 
-				if ( next_seed_piece_recheck_index >= managers.size()){
+				if ( next_seed_piece_recheck_index >= managers.length){
 
 					next_seed_piece_recheck_index	= 0;
 				}
@@ -3689,13 +3703,13 @@ public class GlobalManagerImpl
 
 		for (int i=0;i<next_seed_piece_recheck_index;i++){
 
-			DownloadManager manager = (DownloadManager)managers.get(i);
+			DownloadManager manager = managers[i];
 
 			if ( seedPieceRecheck( manager )){
 
 				next_seed_piece_recheck_index = i+1;
 
-				if ( next_seed_piece_recheck_index >= managers.size()){
+				if ( next_seed_piece_recheck_index >= managers.length ){
 
 					next_seed_piece_recheck_index	= 0;
 				}
@@ -4029,28 +4043,24 @@ public class GlobalManagerImpl
 		try{
 			writer.indent();
 
-	    	managers_mon.enter();
+	    	synchronized( managers_lock ){
 
-			writer.println( "  managers: " + managers_cow.size());
-
-			for (int i=0;i<managers_cow.size();i++){
-
-				DownloadManager	manager = (DownloadManager)managers_cow.get(i);
-
-				try{
-					writer.indent();
-
-					manager.generateEvidence( writer );
-
-				}finally{
-
-					writer.exdent();
+				writer.println( "  managers: " + managers_list_cow.length );
+	
+				for ( DownloadManager manager: managers_list_cow ){
+	
+					try{
+						writer.indent();
+	
+						manager.generateEvidence( writer );
+	
+					}finally{
+	
+						writer.exdent();
+					}
 				}
-			}
-
+	    	}
 	    }finally{
-
-			managers_mon.exit();
 
 			writer.exdent();
 	    }
