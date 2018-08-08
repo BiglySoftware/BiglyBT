@@ -427,7 +427,8 @@ DownloadManagerImpl
 			});
 	}
 
-
+	private static Map<String,Boolean>		save_dir_check_cache = new HashMap<>();
+	private static TimerEventPeriodic		save_dir_check_timer = null;
 
 
 	private final ListenerManager<DownloadManagerPeerListener>	peer_listeners 	= ListenerManager.createManager(
@@ -1101,7 +1102,56 @@ DownloadManagerImpl
 
 						 File	linked_target = getSaveLocation();
 
-						 if ( !linked_target.exists()){
+						 File parent = linked_target.getParentFile();
+						 
+						 Boolean res;
+						 
+						 	// seemingly seen a lot of time taken on startup with big library checking that
+						 	// save location exists so experimenting with reducing FS accesses
+						 
+						 synchronized( save_dir_check_cache ){
+							 
+							 String key = parent.getAbsolutePath();
+							 
+							 res = save_dir_check_cache.get( key );
+							 
+							 if ( res == null ){
+								 
+								 res = parent.exists();
+								 
+								 save_dir_check_cache.put( key, res );
+								 								 
+								 if ( save_dir_check_timer == null ){
+									 
+									 save_dir_check_timer = 
+										SimpleTimer.addPeriodicEvent(
+											"sdct",
+											60*1000,
+											new TimerEventPerformer(){
+												
+												@Override
+												public void perform(TimerEvent event){
+													
+													synchronized( save_dir_check_cache ){
+														
+														if ( save_dir_check_cache.isEmpty()){
+															
+															save_dir_check_timer.cancel();
+															
+															save_dir_check_timer = null;
+															
+														}else{
+															
+															save_dir_check_cache.clear();
+														}
+													}
+												}
+											});
+								 }
+							 }
+						 }
+						 
+						 if ( !res ){
 
 							throw (new NoStackException(
 									MessageText.getString("DownloadManager.error.datamissing")
