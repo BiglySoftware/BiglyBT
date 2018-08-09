@@ -45,8 +45,8 @@ public class
 NetworkAdminUDPTester
 	implements NetworkAdminProtocolTester
 {
-	public static final String 	UDP_SERVER_ADDRESS	= Constants.NAT_TEST_SERVER;
-	public static final int		UDP_SERVER_PORT		= 2081; // 2084;
+	public static final String 	UDP_SERVER_ADDRESS	= Constants.NAT_TEST_UDP_SERVER;
+	public static final int		UDP_SERVER_PORT		= 2085;
 
 	static{
 		NetworkAdminNATUDPCodecs.registerCodecs();
