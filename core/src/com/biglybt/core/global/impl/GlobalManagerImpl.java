@@ -757,14 +757,16 @@ public class GlobalManagerImpl
 		    public void scrapeReceived(TRTrackerScraperResponse response) {
     			HashWrapper	hash = response.getHash();
 
+    			DownloadManager manager;
+    			
     			synchronized( managers_lock ){
     				
-	   				DownloadManager manager = manager_hash_map.get( hash );
+	   				manager = manager_hash_map.get( hash );
+    			}
+    			
+	   			if ( manager != null ){
 	   				
-	   				if ( manager != null ){
-	   					
-	   					manager.setTrackerScrapeResponse( response );
-	    			}
+	   				manager.setTrackerScrapeResponse( response );
     			}
     		}
     	});
