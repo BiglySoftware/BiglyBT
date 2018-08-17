@@ -4237,7 +4237,9 @@ public class Utils
 		int scaledWidth = Math.round(width * scaleFactor);
 		int scaledHeight = Math.round(height * scaleFactor);
 
-
+		if ( width <= 0 || height <= 0 ){
+			return( (ImageData)imageData.clone());
+		}
 		ImageData imageMaskData = null;
 
 		if (imageData.getTransparencyType() == SWT.TRANSPARENCY_ALPHA) {
