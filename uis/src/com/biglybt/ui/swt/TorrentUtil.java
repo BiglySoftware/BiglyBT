@@ -1019,7 +1019,7 @@ public class TorrentUtil
 		Utils.setMenuItemImage(itemArchive, "archive");
 		itemArchive.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
-			public void run(DownloadManager dm) {
+			public void run(DownloadManager[] todo) {
 				ManagerUtils.moveToArchive( ar_dms, null );
 			}
 		});
