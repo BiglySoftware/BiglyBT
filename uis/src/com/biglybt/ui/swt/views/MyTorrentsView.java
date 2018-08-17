@@ -2591,33 +2591,30 @@ public class MyTorrentsView
   // DownloadManagerListener Functions
   @Override
   public void stateChanged(DownloadManager manager, int state) {
-    final TableRowCore row = tv.getRow(manager);
-    if (row != null) {
-    	Utils.getOffOfSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-		    	row.refresh(true);
-		    	if (row.isSelected()) {
-		    		updateSelectedContentRateLimited();
-		    	}
-				}
-    	});
-    }
+	  final TableRowCore row = tv.getRow(manager);
+	  if (row != null) {
+		  Utils.getOffOfSWTThread(new AERunnable() {
+			  @Override
+			  public void runSupport() {
+				  row.refresh(true);
+				  if (row.isSelected()) {
+					  updateSelectedContentRateLimited();
+				  }
+			  }
+		  });
+	  }
   }
 
   // DownloadManagerListener
   @Override
   public void positionChanged(DownloadManager download, int oldPosition, int newPosition) {
   	if (isOurDownloadManager(download)) {
-    	Utils.execSWTThreadLater(0, new AERunnable() {
-				@Override
-				public void runSupport() {
-					// When a torrent gets added to the top of the list, we get a
-					// positionChanged for every torrent below it.  Definitely need this
-					// rate limited
-					updateSelectedContentRateLimited();
-				}
-    	});
+ 	
+		// When a torrent gets added to the top of the list, we get a
+		// positionChanged for every torrent below it.  Definitely need this
+  		// rate limited
+  		
+			updateSelectedContentRateLimited();
   	}
   }
 
