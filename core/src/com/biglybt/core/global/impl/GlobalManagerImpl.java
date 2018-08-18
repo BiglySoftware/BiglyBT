@@ -31,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -206,7 +207,7 @@ public class GlobalManagerImpl
 
 	private Object								managers_lock		= new Object();
 	private volatile DownloadManager[] 			managers_list_cow	= new DownloadManager[0];
-	final Map<HashWrapper,DownloadManager>		manager_hash_map	= new HashMap<>();
+	final Map<HashWrapper,DownloadManager>		manager_hash_map	= new ConcurrentHashMap<>();
 	final Map<DownloadManager, DownloadManager> manager_id_set		= new HashMap<>();
 	
 	private final GlobalMangerProgressListener	progress_listener;
@@ -757,12 +758,7 @@ public class GlobalManagerImpl
 		    public void scrapeReceived(TRTrackerScraperResponse response) {
     			HashWrapper	hash = response.getHash();
 
-    			DownloadManager manager;
-    			
-    			synchronized( managers_lock ){
-    				
-	   				manager = manager_hash_map.get( hash );
-    			}
+    			DownloadManager manager = manager_hash_map.get( hash );
     			
 	   			if ( manager != null ){
 	   				
@@ -1450,11 +1446,8 @@ public class GlobalManagerImpl
   @Override
   public DownloadManager
   getDownloadManager(HashWrapper	hw)
-  {
-	  synchronized( managers_lock ){
-      
-		  return( manager_hash_map.get( hw ));
-	  }
+  {     
+	  return( manager_hash_map.get( hw ));
   }
 
   @Override
