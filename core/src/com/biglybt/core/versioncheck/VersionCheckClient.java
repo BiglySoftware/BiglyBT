@@ -92,8 +92,7 @@ public class VersionCheckClient {
 	private static final long		CACHE_PERIOD	= 5*60*1000;
 	private static boolean secondary_check_done;
 
-	private final List<VersionCheckClientListener> listeners = new ArrayList<>(1);
-	private boolean startCheckRan = false;
+	private final CopyOnWriteList<VersionCheckClientListener> listeners = new CopyOnWriteList<>(5);
 
 	static{
 		VersionCheckClientUDPCodecs.registerCodecs();
@@ -244,141 +243,160 @@ public class VersionCheckClient {
 		boolean force,
 		boolean	v6 )
 	{
-		try {
-			synchronized (listeners) {
-				if (REASON_UPDATE_CHECK_START.equals(reason)) {
-					startCheckRan = true;
-				}
-				for (VersionCheckClientListener l : listeners) {
-					l.versionCheckStarted(reason);
-				}
+		List<VersionCheckClientListener>	listeners_clone = listeners.getList();
+		
+		for ( VersionCheckClientListener l : listeners_clone){
+			
+			try{
+				l.versionCheckStarted(reason);
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
 			}
-		} catch (Throwable t) {
-			Debug.out(t);
 		}
 
-		if ( v6 ){
-
-			if ( enable_v6 ){
-
+		boolean changed = false;
+		
+		try{
+			if ( v6 ){
+	
+				if ( enable_v6 ){
+	
+					try {  check_mon.enter();
+	
+					long time_diff = SystemTime.getCurrentTime() - last_check_time_v6;
+	
+					force = force || time_diff > CACHE_PERIOD || time_diff < 0;
+	
+					if( last_check_data_v6 == null || last_check_data_v6.size() == 0 || force ) {
+						// if we've never checked before then we go ahead even if the "only_if_cached"
+						// flag is set as its had not chance of being cached yet!
+						if ( only_if_cached && last_check_data_v6 != null ){
+							return( new HashMap() );
+						}
+						try {
+							last_check_data_v6 = performVersionCheck( constructVersionCheckMessage( reason ), true, true, true );
+	
+							if ( last_check_data_v6 != null && last_check_data_v6.size() > 0 ){
+	
+								COConfigurationManager.setParameter( "versioncheck.cache.v6", last_check_data_v6 );
+								
+								changed = true;
+							}
+						}
+						catch(SocketException t) {
+							// internet is broken
+							// Debug.out(t.getClass().getName() + ": " + t.getMessage());
+						}
+						catch(UnknownHostException t) {
+							// dns is broken
+							// Debug.out(t.getClass().getName() + ": " + t.getMessage());
+						}
+						catch( Throwable t ) {
+							Debug.out(t);
+							last_check_data_v6 = new HashMap();
+						}
+					}
+					else {
+						Logger.log(new LogEvent(LOGID, "VersionCheckClient is using "
+								+ "cached version check info. Using " + last_check_data_v6.size()
+								+ " reply keys."));
+					}
+					}
+					finally {  check_mon.exit();  }
+				}
+	
+				if( last_check_data_v6 == null )  last_check_data_v6 = new HashMap();
+	
+				return last_check_data_v6;
+	
+			}else{
+	
 				try {  check_mon.enter();
-
-				long time_diff = SystemTime.getCurrentTime() - last_check_time_v6;
-
+	
+				long time_diff = SystemTime.getCurrentTime() - last_check_time_v4;
+	
 				force = force || time_diff > CACHE_PERIOD || time_diff < 0;
-
-				if( last_check_data_v6 == null || last_check_data_v6.size() == 0 || force ) {
+	
+				if( last_check_data_v4 == null || last_check_data_v4.size() == 0 || force ) {
 					// if we've never checked before then we go ahead even if the "only_if_cached"
 					// flag is set as its had not chance of being cached yet!
-					if ( only_if_cached && last_check_data_v6 != null ){
+					if ( only_if_cached && last_check_data_v4 != null ){
 						return( new HashMap() );
 					}
 					try {
-						last_check_data_v6 = performVersionCheck( constructVersionCheckMessage( reason ), true, true, true );
-
-						if ( last_check_data_v6 != null && last_check_data_v6.size() > 0 ){
-
-							COConfigurationManager.setParameter( "versioncheck.cache.v6", last_check_data_v6 );
+						last_check_data_v4 = performVersionCheck( constructVersionCheckMessage( reason ), true, true, false );
+	
+						if ( last_check_data_v4 != null && last_check_data_v4.size() > 0 ){
+	
+							COConfigurationManager.setParameter( "versioncheck.cache.v4", last_check_data_v4 );
+							
+							changed = true;
+						}
+	
+						// clear down any plugin-specific data that has successfully been sent to the version server
+	
+						try{
+							if ( CoreFactory.isCoreAvailable() && CoreFactory.getSingleton().getPluginManager().isInitialized()){
+	
+								//installed plugin IDs
+								PluginInterface[] plugins = CoreFactory.getSingleton().getPluginManager().getPluginInterfaces();
+	
+								for (int i=0;i<plugins.length;i++){
+	
+									PluginInterface		plugin = plugins[i];
+	
+									Map	data = plugin.getPluginconfig().getPluginMapParameter( "plugin.versionserver.data", null );
+	
+									if ( data != null ){
+	
+										plugin.getPluginconfig().setPluginMapParameter( "plugin.versionserver.data", new HashMap());
+									}
+								}
+							}
+						}catch( Throwable e ){
 						}
 					}
-					catch(SocketException t) {
-						// internet is broken
-						// Debug.out(t.getClass().getName() + ": " + t.getMessage());
+					catch( UnknownHostException t ) {
+						// no internet
+						Debug.outNoStack("VersionCheckClient - " + t.getClass().getName() + ": " + t.getMessage());
 					}
-					catch(UnknownHostException t) {
-						// dns is broken
-						// Debug.out(t.getClass().getName() + ": " + t.getMessage());
+					catch (IOException t) {
+						// General connection problem.
+						Debug.outNoStack("VersionCheckClient - " + t.getClass().getName() + ": " + t.getMessage());
 					}
 					catch( Throwable t ) {
 						Debug.out(t);
-						last_check_data_v6 = new HashMap();
+						last_check_data_v4 = new HashMap();
 					}
 				}
 				else {
-					Logger.log(new LogEvent(LOGID, "VersionCheckClient is using "
-							+ "cached version check info. Using " + last_check_data_v6.size()
-							+ " reply keys."));
+					if (Logger.isEnabled())
+						Logger.log(new LogEvent(LOGID, "VersionCheckClient is using "
+								+ "cached version check info. Using " + last_check_data_v4.size()
+								+ " reply keys."));
 				}
 				}
 				finally {  check_mon.exit();  }
+	
+				if( last_check_data_v4 == null )  last_check_data_v4 = new HashMap();
+	
+				last_feature_flag_cache_time = 0;
+	
+				return last_check_data_v4;
 			}
-
-			if( last_check_data_v6 == null )  last_check_data_v6 = new HashMap();
-
-			return last_check_data_v6;
-
-		}else{
-
-			try {  check_mon.enter();
-
-			long time_diff = SystemTime.getCurrentTime() - last_check_time_v4;
-
-			force = force || time_diff > CACHE_PERIOD || time_diff < 0;
-
-			if( last_check_data_v4 == null || last_check_data_v4.size() == 0 || force ) {
-				// if we've never checked before then we go ahead even if the "only_if_cached"
-				// flag is set as its had not chance of being cached yet!
-				if ( only_if_cached && last_check_data_v4 != null ){
-					return( new HashMap() );
-				}
-				try {
-					last_check_data_v4 = performVersionCheck( constructVersionCheckMessage( reason ), true, true, false );
-
-					if ( last_check_data_v4 != null && last_check_data_v4.size() > 0 ){
-
-						COConfigurationManager.setParameter( "versioncheck.cache.v4", last_check_data_v4 );
-					}
-
-					// clear down any plugin-specific data that has successfully been sent to the version server
-
-					try{
-						if ( CoreFactory.isCoreAvailable() && CoreFactory.getSingleton().getPluginManager().isInitialized()){
-
-							//installed plugin IDs
-							PluginInterface[] plugins = CoreFactory.getSingleton().getPluginManager().getPluginInterfaces();
-
-							for (int i=0;i<plugins.length;i++){
-
-								PluginInterface		plugin = plugins[i];
-
-								Map	data = plugin.getPluginconfig().getPluginMapParameter( "plugin.versionserver.data", null );
-
-								if ( data != null ){
-
-									plugin.getPluginconfig().setPluginMapParameter( "plugin.versionserver.data", new HashMap());
-								}
-							}
-						}
-					}catch( Throwable e ){
-					}
-				}
-				catch( UnknownHostException t ) {
-					// no internet
-					Debug.outNoStack("VersionCheckClient - " + t.getClass().getName() + ": " + t.getMessage());
-				}
-				catch (IOException t) {
-					// General connection problem.
-					Debug.outNoStack("VersionCheckClient - " + t.getClass().getName() + ": " + t.getMessage());
-				}
-				catch( Throwable t ) {
-					Debug.out(t);
-					last_check_data_v4 = new HashMap();
+		}finally{
+			
+			for (VersionCheckClientListener l : listeners_clone) {
+				try{
+					l.versionCheckCompleted(reason, changed);
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
 				}
 			}
-			else {
-				if (Logger.isEnabled())
-					Logger.log(new LogEvent(LOGID, "VersionCheckClient is using "
-							+ "cached version check info. Using " + last_check_data_v4.size()
-							+ " reply keys."));
-			}
-			}
-			finally {  check_mon.exit();  }
-
-			if( last_check_data_v4 == null )  last_check_data_v4 = new HashMap();
-
-			last_feature_flag_cache_time = 0;
-
-			return last_check_data_v4;
 		}
 	}
 
@@ -1656,29 +1674,16 @@ public class VersionCheckClient {
 
 	public void
 	addVersionCheckClientListener(
-			boolean triggerStartListener,
-			VersionCheckClientListener l)
+		VersionCheckClientListener l)
 	{
-		synchronized (listeners) {
-			listeners.add(l);
-
-			if (triggerStartListener && startCheckRan) {
-				try {
-					l.versionCheckStarted(REASON_UPDATE_CHECK_START);
-				} catch (Exception e) {
-					Debug.out(e);
-				}
-			}
-		}
+		listeners.add(l);
 	}
 
 	public void
 	removeVersionCheckClientListener(
 		VersionCheckClientListener l)
 	{
-		synchronized (listeners) {
-			listeners.remove(l);
-		}
+		listeners.remove(l);
 	}
 
 

@@ -22,6 +22,7 @@ package com.biglybt.core.pairing;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
@@ -38,6 +39,15 @@ PairingManager
 	public boolean
 	isSRPEnabled();
 
+	public URL
+	getServiceURL();
+	
+	public URL
+	getWebRemoteURL();
+	
+	public String
+	getTunnelServer();
+	
 	public void
 	setGroup(
 		String		group );

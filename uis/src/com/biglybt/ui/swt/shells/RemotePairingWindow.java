@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.shells;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -381,8 +382,11 @@ public class RemotePairingWindow
 	}
 
 	private void setupQR_URL(String ac) {
+		
+		URL server_url = PairingManagerFactory.getSingleton().getWebRemoteURL();
+		
 		String url = "https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl="
-				+ UrlUtils.encode("http://remote.vuze.com/?ac=" + ac + "&ref=1")
+				+ UrlUtils.encode( server_url.toExternalForm() + "?ac=" + ac + "&ref=1")
 				+ "&choe=UTF-8&chld=|0";
 		soQR.setImageUrl(url);
 	}

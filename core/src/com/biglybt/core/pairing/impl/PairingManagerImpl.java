@@ -40,6 +40,8 @@ import com.biglybt.core.pairing.*;
 import com.biglybt.core.security.CryptoManager;
 import com.biglybt.core.security.CryptoManagerFactory;
 import com.biglybt.core.util.*;
+import com.biglybt.core.versioncheck.VersionCheckClient;
+import com.biglybt.core.versioncheck.VersionCheckClientListener;
 import com.biglybt.net.upnp.UPnPRootDevice;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDException;
@@ -65,19 +67,32 @@ PairingManagerImpl
 {
 	private static final boolean DEBUG	= false;
 
-	private static final String	SERVICE_URL;
-
-	static{
-		String url = System.getProperty( "az.pairing.url", "" );
-
-		if ( url.length() == 0 ){
-
-			SERVICE_URL = Constants.PAIRING_URL;
-
-		}else{
-
-			SERVICE_URL = url;
+	private String	_SERVICE_URL;
+	private URL		_WEB_REMOTE_URL;
+	private String 	_TUNNEL_SERVER;
+		
+	{
+			// defaults
+		
+		String pairing_host = Constants.PAIRING_SERVER;
+		
+		_SERVICE_URL = "https://" + pairing_host + "/pairing";
+		
+		String wr_host = Constants.WEB_REMOTE_SERVER;
+		
+		URL wr_url = null;
+	
+		try{
+			wr_url = new URL( "http://" + wr_host + "/" );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
 		}
+		
+		_WEB_REMOTE_URL = wr_url;
+		
+		_TUNNEL_SERVER = "https://" + pairing_host + "/";
 	}
 
 	private static final PairingManagerImpl	singleton = new PairingManagerImpl();
@@ -175,6 +190,23 @@ PairingManagerImpl
 
 		}
 
+		getServices();
+		
+		VersionCheckClient.getSingleton().addVersionCheckClientListener(
+			new VersionCheckClientListener(){
+				
+				@Override
+				public void versionCheckStarted(String reason){					
+				}
+				
+				@Override
+				public void versionCheckCompleted(String reason, boolean changed){
+					if ( changed ){
+						getServices();
+					}
+				}
+			});
+		
 		must_update_once = COConfigurationManager.getBooleanParameter( "pairing.updateoutstanding" );
 
 		PluginInterface default_pi = PluginInitializer.getDefaultInterface();
@@ -196,7 +228,7 @@ PairingManagerImpl
 
 		param_last_error	= configModel.addInfoParameter2( "pairing.last.error", "" );
 
-		param_view = configModel.addHyperlinkParameter2( "pairing.view.registered", SERVICE_URL + "/web/view?ac=" + access_code);
+		param_view = configModel.addHyperlinkParameter2( "pairing.view.registered", getServiceURL().toExternalForm() + "/web/view?ac=" + access_code);
 
 		if ( access_code.length() == 0 ){
 
@@ -423,6 +455,58 @@ PairingManagerImpl
 			});
 	}
 
+	private void
+	getServices()
+	{	
+		Map vc_data = VersionCheckClient.getSingleton().getMostRecentVersionCheckData();
+		
+		if ( vc_data != null ){
+			{	
+				byte[] b_ps = (byte[])vc_data.get( "pairing_server" );
+		
+				if ( b_ps != null ){
+						
+					try{
+						String ps = new String( b_ps, "UTF-8" );
+							
+						_SERVICE_URL = ps;
+						
+					}catch( Throwable e ){
+					}
+				}
+			}
+			
+			{
+				byte[] b_ts = (byte[])vc_data.get( "tunnel_server" );
+				
+				if ( b_ts != null ){
+					
+					try{
+						String ts = new String( b_ts, "UTF-8" );
+						
+						_TUNNEL_SERVER = ts;
+						
+					}catch( Throwable e ){
+					}
+				}
+			}
+			
+			{
+				byte[] b_wr = (byte[])vc_data.get( "web_remote_server" );
+		
+				if ( b_wr != null ){
+					
+					try{
+						String wr = new String( b_wr, "UTF-8" );
+						
+						_WEB_REMOTE_URL = new URL( wr );
+						
+					}catch( Throwable e ){
+					}
+				}
+			}
+		}
+	}
 
 	protected void
 	initialise(
@@ -521,6 +605,34 @@ PairingManagerImpl
 	}
 
 	@Override
+	public URL 
+	getServiceURL()
+	{
+		try{
+			return( new URL( _SERVICE_URL ));
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			return( null );
+		}
+	}
+	
+	@Override
+	public URL 
+	getWebRemoteURL()
+	{
+		return( _WEB_REMOTE_URL );
+	}
+	
+	public String
+	getTunnelServer()
+	{
+		return( _TUNNEL_SERVER );
+	}
+	
+	@Override
 	public void
 	setGroup(
 		String group )
@@ -544,7 +656,7 @@ PairingManagerImpl
 		throws PairingException
 	{
 		try{
-			URL url = new URL( SERVICE_URL + "/remote/listGroup?gc=" + getGroup());
+			URL url = new URL( getServiceURL().toExternalForm() + "/remote/listGroup?gc=" + getGroup());
 
 			InputStream is =  new ResourceDownloaderFactoryImpl().create( url ).download();
 
@@ -585,7 +697,7 @@ PairingManagerImpl
 		throws PairingException
 	{
 		try{
-			URL url = new URL( SERVICE_URL + "/remote/listBindings?ac=" + access_code + "&jsoncallback=" );
+			URL url = new URL( getServiceURL().toExternalForm() + "/remote/listBindings?ac=" + access_code + "&jsoncallback=" );
 
 			InputStream is =  new ResourceDownloaderFactoryImpl().create( url ).download();
 
@@ -737,7 +849,7 @@ PairingManagerImpl
 
 		param_ac_info.setValue( ac );
 
-		param_view.setHyperlink( SERVICE_URL + "/web/view?ac=" + ac );
+		param_view.setHyperlink( getServiceURL().toExternalForm() + "/web/view?ac=" + ac );
 
 		param_view.setEnabled( ac.length() > 0 );
 	}
@@ -1685,7 +1797,7 @@ PairingManagerImpl
 				other_params += "&sig=" + sig;
 			}
 
-			URL target = new URL( SERVICE_URL + "/client/" + command + "?request=" + request_str + other_params );
+			URL target = new URL( getServiceURL().toExternalForm() + "/client/" + command + "?request=" + request_str + other_params );
 
 			Properties	http_properties = new Properties();
 
@@ -2044,7 +2156,7 @@ PairingManagerImpl
 							"&app=" + UrlUtils.encode( SystemProperties.getApplicationName()) +
 							"&locale=" + UrlUtils.encode( MessageText.getCurrentLocale().toString());
 
-						URL target = new URL( SERVICE_URL + "/web/test?sid=" + sid + "&ac=" + access_code + "&format=bencode" + other_params );
+						URL target = new URL( getServiceURL().toExternalForm() + "/web/test?sid=" + sid + "&ac=" + access_code + "&format=bencode" + other_params );
 
 						HttpURLConnection connection = (HttpURLConnection)target.openConnection();
 

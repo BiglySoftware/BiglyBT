@@ -671,7 +671,9 @@ WebPlugin
 
 			connection_test = config_model.addHyperlinkParameter2( "webui.connectiontest", getConnectionTestURL( p_sid ));
 
-			pairing_test = config_model.addHyperlinkParameter2( "webui.pairingtest", "http://remote.vuze.com/?sid=" + p_sid );
+			URL server_url = PairingManagerFactory.getSingleton().getWebRemoteURL();
+
+			pairing_test = config_model.addHyperlinkParameter2( "webui.pairingtest", server_url.toExternalForm() + "?sid=" + p_sid );
 
 				// listeners setup later as they depend on userame params etc
 
@@ -1037,9 +1039,13 @@ WebPlugin
 	getConnectionTestURL(
 		String		sid )
 	{
-		String res = "http://pair.vuze.com/pairing/web/test?sid=" + sid;
-
 		PairingManager pm = PairingManagerFactory.getSingleton();
+
+		URL url = pm.getServiceURL();
+		
+		url = UrlUtils.setProtocol( url, "http" );
+	
+		String res = url.toExternalForm() + "/web/test?sid=" + sid;
 
 		if ( pm.isEnabled()){
 
