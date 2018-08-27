@@ -67,6 +67,11 @@ PairingManagerImpl
 {
 	private static final boolean DEBUG	= false;
 
+	private final String	DEFAULT_SERVICE_URL;
+	private final URL		DEFAULT_WEB_REMOTE_URL;
+	private final String 	DEFAULT_TUNNEL_SERVER;
+
+	
 	private String	_SERVICE_URL;
 	private URL		_WEB_REMOTE_URL;
 	private String 	_TUNNEL_SERVER;
@@ -93,6 +98,10 @@ PairingManagerImpl
 		_WEB_REMOTE_URL = wr_url;
 		
 		_TUNNEL_SERVER = "https://" + pairing_host + "/";
+		
+		DEFAULT_SERVICE_URL 	= _SERVICE_URL;
+		DEFAULT_WEB_REMOTE_URL	= _WEB_REMOTE_URL;
+		DEFAULT_TUNNEL_SERVER	= _TUNNEL_SERVER;
 	}
 
 	private static final PairingManagerImpl	singleton = new PairingManagerImpl();
@@ -461,6 +470,7 @@ PairingManagerImpl
 		Map vc_data = VersionCheckClient.getSingleton().getMostRecentVersionCheckData();
 		
 		if ( vc_data != null ){
+			
 			{	
 				byte[] b_ps = (byte[])vc_data.get( "pairing_server" );
 		
@@ -473,6 +483,9 @@ PairingManagerImpl
 						
 					}catch( Throwable e ){
 					}
+				}else{
+					
+					_SERVICE_URL = DEFAULT_SERVICE_URL;
 				}
 			}
 			
@@ -488,6 +501,9 @@ PairingManagerImpl
 						
 					}catch( Throwable e ){
 					}
+				}else{
+					
+					_TUNNEL_SERVER = DEFAULT_TUNNEL_SERVER;
 				}
 			}
 			
@@ -503,6 +519,9 @@ PairingManagerImpl
 						
 					}catch( Throwable e ){
 					}
+				}else{
+					
+					_WEB_REMOTE_URL = DEFAULT_WEB_REMOTE_URL;
 				}
 			}
 		}
