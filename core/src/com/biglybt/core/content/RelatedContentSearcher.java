@@ -44,6 +44,9 @@ import com.biglybt.plugin.dht.DHTPlugin;
 import com.biglybt.plugin.dht.DHTPluginContact;
 import com.biglybt.plugin.dht.DHTPluginInterface;
 import com.biglybt.plugin.dht.DHTPluginInterface.DHTInterface;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.plugin.dht.DHTPluginValue;
 import com.biglybt.util.MapUtils;
 
@@ -797,6 +800,50 @@ RelatedContentSearcher
 		boolean				is_local,
 		boolean				search_cvs_only )
 	{
+		if ( !is_local ){
+			
+			if ( Constants.isCVSVersion()){
+				
+				try{
+					Map<String,Object>	chat_options = new HashMap<String, Object>();
+					
+					chat_options.put( ChatInstance.OPT_INVISIBLE, true );
+					
+					final ChatInstance stats_chat = 
+						BuddyPluginUtils.getChat( 
+							AENetworkClassifier.AT_PUBLIC, 
+							"Statistics: Search: Received",
+							chat_options );
+					
+					if ( stats_chat != null ){
+						
+						stats_chat.setSharedNickname( false );
+						
+						Map<String,Object>	msg_flags 	= new HashMap<String, Object>();
+						
+						msg_flags.put( BuddyPluginBeta.FLAGS_MSG_ORIGIN_KEY, BuddyPluginBeta.FLAGS_MSG_ORIGIN_SEARCH );
+						
+						Map<String,Object>	msg_options = new HashMap<String, Object>();
+
+						stats_chat.sendMessage( term, msg_flags, msg_options );
+						
+						SimpleTimer.addEvent(
+							"RCM:stats.closer",
+							SystemTime.getCurrentTime() + 15*60*1000,
+							new TimerEventPerformer(){
+								
+								@Override
+								public void perform(TimerEvent event){
+								
+									stats_chat.destroy();
+								}
+							});
+					}
+				}catch( Throwable e ){
+				}
+			}
+		}
+	
 		final boolean is_popularity = isPopularity( term );
 
 			// term is made up of space separated bits - all bits must match
