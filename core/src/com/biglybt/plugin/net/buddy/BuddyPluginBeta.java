@@ -4242,7 +4242,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				changed = true;
 			}
 
-			Set<ChatParticipant>	participants = new HashSet<>();
+			Set<ChatParticipant>	new_participants = new HashSet<>();
 
 			for ( int i=0;i<result.size();i++){
 
@@ -4250,7 +4250,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				ChatParticipant p = msg.getParticipant();
 
-				participants.add( p );
+				new_participants.add( p );
 
 				if ( !changed ){
 
@@ -4266,7 +4266,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				messages = result;
 
-				for ( ChatParticipant p: participants ){
+				for ( ChatParticipant p: new_participants ){
 
 					p.resetMessages();
 				}
@@ -4286,6 +4286,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				for ( ChatParticipant p: updated ){
 
 					updated( p );
+				}
+				
+				for ( ChatParticipant p: new_participants ){
+					
+					if ( p.getMessageCount() == 0 && !p.isMe()){
+						
+						removeParticipant( p );
+						
+						for ( ChatListener l: listeners ){
+
+							l.participantRemoved( p );
+						}
+					}
 				}
 			}
 
@@ -4435,7 +4448,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			ChatMessage msg = new ChatMessage( message_uid_next.incrementAndGet(), message_map );
 
-			long sequence = msg.getSequence();
+			// long sequence = msg.getSequence();
 
 			ChatParticipant	new_participant 	= null;
 			ChatParticipant	dead_participant 	= null;
@@ -4475,9 +4488,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					ChatParticipant rem_part = removed.getParticipant();
 
-					if ( rem_part.removeMessage( removed ) == 0 ){
+					if ( rem_part.removeMessage( removed ) == 0 && !rem_part.isMe()){
 						
-						dead_participant = participants.remove( pk );
+							// if new message for potentially deleted participant then retain
+						
+						if ( !Arrays.equals( pk, rem_part.getPublicKey())){
+							
+							dead_participant = removeParticipant( rem_part );
+						}
 					}
 
 					if ( !rem_part.isMe()){
@@ -4519,21 +4537,6 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				}
 
 				ChatParticipant participant = participants.get( pk );
-
-				if ( participant == null ){
-					
-					if ( dead_participant != null ){
-						
-						if ( Arrays.equals( pk, dead_participant.getPublicKey())){
-							
-							participant = dead_participant;
-							
-							dead_participant = null;
-							
-							participants.put( pk, participant );
-						}							
-					}
-				}
 				
 				if ( participant == null ){
 
@@ -5386,6 +5389,29 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			return( null );
 		}
 
+		private ChatParticipant
+		removeParticipant(
+			ChatParticipant p )
+		{
+			ChatParticipant result = participants.remove( p.getPublicKey());
+		
+			Iterator<List<ChatParticipant>> it = nick_clash_map.values().iterator();
+			
+			while( it.hasNext()){
+			
+				List<ChatParticipant> list = it.next();
+												
+				list.remove( p );
+				
+				if ( list.isEmpty()){
+					
+					it.remove();
+				}
+			}
+			
+			return( result );
+		}
+		
 		protected void
 		updated(
 			ChatParticipant		p )
@@ -6043,6 +6069,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				return(new ArrayList<>(participant_messages));
 			}
+		}
+		
+		public int
+		getMessageCount()
+		{
+			return( participant_messages.size());
 		}
 
 		public boolean
