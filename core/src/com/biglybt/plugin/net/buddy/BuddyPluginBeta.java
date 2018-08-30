@@ -4437,7 +4437,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			long sequence = msg.getSequence();
 
-			ChatParticipant	new_participant = null;
+			ChatParticipant	new_participant 	= null;
+			ChatParticipant	dead_participant 	= null;
 
 			boolean	sort_outstanding = false;
 
@@ -4462,6 +4463,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				messages.add( msg );
 
+				byte[] pk = msg.getPublicKey();
+
 				if ( messages.size() > MSG_HISTORY_MAX ){
 
 					ChatMessage removed = messages.remove(0);
@@ -4472,7 +4475,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					ChatParticipant rem_part = removed.getParticipant();
 
-					rem_part.removeMessage( removed );
+					if ( rem_part.removeMessage( removed ) == 0 ){
+						
+						dead_participant = participants.remove( pk );
+					}
 
 					if ( !rem_part.isMe()){
 
@@ -4512,10 +4518,23 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					}
 				}
 
-				byte[] pk = msg.getPublicKey();
-
 				ChatParticipant participant = participants.get( pk );
 
+				if ( participant == null ){
+					
+					if ( dead_participant != null ){
+						
+						if ( Arrays.equals( pk, dead_participant.getPublicKey())){
+							
+							participant = dead_participant;
+							
+							dead_participant = null;
+							
+							participants.put( pk, participant );
+						}							
+					}
+				}
+				
 				if ( participant == null ){
 
 					new_participant = participant = new ChatParticipant( this, pk );
@@ -4606,6 +4625,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				}
 			}
 
+			if ( dead_participant != null ){
+
+				for ( ChatListener l: listeners ){
+
+					l.participantRemoved( dead_participant );
+				}
+			}
+			
 			if ( new_participant != null ){
 
 				for ( ChatListener l: listeners ){
@@ -5985,11 +6012,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
-		private void
+		private int
 		removeMessage(
 			ChatMessage		message )
 		{
 			participant_messages.remove( message );
+			
+			return( participant_messages.size());
 		}
 
 		private void
