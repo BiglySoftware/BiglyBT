@@ -38,6 +38,7 @@ import com.biglybt.core.metasearch.impl.DateParser;
 import com.biglybt.core.metasearch.impl.DateParserRegex;
 import com.biglybt.core.metasearch.impl.EngineImpl;
 import com.biglybt.core.metasearch.impl.MetaSearchImpl;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.util.*;
@@ -579,6 +580,11 @@ WebEngine
 
 		throws SearchException
 	{
+		if ( NetworkAdmin.getSingleton().hasMissingForcedBind()){
+
+			throw( new SearchException( "Forced bind address is missing" ));
+		}
+		
 		String searchURL = searchURLFormat;
 
 		String lc_url = searchURL.toLowerCase( Locale.US );
