@@ -846,8 +846,10 @@ MagnetPlugin
 		
 		boolean recover = magnet_recovery.getValue();
 
-		if ( recover ){
+		if ( recover && !active.isEmpty()){
 		
+			ThreadPool tp = new ThreadPool( "Magnet Recovery", 16, true );
+			
 			for ( Map map: active.values()){
 					
 				//System.out.println( "Recovering: " + map );
@@ -905,83 +907,84 @@ MagnetPlugin
 					
 					final InetSocketAddress[] f_sources = sources;
 					
-					new AEThread2( "Magnet Recovery")
-					{
-						public void
-						run()
+					tp.run(
+						new AERunnable()
 						{
-							try{
-								byte[] result = recoverableDownload( null, hash, args, f_sources, f_tags, timeout, true );
-								
-								if ( result != null ){
+							public void
+							runSupport()
+							{
+								try{
+									byte[] result = recoverableDownload( null, hash, args, f_sources, f_tags, timeout, true );
 									
-									TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( result );
-									
-									String	torrent_name = FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( torrent ) + ".torrent", false );
-									
-									File torrent_file;
-									
-									String dir = null;
-									
-								    if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")){
-								    	
-										dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
+									if ( result != null ){
 										
-										if ( dir != null ){
+										TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( result );
+										
+										String	torrent_name = FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( torrent ) + ".torrent", false );
+										
+										File torrent_file;
+										
+										String dir = null;
+										
+									    if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")){
+									    	
+											dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
 											
-											if ( dir.length() > 0 ){
+											if ( dir != null ){
 												
-												File f = new File( dir );
-												
-												if ( !f.exists()){
+												if ( dir.length() > 0 ){
 													
-													f.mkdirs();
-												}
-												
-												if ( !( f.isDirectory() && f.canWrite())){
-												
+													File f = new File( dir );
+													
+													if ( !f.exists()){
+														
+														f.mkdirs();
+													}
+													
+													if ( !( f.isDirectory() && f.canWrite())){
+													
+														dir = null;
+													}
+												}else{
+													
 													dir = null;
 												}
-											}else{
-												
-												dir = null;
 											}
-										}
-								    }
-								    
-								    if ( dir != null ){
-								    	
-								    	torrent_file = new File( dir, torrent_name );
-								    	
-								    }else {
-								    	
-								    	torrent_file = new File( AETemporaryFileHandler.getTempDirectory(), torrent_name );
-								    }
-								    
-								    if ( torrent_file.exists()){
-								    	
-								    	torrent_file = AETemporaryFileHandler.createTempFile();
-								    }
-								      
-								    torrent.serialiseToBEncodedFile( torrent_file );
+									    }
+									    
+									    if ( dir != null ){
+									    	
+									    	torrent_file = new File( dir, torrent_name );
+									    	
+									    }else {
+									    	
+									    	torrent_file = new File( AETemporaryFileHandler.getTempDirectory(), torrent_name );
+									    }
+									    
+									    if ( torrent_file.exists()){
+									    	
+									    	torrent_file = AETemporaryFileHandler.createTempFile();
+									    }
+									      
+									    torrent.serialiseToBEncodedFile( torrent_file );
+										
+										UIFunctions uif = UIFunctionsManager.getUIFunctions();
+										
+										TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
+										
+										torrentOptions.setDeleteFileOnCancel( true );
+										torrentOptions.sFileName			= torrent_file.getAbsolutePath();
+										torrentOptions.setTorrent( torrent );
+										
+										uif.addTorrentWithOptions( false, torrentOptions );
+									}
+								}catch( Throwable e ){
 									
-									UIFunctions uif = UIFunctionsManager.getUIFunctions();
-									
-									TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
-									
-									torrentOptions.setDeleteFileOnCancel( true );
-									torrentOptions.sFileName			= torrent_file.getAbsolutePath();
-									torrentOptions.setTorrent( torrent );
-									
-									uif.addTorrentWithOptions( false, torrentOptions );
+									Debug.out( e );
 								}
-							}catch( Throwable e ){
-								
-								Debug.out( e );
 							}
-						}
-					}.start();				
-								
+						});
+														
 				}catch( Throwable e ){
 					
 					Debug.out( e );
