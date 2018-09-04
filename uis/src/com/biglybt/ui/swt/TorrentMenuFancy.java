@@ -53,7 +53,6 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
-import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.GraphicURI;
 import com.biglybt.pif.ui.menus.MenuBuilder;
@@ -2069,7 +2068,9 @@ public class TorrentMenuFancy
 			System.out.println("Menu " + item.getText() + ": " + item.getMenuID());
 		}
 
-		if (item.getStyle() == com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU) {
+		int style = item.getStyle();
+		
+		if ( style == com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU) {
 
 			row = createMenuRow(detailArea, item.getResourceKey(), null,
 					new FancyMenuRowInfoListener() {
@@ -2134,6 +2135,16 @@ public class TorrentMenuFancy
 
 						@Override
 						public boolean run(TableRowCore[] rows) {
+							
+							if ( style == com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK ){
+								
+								Boolean b = (Boolean)item.getData();
+								
+								boolean newSel = !(b != null && b);
+								
+								item.setData( newSel );
+							}
+							
 							if (rows.length != 0) {
 								((MenuItemImpl) item).invokeListenersMulti(getTarget(item));
 							}
@@ -2141,6 +2152,13 @@ public class TorrentMenuFancy
 						}
 
 					});
+			
+			if ( style == com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK ){
+				
+				Boolean b = (Boolean)item.getData();
+									
+				row.setSelection(  b != null && b );
+			}
 		}
 
 		row.setEnabled(item.isEnabled());
