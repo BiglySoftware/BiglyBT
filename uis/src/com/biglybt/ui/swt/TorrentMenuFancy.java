@@ -2060,6 +2060,19 @@ public class TorrentMenuFancy
 			}
 			return;
 		}
+		
+			// Disabled items are removed from fancy menus - if you want to change this then you will need to
+			// code up a disabled look for the rows as currently they just show as normal but aren't selectable
+			// which ain't good
+		
+		if (!item.isEnabled()) {
+			if (DEBUG_MENU) {
+				System.out.println("Menu Not enabled: " + item.getText() + ": "
+						+ item.getMenuID());
+			}
+			return;
+		}
+		
 
 		Graphic graphic = item.getGraphic();
 		FancyRowInfo row;
