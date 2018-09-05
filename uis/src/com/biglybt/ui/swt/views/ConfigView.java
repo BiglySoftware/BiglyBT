@@ -897,11 +897,6 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
       setupSC(item);
 
-      if (filterText != null && filterText.length() > 0) {
-      	hilightText(item, filterText);
-        item.layout(true, true);
-      }
-
       cConfigSection.layout();
 
       updateHeader(section);
@@ -921,21 +916,21 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 			if (child instanceof Label) {
 				if (((Label) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child);
+					hilightControl(child,text);
 				}
 			} else if (child instanceof Group) {
 				if (((Group) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child);
+					hilightControl(child,text);
 				}
 			} else if (child instanceof Button) {
 				if (((Button) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child);
+					hilightControl(child,text);
 				}
 			} else if (child instanceof List) {
 				String[] items = ((List)child).getItems();
 				for (String item : items) {
 					if (item.toLowerCase().contains(text)) {
-						hilightControl(child);
+						hilightControl(child,text);
 						break;
 					}
 				}
@@ -943,7 +938,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 				String[] items = ((Combo)child).getItems();
 				for (String item : items) {
 					if (item.toLowerCase().contains(text)) {
-						hilightControl(child);
+						hilightControl(child,text);
 						break;
 					}
 				}
@@ -957,10 +952,14 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	 *
 	 * @since 4.5.1.1
 	 */
-	private void hilightControl(Control child) {
+	private void hilightControl(Control child, String text) {
 		child.setFont(headerFont);
 		child.setBackground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_BACKGROUND));
 		child.setForeground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_FOREGROUND));
+		
+		if ( child instanceof Composite ){
+			hilightText((Composite)child, text );
+		}
 	}
 
 	private void ensureSectionBuilt(TreeItem treeSection, boolean recreateIfAlreadyThere) {
@@ -984,6 +983,14 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
         Composite c = ((UISWTConfigSection)configSection).configSectionCreate(item);
 
+        	// we need to do this here as, on GTK at least, leaving it until later causes check/radio-boxes not
+        	// to layout correctly after their font is changed
+        
+        if (filterText != null && filterText.length() > 0) {
+          	hilightText(c, filterText);
+            
+        }
+       
         sectionsCreated.add(configSection);
 
         item.setContent(c);
