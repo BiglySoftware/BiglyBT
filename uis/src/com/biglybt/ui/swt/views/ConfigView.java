@@ -954,10 +954,59 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	 */
 	private void hilightControl(Control child, String text) {
 		child.setFont(headerFont);
-		child.setBackground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_BACKGROUND));
-		child.setForeground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_FOREGROUND));
+		
+		if ( Utils.isGTK3 ){
+
+				// problem with checkbox/radio controls not supporting setting foreground text color
+				// so use alternative 
+			
+			Composite parent = child.getParent();
+			
+			parent.addPaintListener(
+				new PaintListener(){
+					
+					@Override
+					public void paintControl(PaintEvent e){
+						GC gc = e.gc;
+						
+						gc.setAdvanced(true);
+						gc.setAntialias(SWT.ON);
+								
+						Point pp = parent.toDisplay(0, 0);
+						Point cp = child.toDisplay(0, 0 );
+						
+						Rectangle bounds = child.getBounds();
+						
+						
+						int	width 	= bounds.width;
+						int height	= bounds.height;
+						
+						gc.setForeground(Colors.fadedRed );
+						
+						gc.drawRectangle( cp.x-pp.x-1, cp.y-pp.y-1, width+2, height+2 );						
+					}
+				});
+					
+			Object ld = child.getLayoutData();
+			
+			if ( ld instanceof GridData || ld == null ){
+				
+				Point size = child.computeSize( SWT.DEFAULT,  SWT.DEFAULT );
+
+				GridData gd = ld == null?new GridData():(GridData)ld;
+				
+				gd.minimumHeight = gd.heightHint = size.y + 2;
+				gd.minimumWidth = gd.widthHint = size.x + 2;
+				
+				child.setLayoutData( gd );
+			}
+		}else{
+			child.setBackground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_BACKGROUND));
+			child.setForeground(Colors.getSystemColor(child.getDisplay(), SWT.COLOR_INFO_FOREGROUND));
+		}
 		
 		if ( child instanceof Composite ){
+			
 			hilightText((Composite)child, text );
 		}
 	}

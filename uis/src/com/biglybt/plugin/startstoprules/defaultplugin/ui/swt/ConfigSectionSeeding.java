@@ -170,7 +170,8 @@ public class ConfigSectionSeeding implements UISWTConfigSection {
 
     label = new Label(cArea, SWT.NULL);
     Messages.setLanguageText(label, "ConfigView.label.peers");
-
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    Utils.setLayoutData(cArea, gridData);
 
     final Composite cFullCopyOptionsArea = new Composite(cSeeding, SWT.NULL);
     layout = new GridLayout();
