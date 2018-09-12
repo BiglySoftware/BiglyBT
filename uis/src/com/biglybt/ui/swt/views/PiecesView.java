@@ -543,61 +543,60 @@ public class PiecesView
 
 					// ugly hack to find other tab
 				
-				Composite comp = tv.getComposite();
+				Composite main_comp = tv.getComposite();
 
 				Composite piv_comp = null;
 				
-				while( comp != null ){
-
-					if ( piv_comp == null ){
+				for ( int i=0;i<2;i++ ){
 					
-						piv_comp = (Composite)comp.getData( PieceInfoView.KEY_INSTANCE );
+					Composite comp = i==0?main_comp:piv_comp;
 					
-						if ( piv_comp != null ){
-					
-								// restart search - needed for torrent details view
-							
-							comp = piv_comp;
+					while( comp != null ){
+	
+						if ( piv_comp == null ){
+						
+							piv_comp = (Composite)comp.getData( PieceInfoView.KEY_INSTANCE );
 						}
-					}
-					
-					if ( comp instanceof CTabFolder ){
-
-						CTabFolder tf = (CTabFolder)comp;
-
-						CTabItem[] items = tf.getItems();
-
-						for ( CTabItem item: items ){
-
-							UISWTViewCore view = (UISWTViewCore)item.getData("TabbedEntry");
-
-							UISWTViewEventListener listener = view.getEventListener();
-
-							if ( listener instanceof UISWTViewEventListenerHolder ){
-
-								listener = ((UISWTViewEventListenerHolder)listener).getDelegatedEventListener( view );
-							}
-
-							if ( listener instanceof PieceInfoView ){
-
-								tf.setSelection( item );
-
-								Event ev = new Event();
-
-								ev.item = item;
-
-									// manual setSelection doesn't file selection event - derp
-
-								tf.notifyListeners( SWT.Selection, ev );
-
-								((PieceInfoView)listener).selectPiece( piece );
-
-								return;
+						
+						if ( comp instanceof CTabFolder ){
+	
+							CTabFolder tf = (CTabFolder)comp;
+	
+							CTabItem[] items = tf.getItems();
+	
+							for ( CTabItem item: items ){
+	
+								UISWTViewCore view = (UISWTViewCore)item.getData("TabbedEntry");
+	
+								UISWTViewEventListener listener = view.getEventListener();
+	
+								if ( listener instanceof UISWTViewEventListenerHolder ){
+	
+									listener = ((UISWTViewEventListenerHolder)listener).getDelegatedEventListener( view );
+								}
+	
+								if ( listener instanceof PieceInfoView ){
+	
+									tf.setSelection( item );
+	
+									Event ev = new Event();
+	
+									ev.item = item;
+	
+										// manual setSelection doesn't file selection event - derp
+	
+									tf.notifyListeners( SWT.Selection, ev );
+	
+									((PieceInfoView)listener).selectPiece( piece );
+	
+									return;
+								}
 							}
 						}
+	
+						comp = comp.getParent();
 					}
-
-					comp = comp.getParent();
+					
 				}
 			}catch( Throwable e ){
 

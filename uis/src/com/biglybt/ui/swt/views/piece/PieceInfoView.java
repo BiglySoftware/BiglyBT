@@ -124,6 +124,8 @@ public class PieceInfoView
 	private int		selectedPieceShowFilePending	= -1;
 	private boolean	selectedPieceShowFile;
 	
+	private boolean scrollPending = false;
+	
 	private Color	file_color;
 	private Color	file_color_faded;
 	
@@ -266,6 +268,8 @@ public class PieceInfoView
 				
 				@Override
 				public void run(){
+					scrollPending = true;
+							
 					refreshInfoCanvas();
 				}
 			});
@@ -770,6 +774,20 @@ public class PieceInfoView
 	}
 
 	protected void refreshInfoCanvas() {
+
+		int pos = refreshInfoCanvasSupport();
+		
+		if ( scrollPending && pos != -1 ){
+			
+			scrollPending = false;
+			
+			sc.setOrigin( 0, pos );
+		}
+	}
+	
+	protected int refreshInfoCanvasSupport() {
+		
+		int	result = -1;
 		
 		synchronized (PieceInfoView.this) {
 			alreadyFilling = false;
@@ -777,14 +795,14 @@ public class PieceInfoView
 
 		if (pieceInfoCanvas == null || pieceInfoCanvas.isDisposed()
 				|| !pieceInfoCanvas.isVisible()) {
-			return;
+			return( result );
 		}
 		pieceInfoCanvas.layout(true);
 		Rectangle bounds = pieceInfoCanvas.getClientArea();
 		if (bounds.width <= 0 || bounds.height <= 0) {
 			topLabelLHS = "";
 			updateTopLabel();
-			return;
+			return( result );
 		}
 
 		if (dlm == null) {
@@ -795,7 +813,7 @@ public class PieceInfoView
 			topLabelRHS = "";
 			updateTopLabel();
 
-			return;
+			return( result );
 		}
 
 		PEPeerManager pm = dlm.getPeerManager();
@@ -809,7 +827,7 @@ public class PieceInfoView
 			topLabelLHS = "";
 			updateTopLabel();
 
-			return;
+			return( result );
 		}
 
 		int iNumCols = bounds.width / BLOCK_SIZE;
@@ -977,10 +995,12 @@ public class PieceInfoView
 				
 				if ( isSel ){
 					newInfo.selected = true;
+					result = iYPos - BLOCK_FILLSIZE;
 				}
 
 				if (oldBlockInfo != null && i < oldBlockInfo.length
 						&& oldBlockInfo[i].sameAs(newInfo)) {
+					
 					iCol++;
 					continue;
 				}
@@ -1057,7 +1077,6 @@ public class PieceInfoView
 				int y = iYPos + (BLOCK_FILLSIZE / 2) - (size.y / 2);
 				gcImg.setForeground(availCol);
 				gcImg.drawText(availText, x, y, true);
-				
 
 				iCol++;
 			}
@@ -1094,6 +1113,8 @@ public class PieceInfoView
 		updateTopLabel();
 
 		pieceInfoCanvas.redraw();
+		
+		return( result );
 	}
 
 	private void drawDownloadIndicator(GC gcImg, int iXPos, int iYPos,
