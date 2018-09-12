@@ -29,6 +29,7 @@ import com.biglybt.plugin.net.buddy.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.dnd.Clipboard;
@@ -133,10 +134,27 @@ BuddyPluginViewInstance
 
 		beta_item.setText( lu.getLocalisedMessageText( "azbuddy.dchat.decentralized" ));
 
-		Composite beta_area = new Composite( tab_folder, SWT.NULL );
+		ScrolledComposite beta_area = new ScrolledComposite( tab_folder, SWT.V_SCROLL | SWT.H_SCROLL );
+		
+		beta_area.setExpandHorizontal(true);
+		beta_area.setExpandVertical(true);
+		
+		Utils.setLayoutData(beta_area, new GridData(SWT.FILL, SWT.FILL, true, true));
+		
 		beta_item.setControl( beta_area );
-
-		createBeta( beta_area );
+				
+		Composite beta_area_comp = new Composite( beta_area, SWT.NULL );
+				
+		beta_area.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(ControlEvent e) {
+				Utils.updateScrolledComposite(beta_area);
+			}
+		});
+		
+		beta_area.setContent( beta_area_comp );
+		
+		createBeta( beta_area_comp );
 
 		classic_item = new CTabItem(tab_folder, SWT.NULL);
 
@@ -177,11 +195,11 @@ BuddyPluginViewInstance
 									
 								if ( _beta_enabled != beta_enabled ){
 										
-										Utils.disposeComposite( beta_area, false );
+										Utils.disposeComposite( beta_area_comp, false );
 										
-										createBeta( beta_area );
+										createBeta( beta_area_comp );
 										
-										beta_area.layout( true, true );
+										beta_area_comp.layout( true, true );
 									}
 								}
 							});
