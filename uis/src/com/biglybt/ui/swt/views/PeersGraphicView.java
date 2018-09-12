@@ -619,7 +619,7 @@ public class PeersGraphicView
 	
 										if ( mdi_entry != null ){
 	
-											mdi_entry.setDatasource(new Object[] { manager, target } );
+											mdi_entry.setDatasource(new Object[] { manager });
 										}
 	
 										Composite comp = panel.getParent();

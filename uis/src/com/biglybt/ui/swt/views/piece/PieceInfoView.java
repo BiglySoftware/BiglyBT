@@ -54,6 +54,7 @@ import com.biglybt.core.util.TimerEventPerformer;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -80,7 +81,8 @@ public class PieceInfoView
 	implements DownloadManagerPieceListener,
 	UISWTViewCoreEventListenerEx
 {
-
+	public static final String	KEY_INSTANCE = "PieceInfoView::instance";
+	
 	private final static int BLOCK_FILLSIZE = 14;
 
 	private final static int BLOCK_SPACING = 3;
@@ -113,10 +115,11 @@ public class PieceInfoView
 
 	private final Color[] blockColors;
 
-	private Label topLabel;
+	private BufferedLabel topLabel;
 	private String topLabelLHS = "";
 	private String topLabelRHS = "";
 
+	private int		selectedPieceExplicit			= -1;
 	private int		selectedPiece					= -1;
 	private int		selectedPieceShowFilePending	= -1;
 	private boolean	selectedPieceShowFile;
@@ -239,8 +242,35 @@ public class PieceInfoView
 		createPeerInfoPanel(composite);
 
 		fillPieceInfoSection();
+		
+		Control c = composite;
+		
+		while( c != null ){
+			
+			c.setData( KEY_INSTANCE, composite );
+			
+			c = c.getParent();
+		}
 	}
 
+	public void
+	selectPiece(
+		PEPiece		piece )
+	{
+		selectedPieceExplicit = piece.getPieceNumber();
+		
+		setTopLableRHS( selectedPieceExplicit );
+		
+		Utils.execSWTThread(
+			new Runnable(){
+				
+				@Override
+				public void run(){
+					refreshInfoCanvas();
+				}
+			});
+	}
+	
 	private void createPeerInfoPanel(Composite parent) {
 		GridLayout layout;
 		GridData gridData;
@@ -263,8 +293,8 @@ public class PieceInfoView
 		gridData = new GridData();
 		imageLabel.setLayoutData(gridData);
 
-		topLabel = new Label(pieceInfoComposite, SWT.NULL);
-		topLabel.setBackground(Colors.white);
+		topLabel = new BufferedLabel(pieceInfoComposite, SWT.DOUBLE_BUFFERED);
+		topLabel.getControl().setBackground(Colors.white);
 		gridData = new GridData(SWT.FILL, SWT.DEFAULT, false, false);
 		topLabel.setLayoutData(gridData);
 
@@ -369,8 +399,12 @@ public class PieceInfoView
 				{
 					int piece_number = getPieceNumber( event.x, event.y );
 
+					boolean pieceChanged = piece_number != selectedPiece;
+					
 					if ( piece_number >= 0 ){
 
+						selectedPieceExplicit = -1;
+						
 						selectedPiece 					= piece_number;
 						selectedPieceShowFilePending	= piece_number;
 						
@@ -400,47 +434,19 @@ public class PieceInfoView
 						
 						refreshInfoCanvas();
 						
-						DiskManager		disk_manager 	= dlm.getDiskManager();
-						PEPeerManager	pm 				= dlm.getPeerManager();
-
-						DiskManagerPiece	dm_piece = disk_manager.getPiece( piece_number );
-						PEPiece 			pm_piece = pm.getPiece( piece_number );
-
-						String	text =  "Piece " + piece_number + ": " + dm_piece.getString();
-
-						if ( pm_piece != null ){
-
-							text += ", active: " + pm_piece.getString();
-
-						}else{
-
-							if ( dm_piece.isNeeded() && !dm_piece.isDone()){
-
-								text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
-							}
-						}
-						
-						text += " - ";
-						
-						DMPieceList l = disk_manager.getPieceList( piece_number );
-						
-						for ( int i=0;i<l.size();i++) {
-		           		 
-							DMPieceMapEntry entry = l.get( i );
-							
-							DiskManagerFileInfo info = entry.getFile();
-					
-							text += (i==0?"":"; ") + info.getFile( true ).getName();
-						}
-						
-						topLabelRHS = text;
+						setTopLableRHS( piece_number );
 
 					}else{
 
 						topLabelRHS = "";
 					}
-
+					
 					updateTopLabel();
+					
+					if ( pieceChanged ){
+						
+						refreshInfoCanvas();
+					}
 				}
 				
 				@Override
@@ -711,6 +717,46 @@ public class PieceInfoView
 	}
 
 	private void
+	setTopLableRHS(
+		int	piece_number )
+	{
+		DiskManager		disk_manager 	= dlm.getDiskManager();
+		PEPeerManager	pm 				= dlm.getPeerManager();
+
+		DiskManagerPiece	dm_piece = disk_manager.getPiece( piece_number );
+		PEPiece 			pm_piece = pm.getPiece( piece_number );
+
+		String	text =  "Piece " + piece_number + ": " + dm_piece.getString();
+
+		if ( pm_piece != null ){
+
+			text += ", active: " + pm_piece.getString();
+
+		}else{
+
+			if ( dm_piece.isNeeded() && !dm_piece.isDone()){
+
+				text += ", inactive: " + pm.getPiecePicker().getPieceString( piece_number );
+			}
+		}
+		
+		text += " - ";
+		
+		DMPieceList l = disk_manager.getPieceList( piece_number );
+		
+		for ( int i=0;i<l.size();i++) {
+   		 
+			DMPieceMapEntry entry = l.get( i );
+			
+			DiskManagerFileInfo info = entry.getFile();
+	
+			text += (i==0?"":"; ") + info.getFile( true ).getName();
+		}
+		
+		topLabelRHS = text;
+	}
+	
+	private void
 	updateTopLabel()
 	{
 		String text = topLabelLHS;
@@ -724,6 +770,7 @@ public class PieceInfoView
 	}
 
 	protected void refreshInfoCanvas() {
+		
 		synchronized (PieceInfoView.this) {
 			alreadyFilling = false;
 		}
@@ -880,7 +927,7 @@ public class PieceInfoView
 				BlockInfo newInfo = newBlockInfo[i] = new BlockInfo();
 
 				if ( i >= selectionStart && i <= selectionEnd ){
-					newInfo.selected = true;
+					newInfo.selectedRange = true;
 				}
 
 				boolean done = dm_pieces[i].isDone();
@@ -926,13 +973,19 @@ public class PieceInfoView
 					newInfo.availNum = -1;
 				}
 
+				boolean isSel = i == selectedPiece || i == selectedPieceExplicit;
+				
+				if ( isSel ){
+					newInfo.selected = true;
+				}
+
 				if (oldBlockInfo != null && i < oldBlockInfo.length
 						&& oldBlockInfo[i].sameAs(newInfo)) {
 					iCol++;
 					continue;
 				}
 
-				if ( newInfo.selected ){
+				if ( newInfo.selectedRange ){
 					Color fc = blockColors[BLOCKCOLOR_SHOWFILE ];
 					
 					gcImg.setBackground( fc );
@@ -969,31 +1022,42 @@ public class PieceInfoView
 					drawUploadIndicator(gcImg, iXPos, iYPos,
 							newInfo.showUp == SHOW_SMALL);
 				}
+				
+				Color availCol = isSel?Colors.red:blockColors[BLOCKCOLOR_AVAILCOUNT];
+				
+				int availNum = newInfo.availNum;
+				
+				String availText = availNum==-1?".":(availNum<100?String.valueOf( availNum ):"+");
+				Point size = gcImg.stringExtent(availText);
 
-				if (newInfo.availNum != -1) {
-					if (minAvailability == newInfo.availNum) {
-						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
-						gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1,
-								BLOCK_FILLSIZE + 1);
-					}
-					if (minAvailability2 == newInfo.availNum) {
-						gcImg.setLineStyle(SWT.LINE_DOT);
-						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
-						gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1,
-								BLOCK_FILLSIZE + 1);
-						gcImg.setLineStyle(SWT.LINE_SOLID);
-					}
+				if (minAvailability == availNum){
+					
+					gcImg.setForeground(availCol);
+					
+					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
+					
+				}else if (minAvailability2 == availNum){
+					
+					gcImg.setLineStyle(SWT.LINE_DOT);
+					
+					gcImg.setForeground(availCol);
+					
+					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
+					
+					gcImg.setLineStyle(SWT.LINE_SOLID);
+					
+				}else if ( isSel ){
 
-					String sNumber = String.valueOf(newInfo.availNum);
-					Point size = gcImg.stringExtent(sNumber);
-
-					if (newInfo.availNum < 100) {
-						int x = iXPos + (BLOCK_FILLSIZE / 2) - (size.x / 2);
-						int y = iYPos + (BLOCK_FILLSIZE / 2) - (size.y / 2);
-						gcImg.setForeground(blockColors[BLOCKCOLOR_AVAILCOUNT]);
-						gcImg.drawText(sNumber, x, y, true);
-					}
+					gcImg.setForeground(availCol);
+					
+					gcImg.drawRectangle(iXPos - 1, iYPos - 1, BLOCK_FILLSIZE + 1, BLOCK_FILLSIZE + 1);
 				}
+
+				int x = iXPos + (BLOCK_FILLSIZE / 2) - (size.x / 2);
+				int y = iYPos + (BLOCK_FILLSIZE / 2) - (size.y / 2);
+				gcImg.setForeground(availCol);
+				gcImg.drawText(availText, x, y, true);
+				
 
 				iCol++;
 			}
@@ -1114,7 +1178,7 @@ public class PieceInfoView
 	}
 
 	private void obfuscatedImage(Image image) {
-		UIDebugGenerator.obfuscateArea(image, topLabel, "");
+		UIDebugGenerator.obfuscateArea(image, topLabel.getControl(), "");
 	}
 
 	// @see com.biglybt.core.download.DownloadManagerPeerListener#pieceAdded(com.biglybt.core.peer.PEPiece)
@@ -1136,6 +1200,7 @@ public class PieceInfoView
 		/** 0 : no; 1 : Yes; 2: small */
 		byte showUp;
 		byte showDown;
+		boolean selectedRange;
 		boolean selected;
 		/**
 		 *
@@ -1150,6 +1215,7 @@ public class PieceInfoView
 					&& availDotted == otherBlockInfo.availDotted
 					&& showDown == otherBlockInfo.showDown
 					&& showUp == otherBlockInfo.showUp 
+					&& selectedRange == otherBlockInfo.selectedRange 
 					&& selected == otherBlockInfo.selected ;
 		}
 	}
