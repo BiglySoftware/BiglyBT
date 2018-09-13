@@ -111,8 +111,9 @@ public class PieceInfoView
 
 	private ScrolledComposite sc;
 
-	protected Canvas pieceInfoCanvas;
-
+	private Canvas 	pieceInfoCanvas;
+	private int		currentNumColumns;
+	
 	private final Color[] blockColors;
 
 	private BufferedLabel topLabel;
@@ -830,7 +831,26 @@ public class PieceInfoView
 			return( result );
 		}
 
+		boolean	forceRepaint = false;
+		
 		int iNumCols = bounds.width / BLOCK_SIZE;
+		
+		if ( currentNumColumns != iNumCols ){
+			
+			currentNumColumns = iNumCols;
+			
+			forceRepaint = true;
+			
+			oldBlockInfo = null;
+			
+			if ( img != null ){
+				
+				img.dispose();
+				
+				img = null;
+			}
+		}
+		
 		int iNeededHeight = (((dm.getNbPieces() - 1) / iNumCols) + 1) * BLOCK_SIZE;
 
 		if (img != null && !img.isDisposed()) {
@@ -998,8 +1018,12 @@ public class PieceInfoView
 					result = iYPos - BLOCK_FILLSIZE;
 				}
 
-				if (oldBlockInfo != null && i < oldBlockInfo.length
-						&& oldBlockInfo[i].sameAs(newInfo)) {
+				if ( 	!forceRepaint && 
+						oldBlockInfo != null && 
+						i < oldBlockInfo.length &&
+						oldBlockInfo[i].sameAs(newInfo)) {
+					
+						// skip this one as unchanged
 					
 					iCol++;
 					continue;
