@@ -55,9 +55,9 @@ Constants
 	public static final String  VERSION_SERVER_V4 	= "version.biglybt.com";
 	public static final String  VERSION_SERVER_V6 	= "version6.biglybt.com";
 
-	public static final String DHT_SEED_ADDRESS_V4			= "dht.vuze.com";
-	public static final String DHT_SEED_ADDRESS_V6			= "dht6.vuze.com";
-	public static final String DHT_SEED_ADDRESS_V6_TUNNEL	= "dht6tunnel.vuze.com";
+	public static final String DHT_SEED_ADDRESS_V4			= "dht.biglybt.com";
+	public static final String DHT_SEED_ADDRESS_V6			= "dht6.biglybt.com";
+	public static final String DHT_SEED_ADDRESS_V6_TUNNEL	= "dht6tunnel.biglybt.com";
 
 	public static final String NAT_TEST_TCP_SERVER		= "nettest.biglybt.com";
 	public static final String NAT_TEST_UDP_SERVER		= "nettestudp.biglybt.com";
@@ -155,7 +155,7 @@ Constants
 	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "1.6.0.1_B06";
+	public static final String AZUREUS_VERSION  = "1.6.0.1_B10";
 	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
 	public static final String AZUREUS_SUBVER	  = "";
 	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1601" + "-").getBytes();  //MUST be 8 chars long!
