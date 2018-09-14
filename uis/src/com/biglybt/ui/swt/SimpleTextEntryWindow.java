@@ -40,6 +40,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 	private Shell shell;
 	private int textLimit;
+	private boolean resizeable;
 	private Combo text_entry_combo;
 	private Text text_entry_text;
 
@@ -91,7 +92,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 		if (parent == null) {
 			parent = Utils.findAnyShell();
 		}
-		shell = com.biglybt.ui.swt.components.shell.ShellFactory.createShell(parent, SWT.DIALOG_TRIM);
+		shell = com.biglybt.ui.swt.components.shell.ShellFactory.createShell(parent, SWT.DIALOG_TRIM | (resizeable?SWT.RESIZE:0 ));
 
 		display = shell.getDisplay();
 		if (this.title != null) {
@@ -115,7 +116,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    	label.setText(this.messages[i]);
 
 	    	// 330 is the current default width.
-	    	gridData = new GridData();
+	    	gridData = resizeable?new GridData(GridData.FILL_HORIZONTAL):new GridData();
 	    	gridData.widthHint = width_hint;
 		    Utils.setLayoutData(label, gridData);
 	    }
@@ -217,7 +218,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    	line_height = (this.multiline_mode) ? 3 : 1;
 	    }
 
-	    gridData = new GridData();
+	    gridData = resizeable?new GridData(GridData.FILL_BOTH):new GridData();
 	    gridData.widthHint = width_hint;
 	    if (text_entry_text != null){
 	    	gridData.minimumHeight = text_entry_text.getLineHeight() * line_height;
@@ -382,6 +383,13 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 				}
 			}
 		});
+  }
+  
+  public void
+  setResizeable(
+		boolean b )
+  {
+	  resizeable = b;
   }
 
   public void
