@@ -1221,7 +1221,13 @@ TagPropertyConstraintHandler
 					
 				}else if ( !value.contains( "," )){
 
-					if ( value.contains( "(" )){
+						// guaranteed single argument
+					
+					if ( value.startsWith( "\"")){ 
+						
+						// string literal
+						
+					}else if ( value.contains( "(" )){
 						
 						return( new Object[]{  compileStart(value, new HashMap<String,ConstraintExpr>())});
 					}
@@ -1268,11 +1274,19 @@ TagPropertyConstraintHandler
 					params.add( current_param.toString());
 
 					for ( int i=0;i<params.size();i++){
+						
 						String p = (String)params.get( i );
-						if ( p.contains( "(" )){
+						
+						if ( p.startsWith( "\"" )){
+							
+							// string literal
+							
+						}else if ( p.contains( "(" )){
+							
 							params.set(i,compileStart(p, new HashMap<String,ConstraintExpr>()));
 						}
 					}
+					
 					return( params.toArray( new Object[ params.size()]));
 				}
 			}
