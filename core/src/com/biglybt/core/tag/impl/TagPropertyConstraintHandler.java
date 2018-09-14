@@ -2024,6 +2024,10 @@ TagPropertyConstraintHandler
 						if ( result instanceof Boolean ){
 
 							return((Boolean)result);
+							
+						}else if ( result instanceof Throwable ){
+							
+							setError( Debug.getNestedExceptionMessage((Throwable)result ));
 						}
 
 						return( false );

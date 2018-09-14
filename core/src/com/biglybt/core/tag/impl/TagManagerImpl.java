@@ -1284,9 +1284,11 @@ TagManagerImpl
 
 		if ( script_type == "" ){
 
-			Debug.out( "Unrecognised script type: " + script );
+			String error = "Unrecognised script type: " + script;
+					
+			Debug.out( error  );
 
-			return( null );
+			return( new Exception( error ));
 		}
 
 		boolean	provider_found = false;
@@ -1331,9 +1333,9 @@ TagManagerImpl
 
 				}catch( Throwable e ){
 
-					Debug.out( e );
-
-					return( null );
+					Debug.out( e );;
+					
+					return( e );
 				}
 			}
 		}
