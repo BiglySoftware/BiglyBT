@@ -19,25 +19,51 @@
 
 package com.biglybt.core.metasearch.impl.web;
 
-public class FieldMapping {
+import java.util.regex.Pattern;
+
+public class FieldMapping
+{
+	private final String postFilter;
+
+	private final boolean postFilterRequiresSearchQuery;
 
 	private String name;
+
 	private int field;
 
-	public FieldMapping(String name,int field) {
+	private Pattern postFilterPattern;
+
+	public FieldMapping(String name, int field, String postFilter) {
 		this.name = name;
 		this.field = field;
+		this.postFilter = postFilter;
+		postFilterRequiresSearchQuery = postFilter != null
+				&& postFilter.contains("%s");
 	}
 
-	public String
-	getName()
-	{
-		return( name );
+	public String getName() {
+		return name;
 	}
 
-	public int
-	getField()
-	{
-		return( field );
+	public int getField() {
+		return field;
+	}
+
+	public Pattern getPostFilterPattern(String searchQuery) {
+		if (postFilter == null) {
+			return null;
+		}
+		if (postFilterPattern == null || (postFilterRequiresSearchQuery
+				&& !postFilterPattern.pattern().contains(
+						"\\\\Q" + searchQuery + "\\\\E"))) {
+			postFilterPattern = Pattern.compile(postFilterRequiresSearchQuery
+					? postFilter.replaceAll("%s", "\\\\Q" + searchQuery + "\\\\E")
+					: postFilter, Pattern.CASE_INSENSITIVE);
+		}
+		return postFilterPattern;
+	}
+
+	public String getPostFilter() {
+		return postFilter;
 	}
 }

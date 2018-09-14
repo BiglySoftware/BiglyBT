@@ -425,6 +425,15 @@ RegexEngine
 
 										if (fieldContent != null) {
 
+											Pattern filter = mappings[i].getPostFilterPattern(searchQuery);
+											if (filter != null) {
+												Matcher postMatch = filter.matcher(fieldContent);
+												if (!postMatch.find()) {
+													fields_matched = 0; // 0 so it won't be added
+													continue;
+												}
+											}
+
 											int fieldTo = mappings[i].getField();
 
 											debugLog( "    " + fieldTo + "=" + fieldContent );
@@ -481,7 +490,18 @@ RegexEngine
 													result.setVotesDownFromHTML(fieldContent);
 													break;
 												case FIELD_HASH :
-													result.setHash(fieldContent);
+													// seen a magnet being returned as hash!
+													if ( fieldContent.startsWith( "magnet:")){
+														byte[] hash = UrlUtils.getHashFromMagnetURI(fieldContent);
+														if ( hash != null ){
+															fieldContent = ByteFormatter.encodeString( hash );
+														}else{
+															fieldContent = null;
+														}
+													}
+													if ( fieldContent != null ){
+														result.setHash(fieldContent);
+													}
 													break;
 												default:
 													fields_matched--;

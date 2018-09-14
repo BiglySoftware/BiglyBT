@@ -160,7 +160,8 @@ WebEngine
 			mappings[i] =
 				new FieldMapping(
 						MapUtils.getMapString( m, "name", null ),
-					((Long)m.get( "field")).intValue());
+					((Long)m.get( "field")).intValue(),
+						MapUtils.getMapString(m, "post_filter", null));
 		}
 
 		init();
@@ -238,6 +239,7 @@ WebEngine
 
 			MapUtils.setMapString( m, "name", fm.getName());
 			m.put( "field", new Long( fm.getField()));
+			MapUtils.setMapString(m, "post_filter", fm.getPostFilter());
 
 			maps.add( m );
 		}
@@ -324,7 +326,7 @@ WebEngine
 				continue;
 			}
 
-			conv_maps.add( new FieldMapping( field_name, field_id ));
+			conv_maps.add( new FieldMapping( field_name, field_id, MapUtils.getMapString(m, "post_filter", null) ));
 		}
 
 		mappings = (FieldMapping[])conv_maps.toArray( new FieldMapping[conv_maps.size()]);
@@ -399,6 +401,11 @@ WebEngine
 				}else{
 
 					entry.put( "group_nb", fm.getName());
+				}
+
+				String filter = fm.getPostFilter();
+				if (filter != null) {
+					entry.put("post_filter", filter);
 				}
 			}
 		}

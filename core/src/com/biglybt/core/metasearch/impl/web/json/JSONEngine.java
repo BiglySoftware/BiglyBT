@@ -369,6 +369,7 @@ JSONEngine
 						WebResult result = new WebResult(this,getRootPage(),getBasePage(),getDateParser(),searchQuery);
 
 						try{
+							boolean addResult = true;
 							for(int j = 0 ; j < mappings.length ; j++) {
 								String fieldFrom = mappings[j].getName();
 								if(fieldFrom == null) {
@@ -445,6 +446,15 @@ JSONEngine
 
 								if(fieldContent == null) {
 									continue;
+								}
+
+								Pattern filter = mappings[i].getPostFilterPattern(searchQuery);
+								if (filter != null) {
+									Matcher postMatch = filter.matcher(fieldContent);
+									if (!postMatch.find()) {
+										addResult = false;
+										continue;
+									}
 								}
 
 								switch(fieldTo) {
@@ -528,7 +538,9 @@ JSONEngine
 								}
 							}
 
-							results.add(result);
+							if (addResult) {
+								results.add(result);
+							}
 
 						}catch( Throwable e ){
 
