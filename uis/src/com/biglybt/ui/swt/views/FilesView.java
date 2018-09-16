@@ -628,7 +628,7 @@ public class FilesView
 				match_result = false;
 			}
 
-			Pattern pattern = RegExUtil.getCachedPattern( "fv:search", s, Pattern.CASE_INSENSITIVE);
+			Pattern pattern = RegExUtil.getCachedPattern( "fv:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 			return( pattern.matcher(name).find() == match_result );
 

@@ -29,7 +29,7 @@ public class StringPattern {
     }
 
     public void setIgnoreCase(boolean ignoreCase) {
-	p=Pattern.compile(p.pattern(),ignoreCase?Pattern.CASE_INSENSITIVE:0);
+	p=Pattern.compile(p.pattern(),ignoreCase?( Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE ):0);
     }
 
     public boolean matches(String probe) {

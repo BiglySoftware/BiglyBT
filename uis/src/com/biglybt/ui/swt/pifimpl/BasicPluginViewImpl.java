@@ -388,7 +388,7 @@ BasicPluginViewImpl
     			{
     				try
     				{
-    					inclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE);
+    					inclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
     					inclText.setBackground(null);
     				} catch (PatternSyntaxException e1)
     				{
@@ -421,7 +421,7 @@ BasicPluginViewImpl
     			{
     				try
     				{
-    					exclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE);
+    					exclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     					exclText.setBackground(null);
     				} catch (PatternSyntaxException e1)
     				{

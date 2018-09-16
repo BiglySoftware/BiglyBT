@@ -625,7 +625,7 @@ public class TableViewSWT_Common
 				FONT_REGEX_ERROR = new Font( filter.widget.getDisplay(), fd );
 			}
 			try {
-				Pattern.compile(filter.nextText, Pattern.CASE_INSENSITIVE);
+				Pattern.compile(filter.nextText, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 				filter.widget.setBackground(COLOR_FILTER_REGEX);
 				filter.widget.setFont( FONT_REGEX );
 

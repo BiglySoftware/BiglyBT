@@ -329,7 +329,7 @@ public class TableColumnSetupWindow
 							match_result = false;
 						}
 
-						Pattern pattern = RegExUtil.getCachedPattern( "tcs:search", s, Pattern.CASE_INSENSITIVE);
+						Pattern pattern = RegExUtil.getCachedPattern( "tcs:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 						if ( pattern.matcher(name).find() == match_result ){
 

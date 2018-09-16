@@ -1426,7 +1426,7 @@ public class MyTorrentsView
 					match_result = false;
 				}
 
-				Pattern pattern = RegExUtil.getCachedPattern( "tv:search", s, Pattern.CASE_INSENSITIVE);
+				Pattern pattern = RegExUtil.getCachedPattern( "tv:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
 				if ( o_name instanceof String ){
 

@@ -773,7 +773,7 @@ public class SBC_ArchivedDownloadsView
 				match_result = false;
 			}
 
-			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE);
+			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 
 			boolean result = !match_result;
@@ -808,7 +808,7 @@ public class SBC_ArchivedDownloadsView
 				match_result = false;
 			}
 
-			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE);
+			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 			return( pattern.matcher(name).find() == match_result );
 		}

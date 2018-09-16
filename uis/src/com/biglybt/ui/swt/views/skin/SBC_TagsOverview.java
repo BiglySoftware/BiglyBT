@@ -919,7 +919,7 @@ public class SBC_TagsOverview
 			match_result = false;
 		}
 
-		Pattern pattern = RegExUtil.getCachedPattern( "tagsoverview:search", s, Pattern.CASE_INSENSITIVE);
+		Pattern pattern = RegExUtil.getCachedPattern( "tagsoverview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 		return( pattern.matcher(name).find() == match_result );
 	}

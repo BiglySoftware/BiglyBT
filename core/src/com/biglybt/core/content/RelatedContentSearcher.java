@@ -884,7 +884,7 @@ RelatedContentSearcher
 					try{
 						if ( !RegExUtil.mightBeEvil( bit )){
 
-							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE );
+							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 						}
 					}catch( Throwable e ){
 					}
@@ -895,7 +895,7 @@ RelatedContentSearcher
 						try{
 							if ( !RegExUtil.mightBeEvil( bit )){
 
-								bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE );
+								bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 							}
 						}catch( Throwable e ){
 						}

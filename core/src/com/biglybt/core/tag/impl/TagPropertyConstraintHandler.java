@@ -1750,7 +1750,7 @@ TagPropertyConstraintHandler
 					if ( params_ok ){
 						
 						try{
-							Pattern p = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE );
+							Pattern p = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 														
 						}catch( Throwable e ) {
 							
@@ -1971,7 +1971,7 @@ TagPropertyConstraintHandler
 							}else{
 	
 								try{
-									pattern = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE );
+									pattern = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 	
 									params[1] = pattern;							
 

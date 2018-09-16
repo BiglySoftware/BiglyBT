@@ -7916,14 +7916,14 @@ SubscriptionManagerImpl
 						bit = bit.substring( 1, bit.length()-1 );
 
 						try{
-							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE );
+							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 						}catch( Throwable e ){
 						}
 					}else if ( bit.contains( "|" )){
 
 						try{
-							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE );
+							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 						}catch( Throwable e ){
 						}
