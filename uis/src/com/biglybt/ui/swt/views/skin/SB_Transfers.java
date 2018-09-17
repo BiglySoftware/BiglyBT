@@ -154,6 +154,8 @@ public class SB_Transfers
 	
 	public static class stats
 	{
+		int total = 0;
+		
 		int numSeeding = 0;
 
 		int numDownloading = 0;
@@ -185,6 +187,7 @@ public class SB_Transfers
 			stats		other )
 		{
 			return(
+					total							== other.total &&
 					numSeeding 						== other.numSeeding &&
 					numDownloading 					== other.numDownloading &&
 					numQueued 						== other.numQueued &&
@@ -201,6 +204,7 @@ public class SB_Transfers
 		copyFrom(
 			stats		other )
 		{
+			total								= other.total;
 			numSeeding 							= other.numSeeding;
 			numDownloading 						= other.numDownloading;
 			numQueued 							= other.numQueued;
@@ -299,8 +303,10 @@ public class SB_Transfers
 			hasBeenOpenedListener = new HasBeenOpenedListener() {
 				@Override
 				public void hasBeenOpenedChanged(DownloadManager dm, boolean opened) {
-					recountUnopened();
-					refreshAllLibraries();
+					synchronized (statsLock) {
+						recountItems();
+						refreshAllLibraries();
+					}
 				}
 			};
 			PlatformTorrentUtils.addHasBeenOpenedListener(hasBeenOpenedListener);
@@ -948,7 +954,7 @@ public class SB_Transfers
 							statsNoLowNoise.numStoppedIncomplete++;
 						}
 					}
-					recountUnopened();
+					recountItems();
 					updateErrorTooltip( gm, stats);
 					refreshAllLibraries();
 				}
@@ -969,7 +975,7 @@ public class SB_Transfers
 				}
 
 				synchronized (statsLock) {
-					recountUnopened();
+					recountItems();
 					if (dm.getAssumedComplete()) {
 						stats.numComplete--;
 						Boolean wasDownloadingB = (Boolean) dm.getUserData("wasDownloading");
@@ -1007,7 +1013,7 @@ public class SB_Transfers
 				dm.addListener(dmListener, false);
 
 				synchronized (statsLock) {
-					recountUnopened();
+					recountItems();
 
 					downloadManagerAdded(dm, statsNoLowNoise);
 					downloadManagerAdded(dm, statsWithLowNoise);
@@ -1169,6 +1175,11 @@ public class SB_Transfers
 
 			if (!PlatformTorrentUtils.getHasBeenOpened(dm) && dm.getAssumedComplete()) {
 				statsNoLowNoise.numUnOpened++;
+			}
+			
+			statsWithLowNoise.total++;
+			if ( !lowNoise ){
+				statsNoLowNoise.total++;
 			}
 		}
 
@@ -1879,17 +1890,23 @@ public class SB_Transfers
 		return( dm_state );
 	}
 
-	void recountUnopened() {
+	void recountItems() {
 		if (!CoreFactory.isCoreRunning()) {
 			return;
 		}
 		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-		List<?> dms = gm.getDownloadManagers();
+		List<DownloadManager> dms = gm.getDownloadManagers();
+		statsNoLowNoise.total = 0;
+		statsWithLowNoise.total = 0;
 		statsNoLowNoise.numUnOpened = 0;
-		for (Iterator<?> iter = dms.iterator(); iter.hasNext();) {
-			DownloadManager dm = (DownloadManager) iter.next();
+		for (Iterator<DownloadManager> iter = dms.iterator(); iter.hasNext();) {
+			DownloadManager dm = iter.next();
 			if (!PlatformTorrentUtils.getHasBeenOpened(dm) && dm.getAssumedComplete()) {
 				statsNoLowNoise.numUnOpened++;
+			}
+			statsWithLowNoise.total++;
+			if ( !PlatformTorrentUtils.isAdvancedViewOnly(dm)){
+				statsNoLowNoise.total++;
 			}
 		}
 		statsWithLowNoise.numUnOpened = statsNoLowNoise.numUnOpened;
@@ -2004,6 +2021,13 @@ public class SB_Transfers
 		}
 
 		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
+		if (entry != null) {
+			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+			
+			requestRedraw( entry );
+		}
+		
+		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY);
 		if (entry != null) {
 			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 			
@@ -2225,7 +2249,7 @@ public class SB_Transfers
 		void countRefreshed(stats statsWithLowNoise, stats statsNoLowNoise);
 	}
 
-	private static class MyMdiEntryCreationListener implements MdiEntryCreationListener {
+	private class MyMdiEntryCreationListener implements MdiEntryCreationListener {
 		private final MultipleDocumentInterfaceSWT mdi;
 
 		public MyMdiEntryCreationListener(MultipleDocumentInterfaceSWT mdi) {
@@ -2234,10 +2258,37 @@ public class SB_Transfers
 
 		@Override
 		public MdiEntry createMDiEntry(String id) {
+			
+			ViewTitleInfo titleInfo = new ViewTitleInfo() {
+				@Override
+				public Object getTitleInfoProperty(int propertyID) {
+					if (propertyID == TITLE_INDICATOR_TEXT) {
+
+						int	total_wln	= statsWithLowNoise.total;
+						int	total_nln 	= statsNoLowNoise.total;
+
+						if ( total_wln == total_nln ){
+							
+							return( String.valueOf( total_wln ));
+							
+						}else{
+							
+							return( total_nln + "/" + total_wln );
+						}
+					}else if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
+						
+					}else if (propertyID == TITLE_INDICATOR_COLOR) {
+						
+					}
+
+					return null;
+				}
+			};
+			
 			MdiEntry entry = mdi.createEntryFromSkinRef(
 					SideBar.SIDEBAR_HEADER_TRANSFERS,
 					SideBar.SIDEBAR_SECTION_LIBRARY, "library", "{sidebar."
-							+ SideBar.SIDEBAR_SECTION_LIBRARY + "}", null, null, false,
+							+ SideBar.SIDEBAR_SECTION_LIBRARY + "}", titleInfo, null, false,
 					"");
 			entry.setImageLeftID("image.sidebar.library");
 			
