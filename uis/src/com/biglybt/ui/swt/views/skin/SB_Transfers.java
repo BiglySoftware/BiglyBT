@@ -2275,7 +2275,7 @@ public class SB_Transfers
 							
 						}else{
 							
-							return( total_nln + "/" + total_wln );
+							return( total_nln + " | " + total_wln );
 						}
 					}else if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
 						
