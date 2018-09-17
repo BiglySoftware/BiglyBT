@@ -2262,10 +2262,12 @@ public class SB_Transfers
 			ViewTitleInfo titleInfo = new ViewTitleInfo() {
 				@Override
 				public Object getTitleInfoProperty(int propertyID) {
+					
+					int	total_wln	= statsWithLowNoise.total;
+					int	total_nln 	= statsNoLowNoise.total;
+
 					if (propertyID == TITLE_INDICATOR_TEXT) {
 
-						int	total_wln	= statsWithLowNoise.total;
-						int	total_nln 	= statsNoLowNoise.total;
 
 						if ( total_wln == total_nln ){
 							
@@ -2277,6 +2279,12 @@ public class SB_Transfers
 						}
 					}else if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
 						
+						if ( total_wln != total_nln  ){
+							
+							return(
+								MessageText.getString( "v3.MainWindow.menu.view.asSimpleList") + "=" + total_nln + ", " +
+								MessageText.getString( "v3.MainWindow.menu.view.asAdvancedList") + "=" + total_wln );
+						}
 					}else if (propertyID == TITLE_INDICATOR_COLOR) {
 						
 					}
