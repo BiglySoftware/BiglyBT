@@ -954,8 +954,8 @@ public class SB_Transfers
 							statsNoLowNoise.numStoppedIncomplete++;
 						}
 					}
-					recountItems();
 					updateErrorTooltip( gm, stats);
+					recountItems();
 					refreshAllLibraries();
 				}
 			}
@@ -975,7 +975,6 @@ public class SB_Transfers
 				}
 
 				synchronized (statsLock) {
-					recountItems();
 					if (dm.getAssumedComplete()) {
 						stats.numComplete--;
 						Boolean wasDownloadingB = (Boolean) dm.getUserData("wasDownloading");
@@ -1002,6 +1001,8 @@ public class SB_Transfers
 					if (wasQueued) {
 						stats.numQueued--;
 					}
+					
+					recountItems();
 					refreshAllLibraries();
 				}
 
@@ -1013,11 +1014,8 @@ public class SB_Transfers
 				dm.addListener(dmListener, false);
 
 				synchronized (statsLock) {
-					recountItems();
-
 					downloadManagerAdded(dm, statsNoLowNoise);
 					downloadManagerAdded(dm, statsWithLowNoise);
-					refreshAllLibraries();
 				}
 			}
 
@@ -1047,6 +1045,9 @@ public class SB_Transfers
 							dm.setUserData("wasDownloading", Boolean.FALSE);
 						}
 					}
+					
+					recountItems();
+					refreshAllLibraries();
 				}
 			}
 		};
