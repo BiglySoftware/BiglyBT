@@ -427,7 +427,22 @@ public class MenuBuildUtils {
 
 				if ( c1[j] != c2[j]){
 
-					break;
+					String label = new String( c1, 0, j+1 );
+					
+					boolean clash = false;
+					
+					for ( int k=0;k<i;k++){
+						
+						if ( label.equals( new String( edges.get(k), 0, edge_lens[k] ))){
+							
+							clash = true;
+						}
+					}
+					
+					if ( !clash ){
+						
+						break;
+					}
 				}
 			}
 
