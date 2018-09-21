@@ -359,6 +359,8 @@ public class SB_Transfers
 
 				triggerCountRefreshListeners();
 
+				refreshAllLibraries();
+				
 				synchronized (this) {
 
 					if (header_show_rates) {
@@ -391,7 +393,10 @@ public class SB_Transfers
 		};
 		COConfigurationManager.addAndFireParameterListeners(
 				new String[]{
-						"MyTorrentsView.showuptime", "MyTorrentsView.showrates"
+						"MyTorrentsView.showuptime", 
+						"MyTorrentsView.showrates",
+						SideBar.SIDEBAR_SECTION_LIBRARY + ".viewmode"
+
 				}, configListenerShow);
 
 	}
@@ -2230,10 +2235,10 @@ public class SB_Transfers
 		// should already be empty if everyone removed their listeners..
 		listeners.clear();
 
-		COConfigurationManager.removeParameterListener("MyTorrentsView.showuptime",
-				configListenerShow);
-		COConfigurationManager.removeParameterListener("MyTorrentsView.showrates",
-				configListenerShow);
+		COConfigurationManager.removeParameterListener("MyTorrentsView.showuptime",	configListenerShow);
+		COConfigurationManager.removeParameterListener("MyTorrentsView.showrates", configListenerShow);
+		COConfigurationManager.removeParameterListener(SideBar.SIDEBAR_SECTION_LIBRARY + ".viewmode", configListenerShow);
+		
 		if (timerEventShowUptime != null) {
 			timerEventShowUptime.cancel();
 			timerEventShowUptime = null;
@@ -2269,8 +2274,9 @@ public class SB_Transfers
 
 					if (propertyID == TITLE_INDICATOR_TEXT) {
 
-
-						if ( total_wln == total_nln ){
+						int viewmode = COConfigurationManager.getIntParameter( SideBar.SIDEBAR_SECTION_LIBRARY + ".viewmode", SBC_LibraryView.MODE_BIGTABLE );
+						
+						if ( total_wln == total_nln || viewmode == SBC_LibraryView.MODE_SMALLTABLE ){
 							
 							return( String.valueOf( total_wln ));
 							
