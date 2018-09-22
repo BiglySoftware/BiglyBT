@@ -77,6 +77,7 @@ TagBase
 	protected static final String	AT_REMOVAL_STRATEGY				= "max.t.r";
 	protected static final String	AT_EOS_SCRIPT					= "eos.scr";
 	protected static final String	AT_EOS_OPTIONS_TEMPLATE			= "eos.ot";
+	protected static final String	AT_EOS_PM						= "eos.pm";
 	protected static final String	AT_NOTIFICATION_POST			= "noti.post";
 	protected static final String	AT_LIMIT_ORDERING				= "max.t.o";
 
@@ -1145,6 +1146,35 @@ TagBase
 		setActionEnabled( TagFeatureExecOnAssign.ACTION_SCRIPT, script.length() > 0 );
 	}
 
+	public String
+	getPostMessageChannel()
+	{
+		String channel = readStringAttribute( AT_EOS_PM, "" );
+
+		if ( channel == null ){
+
+			channel = "";
+		}
+
+		return( channel );
+	}
+
+	public void
+	setPostMessageChannel(
+		String		channel )
+	{
+		if ( channel == null ){
+
+			channel = "";
+		}
+
+		channel = channel.trim();
+
+		writeStringAttribute( AT_EOS_PM, channel);
+
+		setActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI, channel.length() > 0 );
+	}
+	
 	public OptionsTemplateHandler
 	getOptionsTemplateHandler()
 	{

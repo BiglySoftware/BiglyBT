@@ -35,6 +35,8 @@ import com.biglybt.core.tag.*;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 
 public class
 TagDownloadWithState
@@ -540,22 +542,76 @@ TagDownloadWithState
 						}
 					}
 
-				}
-				if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE )){
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI )){
 
-					OptionsTemplateHandler handler = getOptionsTemplateHandler();
+						String chat = getPostMessageChannel();
 
-					if ( handler.isActive()){
-						rs_async.dispatch(
-							new AERunnable()
-							{
-								@Override
-								public void
-								runSupport()
+						if ( chat.length() > 0 ){
+
+							rs_async.dispatch(
+								new AERunnable()
 								{
-									handler.applyTo( dm );
-								}
-							});
+									@Override
+									public void
+									runSupport()
+									{
+										String[] bits = chat.split( ":", 2 );
+										
+										String net = bits[0].startsWith( "Public")?AENetworkClassifier.AT_PUBLIC:AENetworkClassifier.AT_I2P;
+										
+										String key = bits[1].trim();
+										
+										SimpleTimer.addEvent(
+											"EOS:PM",
+											SystemTime.getOffsetTime( 250 ),
+											new TimerEventPerformer(){
+											
+												final private long start = SystemTime.getMonotonousTime();
+												
+												@Override
+												public void perform(TimerEvent event){
+														
+													ChatInstance chat = BuddyPluginUtils.getChat(net, key);
+													
+													if ( chat != null && chat.isAvailable()){
+													
+														chat.sendMessage(  PluginCoreUtils.wrap( dm ));
+														
+													}else{
+												
+														if ( SystemTime.getMonotonousTime() - start >= 10*60*1000 ){
+															
+															Debug.out( "EOS:PM Abandoned sending of magnet to " + chat );
+															
+														}else{
+														
+															SimpleTimer.addEvent( "EOS:PM", SystemTime.getOffsetTime( 5000 ), this );
+														}
+													}
+												}
+											});
+										
+									}
+								});
+						}
+					}
+				
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE )){
+	
+						OptionsTemplateHandler handler = getOptionsTemplateHandler();
+	
+						if ( handler.isActive()){
+							rs_async.dispatch(
+								new AERunnable()
+								{
+									@Override
+									public void
+									runSupport()
+									{
+										handler.applyTo( dm );
+									}
+								});
+						}
 					}
 				}
 			}
@@ -1682,11 +1738,13 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_STOP |
 					TagFeatureExecOnAssign.ACTION_PAUSE |
 					TagFeatureExecOnAssign.ACTION_SCRIPT |
-					TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE );
+					TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE |
+					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI );
 
 		}else if ( getTagType().getTagType() == TagType.TT_DOWNLOAD_STATE ){
 
-			return( TagFeatureExecOnAssign.ACTION_SCRIPT );
+			return( TagFeatureExecOnAssign.ACTION_SCRIPT |
+					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI );
 
 		}else{
 

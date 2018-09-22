@@ -1056,4 +1056,116 @@ public class MenuBuildUtils {
 
 		return( chat_item );
 	}
+	
+	public interface
+	ChatSelectionListener
+	{
+		public void
+		chatSelected(
+			String	chat );
+	}
+	
+	public static void
+	addChatSelectionMenu(
+		Menu					menu,
+		String					resource_key,
+		String					existing_chat,
+		ChatSelectionListener	listener )
+{
+		final Menu chat_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+
+		final org.eclipse.swt.widgets.MenuItem chat_item = new org.eclipse.swt.widgets.MenuItem(menu, SWT.CASCADE);
+
+		Messages.setLanguageText( chat_item, resource_key );
+
+		chat_item.setMenu(chat_menu);
+
+		chat_menu.addMenuListener(
+			new MenuAdapter()
+			{
+				@Override
+				public void
+				menuShown(
+					MenuEvent e)
+				{
+					for ( org.eclipse.swt.widgets.MenuItem mi: chat_menu.getItems()){
+
+						mi.dispose();
+					}
+
+					if ( !BuddyPluginUtils.isBetaChatAvailable()){
+
+						org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.PUSH);
+						
+						Messages.setLanguageText(mi, "tps.status.unavailable");
+
+						mi.setEnabled( false );
+						
+						return;
+					}
+					
+					org.eclipse.swt.widgets.MenuItem mi_none = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.RADIO);
+					
+					Messages.setLanguageText(mi_none, "label.none");
+					
+					mi_none.setSelection( existing_chat==null || existing_chat.trim().isEmpty());
+					
+					mi_none.addListener(SWT.Selection, new Listener() {
+						@Override
+						public void handleEvent(Event event){
+							
+							listener.chatSelected( "" );
+						}});
+					
+					for ( int i=0;i<2;i++){
+						
+						final Menu sub_menu = new Menu(chat_menu.getShell(), SWT.DROP_DOWN);
+
+						final org.eclipse.swt.widgets.MenuItem sub_item = new org.eclipse.swt.widgets.MenuItem(chat_menu, SWT.CASCADE);
+
+						Messages.setLanguageText( sub_item, i==0?"label.public":"label.anon" );
+
+						sub_item.setMenu(sub_menu);
+	
+						String net = i==0?AENetworkClassifier.AT_PUBLIC:AENetworkClassifier.AT_I2P;
+
+						sub_menu.addMenuListener(
+							new MenuAdapter()
+							{
+								@Override
+								public void
+								menuShown(
+									MenuEvent e)
+								{
+									for ( org.eclipse.swt.widgets.MenuItem mi: sub_menu.getItems()){
+
+										mi.dispose();
+									}
+
+									List<ChatInstance> chats = BuddyPluginUtils.getChats();
+
+									for ( ChatInstance chat: chats ){
+										
+										if ( chat.getNetwork() == net ){
+											
+											org.eclipse.swt.widgets.MenuItem mi = new org.eclipse.swt.widgets.MenuItem(sub_menu, SWT.RADIO);
+
+											mi.setText(chat.getKey());
+
+											mi.setSelection( existing_chat!=null && existing_chat.equals(chat.getNetAndKey()));
+											
+											mi.addListener(SWT.Selection, new Listener() {
+												@Override
+												public void handleEvent(Event event){
+													
+													listener.chatSelected( chat.getNetAndKey());
+												}});
+										}
+									}
+								}
+							});
+					}
+				}
+			});
+	}
 }

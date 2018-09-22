@@ -4294,79 +4294,13 @@ BuddyPluginViewBetaChat
 		Download		download,
 		DropAccepter	accepter )
 	{
-		String magnet = UrlUtils.getMagnetURI( download, 80 );
-
-			// we can go a bit over MAX_MSG_LENGTH as underlying limit is a fair bit higher
-		
-		magnet = trimMagnet( magnet, MAX_MSG_CHUNK_LENGTH );
-		
-		magnet += "&xl="  + download.getTorrentSize();
-		
-		DownloadScrapeResult scrape = download.getLastScrapeResult();
-
-		if ( scrape != null && scrape.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
-
-			int seeds 		= scrape.getSeedCount();
-			int leechers	 = scrape.getNonSeedCount();
-			
-			if ( seeds != -1 ){
-				magnet += "&_s="  + seeds;
-			}
-			
-			if ( leechers != -1 ){
-				magnet += "&_l="  + leechers;
-			}
-		}
-		
-		long added = PluginCoreUtils.unwrap( download ).getDownloadState().getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
-
-		magnet += "&_d="  + added;
-		
-		InetSocketAddress address = chat.getMyAddress();
-
-		if ( address != null ){
-
-			String address_str = AddressUtils.getHostAddressForURL(address) + ":" + address.getPort();
-
-			String arg = "&xsource=" + UrlUtils.encode( address_str );
-
-			magnet += arg;
-		}
-
-		magnet += "[[$dn]]";
+		String magnet = chat.getMagnet( download, MAX_MSG_CHUNK_LENGTH );
 
 		plugin.getBeta().tagDownload( download );
 
 		download.setForceStart( true );
 
 		accepter.accept( magnet );
-	}
-	
-	private String
-	trimMagnet(
-		String	magnet,
-		int		max )
-	{
-		while( magnet.length() > MAX_MSG_CHUNK_LENGTH ){
-			
-			int pos = magnet.lastIndexOf( '&' );
-			
-			if ( pos > 0 ) {
-				
-				String x = magnet.substring( pos+1 );
-				
-				if ( x.startsWith( "ws=" ) || x.startsWith( "tr=" )){
-					
-					magnet = magnet.substring( 0,  pos );
-					
-				}else {
-					
-					break;
-				}
-			}
-		}
-		
-		return( magnet );
 	}
 
 	private void

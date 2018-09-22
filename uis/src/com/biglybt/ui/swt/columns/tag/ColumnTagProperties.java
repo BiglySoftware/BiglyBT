@@ -107,7 +107,8 @@ ColumnTagProperties
 						TagFeatureExecOnAssign.ACTION_STOP,
 						TagFeatureExecOnAssign.ACTION_SCRIPT,
 						TagFeatureExecOnAssign.ACTION_PAUSE,
-						TagFeatureExecOnAssign.ACTION_RESUME };
+						TagFeatureExecOnAssign.ACTION_RESUME,
+						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI};
 
 				String[] action_keys =
 					{ 	"label.apply.options.template",
@@ -118,7 +119,8 @@ ColumnTagProperties
 						"v3.MainWindow.button.stop",
 						"label.script",
 						"v3.MainWindow.button.pause",
-						"v3.MainWindow.button.resume"};
+						"v3.MainWindow.button.resume",
+						"label.post.magnet.to.chat"};
 
 				for ( int i=0; i<action_ids.length;i++ ){
 

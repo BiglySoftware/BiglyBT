@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import com.biglybt.activities.LocalActivityManager;
 import com.biglybt.activities.LocalActivityManager.LocalActivityCallback;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
 import com.biglybt.core.tag.Tag;
@@ -47,6 +48,7 @@ import com.biglybt.pif.PluginEvent;
 import com.biglybt.pif.PluginEventListener;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ipc.IPCException;
 import com.biglybt.pif.sharing.*;
 import com.biglybt.pif.torrent.Torrent;
@@ -4734,6 +4736,91 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
+		public void
+		sendMessage(
+			Download		download )
+		{
+			sendMessage( getMagnet( download, 400 ), new HashMap<String, Object>());
+		}
+		
+		public String
+		getMagnet(
+			Download		download,
+			int				size_hint )
+		{
+			String magnet = UrlUtils.getMagnetURI( download, 80 );
+
+				// we can go a bit over size_hint as underlying limit is a fair bit higher
+			
+			magnet = trimMagnet( magnet, size_hint );
+			
+			magnet += "&xl="  + download.getTorrentSize();
+			
+			DownloadScrapeResult scrape = download.getLastScrapeResult();
+
+			if ( scrape != null && scrape.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
+
+				int seeds 		= scrape.getSeedCount();
+				int leechers	 = scrape.getNonSeedCount();
+				
+				if ( seeds != -1 ){
+					magnet += "&_s="  + seeds;
+				}
+				
+				if ( leechers != -1 ){
+					magnet += "&_l="  + leechers;
+				}
+			}
+			
+			long added = PluginCoreUtils.unwrap( download ).getDownloadState().getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
+
+			magnet += "&_d="  + added;
+			
+			InetSocketAddress address = getMyAddress();
+
+			if ( address != null ){
+
+				String address_str = AddressUtils.getHostAddressForURL(address) + ":" + address.getPort();
+
+				String arg = "&xsource=" + UrlUtils.encode( address_str );
+
+				magnet += arg;
+			}
+
+			magnet += "[[$dn]]";
+
+			return( magnet );
+		}
+		
+		private String
+		trimMagnet(
+			String	magnet,
+			int		max )
+		{
+			while( magnet.length() > max ){
+				
+				int pos = magnet.lastIndexOf( '&' );
+				
+				if ( pos > 0 ) {
+					
+					String x = magnet.substring( pos+1 );
+					
+					if ( x.startsWith( "ws=" ) || x.startsWith( "tr=" )){
+						
+						magnet = magnet.substring( 0,  pos );
+						
+					}else {
+						
+						break;
+					}
+				}
+			}
+			
+			return( magnet );
+		}
+		
+		
+		
 		AsyncDispatcher	dispatcher = new AsyncDispatcher( "sendAsync" );
 
 		public void

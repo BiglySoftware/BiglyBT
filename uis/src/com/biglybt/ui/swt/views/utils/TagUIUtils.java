@@ -55,6 +55,7 @@ import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
@@ -718,7 +719,8 @@ public class TagUIUtils
 						TagFeatureExecOnAssign.ACTION_STOP,
 						TagFeatureExecOnAssign.ACTION_PAUSE,
 						TagFeatureExecOnAssign.ACTION_RESUME,
-						TagFeatureExecOnAssign.ACTION_SCRIPT };
+						TagFeatureExecOnAssign.ACTION_SCRIPT,
+						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI };
 
 
 				String[] action_keys =
@@ -730,7 +732,8 @@ public class TagUIUtils
 						"v3.MainWindow.button.stop",
 						"v3.MainWindow.button.pause",
 						"v3.MainWindow.button.resume",
-						"label.script" };
+						"label.script",
+						"label.post.magnet.to.chat"};
 
 				for ( int i=0;i<action_ids.length;i++ ){
 
@@ -811,6 +814,22 @@ public class TagUIUtils
 									});
 								}});
 
+						}else if ( action_id == TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI ){
+
+							String chat_str = tf_eoa.getPostMessageChannel();
+							
+							MenuBuildUtils.addChatSelectionMenu( 
+								eoa_menu,
+								"label.post.magnet.to.chat",
+								chat_str,
+								new MenuBuildUtils.ChatSelectionListener(){
+									
+									@Override
+									public void chatSelected( String chat ){
+										tf_eoa.setPostMessageChannel( chat );
+									}
+								});
+							
 						}else{
 
 							final MenuItem action_item = new MenuItem( eoa_menu, SWT.CHECK);

@@ -465,6 +465,19 @@ BuddyPluginUtils
 		}
 	}
 
+	public static List<ChatInstance>
+	getChats()
+	{
+		BuddyPlugin bp = getPlugin();
+
+		if ( bp != null && bp.isBetaEnabled()){
+			
+			return( bp.getBeta().getChats());
+		}
+		
+		return( new ArrayList<>());
+	}
+	
 	public static ChatInstance
 	getChat(
 		String		net,
