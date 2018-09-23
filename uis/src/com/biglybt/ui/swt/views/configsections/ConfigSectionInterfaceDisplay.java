@@ -265,24 +265,46 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			Group gSideBar = new Group(cSection, SWT.NULL);
 			Messages.setLanguageText(gSideBar, "v3.MainWindow.menu.view.sidebar" );
 			layout = new GridLayout();
-			layout.numColumns = 2;
+			layout.numColumns = 3;
 			gSideBar.setLayout(layout);
 			Utils.setLayoutData(gSideBar, new GridData(GridData.FILL_HORIZONTAL));
 
 			new BooleanParameter(gSideBar, "Show Side Bar", "sidebar.show");
 			label = new Label(gSideBar, SWT.NULL);
-
+			label = new Label(gSideBar, SWT.NULL);
+			
 			label = new Label(gSideBar, SWT.NULL);
 			Messages.setLanguageText(label, "sidebar.top.level.gap" );
 
 			new IntParameter(gSideBar, "Side Bar Top Level Gap", 0, 5 );
-
-			BooleanParameter sso = new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
+			label = new Label(gSideBar, SWT.NULL);
+			
+				// top level order
+			
+			label = new Label(gSideBar, SWT.NULL);
 			GridData gd = new GridData();
 			gd.horizontalSpan = 2;
+			label.setLayoutData( gd );
+			
+			String orderDef = "";
+			String orderStr = "";
+			
+			for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){
+				orderStr += (orderStr.isEmpty()?"":", ") + MessageText.getString( "sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT[i]) + "=" + (i+1);
+				orderDef += (orderDef.isEmpty()?"":", ") + (i+1);
+			}
+			
+			Messages.setLanguageText(label, "sidebar.header.order", new String[]{ orderStr });
+			
+			StringParameter order = new StringParameter(gSideBar, "Side Bar Top Level Order", orderDef, false);
+			
+			BooleanParameter sso = new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
+			gd = new GridData();
+			gd.horizontalSpan = 3;
 			sso.setLayoutData( gd );
 			
 			BooleanParameter showNew = new BooleanParameter(gSideBar, "Show New In Side Bar", "sidebar.show.new");
+			label = new Label(gSideBar, SWT.NULL);
 			label = new Label(gSideBar, SWT.NULL);
 			
 			showNew.addChangeListener(
@@ -299,7 +321,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 				});
 			
 			BooleanParameter showDL = new BooleanParameter(gSideBar, "Show Downloading In Side Bar", "sidebar.show.downloading");
-			
+			label = new Label(gSideBar, SWT.NULL);
 			label = new Label(gSideBar, SWT.NULL);
 
 			showDL.addChangeListener(

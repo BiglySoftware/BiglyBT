@@ -39,6 +39,17 @@ public interface MultipleDocumentInterface
 
 	public static final String SIDEBAR_HEADER_PLUGINS = "header.plugins";
 
+	
+	public static final String[] SIDEBAR_HEADER_ORDER_DEFAULT = new String[] {
+			SIDEBAR_HEADER_DASHBOARD,
+			SIDEBAR_HEADER_TRANSFERS,
+			SIDEBAR_HEADER_VUZE,
+			SIDEBAR_HEADER_DISCOVERY,
+			SIDEBAR_HEADER_DEVICES,
+			SIDEBAR_HEADER_PLUGINS,
+	};
+	
+	
 	public static final String SIDEBAR_SECTION_PLUGINS = "Plugins";
 
 	public static final String SIDEBAR_SECTION_LIBRARY = "Library";

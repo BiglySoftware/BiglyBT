@@ -25,8 +25,10 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.pif.sharing.ShareException;
@@ -93,6 +95,46 @@ public class MainMDISetup
 	private static ShareManagerListener shareManagerListener;
 	private static SB_Vuze sb_vuze;
 
+	public static Set<String>	hiddenTopLevelIDs = new HashSet<>();
+	
+	private static String[] preferredOrder = MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT;
+
+	static{
+		String order = COConfigurationManager.getStringParameter( "Side Bar Top Level Order", "" ).trim();
+		
+		if ( !order.isEmpty()){
+		
+			hiddenTopLevelIDs.addAll( Arrays.asList( preferredOrder ));
+			
+			List<String> newOrder = new ArrayList<>();
+			
+			String[] bits = order.split( "," );
+			
+			for ( String bit: bits ){
+				bit = bit.trim();
+				if ( bit.isEmpty()){
+					continue;
+				}
+				
+				try{
+					int pos = Integer.parseInt( bit );
+					
+					String id = preferredOrder[pos-1];
+					
+					if ( hiddenTopLevelIDs.remove( id )){
+						
+						newOrder.add( id );
+					}
+				}catch( Throwable e ){
+					
+				}
+			}
+			
+			preferredOrder = newOrder.toArray( new String[newOrder.size()]);
+		}
+	}
+
+	
 	public static void setupSideBar(final MultipleDocumentInterfaceSWT mdi,
 	                                final MdiListener l) {
 		if (Utils.isAZ2UI()) {
@@ -907,15 +949,7 @@ public class MainMDISetup
 	}
 
 	private static void setupSidebarVuzeUI(final MultipleDocumentInterfaceSWT mdi) {
-
-		String[] preferredOrder = new String[] {
-			MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-			MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-			MultipleDocumentInterface.SIDEBAR_HEADER_VUZE,
-			MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
-			MultipleDocumentInterface.SIDEBAR_HEADER_DEVICES,
-			MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
-		};
+		
 		mdi.setPreferredOrder(preferredOrder);
 
 		sb_dashboard = new SB_Dashboard(mdi);

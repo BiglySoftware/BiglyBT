@@ -138,7 +138,6 @@ public class SideBar
 	private ParameterListener configBGColorListener;
 	private SWTViewListener swtViewListener;
 
-
 	public SideBar() {
 		super();
 		AEDiagnostics.addWeakEvidenceGenerator(this);
@@ -1471,14 +1470,36 @@ public class SideBar
 		});
 	}
 
-	protected void _setupNewEntry(SideBarEntrySWT entry, String id,
+	private void _setupNewEntry(SideBarEntrySWT entry, String id,
 			boolean expandParent, boolean closeable) {
+		
 		if ( tree.isDisposed()){
 			return;
 		}
 		
+		MdiEntry currentEntry = entry;
+		String	currentID = id;
+		
+			// can't make TreeItems invisible :(
+		
+		while( true ){
+			if ( MainMDISetup.hiddenTopLevelIDs.contains( currentID )){
+				return;
+			}
+			if ( currentEntry == null ){
+				break;
+			}
+			currentID = currentEntry.getParentID();
+			if ( currentID == null ){
+				break;
+			}
+			currentEntry = getEntry(currentID);
+		}
+		
+		
 		String parentID = entry.getParentID();
 		MdiEntry parent = getEntry(parentID);
+		
 		TreeItem parentTreeItem = null;
 		if (parent instanceof SideBarEntrySWT) {
 			SideBarEntrySWT parentSWT = (SideBarEntrySWT) parent;
