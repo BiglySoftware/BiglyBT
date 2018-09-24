@@ -25,7 +25,6 @@ package com.biglybt.ui.swt.views.configsections;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Calendar;
 
 import com.biglybt.core.CoreFactory;
 import org.eclipse.swt.SWT;
@@ -290,13 +289,17 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			String orderStr = "";
 			
 			for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){
-				orderStr += (orderStr.isEmpty()?"":", ") + MessageText.getString( "sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT[i]) + "=" + (i+1);
+				orderStr += (orderStr.isEmpty()?"":", ") + 
+						(i+1) + "=" +
+						MessageText.getString( "sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT[i]);
+						
 				orderDef += (orderDef.isEmpty()?"":", ") + (i+1);
 			}
 			
 			Messages.setLanguageText(label, "sidebar.header.order", new String[]{ orderStr });
 			
 			StringParameter order = new StringParameter(gSideBar, "Side Bar Top Level Order", orderDef, false);
+			order.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
 			
 			BooleanParameter sso = new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
 			gd = new GridData();
