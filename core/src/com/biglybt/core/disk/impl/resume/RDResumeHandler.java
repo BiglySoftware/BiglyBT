@@ -305,6 +305,11 @@ RDResumeHandler
 
 					for (int i = 0; i < pieces.length; i++){
 
+						if ( stopped ){
+							
+							break;
+						}
+						
 						check_position	= i;
 
 						DiskManagerPiece	dm_piece	= pieces[i];
