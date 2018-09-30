@@ -616,7 +616,9 @@ TOTorrentDeserialiseImpl
 			long	total_length = 0;
 
 			String encoding = getAdditionalStringProperty("encoding");
-			hasUTF8Keys &= encoding == null || encoding.equals(ENCODING_ACTUALLY_UTF8_KEYS);
+			hasUTF8Keys &= encoding == null
+					|| encoding.equals(ENCODING_ACTUALLY_UTF8_KEYS)
+					|| encoding.equalsIgnoreCase("utf-8");
 
 			if ( simple_file_length != null ){
 
