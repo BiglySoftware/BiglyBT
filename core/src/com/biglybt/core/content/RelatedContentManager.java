@@ -3529,11 +3529,27 @@ RelatedContentManager
 							byte[]	data = (byte[])map.get( "d" );
 
 							if ( data != null ){
+								map = null;
 
+								BufferedInputStream is = null;
 								try{
-									map = BDecoder.decode(new BufferedInputStream( new GZIPInputStream( new ByteArrayInputStream( CryptoManagerFactory.getSingleton().deobfuscate( data )))));
+									is = new BufferedInputStream(
+											new GZIPInputStream(new ByteArrayInputStream(
+													CryptoManagerFactory.getSingleton().deobfuscate(
+															data))));
+									map = BDecoder.decode(is);
 
-								}catch( Throwable e ){
+								} catch (Throwable ignore) {
+								} finally {
+									if (is != null) {
+										try {
+											is.close();
+										} catch (Throwable ignore) {
+										}
+									}
+								}
+
+								if (map == null) {
 
 										// can get here is config's been deleted
 
