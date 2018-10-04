@@ -20,17 +20,36 @@
 
 package com.biglybt.core.global.impl;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * @author parg
  *
  */
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerPeerListener;
+import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.global.GlobalManagerStats.CountryDetails;
+import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.peer.PEPeerManagerListener;
+import com.biglybt.core.peer.PEPeerManagerListenerAdapter;
+import com.biglybt.core.peer.PEPeerStats;
+import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peer.util.PeerUtils;
+import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SimpleTimer.TimerTickReceiver;
+import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
 
 
@@ -70,7 +89,10 @@ GlobalManagerStatsImpl
 	private final Average data_send_speed_no_lan = Average.getInstance(1000, 10);  //average over 10s, update every 1000ms
     private final Average protocol_send_speed_no_lan = Average.getInstance(1000, 10);  //average over 10s, update every 1000ms
 
-
+    private static final Object	PEER_DATA_KEY = new Object();
+    
+    private List<PEPeer>	removed_peers = new LinkedList<>();
+    
 	protected
 	GlobalManagerStatsImpl(
 		GlobalManagerImpl	_manager )
@@ -79,6 +101,63 @@ GlobalManagerStatsImpl
 
 		load();
 
+		manager.addListener(
+			new GlobalManagerAdapter()
+			{
+				public void
+				downloadManagerAdded(
+					DownloadManager	dm )
+				{
+					dm.addPeerListener(
+						new DownloadManagerPeerListener(){
+							
+							@Override
+							public void 
+							peerRemoved(
+								PEPeer peer)
+							{
+								PEPeerStats stats = peer.getStats();
+								
+								if ( stats.getTotalDataBytesReceived() + stats.getTotalDataBytesSent() > 0 ){
+
+									synchronized( PEER_DATA_KEY ){
+									
+										removed_peers.add( peer );
+									}
+								}
+							}
+							
+							@Override
+							public void 
+							peerManagerWillBeAdded(
+									PEPeerManager manager)
+							{
+							}
+							
+							@Override
+							public void 
+							peerManagerRemoved(
+								PEPeerManager manager)
+							{
+							}
+							
+							@Override
+							public void 
+							peerManagerAdded(
+								PEPeerManager manager)
+							{
+							}
+							
+							@Override
+							public void 
+							peerAdded(
+								PEPeer peer)
+							{
+							}
+						});
+				}
+			}, true );
+		
 		SimpleTimer.addTickReceiver( this );
 	}
 
@@ -238,6 +317,105 @@ GlobalManagerStatsImpl
     	return( manager.getTotalSwarmsPeerRate(downloading,seeding));
     }
 
+
+    private static class
+    PeerDetails
+    {
+    	String		cc;
+    	long		sent;
+    	long		recv;
+    	
+    	PeerDetails(
+    		String		_cc )
+    	{
+    		cc	= _cc;
+    	}
+    }
+    
+    private static class
+    CountryDetailsImpl
+    	implements CountryDetails
+    {
+    	String		cc;
+    	
+    	long		total_sent;
+    	long		total_recv;
+    	
+    	long		last_sent;
+    	long		last_recv;
+    	
+       	com.biglybt.core.util.average.Average		sent_average	= AverageFactory.MovingImmediateAverage( 3 );
+       	com.biglybt.core.util.average.Average		recv_average	= AverageFactory.MovingImmediateAverage( 3 );
+       	
+       	CountryDetailsImpl(
+       		String		_cc )
+       	{
+       		cc	= _cc;
+       	}
+       	
+       	public String
+       	getCC()
+       	{
+       		return( cc );
+       	}
+       	
+		public long
+		getTotalSent()
+		{
+			return( total_sent );
+		}
+		
+		public long
+		getLatestSent()
+		{
+			return( last_sent );
+		}
+		
+		public long
+		getAverageSent()
+		{
+			return((long)sent_average.getAverage());
+		}
+		
+		public long
+		getTotalReceived()
+		{
+			return( total_recv );
+		}
+		
+		public long
+		getLatestReceived()
+		{
+			return( last_recv );
+		}
+		
+		public long
+		getAverageReceived()
+		{
+			return((long)recv_average.getAverage());
+		}
+		
+       	public String
+       	toString()
+       	{
+       		return( "sent: " + total_sent + "/" + last_sent + "/" + (long)sent_average.getAverage() + ", " + 
+       				"recv: " + total_recv + "/" + last_recv + "/" + (long)recv_average.getAverage() );
+       	}
+    }
+    
+    private Map<String,CountryDetails>		country_details = new ConcurrentHashMap<>();
+    private CountryDetailsImpl				country_total	= new CountryDetailsImpl( "" );
+    
+    {
+    	country_details.put( country_total.cc, country_total );
+    }
+    
+	public Iterator<CountryDetails>
+	getCountryDetails()
+	{
+		return( country_details.values().iterator());
+	}
+	
 	@Override
 	public void
 	tick(
@@ -264,6 +442,124 @@ GlobalManagerStatsImpl
 
 			smooth_last_sent 		= up;
 			smooth_last_received 	= down;
+		}
+		
+		if ( tick_count % 60 == 0 ){
+			
+			List<List<PEPeer>>	peer_lists = new LinkedList<>();
+			
+			synchronized( PEER_DATA_KEY ){
+				
+				if ( !removed_peers.isEmpty()){
+			
+					peer_lists.add( removed_peers );
+					
+					removed_peers = new LinkedList<>();
+				}
+			}
+			
+			for ( DownloadManager dm: manager.getDownloadManagers()){
+				
+				PEPeerManager pm = dm.getPeerManager();
+				
+				if ( pm != null ){
+					
+					List<PEPeer> peers = pm.getPeers();
+					
+					if ( !peers.isEmpty()){
+						
+						peer_lists.add( peers );
+					}
+				}
+			}
+			
+				// single threaded here remember
+			
+			long	total_diff_sent	= 0;
+			long	total_diff_recv	= 0;
+			
+			for ( List<PEPeer> peers: peer_lists ){
+				
+				for ( PEPeer peer: peers ){
+					
+					PEPeerStats stats = peer.getStats();
+					
+					long sent = stats.getTotalDataBytesSent();
+					long recv = stats.getTotalDataBytesReceived();
+
+					if ( sent + recv > 0 ){
+						
+						PeerDetails details = (PeerDetails)peer.getUserData( PEER_DATA_KEY );
+						
+						if ( details == null ){
+							
+							String[] dets = PeerUtils.getCountryDetails(peer);
+	
+							details = new PeerDetails( dets==null||dets.length<1?"??":dets[0] );
+							
+							peer.setUserData( PEER_DATA_KEY, details );	
+						}
+																			
+						long diff_sent	= sent - details.sent;
+						long diff_recv	= recv - details.recv;
+						
+						if ( diff_sent + diff_recv > 0 ){
+							
+							String cc = details.cc;
+
+							CountryDetailsImpl cd = (CountryDetailsImpl)country_details.get( cc );
+							
+							if ( cd == null ){
+								
+								cd = new CountryDetailsImpl( cc );
+								
+								country_details.put( cc, cd );
+							}
+							
+							if ( diff_sent > 0 ){
+							
+								cd.last_sent	= diff_sent;
+								cd.total_sent	+= diff_sent;
+
+								cd.sent_average.update( diff_sent );
+								
+								total_diff_sent += diff_sent;
+							}	
+							
+							if ( diff_recv > 0 ){
+								
+								cd.last_recv	= diff_recv;
+								cd.total_recv	+= diff_recv;
+
+								cd.recv_average.update( diff_recv );
+								
+								total_diff_recv += diff_recv;
+							}
+						}
+						
+						details.sent 	= sent;
+						details.recv	= recv;
+					}
+				}
+			}
+			
+			if ( total_diff_sent > 0 ){
+				
+				country_total.last_sent		= total_diff_sent;
+				country_total.total_sent	+= total_diff_sent;
+				
+				country_total.sent_average.update( total_diff_sent );
+			}	
+			
+			if ( total_diff_recv > 0 ){
+				
+				country_total.last_recv		= total_diff_recv;
+				country_total.total_recv	+= total_diff_recv;
+				
+				country_total.recv_average.update( total_diff_recv );
+			}
+			
+			System.out.println( country_details );
 		}
 	}
 

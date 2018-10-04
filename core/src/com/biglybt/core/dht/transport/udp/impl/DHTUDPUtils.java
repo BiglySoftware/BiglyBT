@@ -27,6 +27,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.impl.DHTLog;
 import com.biglybt.core.dht.netcoords.DHTNetworkPosition;
@@ -34,6 +35,8 @@ import com.biglybt.core.dht.netcoords.DHTNetworkPositionManager;
 import com.biglybt.core.dht.netcoords.vivaldi.ver1.VivaldiPositionFactory;
 import com.biglybt.core.dht.transport.*;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
+import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.global.GlobalManagerStats.CountryDetails;
 import com.biglybt.core.util.*;
 
 /**
@@ -1480,5 +1483,90 @@ DHTUDPUtils
 		}
 
 		return( result_list );
+	}
+		
+	protected static void
+	serialiseUploadStats(
+		DataOutputStream		os )
+	
+		throws IOException
+	{
+		GlobalManagerStats stats = CoreFactory.getSingleton().getGlobalManager().getStats();
+		
+		Iterator<CountryDetails>	it = stats.getCountryDetails();
+		
+		List<CountryDetails>	ups = new ArrayList<>(128);
+		
+		Map<CountryDetails,Long>	sent_cache = new HashMap<>();
+
+		while( it.hasNext()){
+			
+			CountryDetails cd = it.next();
+			
+			long sent = cd.getAverageSent();
+			
+			if ( sent > 0 && !cd.getCC().isEmpty()){	// skip boring && total
+		
+				ups.add( cd );
+				
+				sent_cache.put( cd,  sent );
+			}
+		}
+		
+		CountryDetails[] ups_a = ups.toArray( new CountryDetails[0] );
+		
+		Arrays.sort(
+			ups_a,
+			new Comparator<CountryDetails>(){
+				@Override
+				public int 
+				compare(
+					CountryDetails o1, 
+					CountryDetails o2)
+				{
+					Long l1 = (Long)sent_cache.get(o1);
+					Long l2 = (Long)sent_cache.get(o2);
+					
+					return( Long.compare( l2, l1 ));
+				}
+			});
+				
+		os.writeByte( 0x00 );	// version
+		
+		int	records = Math.min( ups_a.length, 16 );
+		
+		os.writeByte((byte)records );
+		
+		for ( CountryDetails cd: ups_a ){
+			
+			String cc = cd.getCC();
+			
+			if ( cc.length() > 2 ){
+				
+				if ( cc.equals( "I2P" )){
+					
+					cc = "X0";
+					
+				}else if ( cc.equals( "Tor" )){
+					
+					cc = "X1";
+					
+				}else{
+					
+					cc = "X2";
+				}
+			}
+			
+			os.writeByte((byte)cc.charAt(0));
+			os.writeByte((byte)cc.charAt(1));
+			os.writeInt((int)(cd.getAverageSent()/1024));
+		}
+	}
+	
+	protected static void
+	deserialiseUploadStats(
+		DataInputStream			is )
+	{
+		
 	}
 }

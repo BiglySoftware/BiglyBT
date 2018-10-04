@@ -65,8 +65,6 @@ DHTUDPPacketRequestFindValue
 		flags = is.readByte();
 
 		maximum_values	= is.readByte();
-
-		super.postDeserialise(is);
 	}
 
 	@Override
@@ -83,8 +81,6 @@ DHTUDPPacketRequestFindValue
 		os.writeByte( flags );
 
 		os.writeByte( maximum_values );
-
-		super.postSerialise( os );
 	}
 
 	protected void

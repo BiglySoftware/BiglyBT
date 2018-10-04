@@ -121,7 +121,8 @@ PeerManagerImpl
 
 				 @Override
 				 public void
-				 destroyed()
+				 destroyed(
+					PEPeerManager	manager )
 				 {
 					 synchronized( foreign_map ){
 
@@ -951,7 +952,8 @@ PeerManagerImpl
 
 		@Override
 		public void
-		destroyed()
+		destroyed(
+			PEPeerManager	manager )
 		{
 		}
 	}

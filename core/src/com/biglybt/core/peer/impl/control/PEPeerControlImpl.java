@@ -645,7 +645,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		for( int i=0; i < peer_manager_listeners.size(); i++ ) {
 
-			((PEPeerManagerListener)peer_manager_listeners.get(i)).destroyed();
+			((PEPeerManagerListener)peer_manager_listeners.get(i)).destroyed( this );
 		}
 
 		sweepList = Collections.emptyList();

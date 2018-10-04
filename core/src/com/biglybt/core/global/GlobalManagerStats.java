@@ -20,6 +20,8 @@
 
 package com.biglybt.core.global;
 
+import java.util.Iterator;
+
 /**
  * @author parg
  *
@@ -99,4 +101,34 @@ GlobalManagerStats
 	public void
 	discarded(
 		int		bytes );
+	
+	public interface
+	CountryDetails
+	{
+			// values are minute based (last minute, minute average)
+		
+		public String
+		getCC();
+		
+		public long
+		getTotalSent();
+		
+		public long
+		getLatestSent();
+		
+		public long
+		getAverageSent();
+		
+		public long
+		getTotalReceived();
+		
+		public long
+		getLatestReceived();
+		
+		public long
+		getAverageReceived();
+	}
+	
+	public Iterator<CountryDetails>
+	getCountryDetails();
 }

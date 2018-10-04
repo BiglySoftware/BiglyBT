@@ -66,8 +66,6 @@ DHTUDPPacketRequestStats
 
 			stats_type	= is.readInt();
 		}
-
-		super.postDeserialise(is);
 	}
 
 	@Override
@@ -83,8 +81,6 @@ DHTUDPPacketRequestStats
 
 			os.writeInt( stats_type );
 		}
-
-		super.postSerialise( os );
 	}
 
 	public void

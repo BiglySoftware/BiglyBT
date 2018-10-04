@@ -69,8 +69,6 @@ DHTUDPPacketRequestFindNode
 			node_status 		= is.readInt();
 			estimated_dht_size 	= is.readInt();
 		}
-
-		super.postDeserialise(is);
 	}
 
 	@Override
@@ -90,8 +88,6 @@ DHTUDPPacketRequestFindNode
 
 			 os.writeInt( estimated_dht_size );
 		}
-
-		super.postSerialise( os );
 	}
 
 	protected void
