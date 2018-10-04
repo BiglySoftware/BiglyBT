@@ -1485,59 +1485,74 @@ DHTUDPUtils
 		return( result_list );
 	}
 		
+	private static final int					CALC_PERIOD		= 60*1000;
+	private static volatile long				last_calc		= SystemTime.getMonotonousTime() - ( CALC_PERIOD + 1 );
+	private static volatile CountryDetails[]	last_details	= new CountryDetails[0];
+	
 	protected static void
 	serialiseUploadStats(
 		DataOutputStream		os )
 	
 		throws IOException
 	{
-		GlobalManagerStats stats = CoreFactory.getSingleton().getGlobalManager().getStats();
+		long	now = SystemTime.getMonotonousTime();
 		
-		Iterator<CountryDetails>	it = stats.getCountryDetails();
-		
-		List<CountryDetails>	ups = new ArrayList<>(128);
-		
-		Map<CountryDetails,Long>	sent_cache = new HashMap<>();
+		if ( now - last_calc > CALC_PERIOD ){
 
-		while( it.hasNext()){
+			GlobalManagerStats stats = CoreFactory.getSingleton().getGlobalManager().getStats();
 			
-			CountryDetails cd = it.next();
+			Iterator<CountryDetails>	it = stats.getCountryDetails();
 			
-			long sent = cd.getAverageSent();
+			List<CountryDetails>	ups = new ArrayList<>(128);
 			
-			if ( sent > 0 && !cd.getCC().isEmpty()){	// skip boring && total
-		
-				ups.add( cd );
+			Map<CountryDetails,Long>	sent_cache = new HashMap<>();
+	
+			while( it.hasNext()){
 				
-				sent_cache.put( cd,  sent );
+				CountryDetails cd = it.next();
+				
+				long sent = cd.getAverageSent();
+				
+				if ( sent > 0 && !cd.getCC().isEmpty()){	// skip boring && total
+			
+					ups.add( cd );
+					
+					sent_cache.put( cd,  sent );
+				}
 			}
+			
+			CountryDetails[] ups_a = ups.toArray( new CountryDetails[0] );
+			
+			Arrays.sort(
+				ups_a,
+				new Comparator<CountryDetails>(){
+					@Override
+					public int 
+					compare(
+						CountryDetails o1, 
+						CountryDetails o2)
+					{
+						Long l1 = (Long)sent_cache.get(o1);
+						Long l2 = (Long)sent_cache.get(o2);
+						
+						return( Long.compare( l2, l1 ));
+					}
+				});
+					
+			last_details = ups_a;
+			
+			last_calc = now;
 		}
 		
-		CountryDetails[] ups_a = ups.toArray( new CountryDetails[0] );
+		CountryDetails[] details = last_details;
 		
-		Arrays.sort(
-			ups_a,
-			new Comparator<CountryDetails>(){
-				@Override
-				public int 
-				compare(
-					CountryDetails o1, 
-					CountryDetails o2)
-				{
-					Long l1 = (Long)sent_cache.get(o1);
-					Long l2 = (Long)sent_cache.get(o2);
-					
-					return( Long.compare( l2, l1 ));
-				}
-			});
-				
 		os.writeByte( 0x00 );	// version
 		
-		int	records = Math.min( ups_a.length, 16 );
+		int	records = Math.min( details.length, 16 );
 		
 		os.writeByte((byte)records );
 		
-		for ( CountryDetails cd: ups_a ){
+		for ( CountryDetails cd: details ){
 			
 			String cc = cd.getCC();
 			

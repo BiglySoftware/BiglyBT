@@ -36,15 +36,10 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.global.GlobalManagerStats;
-import com.biglybt.core.global.GlobalManagerStats.CountryDetails;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.peer.PEPeerManagerListener;
-import com.biglybt.core.peer.PEPeerManagerListenerAdapter;
 import com.biglybt.core.peer.PEPeerStats;
-import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peer.util.PeerUtils;
-import com.biglybt.core.peermanager.peerdb.PeerItem;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.SimpleTimer;
@@ -558,8 +553,6 @@ GlobalManagerStatsImpl
 				
 				country_total.recv_average.update( total_diff_recv );
 			}
-			
-			System.out.println( country_details );
 		}
 	}
 
