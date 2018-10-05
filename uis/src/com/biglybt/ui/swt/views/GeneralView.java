@@ -48,6 +48,9 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
@@ -66,11 +69,13 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.ui.swt.DateWindow;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -501,11 +506,76 @@ public class GeneralView
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     Utils.setLayoutData(pieceSize, gridData);
 
+    	// creation date stuff
+    
+    boolean persistent = manager.isPersistent();
+    
+    SelectionAdapter cd_listener = 
+    	new SelectionAdapter()
+		{
+	    	@Override
+	    	public void
+	    	widgetSelected(
+	    			SelectionEvent arg0)
+	    	{
+	    		long millis = manager.getTorrentCreationDate()*1000;
+	    		
+	    		if ( millis == 0 ){
+	    			millis = -1;	// use current date as default
+	    		}
+	    		
+	    		new DateWindow( 
+	    			"label.enter.date", 
+	    			millis,
+	    			new DateWindow.DateReceiver(){
+						
+						@Override
+						public void dateSelected(long millis){
+							try{
+								TOTorrent torrent = manager.getTorrent();
+								torrent.setCreationDate( millis/1000 );
+								TorrentUtils.writeToFile(torrent);
+							}catch( Throwable e ){
+								Debug.out( e );
+							}
+						}
+					});
+	    	}
+		};
+		  
     label = new Label(gInfo, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.creationdate");
+    
+    Menu cd_menu = new Menu(label.getShell(),SWT.POP_UP);
+
+	MenuItem   mi_cd = new MenuItem( cd_menu,SWT.NONE );
+	Messages.setLanguageText( mi_cd, "menu.set.date" );
+	mi_cd.addSelectionListener( cd_listener );
+	mi_cd.setEnabled( persistent );
+	label.setMenu( cd_menu );
+
     creation_date = new BufferedLabel(gInfo, SWT.LEFT);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     Utils.setLayoutData(creation_date, gridData);
+    
+    cd_menu = new Menu(label.getShell(),SWT.POP_UP);
+
+	mi_cd = new MenuItem( cd_menu,SWT.NONE );
+	Messages.setLanguageText( mi_cd, "menu.set.date" );
+	mi_cd.addSelectionListener( cd_listener );
+	mi_cd.setEnabled( persistent );
+	new MenuItem( cd_menu, SWT.SEPARATOR );
+	ClipboardCopy.addCopyToClipMenu(
+		cd_menu,
+		new ClipboardCopy.copyToClipProvider(){
+			
+			@Override
+			public String getText(){
+				return( creation_date.getText());
+			}
+		});	
+	
+	creation_date.getControl().setMenu( cd_menu );
 
     label = new Label(gInfo, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.private");

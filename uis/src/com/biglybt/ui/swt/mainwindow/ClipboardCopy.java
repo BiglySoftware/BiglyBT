@@ -175,6 +175,29 @@ public class ClipboardCopy {
 		  });
   }
 
+  public static void
+  addCopyToClipMenu(
+	final Menu					menu,
+	final copyToClipProvider	provider )
+  {
+	  MenuItem   item = new MenuItem( menu,SWT.NONE );
+
+	  String	msg_text_id= "label.copy.to.clipboard";
+
+	  item.setText( MessageText.getString( msg_text_id ));
+
+	  item.addSelectionListener(
+		  new SelectionAdapter()
+		  {
+			  @Override
+			  public void
+			  widgetSelected(
+					  SelectionEvent arg0)
+			  {
+				  new Clipboard(menu.getDisplay()).setContents(new Object[] { provider.getText()}, new Transfer[] {TextTransfer.getInstance()});
+			  }
+		  });
+  }
 
   public static void
   addCopyToClipMenu(

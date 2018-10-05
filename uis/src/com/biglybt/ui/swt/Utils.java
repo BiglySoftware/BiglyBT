@@ -3089,6 +3089,34 @@ public class Utils
 		}
 	}
 
+	public static Button[]
+	createOKCancelButtons(
+		Composite panel )
+	{
+	    Button ok;
+	    Button cancel;
+	    if (Constants.isOSX) {
+	    	cancel = Utils.createAlertButton(panel, "Button.cancel");
+	    	ok = Utils.createAlertButton(panel, "Button.ok");
+	    } else {
+	    	ok = Utils.createAlertButton(panel, "Button.ok");
+	    	cancel = Utils.createAlertButton(panel, "Button.cancel");
+	    }
+	    return( new Button[]{ ok, cancel });
+	}
+	public static Button createAlertButton(final Composite panel, String localizationKey)
+	{
+		final Button button = new Button(panel, SWT.PUSH);
+		button.setText(MessageText.getString(localizationKey));
+		final RowData rData = new RowData();
+		rData.width = Math.max(
+				Utils.BUTTON_MINWIDTH,
+				button.computeSize(SWT.DEFAULT,  SWT.DEFAULT).x
+				);
+		button.setLayoutData(rData);
+		return button;
+	}
+	  
 	private static Map truncatedTextCache = new HashMap();
 
 	private static ThreadPool tp = new ThreadPool("GetOffSWT", 3, true);

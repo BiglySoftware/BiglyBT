@@ -233,27 +233,19 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    rLayout.marginLeft = 0;
 	    rLayout.marginBottom = 0;
 	    rLayout.marginRight = 0;
-	    try {
-	    	rLayout.fill = true;
-	    } catch (NoSuchFieldError e) {
-	    	// SWT 2.x
-	    }
+    	rLayout.fill = true;
+	   
 	    rLayout.spacing = Utils.BUTTON_MARGIN;
 	    panel.setLayout(rLayout);
 	    gridData = new GridData();
 	    gridData.horizontalAlignment = SWT.END;
 	    Utils.setLayoutData(panel, gridData);
 
-	    Button ok;
-	    Button cancel;
-	    if (Constants.isOSX) {
-	    	cancel = createAlertButton(panel, "Button.cancel");
-	    	ok = createAlertButton(panel, "Button.ok");
-	    } else {
-	    	ok = createAlertButton(panel, "Button.ok");
-	    	cancel = createAlertButton(panel, "Button.cancel");
-	    }
+	    Button[] buttons = Utils.createOKCancelButtons(panel);
 
+	    Button ok 		= buttons[0];
+	    Button cancel 	= buttons[1];
+	    
 	    ok.addListener(SWT.Selection, new Listener() {
 
 	    	private void showError(String text) {
@@ -355,19 +347,6 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    Utils.centreWindow(shell,false);
 	    shell.open();
 	  }
-
-  private static Button createAlertButton(final Composite panel, String localizationKey)
-  {
-      final Button button = new Button(panel, SWT.PUSH);
-      button.setText(MessageText.getString(localizationKey));
-      final RowData rData = new RowData();
-      rData.width = Math.max(
-              Utils.BUTTON_MINWIDTH,
-              button.computeSize(SWT.DEFAULT,  SWT.DEFAULT).x
-        );
-      button.setLayoutData(rData);
-      return button;
-  }
 
   @Override
   public void setTextLimit(int limit) {
