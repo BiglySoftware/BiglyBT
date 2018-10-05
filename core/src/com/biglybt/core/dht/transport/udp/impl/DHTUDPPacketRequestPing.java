@@ -42,6 +42,8 @@ DHTUDPPacketRequestPing
 	private int[]	alt_networks			= EMPTY_INTS;
 	private int[]	alt_network_counts		= EMPTY_INTS;
 
+	private Object	upload_stats;
+	
 	public
 	DHTUDPPacketRequestPing(
 		DHTTransportUDPImpl				_transport,
@@ -74,7 +76,7 @@ DHTUDPPacketRequestPing
 			
 			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
 
-				DHTUDPUtils.deserialiseUploadStats( is );
+				upload_stats = DHTUDPUtils.deserialiseUploadStats( is );
 			}
 		}
 	}
@@ -124,7 +126,13 @@ DHTUDPPacketRequestPing
 	{
 		return( alt_network_counts );
 	}
-
+	
+	protected Object
+	getUploadStats()
+	{
+		return( upload_stats );
+	}
+	
 	@Override
 	public String
 	getString()

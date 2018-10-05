@@ -1651,8 +1651,12 @@ DHTTransportUDPImpl
 
 							requestSendReplyProcessor( contact, handler, packet, elapsed_time );
 
-							receiveAltContacts((DHTUDPPacketReplyPing)packet );
+							DHTUDPPacketReplyPing reply = (DHTUDPPacketReplyPing)packet;
+							
+							receiveAltContacts( reply );
 
+							DHTUDPUtils.receiveUploadStats( contact, reply.getUploadStats());
+							
 							stats.pingOK();
 
 							long	proc_time = packet.getProcessingTime();
@@ -2907,6 +2911,8 @@ outer:
 
 						sendAltContacts( ping, reply );
 
+						DHTUDPUtils.receiveUploadStats( originating_contact,reply.getUploadStats());
+						
 						requestReceiveReplyProcessor( originating_contact, reply );
 
 						packet_handler_stub.send( reply, request.getAddress());

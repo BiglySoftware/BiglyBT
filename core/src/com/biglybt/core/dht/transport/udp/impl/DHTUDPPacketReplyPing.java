@@ -45,6 +45,8 @@ DHTUDPPacketReplyPing
 
 	private DHTTransportAlternativeContact[]	alt_contacts = EMPTY_CONTACTS;
 
+	private Object	upload_stats;
+
 	public
 	DHTUDPPacketReplyPing(
 		DHTTransportUDPImpl		transport,
@@ -82,7 +84,7 @@ DHTUDPPacketReplyPing
 			
 			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
 
-				DHTUDPUtils.deserialiseUploadStats( is );
+				upload_stats = DHTUDPUtils.deserialiseUploadStats( is );
 			}
 		}
 	}
@@ -144,4 +146,9 @@ DHTUDPPacketReplyPing
 		return( alt_contacts );
 	}
 
+	protected Object
+	getUploadStats()
+	{
+		return( upload_stats );
+	}
 }

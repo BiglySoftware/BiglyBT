@@ -36,7 +36,8 @@ import com.biglybt.core.dht.netcoords.vivaldi.ver1.VivaldiPositionFactory;
 import com.biglybt.core.dht.transport.*;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.global.GlobalManagerStats;
-import com.biglybt.core.global.GlobalManagerStats.CountryDetails;
+import com.biglybt.core.global.GlobalManagerStats.*;
+
 import com.biglybt.core.util.*;
 
 /**
@@ -1484,10 +1485,13 @@ DHTUDPUtils
 
 		return( result_list );
 	}
-		
+	
+	private static final int					MAX_CC_STATS	= 25;
 	private static final int					CALC_PERIOD		= 60*1000;
 	private static volatile long				last_calc		= SystemTime.getMonotonousTime() - ( CALC_PERIOD + 1 );
 	private static volatile CountryDetails[]	last_details	= new CountryDetails[0];
+	
+	private static volatile GlobalManagerStats	gm_stats;
 	
 	protected static void
 	serialiseUploadStats(
@@ -1499,9 +1503,12 @@ DHTUDPUtils
 		
 		if ( now - last_calc > CALC_PERIOD ){
 
-			GlobalManagerStats stats = CoreFactory.getSingleton().getGlobalManager().getStats();
+			if ( gm_stats == null ){
+				
+				gm_stats = CoreFactory.getSingleton().getGlobalManager().getStats();
+			}
 			
-			Iterator<CountryDetails>	it = stats.getCountryDetails();
+			Iterator<CountryDetails>	it = gm_stats.getCountryDetails();
 			
 			List<CountryDetails>	ups = new ArrayList<>(128);
 			
@@ -1548,7 +1555,7 @@ DHTUDPUtils
 		
 		os.writeByte( 0x00 );	// version
 		
-		int	records = Math.min( details.length, 16 );
+		int	records = Math.min( details.length, MAX_CC_STATS );
 		
 		os.writeByte((byte)records );
 		
@@ -1558,11 +1565,11 @@ DHTUDPUtils
 			
 			if ( cc.length() > 2 ){
 				
-				if ( cc.equals( "I2P" )){
+				if ( cc.equals( AENetworkClassifier.AT_I2P )){
 					
 					cc = "X0";
 					
-				}else if ( cc.equals( "Tor" )){
+				}else if ( cc.equals( AENetworkClassifier.AT_TOR )){
 					
 					cc = "X1";
 					
@@ -1578,10 +1585,102 @@ DHTUDPUtils
 		}
 	}
 	
-	protected static void
+	protected static Object
 	deserialiseUploadStats(
 		DataInputStream			is )
+	
+		throws IOException
 	{
+		byte version = is.readByte();
 		
+		int records = (int)(is.readByte() & 0x00ff );
+		
+		if ( records > 0 && records <= MAX_CC_STATS ){
+			
+			RemoteCountryStats[]	stats = new RemoteCountryStats[records];
+			
+			for ( int i=0;i<records;i++){
+				
+				byte c1 = is.readByte();
+				byte c2 = is.readByte();
+				
+				String cc = "" + (char)c1 + (char)c2;
+				
+				if ( c1 == 'X' ){
+					
+					if ( cc.equals( "X0" )){
+					
+						cc = AENetworkClassifier.AT_I2P;
+						
+					}else if ( cc.equals( "X1" )){
+						
+						cc = AENetworkClassifier.AT_TOR;
+						
+					}else{
+						
+					}
+				}
+				
+				String f_cc = cc;
+				
+				int bytes = is.readInt();
+				
+				stats[i] = 
+					new RemoteCountryStats()
+					{
+						public String 
+						getCC()
+						{
+							return( f_cc );
+						}
+					
+						public long
+						getAverageSent()
+						{
+							return( bytes );
+						}
+					};
+			}
+			
+			return( stats );
+			
+		}else{
+			
+			return( null );
+		}
+	}
+	
+	protected static void
+	receiveUploadStats(
+		DHTTransportUDPContactImpl	contact,
+		Object						_stats )
+	{
+		if ( _stats == null ){
+			
+			return;
+		}
+		
+		RemoteCountryStats[]	stats = (RemoteCountryStats[])_stats;
+		
+		InetAddress address = contact.getTransportAddress().getAddress();
+		
+		if ( gm_stats == null ){
+			
+			gm_stats = CoreFactory.getSingleton().getGlobalManager().getStats();
+		}
+		
+		gm_stats.receiveRemoteStats(
+			new RemoteStats(){
+				
+				@Override
+				public RemoteCountryStats[] getStats(){
+					return( stats );
+				}
+				
+				@Override
+				public InetAddress getRemoteAddress(){
+					return( address );
+				}
+			});
 	}
 }

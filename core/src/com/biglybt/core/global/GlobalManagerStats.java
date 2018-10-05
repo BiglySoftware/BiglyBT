@@ -20,6 +20,7 @@
 
 package com.biglybt.core.global;
 
+import java.net.InetAddress;
 import java.util.Iterator;
 
 /**
@@ -131,4 +132,28 @@ GlobalManagerStats
 	
 	public Iterator<CountryDetails>
 	getCountryDetails();
+	
+	public interface
+	RemoteCountryStats
+	{
+		public String 
+		getCC();
+		
+		public long
+		getAverageSent();
+	}
+	
+	public interface
+	RemoteStats
+	{
+		public InetAddress
+		getRemoteAddress();
+		
+		public RemoteCountryStats[]
+		getStats();
+	}
+	
+	public void
+	receiveRemoteStats(
+		RemoteStats		stats );
 }
