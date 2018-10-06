@@ -36,9 +36,13 @@ public class DiskManagerPieceImpl
     //private static final LogIDs LOGID = LogIDs.PIECES;
 
 	private static final byte	PIECE_STATUS_NEEDED		= 0x01;	//want to have the piece
-	private static final byte	PIECE_STATUS_WRITTEN	= 0x20;	//piece fully written to storage
-	private static final byte	PIECE_STATUS_CHECKING	= 0x40;	//piece is being hash checked
+	private static final byte	PIECE_STATUS_WRITTEN	= 0x02;	//piece fully written to storage
+	private static final byte	PIECE_STATUS_CHECKING	= 0x04;	//piece is being hash checked
 
+	private static final byte	PIECE_STATUS2_MERGE_READ	= 0x01;	
+	private static final byte	PIECE_STATUS2_MERGE_WRITE	= 0x02;	
+
+	
     private static final byte PIECE_STATUS_MASK_DOWNLOADABLE	=
     	PIECE_STATUS_CHECKING | PIECE_STATUS_WRITTEN | PIECE_STATUS_NEEDED;
 
@@ -68,9 +72,10 @@ public class DiskManagerPieceImpl
 	protected volatile boolean[]	written;
 
     private byte         statusFlags;
+    private byte         statusFlags2;
 
 	/** it's *very* important to accurately maintain the "done" state of a piece. Currently the statusFlags
-	 * are updated in a non-thread-safe manner so a 'done' field is maintained seperatly.  Synchronizing
+	 * are updated in a non-thread-safe manner so a 'done' field is maintained separately.  Synchronizing
 	 * access to statusFlags or done would cause a tremendous performance hit.
 	 */
     private short		read_count;
@@ -375,6 +380,30 @@ public class DiskManagerPieceImpl
 		}
 	}
 
+	public void
+	setMergeRead()
+	{
+		statusFlags2 |= PIECE_STATUS2_MERGE_READ;
+	}
+
+	public boolean
+	isMergeRead()
+	{
+		return((statusFlags2 & PIECE_STATUS2_MERGE_READ ) != 0 );
+	}
+
+	public void
+	setMergeWrite()
+	{
+		statusFlags2 |= PIECE_STATUS2_MERGE_WRITE;
+	}
+
+	public boolean
+	isMergeWrite()
+	{
+		return((statusFlags2 & PIECE_STATUS2_MERGE_WRITE ) != 0 );
+	}
+	    
 
     /*
     public static final void testStatus()

@@ -718,7 +718,7 @@ GlobalManagerStatsImpl
 	receiveRemoteStats(
 		RemoteStats		stats )
 	{
-		/*
+		
 		System.out.println( "RS: " + stats.getRemoteAddress());
 		
 		RemoteCountryStats[] c_stats = stats.getStats();
@@ -727,7 +727,6 @@ GlobalManagerStatsImpl
 			
 			System.out.println( "    " + c.getCC() + " = " + c.getAverageSent());
 		}
-		*/
 	}
 	
 	@Override

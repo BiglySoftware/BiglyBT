@@ -908,6 +908,14 @@ LWSDiskManager
 		public void			setReadCount(short c){}
 
 		@Override
+		public boolean isMergeRead(){throw( new RuntimeException( "setChecking not implemented" ));}
+		@Override
+		public boolean isMergeWrite(){throw( new RuntimeException( "setChecking not implemented" ));}
+		@Override
+		public void setMergeRead(){throw( new RuntimeException( "setChecking not implemented" ));}
+		@Override
+		public void setMergeWrite(){throw( new RuntimeException( "setChecking not implemented" ));}
+		@Override
 		public void
 		setDone(
 			boolean 	b)

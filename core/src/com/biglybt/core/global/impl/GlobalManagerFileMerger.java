@@ -1251,6 +1251,7 @@ GlobalManagerFileMerger
 													continue;
 												}
 
+												origin_piece.setMergeRead();
 
 												written = target_piece.getWritten();
 
@@ -1267,6 +1268,8 @@ GlobalManagerFileMerger
 
 													if ( other_file.writeBlock( target_piece_num, target_block_num, buffer )){
 
+														target_piece.setMergeWrite();
+														
 														buffer = null;
 
 														if ( completed_piece ){
@@ -1371,6 +1374,8 @@ GlobalManagerFileMerger
 															}
 														}
 
+														origin1_piece.setMergeRead();
+														
 														write_block = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_EXTERNAL, target_block_size );
 
 														final byte SS = DirectByteBuffer.SS_EXTERNAL;
@@ -1427,6 +1432,8 @@ GlobalManagerFileMerger
 																	continue;
 																}
 
+																origin2_piece.setMergeRead();
+																
 																read_block2.limit( SS, write_block.remaining( SS ));
 
 																write_block.put( SS, read_block2 );
@@ -1463,6 +1470,8 @@ GlobalManagerFileMerger
 
 																if ( other_file.writeBlock( target_piece_num, target_block_num, write_block )){
 
+																	target_piece.setMergeWrite();
+																	
 																	write_block = null;
 
 																	if ( completed_piece ){

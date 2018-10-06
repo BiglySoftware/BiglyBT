@@ -103,6 +103,18 @@ DiskManagerPiece
     public void 		reDownloadBlock(int blockNumber);
     public void			reset();
 
+    public void
+    setMergeRead();
+    
+    public boolean
+    isMergeRead();
+    
+    public void
+    setMergeWrite();
+    
+    public boolean
+    isMergeWrite();
+    
     public String
     getString();
 }

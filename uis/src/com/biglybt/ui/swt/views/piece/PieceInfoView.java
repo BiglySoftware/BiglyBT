@@ -89,17 +89,14 @@ public class PieceInfoView
 
 	private final static int BLOCK_SIZE = BLOCK_FILLSIZE + BLOCK_SPACING;
 
-	private final static int BLOCKCOLOR_HAVE = 0;
-
-	private final static int BLOCKCOLORL_NOHAVE = 1;
-
-	private final static int BLOCKCOLOR_TRANSFER = 2;
-
-	private final static int BLOCKCOLOR_NEXT = 3;
-
-	private final static int BLOCKCOLOR_AVAILCOUNT = 4;
-	
-	private final static int BLOCKCOLOR_SHOWFILE = 5;
+	private final static int BLOCKCOLOR_HAVE 		= 0;
+	private final static int BLOCKCOLOR_NOHAVE 		= 1;
+	private final static int BLOCKCOLOR_TRANSFER 	= 2;
+	private final static int BLOCKCOLOR_NEXT 		= 3;
+	private final static int BLOCKCOLOR_AVAILCOUNT 	= 4;
+	private final static int BLOCKCOLOR_SHOWFILE 	= 5;
+	private final static int BLOCKCOLOR_MERGE_READ	= 6;
+	private final static int BLOCKCOLOR_MERGE_WRITE	= 7;
 
 	public static final String MSGID_PREFIX = "PieceInfoView";
 
@@ -156,7 +153,9 @@ public class PieceInfoView
 			Colors.red,
 			Colors.fadedRed,
 			Colors.black,
-			Colors.fadedGreen
+			Colors.fadedGreen,
+			Colors.yellow,
+			Colors.grey
 		};
 	}
 
@@ -617,7 +616,9 @@ public class PieceInfoView
 					"PeersView.BlockView.Transfer",
 					"PeersView.BlockView.NextRequest",
 					"PeersView.BlockView.AvailCount",
-					"PeersView.BlockView.ShowFile"
+					"PeersView.BlockView.ShowFile",
+					"PeersView.BlockView.MergeRead",
+					"PeersView.BlockView.MergeWrite",
 				}, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 2, 1));
 
 		int iFontPixelsHeight = 10;
@@ -957,6 +958,8 @@ public class PieceInfoView
 
 			int iCol = 0;
 			for (int i = 0; i < dm_pieces.length; i++) {
+				DiskManagerPiece dm_piece = dm_pieces[i];
+				
 				if (iCol >= iNumCols) {
 					iCol = 0;
 					iRow++;
@@ -968,7 +971,7 @@ public class PieceInfoView
 					newInfo.selectedRange = true;
 				}
 
-				boolean done = dm_pieces[i].isDone();
+				boolean done = dm_piece.isDone();
 				int iXPos = iCol * BLOCK_SIZE + 1;
 				int iYPos = iRow * BLOCK_SIZE + 1;
 
@@ -977,11 +980,11 @@ public class PieceInfoView
 					newInfo.haveWidth = BLOCK_FILLSIZE;
 				} else {
 					// !done
-					boolean partiallyDone = dm_pieces[i].getNbWritten() > 0;
+					boolean partiallyDone = dm_piece.getNbWritten() > 0;
 
 					int width = BLOCK_FILLSIZE;
 					if (partiallyDone) {
-						int iNewWidth = (int) (((float) dm_pieces[i].getNbWritten() / dm_pieces[i].getNbBlocks()) * width);
+						int iNewWidth = (int) (((float)dm_piece.getNbWritten() / dm_piece.getNbBlocks()) * width);
 						if (iNewWidth >= width)
 							iNewWidth = width - 1;
 						else if (iNewWidth <= 0)
@@ -1050,10 +1053,22 @@ public class PieceInfoView
 					gcImg.fillRectangle(iCol * BLOCK_SIZE, iRow * BLOCK_SIZE, BLOCK_SIZE,
 							BLOCK_SIZE);
 	
-					gcImg.setBackground(blockColors[BLOCKCOLOR_HAVE]);
+					if ( dm_piece.isMergeRead()){
+						
+						gcImg.setBackground(blockColors[BLOCKCOLOR_MERGE_READ]);
+						
+					}else if ( dm_piece.isMergeWrite()){
+						
+						gcImg.setBackground(blockColors[BLOCKCOLOR_MERGE_WRITE]);
+						
+					}else{
+						
+						gcImg.setBackground(blockColors[BLOCKCOLOR_HAVE]);
+					}
+					
 					gcImg.fillRectangle(iXPos, iYPos, newInfo.haveWidth, BLOCK_FILLSIZE);
 	
-					gcImg.setBackground(blockColors[BLOCKCOLORL_NOHAVE]);
+					gcImg.setBackground(blockColors[BLOCKCOLOR_NOHAVE]);
 					gcImg.fillRectangle(iXPos + newInfo.haveWidth, iYPos, BLOCK_FILLSIZE - newInfo.haveWidth, BLOCK_FILLSIZE);
 				}
 				
