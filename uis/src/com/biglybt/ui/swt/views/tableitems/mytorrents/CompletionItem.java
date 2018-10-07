@@ -158,7 +158,7 @@ public class CompletionItem
     ImageLoader imageLoader = ImageLoader.getInstance();
 		Image imgEnd = imageLoader.getImage("dl_bar_end");
 		Image img0 = imageLoader.getImage("dl_bar_0");
-		Image img1 = imageLoader.getImage("dl_bar_1");
+		Image img1 = imageLoader.getImage(percentDone<1000?"dl_bar_1":"dl_bar_1g");
 
 		//draw begining and end
 		if (!imgEnd.isDisposed()) {
