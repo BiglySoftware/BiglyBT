@@ -20,6 +20,9 @@
 
 package com.biglybt.core.global.impl;
 
+import java.net.InetAddress;
+import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,7 +30,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author parg
@@ -39,6 +44,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.global.GlobalManagerStats.RemoteCountryStats;
 import com.biglybt.core.global.GlobalManagerStats.RemoteStats;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerListener;
@@ -46,9 +52,15 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Average;
+import com.biglybt.core.util.CopyOnWriteList;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.SimpleTimer.TimerTickReceiver;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
@@ -466,6 +478,23 @@ GlobalManagerStatsImpl
        	}
     }
     
+	
+	@Override
+	public long
+	getSmoothedSendRate()
+	{
+		return((long)(smoothed_send_rate.getAverage()/current_smoothing_interval));
+	}
+
+	@Override
+	public long
+	getSmoothedReceiveRate()
+	{
+		return((long)(smoothed_receive_rate.getAverage()/current_smoothing_interval));
+	}
+	
+	
+	
     private Map<String,CountryDetails>		country_details = new ConcurrentHashMap<>();
     private CountryDetailsImpl				country_total	= new CountryDetailsImpl( "" );
     
@@ -478,6 +507,8 @@ GlobalManagerStatsImpl
 	{
 		return( country_details.values().iterator());
 	}
+	
+	private AsyncDispatcher stats_dispatcher = new AsyncDispatcher( "GMStats", 1000 );
 	
 	@Override
 	public void
@@ -509,237 +540,480 @@ GlobalManagerStatsImpl
 		
 		if ( tick_count % 60 == 0 ){
 			
-			List<List<PEPeer>>	peer_lists = new LinkedList<>();
-			
-			synchronized( PEER_DATA_KEY ){
-				
-				if ( !removed_peers.isEmpty()){
-			
-					peer_lists.add( removed_peers );
+			stats_dispatcher.dispatch(
+				new AERunnable(){
 					
-					removed_peers = new LinkedList<>();
-				}
-			}
-			
-			for ( DownloadManager dm: manager.getDownloadManagers()){
-				
-				PEPeerManager pm = dm.getPeerManager();
-				
-				if ( pm != null ){
-					
-					List<PEPeer> peers = pm.getPeers();
-					
-					if ( !peers.isEmpty()){
+					@Override
+					public void runSupport()
+					{
+						List<List<PEPeer>>	peer_lists = new LinkedList<>();
 						
-						peer_lists.add( peers );
-					}
-				}
-			}
-			
-				// single threaded here remember
-						
-			Set<CountryDetailsImpl>	updated = new HashSet<>();
-			
-			Map<String,long[]>	updates = new HashMap<>();
-			
-			for ( List<PEPeer> peers: peer_lists ){
-			
-				for ( PEPeer peer: peers ){
-					
-					if ( peer.isLANLocal()){
-						
-						continue;
-					}
-					
-					PEPeerStats stats = peer.getStats();
-					
-					long sent = stats.getTotalDataBytesSent();
-					long recv = stats.getTotalDataBytesReceived();
-
-					if ( sent + recv > 0 ){
-						
-						PeerDetails details = (PeerDetails)peer.getUserData( PEER_DATA_KEY );
-						
-						if ( details == null ){
+						synchronized( PEER_DATA_KEY ){
 							
-							String[] dets = PeerUtils.getCountryDetails(peer);
-	
-							details = new PeerDetails( dets==null||dets.length<1?"??":dets[0] );
-							
-							long[] init_data = (long[])peer.getUserData( PEER_DATA_INIT_KEY );
-							
-							if ( init_data != null ){
+							if ( !removed_peers.isEmpty()){
+						
+								peer_lists.add( removed_peers );
 								
-								details.sent	= init_data[0];
-								details.recv	= init_data[1];
+								removed_peers = new LinkedList<>();
+							}
+						}
+						
+						for ( DownloadManager dm: manager.getDownloadManagers()){
+							
+							PEPeerManager pm = dm.getPeerManager();
+							
+							if ( pm != null ){
+								
+								List<PEPeer> peers = pm.getPeers();
+								
+								if ( !peers.isEmpty()){
+									
+									peer_lists.add( peers );
+								}
+							}
+						}
+						
+							// single threaded here remember
+									
+						Set<CountryDetailsImpl>	updated = new HashSet<>();
+						
+						Map<String,long[]>	updates = new HashMap<>();
+						
+						for ( List<PEPeer> peers: peer_lists ){
+						
+							for ( PEPeer peer: peers ){
+								
+								if ( peer.isLANLocal()){
+									
+									continue;
+								}
+								
+								PEPeerStats stats = peer.getStats();
+								
+								long sent = stats.getTotalDataBytesSent();
+								long recv = stats.getTotalDataBytesReceived();
+			
+								if ( sent + recv > 0 ){
+									
+									PeerDetails details = (PeerDetails)peer.getUserData( PEER_DATA_KEY );
+									
+									if ( details == null ){
+										
+										String[] dets = PeerUtils.getCountryDetails(peer);
+				
+										details = new PeerDetails( dets==null||dets.length<1?"??":dets[0] );
+										
+										long[] init_data = (long[])peer.getUserData( PEER_DATA_INIT_KEY );
+										
+										if ( init_data != null ){
+											
+											details.sent	= init_data[0];
+											details.recv	= init_data[1];
+										}
+										
+										peer.setUserData( PEER_DATA_KEY, details );	
+									}
+										
+									long[] final_data = (long[])peer.getUserData( PEER_DATA_FINAL_KEY );
+									
+									if ( final_data != null ){
+										
+										sent	= final_data[0];
+										recv	= final_data[1];
+									}
+									
+									long diff_sent	= sent - details.sent;
+									long diff_recv	= recv - details.recv;
+															
+									if ( diff_sent + diff_recv > 0 ){
+										
+										String cc = details.cc;
+			
+										long[] totals = updates.get( cc );
+										
+										if ( totals == null ){
+											
+											totals = new long[]{ diff_sent, diff_recv };
+											
+											updates.put( cc, totals );
+											
+										}else{
+										
+											totals[0] += diff_sent;
+											totals[1] += diff_recv;
+										}
+									}
+									
+									details.sent 	= sent;
+									details.recv	= recv;
+								}
+							}
+						}
+						
+						long	total_diff_sent	= 0;
+						long	total_diff_recv	= 0;
+			
+						for ( Map.Entry<String,long[]> entry: updates.entrySet()){
+							
+							String	cc 		= entry.getKey();
+							long[]	totals 	= entry.getValue();
+								
+							long	diff_sent	= totals[0];
+							long	diff_recv	= totals[1];
+							
+							CountryDetailsImpl cd = (CountryDetailsImpl)country_details.get( cc );
+							
+							if ( cd == null ){
+								
+								cd = new CountryDetailsImpl( cc );
+								
+								country_details.put( cc, cd );
 							}
 							
-							peer.setUserData( PEER_DATA_KEY, details );	
-						}
+							updated.add( cd );
 							
-						long[] final_data = (long[])peer.getUserData( PEER_DATA_FINAL_KEY );
-						
-						if ( final_data != null ){
+							if ( diff_sent > 0 ){
 							
-							sent	= final_data[0];
-							recv	= final_data[1];
-						}
-						
-						long diff_sent	= sent - details.sent;
-						long diff_recv	= recv - details.recv;
-												
-						if ( diff_sent + diff_recv > 0 ){
-							
-							String cc = details.cc;
-
-							long[] totals = updates.get( cc );
-							
-							if ( totals == null ){
+								cd.last_sent	= diff_sent;
+								cd.total_sent	+= diff_sent;
+			
+								cd.sent_average.update( diff_sent );
 								
-								totals = new long[]{ diff_sent, diff_recv };
-								
-								updates.put( cc, totals );
+								total_diff_sent += diff_sent;
 								
 							}else{
+								
+								cd.last_sent	= 0;
+								
+								cd.sent_average.update( diff_sent );
+							}
 							
-								totals[0] += diff_sent;
-								totals[1] += diff_recv;
+							if ( diff_recv > 0 ){
+								
+								cd.last_recv	= diff_recv;
+								cd.total_recv	+= diff_recv;
+			
+								cd.recv_average.update( diff_recv );
+								
+								total_diff_recv += diff_recv;
+								
+							}else{
+								
+								cd.last_recv	= 0;
+								
+								cd.recv_average.update( diff_recv );
 							}
 						}
 						
-						details.sent 	= sent;
-						details.recv	= recv;
+						updated.add( country_total );
+						
+						if ( total_diff_sent > 0 ){
+							
+							country_total.last_sent		= total_diff_sent;
+							country_total.total_sent	+= total_diff_sent;
+							
+							country_total.sent_average.update( total_diff_sent );
+							
+						}else{
+							
+							country_total.last_sent		= 0;
+							
+							country_total.sent_average.update( 0 );
+						}		
+						
+						if ( total_diff_recv > 0 ){
+							
+							country_total.last_recv		= total_diff_recv;
+							country_total.total_recv	+= total_diff_recv;
+							
+							country_total.recv_average.update( total_diff_recv );
+							
+						}else{
+							
+							country_total.last_recv		= 0;
+							
+							country_total.recv_average.update( 0 );
+						}
+						
+						for ( CountryDetails cd: country_details.values()){
+							
+							if ( !updated.contains( cd )){
+								
+								CountryDetailsImpl cdi = (CountryDetailsImpl)cd;
+								
+								cdi.last_recv 	= 0;
+								cdi.last_sent	= 0;
+								
+								cdi.recv_average.update( 0 );
+								cdi.sent_average.update( 0 );
+							}
+						}
 					}
-				}
-			}
+				});	
+		}
+		
+		if ( tick_count % 10 == 0 ){
 			
-			long	total_diff_sent	= 0;
-			long	total_diff_recv	= 0;
+			stats_dispatcher.dispatch(
+				new AERunnable(){
+					
+					@Override
+					public void 
+					runSupport()
+					{							
+						for ( Iterator<RemoteStats> it = pending_stats.values().iterator(); it.hasNext();){
+							
+							RemoteStats stats = it.next();
+							
+							it.remove();
+							
+							addRemoteStats( stats );
+						}
+					}
+				});
+		}
+		
+		if ( tick_count % 30 == 0 ){
+			
+			RemoteStats	stats = 
+				new RemoteStats()
+				{
+					final String[] CCS = { "US", "GB", "FR", "IT", "AU", "DE" };
+										
+					RemoteCountryStats[]	stats = new RemoteCountryStats[Math.abs(RandomUtils.nextInt(4))+1];
+					
+					{
+						for ( int i=0; i<stats.length;i++){
+					
+							String cc = CCS[RandomUtils.nextAbsoluteInt() % CCS.length ];
 
-			for ( Map.Entry<String,long[]> entry: updates.entrySet()){
-				
-				String	cc 		= entry.getKey();
-				long[]	totals 	= entry.getValue();
+							stats[i] = 
+								new RemoteCountryStats()
+								{
+									public String 
+									getCC()
+									{
+										return( cc );
+									}
+									
+									public long
+									getAverageSent()
+									{
+										return( 100 );
+									}
+								};
+						}
+					}
 					
-				long	diff_sent	= totals[0];
-				long	diff_recv	= totals[1];
-				
-				CountryDetailsImpl cd = (CountryDetailsImpl)country_details.get( cc );
-				
-				if ( cd == null ){
+					public InetAddress
+					getRemoteAddress()
+					{
+						byte[] bytes = new byte[4];
+						
+						RandomUtils.nextBytes( bytes );
+						
+						try{
+							return( InetAddress.getByAddress( bytes ));
+							
+						}catch( Throwable e ){
+							
+							return( null );
+						}
+					}
 					
-					cd = new CountryDetailsImpl( cc );
+					public long
+					getMonoTime()
+					{
+						return( SystemTime.getMonotonousTime());
+					}
 					
-					country_details.put( cc, cd );
-				}
+					public RemoteCountryStats[]
+					getStats()		
+					{
+						return( stats );
+					}
+				};
 				
-				updated.add( cd );
-				
-				if ( diff_sent > 0 ){
-				
-					cd.last_sent	= diff_sent;
-					cd.total_sent	+= diff_sent;
-
-					cd.sent_average.update( diff_sent );
-					
-					total_diff_sent += diff_sent;
-					
-				}else{
-					
-					cd.last_sent	= 0;
-					
-					cd.sent_average.update( diff_sent );
-				}
-				
-				if ( diff_recv > 0 ){
-					
-					cd.last_recv	= diff_recv;
-					cd.total_recv	+= diff_recv;
-
-					cd.recv_average.update( diff_recv );
-					
-					total_diff_recv += diff_recv;
-					
-				}else{
-					
-					cd.last_recv	= 0;
-					
-					cd.recv_average.update( diff_recv );
-				}
-			}
-			
-			updated.add( country_total );
-			
-			if ( total_diff_sent > 0 ){
-				
-				country_total.last_sent		= total_diff_sent;
-				country_total.total_sent	+= total_diff_sent;
-				
-				country_total.sent_average.update( total_diff_sent );
-				
-			}else{
-				
-				country_total.last_sent		= 0;
-				
-				country_total.sent_average.update( 0 );
-			}		
-			
-			if ( total_diff_recv > 0 ){
-				
-				country_total.last_recv		= total_diff_recv;
-				country_total.total_recv	+= total_diff_recv;
-				
-				country_total.recv_average.update( total_diff_recv );
-				
-			}else{
-				
-				country_total.last_recv		= 0;
-				
-				country_total.recv_average.update( 0 );
-			}
-			
-			for ( CountryDetails cd: country_details.values()){
-				
-				if ( !updated.contains( cd )){
-					
-					CountryDetailsImpl cdi = (CountryDetailsImpl)cd;
-					
-					cdi.last_recv 	= 0;
-					cdi.last_sent	= 0;
-					
-					cdi.recv_average.update( 0 );
-					cdi.sent_average.update( 0 );
-				}
-			}
+			receiveRemoteStats( stats );
 		}
 	}
 
+	private ConcurrentHashMap<InetAddress,RemoteStats>	pending_stats = new ConcurrentHashMap<>();
+	
 	public void
 	receiveRemoteStats(
 		RemoteStats		stats )
 	{
+		pending_stats.put( stats.getRemoteAddress(), stats );
+	}
+	
+	private Map<String,Map<String,Long>>	aggregate_stats = new ConcurrentHashMap<>();
+	
+	private static class
+	HistoryEntry
+	{
+		final String				cc;
+		final long					time;
+		final RemoteCountryStats[]	stats;
 		
-		System.out.println( "RS: " + stats.getRemoteAddress());
-		
-		RemoteCountryStats[] c_stats = stats.getStats();
-		
-		for ( RemoteCountryStats c: c_stats ){
-			
-			System.out.println( "    " + c.getCC() + " = " + c.getAverageSent());
+		private
+		HistoryEntry(
+			String		_cc,
+			RemoteStats	_stats )
+		{
+			cc		= _cc;
+			stats	= _stats.getStats();
+			time	= _stats.getMonoTime(); 
 		}
 	}
 	
-	@Override
-	public long
-	getSmoothedSendRate()
+	private Set<HistoryEntry>					stats_history	= 
+		new TreeSet<>(
+			new Comparator<HistoryEntry>()
+			{
+				public int 
+				compare(
+					HistoryEntry o1, 
+					HistoryEntry o2)
+				{
+					return( Long.compare(o1.time, o2.time ));
+				}
+			});
+	
+	private void
+	addRemoteStats(
+		RemoteStats		stats )
 	{
-		return((long)(smoothed_send_rate.getAverage()/current_smoothing_interval));
+			// add new entry
+		
+		{
+			String[] o_details = PeerUtils.getCountryDetails(stats.getRemoteAddress());
+			
+			String originator_cc;
+			
+			if ( o_details == null || o_details.length < 1 ){
+			
+				originator_cc = "??";
+				
+			}else{
+			
+				originator_cc = o_details[0];
+			}
+			
+			stats_history.add( new HistoryEntry( originator_cc, stats ));
+			
+			Map<String,Long> map = aggregate_stats.get( originator_cc );
+			
+			if ( map == null ){
+				
+				map = new ConcurrentHashMap<>();
+				
+				aggregate_stats.put( originator_cc, map );
+			}
+			
+			RemoteCountryStats[] rcs = stats.getStats();
+			
+			for ( RemoteCountryStats rc: rcs ){
+				
+				String cc = rc.getCC();
+				
+				long	ave = rc.getAverageSent();
+				
+				if ( ave > 0 ){
+					
+					Long	val = map.get( cc );
+					
+					if ( val == null ){
+						
+						map.put( cc, ave );
+						
+					}else{
+						
+						map.put( cc, val + ave );
+					}
+				}
+			}
+		}
+		
+			// remove old
+		
+		{
+			long	now = SystemTime.getMonotonousTime();
+	
+			Iterator<HistoryEntry>	it = stats_history.iterator();
+			
+			while( it.hasNext()){
+				
+				HistoryEntry entry = it.next();
+					
+				if ( 	stats_history.size() > 100 ||
+						now - entry.time > 10*60*1000 ){
+					
+					it.remove();
+					
+					String originator_cc = entry.cc;
+					
+					Map<String,Long> map = aggregate_stats.get( originator_cc );
+			
+					if ( map == null ){
+						
+						Debug.out( "inconsistent");
+						
+						return;
+					}
+					
+					for ( RemoteCountryStats rc: entry.stats ){
+						
+						String cc = rc.getCC();
+						
+						long	ave = rc.getAverageSent();
+						
+						if ( ave > 0 ){
+							
+							Long	val = map.get( cc );
+							
+							if ( val == null ){
+								
+								Debug.out( "inconsistent");
+								
+							}else{
+								
+								long temp = val - ave;
+								
+								if ( temp < 0 ){
+									
+									Debug.out( "inconsistent");
+									
+								}else{
+									
+									if ( temp == 0 ){
+										
+										map.remove( cc );
+										
+									}else{
+										
+										map.put( cc,  temp );
+									}
+								}
+							}
+						}
+					}
+					
+					if ( map.isEmpty()){
+						
+						aggregate_stats.remove( originator_cc );
+					}
+				}else{
+					
+					break;
+				}
+			}
+		}
 	}
-
-	@Override
-	public long
-	getSmoothedReceiveRate()
+	
+	public Map<String,Map<String,Long>>
+	getAggregateRemoteStats()
 	{
-		return((long)(smoothed_receive_rate.getAverage()/current_smoothing_interval));
+		return( aggregate_stats );
 	}
 }

@@ -1670,11 +1670,20 @@ DHTUDPUtils
 		}
 		
 		gm_stats.receiveRemoteStats(
-			new RemoteStats(){
+			new RemoteStats()
+			{	
+				private long time = SystemTime.getMonotonousTime();
 				
 				@Override
 				public RemoteCountryStats[] getStats(){
 					return( stats );
+				}
+				
+				@Override
+				public long 
+				getMonoTime()
+				{
+					return( time );
 				}
 				
 				@Override

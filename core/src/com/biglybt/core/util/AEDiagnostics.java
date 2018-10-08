@@ -372,13 +372,6 @@ AEDiagnostics
 	public static void
 	markDirty()
 	{
-		if ( Constants.isCVSVersion()){
-			try {
-				Debug.out( "Marking as dirty" );
-			}catch( Throwable e ){
-			}
-		}
-		
 		try{
 
 			COConfigurationManager.setParameter( CONFIG_KEY, false );
@@ -400,13 +393,6 @@ AEDiagnostics
 	public static void
 	markClean()
 	{
-		if ( Constants.isCVSVersion()){
-			try {
-				Debug.out( "Marking as clean" );
-			}catch( Throwable e ){
-			}
-		}
-		
 		try{
 			COConfigurationManager.setParameter( CONFIG_KEY, true );
 

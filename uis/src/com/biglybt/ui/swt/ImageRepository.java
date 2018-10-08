@@ -616,6 +616,65 @@ public class ImageRepository
 		return( flag );
 	}
 
+	public static Image
+	getCountryFlag(
+		String			cc,
+		boolean			small )
+	{
+		if ( cc == null ){
+
+			return( null );
+		}
+
+		Image flag = null;
+
+		LocationProvider fp = getFlagProvider();
+
+		if ( fp != null ){
+
+			try{
+				String cc_key = cc + (small?".s":".l");
+
+				flag = flag_cache.get( cc_key );
+
+				if ( flag == null ){
+
+					InputStream is = fp.getCountryFlagForISO3166Code( cc, small?0:1 );
+
+					if ( is != null ){
+
+						try{
+							Display display = Display.getDefault();
+
+							flag = new Image( display, is);
+
+							flag = Utils.adjustPXForDPI( display, flag );
+
+						}finally{
+
+							is.close();
+						}
+					}else{
+
+						flag = flag_none;
+					}
+
+					flag_cache.put( cc_key, flag );
+				}
+
+			}catch( Throwable e ){
+
+			}
+		}
+
+		if ( flag == flag_none ){
+
+			return( null );
+		}
+
+		return( flag );
+	}
+
 
 
 	public static void main(String[] args) {

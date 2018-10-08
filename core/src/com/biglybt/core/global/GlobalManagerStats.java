@@ -21,7 +21,9 @@
 package com.biglybt.core.global;
 
 import java.net.InetAddress;
-import java.util.Iterator;
+import java.util.*;
+
+import com.biglybt.core.util.CopyOnWriteList;
 
 /**
  * @author parg
@@ -149,6 +151,9 @@ GlobalManagerStats
 		public InetAddress
 		getRemoteAddress();
 		
+		public long
+		getMonoTime();
+		
 		public RemoteCountryStats[]
 		getStats();
 	}
@@ -156,4 +161,7 @@ GlobalManagerStats
 	public void
 	receiveRemoteStats(
 		RemoteStats		stats );
+	
+	public Map<String,Map<String,Long>>
+	getAggregateRemoteStats();
 }
