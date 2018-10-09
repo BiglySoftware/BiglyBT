@@ -411,6 +411,8 @@ XferStatsPanel
 			return;
 		}
 		
+		gc.setForeground(Colors.black);
+
 		flag_width	= scale.getReverseWidth( 25 );
 		flag_height	= scale.getReverseHeight( 15 );
 				
@@ -419,10 +421,12 @@ XferStatsPanel
 		
 		latest_sequence = a_stats.getSequence();
 		
-		Map<String,Map<String,Long>> stats = a_stats.getStats();
+		gc.drawText( 
+			" samples=" + a_stats.getSamples() + ", population=" + a_stats.getEstimatedPopulation(), 
+			scale.getX( scale.minX, scale.minY), scale.getY(scale.minX, scale.minY) );
 		
-		gc.setForeground(Colors.black);
-				
+		Map<String,Map<String,Long>> stats = a_stats.getStats();
+						
 		List<Node> 			origins 	= new ArrayList<>();
 		Map<String,Node>	dest_map 	= new HashMap<>();
 		
@@ -660,7 +664,9 @@ XferStatsPanel
 
 			int[] xy = scale.getXY( x_pos, odd?(y_pos+flag_height):(y_pos-flag_height));
 			
-			gc.drawText( DisplayFormatters.formatByteCountToKiBEtcPerSec( count*1024 ), xy[0], xy[1] );
+				// remember stats are in k per min
+			
+			gc.drawText( DisplayFormatters.formatByteCountToKiBEtcPerSec( count*1024/60 ), xy[0], xy[1] );
 				
 		}
 	}

@@ -79,7 +79,7 @@ DHTUDPPacketReplyPing
 
 			alt_contacts = DHTUDPUtils.deserialiseAltContacts( is );
 		}
-		
+				
 		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
 			
 			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){

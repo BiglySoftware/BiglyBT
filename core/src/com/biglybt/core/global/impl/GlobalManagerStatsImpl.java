@@ -22,7 +22,6 @@ package com.biglybt.core.global.impl;
 
 import java.net.InetAddress;
 import java.util.Comparator;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,7 +31,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
+import com.biglybt.core.CoreFactory;
 
 /**
  * @author parg
@@ -40,12 +40,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.dht.DHT;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.global.GlobalManagerStats;
-import com.biglybt.core.global.GlobalManagerStats.RemoteCountryStats;
-import com.biglybt.core.global.GlobalManagerStats.RemoteStats;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerListener;
 import com.biglybt.core.peer.PEPeerManager;
@@ -55,7 +54,6 @@ import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Average;
-import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.RandomUtils;
@@ -64,6 +62,8 @@ import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.SimpleTimer.TimerTickReceiver;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.plugin.dht.DHTPlugin;
 
 
 public class
@@ -853,6 +853,8 @@ GlobalManagerStatsImpl
 	
 	private volatile AggregateStatsImpl	as_latest = new AggregateStatsImpl( sequence++ );
 
+	private DHT	dht_biglybt;
+	
 	private static class
 	HistoryEntry
 	{
@@ -951,7 +953,7 @@ GlobalManagerStatsImpl
 				HistoryEntry entry = it.next();
 					
 				if ( 	stats_history.size() > 100 ||
-						now - entry.time > 10*60*1000 ){
+						now - entry.time > 30*60*1000 ){
 					
 					it.remove();
 					
@@ -1014,10 +1016,25 @@ GlobalManagerStatsImpl
 			}
 		}
 		
+		if ( dht_biglybt == null ){
+			
+			try{
+				PluginInterface dht_pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByClass( DHTPlugin.class );
+				
+				if ( dht_pi != null ){
+					
+					dht_biglybt = ((DHTPlugin)dht_pi.getPlugin()).getDHT( DHT.NW_BIGLYBT_MAIN );
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
 		as_latest = 
 			new AggregateStatsImpl(
 				stats_history.size(),
-				12000,
+				dht_biglybt==null?0:(int)dht_biglybt.getControl().getStats().getEstimatedDHTSize(),
 				sequence++,
 				aggregate_stats );
 	}

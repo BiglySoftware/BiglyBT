@@ -30,6 +30,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.dht.transport.udp.impl.packethandler.DHTUDPPacketNetworkHandler;
@@ -39,6 +40,8 @@ DHTUDPPacketReplyStore
 	extends DHTUDPPacketReply
 {
 	private byte[]	diversify;
+
+	private Object	upload_stats;
 
 	public
 	DHTUDPPacketReplyStore(
@@ -61,9 +64,22 @@ DHTUDPPacketReplyStore
 	{
 		super( network_handler, originator, is, DHTUDPPacketHelper.ACT_REPLY_STORE, trans_id );
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_DIV_AND_CONT ){
+		int	protocol_version = getProtocolVersion();
+		
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_DIV_AND_CONT ){
 
 			diversify = DHTUDPUtils.deserialiseByteArray( is, DHTUDPPacketRequestStore.MAX_KEYS_PER_PACKET );
+		}
+		
+		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
+			
+			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
+
+				if ( is.available() > 0 ){	// interim during 1601 betas
+				
+					upload_stats = DHTUDPUtils.deserialiseUploadStats( is );
+				}
+			}
 		}
 	}
 
@@ -76,9 +92,19 @@ DHTUDPPacketReplyStore
 	{
 		super.serialise(os);
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_DIV_AND_CONT ){
+		int	protocol_version = getProtocolVersion();
+		
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_DIV_AND_CONT ){
 
 			DHTUDPUtils.serialiseByteArray( os, diversify, DHTUDPPacketRequestStore.MAX_KEYS_PER_PACKET );
+		}
+		
+		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
+			
+			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
+
+				DHTUDPUtils.serialiseUploadStats( os );
+			}
 		}
 	}
 
@@ -93,5 +119,11 @@ DHTUDPPacketReplyStore
 	getDiversificationTypes()
 	{
 		return( diversify );
+	}
+	
+	protected Object
+	getUploadStats()
+	{
+		return( upload_stats );
 	}
 }
