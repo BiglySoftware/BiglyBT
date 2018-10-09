@@ -162,6 +162,22 @@ GlobalManagerStats
 	receiveRemoteStats(
 		RemoteStats		stats );
 	
-	public Map<String,Map<String,Long>>
+	public interface
+	AggregateStats
+	{
+		public int
+		getSamples();
+		
+		public int
+		getEstimatedPopulation();
+		
+		public int
+		getSequence();
+		
+		public Map<String,Map<String,Long>>
+		getStats();
+	}
+	
+	public AggregateStats
 	getAggregateRemoteStats();
 }

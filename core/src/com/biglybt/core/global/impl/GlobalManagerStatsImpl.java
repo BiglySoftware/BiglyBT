@@ -848,7 +848,11 @@ GlobalManagerStatsImpl
 	}
 	
 	private Map<String,Map<String,Long>>	aggregate_stats = new ConcurrentHashMap<>();
+		
+	private int sequence;
 	
+	private volatile AggregateStatsImpl	as_latest = new AggregateStatsImpl( sequence++ );
+
 	private static class
 	HistoryEntry
 	{
@@ -1009,11 +1013,74 @@ GlobalManagerStatsImpl
 				}
 			}
 		}
+		
+		as_latest = 
+			new AggregateStatsImpl(
+				stats_history.size(),
+				12000,
+				sequence++,
+				aggregate_stats );
 	}
 	
-	public Map<String,Map<String,Long>>
+	public AggregateStats
 	getAggregateRemoteStats()
 	{
-		return( aggregate_stats );
+		return( as_latest );
+	}
+	
+	private static class
+	AggregateStatsImpl
+		implements AggregateStats
+	{
+		final int	samples;
+		final int	population;
+		final int	sequence;
+		
+		final Map<String,Map<String,Long>>	stats;
+		
+		AggregateStatsImpl(
+			int		_sequence )
+		{
+			samples			= 0;
+			population		= 0;
+			sequence		= _sequence;
+			stats			= new HashMap<>();
+		}
+		
+		AggregateStatsImpl(
+			int		_samples,
+			int		_population,
+			int		_sequence,
+			Map<String,Map<String,Long>>	_stats )
+		{
+			samples		= _samples;
+			population	= _population;
+			sequence	= _sequence;
+			stats		= _stats;
+		}
+		
+		public int
+		getSamples()
+		{
+			return( samples );
+		}
+		
+		public int
+		getEstimatedPopulation()
+		{
+			return( population );
+		}
+		
+		public int
+		getSequence()
+		{
+			return( sequence );
+		}
+		
+		public Map<String,Map<String,Long>>
+		getStats()
+		{
+			return( stats );
+		}
 	}
 }

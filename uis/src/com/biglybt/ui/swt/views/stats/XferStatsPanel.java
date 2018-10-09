@@ -21,6 +21,7 @@
 package com.biglybt.ui.swt.views.stats;
 
 import com.biglybt.ui.swt.ImageRepository;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 import java.util.*;
@@ -35,12 +36,11 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.core.util.SimpleTimer;
-import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.TimerEvent;
-import com.biglybt.core.util.TimerEventPerformer;
+import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.TimerEventPeriodic;
 
 
@@ -69,10 +69,28 @@ XferStatsPanel
 
 	private boolean autoAlpha = false;
 
-	private TimerEventPeriodic timeout_timer;
-
 	private GlobalManagerStats		gm_stats;
+
+	private long	latest_sequence	= Long.MAX_VALUE;
 	
+	private FrequencyLimitedDispatcher	refresh_dispatcher = 
+		new FrequencyLimitedDispatcher(
+			new AERunnable(){
+				
+				@Override
+				public void runSupport(){
+					Utils.execSWTThread(
+						new Runnable(){
+							
+							@Override
+							public void run(){
+								refresh();
+							}
+						});
+				}
+			},
+			250 );
+
 	int flag_width;
 	int flag_height;
 
@@ -204,6 +222,7 @@ XferStatsPanel
 			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 				scale.init();
+				refresh();
 			}
 		});
 
@@ -243,10 +262,9 @@ XferStatsPanel
 		});
 
 		canvas.addMouseMoveListener(new MouseMoveListener() {
-			private long last_refresh;
 			@Override
 			public void mouseMove(MouseEvent event) {
-				boolean	do_refresh = false;
+				
 				if(mouseLeftDown && (event.stateMask & SWT.MOD4) == 0) {
 					int deltaX = event.x - xDown;
 					int deltaY = event.y - yDown;
@@ -260,7 +278,7 @@ XferStatsPanel
 					scale.maxX = scale.saveMaxX - realDeltaX;
 					scale.minY = scale.saveMinY - realDeltaY;
 					scale.maxY = scale.saveMaxY - realDeltaY;
-					do_refresh = true;
+					requestRefresh();
 				}
 				if(mouseRightDown || (mouseLeftDown && (event.stateMask & SWT.MOD4) > 0)) {
 					int deltaX = event.x - xDown;
@@ -282,19 +300,7 @@ XferStatsPanel
 					float centerY = (scale.saveMinY + scale.saveMaxY)/2;
 					scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
 					scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
-					do_refresh = true;
-				}
-
-				if ( do_refresh ){
-
-					long now = SystemTime.getMonotonousTime();
-
-					if ( now - last_refresh >= 250 ){
-
-						last_refresh = now;
-
-						refresh();
-					}
+					requestRefresh();
 				}
 			}
 		});
@@ -318,27 +324,16 @@ XferStatsPanel
 				}
 			}
 		});
-
-		timeout_timer =
-			SimpleTimer.addPeriodicEvent(
-				"DHTOps:timer",
-				30*1000,
-				new TimerEventPerformer()
-				{
-					@Override
-					public void
-					perform(
-						TimerEvent event)
-					{
-						if ( canvas.isDisposed()){
-
-							timeout_timer.cancel();
-
-							return;
-						}
-
-					}
-				});
+		
+		parent.addListener(
+			SWT.Resize,
+			new Listener(){
+				
+				@Override
+				public void handleEvent(Event event){
+					requestRefresh();
+				}
+			});
 	}
 
 	public void setLayoutData(Object data) {
@@ -355,10 +350,25 @@ XferStatsPanel
 	public void
 	refreshView()
 	{
-
-		refresh();
+		if ( gm_stats == null ){
+			
+			return;
+		}
+		
+		AggregateStats		a_stats = gm_stats.getAggregateRemoteStats();
+			
+		if ( latest_sequence == Long.MAX_VALUE || latest_sequence != a_stats.getSequence()){
+		
+			refresh();
+		}
 	}
 
+	private void
+	requestRefresh()
+	{
+		refresh_dispatcher.dispatch();
+	}
+	
 	public void
 	refresh()
 	{
@@ -367,11 +377,6 @@ XferStatsPanel
 			return;
 		}
 
-		if ( gm_stats == null ){
-			
-			return;
-		}
-		
 		Rectangle size = canvas.getBounds();
 
 		if ( size.width <= 0 || size.height <= 0 ){
@@ -401,11 +406,20 @@ XferStatsPanel
 		gc.setBackground(white);
 		gc.fillRectangle(size);
 
+		if ( gm_stats == null ){
+			
+			return;
+		}
+		
 		flag_width	= scale.getReverseWidth( 25 );
 		flag_height	= scale.getReverseHeight( 15 );
 				
 
-		Map<String,Map<String,Long>> stats = gm_stats.getAggregateRemoteStats();
+		AggregateStats		a_stats = gm_stats.getAggregateRemoteStats();
+		
+		latest_sequence = a_stats.getSequence();
+		
+		Map<String,Map<String,Long>> stats = a_stats.getStats();
 		
 		gc.setForeground(Colors.black);
 				
@@ -475,7 +489,7 @@ XferStatsPanel
 
 		
 		int flag_x 	= (int)( scale.minX + flag_width );
-		int flag_y	= (int)( scale.minY + flag_height );
+		int flag_y	= (int)( scale.minY + flag_height*2 );
 		
 		int	flag_x_start = flag_x;
 		
@@ -513,7 +527,7 @@ XferStatsPanel
 		}
 		
 		flag_x 	= (int)( scale.minX + flag_width );
-		flag_y	= (int)( scale.maxY - 2* flag_height );
+		flag_y	= (int)( scale.maxY - 3*flag_height );
 
 		flag_x_start = flag_x;
 		
