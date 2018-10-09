@@ -34,6 +34,8 @@ import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
+import com.biglybt.core.torrent.PlatformTorrentUtils;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -346,6 +348,50 @@ public class FilesViewMenuUtil
 						}
 					});
 			}
+			
+			final MenuItem setThumb = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(setThumb, "menu.set.file.as.thumb");
+						
+			File actual_file = file.getFile( true );
+			
+			if ( 	file.getDownloaded() != file.getLength() ||
+					actual_file.length() != file.getLength() || 
+					!HTTPUtils.isImageFileType( file.getExtension())){
+				
+				setThumb.setEnabled( false );
+				
+			}else{
+			
+				setThumb.addListener(
+					SWT.Selection,
+					new Listener()
+					{
+						@Override
+						public void
+						handleEvent(
+							Event arg )
+						{
+							try{
+								byte[] thumbnail = FileUtil.readFileAsByteArray( actual_file );
+
+								String type = HTTPUtils.guessContentTypeFromFileType( file.getExtension() );
+
+								try{
+									TOTorrent torrent = file.getDownloadManager().getTorrent();
+
+									PlatformTorrentUtils.setContentThumbnail( torrent, thumbnail, type );
+
+								}catch( Throwable e ){
+
+								}
+							}catch( Throwable e ){
+
+								Debug.out( e );
+							}
+						}
+					});
+			}
+			
 		}
 		
 		new MenuItem(menu, SWT.SEPARATOR);

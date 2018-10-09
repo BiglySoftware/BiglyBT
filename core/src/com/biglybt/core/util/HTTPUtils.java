@@ -83,6 +83,10 @@ public class HTTPUtils {
 	public static String guessContentTypeFromFileType(String file_type) {
 		if (file_type != null) {
 
+			if ( file_type.startsWith( "." )){
+				file_type = file_type.substring(1);
+			}
+			
 			String type = (String) file_types.get(file_type.toLowerCase( Constants.LOCALE_ENGLISH ));
 
 			if (type != null) {
@@ -92,6 +96,24 @@ public class HTTPUtils {
 		}
 
 		return (default_type);
+	}
+	
+	public static boolean isImageFileType(String file_type) {
+		if (file_type != null) {
+
+			if ( file_type.startsWith( "." )){
+				file_type = file_type.substring(1);
+			}
+			
+			String type = (String) file_types.get(file_type.toLowerCase( Constants.LOCALE_ENGLISH ));
+
+			if (type != null) {
+
+				return (type.startsWith( "image"));
+			}
+		}
+
+		return( false );
 	}
 
 	public static boolean
