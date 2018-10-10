@@ -24,6 +24,7 @@ import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
+import java.net.InetAddress;
 import java.util.*;
 import java.util.List;
 
@@ -35,9 +36,11 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.dht.control.DHTControlContact;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
@@ -94,6 +97,9 @@ XferStatsPanel
 	int flag_width;
 	int flag_height;
 
+	private List<Object[]>	currentPositions = new ArrayList<>();
+
+	  
 	static float def_minX = -1000;
 	static float def_maxX = 1000;
 	static float def_minY = -1000;
@@ -308,6 +314,40 @@ XferStatsPanel
 		canvas.addMouseTrackListener(new MouseTrackListener() {
 			@Override
 			public void mouseHover(MouseEvent e) {
+	    		int x = e.x;
+	    		int	y = e.y;
+
+	    		Node closest = null;
+
+	    		int		closest_distance = Integer.MAX_VALUE;
+
+	    		for ( Object[] entry: currentPositions ){
+
+	       			int		e_x = (Integer)entry[0];
+	     			int		e_y = (Integer)entry[1];
+
+	       			long	x_diff = x - e_x;
+	       			long	y_diff = y - e_y;
+
+	       			int distance = (int)Math.sqrt( x_diff*x_diff + y_diff*y_diff );
+
+	       			if ( distance < closest_distance ){
+
+	       				closest_distance 	= distance;
+	       				closest				= (Node)entry[2];
+	       			}
+	    		}
+
+	    		if ( closest_distance <= 30 ){
+
+	    			String tt = closest.cc;
+	    			
+	    			canvas.setToolTipText( tt );
+
+	    		}else{
+
+	    			canvas.setToolTipText( "" );
+	    		}
 			}
 
 			@Override
@@ -325,7 +365,7 @@ XferStatsPanel
 			}
 		});
 		
-		parent.addListener(
+		canvas.addListener(
 			SWT.Resize,
 			new Listener(){
 				
@@ -363,7 +403,7 @@ XferStatsPanel
 		}
 	}
 
-	private void
+	public void
 	requestRefresh()
 	{
 		refresh_dispatcher.dispatch();
@@ -415,14 +455,33 @@ XferStatsPanel
 
 		flag_width	= scale.getReverseWidth( 25 );
 		flag_height	= scale.getReverseHeight( 15 );
-				
+			
+		currentPositions.clear();
 
 		AggregateStats		a_stats = gm_stats.getAggregateRemoteStats();
 		
 		latest_sequence = a_stats.getSequence();
 		
+		int	samples 	= a_stats.getSamples();
+		int population	= a_stats.getEstimatedPopulation();
+		
+		long received = a_stats.getLatestReceived();
+		
+		String est_down;
+		
+		if ( samples > 0 && population > 0 ){
+			
+			est_down = ", estimated down=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( (population/samples) * (received/60));
+			
+		}else{
+			
+			est_down = "";
+		}
+		
 		gc.drawText( 
-			" samples=" + a_stats.getSamples() + ", population=" + a_stats.getEstimatedPopulation(), 
+			" samples=" + samples + 
+			", population=" + population + 
+			est_down ,
 			scale.getX( scale.minX, scale.minY), scale.getY(scale.minX, scale.minY) );
 		
 		Map<String,Map<String,Long>> stats = a_stats.getStats();
@@ -476,100 +535,90 @@ XferStatsPanel
 				from_node.links.add( link );
 			}
 		}
-		
-		Comparator<Node> comp = new Comparator<Node>()
-		{
-			@Override
-			public int compare(Node o1, Node o2){
-				return( Long.compare(o2.count, o1.count ));
-			}
-		};
-		
+				
 		List<Node>	dests = new ArrayList<>( dest_map.values());
 		
-		Collections.sort( origins, comp );
-		
-		Collections.sort( dests, comp );
-
-		
-		int flag_x 	= (int)( scale.minX + flag_width );
-		int flag_y	= (int)( scale.minY + flag_height*2 );
-		
-		int	flag_x_start = flag_x;
-		
-		for ( Node node: dests ){
+		float	lhs = scale.minX;
+		float	rhs = scale.maxX - flag_width -10;
 			
-			node.x_pos	= flag_x;
-			node.y_pos	= flag_y;
-						
-			if ( flag_x > ( scale.maxX - flag_width )){
+		for ( int i=0;i<2;i++){
+			
+			int flag_x 	= (int)( -1000 + 10 );
+			
+			int 		flag_y;
+			List<Node>	nodes;
+			boolean		odd;
+			
+			if ( i == 0 ){
 				
-				node.hidden = true;
+				nodes 	= dests;
+				flag_y	= (int)( -1000 + flag_height*2 );
+				odd		= false;
+				
+			}else{
+				
+				nodes 	= origins;
+				flag_y	= (int)( 1000 - 3*flag_height );
+				odd		= true;
+			}
+	
+			Collections.sort(
+				nodes,
+				new Comparator<Node>()
+				{
+					@Override
+					public int compare(Node o1, Node o2){
+						return( Long.compare(o2.count, o1.count ));
+					}
+				});
+
+			int		max_flags = (int)(( rhs - lhs ) / ( 2 * flag_width ));
+			
+			int	pad;
+			
+			if ( nodes.size() >= max_flags ){
+				
+				pad = 0;
 				
 			}else{
 			
-				flag_x += flag_width * 2;
-			}
-		}
-
-		int	pad = (int)(( scale.maxX - scale.minX - ( flag_x - flag_x_start ))/2);
-				
-		boolean odd = false;
-
-		for ( Node node: dests ){
-
-			if ( node.hidden ){
-				
-				break;
+				pad = (int)((( rhs - lhs) - nodes.size() * 2 * flag_width ) / 2 );
 			}
 			
-			node.x_pos += pad;
-			
-			node.draw( gc, odd  );
-			
-			odd = !odd;
-		}
-		
-		flag_x 	= (int)( scale.minX + flag_width );
-		flag_y	= (int)( scale.maxY - 3*flag_height );
-
-		flag_x_start = flag_x;
-		
-		for ( Node node: origins ){
-			
-			node.x_pos	= flag_x;
-			node.y_pos	= flag_y;
-						
-			if ( flag_x > ( scale.maxX - flag_width )){
+			for ( Node node: nodes ){
 				
-				node.hidden = true;
-				
-			}else{
-			
-				flag_x += flag_width * 2;
+				node.x_pos	= flag_x + pad;
+				node.y_pos	= flag_y;
+							
+				if ( 	node.x_pos > rhs || 
+						node.x_pos < lhs ){
+					
+					node.hidden = true;
+					
+					flag_x += flag_width;
+									
+				}else{
+													
+					flag_x += flag_width * 2;
+				}
 			}
-		}
-		
-		pad = (int)(( scale.maxX - scale.minX - ( flag_x - flag_x_start ))/2);
-		
-		odd = true;
-
-		for ( Node node: origins ){
-
-			if ( node.hidden ){
-				
-				break;
-			}
-			
-			node.x_pos += pad;
-		
-			node.draw( gc, odd );
-			
-			odd = !odd;
-			
-			for ( Link link: node.links ){
-				
-				link.draw(gc);
+	
+			for ( Node node: nodes ){
+	
+				if ( !node.hidden ){
+								
+					node.draw( gc, odd  );
+					
+					odd = !odd;
+					
+					if ( i == 1 ){
+												
+						for ( Link link: node.links ){
+							
+							link.draw(gc);
+						}
+					}
+				}
 			}
 		}
 		
@@ -631,7 +680,13 @@ XferStatsPanel
 			int[] xy1 = scale.getXY( x1, y1 );
 			int[] xy2 = scale.getXY( x2, y2 );
 			
+			Color old = gc.getForeground();
+			
+			gc.setForeground( Colors.blues[Colors.BLUES_DARKEST ]);
+			
 			gc.drawLine(xy1[0],xy1[1],xy2[0],xy2[1] );
+			
+			gc.setForeground( old );
 		}
 	}
 	
@@ -653,20 +708,24 @@ XferStatsPanel
 			GC			gc,
 			boolean		odd )
 		{
+			int[] xy = scale.getXY( x_pos, y_pos );
+			
 			if ( image == null ){
 				
-				gc.drawText( cc, scale.getX( x_pos, y_pos), scale.getY( x_pos, y_pos) );
+				gc.drawText( cc, xy[0], xy[1] );
 
 			}else{
 				
-				gc.drawImage( image, scale.getX( x_pos, y_pos), scale.getY( x_pos, y_pos) );
+				gc.drawImage( image, xy[0], xy[1] );
 			}
 
-			int[] xy = scale.getXY( x_pos, odd?(y_pos+flag_height):(y_pos-flag_height));
+			currentPositions.add( new Object[]{ xy[0], xy[1], this });
 			
-				// remember stats are in k per min
+			xy = scale.getXY( x_pos, odd?(y_pos+flag_height):(y_pos-flag_height));
 			
-			gc.drawText( DisplayFormatters.formatByteCountToKiBEtcPerSec( count*1024/60 ), xy[0], xy[1] );
+				// remember stats are in bytes per min
+			
+			gc.drawText( DisplayFormatters.formatByteCountToKiBEtcPerSec( count/60 ), xy[0], xy[1] );
 				
 		}
 	}

@@ -141,8 +141,13 @@ GlobalManagerStats
 		public String 
 		getCC();
 		
+			/**
+			 * 
+			 * @return bytes per MINUTE
+			 */
+		
 		public long
-		getAverageSent();
+		getAverageReceivedBytes();
 	}
 	
 	public interface
@@ -173,6 +178,9 @@ GlobalManagerStats
 		
 		public int
 		getSequence();
+		
+		public long
+		getLatestReceived();
 		
 		public Map<String,Map<String,Long>>
 		getStats();

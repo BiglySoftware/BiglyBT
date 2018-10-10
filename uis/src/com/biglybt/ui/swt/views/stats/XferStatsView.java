@@ -109,13 +109,6 @@ public class XferStatsView
 		return panel;
 	}
 
-	private void refresh() {
-		if ( drawPanel != null ){
-		
-			drawPanel.refreshView();
-		}
-	}
-
 	private String
 	getTitleID()
 	{
@@ -157,10 +150,17 @@ public class XferStatsView
 			break;
 
 		case UISWTViewEvent.TYPE_FOCUSGAINED:
+			if ( drawPanel != null ){
+				
+				drawPanel.requestRefresh();
+			}
 			break;
 
 		case UISWTViewEvent.TYPE_REFRESH:
-			refresh();
+			if ( drawPanel != null ){
+				
+				drawPanel.refreshView();
+			}
 			break;
 		}
 

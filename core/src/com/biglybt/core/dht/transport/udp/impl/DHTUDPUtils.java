@@ -1510,28 +1510,28 @@ DHTUDPUtils
 			
 			Iterator<CountryDetails>	it = gm_stats.getCountryDetails();
 			
-			List<CountryDetails>	ups = new ArrayList<>(128);
+			List<CountryDetails>	downs = new ArrayList<>(128);
 			
-			Map<CountryDetails,Long>	sent_cache = new HashMap<>();
-	
+			Map<CountryDetails,Long>	recv_cache = new HashMap<>();
+				
 			while( it.hasNext()){
 				
 				CountryDetails cd = it.next();
 				
-				long sent = cd.getAverageSent();
+				long sent = cd.getAverageReceived();
 				
 				if ( sent > 0 && !cd.getCC().isEmpty()){	// skip boring && total
 			
-					ups.add( cd );
+					downs.add( cd );
 					
-					sent_cache.put( cd,  sent );
+					recv_cache.put( cd,  sent );
 				}
 			}
-			
-			CountryDetails[] ups_a = ups.toArray( new CountryDetails[0] );
+						
+			CountryDetails[] downs_a = downs.toArray( new CountryDetails[0] );
 			
 			Arrays.sort(
-				ups_a,
+					downs_a,
 				new Comparator<CountryDetails>(){
 					@Override
 					public int 
@@ -1539,22 +1539,22 @@ DHTUDPUtils
 						CountryDetails o1, 
 						CountryDetails o2)
 					{
-						Long l1 = (Long)sent_cache.get(o1);
-						Long l2 = (Long)sent_cache.get(o2);
+						Long l1 = (Long)recv_cache.get(o1);
+						Long l2 = (Long)recv_cache.get(o2);
 						
 						return( Long.compare( l2, l1 ));
 					}
 				});
 					
-			last_details = ups_a;
+			last_details = downs_a;
 			
 			last_calc = now;
 		}
 		
 		CountryDetails[] details = last_details;
 		
-		os.writeByte( 0x00 );	// version
-		
+		os.writeByte( 0x01 );	// version
+				
 		int	records = Math.min( details.length, MAX_CC_STATS );
 		
 		os.writeByte((byte)records );
@@ -1581,7 +1581,10 @@ DHTUDPUtils
 			
 			os.writeByte((byte)cc.charAt(0));
 			os.writeByte((byte)cc.charAt(1));
-			os.writeInt((int)(cd.getAverageSent()/1024));
+			
+			// version 0 - os.writeInt((int)(cd.getAverageSent()/1024));
+			
+			os.writeFloat( cd.getAverageReceived());
 		}
 	}
 	
@@ -1592,6 +1595,11 @@ DHTUDPUtils
 		throws IOException
 	{
 		byte version = is.readByte();
+		
+		if ( version > 1 ){
+			
+			return( null );
+		}
 		
 		int records = (int)(is.readByte() & 0x00ff );
 		
@@ -1623,7 +1631,20 @@ DHTUDPUtils
 				
 				String f_cc = cc;
 				
-				int bytes = is.readInt();
+				long 	bytes;
+				
+				if ( version == 0 ){
+					
+					bytes = ((long)( is.readInt() & 0x00000000ffffffff ))*1024;
+										
+				}else if ( version == 1 ){
+					
+					bytes= (long)is.readFloat();
+					
+				}else{
+					
+					bytes	= 0;
+				}
 				
 				stats[i] = 
 					new RemoteCountryStats()
@@ -1635,7 +1656,7 @@ DHTUDPUtils
 						}
 					
 						public long
-						getAverageSent()
+						getAverageReceivedBytes()
 						{
 							return( bytes );
 						}

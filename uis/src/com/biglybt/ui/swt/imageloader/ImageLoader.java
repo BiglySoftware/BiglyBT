@@ -1231,7 +1231,7 @@ public class ImageLoader
 					}
 				} catch (Throwable e) {
 					System.err.println(e.getMessage() + " for " + url + " at " + cache_file);
-					Debug.printStackTrace(e);
+					//Debug.printStackTrace(e);
 				}
 			}else{
 
