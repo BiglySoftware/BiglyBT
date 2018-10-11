@@ -1486,10 +1486,15 @@ DHTUDPUtils
 		return( result_list );
 	}
 	
-	private static final int					MAX_CC_STATS	= 25;
+	private static final int					MAX_CC_STATS	= 24;	// must be even
 	private static final int					CALC_PERIOD		= 60*1000;
 	private static volatile long				last_calc		= SystemTime.getMonotonousTime() - ( CALC_PERIOD + 1 );
-	private static volatile CountryDetails[]	last_details	= new CountryDetails[0];
+	
+	private static volatile CountryDetails[]	last_details_recv	= new CountryDetails[0];
+	private static volatile CountryDetails[]	last_details_sent	= new CountryDetails[0];
+	
+	private static volatile long				last_details_recv_total;
+	private static volatile long				last_details_sent_total;
 	
 	private static volatile GlobalManagerStats	gm_stats;
 	
@@ -1510,28 +1515,51 @@ DHTUDPUtils
 			
 			Iterator<CountryDetails>	it = gm_stats.getCountryDetails();
 			
-			List<CountryDetails>	downs = new ArrayList<>(128);
+			List<CountryDetails>	recvs = new ArrayList<>(128);
+			List<CountryDetails>	sents = new ArrayList<>(128);
 			
 			Map<CountryDetails,Long>	recv_cache = new HashMap<>();
+			Map<CountryDetails,Long>	sent_cache = new HashMap<>();
 				
+			long	recv_total	= 0;
+			long	sent_total	= 0;
+			
 			while( it.hasNext()){
 				
 				CountryDetails cd = it.next();
 				
-				long sent = cd.getAverageReceived();
-				
-				if ( sent > 0 && !cd.getCC().isEmpty()){	// skip boring && total
-			
-					downs.add( cd );
+				if ( cd.getCC().isEmpty()){
 					
-					recv_cache.put( cd,  sent );
+					continue;
+				}
+				
+				long recv = cd.getAverageReceived();
+				
+				if ( recv > 0 ){
+			
+					recv_total += recv;
+					
+					recvs.add( cd );
+					
+					recv_cache.put( cd,  recv );
+				}
+				
+				long sent = cd.getAverageSent();
+				
+				if ( sent > 0 ){
+			
+					sent_total += sent;
+					
+					sents.add( cd );
+					
+					sent_cache.put( cd,  sent );
 				}
 			}
 						
-			CountryDetails[] downs_a = downs.toArray( new CountryDetails[0] );
+			CountryDetails[] recvs_a = recvs.toArray( new CountryDetails[0] );
 			
 			Arrays.sort(
-					downs_a,
+				recvs_a,
 				new Comparator<CountryDetails>(){
 					@Override
 					public int 
@@ -1545,46 +1573,105 @@ DHTUDPUtils
 						return( Long.compare( l2, l1 ));
 					}
 				});
-					
-			last_details = downs_a;
+				
+			CountryDetails[] sents_a = sents.toArray( new CountryDetails[0] );
+			
+			Arrays.sort(
+				sents_a,
+				new Comparator<CountryDetails>(){
+					@Override
+					public int 
+					compare(
+						CountryDetails o1, 
+						CountryDetails o2)
+					{
+						Long l1 = (Long)sent_cache.get(o1);
+						Long l2 = (Long)sent_cache.get(o2);
+						
+						return( Long.compare( l2, l1 ));
+					}
+				});
+			
+			last_details_recv_total	= recv_total;
+			last_details_sent_total	= sent_total;
+			
+			last_details_recv = recvs_a;
+			last_details_sent = sents_a;
 			
 			last_calc = now;
 		}
-		
-		CountryDetails[] details = last_details;
-		
-		os.writeByte( 0x01 );	// version
 				
-		int	records = Math.min( details.length, MAX_CC_STATS );
+		CountryDetails[] details_recv = last_details_recv;
+		CountryDetails[] details_sent = last_details_sent;
 		
-		os.writeByte((byte)records );
+		os.writeByte( 0x02 );	// version
+			
+		os.writeFloat( last_details_recv_total );
+		os.writeFloat( last_details_sent_total );
 		
-		for ( CountryDetails cd: details ){
+		int num_recv 	= details_recv.length;
+		int num_sent	= details_sent.length;
+		
+		if ( num_recv + num_sent > MAX_CC_STATS ){
 			
-			String cc = cd.getCC();
-			
-			if ( cc.length() > 2 ){
+			final int half = MAX_CC_STATS/2;
+						
+			if ( num_recv < half ){
 				
-				if ( cc.equals( AENetworkClassifier.AT_I2P )){
-					
-					cc = "X0";
-					
-				}else if ( cc.equals( AENetworkClassifier.AT_TOR )){
-					
-					cc = "X1";
-					
-				}else{
-					
-					cc = "X2";
-				}
+				num_sent = MAX_CC_STATS - num_recv;
+				
+			}else if ( num_sent < half ){
+				
+				num_recv = MAX_CC_STATS - num_sent;
+				
+			}else{
+				
+				num_recv = num_sent = half;
+			}
+		}
+		
+		for ( int loop=0;loop<2;loop++){
+			
+			CountryDetails[]	details;
+			int					records;
+
+			if ( loop == 0 ){
+				details	= details_recv;
+				records	= num_recv;
+			}else{
+				details	= details_sent;
+				records	= num_sent;
 			}
 			
-			os.writeByte((byte)cc.charAt(0));
-			os.writeByte((byte)cc.charAt(1));
-			
-			// version 0 - os.writeInt((int)(cd.getAverageSent()/1024));
-			
-			os.writeFloat( cd.getAverageReceived());
+			os.writeByte((byte)records );
+						
+			for ( int i=0;i<records;i++){
+				
+				CountryDetails cd = details[i];
+				
+				String cc = cd.getCC();
+				
+				if ( cc.length() > 2 ){
+					
+					if ( cc.equals( AENetworkClassifier.AT_I2P )){
+						
+						cc = "X0";
+						
+					}else if ( cc.equals( AENetworkClassifier.AT_TOR )){
+						
+						cc = "X1";
+						
+					}else{
+						
+						cc = "X2";
+					}
+				}
+				
+				os.writeByte((byte)cc.charAt(0));
+				os.writeByte((byte)cc.charAt(1));
+								
+				os.writeFloat( loop==0?cd.getAverageReceived():cd.getAverageSent());
+			}
 		}
 	}
 	
@@ -1594,78 +1681,181 @@ DHTUDPUtils
 	
 		throws IOException
 	{
-		byte version = is.readByte();
-		
-		if ( version > 1 ){
+		try{
+			byte version = is.readByte();
 			
-			return( null );
-		}
-		
-		int records = (int)(is.readByte() & 0x00ff );
-		
-		if ( records > 0 && records <= MAX_CC_STATS ){
-			
-			RemoteCountryStats[]	stats = new RemoteCountryStats[records];
-			
-			for ( int i=0;i<records;i++){
+			if ( version == 0 || version == 1 ){
+							
+				int records = (int)(is.readByte() & 0x00ff );
 				
-				byte c1 = is.readByte();
-				byte c2 = is.readByte();
-				
-				String cc = "" + (char)c1 + (char)c2;
-				
-				if ( c1 == 'X' ){
+				if ( records > 0 && records <= MAX_CC_STATS ){
 					
-					if ( cc.equals( "X0" )){
+					RemoteCountryStats[]	stats = new RemoteCountryStats[records];
 					
-						cc = AENetworkClassifier.AT_I2P;
+					for ( int i=0;i<records;i++){
 						
-					}else if ( cc.equals( "X1" )){
+						byte c1 = is.readByte();
+						byte c2 = is.readByte();
 						
-						cc = AENetworkClassifier.AT_TOR;
+						String cc = "" + (char)c1 + (char)c2;
 						
-					}else{
+						if ( c1 == 'X' ){
+							
+							if ( cc.equals( "X0" )){
+							
+								cc = AENetworkClassifier.AT_I2P;
+								
+							}else if ( cc.equals( "X1" )){
+								
+								cc = AENetworkClassifier.AT_TOR;
+								
+							}else{
+								
+							}
+						}
 						
+						String f_cc = cc;
+						
+						long 	bytes;
+						
+						if ( version == 0 ){
+							
+							bytes = ((long)( is.readInt() & 0x00000000ffffffff ))*1024;
+												
+						}else if ( version == 1 ){
+							
+							bytes= (long)is.readFloat();
+							
+						}else{
+							
+							bytes	= 0;
+						}
+						
+						stats[i] = 
+							new RemoteCountryStats()
+							{
+								public String 
+								getCC()
+								{
+									return( f_cc );
+								}
+							
+								public long
+								getAverageReceivedBytes()
+								{
+									return( bytes );
+								}
+								
+								@Override
+								public long 
+								getAverageSentBytes()
+								{
+									return( 0 );
+								}
+							};
+					}
+					
+					return( stats );
+				
+				}else{
+					
+					return( null );
+				}
+			}else if ( version == 2 ){
+				
+				long	total_recv	= (long)is.readFloat();
+				long	total_sent	= (long)is.readFloat();
+				
+				Map<String,long[]>	stats_map = new HashMap<>();
+				
+				stats_map.put( "", new long[]{ total_recv, total_sent });
+				
+				for ( int loop=0;loop<2;loop++){
+					
+					int records = (int)(is.readByte() & 0x00ff );
+					
+					if ( records > 0 && records <= MAX_CC_STATS ){
+												
+						for ( int i=1;i<=records;i++){
+							
+							byte c1 = is.readByte();
+							byte c2 = is.readByte();
+							
+							String cc = "" + (char)c1 + (char)c2;
+							
+							if ( c1 == 'X' ){
+								
+								if ( cc.equals( "X0" )){
+								
+									cc = AENetworkClassifier.AT_I2P;
+									
+								}else if ( cc.equals( "X1" )){
+									
+									cc = AENetworkClassifier.AT_TOR;
+									
+								}else{
+									
+								}
+							}
+							
+							long[] values = stats_map.get( cc );
+							
+							if ( values == null ){
+								
+								values = new long[2];
+								
+								stats_map.put( cc, values );
+							}
+							
+							values[loop] = (long)is.readFloat();
+						}
 					}
 				}
 				
-				String f_cc = cc;
+				RemoteCountryStats[]	stats = new RemoteCountryStats[stats_map.size()];
 				
-				long 	bytes;
+				int	pos = 0;
 				
-				if ( version == 0 ){
+				for ( Map.Entry<String,long[]> entry: stats_map.entrySet()){
 					
-					bytes = ((long)( is.readInt() & 0x00000000ffffffff ))*1024;
-										
-				}else if ( version == 1 ){
-					
-					bytes= (long)is.readFloat();
-					
-				}else{
-					
-					bytes	= 0;
+					stats[pos++] = 
+						new RemoteCountryStats()
+						{
+							long[]	values = entry.getValue();
+							
+							public String 
+							getCC()
+							{
+								return( entry.getKey());
+							}
+						
+							public long
+							getAverageReceivedBytes()
+							{
+								return( values[0] );
+							}
+							
+							@Override
+							public long 
+							getAverageSentBytes()
+							{
+								return( values[1] );
+							}
+						};
 				}
 				
-				stats[i] = 
-					new RemoteCountryStats()
-					{
-						public String 
-						getCC()
-						{
-							return( f_cc );
-						}
-					
-						public long
-						getAverageReceivedBytes()
-						{
-							return( bytes );
-						}
-					};
+				return( stats );
+				
+			}else{
+				
+				return( null );
 			}
+		}catch( Throwable e ){
 			
-			return( stats );
+			if ( Constants.IS_CVS_VERSION ){
 			
-		}else{
+				Debug.out(e);
+			}
 			
 			return( null );
 		}
@@ -1675,12 +1865,14 @@ DHTUDPUtils
 	receiveUploadStats(
 		DHTTransportUDPContactImpl	contact,
 		Object						_stats )
-	{
+	{		
 		if ( _stats == null ){
 			
 			return;
 		}
-		
+	
+		System.out.println( "Receive stats: " + _stats );
+
 		RemoteCountryStats[]	stats = (RemoteCountryStats[])_stats;
 		
 		InetAddress address = contact.getTransportAddress().getAddress();

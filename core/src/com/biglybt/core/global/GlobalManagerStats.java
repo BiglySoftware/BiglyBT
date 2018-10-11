@@ -148,6 +148,9 @@ GlobalManagerStats
 		
 		public long
 		getAverageReceivedBytes();
+		
+		public long
+		getAverageSentBytes();
 	}
 	
 	public interface

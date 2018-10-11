@@ -901,7 +901,7 @@ GlobalManagerStatsImpl
 		RemoteStats		stats )
 	{
 			// add new entry
-		
+				
 		{
 			String[] o_details = PeerUtils.getCountryDetails(stats.getRemoteAddress());
 			
@@ -934,7 +934,7 @@ GlobalManagerStatsImpl
 				String cc = rc.getCC();
 				
 				long	ave = rc.getAverageReceivedBytes();
-				
+								
 				if ( ave > 0 && ave < MAX_ALLOWED_BYTES_PER_MIN ){
 					
 					total_received += ave;
@@ -966,7 +966,7 @@ GlobalManagerStatsImpl
 					
 				if ( 	stats_history.size() > STATS_HISTORY_MAX_SAMPLES ||
 						now - entry.time > STATS_HISTORY_MAX_AGE ){
-					
+										
 					it.remove();
 					
 					String originator_cc = entry.cc;
@@ -1044,7 +1044,7 @@ GlobalManagerStatsImpl
 				Debug.out( e );
 			}
 		}
-		
+				
 		as_latest = 
 			new AggregateStatsImpl(
 				stats_history.size(),

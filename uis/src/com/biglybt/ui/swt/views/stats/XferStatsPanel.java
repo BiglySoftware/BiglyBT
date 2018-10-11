@@ -33,6 +33,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
@@ -478,11 +479,11 @@ XferStatsPanel
 			est_down = "";
 		}
 		
-		gc.drawText( 
-			" samples=" + samples + 
-			", population=" + population + 
-			est_down ,
-			scale.getX( scale.minX, scale.minY), scale.getY(scale.minX, scale.minY) );
+		String header = " samples=" + samples + ", population=" + population +	est_down;
+				
+		gc.drawText( header, scale.getX( scale.minX, scale.minY), scale.getY(scale.minX, scale.minY) );
+		
+		Point header_extent = gc.textExtent( header );
 		
 		Map<String,Map<String,Long>> stats = a_stats.getStats();
 						
@@ -552,7 +553,7 @@ XferStatsPanel
 			if ( i == 0 ){
 				
 				nodes 	= dests;
-				flag_y	= (int)( -1000 + flag_height*2 );
+				flag_y	= (int)( -1000 + flag_height + scale.getReverseHeight( header_extent.y + 5 ));
 				odd		= false;
 				
 			}else{
