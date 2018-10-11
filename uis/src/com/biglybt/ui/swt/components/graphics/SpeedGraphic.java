@@ -115,7 +115,8 @@ public class SpeedGraphic extends ScaledGraphic implements ParameterListener {
 			public void paintControl(PaintEvent e) {
 				if (bufferImage != null && !bufferImage.isDisposed()) {
 					Rectangle bounds = bufferImage.getBounds();
-					if (bounds.width >= e.width && bounds.height >= e.height) {
+					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
+
 						if (alpha != 255) {
 							try {
 								e.gc.setAlpha(alpha);

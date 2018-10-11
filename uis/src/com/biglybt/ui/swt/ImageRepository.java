@@ -626,6 +626,37 @@ public class ImageRepository
 			return( null );
 		}
 
+		if ( AENetworkClassifier.internalise( cc ) == cc ){
+			
+			final String key = "net_" + cc + (small?"_s":"_b" );
+
+			Image i = net_images.get( key );
+
+			if ( i == null ){
+
+				Utils.execSWTThread(
+					new Runnable()
+					{
+						@Override
+						public void
+						run()
+						{
+							Image i = ImageLoader.getInstance().getImage( key );
+
+							net_images.put( key, i );
+						}
+					},
+					false );
+
+				i = net_images.get( key );
+			}
+
+			if ( ImageLoader.isRealImage( i )){
+
+				return( i );
+			}
+		}
+		
 		Image flag = null;
 
 		LocationProvider fp = getFlagProvider();

@@ -130,7 +130,7 @@ public class VivaldiPanel {
 			public void paintControl(PaintEvent e) {
 				if (img != null && !img.isDisposed()) {
 					Rectangle bounds = img.getBounds();
-					if (bounds.width >= e.width && bounds.height >= e.height) {
+					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 						if (alpha != 255) {
 							try {
 								e.gc.setAlpha(alpha);

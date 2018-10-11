@@ -855,12 +855,16 @@ GlobalManagerStatsImpl
 	
 	private static final long MAX_ALLOWED_BYTES_PER_MIN	= 60*1024*1024*1024L;		// gb/sec limit
 	
-	private Map<String,Map<String,Long>>	aggregate_stats = new ConcurrentHashMap<>();
+	private Map<String,Map<String,long[]>>	aggregate_stats = new ConcurrentHashMap<>();
 		
 	private int sequence;
 	
-	private long	total_received;
+	private long	total_received_sum;		// migration before version 2 of exchange protocol
+	private long	total_sent_sum;			// ditto
 	
+	private long	total_received_overall;
+	private long	total_sent_overall;
+
 	private volatile AggregateStatsImpl	as_latest = new AggregateStatsImpl( sequence++ );
 
 	private DHT	dht_biglybt;
@@ -918,7 +922,7 @@ GlobalManagerStatsImpl
 			
 			stats_history.add( new HistoryEntry( originator_cc, stats ));
 			
-			Map<String,Long> map = aggregate_stats.get( originator_cc );
+			Map<String,long[]> map = aggregate_stats.get( originator_cc );
 			
 			if ( map == null ){
 				
@@ -928,26 +932,44 @@ GlobalManagerStatsImpl
 			}
 			
 			RemoteCountryStats[] rcs = stats.getStats();
-			
+						
 			for ( RemoteCountryStats rc: rcs ){
 				
 				String cc = rc.getCC();
 				
-				long	ave = rc.getAverageReceivedBytes();
-								
-				if ( ave > 0 && ave < MAX_ALLOWED_BYTES_PER_MIN ){
+				long	recv = rc.getAverageReceivedBytes();
+				long	sent = rc.getAverageSentBytes();
 					
-					total_received += ave;
+				if ( recv < 0 || recv > MAX_ALLOWED_BYTES_PER_MIN ){
+					recv = 0;
+				}
+				
+				if ( sent < 0 || sent > MAX_ALLOWED_BYTES_PER_MIN ){
+					sent = 0;
+				}
+				
+				
+				if ( sent + recv > 0 ){
 					
-					Long	val = map.get( cc );
+					total_received_sum 	+= recv;
+					total_sent_sum		+= sent;
+					
+					if ( cc.isEmpty()){
+						
+						total_received_overall 	+= recv;
+						total_sent_overall		+= sent;
+					}
+					
+					long[]	val = map.get( cc );
 					
 					if ( val == null ){
 						
-						map.put( cc, ave );
+						map.put( cc, new long[]{ recv, sent });
 						
 					}else{
 						
-						map.put( cc, val + ave );
+						val[0]	+= recv;
+						val[1]	+= sent;
 					}
 				}
 			}
@@ -971,7 +993,7 @@ GlobalManagerStatsImpl
 					
 					String originator_cc = entry.cc;
 					
-					Map<String,Long> map = aggregate_stats.get( originator_cc );
+					Map<String,long[]> map = aggregate_stats.get( originator_cc );
 			
 					if ( map == null ){
 						
@@ -984,11 +1006,20 @@ GlobalManagerStatsImpl
 						
 						String cc = rc.getCC();
 						
-						long	ave = rc.getAverageReceivedBytes();
-						
-						if ( ave > 0 && ave < MAX_ALLOWED_BYTES_PER_MIN ){
+						long	recv = rc.getAverageReceivedBytes();
+						long	sent = rc.getAverageSentBytes();
 							
-							Long	val = map.get( cc );
+						if ( recv < 0 || recv > MAX_ALLOWED_BYTES_PER_MIN ){
+							recv = 0;
+						}
+						
+						if ( sent < 0 || sent > MAX_ALLOWED_BYTES_PER_MIN ){
+							sent = 0;
+						}
+						
+						if ( recv + sent > 0 ){
+							
+							long[]	val = map.get( cc );
 							
 							if ( val == null ){
 								
@@ -996,23 +1027,32 @@ GlobalManagerStatsImpl
 								
 							}else{
 								
-								long temp = val - ave;
-								
-								if ( temp < 0 ){
+								long new_recv = val[0] - recv;
+								long new_sent = val[1] - sent;
+																
+								if ( new_recv < 0 || new_sent < 0 ){
 									
 									Debug.out( "inconsistent");
 									
 								}else{
 									
-									total_received -= ave;
+									total_received_sum 	-= recv;
+									total_sent_sum		-= sent;
 
-									if ( temp == 0 ){
+									if ( cc.isEmpty()){
+										
+										total_received_overall 	-= recv;
+										total_sent_overall		-= sent;
+									}
+									
+									if ( new_recv + new_sent == 0 ){
 										
 										map.remove( cc );
 										
 									}else{
 										
-										map.put( cc,  temp );
+										val[0]	= new_recv;
+										val[1]	= new_sent;
 									}
 								}
 							}
@@ -1050,7 +1090,8 @@ GlobalManagerStatsImpl
 				stats_history.size(),
 				dht_biglybt==null?0:(int)dht_biglybt.getControl().getStats().getEstimatedDHTSize(),
 				sequence++,
-				total_received,
+				Math.max( total_received_sum, total_received_overall ),
+				Math.max( total_sent_sum, total_sent_overall ),
 				aggregate_stats );
 	}
 	
@@ -1068,8 +1109,9 @@ GlobalManagerStatsImpl
 		final int	population;
 		final int	sequence;
 		final long	latest_received;
+		final long	latest_sent;
 		
-		final Map<String,Map<String,Long>>	stats;
+		final Map<String,Map<String,long[]>>	stats;
 		
 		AggregateStatsImpl(
 			int		_sequence )
@@ -1078,6 +1120,7 @@ GlobalManagerStatsImpl
 			population		= 0;
 			sequence		= _sequence;
 			latest_received	= 0;
+			latest_sent		= 0;
 			stats			= new HashMap<>();
 		}
 		
@@ -1086,12 +1129,14 @@ GlobalManagerStatsImpl
 			int		_population,
 			int		_sequence,
 			long	_latest_received,
-			Map<String,Map<String,Long>>	_stats )
+			long	_latest_sent,
+			Map<String,Map<String,long[]>>	_stats )
 		{
 			samples			= _samples;
 			population		= _population;
 			sequence		= _sequence;
 			latest_received	= _latest_received;
+			latest_sent		= _latest_sent;
 			stats			= _stats;
 		}
 		
@@ -1119,8 +1164,15 @@ GlobalManagerStatsImpl
 		{
 			return( latest_received );
 		}
+	
+		@Override
+		public long 
+		getLatestSent()
+		{
+			return( latest_sent );
+		}
 		
-		public Map<String,Map<String,Long>>
+		public Map<String,Map<String,long[]>>
 		getStats()
 		{
 			return( stats );

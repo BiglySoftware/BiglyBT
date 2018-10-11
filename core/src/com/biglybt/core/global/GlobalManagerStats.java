@@ -185,7 +185,10 @@ GlobalManagerStats
 		public long
 		getLatestReceived();
 		
-		public Map<String,Map<String,Long>>
+		public long
+		getLatestSent();
+		
+		public Map<String,Map<String,long[]>>
 		getStats();
 	}
 	

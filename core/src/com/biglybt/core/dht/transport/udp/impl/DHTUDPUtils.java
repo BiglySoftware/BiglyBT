@@ -1765,7 +1765,7 @@ DHTUDPUtils
 				
 				long	total_recv	= (long)is.readFloat();
 				long	total_sent	= (long)is.readFloat();
-				
+								
 				Map<String,long[]>	stats_map = new HashMap<>();
 				
 				stats_map.put( "", new long[]{ total_recv, total_sent });
@@ -1871,8 +1871,6 @@ DHTUDPUtils
 			return;
 		}
 	
-		System.out.println( "Receive stats: " + _stats );
-
 		RemoteCountryStats[]	stats = (RemoteCountryStats[])_stats;
 		
 		InetAddress address = contact.getTransportAddress().getAddress();

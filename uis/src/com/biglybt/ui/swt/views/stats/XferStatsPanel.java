@@ -183,7 +183,7 @@ XferStatsPanel
 			public void paintControl(PaintEvent e) {
 				if (img != null && !img.isDisposed()) {
 					Rectangle bounds = img.getBounds();
-					if (bounds.width >= e.width && bounds.height >= e.height) {
+					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 						if (alpha != 255) {
 							try {
 								e.gc.setAlpha(alpha);
@@ -191,6 +191,7 @@ XferStatsPanel
 								// Ignore ERROR_NO_GRAPHICS_LIBRARY error or any others
 							}
 						}
+						
 						e.gc.drawImage(img, e.x, e.y, e.width, e.height, e.x, e.y,
 								e.width, e.height);
 					}
@@ -466,13 +467,14 @@ XferStatsPanel
 		int	samples 	= a_stats.getSamples();
 		int population	= a_stats.getEstimatedPopulation();
 		
-		long received = a_stats.getLatestReceived();
+		long received 	= a_stats.getLatestReceived();
+		long sent		= a_stats.getLatestSent();
 		
 		String est_down;
 		
 		if ( samples > 0 && population > 0 ){
 			
-			est_down = ", estimated down=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( (population/samples) * (received/60));
+			est_down = ", throughput=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( (population/samples) * ((received+sent)/60));
 			
 		}else{
 			
@@ -485,16 +487,23 @@ XferStatsPanel
 		
 		Point header_extent = gc.textExtent( header );
 		
-		Map<String,Map<String,Long>> stats = a_stats.getStats();
+		Map<String,Map<String,long[]>> stats = a_stats.getStats();
 						
 		List<Node> 			origins 	= new ArrayList<>();
-		Map<String,Node>	dest_map 	= new HashMap<>();
+		
+		Map<String,Node>	dest_recv_map 	= new HashMap<>();
+		Map<String,Node>	dest_sent_map 	= new HashMap<>();
 		
 		
-		for ( Map.Entry<String,Map<String,Long>> entry: stats.entrySet()){
+		for ( Map.Entry<String,Map<String,long[]>> entry: stats.entrySet()){
 					
 			String from_cc = entry.getKey();
-						
+				
+			if ( from_cc.isEmpty()){
+				
+				continue;
+			}
+			
 			Node from_node 	= new Node();
 			
 			origins.add( from_node );
@@ -505,44 +514,83 @@ XferStatsPanel
 			from_node.image		= from_image;
 			from_node.links		= new ArrayList<>();
 						
-			for ( Map.Entry<String,Long>	entry2: entry.getValue().entrySet()){
+			for ( Map.Entry<String,long[]>	entry2: entry.getValue().entrySet()){
 				
 				String 	to_cc 		= entry2.getKey();
-				long	to_count	= entry2.getValue();
 				
-				Node	to_node = dest_map.get( to_cc );
-				
-				if ( to_node == null ){
+				if ( to_cc.isEmpty()){
 					
-					to_node = new Node();
-					
-					dest_map.put( to_cc,  to_node );
-					
-					Image to_image = ImageRepository.getCountryFlag( to_cc, false );
-
-					to_node.cc		= to_cc;
-					to_node.image	= to_image;
+					continue;
 				}
 				
-				from_node.count += to_count;
-				to_node.count += to_count;
+				long[]	to_counts	= entry2.getValue();
 				
-				Link link = new Link();
+				long	to_recv = to_counts[0];
+				long	to_sent = to_counts[1];
 				
-				link.count += to_count;
-				link.source	= from_node;
-				link.target	= to_node;
+				Image to_image = ImageRepository.getCountryFlag( to_cc, false );
+
+				if ( to_recv > 0 ){
+					
+					Node	to_node = dest_recv_map.get( to_cc );
+					
+					if ( to_node == null ){
+						
+						to_node = new Node();
+						
+						dest_recv_map.put( to_cc,  to_node );
+							
+						to_node.cc		= to_cc;
+						to_node.image	= to_image;
+					}
+					
+					from_node.count += to_recv;
+					to_node.count += to_recv;
+					
+					Link link = new Link();
+					
+					link.count += to_recv;
+					link.source	= from_node;
+					link.target	= to_node;
+					
+					from_node.links.add( link );
+				}
 				
-				from_node.links.add( link );
+				if ( to_sent > 0 ){
+					
+					Node	to_node = dest_sent_map.get( to_cc );
+					
+					if ( to_node == null ){
+						
+						to_node = new Node();
+						
+						dest_sent_map.put( to_cc,  to_node );
+							
+						to_node.cc		= to_cc;
+						to_node.image	= to_image;
+					}
+					
+					from_node.count += to_sent;
+					to_node.count += to_sent;
+					
+					Link link = new Link();
+					
+					link.count += to_sent;
+					link.source	= from_node;
+					link.target	= to_node;
+					
+					from_node.links.add( link );
+				}
 			}
 		}
 				
-		List<Node>	dests = new ArrayList<>( dest_map.values());
+		List<Node>	dests_recv = new ArrayList<>( dest_recv_map.values());
+		List<Node>	dests_sent = new ArrayList<>( dest_sent_map.values());
 		
 		float	lhs = scale.minX;
 		float	rhs = scale.maxX - flag_width -10;
 			
-		for ( int i=0;i<2;i++){
+		for ( int i=0;i<3;i++){
 			
 			int flag_x 	= (int)( -1000 + 10 );
 			
@@ -552,14 +600,20 @@ XferStatsPanel
 			
 			if ( i == 0 ){
 				
-				nodes 	= dests;
+				nodes 	= dests_recv;
 				flag_y	= (int)( -1000 + flag_height + scale.getReverseHeight( header_extent.y + 5 ));
 				odd		= false;
+				
+			}else if ( i == 1 ){
+								
+				nodes 	= dests_sent;
+				flag_y	= (int)( 1000 - 3*flag_height );
+				odd		= true;
 				
 			}else{
 				
 				nodes 	= origins;
-				flag_y	= (int)( 1000 - 3*flag_height );
+				flag_y	= 0;
 				odd		= true;
 			}
 	
@@ -604,6 +658,8 @@ XferStatsPanel
 				}
 			}
 	
+			boolean draw_links = nodes == origins;
+			
 			for ( Node node: nodes ){
 	
 				if ( !node.hidden ){
@@ -612,7 +668,7 @@ XferStatsPanel
 					
 					odd = !odd;
 					
-					if ( i == 1 ){
+					if ( draw_links ){
 												
 						for ( Link link: node.links ){
 							
@@ -672,11 +728,21 @@ XferStatsPanel
 				return;
 			}
 			
-			int x1 = source.x_pos + flag_width/2;
-			int y1 = source.y_pos - flag_height;
+			boolean above = source.y_pos > target.y_pos;
 			
+			int x1 = source.x_pos + flag_width/2;
 			int x2 = target.x_pos + flag_width/2;
-			int y2 = target.y_pos + 2*flag_height;
+
+			int y1;
+			int y2;
+			
+			if ( above ){
+				y1 = source.y_pos - flag_height;		
+				y2 = target.y_pos + 2*flag_height;
+			}else{
+				y1 = source.y_pos + 2*flag_height;			
+				y2 = target.y_pos - flag_height;	
+			}
 			
 			int[] xy1 = scale.getXY( x1, y1 );
 			int[] xy2 = scale.getXY( x2, y2 );

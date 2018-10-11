@@ -167,7 +167,7 @@ MultiPlotGraphic
 				public void paintControl(PaintEvent e) {
 					if (bufferImage != null && !bufferImage.isDisposed()) {
 						Rectangle bounds = bufferImage.getBounds();
-						if (bounds.width >= e.width && bounds.height >= e.height) {
+						if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 
 							e.gc.drawImage(bufferImage, e.x, e.y, e.width, e.height, e.x, e.y, e.width, e.height);
 						}
