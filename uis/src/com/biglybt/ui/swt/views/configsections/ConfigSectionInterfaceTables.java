@@ -292,8 +292,18 @@ public class ConfigSectionInterfaceTables
 
 			if (isAZ3) {
 
-				new BooleanParameter(cLibrary, "Library.TagInSideBar", "ConfigView.section.style.TagInSidebar").setLayoutData(new GridData(SWT.FILL,
-								SWT.LEFT, true, false, 2, 1));
+				BooleanParameter show_tags = new BooleanParameter(cLibrary, "Library.TagInSideBar", "ConfigView.section.style.TagInSidebar");
+				
+				show_tags.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false, 2, 1));
+				
+				
+				BooleanParameter show_tag_groups =new BooleanParameter(cLibrary, "Library.TagGroupsInSideBar", "ConfigView.section.style.TagGroupsInSidebar");
+
+				gridData = new GridData(SWT.FILL,SWT.LEFT, true, false, 2, 1);
+				gridData.horizontalIndent = 25;
+				show_tag_groups.setLayoutData( gridData );
+				
+				show_tags.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( show_tag_groups ));
 			}
 
 			BooleanParameter show_tag = new BooleanParameter(cLibrary, "Library.ShowTagButtons", "ConfigView.section.style.ShowTagButtons");

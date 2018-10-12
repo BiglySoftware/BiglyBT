@@ -210,5 +210,7 @@ public class UIConfigDefaultsSWT
 				COConfigurationManager.setParameter( "MyTorrents.status.sortorder." + tid, tid_def );
 			}
 		}
+		
+		def.addParameter( "XferStats.show.samples", true );
 	}
 }

@@ -21,10 +21,11 @@
 package com.biglybt.ui.swt.views.stats;
 
 import com.biglybt.ui.swt.ImageRepository;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
-import java.net.InetAddress;
 import java.util.*;
 import java.util.List;
 
@@ -33,19 +34,18 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-import com.biglybt.core.dht.control.DHTControlContact;
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
-import com.biglybt.core.util.TimerEventPeriodic;
 
 
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -56,12 +56,16 @@ XferStatsPanel
 	private static final int ALPHA_FOCUS = 255;
 	private static final int ALPHA_NOFOCUS = 150;
 
-	Display display;
-	Composite parent;
+	private Display display;
 
-	Canvas canvas;
-	Scale scale;
+	private BufferedLabel	header_label;
+	private Canvas 			canvas;
+	
+	private Scale scale	 = new Scale();
 
+	private boolean	show_samples = COConfigurationManager.getBooleanParameter( "XferStats.show.samples" );
+	
+	
 	private boolean mouseLeftDown = false;
 	private boolean mouseRightDown = false;
 	private int xDown;
@@ -100,7 +104,9 @@ XferStatsPanel
 
 	private List<Object[]>	currentPositions = new ArrayList<>();
 
-	  
+	private Node			hover_node;
+	private float			tp_ratio;
+	
 	static float def_minX = -1000;
 	static float def_maxX = 1000;
 	static float def_minY = -1000;
@@ -171,13 +177,77 @@ XferStatsPanel
 		}	
 	}
 
-	public XferStatsPanel(Composite parent) {
-		this.parent = parent;
-		this.display = parent.getDisplay();
-		this.canvas = new Canvas(parent,SWT.NO_BACKGROUND);
+	public 
+	XferStatsPanel(
+		Composite composite) 
+	{
+		display = composite.getDisplay();
 
-		this.scale = new Scale();
+		Color white = ColorCache.getColor(display,255,255,255);
 
+		Composite panel = new Composite(composite,SWT.NULL);
+	    GridLayout layout = new GridLayout();
+	    layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 
+	    		layout.marginHeight = layout.marginWidth = 0;
+	    
+	    layout.numColumns = 2;
+	    panel.setLayout(layout);
+	    panel.setBackground( white );
+	    
+	    	// header
+	    
+	    header_label = new BufferedLabel( panel, SWT.DOUBLE_BUFFERED );
+	    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+	    grid_data.horizontalIndent = 5;
+	    Utils.setLayoutData( header_label, grid_data);
+	    header_label.getControl().setBackground( white );
+	    
+	    	// controls
+	    
+	    Composite controls = new Composite(panel,SWT.NULL);
+	    layout = new GridLayout();
+	    layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 
+	    		layout.marginHeight = layout.marginWidth = 0;
+	    layout.numColumns = 3;
+	    
+	    controls.setLayout(layout);
+	    
+	    Label label = new Label( controls, SWT.NULL );
+	    label.setBackground( white );
+	    Messages.setLanguageText( label, "ConfigView.section.display" );
+	    
+	    Button sample_button	= new Button( controls, SWT.RADIO );
+	    sample_button.setBackground( white );
+	    Messages.setLanguageText( sample_button, "label.samples" );
+	    sample_button.setSelection( show_samples );
+	    
+	    
+	    Button tp_button	= new Button( controls, SWT.RADIO );
+	    tp_button.setBackground( white );
+	    Messages.setLanguageText( tp_button, "label.throughput" );
+	    tp_button.setSelection( !show_samples );
+
+	    SelectionAdapter sa = 
+	    	new SelectionAdapter(){
+	    		@Override
+	    		public void widgetSelected(SelectionEvent e){
+	    			show_samples = sample_button.getSelection();
+	    			COConfigurationManager.setParameter( "XferStats.show.samples", show_samples );
+	    			requestRefresh();
+	    		}
+			};
+	    
+	    sample_button.addSelectionListener( sa );
+	    tp_button.addSelectionListener( sa );
+	    
+	    	// canvas
+	    
+		canvas = new Canvas(panel,SWT.NO_BACKGROUND);
+		grid_data = new GridData( GridData.FILL_BOTH );
+		grid_data.horizontalSpan = 2;
+		
+		canvas.setLayoutData( grid_data );
+		
 		canvas.addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e) {
@@ -341,15 +411,19 @@ XferStatsPanel
 	    		}
 
 	    		if ( closest_distance <= 30 ){
-
-	    			String tt = closest.cc;
 	    			
-	    			canvas.setToolTipText( tt );
+	    			canvas.setToolTipText( closest.getToolTip());
 
+	    			hover_node	= closest;
+	    			
 	    		}else{
 
+	    			hover_node = null;
+	    			
 	    			canvas.setToolTipText( "" );
 	    		}
+	    		
+	    		requestRefresh();
 			}
 
 			@Override
@@ -387,6 +461,27 @@ XferStatsPanel
 		GlobalManagerStats		_stats )
 	{
 		gm_stats	= _stats;
+	}
+	
+	private String
+	getBPSForDisplay(
+		long	bytes )
+	{
+		if ( show_samples ){
+			
+			bytes = bytes/60;
+			
+		}else{
+			
+			if ( tp_ratio == 0 ){
+				
+				return( "" );
+			}
+		
+			bytes = (long)(( tp_ratio * bytes)/60);
+		}
+		
+		return( DisplayFormatters.formatByteCountToKiBEtcPerSec( bytes ));
 	}
 	
 	public void
@@ -464,28 +559,39 @@ XferStatsPanel
 		
 		latest_sequence = a_stats.getSequence();
 		
-		int	samples 	= a_stats.getSamples();
-		int population	= a_stats.getEstimatedPopulation();
+		float samples 		= a_stats.getSamples();
+		float population	= a_stats.getEstimatedPopulation();
 		
 		long received 	= a_stats.getLatestReceived();
 		long sent		= a_stats.getLatestSent();
 		
-		String est_down;
+		String throughput;
 		
 		if ( samples > 0 && population > 0 ){
 			
-			est_down = ", throughput=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( (population/samples) * ((received+sent)/60));
+			tp_ratio = population/samples;
+			
+			throughput =  DisplayFormatters.formatByteCountToKiBEtcPerSec((long)(tp_ratio*(received+sent)/60));
 			
 		}else{
 			
-			est_down = "";
+			tp_ratio = 0;
+			
+			throughput = "";
 		}
 		
-		String header = " samples=" + samples + ", population=" + population +	est_down;
-				
-		gc.drawText( header, scale.getX( scale.minX, scale.minY), scale.getY(scale.minX, scale.minY) );
+		String header = MessageText.getString(
+							"XferStatsView.header",
+							new String[]{
+								String.valueOf( (int)samples ),
+								String.valueOf( (int)population ),
+								throughput
+							});
 		
-		Point header_extent = gc.textExtent( header );
+		header_label.setText( header );
+		
+		//gc.drawText( header, scale.getX( scale.minX, scale.minY), scale.getY(scale.minX, scale.minY) );
+		//Point header_extent = gc.textExtent( header );
 		
 		Map<String,Map<String,long[]>> stats = a_stats.getStats();
 						
@@ -544,8 +650,8 @@ XferStatsPanel
 						to_node.image	= to_image;
 					}
 					
-					from_node.count += to_recv;
-					to_node.count += to_recv;
+					from_node.count_recv += to_recv;
+					to_node.count_recv += to_recv;
 					
 					Link link = new Link();
 					
@@ -570,8 +676,8 @@ XferStatsPanel
 						to_node.image	= to_image;
 					}
 					
-					from_node.count += to_sent;
-					to_node.count += to_sent;
+					from_node.count_sent += to_sent;
+					to_node.count_sent += to_sent;
 					
 					Link link = new Link();
 					
@@ -601,7 +707,7 @@ XferStatsPanel
 			if ( i == 0 ){
 				
 				nodes 	= dests_recv;
-				flag_y	= (int)( -1000 + flag_height + scale.getReverseHeight( header_extent.y + 5 ));
+				flag_y	= (int)( -1000 + flag_height ); // + scale.getReverseHeight( header_extent.y + 5 ));
 				odd		= false;
 				
 			}else if ( i == 1 ){
@@ -623,7 +729,7 @@ XferStatsPanel
 				{
 					@Override
 					public int compare(Node o1, Node o2){
-						return( Long.compare(o2.count, o1.count ));
+						return( Long.compare(o2.count_recv+o2.count_sent, o1.count_recv+o1.count_sent ));
 					}
 				});
 
@@ -749,7 +855,38 @@ XferStatsPanel
 			
 			Color old = gc.getForeground();
 			
-			gc.setForeground( Colors.blues[Colors.BLUES_DARKEST ]);
+			if ( hover_node != null && (source.cc == hover_node.cc || target.cc == hover_node.cc )){
+				
+				gc.setForeground( Colors.fadedGreen );
+				
+				gc.setLineWidth( 2 );
+				
+			}else{
+			
+				long	per_sec = count/60;
+				
+				if ( per_sec > 10*1024*1024 ){
+					
+					gc.setForeground( Colors.blue );
+					
+				}else{
+					int	blues_index ;
+					
+					if ( per_sec > 1024*1024 ){
+						blues_index = Colors.BLUES_DARKEST;
+					}else if ( per_sec > 100*1024 ){
+						blues_index = Colors.BLUES_MIDDARK;
+					}else if ( per_sec > 10*1024 ){
+						blues_index = 5;
+					}else{
+						blues_index = 3;
+					}				
+				
+					gc.setForeground( Colors.blues[ blues_index ]);
+				}
+				
+				gc.setLineWidth( 1 );
+			}
 			
 			gc.drawLine(xy1[0],xy1[1],xy2[0],xy2[1] );
 			
@@ -762,7 +899,8 @@ XferStatsPanel
 	{
 		String			cc;
 		Image			image;
-		long			count;
+		long			count_sent;
+		long			count_recv;
 		
 		List<Link>		links;
 		
@@ -792,8 +930,27 @@ XferStatsPanel
 			
 				// remember stats are in bytes per min
 			
-			gc.drawText( DisplayFormatters.formatByteCountToKiBEtcPerSec( count/60 ), xy[0], xy[1] );
+			gc.drawText( getBPSForDisplay( count_recv+count_sent ), xy[0], xy[1] );
 				
+		}
+		
+		private String
+		getToolTip()
+		{
+			String tt = cc;
+			
+			if ( count_recv > 0 ){
+				
+				tt += "; " + MessageText.getString( "label.download") + "=" + getBPSForDisplay( count_recv );
+			}
+			
+			if ( count_sent > 0 ){
+				
+				tt += "; " + MessageText.getString( "label.upload") + "=" + getBPSForDisplay( count_sent );
+			}
+
+			
+			return( tt );
 		}
 	}
 }

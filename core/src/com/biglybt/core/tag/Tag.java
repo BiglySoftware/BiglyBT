@@ -104,6 +104,9 @@ Tag
 	setGroup(
 		String		group );
 
+	public TagGroup
+	getGroupContainer();
+	
 	public String
 	getImageID();
 

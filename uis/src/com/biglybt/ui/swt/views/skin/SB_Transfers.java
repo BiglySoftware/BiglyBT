@@ -59,11 +59,13 @@ import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
+import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
@@ -99,15 +101,18 @@ public class SB_Transfers
 	private final HasBeenOpenedListener hasBeenOpenedListener;
 
 	private CategoryListener categoryListener;
-	private TagListener tagListener;
 	private DownloadManagerListener dmListener;
 	private GlobalManagerAdapter gmListener;
 	private TimerEventPeriodic timerEventPeriodic;
 	private CategoryManagerListener categoryManagerListener;
+
 	private TagManagerListener	tagManagerListener;
 	private TagTypeListener tagTypeListener;
+	private TagListener tagListener;
+
 	private final Object	tag_listener_lock = new Object();
 	private ParameterListener paramTagsInSidebarListener;
+	private ParameterListener paramTagGroupsInSidebarListener;
 	private ParameterListener paramCatInSidebarListener;
 
 	private long last_dl_entry_load;
@@ -244,7 +249,8 @@ public class SB_Transfers
 	protected boolean	header_show_rates;
 	protected volatile OverallStats totalStats;
 
-
+	protected boolean	show_tag_groups;
+	
 
 	public SB_Transfers(final MultipleDocumentInterfaceSWT mdi, boolean vuze_ui ) {
 		statsNoLowNoise = new stats();
@@ -830,36 +836,9 @@ public class SB_Transfers
 				}
 			}
 		};
-		COConfigurationManager.addAndFireParameterListener("Library.CatInSideBar",
-				paramCatInSidebarListener);
+		COConfigurationManager.addAndFireParameterListener("Library.CatInSideBar",	paramCatInSidebarListener);
 
-		tagListener = new TagListener() {
-			@Override
-			public void
-			taggableAdded(
-				Tag tag,
-				Taggable tagged )
-			{
-				refreshTagSideBar( tag );
-			}
-
-			@Override
-			public void
-			taggableSync(
-				Tag 		tag )
-			{
-				refreshTagSideBar( tag );
-			}
-
-			@Override
-			public void
-			taggableRemoved(
-				Tag			tag,
-				Taggable	tagged )
-			{
-				refreshTagSideBar( tag );
-			}
-		};
+		show_tag_groups = COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
 
 		paramTagsInSidebarListener = new ParameterListener() {
 
@@ -879,12 +858,25 @@ public class SB_Transfers
 			}
 
 		};
-		COConfigurationManager.addAndFireParameterListener("Library.TagInSideBar",
-				paramTagsInSidebarListener);
+		
+		COConfigurationManager.addAndFireParameterListener("Library.TagInSideBar", paramTagsInSidebarListener);
 
+		paramTagGroupsInSidebarListener = new ParameterListener() {
 
+			@Override
+			public void parameterChanged(String parameterName) {
+							
+				removeTagManagerListeners(true);
+					
+				show_tag_groups = COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
 
+				addTagManagerListeners();
+			}
+		};
+				
+		COConfigurationManager.addParameterListener("Library.TagGroupsInSideBar", paramTagGroupsInSidebarListener);
 
+		
 		final GlobalManager gm = core.getGlobalManager();
 		dmListener = new DownloadManagerAdapter() {
 			@Override
@@ -1369,7 +1361,9 @@ public class SB_Transfers
 			return;
 		}
 
-		MdiEntry entry = mdi.getEntry("Tag." + tag.getTagType().getTagType() + "." + tag.getTagID());
+		String tag_id = "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
+		
+		MdiEntry entry = mdi.getEntry( tag_id );
 
 		if ( entry == null ){
 
@@ -1388,16 +1382,34 @@ public class SB_Transfers
 			return;
 		}
 
-		String old_title = entry.getTitle();
-
 		String tag_title = tag.getTagName( true );
+
+		if ( show_tag_groups ){
+			
+			String group = tag.getGroup();
+			
+			String parent_id = entry.getParentID();
+			
+			boolean is_group		= group != null && !group.isEmpty();
+			
+			boolean parent_is_group = parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." + (is_group?group:"" ));
+			
+			if ( is_group != parent_is_group ){
+				
+				removeTag( tag );
+				
+				setupTag( tag );
+			}
+		}
+		
+		String old_title = entry.getTitle();
 
 		if ( !old_title.equals( tag_title )){
 
 			entry.setTitle( tag_title );
 		}
 		
-		setTagIcon( tag, entry );
+		setTagIcon( tag, entry, false );
 		
 		Object[] tik = (Object[])entry.getUserData( TAG_INDICATOR_KEY );
 
@@ -1457,11 +1469,108 @@ public class SB_Transfers
 
 			String id = "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
 
+			String parent_id = MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS;
+			
+			String group_id  = null;
+			
+			if ( show_tag_groups ){
+				
+				String tag_group = tag.getGroup();
+				
+				if ( tag_group != null && !tag_group.isEmpty()){
+					
+					if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD ){
+						
+						group_id = "Tag." + tag.getTagType().getTagType() + ".group." + tag_group;
+						
+						if ( mdi.getEntry( group_id ) == null ){
+						
+							ViewTitleInfo viewTitleInfo =
+									new ViewTitleInfo()
+									{
+										@Override
+										public Object
+										getTitleInfoProperty(
+											int pid )
+										{
+											if ( pid == TITLE_TEXT ) {
+												
+												return( tag_group );
+												
+											}else if ( pid == TITLE_INDICATOR_TEXT ){
+	
+												
+	
+											}else if ( pid == TITLE_INDICATOR_COLOR ){
+	
+	
+											}else if ( pid == TITLE_INDICATOR_TEXT_TOOLTIP ){
+	
+												
+											}
+	
+											return null;
+										}
+									};
+									
+									// find where to locate this in the sidebar
+
+							TreeMap<String,String>	name_map = new TreeMap<>(FormattersImpl.getAlphanumericComparator2(true));
+
+							name_map.put( tag_group, group_id );
+
+							List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
+							
+							for ( MdiEntry kid: kids ){
+								
+								String prefix = "Tag." + tag.getTagType().getTagType() + ".group.";
+								
+								String kid_id = kid.getId();
+
+								if ( kid_id.startsWith( prefix )){
+									
+									name_map.put( kid_id.substring( prefix.length()), kid_id );
+								}
+							}
+
+							String	prev_id = null;
+
+							for ( String this_id: name_map.values()){
+
+								if ( this_id == group_id ){
+
+									break;
+								}
+
+								prev_id = this_id;
+							}
+
+							if ( prev_id == null && name_map.size() > 1 ){
+
+								Iterator<String>	it = name_map.values().iterator();
+
+								it.next();
+
+								prev_id = "~" + it.next();
+							}
+							
+							MdiEntry entry = mdi.createEntryFromSkinRef(
+									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), false, prev_id );
+							
+							setTagIcon( tag, entry, true );
+						}
+						
+						parent_id = group_id;
+					}
+				}
+			}
+			
 			if ( mdi.getEntry( id ) != null ){
 
 				return null;
 			}
 
+			
 				// find where to locate this in the sidebar
 
 			TreeMap<Tag,String>	name_map = new TreeMap<>(TagUIUtils.getTagComparator());
@@ -1474,9 +1583,17 @@ public class SB_Transfers
 
 					String tid = "Tag." + tag.getTagType().getTagType() + "." + t.getTagID();
 
-					if ( mdi.getEntry( tid ) != null ){
+					MdiEntry entry = mdi.getEntry( tid );
+					
+					if ( entry  != null ){
 
-						name_map.put( t, tid );
+						String this_group = t.getGroup();
+						
+						if ( 	( group_id == null && ( this_group==null || this_group.isEmpty() )) ||
+								( group_id != null && entry.getParentID().equals( group_id ))){
+						
+							name_map.put( t, tid );
+						}
 					}
 				}
 			}
@@ -1553,16 +1670,14 @@ public class SB_Transfers
 				String name = tag.getTagName( true );
 
 				entry = mdi.createEntryFromSkinRef(
-						MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, id, "library",
-						name, viewTitleInfo, tag, closable, prev_id);
+						parent_id, id, "library", name, viewTitleInfo, tag, closable, prev_id );
 				
 				addGeneralLibraryMenus( entry, id );
 				
 			}else{
 
 				entry = mdi.createEntryFromEventListener(
-							MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-							new PeersGeneralView( tag ), id, closable, null, prev_id);
+							parent_id, new PeersGeneralView( tag ), id, closable, null, prev_id );
 
 				entry.setViewTitleInfo( viewTitleInfo );
 			}
@@ -1583,6 +1698,22 @@ public class SB_Transfers
 									// userClosed isn't all we want - it just means we're not closing the app... So to prevent
 									// a deselection of 'show tags in sidebar' 'user-closing' the entries we need this test
 
+								
+								if ( show_tag_groups ){
+									
+									String parent_id = entry.getParentID();
+									
+									if ( parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." )){
+										
+										if ( mdi.getChildrenOf( parent_id ).isEmpty()){
+											
+											MdiEntry parent_entry = mdi.getEntry( parent_id );
+											
+											parent_entry.close( true );
+										}
+									}
+								}
+								
 								if ( COConfigurationManager.getBooleanParameter("Library.TagInSideBar")){
 
 									tag.setVisible( false );
@@ -1594,7 +1725,7 @@ public class SB_Transfers
 
 			if (entry != null) {
 
-				setTagIcon( tag, entry );
+				setTagIcon( tag, entry, false );
 			}
 
 			if (entry instanceof SideBarEntrySWT) {
@@ -1721,76 +1852,95 @@ public class SB_Transfers
 			entry.setUserData( AUTO_CLOSE_KEY, "" );
 
 			entry.close( true );
+			
+			if ( show_tag_groups ){
+			
+				String parent_id = entry.getParentID();
+				
+				if ( parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." )){
+					
+					if ( mdi.getChildrenOf( parent_id ).isEmpty()){
+						
+						MdiEntry parent_entry = mdi.getEntry( parent_id );
+						
+						parent_entry.close( true );
+					}
+				}
+			}
 		}
 	}
 
 	private void
 	setTagIcon(
 		Tag			tag,
-		MdiEntry	entry )
+		MdiEntry	entry,
+		boolean		default_only )
 	{
-		String image_file = tag.getImageFile();
-		
-		if ( image_file == null ){
+		if ( !default_only ){
 			
-			image_file = "";
-		}
-		
-		String existing = (String)entry.getUserData( TAG_IMAGE_KEY );
-		
-		if ( existing == image_file || ( existing != null && existing.equals( image_file ))){
+			String image_file = tag.getImageFile();
 			
-			return;
-		}
-		
-		entry.setUserData( TAG_IMAGE_KEY, image_file );
-		
-		if ( !image_file.isEmpty()){
-			
-			String fif = image_file;
-					
-			Utils.execSWTThread(
-				new Runnable(){
-					
-					@Override
-					public void run(){
-						try{
-							String resource = new File( fif ).toURI().toURL().toExternalForm();
-							
-							ImageLoader.getInstance().getUrlImage(
-								resource, 
-								new Point( 20, 14 ),
-								new ImageLoader.ImageDownloaderListener(){
-									
-									@Override
-									public void imageDownloaded(Image image, String key, boolean returnedImmediately){
-										((MdiEntrySWT)entry).setImageLeftID( key );
-										
-									}
-								});
-							
-						}catch( Throwable e ){
-							
-							Debug.out( e );
-						}
-					}
-				});
-		
-		}else{
-			
-			((MdiEntrySWT)entry).setImageLeft( null );
-			
-			String image_id = tag.getImageID();
-
-			if ( image_id != null ){
-				entry.setImageLeftID( image_id );
-			}else if ( tag.getTagType().getTagType() == TagType.TT_PEER_IPSET ){
-				entry.setImageLeftID("image.sidebar.tag-red");
-			}else if ( tag.getTagType().isTagTypePersistent()){
-				entry.setImageLeftID("image.sidebar.tag-green");
-			}else{
-				entry.setImageLeftID("image.sidebar.tag-blue");
+			if ( image_file == null ){
+				
+				image_file = "";
 			}
+			
+			String existing = (String)entry.getUserData( TAG_IMAGE_KEY );
+			
+			if ( existing == image_file || ( existing != null && existing.equals( image_file ))){
+				
+				return;
+			}
+			
+			entry.setUserData( TAG_IMAGE_KEY, image_file );
+			
+			if ( !image_file.isEmpty()){
+				
+				String fif = image_file;
+						
+				Utils.execSWTThread(
+					new Runnable(){
+						
+						@Override
+						public void run(){
+							try{
+								String resource = new File( fif ).toURI().toURL().toExternalForm();
+								
+								ImageLoader.getInstance().getUrlImage(
+									resource, 
+									new Point( 20, 14 ),
+									new ImageLoader.ImageDownloaderListener(){
+										
+										@Override
+										public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+											((MdiEntrySWT)entry).setImageLeftID( key );
+											
+										}
+									});
+								
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					});
+				
+				return;
+			}
+		}
+		
+		((MdiEntrySWT)entry).setImageLeft( null );
+		
+		String image_id = tag.getImageID();
+
+		if ( image_id != null ){
+			entry.setImageLeftID( image_id );
+		}else if ( tag.getTagType().getTagType() == TagType.TT_PEER_IPSET ){
+			entry.setImageLeftID("image.sidebar.tag-red");
+		}else if ( tag.getTagType().isTagTypePersistent()){
+			entry.setImageLeftID("image.sidebar.tag-green");
+		}else{
+			entry.setImageLeftID("image.sidebar.tag-blue");
 		}
 	}
 
@@ -2064,6 +2214,34 @@ public class SB_Transfers
 
 				return;
 			}
+			
+			tagListener = new TagListener() {
+				@Override
+				public void
+				taggableAdded(
+					Tag tag,
+					Taggable tagged )
+				{
+					refreshTagSideBar( tag );
+				}
+
+				@Override
+				public void
+				taggableSync(
+					Tag 		tag )
+				{
+					refreshTagSideBar( tag );
+				}
+
+				@Override
+				public void
+				taggableRemoved(
+					Tag			tag,
+					Taggable	tagged )
+				{
+					refreshTagSideBar( tag );
+				}
+			};
 
 			tagTypeListener = new TagTypeListener() {
 				@Override
@@ -2244,10 +2422,9 @@ public class SB_Transfers
 			timerEventShowUptime = null;
 		}
 
-		COConfigurationManager.removeParameterListener("Library.TagInSideBar",
-				paramTagsInSidebarListener);
-		COConfigurationManager.removeParameterListener("Library.CatInSideBar",
-				paramCatInSidebarListener);
+		COConfigurationManager.removeParameterListener("Library.TagInSideBar", paramTagsInSidebarListener);
+		COConfigurationManager.removeParameterListener("Library.TagGroupsInSideBar", paramTagGroupsInSidebarListener);
+		COConfigurationManager.removeParameterListener("Library.CatInSideBar", paramCatInSidebarListener);
 	}
 
 	protected interface countRefreshListener

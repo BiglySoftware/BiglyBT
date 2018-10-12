@@ -198,6 +198,7 @@ public class MyTorrentsView
   private Object	currentTagsLock = new Object();
   private Tag[]		_currentTags;
   private List<Tag>	allTags;
+  private List<Tag>	hiddenTags = new ArrayList<>();
 
   	private long drag_drop_location_start = -1;
   	private TableRowCore[] drag_drop_rows = null;
@@ -210,7 +211,8 @@ public class MyTorrentsView
 
 	private Composite filterParent;
 
-	protected boolean neverShowCatOrTagButtons;
+	protected boolean neverShowTagButtons;
+	protected boolean neverShowCatButtons;
 	private boolean	showCatButtons;
 	private boolean	showTagButtons;
 	
@@ -363,7 +365,7 @@ public class MyTorrentsView
 			@Override
 			public void tableDataSourceChanged(Object newDataSource) {
 				if (newDataSource instanceof Tag[]) {
-					neverShowCatOrTagButtons = true;
+					neverShowCatButtons = true;
 					setCurrentTags((Tag[]) newDataSource);
 					return;
 				}
@@ -380,12 +382,32 @@ public class MyTorrentsView
 				}
 
 				if ( newDataSource instanceof Tag ){
-					neverShowCatOrTagButtons = true;
+					neverShowCatButtons = neverShowTagButtons = true;
 					setCurrentTags(new Tag[] {
 						(Tag) newDataSource
 					});
 				}
 
+				if ( newDataSource instanceof TagGroup ){
+					neverShowCatButtons = true;
+					TagGroup	tg = (TagGroup)newDataSource;
+					setCurrentTagGroup( tg );
+					
+					tg.addListener(
+						new TagGroupListener(){
+							
+							@Override
+							public void tagRemoved(Tag tag){
+								setCurrentTagGroup( tg );
+							}
+							
+							@Override
+							public void tagAdded(Tag tag){
+								setCurrentTagGroup( tg );
+							}
+						}, false );
+				}
+				
 				if (newDataSource == null && isEmptyListOnNullDS) {
 					setCurrentTags(new Tag[] { });
 				}
@@ -572,8 +594,8 @@ public class MyTorrentsView
 			  menuItemShowCatBut.setSelection(COConfigurationManager.getBooleanParameter( "Library.ShowCatButtons" ));
 			  menuItemShowTagBut.setSelection(COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons" ));
 
-			  menuItemShowCatBut.setEnabled( !neverShowCatOrTagButtons );
-			  menuItemShowTagBut.setEnabled( !neverShowCatOrTagButtons );
+			  menuItemShowCatBut.setEnabled( !neverShowCatButtons );
+			  menuItemShowTagBut.setEnabled( !neverShowTagButtons );
 
 			  menuEnableSimple.setSelection(COConfigurationManager.getBooleanParameter( "Library.EnableSimpleView" ));
 
@@ -703,14 +725,14 @@ public class MyTorrentsView
 
   private void swt_createTabs() {
 
-    boolean catButtonsDisabled = neverShowCatOrTagButtons;
+    boolean catButtonsDisabled = neverShowCatButtons;
     if ( !catButtonsDisabled){
     	catButtonsDisabled = !COConfigurationManager.getBooleanParameter( "Library.ShowCatButtons" );
     }
 
     List<Tag> tags_to_show = new ArrayList<>();
 
-    boolean tagButtonsDisabled = neverShowCatOrTagButtons;
+    boolean tagButtonsDisabled = neverShowTagButtons;
     if ( !tagButtonsDisabled){
     	tagButtonsDisabled = !COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons" );
 
@@ -722,26 +744,29 @@ public class MyTorrentsView
     }
 
     if ( !tagButtonsDisabled ){
-			ArrayList<Tag> tagsManual = new ArrayList<>(
-					TagManagerFactory.getTagManager().getTagType(
-							TagType.TT_DOWNLOAD_MANUAL).getTags());
-			for (Tag tag : tagsManual) {
-				if (tag.isVisible()) {
+    
+		ArrayList<Tag> tagsManual = new ArrayList<>(
+				TagManagerFactory.getTagManager().getTagType(
+						TagType.TT_DOWNLOAD_MANUAL).getTags());
+		for (Tag tag : tagsManual) {
+			if (tag.isVisible()) {
+				if ( !hiddenTags.contains( tag )){
 					tags_to_show.add(tag);
 				}
 			}
+		}
     }
 
     if (!catButtonsDisabled) {
-			ArrayList<Tag> tagsCat = new ArrayList<>(
-					TagManagerFactory.getTagManager().getTagType(
-							TagType.TT_DOWNLOAD_CATEGORY).getTags());
-			for (Tag tag : tagsCat) {
-				if (tag.isVisible()) {
-					tags_to_show.add(tag);
-				}
+    	
+		ArrayList<Tag> tagsCat = new ArrayList<>(
+				TagManagerFactory.getTagManager().getTagType(
+						TagType.TT_DOWNLOAD_CATEGORY).getTags());
+		for (Tag tag : tagsCat) {
+			if (tag.isVisible()) {
+				tags_to_show.add(tag);
 			}
-
+		}
     }
 
     tags_to_show = TagUIUtils.sortTags( tags_to_show );
@@ -2464,7 +2489,7 @@ public class MyTorrentsView
 		showCatButtons = COConfigurationManager.getBooleanParameter( "Library.ShowCatButtons" );
 		showTagButtons = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons" );
 
-		if ( !neverShowCatOrTagButtons ){
+		if ( !neverShowTagButtons ){
 			
 			currentTagsAny = COConfigurationManager.getBooleanParameter( "Library.ShowTagButtons.Inclusive" );
 		}
@@ -2675,7 +2700,7 @@ public class MyTorrentsView
 	tagChanged(
 		Tag			tag )
 	{
-		if ( neverShowCatOrTagButtons || !( showCatButtons || showTagButtons )){
+		if ( neverShowTagButtons || !( showCatButtons || showTagButtons )){
 			
 			return;
 		}
@@ -2711,7 +2736,7 @@ public class MyTorrentsView
 
 						for ( Tag t: pending_tag_changes ){
 
-							boolean should_be_visible	= t.isVisible();
+							boolean should_be_visible	= t.isVisible() && !hiddenTags.contains( t );
 							boolean is_visible			= allTags.contains( t );
 
 							if ( should_be_visible != is_visible ){
@@ -2814,6 +2839,17 @@ public class MyTorrentsView
 		}
 	}
 
+	private void
+	setCurrentTagGroup(
+		TagGroup		tg )
+	{
+		List<Tag> tags	= tg.getTags();
+		
+		hiddenTags = tags;
+		
+		setCurrentTags( tags.toArray( new Tag[0] ));
+	}
+	
 	protected void setCurrentTags(Tag[] tags) {
 		synchronized( currentTagsLock ){
 			if (_currentTags != null) {

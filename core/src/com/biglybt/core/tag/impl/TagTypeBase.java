@@ -27,6 +27,7 @@ import java.util.Map;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.ListenerManager;
@@ -110,6 +111,8 @@ TagTypeBase
 			});
 
 	private final Map<Taggable,List<TagListener>>	tag_listeners = new HashMap<>();
+
+	private Map<String,TagGroupImpl>	tag_groups = new HashMap<>();
 
 	protected
 	TagTypeBase(
@@ -638,6 +641,164 @@ TagTypeBase
 		return( manager.writeStringListAttribute( this, tag, attr, value ));
 	}
 
+ 	private static class
+ 	TagGroupImpl
+ 		implements TagGroup
+ 	{
+ 		private String name;
+ 		
+ 		private CopyOnWriteList<Tag>	tags = new CopyOnWriteList<>();
+ 		
+ 		private CopyOnWriteList<TagGroupListener>	listeners = new CopyOnWriteList<>();
+ 		
+ 		private
+ 		TagGroupImpl(
+ 			String		_name )
+ 		{
+ 			name	= _name;
+ 		}
+ 		
+ 		public String
+ 		getName()
+ 		{
+ 			return( name );
+ 		}
+ 		
+ 		public List<Tag>
+ 		getTags()
+ 		{
+ 			return( tags.getList());
+ 		}
+ 		
+ 		protected void
+ 		addTag(
+ 			Tag	tag )
+ 		{
+ 			if ( !tags.contains( tag )){
+ 				
+	 			tags.add( tag );
+	 			
+	 			for( TagGroupListener l: listeners ){
+	 				
+	 				try{
+	 					l.tagAdded(tag);
+	 					
+	 				}catch( Throwable e ){
+	 					
+	 					Debug.out( e );
+	 				}
+	 			}
+ 			}
+ 		}
+ 		
+ 		protected void
+ 		removeTag(
+ 			Tag	tag )
+ 		{
+ 			if ( tags.contains( tag )){
+ 				
+	 			tags.remove( tag );
+	 			
+	 			for( TagGroupListener l: listeners ){
+	 				
+	 				try{
+	 					l.tagRemoved(tag);
+	 					
+	 				}catch( Throwable e ){
+	 					
+	 					Debug.out( e );
+	 				}
+	 			}
+ 			}
+ 		}
+ 		
+ 		
+ 		public void
+ 		addListener(
+ 			TagGroupListener	l,
+ 			boolean				fire_for_existing )
+ 		{
+ 			listeners.add( l );
+ 			
+ 			if ( fire_for_existing ){
+ 				
+ 				for ( Tag t: tags ){
+ 					
+ 					l.tagAdded( t );
+ 				}
+ 			}
+ 		}
+ 		
+ 		public void
+ 		removeListener(
+ 			TagGroupListener	l )
+ 		{
+ 			listeners.remove( l );
+ 		}
+ 	}
+ 	
+ 	protected void
+ 	setTagGroup(
+ 		Tag		tag,
+ 		String	old_name,
+ 		String	new_name )
+ 	{
+ 		synchronized( this ){
+ 			
+ 			if ( old_name != null ){
+ 				
+ 				TagGroupImpl tg = tag_groups.get( old_name );
+ 				
+ 				if ( tg != null ){
+ 					
+ 					tg.removeTag( tag );
+ 				}
+ 			}
+ 			
+ 			if ( new_name != null ){
+ 				
+ 				TagGroupImpl tg = tag_groups.get( new_name );
+ 				
+ 				if ( tg == null ){
+ 					
+ 					tg = new TagGroupImpl( new_name );
+ 					
+ 					tag_groups.put( new_name, tg );
+ 				}
+ 				
+ 				tg.addTag( tag );
+ 			}
+ 		}
+ 		
+ 	}
+ 	
+ 	protected TagGroup
+ 	getTagGroup(
+ 		String		name )
+ 	{
+ 		if ( name == null ){
+ 			
+ 			return( new TagGroupImpl( null ));
+ 			
+ 		}else{
+ 			
+ 			synchronized( this ){
+ 				
+ 				TagGroupImpl result = tag_groups.get( name );
+ 				
+ 				if ( result == null ){
+ 					
+ 					result = new TagGroupImpl( name );
+ 					
+ 					tag_groups.put( name, result );
+ 				}
+ 				
+ 				return( result );
+ 			}
+ 		}
+ 		
+ 	}
+ 	
 	public void
 	generate(
 		IndentWriter		writer )

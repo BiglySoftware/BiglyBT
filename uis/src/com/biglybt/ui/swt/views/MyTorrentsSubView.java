@@ -54,7 +54,8 @@ public class MyTorrentsSubView
 
 	public MyTorrentsSubView() {
 		super("MyTorrentsSubView", false);
-		neverShowCatOrTagButtons = true;
+		neverShowCatButtons = true;
+		neverShowTagButtons = true;
 		isEmptyListOnNullDS = true;
 		Core _core = CoreFactory.getSingleton();
 		init(_core, "MyTorrentsSubView", Download.class,

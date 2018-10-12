@@ -21,6 +21,7 @@
 package com.biglybt.core.global.impl;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -872,6 +874,7 @@ GlobalManagerStatsImpl
 	private static class
 	HistoryEntry
 	{
+		final InetAddress			address;
 		final String				cc;
 		final long					time;
 		final RemoteCountryStats[]	stats;
@@ -882,13 +885,27 @@ GlobalManagerStatsImpl
 			RemoteStats	_stats )
 		{
 			cc		= _cc;
+			address	= _stats.getRemoteAddress();
 			stats	= _stats.getStats();
 			time	= _stats.getMonoTime(); 
 		}
+		
+		public int
+		hashCode()
+		{
+			return( address.hashCode());
+		}
+		
+		public boolean
+		equals(
+			Object	other )
+		{
+			return((other instanceof HistoryEntry) && ((HistoryEntry)other).address.equals( address ));
+		}
 	}
 	
-	private Set<HistoryEntry>					stats_history	= 
-		new TreeSet<>(
+	private Map<HistoryEntry,HistoryEntry>			stats_history	= 
+		new TreeMap<>(
 			new Comparator<HistoryEntry>()
 			{
 				public int 
@@ -904,9 +921,20 @@ GlobalManagerStatsImpl
 	addRemoteStats(
 		RemoteStats		stats )
 	{
+		List<HistoryEntry>	to_remove = new ArrayList<>();
+		
 			// add new entry
 				
 		{
+			RemoteCountryStats[] rcs = stats.getStats();
+
+			if ( rcs.length == 0 ){
+				
+					// nothing of use
+				
+				return;
+			}
+			
 			String[] o_details = PeerUtils.getCountryDetails(stats.getRemoteAddress());
 			
 			String originator_cc;
@@ -919,20 +947,11 @@ GlobalManagerStatsImpl
 			
 				originator_cc = o_details[0];
 			}
-			
-			stats_history.add( new HistoryEntry( originator_cc, stats ));
-			
-			Map<String,long[]> map = aggregate_stats.get( originator_cc );
-			
-			if ( map == null ){
-				
-				map = new ConcurrentHashMap<>();
-				
-				aggregate_stats.put( originator_cc, map );
-			}
-			
-			RemoteCountryStats[] rcs = stats.getStats();
 						
+			Map<String,long[]> map = aggregate_stats.get( originator_cc );
+				
+			boolean	added = false;
+			
 			for ( RemoteCountryStats rc: rcs ){
 				
 				String cc = rc.getCC();
@@ -946,8 +965,7 @@ GlobalManagerStatsImpl
 				
 				if ( sent < 0 || sent > MAX_ALLOWED_BYTES_PER_MIN ){
 					sent = 0;
-				}
-				
+				}				
 				
 				if ( sent + recv > 0 ){
 					
@@ -960,6 +978,14 @@ GlobalManagerStatsImpl
 						total_sent_overall		+= sent;
 					}
 					
+					
+					if ( map == null ){
+						
+						map = new ConcurrentHashMap<>();
+						
+						aggregate_stats.put( originator_cc, map );
+					}
+
 					long[]	val = map.get( cc );
 					
 					if ( val == null ){
@@ -971,6 +997,20 @@ GlobalManagerStatsImpl
 						val[0]	+= recv;
 						val[1]	+= sent;
 					}
+					
+					added = true;
+				}
+			}
+			
+			if ( added ){
+					
+				HistoryEntry entry = new HistoryEntry( originator_cc, stats );
+				
+				HistoryEntry old = stats_history.put( entry, entry );
+				
+				if ( old != null ){
+					
+					to_remove.add( old );
 				}
 			}
 		}
@@ -980,92 +1020,98 @@ GlobalManagerStatsImpl
 		{
 			long	now = SystemTime.getMonotonousTime();
 	
-			Iterator<HistoryEntry>	it = stats_history.iterator();
+			Iterator<HistoryEntry>	it = stats_history.keySet().iterator();
 			
 			while( it.hasNext()){
 				
 				HistoryEntry entry = it.next();
-					
+									
 				if ( 	stats_history.size() > STATS_HISTORY_MAX_SAMPLES ||
 						now - entry.time > STATS_HISTORY_MAX_AGE ){
 										
 					it.remove();
 					
-					String originator_cc = entry.cc;
+					to_remove.add( entry );
 					
-					Map<String,long[]> map = aggregate_stats.get( originator_cc );
+				}else{
+					
+					break;
+				}
+			}
 			
-					if ( map == null ){
+			for ( HistoryEntry entry: to_remove ){
+				
+				String originator_cc = entry.cc;
+				
+				Map<String,long[]> map = aggregate_stats.get( originator_cc );
+		
+				if ( map == null ){
+					
+					Debug.out( "inconsistent");
+					
+					return;
+				}
+				
+				for ( RemoteCountryStats rc: entry.stats ){
+					
+					String cc = rc.getCC();
+					
+					long	recv = rc.getAverageReceivedBytes();
+					long	sent = rc.getAverageSentBytes();
 						
-						Debug.out( "inconsistent");
-						
-						return;
+					if ( recv < 0 || recv > MAX_ALLOWED_BYTES_PER_MIN ){
+						recv = 0;
 					}
 					
-					for ( RemoteCountryStats rc: entry.stats ){
+					if ( sent < 0 || sent > MAX_ALLOWED_BYTES_PER_MIN ){
+						sent = 0;
+					}
+					
+					if ( recv + sent > 0 ){
 						
-						String cc = rc.getCC();
+						long[]	val = map.get( cc );
 						
-						long	recv = rc.getAverageReceivedBytes();
-						long	sent = rc.getAverageSentBytes();
+						if ( val == null ){
 							
-						if ( recv < 0 || recv > MAX_ALLOWED_BYTES_PER_MIN ){
-							recv = 0;
-						}
-						
-						if ( sent < 0 || sent > MAX_ALLOWED_BYTES_PER_MIN ){
-							sent = 0;
-						}
-						
-						if ( recv + sent > 0 ){
+							Debug.out( "inconsistent");
 							
-							long[]	val = map.get( cc );
+						}else{
 							
-							if ( val == null ){
+							long new_recv = val[0] - recv;
+							long new_sent = val[1] - sent;
+															
+							if ( new_recv < 0 || new_sent < 0 ){
 								
 								Debug.out( "inconsistent");
 								
 							}else{
 								
-								long new_recv = val[0] - recv;
-								long new_sent = val[1] - sent;
-																
-								if ( new_recv < 0 || new_sent < 0 ){
+								total_received_sum 	-= recv;
+								total_sent_sum		-= sent;
+
+								if ( cc.isEmpty()){
 									
-									Debug.out( "inconsistent");
+									total_received_overall 	-= recv;
+									total_sent_overall		-= sent;
+								}
+								
+								if ( new_recv + new_sent == 0 ){
+									
+									map.remove( cc );
 									
 								}else{
 									
-									total_received_sum 	-= recv;
-									total_sent_sum		-= sent;
-
-									if ( cc.isEmpty()){
-										
-										total_received_overall 	-= recv;
-										total_sent_overall		-= sent;
-									}
-									
-									if ( new_recv + new_sent == 0 ){
-										
-										map.remove( cc );
-										
-									}else{
-										
-										val[0]	= new_recv;
-										val[1]	= new_sent;
-									}
+									val[0]	= new_recv;
+									val[1]	= new_sent;
 								}
 							}
 						}
 					}
+				}
+				
+				if ( map.isEmpty()){
 					
-					if ( map.isEmpty()){
-						
-						aggregate_stats.remove( originator_cc );
-					}
-				}else{
-					
-					break;
+					aggregate_stats.remove( originator_cc );
 				}
 			}
 		}

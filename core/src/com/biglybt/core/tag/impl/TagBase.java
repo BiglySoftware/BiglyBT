@@ -134,7 +134,7 @@ TagBase
 	private TagFeatureLimits		tag_limits;
 
 	private HashMap<String,Object>		transient_properties;
-
+	
 	protected
 	TagBase(
 		TagTypeBase			_tag_type,
@@ -175,6 +175,11 @@ TagBase
 			if ( this instanceof TagFeatureLimits ){
 
 				tag_limits = (TagFeatureLimits)this;
+			}
+			
+			if ( group != null ){
+				
+				tag_type.setTagGroup( this, null, group );
 			}
 		}
 	}
@@ -462,14 +467,25 @@ TagBase
 
 		if ( group == null || new_group == null || !group.equals(new_group)){
 
+			String	old_name = group;
+			
 			group	= new_group;
 
 			writeStringAttribute( AT_GROUP, new_group );
 
+			tag_type.setTagGroup( this, old_name, new_group );
+			
 			tag_type.fireChanged( this );
 		}
 	}
 
+	@Override
+	public TagGroup 
+	getGroupContainer()
+	{
+		return( tag_type.getTagGroup( group ));
+	}
+	
 	protected boolean
 	getVisibleDefault()
 	{
@@ -2496,7 +2512,7 @@ TagBase
 			}
 		}
  	}
-
+ 	
 	public void
 	generate(
 		IndentWriter		writer )
