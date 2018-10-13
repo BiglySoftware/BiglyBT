@@ -855,7 +855,7 @@ XferStatsPanel
 			
 			Color old = gc.getForeground();
 			
-			if ( hover_node != null && (source.cc == hover_node.cc || target.cc == hover_node.cc )){
+			if ( hover_node != null && (source.cc.equals( hover_node.cc ) || target.cc.equals( hover_node.cc ))){
 				
 				gc.setForeground( Colors.fadedGreen );
 				

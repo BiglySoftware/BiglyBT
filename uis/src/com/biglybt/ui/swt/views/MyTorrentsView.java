@@ -198,7 +198,7 @@ public class MyTorrentsView
   private Object	currentTagsLock = new Object();
   private Tag[]		_currentTags;
   private List<Tag>	allTags;
-  private List<Tag>	hiddenTags = new ArrayList<>();
+  private Set<Tag>	hiddenTags = new HashSet<>();	// tag-group tags filter
 
   	private long drag_drop_location_start = -1;
   	private TableRowCore[] drag_drop_rows = null;
@@ -2845,7 +2845,7 @@ public class MyTorrentsView
 	{
 		List<Tag> tags	= tg.getTags();
 		
-		hiddenTags = tags;
+		hiddenTags = new HashSet<>( tags );
 		
 		setCurrentTags( tags.toArray( new Tag[0] ));
 	}
@@ -2858,6 +2858,18 @@ public class MyTorrentsView
 				}
 			}
 	
+			if ( !hiddenTags.isEmpty()){
+				List<Tag>	temp = new ArrayList<Tag>( tags.length + hiddenTags.size());
+				
+				temp.addAll(hiddenTags);
+				
+				for ( Tag t: tags ){
+					if ( !temp.contains(t)){
+						temp.add(t);
+					}
+				}
+				tags = temp.toArray(new Tag[0]);
+			}
 			_currentTags = tags;
 			if (_currentTags != null) {
 				Set<Tag> to_remove = null;
@@ -2921,21 +2933,65 @@ public class MyTorrentsView
 	  		if ( _currentTags == null ){
 	  			return true;
 	  		}
-	
+	  			
 	  		if (currentTagsAny) {
-	    		for (Tag tag : _currentTags) {
-	  				if (tag.hasTaggable(manager)) {
-	  					return true;
+	  			if ( hiddenTags.isEmpty()){
+		    		for (Tag tag : _currentTags) {
+		  				if (tag.hasTaggable(manager)) {
+		  					return true;
+		  				}
+		  			}
+	
+		    		return false;
+	  			}else{
+	  			
+	  				boolean has_hidden 		= false;
+	  				boolean	has_non_hidden	= false;
+	  				
+	  				for (Tag tag : _currentTags) {
+		  				if (tag.hasTaggable(manager)) {
+		  					if ( hiddenTags.contains( tag )){
+		  						has_hidden = true;
+		  					}else{
+		  						has_non_hidden = true;
+		  					}
+		  				}
+		  			}
+	  				
+	  				if ( has_hidden ){
+	  					
+	  					return( _currentTags.length == hiddenTags.size() || has_non_hidden);
+	  				}else{
+	  					
+	  					return( false );
 	  				}
 	  			}
-	    		return false;
 	  		} else {
-	    		for (Tag tag : _currentTags) {
-	  				if (!tag.hasTaggable(manager)) {
-	  					return false;
-	  				}
+	  			if ( hiddenTags.isEmpty()){
+		    		for (Tag tag : _currentTags) {
+		  				if (!tag.hasTaggable(manager)) {
+	  						return false;
+		  				}
+		  			}
+		    		return true;
+	  			}else{
+	  				
+	  				boolean has_hidden = false;
+	  				
+	  				for (Tag tag : _currentTags) {
+		  				if (tag.hasTaggable(manager)) {
+		  					if ( hiddenTags.contains( tag )){
+		  						has_hidden = true;
+		  					}
+		  				}else{
+		  					if ( !hiddenTags.contains( tag )){
+		  						return false;
+		  					}
+		  				}
+		  			}
+	  				
+	  				return( has_hidden );
 	  			}
-	    		return true;
 	  		}
   		}
   	}
@@ -2997,7 +3053,10 @@ public class MyTorrentsView
 	{
 		DownloadManager	manager = (DownloadManager)tagged;
 
-		tv.removeDataSource( manager );
+		if ( !isOurDownloadManager(manager)){
+		
+			tv.removeDataSource( manager );
+		}
 	}
 
 	public void

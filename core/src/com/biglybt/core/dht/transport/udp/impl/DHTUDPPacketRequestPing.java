@@ -99,10 +99,10 @@ DHTUDPPacketRequestPing
 		
 		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
 			
-			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
+			//if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){ checked in serialiseUploadStats
 
-				DHTUDPUtils.serialiseUploadStats( os );
-			}
+				DHTUDPUtils.serialiseUploadStats( protocol_version, getAction(), os );
+			//}
 		}
 	}
 

@@ -1498,13 +1498,38 @@ DHTUDPUtils
 	
 	private static volatile GlobalManagerStats	gm_stats;
 	
+	//private static Average	send_freq = Average.getInstance( 1000, 10 );
+	
+	private static volatile long	last_upload_stats;
+	
 	protected static void
 	serialiseUploadStats(
+		int						protocol_version,
+		int						packet_type,
 		DataOutputStream		os )
 	
 		throws IOException
 	{
+			// full set of stats = 11 + 24*12= about 300 bytes. so limit to 3 per sec
+		
+		//send_freq.addValue(1);
+		//System.out.println( send_freq.getAverage() + " - " + packet_type );
+		
+		if ( protocol_version < DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
+		
+			return;
+		}
+		
 		long	now = SystemTime.getMonotonousTime();
+		
+		if ( now - last_upload_stats < 333 ){
+			
+			os.writeByte( 0xff );	// special case meaning 'no stats'
+			
+			return;
+		}
+		
+		last_upload_stats = now;
 		
 		if ( now - last_calc > CALC_PERIOD ){
 
@@ -1847,6 +1872,8 @@ DHTUDPUtils
 				return( stats );
 				
 			}else{
+				
+					// note that version 0xff is used to indicate no stats have been sent
 				
 				return( null );
 			}
