@@ -251,13 +251,25 @@ AEWin32AccessImpl
 		AEWin32AccessInterface.deleteValue( type, subkey, value_name );
 	}
 
+	private String
+	getShellFolders()
+	{
+		if ( Constants.isWindows7OrHigher ){
+			
+			return( "software\\microsoft\\windows\\currentversion\\explorer\\user shell folders" );
+
+		}else{
+		
+			return( "software\\microsoft\\windows\\currentversion\\explorer\\shell folders" );
+		}
+	}
 	@Override
 	public String
 	getUserAppData()
 
 		throws AEWin32AccessException
 	{
-		String	app_data_key	= "software\\microsoft\\windows\\currentversion\\explorer\\shell folders";
+		String	app_data_key	= getShellFolders();
 		String	app_data_name 	= "appdata";
 
 		return(	readStringValue(
@@ -273,14 +285,7 @@ AEWin32AccessImpl
 
 		throws AEWin32AccessException
 	{
-		String	app_data_key	= "software\\microsoft\\windows\\currentversion\\explorer\\shell folders";
-		String	app_data_name 	= "Common AppData";
-
-		return(	readStringValue(
-					HKEY_LOCAL_MACHINE,
-					app_data_key,
-					app_data_name ));
-
+		throw( new AEWin32AccessException( "deprecated"));
 	}
 
 	@Override
@@ -289,7 +294,7 @@ AEWin32AccessImpl
 
 		throws AEWin32AccessException
 	{
-		String	app_data_key	= "software\\microsoft\\windows\\currentversion\\explorer\\shell folders";
+		String	app_data_key	= getShellFolders();
 		String	app_data_name 	= "Local AppData";
 
 		return(	readStringValue(
@@ -305,7 +310,7 @@ AEWin32AccessImpl
 
 		throws AEWin32AccessException
 	{
-		String	app_data_key	= "software\\microsoft\\windows\\currentversion\\explorer\\shell folders";
+		String	app_data_key	= getShellFolders();
 		String	app_data_name 	= "personal";
 
 		return(	readStringValue(
@@ -321,7 +326,7 @@ AEWin32AccessImpl
 
 		throws AEWin32AccessException
 	{
-		String	app_data_key	= "software\\microsoft\\windows\\currentversion\\explorer\\shell folders";
+		String	app_data_key	= getShellFolders();
 		String	app_data_name 	= "my music";
 
 		try {
@@ -347,7 +352,7 @@ AEWin32AccessImpl
 
 		throws AEWin32AccessException
 	{
-		String	app_data_key	= "software\\microsoft\\windows\\currentversion\\explorer\\shell folders";
+		String	app_data_key	= getShellFolders();
 		String	app_data_name 	= "my video";
 
 		try {
