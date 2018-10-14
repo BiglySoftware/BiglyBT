@@ -4359,9 +4359,80 @@ public class OpenTorrentOptionsWindow
 			Composite more_comp = new Composite( more_outer, SWT.NULL );
 			more_comp.setLayoutData( Utils.getFilledFormData());
 			
-			more_comp.setLayout( new GridLayout(2,false));
+			GridLayout more_layout;
+			
+			if ( torrentOptions != null && !torrentOptions.isSimpleTorrent()){
+				
+				more_layout = new GridLayout(4,false);
+				
+				Label sub_label = new Label( more_comp, SWT.NULL );
+				
+				sub_label.setText( MessageText.getString( "label.subfolder" ));
+				
+				String top = new File (torrentOptions.getDataDir()).getName();
+				
+				Text text = new Text( more_comp, SWT.BORDER );
+				GridData grid_data = new GridData(GridData.FILL_VERTICAL);
+				grid_data.verticalAlignment = SWT.CENTER;
+				grid_data.widthHint=200;
+				Utils.setLayoutData(text, grid_data);
+				
+				text.setText( top );
+				
+				text.addFocusListener(
+					new FocusListener(){
+						
+						@Override
+						public void focusLost(FocusEvent e){
+							String str = text.getText().trim();
+							
+							File data_dir = new File( torrentOptions.getDataDir());
+							
+							if ( str.isEmpty()){
+								
+								String top = data_dir.getName();
+
+								text.setText( top );
+								
+							}else{
+								
+								File new_dir = new File( data_dir.getParentFile(), str );
+								
+								torrentOptions.setExplicitDataDir( new_dir.getParentFile().getAbsolutePath(), str );
+
+								if ( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" )){
+
+									torrentOptions.setManualRename( str );
+
+								}else{
+
+									torrentOptions.setManualRename( null );
+								}
+
+								updateDataDirCombo();
+
+								cmbDataDirChanged();
+							}
+						}
+						
+						@Override
+						public void focusGained(FocusEvent e){
+						}
+					});
+			}else{
+			
+				more_layout = new GridLayout(2,false);
+			}
+			
+			more_layout.marginTop = more_layout.marginBottom = 0;
+			more_layout.marginHeight = 0;
+			
+			more_comp.setLayout( more_layout );
 			
 			Label more_label = new Label( more_comp, SWT.NULL );
+			GridData grid_data = new GridData(GridData.FILL_VERTICAL );
+			grid_data.verticalAlignment = SWT.CENTER;
+			Utils.setLayoutData( more_label, grid_data );
 			
 			more_label.setText( MessageText.getString( "label.more" ));
 			
@@ -4369,7 +4440,7 @@ public class OpenTorrentOptionsWindow
 			
 			Image image = ImageLoader.getInstance().getImage( "menu_down" );
 			more_icon.setImage( image );
-			GridData grid_data = new GridData();
+			 grid_data = new GridData();
 			grid_data.widthHint=image.getBounds().width;
 			grid_data.heightHint=image.getBounds().height;
 			grid_data.verticalAlignment = SWT.CENTER;
@@ -4377,7 +4448,7 @@ public class OpenTorrentOptionsWindow
 
 			final Menu more_menu = new Menu( more_comp );
 
-			for ( Control l: new Control[]{ more_comp,  more_label, more_icon }){
+			for ( Control l: new Control[]{ more_label, more_icon }){
 				
 				l.setCursor(more_comp.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 	
