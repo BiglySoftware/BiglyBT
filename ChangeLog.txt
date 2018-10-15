@@ -1,7 +1,50 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2018.xx.yy | BiglyBT 1.6.0.1
+2018.10.yy | BiglyBT 1.7.0.0
+
+
+FEATURE: UI    | CTRL+C to copy table contents in all table views [Parg]
+FEATURE: UI    | Option to switch multi-tag selection to AND from OR in Library [Parg]
+FEATURE: UI    | Support check-style fancy menu plugin items [Parg]
+FEATURE: UI    | Double-click piece item now shows that piece in the piece map [Parg]
+FEATURE: UI    | Show simple+details library view count when in simple view mode [Parg]
+FEATURE: UI    | Options to change sidebar top-level order and remove entries [Parg]
+FEATURE: UI    | Added ability to set torrent creation date [Parg]
+FEATURE: UI    | Show which pieces have contributed during swarm merge read/write [Parg]
+FEATURE: UI    | Context menu option in Files View to set download thumbnail [Parg]
+FEATURE: UI    | Option to show Tag Groups in sidebar [Parg]
+FEATURE: UI    | Added top-level-folder text field to torrent options dialog [Parg]
+FEATURE: Core  | Added 'up_idle' and 'down_idle' Tag constraint variables [Parg]
+FEATURE: Core  | Improve performance of download management for large libraries [Parg]
+FEATURE: Core  | Added Tag 'execute on assign' action of 'post magnet URI to chat [Parg]
+FEATURE: Core  | Show estimated country/global upload download rates [Parg]
+
+CHANGE: UI     | Alternative config search highlight for GTK3 [Parg]
+CHANGE: UI     | Added scroll-bar for decentralized chat config [Parg]
+CHANGE: UI     | Make comment entry window larger and resizeable [Parg]
+CHANGE: UI     | Alternative classic-UI wording for 'View in SIdebar' [Parg]
+CHANGE: UI     | Shrink health color blob to circle when squished [Parg]
+CHANGE: UI     | Completion progress shown as green when done [Parg]
+CHANGE: Core   | Experiment to reduce file store access during startup [Parg]
+CHANGE: Core   | Update network test servers [Parg]
+CHANGE: Core   | Fail feed updates if force-bind missing [Parg]
+CHANGE: Core   | Rate-limit magnet recovery [Parg]
+CHANGE: Core   | Report more Javascript errors [Parg]
+CHANGE: Core   | Switch DHT bootstrap [Parg]
+
+BUGFIX: UI     | Handle images with 0 width/height [Parg]
+BUGFIX: UI     | Position change refresh doesn't need to be on SWT thread [Parg]
+BUGFIX: UI     | Remove disabled  plugin menu items from fancy menu [Parg]
+BUGFIX: UI     | Fix layout issue on GTK for check box/radio highlight [Parg]
+BUGFIX: UI     | Fix refresh bug on columns change [Parg]
+BUGFIX: UI     | Fix sub-menu construction naming edge-case [Parg]
+BUGFIX: Core   | Fix Javascript Tag constraints [Parg]
+BUGFIX  Core   | Remove chat participants when all messages removed [Parg]
+BUGFIX: Core   | Fix repeat archive bug with multi-select [Parg]
+BUGFIX: Core   | Fix Tag filtering NPE and synchronize correctly [Parg]
+BUGFIX: Core   | When torrent file has UTF keys along with an invalid encoding value use the right keys [TuxPaper]
+BUGFIX: Core   | Switch to use User Shell Folders on Windows [Parg]
 
 2018.07.30 | BiglyBT 1.6.0.0
 
