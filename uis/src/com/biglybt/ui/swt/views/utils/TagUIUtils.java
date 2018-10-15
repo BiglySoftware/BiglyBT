@@ -2469,8 +2469,12 @@ public class TagUIUtils
 				}
 			}
 		}
+		
+		List<Tag> tags = new ArrayList<>();
+		
+		tags.add( tag );
 
-		createTagGroupMenu( menu, tag_type, tag );
+		createTagGroupMenu( menu, tag_type, tags );
 		
 		MenuItem itemDelete = new MenuItem(menu, SWT.PUSH);
 
@@ -2487,24 +2491,24 @@ public class TagUIUtils
 
 	private static void
 	createTagGroupMenu(
-		Menu		menu,
-		TagType		tag_type,
-		Tag			tag )
+		Menu			menu,
+		TagType			tag_type,
+		List<Tag>		tagz )
 	{
-		if ( tag_type.getTagType() != TagType.TT_DOWNLOAD_MANUAL ){
+		if ( tag_type.getTagType() != TagType.TT_DOWNLOAD_MANUAL || tagz.isEmpty()){
 			
 			return;
 		}
 		
 		List<String>	groups = new ArrayList<>();
 		
-		List<Tag> tags = tag_type.getTags();
+		List<Tag> all_tags = tag_type.getTags();
 		
-		for (Tag t : tags) {
+		for ( Tag t : all_tags ){
 			
 			String group = t.getGroup();
 			
-			if (group != null && group.length() > 0  && !groups.contains(group)) {
+			if ( group != null && group.length() > 0  && !groups.contains(group)){
 				
 				groups.add( group );
 			}
@@ -2519,22 +2523,41 @@ public class TagUIUtils
 		Messages.setLanguageText(groups_item, "TableColumn.header.tag.group" );
 		groups_item.setMenu(groups_menu);
 		
-		String group = tag.getGroup();
+		String existing_group = tagz.get(0).getGroup();
 		
-		if ( group == null ){
+		if ( existing_group == null ){
 		
-			group = "";
+			existing_group = "";
+		}
+		
+		for ( Tag t: tagz ){
+			
+			String g = t.getGroup();
+			
+			if ( g == null ){
+				
+				g = "";
+			}
+			
+			if ( !g.equals( existing_group )){
+				
+				existing_group = null;
+				
+				break;
+			}
 		}
 		
 		MenuItem item_none = new MenuItem(groups_menu, SWT.RADIO);
 		Messages.setLanguageText(item_none, "label.none" );
 		item_none.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event){
-				tag.setGroup( null );
+				for ( Tag t: tagz ){
+					t.setGroup( null );
+				}
 			}
 		});
 		
-		item_none.setSelection( group.isEmpty() );
+		item_none.setSelection( existing_group != null && existing_group.isEmpty() );
 		
 		new MenuItem( groups_menu, SWT.SEPARATOR );
 		
@@ -2546,11 +2569,13 @@ public class TagUIUtils
 				
 				item_group.setText( g );
 				
-				item_group.setSelection( g.equals( group ));
+				item_group.setSelection( g.equals( existing_group ));
 				
 				item_group.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event){
-						tag.setGroup( g );
+						for ( Tag t: tagz ){
+							t.setGroup( g );
+						}
 					}
 				});
 			}
@@ -2560,6 +2585,8 @@ public class TagUIUtils
 		
 		MenuItem item_add = new MenuItem(groups_menu, SWT.PUSH);
 
+		final String f_existing_group = existing_group;
+				
 		Messages.setLanguageText(item_add, "menu.add.group");
 		item_add.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -2567,12 +2594,11 @@ public class TagUIUtils
 				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
 						"TagGroupWindow.title", "TagGroupWindow.message");
 
-				String group = tag.getGroup();
-
-				if ( group == null ){
-					group = "";
+				if ( f_existing_group != null ){
+					
+					entryWindow.setPreenteredText( f_existing_group, false );
 				}
-				entryWindow.setPreenteredText( group, false );
+				
 				entryWindow.selectPreenteredText( true );
 
 				entryWindow.prompt(new UIInputReceiverListener() {
@@ -2588,7 +2614,9 @@ public class TagUIUtils
 							if (group.length() == 0) {
 								group = null;
 							}
-							tag.setGroup(group);
+							for ( Tag t: tagz ){
+								t.setGroup(group);
+							}
 
 						} catch (Throwable e) {
 
@@ -2637,6 +2665,8 @@ public class TagUIUtils
 			return;
 		}
 
+		TagType tag_type = tags.get(0).getTagType();
+		
 		MenuItem itemShow = new MenuItem(menu, SWT.PUSH);
 
 		Messages.setLanguageText(itemShow, "Button.bar.show");
@@ -2665,46 +2695,7 @@ public class TagUIUtils
 
 		itemHide.setEnabled( can_hide );
 
-		MenuItem itemGroup = new MenuItem(menu, SWT.PUSH);
-
-		Messages.setLanguageText(itemGroup, "MyTorrentsView.menu.group");
-		itemGroup.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-						"TagGroupWindow.title", "TagGroupWindow.message");
-
-
-				entryWindow.setPreenteredText( "", false );
-				entryWindow.selectPreenteredText( true );
-
-				entryWindow.prompt(new UIInputReceiverListener() {
-					@Override
-					public void UIInputReceiverClosed(UIInputReceiver entryWindow) {
-						if ( !entryWindow.hasSubmittedInput()) {
-							return;
-						}
-
-						try{
-							String group = entryWindow.getSubmittedInput().trim();
-
-							if ( group.length() == 0 ){
-								group = null;
-							}
-
-							for ( Tag tag: tags ){
-
-								tag.setGroup( group );
-							}
-						}catch( Throwable e ){
-
-							Debug.out( e );
-						}
-					}
-				});
-
-			}
-		});
+		createTagGroupMenu( menu, tag_type, tags );
 
 		MenuItem itemExport = new MenuItem(menu, SWT.PUSH);
 		
