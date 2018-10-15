@@ -2390,11 +2390,11 @@ public class TagUIUtils
 	}
 
 	private static void
-		createNonAutoMenuItems(
-				final Menu menu,
-				final Tag tag,
-				final TagType tag_type,
-				Menu[] menuShowHide)
+	createNonAutoMenuItems(
+		Menu 		menu,
+		Tag 		tag,
+		TagType 	tag_type,
+		Menu[] 		menuShowHide )
 	{
 
 		if ( tag_type.hasTagTypeFeature( TagFeature.TF_PROPERTIES )){
@@ -2470,44 +2470,98 @@ public class TagUIUtils
 			}
 		}
 
-		/*
-		MenuItem item_create = new MenuItem( menu, SWT.PUSH);
+		createTagGroupMenu( menu, tag_type, tag );
+		
+		MenuItem itemDelete = new MenuItem(menu, SWT.PUSH);
 
-		Messages.setLanguageText(item_create, "label.add.tag");
-		item_create.addListener(SWT.Selection, new Listener() {
+		Utils.setMenuItemImage(itemDelete, "delete");
+
+		Messages.setLanguageText(itemDelete, "FileItem.delete");
+		itemDelete.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(Event event) {
-
-				createManualTag(null);
+				tag.removeTag();
 			}
 		});
-		*/
+	}
 
-		/* Seldom Used: Color can be set in Tags Overview
-		MenuItem itemSetColor = new MenuItem(menu, SWT.PUSH);
+	private static void
+	createTagGroupMenu(
+		Menu		menu,
+		TagType		tag_type,
+		Tag			tag )
+	{
+		if ( tag_type.getTagType() != TagType.TT_DOWNLOAD_MANUAL ){
+			
+			return;
+		}
+		
+		List<String>	groups = new ArrayList<>();
+		
+		List<Tag> tags = tag_type.getTags();
+		
+		for (Tag t : tags) {
+			
+			String group = t.getGroup();
+			
+			if (group != null && group.length() > 0  && !groups.contains(group)) {
+				
+				groups.add( group );
+			}
+		}
+		
+		Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
 
-		itemSetColor.setText( MessageText.getString( "label.color") + "..." );
-
-		itemSetColor.addListener(SWT.Selection, new Listener() {
-			public void handleEvent(Event event) {
-
-				int[] existing = tag.getColor();
-
-				RGB e_rg = existing==null?null:new RGB(existing[0],existing[1],existing[2]);
-
-				RGB rgb = Utils.showColorDialog( menu.getShell(), e_rg );
-
-				if ( rgb != null ){
-
-					tag.setColor( new int[]{ rgb.red, rgb.green, rgb.blue });
-				}
+		Collections.sort( groups, comp );
+		
+		Menu groups_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		MenuItem groups_item = new MenuItem(menu, SWT.CASCADE );
+		Messages.setLanguageText(groups_item, "TableColumn.header.tag.group" );
+		groups_item.setMenu(groups_menu);
+		
+		String group = tag.getGroup();
+		
+		if ( group == null ){
+		
+			group = "";
+		}
+		
+		MenuItem item_none = new MenuItem(groups_menu, SWT.RADIO);
+		Messages.setLanguageText(item_none, "label.none" );
+		item_none.addListener(SWT.Selection, new Listener() {
+			public void handleEvent(Event event){
+				tag.setGroup( null );
 			}
 		});
-	 */
+		
+		item_none.setSelection( group.isEmpty() );
+		
+		new MenuItem( groups_menu, SWT.SEPARATOR );
+		
+		if ( !groups.isEmpty()){
+			
+			for ( String g: groups ){
+				
+				MenuItem item_group = new MenuItem(groups_menu, SWT.RADIO);
+				
+				item_group.setText( g );
+				
+				item_group.setSelection( g.equals( group ));
+				
+				item_group.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event){
+						tag.setGroup( g );
+					}
+				});
+			}
+		
+			new MenuItem( groups_menu, SWT.SEPARATOR );
+		}
+		
+		MenuItem item_add = new MenuItem(groups_menu, SWT.PUSH);
 
-		MenuItem itemGroup = new MenuItem(menu, SWT.PUSH);
-
-		Messages.setLanguageText(itemGroup, "MyTorrentsView.menu.group");
-		itemGroup.addListener(SWT.Selection, new Listener() {
+		Messages.setLanguageText(item_add, "menu.add.group");
+		item_add.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
@@ -2544,20 +2598,8 @@ public class TagUIUtils
 				});
 			}
 		});
-		
-		MenuItem itemDelete = new MenuItem(menu, SWT.PUSH);
-
-		Utils.setMenuItemImage(itemDelete, "delete");
-
-		Messages.setLanguageText(itemDelete, "FileItem.delete");
-		itemDelete.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				tag.removeTag();
-			}
-		});
 	}
-
+	
 	public static void
 	createSideBarMenuItems(
 		final Menu 			menu,

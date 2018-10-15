@@ -1709,7 +1709,10 @@ public class SB_Transfers
 											
 											MdiEntry parent_entry = mdi.getEntry( parent_id );
 											
-											parent_entry.close( true );
+											if ( parent_entry != null ){
+											
+												parent_entry.close( true );
+											}
 										}
 									}
 								}
