@@ -719,7 +719,7 @@ XferStatsPanel
 			}else{
 				
 				nodes 	= origins;
-				flag_y	= 0;
+				flag_y	= -flag_height;
 				odd		= true;
 			}
 	
