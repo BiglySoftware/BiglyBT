@@ -1317,10 +1317,20 @@ TRTrackerBTAnnouncerImpl
 			  		failure_reason = exceptionToString( e );
 				}
 
-				if ( failure_reason != null && failure_reason.contains("401")){
-
-					failure_reason = "Tracker authentication failed";
-					errorLevel = false;
+				if ( failure_reason != null ){
+					
+					String lcfr = failure_reason.toLowerCase( Locale.US );
+							
+					if ( lcfr.contains("401")){
+				
+						failure_reason = "Tracker authentication failed";
+						
+						errorLevel = false;
+						
+					}else if ( lcfr.contains( "unresolved" ) || lcfr.contains( "no data" )){
+						
+						errorLevel = false;
+					}
 				}
 
 				if (Logger.isEnabled())
