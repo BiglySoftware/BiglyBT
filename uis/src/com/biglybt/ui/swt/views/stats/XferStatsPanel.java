@@ -34,6 +34,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -101,7 +102,8 @@ XferStatsPanel
 
 	int flag_width;
 	int flag_height;
-
+	int	text_height;
+	
 	private List<Object[]>	currentPositions = new ArrayList<>();
 
 	private Node			hover_node;
@@ -553,6 +555,10 @@ XferStatsPanel
 		flag_width	= scale.getReverseWidth( 25 );
 		flag_height	= scale.getReverseHeight( 15 );
 			
+		Point text_extent = gc.textExtent( "1234567890" + DisplayFormatters.formatByteCountToKiBEtcPerSec( 1024));
+		
+		text_height = scale.getReverseHeight( text_extent.y );
+
 		currentPositions.clear();
 
 		AggregateStats		a_stats = gm_stats.getAggregateRemoteStats();
@@ -589,10 +595,7 @@ XferStatsPanel
 							});
 		
 		header_label.setText( header );
-		
-		//gc.drawText( header, scale.getX( scale.minX, scale.minY), scale.getY(scale.minX, scale.minY) );
-		//Point header_extent = gc.textExtent( header );
-		
+						
 		Map<String,Map<String,long[]>> stats = a_stats.getStats();
 						
 		List<Node> 			origins 	= new ArrayList<>();
@@ -698,7 +701,7 @@ XferStatsPanel
 			
 		for ( int i=0;i<3;i++){
 			
-			int flag_x 	= (int)( -1000 + 10 );
+			int flag_x 	= (int)( -1000 + scale.getReverseHeight( 10 ));
 			
 			int 		flag_y;
 			List<Node>	nodes;
@@ -707,19 +710,19 @@ XferStatsPanel
 			if ( i == 0 ){
 				
 				nodes 	= dests_recv;
-				flag_y	= (int)( -1000 + flag_height ); // + scale.getReverseHeight( header_extent.y + 5 ));
+				flag_y	= (int)( -1000 + text_height );
 				odd		= false;
 				
 			}else if ( i == 1 ){
 								
 				nodes 	= dests_sent;
-				flag_y	= (int)( 1000 - 3*flag_height );
+				flag_y	= (int)( 1000 - flag_height - text_height );
 				odd		= true;
 				
 			}else{
 				
 				nodes 	= origins;
-				flag_y	= -flag_height;
+				flag_y	= -text_height;
 				odd		= true;
 			}
 	
@@ -843,11 +846,11 @@ XferStatsPanel
 			int y2;
 			
 			if ( above ){
-				y1 = source.y_pos - flag_height;		
-				y2 = target.y_pos + 2*flag_height;
+				y1 = source.y_pos - text_height;		
+				y2 = target.y_pos + flag_height + text_height;
 			}else{
-				y1 = source.y_pos + 2*flag_height;			
-				y2 = target.y_pos - flag_height;	
+				y1 = source.y_pos + flag_height + text_height;			
+				y2 = target.y_pos - text_height;	
 			}
 			
 			int[] xy1 = scale.getXY( x1, y1 );
@@ -926,7 +929,7 @@ XferStatsPanel
 
 			currentPositions.add( new Object[]{ xy[0], xy[1], this });
 			
-			xy = scale.getXY( x_pos, odd?(y_pos+flag_height):(y_pos-flag_height));
+			xy = scale.getXY( x_pos, odd?(y_pos+flag_height):(y_pos-text_height));
 			
 				// remember stats are in bytes per min
 			
