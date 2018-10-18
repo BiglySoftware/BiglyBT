@@ -701,7 +701,7 @@ XferStatsPanel
 			
 		for ( int i=0;i<3;i++){
 			
-			int flag_x 	= (int)( -1000 + scale.getReverseHeight( 10 ));
+			int flag_x 	= (int)( -1000 + scale.getReverseHeight( 5 ));
 			
 			int 		flag_y;
 			List<Node>	nodes;
@@ -716,13 +716,13 @@ XferStatsPanel
 			}else if ( i == 1 ){
 								
 				nodes 	= dests_sent;
-				flag_y	= (int)( 1000 - flag_height - text_height );
+				flag_y	= (int)( 1000 - flag_height - text_height - scale.getReverseHeight( 5 ));
 				odd		= true;
 				
 			}else{
 				
 				nodes 	= origins;
-				flag_y	= -text_height;
+				flag_y	= -flag_height/2;
 				odd		= true;
 			}
 	
@@ -916,7 +916,43 @@ XferStatsPanel
 			GC			gc,
 			boolean		odd )
 		{
-			int[] xy = scale.getXY( x_pos, y_pos );
+			String speed = getBPSForDisplay( count_recv+count_sent );
+			
+			String nums = speed;
+			
+			int		pos = nums.indexOf( " " );
+			
+			if ( pos != -1 ){
+				
+				nums = nums.substring( 0, pos );
+			}
+			
+			int speed_width = gc.textExtent( nums ).x;
+			
+			int speed_pad = ( flag_width - scale.getReverseWidth( speed_width ))/2;
+			
+			int[] xy = scale.getXY( speed_pad + x_pos, odd?(y_pos+flag_height):(y_pos-text_height));
+			
+			// remember stats are in bytes per min
+		
+			gc.drawText( speed, xy[0], xy[1] );
+		
+			int	width;
+			
+			//image = null;
+			
+			if ( image == null ){
+				
+				width = gc.textExtent( cc ).x;
+				
+			}else{
+			
+				width = image.getBounds().width;
+			}
+			
+			int flag_pad = ( flag_width - scale.getReverseWidth( width ))/2;
+			
+			xy = scale.getXY( flag_pad + x_pos, y_pos );
 			
 			if ( image == null ){
 				
@@ -929,11 +965,7 @@ XferStatsPanel
 
 			currentPositions.add( new Object[]{ xy[0], xy[1], this });
 			
-			xy = scale.getXY( x_pos, odd?(y_pos+flag_height):(y_pos-text_height));
-			
-				// remember stats are in bytes per min
-			
-			gc.drawText( getBPSForDisplay( count_recv+count_sent ), xy[0], xy[1] );
+
 				
 		}
 		
