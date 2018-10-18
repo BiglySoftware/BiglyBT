@@ -1,8 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2018.10.yy | BiglyBT 1.7.0.0
-
+2018.10.18 | BiglyBT 1.7.0.0
 
 FEATURE: UI    | CTRL+C to copy table contents in all table views [Parg]
 FEATURE: UI    | Option to switch multi-tag selection to AND from OR in Library [Parg]
