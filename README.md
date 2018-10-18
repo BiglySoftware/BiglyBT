@@ -34,3 +34,9 @@ Running is only few more steps:
   When a normal user is running the app, the working directory is where the jar, executable, and libraries (dll, so, jnilib) are.
 * If you want a separate config dir from the default one, use VM Option `-Dazureus.config.path=<some config path>`
 * Run it
+
+## Release Installer Notes
+
+We build our installers using [Install4j, multi-platform installer builder](https://www.ej-technologies.com/products/install4j/overview.html)
+
+![Install4j Logo](https://www.ej-technologies.com/images/product_banners/install4j_large.png)
