@@ -747,7 +747,10 @@ TagPropertyConstraintHandler
 
 			ConstraintExpr compiled_expr = null;
 
-			tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
+			if ( tag != null ){
+			
+				tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
+			}
 			
 			try{
 				compiled_expr = compileStart( constraint, new HashMap<String,ConstraintExpr>());
@@ -809,7 +812,7 @@ TagPropertyConstraintHandler
 
 				char c = chars[i];
 
-				if ( c == '"' ){
+				if ( GeneralUtils.isDoubleQuote( c )){
 
 					if ( i == 0 || chars[i-1] != '\\' ){
 
@@ -1223,7 +1226,7 @@ TagPropertyConstraintHandler
 
 						// guaranteed single argument
 					
-					if ( value.startsWith( "\"")){ 
+					if ( GeneralUtils.startsWithDoubleQuote( value )){ 
 						
 						// string literal
 						
@@ -1248,7 +1251,7 @@ TagPropertyConstraintHandler
 
 						char c = chars[i];
 
-						if ( c == '"' ){
+						if ( GeneralUtils.isDoubleQuote( c )){
 
 							if ( i == 0 || chars[i-1] != '\\' ){
 
@@ -1277,7 +1280,7 @@ TagPropertyConstraintHandler
 						
 						String p = (String)params.get( i );
 						
-						if ( p.startsWith( "\"" )){
+						if ( GeneralUtils.startsWithDoubleQuote( p )){
 							
 							// string literal
 							
@@ -2048,7 +2051,7 @@ TagPropertyConstraintHandler
 
 					String arg = (String)_arg;
 
-					if ( arg.startsWith( "\"" ) && arg.endsWith( "\"" )){
+					if ( GeneralUtils.startsWithDoubleQuote( arg ) && GeneralUtils.endsWithDoubleQuote( arg )){
 
 						args[index] = arg.substring( 1, arg.length() - 1 );
 
@@ -2067,7 +2070,7 @@ TagPropertyConstraintHandler
 			{
 				String str = (String)args[index];
 
-				if ( str.startsWith( "\"" ) && str.endsWith( "\"" )){
+				if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
 
 					return( str.substring( 1, str.length() - 1 ));
 
@@ -2095,7 +2098,7 @@ TagPropertyConstraintHandler
 			{
 				String str = (String)args[index];
 
-				if ( str.startsWith( "\"" ) && str.endsWith( "\"" )){
+				if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
 
 					return( new String[]{ str.substring( 1, str.length() - 1 )});
 
@@ -2510,6 +2513,6 @@ TagPropertyConstraintHandler
 		TagPropertyConstraintHandler handler = new TagPropertyConstraintHandler();
 
 		//System.out.println( handler.compileConstraint( "!(hasTag(\"bil\") && (hasTag( \"fred\" ))) || hasTag(\"toot\")" ).getString());
-		System.out.println( handler.compileConstraint( "isGE( shareratio, 1.5)" ).getString());
+		System.out.println( handler.compileConstraint( "hasTag(  “Seeding Only” )" ).getString());
 	}
 }
