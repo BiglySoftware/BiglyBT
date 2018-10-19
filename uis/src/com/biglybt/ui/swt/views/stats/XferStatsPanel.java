@@ -51,6 +51,7 @@ import com.biglybt.core.util.FrequencyLimitedDispatcher;
 
 import com.biglybt.ui.swt.utils.ColorCache;
 
+
 public class
 XferStatsPanel
 {
@@ -621,8 +622,8 @@ XferStatsPanel
 
 			from_node.cc		= from_cc;
 			from_node.image		= from_image;
-			from_node.links		= new ArrayList<>();
-						
+			from_node.links		= new LinkedList<>();
+			
 			for ( Map.Entry<String,long[]>	entry2: entry.getValue().entrySet()){
 				
 				String 	to_cc 		= entry2.getKey();
@@ -656,12 +657,8 @@ XferStatsPanel
 					from_node.count_recv += to_recv;
 					to_node.count_recv += to_recv;
 					
-					Link link = new Link();
-					
-					link.count += to_recv;
-					link.source	= from_node;
-					link.target	= to_node;
-					
+					Link link = new Link( from_node, to_node, to_recv, false );
+										
 					from_node.links.add( link );
 				}
 				
@@ -682,12 +679,8 @@ XferStatsPanel
 					from_node.count_sent += to_sent;
 					to_node.count_sent += to_sent;
 					
-					Link link = new Link();
-					
-					link.count += to_sent;
-					link.source	= from_node;
-					link.target	= to_node;
-					
+					Link link = new Link( from_node, to_node, to_sent, true );
+										
 					from_node.links.add( link );
 				}
 			}
@@ -768,6 +761,9 @@ XferStatsPanel
 			}
 	
 			boolean draw_links = nodes == origins;
+				
+			List<Link>	hup_links 	= new ArrayList<>( 1024 );
+			List<Link>	hdown_links = new ArrayList<>( 1024 );
 			
 			for ( Node node: nodes ){
 	
@@ -778,12 +774,61 @@ XferStatsPanel
 					odd = !odd;
 					
 					if ( draw_links ){
-												
+								
 						for ( Link link: node.links ){
 							
-							link.draw(gc);
+							if ( link.isVisible()){
+							
+								if ( link.draw( gc )){
+									
+									if ( link.upload ){
+										
+										hup_links.add( link );
+										
+									}else{
+										
+										hdown_links.add( link );
+									}
+								}
+							}
 						}
 					}
+				}
+			}
+			
+			if ( !( hup_links.isEmpty() && hdown_links.isEmpty())){
+				
+				Comparator<Link>	comp = new Comparator<XferStatsPanel.Link>(){
+					
+					@Override
+					public int compare(Link o1, Link o2){
+						
+						int diff = o1.target.x_pos -  o2.target.x_pos;
+						
+						if ( diff == 0 ){
+							
+							diff = o1.source.x_pos - o2.source.x_pos;
+						}
+						
+						return( diff );
+					}
+				};
+				
+				Collections.sort( hup_links, comp );
+				Collections.sort( hdown_links, comp );
+				
+				int	pos = 0;
+				
+				for ( Link link: hup_links ){
+					
+					link.drawCount(gc, pos++);
+				}
+				
+				pos = 0;
+				
+				for ( Link link: hdown_links ){
+					
+					link.drawCount(gc, pos++);
 				}
 			}
 		}
@@ -824,19 +869,34 @@ XferStatsPanel
 	private class
 	Link
 	{
-		Node	source;
-		Node	target;
-		long	count;
+		final boolean	upload;	
+		final Node		source;
+		final Node		target;	
+		final long		count;
 		
-		private void
+		private
+		Link(
+			Node		_source,
+			Node		_target,
+			long		_count,
+			boolean		is_upload )
+		{
+			source	= _source;
+			target	= _target;
+			count	= _count;
+			upload 	= is_upload;
+		}
+		
+		private boolean
+		isVisible()
+		{
+			return( !( source.hidden || target.hidden ));
+		}
+		
+		private boolean
 		draw(
 			GC		gc )
 		{
-			if ( source.hidden || target.hidden ){
-				
-				return;
-			}
-			
 			boolean above = source.y_pos > target.y_pos;
 			
 			int x1 = source.x_pos + flag_width/2;
@@ -858,7 +918,9 @@ XferStatsPanel
 			
 			Color old = gc.getForeground();
 			
-			if ( hover_node != null && (source.cc.equals( hover_node.cc ) || target.cc.equals( hover_node.cc ))){
+			boolean hovering =  hover_node != null && (source.cc.equals( hover_node.cc ) || target.cc.equals( hover_node.cc ));
+			
+			if ( hovering ){
 				
 				gc.setForeground( Colors.fadedGreen );
 				
@@ -892,6 +954,79 @@ XferStatsPanel
 			}
 			
 			gc.drawLine(xy1[0],xy1[1],xy2[0],xy2[1] );
+						
+			gc.setForeground( old );
+			
+			return( hovering );
+		}
+		
+		private void
+		drawCount(
+			GC		gc,
+			int		link_num )
+		{
+			boolean above = source.y_pos > target.y_pos;
+
+			int x1 = source.x_pos + flag_width/2;
+			int x2 = target.x_pos + flag_width/2;
+
+			int y1;
+			int y2;
+			
+			if ( above ){
+				y1 = source.y_pos - text_height;		
+				y2 = target.y_pos + flag_height + text_height;
+			}else{
+				y1 = source.y_pos + flag_height + text_height;			
+				y2 = target.y_pos - text_height;	
+			}
+
+			int[] xy1 = scale.getXY( x1, y1 );
+			int[] xy2 = scale.getXY( x2, y2 );
+
+			int	x_diff = xy2[0] - xy1[0];
+			int y_diff = xy2[1] - xy1[1];
+
+			int room 	= Math.abs( y2-y1 )/text_height;
+			
+			float x_chunk = (float)x_diff/room;
+			float y_chunk = (float)y_diff/room;
+			
+			int	offset	= 0;
+			
+			if ( room > 6 ){
+				
+				room 	-= 2;
+				offset	= 1;
+			}
+						
+			int slot = offset + ( link_num % room );
+						
+			String speed = getBPSForDisplay( count );
+					
+			String nums = speed;
+			
+			int		pos = nums.indexOf( " " );
+			
+			if ( pos != -1 ){
+				
+				nums = nums.substring( 0, pos );
+			}
+			
+			int speed_width 	= gc.textExtent( nums ).x;
+			int speed_height 	= gc.textExtent( nums ).y;
+			
+			int speed_pad_x = speed_width/2;
+			int speed_pad_y = speed_height/2;
+			
+			int x_pos = (int)( xy1[0] + x_chunk*slot );
+			int y_pos = (int)( xy1[1] + y_chunk*slot );
+			
+			Color old = gc.getForeground();
+
+			gc.setForeground( Colors.fadedRed );
+
+			gc.drawText( speed, x_pos - speed_pad_x, y_pos - speed_pad_y );
 			
 			gc.setForeground( old );
 		}
@@ -963,10 +1098,7 @@ XferStatsPanel
 				gc.drawImage( image, xy[0], xy[1] );
 			}
 
-			currentPositions.add( new Object[]{ xy[0], xy[1], this });
-			
-
-				
+			currentPositions.add( new Object[]{ xy[0], xy[1], this });				
 		}
 		
 		private String
