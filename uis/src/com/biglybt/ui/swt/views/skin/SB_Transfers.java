@@ -2456,7 +2456,9 @@ public class SB_Transfers
 
 						int viewmode = COConfigurationManager.getIntParameter( SideBar.SIDEBAR_SECTION_LIBRARY + ".viewmode", SBC_LibraryView.MODE_BIGTABLE );
 						
-						if ( total_wln == total_nln || viewmode == SBC_LibraryView.MODE_SMALLTABLE ){
+						if ( 	total_wln == total_nln || 
+								viewmode == SBC_LibraryView.MODE_SMALLTABLE ||
+								!COConfigurationManager.getBooleanParameter( "Library.EnableSimpleView" )){
 							
 							return( String.valueOf( total_wln ));
 							

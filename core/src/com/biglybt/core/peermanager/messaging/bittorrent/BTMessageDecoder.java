@@ -166,8 +166,9 @@ public class BTMessageDecoder implements MessageStreamDecoder {
   @Override
   public ByteBuffer destroy() {
 	if (destroyed) {
-		Debug.out("Trying to redestroy message decoder, stack trace follows: " + this);
-		Debug.outStackTrace();
+		//Not like we're goig to do anything about this - parg 2018/11/17
+		//Debug.out("Trying to redestroy message decoder, stack trace follows: " + this);
+		//Debug.outStackTrace();
 	}
 
     is_paused = true;
@@ -179,39 +180,70 @@ public class BTMessageDecoder implements MessageStreamDecoder {
 
     int lbuff_read = 0;
     int pbuff_read = 0;
-    length_buffer.limit( SS, 4 );
-
-    DirectByteBuffer plb = payload_buffer;
-
-    if( reading_length_mode ) {
-      lbuff_read = length_buffer.position( SS );
+    
+    DirectByteBuffer lb 	= length_buffer;
+    
+    if ( lb != null && lb.hasBeenReturnedToPool()){
+    	
+    	lb = null;
     }
-    else { //reading payload
-      length_buffer.position( SS, 4 );
-      lbuff_read = 4;
-      pbuff_read = plb == null ? 0 : plb.position( SS );
+    
+    DirectByteBuffer plb 	= payload_buffer;
+   
+    if ( plb != null && plb.hasBeenReturnedToPool()){
+    	
+	   plb = null;
     }
-
+    
+    if ( lb != null ){
+    	
+    	lb.limit( SS, 4 );
+	
+	    if ( reading_length_mode ){
+	    	
+	    	lbuff_read = lb.position( SS );
+	    	
+	    }else{ 
+	    	
+	    		//reading payload
+	    	
+	    	lb.position( SS, 4 );
+	    	
+	    	lbuff_read = 4;
+	    	
+	    	pbuff_read = plb == null ? 0 : plb.position( SS );
+	    }
+    }
+    
     ByteBuffer unused = ByteBuffer.allocate( lbuff_read + pbuff_read );   //TODO convert to direct?
 
-    length_buffer.flip( SS );
-    unused.put( length_buffer.getBuffer( SS ) );
-
-    try{
-	    if ( plb != null ) {
-	    	plb.flip( SS );
-	    	unused.put( plb.getBuffer( SS ) ); // Got a buffer overflow exception here in the past - related to PEX?
+    if ( lb != null ){
+    	
+    	lb.flip( SS );
+    	
+	    unused.put( lb.getBuffer( SS ) );
+	
+	    try{
+		    if ( plb != null ){
+		    	
+		    	plb.flip( SS );
+		    	
+		    	unused.put( plb.getBuffer( SS ) ); // Got a buffer overflow exception here in the past - related to PEX?
+		    }
+	    }catch( RuntimeException e ){
+	    	
+	    	Debug.out( "hit known threading issue" );
 	    }
-    }catch( RuntimeException e ){
-    	Debug.out( "hit known threading issue" );
+	
+	    unused.flip();
+	
+	    lb.returnToPool();
     }
-
-    unused.flip();
-
-    length_buffer.returnToPool();
-
-    if( plb != null ) {
+    
+    if ( plb != null ){
+    	
     	plb.returnToPool();
+    	
     	payload_buffer = null;
     }
 

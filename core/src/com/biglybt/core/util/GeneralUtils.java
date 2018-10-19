@@ -327,4 +327,36 @@ GeneralUtils
 		}
 		return sb.toString();
 	}
+	
+	
+	
+	public static boolean
+	isDoubleQuote(
+		char	c )
+	{
+		return( c == '"' || c == '\u201c' || c == '\u201d' );
+	}
+	
+	public static boolean
+	isSingleQuote(
+		char	c )
+	{
+		return( c == '\'' || c == '\u2018' || c == '\u2019' );
+	}
+
+	public static boolean
+	startsWithDoubleQuote(
+		String	str )
+	{
+		return( !str.isEmpty() && isDoubleQuote( str.charAt(0)));
+	}
+	
+	public static boolean
+	endsWithDoubleQuote(
+		String	str )
+	{
+		int	len = str.length();
+		
+		return( len > 0 && isDoubleQuote( str.charAt(len-1)));
+	}
 }
