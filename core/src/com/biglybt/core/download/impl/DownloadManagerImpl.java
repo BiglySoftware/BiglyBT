@@ -61,8 +61,10 @@ import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableResolver;
 import com.biglybt.core.torrent.*;
+import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
@@ -300,6 +302,9 @@ DownloadManagerImpl
     }
 
 
+	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
+
+	
 	private final ListenerManager<DownloadManagerListener>	listeners 	= ListenerManager.createManager(
 			"DM:ListenDispatcher",
 			new ListenerManagerDispatcher<DownloadManagerListener>()
@@ -960,6 +965,8 @@ DownloadManagerImpl
 
 				 torrent	= download_manager_state.getTorrent();
 
+				 all_trackers.registerTorrent( torrent );
+				 
 				 setFileLinks();
 
 				 	// We can't have the identity of this download changing as this will screw up

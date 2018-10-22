@@ -635,6 +635,44 @@ public class MainMDISetup
 						return entry;
 					}
 				});
+		
+		// all trackers
+
+	mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS,
+			new MdiEntryCreationListener() {
+				@Override
+				public MdiEntry createMDiEntry(String id) {
+
+					final ViewTitleInfo title_info =
+						new ViewTitleInfo()
+						{
+							@Override
+							public Object
+							getTitleInfoProperty(
+								int propertyID)
+							{
+								if ( propertyID == TITLE_INDICATOR_TEXT ){
+
+									return( "blah" );
+								}
+
+								return null;
+							}
+						};
+
+					MdiEntry entry = mdi.createEntryFromSkinRef(
+							MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+							MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS, "alltrackersview",
+							"{mdi.entry.alltrackersview}",
+							title_info, null, true, null);
+
+					//entry.setImageLeftID("image.sidebar.logview");
+
+
+
+					return entry;
+				}
+			});
 
 			// torrent options
 
@@ -876,6 +914,18 @@ public class MainMDISetup
 							MultipleDocumentInterface.SIDEBAR_SECTION_DOWNLOAD_HISTORY );
 				}
 			});
+			
+			menuItem = uim.getMenuManager().addMenuItem(
+					MenuManager.MENU_MENUBAR, "alltrackersview.view.heading");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS );
+				}
+			});
+
 		}
 
 		//		System.out.println("Activate sidebar " + startTab + " took "

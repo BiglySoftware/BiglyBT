@@ -50,6 +50,8 @@ import com.biglybt.core.security.SESecurityManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
+import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.tracker.client.impl.*;
@@ -118,6 +120,7 @@ TRTrackerBTAnnouncerImpl
 	private static final AEMonitor 	class_mon 			= new AEMonitor( "TRTrackerBTAnnouncer:class" );
 	private static final Map			tracker_report_map	= new HashMap();
 
+	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
 	final TOTorrent					torrent;
 	private final TOTorrentAnnounceURLSet[]	announce_urls;
@@ -155,7 +158,7 @@ TRTrackerBTAnnouncerImpl
 
 	private long			min_interval_override	= 0;
 
-  	private List trackerUrlLists;
+  	private List<List<URL>> trackerUrlLists;
 
   	private URL lastUsedUrl;
   	private URL	lastAZTrackerCheckedURL;
@@ -917,8 +920,23 @@ TRTrackerBTAnnouncerImpl
   		return( resp );
   	}
 
+    private TRTrackerAnnouncerResponseImpl
+    update2(String evt)
+    {
+    	TRTrackerAnnouncerResponseImpl resp = update2Support( evt );
+    
+    	URL url = resp.getURL();
+    	
+    	if ( url != null ){
+    		
+    		all_trackers.updateTracker( url, resp );
+    	}
+    	
+    	return( resp );
+    }
+    
   private TRTrackerAnnouncerResponseImpl
-  update2(String evt)
+  update2Support(String evt)
   {
   	TRTrackerAnnouncerResponseImpl	last_failure_resp = null;
 
@@ -928,7 +946,7 @@ TRTrackerBTAnnouncerImpl
 
 	for (int i = 0 ; i < trackerUrlLists.size() ; i++) {
 
-		List urls = (List) trackerUrlLists.get(i);
+		List<URL> urls = trackerUrlLists.get(i);
 
 		for (int j = 0 ; j < urls.size() ; j++) {
 
@@ -2491,7 +2509,7 @@ TRTrackerBTAnnouncerImpl
 		boolean	shuffle )
 	{
 		try{
-			trackerUrlLists = new ArrayList(1);
+			trackerUrlLists = new ArrayList<>(1);
 
 				//This entry is present on multi-tracker torrents
 
@@ -2504,7 +2522,7 @@ TRTrackerBTAnnouncerImpl
 					//We then contruct a list of one element, containing this url, and put this list
 					//into the list of lists of urls.
 
-				List list = new ArrayList();
+				List<URL> list = new ArrayList();
 
 				list.add(url);
 
@@ -2519,7 +2537,7 @@ TRTrackerBTAnnouncerImpl
 
 					URL[]	urls = announce_urls[i].getAnnounceURLs();
 
-				 	List random_urls = new ArrayList();
+				 	List<URL> random_urls = new ArrayList<>();
 
 				 	for(int j = 0 ; j < urls.length; j++){
 
@@ -2543,6 +2561,8 @@ TRTrackerBTAnnouncerImpl
 
 			Debug.printStackTrace( e );
 		}
+		
+		all_trackers.registerTrackers( trackerUrlLists );
 	}
 
 	protected String
@@ -3620,6 +3640,11 @@ TRTrackerBTAnnouncerImpl
 		URL		new_url,
 		boolean	explicit  )
 	{
+		if ( old_url != new_url ){
+			
+			all_trackers.registerTracker( new_url );
+		}
+		
 		helper.informURLChange( old_url, new_url, explicit );
 	}
 
