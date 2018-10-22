@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.CoreFactory;
 
@@ -58,7 +58,6 @@ import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Average;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.GeneralUtils;
-import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.SimpleTimer.TimerTickReceiver;
@@ -110,6 +109,12 @@ GlobalManagerStatsImpl
    
     private List<PEPeer>	removed_peers = new LinkedList<>();
     
+	protected
+	GlobalManagerStatsImpl()
+	{
+		manager = null;
+	}
+	
 	protected
 	GlobalManagerStatsImpl(
 		GlobalManagerImpl	_manager )
@@ -870,13 +875,14 @@ GlobalManagerStatsImpl
 	private volatile AggregateStatsImpl	as_latest = new AggregateStatsImpl( sequence++ );
 
 	private DHT	dht_biglybt;
-	
+		
 	private static class
 	HistoryEntry
 	{
+		final long					time	= SystemTime.getMonotonousTime();
+
 		final InetAddress			address;
 		final String				cc;
-		final long					time;
 		final RemoteCountryStats[]	stats;
 		
 		private
@@ -887,42 +893,16 @@ GlobalManagerStatsImpl
 			cc		= _cc;
 			address	= _stats.getRemoteAddress();
 			stats	= _stats.getStats();
-			time	= _stats.getMonoTime(); 
-		}
-		
-		public int
-		hashCode()
-		{
-			return( address.hashCode());
-		}
-		
-		public boolean
-		equals(
-			Object	other )
-		{
-			return((other instanceof HistoryEntry) && ((HistoryEntry)other).address.equals( address ));
 		}
 	}
 	
-	private Map<HistoryEntry,HistoryEntry>			stats_history	= 
-		new TreeMap<>(
-			new Comparator<HistoryEntry>()
-			{
-				public int 
-				compare(
-					HistoryEntry o1, 
-					HistoryEntry o2)
-				{
-					return( Long.compare(o1.time, o2.time ));
-				}
-			});
+	private LinkedList<HistoryEntry>		stats_history 			= new LinkedList<>();
+	private Set<InetAddress>				stats_history_addresses	= new HashSet<>();
 	
 	private void
 	addRemoteStats(
 		RemoteStats		stats )
-	{
-		List<HistoryEntry>	to_remove = new ArrayList<>();
-		
+	{		
 			// add new entry
 				
 		{
@@ -935,7 +915,14 @@ GlobalManagerStatsImpl
 				return;
 			}
 			
-			String[] o_details = PeerUtils.getCountryDetails(stats.getRemoteAddress());
+			InetAddress address = stats.getRemoteAddress();
+					
+			if ( stats_history_addresses.contains( address )){
+				
+				return;
+			}
+			
+			String[] o_details = PeerUtils.getCountryDetails( address );
 			
 			String originator_cc;
 			
@@ -947,18 +934,18 @@ GlobalManagerStatsImpl
 			
 				originator_cc = o_details[0];
 			}
-						
+			
 			Map<String,long[]> map = aggregate_stats.get( originator_cc );
 				
 			boolean	added = false;
-			
+						
 			for ( RemoteCountryStats rc: rcs ){
 				
 				String cc = rc.getCC();
 				
 				long	recv = rc.getAverageReceivedBytes();
 				long	sent = rc.getAverageSentBytes();
-					
+									
 				if ( recv < 0 || recv > MAX_ALLOWED_BYTES_PER_MIN ){
 					recv = 0;
 				}
@@ -1006,30 +993,33 @@ GlobalManagerStatsImpl
 					
 				HistoryEntry entry = new HistoryEntry( originator_cc, stats );
 				
-				HistoryEntry old = stats_history.put( entry, entry );
+				stats_history.addLast( entry );
 				
-				if ( old != null ){
-					
-					to_remove.add( old );
-				}
+				stats_history_addresses.add( address );
 			}
 		}
 		
 			// remove old
 		
+		boolean	things_are_borked = false;
+		
 		{
+			List<HistoryEntry>	to_remove = new ArrayList<>();
+
 			long	now = SystemTime.getMonotonousTime();
 	
-			Iterator<HistoryEntry>	it = stats_history.keySet().iterator();
+			Iterator<HistoryEntry>	it = stats_history.iterator();
 			
 			while( it.hasNext()){
 				
 				HistoryEntry entry = it.next();
-									
-				if ( 	stats_history.size() > STATS_HISTORY_MAX_SAMPLES ||
+										
+				if ( 	stats_history.size() > STATS_HISTORY_MAX_SAMPLES  ||
 						now - entry.time > STATS_HISTORY_MAX_AGE ){
 										
 					it.remove();
+					
+					stats_history_addresses.remove( entry.address );
 					
 					to_remove.add( entry );
 					
@@ -1040,16 +1030,18 @@ GlobalManagerStatsImpl
 			}
 			
 			for ( HistoryEntry entry: to_remove ){
-				
+								
 				String originator_cc = entry.cc;
 				
 				Map<String,long[]> map = aggregate_stats.get( originator_cc );
 		
 				if ( map == null ){
 					
+					things_are_borked = true;
+					
 					Debug.out( "inconsistent");
 					
-					return;
+					break;
 				}
 				
 				for ( RemoteCountryStats rc: entry.stats ){
@@ -1073,6 +1065,8 @@ GlobalManagerStatsImpl
 						
 						if ( val == null ){
 							
+							things_are_borked = true;
+							
 							Debug.out( "inconsistent");
 							
 						}else{
@@ -1081,6 +1075,8 @@ GlobalManagerStatsImpl
 							long new_sent = val[1] - sent;
 															
 							if ( new_recv < 0 || new_sent < 0 ){
+							
+								things_are_borked = true;
 								
 								Debug.out( "inconsistent");
 								
@@ -1114,6 +1110,20 @@ GlobalManagerStatsImpl
 					aggregate_stats.remove( originator_cc );
 				}
 			}
+		}
+		
+		if ( things_are_borked ){
+			
+			stats_history.clear();
+			
+			stats_history_addresses.clear();
+			
+			aggregate_stats.clear();
+			
+			total_received_sum 		= 0;
+			total_received_overall	= 0;
+			total_sent_sum			= 0;
+			total_sent_overall		= 0;
 		}
 		
 		if ( dht_biglybt == null ){

@@ -158,10 +158,7 @@ GlobalManagerStats
 	{
 		public InetAddress
 		getRemoteAddress();
-		
-		public long
-		getMonoTime();
-		
+				
 		public RemoteCountryStats[]
 		getStats();
 	}

@@ -1843,28 +1843,32 @@ DHTUDPUtils
 				
 				for ( Map.Entry<String,long[]> entry: stats_map.entrySet()){
 					
+					long[]	values 	= entry.getValue();
+					String	cc		= entry.getKey();
+					
+					final long	recv 	= values[0];
+					final long	sent	= values[1];
+					
 					stats[pos++] = 
 						new RemoteCountryStats()
 						{
-							long[]	values = entry.getValue();
-							
 							public String 
 							getCC()
 							{
-								return( entry.getKey());
+								return( cc );
 							}
 						
 							public long
 							getAverageReceivedBytes()
 							{
-								return( values[0] );
+								return( recv );
 							}
 							
 							@Override
 							public long 
 							getAverageSentBytes()
 							{
-								return( values[1] );
+								return( sent );
 							}
 						};
 				}
@@ -1910,20 +1914,11 @@ DHTUDPUtils
 		gm_stats.receiveRemoteStats(
 			new RemoteStats()
 			{	
-				private long time = SystemTime.getMonotonousTime();
-				
 				@Override
 				public RemoteCountryStats[] getStats(){
 					return( stats );
 				}
-				
-				@Override
-				public long 
-				getMonoTime()
-				{
-					return( time );
-				}
-				
+								
 				@Override
 				public InetAddress getRemoteAddress(){
 					return( address );
