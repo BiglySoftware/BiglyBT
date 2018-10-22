@@ -865,10 +865,7 @@ GlobalManagerStatsImpl
 	private Map<String,Map<String,long[]>>	aggregate_stats = new ConcurrentHashMap<>();
 		
 	private int sequence;
-	
-	private long	total_received_sum;		// migration before version 2 of exchange protocol
-	private long	total_sent_sum;			// ditto
-	
+		
 	private long	total_received_overall;
 	private long	total_sent_overall;
 
@@ -955,10 +952,7 @@ GlobalManagerStatsImpl
 				}				
 				
 				if ( sent + recv > 0 ){
-					
-					total_received_sum 	+= recv;
-					total_sent_sum		+= sent;
-					
+										
 					if ( cc.isEmpty()){
 						
 						total_received_overall 	+= recv;
@@ -1081,9 +1075,6 @@ GlobalManagerStatsImpl
 								Debug.out( "inconsistent");
 								
 							}else{
-								
-								total_received_sum 	-= recv;
-								total_sent_sum		-= sent;
 
 								if ( cc.isEmpty()){
 									
@@ -1120,9 +1111,7 @@ GlobalManagerStatsImpl
 			
 			aggregate_stats.clear();
 			
-			total_received_sum 		= 0;
 			total_received_overall	= 0;
-			total_sent_sum			= 0;
 			total_sent_overall		= 0;
 		}
 		
@@ -1146,8 +1135,8 @@ GlobalManagerStatsImpl
 				stats_history.size(),
 				dht_biglybt==null?0:(int)dht_biglybt.getControl().getStats().getEstimatedDHTSize(),
 				sequence++,
-				Math.max( total_received_sum, total_received_overall ),
-				Math.max( total_sent_sum, total_sent_overall ),
+				total_received_overall,
+				total_sent_overall,
 				aggregate_stats );
 	}
 	
