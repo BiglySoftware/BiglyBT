@@ -1,10 +1,32 @@
+/* 
+ * Copyright (C) Bigly Software, Inc, All Rights Reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+ */
+
 package com.biglybt.core.tracker.alltrackers;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentListener;
@@ -16,14 +38,26 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimerEvent;
 import com.biglybt.core.util.TimerEventPerformer;
+import com.biglybt.util.MapUtils;
 
 public class 
 AllTrackersManagerImpl
 	implements AllTrackers, TOTorrentListener
 {
+	final static int	MAX_TRACKERS	= 1024;
+	
+	final static int 	TICK_PERIOD	= 2500;
+	final static int	SAVE_PERIOD	= 5*60*1000;
+	final static int	SAVE_TICKS	= SAVE_PERIOD/TICK_PERIOD;
+	
+	private static final String	CONFIG_FILE 				= "alltrackers.config";
+
+	
 	final private static AllTrackersManagerImpl singleton = new AllTrackersManagerImpl();
 	
 	public static AllTrackers
@@ -41,23 +75,71 @@ AllTrackersManagerImpl
 	private
 	AllTrackersManagerImpl()
 	{
+		loadConfig();
+		
+		CoreFactory.getSingleton().addLifecycleListener(
+				new CoreLifecycleAdapter()
+				{
+					@Override
+					public void
+					stopped(
+						Core core )
+					{
+						saveConfig();
+					}
+				});
+		
 		SimpleTimer.addPeriodicEvent(
 			"AllTrackers",
-			2500,
+			TICK_PERIOD,
 			new TimerEventPerformer(){
+					
+				private int	tick_count;
 				
+				private List<TOTorrent>	pending_torrents = new ArrayList<>();
+						
 				@Override
 				public void 
 				perform(
 					TimerEvent event )
 				{
+					tick_count++;
+					
+					if ( pending_torrents != null && CoreFactory.isCoreRunning()){
+					
+						for ( TOTorrent torrent: pending_torrents ){
+							
+							torrent.addListener( AllTrackersManagerImpl.this );
+						}
+						
+						pending_torrents = null;
+					}
+					
 					Set<AllTrackersTracker>	updates = new HashSet<>();
 							
 					while( !update_queue.isEmpty()){
 						
 						Object[] entry = update_queue.remove();
 						
-						AllTrackersTrackerImpl 		tracker = (AllTrackersTrackerImpl)entry[0];
+						Object	e0 = entry[0];
+						
+						if ( e0 instanceof TOTorrent ){
+						
+							TOTorrent torrent = (TOTorrent)e0;
+							
+							if ( pending_torrents == null ){
+								
+								torrent.addListener( AllTrackersManagerImpl.this );
+								
+							}else{
+								
+								pending_torrents.add( torrent );
+							}
+							
+							continue;
+						}
+								
+						AllTrackersTrackerImpl 		tracker = (AllTrackersTrackerImpl)e0;
 						
 						if ( host_map.containsKey( tracker.getTrackerName())){
 
@@ -65,19 +147,44 @@ AllTrackersManagerImpl
 						
 							String status;
 							
+							boolean	updated = false;
+							
 							if ( resp instanceof TRTrackerAnnouncerResponse ){
 						
-								status = ((TRTrackerAnnouncerResponse)resp).getStatusString();
+								TRTrackerAnnouncerResponse a_resp = (TRTrackerAnnouncerResponse)resp;
+										
+								status = a_resp.getStatusString();
 								
+								if ( tracker.setOK( a_resp.getStatus() == TRTrackerAnnouncerResponse.ST_ONLINE )){
+									
+									updated = true;
+								}
 							}else{
 								
-								status = ((TRTrackerScraperResponse)resp).getStatusString();
+									// announce status trumps scrape 
+								
+								if ( tracker.hasStatus()){
+									
+									continue;
+								}
+								
+								TRTrackerScraperResponse s_resp = (TRTrackerScraperResponse)resp;							
+															
+								status = s_resp.getStatusString();
+								
+								if ( tracker.setOK( s_resp.getStatus() == TRTrackerScraperResponse.ST_ONLINE )){
+									
+									updated = true;
+								}
+							}
+														
+							if ( tracker.setStatusString( status )){
+								
+								updated = true;		
 							}
 							
-							if ( !tracker.getStatusString().equals( status )){
-							
-								tracker.setStatusString( status );
-							
+							if ( updated ){
+								
 								updates.add( tracker );
 							}
 						}
@@ -98,8 +205,91 @@ AllTrackersManagerImpl
 							}
 						}
 					}
+					
+					if ( tick_count % SAVE_PERIOD == 0 ){
+						
+						saveConfig();
+					}
 				}
 			});
+	}
+	
+	private synchronized void
+	loadConfig()
+	{
+		try{
+			Map map = FileUtil.readResilientConfigFile( CONFIG_FILE );
+			
+			List<Map>	trackers = (List<Map>)map.get( "trackers" );
+			
+			if ( trackers != null ){
+				
+				for ( Map t: trackers ){
+					
+					try{
+						AllTrackersTrackerImpl tracker = new AllTrackersTrackerImpl( t );
+						
+						host_map.put( tracker.getTrackerName(), tracker );
+						
+						if ( host_map.size() > MAX_TRACKERS ){
+							
+							Debug.out( "Too many trackers - " + trackers.size());
+							
+							return;
+						}
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
+	private synchronized void
+	saveConfig()
+	{
+		try{
+			Map map = new HashMap();
+			
+			List<Map>	trackers = new ArrayList<>( host_map.size() + 32 );
+			
+			map.put( "trackers", trackers ); 
+			
+			for ( AllTrackersTrackerImpl tracker: host_map.values()){
+			
+				try{
+					trackers.add( tracker.exportToMap());
+					
+					if ( trackers.size() > MAX_TRACKERS ){
+						
+						Debug.out( "Too many trackers - " + trackers.size());
+						
+						break;
+					}
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+			
+			FileUtil.writeResilientConfigFile( CONFIG_FILE, map );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
+	@Override
+	public int 
+	getTrackerCount()
+	{
+		return( host_map.size());
 	}
 	
 	@Override
@@ -111,10 +301,10 @@ AllTrackersManagerImpl
 			
 			return;
 		}
-		
-		torrent.addListener( this );
-			
+					
 		registerTorrentSupport( torrent );
+		
+		update_queue.add( new Object[]{ torrent } );
 	}
 	
 	private void 
@@ -249,7 +439,16 @@ AllTrackersManagerImpl
 		
 		if ( tracker != null ){
 			
-			update_queue.add( new Object[]{ tracker, response } );
+			int scrape_state = response.getStatus();
+			
+			if ( 	scrape_state == TRTrackerScraperResponse.ST_INITIALIZING ||
+					scrape_state == TRTrackerScraperResponse.ST_SCRAPING ){
+				
+					// ignore
+			}else{
+				
+				update_queue.add( new Object[]{ tracker, response } );
+			}
 		}
 	}
 	
@@ -289,11 +488,52 @@ AllTrackersManagerImpl
 		
 		private String		status = "";
 		
+		private	long		last_good;
+		private	long		last_bad;
+		private	long		bad_since;
+		private	long		consec_fails;
+		
 		private
 		AllTrackersTrackerImpl(
 			String		_name )
 		{
 			name	= _name;
+		}
+		
+		private
+		AllTrackersTrackerImpl(
+			Map			map )
+		
+			throws IOException
+		{
+			name = MapUtils.getMapString( map, "name", null );
+			
+			if ( name == null ){
+				
+				throw( new IOException( "Invalid" ));
+			}
+			
+			status = MapUtils.getMapString( map, "status", "" );
+			
+			last_good = MapUtils.getMapLong( map, "lg", 0 );
+			last_bad = MapUtils.getMapLong( map, "lb", 0 );
+			bad_since = MapUtils.getMapLong( map, "bs", 0 );
+			consec_fails = MapUtils.getMapLong( map, "cf", 0 );
+		}
+		
+		private Map
+		exportToMap()
+		{
+			Map	map = new HashMap();
+			
+			map.put( "name", name );
+			map.put( "status", status );
+			map.put( "lg",  last_good );
+			map.put( "lb",  last_bad );
+			map.put( "bs",  bad_since );
+			map.put( "cf",  consec_fails );
+			
+			return( map );
 		}
 		
 		@Override
@@ -310,7 +550,13 @@ AllTrackersManagerImpl
 			return( status );
 		}
 		
-		protected void
+		protected boolean
+		hasStatus()
+		{
+			return( !status.isEmpty());
+		}
+		
+		protected boolean
 		setStatusString(
 			String	str )
 		{
@@ -319,7 +565,94 @@ AllTrackersManagerImpl
 				str = "";
 			}
 			
-			status = str;
+			if ( str.equals( status )){
+				
+				return( false );
+				
+			}else{
+				
+				status = str;
+				
+				return( true );
+			}
+		}
+		
+		protected boolean
+		setOK(
+			boolean	is_ok )
+		{
+			long	now = SystemTime.getCurrentTime();
+			
+			boolean	was_ok = consec_fails == 0 && last_good > 0 ;
+			
+			if ( was_ok == is_ok ){
+				
+					// reduce updates when things don't change
+				
+				now = (now/(60*1000))*(60*1000);
+				
+				if ( is_ok ){
+					
+					if ( last_good == now ){
+						
+						return( false );
+					}
+				}else{
+										
+					if ( last_bad == now ){
+					
+						consec_fails++;	// keep track of this though
+
+						return( false );
+					}
+				}
+			}
+			
+			if ( is_ok ){
+				
+				last_good		= now;
+				
+				bad_since		= 0;
+				
+				consec_fails	= 0;
+				
+			}else{
+				
+				last_bad = now;
+				
+				if ( consec_fails == 0 ){
+					
+					bad_since	= now;
+				}
+				
+				consec_fails++;
+			}
+			
+			return( true );
+		}
+		
+		public long
+		getLastGoodTime()
+		{
+			return( last_good );
+		}
+		
+		public long
+		getLastFailTime()
+		{
+			return( last_bad );
+		}
+		
+		public long
+		getFailingSinceTime()
+		{
+			return( bad_since );
+		}
+		
+		public long
+		getConsecutiveFails()
+		{
+			return( consec_fails );
 		}
 	}
 	

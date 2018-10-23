@@ -55,7 +55,6 @@ import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
-import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
@@ -3084,6 +3083,115 @@ public class TagUIUtils
 		});
 	}
 
+	public static MenuItem
+	createTagSelectionMenu(
+		Menu					top_menu,
+		String					resource,
+		List<Tag>				tags,
+		TagSelectionListener	listener )
+	{
+		Menu menu = new Menu( top_menu.getShell(), SWT.DROP_DOWN);
+
+		MenuItem top_item = new MenuItem( top_menu, SWT.CASCADE);
+
+		Messages.setLanguageText( top_item, resource );
+
+		top_item.setMenu( menu );
+	
+		List<String>	menu_names 		= new ArrayList<>();
+		Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
+
+		for ( Tag t: tags ){
+			
+			String name = t.getTagName( true );
+
+			menu_names.add( name );
+			menu_name_map.put( name, t );
+		}
+
+		List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
+
+		for ( Object obj: menu_structure ){
+
+			List<Tag>	bucket_tags = new ArrayList<>();
+
+			Menu parent_menu;
+
+			if ( obj instanceof String ){
+
+				parent_menu = menu;
+
+				bucket_tags.add( menu_name_map.get((String)obj));
+
+			}else{
+
+				Object[]	entry = (Object[])obj;
+
+				List<String>	tag_names = (List<String>)entry[1];
+
+				for ( String name: tag_names ){
+
+					Tag sub_tag = menu_name_map.get( name );
+
+					bucket_tags.add( sub_tag );
+				}
+
+				Menu menu_bucket = new Menu(menu.getShell(), SWT.DROP_DOWN );
+
+				MenuItem bucket_item = new MenuItem( menu, SWT.CASCADE );
+
+				bucket_item.setText((String)entry[0]);
+
+				bucket_item.setMenu( menu_bucket );
+
+				parent_menu = menu_bucket;
+			}
+
+			for ( final Tag t: bucket_tags ){
+
+				MenuItem mi = new MenuItem( parent_menu, SWT.PUSH );
+
+				Messages.setLanguageText(mi, t.getTagName( false ));
+
+				setMenuIcon( mi, t );
+				
+				mi.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						
+						listener.selected( t );
+					}});
+			}
+		}
+		
+		new MenuItem( menu , SWT.SEPARATOR );
+
+		MenuItem item_create = new MenuItem( menu, SWT.PUSH);
+
+		Messages.setLanguageText(item_create, "label.add.tag");
+		
+		item_create.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+
+				createManualTag(new UIFunctions.TagReturner() {
+					@Override
+					public void returnedTags(Tag[] tags) {
+						if ( tags != null ){
+							
+							for ( Tag tag: tags ){
+								
+								listener.selected( tag );
+							}
+						}
+					}
+				});
+			}
+		});
+		
+		return( top_item );
+	}
+	
 	public static List<TagType>
 	sortTagTypes(
 		Collection<TagType>	_tag_types )
@@ -3417,5 +3525,13 @@ public class TagUIUtils
 					}
 				}
 			});
+	}
+	
+	public interface
+	TagSelectionListener
+	{
+		public void
+		selected(
+			Tag		tag );
 	}
 }

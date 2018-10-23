@@ -624,6 +624,14 @@ TorrentUtils
 	getUniqueTrackerHosts(
 		TOTorrent	torrent )
 	{
+		return( getUniqueTrackerHosts( torrent, false ));
+	}
+	
+	public static Set<String>
+	getUniqueTrackerHosts(
+		TOTorrent	torrent,
+		boolean		include_port )
+	{
 		Set<String>	hosts = new HashSet<>();
 
 		if ( torrent != null ){
@@ -654,7 +662,24 @@ TorrentUtils
 
 					if ( host != null ){
 
-						hosts.add( host.toLowerCase( Locale.US ));
+						host = host.toLowerCase( Locale.US );
+						
+						hosts.add( host );
+						
+						if ( include_port ){
+							
+							int port = u.getPort();
+							
+							if ( port == -1 ){
+								
+								port = u.getDefaultPort();
+							}
+							
+							if ( port > 0 ){
+								
+								hosts.add( host + ":" + port );
+							}
+						}
 					}
 				}
 			}

@@ -231,7 +231,7 @@ TagPropertyTrackerHandler
 	getAugmentedHosts(
 		DownloadManager		dm )
 	{
-		Set<String>	hosts = TorrentUtils.getUniqueTrackerHosts( dm.getTorrent());
+		Set<String>	hosts = TorrentUtils.getUniqueTrackerHosts( dm.getTorrent(), true );
 
 		Set<String>	result = new HashSet<>();
 

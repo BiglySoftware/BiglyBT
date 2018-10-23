@@ -1,7 +1,5 @@
-/*
- * Created on May 10, 2013
- *
- * Copyright (C) Azureus Software, Inc, All Rights Reserved.
+/* 
+ * Copyright (C) Bigly Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,20 +19,14 @@
 package com.biglybt.ui.swt.views.skin;
 
 
-import java.io.File;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import com.biglybt.core.CoreFactory;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.swt.columns.alltrackers.ColumnAllTrackersTracker;
-import com.biglybt.ui.swt.columns.alltrackers.ColumnAllTrackersStatus;
-import com.biglybt.ui.swt.columns.archivedls.*;
+import com.biglybt.ui.swt.columns.alltrackers.*;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MenuEvent;
-import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
@@ -42,7 +34,12 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
-import com.biglybt.core.config.COConfigurationManager;
+
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagFeatureProperties;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
@@ -51,23 +48,18 @@ import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
-import com.biglybt.pifimpl.local.PluginCoreUtils;
-import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
-import com.biglybt.ui.swt.views.utils.ManagerUtils;
-import com.biglybt.ui.swt.views.utils.ManagerUtils.ArchiveCallback;
-import com.biglybt.core.util.Debug;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
@@ -151,13 +143,73 @@ public class SBC_AllTrackersView
 					}
 				});
 
+		tableManager.registerColumn(AllTrackersTracker.class,
+				ColumnAllTrackersLastGoodDate.COLUMN_ID,
+				new TableColumnCoreCreationListener() {
+					@Override
+					public TableColumnCore createTableColumnCore(
+							Class<?> forDataSourceType, String tableID, String columnID) {
+						return new ColumnDateSizer(AllTrackersTracker.class, columnID,
+								TableColumnCreator.DATE_COLUMN_WIDTH, tableID) {
+						};
+					}
 
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersLastGoodDate(column);
+					}
+				});
+
+		tableManager.registerColumn(AllTrackersTracker.class,
+				ColumnAllTrackersLastBadDate.COLUMN_ID,
+				new TableColumnCoreCreationListener() {
+					@Override
+					public TableColumnCore createTableColumnCore(
+							Class<?> forDataSourceType, String tableID, String columnID) {
+						return new ColumnDateSizer(AllTrackersTracker.class, columnID,
+								TableColumnCreator.DATE_COLUMN_WIDTH, tableID) {
+						};
+					}
+
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersLastBadDate(column);
+					}
+				});
+		
+		tableManager.registerColumn(AllTrackersTracker.class,
+				ColumnAllTrackersBadSinceDate.COLUMN_ID,
+				new TableColumnCoreCreationListener() {
+					@Override
+					public TableColumnCore createTableColumnCore(
+							Class<?> forDataSourceType, String tableID, String columnID) {
+						return new ColumnDateSizer(AllTrackersTracker.class, columnID,
+								TableColumnCreator.DATE_COLUMN_WIDTH, tableID) {
+						};
+					}
+
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersBadSinceDate(column);
+					}
+				});
+		
+		tableManager.registerColumn(AllTrackersTracker.class, ColumnAllTrackersConsecutiveFails.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersConsecutiveFails(column);
+					}
+				});
 
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnAllTrackersTracker.COLUMN_ID,
 					ColumnAllTrackersStatus.COLUMN_ID,
-	
+					ColumnAllTrackersLastGoodDate.COLUMN_ID,
+					ColumnAllTrackersLastBadDate.COLUMN_ID,
+					ColumnAllTrackersBadSinceDate.COLUMN_ID,
+					ColumnAllTrackersConsecutiveFails.COLUMN_ID,
 				});
 
 		tableManager.setDefaultSortColumnName(TABLE_NAME, ColumnAllTrackersTracker.COLUMN_ID);
@@ -370,7 +422,7 @@ public class SBC_AllTrackersView
 		//list.put( "start", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
 		//list.put( "startstop", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
 
-		list.put( "remove", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
+		//list.put( "remove", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
 	}
 
 	@Override
@@ -406,17 +458,88 @@ public class SBC_AllTrackersView
 	{
 		List<Object>	ds = tv.getSelectedDataSources();
 
-		final List<AllTrackersTracker>	dms = new ArrayList<>(ds.size());
+		final List<AllTrackersTracker>	trackers = new ArrayList<>(ds.size());
 
 		for ( Object o: ds ){
 
-			dms.add((AllTrackersTracker)o);
+			trackers.add((AllTrackersTracker)o);
 		}
 
-		boolean	hasSelection = dms.size() > 0;
+		boolean	hasSelection = trackers.size() > 0;
 
+		List<Tag> all_tags = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
+		
+		List<Tag> tags = new ArrayList<Tag>();
+		
+		for ( Tag t: all_tags ){
+			
+			TagFeatureProperties tfp = (TagFeatureProperties)t;
 
+			TagProperty[] props = tfp.getSupportedProperties();
 
+			for ( TagProperty prop: props ){
+
+				if ( prop.getName( false ).equals( TagFeatureProperties.PR_TRACKERS )){
+					
+					String[] hosts = prop.getStringList();
+					
+					if ( hosts != null && hosts.length > 0 ){
+						
+						tags.add( t );
+					}
+				}
+			}
+		}
+		
+		MenuItem itemAddToTag = 
+			TagUIUtils.createTagSelectionMenu(
+				menu,
+				"alltorrents.add.torrents.to.tag",
+				tags,
+				new TagUIUtils.TagSelectionListener(){
+					
+					@Override
+					public void selected(Tag tag){
+					
+						TagFeatureProperties tfp = (TagFeatureProperties)tag;
+
+						TagProperty[] props = tfp.getSupportedProperties();
+
+						for ( TagProperty prop: props ){
+
+							if ( prop.getName( false ).equals( TagFeatureProperties.PR_TRACKERS )){
+								
+								String[] existing_hosts = prop.getStringList();
+								
+								Set<String>	new_hosts = new HashSet<>();
+								
+								if ( existing_hosts != null && existing_hosts.length > 0 ){
+									
+									new_hosts.addAll( Arrays.asList( existing_hosts ));
+								}
+								
+								for ( AllTrackersTracker tracker: trackers ){
+									
+									String name = tracker.getTrackerName();
+									
+									int pos = name.indexOf( "//" );
+									
+									if ( pos != -1 ){
+										
+										name = name.substring( pos+2 );
+									}
+									
+									new_hosts.add( name );
+								}
+								
+								prop.setStringList( new_hosts.toArray( new String[0]));
+							}
+						}
+					}
+				});
+		
+		itemAddToTag.setEnabled( hasSelection );
+		
 		new MenuItem( menu, SWT.SEPARATOR );
 	}
 
@@ -491,6 +614,17 @@ public class SBC_AllTrackersView
 					row.invalidate( true );
 					
 					row.refresh( true );
+					
+						// need this crap to allow the sort column to pick up invisible changes and resort appropriately :(
+					
+					TableCellCore cell = row.getSortColumnCell( null );
+					
+					if ( cell != null ){
+						
+						cell.invalidate( true );
+						
+						cell.refresh( true );
+					}
 				}
 			}
 		}else{

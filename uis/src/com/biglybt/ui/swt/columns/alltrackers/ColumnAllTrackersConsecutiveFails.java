@@ -21,10 +21,10 @@ package com.biglybt.ui.swt.columns.alltrackers;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.pif.ui.tables.*;
 
-public class ColumnAllTrackersTracker
+public class ColumnAllTrackersConsecutiveFails
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
 {
-	public static String COLUMN_ID = "name";
+	public static String COLUMN_ID = "alltrackers.consecfail";
 
 	@Override
 	public void
@@ -39,10 +39,10 @@ public class ColumnAllTrackersTracker
 	}
 
 	public
-	ColumnAllTrackersTracker(
+	ColumnAllTrackersConsecutiveFails(
 		TableColumn column)
 	{
-		column.setWidth(300);
+		column.initialize(TableColumn.ALIGN_CENTER, TableColumn.POSITION_LAST, 80 );
 		column.addListeners(this);
 	}
 
@@ -53,19 +53,28 @@ public class ColumnAllTrackersTracker
 	{
 		AllTrackersTracker tr = (AllTrackersTracker) cell.getDataSource();
 
-		String name = null;
+		String str = null;
 
 		if ( tr != null ){
 
-			name = tr.getTrackerName();
+			long fails = tr.getConsecutiveFails();
+			
+			if ( fails <= 0 ){
+				
+				str = "";
+			}else{
+				
+				str = String.valueOf( fails );
+			}
+			
 		}
 
-		if ( name == null ){
+		if ( str == null ){
 
-			name = "";
+			str = "";
 		}
 
-		if ( !cell.setSortValue(name) && cell.isValid()){
+		if ( !cell.setSortValue(str) && cell.isValid()){
 
 			return;
 		}
@@ -75,6 +84,6 @@ public class ColumnAllTrackersTracker
 			return;
 		}
 
-		cell.setText(name);
+		cell.setText(str);
 	}
 }

@@ -43,6 +43,10 @@ import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
 import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
 import com.biglybt.core.tracker.host.TRHost;
 import com.biglybt.core.tracker.host.TRHostListener;
 import com.biglybt.core.tracker.host.TRHostTorrent;
@@ -643,6 +647,8 @@ public class MainMDISetup
 				@Override
 				public MdiEntry createMDiEntry(String id) {
 
+					AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
+					
 					final ViewTitleInfo title_info =
 						new ViewTitleInfo()
 						{
@@ -653,7 +659,7 @@ public class MainMDISetup
 							{
 								if ( propertyID == TITLE_INDICATOR_TEXT ){
 
-									return( "blah" );
+									return( String.valueOf( all_trackers.getTrackerCount()));
 								}
 
 								return null;
@@ -666,9 +672,34 @@ public class MainMDISetup
 							"{mdi.entry.alltrackersview}",
 							title_info, null, true, null);
 
-					//entry.setImageLeftID("image.sidebar.logview");
+					entry.setImageLeftID("image.sidebar.alltrackers");
 
+					AllTrackersListener at_listener =
+							new AllTrackersListener()
+							{
+								@Override
+								public void trackerEventOccurred(AllTrackersEvent event)
+								{
+									if ( event.getEventType() != AllTrackersEvent.ET_TRACKER_UPDATED ){
+									
+										ViewTitleInfoManager.refreshTitleInfo( title_info );
+									}
+								}
+							};
 
+					all_trackers.addListener( at_listener, false );
+
+					entry.addListener(
+						new MdiCloseListener() {
+
+							@Override
+							public void
+							mdiEntryClosed(
+								MdiEntry entry, boolean userClosed)
+							{
+								all_trackers.removeListener( at_listener );
+							}
+						});
 
 					return entry;
 				}
