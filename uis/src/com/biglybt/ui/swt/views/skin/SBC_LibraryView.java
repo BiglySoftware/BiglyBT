@@ -325,7 +325,12 @@ public class SBC_LibraryView
 
 												if ( viewMode == provider.view_mode && provider.enabled ){
 
-													MainMDISetup.getSb_transfers().triggerCountRefreshListeners();
+													SB_Transfers xfers = MainMDISetup.getSb_transfers();
+													
+													if ( xfers != null ){
+														
+														xfers.triggerCountRefreshListeners();
+													}
 												}
 											}
 										}

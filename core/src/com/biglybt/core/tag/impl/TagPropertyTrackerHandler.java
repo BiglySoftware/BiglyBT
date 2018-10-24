@@ -339,7 +339,13 @@ TagPropertyTrackerHandler
 			
 			for ( TagProperty tp: to_do ){
 				
-				handleProperty( tp, false );
+					// only active properties require syncing - otherwise tags with no trackers defined
+					// will end up with all their taggables being removed...
+				
+				if ( tp.getStringList().length > 0 ){
+				
+					handleProperty( tp, false );
+				}
 			}
 		}
 	}
