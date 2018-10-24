@@ -1481,6 +1481,45 @@ TorrentUtils
 	}
 
 	public static boolean
+	areIdentical(
+		List<List<String>>	ll1,
+		List<List<String>>	ll2 )
+	{
+		if ( ll1 == null && ll2 == null ){
+			return( true );
+		}else if ( ll1 == null || ll2 == null ){
+			return( false );
+		}
+		
+		int	len = ll1.size();
+		
+		if ( len != ll2.size()){
+			
+			return( false );
+		}
+		
+		for ( int i=0;i<len;i++){
+			List<String> l1 = ll1.get(i);
+			List<String> l2 = ll2.get(i);
+			
+			int l = l1.size();
+			
+			if ( l != l2.size()){
+				
+				return( false );
+			}
+			
+			for ( int j=0;j<l;j++){
+				if ( !l1.get(j).equals(l2.get(j))){
+					return( false );
+				}
+			}
+		}
+		
+		return( true );
+	}
+	
+	public static boolean
 	replaceAnnounceURL(
 		TOTorrent		torrent,
 		URL				old_url,

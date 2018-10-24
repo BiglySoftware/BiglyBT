@@ -45,71 +45,76 @@ TOTorrentDeserialiseImpl
 
 		throws TOTorrentException
 	{
-		if ( !file.exists()){
-			throw( new TOTorrentException( 	"Torrent file '" + file.toString() + "' does not exist",
-					TOTorrentException.RT_FILE_NOT_FOUND ));
-
-		}
-
-		if(!file.isFile()) {
-
-			throw( new TOTorrentException( 	"Torrent must be a file ('" + file.toString() + "')",
-											TOTorrentException.RT_FILE_NOT_FOUND ));
-		}
-
-		if ( file.length() == 0 ){
-
-			throw( new TOTorrentException( 	"Torrent is zero length ('" + file.toString() + "')",
-											TOTorrentException.RT_ZERO_LENGTH ));
-
-		}
-			// parg: there used to be a check made that the torrent file wasn't larger than 1MB.
-			// However, this as been exceeded! (see bug 826617)
-			// As there is no technical reason for this limit I have removed it
-
-		InputStream fis = null;
-
 		try{
-
-			fis = new FileInputStream(file);
-
-			construct( fis );
-
-		}catch( Throwable e ){
-
-				// added automatic handling of gzipped files here as some users seem to be ending up
-				// with then and it isn't a big deal to try
-
+			if ( !file.exists()){
+				throw( new TOTorrentException( 	"Torrent file '" + file.toString() + "' does not exist",
+						TOTorrentException.RT_FILE_NOT_FOUND ));
+	
+			}
+	
+			if(!file.isFile()) {
+	
+				throw( new TOTorrentException( 	"Torrent must be a file ('" + file.toString() + "')",
+												TOTorrentException.RT_FILE_NOT_FOUND ));
+			}
+	
+			if ( file.length() == 0 ){
+	
+				throw( new TOTorrentException( 	"Torrent is zero length ('" + file.toString() + "')",
+												TOTorrentException.RT_ZERO_LENGTH ));
+	
+			}
+				// parg: there used to be a check made that the torrent file wasn't larger than 1MB.
+				// However, this as been exceeded! (see bug 826617)
+				// As there is no technical reason for this limit I have removed it
+	
+			InputStream fis = null;
+	
 			try{
-				if ( fis != null ){
-
-					fis.close();
-
-					fis = null;
-				}
-
-				fis = new GZIPInputStream( new FileInputStream( file ));
-
+	
+				fis = new FileInputStream(file);
+	
 				construct( fis );
-
-			}catch( Throwable f ){
-
-				throw( new TOTorrentException( "Error reading torrent file '" + file.toString() + " - " + Debug.getNestedExceptionMessage(e),
-											TOTorrentException.RT_READ_FAILS ));
+	
+			}catch( Throwable e ){
+	
+					// added automatic handling of gzipped files here as some users seem to be ending up
+					// with then and it isn't a big deal to try
+	
+				try{
+					if ( fis != null ){
+	
+						fis.close();
+	
+						fis = null;
+					}
+	
+					fis = new GZIPInputStream( new FileInputStream( file ));
+	
+					construct( fis );
+	
+				}catch( Throwable f ){
+	
+					throw( new TOTorrentException( "Error reading torrent file '" + file.toString() + " - " + Debug.getNestedExceptionMessage(e),
+												TOTorrentException.RT_READ_FAILS ));
+				}
+			}finally{
+	
+				if ( fis != null ){
+	
+					try{
+	
+						fis.close();
+	
+					}catch( IOException e ){
+	
+						Debug.printStackTrace( e );
+					}
+				}
 			}
 		}finally{
-
-			if ( fis != null ){
-
-				try{
-
-					fis.close();
-
-				}catch( IOException e ){
-
-					Debug.printStackTrace( e );
-				}
-			}
+			
+			setConstructed();
 		}
 	}
 
@@ -119,38 +124,43 @@ TOTorrentDeserialiseImpl
 
 		throws TOTorrentException
 	{
-			// while we could do this I don't like it because we end up with yet another copy of the
-			// torrent data in memory (could in theory be a 50MB torrent...) - we already cache the entire
-			// torrent in a bytearrayoutputstream in 'construct' later and in theory this could be coming
-
-
-		if ( false && is.markSupported()){
-
-			is.mark( Integer.MAX_VALUE );
-
-			BufferedInputStream bis = new BufferedInputStream( is );	// supports independent 'mark/reset'
-
-			try{
-				construct( bis );
-
-			}catch( TOTorrentException e ){
-
+		try{
+				// while we could do this I don't like it because we end up with yet another copy of the
+				// torrent data in memory (could in theory be a 50MB torrent...) - we already cache the entire
+				// torrent in a bytearrayoutputstream in 'construct' later and in theory this could be coming
+	
+	
+			if ( false && is.markSupported()){
+	
+				is.mark( Integer.MAX_VALUE );
+	
+				BufferedInputStream bis = new BufferedInputStream( is );	// supports independent 'mark/reset'
+	
 				try{
-
-					is.reset();
-
-					bis = new BufferedInputStream( new GZIPInputStream( is ));
-
 					construct( bis );
-
-				}catch( Throwable f ){
-
-					throw( e );
+	
+				}catch( TOTorrentException e ){
+	
+					try{
+	
+						is.reset();
+	
+						bis = new BufferedInputStream( new GZIPInputStream( is ));
+	
+						construct( bis );
+	
+					}catch( Throwable f ){
+	
+						throw( e );
+					}
 				}
+			}else{
+	
+				construct( is );
 			}
-		}else{
-
-			construct( is );
+		}finally{
+			
+			setConstructed();
 		}
 	}
 
@@ -160,15 +170,28 @@ TOTorrentDeserialiseImpl
 
 		throws TOTorrentException
 	{
-		construct( bytes );
+		try{
+			construct( bytes );
+			
+		}finally{
+			
+			setConstructed();
+		}
 	}
+	
 	public
 	TOTorrentDeserialiseImpl(
 		Map			map )
 
 		throws TOTorrentException
 	{
-		construct( map );
+		try{
+			construct( map );
+			
+		}finally{
+			
+			setConstructed();
+		}
 	}
 
 	protected void

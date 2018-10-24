@@ -704,7 +704,8 @@ TagManagerImpl
 
 	private final Map<Long,LifecycleHandlerImpl>			lifecycle_handlers = new HashMap<>();
 
-	private TagPropertyUntaggedHandler	untagged_handler;
+	private TagPropertyTrackerHandler 		auto_tracker;
+	private TagPropertyUntaggedHandler		untagged_handler;
 
 	private TagPropertyConstraintHandler	constraint_handler;
 
@@ -815,7 +816,7 @@ TagManagerImpl
 
 		Core core = CoreFactory.getSingleton();
 
-		final TagPropertyTrackerHandler auto_tracker = new TagPropertyTrackerHandler( core, this );
+		auto_tracker = new TagPropertyTrackerHandler( core, this );
 
 		untagged_handler = new TagPropertyUntaggedHandler( core, this );
 
@@ -1038,6 +1039,8 @@ TagManagerImpl
 
 						((TagTypeBase)tt).sync();
 					}
+					
+					auto_tracker.sync();
 				}
 			});
 	}

@@ -35,6 +35,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Text;
 
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.tag.TagManagerFactory;
@@ -44,6 +46,8 @@ import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
@@ -55,11 +59,15 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.RegExUtil;
+import com.biglybt.core.util.TorrentUtils;
+import com.biglybt.core.util.TrackersUtil;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
@@ -469,7 +477,9 @@ public class SBC_AllTrackersView
 
 		List<Tag> all_tags = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
 		
-		List<Tag> tags = new ArrayList<Tag>();
+		List<Tag> tracker_prop_tags = new ArrayList<Tag>();
+		
+		Map<Tag,String>	existing_removal_templates = new TreeMap<>( TagUIUtils.getTagComparator());
 		
 		for ( Tag t: all_tags ){
 			
@@ -479,13 +489,28 @@ public class SBC_AllTrackersView
 
 			for ( TagProperty prop: props ){
 
-				if ( prop.getName( false ).equals( TagFeatureProperties.PR_TRACKERS )){
+				String tp_name = prop.getName( false );
+				
+				if ( tp_name.equals( TagFeatureProperties.PR_TRACKERS )){
 					
 					String[] hosts = prop.getStringList();
 					
 					if ( hosts != null && hosts.length > 0 ){
 						
-						tags.add( t );
+						tracker_prop_tags.add( t );
+					}
+				}else if ( tp_name.equals( TagFeatureProperties.PR_TRACKER_TEMPLATES )){
+					
+					String[] val = prop.getStringList();
+					
+					if ( val.length == 1 ){
+						
+						String[] bits = val[0].split( ":", 2 );
+					
+						if ( bits[0].equals( "x" )){
+							
+							existing_removal_templates.put( t, bits[1] );
+						}
 					}
 				}
 			}
@@ -495,7 +520,7 @@ public class SBC_AllTrackersView
 			TagUIUtils.createTagSelectionMenu(
 				menu,
 				"alltorrents.add.torrents.to.tag",
-				tags,
+				tracker_prop_tags,
 				new TagUIUtils.TagSelectionListener(){
 					
 					@Override
@@ -539,6 +564,200 @@ public class SBC_AllTrackersView
 				});
 		
 		itemAddToTag.setEnabled( hasSelection );
+		
+			// removal menu
+		
+		Menu tt_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+
+		MenuItem tt_item = new MenuItem( menu, SWT.CASCADE);
+
+		Messages.setLanguageText( tt_item, "alltorrents.remove.from.torrents" );
+
+		tt_item.setMenu( tt_menu );
+			
+			// merge into existing
+		
+		Menu tt_merge_menu = new Menu( tt_menu.getShell(), SWT.DROP_DOWN);
+
+		MenuItem tt_merge_item = new MenuItem( tt_menu, SWT.CASCADE);
+
+		Messages.setLanguageText( tt_merge_item, "alltorrents.merge.into.existing" );
+
+		tt_merge_item.setMenu( tt_merge_menu );
+			
+		if ( existing_removal_templates.isEmpty()){
+			
+			tt_merge_item.setEnabled( false );
+			
+		}else{
+			
+			for ( Tag tag: existing_removal_templates.keySet()){
+				
+				MenuItem item = new MenuItem( tt_merge_menu, SWT.PUSH);
+
+				item.setText( tag.getTagName( true ));
+
+				item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void
+					handleEvent(
+						Event event)
+					{
+						String name = existing_removal_templates.get( tag );
+						
+						TrackersUtil tut = TrackersUtil.getInstance();
+
+						List<List<String>> existing_trackers = tut.getMultiTrackers().get( name );
+						
+						List<List<String>> new_trackers = new ArrayList<>();
+						
+						for ( AllTrackersTracker tracker: trackers ){
+						
+							List<String> l = new ArrayList<>();
+							
+							l.add( tracker.getTrackerName());
+							
+							new_trackers.add( l );
+						}
+						
+						if ( existing_trackers != null ){							
+							
+							new_trackers = TorrentUtils.mergeAnnounceURLs( existing_trackers, new_trackers );
+						}
+						
+						tut.addMultiTracker( name, new_trackers );
+						
+						TagFeatureProperties tfp = (TagFeatureProperties)tag;
+
+						TagProperty[] props = tfp.getSupportedProperties();
+
+						for ( TagProperty prop: props ){
+
+							String tp_name = prop.getName( false );
+							
+							if ( tp_name.equals( TagFeatureProperties.PR_TRACKER_TEMPLATES )){
+								
+								prop.setStringList( new String[]{ "x:" + name });
+							}
+						}
+						
+						List<DownloadManager> dms = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
+						
+						for ( DownloadManager dm: dms ){
+							
+							tag.addTaggable( dm );
+						}
+					}});
+			}
+		}
+		
+		new MenuItem( tt_menu, SWT.SEPARATOR );
+		
+		MenuItem tt_create_item = new MenuItem( tt_menu, SWT.PUSH);
+
+		Messages.setLanguageText( tt_create_item, "alltorrents.merge.new" );
+
+		tt_create_item.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void
+			handleEvent(
+				Event event)
+			{
+				SimpleTextEntryWindow entryWindow = 
+					new SimpleTextEntryWindow( "alltorrents.new.action.title", "alltorrents.new.action.msg" );
+			
+				entryWindow.prompt(
+					new UIInputReceiverListener() {
+						@Override
+						public void 
+						UIInputReceiverClosed(
+							UIInputReceiver entryWindow ) 
+						{
+							if (!entryWindow.hasSubmittedInput()) {
+								return;
+							}
+		
+							String new_name = entryWindow.getSubmittedInput().trim();
+						
+							TrackersUtil tut = TrackersUtil.getInstance();
+
+							Set<String> existing_names = new HashSet<>( tut.getMultiTrackers().keySet());
+
+							for ( Tag t: all_tags ){
+								
+								existing_names.add( t.getTagName( true ));
+							}
+							
+							if ( existing_names.contains( new_name )){
+								
+								int	num = 1;
+								
+								while( true ){
+									
+									String test = new_name + "_" + num++;
+									
+									if ( !existing_names.contains( test )){
+										
+										new_name = test;
+										
+										break;
+									}
+								}
+							}
+							
+							TagType tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL );
+							
+							try{
+								Tag new_tag = tt.createTag( new_name , true);
+	
+								new_tag.setPublic( false );
+								
+								List<List<String>>	urls = new ArrayList<>();
+								
+								for ( AllTrackersTracker tracker: trackers ){
+								
+									List<String> l = new ArrayList<>();
+									
+									l.add( tracker.getTrackerName());
+									
+									urls.add( l );
+								}
+								
+								tut.addMultiTracker( new_name, urls );
+								
+								TagFeatureProperties tfp = (TagFeatureProperties)new_tag;
+
+								TagProperty[] props = tfp.getSupportedProperties();
+
+								for ( TagProperty prop: props ){
+
+									String tp_name = prop.getName( false );
+									
+									if ( tp_name.equals( TagFeatureProperties.PR_TRACKER_TEMPLATES )){
+										
+										prop.setStringList( new String[]{ "x:" + new_name });
+									}
+								}
+								
+								List<DownloadManager> dms = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
+								
+								for ( DownloadManager dm: dms ){
+									
+									new_tag.addTaggable( dm );
+								}
+								
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					});
+				
+			}});
+		
+		
+		
+		tt_menu.setEnabled( hasSelection );
 		
 		new MenuItem( menu, SWT.SEPARATOR );
 	}

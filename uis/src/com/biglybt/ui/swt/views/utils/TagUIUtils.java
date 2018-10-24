@@ -1898,7 +1898,14 @@ public class TagUIUtils
 
 							for ( String v: val ){
 
-								def_str += (def_str.length()==0?"":", ") + v;
+								if ( def_str.length() > 200 ){
+									
+									def_str += "...";
+									
+									break;
+								}
+
+								def_str += (def_str.length()==0?"":", ") + v;								
 							}
 						}
 

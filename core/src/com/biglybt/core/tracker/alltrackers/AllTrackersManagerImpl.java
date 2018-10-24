@@ -72,6 +72,8 @@ AllTrackersManagerImpl
 	
 	private CopyOnWriteList<AllTrackersListener>	listeners = new CopyOnWriteList<>();
 	
+	private boolean	got_running;
+	
 	private
 	AllTrackersManagerImpl()
 	{
@@ -85,7 +87,7 @@ AllTrackersManagerImpl
 					stopped(
 						Core core )
 					{
-						saveConfig();
+						saveConfig( true );
 					}
 				});
 		
@@ -111,6 +113,8 @@ AllTrackersManagerImpl
 							
 							torrent.addListener( AllTrackersManagerImpl.this );
 						}
+						
+						got_running = true;
 						
 						pending_torrents = null;
 					}
@@ -208,7 +212,7 @@ AllTrackersManagerImpl
 					
 					if ( tick_count % SAVE_PERIOD == 0 ){
 						
-						saveConfig();
+						saveConfig( false );
 					}
 				}
 			});
@@ -250,8 +254,11 @@ AllTrackersManagerImpl
 	}
 	
 	private synchronized void
-	saveConfig()
+	saveConfig(
+		boolean	closing )
 	{
+		boolean skip_unregistered = closing && got_running;
+		
 		try{
 			Map map = new HashMap();
 			
@@ -261,6 +268,11 @@ AllTrackersManagerImpl
 			
 			for ( AllTrackersTrackerImpl tracker: host_map.values()){
 			
+				if ( skip_unregistered && !tracker.isRegistered()){
+					
+					continue;
+				}
+				
 				try{
 					trackers.add( tracker.exportToMap());
 					
@@ -403,9 +415,13 @@ AllTrackersManagerImpl
 						}
 					}
 					
+					new_tracker.setRegistered();
+					
 					return( new_tracker );
 				}
 			}
+			
+			existing_tracker.setRegistered();
 				
 			return( existing_tracker );
 			
@@ -493,6 +509,8 @@ AllTrackersManagerImpl
 		private	long		bad_since;
 		private	long		consec_fails;
 		
+		private boolean		registered;
+		
 		private
 		AllTrackersTrackerImpl(
 			String		_name )
@@ -534,6 +552,18 @@ AllTrackersManagerImpl
 			map.put( "cf",  consec_fails );
 			
 			return( map );
+		}
+		
+		private void
+		setRegistered()
+		{
+			registered	= true;
+		}
+		
+		private boolean
+		isRegistered()
+		{
+			return( registered );
 		}
 		
 		@Override

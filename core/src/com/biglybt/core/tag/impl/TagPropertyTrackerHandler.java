@@ -21,22 +21,30 @@
 package com.biglybt.core.tag.impl;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
+import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFactory;
+import com.biglybt.core.torrent.TOTorrentListener;
 import com.biglybt.core.util.TorrentUtils;
 
 public class
 TagPropertyTrackerHandler
-	implements TagFeatureProperties.TagPropertyListener
+	implements TagFeatureProperties.TagPropertyListener, TOTorrentListener
 {
 	private final Core core;
-	final TagManagerImpl	tag_manager;
+	private final TagManagerImpl	tag_manager;
 
+	private Set<TagProperty>		properties = new HashSet<>();
+	
 	private final Map<String,List<Tag>>	tracker_host_map = new HashMap<>();
 
+	private final AtomicBoolean	sync_required = new AtomicBoolean(false);
+	
 	protected
 	TagPropertyTrackerHandler(
 		Core _core,
@@ -45,6 +53,8 @@ TagPropertyTrackerHandler
 		core	= _core;
 		tag_manager		= _tm;
 
+		TOTorrentFactory.addTorrentListener( this );
+		
 		tag_manager.addTaggableLifecycleListener(
 			Taggable.TT_DOWNLOAD,
 			new TaggableLifecycleAdapter()
@@ -96,6 +106,11 @@ TagPropertyTrackerHandler
 	hookTagProperty(
 		TagProperty		property )
 	{
+		synchronized( properties ){
+		
+			properties.add( property );
+		}
+		
 		property.addListener( this );
 
 		handleProperty( property, true );
@@ -307,6 +322,36 @@ TagPropertyTrackerHandler
 
 				tag.addTaggable( dm );
 			}
+		}
+	}
+	
+	protected void
+	sync()
+	{
+		if ( sync_required.getAndSet( false )){
+			
+			List<TagProperty>	to_do;
+			
+			synchronized( properties ){
+				
+				to_do = new ArrayList<>( properties );
+			}
+			
+			for ( TagProperty tp: to_do ){
+				
+				handleProperty( tp, false );
+			}
+		}
+	}
+	
+	public void
+	torrentChanged(
+		TOTorrent		torrent,
+		int				change_type )
+	{
+		if ( change_type == TOTorrentListener.CT_ANNOUNCE_URLS ){
+			
+			sync_required.set( true );
 		}
 	}
 }
