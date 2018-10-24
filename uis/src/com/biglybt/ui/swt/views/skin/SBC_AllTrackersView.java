@@ -478,9 +478,7 @@ public class SBC_AllTrackersView
 		List<Tag> all_tags = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
 		
 		List<Tag> tracker_prop_tags = new ArrayList<Tag>();
-		
-		Map<Tag,String>	existing_removal_templates = new TreeMap<>( TagUIUtils.getTagComparator());
-		
+				
 		for ( Tag t: all_tags ){
 			
 			TagFeatureProperties tfp = (TagFeatureProperties)t;
@@ -498,19 +496,6 @@ public class SBC_AllTrackersView
 					if ( hosts != null && hosts.length > 0 ){
 						
 						tracker_prop_tags.add( t );
-					}
-				}else if ( tp_name.equals( TagFeatureProperties.PR_TRACKER_TEMPLATES )){
-					
-					String[] val = prop.getStringList();
-					
-					if ( val.length == 1 ){
-						
-						String[] bits = val[0].split( ":", 2 );
-					
-						if ( bits[0].equals( "x" )){
-							
-							existing_removal_templates.put( t, bits[1] );
-						}
 					}
 				}
 			}
@@ -565,13 +550,81 @@ public class SBC_AllTrackersView
 		
 		itemAddToTag.setEnabled( hasSelection );
 		
-			// removal menu
+			// removal menus
+		
+		addRemovalMenu( all_tags, tracker_prop_tags, trackers, hasSelection, menu, false );
+		addRemovalMenu( all_tags, tracker_prop_tags, trackers, hasSelection, menu, true );
+		
+		new MenuItem( menu, SWT.SEPARATOR );
+	}
+
+	
+	
+	private void
+	addRemovalMenu(
+		List<Tag> 					all_tags,
+		List<Tag> 					tracker_prop_tags,
+		List<AllTrackersTracker>	trackers,
+		boolean						hasSelection,
+		Menu						menu,
+		boolean						is_future )
+	{
+		Map<Tag,String>	existing_removal_templates = new TreeMap<>( TagUIUtils.getTagComparator());
+		
+		for ( Tag t: all_tags ){
+			
+			TagFeatureProperties tfp = (TagFeatureProperties)t;
+
+			TagProperty[] props = tfp.getSupportedProperties();
+
+			String	template_name 	= null;
+			boolean	has_constraint	= false;
+			
+			for ( TagProperty prop: props ){
+
+				String tp_name = prop.getName( false );
+								
+				if ( tp_name.equals( TagFeatureProperties.PR_TRACKER_TEMPLATES )){
+					
+					String[] val = prop.getStringList();
+					
+					if ( val.length == 1 ){
+						
+						String[] bits = val[0].split( ":", 2 );
+					
+						if ( bits[0].equals( "x" )){
+							
+							template_name = bits[1];
+						}
+					}
+				}else if ( tp_name.equals( TagFeatureProperties.PR_CONSTRAINT )){
+					
+					String[] val = prop.getStringList();
+					
+					has_constraint = val.length == 1 && val[0].equalsIgnoreCase( "true" );
+				}
+			}
+			
+			if ( template_name != null ){
+			
+				if ( is_future ){
+					
+					if ( has_constraint ){
+					
+						existing_removal_templates.put( t, template_name );
+					}
+				}else{
+					
+					existing_removal_templates.put( t, template_name );
+				}
+			}
+		}
 		
 		Menu tt_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
 
 		MenuItem tt_item = new MenuItem( menu, SWT.CASCADE);
 
-		Messages.setLanguageText( tt_item, "alltorrents.remove.from.torrents" );
+		Messages.setLanguageText( tt_item, is_future?"alltorrents.remove.from.torrents.future":"alltorrents.remove.from.torrents.now" );
 
 		tt_item.setMenu( tt_menu );
 			
@@ -629,23 +682,22 @@ public class SBC_AllTrackersView
 						
 						TagFeatureProperties tfp = (TagFeatureProperties)tag;
 
-						TagProperty[] props = tfp.getSupportedProperties();
-
-						for ( TagProperty prop: props ){
-
-							String tp_name = prop.getName( false );
-							
-							if ( tp_name.equals( TagFeatureProperties.PR_TRACKER_TEMPLATES )){
+						TagProperty prop = tfp.getProperty( TagFeatureProperties.PR_TRACKER_TEMPLATES );
 								
-								prop.setStringList( new String[]{ "x:" + name });
-							}
-						}
-						
-						List<DownloadManager> dms = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
-						
-						for ( DownloadManager dm: dms ){
+						prop.setStringList( new String[]{ "x:" + name });
 							
-							tag.addTaggable( dm );
+						if ( is_future ){
+							
+								// constraint already set
+							
+						}else{
+							
+							List<DownloadManager> dms = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
+							
+							for ( DownloadManager dm: dms ){
+								
+								tag.addTaggable( dm );
+							}
 						}
 					}});
 			}
@@ -712,6 +764,15 @@ public class SBC_AllTrackersView
 	
 								new_tag.setPublic( false );
 								
+								TagFeatureProperties tfp = (TagFeatureProperties)new_tag;
+
+								if ( is_future ){
+								
+									TagProperty prop = tfp.getProperty( TagFeatureProperties.PR_CONSTRAINT );
+
+									prop.setStringList( new String[]{ "true" });
+								}
+								
 								List<List<String>>	urls = new ArrayList<>();
 								
 								for ( AllTrackersTracker tracker: trackers ){
@@ -725,27 +786,19 @@ public class SBC_AllTrackersView
 								
 								tut.addMultiTracker( new_name, urls );
 								
-								TagFeatureProperties tfp = (TagFeatureProperties)new_tag;
+								TagProperty prop = tfp.getProperty( TagFeatureProperties.PR_TRACKER_TEMPLATES );
 
-								TagProperty[] props = tfp.getSupportedProperties();
-
-								for ( TagProperty prop: props ){
-
-									String tp_name = prop.getName( false );
+								prop.setStringList( new String[]{ "x:" + new_name });
+							
+								if ( !is_future ){
+								
+									List<DownloadManager> dms = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
 									
-									if ( tp_name.equals( TagFeatureProperties.PR_TRACKER_TEMPLATES )){
+									for ( DownloadManager dm: dms ){
 										
-										prop.setStringList( new String[]{ "x:" + new_name });
+										new_tag.addTaggable( dm );
 									}
 								}
-								
-								List<DownloadManager> dms = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
-								
-								for ( DownloadManager dm: dms ){
-									
-									new_tag.addTaggable( dm );
-								}
-								
 							}catch( Throwable e ){
 								
 								Debug.out( e );
@@ -758,10 +811,8 @@ public class SBC_AllTrackersView
 		
 		
 		tt_menu.setEnabled( hasSelection );
-		
-		new MenuItem( menu, SWT.SEPARATOR );
 	}
-
+	
 	@Override
 	public void
 	selected(
