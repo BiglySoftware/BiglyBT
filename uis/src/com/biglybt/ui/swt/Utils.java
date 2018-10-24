@@ -196,19 +196,6 @@ public class Utils
 	{
 		isGTK3 = isGTK && System.getProperty("org.eclipse.swt.internal.gtk.version",
 				"2").startsWith("3");
-		getDPI();	// cache now to prevent invalid-thread access under some conditions later
-					// in particular during plugin init of a custome column
-					/*	org.eclipse.swt.SWTException: Invalid thread access
-					    at org.eclipse.swt.SWT.error(SWT.java:4457)
-					    at org.eclipse.swt.SWT.error(SWT.java:4372)
-					    at org.eclipse.swt.SWT.error(SWT.java:4343)
-					    at org.eclipse.swt.widgets.Display.error(Display.java:1258)
-					    at org.eclipse.swt.widgets.Display.checkDevice(Display.java:764)
-					    at org.eclipse.swt.graphics.Device.getDPI(Device.java:466)
-					    at com.biglybt.ui.swt.Utils.getDPI(Utils.java:3641)
-					    at com.biglybt.ui.swt.Utils.adjustPXForDPI(Utils.java:3654)
-					    at TableColumnImpl.init(TableColumnImpl.java:184)
-					 */
 
 		RGB[] rgbs = new RGB[256];
 		for (int i = 0; i < rgbs.length; i++) {
@@ -4075,30 +4062,8 @@ public class Utils
 	}
 
 	public static float getScaleRatio() {
-		return getDPI().x / (float) DEFAULT_DPI;
-	}
-
-	private static Point getDPI() {
-		if (dpi == null) {
-			boolean enableForceDPI = COConfigurationManager.getBooleanParameter("enable.ui.forceDPI");
-			if (enableForceDPI) {
-				int forceDPI = COConfigurationManager.getIntParameter("Force DPI");
-				if (forceDPI > 0) {
-					dpi = new Point(forceDPI, forceDPI);
-					return dpi;
-				}
-			}
-			Display display = getDisplay();
-			if (display == null) {
-				return new Point(0, 0);
-			}
-			dpi = getDPIRaw( display );
-			COConfigurationManager.setIntDefault("Force DPI", dpi.x);
-			if (dpi.x <= 96 || dpi.y <= 96) {
-				dpi = new Point(0, 0);
-			}
-		}
-		return dpi;
+		// TODO: Remove
+		return 1.0f;
 	}
 
 	private static boolean logged_invalid_dpi = false;
@@ -4126,288 +4091,65 @@ public class Utils
 
 
 	public static int adjustPXForDPI(int unadjustedPX) {
-		if (unadjustedPX == 0) {
-			return unadjustedPX;
-		}
-		int xDPI = getDPI().x;
-		if (xDPI == 0) {
-			return unadjustedPX;
-		}
-		return unadjustedPX * xDPI / DEFAULT_DPI;
+		// TODO: Remove
+		return unadjustedPX;
 	}
 
 	public static Rectangle adjustPXForDPI(Rectangle bounds) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			return bounds;
-		}
-		return new Rectangle(bounds.x * dpi.x / DEFAULT_DPI,
-				bounds.y * dpi.y / DEFAULT_DPI, bounds.width * dpi.x / DEFAULT_DPI,
-				bounds.height * dpi.y / DEFAULT_DPI);
+		// TODO: Remove
+		return bounds;
 	}
 
 	public static Point adjustPXForDPI(Point size) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			return size;
-		}
-		return new Point(size.x * dpi.x / DEFAULT_DPI,
-				size.y * dpi.y / DEFAULT_DPI);
+		return size;
+		// TODO: Remove
 	}
 
 	public static void adjustPXForDPI(FormData fd) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			return;
-		}
-		adjustPXForDPI(fd.left);
-		adjustPXForDPI(fd.right);
-		adjustPXForDPI(fd.top);
-		adjustPXForDPI(fd.bottom);
-		if (fd.width > 0) {
-			fd.width = adjustPXForDPI(fd.width);
-		}
-		if (fd.height > 0) {
-			fd.height = adjustPXForDPI(fd.height);
-		}
-	}
-
-	public static void adjustPXForDPI(FormAttachment fa) {
-		if (fa == null) {
-			return;
-		}
-		if (fa.offset != 0) {
-			fa.offset = adjustPXForDPI(fa.offset);
-		}
+		// TODO: Remove
 	}
 
 	public static void setLayoutData(Control widget, GridData layoutData) {
-		adjustPXForDPI(layoutData);
+		// TODO: Replace with widget.setLayoutData(layoutData) and remove
 		widget.setLayoutData(layoutData);
-	}
-
-	private static void adjustPXForDPI(GridData layoutData) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			return;
-		}
-		if (layoutData.heightHint > 0) {
-			layoutData.heightHint = adjustPXForDPI(layoutData.heightHint);
-		}
-		if (layoutData.horizontalIndent > 0) {
-			layoutData.horizontalIndent = adjustPXForDPI(layoutData.horizontalIndent);
-		}
-		if (layoutData.minimumHeight > 0) {
-			layoutData.minimumHeight = adjustPXForDPI(layoutData.minimumHeight);
-		}
-		if (layoutData.verticalIndent > 0) {
-			layoutData.verticalIndent = adjustPXForDPI(layoutData.verticalIndent);
-		}
-		if (layoutData.minimumWidth > 0) {
-			layoutData.minimumWidth = adjustPXForDPI(layoutData.minimumWidth);
-		}
-		if (layoutData.widthHint > 0) {
-			layoutData.widthHint = adjustPXForDPI(layoutData.widthHint);
-		}
 	}
 
 	public static void setLayoutData(Control widget, FormData layoutData) {
-		adjustPXForDPI(layoutData);
+		// TODO: Replace with widget.setLayoutData(layoutData) and remove
 		widget.setLayoutData(layoutData);
 	}
 
-	public static void setLayoutData(Control item, RowData rowData) {
-		if (rowData.height > 0) {
-			rowData.height = adjustPXForDPI(rowData.height);
-		}
-		if (rowData.width > 0) {
-			rowData.width = adjustPXForDPI(rowData.width);
-		}
-		item.setLayoutData(rowData);
+	public static void setLayoutData(Control widget, RowData layoutData) {
+		// TODO: Replace with widget.setLayoutData(layoutData) and remove
+		widget.setLayoutData(layoutData);
 	}
 
-	public static void setLayoutData(BufferedLabel label, GridData gridData) {
-		adjustPXForDPI(gridData);
-		label.setLayoutData(gridData);
+	public static void setLayoutData(BufferedLabel widget, GridData layoutData) {
+		// TODO: Replace with widget.setLayoutData(layoutData) and remove
+		widget.setLayoutData(layoutData);
 	}
 
 	public static void adjustPXForDPI(Object layoutData) {
-		if (layoutData instanceof GridData) {
-			GridData gd = (GridData) layoutData;
-			adjustPXForDPI(gd);
-		} else if (layoutData instanceof FormData) {
-			FormData fd = (FormData) layoutData;
-			adjustPXForDPI(fd);
-		} else if (layoutData instanceof RowData) {
-			RowData fd = (RowData) layoutData;
-			adjustPXForDPI(fd);
-		}
+		// TODO: Remove
 	}
 
-	private static final WeakHashMap<Image,String>	scaled_images = new WeakHashMap<>();
-	private static int	scaled_imaged_check_count = 0;
-
-	public static boolean
-	adjustPXForDPIRequired(
-		Image		image )
-	{
-		Point dpi = Utils.getDPI();
-		if (dpi.x > 0) {
-			return( !scaled_images.containsKey( image ));
-		}else{
-			return( false );
-		}
+	public static boolean	adjustPXForDPIRequired(Image image)	{
+		// TODO: Remove
+		return false;
 	}
 
-	private static ImageData autoScaleImageData(Device device, final ImageData imageData, float scaleFactor) {
-		int width = imageData.width;
-		int height = imageData.height;
-		int scaledWidth = Math.round(width * scaleFactor);
-		int scaledHeight = Math.round(height * scaleFactor);
-
-		if ( width <= 0 || height <= 0 ){
-			return( (ImageData)imageData.clone());
-		}
-		ImageData imageMaskData = null;
-
-		if (imageData.getTransparencyType() == SWT.TRANSPARENCY_ALPHA) {
-			imageMaskData = new ImageData(width, height, 8, ALPHA_PALETTE, 0, imageData.alphaData);
-		} else if (imageData.getTransparencyType() == SWT.TRANSPARENCY_PIXEL || imageData.getTransparencyType() == SWT.TRANSPARENCY_MASK) {
-			ImageData transparencyMaskData = imageData.getTransparencyMask();
-			imageMaskData = new ImageData(width, height, 1, BW_PALETTE, transparencyMaskData.scanlinePad, transparencyMaskData.data);
-		}
-
-		Image original = new Image(device, imageData);
-		Image originalMask = null;
-
-		if (imageMaskData != null) {
-			originalMask = new Image(device, imageMaskData);
-		}
-
-		/* Create a 24 bit image data with alpha channel */
-		ImageData resultData = new ImageData(scaledWidth, scaledHeight, 24, new PaletteData(0xFF, 0xFF00, 0xFF0000));
-		ImageData resultMaskData = null;
-
-		if (imageMaskData != null) {
-			resultMaskData = new ImageData(scaledWidth, scaledHeight, imageMaskData.depth, imageMaskData.palette);
-		}
-
-		Image result = new Image(device, resultData);
-		Image resultMask = null;
-
-		GC gc = new GC(result);
-		gc.setAntialias(SWT.ON);
-		gc.drawImage(original, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
-		gc.dispose();
-
-		if (resultMaskData != null) {
-			resultMask = new Image(device, resultMaskData);
-			gc = new GC(resultMask);
-			gc.setAntialias(SWT.ON);
-			gc.drawImage(originalMask, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
-			gc.dispose();
-		}
-
-		original.dispose();
-		originalMask.dispose();
-
-		ImageData scaledResult = result.getImageData();
-
-		if (resultMask != null) {
-			ImageData scaledResultMaskData = resultMask.getImageData();
-
-			// Convert 1-bit mask
-			if (scaledResultMaskData.depth == 1) {
-				scaledResult.maskPad = scaledResultMaskData.scanlinePad;
-				scaledResult.maskData = scaledResultMaskData.data;
-			} else {
-				scaledResult.alphaData = scaledResultMaskData.data;
-			}
-		}
-
-		result.dispose();
-		resultMask.dispose();
-		return scaledResult;
-	}
-
-	public static Image
-	adjustPXForDPI(
-		Display		display,
-		Image		image )
-	{
-		Point dpi = Utils.getDPI();
-
-		if (dpi.x > 0) {
-
-			try{
-				Rectangle bounds = image.getBounds();
-				Rectangle newBounds = Utils.adjustPXForDPI(bounds);
-
-				Image newImage = new Image(display, autoScaleImageData(display, image.getImageData(), dpi.x / DEFAULT_DPI));
-
-//				ImageData scaledTo = image.getImageData().scaledTo(newBounds.width, newBounds.height);
-//
-//				Image newImage = new Image(display, scaledTo);
-
-				if ( scaled_imaged_check_count++ % 100 == 0 ){
-					Iterator<Image> it = scaled_images.keySet().iterator();
-					while( it.hasNext()){
-						if ( it.next().isDisposed()){
-							it.remove();
-						}
-					}
-				}
-
-				scaled_images.put( newImage, "" );
-
-				image.dispose();
-
-				return( newImage );
-
-			}catch( Throwable e ){
-
-				Debug.out( "Image DPI adjustment failed: " + Debug.getNestedExceptionMessage(e), e);
-			}
-		}
-
-		return( image );
+	public static Image adjustPXForDPI(Display display, Image image) {
+		// TODO: Remove
+		return image;
 	}
 
 	public static void setLayout(Composite composite, GridLayout layout) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			composite.setLayout(layout);
-			return;
-		}
-
-		layout.marginBottom = adjustPXForDPI(layout.marginBottom);
-		layout.marginHeight = adjustPXForDPI(layout.marginHeight);
-		layout.marginLeft = adjustPXForDPI(layout.marginLeft);
-		layout.marginRight = adjustPXForDPI(layout.marginRight);
-		layout.marginTop = adjustPXForDPI(layout.marginTop);
-		layout.marginWidth = adjustPXForDPI(layout.marginWidth);
-		layout.horizontalSpacing = adjustPXForDPI(layout.horizontalSpacing);
-		layout.verticalSpacing = adjustPXForDPI(layout.verticalSpacing);
-
+		// TODO: Replace with composite.setLayout(layout) and remove
 		composite.setLayout(layout);
 	}
 
 	public static void setLayout(Composite composite, RowLayout layout) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			composite.setLayout(layout);
-			return;
-		}
-
-		layout.marginBottom = adjustPXForDPI(layout.marginBottom);
-		layout.marginHeight = adjustPXForDPI(layout.marginHeight);
-		layout.marginLeft = adjustPXForDPI(layout.marginLeft);
-		layout.marginRight = adjustPXForDPI(layout.marginRight);
-		layout.marginTop = adjustPXForDPI(layout.marginTop);
-		layout.marginWidth = adjustPXForDPI(layout.marginWidth);
-		layout.spacing = adjustPXForDPI(layout.spacing);
-
-
+		// TODO: Replace with composite.setLayout(layout) and remove
 		composite.setLayout(layout);
 	}
 
