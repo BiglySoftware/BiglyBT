@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
@@ -171,6 +172,8 @@ public class AboutWindow {
 				// TODO Auto-generated catch block
 			}
     }
+	  Point dpi = Utils.getDisplay().getDPI();
+	  swt += ", zoom=" + DPIUtil.getDeviceZoom() + ", dpi=" + (dpi.x == dpi.y ? dpi.x : dpi.x + "x" + dpi.y);
 
     Text txtSysInfo = new Text(gSys, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP);
     txtSysInfo.setBackground(Colors.getSystemColor(display, SWT.COLOR_WIDGET_BACKGROUND));
