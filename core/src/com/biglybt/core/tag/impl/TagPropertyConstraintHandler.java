@@ -1102,9 +1102,12 @@ TagPropertyConstraintHandler
 				
 				return( true );
 				
-			}else if ( !dm.isPersistent()) {
+				// 2018/10/25 - can't think of any good reason to skip non-persistent downloads, other tag
+				// operations don't
+				
+			//}else if ( !dm.isPersistent()) {
 			
-				return( !dm.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
+				//return( !dm.getDownloadState().getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD ));
 				
 			}else{
 				
@@ -1496,6 +1499,7 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_MAGNET		= 20;
 		private static final int FT_IS_LOW_NOISE	= 21;
 		private static final int FT_COUNT_TAG		= 22;
+		private static final int FT_HAS_TAG_GROUP	= 23;
 
 		static final Map<String,Integer>	keyword_map = new HashMap<>();
 
@@ -1774,6 +1778,12 @@ TagPropertyConstraintHandler
 					fn_type = FT_COUNT_TAG;
 
 					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+					
+				}else if ( func_name.equals( "hasTagGroup" )){
+
+					fn_type = FT_HAS_TAG_GROUP;
+
+					params_ok = params.length == 1 && getStringLiteral( params, 0 );
 
 				}else{
 
@@ -1801,6 +1811,22 @@ TagPropertyConstraintHandler
 						for ( Tag t: tags ){
 
 							if ( t.getTagName( true ).equals( tag_name )){
+
+								return( true );
+							}
+						}
+
+						return( false );
+					}
+					case FT_HAS_TAG_GROUP:{
+
+						String group_name = (String)params[0];
+
+						for ( Tag t: tags ){
+
+							String group = t.getGroup();
+							
+							if ( group != null && group.equals( group_name )){
 
 								return( true );
 							}
