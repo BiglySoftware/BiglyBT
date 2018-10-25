@@ -1886,8 +1886,9 @@ public class TagUIUtils
 					}else{
 						String[] val = tp.getStringList();
 
-						String def_str;
-
+						String 	def_str;
+						String	msg_str = null;
+						
 						if ( val == null || val.length == 0 ){
 
 							def_str = "";
@@ -1898,20 +1899,23 @@ public class TagUIUtils
 
 							for ( String v: val ){
 
-								if ( def_str.length() > 200 ){
+								if ( def_str.length() > 100 && msg_str == null ){
 									
-									def_str += "...";
-									
-									break;
+									msg_str = def_str + "...";
 								}
 
 								def_str += (def_str.length()==0?"":", ") + v;								
 							}
 						}
 
+						if ( msg_str == null ){
+							
+							msg_str = def_str;
+						}
+						
 						MenuItem set_item = new MenuItem( props_menu, SWT.PUSH);
 
-						set_item.setText( tp.getName( true ) + (def_str.length()==0?"":(" (" + def_str + ") ")) + "..." );
+						set_item.setText( tp.getName( true ) + (msg_str.length()==0?"":(" (" + msg_str + ") ")) + "..." );
 
 						final String f_def_str = def_str;
 
