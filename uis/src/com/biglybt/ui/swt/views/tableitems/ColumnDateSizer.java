@@ -35,6 +35,7 @@ import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.ViewUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -64,6 +65,8 @@ public abstract class ColumnDateSizer
 
 	private ViewUtils.CustomDateFormat cdf;
 
+	private boolean sortInvalidToBottom	= false;
+			
 	public
 	ColumnDateSizer(
 		String 	sName,
@@ -181,7 +184,7 @@ public abstract class ColumnDateSizer
 	}
 
 	public void refresh(final TableCell cell, final long timestamp, long sort_order, final String prefix ) {
-		if (!cell.setSortValue(sort_order) && cell.isValid()) {
+		if (!setSortValue(cell,sort_order) && cell.isValid()) {
 			return;
 		}
 
@@ -384,4 +387,35 @@ public abstract class ColumnDateSizer
 	public void cellHoverComplete(TableCell cell) {
 		cell.setToolTip(null);
 	}
+	
+	public void
+	setSortInvalidToBottom(
+		boolean		b )
+	{
+		sortInvalidToBottom = b;
+	}
+	
+	private boolean
+	setSortValue(
+		TableCell		cell,
+		long			value )
+	{
+		if ( sortInvalidToBottom && value <= 0 ){
+			
+			value = isSortAscending()?Long.MAX_VALUE:Long.MIN_VALUE;
+		}
+		
+		return( cell.setSortValue( value ));
+	}
+	
+	@Override
+	public void 
+	setSortAscending(
+		boolean bAscending)
+	{		
+		super.setSortAscending( bAscending );
+		
+		invalidateCells();
+	}
+	
 }

@@ -49,6 +49,11 @@ ColumnAllTrackersLastBadDate
 	{
 		column.setWidth(TableColumnCreator.DATE_COLUMN_WIDTH);
 		column.addListeners(this);
+		
+		if ( column instanceof ColumnDateSizer ){
+			
+			((ColumnDateSizer)column).setSortInvalidToBottom( true );
+		}
 	}
 
 	@Override
@@ -60,20 +65,14 @@ ColumnAllTrackersLastBadDate
 
 		AllTrackersTracker tracker = (AllTrackersTracker)cell.getDataSource();
 
-		long date = tracker.getLastFailTime();
-
-		if ( date > 0 ){
-			
-			if (tc instanceof ColumnDateSizer) {
-					
-				((ColumnDateSizer) tc).refresh(cell, date );
-			}
+		if ( tracker != null && tc instanceof ColumnDateSizer ){
+		
+			long date = tracker.getLastFailTime();
+				
+			((ColumnDateSizer) tc).refresh(cell, date );
+		
 		}else{
-			
-			if (!cell.setSortValue(date) && cell.isValid()) {
-				return;
-			}
-
+		
 			cell.setText( "" );
 		}
 	}

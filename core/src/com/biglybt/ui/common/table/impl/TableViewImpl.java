@@ -1764,13 +1764,18 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	public void columnInvalidate(TableColumnCore tableColumn,
 			final boolean bMustRefresh) {
 		final String sColumnName = tableColumn.getName();
-
+		boolean isSortColumn = getSortColumn() == tableColumn;
+				
 		runForAllRows(new TableGroupRowRunner() {
 			@Override
 			public void run(TableRowCore row) {
 				TableCellCore cell = row.getTableCellCore(sColumnName);
 				if (cell != null) {
 					cell.invalidate(bMustRefresh);
+					if ( bMustRefresh && isSortColumn ){
+							// force immediate update to sort updates straight away
+						cell.refresh(true,true,true);
+					}
 				}
 			}
 		});
