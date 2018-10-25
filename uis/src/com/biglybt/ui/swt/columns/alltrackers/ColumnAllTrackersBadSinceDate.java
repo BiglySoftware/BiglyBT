@@ -47,6 +47,7 @@ ColumnAllTrackersBadSinceDate
 	ColumnAllTrackersBadSinceDate(
 		TableColumn column)
 	{
+		column.setPosition( TableColumn.POSITION_LAST );
 		column.setWidth(TableColumnCreator.DATE_COLUMN_WIDTH);
 		column.addListeners(this);
 		

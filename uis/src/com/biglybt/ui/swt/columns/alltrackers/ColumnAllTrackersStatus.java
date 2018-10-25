@@ -42,6 +42,7 @@ public class ColumnAllTrackersStatus
 	ColumnAllTrackersStatus(
 		TableColumn column)
 	{
+		column.setPosition( TableColumn.POSITION_LAST );
 		column.setWidth(300);
 		column.addListeners(this);
 	}
