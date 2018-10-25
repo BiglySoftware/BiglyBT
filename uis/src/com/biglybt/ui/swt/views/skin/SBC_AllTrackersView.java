@@ -26,6 +26,9 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.swt.columns.alltrackers.*;
+import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
+import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -210,6 +213,14 @@ public class SBC_AllTrackersView
 					}
 				});
 
+		tableManager.registerColumn(AllTrackersTracker.class, ColumnAllTrackersFailingFor.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersFailingFor(column);
+					}
+				});
+
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnAllTrackersTracker.COLUMN_ID,
@@ -218,6 +229,7 @@ public class SBC_AllTrackersView
 					ColumnAllTrackersLastBadDate.COLUMN_ID,
 					ColumnAllTrackersBadSinceDate.COLUMN_ID,
 					ColumnAllTrackersConsecutiveFails.COLUMN_ID,
+					ColumnAllTrackersFailingFor.COLUMN_ID,
 				});
 
 		tableManager.setDefaultSortColumnName(TABLE_NAME, ColumnAllTrackersTracker.COLUMN_ID);
@@ -454,8 +466,24 @@ public class SBC_AllTrackersView
 	public void
 	addThisColumnSubMenu(
 		String 		columnName,
-		Menu 		menuThisColumn )
+		Menu 		menu )
 	{
+		
+		new MenuItem( menu, SWT.SEPARATOR );
+		
+		MenuItem itemEditTemplates = new MenuItem(menu, SWT.PUSH);
+
+		Messages.setLanguageText( itemEditTemplates, "menu.edit.tracker.templates" );
+
+		itemEditTemplates.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void
+			handleEvent(
+				Event event)
+			{
+				new MultiTrackerEditor( menu.getShell());
+			}});
+		
 	}
 
 	@Override
@@ -554,6 +582,116 @@ public class SBC_AllTrackersView
 		
 		addRemovalMenu( all_tags, tracker_prop_tags, trackers, hasSelection, menu, false );
 		addRemovalMenu( all_tags, tracker_prop_tags, trackers, hasSelection, menu, true );
+		
+			// add to template
+		
+
+		final TrackersUtil tut = TrackersUtil.getInstance();
+
+		List<String> templates = new ArrayList<>( tut.getMultiTrackers().keySet());
+		
+		Menu templates_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+
+		MenuItem templates_item = new MenuItem( menu, SWT.CASCADE);
+
+		Messages.setLanguageText( templates_item, "alltorrents.add.to.template" );
+
+		templates_item.setMenu( templates_menu );
+
+		Collections.sort( templates );
+
+		for ( String template: templates ){
+			
+			MenuItem item = new MenuItem( templates_menu, SWT.PUSH);
+
+			item.setText( template );
+
+			item.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void
+				handleEvent(Event event)
+				{
+					List<List<String>> existing = tut.getMultiTrackers().get( template );
+					
+					List<List<String>> added = new ArrayList<>();
+					
+					for ( AllTrackersTracker tracker: trackers ){
+						
+						List<String> x = new ArrayList<>();
+						
+						x.add( tracker.getTrackerName());
+						
+						added.add( x );
+					}
+					
+					tut.addMultiTracker( template, TorrentUtils.mergeAnnounceURLs( existing,  added ));
+				}});
+		}
+		
+		if ( !templates.isEmpty()){
+			
+			new MenuItem( templates_menu, SWT.SEPARATOR );
+		}
+		
+		MenuItem new_item = new MenuItem( templates_menu, SWT.PUSH);
+
+		Messages.setLanguageText( new_item, "wizard.multitracker.new" );
+
+		new_item.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void
+			handleEvent(Event event)
+			{
+				List<List<String>> group = new ArrayList<>();
+								
+				for ( AllTrackersTracker tracker: trackers ){
+					
+					List<String> x = new ArrayList<>();
+					
+					x.add( tracker.getTrackerName());
+					
+					group.add( x );
+				}
+
+				new MultiTrackerEditor(
+					menu.getShell(),
+					null,
+					group,
+					new TrackerEditorListener() {
+
+						@Override
+						public void
+						trackersChanged(
+							String 				oldName,
+							String 				newName,
+							List<List<String>> 	content )
+						{
+							if ( content != null ){
+								
+								tut.addMultiTracker( newName, content );
+							}
+						}
+					});
+			}});
+		
+		templates_menu.setEnabled( hasSelection );
+		
+			// edit templates
+		
+		new MenuItem( menu, SWT.SEPARATOR );
+		
+		MenuItem itemEditTemplates = new MenuItem(menu, SWT.PUSH);
+
+		Messages.setLanguageText( itemEditTemplates, "menu.edit.tracker.templates" );
+
+		itemEditTemplates.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void
+			handleEvent(
+				Event event)
+			{
+				new MultiTrackerEditor( menu.getShell());
+			}});
 		
 		new MenuItem( menu, SWT.SEPARATOR );
 	}
