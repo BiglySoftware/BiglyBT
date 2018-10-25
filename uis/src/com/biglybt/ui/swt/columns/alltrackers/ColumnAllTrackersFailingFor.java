@@ -45,6 +45,7 @@ public class ColumnAllTrackersFailingFor
 		TableColumn column)
 	{
 		column.initialize(TableColumn.ALIGN_CENTER, TableColumn.POSITION_LAST, 80 );
+		column.setRefreshInterval( TableColumn.INTERVAL_LIVE );
 		column.addListeners(this);
 	}
 
@@ -70,7 +71,11 @@ public class ColumnAllTrackersFailingFor
 					
 					sort = SystemTime.getCurrentTime() - since;
 					
-					str = TimeFormatter.format3(( sort )/1000);
+					long[] new_sort = { 0 };
+					
+					str = TimeFormatter.format3(( sort )/1000, new_sort );
+					
+					sort = new_sort[0]*1000;
 				}
 			}
 		}
