@@ -19,12 +19,14 @@
 package com.biglybt.ui.swt.columns.alltrackers;
 
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pif.ui.tables.*;
 
-public class ColumnAllTrackersStatus
+public class ColumnAllTrackersFailingFor
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
 {
-	public static String COLUMN_ID = "status";
+	public static String COLUMN_ID = "alltrackers.failingfor";
 
 	@Override
 	public void
@@ -39,11 +41,11 @@ public class ColumnAllTrackersStatus
 	}
 
 	public
-	ColumnAllTrackersStatus(
+	ColumnAllTrackersFailingFor(
 		TableColumn column)
 	{
-		column.setPosition( TableColumn.POSITION_LAST );
-		column.setWidth(300);
+		column.initialize(TableColumn.ALIGN_CENTER, TableColumn.POSITION_LAST, 80 );
+		column.setRefreshInterval( TableColumn.INTERVAL_LIVE );
 		column.addListeners(this);
 	}
 
@@ -54,28 +56,35 @@ public class ColumnAllTrackersStatus
 	{
 		AllTrackersTracker tr = (AllTrackersTracker) cell.getDataSource();
 
-		String status = null;
-
+		long 	sort = 0;
+		String	str	= "";
+		
 		if ( tr != null ){
 
-			status = tr.getStatusString();
+			long fails = tr.getConsecutiveFails();
+			
+			if ( fails > 0 ){
+				
+				long since = tr.getFailingSinceTime();
+				
+				if ( since > 0 ){
+					
+					sort = SystemTime.getCurrentTime() - since;
+					
+					long[] new_sort = { 0 };
+					
+					str = TimeFormatter.format3(( sort )/1000, new_sort );
+					
+					sort = new_sort[0]*1000;
+				}
+			}
 		}
 
-		if ( status == null ){
-
-			status = "";
-		}
-
-		if ( !cell.setSortValue(status) && cell.isValid()){
+		if ( !cell.setSortValue(sort) && cell.isValid()){
 
 			return;
 		}
 
-		if (!cell.isShown()){
-
-			return;
-		}
-
-		cell.setText(status);
+		cell.setText( str );
 	}
 }

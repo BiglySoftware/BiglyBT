@@ -53,37 +53,29 @@ public class ColumnAllTrackersConsecutiveFails
 	{
 		AllTrackersTracker tr = (AllTrackersTracker) cell.getDataSource();
 
-		String str = null;
+		long fails;
 
 		if ( tr != null ){
 
-			long fails = tr.getConsecutiveFails();
+			fails = tr.getConsecutiveFails();
 			
-			if ( fails <= 0 ){
+			if ( fails == 0 ){
 				
-				str = "";
-			}else{
-				
-				str = String.valueOf( fails );
+				if ( tr.getLastGoodTime() == 0 ){
+					
+					fails = -1;
+				}
 			}
+		}else{
 			
+			fails = 0;
 		}
 
-		if ( str == null ){
-
-			str = "";
-		}
-
-		if ( !cell.setSortValue(str) && cell.isValid()){
+		if ( !cell.setSortValue(fails) && cell.isValid()){
 
 			return;
 		}
 
-		if (!cell.isShown()){
-
-			return;
-		}
-
-		cell.setText(str);
+		cell.setText(fails<=0?"":String.valueOf( fails ));
 	}
 }

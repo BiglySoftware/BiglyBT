@@ -32,7 +32,7 @@ import com.biglybt.core.internat.MessageText.MessageTextListener;
  *
  */
 public class TimeFormatter {
-  // XXX should be i18n'd
+ 
 	static final String[] TIME_SUFFIXES 	= { "s", "m", "h", "d", "y" };
 
 	static final String[] TIME_SUFFIXES_2 	= { "sec", "min", "hr", "day", "wk", "mo", "yr" };
@@ -242,6 +242,16 @@ public class TimeFormatter {
 	format3(
 		long 	time_secs )
 	{
+		return( format3( time_secs, null ));
+	}
+	
+	static final long[] TIME_LUMPS = { 1, 60, 60*60, 24*60*60, 7*24*60*60, 30*24*60*60, 365*24*60*60L };
+	
+	public static String
+	format3(
+		long 	time_secs,
+		long[]	sort_time )
+	{
 		if (time_secs == Constants.CRAPPY_INFINITY_AS_INT || time_secs >= Constants.CRAPPY_INFINITE_AS_LONG)
 			return Constants.INFINITY_STRING;
 
@@ -266,6 +276,10 @@ public class TimeFormatter {
 		int start = vals.length - 1;
 		while (vals[start] == 0 && start > 0) {
 			start--;
+		}
+		
+		if ( sort_time != null ){
+			sort_time[0] = vals[start] * TIME_LUMPS[start];
 		}
 
 		String result = vals[start] + " " + TIME_SUFFIXES_2[start];

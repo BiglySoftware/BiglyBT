@@ -264,7 +264,9 @@ SBC_SubscriptionResultsView
 
 					final SubscriptionResultFilter f_filters = filters;
 
-
+					with_keywords 		= filters.getWithWords();
+					without_keywords	= filters.getWithoutWords();
+					
 					pFilterUpdater = new Runnable()
 					{
 						@Override
