@@ -373,14 +373,15 @@ AllTrackersManagerImpl
 		}
 	}
 	
-	private AllTrackersTrackerImpl
-	register(
+	@Override
+	public String
+	ingestURL(
 		URL		url )
 	{
 		String 	name = url.getHost();
 		
 		if ( name != null && !name.endsWith( ".dht" )){
-			
+
 			int	port = url.getPort();
 			
 			if ( port == -1 ){
@@ -389,6 +390,21 @@ AllTrackersManagerImpl
 			}
 			
 			name = url.getProtocol() + "://" + name + (port>0?(":" + port):"");
+			
+			return( name );
+		}else{
+			
+			return( null );
+		}
+	}
+	
+	private AllTrackersTrackerImpl
+	register(
+		URL		url )
+	{
+		String 	name = ingestURL( url );
+		
+		if ( name != null ){
 			
 			AllTrackersTrackerImpl existing_tracker = host_map.get( name );
 			

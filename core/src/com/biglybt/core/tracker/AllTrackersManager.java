@@ -38,6 +38,10 @@ AllTrackersManager
 	public interface
 	AllTrackers
 	{
+		public String
+		ingestURL(
+			URL		url );
+		
 		public int
 		getTrackerCount();
 		

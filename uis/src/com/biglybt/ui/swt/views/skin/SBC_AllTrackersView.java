@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.views.skin;
 
 
+import java.net.URL;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -48,6 +49,7 @@ import com.biglybt.core.tag.TagType;
 import com.biglybt.core.tag.TagWrapper;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
@@ -594,6 +596,8 @@ public class SBC_AllTrackersView
 		String 	sColumnName,
 		Menu 	menu )
 	{
+		AllTrackers all_trackers = AllTrackersManager.getAllTrackers();
+		
 		List<Object>	ds = tv.getSelectedDataSources();
 
 		final List<AllTrackersTracker>	trackers = new ArrayList<>(ds.size());
@@ -682,15 +686,21 @@ public class SBC_AllTrackersView
 		
 			// removal menus
 		
-		addRemovalMenu( all_tags, tracker_prop_tags, trackers, hasSelection, menu, false );
-		addRemovalMenu( all_tags, tracker_prop_tags, trackers, hasSelection, menu, true );
 		
-			// add to template
+		if ( Utils.getUserMode() > 0 ){
+			
+			addRemovalMenu( all_tags, tracker_prop_tags, trackers, hasSelection, menu, false );
+			
+			addRemovalMenu( all_tags, tracker_prop_tags, trackers, hasSelection, menu, true );
+		}
 		
+			// add to template	
 
 		final TrackersUtil tut = TrackersUtil.getInstance();
 
-		List<String> templates = new ArrayList<>( tut.getMultiTrackers().keySet());
+		Map<String,List<List<String>>> multitrackers = tut.getMultiTrackers();
+		
+		List<String> templates = new ArrayList<>( multitrackers.keySet());
 		
 		Menu templates_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
 
@@ -776,7 +786,108 @@ public class SBC_AllTrackersView
 					});
 			}});
 		
-		templates_menu.setEnabled( hasSelection );
+		templates_item.setEnabled( hasSelection );
+		
+			// associated with templates
+		
+		Map<String,List<String>>	assoc_map = new HashMap<>();
+		
+		for ( Map.Entry<String,List<List<String>>> entry: multitrackers.entrySet()){
+		
+			String template_name	= entry.getKey();
+			
+			for ( List<String> list: entry.getValue()){
+				
+				for ( String t: list ){
+					
+					try{
+						URL u = new URL( t );
+						
+						t = all_trackers.ingestURL( u );
+						
+					}catch( Throwable e ){
+						
+						t = null;
+					}
+					
+					if ( t != null ){
+						
+						t = t.toLowerCase( Locale.US );
+						
+						List<String>	l = assoc_map.get( t );
+						
+						if ( l == null ){
+							
+							l = new ArrayList<>();
+							
+							assoc_map.put( t,  l );
+						}
+						
+						l.add( template_name );
+					}
+				}
+			}
+		}
+		
+		Menu assoc_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+
+		MenuItem assoc_item = new MenuItem( menu, SWT.CASCADE);
+
+		Messages.setLanguageText( assoc_item, "alltorrents.assoc.with.template" );
+
+		assoc_item.setMenu( assoc_menu );
+
+		Set<String>	assoc_templates = new TreeSet<>();
+		
+		for ( AllTrackersTracker tracker: trackers ){
+			
+			String str = tracker.getTrackerName().toLowerCase( Locale.US );
+			
+			List<String>	list = assoc_map.get( str );
+			
+			if ( list != null ){
+				
+				assoc_templates.addAll( list );
+			}
+		}
+		
+		if ( !assoc_templates.isEmpty()){
+		
+			for ( String name: assoc_templates ){
+				
+				MenuItem item = new MenuItem( assoc_menu, SWT.PUSH );
+	
+				item.setText( name + "..." );
+	
+				item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void
+					handleEvent(Event event)
+					{
+						new MultiTrackerEditor(
+								menu.getShell(),
+								name,
+								multitrackers.get( name ),
+								new TrackerEditorListener() {
+
+									@Override
+									public void
+									trackersChanged(
+										String 				oldName,
+										String 				newName,
+										List<List<String>> 	content )
+									{
+										if ( content != null ){
+											
+											tut.addMultiTracker( newName, content );
+										}
+									}
+								});
+					}});
+			}
+		}
+		
+		assoc_item.setEnabled( hasSelection && !assoc_templates.isEmpty());
 		
 			// edit templates
 		
@@ -1050,7 +1161,7 @@ public class SBC_AllTrackersView
 		
 		
 		
-		tt_menu.setEnabled( hasSelection );
+		tt_item.setEnabled( hasSelection );
 	}
 	
 	@Override
