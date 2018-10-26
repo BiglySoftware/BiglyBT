@@ -89,8 +89,7 @@ public class TableViewPainted
 	private static final boolean DEBUG_WITH_SHELL = false;
 
 	public static final boolean DIRECT_DRAW = (Constants.isOSX
-			&& SWTThread.getInstance().isRetinaDisplay())
-			|| (Constants.isUnix && DPIUtil.getDeviceZoom() != 100);
+			|| Constants.isUnix) && DPIUtil.getDeviceZoom() != 100;
 
 	private static final int DEFAULT_HEADER_HEIGHT = 27;
 
