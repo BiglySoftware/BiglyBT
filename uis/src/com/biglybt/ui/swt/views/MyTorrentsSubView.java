@@ -156,8 +156,6 @@ public class MyTorrentsSubView
   public boolean eventOccurred(UISWTViewEvent event) {
 	  if ( event.getType() == UISWTViewEvent.TYPE_DESTROY ){
 		  destroyed = true;
-		  tableViewDestroyed();
-		  return( true );
 	  }
 	  return( super.eventOccurred(event));
   }
