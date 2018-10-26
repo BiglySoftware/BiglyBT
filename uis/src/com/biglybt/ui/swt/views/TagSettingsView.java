@@ -1072,6 +1072,20 @@ public class TagSettingsView
 
 						@Override
 						public void keyPressed(KeyEvent e) {
+							int key = e.character;
+
+							if ( key <= 26 && key > 0 ){
+
+								key += 'a' - 1;
+							}
+
+							if ( key == 'a' && e.stateMask == SWT.MOD1 ){
+
+								e.doit = false;
+
+								params.constraints.selectAll();
+							}
+							
 							params.constraints.setData("skipset", 1);
 							if (btnSaveConstraint != null && !btnSaveConstraint.isDisposed()) {
 								btnSaveConstraint.setEnabled(true);
