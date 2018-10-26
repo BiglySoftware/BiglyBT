@@ -32,10 +32,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Layout;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.pif.download.Download;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 
 import com.biglybt.core.tag.Tag;
@@ -52,6 +55,8 @@ public class MyTorrentsSubView
 	private Button btnAnyTags;
 	private boolean anyTorrentTags;
 
+	private boolean	destroyed;
+	
 	public MyTorrentsSubView() {
 		super("MyTorrentsSubView", false);
 		neverShowCatButtons = true;
@@ -121,6 +126,20 @@ public class MyTorrentsSubView
 	}
 
 
+	@Override
+	public TableViewSWT<DownloadManager> initYourTableView() {
+		if ( destroyed ){
+				// unfortunately this view doesn't properly support destruction and re-creation as required	
+				// when embedded in a sub-tab so we have to hack around this
+			
+			destroyed = false;
+			Core _core = CoreFactory.getSingleton();
+			init(_core, "MyTorrentsSubView", Download.class,
+					TableColumnCreator.createCompleteDM("MyTorrentsSubView"));
+		}
+		return( super.initYourTableView());
+	}
+	 
   @Override
   public void tableViewInitialized() {
   	anyTorrentTags = COConfigurationManager.getBooleanParameter("TorrentTags.Any");
@@ -134,6 +153,16 @@ public class MyTorrentsSubView
     super.tableViewDestroyed();
   }
 
+  public boolean eventOccurred(UISWTViewEvent event) {
+	  if ( event.getType() == UISWTViewEvent.TYPE_DESTROY ){
+		  destroyed = true;
+		  tableViewDestroyed();
+		  return( true );
+	  }
+	  return( super.eventOccurred(event));
+  }
+  
+		
   /* (non-Javadoc)
    * @see com.biglybt.ui.swt.views.MyTorrentsView#parameterChanged(java.lang.String)
    */
