@@ -755,6 +755,8 @@ TagPropertyConstraintHandler
 			try{
 				compiled_expr = compileStart( constraint, new HashMap<String,ConstraintExpr>());
 
+				// System.out.println( "Compiled:\n" + constraint + " \n->\n" + compiled_expr.getString());
+				
 			}catch( Throwable e ){
 
 				Debug.out( e );
@@ -852,6 +854,11 @@ TagPropertyConstraintHandler
 
 								ConstraintExpr sub_expr = compileStart( bracket_text, context );
 
+								if ( sub_expr == null ){
+									
+									throw( new RuntimeException( "Failed to compile '" + bracket_text + "'" ));
+								}
+								
 								String key = "{" + context.size() + "}";
 
 								context.put(key, sub_expr );
@@ -891,11 +898,7 @@ TagPropertyConstraintHandler
 			String						str,
 			Map<String,ConstraintExpr>	context )
 		{
-			if ( str.startsWith( "{" )){
-
-				return( context.get( str ));
-
-			}else if ( str.contains( "||" )){
+			if ( str.contains( "||" )){
 
 				String[] bits = str.split( "\\|\\|" );
 
@@ -917,6 +920,17 @@ TagPropertyConstraintHandler
 
 				return( new ConstraintExprNot( compileBasic( str.substring(1).trim(), context )));
 
+			}else if ( str.startsWith( "{" )){
+
+				ConstraintExpr val = context.get( str );
+					
+				if ( val == null ){
+					
+					throw( new RuntimeException( "Failed to compile '" + str + "'" ));
+				}
+					
+				return( val );
+ 
 			}else{
 
 				int	pos = str.indexOf( '(' );
