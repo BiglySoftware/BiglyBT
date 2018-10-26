@@ -928,8 +928,9 @@ public class SBC_AllTrackersView
 
 			TagProperty[] props = tfp.getSupportedProperties();
 
-			String	template_name 	= null;
-			boolean	has_constraint	= false;
+			String	template_name 		= null;
+			boolean	has_true_constraint	= false;
+			boolean	has_any_constraint	= false;
 			
 			for ( TagProperty prop: props ){
 
@@ -952,7 +953,9 @@ public class SBC_AllTrackersView
 					
 					String[] val = prop.getStringList();
 					
-					has_constraint = val.length == 1 && val[0].equalsIgnoreCase( "true" );
+					has_any_constraint = val.length > 0;
+					
+					has_true_constraint = val.length == 1 && val[0].equalsIgnoreCase( "true" );
 				}
 			}
 			
@@ -960,13 +963,16 @@ public class SBC_AllTrackersView
 			
 				if ( is_future ){
 					
-					if ( has_constraint ){
+					if ( has_true_constraint ){
 					
 						existing_removal_templates.put( t, template_name );
 					}
 				}else{
 					
-					existing_removal_templates.put( t, template_name );
+					if ( !has_any_constraint ){
+					
+						existing_removal_templates.put( t, template_name );
+					}
 				}
 			}
 		}
