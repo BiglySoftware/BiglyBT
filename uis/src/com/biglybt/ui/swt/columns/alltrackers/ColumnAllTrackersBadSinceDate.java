@@ -19,12 +19,12 @@
 package com.biglybt.ui.swt.columns.alltrackers;
 
 
-import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnExtraInfoListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.ui.swt.views.skin.SBC_AllTrackersView.AllTrackersViewEntry;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.tableitems.ColumnDateSizer;
 
@@ -64,7 +64,7 @@ ColumnAllTrackersBadSinceDate
 	{
 		TableColumn tc = cell.getTableColumn();
 
-		AllTrackersTracker tracker = (AllTrackersTracker)cell.getDataSource();
+		AllTrackersViewEntry tracker = (AllTrackersViewEntry)cell.getDataSource();
 
 		if ( tracker != null && tc instanceof ColumnDateSizer ){
 		

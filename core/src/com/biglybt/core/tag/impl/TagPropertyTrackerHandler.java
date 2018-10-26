@@ -64,32 +64,37 @@ TagPropertyTrackerHandler
 				initialised(
 					List<Taggable>	current_taggables )
 				{
-					TagType tt = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+					TagType[] tts = { 
+						tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL ), 
+						tag_manager.getTagType( TagType.TT_DOWNLOAD_INTERNAL ) };
 
-					tt.addTagTypeListener(
-						new TagTypeAdapter()
-						{
-							@Override
-							public void
-							tagAdded(
-								Tag			tag )
+					for ( TagType tt: tts ){
+						
+						tt.addTagTypeListener(
+							new TagTypeAdapter()
 							{
-								TagFeatureProperties tfp = (TagFeatureProperties)tag;
-
-								TagProperty[] props = tfp.getSupportedProperties();
-
-								for ( TagProperty prop: props ){
-
-									if ( prop.getName( false ).equals( TagFeatureProperties.PR_TRACKERS )){
-
-										hookTagProperty( prop );
-
-										break;
+								@Override
+								public void
+								tagAdded(
+									Tag			tag )
+								{
+									TagFeatureProperties tfp = (TagFeatureProperties)tag;
+	
+									TagProperty[] props = tfp.getSupportedProperties();
+	
+									for ( TagProperty prop: props ){
+	
+										if ( prop.getName( false ).equals( TagFeatureProperties.PR_TRACKERS )){
+	
+											hookTagProperty( prop );
+	
+											break;
+										}
 									}
 								}
-							}
-						},
-						true );
+							},
+							true );
+					}
 				}
 
 				@Override

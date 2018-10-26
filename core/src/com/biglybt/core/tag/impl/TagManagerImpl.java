@@ -1396,6 +1396,8 @@ TagManagerImpl
 
 			ttdm.addTag( tag );
 		}
+		
+		TagTypeDownloadInternal ttdi = new TagTypeDownloadInternal( resolver );
 	}
 
 	private void

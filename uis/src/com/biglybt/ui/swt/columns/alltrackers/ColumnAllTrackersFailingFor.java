@@ -18,10 +18,10 @@
 
 package com.biglybt.ui.swt.columns.alltrackers;
 
-import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.views.skin.SBC_AllTrackersView.AllTrackersViewEntry;
 
 public class ColumnAllTrackersFailingFor
 	implements TableCellRefreshListener, TableColumnExtraInfoListener
@@ -54,8 +54,8 @@ public class ColumnAllTrackersFailingFor
 	refresh(
 		TableCell cell )
 	{
-		AllTrackersTracker tr = (AllTrackersTracker) cell.getDataSource();
-
+		AllTrackersViewEntry tr = (AllTrackersViewEntry)cell.getDataSource();
+		
 		long 	sort = 0;
 		String	str	= "";
 		

@@ -2311,8 +2311,10 @@ public class SB_Transfers
 				@Override
 				public void tagTypeAdded(TagManager manager, TagType tag_type) {
 					synchronized (tag_listener_lock) {
-						if (tag_type.getTagType() != TagType.TT_DOWNLOAD_CATEGORY
-								&& tagTypeListener != null) {
+						int tt = tag_type.getTagType();
+						
+						if (	( tt != TagType.TT_DOWNLOAD_CATEGORY && tt != TagType.TT_DOWNLOAD_INTERNAL ) &&
+								tagTypeListener != null) {
 
 							tag_type.addTagTypeListener(tagTypeListener, true);
 						}

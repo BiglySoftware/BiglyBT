@@ -45,6 +45,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
@@ -924,19 +925,19 @@ public class SBC_TagsOverview
 		return( pattern.matcher(name).find() == match_result );
 	}
 
-	// @see com.biglybt.core.tag.TagManagerListener#tagTypeAdded(com.biglybt.core.tag.TagManager, com.biglybt.core.tag.TagType)
 	@Override
 	public void tagTypeAdded(TagManager manager, TagType tag_type) {
-		tag_type.addTagTypeListener(this, true);
+		if ( Constants.IS_CVS_VERSION || tag_type.getTagType() != TagType.TT_DOWNLOAD_INTERNAL ){
+			
+			tag_type.addTagTypeListener(this, true);
+		}
 	}
 
-	// @see com.biglybt.core.tag.TagManagerListener#tagTypeRemoved(com.biglybt.core.tag.TagManager, com.biglybt.core.tag.TagType)
 	@Override
 	public void tagTypeRemoved(TagManager manager, TagType tag_type) {
 		tag_type.removeTagTypeListener(this);
 	}
 
-	// @see com.biglybt.core.tag.TagTypeListener#tagTypeChanged(com.biglybt.core.tag.TagType)
 	@Override
 	public void tagTypeChanged(TagType tag_type) {
 		tv.tableInvalidate();

@@ -28,6 +28,7 @@ import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.swt.columns.alltrackers.*;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
+import com.biglybt.ui.swt.pif.UISWTInstance;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridLayout;
@@ -44,6 +45,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagWrapper;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
@@ -51,11 +53,15 @@ import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.views.MyTorrentsSubView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -79,13 +85,13 @@ import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 
 public class SBC_AllTrackersView
 	extends SkinView
-	implements 	UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<AllTrackersTracker>,
+	implements 	UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<SBC_AllTrackersView.AllTrackersViewEntry>,
 	TableViewSWTMenuFillListener, TableSelectionListener, AllTrackersListener
 {
 
 	private static final String TABLE_NAME = "AllTrackersView";
 
-	TableViewSWT<AllTrackersTracker> tv;
+	TableViewSWT<AllTrackersViewEntry> tv;
 
 	private Text txtFilter;
 
@@ -95,8 +101,15 @@ public class SBC_AllTrackersView
 
 	private boolean listener_added;
 
+	private boolean registeredCoreSubViews;
+
 	private Object datasource;
 
+	private Map<AllTrackersTracker,AllTrackersViewEntry>	tracker_map = new HashMap<>();
+
+	private Tag	selection_tag;
+	
+	
 	@Override
 	public Object
 	skinObjectInitialShow(
@@ -138,7 +151,7 @@ public class SBC_AllTrackersView
 
 		TableColumnManager tableManager = TableColumnManager.getInstance();
 
-		tableManager.registerColumn(AllTrackersTracker.class, ColumnAllTrackersTracker.COLUMN_ID,
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersTracker.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
 					public void tableColumnCreated(TableColumn column) {
@@ -146,7 +159,7 @@ public class SBC_AllTrackersView
 					}
 				});
 
-		tableManager.registerColumn(AllTrackersTracker.class, ColumnAllTrackersStatus.COLUMN_ID,
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersStatus.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
 					public void tableColumnCreated(TableColumn column) {
@@ -154,13 +167,13 @@ public class SBC_AllTrackersView
 					}
 				});
 
-		tableManager.registerColumn(AllTrackersTracker.class,
+		tableManager.registerColumn(AllTrackersViewEntry.class,
 				ColumnAllTrackersLastGoodDate.COLUMN_ID,
 				new TableColumnCoreCreationListener() {
 					@Override
 					public TableColumnCore createTableColumnCore(
 							Class<?> forDataSourceType, String tableID, String columnID) {
-						return new ColumnDateSizer(AllTrackersTracker.class, columnID,
+						return new ColumnDateSizer(AllTrackersViewEntry.class, columnID,
 								TableColumnCreator.DATE_COLUMN_WIDTH, tableID) {
 						};
 					}
@@ -171,13 +184,13 @@ public class SBC_AllTrackersView
 					}
 				});
 
-		tableManager.registerColumn(AllTrackersTracker.class,
+		tableManager.registerColumn(AllTrackersViewEntry.class,
 				ColumnAllTrackersLastBadDate.COLUMN_ID,
 				new TableColumnCoreCreationListener() {
 					@Override
 					public TableColumnCore createTableColumnCore(
 							Class<?> forDataSourceType, String tableID, String columnID) {
-						return new ColumnDateSizer(AllTrackersTracker.class, columnID,
+						return new ColumnDateSizer(AllTrackersViewEntry.class, columnID,
 								TableColumnCreator.DATE_COLUMN_WIDTH, tableID) {
 						};
 					}
@@ -188,13 +201,13 @@ public class SBC_AllTrackersView
 					}
 				});
 		
-		tableManager.registerColumn(AllTrackersTracker.class,
+		tableManager.registerColumn(AllTrackersViewEntry.class,
 				ColumnAllTrackersBadSinceDate.COLUMN_ID,
 				new TableColumnCoreCreationListener() {
 					@Override
 					public TableColumnCore createTableColumnCore(
 							Class<?> forDataSourceType, String tableID, String columnID) {
-						return new ColumnDateSizer(AllTrackersTracker.class, columnID,
+						return new ColumnDateSizer(AllTrackersViewEntry.class, columnID,
 								TableColumnCreator.DATE_COLUMN_WIDTH, tableID) {
 						};
 					}
@@ -205,7 +218,7 @@ public class SBC_AllTrackersView
 					}
 				});
 		
-		tableManager.registerColumn(AllTrackersTracker.class, ColumnAllTrackersConsecutiveFails.COLUMN_ID,
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersConsecutiveFails.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
 					public void tableColumnCreated(TableColumn column) {
@@ -213,7 +226,7 @@ public class SBC_AllTrackersView
 					}
 				});
 
-		tableManager.registerColumn(AllTrackersTracker.class, ColumnAllTrackersFailingFor.COLUMN_ID,
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersFailingFor.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
 					public void tableColumnCreated(TableColumn column) {
@@ -324,11 +337,18 @@ public class SBC_AllTrackersView
 		Composite control )
 	{
 		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+		
+		if ( uiFunctions != null ){
+			
+			UISWTInstance pluginUI = uiFunctions.getUISWTInstance();
 
+			registerPluginViews( pluginUI );
+		}
+		
 		if ( tv == null ){
 
 			tv = TableViewFactory.createTableViewSWT(
-					AllTrackersTracker.class, TABLE_NAME, TABLE_NAME,
+					AllTrackersViewEntry.class, TABLE_NAME, TABLE_NAME,
 					new TableColumnCore[0],
 					ColumnAllTrackersTracker.COLUMN_ID,
 					SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
@@ -383,6 +403,88 @@ public class SBC_AllTrackersView
 		control.layout( true );
 	}
 
+	private void registerPluginViews(final UISWTInstance pluginUI) {
+		if (registeredCoreSubViews) {
+			return;
+		}
+
+		pluginUI.addView( TABLE_NAME, "MyTorrentsSubView", MyTorrentsSubView.class, null) ;
+
+		registeredCoreSubViews = true;
+
+		final UIManager uiManager = PluginInitializer.getDefaultInterface().getUIManager();
+		uiManager.addUIListener(new UIManagerListener() {
+
+			@Override
+			public void UIAttached(UIInstance instance) {
+
+			}
+
+			@Override
+			public void UIDetached(UIInstance instance) {
+				if (!(instance instanceof UISWTInstance)) {
+					return;
+				}
+
+				registeredCoreSubViews = false;
+			
+				pluginUI.removeViews(TABLE_NAME, "MyTorrentsSubView");
+				uiManager.removeUIListener(this);
+			}
+		});
+
+	}
+	
+	private Tag
+	getSelectionTag()
+	{
+		synchronized( tracker_map ){
+			
+			if ( selection_tag == null ){
+				
+				TagType tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_INTERNAL );
+				
+				selection_tag = tt.getTag( "AllTrackersViewSelection", false );
+				
+				if ( selection_tag == null ){
+	
+					try{
+						selection_tag = tt.createTag( "AllTrackersViewSelection", false );
+						
+						selection_tag.setVisible( false );
+						
+						tt.addTag( selection_tag );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+			}
+			
+			List<String>	prop_val = new ArrayList<>();
+			
+			List<Object> datasources = tv.getSelectedDataSources();
+			
+			for ( Object o: datasources ){
+
+				AllTrackersViewEntry entry = (AllTrackersViewEntry)o;
+				
+				String name = entry.getTrackerName();
+				
+				int pos = name.indexOf( "//" );
+						
+				prop_val.add( name.substring( pos+2 ));
+			}
+			
+			TagProperty tp = ((TagFeatureProperties)selection_tag).getProperty( TagFeatureProperties.PR_TRACKERS );
+			
+			tp.setStringList( prop_val.toArray( new String[0] ));
+			
+			return( selection_tag );
+		}
+	}
+	
 	@Override
 	public boolean
 	toolBarItemActivated(
@@ -399,11 +501,11 @@ public class SBC_AllTrackersView
 
 		if ( datasources.size() > 0 ){
 
-			List<AllTrackersTracker>	dms = new ArrayList<>(datasources.size());
+			List<AllTrackersViewEntry>	dms = new ArrayList<>(datasources.size());
 
 			for ( Object o: datasources ){
 
-				dms.add((AllTrackersTracker)o);
+				dms.add((AllTrackersViewEntry)o);
 			}
 
 			String id = item.getID();
@@ -498,7 +600,7 @@ public class SBC_AllTrackersView
 
 		for ( Object o: ds ){
 
-			trackers.add((AllTrackersTracker)o);
+			trackers.add(((AllTrackersViewEntry)o).getTracker());
 		}
 
 		boolean	hasSelection = trackers.size() > 0;
@@ -1007,37 +1109,66 @@ public class SBC_AllTrackersView
 		
 		List<AllTrackersTracker>	trackers = event.getTrackers();
 		
+		List<AllTrackersViewEntry>	entries = new ArrayList<>( trackers.size());
+		
+		synchronized( tracker_map ){
+			
+			for ( AllTrackersTracker tracker: trackers ){
+				
+				AllTrackersViewEntry entry = tracker_map.get( tracker );
+				
+				if ( entry == null ){
+					
+					entry = new AllTrackersViewEntry( tracker );
+					
+					tracker_map.put( tracker, entry );
+				}
+				
+				entries.add( entry );
+			}
+		}
+				
 		if ( type == AllTrackersEvent.ET_TRACKER_ADDED ){
 			
-			tv.addDataSources( trackers.toArray( new AllTrackersTracker[0] ));
+			tv.addDataSources( entries.toArray( new AllTrackersViewEntry[0] ));
 			
 		}else if ( type == AllTrackersEvent.ET_TRACKER_UPDATED ){
 			
 			for ( AllTrackersTracker tracker: trackers ){
 			
-				TableRowCore row = tv.getRow( tracker  );
+				AllTrackersViewEntry entry;
 				
-				if ( row != null ){
+				synchronized( tracker_map ){
 					
-					row.invalidate( true );
+					entry = tracker_map.get( tracker );
+				}
+				
+				if ( entry != null ){
 					
-					row.refresh( true );
+					TableRowCore row = tv.getRow( entry  );
 					
-						// need this crap to allow the sort column to pick up invisible changes and resort appropriately :(
-					
-					TableCellCore cell = row.getSortColumnCell( null );
-					
-					if ( cell != null ){
+					if ( row != null ){
 						
-						cell.invalidate( true );
+						row.invalidate( true );
 						
-						cell.refresh( true );
+						row.refresh( true );
+						
+							// need this crap to allow the sort column to pick up invisible changes and resort appropriately :(
+						
+						TableCellCore cell = row.getSortColumnCell( null );
+						
+						if ( cell != null ){
+							
+							cell.invalidate( true );
+							
+							cell.refresh( true );
+						}
 					}
 				}
 			}
 		}else{
 			
-			tv.removeDataSources( trackers.toArray( new AllTrackersTracker[0] ));
+			tv.removeDataSources( entries.toArray( new AllTrackersViewEntry[0] ));
 		}
 	}
 
@@ -1065,11 +1196,11 @@ public class SBC_AllTrackersView
 	@Override
 	public boolean
 	filterCheck(
-		AllTrackersTracker 	ds,
-		String 			filter,
-		boolean 		regex)
+		AllTrackersViewEntry 	ds,
+		String 				filter,
+		boolean 			regex)
 	{
-		String name = ds.getTrackerName();
+		String name = ds.getTracker().getTrackerName();
 
 		String s = regex ? filter : "\\Q" + filter.replaceAll("\\s*[|;]\\s*", "\\\\E|\\\\Q") + "\\E";
 
@@ -1093,11 +1224,11 @@ public class SBC_AllTrackersView
 		SWTSkinObject 	skinObject,
 		Object 			params)
 	{
-		if ( params instanceof AllTrackersTracker ){
+		if ( params instanceof AllTrackersViewEntry ){
 
 			if (tv != null) {
 
-				TableRowCore row = tv.getRow((AllTrackersTracker) params);
+				TableRowCore row = tv.getRow((AllTrackersViewEntry) params);
 
 				if ( row != null ){
 
@@ -1109,5 +1240,66 @@ public class SBC_AllTrackersView
 		datasource = params;
 
 		return( null );
+	}
+	
+	public class
+	AllTrackersViewEntry
+		implements TagWrapper, AllTrackersTracker
+	{
+		private final AllTrackersTracker		tracker;
+		
+		private
+		AllTrackersViewEntry(
+			AllTrackersTracker		_tracker )
+		{
+			tracker	= _tracker;
+		}
+		public AllTrackersTracker
+		getTracker()
+		{
+			return( tracker );
+		}
+		
+		public String
+		getTrackerName()
+		{
+			return( tracker.getTrackerName());
+		}
+		
+		public String
+		getStatusString()
+		{
+			return( tracker.getStatusString());
+		}
+		
+		public long
+		getLastGoodTime()
+		{
+			return( tracker.getLastGoodTime());
+		}
+				
+		public long
+		getLastFailTime()
+		{
+			return( tracker.getLastFailTime());
+		}
+		
+		public long
+		getFailingSinceTime()
+		{
+			return( tracker.getFailingSinceTime());
+		}
+		
+		public long
+		getConsecutiveFails()
+		{
+			return( tracker.getConsecutiveFails());
+		}
+		
+		public Tag
+		getTag()
+		{
+			return( getSelectionTag());
+		}
 	}
 }

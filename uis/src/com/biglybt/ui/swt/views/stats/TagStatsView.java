@@ -154,7 +154,10 @@ public class TagStatsView
 
 	    for ( TagType tt: tm.getTagTypes()){
 
-	    	tt.addTagTypeListener( this, false );
+	    	if ( tt.getTagType() != TagType.TT_DOWNLOAD_INTERNAL ){
+	    	
+	    		tt.addTagTypeListener( this, false );
+	    	}
 	    }
 
 		panel.addListener(

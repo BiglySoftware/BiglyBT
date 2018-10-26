@@ -378,6 +378,12 @@ public class MyTorrentsView
 						System.arraycopy(datasources, 0, tags, 0, datasources.length);
 						setCurrentTags(tags);
 						return;
+					}else if ( firstDS instanceof TagWrapper ){
+						Set<Tag>	tags = new HashSet<>();
+						for ( Object o: datasources ){
+							tags.add(((TagWrapper)o).getTag());
+						}
+						setCurrentTags(tags.toArray( new Tag[0] ));
 					}
 				}
 
