@@ -446,7 +446,7 @@ public class SBC_AllTrackersView
 				
 				TagType tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_INTERNAL );
 				
-				selection_tag = tt.getTag( "AllTrackersViewSelection", false );
+				selection_tag = tt.getTag( "AllTrackersViewSelection", true );
 				
 				if ( selection_tag == null ){
 	
