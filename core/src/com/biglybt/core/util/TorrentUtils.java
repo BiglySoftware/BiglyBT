@@ -645,6 +645,21 @@ TorrentUtils
 				if ( host != null ){
 
 					hosts.add( host.toLowerCase( Locale.US ));
+					
+					if ( include_port ){
+						
+						int port = announce_url.getPort();
+						
+						if ( port == -1 ){
+							
+							port = announce_url.getDefaultPort();
+						}
+						
+						if ( port > 0 ){
+							
+							hosts.add( host + ":" + port );
+						}
+					}
 				}
 			}
 
