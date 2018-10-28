@@ -143,10 +143,15 @@ TagPropertyTrackerHandler
 	{
 		String[] trackers = property.getStringList();
 
-		Set<String>	tag_hosts = new HashSet<>(Arrays.asList(trackers));
+		Set<String>	tag_hosts = new HashSet<>();
+		
+		for ( String tracker: trackers ){
+			
+			tag_hosts.add( tracker.toLowerCase( Locale.US ));
+		}
 
 		Tag tag = property.getTag();
-
+		
 		synchronized( tracker_host_map ){
 
 			for ( Map.Entry<String,List<Tag>> entry: tracker_host_map.entrySet()){
@@ -163,7 +168,7 @@ TagPropertyTrackerHandler
 			}
 
 			for ( String host: tag_hosts ){
-
+				
 				List<Tag> tags = tracker_host_map.get( host );
 
 				if ( tags == null ){
@@ -215,11 +220,6 @@ TagPropertyTrackerHandler
 		List<DownloadManager> managers = core.getGlobalManager().getDownloadManagers();
 
 		for ( DownloadManager dm: managers ){
-
-			if ( !dm.isPersistent()){
-
-				continue;
-			}
 
 			if ( tag.hasTaggable( dm )){
 
@@ -291,22 +291,19 @@ TagPropertyTrackerHandler
 	{
 		List<Tag>	result = new ArrayList<>();
 
-		if ( dm.isPersistent()){
+		synchronized( tracker_host_map ){
 
-			synchronized( tracker_host_map ){
+			if ( tracker_host_map.size() > 0 ){
 
-				if ( tracker_host_map.size() > 0 ){
+				Set<String> hosts = getAugmentedHosts( dm );
 
-					Set<String> hosts = getAugmentedHosts( dm );
+				for ( String host: hosts ){
 
-					for ( String host: hosts ){
+					List<Tag> tags = tracker_host_map.get( host );
 
-						List<Tag> tags = tracker_host_map.get( host );
+					if ( tags != null ){
 
-						if ( tags != null ){
-
-							result.addAll( tags );
-						}
+						result.addAll( tags );
 					}
 				}
 			}

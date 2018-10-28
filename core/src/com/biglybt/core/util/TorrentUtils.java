@@ -644,7 +644,9 @@ TorrentUtils
 
 				if ( host != null ){
 
-					hosts.add( host.toLowerCase( Locale.US ));
+					host = host.toLowerCase( Locale.US );
+					
+					hosts.add( host);
 					
 					if ( include_port ){
 						
@@ -4182,7 +4184,7 @@ TorrentUtils
 
 	private static final Pattern txt_pattern = Pattern.compile( "(UDP|TCP):([0-9]+)");
 
-	private static DNSTXTEntry
+	public static DNSTXTEntry
 	getDNSTXTEntry(
 		URL		url )
 	{
@@ -4802,7 +4804,7 @@ TorrentUtils
        	}
 	}
 
-	private static class
+	public static class
 	DNSTXTEntry
 	{
 		private final long					create_time = SystemTime.getMonotonousTime();
@@ -4831,7 +4833,7 @@ TorrentUtils
 			has_records = has;
 		}
 
-		private boolean
+		public boolean
 		hasRecords()
 		{
 			return( has_records );
@@ -4876,7 +4878,7 @@ TorrentUtils
 			return( true );
 		}
 
-		private String
+		public String
 		getString()
 		{
 			if ( has_records ){
