@@ -235,7 +235,16 @@ public class SBC_AllTrackersView
 						new ColumnAllTrackersFailingFor(column);
 					}
 				});
+		
+		tableManager.registerColumn(AllTrackersViewEntry.class, ColumnAllTrackersDNSPrefs.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnAllTrackersDNSPrefs(column);
+					}
+				});
 
+		
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnAllTrackersTracker.COLUMN_ID,
@@ -245,6 +254,7 @@ public class SBC_AllTrackersView
 					ColumnAllTrackersBadSinceDate.COLUMN_ID,
 					ColumnAllTrackersConsecutiveFails.COLUMN_ID,
 					ColumnAllTrackersFailingFor.COLUMN_ID,
+					ColumnAllTrackersDNSPrefs.COLUMN_ID,
 				});
 
 		tableManager.setDefaultSortColumnName(TABLE_NAME, ColumnAllTrackersTracker.COLUMN_ID);
