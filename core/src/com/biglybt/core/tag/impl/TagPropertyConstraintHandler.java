@@ -2195,14 +2195,17 @@ TagPropertyConstraintHandler
 					
 					return((Number)((ConstraintExpr)arg).eval(dm, tags));
 				}
-
 				
 				String str = (String)arg;
 
 				Number result = 0;
 
 				try{
-					if ( Character.isDigit( str.charAt(0))){
+					if ( str.equals( Constants.INFINITY_STRING )){
+						
+						return( Integer.MAX_VALUE );
+						
+					}else if ( Character.isDigit( str.charAt(0))){
 
 						if ( str.contains( "." )){
 
@@ -2214,6 +2217,7 @@ TagPropertyConstraintHandler
 						}
 
 						return( result );
+						
 					}else{
 
 						Integer kw = keyword_map.get( str.toLowerCase( Locale.US ));
