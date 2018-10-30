@@ -388,10 +388,14 @@ public class MyTorrentsView
 				}
 
 				if ( newDataSource instanceof Tag ){
-					neverShowCatButtons = neverShowTagButtons = true;
-					setCurrentTags(new Tag[] {
-						(Tag) newDataSource
-					});
+					neverShowCatButtons = true;
+					//neverShowTagButtons = true;
+					
+					Tag[] tag = new Tag[]{ (Tag) newDataSource };
+					
+					hiddenTags = new HashSet<>( Arrays.asList( tag ));
+					
+					setCurrentTags(tag );
 				}
 
 				if ( newDataSource instanceof TagGroup ){
@@ -729,6 +733,17 @@ public class MyTorrentsView
 		});
   }
 
+  private void destroyTabs() {
+		Utils.execSWTThread(new AERunnable() {
+			@Override
+			public void runSupport() {
+			 	if (cCategoriesAndTags != null && !cCategoriesAndTags.isDisposed()) {
+			  		Utils.disposeComposite(cCategoriesAndTags, false);
+			  	}
+			}
+		});
+  }
+  
   private void swt_createTabs() {
 
     boolean catButtonsDisabled = neverShowCatButtons;
@@ -3378,23 +3393,33 @@ public class MyTorrentsView
 		boolean b = super.eventOccurred(event);
 		if (event.getType() == UISWTViewEvent.TYPE_FOCUSGAINED) {
 			if (rebuildListOnFocusGain) {
-  			List<?> dms = globalManager.getDownloadManagers();
-  			List<DownloadManager> listAdds = new ArrayList<>();
-  			List<DownloadManager> listRemoves = new ArrayList<>();
-  			for (Iterator<?> iter = dms.iterator(); iter.hasNext();) {
-  				DownloadManager dm = (DownloadManager) iter.next();
+				List<?> dms = globalManager.getDownloadManagers();
+				List<DownloadManager> listAdds = new ArrayList<>();
+				List<DownloadManager> listRemoves = new ArrayList<>();
+				for (Iterator<?> iter = dms.iterator(); iter.hasNext();) {
+					DownloadManager dm = (DownloadManager) iter.next();
 
-  				if (!isOurDownloadManager(dm)) {
-  					listRemoves.add(dm);
-  				} else {
-  					listAdds.add(dm);
-  				}
-  			}
-  			tv.removeDataSources(listRemoves.toArray(new DownloadManager[0]));
-  			tv.addDataSources(listAdds.toArray(new DownloadManager[0]));
+					if (!isOurDownloadManager(dm)) {
+						listRemoves.add(dm);
+					} else {
+						listAdds.add(dm);
+					}
+				}
+				tv.removeDataSources(listRemoves.toArray(new DownloadManager[0]));
+				tv.addDataSources(listAdds.toArray(new DownloadManager[0]));
 			}
-	    updateSelectedContent(true);
+			updateSelectedContent(true);
+			
+				// as library views aren't disposed we can end up with a lot of them built which unfortunately
+				// can result in 'no more handles' when here are lots of Tag buttons :(
+			
+			if ( !hiddenTags.isEmpty()){
+				createTabs();
+			}
 		} else if (event.getType() == UISWTViewEvent.TYPE_FOCUSLOST) {
+			if ( !hiddenTags.isEmpty()){
+				destroyTabs();
+			}
 		}
 		return b;
 	}
