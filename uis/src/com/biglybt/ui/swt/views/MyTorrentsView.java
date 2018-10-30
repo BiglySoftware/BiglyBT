@@ -2695,7 +2695,7 @@ public class MyTorrentsView
 		Tag	tag = event.getTag();
 		if ( type == TagEvent.ET_TAG_ADDED ){
 			tagAdded( tag );
-		}else if ( type == TagEvent.ET_TAG_CHANGED ){
+		}else if ( type == TagEvent.ET_TAG_MEMBERSHIP_CHANGED || type == TagEvent.ET_TAG_METADATA_CHANGED){
 			tagChanged( tag );
 		}else if ( type == TagEvent.ET_TAG_REMOVED ){
 			tagRemoved( tag );

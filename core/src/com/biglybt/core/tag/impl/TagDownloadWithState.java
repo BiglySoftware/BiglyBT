@@ -867,7 +867,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_UP, upload_rate_limit );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 	}
 
 	@Override
@@ -907,7 +907,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_DOWN, download_rate_limit );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 	}
 
 	@Override
@@ -985,7 +985,7 @@ TagDownloadWithState
 			}
 		}
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 	}
 
 	@Override
@@ -1041,7 +1041,7 @@ TagDownloadWithState
 			dm.getDownloadState().setIntParameter( DownloadManagerState.PARAM_MIN_SHARE_RATIO, sr );
 		}
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 	}
 
 	@Override
@@ -1097,7 +1097,7 @@ TagDownloadWithState
 			dm.getDownloadState().setIntParameter( DownloadManagerState.PARAM_MAX_SHARE_RATIO, sr );
 		}
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkIndividualShareRatio();
 	}
@@ -1123,7 +1123,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_MAX_SR_ACTION, action );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkIndividualShareRatio();
 	}
@@ -1163,7 +1163,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR, sr );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkAggregateShareRatio();
 	}
@@ -1189,7 +1189,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION, action );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkAggregateShareRatio();
 	}
@@ -1215,7 +1215,7 @@ TagDownloadWithState
 
 		writeBooleanAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY, priority );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkIndividualShareRatio();
 
@@ -1243,7 +1243,7 @@ TagDownloadWithState
 
 		writeBooleanAttribute( AT_RATELIMIT_FP_SEEDING, b );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkFPSeeding();
 	}
@@ -1795,7 +1795,7 @@ TagDownloadWithState
 	{
 		writeStringAttribute( AT_XCODE_TARGET, uid==null?null:(uid + "\n" + name ));
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		getManager().featureChanged( this, TagFeature.TF_XCODE );
 	}

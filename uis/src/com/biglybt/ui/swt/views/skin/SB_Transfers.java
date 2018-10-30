@@ -47,6 +47,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.stats.transfer.OverallStats;
 import com.biglybt.core.stats.transfer.StatsFactory;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.torrent.HasBeenOpenedListener;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.util.*;
@@ -2268,7 +2269,7 @@ public class SB_Transfers
 					Tag tag = event.getTag();
 					if (type == TagEvent.ET_TAG_ADDED) {
 						tagAdded(tag);
-					} else if (type == TagEvent.ET_TAG_CHANGED) {
+					} else if ( type == TagEvent.ET_TAG_MEMBERSHIP_CHANGED || type == TagEvent.ET_TAG_METADATA_CHANGED ) {
 						tagChanged(tag);
 					} else if (type == TagEvent.ET_TAG_REMOVED) {
 						tagRemoved(tag);

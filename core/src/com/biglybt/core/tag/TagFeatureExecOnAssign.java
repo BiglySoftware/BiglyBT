@@ -41,6 +41,19 @@ TagFeatureExecOnAssign
 	public static final int ACTION_APPLY_OPTIONS_TEMPLATE	= 0x0100;
 	public static final int ACTION_POST_MAGNET_URI			= 0x0200;
 
+	public static final int[] ACTIONS = {
+			ACTION_DESTROY,
+			ACTION_START,
+			ACTION_STOP,
+			ACTION_FORCE_START,
+			ACTION_NOT_FORCE_START,
+			ACTION_SCRIPT,
+			ACTION_PAUSE,
+			ACTION_RESUME,
+			ACTION_APPLY_OPTIONS_TEMPLATE,
+			ACTION_POST_MAGNET_URI,
+	};
+	
 	public int
 	getSupportedActions();
 
@@ -48,6 +61,9 @@ TagFeatureExecOnAssign
 	supportsAction(
 		int		action );
 
+	public boolean
+	isAnyActionEnabled();
+	
 	public boolean
 	isActionEnabled(
 		int		action );

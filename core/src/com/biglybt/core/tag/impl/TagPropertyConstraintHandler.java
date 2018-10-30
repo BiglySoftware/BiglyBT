@@ -51,9 +51,12 @@ TagPropertyConstraintHandler
 	private final Core core;
 	private final TagManagerImpl	tag_manager;
 
+	
 	private boolean		initialised;
 	private boolean 	initial_assignment_complete;
 	private boolean		stopping;
+
+	private TagType	tt_manual_download;
 
 	final Map<Tag,TagConstraint>	constrained_tags 	= new HashMap<>();
 
@@ -84,8 +87,8 @@ TagPropertyConstraintHandler
 	private
 	TagPropertyConstraintHandler()
 	{
-		core	= null;
-		tag_manager		= null;
+		core				= null;
+		tag_manager			= null;
 	}
 
 	protected
@@ -93,7 +96,7 @@ TagPropertyConstraintHandler
 		Core _core,
 		TagManagerImpl	_tm )
 	{
-		core	= _core;
+		core			= _core;
 		tag_manager		= _tm;
 
 		if( core != null ){
@@ -109,7 +112,7 @@ TagPropertyConstraintHandler
 					}
 				});
 		}
-
+		
 		tag_manager.addTaggableLifecycleListener(
 			Taggable.TT_DOWNLOAD,
 			new TaggableLifecycleAdapter()
@@ -120,9 +123,9 @@ TagPropertyConstraintHandler
 					List<Taggable>	current_taggables )
 				{
 					try{
-						TagType tt = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+						tt_manual_download = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
 
-						tt.addTagTypeListener( TagPropertyConstraintHandler.this, true );
+						tt_manual_download.addTagTypeListener( TagPropertyConstraintHandler.this, true );
 
 					}finally{
 
@@ -252,13 +255,35 @@ TagPropertyConstraintHandler
 	}
 
 	@Override
-	public void tagEventOccurred(TagEvent event ) {
+	public void 
+	tagEventOccurred(
+		TagEvent event ) 
+	{
 		int	type = event.getEventType();
+		
 		Tag	tag = event.getTag();
+		
 		if ( type == TagEvent.ET_TAG_ADDED ){
+			
 			tagAdded( tag );
+			
 		}else if ( type == TagEvent.ET_TAG_REMOVED ){
+			
 			tagRemoved( tag );
+			
+		}else if ( type == TagEvent.ET_TAG_METADATA_CHANGED ){
+			
+			TagConstraint tc;
+			
+			synchronized( constrained_tags ){
+				
+				tc = constrained_tags.get( tag );
+			}
+			
+			if ( tc != null ){
+				
+				tc.checkStuff();
+			}
 		}
 	}
 
@@ -720,6 +745,9 @@ TagPropertyConstraintHandler
 
 		private boolean	depends_on_download_state;
 
+		private List<Tag>		dependent_on_tags;
+		private boolean			must_check_dependencies;
+		
 		private
 		TagConstraint(
 			TagPropertyConstraintHandler	_handler,
@@ -744,7 +772,9 @@ TagPropertyConstraintHandler
 				auto_add 	= !options.contains( "am=2;" );
 				auto_remove = !options.contains( "am=1;" );
 			}
-
+			
+			checkStuff();			
+			
 			ConstraintExpr compiled_expr = null;
 
 			if ( tag != null ){
@@ -769,6 +799,27 @@ TagPropertyConstraintHandler
 			}
 		}
 
+		private void
+		checkStuff()
+		{
+			// we're only bothered about assignments to tags that can have significant side-effects. Currently these are
+			// 1) execute-on-assign tags
+			// 2) tags with limits (and therefore removal policies such as 'delete download')
+
+			if (((TagFeatureExecOnAssign)tag).isAnyActionEnabled()){
+				
+				must_check_dependencies = true;
+				
+			}else if ( (((TagFeatureLimits)tag).getMaximumTaggables() > 0 )){
+				
+				must_check_dependencies = true;
+				
+			}else{
+				
+				must_check_dependencies = false;
+			}
+		}
+		
 		private boolean
 		isEnabled()
 		{
@@ -787,8 +838,8 @@ TagPropertyConstraintHandler
 		dependOnDownloadState()
 		{
 			return( depends_on_download_state );
-		}
-
+		}			
+		
 		private ConstraintExpr
 		compileStart(
 			String						str,
@@ -1011,38 +1062,7 @@ TagPropertyConstraintHandler
 
 			Set<Taggable>	existing = tag.getTagged();
 
-			if ( testConstraint( dm )){
-
-				if ( auto_add ){
-
-					if ( !existing.contains( dm )){
-
-						if( canAddTaggable( dm )){
-
-							if ( handler.isStopping()){
-
-								return;
-							}
-
-							tag.addTaggable( dm );
-						}
-					}
-				}
-			}else{
-
-				if ( auto_remove ){
-
-					if ( existing.contains( dm )){
-
-						if ( handler.isStopping()){
-
-							return;
-						}
-
-						tag.removeTaggable( dm );
-					}
-				}
-			}
+			applySupport( existing, dm );
 		}
 
 		private void
@@ -1068,46 +1088,113 @@ TagPropertyConstraintHandler
 
 			for ( DownloadManager dm: dms ){
 
-				if ( ignoreDownload( dm )){
+				if ( handler.isStopping()){
+
+					return;
+					
+				}else  if ( ignoreDownload( dm )){
 
 					continue;
 				}
 
-				if ( testConstraint( dm )){
+				applySupport( existing, dm );
+			}
+		}
 
-					if ( auto_add ){
+		private void
+		applySupport(
+			Set<Taggable>		existing,
+			DownloadManager		dm )
+		{
+			applySupport2( existing, dm, must_check_dependencies, null );
+		}
+		
+		private void
+		applySupport2(
+			Set<Taggable>		existing,
+			DownloadManager		dm,
+			boolean				check_dependencies,
+			Set<TagConstraint>	checked )
+		{
+			if ( check_dependencies && checked != null && checked.contains( this )){
+				
+				return;
+			}
+			
+			if ( testConstraint( dm )){
 
-						if ( !existing.contains( dm )){
+				if ( auto_add ){
 
-							if ( canAddTaggable( dm )){
+					if ( !existing.contains( dm )){
 
-								if ( handler.isStopping()){
 
-									return;
+						if ( check_dependencies && dependent_on_tags != null ){
+						
+							boolean	recheck = false;
+							
+							for ( Tag t: dependent_on_tags ){
+								
+								TagConstraint dep = handler.constrained_tags.get( t );
+								
+								if ( dep != null ){
+									
+									if ( checked == null ){
+										
+										checked = new HashSet<>();
+									}
+									
+									try{
+										checked.add( this );
+										
+										//System.out.println( "checking sub-dep " + dep + ", checked=" + checked );
+										
+										dep.applySupport2( existing, dm, true, checked );
+									
+									}finally{
+										
+										checked.remove( this );
+									}
+									
+									recheck = true;
 								}
-
-								tag.addTaggable( dm );
 							}
-						}
-					}
-				}else{
-
-					if ( auto_remove ){
-
-						if ( existing.contains( dm )){
-
-							if ( handler.isStopping()){
-
+							
+							if ( recheck ){
+								
+								applySupport2( existing, dm, false, checked );
+									
 								return;
 							}
-
-							tag.removeTaggable( dm );
 						}
+						
+						if ( handler.isStopping()){
+
+							return;
+						}
+
+						if ( canAddTaggable( dm )){
+
+							tag.addTaggable( dm );
+						}
+					}
+				}
+			}else{
+
+				if ( auto_remove ){
+
+					if ( existing.contains( dm )){
+
+						if ( handler.isStopping()){
+
+							return;
+						}
+
+						tag.removeTaggable( dm );
 					}
 				}
 			}
 		}
-
+		
 		private boolean
 		ignoreDownload(
 			DownloadManager dm )
@@ -1640,6 +1727,27 @@ TagPropertyConstraintHandler
 
 					params_ok = params.length == 1 && getStringLiteral( params, 0 );
 
+					if ( params_ok ){
+						
+						String tag_name = (String)params[0];
+						
+						if ( handler.tt_manual_download != null ){
+							
+							Tag t = handler.tt_manual_download.getTag( tag_name, true );
+							
+							if ( t == null ){
+								
+								throw( new RuntimeException( "Tag '" + tag_name + "' not found" ));
+							}
+							
+							if ( dependent_on_tags == null ){
+								
+								dependent_on_tags = new ArrayList<Tag>(5);
+								
+								dependent_on_tags.add( t );		
+							}
+						}
+					}
 				}else if ( func_name.equals( "hasNet" )){
 
 					fn_type = FT_HAS_NET;

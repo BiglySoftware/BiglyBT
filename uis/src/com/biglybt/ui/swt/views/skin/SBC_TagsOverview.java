@@ -65,6 +65,7 @@ import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UserPrompterResultListener;
@@ -949,7 +950,7 @@ public class SBC_TagsOverview
 		Tag	tag = event.getTag();
 		if ( type == TagEvent.ET_TAG_ADDED ){
 			tagAdded( tag );
-		}else if ( type == TagEvent.ET_TAG_CHANGED ){
+		}else if ( type == TagEvent.ET_TAG_MEMBERSHIP_CHANGED || type == TagEvent.ET_TAG_METADATA_CHANGED ){
 			tagChanged( tag );
 		}else if ( type == TagEvent.ET_TAG_REMOVED ){
 			tagRemoved( tag );

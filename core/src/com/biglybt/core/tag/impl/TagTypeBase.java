@@ -44,10 +44,11 @@ TagTypeBase
 	private final String	tag_type_name;
 
 	private static final int TTL_ADD 					= 1;
-	private static final int TTL_CHANGE 				= 2;
-	private static final int TTL_REMOVE 				= 3;
-	private static final int TTL_TYPE_CHANGE 			= 4;
-	private static final int TTL_ATTENTION_REQUESTED 	= 5;
+	private static final int TTL_TAG_MEMBERHIP_CHANGE 	= 2; 
+	private static final int TTL_TAG_METADATA_CHANGE 	= 3; 
+	private static final int TTL_REMOVE 				= 4;
+	private static final int TTL_TYPE_CHANGE 			= 5;
+	private static final int TTL_ATTENTION_REQUESTED 	= 6;
 
 	private static final TagManagerImpl manager = TagManagerImpl.getSingleton();
 
@@ -76,9 +77,13 @@ TagTypeBase
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_ADDED;
 
-						}else if ( type == TTL_CHANGE ){
+						}else if ( type == TTL_TAG_METADATA_CHANGE ){
 
-							event_type	= TagTypeListener.TagEvent.ET_TAG_CHANGED;
+							event_type	= TagTypeListener.TagEvent.ET_TAG_METADATA_CHANGED;
+
+						}else if ( type == TTL_TAG_MEMBERHIP_CHANGE ){
+
+							event_type	= TagTypeListener.TagEvent.ET_TAG_MEMBERSHIP_CHANGED;
 
 						}else if ( type == TTL_REMOVE ){
 
@@ -355,10 +360,17 @@ TagTypeBase
 	}
 
 	protected void
-	fireChanged(
+	fireMembershipChanged(
 		Tag	t )
 	{
-		tt_listeners.dispatch( TTL_CHANGE, t );
+		tt_listeners.dispatch( TTL_TAG_MEMBERHIP_CHANGE, t );
+	}
+	
+	protected void
+	fireMetadataChanged(
+		Tag	t )
+	{
+		tt_listeners.dispatch( TTL_TAG_METADATA_CHANGE, t );
 	}
 
 	@Override

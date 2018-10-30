@@ -57,6 +57,7 @@ import org.gudy.bouncycastle.util.Arrays;
 
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
+import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -1655,7 +1656,7 @@ public class TagSettingsView
 	public void tagEventOccurred(TagEvent event ) {
 		int	type = event.getEventType();
 		Tag	tag = event.getTag();
-		if ( type == TagEvent.ET_TAG_CHANGED ){
+		if ( type == TagEvent.ET_TAG_MEMBERSHIP_CHANGED || type == TagEvent.ET_TAG_METADATA_CHANGED ){
 			tagChanged( tag );
 		}
 	}

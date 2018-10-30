@@ -47,6 +47,7 @@ import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI.TagButtonTrigger;
 
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.ui.UIFunctions.TagReturner;
 
 /**
@@ -355,7 +356,7 @@ public class TaggingView
 		Tag	tag = event.getTag();
 		if ( type == TagEvent.ET_TAG_ADDED ){
 			tagAdded( tag );
-		}else if ( type == TagEvent.ET_TAG_CHANGED ){
+		}else if ( type == TagEvent.ET_TAG_MEMBERSHIP_CHANGED || type == TagEvent.ET_TAG_METADATA_CHANGED ){
 			tagChanged( tag );
 		}else if ( type == TagEvent.ET_TAG_REMOVED ){
 			tagRemoved( tag );

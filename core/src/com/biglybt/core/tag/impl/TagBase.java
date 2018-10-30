@@ -331,7 +331,7 @@ TagBase
 
 		tag_name = name;
 
-		tag_type.fireChanged( this );
+		tag_type.fireMetadataChanged( this );
 	}
 
 		// public
@@ -373,7 +373,7 @@ TagBase
 
 			writeBooleanAttribute( AT_PUBLIC, v );
 
-			tag_type.fireChanged( this );
+			tag_type.fireMetadataChanged( this );
 		}
 	}
 
@@ -444,7 +444,7 @@ TagBase
 
 			writeBooleanAttribute( AT_VISIBLE, v );
 
-			tag_type.fireChanged( this );
+			tag_type.fireMetadataChanged( this );
 		}
 	}
 
@@ -475,7 +475,7 @@ TagBase
 
 			tag_type.setTagGroup( this, old_name, new_group );
 			
-			tag_type.fireChanged( this );
+			tag_type.fireMetadataChanged( this );
 		}
 	}
 
@@ -506,7 +506,7 @@ TagBase
 	{
 		writeStringAttribute( AT_IMAGE_ID, id );
 		
-		tag_type.fireChanged( this );
+		tag_type.fireMetadataChanged( this );
 	}
 
 	@Override
@@ -520,7 +520,7 @@ TagBase
 	{
 		writeStringAttribute( AT_IMAGE_FILE, id );
 		
-		tag_type.fireChanged( this );
+		tag_type.fireMetadataChanged( this );
 	}
 	
 	private int[]
@@ -604,7 +604,7 @@ TagBase
 
 		colour = null;
 
-		tag_type.fireChanged( this );
+		tag_type.fireMetadataChanged( this );
 	}
 
 	public boolean
@@ -628,7 +628,7 @@ TagBase
 
 				writeBooleanAttribute( AT_RSS_ENABLE, enable );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 
 				tag_type.getTagManager().checkRSSFeeds( this, enable );
 			}
@@ -679,7 +679,7 @@ TagBase
 
 				writeStringAttribute( AT_FL_INIT_LOC, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -707,7 +707,7 @@ TagBase
 
 				writeLongAttribute( AT_FL_INIT_LOC_OPT, options );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -756,7 +756,7 @@ TagBase
 
 				writeStringAttribute( AT_FL_MOVE_COMP, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -784,7 +784,7 @@ TagBase
 
 				writeLongAttribute( AT_FL_MOVE_COMP_OPT, options );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -833,7 +833,7 @@ TagBase
 
 				writeStringAttribute( AT_FL_COPY_COMP, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -861,7 +861,7 @@ TagBase
 
 				writeLongAttribute( AT_FL_COPY_COMP_OPT, options );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -993,7 +993,7 @@ TagBase
 
 				writeLongAttribute( AT_MAX_TAGGABLES, max );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 
 				checkMaximumTaggables();
 			}
@@ -1026,7 +1026,7 @@ TagBase
 
 				writeLongAttribute( AT_REMOVAL_STRATEGY, id );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -1052,7 +1052,7 @@ TagBase
 
 				writeLongAttribute( AT_LIMIT_ORDERING, id );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -1104,6 +1104,20 @@ TagBase
 	}
 
 	public boolean
+	isAnyActionEnabled()
+	{
+		for ( int action: TagFeatureExecOnAssign.ACTIONS ){
+			
+			if ( isActionEnabled(action )){
+				
+				return( true );
+			}
+		}
+		
+		return( false );
+	}
+	
+	public boolean
 	isActionEnabled(
 		int		action )
 	{
@@ -1131,6 +1145,8 @@ TagBase
 		}
 
 		writeBooleanAttribute( AT_PROPERTY_PREFIX + action, enabled );
+		
+		tag_type.fireMetadataChanged( this );
 	}
 
 	public String
@@ -1160,6 +1176,8 @@ TagBase
 		writeStringAttribute( AT_EOS_SCRIPT, script);
 
 		setActionEnabled( TagFeatureExecOnAssign.ACTION_SCRIPT, script.length() > 0 );
+		
+		tag_type.fireMetadataChanged( this );
 	}
 
 	public String
@@ -1189,6 +1207,8 @@ TagBase
 		writeStringAttribute( AT_EOS_PM, channel);
 
 		setActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI, channel.length() > 0 );
+		
+		tag_type.fireMetadataChanged( this );
 	}
 	
 	public OptionsTemplateHandler
@@ -1451,7 +1471,7 @@ TagBase
 
 		tag_type.taggableAdded( this, t );
 
-		tag_type.fireChanged( this );
+		tag_type.fireMembershipChanged( this );
 
 		if ( tag_limits != null ){
 
@@ -1468,7 +1488,7 @@ TagBase
 
 		tag_type.taggableRemoved( this, t );
 
-		tag_type.fireChanged( this );
+		tag_type.fireMembershipChanged( this );
 
 	}
 
@@ -1533,7 +1553,7 @@ TagBase
 
 		writeStringAttribute( AT_DESCRIPTION, str );
 
-		tag_type.fireChanged( this );
+		tag_type.fireMetadataChanged( this );
 	}
 
 	@Override
@@ -1562,7 +1582,7 @@ TagBase
 				transient_properties.put( property, value );
 			}
 
-			tag_type.fireChanged( this );
+			tag_type.fireMetadataChanged( this );
 		}
 	}
 
@@ -2288,7 +2308,7 @@ TagBase
 					}
 				}
 
-				tag_type.fireChanged( TagBase.this );
+				tag_type.fireMetadataChanged( TagBase.this );
 			}
 		}
 		
@@ -2310,7 +2330,7 @@ TagBase
 					}
 				}
 
-				tag_type.fireChanged( TagBase.this );
+				tag_type.fireMetadataChanged( TagBase.this );
 			}
 		}
 
@@ -2339,7 +2359,7 @@ TagBase
 					}
 				}
 
-				tag_type.fireChanged( TagBase.this );
+				tag_type.fireMetadataChanged( TagBase.this );
 			}
 		}
 
@@ -2368,7 +2388,7 @@ TagBase
 					}
 				}
 
-				tag_type.fireChanged( TagBase.this );
+				tag_type.fireMetadataChanged( TagBase.this );
 			}
 		}
 
