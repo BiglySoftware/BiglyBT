@@ -24,6 +24,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLStreamHandler;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -345,12 +346,18 @@ public class FileDownloadWindow
 					return;
 				}
 
-				if ( torrentOptions != null && torrentOptions.getHideErrors()){
+				String message = downloader.getError();
+				
+					// hack to prevent window popping up when user manually removes magnet download torrent
+				
+				boolean not_error = message != null && message.toLowerCase( Locale.US ).contains( "manually" );
+				
+				if ( not_error || ( torrentOptions != null && torrentOptions.getHideErrors())){
 					pReporter.setCancelCloses( true );
 					pReporter.cancel();
 				}else{
 					pReporter.setErrorMessage(MessageText.getString("fileDownloadWindow.state_error")
-							+ downloader.getError());
+							+ message);
 				}
 
 				if ( callOnError != null ){
