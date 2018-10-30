@@ -2315,7 +2315,9 @@ TagPropertyConstraintHandler
 				try{
 					if ( str.equals( Constants.INFINITY_STRING )){
 						
-						return( Integer.MAX_VALUE );
+						result = Integer.MAX_VALUE;
+						
+						return( result );
 						
 					}else if ( Character.isDigit( str.charAt(0))){
 
@@ -2520,7 +2522,7 @@ TagPropertyConstraintHandler
 								TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
 
 								int	seeds = dm.getNbSeeds();
-								int	peers = dm.getNbSeeds();
+								int	peers = dm.getNbPeers();
 
 								if ( response != null && response.isValid()){
 
@@ -2544,7 +2546,7 @@ TagPropertyConstraintHandler
 
 										}else{
 
-											ratio = Float.MAX_VALUE;
+											return( Integer.MAX_VALUE );
 										}
 									}else{
 
