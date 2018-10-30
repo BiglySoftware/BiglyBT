@@ -1543,6 +1543,8 @@ TagPropertyConstraintHandler
 		private static final int	KW_AVAILABILITY		 	= 23;
 		private static final int	KW_UP_IDLE			 	= 24;
 		private static final int	KW_DOWN_IDLE		 	= 25;
+		private static final int	KW_DOWNLOADED		 	= 26;
+		private static final int	KW_UPLOADED			 	= 27;
 
 		static{
 			keyword_map.put( "shareratio", KW_SHARE_RATIO );
@@ -1604,6 +1606,8 @@ TagPropertyConstraintHandler
 			keyword_map.put( "downidle", KW_DOWN_IDLE );
 			keyword_map.put( "down_idle", KW_DOWN_IDLE );
 
+			keyword_map.put( "downloaded", KW_DOWNLOADED );
+			keyword_map.put( "uploaded", KW_UPLOADED );
 		}
 
 		private class
@@ -2515,6 +2519,14 @@ TagPropertyConstraintHandler
 									
 									return( secs );
 								}
+							}
+							case KW_DOWNLOADED:{
+								
+								return( dm.getStats().getTotalGoodDataBytesReceived());
+							}
+							case KW_UPLOADED:{
+								
+								return( dm.getStats().getTotalDataBytesSent());
 							}
 							default:{
 
