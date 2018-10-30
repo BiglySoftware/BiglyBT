@@ -382,6 +382,8 @@ AllTrackersManagerImpl
 		
 		if ( name != null && !name.endsWith( ".dht" )){
 
+			name = name.toLowerCase( Locale.US );
+			
 			int	port = url.getPort();
 			
 			if ( port == -1 ){
@@ -392,6 +394,7 @@ AllTrackersManagerImpl
 			name = url.getProtocol() + "://" + name + (port>0?(":" + port):"");
 			
 			return( name );
+			
 		}else{
 			
 			return( null );
