@@ -590,6 +590,11 @@ GlobalManagerStatsImpl
 						
 							for ( PEPeer peer: peers ){
 								
+								if ( peer.getPeerState() != PEPeer.TRANSFERING ){
+									
+									continue;
+								}
+								
 								if ( peer.isLANLocal()){
 									
 									continue;
