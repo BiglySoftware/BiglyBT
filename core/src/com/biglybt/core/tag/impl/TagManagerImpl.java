@@ -1654,6 +1654,27 @@ TagManagerImpl
 	}
 
 	@Override
+	public List<Tag> 
+	getTagsByName(
+		String name, 
+		boolean is_localized)
+	{
+		List<Tag>	result = new ArrayList<Tag>();
+
+		for ( TagType tt: tag_types ){
+
+			Tag t = tt.getTag( name, is_localized );
+			
+			if ( t != null ){
+				
+				result.add( t );
+			}
+		}
+
+		return( result );
+	}
+	
+	@Override
 	public Tag
 	lookupTagByUID(
 		long	tag_uid )

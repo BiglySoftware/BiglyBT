@@ -56,8 +56,6 @@ TagPropertyConstraintHandler
 	private boolean 	initial_assignment_complete;
 	private boolean		stopping;
 
-	private TagType	tt_manual_download;
-
 	final Map<Tag,TagConstraint>	constrained_tags 	= new HashMap<>();
 
 	private boolean	dm_listener_added;
@@ -123,7 +121,7 @@ TagPropertyConstraintHandler
 					List<Taggable>	current_taggables )
 				{
 					try{
-						tt_manual_download = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+						TagType tt_manual_download = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
 
 						tt_manual_download.addTagTypeListener( TagPropertyConstraintHandler.this, true );
 
@@ -1731,20 +1729,26 @@ TagPropertyConstraintHandler
 						
 						String tag_name = (String)params[0];
 						
-						if ( handler.tt_manual_download != null ){
+						if ( handler.tag_manager != null ){
 							
-							Tag t = handler.tt_manual_download.getTag( tag_name, true );
+							List<Tag> tags = handler.tag_manager.getTagsByName( tag_name, true );
 							
-							if ( t == null ){
+							if ( tags.isEmpty()){
 								
 								throw( new RuntimeException( "Tag '" + tag_name + "' not found" ));
 							}
 							
-							if ( dependent_on_tags == null ){
+							for ( Tag t: tags ){
 								
-								dependent_on_tags = new ArrayList<Tag>(5);
+								if ( t.getTagType().hasTagTypeFeature( TagFeature.TF_PROPERTIES )){
+									
+									if ( dependent_on_tags == null ){
 								
-								dependent_on_tags.add( t );		
+										dependent_on_tags = new ArrayList<Tag>(5);
+									}
+								
+									dependent_on_tags.add( t );
+								}
 							}
 						}
 					}

@@ -50,6 +50,11 @@ TagManager
 		int			tag_types,
 		Taggable	taggable );
 
+	public List<Tag>
+	getTagsByName(
+		String		name,
+		boolean		is_localized );
+	
 	public void
 	setTagPublicDefault(
 		boolean	pub );
