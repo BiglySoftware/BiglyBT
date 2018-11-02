@@ -461,6 +461,10 @@ public class PeerUtils {
 		  peerId[i] = (byte)chars.charAt(pos);
 		}
 
+		if (Constants.isAndroid) {
+			peerId[8] = 'A';
+		}
+
 		// System.out.println( "generated new peer id:" + ByteFormatter.nicePrint(peerId));
 
 	 	return( peerId );
