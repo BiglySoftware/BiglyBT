@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) Bigly Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -68,6 +67,7 @@ import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.logging.LoggerChannel;
+import com.biglybt.util.ConcurrentLinkedDeque;
 import com.biglybt.util.MapUtils;
 
 public class 
@@ -105,7 +105,7 @@ AllTrackersManagerImpl
 	
 	private volatile boolean stopping;
 	
-	private Map<String,AllTrackersTrackerImpl>		host_map = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<String,AllTrackersTrackerImpl>		host_map = new ConcurrentHashMap<>();
 	
 	private ConcurrentLinkedDeque<Object[]>			update_queue = new ConcurrentLinkedDeque<>();
 	
