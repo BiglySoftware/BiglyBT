@@ -21,11 +21,12 @@ package com.biglybt.ui.swt.views.stats;
 
 import com.biglybt.core.Core;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTView;
@@ -33,15 +34,19 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
+import com.biglybt.core.global.GlobalManagerStats;
 
 public class XferStatsView
 	implements UISWTViewCoreEventListenerEx
 {
 	public static final String MSGID_PREFIX = "XferStatsView";
 
-	Composite panel;
-	XferStatsPanel drawPanel;
-	private final boolean autoAlpha;
+	Composite 				composite;
+	
+	XferStatsPanel 			local_stats;
+	XferStatsPanel 			global_stats;
+	
+	private final boolean 	autoAlpha;
 
 	private UISWTView swtView;
 
@@ -79,13 +84,51 @@ public class XferStatsView
 		this.autoAlpha = autoAlpha;
 	}
 
-	public void initialize(Composite composite) {
+	public void 
+	initialize(
+		Composite _composite) 
+	{
+		composite = _composite;
 		
-		panel = new Composite(composite,SWT.NULL);
-		panel.setLayout(new FillLayout());
-		drawPanel = new XferStatsPanel(panel);
-		drawPanel.setAutoAlpha(autoAlpha);
+		CTabFolder tab_folder = new CTabFolder(composite, SWT.LEFT);
+
+		CTabItem global_item = new CTabItem(tab_folder, SWT.NULL);
+
+		global_item.setText( MessageText.getString( "label.global" ));
+
+		Composite global_composite = new Composite( tab_folder, SWT.NULL );
+
+		global_item.setControl( global_composite );
+	
+		global_composite.setLayout(new FillLayout());
+		global_composite.setLayoutData( Utils.getFilledFormData());
+					
+		Composite global_panel = new Composite(global_composite,SWT.NULL);
+		global_panel.setLayout(new FillLayout());
 		
+		global_stats = new XferStatsPanel( global_panel, true );
+		global_stats.setAutoAlpha(autoAlpha);
+		
+
+		CTabItem local_item = new CTabItem(tab_folder, SWT.NULL);
+
+		local_item.setText( MessageText.getString( "DHTView.db.local" ));
+
+		Composite local_composite = new Composite( tab_folder, SWT.NULL );
+
+		local_composite.setLayout(new FillLayout());
+		local_composite.setLayoutData( Utils.getFilledFormData());
+
+		local_item.setControl( local_composite );
+		
+		Composite local_panel = new Composite(local_composite,SWT.NULL);
+		local_panel.setLayout(new FillLayout());
+
+		local_stats = new XferStatsPanel( local_panel, false );
+		local_stats.setAutoAlpha(autoAlpha);
+		
+		tab_folder.setSelection(  global_item );
+
 		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 
 			@Override
@@ -96,15 +139,14 @@ public class XferStatsView
 						
 						@Override
 						public void run(){
-							drawPanel.init( core.getGlobalManager().getStats());
-						}
+							GlobalManagerStats stats = core.getGlobalManager().getStats();
+							
+							global_stats.init( stats.getAggregateRemoteStats());
+							local_stats.init( stats.getAggregateLocalStats());
+						} 
 					});
 			}
 		});
-	}
-
-	private Composite getComposite() {
-		return panel;
 	}
 
 	private String
@@ -116,8 +158,9 @@ public class XferStatsView
 	public
 	void delete()
 	{
-		if (drawPanel != null) {
-			drawPanel.delete();
+		if (global_stats != null) {
+			global_stats.delete();
+			local_stats.delete();
 		}
 	}
 
@@ -138,7 +181,7 @@ public class XferStatsView
 			break;
 
 		case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
-			Messages.updateLanguageForControl(getComposite());
+			Messages.updateLanguageForControl(composite);
 			if (swtView != null) {
 				swtView.setTitle(MessageText.getString(getTitleID()));
 			}
@@ -148,16 +191,18 @@ public class XferStatsView
 			break;
 
 		case UISWTViewEvent.TYPE_FOCUSGAINED:
-			if ( drawPanel != null ){
+			if ( global_stats != null ){
 				
-				drawPanel.requestRefresh();
+				global_stats.requestRefresh();
+				local_stats.requestRefresh();
 			}
 			break;
 
 		case UISWTViewEvent.TYPE_REFRESH:
-			if ( drawPanel != null ){
+			if ( global_stats != null ){
 				
-				drawPanel.refreshView();
+				global_stats.refreshView();
+				local_stats.refreshView();
 			}
 			break;
 		}

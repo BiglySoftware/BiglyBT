@@ -191,4 +191,7 @@ GlobalManagerStats
 	
 	public AggregateStats
 	getAggregateRemoteStats();
+	
+	public AggregateStats
+	getAggregateLocalStats();
 }

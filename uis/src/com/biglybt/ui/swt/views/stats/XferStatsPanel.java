@@ -39,7 +39,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
@@ -77,7 +76,7 @@ XferStatsPanel
 
 	private boolean autoAlpha = false;
 
-	private GlobalManagerStats		gm_stats;
+	private AggregateStats		my_stats;
 
 	private long	latest_sequence	= Long.MAX_VALUE;
 	
@@ -160,7 +159,8 @@ XferStatsPanel
 		public int[] getXY( float x, float y ){
 			return( new int[]{getX(x,y), getY( x,y)});
 		}
-			
+		
+		/*
 		public int getWidth( float w ){
 			return( (int)(w/(maxX-minX)* width));
 		}		
@@ -168,6 +168,7 @@ XferStatsPanel
 		public int getHeight( float w ){	
 			return( (int)(w/(maxY-minY)* height));
 		}
+		*/
 		
 		public int getReverseWidth( float w ){
 			return( (int)((w/width)* (maxX-minX)));
@@ -180,7 +181,8 @@ XferStatsPanel
 
 	public 
 	XferStatsPanel(
-		Composite composite) 
+		Composite 	composite,
+		boolean		show_header )
 	{
 		display = composite.getDisplay();
 
@@ -195,56 +197,73 @@ XferStatsPanel
 	    panel.setLayout(layout);
 	    panel.setBackground( white );
 	    
-	    	// header
-	    
-	    header_label = new BufferedLabel( panel, SWT.DOUBLE_BUFFERED );
-	    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
-	    grid_data.horizontalIndent = 5;
-	    Utils.setLayoutData( header_label, grid_data);
-	    header_label.getControl().setBackground( white );
-	    
-	    	// controls
-	    
-	    Composite controls = new Composite(panel,SWT.NULL);
-	    layout = new GridLayout();
-	    layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 
-	    		layout.marginHeight = layout.marginWidth = 0;
-	    layout.numColumns = 3;
-	    
-	    controls.setLayout(layout);
-	    
-	    Label label = new Label( controls, SWT.NULL );
-	    label.setBackground( white );
-	    Messages.setLanguageText( label, "ConfigView.section.display" );
-	    
-	    Button sample_button	= new Button( controls, SWT.RADIO );
-	    sample_button.setBackground( white );
-	    Messages.setLanguageText( sample_button, "label.samples" );
-	    sample_button.setSelection( show_samples );
-	    
-	    
-	    Button tp_button	= new Button( controls, SWT.RADIO );
-	    tp_button.setBackground( white );
-	    Messages.setLanguageText( tp_button, "label.throughput" );
-	    tp_button.setSelection( !show_samples );
-
-	    SelectionAdapter sa = 
-	    	new SelectionAdapter(){
-	    		@Override
-	    		public void widgetSelected(SelectionEvent e){
-	    			show_samples = sample_button.getSelection();
-	    			COConfigurationManager.setParameter( "XferStats.show.samples", show_samples );
-	    			requestRefresh();
-	    		}
-			};
-	    
-	    sample_button.addSelectionListener( sa );
-	    tp_button.addSelectionListener( sa );
+	    if ( show_header ){
+		    	
+	    		// header
+		    
+		    header_label = new BufferedLabel( panel, SWT.DOUBLE_BUFFERED );
+		    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+		    grid_data.horizontalIndent = 5;
+		    Utils.setLayoutData( header_label, grid_data);
+		    header_label.getControl().setBackground( white );
+		    
+		    	// controls
+		    
+		    Composite controls = new Composite(panel,SWT.NULL);
+		    layout = new GridLayout();
+		    layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 
+		    		layout.marginHeight = layout.marginWidth = 0;
+		    layout.numColumns = 3;
+		    
+		    controls.setLayout(layout);
+		    
+		    Label label = new Label( controls, SWT.NULL );
+		    label.setBackground( white );
+		    Messages.setLanguageText( label, "ConfigView.section.display" );
+		    
+		    Button sample_button	= new Button( controls, SWT.RADIO );
+		    sample_button.setBackground( white );
+		    Messages.setLanguageText( sample_button, "label.samples" );
+		    sample_button.setSelection( show_samples );
+		    
+		    
+		    Button tp_button	= new Button( controls, SWT.RADIO );
+		    tp_button.setBackground( white );
+		    Messages.setLanguageText( tp_button, "label.throughput" );
+		    tp_button.setSelection( !show_samples );
+	
+		    SelectionAdapter sa = 
+		    	new SelectionAdapter(){
+		    		@Override
+		    		public void widgetSelected(SelectionEvent e){
+		    			show_samples = sample_button.getSelection();
+		    			COConfigurationManager.setParameter( "XferStats.show.samples", show_samples );
+		    			requestRefresh();
+		    		}
+				};
+		    
+		    sample_button.addSelectionListener( sa );
+		    tp_button.addSelectionListener( sa );
+		    
+	    }else{
+	    	
+	    	Label label = new Label( panel, SWT.DOUBLE_BUFFERED );
+	    	
+		    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+		    grid_data.horizontalSpan = 2;
+		    grid_data.horizontalIndent = 5;
+		    Utils.setLayoutData( label, grid_data);
+		    label.setBackground( white );
+			  
+		    Messages.setLanguageText( label, "XferStatsView.local.header" );
+		    
+	    	show_samples = true;
+	    }
 	    
 	    	// canvas
 	    
 		canvas = new Canvas(panel,SWT.NO_BACKGROUND);
-		grid_data = new GridData( GridData.FILL_BOTH );
+		GridData grid_data = new GridData( GridData.FILL_BOTH );
 		grid_data.horizontalSpan = 2;
 		
 		canvas.setLayoutData( grid_data );
@@ -459,9 +478,9 @@ XferStatsPanel
 
 	protected void
 	init(
-		GlobalManagerStats		_stats )
+		AggregateStats		_stats )
 	{
-		gm_stats	= _stats;
+		my_stats	= _stats;
 	}
 	
 	private String
@@ -488,14 +507,12 @@ XferStatsPanel
 	public void
 	refreshView()
 	{
-		if ( gm_stats == null ){
+		if ( my_stats == null ){
 			
 			return;
 		}
-		
-		AggregateStats		a_stats = gm_stats.getAggregateRemoteStats();
-			
-		if ( latest_sequence == Long.MAX_VALUE || latest_sequence != a_stats.getSequence()){
+					
+		if ( latest_sequence == Long.MAX_VALUE || latest_sequence != my_stats.getSequence()){
 		
 			refresh();
 		}
@@ -544,7 +561,7 @@ XferStatsPanel
 		gc.setBackground(white);
 		gc.fillRectangle(size);
 
-		if ( gm_stats == null ){
+		if ( my_stats == null ){
 			
 			return;
 		}
@@ -559,43 +576,43 @@ XferStatsPanel
 		text_height = scale.getReverseHeight( text_extent.y );
 
 		currentPositions.clear();
-
-		AggregateStats		a_stats = gm_stats.getAggregateRemoteStats();
 		
-		latest_sequence = a_stats.getSequence();
+		latest_sequence = my_stats.getSequence();
 		
-		float samples 		= a_stats.getSamples();
-		float population	= a_stats.getEstimatedPopulation();
-		
-		long received 	= a_stats.getLatestReceived();
-		long sent		= a_stats.getLatestSent();
-		
-		String throughput;
-		
-		if ( samples > 0 && population > 0 ){
+		if ( header_label != null ){
+			float samples 		= my_stats.getSamples();
+			float population	= my_stats.getEstimatedPopulation();
 			
-			tp_ratio = population/samples;
+			long received 	= my_stats.getLatestReceived();
+			long sent		= my_stats.getLatestSent();
 			
-			throughput =  DisplayFormatters.formatByteCountToKiBEtcPerSec((long)(tp_ratio*(received+sent)/60));
+			String throughput;
 			
-		}else{
+			if ( samples > 0 && population > 0 ){
+				
+				tp_ratio = population/samples;
+				
+				throughput =  DisplayFormatters.formatByteCountToKiBEtcPerSec((long)(tp_ratio*(received+sent)/60));
+				
+			}else{
+				
+				tp_ratio = 0;
+				
+				throughput = "";
+			}
 			
-			tp_ratio = 0;
+			String header = MessageText.getString(
+								"XferStatsView.header",
+								new String[]{
+									String.valueOf( (int)samples ),
+									String.valueOf( (int)population ),
+									throughput
+								});
 			
-			throughput = "";
+			header_label.setText( header );
 		}
 		
-		String header = MessageText.getString(
-							"XferStatsView.header",
-							new String[]{
-								String.valueOf( (int)samples ),
-								String.valueOf( (int)population ),
-								throughput
-							});
-		
-		header_label.setText( header );
-						
-		Map<String,Map<String,long[]>> stats = a_stats.getStats();
+		Map<String,Map<String,long[]>> stats = my_stats.getStats();
 						
 		List<Node> 			origins 	= new ArrayList<>();
 		

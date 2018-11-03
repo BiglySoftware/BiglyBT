@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.CoreFactory;
@@ -47,6 +48,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerPeerListener;
 import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerListener;
 import com.biglybt.core.peer.PEPeerManager;
@@ -504,6 +506,8 @@ GlobalManagerStatsImpl
 	
     private Map<String,CountryDetails>		country_details = new ConcurrentHashMap<>();
     private CountryDetailsImpl				country_total	= new CountryDetailsImpl( "" );
+    private AtomicInteger					country_details_seq	= new AtomicInteger();
+    private String							country_my_cc	= "";
     
     {
     	country_details.put( country_total.cc, country_total );
@@ -553,6 +557,19 @@ GlobalManagerStatsImpl
 					@Override
 					public void runSupport()
 					{
+						try{
+							InetAddress ia = NetworkAdmin.getSingleton().getDefaultPublicAddress();
+							
+							String[] dets = PeerUtils.getCountryDetails( ia );
+							
+							if ( dets != null && dets.length > 0 ){
+								
+								country_my_cc = dets[0];
+							}
+						}catch( Throwable e ){
+							
+						}
+						
 						List<List<PEPeer>>	peer_lists = new LinkedList<>();
 						
 						synchronized( PEER_DATA_KEY ){
@@ -760,6 +777,8 @@ GlobalManagerStatsImpl
 								cdi.sent_average.update( 0 );
 							}
 						}
+						
+						country_details_seq.incrementAndGet();
 					}
 				});	
 		}
@@ -874,7 +893,7 @@ GlobalManagerStatsImpl
 	private long	total_received_overall;
 	private long	total_sent_overall;
 
-	private volatile AggregateStatsImpl	as_latest = new AggregateStatsImpl( sequence++ );
+	private volatile AggregateStatsImpl	as_remote_latest = new AggregateStatsImpl( sequence++ );
 
 	private DHT	dht_biglybt;
 		
@@ -1135,7 +1154,7 @@ GlobalManagerStatsImpl
 			}
 		}
 				
-		as_latest = 
+		as_remote_latest = 
 			new AggregateStatsImpl(
 				stats_history.size(),
 				dht_biglybt==null?0:(int)dht_biglybt.getControl().getStats().getEstimatedDHTSize(),
@@ -1145,10 +1164,127 @@ GlobalManagerStatsImpl
 				aggregate_stats );
 	}
 	
+	private AggregateStatsWrapper	as_remote_wrapper 	= new AggregateStatsWrapper( false );
+	private AggregateStatsWrapper	as_local_wrapper 	= new AggregateStatsWrapper( true );
+	
 	public AggregateStats
 	getAggregateRemoteStats()
 	{
-		return( as_latest );
+		return( as_remote_wrapper );
+	}
+	
+	public AggregateStats
+	getAggregateLocalStats()
+	{
+		return( as_local_wrapper );
+	}
+	
+	private class
+	AggregateStatsWrapper
+		implements AggregateStats
+	{
+		final boolean is_local;
+		
+		private int		last_local_seq = -1;
+		
+		private Map<String,Map<String,long[]>>	as_local_latest = new HashMap<>();
+		
+		AggregateStatsWrapper(
+			boolean		_is_local )
+		{
+			is_local	= _is_local;
+		}
+		
+		public int
+		getSamples()
+		{
+			if ( is_local ){
+				return( -1 );
+			}else{
+				return( as_remote_latest.getSamples());
+
+			}
+		}
+		
+		public int
+		getEstimatedPopulation()
+		{
+			if ( is_local ){
+				return( -1 );
+			}else{
+				return( as_remote_latest.getEstimatedPopulation());
+
+			}		
+		}
+		
+		public int
+		getSequence()
+		{
+			if ( is_local ){
+				
+				int seq = country_details_seq.get();
+				
+				if ( seq != last_local_seq ){
+					
+					Iterator<CountryDetails> it = getCountryDetails();
+					
+					Map<String,Map<String,long[]>> my_sample = new HashMap<>();
+					
+					Map<String,long[]>	my_stats = new HashMap<>();
+					
+					my_sample.put( country_my_cc, my_stats );
+					
+					while( it.hasNext()){
+					
+						CountryDetails cd = it.next();
+						
+						my_stats.put( cd.getCC(), new long[]{ cd.getAverageReceived(), cd.getAverageSent() } );
+					}
+					
+					as_local_latest	= my_sample;
+							
+					last_local_seq = seq;
+				}
+				
+				return( seq );
+				
+			}else{
+				
+				return( as_remote_latest.getSequence());
+			}		
+		}
+		
+		public long
+		getLatestReceived()
+		{
+			if ( is_local ){
+				return( -1 );
+			}else{
+				return( as_remote_latest.getLatestReceived());
+			}		
+		}
+		
+		public long
+		getLatestSent()
+		{
+			if ( is_local ){
+				return( -1 );
+			}else{
+				return( as_remote_latest.getLatestSent());
+
+			}		
+		}
+		
+		public Map<String,Map<String,long[]>>
+		getStats()
+		{
+			if ( is_local ){
+				return( as_local_latest );
+			}else{
+				return( as_remote_latest.getStats());
+
+			}		
+		}
 	}
 	
 	private static class
