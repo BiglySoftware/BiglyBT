@@ -22,7 +22,6 @@ package com.biglybt.core.global.impl;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,10 +29,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.biglybt.core.CoreFactory;
 
@@ -1238,7 +1235,7 @@ GlobalManagerStatsImpl
 					
 						CountryDetails cd = it.next();
 						
-						my_stats.put( cd.getCC(), new long[]{ cd.getAverageReceived(), cd.getAverageSent() } );
+						my_stats.put( cd.getCC(), new long[]{ cd.getAverageSent(), cd.getAverageReceived()  } );
 					}
 					
 					as_local_latest	= my_sample;
