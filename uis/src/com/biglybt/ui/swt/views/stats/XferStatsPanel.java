@@ -629,7 +629,7 @@ XferStatsPanel
 				continue;
 			}
 			
-			Node from_node 	= new Node();
+			Node from_node 	= new Node( 0 );
 			
 			origins.add( from_node );
 			
@@ -661,7 +661,7 @@ XferStatsPanel
 					
 					if ( to_node == null ){
 						
-						to_node = new Node();
+						to_node = new Node( 1 );
 						
 						dest_recv_map.put( to_cc,  to_node );
 							
@@ -683,7 +683,7 @@ XferStatsPanel
 					
 					if ( to_node == null ){
 						
-						to_node = new Node();
+						to_node = new Node( 2 );
 						
 						dest_sent_map.put( to_cc,  to_node );
 							
@@ -1050,6 +1050,8 @@ XferStatsPanel
 	private class
 	Node
 	{
+		final int		type;
+		
 		String			cc;
 		Image			image;
 		long			count_sent;
@@ -1060,6 +1062,13 @@ XferStatsPanel
 		int			x_pos;
 		int			y_pos;
 		boolean		hidden;
+		
+		private
+		Node(
+			int		_type )
+		{
+			type	= _type;
+		}
 		
 		private void
 		draw(
@@ -1121,14 +1130,30 @@ XferStatsPanel
 		{
 			String tt = cc;
 			
-			if ( count_recv > 0 ){
+			if ( type == 0 ){
 				
-				tt += "; " + MessageText.getString( "label.download") + "=" + getBPSForDisplay( count_recv );
-			}
-			
-			if ( count_sent > 0 ){
+				if ( count_recv > 0 ){
+					
+					tt += "; " + MessageText.getString( "label.download") + "=" + getBPSForDisplay( count_recv );
+				}
 				
-				tt += "; " + MessageText.getString( "label.upload") + "=" + getBPSForDisplay( count_sent );
+				if ( count_sent > 0 ){
+					
+					tt += "; " + MessageText.getString( "label.upload") + "=" + getBPSForDisplay( count_sent );
+				}
+			}else if ( type == 1 ){
+				
+				if ( count_recv > 0 ){
+					
+					tt += "; " + MessageText.getString( "label.upload") + "=" + getBPSForDisplay( count_recv );
+				}
+
+			}else{
+				
+				if ( count_sent > 0 ){
+					
+					tt += "; " + MessageText.getString( "label.download") + "=" + getBPSForDisplay( count_sent );
+				}
 			}
 
 			
