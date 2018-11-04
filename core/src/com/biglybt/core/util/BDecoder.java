@@ -39,6 +39,7 @@ public class BDecoder
 	public static final int MAX_BYTE_ARRAY_SIZE		= 100*1024*1024;
 	private static final int MAX_MAP_KEY_SIZE		= 64*1024;
 
+	private static final boolean USE_NEW_BDECODER = System.getProperty("bdecoder.new", "1").equals("1");
 	private static final boolean TRACE	= false;
 
 	private boolean recovery_mode;
@@ -155,7 +156,9 @@ public class BDecoder
 
 		throws IOException
 	{
-		Object	res = decodeInputStream(data, "", 0, internKeys);
+		Object	res = USE_NEW_BDECODER
+				? decodeInputStream2(data, "", 0, internKeys)
+				: decodeInputStream(data, "", 0, internKeys);
 
 		if ( res == null ){
 
@@ -175,7 +178,9 @@ public class BDecoder
 
 		throws IOException
 	{
-		Object res = decodeInputStream(data, "", 0, internKeys);
+		Object res = USE_NEW_BDECODER 
+				? decodeInputStream2(data, "", 0, internKeys)
+				: decodeInputStream(data, "", 0, internKeys);
 
 		if ( res == null ){
 
@@ -190,9 +195,11 @@ public class BDecoder
 	}
 
 	// reuseable objects for key decoding
-	private ByteBuffer keyBytesBuffer = ByteBuffer.allocate(32);
-	private CharBuffer keyCharsBuffer = CharBuffer.allocate(32);
-	private final CharsetDecoder keyDecoder = Constants.BYTE_CHARSET.newDecoder();
+	private ByteBuffer keyBytesBuffer = USE_NEW_BDECODER ? null : ByteBuffer.allocate(32);
+	private byte[] keyBytes = USE_NEW_BDECODER ? new byte[32] : null;
+	private int keyBytesLen = 0;
+	private CharBuffer keyCharsBuffer = USE_NEW_BDECODER ? null : CharBuffer.allocate(32);
+	private final CharsetDecoder keyDecoder = USE_NEW_BDECODER ? null : Constants.BYTE_CHARSET.newDecoder();
 
 	private Object
 	decodeInputStream(
@@ -508,6 +515,270 @@ public class BDecoder
     return Long.parseLong(str);
   }
 	 */
+
+	/**
+	 * Differences between decodeInputStream<br/>
+	 * This: Uses byte[] for keys<br/>
+	 * Other: Uses ByteBuffer<br/>
+	 * <br/>
+	 * This: Uses new String(byte[], pos, len, charset)<br/>
+	 * Other: Uses CharsetDecoder.decode(ByteBuffer, CharBuffer) and new String(charBuffer.array(), 0, len)<br/>
+	 * <br/>
+	 * This: Verifies map order using key in String form<br/>
+	 * Other: Verifies map order by copying bytes and comparing<br/>
+	 * <p/>
+	 * On a torrent with 100k files and set to verify map order, this method is 
+	 * 2.5x faster.
+	 */
+	private Object
+	decodeInputStream2(
+			InputStream dbis,
+			String		context,
+			int			nesting,
+			boolean internKeys)
+
+			throws IOException
+	{
+		if (nesting == 0 && !dbis.markSupported()) {
+
+			throw new IOException("InputStream must support the mark() method");
+		}
+
+		//set a mark
+
+		dbis.mark(1);
+
+		//read a byte
+
+		int tempByte = dbis.read();
+
+		//decide what to do
+
+		switch (tempByte) {
+			case 'd' :
+				//create a new dictionary object
+
+				LightHashMap tempMap = new LightHashMap();
+
+				try{
+					String prev_key = null;
+
+					//get the key
+
+					while (true) {
+
+						dbis.mark(1);
+
+						tempByte = dbis.read();
+						if(tempByte == 'e' || tempByte == -1)
+							break; // end of map
+
+						dbis.reset();
+
+						// decode key strings manually so we can reuse the bytebuffer
+
+						int keyLength = (int)getPositiveNumberFromStream(dbis, ':');
+
+						int skipBytes = 0;
+
+						if ( keyLength > MAX_MAP_KEY_SIZE ){
+							skipBytes = keyLength - MAX_MAP_KEY_SIZE;
+							keyLength = MAX_MAP_KEY_SIZE;
+							//new Exception().printStackTrace();
+							//throw( new IOException( msg ));
+						}
+
+						if(keyLength < keyBytesLen)
+						{
+							keyBytesLen = keyLength;
+						} else {
+							keyBytes = new byte[keyLength];
+							keyBytesLen = keyLength;
+						}
+
+						getByteArrayFromStream(dbis, keyLength, keyBytes);
+
+						if (skipBytes > 0) {
+							dbis.skip(skipBytes);
+						}
+
+						String key = new String(keyBytes, 0, keyLength, Constants.BYTE_CHARSET);
+
+						// keys often repeat a lot - intern to save space
+						if (internKeys)
+							key = StringInterner.intern( key );
+
+						if ( verify_map_order ){
+							if (prev_key != null) {
+								if (prev_key.compareTo(key) > 0) {
+									Debug.out( "Dictionary order incorrect: prev=" + prev_key + ", current=" + key);
+
+									if (!( tempMap instanceof LightHashMapEx )){
+
+										LightHashMapEx x = new LightHashMapEx( tempMap );
+
+										x.setFlag( LightHashMapEx.FL_MAP_ORDER_INCORRECT, true );
+
+										tempMap = x;
+									}
+
+								}
+							}
+							prev_key = key;
+						}
+
+						//decode value
+
+						Object value = decodeInputStream2(dbis,key,nesting+1,internKeys);
+
+						// value interning is too CPU-intensive, let's skip that for now
+					/*if(value instanceof byte[] && ((byte[])value).length < 17)
+					value = StringInterner.internBytes((byte[])value);*/
+
+						if ( TRACE ){
+							System.out.println( key + "->" + value + ";" );
+						}
+
+						// recover from some borked encodings that I have seen whereby the value has
+						// not been encoded. This results in, for example,
+						// 18:azureus_propertiesd0:e
+						// we only get null back here if decoding has hit an 'e' or end-of-file
+						// that is, there is no valid way for us to get a null 'value' here
+
+						if ( value == null ){
+
+							System.err.println( "Invalid encoding - value not serialsied for '" + key + "' - ignoring: map so far=" + tempMap + ",loc=" + Debug.getCompressedStackTrace());
+
+							break;
+						}
+
+						if (skipBytes > 0) {
+
+							String msg = "dictionary key is too large - "
+									+ (keyLength + skipBytes) + ":, max=" + MAX_MAP_KEY_SIZE
+									+ ": skipping key starting with " + new String(key.substring(0, 128));
+							System.err.println( msg );
+
+						} else {
+
+							if ( tempMap.put( key, value) != null ){
+
+								Debug.out( "BDecoder: key '" + key + "' already exists!" );
+							}
+						}
+					}
+
+				/*
+	        if ( tempMap.size() < 8 ){
+
+	        	tempMap = new CompactMap( tempMap );
+	        }*/
+
+					dbis.mark(1);
+					tempByte = dbis.read();
+					dbis.reset();
+					if ( nesting > 0 && tempByte == -1 ){
+
+						throw( new BEncodingException( "BDecoder: invalid input data, 'e' missing from end of dictionary"));
+					}
+				}catch( Throwable e ){
+
+					if ( !recovery_mode ){
+
+						if ( e instanceof IOException ){
+
+							throw((IOException)e);
+						}
+
+						throw( new IOException( Debug.getNestedExceptionMessage(e)));
+					}
+				}
+
+				tempMap.compactify(-0.9f);
+
+				//return the map
+
+				return tempMap;
+
+			case 'l' :
+				//create the list
+
+				ArrayList tempList = new ArrayList();
+
+				try{
+					//create the key
+
+					String context2 = PORTABLE_ROOT==null?context:(context+"[]");
+
+					Object tempElement = null;
+					while ((tempElement = decodeInputStream2(dbis, context2, nesting+1, internKeys)) != null) {
+						//add the element
+						tempList.add(tempElement);
+					}
+
+					tempList.trimToSize();
+					dbis.mark(1);
+					tempByte = dbis.read();
+					dbis.reset();
+					if ( nesting > 0 && tempByte == -1 ){
+
+						throw( new BEncodingException( "BDecoder: invalid input data, 'e' missing from end of list"));
+					}
+				}catch( Throwable e ){
+
+					if ( !recovery_mode ){
+
+						if ( e instanceof IOException ){
+
+							throw((IOException)e);
+						}
+
+						throw( new IOException( Debug.getNestedExceptionMessage(e)));
+					}
+				}
+				//return the list
+				return tempList;
+
+			case 'e' :
+			case -1 :
+				return null;
+
+			case 'i' :
+				return Long.valueOf(getNumberFromStream(dbis, 'e'));
+
+			case '0' :
+			case '1' :
+			case '2' :
+			case '3' :
+			case '4' :
+			case '5' :
+			case '6' :
+			case '7' :
+			case '8' :
+			case '9' :
+				//move back one
+				dbis.reset();
+				//get the string
+				return getByteArrayFromStream(dbis, context );
+
+			default :{
+
+				int	rem_len = dbis.available();
+
+				if ( rem_len > 256 ){
+
+					rem_len	= 256;
+				}
+
+				byte[] rem_data = new byte[rem_len];
+
+				dbis.read( rem_data );
+
+				throw( new BEncodingException(
+						"BDecoder: unknown command '" + tempByte + ", remainder = " + new String( rem_data )));
+			}
+		}
+	}
 
 	/** only create the array once per decoder instance (no issues with recursion as it's only used in a leaf method)
 	 */
