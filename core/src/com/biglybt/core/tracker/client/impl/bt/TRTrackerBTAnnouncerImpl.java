@@ -279,6 +279,13 @@ TRTrackerBTAnnouncerImpl
 					return;
 				}
 
+				if ( Logger.isClosingTakingTooLong()){
+				
+						// give up 
+					
+					return;
+				}
+				
 				long	secs_to_wait = getErrorRetryInterval();
 
 				try{

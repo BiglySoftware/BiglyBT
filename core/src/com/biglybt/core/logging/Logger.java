@@ -39,6 +39,8 @@ public class Logger {
 
 	private static final FileLogging fileLogging = new FileLogging();
 
+	private static volatile boolean closing_taking_too_long;
+	
 	static {
 		try {
 			loggerImpl = new LoggerImpl();
@@ -86,6 +88,20 @@ public class Logger {
 	setClosing()
 	{
 		loggerImpl.setClosing();
+	}
+	
+	public static void
+	setClosingTakingTooLong()
+	{
+		closing_taking_too_long = true;
+		
+		fileLogging.setClosingTakingTooLong();
+	}
+	
+	public static boolean
+	isClosingTakingTooLong()
+	{
+		return( closing_taking_too_long );
 	}
 
 	/**

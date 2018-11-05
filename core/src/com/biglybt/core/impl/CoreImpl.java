@@ -1619,7 +1619,7 @@ CoreImpl
 			"ShutFail",
 			SystemTime.getOffsetTime( 60*1000 ),
 			new TimerEventPerformer()
-			{
+			{				
 				boolean	die_die_die;
 
 				@Override
@@ -1627,6 +1627,11 @@ CoreImpl
 				perform(
 					TimerEvent event )
 				{	
+						// it has been a minute - turn off logging if it is enabled as this can significantly
+						// slow things down
+					
+					Logger.setClosingTakingTooLong();
+					
 					last_progress.set( SystemTime.getMonotonousTime());
 					
 						// hang around while things are making progress

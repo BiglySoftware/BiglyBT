@@ -53,6 +53,7 @@ public class FileLogging implements ILogEventListener {
 	private static final String CFG_ENABLELOGTOFILE = "Logging Enable";
 
 	private static boolean closing;
+	private static volatile boolean closing_taking_too_long;
 	
 	protected static void
 	setClosing()
@@ -61,6 +62,14 @@ public class FileLogging implements ILogEventListener {
 		
 			closing	= true;
 		}
+	}
+	
+	public void
+	setClosingTakingTooLong()
+	{
+		logToFile( "Closedown is taking too long, disabling file logging" );
+		
+		closing_taking_too_long	= true;
 	}
 	
 	private boolean bLogToFile = false;
@@ -181,7 +190,7 @@ public class FileLogging implements ILogEventListener {
 	}
 
 	private void logToFile(String str) {
-		if (!bLogToFile)
+		if (!bLogToFile || closing_taking_too_long )
 			return;
 
 		String dateStr = format.format(new Date());
