@@ -39,7 +39,7 @@ public class BDecoder
 	public static final int MAX_BYTE_ARRAY_SIZE		= 100*1024*1024;
 	private static final int MAX_MAP_KEY_SIZE		= 64*1024;
 
-	private static final boolean USE_NEW_BDECODER = System.getProperty("bdecoder.new", "1").equals("1");
+	private static final boolean USE_NEW_BDECODER = System.getProperty("bdecoder.new", "0").equals("1");
 	private static final boolean TRACE	= false;
 
 	private boolean recovery_mode;
