@@ -43,6 +43,7 @@ import com.biglybt.core.diskmanager.cache.CacheFile;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerException;
 import com.biglybt.core.diskmanager.cache.CacheFileManagerFactory;
 import com.biglybt.core.diskmanager.cache.CacheFileOwner;
+import com.biglybt.core.diskmanager.file.FMFileManager;
 import com.biglybt.core.diskmanager.file.FMFileManagerFactory;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerException;
@@ -3363,11 +3364,34 @@ DiskManagerImpl
 
             throws TOTorrentException, UnsupportedEncodingException, LocaleUtilEncodingException
     {
-        LocaleUtilDecoder locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
+			LocaleUtilDecoder locale_decoder = LocaleTorrentUtil.getTorrentEncoding( torrent );
 
-        TOTorrentFile[] files = torrent.getFiles();
+			TOTorrentFile[] files = torrent.getFiles();
 
-        String  root_path = torrent_save_dir + File.separator + torrent_save_file + File.separator;
+			String  root_path = torrent_save_dir + File.separator + torrent_save_file + File.separator;
+			File root_path_file = new File( torrent_save_dir, torrent_save_file );
+			String root_full_path;
+			try {
+				root_full_path = root_path_file.getCanonicalPath();
+			}catch( Throwable e ){
+
+				Debug.printStackTrace(e);
+				return;
+			}
+
+			FMFileManager fm_factory = FMFileManagerFactory.getSingleton();
+			boolean has_links = fm_factory.hasLinks(torrent);
+	
+			if (!has_links) {
+				if	(!root_path_file.isDirectory()) {
+					return;
+				}
+				if (root_path_file.list().length == 0) {
+					TorrentUtils.recursiveEmptyDirDelete(root_path_file);
+					return;
+				}
+			}
+
 
         boolean delete_if_not_in_dir = COConfigurationManager.getBooleanParameter("File.delete.include_files_outside_save_dir");
 
@@ -3397,38 +3421,42 @@ DiskManagerImpl
 
             File file = new File(path_str);
 
-            File linked_file = FMFileManagerFactory.getSingleton().getFileLink( torrent, i, file );
+					boolean delete;
 
-            boolean delete;
-
-            if ( linked_file == file ){
-
-                delete  = true;
-
-            }else{
-
-                    // only consider linked files for deletion if they are in the torrent save dir
-                    // i.e. a rename probably instead of a retarget to an existing file elsewhere
-                    // delete_if_not_in_dir does allow this behaviour to be overridden though.
-
-                try{
-                    if ( delete_if_not_in_dir || linked_file.getCanonicalPath().startsWith(new File( root_path ).getCanonicalPath())){
-
-                        file    = linked_file;
-
-                        delete  = true;
-
-                    }else{
-
-                        delete = false;
-                    }
-                }catch( Throwable e ){
-
-                    Debug.printStackTrace(e);
-
-                    delete = false;
-                }
-            }
+					if (has_links) {
+						File linked_file = fm_factory.getFileLink( torrent, i, file );
+	
+						if ( linked_file == file ){
+	
+							delete  = true;
+	
+						}else{
+	
+							// only consider linked files for deletion if they are in the torrent save dir
+							// i.e. a rename probably instead of a retarget to an existing file elsewhere
+							// delete_if_not_in_dir does allow this behaviour to be overridden though.
+	
+							try{
+								if ( delete_if_not_in_dir || linked_file.getCanonicalPath().startsWith(root_full_path)){
+	
+									file    = linked_file;
+	
+									delete  = true;
+	
+								}else{
+	
+									delete = false;
+								}
+							}catch( Throwable e ){
+	
+								Debug.printStackTrace(e);
+	
+								delete = false;
+							}
+						}
+					} else {
+           	delete = true;
+					}
 
             if ( delete && file.exists() && !file.isDirectory()){
 
@@ -3442,7 +3470,7 @@ DiskManagerImpl
             }
         }
 
-        TorrentUtils.recursiveEmptyDirDelete(new File( torrent_save_dir, torrent_save_file ));
+        TorrentUtils.recursiveEmptyDirDelete(root_path_file);
     }
 
     @Override
