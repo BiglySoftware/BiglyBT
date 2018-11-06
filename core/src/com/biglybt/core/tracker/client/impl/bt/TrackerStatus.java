@@ -230,6 +230,11 @@ public class TrackerStatus {
   	{
   		//LGLogger.log( "updateSingleHash():: force=" + force + ", async=" +async+ ", url=" +scrapeURL+ ", hash=" +ByteFormatter.nicePrint(hash, true) );
 
+  		if ( Logger.isClosingTakingTooLong()){
+  			
+  			return;
+  		}
+  		
   		if ( scrapeURL == null ){
   			if (Logger.isEnabled()) {
 					Logger.log(new LogEvent(TorrentUtils.getDownloadManager(hash), LOGID,
