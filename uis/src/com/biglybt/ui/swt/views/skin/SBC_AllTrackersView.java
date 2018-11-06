@@ -1053,6 +1053,8 @@ public class SBC_AllTrackersView
 								
 						prop.setStringList( new String[]{ "x:" + name });
 							
+						prop.syncListeners();
+						
 						if ( is_future ){
 							
 								// constraint already set
@@ -1157,6 +1159,8 @@ public class SBC_AllTrackersView
 
 								prop.setStringList( new String[]{ "x:" + new_name });
 							
+								prop.syncListeners();
+								
 								if ( !is_future ){
 								
 									List<DownloadManager> dms = CoreFactory.getSingleton().getGlobalManager().getDownloadManagers();
