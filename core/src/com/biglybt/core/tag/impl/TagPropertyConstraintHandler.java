@@ -1599,6 +1599,9 @@ TagPropertyConstraintHandler
 		private static final int FT_IS_LOW_NOISE	= 21;
 		private static final int FT_COUNT_TAG		= 22;
 		private static final int FT_HAS_TAG_GROUP	= 23;
+		private static final int FT_HOURS_TO_SECS	= 24;
+		private static final int FT_DAYS_TO_SECS	= 25;
+		private static final int FT_WEEKS_TO_SECS	= 26;
 
 		static final Map<String,Integer>	keyword_map = new HashMap<>();
 
@@ -1915,6 +1918,24 @@ TagPropertyConstraintHandler
 
 					params_ok = params.length == 1 && getStringLiteral( params, 0 );
 
+				}else if ( func_name.equals( "hoursToSeconds" ) || func_name.equals( "htos" ) || func_name.equals( "h2s" )){
+
+					fn_type = FT_HOURS_TO_SECS;
+
+					params_ok = params.length == 1 && getNumericLiteral( params, 0 );
+					
+				}else if ( func_name.equals( "daysToSeconds" ) || func_name.equals( "dtos" ) || func_name.equals( "d2s" )){
+
+					fn_type = FT_DAYS_TO_SECS;
+
+					params_ok = params.length == 1 && getNumericLiteral( params, 0 );
+					
+				}else if ( func_name.equals( "weeksToSeconds" ) || func_name.equals( "wtos" ) || func_name.equals( "w2s" )){
+
+					fn_type = FT_WEEKS_TO_SECS;
+
+					params_ok = params.length == 1 && getNumericLiteral( params, 0 );
+
 				}else{
 
 					throw( new RuntimeException( "Unsupported function '" + func_name + "'" ));
@@ -2191,6 +2212,24 @@ TagPropertyConstraintHandler
 
 						return( false );
 					}
+					case FT_HOURS_TO_SECS:{
+
+						Number n1 = getNumeric( dm, tags, params, 0 );
+						
+						return((long)( n1.doubleValue() * 60*60 ));
+					}
+					case FT_DAYS_TO_SECS:{
+
+						Number n1 = getNumeric( dm, tags, params, 0 );
+						
+						return((long)( n1.doubleValue() * 24*60*60 ));
+					}
+					case FT_WEEKS_TO_SECS:{
+
+						Number n1 = getNumeric( dm, tags, params, 0 );
+						
+						return((long)( n1.doubleValue() * 7*24*60*60 ));
+					}
 				}
 
 				return( false );
@@ -2218,6 +2257,34 @@ TagPropertyConstraintHandler
 				return( false );
 			}
 
+			private boolean
+			getNumericLiteral(
+				Object[]	args,
+				int			index )
+			{
+				Object arg = args[index];
+
+				if ( arg instanceof Number ){
+
+					return( true );
+					
+				}else if ( arg instanceof String ){
+					
+					try{
+						Double d = Double.parseDouble( (String)arg );
+						
+						args[0] = d;
+						
+						return( true );
+								
+					}catch( Throwable e ){
+						
+					}
+				}
+
+				return( false );
+			}
+			
 			private String
 			getString(
 				DownloadManager		dm,
