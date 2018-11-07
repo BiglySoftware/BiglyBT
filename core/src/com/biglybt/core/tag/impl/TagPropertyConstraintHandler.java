@@ -21,12 +21,17 @@
 package com.biglybt.core.tag.impl;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.CoreRunningListener;
+import com.biglybt.core.config.COConfigurationListener;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
@@ -728,6 +733,50 @@ TagPropertyConstraintHandler
 		return( new TagConstraint( this, null, expr, null, true ).expr );
 	}
 
+	private static Pattern comp_op_pattern = Pattern.compile( "(.+?)(==|!=|>=|>|<=|<)(.+)");
+	
+	private static Map<String,String>	comp_op_map = new HashMap<>();
+	
+	static{
+		comp_op_map.put( "==", "isEQ" );
+		comp_op_map.put( "!=", "isNEQ" );
+		comp_op_map.put( ">=", "isGE" );
+		comp_op_map.put( "<=", "isLE" );
+		comp_op_map.put( ">",  "isGT" );
+		comp_op_map.put( "<",  "isLT" );
+	}
+	
+	private static Map<String,Object[]>	config_value_cache = new ConcurrentHashMap<String, Object[]>();
+	
+	private static Map<String,Object[]>	config_key_map = new HashMap<>();
+	
+	private static final String	CONFIG_FLOAT = "float";
+	
+	static{
+		String[][] entries = {
+				{ "queue.seeding.ignore.share.ratio", CONFIG_FLOAT, "Stop Ratio" },	
+		};
+		
+		ParameterListener listener = 
+			new ParameterListener()
+			{
+				@Override
+				public void 
+				parameterChanged(
+					String parameterName)
+				{	
+					config_value_cache.clear();
+				}
+			};
+			
+		for ( String[] entry: entries ){
+			
+			config_key_map.put((String)entry[0], new Object[]{ entry[1], entry[2] });
+			
+			COConfigurationManager.addParameterListener( entry[2], listener );	
+		}
+	}
+	
 	private static class
 	TagConstraint
 	{
@@ -804,17 +853,20 @@ TagPropertyConstraintHandler
 			// 1) execute-on-assign tags
 			// 2) tags with limits (and therefore removal policies such as 'delete download')
 
-			if (((TagFeatureExecOnAssign)tag).isAnyActionEnabled()){
+			if ( tag != null ){
 				
-				must_check_dependencies = true;
-				
-			}else if ( (((TagFeatureLimits)tag).getMaximumTaggables() > 0 )){
-				
-				must_check_dependencies = true;
-				
-			}else{
-				
-				must_check_dependencies = false;
+				if (((TagFeatureExecOnAssign)tag).isAnyActionEnabled()){
+					
+					must_check_dependencies = true;
+					
+				}else if ( (((TagFeatureLimits)tag).getMaximumTaggables() > 0 )){
+					
+					must_check_dependencies = true;
+					
+				}else{
+					
+					must_check_dependencies = false;
+				}
 			}
 		}
 		
@@ -895,7 +947,7 @@ TagPropertyConstraintHandler
 
 								String key = "{" + context.size() + "}";
 
-								context.put( key, new ConstraintExprParams( bracket_text ));
+								context.put( key, new ConstraintExprParams( bracket_text, context ));
 
 								result.append( "(" ).append( key ).append( ")" );
 
@@ -946,7 +998,7 @@ TagPropertyConstraintHandler
 		compileBasic(
 			String						str,
 			Map<String,ConstraintExpr>	context )
-		{
+		{			
 			if ( str.contains( "||" )){
 
 				String[] bits = str.split( "\\|\\|" );
@@ -965,38 +1017,53 @@ TagPropertyConstraintHandler
 
 				return( new ConstraintExprXor( compile( bits, context )));
 
-			}else if ( str.startsWith( "!" )){
-
-				return( new ConstraintExprNot( compileBasic( str.substring(1).trim(), context )));
-
-			}else if ( str.startsWith( "{" )){
-
-				ConstraintExpr val = context.get( str );
-					
-				if ( val == null ){
-					
-					throw( new RuntimeException( "Failed to compile '" + str + "'" ));
-				}
-					
-				return( val );
- 
 			}else{
+							
+				Matcher m = comp_op_pattern.matcher( str );
 
-				int	pos = str.indexOf( '(' );
-
-				if ( pos > 0 && str.endsWith( ")" )){
-
-					String func = str.substring( 0, pos );
-
-					String key = str.substring( pos+1, str.length() - 1 ).trim();
-
-					ConstraintExprParams params = (ConstraintExprParams)context.get( key );
-
-					return( new ConstraintExprFunction( func, params ));
-
+				if ( m.find()){
+							
+					String lhs 	= m.group(1).trim();
+					String op 	= m.group(2).trim();
+					String rhs	= m.group(3).trim();
+					
+					ConstraintExprParams params = new ConstraintExprParams( lhs + "," + rhs, context );
+					
+					return( new ConstraintExprFunction( comp_op_map.get( op ), params ));
+					
+				}else if ( str.startsWith( "!" )){
+	
+					return( new ConstraintExprNot( compileBasic( str.substring(1).trim(), context )));
+	
+				}else if ( str.startsWith( "{" )){
+	
+					ConstraintExpr val = context.get( str );
+						
+					if ( val == null ){
+						
+						throw( new RuntimeException( "Failed to compile '" + str + "'" ));
+					}
+						
+					return( val );
+	 
 				}else{
-
-					throw( new RuntimeException( "Unsupported construct: " + str ));
+	
+					int	pos = str.indexOf( '(' );
+	
+					if ( pos > 0 && str.endsWith( ")" )){
+	
+						String func = str.substring( 0, pos );
+	
+						String key = str.substring( pos+1, str.length() - 1 ).trim();
+	
+						ConstraintExprParams params = (ConstraintExprParams)context.get( key );
+	
+						return( new ConstraintExprFunction( func, params ));
+	
+					}else{
+	
+						throw( new RuntimeException( "Unsupported construct: " + str ));
+					}
 				}
 			}
 		}
@@ -1299,13 +1366,16 @@ TagPropertyConstraintHandler
 		ConstraintExprParams
 			implements  ConstraintExpr
 		{
-			private final String	value;
-
+			private final String						value;
+			private final Map<String,ConstraintExpr>	context;
+			
 			private
 			ConstraintExprParams(
-				String	_value )
+				String						_value,
+				Map<String,ConstraintExpr>	_context )
 			{
-				value = _value.trim();
+				value		= _value.trim();
+				context		= _context;
 			}
 
 			@Override
@@ -1332,9 +1402,13 @@ TagPropertyConstraintHandler
 						
 						// string literal
 						
+					}else if ( value.startsWith( "{" )){
+						
+						return( new Object[]{ dereference( value )});
+						
 					}else if ( value.contains( "(" )){
 						
-						return( new Object[]{  compileStart(value, new HashMap<String,ConstraintExpr>())});
+						return( new Object[]{  compileStart(value, context )});
 					}
 					
 					return( new Object[]{ value });
@@ -1386,9 +1460,13 @@ TagPropertyConstraintHandler
 							
 							// string literal
 							
+						}else if ( p.startsWith( "{" )){
+							
+							params.set(i, dereference( p ));
+							
 						}else if ( p.contains( "(" )){
 							
-							params.set(i,compileStart(p, new HashMap<String,ConstraintExpr>()));
+							params.set(i,compileStart(p, context ));
 						}
 					}
 					
@@ -1396,11 +1474,49 @@ TagPropertyConstraintHandler
 				}
 			}
 
+			private Object
+			dereference(
+				String	key )
+			{
+				Object obj = context.get( key );
+				
+				if ( obj == null ){
+					
+					throw( new RuntimeException( "Reference " + key + " not found" ));
+				}
+			
+				if ( obj instanceof ConstraintExprParams ){
+					
+					ConstraintExprParams params = (ConstraintExprParams)obj;
+					
+					Object[] args = params.getValues();
+					
+					if ( args.length != 1 ){
+						
+						throw( new RuntimeException( "Reference " + key + " resolved incorrectly" ));
+					}
+					
+					return( args[0] );
+					
+				}
+				
+				return( obj );
+			}
+			
 			@Override
 			public String
 			getString()
 			{
-				return( value );
+				Object[] params = getValues();
+				
+				String str = "";
+				
+				for ( Object obj: params ){
+					
+					str += (str.isEmpty()?"":",") + (obj instanceof ConstraintExpr?((ConstraintExpr)obj).getString():obj);
+				}
+				
+				return( str );
 			}
 		}
 
@@ -1572,7 +1688,7 @@ TagPropertyConstraintHandler
 				return( "(" + res + ")" );
 			}
 		}
-
+		
 		private static final int FT_HAS_TAG		= 1;
 		private static final int FT_IS_PRIVATE	= 2;
 
@@ -1602,6 +1718,7 @@ TagPropertyConstraintHandler
 		private static final int FT_HOURS_TO_SECS	= 24;
 		private static final int FT_DAYS_TO_SECS	= 25;
 		private static final int FT_WEEKS_TO_SECS	= 26;
+		private static final int FT_GET_CONFIG		= 27;
 
 		static final Map<String,Integer>	keyword_map = new HashMap<>();
 
@@ -1936,6 +2053,25 @@ TagPropertyConstraintHandler
 
 					params_ok = params.length == 1 && getNumericLiteral( params, 0 );
 
+				}else if ( func_name.equals( "getConfig" )){
+
+					fn_type = FT_GET_CONFIG;
+
+					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+					
+					if ( params_ok ){
+						
+						String key = (String)params[0];
+						
+						key = key.toLowerCase( Locale.US );
+						
+						params[0] = key;
+								
+						if ( !config_key_map.containsKey( key )){
+							
+							throw( new RuntimeException( "Unsupported configuration parameter: " + key ));
+						}
+					}
 				}else{
 
 					throw( new RuntimeException( "Unsupported function '" + func_name + "'" ));
@@ -2229,6 +2365,37 @@ TagPropertyConstraintHandler
 						Number n1 = getNumeric( dm, tags, params, 0 );
 						
 						return((long)( n1.doubleValue() * 7*24*60*60 ));
+					}
+					case FT_GET_CONFIG:{
+						
+						String key = (String)params[0];
+						
+						long now = SystemTime.getMonotonousTime();
+						
+						Object[] existing = config_value_cache.get( key );
+						
+						if ( existing != null ){
+							
+							if ( now - ((Long)existing[0]) < 60*1000 ){
+								
+								return( existing[1]);
+							}
+						}
+						
+						Object[] entry = config_key_map.get( key );
+						
+						if ( entry[0] == CONFIG_FLOAT ){
+							
+							Object result = COConfigurationManager.getFloatParameter( (String)entry[1]);
+							
+							config_value_cache.put( key, new Object[]{ now, result });
+							
+							return( result );
+						}
+						
+						setError( "Error getting config value for '" + key + "'" );
+						
+						return( 0 );
 					}
 				}
 
@@ -2750,6 +2917,6 @@ TagPropertyConstraintHandler
 		TagPropertyConstraintHandler handler = new TagPropertyConstraintHandler();
 
 		//System.out.println( handler.compileConstraint( "!(hasTag(\"bil\") && (hasTag( \"fred\" ))) || hasTag(\"toot\")" ).getString());
-		System.out.println( handler.compileConstraint( "hasTag(  “Seeding Only” )" ).getString());
+		System.out.println( handler.compileConstraint( "hasTag(  “Seeding Only” ) && seeding_for > h2s(10) || hasTag(\"sdsd\") " ).getString());
 	}
 }
