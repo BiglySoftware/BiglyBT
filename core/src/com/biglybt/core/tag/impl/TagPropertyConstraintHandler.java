@@ -29,7 +29,6 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.CoreRunningListener;
-import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
@@ -748,7 +747,7 @@ TagPropertyConstraintHandler
 	
 	private static Map<String,Object[]>	config_value_cache = new ConcurrentHashMap<String, Object[]>();
 	
-	private static Map<String,Object[]>	config_key_map = new HashMap<>();
+	private static Map<String,String[]>	config_key_map = new HashMap<>();
 	
 	private static final String	CONFIG_FLOAT = "float";
 	
@@ -771,7 +770,7 @@ TagPropertyConstraintHandler
 			
 		for ( String[] entry: entries ){
 			
-			config_key_map.put((String)entry[0], new Object[]{ entry[1], entry[2] });
+			config_key_map.put( entry[0], new String[]{ entry[1], entry[2] });
 			
 			COConfigurationManager.addParameterListener( entry[2], listener );	
 		}
@@ -2007,7 +2006,7 @@ TagPropertyConstraintHandler
 					if ( params_ok ){
 						
 						try{
-							Pattern p = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+							Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 														
 						}catch( Throwable e ) {
 							
@@ -2382,11 +2381,11 @@ TagPropertyConstraintHandler
 							}
 						}
 						
-						Object[] entry = config_key_map.get( key );
+						String[] entry = config_key_map.get( key );
 						
 						if ( entry[0] == CONFIG_FLOAT ){
 							
-							Object result = COConfigurationManager.getFloatParameter( (String)entry[1]);
+							Object result = COConfigurationManager.getFloatParameter(entry[1]);
 							
 							config_value_cache.put( key, new Object[]{ now, result });
 							
