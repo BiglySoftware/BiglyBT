@@ -409,11 +409,6 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 
 	/**
 	 * @param listener
-	 */
-	public void loadExistingTorrentsNow(boolean async);
-
-	/**
-	 * @param listener
 	 * @param trigger
 	 */
 	void addListener(GlobalManagerListener listener, boolean trigger);

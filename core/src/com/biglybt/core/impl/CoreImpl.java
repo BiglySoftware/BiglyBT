@@ -1012,19 +1012,7 @@ CoreImpl
 			pluginload.run();
 		}
 
-
-
-
-
-		// Disable async loading of existing torrents, because there are many things
-		// (like hosting) that require all the torrents to be loaded.  While we
-		// can write code for each of these cases to wait until the torrents are
-		// loaded, it's a pretty big job to find them all and fix all their quirks.
-		// Too big of a job for this late in the release stage.
-		// Other example is the tracker plugin that is coded in a way where it must
-		// always publish a complete rss feed
-
-		global_manager = GlobalManagerFactory.create(this, null, 0);
+		global_manager = GlobalManagerFactory.create( this, null );
 
 		if (stopped) {
 			System.err.println("Core stopped while starting");

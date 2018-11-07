@@ -291,6 +291,7 @@ public class GlobalManagerImpl
 
    }
 
+   private DownloadStateTagger	ds_tagger;
 
    public class Checker extends AEThread {
     int loopFactor;
@@ -487,9 +488,8 @@ public class GlobalManagerImpl
 
   public
   GlobalManagerImpl(
-	Core core,
-	GlobalMangerProgressListener 	listener,
-  	long 							existingTorrentLoadDelay)
+	Core 							core,
+	GlobalMangerProgressListener 	listener )
   {
     //Debug.dumpThreadsLoop("Active threads");
 	progress_listener = listener;
@@ -523,23 +523,30 @@ public class GlobalManagerImpl
 
     	Logger.log(new LogEvent(LOGID, "Download History unavailable", e ));
     }
+    
+    try{
 
-    // Wait at least a few seconds before loading existing torrents.
-    // typically the UI will call loadExistingTorrents before this runs
-    // This is here in case the UI is stupid or forgets
-    if (existingTorrentLoadDelay > 0) {
-			loadTorrentsDelay = new DelayedEvent("GM:tld", existingTorrentLoadDelay,
-					new AERunnable() {
-						@Override
-						public void runSupport() {
-							loadExistingTorrentsNow(false); // already async
-						}
-					});
-		} else {
-			// run sync
-			loadDownloads();
+        if ( TagManagerFactory.getTagManager().isEnabled()){
+
+        		// must register the tag type/tags before telling tag manager that the downloads are initialised
+        		// as this process kicks off tag constraint validation and this may depend on the download state
+        		// tags existing (e.g. hasTag( "Seeding" )
+        	
+        	ds_tagger = new DownloadStateTagger();
+        }
+
+    	loadDownloads();
+    	
+	}finally{
+
+		if ( ds_tagger != null ){
+			
+			ds_tagger.initialise();
 		}
-
+		
+		taggable_life_manager.initialized( getResolvedTaggables());
+	}
+    
     if (progress_listener != null){
     	progress_listener.reportCurrentTask(MessageText.getString("splash.initializeGM"));
     }
@@ -824,36 +831,8 @@ public class GlobalManagerImpl
     		}
     	});
 
-    if ( TagManagerFactory.getTagManager().isEnabled()){
-
-    	new DownloadStateTagger( this );
-    }
-
     file_merger = new GlobalManagerFileMerger( this );
   }
-
-  @Override
-  public void loadExistingTorrentsNow(boolean async)
-	{
-		if (loadTorrentsDelay == null) {
-			return;
-		}
-		loadTorrentsDelay = null;
-
-		//System.out.println(SystemTime.getCurrentTime() + ": load via " + Debug.getCompressedStackTrace());
-		if (async) {
-			AEThread thread = new AEThread("load torrents", true) {
-				@Override
-				public void runSupport() {
-					loadDownloads();
-				}
-			};
-			thread.setPriority(3);
-			thread.start();
-		} else {
-			loadDownloads();
-		}
-	}
 
   @Override
   public DownloadManager
@@ -1119,9 +1098,7 @@ public class GlobalManagerImpl
 		boolean				notifyListeners)
    {
     if (!isStopping) {
-    	// make sure we have existing ones loaded so that existing check works
-    	loadExistingTorrentsNow(false);
-
+ 
       synchronized( managers_lock ){
 
       	DownloadManager existing = manager_id_set.get(download_manager);
@@ -2289,164 +2266,159 @@ public class GlobalManagerImpl
 
   void loadDownloads()
   {
+	  if (this.cripple_downloads_config) {
+		  loadingComplete = true;
+		  loadingSem.releaseForever();
+		  return;
+	  }
+
+	  boolean pause_active = COConfigurationManager.getBooleanParameter( "Pause Downloads On Start After Resume", false );
+
+	  if ( pause_active ){
+		  
+		  COConfigurationManager.removeParameter( "Pause Downloads On Start After Resume" );
+		  
+		  COConfigurationManager.setParameter( "br.restore.autopause", true );
+	  }
+
+
 	  try{
-		  if (this.cripple_downloads_config) {
-			  loadingComplete = true;
-			  loadingSem.releaseForever();
-			  return;
-		  }
+		  DownloadManagerStateFactory.loadGlobalStateCache();
 
-		  boolean pause_active = COConfigurationManager.getBooleanParameter( "Pause Downloads On Start After Resume", false );
-
-		  if ( pause_active ){
-			  
-			  COConfigurationManager.removeParameter( "Pause Downloads On Start After Resume" );
-			  
-			  COConfigurationManager.setParameter( "br.restore.autopause", true );
-		  }
-
-
+		  int triggerOnCount = 2;
+		  ArrayList<DownloadManager> downloadsAdded = new ArrayList<>();
+		  lastListenerUpdate = 0;
 		  try{
-			  DownloadManagerStateFactory.loadGlobalStateCache();
-
-			  int triggerOnCount = 2;
-			  ArrayList<DownloadManager> downloadsAdded = new ArrayList<>();
-			  lastListenerUpdate = 0;
-			  try{
-				  if (progress_listener != null){
-					  progress_listener.reportCurrentTask(MessageText.getString("splash.loadingTorrents"));
-				  }
-
-				  Map map = FileUtil.readResilientConfigFile("downloads.config");
-
-				  ArrayList pause_data = (ArrayList)map.get( "pause_data" );
-
-				  boolean debug = Boolean.getBoolean("debug");
-
-				  Iterator iter = null;
-				  //v2.0.3.0+ vs older mode
-				  List downloads = (List) map.get("downloads");
-				  int nbDownloads;
-				  if (downloads == null) {
-					  //No downloads entry, then use the old way
-					  iter = map.values().iterator();
-					  nbDownloads = map.size();
-				  }
-				  else {
-					  //New way, downloads stored in a list
-					  iter = downloads.iterator();
-					  nbDownloads = downloads.size();
-				  }
-				  int currentDownload = 0;
-				  while (iter.hasNext()) {
-					  currentDownload++;
-					  Map mDownload = (Map) iter.next();
-
-					  if ( pause_active ){
-						  
-						  try{
-							  int 		state 	= ((Number)mDownload.get( "state" )).intValue();
-							  boolean 	fs 		= ((Number)mDownload.get( "forceStart" )).intValue() != 0;
-							  
-							  if ( state != DownloadManager.STATE_STOPPED ){
-								  
-								  mDownload.put( "state", new Long( DownloadManager.STATE_STOPPED ));
-								  mDownload.remove( "forceStart" );
-								  
-								  byte[] key = (byte[])mDownload.get( "torrent_hash" );
-								  
-								  if ( pause_data == null ){
-									  
-									  pause_data = new ArrayList();
-								  }
-								  
-								  Map m = new HashMap();
-								  
-								  m.put( "hash", key );
-								  m.put( "force", new Long( fs?1:0 ));
-								  
-								  pause_data.add( m );
-							  }
-							  
-						  }catch( Throwable e ){
-							  Debug.printStackTrace( e );
-						  }
-					  }
-					  DownloadManager dm =
-						  loadDownload(
-								  mDownload,
-								  currentDownload,
-								  nbDownloads,
-								  progress_listener,
-								  debug );
-
-					  if ( dm != null ){
-
-						  downloadsAdded.add(dm);
-
-						  if (downloadsAdded.size() >= triggerOnCount) {
-							  triggerOnCount *= 2;
-							  triggerAddListener(downloadsAdded);
-							  downloadsAdded.clear();
-						  }
-					  }
-				  }
-
-				  // This is set to true by default, but once the downloads have been loaded, we have no reason to ever
-				  // to do this check again - we only want to do it once to upgrade the state of existing downloads
-				  // created before this code was around.
-				  COConfigurationManager.setParameter("Set Completion Flag For Completed Downloads On Start", false);
-
-				  //load pause/resume state
-				  if( pause_data != null ) {
-					  try {  paused_list_mon.enter();
-					  for( int i=0; i < pause_data.size(); i++ ) {
-						  Object	pd = pause_data.get(i);
-
-						  byte[]		key;
-						  boolean		force;
-
-						  if ( pd instanceof byte[]){
-							  // old style, migration purposes
-							  key 	= (byte[])pause_data.get( i );
-							  force	= false;
-						  }else{
-							  Map	m = (Map)pd;
-
-							  key 	= (byte[])m.get("hash");
-							  force 	= ((Long)m.get("force")).intValue() == 1;
-						  }
-						  paused_list.add( new Object[]{ new HashWrapper( key ), Boolean.valueOf(force)} );
-					  }
-					  }
-					  finally {  paused_list_mon.exit();  }
-				  }
-
-
-				  // Someone could have mucked with the config file and set weird positions,
-				  // so fix them up.
-				  fixUpDownloadManagerPositions();
-				  Logger.log(new LogEvent(LOGID, "Loaded " + managers_list_cow.length + " torrents"));
-
-			  }catch( Throwable e ){
-				  // there's been problems with corrupted download files stopping AZ from starting
-				  // added this to try and prevent such foolishness
-
-				  Debug.printStackTrace( e );
-			  } finally {
-				  loadingComplete = true;
-				  triggerAddListener(downloadsAdded);
-
-				  loadingSem.releaseForever();
+			  if (progress_listener != null){
+				  progress_listener.reportCurrentTask(MessageText.getString("splash.loadingTorrents"));
 			  }
 
-		  }finally{
+			  Map map = FileUtil.readResilientConfigFile("downloads.config");
 
-			  DownloadManagerStateFactory.discardGlobalStateCache();
+			  ArrayList pause_data = (ArrayList)map.get( "pause_data" );
+
+			  boolean debug = Boolean.getBoolean("debug");
+
+			  Iterator iter = null;
+			  //v2.0.3.0+ vs older mode
+			  List downloads = (List) map.get("downloads");
+			  int nbDownloads;
+			  if (downloads == null) {
+				  //No downloads entry, then use the old way
+				  iter = map.values().iterator();
+				  nbDownloads = map.size();
+			  }
+			  else {
+				  //New way, downloads stored in a list
+				  iter = downloads.iterator();
+				  nbDownloads = downloads.size();
+			  }
+			  int currentDownload = 0;
+			  while (iter.hasNext()) {
+				  currentDownload++;
+				  Map mDownload = (Map) iter.next();
+
+				  if ( pause_active ){
+					  
+					  try{
+						  int 		state 	= ((Number)mDownload.get( "state" )).intValue();
+						  boolean 	fs 		= ((Number)mDownload.get( "forceStart" )).intValue() != 0;
+						  
+						  if ( state != DownloadManager.STATE_STOPPED ){
+							  
+							  mDownload.put( "state", new Long( DownloadManager.STATE_STOPPED ));
+							  mDownload.remove( "forceStart" );
+							  
+							  byte[] key = (byte[])mDownload.get( "torrent_hash" );
+							  
+							  if ( pause_data == null ){
+								  
+								  pause_data = new ArrayList();
+							  }
+							  
+							  Map m = new HashMap();
+							  
+							  m.put( "hash", key );
+							  m.put( "force", new Long( fs?1:0 ));
+							  
+							  pause_data.add( m );
+						  }
+						  
+					  }catch( Throwable e ){
+						  Debug.printStackTrace( e );
+					  }
+				  }
+				  DownloadManager dm =
+					  loadDownload(
+							  mDownload,
+							  currentDownload,
+							  nbDownloads,
+							  progress_listener,
+							  debug );
+
+				  if ( dm != null ){
+
+					  downloadsAdded.add(dm);
+
+					  if (downloadsAdded.size() >= triggerOnCount) {
+						  triggerOnCount *= 2;
+						  triggerAddListener(downloadsAdded);
+						  downloadsAdded.clear();
+					  }
+				  }
+			  }
+
+			  // This is set to true by default, but once the downloads have been loaded, we have no reason to ever
+			  // to do this check again - we only want to do it once to upgrade the state of existing downloads
+			  // created before this code was around.
+			  COConfigurationManager.setParameter("Set Completion Flag For Completed Downloads On Start", false);
+
+			  //load pause/resume state
+			  if( pause_data != null ) {
+				  try {  paused_list_mon.enter();
+				  for( int i=0; i < pause_data.size(); i++ ) {
+					  Object	pd = pause_data.get(i);
+
+					  byte[]		key;
+					  boolean		force;
+
+					  if ( pd instanceof byte[]){
+						  // old style, migration purposes
+						  key 	= (byte[])pause_data.get( i );
+						  force	= false;
+					  }else{
+						  Map	m = (Map)pd;
+
+						  key 	= (byte[])m.get("hash");
+						  force 	= ((Long)m.get("force")).intValue() == 1;
+					  }
+					  paused_list.add( new Object[]{ new HashWrapper( key ), Boolean.valueOf(force)} );
+				  }
+				  }
+				  finally {  paused_list_mon.exit();  }
+			  }
+
+
+			  // Someone could have mucked with the config file and set weird positions,
+			  // so fix them up.
+			  fixUpDownloadManagerPositions();
+			  Logger.log(new LogEvent(LOGID, "Loaded " + managers_list_cow.length + " torrents"));
+
+		  }catch( Throwable e ){
+			  // there's been problems with corrupted download files stopping AZ from starting
+			  // added this to try and prevent such foolishness
+
+			  Debug.printStackTrace( e );
+		  } finally {
+			  loadingComplete = true;
+			  triggerAddListener(downloadsAdded);
+
+			  loadingSem.releaseForever();
 		  }
+
 	  }finally{
 
-		  taggable_life_manager.initialized( getResolvedTaggables());
+		  DownloadManagerStateFactory.discardGlobalStateCache();
 	  }
   }
 
@@ -4233,12 +4205,12 @@ public class GlobalManagerImpl
 		}
 	}
 
-	private static class
+	private class
 	DownloadStateTagger
 		extends TagTypeWithState
 		implements DownloadManagerListener
 	{
-		private static final int[] color_default = { 41, 140, 165 };
+		private final int[] color_default = { 41, 140, 165 };
 
 		private final Object	main_tag_key 	= new Object();
 		private final Object	comp_tag_key	= new Object();
@@ -4286,8 +4258,7 @@ public class GlobalManagerImpl
 				});
 		}
 
-		DownloadStateTagger(
-			GlobalManagerImpl		_gm )
+		DownloadStateTagger()
 		{
 			super( TagType.TT_DOWNLOAD_STATE, TagDownload.FEATURES & ~TagFeature.TF_NOTIFICATIONS, "tag.type.ds" );
 
@@ -4315,8 +4286,12 @@ public class GlobalManagerImpl
 			if ( tag_error.isColorDefault()){
 				tag_error.setColor( new int[]{ 132, 16, 58 });
 			}
-
-			_gm.addListener(
+		}
+		
+		private void
+		initialise()
+		{
+			addListener(
 				new GlobalManagerAdapter()
 				{
 					@Override
