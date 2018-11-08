@@ -101,31 +101,63 @@ public class TagUIUtils
 	setupSideBarMenus(
 		final MenuManager	menuManager )
 	{
-		com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
-				+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-				"ConfigView.section.style.TagInSidebar");
-		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
-
-		menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-			@Override
-			public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-				boolean b = COConfigurationManager.getBooleanParameter("Library.TagInSideBar");
-				COConfigurationManager.setParameter("Library.TagInSideBar", !b);
-			}
-		});
-
-		menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-			@Override
-			public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-				menu.setData(Boolean.valueOf(COConfigurationManager.getBooleanParameter("Library.TagInSideBar")));
-			}
-		});
-
+			// show tags in sidebar
+		
+		{
+			com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
+					+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+					"ConfigView.section.style.TagInSidebar");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
+	
+			menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
+				@Override
+				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+					boolean b = COConfigurationManager.getBooleanParameter("Library.TagInSideBar");
+					COConfigurationManager.setParameter("Library.TagInSideBar", !b);
+				}
+			});
+	
+			menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
+				@Override
+				public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+					menu.setData(Boolean.valueOf(COConfigurationManager.getBooleanParameter("Library.TagInSideBar")));
+				}
+			});
+		}
+		
+			// show tag groups
+		
+		{
+			com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
+					+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+					"!    " + MessageText.getString("ConfigView.section.style.TagGroupsInSidebar") + "!" );
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
+	
+			menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
+				@Override
+				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+					boolean b = COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
+					COConfigurationManager.setParameter("Library.TagGroupsInSideBar", !b);
+				}
+			});
+	
+			menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
+				@Override
+				public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+					menu.setData(Boolean.valueOf(COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar")));
+					menu.setEnabled( COConfigurationManager.getBooleanParameter("Library.TagInSideBar"));
+				}
+			});
+		}
+		
+		
 			// tag options
 
-		menuItem = menuManager.addMenuItem("sidebar."
+		com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
 				+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 				"label.tags");
 		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
