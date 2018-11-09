@@ -33,10 +33,23 @@ import com.biglybt.core.internat.MessageText.MessageTextListener;
  */
 public class TimeFormatter {
  
+	public static final int	TS_SECOND	= 0;
+	public static final int	TS_MINUTE	= 1;
+	public static final int	TS_HOUR		= 2;
+	public static final int	TS_DAY		= 3;
+	public static final int	TS_YEAR		= 4;
+	
 	static final String[] TIME_SUFFIXES 	= { "s", "m", "h", "d", "y" };
 
 	static final String[] TIME_SUFFIXES_2 	= { "sec", "min", "hr", "day", "wk", "mo", "yr" };
 
+	public static String
+	getLongSuffix(
+		int		unit )
+	{
+		return( TIME_SUFFIXES_2[unit]);
+	}
+	
 	public static final String[] DATEFORMATS_DESC;
 	
 	static{

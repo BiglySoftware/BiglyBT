@@ -20,6 +20,8 @@
 
 package com.biglybt.core.tag;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import com.biglybt.core.vuzefile.VuzeFile;
@@ -149,6 +151,18 @@ Tag
 	hasTaggable(
 		Taggable	t );
 
+	public default List<Tag>
+	dependsOnTags()
+	{
+		return( Collections.emptyList());
+	}
+	
+	public default String
+	getStatus()
+	{
+		return( "" );
+	}
+	
 	public void
 	removeTag();
 

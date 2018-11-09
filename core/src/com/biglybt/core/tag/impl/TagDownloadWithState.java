@@ -2072,4 +2072,34 @@ TagDownloadWithState
 			}
 		}
 	}
+	
+	@Override
+	public List<Tag>
+	dependsOnTags()
+	{
+		return( getManager().getDependsOnTags( this ));
+	}
+	
+	@Override
+	public String
+	getStatus()
+	{
+		String result = "";
+		
+		String error = (String)getTransientProperty( Tag.TP_CONSTRAINT_ERROR );
+		
+		if ( error != null ){
+			
+			result += "Error: " + error;
+		}
+		
+		String other = getManager().getTagStatus( this );
+		
+		if ( other != null ){
+			
+			result += (result.isEmpty()?"":"; ") + other;
+		}
+		
+		return( result );
+	}
 }

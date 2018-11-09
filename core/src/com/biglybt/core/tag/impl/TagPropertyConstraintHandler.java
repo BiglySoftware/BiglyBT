@@ -42,6 +42,7 @@ import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadListener;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -60,7 +61,7 @@ TagPropertyConstraintHandler
 	private boolean 	initial_assignment_complete;
 	private boolean		stopping;
 
-	final Map<Tag,TagConstraint>	constrained_tags 	= new HashMap<>();
+	final Map<Tag,TagConstraint>	constrained_tags 	= new ConcurrentHashMap<>();
 
 	private boolean	dm_listener_added;
 
@@ -275,12 +276,7 @@ TagPropertyConstraintHandler
 			
 		}else if ( type == TagEvent.ET_TAG_METADATA_CHANGED ){
 			
-			TagConstraint tc;
-			
-			synchronized( constrained_tags ){
-				
-				tc = constrained_tags.get( tag );
-			}
+			TagConstraint tc = constrained_tags.get( tag );
 			
 			if ( tc != null ){
 				
@@ -486,6 +482,34 @@ TagPropertyConstraintHandler
 	{
 	}
 
+	protected String
+	getTagStatus(
+		Tag	tag )
+	{
+		TagConstraint tc = constrained_tags.get( tag );
+			
+		if ( tc != null ){
+			
+			return( tc.getStatus());
+		}
+		
+		return( null );
+	}
+	
+	protected List<Tag>
+	getDependsOnTags(
+		Tag	tag )
+	{
+		TagConstraint tc = constrained_tags.get( tag );
+		
+		if ( tc != null ){
+			
+			return( tc.getDependsOnTags());
+		}
+		
+		return( Collections.emptyList());
+	}
+	
 	public void
 	tagRemoved(
 		Tag			tag )
@@ -794,6 +818,8 @@ TagPropertyConstraintHandler
 		private List<Tag>		dependent_on_tags;
 		private boolean			must_check_dependencies;
 		
+		private Average			activity_average = Average.getInstance( 1000, 60 );
+		
 		private
 		TagConstraint(
 			TagPropertyConstraintHandler	_handler,
@@ -845,6 +871,18 @@ TagPropertyConstraintHandler
 			}
 		}
 
+		private String
+		getStatus()
+		{
+			return( activity_average.getAverage() + "/" +  TimeFormatter.getLongSuffix( TimeFormatter.TS_SECOND ));
+		}
+		
+		private List<Tag>
+		getDependsOnTags()
+		{
+			return( dependent_on_tags );
+		}
+		
 		private void
 		checkStuff()
 		{
@@ -1317,6 +1355,8 @@ TagPropertyConstraintHandler
 			DownloadManager	dm )
 		{
 			if ( enabled ){
+								
+				activity_average.addValue( 1 );
 				
 				List<Tag> dm_tags = handler.tag_manager.getTagsForTaggable( dm );
 	

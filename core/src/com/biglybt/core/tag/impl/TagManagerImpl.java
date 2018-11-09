@@ -1833,6 +1833,30 @@ TagManagerImpl
 		}
 	}
 
+	protected String
+	getTagStatus(
+		Tag	tag )
+	{
+		if ( constraint_handler != null ){
+		
+			return( constraint_handler.getTagStatus( tag ));
+		}
+		
+		return( null );
+	}
+	
+	protected List<Tag>
+	getDependsOnTags(
+		Tag	tag )
+	{
+		if ( constraint_handler != null ){
+			
+			return( constraint_handler.getDependsOnTags( tag ));
+		}
+		
+		return( Collections.emptyList());
+	}
+	
 	@Override
 	public void
 	addTagManagerListener(

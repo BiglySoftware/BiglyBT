@@ -65,7 +65,6 @@ import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.tag.*;
-import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UserPrompterResultListener;
@@ -490,6 +489,22 @@ public class SBC_TagsOverview
 					}
 				});
 
+		tableManager.registerColumn(Tag.class, ColumnTagStatus.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagStatus(column);
+					}
+				});
+
+		tableManager.registerColumn(Tag.class, ColumnTagDependsOn.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagDependsOn(column);
+					}
+				});
+
 		
 		tableManager.setDefaultColumnNames(TABLE_TAGS,
 				new String[] {
@@ -502,6 +517,7 @@ public class SBC_TagsOverview
 					ColumnTagDownRate.COLUMN_ID,
 					ColumnTagUpLimit.COLUMN_ID,
 					ColumnTagDownLimit.COLUMN_ID,
+					ColumnTagStatus.COLUMN_ID,
 				});
 
 		tableManager.setDefaultSortColumnName(TABLE_TAGS, ColumnTagName.COLUMN_ID);
