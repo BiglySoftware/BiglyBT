@@ -313,9 +313,11 @@ public class ConfigSectionTransferAutoSpeedSelect
         String co_up		= "AutoSpeed Network Upload Speed (temp)";
         String co_up_type 	= "AutoSpeed Network Upload Speed Type (temp)";
 
+		int kinb = DisplayFormatters.getKinB();
+
         SpeedManagerLimitEstimate up_lim = sm.getEstimatedUploadCapacityBytesPerSec();
 
-        COConfigurationManager.setParameter( co_up, up_lim.getBytesPerSec()/1024 );
+        COConfigurationManager.setParameter( co_up, up_lim.getBytesPerSec()/kinb );
 		COConfigurationManager.setParameter( co_up_type, limit_to_text.getSettableType( up_lim ));
 
 		final IntParameter max_upload = new IntParameter(networkGroup, co_up );
@@ -323,7 +325,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 		final Label upload_bits = new Label(networkGroup, SWT.NULL);
 	    gridData = new GridData();
 	    Utils.setLayoutData(upload_bits, gridData);
-	    upload_bits.setText(getMBitLimit(limit_to_text,(up_lim.getBytesPerSec()/1024)*1024));
+	    upload_bits.setText(getMBitLimit(limit_to_text,(up_lim.getBytesPerSec()/kinb)*kinb));
 
 		final StringListParameter max_upload_type =
 			new StringListParameter(networkGroup, co_up_type, limit_to_text.getSettableTypes(),limit_to_text.getSettableTypes() );
@@ -367,7 +369,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 						return;
 					}
 
-					int	value = max_upload.getValue() * 1024;
+					int	value = max_upload.getValue() * kinb;
 
 					SpeedManagerLimitEstimate existing = sm.getEstimatedUploadCapacityBytesPerSec();
 
@@ -392,8 +394,8 @@ public class ConfigSectionTransferAutoSpeedSelect
 
         String co_down			= "AutoSpeed Network Download Speed (temp)";
 		String co_down_type 	= "AutoSpeed Network Download Speed Type (temp)";
-
-        COConfigurationManager.setParameter( co_down, down_lim.getBytesPerSec()/1024 );
+		
+        COConfigurationManager.setParameter( co_down, down_lim.getBytesPerSec()/kinb);
         COConfigurationManager.setParameter( co_down_type, limit_to_text.getSettableType( down_lim ));
 
 		final IntParameter max_download = new IntParameter(networkGroup, co_down );
@@ -401,7 +403,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 		final Label download_bits = new Label(networkGroup, SWT.NULL);
 	    gridData = new GridData();
 	    Utils.setLayoutData(download_bits, gridData);
-	    download_bits.setText(getMBitLimit(limit_to_text,(down_lim.getBytesPerSec()/1024)*1024));
+	    download_bits.setText(getMBitLimit(limit_to_text,(down_lim.getBytesPerSec()/kinb)*kinb));
 
 		final StringListParameter max_download_type =
 			new StringListParameter(networkGroup, co_down_type, limit_to_text.getSettableTypes(),limit_to_text.getSettableTypes() );
@@ -445,7 +447,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 						return;
 					}
 
-					int	value = max_download.getValue() * 1024;
+					int	value = max_download.getValue() * kinb;
 
 					SpeedManagerLimitEstimate existing = sm.getEstimatedDownloadCapacityBytesPerSec();
 
@@ -513,7 +515,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 
    				        				upload_bits.setText(getMBitLimit(limit_to_text, limit.getBytesPerSec()));
 
-   				        				max_upload.setValue( limit.getBytesPerSec()/1024 );
+   				        				max_upload.setValue( limit.getBytesPerSec()/kinb );
 
    							        	max_upload_type.setValue( limit_to_text.getSettableType( limit ));
 
@@ -525,7 +527,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 
    				    					download_bits.setText(getMBitLimit(limit_to_text, limit.getBytesPerSec()));
 
-   				        				max_download.setValue( limit.getBytesPerSec()/1024 );
+   				        				max_download.setValue( limit.getBytesPerSec()/kinb );
 
    							        	max_download_type.setValue( limit_to_text.getSettableType( limit ));
 
@@ -619,6 +621,6 @@ public class ConfigSectionTransferAutoSpeedSelect
     	TransferStatsView.limitToTextHelper		helper,
     	long 									value )
     {
-    	return("("+(value==0?helper.getUnlimited():DisplayFormatters.formatByteCountToBitsPerSec( value ))+")" );
+    	return("("+(value==0?helper.getUnlimited():DisplayFormatters.formatByteCountToBitsPerSec2( value ))+")" );
     }
 }

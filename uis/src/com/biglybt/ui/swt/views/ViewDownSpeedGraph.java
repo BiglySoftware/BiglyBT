@@ -28,6 +28,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.TimerEvent;
 import com.biglybt.core.util.TimerEventPerformer;
@@ -84,7 +85,7 @@ public class ViewDownSpeedGraph
 		downSpeedGraphic.addIntsValue(new int[] {
 			stats.getDataReceiveRate() + stats.getProtocolReceiveRate(),
 			stats.getProtocolReceiveRate(),
-			COConfigurationManager.getIntParameter("Max Download Speed KBs") * 1024,
+			COConfigurationManager.getIntParameter("Max Download Speed KBs") * DisplayFormatters.getKinB(),
 			swarms_peer_speed
 		});
 	}

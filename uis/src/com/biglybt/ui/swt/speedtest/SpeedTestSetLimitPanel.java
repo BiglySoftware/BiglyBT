@@ -62,16 +62,18 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
     public SpeedTestSetLimitPanel(Wizard wizard, IWizardPanel previousPanel, int upload, long maxup, int download, long maxdown) {
         super(wizard, previousPanel);
 
-        downloadHitLimit 	= download > maxdown - 20*1024;
-        uploadHitLimit 		= upload > maxup - 20*1024;
+        int	kinb = DisplayFormatters.getKinB();
+        
+        downloadHitLimit 	= download > maxdown - 20*kinb;
+        uploadHitLimit 		= upload > maxup - 20*kinb;
 
-        measuredUploadKbps =upload/1024;
+        measuredUploadKbps =upload/kinb;
         if(measuredUploadKbps<5){
             uploadTestRan = false;
         }
 
 
-        measuredDownloadKbps =download/1024;
+        measuredDownloadKbps =download/kinb;
         if(measuredDownloadKbps<5){
             downloadTestRan = false;
         }
@@ -161,14 +163,15 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         uploadLimitSetting.setText( ""+uploadCapacity );
         uploadLimitSetting.addListener(SWT.Verify, new NumberListener(uploadLimitSetting));
 
-
+        int kinb = DisplayFormatters.getKinB();
+        
         //echo
         final Label echo = new Label(panel, SWT.NULL);
         gridData = new GridData();
         gridData.horizontalSpan = 1;
         gridData.widthHint = 80;
         Utils.setLayoutData(echo, gridData);
-        echo.setText( DisplayFormatters.formatByteCountToBitsPerSec(uploadCapacity*1024) );
+        echo.setText( DisplayFormatters.formatByteCountToBitsPerSec2(uploadCapacity*kinb) );
         //This space has a change listener the updates in bits/sec.
 
         //want a change listener to update the echo label which has the value in bits/sec.
@@ -210,7 +213,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         gridData.horizontalSpan = 1;
         gridData.widthHint = 80;
         Utils.setLayoutData(downEcho, gridData);
-        downEcho.setText( DisplayFormatters.formatByteCountToBitsPerSec(bestDownloadSetting*1024) );
+        downEcho.setText( DisplayFormatters.formatByteCountToBitsPerSec2(bestDownloadSetting*kinb) );
 
         //convert bytes to bits on the fly for user.
         downloadLimitSetting.addListener(SWT.Modify, new ByteConversionListener(downEcho, downloadLimitSetting) );
@@ -233,7 +236,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
 
             //Since cable modems can over estimate upload need to drop type setting to estimate.
             sm.setEstimatedUploadCapacityBytesPerSec(
-        			measuredUploadKbps*1024,
+        			measuredUploadKbps*kinb,
         			uploadHitLimit?	// parg: as far as I can tell this stuff is deliberate, probably because the 'measured' conf settings screwed things up
         				SpeedManagerLimitEstimate.TYPE_ESTIMATED :SpeedManagerLimitEstimate.TYPE_ESTIMATED);
         }
@@ -241,7 +244,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         if ( downloadTestRan ){
 
         	sm.setEstimatedDownloadCapacityBytesPerSec(
-        			measuredDownloadKbps*1024,
+        			measuredDownloadKbps*kinb,
         			downloadHitLimit?
         				SpeedManagerLimitEstimate.TYPE_MEASURED_MIN :SpeedManagerLimitEstimate.TYPE_MEASURED);
         }
@@ -492,7 +495,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         gridData.horizontalSpan = 1;
         gridData.horizontalAlignment = GridData.CENTER;
         c4.setLayoutData(gridData);
-        c4.setText( DisplayFormatters.formatByteCountToBitsPerSec(rate) );
+        c4.setText( DisplayFormatters.formatByteCountToBitsPerSec2(rate) );
 
         //spacer column
         Label c5 = new Label(panel, SWT.NULL);
@@ -522,14 +525,16 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
             est = speedManager.getEstimatedDownloadCapacityBytesPerSec();
         }
 
+        int kinb = DisplayFormatters.getKinB();
+        
         //Use previous value if no test of this type ran.
         if( !testRan ){
-            retVal = est.getBytesPerSec()/1024;
+            retVal = est.getBytesPerSec()/kinb;
         }
 
         //if the previous set to Manually use that value.
         if( est.getEstimateType()==SpeedManagerLimitEstimate.TYPE_MANUAL ){
-            retVal = est.getBytesPerSec()/1024;
+            retVal = est.getBytesPerSec()/kinb;
         }
 
         return retVal;
@@ -577,7 +582,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
             try{
                 int newValInt = Integer.parseInt(newVal);
                 if( echoLbl!=null ){
-                    echoLbl.setText( DisplayFormatters.formatByteCountToBitsPerSec(newValInt*1024) );
+                    echoLbl.setText( DisplayFormatters.formatByteCountToBitsPerSec2(newValInt*DisplayFormatters.getKinB()));
                 }
             }catch(Throwable t){
                 //echo.setText(" - ");

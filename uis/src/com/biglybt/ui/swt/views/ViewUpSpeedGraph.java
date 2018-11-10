@@ -30,6 +30,7 @@ import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.TimerEvent;
 import com.biglybt.core.util.TimerEventPerformer;
@@ -96,7 +97,7 @@ public class ViewUpSpeedGraph
 		upSpeedGraphic.addIntsValue(new int[] {
 			stats.getDataSendRate() + stats.getProtocolSendRate(),
 			stats.getProtocolSendRate(),
-			COConfigurationManager.getIntParameter(TransferSpeedValidator.getActiveUploadParameter(manager)) * 1024,
+			COConfigurationManager.getIntParameter(TransferSpeedValidator.getActiveUploadParameter(manager)) * DisplayFormatters.getKinB(),
 			swarms_peer_speed
 		});
 	}

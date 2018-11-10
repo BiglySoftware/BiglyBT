@@ -814,6 +814,7 @@ TagPropertyConstraintHandler
 		private final ConstraintExpr	expr;
 
 		private boolean	depends_on_download_state;
+		private int		depends_on_level			= DEP_STATIC;
 
 		private List<Tag>		dependent_on_tags;
 		private boolean			must_check_dependencies;
@@ -874,7 +875,14 @@ TagPropertyConstraintHandler
 		private String
 		getStatus()
 		{
-			return( activity_average.getAverage() + "/" +  TimeFormatter.getLongSuffix( TimeFormatter.TS_SECOND ));
+			String result = activity_average.getAverage() + "/" +  TimeFormatter.getLongSuffix( TimeFormatter.TS_SECOND );
+			
+			if ( Constants.IS_CVS_VERSION ){
+				
+				result +=  ", " + "DS=" + depends_on_download_state + ", DL=" + depends_on_level;
+			}
+			
+			return( result );
 		}
 		
 		private List<Tag>
@@ -1415,6 +1423,24 @@ TagPropertyConstraintHandler
 			{
 				value		= _value.trim();
 				context		= _context;
+				
+				try{
+					Object[] args = getValues();
+					
+					for ( Object obj: args ){
+						
+						if ( obj instanceof String ){
+							
+							int[] kw_details = keyword_map.get((String)obj);
+							
+							if ( kw_details != null ){
+								
+								depends_on_level = Math.max( depends_on_level, kw_details[1] );
+							}
+						}
+					}
+				}catch( Throwable e ){
+				}
 			}
 
 			@Override
@@ -1759,7 +1785,12 @@ TagPropertyConstraintHandler
 		private static final int FT_WEEKS_TO_SECS	= 26;
 		private static final int FT_GET_CONFIG		= 27;
 
-		static final Map<String,Integer>	keyword_map = new HashMap<>();
+		
+		private static final int	DEP_STATIC		= 0;
+		private static final int	DEP_RUNNING		= 1;
+		private static final int	DEP_TIME		= 2;
+		
+		static final Map<String,int[]>	keyword_map = new HashMap<>();
 
 		private static final int	KW_SHARE_RATIO		= 0;
 		private static final int	KW_AGE 				= 1;
@@ -1789,69 +1820,74 @@ TagPropertyConstraintHandler
 		private static final int	KW_DOWN_IDLE		 	= 25;
 		private static final int	KW_DOWNLOADED		 	= 26;
 		private static final int	KW_UPLOADED			 	= 27;
+		private static final int	KW_NAME				 	= 28;
+		private static final int	KW_FILE_NAMES		 	= 29;
 
 		static{
-			keyword_map.put( "shareratio", KW_SHARE_RATIO );
-			keyword_map.put( "share_ratio", KW_SHARE_RATIO );
-			keyword_map.put( "age", KW_AGE );
-			keyword_map.put( "percent", KW_PERCENT );
-			keyword_map.put( "downloadingfor", KW_DOWNLOADING_FOR );
-			keyword_map.put( "downloading_for", KW_DOWNLOADING_FOR );
-			keyword_map.put( "seedingfor", KW_SEEDING_FOR );
-			keyword_map.put( "seeding_for", KW_SEEDING_FOR );
-			keyword_map.put( "swarmmergebytes", KW_SWARM_MERGE );
-			keyword_map.put( "swarm_merge_bytes", KW_SWARM_MERGE );
-			keyword_map.put( "lastactive", KW_LAST_ACTIVE );
-			keyword_map.put( "last_active", KW_LAST_ACTIVE );
-			keyword_map.put( "seedcount", KW_SEED_COUNT );
-			keyword_map.put( "seed_count", KW_SEED_COUNT );
-			keyword_map.put( "peercount", KW_PEER_COUNT );
-			keyword_map.put( "peer_count", KW_PEER_COUNT );
-			keyword_map.put( "seedpeerratio", KW_SEED_PEER_RATIO );
-			keyword_map.put( "seed_peer_ratio", KW_SEED_PEER_RATIO );
-			keyword_map.put( "resumein", KW_RESUME_IN );
-			keyword_map.put( "resume_in", KW_RESUME_IN );
+			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
+			keyword_map.put( "share_ratio", 			new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
+			keyword_map.put( "age",						new int[]{KW_AGE,					DEP_TIME });
+			keyword_map.put( "percent", 				new int[]{KW_PERCENT,				DEP_RUNNING });
+			keyword_map.put( "downloadingfor", 			new int[]{KW_DOWNLOADING_FOR,		DEP_RUNNING });
+			keyword_map.put( "downloading_for", 		new int[]{KW_DOWNLOADING_FOR,		DEP_RUNNING });
+			keyword_map.put( "seedingfor", 				new int[]{KW_SEEDING_FOR,			DEP_RUNNING });
+			keyword_map.put( "seeding_for", 			new int[]{KW_SEEDING_FOR,			DEP_RUNNING });
+			keyword_map.put( "swarmmergebytes", 		new int[]{KW_SWARM_MERGE,			DEP_RUNNING });
+			keyword_map.put( "swarm_merge_bytes", 		new int[]{KW_SWARM_MERGE,			DEP_RUNNING });
+			keyword_map.put( "lastactive", 				new int[]{KW_LAST_ACTIVE,			DEP_RUNNING });
+			keyword_map.put( "last_active", 			new int[]{KW_LAST_ACTIVE,			DEP_RUNNING });
+			keyword_map.put( "seedcount", 				new int[]{KW_SEED_COUNT,			DEP_TIME  });
+			keyword_map.put( "seed_count", 				new int[]{KW_SEED_COUNT,			DEP_TIME });
+			keyword_map.put( "peercount", 				new int[]{KW_PEER_COUNT,			DEP_TIME });
+			keyword_map.put( "peer_count", 				new int[]{KW_PEER_COUNT,			DEP_TIME });
+			keyword_map.put( "seedpeerratio", 			new int[]{KW_SEED_PEER_RATIO,		DEP_TIME });
+			keyword_map.put( "seed_peer_ratio", 		new int[]{KW_SEED_PEER_RATIO,		DEP_TIME });
+			keyword_map.put( "resumein", 				new int[]{KW_RESUME_IN,				DEP_TIME });
+			keyword_map.put( "resume_in",				new int[]{KW_RESUME_IN,				DEP_TIME });
 
-			keyword_map.put( "minofhour", KW_MIN_OF_HOUR );
-			keyword_map.put( "min_of_hour", KW_MIN_OF_HOUR );
-			keyword_map.put( "hourofday", KW_HOUR_OF_DAY );
-			keyword_map.put( "hour_of_day", KW_HOUR_OF_DAY );
-			keyword_map.put( "dayofweek", KW_DAY_OF_WEEK );
-			keyword_map.put( "day_of_week", KW_DAY_OF_WEEK );
-			keyword_map.put( "tagage", KW_TAG_AGE );
-			keyword_map.put( "tag_age", KW_TAG_AGE );
-			keyword_map.put( "completedage", KW_COMPLETED_AGE );
-			keyword_map.put( "completed_age", KW_COMPLETED_AGE );
+			keyword_map.put( "minofhour", 				new int[]{KW_MIN_OF_HOUR,			DEP_TIME });
+			keyword_map.put( "min_of_hour",				new int[]{KW_MIN_OF_HOUR,			DEP_TIME });
+			keyword_map.put( "hourofday", 				new int[]{KW_HOUR_OF_DAY,			DEP_TIME });
+			keyword_map.put( "hour_of_day", 			new int[]{KW_HOUR_OF_DAY,			DEP_TIME });
+			keyword_map.put( "dayofweek", 				new int[]{KW_DAY_OF_WEEK,			DEP_TIME });
+			keyword_map.put( "day_of_week", 			new int[]{KW_DAY_OF_WEEK,			DEP_TIME });
+			keyword_map.put( "tagage", 					new int[]{KW_TAG_AGE,				DEP_TIME });
+			keyword_map.put( "tag_age", 				new int[]{KW_TAG_AGE,				DEP_TIME });
+			keyword_map.put( "completedage", 			new int[]{KW_COMPLETED_AGE,			DEP_TIME });
+			keyword_map.put( "completed_age", 			new int[]{KW_COMPLETED_AGE,			DEP_TIME });
 
-			keyword_map.put( "peermaxcompletion", KW_PEER_MAX_COMP );
-			keyword_map.put( "peer_max_completion", KW_PEER_MAX_COMP );
+			keyword_map.put( "peermaxcompletion", 		new int[]{KW_PEER_MAX_COMP,			DEP_RUNNING });
+			keyword_map.put( "peer_max_completion", 	new int[]{KW_PEER_MAX_COMP,			DEP_RUNNING });
 			
-			keyword_map.put( "leechmaxcompletion", KW_LEECHER_MAX_COMP );
-			keyword_map.put( "leech_max_completion", KW_LEECHER_MAX_COMP );
-			keyword_map.put( "leechermaxcompletion", KW_LEECHER_MAX_COMP );
-			keyword_map.put( "leecher_max_completion", KW_LEECHER_MAX_COMP );
+			keyword_map.put( "leechmaxcompletion", 		new int[]{KW_LEECHER_MAX_COMP,		DEP_RUNNING });
+			keyword_map.put( "leech_max_completion", 	new int[]{KW_LEECHER_MAX_COMP,		DEP_RUNNING });
+			keyword_map.put( "leechermaxcompletion", 	new int[]{KW_LEECHER_MAX_COMP,		DEP_RUNNING });
+			keyword_map.put( "leecher_max_completion", 	new int[]{KW_LEECHER_MAX_COMP,		DEP_RUNNING });
 			
-			keyword_map.put( "peeraveragecompletion", KW_PEER_AVERAGE_COMP );
-			keyword_map.put( "peer_average_completion", KW_PEER_AVERAGE_COMP );
+			keyword_map.put( "peeraveragecompletion", 	new int[]{KW_PEER_AVERAGE_COMP,		DEP_RUNNING });
+			keyword_map.put( "peer_average_completion", new int[]{KW_PEER_AVERAGE_COMP,		DEP_RUNNING });
 			
-			keyword_map.put( "size", KW_SIZE );
-			keyword_map.put( "sizemb", KW_SIZE_MB );
-			keyword_map.put( "size_mb", KW_SIZE_MB );
-			keyword_map.put( "sizegb", KW_SIZE_GB );
-			keyword_map.put( "size_gb", KW_SIZE_GB );
+			keyword_map.put( "size", 					new int[]{KW_SIZE,					DEP_STATIC });
+			keyword_map.put( "sizemb", 					new int[]{KW_SIZE_MB,				DEP_STATIC });
+			keyword_map.put( "size_mb", 				new int[]{KW_SIZE_MB,				DEP_STATIC });
+			keyword_map.put( "sizegb", 					new int[]{KW_SIZE_GB,				DEP_STATIC });
+			keyword_map.put( "size_gb", 				new int[]{KW_SIZE_GB,				DEP_STATIC });
 			
-			keyword_map.put( "filecount", KW_FILE_COUNT );
-			keyword_map.put( "file_count", KW_FILE_COUNT );
+			keyword_map.put( "filecount", 				new int[]{KW_FILE_COUNT,			DEP_STATIC });
+			keyword_map.put( "file_count", 				new int[]{KW_FILE_COUNT,			DEP_STATIC });
 			
-			keyword_map.put( "availability", KW_AVAILABILITY );
+			keyword_map.put( "availability", 			new int[]{KW_AVAILABILITY,			DEP_RUNNING });
 			
-			keyword_map.put( "upidle", KW_UP_IDLE );
-			keyword_map.put( "up_idle", KW_UP_IDLE );
-			keyword_map.put( "downidle", KW_DOWN_IDLE );
-			keyword_map.put( "down_idle", KW_DOWN_IDLE );
+			keyword_map.put( "upidle", 					new int[]{KW_UP_IDLE,				DEP_RUNNING });
+			keyword_map.put( "up_idle", 				new int[]{KW_UP_IDLE,				DEP_RUNNING });
+			keyword_map.put( "downidle", 				new int[]{KW_DOWN_IDLE,				DEP_RUNNING });
+			keyword_map.put( "down_idle", 				new int[]{KW_DOWN_IDLE, 			DEP_RUNNING });
 
-			keyword_map.put( "downloaded", KW_DOWNLOADED );
-			keyword_map.put( "uploaded", KW_UPLOADED );
+			keyword_map.put( "downloaded", 				new int[]{KW_DOWNLOADED,			DEP_RUNNING });
+			keyword_map.put( "uploaded", 				new int[]{KW_UPLOADED,				DEP_RUNNING });
+			
+			keyword_map.put( "name", 					new int[]{KW_NAME,					DEP_STATIC });
+			keyword_map.put( "file_names", 				new int[]{KW_FILE_NAMES,			DEP_STATIC });
 		}
 
 		private class
@@ -2611,14 +2647,16 @@ TagPropertyConstraintHandler
 						
 					}else{
 
-						Integer kw = keyword_map.get( str.toLowerCase( Locale.US ));
+						int[] kw_details = keyword_map.get( str.toLowerCase( Locale.US ));
 
-						if ( kw == null ){
+						if ( kw_details == null ){
 
 							setError(  "Invalid constraint keyword: " + str );
 
 							return( result );
 						}
+						
+						int kw = kw_details[0];
 
 						result = null;	// don't cache any results below as they are variable
 						

@@ -2833,11 +2833,16 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			
 			if ( is_fp ){
 				
-				fp_tag.addTaggable( dm );
+				if ( !fp_tag.hasTaggable( dm )){
 				
+					fp_tag.addTaggable( dm );
+				}
 			}else{
 				
-				fp_tag.removeTaggable( dm );
+				if ( fp_tag.hasTaggable( dm )){
+				
+					fp_tag.removeTaggable( dm );
+				}
 			}
 		}
 	}

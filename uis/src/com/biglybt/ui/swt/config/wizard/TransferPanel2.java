@@ -304,7 +304,7 @@ TransferPanel2
 
     for (int i = 1; i < connection_rates.length; i++) {
 
-    	connection_labels[i] = (i<3?(dial_up+ " "):"xxx/") + DisplayFormatters.formatByteCountToBitsPerSec( connection_rates[i]/8);
+    	connection_labels[i] = (i<3?(dial_up+ " "):"xxx/") + DisplayFormatters.formatByteCountToBitsPerSec2( connection_rates[i]/8);
     }
 
     final Combo connection_speed = new Combo(gRadio, SWT.SINGLE | SWT.READ_ONLY);
@@ -404,7 +404,7 @@ TransferPanel2
 		uprate_label.setText(
 			MessageText.getString( "configureWizard.transfer2.rate.changed",
 			new String[]{
-				DisplayFormatters.formatByteCountToBitsPerSec( rate ) + " (" + DisplayFormatters.formatByteCountToKiBEtcPerSec( rate ) + ")" ,
+				DisplayFormatters.formatByteCountToBitsPerSec2( rate ) + " (" + DisplayFormatters.formatByteCountToKiBEtcPerSec( rate ) + ")" ,
 				DisplayFormatters.formatByteCountToKiBEtcPerSec( wizard.getUploadLimit()),
 				String.valueOf( wizard.maxActiveTorrents ),
 				String.valueOf( wizard.maxDownloads )

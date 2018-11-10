@@ -82,11 +82,13 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
         Utils.setLayoutData(label, gridData);
         Messages.setLanguageText(label,"SpeedTestWizard.finish.panel.click.close");
 
+        int kinb = DisplayFormatters.getKinB();
+        
         //show the setting for upload speed
         SpeedManagerLimitEstimate upEst = speedManager.getEstimatedUploadCapacityBytesPerSec();
-        int maxUploadKbs = upEst.getBytesPerSec()/1024;
+        int maxUploadKbs = upEst.getBytesPerSec()/kinb;
         SpeedManagerLimitEstimate downEst = speedManager.getEstimatedDownloadCapacityBytesPerSec();
-        int maxDownloadKbs = downEst.getBytesPerSec()/1024;
+        int maxDownloadKbs = downEst.getBytesPerSec()/kinb;
 
         //boolean setting.
         boolean autoSpeedEnabled = COConfigurationManager.getBooleanParameter( TransferSpeedValidator.AUTO_UPLOAD_ENABLED_CONFIGKEY );
@@ -218,7 +220,7 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
         if(maxKbps==0){
             maxBitsPerSec = MessageText.getString("ConfigView.unlimited");
         }else{
-            maxBitsPerSec = DisplayFormatters.formatByteCountToBitsPerSec( maxKbps * 1024 );
+            maxBitsPerSec = DisplayFormatters.formatByteCountToBitsPerSec2( maxKbps * DisplayFormatters.getKinB());
         }
 
         c3.setText(maxBitsPerSec);

@@ -1381,7 +1381,9 @@ public class MainStatusBar
 			GlobalManager gm = core.getGlobalManager();
 			GlobalManagerStats stats = gm.getStats();
 
-			int dl_limit = NetworkManager.getMaxDownloadRateBPS() / 1024;
+			int kinb = DisplayFormatters.getKinB();
+			
+			int dl_limit = NetworkManager.getMaxDownloadRateBPS() / kinb;
 			long rec_data = stats.getDataReceiveRate();
 			long rec_prot = stats.getProtocolReceiveRate();
 
@@ -1397,11 +1399,11 @@ public class MainStatusBar
 			boolean auto_up = TransferSpeedValidator.isAutoSpeedActive(gm)
 					&& TransferSpeedValidator.isAutoUploadAvailable(core);
 
-			int ul_limit_norm = NetworkManager.getMaxUploadRateBPSNormal() / 1024;
+			int ul_limit_norm = NetworkManager.getMaxUploadRateBPSNormal() / kinb;
 
 			String seeding_only;
 			if (NetworkManager.isSeedingOnlyUploadRate()) {
-				int ul_limit_seed = NetworkManager.getMaxUploadRateBPSSeedingOnly() / 1024;
+				int ul_limit_seed = NetworkManager.getMaxUploadRateBPSSeedingOnly() / kinb;
 				if (ul_limit_seed == 0) {
 					seeding_only = "+" + Constants.INFINITY_STRING + "K";
 				} else {

@@ -816,10 +816,12 @@ DeviceManagerUI
 
 		// max xcode
 
+		int kinb = DisplayFormatters.getKinB();
+		
 		final IntParameter max_xcode =
 			configModel.addIntParameter2(
 				"device.config.xcode.maxbps", "device.config.xcode.maxbps",
-				(int)(device_manager.getTranscodeManager().getQueue().getMaxBytesPerSecond()/1024),
+				(int)(device_manager.getTranscodeManager().getQueue().getMaxBytesPerSecond()/kinb),
 				0, Integer.MAX_VALUE );
 
 		max_xcode.addListener(
@@ -830,7 +832,7 @@ DeviceManagerUI
 				parameterChanged(
 					Parameter param)
 				{
-					device_manager.getTranscodeManager().getQueue().setMaxBytesPerSecond( max_xcode.getValue()*1024 );
+					device_manager.getTranscodeManager().getQueue().setMaxBytesPerSecond( max_xcode.getValue()*kinb );
 				}
 			});
 
@@ -5571,8 +5573,8 @@ DeviceManagerUI
 									run()
 									{
 										max_up_down.setText( 
-											DisplayFormatters.formatByteCountToBitsPerSec( result[1]/8 ) + ", " +
-											DisplayFormatters.formatByteCountToBitsPerSec( result[0]/8 ));
+											DisplayFormatters.formatByteCountToBitsPerSec2( result[1]/8 ) + ", " +
+											DisplayFormatters.formatByteCountToBitsPerSec2( result[0]/8 ));
 									}
 								});
 					}catch( Throwable e ){

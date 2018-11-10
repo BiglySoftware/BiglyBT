@@ -617,6 +617,7 @@ DisplayFormatters
      * Print the BITS/second in an international format.
      * @param n - always formatted using SI (i.e. decimal) prefixes
      * @return String in an internationalized format.
+     * @deprecated Dunno who thought this was a good idea to use decimal calc but binary/decimal selected unit text
      */
     public static String
     formatByteCountToBitsPerSec(
@@ -638,7 +639,34 @@ DisplayFormatters
 
         return( formatDecimal(dbl, precision, true, true) + units_bits[unitIndex] + per_sec );
     }
+    
+    /**
+     * Prints byte value in BITS/second in either binary or decimal units as required
+     * @param n byte count
+     * @return
+     */
 
+    public static String
+    formatByteCountToBitsPerSec2(
+        long n)
+    {
+        double dbl = n * 8;
+
+        int unitIndex = UNIT_B;
+
+        long	div = getKinB();
+
+        while (dbl >= div && unitIndex < unitsStopAt){
+
+          dbl /= div;
+          unitIndex++;
+        }
+
+        int  precision = UNITS_PRECISION[unitIndex];
+
+        return( formatDecimal(dbl, precision, true, true) + units_bits[unitIndex] + per_sec );
+    }
+    
     public static String
     formatETA(long eta)
     {

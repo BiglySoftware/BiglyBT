@@ -112,8 +112,10 @@ public class ConfigSectionFilePerformance implements UISWTConfigSection {
 
    	// diskmanager.perf.cache.size
 
+	long kinb = DisplayFormatters.getKinB();
+
     long max_mem_bytes 	= Runtime.getRuntime().maxMemory();
-    long mb_1			= 1*1024*1024;
+    long mb_1			= 1*kinb*kinb;
     long mb_32			= 32*mb_1;
 
     Label cache_size_label = new Label(cSection, SWT.NULL);

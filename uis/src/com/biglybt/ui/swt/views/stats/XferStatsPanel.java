@@ -945,18 +945,20 @@ XferStatsPanel
 			
 				long	per_sec = count/60;
 				
-				if ( per_sec > 10*1024*1024 ){
+				int kinb = DisplayFormatters.getKinB();
+
+				if ( per_sec > 10*kinb*kinb ){
 					
 					gc.setForeground( Colors.blue );
 					
 				}else{
 					int	blues_index ;
 					
-					if ( per_sec > 1024*1024 ){
+					if ( per_sec > kinb*kinb ){
 						blues_index = Colors.BLUES_DARKEST;
-					}else if ( per_sec > 100*1024 ){
+					}else if ( per_sec > 100*kinb ){
 						blues_index = Colors.BLUES_MIDDARK;
-					}else if ( per_sec > 10*1024 ){
+					}else if ( per_sec > 10*kinb ){
 						blues_index = 5;
 					}else{
 						blues_index = 3;

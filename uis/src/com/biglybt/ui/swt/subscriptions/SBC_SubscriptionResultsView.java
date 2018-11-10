@@ -371,7 +371,8 @@ SBC_SubscriptionResultsView
 					});
 			}
 
-
+			int kinb = DisplayFormatters.getKinB();
+			
 				// min size
 
 			label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
@@ -386,7 +387,7 @@ SBC_SubscriptionResultsView
 			lblMinSize.setText(MessageText.getString("SubscriptionResults.filter.min_size"));
 			Spinner spinMinSize = new Spinner(cMinSize, SWT.BORDER);
 			spinMinSize.setMinimum(0);
-			spinMinSize.setMaximum(100*1024*1024);	// 100 TB should do...
+			spinMinSize.setMaximum(100*kinb*kinb);	// 100 TB should do...
 			spinMinSize.setSelection(minSize);
 			spinMinSize.addListener(SWT.Selection, new Listener() {
 				@Override
@@ -410,7 +411,7 @@ SBC_SubscriptionResultsView
 			lblMaxSize.setText(MessageText.getString("SubscriptionResults.filter.max_size"));
 			Spinner spinMaxSize = new Spinner(cMaxSize, SWT.BORDER);
 			spinMaxSize.setMinimum(0);
-			spinMaxSize.setMaximum(100*1024*1024);	// 100 TB should do...
+			spinMaxSize.setMaximum(100*kinb*kinb);	// 100 TB should do...
 			spinMaxSize.setSelection(maxSize);
 			spinMaxSize.addListener(SWT.Selection, new Listener() {
 				@Override
