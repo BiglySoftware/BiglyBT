@@ -794,8 +794,12 @@ BasicPluginConfigImpl
 							public void runSupport() {
 								{
 									for (int k = 1; k < stuff.length; k++) {
-										if (stuff[k] instanceof Control)
-											((Control) stuff[k]).setEnabled(p.isEnabled());
+										if (stuff[k] instanceof Control){
+											Control c = (Control)stuff[k];
+											if ( !c.isDisposed()){
+												c.setEnabled(p.isEnabled());
+											}
+										}
 									}
 
 								}

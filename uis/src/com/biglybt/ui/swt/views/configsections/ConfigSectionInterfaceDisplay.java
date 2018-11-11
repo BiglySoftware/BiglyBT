@@ -95,28 +95,47 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 		Group gVarious = new Group(cSection, SWT.NULL);
 		layout = new GridLayout();
-		layout.numColumns = 1;
+		layout.numColumns = 2;
 		gVarious.setLayout(layout);
 		Utils.setLayoutData(gVarious, new GridData(GridData.FILL_HORIZONTAL));
 
 		gVarious.setText( MessageText.getString( "label.various" ));
 
 
-		new BooleanParameter(gVarious, "Show Download Basket", "ConfigView.section.style.showdownloadbasket");
-
-		new BooleanParameter(gVarious, "suppress_file_download_dialog", "ConfigView.section.interface.display.suppress.file.download.dialog");
-
-		new BooleanParameter(gVarious, "Suppress Sharing Dialog", "ConfigView.section.interface.display.suppress.sharing.dialog");
-
-		new BooleanParameter(gVarious, "show_torrents_menu", "Menu.show.torrent.menu");
+		BooleanParameter bp = new BooleanParameter(gVarious, "Show Download Basket", "ConfigView.section.style.showdownloadbasket");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
+		
+		bp = new BooleanParameter(gVarious, "suppress_file_download_dialog", "ConfigView.section.interface.display.suppress.file.download.dialog");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
+		
+		bp = new BooleanParameter(gVarious, "Suppress Sharing Dialog", "ConfigView.section.interface.display.suppress.sharing.dialog");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
+		
+		bp = new BooleanParameter(gVarious, "show_torrents_menu", "Menu.show.torrent.menu");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
 
 		if ( !Constants.isUnix ){
 				// TextWithHistory issues on Linux
-			new BooleanParameter(gVarious, "mainwindow.search.history.enabled", "search.history.enable");
+			bp = new BooleanParameter(gVarious, "mainwindow.search.history.enabled", "search.history.enable");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			bp.setLayoutData(gridData);
 		}
 
 		if (Constants.isWindowsXP) {
 			final Button enableXPStyle = new Button(gVarious, SWT.CHECK);
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			enableXPStyle.setLayoutData(gridData);
+			
 			Messages.setLanguageText(enableXPStyle, "ConfigView.section.style.enableXPStyle");
 
 			boolean enabled = false;
@@ -166,33 +185,48 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 		}
 
 		if (Constants.isOSX) {
-			new BooleanParameter(gVarious, "enable_small_osx_fonts", "ConfigView.section.style.osx_small_fonts");
+			bp = new BooleanParameter(gVarious, "enable_small_osx_fonts", "ConfigView.section.style.osx_small_fonts");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			bp.setLayoutData(gridData);
 		}
 
 		// Reuse the labels of the other menu actions.
 		if (PlatformManagerFactory.getPlatformManager().hasCapability(PlatformManagerCapabilities.ShowFileInBrowser)) {
-			BooleanParameter bp = new BooleanParameter(gVarious, "MyTorrentsView.menu.show_parent_folder_enabled", "ConfigView.section.style.use_show_parent_folder");
+			bp = new BooleanParameter(gVarious, "MyTorrentsView.menu.show_parent_folder_enabled", "ConfigView.section.style.use_show_parent_folder");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			bp.setLayoutData(gridData);
+			
 			Messages.setLanguageText(bp.getControl(), "ConfigView.section.style.use_show_parent_folder", new String[] {
 				MessageText.getString("MyTorrentsView.menu.open_parent_folder"),
 				MessageText.getString("MyTorrentsView.menu.explore"),
 			});
 
 			if (Constants.isOSX) {
-				new BooleanParameter(gVarious, "FileBrowse.usePathFinder",
+				bp = new BooleanParameter(gVarious, "FileBrowse.usePathFinder",
 						"ConfigView.section.style.usePathFinder");
+				gridData = new GridData();
+				gridData.horizontalSpan = 2;
+				bp.setLayoutData(gridData);
 			}
 		}
 
 		if (userMode > 0) {
-  		final BooleanParameter paramEnableForceDPI = new BooleanParameter(
-  				gVarious, "enable.ui.forceDPI", "ConfigView.section.style.forceDPI");
-  		paramEnableForceDPI.setLayoutData(new GridData());
-			IntParameter forceDPI = new IntParameter(gVarious, "Force DPI", 0,
-					Integer.MAX_VALUE);
-			forceDPI.setLayoutData(new GridData());
-			paramEnableForceDPI.setAdditionalActionPerformer(
-					new ChangeSelectionActionPerformer(forceDPI.getControl()));
+	  		final BooleanParameter paramEnableForceDPI = new BooleanParameter(
+	  				gVarious, "enable.ui.forceDPI", "ConfigView.section.style.forceDPI");
+	  		paramEnableForceDPI.setLayoutData(new GridData());
+				IntParameter forceDPI = new IntParameter(gVarious, "Force DPI", 0,
+						Integer.MAX_VALUE);
+				forceDPI.setLayoutData(new GridData());
+				paramEnableForceDPI.setAdditionalActionPerformer(
+						new ChangeSelectionActionPerformer(forceDPI.getControl()));
 		}
+		
+		bp = new BooleanParameter(gVarious, "Disable All Tooltips", "ConfigView.section.style.disable.all.tt");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
 
 			// toolbar
 		

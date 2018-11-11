@@ -4256,12 +4256,25 @@ public class Utils
 	}
 
 	
-	private static boolean tt_enabled = false;;
+	
+	private static boolean tt_enabled = false;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Disable All Tooltips",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String name){
+					tt_enabled = !COConfigurationManager.getBooleanParameter( name );
+				}
+			});
+	}
 	
 	public static boolean
 	getTTEnabled()
 	{
-		return( tt_enabled );
+		return( tt_enabled ); 
 	}
 	
 	public static void

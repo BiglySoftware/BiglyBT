@@ -129,7 +129,8 @@ public class UIConfigDefaultsSWT
 		def.addParameter("auto_remove_inactive_items", false);
 		def.addParameter("show_torrents_menu", true);
 		def.addParameter("mainwindow.search.history.enabled", true);
-
+		def.addParameter("Disable All Tooltips", false);
+		
 		def.addParameter("MyTorrentsView.table.style", 0);
 
 		def.addParameter("v3.topbar.height", 60);
