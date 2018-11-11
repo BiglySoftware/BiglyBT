@@ -379,9 +379,9 @@ public class PeerInfoView
 				String[] country_details = PeerUtils.getCountryDetails( peer );
 
 				if ( country_details != null && country_details.length == 2 ){
-					imageLabel.setToolTipText(country_details[0] + "- " + country_details[1]);
+					Utils.setTT(imageLabel,country_details[0] + "- " + country_details[1]);
 				}else{
-					imageLabel.setToolTipText( "" );
+					Utils.setTT(imageLabel, "" );
 				}
 			}else if (countryLocator != null) {
 					try {
@@ -394,7 +394,7 @@ public class PeerInfoView
 								"getIPISO3166", new Class[] { String.class }).invoke(
 								countryLocator, new Object[] { peer.getIp() });
 
-						imageLabel.setToolTipText(sCode + "- " + sCountry);
+						Utils.setTT(imageLabel,sCode + "- " + sCountry);
 
 						InputStream is = countryLocator.getClass().getClassLoader()
 								.getResourceAsStream(
@@ -413,7 +413,7 @@ public class PeerInfoView
 						// ignore
 					}
 			}else{
-				imageLabel.setToolTipText( "" );
+				Utils.setTT(imageLabel, "" );
 			}
 
 		}

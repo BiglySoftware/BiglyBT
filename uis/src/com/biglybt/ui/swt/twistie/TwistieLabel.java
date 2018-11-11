@@ -36,6 +36,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+import com.biglybt.ui.swt.Utils;
+
 /**
  * A Label with a twistie graphic at the beginning; every time this label is clicked the
  * twistie graphic toggles between pointing to the right and pointing down.
@@ -305,14 +307,16 @@ public class TwistieLabel
 	@Override
 	public void setToolTipText(String string) {
 		if (null != titleLabel) {
-			titleLabel.setToolTipText(string);
+			Utils.setTT(titleLabel,string);
 		}
 
 		if (null != descriptionLabel) {
-			descriptionLabel.setToolTipText(string);
+			Utils.setTT(descriptionLabel,string);
 		}
 
-		super.setToolTipText(string);
+		if ( Utils.getTTEnabled()){
+			super.setToolTipText(string);
+		}
 	}
 
 	/**

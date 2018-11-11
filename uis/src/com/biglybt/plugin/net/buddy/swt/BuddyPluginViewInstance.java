@@ -681,7 +681,7 @@ BuddyPluginViewInstance
 
 		imgOpenFolder.setBackground(noti_browse.getBackground());
 
-		noti_browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+		Utils.setTT(noti_browse,MessageText.getString("ConfigView.button.browse"));
 
 		noti_browse.addListener(SWT.Selection, new Listener() {
 			@Override

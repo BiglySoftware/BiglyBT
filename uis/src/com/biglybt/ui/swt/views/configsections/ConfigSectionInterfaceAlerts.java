@@ -307,7 +307,7 @@ public class ConfigSectionInterfaceAlerts
 
 		imgOpenFolder.setBackground(d_browse.getBackground());
 
-		d_browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+		Utils.setTT(d_browse,MessageText.getString("ConfigView.button.browse"));
 
 		d_browse.addListener(SWT.Selection, new Listener() {
 			@Override

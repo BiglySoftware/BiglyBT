@@ -346,7 +346,7 @@ public class TorrentInfoView
 			Utils.setLayoutData(label,  gridData );
 			String key = ((TableColumnCore) cell.getTableColumn()).getTitleLanguageKey();
 			label.setText(MessageText.getString(key) + ": ");
-			label.setToolTipText(MessageText.getString(key + ".info", ""));
+			Utils.setTT(label,MessageText.getString(key + ".info", ""));
 
 			final Composite c = new Composite(gColumns, SWT.DOUBLE_BUFFERED);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
@@ -361,7 +361,7 @@ public class TorrentInfoView
 					Object toolTip = cell.getToolTip();
 					if (toolTip instanceof String) {
 						String s = (String) toolTip;
-						c.setToolTipText(s);
+						Utils.setTT(c,s);
 					}
 				}
 			});

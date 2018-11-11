@@ -4901,7 +4901,7 @@ DeviceManagerUI
 
 											}
 
-											info.setToolTipText( tooltip );
+											Utils.setTT(info, tooltip );
 										}
 									});
 
@@ -4924,7 +4924,7 @@ DeviceManagerUI
 
 												last_style = style;
 
-												info.setToolTipText( "" );
+												Utils.setTT(info, "" );
 											}
 										}catch( Throwable e ){
 										}

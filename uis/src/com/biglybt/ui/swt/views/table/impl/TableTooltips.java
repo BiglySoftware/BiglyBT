@@ -17,6 +17,7 @@
 
 package com.biglybt.ui.swt.views.table.impl;
 
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
@@ -88,6 +89,10 @@ public class TableTooltips
 				if (toolTipShell != null && !toolTipShell.isDisposed())
 					toolTipShell.dispose();
 
+				if ( !Utils.getTTEnabled()){
+					return;
+				}
+				
 				TableCellCore cell = tv.getTableCell(event.x, event.y);
 				if (cell == null)
 					return;

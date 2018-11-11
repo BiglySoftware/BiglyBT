@@ -345,7 +345,7 @@ public class MainStatusBar
 
 		progressViewerImageLabel = new CLabelPadding(statusBar, SWT.NONE);
 		// image set below after adding listener
-		progressViewerImageLabel.setToolTipText(MessageText.getString("Progress.reporting.statusbar.button.tooltip"));
+		Utils.setTT( progressViewerImageLabel, MessageText.getString("Progress.reporting.statusbar.button.tooltip"));
 		progressViewerImageLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
@@ -448,7 +448,7 @@ public class MainStatusBar
 
 		dhtStatus = new CLabelPadding(statusBar, borderFlag);
 		dhtStatus.setText("");
-		dhtStatus.setToolTipText(MessageText.getString("MainWindow.dht.status.tooltip"));
+		Utils.setTT( dhtStatus,MessageText.getString("MainWindow.dht.status.tooltip"));
 
 		Utils.addAndFireParameterListener(mapConfigListeners, true,
 				"Status Area Show DDB", new ParameterListener() {
@@ -1041,7 +1041,7 @@ public class MainStatusBar
 						}
 					};
 
-					feedback.setToolTipText(MessageText.getString("statusbar.feedback.tooltip"));
+					Utils.setTT(feedback,MessageText.getString("statusbar.feedback.tooltip"));
 					feedback.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 					feedback.setForeground(Colors.blue);
 					feedback.addListener(SWT.MouseUp, feedback_listener);
@@ -1122,7 +1122,7 @@ public class MainStatusBar
 
 				ClipboardCopy.addCopyToClipMenu( menu, url_str );
 
-				feedback.setToolTipText( url_str );
+				Utils.setTT( feedback, url_str );
 
 				feedback.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 				feedback.setForeground(Colors.blue);
@@ -1489,19 +1489,19 @@ public class MainStatusBar
 			switch (dht_status) {
 				case DHTPlugin.STATUS_RUNNING:
 
-					dhtStatus.setToolTipText(MessageText.getString("MainWindow.dht.status.tooltip"));
+					Utils.setTT(dhtStatus,MessageText.getString("MainWindow.dht.status.tooltip"));
 					dhtStatus.setText(MessageText.getString("MainWindow.dht.status.users").replaceAll(
 							"%1", numberFormat.format(dht_count)));
 
 					/*
 					if ( reachable ){
 						dhtStatus.setImage(ImageRepository.getImage("greenled"));
-						dhtStatus.setToolTipText(MessageText
+						Utils.setTT(dhtStatus.MessageText
 								.getString("MainWindow.dht.status.tooltip"));
 						dhtStatus.setText(MessageText.getString("MainWindow.dht.status.users").replaceAll("%1", numberFormat.format(dht_count)));
 					} else {
 						dhtStatus.setImage(ImageRepository.getImage("yellowled"));
-						dhtStatus.setToolTipText(MessageText
+						Utils.setTT( dhtStatus,MessageText
 								.getString("MainWindow.dht.status.unreachabletooltip"));
 						dhtStatus.setText(MessageText
 								.getString("MainWindow.dht.status.unreachable"));
@@ -1612,7 +1612,7 @@ public class MainStatusBar
 			if ( !nat_info.isEmpty() ){
 				tt += "\n" + nat_info;
 			}
-			natStatus.setToolTipText( tt );
+			Utils.setTT(natStatus, tt );
 			lastNATInfo		= nat_info;
 			
 			natStatus.setText(MessageText.getString(statusID));
@@ -1714,7 +1714,7 @@ public class MainStatusBar
 
 			ratio_str = (ratio / 1000) + "." + partial;
 
-			srStatus.setToolTipText(MessageText.getString(tooltipID, new String[] {
+			Utils.setTT( srStatus,MessageText.getString(tooltipID, new String[] {
 				ratio_str
 			}));
 
@@ -1748,7 +1748,7 @@ public class MainStatusBar
 				+ "/"
 				+ numberFormat.format(core.getIpFilterManager().getBadIps().getNbBadIps()));
 
-		ipBlocked.setToolTipText(MessageText.getString("MainWindow.IPs.tooltip",
+		Utils.setTT(ipBlocked,MessageText.getString("MainWindow.IPs.tooltip",
 				new String[] {
 					ip_filter.isEnabled()?
 					DisplayFormatters.formatDateShort(ip_filter.getLastUpdateTime()):MessageText.getString( "ipfilter.disabled" )
@@ -1761,7 +1761,7 @@ public class MainStatusBar
 	@Override
 	public void setDebugInfo(String string) {
 		if (statusText != null && !statusText.isDisposed())
-			statusText.setToolTipText(string);
+			Utils.setTT(statusText,string);
 	}
 
 	@Override
@@ -1819,20 +1819,20 @@ public class MainStatusBar
 				{
 					@Override
 					public void mouseEnter(MouseEvent e) {
-						//CLabelPadding.super.setToolTipText( tooltip_text );
 						hovering = true;
 					}
 
 					@Override
 					public void mouseExit(MouseEvent e) {
-						//CLabelPadding.super.setToolTipText( "" );
 						hovering = false;
 					}
 					@Override
 					public void mouseHover(MouseEvent e) {
 						String existing = CLabelPadding.super.getToolTipText();
 						if ( existing == null || !existing.equals( tooltip_text )){
-							CLabelPadding.super.setToolTipText( tooltip_text );
+							if ( Utils.getTTEnabled()){
+								CLabelPadding.super.setToolTipText( tooltip_text );
+							}
 						}
 					}
 				});
@@ -1854,7 +1854,9 @@ public class MainStatusBar
 
 			if ( hovering ){
 
-				super.setToolTipText( str );
+				if ( Utils.getTTEnabled()){
+					super.setToolTipText( str );
+				}
 			}
 		}
 

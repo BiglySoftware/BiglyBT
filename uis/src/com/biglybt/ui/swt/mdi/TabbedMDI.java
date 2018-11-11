@@ -490,7 +490,7 @@ public class TabbedMDI
 		String tt = MessageText.getString("label.click.to.restore");
 		for (int i = 0; i < items.length; i++) {
 			CTabItem tabItem = items[i];
-			tabItem.setToolTipText(tt);
+			Utils.setTT(tabItem,tt);
 			Control control = tabItem.getControl();
 			if (control != null && !control.isDisposed()) {
 				tabItem.getControl().setVisible(false);
@@ -537,7 +537,7 @@ public class TabbedMDI
 
 			for (int i = 0; i < items.length; i++) {
 				CTabItem tabItem = items[i];
-				tabItem.setToolTipText(tt);
+				Utils.setTT(tabItem,tt);
 			}
 		}
 

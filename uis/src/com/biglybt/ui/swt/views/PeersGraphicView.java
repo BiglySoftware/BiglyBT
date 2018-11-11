@@ -496,7 +496,7 @@ public class PeersGraphicView
 				}
 			}
 
-			panel.setToolTipText( tt );
+			Utils.setTT(panel, tt );
 		}
     });
 

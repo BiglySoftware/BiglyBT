@@ -1062,7 +1062,7 @@ public class MyTorrentsView
 					Tag tag = (Tag) curButton.getData("Tag");
 
 					if (!(tag instanceof Category)) {
-						curButton.setToolTipText(TagUIUtils.getTagTooltip(tag, true));
+						Utils.setTT(curButton,TagUIUtils.getTagTooltip(tag, true));
 						return;
 					}
 
@@ -1115,12 +1115,12 @@ public class MyTorrentsView
 					}
 
 					if (count == 0) {
-						curButton.setToolTipText(
+						Utils.setTT(curButton,
 								down_details + "\n" + up_details + "\nTotal: 0");
 						return;
 					}
 
-					curButton.setToolTipText((up_details.length() == 0 ? ""
+					Utils.setTT(curButton,(up_details.length() == 0 ? ""
 							: (down_details + "\n" + up_details + "\n")) + "Total: " + count
 							+ "\n" + "Downloading/Seeding: " + ttlActive + "\n" + "\n"
 							+ "Total Speed: "

@@ -242,7 +242,7 @@ ConfigSectionSecurity
 
 	    imgOpenFolder.setBackground(browse.getBackground());
 
-	    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+	    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
 
 	    browse.addListener(SWT.Selection, new Listener() {
 	      @Override

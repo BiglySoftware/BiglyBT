@@ -1642,7 +1642,7 @@ public class TableViewPainted
 							TableColumnCore column = getTableColumnByOffset(e.x);
 
 							if (column == null || ( TableTooltips.tooltips_disabled && !column.doesAutoTooltip())){
-								cHeaderArea.setToolTipText(null);
+								Utils.setTT(cHeaderArea,null);
 							} else {
 								String info = MessageText.getString(
 										column.getTitleLanguageKey() + ".info", (String) null);
@@ -1652,9 +1652,9 @@ public class TableViewPainted
 									if (info != null) {
 										tt += "\n" + info;
 									}
-									cHeaderArea.setToolTipText(tt);
+									Utils.setTT(cHeaderArea,tt);
 								} else {
-									cHeaderArea.setToolTipText(info);
+									Utils.setTT(cHeaderArea,info);
 								}
 							}
 						}

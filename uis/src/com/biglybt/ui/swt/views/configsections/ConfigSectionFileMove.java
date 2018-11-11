@@ -175,7 +175,7 @@ public class ConfigSectionFileMove implements UISWTConfigSection
 		Button browse3 = new Button(gMoveCompleted, SWT.PUSH);
 		browse3.setImage(imgOpenFolder);
 		imgOpenFolder.setBackground(browse3.getBackground());
-		browse3.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+		Utils.setTT(browse3,MessageText.getString("ConfigView.button.browse"));
 
 		browse3.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -224,7 +224,7 @@ public class ConfigSectionFileMove implements UISWTConfigSection
 		Button browse4 = new Button(cTorrentDir, SWT.PUSH);
 		browse4.setImage(imgOpenFolder);
 		imgOpenFolder.setBackground(browse4.getBackground());
-		browse4.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+		Utils.setTT(browse4,MessageText.getString("ConfigView.button.browse"));
 
 		browse4.addListener(SWT.Selection, new Listener() {
 			@Override

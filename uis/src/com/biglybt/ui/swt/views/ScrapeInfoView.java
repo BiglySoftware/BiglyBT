@@ -393,7 +393,7 @@ public class ScrapeInfoView
 				trackerUrlValue.setForeground(null);
 				trackerUrlValue.setCursor(null);
 				Messages.setLanguageText(trackerUrlValue.getWidget(), null);
-				trackerUrlValue.setToolTipText(null);
+				Utils.setTT(trackerUrlValue,null);
 			}
 		}
 

@@ -175,7 +175,7 @@ public class Messages {
 		}
 		if (widget instanceof Control) {
 			if (showKey) {
-				((Control) widget).setToolTipText(key);
+				Utils.setTT((Control) widget,key);
 				return;
 			}
 			if (!key.endsWith(".tooltip")) {
@@ -183,7 +183,7 @@ public class Messages {
 			}
 			String toolTip = MessageText.getString(key);
 			if (!toolTip.equals('!' + key + '!')) {
-				((Control) widget).setToolTipText(toolTip);
+				Utils.setTT((Control) widget, toolTip);
 			}
 		} else if (widget instanceof ToolItem) {
 			if (!key.endsWith(".tooltip")) {
@@ -191,7 +191,7 @@ public class Messages {
 			}
 			String toolTip = MessageText.getString(key);
 			if (!toolTip.equals('!' + key + '!')) {
-				((ToolItem) widget).setToolTipText(toolTip.replaceAll("Meta\\+",
+				Utils.setTT((ToolItem) widget,toolTip.replaceAll("Meta\\+",
 						Constants.isOSX ? "Cmd+" : "Ctrl+"));
 			}
 		} else if (widget instanceof TableColumn) {
@@ -205,7 +205,7 @@ public class Messages {
 			}
 			if (toolTip != null) {
 				try {
-					((TableColumn) widget).setToolTipText(toolTip);
+					Utils.setTT((TableColumn) widget,toolTip);
 				} catch (NoSuchMethodError e) {
 					// Pre SWT 3.2
 				}
@@ -304,17 +304,17 @@ public class Messages {
 		if (widget.getData(RESOURCE_KEY) != null) {
 			String sToolTip = MessageText.getString((String) widget.getData(RESOURCE_KEY));
 			if (widget instanceof CLabel)
-				((CLabel) widget).setToolTipText(sToolTip);
+				Utils.setTT((CLabel) widget,sToolTip);
 			else if (widget instanceof Label)
-				((Label) widget).setToolTipText(sToolTip);
+				Utils.setTT((Label) widget,sToolTip);
 			else if (widget instanceof Text)
-				((Text) widget).setToolTipText(sToolTip);
+				Utils.setTT((Text) widget,sToolTip);
 			else if (widget instanceof Canvas)
-				((Canvas) widget).setToolTipText(sToolTip);
+				Utils.setTT((Canvas) widget,sToolTip);
 			else if (widget instanceof Composite)
-				((Composite) widget).setToolTipText(sToolTip);
+				Utils.setTT((Composite) widget,sToolTip);
 			else if (widget instanceof Control)
-				((Control) widget).setToolTipText(sToolTip);
+				Utils.setTT((Control) widget,sToolTip);
 			else
 				System.out.println("No cast for " + widget.getClass().getName());
 		}

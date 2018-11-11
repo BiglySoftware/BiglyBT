@@ -1156,7 +1156,7 @@ BuddyPluginViewBetaChat
 										}
 									}
 	
-									log.setToolTipText( MessageText.getString( "label.right.click.for.options" ) + tt_extra );
+									Utils.setTT(log, MessageText.getString( "label.right.click.for.options" ) + tt_extra );
 	
 	
 									StyleRange derp;
@@ -1193,7 +1193,7 @@ BuddyPluginViewBetaChat
 	
 						if ( !active ){
 	
-							log.setToolTipText( "" );
+							Utils.setTT(log, "" );
 	
 							if ( old_range != null ){
 	
@@ -1297,7 +1297,7 @@ BuddyPluginViewBetaChat
 	
 			label = new Label( nick_area, SWT.NULL );
 			label.setText( lu.getLocalisedMessageText( "label.shared" ));
-			label.setToolTipText( lu.getLocalisedMessageText( "azbuddy.dchat.shared.tooltip" ));
+			Utils.setTT(label, lu.getLocalisedMessageText( "azbuddy.dchat.shared.tooltip" ));
 	
 			shared_nick_button = new Button( nick_area, SWT.CHECK );
 	
@@ -2516,7 +2516,7 @@ BuddyPluginViewBetaChat
 
 			pop_out.setCursor(pop_out.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 
-			pop_out.setToolTipText( MessageText.getString( "label.pop.out" ));
+			Utils.setTT(pop_out, MessageText.getString( "label.pop.out" ));
 
 			pop_out.addMouseListener(new MouseAdapter() {
 				@Override
@@ -2583,7 +2583,7 @@ BuddyPluginViewBetaChat
 			grid_data.heightHint = rss_image_gray.getBounds().height;
 			rss_button.setLayoutData(grid_data);
 	
-			rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
+			Utils.setTT(rss_button, MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
 	
 			rss_button.addMouseTrackListener(
 				new MouseTrackAdapter(){
@@ -2620,7 +2620,7 @@ BuddyPluginViewBetaChat
 			rss_button.setLayoutData(grid_data);
 			//rss_button.setEnabled(false);
 	
-			rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
+			Utils.setTT(rss_button, MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
 	
 			rss_button.addSelectionListener(
 				new SelectionAdapter(){

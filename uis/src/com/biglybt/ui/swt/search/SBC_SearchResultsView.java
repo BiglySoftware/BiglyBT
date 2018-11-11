@@ -767,7 +767,7 @@ SBC_SearchResultsView
 
 											if ( msg != null ){
 
-												indicator.setToolTipText( msg );
+												Utils.setTT(indicator, msg );
 											}
 										}else{
 

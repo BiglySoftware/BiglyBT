@@ -295,7 +295,7 @@ public class SWTSkinObjectImage2
 
 		final String sURL = properties.getStringValue(sConfigID + ".url");
 		if (sURL != null && sURL.length() > 0) {
-			canvas.setToolTipText(sURL);
+			Utils.setTT(canvas,sURL);
 			canvas.addListener(SWT.MouseUp, new Listener() {
 				@Override
 				public void handleEvent(Event arg0) {

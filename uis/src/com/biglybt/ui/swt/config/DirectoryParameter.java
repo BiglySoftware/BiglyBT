@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.internat.MessageText;
-
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 /**
@@ -62,7 +62,7 @@ DirectoryParameter
 
 	    Button browse = new Button(pluginGroup, SWT.PUSH);
 	    ImageLoader.getInstance().setButtonImage(browse, getBrowseImageResource());
-	    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+	    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
 
 	    browse.addListener(SWT.Selection, new Listener() {
 	      @Override

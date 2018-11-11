@@ -298,9 +298,9 @@ public class ProgressReporterPanel
 		imageLoader.setLabelImage(actionLabel_remove, "progress_remove");
 		imageLoader.setLabelImage(actionLabel_retry, "progress_retry");
 
-		actionLabel_cancel.setToolTipText(MessageText.getString("Progress.reporting.action.label.cancel.tooltip"));
-		actionLabel_remove.setToolTipText(MessageText.getString("Progress.reporting.action.label.remove.tooltip"));
-		actionLabel_retry.setToolTipText(MessageText.getString("Progress.reporting.action.label.retry.tooltip"));
+		Utils.setTT(actionLabel_cancel,MessageText.getString("Progress.reporting.action.label.cancel.tooltip"));
+		Utils.setTT(actionLabel_remove,MessageText.getString("Progress.reporting.action.label.remove.tooltip"));
+		Utils.setTT(actionLabel_retry,MessageText.getString("Progress.reporting.action.label.retry.tooltip"));
 
 		/* ========================================
 		 * Catch up on any messages we might have missed

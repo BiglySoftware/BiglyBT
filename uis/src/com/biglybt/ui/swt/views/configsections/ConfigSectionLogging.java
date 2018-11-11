@@ -152,7 +152,7 @@ public class ConfigSectionLogging implements UISWTConfigSection {
     Button browse = new Button(cArea, SWT.PUSH);
     browse.setImage(imgOpenFolder);
     imgOpenFolder.setBackground(browse.getBackground());
-    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
     browse.addListener(SWT.Selection, new Listener() {
       /* (non-Javadoc)
        * @see org.eclipse.swt.widgets.Listener#handleEvent(org.eclipse.swt.widgets.Event)

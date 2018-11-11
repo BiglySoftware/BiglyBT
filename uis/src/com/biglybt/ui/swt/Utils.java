@@ -30,6 +30,7 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.dnd.*;
@@ -68,12 +69,15 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
 import com.biglybt.ui.swt.components.BufferedLabel;
+import com.biglybt.ui.swt.components.BufferedTruncatedLabel;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.pif.UISWTStatusEntry;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.systray.TrayItemDelegate;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 
 /**
@@ -4251,6 +4255,79 @@ public class Utils
 		properties.put(ShareManager.PR_PERSONAL, "true");
 	}
 
+	
+	private static boolean tt_enabled = false;;
+	
+	public static boolean
+	getTTEnabled()
+	{
+		return( tt_enabled );
+	}
+	
+	public static void
+	setTT(
+		Control		c,
+		String		text )
+	{
+		c.setToolTipText( tt_enabled?text:null );
+	}	
+	
+	public static void
+	setTT(
+		BufferedTruncatedLabel		c,
+		String						text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		CTabItem			c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		UISWTStatusEntry	c,
+		String				text )
+	{
+		c.setTooltipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		TableColumn			c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		ToolItem			c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		TrayItem			c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		TrayItemDelegate	c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
 	public static void dispose() {
 		shellIcons = null;
 		icon128 = null;

@@ -439,7 +439,7 @@ BuddyPluginView
 
 			label.setText( label_text = MessageText.getString( "azbuddy.tracker.bbb.status.title" ));
 			
-			label.setTooltipText( MessageText.getString( "azbuddy.tracker.bbb.status.title.tooltip" ));
+			Utils.setTT(label, MessageText.getString( "azbuddy.tracker.bbb.status.title.tooltip" ));
 
 			tracker = plugin.getTracker();
 
@@ -646,7 +646,7 @@ BuddyPluginView
 
 					status.setImage( iconNLI );
 
-					status.setTooltipText( MessageText.getString( "azbuddy.tracker.bbb.status.nli" ));
+					Utils.setTT(status, MessageText.getString( "azbuddy.tracker.bbb.status.nli" ));
 
 					disableUpdates();
 
@@ -681,7 +681,7 @@ BuddyPluginView
 
 						status.setImage( iconIDLE );
 
-						status.setTooltipText( MessageText.getString( "azbuddy.tracker.bbb.status.idle" ));
+						Utils.setTT(status, MessageText.getString( "azbuddy.tracker.bbb.status.idle" ));
 
 						disableUpdates();
 
@@ -760,7 +760,7 @@ BuddyPluginView
 										tt = MessageText.getString( "azbuddy.tracker.bbb.status.inout" ) + ": " + DisplayFormatters.formatByteCountToKiBEtcPerSec( tracker.getNetworkReceiveBytesPerSecond()) + "/" + DisplayFormatters.formatByteCountToKiBEtcPerSec( tracker.getNetworkSendBytesPerSecond());
 									}
 
-									status.setTooltipText( tt );
+									Utils.setTT(status, tt );
 								}
 							}
 						}
@@ -1424,7 +1424,7 @@ BuddyPluginView
 
 			if ( beta_status != null ){
 
-				beta_status.setTooltipText( text );
+				Utils.setTT(beta_status, text );
 			}
 
 			buildMenu( instances );
@@ -1631,7 +1631,7 @@ BuddyPluginView
 												playSound();
 											}
 
-											beta_status.setTooltipText( tt_text );
+											Utils.setTT(beta_status, tt_text );
 
 											Image image = has_mine?bs_chat_red:bs_chat_green;
 											
@@ -2850,7 +2850,7 @@ BuddyPluginView
 
 								button.setText( short_name );
 								button.setAlignment( SWT.LEFT );
-								button.setToolTipText( long_name );
+								Utils.setTT(button, long_name );
 
 								button.setData( net + ":" + key );
 
@@ -3340,7 +3340,7 @@ BuddyPluginView
 
 												BuddyPluginViewBetaChat view = new BuddyPluginViewBetaChat( BuddyPluginView.this, plugin, chat, chat_composite );
 
-												((CTabItem)chat_composite.getData("tabitem")).setToolTipText( key );
+												Utils.setTT(((CTabItem)chat_composite.getData("tabitem")),key );
 
 												chat_composite.layout( true, true );
 

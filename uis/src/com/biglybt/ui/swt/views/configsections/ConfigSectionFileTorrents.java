@@ -121,7 +121,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     Button browse2 = new Button(gSaveTorrents, SWT.PUSH);
     browse2.setImage(imgOpenFolder);
     imgOpenFolder.setBackground(browse2.getBackground());
-    browse2.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+    Utils.setTT(browse2,MessageText.getString("ConfigView.button.browse"));
 
     browse2.addListener(SWT.Selection, new Listener() {
       /* (non-Javadoc)
@@ -218,7 +218,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
 	    Button browse4 = new Button(gWatchFolder, SWT.PUSH);
 	    browse4.setImage(imgOpenFolder);
 	    imgOpenFolder.setBackground(browse4.getBackground());
-	    browse4.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+	    Utils.setTT(browse4,MessageText.getString("ConfigView.button.browse"));
 
 	    browse4.addListener(SWT.Selection, new Listener() {
 	      @Override

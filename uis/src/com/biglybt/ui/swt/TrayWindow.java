@@ -284,7 +284,7 @@ public class TrayWindow
     }finally{
     	managers_mon.exit();
     }
-    //label.setToolTipText(toolTip.toString());
+    //Utils.setTT(label,toolTip.toString());
     //minimized.moveAbove(null);
   }
 

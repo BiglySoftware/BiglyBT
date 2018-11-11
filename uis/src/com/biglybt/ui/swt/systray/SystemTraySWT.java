@@ -130,7 +130,7 @@ public class SystemTraySWT
 				} else {
 					MessageText.removeListener(SystemTraySWT.this);
 					if (trayItem != null && !trayItem.isDisposed()) {
-						trayItem.setToolTipText(null);
+						Utils.setTT(trayItem,null);
 					}
 				}
 			}
@@ -586,7 +586,7 @@ public class SystemTraySWT
 	  			toolTip.append( alertsKeyVal.replaceAll("%1", "" + alerts));
 	  		}
 
-	  		trayItem.setToolTipText(toolTip.toString());
+	  		Utils.setTT(trayItem,toolTip.toString());
 		}
 
 

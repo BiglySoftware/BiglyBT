@@ -871,7 +871,7 @@ public class OpenTorrentOptionsWindow
 
 		buttonTorrentUp = new Button(button_area, SWT.PUSH);
 		buttonTorrentUp.setImage( loadImage( "image.toolbar.up" ));
-		buttonTorrentUp.setToolTipText(MessageText.getString("Button.moveUp"));
+		Utils.setTT(buttonTorrentUp,MessageText.getString("Button.moveUp"));
 		buttonTorrentUp.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -912,7 +912,7 @@ public class OpenTorrentOptionsWindow
 
 		buttonTorrentDown = new Button(button_area, SWT.PUSH);
 		buttonTorrentDown.setImage( loadImage( "image.toolbar.down" ));
-		buttonTorrentDown.setToolTipText(MessageText.getString("Button.moveDown"));
+		Utils.setTT(buttonTorrentDown,MessageText.getString("Button.moveDown"));
 		buttonTorrentDown.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
@@ -952,7 +952,7 @@ public class OpenTorrentOptionsWindow
 			}});
 
 		buttonTorrentRemove = new Button(button_area, SWT.PUSH);
-		buttonTorrentRemove.setToolTipText(MessageText.getString("OpenTorrentWindow.torrent.remove"));
+		Utils.setTT(buttonTorrentRemove,MessageText.getString("OpenTorrentWindow.torrent.remove"));
 		buttonTorrentRemove.setImage( loadImage( "image.toolbar.remove" ));
 		buttonTorrentRemove.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -3447,7 +3447,7 @@ public class OpenTorrentOptionsWindow
 														}
 
 														ratingText.setText( text );
-														ratingText.setToolTipText( tooltip );
+														Utils.setTT(ratingText, tooltip );
 													}
 												}
 											});
@@ -4073,7 +4073,7 @@ public class OpenTorrentOptionsWindow
 			btnTreeView = new Button(cButtonsBottom, SWT.PUSH);
 			buttons.add( btnTreeView );
 			Messages.setLanguageText(btnTreeView, "OpenTorrentWindow.tree.view");
-			btnTreeView.setToolTipText( MessageText.getString( "OpenTorrentWindow.tree.view.info" ));
+			Utils.setTT(btnTreeView, MessageText.getString( "OpenTorrentWindow.tree.view.info" ));
 
 			btnTreeView.addListener(SWT.Selection, new Listener(){
 				@Override
@@ -4091,7 +4091,7 @@ public class OpenTorrentOptionsWindow
 			btnPrivacy = new Button(cButtonsBottom, SWT.TOGGLE);
 			buttons.add( btnPrivacy );
 			Messages.setLanguageText(btnPrivacy, "label.privacy");
-			btnPrivacy.setToolTipText( MessageText.getString( "OpenTorrentWindow.privacy.info" ));
+			Utils.setTT(btnPrivacy, MessageText.getString( "OpenTorrentWindow.privacy.info" ));
 
 			btnPrivacy.addListener(SWT.Selection, new Listener(){
 				private int					saved_start_mode;
@@ -4301,7 +4301,7 @@ public class OpenTorrentOptionsWindow
 					}
 				});
 
-			cmbDataDir.setToolTipText( MessageText.getString( "label.ctrl.space.for.suggestion" ));
+			Utils.setTT(cmbDataDir, MessageText.getString( "label.ctrl.space.for.suggestion" ));
 
 			cmbDataDir.addModifyListener(new ModifyListener() {
 				@Override
@@ -4839,7 +4839,7 @@ public class OpenTorrentOptionsWindow
 
 						button.setText( tag.getTagName( true ));
 
-						button.setToolTipText( TagUIUtils.getTagTooltip(tag));
+						Utils.setTT(button, TagUIUtils.getTagTooltip(tag));
 
 						if ( initialTags.contains( tag )){
 
@@ -4988,7 +4988,7 @@ public class OpenTorrentOptionsWindow
 
 						but.setText( tagDisplayName );
 
-						but.setToolTipText(MessageText.getString("tagtype.discovered"));
+						Utils.setTT(but,MessageText.getString("tagtype.discovered"));
 
 						but.addSelectionListener(
 							new SelectionAdapter() {

@@ -898,11 +898,11 @@ public class MessageBoxShell
 						if (hitUrl != null) {
 							canvas.setCursor(canvas.getDisplay().getSystemCursor(
 									SWT.CURSOR_HAND));
-							canvas.setToolTipText(hitUrl.url);
+							Utils.setTT(canvas,hitUrl.url);
 						} else {
 							canvas.setCursor(canvas.getDisplay().getSystemCursor(
 									SWT.CURSOR_ARROW));
-							canvas.setToolTipText(null);
+							Utils.setTT(canvas,null);
 						}
 					}
 				} else if (e.type == SWT.MouseUp) {

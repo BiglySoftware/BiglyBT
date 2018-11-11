@@ -432,7 +432,7 @@ XferStatsPanel
 
 	    		if ( closest_distance <= 30 ){
 	    			
-	    			canvas.setToolTipText( closest.getToolTip());
+	    			Utils.setTT(canvas, closest.getToolTip());
 
 	    			hover_node	= closest;
 	    			
@@ -440,7 +440,7 @@ XferStatsPanel
 
 	    			hover_node = null;
 	    			
-	    			canvas.setToolTipText( "" );
+	    			Utils.setTT(canvas, "" );
 	    		}
 	    		
 	    		requestRefresh();

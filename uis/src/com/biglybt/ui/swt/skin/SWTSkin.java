@@ -950,7 +950,7 @@ public class SWTSkin
 					if (sText.length() < 20) {
 						group.setText(sText);
 					}
-					group.setToolTipText(sText);
+					Utils.setTT(group,sText);
 				}
 			}
 

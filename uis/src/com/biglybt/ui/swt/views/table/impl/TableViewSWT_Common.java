@@ -633,7 +633,7 @@ public class TableViewSWT_Common
 						"MyTorrentsView.filter.tooltip");
 			} catch (Exception e) {
 				filter.widget.setBackground(Colors.colorErrorBG);
-				filter.widget.setToolTipText(e.getMessage());
+				Utils.setTT(filter.widget,e.getMessage());
 				filter.widget.setFont( FONT_REGEX_ERROR );
 			}
 		} else {

@@ -174,7 +174,7 @@ public class ConfigSectionStats implements UISWTConfigSection {
     Button browse = new Button(gSnap, SWT.PUSH);
     browse.setImage(imgOpenFolder);
     imgOpenFolder.setBackground(browse.getBackground());
-    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
     controls[2] = browse;
     browse.addListener(SWT.Selection, new Listener() {
       /* (non-Javadoc)

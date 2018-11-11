@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.Messages;
-
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 import com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl;
@@ -55,7 +55,7 @@ public class PluginDirectoryParameter implements PluginParameterImpl {
 
     Button browse = new Button(pluginGroup, SWT.PUSH);
     ImageLoader.getInstance().setButtonImage(browse, "openFolderButton");
-    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
 
     browse.addListener(SWT.Selection, new Listener() {
       @Override

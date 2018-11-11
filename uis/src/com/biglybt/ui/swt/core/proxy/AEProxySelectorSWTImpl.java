@@ -449,7 +449,7 @@ AEProxySelectorSWTImpl
 
 						status.setImage( f_icon );
 
-						status.setTooltipText(
+						Utils.setTT(status,
 							MessageText.getString(
 								"proxy.socks.ui.icon.tip",
 								new String[]{ MessageText.getString(f_key)} ));

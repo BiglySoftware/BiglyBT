@@ -147,7 +147,7 @@ PMSWTImpl
 
 										last_tooltip_text = MessageText.getString( "pairing.ui.icon.tip" );
 
-										status.setTooltipText( last_tooltip_text );
+										Utils.setTT(status, last_tooltip_text );
 
 										status.setImageEnabled( true );
 
@@ -533,7 +533,7 @@ PMSWTImpl
 
 			last_tooltip_text = tooltip_text_str;
 
-			status.setTooltipText( last_tooltip_text );
+			Utils.setTT(status, last_tooltip_text );
 		}
 
 		Image	target_image = null;

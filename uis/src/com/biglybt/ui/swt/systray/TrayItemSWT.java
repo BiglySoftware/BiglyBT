@@ -24,6 +24,7 @@ import org.eclipse.swt.widgets.TrayItem;
 
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 /**
@@ -70,7 +71,7 @@ public class TrayItemSWT
 
 	@Override
 	public void setToolTipText(String s) {
-		item.setToolTipText(s);
+		Utils.setTT(item,s);
 	}
 
 	@Override

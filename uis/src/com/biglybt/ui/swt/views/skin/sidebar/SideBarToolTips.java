@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.views.skin.sidebar;
 
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
@@ -104,6 +105,10 @@ public class SideBarToolTips
 		if (toolTipShell != null && !toolTipShell.isDisposed())
 			toolTipShell.dispose();
 
+		if ( !Utils.getTTEnabled()){
+			return;
+		}
+		
 		if (tree.getItemCount() == 0) {
 			return;
 		}

@@ -660,7 +660,7 @@ public class OpenTorrentWindow
 				&& btnPasteOpen.isVisible() != bTorrentInClipboard) {
 			btnPasteOpen.setVisible(bTorrentInClipboard);
 			if (bTorrentInClipboard) {
-				btnPasteOpen.setToolTipText(sClipText);
+				Utils.setTT(btnPasteOpen,sClipText);
 			}
 		}
 

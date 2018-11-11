@@ -2099,7 +2099,7 @@ public class MainWindowImpl
 
 		String tooltip = MessageText.getString( "v3.MainWindow.search.tooltip" );
 
-		text.setToolTipText( tooltip );
+		Utils.setTT(text, tooltip );
 
 		SWTSkinProperties properties = skinObject.getProperties();
 		Color colorSearchTextBG = properties.getColor("color.search.text.bg");
