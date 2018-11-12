@@ -59,81 +59,98 @@ public class DonationWindow
 
 	static BrowserWrapper.BrowserFunction browserFunction;
 
-	public static void checkForDonationPopup() {
-		if (shell != null) {
-			if (DEBUG) {
-				new MessageBoxShell(SWT.OK, "Donations Test", "Already Open").open(null);
+	public static void 
+	checkForDonationPopup() 
+	{
+		synchronized( DonationWindow.class ){
+			
+			if (shell != null) {
+				if (DEBUG) {
+					new MessageBoxShell(SWT.OK, "Donations Test", "Already Open").open(null);
+				}
+				return;
 			}
-			return;
-		}
-
-		long maxDate = COConfigurationManager.getLongParameter("donations.maxDate", 0);
-		boolean force = maxDate > 0 && SystemTime.getCurrentTime() > maxDate;
-
-		//Check if user has already donated first
-		boolean alreadyDonated = COConfigurationManager.getBooleanParameter(
-				"donations.donated", false);
-		if (alreadyDonated && !force) {
-			if (DEBUG) {
-				new MessageBoxShell(SWT.OK, "Donations Test",
-						"Already Donated! I like you.").open(null);
+	
+			long maxDate = COConfigurationManager.getLongParameter("donations.maxDate", 0);
+			
+			boolean force = maxDate > 0 && SystemTime.getCurrentTime() > maxDate;
+	
+			if ( force ){
+			
+					// bump up max-date to avoid multiple 'concurrent' additions from triggering
+					// multiple windows
+				
+				COConfigurationManager.setParameter("donations.maxDate", maxDate + 24*60*60*1000 );
 			}
-			return;
-		}
-
-		OverallStats stats = StatsFactory.getStats();
-		if (stats == null) {
-			return;
-		}
-
-		long upTime = stats.getTotalUpTime();
-		int hours = (int) (upTime / (60 * 60)); //secs * mins
-
-		//Ask every DONATIONS_ASK_AFTER hours.
-		int nextAsk = COConfigurationManager.getIntParameter(
-				"donations.nextAskHours", 0);
-
-		if (nextAsk == 0) {
-			// First Time
-			COConfigurationManager.setParameter("donations.nextAskHours", hours
-					+ initialAskHours);
+			
+				//Check if user has already donated first
+			
+			boolean alreadyDonated = COConfigurationManager.getBooleanParameter("donations.donated", false);
+			
+			if (alreadyDonated && !force) {
+				if (DEBUG) {
+					new MessageBoxShell(SWT.OK, "Donations Test",
+							"Already Donated! I like you.").open(null);
+				}
+				return;
+			}
+	
+			OverallStats stats = StatsFactory.getStats();
+			
+			if (stats == null){
+				
+				return;
+			}
+	
+			long upTime = stats.getTotalUpTime();
+			
+			int hours = (int) (upTime / (60 * 60)); //secs * mins
+	
+				//Ask every DONATIONS_ASK_AFTER hours.
+			
+			int nextAsk = COConfigurationManager.getIntParameter( "donations.nextAskHours", 0 );
+	
+			if ( nextAsk == 0 ){
+				
+					// First Time
+				
+				COConfigurationManager.setParameter( "donations.nextAskHours", hours	+ initialAskHours );
+				
+				COConfigurationManager.save();
+				
+				if (DEBUG) {
+					new MessageBoxShell(SWT.OK, "Donations Test",
+							"Newbie. You're active for " + hours + ".").open(null);
+				}
+				return;
+			}
+	
+			if (hours < nextAsk && !force){
+				
+				if (DEBUG) {
+					new MessageBoxShell(SWT.OK, "Donations Test", "Wait "
+							+ (nextAsk - hours) + ".").open(null);
+				}
+				return;
+			}
+	
+			long minDate = COConfigurationManager.getLongParameter("donations.minDate",	0);
+			
+			if (minDate > 0 && minDate > SystemTime.getCurrentTime()) {
+				if (DEBUG) {
+					new MessageBoxShell(SWT.OK, "Donation Test", "Wait "
+							+ ((SystemTime.getCurrentTime() - minDate) / 1000 / 3600 / 24)
+							+ " days").open(null);
+				}
+				return;
+			}
+	
+			COConfigurationManager.setParameter("donations.nextAskHours", hours	+ reAskEveryHours);
+			
 			COConfigurationManager.save();
-			if (DEBUG) {
-				new MessageBoxShell(SWT.OK, "Donations Test",
-						"Newbie. You're active for " + hours + ".").open(null);
-			}
-			return;
 		}
-
-		if (hours < nextAsk && !force) {
-			if (DEBUG) {
-				new MessageBoxShell(SWT.OK, "Donations Test", "Wait "
-						+ (nextAsk - hours) + ".").open(null);
-			}
-			return;
-		}
-
-		long minDate = COConfigurationManager.getLongParameter("donations.minDate",
-				0);
-		if (minDate > 0 && minDate > SystemTime.getCurrentTime()) {
-			if (DEBUG) {
-				new MessageBoxShell(SWT.OK, "Donation Test", "Wait "
-						+ ((SystemTime.getCurrentTime() - minDate) / 1000 / 3600 / 24)
-						+ " days").open(null);
-			}
-			return;
-		}
-
-		COConfigurationManager.setParameter("donations.nextAskHours", hours
-				+ reAskEveryHours);
-		COConfigurationManager.save();
-
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				open(false, "check");
-			}
-		});
+		
+		open(false, "check");
 	}
 
 	public static void open(final boolean showNoLoad, final String sourceRef) {
