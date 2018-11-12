@@ -78,6 +78,7 @@ public class TableTooltips
 		composite.addListener(SWT.KeyDown, this);
 		composite.addListener(SWT.MouseMove, this);
 		composite.addListener(SWT.MouseHover, this);
+		composite.addListener(SWT.MouseExit, this);
 		mainShell.addListener(SWT.Deactivate, this);
 		tv.getComposite().addListener(SWT.Deactivate, this);
 	}
