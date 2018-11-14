@@ -30,13 +30,14 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
-import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.menus.MenuManager;
@@ -1242,19 +1243,71 @@ public class FilesViewMenuUtil
 				// to actually do a file-level recheck the download need to be started after requesting the
 				// recheck(s)
 			
+			DownloadManagerListener l =
+					new DownloadManagerAdapter(){
+						
+						boolean	is_ready;
+						
+						@Override
+						public void stateChanged(DownloadManager manager, int state){
+							
+							if ( state == DownloadManager.STATE_ERROR ){
+								
+								if ( !was_force ){
+									
+									dm.setForceStart( false );
+								}
+								
+								dm.removeListener( this );
+								
+							}else if ( state == DownloadManager.STATE_READY ){
+
+								is_ready = true;
+							
+							}else if ( is_ready && 
+										( 	state == DownloadManager.STATE_DOWNLOADING || 
+											state == DownloadManager.STATE_SEEDING ||
+											state == DownloadManager.STATE_QUEUED )){
+								
+								dm.removeListener( this );
+								
+								if ( !was_force ){
+									
+									dm.setForceStart( false );
+								}
+								
+								if ( was_paused ){
+									
+									ManagerUtils.asyncPause( dm );
+									
+								}else if ( was_stopped ){
+									
+									ManagerUtils.asyncStop( dm, DownloadManager.STATE_STOPPED );
+								}
+							}else if ( is_ready && state == DownloadManager.STATE_STOPPED ){
+								
+									// shouldn't get here but just in case
+								
+								dm.removeListener( this );
+							}	
+						}
+					};
+					
+			dm.addListener( l );
+
 			if ( was_paused ){
 
 				dm.resume();
 				
 			}else{
 				
+				
 				dm.stopIt( DownloadManager.STATE_QUEUED, false, false );
 			}
-			
-			if ( was_force ){
 				
-				dm.setForceStart( true );
-			}
+				// gotta get it running
+			
+			dm.setForceStart( true );
 		}
 	}
 	
