@@ -70,6 +70,7 @@ GlobalManagerFileMerger
 	boolean	initialised;
 	boolean	enabled;
 	boolean	enabled_extended;
+	int		tolerance;
 
 	final Map<HashWrapper,DownloadManager>		dm_map = new HashMap<>();
 
@@ -112,20 +113,24 @@ GlobalManagerFileMerger
 	initialise()
 	{
 		COConfigurationManager.addAndFireParameterListeners(
-			new String[]{ "Merge Same Size Files", "Merge Same Size Files Extended" },
+			new String[]{ "Merge Same Size Files", "Merge Same Size Files Extended", "Merge Same Size Files Tolerance" },
 			new ParameterListener(){
 
 				@Override
 				public void
 				parameterChanged(
-					String _name )
+					String name )
 				{
 					enabled 			= COConfigurationManager.getBooleanParameter( "Merge Same Size Files" );
 					enabled_extended 	= COConfigurationManager.getBooleanParameter( "Merge Same Size Files Extended" );
+					
+					int	old_tolerance = tolerance;
+					
+					tolerance		 	= COConfigurationManager.getIntParameter( "Merge Same Size Files Tolerance" );
 
 					if ( initialised ){
 
-						syncFileSets();
+						syncFileSets( old_tolerance != tolerance );
 					}
 				}
 			});
@@ -138,7 +143,7 @@ GlobalManagerFileMerger
 				downloadManagerAdded(
 					DownloadManager dm )
 				{
-					syncFileSets();
+					syncFileSets( false );
 				}
 
 				@Override
@@ -146,12 +151,12 @@ GlobalManagerFileMerger
 				downloadManagerRemoved(
 					DownloadManager dm )
 				{
-					syncFileSets();
+					syncFileSets( false );
 				}
 			},
 			false );
 
-		syncFileSets();
+		syncFileSets( false );
 
 		initialised = true;
 	}
@@ -193,7 +198,8 @@ GlobalManagerFileMerger
 	}
 
 	void
-	syncFileSets()
+	syncFileSets(
+		boolean		force )
 	{
 		List<DownloadManager> dms = gm.getDownloadManagers();
 
@@ -261,7 +267,60 @@ GlobalManagerFileMerger
 				}
 			}
 
-			if ( changed ){
+			if ( changed || force ){
+
+				Map<String,Object>	tolerance_map = new HashMap<>();
+				
+				if ( tolerance != 0 ){
+					
+					for ( DownloadManager dm: dm_map.values()){
+
+						TOTorrent torrent = dm.getTorrent();
+
+						if ( torrent == null ){
+
+							continue;
+						}
+
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+
+						for ( DiskManagerFileInfo file: files ){
+
+								// filter out small files
+
+							if ( file.getNbPieces() < MIN_PIECES ){
+
+								continue;
+							}
+								
+							String name = file.getFile( true ).getName();
+							
+							long	len = file.getLength();
+							
+							Object existing = tolerance_map.get( name );
+							
+							if ( existing == null ){
+								
+								tolerance_map.put( name, len );
+								
+							}else{
+								
+								if ( existing instanceof Long ){
+									
+									List<Long> list = new ArrayList<>(2);
+							
+									list.add((Long)existing );
+									list.add( len );
+									
+									tolerance_map.put( name, list );
+								}else{
+									
+									((List<Long>)existing).add( len );
+								}
+							}
+						}
+					}
+				}
 
 				List<Set<DiskManagerFileInfo>>	interesting = new LinkedList<>();
 
@@ -287,15 +346,67 @@ GlobalManagerFileMerger
 							continue;
 						}
 
-						long len = file.getLength();
+						long len_to_use = file.getLength();
 
-						Set<DiskManagerFileInfo> set = size_map.get( len );
+						if ( tolerance != 0 ){
+							
+							String name = file.getFile( true ).getName();
+							
+							Object o = tolerance_map.get( name );
+							
+							if ( o instanceof Long ){
+								
+							}else{
+								
+								Long[]	lengths;
+								
+								if ( o instanceof List ){
+								
+									List<Long>	list = (List<Long>)o;
+									
+									lengths = list.toArray( new Long[0] );
+									
+									Arrays.sort( lengths );
+									
+									tolerance_map.put( name, lengths );
+									
+								}else{
+									
+									lengths = (Long[])o;
+									
+								}
+								
+								long	current = lengths[0];
+								
+								if ( len_to_use > current ){
+									
+									for ( int i=1;i<lengths.length;i++){
+										
+										long	l = lengths[i];
+										
+										if ( l - current > tolerance ){
+											
+											current = l;
+										}
+										
+										if ( l == len_to_use ){
+											
+											len_to_use = current;
+											
+											break;
+										}
+									}
+								}
+							}
+						}
+						
+						Set<DiskManagerFileInfo> set = size_map.get( len_to_use );
 
 						if ( set == null ){
 
 							set = new HashSet<>();
 
-							size_map.put( len, set );
+							size_map.put( len_to_use, set );
 						}
 
 						boolean same_dm = false;
@@ -948,10 +1059,13 @@ GlobalManagerFileMerger
 					size = f.getLength();
 				}
 
-				msg.append( "    " );
+				msg.append( "  " );
 				msg.append( file.getDownloadManager().getDisplayName());
 				msg.append( ": " );
 				msg.append( f.getTorrentFile().getRelativePath());
+				msg.append( "\n" );
+				
+				msg.append( "    " + file.getInfo());
 				msg.append( "\n" );
 			}
 
@@ -1013,7 +1127,7 @@ GlobalManagerFileMerger
 
 			private final boolean[]					modified_pieces;
 
-			int	pieces_completed;
+			private int	pieces_completed;
 			private int	pieces_corrupted;
 
 			private int	forced_start_piece		= 0;
@@ -1588,6 +1702,14 @@ GlobalManagerFileMerger
 				return( merged_byte_counnt );
 			}
 
+			String
+			getInfo()
+			{
+				return( 
+					"merge=" + DisplayFormatters.formatByteCountToKiBEtc( merged_byte_counnt ) + "," +
+					"p_ok=" + pieces_completed + ",p_bad=" + pieces_corrupted + ",force=["+forced_start_piece + "," + forced_end_piece + "]" );
+			}
+			
 			boolean
 			forceRange(
 				int		for_piece,

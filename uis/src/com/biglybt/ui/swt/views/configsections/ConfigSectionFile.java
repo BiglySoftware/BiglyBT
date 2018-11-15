@@ -407,6 +407,25 @@ public class ConfigSectionFile
 			mergeSameSize.setAdditionalActionPerformer(mergeAP);
 		}
 
+		// merge tolerance
+
+		sCurConfigID = "Merge Same Size Files Tolerance";
+		allConfigIDs.add(sCurConfigID);
+		if (mergeSameSize != null) {
+			label = new Label(gFile, SWT.NULL );
+			Messages.setLanguageText( label,"ConfigView.section.file.merge.same.size.tolerance");
+			gridData = new GridData();
+			gridData.horizontalIndent = 25;
+			label.setLayoutData(gridData);
+
+			IntParameter tol = new IntParameter(gFile, sCurConfigID);
+			gridData = new GridData();
+			tol.setLayoutData(gridData);
+			
+			IAdditionalActionPerformer mergeAP = new ChangeSelectionActionPerformer( new Control[]{ tol.getControl(), label });
+			mergeSameSize.setAdditionalActionPerformer(mergeAP);
+		}
+		
 			// recheck on complete
 
 		sCurConfigID = "Check Pieces on Completion";
