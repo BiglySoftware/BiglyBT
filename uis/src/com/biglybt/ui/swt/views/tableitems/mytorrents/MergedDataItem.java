@@ -26,6 +26,7 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableCellToolTipListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
@@ -36,7 +37,7 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
  */
 public class MergedDataItem
        extends CoreTableColumnSWT
-       implements TableCellRefreshListener
+       implements TableCellRefreshListener, TableCellToolTipListener
 {
 	public static final Class DATASOURCE_TYPE = Download.class;
 
@@ -69,12 +70,36 @@ public class MergedDataItem
 			return;
 
 		cell.setText(value==0?"":DisplayFormatters.formatByteCountToKiBEtc( value ));
-
-		String info = dm.isSwarmMerging();
-
-		if ( info == null ){
+	}
+	
+	@Override
+	public void 
+	cellHover(TableCell cell)
+	{
+		DownloadManager dm = (DownloadManager)cell.getDataSource();
+		
+		String info;
+		
+		if ( dm == null ){
+			
 			info = "";
+			
+		}else{
+			
+			info = dm.isSwarmMerging();
+
+			if ( info == null ){
+				
+				info = "";
+			}
 		}
+		
 		cell.setToolTip( info );
 	}
+
+	@Override
+	public void
+	cellHoverComplete(TableCell cell)
+	{	
+	}   
 }

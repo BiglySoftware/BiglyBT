@@ -1048,15 +1048,25 @@ GlobalManagerFileMerger
 		{
 			StringBuilder msg = new StringBuilder(1024);
 
-			long	size = -1;
+			long	size_min = -1;
+			long	size_max = -1;
 
 			for ( SameSizeFileWrapper file: file_wrappers ){
 
 				DiskManagerFileInfo f = file.getFile();
 
-				if ( size == -1 ){
+				if ( size_min == -1 ){
 
-					size = f.getLength();
+					size_min = size_max = f.getLength();
+				}else{
+					
+					if ( tolerance != 0 ){
+						
+						long l2 = f.getLength();
+						
+						size_min = Math.min( size_min, l2 );
+						size_max = Math.max( size_max, l2 );
+					}
 				}
 
 				msg.append( "  " );
@@ -1069,7 +1079,14 @@ GlobalManagerFileMerger
 				msg.append( "\n" );
 			}
 
-			return( "Size: " + DisplayFormatters.formatByteCountToKiBEtc( size ) + "\n" + msg.toString());
+			String size_str = DisplayFormatters.formatByteCountToKiBEtc( size_min );
+			
+			if ( size_max > size_min ){
+				
+				size_str += " (+" + (size_max-size_min ) + ")";
+			}
+			
+			return( "Size: " + size_str + "\n" + msg.toString());
 		}
 
 		void
@@ -1706,8 +1723,10 @@ GlobalManagerFileMerger
 			getInfo()
 			{
 				return( 
-					"merge=" + DisplayFormatters.formatByteCountToKiBEtc( merged_byte_counnt ) + "," +
-					"p_ok=" + pieces_completed + ",p_bad=" + pieces_corrupted + ",force=["+forced_start_piece + "," + forced_end_piece + "]" );
+					"merged=" + DisplayFormatters.formatByteCountToKiBEtc( merged_byte_counnt ) +
+					", ok=" + pieces_completed + 
+					", bad=" + pieces_corrupted + 
+					", force=[" + (forced_end_piece==-1?"":(forced_start_piece + "-" + forced_end_piece)) + "]" );
 			}
 			
 			boolean
