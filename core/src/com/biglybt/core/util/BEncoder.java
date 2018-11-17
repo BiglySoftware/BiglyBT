@@ -491,6 +491,8 @@ BEncoder
        		o = String.valueOf((Float)o);
      	}else if ( o instanceof Double ){
        		o = String.valueOf((Double)o);
+	    } else if ( o instanceof BEncodableObject ) {
+    		o = ((BEncodableObject) o).toBencodeObject();
        	}else if ( o instanceof byte[] ){
        		try{
        			byte[] b = (byte[])o;
@@ -583,7 +585,10 @@ BEncoder
 		    	o1 = normaliseObject( o1 );
 		    	o2 = normaliseObject( o2 );
 
-		    	if ( o1.getClass() != o2.getClass()){
+		    	boolean isOk = ( o1 instanceof Map && o2 instanceof Map ) ||
+					    ( o1 instanceof List && o2 instanceof List );
+
+		    	if ( !isOk && o1.getClass() != o2.getClass()){
 
 			    	Debug.out( "Failed to normalise classes " + o1.getClass() + "/" + o2.getClass());
 
