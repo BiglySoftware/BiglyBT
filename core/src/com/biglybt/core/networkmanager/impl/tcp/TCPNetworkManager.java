@@ -124,8 +124,8 @@ TCPNetworkManager
 
 	private final TCPConnectionManager connect_disconnect_manager = new TCPConnectionManager();
 
-	private final IncomingSocketChannelManager incoming_socketchannel_manager =
-		new IncomingSocketChannelManager( "TCP.Listen.Port", "TCP.Listen.Port.Enable" );
+	private final IncomingSocketChannelManager default_incoming_socketchannel_manager = 
+			new IncomingSocketChannelManager( "TCP.Listen.Port", "TCP.Listen.Port.Enable" );
 
 	long	read_select_count;
 	long	write_select_count;
@@ -265,24 +265,10 @@ TCPNetworkManager
 	    write_selector_thread.start();
 	}
 
-	public void
-	setExplicitBindAddress(
-			InetAddress	address )
+	public IncomingSocketChannelManager
+	getDefaultIncomingSocketManager()
 	{
-		incoming_socketchannel_manager.setExplicitBindAddress( address );
-	}
-
-	public void
-	clearExplicitBindAddress()
-	{
-		incoming_socketchannel_manager.clearExplicitBindAddress();
-	}
-
-	public boolean
-	isEffectiveBindAddress(
-			InetAddress		address )
-	{
-		return( incoming_socketchannel_manager.isEffectiveBindAddress( address ));
+		return( default_incoming_socketchannel_manager );
 	}
 
 		/**
@@ -311,9 +297,9 @@ TCPNetworkManager
 
 
 	public boolean
-	isTCPListenerEnabled()
+	isDefaultTCPListenerEnabled()
 	{
-		return( incoming_socketchannel_manager.isEnabled());
+		return( default_incoming_socketchannel_manager.isEnabled());
 	}
 
 	/**
@@ -322,14 +308,14 @@ TCPNetworkManager
 	 */
 
 	public int
-	getTCPListeningPortNumber()
+	getDefaultTCPListeningPortNumber()
 	{
-		return( incoming_socketchannel_manager.getTCPListeningPortNumber());
+		return( default_incoming_socketchannel_manager.getTCPListeningPortNumber());
 	}
 
 	public long
 	getLastIncomingNonLocalConnectionTime()
 	{
-		return( incoming_socketchannel_manager.getLastNonLocalConnectionTime());
+		return( default_incoming_socketchannel_manager.getLastNonLocalConnectionTime());
 	}
 }

@@ -30,6 +30,7 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
 import com.biglybt.core.tracker.client.*;
@@ -143,7 +144,7 @@ TRTrackerAnnouncerImpl
 			 throw( new TRTrackerAnnouncerException( "TRTrackerAnnouncer: Peer ID generation fails", e ));
 		}
 	}
-
+	
 	@Override
 	public TOTorrent
 	getTorrent()

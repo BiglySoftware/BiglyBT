@@ -111,9 +111,9 @@ public class NatCheckerServer extends AEThread {
 
     	  TCPNetworkManager	net_man = TCPNetworkManager.getSingleton();
 
-      	  if ( net_man.isTCPListenerEnabled()){
+      	  if ( net_man.isDefaultTCPListenerEnabled()){
 
-    		  use_incoming_router = _port == net_man.getTCPListeningPortNumber();
+    		  use_incoming_router = _port == net_man.getDefaultTCPListeningPortNumber();
 
     	  }else{
 
@@ -122,9 +122,9 @@ public class NatCheckerServer extends AEThread {
 
 	      if ( use_incoming_router ) {
 
- 		 	if ( !net_man.isEffectiveBindAddress( bind_ip )){
+ 		 	if ( !net_man.getDefaultIncomingSocketManager().isEffectiveBindAddress( bind_ip )){
 
-    			  net_man.setExplicitBindAddress( bind_ip );
+    			  net_man.getDefaultIncomingSocketManager().setExplicitBindAddress( bind_ip );
 
     			  bind_ip_set	= true;
     		  }
@@ -334,7 +334,7 @@ public class NatCheckerServer extends AEThread {
 
     		  if ( bind_ip_set ){
 
-    			  TCPNetworkManager.getSingleton().clearExplicitBindAddress();
+    			  TCPNetworkManager.getSingleton().getDefaultIncomingSocketManager().clearExplicitBindAddress();
     		  }
     	  }
       }

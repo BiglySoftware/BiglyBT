@@ -368,7 +368,7 @@ MagnetPlugin
 
 								InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
 								
-								int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+								int port = TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber();
 
 								if ( ip != null && port > 0 ){
 									

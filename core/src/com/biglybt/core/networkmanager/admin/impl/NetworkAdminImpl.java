@@ -1670,13 +1670,13 @@ addressLoop:
 
 		TCPNetworkManager	tcp_manager = TCPNetworkManager.getSingleton();
 
-		if ( tcp_manager.isTCPListenerEnabled()){
+		if ( tcp_manager.isDefaultTCPListenerEnabled()){
 
 			protocols.add(
 					new NetworkAdminProtocolImpl(
 							core,
 							NetworkAdminProtocol.PT_TCP,
-							tcp_manager.getTCPListeningPortNumber()));
+							tcp_manager.getDefaultTCPListeningPortNumber()));
 		}
 
 		UDPNetworkManager	udp_manager = UDPNetworkManager.getSingleton();

@@ -1978,7 +1978,40 @@ DownloadManagerImpl
 		torrent	= null;
 	}
 
-
+	protected int
+	getTCPPortOverride()
+	{
+		try{
+			TOTorrent torrent = getTorrent();
+			
+			if ( Arrays.equals( torrent.getHash(), ByteFormatter.decodeString( "CDCA759DE2BEFE2FAEBAC6677E96A87BCAA468E3" ))){
+			
+				return( 47238 );
+			}
+		}catch( Throwable e ){
+			
+		}
+		
+		return( 0 );
+	}
+	
+	protected HashWrapper 
+	getTorrentHashOverride()
+	{
+		try{
+			TOTorrent torrent = getTorrent();
+			
+			if ( Arrays.equals( torrent.getHash(), ByteFormatter.decodeString( "CDCA759DE2BEFE2FAEBAC6677E96A87BCAA468E3" ))){
+			
+				return( new HashWrapper( ByteFormatter.decodeString( "603ACA36401A6C265F20DEAE912E6122EE6F9835" )));
+			}
+		}catch( Throwable e ){
+			
+		}
+		
+		return( null );
+	}
+	
 	@Override
 	public void
 	saveResumeData()
@@ -2072,6 +2105,13 @@ DownloadManagerImpl
 							getNetworks()
 							{
 								return( download_manager_state.getNetworks());
+							}
+							
+							@Override
+							public HashWrapper 
+							getTorrentHashOverride()
+							{
+								return( DownloadManagerImpl.this.getTorrentHashOverride());
 							}
 						});
 

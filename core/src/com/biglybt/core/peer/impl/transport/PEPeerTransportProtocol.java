@@ -673,7 +673,7 @@ implements PEPeerTransport
 
 		if ( use_crypto ){
 
-			BTHandshake handshake = new BTHandshake( manager.getHash(),
+			BTHandshake handshake = new BTHandshake( manager.getTargetHash(),
 					manager.getPeerId(),
                     manager.getExtendedMessagingMode(), other_peer_handshake_version );
 
@@ -1080,7 +1080,7 @@ implements PEPeerTransport
 	{
 		SHA1Hasher sha1 = new SHA1Hasher();
 		sha1.update(sessionSecret);
-		sha1.update(manager.getHash());
+		sha1.update(manager.getTargetHash());
 		sha1.update(getIp().getBytes());
 		mySessionID = sha1.getHash();
 		checkForReconnect(mySessionID);
@@ -1138,7 +1138,7 @@ implements PEPeerTransport
 				}
 			}
 
-			BTHandshake handshake =	new BTHandshake( manager.getHash(),
+			BTHandshake handshake =	new BTHandshake( manager.getTargetHash(),
 					manager.getPeerId(), msg_mode, other_peer_handshake_version );
 
 			if (Logger.isEnabled())
@@ -1151,8 +1151,8 @@ implements PEPeerTransport
 	}
 
 	private void sendLTHandshake() {
-		String client_name = (String)ClientIDManagerImpl.getSingleton().getProperty(  manager.getHash(), ClientIDGenerator.PR_CLIENT_NAME );
-		int localTcpPort = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+		String client_name = (String)ClientIDManagerImpl.getSingleton().getProperty(  manager.getTargetHash(), ClientIDGenerator.PR_CLIENT_NAME );
+		int localTcpPort = manager.getTCPListeningPortNumber();
 		String tcpPortOverride = COConfigurationManager.getStringParameter("TCP.Listen.Port.Override");
 		try
 		{
@@ -1219,7 +1219,7 @@ implements PEPeerTransport
 			avail_vers[i] = avail_msgs[i].getVersion();
 		}
 
-		int local_tcp_port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+		int local_tcp_port = manager.getTCPListeningPortNumber();
 		int local_udp_port = UDPNetworkManager.getSingleton().getUDPListeningPortNumber();
 		int local_udp2_port = UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber();
 		String tcpPortOverride = COConfigurationManager.getStringParameter("TCP.Listen.Port.Override");
@@ -2522,7 +2522,7 @@ implements PEPeerTransport
 			closeConnectionInternally("peer sent another handshake after the initial connect");
 		}
 
-		if( !Arrays.equals( manager.getHash(), handshake.getDataHash() ) ) {
+		if( !Arrays.equals( manager.getTargetHash(), handshake.getDataHash() ) ) {
 			closeConnectionInternally( "handshake has wrong infohash" );
 			handshake.destroy();
 			return;
@@ -4934,7 +4934,7 @@ implements PEPeerTransport
 						connection.getOutgoingMessageQueue().addMessage( new UTPeerExchange(adds, drops, null, (byte)0), false);
 					}
 					else {
-						connection.getOutgoingMessageQueue().addMessage( new AZPeerExchange( manager.getHash(), adds, drops, other_peer_pex_version ), false );
+						connection.getOutgoingMessageQueue().addMessage( new AZPeerExchange( manager.getTargetHash(), adds, drops, other_peer_pex_version ), false );
 					}
 				}
 			}else{
@@ -5680,7 +5680,7 @@ implements PEPeerTransport
 	generateFastSet(
 		int		num )
 	{
-		return( generateFastSet( manager.getHash(), getIp(), nbPieces, num ));
+		return( generateFastSet( manager.getTargetHash(), getIp(), nbPieces, num ));
 	}
 
 	@Override

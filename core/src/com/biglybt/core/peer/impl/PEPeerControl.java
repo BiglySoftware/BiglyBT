@@ -64,6 +64,17 @@ PEPeerControl
 	    PEPeer peer,
 	    int pieceNumber);
 
+	public int
+	getTCPListeningPortNumber();
+	
+		/**
+		 * Get torrent hash including any overrides
+		 * @return
+		 */
+	
+	public byte[]
+	getTargetHash();
+	
 	public boolean
 	isPrivateTorrent();
 

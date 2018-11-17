@@ -122,7 +122,8 @@ TRTrackerBTAnnouncerImpl
 
 	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
-	final TOTorrent					torrent;
+	private final TOTorrent					torrent;
+	
 	private final TOTorrentAnnounceURLSet[]	announce_urls;
 
 	private TRTrackerAnnouncerImpl.Helper	helper;
@@ -135,7 +136,7 @@ TRTrackerBTAnnouncerImpl
 	private TRTrackerAnnouncerResponseImpl	last_response			= null;
 	private long				last_update_time_secs;
 	private long				current_time_to_wait_secs;
-	final boolean				manual_control;
+	private final boolean		manual_control;
 
 	private long		tracker_interval;
 	private long		tracker_min_interval;
@@ -163,7 +164,8 @@ TRTrackerBTAnnouncerImpl
   	private URL lastUsedUrl;
   	private URL	lastAZTrackerCheckedURL;
 
-  	private HashWrapper			torrent_hash;
+  	final private HashWrapper			torrent_hash_actual;
+  	final private HashWrapper			torrent_hash_target;
 
 	private String	last_tracker_message;		// per torrent memory
 
@@ -203,6 +205,7 @@ TRTrackerBTAnnouncerImpl
 
   public
   TRTrackerBTAnnouncerImpl(
+	HashWrapper						_torrent_hash_override,
    	TOTorrent						_torrent,
    	TOTorrentAnnounceURLSet[]		_announce_urls,
 	String[]						_peer_networks,
@@ -211,21 +214,23 @@ TRTrackerBTAnnouncerImpl
 
   	throws TRTrackerAnnouncerException
   {
-	torrent			= _torrent;
-	announce_urls	= _announce_urls;
-  	peer_networks	= _peer_networks;
-  	manual_control	= _manual;
-  	helper			= _helper;
+	torrent				= _torrent;
+	announce_urls		= _announce_urls;
+  	peer_networks		= _peer_networks;
+  	manual_control		= _manual;
+  	helper				= _helper;
 
 	try {
-		torrent_hash = _torrent.getHashWrapper();
+		torrent_hash_actual = _torrent.getHashWrapper();
 
 	}catch( TOTorrentException e ){
 
 		Logger.log(new LogEvent(torrent, LOGID, "Torrent hash retrieval fails", e));
 
-		throw( new TRTrackerAnnouncerException( "TRTrackerAnnouncer: URL encode fails"));
+		throw( new TRTrackerAnnouncerException( "TRTrackerAnnouncer: Torrent hash retrieval fails"));
 	}
+
+	torrent_hash_target	= _torrent_hash_override==null?torrent_hash_actual:_torrent_hash_override;
 
 		//Get the Tracker url
 
@@ -238,7 +243,7 @@ TRTrackerBTAnnouncerImpl
 
 	    if ( COConfigurationManager.getBooleanParameter("Tracker Separate Peer IDs")){
 
-	    	tracker_peer_id = ClientIDManagerImpl.getSingleton().generatePeerID( torrent_hash.getBytes(), true );
+	    	tracker_peer_id = ClientIDManagerImpl.getSingleton().generatePeerID( torrent_hash_target.getBytes(), true );
 
 	    }else{
 
@@ -251,7 +256,7 @@ TRTrackerBTAnnouncerImpl
 
 	try {
 
-		this.info_hash += URLEncoder.encode(new String(torrent_hash.getBytes(), Constants.BYTE_ENCODING), Constants.BYTE_ENCODING).replaceAll("\\+", "%20");
+		this.info_hash += URLEncoder.encode(new String(torrent_hash_target.getBytes(), Constants.BYTE_ENCODING), Constants.BYTE_ENCODING).replaceAll("\\+", "%20");
 
 		this.tracker_peer_id_str += URLEncoder.encode(new String(tracker_peer_id, Constants.BYTE_ENCODING), Constants.BYTE_ENCODING).replaceAll("\\+", "%20");
 
@@ -1077,7 +1082,7 @@ TRTrackerBTAnnouncerImpl
 		  	last_failure_resp =
 		  		new TRTrackerAnnouncerResponseImpl(
 		  				original_url,
-		  				torrent_hash,
+		  				torrent_hash_actual,
 		  				TRTrackerAnnouncerResponse.ST_OFFLINE,
 						getErrorRetryInterval(),
 						"malformed URL '" + (request_url==null?"<null>":request_url.toString()) + "'" );
@@ -1089,7 +1094,7 @@ TRTrackerBTAnnouncerImpl
 		  	last_failure_resp =
 		  		new TRTrackerAnnouncerResponseImpl(
 		  				original_url,
-		  				torrent_hash,
+		  				torrent_hash_actual,
 		  				TRTrackerAnnouncerResponse.ST_OFFLINE,
 						getErrorRetryInterval(),
 						e.getMessage()==null?e.toString():e.getMessage());
@@ -1109,7 +1114,7 @@ TRTrackerBTAnnouncerImpl
 		  	last_failure_resp =
 		  		new TRTrackerAnnouncerResponseImpl(
 		  				null,
-		  				torrent_hash,
+		  				torrent_hash_actual,
 		  				TRTrackerAnnouncerResponse.ST_OFFLINE,
 						getErrorRetryInterval(),
 						"Reason Unknown" );
@@ -1146,7 +1151,7 @@ TRTrackerBTAnnouncerImpl
  		boolean errorLevel = true;
 
  		try{
-	    	TorrentUtils.setTLSTorrentHash( torrent_hash );
+	    	TorrentUtils.setTLSTorrentHash( torrent_hash_actual );
 
 	 			// loop to possibly retry update on SSL certificate install
 
@@ -1469,7 +1474,7 @@ TRTrackerBTAnnouncerImpl
  		}
 
  		try{
- 			ClientIDManagerImpl.getSingleton().generateHTTPProperties( torrent_hash.getBytes(), http_properties );
+ 			ClientIDManagerImpl.getSingleton().generateHTTPProperties( torrent_hash_target.getBytes(), http_properties );
 
  		}catch( ClientIDException e ){
 
@@ -1839,7 +1844,7 @@ TRTrackerBTAnnouncerImpl
 				 				}
 
 				 				announce_request.setDetails(
-				 					torrent_hash.getBytes(),
+				 					torrent_hash_target.getBytes(),
 				 					tracker_peer_id,
 									getLongURLParam( url_str, "downloaded" ),
 									event,
@@ -1892,7 +1897,7 @@ TRTrackerBTAnnouncerImpl
 				 				}
 
 				 				announce_request.setDetails(
-				 					torrent_hash.getBytes(),
+				 					torrent_hash_target.getBytes(),
 				 					tracker_peer_id,
 									getLongURLParam( url_str, "downloaded" ),
 									event,
@@ -2112,10 +2117,12 @@ TRTrackerBTAnnouncerImpl
   	request.append(info_hash);
   	request.append(tracker_peer_id_str);
 
+  	int tcp_port = announce_data_provider.getTCPListeningPortNumber();
+  	
 	String	port_details =
 		announce_data_provider.getCryptoLevel()==NetworkManager.CRYPTO_OVERRIDE_REQUIRED?
-				TRTrackerUtils.getPortsForURLFullCrypto():
-				TRTrackerUtils.getPortsForURL();
+				TRTrackerUtils.getPortsForURLFullCrypto( tcp_port ):
+				TRTrackerUtils.getPortsForURL( tcp_port );
 
   	request.append(port_details);
   	request.append("&uploaded=").append(announce_data_provider.getTotalSent());
@@ -2791,7 +2798,7 @@ TRTrackerBTAnnouncerImpl
     										"Problems with Tracker, will retry in "
     												+ getErrorRetryInterval() + "ms"));
 
-    				       return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash, TRTrackerAnnouncerResponse.ST_OFFLINE, getErrorRetryInterval(), "Unknown cause" ));
+    				       return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_OFFLINE, getErrorRetryInterval(), "Unknown cause" ));
 
     				     }
 
@@ -2799,7 +2806,7 @@ TRTrackerBTAnnouncerImpl
 
     			       failure_reason = new String( failure_reason_bytes, Constants.DEFAULT_ENCODING);
 
-    			       return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash, TRTrackerAnnouncerResponse.ST_REPORTED_ERROR, getErrorRetryInterval(), failure_reason ));
+    			       return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_REPORTED_ERROR, getErrorRetryInterval(), failure_reason ));
 
 				   }
 
@@ -3477,7 +3484,7 @@ TRTrackerBTAnnouncerImpl
 
 					helper.addToTrackerCache( peers);
 
-					TRTrackerAnnouncerResponseImpl resp = new TRTrackerAnnouncerResponseImpl( url, torrent_hash, TRTrackerAnnouncerResponse.ST_ONLINE, time_to_wait, peers );
+					TRTrackerAnnouncerResponseImpl resp = new TRTrackerAnnouncerResponseImpl( url, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_ONLINE, time_to_wait, peers );
 
 						//reset failure retry interval on successful connect
 
@@ -3589,7 +3596,7 @@ TRTrackerBTAnnouncerImpl
 						return(
 								new TRTrackerAnnouncerResponseImpl(
 										url,
-										torrent_hash,
+										torrent_hash_actual,
 										TRTrackerAnnouncerResponse.ST_REPORTED_ERROR,
 										Math.max( tracker_interval, getErrorRetryInterval()),
 										failure_reason ));
@@ -3623,7 +3630,7 @@ TRTrackerBTAnnouncerImpl
 			}
   		}
 
-		return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash, TRTrackerAnnouncerResponse.ST_OFFLINE, getErrorRetryInterval(), failure_reason ));
+		return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_OFFLINE, getErrorRetryInterval(), failure_reason ));
   	}
 
   	private Long
@@ -3667,7 +3674,7 @@ TRTrackerBTAnnouncerImpl
 	{
 		if( last_response == null ){
 
-			return new TRTrackerAnnouncerResponseImpl( null, torrent_hash, TRTrackerAnnouncerResponse.ST_OFFLINE, TRTrackerAnnouncer.REFRESH_MINIMUM_SECS, "Initialising" );
+			return new TRTrackerAnnouncerResponseImpl( null, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_OFFLINE, TRTrackerAnnouncer.REFRESH_MINIMUM_SECS, "Initialising" );
 		}
 
 		return( last_response );
@@ -3793,7 +3800,7 @@ TRTrackerBTAnnouncerImpl
 
 	  		response = new TRTrackerAnnouncerResponseImpl(
 				  				result.getURL(),
-				  				torrent_hash,
+				  				torrent_hash_actual,
 				  				TRTrackerAnnouncerResponse.ST_OFFLINE,
 								result.getTimeToWait(),
 								reason );
@@ -3861,7 +3868,7 @@ TRTrackerBTAnnouncerImpl
 			response =
 				new TRTrackerAnnouncerResponseImpl(
 						result.getURL(),
-						torrent_hash,
+						torrent_hash_actual,
 						TRTrackerAnnouncerResponse.ST_ONLINE,
 						result.getTimeToWait(),
 						peers );

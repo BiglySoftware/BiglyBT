@@ -26,6 +26,7 @@ import java.util.Map;
 
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.impl.TRTrackerAnnouncerFactoryImpl;
+import com.biglybt.core.util.HashWrapper;
 
 public class
 TRTrackerAnnouncerFactory
@@ -84,6 +85,9 @@ TRTrackerAnnouncerFactory
 	public interface
 	DataProvider
 	{
+		public HashWrapper
+		getTorrentHashOverride();
+		
 		public String[]
 		getNetworks();
 	}

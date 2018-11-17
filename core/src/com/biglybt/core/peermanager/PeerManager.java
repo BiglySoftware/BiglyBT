@@ -259,9 +259,9 @@ public class PeerManager implements CoreStatsProvider {
 			@Override
 			public Object
 			matches(
-					TransportHelper		transport,
-					ByteBuffer 			to_compare,
-					int 				port )
+				TransportHelper		transport,
+				ByteBuffer 			to_compare,
+				int 				local_port )
 			{
 				InetSocketAddress	address = transport.getAddress();
 
@@ -288,6 +288,27 @@ public class PeerManager implements CoreStatsProvider {
 						if ( registrations != null ){
 
 							routing_data = registrations.get(0);
+							
+							if ( registrations.size() > 1 ){
+								
+								for ( PeerManagerRegistrationImpl r: registrations ){
+									
+									PeerManagerRegistrationAdapter adapter = r.getAdapter();
+									
+									if ( adapter.getHashOverride() != null ){
+										
+										if ( local_port == adapter.getLocalPort()){
+											
+											routing_data = r;
+											
+											break;
+										}
+									}else{
+										
+										routing_data = r;	// default non-override
+									}
+								}
+							}
 						}
 					}finally{
 
@@ -505,9 +526,6 @@ public class PeerManager implements CoreStatsProvider {
 		try{
 			managers_mon.enter();
 
-			// normally we only get a max of 1 of these. However, due to DownloadManager crazyness
-			// we can get an extra one when adding a download that already exists...
-
 			List<PeerManagerRegistrationImpl>	registrations = registered_legacy_managers.get( hash );
 
 			byte[][]	secrets = adapter.getSecrets();
@@ -525,6 +543,24 @@ public class PeerManager implements CoreStatsProvider {
 
 			registrations.add( registration );
 
+			byte[] override = adapter.getHashOverride();
+			
+			if ( override != null ){
+				
+				HashWrapper ov_hw = new HashWrapper( override );
+				
+				List<PeerManagerRegistrationImpl>	ov_registrations = registered_legacy_managers.get( ov_hw );
+
+				if ( ov_registrations == null ){
+
+					ov_registrations = new ArrayList<>(1);
+
+					registered_legacy_managers.put( ov_hw, ov_registrations );
+				}
+
+				ov_registrations.add( registration );
+			}
+			
 			return( registration );
 
 		}finally{
@@ -539,8 +575,8 @@ public class PeerManager implements CoreStatsProvider {
 	PeerManagerRegistrationImpl
 		implements PeerManagerRegistration
 	{
-		private final HashWrapper 					hash;
-		final PeerManagerRegistrationAdapter	adapter;
+		private final HashWrapper 						hash;
+		private final PeerManagerRegistrationAdapter	adapter;
 
 		private PEPeerControl					download;
 
@@ -777,6 +813,29 @@ public class PeerManager implements CoreStatsProvider {
 					}
 				}
 
+				byte[] override = adapter.getHashOverride();
+				
+				if ( override != null ){
+					
+					HashWrapper ov_hw = new HashWrapper( override );
+					
+					List<PeerManagerRegistrationImpl>	ov_registrations = registered_legacy_managers.get( ov_hw );
+
+					if ( ov_registrations == null ){
+
+						Debug.out( "manager already deregistered" );
+
+					}else{
+
+						if ( ov_registrations.remove( this )){
+
+						}else{
+
+							Debug.out( "manager already deregistered" );
+						}
+					}
+				}
+				
 				synchronized( this ){
 
 					if ( links != null ){

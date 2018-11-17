@@ -26,9 +26,15 @@ import com.biglybt.core.networkmanager.NetworkConnection;
 public interface
 PeerManagerRegistrationAdapter
 {
+	public byte[]
+	getHashOverride();
+	
 	public byte[][]
 	getSecrets();
 
+	public int
+	getLocalPort();
+	
 	public boolean
 	manualRoute(
 		NetworkConnection		connection );

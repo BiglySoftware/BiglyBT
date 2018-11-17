@@ -665,6 +665,20 @@ DiskManagerCheckRequestListener, IPFilterListener
 	}
 
 	@Override
+	public int 
+	getTCPListeningPortNumber()
+	{
+		return( adapter.getTCPListeningPortNumber());
+	}
+	
+	@Override
+	public byte[] 
+	getTargetHash()
+	{
+		return( adapter.getTargetHash());
+	}
+	
+	@Override
 	public boolean
 	isDestroyed()
 	{

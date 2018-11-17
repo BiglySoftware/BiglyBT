@@ -40,6 +40,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
@@ -558,6 +559,12 @@ DownloadManagerController
 
 						return((int)((current_local+1023)/1024 ));
 					}
+					
+	    			public int
+	    			getTCPListeningPortNumber()
+	    			{
+	    				return( DownloadManagerController.this.getTCPListeningPortNumber());
+	    			}
 
 					@Override
 					public int
@@ -1427,6 +1434,27 @@ DownloadManagerController
 		}
 	}
 
+	@Override
+	public byte[] 
+	getHashOverride()
+	{
+		HashWrapper hw = download_manager.getTorrentHashOverride();
+		
+		if ( hw != null ){
+			
+			return( hw.getBytes());
+		}
+		
+		return( null );
+	}
+	
+	@Override
+	public int 
+	getLocalPort()
+	{
+		return( download_manager.getTCPPortOverride());
+	}
+	
 		// secrets for outbound connections, based on level of target
 
 	@Override
@@ -1441,8 +1469,16 @@ DownloadManagerController
 
 			if ( crypto_level == PeerItemFactory.CRYPTO_LEVEL_1 ){
 
-				secret = torrent.getHash();
-
+				HashWrapper override = download_manager.getTorrentHashOverride();
+				
+				if ( override != null ){
+					
+					secret = override.getBytes();
+					
+				}else{
+				
+					secret = torrent.getHash();
+				}
 			}else{
 
 				secret = getSecret2( torrent );
@@ -1699,7 +1735,47 @@ DownloadManagerController
 			activation_count = bloom.getEntryCount();
 		}
 	}
-
+	
+	@Override
+	public byte[]
+	getTargetHash()
+	{
+		HashWrapper hw = download_manager.getTorrentHashOverride();
+		
+		if ( hw != null ){
+			
+			return( hw.getBytes());
+		}
+		
+		TOTorrent torrent = download_manager.getTorrent();
+		
+		if ( torrent != null ){
+			
+			try{
+				return( torrent.getHash());
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+		
+		return( null );
+	}
+	
+	@Override
+	public int 
+	getTCPListeningPortNumber()
+	{
+		int port = download_manager.getTCPPortOverride();
+		
+		if ( port > 0 ){
+			
+			return( port );
+		}
+		
+		return( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber());
+	}
+	
 	public int
 	getActivationCount()
 	{

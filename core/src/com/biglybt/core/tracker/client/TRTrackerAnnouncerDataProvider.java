@@ -59,7 +59,10 @@ TRTrackerAnnouncerDataProvider
 	public int
 	getUploadSpeedKBSec(
 		boolean	estimate );
-
+	
+	public int
+	getTCPListeningPortNumber();
+	
 	public int
 	getCryptoLevel();
 

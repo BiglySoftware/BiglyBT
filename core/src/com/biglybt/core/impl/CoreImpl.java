@@ -374,7 +374,7 @@ CoreImpl
 						getPorts()
 						{
 							return( new int[]{
-								TCPNetworkManager.getSingleton().getTCPListeningPortNumber(),
+								TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber(),
 								UDPNetworkManager.getSingleton().getUDPListeningPortNumber(),
 								UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber()});
 	
