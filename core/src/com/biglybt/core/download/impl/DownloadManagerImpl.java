@@ -1999,11 +1999,9 @@ DownloadManagerImpl
 	getTorrentHashOverride()
 	{
 		try{
-			TOTorrent torrent = getTorrent();
-			
-			if ( Arrays.equals( torrent.getHash(), ByteFormatter.decodeString( "CDCA759DE2BEFE2FAEBAC6677E96A87BCAA468E3" ))){
-			
-				return( new HashWrapper( ByteFormatter.decodeString( "603ACA36401A6C265F20DEAE912E6122EE6F9835" )));
+			if ( torrent != null ){
+				
+				return( new HashWrapper( TorrentUtils.getOriginalHash( torrent )));
 			}
 		}catch( Throwable e ){
 			

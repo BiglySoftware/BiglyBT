@@ -769,15 +769,6 @@ TOTorrentImpl
 			}
 		}
 
-		/* support this for fixing borked torrents
-		if ( !TorrentUtils.isDecentralised( announce_url )){
-
-			throw( new TOTorrentException(
-						"Hash override can only be set on decentralised torrents",
-						TOTorrentException.RT_HASH_FAILS ));
-		}
-		*/
-
 		torrent_hash_override = hash;
 
 		torrent_hash	= null;

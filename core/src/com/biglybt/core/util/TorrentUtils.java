@@ -129,6 +129,7 @@ TorrentUtils
 	private static final String		TORRENT_AZ_PROP_PEER_CACHE_VALID		= "peer_cache_valid";
 	public static final String		TORRENT_AZ_PROP_INITIAL_LINKAGE			= "initial_linkage";
 	public static final String		TORRENT_AZ_PROP_INITIAL_LINKAGE2		= "initial_linkage2";
+	public static final String		TORRENT_AZ_PROP_ORIGINAL_HASH			= "original_hash";
 
 	private static final String		MEM_ONLY_TORRENT_PATH		= "?/\\!:mem_only:!\\/?";
 
@@ -2098,6 +2099,39 @@ TorrentUtils
 		}
 
 		return( result );
+	}
+	
+	public static void
+	setOriginalHash(
+		TOTorrent		torrent,
+		byte[]			hash )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			m.put( TORRENT_AZ_PROP_ORIGINAL_HASH, hash );
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+	}
+	
+	public static byte[]
+	getOriginalHash(
+		TOTorrent		torrent )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			return((byte[])m.get( TORRENT_AZ_PROP_ORIGINAL_HASH ));
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+		
+		return( null );
 	}
 	
 	public static void
@@ -4571,11 +4605,15 @@ TorrentUtils
 	applyAllDNSMods(
 		URL		url )
 	{
+		List<URL> default_result = new ArrayList<>(1);
+		
+		default_result.add( url );
+		
 		if ( DNS_HANDLING_ENABLE ){
 
 			DNSTXTEntry txt_entry = getDNSTXTEntry( url );
 
-			if ( txt_entry != null && txt_entry.hasRecords()){
+			if ( txt_entry != null && txt_entry.hasRecords()){		
 
 				boolean url_is_tcp 	= url.getProtocol().toLowerCase().startsWith( "http" );
 				int		url_port	= url.getPort();
@@ -4589,7 +4627,7 @@ TorrentUtils
 
 				if ( ports.size() == 0 ){
 
-					return( null );
+					return( null );	// NULL here as no valid ports
 
 				}else{
 
@@ -4618,11 +4656,11 @@ TorrentUtils
 				}
 			}else{
 
-				return( null );
+				return( default_result );
 			}
 		}else{
 
-			return( null );
+			return( default_result );
 		}
 	}
 

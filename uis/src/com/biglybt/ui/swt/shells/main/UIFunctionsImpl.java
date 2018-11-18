@@ -1186,7 +1186,7 @@ public class UIFunctionsImpl
 			is_silent = UIFunctions.OTO_SILENT_DEFAULT;
 		}
 
-		if (CoreFactory.isCoreRunning()){
+		if ( CoreFactory.isCoreRunning()){
 
 			Core core = CoreFactory.getSingleton();
 
@@ -1200,81 +1200,178 @@ public class UIFunctionsImpl
 
 			if ( existingDownload != null ){
 
+				boolean delete_delegated = false;
+				
 				if ( !is_silent ){
 
 					final String fExistingName = existingDownload.getDisplayName();
+					
 					final DownloadManager fExistingDownload = existingDownload;
 
 					fExistingDownload.fireGlobalManagerEvent(GlobalManagerEvent.ET_REQUEST_ATTENTION);
+					
+					TOTorrent new_torrent 		= torrentOptions.getTorrent();
+					TOTorrent existing_torrent	= fExistingDownload.getTorrent();
+							
+					boolean can_merge = TorrentUtils.canMergeAnnounceURLs( new_torrent, existing_torrent);
 
+					boolean can_merge_private = can_merge && new_torrent.getPrivate();
+					
+					delete_delegated = can_merge_private;
+					
 					Utils.execSWTThread(new AERunnable() {
 						@Override
 						public void runSupport() {
-							boolean can_merge = TorrentUtils.canMergeAnnounceURLs(
-									torrentOptions.getTorrent(), fExistingDownload.getTorrent());
 
-							long	existed_for = SystemTime.getCurrentTime() - fExistingDownload.getCreationTime();
+							if ( can_merge_private ){
+								
+									// we have to modify the new, private torrent, for this to work. (can't do this if it isn't private as support for
+									// hash override isn't supported in DHT, magnet xfer,...
+								
+								String text = MessageText.getString(MSG_ALREADY_EXISTS
+										+ ".text", new String[] {
+									":" + torrentOptions.sOriginatingLocation,
+									fExistingName,
+									MessageText.getString(MSG_ALREADY_EXISTS_NAME),
+								});
 
-							Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
+								text += "\n\n" + MessageText.getString("openTorrentWindow.mb.alreadyExists.add.dup");
 
-							if ((Display.getDefault().getActiveShell() == null
-									|| !mainShell.isVisible() || mainShell.getMinimized())
-									&& (!can_merge)) {
+								MessageBoxShell mb = 
+										new MessageBoxShell(SWT.YES | SWT.NO,
+												MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text);
 
+								mb.setDefaultButtonUsingStyle( SWT.NO );
+								
+								mb.open(new UserPrompterResultListener() {
+									@Override
+									public void prompterClosed(int result) {
+										if ( result == SWT.YES ){
 
-									// seems we're getting some double additions (linux user reported but could be a general issue) so
-									// don't warn if the matching download has been added recently
-
-								if ( existed_for > 15*1000 ){
-
-									new MessageSlideShell(Display.getCurrent(), SWT.ICON_INFORMATION,
-											MSG_ALREADY_EXISTS, null, new String[] {
-												":" + torrentOptions.sOriginatingLocation, // : prefix is deliberate to disable click on ref in message as might be an unwanted action
-												fExistingName,
-												MessageText.getString(MSG_ALREADY_EXISTS_NAME),
-											}, new Object[] {
-												fExistingDownload
-											}, -1);
-								}
-							} else {
-
-								if (can_merge) {
-
-									String text = MessageText.getString(MSG_ALREADY_EXISTS
-											+ ".text", new String[] {
-										":" + torrentOptions.sOriginatingLocation,
-										fExistingName,
-										MessageText.getString(MSG_ALREADY_EXISTS_NAME),
-									});
-
-									text += "\n\n"
-											+ MessageText.getString("openTorrentWindow.mb.alreadyExists.merge");
-
-									MessageBoxShell mb = new MessageBoxShell(SWT.YES | SWT.NO,
-											MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text);
-
-									mb.open(new UserPrompterResultListener() {
-										@Override
-										public void prompterClosed(int result) {
-											if (result == SWT.YES) {
-
-												TorrentUtils.mergeAnnounceURLs(
-														torrentOptions.getTorrent(),
-														fExistingDownload.getTorrent());
+											try{
+												File tmp_dir = AETemporaryFileHandler.getTempDirectory();
+												
+												byte[] hash_ov = RandomUtils.nextSecureHash();
+												
+												String	hash_str = ByteFormatter.encodeString( hash_ov,  0, 4 );
+												
+												String new_file_name;
+												
+												if ( torrentOptions.sFileName == null ){
+													
+													new_file_name = hash_str;
+													
+												}else{
+													
+													new_file_name = new File( torrentOptions.sFileName ).getName();
+													
+													int pos = new_file_name.lastIndexOf( "." );
+													
+													if ( pos != -1 ){
+														
+														new_file_name = new_file_name.substring( 0, pos );
+													}
+													
+													new_file_name += "_" + hash_str;
+												}
+												
+												new_file_name += ".torrent";
+												
+												File new_file = new File( tmp_dir, new_file_name );
+												
+												byte[] existing_hash = torrent.getHash();
+												
+												torrent.setHashOverride( hash_ov );
+												
+												TorrentUtils.setOriginalHash( torrent, existing_hash );
+												
+												torrent.serialiseToBEncodedFile( new_file );
+												
+												torrentOptions.sFileName = new_file.getAbsolutePath();
+												
+												addTorrentWithOptionsSupport( torrentOptions, addOptions, false );
+												
+											}catch( Throwable e ){
+												
+												Debug.out( e );
+											}
+										}else{
+											
+											if ( torrentOptions.getDeleteFileOnCancel()){
+												
+												File torrentFile = new File(torrentOptions.sFileName);
+							
+												torrentFile.delete();
 											}
 										}
-									});
-								} else {
-
+									}
+								});
+																
+							}else{
+								
+								long	existed_for = SystemTime.getCurrentTime() - fExistingDownload.getCreationTime();
+	
+								Shell mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
+	
+								if ((Display.getDefault().getActiveShell() == null
+										|| !mainShell.isVisible() || mainShell.getMinimized())
+										&& (!can_merge)) {
+	
+	
+										// seems we're getting some double additions (linux user reported but could be a general issue) so
+										// don't warn if the matching download has been added recently
+	
 									if ( existed_for > 15*1000 ){
-
-										MessageBoxShell mb = new MessageBoxShell(SWT.OK,
-												MSG_ALREADY_EXISTS, new String[] {
-													":" + torrentOptions.sOriginatingLocation,
+	
+										new MessageSlideShell(Display.getCurrent(), SWT.ICON_INFORMATION,
+												MSG_ALREADY_EXISTS, null, new String[] {
+													":" + torrentOptions.sOriginatingLocation, // : prefix is deliberate to disable click on ref in message as might be an unwanted action
 													fExistingName,
 													MessageText.getString(MSG_ALREADY_EXISTS_NAME),
-												});
-										mb.open(null);
+												}, new Object[] {
+													fExistingDownload
+												}, -1);
+									}
+								} else {
+	
+									if (can_merge) {
+	
+										String text = MessageText.getString(MSG_ALREADY_EXISTS
+												+ ".text", new String[] {
+											":" + torrentOptions.sOriginatingLocation,
+											fExistingName,
+											MessageText.getString(MSG_ALREADY_EXISTS_NAME),
+										});
+	
+										text += "\n\n"
+												+ MessageText.getString("openTorrentWindow.mb.alreadyExists.merge");
+	
+										MessageBoxShell mb = new MessageBoxShell(SWT.YES | SWT.NO,
+												MessageText.getString(MSG_ALREADY_EXISTS + ".title"), text);
+	
+										mb.open(new UserPrompterResultListener() {
+											@Override
+											public void prompterClosed(int result) {
+												if (result == SWT.YES) {
+	
+													TorrentUtils.mergeAnnounceURLs(
+															torrentOptions.getTorrent(),
+															fExistingDownload.getTorrent());
+												}
+											}
+										});
+									} else {
+	
+										if ( existed_for > 15*1000 ){
+	
+											MessageBoxShell mb = new MessageBoxShell(SWT.OK,
+													MSG_ALREADY_EXISTS, new String[] {
+														":" + torrentOptions.sOriginatingLocation,
+														fExistingName,
+														MessageText.getString(MSG_ALREADY_EXISTS_NAME),
+													});
+											mb.open(null);
+										}
 									}
 								}
 							}
@@ -1282,13 +1379,16 @@ public class UIFunctionsImpl
 					});
 				}
 
-				if ( torrentOptions.getDeleteFileOnCancel()){
-
-					File torrentFile = new File(torrentOptions.sFileName);
-
-					torrentFile.delete();
+				if ( !delete_delegated ){
+					
+					if ( torrentOptions.getDeleteFileOnCancel()){
+	
+						File torrentFile = new File(torrentOptions.sFileName);
+	
+						torrentFile.delete();
+					}
 				}
-
+				
 				return( true );
 
 			}else{
@@ -1402,7 +1502,17 @@ public class UIFunctionsImpl
 				}
 			}
 		}
+		
+		return( addTorrentWithOptionsSupport( torrentOptions, addOptions, is_silent ));
+	}
+	
+	private boolean
+	addTorrentWithOptionsSupport(
+		TorrentOpenOptions 		torrentOptions,
+		Map<String, Object> 	addOptions,
+		boolean					is_silent )
 
+	{
 		Boolean force = (Boolean)addOptions.get( UIFunctions.OTO_FORCE_OPEN );
 
 		if ( force == null ){
