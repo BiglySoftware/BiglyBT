@@ -530,14 +530,14 @@ DHTTrackerPlugin
 	{
 		Torrent	torrent = download.getTorrent();
 
-		boolean	is_decentralised = false;
-
+		if ( torrent == null ){
+			
+			return;
+		}
+		
 		URL announce_url = torrent.getAnnounceURL();
 		
-		if ( torrent != null ){
-
-			is_decentralised = TorrentUtils.isDecentralised( announce_url );
-		}
+		boolean	is_decentralised = TorrentUtils.isDecentralised( announce_url );
 
 			// bail on our low noise ones, these don't require decentralised tracking unless that's what they are
 
@@ -553,12 +553,9 @@ DHTTrackerPlugin
 
 		if ( track_only_decentralsed ){
 
-			if ( torrent != null ){
+			if ( !is_decentralised ){
 
-				if ( !is_decentralised ){
-
-					return;
-				}
+				return;
 			}
 		}
 
@@ -566,7 +563,7 @@ DHTTrackerPlugin
 
 			String[]	networks = download.getListAttribute( ta_networks );
 
-			if ( torrent != null && networks != null ){
+			if ( networks != null ){
 
 				boolean	public_net = false;
 
@@ -642,7 +639,7 @@ DHTTrackerPlugin
 
 		}else{
 
-			if ( torrent != null && torrent.isDecentralised()){
+			if ( torrent.isDecentralised()){
 
 				download.addListener(
 					new DownloadListener()
@@ -823,6 +820,7 @@ DHTTrackerPlugin
 		Download	download )
 	{
 		if ( is_running ){
+			
 			download.removeTrackerListener( DHTTrackerPlugin.this );
 
 			download.removeListener( DHTTrackerPlugin.this );
@@ -842,8 +840,6 @@ DHTTrackerPlugin
 
 				this_mon.exit();
 			}
-		}else{
-
 		}
 	}
 
