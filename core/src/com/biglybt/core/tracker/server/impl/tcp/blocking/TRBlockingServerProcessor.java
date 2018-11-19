@@ -75,7 +75,10 @@ TRBlockingServerProcessor
 		boolean	keep_alive = getServer().isKeepAliveEnabled();
 
 		try{
-			InputStream	is = new BufferedInputStream( socket.getInputStream());
+			InputStream inputStream = socket.getInputStream();
+			int available = inputStream.available();
+			int bufferSize = available >= 16384 ? 16384 : 8192;
+			InputStream	is = new BufferedInputStream(inputStream, bufferSize);
 
 			while( true ){
 
