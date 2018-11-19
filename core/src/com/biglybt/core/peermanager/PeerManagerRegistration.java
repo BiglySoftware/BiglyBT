@@ -19,6 +19,8 @@
 
 package com.biglybt.core.peermanager;
 
+import java.util.List;
+
 import com.biglybt.core.peer.impl.PEPeerControl;
 import com.biglybt.core.torrent.TOTorrentFile;
 
@@ -57,4 +59,10 @@ PeerManagerRegistration
     // XXX: Doesn't appear to be used.
     public String
 	getDescription();
+    
+    public List<PeerManagerRegistration>
+    getOtherRegistrationsForHash();
+    
+    public int 
+    getLocalPort();
 }

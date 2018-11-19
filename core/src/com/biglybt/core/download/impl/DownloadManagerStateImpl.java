@@ -60,10 +60,11 @@ DownloadManagerStateImpl
 
 
 	private static final LogIDs LOGID = LogIDs.DISK;
-	private static final String			RESUME_KEY				= "resume";
-	private static final String			TRACKER_CACHE_KEY		= "tracker_cache";
-	private static final String			ATTRIBUTE_KEY			= "attributes";
-	private static final String			AZUREUS_PROPERTIES_KEY	= "azureus_properties";
+	private static final String			RESUME_KEY						= "resume";
+	private static final String			TRACKER_CACHE_KEY				= "tracker_cache";
+	private static final String			ATTRIBUTE_KEY					= "attributes";
+	private static final String			AZUREUS_PROPERTIES_KEY			= "azureus_properties";
+	private static final String			AZUREUS_PRIVATE_PROPERTIES_KEY	= "azureus_private_properties";
 
 	private static final File			ACTIVE_DIR;
 
@@ -3401,28 +3402,29 @@ DownloadManagerStateImpl
 		extends 	LogRelation
 		implements 	TorrentUtils.ExtendedTorrent
 	{
-		private final DownloadManagerImpl	download_manager;
+		final DownloadManagerImpl	download_manager;
 
-		private final String		torrent_file;
-		private HashWrapper	torrent_hash_wrapper;
-		private Map			cache;
-		private Map			cache_attributes;
-		private Map			cache_azp;
+		final String		torrent_file;
+		HashWrapper			torrent_hash_wrapper;
+		Map					cache;
+		Map					cache_attributes;
+		Map					cache_azp;
+		Map					cache_azpp;
 
 		volatile TorrentUtils.ExtendedTorrent		delegate;
-		private TOTorrentException							fixup_failure;
+		TOTorrentException							fixup_failure;
 
-		private boolean		discard_pieces;
-		private boolean		logged_failure;
+		boolean		discard_pieces;
+		boolean		logged_failure;
 
-		private Boolean		simple_torrent;
-		private long		size;
-		private int			file_count;
+		Boolean		simple_torrent;
+		long		size;
+		int			file_count;
 
-		private URL										announce_url;
-		cacheGroup								announce_group;
+		URL								announce_url;
+		cacheGroup						announce_group;
 
-		private volatile boolean		discard_fluff;
+		volatile boolean		discard_fluff;
 
 		protected
 		CachedStateWrapper(
@@ -3439,6 +3441,7 @@ DownloadManagerStateImpl
 
 			cache_attributes 	= (Map)cache.get( "attributes" );
 			cache_azp 			= (Map)cache.get( "azp" );
+			cache_azpp 			= (Map)cache.get( "azpp" );
 
 			if ( _force_piece_discard ){
 
@@ -3520,8 +3523,9 @@ DownloadManagerStateImpl
 			cache.put( "encoding", state.getAdditionalStringProperty( "encoding" ));
 			cache.put( "torrent filename", state.getAdditionalStringProperty( "torrent filename" ));
 
-			cache.put( "attributes", state.getAdditionalMapProperty( ATTRIBUTE_KEY ));
-			cache.put( "azp", state.getAdditionalMapProperty( AZUREUS_PROPERTIES_KEY ));
+			cache.put( "attributes", 	state.getAdditionalMapProperty( ATTRIBUTE_KEY ));
+			cache.put( "azp", 			state.getAdditionalMapProperty( AZUREUS_PROPERTIES_KEY ));
+			cache.put( "azpp", 			state.getAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES_KEY ));
 
 			try{
 				cache.put( "au", state.getAnnounceURL().toExternalForm());
@@ -3824,6 +3828,13 @@ DownloadManagerStateImpl
 								delegate.setAdditionalMapProperty( AZUREUS_PROPERTIES_KEY, cache_azp );
 
 								cache_azp = null;
+							}
+							
+							if ( cache_azpp != null ){
+
+								delegate.setAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES_KEY, cache_azpp );
+
+								cache_azpp = null;
 							}
 
 							announce_url = null;
@@ -4502,17 +4513,25 @@ DownloadManagerStateImpl
        	{
 			Map	c = cache_attributes;
 
-			if ( c != null &&  name.equals( "attributes" )){
+			if ( c != null &&  name.equals( ATTRIBUTE_KEY )){
 
 				return( c );
 			}
 
 			c = cache_azp;
 
-			if ( c != null &&  name.equals( "azureus_properties" )){
+			if ( c != null &&  name.equals( AZUREUS_PROPERTIES_KEY )){
 
 				return( c );
 			}
+			
+			c = cache_azpp;
+
+			if ( c != null &&  name.equals( AZUREUS_PRIVATE_PROPERTIES_KEY )){
+
+				return( c );
+			}
+
 
 	   		if ( fixup()){
 

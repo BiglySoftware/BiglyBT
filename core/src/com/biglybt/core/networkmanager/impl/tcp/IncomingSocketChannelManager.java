@@ -222,7 +222,12 @@ public class IncomingSocketChannelManager
 	 *
 	 * @return port number
 	 */
-  public int getTCPListeningPortNumber() {  return tcp_listen_port;  }
+  
+  public int 
+  getTCPListeningPortNumber() 
+  {  
+	  return tcp_listen_port;  
+  }
 
   public void
   setExplicitBindAddress(

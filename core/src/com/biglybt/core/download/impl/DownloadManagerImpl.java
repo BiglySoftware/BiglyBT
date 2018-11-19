@@ -53,10 +53,12 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peermanager.PeerManagerRegistration;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableResolver;
@@ -134,7 +136,8 @@ DownloadManagerImpl
 	private static final int LDT_FILEPRIORITYCHANGED 	= 5;
 	private static final int LDT_FILELOCATIONCHANGED 	= 6;
 
-
+	private static Object 			port_init_lock = new Object();
+	
 	private final AEMonitor	listeners_mon	= new AEMonitor( "DM:DownloadManager:L" );
 
 
@@ -563,7 +566,7 @@ DownloadManagerImpl
 	private Object[]					read_torrent_state;
 	DownloadManagerState		download_manager_state;
 
-	TOTorrent		torrent;
+	private TOTorrent		torrent;
 	private String 			torrent_comment;
 	private String 			torrent_created_by;
 
@@ -707,6 +710,8 @@ DownloadManagerImpl
     private int		crypto_level 	= NetworkManager.CRYPTO_OVERRIDE_NONE;
     private int		message_mode	= -1;
 
+    private int		tcp_port_override;
+    
 	// Only call this with STATE_QUEUED, STATE_WAITING, or STATE_STOPPED unless you know what you are doing
 
     private volatile boolean	removing;
@@ -1981,17 +1986,58 @@ DownloadManagerImpl
 	protected int
 	getTCPPortOverride()
 	{
-		try{
-			TOTorrent torrent = getTorrent();
+		if ( tcp_port_override != 0 ){
 			
-			if ( Arrays.equals( torrent.getHash(), ByteFormatter.decodeString( "CDCA759DE2BEFE2FAEBAC6677E96A87BCAA468E3" ))){
-			
-				return( 47238 );
-			}
-		}catch( Throwable e ){
-			
+			return( tcp_port_override>0?tcp_port_override:0 );
 		}
 		
+		if ( getTorrentHashOverride() != null ){
+			
+			synchronized( port_init_lock ){
+				
+				PeerManagerRegistration reg = controller.getPeerManagerRegistration();
+				
+				if ( reg != null ){
+					
+					int	allocated_port = 0;
+					
+					try{
+						tcp_port_override = -1;		// prevent recursion
+					
+						List<PeerManagerRegistration> others = reg.getOtherRegistrationsForHash();
+						
+						List<Integer>	existing_ports = new ArrayList<Integer>();
+								
+						for ( PeerManagerRegistration r: others ){
+							
+							int port = r.getLocalPort();
+							
+							if ( port > 0 ){
+							
+								existing_ports.add( port );
+							}
+						}
+
+						allocated_port = TCPNetworkManager.getSingleton().getAdditionalTCPListeningPortNumber( existing_ports );
+						
+					}finally{
+						
+						tcp_port_override = allocated_port;
+					}
+					
+					return( tcp_port_override );
+					
+				}else{
+					
+						// hmm, what to do
+					
+					return( -1 );
+				}
+			}
+		}
+		
+		tcp_port_override = -1;
+				
 		return( 0 );
 	}
 	

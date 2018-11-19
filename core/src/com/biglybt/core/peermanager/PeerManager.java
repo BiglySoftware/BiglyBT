@@ -608,7 +608,54 @@ public class PeerManager implements CoreStatsProvider {
 		{
 			return( hash.getBytes() );
 		}
+		
+		public int
+		getLocalPort()
+		{
+			return( adapter.getLocalPort());
+		}
 
+	    public List<PeerManagerRegistration>
+	    getOtherRegistrationsForHash()
+	    {
+	    	List<PeerManagerRegistration> result = new ArrayList<>();
+	    	
+	    	HashWrapper hw;
+	    	
+	    	byte[] ho_b = adapter.getHashOverride();
+	    	
+	    	if ( ho_b == null ){
+	    		
+	    		hw = hash;
+	    		
+	    	}else{
+	    		
+	    		hw = new HashWrapper( ho_b );
+	    	}
+	    		
+    		try{
+    			managers_mon.enter();
+    							
+				List<PeerManagerRegistrationImpl>	ov_registrations = registered_legacy_managers.get( hw );
+
+				if ( ov_registrations != null ){
+
+					for ( PeerManagerRegistrationImpl r: ov_registrations ){
+						
+						if ( r != this ){
+							
+							result.add( r );
+						}
+					}
+				}
+    		}finally{
+    			
+    			managers_mon.exit();
+	    	}
+	    	
+	    	return( result );
+	    }
+	    
 		@Override
 		public TOTorrentFile
 		getLink(
