@@ -533,6 +533,11 @@ ClientIDManagerImpl
 
 				int	p3 = cid.lastIndexOf( ":" );
 
+				if ( p3 == -1 ){
+					
+					Debug.out( "eh?" );
+				}
+				
 				String	target_host	= cid.substring( 0, p3 );
 
 				String[] port_hash =  cid.substring(p3+1).split( "\\+" );

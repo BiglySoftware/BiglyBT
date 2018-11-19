@@ -1450,9 +1450,10 @@ DownloadManagerController
 	
 	@Override
 	public int 
-	getLocalPort()
+	getLocalPort(
+		boolean	only_if_allocated )
 	{
-		return( download_manager.getTCPPortOverride());
+		return( download_manager.getTCPPortOverride( only_if_allocated ));
 	}
 	
 		// secrets for outbound connections, based on level of target
@@ -1766,14 +1767,7 @@ DownloadManagerController
 	public int 
 	getTCPListeningPortNumber()
 	{
-		int port = download_manager.getTCPPortOverride();
-		
-		if ( port > 0 ){
-			
-			return( port );
-		}
-		
-		return( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber());
+		return( download_manager.getTCPListeningPortNumber());
 	}
 	
 	public int

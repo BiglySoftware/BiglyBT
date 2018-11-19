@@ -201,6 +201,9 @@ DownloadManager
     public void
     resume();
 
+    public int
+    getTCPListeningPortNumber();
+    
     public long
     getAutoResumeTime();
 

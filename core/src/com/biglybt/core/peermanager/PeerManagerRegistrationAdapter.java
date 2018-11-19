@@ -33,7 +33,8 @@ PeerManagerRegistrationAdapter
 	getSecrets();
 
 	public int
-	getLocalPort();
+	getLocalPort(
+		boolean	only_if_allocated );
 	
 	public boolean
 	manualRoute(

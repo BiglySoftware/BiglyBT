@@ -975,13 +975,14 @@ PeersViewBase
 	}
 	
 	private static String
-	getMyPeerDetails()
+	getMyPeerDetails(
+		DownloadManager		dm )
 	{
 		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
 
 		InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
 		
-		int port = TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber();
+		int port = dm.getTCPListeningPortNumber();
 		
 		String	str = "";
 			
@@ -1022,7 +1023,7 @@ PeersViewBase
 				handleEvent(
 						Event event)
 				{
-					String str = getMyPeerDetails();
+					String str = getMyPeerDetails( man );
 					
 					if ( str.isEmpty()){
 						
@@ -1065,7 +1066,7 @@ PeersViewBase
 				{
 					List<PEPeer> peers = pm.getPeers();
 					
-					String str = getMyPeerDetails();
+					String str = getMyPeerDetails( man );
 					
 					for ( PEPeer peer: peers ){
 						

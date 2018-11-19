@@ -364,11 +364,13 @@ MagnetPlugin
 							
 							if ( networks.contains( AENetworkClassifier.AT_PUBLIC ) && !cb_data.contains( "xsource=" )){
 								
+								DownloadManager dm = download==null?null:PluginCoreUtils.unwrap( download );
+								
 								InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
 
 								InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
 								
-								int port = TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber();
+								int port = dm==null?TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber():dm.getTCPListeningPortNumber();
 
 								if ( ip != null && port > 0 ){
 									
@@ -395,9 +397,7 @@ MagnetPlugin
 									if ( download != null ){
 										
 										Set<String>	added = new HashSet<>();
-										
-										DownloadManager dm = PluginCoreUtils.unwrap( download );
-										
+																				
 										PEPeerManager pm = dm.getPeerManager();
 										
 										if ( pm != null ){

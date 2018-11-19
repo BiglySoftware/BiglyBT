@@ -113,7 +113,8 @@ BuddyPluginTracker
 	private Set<Download>	tracked_downloads		= new HashSet<>();
 	private int				download_set_id;
 
-	private Set<Download>	last_processed_download_set;
+	private Set<Download>	last_processed_download_set	= new HashSet<>();
+	
 	private int				last_processed_download_set_id;
 
 	private Map<HashWrapper,List<Download>>	short_id_map	= new HashMap<>();

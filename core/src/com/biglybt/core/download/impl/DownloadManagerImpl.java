@@ -710,7 +710,7 @@ DownloadManagerImpl
     private int		crypto_level 	= NetworkManager.CRYPTO_OVERRIDE_NONE;
     private int		message_mode	= -1;
 
-    private int		tcp_port_override;
+    private volatile int		tcp_port_override;
     
 	// Only call this with STATE_QUEUED, STATE_WAITING, or STATE_STOPPED unless you know what you are doing
 
@@ -1984,7 +1984,8 @@ DownloadManagerImpl
 	}
 
 	protected int
-	getTCPPortOverride()
+	getTCPPortOverride(
+		boolean	only_if_allocated )
 	{
 		if ( tcp_port_override != 0 ){
 			
@@ -1992,53 +1993,51 @@ DownloadManagerImpl
 		}
 		
 		if ( getTorrentHashOverride() != null ){
-			
-			synchronized( port_init_lock ){
+							
+			if ( only_if_allocated ){
+					
+				return( -1 );
+			}
 				
-				PeerManagerRegistration reg = controller.getPeerManagerRegistration();
+			PeerManagerRegistration reg = controller.getPeerManagerRegistration();
 				
-				if ( reg != null ){
+			if ( reg != null ){
+										
+				List<PeerManagerRegistration> others = reg.getOtherRegistrationsForHash();
 					
-					int	allocated_port = 0;
-					
-					try{
-						tcp_port_override = -1;		// prevent recursion
-					
-						List<PeerManagerRegistration> others = reg.getOtherRegistrationsForHash();
+				List<Integer>	existing_ports = new ArrayList<Integer>();
+							
+				for ( PeerManagerRegistration r: others ){
 						
-						List<Integer>	existing_ports = new ArrayList<Integer>();
-								
-						for ( PeerManagerRegistration r: others ){
-							
-							int port = r.getLocalPort();
-							
-							if ( port > 0 ){
-							
-								existing_ports.add( port );
-							}
-						}
+					int port = r.getLocalPort( true );
+						
+					if ( port > 0 ){
+						
+						existing_ports.add( port );
+					}
+				}
 
-						allocated_port = TCPNetworkManager.getSingleton().getAdditionalTCPListeningPortNumber( existing_ports );
+				synchronized( port_init_lock ){
+					
+					if ( tcp_port_override == 0 ){
 						
-					}finally{
-						
-						tcp_port_override = allocated_port;
+						tcp_port_override = TCPNetworkManager.getSingleton().getAdditionalTCPListeningPortNumber( existing_ports );
 					}
 					
 					return( tcp_port_override );
-					
-				}else{
-					
-						// hmm, what to do
-					
-					return( -1 );
 				}
+			}else{
+					
+					// hmm, what to do
+					
+				return( -1 );
 			}
-		}
+		}else{
 		
-		tcp_port_override = -1;
+			tcp_port_override = -1;
 				
-		return( 0 );
+			return( 0 );
+		}
 	}
 	
 	protected HashWrapper 
@@ -2054,6 +2053,20 @@ DownloadManagerImpl
 		}
 		
 		return( null );
+	}
+	
+	@Override
+	public int 
+	getTCPListeningPortNumber()
+	{
+		int port = getTCPPortOverride( false );
+		
+		if ( port > 0 ){
+			
+			return( port );
+		}
+		
+		return( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber());
 	}
 	
 	@Override

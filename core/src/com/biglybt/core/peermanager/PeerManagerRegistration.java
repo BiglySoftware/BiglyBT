@@ -64,5 +64,6 @@ PeerManagerRegistration
     getOtherRegistrationsForHash();
     
     public int 
-    getLocalPort();
+    getLocalPort(
+    	boolean	only_if_allocated );
 }

@@ -20,7 +20,6 @@
 package com.biglybt.core.networkmanager.impl.tcp;
 
 
-import java.net.InetAddress;
 import java.nio.channels.CancelledKeyException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -36,7 +35,6 @@ import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.SystemTime;
 
 public class

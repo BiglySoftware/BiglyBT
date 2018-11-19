@@ -104,7 +104,8 @@ NetStatusProtocolTesterBT
 				
 				@Override
 				public int 
-				getLocalPort()
+				getLocalPort(
+					boolean only_if_allocated )
 				{
 					return( 0 );
 				}
