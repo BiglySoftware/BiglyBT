@@ -734,8 +734,7 @@ TOTorrentImpl
 				SHA1Hasher s = new SHA1Hasher();
 
 				torrent_hash = s.calculateHash(BEncoder.encode(info));
-
-				// torrent_hash = ByteFormatter.decodeString( "603ACA36401A6C265F20DEAE912E6122EE6F9835" );
+				
 			}else{
 
 				torrent_hash = torrent_hash_override;

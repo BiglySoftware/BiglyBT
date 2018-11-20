@@ -6010,13 +6010,7 @@ public class OpenTorrentOptionsWindow
 
 			if (so instanceof SWTSkinObjectText) {
 
-				String hash_str = null;
-
-				try{
-					hash_str = ByteFormatter.encodeString(torrentOptions.getTorrent().getHash());
-
-				}catch( Throwable e ){
-				}
+				String hash_str = TorrentUtils.nicePrintTorrentHash( torrent );
 
 				SWTSkinObjectText text = (SWTSkinObjectText)so;
 

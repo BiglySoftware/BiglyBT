@@ -823,6 +823,10 @@ implements PEPeerTransport
 						if ( property_name == AEProxyFactory.PO_PEER_NETWORKS ){
 
 							return( manager.getAdapter().getEnabledNetworks());
+							
+						}else if ( property_name.equals( "local_port" )){
+							
+							return( manager.getAdapter().getTCPListeningPortNumber());
 						}
 
 						return( null );

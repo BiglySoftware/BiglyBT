@@ -167,6 +167,14 @@ ExternalSeedReaderFactoryGetRight
 
 						if ( url_str.length() > 0 ){
 
+								// internet-archive torrents have started embedding 'relative' urls which we don't
+								// support
+							
+							if ( url_str.startsWith( "/" )){
+								
+								continue;
+							}
+							
 							URL	url = new URL( url_str );
 
 							String	protocol = url.getProtocol().toLowerCase();

@@ -2134,6 +2134,29 @@ TorrentUtils
 		return( null );
 	}
 	
+	public static byte[]
+	getHashForDisplay(
+		TOTorrent		torrent )
+	{
+		if ( torrent == null ){
+			
+			return( null );
+		}
+		
+		byte[] hash = getOriginalHash( torrent );
+		
+		if ( hash == null ){
+			
+			try{
+				hash = torrent.getHash();
+				
+			}catch( Throwable e ){
+			}
+		}
+		
+		return( hash );
+	}
+	
 	public static void
 	setPeerCache(
 		TOTorrent		torrent,
@@ -3907,12 +3930,10 @@ TorrentUtils
 
 			hash = new byte[20];
 		} else {
-			try {
-				hash = torrent.getHash();
+			
+			hash = getHashForDisplay( torrent );
 
-			} catch (TOTorrentException e) {
-
-				Debug.printStackTrace(e);
+			if ( hash == null ){
 
 				hash = new byte[20];
 			}
