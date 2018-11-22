@@ -26,6 +26,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
@@ -940,8 +942,73 @@ public class Utils
 	 *
 	 * @since 3.0.4.3
 	 */
-	private static boolean execSWTThread(final Runnable code, final int msLater) {
+	
+		// only time the async_seq is 0 is when there is not active async_runner
+	
+	static AtomicInteger async_seq = new AtomicInteger();
+	
+	static ConcurrentLinkedQueue<Object[]>	async_exec_q = new ConcurrentLinkedQueue<>();
+	
+	
+	static Runnable async_runner =
+		new Runnable()
+		{
+			public void
+			run()
+			{
+				Integer	last = -1;
+				
+				while( true ){
+					
+					Object[] r = async_exec_q.poll();
+					
+					if ( r == null ){
+						
+						if ( async_seq.compareAndSet( last+1, 0 )){
+							
+							break;
+							
+						}else{
+							
+								// something has been added to the queue between it being empty and the	
+								// attempt to exit
+							
+							if ( Constants.IS_CVS_VERSION ){
+							
+								if ( async_exec_q.isEmpty()){
+								
+									Debug.out( "Inconsistent async queue" );
+									
+									async_seq.set( 0 );
+									
+									break;
+								}
+							}
+							
+							//System.out.println( last + ": spin" );
+							
+							continue;
+						}
+					}
+					
+					try{
+						((Runnable)r[0]).run();
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+					
+					last = (Integer)r[1];
+					
+					//System.out.println( last + ": run" );
+				}
+			}			
+		};
+		
+	private static boolean execSWTThread(final Runnable code, final int msLater) {		
 		final Display display = getDisplay(false);
+
 		if (display == null) {
 			if (code == null) {
 				return false;
@@ -975,7 +1042,16 @@ public class Utils
 			try {
 				if (queue == null) {
 					if (msLater <= 0) {
-						display.asyncExec(code);
+						
+						int my_seq = async_seq.getAndIncrement();
+						
+						async_exec_q.add( new Object[]{ code, my_seq });
+						
+						if ( my_seq == 0 ){
+						
+							display.asyncExec( async_runner );
+
+						}
 					} else {
 						if(isSWTThread) {
 							display.timerExec(msLater, code);
