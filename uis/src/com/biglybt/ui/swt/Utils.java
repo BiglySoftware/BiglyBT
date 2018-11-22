@@ -956,6 +956,8 @@ public class Utils
 			public void
 			run()
 			{
+				int	spins = 0;
+				
 				Integer	last = -1;
 				
 				while( true ){
@@ -970,26 +972,30 @@ public class Utils
 							
 						}else{
 							
-								// something has been added to the queue between it being empty and the	
-								// attempt to exit
-							
-							if ( Constants.IS_CVS_VERSION ){
-							
-								if ( async_exec_q.isEmpty()){
-								
-									Debug.out( "Inconsistent async queue" );
-									
-									async_seq.set( 0 );
-									
-									break;
-								}
-							}
+								// something has been added to, or is in the process of being added to, 
+								// the queue between it being empty and the attempt to exit
 							
 							//System.out.println( last + ": spin" );
+							
+							if ( ++spins >= 1000 ){
+								
+								try{
+									if ( spins == 1000 ){
+										
+										Debug.out( "Excessive spinning" );
+									}
+									
+									Thread.sleep(1);
+									
+								}catch( Throwable e ){
+								}
+							}
 							
 							continue;
 						}
 					}
+					
+					spins = 0;
 					
 					try{
 						((Runnable)r[0]).run();
