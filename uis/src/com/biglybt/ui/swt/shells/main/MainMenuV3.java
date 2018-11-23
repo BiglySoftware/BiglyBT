@@ -366,15 +366,14 @@ public class MainMenuV3
 			boolean needsSep = false;
 			boolean enabled = COConfigurationManager.getBooleanParameter("Beta Programme Enabled");
 			if (enabled) {
-				MenuFactory.addMenuItem(viewMenu, SWT.CHECK, PREFIX_V2 + ".view.beta",
-						new Listener() {
-							@Override
-							public void handleEvent(Event event) {
-								MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-								if (mdi != null) {
-									mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_BETAPROGRAM);
-								}
-							}
+				MenuFactory.addMenuItem(viewMenu, PREFIX_V2 + ".view.beta", new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+						if (mdi != null) {
+							mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_BETAPROGRAM);
+						}
+					}
 				});
 				needsSep = true;
 			}
