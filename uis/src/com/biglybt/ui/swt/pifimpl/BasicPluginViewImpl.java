@@ -35,6 +35,9 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.components.UIPropertyChangeEvent;
@@ -435,20 +438,50 @@ BasicPluginViewImpl
 
     		// pause
 
+		String config_key = model.getName() + ".LoggerView.pause";
+
 		Button buttonPause = new Button(bottomSection, SWT.CHECK);
 		Messages.setLanguageText(buttonPause, "LoggerView.pause");
 		gridData = new GridData();
 		Utils.setLayoutData(buttonPause, gridData);
+		
 		buttonPause.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (e.widget == null || !(e.widget instanceof Button))
 					return;
 				Button btn = (Button) e.widget;
-				paused = btn.getSelection();
+				
+				boolean sel = btn.getSelection();
+				
+				Object o = model.getProperty( BasicPluginViewModel.PR_EXTERNAL_LOG_PAUSE );
+				
+				boolean external_pause_control = false;
+				
+				if ( o instanceof Boolean ){
+				
+					external_pause_control = (Boolean)o;
+				}
+				
+				if ( !external_pause_control){
+					paused = sel;
+				}
+				
+				COConfigurationManager.setParameter( config_key, sel );
 			}
 		});
-
+		
+		COConfigurationManager.addAndFireParameterListener(
+			config_key,
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String name){
+					boolean	paused = COConfigurationManager.getBooleanParameter( name, false );
+					
+					buttonPause.setSelection( paused );
+				}
+			});
     }
 
   }

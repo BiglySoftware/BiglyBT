@@ -26,6 +26,7 @@ package com.biglybt.pifimpl.local.ui.model;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.pif.PluginInterface;
@@ -54,6 +55,8 @@ BasicPluginViewModelImpl
 	private UIProgressBar	progress;
 	private String sConfigSectionID;
 
+	private Map<Integer,Object>	properties;
+	
 	public
 	BasicPluginViewModelImpl(
 		UIManagerImpl	_ui_manager,
@@ -124,6 +127,37 @@ BasicPluginViewModelImpl
 		return sConfigSectionID;
 	}
 
+	public void
+	setProperty(
+		int		property,
+		Object	value )
+	{
+		synchronized( this ){
+			
+			if ( properties == null ){
+				
+				properties = new HashMap<>();
+			}
+			
+			properties.put( property, value);
+		}
+	}
+	
+	public Object
+	getProperty(
+		int		property )
+	{
+		synchronized( this ){
+			
+			if ( properties == null ){
+				
+				return( null );
+			}
+			
+			return( properties.get( property ));
+		}
+	}
+	
 	@Override
 	public void
 	destroy()

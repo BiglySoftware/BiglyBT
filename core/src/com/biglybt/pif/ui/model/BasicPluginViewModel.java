@@ -35,6 +35,8 @@ public interface
 BasicPluginViewModel
 	extends PluginViewModel
 {
+	public static final int	PR_EXTERNAL_LOG_PAUSE = 1;	// Boolean
+	
 		/**
 		 * All UI Components are initially enabled - disable if not required
 		 * @return
@@ -85,4 +87,13 @@ BasicPluginViewModel
 	 * @param channel The log channel to listen to.
 	 */
 	public void attachLoggerChannel(LoggerChannel channel);
+	
+	public void
+	setProperty(
+		int		property,
+		Object	value );
+	
+	public Object
+	getProperty(
+		int		property );
 }
