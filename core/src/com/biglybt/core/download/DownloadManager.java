@@ -207,6 +207,12 @@ DownloadManager
     public long
     getAutoResumeTime();
 
+    public default void
+    setAutoResumeTime(
+    	long	time )
+    {
+    }
+    
     public GlobalManager
     getGlobalManager();
 

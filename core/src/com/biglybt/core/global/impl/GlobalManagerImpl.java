@@ -1779,10 +1779,15 @@ public class GlobalManagerImpl
 
 		  return( false );
 	  }
+	  
+	  if ( manager.isPaused()){
+		  
+		  return( true );
+	  }
 
 	  int state = manager.getState();
 
-	  if ( 	state != DownloadManager.STATE_STOPPED &&
+	  if ( 	// state != DownloadManager.STATE_STOPPED &&	decided to allow pausing of stopped torrents
 			state != DownloadManager.STATE_ERROR &&
 			state != DownloadManager.STATE_STOPPING ) {
 
@@ -1804,8 +1809,11 @@ public class GlobalManagerImpl
 	    		  paused_list_mon.exit();
 	    	  }
 
-	    	  manager.stopIt( DownloadManager.STATE_STOPPED, false, false );
-
+	    	  if ( state != DownloadManager.STATE_STOPPED ){
+	    	  
+	    		  manager.stopIt( DownloadManager.STATE_STOPPED, false, false );
+	    	  }
+	    	  
 	    	  return( true );
 
 	      }catch( TOTorrentException e ){
@@ -1818,7 +1826,9 @@ public class GlobalManagerImpl
   }
 
   @Override
-  public void stopPausedDownload(DownloadManager dm)
+  public void 
+  stopPausedDownload(
+		DownloadManager dm )
   {
 	  try {
 		  paused_list_mon.enter();
@@ -1833,6 +1843,10 @@ public class GlobalManagerImpl
 
 			  if ( this_manager == dm ){
 
+				  this_manager.setAutoResumeTime( 0 );
+				  
+				  this_manager.setStopReason( null );
+				  
 				  paused_list.remove(i);
 
 				  break;

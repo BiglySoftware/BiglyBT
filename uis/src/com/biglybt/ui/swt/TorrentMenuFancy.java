@@ -1112,17 +1112,17 @@ public class TorrentMenuFancy
 
 		if (userMode > 0 && hasSelection) {
 
-			boolean can_pause = false;
+			boolean can_pause_for = false;
 
 			for (int i = 0; i < dms.length; i++) {
 				DownloadManager dm = dms[i];
-				if (ManagerUtils.isPauseable(dm)) {
-					can_pause = true;
+				if (dm.isPaused() || ManagerUtils.isPauseable(dm)) {
+					can_pause_for = true;
 					break;
 				}
 			}
 
-			if ( can_pause ){
+			if ( can_pause_for ){
 
 				createRow(detailArea, "MainWindow.menu.transfers.pausetransfersfor",
 					null, new Listener() {

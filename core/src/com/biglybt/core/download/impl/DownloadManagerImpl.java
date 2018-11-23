@@ -2357,12 +2357,20 @@ DownloadManagerImpl
 
 		try {
 			boolean closing = state_after_stopping == DownloadManager.STATE_CLOSED;
+			
 			int curState = getState();
-			boolean alreadyStopped = curState == STATE_STOPPED
-					|| curState == STATE_STOPPING || curState == STATE_ERROR;
-			boolean skipSetTimeStopped = alreadyStopped
-					|| (closing && curState == STATE_QUEUED);
+			
+			boolean alreadyStopped = 	curState == STATE_STOPPED ||
+										curState == STATE_STOPPING || 
+										curState == STATE_ERROR;
+			
+			boolean skipSetTimeStopped = alreadyStopped	|| (closing && curState == STATE_QUEUED);
 
+			if ( alreadyStopped ){
+				
+				resume_time = 0;
+			}
+			
 			if (!skipSetTimeStopped) {
 				download_manager_state.setLongAttribute(
 						DownloadManagerState.AT_TIME_STOPPED, SystemTime.getCurrentTime());
@@ -2396,11 +2404,20 @@ DownloadManagerImpl
 	{
 			// obviously we should manage the timer+resumption but it works as it is at the moment...
 
+		if ( isPaused()){
+			
+			resume_time = _resume_time;
+			
+			return( true );
+			
+		}else{
+		
 			// we're not yet in a stopped state so indicate this with a negative value - it'll be corrected when the download stops
 
-		resume_time	= -_resume_time;
+			resume_time	= -_resume_time;
 
-		return( globalManager.pauseDownload( this ));
+			return( globalManager.pauseDownload( this ));
+		}
 	}
 
 	@Override
@@ -2409,6 +2426,15 @@ DownloadManagerImpl
 	{
 		return( resume_time );
 	}
+	
+	@Override
+	public void
+	setAutoResumeTime(
+		long		time )
+	{
+		resume_time	= time;
+	}
+	
 	@Override
 	public boolean
 	isPaused()

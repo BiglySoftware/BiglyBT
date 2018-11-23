@@ -1722,7 +1722,8 @@ public class ManagerUtils {
 	    if(dm == null)
 	      return false;
 	    int state = dm.getState();
-	    if (	state == DownloadManager.STATE_STOPPED ||
+	    if (	// 	state == DownloadManager.STATE_STOPPED || decided to allow pausing of a stopped torrent
+	    		dm.isPaused() ||
 	    		state == DownloadManager.STATE_STOPPING	||
 	    		state == DownloadManager.STATE_ERROR ) {
 	      return false;
@@ -1863,8 +1864,10 @@ public class ManagerUtils {
 
 		int state = dm.getState();
 
-		if (state == DownloadManager.STATE_STOPPED
-				|| state == DownloadManager.STATE_STOPPING ){
+		if (	// state == DownloadManager.STATE_STOPPED ||	decided to allow pausing of stopped downloads
+				dm.isPaused() ||
+				state == DownloadManager.STATE_STOPPING ){
+			
 			return;
 		}
 
@@ -2199,7 +2202,7 @@ public class ManagerUtils {
 							
 						for ( DownloadManager dm: dms ){
 
-							if ( !isPauseable( dm )){
+							if ( !dm.isPaused() && !isPauseable( dm )){
 
 								continue;
 							}

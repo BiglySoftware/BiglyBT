@@ -1335,15 +1335,15 @@ public class TorrentUtil
 		// Advanced > Pause For..
 		if (userMode > 0) {
 
-			boolean can_pause = false;
+			boolean can_pause_for = false;
 
 			for (int i = 0; i < dms.length; i++) {
 
 				DownloadManager dm = dms[i];
 
-				if (ManagerUtils.isPauseable(dm)) {
+				if ( dm.isPaused() || ManagerUtils.isPauseable(dm)) {
 
-					can_pause = true;
+					can_pause_for = true;
 
 					break;
 				}
@@ -1351,7 +1351,7 @@ public class TorrentUtil
 
 			final MenuItem itemPauseFor = new MenuItem(menuAdvanced, SWT.PUSH);
 
-			itemPauseFor.setEnabled(can_pause);
+			itemPauseFor.setEnabled(can_pause_for);
 
 			Messages.setLanguageText(itemPauseFor,
 					"MainWindow.menu.transfers.pausetransfersfor");
@@ -1812,7 +1812,7 @@ public class TorrentUtil
 
 			DownloadManager dm = dms[i];
 
-			if (ManagerUtils.isPauseable(dm)) {
+			if ( dm.isPaused() || ManagerUtils.isPauseable(dm)) {
 
 				dms_to_pause.add(dm);
 			}
