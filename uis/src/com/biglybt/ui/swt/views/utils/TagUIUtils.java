@@ -751,8 +751,8 @@ public class TagUIUtils
 						TagFeatureExecOnAssign.ACTION_PAUSE,
 						TagFeatureExecOnAssign.ACTION_RESUME,
 						TagFeatureExecOnAssign.ACTION_SCRIPT,
-						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI };
-
+						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI,
+						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC };
 
 				String[] action_keys =
 					{ 	"label.apply.options.template",
@@ -764,7 +764,8 @@ public class TagUIUtils
 						"v3.MainWindow.button.pause",
 						"v3.MainWindow.button.resume",
 						"label.script",
-						"label.post.magnet.to.chat"};
+						"label.post.magnet.to.chat",
+						"label.init.save.loc.move" };
 
 				for ( int i=0;i<action_ids.length;i++ ){
 
@@ -877,6 +878,22 @@ public class TagUIUtils
 										tf_eoa.setActionEnabled( action_id, action_item.getSelection());
 									}
 								});
+							
+							if ( action_id == TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC ){
+								
+								TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+								
+								boolean enable = false;
+								
+								if ( fl.supportsTagInitialSaveFolder()){
+									
+									File f = fl.getTagInitialSaveFolder();
+									
+									enable = f != null;
+								}
+								
+								action_item.setEnabled( enable );
+							}
 						}
 					}
 				}

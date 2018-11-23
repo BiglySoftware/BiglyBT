@@ -20,6 +20,7 @@
 
 package com.biglybt.core.tag.impl;
 
+import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.download.DownloadManager;
@@ -32,6 +33,7 @@ import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -404,6 +406,67 @@ TagDownloadWithState
 		super.removeTag();
 	}
 
+	private static final AsyncDispatcher move_dispatcher = new AsyncDispatcher( "tag:eos_move" );
+
+	private static void
+	moveDownload(
+		DownloadManager			dm,
+		TagFeatureFileLocation	fl )
+	{
+		move_dispatcher.dispatch(
+			new AERunnable()
+			{
+				@Override
+				public void
+				runSupport()
+				{
+					File save_loc = fl.getTagInitialSaveFolder();
+					
+					long	options = fl.getTagInitialSaveOptions();
+
+					boolean set_data 	= (options&TagFeatureFileLocation.FL_DATA) != 0;
+					boolean set_torrent = (options&TagFeatureFileLocation.FL_TORRENT) != 0;
+
+					if ( set_data ){
+
+						File existing_save_loc = dm.getSaveLocation();
+
+						if ( dm.getTorrent().isSimpleTorrent()){
+							
+							existing_save_loc = existing_save_loc.getParentFile();
+						}
+						
+						if ( ! ( existing_save_loc.equals( save_loc ))){
+
+							try{
+								dm.moveDataFilesLive( save_loc );
+
+							}catch( Throwable e ){
+
+								Debug.out( e );
+							}
+						}
+					}
+
+					if ( set_torrent ){
+
+						File old_torrent_file = new File( dm.getTorrentFileName());
+
+						if ( old_torrent_file.exists()){
+
+							try{
+								dm.setTorrentFile( save_loc, old_torrent_file.getName());
+
+							}catch( Throwable e ){
+
+								Debug.out( e );
+							}
+						}
+					}
+				}
+			});
+	}
+	
 	@Override
 	public void
 	addTaggable(
@@ -611,6 +674,24 @@ TagDownloadWithState
 										handler.applyTo( dm );
 									}
 								});
+						}
+					}
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC )){
+					
+						if ( getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+							
+							TagFeatureFileLocation fl = (TagFeatureFileLocation)this;
+							
+							if ( fl.supportsTagInitialSaveFolder()){
+								
+								File f = fl.getTagInitialSaveFolder();
+								
+								if ( f != null ){
+									
+									moveDownload( dm, fl );
+								}
+							}
 						}
 					}
 				}
@@ -1739,7 +1820,8 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_PAUSE |
 					TagFeatureExecOnAssign.ACTION_SCRIPT |
 					TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE |
-					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI );
+					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI |
+					TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC );
 
 		}else if ( getTagType().getTagType() == TagType.TT_DOWNLOAD_STATE ){
 
