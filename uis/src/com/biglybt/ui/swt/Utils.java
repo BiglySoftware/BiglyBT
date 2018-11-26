@@ -945,6 +945,8 @@ public class Utils
 	
 		// only time the async_seq is 0 is when there is not active async_runner
 	
+	static final boolean USE_ASYNC_EXEC_QUEUE = true;
+	
 	static AtomicInteger async_seq = new AtomicInteger();
 	
 	static ConcurrentLinkedQueue<Object[]>	async_exec_q = new ConcurrentLinkedQueue<>();
@@ -974,17 +976,10 @@ public class Utils
 							
 								// something has been added to, or is in the process of being added to, 
 								// the queue between it being empty and the attempt to exit
-							
-							//System.out.println( last + ": spin" );
-							
-							if ( ++spins >= 1000 ){
+														
+							if ( ++spins >= 10 ){
 								
-								try{
-									if ( spins == 1000 ){
-										
-										Debug.out( "Excessive spinning" );
-									}
-									
+								try{	
 									Thread.sleep(1);
 									
 								}catch( Throwable e ){
@@ -1049,14 +1044,19 @@ public class Utils
 				if (queue == null) {
 					if (msLater <= 0) {
 						
-						int my_seq = async_seq.getAndIncrement();
-						
-						async_exec_q.add( new Object[]{ code, my_seq });
-						
-						if ( my_seq == 0 ){
-						
-							display.asyncExec( async_runner );
-
+						if ( USE_ASYNC_EXEC_QUEUE ){
+					
+							int my_seq = async_seq.getAndIncrement();
+							
+							async_exec_q.add( new Object[]{ code, my_seq });
+							
+							if ( my_seq == 0 ){
+							
+								display.asyncExec( async_runner );
+	
+							}
+						}else{
+							display.asyncExec( code );
 						}
 					} else {
 						if(isSWTThread) {

@@ -203,6 +203,31 @@ public class VirtualChannelSelector {
 
 
 
+  public boolean isPaused( AbstractSelectableChannel channel ) {
+	    if( SAFE_SELECTOR_MODE_ENABLED ) {
+	      try{  selectors_mon.enter();
+	      	//System.out.println( "pause - " + channel.hashCode() + " - " + Debug.getCompressedStackTrace());
+	      for( Map.Entry<VirtualChannelSelectorImpl, ArrayList<AbstractSelectableChannel>> entry: selectors.entrySet()) {
+
+	          VirtualChannelSelectorImpl 			sel 		= entry.getKey();
+	          ArrayList<AbstractSelectableChannel> 	channels 	= entry.getValue();
+
+	          if( channels.contains( channel ) ) {
+	            return( sel.isPaused( channel ));
+	          }
+	        }
+
+	        Debug.out( "isPaused():: channel not found!" );
+	      }
+	      finally{ selectors_mon.exit();  }
+	      
+	      return( false );
+	    }
+	    else {
+	      return( selector_impl.isPaused( channel ));
+	    }
+	  }
+  
   /**
    * Pause selection operations for the given channel
    * @param channel to pause
@@ -262,7 +287,30 @@ public class VirtualChannelSelector {
   }
 
 
+  public boolean isRegistered( AbstractSelectableChannel channel ) {
+	    if( SAFE_SELECTOR_MODE_ENABLED ) {
+	      try{  selectors_mon.enter();
+	      	//System.out.println( "pause - " + channel.hashCode() + " - " + Debug.getCompressedStackTrace());
+	      for( Map.Entry<VirtualChannelSelectorImpl, ArrayList<AbstractSelectableChannel>> entry: selectors.entrySet()) {
 
+	          VirtualChannelSelectorImpl 			sel 		= entry.getKey();
+	          ArrayList<AbstractSelectableChannel> 	channels 	= entry.getValue();
+
+	          if( channels.contains( channel ) ) {
+	            return( sel.isRegistered( channel ));
+	          }
+	        }
+
+	        Debug.out( "isRegistered():: channel not found!" );
+	      }
+	      finally{ selectors_mon.exit();  }
+	      
+	      return( false );
+	    }
+	    else {
+	      return( selector_impl.isRegistered( channel ));
+	    }
+	  }
   /**
    * Cancel the selection operations for the given channel.
    * @param channel channel originally registered

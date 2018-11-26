@@ -418,7 +418,29 @@ public class VirtualChannelSelectorImpl {
     }
 
 
+    public boolean
+    isPaused(
+    	AbstractSelectableChannel	channel )
+    {
+        SelectionKey key = channel.keyFor( selector );
 
+        if( key != null && key.isValid() ) {
+        	
+        	return((  key.interestOps() & INTEREST_OP ) == 0 );
+        }else{
+            try{  
+            	register_cancel_list_mon.enter();
+
+            	Boolean b = paused_states.get( channel );
+
+            	return( b != null && b );
+            	
+          }finally{ 
+        	  register_cancel_list_mon.exit();  
+          }
+        }
+    }
+    
     public void pauseSelects( AbstractSelectableChannel channel ) {
 
       //System.out.println( "pauseSelects: " + channel + " - " + Debug.getCompressedStackTrace() );
@@ -443,9 +465,7 @@ public class VirtualChannelSelectorImpl {
         }
       }
     }
-
-
-
+    	
 
     public void resumeSelects( AbstractSelectableChannel channel ) {
       //System.out.println( "resumeSelects: " + channel + " - " + Debug.getCompressedStackTrace() );
@@ -480,8 +500,40 @@ public class VirtualChannelSelectorImpl {
       //catch( Throwable t ) {  Debug.out( "selector.wakeup():: caught exception: ", t );   }
     }
 
+    public boolean
+    isRegistered( AbstractSelectableChannel channel ){
+    
+      SelectionKey key = channel.keyFor( selector );
 
+         if( key != null ){
+        	 return( true );
+         }else{
+    	  	try{
+        		register_cancel_list_mon.enter();
 
+        			// ensure that there's only one operation outstanding for a given channel
+        			// at any one time (the latest operation requested )
+
+        		for (Iterator<Object> it = register_cancel_list.iterator();it.hasNext();){
+
+        			Object	obj = it.next();
+
+    				if ( channel == obj ||
+       						(	obj instanceof RegistrationData &&
+    								((RegistrationData)obj).channel == channel )){
+
+    					return( true );
+        			}
+        		}
+
+        	}finally{
+
+        		register_cancel_list_mon.exit();
+        	} 
+    	  	
+    	  	return( false );
+         }
+    }
 
     public void
 	cancel(
