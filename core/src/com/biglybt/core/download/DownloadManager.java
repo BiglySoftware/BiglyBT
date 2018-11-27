@@ -188,12 +188,26 @@ DownloadManager
         boolean remove_data,
         boolean	for_removal );
 
-    public boolean
-    pause();
-
+    	/**
+    	 * 
+    	 * @param only_if_active
+    	 * @return true -> download was placed into a paused state (including if it was already paused)
+    	 */
+    
     public boolean
     pause(
-    	long	auto_resume_time );
+    	boolean		only_if_active );
+
+    	/**
+    	 * 
+    	 * @param auto_resume_time
+    	 * @return true -> download was placed into a paused state (including if it was already paused)
+    	 */
+    
+    public boolean
+    pause(
+    	boolean		only_if_active,
+    	long		auto_resume_time );
 
     public boolean
     isPaused();

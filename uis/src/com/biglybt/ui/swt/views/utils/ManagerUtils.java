@@ -2106,7 +2106,7 @@ public class ManagerUtils {
 		    public void
 			runSupport()
     		{
-    			dm.pause();
+    			dm.pause( false );
     		}
 		});
   	}
@@ -2194,7 +2194,7 @@ public class ManagerUtils {
 								}
 							};
 
-						long target_time = SystemTime.getOffsetTime( seconds*1000);
+						final long target_time = SystemTime.getOffsetTime( seconds*1000);
 
 						String time_str = new SimpleDateFormat( "HH:mm:ss" ).format( new Date( target_time ));
 						
@@ -2207,7 +2207,7 @@ public class ManagerUtils {
 								continue;
 							}
 
-							if ( dm.pause( target_time )){
+							if ( dm.pause( false, target_time )){
 
 								dm.setStopReason( reason );
 								
@@ -2246,8 +2246,10 @@ public class ManagerUtils {
 											dm.removeListener( listener );
 
 											try{
-												dm.resume();
-
+												if ( dm.getAutoResumeTime() == target_time ){
+												
+													dm.resume();
+												}
 											}catch( Throwable e ){
 
 												Debug.out( e );

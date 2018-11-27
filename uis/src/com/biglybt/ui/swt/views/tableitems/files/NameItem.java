@@ -591,7 +591,7 @@ public class NameItem extends CoreTableColumnSWT implements
 
 		// code stolen from FilesView
 		final boolean[] result = { false };
-		boolean paused = fileInfo.getDownloadManager().pause();
+		boolean paused = fileInfo.getDownloadManager().pause( true );
 		FileUtil.runAsTask(new CoreOperationTask()
 		{
 			@Override

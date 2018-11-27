@@ -1773,7 +1773,8 @@ public class GlobalManagerImpl
   @Override
   public boolean
   pauseDownload(
-	DownloadManager	manager )
+	DownloadManager	manager,
+	boolean			only_if_active )
   {
 	  if ( manager.getTorrent() == null ) {
 
@@ -1781,6 +1782,11 @@ public class GlobalManagerImpl
 	  }
 	  
 	  if ( manager.isPaused()){
+		  
+		  if ( only_if_active ){
+			  
+			  return( false );
+		  }
 		  
 		  return( true );
 	  }
@@ -1791,6 +1797,11 @@ public class GlobalManagerImpl
 			state != DownloadManager.STATE_ERROR &&
 			state != DownloadManager.STATE_STOPPING ) {
 
+		  if ( state == DownloadManager.STATE_STOPPED && only_if_active ){
+			  
+			  return( false );
+		  }
+		  
 	      try{
 
 	    	  HashWrapper	wrapper = manager.getTorrent().getHashWrapper();

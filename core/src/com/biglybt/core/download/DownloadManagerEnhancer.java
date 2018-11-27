@@ -385,7 +385,7 @@ DownloadManagerEnhancer
 				pause_set.add( hw );
 			}
 
-			dm.pause();
+			dm.pause( false );
 
 		}catch( Throwable e ){
 

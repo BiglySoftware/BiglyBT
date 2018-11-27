@@ -2392,19 +2392,26 @@ DownloadManagerImpl
 
 	@Override
 	public boolean
-	pause()
+	pause(
+		boolean		only_if_active )
 	{
-		return( globalManager.pauseDownload( this ));
+		return( globalManager.pauseDownload( this, only_if_active ));
 	}
 
 	@Override
 	public boolean
 	pause(
-		long	_resume_time )
+		boolean		only_if_active,
+		long		_resume_time )
 	{
 			// obviously we should manage the timer+resumption but it works as it is at the moment...
 
 		if ( isPaused()){
+			
+			if ( only_if_active ){
+				
+				return( false );
+			}
 			
 			resume_time = _resume_time;
 			
@@ -2416,7 +2423,7 @@ DownloadManagerImpl
 
 			resume_time	= -_resume_time;
 
-			return( globalManager.pauseDownload( this ));
+			return( globalManager.pauseDownload( this, only_if_active ));
 		}
 	}
 
@@ -4747,7 +4754,7 @@ DownloadManagerImpl
 
   	throws DownloadManagerException
   	{
-	  boolean is_paused = this.pause();
+	  boolean is_paused = this.pause( true );
 	  try {moveDataFilesSupport0(new_parent_dir, new_filename);}
 	  finally {if (is_paused) {this.resume();}}
   	}
@@ -5168,7 +5175,7 @@ DownloadManagerImpl
 	  File torrent_file_now = new File(getTorrentFileName());
 	  if (!slc.isDifferentTorrentLocation(torrent_file_now)) {return;}
 
-	  boolean is_paused = this.pause();
+	  boolean is_paused = this.pause( true );
 	  try {moveTorrentFile0(new_parent_dir, new_name);}
 	  finally {if (is_paused) {this.resume();}}
   }
@@ -6519,7 +6526,7 @@ DownloadManagerImpl
 
 	@Override
 	public void rename(String name) throws DownloadManagerException {
-		boolean paused = this.pause();
+		boolean paused = this.pause( true );
 		try {
 			this.renameDownload(name);
 			this.getDownloadState().setAttribute(DownloadManagerState.AT_DISPLAY_NAME, name);

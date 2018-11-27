@@ -945,7 +945,7 @@ public class FilesViewMenuUtil
 									
 									if (!pausedDownloads.contains(manager)) {
 										
-										if (manager.pause()){
+										if (manager.pause( true )){
 											
 											pausedDownloads.add(manager);
 										}
@@ -1069,7 +1069,7 @@ public class FilesViewMenuUtil
 	
 					DownloadManager manager = fileInfo.getDownloadManager();
 					if (!pausedDownloads.contains(manager)) {
-						if (manager.pause()){
+						if (manager.pause( true )){
 							pausedDownloads.add(manager);
 						}
 					}
@@ -1232,7 +1232,7 @@ public class FilesViewMenuUtil
 			
 			if ( !was_stopped ){
 				
-				dm.pause();
+				dm.pause( true );
 			}
 
 			for ( DiskManagerFileInfo file: fileInfos ){
@@ -1535,7 +1535,7 @@ public class FilesViewMenuUtil
 				File f_target = new File(existing_file.getParentFile(), receiver.getSubmittedInput());
 
 				DownloadManager manager = fileInfo.getDownloadManager();
-				boolean needsUnpause = manager.pause();
+				boolean needsUnpause = manager.pause( true );
 
 				moveFile(
 						fileInfo.getDownloadManager(),
@@ -1881,7 +1881,7 @@ public class FilesViewMenuUtil
 		boolean paused = false;
 		if (type_has_been_changed) {
 			if (requires_pausing)
-				paused = manager.pause();
+				paused = manager.pause( true );
 			if (linearCount > 0)
 				ok &= Arrays.equals(
 						setLinear,
@@ -1980,7 +1980,7 @@ public class FilesViewMenuUtil
 
 							if ( !paused.contains( manager )){
 
-								if ( manager.pause()){
+								if ( manager.pause( true )){
 
 									paused.add( manager );
 								}

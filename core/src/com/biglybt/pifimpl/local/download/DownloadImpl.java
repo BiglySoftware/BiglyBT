@@ -447,7 +447,7 @@ DownloadImpl
 	public void
 	pause()
 	{
-		download_manager.pause();
+		download_manager.pause( false );
 	}
 
 	@Override

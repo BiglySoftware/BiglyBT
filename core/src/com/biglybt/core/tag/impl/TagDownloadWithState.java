@@ -542,7 +542,7 @@ TagDownloadWithState
 
 										}else{
 
-											dm.pause();
+											dm.pause( true );
 										}
 
 										// recheck here in case it is an 'archive' action that requires
@@ -1783,7 +1783,7 @@ TagDownloadWithState
 							public void
 							runSupport()
 							{
-								dm.pause();
+								dm.pause( true );
 							}
 						});
 				}
