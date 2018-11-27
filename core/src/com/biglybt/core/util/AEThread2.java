@@ -22,6 +22,8 @@ package com.biglybt.core.util;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 
 
 public abstract class
@@ -37,6 +39,8 @@ AEThread2
 
 	private static final ConcurrentLinkedDeque<threadWrapper>	daemon_threads 		= new ConcurrentLinkedDeque<>();
 	private static final AtomicInteger							daemon_thread_count = new AtomicInteger();
+	
+	private static final AEThread2	PENDING = new AEThread2( "pending" ){ public void run(){}};
 	
 	private static final class JoinLock {
 		volatile boolean released = false;
@@ -250,9 +254,9 @@ AEThread2
 	threadWrapper
 		extends Thread
 	{
-		private AESemaphore2	sem;
-		private AEThread2		target;
-		private JoinLock		currentLock;
+		private volatile AEThread2	target = null;
+		
+		private JoinLock				currentLock;
 
 		private long		last_active_time;
 
@@ -273,7 +277,7 @@ AEThread2
 		run()
 		{
 			while( true ){
-
+				
 				synchronized( currentLock ){
 					try{
 						if ( TRACE_TIMES ){
@@ -306,7 +310,7 @@ AEThread2
 
 					}finally{
 
-						target = null;
+						target = PENDING;
 
 						debug	= null;
 
@@ -380,11 +384,14 @@ AEThread2
 					setName( "AEThread2:parked[" + daemon_threads.size() + "]" );
 
 					// System.out.println( "AEThread2: queue=" + daemon_threads.size() + ",creates=" + total_creates + ",starts=" + total_starts );
-
-					sem.reserve();
+					
+					while( target == PENDING ){
+						
+						LockSupport.park( this );
+					}
 
 					if ( target == null ){
-
+						
 						break;
 					}
 				}
@@ -396,26 +403,28 @@ AEThread2
 			AEThread2	_target,
 			String		_name )
 		{
-			target	= _target;
-
 			setName( _name );
 
-			if ( sem == null ){
+			if ( target == null ){
 
-				 sem = new AESemaphore2( "AEThread2" );
+				target = _target;
 
-				 super.start();
+				super.start();
 
 			}else{
 
-				sem.release();
+				target = _target;
+				
+				LockSupport.unpark( this );
 			}
 		}
 
 		protected void
 		retire()
 		{
-			sem.release();
+			target = null;
+			
+			LockSupport.unpark( this );
 		}
 
 		protected void
