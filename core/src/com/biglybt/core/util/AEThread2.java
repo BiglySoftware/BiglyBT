@@ -20,7 +20,8 @@
 
 package com.biglybt.core.util;
 
-import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public abstract class
@@ -34,22 +35,23 @@ AEThread2
 	private static final int THREAD_TIMEOUT_CHECK_PERIOD	= 10*1000;
 	private static final int THREAD_TIMEOUT					= 60*1000;
 
-	private static final LinkedList<threadWrapper>	daemon_threads = new LinkedList<>();
-
+	private static final ConcurrentLinkedDeque<threadWrapper>	daemon_threads 		= new ConcurrentLinkedDeque<>();
+	private static final AtomicInteger							daemon_thread_count = new AtomicInteger();
+	
 	private static final class JoinLock {
 		volatile boolean released = false;
 	}
 
-	private static long	last_timeout_check;
+	private static volatile long	last_timeout_check;
 
-	private static long	total_starts;
-	private static long	total_creates;
+	//private static AtomicLong	total_starts	= new AtomicLong();
+	//private static AtomicLong	total_creates	= new AtomicLong();
 
 
 	private threadWrapper	wrapper;
 
 	private String				name;
-	private final boolean				daemon;
+	private final boolean		daemon;
 	private int					priority	= Thread.NORM_PRIORITY;
 	private volatile JoinLock	lock		= new JoinLock();
 
@@ -90,22 +92,25 @@ AEThread2
 
 		if ( daemon ){
 
-			synchronized( daemon_threads ){
+			//total_starts.incrementAndGet();
 
-				total_starts++;
+			wrapper = daemon_threads.pollLast();
 
-				if ( daemon_threads.isEmpty()){
+			if ( wrapper == null ){
+				
+				//total_creates.incrementAndGet();
 
-					total_creates++;
+				wrapper = new threadWrapper( name, true );
 
-					wrapper = new threadWrapper( name, true );
+				//System.out.println( "Create new: queue=" + daemon_thread_count.get() );
+				
+			}else{
 
-				}else{
-
-					wrapper = (threadWrapper)daemon_threads.removeLast();
-
-					wrapper.setName( name );
-				}
+				daemon_thread_count.decrementAndGet();
+				
+				wrapper.setName( name );
+				
+				//System.out.println( "Reuse " + wrapper.getId() + ", queue=" + daemon_thread_count.get());
 			}
 		}else{
 
@@ -317,46 +322,64 @@ AEThread2
 
 				}else{
 
-					synchronized( daemon_threads ){
+					last_active_time	= SystemTime.getMonotonousTime();
 
-						last_active_time	= SystemTime.getCurrentTime();
+					if ( 	last_active_time < last_timeout_check ||
+							last_active_time - last_timeout_check > THREAD_TIMEOUT_CHECK_PERIOD ){
 
-						if ( 	last_active_time < last_timeout_check ||
-								last_active_time - last_timeout_check > THREAD_TIMEOUT_CHECK_PERIOD ){
+						last_timeout_check	= last_active_time;
 
-							last_timeout_check	= last_active_time;
+						int count = daemon_thread_count.get();
 
-							while( daemon_threads.size() > 0 && daemon_threads.size() > MIN_RETAINED ){
-
-								threadWrapper thread = (threadWrapper)daemon_threads.getFirst();
-
-								long	thread_time = thread.last_active_time;
-
-								if ( 	last_active_time < thread_time ||
-										last_active_time - thread_time > THREAD_TIMEOUT ){
-
-									daemon_threads.removeFirst();
-
-									thread.retire();
-
-								}else{
-
-									break;
+						int	to_maybe_remove = count - MIN_RETAINED;
+						
+						if ( to_maybe_remove > 0 ){
+							
+							threadWrapper thread = daemon_threads.peek();
+							
+							if ( thread != null ){
+								
+								if ( last_active_time - thread.last_active_time < THREAD_TIMEOUT ){
+									
+									to_maybe_remove = 0;
 								}
 							}
 						}
+						
+						while( to_maybe_remove > 0 ){
 
-						if ( daemon_threads.size() >= MAX_RETAINED ){
+							threadWrapper thread = daemon_threads.poll();
+							
+							if ( thread == null ){
+								
+								break;
+							}
 
-							return;
+							daemon_thread_count.decrementAndGet();
+							
+							to_maybe_remove--;
+							
+							thread.retire();
+								
+							if ( last_active_time - thread.last_active_time < THREAD_TIMEOUT ){
+	
+								break;
+							}
 						}
-
-						daemon_threads.addLast( this );
-
-						setName( "AEThread2:parked[" + daemon_threads.size() + "]" );
-
-						// System.out.println( "AEThread2: queue=" + daemon_threads.size() + ",creates=" + total_creates + ",starts=" + total_starts );
 					}
+
+					if ( daemon_thread_count.get() >= MAX_RETAINED ){
+
+						return;
+					}
+
+					daemon_threads.addLast( this );
+
+					daemon_thread_count.incrementAndGet();
+					
+					setName( "AEThread2:parked[" + daemon_threads.size() + "]" );
+
+					// System.out.println( "AEThread2: queue=" + daemon_threads.size() + ",creates=" + total_creates + ",starts=" + total_starts );
 
 					sem.reserve();
 
