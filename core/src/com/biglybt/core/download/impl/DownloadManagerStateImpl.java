@@ -511,9 +511,8 @@ DownloadManagerStateImpl
 			return;
 		}
 
-		try{
-
-			BufferedInputStream is = new BufferedInputStream( new GZIPInputStream( new FileInputStream( file )));
+		try( 	FileInputStream fis = new FileInputStream( file );
+				BufferedInputStream is = new BufferedInputStream( new GZIPInputStream( fis ))){
 
 			try{
 
@@ -536,18 +535,9 @@ DownloadManagerStateImpl
 					}
 				}
 
-				is.close();
-
 			}catch( IOException e){
 
 				Debug.printStackTrace( e );
-			}finally{
-
-				try{
-					is.close();
-
-				}catch( Throwable e ){
-				}
 			}
 		}catch( Throwable e ){
 
