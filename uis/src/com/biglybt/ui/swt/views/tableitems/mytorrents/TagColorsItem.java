@@ -167,7 +167,12 @@ public class TagColorsItem
 
 				if ( rgb != null && rgb.length == 3 && ( show_default_colours || !tag.isColorDefault())){
 
-					colors.add( ColorCache.getColor( gc.getDevice(), rgb ));
+					Color color = ColorCache.getColor( gc.getDevice(), rgb );
+					
+					if ( color != null ){
+					
+						colors.add( color );
+					}
 				}
 			}
 		}

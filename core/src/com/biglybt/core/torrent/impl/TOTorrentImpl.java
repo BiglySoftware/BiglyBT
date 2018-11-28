@@ -269,8 +269,16 @@ TOTorrentImpl
               //only use newly saved file if it got this far, i.e. it was written successfully
 
             if ( temp.length() > 1L ) {
-            	output_file.delete(); // Will fail silently if it doesn't exist.
-                temp.renameTo( output_file );
+            	
+            	if ( output_file.exists() && !output_file.delete()){
+            		
+            		Debug.out( "Failed to delete " + output_file );
+            	}
+            	
+                if ( !temp.renameTo( output_file )){
+                	
+                	Debug.out( "Failed to rename '" + temp + "' to '" + output_file + "'" );
+                }
             }
 
 		}catch( TOTorrentException e ){

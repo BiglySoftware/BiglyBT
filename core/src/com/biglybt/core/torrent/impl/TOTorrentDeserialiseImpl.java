@@ -89,7 +89,11 @@ TOTorrentDeserialiseImpl
 						fis = null;
 					}
 	
-					fis = new GZIPInputStream( new FileInputStream( file ));
+						// have to do this separately as if the GZIPInputStream constructor fails it doesn't close the file...
+					
+					fis = new FileInputStream( file );
+					
+					fis = new GZIPInputStream( fis );
 	
 					construct( fis );
 	
