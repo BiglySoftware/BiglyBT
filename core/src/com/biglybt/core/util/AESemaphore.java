@@ -92,6 +92,11 @@ AESemaphore
 	public boolean
 	reserveIfAvailable()
 	{
+		if ( released_forever ){
+			
+			return( true );
+		}
+		
 		return( sem.tryAcquire());
 	}
 	
