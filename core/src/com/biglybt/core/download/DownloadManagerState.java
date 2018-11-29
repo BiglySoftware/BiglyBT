@@ -170,6 +170,9 @@ DownloadManagerState
 	public File
 	getStateFile( );
 
+	public boolean
+	getAndClearRecoveredStatus();
+	
 	public void
 	setFlag(
 		long		flag,

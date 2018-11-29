@@ -1326,6 +1326,11 @@ DownloadManagerImpl
 						download_manager_state.setDisplayName(title);
 					}
 				}
+				
+				if ( download_manager_state.getAndClearRecoveredStatus()){
+					
+					setFailed( "Recovered from original torrent" );
+				}
 			}catch( TOTorrentException e ){
 
 				//Debug.printStackTrace( e );

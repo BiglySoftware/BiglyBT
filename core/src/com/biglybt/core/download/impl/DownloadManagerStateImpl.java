@@ -35,6 +35,7 @@ import com.biglybt.core.disk.DiskManagerFactory;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.*;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
+import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.LogRelation;
@@ -263,6 +264,8 @@ DownloadManagerStateImpl
 
 	private int supressWrites = 0;
 
+	private boolean recovered;
+	
 	private static final ThreadLocal		tls_wbr	=
 		new ThreadLocal()
 		{
@@ -276,7 +279,7 @@ DownloadManagerStateImpl
 
 	private int transient_flags;
 		
-	private static DownloadManagerState
+	private static DownloadManagerStateImpl
 	getDownloadState(
 		DownloadManagerImpl				download_manager,
 		TOTorrent						original_torrent,
@@ -339,6 +342,8 @@ DownloadManagerStateImpl
 
 		File	saved_file = getStateFile( torrent_hash );
 
+		boolean	was_corrupt = false;
+		
 		if ( saved_file.exists()){
 
 			try{
@@ -346,6 +351,8 @@ DownloadManagerStateImpl
 
 			}catch( Throwable e ){
 
+				was_corrupt = true;
+				
 				Debug.out( "Failed to load download state for " + saved_file, e );
 			}
 		}
@@ -354,12 +361,19 @@ DownloadManagerStateImpl
 
 		if ( saved_state == null ){
 
-			copyTorrentToActive( original_torrent, saved_file );
+			copyTorrentToActive( original_torrent, saved_file, was_corrupt );
 
 			saved_state = TorrentUtils.readDelegateFromFile( saved_file, false );
 		}
 
-		return( getDownloadState( null, original_torrent, saved_state ));
+		DownloadManagerStateImpl state = getDownloadState( null, original_torrent, saved_state );
+		
+		if ( was_corrupt ){
+			
+			state.setRecovered();
+		}
+		
+		return( state );
 	}
 
 	protected static DownloadManagerState
@@ -409,7 +423,10 @@ DownloadManagerStateImpl
 			}
 		}
 
+		
 			// if saved state not found then recreate from original torrent if required
+
+		boolean	was_corrupt = false;
 
 		if ( saved_state == null ){
 
@@ -418,14 +435,16 @@ DownloadManagerStateImpl
 			torrent_hash = original_torrent.getHash();
 
 			File	saved_file = getStateFile( torrent_hash );
-
+			
 			if ( saved_file.exists()){
-
+				
 				try{
 					saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
 
 				}catch( Throwable e ){
 
+					was_corrupt = true;
+					
 					Debug.out( "Failed to load download state for " + saved_file );
 				}
 			}
@@ -437,13 +456,18 @@ DownloadManagerStateImpl
 					// and do stuff like write it somewhere else which would screw us
 					// up)
 
-				copyTorrentToActive( original_torrent, saved_file );
+				copyTorrentToActive( original_torrent, saved_file, was_corrupt );
 
 				saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
 			}
 		}
 
-		DownloadManagerState res = getDownloadState( download_manager, original_torrent, saved_state );
+		DownloadManagerStateImpl res = getDownloadState( download_manager, original_torrent, saved_state );
+
+		if ( was_corrupt ){
+			
+			res.setRecovered();
+		}
 
 		if ( inactive ){
 
@@ -456,11 +480,22 @@ DownloadManagerStateImpl
 	private static void
 	copyTorrentToActive(
 		TOTorrent		torrent_file,
-		File			state_file )
+		File			state_file,
+		boolean			was_corrupt )
 	
 		throws TOTorrentException
 	{
 		TorrentUtils.copyToFile( torrent_file, state_file );
+		
+		if ( was_corrupt ){
+			
+    		Logger.log(
+    			new LogAlert(
+    				torrent_file, 
+    				LogAlert.REPEATABLE,
+					 LogAlert.AT_ERROR,
+					"Recovered download from original torrent: " + TorrentUtils.getLocalisedName(torrent_file)));
+		}
 		
 		if (	COConfigurationManager.getBooleanParameter("Save Torrent Files") && 
 				COConfigurationManager.getBooleanParameter("Delete Saved Torrent Files")){
@@ -828,6 +863,26 @@ DownloadManagerStateImpl
 		}
 	}
 
+	private void
+	setRecovered()
+	{
+		recovered = true;
+	}
+	
+	@Override
+	public boolean
+	getAndClearRecoveredStatus()
+	{
+		if ( recovered ){
+			
+			recovered = false;
+			
+			return( true );
+		}
+		
+		return( false );
+	}
+	
 	@Override
 	public void
 	clearTrackerResponseCache()
@@ -2929,6 +2984,12 @@ DownloadManagerStateImpl
 			return( null );
 		}
 
+		public boolean
+		getAndClearRecoveredStatus()
+		{
+			return( false );
+		}
+		
 		@Override
 		public DownloadManager
 		getDownloadManager()
@@ -3904,6 +3965,8 @@ DownloadManagerStateImpl
 
 			saved_file = getStateFile( torrent_hash_wrapper.getBytes());
 
+			boolean	was_corrupt = false;
+			
 			if ( saved_file.exists()){
 
 				try{
@@ -3911,6 +3974,8 @@ DownloadManagerStateImpl
 
 				}catch( Throwable e ){
 
+					was_corrupt = true;
+					
 					Debug.out( "Failed to load download state for " + saved_file );
 				}
 			}
@@ -3920,8 +3985,16 @@ DownloadManagerStateImpl
 				// and do stuff like write it somewhere else which would screw us
 				// up)
 
-			copyTorrentToActive( original_torrent, saved_file );
+			copyTorrentToActive( original_torrent, saved_file, was_corrupt );
 
+			if ( was_corrupt ){
+				
+				if ( download_manager != null ){
+					
+					download_manager.setFailed( "Recovered from original torrent" );
+				}
+			}
+			
 			return( TorrentUtils.readDelegateFromFile( saved_file, discard_pieces ));
 		}
 

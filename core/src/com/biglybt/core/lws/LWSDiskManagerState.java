@@ -50,6 +50,12 @@ LWSDiskManagerState
 	{
 		return( null );
 	}
+	
+	public boolean
+	getAndClearRecoveredStatus()
+	{
+		return( false );
+	}
 
 	public File
 	getStateFile(
