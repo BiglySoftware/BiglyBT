@@ -19,7 +19,7 @@
 
 package com.biglybt.pifimpl.local.utils;
 
-import com.biglybt.core.util.AEMonitor3;
+import com.biglybt.core.util.AEMonitorOld;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.utils.Monitor;
 
@@ -28,7 +28,7 @@ public class MonitorImpl implements Monitor {
 
 	private static long	next_mon_id;
 
-	private AEMonitor3 mon;
+	private AEMonitorOld mon;
 
 	protected
 	MonitorImpl(
@@ -36,7 +36,7 @@ public class MonitorImpl implements Monitor {
 	{
 		synchronized( MonitorImpl.class ){
 
-		  mon = new AEMonitor3("Plugin " + pi.getPluginID() + ":" + next_mon_id++ );
+		  mon = new AEMonitorOld("Plugin " + pi.getPluginID() + ":" + next_mon_id++ );
 		}
 	}
 

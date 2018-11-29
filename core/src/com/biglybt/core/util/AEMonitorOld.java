@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.Map;
 
 public class
-AEMonitor3
+AEMonitorOld
 	extends AEMonSem
 {
 	private int			dont_wait		= 1;
@@ -39,7 +39,7 @@ AEMonitor3
 	protected Thread		last_waiter;
 
 	public
-	AEMonitor3(
+	AEMonitorOld(
 		String			_name )
 	{
 		super( _name, true );

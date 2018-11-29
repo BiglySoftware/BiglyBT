@@ -140,7 +140,7 @@ AEMonSem
 
 			while (it.hasNext()){
 
-				AEMonitor3	monitor = (AEMonitor3)it.next();
+				AEMonitorOld	monitor = (AEMonitorOld)it.next();
 
 				long	diff = monitor.entry_count - monitor.last_entry_count;
 
@@ -308,7 +308,7 @@ AEMonSem
 
 				AEMonSem	ms = (AEMonSem)waiting_monitors.get(i);
 
-				Thread last_waiter = ((AEMonitor3)ms).last_waiter;
+				Thread last_waiter = ((AEMonitorOld)ms).last_waiter;
 
 				diag_logger.log( "        [" + (last_waiter==null?"<waiter lost>":last_waiter.getName()) + "] " +  ms.name + " - " + ms.last_trace_key );
 			}
@@ -322,7 +322,7 @@ AEMonSem
 
 				AEMonSem	ms = (AEMonSem)busy_monitors.get(i);
 
-				Thread owner = ((AEMonitor3)ms).owner;
+				Thread owner = ((AEMonitorOld)ms).owner;
 
 				diag_logger.log( "        [" + (owner==null?"<owner lost>":owner.getName()) + "] " + ms.name + " - " + ms.last_trace_key );
 			}
@@ -336,7 +336,7 @@ AEMonSem
 
 				AEMonSem	ms = (AEMonSem)waiting_semaphores.get(i);
 
-				Thread last_waiter = ((AESemaphore)ms).latest_waiter;
+				Thread last_waiter = ((AESemaphoreOld)ms).latest_waiter;
 
 				diag_logger.log( "        [" + (last_waiter==null?"<waiter lost>":last_waiter.getName()) + "] " +  ms.name + " - " + ms.last_trace_key );
 			}

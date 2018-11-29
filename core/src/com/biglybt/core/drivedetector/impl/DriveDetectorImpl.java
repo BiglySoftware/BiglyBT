@@ -36,7 +36,7 @@ public class DriveDetectorImpl
 	implements DriveDetector,
 	AEDiagnosticsEvidenceGenerator
 {
-	final AEMonitor2 mon_driveDetector = new AEMonitor2("driveDetector");
+	final AEMonitor mon_driveDetector = new AEMonitor("driveDetector");
 
 	final CopyOnWriteList<DriveDetectedListener> listListeners = new CopyOnWriteList<>(1);
 

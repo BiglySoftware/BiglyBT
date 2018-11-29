@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.AESemaphore2;
+import com.biglybt.core.util.AESemaphore;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 
@@ -323,7 +323,7 @@ public class VuzeMessageBox
 	@Override
 	public int waitUntilClosed() {
 		if (opened) {
-			final AESemaphore2 sem = new AESemaphore2("waitUntilClosed");
+			final AESemaphore sem = new AESemaphore("waitUntilClosed");
 			Utils.execSWTThread(new AERunnable() {
 				@Override
 				public void runSupport() {

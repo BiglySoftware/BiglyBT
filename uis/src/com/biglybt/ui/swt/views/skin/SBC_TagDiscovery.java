@@ -100,7 +100,7 @@ public class SBC_TagDiscovery
 
 	private int scansRemaining = 0;
 
-	private AEMonitor2 mon_scansRemaining = new AEMonitor2("scansRemaining");
+	private AEMonitor mon_scansRemaining = new AEMonitor("scansRemaining");
 
 	private Map<String, TagDiscovery> mapTagDiscoveries = new HashMap<>();
 
