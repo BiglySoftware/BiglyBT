@@ -197,22 +197,11 @@ public class PieceInfoView
 	private void dataSourceChanged(Object newDataSource) {
 		//System.out.println( "dsc: dlm=" + dlm + ", new=" + (newDataSource instanceof Object[]?((Object[])newDataSource)[0]:newDataSource));
 
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource );
+		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, dlm );
 
 		if ( newManager != null ){
 
 			oldBlockInfo = null;
-
-		}else if (newDataSource instanceof Object[]) {
-			Object[] objects = (Object[]) newDataSource;
-			if (objects.length > 0 && (objects[0] instanceof PEPiece)) {
-				PEPiece piece = (PEPiece) objects[0];
-				DiskManager diskManager = piece.getDMPiece().getManager();
-				if (diskManager instanceof DiskManagerImpl) {
-					DiskManagerImpl dmi = (DiskManagerImpl) diskManager;
-					newManager = dmi.getDownloadManager();
-				}
-			}
 		}
 
 		synchronized( this ){

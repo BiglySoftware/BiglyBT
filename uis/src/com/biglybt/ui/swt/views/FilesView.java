@@ -432,7 +432,7 @@ public class FilesView
   // @see TableDataSourceChangedListener#tableDataSourceChanged(java.lang.Object)
 	@Override
 	public void tableDataSourceChanged(Object newDataSource) {
-		List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource );
+		List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource, managers );
 
 		if (newManagers.size() == managers.size()){
 			boolean diff = false;

@@ -33,7 +33,7 @@ public interface TableSelectionListener
 
 	default public void defaultSelected(TableRowCore[] rows, int stateMask )
 	{
-		System.err.println( new Exception( "eh?" ));
+		System.err.println( new Exception( "Implement one of the two defaultSelected methods" ));
 	}
 
 	default public void defaultSelected(TableRowCore[] rows, int stateMask, int orgin )

@@ -212,7 +212,7 @@ public class PrivacyView
 	{
 		synchronized( this ){
 
-			DownloadManager new_dm = ViewUtils.getDownloadManagerFromDataSource( newDataSource );
+			DownloadManager new_dm = ViewUtils.getDownloadManagerFromDataSource( newDataSource, current_dm );
 
 			if ( new_dm == current_dm ){
 

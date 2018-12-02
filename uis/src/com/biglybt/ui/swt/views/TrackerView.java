@@ -443,7 +443,7 @@ public class TrackerView
 	tableDataSourceChanged(
 		Object newDataSource )
  {
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource );
+		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, manager );
 
 		if (newManager == manager) {
 			tv.setEnabled(manager != null);

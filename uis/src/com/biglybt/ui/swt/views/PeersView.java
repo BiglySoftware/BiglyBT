@@ -139,7 +139,7 @@ public class PeersView
 			return;
 		}
 
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource );
+		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, manager );
 
 		if (newManager == manager) {
 			tv.setEnabled(manager != null);
@@ -325,8 +325,11 @@ public class PeersView
 			
 			String id = "DMDetails_Peers";
 	
-			setFocused( true );	// do this here to pick up correct manager before rest of code
-	
+			if ( focus_pending_ds != null ){
+				
+				setFocused( true );	// do this here to pick up correct manager before rest of code
+			}
+			
 			if (manager != null) {
 				if (manager.getTorrent() != null) {
 					id += "." + manager.getInternalName();

@@ -165,7 +165,7 @@ public class GeneralView
   }
 
 	public void dataSourceChanged(Object newDataSource) {
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource );
+		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, manager );
 
 		if (newManager == manager) {
 			return;

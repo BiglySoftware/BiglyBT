@@ -327,7 +327,16 @@ public class PeersGraphicView
 		  }
 	  }
 
-	  List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource );
+	  List<DownloadManager> existing = new ArrayList<>();
+	  
+	  synchronized( dm_data_lock ){
+		  for ( ManagerData data: dm_data ){
+			  
+			  existing.add( data.manager );
+		  }
+	  }
+	  
+	  List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource, existing );
 
 	  synchronized( dm_data_lock ){
 

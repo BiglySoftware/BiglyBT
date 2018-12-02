@@ -1214,6 +1214,10 @@ PeersViewBase
 	}
 	
 	@Override
+	public void defaultSelected(TableRowCore[] rows, int stateMask){
+	}
+	
+	@Override
 	public void mouseEnter(TableRowCore row){
 	}
 
