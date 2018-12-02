@@ -64,6 +64,9 @@ public class ColumnAllTrackersStatus
 		if ( status == null ){
 
 			status = "";
+		}else{
+			
+			status = status.replaceAll( "[\r\n]+", " ");
 		}
 
 		if ( !cell.setSortValue(status) && cell.isValid()){
