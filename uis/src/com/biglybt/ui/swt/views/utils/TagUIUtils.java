@@ -28,6 +28,8 @@ import com.biglybt.pif.ui.UIInstance;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuEvent;
+import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -2182,93 +2184,124 @@ public class TagUIUtils
 
 				t_item.setMenu(t_menu);
 
-				String[] existing = tf_xcode.getTagTranscodeTarget();
-
-				for ( final TrancodeUIUtils.TranscodeTarget tt : tts ){
-
-					TrancodeUIUtils.TranscodeProfile[] profiles = tt.getProfiles();
-
-					if ( profiles.length > 0 ){
-
-						final Menu tt_menu = new Menu(t_menu.getShell(), SWT.DROP_DOWN);
-
-						final MenuItem tt_item = new MenuItem(t_menu, SWT.CASCADE);
-
-						tt_item.setText(tt.getName());
-
-						tt_item.setMenu(tt_menu);
-
-						for (final TrancodeUIUtils.TranscodeProfile tp : profiles) {
-
-							final MenuItem p_item = new MenuItem(tt_menu, SWT.CHECK);
-
-							p_item.setText(tp.getName());
-
-							boolean	selected = existing != null	&& existing[0].equals(tp.getUID());
-
-							if ( selected ){
-
-								Utils.setMenuItemImage(tt_item, "graytick");
+				
+				t_menu.addMenuListener(
+					new MenuListener(){
+						
+						@Override
+						public void menuShown(MenuEvent e){
+							for ( MenuItem mi: t_menu.getItems()){
+								mi.dispose();
 							}
+							
+							String[] existing = tf_xcode.getTagTranscodeTarget();
 
-							p_item.setSelection(selected );
+							for ( final TrancodeUIUtils.TranscodeTarget tt : tts ){
 
-							p_item.addListener(SWT.Selection, new Listener(){
-								@Override
-								public void handleEvent(Event event) {
+								TrancodeUIUtils.TranscodeProfile[] profiles = tt.getProfiles();
 
-									String name = tt.getName() + " - " + tp.getName();
+								if ( profiles.length > 0 ){
 
-									if ( p_item.getSelection()){
+									final Menu tt_menu = new Menu(t_menu.getShell(), SWT.DROP_DOWN);
 
-										tf_xcode.setTagTranscodeTarget( tp.getUID(), name );
+									final MenuItem tt_item = new MenuItem(t_menu, SWT.CASCADE);
 
-									}else{
+									tt_item.setText(tt.getName());
 
-										tf_xcode.setTagTranscodeTarget( null, null );
+									tt_item.setMenu(tt_menu);
+
+									for (final TrancodeUIUtils.TranscodeProfile tp : profiles) {
+
+										final MenuItem p_item = new MenuItem(tt_menu, SWT.CHECK);
+
+										p_item.setText(tp.getName());
+
+										boolean	selected = existing != null	&& existing[0].equals(tp.getUID());
+
+										if ( selected ){
+
+											Utils.setMenuItemImage(tt_item, "graytick");
+										}
+
+										p_item.setSelection(selected );
+
+										p_item.addListener(SWT.Selection, new Listener(){
+											@Override
+											public void handleEvent(Event event) {
+
+												String name = tt.getName() + " - " + tp.getName();
+
+												if ( p_item.getSelection()){
+
+													tf_xcode.setTagTranscodeTarget( tp.getUID(), name );
+
+												}else{
+
+													tf_xcode.setTagTranscodeTarget( null, null );
+												}
+											}
+										});
 									}
-								}
-							});
-						}
 
-						new MenuItem(tt_menu, SWT.SEPARATOR );
+									new MenuItem(tt_menu, SWT.SEPARATOR );
 
-						final MenuItem no_xcode_item = new MenuItem(tt_menu, SWT.CHECK);
+									final MenuItem no_xcode_item = new MenuItem(tt_menu, SWT.CHECK);
 
-						final String never_str = MessageText.getString( "v3.menu.device.defaultprofile.never" );
+									final String never_str = MessageText.getString( "v3.menu.device.defaultprofile.never" );
 
-						no_xcode_item.setText( never_str );
+									no_xcode_item.setText( never_str );
 
-						final String never_uid = tt.getID() + "/blank";
+									final String never_uid = tt.getID() + "/blank";
 
-						boolean	selected = existing != null	&& existing[0].equals(never_uid);
+									boolean	selected = existing != null	&& existing[0].equals(never_uid);
 
-						if ( selected ){
+									if ( selected ){
 
-							Utils.setMenuItemImage(tt_item, "graytick");
-						}
+										Utils.setMenuItemImage(tt_item, "graytick");
+									}
 
-						no_xcode_item.setSelection(selected );
+									no_xcode_item.setSelection(selected );
 
-						no_xcode_item.addListener(SWT.Selection, new Listener(){
+									no_xcode_item.addListener(SWT.Selection, new Listener(){
 
-							@Override
-							public void handleEvent(Event event) {
+										@Override
+										public void handleEvent(Event event) {
 
-								String name = tt.getName() + " - " + never_str;
+											String name = tt.getName() + " - " + never_str;
 
-								if ( no_xcode_item.getSelection()){
+											if ( no_xcode_item.getSelection()){
 
-									tf_xcode.setTagTranscodeTarget( never_uid, name );
+												tf_xcode.setTagTranscodeTarget( never_uid, name );
 
-								}else{
+											}else{
 
-									tf_xcode.setTagTranscodeTarget( null, null );
+												tf_xcode.setTagTranscodeTarget( null, null );
+											}
+										}
+									});	
 								}
 							}
-						});
-					}
-				}
+						}
+						
+						@Override
+						public void menuHidden(MenuEvent e){
+							MenuItem[] items = t_menu.getItems();
+							
+							Utils.execSWTThreadLater(
+								1,
+								new Runnable(){
+									
+									@Override
+									public void run(){
+										for ( MenuItem mi: items){
+											mi.dispose();
+										}
+									}
+								});
+							
+						}
+					});
+				
 			}
 		}
 	}
