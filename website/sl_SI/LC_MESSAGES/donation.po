@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: sl\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2018-06-07 13:00-0400\n"
+"PO-Revision-Date: 2018-12-02 19:31\n"
 
 msgid "test"
 msgstr "Preskus v angleščini"
@@ -32,7 +32,7 @@ msgid "donation_monthly_title"
 msgstr "Mesečna zahvala"
 
 msgid "donation_onetime_title"
-msgstr "Enkratna ponudba"
+msgstr "Enkratni prispevek"
 
 msgid "donation_bitcoin_title"
 msgstr "Bitcoin"
@@ -41,7 +41,7 @@ msgid "donation_monthly_description"
 msgstr "Poklonite razvijalcem vsak mesec eno kavo"
 
 msgid "donation_monthly_per_month"
-msgstr "/mo"
+msgstr "/mesec"
 
 msgid "donation_onetime_amount"
 msgstr "Znesek (%1):"
