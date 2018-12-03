@@ -42,6 +42,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
@@ -2983,6 +2984,21 @@ TagManagerImpl
 		return( vf );
 	}
 	
+	protected String
+	explain(
+		Tag				tag,
+		TagProperty		property,
+		Taggable		taggable )
+	{
+		if ( property.getName( false ) == TagFeatureProperties.PR_CONSTRAINT ){
+			
+			return( constraint_handler.explain( tag, taggable ));
+			
+		}else{
+			
+			return( "" );
+		}
+	}
 	@Override
 	public void
 	generate(

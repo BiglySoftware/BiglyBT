@@ -496,6 +496,31 @@ TagPropertyConstraintHandler
 		return( null );
 	}
 	
+	protected String
+	explain(
+		Tag				tag,
+		Taggable		taggable )
+	{
+		TagConstraint tc = constrained_tags.get( tag );
+		
+		if ( tc == null ){
+			
+			return( "no constraint" );
+			
+		}else if ( ! ( taggable instanceof DownloadManager )){
+			
+			return( "invalid taggable" );
+			
+		}else{
+			
+			StringBuilder		debug = new StringBuilder( 1024 );
+			
+			boolean result = tc.testConstraint((DownloadManager)taggable, debug);
+			
+			return( "result=" + result + "\n\tconstraint=" + tc.getString() + "\n\teval=" +  debug.toString());
+		}
+	}
+	
 	protected List<Tag>
 	getDependsOnTags(
 		Tag	tag )
@@ -885,6 +910,12 @@ TagPropertyConstraintHandler
 			return( result );
 		}
 		
+		private String
+		getString()
+		{
+			return( expr==null?"Failed to compile":expr.getString());
+		}
+		
 		private List<Tag>
 		getDependsOnTags()
 		{
@@ -1231,7 +1262,7 @@ TagPropertyConstraintHandler
 				return;
 			}
 			
-			if ( testConstraint( dm )){
+			if ( testConstraint( dm, null )){
 
 				if ( auto_add ){
 
@@ -1360,7 +1391,8 @@ TagPropertyConstraintHandler
 
 		private boolean
 		testConstraint(
-			DownloadManager	dm )
+			DownloadManager		dm,
+			StringBuilder		debug )
 		{
 			if ( enabled ){
 								
@@ -1368,7 +1400,16 @@ TagPropertyConstraintHandler
 				
 				List<Tag> dm_tags = handler.tag_manager.getTagsForTaggable( dm );
 	
-				return( (Boolean)expr.eval( dm, dm_tags ));
+				if ( expr == null ){
+				
+					if ( debug!=null){
+						debug.append( "false");
+					}
+					
+					return( false );
+				}
+				
+				return( (Boolean)expr.eval( dm, dm_tags, debug ));
 				
 			}else{
 				
@@ -1382,7 +1423,8 @@ TagPropertyConstraintHandler
 			public Object
 			eval(
 				DownloadManager		dm,
-				List<Tag>			tags );
+				List<Tag>			tags,
+				StringBuilder		debug );
 
 			public String
 			getString();
@@ -1396,8 +1438,14 @@ TagPropertyConstraintHandler
 			public Object
 			eval(
 				DownloadManager		dm,
-				List<Tag>			tags )
+				List<Tag>			tags,
+				StringBuilder		debug )
 			{
+				if ( debug != null ){
+					
+					debug.append( getString());
+				}
+				
 				return( true );
 			}
 
@@ -1447,7 +1495,8 @@ TagPropertyConstraintHandler
 			public Object
 			eval(
 				DownloadManager		dm,
-				List<Tag>			tags )
+				List<Tag>			tags,
+				StringBuilder		debug )
 			{
 				return( false );
 			}
@@ -1602,9 +1651,20 @@ TagPropertyConstraintHandler
 			public Object
 			eval(
 				DownloadManager		dm,
-				List<Tag>			tags )
+				List<Tag>			tags,
+				StringBuilder		debug )
 			{
-				return( ! (Boolean)expr.eval( dm, tags ));
+				if ( debug != null ){
+					debug.append( "!(" );
+				}
+				
+				Boolean result = !(Boolean)expr.eval( dm, tags, debug );
+				
+				if ( debug != null ){
+					debug.append( ")" );
+				}
+				
+				return( result );
 			}
 
 			@Override
@@ -1632,17 +1692,45 @@ TagPropertyConstraintHandler
 			public Object
 			eval(
 				DownloadManager		dm,
-				List<Tag>			tags )
+				List<Tag>			tags,
+				StringBuilder		debug )
 			{
-				for ( ConstraintExpr expr: exprs ){
-
-					if (  (Boolean)expr.eval( dm, tags )){
-
-						return( true );
+				if ( debug != null ){
+					debug.append( "(" );
+				}
+				
+				try{
+					int	num = 1;
+					
+					for ( ConstraintExpr expr: exprs ){
+	
+						if ( debug != null ){
+							if ( num > 1 ){
+								debug.append( "||");
+							}
+						}
+						
+						Boolean b = (Boolean)expr.eval( dm, tags, debug );
+						
+						if ( debug != null ){
+							debug.append( b );
+						}
+						
+						if ( b ){
+	
+							return( true );
+						}
+						
+						num++;
+					}
+						
+					return( false );
+					
+				}finally{
+					if ( debug != null ){
+						debug.append( ")" );
 					}
 				}
-
-				return( false );
 			}
 
 			@Override
@@ -1677,17 +1765,44 @@ TagPropertyConstraintHandler
 			public Object
 			eval(
 				DownloadManager		dm,
-				List<Tag>			tags )
+				List<Tag>			tags,
+				StringBuilder		debug )
 			{
-				for ( ConstraintExpr expr: exprs ){
+				if ( debug != null ){
+					debug.append( "(" );
+				}
+				
+				try{
+					int	num = 1;
 
-					if ( ! (Boolean)expr.eval( dm, tags )){
+					for ( ConstraintExpr expr: exprs ){
+	
+						if ( debug != null ){
+							if ( num > 1 ){
+								debug.append( "&&");
+							}
+						}
+						
+						boolean b = (Boolean)expr.eval( dm, tags, debug );
+						
+						if ( debug != null ){
+							debug.append( b );
+						}
 
-						return( false );
+						if ( !b ){
+	
+							return( false );
+						}
+						
+						num++;
+					}
+	
+					return( true );
+				}finally{
+					if ( debug != null ){
+						debug.append( ")" );
 					}
 				}
-
-				return( true );
 			}
 
 			@Override
@@ -1727,16 +1842,42 @@ TagPropertyConstraintHandler
 			public Object
 			eval(
 				DownloadManager		dm,
-				List<Tag>			tags )
+				List<Tag>			tags,
+				StringBuilder		debug )
 			{
-				boolean res =  (Boolean)exprs[0].eval( dm, tags );
-
-				for ( int i=1;i<exprs.length;i++){
-
-					res = res ^  (Boolean)exprs[i].eval( dm, tags );
+				if ( debug != null ){
+					debug.append( "(" );
 				}
 
-				return( res );
+				try{
+					boolean res = (Boolean)exprs[0].eval( dm, tags, debug );
+	
+					if ( debug != null ){
+						debug.append( res );
+					}
+					
+					for ( int i=1;i<exprs.length;i++){
+	
+						if ( debug != null ){
+							debug.append( "^" );;
+						}
+
+						boolean b = (Boolean)exprs[i].eval( dm, tags, debug );
+						
+						if ( debug != null ){
+							debug.append( b );
+						}
+						
+						res = res ^ b;
+					}
+	
+					return( res );
+					
+				}finally{
+					if ( debug != null ){
+						debug.append( ")" );
+					}
+				}
 			}
 
 			@Override
@@ -2163,7 +2304,27 @@ TagPropertyConstraintHandler
 			public Object
 			eval(
 				DownloadManager		dm,
-				List<Tag>			tags )
+				List<Tag>			tags,
+				StringBuilder		debug )
+			{
+				if ( debug!=null){
+					debug.append( "[" + func_name + "->" );
+				}
+				
+				Object res = evalSupport( dm, tags, debug );
+				
+				if ( debug!=null){
+					debug.append( res + "]" );
+				}
+				
+				return( res );
+			}
+			
+			public Object
+			evalSupport(
+				DownloadManager		dm,
+				List<Tag>			tags,
+				StringBuilder		debug )
 			{
 				switch( fn_type ){
 					case FT_HAS_TAG:{
@@ -2306,8 +2467,8 @@ TagPropertyConstraintHandler
 					case FT_EQ:
 					case FT_NEQ:{
 
-						Number n1 = getNumeric( dm, tags, params, 0 );
-						Number n2 = getNumeric( dm, tags, params, 1 );
+						Number n1 = getNumeric( dm, tags, params, 0, debug );
+						Number n2 = getNumeric( dm, tags, params, 1, debug );
 
 						switch( fn_type ){
 
@@ -2425,19 +2586,19 @@ TagPropertyConstraintHandler
 					}
 					case FT_HOURS_TO_SECS:{
 
-						Number n1 = getNumeric( dm, tags, params, 0 );
+						Number n1 = getNumeric( dm, tags, params, 0, debug );
 						
 						return((long)( n1.doubleValue() * 60*60 ));
 					}
 					case FT_DAYS_TO_SECS:{
 
-						Number n1 = getNumeric( dm, tags, params, 0 );
+						Number n1 = getNumeric( dm, tags, params, 0, debug  );
 						
 						return((long)( n1.doubleValue() * 24*60*60 ));
 					}
 					case FT_WEEKS_TO_SECS:{
 
-						Number n1 = getNumeric( dm, tags, params, 0 );
+						Number n1 = getNumeric( dm, tags, params, 0, debug  );
 						
 						return((long)( n1.doubleValue() * 7*24*60*60 ));
 					}
@@ -2608,7 +2769,31 @@ TagPropertyConstraintHandler
 				DownloadManager		dm,
 				List<Tag>			tags,
 				Object[]			args,
-				int					index )
+				int					index,
+				StringBuilder		debug )
+			{
+				if ( debug!=null){
+					Object arg = args[index];
+
+					debug.append( "[" + arg + "->" );
+				}			
+				
+				Number res = getNumericSupport( dm, tags, args, index, debug );
+				
+				if ( debug!=null){
+					debug.append( res + "]" );
+				}
+	
+				return( res );
+			}
+			
+			private Number
+			getNumericSupport(
+				DownloadManager		dm,
+				List<Tag>			tags,
+				Object[]			args,
+				int					index,
+				StringBuilder		debug )
 			{
 				Object arg = args[index];
 
@@ -2618,7 +2803,7 @@ TagPropertyConstraintHandler
 					
 				}else if ( arg instanceof ConstraintExpr ){
 					
-					return((Number)((ConstraintExpr)arg).eval(dm, tags));
+					return((Number)((ConstraintExpr)arg).eval(dm, tags, debug ));
 				}
 				
 				String str = (String)arg;

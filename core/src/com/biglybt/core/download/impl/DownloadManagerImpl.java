@@ -854,6 +854,11 @@ DownloadManagerImpl
 	}
 	
 	@Override
+	public String getTaggableName(){
+		return(getDisplayName());
+	}
+	
+	@Override
 	public ExportedDataSource 
 	exportDataSource()
 	{

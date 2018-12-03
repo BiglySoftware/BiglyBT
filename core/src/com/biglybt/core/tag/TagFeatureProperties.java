@@ -93,6 +93,10 @@ TagFeatureProperties
 
 		public void
 		syncListeners();
+		
+		public String
+		explainTaggable(
+			Taggable	taggable );
 	}
 
 	public interface

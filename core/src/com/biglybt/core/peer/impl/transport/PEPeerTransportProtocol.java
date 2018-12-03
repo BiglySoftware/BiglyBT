@@ -5691,6 +5691,10 @@ implements PEPeerTransport
 	public int getTaggableType() {return TT_PEER;}
    	@Override
     public String getTaggableID(){ return( null ); }
+   	@Override
+   	public String getTaggableName(){
+   		return( getIp());
+   	}
 	@Override
 	public TaggableResolver	getTaggableResolver(){ return( null ); }
 	@Override

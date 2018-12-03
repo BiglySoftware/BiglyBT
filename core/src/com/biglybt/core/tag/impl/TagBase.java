@@ -2531,6 +2531,14 @@ TagBase
 				}
 			}
 		}
+		
+		@Override
+		public String 
+		explainTaggable(
+			Taggable taggable)
+		{
+			return( tag_type.getTagManager().explain( TagBase.this, this, taggable ));
+		}
  	}
  	
 	public void

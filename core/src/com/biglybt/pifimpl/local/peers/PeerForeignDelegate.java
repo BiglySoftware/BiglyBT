@@ -1367,6 +1367,10 @@ PeerForeignDelegate
    	@Override
     public String getTaggableID(){ return( null ); }
 	@Override
+	public String getTaggableName(){
+		return(getIp());
+	}
+	@Override
 	public TaggableResolver	getTaggableResolver(){ return( null ); }
 	@Override
 	public Object getTaggableTransientProperty(String key) {
