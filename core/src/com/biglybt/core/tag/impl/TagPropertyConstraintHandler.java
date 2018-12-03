@@ -517,7 +517,7 @@ TagPropertyConstraintHandler
 			
 			boolean result = tc.testConstraint((DownloadManager)taggable, debug);
 			
-			return( "result=" + result + "\n\tconstraint=" + tc.getString() + "\n\teval=" +  debug.toString());
+			return( result + "\n\tconstraint=" + tc.getString() + "\n\teval=" +  debug.toString());
 		}
 	}
 	
@@ -2308,13 +2308,13 @@ TagPropertyConstraintHandler
 				StringBuilder		debug )
 			{
 				if ( debug!=null){
-					debug.append( "[" + func_name + "->" );
+					debug.append( "[" + func_name );
 				}
 				
 				Object res = evalSupport( dm, tags, debug );
 				
 				if ( debug!=null){
-					debug.append( res + "]" );
+					debug.append( "->" + res + "]" );
 				}
 				
 				return( res );
@@ -2772,19 +2772,46 @@ TagPropertyConstraintHandler
 				int					index,
 				StringBuilder		debug )
 			{
-				if ( debug!=null){
-					Object arg = args[index];
+				Object arg = args[index];
+				
+				if ( arg instanceof Number ){
 
-					debug.append( "[" + arg + "->" );
-				}			
-				
-				Number res = getNumericSupport( dm, tags, args, index, debug );
-				
-				if ( debug!=null){
-					debug.append( res + "]" );
-				}
+					Number res = (Number)arg;
+					
+					if ( debug!=null){
+						debug.append( "[" + res + "]" );
+					}			
+					
+					return( res );
+					
+				}else if ( arg instanceof ConstraintExpr ){		
+
+					if ( debug!=null){
+						debug.append( "[" );
+					}
+					
+					Number res = (Number)((ConstraintExpr)arg).eval(dm, tags, debug );
+					
+					if ( debug!=null){
+						debug.append( "->" + res + "]" );
+					}
+					
+					return( res );
+					
+				}else{
+
+					if ( debug!=null){
+						debug.append( "[" + arg + "->" );
+					}			
+
+					Number res = getNumericSupport( dm, tags, args, index );
+					
+					if ( debug!=null){
+						debug.append( res + "]" );
+					}
 	
-				return( res );
+					return( res );
+				}
 			}
 			
 			private Number
@@ -2792,19 +2819,9 @@ TagPropertyConstraintHandler
 				DownloadManager		dm,
 				List<Tag>			tags,
 				Object[]			args,
-				int					index,
-				StringBuilder		debug )
+				int					index )
 			{
 				Object arg = args[index];
-
-				if ( arg instanceof Number ){
-
-					return((Number)arg);
-					
-				}else if ( arg instanceof ConstraintExpr ){
-					
-					return((Number)((ConstraintExpr)arg).eval(dm, tags, debug ));
-				}
 				
 				String str = (String)arg;
 
