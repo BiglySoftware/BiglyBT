@@ -265,19 +265,6 @@ public abstract class BaseMdiEntry
 		return closeable;
 	}
 
-	public boolean isCollapseDisabled() {
-		return collapseDisabled;
-	}
-
-	/* (non-Javadoc)
-	 * @see MdiEntry#setCollapseDisabled(boolean)
-	 */
-	@Override
-	public void setCollapseDisabled(boolean collapseDisabled) {
-		this.collapseDisabled = collapseDisabled;
-		setExpanded(true);
-	}
-
 	// @see MdiEntry#addListeners(java.lang.Object)
 	@Override
 	public void addListeners(Object objectWithListeners) {

@@ -87,6 +87,7 @@ public class SideBarEntrySWT
 	private static final boolean PAINT_BG = !Constants.isUnix;
 
 	private static final boolean DO_OUR_OWN_TREE_INDENT = true;
+	private static final boolean DO_EXPANDO_INDENT 		= true;
 
 	private static final int SIDEBAR_SPACING = 2;
 
@@ -950,10 +951,10 @@ public class SideBarEntrySWT
 		} else if (DO_OUR_OWN_TREE_INDENT) {
 			TreeItem tempItem = treeItem.getParentItem();
 			int indent;
-			if (!isCollapseDisabled() && tempItem == null && !Utils.isGTK) {
+			if (tempItem == null && !Utils.isGTK) {
 				indent = 22;
 			} else {
-				indent = 10;
+				indent = DO_EXPANDO_INDENT?22:10;
 			}
 			while (tempItem != null) {
 				indent += 10;
@@ -1296,12 +1297,11 @@ public class SideBarEntrySWT
 
 		// OSX overrides the twisty, and we can't use the default twisty
 		// on Windows because it doesn't have transparency and looks ugly
-		if (treeItem.getItemCount() > 0 && !isCollapseDisabled()
-				&& !SideBar.USE_NATIVE_EXPANDER) {
+		if (treeItem.getItemCount() > 0	&& !SideBar.USE_NATIVE_EXPANDER) {
 			gc.setAntialias(SWT.ON);
 			Color oldBG = gc.getBackground();
 			gc.setBackground(Colors.getSystemColor(event.display, SWT.COLOR_LIST_FOREGROUND));
-			int baseX = 22; // itemBounds.x;
+			int baseX = DO_EXPANDO_INDENT?itemBounds.x:22;
 			if (treeItem.getExpanded()) {
 				int xStart = 12;
 				int arrowSize = 8;

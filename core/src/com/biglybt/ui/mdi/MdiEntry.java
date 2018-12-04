@@ -87,7 +87,7 @@ public interface MdiEntry extends UIPluginView
 
 	public void setImageLeftID(String string);
 
-	public void setCollapseDisabled(boolean b);
+	//public void setCollapseDisabled(boolean b);
 
 	public void addListener(MdiEntryDropListener listener);
 

@@ -733,8 +733,7 @@ public class SideBar
 								Rectangle closeArea = (Rectangle) treeItem.getData("closeArea");
 								if (closeArea != null && closeArea.contains(event.x, event.y)) {
 									cursorNo = SWT.CURSOR_HAND;
-								} else if (entry != null && !entry.isCollapseDisabled()
-										&& treeItem.getItemCount() > 0) {
+								} else if (entry != null && treeItem.getItemCount() > 0) {
 									cursorNo = SWT.CURSOR_HAND;
 								}else if ( entry != null ) {
 									MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
@@ -838,7 +837,7 @@ public class SideBar
 									}
 								}
 
-								if (!entry.isCollapseDisabled() && treeItem.getItemCount() > 0) {
+								if ( treeItem.getItemCount() > 0) {
 									if (!entry.isSelectable() || event.x < 20) {
 										// Note: On Windows, user can expand row by clicking the invisible area where the OS twisty would be
   									MdiEntry currentEntry = getCurrentEntry();
@@ -868,23 +867,14 @@ public class SideBar
 
 						case SWT.Collapse: {
 							SideBarEntrySWT entry = (SideBarEntrySWT) treeItem.getData("MdiEntry");
-
-							if (entry.isCollapseDisabled()) {
-								tree.setRedraw(false);
-								Display.getDefault().asyncExec(new Runnable() {
-									@Override
-									public void run() {
-										((TreeItem) event.item).setExpanded(true);
-										getTree().setRedraw(true);
-									}
-								});
-							} else {
-								MdiEntry currentEntry = getCurrentEntry();
-								if (currentEntry != null
-										&& entry.getId().equals(currentEntry.getParentID())) {
-									showEntryByID(SIDEBAR_SECTION_LIBRARY);
-								}
+							
+							MdiEntry currentEntry = getCurrentEntry();
+							
+							if (currentEntry != null && entry.getId().equals(currentEntry.getParentID())){
+								
+								showEntryByID(SIDEBAR_SECTION_LIBRARY);
 							}
+						
 							break;
 						}
 
