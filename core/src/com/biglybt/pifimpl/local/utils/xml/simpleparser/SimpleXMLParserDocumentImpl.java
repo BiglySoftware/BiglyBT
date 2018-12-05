@@ -249,6 +249,13 @@ SimpleXMLParserDocumentImpl
 						try{
 							URL url  = new URL( systemId );
 
+							String protocol = url.getProtocol();
+							
+							if ( !protocol.toLowerCase().startsWith( "http" )){
+								
+								return( new InputSource( new ByteArrayInputStream("<?xml version='1.0' encoding='UTF-8'?>".getBytes())));
+							}
+							
 							if ( source_url != null ){
 
 								String net = AENetworkClassifier.categoriseAddress( source_url.getHost());
