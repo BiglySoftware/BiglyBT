@@ -23,6 +23,7 @@
 package com.biglybt.plugin.net.buddy;
 
 import com.biglybt.core.util.Debug;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 
 public class
 BuddyPluginUI
@@ -61,6 +62,29 @@ BuddyPluginUI
 
 			try{
 				impl_class.getMethod( "openChat", String.class, String.class ).invoke( null, network, key );
+
+				return( true );
+
+			}catch( Throwable e ){
+
+				Debug.out( e );
+			}
+		}else{
+
+			Debug.out( "Not supported" );
+		}
+
+		return( false );
+	}
+	
+	public static boolean
+	openChat(
+		ChatInstance	chat )
+	{
+		if ( impl_class != null ){
+
+			try{
+				impl_class.getMethod( "openChat", ChatInstance.class ).invoke( null, chat );
 
 				return( true );
 

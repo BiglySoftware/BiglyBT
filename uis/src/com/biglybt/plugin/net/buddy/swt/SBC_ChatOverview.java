@@ -200,23 +200,36 @@ public class SBC_ChatOverview
 			try{
 				ChatInstance chat = beta.getChat(network, key);
 
-				chat.setAutoNotify( true );
-
-				MdiEntry mdi_entry = createChatMdiEntry( chat );
-
-				MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-
-				if ( mdi != null ){
-
-					mdi.showEntry( mdi_entry );
-				}
+				openChat( chat );
+				
 			}catch( Throwable e ){
 
 				Debug.out( e );
 			}
 		}
 	}
+	
+	public static void
+	openChat(
+		ChatInstance		chat )
+	{
+		try{
+			chat.setAutoNotify( true );
 
+			MdiEntry mdi_entry = createChatMdiEntry( chat );
+
+			MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+
+			if ( mdi != null ){
+
+				mdi.showEntry( mdi_entry );
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+		}
+	}
+	
 	private static MdiEntry
 	createChatMdiEntry(
 			final ChatInstance chat )

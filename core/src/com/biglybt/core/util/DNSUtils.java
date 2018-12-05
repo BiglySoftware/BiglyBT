@@ -131,7 +131,7 @@ DNSUtils
 
 			int	hit = -1;
 
-			for ( int i=num_bits-1;i>=0;i--){
+			for ( int i=num_bits-2;i>=0;i--){	// always want at least 2 components
 
 				String bit = bits[i];
 
