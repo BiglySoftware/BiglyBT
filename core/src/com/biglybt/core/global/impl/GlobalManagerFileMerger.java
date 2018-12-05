@@ -50,6 +50,10 @@ import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.components.UIButton;
+import com.biglybt.pif.ui.components.UIComponent;
+import com.biglybt.pif.ui.components.UIPropertyChangeEvent;
+import com.biglybt.pif.ui.components.UIPropertyChangeListener;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.pifimpl.local.PluginInitializer;
 
@@ -111,7 +115,7 @@ GlobalManagerFileMerger
 		
 		PluginInterface plugin_interface = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface();
 		
-		log = plugin_interface.getLogger().getChannel("Plugin Update");
+		log = plugin_interface.getLogger().getChannel( "Swarm Merge" );
 
 		log.setDiagnostic();
 
@@ -143,6 +147,36 @@ GlobalManagerFileMerger
 		model.getActivity().setVisible( false );
 		model.getProgress().setVisible( false );
 
+		UIButton reset = model.addButton();
+		
+		reset.setLabel( "TableColumn.header.mergeddata" );
+		
+		reset.setName( "Button.reset" );
+		
+		reset.addPropertyChangeListener(
+			new UIPropertyChangeListener(){
+				
+				@Override
+				public void propertyChanged(UIPropertyChangeEvent ev){
+					if ( ev.getPropertyType() == UIComponent.PT_SELECTED ){
+						
+						log( "Resetting" );
+						
+						synchronized( dm_map ){
+
+							for ( SameSizeFiles s: sames ){
+
+								s.destroy();
+							}
+							
+							sames.clear();
+							
+							syncFileSets( true );
+						}
+					}
+				}
+			});
+		
 		model.attachLoggerChannel( log );
 
 		setLoggingPaused( true );

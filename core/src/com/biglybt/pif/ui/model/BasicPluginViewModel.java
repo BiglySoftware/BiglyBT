@@ -19,8 +19,11 @@
 
 package com.biglybt.pif.ui.model;
 
+import java.util.List;
+
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.logging.LoggerChannelListener;
+import com.biglybt.pif.ui.components.UIButton;
 import com.biglybt.pif.ui.components.UIProgressBar;
 import com.biglybt.pif.ui.components.UITextArea;
 import com.biglybt.pif.ui.components.UITextField;
@@ -54,6 +57,12 @@ BasicPluginViewModel
 	public UIProgressBar
 	getProgress();
 
+	public UIButton
+	addButton();
+		
+	public List<UIButton>
+	getButtons();
+	
 	/**
 	 *
 	 * @param id

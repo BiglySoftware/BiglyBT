@@ -21,6 +21,7 @@
 package com.biglybt.ui.swt.pifimpl;
 
 import java.util.*;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -40,6 +41,8 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.pif.ui.components.UIButton;
+import com.biglybt.pif.ui.components.UIComponent;
 import com.biglybt.pif.ui.components.UIPropertyChangeEvent;
 import com.biglybt.pif.ui.components.UIPropertyChangeListener;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
@@ -269,6 +272,29 @@ BasicPluginViewImpl
       Utils.setLayoutData(progress, gridData);
     }
 
+    List<Button>	all_buttons = new ArrayList<>();
+    
+    List<UIButton>	buttons = model.getButtons();
+    
+    if ( !buttons.isEmpty()){
+    	for ( UIButton b: buttons ){
+    		Label buttonTitle = new Label(topSection,SWT.NULL);
+    		Messages.setLanguageText(buttonTitle, b.getLabel());
+    		Button button = new Button( topSection, SWT.PUSH );
+    		Messages.setLanguageText(button, b.getName());
+    		
+    		all_buttons.add( button );
+    		
+    		button.addSelectionListener(
+    			new SelectionAdapter(){
+    				@Override
+    				public void widgetSelected(SelectionEvent e){
+    					b.setProperty(UIComponent.PT_SELECTED, true );
+    				}
+				});
+    	}
+    }
+    
     if (sConfigSectionID != null) {
     	Composite configSection = new Composite(panel, SWT.NONE);
         gridLayout = new GridLayout();
@@ -307,6 +333,8 @@ BasicPluginViewImpl
     	Button button = new Button( topSection, SWT.PUSH );
     	Messages.setLanguageText(button,"plugins.basicview.clear");
 
+    	all_buttons.add( button );
+    	
     	button.addListener(SWT.Selection, new Listener() {
     		@Override
 		    public void handleEvent(Event event)
@@ -482,6 +510,11 @@ BasicPluginViewImpl
 					buttonPause.setSelection( paused );
 				}
 			});
+    }
+    
+    if ( all_buttons.size() > 1 ){
+    	
+    	Utils.makeButtonsEqualWidth( all_buttons );
     }
 
   }

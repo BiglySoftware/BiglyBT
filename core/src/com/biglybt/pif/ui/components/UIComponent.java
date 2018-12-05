@@ -32,6 +32,7 @@ UIComponent
 	public static final String PT_VISIBLE		= "visible";		// Boolean
 	public static final String PT_WIDTH_HINT	= "whint";			// Integer
 	public static final String PT_HEIGHT_HINT	= "hhint";			// Integer
+	public static final String PT_SELECTED		= "selected";		// Boolean
 
 	public void
 	setEnabled(

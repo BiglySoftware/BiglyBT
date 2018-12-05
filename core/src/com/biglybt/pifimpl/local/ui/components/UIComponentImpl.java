@@ -83,7 +83,7 @@ UIComponentImpl
 		final String	property_type,
 		final Object	property_value )
 	{
-		final Object	old_value = properties.get( property_type );
+		final Object	old_value = property_type==PT_SELECTED?false:properties.get( property_type );
 
 		properties.put( property_type, property_value );
 
