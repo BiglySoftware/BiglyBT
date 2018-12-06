@@ -1,69 +1,24 @@
 # Translating BiglyBT
 
-Thank you for your interesting in helping out BiglyBT.  We really need help with translating BiglyBT to as many languages possible.  Translating BiglyBT is no small task.  We have over 4000 translation strings, and many of the 40 language we bundle are very incomplete.  Here's a breakdown of the completion level of each language in v1.2.0.0:
-
-| Locale | Language | Country | % Translated | Active Translator(s) |
-|:---|:---|:---|---:|:---|
-| pt_BR | Portuguese | Brazil | ~99% | [Havokdan](https://github.com/Havokdan) |
-| eu | Basque |  | ~99% | azpidatziak |
-| zh_CN | Chinese | China | ~88% |  |
-| bg_BG | Bulgarian | Bulgaria | ~83% | andreshko |
-| es_ES | Spanish | Spain | ~80% | Valtiel |
-| ca_AD | Catalan | Andorra | ~79% |  |
-| ko_KR | Korean | South Korea | ~78% |  |
-| fr_FR | French | France | ~77% |  |
-| ro_RO | Romanian | Romania | ~72% |  |
-| ru_RU | Russian | Russia | ~67% |  |
-| cs_CZ | Czech | Czech Republic | ~66% |  |
-| fi_FI | Finnish | Finland | ~63% |  |
-| de_DE | German | Germany | ~62% |  |
-| it_IT | Italian | Italy | ~62% |  |
-| uk_UA | Ukrainian | Ukraine | ~60% |  |
-| pl_PL | Polish | Poland | ~57% |  |
-| sv_SE | Swedish | Sweden | ~52% |  |
-| no_NO | Norwegian | Norway | ~52% | Leif |
-| hu_HU | Hungarian | Hungary | ~51% |  |
-| li_NL | Limburgish | Netherlands | ~49% |  |
-| nl_NL | Dutch | Netherlands | ~48% |  |
-| sr_LATIN | Serbian | LATIN | ~48% |  |
-| sr | Serbian |  | ~46% |  |
-| ja_JP | Japanese | Japan | ~46% |  |
-| lt_LT | Lithuanian | Lithuania | ~44% |  |
-| da_DK | Danish | Denmark | ~43% |  |
-| zh_TW | Chinese | Taiwan | ~40% |  |
-| pt_PT | Portuguese | Portugal | ~40% |  |
-| tr_TR | Turkish | Turkey | ~36% |  |
-| sk_SK | Slovak | Slovakia | ~30% |  |
-| th_TH | Thai | Thailand | ~29% |  |
-| fy_NL | Frisian | Netherlands | ~27% |  |
-| ka_GE | Georgian | Georgia | ~26% |  |
-| in_ID | Indonesian | Indonesia | ~24% |  |
-| bs_BA | Bosnian | Bosnia and Herzegovina | ~23% |  |
-| el_GR | Greek | Greece | ~23% |  |
-| sl_SI | Slovenian | Slovenia | ~21% |  |
-| iw_IL | Hebrew | Israel | ~19% | AlmogK |
-| oc | Occitan |  | ~16% |  |
-| gl_ES | Gallegan | Spain | ~12% |  |
-| ms_SG | Malay | Singapore | ~11% |  |
-| ar_SA | Arabic | Saudi Arabia | ~9% |  |
-| mk_MK | Macedonian | Macedonia | ~6% |  |
-| hy_AM | Armenian | Armenia | ~4% |  |
-| km_KH | Khmer | Cambodia | ~1% |  
+Thank you for your interesting in helping out BiglyBT.  We really need help with translating BiglyBT to as many languages possible.  Translating BiglyBT is no small task.  We have over 4000 translation strings, and many of the 40 language we bundle are very incomplete.  A breakdown of the completion level of each language is displayed on our [BiglyBT CrowdIn](https://crowdin.com/project/biglybt) page:
 
 Preferably, we'd love it if your native language wasn't English, however, anyone fluent in another language is very much appreciated.
 
 ## How to Translate
 
-The Language files are "Java Properties" files, located in [core/src/com/biglybt/internat](core/src/com/biglybt/internat).  You can use your favorite translation tool, or, you can use one of the ways below:
+We highly recommend using Crowdin to translate, however, we will not refuse translations using your favorite translation tool.
+The Language files are "Java Properties" files, located in [core/src/com/biglybt/internat](core/src/com/biglybt/internat).  
 
 ### Crowdin
 
-Visit our [BiglyBT Project Page on Crowdin](https://crowdin.com/projects/BiglyBT).  Crowdin is one of the best collaborative online localization tools, and has handy features such as suggesting translations from other projects with similar strings.
+Visit our [BiglyBT Project Page on Crowdin](https://crowdin.com/project/BiglyBT).  Crowdin is one of the best collaborative online localization tools, and has handy features such as suggesting translations from other projects with similar strings.
+
+Please note that BiglyBT for Android has its own tranlation project at [BiglyBT-Android Project Page on Crowdin](https://crowdin.com/project/biglybt-android)
 
 
 ### BiglyBT Internationization Plugin
 
-The advantage to using our plugin is that it will also try to pull in plugins that need translations.  Install the [Internationalize BiglyBT Plugin](https://plugins.biglybt.com/#i18nAZ) (If it doesn't prompt to launch BiglyBT, you can copy and paste the URL into the search bar of BiglyBT).
+Prior to using Crowdin for translation management, we had a BiglyBT plugin to handle translations.  Install the [Internationalize BiglyBT Plugin](https://plugins.biglybt.com/#i18nAZ) (If it doesn't prompt to launch BiglyBT, you can copy and paste the URL into the search bar of BiglyBT).
 
 ### IntelliJ
 
