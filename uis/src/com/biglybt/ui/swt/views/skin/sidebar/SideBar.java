@@ -135,6 +135,7 @@ public class SideBar
 
 	private List<UISWTViewCore> pluginViews = new ArrayList<>();
 	private ParameterListener configShowSideBarListener;
+	private ParameterListener configRedrawListener;
 	private ParameterListener configBGColorListener;
 	private SWTViewListener swtViewListener;
 
@@ -432,10 +433,28 @@ public class SideBar
 				}
 			}
 		};
+		
 		COConfigurationManager.addParameterListener(
-			"Show Side Bar",
+				"Show Side Bar",
 				configShowSideBarListener);
 
+		configRedrawListener = new ParameterListener() {
+			@Override
+			public void
+			parameterChanged(
+				String name) 
+			{
+				Utils.execSWTThread( new Runnable(){ public void run(){ swt_redraw(); }});
+			}
+		};
+		
+		COConfigurationManager.addParameterListener(
+				new String[]{
+					"Side Bar Close Position",
+					"Side Bar Indent Expanders",
+					"Side Bar Compact View",
+				}, configRedrawListener );
+		
 		updateSidebarVisibility();
 
 		return null;
@@ -464,10 +483,15 @@ public class SideBar
 			Debug.out(e);
 		}
 
-		COConfigurationManager.removeParameterListener("Show Side Bar", configShowSideBarListener);
+		COConfigurationManager.removeParameterListener( "Show Side Bar", configShowSideBarListener);
 		COConfigurationManager.removeParameterListener(	"config.skin.color.sidebar.bg", configBGColorListener);
 		COConfigurationManager.removeParameterListener(	"Side Bar Close Position", configBGColorListener);
 
+		COConfigurationManager.removeParameterListener( "Side Bar Close Position", configRedrawListener );
+		COConfigurationManager.removeParameterListener( "Side Bar Indent Expanders", configRedrawListener );
+		COConfigurationManager.removeParameterListener( "Side Bar Compact View", configRedrawListener );
+		
+		
 		if (swtViewListener != null) {
 			try {
 				UISWTInstanceImpl uiSWTinstance = (UISWTInstanceImpl) UIFunctionsManagerSWT.getUIFunctionsSWT().getUISWTInstance();
@@ -1397,6 +1421,35 @@ public class SideBar
 			}
 
 			swt_updateSideBarColors( ti.getItems());
+		}
+	}
+	
+	private void
+	swt_redraw()
+	{
+		tree.redraw();
+		
+		swt_redraw( tree.getItems());
+	}
+	
+	private void
+	swt_redraw(
+		TreeItem[]	items )
+	{
+		tree.redraw();
+		
+		for ( TreeItem ti: items){
+
+			SideBarEntrySWT entry = (SideBarEntrySWT) ti.getData("MdiEntry");
+
+			if ( entry != null ){
+
+				entry.updateColors();
+
+				entry.redraw();
+			}
+
+			swt_redraw( ti.getItems());
 		}
 	}
 

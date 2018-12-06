@@ -742,6 +742,8 @@ public class ConfigurationDefaults {
     def.put( "Show New In Side Bar", TRUE );
     def.put( "Show Downloading In Side Bar", TRUE );
     def.put( "Side Bar Close Position", ZERO );
+    def.put( "Side Bar Indent Expanders", TRUE );
+    def.put( "Side Bar Compact View", FALSE );
     
     def.put( "Share Ratio Progress Interval", 1000L );	// thousandths
 

@@ -87,8 +87,36 @@ public class SideBarEntrySWT
 	private static final boolean PAINT_BG = !Constants.isUnix;
 
 	private static final boolean DO_OUR_OWN_TREE_INDENT = true;
-	private static final boolean DO_EXPANDO_INDENT 		= true;
+		
+	private static final int		EXPANDO_WIDTH				= 12;
+	private static final int		EXPANDO_INDENT				= 10;
 
+	private static boolean DO_EXPANDO_INDENT;
+	private static boolean COMPACT_SIDEBAR;
+
+	private static int				EXPANDO_LEFT_INDENT;
+	private static int				EXPANDO_INDENT_INITIAL;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{
+					"Side Bar Indent Expanders",
+					"Side Bar Compact View",
+				},
+				new ParameterListener(){
+					
+					@Override
+					public void parameterChanged(String name ){
+						
+						DO_EXPANDO_INDENT = COConfigurationManager.getBooleanParameter( "Side Bar Indent Expanders" );
+						COMPACT_SIDEBAR = COConfigurationManager.getBooleanParameter( "Side Bar Compact View" );
+						
+						EXPANDO_LEFT_INDENT 	= COMPACT_SIDEBAR?4:10;
+						EXPANDO_INDENT_INITIAL	= EXPANDO_WIDTH + EXPANDO_LEFT_INDENT;
+					}
+				});
+	}
+	
 	private static final int SIDEBAR_SPACING = 2;
 
 	private int IMAGELEFT_SIZE = 20;
@@ -952,16 +980,24 @@ public class SideBarEntrySWT
 			TreeItem tempItem = treeItem.getParentItem();
 			int indent;
 			if (tempItem == null && !Utils.isGTK) {
-				indent = 22;
+				indent = EXPANDO_INDENT_INITIAL;
 			} else {
-				indent = DO_EXPANDO_INDENT?22:10;
+				indent = DO_EXPANDO_INDENT?EXPANDO_INDENT_INITIAL:EXPANDO_LEFT_INDENT;
 			}
 			while (tempItem != null) {
-				indent += 10;
+				indent += EXPANDO_INDENT;
 				tempItem = tempItem.getParentItem();
 			}
 			if (SideBar.USE_NATIVE_EXPANDER && Utils.isGTK) {
 				indent += 5;
+			}
+			
+			if ( treeItem.getItemCount() > 0	&& !SideBar.USE_NATIVE_EXPANDER) {
+				// expando visible
+			}else{
+				if ( COMPACT_SIDEBAR ){
+					indent -= EXPANDO_INDENT/2;
+				}
 			}
 			itemBounds.x = indent;
 		}
@@ -1301,9 +1337,9 @@ public class SideBarEntrySWT
 			gc.setAntialias(SWT.ON);
 			Color oldBG = gc.getBackground();
 			gc.setBackground(Colors.getSystemColor(event.display, SWT.COLOR_LIST_FOREGROUND));
-			int baseX = DO_EXPANDO_INDENT?itemBounds.x:22;
+			int baseX = DO_EXPANDO_INDENT?itemBounds.x:EXPANDO_INDENT_INITIAL;
 			if (treeItem.getExpanded()) {
-				int xStart = 12;
+				int xStart = EXPANDO_WIDTH;
 				int arrowSize = 8;
 				int yStart = itemBounds.height - (itemBounds.height + arrowSize) / 2;
 				gc.fillPolygon(new int[] {
@@ -1315,7 +1351,7 @@ public class SideBarEntrySWT
 					itemBounds.y + yStart + arrowSize,
 				});
 			} else {
-				int xStart = 12;
+				int xStart = EXPANDO_WIDTH;
 				int arrowSize = 8;
 				int yStart = itemBounds.height - (itemBounds.height + arrowSize) / 2;
 				gc.fillPolygon(new int[] {
