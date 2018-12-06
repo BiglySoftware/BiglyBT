@@ -453,6 +453,7 @@ public class SideBar
 					"Side Bar Close Position",
 					"Side Bar Indent Expanders",
 					"Side Bar Compact View",
+					"Side Bar Hide Left Icon",
 				}, configRedrawListener );
 		
 		updateSidebarVisibility();
@@ -490,7 +491,7 @@ public class SideBar
 		COConfigurationManager.removeParameterListener( "Side Bar Close Position", configRedrawListener );
 		COConfigurationManager.removeParameterListener( "Side Bar Indent Expanders", configRedrawListener );
 		COConfigurationManager.removeParameterListener( "Side Bar Compact View", configRedrawListener );
-		
+		COConfigurationManager.removeParameterListener( "Side Bar Hide Left Icon", configRedrawListener );
 		
 		if (swtViewListener != null) {
 			try {

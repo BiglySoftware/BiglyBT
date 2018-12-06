@@ -97,11 +97,14 @@ public class SideBarEntrySWT
 	private static int				EXPANDO_LEFT_INDENT;
 	private static int				EXPANDO_INDENT_INITIAL;
 	
+	private static boolean			IMAGELEFT_HIDDEN;
+	
 	static{
 		COConfigurationManager.addAndFireParameterListeners(
 				new String[]{
 					"Side Bar Indent Expanders",
 					"Side Bar Compact View",
+					"Side Bar Hide Left Icon",
 				},
 				new ParameterListener(){
 					
@@ -113,6 +116,8 @@ public class SideBarEntrySWT
 						
 						EXPANDO_LEFT_INDENT 	= COMPACT_SIDEBAR?4:10;
 						EXPANDO_INDENT_INITIAL	= EXPANDO_WIDTH + EXPANDO_LEFT_INDENT;
+						
+						IMAGELEFT_HIDDEN = COConfigurationManager.getBooleanParameter( "Side Bar Hide Left Icon" );
 					}
 				});
 	}
@@ -1197,7 +1202,10 @@ public class SideBarEntrySWT
 			suffix = null;
 			imageLeft = getImageLeft(null);
 		}
-		if (imageLeft != null) {
+		
+		if ( IMAGELEFT_HIDDEN ){
+			
+		}else if (imageLeft != null ) {
 			Rectangle clipping = gc.getClipping();
 			Utils.setClipping(gc, new Rectangle(x0IndicatorOfs, itemBounds.y, IMAGELEFT_SIZE,
 					itemBounds.height));

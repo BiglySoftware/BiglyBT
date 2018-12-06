@@ -374,6 +374,12 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 						}
 					});
 			
+			BooleanParameter hideicon = new BooleanParameter(gSideBar, "Side Bar Hide Left Icon", "sidebar.hide.icon");
+			gd = new GridData();
+			gd.horizontalSpan = 3;
+			hideicon.setLayoutData( gd );
+
+			
 			label = new Label(gSideBar, SWT.NULL);
 			Messages.setLanguageText(label, "sb.close.icon.position" );
 			
@@ -382,10 +388,8 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 					MessageText.getString( "sb.close.right" ),
 					MessageText.getString( "sb.close.never" ),
 			};
-			
-			
-		    IntListParameter cp_param = 
-		    		new IntListParameter(gSideBar, "Side Bar Close Position", 0, cp_labs, new int[]{ 0, 1, 2 });
+		
+		    new IntListParameter(gSideBar, "Side Bar Close Position", 0, cp_labs, new int[]{ 0, 1, 2 });
 		    
 		    if ( !Utils.isGTK ){
 		    	
