@@ -387,17 +387,18 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 		    IntListParameter cp_param = 
 		    		new IntListParameter(gSideBar, "Side Bar Close Position", 0, cp_labs, new int[]{ 0, 1, 2 });
 		    
-			BooleanParameter indent = new BooleanParameter(gSideBar, "Side Bar Indent Expanders", "sidebar.indent.expanders");
-			gd = new GridData();
-			gd.horizontalSpan = 3;
-			indent.setLayoutData( gd );
-
-			BooleanParameter compact = new BooleanParameter(gSideBar, "Side Bar Compact View", "sidebar.compact.view");
-			gd = new GridData();
-			gd.horizontalSpan = 3;
-			compact.setLayoutData( gd );
-
-
+		    if ( !Utils.isGTK ){
+		    	
+				BooleanParameter indent = new BooleanParameter(gSideBar, "Side Bar Indent Expanders", "sidebar.indent.expanders");
+				gd = new GridData();
+				gd.horizontalSpan = 3;
+				indent.setLayoutData( gd );
+	
+				BooleanParameter compact = new BooleanParameter(gSideBar, "Side Bar Compact View", "sidebar.compact.view");
+				gd = new GridData();
+				gd.horizontalSpan = 3;
+				compact.setLayoutData( gd );
+		    }
 		}
 
 			// status bar
