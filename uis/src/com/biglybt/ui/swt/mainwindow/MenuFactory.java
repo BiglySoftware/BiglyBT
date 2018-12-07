@@ -396,13 +396,19 @@ public class MenuFactory
 
 						if (path != null) {
 
-							VuzeFileHandler vfh = VuzeFileHandler.getSingleton();
+							// loadAndHandleVuzeFile may pull from network
+							Utils.getOffOfSWTThread(new AERunnable() {
+								@Override
+								public void runSupport() {
+									VuzeFileHandler vfh = VuzeFileHandler.getSingleton();
 
-							if (vfh.loadAndHandleVuzeFile(path,
-									VuzeFileComponent.COMP_TYPE_NONE) == null) {
+									if (vfh.loadAndHandleVuzeFile(path,
+											VuzeFileComponent.COMP_TYPE_NONE) == null) {
 
-								TorrentOpener.openTorrent(path);
-							}
+										TorrentOpener.openTorrent(path);
+									}
+								}
+							});
 						}
 					}
 				});
