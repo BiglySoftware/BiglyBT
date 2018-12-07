@@ -1846,7 +1846,7 @@ TagManagerImpl
 		return( null );
 	}
 	
-	protected List<Tag>
+	protected Set<Tag>
 	getDependsOnTags(
 		Tag	tag )
 	{
@@ -1855,7 +1855,7 @@ TagManagerImpl
 			return( constraint_handler.getDependsOnTags( tag ));
 		}
 		
-		return( Collections.emptyList());
+		return( Collections.emptySet());
 	}
 	
 	@Override

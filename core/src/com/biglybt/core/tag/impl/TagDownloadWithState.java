@@ -2159,7 +2159,7 @@ TagDownloadWithState
 	public List<Tag>
 	dependsOnTags()
 	{
-		return( getManager().getDependsOnTags( this ));
+		return( new ArrayList<Tag>( getManager().getDependsOnTags( this )));
 	}
 	
 	@Override

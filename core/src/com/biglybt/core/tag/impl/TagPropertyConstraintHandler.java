@@ -521,7 +521,7 @@ TagPropertyConstraintHandler
 		}
 	}
 	
-	protected List<Tag>
+	protected Set<Tag>
 	getDependsOnTags(
 		Tag	tag )
 	{
@@ -532,7 +532,7 @@ TagPropertyConstraintHandler
 			return( tc.getDependsOnTags());
 		}
 		
-		return( Collections.emptyList());
+		return( Collections.emptySet());
 	}
 	
 	public void
@@ -841,7 +841,7 @@ TagPropertyConstraintHandler
 		private boolean	depends_on_download_state;
 		private int		depends_on_level			= DEP_STATIC;
 
-		private List<Tag>		dependent_on_tags;
+		private Set<Tag>		dependent_on_tags;
 		private boolean			must_check_dependencies;
 		
 		private Average			activity_average = Average.getInstance( 1000, 60 );
@@ -916,10 +916,10 @@ TagPropertyConstraintHandler
 			return( expr==null?"Failed to compile":expr.getString());
 		}
 		
-		private List<Tag>
+		private Set<Tag>
 		getDependsOnTags()
 		{
-			return( dependent_on_tags );
+			return( dependent_on_tags == null?Collections.emptySet():dependent_on_tags );
 		}
 		
 		private void
@@ -1925,6 +1925,7 @@ TagPropertyConstraintHandler
 		private static final int FT_DAYS_TO_SECS	= 25;
 		private static final int FT_WEEKS_TO_SECS	= 26;
 		private static final int FT_GET_CONFIG		= 27;
+		private static final int FT_HAS_TAG_AGE		= 28;
 
 		
 		private static final int	DEP_STATIC		= 0;
@@ -2055,10 +2056,21 @@ TagPropertyConstraintHandler
 
 				boolean	params_ok = false;
 
-				if ( func_name.equals( "hasTag" )){
+				if ( func_name.equals( "hasTag" ) || func_name.equals( "hasTagAge" ) || func_name.equals( "countTag" )){
 
-					fn_type = FT_HAS_TAG;
-
+					if ( func_name.equals( "hasTag" )){
+						
+						fn_type = FT_HAS_TAG;
+						
+					}else if ( func_name.equals( "hasTagAge" )){
+						
+						fn_type = FT_HAS_TAG_AGE;
+						
+					}else{
+						
+						fn_type = FT_COUNT_TAG;
+					}
+					
 					params_ok = params.length == 1 && getStringLiteral( params, 0 );
 
 					if ( params_ok ){
@@ -2080,7 +2092,7 @@ TagPropertyConstraintHandler
 									
 									if ( dependent_on_tags == null ){
 								
-										dependent_on_tags = new ArrayList<Tag>(5);
+										dependent_on_tags = new HashSet<Tag>();
 									}
 								
 									dependent_on_tags.add( t );
@@ -2238,12 +2250,6 @@ TagPropertyConstraintHandler
 					params_ok = params.length == 1 && getStringLiteral( params, 0 );
 
 					depends_on_download_state = true;	// dunno so let's assume so
-
-				}else if ( func_name.equals( "countTag" )){
-
-					fn_type = FT_COUNT_TAG;
-
-					params_ok = params.length == 1 && getStringLiteral( params, 0 );
 					
 				}else if ( func_name.equals( "hasTagGroup" )){
 
@@ -2341,6 +2347,53 @@ TagPropertyConstraintHandler
 
 						return( false );
 					}
+					case FT_HAS_TAG_AGE:{
+
+						String tag_name = (String)params[0];
+
+						Tag target = null;
+						
+						if ( dependent_on_tags != null ){
+							
+							for ( Tag t: dependent_on_tags ){
+	
+								if ( t.getTagName( true ).equals( tag_name )){
+	
+									target = t;
+									
+									break;
+								}
+							}
+						}
+						
+						if ( target == null ){
+							
+							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Tag '" + tag_name + "' not found" );
+							
+							return( 0 );
+						}				
+						
+						if ( !target.hasTaggable( dm )){
+							
+							return( -1 );
+						}
+						
+						long tag_added = target.getTaggableAddedTime( dm );
+
+						if ( tag_added <= 0 ){
+
+							return( 0 );
+						}
+
+						long age = (( SystemTime.getCurrentTime() - tag_added )/1000 );		// secs
+
+						if ( age < 0 ){
+
+							age = 0;
+						}
+						
+						return( age );
+					}
 					case FT_HAS_TAG_GROUP:{
 
 						String group_name = (String)params[0];
@@ -2361,9 +2414,22 @@ TagPropertyConstraintHandler
 						
 						String tag_name = (String)params[0];
 						
-						List<Tag> fred = handler.tag_manager.lookupTagsByName( tag_name );
+						Tag target = null;
 						
-						if ( fred.isEmpty()){
+						if ( dependent_on_tags != null ){
+							
+							for ( Tag t: dependent_on_tags ){
+	
+								if ( t.getTagName( true ).equals( tag_name )){
+	
+									target = t;
+									
+									break;
+								}
+							}
+						}	
+						
+						if ( target == null ){
 							
 							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Tag '" + tag_name + "' not found" );
 							
@@ -2371,7 +2437,7 @@ TagPropertyConstraintHandler
 							
 						}else{
 							
-							return( fred.get(0).getTaggedCount());
+							return( target.getTaggedCount());
 						}
 					}
 					case FT_HAS_NET:{
