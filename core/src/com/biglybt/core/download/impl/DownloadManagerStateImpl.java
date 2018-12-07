@@ -418,7 +418,7 @@ DownloadManagerStateImpl
 
 				}catch( Throwable e ){
 
-					Debug.out( "Failed to load download state for " + saved_file );
+					Debug.out( "Failed to load download state for " + saved_file, e );
 				}
 			}
 		}
