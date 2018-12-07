@@ -1276,7 +1276,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								
 								String tracker = DNSUtils.getInterestingHostSuffix( hosts.iterator().next());
 								
-								if ( !checked.contains( tracker )){
+								if ( tracker != null && !checked.contains( tracker )){
 								
 									checked.add( tracker );
 									

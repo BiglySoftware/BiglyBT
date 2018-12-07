@@ -118,8 +118,30 @@ DNSUtils
 			return( null );
 		}
 
+		if ( AENetworkClassifier.categoriseAddress( host ) != AENetworkClassifier.AT_PUBLIC ){
+			
+			return( host );
+		}
+		
 		if ( bits.length > 2 ){
 
+			boolean	raw = true;
+						
+			for ( char c: host.toCharArray()){
+			
+				if ( c != '.' && c != ':' && !Character.isDigit( c )){
+					
+					raw = false;
+					
+					break;
+				}
+			}
+			
+			if ( raw ){
+				
+				return( null );
+			}
+			
 			// We want to find the most sensible name for the host, <prefix>+"."+ TLD
 			// Unfortuantely the TLD list is large and ever growing (see http://data.iana.org/TLD/tlds-alpha-by-domain.txt)
 			// and the rules for identifying valid ones even worse (see https://www.publicsuffix.org/list/public_suffix_list.dat)
