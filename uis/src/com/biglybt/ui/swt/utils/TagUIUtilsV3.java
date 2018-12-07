@@ -119,7 +119,7 @@ public class TagUIUtilsV3
 
 							try {
 
-								tag = tt.createTag(tag_name, true);
+								tag = tt.createTag(tag_name, false);
 
 								tag.setPublic(cb.isChecked());
 
@@ -129,6 +129,8 @@ public class TagUIUtilsV3
 										tag.setGroup(group);
 									}
 								}
+
+								tt.addTag(tag);
 
 							} catch (TagException e) {
 
