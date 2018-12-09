@@ -348,7 +348,13 @@ AEDiagnosticsLogger
 
 			if ( current_writer == null ){
 
-				current_writer = new PrintWriter( new OutputStreamWriter( new FileOutputStream( log_file, true ), "UTF-8" ));
+				FileOutputStream os = new FileOutputStream(log_file, true);
+				if (log_file.length() == 0) {
+					// UTF-8 BOM
+					os.write(new byte[] { (byte) 239, (byte) 187, (byte) 191 });
+				}
+
+				current_writer = new PrintWriter( new OutputStreamWriter(os, "UTF-8" ));
 			}
 
 			current_writer.println( str );

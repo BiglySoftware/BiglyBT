@@ -54,7 +54,7 @@ public class FileLogging implements ILogEventListener {
 
 	private static boolean closing;
 	private static volatile boolean closing_taking_too_long;
-	
+
 	protected static void
 	setClosing()
 	{
@@ -260,7 +260,11 @@ public class FileLogging implements ILogEventListener {
 			try
 			{
 				logFileOS = new FileOutputStream( logFile, true );
-				
+				if (logFile.length() == 0) {
+					// UTF-8 BOM
+					logFileOS.write(new byte[] { (byte) 239, (byte) 187, (byte) 191 });
+				}
+
 				OutputStreamWriter osw = new OutputStreamWriter( logFileOS, "UTF-8" );
 				
 				logFilePrinter = new PrintWriter( osw );
