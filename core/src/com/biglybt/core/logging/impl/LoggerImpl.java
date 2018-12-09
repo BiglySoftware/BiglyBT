@@ -16,7 +16,8 @@
  */
 package com.biglybt.core.logging.impl;
 
-import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -107,7 +108,7 @@ public class LoggerImpl {
 					psOldOut = System.out;
 
 				psOut = new PrintStream(new RedirectorStream(psOldOut, LogIDs.STDOUT,
-						LogEvent.LT_INFORMATION));
+						LogEvent.LT_INFORMATION), true, "utf-8");
 
 				System.setOut(psOut);
 			}
@@ -117,7 +118,7 @@ public class LoggerImpl {
 					psOldErr = System.err;
 
 				psErr = new PrintStream(new RedirectorStream(psOldErr, LogIDs.STDERR,
-						LogEvent.LT_ERROR));
+						LogEvent.LT_ERROR), true, "utf-8");
 
 				System.setErr(psErr);
 			}
@@ -140,45 +141,63 @@ public class LoggerImpl {
 	/**
 	 * Redirects any incoming text to the logger
 	 */
-	private class RedirectorStream extends OutputStream {
+	private class RedirectorStream
+		extends ByteArrayOutputStream
+	{
 		protected final PrintStream ps;
-
-		protected final StringBuffer buffer = new StringBuffer(1024);
 
 		protected final LogIDs logID;
 
 		protected final int logType;
 
 		protected RedirectorStream(PrintStream _ps, LogIDs _logID, int _logType) {
+			super(80);
 			ps = _ps;
 			logType = _logType;
 			logID = _logID;
 		}
 
 		@Override
-		public void write(int data) {
-			char c = (char) data;
-
-			if (c == '\n') {
-				if (!bLogToStdOut) {
-					ps.println(buffer);
+		public synchronized void reset() {
+			if (count > 0) {
+				if (buf[count - 1] != '\n') {
+					this.write('\n');
 				}
-				log(new LogEvent(logID, logType, buffer.toString()));
-				buffer.setLength(0);
-			} else if (c != '\r') {
-				buffer.append(c);
+				try {
+					flush();
+				} catch (IOException ignore) {
+				}
 			}
+			super.reset();
 		}
 
 		@Override
-		public void write(byte b[], int off, int len) {
-			for (int i = off; i < off + len; i++) {
-				int d = b[i];
-				if (d < 0)
-					d += 256;
-				write(d);
-			}
+		public void close()
+				throws IOException {
+			flush();
+			super.close();
 		}
+
+		@Override
+		public synchronized void flush()
+				throws IOException {
+			super.flush();
+
+			if (count == 0) {
+				return;
+			}
+			if (buf[count - 1] != '\n') {
+				return;
+			}
+
+			String s = toString("utf-8");
+			if (!bLogToStdOut) {
+				ps.print(s);
+			}
+			log(new LogEvent(logID, logType, s));
+			super.reset();
+		}
+
 	}
 
 	// Log Event Functions
