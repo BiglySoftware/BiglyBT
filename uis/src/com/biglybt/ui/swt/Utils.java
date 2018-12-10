@@ -1036,7 +1036,7 @@ public class Utils
 				long wait = SystemTime.getCurrentTime() - lStartTimeRun;
 				if (wait > 700) {
 					diag_logger.log(SystemTime.getCurrentTime() + "] took " + wait
-							+ "ms to run " + Debug.getCompressedStackTrace(-5));
+							+ "ms to run " + Debug.getCompressedStackTrace(new Throwable(), 2, -2, false));
 				}
 			}
 		} else if (msLater >= -1) {
@@ -1078,7 +1078,7 @@ public class Utils
 
 					diag_logger.log(SystemTime.getCurrentTime() + "] + Q. size= "
 							+ queue.size() + ";in=" + msLater + "; add " + code + " via "
-							+ Debug.getCompressedStackTrace(-5));
+							+ Debug.getCompressedStackTrace(new Throwable(), 2, -2, false));
 					final long lStart = SystemTime.getCurrentTime();
 
 					final Display fDisplay = display;
