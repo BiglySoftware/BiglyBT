@@ -153,8 +153,7 @@ public class GenericFloatParameter {
   }
 
   public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    inputField.setLayoutData(layoutData);
+	  inputField.setLayoutData(layoutData);
   }
 
   public Control

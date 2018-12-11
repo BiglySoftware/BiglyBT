@@ -254,11 +254,11 @@ public class PrivacyView
 
 				GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 
-				Utils.setLayoutData(sc, gd);
+				sc.setLayoutData(gd);
 
 			}else if ( parentLayout instanceof FormLayout ){
 
-				Utils.setLayoutData(sc, Utils.getFilledFormData());
+				sc.setLayoutData(Utils.getFilledFormData());
 			}
 
 			cMainComposite = new Composite(sc, SWT.NONE);
@@ -285,7 +285,7 @@ public class PrivacyView
 		overview_comp.setLayout(  new GridLayout(3, false ));
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(overview_comp,  gd);
+		overview_comp.setLayoutData(gd);
 
 		Label label = new Label( overview_comp, SWT.NULL );
 		label.setText( MessageText.getString( "privacy.view.intro" ));
@@ -303,7 +303,7 @@ public class PrivacyView
 		slider_comp.setLayout( layout);
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(slider_comp,  gd);
+		slider_comp.setLayoutData(gd);
 
 		label = new Label( slider_comp, SWT.NULL );
 		label.setText(  MessageText.getString( "privacy.view.level" ) + ":" );
@@ -311,7 +311,7 @@ public class PrivacyView
 		Composite slider2_comp = new Composite( slider_comp, SWT.NULL );
 		slider2_comp.setLayout( new GridLayout(6, true ));
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(slider2_comp,  gd);
+		slider2_comp.setLayoutData(gd);
 
 		label = new Label( slider2_comp, SWT.NULL );
 		label.setText( MessageText.getString( "privacy.view.public.only" ));
@@ -321,26 +321,26 @@ public class PrivacyView
 		label.setAlignment( SWT.CENTER );
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(label,  gd);
+		label.setLayoutData(gd);
 
 		label = new Label( slider2_comp, SWT.NULL );
 		label.setText( MessageText.getString( "privacy.view.anon.only" ));
 		label.setAlignment( SWT.CENTER );
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(label,  gd);
+		label.setLayoutData(gd);
 
 		label = new Label( slider2_comp, SWT.NULL );
 		label.setText(  MessageText.getString( "label.invalid" ));
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		gd.horizontalAlignment = SWT.END;
-		Utils.setLayoutData(label,  gd);
+		label.setLayoutData(gd);
 
 		privacy_scale = new Scale(slider2_comp, SWT.HORIZONTAL);
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
 		gd.horizontalSpan = 6;
-		Utils.setLayoutData(privacy_scale,  gd);
+		privacy_scale.setLayoutData(gd);
 
 		privacy_scale.setMinimum( 0 );
 		privacy_scale.setMaximum( 30 );
@@ -404,7 +404,7 @@ public class PrivacyView
 		Composite network_comp = new Composite( slider_comp, SWT.NULL );
 
 		gd = new GridData();
-		Utils.setLayoutData(network_comp,  gd );
+		network_comp.setLayoutData(gd);
 
 		network_buttons = new Button[AENetworkClassifier.AT_NETWORKS.length];
 
@@ -436,7 +436,7 @@ public class PrivacyView
 			});
 
 			GridData gridData = new GridData();
-			Utils.setLayoutData(button, gridData);
+			button.setLayoutData(gridData);
 		}
 
 
@@ -449,7 +449,7 @@ public class PrivacyView
 		tracker_webseed_comp.setLayout( layout);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(tracker_webseed_comp,  gd );
+		tracker_webseed_comp.setLayoutData(gd);
 
 		tracker_webseed_comp.addPaintListener(
 			new PaintListener(){
@@ -472,7 +472,7 @@ public class PrivacyView
 		Composite tracker_comp = new Composite( tracker_webseed_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(tracker_comp,  gd );
+		tracker_comp.setLayoutData(gd);
 		tracker_comp.setLayout( new GridLayout( 2, false ));
 
 		label = new Label( tracker_comp, SWT.NULL );
@@ -480,14 +480,14 @@ public class PrivacyView
 
 		tracker_info = new BufferedLabel(tracker_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(tracker_info,  gd );
+		tracker_info.setLayoutData(gd);
 
-			// Webseed Info
+		// Webseed Info
 
 		Composite webseed_comp = new Composite( tracker_webseed_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(webseed_comp,  gd );
+		webseed_comp.setLayoutData(gd);
 
 		webseed_comp.setLayout( new GridLayout( 2, false ));
 
@@ -496,7 +496,7 @@ public class PrivacyView
 
 		webseed_info = new BufferedLabel(webseed_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(webseed_info,  gd );
+		webseed_info.setLayoutData(gd);
 
 			// Peer Info
 
@@ -505,7 +505,7 @@ public class PrivacyView
 		Composite peer_comp = new Composite( tracker_webseed_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(peer_comp,  gd );
+		peer_comp.setLayoutData(gd);
 		peer_comp.setLayout( new GridLayout( 2, false ));
 
 		label = new Label( peer_comp, SWT.NULL );
@@ -513,8 +513,7 @@ public class PrivacyView
 
 		peer_info = new BufferedLabel(peer_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(peer_info,  gd );
-
+		peer_info.setLayoutData(gd);
 
 
 			// I2P install state
@@ -525,7 +524,7 @@ public class PrivacyView
 		//Composite i2p_group = new Composite( cMainComposite, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(i2p_group,  gd );
+		i2p_group.setLayoutData(gd);
 
 		i2p_group.setLayout( new GridLayout(4, false ));
 
@@ -533,7 +532,7 @@ public class PrivacyView
 		label.setText( MessageText.getString( "privacy.view.lookup.info" ));
 		gd = new GridData();
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(label,  gd );
+		label.setLayoutData(gd);
 
 		label = new Label( i2p_group, SWT.NULL );
 		label.setText( MessageText.getString( "label.lookup.status" ) + ":" );
@@ -542,13 +541,13 @@ public class PrivacyView
 		i2p_result_summary = new BufferedLabel(i2p_group,SWT.DOUBLE_BUFFERED);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
 		//gd.horizontalIndent = 4;
-		Utils.setLayoutData(i2p_result_summary,  gd );
+		i2p_result_summary.setLayoutData(gd);
 
 		Composite i2p_button_comp = new Composite( i2p_group, SWT.NULL );
 		i2p_button_comp.setLayout( new GridLayout(2, false ));
 
 		gd = new GridData( GridData.FILL_VERTICAL );
-		Utils.setLayoutData(i2p_button_comp,  gd );
+		i2p_button_comp.setLayoutData(gd);
 
 		label = new Label( i2p_button_comp, SWT.NULL );
 		label.setText( MessageText.getString( "GeneralView.section.availability" ));
@@ -595,7 +594,7 @@ public class PrivacyView
 		gd = new GridData();
 		gd.widthHint = 300;
 		gd.heightHint = 150;
-		Utils.setLayoutData(i2p_lookup_comp,  gd );
+		i2p_lookup_comp.setLayoutData(gd);
 
 		i2p_lookup_comp.setBackground( Colors.white );
 
@@ -605,7 +604,7 @@ public class PrivacyView
 		i2p_result_list = new Text( i2p_group, SWT.BORDER | SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
 		gd = new GridData( GridData.FILL_BOTH );
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(i2p_result_list,  gd );
+		i2p_result_list.setLayoutData(gd);
 
 		i2p_result_list.setEditable( false );
 
@@ -812,7 +811,7 @@ public class PrivacyView
 		gd = new GridData( GridData.FILL_HORIZONTAL );
 		gd.horizontalSpan = 2;
 		gd.widthHint = 150;
-		Utils.setLayoutData(i2p_options_info,  gd );
+		i2p_options_info.setLayoutData(gd);
 
 		i2p_options_info.setText( MessageText.getString( "privacy.view.check.bw.info" ));
 
@@ -834,7 +833,7 @@ public class PrivacyView
 		i2p_options_link = new Label( i2p_button_comp, SWT.NULL );
 		gd = new GridData( GridData.FILL_HORIZONTAL );
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(i2p_options_link,  gd );
+		i2p_options_link.setLayoutData(gd);
 		i2p_options_link.setText( MessageText.getString( "privacy.view.check.bw" ));
 
 		i2p_options_link.setCursor(i2p_options_link.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -872,13 +871,13 @@ public class PrivacyView
 		label = new Label( i2p_button_comp, SWT.NULL );
 		gd = new GridData( GridData.FILL_BOTH );
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(label,  gd );
+		label.setLayoutData(gd);
 
 
 		Group bottom_comp = new Group( cMainComposite, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(bottom_comp,  gd );
+		bottom_comp.setLayoutData(gd);
 
 		bottom_comp.setLayout( new GridLayout( 2, false ));
 
@@ -890,12 +889,12 @@ public class PrivacyView
 		Composite torrent_comp = new Composite( bottom_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(torrent_comp,  gd );
+		torrent_comp.setLayoutData(gd);
 		torrent_comp.setLayout( removeMarginsAndSpacing( new GridLayout( 2, false )));
 
 		torrent_info = new BufferedLabel(torrent_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(torrent_info,  gd );
+		torrent_info.setLayoutData(gd);
 
 			// source selection
 
@@ -905,7 +904,7 @@ public class PrivacyView
 		Composite sources_comp = new Composite( bottom_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(sources_comp,  gd );
+		sources_comp.setLayoutData(gd);
 
 		source_buttons = new Button[PEPeerSource.PS_SOURCES.length];
 
@@ -935,7 +934,7 @@ public class PrivacyView
 			});
 
 			GridData gridData = new GridData();
-			Utils.setLayoutData(button, gridData);
+			button.setLayoutData(gridData);
 		}
 
 			// IP Filter
@@ -946,7 +945,7 @@ public class PrivacyView
 		Composite ipfilter_comp = new Composite( bottom_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(ipfilter_comp,  gd );
+		ipfilter_comp.setLayoutData(gd);
 		ipfilter_comp.setLayout( removeMargins( new GridLayout( 2, false )));
 
 
@@ -963,9 +962,9 @@ public class PrivacyView
 			});
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(ipfilter_enabled,  gd );
+		ipfilter_enabled.setLayoutData(gd);
 
-			// VPN Info
+		// VPN Info
 
 		label = new Label( bottom_comp, SWT.NULL );
 		label.setText( MessageText.getString( "label.vpn.status" ) + ":" );
@@ -973,12 +972,12 @@ public class PrivacyView
 		Composite vpn_comp = new Composite( bottom_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(vpn_comp,  gd );
+		vpn_comp.setLayoutData(gd);
 		vpn_comp.setLayout( removeMargins( new GridLayout( 2, false )));
 
 		vpn_info = new BufferedLabel(vpn_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(vpn_info,  gd );
+		vpn_info.setLayoutData(gd);
 
 			// SOCKS Info
 
@@ -988,7 +987,7 @@ public class PrivacyView
 		Composite socks_comp = new Composite( bottom_comp, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(socks_comp,  gd );
+		socks_comp.setLayoutData(gd);
 		socks_comp.setLayout( removeMargins( new GridLayout( 10, false )));
 
 		label = new Label(socks_comp,SWT.NULL);
@@ -997,7 +996,7 @@ public class PrivacyView
 		socks_state =  new BufferedLabel(socks_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData();
 		gd.widthHint = 120;
-		Utils.setLayoutData(socks_state, gd);
+		socks_state.setLayoutData(gd);
 
 		// current details
 
@@ -1007,7 +1006,7 @@ public class PrivacyView
 		socks_current =  new BufferedLabel(socks_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData();
 		gd.widthHint = 120;
-		Utils.setLayoutData(socks_current, gd);
+		socks_current.setLayoutData(gd);
 
 		// fail details
 
@@ -1017,7 +1016,7 @@ public class PrivacyView
 		socks_fails =  new BufferedLabel(socks_comp,SWT.DOUBLE_BUFFERED);
 		gd = new GridData();
 		gd.widthHint = 120;
-		Utils.setLayoutData(socks_fails, gd);
+		socks_fails.setLayoutData(gd);
 
 		// more info
 
@@ -1027,7 +1026,7 @@ public class PrivacyView
 		gd.horizontalAlignment = GridData.HORIZONTAL_ALIGN_BEGINNING;
 		socks_more  =  new Label(socks_comp, SWT.NULL );
 		socks_more.setText( MessageText.getString( "label.more") + "..." );
-		Utils.setLayoutData(socks_more,  gd );
+		socks_more.setLayoutData(gd);
 		socks_more.setCursor(socks_more.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		socks_more.setForeground(Colors.blue);
 		socks_more.addMouseListener(new MouseAdapter() {

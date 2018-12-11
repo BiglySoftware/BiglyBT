@@ -21,7 +21,6 @@ import java.util.ResourceBundle;
 import org.eclipse.swt.graphics.Color;
 
 import com.biglybt.core.util.Debug;
-import com.biglybt.ui.swt.Utils;
 
 /**
  * Simple extension of SWTSkinProperties that first checks the original
@@ -381,7 +380,6 @@ public class SWTSkinPropertiesClone
 				result = (int) (properties.getEmHeightPX() * em);
 			} else {
 				result = Integer.parseInt(value);
-				result = Utils.adjustPXForDPI(result);
 			}
 		} catch (NumberFormatException e) {
 			// ignore error.. it might be valid to store a non-numeric..

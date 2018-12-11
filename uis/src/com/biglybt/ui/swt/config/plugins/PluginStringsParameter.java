@@ -26,7 +26,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import com.biglybt.pifimpl.local.ui.config.StringListParameterImpl;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 
 /**
  * @author Olivier
@@ -52,7 +51,7 @@ public class PluginStringsParameter implements PluginParameterImpl {
     controls[1] = slp.getControl();
     GridData gridData = new GridData();
     gridData.widthHint = 100;
-    Utils.setLayoutData(controls[1], gridData);
+    controls[1].setLayoutData(gridData);
     new Label(pluginGroup,SWT.NULL);
   }
 

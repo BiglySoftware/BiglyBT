@@ -51,7 +51,6 @@ import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
-import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.download.DownloadStub;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -1694,11 +1693,6 @@ public class UIFunctionsImpl
 	@Override
 	public TabbedMdiInterface createTabbedMDI(Composite parent, String id) {
 		return new TabbedMDI(parent, id);
-	}
-
-	@Override
-	public int adjustPXForDPI(int px) {
-		return( Utils.adjustPXForDPI( px ));
 	}
 
 	@Override

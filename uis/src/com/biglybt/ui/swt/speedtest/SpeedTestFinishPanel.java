@@ -5,7 +5,6 @@ import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.Wizard;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.stats.TransferStatsView;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
@@ -69,7 +68,7 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
 
         Composite panel = new Composite(rootPanel, SWT.NULL);
         GridData gridData = new GridData( GridData.VERTICAL_ALIGN_CENTER | GridData.FILL_HORIZONTAL );
-        Utils.setLayoutData(panel, gridData);
+        panel.setLayoutData(gridData);
         layout = new GridLayout();
         layout.numColumns = 3;
         layout.makeColumnsEqualWidth=true;
@@ -79,7 +78,7 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
         gridData = new GridData();
         gridData.horizontalSpan = 3;
         gridData.widthHint = 380;
-        Utils.setLayoutData(label, gridData);
+        label.setLayoutData(gridData);
         Messages.setLanguageText(label,"SpeedTestWizard.finish.panel.click.close");
 
         int kinb = DisplayFormatters.getKinB();

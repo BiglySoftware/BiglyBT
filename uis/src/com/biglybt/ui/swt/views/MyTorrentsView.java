@@ -26,13 +26,6 @@ import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
-import com.biglybt.pif.ui.*;
-import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.common.table.*;
-import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
@@ -42,6 +35,9 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowData;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
@@ -60,26 +56,31 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.tag.*;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.TorrentUtils.PotentialTorrentDeletionListener;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.PluginManager;
-import com.biglybt.pif.download.Download;
-import com.biglybt.pif.download.DownloadTypeComplete;
-import com.biglybt.pif.download.DownloadTypeIncomplete;
-import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.pif.ui.tables.TableRow;
-import com.biglybt.pif.ui.tables.TableRowRefreshListener;
-import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
+import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableViewImpl;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.selectedcontent.ISelectedContent;
+import com.biglybt.ui.selectedcontent.SelectedContent;
+import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.components.CompositeMinSize;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
+import com.biglybt.ui.swt.utils.SWTRunnable;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -92,16 +93,16 @@ import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
-import com.biglybt.core.tag.*;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.common.table.impl.TableViewImpl;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.selectedcontent.ISelectedContent;
-import com.biglybt.ui.selectedcontent.SelectedContent;
-import com.biglybt.ui.selectedcontent.SelectedContentManager;
-import com.biglybt.ui.swt.mdi.MdiEntrySWT;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadTypeComplete;
+import com.biglybt.pif.download.DownloadTypeIncomplete;
+import com.biglybt.pif.ui.*;
+import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.ui.tables.TableRowRefreshListener;
+import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
 
 /** Displays a list of torrents in a table view.
  *
@@ -834,13 +835,12 @@ public class MyTorrentsView
 	      rowLayout = new RowLayout();
 	      cCategoriesAndTags.setLayout(rowLayout);
 		}
-	    rowLayout.marginTop = 0;
-	    rowLayout.marginBottom = 0;
-	    rowLayout.marginLeft = Utils.adjustPXForDPI(3);
-	    rowLayout.marginRight = Utils.adjustPXForDPI(3);
-	    rowLayout.spacing = 0;
-	    rowLayout.wrap = true;
-
+		rowLayout.marginTop = 0;
+		rowLayout.marginBottom = 0;
+		rowLayout.marginLeft = 3;
+		rowLayout.marginRight = 3;
+		rowLayout.spacing = 0;
+		rowLayout.wrap = true;
 
 	    Menu menu = getHeaderMenu(cTableParentPanel);
 	    cTableParentPanel.setMenu( menu );
@@ -884,7 +884,7 @@ public class MyTorrentsView
 			return;
 		}
 
-		int iFontPixelsHeight = Utils.adjustPXForDPI(10);
+		int iFontPixelsHeight = 10;
 		int iFontPointHeight = (iFontPixelsHeight * 72)	/ Utils.getDPIRaw( cCategoriesAndTags.getDisplay()).y;
 
 		Label spacer = null;

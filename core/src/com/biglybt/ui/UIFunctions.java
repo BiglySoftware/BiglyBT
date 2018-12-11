@@ -213,8 +213,6 @@ public interface UIFunctions
 
 	public void showCreateTagDialog(TagReturner tagReturner);
 
-	public int adjustPXForDPI( int px );
-
 	void tableColumnAddedListeners(TableColumnImpl tableColumn, Object listeners);
 
 	public interface

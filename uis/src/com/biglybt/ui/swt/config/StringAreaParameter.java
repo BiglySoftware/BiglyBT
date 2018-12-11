@@ -23,6 +23,7 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Utils;
@@ -142,11 +143,10 @@ public class StringAreaParameter extends Parameter{
 	  }
   }
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    inputField.setLayoutData(layoutData);
-  }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		inputField.setLayoutData(layoutData);
+	}
 
   public void setValue(final String value) {
 		Utils.execSWTThread(new AERunnable() {

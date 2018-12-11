@@ -257,18 +257,18 @@ public abstract class TranscodeChooser
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 10);
 		fd.top = new FormAttachment(cmbXCode, 0, SWT.CENTER);
-		Utils.setLayoutData(btnNoPrompt, fd);
+		btnNoPrompt.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.right = new FormAttachment(100, -10);
 		fd.top = new FormAttachment(0, 5);
 		fd.bottom = new FormAttachment(100, -5);
-		Utils.setLayoutData(cmbXCode, fd);
+		cmbXCode.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.right = new FormAttachment(cmbXCode, -5);
 		fd.top = new FormAttachment(cmbXCode, 0, SWT.CENTER);
-		Utils.setLayoutData(lblXCode, fd);
+		lblXCode.setLayoutData(fd);
 
 		int userMode = COConfigurationManager.getIntParameter("User Mode");
 		if (userMode == 0) {
@@ -595,7 +595,7 @@ public abstract class TranscodeChooser
 								GridData gridData = (GridData) lblImage.getLayoutData();
 								gridData.heightHint = bounds.height + 10;
 								gridData.widthHint = bounds.width + 16;
-								Utils.setLayoutData(lblImage, gridData);
+								lblImage.setLayoutData(gridData);
 								lblImage.getShell().layout(new Control[] {
 									lblImage
 								});
@@ -611,7 +611,7 @@ public abstract class TranscodeChooser
 				gridData.widthHint = bounds.width + 16;
 			}
 		}
-		Utils.setLayoutData(lblImage, gridData);
+		lblImage.setLayoutData(gridData);
 
 		Label label = new Label(c, SWT.WRAP | SWT.CENTER);
 		if (listenerMouseInout != null) {
@@ -620,7 +620,7 @@ public abstract class TranscodeChooser
 		label.addListener(SWT.MouseUp, clickListener);
 		label.addListener(SWT.MouseDown, clickListener);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		String s = name;
 		//s += " (via " + profile.getProvider().getName() + ")";
 		label.setText(s);
@@ -839,7 +839,7 @@ public abstract class TranscodeChooser
 		} else {
 			fd.top = new FormAttachment(lastButton, 15);
 		}
-		Utils.setLayoutData(button, fd);
+		button.setLayoutData(fd);
 
 		if (shortDescription != null && shortDescription.length() > 0) {
 			Label label = new Label(parent, SWT.None);
@@ -848,7 +848,7 @@ public abstract class TranscodeChooser
 			fd = new FormData();
 			fd.top = new FormAttachment(button, 0, SWT.CENTER);
 			fd.left = new FormAttachment(button, 5);
-			Utils.setLayoutData(label, fd);
+			label.setLayoutData(fd);
 		}
 
 		return button;

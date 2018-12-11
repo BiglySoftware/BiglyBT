@@ -32,15 +32,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.ProgressBar;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
@@ -350,7 +342,7 @@ ProgressWindow
 					gridData = new GridData( GridData.FILL_HORIZONTAL );
 					gridData.horizontalSpan = 2;
 					gridData.horizontalIndent = 25;
-					Utils.setLayoutData( subtask_label, gridData);
+					subtask_label.setLayoutData(gridData);
 					subtask_label.setBackground( Colors.white );
 				}
 			}
@@ -437,7 +429,7 @@ ProgressWindow
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(compProg, gridData);
+			compProg.setLayoutData(gridData);
 			GridLayout layoutProgress = new GridLayout();
 			layoutProgress.numColumns = 1;
 			layoutProgress.marginWidth = layoutProgress.marginHeight = 0;
@@ -450,8 +442,8 @@ ProgressWindow
 			progress_bar.setBackground( Colors.white );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.widthHint = 400;
-			Utils.setLayoutData( progress_bar, gridData );
-		
+			progress_bar.setLayoutData(gridData);
+
 			int states = progress.getSupportedTaskStates();
 			
 			if ( states != ProgressCallback.ST_NONE ){
@@ -459,15 +451,15 @@ ProgressWindow
 				Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL);
 				gridData.horizontalSpan = 2;
-				Utils.setLayoutData(labelSeparator, gridData);
-		
-					// buttons
+				labelSeparator.setLayoutData(gridData);
+
+				// buttons
 		
 				Composite comp = new Composite(shell,SWT.NULL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 				gridData.grabExcessHorizontalSpace = true;
 				gridData.horizontalSpan = 2;
-				Utils.setLayoutData(comp, gridData);
+				comp.setLayoutData(gridData);
 				GridLayout layoutButtons = new GridLayout();
 				layoutButtons.numColumns = 3;
 				comp.setLayout(layoutButtons);
@@ -480,7 +472,7 @@ ProgressWindow
 				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 				gridData.grabExcessHorizontalSpace = true;
 				//gridData.widthHint = 70;
-				Utils.setLayoutData(bPause, gridData);
+				bPause.setLayoutData(gridData);
 				buttons.add( bPause );
 		
 				Button bResume = new Button(comp,SWT.PUSH);
@@ -488,7 +480,7 @@ ProgressWindow
 				gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 				gridData.grabExcessHorizontalSpace = false;
 				//gridData.widthHint = 70;
-				Utils.setLayoutData(bResume, gridData);
+				bResume.setLayoutData(gridData);
 				buttons.add( bResume );
 
 				
@@ -497,7 +489,7 @@ ProgressWindow
 				gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
 				gridData.grabExcessHorizontalSpace = false;
 				//gridData.widthHint = 70;
-				Utils.setLayoutData(bCancel, gridData);
+				bCancel.setLayoutData(gridData);
 				buttons.add( bCancel );
 
 				Utils.makeButtonsEqualWidth( buttons );

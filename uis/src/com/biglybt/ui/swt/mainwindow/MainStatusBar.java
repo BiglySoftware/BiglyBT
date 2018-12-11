@@ -16,7 +16,6 @@
  */
 package com.biglybt.ui.swt.mainwindow;
 
-import java.net.URL;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -291,7 +290,7 @@ public class MainStatusBar
 		//Either the Status Text
 		statusText = new CLabel(statusBar, borderFlag);
 		statusText.setForeground(fgColor);
-		Utils.setLayoutData(statusText, new GridData(GridData.FILL_HORIZONTAL
+		statusText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL
 				| GridData.VERTICAL_ALIGN_FILL));
 
 		addStatusBarMenu(statusText);
@@ -335,7 +334,7 @@ public class MainStatusBar
 		progressBar.setVisible(false);
 		progressGridData = new GridData(SWT.CENTER, SWT.CENTER, false, false);
 		progressGridData.widthHint = 5;
-		Utils.setLayoutData(progressBar, progressGridData);
+		progressBar.setLayoutData(progressGridData);
 
 		// addRIP();
 
@@ -2091,7 +2090,7 @@ public class MainStatusBar
 				}
 				UpdateableCLabel result = new UpdateableCLabel(plugin_label_composite, borderFlag,
 						updater);
-				Utils.setLayoutData(result, new GridData(GridData.FILL_BOTH));
+				result.setLayoutData(new GridData(GridData.FILL_BOTH));
 				layoutPluginComposite();
 				updater.created(result);
 			}

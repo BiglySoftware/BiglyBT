@@ -22,33 +22,17 @@
 
 package com.biglybt.ui.swt;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTError;
-import org.eclipse.swt.browser.CloseWindowListener;
-import org.eclipse.swt.browser.LocationEvent;
-import org.eclipse.swt.browser.LocationListener;
-import org.eclipse.swt.browser.OpenWindowListener;
-import org.eclipse.swt.browser.ProgressEvent;
-import org.eclipse.swt.browser.ProgressListener;
-import org.eclipse.swt.browser.StatusTextListener;
-import org.eclipse.swt.browser.TitleEvent;
-import org.eclipse.swt.browser.TitleListener;
-import org.eclipse.swt.browser.WindowEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.browser.*;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
@@ -92,7 +76,7 @@ BrowserWrapperFake
 			Messages.setLanguageText(label, "browser.internal.disabled.info");
 			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan = 3;
-			Utils.setLayoutData(label,  grid_data );
+			label.setLayoutData(grid_data);
 			label.setBackground( Colors.white );
 
 			label = new Label(browser, SWT.NULL);
@@ -112,7 +96,7 @@ BrowserWrapperFake
 
 			label = new Label(browser, SWT.NULL);
 			grid_data = new GridData( GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(label,  grid_data );
+			label.setLayoutData(grid_data);
 
 		}else{
 
@@ -120,7 +104,7 @@ BrowserWrapperFake
 			Messages.setLanguageText(label, "browser.internal.failed.info", new String[]{ Debug.getNestedExceptionMessage( _failure )});
 			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan = 3;
-			Utils.setLayoutData(label,  grid_data );
+			label.setLayoutData(grid_data);
 			label.setBackground( Colors.white );
 		}
 
@@ -132,14 +116,14 @@ BrowserWrapperFake
 		details.setLayout(layout);
 		GridData grid_data = new GridData( GridData.FILL_BOTH );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(details,  grid_data);
+		details.setLayoutData(grid_data);
 		details.setBackground( Colors.white );
 
 			// url
 
 		Label label = new Label(details, SWT.NULL );
 		label.setText( "URL" );
-		Utils.setLayoutData(label,  new GridData());
+		label.setLayoutData(new GridData());
 		label.setBackground( Colors.white );
 
 
@@ -167,7 +151,7 @@ BrowserWrapperFake
 
 		grid_data = new GridData(GridData.FILL_HORIZONTAL);
 		grid_data.horizontalIndent = 10;
-		Utils.setLayoutData(link_label, grid_data);
+		link_label.setLayoutData(grid_data);
 
 		ClipboardCopy.addCopyToClipMenu(
 			link_label,
@@ -183,14 +167,14 @@ BrowserWrapperFake
 
 		label = new Label(details, SWT.NULL );
 		Messages.setLanguageText(label, "label.description" );
-		Utils.setLayoutData(label,  new GridData());
+		label.setLayoutData(new GridData());
 		label.setBackground( Colors.white );
 
 		description_label = new Label(details, SWT.WRAP );
 		description_label.setText( "" );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL);
 		grid_data.horizontalIndent = 10;
-		Utils.setLayoutData(description_label,  grid_data );
+		description_label.setLayoutData(grid_data);
 		description_label.setBackground( Colors.white );
 	}
 

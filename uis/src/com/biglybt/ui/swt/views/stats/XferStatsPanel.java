@@ -204,7 +204,7 @@ XferStatsPanel
 		    header_label = new BufferedLabel( panel, SWT.DOUBLE_BUFFERED );
 		    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 		    grid_data.horizontalIndent = 5;
-		    Utils.setLayoutData( header_label, grid_data);
+		    header_label.setLayoutData(grid_data);
 		    header_label.getControl().setBackground( white );
 		    
 		    	// controls
@@ -252,7 +252,7 @@ XferStatsPanel
 		    GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 		    grid_data.horizontalSpan = 2;
 		    grid_data.horizontalIndent = 5;
-		    Utils.setLayoutData( label, grid_data);
+		    label.setLayoutData(grid_data);
 		    label.setBackground( white );
 			  
 		    Messages.setLanguageText( label, "XferStatsView.local.header" );

@@ -25,49 +25,39 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
-import com.biglybt.plugin.net.buddy.*;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CTabFolder;
-import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.custom.StyleRange;
-import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.custom.*;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.security.*;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManagerEvent;
+import com.biglybt.pif.ui.*;
 import com.biglybt.pif.utils.LocaleUtilities;
+import com.biglybt.plugin.net.buddy.*;
+import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.IntParameter;
 import com.biglybt.ui.swt.config.Parameter;
 import com.biglybt.ui.swt.config.ParameterChangeAdapter;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.core.security.*;
-import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.UserPrompterResultListener;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
 BuddyPluginViewInstance
@@ -126,9 +116,9 @@ BuddyPluginViewInstance
 		tab_folder = new CTabFolder(composite, SWT.LEFT);
 
 		tab_folder.setBorderVisible(true);
-		tab_folder.setTabHeight(Utils.adjustPXForDPI(20));
+		tab_folder.setTabHeight(20);
 		GridData grid_data = new GridData(GridData.FILL_BOTH);
-		Utils.setLayoutData(tab_folder, grid_data);
+		tab_folder.setLayoutData(grid_data);
 
 		CTabItem beta_item = new CTabItem(tab_folder, SWT.NULL);
 
@@ -138,9 +128,9 @@ BuddyPluginViewInstance
 		
 		beta_area.setExpandHorizontal(true);
 		beta_area.setExpandVertical(true);
-		
-		Utils.setLayoutData(beta_area, new GridData(SWT.FILL, SWT.FILL, true, true));
-		
+
+		beta_area.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
 		beta_item.setControl( beta_area );
 				
 		Composite beta_area_comp = new Composite( beta_area, SWT.NULL );
@@ -250,7 +240,7 @@ BuddyPluginViewInstance
 
 		main.setLayout(layout);
 		GridData grid_data = new GridData(GridData.FILL_BOTH );
-		Utils.setLayoutData(main, grid_data);
+		main.setLayoutData(grid_data);
 
 		beta_enabled = plugin.isBetaEnabled();
 		
@@ -295,7 +285,7 @@ BuddyPluginViewInstance
 		info_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(info_area, grid_data);
+		info_area.setLayoutData(grid_data);
 
 		Label label = new Label( info_area, SWT.NULL );
 
@@ -405,7 +395,7 @@ BuddyPluginViewInstance
 		ui_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(ui_area, grid_data);
+		ui_area.setLayoutData(grid_data);
 
 		ui_area.setText( lu.getLocalisedMessageText( "ConfigView.section.style" ));
 
@@ -417,7 +407,7 @@ BuddyPluginViewInstance
 		public_nickname = new Text( ui_area, SWT.BORDER );
 		grid_data = new GridData();
 		grid_data.widthHint = 200;
-		Utils.setLayoutData(public_nickname,  grid_data );
+		public_nickname.setLayoutData(grid_data);
 
 		public_nickname.setText( plugin_beta.getSharedPublicNickname());
 		public_nickname.addListener(SWT.FocusOut, new Listener() {
@@ -437,7 +427,7 @@ BuddyPluginViewInstance
 		anon_nickname = new Text( ui_area, SWT.BORDER );
 		grid_data = new GridData();
 		grid_data.widthHint = 200;
-		Utils.setLayoutData(anon_nickname,  grid_data );
+		anon_nickname.setLayoutData(grid_data);
 
 		anon_nickname.setText( plugin_beta.getSharedAnonNickname());
 		anon_nickname.addListener(SWT.FocusOut, new Listener() {
@@ -522,7 +512,7 @@ BuddyPluginViewInstance
 		label = new Label( ui_area, SWT.NULL );
 		grid_data = new GridData();
 		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(label, grid_data);
+		label.setLayoutData(grid_data);
 
 			// hide search/subcriptions
 
@@ -547,7 +537,7 @@ BuddyPluginViewInstance
 		label = new Label( ui_area, SWT.NULL );
 		grid_data = new GridData();
 		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(label, grid_data);
+		label.setLayoutData(grid_data);
 
 			// standalone windows
 
@@ -572,7 +562,7 @@ BuddyPluginViewInstance
 		label = new Label( ui_area, SWT.NULL );
 		grid_data = new GridData();
 		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(label, grid_data);
+		label.setLayoutData(grid_data);
 
 			// popout windows -> sidebar
 
@@ -602,7 +592,7 @@ BuddyPluginViewInstance
 		noti_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(noti_area, grid_data);
+		noti_area.setLayoutData(grid_data);
 
 		noti_area.setText( lu.getLocalisedMessageText( "v3.MainWindow.tab.events" ));
 
@@ -629,7 +619,7 @@ BuddyPluginViewInstance
 		final Text noti_file = new Text( noti_area, SWT.BORDER );
 		grid_data = new GridData();
 		grid_data.widthHint = 400;
-		Utils.setLayoutData(noti_file,  grid_data );
+		noti_file.setLayoutData(grid_data);
 
 		String sound_file = plugin_beta.getSoundFile();
 
@@ -753,7 +743,7 @@ BuddyPluginViewInstance
 		private_chat_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(private_chat_area, grid_data);
+		private_chat_area.setLayoutData(grid_data);
 
 		private_chat_area.setText( lu.getLocalisedMessageText( "label.private.chat" ));
 
@@ -765,7 +755,7 @@ BuddyPluginViewInstance
 
 		label = new Label( private_chat_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(label, grid_data);
+		label.setLayoutData(grid_data);
 
 		private_chat_enable.addSelectionListener(
 				new SelectionAdapter()
@@ -787,7 +777,7 @@ BuddyPluginViewInstance
 
 		label = new Label( private_chat_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(label, grid_data);
+		label.setLayoutData(grid_data);
 
 		private_chat_pinned.addSelectionListener(
 				new SelectionAdapter()
@@ -817,7 +807,7 @@ BuddyPluginViewInstance
 		import_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(import_area, grid_data);
+		import_area.setLayoutData(grid_data);
 
 		import_area.setText( lu.getLocalisedMessageText( "azbuddy.dchat.cannel.import" ));
 
@@ -828,7 +818,7 @@ BuddyPluginViewInstance
 		final Text import_data = new Text( import_area, SWT.BORDER );
 		grid_data = new GridData();
 		grid_data.widthHint = 400;
-		Utils.setLayoutData(import_data,  grid_data );
+		import_data.setLayoutData(grid_data);
 
 		final Button import_button = new Button( import_area, SWT.NULL );
 
@@ -910,7 +900,7 @@ BuddyPluginViewInstance
 		adv_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(adv_area, grid_data);
+		adv_area.setLayoutData(grid_data);
 
 
 			// shared endpoint
@@ -939,8 +929,7 @@ BuddyPluginViewInstance
 		label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.anon.share.endpoint.info" ));
 
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(label, grid_data);
-
+		label.setLayoutData(grid_data);
 
 
 			// testing
@@ -952,7 +941,7 @@ BuddyPluginViewInstance
 		test_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(test_area, grid_data);
+		test_area.setLayoutData(grid_data);
 
 
 			// public beta channel
@@ -967,7 +956,7 @@ BuddyPluginViewInstance
 		label = new Label( test_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(label, grid_data);
+		label.setLayoutData(grid_data);
 
 			// anonymous beta channel
 
@@ -984,7 +973,7 @@ BuddyPluginViewInstance
 		label = new Label( test_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(label, grid_data);
+		label.setLayoutData(grid_data);
 
 			// create custom channel
 
@@ -994,7 +983,7 @@ BuddyPluginViewInstance
 		final Text channel_key = new Text( test_area, SWT.BORDER );
 		grid_data = new GridData();
 		grid_data.widthHint = 200;
-		Utils.setLayoutData(channel_key,  grid_data );
+		channel_key.setLayoutData(grid_data);
 
 		final Button create_i2p_button = new Button( test_area, SWT.CHECK );
 
@@ -1332,7 +1321,7 @@ BuddyPluginViewInstance
 
 		main.setLayout(layout);
 		GridData grid_data = new GridData(GridData.FILL_BOTH );
-		Utils.setLayoutData(main, grid_data);
+		main.setLayoutData(grid_data);
 
 			// info
 
@@ -1344,7 +1333,7 @@ BuddyPluginViewInstance
 		info_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(info_area, grid_data);
+		info_area.setLayoutData(grid_data);
 
 		Label label = new Label( info_area, SWT.NULL );
 
@@ -1390,14 +1379,14 @@ BuddyPluginViewInstance
 		layout.marginWidth = 0;
 		controls.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(controls, grid_data);
+		controls.setLayoutData(grid_data);
 
 		Label control_label = new Label( controls, SWT.NULL );
 		control_label.setText( lu.getLocalisedMessageText( "azbuddy.ui.new_buddy" ) + " " );
 
 		final Text control_text = new Text( controls, SWT.BORDER );
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(control_text, gridData);
+		control_text.setLayoutData(gridData);
 
 		final Button control_button = new Button( controls, SWT.NULL );
 		control_button.setText( lu.getLocalisedMessageText( "Button.add" ));
@@ -1434,7 +1423,7 @@ BuddyPluginViewInstance
 
 		final Label control_val_pk = new Label( controls, SWT.NULL );
 		gridData = new GridData();
-		Utils.setLayoutData(control_val_pk, gridData);
+		control_val_pk.setLayoutData(gridData);
 
 		ClipboardCopy.addCopyToClipMenu(
 				control_val_pk,
@@ -1547,7 +1536,7 @@ BuddyPluginViewInstance
 		flayout.marginWidth = 0;
 		form.setLayout(flayout);
 		gridData = new GridData(GridData.FILL_BOTH);
-		Utils.setLayoutData(form, gridData);
+		form.setLayoutData(gridData);
 
 
 		final Composite child1 = new Composite(form,SWT.NULL);
@@ -1578,7 +1567,7 @@ BuddyPluginViewInstance
 		formData.left = new FormAttachment(0, 0);
 		formData.right = new FormAttachment(100, 0);
 		formData.top = new FormAttachment(0, 0);
-		Utils.setLayoutData(child1, formData);
+		child1.setLayoutData(formData);
 
 		final FormData child1Data = formData;
 
@@ -1591,7 +1580,7 @@ BuddyPluginViewInstance
 		formData.right = new FormAttachment(100, 0);
 		formData.top = new FormAttachment(child1);
 		formData.height = SASH_WIDTH;
-		Utils.setLayoutData(sash, formData);
+		sash.setLayoutData(formData);
 
 			// child2
 
@@ -1600,7 +1589,7 @@ BuddyPluginViewInstance
 		formData.right = new FormAttachment(100, 0);
 		formData.bottom = new FormAttachment(100, 0);
 		formData.top = new FormAttachment(sash);
-		Utils.setLayoutData(child2, formData);
+		child2.setLayoutData(formData);
 
 		final PluginConfig pc = plugin.getPluginInterface().getPluginconfig();
 
@@ -1665,7 +1654,7 @@ BuddyPluginViewInstance
 		grid_data = new GridData(GridData.FILL_BOTH);
 		grid_data.horizontalSpan = 1;
 		grid_data.horizontalIndent = 4;
-		Utils.setLayoutData(log, grid_data);
+		log.setLayoutData(grid_data);
 		log.setIndent( 4 );
 
 		buddies = plugin.getBuddies();
@@ -1739,7 +1728,7 @@ BuddyPluginViewInstance
 
 			TableColumn tc = new TableColumn(buddy_table, aligns[i]);
 
-			tc.setWidth(Utils.adjustPXForDPI(sizes[i]));
+			tc.setWidth(sizes[i]);
 
 			Messages.setLanguageText(tc, headers[i]);
 		}
@@ -1794,7 +1783,7 @@ BuddyPluginViewInstance
 
 	    GridData gridData = new GridData(GridData.FILL_BOTH);
 	    gridData.heightHint = buddy_table.getHeaderHeight() * 3;
-		Utils.setLayoutData(buddy_table, gridData);
+		buddy_table.setLayoutData(gridData);
 
 
 		buddy_table.addListener(
@@ -2801,7 +2790,7 @@ BuddyPluginViewInstance
 
 			TableColumn tc = new TableColumn(partial_buddy_table, aligns[i]);
 
-			tc.setWidth(Utils.adjustPXForDPI(sizes[i]));
+			tc.setWidth(sizes[i]);
 
 			Messages.setLanguageText(tc, headers[i]);
 		}
@@ -2839,10 +2828,9 @@ BuddyPluginViewInstance
 	    	columns[i].addListener(SWT.Selection,sort_listener);
 	    }
 
-	    GridData gridData = new GridData(GridData.FILL_BOTH);
-	    gridData.heightHint = partial_buddy_table.getHeaderHeight() * 3;
-		Utils.setLayoutData(partial_buddy_table, gridData);
-
+		GridData gridData = new GridData(GridData.FILL_BOTH);
+		gridData.heightHint = partial_buddy_table.getHeaderHeight() * 3;
+		partial_buddy_table.setLayoutData(gridData);
 
 		partial_buddy_table.addListener(
 			SWT.SetData,

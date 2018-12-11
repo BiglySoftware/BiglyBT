@@ -219,7 +219,7 @@ public class SWTSkinObjectTextbox
 							fontSize = FontUtils.getHeight(fd) * dSize;
 						} else {
 							fontSize = FontUtils.getFontHeightFromPX(textWidget.getDisplay(),
-									tempFontData, null, Utils.adjustPXForDPI((int) dSize));
+									tempFontData, null, (int) dSize);
 						}
 					}
 

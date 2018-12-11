@@ -21,16 +21,12 @@ package com.biglybt.ui.swt.networks;
 
 
 import java.util.*;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AENetworkClassifierListener;
@@ -40,7 +36,6 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 
 /**
@@ -142,14 +137,14 @@ SWTNetworkSelection
 			info_label.setText(MessageText.getString("window.networkselection.info"));
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(info_label, gridData);
+			info_label.setLayoutData(gridData);
 
 				// line
 
 			Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(labelSeparator, gridData);
+			labelSeparator.setLayoutData(gridData);
 
 	    		// description
 
@@ -157,13 +152,13 @@ SWTNetworkSelection
 			desc_label.setText(MessageText.getString("window.networkselection.description"));
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 1;
-			Utils.setLayoutData(desc_label, gridData);
+			desc_label.setLayoutData(gridData);
 
 			Label desc_value = new Label(shell,SWT.NULL);
 			desc_value.setText(description);
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(desc_value, gridData);
+			desc_value.setLayoutData(gridData);
 
 				// networks
 
@@ -178,14 +173,14 @@ SWTNetworkSelection
 			    Label label = new Label(shell, SWT.NULL);
 				gridData = new GridData(GridData.FILL_BOTH);
 				gridData.horizontalSpan = 1;
-				Utils.setLayoutData(label, gridData);
-			    Messages.setLanguageText(label, msg_text);
+				label.setLayoutData(gridData);
+				Messages.setLanguageText(label, msg_text);
 
 			    final Button checkBox = new Button(shell, SWT.CHECK);
 			    checkBox.setSelection(false);
 				gridData = new GridData(GridData.FILL_BOTH);
 				gridData.horizontalSpan = 2;
-				Utils.setLayoutData(checkBox, gridData);
+				checkBox.setLayoutData(gridData);
 
 				checkboxes[i]	= checkBox;
 
@@ -203,7 +198,7 @@ SWTNetworkSelection
 			labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(labelSeparator, gridData);
+			labelSeparator.setLayoutData(gridData);
 
 				// buttons
 
@@ -214,7 +209,7 @@ SWTNetworkSelection
 		 	gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 		 	gridData.grabExcessHorizontalSpace = true;
 		 	gridData.widthHint = 70;
-		 	Utils.setLayoutData(bOk, gridData);
+			bOk.setLayoutData(gridData);
 		 	bOk.addListener(SWT.Selection,new Listener() {
 		  		@Override
 				  public void handleEvent(Event e) {
@@ -227,7 +222,7 @@ SWTNetworkSelection
 		 	gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
 		 	gridData.grabExcessHorizontalSpace = false;
 		 	gridData.widthHint = 70;
-		 	Utils.setLayoutData(bCancel, gridData);
+			bCancel.setLayoutData(gridData);
 		 	bCancel.addListener(SWT.Selection,new Listener() {
 		 		@Override
 			  public void handleEvent(Event e) {

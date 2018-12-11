@@ -20,12 +20,9 @@ package com.biglybt.ui.swt.config;
 import java.security.MessageDigest;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
-import com.biglybt.core.config.*;
+import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA1Hasher;
@@ -100,11 +97,10 @@ PasswordParameter
     });
   }
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    inputField.setLayoutData(layoutData);
-  }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		inputField.setLayoutData(layoutData);
+	}
 
   public void setValue(final String value) {
 		Utils.execSWTThread(new AERunnable() {

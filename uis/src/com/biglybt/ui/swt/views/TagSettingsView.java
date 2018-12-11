@@ -31,10 +31,7 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
@@ -57,7 +54,6 @@ import org.gudy.bouncycastle.util.Arrays;
 
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
-import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -258,9 +254,9 @@ public class TagSettingsView
 			Layout parentLayout = parent.getLayout();
 			if (parentLayout instanceof GridLayout) {
 				GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-				Utils.setLayoutData(sc, gd);
+				sc.setLayoutData(gd);
 			} else if (parentLayout instanceof FormLayout) {
-				Utils.setLayoutData(sc, Utils.getFilledFormData());
+				sc.setLayoutData(Utils.getFilledFormData());
 			}
 
 			cMainComposite = new Composite(sc, SWT.NONE);
@@ -341,20 +337,20 @@ public class TagSettingsView
 			FontUtils.setFontHeight(label, 12, SWT.BOLD);
 			gd = new GridData();
 			gd.horizontalSpan = 6;
-			Utils.setLayoutData(label, gd);
+			label.setLayoutData(gd);
 			label.setText(tagTypes);
 
 			// Field: Name
 			label = new Label(cSection1, SWT.NONE);
 			Messages.setLanguageText(label, "MinimizedWindow.name");
 			gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-			Utils.setLayoutData(label, gd);
+			label.setLayoutData(gd);
 
 			if (numTags == 1 && !tags[0].getTagType().isTagTypeAuto()) {
 				Text txtName = new Text(cSection1, SWT.BORDER);
 				params.cName = txtName;
 				gd = new GridData(SWT.FILL, SWT.CENTER, true, false);
-				Utils.setLayoutData(txtName, gd);
+				txtName.setLayoutData(gd);
 
 				txtName.addModifyListener(new ModifyListener() {
 					@Override
@@ -372,7 +368,7 @@ public class TagSettingsView
 			} else {
 				label = new Label(cSection1, SWT.WRAP);
 				gd = Utils.getWrappableLabelGridData(1, GridData.GRAB_HORIZONTAL);
-				Utils.setLayoutData(label, gd);
+				label.setLayoutData(gd);
 				params.cName = label;
 			}
 
@@ -501,7 +497,7 @@ public class TagSettingsView
 
 					gd = new GridData();
 					label = new Label(gTransfer, SWT.NULL);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 					label.setText(k_unit + " " + MessageText.getString(
 							"GeneralView.label.maxdownloadspeed.tooltip"));
 
@@ -554,7 +550,7 @@ public class TagSettingsView
 				if (supportsTagUploadLimit) {
 					gd = new GridData();
 					label = new Label(gTransfer, SWT.NULL);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 					label.setText(k_unit + " " + MessageText.getString(
 							"GeneralView.label.maxuploadspeed.tooltip"));
 
@@ -632,7 +628,7 @@ public class TagSettingsView
 					label = new Label(gTransfer, SWT.NONE);
 					Messages.setLanguageText(label, "TableColumn.header.min_sr");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 
 					params.min_sr = new GenericFloatParameter(
 							new GenericParameterAdapter() {
@@ -657,7 +653,7 @@ public class TagSettingsView
 					label = new Label(gTransfer, SWT.NONE);
 					Messages.setLanguageText(label, "TableColumn.header.max_sr");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 
 					params.max_sr = new GenericFloatParameter(
 							new GenericParameterAdapter() {
@@ -695,7 +691,7 @@ public class TagSettingsView
 					label = new Label(gTransfer, SWT.NONE);
 					Messages.setLanguageText(label, "label.when.exceeded");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 					params.max_sr_action = new GenericStringListParameter(
 							new GenericParameterAdapter() {
 								@Override
@@ -724,7 +720,7 @@ public class TagSettingsView
 					label = new Label(gTransfer, SWT.NONE);
 					Messages.setLanguageText(label, "TableColumn.header.max_aggregate_sr");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 
 					params.max_aggregate_sr = new GenericFloatParameter(
 							new GenericParameterAdapter() {
@@ -760,7 +756,7 @@ public class TagSettingsView
 					label = new Label(gTransfer, SWT.NONE);
 					Messages.setLanguageText(label, "label.when.exceeded");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 					params.max_aggregate_sr_action = new GenericStringListParameter(
 							new GenericParameterAdapter() {
 								@Override
@@ -788,7 +784,7 @@ public class TagSettingsView
 					label = new Label(gTransfer, SWT.NONE);
 					Messages.setLanguageText(label, "label.aggregate.has.priority");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 					params.max_aggregate_sr_priority = new GenericBooleanParameter(
 							new BooleanParameterAdapter() {
 								@Override
@@ -851,7 +847,7 @@ public class TagSettingsView
 					gFiles.setLayout(gridLayout);
 
 					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 4, 1);
-					Utils.setLayoutData(gFiles, gd);
+					gFiles.setLayoutData(gd);
 
 					if ( fl.supportsTagInitialSaveFolder()){
 
@@ -1059,13 +1055,13 @@ public class TagSettingsView
 					gConstraint.setLayout(gridLayout);
 
 					gd = new GridData(SWT.FILL, SWT.NONE, true, false, 4, 1);
-					Utils.setLayoutData(gConstraint, gd);
+					gConstraint.setLayoutData(gd);
 
 					params.constraints = new Text(gConstraint,
 							SWT.WRAP | SWT.BORDER | SWT.MULTI);
 					gd = new GridData(SWT.FILL, SWT.NONE, true, false, columns, 1);
 					gd.heightHint = 40;
-					Utils.setLayoutData(params.constraints, gd);
+					params.constraints.setLayoutData(gd);
 					params.constraints.addKeyListener(new KeyListener() {
 						@Override
 						public void keyReleased(KeyEvent e) {
@@ -1098,8 +1094,8 @@ public class TagSettingsView
 					params.constraintError = new Label(gConstraint, SWT.NULL );
 					params.constraintError.setForeground( Colors.colorError);
 					gd = new GridData(SWT.FILL, SWT.NONE, true, false, columns, 1);
-					Utils.setLayoutData(params.constraintError, gd);
-					
+					params.constraintError.setLayoutData(gd);
+
 					btnSaveConstraint = new Button(gConstraint, SWT.PUSH);
 					btnSaveConstraint.setEnabled(false);
 					btnSaveConstraint.addListener(SWT.Selection, new Listener() {
@@ -1214,8 +1210,7 @@ public class TagSettingsView
 							CM_LABELS, CM_VALUES );
 
 					Link lblAboutConstraint = new Link(gConstraint, SWT.WRAP);
-					Utils.setLayoutData(lblAboutConstraint,
-							Utils.getWrappableLabelGridData(1, GridData.GRAB_HORIZONTAL));
+					lblAboutConstraint.setLayoutData(Utils.getWrappableLabelGridData(1, GridData.GRAB_HORIZONTAL));
 					lblAboutConstraint.setText(
 							MessageText.getString("tag.constraints.info"));
 					lblAboutConstraint.addListener(SWT.Selection, new Listener() {
@@ -1252,7 +1247,7 @@ public class TagSettingsView
 					label = new Label(gLimits, SWT.NONE);
 					Messages.setLanguageText(label, "TableColumn.header.max_taggables");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					Utils.setLayoutData(label, gd);
+					label.setLayoutData(gd);
 
 					params.tfl_max_taggables = new GenericIntParameter(
 						new GenericParameterAdapter() {
@@ -1468,7 +1463,7 @@ public class TagSettingsView
 
 			GridData gd = new GridData();
 			Label label = new Label(parent, SWT.NONE);
-			Utils.setLayoutData(label, gd);
+			label.setLayoutData(gd);
 			Messages.setLanguageText(label, labelTextID);
 
 			Button browse = new Button(parent, SWT.PUSH);
@@ -1504,7 +1499,7 @@ public class TagSettingsView
 			lblValue = new Label(parent, SWT.WRAP);
 			gd = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
 			gd.verticalAlignment = SWT.CENTER;
-			Utils.setLayoutData(lblValue, gd);
+			lblValue.setLayoutData(gd);
 
 			btnClear = new Button(parent, SWT.PUSH);
 			Messages.setLanguageText(btnClear, "Button.clear");

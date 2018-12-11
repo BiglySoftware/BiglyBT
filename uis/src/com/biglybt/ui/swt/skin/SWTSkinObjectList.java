@@ -26,18 +26,13 @@ import java.util.Locale;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Composite;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.components.CompositeMinSize;
 import com.biglybt.ui.swt.utils.FontUtils;
 
 /**
@@ -150,7 +145,7 @@ public class SWTSkinObjectList
 							fontSize = FontUtils.getHeight(fd) * dSize;
 						} else {
 							fontSize = FontUtils.getFontHeightFromPX(widget.getDisplay(),
-									tempFontData, null, Utils.adjustPXForDPI((int) dSize));
+									tempFontData, null, (int) dSize);
 						}
 					}
 

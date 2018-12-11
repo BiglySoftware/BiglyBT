@@ -27,7 +27,6 @@ import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.BooleanParameter;
 import com.biglybt.ui.swt.config.IntListParameter;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
@@ -79,14 +78,14 @@ public class ConfigSectionSeedingFirstPriority
     layout.marginHeight = 0;
     cFirstPriorityArea.setLayout(layout);
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(cFirstPriorityArea, gridData);
+		cFirstPriorityArea.setLayoutData(gridData);
 
 
     label = new Label(cFirstPriorityArea, SWT.WRAP);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 2;
     gridData.widthHint = 300;
-    Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
     Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.info");
 
     // ** Begin No Touch area
@@ -99,8 +98,8 @@ public class ConfigSectionSeedingFirstPriority
     layout.verticalSpacing = 6;
     cFP.setLayout(layout);
     gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(cFP, gridData);
-	Messages.setLanguageText(cFP, "ConfigView.label.seeding.firstPriority.FP");
+		cFP.setLayoutData(gridData);
+		Messages.setLanguageText(cFP, "ConfigView.label.seeding.firstPriority.FP");
 
 	// row
 	cArea = new Composite(cFP, SWT.NULL);
@@ -111,7 +110,7 @@ public class ConfigSectionSeedingFirstPriority
     cArea.setLayout(layout);
 	gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
     gridData.horizontalSpan = 3;
-    Utils.setLayoutData(cArea, gridData);
+		cArea.setLayoutData(gridData);
 	label = new Label(cArea, SWT.NULL);
 	Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority");
 	String fpLabels[] = { MessageText.getString("ConfigView.text.all"),
@@ -195,7 +194,7 @@ public class ConfigSectionSeedingFirstPriority
 	cIgnoreFP.setLayout(layout);
     gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
     gridData.horizontalSpan = 2;
-	Utils.setLayoutData(cIgnoreFP, gridData);
+		cIgnoreFP.setLayoutData(gridData);
     Messages.setLanguageText(cIgnoreFP, "ConfigView.label.seeding.firstPriority.ignore");
 
 	// Ignore S:P Ratio
@@ -245,7 +244,7 @@ public class ConfigSectionSeedingFirstPriority
     cArea1.setLayout(layout);
 	gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(cArea1, gridData);
+		cArea1.setLayoutData(gridData);
 	label = new Label(cArea1, SWT.NULL);
 	Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.ignore.info");
 

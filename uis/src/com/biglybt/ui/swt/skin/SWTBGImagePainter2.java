@@ -23,7 +23,10 @@ import java.util.ArrayList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.*;
@@ -31,7 +34,6 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
-
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 /**
@@ -236,13 +238,13 @@ public class SWTBGImagePainter2
 		imgSrc = bgImage;
 		if (imgSrc != null) {
 			imgSrcBounds = imgSrc.getBounds();
-			imgSrcBoundsAdj = Utils.adjustPXForDPI(imgSrcBounds);
+			imgSrcBoundsAdj = imgSrcBounds;
 		}
 		lastShellBGSize = new Point(0, 0);
 		if (ImageLoader.isRealImage(bgImageLeft)) {
 			imgSrcLeft = bgImageLeft;
 			imgSrcLeftBounds = imgSrcLeft.getBounds();
-			imgSrcLeftBoundsAdj = Utils.adjustPXForDPI(imgSrcLeftBounds);
+			imgSrcLeftBoundsAdj = imgSrcLeftBounds;
 		} else {
 			imgSrcLeft = null;
 			imgSrcLeftBounds = Utils.EMPTY_RECT;
@@ -251,7 +253,7 @@ public class SWTBGImagePainter2
 		if (ImageLoader.isRealImage(bgImageRight)) {
 			imgSrcRight = bgImageRight;
 			imgSrcRightBounds = imgSrcRight.getBounds();
-			imgSrcRightBoundsAdj = Utils.adjustPXForDPI(imgSrcRightBounds);
+			imgSrcRightBoundsAdj = imgSrcRightBounds;
 		} else {
 			imgSrcRight = null;
 			imgSrcRightBounds = Utils.EMPTY_RECT;
@@ -333,20 +335,20 @@ public class SWTBGImagePainter2
 		if (imgSrcID != null) {
 			Image imgSrc = imageLoader.getImage(imgSrcID);
 			imgSrcBounds = imgSrc.getBounds();
-			imgSrcBoundsAdj = Utils.adjustPXForDPI(imgSrcBounds);
+			imgSrcBoundsAdj = imgSrcBounds;
 			imageLoader.releaseImage(imgSrcID);
 		}
 		Image imgSrcLeft = imageLoader.getImage(imgSrcLeftID);
 		if (ImageLoader.isRealImage(imgSrcLeft)) {
 			imgSrcLeftBounds = imgSrcLeft.getBounds();
-			imgSrcLeftBoundsAdj = Utils.adjustPXForDPI(imgSrcLeftBounds);
+			imgSrcLeftBoundsAdj = imgSrcLeftBounds;
 		}
 		imageLoader.releaseImage(imgSrcLeftID);
 
 		Image imgSrcRight = imageLoader.getImage(imgSrcRightID);
 		if (ImageLoader.isRealImage(imgSrcRight)) {
 			imgSrcRightBounds = imgSrcRight.getBounds();
-			imgSrcRightBoundsAdj = Utils.adjustPXForDPI(imgSrcRightBounds);
+			imgSrcRightBoundsAdj = imgSrcRightBounds;
 		}
 		imageLoader.releaseImage(imgSrcRightID);
 
@@ -424,28 +426,28 @@ public class SWTBGImagePainter2
 			Image[] images = imageLoader.getImages(imgSrcID);
 			imagesToRelease.add(imgSrcID);
 			if (images.length == 1) {
-  			imgSrc = images[0];
-  			imgSrcBounds = imgSrc.getBounds();
-  			imgSrcBoundsAdj = Utils.adjustPXForDPI(imgSrcBounds);
+				imgSrc = images[0];
+				imgSrcBounds = imgSrc.getBounds();
+				imgSrcBoundsAdj = imgSrcBounds;
 			} else if (images.length == 2) {
 				imgSrcLeft = images[0];
 				imgSrcLeftBounds = imgSrcLeft.getBounds();
-				imgSrcLeftBoundsAdj = Utils.adjustPXForDPI(imgSrcLeftBounds);
-  			imgSrc = images[1];
-  			imgSrcBounds = imgSrc.getBounds();
-  			imgSrcBoundsAdj = Utils.adjustPXForDPI(imgSrcBounds);
+				imgSrcLeftBoundsAdj = imgSrcLeftBounds;
+				imgSrc = images[1];
+				imgSrcBounds = imgSrc.getBounds();
+				imgSrcBoundsAdj = imgSrcBounds;
 				imgSrcRight = images[1];
 				imgSrcRightBounds = imgSrcRight.getBounds();
-				imgSrcRightBoundsAdj = Utils.adjustPXForDPI(imgSrcRightBounds);
+				imgSrcRightBoundsAdj = imgSrcRightBounds;
 			} else if (images.length == 3) {
 				imgSrcLeft = images[0];
 				imgSrcLeftBounds = imgSrcLeft.getBounds();
-  			imgSrc = images[1];
-  			imgSrcBoundsAdj = Utils.adjustPXForDPI(imgSrcBounds);
-  			imgSrcBounds = imgSrc.getBounds();
+				imgSrc = images[1];
+				imgSrcBoundsAdj = imgSrcBounds;
+				imgSrcBounds = imgSrc.getBounds();
 				imgSrcRight = images[2];
 				imgSrcRightBounds = imgSrcRight.getBounds();
-				imgSrcRightBoundsAdj = Utils.adjustPXForDPI(imgSrcRightBounds);
+				imgSrcRightBoundsAdj = imgSrcRightBounds;
 			}
 		}
 

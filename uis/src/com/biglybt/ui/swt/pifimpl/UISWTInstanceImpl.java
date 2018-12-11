@@ -47,7 +47,6 @@ import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.ui.*;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
-import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
@@ -63,7 +62,6 @@ import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 @SuppressWarnings("unused")
@@ -1031,8 +1029,6 @@ UISWTInstanceImpl
 				Display display = getDisplay();
 
 				Image image = new Image(display, imageData);
-
-				image = Utils.adjustPXForDPI( display,  image );
 
 				listDisposeOnUnload.add(image);
 

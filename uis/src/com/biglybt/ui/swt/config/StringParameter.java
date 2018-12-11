@@ -129,11 +129,10 @@ public class StringParameter extends Parameter{
 	  }
   }
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    inputField.setLayoutData(layoutData);
-  }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		inputField.setLayoutData(layoutData);
+	}
 
   public void setValue(final String value) {
 		Utils.execSWTThread(new AERunnable() {

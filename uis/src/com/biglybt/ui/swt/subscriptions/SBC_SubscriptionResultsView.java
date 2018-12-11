@@ -338,7 +338,7 @@ SBC_SubscriptionResultsView
 				final Text textWithKW = new Text(cWithKW, SWT.BORDER);
 				textWithKW.setMessage(MessageText.getString(with?"SubscriptionResults.filter.with.words":"SubscriptionResults.filter.without.words"));
 				GridData gd = new GridData();
-				gd.widthHint = Utils.adjustPXForDPI( 100 );
+				gd.widthHint = 100;
 				textWithKW.setLayoutData( gd );
 				textWithKW.addModifyListener(
 					new ModifyListener() {

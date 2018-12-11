@@ -32,18 +32,11 @@ import com.biglybt.core.CoreRunningListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
@@ -90,7 +83,7 @@ public class UIPWListPanel extends AbstractWizardPanel {
 
 	Composite panel = new Composite(rootPanel, SWT.NULL);
 	GridData gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER | GridData.FILL_HORIZONTAL);
-	Utils.setLayoutData(panel, gridData);
+	panel.setLayoutData(gridData);
 	layout = new GridLayout();
 	layout.numColumns = 1;
 	panel.setLayout(layout);
@@ -102,16 +95,16 @@ public class UIPWListPanel extends AbstractWizardPanel {
 	pluginList.setHeaderVisible(true);
 	GridData data = new GridData(GridData.FILL_HORIZONTAL);
 	data.heightHint = 200;
-	Utils.setLayoutData(pluginList, data);
+	pluginList.setLayoutData(data);
 
 
 	TableColumn tcName = new TableColumn(pluginList,SWT.LEFT);
 	Messages.setLanguageText(tcName,"label.name");
-	tcName.setWidth(Utils.adjustPXForDPI(200));
+	tcName.setWidth(200);
 
 	TableColumn tcVersion = new TableColumn(pluginList,SWT.LEFT);
 	Messages.setLanguageText(tcVersion,"ConfigView.pluginlist.column.version");
-	tcVersion.setWidth(Utils.adjustPXForDPI(150));
+	tcVersion.setWidth(150);
 
     PluginInterface plugins[] = new PluginInterface[0];
     try {

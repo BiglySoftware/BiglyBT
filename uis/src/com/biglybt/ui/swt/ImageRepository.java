@@ -74,7 +74,6 @@ public class ImageRepository
 	/**
 	   * Gets an image for a file associated with a given program
 	   *
-	   * @param program the Program
 	   */
 	public static Image getIconFromExtension(File file, String ext, boolean bBig,
 			boolean minifolder) {
@@ -488,8 +487,6 @@ public class ImageRepository
 
 									flag = new Image( display, is);
 
-									flag = Utils.adjustPXForDPI( display, flag );
-
 									//System.out.println( "Created flag image for " + cc_key );
 
 								}finally{
@@ -587,8 +584,6 @@ public class ImageRepository
 
 							flag = new Image( display, is);
 
-							flag = Utils.adjustPXForDPI( display, flag );
-
 							//System.out.println( "Created flag image for " + cc_key );
 
 						}finally{
@@ -678,8 +673,6 @@ public class ImageRepository
 							Display display = Display.getDefault();
 
 							flag = new Image( display, is);
-
-							flag = Utils.adjustPXForDPI( display, flag );
 
 						}finally{
 

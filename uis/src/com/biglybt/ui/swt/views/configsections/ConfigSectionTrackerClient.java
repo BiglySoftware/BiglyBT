@@ -23,18 +23,19 @@
 package com.biglybt.ui.swt.views.configsections;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
+
+import com.biglybt.pif.ui.config.ConfigSection;
 
 public class
 ConfigSectionTrackerClient
@@ -111,7 +112,7 @@ ConfigSectionTrackerClient
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalIndent = 25;
-    Utils.setLayoutData( dont_scrape_never_Started.getControl(), gridData );
+		dont_scrape_never_Started.getControl().setLayoutData(gridData);
 
     BooleanParameter aggregate = new BooleanParameter(scrapeGroup, "Tracker Client Scrape Single Only",
     							"ConfigView.section.tracker.client.scrapesingleonly");

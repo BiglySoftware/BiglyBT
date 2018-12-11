@@ -26,11 +26,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerFactory;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerService;
@@ -67,13 +63,13 @@ public class ChooseServicePanel extends AbstractWizardPanel {
     GridData gridData = new GridData();
     gridData.widthHint = 380;
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(label, gridData);
+    label.setLayoutData(gridData);
     label.setText(MessageText.getString("ipCheckerWizard.explanations"));
 
     this.servicesList = new Combo(rootPanel,SWT.READ_ONLY);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(servicesList, gridData);
+    servicesList.setLayoutData(gridData);
 
     this.services = ExternalIPCheckerFactory.create().getServices();
 
@@ -88,7 +84,7 @@ public class ChooseServicePanel extends AbstractWizardPanel {
 
     this.serviceUrl = new Label(rootPanel,SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(serviceUrl, gridData);
+    serviceUrl.setLayoutData(gridData);
     serviceUrl.setForeground(Colors.blue);
     serviceUrl.setCursor(handCursor);
     serviceUrl.addMouseListener(new MouseAdapter() {
@@ -114,14 +110,14 @@ public class ChooseServicePanel extends AbstractWizardPanel {
 	gridData = new GridData();
 	gridData.heightHint = 50;
 	gridData.verticalAlignment = GridData.VERTICAL_ALIGN_BEGINNING;
-	Utils.setLayoutData(label, gridData);
+	label.setLayoutData(gridData);
 	label.setText(MessageText.getString("ipCheckerWizard.service.description"));
 
 	this.serviceDescription = new Label(rootPanel,SWT.WRAP);
 	gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.heightHint = 50;
     gridData.verticalAlignment = GridData.VERTICAL_ALIGN_BEGINNING;
-	Utils.setLayoutData(serviceDescription, gridData);
+    serviceDescription.setLayoutData(gridData);
 
     updateInfos();
 

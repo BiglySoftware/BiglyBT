@@ -34,10 +34,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Constants;
@@ -148,7 +145,7 @@ NetStatusPluginView
 		layout.marginWidth = 0;
 		main.setLayout(layout);
 		GridData grid_data = new GridData(GridData.FILL_BOTH );
-		Utils.setLayoutData(main, grid_data);
+		main.setLayoutData(grid_data);
 
 			// control
 
@@ -162,12 +159,12 @@ NetStatusPluginView
 		Label info = new Label( control, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL);
 		grid_data.horizontalSpan = 3;
-		Utils.setLayoutData(info,  grid_data );
+		info.setLayoutData(grid_data);
 		Messages.setLanguageText( info,  "label.test.internet" );
 
 		grid_data = new GridData(GridData.FILL_HORIZONTAL);
 		grid_data.horizontalSpan = 1;
-		Utils.setLayoutData(control, grid_data);
+		control.setLayoutData(grid_data);
 
 		List<Button> buttons = new ArrayList<>();
 
@@ -231,7 +228,7 @@ NetStatusPluginView
 
 
 			grid_data = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(options, grid_data);
+		options.setLayoutData(grid_data);
 
 			/*
 				Button opt1 = new Button( options, SWT.CHECK );
@@ -295,7 +292,7 @@ NetStatusPluginView
 		grid_data = new GridData(GridData.FILL_BOTH);
 		grid_data.horizontalSpan = 1;
 		grid_data.horizontalIndent = 4;
-		Utils.setLayoutData(log, grid_data);
+		log.setLayoutData(grid_data);
 		log.setIndent( 4 );
 
 		ClipboardCopy.addCopyToClipMenu(

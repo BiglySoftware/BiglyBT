@@ -25,7 +25,6 @@ package com.biglybt.ui.swt.views.configsections;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.biglybt.ui.swt.systray.SystemTraySWT;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -48,6 +47,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
+import com.biglybt.ui.swt.systray.SystemTraySWT;
 
 public class ConfigSectionInterface
 	implements UISWTConfigSection
@@ -93,7 +93,7 @@ public class ConfigSectionInterface
 
 		gridData = new GridData(
 				GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(cDisplay, gridData);
+		cDisplay.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		layout.marginWidth = 0;
@@ -108,7 +108,7 @@ public class ConfigSectionInterface
 		Messages.setLanguageText(gAutoOpen, "ConfigView.label.autoopen");
 		layout = new GridLayout(3, false);
 		gAutoOpen.setLayout(layout);
-		Utils.setLayoutData(gAutoOpen, new GridData(GridData.FILL_HORIZONTAL));
+		gAutoOpen.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		label = new Label(gAutoOpen, SWT.NULL);
 		Messages.setLanguageText(label, "ConfigView.label.autoopen.detailstab");
@@ -142,7 +142,7 @@ public class ConfigSectionInterface
 		gBarTrans.setLayout(layout);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalIndent = 25;
-		Utils.setLayoutData(gBarTrans, gridData);
+		gBarTrans.setLayoutData(gridData);
 
 		label = new Label(gBarTrans, SWT.NULL);
 		Messages.setLanguageText(label, "label.bar.trans");
@@ -162,8 +162,8 @@ public class ConfigSectionInterface
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			gSysTray.setLayout(layout);
-			Utils.setLayoutData(gSysTray, new GridData(GridData.FILL_HORIZONTAL));
-	
+			gSysTray.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
 			BooleanParameter est = new BooleanParameter(gSysTray, "Enable System Tray",
 					"ConfigView.section.interface.enabletray");
 			est.addChangeListener(new ParameterChangeAdapter() {
@@ -240,10 +240,10 @@ public class ConfigSectionInterface
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		limit_group.setLayout(layout);
-		Utils.setLayoutData(limit_group, new GridData(GridData.FILL_HORIZONTAL));
+		limit_group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		Label limit_group_label = new Label(limit_group, SWT.WRAP);
-		Utils.setLayoutData(limit_group_label,
+		limit_group_label.setLayoutData(
 				Utils.getWrappableLabelGridData(2, GridData.GRAB_HORIZONTAL));
 		Messages.setLanguageText(limit_group_label,
 				"ConfigView.label.set_ui_transfer_speeds.description");
@@ -286,7 +286,7 @@ public class ConfigSectionInterface
 		layout.marginWidth = 0;
 		layout.numColumns = 2;
 		cArea.setLayout(layout);
-		Utils.setLayoutData(cArea, new GridData(GridData.FILL_HORIZONTAL));
+		cArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		new LinkLabel(cArea, "ConfigView.label.version.info.link",
 				Constants.URL_WIKI + "w/Version.azureusplatform.com");
@@ -306,7 +306,7 @@ public class ConfigSectionInterface
 		layout.marginWidth = 0;
 		layout.numColumns = 2;
 		cArea.setLayout(layout);
-		Utils.setLayoutData(cArea, new GridData(GridData.FILL_HORIZONTAL));
+		cArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		// clear remembered decisions
 
@@ -394,7 +394,7 @@ public class ConfigSectionInterface
 			layout.marginWidth = 0;
 			layout.numColumns = 2;
 			cResetAssoc.setLayout(layout);
-			Utils.setLayoutData(cResetAssoc, new GridData());
+			cResetAssoc.setLayoutData(new GridData());
 
 			label = new Label(cResetAssoc, SWT.NULL);
 			Messages.setLanguageText(label,

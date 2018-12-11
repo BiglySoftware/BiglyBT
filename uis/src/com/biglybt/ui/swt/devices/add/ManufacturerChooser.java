@@ -78,7 +78,7 @@ public class ManufacturerChooser
 			Composite area = new Composite(parent, SWT.NONE);
 			RowLayout rowLayout = new RowLayout(SWT.VERTICAL);
 			rowLayout.fill = true;
-			Utils.setLayout(area, rowLayout);
+			area.setLayout(rowLayout);
 			fd = Utils.getFilledFormData();
 			fd.left = new FormAttachment(centerCanvas, 50, SWT.CENTER);
 			fd.right = null;

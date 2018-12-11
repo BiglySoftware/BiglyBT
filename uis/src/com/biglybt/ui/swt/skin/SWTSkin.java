@@ -880,7 +880,6 @@ public class SWTSkin
 								offset = (int) (properties.getEmHeightPX() * em);
 							} else {
 								offset = Integer.parseInt(value);
-								offset = Utils.adjustPXForDPI(offset);
 							}
 						} catch (Exception e) {
 						}
@@ -922,7 +921,6 @@ public class SWTSkin
 										offset = (int) (properties.getEmHeightPX() * em);
 									} else {
 										offset = Integer.parseInt(value);
-										offset = Utils.adjustPXForDPI(offset);
 									}
 								} catch (Exception e) {
 								}

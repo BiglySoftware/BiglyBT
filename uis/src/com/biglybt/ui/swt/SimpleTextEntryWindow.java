@@ -18,16 +18,21 @@
 package com.biglybt.ui.swt;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.*;
-import org.eclipse.swt.layout.*;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.UIInputValidator;
 import com.biglybt.ui.swt.pifimpl.AbstractUISWTInputReceiver;
+
+import com.biglybt.pif.ui.UIInputValidator;
 
 /**
  * @author amc1
@@ -118,7 +123,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    	// 330 is the current default width.
 	    	gridData = resizeable?new GridData(GridData.FILL_HORIZONTAL):new GridData();
 	    	gridData.widthHint = width_hint;
-		    Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 	    }
 
 	    // Create Text object with pre-entered text.
@@ -224,8 +229,8 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    	gridData.minimumHeight = text_entry_text.getLineHeight() * line_height;
 	    	gridData.heightHint = gridData.minimumHeight;
 	    }
-	    
-	    Utils.setLayoutData(text_entry, gridData);
+
+		text_entry.setLayoutData(gridData);
 
 	    Composite panel = new Composite(shell, SWT.NULL);
 	    final RowLayout rLayout = new RowLayout();
@@ -239,7 +244,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    panel.setLayout(rLayout);
 	    gridData = new GridData();
 	    gridData.horizontalAlignment = SWT.END;
-	    Utils.setLayoutData(panel, gridData);
+		panel.setLayoutData(gridData);
 
 	    Button[] buttons = Utils.createOKCancelButtons(panel);
 

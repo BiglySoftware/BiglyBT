@@ -27,17 +27,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.ProgressBar;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEThread2;
@@ -140,25 +130,25 @@ public class SubscriptionListWindow implements SubscriptionLookupListener {
 		data.right = new FormAttachment(100,0);
 		data.top = new FormAttachment(0,0);
 		data.bottom = new FormAttachment(separator,0);
-		Utils.setLayoutData(mainComposite, data);
+		mainComposite.setLayoutData(data);
 
 		data = new FormData();
 		data.left = new FormAttachment(0,0);
 		data.right = new FormAttachment(100,0);
 		data.bottom = new FormAttachment(cancel,-2);
-		Utils.setLayoutData(separator, data);
+		separator.setLayoutData(data);
 
 		data = new FormData();
 		data.right = new FormAttachment(action);
 		data.width = 100;
 		data.bottom = new FormAttachment(100,-5);
-		Utils.setLayoutData(cancel, data);
+		cancel.setLayoutData(data);
 
 		data = new FormData();
 		data.right = new FormAttachment(100,-5);
 		data.width = 100;
 		data.bottom = new FormAttachment(100,-5);
-		Utils.setLayoutData(action, data);
+		action.setLayoutData(data);
 
 		cancel.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -186,12 +176,12 @@ public class SubscriptionListWindow implements SubscriptionLookupListener {
 
 		TableColumn name = new TableColumn(subscriptionsList,SWT.NONE);
 		name.setText(MessageText.getString("subscriptions.listwindow.name"));
-		name.setWidth(Utils.adjustPXForDPI(310));
+		name.setWidth(310);
 		name.setResizable(false);
 
 		TableColumn popularity = new TableColumn(subscriptionsList,SWT.NONE);
 		popularity.setText(MessageText.getString("subscriptions.listwindow.popularity"));
-		popularity.setWidth(Utils.adjustPXForDPI(70));
+		popularity.setWidth(70);
 		popularity.setResizable(false);
 
 		subscriptionsList.addListener(SWT.SetData, new Listener() {
@@ -261,13 +251,13 @@ public class SubscriptionListWindow implements SubscriptionLookupListener {
 		data.right = new FormAttachment(100,-5);
 		data.top = new FormAttachment(animatedImage.getControl(),10);
 		data.height = 50;
-		Utils.setLayoutData(loadingText, data);
+		loadingText.setLayoutData(data);
 
 		data = new FormData();
 		data.left = new FormAttachment(0,5);
 		data.right = new FormAttachment(100,-5);
 		data.top = new FormAttachment(loadingText,5);
-		Utils.setLayoutData(loadingProgress, data);
+		loadingProgress.setLayoutData(data);
 
 		boolean autoCheck = COConfigurationManager.getBooleanParameter("subscriptions.autocheck");
 
@@ -286,7 +276,7 @@ public class SubscriptionListWindow implements SubscriptionLookupListener {
 			data.left = new FormAttachment(0,5);
 			data.right = new FormAttachment(100,-5);
 			data.top = new FormAttachment(1,3,0);
-			Utils.setLayoutData(acceptLabel, data);
+			acceptLabel.setLayoutData(data);
 
 			action.addListener(SWT.Selection, new Listener() {
 				@Override

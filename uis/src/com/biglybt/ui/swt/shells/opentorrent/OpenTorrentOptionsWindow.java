@@ -541,7 +541,7 @@ public class OpenTorrentOptionsWindow
 				info_area.setLayout( new GridLayout());
 
 				torrents_info_label = new Label( info_area, SWT.NULL );
-				Utils.setLayoutData(torrents_info_label,  new GridData( GridData.FILL_HORIZONTAL ));
+				torrents_info_label.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
 				sash_object.setVisible( false );
 				sash_object.setAboveVisible( false );
@@ -852,7 +852,7 @@ public class OpenTorrentOptionsWindow
 		layout.horizontalSpacing = layout.verticalSpacing = 0;
 		table_area.setLayout( layout );
 		gd = new GridData( GridData.FILL_BOTH );
-		Utils.setLayoutData(table_area,  gd );
+		table_area.setLayoutData(gd);
 
 			// toolbar area
 
@@ -863,11 +863,11 @@ public class OpenTorrentOptionsWindow
 		layout.marginTop = 5;
 		button_area.setLayout( layout);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(button_area,  gd );
+		button_area.setLayoutData(gd);
 
 		Label label = new Label( button_area, SWT.NULL );
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(label,  gd );
+		label.setLayoutData(gd);
 
 		buttonTorrentUp = new Button(button_area, SWT.PUSH);
 		buttonTorrentUp.setImage( loadImage( "image.toolbar.up" ));
@@ -972,8 +972,7 @@ public class OpenTorrentOptionsWindow
 
 		label = new Label( button_area, SWT.NULL );
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(label,  gd );
-
+		label.setLayoutData(gd);
 
 
 		TableColumnManager tcm = TableColumnManager.getInstance();
@@ -2062,7 +2061,7 @@ public class OpenTorrentOptionsWindow
 
 			Composite comp = new Composite( tree_shell, SWT.NULL );
 			GridData gridData = new GridData( GridData.FILL_BOTH );
-			Utils.setLayoutData(comp, gridData);
+			comp.setLayoutData(gridData);
 
 			layout = new GridLayout();
 			layout.numColumns = 1;
@@ -2135,7 +2134,7 @@ public class OpenTorrentOptionsWindow
 			final Tree tree = new Tree(comp, SWT.VIRTUAL | SWT.BORDER | SWT.MULTI | SWT.CHECK | SWT.V_SCROLL | SWT.H_SCROLL);
 
 			gridData = new GridData(GridData.FILL_BOTH);
-			Utils.setLayoutData(tree, gridData);
+			tree.setLayoutData(gridData);
 
 			tree.setHeaderVisible(true);
 			tree.setLinesVisible( true );
@@ -2383,13 +2382,13 @@ public class OpenTorrentOptionsWindow
 
 			Label labelSeparator = new Label( comp, SWT.SEPARATOR | SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(labelSeparator, gridData);
+			labelSeparator.setLayoutData(gridData);
 
 				// buttons
 
 			Composite buttonComp = new Composite( comp, SWT.NULL );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(buttonComp, gridData);
+			buttonComp.setLayoutData(gridData);
 
 			layout = new GridLayout();
 			layout.numColumns = 2;
@@ -2400,7 +2399,7 @@ public class OpenTorrentOptionsWindow
 			Composite buttonArea = new Composite(buttonComp,SWT.NULL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
-			Utils.setLayoutData(buttonArea, gridData);
+			buttonArea.setLayoutData(gridData);
 			GridLayout layoutButtons = new GridLayout();
 			layoutButtons.numColumns = 1;
 			buttonArea.setLayout(layoutButtons);
@@ -2414,7 +2413,7 @@ public class OpenTorrentOptionsWindow
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.widthHint = 70;
-			Utils.setLayoutData(bOK, gridData);
+			bOK.setLayoutData(gridData);
 			bOK.addListener(SWT.Selection,new Listener() {
 				@Override
 				public void handleEvent(Event e) {
@@ -2999,7 +2998,7 @@ public class OpenTorrentOptionsWindow
 
 			Composite comp = new Composite( avail_shell, SWT.NULL );
 			GridData gridData = new GridData( GridData.FILL_BOTH );
-			Utils.setLayoutData(comp, gridData);
+			comp.setLayoutData(gridData);
 
 			layout = new GridLayout();
 			layout.numColumns = 1;
@@ -3030,7 +3029,7 @@ public class OpenTorrentOptionsWindow
 
 			Composite progressComp = new Composite( comp, SWT.NULL );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(progressComp, gridData);
+			progressComp.setLayoutData(gridData);
 
 			layout = new GridLayout();
 			layout.numColumns = 2;
@@ -3042,7 +3041,7 @@ public class OpenTorrentOptionsWindow
 			final Composite progBarComp = new Composite( progressComp, SWT.NULL );
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			//gridData.widthHint = 400;
-			Utils.setLayoutData(progBarComp, gridData);
+			progBarComp.setLayoutData(gridData);
 
 			//Label padLabel = new Label(progressComp,SWT.NULL);
 			//gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -3054,11 +3053,11 @@ public class OpenTorrentOptionsWindow
 
 			final ProgressBar progBarIndeterminate = new ProgressBar(progBarComp, SWT.HORIZONTAL | SWT.INDETERMINATE);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(progBarIndeterminate, gridData);
+			progBarIndeterminate.setLayoutData(gridData);
 
 			final ProgressBar progBarComplete = new ProgressBar(progBarComp, SWT.HORIZONTAL );
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(progBarComplete, gridData);
+			progBarComplete.setLayoutData(gridData);
 			progBarComplete.setMaximum( 1 );
 			progBarComplete.setSelection( 1 );
 
@@ -3116,13 +3115,13 @@ public class OpenTorrentOptionsWindow
 
 			Label labelSeparator = new Label( comp, SWT.SEPARATOR | SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(labelSeparator, gridData);
+			labelSeparator.setLayoutData(gridData);
 
 				// buttons
 
 			Composite buttonComp = new Composite( comp, SWT.NULL );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(buttonComp, gridData);
+			buttonComp.setLayoutData(gridData);
 
 			layout = new GridLayout();
 			layout.numColumns = 2;
@@ -3133,7 +3132,7 @@ public class OpenTorrentOptionsWindow
 			Composite buttonArea = new Composite(buttonComp,SWT.NULL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
-			Utils.setLayoutData(buttonArea, gridData);
+			buttonArea.setLayoutData(gridData);
 			GridLayout layoutButtons = new GridLayout();
 			layoutButtons.numColumns = 1;
 			buttonArea.setLayout(layoutButtons);
@@ -3147,7 +3146,7 @@ public class OpenTorrentOptionsWindow
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.widthHint = 70;
-			Utils.setLayoutData(bOK, gridData);
+			bOK.setLayoutData(gridData);
 			bOK.addListener(SWT.Selection,new Listener() {
 				@Override
 				public void handleEvent(Event e) {
@@ -3251,7 +3250,7 @@ public class OpenTorrentOptionsWindow
 			Composite comp = new Composite( comments_shell, SWT.NULL );
 
 			GridData gridData = new GridData( GridData.FILL_BOTH );
-			Utils.setLayoutData(comp, gridData);
+			comp.setLayoutData(gridData);
 
 			layout = new GridLayout();
 			layout.numColumns = 1;
@@ -3266,7 +3265,7 @@ public class OpenTorrentOptionsWindow
 			layout.marginHeight = 0;
 			topComp.setLayout(layout);
 			gridData = new GridData( GridData.FILL_BOTH );
-			Utils.setLayoutData(topComp, gridData);
+			topComp.setLayoutData(gridData);
 
 			String active_networks_str = "";
 
@@ -3287,7 +3286,7 @@ public class OpenTorrentOptionsWindow
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.horizontalIndent = 8;
 			gridData.verticalIndent = 8;
-			Utils.setLayoutData(info_label, gridData);
+			info_label.setLayoutData(gridData);
 
 				// azrating plugin
 
@@ -3297,7 +3296,7 @@ public class OpenTorrentOptionsWindow
 
 			ratingComp.setLayout(layout);
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(ratingComp, gridData);
+			ratingComp.setLayoutData(gridData);
 
 			ratingComp.setText( "Rating Plugin" );
 
@@ -3308,13 +3307,13 @@ public class OpenTorrentOptionsWindow
 			layout.marginHeight = 4;
 			ratingComp2.setLayout(layout);
 			gridData = new GridData( GridData.FILL_BOTH );
-			Utils.setLayoutData(ratingComp2, gridData);
+			ratingComp2.setLayoutData(gridData);
 			ratingComp2.setBackground( Colors.white );
 
 			final Label ratingText = new Label( ratingComp2, SWT.WRAP );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.heightHint=ratingText.getFont().getFontData()[0].getHeight() * 2 + 16;
-			Utils.setLayoutData(ratingText, gridData);
+			ratingText.setLayoutData(gridData);
 			ratingText.setBackground( Colors.white );
 
 			final boolean[]	az_rating_in_progress = { false };
@@ -3476,7 +3475,7 @@ public class OpenTorrentOptionsWindow
 			layout.numColumns = 1;
 			chatComp.setLayout(layout);
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(chatComp, gridData);
+			chatComp.setLayoutData(gridData);
 
 			chatComp.setText( "Chat Plugin" );
 
@@ -3541,13 +3540,13 @@ public class OpenTorrentOptionsWindow
 				layout.marginHeight = 4;
 				chatComp2.setLayout(layout);
 				gridData = new GridData( GridData.FILL_BOTH );
-				Utils.setLayoutData(chatComp2, gridData);
+				chatComp2.setLayoutData(gridData);
 				chatComp2.setBackground( Colors.white );
 
 				final Label chatText = new Label( chatComp2, SWT.WRAP );
 				gridData = new GridData( GridData.FILL_HORIZONTAL );
 				gridData.heightHint=ratingText.getFont().getFontData()[0].getHeight() * 2 + 16;
-				Utils.setLayoutData(chatText, gridData);
+				chatText.setLayoutData(gridData);
 				chatText.setBackground( Colors.white );
 
 				chatText.setText( MessageText.getString( "torrent.comment.azmsgsync.install" ));
@@ -3557,7 +3556,7 @@ public class OpenTorrentOptionsWindow
 
 			Composite progressComp = new Composite( comp, SWT.NULL );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(progressComp, gridData);
+			progressComp.setLayoutData(gridData);
 
 			layout = new GridLayout();
 			layout.numColumns = 3;
@@ -3569,7 +3568,7 @@ public class OpenTorrentOptionsWindow
 			final Composite progBarComp = new Composite( progressComp, SWT.NULL );
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			//gridData.widthHint = 300;
-			Utils.setLayoutData(progBarComp, gridData);
+			progBarComp.setLayoutData(gridData);
 
 			//Label padLabel = new Label(progressComp,SWT.NULL);
 			//gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -3581,11 +3580,11 @@ public class OpenTorrentOptionsWindow
 
 			final ProgressBar progBarIndeterminate = new ProgressBar(progBarComp, SWT.HORIZONTAL | SWT.INDETERMINATE);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(progBarIndeterminate, gridData);
+			progBarIndeterminate.setLayoutData(gridData);
 
 			final ProgressBar progBarComplete = new ProgressBar(progBarComp, SWT.HORIZONTAL );
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(progBarComplete, gridData);
+			progBarComplete.setLayoutData(gridData);
 			progBarComplete.setMaximum( 1 );
 			progBarComplete.setSelection( 1 );
 
@@ -3671,13 +3670,13 @@ public class OpenTorrentOptionsWindow
 
 			Label labelSeparator = new Label( comp, SWT.SEPARATOR | SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(labelSeparator, gridData);
+			labelSeparator.setLayoutData(gridData);
 
 				// buttons
 
 			Composite buttonComp = new Composite( comp, SWT.NULL );
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
-			Utils.setLayoutData(buttonComp, gridData);
+			buttonComp.setLayoutData(gridData);
 
 			layout = new GridLayout();
 			layout.numColumns = 2;
@@ -3688,7 +3687,7 @@ public class OpenTorrentOptionsWindow
 			Composite buttonArea = new Composite(buttonComp,SWT.NULL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
-			Utils.setLayoutData(buttonArea, gridData);
+			buttonArea.setLayoutData(gridData);
 			GridLayout layoutButtons = new GridLayout();
 			layoutButtons.numColumns = 1;
 			buttonArea.setLayout(layoutButtons);
@@ -3702,7 +3701,7 @@ public class OpenTorrentOptionsWindow
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.widthHint = 70;
-			Utils.setLayoutData(bOK, gridData);
+			bOK.setLayoutData(gridData);
 			bOK.addListener(SWT.Selection,new Listener() {
 				@Override
 				public void handleEvent(Event e) {
@@ -3946,7 +3945,7 @@ public class OpenTorrentOptionsWindow
 			layout.marginWidth = layout.marginHeight = layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
 			cButtonsTop.setLayout(layout);
 			GridData gridData = new GridData( GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cButtonsTop,  gridData );
+			cButtonsTop.setLayoutData(gridData);
 
 
 			Canvas line = new Canvas(cButtonsArea,SWT.NO_BACKGROUND);
@@ -3963,14 +3962,14 @@ public class OpenTorrentOptionsWindow
 			});
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.heightHint = 2;
-			Utils.setLayoutData(line, gridData);
+			line.setLayoutData(gridData);
 
 			Composite cButtonsBottom = new Composite(cButtonsArea, SWT.NULL);
 			layout = new GridLayout(5,false);
 			layout.marginWidth = layout.marginHeight = layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
 			cButtonsBottom.setLayout(layout);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cButtonsBottom,  gridData );
+			cButtonsBottom.setLayoutData(gridData);
 
 			List<Button>	buttons = new ArrayList<>();
 
@@ -4035,7 +4034,7 @@ public class OpenTorrentOptionsWindow
 
 			Label pad1 = new Label(cButtonsTop, SWT.NONE);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(pad1,  gridData );
+			pad1.setLayoutData(gridData);
 
 			// swarm-it button
 
@@ -4084,7 +4083,7 @@ public class OpenTorrentOptionsWindow
 
 			Label pad2 = new Label(cButtonsBottom, SWT.NONE);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(pad2,  gridData );
+			pad2.setLayoutData(gridData);
 
 				// privacy add mode
 
@@ -4199,8 +4198,8 @@ public class OpenTorrentOptionsWindow
 				SWTSkinObjectButton soBrowseButton, SWTSkinObjectContainer soMoreArea) 
 		{	
 			cmbDataDir = new Combo(soInputArea.getComposite(), SWT.NONE);
-			
-			Utils.setLayoutData(cmbDataDir, Utils.getFilledFormData());
+
+			cmbDataDir.setLayoutData(Utils.getFilledFormData());
 
 			cmbDataDir.addKeyListener(
 				new KeyListener(){
@@ -4375,8 +4374,8 @@ public class OpenTorrentOptionsWindow
 				GridData grid_data = new GridData(GridData.FILL_VERTICAL);
 				grid_data.verticalAlignment = SWT.CENTER;
 				grid_data.widthHint=200;
-				Utils.setLayoutData(text, grid_data);
-				
+				text.setLayoutData(grid_data);
+
 				text.setText( top );
 				
 				text.addFocusListener(
@@ -4432,8 +4431,8 @@ public class OpenTorrentOptionsWindow
 			Label more_label = new Label( more_comp, SWT.NULL );
 			GridData grid_data = new GridData(GridData.FILL_VERTICAL );
 			grid_data.verticalAlignment = SWT.CENTER;
-			Utils.setLayoutData( more_label, grid_data );
-			
+			more_label.setLayoutData(grid_data);
+
 			more_label.setText( MessageText.getString( "label.more" ));
 			
 			Label more_icon = new Label( more_comp, SWT.NULL );
@@ -4444,7 +4443,7 @@ public class OpenTorrentOptionsWindow
 			grid_data.widthHint=image.getBounds().width;
 			grid_data.heightHint=image.getBounds().height;
 			grid_data.verticalAlignment = SWT.CENTER;
-			Utils.setLayoutData(more_icon, grid_data);
+			more_icon.setLayoutData(grid_data);
 
 			final Menu more_menu = new Menu( more_comp );
 
@@ -4556,7 +4555,7 @@ public class OpenTorrentOptionsWindow
 
 			Composite cTorrentModes = new Composite(cTorrentOptions, SWT.NONE);
 			GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cTorrentModes, Utils.getFilledFormData());
+			cTorrentModes.setLayoutData(Utils.getFilledFormData());
 			GridLayout layout = new GridLayout();
 			layout.numColumns = 5;
 			layout.marginWidth = 5;
@@ -4565,12 +4564,12 @@ public class OpenTorrentOptionsWindow
 
 			Label label = new Label(cTorrentModes, SWT.NONE);
 			gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "OpenTorrentWindow.startMode");
 
 			cmbStartMode = new Combo(cTorrentModes, SWT.BORDER | SWT.READ_ONLY);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cmbStartMode, gridData);
+			cmbStartMode.setLayoutData(gridData);
 			updateStartModeCombo();
 			cmbStartMode.addSelectionListener(new SelectionAdapter() {
 				@Override
@@ -4581,12 +4580,12 @@ public class OpenTorrentOptionsWindow
 
 			label = new Label(cTorrentModes, SWT.NONE);
 			gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "OpenTorrentWindow.addPosition");
 
 			cmbQueueLocation = new Combo(cTorrentModes, SWT.BORDER | SWT.READ_ONLY);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cmbQueueLocation, gridData);
+			cmbQueueLocation.setLayoutData(gridData);
 			updateQueueLocationCombo();
 			cmbQueueLocation.addSelectionListener(new SelectionAdapter() {
 				@Override
@@ -4598,8 +4597,8 @@ public class OpenTorrentOptionsWindow
 			Button seqDL = new Button( cTorrentModes, SWT.CHECK );
 			Messages.setLanguageText(seqDL, "menu.sequential.download");
 			gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER);
-			Utils.setLayoutData(seqDL, gridData);
-			
+			seqDL.setLayoutData(gridData);
+
 			if ( Constants.isWindows ){
 				seqDL.setBackground( Colors.white );
 			}
@@ -4617,11 +4616,11 @@ public class OpenTorrentOptionsWindow
 					// tag area
 
 				Composite tagLeft 	= new Composite( cTorrentModes, SWT.NULL);
-				Utils.setLayoutData(tagLeft,  new GridData(GridData.VERTICAL_ALIGN_CENTER ));
+				tagLeft.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_CENTER ));
 				Composite tagRight 	= new Composite( cTorrentModes, SWT.NULL);
 				gridData = new GridData(GridData.FILL_HORIZONTAL );
 				gridData.horizontalSpan = 4;
-				Utils.setLayoutData(tagRight, gridData);
+				tagRight.setLayoutData(gridData);
 
 				layout = new GridLayout();
 				layout.numColumns = 1;
@@ -4649,12 +4648,12 @@ public class OpenTorrentOptionsWindow
 				tagLayout.justify = false;
 				tagLayout.fill = false;
 				tagLayout.spacing = 5;
-				Utils.setLayout(tagButtonsArea, tagLayout);
+				tagButtonsArea.setLayout(tagLayout);
 
 				buildTagButtonPanel( tagButtonsArea );
 
 				Button addTag = new Button( tagLeft, SWT.NULL );
-				Utils.setLayoutData(addTag,  new GridData(GridData.VERTICAL_ALIGN_CENTER ));
+				addTag.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_CENTER ));
 				addTag.setText("+");
 
 				addTag.addSelectionListener(
@@ -6154,7 +6153,7 @@ public class OpenTorrentOptionsWindow
 			Messages.setLanguageText(button, "MyTorrentsView.menu.ipf_enable");
 			GridData gd = new GridData();
 			gd.verticalAlignment = SWT.CENTER;
-			Utils.setLayoutData(button,  gd);
+			button.setLayoutData(gd);
 			button.setSelection(!torrentOptions.disableIPFilter);
 
 			button.addSelectionListener(new SelectionAdapter() {
@@ -6185,7 +6184,7 @@ public class OpenTorrentOptionsWindow
 
 				FormData form_data = Utils.getFilledFormData();
 				form_data.bottom = null;
-				Utils.setLayoutData(peer_sources_composite, form_data);
+				peer_sources_composite.setLayoutData(form_data);
 
 				//		Label label = new Label(peer_sources_group, SWT.WRAP);
 				//		Messages.setLanguageText(label,
@@ -6230,7 +6229,7 @@ public class OpenTorrentOptionsWindow
 
 				FormData form_data = Utils.getFilledFormData();
 				form_data.top = new FormAttachment( peer_sources_composite );
-				Utils.setLayoutData(network_group_parent, form_data);
+				network_group_parent.setLayoutData(form_data);
 
 				for (int i = 0; i < AENetworkClassifier.AT_NETWORKS.length; i++) {
 
@@ -6511,11 +6510,11 @@ public class OpenTorrentOptionsWindow
 						l = new Label(diskspaceComp, SWT.NONE);
 						l.setForeground(filesTooBig ? Colors.colorError : null);
 						l.setText(part.root.getPath());
-						Utils.setLayoutData(l, new GridData(SWT.END, SWT.TOP, false, false));
+						l.setLayoutData(new GridData(SWT.END, SWT.TOP, false, false));
 
 						l = new Label(diskspaceComp, SWT.NONE);
 						l.setForeground(filesTooBig ? Colors.colorError : null);
-						Utils.setLayoutData(l, new GridData(SWT.END, SWT.TOP, false, false));
+						l.setLayoutData(new GridData(SWT.END, SWT.TOP, false, false));
 						l.setText(s);
 					}
 

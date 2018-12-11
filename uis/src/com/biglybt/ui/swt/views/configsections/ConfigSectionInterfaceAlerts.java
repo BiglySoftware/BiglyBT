@@ -350,6 +350,6 @@ public class ConfigSectionInterfaceAlerts
 		Messages.setLanguageText(d_sound_info, "ConfigView.section.interface.wavlocation.info");
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.widthHint = 100;
-		Utils.setLayoutData(d_sound_info, gridData);
+		d_sound_info.setLayoutData(gridData);
 	}
 }

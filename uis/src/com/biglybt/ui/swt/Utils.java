@@ -39,6 +39,7 @@ import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
@@ -783,19 +784,18 @@ public class Utils
 				if (Constants.isWindows) {
 					// Windows, SWT sets ICON_SMALL (used for titlebar) and ICON_BIG
 					// (used for alt-tab).  It doesn't pick the best size for ICON_SMALL
-					float ratio = getScaleRatio();
-					if (ratio <= 1) {
+					int zoom = DPIUtil.getDeviceZoom();
+					if (zoom <= 100) {
 						shellIconNames = new String[] {
 							"logo16",
 							"logo128"
 						};
-					} else if (ratio <= 2) {
+					} else if (zoom <= 200) {
 						shellIconNames = new String[] {
 							"logo32",
 							"logo128"
 						};
-					}
-					if (ratio <= 4) {
+					} else if (zoom <= 400) {
 						shellIconNames = new String[] {
 							"logo64",
 							"logo128"
@@ -2068,7 +2068,6 @@ public class Utils
 
 	public static void drawImageCenterScaleDown(GC gc, Image imgSrc, Rectangle area) {
 		Rectangle imgSrcBounds = imgSrc.getBounds();
-		Rectangle imgSrcBoundsAdj = Utils.adjustPXForDPI(imgSrcBounds);
 		if (area.width < imgSrcBounds.width || area.height < imgSrcBounds.height) {
 			float dx = (float) area.width / imgSrcBounds.width;
 			float dy = (float) area.height / imgSrcBounds.height ;
@@ -2080,10 +2079,10 @@ public class Utils
 					area.x + (area.width - newX) / 2, area.y +  (area.height - newY) / 2, newX, newY);
 		} else {
 			//drawMode = DRAW_CENTER;
-			int x = (area.width - imgSrcBoundsAdj.width) / 2;
-			int y = (area.height - imgSrcBoundsAdj.height) / 2;
+			int x = (area.width - imgSrcBounds.width) / 2;
+			int y = (area.height - imgSrcBounds.height) / 2;
 			gc.drawImage(imgSrc, 0, 0, imgSrcBounds.width, imgSrcBounds.height,
-					area.x + x, area.y + y, imgSrcBoundsAdj.width, imgSrcBoundsAdj.height);
+					area.x + x, area.y + y, imgSrcBounds.width, imgSrcBounds.height);
 		}
 
 	}
@@ -4147,11 +4146,6 @@ public class Utils
 	    sash.addListener(SWT.Resize, sash_listener );
 	}
 
-	public static float getScaleRatio() {
-		// TODO: Remove
-		return 1.0f;
-	}
-
 	private static boolean logged_invalid_dpi = false;
 
 	public static Point
@@ -4175,69 +4169,6 @@ public class Utils
 		return( p );
 	}
 
-
-	public static int adjustPXForDPI(int unadjustedPX) {
-		// TODO: Remove
-		return unadjustedPX;
-	}
-
-	public static Rectangle adjustPXForDPI(Rectangle bounds) {
-		// TODO: Remove
-		return bounds;
-	}
-
-	public static Point adjustPXForDPI(Point size) {
-		return size;
-		// TODO: Remove
-	}
-
-	public static void adjustPXForDPI(FormData fd) {
-		// TODO: Remove
-	}
-
-	public static void setLayoutData(Control widget, GridData layoutData) {
-		// TODO: Replace with widget.setLayoutData(layoutData) and remove
-		widget.setLayoutData(layoutData);
-	}
-
-	public static void setLayoutData(Control widget, FormData layoutData) {
-		// TODO: Replace with widget.setLayoutData(layoutData) and remove
-		widget.setLayoutData(layoutData);
-	}
-
-	public static void setLayoutData(Control widget, RowData layoutData) {
-		// TODO: Replace with widget.setLayoutData(layoutData) and remove
-		widget.setLayoutData(layoutData);
-	}
-
-	public static void setLayoutData(BufferedLabel widget, GridData layoutData) {
-		// TODO: Replace with widget.setLayoutData(layoutData) and remove
-		widget.setLayoutData(layoutData);
-	}
-
-	public static void adjustPXForDPI(Object layoutData) {
-		// TODO: Remove
-	}
-
-	public static boolean	adjustPXForDPIRequired(Image image)	{
-		// TODO: Remove
-		return false;
-	}
-
-	public static Image adjustPXForDPI(Display display, Image image) {
-		// TODO: Remove
-		return image;
-	}
-
-	public static void setLayout(Composite composite, GridLayout layout) {
-		// TODO: Replace with composite.setLayout(layout) and remove
-		composite.setLayout(layout);
-	}
-
-	public static void setLayout(Composite composite, RowLayout layout) {
-		// TODO: Replace with composite.setLayout(layout) and remove
-		composite.setLayout(layout);
-	}
 
 	public static void setClipping(GC gc, Rectangle r) {
 		if (r == null) {

@@ -237,7 +237,7 @@ public class TableColumnSetupWindow
 		fd.left.offset = 5;
 		fd.top.offset = 5;
 		fd.bottom = null;
-		Utils.setLayoutData(topInfo, fd);
+		topInfo.setLayoutData(fd);
 
 		Button btnOk = new Button(shell, SWT.PUSH);
 		Messages.setLanguageText(btnOk, "Button.ok");
@@ -438,7 +438,7 @@ public class TableColumnSetupWindow
 
 		if (CAT_BUTTONS) {
 			cCategories = new Composite(cFilterArea, SWT.NONE);
-			Utils.setLayout(cCategories, new RowLayout());
+			cCategories.setLayout(new RowLayout());
 
   		Button button = new Button(cCategories, SWT.TOGGLE);
   		Messages.setLanguageText(button, "Categories.all");
@@ -707,81 +707,81 @@ public class TableColumnSetupWindow
 		fd.right = new FormAttachment(100, -3);
 		fd.bottom = new FormAttachment(btnOk, -5);
 		fd.width = 210;
-		Utils.setLayoutData(cResultArea, fd);
+		cResultArea.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.top = new FormAttachment(0, 3);
 		fd.left = new FormAttachment(0, 3);
 		fd.right = new FormAttachment(100, -3);
 		fd.bottom = new FormAttachment(cResultButtonArea, -3);
-		Utils.setLayoutData(cTableChosen, fd);
+		cTableChosen.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.bottom = new FormAttachment(100, 0);
 		fd.left = new FormAttachment(cTableChosen, 0, SWT.CENTER);
-		Utils.setLayoutData(cResultButtonArea, fd);
+		cResultButtonArea.setLayoutData(fd);
 
 			// align
 
 		fd = new FormData();
 		fd.top = new FormAttachment(0, 3);
 		fd.left = new FormAttachment(0, 3);
-		Utils.setLayoutData(btnLeft, fd);
+		btnLeft.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.left = new FormAttachment(btnLeft, 3);
 		fd.top = new FormAttachment(btnLeft, 0, SWT.TOP);
 		fd.bottom = new FormAttachment(btnLeft, 0, SWT.BOTTOM);
-		Utils.setLayoutData(btnCentre, fd);
+		btnCentre.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.left = new FormAttachment(btnCentre, 3);
 		fd.top = new FormAttachment(btnLeft, 0, SWT.TOP);
 		fd.bottom = new FormAttachment(btnLeft, 0, SWT.BOTTOM);
-		Utils.setLayoutData(btnRight, fd);
+		btnRight.setLayoutData(fd);
 
 			// move
 
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 3);
 		fd.top = new FormAttachment(btnLeft, 2);
-		Utils.setLayoutData(btnUp, fd);
+		btnUp.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.left = new FormAttachment(btnUp, 3);
 		fd.top = new FormAttachment(btnUp, 0, SWT.TOP);
-		Utils.setLayoutData(btnDown, fd);
+		btnDown.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.left = new FormAttachment(btnDown, 3);
 		fd.top = new FormAttachment(btnUp, 0, SWT.TOP);
-		Utils.setLayoutData(btnDel, fd);
+		btnDel.setLayoutData(fd);
 
 		if ( btnReset != null ){
 
 	  		fd = new FormData();
 	  		fd.right = new FormAttachment(btnApply, -3);
 	  		fd.bottom = new FormAttachment(btnApply, 0, SWT.BOTTOM);
-	  		Utils.setLayoutData(btnReset, fd);
+			btnReset.setLayoutData(fd);
 		}
 
 		fd = new FormData();
 		fd.right = new FormAttachment(100, -3);
 		fd.top = new FormAttachment(btnUp, 3, SWT.BOTTOM);
 		//fd.width = 64;
-		Utils.setLayoutData(btnApply, fd);
+		btnApply.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.right = new FormAttachment(100, -8);
 		fd.bottom = new FormAttachment(100, -3);
 		//fd.width = 65;
-		Utils.setLayoutData(btnCancel, fd);
+		btnCancel.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.right = new FormAttachment(btnCancel, -3);
 		fd.bottom = new FormAttachment(btnCancel, 0, SWT.BOTTOM);
 		//fd.width = 64;
-		Utils.setLayoutData(btnOk, fd);
+		btnOk.setLayoutData(fd);
 
 		// <<<<<<<<< Chosen
 
@@ -790,55 +790,55 @@ public class TableColumnSetupWindow
 		fd.left = new FormAttachment(0, 3);
 		fd.right = new FormAttachment(cResultArea, -3);
 		fd.bottom = new FormAttachment(100, -3);
-		Utils.setLayoutData(cPickArea, fd);
+		cPickArea.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.bottom = new FormAttachment(100, 0);
 		fd.left = new FormAttachment(0, 0);
 		fd.right = new FormAttachment(100, 0);
-		Utils.setLayoutData(expandFilters, fd);
+		expandFilters.setLayoutData(fd);
 
 
 		if (CAT_BUTTONS) {
 			fd = new FormData();
 			fd.bottom = new FormAttachment(cCategories, 0, SWT.CENTER);
 			fd.left = new FormAttachment(0, 5);
-			Utils.setLayoutData(lblCat, fd);
+			lblCat.setLayoutData(fd);
 
 			fd = new FormData();
 			//fd.top = new FormAttachment(0, 0);
 			fd.bottom = new FormAttachment(radProficiency[0], 0, SWT.CENTER);
 			fd.left = new FormAttachment(0, 0);
-			Utils.setLayoutData(lblProficiency, fd);
+			lblProficiency.setLayoutData(fd);
 
   		fd = new FormData();
   		fd.top = new FormAttachment(cProficiency, 5);
   		fd.left = new FormAttachment(lblCat, 5);
   		fd.right = new FormAttachment(100, 0);
-  		Utils.setLayoutData(cCategories, fd);
+			cCategories.setLayoutData(fd);
 		} else {
 			fd = new FormData();
 			fd.top = new FormAttachment(comboFilter, -5);
 			fd.right = new FormAttachment(comboFilter, 0, SWT.CENTER);
-			Utils.setLayoutData(lblCat, fd);
+			lblCat.setLayoutData(fd);
 
   		fd = new FormData();
   		fd.top = new FormAttachment(cProficiency, 0, SWT.CENTER);
   		fd.right = new FormAttachment(100, 0);
-  		Utils.setLayoutData(comboFilter, fd);
+			comboFilter.setLayoutData(fd);
 		}
 
 		fd = new FormData();
 		fd.top = new FormAttachment(0, 5);
 		fd.left = new FormAttachment(0, 5);
-		Utils.setLayoutData(cProficiency, fd);
+		cProficiency.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.top = new FormAttachment(0, 3);
 		fd.left = new FormAttachment(0, 3);
 		fd.right = new FormAttachment(100, -3);
 		fd.bottom = new FormAttachment(expandFilters, -3);
-		Utils.setLayoutData(cTableAvail, fd);
+		cTableAvail.setLayoutData(fd);
 
 
 		//cTableAvail.setFocus();

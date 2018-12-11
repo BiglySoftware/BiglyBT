@@ -157,7 +157,7 @@ public class SystemTraySWT
 		trayItem = TrayDelegateFactory.createTrayItem(tray);
 
 		File imageFile = new File(SystemProperties.getApplicationPath(), "biglybt-lightgray.svg");
-		trayIconImageID = Constants.isOSX ? "osx_tray" : Constants.isUnix ? "nix_tray" : Utils.getScaleRatio() > 1 ? "logo32" : "logo16";
+		trayIconImageID = Constants.isOSX ? "osx_tray" : Constants.isUnix ? "nix_tray" : "logo32";
 		trayItem.setImage(trayIconImageID, imageFile);
 
 		trayItem.setVisible(true);

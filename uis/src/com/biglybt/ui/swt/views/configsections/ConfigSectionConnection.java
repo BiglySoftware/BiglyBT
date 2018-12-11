@@ -81,7 +81,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 		Composite cSection = new Composite(parent, SWT.NULL);
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL
 				| GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(cSection, gridData);
+		cSection.setLayoutData(gridData);
 		layout = new GridLayout();
 		cSection.setLayout(layout);
 
@@ -94,14 +94,14 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 		layout.marginWidth = 0;
 		cMiniArea.setLayout(layout);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(cMiniArea, gridData);
+		cMiniArea.setLayoutData(gridData);
 
 		final boolean	separate_ports = userMode > 1 || COConfigurationManager.getIntParameter( "TCP.Listen.Port" ) != COConfigurationManager.getIntParameter( "UDP.Listen.Port" );
 
 		label = new Label(cMiniArea, SWT.NULL);
 		Messages.setLanguageText(label, separate_ports?"ConfigView.label.tcplistenport":"ConfigView.label.serverport");
 		gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 
 		final IntParameter tcplisten = new IntParameter(cMiniArea,
 				"TCP.Listen.Port", 1, 65535);
@@ -129,7 +129,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 			label = new Label(cMiniArea, SWT.NULL);
 			Messages.setLanguageText(label, "ConfigView.label.udplistenport");
 			gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 
 			final IntParameter udp_listen = new IntParameter(cMiniArea,
 					"UDP.Listen.Port", 1, 65535);
@@ -162,7 +162,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 				layout.marginWidth = 0;
 				cNonDataUDPArea.setLayout(layout);
 				gridData = new GridData(GridData.FILL_HORIZONTAL);
-				Utils.setLayoutData(cNonDataUDPArea, gridData);
+				cNonDataUDPArea.setLayoutData(gridData);
 
 				final BooleanParameter commonUDP =
 					new BooleanParameter(cNonDataUDPArea, "UDP.NonData.Listen.Port.Same",	"ConfigView.section.connection.nondata.udp.same");
@@ -264,7 +264,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
 
-			Utils.setLayoutData(cRandPortArea, gridData);
+			cRandPortArea.setLayoutData(gridData);
 
 			BooleanParameter rand_enable =
 				new BooleanParameter(cRandPortArea, "Listen.Port.Randomize.Enable",	"ConfigView.section.connection.port.rand.enable");
@@ -274,7 +274,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 			label.setText(MessageText.getString( "ConfigView.section.connection.port.rand.range" ));
 			gridData = new GridData();
 			gridData.horizontalIndent = 20;
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 
 			StringParameter rand_range = new StringParameter( cRandPortArea, "Listen.Port.Randomize.Range" );
 			gridData = new GridData();
@@ -303,7 +303,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 			// wiki link
 			label = new Label(cSection, SWT.NULL);
 			gridData = new GridData();
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			label.setText(MessageText.getString("Utils.link.visit") + ":");
 
 			final Label linkLabel = new Label(cSection, SWT.NULL);
@@ -314,7 +314,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 			linkLabel.setCursor(linkLabel.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 			linkLabel.setForeground(Colors.blue);
 			gridData = new GridData();
-			Utils.setLayoutData(linkLabel, gridData);
+			linkLabel.setLayoutData(gridData);
 			linkLabel.addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseDoubleClick(MouseEvent arg0) {
@@ -394,7 +394,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 			ws_group.setLayout(ws_layout);
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(ws_group, gridData);
+			ws_group.setLayoutData(gridData);
 
 			new BooleanParameter(ws_group, "webseed.activation.uses.availability", "ConfigView.section.connection.webseed.act.on.avail");
 		}
@@ -409,13 +409,13 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 			peer_sources_group.setLayout(peer_sources_layout);
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(peer_sources_group, gridData);
+			peer_sources_group.setLayoutData(gridData);
 
 			label = new Label(peer_sources_group, SWT.WRAP);
 			Messages.setLanguageText(label,
 					"ConfigView.section.connection.group.peersources.info");
 			gridData = new GridData();
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 
 			for (int i = 0; i < PEPeerSource.PS_SOURCES.length; i++) {
 
@@ -445,13 +445,13 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 				networks_group.setLayout(networks_layout);
 
 				gridData = new GridData(GridData.FILL_HORIZONTAL);
-				Utils.setLayoutData(networks_group, gridData);
+				networks_group.setLayoutData(gridData);
 
 				label = new Label(networks_group, SWT.NULL);
 				Messages.setLanguageText(label,
 						"ConfigView.section.connection.group.networks.info");
 				gridData = new GridData();
-				Utils.setLayoutData(label, gridData);
+				label.setLayoutData(gridData);
 
 				for (int i = 0; i < AENetworkClassifier.AT_NETWORKS.length; i++) {
 
@@ -469,7 +469,7 @@ public class ConfigSectionConnection implements UISWTConfigSection {
 
 				label = new Label(networks_group, SWT.NULL);
 				gridData = new GridData();
-				Utils.setLayoutData(label, gridData);
+				label.setLayoutData(gridData);
 
 				BooleanParameter network_prompt = new BooleanParameter(networks_group,
 						"Network Selection Prompt",

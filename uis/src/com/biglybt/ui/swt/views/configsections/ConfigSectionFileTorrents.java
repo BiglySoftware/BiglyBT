@@ -30,14 +30,12 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-
-import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.ui.swt.pif.UISWTConfigSection;
 
 public class ConfigSectionFileTorrents implements UISWTConfigSection {
   @Override
@@ -82,12 +80,12 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
   public void
   configSectionCreateSupport(
 	final Composite cTorrent )
-{
+	{
 	ImageLoader imageLoader = ImageLoader.getInstance();
 	Image imgOpenFolder = imageLoader.getImage("openFolderButton");
 
 	GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(cTorrent, gridData);
+		cTorrent.setLayoutData(gridData);
     GridLayout layout = new GridLayout();
     layout.numColumns = 2;
     cTorrent.setLayout(layout);
@@ -103,7 +101,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalIndent = 25;
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(gSaveTorrents, gridData);
+		gSaveTorrents.setLayoutData(gridData);
     layout = new GridLayout();
     layout.marginHeight = 0;
     layout.marginWidth = 0;
@@ -138,7 +136,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
         }
       }
     });
-    Utils.setLayoutData(browse2, new GridData());
+		browse2.setLayoutData(new GridData());
 
     gridData = new GridData();
     gridData.horizontalSpan = 2;
@@ -197,7 +195,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalIndent = 25;
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(gWatchFolder, gridData);
+		gWatchFolder.setLayoutData(gridData);
     layout = new GridLayout();
     layout.marginHeight = 0;
     layout.marginWidth = 0;
@@ -251,7 +249,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     Composite gAddButton = new Composite(gWatchFolder, SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 4;
-    Utils.setLayoutData(gAddButton, gridData);
+		gAddButton.setLayoutData(gridData);
     layout = new GridLayout();
     layout.marginHeight = 0;
     layout.marginWidth = 0;

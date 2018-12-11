@@ -755,7 +755,7 @@ public class SubscriptionWizard {
 		libraryTable = new Table(composite, SWT.FULL_SELECTION | SWT.VIRTUAL | SWT.V_SCROLL | SWT.SINGLE);
 
 		final TableColumn torrentColumn = new TableColumn(libraryTable, SWT.NONE);
-		torrentColumn.setWidth(Utils.adjustPXForDPI(50));
+		torrentColumn.setWidth(50);
 
 		final Composite compEmpty = new Composite(composite,SWT.NONE);
 		compEmpty.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));

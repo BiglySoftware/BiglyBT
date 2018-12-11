@@ -24,13 +24,7 @@ import java.util.List;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.util.*;
 import com.biglybt.core.download.DownloadManager;
@@ -54,21 +48,21 @@ public class TrackerChangerWindow {
     Messages.setLanguageText(label, "TrackerChangerWindow.newtracker");
     GridData gridData = new GridData();
     gridData.widthHint = 400;
-    Utils.setLayoutData(label, gridData);
+    label.setLayoutData(gridData);
 
     final Text url = new Text(shell, SWT.BORDER);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.widthHint = 400;
-    Utils.setLayoutData(url, gridData);
+    url.setLayoutData(gridData);
     Utils.setTextLinkFromClipboard(shell, url, false, false);
 
     Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(labelSeparator, gridData);
+    labelSeparator.setLayoutData(gridData);
 
     Composite panel = new Composite(shell, SWT.NONE);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(panel, gridData);
+    panel.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 3;
     panel.setLayout(layout);
@@ -77,14 +71,14 @@ public class TrackerChangerWindow {
 
     label = new Label( panel, SWT.NONE );
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(label, gridData );
+    label.setLayoutData(gridData);
 
     Button ok = new Button(panel, SWT.PUSH);
     ok.setText(MessageText.getString("Button.ok"));
     gridData = new GridData();
     gridData.widthHint = 70;
     gridData.horizontalAlignment = GridData.END;
-    Utils.setLayoutData(ok, gridData);
+    ok.setLayoutData(gridData);
     shell.setDefaultButton(ok);
     ok.addListener(SWT.Selection, new Listener() {
 
@@ -148,7 +142,7 @@ public class TrackerChangerWindow {
     gridData = new GridData();
     gridData.widthHint = 70;
     gridData.horizontalAlignment = GridData.END;
-    Utils.setLayoutData(cancel, gridData);
+    cancel.setLayoutData(gridData);
     cancel.addListener(SWT.Selection, new Listener() {
 
       @Override

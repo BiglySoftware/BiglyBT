@@ -180,14 +180,14 @@ public class ProgressReporterPanel
 	private void createControls(IProgressReport pReport) {
 
 		imageLabel = new Label(this, SWT.NONE);
-		Utils.setLayoutData(imageLabel, new GridData(SWT.BEGINNING, SWT.TOP, false, false,1,3));
+		imageLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.TOP, false, false,1,3));
 
 
 		/*
 		 * Creates the main panel
 		 */
 		progressPanel = new Composite(this, SWT.NONE);
-		Utils.setLayoutData(progressPanel, new GridData(SWT.FILL, SWT.FILL, true, false));
+		progressPanel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 		GridLayout rightLayout = new GridLayout(4, false);
 		rightLayout.marginHeight = 0;
 		rightLayout.marginWidth = 0;
@@ -198,26 +198,26 @@ public class ProgressReporterPanel
 		 */
 
 		nameLabel = new Label(progressPanel, SWT.WRAP);
-		Utils.setLayoutData(nameLabel, new GridData(SWT.FILL, SWT.CENTER, true,
+		nameLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
 				false, 4, 1));
 
 		pBar = new AZProgressBar(progressPanel, pReport.isIndeterminate());
-		Utils.setLayoutData(pBar, new GridData(SWT.FILL, SWT.CENTER, true, false));
+		pBar.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		actionLabel_cancel = new Label(progressPanel, SWT.NONE);
-		Utils.setLayoutData(actionLabel_cancel, new GridData(SWT.END, SWT.CENTER, false,
+		actionLabel_cancel.setLayoutData(new GridData(SWT.END, SWT.CENTER, false,
 				false));
 
 		actionLabel_remove = new Label(progressPanel, SWT.NONE);
-		Utils.setLayoutData(actionLabel_remove, new GridData(SWT.END, SWT.CENTER, false,
+		actionLabel_remove.setLayoutData(new GridData(SWT.END, SWT.CENTER, false,
 				false));
 
 		actionLabel_retry = new Label(progressPanel, SWT.NONE);
-		Utils.setLayoutData(actionLabel_retry, new GridData(SWT.END, SWT.CENTER, false,
+		actionLabel_retry.setLayoutData(new GridData(SWT.END, SWT.CENTER, false,
 				false));
 
 		statusLabel = new Label(progressPanel, SWT.NONE);
-		Utils.setLayoutData(statusLabel, new GridData(SWT.BEGINNING, SWT.CENTER, true, false,
+		statusLabel.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, false,
 				2, 1));
 
 		/*
@@ -340,14 +340,14 @@ public class ProgressReporterPanel
 	 */
 	private void createDetailSection(IProgressReport pReport) {
 		Label separator = new Label(this, SWT.SEPARATOR | SWT.HORIZONTAL);
-		Utils.setLayoutData(separator, new GridData(SWT.FILL, SWT.TOP, true, false));
+		separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 
 		detailSection = new TwistieSection(this, TwistieLabel.NONE);
 		detailSection.setTitle(MessageText.getString("label.details"));
 		Composite sectionContent = detailSection.getContent();
 
 		detailSectionData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		Utils.setLayoutData(detailSection, detailSectionData);
+		detailSection.setLayoutData(detailSectionData);
 
 		GridLayout sectionLayout = new GridLayout();
 		sectionLayout.marginHeight = 0;
@@ -357,7 +357,7 @@ public class ProgressReporterPanel
 
 		detailListWidget = new StyledText(sectionContent, SWT.BORDER | SWT.V_SCROLL
 				| SWT.WRAP);
-		Utils.setLayoutData(detailListWidget, new GridData(SWT.FILL, SWT.FILL, true, true));
+		detailListWidget.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
 		/*
 		 * Add a default message instead of an empty box if there is no history;

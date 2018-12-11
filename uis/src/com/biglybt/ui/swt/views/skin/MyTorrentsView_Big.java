@@ -26,7 +26,6 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadTypeComplete;
 import com.biglybt.pif.download.DownloadTypeIncomplete;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 
 import com.biglybt.core.torrent.PlatformTorrentUtils;
@@ -42,7 +41,7 @@ public class MyTorrentsView_Big
 	public MyTorrentsView_Big(Core _core, int torrentFilterMode,
 	                          TableColumnCore[] basicItems, Text txtFilter, Composite cCatsTags) {
 		super( true );
-		defaultRowHeight = Utils.adjustPXForDPI(40);
+		defaultRowHeight = 40;
 		this.torrentFilterMode = torrentFilterMode;
 		this.txtFilter = txtFilter;
 		this.cCategoriesAndTags = cCatsTags;

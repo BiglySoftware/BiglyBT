@@ -18,6 +18,7 @@
 package com.biglybt.ui.swt;
 
 import java.util.*;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -27,14 +28,7 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -127,14 +121,14 @@ public class TextViewerWindow {
     GridData gridData = new GridData(  GridData.FILL_HORIZONTAL );
     gridData.widthHint = 200;
     gridData.horizontalSpan = 3;
-    Utils.setLayoutData(label, gridData);
+    label.setLayoutData(gridData);
 
     txtInfo = new Text(shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.WRAP);
     gridData = new GridData(  GridData.FILL_BOTH );
     gridData.widthHint = 600;
     gridData.heightHint = 400;
     gridData.horizontalSpan = 3;
-    Utils.setLayoutData(txtInfo, gridData);
+    txtInfo.setLayoutData(gridData);
     txtInfo.setText(sText);
     
     np_font = new Font(shell.getDisplay(), "Courier", txtInfo.getFont().getFontData()[0].getHeight(), SWT.NORMAL);
@@ -165,8 +159,8 @@ public class TextViewerWindow {
     buttonArea.setLayout( new GridLayout(  3, false ));
     gridData = new GridData(  GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 3;
-    Utils.setLayoutData(buttonArea, gridData);
-    		
+    buttonArea.setLayoutData(gridData);
+
     buildButtons();
     
 	shell.addListener(SWT.Traverse, new Listener() {
@@ -250,8 +244,8 @@ public class TextViewerWindow {
 
 	  Label label = new Label(buttonArea, SWT.NONE);
 	  GridData gridData = new GridData( GridData.FILL_HORIZONTAL );
-	  Utils.setLayoutData(label, gridData);
-	  
+	  label.setLayoutData(gridData);
+
 	  if ( cancel_enabled ){
 		  if (Constants.isOSX) {
 			  cancel = new Button(buttonArea, SWT.PUSH);

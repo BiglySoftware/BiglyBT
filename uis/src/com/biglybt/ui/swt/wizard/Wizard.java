@@ -132,14 +132,14 @@ public class Wizard {
     Color white = Colors.getSystemColor(display, SWT.COLOR_WHITE);
     cTitle.setBackground(white);
     GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(cTitle, gridData);
+    cTitle.setLayoutData(gridData);
     GridLayout titleLayout = new GridLayout();
     titleLayout.numColumns = 1;
     cTitle.setLayout(titleLayout);
     title = new Label(cTitle, SWT.NULL);
     title.setBackground(white);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(title, gridData);
+    title.setLayoutData(gridData);
     Font font = title.getFont();
     FontData[] data = font.getFontData();
     for(int i = 0 ; i < data.length ; i++) {
@@ -149,11 +149,11 @@ public class Wizard {
     title.setFont(titleFont);
     currentInfo = new Label(cTitle, SWT.WRAP);
     gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL );
-    Utils.setLayoutData(currentInfo, gridData);
+    currentInfo.setLayoutData(gridData);
     currentInfo.setBackground(white);
     errorMessage = new Label(cTitle, SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(errorMessage, gridData);
+    errorMessage.setLayoutData(gridData);
     errorMessage.setBackground(white);
     Color red = Colors.getSystemColor(display, SWT.COLOR_RED);
     errorMessage.setForeground(red);
@@ -163,14 +163,14 @@ public class Wizard {
 
     panel = new Composite(wizardWindow, SWT.NULL);
     gridData = new GridData(GridData.FILL_BOTH);
-    Utils.setLayoutData(panel, gridData);
+    panel.setLayoutData(gridData);
 
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     new Label(wizardWindow, SWT.SEPARATOR | SWT.HORIZONTAL).setLayoutData(gridData);
 
     Composite cButtons = new Composite(wizardWindow, SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(cButtons, gridData);
+    cButtons.setLayoutData(gridData);
     GridLayout layoutButtons = new GridLayout();
     layoutButtons.numColumns = 5;
     cButtons.setLayout(layoutButtons);
@@ -181,28 +181,28 @@ public class Wizard {
     gridData = new GridData();
     gridData.widthHint = 90;
     gridData.horizontalAlignment = GridData.CENTER;
-    Utils.setLayoutData(cancel, gridData);
+    cancel.setLayoutData(gridData);
     Messages.setLanguageText(cancel, "Button.cancel");
 
     previous = new Button(cButtons, SWT.PUSH);
     gridData = new GridData();
     gridData.widthHint = 90;
     gridData.horizontalAlignment = GridData.END;
-    Utils.setLayoutData(previous, gridData);
+    previous.setLayoutData(gridData);
     Messages.setLanguageText(previous, "wizard.previous");
 
     next = new Button(cButtons, SWT.PUSH);
     gridData = new GridData();
     gridData.widthHint = 90;
     gridData.horizontalAlignment = GridData.BEGINNING;
-    Utils.setLayoutData(next, gridData);
+    next.setLayoutData(gridData);
     Messages.setLanguageText(next, "wizard.next");
 
     finish = new Button(cButtons, SWT.PUSH);
     gridData = new GridData();
     gridData.widthHint = 90;
     gridData.horizontalAlignment = GridData.CENTER;
-    Utils.setLayoutData(finish, gridData);
+    finish.setLayoutData(gridData);
     Messages.setLanguageText(finish, "wizard.finish");
 
     previous.addListener(SWT.Selection, new Listener() {
@@ -283,7 +283,7 @@ public class Wizard {
 	});
 
  	wizardHeight = wizardWindow.computeSize(width,SWT.DEFAULT).y - 50;
- 	wizardWindow.setSize(Utils.adjustPXForDPI(width),Utils.adjustPXForDPI(400));
+ 	wizardWindow.setSize(width, 400);
 
   }
 

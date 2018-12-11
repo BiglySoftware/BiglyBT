@@ -32,7 +32,6 @@ import org.eclipse.swt.widgets.Label;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
@@ -66,7 +65,7 @@ BetaWizardStart
 
 		Label info_label = new Label( rootPanel, SWT.WRAP );
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(info_label, gridData);
+		info_label.setLayoutData(gridData);
 		info_label.setText( MessageText.getString( "beta.wizard.info" ));
 
 		LinkLabel link = new LinkLabel( rootPanel, "beta.wizard.link", MessageText.getString( "beta.wizard.link.url" ));
@@ -74,12 +73,12 @@ BetaWizardStart
 
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.verticalIndent=10;
-		Utils.setLayoutData(link_label, gridData);
+		link_label.setLayoutData(gridData);
 
 		final Composite gRadio = new Composite(rootPanel, SWT.NULL);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 	    gridData.verticalIndent=10;
-		Utils.setLayoutData(gRadio, gridData);
+		gRadio.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		gRadio.setLayout( layout );
@@ -111,12 +110,12 @@ BetaWizardStart
 
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.verticalIndent=10;
-		Utils.setLayoutData(forum_label, gridData);
+		forum_label.setLayoutData(gridData);
 
 		Label version_label = new Label( rootPanel, SWT.WRAP );
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.verticalIndent=10;
-		Utils.setLayoutData(version_label, gridData);
+		version_label.setLayoutData(gridData);
 		version_label.setText( MessageText.getString( "beta.wizard.version", new String[]{ Constants.AZUREUS_VERSION } ));
 	}
 

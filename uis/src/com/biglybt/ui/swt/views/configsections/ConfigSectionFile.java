@@ -104,7 +104,7 @@ public class ConfigSectionFile
 		gDefaultDir.setLayout(layout);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(gDefaultDir, gridData);
+		gDefaultDir.setLayoutData(gridData);
 
 		if (userMode > 0) {
 			// def dir: best guess
@@ -123,7 +123,7 @@ public class ConfigSectionFile
 		Label lblDefaultDir = new Label(gDefaultDir, SWT.NONE);
 		Messages.setLanguageText(lblDefaultDir,
 				"ConfigView.section.file.defaultdir.ask");
-		Utils.setLayoutData(lblDefaultDir, new GridData());
+		lblDefaultDir.setLayoutData(new GridData());
 
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		final StringParameter pathParameter = new StringParameter(gDefaultDir,
@@ -159,7 +159,7 @@ public class ConfigSectionFile
 		Composite cOpenOptions = new Composite(gDefaultDir, SWT.NONE);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 3;
-		Utils.setLayoutData(cOpenOptions, gridData);
+		cOpenOptions.setLayoutData(gridData);
 		RowLayout rowLayout = new RowLayout();
 		rowLayout.marginBottom = rowLayout.marginLeft = rowLayout.marginRight = rowLayout.marginTop = 0;
 		rowLayout.center = true;
@@ -208,7 +208,7 @@ public class ConfigSectionFile
 			cHistory.setLayout(layout);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(cHistory, gridData);
+			cHistory.setLayoutData(gridData);
 
 			// def dir: auto update
 			sCurConfigID = "DefaultDir.AutoUpdate";
@@ -218,7 +218,7 @@ public class ConfigSectionFile
 
 			Label padLabel = new Label( cHistory, SWT.NULL );
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(padLabel, gridData);
+			padLabel.setLayoutData(gridData);
 
 			sCurConfigID = "saveTo_list.max_entries";
 			allConfigIDs.add(sCurConfigID);
@@ -326,7 +326,7 @@ public class ConfigSectionFile
 			Messages.setLanguageText(lblMinMB, "ConfigView.label.piecereorderminmb");
 			gridData = new GridData();
 			gridData.horizontalIndent = 25;
-			Utils.setLayoutData(lblMinMB, gridData);
+			lblMinMB.setLayoutData(gridData);
 
 			IntParameter minMB = new IntParameter(gFile, sCurConfigID);
 			gridData = new GridData();
@@ -484,7 +484,7 @@ public class ConfigSectionFile
 			maxLinksGroup.setLayout(layout);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(maxLinksGroup, gridData);
+			maxLinksGroup.setLayoutData(gridData);
 
 			Label maxLinks = new Label(maxLinksGroup, SWT.NULL);
 			Messages.setLanguageText(maxLinks, "ConfigView.label.max.file.links");
@@ -520,7 +520,7 @@ public class ConfigSectionFile
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalIndent = 25;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cOOSDGroup, gridData);
+			cOOSDGroup.setLayoutData(gridData);
 
 			sCurConfigID = "Insufficient Space Download Restart Period";
 			allConfigIDs.add(sCurConfigID);
@@ -567,7 +567,7 @@ public class ConfigSectionFile
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalIndent = 25;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cResumeGroup, gridData);
+			cResumeGroup.setLayoutData(gridData);
 
 			sCurConfigID = "Save Resume Interval";
 			allConfigIDs.add(sCurConfigID);
@@ -653,12 +653,12 @@ public class ConfigSectionFile
 			label = new Label(gFile, SWT.WRAP);
 			gridData = new GridData();
 			gridData.widthHint = 180;
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "ConfigView.label.priorityExtensions");
 
 			Composite cExtensions = new Composite(gFile, SWT.NULL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cExtensions, gridData);
+			cExtensions.setLayoutData(gridData);
 			layout = new GridLayout();
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
@@ -687,12 +687,12 @@ public class ConfigSectionFile
 		label = new Label(gFile, SWT.WRAP);
 		gridData = new GridData();
 		gridData.widthHint = 180;
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		Messages.setLanguageText(label, "ConfigView.label.quickviewexts");
 
 		Composite cQuickView = new Composite(gFile, SWT.NULL);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(cQuickView, gridData);
+		cQuickView.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
@@ -809,7 +809,7 @@ public class ConfigSectionFile
 			gIgnoredFiles.setLayout(layout);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(gIgnoredFiles, gridData);
+			gIgnoredFiles.setLayoutData(gridData);
 
 				// torrent add auto-skip file types
 
@@ -878,7 +878,7 @@ public class ConfigSectionFile
 		gDeletion.setLayout(layout);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(gDeletion, gridData);
+		gDeletion.setLayoutData(gridData);
 
 		if (userMode > 0) {
 	  		Composite c = new Composite(gDeletion, SWT.NONE);
@@ -889,7 +889,7 @@ public class ConfigSectionFile
 	  		c.setLayout(layout);
 	  		gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  		gridData.horizontalSpan = 2;
-	  		Utils.setLayoutData(c, gridData);
+			c.setLayoutData(gridData);
 
 	  		sCurConfigID = "tb.confirm.delete.content";
 	  		label = new Label(c, SWT.NULL);
@@ -961,16 +961,16 @@ public class ConfigSectionFile
 			gConfigSettings.setLayout(layout);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(gConfigSettings, gridData);
+			gConfigSettings.setLayoutData(gridData);
 
 			// Configuration directory information.
 			Label config_label = new Label(gConfigSettings, SWT.NULL);
 			Messages.setLanguageText(config_label,
 					"ConfigView.section.file.config.currentdir");
-			Utils.setLayoutData(config_label, new GridData());
+			config_label.setLayoutData(new GridData());
 			Label config_link = new Label(gConfigSettings, SWT.NULL);
 			config_link.setText(SystemProperties.getUserPath());
-			Utils.setLayoutData(config_link, new GridData());
+			config_link.setLayoutData(new GridData());
 			LinkLabel.makeLinkedLabel(config_link, SystemProperties.getUserPath());
 
 			sCurConfigID = "Use Config File Backups";

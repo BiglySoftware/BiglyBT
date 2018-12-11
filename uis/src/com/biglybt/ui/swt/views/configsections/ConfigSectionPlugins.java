@@ -313,7 +313,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		Composite infoGroup = new Composite(parent, SWT.NULL);
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL
 				| GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(infoGroup, gridData);
+		infoGroup.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		layout.marginWidth = 0;
@@ -353,13 +353,13 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		}
 
 		label = new Label(infoGroup, SWT.WRAP);
-		Utils.setLayoutData(label, new GridData(GridData.FILL_HORIZONTAL));
+		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		Messages.setLanguageText(label, "ConfigView.pluginlist.whereToPut");
 
 		label = new Label(infoGroup, SWT.WRAP);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalIndent = 10;
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		label.setText(sUserPluginDir.replaceAll("&", "&&"));
 		label.setForeground(Colors.blue);
 		label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -383,13 +383,13 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		});
 
 		label = new Label(infoGroup, SWT.WRAP);
-		Utils.setLayoutData(label, new GridData(GridData.FILL_HORIZONTAL));
+		label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		Messages.setLanguageText(label, "ConfigView.pluginlist.whereToPutOr");
 
 		label = new Label(infoGroup, SWT.WRAP);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalIndent = 10;
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		label.setText(sAppPluginDir.replaceAll("&", "&&"));
 		label.setForeground(Colors.blue);
 		label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
@@ -426,7 +426,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		});
 
 		Label labelInfo = new Label(infoGroup, SWT.WRAP);
-		Utils.setLayoutData(labelInfo, new GridData(GridData.FILL_HORIZONTAL));
+		labelInfo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		Messages.setLanguageText(labelInfo, "ConfigView.pluginlist.info");
 
 		table = new Table(infoGroup, SWT.BORDER | SWT.SINGLE | SWT.CHECK
@@ -434,10 +434,10 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		gridData = new GridData(GridData.FILL_BOTH);
 		gridData.heightHint = 200;
 		gridData.widthHint = 200;
-		Utils.setLayoutData(table, gridData);
+		table.setLayoutData(gridData);
 		for (int i = 0; i < COLUMN_HEADERS.length; i++) {
 			final TableColumn tc = new TableColumn(table, COLUMN_ALIGNS[i]);
-			tc.setWidth(Utils.adjustPXForDPI(COLUMN_SIZES[i]));
+			tc.setWidth(COLUMN_SIZES[i]);
 			tc.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -462,10 +462,10 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		layout.marginWidth = 0;
 		layout.numColumns = 5;
 		cButtons.setLayout(layout);
-		Utils.setLayoutData(cButtons, new GridData());
+		cButtons.setLayoutData(new GridData());
 
 		final Button btnUnload = new Button(cButtons, SWT.PUSH);
-		Utils.setLayoutData(btnUnload, new GridData());
+		btnUnload.setLayoutData(new GridData());
 		Messages.setLanguageText(btnUnload, "ConfigView.pluginlist.unloadSelected");
 		btnUnload.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -514,7 +514,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		btnUnload.setEnabled( false );
 
 		final Button btnLoad = new Button(cButtons, SWT.PUSH);
-		Utils.setLayoutData(btnUnload, new GridData());
+		btnUnload.setLayoutData(new GridData());
 		Messages.setLanguageText(btnLoad, "ConfigView.pluginlist.loadSelected");
 		btnLoad.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -574,7 +574,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 			// scan
 
 		final Button btnScan = new Button(cButtons, SWT.PUSH);
-		Utils.setLayoutData(btnScan, new GridData());
+		btnScan.setLayoutData(new GridData());
 		Messages.setLanguageText(btnScan, "ConfigView.pluginlist.scan");
 		btnScan.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -590,7 +590,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 			// uninstall
 
 		final Button btnUninstall = new Button(cButtons, SWT.PUSH);
-		Utils.setLayoutData(btnUninstall, new GridData());
+		btnUninstall.setLayoutData(new GridData());
 		Messages.setLanguageText(btnUninstall, "ConfigView.pluginlist.uninstallSelected");
 		btnUninstall.addSelectionListener(new SelectionAdapter() {
 			@Override

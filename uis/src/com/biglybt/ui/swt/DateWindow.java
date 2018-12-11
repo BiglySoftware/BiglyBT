@@ -18,7 +18,6 @@
 package com.biglybt.ui.swt;
 
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -29,12 +28,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.DateTime;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 
@@ -59,8 +53,8 @@ public class DateWindow {
 
     DateTime calendar = new DateTime(shell, SWT.CALENDAR | SWT.LONG );
     GridData gridData = new GridData(GridData.FILL_BOTH);
-    Utils.setLayoutData(calendar, gridData);
-    
+    calendar.setLayoutData(gridData);
+
     if ( current >= 0 ){
     	GregorianCalendar cal = new GregorianCalendar();
     	cal.setTimeInMillis( current );
@@ -80,7 +74,7 @@ public class DateWindow {
     panel.setLayout(rLayout);
     gridData = new GridData();
     gridData.horizontalAlignment = SWT.END;
-    Utils.setLayoutData(panel, gridData);
+    panel.setLayoutData(gridData);
 
     Button[] buttons = Utils.createOKCancelButtons(panel);
 

@@ -27,17 +27,13 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
+import com.biglybt.plugin.startstoprules.defaultplugin.DefaultRankCalculator;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.config.IntListParameter;
-import com.biglybt.ui.swt.config.IntParameter;
-import com.biglybt.ui.swt.config.Parameter;
-import com.biglybt.ui.swt.config.ParameterChangeAdapter;
-import com.biglybt.ui.swt.config.ParameterChangeListener;
+import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
-import com.biglybt.plugin.startstoprules.defaultplugin.DefaultRankCalculator;
 
 
 /** Seeding Automation Specific options
@@ -84,7 +80,7 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
     layout.marginHeight = 0;
     cDownloading.setLayout(layout);
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(cDownloading, gridData);
+		cDownloading.setLayoutData(gridData);
 
     	// wiki link
 
@@ -95,7 +91,7 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 	linkLabel.setForeground(Colors.blue);
 	gridData = new GridData();
 	gridData.horizontalSpan = 2;
-	Utils.setLayoutData(linkLabel, gridData);
+	linkLabel.setLayoutData(gridData);
 	linkLabel.addMouseListener(new MouseAdapter() {
 		@Override
 		public void mouseDoubleClick(MouseEvent arg0) {
@@ -145,7 +141,7 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
     gSpeed.setLayout(layout);
     gridData = new GridData(GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(gSpeed, gridData);
+		gSpeed.setLayoutData(gridData);
 
     gSpeed.setText( MessageText.getString( "label.speed.options" ));
   	// info
@@ -154,7 +150,7 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 2;
     gridData.widthHint = 300;
-    Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
     Messages.setLanguageText(label, "ConfigView.label.downloading.info");
 
 

@@ -25,16 +25,20 @@ package com.biglybt.ui.swt.views.configsections;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.*;
+import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.config.BooleanParameter;
+import com.biglybt.ui.swt.config.ChangeSelectionActionPerformer;
+import com.biglybt.ui.swt.config.IntParameter;
+import com.biglybt.ui.swt.pif.UISWTConfigSection;
 
 public class ConfigSectionFilePerformance implements UISWTConfigSection {
   @Override
@@ -78,13 +82,13 @@ public class ConfigSectionFilePerformance implements UISWTConfigSection {
     cSection.setLayout(layout);
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(cSection, gridData);
+		cSection.setLayoutData(gridData);
 
     label = new Label(cSection, SWT.WRAP);
     Messages.setLanguageText(label, "ConfigView.section.file.perf.explain");
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 3;
-    Utils.setLayoutData(label,  gridData );
+		label.setLayoutData(gridData);
 
     // diskmanager.friendly.hashchecking
     final BooleanParameter friendly_hashchecking = new BooleanParameter(cSection, "diskmanager.friendly.hashchecking", "ConfigView.section.file.friendly.hashchecking");
@@ -137,7 +141,7 @@ public class ConfigSectionFilePerformance implements UISWTConfigSection {
     Label cache_explain_label = new Label(cSection, SWT.WRAP);
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING | GridData.FILL_HORIZONTAL);
     gridData.widthHint = 300;
-    Utils.setLayoutData(cache_explain_label, gridData);
+		cache_explain_label.setLayoutData(gridData);
     Messages.setLanguageText(
     		cache_explain_label,
 			"ConfigView.section.file.perf.cache.size.explain",
@@ -153,7 +157,7 @@ public class ConfigSectionFilePerformance implements UISWTConfigSection {
 
     Label cnst_label = new Label(cSection, SWT.NULL);
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    Utils.setLayoutData(cnst_label, gridData);
+			cnst_label.setLayoutData(gridData);
     // XXX Changed "DisplayFormatters.getUnit(DisplayFormatters.UNIT_KB)" to
     //     getUnitBase10 for the release, since the # is stored in KB.
     Messages.setLanguageText(cnst_label,
@@ -222,14 +226,14 @@ public class ConfigSectionFilePerformance implements UISWTConfigSection {
     label = new Label(cSection, SWT.WRAP);
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING | GridData.FILL_HORIZONTAL);
     gridData.widthHint = 300;
-    Utils.setLayoutData(label, gridData);
+				label.setLayoutData(gridData);
     Messages.setLanguageText(label, "ConfigView.section.file.max_open_files.explain");
 
     	// write mb limit
 
     label = new Label(cSection, SWT.NULL);
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
     String label_text =
     	MessageText.getString(
     		"ConfigView.section.file.writemblimit",
@@ -241,14 +245,14 @@ public class ConfigSectionFilePerformance implements UISWTConfigSection {
     label = new Label(cSection, SWT.WRAP);
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING | GridData.FILL_HORIZONTAL);
     gridData.widthHint = 300;
-    Utils.setLayoutData(label, gridData);
+      label.setLayoutData(gridData);
     Messages.setLanguageText(label, "ConfigView.section.file.writemblimit.explain");
 
     	// read mb limit
 
     label = new Label(cSection, SWT.NULL);
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
     label_text =
     	MessageText.getString(
     		"ConfigView.section.file.readmblimit",
@@ -260,7 +264,7 @@ public class ConfigSectionFilePerformance implements UISWTConfigSection {
     label = new Label(cSection, SWT.WRAP);
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING | GridData.FILL_HORIZONTAL);
     gridData.widthHint = 300;
-    Utils.setLayoutData(label, gridData);
+      label.setLayoutData(gridData);
     Messages.setLanguageText(label, "ConfigView.section.file.readmblimit.explain");
 
     }

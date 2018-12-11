@@ -100,7 +100,6 @@ public class GenericBooleanParameter
 	}
 
 	public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
 		checkBox.setLayoutData(layoutData);
 	}
 

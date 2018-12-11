@@ -193,7 +193,7 @@ public class SWTSkinObjectCombo
 							fontSize = FontUtils.getHeight(fd) * dSize;
 						} else {
 							fontSize = FontUtils.getFontHeightFromPX(widget.getDisplay(),
-									tempFontData, null, Utils.adjustPXForDPI((int) dSize));
+									tempFontData, null, (int) dSize);
 						}
 					}
 

@@ -25,17 +25,19 @@ package com.biglybt.ui.swt.views.configsections;
 import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 
-import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AENetworkClassifier;
-import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
+
+import com.biglybt.pif.ui.config.ConfigSection;
 
 public class ConfigSectionSharing implements UISWTConfigSection {
   @Override
@@ -70,7 +72,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 
     Composite gSharing = new Composite(parent, SWT.WRAP);
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(gSharing, gridData);
+		gSharing.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 2;
     layout.marginHeight = 0;
@@ -81,7 +83,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 	gridData = new GridData();
     Label protocol_lab = new Label(gSharing, SWT.NULL);
     Messages.setLanguageText(protocol_lab, "ConfigView.section.sharing.protocol");
-	Utils.setLayoutData(protocol_lab,  gridData );
+		protocol_lab.setLayoutData(gridData);
 
 	String[]	protocols = {"HTTP","HTTPS","UDP","DHT" };
     String[]	descs = {"HTTP","HTTPS (SSL)", "UDP", "Decentralised" };
@@ -163,7 +165,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 	gridData.horizontalIndent = 25;
     Label period_label = new Label(gSharing, SWT.NULL );
     Messages.setLanguageText(period_label, "ConfigView.section.sharing.rescanperiod");
-	Utils.setLayoutData(period_label,  gridData );
+		period_label.setLayoutData(gridData);
 
     gridData = new GridData();
 	IntParameter rescan_period = new IntParameter(gSharing, "Sharing Rescan Period");
@@ -205,7 +207,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 
 	gridData = new GridData(GridData.FILL_HORIZONTAL);
 	gridData.horizontalSpan = 2;
-	Utils.setLayoutData(networks_group, gridData);
+		networks_group.setLayoutData(gridData);
 
 	BooleanParameter network_global = new BooleanParameter( networks_group, "Sharing Network Selection Global", "label.use.global.defaults");
 
@@ -220,8 +222,8 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 
 		gridData = new GridData();
 		gridData.horizontalIndent = 25;
-		Utils.setLayoutData(network.getControl(),  gridData );
-		
+		network.getControl().setLayoutData(gridData);
+
 		net_params.add( network );
 	}
 

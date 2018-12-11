@@ -292,12 +292,12 @@ public class ImageLoader
 				if (index > 0) {
 					String sTryFile = value.substring(0, index) + suffix
 							+ value.substring(index);
-					images[i] = loadImage(display, cl, sTryFile, sKey, scale);
+					images[i] = loadImage(display, cl, sTryFile, sKey);
 
 					if (images[i] == null) {
 						sTryFile = value.substring(0, index) + suffix.replace('-', '_')
 								+ value.substring(index);
-						images[i] = loadImage(display, cl, sTryFile, sKey, scale);
+						images[i] = loadImage(display, cl, sTryFile, sKey);
 					}
 				}
 
@@ -317,14 +317,14 @@ public class ImageLoader
 				if (useIndex == -1) {
 					String sTryFile = origFile.substring(0, index) + suffix
 							+ origFile.substring(index);
-					image = loadImage(display, cl, sTryFile, sKey, scale);
+					image = loadImage(display, cl, sTryFile, sKey);
 
 						// not in repo
 
 					if (image == null) {
 						sTryFile = origFile.substring(0, index) + suffix.replace('-', '_')
 								+ origFile.substring(index);
-						image = loadImage(display, cl, sTryFile, sKey, scale);
+						image = loadImage(display, cl, sTryFile, sKey);
 
 							// not in repo
 					}
@@ -338,7 +338,7 @@ public class ImageLoader
 
 					if ( image == null ){
 
-						image = loadImage(display, cl, sTryFile, sTryFile, scale);
+						image = loadImage(display, cl, sTryFile, sTryFile);
 
 						if ( isRealImage(image)){
 
@@ -355,7 +355,7 @@ public class ImageLoader
 							if (!isRealImage(image)) {
 
 								image = loadImage(display, cl, sTryFileNonDisabled,
-										sTryFileNonDisabled, scale);
+										sTryFileNonDisabled);
 
 								if ( isRealImage(image)) {
 
@@ -394,7 +394,7 @@ public class ImageLoader
 
 				}else{
 
-					image = loadImage(display, cl, values[locationStart], sKey, scale);
+					image = loadImage(display, cl, values[locationStart], sKey);
 
 					if ( isRealImage(image)) {
 
@@ -452,7 +452,7 @@ public class ImageLoader
 	}
 
 	private Image loadImage(Display display, ClassLoader cl, String res,
-			String sKey, boolean scale) {
+			String sKey) {
 		Image img = null;
 
 		//System.out.println("LoadImage " + sKey + " - " + res);
@@ -479,7 +479,7 @@ public class ImageLoader
 						if (index > 0) {
 							String sTryFile = sParentFile.substring(0, index) + sSuffix
 									+ sParentFile.substring(index);
-							img = loadImage(display, cl, sTryFile, sKey, scale);
+							img = loadImage(display, cl, sTryFile, sKey);
 
 							if (img != null) {
 								break;
@@ -487,7 +487,7 @@ public class ImageLoader
 
 							sTryFile = sParentFile.substring(0, index)
 									+ sSuffix.replace('-', '_') + sParentFile.substring(index);
-							img = loadImage(display, cl, sTryFile, sKey, scale);
+							img = loadImage(display, cl, sTryFile, sKey);
 
 							if (img != null) {
 								break;
@@ -533,8 +533,6 @@ public class ImageLoader
 						releaseImage(id);
 					}
 					//System.err.println("ImageRepository:loadImage:: Resource not found: " + res);
-				} else if (scale) {
-					img = Utils.adjustPXForDPI(display, img);
 				}
 			} catch (Throwable e) {
 				System.err.println("ImageRepository:loadImage:: Resource not found: "

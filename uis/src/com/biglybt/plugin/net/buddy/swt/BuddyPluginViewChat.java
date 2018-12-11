@@ -21,37 +21,24 @@
 package com.biglybt.plugin.net.buddy.swt;
 
 import java.util.*;
+import java.util.List;
 
-import com.biglybt.plugin.net.buddy.BuddyPlugin;
-import com.biglybt.plugin.net.buddy.BuddyPluginAZ2;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.utils.LocaleUtilities;
+import com.biglybt.plugin.net.buddy.*;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.Colors;
-
-import com.biglybt.plugin.net.buddy.BuddyPluginAZ2ChatListener;
-import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
 
 public class
 BuddyPluginViewChat
@@ -103,7 +90,7 @@ BuddyPluginViewChat
 		layout.marginWidth = 0;
 		shell.setLayout(layout);
 		GridData grid_data = new GridData(GridData.FILL_BOTH );
-		Utils.setLayoutData(shell, grid_data);
+		shell.setLayoutData(grid_data);
 
 
 		log = new StyledText(shell,SWT.READ_ONLY | SWT.V_SCROLL | SWT.BORDER | SWT.WRAP | SWT.NO_FOCUS );
@@ -112,7 +99,7 @@ BuddyPluginViewChat
 		grid_data.horizontalIndent = 4;
 		grid_data.widthHint = 300;
 		grid_data.heightHint = 400;
-		Utils.setLayoutData(log, grid_data);
+		log.setLayoutData(grid_data);
 		log.setIndent( 4 );
 
 		log.setEditable( false );
@@ -125,9 +112,9 @@ BuddyPluginViewChat
 		rhs.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_BOTH );
 		grid_data.widthHint = 150;
-		Utils.setLayoutData(rhs, grid_data);
+		rhs.setLayoutData(grid_data);
 
-			// table
+		// table
 
 		buddy_table = new Table(rhs, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
@@ -142,17 +129,16 @@ BuddyPluginViewChat
 
 			TableColumn tc = new TableColumn(buddy_table, aligns[i]);
 
-			tc.setWidth(Utils.adjustPXForDPI(sizes[i]));
+			tc.setWidth(sizes[i]);
 
 			Messages.setLanguageText(tc, headers[i]);
 		}
 
-	    buddy_table.setHeaderVisible(true);
+		buddy_table.setHeaderVisible(true);
 
-	    grid_data = new GridData(GridData.FILL_BOTH);
-	    grid_data.heightHint = buddy_table.getHeaderHeight() * 3;
-		Utils.setLayoutData(buddy_table, grid_data);
-
+		grid_data = new GridData(GridData.FILL_BOTH);
+		grid_data.heightHint = buddy_table.getHeaderHeight() * 3;
+		buddy_table.setLayoutData(grid_data);
 
 		buddy_table.addListener(
 			SWT.SetData,
@@ -202,7 +188,7 @@ BuddyPluginViewChat
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
 		grid_data.heightHint = 50;
-		Utils.setLayoutData(text, grid_data);
+		text.setLayoutData(grid_data);
 
 		text.addKeyListener(
 			new KeyListener()

@@ -215,8 +215,6 @@ public class SideBarEntrySWT
 
 		this.sidebar = sidebar;
 
-		IMAGELEFT_GAP = Utils.adjustPXForDPI(IMAGELEFT_GAP);
-		IMAGELEFT_SIZE = Utils.adjustPXForDPI(IMAGELEFT_SIZE);
 		updateColors();
 	}
 
@@ -1059,7 +1057,7 @@ public class SideBarEntrySWT
 				//	textSize.x = minTextSize.x + 2;
 				//}
 
-				int width = textSize.x + Utils.adjustPXForDPI(10);
+				int width = textSize.x + 10;
 				x1IndicatorOfs += width + SIDEBAR_SPACING;
 				int startX = treeArea.width - x1IndicatorOfs;
 

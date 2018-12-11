@@ -174,8 +174,9 @@ public class SWTSkinObjectSlider
 		}
 
 		canvas = new Canvas(createOn, style);
-		Utils.setLayoutData(canvas, new FormData(maxSize.x == 0 ? SWT.DEFAULT
-				: maxSize.x, maxSize.y));
+		FormData layoutData = new FormData(maxSize.x == 0 ? SWT.DEFAULT
+				: maxSize.x, maxSize.y);
+		canvas.setLayoutData(layoutData);
 		canvas.setSize(SWT.DEFAULT, maxSize.y);
 		setControl(canvas);
 

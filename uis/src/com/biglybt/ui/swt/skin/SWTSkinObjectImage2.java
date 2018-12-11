@@ -126,7 +126,6 @@ public class SWTSkinObjectImage2
 					}
 				}
 				Rectangle imgSrcBounds = imgSrc.getBounds();
-				Rectangle imgSrcBoundsAdj = Utils.adjustPXForDPI(imgSrcBounds);
 				Point size = control.getSize();
 
 				if (drawMode == DRAW_SCALEDOWN_OR_CENTER) {
@@ -142,27 +141,27 @@ public class SWTSkinObjectImage2
 							0, 0, size.x, size.y);
 				} else if (drawMode == DRAW_LEFT) {
 					e.gc.drawImage(imgSrc, 0, 0, imgSrcBounds.width, imgSrcBounds.height,
-							0, 0, imgSrcBoundsAdj.width, imgSrcBoundsAdj.height);
+							0, 0, imgSrcBounds.width, imgSrcBounds.height);
 					//e.gc.drawImage(imgSrc, 0, 0);
 				} else if (drawMode == DRAW_NORMAL || drawMode == DRAW_CENTER
 						|| drawMode == DRAW_ANIMATE) {
 					int x;
 					int y;
 					if ((control.getStyle() & SWT.RIGHT) != 0) {
-  					x = size.x - imgSrcBoundsAdj.width;
-  					y = (size.y - imgSrcBoundsAdj.height) / 2;
+  					x = size.x - imgSrcBounds.width;
+  					y = (size.y - imgSrcBounds.height) / 2;
 					} else {
-						x = (size.x - imgSrcBoundsAdj.width) / 2;
-						y = (size.y - imgSrcBoundsAdj.height) / 2;
+						x = (size.x - imgSrcBounds.width) / 2;
+						y = (size.y - imgSrcBounds.height) / 2;
 					}
 					e.gc.drawImage(imgSrc, 0, 0, imgSrcBounds.width, imgSrcBounds.height,
-							x, y, imgSrcBoundsAdj.width, imgSrcBoundsAdj.height);
+							x, y, imgSrcBounds.width, imgSrcBounds.height);
 					//e.gc.drawImage(imgSrc, x, y);
 				} else if (drawMode == DRAW_HCENTER) {
 					int x = (size.x - imgSrcBounds.width) / 2;
 					int y = 0;
 					e.gc.drawImage(imgSrc, 0, 0, imgSrcBounds.width, imgSrcBounds.height,
-							x, y, imgSrcBoundsAdj.width, imgSrcBoundsAdj.height);
+							x, y, imgSrcBounds.width, imgSrcBounds.height);
 					//e.gc.drawImage(imgSrc, x, y);
 				} else if (drawMode == DRAW_SCALE) {
 					float dx = (float) size.x / imgSrcBounds.width;
@@ -183,7 +182,7 @@ public class SWTSkinObjectImage2
 						imgRight = (Image) control.getData("image-right");
 					}
 					if (imgRight != null) {
-						int width = Utils.adjustPXForDPI(imgRight.getBounds().width);
+						int width = imgRight.getBounds().width;
 
 						x1 -= width;
 					}
@@ -195,21 +194,21 @@ public class SWTSkinObjectImage2
 						// TODO: Tile down
 						e.gc.drawImage(imgLeft, 0, 0);
 
-						x0 += Utils.adjustPXForDPI(imgLeft.getBounds().width);
+						x0 += imgLeft.getBounds().width;
 					}
 
-					for (int y = y0; y < y1; y += imgSrcBoundsAdj.height) {
-						for (int x = x0; x < x1; x += imgSrcBoundsAdj.width) {
+					for (int y = y0; y < y1; y += imgSrcBounds.height) {
+						for (int x = x0; x < x1; x += imgSrcBounds.width) {
 							//e.gc.drawImage(imgSrc, x, y);
 							e.gc.drawImage(imgSrc, 0, 0, imgSrcBounds.width, imgSrcBounds.height,
-									x, y, imgSrcBoundsAdj.width, imgSrcBoundsAdj.height);
+									x, y, imgSrcBounds.width, imgSrcBounds.height);
 						}
 					}
 
 					if (imgRight != null) {
 						// TODO: Tile down
 						Rectangle imgRightBounds = imgRight.getBounds();
-						Rectangle imgRightBoundsAdj = Utils.adjustPXForDPI(imgRightBounds);
+						Rectangle imgRightBoundsAdj = imgRightBounds;
 
 						e.gc.drawImage(imgRight, 0, 0, imgRightBounds.width, imgRightBounds.height,
 								x1, 0, imgRightBoundsAdj.width, imgRightBoundsAdj.height);

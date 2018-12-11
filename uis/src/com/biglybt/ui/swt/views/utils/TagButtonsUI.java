@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.core.tag.Tag;
@@ -172,7 +171,7 @@ implements PaintListener
 				RowLayout rowLayout = new RowLayout();
 				rowLayout.pack = true;
 				rowLayout.spacing = 5;
-				Utils.setLayout(g, rowLayout);
+				g.setLayout(rowLayout);
 			}
 
 			Composite p = new Composite(g, SWT.DOUBLE_BUFFERED);

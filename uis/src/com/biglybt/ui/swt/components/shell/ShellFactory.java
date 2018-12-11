@@ -30,7 +30,6 @@ import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
@@ -245,7 +244,7 @@ public final class ShellFactory
 		public Point computeSize(int wHint, int hHint) {
 			if (!inSetSize && wHint > 0 && hHint == SWT.DEFAULT) {
 				inSetSize = true;
-				return super.computeSize(Utils.adjustPXForDPI(wHint), hHint);
+				return super.computeSize(wHint, hHint);
 			}
 			return super.computeSize(wHint, hHint);
 		}
@@ -264,8 +263,6 @@ public final class ShellFactory
 			}
 			inSetSize = true;
 			try {
-  			width = Utils.adjustPXForDPI(width);
-  			height = Utils.adjustPXForDPI(height);
 				super.setSize(width, height);
 			} finally {
 				inSetSize = false;
@@ -290,7 +287,7 @@ public final class ShellFactory
 			}
 			inSetSize = true;
 			try {
-				super.setSize(Utils.adjustPXForDPI(size));
+				super.setSize(size);
 			} finally {
 				inSetSize = false;
 			}

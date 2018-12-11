@@ -56,7 +56,6 @@ import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.HSLColor;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -931,7 +930,6 @@ public class TableViewPainted
 	 */
 	@Override
 	public void setRowDefaultHeight(int iHeight) {
-		iHeight = Utils.adjustPXForDPI(iHeight);
 		setRowDefaultHeightPX(iHeight);
 	}
 
@@ -1322,7 +1320,7 @@ public class TableViewPainted
 		cHeaderArea = new Canvas(cTableComposite, SWT.DOUBLE_BUFFERED);
 
 		fontHeader = FontUtils.getFontWithHeight(cHeaderArea.getFont(), null,
-				Utils.adjustPXForDPI(12));
+				12);
 		fontHeaderSmall = FontUtils.getFontPercentOf(fontHeader, 0.8f);
 		cHeaderArea.setFont(fontHeader);
 
@@ -1345,7 +1343,7 @@ public class TableViewPainted
 
 		headerHeight = configMan.getIntParameter("Table.headerHeight");
 		if (headerHeight <= 0) {
-			headerHeight = Utils.adjustPXForDPI(DEFAULT_HEADER_HEIGHT);
+			headerHeight = DEFAULT_HEADER_HEIGHT;
 		}
 
 		FormData fd = Utils.getFilledFormData();
@@ -2051,9 +2049,9 @@ public class TableViewPainted
 */
 			if (isSortColumn) {
 				// draw sort indicator
-				int arrowHeight = Utils.adjustPXForDPI(6);
+				int arrowHeight = 6;
 				int arrowY = (headerHeight / 2) - (arrowHeight / 2);
-				int arrowHalfW = Utils.adjustPXForDPI(4);
+				int arrowHalfW = 4;
 				int middle = w - arrowHalfW - 4;
 				wText = w - (arrowHalfW * 2) - 5;
 				int y1, y2;
@@ -2444,7 +2442,7 @@ public class TableViewPainted
 		if (parameterName == null || parameterName.equals("Table.headerHeight")) {
 			headerHeight = configMan.getIntParameter("Table.headerHeight");
 			if (headerHeight == 0) {
-				headerHeight = Utils.adjustPXForDPI(DEFAULT_HEADER_HEIGHT);
+				headerHeight = DEFAULT_HEADER_HEIGHT;
 			}
 			setHeaderVisible(getHeaderVisible());
 		}

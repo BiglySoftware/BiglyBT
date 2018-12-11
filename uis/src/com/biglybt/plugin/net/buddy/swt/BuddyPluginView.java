@@ -2226,7 +2226,7 @@ BuddyPluginView
 			composite.setLayout(layout);
 
 			GridData grid_data = new GridData(GridData.FILL_BOTH );
-			Utils.setLayoutData(composite, grid_data);
+			composite.setLayoutData(grid_data);
 
 			if ( !download_only_mode ){
 
@@ -2241,7 +2241,7 @@ BuddyPluginView
 				lhs.setLayout(layout);
 				grid_data = new GridData(GridData.FILL_VERTICAL );
 				//grid_data.widthHint = 200;
-				Utils.setLayoutData(lhs, grid_data);
+				lhs.setLayoutData(grid_data);
 
 				Button downloads = new Button( lhs, SWT.TOGGLE );
 				downloads.setText( MessageText.getString( "v3.MainWindow.button.download" ));
@@ -2276,7 +2276,7 @@ BuddyPluginView
 				middle.setLayout(layout);
 				grid_data = new GridData(GridData.FILL_VERTICAL );
 				grid_data.widthHint = 0;
-				Utils.setLayoutData(middle, grid_data);
+				middle.setLayoutData(grid_data);
 
 				middle.setText( "" );
 
@@ -2329,9 +2329,9 @@ BuddyPluginView
 
 			tab_folder.setTabHeight(20);
 			grid_data = new GridData(GridData.FILL_BOTH);
-			Utils.setLayoutData(tab_folder, grid_data);
+			tab_folder.setLayoutData(grid_data);
 
-				// public
+			// public
 
 			public_item = new CTabItem(tab_folder, SWT.NULL);
 
@@ -2343,7 +2343,7 @@ BuddyPluginView
 			public_item.setControl( public_composite );
 
 			grid_data = new GridData(GridData.FILL_BOTH );
-			Utils.setLayoutData(public_composite, grid_data);
+			public_composite.setLayoutData(grid_data);
 			public_composite.setData( "tabitem", public_item );
 
 				// anon
@@ -2361,7 +2361,7 @@ BuddyPluginView
 				anon_item.setControl( anon_composite );
 
 				grid_data = new GridData(GridData.FILL_BOTH );
-				Utils.setLayoutData(anon_composite, grid_data);
+				anon_composite.setLayoutData(grid_data);
 				anon_composite.setData( "tabitem", anon_item );
 			}
 
@@ -2377,7 +2377,7 @@ BuddyPluginView
 				neither_item.setControl( neither_composite );
 
 				grid_data = new GridData(GridData.FILL_BOTH );
-				Utils.setLayoutData(neither_composite, grid_data);
+				neither_composite.setLayoutData(grid_data);
 				neither_composite.setData( "tabitem", neither_item );
 
 				layout = new GridLayout();
@@ -2524,7 +2524,7 @@ BuddyPluginView
 
 						GridData grid_data = new GridData(GridData.FILL_VERTICAL );
 						grid_data.widthHint = 0;
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 					}else if ( mode == CHAT_TRACKERS ){
 
@@ -2550,7 +2550,7 @@ BuddyPluginView
 						layout.numColumns = 1;
 						middle.setLayout(layout);
 						GridData grid_data = new GridData(GridData.FILL_VERTICAL );
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 						Set<String>	reduced_trackers = new HashSet<>();
 
@@ -2624,7 +2624,7 @@ BuddyPluginView
 						if (download == null) {
 							grid_data.exclude = true;
 						}
-						Utils.setLayoutData(lhs, grid_data);
+						lhs.setLayoutData(grid_data);
 
 
 						middle.setVisible( true );
@@ -2662,7 +2662,7 @@ BuddyPluginView
 						layout.numColumns = 1;
 						middle.setLayout(layout);
 						grid_data = new GridData(GridData.FILL_VERTICAL );
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 						int	num_tags = tags.size();
 
@@ -2729,7 +2729,7 @@ BuddyPluginView
 						layout.numColumns = 1;
 						middle.setLayout(layout);
 						GridData grid_data = new GridData(GridData.FILL_VERTICAL );
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 						final List<Button>	buttons = new ArrayList<>();
 
@@ -2781,7 +2781,7 @@ BuddyPluginView
 						layout.numColumns = 1;
 						middle.setLayout(layout);
 						GridData grid_data = new GridData(GridData.FILL_VERTICAL );
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 						List<String[]>	list = plugin.getBeta().getFavourites();
 
@@ -2962,7 +2962,7 @@ BuddyPluginView
 				    }
 				};
 
-			Utils.setLayoutData(scrollable,  new GridData(GridData.FILL_VERTICAL ));
+			scrollable.setLayoutData(new GridData(GridData.FILL_VERTICAL ));
 
 			final Composite scrollChild = new Composite( scrollable, SWT.NONE );
 
@@ -2974,7 +2974,7 @@ BuddyPluginView
 			gLayoutChild.marginWidth 		= 0;
 			gLayoutChild.marginHeight		= 0;
 			scrollChild.setLayout(gLayoutChild);
-			Utils.setLayoutData(scrollChild,  new GridData(GridData.FILL_VERTICAL ));
+			scrollChild.setLayoutData(new GridData(GridData.FILL_VERTICAL ));
 
 			scrollable.setContent(scrollChild);
 			scrollable.setExpandVertical(true);
@@ -3380,7 +3380,7 @@ BuddyPluginView
 
 					label.setText( MessageText.getString( "v3.MainWindow.view.wait" ));
 					GridData grid_data = new GridData(GridData.FILL_BOTH );
-					Utils.setLayoutData(label, grid_data);
+					label.setLayoutData(grid_data);
 
 				}
 

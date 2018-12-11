@@ -31,10 +31,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -95,7 +92,7 @@ public class ConfigSectionInterfaceTables
 		GridLayout layout;
 		GridData gridData;
 		Composite cSection = new Composite(parent, SWT.NULL);
-		Utils.setLayoutData(cSection, new GridData(GridData.FILL_BOTH));
+		cSection.setLayoutData(new GridData(GridData.FILL_BOTH));
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		cSection.setLayout(layout);
@@ -106,7 +103,7 @@ public class ConfigSectionInterfaceTables
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			cGeneral.setLayout(layout);
-			Utils.setLayoutData(cGeneral, new GridData( GridData.FILL_HORIZONTAL ));
+			cGeneral.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
 			label = new Label(cGeneral, SWT.NULL);
 			Messages.setLanguageText(label, "ConfigView.section.style.defaultSortOrder");
@@ -265,7 +262,7 @@ public class ConfigSectionInterfaceTables
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			cLibrary.setLayout(layout);
-			Utils.setLayoutData(cLibrary, new GridData( GridData.FILL_HORIZONTAL ));
+			cLibrary.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
 				// User tree
 
@@ -371,7 +368,7 @@ public class ConfigSectionInterfaceTables
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.horizontalSpan = 2;
 			gridData.horizontalIndent = 25;
-			Utils.setLayoutData(cLaunchWeb, gridData);
+			cLaunchWeb.setLayoutData(gridData);
 
 			BooleanParameter web_in_browser =
 					new BooleanParameter(cLaunchWeb, "Library.LaunchWebsiteInBrowser", "library.launch.web.in.browser");
@@ -416,12 +413,12 @@ public class ConfigSectionInterfaceTables
 			cLaunch.setLayout(layout);
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cLaunch, gridData);
+			cLaunch.setLayoutData(gridData);
 
-		    Label	info_label = new Label( cLaunch, SWT.WRAP );
-		    Messages.setLanguageText( info_label, "ConfigView.label.lh.info" );
-		    gridData = Utils.getWrappableLabelGridData(5, GridData.HORIZONTAL_ALIGN_FILL );
-		    Utils.setLayoutData(info_label,  gridData );
+			Label	info_label = new Label( cLaunch, SWT.WRAP );
+			Messages.setLanguageText( info_label, "ConfigView.label.lh.info" );
+			gridData = Utils.getWrappableLabelGridData(5, GridData.HORIZONTAL_ALIGN_FILL );
+			info_label.setLayoutData(gridData);
 
 			for ( int i=0;i<4;i++){
 
@@ -522,7 +519,7 @@ public class ConfigSectionInterfaceTables
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			cSeachSubs.setLayout(layout);
-			Utils.setLayoutData(cSeachSubs, new GridData( GridData.FILL_HORIZONTAL ));
+			cSeachSubs.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
 
 			new BooleanParameter(

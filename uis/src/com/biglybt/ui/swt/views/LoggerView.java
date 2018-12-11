@@ -208,7 +208,7 @@ public class LoggerView
 				| SWT.H_SCROLL);
 		gd = new GridData(GridData.FILL_BOTH);
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(consoleText, gd);
+		consoleText.setLayoutData(gd);
 
 		// XXX This doesn't work well, but it's better than nothing
 		consoleText.addListener(SWT.Resize, new Listener() {
@@ -253,12 +253,12 @@ public class LoggerView
 		layout.verticalSpacing = 1;
 		cLeft.setLayout(layout);
 		gd = new GridData(SWT.TOP, SWT.LEAD, false, false);
-		Utils.setLayoutData(cLeft, gd);
+		cLeft.setLayoutData(gd);
 
 		Button buttonPause = new Button(cLeft, SWT.CHECK);
 		Messages.setLanguageText(buttonPause, "LoggerView.pause");
 		gd = new GridData();
-		Utils.setLayoutData(buttonPause, gd);
+		buttonPause.setLayoutData(gd);
 		buttonPause.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -275,7 +275,7 @@ public class LoggerView
 		Button buttonRealtime = new Button(cLeft, SWT.CHECK);
 		Messages.setLanguageText(buttonRealtime, "LoggerView.realtime");
 		gd = new GridData();
-		Utils.setLayoutData(buttonRealtime, gd);
+		buttonRealtime.setLayoutData(gd);
 		buttonRealtime.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -289,7 +289,7 @@ public class LoggerView
 		buttonAutoScroll = new Button(cLeft, SWT.CHECK);
 		Messages.setLanguageText(buttonAutoScroll, "LoggerView.autoscroll");
 		gd = new GridData();
-		Utils.setLayoutData(buttonAutoScroll, gd);
+		buttonAutoScroll.setLayoutData(gd);
 		buttonAutoScroll.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -304,7 +304,7 @@ public class LoggerView
 		Button buttonClear = new Button(cLeft, SWT.PUSH);
 		Messages.setLanguageText(buttonClear, "LoggerView.clear");
 		gd = new GridData();
-		Utils.setLayoutData(buttonClear, gd);
+		buttonClear.setLayoutData(gd);
 		buttonClear.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -323,19 +323,19 @@ public class LoggerView
 		layout.numColumns = 2;
 		gLogIDs.setLayout(layout);
 		gd = new GridData();
-		Utils.setLayoutData(gLogIDs, gd);
+		gLogIDs.setLayoutData(gd);
 
 		Label label = new Label(gLogIDs, SWT.NONE);
 		Messages.setLanguageText(label, "ConfigView.section.logging.level");
-		Utils.setLayoutData(label, new GridData());
+		label.setLayoutData(new GridData());
 
 		final Label labelCatFilter = new Label(gLogIDs, SWT.NONE);
-		Utils.setLayoutData(labelCatFilter, new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+		labelCatFilter.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 
 		final List listLogTypes = new List(gLogIDs, SWT.BORDER | SWT.SINGLE
 				| SWT.V_SCROLL);
 		gd = new GridData(SWT.NULL, SWT.BEGINNING, false, false);
-		Utils.setLayoutData(listLogTypes, gd);
+		listLogTypes.setLayoutData(gd);
 
 		final int[] logTypes = { LogEvent.LT_INFORMATION, LogEvent.LT_WARNING,
 				LogEvent.LT_ERROR };
@@ -352,7 +352,7 @@ public class LoggerView
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		cChecksAndButtons.setLayout(layout);
-		Utils.setLayoutData(cChecksAndButtons, new GridData());
+		cChecksAndButtons.setLayoutData(new GridData());
 
 		final Composite cChecks = new Composite(cChecksAndButtons, SWT.NULL);
 		RowLayout rowLayout = new RowLayout(SWT.VERTICAL);
@@ -388,7 +388,7 @@ public class LoggerView
 			if (i == 0) {
 				gd = new GridData(SWT.FILL, SWT.FILL, false, false, 1, 2);
 				gd.heightHint = (btn.computeSize(SWT.DEFAULT, SWT.DEFAULT).y + 2) * 3;
-				Utils.setLayoutData(cChecks, gd);
+				cChecks.setLayoutData(gd);
 			}
 		}
 
@@ -422,7 +422,7 @@ public class LoggerView
 		Button btn;
 		btn = new Button(cChecksAndButtons, SWT.PUSH);
 		gd = new GridData();
-		Utils.setLayoutData(btn, gd);
+		btn.setLayoutData(gd);
 		Messages.setLanguageText(btn, "LoggerView.filter.checkAll");
 		btn.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -444,7 +444,7 @@ public class LoggerView
 
 		btn = new Button(cChecksAndButtons, SWT.PUSH);
 		gd = new GridData();
-		Utils.setLayoutData(btn, gd);
+		btn.setLayoutData(gd);
 		Messages.setLanguageText(btn, "LoggerView.filter.uncheckAll");
 		btn.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -467,18 +467,18 @@ public class LoggerView
 		Composite cBottom = new Composite(panel, SWT.NONE);
 		gd = new GridData(SWT.FILL, SWT.FILL, true, false);
 		gd.horizontalSpan = 2;
-		Utils.setLayoutData(cBottom, gd);
+		cBottom.setLayoutData(gd);
 		cBottom.setLayout(new GridLayout(2, false));
 
 
 		label = new Label(cBottom, SWT.NONE);
-		Utils.setLayoutData(label, new GridData());
+		label.setLayoutData(new GridData());
 		Messages.setLanguageText(label, "LoggerView.includeOnly");
 
 		final Text inclText = new Text(cBottom, SWT.BORDER);
 		gd = new GridData();
 		gd.widthHint = 200;
-		Utils.setLayoutData(inclText, gd);
+		inclText.setLayoutData(gd);
 		inclText.addModifyListener(new ModifyListener()
 		{
 			@Override
@@ -501,13 +501,13 @@ public class LoggerView
 		});
 
 		label = new Label(cBottom, SWT.NONE);
-		Utils.setLayoutData(label, new GridData());
+		label.setLayoutData(new GridData());
 		Messages.setLanguageText(label, "LoggerView.excludeAll");
 
 		final Text exclText = new Text(cBottom, SWT.BORDER);
 		gd = new GridData();
 		gd.widthHint = 200;
-		Utils.setLayoutData(exclText, gd);
+		exclText.setLayoutData(gd);
 		exclText.addModifyListener(new ModifyListener()
 		{
 			@Override

@@ -132,8 +132,6 @@ public class MessageSlideShell
 
 	private Color colorFG;
 
-	private int shellWidth;
-
 	/** Open a popup using resource keys for title/text
 	 *
 	 * @param display Display to create the shell on
@@ -358,8 +356,6 @@ public class MessageSlideShell
 			shell.setText(popupParams.title);
 		}
 
-		shellWidth = Utils.adjustPXForDPI(SHELL_DEF_WIDTH);
-
 		UISkinnableSWTListener[] listeners = UISkinnableManagerSWT.getInstance().getSkinnableListeners(
 				MessageSlideShell.class.toString());
 		for (int i = 0; i < listeners.length; i++) {
@@ -429,8 +425,8 @@ public class MessageSlideShell
 						textDetails.setText(sDetails);
 						detailsShell.layout();
 						Rectangle shellBounds = shell.getBounds();
-						int detailsWidth = Utils.adjustPXForDPI(DETAILS_WIDTH);
-						int detailsHeight = Utils.adjustPXForDPI(DETAILS_HEIGHT);
+						int detailsWidth = DETAILS_WIDTH;
+						int detailsHeight = DETAILS_HEIGHT;
 						detailsShell.setBounds(shellBounds.x + shellBounds.width
 								- detailsWidth, shellBounds.y - detailsHeight, detailsWidth,
 								detailsHeight);
@@ -540,13 +536,11 @@ public class MessageSlideShell
 
 		// Image has gap for text at the top (with image at bottom left)
 		// trim top to height of shell
-		Point bestSize = cShell.computeSize(shellWidth, SWT.DEFAULT);
-		int minHeight = Utils.adjustPXForDPI(SHELL_MIN_HEIGHT);
-		int maxHeight = Utils.adjustPXForDPI(SHELL_MAX_HEIGHT);
-		if (bestSize.y < minHeight)
-			bestSize.y = minHeight;
-		else if (bestSize.y > maxHeight) {
-			bestSize.y = maxHeight;
+		Point bestSize = cShell.computeSize(SHELL_DEF_WIDTH, SWT.DEFAULT);
+		if (bestSize.y < SHELL_MIN_HEIGHT)
+			bestSize.y = SHELL_MIN_HEIGHT;
+		else if (bestSize.y > SHELL_MAX_HEIGHT) {
+			bestSize.y = SHELL_MAX_HEIGHT;
 			if (sDetails == null) {
 				sDetails = popupParams.text;
 			} else {
@@ -676,7 +670,7 @@ public class MessageSlideShell
 		final Canvas canvas = new Canvas(shell, SWT.None) {
 			@Override
 			public Point computeSize(int wHint, int hHint, boolean changed) {
-				Rectangle area = new Rectangle(0, 0, shellWidth, 5000);
+				Rectangle area = new Rectangle(0, 0, SHELL_DEF_WIDTH, 5000);
 				GC gc = new GC(this);
 				GCStringPrinter sp = new GCStringPrinter(gc, popupParams.text, area,
 						true, false, SWT.WRAP | SWT.TOP);

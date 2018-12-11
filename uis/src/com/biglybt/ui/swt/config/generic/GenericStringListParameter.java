@@ -231,10 +231,9 @@ public class GenericStringListParameter{
   	}
 	}
 
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    list.setLayoutData(layoutData);
-   }
+	public void setLayoutData(Object layoutData) {
+		list.setLayoutData(layoutData);
+	}
 
   public Control getControl() {
     return list;

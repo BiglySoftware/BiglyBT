@@ -178,7 +178,6 @@ public class SWTSkinObjectButton
 					if (width == -1) {
   					int minWidth = properties.getIntValue(sConfigID + ".minwidth", -1);
   					if (minWidth >= 0) {
-  						minWidth = Utils.adjustPXForDPI(minWidth);
     					FormData fd = (FormData) button.getLayoutData();
     					if (fd == null) {
     						fd = new FormData();

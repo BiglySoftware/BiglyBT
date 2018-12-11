@@ -39,7 +39,6 @@ import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 
 public class
@@ -110,7 +109,7 @@ CertificateCreatorWindow
 			Messages.setLanguageText(info_label, "security.certcreate.intro");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(info_label, gridData);
+			info_label.setLayoutData(gridData);
 
 			// alias
 
@@ -118,7 +117,7 @@ CertificateCreatorWindow
 			Messages.setLanguageText(alias_label, "security.certcreate.alias");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 1;
-			Utils.setLayoutData(alias_label, gridData);
+			alias_label.setLayoutData(gridData);
 
 			final Text alias_field =new Text(shell,SWT.BORDER);
 
@@ -126,7 +125,7 @@ CertificateCreatorWindow
 
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(alias_field, gridData);
+			alias_field.setLayoutData(gridData);
 
 			// strength
 
@@ -134,7 +133,7 @@ CertificateCreatorWindow
 			Messages.setLanguageText(strength_label, "security.certcreate.strength");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 1;
-			Utils.setLayoutData(strength_label, gridData);
+			strength_label.setLayoutData(gridData);
 
 			final Combo strength_combo = new Combo(shell, SWT.SINGLE | SWT.READ_ONLY);
 
@@ -170,12 +169,12 @@ CertificateCreatorWindow
 				Messages.setLanguageText(resource_label, field_names[i]);
 				gridData = new GridData(GridData.FILL_BOTH);
 				gridData.horizontalSpan = 1;
-				Utils.setLayoutData(resource_label, gridData);
+				resource_label.setLayoutData(gridData);
 
 				Text field = fields[i] = new Text(shell,SWT.BORDER);
 				gridData = new GridData(GridData.FILL_BOTH);
 				gridData.horizontalSpan = 2;
-				Utils.setLayoutData(field, gridData);
+				field.setLayoutData(gridData);
 			}
 
 				// line
@@ -183,7 +182,7 @@ CertificateCreatorWindow
 			Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(labelSeparator, gridData);
+			labelSeparator.setLayoutData(gridData);
 
 				// buttons
 
@@ -193,7 +192,7 @@ CertificateCreatorWindow
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(comp, gridData);
+			comp.setLayoutData(gridData);
 			GridLayout layoutButtons = new GridLayout();
 			layoutButtons.numColumns = 2;
 			comp.setLayout(layoutButtons);
@@ -205,7 +204,7 @@ CertificateCreatorWindow
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.widthHint = 70;
-			Utils.setLayoutData(bYes, gridData);
+			bYes.setLayoutData(gridData);
 			bYes.addListener(SWT.Selection,new Listener() {
 				@Override
 				public void handleEvent(Event e) {
@@ -253,7 +252,7 @@ CertificateCreatorWindow
 			gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
 			gridData.grabExcessHorizontalSpace = false;
 			gridData.widthHint = 70;
-			Utils.setLayoutData(bNo, gridData);
+			bNo.setLayoutData(gridData);
 			bNo.addListener(SWT.Selection,new Listener() {
 				@Override
 				public void handleEvent(Event e) {

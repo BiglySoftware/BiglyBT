@@ -24,7 +24,6 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import com.biglybt.core.config.*;
-import com.biglybt.ui.swt.Utils;
 
 public class FloatParameter {
 
@@ -120,7 +119,6 @@ public class FloatParameter {
 
 
   public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
     inputField.setLayoutData(layoutData);
   }
 

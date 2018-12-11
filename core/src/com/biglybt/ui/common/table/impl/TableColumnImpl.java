@@ -68,18 +68,6 @@ public class TableColumnImpl
 
 	private static UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 
-	private static int
-	adjustPXForDPI(
-		int	px )
-	{
-		if ( uiFunctions == null ){
-
-			return( px );
-		}
-
-		return( uiFunctions.adjustPXForDPI( px ));
-	}
-	
 	private static Comparator<String> intuitiveComparator = FormattersImpl.getAlphanumericComparator2( true );
 	private static boolean	intiutiveSorting;
 	
@@ -215,7 +203,7 @@ public class TableColumnImpl
 		iConsecutiveErrCount = 0;
 		lLastSortValueChange = 0;
 		bVisible = false;
-		iMinWidth = adjustPXForDPI(16);
+		iMinWidth = 16;
 		iPosition = POSITION_INVISIBLE;
 		int iSortDirection = COConfigurationManager.getIntParameter(CFG_SORTDIRECTION);
 		bSortAscending = iSortDirection == 1 ? false : true;
@@ -231,8 +219,8 @@ public class TableColumnImpl
 
 		this.iAlignment = this.iDefaultAlignment =  iAlignment;
 		setPosition(iPosition);
-		this.iWidth = this.iDefaultWidth = adjustPXForDPI(iWidth);
-		this.iMinWidth = adjustPXForDPI(16);
+		this.iWidth = this.iDefaultWidth = iWidth;
+		this.iMinWidth = 16;
 		this.iInterval = iInterval;
 	}
 
@@ -245,8 +233,8 @@ public class TableColumnImpl
 
 		this.iAlignment = this.iDefaultAlignment = iAlignment;
 		setPosition(iPosition);
-		this.iWidth = this.iDefaultWidth = adjustPXForDPI(iWidth);
-		this.iMinWidth = adjustPXForDPI(16);
+		this.iWidth = this.iDefaultWidth = iWidth;
+		this.iMinWidth = 16;
 	}
 
 	@Override
@@ -288,7 +276,7 @@ public class TableColumnImpl
 
 	@Override
 	public void setWidth(int realPXWidth) {
-		setWidthPX(adjustPXForDPI(realPXWidth));
+		setWidthPX(realPXWidth);
 	}
 
 	@Override
@@ -1577,8 +1565,6 @@ public class TableColumnImpl
 	// @see com.biglybt.pif.ui.tables.TableColumn#setMinWidth(int)
 	@Override
 	public void setMinWidth(int minwidth) {
-		// :(
-		minwidth = adjustPXForDPI(minwidth);
 		if (minwidth > iMaxWidth && iMaxWidth >= 0) {
 			iMaxWidth = minwidth;
 		}
@@ -1600,8 +1586,6 @@ public class TableColumnImpl
 	// @see com.biglybt.pif.ui.tables.TableColumn#setMaxWidth(int)
 	@Override
 	public void setMaxWidth(int maxwidth) {
-		// :(
-		maxwidth = adjustPXForDPI(maxwidth);
 		if (maxwidth >= 0 && maxwidth < iMinWidth) {
 			iMinWidth = maxwidth;
 		}

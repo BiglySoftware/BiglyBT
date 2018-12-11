@@ -42,7 +42,6 @@ import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.internat.MessageText;
@@ -89,7 +88,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 		Composite cSection = new Composite(parent, SWT.NULL);
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL
 				| GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(cSection, gridData);
+		cSection.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.marginHeight = 0;
@@ -104,7 +103,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 		//  max upload speed
 		gridData = new GridData();
 		label = new Label(cSection, SWT.NULL);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		Messages.setLanguageText(label, "ConfigView.label.maxuploadspeed");
 
 		gridData = new GridData();
@@ -122,7 +121,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 		gridData = new GridData();
 		gridData.horizontalIndent = 15;
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(cMaxUploadSpeedOptionsArea, gridData);
+		cMaxUploadSpeedOptionsArea.setLayoutData(gridData);
 
 		ImageLoader imageLoader = ImageLoader.getInstance();
 		Image img = imageLoader.getImage("subitem");
@@ -130,7 +129,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 		label = new Label(cMaxUploadSpeedOptionsArea, SWT.NULL);
 		img.setBackground(label.getBackground());
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		label.setImage(img);
 
 		gridData = new GridData();
@@ -154,7 +153,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			gridData = new GridData(GridData.VERTICAL_ALIGN_FILL
 					| GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cWiki, gridData);
+			cWiki.setLayoutData(gridData);
 			layout = new GridLayout();
 			layout.numColumns = 4;
 			layout.marginHeight = 0;
@@ -164,7 +163,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			gridData.horizontalIndent = 6;
 			gridData.horizontalSpan = 2;
 			label = new Label(cWiki, SWT.NULL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			label.setText(MessageText.getString("Utils.link.visit") + ":");
 
 			gridData = new GridData();
@@ -178,7 +177,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 
 			gridData = new GridData();
 			label = new Label(cSection, SWT.NULL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "ConfigView.label.maxuploadswhenbusymin" );
 
 			gridData = new GridData();
@@ -188,7 +187,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 		// max download speed
 		gridData = new GridData();
 		label = new Label(cSection, SWT.NULL);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		Messages.setLanguageText(label, "ConfigView.label.maxdownloadspeed");
 
 		gridData = new GridData();
@@ -338,11 +337,11 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			gridData = new GridData();
 			gridData.horizontalIndent = 15;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(bias_slack_area, gridData);
+			bias_slack_area.setLayoutData(gridData);
 
 			label = new Label(bias_slack_area, SWT.NULL);
 			gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			label.setImage(img);
 
 			label = new Label(bias_slack_area, SWT.NULL);
@@ -361,11 +360,11 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			gridData = new GridData();
 			gridData.horizontalIndent = 15;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(bias_unlimited_area, gridData);
+			bias_unlimited_area.setLayoutData(gridData);
 
 			label = new Label(bias_unlimited_area, SWT.NULL);
 			gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			label.setImage(img);
 
 
@@ -395,7 +394,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(auto_group, gridData);
+			auto_group.setLayoutData(gridData);
 
 			BooleanParameter auto_adjust = new BooleanParameter(
 					auto_group,
@@ -410,7 +409,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			// max uploads
 			gridData = new GridData();
 			label = new Label(auto_group, SWT.NULL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "ConfigView.label.maxuploads");
 
 			gridData = new GridData();
@@ -429,11 +428,11 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			gridData = new GridData();
 			gridData.horizontalIndent = 15;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cMaxUploadsOptionsArea, gridData);
+			cMaxUploadsOptionsArea.setLayoutData(gridData);
 			label = new Label(cMaxUploadsOptionsArea, SWT.NULL);
 			img.setBackground(label.getBackground());
 			gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			label.setImage(img);
 
 			gridData = new GridData();
@@ -453,7 +452,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 
 			gridData = new GridData();
 			label = new Label(auto_group, SWT.NULL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "ConfigView.label.max_peers_per_torrent");
 
 			gridData = new GridData();
@@ -475,11 +474,11 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			gridData = new GridData();
 			gridData.horizontalIndent = 15;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cMaxPeersOptionsArea, gridData);
+			cMaxPeersOptionsArea.setLayoutData(gridData);
 			label = new Label(cMaxPeersOptionsArea, SWT.NULL);
 			img.setBackground(label.getBackground());
 			gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			label.setImage(img);
 
 			gridData = new GridData();
@@ -497,7 +496,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 
 			gridData = new GridData();
 			label = new Label(auto_group, SWT.NULL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "ConfigView.label.max_peers_total");
 
 			gridData = new GridData();
@@ -507,7 +506,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 
 			gridData = new GridData();
 			label = new Label(auto_group, SWT.NULL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "ConfigView.label.maxseedspertorrent");
 
 			gridData = new GridData();
@@ -569,7 +568,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(npp_group, gridData);
+			npp_group.setLayoutData(gridData);
 
 			label = new Label(npp_group, SWT.NULL);
 			Messages.setLanguageText(label, "ConfigView.label.npp.slots");
@@ -674,11 +673,11 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			cMiniArea.setLayout(layout);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cMiniArea, gridData);
+			cMiniArea.setLayoutData(gridData);
 
 			gridData = new GridData();
 			label = new Label(cMiniArea, SWT.NULL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label,
 					"ConfigView.label.transfer.ignorepeerports");
 

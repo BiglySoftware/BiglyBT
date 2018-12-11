@@ -21,14 +21,16 @@ package com.biglybt.plugin.startstoprules.defaultplugin.ui.swt;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
+import com.biglybt.ui.swt.config.BooleanParameter;
+import com.biglybt.ui.swt.config.FloatParameter;
+import com.biglybt.ui.swt.config.IntParameter;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.pif.UISWTConfigSection;
 
 /** Config Section for items that make us ignore torrents when seeding
  * @author TuxPaper
@@ -76,7 +78,7 @@ public class ConfigSectionSeedingIgnore implements UISWTConfigSection {
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 3;
     gridData.widthHint = 300;
-    Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
     Messages.setLanguageText(label, "ConfigView.label.autoSeedingIgnoreInfo"); //$NON-NLS-1$
 
 	Composite cIgnore = new Group(cIgnoreRules, SWT.NULL);
@@ -85,7 +87,7 @@ public class ConfigSectionSeedingIgnore implements UISWTConfigSection {
     layout.verticalSpacing = 6;
 	cIgnore.setLayout(layout);
     gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-	Utils.setLayoutData(cIgnore, gridData);
+		cIgnore.setLayoutData(gridData);
 	Messages.setLanguageText(cIgnore, "ConfigView.label.seeding.ignore");
 
 
@@ -112,12 +114,12 @@ public class ConfigSectionSeedingIgnore implements UISWTConfigSection {
     gridData = new GridData();
     gridData.horizontalIndent = 15;
     gridData.horizontalSpan = 3;
-    Utils.setLayoutData(cArea, gridData);
+		cArea.setLayoutData(gridData);
 
 		label = new Label(cArea, SWT.NULL);
 		ImageLoader.getInstance().setLabelImage(label, "subitem");
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 
     label = new Label(cArea, SWT.NULL);
     Messages.setLanguageText(label, "ConfigView.label.seeding.fakeFullCopySeedStart");
@@ -145,12 +147,12 @@ public class ConfigSectionSeedingIgnore implements UISWTConfigSection {
     gridData = new GridData();
     gridData.horizontalIndent = 15;
     gridData.horizontalSpan = 3;
-    Utils.setLayoutData(cArea, gridData);
+		cArea.setLayoutData(gridData);
 
     label = new Label(cArea, SWT.NULL);
 		ImageLoader.getInstance().setLabelImage(label, "subitem");
     gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 
     label = new Label(cArea, SWT.NULL);
     Messages.setLanguageText(label, "ConfigView.label.seeding.fakeFullCopySeedStart");

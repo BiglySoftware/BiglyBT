@@ -14,12 +14,7 @@ import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.Constants;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.*;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -130,7 +125,7 @@ public class ConfigSectionTransferAutoSpeedSelect
         }
 
         gridData = new GridData(GridData.VERTICAL_ALIGN_FILL|GridData.HORIZONTAL_ALIGN_FILL);
-        Utils.setLayoutData(cSection, gridData);
+        cSection.setLayoutData(gridData);
         GridLayout subPanel = new GridLayout();
         subPanel.numColumns = 3;
         cSection.setLayout(subPanel);
@@ -149,13 +144,13 @@ public class ConfigSectionTransferAutoSpeedSelect
         modeGroup.setLayout(modeLayout);
 
         gridData = new GridData(GridData.FILL_HORIZONTAL);
-        Utils.setLayoutData(modeGroup, gridData);
+        modeGroup.setLayoutData(gridData);
 
         //Need a drop down to select which method will be used.
         Label label = new Label(modeGroup, SWT.NULL);
         Messages.setLanguageText(label,"ConfigTransferAutoSpeed.algorithm");
         gridData = new GridData();
-        Utils.setLayoutData(label, gridData);
+        label.setLayoutData(gridData);
 
         String AutoSpeedClassic = MessageText.getString("ConfigTransferAutoSpeed.auto.speed.classic");
         String AutoSpeedBeta = MessageText.getString("ConfigTransferAutoSpeed.auto.speed.beta");
@@ -195,7 +190,7 @@ public class ConfigSectionTransferAutoSpeedSelect
         Label spacer = new Label(modeGroup, SWT.NULL);
         gridData = new GridData();
         gridData.horizontalSpan=3;
-        Utils.setLayoutData(spacer, gridData);
+        spacer.setLayoutData(gridData);
 
         //To enable the beta.
         gridData = new GridData();
@@ -226,7 +221,7 @@ public class ConfigSectionTransferAutoSpeedSelect
   	  	spacer = new Label(cSection, SWT.NULL);
         gridData = new GridData();
         gridData.horizontalSpan=3;
-        Utils.setLayoutData(spacer, gridData);
+        spacer.setLayoutData(gridData);
 
         	// NETWORK GROUP
 
@@ -258,12 +253,12 @@ public class ConfigSectionTransferAutoSpeedSelect
   	  	Messages.setLanguageText(label,"SpeedView.stats.estupcap");
         gridData = new GridData();
         gridData.horizontalIndent = 20;
-        Utils.setLayoutData(label, gridData);
+        label.setLayoutData(gridData);
 
         final Label up_cap = new Label(networkGroup, SWT.NULL);
         gridData = new GridData(GridData.FILL_HORIZONTAL);
         gridData.horizontalSpan = 4;
-        Utils.setLayoutData(up_cap, gridData);
+        up_cap.setLayoutData(gridData);
 
         	// down cap
 
@@ -271,12 +266,12 @@ public class ConfigSectionTransferAutoSpeedSelect
   	  	Messages.setLanguageText(label,"SpeedView.stats.estdowncap");
         gridData = new GridData();
         gridData.horizontalIndent = 20;
-        Utils.setLayoutData(label, gridData);
+        label.setLayoutData(gridData);
 
         final Label down_cap = new Label(networkGroup, SWT.NULL);
         gridData = new GridData(GridData.FILL_HORIZONTAL);
         gridData.horizontalSpan = 4;
-        Utils.setLayoutData(down_cap, gridData);
+        down_cap.setLayoutData(gridData);
 
         // Core avail: We check at top
         final SpeedManager sm = CoreFactory.getSingleton().getSpeedManager();
@@ -292,7 +287,7 @@ public class ConfigSectionTransferAutoSpeedSelect
  	  	spacer = new Label(networkGroup, SWT.NULL);
         gridData = new GridData();
         gridData.horizontalSpan=5;
-        Utils.setLayoutData(spacer, gridData);
+        spacer.setLayoutData(gridData);
 
         	// info
 
@@ -300,7 +295,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 	    Messages.setLanguageText(
 	    		info_label, "ConfigView.section.transfer.autospeed.network.info",
 	    		new String[]{ DisplayFormatters.getRateUnit( DisplayFormatters.UNIT_KB )});
-	    Utils.setLayoutData(info_label, Utils.getWrappableLabelGridData(5, 0));
+	    info_label.setLayoutData(Utils.getWrappableLabelGridData(5, 0));
 
 	    	// up set
 
@@ -308,7 +303,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 	    Messages.setLanguageText(label,"SpeedView.stats.estupcap");
 	    gridData = new GridData();
 	    gridData.horizontalIndent = 20;
-	    Utils.setLayoutData(label, gridData);
+	    label.setLayoutData(gridData);
 
         String co_up		= "AutoSpeed Network Upload Speed (temp)";
         String co_up_type 	= "AutoSpeed Network Upload Speed Type (temp)";
@@ -324,7 +319,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 
 		final Label upload_bits = new Label(networkGroup, SWT.NULL);
 	    gridData = new GridData();
-	    Utils.setLayoutData(upload_bits, gridData);
+	    upload_bits.setLayoutData(gridData);
 	    upload_bits.setText(getMBitLimit(limit_to_text,(up_lim.getBytesPerSec()/kinb)*kinb));
 
 		final StringListParameter max_upload_type =
@@ -388,7 +383,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 	    Messages.setLanguageText(label,"SpeedView.stats.estdowncap");
 	    gridData = new GridData();
 	    gridData.horizontalIndent = 20;
-	    Utils.setLayoutData(label, gridData);
+	    label.setLayoutData(gridData);
 
         SpeedManagerLimitEstimate down_lim = sm.getEstimatedDownloadCapacityBytesPerSec();
 
@@ -402,7 +397,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 
 		final Label download_bits = new Label(networkGroup, SWT.NULL);
 	    gridData = new GridData();
-	    Utils.setLayoutData(download_bits, gridData);
+	    download_bits.setLayoutData(gridData);
 	    download_bits.setText(getMBitLimit(limit_to_text,(down_lim.getBytesPerSec()/kinb)*kinb));
 
 		final StringListParameter max_download_type =
@@ -546,7 +541,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 	   spacer = new Label(cSection, SWT.NULL);
 	   gridData = new GridData();
 	   gridData.horizontalSpan=3;
-	   Utils.setLayoutData(spacer, gridData);
+	   spacer.setLayoutData(gridData);
 
 		BooleanParameter debug_au = new BooleanParameter(
 				cSection, "Auto Upload Speed Debug Enabled",
@@ -560,14 +555,14 @@ public class ConfigSectionTransferAutoSpeedSelect
         spacer = new Label(cSection, SWT.NULL);
         gridData = new GridData();
         gridData.horizontalSpan=3;
-        Utils.setLayoutData(spacer, gridData);
+        spacer.setLayoutData(gridData);
 
         /////////////////////////////////////////
         //Add group to link to Wiki page.
         /////////////////////////////////////////
         Group azWiki = new Group(cSection, SWT.WRAP);
         gridData = new GridData();
-        Utils.setLayoutData(azWiki, gridData);
+        azWiki.setLayoutData(gridData);
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
         layout.marginHeight = 1;
@@ -582,7 +577,7 @@ public class ConfigSectionTransferAutoSpeedSelect
         linkLabel.setCursor(linkLabel.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
         linkLabel.setForeground(Colors.blue);
         gridData = new GridData();
-        Utils.setLayoutData(linkLabel,  gridData );
+	    linkLabel.setLayoutData(gridData);
 	    linkLabel.addMouseListener(new MouseAdapter() {
 	      @Override
 	      public void mouseDoubleClick(MouseEvent arg0) {

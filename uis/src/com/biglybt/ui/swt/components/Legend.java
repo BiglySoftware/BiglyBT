@@ -158,7 +158,7 @@ public class Legend {
 
 			Composite colorSet = new Composite(legend, SWT.NONE);
 
-			Utils.setLayout(colorSet,new RowLayout(SWT.HORIZONTAL));
+			colorSet.setLayout(new RowLayout(SWT.HORIZONTAL));
 
 			final Canvas cColor = new Canvas(colorSet, SWT.BORDER);
 			cColor.setData("Index", new Integer(i));

@@ -70,14 +70,14 @@ public class BubbleTextBox
 		fd.bottom = new FormAttachment(100, -PADDING_VERTICAL);
 		fd.left = new FormAttachment(0, 17);
 		fd.right = new FormAttachment(100, -15);
-		Utils.setLayoutData(textWidget, fd);
+		textWidget.setLayoutData(fd);
 
-		WIDTH_OVAL = Utils.adjustPXForDPI(7);
-		HEIGHT_OVAL = Utils.adjustPXForDPI(6);
-		INDENT_OVAL = Utils.adjustPXForDPI(6);
-		HEIGHT_ICON_MAX = Utils.adjustPXForDPI(12);
-		WIDTH_CLEAR = Utils.adjustPXForDPI(7);
-		WIDTH_PADDING = Utils.adjustPXForDPI(6);
+		WIDTH_OVAL = 7;
+		HEIGHT_OVAL = 6;
+		INDENT_OVAL = 6;
+		HEIGHT_ICON_MAX = 12;
+		WIDTH_CLEAR = 7;
+		WIDTH_PADDING = 6;
 
 		cBubble.addPaintListener(new PaintListener() {
 			@Override
@@ -101,7 +101,7 @@ public class BubbleTextBox
 				e.gc.setAlpha(255);
 				e.gc.setLineCap(SWT.CAP_FLAT);
 
-				int iconHeight = clientArea.height - Utils.adjustPXForDPI(9);
+				int iconHeight = clientArea.height - 9;
 				if (iconHeight > HEIGHT_ICON_MAX) {
 					iconHeight = HEIGHT_ICON_MAX;
 				}
@@ -110,7 +110,7 @@ public class BubbleTextBox
 				Color colorClearX = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 				e.gc.setForeground(colorClearX);
 
-				e.gc.setLineWidth(Utils.adjustPXForDPI(2));
+				e.gc.setLineWidth(2);
 				e.gc.drawOval(clientArea.x + INDENT_OVAL, iconY, WIDTH_OVAL,
 						HEIGHT_OVAL);
 				e.gc.drawPolyline(new int[] {

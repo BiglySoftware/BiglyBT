@@ -116,19 +116,6 @@ public class SpeedScaleShell
 		bigPageIncrement = 100;
 		cancelled = true;
 		menuChosen = false;
-
-		OPTION_HEIGHT = Utils.adjustPXForDPI(OPTION_HEIGHT);
-		TEXT_HEIGHT = Utils.adjustPXForDPI(TEXT_HEIGHT);
-		SCALER_HEIGHT = Utils.adjustPXForDPI(SCALER_HEIGHT);
-		HEIGHT = Utils.adjustPXForDPI(HEIGHT);
-		MIN_WIDTH = Utils.adjustPXForDPI(MIN_WIDTH);
-		PADDING_X0 = Utils.adjustPXForDPI(PADDING_X0);
-		PADDING_X1 = Utils.adjustPXForDPI(PADDING_X1);
-		MARKER_HEIGHT = Utils.adjustPXForDPI(MARKER_HEIGHT);
-		MARKER_WIDTH = Utils.adjustPXForDPI(MARKER_WIDTH);
-		PX_2 = Utils.adjustPXForDPI(PX_2);
-		PX_5 = Utils.adjustPXForDPI(PX_5);
-		PX_10 = Utils.adjustPXForDPI(PX_10);
 	}
 
 	/**
@@ -422,7 +409,7 @@ public class SpeedScaleShell
 					// aw
 				}
 
-				e.gc.setLineWidth(Utils.adjustPXForDPI(1));
+				e.gc.setLineWidth(1);
 
 				e.gc.setForeground(
 						Colors.getSystemColor(display, SWT.COLOR_WIDGET_NORMAL_SHADOW));
@@ -479,7 +466,7 @@ public class SpeedScaleShell
 								Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
 					}
 
-					int ovalGap = Utils.adjustPXForDPI(6);
+					int ovalGap = 6;
 					float ovalPadding = ovalGap / 2.0f;
 					int ovalSize = OPTION_HEIGHT - ovalGap;
 					float xCenter = (ovalSize / 2.0f) + PX_2;
@@ -516,7 +503,7 @@ public class SpeedScaleShell
 					if (extent.x > WIDTH - PX_10) {
 						extent.x = WIDTH - PX_10;
 					}
-					int yTypedValue = Utils.adjustPXForDPI(15);
+					int yTypedValue = 15;
 					Rectangle rect = new Rectangle(WIDTH - (PX_10 - 2) - extent.x, yTypedValue - 1,
 							extent.x + PX_5,
 							extent.y + (PX_5 - 1) + (yTypedValue - 1) > TEXT_HEIGHT
@@ -563,7 +550,7 @@ public class SpeedScaleShell
 						} catch (Exception e) {
 						}
 					}
-					int y = Utils.adjustPXForDPI(15);
+					int y = 15;
 					gc.drawLine(WIDTH - PX_5, y + 1, WIDTH - PX_5, y + OPTION_HEIGHT);
 				} finally {
 					gc.dispose();

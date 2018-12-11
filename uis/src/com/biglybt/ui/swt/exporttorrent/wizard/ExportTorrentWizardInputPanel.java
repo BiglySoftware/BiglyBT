@@ -30,17 +30,10 @@ import java.io.File;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.wizard.*;
 
 public class
@@ -71,7 +64,7 @@ ExportTorrentWizardInputPanel
 
 		Composite panel = new Composite(rootPanel, SWT.NULL);
 		GridData gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER | GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(panel, gridData);
+		panel.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 3;
 		panel.setLayout(layout);
@@ -80,7 +73,7 @@ ExportTorrentWizardInputPanel
 		gridData = new GridData();
 		gridData.horizontalSpan = 3;
 		gridData.widthHint = 380;
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		Messages.setLanguageText(label, "exportTorrentWizard.torrentfile.message");
 
 		label = new Label(panel,SWT.NULL);
@@ -88,7 +81,7 @@ ExportTorrentWizardInputPanel
 
 		final Text textPath = new Text(panel,SWT.BORDER);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(textPath, gridData);
+		textPath.setLayoutData(gridData);
 		textPath.setText("");
 
 		Button browse = new Button(panel,SWT.PUSH);

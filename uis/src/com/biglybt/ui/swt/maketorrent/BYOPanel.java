@@ -79,10 +79,10 @@ public class BYOPanel
 		tree.setHeaderVisible(true);
 		TreeColumn treeColumn = new TreeColumn(tree, 0);
 		Messages.setLanguageText(treeColumn, "label.torrent.structure");
-		treeColumn.setWidth(Utils.adjustPXForDPI(180));
+		treeColumn.setWidth(180);
 		treeColumn = new TreeColumn(tree, 0);
 		Messages.setLanguageText(treeColumn, "label.original.file");
-		treeColumn.setWidth(Utils.adjustPXForDPI(500));
+		treeColumn.setWidth(500);
 		gridData = new GridData(GridData.FILL_BOTH);
 		tree.setLayoutData(gridData);
 
@@ -121,7 +121,7 @@ public class BYOPanel
 		});
 
 		Composite cButtons = new Composite(panel, 0);
-		Utils.setLayout(cButtons, new RowLayout());
+		cButtons.setLayout(new RowLayout());
 		cButtons.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		Button btnAddContainer = new Button(cButtons, SWT.PUSH);

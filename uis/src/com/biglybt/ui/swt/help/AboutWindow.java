@@ -123,9 +123,9 @@ public class AboutWindow {
     gridData.horizontalIndent = gridData.verticalIndent = 0;
     final Rectangle imgBounds = image.getBounds();
 		final Rectangle boundsColor = imgSrc.getBounds();
-    gridData.widthHint = Utils.adjustPXForDPI(300);
+		gridData.widthHint = 300;
     gridData.heightHint = imgBounds.height + imgBounds.y + 20;
-    labelImage.setLayoutData(gridData);
+		labelImage.setLayoutData(gridData);
     labelImage.addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e) {
@@ -155,14 +155,14 @@ public class AboutWindow {
     gInternet.setLayout(gridLayout);
     Messages.setLanguageText(gInternet, "MainWindow.about.section.internet"); //$NON-NLS-1$
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(gInternet, gridData);
+		gInternet.setLayoutData(gridData);
 
     Group gSys = new Group(window, SWT.NULL);
     gSys.setLayout(new GridLayout());
     Messages.setLanguageText(gSys, "MainWindow.about.section.system"); //$NON-NLS-1$
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
     gridData.verticalSpan = 1;
-    Utils.setLayoutData(gSys, gridData);
+		gSys.setLayoutData(gridData);
 
     String swt = "";
     if (Utils.isGTK) {
@@ -191,7 +191,8 @@ public class AboutWindow {
     				+ COConfigurationManager.getStringParameter("ui");
 
     txtSysInfo.setText( about_text );
-    Utils.setLayoutData(txtSysInfo, gridData = new GridData(GridData.FILL_BOTH));
+		gridData = new GridData(GridData.FILL_BOTH);
+		txtSysInfo.setLayoutData(gridData);
     if (window.getCaret() != null)
     	window.getCaret().setVisible(false);
 
@@ -226,7 +227,7 @@ public class AboutWindow {
       linkLabel.setForeground(Colors.blue);
       gridData = new GridData(GridData.FILL_HORIZONTAL);
       gridData.horizontalSpan = 1;
-      Utils.setLayoutData(linkLabel, gridData);
+			linkLabel.setLayoutData(gridData);
       linkLabel.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseDoubleClick(MouseEvent arg0) {

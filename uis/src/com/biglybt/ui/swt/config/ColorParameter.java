@@ -190,10 +190,9 @@ public class ColorParameter extends Parameter implements ParameterListener {
   }
 
   @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    colorChooser.setLayoutData(layoutData);
-  }
+	public void setLayoutData(Object layoutData) {
+		colorChooser.setLayoutData(layoutData);
+	}
 
   @Override
   public void parameterChanged(String parameterName) {

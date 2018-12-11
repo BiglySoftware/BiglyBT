@@ -1106,12 +1106,6 @@ MainWindowDelayStub
 		}
 
 		@Override
-		public int adjustPXForDPI(int px) {
-			log( "adjustPXForDPI" );
-			return( px );
-		}
-
-		@Override
 		public void tableColumnAddedListeners(TableColumnImpl tableColumn, Object listeners) {
 			log("tableColumnAddedListeners");
 		}

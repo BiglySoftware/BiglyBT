@@ -207,7 +207,7 @@ LocaleUtilSWT
 
     final Table table = new Table(s, SWT.SINGLE | SWT.FULL_SELECTION | SWT.BORDER | SWT.V_SCROLL);
     gridData = new GridData( GridData.FILL_BOTH );
-    Utils.setLayoutData(table, gridData);
+    table.setLayoutData(gridData);
 
     table.setLinesVisible(true);
     table.setHeaderVisible(true);
@@ -243,7 +243,7 @@ LocaleUtilSWT
 
     Composite composite = new Composite(s,SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(composite, gridData);
+    composite.setLayoutData(gridData);
 
     GridLayout subLayout  = new GridLayout();
     subLayout.numColumns = 2;
@@ -251,7 +251,7 @@ LocaleUtilSWT
     composite.setLayout(subLayout);
 
     final Button checkBox = new Button(composite, SWT.CHECK);
-    Utils.setLayoutData(checkBox, new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+    checkBox.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
     checkBox.setSelection(rememberEncodingDecision);
     Messages.setLanguageText(checkBox, "LocaleUtil.label.checkbox.rememberdecision"); //$NON-NLS-1$, "LocaleUtil.label.checkbox.rememberdecision"); //$NON-NLS-1$
 
@@ -259,8 +259,7 @@ LocaleUtilSWT
     ok.setText(" ".concat(MessageText.getString("Button.next")).concat(" ")); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$
     gridData = new GridData(GridData.END);
     gridData.widthHint = 100;
-    Utils.setLayoutData(ok, gridData);
-
+    ok.setLayoutData(gridData);
 
 
     s.setSize(500,500);

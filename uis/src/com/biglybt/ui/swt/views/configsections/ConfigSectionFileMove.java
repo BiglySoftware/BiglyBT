@@ -29,7 +29,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
@@ -155,7 +154,7 @@ public class ConfigSectionFileMove implements UISWTConfigSection
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalIndent = 25;
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(gMoveCompleted, gridData);
+		gMoveCompleted.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.marginHeight = 0;
 		layout.marginWidth = 4;
@@ -215,7 +214,7 @@ public class ConfigSectionFileMove implements UISWTConfigSection
 		Messages.setLanguageText(lTorrentDir, "ConfigView.label.directory.if.different");
 		gridData = new GridData();
 		gridData.horizontalIndent = 25;
-		Utils.setLayoutData(lTorrentDir, gridData);
+		lTorrentDir.setLayoutData(gridData);
 
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		final StringParameter moveTorrentPath = new StringParameter(cTorrentDir, move_torrent_dir_setting);

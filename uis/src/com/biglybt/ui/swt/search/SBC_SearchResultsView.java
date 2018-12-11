@@ -287,7 +287,7 @@ SBC_SearchResultsView
 				}
 				textWidget.setMessage(MessageText.getString(with?"SubscriptionResults.filter.with.words":"SubscriptionResults.filter.without.words"));
 				GridData gd = new GridData();
-				gd.widthHint = Utils.adjustPXForDPI( 100 );
+				gd.widthHint = 100;
 				textWidget.setLayoutData( gd );
 				textWidget.addModifyListener(
 					new ModifyListener() {
@@ -583,7 +583,7 @@ SBC_SearchResultsView
 
 			GridData gd = new GridData();
 
-			gd.widthHint = Utils.adjustPXForDPI(size.x);
+			gd.widthHint = size.x;
 
 			results.setLayoutData( gd );
 
@@ -1516,7 +1516,7 @@ SBC_SearchResultsView
 
 				image_loader.getUrlImage(
 					icon,
-					new Point(0, Utils.adjustPXForDPI(16)),
+					new Point(0, 16),
 					new ImageDownloaderListener() {
 
 						@Override

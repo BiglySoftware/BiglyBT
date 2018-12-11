@@ -155,7 +155,7 @@ BasicPluginConfigImpl
 
 		GridData main_gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
 
-		Utils.setLayoutData(main_tab, main_gridData);
+		main_tab.setLayoutData(main_gridData);
 
 		GridLayout layout = new GridLayout();
 
@@ -241,7 +241,7 @@ BasicPluginConfigImpl
 										gridData.heightHint = 0;
 									}
 
-									Utils.setLayoutData(tab_parent, gridData);
+									tab_parent.setLayoutData(gridData);
 
 									layout = new GridLayout();
 
@@ -272,7 +272,7 @@ BasicPluginConfigImpl
 							grid_data.heightHint = 0;
 						}
 
-						Utils.setLayoutData(tf, grid_data);
+						tf.setLayoutData(grid_data);
 
 						tab_folder_map.put( tab_folder, tf );
 					}
@@ -308,7 +308,7 @@ BasicPluginConfigImpl
 							grid_data.heightHint = 0;
 						}
 
-						Utils.setLayoutData(tab_composite,  grid_data );
+						tab_composite.setLayoutData(grid_data);
 
 						if ( tf.getItemCount() == 1 ){
 
@@ -353,7 +353,7 @@ BasicPluginConfigImpl
 						grid_data.heightHint = 0;
 					}
 
-					Utils.setLayoutData(current_composite,  grid_data );
+					current_composite.setLayoutData(grid_data);
 
 					layout = new GridLayout();
 
@@ -540,7 +540,7 @@ BasicPluginConfigImpl
 				final Composite area = new Composite(current_composite, SWT.NULL);
 				//GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_HORIZONTAL );
 				GridData gridData = new GridData();
-				Utils.setLayoutData(area, gridData);
+				area.setLayoutData(gridData);
 				layout = new GridLayout();
 				layout.numColumns 	= 2;
 				layout.marginHeight = 0;
@@ -643,7 +643,7 @@ BasicPluginConfigImpl
 
 				GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.FILL_HORIZONTAL );
 
-				Utils.setLayoutData(area, gridData);
+				area.setLayoutData(gridData);
 
 				layout = new GridLayout();
 
@@ -698,7 +698,7 @@ BasicPluginConfigImpl
 					UISWTParameterContext context = (UISWTParameterContext)((UIParameterImpl)param).getContext();
 					Composite internal_composite = new Composite(current_composite, SWT.NULL);
 					GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-					Utils.setLayoutData(internal_composite, gridData);
+					internal_composite.setLayoutData(gridData);
 					boolean initialised_component = true;
 					try {context.create(internal_composite);}
 					catch (Exception e) {Debug.printStackTrace(e); initialised_component = false;}
@@ -736,7 +736,7 @@ BasicPluginConfigImpl
 
 				gridData.widthHint = 300;
 
-				Utils.setLayoutData(label,  gridData );
+				label.setLayoutData(gridData);
 
 				swt_param	= null;
 			}

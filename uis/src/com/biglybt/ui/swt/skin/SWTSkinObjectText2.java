@@ -210,12 +210,12 @@ public class SWTSkinObjectText2
 
 				int fixedWidth = skinProperties.getIntValue(sConfigID + ".width", -1);
 				if (fixedWidth >= 0) {
-					pt.x = Utils.adjustPXForDPI(fixedWidth);
+					pt.x = fixedWidth;
 					//pt.x = fixedWidth;
 				}
 				int fixedHeight = skinProperties.getIntValue(sConfigID + ".height", -1);
 				if (fixedHeight >= 0) {
-					pt.y = Utils.adjustPXForDPI(fixedHeight);
+					pt.y = fixedHeight;
 					//pt.y = fixedHeight;
 				}
 

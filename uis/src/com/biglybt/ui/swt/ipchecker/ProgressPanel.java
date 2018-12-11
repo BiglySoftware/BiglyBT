@@ -31,7 +31,6 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerService;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerServiceListener;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.wizard.*;
 
 /**
@@ -61,7 +60,7 @@ public class ProgressPanel extends AbstractWizardPanel implements ExternalIPChec
 
     Composite panel = new Composite(rootPanel, SWT.NULL);
     GridData gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER | GridData.FILL_HORIZONTAL);
-    Utils.setLayoutData(panel, gridData);
+    panel.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 1;
     panel.setLayout(layout);
@@ -70,7 +69,7 @@ public class ProgressPanel extends AbstractWizardPanel implements ExternalIPChec
     tasks.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.heightHint = 120;
-    Utils.setLayoutData(tasks, gridData);
+    tasks.setLayoutData(gridData);
   }
 
   @Override

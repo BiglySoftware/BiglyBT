@@ -106,7 +106,7 @@ public class AdvRenameWindow
 		RowLayout rowLayout = new RowLayout(SWT.HORIZONTAL);
 		rowLayout.fill = true;
 		rowLayout.spacing = 5;
-		Utils.setLayout(cButtons, rowLayout);
+		cButtons.setLayout(rowLayout);
 
 		Button btnReset = new Button(cButtons, SWT.PUSH);
 		Messages.setLanguageText(btnReset, "Button.reset");

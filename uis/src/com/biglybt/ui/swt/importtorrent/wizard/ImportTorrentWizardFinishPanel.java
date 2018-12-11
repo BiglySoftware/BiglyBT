@@ -31,7 +31,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.wizard.*;
 
 public class
@@ -57,7 +56,7 @@ ImportTorrentWizardFinishPanel
 
 	Composite panel = new Composite(rootPanel, SWT.NULL);
 	GridData gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER | GridData.FILL_HORIZONTAL);
-	Utils.setLayoutData(panel, gridData);
+	panel.setLayoutData(gridData);
 	layout = new GridLayout();
 	layout.numColumns = 3;
 	panel.setLayout(layout);
@@ -66,7 +65,7 @@ ImportTorrentWizardFinishPanel
 	gridData = new GridData();
 	gridData.horizontalSpan = 3;
 	gridData.widthHint = 380;
-	Utils.setLayoutData(label, gridData);
+	label.setLayoutData(gridData);
 	Messages.setLanguageText(label, "importTorrentWizard.finish.message");
   }
 

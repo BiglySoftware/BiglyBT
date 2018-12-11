@@ -37,7 +37,6 @@ import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.pif.platform.PlatformManagerException;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -82,7 +81,7 @@ public class ConfigSectionConnectionAdvanced
 
 		gridData = new GridData(
 				GridData.HORIZONTAL_ALIGN_FILL + GridData.VERTICAL_ALIGN_FILL);
-		Utils.setLayoutData(cSection, gridData);
+		cSection.setLayoutData(gridData);
 		GridLayout advanced_layout = new GridLayout();
 		cSection.setLayout(advanced_layout);
 
@@ -90,7 +89,7 @@ public class ConfigSectionConnectionAdvanced
 		if (userMode < REQUIRED_MODE) {
 			Label label = new Label(cSection, SWT.WRAP);
 			gridData = new GridData();
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 
 			final String[] modeKeys = {
 				"ConfigView.section.mode.beginner",
@@ -129,7 +128,7 @@ public class ConfigSectionConnectionAdvanced
 				"ConfigView.section.connection.advanced.socket.group");
 		gridData = new GridData(
 				GridData.VERTICAL_ALIGN_FILL | GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(gSocket, gridData);
+		gSocket.setLayoutData(gridData);
 		GridLayout glayout = new GridLayout();
 		glayout.numColumns = 3;
 		gSocket.setLayout(glayout);
@@ -140,7 +139,7 @@ public class ConfigSectionConnectionAdvanced
 		Messages.setLanguageText(lmaxout,
 				"ConfigView.section.connection.network.max.simultaneous.connect.attempts");
 		gridData = new GridData();
-		Utils.setLayoutData(lmaxout, gridData);
+		lmaxout.setLayoutData(gridData);
 
 		IntParameter max_connects = new IntParameter(gSocket,
 				"network.max.simultaneous.connect.attempts", 1, 100);
@@ -154,7 +153,7 @@ public class ConfigSectionConnectionAdvanced
 		Messages.setLanguageText(lmaxpout,
 				"ConfigView.section.connection.network.max.outstanding.connect.attempts");
 		gridData = new GridData();
-		Utils.setLayoutData(lmaxpout, gridData);
+		lmaxpout.setLayoutData(gridData);
 
 		IntParameter max_pending_connects = new IntParameter(gSocket,
 				"network.tcp.max.connections.outstanding", 1, 65536);
@@ -167,7 +166,7 @@ public class ConfigSectionConnectionAdvanced
 		Label lbind = new Label(gSocket, SWT.NULL);
 		Messages.setLanguageText(lbind, "ConfigView.label.bindip");
 		gridData = new GridData();
-		Utils.setLayoutData(lbind, gridData);
+		lbind.setLayoutData(gridData);
 
 		StringParameter bindip = new StringParameter(gSocket, "Bind IP", "", false);
 		gridData = new GridData();
@@ -184,7 +183,7 @@ public class ConfigSectionConnectionAdvanced
 				});
 		gridData = new GridData();
 		gridData.horizontalSpan = 3;
-		Utils.setLayoutData(lbind2, gridData);
+		lbind2.setLayoutData(gridData);
 
 		BooleanParameter check_bind = new BooleanParameter(gSocket,
 				"Check Bind IP On Start", "network.check.ipbinding");
@@ -242,7 +241,7 @@ public class ConfigSectionConnectionAdvanced
 		final Label lsendcurr = new Label(gSocket, SWT.NULL);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalIndent = 10;
-		Utils.setLayoutData(lsendcurr, gridData);
+		lsendcurr.setLayoutData(gridData);
 
 		// rcvbuf
 
@@ -257,7 +256,7 @@ public class ConfigSectionConnectionAdvanced
 		final Label lreccurr = new Label(gSocket, SWT.NULL);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalIndent = 10;
-		Utils.setLayoutData(lreccurr, gridData);
+		lreccurr.setLayoutData(gridData);
 
 		final Runnable buff_updater = new Runnable() {
 			@Override

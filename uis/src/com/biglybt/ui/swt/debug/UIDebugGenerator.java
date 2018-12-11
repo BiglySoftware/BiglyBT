@@ -502,7 +502,7 @@ public class UIDebugGenerator
 
 		Composite cButtons = new Composite(cButtonsSuper, SWT.NONE);
 		cButtons.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true));
-		Utils.setLayout(cButtons, new RowLayout());
+		cButtons.setLayout(new RowLayout());
 
 		Button btnSendLater = new Button(cButtons, SWT.PUSH);
 		btnSendLater.addListener(SWT.Selection, new Listener() {

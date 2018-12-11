@@ -104,11 +104,10 @@ public class IntListParameter extends Parameter {
   }
 
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    list.setLayoutData(layoutData);
-   }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		list.setLayoutData(layoutData);
+	}
 
   @Override
   public Control getControl() {
