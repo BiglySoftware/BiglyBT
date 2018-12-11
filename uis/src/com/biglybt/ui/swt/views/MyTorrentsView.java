@@ -233,6 +233,18 @@ public class MyTorrentsView
 
 	protected boolean isEmptyListOnNullDS;
 
+	private final Map<String,String>	removed_while_selected =
+			new LinkedHashMap<String,String>(64,0.75f,true)
+			{
+				@Override
+				protected boolean
+				removeEldestEntry(
+			   		Map.Entry<String,String> eldest)
+				{
+					return size() > 64;
+				}
+			};
+	
 	public MyTorrentsView( boolean supportsTabs ) {
 		super("MyTorrentsView");
 		this.supportsTabs = supportsTabs;
@@ -3113,7 +3125,7 @@ public class MyTorrentsView
 				}
 			});
 	}
-
+	
   // globalmanagerlistener Functions
   // @see com.biglybt.core.global.GlobalManagerListener#downloadManagerAdded(com.biglybt.core.download.DownloadManager)
   @Override
@@ -3129,6 +3141,23 @@ public class MyTorrentsView
   public void downloadManagerRemoved(DownloadManager dm ) {
     dm.removeListener( this );
     DownloadBar.close(dm);
+    
+    TableRowCore row = tv.getRow( dm );
+    
+    if ( row != null ){
+    	
+    	if ( row.isSelected()){
+    		
+    		if ( dm.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD)){
+    		
+    			synchronized( removed_while_selected ){
+    			
+    				removed_while_selected.put( dm.getInternalName(), "" );
+    			}
+    		}
+    	}
+    }
+    
     tv.removeDataSource(dm);
   }
 
@@ -3435,6 +3464,36 @@ public class MyTorrentsView
 			if ( dm.getDownloadState().getBooleanAttribute( DownloadManagerState.AT_FILES_EXPANDED )){
 				row.setExpanded(true);
 			}
+			
+			boolean	was_selected;
+			
+    		synchronized( removed_while_selected ){
+
+    			was_selected = removed_while_selected.remove( dm.getInternalName()) != null;
+    		}
+    		
+    		if ( was_selected ){
+    			
+    			TableRowCore[] selected = tv.getSelectedRows();
+    			
+    			if ( selected.length == 0 ){
+    				
+    				tv.setSelectedRows( new TableRowCore[]{ row });
+    				
+    			}else{
+    				
+    				TableRowCore[] new_sel = new TableRowCore[ selected.length + 1];
+    				
+    				System.arraycopy( selected, 0, new_sel, 0, selected.length );
+    				
+    				new_sel[selected.length] = row;
+    				
+    				tv.setSelectedRows( new_sel );
+    			}
+    			
+    		  	updateSelectedContent();
+    		  	refreshTorrentMenu();
+    		}
 		}
 		//if (getRowDefaultHeight() > 0 && row.getParentRowCore() != null) {
 		//	row.setHeight(20);
