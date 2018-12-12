@@ -30,10 +30,6 @@ import java.util.*;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManager;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
@@ -60,8 +56,11 @@ MagnetPluginMDDownloader
 	final private Set<String>			networks;
 	final private InetSocketAddress[]	addresses;
 	final private List<String>			tags;
+	final private Map<String,Object>	initial_metadata;
 	final private String				args;
 
+	private volatile com.biglybt.core.download.DownloadManager		core_dm;
+	
 	private volatile boolean		started;
 	private volatile boolean		cancelled;
 	private volatile boolean		completed;
@@ -79,6 +78,7 @@ MagnetPluginMDDownloader
 		Set<String>			_networks,
 		InetSocketAddress[]	_addresses,
 		List<String>		_tags,
+		Map<String,Object>	_initial_metadata,
 		String				_args )
 	{
 		plugin				= _plugin;
@@ -87,6 +87,7 @@ MagnetPluginMDDownloader
 		networks			= _networks;
 		addresses			= _addresses;
 		tags				= _tags;
+		initial_metadata	= _initial_metadata;
 		args				= _args;
 	}
 
@@ -124,13 +125,13 @@ MagnetPluginMDDownloader
 		}
 	}
 
-	protected void
+	protected boolean
 	cancel()
 	{
-		cancelSupport( false );
+		return( cancelSupport( false ));
 	}
 
-	private void
+	private boolean
 	cancelSupport(
 		boolean	internal )
 	{
@@ -150,7 +151,7 @@ MagnetPluginMDDownloader
 
 				if ( cancelled || completed ){
 
-					return;
+					return( cancelled );
 				}
 
 				cancelled	= true;
@@ -164,6 +165,9 @@ MagnetPluginMDDownloader
 
 				request.cancel();
 			}
+			
+			return( true );
+			
 		}finally{
 
 			running_sem.releaseForever();
@@ -175,6 +179,12 @@ MagnetPluginMDDownloader
 		}
 	}
 
+	protected com.biglybt.core.download.DownloadManager
+	getDownloadManager()
+	{
+		return( core_dm );
+	}
+	
 	private void
 	startSupport(
 		final DownloadListener		listener )
@@ -330,7 +340,7 @@ MagnetPluginMDDownloader
 
 			String	display_name = MessageText.getString( "MagnetPlugin.use.md.download.name", new String[]{ name });
 
-			com.biglybt.core.download.DownloadManager		core_dm = PluginCoreUtils.unwrap( download );
+			core_dm = PluginCoreUtils.unwrap( download );
 			
 			DownloadManagerState state = core_dm.getDownloadState();
 
@@ -395,23 +405,7 @@ MagnetPluginMDDownloader
 				}
 			}
 
-			if ( tags != null ){
-				
-				try{
-					TagManager tm = TagManagerFactory.getTagManager();
-					
-					for ( String tn: tags ){
-						
-						Tag tag = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTag( tn, true );
-						
-						if ( tag != null ){
-							
-							tag.addTaggable( core_dm );
-						}
-					}	
-				}catch( Throwable e ){
-				}
-			}
+			plugin.setInitialMetadata( core_dm, tags, initial_metadata );
 			
 			final Set<String> peer_networks = new HashSet<>();
 
@@ -890,31 +884,10 @@ MagnetPluginMDDownloader
 				}catch( Throwable e ){
 				}
 				
-				try{
-					List<Tag> tags = TagManagerFactory.getTagManager().getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, core_dm );
-					
-					if ( !tags.isEmpty()){
-						
-						List<String> tag_names = new ArrayList<>();
-						
-						for ( Tag t: tags ){
-							
-							if ( !t.isTagAuto()[0]){
-							
-								tag_names.add( t.getTagName( true ));
-							}
-						}
-						
-						TorrentUtils.setInitialTags( torrent, tag_names );
-					}
-				}catch( Throwable e ){
-					
-				}
-
 				listener.complete( torrent, peer_networks );
 
 			}else{
-
+					
 				if ( cancelled ){
 
 					throw( new Exception( "Download cancelled" ));
@@ -959,6 +932,15 @@ MagnetPluginMDDownloader
 			try{
 				if ( download != null ){
 
+						// unfortunately the tags get lost on download removal so cache them
+					
+					List<String> latest_tags =  plugin.getInitialTags( core_dm );
+					
+					if ( !latest_tags.isEmpty()){
+					
+						core_dm.setUserData( MagnetPlugin.DM_TAG_CACHE, latest_tags );
+					}
+					
 					try{
 						download.stop();
 
@@ -1025,7 +1007,7 @@ MagnetPluginMDDownloader
 		reportProgress(
 			int		downloaded,
 			int		total_size );
-
+		
 		public void
 		complete(
 			TOTorrent		torrent,

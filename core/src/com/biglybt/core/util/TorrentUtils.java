@@ -50,6 +50,7 @@ import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.torrent.*;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pifimpl.local.utils.resourcedownloader.ResourceDownloaderFactoryImpl;
+import com.biglybt.util.MapUtils;
 
 
 public class
@@ -125,6 +126,7 @@ TorrentUtils
 	private static final String		TORRENT_AZ_PROP_NETWORK_CACHE			= "network_cache";
 	private static final String		TORRENT_AZ_PROP_TAG_CACHE				= "tag_cache";
 	private static final String		TORRENT_AZ_PROP_INITIAL_TAGS			= "initial_tags";
+	private static final String		TORRENT_AZ_PROP_INITIAL_METADATA		= "other_metadata";
 	private static final String		TORRENT_AZ_PROP_PEER_CACHE				= "peer_cache";
 	private static final String		TORRENT_AZ_PROP_PEER_CACHE_VALID		= "peer_cache_valid";
 	public static final String		TORRENT_AZ_PROP_INITIAL_LINKAGE			= "initial_linkage";
@@ -2100,6 +2102,79 @@ TorrentUtils
 
 		return( result );
 	}
+	
+	public static void
+	setInitialMetadata(
+		TOTorrent				torrent,
+		Map<String,Object>		metadata )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			m.put( TORRENT_AZ_PROP_INITIAL_METADATA, metadata );
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+	}
+	
+	public static Map<String,Object>
+	getInitialMetadata(
+		TOTorrent		torrent )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			return( (Map<String,Object>)m.get( TORRENT_AZ_PROP_INITIAL_METADATA));
+
+	
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+
+		return( Collections.emptyMap());
+	}
+	
+	public static Map<String,Object>
+	getInitialMetadata(
+		DownloadManager		dm )
+	{
+		Map<String,Object>	other_metadata = new HashMap<>();
+		
+		DownloadManagerState	dms = dm.getDownloadState();
+		
+		String comment = dms.getUserComment();
+		
+		if ( comment != null && !comment.isEmpty()){
+			
+			MapUtils.setMapString( other_metadata, "comment", comment );
+		}
+		
+		return( other_metadata );
+	}
+	
+	public static void
+	setInitialMetadata(
+		DownloadManager			dm,
+		Map<String,Object>		other_metadata )
+	{
+		if ( other_metadata == null || other_metadata.isEmpty()){
+			
+			return;
+		}
+		
+		DownloadManagerState	dms = dm.getDownloadState();
+
+		String comment = MapUtils.getMapString( other_metadata, "comment", null );
+		
+		if ( comment != null ){
+			
+			dms.setUserComment( comment );
+		}
+	}
+	
 	
 	public static void
 	setOriginalHash(

@@ -115,8 +115,9 @@ public class TorrentOpenOptions
 
 	private Map<String, Boolean> enabledNetworks = new HashMap<>();
 
-	private List<Tag>	initialTags = new ArrayList<>();
-
+	private List<Tag>			initialTags = new ArrayList<>();
+	private Map<String,Object>	initialMetadata;
+	
 	private List<List<String>>	updatedTrackers;
 
 	private int max_up;
@@ -208,7 +209,8 @@ public class TorrentOpenOptions
 		this.peerSource = toBeCloned.peerSource == null ? null : new HashMap<>(toBeCloned.peerSource);
 		this.enabledNetworks = toBeCloned.enabledNetworks == null ? null : new HashMap<>(toBeCloned.enabledNetworks);
 		this.initialTags = toBeCloned.initialTags == null ? null : new ArrayList<>(toBeCloned.initialTags);
-
+		this.initialMetadata = BEncoder.cloneMap(toBeCloned.initialMetadata);
+		
 		if ( toBeCloned.updatedTrackers != null ){
 			updatedTrackers = new ArrayList<>();
 			for (List<String> l: toBeCloned.updatedTrackers){
@@ -471,6 +473,12 @@ public class TorrentOpenOptions
 		initialTags = tags;
 	}
 
+	public Map<String,Object>
+	getInitialMetadata()
+	{
+		return( initialMetadata );
+	}
+	
 	public void
 	setDirty()
 	{
@@ -977,6 +985,8 @@ public class TorrentOpenOptions
 				}catch( Throwable e ){
 				}
 			}
+			
+			initialMetadata = TorrentUtils.getInitialMetadata( torrent );
 			
 			renameDuplicates();
 		}

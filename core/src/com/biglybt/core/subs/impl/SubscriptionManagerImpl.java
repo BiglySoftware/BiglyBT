@@ -6789,7 +6789,8 @@ SubscriptionManagerImpl
 				hash,
 				"",
 				new InetSocketAddress[0],
-				null,
+				Collections.emptyList(),
+				Collections.emptyMap(),
 				300*1000,
 				MagnetPlugin.FL_DISABLE_MD_LOOKUP );
 

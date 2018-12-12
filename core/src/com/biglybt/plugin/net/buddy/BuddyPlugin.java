@@ -4124,7 +4124,8 @@ BuddyPlugin
 							hash,
 							"",
 							new InetSocketAddress[0],
-							null,
+							Collections.emptyList(),
+							Collections.emptyMap(),
 							timeout,
 							MagnetPlugin.FL_NONE );
 

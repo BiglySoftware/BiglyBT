@@ -682,6 +682,12 @@ public class TorrentOpener {
 							dm_state.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
 						}
 						
+						Map<String,Object>	md = torrentOptions.getInitialMetadata();
+						
+						if ( md != null ){
+							
+							TorrentUtils.setInitialMetadata( dm, md );
+						}
 					} finally {
 
 						dm.getDownloadState().suppressStateSave(false);
