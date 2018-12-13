@@ -36,6 +36,8 @@ import java.util.zip.GZIPInputStream;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.category.Category;
+import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFactory;
@@ -2141,37 +2143,102 @@ TorrentUtils
 	getInitialMetadata(
 		DownloadManager		dm )
 	{
-		Map<String,Object>	other_metadata = new HashMap<>();
-		
-		DownloadManagerState	dms = dm.getDownloadState();
-		
-		String comment = dms.getUserComment();
-		
-		if ( comment != null && !comment.isEmpty()){
+		Map<String,Object>	metadata = new HashMap<>();
+
+		try{		
+			DownloadManagerState	dms = dm.getDownloadState();
 			
-			MapUtils.setMapString( other_metadata, "comment", comment );
+			String comment = dms.getUserComment();
+			
+			if ( comment != null && !comment.isEmpty()){
+				
+				MapUtils.setMapString( metadata, "comment", comment );
+			}
+			
+				// category also manually set in MagnetPlugin when metadata extracted after dm removed from gm
+			
+			Category cat = dms.getCategory();
+			
+			if ( cat != null ){
+				
+				if ( cat.getType() == Category.TYPE_USER ){
+					
+					MapUtils.setMapString( metadata, "category", cat.getName());
+				}
+			}
+			
+			TOTorrent torrent = dm.getTorrent();
+			
+			if ( torrent != null ){
+				
+				byte[] thumbnail = PlatformTorrentUtils.getContentThumbnail( torrent );
+				
+				if ( thumbnail != null ){
+					
+					String type = PlatformTorrentUtils.getContentThumbnailType( torrent );
+					
+					metadata.put( "thumbnail", thumbnail );
+					
+					MapUtils.setMapString( metadata, "thumbnail_type", type );
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
 		}
 		
-		return( other_metadata );
+		return( metadata );
 	}
 	
 	public static void
 	setInitialMetadata(
 		DownloadManager			dm,
-		Map<String,Object>		other_metadata )
+		Map<String,Object>		metadata )
 	{
-		if ( other_metadata == null || other_metadata.isEmpty()){
+		try{
+			if ( metadata == null || metadata.isEmpty()){
+				
+				return;
+			}
 			
-			return;
-		}
-		
-		DownloadManagerState	dms = dm.getDownloadState();
-
-		String comment = MapUtils.getMapString( other_metadata, "comment", null );
-		
-		if ( comment != null ){
+			DownloadManagerState	dms = dm.getDownloadState();
+	
+			String comment = MapUtils.getMapString( metadata, "comment", null );
 			
-			dms.setUserComment( comment );
+			if ( comment != null ){
+				
+				dms.setUserComment( comment );
+			}
+			
+			String category = MapUtils.getMapString( metadata, "category", null );
+	
+			if ( category != null ){
+				
+				Category cat = CategoryManager.getCategory( category );
+				
+				if ( cat != null ){
+				
+					dms.setCategory(cat);
+				}
+			}
+			
+			byte[] thumbnail = (byte[])metadata.get( "thumbnail" );
+			
+			if ( thumbnail != null ){
+				
+				TOTorrent torrent = dm.getTorrent();
+				
+				if ( torrent != null ){
+					
+					String type = MapUtils.getMapString( metadata, "thumbnail_type", null );
+					
+					PlatformTorrentUtils.setContentThumbnail( torrent, thumbnail, type );
+				}
+			}
+						
+		}catch( Throwable e ){
+			
+			Debug.out( e );
 		}
 	}
 	

@@ -47,7 +47,6 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.stats.transfer.OverallStats;
 import com.biglybt.core.stats.transfer.StatsFactory;
 import com.biglybt.core.tag.*;
-import com.biglybt.core.tag.TagTypeListener.TagEvent;
 import com.biglybt.core.torrent.HasBeenOpenedListener;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.util.*;
@@ -1244,12 +1243,14 @@ public class SB_Transfers
 			return;
 		}
 
-		MdiEntry entry = mdi.getEntry("Cat."
-				+ Base32.encode(category.getName().getBytes()));
+		MdiEntry entry = mdi.getEntry("Cat." + Base32.encode(category.getName().getBytes()));
+		
 		if (entry == null) {
 			return;
 		}
 
+		requestRedraw( entry );
+		
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 	}
 

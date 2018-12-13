@@ -27,6 +27,7 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.*;
 
+import com.biglybt.core.category.Category;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerManager;
@@ -932,13 +933,23 @@ MagnetPluginMDDownloader
 			try{
 				if ( download != null ){
 
-						// unfortunately the tags get lost on download removal so cache them
+						// unfortunately the tags and category get lost on download removal so cache them
 					
 					List<String> latest_tags =  plugin.getInitialTags( core_dm );
 					
 					if ( !latest_tags.isEmpty()){
 					
 						core_dm.setUserData( MagnetPlugin.DM_TAG_CACHE, latest_tags );
+					}
+					
+					Category cat = core_dm.getDownloadState().getCategory();
+					
+					if ( cat != null ){
+						
+						if ( cat.getType() == Category.TYPE_USER ){
+
+							core_dm.setUserData( MagnetPlugin.DM_CATEGORY_CACHE, cat.getName());
+						}
 					}
 					
 					try{

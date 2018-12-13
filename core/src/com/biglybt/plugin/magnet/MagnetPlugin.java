@@ -121,7 +121,8 @@ MagnetPlugin
 	
 	public static final String[] SOURCE_STRINGS = new String[ SOURCE_KEYS.length ];
 
-	protected static final Object	DM_TAG_CACHE = new Object();
+	protected static final Object	DM_TAG_CACHE 		= new Object();
+	protected static final Object	DM_CATEGORY_CACHE 	= new Object();
 	
 	private PluginInterface		plugin_interface;
 
@@ -1304,6 +1305,13 @@ MagnetPlugin
 			tags = (List<String>)dm.getUserData( DM_TAG_CACHE );
 			
 			other_metadata = TorrentUtils.getInitialMetadata( dm );
+			
+			String category = (String)dm.getUserData( DM_CATEGORY_CACHE );
+			
+			if ( category != null ){
+				
+				MapUtils.setMapString( other_metadata, "category", category );
+			}
 		}
 		
 		return( addTrackersAndWebSeedsEtc( torrent_data, args, networks, tags, other_metadata ));
