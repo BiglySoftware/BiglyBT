@@ -24,10 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import com.biglybt.core.devices.Device;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.skin.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
@@ -35,14 +31,17 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.devices.Device;
+import com.biglybt.core.devices.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-
-import com.biglybt.core.devices.*;
+import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
@@ -670,9 +669,9 @@ public abstract class TranscodeChooser
 			}
 		});
 
-		fontDevice = FontUtils.getFontWithHeight(parent.getFont(), null, 16, SWT.BOLD);
-		fontDeviceDesc = FontUtils.getFontWithHeight(parent.getFont(), null, 16,
-				SWT.NONE);
+		Font baseFont = parent.getFont();
+		fontDevice = FontUtils.getFontWithStyle(baseFont, SWT.BOLD, 1.1f);
+		fontDeviceDesc = FontUtils.getFontWithStyle(baseFont, SWT.NONE, 1.1f);
 
 		/**
 		PaintListener paintListener = new PaintListener() {

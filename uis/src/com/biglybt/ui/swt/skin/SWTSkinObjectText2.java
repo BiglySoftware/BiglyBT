@@ -232,13 +232,6 @@ public class SWTSkinObjectText2
 			}
 		};
 
-		if (false && font == null) {
-			Display display = createOn.getDisplay();
-			FontData fd = new FontData("Arial", Utils.pixelsToPoint(10,
-					Utils.getDPIRaw(display).y), SWT.NORMAL);
-			font = new Font(display, fd);
-		}
-
 		canvas.setData("font", font);
 		setControl(canvas);
 		if (typeParams.length > 1) {
@@ -432,7 +425,7 @@ public class SWTSkinObjectText2
 			canvas.setData("font", existingFont);
 		} else {
 			boolean bNewFont = false;
-			float fontSize = -1;
+			float fontSizeAdj = -1;
 			int iFontWeight = -1;
 			String sFontFace = null;
 			FontData[] tempFontData = canvas.getFont().getFontData();
@@ -529,9 +522,8 @@ public class SWTSkinObjectText2
 			// font.height isn't necessarily in px.
 			String sSize = properties.getStringValue(sPrefix + ".size" + suffix);
 			if (sSize != null) {
-				FontData[] fd = canvas.getFont().getFontData();
-
 				sSize = sSize.trim();
+
 				try {
 					char firstChar = sSize.charAt(0);
 					char lastChar = sSize.charAt(sSize.length() - 1);
@@ -544,25 +536,15 @@ public class SWTSkinObjectText2
 					float dSize = NumberFormat.getInstance(Locale.US).parse(sSize).floatValue();
 
 					if (lastChar == '%') {
-						fontSize = FontUtils.getHeight(fd) * (dSize / 100);
+						fontSizeAdj = dSize / 100;
 					} else if (firstChar == '+') {
-						//int curPX = FontUtils.getFontHeightInPX(tempFontData);
-						//fontSize = FontUtils.getFontHeightFromPX(canvas.getDisplay(),
-						//		tempFontData, null, (int) (curPX + dSize));
-						fontSize = (int) (fd[0].height + dSize);
+						fontSizeAdj = 1.0f + (dSize * 0.1f);
 					} else if (firstChar == '-') {
-						fontSize = (int) (fd[0].height - dSize);
+						fontSizeAdj = 1.0f - (dSize * 0.1f);
+					} else if (sSize.endsWith("rem")) {
+						fontSizeAdj = dSize;
 					} else {
-						if (sSize.endsWith("px")) {
-							//iFontSize = Utils.getFontHeightFromPX(canvas.getFont(), null, (int) dSize);
-							fontSize = FontUtils.getFontHeightFromPX(canvas.getDisplay(),
-									tempFontData, null, (int) dSize);
-							//iFontSize = Utils.pixelsToPoint(dSize, canvas.getDisplay().getDPI().y);
-						} else if (sSize.endsWith("rem")) {
-							fontSize = FontUtils.getHeight(fd) * dSize;
-						} else {
-							fontSize = (int) dSize;
-						}
+						fontSizeAdj = dSize / (float) FontUtils.getFontHeightInPX(tempFontData);
 					}
 
 					bNewFont = true;
@@ -577,8 +559,9 @@ public class SWTSkinObjectText2
 			if (bNewFont) {
 				FontData[] fd = canvas.getFont().getFontData();
 
-				if (fontSize > 0) {
-					FontUtils.setFontDataHeight(fd, fontSize);
+				if (fontSizeAdj > 0) {
+					FontUtils.setFontDataHeight(fd,
+							FontUtils.getHeight(fd) * fontSizeAdj);
 				}
 
 				if (iFontWeight >= 0) {

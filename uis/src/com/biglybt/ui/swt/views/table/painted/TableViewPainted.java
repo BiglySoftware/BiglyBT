@@ -1319,8 +1319,7 @@ public class TableViewPainted
 
 		cHeaderArea = new Canvas(cTableComposite, SWT.DOUBLE_BUFFERED);
 
-		fontHeader = FontUtils.getFontWithHeight(cHeaderArea.getFont(), null,
-				12);
+		fontHeader = FontUtils.getFontPercentOf(cHeaderArea.getFont(), 0.9f);
 		fontHeaderSmall = FontUtils.getFontPercentOf(fontHeader, 0.8f);
 		cHeaderArea.setFont(fontHeader);
 

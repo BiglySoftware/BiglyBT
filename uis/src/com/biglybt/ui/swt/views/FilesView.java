@@ -84,6 +84,7 @@ import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.file.FileInfoView;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
@@ -391,7 +392,9 @@ public class FilesView
 		lblHeader = new BufferedLabel(cTop, SWT.CENTER | ( Constants.isLinux?0: SWT.DOUBLE_BUFFERED));
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
-		bubbleTextBox.getTextWidget().setMessage(MessageText.getString("TorrentDetailsView.filter"));
+		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
+		FontUtils.fontToWidgetHeight(bubbleTextWidget);
+		bubbleTextWidget.setMessage(MessageText.getString("TorrentDetailsView.filter"));
 
 		FormData fd = Utils.getFilledFormData();
 		fd.left = null;
@@ -413,7 +416,7 @@ public class FilesView
 		fd.right = new FormAttachment(bubbleTextBox.getParent(), -10);
 		lblHeader.setLayoutData(fd);
 
-		tv.enableFilterCheck(bubbleTextBox.getTextWidget(), this, true );
+		tv.enableFilterCheck(bubbleTextWidget, this, true );
 
 		Composite tableParent = new Composite(parent, SWT.NONE);
 

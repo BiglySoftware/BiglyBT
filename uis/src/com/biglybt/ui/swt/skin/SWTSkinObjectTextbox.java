@@ -34,11 +34,11 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
+
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
-
 import com.biglybt.ui.swt.utils.FontUtils;
 
 /**
@@ -93,6 +93,8 @@ public class SWTSkinObjectTextbox
 					doBubble = true;
 				}
 			}
+		} else {
+			style |= SWT.SINGLE;
 		}
 
 		if ((style & SWT.WRAP) == 0 && (style & SWT.MULTI) > 0 && !properties.getBooleanValue(sConfigID + ".nohbar", false)) {
@@ -121,6 +123,18 @@ public class SWTSkinObjectTextbox
 
 		setControl(cBubble == null ? textWidget : cBubble);
 		updateFont("");
+
+
+		if ((style & SWT.SINGLE) > 0) {
+			// If we set a height for a single line textbox, but didn't set the font
+			// size, then force the font size to the widget height.
+			int fixedHeight = properties.getIntValue(sConfigID + ".height", -1);
+			boolean noFontSize = properties.getStringValue(sConfigID + ".text.size",
+					"").isEmpty();
+			if (fixedHeight > 0 && noFontSize) {
+				FontUtils.fontToWidgetHeight(textWidget);
+			}
+		}
 	}
 
 	// @see SWTSkinObjectBasic#switchSuffix(java.lang.String, int, boolean)
@@ -172,7 +186,7 @@ public class SWTSkinObjectTextbox
 			textWidget.setFont(existingFont);
 		} else {
 			boolean bNewFont = false;
-			float fontSize = -1;
+			float fontSizeAdj = -1;
 			String sFontFace = null;
 			FontData[] tempFontData = textWidget.getFont().getFontData();
 
@@ -186,9 +200,8 @@ public class SWTSkinObjectTextbox
 			// font.height isn't necessarily in px.
 			String sSize = properties.getStringValue(sPrefix + ".size" + suffix);
 			if (sSize != null) {
-				FontData[] fd = textWidget.getFont().getFontData();
-
 				sSize = sSize.trim();
+
 				try {
 					char firstChar = sSize.charAt(0);
 					char lastChar = sSize.charAt(sSize.length() - 1);
@@ -201,32 +214,15 @@ public class SWTSkinObjectTextbox
 					float dSize = NumberFormat.getInstance(Locale.US).parse(sSize).floatValue();
 
 					if (lastChar == '%') {
-						fontSize = FontUtils.getHeight(fd) * (dSize / 100);
+						fontSizeAdj = dSize / 100;
 					} else if (firstChar == '+') {
-						//int curPX = FontUtils.getFontHeightInPX(tempFontData);
-						//fontSize = FontUtils.getFontHeightFromPX(textWidget.getDisplay(),
-						//		tempFontData, null, (int) (curPX + dSize));
-						fontSize = (int) (fd[0].height + dSize);
+						fontSizeAdj = 1.0f + (dSize * 0.1f);
 					} else if (firstChar == '-') {
-						fontSize = (int) (fd[0].height - dSize);
+						fontSizeAdj = 1.0f - (dSize * 0.1f);
+					} else if (sSize.endsWith("rem")) {
+						fontSizeAdj = dSize;
 					} else {
-						if (sSize.endsWith("px")) {
-							//iFontSize = Utils.getFontHeightFromPX(textWidget.getFont(), null, (int) dSize);
-							fontSize = FontUtils.getFontHeightFromPX(textWidget.getDisplay(),
-									tempFontData, null, (int) dSize);
-							//iFontSize = Utils.pixelsToPoint(dSize, textWidget.getDisplay().getDPI().y);
-						} else if (sSize.endsWith("rem")) {
-							fontSize = FontUtils.getHeight(fd) * dSize;
-						} else {
-							fontSize = FontUtils.getFontHeightFromPX(textWidget.getDisplay(),
-									tempFontData, null, (int) dSize);
-						}
-					}
-
-					if (Utils.isGTK) {
-						float reduceBy = FontUtils.getFontHeightFromPX(textWidget.getDisplay(), tempFontData, null, 4);
-						//System.out.println(getViewID() + "] want=" + sSize + "; fontSize=" + fontSize + "; reduceBy = " + reduceBy);
-						fontSize -= reduceBy;
+						fontSizeAdj = dSize / (float) FontUtils.getFontHeightInPX(tempFontData);
 					}
 
 					bNewFont = true;
@@ -241,8 +237,9 @@ public class SWTSkinObjectTextbox
 			if (bNewFont) {
 				FontData[] fd = textWidget.getFont().getFontData();
 
-				if (fontSize > 0) {
-					FontUtils.setFontDataHeight(fd, fontSize);
+				if (fontSizeAdj > 0) {
+					FontUtils.setFontDataHeight(fd,
+							FontUtils.getHeight(fd) * fontSizeAdj);
 				}
 
 				if (sFontFace != null) {

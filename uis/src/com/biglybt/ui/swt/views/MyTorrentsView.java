@@ -80,6 +80,7 @@ import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -892,12 +893,10 @@ public class MyTorrentsView
 	 */
 	private void buildCatAndTag(List<Tag> tags) {
 
-		if (tags.size() == 0 || cCategoriesAndTags.isDisposed()){
+		if (tags.size() == 0 || cCategoriesAndTags == null
+				|| cCategoriesAndTags.isDisposed()) {
 			return;
 		}
-
-		int iFontPixelsHeight = 10;
-		int iFontPointHeight = (iFontPixelsHeight * 72)	/ Utils.getDPIRaw( cCategoriesAndTags.getDisplay()).y;
 
 		Label spacer = null;
 
@@ -939,9 +938,15 @@ public class MyTorrentsView
 													public void
 													run()
 													{
+														if (tv == null || curButton == null) {
+															return;
+														}
 														Object[] ds = tv.getSelectedDataSources().toArray();
 
 														Tag tag = (Tag) curButton.getData("Tag");
+														if (tag == null) {
+															return;
+														}
 
 														if (tag instanceof Category) {
 															TorrentUtil.assignToCategory(ds, (Category) tag);
@@ -1056,12 +1061,15 @@ public class MyTorrentsView
 				private void
 				setSelection( Composite parent)
 				{
+					if (parent == null) {
+						return;
+					}
 					Control[] controls = parent.getChildren();
-					for (int i = 0; i < controls.length; i++) {
-						if (!(controls[i] instanceof Button)) {
+					for (Control control : controls) {
+						if (!(control instanceof Button)) {
 							continue;
 						}
-						Button b = (Button) controls[i];
+						Button b = (Button) control;
 						Tag btag = (Tag) b.getData("Tag");
 						b.setSelection(isCurrent(btag));
 					}
@@ -1253,10 +1261,7 @@ public class MyTorrentsView
 
 			button.addKeyListener(this);
 			if ( fontButton == null) {
-				Font f = button.getFont();
-				FontData fd = f.getFontData()[0];
-				fd.setHeight(iFontPointHeight);
-				fontButton = new Font(cCategoriesAndTags.getDisplay(), fd);
+				fontButton = FontUtils.getFontPercentOf(button.getFont(), 0.8f);
 			}
 			button.setText("|");
 			button.setFont(fontButton);

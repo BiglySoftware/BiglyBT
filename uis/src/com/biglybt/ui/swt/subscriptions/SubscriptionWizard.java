@@ -25,12 +25,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.biglybt.core.Core;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -126,8 +126,6 @@ public class SubscriptionWizard {
 	Font boldFont;
 	Font titleFont;
 	Font subTitleFont;
-	Font textInputFont;
-
 
 	Composite main;
 	StackLayout mainLayout;
@@ -253,10 +251,6 @@ public class SubscriptionWizard {
 					titleFont.dispose();
 				}
 
-				if(textInputFont != null && !textInputFont.isDisposed()) {
-					textInputFont.dispose();
-				}
-
 				if(boldFont != null && !boldFont.isDisposed()) {
 					boldFont.dispose();
 				}
@@ -365,7 +359,6 @@ public class SubscriptionWizard {
 		}
 	}
 	private void populateHeader(Composite header) {
-		header.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
 		title = new Label(header, SWT.WRAP);
 
 		title.setFont(titleFont);
@@ -497,7 +490,7 @@ public class SubscriptionWizard {
 		Rectangle imageBounds = cSearchInput.getBackgroundImage().getBounds();
 
 		feedUrl = new Text(cSearchInput, SWT.SINGLE);
-		feedUrl.setFont(textInputFont);
+		FontUtils.fontToWidgetHeight(feedUrl);
 		feedUrl.setText("http://");
 //		feedUrl.setData("visited",new Boolean(false));
 //
@@ -537,13 +530,11 @@ public class SubscriptionWizard {
 		subsNameText.setText( MessageText.getString( "TableColumn.header.name" ));
 
 		subsName = new Text(composite, SWT.BORDER);
-		subsName.setFont(textInputFont);
 		if ( subs_name_default != null ){
 			subsName.setText( subs_name_default );
 		}
 		anonCheck = new Button(composite, SWT.CHECK );
-		Label anonMsg = new Label(composite,SWT.WRAP);
-		anonMsg.setText(MessageText.getString("label.anon"));
+		Messages.setLanguageText(anonCheck, "label.anon");
 
 		anonCheck.setSelection( anon_default );
 
@@ -574,9 +565,10 @@ public class SubscriptionWizard {
 			// feed url
 
 		data = new FormData();
-		data.top = new FormAttachment(0,7);
+		data.top = new FormAttachment(0,5);
 		data.left = new FormAttachment(0, 45);
 		data.right = new FormAttachment(100, -8);
+		data.bottom = new FormAttachment(100, -4);
 		feedUrl.setLayoutData(data);
 
 			// rss bullet and text
@@ -595,26 +587,20 @@ public class SubscriptionWizard {
 			// name + anon check and text
 
 		data = new FormData();
-		data.top = new FormAttachment(rssBullet,20);
+		data.top = new FormAttachment(subsName,0, SWT.CENTER);
 		data.left = new FormAttachment(subTitle2, 0, SWT.LEFT );
 		subsNameText.setLayoutData(data);
 
 		data = new FormData();
-		data.bottom = new FormAttachment(subsNameText,0, SWT.BOTTOM);
+		data.top = new FormAttachment(rssBullet,20);
 		data.left	= new FormAttachment(subsNameText, 5, SWT.RIGHT);
 		data.right 	= new FormAttachment(50);
 		subsName.setLayoutData(data);
 
 		data = new FormData();
-		data.bottom = new FormAttachment(subsNameText,0, SWT.BOTTOM);
+		data.top = new FormAttachment(subsName,0, SWT.CENTER);
 		data.left = new FormAttachment(subsName, 5, SWT.RIGHT);
 		anonCheck.setLayoutData(data);
-
-		data = new FormData();
-		data.bottom = new FormAttachment(subsNameText,0, SWT.BOTTOM);
-		data.left = new FormAttachment(anonCheck,5, SWT.RIGHT);
-		data.right = new FormAttachment(100);
-		anonMsg.setLayoutData(data);
 
 			// bottom text
 
@@ -641,7 +627,7 @@ public class SubscriptionWizard {
 		Rectangle imageBounds = cSearchInput.getBackgroundImage().getBounds();
 
 		searchInput = new Text(cSearchInput, SWT.SINGLE);
-		searchInput.setFont(textInputFont);
+		FontUtils.fontToWidgetHeight(searchInput);
 //		searchInput.setText(MessageText.getString("Wizard.Subscription.search.inputPrompt"));
 //		searchInput.setData("visited",new Boolean(false));
 //
@@ -697,9 +683,10 @@ public class SubscriptionWizard {
 		cSearchInput.setLayoutData(data);
 
 		data = new FormData();
-		data.top = new FormAttachment(0, 7);
+		data.top = new FormAttachment(0, 5);
 		data.left = new FormAttachment(0, 45);
 		data.right = new FormAttachment(100, -8);
+		data.bottom = new FormAttachment(100, -4);
 		searchInput.setLayoutData(data);
 
 		data = new FormData();
@@ -1176,36 +1163,11 @@ public class SubscriptionWizard {
 
 	private void createFonts() {
 
-		FontData[] fDatas = shell.getFont().getFontData();
+		Font baseFont = shell.getFont();
 
-		for(int i = 0 ; i < fDatas.length ; i++) {
-			fDatas[i].setStyle(SWT.BOLD);
-		}
-		boldFont = new Font(display,fDatas);
-
-
-		for(int i = 0 ; i < fDatas.length ; i++) {
-			if(com.biglybt.core.util.Constants.isOSX) {
-				fDatas[i].setHeight(12);
-			} else {
-				fDatas[i].setHeight(10);
-			}
-		}
-		subTitleFont = new Font(display,fDatas);
-
-		for(int i = 0 ; i < fDatas.length ; i++) {
-			if(com.biglybt.core.util.Constants.isOSX) {
-				fDatas[i].setHeight(17);
-			} else {
-				fDatas[i].setHeight(14);
-			}
-		}
-		titleFont = new Font(display,fDatas);
-
-		// When GTK3 can show a textbox without a border, we can remove the logic
-		textInputFont = FontUtils.getFontWithHeight(shell.getFont(), null, Utils.isGTK3 ? 12 : 14);
-
-
+		boldFont = FontUtils.getFontWithStyle(baseFont, SWT.BOLD, 1.0f);
+		subTitleFont = FontUtils.getFontWithStyle(baseFont, SWT.BOLD, 1.1f);
+		titleFont = FontUtils.getFontWithStyle(baseFont, SWT.BOLD, 1.3f);
 	}
 
 	private void populateFooter(Composite footer) {

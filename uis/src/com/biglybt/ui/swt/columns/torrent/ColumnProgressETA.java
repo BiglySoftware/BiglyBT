@@ -374,8 +374,8 @@ public class ColumnProgressETA
 		}
 
 		if (fontText == null) {
-			fontText = FontUtils.getFontWithHeight(gc.getFont(), gc,
-					boundsImgBG.height - 3);
+			int wantHeightPX = boundsImgBG.height - 3;
+			fontText = FontUtils.getFontWithHeight(gc.getFont(), wantHeightPX, SWT.DEFAULT);
 		}
 
 		if (!showSecondLine) {

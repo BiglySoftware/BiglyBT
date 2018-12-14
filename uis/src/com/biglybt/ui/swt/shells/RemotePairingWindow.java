@@ -227,8 +227,7 @@ public class RemotePairingWindow
 
 			Font font = control.getFont();
 			GC gc = new GC(control);
-			fontCode = FontUtils.getFontWithHeight(font, gc, Constants.isWindows ? 20
-					: 18, SWT.BOLD);
+			fontCode = FontUtils.getFontWithStyle(font,  SWT.BOLD, 1.33f);
 			gc.dispose();
 			control.setFont(fontCode);
 

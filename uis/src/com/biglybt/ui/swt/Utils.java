@@ -89,8 +89,6 @@ import com.biglybt.ui.swt.utils.SWTRunnable;
  */
 public class Utils
 {
-	private static final int DEFAULT_DPI = Constants.isOSX ? 72 : 96;
-
 	public static final String GOOD_STRING = "(/|,jI~`gy";
 
 	public static final boolean isGTK = SWT.getPlatform().equals("gtk");
@@ -192,25 +190,12 @@ public class Utils
 	private static Set<DiskManagerFileInfo>	quick_view_active = new HashSet<>();
 	private static TimerEventPeriodic		quick_view_event;
 
-	private static Point dpi;
-
-	// Alpha and BW palette definitions from org.eclipse.ui.internal.decorators.DecorationImageBuilder
-	private static PaletteData ALPHA_PALETTE, BW_PALETTE;
-
 	public static void
 	initialize(
 		Display		display )
 	{
 		isGTK3 = isGTK && System.getProperty("org.eclipse.swt.internal.gtk.version",
 				"2").startsWith("3");
-
-		RGB[] rgbs = new RGB[256];
-		for (int i = 0; i < rgbs.length; i++) {
-			rgbs[i] = new RGB(i, i, i);
-		}
-
-		ALPHA_PALETTE = new PaletteData(rgbs);
-		BW_PALETTE = new PaletteData(new RGB[] { new RGB(0, 0, 0), new RGB(255, 255, 255) });
 	}
 
 	public static void
@@ -2054,16 +2039,6 @@ public class Utils
 		formData.bottom = new FormAttachment(100, 0);
 
 		return formData;
-	}
-
-	public static int pixelsToPoint(int pixels, int dpi) {
-		int ret = (int) Math.round((pixels * 72.0) / dpi);
-		return ret;
-	}
-
-    private static int pixelsToPoint(double pixels, int dpi) {
-		int ret = (int) Math.round((pixels * 72.0) / dpi);
-		return ret;
 	}
 
 	public static void drawImageCenterScaleDown(GC gc, Image imgSrc, Rectangle area) {
@@ -4145,30 +4120,6 @@ public class Utils
 		comp.addListener(SWT.Resize, sash_listener );
 	    sash.addListener(SWT.Resize, sash_listener );
 	}
-
-	private static boolean logged_invalid_dpi = false;
-
-	public static Point
-	getDPIRaw(
-		Device		device )
-	{
-		Point p = device.getDPI();
-
-		if ( p.x < 0 || p.y < 0 || p.x > 8192 || p.y > 8192 ){
-
-			if ( !logged_invalid_dpi ){
-
-				logged_invalid_dpi = true;
-
-				Debug.outNoStack( "Invalid DPI: " + p );
-			}
-
-			return( new Point( 96, 96 ));
-		}
-
-		return( p );
-	}
-
 
 	public static void setClipping(GC gc, Rectangle r) {
 		if (r == null) {

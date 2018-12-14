@@ -31,7 +31,6 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
-import com.biglybt.core.disk.impl.DiskManagerImpl;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceList;
 import com.biglybt.core.disk.impl.piecemapper.DMPieceMapEntry;
 import com.biglybt.core.download.DownloadManager;
@@ -45,12 +44,7 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.SimpleTimer;
-import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.TimerEvent;
-import com.biglybt.core.util.TimerEventPerformer;
+import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -61,6 +55,7 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.PiecesView;
 import com.biglybt.ui.swt.views.ViewUtils;
 import com.biglybt.util.MapUtils;
@@ -610,14 +605,7 @@ public class PieceInfoView
 					"PeersView.BlockView.MergeWrite",
 				}, new GridData(SWT.FILL, SWT.DEFAULT, true, false, 2, 1));
 
-		int iFontPixelsHeight = 10;
-		int iFontPointHeight = (iFontPixelsHeight * 72)
-				/ Utils.getDPIRaw( pieceInfoCanvas.getDisplay()).y;
-		Font f = pieceInfoCanvas.getFont();
-		FontData[] fontData = f.getFontData();
-		fontData[0].setHeight(iFontPointHeight);
-		font = new Font(pieceInfoCanvas.getDisplay(), fontData);
-
+		font = FontUtils.getFontPercentOf(pieceInfoCanvas.getFont(), 0.7f);
 	}
 
 	private int

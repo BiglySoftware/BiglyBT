@@ -90,6 +90,8 @@ public class SideBar
 	// will become invalidated and we don't get a paintitem :(
 	private static final boolean USE_PAINT = !Constants.isWindows && !Utils.isGTK;
 
+	// https://bugs.eclipse.org/bugs/show_bug.cgi?id=351751
+	// "GTK doesn't allow you to paint over the expander arrows, this is a platform limitation we cannot work around."
 	protected static final boolean USE_NATIVE_EXPANDER = Utils.isGTK;
 
 	private static final int GAP_BETWEEN_LEVEL_1;
@@ -111,8 +113,6 @@ public class SideBar
 	private Tree tree;
 
 	private Font fontHeader;
-
-	private Font font;
 
 	private SWTSkinObject soSideBarPopout;
 
@@ -544,35 +544,10 @@ public class SideBar
 
 		tree.setBackground(bg);
 		tree.setForeground(fg);
-		FontData[] fontData = tree.getFont().getFontData();
 
+		fontHeader = FontUtils.getFontWithStyle(tree.getFont(), SWT.BOLD, 1.0f);
 
-		if (Utils.isGTK3) {
-			
-			fontData[0].setStyle(SWT.BOLD);
-			
-			fontHeader = new Font(tree.getDisplay(), fontData);
-			font = tree.getFont();
-			
-		} else {
-			int fontHeight;
-
-			fontHeight = (Constants.isOSX ? 11 : 12)
-				+ (tree.getItemHeight() > 18 ? tree.getItemHeight() - 18 : 0);
-
-			if (Constants.isUnix && tree.getItemHeight() >= 38) {
-				fontHeight = 13;
-			}
-			
-			fontData[0].setStyle(SWT.BOLD);
-			FontUtils.getFontHeightFromPX(tree.getDisplay(), fontData, null, fontHeight);
-			fontHeader = new Font(tree.getDisplay(), fontData);
-			font = FontUtils.getFontWithHeight(tree.getFont(), null, fontHeight);
-		}
-
-		tree.setFont(font);
-
-			// after a scroll we need to recalculate the hit areas as they will have moved!
+		// after a scroll we need to recalculate the hit areas as they will have moved!
 
 		tree.getVerticalBar().addSelectionListener(
 			new SelectionAdapter()
@@ -881,7 +856,6 @@ public class SideBar
 
 						case SWT.Dispose: {
 							fontHeader.dispose();
-							font.dispose();
 							if (dropTarget != null && !dropTarget.isDisposed()) {
 								dropTarget.dispose();
 							}

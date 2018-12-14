@@ -155,7 +155,7 @@ public class ColumnTJ_Completion
 		gcImage.setForeground(textColor);
 
 		if (fontText == null) {
-			fontText = FontUtils.getFontWithHeight(gcImage.getFont(), gcImage, 10);
+			fontText = FontUtils.getFontWithHeight(gcImage.getFont(), 10, SWT.DEFAULT);
 		}
 
 		gcImage.setFont(fontText);

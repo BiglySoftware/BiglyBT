@@ -2039,50 +2039,7 @@ public class MainWindowImpl
 			}
 		});
 
-		text.addListener(SWT.Resize, new Listener() {
-			Font lastFont = null;
-			int	lastHeight = -1;
-
-			@Override
-			public void handleEvent(Event event) {
-				Text text = (Text) event.widget;
-
-				int h = text.getClientArea().height - 2;
-				if (Utils.isGTK3) {
-					// GTK3 has border included in clientArea
-					h -= 5;
-				} else if (Utils.isGTK && h > 18) {
-					h = 18;
-				}
-
-				if ( h == lastHeight ){
-					return;
-				}
-
-				lastHeight = h;
-				Font font = FontUtils.getFontWithHeight(text.getFont(), null, h);
-				if (font != null) {
-					text.setFont(font);
-
-					if ( lastFont == null ){
-
-						text.addDisposeListener(new DisposeListener() {
-							@Override
-							public void widgetDisposed(DisposeEvent e) {
-								Text text = (Text) e.widget;
-								text.setFont(null);
-								Utils.disposeSWTObjects(lastFont);
-							}
-						});
-
-					}else{
-						Utils.disposeSWTObjects(lastFont);
-					}
-
-					lastFont = font;
-				}
-			}
-		});
+		FontUtils.fontToWidgetHeight(text);
 
 		text.setTextLimit(2048);	// URIs can get pretty long...
 

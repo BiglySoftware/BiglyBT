@@ -27,8 +27,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.CoreRunningListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.PaintEvent;
@@ -38,6 +36,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
@@ -48,11 +49,10 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.util.PeerUtils;
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.Plugin;
-import com.biglybt.pif.PluginInterface;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.Messages;
@@ -63,10 +63,11 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-
-import com.biglybt.core.Core;
-import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.util.MapUtils;
+
+import com.biglybt.pif.Plugin;
+import com.biglybt.pif.PluginInterface;
 
 /**
  * Piece Map subview for Peers View.
@@ -329,13 +330,7 @@ public class PeerInfoView
 						"PeersView.BlockView.AvailCount" }, new GridData(SWT.FILL,
 						SWT.DEFAULT, true, false, 2, 1));
 
-		int iFontPixelsHeight = 10;
-		int iFontPointHeight = (iFontPixelsHeight * 72)
-				/ Utils.getDPIRaw( peerInfoCanvas.getDisplay()).y;
-		Font f = peerInfoCanvas.getFont();
-		FontData[] fontData = f.getFontData();
-		fontData[0].setHeight(iFontPointHeight);
-		font = new Font(peerInfoCanvas.getDisplay(), fontData);
+		font = FontUtils.getFontPercentOf(peerInfoCanvas.getFont(), 0.7f);
 
 		return peerInfoComposite;
 	}

@@ -126,9 +126,10 @@ public class SWTSkinObjectText1
 			label.setFont(existingFont);
 		} else {
 			boolean bNewFont = false;
-			float fontSize = -1;
+			float fontSizeAdj = -1;
 			int iFontWeight = -1;
 			String sFontFace = null;
+			FontData[] tempFontData = label.getFont().getFontData();
 
 			String sSize = properties.getStringValue(sPrefix + ".size" + suffix);
 			if (sSize != null) {
@@ -136,31 +137,25 @@ public class SWTSkinObjectText1
 
 				try {
 					char firstChar = sSize.charAt(0);
+					char lastChar = sSize.charAt(sSize.length() - 1);
 					if (firstChar == '+' || firstChar == '-') {
 						sSize = sSize.substring(1);
+					} else if (lastChar == '%') {
+						sSize = sSize.substring(0, sSize.length() - 1);
 					}
 
-					if (sSize.endsWith("%")) {
-						sSize = sSize.substring(0, sSize.length() - 1);
-						float pctSize = NumberFormat.getInstance(Locale.US).parse(sSize).floatValue();
-						fontSize = FontUtils.getHeight(fd) * pctSize;
+					float dSize = NumberFormat.getInstance(Locale.US).parse(sSize).floatValue();
+
+					if (lastChar == '%') {
+						fontSizeAdj = dSize / 100;
+					} else if (firstChar == '+') {
+						fontSizeAdj = 1.0f + (dSize * 0.1f);
+					} else if (firstChar == '-') {
+						fontSizeAdj = 1.0f - (dSize * 0.1f);
+					} else if (sSize.endsWith("rem")) {
+						fontSizeAdj = dSize;
 					} else {
-
-						float dSize = NumberFormat.getInstance(Locale.US).parse(sSize).floatValue();
-
-  					if (firstChar == '+') {
-  						fontSize = (int) (fd[0].height + dSize);
-  					} else if (firstChar == '-') {
-  						fontSize = (int) (fd[0].height - dSize);
-  					} else {
-  						fontSize = dSize;
-  					}
-
-  					if (sSize.endsWith("px")) {
-  						fontSize = FontUtils.getFontHeightFromPX(label.getFont(), null, (int) dSize);
-						} else if (sSize.endsWith("rem")) {
-							fontSize = FontUtils.getHeight(fd) * dSize;
-  					}
+						fontSizeAdj = dSize / (float) FontUtils.getFontHeightInPX(tempFontData);
 					}
 
 					bNewFont = true;
@@ -226,8 +221,9 @@ public class SWTSkinObjectText1
 			if (bNewFont) {
 				FontData[] fd = label.getFont().getFontData();
 
-				if (fontSize > 0) {
-					FontUtils.setFontDataHeight(fd, fontSize);
+				if (fontSizeAdj > 0) {
+					FontUtils.setFontDataHeight(fd,
+							FontUtils.getHeight(fd) * fontSizeAdj);
 				}
 
 				if (iFontWeight >= 0) {
