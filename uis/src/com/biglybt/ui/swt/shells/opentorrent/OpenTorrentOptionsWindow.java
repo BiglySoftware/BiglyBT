@@ -32,6 +32,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
+import org.json.simple.JSONObject;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -74,6 +75,7 @@ import com.biglybt.ui.common.table.TableSelectionListener;
 import com.biglybt.ui.common.table.TableViewFilterCheck;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
@@ -101,6 +103,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.TrackerNameItem;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import com.biglybt.util.JSONUtils;
 import com.biglybt.util.MapUtils;
 
 @SuppressWarnings({
@@ -5476,9 +5479,10 @@ public class OpenTorrentOptionsWindow
 						});
 					}
 
+					new MenuItem(menu, SWT.SEPARATOR );
+
 					if ( !torrentOptions.isSimpleTorrent()){
 
-						 new MenuItem(menu, SWT.SEPARATOR );
 
 						 item = new MenuItem(menu, SWT.PUSH);
 
@@ -5523,9 +5527,33 @@ public class OpenTorrentOptionsWindow
 											((MenuItem)e.widget).getSelection());
 								 }
 							 });
-
-						 new MenuItem(menu, SWT.SEPARATOR );
 					}
+					
+					item = new MenuItem(menu, SWT.PUSH);
+
+					Messages.setLanguageText(item, "OpenTorrentWindow.show.skip.options");
+
+					item.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+							if ( uif != null ){
+
+								JSONObject args = new JSONObject();
+
+								args.put( "select", "torrent-add-auto-skip" );
+								
+								String args_str = JSONUtils.encodeToJSON( args );
+								
+								uif.getMDI().showEntryByID(
+										MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+										"files" + args_str );
+							}
+						}
+					});
+
+					 new MenuItem(menu, SWT.SEPARATOR );
 				}
 
 				@Override

@@ -49,7 +49,7 @@ import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.configsections.*;
-
+import com.biglybt.util.JSONUtils;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
@@ -59,6 +59,8 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   private static final LogIDs LOGID = LogIDs.GUI;
   public static final String sSectionPrefix = "ConfigView.section.";
 
+  public static final String SELECT_KEY	= "ConfigView.select_key";
+  
   Map<TreeItem, ConfigSection> sections = new HashMap<>();
   // Only access on SWT Thread
   java.util.List<ConfigSection> sectionsCreated = new ArrayList<>(1);
@@ -376,7 +378,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
           //OSX lets you select nothing in the tree for example when a child is selected
           //and you close its parent.
           if(tree.getSelection().length > 0)
-    	      showSection(tree.getSelection()[0], false);
+    	      showSection(tree.getSelection()[0], false, null);
            }
       });
       // Double click = expand/contract branch
@@ -634,7 +636,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
     	// setSelection doesn't trigger a SelectionListener, so..
 
-    showSection( selection, false );
+    showSection( selection, false, null );
   }
 
 
@@ -729,7 +731,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 									}
 									TreeItem[] selection = tree.getSelection();
 									if (selection != null && selection.length > 0) {
-										showSection(selection[0],false);
+										showSection(selection[0],false, null);
 									}
 								}
 							}
@@ -883,29 +885,59 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	private void
 	showSection(
 		TreeItem 	section,
-		boolean		focus )
+		boolean		focus,
+		Map			options )
 	{
-	saveLatestSelection( section );
+		saveLatestSelection( section );
 
-    ScrolledComposite item = (ScrolledComposite)section.getData("Panel");
+		ScrolledComposite item = (ScrolledComposite)section.getData("Panel");
 
-    if (item != null) {
+		if (item != null) {
 
-    	ensureSectionBuilt(section, true);
+			ensureSectionBuilt(section, true);
 
-      layoutConfigSection.topControl = item;
+			layoutConfigSection.topControl = item;
 
-      setupSC(item);
+			setupSC(item);
 
-      cConfigSection.layout();
+			cConfigSection.layout();
 
-      updateHeader(section);
+			updateHeader(section);
 
-      if ( focus ){
-    	  layoutConfigSection.topControl.traverse( SWT.TRAVERSE_TAB_NEXT);
-      }
-    }
-  }
+			if ( options != null ){
+				
+				String select = (String)options.get( "select" );
+				
+				if ( select != null ){
+					
+					Control hit = hilightText2( item, select );
+					
+					if ( hit != null ){
+						
+						Utils.execSWTThreadLater(
+							1,
+							new Runnable()
+							{
+								public void
+								run()
+								{
+									Rectangle itemRect = item.getDisplay().map( hit.getParent(), item, hit.getBounds());
+																		
+									Point origin = item.getOrigin();
+																		
+									origin.y = itemRect.y;
+									
+									item.setOrigin(origin);
+								}
+							});
+					}
+				}
+			}
+			if ( focus ){
+				layoutConfigSection.topControl.traverse( SWT.TRAVERSE_TAB_NEXT);
+			}
+		}
+	}
 
 	private void hilightText(Composite c, String text) {
 		Control[] children = c.getChildren();
@@ -916,21 +948,21 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 			if (child instanceof Label) {
 				if (((Label) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child,text);
+					hilightControl(child,text,true);
 				}
 			} else if (child instanceof Group) {
 				if (((Group) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child,text);
+					hilightControl(child,text,true);
 				}
 			} else if (child instanceof Button) {
 				if (((Button) child).getText().toLowerCase().contains(text)) {
-					hilightControl(child,text);
+					hilightControl(child,text,true);
 				}
 			} else if (child instanceof List) {
 				String[] items = ((List)child).getItems();
 				for (String item : items) {
 					if (item.toLowerCase().contains(text)) {
-						hilightControl(child,text);
+						hilightControl(child,text,true);
 						break;
 					}
 				}
@@ -938,7 +970,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 				String[] items = ((Combo)child).getItems();
 				for (String item : items) {
 					if (item.toLowerCase().contains(text)) {
-						hilightControl(child,text);
+						hilightControl(child,text,true);
 						break;
 					}
 				}
@@ -946,13 +978,44 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 		}
 	}
+	
+	private Control hilightText2(Composite c, String select) {
+		
+		Control first_control 	= null;
+		
+		Control[] children = c.getChildren();
+		for (Control child : children) {
+			if (child instanceof Composite) {
+				Control x = hilightText2((Composite) child, select);
+				if ( x != null ){
+					if ( first_control == null ){
+						first_control = x;
+					}
+				}
+			}
+
+			String select_key = (String)child.getData( SELECT_KEY );
+			
+			if ( select_key != null && select.equals( select_key )){
+			
+				if ( first_control == null ){
+					
+					first_control = child;
+				}
+								
+				hilightControl( child, select, false);
+			}
+		}
+		
+		return( first_control );
+	}
 
 	/**
 	 * @param child
 	 *
 	 * @since 4.5.1.1
 	 */
-	private void hilightControl(Control child, String text) {
+	private void hilightControl(Control child, String text, boolean type1 ) {
 		child.setFont(headerFont);
 		
 		if ( Utils.isGTK3 ){
@@ -1007,7 +1070,11 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 		
 		if ( child instanceof Composite ){
 			
-			hilightText((Composite)child, text );
+			if ( type1 ){
+				hilightText((Composite)child, text );
+			}else{
+				hilightText2((Composite)child, text );
+			}
 		}
 	}
 
@@ -1340,12 +1407,28 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   }
 
   public boolean selectSection(String id, boolean focus) {
-		TreeItem ti = findTreeItem(id);
-		if (ti == null)
-			return false;
-		tree.setSelection(new TreeItem[] { ti });
-		showSection(ti, focus);
-		return true;
+
+	  Map args = null;
+
+	  if ( id != null ){
+		  int	pos = id.indexOf( '{' );
+	
+		  if ( pos != -1 ){
+	
+			  String json_args = id.substring( pos );
+	
+			  args = JSONUtils.decodeJSON( json_args );
+	
+			  id = id.substring( 0, pos );
+		  }
+	  }
+	  
+	  TreeItem ti = findTreeItem(id);
+	  if (ti == null)
+		  return false;
+	  tree.setSelection(new TreeItem[] { ti });
+	  showSection(ti, focus, args);
+	  return true;
 	}
 
 	public void save() {

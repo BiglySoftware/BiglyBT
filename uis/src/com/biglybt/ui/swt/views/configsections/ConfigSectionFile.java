@@ -47,6 +47,7 @@ import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
+import com.biglybt.ui.swt.views.ConfigView;
 
 public class ConfigSectionFile
 	implements UISWTConfigSection
@@ -817,6 +818,8 @@ public class ConfigSectionFile
 			Messages.setLanguageText(lSkipFiles,
 					"ConfigView.section.file.torrent.autoskipfiles");
 
+			lSkipFiles.setData( ConfigView.SELECT_KEY, "torrent-add-auto-skip" );
+			
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
 			new StringParameter(gIgnoredFiles, "File.Torrent.AutoSkipExtensions").setLayoutData(gridData);
@@ -826,6 +829,8 @@ public class ConfigSectionFile
 			Label lSkipFileNames = new Label(gIgnoredFiles, SWT.NULL);
 			Messages.setLanguageText(lSkipFileNames,
 					"ConfigView.section.file.torrent.autoskipfilenames");
+
+			lSkipFileNames.setData( ConfigView.SELECT_KEY, "torrent-add-auto-skip" );
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 1;
@@ -838,6 +843,8 @@ public class ConfigSectionFile
 			Messages.setLanguageText(lSkipFilesMinSize,
 					"ConfigView.section.file.torrent.autoskipfilesminsize");
 
+			lSkipFilesMinSize.setData( ConfigView.SELECT_KEY, "torrent-add-auto-skip" );
+			
 			new IntParameter(gIgnoredFiles, "File.Torrent.AutoSkipMinSizeKB", 0, Integer.MAX_VALUE );
 			new Label( gIgnoredFiles, SWT.NULL );
 			

@@ -788,7 +788,7 @@ public class MainMDISetup
 							MdiEntry entry = ((MultipleDocumentInterfaceSWT) mdi).createEntryFromEventListener(
 									MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
 									ConfigView.class,
-									MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, true, null,
+									MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, true, section,
 									null);
 
 							entry.setImageLeftID( "image.sidebar.config" );
