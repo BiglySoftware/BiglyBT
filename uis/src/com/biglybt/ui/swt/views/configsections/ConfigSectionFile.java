@@ -822,7 +822,7 @@ public class ConfigSectionFile
 			
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
-			new StringParameter(gIgnoredFiles, "File.Torrent.AutoSkipExtensions").setLayoutData(gridData);
+			new StringParameter(gIgnoredFiles, "File.Torrent.AutoSkipExtensions", false ).setLayoutData(gridData);
 
 			// torrent add auto-skip file names
 
@@ -834,7 +834,7 @@ public class ConfigSectionFile
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 1;
-			new StringParameter(gIgnoredFiles, "File.Torrent.AutoSkipFiles").setLayoutData(gridData);
+			new StringParameter(gIgnoredFiles, "File.Torrent.AutoSkipFiles", false ).setLayoutData(gridData);
 			new BooleanParameter(gIgnoredFiles, "File.Torrent.AutoSkipFiles.RegExp", "label.regexps");
 			
 				// torrent add auto-skip min size

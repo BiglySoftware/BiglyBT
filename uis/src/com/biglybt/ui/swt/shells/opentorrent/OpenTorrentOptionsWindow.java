@@ -37,6 +37,7 @@ import org.json.simple.JSONObject;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.content.ContentException;
 import com.biglybt.core.content.RelatedAttributeLookupListener;
@@ -1665,7 +1666,7 @@ public class OpenTorrentOptionsWindow
 
 	protected class
 	OpenTorrentInstance
-		implements TableViewFilterCheck<TorrentOpenFileOptions>
+		implements TableViewFilterCheck<TorrentOpenFileOptions>, ParameterListener
 	{
 		final private HashWrapper						hash;
 		final private TorrentOpenOptions 				torrentOptions;
@@ -1751,6 +1752,15 @@ public class OpenTorrentOptionsWindow
 
 			shell = parent.getShell();
 
+			COConfigurationManager.addParameterListener(
+				new String[]{
+					"File.Torrent.AutoSkipExtensions",
+					"File.Torrent.AutoSkipFiles",
+					"File.Torrent.AutoSkipFiles.RegExp",
+					"File.Torrent.AutoSkipMinSizeKB",
+				}, this );
+				
+				
 			torrentOptions.addListener(new TorrentOpenOptions.FileListener() {
 				@Override
 				public void toDownloadChanged(TorrentOpenFileOptions fo, boolean toDownload) {
@@ -1909,6 +1919,15 @@ public class OpenTorrentOptionsWindow
 			return( parent );
 		}
 
+		@Override
+		public void 
+		parameterChanged(String parameterName){
+			if ( torrentOptions != null ){
+				
+				torrentOptions.applySkipConfig();
+			}
+		}
+		
 		private void
 		initialize()
 		{
@@ -6795,6 +6814,14 @@ public class OpenTorrentOptionsWindow
 		dispose()
 		{
 			tvFiles.delete();
+			
+			COConfigurationManager.removeParameterListeners(
+					new String[]{
+						"File.Torrent.AutoSkipExtensions",
+						"File.Torrent.AutoSkipFiles",
+						"File.Torrent.AutoSkipFiles.RegExp",
+						"File.Torrent.AutoSkipMinSizeKB",
+					},this );
 		}
 	}
 

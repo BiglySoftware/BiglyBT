@@ -621,6 +621,14 @@ COConfigurationManager
 	}
 
 	public static void
+	removeParameterListeners(String[] parameters, ParameterListener listener)
+	{
+		for ( String parameter: parameters ){
+			ConfigurationManager.getInstance().removeParameterListener(parameter, listener);
+		}
+	}
+	
+	public static void
 	removeListener(
 		COConfigurationListener		listener )
 	{
