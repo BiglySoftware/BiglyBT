@@ -18,19 +18,24 @@
 
 package com.biglybt.ui.swt.components;
 
-import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Text;
+
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.Colors;
 
 /**
  * TextBox with a "search bubble" style around it.  Search icon on left, X on the right
@@ -43,7 +48,8 @@ public class BubbleTextBox
 
 	private Composite cBubble;
 
-	private static final int PADDING_VERTICAL = 2;
+	private static final int PADDING_TOP = (Utils.isGTK3) ? 1 : 2;
+	private static final int PADDING_BOTTOM = (Utils.isGTK3) ? 2 : 2;
 
 	private int WIDTH_OVAL;
 
@@ -61,13 +67,49 @@ public class BubbleTextBox
 
 	public BubbleTextBox(Composite parent, int style) {
 		cBubble = new Composite(parent, SWT.DOUBLE_BUFFERED);
-		cBubble.setLayout(new FormLayout());
+		FormLayout layout = new FormLayout();
+		layout.marginTop = PADDING_TOP;
+		layout.marginBottom = PADDING_BOTTOM;
+		cBubble.setLayout(layout);
 
-		textWidget = new Text(cBubble, style & ~(SWT.BORDER | SWT.SEARCH));
+		textWidget = new Text(cBubble, style & ~(SWT.BORDER | SWT.SEARCH)) {
+			@Override
+			protected void checkSubclass() {
+			}
 
-		FormData fd = new FormData();
-		fd.top = new FormAttachment(0, PADDING_VERTICAL);
-		fd.bottom = new FormAttachment(100, -PADDING_VERTICAL);
+			@Override
+			public Point computeSize(int wHint, int hHint, boolean changed) {
+				Point point = super.computeSize(wHint, hHint, changed);
+				if (Utils.isGTK3) {
+					Rectangle area = getParent().getClientArea();
+					//System.out.println("computedSize = " + point  + "; parent.h=" + area.height);
+
+					// Bug in SWT: When there's no border, computed size chops off a few
+					// pixels in height (probably because GTK3 shows a border when focused)
+					point.y += 2;
+
+					// Bug in SWT: Seems Text widget on GTK3 doesn't obey parent's fixed height
+					if (area.height > 0 && point.y > area.height) {
+						point.y = area.height;
+					}
+				}
+				return point;
+			}
+		};
+
+		FormData fd;
+
+		Composite cCenterV = new Composite(cBubble, SWT.NO_BACKGROUND);
+		fd = new FormData();
+		fd.width = 1;
+		fd.height = 1;
+		fd.top = new FormAttachment(0);
+		fd.bottom = new FormAttachment(100);
+		cCenterV.setVisible(false);
+		cCenterV.setLayoutData(fd);
+
+		fd = new FormData();
+		fd.top = new FormAttachment(cCenterV,0, SWT.CENTER);
 		fd.left = new FormAttachment(0, 17);
 		fd.right = new FormAttachment(100, -15);
 		textWidget.setLayoutData(fd);
