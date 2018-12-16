@@ -39,6 +39,8 @@ import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -51,8 +53,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.TabFolder;
@@ -1488,7 +1492,7 @@ public class TransferStatsView
 
       for (int i=0;i<zone_views.length;i++){
 
-    	  zone_views[i].refresh();
+    	  zone_views[i].refresh(false);
       }
 
     } else {
@@ -1641,6 +1645,26 @@ public class TransferStatsView
 		  labels		= _labels;
 		  formatters	= _formatters;
 
+		  canvas.addPaintListener(new PaintListener() {
+				@Override
+				public void paintControl(PaintEvent e) {
+					if (buffer_image != null && !buffer_image.isDisposed()) {
+						Rectangle bounds = buffer_image.getBounds();
+						if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
+
+							e.gc.drawImage(buffer_image, e.x, e.y, e.width, e.height, e.x, e.y,
+									e.width, e.height);
+						}
+					}
+				}
+			});
+
+		  canvas.addListener(SWT.Resize, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					refresh(true);
+				}
+			});
 		  COConfigurationManager.addAndFireParameterListener( "Graphics Update", this );
 	  }
 
@@ -1662,7 +1686,7 @@ public class TransferStatsView
 	  }
 
 	  private void
-	  refresh()
+	  refresh( boolean force )
 	  {
 		  if ( canvas.isDisposed()){
 
@@ -1682,7 +1706,7 @@ public class TransferStatsView
 
 		  refresh_count++;
 
-		  if ( refresh_count > graphicsUpdate ){
+		  if ( refresh_count > graphicsUpdate || force ){
 
 			  refresh_count = 0;
 		  }

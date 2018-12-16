@@ -22,6 +22,7 @@ package com.biglybt.ui.swt.components.graphics;
 
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.GC;
@@ -29,6 +30,9 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.AEMonitor;
@@ -98,6 +102,28 @@ Plot3D
 
 			colours[i] = new Color( device, hsl.getRed(), hsl.getGreen(), hsl.getBlue());
 		}
+		
+		canvas.addPaintListener(new PaintListener() {
+
+			@Override
+			public void paintControl(PaintEvent e) {
+				if (bufferImage != null && !bufferImage.isDisposed()) {
+					Rectangle bounds = bufferImage.getBounds();
+					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
+
+						e.gc.drawImage(bufferImage, e.x, e.y, e.width, e.height, e.x, e.y,
+								e.width, e.height);
+					}
+				}
+			}
+		});
+
+		canvas.addListener(SWT.Resize, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				drawPlot();
+			}
+		});
 	}
 
 	public void
