@@ -505,6 +505,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		configModel.addIntParameter2("StartStopManager_Downloading_iSortType",
 				"ConfigView.label.downloading.autoReposition", DefaultRankCalculator.DOWNLOAD_ORDER_INDEX );
 
+		configModel.addBooleanParameter2("StartStopManager_bAddForDownloadingSR1",
+				"ConfigView.label.downloading.addsr1", true);
+		
 		configModel.addIntParameter2("StartStopManager_Downloading_iTestTimeSecs",
 				PREFIX_RES + "testTime", 120 );
 

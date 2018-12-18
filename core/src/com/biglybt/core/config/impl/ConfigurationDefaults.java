@@ -253,7 +253,8 @@ public class ConfigurationDefaults {
 
     def.put("Allow Same IP Peers",FALSE);
     def.put("Use Super Seeding",FALSE);
-
+    def.put("StartStopManager_bAddForDownloadingSR1", TRUE);
+    
     def.put("Start On Login", FALSE );
     def.put("Start In Low Resource Mode", FALSE );
     def.put("LRMS UI", TRUE );

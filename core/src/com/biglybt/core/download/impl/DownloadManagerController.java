@@ -3439,7 +3439,17 @@ DownloadManagerController
 
 								long	amount_downloaded = (completed*dm.getTotalLength())/1000;
 
-								stats.setSavedDownloadedUploaded( amount_downloaded, amount_downloaded );
+								boolean	sr1 = COConfigurationManager.getBooleanParameter("StartStopManager_bAddForDownloadingSR1");
+
+								if ( sr1 ){
+								
+									stats.setSavedDownloadedUploaded( amount_downloaded, amount_downloaded );
+									
+								}else{
+									
+									stats.setSavedDownloadedUploaded( amount_downloaded, 0 );
+
+								}
 							}
 						}else{
 							// see GlobalManager for comment on this
