@@ -374,6 +374,7 @@ public class ConfigurationDefaults {
     def.put( "Watch Torrent Folder Interval", ONE );	// deprecated, use secs below, migrated in checker
     def.put( "Watch Torrent Folder Interval Secs", SIXTY );
     def.put( "Start Watched Torrents Stopped", FALSE );
+    def.put( "Watch Torrent Always Rename", FALSE );
     def.put( "Watch Torrent Folder Path", "" );
     def.put( "Watch Torrent Folder Path Count", ONE );
     def.put( "Prioritize First Piece", FALSE );

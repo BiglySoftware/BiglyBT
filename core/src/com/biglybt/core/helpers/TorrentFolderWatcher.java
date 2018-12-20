@@ -237,6 +237,9 @@ public class TorrentFolderWatcher {
 					.getBooleanParameter("Start Watched Torrents Stopped")
 					? DownloadManager.STATE_STOPPED : DownloadManager.STATE_QUEUED;
 
+			boolean always_rename = COConfigurationManager.getBooleanParameter("Watch Torrent Always Rename");
+
+			
 	    	int num_folders = COConfigurationManager.getIntParameter( "Watch Torrent Folder Path Count", 1);
 
 	    	List<File>		folders = new ArrayList<>();
@@ -400,7 +403,7 @@ public class TorrentFolderWatcher {
 										Logger.log(new LogEvent(LOGID, file.getAbsolutePath()
 												+ " is an archived download"));
 	
-									if ( !save_torrents ){
+									if ( always_rename || !save_torrents ){
 	
 										File imported = new File(folder, file.getName() + ".imported");
 	
@@ -457,7 +460,7 @@ public class TorrentFolderWatcher {
 										hash = torrent.getHash();
 									} catch (Exception e) { }
 	
-									if (!save_torrents) {
+									if ( always_rename || !save_torrents) {
 	
 										File imported = new File(folder, file.getName() + ".imported");
 	

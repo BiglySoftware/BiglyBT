@@ -310,6 +310,13 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     new BooleanParameter(gWatchFolder, "Start Watched Torrents Stopped",
                          "ConfigView.label.startwatchedtorrentsstopped").setLayoutData(gridData);
 
+    	// always rename to .imported
+
+    gridData = new GridData();
+    gridData.horizontalSpan = 5;
+    new BooleanParameter(gWatchFolder, "Watch Torrent Always Rename",
+                         "ConfigView.label.watchtorrentrename").setLayoutData(gridData);
+    
     controls = new Control[]{ gWatchFolder };
     watchFolder.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(controls));
   }
