@@ -132,6 +132,9 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 		new IntListParameter(cDownloading, "StartStopManager_Downloading_iSortType",
 			orderLabels, orderValues);
 
+	gridData = new GridData();
+	gridData.horizontalSpan = 2;
+
 	new BooleanParameter(cDownloading, "StartStopManager_bAddForDownloadingSR1",
                "ConfigView.label.downloading.addsr1").setLayoutData(gridData);
 
