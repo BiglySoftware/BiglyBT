@@ -1775,7 +1775,10 @@ MagnetPlugin
 		
 		DownloadResult	result = _downloadSupport( listener, hash, args, sources, tags, initial_metadata, _timeout, flags, download );
 		
-		result.setDownload( download[0] );
+		if ( result != null ){
+		
+			result.setDownload( download[0] );
+		}
 		
 		return( result );
 	}

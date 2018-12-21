@@ -205,6 +205,8 @@ public interface IMenuConstants
 
 	public static final String MENU_ID_BUG_REPORT = "MainWindow.menu.bugreport";
 
+	public static final String  MENU_ID_PLUGINS_INSTALL_FROM_FILE = "MainWindow.menu.install.from.file";
+	
 	public static final String MENU_ID_PLUGINS_UNINSTALL = "MainWindow.menu.plugins.uninstallPlugins";
 
 	public static final String MENU_ID_COMMUNITY = "MainWindow.menu.community";

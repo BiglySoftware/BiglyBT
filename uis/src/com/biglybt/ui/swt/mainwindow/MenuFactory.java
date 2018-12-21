@@ -71,6 +71,7 @@ import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.minibar.MiniBarManager;
 import com.biglybt.ui.swt.nat.NatTestWindow;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
+import com.biglybt.ui.swt.plugininstaller.InstallPluginWizard;
 import com.biglybt.ui.swt.pluginsuninstaller.UnInstallPluginWizard;
 import com.biglybt.ui.swt.sharing.ShareUtils;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
@@ -2416,6 +2417,16 @@ public class MenuFactory
 		}
 	}
 
+	public static MenuItem addPluginInstallFromFileItem( Menu menuParent ){
+		return addMenuItem(menuParent, MENU_ID_PLUGINS_INSTALL_FROM_FILE,
+				new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						new InstallPluginWizard();
+					}
+		});
+	}
+	
 	public static MenuItem addPluginUnInstallMenuItem(Menu menuParent) {
 		return addMenuItem(menuParent, MENU_ID_PLUGINS_UNINSTALL,
 				new Listener() {
