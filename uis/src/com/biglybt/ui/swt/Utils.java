@@ -2282,19 +2282,28 @@ public class Utils
 	}
 
 	public static Shell findAnyShell() {
+		return findAnyShell(true);
+	}
+
+	public static Shell findAnyShell(boolean preferMainShell) {
+		Shell fallBackShell = null;
+
 		// Pick the main shell if we can
 		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
 		if (uiFunctions != null) {
 			Shell shell = uiFunctions.getMainShell();
 			if (shell != null && !shell.isDisposed()) {
-				return shell;
+				if (preferMainShell) {
+					return shell;
+				}
+				fallBackShell = shell;
 			}
 		}
 
 		// Get active shell from current display if we can
 		Display current = Display.getCurrent();
 		if (current == null) {
-			return null;
+			return fallBackShell;
 		}
 		Shell shell = current.getActiveShell();
 		if (shell != null && !shell.isDisposed()) {
@@ -2304,14 +2313,14 @@ public class Utils
 		// Get first shell of current display if we can
 		Shell[] shells = current.getShells();
 		if (shells.length == 0) {
-			return null;
+			return fallBackShell;
 		}
 
 		if (shells[0] != null && !shells[0].isDisposed()) {
 			return shells[0];
 		}
 
-		return null;
+		return fallBackShell;
 	}
 
 	public static boolean verifyShellRect(Shell shell, boolean bAdjustIfInvalid) {
