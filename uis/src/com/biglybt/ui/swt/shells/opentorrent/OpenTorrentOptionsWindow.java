@@ -55,13 +55,6 @@ import com.biglybt.core.torrent.impl.TorrentOpenFileOptions;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions.FileListener;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.PluginManager;
-import com.biglybt.pif.ipc.IPCInterface;
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
@@ -106,6 +99,14 @@ import com.biglybt.ui.swt.views.tableitems.mytorrents.TrackerNameItem;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.util.JSONUtils;
 import com.biglybt.util.MapUtils;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.ipc.IPCInterface;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 
 @SuppressWarnings({
 	"unchecked",
@@ -1719,6 +1720,8 @@ public class OpenTorrentOptionsWindow
 
 		private TableViewSWT<TorrentOpenFileOptions> tvFiles;
 
+		private Text txtSubFolder;
+
 		private SWTSkinObjectExpandItem soStartOptionsExpandItem;
 
 		//private SWTSkinObjectExpandItem soExpandItemPeer;
@@ -2018,14 +2021,7 @@ public class OpenTorrentOptionsWindow
 				}
 				*/
 
-				so = skin.getSkinObject("expanditem-torrentinfo");
-				if (so instanceof SWTSkinObjectExpandItem) {
-					soExpandItemTorrentInfo = (SWTSkinObjectExpandItem) so;
-					soExpandItemTorrentInfo.setText(MessageText.getString("OpenTorrentOptions.header.torrentinfo")
-							+ ": " + torrentOptions.getTorrentName());
-				}
-
-				setupInfoFields(skin);
+				setupInfoSection(skin);
 
 				updateStartOptionsHeader();
 				cmbDataDirChanged();
@@ -4392,20 +4388,20 @@ public class OpenTorrentOptionsWindow
 				
 				String top = new File (torrentOptions.getDataDir()).getName();
 				
-				Text text = new Text( more_comp, SWT.BORDER );
+				txtSubFolder = new Text( more_comp, SWT.BORDER );
 				GridData grid_data = new GridData(GridData.FILL_VERTICAL);
 				grid_data.verticalAlignment = SWT.CENTER;
 				grid_data.widthHint=200;
-				text.setLayoutData(grid_data);
+				txtSubFolder.setLayoutData(grid_data);
 
-				text.setText( top );
+				txtSubFolder.setText( top );
 				
-				text.addFocusListener(
+				txtSubFolder.addFocusListener(
 					new FocusListener(){
 						
 						@Override
 						public void focusLost(FocusEvent e){
-							String str = text.getText().trim();
+							String str = txtSubFolder.getText().trim();
 							
 							File data_dir = new File( torrentOptions.getDataDir());
 							
@@ -4413,7 +4409,7 @@ public class OpenTorrentOptionsWindow
 								
 								String top = data_dir.getName();
 
-								text.setText( top );
+								txtSubFolder.setText( top );
 								
 							}else{
 								
@@ -5041,6 +5037,7 @@ public class OpenTorrentOptionsWindow
 					return;
 				}
 
+				// XXX We don't call tt.removeTagTypeListener
 				tt.addTagTypeListener(
 					new TagTypeListener()
 					{
@@ -6049,8 +6046,16 @@ public class OpenTorrentOptionsWindow
 			diskFreeInfoRefreshPending = true;
 		}
 
-		private void setupInfoFields(SWTSkin skin) {
+		private void setupInfoSection(SWTSkin skin) {
 			SWTSkinObject so;
+
+			so = skin.getSkinObject("expanditem-torrentinfo");
+			if (so instanceof SWTSkinObjectExpandItem) {
+				soExpandItemTorrentInfo = (SWTSkinObjectExpandItem) so;
+				soExpandItemTorrentInfo.setText(MessageText.getString("OpenTorrentOptions.header.torrentinfo")
+						+ ": " + torrentOptions.getTorrentName());
+			}
+
 			so = skin.getSkinObject("torrentinfo-name");
 			TOTorrent torrent = torrentOptions.getTorrent();
 
@@ -6060,11 +6065,9 @@ public class OpenTorrentOptionsWindow
 
 				SWTSkinObjectText text = (SWTSkinObjectText)so;
 
-				text.setText( torrentOptions.getTorrentName() +  (hash_str==null?"":("\u00a0\u00a0\u00a0\u00a0[" + hash_str + "]")));
+				text.setText( torrentOptions.getTorrentName() +  (torrent==null?"":("\u00a0\u00a0\u00a0\u00a0[" + hash_str + "]")));
 
-				if ( hash_str != null ){
-
-					final String f_hash_str = hash_str;
+				if ( torrent != null && text.getControl().getData("hasClipMenu") == null ){
 
 					ClipboardCopy.addCopyToClipMenu(
 						text.getControl(),
@@ -6081,16 +6084,16 @@ public class OpenTorrentOptionsWindow
 							public String
 							getText()
 							{
-								return( f_hash_str );
+								return( hash_str );
 							}
 						});
+					text.getControl().setData("hasClipMenu", true);
 				}
 			}
 
-			so = skin.getSkinObject("torrentinfo-trackername");
-
 
 			if ( torrent != null ){
+				so = skin.getSkinObject("torrentinfo-trackername");
 				if (so instanceof SWTSkinObjectText) {
 					((SWTSkinObjectText) so).setText(TrackerNameItem.getTrackerName(torrent) + ((torrent==null||!torrent.getPrivate())?"":(" (private)")));
 				}
@@ -6112,7 +6115,51 @@ public class OpenTorrentOptionsWindow
 					String creation_date = DisplayFormatters.formatDate(torrent.getCreationDate() * 1000l);
 					((SWTSkinObjectText) so).setText(creation_date);
 				}
+
+				so = skin.getSkinObject("torrentinfo-encoding");
+				if (so instanceof SWTSkinObjectText) {
+					SWTSkinObjectText soTorrentEncoding = (SWTSkinObjectText) so;
+					soTorrentEncoding.setText(
+							MessageText.getString("TorrentInfoView.torrent.encoding") + ": "
+									+ getEncodingName(torrent));
+					Control control = so.getControl();
+					if (control.getData("hasMouseL") == null) {
+						control.addMouseListener(new MouseAdapter() {
+							@Override
+							public void mouseUp(MouseEvent e) {
+								try {
+									LocaleTorrentUtil.getTorrentEncoding(torrent, true, true);
+									torrentOptions.rebuildOriginalNames();
+									setupInfoSection(skin);
+									if (txtSubFolder != null) {
+										String top = new File (torrentOptions.getDataDir()).getName();
+
+										txtSubFolder.setText(top);
+									}
+
+								} catch (TOTorrentException ex) {
+									Debug.out(ex);
+								}
+							}
+						});
+						control.setData("hasMouseL", true);
+					}
+				}
+
 			}
+		}
+
+		private String getEncodingName(TOTorrent torrent) {
+			String encoding = torrent.getAdditionalStringProperty("encoding");
+			if (encoding == null) {
+				LocaleUtilDecoder decoder = LocaleTorrentUtil.getTorrentEncodingIfAvailable(
+						torrent);
+				if (decoder != null) {
+					encoding = decoder.getName();
+				}
+			}
+
+			return encoding;
 		}
 
 		private void setupTrackers(SWTSkinObjectContainer so) {

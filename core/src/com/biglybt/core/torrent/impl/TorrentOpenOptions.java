@@ -589,6 +589,24 @@ public class TorrentOpenOptions
 	}
 
 	public void
+	rebuildOriginalNames()
+	{
+		if (files == null) {
+			return;
+		}
+		TOTorrentFile[] tfiles = torrent.getFiles();
+		for (int i = 0; i < files.length; i++) {
+			TOTorrentFile	torrentFile = tfiles[i];
+
+			if (files[i] != null) {
+				files[i].orgFullName = torrentFile.getRelativePath(); // translated to locale
+				files[i].orgFileName = new File(files[i].orgFullName).getName();
+			}
+		}
+
+	}
+
+	public void
 	applySkipConfig()
 	{
 		TOTorrentFile[] tfiles = torrent.getFiles();
@@ -806,7 +824,8 @@ public class TorrentOpenOptions
 
 			// Force a check on the encoding, will prompt user if we dunno
 			try {
-				LocaleTorrentUtil.getTorrentEncoding(torrent);
+				LocaleTorrentUtil.getTorrentEncoding(torrent, true,
+						COConfigurationManager.getBooleanParameter("File.Decoder.Prompt"));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

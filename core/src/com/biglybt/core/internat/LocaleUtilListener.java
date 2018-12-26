@@ -19,6 +19,8 @@
 
 package com.biglybt.core.internat;
 
+import java.util.List;
+
 /**
  * @author parg
  *
@@ -29,9 +31,10 @@ LocaleUtilListener
 {
 	public LocaleUtilDecoderCandidate
 	selectDecoder(
-		LocaleUtil						locale_util,
-		Object							selection_owner,
-		LocaleUtilDecoderCandidate[]	candidates )
+			LocaleUtil						locale_util,
+			Object							selection_owner,
+			List<LocaleUtilDecoderCandidate> candidates,
+			boolean forceAsk  )
 
 		throws LocaleUtilEncodingException;
 }

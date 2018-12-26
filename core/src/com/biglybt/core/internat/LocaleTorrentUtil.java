@@ -16,16 +16,18 @@
  */
 package com.biglybt.core.internat;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TorrentUtils;
 
 /**
@@ -35,7 +37,7 @@ import com.biglybt.core.util.TorrentUtils;
  */
 public class LocaleTorrentUtil
 {
-	private static final List listeners = new ArrayList();
+	private static final List<LocaleUtilListener> listeners = new ArrayList<>();
 
 	/**
 	 * Retrieves the encoding of the torrent if it can be determined.
@@ -43,15 +45,10 @@ public class LocaleTorrentUtil
 	 * Does not prompt the user with choices.
 	 *
 	 * @param torrent Torrent to get encoding of
-	 * @return Locale torrent is in
-	 *
-	 * @throws TOTorrentException
-	 * @throws UnsupportedEncodingException
+	 * @return Locale torrent is in.  Torrents with .utf8 keys will always get a decoder
 	 */
 	static public LocaleUtilDecoder getTorrentEncodingIfAvailable(
 			TOTorrent torrent)
-
-		throws TOTorrentException, UnsupportedEncodingException
 	{
 		String encoding = torrent.getAdditionalStringProperty("encoding");
 
@@ -62,177 +59,187 @@ public class LocaleTorrentUtil
 			encoding = "utf8";
 		}
 
+		LocaleUtil localeUtil = LocaleUtil.getSingleton();
+
 		// get canonical name
 
 		String canonical_name;
 
 		try {
-			canonical_name = Charset.forName(encoding).name();
+			LocaleUtilDecoder fallback_decoder = localeUtil.getFallBackDecoder();
+
+			canonical_name = encoding.equals(fallback_decoder.getName())
+					? encoding : Charset.forName(encoding).name();
 
 		} catch (Throwable e) {
 
 			canonical_name = encoding;
 		}
 
-		LocaleUtilDecoder chosenDecoder = null;
-		LocaleUtilDecoder[] all_decoders = LocaleUtil.getSingleton().getDecoders();
+		LocaleUtilDecoder[] all_decoders = localeUtil.getDecoders();
 
-		for (int i = 0; i < all_decoders.length; i++) {
-			if (all_decoders[i].getName().equals(canonical_name)) {
-				chosenDecoder = all_decoders[i];
-				break;
+		for (LocaleUtilDecoder decoder : all_decoders) {
+
+			if (decoder.getName().equals(canonical_name)) {
+
+				return (decoder);
 			}
 		}
 
-		return chosenDecoder;
+		return null;
 	}
 
 	/**
-	 * Get the torrent's encoding, prompting the user to choose from a list
+	 * Get the torrent's encoding, optionally prompting the user to choose from a list
 	 * if needed.
 	 *
 	 * @param torrent Torrent to get encoding of
 	 * @return LocaleUtilDecoder that the torrent is in
-	 *
-	 * @throws TOTorrentException
-	 * @throws UnsupportedEncodingException
-	 *
 	 */
-	// TODO: Use getTorrentEncodingIfAvailable instead of almost-similar code
-	//        (merge anything cool from this function's dup code into
-	//         getTorrentEncodingIfAvailable)
 	static public LocaleUtilDecoder getTorrentEncoding(TOTorrent torrent)
 
-		throws TOTorrentException, UnsupportedEncodingException
+		throws TOTorrentException
 	{
-		return getTorrentEncoding(torrent, true);
+		return getTorrentEncoding(torrent, true, false);
 	}
 
-	static public LocaleUtilDecoder getTorrentEncoding(TOTorrent torrent, boolean saveToFileAllowed)
-
-	throws TOTorrentException, UnsupportedEncodingException
+	static public LocaleUtilDecoder getTorrentEncoding(TOTorrent torrent,
+			boolean saveToFileAllowed, boolean forcePrompt)
+			throws TOTorrentException
 	{
 		String encoding = torrent.getAdditionalStringProperty("encoding");
 		if (TOTorrent.ENCODING_ACTUALLY_UTF8_KEYS.equals(encoding)) {
-			encoding = "utf8";
+			forcePrompt = false;
+		}
+
+		if (!forcePrompt) {
+			LocaleUtilDecoder decoder = getTorrentEncodingIfAvailable(torrent);
+			if (decoder != null) {
+				return decoder;
+			}
 		}
 
 		// we can only persist the torrent if it has a filename defined for it
 
-		boolean bSaveToFile;
+		boolean bSaveToFile = saveToFileAllowed;
 
 		try {
-			TorrentUtils.getTorrentFileName(torrent);
 
-			bSaveToFile = true;
+			bSaveToFile &= TorrentUtils.getTorrentFileName(torrent) != null;
 
 		} catch (Throwable e) {
 
 			bSaveToFile = false;
 		}
 
-		if (encoding != null) {
-
-			// get canonical name
-
-			try {
-				LocaleUtilDecoder[] all_decoders = LocaleUtil.getSingleton().getDecoders();
-				LocaleUtilDecoder fallback_decoder = LocaleUtil.getSingleton().getFallBackDecoder();
-
-				String canonical_name = encoding.equals(fallback_decoder.getName())
-						? encoding : Charset.forName(encoding).name();
-
-				for (int i = 0; i < all_decoders.length; i++) {
-
-					if (all_decoders[i].getName().equals(canonical_name)) {
-
-						return (all_decoders[i]);
-					}
-				}
-			} catch (Throwable e) {
-
-				Debug.printStackTrace(e);
-			}
-		}
-
 		// get the decoders valid for various localisable parts of torrent content
 		// not in any particular order (well, system encoding is guaranteed to be first entry me thinks)
 
-		LocaleUtilDecoderCandidate[] candidates = getTorrentCandidates(torrent);
-
-		boolean system_decoder_is_valid = false;
-
+		List<LocaleUtilDecoderCandidate> candidates = getTorrentCandidates(torrent);
 		LocaleUtil localeUtil = LocaleUtil.getSingleton();
-		LocaleUtilDecoder system_decoder = localeUtil.getSystemDecoder();
-		for (int i = 0; i < candidates.length; i++) {
-			if (candidates[i].getDecoder() == system_decoder) {
-				system_decoder_is_valid = true;
-				break;
-			}
-		}
 
 		LocaleUtilDecoder selected_decoder = null;
 
+		// updated this to select UTF-8 over the system decoder if it is 'as good' as any other
+
+		int	min_length 	= Integer.MAX_VALUE;
+		int utf8_length = Integer.MAX_VALUE;
+
+		LocaleUtilDecoder	utf8_decoder = null;
+
+		for ( LocaleUtilDecoderCandidate candidate: candidates ){
+
+			String val = candidate.getValue();
+
+			if ( val != null ){
+
+				int	len = val.length();
+
+				if ( len < min_length ){
+
+					min_length = len;
+				}
+
+				LocaleUtilDecoder decoder = candidate.getDecoder();
+				String name = decoder.getName().toUpperCase( Locale.US );
+
+				if ( name.equals( "UTF-8" ) || name.equals( "UTF8" )){
+
+					utf8_length		= len;
+					utf8_decoder 	= decoder;
+				}
+			}
+		}
+
+		if ( utf8_decoder != null && utf8_length == min_length ){
+			selected_decoder = utf8_decoder;
+		} else {
+
+			// see if we can try and apply a default encoding
+
+			String default_name = COConfigurationManager.getStringParameter(
+					"File.Decoder.Default", "");
+
+			if (default_name.length() > 0) {
+				for (LocaleUtilDecoderCandidate candidate : candidates) {
+					LocaleUtilDecoder decoder = candidate.getDecoder();
+					if (candidate.getValue() != null
+							&& decoder.getName().equals(default_name)) {
+
+						selected_decoder = decoder;
+						break;
+					}
+				}
+			}
+		}
+
+		if (selected_decoder == null || forcePrompt) {
+
 			// ask listeners for an explicit decision
 
-		for ( int i = 0; i < listeners.size(); i++ ){
+			for (LocaleUtilListener listener : listeners) {
 
-			try {
-				LocaleUtilDecoderCandidate candidate = ((LocaleUtilListener) listeners.get(i)).selectDecoder( 	localeUtil, torrent, candidates);
+				try {
+					LocaleUtilDecoderCandidate candidate = listener.selectDecoder(
+							localeUtil, torrent, candidates, forcePrompt);
 
-				if ( candidate != null ){
+					if (candidate != null) {
 
-					selected_decoder = candidate.getDecoder();
+						selected_decoder = candidate.getDecoder();
 
-					break;
+						break;
+					}
+				} catch (Throwable ignore) {
 				}
-			}catch( Throwable e ){
+			}
+
+			if (forcePrompt && selected_decoder == null) {
+				LocaleUtilDecoder decoder = getTorrentEncodingIfAvailable(torrent);
+				if (decoder != null) {
+					return decoder;
+				}
 			}
 		}
 
 		if ( selected_decoder == null ){
 
-				// going to make an automatic decision, don't persist this
+			// going to make an automatic decision, don't persist this
 
 			bSaveToFile = false;
 
-				// updated this to select UTF-8 over the system decoder if it is 'as good' as any other
+			boolean system_decoder_is_valid = false;
 
-			int	min_length 	= Integer.MAX_VALUE;
-			int utf8_length = Integer.MAX_VALUE;
+			LocaleUtilDecoder system_decoder = localeUtil.getSystemDecoder();
+			for (LocaleUtilDecoderCandidate candidate : candidates) {
+				if (candidate.getDecoder() == system_decoder) {
+					system_decoder_is_valid = true;
+					break;
+				}
+			}
 
-			LocaleUtilDecoderCandidate	utf8_decoder = null;
+			if ( system_decoder_is_valid ){
 
-	    	for ( LocaleUtilDecoderCandidate candidate: candidates ){
-
-	    		String val = candidate.getValue();
-
-	    		if ( val != null ){
-
-	    			int	len = val.length();
-
-	    			if ( len < min_length ){
-
-	    				min_length = len;
-	    			}
-
-	    			String name = candidate.getDecoder().getName().toUpperCase( Locale.US );
-
-	    			if ( name.equals( "UTF-8" ) || name.equals( "UTF8" )){
-
-	    				utf8_length		= len;
-	    				utf8_decoder 	= candidate;
-	    			}
-	    		}
-	    	}
-
-	    	if ( utf8_decoder != null && utf8_length == min_length ){
-
-	    		selected_decoder = utf8_decoder.getDecoder();
-
-	    	}else if ( system_decoder_is_valid ){
-
-	    			// go for system decoder, if valid, fallback if not
+				// go for system decoder, if valid, fallback if not
 
 				selected_decoder = localeUtil.getSystemDecoder();
 
@@ -242,9 +249,10 @@ public class LocaleTorrentUtil
 			}
 		}
 
-		torrent.setAdditionalStringProperty("encoding", selected_decoder.getName());
+		torrent.setAdditionalStringProperty("encoding",
+				selected_decoder.getName());
 
-		if (bSaveToFile && saveToFileAllowed) {
+		if (bSaveToFile) {
 			TorrentUtils.writeToFile(torrent);
 		}
 
@@ -255,108 +263,100 @@ public class LocaleTorrentUtil
 	 * Checks the Torrent's text fields (path, comment, etc) against a list
 	 * of locals, returning only those that can handle all the fields.
 	 *
-	 * @param torrent
-	 * @return
-	 * @throws TOTorrentException
-	 * @throws UnsupportedEncodingException
+	 * @return {@link LocaleUtilDecoderCandidate}s that can decode the torrent.
+	 * All entries will have a non-null decoder
 	 */
-	static protected LocaleUtilDecoderCandidate[] getTorrentCandidates(
-			TOTorrent torrent)
-
-		throws TOTorrentException, UnsupportedEncodingException
-	{
+	static protected List<LocaleUtilDecoderCandidate> getTorrentCandidates(
+			TOTorrent torrent) {
 		long lMinCandidates;
 		byte[] minCandidatesArray;
 
-		Set cand_set = new HashSet();
 		LocaleUtil localeUtil = LocaleUtil.getSingleton();
 
-		List candidateDecoders = localeUtil.getCandidateDecoders(torrent.getName());
-		lMinCandidates = candidateDecoders.size();
-		minCandidatesArray = torrent.getName();
-
-		cand_set.addAll(candidateDecoders);
+		byte[] torrentName = torrent.getName();
+		List<LocaleUtilDecoderCandidate> candidateList = localeUtil.getCandidates(
+				torrentName);
+		lMinCandidates = candidateList.size();
+		minCandidatesArray = torrentName;
 
 		TOTorrentFile[] files = torrent.getFiles();
 
-		for (int i = 0; i < files.length; i++) {
-
-			TOTorrentFile file = files[i];
+		for (TOTorrentFile file : files) {
 
 			byte[][] comps = file.getPathComponents();
 
-			for (int j = 0; j < comps.length; j++) {
-				candidateDecoders = localeUtil.getCandidateDecoders(comps[j]);
+			for (byte[] comp : comps) {
+				List<LocaleUtilDecoderCandidate> candidateDecoders = localeUtil.getCandidates(
+						comp);
 				if (candidateDecoders.size() < lMinCandidates) {
 					lMinCandidates = candidateDecoders.size();
-					minCandidatesArray = comps[j];
+					minCandidatesArray = comp;
 				}
-				cand_set.retainAll(candidateDecoders);
+				retainAll(candidateList, candidateDecoders);
 			}
 		}
 
 		byte[] comment = torrent.getComment();
 
 		if (comment != null) {
-			candidateDecoders = localeUtil.getCandidateDecoders(comment);
+			List<LocaleUtilDecoderCandidate> candidateDecoders = localeUtil.getCandidates(comment);
 			if (candidateDecoders.size() < lMinCandidates) {
 				lMinCandidates = candidateDecoders.size();
 				minCandidatesArray = comment;
 			}
-			cand_set.retainAll(candidateDecoders);
+			retainAll(candidateList, candidateDecoders);
 		}
 
 		byte[] created = torrent.getCreatedBy();
 
 		if (created != null) {
-			candidateDecoders = localeUtil.getCandidateDecoders(created);
+			List<LocaleUtilDecoderCandidate> candidateDecoders = localeUtil.getCandidates(created);
 			if (candidateDecoders.size() < lMinCandidates) {
 				lMinCandidates = candidateDecoders.size();
 				minCandidatesArray = created;
 			}
-			cand_set.retainAll(candidateDecoders);
+			retainAll(candidateList, candidateDecoders);
 		}
 
-		List candidatesList = localeUtil.getCandidatesAsList(minCandidatesArray);
-		LocaleUtilDecoderCandidate[] candidates;
-		candidates = new LocaleUtilDecoderCandidate[candidatesList.size()];
-		candidatesList.toArray(candidates);
+		if (candidateList.isEmpty()) {
+			candidateList = localeUtil.getCandidates(minCandidatesArray);
+		}
 
-		Arrays.sort(candidates, new Comparator() {
-			@Override
-			public int compare(Object o1, Object o2) {
-				LocaleUtilDecoderCandidate luc1 = (LocaleUtilDecoderCandidate) o1;
-				LocaleUtilDecoderCandidate luc2 = (LocaleUtilDecoderCandidate) o2;
-
-				LocaleUtilDecoder dec1 = luc1.getDecoder();
-				LocaleUtilDecoder dec2 = luc2.getDecoder();
-
-				int res = dec1.getIndex() - dec2.getIndex();
-
-				if ( res == 0 ){
-
-					return( 0 );
+		// prefer utf-8
+		for (int i = 0; i < candidateList.size(); i++) {
+			LocaleUtilDecoderCandidate candidate = candidateList.get(i);
+			if (candidate.getDecoder().getName().equals("UTF-8")) {
+				if (i > 0) {
+					candidateList.remove(i);
+					candidateList.add(0, candidate);
 				}
+				break;
+			}
+		}
 
-				String n1 = dec1.getName();
-				String n2 = dec2.getName();
+		return candidateList;
+	}
 
-				if ( n1.equals( "UTF-8" )){
+	private static void retainAll(List<LocaleUtilDecoderCandidate> listToModify,
+			List<LocaleUtilDecoderCandidate> list) {
+		Iterator<LocaleUtilDecoderCandidate> it = listToModify.iterator();
+		while (it.hasNext()) {
+			LocaleUtilDecoderCandidate candidate = it.next();
+			if (candidate == null) {
+				continue;
+			}
 
-					return( -1 );
-
-				}else if ( n2.equals( "UTF-8" )){
-
-					return( 1 );
-
-				}else{
-
-					return( res );
+			boolean found = false;
+			for (LocaleUtilDecoderCandidate candidate2 : list) {
+				if (candidate.getIndex() == candidate2.getIndex()) {
+					found = true;
+					break;
 				}
 			}
-		});
-
-		return candidates;
+			if (!found) {
+				it.remove();
+			}
+		}
 	}
 
 	static public void setTorrentEncoding(TOTorrent torrent, String encoding)
@@ -365,7 +365,7 @@ public class LocaleTorrentUtil
 	{
 		try {
 			LocaleUtil localeUtil = LocaleUtil.getSingleton();
-			LocaleUtilDecoderCandidate[] candidates = getTorrentCandidates(torrent);
+			List<LocaleUtilDecoderCandidate> candidates = getTorrentCandidates(torrent);
 
 			String canonical_requested_name;
 
@@ -388,9 +388,9 @@ public class LocaleTorrentUtil
 
 			boolean ok = false;
 
-			for (int i = 0; i < candidates.length; i++) {
+			for (LocaleUtilDecoderCandidate candidate : candidates) {
 
-				if (candidates[i].getDecoder().getName().equals(
+				if (candidate.getDecoder().getName().equals(
 						canonical_requested_name)) {
 
 					ok = true;
@@ -401,12 +401,12 @@ public class LocaleTorrentUtil
 
 			if (!ok) {
 
-				String[] charsets = new String[candidates.length];
-				String[] names = new String[candidates.length];
+				String[] charsets = new String[candidates.size()];
+				String[] names = new String[candidates.size()];
 
-				for (int i = 0; i < candidates.length; i++) {
+				for (int i = 0; i < candidates.size(); i++) {
 
-					LocaleUtilDecoder decoder = candidates[i].getDecoder();
+					LocaleUtilDecoder decoder = candidates.get(i).getDecoder();
 
 					charsets[i] = decoder.getName();
 					names[i] = decoder.decodeString(torrent.getName());
@@ -446,5 +446,4 @@ public class LocaleTorrentUtil
 	public static void removeListener(LocaleUtilListener l) {
 		listeners.remove(l);
 	}
-
 }

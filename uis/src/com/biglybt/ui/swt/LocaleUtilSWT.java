@@ -20,9 +20,9 @@
 package com.biglybt.ui.swt;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
-import com.biglybt.core.Core;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
@@ -31,6 +31,8 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.*;
 import com.biglybt.core.util.AERunnable;
@@ -58,136 +60,111 @@ LocaleUtilSWT
   }
 
 
-  @Override
-  public LocaleUtilDecoderCandidate
-  selectDecoder(
-  	LocaleUtil						locale_util,
-	Object							decision_owner,
-  	LocaleUtilDecoderCandidate[]	candidates )
+	@Override
+	public LocaleUtilDecoderCandidate selectDecoder(LocaleUtil locale_util,
+			Object decision_owner, List<LocaleUtilDecoderCandidate> candidates,
+			boolean forceAsk)
+			throws LocaleUtilEncodingException
+	{
+		if (!forceAsk) {
+			if (decision_owner != remembered_on_behalf_of) {
 
-  	throws LocaleUtilEncodingException
-  {
-  	if ( decision_owner != remembered_on_behalf_of ){
+				remembered_on_behalf_of = decision_owner;
+				rememberedDecoder = null;
+			}
 
-  		remembered_on_behalf_of		= decision_owner;
-  		rememberedDecoder			= null;
-  	}
+			if (rememberEncodingDecision && rememberedDecoder != null) {
 
-    if( rememberEncodingDecision && rememberedDecoder != null) {
+				for (LocaleUtilDecoderCandidate candidate : candidates) {
 
-      for (int i = 0; i < candidates.length; i++) {
-
-        if(candidates[i].getValue() != null && rememberedDecoder == candidates[i].getDecoder()) {
-          return( candidates[i] );
-        }
-      }
-    }
-
-    LocaleUtilDecoderCandidate	default_candidate	= candidates[0];
-
-    String defaultString = candidates[0].getValue();
-
-    Arrays.sort(candidates);
-
-    boolean always_prompt = COConfigurationManager.getBooleanParameter("File.Decoder.Prompt", false );
-
-    if ( !always_prompt ){
-
-    	int minlength = candidates[0].getValue().length();
-
-	    // If the default string length == minlength assumes that
-	    // the array encoding is from default charset
-
-	    if (defaultString != null && defaultString.length() == minlength) {
-	      return( null );
-	    }
-
-	    	// see if we can try and apply a default encoding
-
-	    String	default_name = COConfigurationManager.getStringParameter( "File.Decoder.Default", "" );
-
-	    if ( default_name.length() > 0 ){
-			for (int i = 0; i < candidates.length; i++) {
-			  if(candidates[i].getValue() != null && candidates[i].getDecoder().getName().equals( default_name )) {
-
-				return( candidates[i] );
-			  }
+					if (candidate.getValue() != null
+							&& rememberedDecoder == candidate.getDecoder()) {
+						return (candidate);
+					}
+				}
 			}
 		}
-    }
 
-    ArrayList choosableCandidates = new ArrayList();
+		LocaleUtilDecoderCandidate default_candidate = candidates.get(0);
 
-    	// Always stick the default candidate in position 0 if valid
+		String defaultString = default_candidate.getValue();
 
-    if ( defaultString != null ){
+		ArrayList choosableCandidates = new ArrayList();
 
-    	choosableCandidates.add( default_candidate );
-    }
+		// Always stick the default candidate in position 0 if valid
 
-    LocaleUtilDecoder[]	general_decoders = locale_util.getGeneralDecoders();
+		if (defaultString != null) {
 
-    	// 	add all general candidates with names not already in the list
+			choosableCandidates.add(default_candidate);
+		}
 
-    for (int j = 0; j < general_decoders.length; j++) {
+		LocaleUtilDecoder[] general_decoders = locale_util.getGeneralDecoders();
 
-      for (int i = 0; i < candidates.length; i++) {
+		// 	add all general candidates with names not already in the list
 
-      	if (candidates[i].getValue()==null || candidates[i].getDecoder()==null) continue;
+		for (int j = 0; j < general_decoders.length; j++) {
 
-	        if(		general_decoders[j] != null &&
-	        		general_decoders[j].getName().equals(candidates[i].getDecoder().getName())){
+			for (LocaleUtilDecoderCandidate candidate : candidates) {
 
-	        	if (!choosableCandidates.contains(candidates[i])) {
+				if (candidate.getValue() == null || candidate.getDecoder() == null)
+					continue;
 
-	        		choosableCandidates.add(candidates[i]);
+				if (general_decoders[j] != null && general_decoders[j].getName().equals(
+						candidate.getDecoder().getName())) {
 
-	        		break;
-	        	}
-	        }
-      	}
-    }
+					if (!choosableCandidates.contains(candidate)) {
 
-    	// add the remaining possible locales
+						choosableCandidates.add(candidate);
 
-   	for (int i = 0; i < candidates.length; i++){
+						break;
+					}
+				}
+			}
+		}
 
-   		if (candidates[i].getValue()==null || candidates[i].getDecoder()==null) continue;
+		// add the remaining possible locales
 
-   		if (!choosableCandidates.contains(candidates[i])){
+		for (LocaleUtilDecoderCandidate candidate : candidates) {
 
-   			choosableCandidates.add(candidates[i]);
-   		}
-   	}
+			if (candidate.getValue() == null || candidate.getDecoder() == null)
+				continue;
 
+			if (!choosableCandidates.contains(candidate)) {
 
-    final LocaleUtilDecoderCandidate[] candidatesToChoose = (LocaleUtilDecoderCandidate[]) choosableCandidates.toArray(new LocaleUtilDecoderCandidate[choosableCandidates.size()]);
-    final LocaleUtilDecoderCandidate[] selected_candidate = {null};
+				choosableCandidates.add(candidate);
+			}
+		}
 
-    // Run Synchronously, since we want the results
-    Utils.execSWTThread(new AERunnable() {
-      @Override
-      public void runSupport() {
-      	try{
-        	showChoosableEncodingWindow(Utils.findAnyShell(),
-        			candidatesToChoose,selected_candidate);
+		final LocaleUtilDecoderCandidate[] candidatesToChoose = (LocaleUtilDecoderCandidate[]) choosableCandidates.toArray(
+				new LocaleUtilDecoderCandidate[0]);
+		final LocaleUtilDecoderCandidate[] selected_candidate = {
+			null
+		};
 
-      	}catch( Throwable e ){
+		// Run Synchronously, since we want the results
+		Utils.execSWTThread(new AERunnable() {
+			@Override
+			public void runSupport() {
+				try {
+					showChoosableEncodingWindow(Utils.findAnyShell(false), candidatesToChoose,
+							selected_candidate);
 
-      		Debug.printStackTrace( e );
+				} catch (Throwable e) {
 
-        }
-      }
-    }, false);
+					Debug.printStackTrace(e);
 
-    if ( selected_candidate[0] == null ){
+				}
+			}
+		}, false);
 
-    	throw( new LocaleUtilEncodingException( true ));
-    }else{
+		if (selected_candidate[0] == null) {
 
-    	return ( selected_candidate[0] );
-    }
-  }
+			throw (new LocaleUtilEncodingException(true));
+		} else {
+
+			return (selected_candidate[0]);
+		}
+	}
 
   private void
   showChoosableEncodingWindow(
@@ -283,6 +260,7 @@ LocaleUtilSWT
         s.dispose();
       }
     });
+
 
     s.open();
     while (!s.isDisposed()) {

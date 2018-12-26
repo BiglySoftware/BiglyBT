@@ -29,10 +29,10 @@ public class TorrentOpenFileOptions
 {
 	/** relative path + full file name as specified by the torrent */
 	/** @todo: getter/setters */
-	public final String orgFullName;
+	public String orgFullName;
 
 	/** @todo: getter/setters */
-	public final String orgFileName;
+	public String orgFileName;
 
 	/** @todo: getter/setters */
 	public final long lSize;
