@@ -58,6 +58,10 @@ import com.biglybt.core.util.HostNameToIPResolver;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadAnnounceResult;
+import com.biglybt.pif.download.DownloadAnnounceResultPeer;
+import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ipc.IPCException;
 import com.biglybt.pif.ipc.IPCInterface;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -650,10 +654,12 @@ public class PrivacyView
 						search_count++;
 
 						final int	search_id = search_count;
-
+						
 						IPCInterface callback =
 							new IPCInterface()
 							{
+								final int[] result = { -1, -1 };
+
 								@Override
 								public Object
 								invoke(
@@ -688,6 +694,24 @@ public class PrivacyView
 
 														i2p_lookup_button.setEnabled( true );
 
+														synchronized( result ){
+														
+															if ( result[0] != -1 ){
+														
+																try{
+																
+																	Download d = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getDownloadManager().getDownload( hash );
+																	
+																	if ( d != null ){
+																		
+																		injectResult( d, result );
+																	}
+																}catch( Throwable e ){
+																	
+																}
+															}
+														}
+														
 														if ( 	i2p_result_list.getText().length() == 0 &&
 																status != TrackerPeerSource.ST_UNAVAILABLE){
 
@@ -715,6 +739,12 @@ public class PrivacyView
 														int	leechers	= (Integer)params[2];
 														int	peers		= (Integer)params[3];
 
+														synchronized( result ){
+															
+															result[0] = seeds;
+															result[1] = leechers;
+														}
+														
 														i2p_result_summary.setText(
 															MessageText.getString(
 																"privacy.view.lookup.msg",
@@ -1064,6 +1094,97 @@ public class PrivacyView
 		Utils.relayout(cMainComposite);
 	}
 
+	private void
+	injectResult(
+		Download		download,
+		int[]			result )
+	{
+		DownloadScrapeResult scrape = download.getAggregatedScrapeResult();
+		
+		if ( scrape.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
+			
+			int total = scrape.getNonSeedCount() + scrape.getSeedCount();
+			
+			if ( total >= result[0] + result[1] ){
+				
+				return;
+			}
+		}
+		
+		download.setScrapeResult(
+			new DownloadScrapeResult()
+			{
+				@Override
+				public Download
+				getDownload()
+				{
+					return( null );
+				}
+				
+				@Override
+				public int
+				getResponseType()
+				{
+					return( RT_SUCCESS );
+				}
+				
+				@Override
+				public int
+				getSeedCount()
+				{
+					return( result[0] );
+				}
+				
+				@Override
+				public int
+				getNonSeedCount()
+				{
+					return( result[1] );
+				}
+
+				@Override
+				public long
+				getScrapeStartTime()
+				{
+					return( SystemTime.getCurrentTime());
+				}
+					
+				@Override
+				public void
+				setNextScrapeStartTime(
+					long nextScrapeStartTime)
+				{
+				}
+				
+				@Override
+				public long
+				getNextScrapeStartTime()
+				{
+					return( 0 );
+				}
+				
+				@Override
+				public String
+				getStatus()
+				{
+					return( "OK" );
+				}
+
+				@Override
+				public URL
+				getURL()
+				{
+					try{
+						return( new URL( "dht:" ));
+						
+					}catch( Throwable e ){
+						
+						return( null );
+					}
+				}
+			});
+	}
+	
 	private void
 	setPrivacyLevel(
 		final int		level )
