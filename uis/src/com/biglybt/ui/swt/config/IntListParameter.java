@@ -57,7 +57,11 @@ public class IntListParameter extends Parameter {
       int index = findIndex(value,values);
       list = new Combo(composite,SWT.SINGLE | SWT.READ_ONLY);
       for(int i = 0 ; i < labels.length  ;i++) {
-        list.add(labels[i]);
+    	  if ( Utils.isGTK ){
+    		  list.add(labels[i] +  "    ");	// Pad to force avoid truncation of selected label in control
+    	  }else {
+    		  list.add(labels[i]);
+    	  }
       }
 
       setIndex(index);
