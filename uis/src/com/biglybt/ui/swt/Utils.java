@@ -764,42 +764,12 @@ public class Utils
 		try {
 			if (shellIcons == null) {
 
-				String[] shellIconNames;
-
-				if (Constants.isWindows) {
-					// Windows, SWT sets ICON_SMALL (used for titlebar) and ICON_BIG
-					// (used for alt-tab).  It doesn't pick the best size for ICON_SMALL
-					int zoom = DPIUtil.getDeviceZoom();
-					if (zoom <= 100) {
-						shellIconNames = new String[] {
-							"logo16",
-							"logo128"
-						};
-					} else if (zoom <= 200) {
-						shellIconNames = new String[] {
-							"logo32",
-							"logo128"
-						};
-					} else if (zoom <= 400) {
-						shellIconNames = new String[] {
-							"logo64",
-							"logo128"
-						};
-					} else {
-						shellIconNames = new String[] {
-							"logo128",
-							"logo128"
-						};
-					}
-
-				} else {
-					shellIconNames = new String[] {
+				String[] shellIconNames = new String[] {
 						"logo16",
 						"logo32",
 						"logo64",
 						"logo128"
-					};
-				}
+				};
 
 				ArrayList<Image> listShellIcons = new ArrayList<>(
 						shellIconNames.length);
