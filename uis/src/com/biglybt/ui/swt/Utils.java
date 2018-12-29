@@ -1000,6 +1000,7 @@ public class Utils
 				return false;
 			}
 			if (code instanceof SWTRunnable) {
+				// SWTRunnable is wrapped in try/catch, so we don't need one here
 				code.run();
 				return true;
 			}
@@ -1011,18 +1012,22 @@ public class Utils
 
 		boolean isSWTThread = display.getThread() == Thread.currentThread();
 		if (msLater < 0 && isSWTThread) {
-			if (queue == null) {
-				code.run();
-			} else {
-				long lStartTimeRun = SystemTime.getCurrentTime();
+			try {
+				if (queue == null) {
+					code.run();
+				} else {
+					long lStartTimeRun = SystemTime.getCurrentTime();
 
-				code.run();
+					code.run();
 
-				long wait = SystemTime.getCurrentTime() - lStartTimeRun;
-				if (wait > 700) {
-					diag_logger.log(SystemTime.getCurrentTime() + "] took " + wait
-							+ "ms to run " + Debug.getCompressedStackTrace(new Throwable(), 2, -2, false));
+					long wait = SystemTime.getCurrentTime() - lStartTimeRun;
+					if (wait > 700) {
+						diag_logger.log(SystemTime.getCurrentTime() + "] took " + wait
+								+ "ms to run " + Debug.getCompressedStackTrace(new Throwable(), 2, -2, false));
+					}
 				}
+			} catch (Throwable t) {
+				DebugLight.printStackTrace(t);
 			}
 		} else if (msLater >= -1) {
 			try {
@@ -1041,18 +1046,18 @@ public class Utils
 	
 							}
 						}else{
-							display.asyncExec( code );
+							display.asyncExec(makeRunnableSafe(code));
 						}
 					} else {
 						if(isSWTThread) {
-							display.timerExec(msLater, code);
+							display.timerExec(msLater, makeRunnableSafe(code));
 						} else {
   						SimpleTimer.addEvent("execSWTThreadLater",
   								SystemTime.getOffsetTime(msLater), new TimerEventPerformer() {
   									@Override
 									  public void perform(TimerEvent event) {
   										if (!display.isDisposed()) {
-  											display.asyncExec(code);
+  											display.asyncExec(makeRunnableSafe(code));
   										}
   									}
   								});
@@ -1088,7 +1093,11 @@ public class Utils
 										Debug.out("Error while execSWTThread w/disposed Display", e);
 									}
 								} else {
-									code.run();
+									try {
+										code.run();
+									} catch (Throwable t) {
+										Debug.out("execSWTThread " + code, t);
+									}
 								}
 							} finally {
 								long runTIme = SystemTime.getCurrentTime() - lStartTimeRun;
@@ -1140,10 +1149,23 @@ public class Utils
 				return false;
 			}
 		} else {
-			display.syncExec(code);
+			display.syncExec(makeRunnableSafe(code));
 		}
 
 		return true;
+	}
+
+	private static Runnable makeRunnableSafe(Runnable code) {
+		if (!(code instanceof AERunnable) && !(code instanceof SWTRunnable)) {
+			return new AERunnable() {
+				@Override
+				public void runSupport() {
+					code.run();
+				}
+			};
+		}
+
+		return code;
 	}
 
 	/**
