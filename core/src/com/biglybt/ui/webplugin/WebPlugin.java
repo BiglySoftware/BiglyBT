@@ -1557,7 +1557,7 @@ WebPlugin
 							}
 						}
 
-						boolean	result = authenticateSupport( headers, resource, user, pw );
+						boolean	result = authenticateSupport( client_address, headers, resource, user, pw );
 
 						if ( !result ){
 
@@ -1649,6 +1649,7 @@ WebPlugin
 
 					private boolean
 					authenticateSupport(
+						String		client_address,
 						String		headers,
 						URL			resource,
 						String		user,
@@ -1668,38 +1669,38 @@ WebPlugin
 								
 							}else{
 								
-								String 	actual_host = getHeaderField( headers, "host" );
+								String 	this_server_host = getHeaderField( headers, "host" );
 								
-								int		actual_port = protocol == Tracker.PR_HTTP?80:443;
+								int		this_server_port = protocol == Tracker.PR_HTTP?80:443;
 								
 								String 	referrer = getHeaderField( headers, "referer" );
 																
-								if ( actual_host.startsWith( "[" )){
+								if ( this_server_host.startsWith( "[" )){
 									
-									int	pos = actual_host.lastIndexOf( ']' );
+									int	pos = this_server_host.lastIndexOf( ']' );
 									
 									if ( pos != -1 ){
 										
-										String rem = actual_host.substring( pos+1 );
+										String rem = this_server_host.substring( pos+1 );
 										
-										actual_host = actual_host.substring( 0, pos+1 );
+										this_server_host = this_server_host.substring( 0, pos+1 );
 										
 										pos = rem.indexOf( ':' );
 										
 										if ( pos != -1 ){
 											
-											actual_port = Integer.parseInt( rem.substring( pos+1 ).trim());
+											this_server_port = Integer.parseInt( rem.substring( pos+1 ).trim());
 										}
 									}
 								}else{
 									
-									int pos = actual_host.indexOf( ':' );
+									int pos = this_server_host.indexOf( ':' );
 									
 									if ( pos != -1 ){
 										
-										actual_port = Integer.parseInt( actual_host.substring( pos+1 ).trim());
+										this_server_port = Integer.parseInt( this_server_host.substring( pos+1 ).trim());
 										
-										actual_host = actual_host.substring( 0,  pos );
+										this_server_host = this_server_host.substring( 0,  pos );
 									}
 								}
 								
@@ -1709,9 +1710,9 @@ WebPlugin
 								
 								String msg	= "";
 								
-								if ( actual_port != server_port ){
+								if ( this_server_port != server_port ){
 									
-									msg = "port mismatch: " + server_port + "/" + actual_port;
+									msg = "port mismatch: " + server_port + "/" + this_server_port;
 									
 								}else{
 																
@@ -1736,7 +1737,7 @@ WebPlugin
 											}
 										}
 										
-										if ( actual_host.equals( a.trim())){
+										if ( client_address.equals( a.trim())){
 											
 											result = true;
 											
@@ -1765,7 +1766,7 @@ WebPlugin
 
 										ip_range.checkValid();
 
-										if (ip_range.isValid() && ip_range.isInRange(actual_host)){
+										if (ip_range.isValid() && ip_range.isInRange(client_address)){
 
 											result = true;
 
@@ -1776,7 +1777,7 @@ WebPlugin
 									
 									if ( !result ){
 										
-										msg = "host '" + actual_host + "' not in whitelist";
+										msg = "host '" + client_address + "' not in whitelist";
 										
 									}else{
 										
