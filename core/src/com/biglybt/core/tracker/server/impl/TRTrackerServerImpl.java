@@ -605,6 +605,13 @@ TRTrackerServerImpl
 		String				user,
 		String				password )
 	{
+		if ( headers.toLowerCase( Locale.US ).contains( "x-real-ip")){
+		
+				// someone messing about
+			
+			return( false );
+		}
+		
 		headers = headers.trim() + "\r\nX-Real-IP: " + AddressUtils.getHostAddress( remote_ip ) + "\r\n\r\n";
 
 		for (int i=0;i<auth_listeners.size();i++){
