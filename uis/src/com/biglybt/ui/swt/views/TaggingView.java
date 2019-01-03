@@ -263,7 +263,7 @@ public class TaggingView
 		List<Tag> listAllTags = getTags();
 
 		tagButtonsUI.buildTagGroup(listAllTags, cMainComposite,
-				new TagButtonTrigger() {
+				true, new TagButtonTrigger() {
 					@Override
 					public void tagButtonTriggered(Tag tag, boolean doTag) {
 						for (Taggable taggable : taggables) {
@@ -274,6 +274,11 @@ public class TaggingView
 							}
 							swt_updateFields();
 						}
+					}
+
+					@Override
+					public Boolean tagSelectedOverride(Tag tag) {
+						return null;
 					}
 				});
 

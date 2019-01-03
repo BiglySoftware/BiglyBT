@@ -19,8 +19,8 @@ package com.biglybt.ui.swt.shells.opentorrent;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -50,6 +50,8 @@ import com.biglybt.core.internat.LocaleUtilDecoder;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.impl.TagBase;
+import com.biglybt.core.tag.impl.TagTypeBase;
 import com.biglybt.core.torrent.*;
 import com.biglybt.core.torrent.impl.TorrentOpenFileOptions;
 import com.biglybt.core.torrent.impl.TorrentOpenOptions;
@@ -70,8 +72,10 @@ import com.biglybt.ui.common.table.TableViewFilterCheck;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.UIConfigDefaultsSWT;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.config.generic.GenericIntParameter;
 import com.biglybt.ui.swt.config.generic.GenericParameterAdapter;
@@ -87,7 +91,6 @@ import com.biglybt.ui.swt.shells.main.UIFunctionsImpl;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.subscriptions.SubscriptionListWindow;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
-import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.TrackerAvailView;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
@@ -96,7 +99,8 @@ import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.TrackerNameItem;
-import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import com.biglybt.ui.swt.views.utils.TagButtonsUI;
+import com.biglybt.ui.swt.views.utils.TagButtonsUI.TagButtonTrigger;
 import com.biglybt.util.JSONUtils;
 import com.biglybt.util.MapUtils;
 
@@ -164,6 +168,8 @@ public class OpenTorrentOptionsWindow
 	public static final String TABLEID_TORRENTS = "OpenTorrentTorrent";
 	public static final String TABLEID_FILES 	= "OpenTorrentFile";
 
+
+	private static final String SP_KEY = "oto:tag:initsp";
 
 
 	public static void main(String[] args) {
@@ -304,8 +310,6 @@ public class OpenTorrentOptionsWindow
 	private OpenTorrentInstance			multi_selection_instance;
 
 	protected Map<String,DiscoveredTag> listDiscoveredTags = new TreeMap<>();
-
-	protected List<String> listTagsToCreate = new ArrayList<>();
 
 	public static OpenTorrentOptionsWindow
 	addTorrent(
@@ -1737,6 +1741,7 @@ public class OpenTorrentOptionsWindow
 
 		private boolean 		treeViewDisableUpdates;
 		private Set<TreeNode>	treePendingExpansions = new HashSet<>();
+		private TagButtonsUI tagButtonsUI;
 
 		private
 		OpenTorrentInstance(
@@ -1825,7 +1830,7 @@ public class OpenTorrentOptionsWindow
 						synchronized( listDiscoveredTags ){
 							for ( String tag: tag_cache ){
 								if ( !listDiscoveredTags.containsKey( tag )){
-									listDiscoveredTags.put( tag, new DiscoveredTag( tag, nets));
+									listDiscoveredTags.put( tag.toLowerCase(), new DiscoveredTag( tag, nets));
 								}
 							}
 						}
@@ -1841,9 +1846,7 @@ public class OpenTorrentOptionsWindow
 								@Override
 								public void tagFound(String tag, String network) {
 
-									if (checkAlreadyHaveTag(torrentOptions.getInitialTags(), tag)) {
-										return;
-									}
+									tag = tag.toLowerCase();
 									synchronized( listDiscoveredTags ){
 										if (listDiscoveredTags.containsKey(tag)) {
 											return;
@@ -1851,17 +1854,7 @@ public class OpenTorrentOptionsWindow
 										listDiscoveredTags.put( tag, new DiscoveredTag( tag, nets));
 									}
 
-									Utils.execSWTThread(new Runnable() {
-										@Override
-										public void run() {
-											if (tagButtonsArea == null
-													|| tagButtonsArea.isDisposed()) {
-												return;
-											}
-											buildTagButtonPanel(tagButtonsArea, true);
-										}
-									});
-
+									buildTagButtonPanel();
 								}
 
 								@Override
@@ -2057,7 +2050,7 @@ public class OpenTorrentOptionsWindow
 				return;
 			}
 
-			buildTagButtonPanel( tagButtonsArea, true );
+			tagButtonsUI.updateFields(null);
 		}
 
 		private void
@@ -3893,19 +3886,12 @@ public class OpenTorrentOptionsWindow
 				tag_str = "";
 
 				for ( Tag t: initialtags ){
+					if ((t instanceof DiscoveredTag)
+							&& ((DiscoveredTag) t).existingTag != null) {
+						continue;
+					}
 					numTags++;
 					tag_str += (tag_str==""?"":", ") + t.getTagName( true );
-				}
-			}
-
-
-			String[] tagsToCreate = listTagsToCreate.toArray(new String[0]);
-			for (String tagName : tagsToCreate) {
-				numTags++;
-				if (tag_str == null) {
-					tag_str = tagName;
-				} else {
-					tag_str += (tag_str==""?"":", ") + tagName;
 				}
 			}
 
@@ -4661,456 +4647,239 @@ public class OpenTorrentOptionsWindow
 				gridData = new GridData(SWT.FILL, SWT.FILL, true, true );
 				tagButtonsArea.setLayoutData( gridData);
 
-				RowLayout tagLayout = new RowLayout();
-				tagLayout.pack = true;
-				tagLayout.justify = false;
-				tagLayout.fill = false;
-				tagLayout.spacing = 5;
-				tagButtonsArea.setLayout(tagLayout);
+				buildTagButtonPanel();
 
-				buildTagButtonPanel( tagButtonsArea );
 
 				Button addTag = new Button( tagLeft, SWT.NULL );
 				addTag.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_CENTER ));
 				addTag.setText("+");
 
-				addTag.addSelectionListener(
-					new SelectionAdapter() {
+				addTag.addListener(SWT.Selection,
+						event -> TagUIUtilsV3.showCreateTagDialog(tags -> {
 
-						@Override
-						public void
-						widgetSelected(
-							SelectionEvent e)
-						{
-							TagUIUtilsV3.showCreateTagDialog(
-								new UIFunctions.TagReturner()
-								{
-									@Override
-									public void returnedTags(Tag[] tags){
-
-										List<Tag> initialTags = torrentOptions.getInitialTags();
-
-										boolean changed = false;
-
-										for ( Tag tag: tags ){
-
-											if ( !initialTags.contains( tag )){
-
-												initialTags.add( tag );
-
-												changed = true;
-											}
-										}
-
-										if ( changed ){
-
-											torrentOptions.setInitialTags( initialTags );
-
-											updateStartOptionsHeader();
-
-											buildTagButtonPanel( tagButtonsArea, true );
-										}
-									}
-								});
-						}
-					});
-			}
-		}
-
-		private void
-		buildTagButtonPanel(
-			Composite	parent )
-		{
-			buildTagButtonPanel( parent, false );
-		}
-
-		private void
-		buildTagButtonPanel(
-			final 	Composite	parent,
-			boolean	is_rebuild )
-		{
-			try{
-				if ( parent.isDisposed()){
-
-					return;
-				}
-
-				final String SP_KEY = "oto:tag:initsp";
-
-				if ( is_rebuild ){
-
-					Utils.disposeComposite( parent, false );
-
-				}else{
-
-					parent.setData( SP_KEY, getSavePath());
-				}
-
-				final TagType tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL );
-
-				List<Tag> initialTags = torrentOptions.getInitialTags();
-
-				Listener menuDetectListener = new Listener() {
-					@Override
-					public void handleEvent(Event event) {
-
-						final Button button = (Button) event.widget;
-						Menu menu = new Menu(button);
-						button.setMenu(menu);
-
-						MenuBuildUtils.addMaintenanceListenerForMenu(menu, new MenuBuilder() {
-							@Override
-							public void buildMenu(final Menu menu, MenuEvent menuEvent) {
-								Tag tag = (Tag) button.getData("Tag");
-								TagUIUtils.createSideBarMenuItems(menu, tag);
-							}
-						});
-					}
-				};
-
-				PaintListener paintListener = new PaintListener() {
-
-					@Override
-					public void paintControl(PaintEvent e) {
-						Button button;
-						Composite c = null;
-						if (e.widget instanceof Composite) {
-							c = (Composite) e.widget;
-							button = (Button) c.getChildren()[0];
-						} else {
-							button = (Button) e.widget;
-						}
-						Tag tag = (Tag) button.getData("Tag");
-						if (tag == null) {
-							return;
-						}
-
-						//ImageLoader.getInstance().getImage(? "check_yes" : "check_no");
-
-						if (c != null) {
-							boolean checked = button.getSelection();
-		  				Point size = c.getSize();
-		  				Point sizeButton = button.getSize();
-		  				e.gc.setAntialias(SWT.ON);
-		  				e.gc.setForeground(ColorCache.getColor(e.display, tag.getColor()));
-		  				int lineWidth = button.getSelection() ? 2 : 1;
-		  				e.gc.setLineWidth(lineWidth);
-
-		  				int curve = 20;
-		  				int width = sizeButton.x + lineWidth + 1;
-		  				width += Constants.isOSX ? 5 : curve / 2;
-		  				if (checked) {
-		    				e.gc.setAlpha(0x20);
-		    				e.gc.setBackground(ColorCache.getColor(e.display, tag.getColor()));
-		    				e.gc.fillRoundRectangle(-curve, lineWidth - 1, width + curve, size.y - lineWidth, curve, curve);
-		    				e.gc.setAlpha(0xff);
-		  				}
-		  				if (!checked) {
-		    				e.gc.setAlpha(0x80);
-		  				}
-		  				e.gc.drawRoundRectangle(-curve, lineWidth - 1, width + curve, size.y - lineWidth, curve, curve);
-		  				e.gc.drawLine(lineWidth - 1, lineWidth, lineWidth - 1, size.y - lineWidth);
-						} else {
-		  				if (!Constants.isOSX && button.getSelection()) {
-		    				Point size = button.getSize();
-		    				e.gc.setBackground(ColorCache.getColor(e.display, tag.getColor()));
-		    				e.gc.setAlpha(20);
-		    				e.gc.fillRectangle(0, 0, size.x, size.y);
-		  				}
-						}
-					}
-				};
-
-				for ( final Tag tag: TagUIUtils.sortTags( tt.getTags())){
-
-					if ( tag.canBePublic() && !tag.isTagAuto()[0]){
-
-						Composite p = new Composite(parent, SWT.DOUBLE_BUFFERED);
-						
-						String iconFile = tag.getImageFile();
-						
-						GridLayout layout = new GridLayout(1, false);
-						layout.marginHeight = 3;
-						if (Constants.isWindows) {
-							layout.marginWidth = 6;
-							layout.marginLeft = 2;
-							layout.marginTop = 1;
-						} else {
-							layout.marginWidth = 0;
-							layout.marginLeft = 3;
-							layout.marginRight = 11;
-						}
-						p.setLayout(layout);
-						p.addPaintListener(paintListener);
-						
-						final Button button = new Button(p, SWT.CHECK);
-
-						if ( Constants.isWindows ){
-							button.setBackground( Colors.white );
-						}
-
-						button.setData("Tag", tag);
-
-						button.addListener(SWT.MenuDetect, menuDetectListener);
-						button.addPaintListener(paintListener);
-
-						button.setText( tag.getTagName( true ));
-
-						Utils.setTT(button, TagUIUtils.getTagTooltip(tag));
-
-						if ( initialTags.contains( tag )){
-
-							button.setSelection( true );
-						}
-
-						button.addSelectionListener(
-							new SelectionAdapter() {
-
-								@Override
-								public void
-								widgetSelected(
-									SelectionEvent e)
-								{
-									List<Tag>  tags = torrentOptions.getInitialTags();
-
-									if ( button.getSelection()){
-
-										tags.add( tag );
-
-										TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
-
-										if ( fl.supportsTagInitialSaveFolder()){
-
-											File save_loc = fl.getTagInitialSaveFolder();
-
-											if ( save_loc != null ){
-
-												if (( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 ){
-
-													setSavePath( save_loc.getAbsolutePath());
-												}
-											}
-										}
-									}else{
-
-										tags.remove( tag );
-
-										TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
-
-										if ( fl.supportsTagInitialSaveFolder()){
-
-											File save_loc = fl.getTagInitialSaveFolder();
-
-											if ( 	save_loc != null &&
-													( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 &&
-													getSavePath().equals( save_loc.getAbsolutePath())){
-
-												String old = (String)parent.getData( SP_KEY );
-
-												if ( old != null ){
-
-													setSavePath( old );
-												}
-											}
-										}
-									}
-
-									button.getParent().redraw();
-
-									torrentOptions.setInitialTags( tags );
-
-									updateStartOptionsHeader();
-								}
-							});
-						
-					if ( iconFile != null ){
-														
-						String resource = new File( iconFile ).toURI().toURL().toExternalForm();
-													
-						ImageLoader.getInstance().getUrlImage(
-								  resource, 
-								  new Point( 20, 14 ),
-								  new ImageLoader.ImageDownloaderListener(){
-				
-									  @Override
-									  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
-										  							  
-										 if ( image != null && returnedImmediately ){
-												
-											 button.setImage(image);
-											 
-											 button.addDisposeListener(
-												new DisposeListener(){
-													
-													@Override
-													public void widgetDisposed(DisposeEvent e){
-														ImageLoader.getInstance().releaseImage( key );
-													}
-												});
-											
-										 }
-									  }
-								  });
-						}
-					}
-				}
-
-				synchronized( listDiscoveredTags ){
-
-					for ( DiscoveredTag tag : listDiscoveredTags.values()) {
-
-						final String tagName = tag.name;
-
-						boolean alreadyHave = checkAlreadyHaveTag(initialTags, tagName);
-
-						if ( alreadyHave ){
-
-							break;
-						}
-
-						final Button but = new Button( parent, SWT.CHECK );
-
-						if ( Constants.isWindows ){
-							but.setBackground( Colors.white );
-						}
-
-						but.setImage(ImageLoader.getInstance().getImage("image.sidebar.rcm"));
-
-
-						if ( listTagsToCreate.contains( tagName )){
-							but.setSelection( true );
-						}
-
-						String tagDisplayName = tagName;
-
-						String[] nets = tag.networks;
-
-						if ( nets.length > 0 ){
-							boolean boring = false;
-							String nets_str = "";
-
-							for ( String net: nets ){
-								if ( net == AENetworkClassifier.AT_PUBLIC ){
-									boring = true;
-									break;
-								}
-								nets_str += (nets_str.length()==0?"":"/") + net;
-							}
-
-							if ( !boring && nets_str.length() > 0 ){
-
-								tagDisplayName += " [" + nets_str + "]";
-							}
-						}
-
-						but.setText( tagDisplayName );
-
-						Utils.setTT(but,MessageText.getString("tagtype.discovered"));
-
-						but.addSelectionListener(
-							new SelectionAdapter() {
-
-								@Override
-								public void
-								widgetSelected(
-									SelectionEvent e)
-								{
-									if ( but.getSelection()){
-
-										listTagsToCreate.add(tagName);
-
-									}else{
-
-										listTagsToCreate.remove(tagName);
-									}
-
-									updateStartOptionsHeader();
-								}
-							});
-					}
-				}
-
-				if ( is_rebuild ){
-
-					parent.getParent().layout( true,  true );
-
-					return;
-				}
-
-				// XXX We don't call tt.removeTagTypeListener
-				tt.addTagTypeListener(
-					new TagTypeListener()
-					{
-
-						@Override
-						public void
-						tagTypeChanged(
-							TagType tag_type)
-						{
-						}
-
-						@Override
-						public void tagEventOccurred(TagEvent event ) {
-							int	type = event.getEventType();
-							Tag	tag = event.getTag();
-							if ( type == TagEvent.ET_TAG_ADDED ){
-								tagAdded( tag );
-							}else if ( type == TagEvent.ET_TAG_REMOVED ){
-								tagRemoved( tag );
-							}
-						}
-
-						public void
-						tagRemoved(
-							Tag tag )
-						{
 							List<Tag> initialTags = torrentOptions.getInitialTags();
 
-							if ( initialTags.contains( tag )){
+							boolean changed = false;
 
-								initialTags.remove( tag );
+							for (Tag tag : tags) {
+								changed |= addInitialTag(initialTags, tag);
+								Tag otherTag = findOtherTag(tag);
+								if (otherTag != null) {
+									if ((otherTag instanceof DiscoveredTag)
+											&& ((DiscoveredTag) otherTag).existingTag == null) {
+										((DiscoveredTag) otherTag).existingTag = tag;
+									}
+									changed |= addInitialTag(initialTags, otherTag);
+								}
+							}
 
-								torrentOptions.setInitialTags( initialTags );
+							if (changed) {
+
+								torrentOptions.setInitialTags(initialTags);
 
 								updateStartOptionsHeader();
+
+								tagButtonsUI.updateFields(null);
 							}
-
-							rebuild();
-						}
-
-						public void
-						tagAdded(
-							Tag tag)
-						{
-							rebuild();
-						}
-
-						private void
-						rebuild()
-						{
-							if ( parent.isDisposed()){
-
-								tt.removeTagTypeListener( this );
-							}else{
-
-								Utils.execSWTThread(
-									new Runnable()
-									{
-										@Override
-										public void
-										run()
-										{
-											buildTagButtonPanel( parent, true );
-										}
-									});
-							}
-						}
-					}, false );
-
-			}catch( Throwable e ){
-
-				Debug.out( e);
+						}));
 			}
+		}
+
+		private void buildTagButtonPanel() {
+			if (!Utils.isThisThreadSWT()) {
+				Utils.execSWTThread(this::buildTagButtonPanel);
+				return;
+			}
+
+			if (tagButtonsArea == null || tagButtonsArea.isDisposed()) {
+
+				return;
+			}
+
+			TagType tt = TagManagerFactory.getTagManager().getTagType(
+					TagType.TT_DOWNLOAD_MANUAL);
+
+			boolean is_rebuild = tagButtonsArea.getData(SP_KEY) != null;
+
+			if (is_rebuild) {
+
+				Utils.disposeComposite(tagButtonsArea, false);
+
+			} else {
+
+				tagButtonsArea.setData(SP_KEY, getSavePath());
+
+				tagButtonsUI = new TagButtonsUI();
+				TagTypeListener tagTypeListener = new TagTypeListener() {
+					@Override
+					public void tagTypeChanged(TagType tag_type) {
+
+					}
+
+					@Override
+					public void tagEventOccurred(TagEvent event) {
+						int type = event.getEventType();
+						Tag tag = event.getTag();
+						if (type == TagEvent.ET_TAG_ADDED) {
+							tagAdded(tag);
+						} else if (type == TagEvent.ET_TAG_REMOVED) {
+							tagRemoved(tag);
+						}
+					}
+
+					public void tagRemoved(Tag tag) {
+						List<Tag> initialTags = torrentOptions.getInitialTags();
+						if (removeInitialTag(initialTags, tag)) {
+
+							Tag otherTag = findOtherTag(tag);
+							if (otherTag != null) {
+								removeInitialTag(initialTags, otherTag);
+							}
+
+							torrentOptions.setInitialTags(initialTags);
+
+							updateStartOptionsHeader();
+						}
+
+						buildTagButtonPanel();
+					}
+
+					public void tagAdded(Tag tag) {
+						buildTagButtonPanel();
+					}
+				};
+				tt.addTagTypeListener(tagTypeListener, false);
+				tagButtonsArea.addDisposeListener(
+						e -> tt.removeTagTypeListener(tagTypeListener));
+			}
+
+			List<Tag> tags = new ArrayList(tt.getTags());
+			for (Iterator<Tag> iter = tags.iterator(); iter.hasNext();) {
+				Tag next = iter.next();
+				boolean[] auto = next.isTagAuto();
+				boolean auto_add = auto[0];
+				//boolean auto_rem	= auto[1];
+
+				if (auto_add) {
+					iter.remove();
+				}
+			}
+
+			for (DiscoveredTag discoveredTag : listDiscoveredTags.values()) {
+				tags.add(discoveredTag);
+			}
+
+			tagButtonsUI.buildTagGroup(tags, tagButtonsArea, false,
+					new TagButtonTrigger() {
+						public void tagButtonTriggered(Tag tag, boolean doTag) {
+							List<Tag> tags = torrentOptions.getInitialTags();
+							boolean initialTagsChanged = doTag ? addInitialTag(tags, tag)
+									: removeInitialTag(tags, tag);
+							if (initialTagsChanged) {
+
+								Tag otherTag = findOtherTag(tag);
+								if (otherTag != null) {
+									if (doTag) {
+										addInitialTag(tags, otherTag);
+									} else {
+										removeInitialTag(tags, otherTag);
+									}
+								}
+
+								torrentOptions.setInitialTags(tags);
+							}
+
+							tagButtonsUI.updateFields(null);
+							updateStartOptionsHeader();
+						}
+
+						public Boolean tagSelectedOverride(Tag tag) {
+							List<Tag> initialTags = torrentOptions.getInitialTags();
+							if (initialTags.contains(tag)) {
+								return true;
+							}
+							return null;
+						}
+					});
+			tagButtonsUI.setEnableWhenNoTaggables(true);
+			tagButtonsUI.updateFields(null);
+		}
+
+		private boolean removeInitialTag(List<Tag> tags, Tag tag) {
+			boolean tagsChanged = tags.remove( tag );
+			if (!tagsChanged) {
+				return tagsChanged;
+			}
+
+			// This logic might fit better outside the UI code, such as
+			// TorrentOpenOptions
+			if (tag instanceof TagFeatureFileLocation) {
+				TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+
+				if ( fl.supportsTagInitialSaveFolder()){
+
+					File save_loc = fl.getTagInitialSaveFolder();
+
+					if ( 	save_loc != null &&
+							( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 &&
+							getSavePath().equals( save_loc.getAbsolutePath())){
+
+						String old = (String)tagButtonsArea.getData( SP_KEY );
+
+						if ( old != null ){
+
+							setSavePath( old );
+						}
+					}
+				}
+			}
+			return tagsChanged;
+		}
+
+		private boolean addInitialTag(List<Tag> tags, Tag tag) {
+			boolean tagsChanged = false;
+			if (!tags.contains(tag)) {
+				tags.add(tag);
+				tagsChanged = true;
+
+				// This logic might fit better outside the UI code, such as
+				// TorrentOpenOptions
+				if (tag instanceof TagFeatureFileLocation) {
+					TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+
+					if ( fl.supportsTagInitialSaveFolder()){
+
+						File save_loc = fl.getTagInitialSaveFolder();
+
+						if ( save_loc != null ){
+
+							if (( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0 ){
+
+								setSavePath( save_loc.getAbsolutePath());
+							}
+						}
+					}
+				}
+
+			}
+
+			return tagsChanged;
+		}
+
+		/**
+		 * If tagToFind is DiscoveredTag, returns {@link DiscoveredTag#existingTag}.
+		 * Otherwise, returns DiscoveredTag with same name, if available.
+		 */
+		private Tag findOtherTag(Tag tagToFind) {
+			if (tagToFind instanceof DiscoveredTag) {
+				return ((DiscoveredTag) tagToFind).existingTag;
+			}
+
+			DiscoveredTag discoveredTag = listDiscoveredTags.get(tagToFind.getTagName(false).toLowerCase());
+			if (discoveredTag == null) {
+				discoveredTag = listDiscoveredTags.get(tagToFind.getTagName(true).toLowerCase());
+			}
+			return discoveredTag;
 		}
 
 		private void setupTVFiles(SWTSkinObjectContainer soFilesTable, SWTSkinObjectTextbox soFilesFilter ) {
@@ -6834,23 +6603,27 @@ public class OpenTorrentOptionsWindow
 					}
 				}
 			}
-			
-			if (listTagsToCreate.size() > 0) {
-				TagManager tagManager = TagManagerFactory.getTagManager();
-				TagType tagType = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
-				String[] tagsToCreate = listTagsToCreate.toArray(new String[0]);
 
-				List<Tag> initialTags = torrentOptions.getInitialTags();
-
-				for (String tagName : tagsToCreate) {
-					try {
-						Tag tag = tagType.createTag(tagName, true);
-						tag.setPublic(true);
-						listTagsToCreate.remove(tagName);
-						initialTags.add(tag);
-					} catch (TagException e) {
+			TagManager tagManager = TagManagerFactory.getTagManager();
+			TagType tagType = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+			List<Tag> initialTags = torrentOptions.getInitialTags();
+			boolean initialTagsChanged = false;
+			for (ListIterator<Tag> iter = initialTags.listIterator(); iter.hasNext(); ) {
+				Tag tag = iter.next();
+				if (tag instanceof DiscoveredTag) {
+					initialTagsChanged = true;
+					iter.remove();
+					if (((DiscoveredTag) tag).existingTag == null) {
+						try {
+							Tag newTag = tagType.createTag(tag.getTagName(), true);
+							newTag.setPublic(true);
+							iter.add(newTag);
+						} catch (TagException e) {
+						}
 					}
 				}
+			}
+			if (initialTagsChanged) {
 				torrentOptions.setInitialTags(initialTags);
 			}
 
@@ -6911,16 +6684,14 @@ public class OpenTorrentOptionsWindow
 		}
 	}
 
-	public boolean checkAlreadyHaveTag(List<Tag> initialTags, String tagName) {
-		boolean alreadyHave = false;
+	public static Tag getExistingTag(List<Tag> initialTags, String tagName) {
 		for (Tag tag : initialTags) {
 			if (tagName.equalsIgnoreCase(tag.getTagName(false))
 					|| tagName.equalsIgnoreCase(tag.getTagName(true))) {
-				alreadyHave = true;
-				break;
+				return tag;
 			}
 		}
-		return alreadyHave;
+		return null;
 	}
 
 	private static Comparator tree_comp = new FormattersImpl().getAlphanumericComparator( true );
@@ -7149,19 +6920,88 @@ public class OpenTorrentOptionsWindow
 		}
 	}
 
-	private static class
-	DiscoveredTag
+	private static class DiscoveredTag
+		extends TagBase
 	{
-		final private String		name;
-		final private String[]		networks;
+		private static final AtomicInteger tag_ids = new AtomicInteger();
+		final private String name;
+		final private String[] networks;
+		private Tag existingTag;
 
-		private
-		DiscoveredTag(
-			String		_name,
-			String[]	_networks )
+		private DiscoveredTag(String _name, String[] _networks) {
+			super(new TagTypeDiscovery(), tag_ids.incrementAndGet(), _name);
+			name = _name;
+			networks = _networks;
+			setGroup(MessageText.getString("tag.discovery.view.heading"));
+			setImageID("image.sidebar.rcm");
+
+			TagType tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL );
+			List<Tag> tags = tt.getTags();
+			existingTag = getExistingTag(tags, _name);
+
+			if ( networks != null && networks.length > 0 ){
+				boolean boring = false;
+				String nets_str = "";
+
+				for ( String net: networks ){
+					if ( net == AENetworkClassifier.AT_PUBLIC ){
+						boring = true;
+						break;
+					}
+					nets_str += (nets_str.length()==0?"":"/") + net;
+				}
+
+				if ( !boring && nets_str.length() > 0 ){
+
+					setDescription("[" + nets_str + "]");
+				}
+			}
+
+		}
+
+		@Override
+		public int getTaggableTypes() {
+			return 0;
+		}
+
+		@Override
+		public int getTaggedCount() {
+			return 0;
+		}
+
+		@Override
+		public Set<Taggable> getTagged() {
+			return null;
+		}
+
+		@Override
+		public boolean hasTaggable(Taggable t) {
+			return false;
+		}
+
+		private static class TagTypeDiscovery
+			extends TagTypeBase
 		{
-			name		= _name;
-			networks	= _networks;
+			private final int[] color_default = {
+				0,
+				80,
+				80
+			};
+
+			public TagTypeDiscovery() {
+				super(TagType.TT_TAG_SUGGESTION, 0,
+						MessageText.getString("tagtype.discovered"));
+			}
+
+			@Override
+			public List<Tag> getTags() {
+				return new ArrayList<>();
+			}
+
+			@Override
+			public int[] getColorDefault() {
+				return color_default;
+			}
 		}
 	}
 }
