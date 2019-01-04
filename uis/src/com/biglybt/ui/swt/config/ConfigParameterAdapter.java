@@ -67,6 +67,9 @@ public class ConfigParameterAdapter extends GenericParameterAdapter
 					} else if (valueObject instanceof String) {
 						String s = COConfigurationManager.getStringParameter(parameterName);
 						owner.setValue(s);
+					} else if (valueObject instanceof byte[]) {
+						byte[] b = COConfigurationManager.getByteParameter(parameterName);
+						owner.setValue(b);
 					}
 				} catch (Exception e) {
 					Debug.out("parameterChanged trigger from ConfigParamAdapter "

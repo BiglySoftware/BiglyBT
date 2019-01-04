@@ -17,12 +17,14 @@
  */
 package com.biglybt.ui.swt.config;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA1Hasher;
@@ -38,8 +40,9 @@ PasswordParameter
 {
   String name;
   Text inputField;
+	private final int encoding;
 
-  public
+	public
   PasswordParameter(
   	Composite composite,
 	final String name)
@@ -55,11 +58,11 @@ PasswordParameter
   {
   	super(name);
     this.name = name;
+	  this.encoding = encoding;
     inputField = new Text(composite, SWT.BORDER);
-    inputField.setEchoChar('*');
+	  inputField.setEchoChar('*');
     byte[] value = COConfigurationManager.getByteParameter(name, "".getBytes());
-    if(value.length > 0)
-      inputField.setText("***");
+    inputField.setMessage(value.length > 0 ? MessageText.getString("ConfigView.password.isset") : "");
     inputField.addListener(SWT.Modify, new Listener() {
       @Override
       public void handleEvent(Event event) {
@@ -102,25 +105,20 @@ PasswordParameter
 		inputField.setLayoutData(layoutData);
 	}
 
-  public void setValue(final String value) {
+  private void setValue(final String value) {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				if (inputField == null || inputField.isDisposed()
-						|| inputField.getText().equals(value)) {
+				if (inputField == null || inputField.isDisposed()) {
 					return;
 				}
-				inputField.setText(value);
+
+				inputField.setMessage(value.length() > 0 ? MessageText.getString("ConfigView.password.isset") : "");
+				if (!inputField.getText().equals(value)) {
+					inputField.setText(value);
+				}
 			}
 		});
-
-    if (!COConfigurationManager.getParameter(name).equals(value)) {
-    	COConfigurationManager.setParameter(name, value);
-    }
-  }
-
-  public String getValue() {
-    return inputField.getText();
   }
 
   @Override
@@ -130,8 +128,25 @@ PasswordParameter
 
   @Override
   public void setValue(Object value) {
-  	if (value instanceof String) {
-  		setValue((String)value);
-  	}
+		// Note: setValue is only called if getValueObject returns non-null
+	  // non ET_PLAIN parameters return null, so this is only called for ET_PLAIN
+		if ((value instanceof byte[])
+				&& encoding == com.biglybt.pif.ui.config.PasswordParameter.ET_PLAIN) {
+			try {
+				setValue(new String((byte[]) value, "utf8"));
+			} catch (UnsupportedEncodingException e) {
+			}
+		}
   }
+
+	@Override
+	public Object getValueObject() {
+  	if (encoding == com.biglybt.pif.ui.config.PasswordParameter.ET_PLAIN) {
+		  Object val = COConfigurationManager.getParameter(name);
+		  if (val instanceof byte[]) {
+		  	return val;
+		  }
+	  }
+  	return super.getValueObject();
+	}
 }
