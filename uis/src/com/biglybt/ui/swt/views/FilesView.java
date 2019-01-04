@@ -146,6 +146,7 @@ public class FilesView
     new FileETAItem(),
     new RelocatedItem(),
     new FileModifiedItem(),
+    new DownloadNameItem(),
   };
 
   static{
