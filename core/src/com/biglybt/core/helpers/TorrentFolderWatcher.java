@@ -21,9 +21,7 @@ package com.biglybt.core.helpers;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.net.Proxy;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -460,18 +458,22 @@ public class TorrentFolderWatcher {
 										hash = torrent.getHash();
 									} catch (Exception e) { }
 	
+									DownloadManager dm;
+									
 									if ( always_rename || !save_torrents) {
 	
 										File imported = new File(folder, file.getName() + ".imported");
 	
 										TorrentUtils.move(file, imported);
 	
-										global_manager.addDownloadManager(imported.getAbsolutePath(), hash,
+										dm = 
+											global_manager.addDownloadManager(imported.getAbsolutePath(), hash,
 												data_save_path, start_state, true,false,dmia);
+										
 	
 									} else {
 	
-										global_manager.addDownloadManager(file.getAbsolutePath(), hash,
+										dm = global_manager.addDownloadManager(file.getAbsolutePath(), hash,
 												data_save_path, start_state, true, false, dmia);
 	
 										// add torrent for deletion, since there will be a
@@ -479,6 +481,36 @@ public class TorrentFolderWatcher {
 										to_delete.add(torrent);
 									}
 	
+									if ( dm != null ){
+											
+											// might have already existed, check tagging
+										
+										if ( tag_name != null ){
+											
+											TagManager tm = TagManagerFactory.getTagManager();
+	
+											TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+	
+											Tag	tag = tt.getTag( tag_name, true );
+	
+											try{
+												if ( tag == null ){
+	
+													tag = tt.createTag( tag_name, true );
+												}
+	
+												if ( !tag.hasTaggable( dm )){
+												
+													tag.addTaggable( dm );
+												}
+	
+											}catch( Throwable e ){
+	
+												Debug.out( e );
+											}
+										}
+									}
+									
 									if (Logger.isEnabled())
 										Logger.log(new LogEvent(LOGID, "Auto-imported "
 												+ file.getAbsolutePath()));
