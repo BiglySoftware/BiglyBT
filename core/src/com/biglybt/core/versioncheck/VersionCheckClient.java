@@ -952,6 +952,13 @@ public class VersionCheckClient {
 
 							Map	reply = BDecoder.decode( new BufferedInputStream( is ));
 
+							if ( reply != null ){
+								
+									// remove bogus address
+								
+								reply.remove( "source_ip_address" );
+							}
+								
 							preProcessReply( reply, v6 );
 
 							worked = true;
