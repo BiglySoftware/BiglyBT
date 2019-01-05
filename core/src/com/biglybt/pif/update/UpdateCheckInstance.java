@@ -44,6 +44,11 @@ UpdateCheckInstance
 
 
 	public static final int	PT_UI_EXTRA_MESSAGE				= 6;	// String
+	
+	
+	public static final int	PT_RESOURCE_OVERRIDES			= 7;	// Map<String,Object>
+
+	
 		/**
 		 * returns one of the above UCI_ constants
 		 * @return

@@ -31,7 +31,6 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 
 import com.biglybt.pif.update.UpdateChecker;
-import com.biglybt.ui.swt.Utils;
 
 
 /**

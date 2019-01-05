@@ -36,12 +36,12 @@ import com.biglybt.ui.swt.wizard.*;
  */
 public class InstallPluginWizard extends Wizard {
   
-  List<InstallablePlugin> plugins = new ArrayList<InstallablePlugin>();
+	List<InstallablePlugin> plugins = new ArrayList<InstallablePlugin>();
   
-  boolean shared = false;
+	boolean shared = false;
     
   
-  public InstallPluginWizard()
+	public InstallPluginWizard()
 	{
 		super("installPluginsWizard.title");			
 				
@@ -50,6 +50,14 @@ public class InstallPluginWizard extends Wizard {
 		setFirstPanel(file_panel);
 	}
   	
+	public InstallPluginWizard( String file )
+	{
+		super("installPluginsWizard.title");			
+				
+		IPWFilePanel file_panel = new IPWFilePanel(this,null, file);
+	
+		setFirstPanel(file_panel);
+	}
   	public void 
 	onClose() 
 	{

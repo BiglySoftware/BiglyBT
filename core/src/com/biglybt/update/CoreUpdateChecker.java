@@ -66,8 +66,16 @@ CoreUpdateChecker
 	public static final int	RD_SIZE_RETRIES	= 3;
 	public static final int	RD_SIZE_TIMEOUT	= 10000;
 
-	protected static CoreUpdateChecker		singleton;
+	public static final String	RES_EXPLICIT_FILE = "CoreUpdateChecker.explicit";
+	
+	protected static volatile CoreUpdateChecker		singleton;
 
+	public static CoreUpdateChecker
+	getSingleton()
+	{
+		return( singleton );
+	}
+	
 	protected PluginInterface plugin_interface;
 	protected ResourceDownloaderFactory 	rdf;
 	protected LoggerChannel					log;
@@ -86,7 +94,7 @@ CoreUpdateChecker
 	{
 		singleton	= this;
 	}
-
+	
 	protected void
 	doUsageStatsSupport()
 	{
@@ -156,219 +164,32 @@ CoreUpdateChecker
 		final UpdateChecker	checker )
 	{
 		try{
-			String	current_version = plugin_interface.getApplicationVersion();
-
-			log.log( "Update check starts: current = " + current_version );
-
-			Map	decoded = VersionCheckClient.getSingleton().getVersionCheckInfo(
-		  			first_check?VersionCheckClient.REASON_UPDATE_CHECK_START:VersionCheckClient.REASON_UPDATE_CHECK_PERIODIC);
-
-
-			displayUserMessage( decoded );
-
-			// No point complaining later if we don't have any data in the map (which is
-			// more likely due to network problems rather than the version check server
-			// *actually* returning a map with nothing in it.
-			if (decoded.isEmpty()) {return;}
-
-			String latest_version;
-			String latest_file_name;
-
-			byte[] b_version = (byte[])decoded.get("version");
-
-			if ( b_version != null ){
-
-				latest_version = new String( b_version );
-
-				plugin_interface.getPluginProperties().setProperty( LATEST_VERSION_PROPERTY, latest_version );
-
-			}else{
-
-				throw( new Exception( "No version found in reply" ));
-			}
-
-			byte[] b_filename = (byte[]) decoded.get("filename");
-
-			if ( b_filename != null ){
-
-				latest_file_name = new String( b_filename );
-
-			}else{
-
-				throw( new Exception( "No update file details in reply" ));
-			}
-
-			String	msg = "Core: latest_version = '" + latest_version + "', file = '" + latest_file_name + "'";
-
-			URL		full_download_url;
-
-			if ( latest_file_name.startsWith( "http" )){
-
-				try{
-					full_download_url	= new URL( latest_file_name );
-
-				}catch( Throwable e ){
-
-					full_download_url = null;
-
-					log.log( e );
-				}
-
-				int	pos = latest_file_name.lastIndexOf( '/' );
-
-				latest_file_name = latest_file_name.substring( pos+1 );
-
-			}else{
-
-				full_download_url	= null;
-			}
-
-			checker.reportProgress( msg );
-
-			log.log( msg );
-
-			if ( !shouldUpdate( current_version, latest_version )){
-
-				return;
-			}
-
-			final String	f_latest_version	= latest_version;
-			final String	f_latest_file_name	= latest_file_name;
-
-			ResourceDownloader	top_downloader;
-
-			if ( full_download_url == null ){
-
-				throw( new Exception( "No download URL available" ));
-
-			}else{
-
-				ResourceDownloader full_rd 		= rdf.create( full_download_url );
-				ResourceDownloader full_ap_rd 	= rdf.createWithAutoPluginProxy( full_download_url );
-
-				full_rd = rdf.getSuffixBasedDownloader( full_rd );
-
-				top_downloader =
-					rdf.getAlternateDownloader(
-							new ResourceDownloader[]
-								{
-									full_rd,
-									full_ap_rd,
-								});
-			}
-
-			top_downloader.addListener( rd_logger );
-
-				// get size so it is cached
-
-			top_downloader.getSize();
-
-
-			byte[]	info_b = (byte[])decoded.get( "info" );
-
-			String	info = null;
-
-			if ( info_b != null ){
-
-				try{
-					info = new String( info_b, "UTF-8" );
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace( e );
-				}
-			}
-
-			byte[] info_url_bytes = (byte[])decoded.get("info_url");
-
-			String info_url = null;
-
-			if ( info_url_bytes != null ){
-
-				try{
-					info_url = new String( info_url_bytes );
-
-				}catch( Exception e ){
-
-					Debug.out(e);
-				}
-			}
-
-			if ( info != null || info_url != null ){
-
-				String	check;
-
-				if ( info == null ){
-
-					check = info_url;
-
-				}else if ( info_url == null ){
-
-					check = info;
-
-				}else{
-
-					check = info + "|" + info_url;
-				}
-
-				byte[]	sig = (byte[])decoded.get( "info_sig" );
-
-				boolean	ok = false;
-
-				if ( sig == null ){
-
-					Logger.log( new LogEvent( LogIDs.LOGGER, "info signature check failed - missing signature" ));
-
-				}else{
-
-					try{
-						AEVerifier.verifyData( check, sig );
-
-						ok = true;
-
-					}catch( Throwable e ){
-
-						Logger.log( new LogEvent( LogIDs.LOGGER, "info signature check failed", e  ));
-					}
-				}
-
-				if ( !ok ){
-
-					info		= null;
-					info_url	= null;
-				}
-			}
-
 			String update_name = "Core " + Constants.AZUREUS_NAME + " Version";
+
+			UpdateCheckInstance check_inst = checker.getCheckInstance();
 			
-			String[]	desc;
-
-			if ( info == null ){
-
-				desc = new String[]{ update_name };
-
-			}else{
-
-				desc = new String[]{update_name, info };
-			}
-
-
-
-			final Update update =
-				checker.addUpdate(
-						update_name,
-						desc,
-						current_version,
-						latest_version,
-						top_downloader,
-						Update.RESTART_REQUIRED_YES );
-
-			if ( info_url != null ){
-
-				update.setDescriptionURL(info_url);
-			}
-
-			top_downloader.addListener(
+			Map<String,Object> overrides = (Map<String,Object>)check_inst.getProperty( UpdateCheckInstance.PT_RESOURCE_OVERRIDES );
+			
+			if ( overrides != null && overrides.containsKey( RES_EXPLICIT_FILE )){
+				
+				File file = (File)overrides.get( RES_EXPLICIT_FILE );
+				
+				ResourceDownloader rd 		= rdf.create( file );
+				
+				String	current_version = plugin_interface.getApplicationVersion();
+				
+				String latest_version	= "explicit";
+				
+				final Update update =
+						checker.addUpdate(
+								update_name,
+								new String[]{ "Explicit update" },
+								current_version,
+								latest_version,
+								rd,
+								Update.RESTART_REQUIRED_YES );
+				
+				rd.addListener(
 					new ResourceDownloaderAdapter()
 					{
 						@Override
@@ -377,7 +198,7 @@ CoreUpdateChecker
 							final ResourceDownloader	downloader,
 							InputStream					data )
 						{
-							installUpdate( checker, update, downloader, f_latest_file_name, f_latest_version, data );
+							installUpdate( checker, update, downloader, file.getName(), latest_version, data );
 
 							return( true );
 						}
@@ -393,6 +214,245 @@ CoreUpdateChecker
 							update.complete( false );
 						}
 					});
+					
+			}else{
+				
+				String	current_version = plugin_interface.getApplicationVersion();
+	
+				log.log( "Update check starts: current = " + current_version );
+	
+				Map	decoded = VersionCheckClient.getSingleton().getVersionCheckInfo(
+			  			first_check?VersionCheckClient.REASON_UPDATE_CHECK_START:VersionCheckClient.REASON_UPDATE_CHECK_PERIODIC);
+	
+	
+				displayUserMessage( decoded );
+	
+				// No point complaining later if we don't have any data in the map (which is
+				// more likely due to network problems rather than the version check server
+				// *actually* returning a map with nothing in it.
+				if (decoded.isEmpty()) {return;}
+	
+				String latest_version;
+				String latest_file_name;
+	
+				byte[] b_version = (byte[])decoded.get("version");
+	
+				if ( b_version != null ){
+	
+					latest_version = new String( b_version );
+	
+					plugin_interface.getPluginProperties().setProperty( LATEST_VERSION_PROPERTY, latest_version );
+	
+				}else{
+	
+					throw( new Exception( "No version found in reply" ));
+				}
+	
+				byte[] b_filename = (byte[]) decoded.get("filename");
+	
+				if ( b_filename != null ){
+	
+					latest_file_name = new String( b_filename );
+	
+				}else{
+	
+					throw( new Exception( "No update file details in reply" ));
+				}
+	
+				String	msg = "Core: latest_version = '" + latest_version + "', file = '" + latest_file_name + "'";
+	
+				URL		full_download_url;
+	
+				if ( latest_file_name.startsWith( "http" )){
+	
+					try{
+						full_download_url	= new URL( latest_file_name );
+	
+					}catch( Throwable e ){
+	
+						full_download_url = null;
+	
+						log.log( e );
+					}
+	
+					int	pos = latest_file_name.lastIndexOf( '/' );
+	
+					latest_file_name = latest_file_name.substring( pos+1 );
+	
+				}else{
+	
+					full_download_url	= null;
+				}
+	
+				checker.reportProgress( msg );
+	
+				log.log( msg );
+	
+				if ( !shouldUpdate( current_version, latest_version )){
+	
+					return;
+				}
+
+				final String	f_latest_version	= latest_version;
+				final String	f_latest_file_name	= latest_file_name;
+	
+				ResourceDownloader	top_downloader;
+	
+				if ( full_download_url == null ){
+	
+					throw( new Exception( "No download URL available" ));
+	
+				}else{
+	
+					ResourceDownloader full_rd 		= rdf.create( full_download_url );
+					ResourceDownloader full_ap_rd 	= rdf.createWithAutoPluginProxy( full_download_url );
+	
+					full_rd = rdf.getSuffixBasedDownloader( full_rd );
+	
+					top_downloader =
+						rdf.getAlternateDownloader(
+								new ResourceDownloader[]
+									{
+										full_rd,
+										full_ap_rd,
+									});
+				}
+	
+				top_downloader.addListener( rd_logger );
+	
+					// get size so it is cached
+	
+				top_downloader.getSize();
+	
+	
+				byte[]	info_b = (byte[])decoded.get( "info" );
+	
+				String	info = null;
+	
+				if ( info_b != null ){
+	
+					try{
+						info = new String( info_b, "UTF-8" );
+	
+					}catch( Throwable e ){
+	
+						Debug.printStackTrace( e );
+					}
+				}
+	
+				byte[] info_url_bytes = (byte[])decoded.get("info_url");
+	
+				String info_url = null;
+	
+				if ( info_url_bytes != null ){
+	
+					try{
+						info_url = new String( info_url_bytes );
+	
+					}catch( Exception e ){
+	
+						Debug.out(e);
+					}
+				}
+	
+				if ( info != null || info_url != null ){
+	
+					String	check;
+	
+					if ( info == null ){
+	
+						check = info_url;
+	
+					}else if ( info_url == null ){
+	
+						check = info;
+	
+					}else{
+	
+						check = info + "|" + info_url;
+					}
+	
+					byte[]	sig = (byte[])decoded.get( "info_sig" );
+	
+					boolean	ok = false;
+	
+					if ( sig == null ){
+	
+						Logger.log( new LogEvent( LogIDs.LOGGER, "info signature check failed - missing signature" ));
+	
+					}else{
+	
+						try{
+							AEVerifier.verifyData( check, sig );
+	
+							ok = true;
+	
+						}catch( Throwable e ){
+	
+							Logger.log( new LogEvent( LogIDs.LOGGER, "info signature check failed", e  ));
+						}
+					}
+	
+					if ( !ok ){
+	
+						info		= null;
+						info_url	= null;
+					}
+				}
+					
+				String[]	desc;
+	
+				if ( info == null ){
+	
+					desc = new String[]{ update_name };
+	
+				}else{
+	
+					desc = new String[]{update_name, info };
+				}
+	
+	
+	
+				final Update update =
+					checker.addUpdate(
+							update_name,
+							desc,
+							current_version,
+							latest_version,
+							top_downloader,
+							Update.RESTART_REQUIRED_YES );
+	
+				if ( info_url != null ){
+	
+					update.setDescriptionURL(info_url);
+				}
+	
+				top_downloader.addListener(
+						new ResourceDownloaderAdapter()
+						{
+							@Override
+							public boolean
+							completed(
+								final ResourceDownloader	downloader,
+								InputStream					data )
+							{
+								installUpdate( checker, update, downloader, f_latest_file_name, f_latest_version, data );
+	
+								return( true );
+							}
+	
+							@Override
+							public void
+							failed(
+								ResourceDownloader			downloader,
+								ResourceDownloaderException e )
+							{
+								//Debug.out( downloader.getName() + " failed", e );
+	
+								update.complete( false );
+							}
+						});
+			}
 		}catch( Throwable e ){
 
 			log.log( e );

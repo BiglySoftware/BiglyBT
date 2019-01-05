@@ -29,12 +29,14 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.installer.*;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.mainwindow.ListenerNeedingCoreRunning;
+import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.wizard.*;
 
 
@@ -44,6 +46,8 @@ import com.biglybt.ui.swt.wizard.*;
  */
 public class IPWFilePanel extends AbstractWizardPanel<InstallPluginWizard> {
   
+  String	initial_file;
+	
   Text txtFile;
   boolean valid = false;
   
@@ -52,6 +56,16 @@ public class IPWFilePanel extends AbstractWizardPanel<InstallPluginWizard> {
     IWizardPanel<InstallPluginWizard> previous) 
   {
     super(wizard,previous);
+  }
+  
+  public IPWFilePanel(
+		  InstallPluginWizard wizard,
+		  IWizardPanel<InstallPluginWizard> previous,
+		  String		file ) 
+  {
+	  super(wizard,previous);
+	  
+	  initial_file = file;
   }
   
   public void show() {
@@ -74,6 +88,10 @@ public class IPWFilePanel extends AbstractWizardPanel<InstallPluginWizard> {
 	Messages.setLanguageText(label,"installPluginsWizard.file.file");
 	
 	txtFile = new Text(panel,SWT.BORDER);
+	
+	if ( initial_file != null ){
+		txtFile.setText( initial_file );
+	}
 	GridData data = new GridData(GridData.FILL_HORIZONTAL);
 	txtFile.setLayoutData(data);
 	txtFile.addListener(SWT.Modify,new ListenerNeedingCoreRunning(){
@@ -96,6 +114,14 @@ public class IPWFilePanel extends AbstractWizardPanel<InstallPluginWizard> {
 	  }
 	});	
 	
+	if ( initial_file != null ){
+		CoreWaiterSWT.waitForCoreRunning(new CoreRunningListener() {
+			@Override
+			public void coreRunning(Core core) {
+				checkValidFile(core);
+			}
+		});
+	}
   }
   
   private void checkValidFile(Core core) {

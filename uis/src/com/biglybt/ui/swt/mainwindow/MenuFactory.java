@@ -78,12 +78,13 @@ import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.speedtest.SpeedTestWizard;
 import com.biglybt.ui.swt.update.UpdateMonitor;
+import com.biglybt.ui.swt.updater2.SWTUpdateChecker;
 import com.biglybt.ui.swt.views.stats.StatsView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.welcome.WelcomeWindow;
-
+import com.biglybt.update.CoreUpdateChecker;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
@@ -1147,6 +1148,35 @@ public class MenuFactory
 					buildMenu(
 						final Menu menu, MenuEvent menuEvent)
 					{
+						MenuItem manualInstall = new MenuItem(menu, SWT.PUSH);
+
+						Messages.setLanguageText(manualInstall, "menu.install.manual.update" );
+
+						manualInstall.addListener(
+							SWT.Selection,
+							new Listener()
+							{
+								@Override
+								public void
+								handleEvent(
+									Event arg )
+								{
+									Utils.execSWTThreadLater(
+											1,
+											new Runnable()
+											{
+												@Override
+												public void
+												run()
+												{
+													manualInstall();
+												}
+											});
+								}
+							});
+						
+						new MenuItem( menu, SWT.SEPARATOR );
+						
 						MenuItem viewTorrent = new MenuItem(menu, SWT.PUSH);
 
 						Messages.setLanguageText(viewTorrent, "torrent.view.info" );
@@ -1228,6 +1258,8 @@ public class MenuFactory
 								}
 							});
 
+						new MenuItem( menu, SWT.SEPARATOR );
+						
 						MenuItem bencodeToJSON = new MenuItem(menu, SWT.PUSH);
 
 						Messages.setLanguageText(bencodeToJSON, "menu.bencode.to.json" );
@@ -1282,6 +1314,8 @@ public class MenuFactory
 								}
 							});
 
+						new MenuItem( menu, SWT.SEPARATOR );
+						
 						MenuItem showChanges = new MenuItem(menu, SWT.PUSH);
 
 						Messages.setLanguageText(showChanges, "show.config.changes" );
@@ -1480,6 +1514,110 @@ public class MenuFactory
 		}
 	}
 
+	private static void
+	manualInstall()
+	{
+		final Shell shell = Utils.findAnyShell();
+
+		try{
+			FileDialog dialog = new FileDialog( shell, SWT.SYSTEM_MODAL | SWT.OPEN );
+
+			dialog.setFilterExtensions(new String[] { "*.jar;*.zip", Constants.FILE_WILDCARD });
+
+			dialog.setFilterNames(new String[] { "*.jar;*.zip", Constants.FILE_WILDCARD });
+
+			dialog.setFilterPath( TorrentOpener.getFilterPathTorrent());
+
+			dialog.setText(MessageText.getString( "manual.update.browse" ));
+
+			String str = dialog.open();
+
+			if ( str != null ){
+				
+				File file = new File( str );
+				
+				String	name = file.getName();
+				
+				if ( name.startsWith( "core_" )){
+					
+					Utils.getOffOfSWTThread(
+							new AERunnable()
+							{
+								@Override
+								public void
+								runSupport()
+								{
+									Map<String,Object> overrides = new HashMap<>();
+									
+									overrides.put( CoreUpdateChecker.RES_EXPLICIT_FILE, file );
+									
+									UpdateMonitor.getSingleton(CoreFactory.getSingleton()).performCheck(
+											true, false, false, overrides,
+											new UpdateCheckInstanceListener() {
+												public void
+												cancelled(
+													UpdateCheckInstance		instance )
+												{											
+												}
+
+												public void
+												complete(
+													UpdateCheckInstance		instance )
+												{	
+												}
+									});
+								}
+							});
+					
+				}else if ( name.startsWith( "plugins_" )){
+					
+					new InstallPluginWizard( str );
+					
+				}else if ( name.startsWith( "swt_" )){
+					
+					Utils.getOffOfSWTThread(
+							new AERunnable()
+							{
+								@Override
+								public void
+								runSupport()
+								{
+									Map<String,Object> overrides = new HashMap<>();
+									
+									overrides.put( SWTUpdateChecker.RES_EXPLICIT_FILE, file );
+									
+									UpdateMonitor.getSingleton(CoreFactory.getSingleton()).performCheck(
+											true, false, false, overrides,
+											new UpdateCheckInstanceListener() {
+												public void
+												cancelled(
+													UpdateCheckInstance		instance )
+												{											
+												}
+
+												public void
+												complete(
+													UpdateCheckInstance		instance )
+												{	
+												}
+									});
+								}
+							});
+				}else{
+					
+					throw( new Exception( "Unsupported file type - must start with 'core_', 'plugins_' or 'swt_'" ));
+				}
+			}
+		}catch( Throwable e ){
+			
+
+			MessageBoxShell mb = new MessageBoxShell( SWT.ERROR, MessageText.getString( "ConfigView.section.security.resetkey.error.title"), Debug.getNestedExceptionMessage( e ));
+
+ 			mb.setParent( shell );
+
+ 			mb.open( null );
+		}
+	}
 
 	private static void
 	handleTorrentView()
