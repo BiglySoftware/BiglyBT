@@ -933,7 +933,7 @@ public class VersionCheckClient {
 
 			if ( !v6 ){
 
-				PluginProxy proxy = AEProxyFactory.getPluginProxy( "Vuze version check", url );
+				PluginProxy proxy = AEProxyFactory.getPluginProxy( Constants.APP_NAME + " version check", url );
 
 				if ( proxy != null ){
 
