@@ -372,8 +372,8 @@ public class TorrentFolderWatcher {
 							return;
 						}
 
-						File file = new File(folder, currentFileList[i]);
-
+						File file = new File(folder, currentFileList[i]).getAbsoluteFile();
+						
 						if ( file.getName().toLowerCase( Locale.US ).endsWith( ".magnet" )) {
 							
 							handleMagnet( file );
@@ -381,18 +381,34 @@ public class TorrentFolderWatcher {
 						}else{
 							// make sure we've got a valid torrent file before proceeding
 	
+							DownloadManager dm;
+							
 							try {
 	
 								TOTorrent torrent = TorrentUtils.readFromFile(file, false);
 	
-								if (global_manager.getDownloadManager(torrent) != null) {
+								dm = global_manager.getDownloadManager( torrent );
+								
+								if ( dm != null) {
 	
 									if (Logger.isEnabled())
 										Logger.log(new LogEvent(LOGID, file.getAbsolutePath()
 												+ " is already being downloaded"));
-	
-									// we can't touch the torrent file as it is (probably)
-									// being used for the download
+										
+										// check to see if we can rename the torrent file
+
+									if ( always_rename ){
+									
+										if ( !file.equals( new File( dm.getTorrentFileName()).getAbsoluteFile())){
+											
+											File imported = new File(folder, file.getName() + ".imported");
+											
+											TorrentUtils.move(file, imported);
+										}
+									}
+									
+									applyTag( dm, tag_name );
+
 								}else if ( plugin_dm.lookupDownloadStub( torrent.getHash()) != null ){
 	
 									// archived download
@@ -429,27 +445,7 @@ public class TorrentFolderWatcher {
 											DownloadManager 		dm,
 											boolean 				for_seeding )
 										{
-											if ( tag_name != null ){
-	
-												TagManager tm = TagManagerFactory.getTagManager();
-	
-												TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
-	
-												Tag	tag = tt.getTag( tag_name, true );
-	
-												try{
-													if ( tag == null ){
-	
-														tag = tt.createTag( tag_name, true );
-													}
-	
-													tag.addTaggable( dm );
-	
-												}catch( Throwable e ){
-	
-													Debug.out( e );
-												}
-											}
+											applyTag( dm, tag_name );
 										}
 									};
 	
@@ -458,7 +454,7 @@ public class TorrentFolderWatcher {
 										hash = torrent.getHash();
 									} catch (Exception e) { }
 	
-									DownloadManager dm;
+									
 									
 									if ( always_rename || !save_torrents) {
 	
@@ -466,8 +462,7 @@ public class TorrentFolderWatcher {
 	
 										TorrentUtils.move(file, imported);
 	
-										dm = 
-											global_manager.addDownloadManager(imported.getAbsolutePath(), hash,
+										dm = global_manager.addDownloadManager(imported.getAbsolutePath(), hash,
 												data_save_path, start_state, true,false,dmia);
 										
 	
@@ -480,36 +475,10 @@ public class TorrentFolderWatcher {
 										// saved copy elsewhere
 										to_delete.add(torrent);
 									}
-	
-									if ( dm != null ){
-											
-											// might have already existed, check tagging
-										
-										if ( tag_name != null ){
-											
-											TagManager tm = TagManagerFactory.getTagManager();
-	
-											TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
-	
-											Tag	tag = tt.getTag( tag_name, true );
-	
-											try{
-												if ( tag == null ){
-	
-													tag = tt.createTag( tag_name, true );
-												}
-	
-												if ( !tag.hasTaggable( dm )){
 												
-													tag.addTaggable( dm );
-												}
-	
-											}catch( Throwable e ){
-	
-												Debug.out( e );
-											}
-										}
-									}
+										// might have already existed, check tagging
+										
+									applyTag( dm, tag_name );
 									
 									if (Logger.isEnabled())
 										Logger.log(new LogEvent(LOGID, "Auto-imported "
@@ -532,6 +501,34 @@ public class TorrentFolderWatcher {
 		}
 	}
 
+	private void
+	applyTag(
+		DownloadManager		dm,
+		String				tag_name )
+	{
+		if ( tag_name != null && dm != null ){
+			
+			TagManager tm = TagManagerFactory.getTagManager();
+
+			TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+
+			Tag	tag = tt.getTag( tag_name, true );
+
+			try{
+				if ( tag == null ){
+
+					tag = tt.createTag( tag_name, true );
+				}
+
+				tag.addTaggable( dm );
+
+			}catch( Throwable e ){
+
+				Debug.out( e );
+			}
+		}
+	}
+	
 	private List<File>	pending_magnets = new ArrayList<File>();
 	private Set<File>	active_magnets 	= new HashSet<File>();
 	private Set<File>	failed_magnets 	= new HashSet<File>();
