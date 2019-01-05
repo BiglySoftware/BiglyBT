@@ -1720,7 +1720,13 @@ WebPlugin
 									
 										a = a.trim();
 										
-										if ( a.equals( "$" )){
+										if ( a.equals( "*" )){
+											
+											result = true;
+											
+											break;
+											
+										}else if ( a.equals( "$" )){
 										
 											InetAddress bind = getServerBindIP();
 											
