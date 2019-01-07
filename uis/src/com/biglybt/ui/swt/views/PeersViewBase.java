@@ -15,6 +15,8 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -40,6 +42,7 @@ import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.IdentityHashSet;
@@ -1109,7 +1112,26 @@ PeersViewBase
 						String def = COConfigurationManager.getStringParameter( "add.peers.default", "" );
 
 						entryWindow.setPreenteredText( String.valueOf( def ), false );
-
+						
+						entryWindow.addVerifyListener(
+					    		new VerifyListener(){
+									
+									@Override
+									public void verifyText(VerifyEvent e){
+										String str = e.text.replaceAll( "[\\r\\n]+", ", " ).trim();
+										
+										while( str.startsWith( "," )){
+											str = str.substring( 1 ).trim();
+										}
+										
+										while( str.endsWith( "," )){
+											str = str.substring( 0, str.length()-1).trim();
+										}
+										
+										e.text = str;
+									}
+								});
+						
 						entryWindow.prompt(
 								new UIInputReceiverListener()
 								{
@@ -1139,32 +1161,40 @@ PeersViewBase
 											return;
 										}
 
-										String[] bits = sReturn.split( "," );
-
-										for  ( String bit: bits ){
-
-											bit = bit.trim();
-
-											int	pos = bit.lastIndexOf( ':' );
-
-											if ( pos != -1 ){
-
-												String host = bit.substring( 0, pos ).trim();
-												String port = bit.substring( pos+1 ).trim();
-
-												try{
-													int	i_port = Integer.parseInt( port );
-
-													pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
-
-												}catch( Throwable e ){
-
+										Utils.getOffOfSWTThread(
+											new AERunnable(){
+												
+												@Override
+												public void runSupport()
+												{
+													String[] bits = sReturn.split( "," );
+			
+													for  ( String bit: bits ){
+			
+														bit = bit.trim();
+			
+														int	pos = bit.lastIndexOf( ':' );
+			
+														if ( pos != -1 ){
+			
+															String host = bit.substring( 0, pos ).trim();
+															String port = bit.substring( pos+1 ).trim();
+			
+															try{
+																int	i_port = Integer.parseInt( port );
+			
+																pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+			
+															}catch( Throwable e ){
+			
+															}
+														}else{
+			
+															pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+														}
+													}
 												}
-											}else{
-
-												pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
-											}
-										}
+											});
 									}
 								});
 					}

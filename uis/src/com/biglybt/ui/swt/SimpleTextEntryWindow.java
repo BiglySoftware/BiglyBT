@@ -17,11 +17,15 @@
  */
 package com.biglybt.ui.swt;
 
+import java.util.ArrayList;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -49,6 +53,8 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	private Combo text_entry_combo;
 	private Text text_entry_text;
 
+	private java.util.List<VerifyListener> verify_listeners = new ArrayList<>();
+	
 	public SimpleTextEntryWindow() {
 	}
 
@@ -69,6 +75,13 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 		setLocalisedMessage(MessageText.getString(sLabelKey, p1));
 	}
 
+	public void
+	addVerifyListener(
+		VerifyListener		l )
+	{
+		verify_listeners.add( l );
+	}
+	
 	@Override
 	protected void promptForInput() {
 		Utils.execSWTThread(new Runnable() {
@@ -216,6 +229,17 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 	    });
 
+	    for ( VerifyListener l: verify_listeners ){
+			if ( text_entry_text != null ){
+				
+				text_entry_text.addVerifyListener( l );
+				
+			}else if ( text_entry_combo != null ){
+
+				text_entry_combo.addVerifyListener( l );
+			}
+	    }
+	    
 	    // Default behaviour - single mode results in default height of 1 line,
 	    // multiple lines has default height of 3.
 	    int line_height = this.line_height;
