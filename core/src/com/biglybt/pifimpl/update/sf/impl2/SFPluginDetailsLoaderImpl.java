@@ -235,7 +235,9 @@ SFPluginDetailsLoaderImpl
 							dl.setProperty( "URL_HOST", plugin_proxy.getURLHostRewrite());
 						}
 
-						dl = rd_factory.getRetryDownloader( dl, 5 );
+						dl.setProperty( "URL_Connect_Timeout", 5000);
+
+						dl = rd_factory.getRetryDownloader( dl, 2 );
 
 						dl.addListener( this );
 
