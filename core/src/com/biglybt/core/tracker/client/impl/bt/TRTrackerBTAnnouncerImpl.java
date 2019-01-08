@@ -1705,7 +1705,7 @@ TRTrackerBTAnnouncerImpl
 									"Message Received was : " + message));
 						}
 
- 						failure_reason = exceptionToString( e );
+ 						failure_reason = exceptionToString( con, e );
 
  						break;
  					}
@@ -1725,8 +1725,8 @@ TRTrackerBTAnnouncerImpl
  			}catch (Exception e){
 
  				//e.printStackTrace();
-
- 				failure_reason = exceptionToString( e );
+ 				
+ 				failure_reason = exceptionToString( con, e );
 
  			}finally{
 
@@ -2056,7 +2056,15 @@ TRTrackerBTAnnouncerImpl
 
  	protected String
  	exceptionToString(
- 		Throwable 	e )
+ 		Throwable 			e )
+ 	{
+ 		return( exceptionToString( null, e ));
+ 	}
+ 	
+ 	protected String
+ 	exceptionToString(
+ 		HttpURLConnection	con,
+ 		Throwable 			e )
  	{
  		String	str;
 
@@ -2090,6 +2098,18 @@ TRTrackerBTAnnouncerImpl
  			str  = "timeout";
  		}
 
+ 		if ( con != null ){
+ 			
+ 			try{
+ 				String error = FileUtil.readInputStreamAsString( con.getErrorStream(), 512 ).trim();
+ 				
+ 				if ( !error.isEmpty()){
+ 					
+ 					str += " [error=" + error + "]";
+ 				}
+ 			}catch( Throwable f ){
+ 			}
+ 		}
  		return( str );
  	}
 
@@ -2124,6 +2144,16 @@ TRTrackerBTAnnouncerImpl
 				TRTrackerUtils.getPortsForURLFullCrypto( tcp_port ):
 				TRTrackerUtils.getPortsForURL( tcp_port );
 
+		// nasty hack to deal with fact that the update tracker doesn't support port=0 (which is default with SOCKS)
+				
+	try{
+		if ( _url.getHost().endsWith( ".amazonaws.com" )){
+			
+			port_details = port_details.replaceAll( "&port=0", "&port=" + tcp_port );
+		}
+	}catch( Throwable e ){
+	}
+				
   	request.append(port_details);
   	request.append("&uploaded=").append(announce_data_provider.getTotalSent());
   	request.append("&downloaded=").append(announce_data_provider.getTotalReceived());

@@ -94,6 +94,16 @@ NetworkAdminSocksProxyImpl
 		return( user );
 	}
 
+	protected boolean
+	sameAs(
+		NetworkAdminSocksProxyImpl	other )
+	{
+		return(	host.equals( other.host ) && 
+				port.equals( other.port ) && 
+				user.equals( other.user ) &&
+				password.equals( other.password ));
+	}
+	
 	@Override
 	public String[]
 	getVersionsSupported()

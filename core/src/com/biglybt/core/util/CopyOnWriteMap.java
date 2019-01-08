@@ -49,6 +49,14 @@ public class CopyOnWriteMap<K,V> {
 		}
 	}
 
+	public void setAll(Map<K,V> m ) {
+		synchronized(this) {
+			HashMap<K,V> new_map = new HashMap<>();
+			new_map.putAll( m );
+			this.map = new_map;
+		}
+	}
+	
 	public void putAll( CopyOnWriteMap<K,V> m ){
 		putAll( m.map );
 	}

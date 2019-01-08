@@ -59,6 +59,8 @@ COConfigurationManager
 
 	public static final boolean	ENABLE_MULTIPLE_UDP_PORTS	= false;
 
+	public static final int	MAX_DATA_SOCKS_PROXIES = 3;
+	
 	private static boolean	pre_initialised;
 
 	public static synchronized void

@@ -75,11 +75,11 @@ ClientInstanceManagerImpl
 
 	private static final AEMonitor	class_mon = new AEMonitor( "ClientInstanceManager:class" );
 
-	static String	socks_proxy	= null;
+	static Set<String>	data_socks_proxies	= null;
 
 	static{
-		COConfigurationManager.addAndFireParameterListeners(
-			new String[]{ "Proxy.Data.Enable", "Proxy.Host", "Proxy.Data.Same", "Proxy.Data.Host" },
+		
+		ParameterListener listener = 
 			new ParameterListener()
 			{
 				@Override
@@ -88,28 +88,61 @@ ClientInstanceManagerImpl
 					String parameterName )
 				{
 					if ( !COConfigurationManager.getBooleanParameter("Proxy.Data.Enable")){
-
-						socks_proxy = null;
-
+	
+						data_socks_proxies = null;
+	
 						return;
 					}
-
+	
+					List<String>	hosts = new ArrayList<>();
+					
 					if ( COConfigurationManager.getBooleanParameter("Proxy.Data.Same")){
-
-						socks_proxy = COConfigurationManager.getStringParameter( "Proxy.Host" );
-
+	
+						hosts.add( COConfigurationManager.getStringParameter( "Proxy.Host" ));
+	
 					}else{
-
-						socks_proxy = COConfigurationManager.getStringParameter( "Proxy.Data.Host" );
-
+	
+						hosts.add( COConfigurationManager.getStringParameter( "Proxy.Data.Host" ));
+						
+						for ( int i=2;i<=COConfigurationManager.MAX_DATA_SOCKS_PROXIES;i++){
+						
+							hosts.add( COConfigurationManager.getStringParameter( "Proxy.Data.Host." + i ));
+						}
 					}
-
-					if ( socks_proxy != null ){
-
-						socks_proxy	= socks_proxy.trim();
+	
+					Set<String> proxies = new HashSet<>();
+					
+					for ( String h: hosts ){
+						
+						if ( h != null ){
+							
+							h = h.trim();
+							
+							if ( !h.isEmpty()){
+								
+								proxies.add( h );
+							}
+						}
+					}
+					
+					if ( proxies.isEmpty()){
+						
+						data_socks_proxies = null;
+						
+					}else{
+						
+						data_socks_proxies = proxies;
 					}
 				}
-			});
+			};
+		
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{ "Proxy.Data.Enable", "Proxy.Host", "Proxy.Data.Same", "Proxy.Data.Host" },
+			listener );
+		
+		for ( int i=2;i<=COConfigurationManager.MAX_DATA_SOCKS_PROXIES;i++){
+			COConfigurationManager.addParameterListener( "Proxy.Data.Host." + i, listener );
+		}
 	}
 
 	public static ClientInstanceManager
@@ -955,11 +988,11 @@ ClientInstanceManagerImpl
 			return( false );
 		}
 
-		String	sp = socks_proxy;
+		Set<String>	sp = data_socks_proxies;
 
 		if ( sp != null ){
 
-			if ( sp.equals( address.getHostAddress())){
+			if ( sp.contains( address.getHostAddress())){
 
 				return( false );
 			}

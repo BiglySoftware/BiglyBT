@@ -350,10 +350,20 @@ public class ConfigurationDefaults {
     def.put( "Proxy.Data.SOCKS.version", "V4" );
     def.put( "Proxy.Data.SOCKS.inform", TRUE);
     def.put( "Proxy.Data.Same", TRUE);
-    def.put( "Proxy.Data.Host", "" );
-    def.put( "Proxy.Data.Port", "" );
-    def.put( "Proxy.Data.Username", "<none>" );
-    def.put( "Proxy.Data.Password", "" );
+    
+    for ( int i=1;i<=COConfigurationManager.MAX_DATA_SOCKS_PROXIES;i++){
+    	if ( i == 1 ){
+		    def.put( "Proxy.Data.Host", "" );
+		    def.put( "Proxy.Data.Port", "" );
+		    def.put( "Proxy.Data.Username", "<none>" );
+		    def.put( "Proxy.Data.Password", "" );
+    	}else{
+    		def.put( "Proxy.Data.Host." + i, "" );
+ 		    def.put( "Proxy.Data.Port." + i, "" );
+ 		    def.put( "Proxy.Data.Username." + i, "<none>" );
+ 		    def.put( "Proxy.Data.Password." + i, "" );
+    	}
+    }
 
     def.put( "DNS Alt Servers", "8.8.8.8" );
     def.put( "DNS Alt Servers SOCKS Enable", TRUE );

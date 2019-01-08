@@ -1770,23 +1770,47 @@ addressLoop:
 			res.add( p1 );
 		}
 
+			// add in the configured one in case not restarted (restart transfers to the above props)
+		
+  		host = COConfigurationManager.getStringParameter("Proxy.Host");
+  		port = COConfigurationManager.getStringParameter("Proxy.Port");
+  		
+  		user = COConfigurationManager.getStringParameter("Proxy.Username");
+  		if ( user.trim().equalsIgnoreCase("<none>")){
+			user = "";
+		}
+  		password = COConfigurationManager.getStringParameter("Proxy.Password");
+
+		NetworkAdminSocksProxyImpl	p2 = new NetworkAdminSocksProxyImpl( host, port, user, password );
+
+		if ( p2.isConfigured()){
+
+			if ( !p1.isConfigured() || !p1.sameAs( p2 )){
+			
+				res.add( p2 );
+			}
+		}
+		
 		if ( 	COConfigurationManager.getBooleanParameter( "Proxy.Data.Enable" ) &&
 				!COConfigurationManager.getBooleanParameter( "Proxy.Data.Same" )){
 
-			host 	= COConfigurationManager.getStringParameter( "Proxy.Data.Host" );
-			port	= COConfigurationManager.getStringParameter( "Proxy.Data.Port" );
-			user	= COConfigurationManager.getStringParameter( "Proxy.Data.Username" );
-
-			if ( user.trim().equalsIgnoreCase("<none>")){
-				user = "";
-			}
-			password = COConfigurationManager.getStringParameter( "Proxy.Data.Password" );
-
-			NetworkAdminSocksProxyImpl	p2 = new NetworkAdminSocksProxyImpl( host, port, user, password );
-
-			if ( p2.isConfigured()){
-
-				res.add( p2 );
+			for ( int i=1;i<=COConfigurationManager.MAX_DATA_SOCKS_PROXIES;i++){
+				String suffix = i==1?"":("."+i);
+				host 	= COConfigurationManager.getStringParameter( "Proxy.Data.Host" + suffix );
+				port	= COConfigurationManager.getStringParameter( "Proxy.Data.Port" + suffix );
+				user	= COConfigurationManager.getStringParameter( "Proxy.Data.Username" + suffix );
+	
+				if ( user.trim().equalsIgnoreCase("<none>")){
+					user = "";
+				}
+				password = COConfigurationManager.getStringParameter( "Proxy.Data.Password" + suffix );
+	
+				NetworkAdminSocksProxyImpl	pn = new NetworkAdminSocksProxyImpl( host, port, user, password );
+	
+				if ( pn.isConfigured()){
+	
+					res.add( pn );
+				}
 			}
 		}
 

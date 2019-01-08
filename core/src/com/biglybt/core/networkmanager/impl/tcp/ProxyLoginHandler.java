@@ -26,7 +26,7 @@ import java.net.Proxy;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.ArrayList;
+import java.util.*;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
@@ -49,13 +49,11 @@ public class ProxyLoginHandler {
   private static final int	READ_NOT_DONE		= 1;
   private static final int	READ_NO_PROGRESS	= 2;
 
-  public static InetSocketAddress DEFAULT_SOCKS_SERVER_ADDRESS;
-
-  private static String default_socks_version;
-  private static String default_socks_user;
-  private static String default_socks_password;
-
-
+  private static Object								proxy_lock			= new Object();
+  private static List<ProxyInfo> 					proxies 			= new ArrayList<>();
+  private static Map<InetSocketAddress,ProxyInfo>	proxy_address_map 	= new HashMap<>();
+  private static int								proxy_index;
+  
   static{
 	  COConfigurationManager.addListener(
 			 new COConfigurationListener()
@@ -75,6 +73,7 @@ public class ProxyLoginHandler {
   readConfig()
   {
 	  boolean socks_same = COConfigurationManager.getBooleanParameter( "Proxy.Data.Same" );
+	  
 	  String socks_host = COConfigurationManager.getStringParameter( socks_same ? "Proxy.Host" : "Proxy.Data.Host" );
 	  int socks_port = 0;
 	  try{
@@ -84,28 +83,116 @@ public class ProxyLoginHandler {
 
 		  if ( socks_port_str.length() > 0 ){
 
-			  socks_port = Integer.parseInt( COConfigurationManager.getStringParameter( socks_same ? "Proxy.Port" : "Proxy.Data.Port" ) );
+			  socks_port = Integer.parseInt( socks_port_str );
 		  }
 	  }catch( Throwable e ){  Debug.printStackTrace(e);  }
 
-	  DEFAULT_SOCKS_SERVER_ADDRESS = new InetSocketAddress( socks_host, socks_port );
+	  List<ProxyInfo>	latest_proxies = new ArrayList<>();
+	  
+	  InetSocketAddress address = new InetSocketAddress( socks_host, socks_port );
 
-	  default_socks_version = COConfigurationManager.getStringParameter( "Proxy.Data.SOCKS.version" );
-	  default_socks_user  = COConfigurationManager.getStringParameter( socks_same ? "Proxy.Username" : "Proxy.Data.Username" );
-	  if ( default_socks_user.trim().equalsIgnoreCase("<none>")){
-		  default_socks_user = "";
+	  String version = COConfigurationManager.getStringParameter( "Proxy.Data.SOCKS.version" );
+	  String user = COConfigurationManager.getStringParameter( socks_same ? "Proxy.Username" : "Proxy.Data.Username" );
+	  if ( user.trim().equalsIgnoreCase("<none>")){
+		  user = "";
 	  }
-	  default_socks_password = COConfigurationManager.getStringParameter( socks_same ? "Proxy.Password" : "Proxy.Data.Password" );
+	  String password = COConfigurationManager.getStringParameter( socks_same ? "Proxy.Password" : "Proxy.Data.Password" );
+	  
+	  latest_proxies.add( new ProxyInfo( address, version, user, password ));
+	  
+	  if ( !socks_same ){
+		  
+		  for ( int i=2;i<=COConfigurationManager.MAX_DATA_SOCKS_PROXIES;i++ ){
+			  
+			  socks_host = COConfigurationManager.getStringParameter( "Proxy.Data.Host." + i ).trim();
+			  socks_port = 0;
+			  try{
+				  String socks_port_str = COConfigurationManager.getStringParameter( "Proxy.Data.Port." + i );
 
+				  socks_port_str = socks_port_str.trim();
+
+				  if ( socks_port_str.length() > 0 ){
+
+					  socks_port = Integer.parseInt( socks_port_str );
+				  }
+			  }catch( Throwable e ){  Debug.printStackTrace(e);  }
+
+			  if ( !( socks_host.isEmpty() || socks_port == 0 )){
+
+				  address = new InetSocketAddress( socks_host, socks_port );
+	
+				  user = COConfigurationManager.getStringParameter( "Proxy.Data.Username." + i );
+				  if ( user.trim().equalsIgnoreCase("<none>")){
+					  user = "";
+				  }
+				  password = COConfigurationManager.getStringParameter( "Proxy.Data.Password." + i );
+				  
+				  latest_proxies.add( new ProxyInfo( address, version, user, password ));
+			  }
+		  }
+	  }
+	  
+	  synchronized( proxy_lock ){
+		  
+		  int size = latest_proxies.size();
+		  
+		  boolean	changed = false;
+		  
+		  if ( size == proxies.size()){
+		  
+			  for ( int i=0;i<size;i++){
+				  
+				  if ( !latest_proxies.get(i).sameAs( proxies.get( i ))){
+					  
+					  changed = true;
+					  
+					  break;
+				  }
+			  }
+		  }else{
+			  
+			  changed = true;
+		  }
+		  
+		  if ( changed ){
+			  
+			  proxies = latest_proxies;
+			  
+			  proxy_address_map.clear();
+			  
+			  for ( ProxyInfo p: proxies ){
+				  
+				  proxy_address_map.put( p.address, p );
+			  }
+		  }
+	  }
   }
 
+  protected static boolean
+  isDefaultProxy(
+	InetSocketAddress	a )
+  {
+	  synchronized( proxy_lock ){
+		
+		  return( proxy_address_map.get( a ) != null );
+	  }
+  }
+  
+  protected static void
+  proxyFailed(
+	  InetSocketAddress		address,
+	  Throwable				error )
+  {
+	  
+  }
+  
   private static final AEProxySelector	proxy_selector = AEProxySelectorFactory.getSelector();
 
-  final TCPTransportImpl proxy_connection;
+  private final TCPTransportImpl proxy_connection;
   private final InetSocketAddress remote_address;
-  final ProxyListener proxy_listener;
+  private final ProxyListener proxy_listener;
 
-  private final String mapped_ip;
+  private String mapped_ip;
   private int socks5_handshake_phase = 0;
   private int socks5_address_length;
 
@@ -124,11 +211,51 @@ public class ProxyLoginHandler {
 
   public
   ProxyLoginHandler(
-	TCPTransportImpl 	proxy_connection,
-	InetSocketAddress	remote_address,
-	ProxyListener 		listener )
+	TCPTransportImpl 	_proxy_connection,
+	InetSocketAddress	_remote_address,
+	ProxyListener 		_listener )
   {
-	  this( proxy_connection, remote_address, listener, default_socks_version, default_socks_user, default_socks_password );
+	  proxy_connection 	= _proxy_connection;
+	  remote_address 	= _remote_address;
+	  proxy_listener 	= _listener;
+	  socks_version 	= "V4a";
+	  socks_user		= "";
+	  socks_password	= "";
+  
+	  connect();
+  }
+  
+  public
+  ProxyLoginHandler(
+	TCPTransportImpl 	_proxy_connection,
+	InetSocketAddress	_remote_address,
+	ProxyListener 		_listener,
+	InetSocketAddress	socks_address )
+  {
+	  proxy_connection 	= _proxy_connection;
+	  remote_address 	= _remote_address;
+	  proxy_listener 	= _listener;
+	   
+	  ProxyInfo proxy;
+	  
+	  synchronized( proxy_lock ){
+		  
+		  proxy = proxy_address_map.get( socks_address );
+	  }
+	  
+	  if ( proxy == null ){
+		  
+		  socks_version 	= "V4a";
+		  socks_user		= "";
+		  socks_password	= "";
+		  
+	  }else{
+		  socks_version 	= proxy.version;
+		  socks_user		= proxy.user;
+		  socks_password	= proxy.password;
+	  }
+	  
+	  connect();
   }
 
   public
@@ -146,6 +273,13 @@ public class ProxyLoginHandler {
     socks_version		= _socks_version;
     socks_user			= _socks_user;
     socks_password		= _socks_password;
+    
+    connect();
+  }
+  
+  private void
+  connect()
+  {
 
     if ( remote_address.isUnresolved() || remote_address.getAddress() == null ){
       // deal with long "hostnames" that we get for, e.g., I2P destinations
@@ -184,21 +318,37 @@ public class ProxyLoginHandler {
   getProxyAddress(
 	InetSocketAddress	target )
   {
-	  Proxy p = proxy_selector.getSOCKSProxy( DEFAULT_SOCKS_SERVER_ADDRESS, target  );
-
-	  	// always use a proxy here as the calling code should know what it is doing...
-
-	  if ( p.type() == Proxy.Type.SOCKS ){
-
-		  SocketAddress sa = p.address();
-
-		  if ( sa instanceof InetSocketAddress ){
-
-			  return((InetSocketAddress)sa);
+	  synchronized( proxy_lock ){
+		  
+		  int size = proxies.size();
+		  
+		  if ( size == 0 ){
+			  
+			  throw( new RuntimeException( "No proxies" ));
 		  }
-	  }
+		  
+		  ProxyInfo  proxy = proxies.get( proxy_index++ % size );
+	  
+		  Proxy p = proxy_selector.getSOCKSProxy( proxy.address, target  );
 
-	  return( DEFAULT_SOCKS_SERVER_ADDRESS );
+		  	// always use a proxy here as the calling code should know what it is doing...
+
+		  if ( p.type() == Proxy.Type.SOCKS ){
+	
+			  SocketAddress sa = p.address();
+	
+			  if ( sa instanceof InetSocketAddress ){
+	
+				  InetSocketAddress isa = (InetSocketAddress)sa;
+				  
+				  proxy_address_map.put( isa, proxy );
+				  
+				  return( isa );
+			  }
+		  }
+
+		  return( proxy.address );
+	  }
   }
 
   private void doSocks4Login( final ByteBuffer[] data ) {
@@ -628,4 +778,35 @@ public class ProxyLoginHandler {
     public void connectFailure( Throwable failure_msg );
   }
 
+  private static class
+  ProxyInfo
+  {
+	  private final InetSocketAddress 	address;
+	  private final String 				version;
+	  private final String 				user;
+	  private final String 				password;
+	  
+	  private
+	  ProxyInfo(
+		InetSocketAddress		_address,
+		String					_version,
+		String					_user,
+		String					_password )
+	  {
+		  address		= _address;
+		  version		= _version;
+		  user			= _user;
+		  password		= _password;
+	  }
+	  
+	  private boolean
+	  sameAs(
+		ProxyInfo	other )
+	  {
+		  return( address.equals( other.address ) &&
+				  version.equals( other.version ) &&
+				  user.equals( other.user ) &&
+				  password.equals( other.password ));
+	  }
+  }
 }
