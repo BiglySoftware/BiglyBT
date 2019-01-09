@@ -106,6 +106,20 @@ BasicPluginConfigModel
 
 	/**
 	 *
+	 * @param labels A list of localised message strings corresponding to each value.
+	 *
+	 * @since BiglyBT 5.7.0.1
+	 */
+	public IntListParameter
+	addIntListParameter2(
+			String    key,
+			String    resource_name,
+			int[]     values,
+			String[]  labels,
+			int	      defaultValue );
+
+	/**
+	 *
 	 * @param key
 	 * @param resource_name
 	 * @param encoding_type

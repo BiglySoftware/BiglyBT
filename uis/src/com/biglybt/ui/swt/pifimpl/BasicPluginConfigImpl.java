@@ -627,6 +627,18 @@ BasicPluginConfigImpl
 
 				swt_param.setLayoutData( gridData );
 
+			}else if ( param instanceof IntListParameterImpl ){
+
+				IntListParameterImpl	il_param = (IntListParameterImpl)param;
+
+				GridData gridData = new GridData();
+
+				gridData.widthHint = 150;
+
+				swt_param = new IntListParameter(current_composite, key, il_param.getLabels(), il_param.getValues());
+
+				swt_param.setLayoutData( gridData );
+
 			}else if ( param instanceof PasswordParameterImpl ){
 
 				GridData gridData = new GridData();
