@@ -31,6 +31,7 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -889,7 +890,7 @@ public class TorrentMenuFancy
 			final boolean newForceStart = !forceStart;
 
 			createActionButton(dms, cQuickCommands, "MyTorrentsView.menu.forceStart",
-					"forcestart", forceStartEnabled, forceStart ? SWT.BORDER : SWT.PUSH,
+					"forcestart", forceStartEnabled, !newForceStart,
 					new ListenerDMTask(dms) {
 						@Override
 						public void run(DownloadManager dm) {
@@ -1759,12 +1760,12 @@ public class TorrentMenuFancy
 			Composite cParent, String keyToolTip, String keyImage, boolean enable,
 			Listener listener) {
 		return createActionButton(dms, cParent, keyToolTip, keyImage, enable,
-				SWT.BORDER, listener);
+				false, listener);
 	}
 
 	private Control createActionButton(final DownloadManager[] dms,
 			Composite cParent, String keyToolTip, final String keyImage,
-			boolean enable, int style, final Listener listener) {
+			boolean enable, boolean selected, final Listener listener) {
 		final Canvas item = new Canvas(cParent, SWT.NO_BACKGROUND
 				| SWT.DOUBLE_BUFFERED);
 
@@ -1776,18 +1777,23 @@ public class TorrentMenuFancy
 				Control c = (Control) e.widget;
 				if (e.type == SWT.Paint) {
 					Point size = c.getSize();
+					
+					GC gc = e.gc;
+					
+					gc.fillRectangle(0, 0, size.x, size.y );
 					if (inWidget) {
-						e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
+						gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
 					} else {
-						e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
+						gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
 					}
-					e.gc.setAdvanced(true);
-					e.gc.setAntialias(SWT.ON);
-					e.gc.fillRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
-					e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_DARK_SHADOW));
-					e.gc.drawRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
-					e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
-					e.gc.drawRoundRectangle(1, 1, size.x - 3, size.y - 3, 6, 6);
+					gc.setAdvanced(true);
+					gc.setAntialias(SWT.ON);
+					
+					gc.fillRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
+					gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_DARK_SHADOW));
+					gc.drawRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
+					gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
+					gc.drawRoundRectangle(1, 1, size.x - 3, size.y - 3, 6, 6);
 
 					Image image = ImageLoader.getInstance().getImage(
 							c.isEnabled() ? keyImage : keyImage + "-disabled");
@@ -1795,7 +1801,19 @@ public class TorrentMenuFancy
 					int x = size.x / 2 - bounds.width / 2;
 					int y = size.y / 2 - bounds.height / 2;
 
-					e.gc.drawImage(image, x, y);
+					gc.drawImage(image, x, y);
+					
+					if ( selected && c.isEnabled()){
+						
+						image = ImageLoader.getInstance().getImage( "blacktick" );
+						
+						bounds = image.getBounds();
+						
+						x = 2;
+						y = size.y / 2 - bounds.height / 2;
+						
+						gc.drawImage(image, x, y);
+					}
 				} else if (e.type == SWT.MouseEnter) {
 					inWidget = true;
 					c.redraw();
