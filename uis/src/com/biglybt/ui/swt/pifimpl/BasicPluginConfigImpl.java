@@ -50,6 +50,7 @@ import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.config.BooleanParameter;
 import com.biglybt.ui.swt.config.DirectoryParameter;
 import com.biglybt.ui.swt.config.InfoParameter;
+import com.biglybt.ui.swt.config.IntListParameter;
 import com.biglybt.ui.swt.config.IntParameter;
 import com.biglybt.ui.swt.config.Parameter;
 import com.biglybt.ui.swt.config.PasswordParameter;
