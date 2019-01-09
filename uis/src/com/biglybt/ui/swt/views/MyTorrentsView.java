@@ -1313,7 +1313,7 @@ public class MyTorrentsView
 			if (isCat) {
 				CategoryUIUtils.setupCategoryMenu(menu, (Category) tag);
 			} else {
-				TagUIUtils.createSideBarMenuItems(menu, tag);
+				TagUIUtils.createSideBarMenuItemsDelayed(menu, tag);
 			}
 		}
 

@@ -704,6 +704,23 @@ public class TagUIUtils
 	}
 
 	public static void
+	createSideBarMenuItemsDelayed(
+		final Menu menu, final Tag tag )
+	{
+		menu.addMenuListener(new MenuListener() {
+			@Override
+			public void menuShown(MenuEvent e){
+				Utils.disposeSWTObjects((Object[]) menu.getItems());
+				createSideBarMenuItems( menu, tag );
+			}
+			@Override
+			public void menuHidden(MenuEvent e){
+			
+			}
+		});
+	}
+	
+	public static void
 	createSideBarMenuItems(
 		final Menu menu, final Tag tag )
 	{
