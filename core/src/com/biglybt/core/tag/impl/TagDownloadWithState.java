@@ -694,6 +694,31 @@ TagDownloadWithState
 							}
 						}
 					}
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS )){
+						
+						List<Tag> tags = getTagAssigns();
+						
+						if ( !tags.isEmpty()){
+
+							rs_async.dispatch(
+								new AERunnable()
+								{
+									@Override
+									public void
+									runSupport()
+									{
+										for ( Tag t: tags ){
+										
+											if ( !t.hasTaggable( dm )){
+											
+												t.addTaggable( dm );
+											}
+										}
+									}
+								});
+						}
+					}
 				}
 			}
 		}else{
@@ -1821,7 +1846,8 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_SCRIPT |
 					TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE |
 					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI |
-					TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC );
+					TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC |
+					TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS );
 
 		}else if ( getTagType().getTagType() == TagType.TT_DOWNLOAD_STATE ){
 

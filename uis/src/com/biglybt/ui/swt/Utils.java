@@ -36,10 +36,11 @@ import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.dnd.*;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.*;
@@ -71,7 +72,6 @@ import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
-import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.BufferedTruncatedLabel;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -4021,6 +4021,44 @@ public class Utils
 		}
 	}
 
+	public static Composite
+	createScrolledComposite(
+		Composite parent )
+	{
+		parent.setLayout( new GridLayout( 1, true ));
+		
+		ScrolledComposite scrolled_comp = new ScrolledComposite( parent , SWT.V_SCROLL );
+		
+		scrolled_comp.setExpandHorizontal(true);
+		
+		scrolled_comp.setExpandVertical(true);
+		
+		GridLayout layout = new GridLayout();
+		
+		layout.horizontalSpacing = 0;
+		layout.verticalSpacing = 0;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		
+		scrolled_comp.setLayout(layout);
+		
+		GridData gridData = new GridData(GridData.FILL_BOTH );
+		
+		scrolled_comp.setLayoutData(gridData);
+	
+	    Composite result = new Canvas(scrolled_comp, SWT.NULL);
+		
+	    scrolled_comp.setContent(result);
+		scrolled_comp.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(ControlEvent e) {
+				updateScrolledComposite(scrolled_comp);
+			}
+		});
+		
+		return( result );
+	}
+	
 	public static void updateScrolledComposite(ScrolledComposite sc) {
 		Control content = sc.getContent();
 		if (content != null && !content.isDisposed()) {

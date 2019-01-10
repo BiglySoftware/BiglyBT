@@ -19,11 +19,17 @@
 package com.biglybt.ui.swt.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.skin.*;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
@@ -33,6 +39,7 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.skin.StandardButtonsArea;
+import com.biglybt.ui.swt.views.utils.TagButtonsUI;
 
 /**
  * @author TuxPaper
@@ -173,4 +180,81 @@ public class TagUIUtilsV3
 		dialog.open();
 	}
 
+	public static void 
+	showTagSelectionDialog(
+		List<Tag>				tags,
+		List<Tag>				selected_tags,
+		TagSelectionListener	listener )
+	{
+		final SkinnedDialog dialog = new SkinnedDialog("skin3_dlg_selecttags", "shell",	SWT.DIALOG_TRIM | SWT.RESIZE );
+		
+		SWTSkin skin = dialog.getSkin();
+
+		SWTSkinObject so = skin.getSkinObject("main-area");
+		
+		if ( so instanceof SWTSkinObjectContainer){
+				
+			Composite main = ((SWTSkinObjectContainer)so).getComposite();
+			
+			main.setLayout( new GridLayout(1,true));
+			
+			Composite comp = Utils.createScrolledComposite( main );
+			
+			comp.setLayoutData( new GridData( GridData.FILL_BOTH ));
+			
+			TagButtonsUI tagButtonsUI = new TagButtonsUI();
+					
+			tagButtonsUI.buildTagGroup(
+				tags, comp, false, 
+				new TagButtonsUI.TagButtonTrigger(){
+					
+					@Override
+					public Boolean tagSelectedOverride(Tag tag){
+						return null;
+					}
+					
+					@Override
+					public void tagButtonTriggered(Tag tag, boolean doTag){
+						
+					}
+				});
+			
+			tagButtonsUI.setSelectedTags( selected_tags);
+		
+			SWTSkinObject soButtonArea = skin.getSkinObject("bottom-area");
+			if (soButtonArea instanceof SWTSkinObjectContainer) {
+				StandardButtonsArea buttonsArea = new StandardButtonsArea() {
+					@Override
+					protected void clicked(int buttonValue) {
+						if (buttonValue == SWT.OK) {
+	
+							listener.selected( tagButtonsUI.getSelectedTags());
+						}
+	
+						dialog.close();
+					}
+				};
+				buttonsArea.setButtonIDs(new String[] {
+					MessageText.getString("Button.ok"),
+					MessageText.getString("Button.cancel")
+				});
+				buttonsArea.setButtonVals(new Integer[] {
+					SWT.OK,
+					SWT.CANCEL
+				});
+				buttonsArea.swt_createButtons(
+						((SWTSkinObjectContainer) soButtonArea).getComposite());
+			}
+		}
+		
+		dialog.open();
+	}
+	
+	public interface
+	TagSelectionListener
+	{
+		void
+		selected(
+			List<Tag>		tags );
+	}
 }

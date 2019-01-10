@@ -78,6 +78,7 @@ import com.biglybt.ui.swt.mdi.BaseMdiEntry;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.ViewUtils;
 import com.biglybt.ui.swt.views.ViewUtils.SpeedAdapter;
@@ -771,7 +772,8 @@ public class TagUIUtils
 						TagFeatureExecOnAssign.ACTION_RESUME,
 						TagFeatureExecOnAssign.ACTION_SCRIPT,
 						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI,
-						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC };
+						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC,
+						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS };
 
 				String[] action_keys =
 					{ 	"label.apply.options.template",
@@ -784,7 +786,8 @@ public class TagUIUtils
 						"v3.MainWindow.button.resume",
 						"label.script",
 						"label.post.magnet.to.chat",
-						"label.init.save.loc.move" };
+						"label.init.save.loc.move",
+						"label.assign.tags"};
 
 				for ( int i=0;i<action_ids.length;i++ ){
 
@@ -880,6 +883,57 @@ public class TagUIUtils
 										tf_eoa.setPostMessageChannel( chat );
 									}
 								});
+							
+						}else if ( action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ){
+							
+							final MenuItem action_item = new MenuItem( eoa_menu, SWT.PUSH);
+
+							List<Tag> tags = tf_eoa.getTagAssigns();
+
+							String msg = MessageText.getString( action_keys[i] );
+
+							String tag_str = "";
+							
+							for ( Tag t: tags ){
+								
+								tag_str += (tag_str==""?"":",") + t.getTagName( true );
+							}
+							
+							if ( !tag_str.isEmpty()){
+
+								msg += ": " + tag_str;
+							}
+
+							msg += "...";
+
+							action_item.setText( msg );
+
+							action_item.addListener( SWT.Selection, new Listener(){
+								@Override
+								public void
+								handleEvent(Event event)
+								{
+									TagManager tagManager = TagManagerFactory.getTagManager();
+									
+									TagType tt = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+									
+									List<Tag> all_tags = new ArrayList<>( tt.getTags());
+
+									all_tags.remove( tag );
+									
+									TagUIUtilsV3.showTagSelectionDialog( 
+										all_tags, 
+										tags,
+										new TagUIUtilsV3.TagSelectionListener()
+										{
+											@Override
+											public void selected(List<Tag> tags){
+												
+												tf_eoa.setTagAssigns( tags );
+											}
+										});
+								}
+							});
 							
 						}else{
 

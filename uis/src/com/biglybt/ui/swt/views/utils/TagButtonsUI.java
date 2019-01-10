@@ -20,7 +20,9 @@ package com.biglybt.ui.swt.views.utils;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
@@ -267,7 +269,70 @@ implements PaintListener
 		}
 	}
 
+	public void setSelectedTags( List<Tag> tags ){
+		
+		List<Control> layoutChanges = new ArrayList<>();
+		
+		Set<Tag> tag_set = new HashSet<>( tags );
+		
+		for (Button button : buttons) {
 
+			Tag tag = (Tag) button.getData("Tag");
+			if (tag == null) {
+				continue;
+			}
+			
+			boolean changed = false;
+			
+			String name = tag.getTagName(true);
+			
+			if ( !button.getText().equals(name)){
+			
+				button.setText(name);
+				
+				changed = true;
+			}
+			
+			boolean select = tag_set.contains( tag );
+			
+			if ( select != button.getSelection()){
+			
+				button.setSelection( select );
+			
+				changed = true;
+			}
+			
+			if ( changed ){
+				
+				layoutChanges.add(button);
+				
+				button.getParent().redraw();
+			}
+		}
+		
+		if (layoutChanges.size() > 0) {
+			cMainComposite.layout(layoutChanges.toArray(new Control[0]));
+		}
+	}
+	
+	public List<Tag>
+	getSelectedTags()
+	{
+		List<Tag> result = new ArrayList<>();
+		
+		for (Button button : buttons) {
+
+			if ( button.getSelection()){
+				Tag tag = (Tag) button.getData("Tag");
+				if (tag != null) {
+					result.add( tag );
+				}
+			}
+		}
+
+		return( result );
+	}
+	
 	public boolean updateFields(List<Taggable> taggables) {
 		List<Control> layoutChanges = new ArrayList<>();
 		for (Button button : buttons) {
