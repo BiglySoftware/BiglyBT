@@ -187,6 +187,17 @@ BasicPluginConfigModelImpl
 	}
 
 	@Override
+	public FloatParameter addFloatParameter2(String key, String resource_name,
+			float defaultValue, float minValue, float maxValue, boolean allowZero,
+			int digitsAfterDecimal) {
+		FloatParameterImpl res = new FloatParameterImpl(configobj, resolveKey(key),
+				resource_name, defaultValue, minValue, maxValue, digitsAfterDecimal);
+		parameters.add(res);
+
+		return res;
+	}
+
+	@Override
 	public com.biglybt.pif.ui.config.PasswordParameter
 	addPasswordParameter2(
 		String 		key,

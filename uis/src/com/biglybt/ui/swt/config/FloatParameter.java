@@ -18,14 +18,14 @@
 package com.biglybt.ui.swt.config;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
-import com.biglybt.core.config.*;
+import org.eclipse.swt.widgets.*;
 
-public class FloatParameter {
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.ui.swt.Utils;
+
+public class FloatParameter
+	extends Parameter
+{
 
   Text inputField;
   float fMinValue = 0;
@@ -35,16 +35,17 @@ public class FloatParameter {
   String sParamName;
   boolean allowZero = false;
 
-  public FloatParameter(Composite composite, final String name) {
-    fDefaultValue = COConfigurationManager.getFloatParameter(name);
-    initialize(composite,name);
+  public FloatParameter(Composite composite, String configID) {
+    super(configID);
+    fDefaultValue = COConfigurationManager.getFloatParameter(configID);
+    initialize(composite,configID);
   }
 
-  public FloatParameter(Composite composite, final String name,
-                        float minValue, float maxValue, boolean allowZero,
-                        int digitsAfterDecimal) {
-    fDefaultValue = COConfigurationManager.getFloatParameter(name);
-    initialize(composite,name);
+	public FloatParameter(Composite composite, String configID, float minValue,
+			float maxValue, boolean allowZero, int digitsAfterDecimal) {
+		super(configID);
+    fDefaultValue = COConfigurationManager.getFloatParameter(configID);
+    initialize(composite,configID);
     fMinValue = minValue;
     fMaxValue = maxValue;
     this.allowZero = allowZero;
@@ -99,22 +100,29 @@ public class FloatParameter {
       public void handleEvent(Event event) {
         try {
           float val = Float.parseFloat(inputField.getText());
-          if (val < fMinValue) {
-            if (!(allowZero && val == 0)) {
-              inputField.setText(String.valueOf(fMinValue));
-              COConfigurationManager.setParameter(name, fMinValue);
-            }
-          }
-          if (val > fMaxValue) {
-            if (fMaxValue > -1) {
-            	inputField.setText(String.valueOf(fMaxValue));
-            	COConfigurationManager.setParameter(name, fMaxValue);
-            }
-          }
+          swt_setInputField(val);
         }
         catch (Exception e) {}
       }
     });
+  }
+
+  private void swt_setInputField(float val) {
+    try {
+      if (val < fMinValue) {
+        if (!(allowZero && val == 0)) {
+          inputField.setText(String.valueOf(fMinValue));
+          COConfigurationManager.setParameter(sParamName, fMinValue);
+        }
+      }
+      if (val > fMaxValue) {
+        if (fMaxValue > -1) {
+          inputField.setText(String.valueOf(fMaxValue));
+          COConfigurationManager.setParameter(sParamName, fMaxValue);
+        }
+      }
+    }
+    catch (Exception e) {}
   }
 
 
@@ -126,5 +134,14 @@ public class FloatParameter {
   getControl()
   {
   	return( inputField );
+  }
+
+  @Override
+  public void setValue(Object value) {
+
+    if (value instanceof Number) {
+      float f = ((Number) value).floatValue();
+      Utils.execSWTThread(() -> swt_setInputField(f));
+    }
   }
 }

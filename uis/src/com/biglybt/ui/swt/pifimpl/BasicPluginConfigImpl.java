@@ -189,7 +189,7 @@ BasicPluginConfigImpl
 
 		for (int i=0;i<parameters.length;i++){
 
-			final ParameterImpl	param = 	(ParameterImpl)parameters[i];
+			ParameterImpl	param = 	(ParameterImpl)parameters[i];
 
 			if ( param.getMinimumRequiredUserMode() > userMode ){
 
@@ -197,6 +197,19 @@ BasicPluginConfigImpl
 			}
 
 			ParameterGroupImpl	pg = param.getGroup();
+			
+			if (pg != null && pg.getGroup() != null
+					&& group_map.get(pg.getGroup()) == null
+					&& tab_folder_map.get(pg.getGroup()) == null) {
+
+				// Parent group hasn't been created yet.  
+				// Hack in a label to parent group, so it gets created
+				// doesn't solve deeper nesting
+				i--;
+				param = new LabelParameterImpl(null, "", "");
+				pg = pg.getGroup();
+				param.setGroup(pg);
+			}
 
 			if ( pg == null ){
 
@@ -206,120 +219,8 @@ BasicPluginConfigImpl
 
 				ParameterTabFolderImpl	tab_folder = pg.getTabFolder();
 
-				if ( tab_folder != null ){
-
-					ParameterGroupImpl tab_group = tab_folder.getGroup();
-
-					CTabFolder	tf = tab_folder_map.get( tab_folder );
-
-					if ( tf == null ){
-
-						Composite tab_parent = current_composite;
-
-						if ( tab_group != null ){
-
-							String tg_resource = tab_group.getResourceName();
-
-							if ( tg_resource != null ){
-
-								tab_parent = group_map.get( tab_group );
-
-								if ( tab_parent == null ){
-
-									tab_parent = new Group( current_composite, SWT.NULL);
-
-									Messages.setLanguageText(tab_parent, tg_resource );
-
-									GridData gridData = new GridData(GridData.FILL_HORIZONTAL );
-
-									gridData.horizontalSpan = 2;
-
-									if ( tab_group.getMinimumRequiredUserMode() > userMode ){
-
-										tab_parent.setVisible( false );
-
-										gridData.widthHint = 0;
-										gridData.heightHint = 0;
-									}
-
-									tab_parent.setLayoutData(gridData);
-
-									layout = new GridLayout();
-
-									layout.numColumns = tab_group.getNumberColumns() * 2;
-
-									tab_parent.setLayout(layout);
-
-									group_map.put( tab_group, tab_parent );
-								}
-							}
-						}
-
-						tf = new CTabFolder( tab_parent, SWT.LEFT );
-
-						tf.setBorderVisible( tab_group == null );
-
-						tf.setTabHeight(20);
-
-						GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
-
-						grid_data.horizontalSpan = 2;
-
-						if ( tab_folder.getMinimumRequiredUserMode() > userMode ){
-
-							tf.setVisible( false );
-
-							grid_data.widthHint = 0;
-							grid_data.heightHint = 0;
-						}
-
-						tf.setLayoutData(grid_data);
-
-						tab_folder_map.put( tab_folder, tf );
-					}
-
-					Composite tab_composite = tab_map.get( pg );
-
-					if ( tab_composite == null ){
-
-						CTabItem tab_item = new CTabItem(tf, SWT.NULL);
-
-						String tab_name = pg.getResourceName();
-
-						if ( tab_name != null ){
-
-							Messages.setLanguageText( tab_item, tab_name );
-						}
-
-						tab_composite = new Composite( tf, SWT.NONE );
-						tab_item.setControl( tab_composite );
-
-						layout = new GridLayout();
-						layout.numColumns = 2;
-
-						tab_composite.setLayout(layout);
-
-						GridData grid_data = new GridData(GridData.FILL_BOTH);
-
-						if ( pg.getMinimumRequiredUserMode() > userMode ){
-
-							tab_composite.setVisible( false );
-
-							grid_data.widthHint = 0;
-							grid_data.heightHint = 0;
-						}
-
-						tab_composite.setLayoutData(grid_data);
-
-						if ( tf.getItemCount() == 1 ){
-
-							tf.setSelection( tab_item );
-						}
-
-						tab_map.put( pg, tab_composite );
-					}
-
-					current_composite = tab_composite;
+				if ( tab_folder != null ) {
+					current_composite = handleTabFolder(userMode, current_composite, group_map, tab_folder_map, tab_map, pg, tab_folder);
 				}
 
 				Composite comp = group_map.get( pg );
@@ -343,7 +244,9 @@ BasicPluginConfigImpl
 
 					GridData grid_data = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
 
-					grid_data.grabExcessHorizontalSpace = true;
+					if (!use_composite) {
+						grid_data.grabExcessHorizontalSpace = true;
+					}
 					grid_data.horizontalSpan = 2;
 
 					if ( pg.getMinimumRequiredUserMode() > userMode ){
@@ -359,6 +262,10 @@ BasicPluginConfigImpl
 					layout = new GridLayout();
 
 					layout.numColumns = pg.getNumberColumns() * 2;
+
+					if (use_composite) {
+						layout.marginWidth = layout.marginHeight = 0;
+					}
 
 					current_composite.setLayout(layout);
 
@@ -379,9 +286,9 @@ BasicPluginConfigImpl
 				// we can only use the check-box's label form for boolean params if the text
 				// doesn't include formatting (it doesn't handle it)
 
-			if ( 	label_text.indexOf('\n') != -1 ||
+			if (!label_text.isEmpty() && (label_text.indexOf('\n') != -1 ||
 					label_text.indexOf('\t') != -1 ||
-					!(param instanceof BooleanParameterImpl)) {
+					!(param instanceof BooleanParameterImpl))) {
 
 				String hyperlink = null;
 				if (param instanceof HyperlinkParameterImpl) {
@@ -434,10 +341,10 @@ BasicPluginConfigImpl
 								{
 									if ( f_label.isDisposed()){
 
-										param.removeListener( this );
+										p.removeListener( this );
 									}else{
 
-										final String hyperlink = ((HyperlinkParameterImpl)param).getHyperlink();
+										final String hyperlink = ((HyperlinkParameterImpl)p).getHyperlink();
 
 										if (hyperlink != null) {
 
@@ -490,11 +397,11 @@ BasicPluginConfigImpl
 						{
 							if ( swt_param.getControls()[0].isDisposed()){
 
-								param.removeListener( this );
+								p.removeListener( this );
 
 							}else{
 
-								((BooleanParameter)swt_param).setSelected(((BooleanParameterImpl)param).getValue());
+								((BooleanParameter)swt_param).setSelected(((BooleanParameterImpl)p).getValue());
 							}
 						}
 					});
@@ -520,11 +427,43 @@ BasicPluginConfigImpl
 							{
 								if ( swt_param.getControls()[0].isDisposed()){
 
-									param.removeListener( this );
+									p.removeListener( this );
 
 								}else{
 
-									((IntParameter)swt_param).setValue(((IntParameterImpl)param).getValue());
+									((IntParameter)swt_param).setValue(((IntParameterImpl)p).getValue());
+								}
+							}
+						});
+
+
+				GridData gridData = new GridData();
+				if (!Constants.isUnix) {
+					gridData.widthHint = 100;
+				}
+
+				swt_param.setLayoutData( gridData );
+
+			} else if ( param instanceof FloatParameterImpl ) {
+
+				FloatParameterImpl float_param = (FloatParameterImpl) param;
+				swt_param = new FloatParameter(current_composite,key , float_param.getMinValue(), float_param.getMaxValue(), float_param.isAllowZero(), float_param.getNumDigitsAfterDecimal());
+
+				param.addListener(
+						new ParameterListener()
+						{
+							@Override
+							public void
+							parameterChanged(
+									com.biglybt.pif.ui.config.Parameter	p )
+							{
+								if ( swt_param.getControls()[0].isDisposed()){
+
+									p.removeListener( this );
+
+								}else{
+
+									swt_param.setValue(((FloatParameterImpl)p).getValue());
 								}
 							}
 						});
@@ -700,7 +639,7 @@ BasicPluginConfigImpl
 								boolean		caused_internally )
 							{
 								try {
-									param.parameterChanged( "" );
+									_param.parameterChanged( "" );
 								} catch (Throwable t) {
 									Debug.out(t);
 								}
@@ -711,6 +650,7 @@ BasicPluginConfigImpl
 					UISWTParameterContext context = (UISWTParameterContext)((UIParameterImpl)param).getContext();
 					Composite internal_composite = new Composite(current_composite, SWT.NULL);
 					GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+					gridData.horizontalSpan = label == null ? 2 : 1;
 					internal_composite.setLayoutData(gridData);
 					boolean initialised_component = true;
 					try {context.create(internal_composite);}
@@ -739,7 +679,7 @@ BasicPluginConfigImpl
 				gridData.heightHint = 100;
 				swt_param.setLayoutData( gridData );
 
-			}else{
+			}else if (label != null){
 
 					// label
 
@@ -752,6 +692,8 @@ BasicPluginConfigImpl
 				label.setLayoutData(gridData);
 
 				swt_param	= null;
+			} else {
+				swt_param = null;
 			}
 
 			if ( swt_param == null ){
@@ -967,5 +909,123 @@ BasicPluginConfigImpl
 		}
 
 		return( main_tab );
+	}
+
+	@NotNull
+	private Composite handleTabFolder(int userMode, Composite current_composite, Map<ParameterGroupImpl, Composite> group_map, Map<ParameterTabFolderImpl, CTabFolder> tab_folder_map, Map<ParameterGroupImpl, Composite> tab_map, ParameterGroupImpl pg, ParameterTabFolderImpl tab_folder) {
+		GridLayout layout;
+		ParameterGroupImpl tab_group = tab_folder.getGroup();
+
+		CTabFolder	tf = tab_folder_map.get( tab_folder );
+
+		if ( tf == null ){
+
+			Composite tab_parent = current_composite;
+
+			if ( tab_group != null ){
+
+				String tg_resource = tab_group.getResourceName();
+
+				if ( tg_resource != null ){
+
+					tab_parent = group_map.get( tab_group );
+
+					if ( tab_parent == null ){
+
+						tab_parent = new Group( current_composite, SWT.NULL);
+
+						Messages.setLanguageText(tab_parent, tg_resource );
+
+						GridData gridData = new GridData(GridData.FILL_HORIZONTAL );
+
+						gridData.horizontalSpan = 2;
+
+						if ( tab_group.getMinimumRequiredUserMode() > userMode ){
+
+							tab_parent.setVisible( false );
+
+							gridData.widthHint = 0;
+							gridData.heightHint = 0;
+						}
+
+						tab_parent.setLayoutData(gridData);
+
+						layout = new GridLayout();
+
+						layout.numColumns = tab_group.getNumberColumns() * 2;
+
+						tab_parent.setLayout(layout);
+
+						group_map.put( tab_group, tab_parent );
+					}
+				}
+			}
+
+			tf = new CTabFolder( tab_parent, SWT.LEFT );
+
+			tf.setBorderVisible( tab_group == null );
+
+			tf.setTabHeight(20);
+
+			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+
+			grid_data.horizontalSpan = 2;
+
+			if ( tab_folder.getMinimumRequiredUserMode() > userMode ){
+
+				tf.setVisible( false );
+
+				grid_data.widthHint = 0;
+				grid_data.heightHint = 0;
+			}
+
+			tf.setLayoutData(grid_data);
+
+			tab_folder_map.put( tab_folder, tf );
+		}
+
+		Composite tab_composite = tab_map.get( pg );
+
+		if ( tab_composite == null ){
+
+			CTabItem tab_item = new CTabItem(tf, SWT.NULL);
+
+			String tab_name = pg.getResourceName();
+
+			if ( tab_name != null ){
+
+				Messages.setLanguageText( tab_item, tab_name );
+			}
+
+			tab_composite = new Composite( tf, SWT.NONE );
+			tab_item.setControl( tab_composite );
+
+			layout = new GridLayout();
+			layout.numColumns = 2;
+
+			tab_composite.setLayout(layout);
+
+			GridData grid_data = new GridData(GridData.FILL_BOTH);
+
+			if ( pg.getMinimumRequiredUserMode() > userMode ){
+
+				tab_composite.setVisible( false );
+
+				grid_data.widthHint = 0;
+				grid_data.heightHint = 0;
+			}
+
+			tab_composite.setLayoutData(grid_data);
+
+			if ( tf.getItemCount() == 1 ){
+
+				tf.setSelection( tab_item );
+			}
+
+			tab_map.put( pg, tab_composite );
+		}
+
+		current_composite = tab_composite;
+		return current_composite;
 	}
 }

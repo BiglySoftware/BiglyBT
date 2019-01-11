@@ -108,7 +108,7 @@ BasicPluginConfigModel
 	 *
 	 * @param labels A list of localised message strings corresponding to each value.
 	 *
-	 * @since BiglyBT 5.7.0.1
+	 * @since BiglyBT 1.7.0.1
 	 */
 	public IntListParameter
 	addIntListParameter2(
@@ -117,6 +117,20 @@ BasicPluginConfigModel
 			int[]     values,
 			String[]  labels,
 			int	      defaultValue );
+
+	/**
+	 *
+	 * @since BiglyBT 1.7.0.1
+	 */
+	public FloatParameter
+	addFloatParameter2(
+			String    key,
+			String    resource_name,
+			float	    defaultValue,
+			float     minValue,
+			float     maxValue,
+			boolean   allowZero,
+			int digitsAfterDecimal);
 
 	/**
 	 *
