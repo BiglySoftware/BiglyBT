@@ -29,6 +29,7 @@ import java.util.*;
 import java.util.List;
 
 import com.biglybt.core.util.Constants;
+import com.biglybt.ui.swt.config.FloatParameter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -447,7 +448,9 @@ BasicPluginConfigImpl
 			} else if ( param instanceof FloatParameterImpl ) {
 
 				FloatParameterImpl float_param = (FloatParameterImpl) param;
-				swt_param = new FloatParameter(current_composite,key , float_param.getMinValue(), float_param.getMaxValue(), float_param.isAllowZero(), float_param.getNumDigitsAfterDecimal());
+				swt_param = new FloatParameter(current_composite, key,
+						float_param.getMinValue(), float_param.getMaxValue(),
+						float_param.isAllowZero(), float_param.getNumDigitsAfterDecimal());
 
 				param.addListener(
 						new ParameterListener()
@@ -911,8 +914,11 @@ BasicPluginConfigImpl
 		return( main_tab );
 	}
 
-	@NotNull
-	private Composite handleTabFolder(int userMode, Composite current_composite, Map<ParameterGroupImpl, Composite> group_map, Map<ParameterTabFolderImpl, CTabFolder> tab_folder_map, Map<ParameterGroupImpl, Composite> tab_map, ParameterGroupImpl pg, ParameterTabFolderImpl tab_folder) {
+	private Composite handleTabFolder(int userMode, Composite current_composite,
+			Map<ParameterGroupImpl, Composite> group_map,
+			Map<ParameterTabFolderImpl, CTabFolder> tab_folder_map,
+			Map<ParameterGroupImpl, Composite> tab_map, ParameterGroupImpl pg,
+			ParameterTabFolderImpl tab_folder) {
 		GridLayout layout;
 		ParameterGroupImpl tab_group = tab_folder.getGroup();
 
