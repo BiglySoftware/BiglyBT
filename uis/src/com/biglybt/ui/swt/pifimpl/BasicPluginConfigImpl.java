@@ -228,7 +228,16 @@ BasicPluginConfigImpl
 
 				if ( comp == null ){
 
-					boolean nested = pg.getGroup() != null || tab_folder != null;
+					ParameterGroupImpl pgParent = pg.getGroup();
+
+					boolean nested = pgParent != null || tab_folder != null;
+
+					if (tab_folder == null) {
+						Composite composite = group_map.get(pgParent);
+						if (composite != null) {
+							current_composite = composite;
+						}
+					}
 
 					Composite group_parent = nested?current_composite:main_tab;
 
@@ -245,9 +254,7 @@ BasicPluginConfigImpl
 
 					GridData grid_data = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
 
-					if (!use_composite) {
-						grid_data.grabExcessHorizontalSpace = true;
-					}
+					grid_data.grabExcessHorizontalSpace = true;
 					grid_data.horizontalSpan = 2;
 
 					if ( pg.getMinimumRequiredUserMode() > userMode ){
