@@ -31,9 +31,9 @@ public class FloatParameterImpl
 
 	private boolean limited;
 
-	private float min_value;
+	private float min_value = 0;
 
-	private float max_value;
+	private float max_value = -1;
 
 	private boolean allowZero = true;
 
