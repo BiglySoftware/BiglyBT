@@ -481,10 +481,10 @@ public class MessageBoxShell
 							public void changed(LocationEvent event) {
 							}
 						});
-						browser.addOpenWindowListener(new OpenWindowListener() {
+						browser.addOpenWindowListener(new BrowserWrapper.OpenWindowListener() {
 							@Override
-							public void open(WindowEvent event) {
-								event.required = true;
+							public void open(BrowserWrapper.WindowEvent event) {
+								event.setRequired( true );
 							}
 						});
 					}

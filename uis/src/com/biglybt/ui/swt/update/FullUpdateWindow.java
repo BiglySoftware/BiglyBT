@@ -138,9 +138,9 @@ public class FullUpdateWindow
 				}
 			});
 
-			browser.addOpenWindowListener(new OpenWindowListener() {
+			browser.addOpenWindowListener(new BrowserWrapper.OpenWindowListener() {
 				@Override
-				public void open(WindowEvent event) {
+				public void open(BrowserWrapper.WindowEvent event) {
 					final BrowserWrapper subBrowser = Utils.createSafeBrowser(shell,
 							SWT.NONE);
 					if (subBrowser == null) {

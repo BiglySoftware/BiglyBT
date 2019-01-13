@@ -23,6 +23,8 @@
 package com.biglybt.ui.swt;
 
 import org.eclipse.swt.browser.Browser;
+//import org.eclipse.swt.chromium.Browser;
+
 import org.eclipse.swt.browser.CloseWindowListener;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.OpenWindowListener;
@@ -48,6 +50,8 @@ BrowserWrapperSWT
 		int				style )
 	{
 		browser = new Browser( composite, style );
+		
+		browser.setData( BrowserWrapperSWTFactory.BROWSER_KEY, true );
 	}
 
 	@Override
@@ -68,7 +72,7 @@ BrowserWrapperSWT
 	setBrowser(
 		WindowEvent		event )
 	{
-		event.browser = browser;
+		((WindowEventImpl)event).setBrowser( browser );
 	}
 
 	@Override
@@ -275,7 +279,25 @@ BrowserWrapperSWT
 	addOpenWindowListener(
 		OpenWindowListener		l )
 	{
-		browser.addOpenWindowListener( l );
+		/*
+		browser.addOpenWindowListener( 
+			new org.eclipse.swt.chromium.OpenWindowListener(){
+				
+				@Override
+				public void open(org.eclipse.swt.chromium.WindowEvent event){
+					l.open( new WindowEventImpl( event ));
+				}
+			});
+		*/
+		
+		browser.addOpenWindowListener( 
+				new org.eclipse.swt.browser.OpenWindowListener(){
+					
+					@Override
+					public void open(org.eclipse.swt.browser.WindowEvent event){
+						l.open( new WindowEventImpl( event ));
+					}
+				});
 	}
 
 	@Override
@@ -338,9 +360,34 @@ BrowserWrapperSWT
 				}
 			};
 
-		return( new BrowserFunctionSWT( bf, swt_bf ));
+		return( new BrowserFunctionSWTChromium( bf, swt_bf ));
 	}
+	
+	/*
+	@Override
+	public BrowserFunction
+	addBrowserFunction(
+		String						name,
+		final BrowserFunction		bf )
+	{
+		org.eclipse.swt.chromium.BrowserFunction swt_bf =
+			new org.eclipse.swt.chromium.BrowserFunction(
+				browser,
+				name )
+			{
+				@Override
+				public Object
+				function(
+					Object[] arguments )
+				{
+					return( bf.function(arguments));
+				}
+			};
 
+		return( new BrowserFunctionSWTChromium( bf, swt_bf ));
+	}
+	*/
+	
 	public static class
 	BrowserFunctionSWT
 		extends BrowserFunction
@@ -381,4 +428,140 @@ BrowserWrapperSWT
 			swt_bf.dispose();
 		}
 	}
+	
+	public static class
+	BrowserFunctionSWTChromium
+		extends BrowserFunction
+	{
+		private final BrowserFunction							bf;
+		private final org.eclipse.swt.browser.BrowserFunction	swt_bf;
+
+		private
+		BrowserFunctionSWTChromium(
+			BrowserFunction								_bf,
+			org.eclipse.swt.browser.BrowserFunction	_swt_bf )
+		{
+			bf		= _bf;
+			swt_bf 	= _swt_bf;
+
+			bf.bind( this );
+		}
+
+		@Override
+		public Object
+		function(
+			Object[] arguments )
+		{
+			return( bf.function( arguments ));
+		}
+
+		@Override
+		public boolean
+		isDisposed()
+		{
+			return( swt_bf.isDisposed());
+		}
+
+		@Override
+		public void
+		dispose()
+		{
+			swt_bf.dispose();
+		}
+	}
+	
+	private class
+	WindowEventImpl
+		implements WindowEvent
+	{
+		private org.eclipse.swt.browser.WindowEvent	event;
+
+		private
+		WindowEventImpl(
+			org.eclipse.swt.browser.WindowEvent	_event )
+		{
+			event	= _event;
+		}
+		
+		@Override
+		public void setRequired(boolean required){
+			event.required = required;
+		}
+		
+		private void
+		setBrowser(
+			org.eclipse.swt.browser.Browser	browser )
+		{
+			event.browser = browser;
+		}
+	}
+	
+	/*
+	public static class
+	BrowserFunctionSWTChromium
+		extends BrowserFunction
+	{
+		private final BrowserFunction							bf;
+		private final org.eclipse.swt.chromium.BrowserFunction	swt_bf;
+
+		private
+		BrowserFunctionSWTChromium(
+			BrowserFunction								_bf,
+			org.eclipse.swt.chromium.BrowserFunction	_swt_bf )
+		{
+			bf		= _bf;
+			swt_bf 	= _swt_bf;
+
+			bf.bind( this );
+		}
+
+		@Override
+		public Object
+		function(
+			Object[] arguments )
+		{
+			return( bf.function( arguments ));
+		}
+
+		@Override
+		public boolean
+		isDisposed()
+		{
+			return( swt_bf.isDisposed());
+		}
+
+		@Override
+		public void
+		dispose()
+		{
+			swt_bf.dispose();
+		}
+	}
+	
+	private class
+	WindowEventImpl
+		implements WindowEvent
+	{
+		private org.eclipse.swt.chromium.WindowEvent	event;
+
+		private
+		WindowEventImpl(
+			org.eclipse.swt.chromium.WindowEvent	_event )
+		{
+			event	= _event;
+		}
+		
+		@Override
+		public void setRequired(boolean required){
+			event.required = required;
+		}
+		
+		private void
+		setBrowser(
+			org.eclipse.swt.chromium.Browser	browser )
+		{
+			event.browser = browser;
+		}
+	}
+	*/
 }
