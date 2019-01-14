@@ -3288,7 +3288,7 @@ public class Utils
 		final BrowserWrapper browser = BrowserWrapper.createBrowser(parent, style);
   		browser.addDisposeListener(new DisposeListener() {
   			@Override
-			  public void widgetDisposed(DisposeEvent e)
+			  public void widgetDisposed(DisposeEvent event)
   			{
   					/*
   					 * Intent here seems to be to run all pending events through the queue to ensure
@@ -3301,43 +3301,48 @@ public class Utils
   					 * the browser. So added timeout
   					 */
 
-  				browser.setUrl("about:blank");
-
-  				browser.setVisible(false);
-
-  				final boolean[]	done = {false};
-
-  				final long start = SystemTime.getMonotonousTime();
-
-  				execSWTThreadLater(
-  					250,
-  					new Runnable()
-  					{
-  						@Override
-						  public void
-  						run()
-  						{
-  							synchronized( done ){
-
-  								done[0] = true;
-  							}
-  						}
-  					});
-
-  				while(!e.display.isDisposed() && e.display.readAndDispatch()){
-
-  					synchronized( done ){
-
-  						if ( done[0] || SystemTime.getMonotonousTime() - start > 500 ){
-
-  							break;
-  						}
-  					}
+  				try{
+	  				browser.setUrl("about:blank");
+	
+	  				browser.setVisible(false);
+	
+	  				final boolean[]	done = {false};
+	
+	  				final long start = SystemTime.getMonotonousTime();
+	
+	  				execSWTThreadLater(
+	  					250,
+	  					new Runnable()
+	  					{
+	  						@Override
+							  public void
+	  						run()
+	  						{
+	  							synchronized( done ){
+	
+	  								done[0] = true;
+	  							}
+	  						}
+	  					});
+	
+	  				while(!event.display.isDisposed() && event.display.readAndDispatch()){
+	
+	  					synchronized( done ){
+	
+	  						if ( done[0] || SystemTime.getMonotonousTime() - start > 500 ){
+	
+	  							break;
+	  						}
+	  					}
+	  				}
+  				}catch( Throwable e ){
+  					
   				}
   			}
   		});
   		return browser ;
 		} catch (Throwable e) {
+			e.printStackTrace();
 		}
 		return null;
 	}

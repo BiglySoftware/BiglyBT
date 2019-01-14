@@ -276,32 +276,6 @@ BrowserWrapperSWT
 
 	@Override
 	public void
-	addOpenWindowListener(
-		OpenWindowListener		l )
-	{
-		/*
-		browser.addOpenWindowListener( 
-			new org.eclipse.swt.chromium.OpenWindowListener(){
-				
-				@Override
-				public void open(org.eclipse.swt.chromium.WindowEvent event){
-					l.open( new WindowEventImpl( event ));
-				}
-			});
-		*/
-		
-		browser.addOpenWindowListener( 
-				new org.eclipse.swt.browser.OpenWindowListener(){
-					
-					@Override
-					public void open(org.eclipse.swt.browser.WindowEvent event){
-						l.open( new WindowEventImpl( event ));
-					}
-				});
-	}
-
-	@Override
-	public void
 	addCloseWindowListener(
 		CloseWindowListener		l )
 	{
@@ -339,7 +313,23 @@ BrowserWrapperSWT
 	{
 		browser.removeStatusTextListener( l );
 	}
-
+	
+	
+	@Override
+	public void
+	addOpenWindowListener(
+		OpenWindowListener		l )
+	{
+		browser.addOpenWindowListener( 
+				new org.eclipse.swt.browser.OpenWindowListener(){
+					
+					@Override
+					public void open(org.eclipse.swt.browser.WindowEvent event){
+						l.open( new WindowEventImpl( event ));
+					}
+				});
+	}
+	
 	@Override
 	public BrowserFunction
 	addBrowserFunction(
@@ -360,34 +350,9 @@ BrowserWrapperSWT
 				}
 			};
 
-		return( new BrowserFunctionSWTChromium( bf, swt_bf ));
+		return( new BrowserFunctionSWT( bf, swt_bf ));
 	}
-	
-	/*
-	@Override
-	public BrowserFunction
-	addBrowserFunction(
-		String						name,
-		final BrowserFunction		bf )
-	{
-		org.eclipse.swt.chromium.BrowserFunction swt_bf =
-			new org.eclipse.swt.chromium.BrowserFunction(
-				browser,
-				name )
-			{
-				@Override
-				public Object
-				function(
-					Object[] arguments )
-				{
-					return( bf.function(arguments));
-				}
-			};
 
-		return( new BrowserFunctionSWTChromium( bf, swt_bf ));
-	}
-	*/
-	
 	public static class
 	BrowserFunctionSWT
 		extends BrowserFunction
@@ -397,47 +362,6 @@ BrowserWrapperSWT
 
 		private
 		BrowserFunctionSWT(
-			BrowserFunction							_bf,
-			org.eclipse.swt.browser.BrowserFunction	_swt_bf )
-		{
-			bf		= _bf;
-			swt_bf 	= _swt_bf;
-
-			bf.bind( this );
-		}
-
-		@Override
-		public Object
-		function(
-			Object[] arguments )
-		{
-			return( bf.function( arguments ));
-		}
-
-		@Override
-		public boolean
-		isDisposed()
-		{
-			return( swt_bf.isDisposed());
-		}
-
-		@Override
-		public void
-		dispose()
-		{
-			swt_bf.dispose();
-		}
-	}
-	
-	public static class
-	BrowserFunctionSWTChromium
-		extends BrowserFunction
-	{
-		private final BrowserFunction							bf;
-		private final org.eclipse.swt.browser.BrowserFunction	swt_bf;
-
-		private
-		BrowserFunctionSWTChromium(
 			BrowserFunction								_bf,
 			org.eclipse.swt.browser.BrowserFunction	_swt_bf )
 		{
@@ -495,17 +419,56 @@ BrowserWrapperSWT
 			event.browser = browser;
 		}
 	}
+
 	
 	/*
+	@Override
+	public void
+	addOpenWindowListener(
+		OpenWindowListener		l )
+	{
+		browser.addOpenWindowListener( 
+			new org.eclipse.swt.chromium.OpenWindowListener(){
+				
+				@Override
+				public void open(org.eclipse.swt.chromium.WindowEvent event){
+					l.open( new WindowEventImpl( event ));
+				}
+			});
+	}
+	
+	@Override
+	public BrowserFunction
+	addBrowserFunction(
+		String						name,
+		final BrowserFunction		bf )
+	{
+		org.eclipse.swt.chromium.BrowserFunction swt_bf =
+			new org.eclipse.swt.chromium.BrowserFunction(
+				browser,
+				name )
+			{
+				@Override
+				public Object
+				function(
+					Object[] arguments )
+				{
+					return( bf.function(arguments));
+				}
+			};
+
+		return( new BrowserFunctionSWTChromium( bf, swt_bf ));
+	}
+	
 	public static class
-	BrowserFunctionSWTChromium
+	BrowserFunctionSWT
 		extends BrowserFunction
 	{
 		private final BrowserFunction							bf;
 		private final org.eclipse.swt.chromium.BrowserFunction	swt_bf;
 
 		private
-		BrowserFunctionSWTChromium(
+		BrowserFunctionSWT(
 			BrowserFunction								_bf,
 			org.eclipse.swt.chromium.BrowserFunction	_swt_bf )
 		{
