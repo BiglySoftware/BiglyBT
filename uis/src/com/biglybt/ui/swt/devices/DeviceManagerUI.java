@@ -5225,7 +5225,7 @@ DeviceManagerUI
 								@Override
 								public void run(){
 									
-									UPnPService service = findService( (DeviceUPnP)device, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1" );
+									UPnPService service = findService( (DeviceUPnP)device, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:" );
 									
 									if ( service != null ){
 										
@@ -5638,7 +5638,7 @@ DeviceManagerUI
 		{
 			for ( UPnPService service: device.getServices()){
 				
-				if ( service.getServiceType().equalsIgnoreCase( type )){
+				if ( GeneralUtils.startsWithIgnoreCase( service.getServiceType(), type )){
 					
 					return( service );
 				}

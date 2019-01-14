@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.net.upnp.UPnPDevice;
 import com.biglybt.net.upnp.UPnPDeviceImage;
 import com.biglybt.net.upnp.UPnPService;
@@ -103,7 +104,7 @@ UPnPDeviceImpl
 			}
 		}
 
-		boolean	interested = device_type.equalsIgnoreCase( "urn:schemas-upnp-org:device:WANConnectionDevice:1" );
+		boolean	interested = GeneralUtils.startsWithIgnoreCase( device_type, "urn:schemas-upnp-org:device:WANConnectionDevice:" );
 
 		root_device.getUPnP().log( indent + friendly_name + (interested?" *":""));
 

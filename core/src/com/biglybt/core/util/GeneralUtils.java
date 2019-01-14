@@ -359,4 +359,12 @@ GeneralUtils
 		
 		return( len > 0 && isDoubleQuote( str.charAt(len-1)));
 	}
+	
+	public static boolean
+	startsWithIgnoreCase(
+		String 	s1,
+		String	s2 )
+	{
+		return( s1.toLowerCase( Locale.US ).startsWith( s2.toLowerCase( Locale.US )));
+	}
 }

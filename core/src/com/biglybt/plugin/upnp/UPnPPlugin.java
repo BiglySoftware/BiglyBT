@@ -1148,8 +1148,8 @@ UPnPPlugin
 
 			String	service_type = s.getServiceType();
 
-			if ( 	service_type.equalsIgnoreCase( "urn:schemas-upnp-org:service:WANIPConnection:1") ||
-					service_type.equalsIgnoreCase( "urn:schemas-upnp-org:service:WANPPPConnection:1")){
+			if ( 	GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANIPConnection:") ||
+					GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANPPPConnection:")){
 
 				final UPnPWANConnection	wan_service = (UPnPWANConnection)s.getSpecificService();
 
@@ -1170,7 +1170,7 @@ UPnPPlugin
 
 				interesting++;
 
-			}else if ( 	service_type.equalsIgnoreCase( "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1")){
+			}else if ( 	GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:")){
 
 				/*
 				try{

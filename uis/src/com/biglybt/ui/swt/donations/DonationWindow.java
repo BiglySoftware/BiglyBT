@@ -311,7 +311,7 @@ public class DonationWindow
 
 		if ( !browser.isFake()){
 
-			SimpleTimer.addEvent("donation.pageload", SystemTime.getOffsetTime(6000),
+			SimpleTimer.addEvent("donation.pageload", SystemTime.getOffsetTime(15000),
 					new TimerEventPerformer() {
 						@Override
 						public void perform(TimerEvent event) {
