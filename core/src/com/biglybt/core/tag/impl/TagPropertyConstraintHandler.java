@@ -1964,6 +1964,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_UPLOADED			 	= 27;
 		private static final int	KW_NAME				 	= 28;
 		private static final int	KW_FILE_NAMES		 	= 29;
+		private static final int	KW_SAVE_PATH		 	= 30;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2030,6 +2031,7 @@ TagPropertyConstraintHandler
 			
 			keyword_map.put( "name", 					new int[]{KW_NAME,					DEP_STATIC });
 			keyword_map.put( "file_names", 				new int[]{KW_FILE_NAMES,			DEP_STATIC });
+			keyword_map.put( "save_path", 				new int[]{KW_SAVE_PATH,			DEP_STATIC });
 		}
 
 		private class
@@ -2790,15 +2792,21 @@ TagPropertyConstraintHandler
 			{
 				String str = (String)args[index];
 
+				int		kw;
+				
 				if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
 
 					return( new String[]{ str.substring( 1, str.length() - 1 )});
 
 				}else if ( str.equals( "name" )){
 
+					kw = KW_NAME;
+					
 					return( new String[]{ dm.getDisplayName()});
 
 				}else if ( str.equals( "file_names" ) || str.equals( "filenames" )){
+					
+					kw = KW_FILE_NAMES;
 					
 					String[] result = (String[])dm.getUserData( DM_FILE_FILE_NAMES );
 					
@@ -2817,6 +2825,12 @@ TagPropertyConstraintHandler
 					}
 					
 					return( result );
+					
+				}else if ( str.equals( "save_path" ) || str.equals( "savepath" )){
+					
+					kw = KW_SAVE_PATH;
+					
+					return( new String[]{ dm.getAbsoluteSaveLocation().getAbsolutePath()});
 					
 				}else{
 
