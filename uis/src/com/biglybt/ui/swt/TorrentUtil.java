@@ -2749,7 +2749,7 @@ public class TorrentUtil
 		}
 	}
 	
-	public static void repositionManual(final TableView tv,
+	public static void repositionManual(final TableView<DownloadManager> tv,
 			final DownloadManager[] dms, final Shell shell,
 			final boolean isSeedingView) {
 		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
@@ -2874,12 +2874,13 @@ public class TorrentUtil
 
 	}
 
-	private static void moveSelectedTorrentsTo(TableView tv,
+	private static void moveSelectedTorrentsTo(TableView<DownloadManager> tv,
 			DownloadManager[] dms, int iNewPos) {
 		if (dms == null || dms.length == 0) {
 			return;
 		}
 
+		/*
 		TableColumnCore sortColumn = tv == null ? null : tv.getSortColumn();
 		boolean isSortAscending = sortColumn == null ? true
 				: sortColumn.isSortAscending();
@@ -2897,12 +2898,69 @@ public class TorrentUtil
 					iNewPos--;
 			}
 		}
+		*/
+		
+		// selected downloads are in the required order relative to iNewPos
+		// problem is that some of the selection's positions might screw things up - if you put download X in the right location
+		// and then go to position Y next, but Y happens to be before X in the list, then X will be shunted down into the wrong place
+		// when Y is removed
+		// easiest fix is to fill positions < iNewPos before moving downloads into place
+		 
+		GlobalManager gm = dms[0].getGlobalManager();
+		
+		ArrayList<DownloadManager> all_dms = new ArrayList<>( tv.getDataSources());
 
-		if (tv != null) {
-			boolean bForceSort = sortColumn.getName().equals("#");
-			tv.columnInvalidate("#");
-			tv.refreshTable(bForceSort);
+		if ( iNewPos > 1 ){
+						
+			all_dms.sort(
+				new Comparator<DownloadManager>()
+				{
+					@Override
+					public int compare(DownloadManager o1, DownloadManager o2){
+						return( o1.getPosition() - o2.getPosition());
+					}
+				});
+			
+			IdentityHashSet<DownloadManager> moving = new IdentityHashSet<>( Arrays.asList( dms ));
+			
+			int pos		= 1;
+			int to_move = iNewPos-1;
+			
+			for ( DownloadManager dm: all_dms ){
+							
+				if ( !moving.contains( dm )){
+					
+					gm.moveTo( dm, pos++ );
+					
+					to_move--;
+					
+					if ( to_move == 0 ){
+						
+						break;
+					}
+				}
+			}
 		}
+				
+		for (int i = 0; i < dms.length; i++) {
+			
+			DownloadManager dm = dms[i];
+
+			gm.moveTo(dm, iNewPos++);
+
+			if ( iNewPos > all_dms.size()){
+				
+				iNewPos = 1;
+			}
+		}
+		
+		TableColumnCore sortColumn = tv.getSortColumn();
+
+		boolean bForceSort = sortColumn.getName().equals("#");
+		
+		tv.columnInvalidate("#");
+		
+		tv.refreshTable(bForceSort);
 	}
 
 	protected static void changeDirSelectedTorrents(DownloadManager[] dms,

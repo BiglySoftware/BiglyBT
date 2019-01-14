@@ -244,7 +244,7 @@ public class TorrentMenuFancy
 
 	private Listener headerListener;
 
-	private TableViewSWT<?> tv;
+	private TableViewSWT<DownloadManager> tv;
 
 	private boolean isSeedingView;
 
@@ -278,7 +278,7 @@ public class TorrentMenuFancy
 
 	private PaintListener paintListenerArrow;
 
-	public TorrentMenuFancy(final TableViewSWT<?> tv,
+	public TorrentMenuFancy(final TableViewSWT<DownloadManager> tv,
 			final boolean isSeedingView, Shell parentShell,
 			final DownloadManager[] dms, final String tableID) {
 		this.tv = tv;
