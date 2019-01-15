@@ -756,14 +756,22 @@ public class TabbedEntry
 			return;
 		}
 
+		boolean changed = false;
 		String newText = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_TEXT);
 		if (newText != null) {
-			setTitle(newText);
+			changed |= setTitleSupport(newText);
 		} else {
 			String titleID = getTitleID();
 			if (titleID != null) {
-				setTitleID(titleID);
+				changed |= setTitleID2(titleID);
 			}
+		}
+
+		// We could go through each TITLE_TEXT, TITLE_INDICATOR_TEXT, TITLE_INDICATOR_COLOR, etc
+		// to see which has changed, but since we are being explicitly called, we
+		// just assume something changed and redraw
+		if (!changed) {
+			redraw();
 		}
 	}
 

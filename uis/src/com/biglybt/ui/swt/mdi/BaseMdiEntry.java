@@ -926,6 +926,9 @@ public abstract class BaseMdiEntry
 
 	@Override
 	public void setImageLeftID(String id) {
+		setImageLeftID2(id);
+	}
+	public boolean setImageLeftID2(String id) {
 		boolean changed = id != imageLeftID && ( id == null || imageLeftID == null || !id.equals( imageLeftID ));
 		
 		imageLeftID = id;
@@ -934,6 +937,7 @@ public abstract class BaseMdiEntry
 		if ( changed ){
 			redraw();
 		}
+		return changed;
 	}
 
 	/* (non-Javadoc)
@@ -993,6 +997,8 @@ public abstract class BaseMdiEntry
 			return;
 		}
 
+		boolean changed = false;
+
 		String imageID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_IMAGEID);
 		
 			// don't overwrite any any existing (probably statically assigned) image id with a
@@ -1002,13 +1008,20 @@ public abstract class BaseMdiEntry
 			if ( imageID.length() == 0 ){
 				imageID = null;
 			}
-						
-			setImageLeftID(  imageID);
+
+			changed |= setImageLeftID2(  imageID);
 		}
 		
 		String logID = (String) viewTitleInfo.getTitleInfoProperty(ViewTitleInfo.TITLE_LOGID);
 		if (logID != null) {
 			setLogID(logID);
+		}
+
+		// We could go through each TITLE_TEXT, TITLE_INDICATOR_TEXT, TITLE_INDICATOR_COLOR, etc
+		// to see which has changed, but since we are being explicitly called, we
+		// just assume something changed and redraw
+		if (!changed) {
+			redraw();
 		}
 	}
 
@@ -1168,10 +1181,16 @@ public abstract class BaseMdiEntry
 
 	@Override
 	public void setTitleID( String id ) {
+		setTitleID2(id);
+	}
+
+	public boolean setTitleID2( String id ) {
 		if ( super.setTitleIDSupport( id )) {
 			
 			redraw();
+			return true;
 		}
+		return false;
 	}
 	
 	@Override
