@@ -20,8 +20,6 @@
 package com.biglybt.ui.swt.components.graphics;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
@@ -249,9 +247,15 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
       Rectangle bounds = drawCanvas.getClientArea();
 
       //If bufferedImage is not null, dispose it
-      if(bufferImage != null && ! bufferImage.isDisposed())
+      if(bufferImage != null && ! bufferImage.isDisposed()){
         bufferImage.dispose();
-
+      }
+      
+      if ( bounds.isEmpty()){
+    	  bufferImage = null;
+    	  return;
+      }
+      
       bufferImage = new Image(drawCanvas.getDisplay(),bounds);
 
       GC gcImage = new GC(bufferImage);

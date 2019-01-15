@@ -199,6 +199,13 @@ Plot3D
 				bufferImage.dispose();
 			}
 
+			if ( bounds.isEmpty()){
+				
+				bufferImage = null;
+				
+				return;
+			}
+			
 			bufferImage = new Image( canvas.getDisplay(), bounds );
 
 			GC image = new GC( bufferImage );
