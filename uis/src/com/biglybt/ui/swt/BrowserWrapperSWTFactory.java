@@ -18,21 +18,48 @@
 
 package com.biglybt.ui.swt;
 
+import java.util.*;
+
 import org.eclipse.swt.SWTError;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+
+import com.biglybt.core.util.CopyOnWriteList;
+import com.biglybt.core.util.Debug;
 
 public class 
 BrowserWrapperSWTFactory
 {
 	public static String BROWSER_KEY	= "BrowserWrapperSWTFactory.browser";
 
+	private static CopyOnWriteList<BrowserProvider>	providers = new CopyOnWriteList<>();
+	
 	public static BrowserWrapper
 	create(
 		Composite		composite,
 		int				style )
 	{
 		try{
+			Map<String,Object> properties = new HashMap<>();
+					
+			for ( BrowserProvider provider: providers ){
+				
+				try{
+					BrowserWrapper browser = provider.create( composite, style, properties);
+					
+					if ( browser != null ){
+						
+						return( browser );
+					}
+					
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+				
+				Utils.disposeComposite( composite, false );
+			}
+			
 			return( new BrowserWrapperSWT( composite, style ));
 
 		}catch( SWTError error ){
@@ -49,5 +76,35 @@ BrowserWrapperSWTFactory
 
 			return( new BrowserWrapperFake( composite, style, error ));
 		}
+	}
+	
+	public static void
+	registerProvider(
+		BrowserProvider		provider )
+	{
+		synchronized( providers ){
+			
+			providers.add( provider );
+		}
+	}
+	
+	public static void
+	unregisterProvider(
+		BrowserProvider		provider )
+	{
+		synchronized( providers ){
+			
+			providers.remove( provider );
+		}
+	}
+	
+	public interface
+	BrowserProvider
+	{
+		public BrowserWrapper
+		create(
+			Composite			composite,
+			int					style,
+			Map<String,Object>	properties );	
 	}
 }

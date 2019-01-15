@@ -27,6 +27,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.biglybt.core.Core;
@@ -786,13 +787,16 @@ public class TorrentOpener {
 			}
 
 			if (fOriginal.length() > TorrentUtils.MAX_TORRENT_FILE_SIZE ) {
-				UIFunctionsManager.getUIFunctions().showErrorMessage(
-						"OpenTorrentWindow.mb.openError", fOriginal.toString(),
-						new String[] {
-							UrlUtils.decode(sOriginatingLocation),
-							"Too large to be a torrent"
-						});
-				return false;
+				if ( !fOriginal.getName().toLowerCase( Locale.US ).endsWith( ".biglybt" )){
+				
+					UIFunctionsManager.getUIFunctions().showErrorMessage(
+							"OpenTorrentWindow.mb.openError", fOriginal.toString(),
+							new String[] {
+								UrlUtils.decode(sOriginatingLocation),
+								"Too large to be a torrent"
+							});
+					return false;
+				}
 			}
 
 			torrentFile = TorrentUtils.copyTorrentFileToSaveDir(fOriginal, true);

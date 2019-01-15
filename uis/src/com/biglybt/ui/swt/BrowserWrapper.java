@@ -20,7 +20,6 @@
 
 package com.biglybt.ui.swt;
 
-import org.eclipse.swt.SWTError;
 import org.eclipse.swt.browser.CloseWindowListener;
 import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.browser.ProgressListener;
@@ -201,7 +200,7 @@ BrowserWrapper
 	{
 		private BrowserFunction		delegate;
 
-		protected void
+		public void
 		bind(
 			BrowserFunction		_delegate )
 		{

@@ -220,7 +220,7 @@ public class Utils
 				}
 				try {
 					control.dispose();
-				} catch (SWTException e) {
+				} catch (Throwable e) {
 					Debug.printStackTrace(e);
 				}
 			}
@@ -229,7 +229,7 @@ public class Utils
 		if (!composite.isDisposed() && disposeSelf)
 			try {
 				composite.dispose();
-			} catch (SWTException e) {
+			} catch (Throwable e) {
 				Debug.printStackTrace(e);
 			}
 	}
