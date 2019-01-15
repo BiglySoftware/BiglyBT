@@ -2228,7 +2228,7 @@ TagPropertyConstraintHandler
 
 					fn_type = FT_CONTAINS;
 
-					params_ok = params.length == 2;
+					params_ok = params.length == 2 || (  params.length == 3 && getNumericLiteral( params, 2 ));
 
 				}else if ( func_name.equals( "lowercase" )){
 
@@ -2240,13 +2240,36 @@ TagPropertyConstraintHandler
 
 					fn_type = FT_MATCHES;
 
-					params_ok = params.length == 2 && getStringLiteral( params, 1 );
+					params_ok = ( params.length == 2 || params.length == 3) && getStringLiteral( params, 1 );
 
+					if ( params_ok && params.length == 3 ){
+						
+						params_ok = getNumericLiteral( params, 2 );
+					}
+					
 					if ( params_ok ){
 						
 						try{
-							Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-														
+							boolean	case_insensitive = true;
+							
+							if ( params.length == 3 ){
+																	
+								Number flags = (Number)params[2];
+									
+								if ( flags.intValue() == 0 ){
+										
+									case_insensitive = false;
+								}
+							}
+							
+							if ( case_insensitive ){
+								
+								Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+								
+							}else{
+								
+								Pattern.compile((String)params[1] );
+							}
 						}catch( Throwable e ) {
 							
 							tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, "Invalid constraint pattern: " + params[1] + ": " + e.getMessage());
@@ -2569,12 +2592,37 @@ TagPropertyConstraintHandler
 						String[]	s1s = getStrings( dm, tags, params, 0, debug );
 						
 						String		s2 = getString( dm, tags, params, 1, debug );
-
-						for ( String s1: s1s ){
 						
-							if ( s1.contains( s2 )){
+						boolean	case_insensitive = false;
+						
+						if ( params.length == 3 && getNumericLiteral( params, 2 )){
+							
+							Number flags = (Number)params[2];
+							
+							if ( flags.intValue() == 1 ){
 								
-								return( true );
+								case_insensitive = true;
+							}
+						}
+						
+						if ( case_insensitive ){
+							
+							s2 = s2.toLowerCase( Locale.US );
+							
+							for ( String s1: s1s ){
+								
+								if ( s1.toLowerCase( Locale.US).contains( s2 )){
+									
+									return( true );
+								}
+							}
+						}else{						
+							for ( String s1: s1s ){
+							
+								if ( s1.contains( s2 )){
+									
+									return( true );
+								}
 							}
 						}
 						
@@ -2604,9 +2652,28 @@ TagPropertyConstraintHandler
 								
 							}else{
 	
+								boolean	case_insensitive = true;
+								
+								if ( params.length == 3 ){
+																		
+									Number flags = (Number)params[2];
+										
+									if ( flags.intValue() == 0 ){
+											
+										case_insensitive = false;
+									}
+								}
+								
 								try{
-									pattern = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
-	
+									if ( case_insensitive ){
+									
+										pattern = Pattern.compile((String)params[1], Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+										
+									}else{
+										
+										pattern = Pattern.compile((String)params[1] );
+									}
+									
 									params[1] = pattern;							
 
 								}catch( Throwable e ){
@@ -2758,7 +2825,7 @@ TagPropertyConstraintHandler
 					try{
 						Double d = Double.parseDouble( (String)arg );
 						
-						args[0] = d;
+						args[index] = d;
 						
 						return( true );
 								
