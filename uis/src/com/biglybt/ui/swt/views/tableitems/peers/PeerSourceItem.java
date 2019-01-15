@@ -22,6 +22,7 @@
 
 package com.biglybt.ui.swt.views.tableitems.peers;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -50,11 +51,17 @@ public class PeerSourceItem
   @Override
   public void refresh(TableCell cell) {
     PEPeer peer = (PEPeer)cell.getDataSource();
-    String value = (peer == null) ? "" : peer.getPeerSource();
+    String ps = (peer == null) ? "" : peer.getPeerSource();
 
-    if (!cell.setSortValue(value) && cell.isValid())
+    if (!cell.setSortValue( ps ) && cell.isValid())
       return;
 
+    String value;
+    if ( ps.isEmpty()){
+    	value = "";
+    }else{
+    	value = MessageText.getString( "peersource.short." + ps );
+    }
     cell.setText(""+value);
   }
 }
