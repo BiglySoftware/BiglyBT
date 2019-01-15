@@ -20,6 +20,7 @@
 
 package com.biglybt.core.tag.impl;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -42,7 +43,6 @@ import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
-import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadListener;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -1926,7 +1926,7 @@ TagPropertyConstraintHandler
 		private static final int FT_WEEKS_TO_SECS	= 26;
 		private static final int FT_GET_CONFIG		= 27;
 		private static final int FT_HAS_TAG_AGE		= 28;
-
+		private static final int FT_LOWERCASE		= 29;		
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -1965,6 +1965,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_NAME				 	= 28;
 		private static final int	KW_FILE_NAMES		 	= 29;
 		private static final int	KW_SAVE_PATH		 	= 30;
+		private static final int	KW_SAVE_FOLDER		 	= 31;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2031,7 +2032,8 @@ TagPropertyConstraintHandler
 			
 			keyword_map.put( "name", 					new int[]{KW_NAME,					DEP_STATIC });
 			keyword_map.put( "file_names", 				new int[]{KW_FILE_NAMES,			DEP_STATIC });
-			keyword_map.put( "save_path", 				new int[]{KW_SAVE_PATH,			DEP_STATIC });
+			keyword_map.put( "save_path", 				new int[]{KW_SAVE_PATH,				DEP_STATIC });
+			keyword_map.put( "save_folder", 			new int[]{KW_SAVE_FOLDER,			DEP_STATIC });
 		}
 
 		private class
@@ -2227,6 +2229,12 @@ TagPropertyConstraintHandler
 					fn_type = FT_CONTAINS;
 
 					params_ok = params.length == 2;
+
+				}else if ( func_name.equals( "lowercase" )){
+
+					fn_type = FT_LOWERCASE;
+
+					params_ok = params.length == 1;
 
 				}else if ( func_name.equals( "matches" )){
 
@@ -2558,9 +2566,9 @@ TagPropertyConstraintHandler
 					}
 					case FT_CONTAINS:{
 
-						String[]	s1s = getStrings( dm, params, 0 );
+						String[]	s1s = getStrings( dm, tags, params, 0, debug );
 						
-						String		s2 = getString( dm, params, 1 );
+						String		s2 = getString( dm, tags, params, 1, debug );
 
 						for ( String s1: s1s ){
 						
@@ -2572,9 +2580,15 @@ TagPropertyConstraintHandler
 						
 						return( false );
 					}
+					case FT_LOWERCASE:{
+						
+						String	s = getString( dm, tags, params, 0, debug );
+
+						return( s.toLowerCase( Locale.US ));
+					}
 					case FT_MATCHES:{
 
-						String[]	s1s = getStrings( dm, params, 0 );
+						String[]	s1s = getStrings( dm, tags, params, 0, debug );
 
 						if ( params[1] == null ){
 
@@ -2759,39 +2773,77 @@ TagPropertyConstraintHandler
 			private String
 			getString(
 				DownloadManager		dm,
+				List<Tag>			tags,
 				Object[]			args,
-				int					index )
+				int					index,
+				StringBuilder		debug )
 			{
-				String str = (String)args[index];
-
-				if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
-
-					return( str.substring( 1, str.length() - 1 ));
-
-				}else if ( str.equals( "name" )){
-
-					return( dm.getDisplayName());
-
-				}else{
-
-					setError( "Invalid constraint string: " + str );
-
-					String result = "\"\"";
-
-					args[index] = result;
-
-					return( result );
-				}
+				String[] res = getStrings( dm, tags, args, index, debug );
+				
+				return( res[0] );
 			}
 
 			private String[]
 			getStrings(
 				DownloadManager		dm,
+				List<Tag>			tags,
 				Object[]			args,
-				int					index )
+				int					index,
+				StringBuilder		debug )
 			{
-				String str = (String)args[index];
+				try{
+					Object arg = args[index];
+	
+					if ( arg instanceof String ){
+						
+						String str = (String)arg;
+						
+						String[] result = getStringKeyword( dm, str );
+							
+						if ( result == null ){
+		
+							throw( new Exception( "Invalid constraint string: " + str ));
+							
+						}else{
+							
+							return( result );
+						}
+						
+					}else if ( arg instanceof ConstraintExpr ){		
+	
+						if ( debug!=null){
+							debug.append( "[" );
+						}
+						
+						String res = (String)((ConstraintExpr)arg).eval(dm, tags, debug );
+						
+						if ( debug!=null){
+							debug.append( "->" + res + "]" );
+						}
+						
+						return( new String[]{ res });
+						
+					}else{
+						
+						throw( new Exception( "Invalid constraint string: " + arg ));
+					}
+				}catch( Throwable e ){
+					
+					setError( Debug.getNestedExceptionMessage( e ));
+					
+					String result = "\"\"";
 
+					args[index] = result;
+
+					return( new String[]{ result });
+				}
+			}
+			
+			private String[]
+			getStringKeyword(
+				DownloadManager		dm,
+				String				str )
+			{
 				int		kw;
 				
 				if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
@@ -2832,15 +2884,26 @@ TagPropertyConstraintHandler
 					
 					return( new String[]{ dm.getAbsoluteSaveLocation().getAbsolutePath()});
 					
+				}else if ( str.equals( "save_folder" ) || str.equals( "savefolder" )){
+					
+					kw = KW_SAVE_FOLDER;
+					
+					File save_loc = dm.getAbsoluteSaveLocation().getAbsoluteFile();
+					
+					File save_folder = save_loc.getParentFile();
+					
+					if ( save_folder.isDirectory()){
+						
+						return( new String[]{ save_folder.getAbsolutePath()});
+						
+					}else{
+						
+						return( new String[]{ save_loc.getAbsolutePath()});
+					}
+					
 				}else{
 
-					setError( "Invalid constraint string: " + str );
-
-					String result = "\"\"";
-
-					args[index] = result;
-
-					return( new String[]{ result });
+					return( null );
 				}
 			}
 			
