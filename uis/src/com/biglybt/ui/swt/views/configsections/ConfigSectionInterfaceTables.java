@@ -80,9 +80,8 @@ public class ConfigSectionInterfaceTables
 
 	@Override
 	public Composite configSectionCreate(final Composite parent) {
-		int userMode = COConfigurationManager.getIntParameter("User Mode");
-		boolean isAZ3 = COConfigurationManager.getStringParameter("ui").equals(
-				"az3");
+		int userMode = Utils.getUserMode();
+		boolean isAZ3 = Utils.isAZ3UI();
 
 		// "Display" Sub-Section:
 		// ----------------------

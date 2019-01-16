@@ -131,7 +131,8 @@ public class Utils
 	private static int userMode;
 
 	private static boolean isAZ2;
-
+	private static boolean isAZ3;
+	
 	private static AEDiagnosticsEvidenceGenerator evidenceGenerator;
 
 	private static ParameterListener configUserModeListener;
@@ -177,14 +178,16 @@ public class Utils
 		configUIListener = new ParameterListener() {
 			@Override
 			public void parameterChanged(String parameterName) {
-				isAZ2 = "az2".equals(COConfigurationManager.getStringParameter("ui"));
+				String ui = COConfigurationManager.getStringParameter("ui");
+				isAZ2 = ui.equals( "az2" );
+				isAZ3 = ui.equals( "az3" );
 			}
 		};
 		COConfigurationManager.addAndFireParameterListener("User Mode", configUserModeListener);
 		COConfigurationManager.addAndFireParameterListener("ui", configUIListener);
 		// no need to listen, changing param requires restart
-    boolean smallOSXControl = COConfigurationManager.getBooleanParameter("enable_small_osx_fonts");
-    BUTTON_MARGIN = Constants.isOSX ? (smallOSXControl ? 10 : 12) : 6;
+		boolean smallOSXControl = COConfigurationManager.getBooleanParameter("enable_small_osx_fonts");
+		BUTTON_MARGIN = Constants.isOSX ? (smallOSXControl ? 10 : 12) : 6;
 	}
 
 	private static Set<DiskManagerFileInfo>	quick_view_active = new HashSet<>();
@@ -205,9 +208,27 @@ public class Utils
 	}
 	
 	public static boolean isAZ2UI() {
+		if ( configUIListener == null ){
+			Debug.out( "hmm" );
+		}
 		return isAZ2;
 	}
 
+	public static boolean isAZ3UI() {
+		if ( configUIListener == null ){
+			Debug.out( "hmm" );
+		}
+		return isAZ3;
+	}
+	
+	public static int getUserMode() {
+		if ( configUserModeListener == null ){
+			Debug.out( "hmm" );
+		}
+		return userMode;
+	}
+
+	
 	public static void disposeComposite(Composite composite, boolean disposeSelf) {
 		if (composite == null || composite.isDisposed())
 			return;
@@ -3345,10 +3366,6 @@ public class Utils
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-	public static int getUserMode() {
-		return userMode;
 	}
 
 	public static Point getLocationRelativeToShell(Control control) {

@@ -838,7 +838,7 @@ public class SB_Transfers
 		};
 		COConfigurationManager.addAndFireParameterListener("Library.CatInSideBar",	paramCatInSidebarListener);
 
-		show_tag_groups = COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
+		show_tag_groups = Utils.isAZ3UI() && COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
 
 		paramTagsInSidebarListener = new ParameterListener() {
 
@@ -868,7 +868,7 @@ public class SB_Transfers
 							
 				removeTagManagerListeners(true);
 					
-				show_tag_groups = COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
+				show_tag_groups = Utils.isAZ3UI() && COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
 
 				addTagManagerListeners();
 			}
