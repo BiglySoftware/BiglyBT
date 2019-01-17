@@ -2774,14 +2774,11 @@ public class TorrentUtil
 				}
 
 				Core core = CoreFactory.getSingleton();
+				
 				if (core == null) {
 					return;
 				}
-				int size = core.getGlobalManager().downloadManagerCount(
-						isSeedingView);
-				if (newPosition > size)
-					newPosition = size;
-
+				
 				if (newPosition <= 0) {
 					MessageBox mb = new MessageBox(shell, SWT.ICON_ERROR | SWT.OK);
 					mb.setText(MessageText.getString("MyTorrentsView.dialog.NumberError.title"));
@@ -2873,43 +2870,94 @@ public class TorrentUtil
 		});
 
 	}
-
-	private static void moveSelectedTorrentsTo(TableView<DownloadManager> tv,
-			DownloadManager[] dms, int iNewPos) {
-		if (dms == null || dms.length == 0) {
+	
+	private static void 
+	moveSelectedTorrentsTo(
+		TableView<DownloadManager> 	tv,
+		DownloadManager[] 			selected_dms, 
+		int 						iNewPos ) 
+	{
+		if ( selected_dms == null || selected_dms.length == 0 ){
+			
 			return;
 		}
-
-		/*
-		TableColumnCore sortColumn = tv == null ? null : tv.getSortColumn();
-		boolean isSortAscending = sortColumn == null ? true
-				: sortColumn.isSortAscending();
-
-		for (int i = 0; i < dms.length; i++) {
-			DownloadManager dm = dms[i];
-			int iOldPos = dm.getPosition();
-
-			dm.getGlobalManager().moveTo(dm, iNewPos);
-			if (isSortAscending) {
-				if (iOldPos > iNewPos)
-					iNewPos++;
-			} else {
-				if (iOldPos < iNewPos)
-					iNewPos--;
+		
+			// managers might be both incomplete and complete (coming from simple library view) so best
+			// solution is to split and treat separately (obviously iNewPos doesn't really make sense to both
+			// but whatever...)
+		
+		GlobalManager gm = selected_dms[0].getGlobalManager();
+				
+		List<DownloadManager>	selected_incomplete = new ArrayList<>();
+		List<DownloadManager>	selected_complete	= new ArrayList<>();
+		
+		for ( DownloadManager dm: selected_dms ){
+			
+			if ( dm.isDownloadComplete( false )){
+				selected_complete.add( dm );
+			}else{
+				selected_incomplete.add( dm );
 			}
 		}
-		*/
 		
+		List<DownloadManager> all_dms = gm.getDownloadManagers();
+
+		List<DownloadManager>	all_incomplete	= new ArrayList<>();
+		List<DownloadManager>	all_complete	= new ArrayList<>();
+		
+		for ( DownloadManager dm: all_dms ){
+			
+			if ( dm.isDownloadComplete( false )){
+				all_complete.add( dm );
+			}else{
+				all_incomplete.add( dm );
+			}
+		}
+		
+		if ( !selected_incomplete.isEmpty()){
+			
+			moveSelectedTorrentsTo( gm, all_incomplete, selected_incomplete, iNewPos );
+		}
+		
+		if ( !selected_complete.isEmpty()){
+			
+			moveSelectedTorrentsTo( gm, all_complete, selected_complete, iNewPos );
+		}
+	
+		TableColumnCore sortColumn = tv.getSortColumn();
+
+		boolean bForceSort = sortColumn.getName().equals("#");
+		
+		tv.columnInvalidate("#");
+		
+		tv.refreshTable(bForceSort);
+	}
+	
+
+	private static void 
+	moveSelectedTorrentsTo(
+		GlobalManager				gm,
+		List<DownloadManager>		all_dms, 
+		List<DownloadManager>		selected_dms,
+		int 						iNewPos ) 
+	{		
+		int num_selected = selected_dms.size();
+	
 		// selected downloads are in the required order relative to iNewPos
 		// problem is that some of the selection's positions might screw things up - if you put download X in the right location
 		// and then go to position Y next, but Y happens to be before X in the list, then X will be shunted down into the wrong place
 		// when Y is removed
 		// easiest fix is to fill positions < iNewPos before moving downloads into place
 		 
-		GlobalManager gm = dms[0].getGlobalManager();
+		int num_dms = all_dms.size();
 		
-		ArrayList<DownloadManager> all_dms = new ArrayList<>( tv.getDataSources());
-
+		if ( iNewPos > num_dms ){
+		
+				// invalid index -> end of selection ends up a max
+			
+			iNewPos = num_dms - num_selected + 1;
+		}
+		
 		if ( iNewPos > 1 ){
 						
 			all_dms.sort(
@@ -2921,7 +2969,7 @@ public class TorrentUtil
 					}
 				});
 			
-			IdentityHashSet<DownloadManager> moving = new IdentityHashSet<>( Arrays.asList( dms ));
+			IdentityHashSet<DownloadManager> moving = new IdentityHashSet<>( selected_dms );
 			
 			int pos		= 1;
 			int to_move = iNewPos-1;
@@ -2942,25 +2990,15 @@ public class TorrentUtil
 			}
 		}
 				
-		for (int i = 0; i < dms.length; i++) {
+		for ( DownloadManager dm: selected_dms ){
 			
-			DownloadManager dm = dms[i];
-
 			gm.moveTo(dm, iNewPos++);
 
-			if ( iNewPos > all_dms.size()){
+			if ( iNewPos > num_dms ){
 				
 				iNewPos = 1;
 			}
 		}
-		
-		TableColumnCore sortColumn = tv.getSortColumn();
-
-		boolean bForceSort = sortColumn.getName().equals("#");
-		
-		tv.columnInvalidate("#");
-		
-		tv.refreshTable(bForceSort);
 	}
 
 	protected static void changeDirSelectedTorrents(DownloadManager[] dms,
