@@ -233,6 +233,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private static final int MAINLOOP_TWENTY_SECOND_INTERVAL = MAINLOOP_ONE_SECOND_INTERVAL * 20;
 	private static final int MAINLOOP_THIRTY_SECOND_INTERVAL = MAINLOOP_ONE_SECOND_INTERVAL * 30;
 	private static final int MAINLOOP_SIXTY_SECOND_INTERVAL = MAINLOOP_ONE_SECOND_INTERVAL * 60;
+	private static final int MAINLOOP_FIVE_MINUTE_INTERVAL = MAINLOOP_SIXTY_SECOND_INTERVAL * 5;
 	private static final int MAINLOOP_TEN_MINUTE_INTERVAL = MAINLOOP_SIXTY_SECOND_INTERVAL * 10;
 
 
@@ -334,6 +335,22 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 	};
 
+	private static final int MAX_SEEDING_SEED_DISCONNECT_HISTORY 	= 256;
+	private static final int SEEDING_SEED_DISCONNECT_TIMEOUT		= 10*60*1000;
+	
+			
+	private final Map<String,Long>	seeding_seed_disconnects =
+		new LinkedHashMap<String,Long>(MAX_SEEDING_SEED_DISCONNECT_HISTORY,0.75f,true)
+		{
+			@Override
+			protected boolean
+			removeEldestEntry(
+				Map.Entry<String,Long> eldest)
+			{
+				return size() > MAX_SEEDING_SEED_DISCONNECT_HISTORY;
+			}
+		};
+		
 	private static final int UDP_RECONNECT_MIN_MILLIS	= 10*1000;
 	private long	last_udp_reconnect;
 
@@ -769,7 +786,28 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 			checkSeeds();
 
-			if(!seeding_mode) {
+			if ( seeding_mode ){
+				
+				if ( mainloop_loop_count % MAINLOOP_FIVE_MINUTE_INTERVAL != 0 ){
+					
+					synchronized( seeding_seed_disconnects ){
+						
+						long now = SystemTime.getMonotonousTime();
+						
+						Iterator<Map.Entry<String,Long>> it = seeding_seed_disconnects.entrySet().iterator();
+						
+						while( it.hasNext()){
+							
+							Map.Entry<String,Long> entry = it.next();
+							
+							if ( now - entry.getValue() > SEEDING_SEED_DISCONNECT_TIMEOUT ){
+								
+								it.remove();
+							}
+						}
+					}
+				}
+			}else{
 				// if we're not finished
 
 				checkRequests();
@@ -1298,6 +1336,27 @@ DiskManagerCheckRequestListener, IPFilterListener
 			return( "Peer source '" + peer_source + "' is not enabled" );
 		}
 
+		if ( seeding_mode && disconnect_seeds_when_seeding ){
+			
+			String key = address + ":" + tcp_port;
+			
+			synchronized( seeding_seed_disconnects ){
+			
+				Long prev = seeding_seed_disconnects.get( key );
+				
+				if ( prev != null ){
+					
+					if ( SystemTime.getMonotonousTime() - prev > SEEDING_SEED_DISCONNECT_TIMEOUT ){
+						
+						seeding_seed_disconnects.remove( key );
+						
+					}else{
+						
+						return( "Ignore recent seeds when seeding" );
+					}
+				}
+			}
+		}
 		boolean	is_priority_connection 	= false;
 		boolean	force					= false;
 		
@@ -2032,6 +2091,11 @@ DiskManagerCheckRequestListener, IPFilterListener
 				_timeStartedSeeding_mono 	= -1;
 				_timeFinished				= 0;
 
+				synchronized( seeding_seed_disconnects ){
+					
+					seeding_seed_disconnects.clear();
+				}
+				
 				Logger.log(
 						new LogEvent(	disk_mgr.getTorrent(), LOGID,
 								"Turning off seeding mode for PEPeerManager"));
@@ -3500,6 +3564,16 @@ DiskManagerCheckRequestListener, IPFilterListener
 		if ( pc.isSeed()){
 
 			last_seed_disconnect_time = SystemTime.getCurrentTime();
+			
+			if ( seeding_mode && disconnect_seeds_when_seeding ){
+				
+				String key = pc.getIp() + ":" + pc.getTCPListenPort();
+				
+				synchronized( seeding_seed_disconnects ){
+				
+					seeding_seed_disconnects.put( key, SystemTime.getMonotonousTime());
+				}
+			}
 		}
 
 		adapter.removePeer(pc);  //async downloadmanager notification
