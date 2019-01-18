@@ -4301,7 +4301,16 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								ChatMessage m1,
 								ChatMessage m2 )
 							{
-								long l = m1.getTimeStamp() - m2.getTimeStamp();
+								long t1 = m1.getSequence();
+								long t2 = m2.getSequence();
+
+								if ( t1 == t2 ){
+									
+									t1 = m1.getTimeStamp();
+									t2 = m2.getTimeStamp();
+								}
+							
+								long l = t1 - t2;
 
 								if ( l < 0 ){
 									return( -1 );
@@ -4502,9 +4511,15 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					ChatMessage m1 = list1.get( pos1 );
 					ChatMessage m2 = list2.get( pos2 );
 
-					long t1 = m1.getTimeStamp();
-					long t2 = m2.getTimeStamp();
+					long t1 = m1.getSequence();
+					long t2 = m2.getSequence();
 
+					if ( t1 == t2 ){
+						
+						t1 = m1.getTimeStamp();
+						t2 = m2.getTimeStamp();
+					}
+					
 					if ( t1 < t2 || ( t1 == t2 && m1.getUID() < m2.getUID())){
 
 						result.add( m1 );
