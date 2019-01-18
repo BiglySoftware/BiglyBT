@@ -22,6 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 
 /**
  * Created by TuxPaper on 6/29/2017.
@@ -34,6 +35,7 @@ public class TrayDelegateFactory
 				return (TrayDelegate) Class.forName(
 						"com.biglybt.ui.swt.systray.TrayDork").newInstance();
 			} catch (Throwable ignore) {
+				Debug.outNoStack(ignore.getMessage());
 			}
 		}
 		return new TraySWT(display);

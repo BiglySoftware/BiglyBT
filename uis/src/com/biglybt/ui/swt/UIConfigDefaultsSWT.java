@@ -182,6 +182,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter( "tag.add.customize.default.checked", true );
 		
 		def.addParameter( "MyTorrents.status.sortorder", 0 );
+		def.addParameter( "ui.forceDorkTray", false);
 		
 		if ( COConfigurationManager.hasParameter("PeersView.status.prioritysort", true )){
 			

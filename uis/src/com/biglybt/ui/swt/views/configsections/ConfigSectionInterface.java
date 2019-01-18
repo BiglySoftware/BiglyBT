@@ -89,6 +89,8 @@ public class ConfigSectionInterface
 		GridLayout layout;
 		Label label;
 
+		int userMode = COConfigurationManager.getIntParameter("User Mode");
+
 		Composite cDisplay = new Composite(parent, SWT.NULL);
 
 		gridData = new GridData(
@@ -160,7 +162,7 @@ public class ConfigSectionInterface
 			Group gSysTray = new Group(cDisplay, SWT.NULL);
 			Messages.setLanguageText(gSysTray, "ConfigView.label.systray");
 			layout = new GridLayout();
-			layout.numColumns = 2;
+			layout.numColumns = 1;
 			gSysTray.setLayout(layout);
 			gSysTray.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
@@ -176,6 +178,21 @@ public class ConfigSectionInterface
 					}
 				}
 			});
+
+			if (Constants.isUnix && userMode > 1) {
+				BooleanParameter paramForceDorkTray = new BooleanParameter(gSysTray,
+						"ui.forceDorkTray", "ConfigView.ui.forcedorktray");
+				paramForceDorkTray.addChangeListener(new ParameterChangeAdapter() {
+					@Override
+					public void parameterChanged(Parameter p, boolean caused_internally) {
+						if (!caused_internally) {
+							return;
+						}
+						SystemTraySWT.getTray().dispose();
+						SystemTraySWT.getTray();
+					}
+				});
+			}
 			
 			BooleanParameter stdo = new BooleanParameter(gSysTray, "System Tray Disabled Override",
 					"ConfigView.label.closetotrayoverride");

@@ -590,7 +590,7 @@ public class SystemTraySWT
 		}
 
 
-		if (Constants.isUnix && gm != null) {
+		if (!(tray instanceof TraySWT)) {
 			GlobalManagerStats stats = gm.getStats();
 
 			long l = (stats.getDataReceiveRate() + stats.getDataSendRate()) / 1024;
