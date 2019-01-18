@@ -95,6 +95,9 @@ import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.SubscriptionResult;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
@@ -121,6 +124,7 @@ import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.utils.LocaleUtilities;
 import com.biglybt.pif.utils.search.SearchResult;
 import com.biglybt.pif.utils.subscriptions.SubscriptionManager;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
@@ -4229,8 +4233,14 @@ BuddyPluginViewBetaChat
 						Utils.setPeronalShare( properties );
 						
 						properties.put( ShareManager.PR_NETWORKS, networks_str );
-						properties.put( ShareManager.PR_USER_DATA, "buddyplugin:share" );
 
+						Tag tag = plugin.getBeta().getDownloadTag();
+
+						if ( tag != null ){
+							
+							properties.put( ShareManager.PR_TAGS, String.valueOf( tag.getTagUID()));
+						}
+						
 						Torrent 	torrent;
 
 						try{

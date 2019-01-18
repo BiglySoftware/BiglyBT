@@ -67,6 +67,7 @@ import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -97,39 +98,44 @@ public class MyTrackerView
 	UIPluginViewToolBarListener, UISWTViewCoreEventListenerEx
 {
 	protected static final TorrentAttribute	category_attribute =
-		TorrentManagerImpl.getSingleton().getAttribute( TorrentAttribute.TA_CATEGORY );
-  private static TableColumnCore[] basicItems = null;
+			TorrentManagerImpl.getSingleton().getAttribute( TorrentAttribute.TA_CATEGORY );
+	
+	private static TableColumnCore[] basicItems =  new TableColumnCore[] {
+		new NameItem(),
+		new TrackerItem(),
+		new StatusItem(),
+		new CategoryItem(),
+		new PassiveItem(),
+		new PersistentItem(),
+		new SeedCountItem(),
+		new PeerCountItem(),
+		new BadNATCountItem(),
+		new AnnounceCountItem(),
+		new ScrapeCountItem(),
+		new CompletedCountItem(),
+		new UploadedItem(),
+		new DownloadedItem(),
+		new LeftItem(),
+		new TotalBytesInItem(),
+		new AverageBytesInItem(),
+		new TotalBytesOutItem(),
+		new AverageBytesOutItem(),
+		new DateAddedItem(),
+	};
+	
+	static{
+		TableColumnManager tcManager = TableColumnManager.getInstance();
+
+		tcManager.setDefaultColumnNames( TableManager.TABLE_MYTRACKER, basicItems );
+	}
+	
 	private Menu			menuCategory;
 
 	private TableViewSWT<TRHostTorrent> tv;
 
 	public MyTrackerView() {
 		super("MyTrackerView");
-		if (basicItems == null) {
-			basicItems = new TableColumnCore[] {
-				new NameItem(),
-				new TrackerItem(),
-				new StatusItem(),
-				new CategoryItem(),
-				new PassiveItem(),
-				new PersistentItem(),
-				new SeedCountItem(),
-				new PeerCountItem(),
-				new BadNATCountItem(),
-				new AnnounceCountItem(),
-				new ScrapeCountItem(),
-				new CompletedCountItem(),
-				new UploadedItem(),
-				new DownloadedItem(),
-				new LeftItem(),
-				new TotalBytesInItem(),
-				new AverageBytesInItem(),
-				new TotalBytesOutItem(),
-				new AverageBytesOutItem(),
-				new DateAddedItem(),
-			};
-		}
-
+	
 		tv = TableViewFactory.createTableViewSWT(TrackerTorrent.class,
 				TableManager.TABLE_MYTRACKER, getPropertiesPrefix(), basicItems, "name",
 				SWT.MULTI | SWT.FULL_SELECTION | SWT.BORDER | SWT.VIRTUAL);

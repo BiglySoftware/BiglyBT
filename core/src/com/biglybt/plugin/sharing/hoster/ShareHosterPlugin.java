@@ -171,7 +171,8 @@ ShareHosterPlugin
 					}
 				});
 
-			Download	new_download = null;
+			Download	old_download	= null;
+			Download	new_download 	= null;
 
 			int	type = resource.getType();
 
@@ -183,9 +184,9 @@ ShareHosterPlugin
 
 				Torrent torrent = item.getTorrent();
 
-				Download	download = download_manager.getDownload( torrent );
+				old_download = download_manager.getDownload( torrent );
 
-				if ( download == null ){
+				if ( old_download == null ){
 
 					new_download = addDownload( resource, torrent, item.getTorrentFile(), file_resource.getFile());
 				}
@@ -197,41 +198,60 @@ ShareHosterPlugin
 
 				Torrent torrent = item.getTorrent();
 
-				Download	download = download_manager.getDownload( torrent );
+				old_download = download_manager.getDownload( torrent );
 
-				if ( download == null ){
+				if ( old_download == null ){
 
 					new_download = addDownload( resource, torrent, item.getTorrentFile(), dir_resource.getDir());
 				}
 			}
 
-			if ( new_download != null ){
+			final Download	f_old_download = old_download;
+			final Download	f_new_download = new_download;
+			
+			ShareResourceListener resource_listneer = 
+				new ShareResourceListener()
+				{
+					@Override
+					public void
+					shareResourceChanged(
+						ShareResource			resource,
+						ShareResourceEvent		event )
+					{
+						int	type = event.getType();
+						
+						if ( type == ShareResourceEvent.ET_ATTRIBUTE_CHANGED ){
+	
+							TorrentAttribute	attribute = (TorrentAttribute)event.getData();
+	
+							// System.out.println( "sh: res -> ds: " + attribute.getName() + "/" + resource.getAttribute( attribute ));
+	
+							if ( f_old_download != null ){
+								
+								f_old_download.setAttribute( attribute, resource.getAttribute( attribute ));
+							}
 
-				final Download	f_new_download = new_download;
+							if ( f_new_download != null ){
+								
+								f_new_download.setAttribute( attribute, resource.getAttribute( attribute ));
+							}
+							
+						}else if ( type == ShareResourceEvent.ET_PROPERTY_CHANGED ){
+							
+							System.out.println( "Change!" );
+						}
+					}
+				};
+			
+			if ( old_download != null ){
+				
+				resource.addChangeListener( resource_listneer );
+
+			}else if ( new_download != null ){
 
 				resource_dl_map.put( resource, new_download );
 
-				resource.addChangeListener(
-					new ShareResourceListener()
-					{
-						@Override
-						public void
-						shareResourceChanged(
-							ShareResource			resource,
-							ShareResourceEvent		event )
-						{
-							if ( event.getType() == ShareResourceEvent.ET_ATTRIBUTE_CHANGED ){
-
-								TorrentAttribute	attribute = (TorrentAttribute)event.getData();
-
-								// System.out.println( "sh: res -> ds: " + attribute.getName() + "/" + resource.getAttribute( attribute ));
-
-								f_new_download.setAttribute(
-										attribute,
-										resource.getAttribute( attribute ));
-							}
-						}
-					});
+				resource.addChangeListener( resource_listneer );
 
 				TorrentAttribute[]	attributes = resource.getAttributes();
 

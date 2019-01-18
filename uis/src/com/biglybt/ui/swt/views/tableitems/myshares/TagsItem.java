@@ -19,12 +19,13 @@
 
 package com.biglybt.ui.swt.views.tableitems.myshares;
 
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.sharing.ShareResource;
-import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 /**
@@ -33,19 +34,16 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
  */
 
 public class
-CategoryItem
+TagsItem
 	extends CoreTableColumnSWT
 	implements TableCellRefreshListener
 {
-		/** Default Constructor */
-
-	protected static final TorrentAttribute	category_attribute =
-		TorrentManagerImpl.getSingleton().getAttribute( TorrentAttribute.TA_CATEGORY );
+	private static TagManager tag_manager = TagManagerFactory.getTagManager();
 
 	public
-	CategoryItem()
+	TagsItem()
 	{
-		super("category", POSITION_LAST, 100, TableManager.TABLE_MYSHARES);
+		super("tags", POSITION_LAST, 100, TableManager.TABLE_MYSHARES);
 
 		setRefreshInterval(INTERVAL_LIVE);
 	}
@@ -62,9 +60,32 @@ CategoryItem
 
 		}else{
 
-			String	value = item.getAttribute(category_attribute);
+			String	value = item.getProperties().get( ShareManager.PR_TAGS );
 
-			cell.setText( value==null?"":value);
+			if ( value == null ){
+				
+				value = "";
+				
+			}else{
+				
+				String[] bits = value.split( "," );
+				
+				value = "";
+				
+				for ( String bit: bits ){
+					
+					try{
+						String name = tag_manager.lookupTagByUID( Long.parseLong( bit )).getTagName( true );
+						
+						value += (value.isEmpty()?"":", ") + name;
+						
+					}catch( Throwable e ){
+						
+					}
+				}
+			}
+			
+			cell.setText( value );
 		}
 	}
 }

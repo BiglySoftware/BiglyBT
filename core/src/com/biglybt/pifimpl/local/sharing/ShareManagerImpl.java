@@ -1207,4 +1207,17 @@ ShareManagerImpl
 			}.start();
 		}
 	}
+	
+	protected void
+	configDirty()
+	{
+		try{
+				// todo could batch these up...
+			
+			config.saveConfig();
+			
+		}catch( Throwable e ){
+			
+		}
+	}
 }

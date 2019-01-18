@@ -44,8 +44,10 @@ import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.sharing.ShareException;
 import com.biglybt.pif.sharing.ShareItem;
+import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.sharing.ShareResource;
 import com.biglybt.pif.sharing.ShareResourceDeletionVetoException;
+import com.biglybt.pif.sharing.ShareResourceEvent;
 import com.biglybt.pif.sharing.ShareResourceWillBeDeletedListener;
 import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pifimpl.local.torrent.TorrentImpl;
@@ -466,5 +468,35 @@ ShareResourceFileOrDirImpl
 	getProperties()
 	{
 		return( properties );
+	}
+	
+	@Override
+	public void 
+	setProperties(
+		Map<String, String> props)
+	{
+		for ( Map.Entry<String,String> entry: props.entrySet()){
+			
+			String 	key 	= entry.getKey();
+			String	value 	= entry.getValue();
+			
+			if ( key.equals( ShareManager.PR_TAGS )){
+				
+				if ( !value.equals( properties.get( ShareManager.PR_TAGS ))){
+					
+					properties.put( key, value );
+					
+					fireChangeEvent( ShareResourceEvent.ET_PROPERTY_CHANGED, key );
+				}
+			}else{
+				
+				if ( !value.equals( properties.get( key ))){
+				
+					Debug.out( "Unsupported property change" );
+				}
+			}
+		}
+		
+		manager.configDirty();
 	}
 }

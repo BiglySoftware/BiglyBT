@@ -77,6 +77,10 @@ ShareResource
 	public Map<String,String>
 	getProperties();
 
+	public void
+	setProperties(
+		Map<String,String>	props );
+	
 	public boolean
 	isPersistent();
 

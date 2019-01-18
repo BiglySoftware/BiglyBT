@@ -1173,63 +1173,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				{
 					int	type = ev.getType();
 
-					if ( type == PluginEvent.PEV_INITIAL_SHARING_COMPLETE ){
-
-						try{
-							ShareManager share_manager = plugin_interface.getShareManager();
-
-							share_manager.addListener(
-								new ShareManagerListener() {
-
-									@Override
-									public void
-									resourceModified(
-										ShareResource old_resource,
-										ShareResource new_resource )
-									{
-										checkTag( new_resource );
-									}
-
-									@Override
-									public void
-									resourceDeleted(
-										ShareResource resource )
-									{
-									}
-
-									@Override
-									public void
-									resourceAdded(
-										ShareResource resource )
-									{
-										checkTag( resource );
-									}
-
-									@Override
-									public void
-									reportProgress(
-										int percent_complete )
-									{
-									}
-
-									@Override
-									public void
-									reportCurrentTask(
-										String task_description )
-									{				}
-								});
-
-							ShareResource[] existing = share_manager.getShares();
-
-							for ( ShareResource sr: existing ){
-
-								checkTag( sr );
-							}
-						}catch( Throwable e ){
-
-							Debug.out( e );
-						}
-					}else if ( type == PluginEvent.PEV_PLUGIN_OPERATIONAL ){
+					if ( type == PluginEvent.PEV_PLUGIN_OPERATIONAL ){
 
 						pluginAdded((PluginInterface)ev.getValue());
 
@@ -1338,50 +1282,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		
 	}
 
-	private void
-	checkTag(
-		ShareResource		resource )
-	{
-		Map<String,String>	properties = resource.getProperties();
-
-		if ( properties != null ){
-
-			String ud = properties.get( ShareManager.PR_USER_DATA );
-
-			if ( ud != null && ud.equals( "buddyplugin:share" )){
-
-				try{
-
-					Torrent torrent = null;
-
-					if ( resource instanceof ShareResourceFile ){
-
-						torrent = ((ShareResourceFile)resource).getItem().getTorrent();
-
-					}else if ( resource instanceof ShareResourceDir ){
-
-						torrent = ((ShareResourceDir)resource).getItem().getTorrent();
-					}
-
-					if ( torrent != null ){
-
-						Download download = plugin_interface.getPluginManager().getDefaultPluginInterface().getShortCuts().getDownload( torrent.getHash());
-
-						if ( download != null ){
-
-							tagDownload( download );
-						}
-					}
-				}catch( Throwable e ){
-
-				}
-			}
-		}
-	}
-
-	public void
-	tagDownload(
-		Download	download )
+	public Tag
+	getDownloadTag()
 	{
 		try{
 			TagType tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL );
@@ -1397,11 +1299,25 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				tag.setPublic( false );
 			}
 
-			tag.addTaggable( PluginCoreUtils.unwrap( download ));
+			return( tag );
 
 		}catch( Throwable e ){
 
 			Debug.out( e );
+		}
+		
+		return( null );
+	}
+	
+	public void
+	tagDownload(
+		Download	download )
+	{
+		Tag tag = getDownloadTag();
+		
+		if ( tag != null ){
+
+			tag.addTaggable( PluginCoreUtils.unwrap( download ));
 		}
 	}
 

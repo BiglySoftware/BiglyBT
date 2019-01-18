@@ -28,6 +28,7 @@ public interface
 ShareResourceEvent
 {
 	public static final int	ET_ATTRIBUTE_CHANGED	= 1;
+	public static final int	ET_PROPERTY_CHANGED		= 2;
 
 	public int
 	getType();

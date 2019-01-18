@@ -39,7 +39,7 @@ PersistentItem
 	public
 	PersistentItem()
 	{
-		super( "persistent", ALIGN_TRAIL, POSITION_INVISIBLE, 60, TableManager.TABLE_MYSHARES );
+		super( "persistent", ALIGN_LEAD, POSITION_INVISIBLE, 60, TableManager.TABLE_MYSHARES );
 
 		setRefreshInterval(INTERVAL_LIVE);
 	}

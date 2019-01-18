@@ -470,11 +470,28 @@ TorrentUtils
 
 		throws TOTorrentException
 	{
+		return( getTorrentFileName( torrent, true ));
+	}
+	
+	public static String
+	getTorrentFileName(
+		TOTorrent		torrent,
+		boolean			is_mandatory )
+
+		throws TOTorrentException
+	{
     	String str = torrent.getAdditionalStringProperty("torrent filename");
 
     	if ( str == null ){
 
-    		throw( new TOTorrentException("TorrentUtils::getTorrentFileName: no 'torrent filename' attribute defined", TOTorrentException.RT_FILE_NOT_FOUND));
+    		if ( is_mandatory ){
+    		
+    			throw( new TOTorrentException("TorrentUtils::getTorrentFileName: no 'torrent filename' attribute defined", TOTorrentException.RT_FILE_NOT_FOUND));
+    			
+    		}else{
+    			
+    			return( null );
+    		}
     	}
 
     	if ( str.equals( MEM_ONLY_TORRENT_PATH )){

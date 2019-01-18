@@ -501,7 +501,9 @@ DownloadManagerStateImpl
 				COConfigurationManager.getBooleanParameter("Delete Saved Torrent Files")){
 			
 			try{
-				String file_str = TorrentUtils.getTorrentFileName( torrent_file  );
+					// torrent might not have been persisted yet so don't insist of file name being present
+				
+				String file_str = TorrentUtils.getTorrentFileName( torrent_file, false  );
 				
 				if ( file_str != null ){
 					

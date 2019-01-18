@@ -211,6 +211,14 @@ ShareResourceImpl
 			}
 		}
 
+		fireChangeEvent( ShareResourceEvent.ET_ATTRIBUTE_CHANGED, attribute );
+	}
+
+	protected void
+	fireChangeEvent(
+		int			type,
+		Object		data )
+	{
 		for (int i=0;i<change_listeners.size();i++){
 
 			try{
@@ -222,14 +230,14 @@ ShareResourceImpl
 							public int
 							getType()
 							{
-								return( ShareResourceEvent.ET_ATTRIBUTE_CHANGED);
+								return( type );
 							}
 
 							@Override
 							public Object
 							getData()
 							{
-								return( attribute );
+								return( data );
 							}
 						});
 
@@ -239,7 +247,6 @@ ShareResourceImpl
 			}
 		}
 	}
-
 	@Override
 	public String
 	getAttribute(
