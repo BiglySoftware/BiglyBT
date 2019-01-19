@@ -36,6 +36,7 @@ FEATURE: Tag   | Added hasTagAge constraint function [Parg]
 FEATURE: Tag   | Tag execute-on-assign option to assign other tags [Parg]
 FEATURE: Tag   | save_path, save_folder Tag constraint variables [Parg]
 FEATURE: Tag   | Added flag to control Tag constraint contains/matches case sensitivity [Parg]
+FEATURE: Tag   | MyShares view now shows associated Tag and allows assignment [Parg]
 
 CHANGE: UI     | Don't popup progress window when magnet download manually removed [Parg]
 CHANGE: UI     | Ctrl+A selects all in constraint setting [Parg]
@@ -57,6 +58,8 @@ CHANGE: UI     | Use textbox hint when password is set, instead of ""***" [TuxPa
 CHANGE: UI     | Allow '*' as whitelist component [Parg]
 CHANGE: UI     | Support pasting peers on multiple lines [Parg]
 CHANGE: UI     | Indicate state on fancy menu force-start icon [Parg]
+CHANGE: UI     | Clicking on an expand/collapse icon in Library or Files View no longer selects the row [Parg]
+CHANGE: UI     | Larger click area for expand/collapse icon [Parg]
 CHANGE: Core   | Retain category, thumbnail and user comments from metadata download [Parg]
 CHANGE: Core   | Faster bdecoding of torrents etc [TuxPaper]
 CHANGE: Core   | Faster closedown [Parg]
@@ -66,6 +69,7 @@ CHANGE: Core   | Write UTF-8 BOM to log files, so editors don't have to guess en
 CHANGE: Core   | Inject Privacy View lookup results if decent [Parg]
 CHANGE: Core   | Remove reported client-ip when proxy connection used [Parg]
 CHANGE: Core   | Don't wait forever to connect to plugin repo, and reduce retries [TuxPaper]
+CHANGE: Core   | Reduce frequency of atempted connections when seeding [Parg]
 
 BUGFIX: UI     | Fixed beta forum link [Parg]
 BUGFIX: UI     | Fix stats labeling [Parg]
@@ -89,7 +93,8 @@ BUGFIX: Core   | Fix 'save failed' for ClientStats [TuxPaper]
 BUGFIX: Core   | Fix downloads being incorrectly started after file rename [Parg]
 BUGFIX: Core   | Fix recovery bug when active/.dat files corrupted [Parg]
 BUGFIX: Core   | Fix biglybt.log not correctly writing UTF-8 chars longer than one byte [TuxPaper]
-
+BUGFIX: Core   | Fix deadlock in table display [Parg]
+BUGFIX: Core   | Decentralized chat messages sometime out of order [Parg]
 
 2018.10.18 | BiglyBT 1.7.0.0
 
