@@ -809,6 +809,16 @@ UISWTInstanceImpl
 	}
 
 	@Override
+	public void promptUser(String title, String text, String[] options,
+			int defaultOption, UIMessageListener listener) {
+
+		MessageBoxShell mb = new MessageBoxShell(title, text, options,
+				defaultOption);
+		mb.open(listener == null ? null
+				: result -> listener.UIMessageClosed(result));
+	}
+
+	@Override
 	public void showDownloadBar(Download download, final boolean display) {
 		if (!(download instanceof DownloadImpl)) {return;}
 		final DownloadManager dm = ((DownloadImpl)download).getDownload();
@@ -1102,6 +1112,12 @@ UISWTInstanceImpl
 		public int promptUser(String title, String text, String[] options,
 		                      int defaultOption) {
 			return delegate.promptUser(title, text, options, defaultOption);
+		}
+
+		@Override
+		public void promptUser(String title, String text, String[] options,
+				int defaultOption, UIMessageListener listener) {
+			delegate.promptUser(title, text, options, defaultOption, listener);
 		}
 
 		@Override

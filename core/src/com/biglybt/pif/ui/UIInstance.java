@@ -51,14 +51,33 @@ UIInstance
 	/**
 	 * Prompts the user with a title, text, and a series of options.  The options
 	 * are typically displayed as buttons.
+	 * <p/>
+	 * This method returns blocks the UI until the user makes a choice.  It's
+	 * recommended to use {@link #promptUser(String, String, String[], int, UIMessageListener)} instead
 	 *
 	 * @param title
 	 * @param text
 	 * @param options
 	 * @return Index of option chosen, -1 if cancelled or error
+	 *
+	 * @discouraged
 	 */
 	public int promptUser(String title, String text, String[] options,
 			int defaultOption);
+
+	/**
+	 * Prompts the user with a title, text, and a series of options.  The options
+	 * are typically displayed as buttons.
+	 * <p/>
+	 * This method returns immediately.
+	 *
+	 * @param options List of options to present to the user.  Typically shown as buttons
+	 * @param listener triggered after user chooses an option
+	 *
+	 * @since 1.7.0.1
+	 */
+	public void promptUser(String title, String text, String[] options,
+	                      int defaultOption, UIMessageListener listener);
 
 	/**
 	 * Creates a {@link UIInputReceiver} instance to allow a plugin to request

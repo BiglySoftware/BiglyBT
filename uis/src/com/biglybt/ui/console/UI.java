@@ -512,6 +512,27 @@ public class UI
 	}
 
 	@Override
+	public void promptUser(String title, String text, String[] options, int defaultOption, UIMessageListener listener) {
+		console.out.println("Prompt: " + title);
+		console.out.println(text);
+
+		String sOptions = "Options: ";
+		for (int i = 0; i < options.length; i++) {
+			if (i != 0) {
+				sOptions += ", ";
+			}
+			sOptions += "[" + i + "]" + options[i];
+		}
+
+		console.out.println(sOptions);
+
+		console.out.println(
+				"WARNING: Option [" + defaultOption + "] automatically selected. "
+						+ "Console UI devs need to implement this function!");
+		listener.UIMessageClosed(defaultOption);
+	}
+
+	@Override
 	public boolean openView(BasicPluginViewModel model) {
 		// TODO Auto-generated method stub
 		return false;
