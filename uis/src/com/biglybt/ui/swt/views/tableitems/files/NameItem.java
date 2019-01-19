@@ -69,7 +69,6 @@ public class NameItem extends CoreTableColumnSWT implements
 	TableCellSWTPaintListener, TableCellMouseMoveListener,
 	TableCellInplaceEditorListener
 {
-	private static final String ID_EXPANDOHITAREA 	= "expandoHitArea";
 	private static final String ID_CHECKHITAREA		= "checkHitArea";
 
 	private static boolean NEVER_SHOW_TWISTY;
@@ -205,11 +204,14 @@ public class NameItem extends CoreTableColumnSWT implements
 			}
 			
 			int numSubItems = rowCore.getSubItemCount();
-			int paddingX = 3;
 			
-			int width = 7;
+			final int EXPANDOPADLEFT = 3;
+			
+			int paddingX = EXPANDOPADLEFT;
+			
+			final int EXPANDOWIDTH = 7;
 
-			paddingX += depth*width;
+			paddingX += depth*EXPANDOWIDTH;
 			
 			boolean	show_twisty;
 
@@ -230,6 +232,8 @@ public class NameItem extends CoreTableColumnSWT implements
 				cellBounds.width -= paddingX;
 			}
 			
+			final int CHECKPADLEFT = 2;
+			
 			if (show_twisty){
 				
 				int middleY = cellBounds.y + (cellBounds.height / 2) - 1;
@@ -243,30 +247,33 @@ public class NameItem extends CoreTableColumnSWT implements
 					gc.fillPolygon(new int[] {
 						startX,
 						middleY - halfHeight,
-						startX + width,
+						startX + EXPANDOWIDTH,
 						middleY - halfHeight,
-						startX + (width / 2),
+						startX + (EXPANDOWIDTH / 2),
 						middleY + (halfHeight * 2) + 1
 					});
 				} else {
 					gc.fillPolygon(new int[] {
 						startX,
 						middleY - halfHeight,
-						startX + width,
+						startX + EXPANDOWIDTH,
 						middleY + halfHeight,
 						startX,
 						middleY + (halfHeight * 2) + 1
 					});
 				}
 				gc.setBackground(bg);
-				Rectangle hitArea = new Rectangle(paddingX*2, middleY - halfHeight
-						- cellBounds.y, width, (halfHeight * 4) + 1);
-				rowCore.setData(ID_EXPANDOHITAREA, hitArea);
+				//Rectangle hitArea = new Rectangle(paddingX*2, middleY - halfHeight
+				//		- cellBounds.y, width, (halfHeight * 4) + 1);
+				// expando is quite small, make it easier to hit
+				Rectangle hitArea = new Rectangle(startX - originalBoundxsX - EXPANDOPADLEFT, 0, EXPANDOWIDTH + EXPANDOPADLEFT + CHECKPADLEFT, cellBounds.height);
+				rowCore.setData(TableRowCore.ID_EXPANDOHITAREA, hitArea);
+				rowCore.setData(TableRowCore.ID_EXPANDOHITCOLUMN, getName());
 			}
 			
 			if (!NEVER_SHOW_TWISTY) {
-				cellBounds.x += paddingX  + width;
-				cellBounds.width -= paddingX + width;
+				cellBounds.x += paddingX  + EXPANDOWIDTH;
+				cellBounds.width -= paddingX + EXPANDOWIDTH;
 			}
 			
 			ImageLoader im = ImageLoader.getInstance();
@@ -306,7 +313,7 @@ public class NameItem extends CoreTableColumnSWT implements
 			
 			int checkYOffset = (cellBounds.height - checkSize.height )/2 +1;
 			
-			gc.drawImage(check, cellBounds.x+2, cellBounds.y + checkYOffset);
+			gc.drawImage(check, cellBounds.x+CHECKPADLEFT, cellBounds.y + checkYOffset);
 			
 			im.releaseImage(check_key );
 			
@@ -498,7 +505,7 @@ public class NameItem extends CoreTableColumnSWT implements
 			}
 			
 			boolean inArea = false;
-			Object data = row.getData(ID_EXPANDOHITAREA);
+			Object data = row.getData(TableRowCore.ID_EXPANDOHITAREA);
 			if (data instanceof Rectangle) {
 				Rectangle hitArea = (Rectangle) data;
 				boolean inExpando = hitArea.contains(event.x, event.y);

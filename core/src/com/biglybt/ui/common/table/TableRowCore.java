@@ -31,6 +31,9 @@ import com.biglybt.pif.ui.tables.TableRowMouseEvent;
  */
 public interface TableRowCore extends TableRow
 {
+	public static final String ID_EXPANDOHITCOLUMN 	= "expandoHitColumn";	// data = String
+	public static final String ID_EXPANDOHITAREA 	= "expandoHitArea";		// data = Rectangle
+
 	/** Invalidates Row */
 	public void invalidate();
 

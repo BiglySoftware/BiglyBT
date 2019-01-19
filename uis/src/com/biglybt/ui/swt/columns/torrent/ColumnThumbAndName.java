@@ -80,7 +80,6 @@ public class ColumnThumbAndName
 
 	public static final String COLUMN_ID = "name";
 
-	private static final String ID_EXPANDOHITAREA = "expandoHitArea";
 	private static final String ID_EXPANDOHITAREASHOW = "expandoHitAreaShow";
 
 	private static final boolean NEVER_SHOW_TWISTY =
@@ -272,7 +271,7 @@ public class ColumnThumbAndName
 					show_twisty = torrent != null && !dm.getTorrent().isSimpleTorrent();
 
 					rowCore.setData( ID_EXPANDOHITAREASHOW, Boolean.valueOf(show_twisty));
-
+					
 				}else{
 					show_twisty = show;
 				}
@@ -306,9 +305,12 @@ public class ColumnThumbAndName
 					});
 				}
 				gc.setBackground(bg);
-				Rectangle hitArea = new Rectangle(paddingX, middleY - halfHeight
-						- cellBounds.y, width, (halfHeight * 4) + 1);
-				rowCore.setData(ID_EXPANDOHITAREA, hitArea);
+				//Rectangle hitArea = new Rectangle(paddingX, middleY - halfHeight
+				//		- cellBounds.y, width, (halfHeight * 4) + 1);
+				// expando is quite small, make it easier to hit
+				Rectangle hitArea = new Rectangle(0, 0, width + paddingX * 2, cellBounds.height);
+				rowCore.setData( TableRowCore.ID_EXPANDOHITAREA, hitArea);
+				rowCore.setData( TableRowCore.ID_EXPANDOHITCOLUMN, getName());
 			}
 
 			if (!NEVER_SHOW_TWISTY) {
@@ -711,7 +713,7 @@ public class ColumnThumbAndName
 			if (row == null) {
 				return;
 			}
-			Object data = row.getData(ID_EXPANDOHITAREA);
+			Object data = row.getData(TableRowCore.ID_EXPANDOHITAREA);
 			if (data instanceof Rectangle) {
 				Rectangle hitArea = (Rectangle) data;
 				boolean inExpando = hitArea.contains(event.x, event.y);

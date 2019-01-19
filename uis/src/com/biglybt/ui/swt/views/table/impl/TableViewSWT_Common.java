@@ -123,6 +123,35 @@ public class TableViewSWT_Common
 		}
 	}
 
+	private boolean
+	isInExpando(
+		TableRowSWT		row,
+		TableCellCore	cell,
+		TableColumnCore	tc,
+		MouseEvent		e )
+	{
+		if ( row != null && cell instanceof TableCellSWT ){
+			
+			Rectangle expando_rect = (Rectangle)row.getData( TableRowCore.ID_EXPANDOHITAREA );
+			
+			if ( expando_rect != null ){
+				
+				String expando_column = (String)row.getData( TableRowCore.ID_EXPANDOHITCOLUMN );
+				
+				if ( expando_column != null && tc != null &&expando_column.equals( tc.getName())){
+					
+					Rectangle cell_bounds = ((TableCellSWT)cell).getBounds();
+					
+					expando_rect = new Rectangle( expando_rect.x + cell_bounds.x, expando_rect.y + cell_bounds.y, expando_rect.width, expando_rect.height );
+					
+					return( expando_rect.contains( e.x, e.y ));
+				}
+			}
+		}
+		
+		return( false );
+	}
+	
 	long lastMouseUpEventTime = 0;
 	Point lastMouseUpPos = new Point(0, 0);
 	boolean mouseDown = false;
@@ -139,30 +168,43 @@ public class TableViewSWT_Common
 		TableColumnCore tc = tv.getTableColumnByOffset(e.x);
 		TableCellCore cell = tv.getTableCell(e.x, e.y);
 		//TableRowCore row = tv.getTableRow(e.x, e.y, true);
-		mouseUp(mouseDownOnRow, cell, e.button, e.stateMask);
+		
+		boolean	in_expando = isInExpando( mouseDownOnRow, cell, tc, e );
 
-		if (e.button == 1) {
-			long time = e.time & 0xFFFFFFFFL;
-			long diff = time - lastMouseUpEventTime;
-			if (diff <= e.display.getDoubleClickTime() && diff >= 0
-					&& lastMouseUpPos.x == e.x && lastMouseUpPos.y == e.y) {
-				// Fake double click because Cocoa SWT 3650 doesn't always trigger
-				// DefaultSelection listener on a Tree on dblclick (works find in Table)
-				runDefaultAction(e.stateMask, 0 );
-				return;
-			}
-			lastMouseUpEventTime = time;
-			lastMouseUpPos = new Point(e.x, e.y);
-		}
-
-		if (cell != null && tc != null) {
+		if ( in_expando ){
+			
 			TableCellMouseEvent event = createMouseEvent(cell, e,
 					TableCellMouseEvent.EVENT_MOUSEUP, false);
 			if (event != null) {
 				tc.invokeCellMouseListeners(event);
 				cell.invokeMouseListeners(event);
-				if (event.skipCoreFunctionality) {
-					lCancelSelectionTriggeredOn = System.currentTimeMillis();
+			}
+		}else{
+			mouseUp(mouseDownOnRow, cell, e.button, e.stateMask);
+	
+			if (e.button == 1) {
+				long time = e.time & 0xFFFFFFFFL;
+				long diff = time - lastMouseUpEventTime;
+				if (diff <= e.display.getDoubleClickTime() && diff >= 0
+						&& lastMouseUpPos.x == e.x && lastMouseUpPos.y == e.y) {
+					// Fake double click because Cocoa SWT 3650 doesn't always trigger
+					// DefaultSelection listener on a Tree on dblclick (works find in Table)
+					runDefaultAction(e.stateMask, 0 );
+					return;
+				}
+				lastMouseUpEventTime = time;
+				lastMouseUpPos = new Point(e.x, e.y);
+			}
+	
+			if (cell != null && tc != null) {
+				TableCellMouseEvent event = createMouseEvent(cell, e,
+						TableCellMouseEvent.EVENT_MOUSEUP, false);
+				if (event != null) {
+					tc.invokeCellMouseListeners(event);
+					cell.invokeMouseListeners(event);
+					if (event.skipCoreFunctionality) {
+						lCancelSelectionTriggeredOn = System.currentTimeMillis();
+					}
 				}
 			}
 		}
@@ -180,37 +222,50 @@ public class TableViewSWT_Common
 		TableCellCore cell = tv.getTableCell(e.x, e.y);
 		TableColumnCore tc = cell == null ? null : cell.getTableColumnCore();
 
-		mouseDown(row, cell, e.button, e.stateMask);
-
-		if (row == null) {
-			tv.setSelectedRows(new TableRowCore[0]);
-		}
-
-		tv.editCell(null, -1); // clear out current cell editor
-
-		if (cell != null && tc != null) {
+		boolean	in_expando = isInExpando( row, cell, tc, e );
+		
+		if ( in_expando ){
+		
 			TableCellMouseEvent event = createMouseEvent(cell, e,
 					TableCellMouseEvent.EVENT_MOUSEDOWN, false);
 			if (event != null) {
 				tc.invokeCellMouseListeners(event);
 				cell.invokeMouseListeners(event);
-				tv.invokeRowMouseListener(event);
-				if (event.skipCoreFunctionality) {
-					lCancelSelectionTriggeredOn = System.currentTimeMillis();
+			}
+		}else{
+			
+			mouseDown(row, cell, e.button, e.stateMask);
+	
+			if (row == null) {
+				tv.setSelectedRows(new TableRowCore[0]);
+			}
+	
+			tv.editCell(null, -1); // clear out current cell editor
+	
+			if (cell != null && tc != null) {
+				TableCellMouseEvent event = createMouseEvent(cell, e,
+						TableCellMouseEvent.EVENT_MOUSEDOWN, false);
+				if (event != null) {
+					tc.invokeCellMouseListeners(event);
+					cell.invokeMouseListeners(event);
+					tv.invokeRowMouseListener(event);
+					if (event.skipCoreFunctionality) {
+						lCancelSelectionTriggeredOn = System.currentTimeMillis();
+					}
 				}
-			}
-			if (tc.hasInplaceEditorListener() && e.button == 1
-					&& lastClickRow == cell.getTableRowCore()) {
-				tv.editCell(tv.getTableColumnByOffset(e.x), cell.getTableRowCore().getIndex());
-			}
-			if (e.button == 1) {
-				lastClickRow = cell.getTableRowCore();
-			}
-		} else if (row != null) {
-			TableRowMouseEvent event = createMouseEvent(row, e,
-					TableCellMouseEvent.EVENT_MOUSEDOWN, false);
-			if (event != null) {
-				tv.invokeRowMouseListener(event);
+				if (tc.hasInplaceEditorListener() && e.button == 1
+						&& lastClickRow == cell.getTableRowCore()) {
+					tv.editCell(tv.getTableColumnByOffset(e.x), cell.getTableRowCore().getIndex());
+				}
+				if (e.button == 1) {
+					lastClickRow = cell.getTableRowCore();
+				}
+			} else if (row != null) {
+				TableRowMouseEvent event = createMouseEvent(row, e,
+						TableCellMouseEvent.EVENT_MOUSEDOWN, false);
+				if (event != null) {
+					tv.invokeRowMouseListener(event);
+				}
 			}
 		}
 	}

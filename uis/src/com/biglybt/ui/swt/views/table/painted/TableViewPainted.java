@@ -115,9 +115,10 @@ public class TableViewPainted
 	 */
 	LinkedHashSet<TableRowPainted> visibleRows = new LinkedHashSet<>();
 
-	Object visibleRows_sync = new Object();
+	private Object lock = new Object();
 
-	Object lock = new Object();
+	//Object visibleRows_sync = new Object();	// got a deadlock between this and lock when separate so consolidated
+	private Object visibleRows_sync = lock;
 
 	/**
 	 * Up to date table client area.  So far, the best places to refresh
