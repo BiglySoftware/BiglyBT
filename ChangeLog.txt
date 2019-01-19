@@ -69,7 +69,7 @@ CHANGE: Core   | Write UTF-8 BOM to log files, so editors don't have to guess en
 CHANGE: Core   | Inject Privacy View lookup results if decent [Parg]
 CHANGE: Core   | Remove reported client-ip when proxy connection used [Parg]
 CHANGE: Core   | Don't wait forever to connect to plugin repo, and reduce retries [TuxPaper]
-CHANGE: Core   | Reduce frequency of atempted connections when seeding [Parg]
+CHANGE: Core   | Reduce frequency of attempted connections when seeding [Parg]
 
 BUGFIX: UI     | Fixed beta forum link [Parg]
 BUGFIX: UI     | Fix stats labeling [Parg]
