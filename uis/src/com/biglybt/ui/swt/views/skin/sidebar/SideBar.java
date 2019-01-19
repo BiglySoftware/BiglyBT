@@ -237,15 +237,10 @@ public class SideBar
 							menu.setVisible( false );
 							
 						}else {
-						
-							if ( COConfigurationManager.getIntParameter( "Side Bar Close Position" ) == 2 ){
-								
-								menu.setVisible( true );
-								
-							}else{
-								
-								menu.setVisible( false);
-							}
+
+							// Always show close menu because some OSes (Gnome on Debian)
+							// cover up the "x" with an animated scrollbar
+							menu.setVisible( true );
 						}
 					}
 				});
