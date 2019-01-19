@@ -49,6 +49,7 @@ import com.biglybt.pif.tracker.TrackerTorrent;
 import com.biglybt.pif.tracker.TrackerTorrentRemovalVetoException;
 import com.biglybt.pif.tracker.TrackerTorrentWillBeRemovedListener;
 import com.biglybt.pif.utils.DelayedTask;
+import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 public class
@@ -218,27 +219,49 @@ ShareHosterPlugin
 						ShareResource			resource,
 						ShareResourceEvent		event )
 					{
+						Download download = f_old_download==null?f_new_download:f_old_download;
+						
 						int	type = event.getType();
 						
 						if ( type == ShareResourceEvent.ET_ATTRIBUTE_CHANGED ){
 	
 							TorrentAttribute	attribute = (TorrentAttribute)event.getData();
 	
-							// System.out.println( "sh: res -> ds: " + attribute.getName() + "/" + resource.getAttribute( attribute ));
-	
-							if ( f_old_download != null ){
-								
-								f_old_download.setAttribute( attribute, resource.getAttribute( attribute ));
-							}
-
-							if ( f_new_download != null ){
-								
-								f_new_download.setAttribute( attribute, resource.getAttribute( attribute ));
-							}
+								// System.out.println( "sh: res -> ds: " + attribute.getName() + "/" + resource.getAttribute( attribute ));
+									
+							download.setAttribute( attribute, resource.getAttribute( attribute ));
 							
 						}else if ( type == ShareResourceEvent.ET_PROPERTY_CHANGED ){
 							
-							System.out.println( "Change!" );
+							String[] entry = (String[])event.getData();
+							
+							String key = entry[0];
+							
+							if ( key.equals( ShareManager.PR_TAGS )){
+								
+								String new_tags_str = entry[2];
+								
+								String[] bits = new_tags_str.split( "," );
+								
+								TagManager tm = TagManagerFactory.getTagManager();
+								
+								for ( String bit: bits ){
+									
+									bit = bit.trim();
+									
+									if ( !bit.isEmpty()){
+										
+										try{
+											Tag tag = tm.lookupTagByUID( Long.parseLong( bit ));
+											
+											tag.addTaggable( PluginCoreUtils.unwrap( download ));
+											
+										}catch( Throwable e ){
+											
+										}
+									}
+								}
+							}
 						}
 					}
 				};

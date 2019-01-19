@@ -353,7 +353,7 @@ implements ShareManagerListener,
 							
 							for ( Tag t: tags ){
 								
-								tags_str += "," + t.getTagUID();
+								tags_str += (tags_str.isEmpty()?"":",") + t.getTagUID();
 							}
 							
 							final String f = tags_str;

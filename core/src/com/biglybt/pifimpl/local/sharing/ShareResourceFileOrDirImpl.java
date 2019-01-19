@@ -477,20 +477,27 @@ ShareResourceFileOrDirImpl
 	{
 		for ( Map.Entry<String,String> entry: props.entrySet()){
 			
-			String 	key 	= entry.getKey();
-			String	value 	= entry.getValue();
+			String 	key 		= entry.getKey();
+			String	new_value 	= entry.getValue();
 			
+			String old_value = properties.get( key );
+
 			if ( key.equals( ShareManager.PR_TAGS )){
-				
-				if ( !value.equals( properties.get( ShareManager.PR_TAGS ))){
+												
+				if ( !new_value.equals( old_value )){
 					
-					properties.put( key, value );
+					properties.put( key, new_value );
 					
-					fireChangeEvent( ShareResourceEvent.ET_PROPERTY_CHANGED, key );
+					if ( old_value == null ){
+						
+						old_value = "";
+					}
+
+					fireChangeEvent( ShareResourceEvent.ET_PROPERTY_CHANGED, new String[]{ key, old_value, new_value });
 				}
 			}else{
 				
-				if ( !value.equals( properties.get( key ))){
+				if ( !new_value.equals( old_value )){
 				
 					Debug.out( "Unsupported property change" );
 				}
