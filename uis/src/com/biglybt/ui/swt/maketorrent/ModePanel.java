@@ -243,7 +243,7 @@ public class ModePanel extends AbstractWizardPanel<NewTorrentWizard> {
     // "external tracker" button *even if* we set it up so that "dht tracker" should be selected....
 
     final Button btnDHTTracker = new Button(panel, SWT.RADIO);
-    Messages.setLanguageText(btnDHTTracker, "wizard.tracker.dht");
+    Messages.setLanguageText(btnDHTTracker, "label.decentralised");
     gridData = new GridData();
     gridData.horizontalSpan = 4;
     btnDHTTracker.setLayoutData(gridData);
