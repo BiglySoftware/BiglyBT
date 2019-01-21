@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2019.01.xx | BiglyBT 1.8.0.0
+2019.01.21 | BiglyBT 1.8.0.0
 
 FEATURE: UI    | New 'All Trackers' view [Parg]
 FEATURE: UI    | Added local country stats view [Parg]
@@ -59,7 +59,9 @@ CHANGE: UI     | Allow '*' as whitelist component [Parg]
 CHANGE: UI     | Support pasting peers on multiple lines [Parg]
 CHANGE: UI     | Indicate state on fancy menu force-start icon [Parg]
 CHANGE: UI     | Clicking on an expand/collapse icon in Library or Files View no longer selects the row [Parg]
+CHANGE: UI     | Always show sidebar close menu in case "x" obfuscated by scrollbar [TuxPaper]
 CHANGE: UI     | Larger click area for expand/collapse icon [Parg]
+CHANGE: Plug   | *nix: Install Dorkbox-SystemTray plugin if not present [TuxPaper]
 CHANGE: Core   | Retain category, thumbnail and user comments from metadata download [Parg]
 CHANGE: Core   | Faster bdecoding of torrents etc [TuxPaper]
 CHANGE: Core   | Faster closedown [Parg]
