@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2019.xx.yy | BiglyBT 1.8.0.1
+
 2019.01.21 | BiglyBT 1.8.0.0
 
 FEATURE: UI    | New 'All Trackers' view [Parg]
