@@ -5204,9 +5204,11 @@ SubscriptionManagerImpl
 
 								String lc_url = url.toLowerCase( Locale.US );
 
-								if ( lc_url.startsWith( "http" )){
+								if ( lc_url.startsWith( "http" ) && lc_url.length() > 10 ){
 
-									String alt_url = UrlUtils.parseTextForURL( url.substring( 5 ), true );
+										// skip over initial http(s):// 
+									
+									String alt_url = UrlUtils.parseTextForURL( url.substring( 10 ), true );
 
 									if ( key.startsWith( alt_url )){
 
