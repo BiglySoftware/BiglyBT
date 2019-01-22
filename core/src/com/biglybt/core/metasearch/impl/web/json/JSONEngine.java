@@ -448,7 +448,7 @@ JSONEngine
 									continue;
 								}
 
-								Pattern filter = mappings[i].getPostFilterPattern(searchQuery);
+								Pattern filter = mappings[j].getPostFilterPattern(searchQuery);
 								if (filter != null) {
 									Matcher postMatch = filter.matcher(fieldContent);
 									if (!postMatch.find()) {
