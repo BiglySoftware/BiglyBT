@@ -89,7 +89,7 @@ public class SideBarEntrySWT
 	private static final boolean DO_OUR_OWN_TREE_INDENT = true;
 		
 	private static final int		EXPANDO_WIDTH				= 12;
-	private static final int		EXPANDO_INDENT				= 10;
+	private static int				EXPANDO_INDENT;
 
 	private static boolean DO_EXPANDO_INDENT;
 	private static boolean COMPACT_SIDEBAR;
@@ -114,7 +114,15 @@ public class SideBarEntrySWT
 						DO_EXPANDO_INDENT = COConfigurationManager.getBooleanParameter( "Side Bar Indent Expanders" );
 						COMPACT_SIDEBAR = COConfigurationManager.getBooleanParameter( "Side Bar Compact View" );
 						
-						EXPANDO_LEFT_INDENT 	= COMPACT_SIDEBAR?4:10;
+						boolean osx_standard = Constants.isOSX && !COMPACT_SIDEBAR;  // align things with semi-visible native twisty
+						
+						if ( osx_standard ) {
+							EXPANDO_INDENT = 15;
+						}else{
+							EXPANDO_INDENT = 10;
+						}
+						
+						EXPANDO_LEFT_INDENT 	= COMPACT_SIDEBAR?4:(osx_standard?8:10);
 						EXPANDO_INDENT_INITIAL	= EXPANDO_WIDTH + EXPANDO_LEFT_INDENT;
 						
 						IMAGELEFT_HIDDEN = COConfigurationManager.getBooleanParameter( "Side Bar Hide Left Icon" );

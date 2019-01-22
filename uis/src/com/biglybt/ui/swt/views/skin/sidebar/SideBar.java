@@ -808,7 +808,7 @@ public class SideBar
 								//treeItem.dispose();
 								return;
 							} else if (getCurrentEntrySWT() != entry && Constants.isOSX) {
-								showEntry(entry);
+								// showEntry(entry);  removed as we'll get a selection event if needed
 							}
 
 							if (entry != null) {
