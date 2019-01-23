@@ -588,7 +588,6 @@ public class MultiTrackerEditor {
 
 
 		final Button btnEdit = new Button(cTemplate, SWT.PUSH);
-		buttons.add( btnEdit );
 		Messages.setLanguageText(btnEdit, "wizard.multitracker.edit");
 		btnEdit.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -600,7 +599,6 @@ public class MultiTrackerEditor {
 		});
 
 		final Button btnDelete = new Button(cTemplate, SWT.PUSH);
-		buttons.add( btnDelete );
 		Messages.setLanguageText(btnDelete, "wizard.multitracker.delete");
 		btnDelete.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -632,7 +630,6 @@ public class MultiTrackerEditor {
 		});
 
 		final Button btnNew = new Button(cTemplate, SWT.PUSH);
-		buttons.add( btnNew );
 		Messages.setLanguageText(btnNew, "wizard.multitracker.new");
 		btnNew.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -643,6 +640,10 @@ public class MultiTrackerEditor {
 				new MultiTrackerEditor(btnNew.getShell(), null,group, templateTEL);
 			}
 		});
+
+		buttons.add( btnNew );		// must be first as it is skipped in above enabling logic by position...
+		buttons.add( btnEdit );
+		buttons.add( btnDelete );
 
 		configList.addListener(SWT.Selection,new Listener() {
 			@Override
