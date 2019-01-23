@@ -96,8 +96,7 @@ public class ImageLoader
 	public static synchronized ImageLoader getInstance() {
 		if (instance == null) {
 			if (Utils.isDisplayDisposed()) {
-				System.err.println("Calling getInstance after display disposed: " + Debug.getCompressedStackTrace());
-				return null;
+				throw new SWTException("Calling getInstance after display disposed");
 			}
 			instance = new ImageLoader(Display.getDefault(), null);
 			// always add az2 icons to instance
