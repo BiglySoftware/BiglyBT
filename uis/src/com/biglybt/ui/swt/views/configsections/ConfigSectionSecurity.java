@@ -232,7 +232,7 @@ ConfigSectionSecurity
 
 	    gridData.widthHint = 150;
 
-	    final StringParameter pathParameter = new StringParameter(gSecurity, "Security.JAR.tools.dir", ""); //$NON-NLS-1$ //$NON-NLS-2$
+	    final StringParameter pathParameter = new StringParameter(gSecurity, "Security.JAR.tools.dir");
 
 	    pathParameter.setLayoutData(gridData);
 

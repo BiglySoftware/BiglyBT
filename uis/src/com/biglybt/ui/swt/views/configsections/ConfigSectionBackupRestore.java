@@ -237,7 +237,7 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 
 
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		final StringParameter pathParameter = new StringParameter(gDefaultDir, "br.backup.auto.dir", "" );
+		final StringParameter pathParameter = new StringParameter(gDefaultDir, "br.backup.auto.dir");
 		pathParameter.setLayoutData(gridData);
 
 		if ( pathParameter.getValue().length() == 0 ){

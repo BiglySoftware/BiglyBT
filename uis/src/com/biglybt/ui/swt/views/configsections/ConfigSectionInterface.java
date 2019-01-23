@@ -36,8 +36,6 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.TrackersUtil;
-import com.biglybt.pif.platform.PlatformManagerException;
-import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
@@ -48,6 +46,9 @@ import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
 import com.biglybt.ui.swt.systray.SystemTraySWT;
+
+import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.pif.ui.config.ConfigSection;
 
 public class ConfigSectionInterface
 	implements UISWTConfigSection
@@ -134,27 +135,30 @@ public class ConfigSectionInterface
 					"ConfigView.label.info.in.window.title");
 		}
 
-		new BooleanParameter(cDisplay, "Remember transfer bar location",
-				"ConfigView.label.transferbar.remember_location");
-
-		Composite gBarTrans = new Composite(cDisplay, SWT.NULL);
-		layout = new GridLayout(4, false);
-		layout.marginWidth = 0;
-		layout.marginHeight = 0;
+		Group gBarTrans = new Group(cDisplay, SWT.NONE);
+		Messages.setLanguageText(gBarTrans, "MainWindow.menu.view.open_global_transfer_bar");
+		layout = new GridLayout(2, false);
 		gBarTrans.setLayout(layout);
-		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		gridData.horizontalIndent = 25;
 		gBarTrans.setLayoutData(gridData);
+
+		BooleanParameter paramRememberTBLocation = new BooleanParameter(gBarTrans, "Remember transfer bar location",
+				"ConfigView.label.transferbar.remember_location");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		paramRememberTBLocation.setLayoutData(gridData);
+
 
 		label = new Label(gBarTrans, SWT.NULL);
 		Messages.setLanguageText(label, "label.bar.trans");
 
 		new IntParameter(gBarTrans, "Bar Transparency", 0, 100);
 
-		label = new Label(gBarTrans, SWT.NULL);
-		Messages.setLanguageText(label, "label.show.icon.area");
-
-		new BooleanParameter(gBarTrans, "Transfer Bar Show Icon Area");
+		
+		BooleanParameter paramTBShowIconArea = new BooleanParameter(gBarTrans,
+				"Transfer Bar Show Icon Area", "label.show.icon.area");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		paramTBShowIconArea.setLayoutData(gridData);
 
 		{
 				// sys tray
@@ -272,11 +276,11 @@ public class ConfigSectionInterface
 		final String limit_type_prefix = "config.ui.speed.partitions.manual.";
 		for (int i = 0; i < limit_types.length; i++) {
 			final BooleanParameter bp = new BooleanParameter(limit_group,
-					limit_type_prefix + limit_types[i] + ".enabled", false,
+					limit_type_prefix + limit_types[i] + ".enabled",
 					"ConfigView.label.set_ui_transfer_speeds.description."
 							+ limit_types[i]);
 			final StringParameter sp = new StringParameter(limit_group,
-					limit_type_prefix + limit_types[i] + ".values", "");
+					limit_type_prefix + limit_types[i] + ".values");
 			IAdditionalActionPerformer iaap = new GenericActionPerformer(
 					new Control[] {}) {
 				@Override

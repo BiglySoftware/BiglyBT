@@ -141,14 +141,14 @@ public class ConfigSectionConnectionProxy implements UISWTConfigSection {
 
 		Label lHost = new Label(gProxyTracker, SWT.NULL);
 		Messages.setLanguageText(lHost, "ConfigView.section.proxy.host");
-		final StringParameter pHost = new StringParameter(gProxyTracker, "Proxy.Host", "", false );
+		final StringParameter pHost = new StringParameter(gProxyTracker, "Proxy.Host", false );
 		gridData = new GridData();
 		gridData.widthHint = 105;
 		pHost.setLayoutData(gridData);
 
 		Label lPort = new Label(gProxyTracker, SWT.NULL);
 		Messages.setLanguageText(lPort, "ConfigView.section.proxy.port");
-		final StringParameter pPort = new StringParameter(gProxyTracker, "Proxy.Port", "", false );
+		final StringParameter pPort = new StringParameter(gProxyTracker, "Proxy.Port", false );
 		gridData = new GridData();
 		gridData.widthHint = 40;
 		pPort.setLayoutData(gridData);
@@ -162,7 +162,7 @@ public class ConfigSectionConnectionProxy implements UISWTConfigSection {
 
 		Label lPass = new Label(gProxyTracker, SWT.NULL);
 		Messages.setLanguageText(lPass, "ConfigView.section.proxy.password");
-		final StringParameter pPass = new StringParameter(gProxyTracker, "Proxy.Password", "", false );
+		final StringParameter pPass = new StringParameter(gProxyTracker, "Proxy.Password", false );
 		gridData = new GridData();
 		gridData.widthHint = 105;
 		pPass.setLayoutData(gridData);
@@ -391,7 +391,7 @@ public class ConfigSectionConnectionProxy implements UISWTConfigSection {
 			dropValues[i] = socks_types[i];
 		}
 		final StringListParameter socksType = new StringListParameter(gProxyPeer,
-				"Proxy.Data.SOCKS.version", "V4", dropLabels, dropValues);
+				"Proxy.Data.SOCKS.version", dropLabels, dropValues);
 
 		final BooleanParameter sameConfig = new BooleanParameter(gProxyPeer,
 				"Proxy.Data.Same", "ConfigView.section.proxy.peer.same");
@@ -426,15 +426,15 @@ public class ConfigSectionConnectionProxy implements UISWTConfigSection {
 			Label lDataHost = new Label(gProxyPeerServer, SWT.NULL);
 			Messages.setLanguageText(lDataHost, "ConfigView.section.proxy.host");
 			StringParameter pDataHost = new StringParameter(gProxyPeerServer,
-					"Proxy.Data.Host" + suffix , "");
+					"Proxy.Data.Host" + suffix );
 			gridData = new GridData();
 			gridData.widthHint = 105;
 			pDataHost.setLayoutData(gridData);
-	
+
 			Label lDataPort = new Label(gProxyPeerServer, SWT.NULL);
 			Messages.setLanguageText(lDataPort, "ConfigView.section.proxy.port");
 			StringParameter pDataPort = new StringParameter(gProxyPeerServer,
-					"Proxy.Data.Port" + suffix, "");
+					"Proxy.Data.Port" + suffix);
 			gridData = new GridData();
 			gridData.widthHint = 40;
 			pDataPort.setLayoutData(gridData);
@@ -450,7 +450,7 @@ public class ConfigSectionConnectionProxy implements UISWTConfigSection {
 			Label lDataPass = new Label(gProxyPeerServer, SWT.NULL);
 			Messages.setLanguageText(lDataPass, "ConfigView.section.proxy.password");
 			StringParameter pDataPass = new StringParameter(gProxyPeerServer,
-					"Proxy.Data.Password" + suffix, "");
+					"Proxy.Data.Password" + suffix);
 			gridData = new GridData();
 			gridData.widthHint = 105;
 			pDataPass.setLayoutData(gridData);

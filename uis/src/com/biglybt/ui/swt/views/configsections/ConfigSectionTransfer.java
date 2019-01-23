@@ -684,7 +684,7 @@ public class ConfigSectionTransfer implements UISWTConfigSection {
 			gridData = new GridData();
 			gridData.widthHint = 125;
 			StringParameter ignore_ports = new StringParameter(cMiniArea,
-					"Ignore.peer.ports", "0");
+					"Ignore.peer.ports");
 			ignore_ports.setLayoutData(gridData);
 		}
 

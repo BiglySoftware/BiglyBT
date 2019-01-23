@@ -168,7 +168,7 @@ public class ConfigSectionConnectionAdvanced
 		gridData = new GridData();
 		lbind.setLayoutData(gridData);
 
-		StringParameter bindip = new StringParameter(gSocket, "Bind IP", "", false);
+		StringParameter bindip = new StringParameter(gSocket, "Bind IP", false);
 		gridData = new GridData();
 		gridData.widthHint = 100;
 		gridData.horizontalSpan = 2;

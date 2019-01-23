@@ -165,6 +165,7 @@ public class UIConfigDefaultsSWT
 
 		def.addParameter( "Library.ShowCatButtons", true );
 		def.addParameter( "Library.ShowTagButtons", false );
+		def.addParameter( "Library.showFancyMenu", true );
 		def.addParameter( "Library.ShowTagButtons.CompOnly", false );
 		def.addParameter( "Library.ShowTagButtons.Inclusive", true );
 		def.addParameter( "open.torrent.window.rename.on.tlf.change", true );
@@ -214,5 +215,12 @@ public class UIConfigDefaultsSWT
 		}
 		
 		def.addParameter( "XferStats.show.samples", true );
+		def.addParameter( "browser.external.non.pub", true );
+
+		String orderDef = "";
+		for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){
+			orderDef += (orderDef.isEmpty()?"":", ") + (i+1);
+		}
+		def.addParameter( "Side Bar Top Level Order", orderDef );
 	}
 }

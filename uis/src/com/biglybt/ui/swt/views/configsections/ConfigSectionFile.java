@@ -856,8 +856,7 @@ public class ConfigSectionFile
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 2;
-			new StringParameter(gIgnoredFiles, "File.Torrent.IgnoreFiles",
-					TOTorrent.DEFAULT_IGNORE_FILES).setLayoutData(gridData);
+			new StringParameter(gIgnoredFiles, "File.Torrent.IgnoreFiles").setLayoutData(gridData);
 
 
 				// file name character mappings
@@ -869,8 +868,7 @@ public class ConfigSectionFile
 
 				gridData = new GridData(GridData.FILL_HORIZONTAL);
 				gridData.horizontalSpan = 2;
-				new StringParameter(gFile, "File.Character.Conversions",
-						ConfigurationDefaults.DEFAULT_FILE_CONVERSION_CHARS).setLayoutData(gridData);
+				new StringParameter(gFile, "File.Character.Conversions").setLayoutData(gridData);
 			}
 		}
 

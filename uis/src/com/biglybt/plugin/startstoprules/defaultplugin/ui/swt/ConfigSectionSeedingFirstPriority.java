@@ -208,7 +208,7 @@ public class ConfigSectionSeedingFirstPriority
 		ignoreSPRatioLabels[i] = i * 10 + " " + ":1" ;
 		ignoreSPRatioValues[i] = i * 10;
     }
-	new IntListParameter(cIgnoreFP, "StartStopManager_iFirstPriority_ignoreSPRatio", 0,
+	new IntListParameter(cIgnoreFP, "StartStopManager_iFirstPriority_ignoreSPRatio",
 							ignoreSPRatioLabels, ignoreSPRatioValues);
 
 	//	 Ignore 0 Peers
@@ -232,7 +232,7 @@ public class ConfigSectionSeedingFirstPriority
 			ignoreIdleHoursValues[i + 1] = availIdleHours[i];
 		}
 		new IntListParameter(cIgnoreFP,
-				"StartStopManager_iFirstPriority_ignoreIdleHours", 0,
+				"StartStopManager_iFirstPriority_ignoreIdleHours",
 				ignoreIdleHoursLabels, ignoreIdleHoursValues);
 
 	//	 row

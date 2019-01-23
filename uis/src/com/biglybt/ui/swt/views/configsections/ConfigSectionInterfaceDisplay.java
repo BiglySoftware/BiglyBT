@@ -317,20 +317,17 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			gd.horizontalSpan = 2;
 			label.setLayoutData( gd );
 			
-			String orderDef = "";
 			String orderStr = "";
 			
 			for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){
 				orderStr += (orderStr.isEmpty()?"":", ") + 
 						(i+1) + "=" +
 						MessageText.getString( "sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT[i]);
-						
-				orderDef += (orderDef.isEmpty()?"":", ") + (i+1);
 			}
 			
 			Messages.setLanguageText(label, "sidebar.header.order", new String[]{ orderStr });
 			
-			StringParameter order = new StringParameter(gSideBar, "Side Bar Top Level Order", orderDef, false);
+			StringParameter order = new StringParameter(gSideBar, "Side Bar Top Level Order", false);
 			order.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
 			
 			BooleanParameter sso = new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
@@ -387,7 +384,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 					MessageText.getString( "sb.close.never" ),
 			};
 		
-		    new IntListParameter(gSideBar, "Side Bar Close Position", 0, cp_labs, new int[]{ 0, 1, 2 });
+		    new IntListParameter(gSideBar, "Side Bar Close Position", cp_labs, new int[]{ 0, 1, 2 });
 		    
 		    if ( !Utils.isGTK ){
 		    	
@@ -635,7 +632,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 				String temp = MessageText.getString( "config.external.browser.non.pub", new String[]{ pi_names });
 
-				BooleanParameter non_pub = new BooleanParameter( nonPubArea, "browser.external.non.pub", true, "!" + temp + "!" );
+				BooleanParameter non_pub = new BooleanParameter( nonPubArea, "browser.external.non.pub", "!" + temp + "!" );
 			}
 
 				// test launch
@@ -852,7 +849,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 		Messages.setLanguageText(label, "ConfigView.section.style.guiUpdate");
 		int[] values = { 10, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 15000 };
 		String[] labels = { "10 ms", "25 ms", "50 ms", "100 ms", "250 ms", "500 ms", "1 s", "2 s", "5 s", "10 s", "15 s" };
-		new IntListParameter(gRefresh, "GUI Refresh", 1000, labels, values);
+		new IntListParameter(gRefresh, "GUI Refresh", labels, values);
 
 		label = new Label(gRefresh, SWT.NULL);
 		Messages.setLanguageText(label, "ConfigView.section.style.inactiveUpdate");

@@ -229,7 +229,7 @@ ConfigSectionTrackerClient
     label.setLayoutData(Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
     Messages.setLanguageText(label, "ConfigView.label.overrideip");
 
-    StringParameter overrideip = new StringParameter(overrideGroup, "Override Ip", "");
+    StringParameter overrideip = new StringParameter(overrideGroup, "Override Ip");
     GridData data = new GridData(GridData.FILL_HORIZONTAL);
     data.widthHint = 100;
     overrideip.setLayoutData(data);
@@ -261,12 +261,9 @@ ConfigSectionTrackerClient
     	}
     });
 
-    label = new Label(overrideGroup, SWT.WRAP);
-    label.setLayoutData(Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
-    Messages.setLanguageText(label, "ConfigView.label.noportannounce");
-
-    BooleanParameter noPortAnnounce = new BooleanParameter(overrideGroup,"Tracker Client No Port Announce");
+    BooleanParameter noPortAnnounce = new BooleanParameter(overrideGroup,"Tracker Client No Port Announce", "ConfigView.label.noportannounce");
     data = new GridData();
+    data.horizontalSpan = 2;
     noPortAnnounce.setLayoutData(data);
 
     label = new Label(overrideGroup, SWT.WRAP);

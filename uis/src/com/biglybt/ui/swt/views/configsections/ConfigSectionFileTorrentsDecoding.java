@@ -125,7 +125,7 @@ public class ConfigSectionFileTorrentsDecoding implements UISWTConfigSection
 		for (int i = 1; i <= decoders.length; i++) {
 			decoderLabels[i] = decoderValues[i] = decoders[i - 1].getName();
 		}
-		new StringListParameter(cSection, "File.Decoder.Default", "",
+		new StringListParameter(cSection, "File.Decoder.Default",
 				decoderLabels, decoderValues);
 
 		// locale always prompt

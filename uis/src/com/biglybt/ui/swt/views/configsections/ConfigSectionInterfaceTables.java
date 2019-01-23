@@ -153,7 +153,7 @@ public class ConfigSectionInterfaceTables
 					"10 s",
 					"15 s"
 				};
-				new IntListParameter(cGeneral, "GUI Refresh", 1000, labels, values);
+				new IntListParameter(cGeneral, "GUI Refresh", labels, values);
 
 				label = new Label(cGeneral, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.section.style.graphicsUpdate");
@@ -211,7 +211,7 @@ public class ConfigSectionInterfaceTables
 				Messages.setLanguageText(chkCustomDate, "ConfigView.section.style.customDateFormat");
 				chkCustomDate.setSelection(cdEnabled);
 
-				final StringParameter paramCustomDate = new StringParameter(cGeneral, "Table.column.dateformat", "");
+				final StringParameter paramCustomDate = new StringParameter(cGeneral, "Table.column.dateformat");
 				paramCustomDate.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 				paramCustomDate.setEnabled(cdEnabled);
 				paramCustomDate.addChangeListener(new ParameterChangeAdapter() {
@@ -329,7 +329,7 @@ public class ConfigSectionInterfaceTables
 								SWT.LEFT, true, false, 2, 1));
 			//}
 
-			new BooleanParameter(cLibrary, "Library.showFancyMenu", true, "ConfigView.section.style.ShowFancyMenu").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
+			new BooleanParameter(cLibrary, "Library.showFancyMenu",  "ConfigView.section.style.ShowFancyMenu").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
 					true, false, 2, 1));
 
 
@@ -424,7 +424,7 @@ public class ConfigSectionInterfaceTables
 				label = new Label(cLaunch, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.label.lh.ext");
 
-				StringParameter exts = new StringParameter(cLaunch, "Table.lh" + i + ".exts", "");
+				StringParameter exts = new StringParameter(cLaunch, "Table.lh" + i + ".exts");
 				gridData = new GridData();
 				gridData.widthHint = 200;
 				exts.setLayoutData( gridData );

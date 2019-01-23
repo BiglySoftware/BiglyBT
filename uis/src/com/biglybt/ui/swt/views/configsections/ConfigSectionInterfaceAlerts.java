@@ -292,7 +292,7 @@ public class ConfigSectionInterfaceAlerts
 
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 
-		final StringParameter e_pathParameter = new StringParameter(cArea,playKeyConfig, "");
+		final StringParameter e_pathParameter = new StringParameter(cArea,playKeyConfig);
 
 		if (e_pathParameter.getValue().length() == 0) {
 

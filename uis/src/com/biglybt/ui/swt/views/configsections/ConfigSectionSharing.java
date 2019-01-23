@@ -88,7 +88,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 	String[]	protocols = {"HTTP","HTTPS","UDP","DHT" };
     String[]	descs = {"HTTP","HTTPS (SSL)", "UDP", "Decentralised" };
 
-    StringListParameter protocol = new StringListParameter(gSharing, "Sharing Protocol", "DHT", descs, protocols );
+    StringListParameter protocol = new StringListParameter(gSharing, "Sharing Protocol", descs, protocols );
 
 	// row
 
@@ -185,7 +185,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 	gridData = new GridData(GridData.FILL_HORIZONTAL);
 	gridData.horizontalIndent = 25;
 	gridData.horizontalSpan = 2;
-    StringParameter torrent_comment = new StringParameter(gSharing, "Sharing Torrent Comment", "" );
+    StringParameter torrent_comment = new StringParameter(gSharing, "Sharing Torrent Comment");
     torrent_comment.setLayoutData(gridData);
 
    	// row

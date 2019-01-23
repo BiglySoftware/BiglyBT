@@ -128,7 +128,7 @@ public class ConfigSectionInterfaceLanguage implements UISWTConfigSection {
       }
     });
 
-    BooleanParameter uc = new BooleanParameter( cMain, "label.lang.upper.case", false, "label.lang.upper.case" );
+    BooleanParameter uc = new BooleanParameter( cMain, "label.lang.upper.case",  "label.lang.upper.case" );
 
     uc.addChangeListener( new ParameterChangeAdapter() {
         @Override

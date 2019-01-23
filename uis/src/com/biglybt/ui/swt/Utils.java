@@ -1411,7 +1411,7 @@ public class Utils
 
 				eb_choice = COConfigurationManager.getStringParameter( "browser.external.id", "system" );
 
-				use_plugins = COConfigurationManager.getBooleanParameter( "browser.external.non.pub", true );
+				use_plugins = COConfigurationManager.getBooleanParameter( "browser.external.non.pub" );
 
 				if ( net_type != AENetworkClassifier.AT_PUBLIC && use_plugins ){
 

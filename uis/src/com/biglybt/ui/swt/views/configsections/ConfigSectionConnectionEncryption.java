@@ -166,8 +166,7 @@ public class ConfigSectionConnectionEncryption
 		Messages.setLanguageText(lmin,
 				"ConfigView.section.connection.encryption.min_encryption_level");
 		final StringListParameter min_level = new StringListParameter(cEncryptLevel,
-				"network.transport.encrypted.min_level", encryption_types[1],
-				dropLabels, dropValues);
+				"network.transport.encrypted.min_level", dropLabels, dropValues);
 
 		Label lcryptofb = new Label(gCrypto, SWT.WRAP);
 		Messages.setLanguageText(lcryptofb,

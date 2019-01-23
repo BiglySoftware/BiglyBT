@@ -224,7 +224,7 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 				label = new Label(gSleep, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.label.sleep.tag");
 				
-				new StringListParameter(gSleep, "Prevent Sleep Tag", "", tags, tags );
+				new StringListParameter(gSleep, "Prevent Sleep Tag", tags, tags );
 			}
 		}
 
@@ -433,7 +433,7 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 
 			gridData = new GridData();
 			gridData.widthHint = 125;
-			final StringParameter max_vm = new StringParameter(area, "jvm.max.mem", "", false );
+			final StringParameter max_vm = new StringParameter(area, "jvm.max.mem", false );
 			max_vm.setLayoutData(gridData);
 
 			max_vm.setValue( max_mem == -1?"":encodeDisplayLong( max_mem ));
@@ -539,7 +539,7 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 
 			gridData = new GridData();
 			gridData.widthHint = 125;
-			final StringParameter min_vm = new StringParameter(area, "jvm.min.mem", "", false );
+			final StringParameter min_vm = new StringParameter(area, "jvm.min.mem", false );
 			min_vm.setLayoutData(gridData);
 
 			min_vm.setValue( min_mem == -1?"":encodeDisplayLong( min_mem ));
@@ -640,7 +640,7 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 
 			gridData = new GridData();
 			gridData.widthHint = 125;
-			final StringParameter max_direct_vm = new StringParameter(area, "jvm.max.direct.mem", "", false );
+			final StringParameter max_direct_vm = new StringParameter(area, "jvm.max.direct.mem", false );
 			max_direct_vm.setLayoutData(gridData);
 
 			max_direct_vm.setValue( max_direct == -1?"":encodeDisplayLong( max_direct ));
@@ -893,7 +893,7 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 
 		String[][]	action_details = getActionDetails();
 
-		final StringListParameter dc = new StringListParameter(comp, "On Downloading Complete Do", "Nothing", action_details[0], action_details[1] );
+		final StringListParameter dc = new StringListParameter(comp, "On Downloading Complete Do", action_details[0], action_details[1] );
 
 		if ( include_script_setting ){
 
@@ -940,7 +940,7 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 
 		String[][]	action_details = getActionDetails();
 
-	    final StringListParameter sc = new StringListParameter(comp, "On Seeding Complete Do", "Nothing", action_details[0], action_details[1] );
+	    final StringListParameter sc = new StringListParameter(comp, "On Seeding Complete Do", action_details[0], action_details[1] );
 
 	    if ( include_script_setting ){
 

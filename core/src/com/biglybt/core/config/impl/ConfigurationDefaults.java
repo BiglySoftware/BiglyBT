@@ -435,6 +435,7 @@ public class ConfigurationDefaults {
     def.put( "Enforce Bind IP", FALSE);
     def.put( "Show IP Bindings Icon", TRUE );
 
+    def.put( "Stats Period", Long.valueOf(30) );
     def.put( "Stats Export Peer Details", FALSE );
     def.put( "Stats Export File Details", FALSE );
     def.put( "Stats XSL File", "" );
@@ -443,6 +444,7 @@ public class ConfigurationDefaults {
     def.put( "Stats Dir", "" );
     def.put( "Stats File", StatsWriterPeriodic.DEFAULT_STATS_FILE_NAME );
     def.put( "long.term.stats.enable", TRUE );
+    def.put( "long.term.stats.weekstart", Calendar.SUNDAY );
     def.put( "Stats Smoothing Secs", new Long( 2*60 ));
     def.put( "File.Torrent.AutoSkipExtensions", "" );
     def.put( "File.Torrent.AutoSkipFiles", "" );

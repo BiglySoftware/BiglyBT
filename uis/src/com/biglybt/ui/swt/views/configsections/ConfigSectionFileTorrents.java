@@ -210,7 +210,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
 
 	    gridData = new GridData(GridData.FILL_HORIZONTAL);
 	    final StringParameter watchFolderPathParameter =
-	    	new StringParameter(gWatchFolder, "Watch Torrent Folder Path" + (i==0?"":(" " + i )), "");
+	    	new StringParameter(gWatchFolder, "Watch Torrent Folder Path" + (i==0?"":(" " + i )));
 	    watchFolderPathParameter.setLayoutData(gridData);
 
 	    Button browse4 = new Button(gWatchFolder, SWT.PUSH);
@@ -235,7 +235,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
 	    Messages.setLanguageText(lTag, "label.assign.to.tag");
 
 	    StringParameter tagParam =
-	    	new StringParameter(gWatchFolder, "Watch Torrent Folder Tag" + (i==0?"":(" " + i )), "");
+	    	new StringParameter(gWatchFolder, "Watch Torrent Folder Tag" + (i==0?"":(" " + i )));
 	    gridData = new GridData();
 	    gridData.widthHint = 60;
 	    tagParam.setLayoutData(gridData);

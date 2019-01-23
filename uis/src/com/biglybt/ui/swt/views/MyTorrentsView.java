@@ -290,7 +290,7 @@ public class MyTorrentsView
   // @see com.biglybt.ui.swt.views.table.impl.TableViewTab#tableViewTabInitComplete()
   @Override
   public void tableViewTabInitComplete() {
-  	if (COConfigurationManager.getBooleanParameter("Library.showFancyMenu", true)) {
+  	if (COConfigurationManager.getBooleanParameter("Library.showFancyMenu")) {
     	Composite tableComposite = tv.getComposite();
     	oldMenu = tableComposite.getMenu();
     	Menu menu = new Menu(tableComposite);
