@@ -6665,15 +6665,6 @@ public class OpenTorrentOptionsWindow
 			return( 0 );
 		}
 
-		@Override
-		public int
-		getIntValue(
-			String	key,
-			int		def )
-		{
-			return( def );
-		}
-
 
 		@Override
 		public boolean

@@ -29,9 +29,8 @@ import org.eclipse.swt.widgets.Label;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.pif.UISWTConfigSection;
 
 import com.biglybt.pif.ui.config.ConfigSection;
 
@@ -98,12 +97,11 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
 		label.setLayoutData(gridData);
 
-		label = new Label(cMaxDownloads, SWT.NULL);
-		Messages.setLanguageText(label, "ConfigView.label.ignoreChecking");
-
 		gridData = new GridData();
-		BooleanParameter ignoreChecking = new BooleanParameter(
-				cMaxDownloads, "StartStopManager_bMaxDownloadIgnoreChecking");
+		gridData.horizontalSpan = 2;
+		BooleanParameter ignoreChecking = new BooleanParameter(cMaxDownloads,
+				"StartStopManager_bMaxDownloadIgnoreChecking",
+				"ConfigView.label.ignoreChecking");
 
 		ignoreChecking.setLayoutData(gridData);
 

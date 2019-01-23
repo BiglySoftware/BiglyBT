@@ -428,7 +428,7 @@ public class TagSettingsView
 								tag.setVisible(value);
 							}
 						}
-					}, cSection2, null, "TagSettings.viewInSideBar");
+					}, cSection2, null, "TagSettings.viewInSideBar", null);
 			gd = new GridData();
 			gd.horizontalSpan = 4;
 			params.viewInSideBar.setLayoutData(gd);
@@ -452,7 +452,7 @@ public class TagSettingsView
 									tag.setPublic(value);
 								}
 							}
-						}, cSection2, null, "TagAddWindow.public.checkbox");
+						}, cSection2, null, "TagAddWindow.public.checkbox", null);
 				gd = new GridData();
 				gd.horizontalSpan = 4;
 				params.isPublic.setLayoutData(gd);
@@ -520,11 +520,6 @@ public class TagSettingsView
 								}
 
 								@Override
-								public int getIntValue(String key, int def) {
-									return getIntValue(key);
-								}
-
-								@Override
 								public void setIntValue(String key, int value) {
 									for (TagFeatureRateLimit rl : rls) {
   									if (value == -1) {
@@ -573,11 +568,6 @@ public class TagSettingsView
 								}
 
 								@Override
-								public int getIntValue(String key, int def) {
-									return getIntValue(key);
-								}
-
-								@Override
 								public void setIntValue(String key, int value) {
 									for (TagFeatureRateLimit rl : rls) {
 									if (value == -1) {
@@ -617,7 +607,7 @@ public class TagSettingsView
 										rl.setTagUploadPriority(value ? 1 : 0);
 									}
 								}
-							}, gTransfer, null, "cat.upload.priority");
+							}, gTransfer, null, "cat.upload.priority", null);
 					gd = new GridData();
 					gd.horizontalSpan = 6 - cols_used;
 					params.uploadPriority.setLayoutData(gd);
@@ -695,10 +685,6 @@ public class TagSettingsView
 					params.max_sr_action = new GenericStringListParameter(
 							new GenericParameterAdapter() {
 								@Override
-								public String getStringListValue(String key, String def ) {
-									return( getStringListValue( key ));
-								}
-								@Override
 								public String
 								getStringListValue(
 									String		key )
@@ -711,8 +697,8 @@ public class TagSettingsView
 									rls[0].setTagMaxShareRatioAction( Integer.parseInt( value ));
 								}
 							},
-							gTransfer, "max_sr_action", ""+TagFeatureRateLimit.SR_INDIVIDUAL_ACTION_DEFAULT,
-							ST_ACTION_LABELS, ST_ACTION_VALUES );
+							gTransfer, "max_sr_action", ST_ACTION_LABELS,
+							ST_ACTION_VALUES );
 				}
 
 				// Field: Max Aggregate Share
@@ -760,10 +746,6 @@ public class TagSettingsView
 					params.max_aggregate_sr_action = new GenericStringListParameter(
 							new GenericParameterAdapter() {
 								@Override
-								public String getStringListValue(String key, String def ) {
-									return( getStringListValue( key ));
-								}
-								@Override
 								public String
 								getStringListValue(
 									String		key )
@@ -776,11 +758,12 @@ public class TagSettingsView
 									rls[0].setTagMaxAggregateShareRatioAction( Integer.parseInt( value ));
 								}
 							},
-							gTransfer, "max_aggregate_sr_action", ""+TagFeatureRateLimit.SR_AGGREGATE_ACTION_DEFAULT,
+							gTransfer, "max_aggregate_sr_action",
 							ST_ACTION_LABELS, ST_ACTION_VALUES );
 
 						// aggregate has priority
 
+					// XXX Can we move the label to textKey?
 					label = new Label(gTransfer, SWT.NONE);
 					Messages.setLanguageText(label, "label.aggregate.has.priority");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
@@ -801,7 +784,7 @@ public class TagSettingsView
 									 rls[0].setTagMaxAggregateShareRatioHasPriority( value );
 								}
 							},
-							gTransfer, "max_aggregate_sr_priority", TagFeatureRateLimit.AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY_DEFAULT );
+							gTransfer, "max_aggregate_sr_priority", null, null );
 
 					updateTagSRParams( params );
 				}
@@ -826,7 +809,7 @@ public class TagSettingsView
 										rl.setFirstPrioritySeeding(value);
 									}
 								}
-							}, gTransfer, null, "label.first.priority.seeding");
+							}, gTransfer, null, "label.first.priority.seeding", null);
 					gd = new GridData();
 					gd.horizontalSpan = 6 - cols_used;
 					params.firstPrioritySeeding.setLayoutData(gd);
@@ -888,7 +871,7 @@ public class TagSettingsView
 										}
 										fl.setTagInitialSaveOptions(flags);
 									}
-								}, gFiles, null, "label.move.data");
+								}, gFiles, null, "label.move.data", null);
 
 						params.initalSaveTorrent = new GenericBooleanParameter(
 								new BooleanParameterAdapter() {
@@ -907,7 +890,7 @@ public class TagSettingsView
 										}
 										fl.setTagInitialSaveOptions(flags);
 									}
-								}, gFiles, null, "label.move.torrent");
+								}, gFiles, null, "label.move.torrent", null);
 
 					}
 
@@ -953,7 +936,7 @@ public class TagSettingsView
 										}
 										fl.setTagMoveOnCompleteOptions(flags);
 									}
-								}, gFiles, null, "label.move.data");
+								}, gFiles, null, "label.move.data", null);
 
 						params.moveOnCompleteTorrent = new GenericBooleanParameter(
 								new BooleanParameterAdapter() {
@@ -972,7 +955,7 @@ public class TagSettingsView
 										}
 										fl.setTagMoveOnCompleteOptions(flags);
 									}
-								}, gFiles, null, "label.move.torrent");
+								}, gFiles, null, "label.move.torrent", null);
 					}
 
 					if ( fl.supportsTagCopyOnComplete()){
@@ -1015,7 +998,7 @@ public class TagSettingsView
 										}
 										fl.setTagCopyOnCompleteOptions(flags);
 									}
-								}, gFiles, null, "label.copy.data");
+								}, gFiles, null, "label.copy.data", null);
 
 						params.copyOnCompleteTorrent = new GenericBooleanParameter(
 								new BooleanParameterAdapter() {
@@ -1034,7 +1017,7 @@ public class TagSettingsView
 										}
 										fl.setTagCopyOnCompleteOptions(flags);
 									}
-								}, gFiles, null, "label.copy.torrent");
+								}, gFiles, null, "label.copy.torrent", null);
 					}
 				}
 			}
@@ -1153,7 +1136,7 @@ public class TagSettingsView
 									propConstraint.setEnabled( value );
 								
 								}
-							}, gConstraint, null, "label.enabled");
+							}, gConstraint, null, "label.enabled", null);
 					
 					Label constraintMode = new Label(gConstraint, SWT.NULL );
 					Messages.setLanguageText(constraintMode, "label.scope");
@@ -1172,10 +1155,6 @@ public class TagSettingsView
 
 					params.constraintMode = new GenericStringListParameter(
 							new GenericParameterAdapter() {
-								@Override
-								public String getStringListValue(String key, String def ) {
-									return( getStringListValue( key ));
-								}
 								@Override
 								public String
 								getStringListValue(
@@ -1206,7 +1185,7 @@ public class TagSettingsView
 									propConstraint.setStringList(new String[]{ list!=null&&list.length>0?list[0]:"", value });
 								}
 							},
-							gConstraint, "tag_constraint_action_mode", CM_ADD_REMOVE,
+							gConstraint, "tag_constraint_action_mode",
 							CM_LABELS, CM_VALUES );
 
 					Link lblAboutConstraint = new Link(gConstraint, SWT.WRAP);
@@ -1255,10 +1234,7 @@ public class TagSettingsView
 							public int getIntValue(String key) {
 								return tfl.getMaximumTaggables();
 							}
-							@Override
-							public int getIntValue(String key, int def) {
-								return getIntValue(key);
-							}
+
 							@Override
 							public void setIntValue(String key, int value) {
 								tfl.setMaximumTaggables( value );
@@ -1288,15 +1264,6 @@ public class TagSettingsView
 									String		key )
 								{
 									return( String.valueOf( tfl.getRemovalStrategy()));
-								}
-
-								@Override
-								public String
-								getStringListValue(
-									String		key,
-									String		def )
-								{
-									return( getStringListValue( key ));
 								}
 
 								@Override
@@ -1336,15 +1303,6 @@ public class TagSettingsView
 									String		key )
 								{
 									return( String.valueOf( tfl.getOrdering()));
-								}
-
-								@Override
-								public String
-								getStringListValue(
-									String		key,
-									String		def )
-								{
-									return( getStringListValue( key ));
 								}
 
 								@Override
@@ -1403,7 +1361,7 @@ public class TagSettingsView
 								}
 								tfn.setPostingNotifications(flags);
 							}
-						}, gNotifications, null, "label.on.addition");
+						}, gNotifications, null, "label.on.addition", null);
 
 				params.notification_post_remove = new GenericBooleanParameter(
 						new BooleanParameterAdapter() {
@@ -1422,7 +1380,7 @@ public class TagSettingsView
 								}
 								tfn.setPostingNotifications(flags);
 							}
-						}, gNotifications, null, "label.on.removal");
+						}, gNotifications, null, "label.on.removal", null);
 			}
 
 			swt_updateFields();
@@ -1677,11 +1635,6 @@ public class TagSettingsView
 	private static abstract class BooleanParameterAdapter extends GenericParameterAdapter {
 		@Override
 		public abstract Boolean getBooleanValue(String key);
-
-		@Override
-		public Boolean getBooleanValue(String key, Boolean def) {
-			return getBooleanValue(key);
-		}
 
 		@Override
 		public abstract void setBooleanValue(String key, boolean value);

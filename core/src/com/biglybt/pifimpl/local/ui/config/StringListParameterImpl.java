@@ -26,7 +26,6 @@ import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 public class StringListParameterImpl extends ParameterImpl implements StringListParameter
 {
-	private String defaultValue;
 	private String[] values;
 	private String[] labels;
 
@@ -40,18 +39,12 @@ public class StringListParameterImpl extends ParameterImpl implements StringList
 			String[] labels)
 	{
 		super(config,key, label);
-		this.defaultValue = defaultValue;
+		COConfigurationManager.setStringDefault(getKey(), defaultValue);
 		this.values = values;
 		this.labels = labels;
 		config.notifyParamExists(getKey());
-		COConfigurationManager.setStringDefault(getKey(), defaultValue);
 	}
 
-
-	public String getDefaultValue()
-	{
-		return defaultValue;
-	}
 
 	public String[] getValues()
 	{
@@ -75,7 +68,7 @@ public class StringListParameterImpl extends ParameterImpl implements StringList
 	public String
 	getValue()
 	{
-		return( config.getUnsafeStringParameter(getKey(), getDefaultValue()));
+		return( config.getUnsafeStringParameter(getKey()));
 	}
 
 	@Override

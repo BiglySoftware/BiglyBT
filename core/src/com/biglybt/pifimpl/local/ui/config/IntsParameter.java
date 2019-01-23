@@ -30,7 +30,6 @@ import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 public class IntsParameter extends ParameterImpl
 {
-	private int defaultValue;
 	private int[] values;
 	private String[] labels;
 
@@ -44,17 +43,10 @@ public class IntsParameter extends ParameterImpl
 			String[] labels)
 	{
 		super(config,key, label);
-		this.defaultValue = defaultValue;
 		this.values = values;
 		this.labels = labels;
 
-		COConfigurationManager.setIntDefault(getKey(), getDefaultValue());
-	}
-
-
-	public int getDefaultValue()
-	{
-		return defaultValue;
+		COConfigurationManager.setIntDefault(getKey(), defaultValue);
 	}
 
 	public int[] getValues()

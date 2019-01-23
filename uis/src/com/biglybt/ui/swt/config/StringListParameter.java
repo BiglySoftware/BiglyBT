@@ -36,66 +36,17 @@ import com.biglybt.ui.swt.Utils;
 public class StringListParameter extends Parameter {
 
   Control list;
-  final String name;
-  final String default_value;
 	private final String[] values;
 	private final boolean useCombo;
 
-  /**
-   *
-   * @param composite
-   * @param _name
-   * @param labels
-   * @param values
-   * @param bUseCombo
-   */
-  public StringListParameter(Composite composite, String _name,
-			String labels[], String values[], boolean bUseCombo) {
-		this(composite, _name, COConfigurationManager.getStringParameter(_name),
-				labels, values, bUseCombo);
-	}
-
-  /**
-   *
-   * @param composite
-   * @param _name
-   * @param labels
-   * @param values
-   */
-	public StringListParameter(Composite composite, String _name,
+	public StringListParameter(Composite composite, String configID,
 			String labels[], String values[]) {
-		this(composite, _name, COConfigurationManager.getStringParameter(_name),
-				labels, values, true);
+		this(composite, configID, labels, values, true);
 	}
 
-	/**
-	 *
-	 * @param composite
-	 * @param _name
-	 * @param defaultValue
-	 * @param labels
-	 * @param values
-	 */
-	public StringListParameter(Composite composite, String _name,
-			String defaultValue, final String labels[], final String values[]) {
-		this(composite, _name, defaultValue, labels, values, true);
-	}
-
-	/**
-	 *
-	 * @param composite
-	 * @param _name
-	 * @param defaultValue
-	 * @param labels
-	 * @param values
-	 * @param bUseCombo
-	 */
-	public StringListParameter(Composite composite, String _name,
-			String defaultValue, final String labels[], final String values[],
-			final boolean bUseCombo) {
-  	super(_name);
-    this.name = _name;
-    this.default_value = defaultValue;
+	public StringListParameter(Composite composite, String configID,
+			String labels[], String values[], boolean bUseCombo) {
+		super(configID);
 		this.values = values;
 		useCombo = bUseCombo;
 
@@ -103,7 +54,7 @@ public class StringListParameter extends Parameter {
       return;
     }
 
-    String value = COConfigurationManager.getStringParameter(name,defaultValue);
+		String value = COConfigurationManager.getStringParameter(configID);
     int index = findIndex(value,values);
     if (bUseCombo) {
     	list = new Combo(composite,SWT.SINGLE | SWT.READ_ONLY);
@@ -177,9 +128,9 @@ public class StringListParameter extends Parameter {
 
 	protected void setIndex(final int index) {
 		if (index < 0) {
-			COConfigurationManager.removeParameter(name);
+			COConfigurationManager.removeParameter(configID);
 
-			String defValue = COConfigurationManager.getStringParameter(name);
+			String defValue = COConfigurationManager.getStringParameter(configID);
 			int i = findIndex(defValue, values);
 			if (i >= 0) {
 				// no recursion, because this area only gets called again if i was < 0
@@ -224,9 +175,9 @@ public class StringListParameter extends Parameter {
 			}
 		});
 
-  	if (!COConfigurationManager.getStringParameter(name).equals(selected_value)) {
-  		COConfigurationManager.setParameter(name, selected_value);
-  	}
+		if (!COConfigurationManager.getStringParameter(configID).equals(selected_value)) {
+			COConfigurationManager.setParameter(configID, selected_value);
+		}
 	}
 
 	@Override
@@ -239,9 +190,9 @@ public class StringListParameter extends Parameter {
     return list;
   }
 
-  public String getValue() {
-    return COConfigurationManager.getStringParameter( name, default_value );
-  }
+	public String getValue() {
+		return COConfigurationManager.getStringParameter(configID);
+	}
 
   @Override
   public void setValue(Object value) {

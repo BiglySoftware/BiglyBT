@@ -43,8 +43,8 @@ BooleanParameterImpl
 		boolean 		defaultValue)
 	{
 		super( config, key, label);
-		config.notifyParamExists(getKey());
 		COConfigurationManager.setBooleanDefault( getKey(), defaultValue );
+		config.notifyParamExists(getKey());
 	}
 
 	public boolean getDefaultValue() {

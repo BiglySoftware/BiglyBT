@@ -37,65 +37,19 @@ public class GenericStringListParameter{
 	private GenericParameterAdapter		adapter;
 	private Control list;
 	private final String name;
-	private final String default_value;
 	private final String[] values;
 	private final boolean useCombo;
 
-  /**
-   *
-   * @param composite
-   * @param _name
-   * @param labels
-   * @param values
-   * @param bUseCombo
-   */
-  public GenericStringListParameter(GenericParameterAdapter adapter, Composite composite, String _name,
-			String labels[], String values[], boolean bUseCombo) {
-		this(adapter, composite, _name, adapter.getStringListValue(_name),
-				labels, values, bUseCombo);
-	}
-
-  /**
-   *
-   * @param composite
-   * @param _name
-   * @param labels
-   * @param values
-   */
 	public GenericStringListParameter(GenericParameterAdapter adapter, Composite composite, String _name,
 			String labels[], String values[]) {
-		this(adapter, composite, _name, adapter.getStringListValue(_name),
-				labels, values, true);
+		this(adapter, composite, _name, labels, values, true);
 	}
 
-	/**
-	 *
-	 * @param composite
-	 * @param _name
-	 * @param defaultValue
-	 * @param labels
-	 * @param values
-	 */
-	public GenericStringListParameter(GenericParameterAdapter adapter, Composite composite, String _name,
-			String defaultValue, final String labels[], final String values[]) {
-		this(adapter, composite, _name, defaultValue, labels, values, true);
-	}
-
-	/**
-	 *
-	 * @param composite
-	 * @param _name
-	 * @param defaultValue
-	 * @param labels
-	 * @param values
-	 * @param bUseCombo
-	 */
 	public GenericStringListParameter(GenericParameterAdapter _adapter, Composite composite, String _name,
-			String defaultValue, final String labels[], final String values[],
+			final String labels[], final String values[],
 			final boolean bUseCombo) {
 		adapter = _adapter;
     this.name = _name;
-    this.default_value = defaultValue;
 		this.values = values;
 		useCombo = bUseCombo;
 
@@ -103,7 +57,7 @@ public class GenericStringListParameter{
       return;
     }
 
-    String value = adapter.getStringListValue( name, defaultValue );
+    String value = adapter.getStringListValue( name );
     int index = findIndex(value,values);
     if (bUseCombo) {
     	list = new Combo(composite,SWT.SINGLE | SWT.READ_ONLY);
@@ -240,7 +194,7 @@ public class GenericStringListParameter{
   }
 
   public String getValue() {
-    return adapter.getStringListValue( name, default_value );
+    return adapter.getStringListValue( name );
   }
 
   public void setValue(Object value) {

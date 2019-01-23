@@ -25,8 +25,8 @@ package com.biglybt.ui.swt.pifimpl;
  */
 
 import java.lang.ref.WeakReference;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.config.FloatParameter;
@@ -37,29 +37,24 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.config.*;
-import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.config.BooleanParameter;
-import com.biglybt.ui.swt.config.DirectoryParameter;
-import com.biglybt.ui.swt.config.InfoParameter;
-import com.biglybt.ui.swt.config.IntListParameter;
-import com.biglybt.ui.swt.config.IntParameter;
-import com.biglybt.ui.swt.config.Parameter;
-import com.biglybt.ui.swt.config.PasswordParameter;
-import com.biglybt.ui.swt.config.StringListParameter;
-import com.biglybt.ui.swt.config.StringParameter;
-import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
 import com.biglybt.ui.swt.pif.UISWTParameterContext;
+
+import com.biglybt.pif.ui.config.ActionParameter;
+import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.pif.ui.config.EnablerParameter;
+import com.biglybt.pif.ui.config.ParameterListener;
+import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 
 public class
 BasicPluginConfigImpl
@@ -316,19 +311,7 @@ BasicPluginConfigImpl
 				}
 
 				if ( add_copy ){
-					final Label f_label = label;
-
-					ClipboardCopy.addCopyToClipMenu(
-							label,
-							new ClipboardCopy.copyToClipProvider()
-							{
-								@Override
-								public String
-								getText()
-								{
-									return( f_label.getText().trim());
-								}
-							});
+					label.setData(Parameter.KEY_LABEL_ADDCOPYTOCLIPMENU, true);
 				}
 
 				if (hyperlink != null) {
@@ -384,11 +367,11 @@ BasicPluginConfigImpl
 
 				if ( label == null ){
 
-					swt_param = new BooleanParameter(current_composite, key,
-							((BooleanParameterImpl) param).getDefaultValue(), param.getLabelKey());
+					swt_param = new BooleanParameter(current_composite, key, param.getLabelKey());
 				}else{
 
-					swt_param = new BooleanParameter(current_composite, key, ((BooleanParameterImpl)param).getDefaultValue());
+					swt_param = new BooleanParameter(current_composite, key, null);
+					swt_param.setRelatedLabel(label);
 				}
 
 				GridData data = new GridData();
@@ -417,8 +400,7 @@ BasicPluginConfigImpl
 			}else if ( param instanceof IntParameterImpl ){
 
 				IntParameterImpl int_param = (IntParameterImpl)param;
-				swt_param = new IntParameter(current_composite, key,
-						int_param.getDefaultValue());
+				swt_param = new IntParameter(current_composite, key);
 
 				if (int_param.isLimited()) {
 					((IntParameter)swt_param).setMinimumValue(int_param.getMinValue());
@@ -450,6 +432,7 @@ BasicPluginConfigImpl
 					gridData.widthHint = 100;
 				}
 
+				swt_param.setRelatedLabel(label);
 				swt_param.setLayoutData( gridData );
 
 			} else if ( param instanceof FloatParameterImpl ) {
@@ -484,6 +467,7 @@ BasicPluginConfigImpl
 					gridData.widthHint = 100;
 				}
 
+				swt_param.setRelatedLabel(label);
 				swt_param.setLayoutData( gridData );
 
 			}else if ( param instanceof ColorParameterImpl ) {
@@ -501,7 +485,7 @@ BasicPluginConfigImpl
 				final ColorParameterImpl color_param = (ColorParameterImpl)param;
 				swt_param = new com.biglybt.ui.swt.config.ColorParameter(
 						area, key, color_param.getRedValue(),
-						color_param.getGreenValue(), color_param.getBlueValue()) {
+						color_param.getGreenValue(), color_param.getBlueValue(), false) {
 
 					@Override
 					public void newColorSet(RGB newColor) {
@@ -510,6 +494,7 @@ BasicPluginConfigImpl
 						reset_button_holder[0].getControl().setEnabled(true);
 					}
 				};
+				swt_param.setRelatedLabel(label);
 
 				// Reuse the same label as defined for UI reset buttons.
 				reset_button_holder[0] = new ButtonParameter(area, "ConfigView.section.style.colorOverrides.reset");
@@ -539,14 +524,14 @@ BasicPluginConfigImpl
 
 				if ( num_lines <= 1 ){
 
-					swt_param = new StringParameter(current_composite, key, s_param.getDefaultValue(), s_param.getGenerateIntermediateEvents());
+					swt_param = new StringParameter(current_composite, key, s_param.getGenerateIntermediateEvents());
 
 
 					swt_param.setLayoutData( gridData );
 
 				}else{
 
-					StringAreaParameter sa_param =  new StringAreaParameter(current_composite, key, s_param.getDefaultValue());
+					StringAreaParameter sa_param =  new StringAreaParameter(current_composite, key);
 
 					swt_param = sa_param;
 
@@ -555,13 +540,14 @@ BasicPluginConfigImpl
 					swt_param.setLayoutData( gridData );
 
 				}
+				swt_param.setRelatedLabel(label);
 			}else if ( param instanceof InfoParameterImpl ){
 
 				GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 
 				gridData.widthHint = 150;
 
-				swt_param = new InfoParameter(current_composite, key, "" );
+				swt_param = new InfoParameter(current_composite, key );
 
 				swt_param.setLayoutData( gridData );
 
@@ -573,7 +559,9 @@ BasicPluginConfigImpl
 
 				gridData.widthHint = 150;
 
-				swt_param = new StringListParameter(current_composite, key, sl_param.getDefaultValue(), sl_param.getLabels(), sl_param.getValues());
+				swt_param = new StringListParameter(current_composite, key, sl_param.getLabels(), sl_param.getValues());
+
+				swt_param.setRelatedLabel(label);
 
 				swt_param.setLayoutData( gridData );
 
@@ -587,6 +575,8 @@ BasicPluginConfigImpl
 
 				swt_param = new IntListParameter(current_composite, key, il_param.getLabels(), il_param.getValues());
 
+				swt_param.setRelatedLabel(label);
+
 				swt_param.setLayoutData( gridData );
 
 			}else if ( param instanceof PasswordParameterImpl ){
@@ -596,6 +586,7 @@ BasicPluginConfigImpl
 				gridData.widthHint = 150;
 
 				swt_param = new PasswordParameter(current_composite, key, ((PasswordParameterImpl)param).getEncodingType());
+				swt_param.setRelatedLabel(label);
 
 				swt_param.setLayoutData( gridData );
 
@@ -616,12 +607,13 @@ BasicPluginConfigImpl
 				area.setLayout(layout);
 
 				if (param instanceof DirectoryParameterImpl) {
-					swt_param = new DirectoryParameter(area, key, ((DirectoryParameterImpl)param).getDefaultValue());
+					swt_param = new DirectoryParameter(area, key);
 				}
 				else {
 					com.biglybt.pifimpl.local.ui.config.FileParameter fp = (com.biglybt.pifimpl.local.ui.config.FileParameter)param;
-					swt_param = new com.biglybt.ui.swt.config.FileParameter(area, key, fp.getDefaultValue(), fp.getFileExtensions());
+					swt_param = new com.biglybt.ui.swt.config.FileParameter(area, key, fp.getFileExtensions());
 				}
+				swt_param.setRelatedLabel(label);
 
 			}else if ( param instanceof ActionParameterImpl ){
 
@@ -638,6 +630,8 @@ BasicPluginConfigImpl
 
 					swt_param = new LinkParameter( current_composite, _param.getActionResource());
 				}
+
+				swt_param.setRelatedLabel(label);
 
 				swt_param.addChangeListener(
 						new ParameterChangeAdapter()
@@ -668,6 +662,7 @@ BasicPluginConfigImpl
 
 					if (initialised_component) {
 						swt_param = new UISWTParameter(internal_composite, param.getKey());
+						swt_param.setRelatedLabel(label);
 					}
 					else {
 						swt_param = null;
@@ -683,6 +678,7 @@ BasicPluginConfigImpl
 			} else if ( param instanceof UITextAreaImpl ){
 
 				swt_param = new TextAreaParameter(current_composite, ((UITextAreaImpl)param));
+				swt_param.setRelatedLabel(label);
 
 				GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 				gridData.horizontalSpan	= 2;

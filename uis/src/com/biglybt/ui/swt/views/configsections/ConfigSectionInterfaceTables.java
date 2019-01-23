@@ -432,7 +432,7 @@ public class ConfigSectionInterfaceTables
 				label = new Label(cLaunch, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.label.lh.prog");
 
-				final FileParameter prog = new FileParameter(cLaunch, "Table.lh" + i + ".prog", "", new String[0]);
+				final FileParameter prog = new FileParameter(cLaunch, "Table.lh" + i + ".prog", new String[0]);
 
 				gridData = new GridData();
 				gridData.widthHint = 400;

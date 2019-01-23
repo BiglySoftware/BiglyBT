@@ -32,7 +32,6 @@ import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 public class IntParameterImpl extends ParameterImpl implements IntParameter
 {
-	private int defaultValue;
 	private boolean limited;
 	private int min_value;
 	private int max_value;
@@ -42,7 +41,6 @@ public class IntParameterImpl extends ParameterImpl implements IntParameter
 		config.notifyParamExists(getKey());
 		COConfigurationManager.setIntDefault( getKey(), defaultValue );
 
-		this.defaultValue = defaultValue;
 		this.limited = false;
 	}
 
@@ -55,18 +53,11 @@ public class IntParameterImpl extends ParameterImpl implements IntParameter
 	}
 
 
-	/**
-	 * @return Returns the defaultValue.
-	 */
-	public int getDefaultValue()
-	{
-		return defaultValue;
-	}
 	@Override
 	public int
 	getValue()
 	{
-		return( config.getUnsafeIntParameter( getKey(), getDefaultValue()));
+		return( config.getUnsafeIntParameter( getKey()));
 	}
 
 	@Override

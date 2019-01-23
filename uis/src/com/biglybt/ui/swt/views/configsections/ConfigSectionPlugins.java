@@ -21,7 +21,9 @@
 package com.biglybt.ui.swt.views.configsections;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -40,28 +42,21 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginException;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.installer.PluginInstallationListener;
-import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.pif.ui.config.Parameter;
-import com.biglybt.pif.ui.model.BasicPluginConfigModel;
-import com.biglybt.pif.ui.model.PluginConfigModel;
-import com.biglybt.pifimpl.local.PluginInterfaceImpl;
-import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
-import com.biglybt.pifimpl.local.ui.config.ParameterRepository;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.config.DualChangeSelectionActionPerformer;
-import com.biglybt.ui.swt.config.IAdditionalActionPerformer;
-import com.biglybt.ui.swt.config.plugins.PluginParameter;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
-import com.biglybt.ui.swt.views.ConfigView;
+
+import com.biglybt.pif.PluginException;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.installer.PluginInstallationListener;
+import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.pif.ui.model.BasicPluginConfigModel;
+import com.biglybt.pif.ui.model.PluginConfigModel;
 
 /**
  * Configuration Section that lists all the plugins and sets up
@@ -83,11 +78,9 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 	private final static int[] COLUMN_ALIGNS = { SWT.CENTER, SWT.LEFT, SWT.LEFT,
 			SWT.RIGHT, SWT.LEFT, SWT.CENTER};
 
-	private ConfigView configView;
+	final FilterComparator comparator = new FilterComparator();
 
-	FilterComparator comparator;
-
-	List pluginIFs;
+	List<PluginInterface> pluginIFs;
 
 	private Table table;
 
@@ -95,7 +88,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 
 	private Image imgGreenLed;
 
-	static class FilterComparator implements Comparator {
+	static class FilterComparator implements Comparator<PluginInterface> {
 		boolean ascending = true;
 
 		static final int FIELD_LOAD = 0;
@@ -117,7 +110,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		String sAppPluginDir;
 
 		public FilterComparator() {
-			String sep = System.getProperty("file.separator");
+			String sep = File.separator;
 
 			sUserPluginDir = FileUtil.getUserFile("plugins").toString();
 			if (!sUserPluginDir.endsWith(sep))
@@ -129,9 +122,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		}
 
 		@Override
-		public int compare(Object arg0, Object arg1) {
-			PluginInterface if0 = (PluginInterface) arg0;
-			PluginInterfaceImpl if1 = (PluginInterfaceImpl) arg1;
+		public int compare(PluginInterface if0, PluginInterface if1) {
 			int result = 0;
 
 			switch (field) {
@@ -254,11 +245,8 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 
 	/**
 	 * Initialize
-	 * @param _configView
 	 */
-	public ConfigSectionPlugins(ConfigView _configView) {
-		configView = _configView;
-		comparator = new FilterComparator();
+	public ConfigSectionPlugins() {
 	}
 
 	@Override
@@ -301,6 +289,11 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
     	return cSection;
     }
 
+  	Display display = parent.getDisplay();
+  	if (display == null || display.isDisposed()) {
+  		return null;
+	  }
+
 		GridLayout layout;
 		GridData gridData;
 
@@ -322,7 +315,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 
 		infoGroup.setLayout(new GridLayout());
 
-		String sep = System.getProperty("file.separator");
+		String sep = File.separator;
 
 		File fUserPluginDir = FileUtil.getUserFile("plugins");
 
@@ -362,7 +355,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		label.setLayoutData(gridData);
 		label.setText(sUserPluginDir.replaceAll("&", "&&"));
 		label.setForeground(Colors.blue);
-		label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+		label.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 
 		final String _sUserPluginDir = sUserPluginDir;
 
@@ -392,7 +385,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 		label.setLayoutData(gridData);
 		label.setText(sAppPluginDir.replaceAll("&", "&&"));
 		label.setForeground(Colors.blue);
-		label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+		label.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 
 		final String _sAppPluginDir = sAppPluginDir;
 
@@ -417,13 +410,8 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 
 		pluginIFs = rebuildPluginIFs();
 
-		Collections.sort(pluginIFs, new Comparator() {
-			@Override
-			public int compare(Object o1, Object o2) {
-				return (((PluginInterface) o1).getPluginName()
-						.compareToIgnoreCase(((PluginInterface) o2).getPluginName()));
-			}
-		});
+		pluginIFs.sort((o1,
+				o2) -> (o1.getPluginName().compareToIgnoreCase(o2.getPluginName())));
 
 		Label labelInfo = new Label(infoGroup, SWT.WRAP);
 		labelInfo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -448,7 +436,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 					} catch (NoSuchMethodError ignore) {
 						// Ignore Pre 3.0
 					}
-					Collections.sort(pluginIFs, comparator);
+					pluginIFs.sort(comparator);
 					table.clearAll();
 				}
 			});
@@ -477,10 +465,12 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 					public void
 					run()
 					{
-						for (int i = 0; i < items.length; i++) {
-							int index = items[i];
+						for (int index : items) {
 							if (index >= 0 && index < pluginIFs.size()) {
-								PluginInterface pluginIF = (PluginInterface) pluginIFs.get(index);
+								PluginInterface pluginIF = pluginIFs.get(index);
+								if (pluginIF == null) {
+									continue;
+								}
 								if (pluginIF.getPluginState().isOperational()) {
 									if (pluginIF.getPluginState().isUnloadable()) {
 										try {
@@ -492,19 +482,12 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 									}
 								}
 
-								Utils.execSWTThread(
-									new Runnable()
-									{
-										@Override
-										public void
-										run()
-										{
-											pluginIFs = rebuildPluginIFs();
-											table.setItemCount(pluginIFs.size());
-											Collections.sort(pluginIFs, comparator);
-											table.clearAll();
-										}
-									});
+								Utils.execSWTThread(() -> {
+									pluginIFs = rebuildPluginIFs();
+									table.setItemCount(pluginIFs.size());
+									pluginIFs.sort(comparator);
+									table.clearAll();
+								});
 							}
 						}
 					}
@@ -526,44 +509,45 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 					public void
 					run()
 					{
-						for (int i = 0; i < items.length; i++) {
-							int index = items[i];
-							if (index >= 0 && index < pluginIFs.size()) {
-
-								PluginInterface pluginIF = (PluginInterface) pluginIFs.get(index);
-								if (pluginIF.getPluginState().isOperational()) {continue;} // Already loaded.
-
-								// Re-enable disabled plugins, as long as they haven't failed on
-								// initialise.
-								if (pluginIF.getPluginState().isDisabled()) {
-									if (pluginIF.getPluginState().hasFailed()) {continue;}
-									pluginIF.getPluginState().setDisabled(false);
-								}
-
-								try {
-									pluginIF.getPluginState().reload();
-								} catch (PluginException e1) {
-									// TODO Auto-generated catch block
-									Debug.printStackTrace(e1);
-								}
-
-								Utils.execSWTThread(
-									new Runnable()
-									{
-										@Override
-										public void
-										run()
-										{
-											if (table == null || table.isDisposed()) {
-												return;
-											}
-											pluginIFs = rebuildPluginIFs();
-											table.setItemCount(pluginIFs.size());
-											Collections.sort(pluginIFs, comparator);
-											table.clearAll();
-										}
-									});
+						for (int index : items) {
+							if (index < 0 || index >= pluginIFs.size()) {
+								continue;
 							}
+
+							PluginInterface pluginIF = pluginIFs.get(index);
+							if (pluginIF == null) {
+								continue;
+							}
+
+							if (pluginIF.getPluginState().isOperational()) {
+								continue;
+							} // Already loaded.
+
+							// Re-enable disabled plugins, as long as they haven't failed on
+							// initialise.
+							if (pluginIF.getPluginState().isDisabled()) {
+								if (pluginIF.getPluginState().hasFailed()) {
+									continue;
+								}
+								pluginIF.getPluginState().setDisabled(false);
+							}
+
+							try {
+								pluginIF.getPluginState().reload();
+							} catch (PluginException e1) {
+								// TODO Auto-generated catch block
+								Debug.printStackTrace(e1);
+							}
+
+							Utils.execSWTThread(() -> {
+								if (table == null || table.isDisposed()) {
+									return;
+								}
+								pluginIFs = rebuildPluginIFs();
+								table.setItemCount(pluginIFs.size());
+								pluginIFs.sort(comparator);
+								table.clearAll();
+							});
 						}
 					}
 				}.start();
@@ -582,7 +566,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 				CoreFactory.getSingleton().getPluginManager().refreshPluginList(false);
 				pluginIFs = rebuildPluginIFs();
 				table.setItemCount(pluginIFs.size());
-				Collections.sort(pluginIFs, comparator);
+				pluginIFs.sort(comparator);
 				table.clearAll();
 			}
 		});
@@ -609,12 +593,11 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 
 							List<PluginInterface> pis = new ArrayList<>();
 
-							for (int i = 0; i < items.length; i++) {
-								int index = items[i];
+							for (int index : items) {
 								if (index >= 0 && index < pluginIFs.size()) {
-									PluginInterface pluginIF = (PluginInterface) pluginIFs.get(index);
+									PluginInterface pluginIF = pluginIFs.get(index);
 
-									pis.add( pluginIF );
+									pis.add(pluginIF);
 								}
 							}
 
@@ -664,20 +647,13 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 							}
 						}finally{
 
-							Utils.execSWTThread(
-								new Runnable()
-								{
-									@Override
-									public void
-									run()
-									{
-										pluginIFs = rebuildPluginIFs();
-										table.setItemCount(pluginIFs.size());
-										Collections.sort(pluginIFs, comparator);
-										table.clearAll();
-										table.setSelection(new int[0]);
-									}
-								});
+							Utils.execSWTThread(() -> {
+								pluginIFs = rebuildPluginIFs();
+								table.setItemCount(pluginIFs.size());
+								pluginIFs.sort(comparator);
+								table.clearAll();
+								table.setSelection(new int[0]);
+							});
 						}
 					}
 				}.start();
@@ -690,7 +666,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 			public void handleEvent(Event event) {
 				TableItem item = (TableItem) event.item;
 				int index = table.indexOf(item);
-				PluginInterface pluginIF = (PluginInterface) pluginIFs.get(index);
+				PluginInterface pluginIF = pluginIFs.get(index);
 
 				for (int i = 0; i < COLUMN_HEADERS.length; i++) {
 					if (i == FilterComparator.FIELD_NAME)
@@ -721,7 +697,7 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 
 						int index = table.indexOf(items[0]);
 
-						PluginInterface pluginIF = (PluginInterface) pluginIFs.get(index);
+						PluginInterface pluginIF = pluginIFs.get(index);
 
 						PluginConfigModel[] models = pluginIF.getUIManager().getPluginConfigModels();
 
@@ -751,7 +727,10 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 			public void widgetSelected(SelectionEvent e) {
 				TableItem item = (TableItem) e.item;
 				int index = table.indexOf(item);
-				PluginInterface pluginIF = (PluginInterface) pluginIFs.get(index);
+				PluginInterface pluginIF = pluginIFs.get(index);
+				if (pluginIF == null) {
+					return;
+				}
 
 				if (e.detail == SWT.CHECK){
 
@@ -782,10 +761,9 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 	 *
 	 * @since 3.0.5.3
 	 */
-	private List rebuildPluginIFs() {
-		List pluginIFs = Arrays.asList(CoreFactory.getSingleton().getPluginManager().getPlugins());
-		for (Iterator iter = pluginIFs.iterator(); iter.hasNext();) {
-			PluginInterface pi = (PluginInterface) iter.next();
+	private List<PluginInterface> rebuildPluginIFs() {
+		List<PluginInterface> pluginIFs = Arrays.asList(CoreFactory.getSingleton().getPluginManager().getPlugins());
+		for (PluginInterface pi : pluginIFs) {
 			// COConfigurationManager will not add the same listener twice
 			COConfigurationManager.addWeakParameterListener(this, false,
 					"PluginInfo." + pi.getPluginID() + ".enabled");
@@ -806,91 +784,5 @@ public class ConfigSectionPlugins implements UISWTConfigSection, ParameterListen
 				}
 			});
 		}
-	}
-
-	public void initPluginSubSections() {
-		// Create subsections for plugins that used the PluginConfigModel object
-		// =====================================================================
-
-		TreeItem treePlugins = configView
-				.findTreeItem(ConfigSection.SECTION_PLUGINS);
-		ParameterRepository repository = ParameterRepository.getInstance();
-
-		String[] names = repository.getNames();
-
-		Arrays.sort(names);
-
-		for (int i = 0; i < names.length; i++) {
-			String pluginName = names[i];
-			Parameter[] parameters = repository.getParameterBlock(pluginName);
-
-			// Note: 2070's plugin documentation for PluginInterface.addConfigUIParameters
-			//       said to pass <"ConfigView.plugins." + displayName>.  This was
-			//       never implemented in 2070.  2070 read the key <displayName> without
-			//       the prefix.
-			//
-			//       2071+ uses <sSectionPrefix ("ConfigView.section.plugins.") + pluginName>
-			//       and falls back to <displayName>.  Since
-			//       <"ConfigView.plugins." + displayName> was never implemented in the
-			//       first place, a check for it has not been created
-			boolean bUsePrefix = MessageText.keyExists(ConfigView.sSectionPrefix
-					+ "plugins." + pluginName);
-			Composite pluginGroup = configView.createConfigSection(treePlugins,
-					pluginName, -2, bUsePrefix);
-			GridLayout pluginLayout = new GridLayout();
-			pluginLayout.numColumns = 3;
-			pluginGroup.setLayout(pluginLayout);
-
-			Map parameterToPluginParameter = new HashMap();
-			//Add all parameters
-			for (int j = 0; j < parameters.length; j++) {
-				Parameter parameter = parameters[j];
-				parameterToPluginParameter.put(parameter, new PluginParameter(
-						pluginGroup, parameter));
-			}
-			//Check for dependencies
-			for (int j = 0; j < parameters.length; j++) {
-				Parameter parameter = parameters[j];
-				if (parameter instanceof BooleanParameterImpl) {
-					List parametersToEnable = ((BooleanParameterImpl) parameter)
-							.getEnabledOnSelectionParameters();
-					List controlsToEnable = new ArrayList();
-					Iterator iter = parametersToEnable.iterator();
-					while (iter.hasNext()) {
-						Parameter parameterToEnable = (Parameter) iter.next();
-						PluginParameter pp = (PluginParameter) parameterToPluginParameter
-								.get(parameterToEnable);
-						Control[] controls = pp.getControls();
-						Collections.addAll(controlsToEnable, controls);
-					}
-
-					List parametersToDisable = ((BooleanParameterImpl) parameter)
-							.getDisabledOnSelectionParameters();
-					List controlsToDisable = new ArrayList();
-					iter = parametersToDisable.iterator();
-					while (iter.hasNext()) {
-						Parameter parameterToDisable = (Parameter) iter.next();
-						PluginParameter pp = (PluginParameter) parameterToPluginParameter
-								.get(parameterToDisable);
-						Control[] controls = pp.getControls();
-						Collections.addAll(controlsToDisable, controls);
-					}
-
-					Control[] ce = new Control[controlsToEnable.size()];
-					Control[] cd = new Control[controlsToDisable.size()];
-
-					if (ce.length + cd.length > 0) {
-						IAdditionalActionPerformer ap = new DualChangeSelectionActionPerformer(
-								(Control[]) controlsToEnable.toArray(ce),
-								(Control[]) controlsToDisable.toArray(cd));
-						PluginParameter pp = (PluginParameter) parameterToPluginParameter
-								.get(parameter);
-						pp.setAdditionalActionPerfomer(ap);
-					}
-
-				}
-			}
-		}
-
 	}
 }

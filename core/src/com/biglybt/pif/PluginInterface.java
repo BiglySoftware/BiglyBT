@@ -37,9 +37,6 @@ import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.torrent.TorrentManager;
 import com.biglybt.pif.tracker.Tracker;
 import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.pif.ui.config.Parameter;
-import com.biglybt.pif.ui.config.PluginConfigUIFactory;
 import com.biglybt.pif.update.UpdateManager;
 import com.biglybt.pif.utils.ShortCuts;
 import com.biglybt.pif.utils.Utilities;
@@ -80,53 +77,7 @@ public interface PluginInterface {
 	public String
 	getApplicationVersion();
 
-  /**
-   * adds a tab under the 'plugins' tab in the config view.<br>
-   * Use {@link #getPluginConfigUIFactory()} to get the
-   * {@link PluginConfigUIFactory} class, from which you can create different
-   * types of parameters.
-   *
-   * @param parameters the Parameter(s) to be edited
-   * @param displayName the under which it should display.<br>
-   * The client will look-up for ConfigView.section.plugins.<i>displayName</i>; into the lang files
-   * in order to find the localized displayName. (see i18n)
-   *
-   * @since 2.0.6.0
-   * @deprecated Use of this is discouraged - use {@link UIManager#createBasicPluginConfigModel(String)}
-   *     to get a <tt>BasicPluginViewModel</tt> instance, and then use the methods on that to add
-   *     parameters.
-   */
-  public void addConfigUIParameters(Parameter[] parameters, String displayName);
-
-  /**
-   * adds a ConfigSection to the config view.<p>
-   * In contrast to addConfigUIParameters, this gives you total control over
-   * a tab.  Please be kind and use localizable text.<BR>
-   *
-   * @param section ConfigSection to be added to the Config view
-   *
-   * @since 2.0.8.0
-   * @deprecated Use {@link UIManager#createBasicPluginConfigModel(String)} instead.
-   */
-	public void addConfigSection(ConfigSection section);
-
 	/**
-	 *
-	 * @param section
-	 * @since 2.3.0.5
-	 */
-
-	public void removeConfigSection( ConfigSection section );
-
-  /**
-   *
-   * @return List of ConfigSections for this plugin
-   *
-   * @since 2.5.0.1
-   */
-	ConfigSection[] getConfigSections();
-
-  /**
    * Gives access to the tracker functionality
    * @return The tracker
    *
@@ -278,17 +229,7 @@ public interface PluginInterface {
   public PluginConfig getPluginconfig();
 
 
-  /**
-   * gives access to the plugin Config UI Factory
-   * @return the PluginConfigUIFactory associated with this plugin
-   *
-   * @deprecated Use of this is discouraged - use {@link UIManager#createBasicPluginConfigModel(String)}
-   *     to get a <tt>BasicPluginViewModel</tt> instance, and then use the methods on that to add
-   *     parameters.
-   */
-  public PluginConfigUIFactory getPluginConfigUIFactory();
-
-  /**
+	/**
    * gives access to the ClassLoader used to load the plugin
    * @return
    *

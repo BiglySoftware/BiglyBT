@@ -288,8 +288,7 @@ TorrentOptionsView
 						ds_param_adapter,
 						cMaxUploadsOptionsArea,
 						DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED,
-						false,
-						"TorrentOptionsView.param.alternative.value.enable");
+						"TorrentOptionsView.param.alternative.value.enable", null);
 			ds_parameters.put( DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED, max_uploads_when_seeding_enabled );
 			max_uploads_when_seeding_enabled.setLayoutData( gridData );
 
@@ -342,8 +341,7 @@ TorrentOptionsView
 						ds_param_adapter,
 						cMaxPeersOptionsArea,
 						DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED,
-						false,
-						"TorrentOptionsView.param.alternative.value.enable");
+						"TorrentOptionsView.param.alternative.value.enable", null);
 			ds_parameters.put( DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED, max_peers_when_seeding_enabled );
 			max_peers_when_seeding_enabled.setLayoutData( gridData );
 
@@ -755,17 +753,8 @@ TorrentOptionsView
 		getIntValue(
 			String	key )
 		{
-			return( getIntValue( key, 0 ));
-		}
-
-		@Override
-		public int
-		getIntValue(
-			String	key,
-			int		def )
-		{
 			if ( key == MAX_UPLOAD ){
-				int	result = def;
+				int	result = 0;
 
 				for (int i=0;i<managers.length;i++){
 					int	val = managers[i].getUploadRateLimitBytesPerSecond()/DisplayFormatters.getKinB();
@@ -773,14 +762,14 @@ TorrentOptionsView
 					if ( i==0 ){
 						result = val;
 					}else if ( result != val ){
-						return( def );
+						return( 0 );
 					}
 				}
 
 				return( result );
 
 			}else if ( key == MAX_DOWNLOAD ){
-				int	result = def;
+				int	result = 0;
 
 				for (int i=0;i<managers.length;i++){
 					int	val = managers[i].getDownloadRateLimitBytesPerSecond()/DisplayFormatters.getKinB();
@@ -788,7 +777,7 @@ TorrentOptionsView
 					if ( i==0 ){
 						result = val;
 					}else if ( result != val ){
-						return( def );
+						return( 0 );
 					}
 				}
 
@@ -840,16 +829,7 @@ TorrentOptionsView
 		getIntValue(
 			String	key )
 		{
-			return( getIntValue( key, 0 ));
-		}
-
-		@Override
-		public int
-		getIntValue(
-			String	key,
-			int		def )
-		{
-			int	result = def;
+			int	result = 0;
 
 			for (int i=0;i<managers.length;i++){
 				int	val = managers[i].getIntParameter( key );
@@ -857,7 +837,7 @@ TorrentOptionsView
 				if ( i==0 ){
 					result = val;
 				}else if ( result != val ){
-					return( def );
+					return( 0 );
 				}
 			}
 
@@ -886,16 +866,7 @@ TorrentOptionsView
 		getBooleanValue(
 			String	key )
 		{
-			return( getBooleanValue(key,false));
-		}
-
-		@Override
-		public Boolean
-		getBooleanValue(
-			String		key,
-			Boolean		def )
-		{
-			boolean	result = def;
+			boolean	result = false;
 
 			for (int i=0;i<managers.length;i++){
 				boolean	val = managers[i].getBooleanParameter( key );
@@ -903,7 +874,7 @@ TorrentOptionsView
 				if ( i==0 ){
 					result = val;
 				}else if ( result != val ){
-					return( def );
+					return( false );
 				}
 			}
 

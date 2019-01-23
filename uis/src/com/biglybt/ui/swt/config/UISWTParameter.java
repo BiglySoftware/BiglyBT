@@ -29,8 +29,8 @@ public class UISWTParameter extends Parameter {
 
 	private Control control;
 
-	public UISWTParameter(Control control, String name) {
-		super(name);
+	public UISWTParameter(Control control, String configID) {
+		super(configID);
 		this.control = control;
 	}
 

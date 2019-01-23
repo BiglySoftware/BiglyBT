@@ -47,6 +47,7 @@ import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
@@ -318,11 +319,9 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 
 				// info
 
-			label = new Label(gJVM, SWT.NULL);
+			label = new Label(gJVM, SWT.WRAP);
 			Messages.setLanguageText(label, "jvm.info");
-			gridData = new GridData();
-			gridData.horizontalSpan = 2;
-			label.setLayoutData(gridData);
+			label.setLayoutData(Utils.getWrappableLabelGridData(2, SWT.NONE));
 
 			try{
 				final File option_file = platform.getVMOptionFile();
@@ -338,7 +337,8 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 
 					// show option file
 
-				label = new Label(gJVM, SWT.NULL);
+				label = new Label(gJVM, SWT.WRAP);
+				label.setLayoutData(Utils.getWrappableLabelGridData(1, GridData.HORIZONTAL_ALIGN_FILL));
 				Messages.setLanguageText(label, "jvm.show.file", new String[]{ option_file.getAbsolutePath() });
 
 				Button show_folder_button = new Button( gJVM, SWT.PUSH );
@@ -713,9 +713,8 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 					}
 				});
 
-			label = new Label(area, SWT.NULL);
-			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			label.setLayoutData(gridData);
+			label = new Label(area, SWT.WRAP);
+			label.setLayoutData(Utils.getWrappableLabelGridData(1, 0));
 			Messages.setLanguageText(label,	"jvm.max.direct.mem.info" );
 		}
 
@@ -902,7 +901,7 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 			dc_label.setLayoutData(new GridData());
 
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			final FileParameter dc_script = new FileParameter(comp, "On Downloading Complete Script", "", new String[0]);
+			final FileParameter dc_script = new FileParameter(comp, "On Downloading Complete Script",  new String[0]);
 			dc_script.setLayoutData(gridData);
 
 			boolean	is_script = dc.getValue().startsWith( "RunScript" );
@@ -948,7 +947,7 @@ public class ConfigSectionStartShutdown implements UISWTConfigSection {
 			Messages.setLanguageText(sc_label, "label.script.to.run");
 			sc_label.setLayoutData(new GridData());
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			final FileParameter sc_script = new FileParameter(comp, "On Seeding Complete Script", "", new String[0]);
+			final FileParameter sc_script = new FileParameter(comp, "On Seeding Complete Script",  new String[0]);
 			sc_script.setLayoutData(gridData);
 
 			boolean is_script = sc.getValue().startsWith( "RunScript" );

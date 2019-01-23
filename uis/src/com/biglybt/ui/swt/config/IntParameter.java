@@ -19,7 +19,9 @@ package com.biglybt.ui.swt.config;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.ui.swt.config.generic.GenericIntParameter;
 
 /**
@@ -32,29 +34,17 @@ public class
 IntParameter
 	extends Parameter
 {
-  protected GenericIntParameter	delegate;
+  protected final GenericIntParameter	delegate;
 
-  public IntParameter(Composite composite, final String name) {
-  	super(name);
-	  delegate = new GenericIntParameter(config_adapter, composite, name);
+  public IntParameter(Composite composite, String configID) {
+  	super(configID);
+	  delegate = new GenericIntParameter(config_adapter, composite, configID);
   }
 
-  /**
-   * @deprecated defaultValue should be set via ConfigurationDefaults, not passed by the caller
-   */
-  public IntParameter(Composite composite, final String name, int defaultValue) {
-  	super(name);
-	  delegate = new GenericIntParameter(config_adapter, composite, name,
-				defaultValue);
-  }
-
-
-  public IntParameter(Composite composite,
-                      final String name,
-                      int minValue,
-                      int maxValue) {
-  	super(name);
-	  delegate = new GenericIntParameter(config_adapter, composite, name,
+	public IntParameter(Composite composite, String configID, int minValue,
+			int maxValue) {
+  	super(configID);
+	  delegate = new GenericIntParameter(config_adapter, composite, configID,
 				minValue, maxValue);
   }
 
@@ -131,6 +121,6 @@ IntParameter
   // @see com.biglybt.ui.swt.config.Parameter#getValueObject()
   @Override
   public Object getValueObject() {
-  	return new Integer(getValue());
+  	return getValue();
   }
 }

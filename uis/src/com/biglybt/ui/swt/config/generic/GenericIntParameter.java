@@ -38,8 +38,6 @@ public class GenericIntParameter
 
 	private int iMaxValue = Integer.MAX_VALUE;
 
-	private int iDefaultValue;
-
 	private String sParamName;
 
 	private boolean bGenerateIntermediateEvents = false;
@@ -57,22 +55,12 @@ public class GenericIntParameter
 	private boolean	disableTimedSave = false;
 
 	public GenericIntParameter(GenericParameterAdapter adapter,
-			Composite composite, final String name) {
-		iDefaultValue = adapter.getIntValue(name);
-		initialize(adapter, composite, name);
-	}
-
-	/** @deprecated */
-	public GenericIntParameter(GenericParameterAdapter adapter,
-			Composite composite, final String name, int defaultValue) {
-		iDefaultValue = defaultValue;
-		initialize(adapter, composite, name);
+			Composite composite, final String paramID) {
+		initialize(adapter, composite, paramID);
 	}
 
 	public GenericIntParameter(GenericParameterAdapter adapter,
-			Composite composite, String name, int minValue, int maxValue) {
-		iDefaultValue = adapter.getIntValue(name);
-
+			Composite composite, String paramID, int minValue, int maxValue) {
 		if ( maxValue < minValue ){
 			Debug.out( "max < min, not good" );
 				// common mistake to use -1 to indicate no-limit
@@ -82,13 +70,13 @@ public class GenericIntParameter
 
 		iMinValue = minValue;
 		iMaxValue = maxValue;
-		initialize(adapter, composite, name);
+		initialize(adapter, composite, paramID);
 	}
 
-	public void initialize(GenericParameterAdapter _adapter, Composite composite,
-			String name) {
+	private void initialize(GenericParameterAdapter _adapter, Composite composite,
+			String paramID) {
 		adapter = _adapter;
-		sParamName = name;
+		sParamName = paramID;
 
 		timerEventSave = new TimerEventPerformer() {
 			@Override
@@ -109,7 +97,7 @@ public class GenericIntParameter
 			}
 		};
 
-		int value = adapter.getIntValue(name, iDefaultValue);
+		int value = adapter.getIntValue(paramID);
 
 		spinner = new Spinner(composite, SWT.BORDER | SWT.RIGHT);
 		setMinimumValue(iMinValue);
@@ -275,7 +263,7 @@ public class GenericIntParameter
 	}
 
 	public int getValue() {
-		return (adapter.getIntValue(sParamName, iDefaultValue));
+		return (adapter.getIntValue(sParamName));
 	}
 
 	public void resetToDefault() {
@@ -333,7 +321,7 @@ public class GenericIntParameter
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				swt_setSpinnerValue(adapter.getIntValue(sParamName, iDefaultValue));
+				swt_setSpinnerValue(adapter.getIntValue(sParamName));
 			}
 		});
 	}

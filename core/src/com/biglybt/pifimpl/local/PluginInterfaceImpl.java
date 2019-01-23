@@ -42,9 +42,6 @@ import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.torrent.TorrentManager;
 import com.biglybt.pif.tracker.Tracker;
 import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.pif.ui.config.Parameter;
-import com.biglybt.pif.ui.config.PluginConfigUIFactory;
 import com.biglybt.pif.update.UpdateManager;
 import com.biglybt.pif.utils.ShortCuts;
 import com.biglybt.pif.utils.Utilities;
@@ -61,10 +58,6 @@ import com.biglybt.pifimpl.local.sharing.ShareManagerImpl;
 import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
 import com.biglybt.pifimpl.local.tracker.TrackerImpl;
 import com.biglybt.pifimpl.local.ui.UIManagerImpl;
-import com.biglybt.pifimpl.local.ui.config.ConfigSectionHolder;
-import com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository;
-import com.biglybt.pifimpl.local.ui.config.ParameterRepository;
-import com.biglybt.pifimpl.local.ui.config.PluginConfigUIFactoryImpl;
 import com.biglybt.pifimpl.local.update.UpdateManagerImpl;
 import com.biglybt.pifimpl.local.utils.ShortCutsImpl;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
@@ -100,7 +93,7 @@ PluginInterfaceImpl
   private Logger				logger;
   private IPCInterfaceImpl		ipc_interface;
   protected List				children		= new ArrayList();
-  private PluginStateImpl       state;
+  private final PluginStateImpl       state;
 
   /**
    * This is the plugin ID value we were given when we were created.
@@ -248,33 +241,6 @@ PluginInterfaceImpl
 		return( Constants.AZUREUS_VERSION );
 	}
 
-  @Override
-  public void addConfigSection(ConfigSection section)
-  {
-	// Method is used by autocat.
-  	ConfigSectionRepository.getInstance().addConfigSection(section, this);
-  }
-
-  @Override
-  public void removeConfigSection(ConfigSection section)
-  {
-  	ConfigSectionRepository.getInstance().removeConfigSection(section);
-  }
-
-  @Override
-  public ConfigSection[] getConfigSections() {
-  	ArrayList<ConfigSection> list = ConfigSectionRepository.getInstance().getList();
-  	for (Iterator<ConfigSection> iter = list.iterator(); iter.hasNext();) {
-			ConfigSection configSection = iter.next();
-			if (configSection instanceof ConfigSectionHolder) {
-				if (((ConfigSectionHolder)configSection).getPluginInterface() != this) {
-					iter.remove();
-				}
-			}
-		}
-  	return list.toArray(new ConfigSection[0]);
-  }
-
 	public void
   setPluginName(
   	String	name )
@@ -407,23 +373,12 @@ PluginInterfaceImpl
   }
 
   @Override
-  public void addConfigUIParameters(Parameter[] parameters, String displayName) {
-  	ParameterRepository.getInstance().addPlugin(parameters, displayName);
-  }
-
-
-  @Override
   public PluginConfig getPluginconfig() {
     return config;
   }
 
 
-  @Override
-  public PluginConfigUIFactory getPluginConfigUIFactory() {
-    return new PluginConfigUIFactoryImpl(config,pluginConfigKey);
-  }
-
-  public String
+	public String
   getPluginConfigKey()
   {
   	return( pluginConfigKey );

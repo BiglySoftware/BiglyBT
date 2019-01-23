@@ -26,30 +26,20 @@ import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 public class StringParameterImpl extends ParameterImpl implements StringParameter
 {
-	private String 	defaultValue;
 	private int		line_count;
 
 	public StringParameterImpl(PluginConfigImpl config,String key, String label, String defaultValue)
 	{
 		super(config,key, label);
-		config.notifyParamExists(getKey());
 		COConfigurationManager.setStringDefault(getKey(), defaultValue);
-		this.defaultValue = defaultValue;
-	}
-
-	/**
-	 * @return Returns the defaultValue.
-	 */
-	public String getDefaultValue()
-	{
-		return defaultValue;
+		config.notifyParamExists(getKey());
 	}
 
 	@Override
 	public String
 	getValue()
 	{
-		return( config.getUnsafeStringParameter( getKey(), getDefaultValue()));
+		return( config.getUnsafeStringParameter( getKey()));
 	}
 
 	@Override

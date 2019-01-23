@@ -48,13 +48,12 @@ DirectoryParameter
 	public
 	DirectoryParameter(
 		final Composite pluginGroup,
-		String			name,
-		String			defaultValue )
+		String			configID )
 	{
-  	super(name);
+  	super(configID);
 	  	controls = new Control[2];
 
-	    sp = new StringParameter(pluginGroup, name, defaultValue);
+		sp = new StringParameter(pluginGroup, configID);
 
 	    controls[0] = sp.getControl();
 	    GridData gridData = new GridData(GridData.FILL_HORIZONTAL);

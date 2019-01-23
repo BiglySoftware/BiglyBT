@@ -22,6 +22,7 @@ package com.biglybt.plugin.startstoprules.defaultplugin.ui.swt;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository;
 import com.biglybt.plugin.startstoprules.defaultplugin.StartStopRulesDefaultPlugin;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
@@ -41,13 +42,14 @@ public class
 StartStopRulesDefaultPluginSWTUI
 	implements StartStopRulesDefaultPlugin.UIAdapter
 {
-	public StartStopRulesDefaultPluginSWTUI(PluginInterface plugin_interface) {
-		plugin_interface.addConfigSection(new ConfigSectionQueue());
-		plugin_interface.addConfigSection(new ConfigSectionDownloading());
-		plugin_interface.addConfigSection(new ConfigSectionSeeding());
-		plugin_interface.addConfigSection(new ConfigSectionSeedingAutoStarting());
-		plugin_interface.addConfigSection(new ConfigSectionSeedingFirstPriority());
-		plugin_interface.addConfigSection(new ConfigSectionSeedingIgnore());
+	public StartStopRulesDefaultPluginSWTUI(PluginInterface pi) {
+		ConfigSectionRepository csrep = ConfigSectionRepository.getInstance();
+		csrep.addConfigSection(new ConfigSectionQueue(), pi);
+		csrep.addConfigSection(new ConfigSectionDownloading(), pi);
+		csrep.addConfigSection(new ConfigSectionSeeding(), pi);
+		csrep.addConfigSection(new ConfigSectionSeedingAutoStarting(), pi);
+		csrep.addConfigSection(new ConfigSectionSeedingFirstPriority(), pi);
+		csrep.addConfigSection(new ConfigSectionSeedingIgnore(), pi);
 	}
 
 	@Override

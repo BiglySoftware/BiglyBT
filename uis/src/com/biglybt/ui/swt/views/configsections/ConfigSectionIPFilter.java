@@ -33,6 +33,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
@@ -46,10 +47,8 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
-import com.biglybt.core.CoreFactory;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.pif.UISWTConfigSection;
 
 import com.biglybt.pif.ui.config.ConfigSection;
 
@@ -189,15 +188,15 @@ public class ConfigSectionIPFilter implements UISWTConfigSection {
 
 	gridData = new GridData();
 
-    BooleanParameter enabled = new BooleanParameter(gFilter, "Ip Filter Enabled");
-	enabled.setLayoutData( gridData );
-    Messages.setLanguageText(enabled.getControl(), "ConfigView.section.ipfilter.enable");
+		BooleanParameter enabled = new BooleanParameter(gFilter,
+				"Ip Filter Enabled", "ConfigView.section.ipfilter.enable");
+		enabled.setLayoutData( gridData );
 
 	gridData = new GridData();
 
-    BooleanParameter deny = new BooleanParameter(gFilter, "Ip Filter Allow");
-	deny.setLayoutData( gridData );
-    Messages.setLanguageText(deny.getControl(), "ConfigView.section.ipfilter.allow");
+		BooleanParameter deny = new BooleanParameter(gFilter, "Ip Filter Allow",
+				"ConfigView.section.ipfilter.allow");
+		deny.setLayoutData( gridData );
 
     deny.addChangeListener(
     	new ParameterChangeAdapter()
@@ -217,12 +216,12 @@ public class ConfigSectionIPFilter implements UISWTConfigSection {
 
 	gridData = new GridData();
 
-	BooleanParameter persist_bad_data_banning = new BooleanParameter(gFilter, "Ip Filter Banning Persistent");
-	persist_bad_data_banning.setLayoutData( gridData );
-	Messages.setLanguageText(persist_bad_data_banning.getControl(), "ConfigView.section.ipfilter.persistblocking");
+		BooleanParameter persist_bad_data_banning = new BooleanParameter(gFilter,
+				"Ip Filter Banning Persistent",
+				"ConfigView.section.ipfilter.persistblocking");
+		persist_bad_data_banning.setLayoutData( gridData );
 
-	BooleanParameter disableForUpdates = new BooleanParameter(gFilter, "Ip Filter Disable For Updates");
-	Messages.setLanguageText(disableForUpdates.getControl(), "ConfigView.section.ipfilter.disable.for.updates");
+	BooleanParameter disableForUpdates = new BooleanParameter(gFilter, "Ip Filter Disable For Updates",  "ConfigView.section.ipfilter.disable.for.updates");
 
     Group gBlockBanning = new Group(gFilter, SWT.NULL);
     Messages.setLanguageText(gBlockBanning, "ConfigView.section.ipfilter.peerblocking.group");
@@ -463,24 +462,23 @@ public class ConfigSectionIPFilter implements UISWTConfigSection {
     fd.right = new FormAttachment(100, 0);
 		lblAutoLoadInfo.setLayoutData(fd);
 
-    BooleanParameter clear_on_reload = new BooleanParameter(gAutoLoad, "Ip Filter Clear On Reload" );
+		BooleanParameter clear_on_reload = new BooleanParameter(gAutoLoad,
+				"Ip Filter Clear On Reload",
+				"ConfigView.section.ipfilter.clear.on.reload");
     fd = new FormData();
     fd.top = new FormAttachment(lblAutoLoadInfo, 3);
     fd.left = new FormAttachment(0, 0);
     fd.right = new FormAttachment(100, 0);
     clear_on_reload.setLayoutData(fd);
-	Messages.setLanguageText(clear_on_reload.getControl(),
-		"ConfigView.section.ipfilter.clear.on.reload");
 
     	// description scratch file
 
     if (userMode > 0) {
     	gridData = new GridData();
-    	BooleanParameter enableDesc = new BooleanParameter(gFilter,
-    	"Ip Filter Enable Description Cache");
+			BooleanParameter enableDesc = new BooleanParameter(gFilter,
+					"Ip Filter Enable Description Cache",
+					"ConfigView.section.ipfilter.enable.descriptionCache");
     	enableDesc.setLayoutData(gridData);
-    	Messages.setLanguageText(enableDesc.getControl(),
-    	"ConfigView.section.ipfilter.enable.descriptionCache");
     }
 
 

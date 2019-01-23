@@ -38,30 +38,28 @@ public class
 PasswordParameter
 	extends Parameter
 {
-  String name;
   Text inputField;
 	private final int encoding;
 
 	public
   PasswordParameter(
   	Composite composite,
-	final String name)
+	  String configID)
   {
-  	this( composite, name, com.biglybt.pif.ui.config.PasswordParameter.ET_SHA1 );
+  	this( composite, configID, com.biglybt.pif.ui.config.PasswordParameter.ET_SHA1 );
   }
 
   public
   PasswordParameter(
   	Composite 		composite,
-	final String 	name,
-	final int		encoding )
+	  String configID,
+	  int		encoding )
   {
-  	super(name);
-    this.name = name;
+	  super(configID);
 	  this.encoding = encoding;
     inputField = new Text(composite, SWT.BORDER);
 	  inputField.setEchoChar('*');
-    byte[] value = COConfigurationManager.getByteParameter(name, "".getBytes());
+	  byte[] value = COConfigurationManager.getByteParameter(configID, "".getBytes());
     inputField.setMessage(value.length > 0 ? MessageText.getString("ConfigView.password.isset") : "");
     inputField.addListener(SWT.Modify, new Listener() {
       @Override
@@ -92,7 +90,7 @@ PasswordParameter
             encoded = password;
           }
 
-          COConfigurationManager.setParameter(name, encoded);
+          COConfigurationManager.setParameter(configID, encoded);
         } catch(Exception e) {
         	Debug.printStackTrace( e );
         }
@@ -142,7 +140,7 @@ PasswordParameter
 	@Override
 	public Object getValueObject() {
   	if (encoding == com.biglybt.pif.ui.config.PasswordParameter.ET_PLAIN) {
-		  Object val = COConfigurationManager.getParameter(name);
+		  Object val = COConfigurationManager.getParameter(configID);
 		  if (val instanceof byte[]) {
 		  	return val;
 		  }

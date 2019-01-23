@@ -20,31 +20,21 @@ public class IconParameter extends Parameter implements ParameterListener {
 
 
   private Button iconChooser;
-  protected String sParamName;
   private Image img;
   private String imgResource;
 
   private String file;
   
-  public IconParameter(final Composite composite,
-          final String name,
-          String file) {
-	  this( composite, name, file, false );
-  }
-  
-  public IconParameter(final Composite composite,
-                        final String name,
-                        String _file,
-                        boolean hasDefault) {
-  	super(name);
-    sParamName = name;
+	public IconParameter(Composite composite, String configID, String _file,
+			boolean hasDefault) {
+		super(configID);
     iconChooser = new Button(composite,SWT.PUSH);
-    if (name == null) {
+		if (configID == null) {
     	file = _file;
     } else {
-      file = COConfigurationManager.getStringParameter(sParamName, _file);
-     
-      COConfigurationManager.addParameterListener(sParamName, this);
+			file = COConfigurationManager.getStringParameter(configID, _file);
+
+			COConfigurationManager.addParameterListener(configID, this);
     }
     updateButtonIcon(composite.getDisplay(),file );
 
@@ -70,9 +60,10 @@ public class IconParameter extends Parameter implements ParameterListener {
     iconChooser.addListener(SWT.Dispose, new Listener() {
       @Override
       public void handleEvent(Event e) {
-      	if (sParamName != null) {
-      		COConfigurationManager.removeParameterListener(sParamName, IconParameter.this);
-      	}
+				if (configID != null) {
+					COConfigurationManager.removeParameterListener(configID,
+							IconParameter.this);
+				}
       	releaseImage();
       }
     });
@@ -90,8 +81,8 @@ public class IconParameter extends Parameter implements ParameterListener {
           }
           
           newIconChosen(newFile);
-          if (name != null) {
-        	  COConfigurationManager.setParameter(name, newFile);
+				if (configID != null) {
+					COConfigurationManager.setParameter(configID, newFile);
           } else {
         	  file = newFile;
 
@@ -171,7 +162,7 @@ public class IconParameter extends Parameter implements ParameterListener {
 
   @Override
   public void parameterChanged(String parameterName) {
-    file = COConfigurationManager.getStringParameter(sParamName );
+    file = COConfigurationManager.getStringParameter(configID);
   
     updateButtonIcon(iconChooser.getDisplay(), file);
   }
@@ -192,10 +183,10 @@ public class IconParameter extends Parameter implements ParameterListener {
   public void setIcon(String _file) {
 		file = _file;
 
-		if (sParamName == null) {
+		if (configID == null) {
 			updateButtonIcon(iconChooser.getDisplay(), file);
 		} else {
-			COConfigurationManager.setParameter(sParamName,file );
+			COConfigurationManager.setParameter(configID, file);
 		}
   }
 }

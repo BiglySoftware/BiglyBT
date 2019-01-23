@@ -580,7 +580,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			manualArea.setLayout( layout);
 			manualArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-			final Parameter manualProg = new FileParameter(manualArea, "browser.external.prog","", new String[]{});
+			final Parameter manualProg = new FileParameter(manualArea, "browser.external.prog", new String[]{});
 
 			manualProg.setEnabled( existing_index == 1 );
 

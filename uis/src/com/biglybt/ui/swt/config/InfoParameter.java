@@ -33,18 +33,12 @@ public class
 InfoParameter
 	extends Parameter
 {
-	private String 				name;
 	private BufferedLabel	 	label;
 
-	public InfoParameter(Composite composite,String name) {
-		this(composite, name, COConfigurationManager.getStringParameter(name));
-	}
-
-	public InfoParameter(Composite composite,final String name, String defaultValue ) {
-		super(name);
-		this.name = name;
+	public InfoParameter(Composite composite,String configID) {
+		super(configID);
 		this.label = new BufferedLabel(composite, SWT.NULL);
-		String value = COConfigurationManager.getStringParameter(name, defaultValue);
+		String value = COConfigurationManager.getStringParameter(configID);
 		label.setText(value);
 	}
 
@@ -61,8 +55,8 @@ InfoParameter
 			}
 		});
 
-		if (!COConfigurationManager.getStringParameter(name).equals(value)) {
-			COConfigurationManager.setParameter(name, value);
+		if (!COConfigurationManager.getStringParameter(configID).equals(value)) {
+			COConfigurationManager.setParameter(configID, value);
 		}
 	}
 
@@ -92,6 +86,6 @@ InfoParameter
 
 	@Override
 	public Object getValueObject() {
-		return COConfigurationManager.getStringParameter(name);
+		return COConfigurationManager.getStringParameter(configID);
 	}
 }
