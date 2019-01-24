@@ -47,6 +47,7 @@ import com.biglybt.core.networkmanager.admin.*;
 import com.biglybt.core.networkmanager.impl.http.HTTPNetworkManager;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
 import com.biglybt.core.proxy.socks.AESocksProxy;
 import com.biglybt.core.proxy.socks.AESocksProxyFactory;
@@ -263,19 +264,121 @@ NetworkAdminImpl
 				coreRunning(
 					Core core )
 				{
-					try{
-						Class.forName("com.biglybt.ui.swt.core.nwmadmin.NetworkAdminSWTImpl").getConstructor(
-							new Class[]{ Core.class, NetworkAdminImpl.class }).newInstance(
-								new Object[]{ core, NetworkAdminImpl.this });
-
-					}catch( Throwable e ){
-					}
+					setup( core );
 				}
 			});
 
 		initialised = true;
 	}
 
+	private void
+	setup(
+		Core	core )
+	{
+		try{
+			Class.forName("com.biglybt.ui.swt.core.nwmadmin.NetworkAdminSWTImpl").getConstructor(
+				new Class[]{ Core.class, NetworkAdminImpl.class }).newInstance(
+					new Object[]{ core, NetworkAdminImpl.this });
+
+		}catch( Throwable e ){
+		}
+		
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[] { "Enforce Bind IP", "Enforce Bind IP Pause" },
+				new ParameterListener()
+				{
+					private Object	lock = new Object();
+					
+					private TimerEventPeriodic	timer;
+							
+					private boolean	paused;
+					
+					TimerEventPerformer listener = (event_unused) -> 
+						{	
+							boolean	enforce 		= COConfigurationManager.getBooleanParameter( "Enforce Bind IP");
+							boolean	enforce_pause 	= COConfigurationManager.getBooleanParameter( "Enforce Bind IP Pause");
+
+							boolean bad = enforce && enforce_pause && hasMissingForcedBind();
+							
+							synchronized( lock ){
+								
+								if ( bad || paused ){
+								
+									paused = bad;
+																							
+									List<DownloadManager> dms = core.getGlobalManager().getDownloadManagers();
+									
+									for ( DownloadManager dm: dms ){
+										
+										if ( paused ){
+											
+											if ( !dm.isPaused()){
+											
+												int state = dm.getState();
+												
+												if (	state != DownloadManager.STATE_ERROR && 
+														state != DownloadManager.STATE_STOPPED && 
+														state != DownloadManager.STATE_STOPPING ){
+													
+													if ( dm.pause( true )){
+														
+														dm.setStopReason( "{label.binding.missing}" );
+													}
+												}
+											}
+										}else{
+											
+											if ( dm.isPaused()){
+												
+												String reason = dm.getStopReason();
+												
+												if ( reason != null && reason.equals( "{label.binding.missing}" )){
+													
+													dm.resume();
+												}
+											}
+										}
+									}
+								}
+							}
+						};
+						
+					@Override
+					public void
+					parameterChanged(
+						String parameterName )
+					{
+						boolean	enforce 		= COConfigurationManager.getBooleanParameter( "Enforce Bind IP");
+						boolean	enforce_pause 	= COConfigurationManager.getBooleanParameter( "Enforce Bind IP Pause");
+						
+						synchronized( lock ){
+							
+							if ( enforce && enforce_pause ){
+								
+								if ( timer == null ){
+							
+									timer = 
+										SimpleTimer.addPeriodicEvent(
+											"bind checker",
+											10*1000,
+											listener );
+								}
+							}else{
+								
+								if ( timer != null ){
+					
+									timer.cancel();
+									
+									timer = null;
+									
+									listener.perform( null );
+								}
+							}		
+						}
+					}
+				});
+	}
+	
 	private void
 	checkDNSSPI()
 	{
@@ -2902,7 +3005,15 @@ addressLoop:
 
 				String s;
 
-				if ( address.isAnyLocalAddress()){
+				if ( address.isLoopbackAddress()){
+					
+						// ignore loopback addresses as these are used to black-hole things when
+						// the binding is down
+					
+					continue;
+					
+				}else if ( address.isAnyLocalAddress()){
+				
 
 					s = "*";
 

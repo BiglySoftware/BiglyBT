@@ -197,6 +197,15 @@ public class ConfigSectionConnectionAdvanced
 		gridData.horizontalSpan = 3;
 		force_bind.setLayoutData(gridData);
 
+		BooleanParameter force_bind_pause = new BooleanParameter(gSocket,
+				"Enforce Bind IP Pause", "network.enforce.ipbinding.pause");
+		gridData = new GridData();
+		gridData.horizontalIndent = 25;
+		gridData.horizontalSpan = 3;
+		force_bind_pause.setLayoutData(gridData);
+		
+		force_bind.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( force_bind_pause.getControls()));
+		
 		BooleanParameter bind_icon = new BooleanParameter(gSocket,
 				"Show IP Bindings Icon", "network.ipbinding.icon.show");
 		gridData = new GridData();

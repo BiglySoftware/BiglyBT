@@ -433,6 +433,7 @@ public class ConfigurationDefaults {
     def.put( "Bind IP", "" );
     def.put( "Check Bind IP On Start", TRUE );
     def.put( "Enforce Bind IP", FALSE);
+    def.put( "Enforce Bind IP Pause", FALSE);
     def.put( "Show IP Bindings Icon", TRUE );
 
     def.put( "Stats Period", Long.valueOf(30) );

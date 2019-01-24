@@ -858,6 +858,9 @@ DisplayFormatters
 
 					String sr = manager.getStopReason();
 					if ( sr != null && !sr.isEmpty()){
+						if ( sr.startsWith( "{" ) && sr.endsWith( "}" )){
+							sr = MessageText.getString( sr.substring( 1, sr.length() - 1 ));
+						}
 						tmp += " (" + sr + ")";
 					}
 				}
