@@ -1472,13 +1472,22 @@ public class Utils
 
 			sFileModified = sFileModified.replaceAll( " ", "\\ " );
 
-			if (!Program.launch("xdg-open " + sFileModified)) {
+			if (!fallbackLaunch("xdg-open " + sFileModified)) {
 
-				if ( !Program.launch("htmlview " + sFileModified)){
+				if ( !fallbackLaunch("htmlview " + sFileModified)){
 
 					Debug.out( "Failed to launch '" + sFileModified + "'" );
 				}
 			}
+		}
+	}
+
+	private static boolean fallbackLaunch(String filename) {
+		try {
+			Runtime.getRuntime().exec(filename);
+			return true;
+		} catch	(Exception e) {
+			return false;
 		}
 	}
 
