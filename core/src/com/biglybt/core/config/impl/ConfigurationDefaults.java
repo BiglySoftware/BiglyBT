@@ -763,6 +763,9 @@ public class ConfigurationDefaults {
     
     def.put( "Share Ratio Progress Interval", 1000L );	// thousandths
 
+    def.put( "search.showRCMView", FALSE );
+    def.put( "search.rss.template.timeout", 20 );
+    
     def.put( "installer.mode", "" );		// the type of the last installer used (see installer code for values)
 }
 

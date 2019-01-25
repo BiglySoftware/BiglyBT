@@ -30,6 +30,7 @@ import com.biglybt.util.MapUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.metasearch.SearchException;
 import com.biglybt.core.metasearch.SearchLoginException;
@@ -65,6 +66,13 @@ WebEngine
 	static private final Pattern rootURLPattern = Pattern.compile("((?:tor:)?https?://[^/]+)");
 	static private final Pattern baseURLPattern = Pattern.compile("((?:tor:)?https?://.*/)");
 
+	static private int search_timeout_secs;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+				"search.rss.template.timeout",
+				(name)->{ search_timeout_secs = COConfigurationManager.getIntParameter( name); });
+	}
 
 	private String 			searchURLFormat;
 	private String 			timeZone;
@@ -946,7 +954,8 @@ WebEngine
 
 						initial_url_rd.setProperty( "URL_Connect_Timeout", 10*1000 );
 
-						initial_url_rd.setProperty( "URL_Read_Timeout", 10*1000 );
+						
+						initial_url_rd.setProperty( "URL_Read_Timeout", search_timeout_secs * 1000 );
 					}
 
 					mr_rd = rdf.getMetaRefreshDownloader( initial_url_rd );

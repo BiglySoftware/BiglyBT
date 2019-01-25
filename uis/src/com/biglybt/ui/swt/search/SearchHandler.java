@@ -87,7 +87,7 @@ SearchHandler
 
 				if ( 	COConfigurationManager.getBooleanParameter("rcm.overall.enabled",true) &&
 						COConfigurationManager.getBooleanParameter( "Plugin.aercm.rcm.search.enable", false ) &&
-						COConfigurationManager.getBooleanParameter("search.showRCMView") &&
+						COConfigurationManager.getBooleanParameter("search.showRCMView") &&	
 						CoreFactory.isCoreRunning()){
 
 					final PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( "aercm");
