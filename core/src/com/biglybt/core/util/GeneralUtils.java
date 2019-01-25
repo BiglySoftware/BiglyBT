@@ -22,6 +22,7 @@ package com.biglybt.core.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -366,5 +367,92 @@ GeneralUtils
 		String	s2 )
 	{
 		return( s1.toLowerCase( Locale.US ).startsWith( s2.toLowerCase( Locale.US )));
+	}
+	
+	private static Map<String,Integer>		unit_map = new HashMap<>();
+	
+	static{
+		unit_map.put( "b",  0 );
+		unit_map.put( "kb", 1 );
+		unit_map.put( "mb", 2 );
+		unit_map.put( "gb", 3 );
+		unit_map.put( "tb", 4 );
+		unit_map.put( "pb", 5 );
+		unit_map.put( "eb", 6 );
+				
+		unit_map.put( "kib", 11 );
+		unit_map.put( "mib", 12 );
+		unit_map.put( "gib", 13 );
+		unit_map.put( "tib", 14 );
+		unit_map.put( "pib", 15 );
+		unit_map.put( "eib", 16 );
+		
+		unit_map.put( "k"  , 11 );
+		unit_map.put( "m",   12 );
+		unit_map.put( "g",   13 );
+		unit_map.put( "t",   14 );
+		unit_map.put( "p",   15 );
+		unit_map.put( "e",   16 );
+	}
+	
+	static long[] unit_values = {
+		 	1L, 
+			1000L, 
+			1000L*1000,
+			1000L*1000*1000,
+			1000L*1000*1000*1000,
+			1000L*1000*1000*1000*1000,
+			1000L*1000*1000*1000*1000*1000,
+			0, 0, 0, 
+			1L,
+			1024L,
+			1024L*1024,
+			1024L*1024*1024,
+			1024L*1024*1024*1024,
+			1024L*1024*1024*1024*1024,
+			1024L*1024*1024*1024*1024*1024,
+		};
+	
+	public static long
+	getUnitMultiplier(
+		String		unit,
+		boolean		treat_decimal_as_binary )
+	{
+		if ( unit.equals( "b" )){
+			return( 1 );	// get a lot of these, optimize
+		}
+		
+		unit = unit.toLowerCase( Locale.US );
+		
+		Integer val = unit_map.get( unit );
+		
+		if ( val == null ){
+			
+			return( -1 );
+			
+		}else{
+			
+			int index = val;
+			
+			if ( treat_decimal_as_binary && index < 10 ){
+				
+				index += 10;
+			}
+			
+			return( unit_values[index] );
+		}
+	}
+	
+	public static void
+	main(String[] args )
+	{
+		System.out.println( getUnitMultiplier( "e", false ));
+		System.out.println( getUnitMultiplier( "e", true ));
+		System.out.println( getUnitMultiplier( "pb", false ));
+		System.out.println( getUnitMultiplier( "pb", true ));
+		System.out.println( getUnitMultiplier( "pib", false ));
+		System.out.println( getUnitMultiplier( "pib", true ));
+				
+	
 	}
 }

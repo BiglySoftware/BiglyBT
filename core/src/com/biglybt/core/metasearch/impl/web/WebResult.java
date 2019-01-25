@@ -19,6 +19,7 @@
 
 package com.biglybt.core.metasearch.impl.web;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.StringTokenizer;
 
@@ -30,6 +31,7 @@ import com.biglybt.core.metasearch.impl.DateParser;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.UrlUtils;
 
 public class WebResult extends Result {
@@ -272,30 +274,14 @@ public class WebResult extends Result {
 				} catch(Throwable e) {
 					//No unit
 				}
-				long multiplier = 1;
-				long KB_UNIT = 1024;
-				long KIB_UNIT = 1024;
-				if("mb".equals(unit)) {
-					multiplier = KB_UNIT*KB_UNIT;
-				} else if("mib".equals(unit)) {
-					multiplier = KIB_UNIT*KIB_UNIT;
-				} else if("m".equals(unit)) {
-					multiplier = KIB_UNIT*KIB_UNIT;
-				} else if("gb".equals(unit)) {
-					multiplier = KB_UNIT*KB_UNIT*KB_UNIT;
-				} else if("gib".equals(unit)) {
-					multiplier = KIB_UNIT*KIB_UNIT*KIB_UNIT;
-				} else if("g".equals(unit)) {
-					multiplier = KIB_UNIT*KIB_UNIT*KIB_UNIT;
-				} else if("kb".equals(unit)) {
-					multiplier = KB_UNIT;
-				} else if("kib".equals(unit)) {
-					multiplier = KIB_UNIT;
-				} else if("k".equals(unit)) {
-					multiplier = KIB_UNIT;
+					// dunno why this code always uses binary but I just replicated how it worked when abstracting
+				
+				long multiplier = GeneralUtils.getUnitMultiplier( unit, true );
+	
+				if ( multiplier <= 0 ){
+					multiplier= 1;	// ignore invalid 
 				}
-
-				this.size = (long) (base * multiplier);
+				this.size = (long) (base * multiplier );
 			} catch(Throwable e) {
 				//e.printStackTrace();
 			}

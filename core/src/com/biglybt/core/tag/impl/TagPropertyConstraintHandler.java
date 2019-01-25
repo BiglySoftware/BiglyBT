@@ -21,6 +21,7 @@
 package com.biglybt.core.tag.impl;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -3046,15 +3047,54 @@ TagPropertyConstraintHandler
 						
 					}else if ( Character.isDigit( str.charAt(0))){
 
+							// look for units
+						
+						String unit = "";
+						
+						for ( int i=0;i<str.length();i++){
+							
+							if ( !Character.isDigit( str.charAt( i ) )){
+								
+								unit = str.substring( i ).trim();
+								
+								str = str.substring( 0,  i );
+								
+								break;
+							}
+						}
+						
 						if ( str.contains( "." )){
 
-							result = Float.parseFloat( str );
+							result = Double.parseDouble( str );
 
 						}else{
 
 							result = Long.parseLong( str );
 						}
 
+						if ( !unit.isEmpty()){
+							
+							long multiplier = GeneralUtils.getUnitMultiplier( unit, false );
+							
+							if ( multiplier <= 0 ){
+								
+								setError( "Invalid unit '" + unit + "'" );
+								
+							}else{
+								
+								if ( multiplier > 1 ){
+									
+									if ( result instanceof Long ){
+										
+										result = ((Long)result).longValue() * multiplier;
+										
+									}else{
+										
+										result = ((Double)result).longValue() * multiplier;
+									}
+								}
+							}
+						}
 						return( result );
 						
 					}else{
