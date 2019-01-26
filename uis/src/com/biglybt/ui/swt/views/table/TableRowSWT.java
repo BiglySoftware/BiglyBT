@@ -46,6 +46,17 @@ public interface TableRowSWT extends TableRowCore
 
 	public Color getBackground();
 
+	
+	public void
+	requestForegroundColor(
+		ColorRequester		requester,
+		Color				color );
+	
+	public void
+	requestBackgroundColor(
+		ColorRequester		requester,
+		Color				color );
+	  
 	/**
 	 * @param cellName
 	 * @return
@@ -104,4 +115,11 @@ public interface TableRowSWT extends TableRowCore
 	public int getFullHeight();
 
 	boolean isShown();
+	
+	interface
+	ColorRequester
+	{
+		public int
+		getPriority();
+	}
 }

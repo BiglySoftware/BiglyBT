@@ -134,6 +134,13 @@ Tag
 	isColorDefault();
 	
 	public void
+	setColors(
+		long[]		colors );
+	
+	public long[]
+	getColors();
+	
+	public void
 	addTaggable(
 		Taggable	t );
 

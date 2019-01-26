@@ -52,6 +52,7 @@ TagBase
 	protected static final String	AT_IMAGE_ID						= "img.id";
 	protected static final String	AT_IMAGE_FILE					= "img.file";
 	protected static final String	AT_COLOR_ID						= "col.rgb";
+	protected static final String	AT_COLORS_ID					= "cols";
 	protected static final String	AT_RSS_ENABLE					= "rss.enable";
 	protected static final String	AT_RATELIMIT_UP_PRI				= "rl.uppri";
 	protected static final String	AT_XCODE_TARGET					= "xcode.to";
@@ -126,6 +127,7 @@ TagBase
 	private Boolean	is_public;
 	private String	group;
 	private int[]	colour;
+	private long[]	colours;
 	private String	description;
 
 
@@ -608,6 +610,44 @@ TagBase
 		tag_type.fireMetadataChanged( this );
 	}
 
+	@Override
+	public long[]
+	getColors()
+	{
+		long[] result = colours;
+
+		if ( result == null ){
+
+			result = readLongListAttribute( AT_COLORS_ID, new long[0] );
+
+			colours = result;
+		}
+
+		return( result );
+	}
+
+	@Override
+	public void
+	setColors(
+		long[]		params )
+	{
+		if ( params == null ){
+			
+			params = new long[0];
+		}
+		
+		if ( colours != null && colours.length == 0 && params.length == 0 ){
+			
+		}else{
+		
+			writeLongListAttribute( AT_COLORS_ID, params );
+		}
+		
+		colours = params;
+
+		tag_type.fireMetadataChanged( this );
+	}
+	
 	public boolean
 	isTagRSSFeedEnabled()
 	{
@@ -1864,6 +1904,22 @@ TagBase
 		return( tag_type.writeStringListAttribute( this, attr, value ));
 	}
 
+	protected long[]
+	readLongListAttribute(
+		String		attr,
+		long[]		def )
+	{
+		return( tag_type.readLongListAttribute( this, attr, def ));
+	}
+
+	protected boolean
+	writeLongListAttribute(
+		String		attr,
+		long[]		value )
+	{
+		return( tag_type.writeLongListAttribute( this, attr, value ));
+	}
+	
 	private static final Map<Long,long[][]>	session_cache = new HashMap<>();
 
 	private long[]						total_up_at_start;

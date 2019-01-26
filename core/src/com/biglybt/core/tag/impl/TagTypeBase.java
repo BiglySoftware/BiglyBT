@@ -653,6 +653,24 @@ TagTypeBase
 		return( manager.writeStringListAttribute( this, tag, attr, value ));
 	}
 
+	protected long[]
+	readLongListAttribute(
+		TagBase		tag,
+		String		attr,
+		long[]		def )
+	{
+		return( manager.readLongListAttribute( this, tag, attr, def ));
+	}
+
+	protected boolean
+	writeLongListAttribute(
+		TagBase		tag,
+		String		attr,
+		long[]	value )
+	{
+		return( manager.writeLongListAttribute( this, tag, attr, value ));
+	}
+	
  	private static class
  	TagGroupImpl
  		implements TagGroup

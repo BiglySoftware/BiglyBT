@@ -54,6 +54,8 @@ TagPropertyConstraintHandler
 {
 	private static final Object DM_FILE_FILE_NAMES = new Object();
 	
+	private static final String		EVAL_CTX_COLOURS = "colours";
+	
 	private final Core core;
 	private final TagManagerImpl	tag_manager;
 
@@ -1410,8 +1412,18 @@ TagPropertyConstraintHandler
 					return( false );
 				}
 				
-				return( (Boolean)expr.eval( dm, dm_tags, debug ));
+				Map<String,Object>	context = new HashMap<>();
 				
+				boolean result = (Boolean)expr.eval( context, dm, dm_tags, debug );
+				
+				if ( result ){
+					
+					long[] colours = (long[])context.get( EVAL_CTX_COLOURS );
+					
+					tag.setColors( colours );
+				}
+								
+				return( result );
 			}else{
 				
 				return( false );
@@ -1423,6 +1435,7 @@ TagPropertyConstraintHandler
 		{
 			public Object
 			eval(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug );
@@ -1438,6 +1451,7 @@ TagPropertyConstraintHandler
 			@Override
 			public Object
 			eval(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug )
@@ -1495,6 +1509,7 @@ TagPropertyConstraintHandler
 			@Override
 			public Object
 			eval(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug )
@@ -1651,6 +1666,7 @@ TagPropertyConstraintHandler
 			@Override
 			public Object
 			eval(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug )
@@ -1659,7 +1675,7 @@ TagPropertyConstraintHandler
 					debug.append( "!(" );
 				}
 				
-				Boolean result = !(Boolean)expr.eval( dm, tags, debug );
+				Boolean result = !(Boolean)expr.eval( context, dm, tags, debug );
 				
 				if ( debug != null ){
 					debug.append( ")" );
@@ -1692,6 +1708,7 @@ TagPropertyConstraintHandler
 			@Override
 			public Object
 			eval(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug )
@@ -1711,7 +1728,7 @@ TagPropertyConstraintHandler
 							}
 						}
 						
-						Boolean b = (Boolean)expr.eval( dm, tags, debug );
+						Boolean b = (Boolean)expr.eval( context, dm, tags, debug );
 						
 						if ( debug != null ){
 							debug.append( b );
@@ -1765,6 +1782,7 @@ TagPropertyConstraintHandler
 			@Override
 			public Object
 			eval(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug )
@@ -1784,7 +1802,7 @@ TagPropertyConstraintHandler
 							}
 						}
 						
-						boolean b = (Boolean)expr.eval( dm, tags, debug );
+						boolean b = (Boolean)expr.eval( context, dm, tags, debug );
 						
 						if ( debug != null ){
 							debug.append( b );
@@ -1842,6 +1860,7 @@ TagPropertyConstraintHandler
 			@Override
 			public Object
 			eval(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug )
@@ -1851,7 +1870,7 @@ TagPropertyConstraintHandler
 				}
 
 				try{
-					boolean res = (Boolean)exprs[0].eval( dm, tags, debug );
+					boolean res = (Boolean)exprs[0].eval( context, dm, tags, debug );
 	
 					if ( debug != null ){
 						debug.append( res );
@@ -1863,7 +1882,7 @@ TagPropertyConstraintHandler
 							debug.append( "^" );;
 						}
 
-						boolean b = (Boolean)exprs[i].eval( dm, tags, debug );
+						boolean b = (Boolean)exprs[i].eval( context, dm, tags, debug );
 						
 						if ( debug != null ){
 							debug.append( b );
@@ -1928,6 +1947,7 @@ TagPropertyConstraintHandler
 		private static final int FT_GET_CONFIG		= 27;
 		private static final int FT_HAS_TAG_AGE		= 28;
 		private static final int FT_LOWERCASE		= 29;		
+		private static final int FT_SET_COLOURS		= 30;		
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -1967,6 +1987,8 @@ TagPropertyConstraintHandler
 		private static final int	KW_FILE_NAMES		 	= 29;
 		private static final int	KW_SAVE_PATH		 	= 30;
 		private static final int	KW_SAVE_FOLDER		 	= 31;
+		private static final int	KW_MAX_UP			 	= 32;
+		private static final int	KW_MAX_DOWN			 	= 33;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2035,6 +2057,12 @@ TagPropertyConstraintHandler
 			keyword_map.put( "file_names", 				new int[]{KW_FILE_NAMES,			DEP_STATIC });
 			keyword_map.put( "save_path", 				new int[]{KW_SAVE_PATH,				DEP_STATIC });
 			keyword_map.put( "save_folder", 			new int[]{KW_SAVE_FOLDER,			DEP_STATIC });
+			
+			keyword_map.put( "max_up", 					new int[]{KW_MAX_UP,				DEP_RUNNING });
+			keyword_map.put( "maxup", 					new int[]{KW_MAX_UP,				DEP_RUNNING });
+			keyword_map.put( "max_down", 				new int[]{KW_MAX_DOWN,				DEP_RUNNING });
+			keyword_map.put( "maxdown", 				new int[]{KW_MAX_DOWN,				DEP_RUNNING });
+
 		}
 
 		private class
@@ -2059,6 +2087,8 @@ TagPropertyConstraintHandler
 
 				params		= _params.getValues();
 
+				int num_params = params.length;
+				
 				boolean	params_ok = false;
 
 				if ( func_name.equals( "hasTag" ) || func_name.equals( "hasTagAge" ) || func_name.equals( "countTag" )){
@@ -2076,7 +2106,7 @@ TagPropertyConstraintHandler
 						fn_type = FT_COUNT_TAG;
 					}
 					
-					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+					params_ok = num_params == 1 && getStringLiteral( params, 0 );
 
 					if ( params_ok ){
 						
@@ -2109,7 +2139,7 @@ TagPropertyConstraintHandler
 
 					fn_type = FT_HAS_NET;
 
-					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+					params_ok = num_params == 1 && getStringLiteral( params, 0 );
 
 					if ( params_ok ){
 
@@ -2121,7 +2151,7 @@ TagPropertyConstraintHandler
 
 					fn_type = FT_IS_PRIVATE;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "isForceStart" )){
 
@@ -2129,7 +2159,7 @@ TagPropertyConstraintHandler
 
 					depends_on_download_state = true;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "isChecking" )){
 
@@ -2137,7 +2167,7 @@ TagPropertyConstraintHandler
 
 					depends_on_download_state = true;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "isComplete" )){
 
@@ -2145,7 +2175,7 @@ TagPropertyConstraintHandler
 
 					depends_on_download_state = true;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "isStopped" )){
 
@@ -2153,7 +2183,7 @@ TagPropertyConstraintHandler
 
 						depends_on_download_state = true;
 
-						params_ok = params.length == 0;
+						params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "isError" )){
 
@@ -2161,7 +2191,7 @@ TagPropertyConstraintHandler
 
 					depends_on_download_state = true;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "isPaused" )){
 
@@ -2169,81 +2199,81 @@ TagPropertyConstraintHandler
 
 					depends_on_download_state = true;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 					
 				}else if ( func_name.equals( "isMagnet" )){
 
 					fn_type = FT_IS_MAGNET;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "isLowNoise" )){
 
 					fn_type = FT_IS_LOW_NOISE;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "canArchive" )){
 
 					fn_type = FT_CAN_ARCHIVE;
 
-					params_ok = params.length == 0;
+					params_ok = num_params == 0;
 
 				}else if ( func_name.equals( "isGE" )){
 
 					fn_type = FT_GE;
 
-					params_ok = params.length == 2;
+					params_ok = num_params == 2;
 
 				}else if ( func_name.equals( "isGT" )){
 
 					fn_type = FT_GT;
 
-					params_ok = params.length == 2;
+					params_ok = num_params == 2;
 
 				}else if ( func_name.equals( "isLE" )){
 
 					fn_type = FT_LE;
 
-					params_ok = params.length == 2;
+					params_ok = num_params == 2;
 
 				}else if ( func_name.equals( "isLT" )){
 
 					fn_type = FT_LT;
 
-					params_ok = params.length == 2;
+					params_ok = num_params == 2;
 
 				}else if ( func_name.equals( "isEQ" )){
 
 					fn_type = FT_EQ;
 
-					params_ok = params.length == 2;
+					params_ok = num_params == 2;
 
 				}else if ( func_name.equals( "isNEQ" )){
 
 					fn_type = FT_NEQ;
 
-					params_ok = params.length == 2;
+					params_ok = num_params == 2;
 
 				}else if ( func_name.equals( "contains" )){
 
 					fn_type = FT_CONTAINS;
 
-					params_ok = params.length == 2 || (  params.length == 3 && getNumericLiteral( params, 2 ));
+					params_ok = num_params == 2 || (  num_params == 3 && getNumericLiteral( params, 2 ));
 
 				}else if ( func_name.equals( "lowercase" )){
 
 					fn_type = FT_LOWERCASE;
 
-					params_ok = params.length == 1;
+					params_ok = num_params == 1;
 
 				}else if ( func_name.equals( "matches" )){
 
 					fn_type = FT_MATCHES;
 
-					params_ok = ( params.length == 2 || params.length == 3) && getStringLiteral( params, 1 );
+					params_ok = ( num_params == 2 || num_params == 3) && getStringLiteral( params, 1 );
 
-					if ( params_ok && params.length == 3 ){
+					if ( params_ok && num_params == 3 ){
 						
 						params_ok = getNumericLiteral( params, 2 );
 					}
@@ -2253,7 +2283,7 @@ TagPropertyConstraintHandler
 						try{
 							boolean	case_insensitive = true;
 							
-							if ( params.length == 3 ){
+							if ( num_params == 3 ){
 																	
 								Number flags = (Number)params[2];
 									
@@ -2281,7 +2311,7 @@ TagPropertyConstraintHandler
 
 					fn_type = FT_JAVASCRIPT;
 
-					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+					params_ok = num_params == 1 && getStringLiteral( params, 0 );
 
 					depends_on_download_state = true;	// dunno so let's assume so
 					
@@ -2289,31 +2319,31 @@ TagPropertyConstraintHandler
 
 					fn_type = FT_HAS_TAG_GROUP;
 
-					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+					params_ok = num_params == 1 && getStringLiteral( params, 0 );
 
 				}else if ( func_name.equals( "hoursToSeconds" ) || func_name.equals( "htos" ) || func_name.equals( "h2s" )){
 
 					fn_type = FT_HOURS_TO_SECS;
 
-					params_ok = params.length == 1 && getNumericLiteral( params, 0 );
+					params_ok = num_params == 1 && getNumericLiteral( params, 0 );
 					
 				}else if ( func_name.equals( "daysToSeconds" ) || func_name.equals( "dtos" ) || func_name.equals( "d2s" )){
 
 					fn_type = FT_DAYS_TO_SECS;
 
-					params_ok = params.length == 1 && getNumericLiteral( params, 0 );
+					params_ok = num_params == 1 && getNumericLiteral( params, 0 );
 					
 				}else if ( func_name.equals( "weeksToSeconds" ) || func_name.equals( "wtos" ) || func_name.equals( "w2s" )){
 
 					fn_type = FT_WEEKS_TO_SECS;
 
-					params_ok = params.length == 1 && getNumericLiteral( params, 0 );
+					params_ok = num_params == 1 && getNumericLiteral( params, 0 );
 
 				}else if ( func_name.equals( "getConfig" )){
 
 					fn_type = FT_GET_CONFIG;
 
-					params_ok = params.length == 1 && getStringLiteral( params, 0 );
+					params_ok = num_params == 1 && getStringLiteral( params, 0 );
 					
 					if ( params_ok ){
 						
@@ -2326,6 +2356,24 @@ TagPropertyConstraintHandler
 						if ( !config_key_map.containsKey( key )){
 							
 							throw( new RuntimeException( "Unsupported configuration parameter: " + key ));
+						}
+					}
+				}else if ( func_name.equals( "setColors" ) || func_name.equals( "setColours" )){
+
+					fn_type = FT_SET_COLOURS;
+
+					params_ok = num_params >= 1&&  num_params <= 3;
+
+					if ( params_ok ){
+						
+						for ( int i=0;i<num_params;i++){
+						
+							params_ok = getNumericLiteral( params, i );
+							
+							if ( !params_ok ){
+								
+								break;
+							}
 						}
 					}
 				}else{
@@ -2343,6 +2391,7 @@ TagPropertyConstraintHandler
 			@Override
 			public Object
 			eval(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug )
@@ -2351,7 +2400,7 @@ TagPropertyConstraintHandler
 					debug.append( "[" + func_name );
 				}
 				
-				Object res = evalSupport( dm, tags, debug );
+				Object res = evalSupport( context, dm, tags, debug );
 				
 				if ( debug!=null){
 					debug.append( "->" + res + "]" );
@@ -2362,10 +2411,13 @@ TagPropertyConstraintHandler
 			
 			public Object
 			evalSupport(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				StringBuilder		debug )
 			{
+				int num_params = params.length;
+
 				switch( fn_type ){
 					case FT_HAS_TAG:{
 
@@ -2567,8 +2619,8 @@ TagPropertyConstraintHandler
 					case FT_EQ:
 					case FT_NEQ:{
 
-						Number n1 = getNumeric( dm, tags, params, 0, debug );
-						Number n2 = getNumeric( dm, tags, params, 1, debug );
+						Number n1 = getNumeric( context, dm, tags, params, 0, debug );
+						Number n2 = getNumeric( context, dm, tags, params, 1, debug );
 
 						switch( fn_type ){
 
@@ -2590,13 +2642,13 @@ TagPropertyConstraintHandler
 					}
 					case FT_CONTAINS:{
 
-						String[]	s1s = getStrings( dm, tags, params, 0, debug );
+						String[]	s1s = getStrings( context, dm, tags, params, 0, debug );
 						
-						String		s2 = getString( dm, tags, params, 1, debug );
+						String		s2 = getString( context, dm, tags, params, 1, debug );
 						
 						boolean	case_insensitive = false;
 						
-						if ( params.length == 3 && getNumericLiteral( params, 2 )){
+						if ( num_params == 3 && getNumericLiteral( params, 2 )){
 							
 							Number flags = (Number)params[2];
 							
@@ -2631,13 +2683,13 @@ TagPropertyConstraintHandler
 					}
 					case FT_LOWERCASE:{
 						
-						String	s = getString( dm, tags, params, 0, debug );
+						String	s = getString( context, dm, tags, params, 0, debug );
 
 						return( s.toLowerCase( Locale.US ));
 					}
 					case FT_MATCHES:{
 
-						String[]	s1s = getStrings( dm, tags, params, 0, debug );
+						String[]	s1s = getStrings( context, dm, tags, params, 0, debug );
 
 						if ( params[1] == null ){
 
@@ -2655,7 +2707,7 @@ TagPropertyConstraintHandler
 	
 								boolean	case_insensitive = true;
 								
-								if ( params.length == 3 ){
+								if ( num_params == 3 ){
 																		
 									Number flags = (Number)params[2];
 										
@@ -2736,19 +2788,19 @@ TagPropertyConstraintHandler
 					}
 					case FT_HOURS_TO_SECS:{
 
-						Number n1 = getNumeric( dm, tags, params, 0, debug );
+						Number n1 = getNumeric( context, dm, tags, params, 0, debug );
 						
 						return((long)( n1.doubleValue() * 60*60 ));
 					}
 					case FT_DAYS_TO_SECS:{
 
-						Number n1 = getNumeric( dm, tags, params, 0, debug  );
+						Number n1 = getNumeric( context, dm, tags, params, 0, debug  );
 						
 						return((long)( n1.doubleValue() * 24*60*60 ));
 					}
 					case FT_WEEKS_TO_SECS:{
 
-						Number n1 = getNumeric( dm, tags, params, 0, debug  );
+						Number n1 = getNumeric( context, dm, tags, params, 0, debug  );
 						
 						return((long)( n1.doubleValue() * 7*24*60*60 ));
 					}
@@ -2782,6 +2834,18 @@ TagPropertyConstraintHandler
 						setError( "Error getting config value for '" + key + "'" );
 						
 						return( 0 );
+					}
+					case FT_SET_COLOURS:{
+						
+						long[] p = new long[ num_params ];
+						
+						for ( int i=0;i<num_params;i++){
+							
+							p[i] = getNumeric( context, dm, tags, params, i, debug  ).longValue();
+						}
+						context.put( EVAL_CTX_COLOURS, p);
+						
+						return( true );
 					}
 				}
 
@@ -2823,12 +2887,27 @@ TagPropertyConstraintHandler
 					
 				}else if ( arg instanceof String ){
 					
+					String s_arg = (String)arg;
+					
 					try{
-						Double d = Double.parseDouble( (String)arg );
+						if ( s_arg.startsWith( "0x" )){
+							
+							args[index] = Long.parseLong( s_arg.substring( 2 ), 16 );
+							
+							return( true );
+							
+						}else if ( s_arg.startsWith( "#" )){
+								
+							args[index] = Long.parseLong( s_arg.substring( 1 ), 16 );
+								
+							return( true );
+								
+						}else{
+											
+							args[index] =  Double.parseDouble( s_arg );
 						
-						args[index] = d;
-						
-						return( true );
+							return( true );
+						}
 								
 					}catch( Throwable e ){
 						
@@ -2840,19 +2919,21 @@ TagPropertyConstraintHandler
 			
 			private String
 			getString(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				Object[]			args,
 				int					index,
 				StringBuilder		debug )
 			{
-				String[] res = getStrings( dm, tags, args, index, debug );
+				String[] res = getStrings( context, dm, tags, args, index, debug );
 				
 				return( res[0] );
 			}
 
 			private String[]
 			getStrings(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				Object[]			args,
@@ -2883,7 +2964,7 @@ TagPropertyConstraintHandler
 							debug.append( "[" );
 						}
 						
-						String res = (String)((ConstraintExpr)arg).eval(dm, tags, debug );
+						String res = (String)((ConstraintExpr)arg).eval( context, dm, tags, debug );
 						
 						if ( debug!=null){
 							debug.append( "->" + res + "]" );
@@ -2977,6 +3058,7 @@ TagPropertyConstraintHandler
 			
 			private Number
 			getNumeric(
+				Map<String,Object>	context,
 				DownloadManager		dm,
 				List<Tag>			tags,
 				Object[]			args,
@@ -3001,7 +3083,7 @@ TagPropertyConstraintHandler
 						debug.append( "[" );
 					}
 					
-					Number res = (Number)((ConstraintExpr)arg).eval(dm, tags, debug );
+					Number res = (Number)((ConstraintExpr)arg).eval( context, dm, tags, debug );
 					
 					if ( debug!=null){
 						debug.append( "->" + res + "]" );
@@ -3045,13 +3127,18 @@ TagPropertyConstraintHandler
 						
 						return( result );
 						
-					}else if ( Character.isDigit( str.charAt(0))){
+					}else if ( 	Character.isDigit( str.charAt(0)) || 
+								( 	str.length() > 1 && 
+									str.startsWith( "-") && 
+									Character.isDigit( str.charAt(1)))){
 
 							// look for units
 						
 						String unit = "";
 						
-						for ( int i=0;i<str.length();i++){
+							// start at one to skip any potential leading -
+						
+						for ( int i=1;i<str.length();i++){
 							
 							if ( !Character.isDigit( str.charAt( i ) )){
 								
@@ -3404,6 +3491,14 @@ TagPropertyConstraintHandler
 							case KW_UPLOADED:{
 								
 								return( dm.getStats().getTotalDataBytesSent());
+							}
+							case KW_MAX_UP:{
+								
+								return( dm.getStats().getUploadRateLimitBytesPerSecond());
+							}
+							case KW_MAX_DOWN:{
+								
+								return( dm.getStats().getDownloadRateLimitBytesPerSecond());
 							}
 							default:{
 

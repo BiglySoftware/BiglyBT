@@ -72,6 +72,11 @@ public class TableRowPainted
 
 	private Color colorFG = null;
 
+	private Object			colorLock = new Object();
+	
+	private CopyOnWriteList<Object[]>	FGRequesters = new CopyOnWriteList<>(1);
+	private CopyOnWriteList<Object[]>	BGRequesters = new CopyOnWriteList<>(1);
+	
 	public TableRowPainted(TableRowCore parentRow, TableViewPainted tv,
 			Object dataSource, boolean triggerHeightChange) {
 		// in theory, TableRowPainted could have its own sync
@@ -1224,25 +1229,137 @@ public class TableRowPainted
 		return true;
 	}
 
+
+	@Override
+	public Color getForeground() {
+		if ( colorFG != null ){
+			
+			return( colorFG );
+		}
+		
+		List<Object[]> list = FGRequesters.getList();
+		
+		if ( !list.isEmpty()){
+			
+			return((Color)list.get(0)[1]);
+		}
+		
+		return( null );
+	}
+
+	@Override
+	public Color 
+	getBackground() 
+	{
+		List<Object[]> list = BGRequesters.getList();
+		
+		if ( !list.isEmpty()){
+			
+			return((Color)list.get(0)[1]);
+		}
+		
+		return( null );	
+	}
+
+	@Override
+	public void 
+	requestForegroundColor(
+		ColorRequester 	requester,
+		Color			color )
+	{
+		requestColor( FGRequesters, requester, color );
+	}
+	
+	@Override
+	public void 
+	requestBackgroundColor(
+		ColorRequester	requester,
+		Color			color )
+	{
+		requestColor( BGRequesters, requester, color );
+	}
+	
+	private void
+	requestColor(
+		CopyOnWriteList<Object[]>	cow,
+		ColorRequester				requester,
+		Color						color )
+	{
+		boolean	changed = false;
+		
+		try{
+			synchronized( colorLock ){
+				
+				int index 		= 0;
+				int	insert_at	= -1;
+				
+				for ( Object[] entry: cow ){
+				
+					ColorRequester r = (ColorRequester)entry[0];
+					
+					if ( r == requester ){
+						
+						if ( color == null ){
+					
+							cow.remove( entry );
+							
+							changed = true;
+							
+						}else{
+							
+							if ( !color.equals( (Color)entry[1])){
+								
+								entry[1] = color;
+								
+								changed = true;
+							}
+						}
+						
+						return;
+					}
+					
+					if ( insert_at == -1 && r.getPriority() < requester.getPriority()){
+						
+						insert_at = index;
+					}
+					
+					index++;
+				}
+				
+				Object[] new_entry = { requester, color };
+				
+				if ( insert_at >= 0 ){
+					
+					cow.add( insert_at, new_entry );
+					
+				}else{
+					
+					cow.add( new_entry );
+				}
+			}
+		}finally{
+			
+			if ( changed ){
+				
+				Utils.getOffOfSWTThread(new AERunnable() {
+					@Override
+					public void runSupport() {
+						redraw(false, false);
+					}
+				});
+			}
+		}
+	}
+	
+	@Override
+	public void setBackgroundImage(Image image) {
+		//TODO
+	}
+
 	@Override
 	public boolean setIconSize(Point pt) {
 		//TODO
 		return false;
-	}
-
-	@Override
-	public Color getForeground() {
-		return colorFG;
-	}
-
-	@Override
-	public Color getBackground() {
-		return null;
-	}
-
-	@Override
-	public void setBackgroundImage(Image image) {
-		//TODO
 	}
 
 	/* (non-Javadoc)

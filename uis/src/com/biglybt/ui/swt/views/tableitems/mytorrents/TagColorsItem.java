@@ -28,6 +28,7 @@ import java.util.List;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -40,13 +41,16 @@ import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
+import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.utils.ColorCache;
 
 /** Display Category torrent belongs to.
@@ -64,6 +68,8 @@ public class TagColorsItem
 	public static final String COLUMN_ID = "tag_colors";
 
 	private static String CFG_SHOW_DEF_COLOURS = "TagColorsItem.showdefcolours";
+	
+	private static TableRowSWT.ColorRequester	color_requester = ()-> 10;
 	
 	private static boolean show_default_colours;
 	
@@ -133,18 +139,139 @@ public class TagColorsItem
 
 			if ( tags.size() > 0 ){
 
-				for ( Tag t: tags ){
+				for ( Tag tag: tags ){
 
-					String str = t.getTagName( true );
+					String str = tag.getTagName( true );
 
 					if ( sTags == null ){
 						sTags = str;
 					}else{
 						sTags += ", " + str;
 					}
+										
+	
+				}
+			}
+			
+			int[] 	row_fg_color 		= null;
+			int[] 	row_bg_color 		= null;
+			
+			long	row_color_priority 	= -1;
+			long	row_color_uuid		= -1;
+			
+			for ( Tag tag: tags ){
+
+						
+				long[] colours = tag.getColors();
+				
+				if ( colours.length > 0 ){
+
+					long	priority;
+					
+					long	uuid = tag.getTagUID();
+					
+					if ( colours.length >= 3 ){
+						
+						priority = colours[2];
+						
+					}else{
+						
+						priority = uuid;
+					}
+				
+					boolean	set = false;
+					
+					if ( row_color_priority == -1 || row_color_priority < priority ){
+											
+						set = true;
+						
+					}else if ( row_color_priority == priority ){
+						
+						if ( row_color_uuid <  uuid ){
+														
+							set = true;
+						}
+					}
+					
+					if ( set ){
+						
+						long	fg = colours[0];
+						
+						row_fg_color = new int[]{ (int)((fg>>16)&0x00ff), (int)((fg>>8)&0x00ff), ((int)fg&0x00ff)};
+						
+						if ( colours.length > 1 ){
+							
+							long	bg = colours[1];
+							
+							row_bg_color = new int[]{ (int)((bg>>16)&0x00ff), (int)((bg>>8)&0x00ff), ((int)bg&0x00ff)};
+
+						}
+						
+						row_color_priority	= priority;
+						row_color_uuid		= uuid;
+					}
+				}
+			}
+			
+			TableRow row = cell.getTableRow();
+			
+			if ( row instanceof TableRowSWT ){
+						
+				boolean	missing_fg = false;
+				boolean	missing_bg = false;
+				
+				Color fg = null;
+				Color bg = null;
+				
+				if ( row_fg_color != null ){
+					
+					fg = ColorCache.getColor( null, row_fg_color );
+					
+					if ( fg == null ){
+						
+						missing_fg = true;
+					}
+				}
+
+				
+				if ( row_bg_color != null ){
+					
+					bg = ColorCache.getColor( null, row_bg_color );
+					
+					if ( bg == null ){
+						
+						missing_bg = true;
+					}
+				}
+				
+				if ( missing_fg ){
+					
+					int[] f_row_color = row_fg_color;
+					
+					Utils.execSWTThread(
+						()->{
+							((TableRowSWT)row).requestForegroundColor( color_requester, ColorCache.getColor( Display.getCurrent(), f_row_color ));
+						});
+				}else{
+				
+					((TableRowSWT)row).requestForegroundColor( color_requester, fg);
+				}
+				
+				if ( missing_bg ){
+					
+					int[] f_row_color = row_bg_color;
+					
+					Utils.execSWTThread(
+						()->{
+							((TableRowSWT)row).requestBackgroundColor( color_requester, ColorCache.getColor( Display.getCurrent(), f_row_color ));
+						});
+				}else{
+				
+					((TableRowSWT)row).requestBackgroundColor( color_requester, bg );
 				}
 			}
 		}
+		
 		cell.setSortValue( sTags );
 		cell.setToolTip((sTags == null) ? "" : sTags );
 	}
@@ -156,11 +283,14 @@ public class TagColorsItem
 
 		List<Color> colors = new ArrayList<>();
 
-
-		if (dm != null) {
+		if ( dm != null ){
 
 			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
 
+			Color 	row_color 			= null;
+			long	row_color_priority 	= -1;
+			long	row_color_uuid		= -1;
+			
 			for ( Tag tag: tags ){
 
 				int[] rgb = tag.getColor();
@@ -173,7 +303,58 @@ public class TagColorsItem
 					
 						colors.add( color );
 					}
+				}						
+					
+				long[] colours = tag.getColors();
+				
+				if ( colours.length > 0 ){
+
+					long	priority;
+					
+					long	uuid = tag.getTagUID();
+					
+					if ( colours.length >= 3 ){
+						
+						priority = colours[2];
+						
+					}else{
+						
+						priority = uuid;
+					}
+				
+					boolean	set = false;
+					
+					if ( row_color_priority == -1 || row_color_priority < priority ){
+											
+						set = true;
+						
+					}else if ( row_color_priority == priority ){
+						
+						if ( row_color_uuid <  uuid ){
+														
+							set = true;
+						}
+					}
+					
+					if ( set ){
+						
+						long	fg = colours[0];
+						
+						int[] x = { (int)((fg>>16)&0x00ff), (int)((fg>>8)&0x00ff), ((int)fg&0x00ff)};
+						
+						row_color = ColorCache.getColor( gc.getDevice(), x );
+						
+						row_color_priority	= priority;
+						row_color_uuid		= uuid;
+					}
 				}
+			}
+			
+			TableRow row = cell.getTableRow();
+			
+			if ( row instanceof TableRowSWT ){
+									
+				((TableRowSWT)row).requestForegroundColor( color_requester, row_color);
 			}
 		}
 

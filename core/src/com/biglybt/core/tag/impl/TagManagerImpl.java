@@ -2625,6 +2625,117 @@ TagManagerImpl
 		}
 	}
 
+	protected long[]
+	readLongListAttribute(
+		TagTypeBase		tag_type,
+		TagBase			tag,
+		String			attr,
+		long[]			def )
+	{
+		try{
+			synchronized( this ){
+
+				Map conf = getConf( tag_type, tag, false );
+
+				if ( conf == null ){
+
+					return( def );
+				}
+
+				List<Long> vals =(List)conf.get( attr );
+
+				if ( vals == null ){
+
+					return( def );
+				}
+
+				long[] result = new long[vals.size()];
+				
+				for ( int i=0;i<result.length;i++){
+					result[i] = vals.get(i);
+				}
+				
+				return( result );
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+
+			return( def );
+		}
+	}
+
+	protected boolean
+	writeLongListAttribute(
+		TagTypeBase		tag_type,
+		TagBase			tag,
+		String			attr,
+		long[]			value )
+	{
+		try{
+			synchronized( this ){
+
+				Map conf = getConf( tag_type, tag, true );
+
+				List<Long> old = (List)conf.get( attr );
+
+				if ( old == null && value == null ){
+
+					return( false );
+
+				}else if ( old != null && value != null ){
+
+					if ( value.length == old.size()){
+
+						boolean diff = false;
+
+						for ( int i=0;i<value.length;i++){
+
+							long old_value = old.get(i);
+
+							if ( old_value  != value[i]){
+
+								diff = true;
+
+								break;
+							}
+						}
+
+						if ( !diff ){
+
+							return( false );
+						}
+					}
+				}
+
+				if ( value == null ){
+
+					conf.remove( attr );
+					
+				}else{
+
+					List<Long> l = new ArrayList<>( value.length );
+					
+					for ( long v: value ){
+						
+						l.add( v );
+					}
+					
+					conf.put( attr, l);
+				}
+
+				setDirty();
+
+				return( true );
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+
+			return( false );
+		}
+	}
+	
 	protected void
 	removeConfig(
 		TagType	tag_type )
