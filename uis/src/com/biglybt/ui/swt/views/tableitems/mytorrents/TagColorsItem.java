@@ -197,16 +197,21 @@ public class TagColorsItem
 						
 						long	fg = colours[0];
 						
-						row_fg_color = new int[]{ (int)((fg>>16)&0x00ff), (int)((fg>>8)&0x00ff), ((int)fg&0x00ff)};
-						
-						if ( colours.length > 1 ){
+						if ( fg >= 0 ){
 							
-							long	bg = colours[1];
-							
-							row_bg_color = new int[]{ (int)((bg>>16)&0x00ff), (int)((bg>>8)&0x00ff), ((int)bg&0x00ff)};
-
+							row_fg_color = new int[]{ (int)((fg>>16)&0x00ff), (int)((fg>>8)&0x00ff), ((int)fg&0x00ff)};
 						}
 						
+						if ( colours.length > 1 ){
+								
+							long	bg = colours[1];
+							
+							if ( bg >= 0 ){
+								
+								row_bg_color = new int[]{ (int)((bg>>16)&0x00ff), (int)((bg>>8)&0x00ff), ((int)bg&0x00ff)};
+							}
+						}
+							
 						row_color_priority	= priority;
 						row_color_uuid		= uuid;
 					}
@@ -286,10 +291,6 @@ public class TagColorsItem
 		if ( dm != null ){
 
 			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
-
-			Color 	row_color 			= null;
-			long	row_color_priority 	= -1;
-			long	row_color_uuid		= -1;
 			
 			for ( Tag tag: tags ){
 
@@ -304,57 +305,6 @@ public class TagColorsItem
 						colors.add( color );
 					}
 				}						
-					
-				long[] colours = tag.getColors();
-				
-				if ( colours.length > 0 ){
-
-					long	priority;
-					
-					long	uuid = tag.getTagUID();
-					
-					if ( colours.length >= 3 ){
-						
-						priority = colours[2];
-						
-					}else{
-						
-						priority = uuid;
-					}
-				
-					boolean	set = false;
-					
-					if ( row_color_priority == -1 || row_color_priority < priority ){
-											
-						set = true;
-						
-					}else if ( row_color_priority == priority ){
-						
-						if ( row_color_uuid <  uuid ){
-														
-							set = true;
-						}
-					}
-					
-					if ( set ){
-						
-						long	fg = colours[0];
-						
-						int[] x = { (int)((fg>>16)&0x00ff), (int)((fg>>8)&0x00ff), ((int)fg&0x00ff)};
-						
-						row_color = ColorCache.getColor( gc.getDevice(), x );
-						
-						row_color_priority	= priority;
-						row_color_uuid		= uuid;
-					}
-				}
-			}
-			
-			TableRow row = cell.getTableRow();
-			
-			if ( row instanceof TableRowSWT ){
-									
-				((TableRowSWT)row).requestForegroundColor( color_requester, row_color);
 			}
 		}
 
