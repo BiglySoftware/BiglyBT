@@ -1896,6 +1896,22 @@ public class MyTorrentsView
 				itemPriority.addListener(SWT.Selection, listener );
 				itemStatus.addListener(SWT.Selection, listener );
 
+				boolean change_status_fg = COConfigurationManager.getBooleanParameter("MyTorrents.status.change.fg" );
+
+				final MenuItem item = new MenuItem(menuThisColumn, SWT.CHECK);
+				Messages.setLanguageText(item, "MyTorrents.status.change.fg");
+				item.setSelection(change_status_fg);
+
+				item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						boolean change_status_fg = item.getSelection();
+						COConfigurationManager.setParameter("MyTorrents.status.change.fg", change_status_fg);
+						tv.columnInvalidate("status");
+						tv.refreshTable(false);
+					}
+				});
+				
 				break;
 			}
 		}

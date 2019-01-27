@@ -205,7 +205,9 @@ public class UIConfigDefaultsSWT
 			
 			COConfigurationManager.removeParameter( "MyTorrents.status.sortorder" );
 		}
-				
+			
+		def.addParameter( "MyTorrents.status.change.fg", true );
+		
 		for ( String tid: TableManager.TABLE_MYTORRENTS_ALL ){
 			def.addParameter( "MyTorrents.status.sortorder." + tid, 0 );
 			

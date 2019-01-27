@@ -62,6 +62,8 @@ public class StatusItem
 	
 	private static Map<String,Integer>	sort_orders = new HashMap<>();
 	
+	private static boolean	overall_change_fg;
+	
 	static{
 		for ( String tid: TableManager.TABLE_MYTORRENTS_ALL ){
 			COConfigurationManager.addAndFireParameterListener(
@@ -84,6 +86,16 @@ public class StatusItem
 					@Override
 					public void parameterChanged(String parameterName){
 						sort_orders.put("other", COConfigurationManager.getIntParameter( parameterName ));
+					}
+				});
+		
+		COConfigurationManager.addAndFireParameterListener(
+				"MyTorrents.status.change.fg",
+				new ParameterListener(){
+					
+					@Override
+					public void parameterChanged(String parameterName){
+						overall_change_fg = COConfigurationManager.getBooleanParameter( parameterName );
 					}
 				});
 	}
@@ -377,8 +389,8 @@ public class StatusItem
 				} else {
 					color = null;
 				}
-				if (changeRowFG) {
-					row.setForeground(Utils.colorToIntArray(color));
+				if (changeRowFG ) {
+					row.setForeground( overall_change_fg?Utils.colorToIntArray(color):null);
 				} else if (changeCellFG) {
 					cell.setForeground(Utils.colorToIntArray(color));
 				}
