@@ -546,7 +546,7 @@ TagPropertyConstraintHandler
 			if ( constrained_tags.containsKey( tag )){
 
 				constrained_tags.remove( tag );
-
+				
 				checkTimer();
 			}
 		}
@@ -589,6 +589,8 @@ TagPropertyConstraintHandler
 				if ( constrained_tags.containsKey( tag )){
 
 					constrained_tags.remove( tag );
+					
+					tag.setTransientProperty( Tag.TP_CONSTRAINT_ERROR, null );
 				}
 			}else{
 
