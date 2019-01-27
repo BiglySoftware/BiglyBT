@@ -35,7 +35,11 @@ import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.core.vuzefile.VuzeFile;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerEvent;
+import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.util.MapUtils;
 
 public abstract class
@@ -2429,6 +2433,41 @@ TagBase
 		setStringList(
 			String[]	value )
 		{
+			String name = getName( false );
+			
+			if ( name.equals( TagFeatureProperties.PR_CONSTRAINT )){
+				
+				String[] old_value = getStringList();
+				
+				if ( old_value.length == 0 || old_value[0].trim().isEmpty()){
+					
+					if ( value != null && value.length > 0 && !value[0].trim().isEmpty()){
+				
+						if ( !getTaggables().isEmpty()){
+							
+							UIManager ui_manager = StaticUtilities.getUIManager( 15*1000 );
+
+							if ( ui_manager!= null ){
+								
+								String desc = MessageText.getString(
+										"tag.constraint.with.manuals.desc",
+										new String[]{ getTagName( true ) });
+								
+								long res = ui_manager.showMessageBox(
+										"tag.constraint.with.manuals.title",
+										"!" + desc + "!",
+										UIManagerEvent.MT_OK | UIManagerEvent.MT_CANCEL );
+	
+								if ( res != UIManagerEvent.MT_OK ){
+									
+									return;
+								}
+							}
+						}
+					}
+				}
+			}
+			
 			if ( writeStringListAttribute( AT_PROPERTY_PREFIX + name, value )){
 
 				for ( TagPropertyListener l: listeners ){
