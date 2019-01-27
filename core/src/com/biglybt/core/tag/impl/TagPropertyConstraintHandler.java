@@ -21,7 +21,6 @@
 package com.biglybt.core.tag.impl;
 
 import java.io.File;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -3140,7 +3139,9 @@ TagPropertyConstraintHandler
 						
 						for ( int i=1;i<str.length();i++){
 							
-							if ( !Character.isDigit( str.charAt( i ) )){
+							char c = str.charAt( i );
+							
+							if ( c != '.' && !Character.isDigit( c )){
 								
 								unit = str.substring( i ).trim();
 								
@@ -3173,11 +3174,11 @@ TagPropertyConstraintHandler
 									
 									if ( result instanceof Long ){
 										
-										result = ((Long)result).longValue() * multiplier;
+										result = result.longValue() * multiplier;
 										
 									}else{
 										
-										result = ((Double)result).longValue() * multiplier;
+										result = result.doubleValue() * multiplier;
 									}
 								}
 							}
