@@ -156,11 +156,13 @@ public class TagColorsItem
 			int[] 	row_fg_color 		= null;
 			int[] 	row_bg_color 		= null;
 			
-			long	row_color_priority 	= -1;
-			long	row_color_uuid		= -1;
+			long	row_fg_color_priority 	= -1;
+			long	row_fg_color_uuid		= -1;
+			
+			long	row_bg_color_priority 	= -1;
+			long	row_bg_color_uuid		= -1;
 			
 			for ( Tag tag: tags ){
-
 						
 				long[] colours = tag.getColors();
 				
@@ -179,41 +181,58 @@ public class TagColorsItem
 						priority = uuid;
 					}
 				
-					boolean	set = false;
+					boolean	set_fg = false;
+					boolean	set_bg = false;
 					
-					if ( row_color_priority == -1 || row_color_priority < priority ){
-											
-						set = true;
+					long	fg = colours[0];
+
+					if ( fg >= 0 ){
 						
-					}else if ( row_color_priority == priority ){
-						
-						if ( row_color_uuid <  uuid ){
-														
-							set = true;
+						if ( row_fg_color_priority == -1 || row_fg_color_priority < priority ){
+												
+							set_fg = true;
+							
+						}else if ( row_fg_color_priority == priority ){
+							
+							if ( row_fg_color_uuid <  uuid ){
+															
+								set_fg = true;
+							}
 						}
 					}
 					
-					if ( set ){
+					long	bg = colours.length>1?colours[1]:-1;
+					
+					if ( bg >= 0 ){
 						
-						long	fg = colours[0];
-						
-						if ( fg >= 0 ){
+						if ( row_bg_color_priority == -1 || row_bg_color_priority < priority ){
+												
+							set_bg = true;
 							
-							row_fg_color = new int[]{ (int)((fg>>16)&0x00ff), (int)((fg>>8)&0x00ff), ((int)fg&0x00ff)};
-						}
-						
-						if ( colours.length > 1 ){
-								
-							long	bg = colours[1];
+						}else if ( row_bg_color_priority == priority ){
 							
-							if ( bg >= 0 ){
-								
-								row_bg_color = new int[]{ (int)((bg>>16)&0x00ff), (int)((bg>>8)&0x00ff), ((int)bg&0x00ff)};
+							if ( row_bg_color_uuid <  uuid ){
+															
+								set_bg = true;
 							}
 						}
-							
-						row_color_priority	= priority;
-						row_color_uuid		= uuid;
+					}
+					
+					if ( set_fg ){
+																			
+						row_fg_color = new int[]{ (int)((fg>>16)&0x00ff), (int)((fg>>8)&0x00ff), ((int)fg&0x00ff)};
+						
+						row_fg_color_priority	= priority;
+						row_fg_color_uuid		= uuid;
+
+					}
+					
+					if ( set_bg ){
+									
+						row_bg_color = new int[]{ (int)((bg>>16)&0x00ff), (int)((bg>>8)&0x00ff), ((int)bg&0x00ff)};
+			
+						row_bg_color_priority	= priority;
+						row_bg_color_uuid		= uuid;
 					}
 				}
 			}
