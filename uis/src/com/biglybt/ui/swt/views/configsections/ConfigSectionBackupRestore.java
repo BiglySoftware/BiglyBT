@@ -492,18 +492,21 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 																public void
 																runSupport()
 																{
-																	if ( str.endsWith( "..." )){
-
-																		viewer.append( str );
-
-																	}else{
-
-																		viewer.append( str + "\r\n" );
-																	}
-
-																	if ( complete ){
-
-																		viewer.setOKEnabled( true );
+																	if ( !viewer.isDisposed()){
+																		
+																		if ( str.endsWith( "..." )){
+	
+																			viewer.append( str );
+	
+																		}else{
+	
+																			viewer.append( str + "\r\n" );
+																		}
+	
+																		if ( complete ){
+	
+																			viewer.setOKEnabled( true );
+																		}
 																	}
 																}
 															});
