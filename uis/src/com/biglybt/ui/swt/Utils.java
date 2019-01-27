@@ -921,7 +921,10 @@ public class Utils
 	
 		// only time the async_seq is 0 is when there is not active async_runner
 	
-	static final boolean USE_ASYNC_EXEC_QUEUE = true;
+		// this doesn't work properly if we have code running dispatch loops (e.g. TextViewer::goModal)
+		// as this blocks the async_runner and subsequent events don't get run :(
+	
+	static final boolean USE_ASYNC_EXEC_QUEUE = false;
 	
 	static AtomicInteger async_seq = new AtomicInteger();
 	
