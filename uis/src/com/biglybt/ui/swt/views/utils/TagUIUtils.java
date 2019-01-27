@@ -2960,7 +2960,7 @@ public class TagUIUtils
 
 				TagType tt = t.getTagType();
 
-				if ( tt.isTagTypeAuto() || t.isTagAuto()[0] || t.isTagAuto()[1]){
+				if ( tt.isTagTypeAuto() || ( t.isTagAuto()[0] &&  t.isTagAuto()[1])){
 
 					List<Tag> x = auto_map.get( tt );
 
@@ -3049,9 +3049,7 @@ public class TagUIUtils
 
 			for ( Tag t: manual_t ){
 
-					// don't allow manual adding of taggables to auto-tags
-
-				if ( !t.isTagAuto()[0]){
+				if ( !( t.isTagAuto()[0] && t.isTagAuto()[1] )){ 
 
 					String name = t.getTagName( true );
 
