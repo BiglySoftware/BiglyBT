@@ -467,6 +467,8 @@ BuddyPlugin
 				});
 
 
+		config.addLabelParameter2("azbuddy.dchat.more.settings");
+		
 
 			// config end
 
