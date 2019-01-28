@@ -23,10 +23,9 @@
 package com.biglybt.ui.swt.views.tableitems.peers;
 
 import com.biglybt.core.peer.PEPeer;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
-
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.pif.ui.tables.*;
 
 
@@ -39,6 +38,8 @@ public class SnubbedItem
 	extends CoreTableColumnSWT
 	implements TableCellRefreshListener
 {
+	private static TableRowSWT.ColorRequester	color_requester = ()-> 1;
+
 	public SnubbedItem(String table_id) {
 		super("S", ALIGN_CENTER, POSITION_INVISIBLE, 20, table_id);
 		setRefreshInterval(INTERVAL_LIVE);
@@ -62,8 +63,10 @@ public class SnubbedItem
 		cell.setText(bSnubbed ? "*" : "");
 
 		TableRow row = cell.getTableRow();
-		if (row != null) {
-			row.setForeground(Utils.colorToIntArray(bSnubbed ? Colors.grey : null));
+		
+		if (row instanceof TableRowSWT) {
+			
+			((TableRowSWT)row).requestForegroundColor( color_requester, bSnubbed ? Colors.grey : null );
 		}
 	}
 }

@@ -40,7 +40,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
-
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -64,6 +64,8 @@ public class StatusItem
 	
 	private static boolean	overall_change_fg;
 	
+	private static TableRowSWT.ColorRequester	color_requester = ()-> 20;
+
 	static{
 		for ( String tid: TableManager.TABLE_MYTORRENTS_ALL ){
 			COConfigurationManager.addAndFireParameterListener(
@@ -390,7 +392,10 @@ public class StatusItem
 					color = null;
 				}
 				if (changeRowFG ) {
-					row.setForeground( overall_change_fg?Utils.colorToIntArray(color):null);
+					if ( row instanceof TableRowSWT ){
+						((TableRowSWT)row).requestForegroundColor( color_requester, overall_change_fg?color:null);
+					}
+					// row.setForeground( overall_change_fg?Utils.colorToIntArray(color):null);
 				} else if (changeCellFG) {
 					cell.setForeground(Utils.colorToIntArray(color));
 				}

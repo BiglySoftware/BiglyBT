@@ -64,7 +64,9 @@ public interface TableRow {
   * @param green green value (0 - 255)
   * @param blue blue value (0 - 255)
   * @since 3.0.3.5
+  * @deprecated - use (currently in TableRowSWT but obviously promotable) requestForegroundColor
   */
+  
   public void setForeground(int red, int green, int blue);
 
   /**
@@ -74,13 +76,16 @@ public interface TableRow {
    *            default color
    *
    * @since 3.0.4.3
+   * @deprecated - use (currently in TableRowSWT but obviously promotable) requestForegroundColor
    */
+  
   public void setForeground(int[] rgb);
 
   /**
    * Change the row's foreground color to the user's defined "error" color.
    *
   * @since 3.0.3.5
+  * @deprecated - use (currently in TableRowSWT but obviously promotable) requestForegroundColor
   */
   public void setForegroundToErrorColor();
 

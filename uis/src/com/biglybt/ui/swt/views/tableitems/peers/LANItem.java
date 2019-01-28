@@ -23,10 +23,9 @@
 package com.biglybt.ui.swt.views.tableitems.peers;
 
 import com.biglybt.core.peer.PEPeer;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
-
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.pif.ui.tables.*;
 
 /**
@@ -39,6 +38,8 @@ public class LANItem
 	implements TableCellRefreshListener
 {
 	public static final String COLUMN_ID = "lan";
+
+	private static TableRowSWT.ColorRequester	color_requester = ()-> 2;
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
@@ -63,8 +64,10 @@ public class LANItem
 		cell.setText(lan ? "*" : "");
 
 		TableRow row = cell.getTableRow();
-		if (row != null) {
-			row.setForeground(Utils.colorToIntArray(lan ? Colors.blue : null));
+		
+		if (row instanceof TableRowSWT) {
+			
+			((TableRowSWT)row).requestForegroundColor( color_requester, lan ? Colors.blue : null );
 		}
 	}
 }

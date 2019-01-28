@@ -1326,15 +1326,20 @@ public class TableRowPainted
 					index++;
 				}
 				
-				Object[] new_entry = { requester, color };
-				
-				if ( insert_at >= 0 ){
+				if ( color != null ){
 					
-					cow.add( insert_at, new_entry );
+					Object[] new_entry = { requester, color };
 					
-				}else{
+					if ( insert_at >= 0 ){
+						
+						cow.add( insert_at, new_entry );
+						
+					}else{
+						
+						cow.add( new_entry );
+					}
 					
-					cow.add( new_entry );
+					changed = true;
 				}
 			}
 		}finally{
