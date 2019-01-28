@@ -488,11 +488,11 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		// when bAutoStart0Peers
 		if (iRankType == StartStopRulesDefaultPlugin.RANK_TIMED
 				&& !isFirstPriority()
-				&& !(bAutoStart0Peers && rules.calcPeersNoUs(dl,dl.getAggregatedScrapeResult()) == 0 && lastScrapeResultOk)) {
+				&& !(bAutoStart0Peers && rules.calcPeersNoUs(dl,dl.getAggregatedScrapeResult( false )) == 0 && lastScrapeResultOk)) {
 			bIsActive = (state == Download.ST_SEEDING);
 
 		} else if (state != Download.ST_SEEDING
-				|| (bAutoStart0Peers && rules.calcPeersNoUs(dl,dl.getAggregatedScrapeResult()) == 0)) {
+				|| (bAutoStart0Peers && rules.calcPeersNoUs(dl,dl.getAggregatedScrapeResult( false )) == 0)) {
 			// Not active if we aren't seeding
 			// Not active if we are AutoStarting 0 Peers, and peer count == 0
 			bIsActive = false;
@@ -589,7 +589,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		// here we are seeding
 
 		lastModifiedShareRatio = stats.getShareRatio();
-		DownloadScrapeResult sr = dl.getAggregatedScrapeResult();
+		DownloadScrapeResult sr = dl.getAggregatedScrapeResult( false );
 		lastModifiedScrapeResultPeers = rules.calcPeersNoUs(dl,sr);
 		lastModifiedScrapeResultSeeds = rules.calcSeedsNoUs(dl,sr);
 
@@ -1129,7 +1129,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	public boolean changeChecker() {
 		if (getActivelySeeding()) {
 			int shareRatio = dl.getStats().getShareRatio();
-			int numSeeds = rules.calcSeedsNoUs(dl,dl.getAggregatedScrapeResult());
+			int numSeeds = rules.calcSeedsNoUs(dl,dl.getAggregatedScrapeResult( false ));
 
 			int	activeMaxSR = dlSpecificMaxShareRatio;
 			if ( activeMaxSR <= 0 ){

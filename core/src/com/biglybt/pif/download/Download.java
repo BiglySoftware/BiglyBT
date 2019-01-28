@@ -650,8 +650,15 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
 	 * @return
 	 */
 
+	public default DownloadScrapeResult
+	getAggregatedScrapeResult()
+	{
+		return( getAggregatedScrapeResult( true ));
+	}
+	
 	public DownloadScrapeResult
-	getAggregatedScrapeResult();
+	getAggregatedScrapeResult(
+		boolean allow_caching );
 
 	/**
 	 * Gives access to the current activation state. Note that we currently only fire the activation listener

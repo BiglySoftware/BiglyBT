@@ -32,8 +32,8 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
-import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
@@ -178,10 +178,15 @@ public class SeedsItem
 		}
 
 		@Override
-		public void scrapeResult(final TRTrackerScraperResponse response) {
-			if (checkScrapeResult(response)) {
-				lTotalSeeds = response.getSeeds();
-				lTotalPeers = response.getPeers();
+		protected void updateSeedsPeers( Download download, boolean cache ){
+			if ( download != null ){
+				DownloadScrapeResult result = download.getAggregatedScrapeResult( cache );
+				
+				if ( result.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
+					
+					lTotalSeeds = result.getSeedCount();
+					lTotalPeers = result.getNonSeedCount();
+				}
 			}
 		}
 
@@ -196,11 +201,7 @@ public class SeedsItem
 				lConnectedSeeds = dm.getNbSeeds();
 
 				if (lTotalSeeds == -1) {
-					TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
-					if (response != null && response.isValid()) {
-						lTotalSeeds = response.getSeeds();
-						lTotalPeers = response.getPeers();
-					}
+					updateSeedsPeers( getDownload(), true );
 				}
 
 				if (cell instanceof TableCellSWT) {
@@ -304,10 +305,13 @@ public class SeedsItem
 					sToolTip += lTotalSeeds + " "
 							+ MessageText.getString("GeneralView.label.in_swarm");
 				} else {
-					TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
-					sToolTip += "?? " + MessageText.getString("GeneralView.label.in_swarm");
-					if (response != null)
-						sToolTip += "(" + response.getStatusString() + ")";
+					Download d = getDownload();
+					if ( d != null ){
+						DownloadScrapeResult response = d.getAggregatedScrapeResult( true );
+						sToolTip += "?? " + MessageText.getString("GeneralView.label.in_swarm");
+						if (response != null)
+							sToolTip += "(" + response.getStatus() + ")";
+					}
 				}
 				boolean bCompleteTorrent = dm.getAssumedComplete();
 				if (bCompleteTorrent && iFC_NumPeers > 0 && lTotalSeeds >= iFC_MinSeeds

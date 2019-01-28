@@ -581,7 +581,7 @@ LWSDownload
 
 	@Override
 	public DownloadScrapeResult
-	getAggregatedScrapeResult()
+	getAggregatedScrapeResult( boolean cache )
 	{
 		return( getLastScrapeResult());
 	}

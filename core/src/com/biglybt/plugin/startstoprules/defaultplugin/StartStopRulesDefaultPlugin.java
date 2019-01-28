@@ -1316,7 +1316,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					boolean bScrapeOk = true;
 					if (!bOkToStartSeeding) {
 						bScrapeOk = scrapeResultOk(download);
-						if (calcSeedsNoUs(download,download.getAggregatedScrapeResult()) == 0 && bScrapeOk)
+						if (calcSeedsNoUs(download,download.getAggregatedScrapeResult( false )) == 0 && bScrapeOk)
 							bOkToStartSeeding = true;
 						else if ((download.getSeedingRank() > 0)
 								&& (state == Download.ST_QUEUED || state == Download.ST_READY)
@@ -1729,8 +1729,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						DefaultRankCalculator d1,
 						DefaultRankCalculator d2)
 					{
-						DownloadScrapeResult s1 = d1.getDownloadObject().getAggregatedScrapeResult();
-						DownloadScrapeResult s2 = d2.getDownloadObject().getAggregatedScrapeResult();
+						DownloadScrapeResult s1 = d1.getDownloadObject().getAggregatedScrapeResult( true );
+						DownloadScrapeResult s2 = d2.getDownloadObject().getAggregatedScrapeResult( true );
 
 						int result = s2.getSeedCount() - s1.getSeedCount();
 
@@ -2752,7 +2752,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	}
 
 	private boolean scrapeResultOk(Download download) {
-		DownloadScrapeResult sr = download.getAggregatedScrapeResult();
+		DownloadScrapeResult sr = download.getAggregatedScrapeResult( false );
 		return (sr.getResponseType() == DownloadScrapeResult.RT_SUCCESS);
 	}
 

@@ -22,8 +22,9 @@ import com.biglybt.core.download.DownloadManagerTrackerListener;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
-
+import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 /**
  * Base cell class for cells listening to the tracker listener
@@ -35,7 +36,8 @@ abstract class AbstractTrackerCell implements TableCellRefreshListener,
 	TableCell cell;
 
 	private DownloadManager dm;
-
+	private Download		download;
+	
 	/**
 	 * Initialize
 	 *
@@ -46,9 +48,13 @@ abstract class AbstractTrackerCell implements TableCellRefreshListener,
 		cell.addListeners(this);
 
 		dm = (DownloadManager) cell.getDataSource();
-		if (dm == null)
+		
+		if (dm == null){
 			return;
+		}
+		
 		dm.addTrackerListener(this);
+		download = PluginCoreUtils.wrap( dm );
 	}
 
 	@Override
@@ -56,6 +62,24 @@ abstract class AbstractTrackerCell implements TableCellRefreshListener,
 		// Don't care about announce
 	}
 
+	@Override
+	public void scrapeResult(final TRTrackerScraperResponse response) {
+		if (checkScrapeResult(response)) {
+			updateSeedsPeers( download, false  );
+		}
+	}
+
+	protected abstract void
+	updateSeedsPeers(
+		Download	download,
+		boolean		use_cache );
+	
+	protected Download
+	getDownload()
+	{
+		return( download );
+	}
+	
 	public boolean checkScrapeResult(final TRTrackerScraperResponse response) {
 		if (response != null) {
 			TableCell cell_ref = cell;
@@ -68,6 +92,7 @@ abstract class AbstractTrackerCell implements TableCellRefreshListener,
 			if (dm == null || dm != this.dm)
 				return false;
 
+			/* Not these days - we use the 'best' response available
 			TOTorrent	torrent = dm.getTorrent();
 
 			if ( torrent == null ){
@@ -79,7 +104,7 @@ abstract class AbstractTrackerCell implements TableCellRefreshListener,
 					&& responseURL != null
 					&& !announceURL.toString().equals(responseURL.toString()))
 				return false;
-
+			*/
 
 			cell_ref.invalidate();
 
@@ -99,8 +124,10 @@ abstract class AbstractTrackerCell implements TableCellRefreshListener,
 			if (oldDM != null)
 				oldDM.removeTrackerListener(this);
 
-			if (dm != null)
+			if (dm != null){
 				dm.addTrackerListener(this);
+				download = PluginCoreUtils.wrap( dm );
+			}
 		}
 	}
 

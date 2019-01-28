@@ -552,7 +552,7 @@ RPDownload
 
 	@Override
 	public DownloadScrapeResult
-	getAggregatedScrapeResult()
+	getAggregatedScrapeResult( boolean cache )
 	{
 		notSupported();
 
