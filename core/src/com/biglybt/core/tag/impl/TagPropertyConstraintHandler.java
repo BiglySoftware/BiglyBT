@@ -35,7 +35,9 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
@@ -51,7 +53,9 @@ public class
 TagPropertyConstraintHandler
 	implements TagTypeListener, DownloadListener
 {
-	private static final Object DM_FILE_FILE_NAMES = new Object();
+	private static final Object DM_LISTENER_ADDED				= new Object();
+	private static final Object DM_FILE_FILE_NAMES 				= new Object();
+	private static final Object DM_FILE_FILE_NAMES_SELECTED 	= new Object();
 	
 	private static final String		EVAL_CTX_COLOURS = "colours";
 	
@@ -86,7 +90,15 @@ TagPropertyConstraintHandler
 
 	final IdentityHashMap<DownloadManager,List<TagConstraint>>	freq_lim_pending = new IdentityHashMap<>();
 
-
+	private DownloadManagerListener dm_listener = 
+		new DownloadManagerAdapter(){
+			
+			@Override
+			public void filePriorityChanged(DownloadManager download, DiskManagerFileInfo file){
+				download.setUserData( DM_FILE_FILE_NAMES_SELECTED, null );
+			}
+		};
+		
 	private TimerEventPeriodic		timer;
 
 	private
@@ -252,6 +264,21 @@ TagPropertyConstraintHandler
 		}
 	}
 
+	private void
+	checkDMListener(
+		DownloadManager		dm )
+	{
+		synchronized( DM_LISTENER_ADDED ){
+			
+			if ( dm.getUserData( DM_LISTENER_ADDED ) == null ){
+				
+				dm.addListener( dm_listener );
+				
+				dm.setUserData( DM_LISTENER_ADDED, "" );
+			}
+		}
+	}
+	
 	@Override
 	public void
 	tagTypeChanged(
@@ -1990,6 +2017,7 @@ TagPropertyConstraintHandler
 		private static final int	KW_SAVE_FOLDER		 	= 31;
 		private static final int	KW_MAX_UP			 	= 32;
 		private static final int	KW_MAX_DOWN			 	= 33;
+		private static final int	KW_FILE_NAMES_SELECTED	= 34;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2055,15 +2083,19 @@ TagPropertyConstraintHandler
 			keyword_map.put( "uploaded", 				new int[]{KW_UPLOADED,				DEP_RUNNING });
 			
 			keyword_map.put( "name", 					new int[]{KW_NAME,					DEP_STATIC });
+			keyword_map.put( "filenames", 				new int[]{KW_FILE_NAMES,			DEP_STATIC });
 			keyword_map.put( "file_names", 				new int[]{KW_FILE_NAMES,			DEP_STATIC });
+			keyword_map.put( "filenamesselected",		new int[]{KW_FILE_NAMES_SELECTED,	DEP_STATIC });
+			keyword_map.put( "file_names_selected",		new int[]{KW_FILE_NAMES_SELECTED,	DEP_STATIC });
+			keyword_map.put( "savepath", 				new int[]{KW_SAVE_PATH,				DEP_STATIC });
 			keyword_map.put( "save_path", 				new int[]{KW_SAVE_PATH,				DEP_STATIC });
+			keyword_map.put( "savefolder", 				new int[]{KW_SAVE_FOLDER,			DEP_STATIC });
 			keyword_map.put( "save_folder", 			new int[]{KW_SAVE_FOLDER,			DEP_STATIC });
 			
-			keyword_map.put( "max_up", 					new int[]{KW_MAX_UP,				DEP_RUNNING });
 			keyword_map.put( "maxup", 					new int[]{KW_MAX_UP,				DEP_RUNNING });
-			keyword_map.put( "max_down", 				new int[]{KW_MAX_DOWN,				DEP_RUNNING });
+			keyword_map.put( "max_up", 					new int[]{KW_MAX_UP,				DEP_RUNNING });
 			keyword_map.put( "maxdown", 				new int[]{KW_MAX_DOWN,				DEP_RUNNING });
-
+			keyword_map.put( "max_down", 				new int[]{KW_MAX_DOWN,				DEP_RUNNING });
 		}
 
 		private class
@@ -3024,6 +3056,37 @@ TagPropertyConstraintHandler
 						}
 						
 						dm.setUserData( DM_FILE_FILE_NAMES, result );
+					}
+					
+					return( result );
+					
+				}else if ( str.equals( "file_names_selected" ) || str.equals( "filenamesselected" )){
+					
+					kw = KW_FILE_NAMES_SELECTED;
+					
+					String[] result = (String[])dm.getUserData( DM_FILE_FILE_NAMES_SELECTED );
+					
+					if ( result == null ){
+						
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+						
+						List<String>	names = new ArrayList<>( files.length );
+						
+						for ( int i=0;i<files.length;i++){
+							
+							if ( files[i].isSkipped()){
+								
+								continue;
+							}
+							
+							names.add( files[i].getFile( false ).getName());
+						}
+						
+						result = names.toArray( new String[0] );
+						
+						dm.setUserData( DM_FILE_FILE_NAMES_SELECTED, result );
+						
+						handler.checkDMListener( dm );
 					}
 					
 					return( result );
