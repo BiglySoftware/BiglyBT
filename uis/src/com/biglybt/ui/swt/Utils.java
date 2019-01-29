@@ -3968,7 +3968,16 @@ public class Utils
 		Composite	form,
 		int			SASH_WIDTH )
 	{
-	    final Sash sash = new Sash(form, SWT.HORIZONTAL);
+		return( createSash( form, SASH_WIDTH, SWT.HORIZONTAL ));
+	}
+	
+	public static Sash
+	createSash(
+		Composite	form,
+		int			SASH_WIDTH,
+		int			style )
+	{
+	    final Sash sash = new Sash(form, style );
 	    Image image = new Image(sash.getDisplay(), 9, SASH_WIDTH);
 	    ImageData imageData = image.getImageData();
 	    int[] row = new int[imageData.width];

@@ -67,9 +67,16 @@ public class MyTorrentsSuperView
 {
 	private static int SASH_WIDTH = 5;
 
+	private static boolean	SPLIT_HORIZONTALLY = true;
 
-  private MyTorrentsView torrentview;
-  private MyTorrentsView seedingview;
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Library.TorrentViewSplitHorizontal",
+			(name)->{ SPLIT_HORIZONTALLY= COConfigurationManager.getBooleanParameter( name );});
+	}
+	
+	private MyTorrentsView torrentview;
+	private MyTorrentsView seedingview;
 
 	private Composite form;
 
@@ -136,7 +143,6 @@ public class MyTorrentsSuperView
 
   	GridLayout layout;
 
-
   	child1 = new Composite(form,SWT.NONE);
   	layout = new GridLayout();
   	layout.numColumns = 1;
@@ -146,7 +152,7 @@ public class MyTorrentsSuperView
   	layout.marginWidth = 0;
   	child1.setLayout(layout);
 
-  	final Sash sash = Utils.createSash( form, SASH_WIDTH );
+  	final Sash sash = Utils.createSash( form, SASH_WIDTH, SPLIT_HORIZONTALLY?SWT.HORIZONTAL:SWT.VERTICAL );
 
     child2 = new Composite(form,SWT.NULL);
     layout = new GridLayout();
@@ -161,100 +167,169 @@ public class MyTorrentsSuperView
 
     // More precision, times by 100
     int weight = (int) (COConfigurationManager.getFloatParameter("MyTorrents.SplitAt"));
-		if (weight > 10000) {
-			weight = 10000;
-		} else if (weight < 100) {
-			weight *= 100;
-		}
-		// Min/max of 5%/95%
-		if (weight < 500) {
-			weight = 500;
-		} else if (weight > 9000) {
-			weight = 9000;
-		}
-		double pct = (float)weight / 10000;
-		sash.setData("PCT", new Double(pct));
+    if (weight > 10000) {
+    	weight = 10000;
+    } else if (weight < 100) {
+    	weight *= 100;
+    }
+    // Min/max of 5%/95%
+    if (weight < 500) {
+    	weight = 500;
+    } else if (weight > 9000) {
+    	weight = 9000;
+    }
+    double pct = (float)weight / 10000;
+    sash.setData("PCT", new Double(pct));
 
-		// FormData for table child1
-		formData = new FormData();
-		formData.left = new FormAttachment(0, 0);
-		formData.right = new FormAttachment(100, 0);
-		formData.top = new FormAttachment(0, 0);
-		formData.bottom = new FormAttachment((int) (pct * 100), 0);
-		child1.setLayoutData(formData);
-		final FormData child1Data = formData;
+    if ( SPLIT_HORIZONTALLY ){
+	    // FormData for table child1
+	    formData = new FormData();
+	    formData.left = new FormAttachment(0, 0);
+	    formData.right = new FormAttachment(100, 0);
+	    formData.top = new FormAttachment(0, 0);
+	    formData.bottom = new FormAttachment((int) (pct * 100), 0);
+	    child1.setLayoutData(formData);
+	    final FormData child1Data = formData;
+	
+	    // sash
+	    formData = new FormData();
+	    formData.left = new FormAttachment(0, 0);
+	    formData.right = new FormAttachment(100, 0);
+	    formData.top = new FormAttachment(child1);
+	    formData.height = SASH_WIDTH;
+	    sash.setLayoutData(formData);
+	
+	    // child2
+	    formData = new FormData();
+	    formData.left = new FormAttachment(0, 0);
+	    formData.right = new FormAttachment(100, 0);
+	    formData.bottom = new FormAttachment(100, 0);
+	    formData.top = new FormAttachment(sash);
+	
+	    child2.setLayoutData(formData);
+	
+	
+	    // Listeners to size the folder
+	    sash.addSelectionListener(new SelectionAdapter() {
+	    	@Override
+	    	public void widgetSelected(SelectionEvent e) {
+	    		final boolean FASTDRAG = true;
+	
+	    		if (FASTDRAG && e.detail == SWT.DRAG)
+	    			return;
+	
+	    		child1Data.height = e.y + e.height - SASH_WIDTH;
+	    		form.layout();
+	
+	    		Double l = new Double((double) child1.getBounds().height
+	    				/ form.getBounds().height);
+	    		sash.setData("PCT", l);
+	    		if (e.detail != SWT.DRAG) {
+	    			int i = (int) (l.doubleValue() * 10000);
+	    			COConfigurationManager.setParameter("MyTorrents.SplitAt", i);
+	    		}
+	    	}
+	    });
+	
+	    form.addListener(SWT.Resize, new DelayedListenerMultiCombiner() {
+	    	@Override
+	    	public void handleDelayedEvent(Event e) {
+	    		if ( sash.isDisposed()){
+	    			return;
+	    		}
+	    		Double l = (Double) sash.getData("PCT");
+	    		if (l == null) {
+	    			return;
+	    		}
+	    		int newHeight = (int) (form.getBounds().height * l.doubleValue());
+	    		if (child1Data.height != newHeight || child1Data.bottom != null) {
+	    			child1Data.bottom = null;
+	    			child1Data.height = newHeight;
+	    			form.layout();
+	    		}
+	    	}
+	    });
+    }else{
+        // FormData for table child1
+	    formData = new FormData();
+	    formData.left = new FormAttachment(0, 0);
+	    formData.bottom = new FormAttachment(100, 0);
+	    formData.top = new FormAttachment(0, 0);
+	    formData.right = new FormAttachment((int) (pct * 100), 0);
+	    child1.setLayoutData(formData);
+	    final FormData child1Data = formData;
+	
+	    // sash
+	    formData = new FormData();
+	    formData.top = new FormAttachment(0, 0);
+	    formData.bottom = new FormAttachment(100, 0);
+	    formData.left = new FormAttachment(child1);
+	    formData.width = SASH_WIDTH;
+	    sash.setLayoutData(formData);
+	
+	    // child2
+	    formData = new FormData();
+	    formData.top = new FormAttachment(0, 0);
+	    formData.right = new FormAttachment(100, 0);
+	    formData.bottom = new FormAttachment(100, 0);
+	    formData.left = new FormAttachment(sash);
+	
+	    child2.setLayoutData(formData);
+	
+	    // Listeners to size the folder
+	    sash.addSelectionListener(new SelectionAdapter() {
+	    	@Override
+	    	public void widgetSelected(SelectionEvent e) {
+	    		final boolean FASTDRAG = true;
+	
+	    		if (FASTDRAG && e.detail == SWT.DRAG)
+	    			return;
+	
+	    		child1Data.width = e.x + e.width - SASH_WIDTH;
+	    		form.layout();
+	
+	    		Double l = new Double((double) child1.getBounds().width
+	    				/ form.getBounds().width);
+	    		sash.setData("PCT", l);
+	    		if (e.detail != SWT.DRAG) {
+	    			int i = (int) (l.doubleValue() * 10000);
+	    			COConfigurationManager.setParameter("MyTorrents.SplitAt", i);
+	    		}
+	    	}
+	    });
+	
+	    form.addListener(SWT.Resize, new DelayedListenerMultiCombiner() {
+	    	@Override
+	    	public void handleDelayedEvent(Event e) {
+	    		if ( sash.isDisposed()){
+	    			return;
+	    		}
+	    		Double l = (Double) sash.getData("PCT");
+	    		if (l == null) {
+	    			return;
+	    		}
+	    		int newWidth = (int) (form.getBounds().width * l.doubleValue());
+	    		if (child1Data.width != newWidth || child1Data.right != null) {
+	    			child1Data.right = null;
+	    			child1Data.width = newWidth;
+	    			form.layout();
+	    		}
+	    	}
+	    });
+    }
+    
+    CoreFactory.addCoreRunningListener(new CoreRunningListener() {
+    	@Override
+    	public void coreRunning(final Core core) {
+    		Utils.execSWTThread(new AERunnable() {
+    			@Override
+    			public void runSupport() {
+    				initializeWithCore(core, parent);
+    			}
 
-		// sash
-		formData = new FormData();
-		formData.left = new FormAttachment(0, 0);
-		formData.right = new FormAttachment(100, 0);
-		formData.top = new FormAttachment(child1);
-		formData.height = SASH_WIDTH;
-		sash.setLayoutData(formData);
-
-    // child2
-		formData = new FormData();
-		formData.left = new FormAttachment(0, 0);
-		formData.right = new FormAttachment(100, 0);
-		formData.bottom = new FormAttachment(100, 0);
-		formData.top = new FormAttachment(sash);
-
-		child2.setLayoutData(formData);
-
-
-		// Listeners to size the folder
-		sash.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				final boolean FASTDRAG = true;
-
-				if (FASTDRAG && e.detail == SWT.DRAG)
-					return;
-
-				child1Data.height = e.y + e.height - SASH_WIDTH;
-				form.layout();
-
-				Double l = new Double((double) child1.getBounds().height
-						/ form.getBounds().height);
-				sash.setData("PCT", l);
-				if (e.detail != SWT.DRAG) {
-					int i = (int) (l.doubleValue() * 10000);
-					COConfigurationManager.setParameter("MyTorrents.SplitAt", i);
-				}
-			}
-		});
-
-		form.addListener(SWT.Resize, new DelayedListenerMultiCombiner() {
-			@Override
-			public void handleDelayedEvent(Event e) {
-				if ( sash.isDisposed()){
-					return;
-				}
-				Double l = (Double) sash.getData("PCT");
-				if (l == null) {
-					return;
-				}
-				int newHeight = (int) (form.getBounds().height * l.doubleValue());
-				if (child1Data.height != newHeight || child1Data.bottom != null) {
-					child1Data.bottom = null;
-					child1Data.height = newHeight;
-					form.layout();
-				}
-			}
-		});
-
-		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
-			@Override
-			public void coreRunning(final Core core) {
-				Utils.execSWTThread(new AERunnable() {
-					@Override
-					public void runSupport() {
-						initializeWithCore(core, parent);
-					}
-
-				});
-			}
-  	});
+    		});
+    	}
+    });
 
   }
 
@@ -268,20 +343,23 @@ public class MyTorrentsSuperView
 				child2);
 
 
-    torrentview.getComposite().addListener(SWT.FocusIn, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				seedingview.getTableView().getTabsCommon().setTvOverride(torrentview.getTableView());
-			}
-		});
-
-    seedingview.getComposite().addListener(SWT.FocusIn, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				seedingview.getTableView().getTabsCommon().setTvOverride(null);
-			}
-		});
-
+    if ( !SPLIT_HORIZONTALLY ){
+    	
+	    torrentview.getComposite().addListener(SWT.FocusIn, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					seedingview.getTableView().getTabsCommon().setTvOverride(torrentview.getTableView());
+				}
+			});
+	
+	    seedingview.getComposite().addListener(SWT.FocusIn, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					seedingview.getTableView().getTabsCommon().setTvOverride(null);
+				}
+			});
+    }
+    
 
     	// delegate selections from the incomplete view to the sub-tabs owned by the seeding view
 
@@ -307,9 +385,18 @@ public class MyTorrentsSuperView
 
 	    			if ( incomp_tv != null && comp_tv != null && ( selected_tv == incomp_tv || selected_tv == comp_tv )){
 
-    					TableViewSWT_TabsCommon tabs = comp_tv.getTabsCommon();
+	    				TableViewSWT_TabsCommon target_tabs;
+	    				
+						if ( SPLIT_HORIZONTALLY ){
 
-    					if ( tabs != null ){
+							target_tabs = comp_tv.getTabsCommon();
+
+						}else{
+						
+							target_tabs = ((TableViewSWT<?>)selected_tv).getTabsCommon();
+						}
+
+    					if ( target_tabs != null ){
 
     						Utils.execSWTThread(
     							new Runnable()
@@ -317,8 +404,8 @@ public class MyTorrentsSuperView
     								public void
     								run()
     								{
-    									tabs.triggerTabViewsDataSourceChanged(selected_tv);
-    								}
+    									target_tabs.triggerTabViewsDataSourceChanged(selected_tv);
+   									}
     							});
     					}
 	    			}
@@ -544,7 +631,7 @@ public class MyTorrentsSuperView
 		Composite 			c )
 	{
 		MyTorrentsView view = new MyTorrentsView(_core, tableID,
-				isSeedingView, columns, txtFilter, cCats, isSeedingView );
+				isSeedingView, columns, txtFilter, cCats, SPLIT_HORIZONTALLY?isSeedingView:true  );
 
 		try {
 			UISWTViewImpl swtView = new UISWTViewImpl(tableID, UISWTInstance.VIEW_MAIN, false);

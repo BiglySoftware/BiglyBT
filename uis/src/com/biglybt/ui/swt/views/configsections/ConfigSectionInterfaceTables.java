@@ -323,12 +323,14 @@ public class ConfigSectionInterfaceTables
 			show_tag.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( show_tag_comp_only ));
 			show_tag.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( tag_inclusive ));
 
-			//if (isAZ3) {
-
-				new BooleanParameter(cLibrary, "Library.ShowTabsInTorrentView", "ConfigView.section.style.ShowTabsInTorrentView").setLayoutData(new GridData(SWT.FILL,
+			new BooleanParameter(cLibrary, "Library.ShowTabsInTorrentView", "ConfigView.section.style.ShowTabsInTorrentView").setLayoutData(new GridData(SWT.FILL,
 								SWT.LEFT, true, false, 2, 1));
-			//}
+		
 
+			new BooleanParameter(cLibrary, "Library.TorrentViewSplitHorizontal", "ConfigView.section.style.TorrentViewSplitHorizontal").setLayoutData(new GridData(SWT.FILL,
+					SWT.LEFT, true, false, 2, 1));
+
+			
 			new BooleanParameter(cLibrary, "Library.showFancyMenu",  "ConfigView.section.style.ShowFancyMenu").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
 					true, false, 2, 1));
 

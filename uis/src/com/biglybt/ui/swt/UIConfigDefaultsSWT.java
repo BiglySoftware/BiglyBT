@@ -169,6 +169,7 @@ public class UIConfigDefaultsSWT
 		def.addParameter( "Library.ShowTagButtons.CompOnly", false );
 		def.addParameter( "Library.ShowTagButtons.Inclusive", true );
 		def.addParameter( "open.torrent.window.rename.on.tlf.change", true );
+		def.addParameter( "Library.TorrentViewSplitHorizontal", true );
 
 		def.addParameter( "Library.LaunchWebsiteInBrowser", true );
 		def.addParameter( "Library.LaunchWebsiteInBrowserAnon", false );
