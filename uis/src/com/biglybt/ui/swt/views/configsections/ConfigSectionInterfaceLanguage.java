@@ -92,6 +92,9 @@ public class ConfigSectionInterfaceLanguage implements UISWTConfigSection {
     int iUsingLocale = -1;
     for( int i=0; i < locales.length; i++ ) {
       Locale locale = locales[ i ];
+      
+      locale = MessageText.getDisplaySubstitute( locale );
+      
       String sName = locale.getDisplayName(locale);
       String sName2 = locale.getDisplayName();
       if (!sName.equals(sName2)) {

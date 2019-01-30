@@ -605,10 +605,13 @@ public class MessageText {
 
     if (sort) {
       try{
-  	    Arrays.sort(foundLocales, new Comparator() {
+  	    Arrays.sort(foundLocales, new Comparator<Locale>() {
   	      @Override
-	        public final int compare (Object a, Object b) {
-  	        return ((Locale)a).getDisplayName((Locale)a).compareToIgnoreCase(((Locale)b).getDisplayName((Locale)b));
+	        public final int compare (Locale a, Locale b) {
+  	    	  a = getDisplaySubstitute(a);
+  	    	  b = getDisplaySubstitute(b);
+  	        
+  	    	  return(a.getDisplayName(a).compareToIgnoreCase(b.getDisplayName(b)));
   	      }
   	    });
       }catch( Throwable e ){
@@ -824,6 +827,36 @@ public class MessageText {
   }
   */
 
+  private static final Map<String,Locale> substitutes = new HashMap<>();
+  
+  static{
+	  if ( new Locale( "vls", "BE" ).getDisplayLanguage().equals( "vls" )){
+	  
+		  substitutes.put( "vls_BE", new Locale( "nl", "BE" ));
+	  }
+  }
+  
+  public static Locale
+  getDisplaySubstitute(
+	Locale		l )
+  {
+	  if ( substitutes.isEmpty()){
+		  
+		  return( l );
+	  }
+	  
+	  Locale res =  substitutes.get( l.getLanguage() + "_" +  l.getCountry());
+	
+	  if ( res != null ){
+		  
+		  return( res );
+		  
+	  }else{
+		
+		return( l );
+	}
+  }
+  
   public static interface
   MessageTextListener
   {
