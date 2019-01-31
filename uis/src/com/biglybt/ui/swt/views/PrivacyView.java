@@ -30,6 +30,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -59,8 +60,6 @@ import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
-import com.biglybt.pif.download.DownloadAnnounceResult;
-import com.biglybt.pif.download.DownloadAnnounceResultPeer;
 import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ipc.IPCException;
 import com.biglybt.pif.ipc.IPCInterface;
@@ -92,6 +91,9 @@ public class PrivacyView
 {
 	public static final String MSGID_PREFIX = "PrivacyView";
 
+	private static boolean	KEEP_VIEW			= true;
+	private static int		MAX_LOOKUP_HISTORY	= 16;
+	
 	private UISWTView swtView;
 
 	private Composite cMainComposite;
@@ -110,13 +112,7 @@ public class PrivacyView
 
 	private boolean		i2p_install_prompted;
 
-	private Composite	i2p_lookup_comp;
-	private Button 		i2p_install_button;
-	private Button 		i2p_lookup_button;
-	private Label 		i2p_options_link;
 
-	private BufferedLabel 	i2p_result_summary;
-	private Text			i2p_result_list;
 
 	private Button[]	network_buttons;
 	private Button[]	source_buttons;
@@ -140,6 +136,10 @@ public class PrivacyView
 	private Set<String>		enabled_networks 	= new HashSet<>();
 	private Set<String>		enabled_sources 	= new HashSet<>();
 
+	private	I2PStackItem	current_i2p_entry;
+	private Group 			i2p_stack_group;
+    private StackLayout 	stack_layout;
+
 	public
 	PrivacyView()
 	{
@@ -157,6 +157,10 @@ public class PrivacyView
 			case UISWTViewEvent.TYPE_CREATE:
 				swtView = (UISWTView) event.getData();
 				swtView.setTitle(getFullTitle());
+				if ( KEEP_VIEW ){
+					swtView.setDestroyOnDeactivate(false);
+				}
+				
 				break;
 
 			case UISWTViewEvent.TYPE_DESTROY:
@@ -185,7 +189,9 @@ public class PrivacyView
 				break;
 
 			case UISWTViewEvent.TYPE_FOCUSLOST:
-				delete();
+				if ( !KEEP_VIEW ){
+					delete();
+				}
 				break;
 
 			case UISWTViewEvent.TYPE_REFRESH:
@@ -271,6 +277,11 @@ public class PrivacyView
 
 		}else{
 
+			if ( KEEP_VIEW ){
+				
+				return;
+			}
+			
 			Utils.disposeComposite(cMainComposite, false);
 		}
 
@@ -522,388 +533,19 @@ public class PrivacyView
 
 			// I2P install state
 
-		Group i2p_group = new Group( cMainComposite, SWT.NULL );
-		i2p_group.setText( "I2P" );
+		i2p_stack_group = new Group( cMainComposite, SWT.NULL );
+		i2p_stack_group.setText( "I2P" );
 
-		//Composite i2p_group = new Composite( cMainComposite, SWT.NULL );
-
+		
+        stack_layout = new StackLayout();
+        i2p_stack_group.setLayout(stack_layout);
 		gd = new GridData( GridData.FILL_HORIZONTAL );
-		i2p_group.setLayoutData(gd);
-
-		i2p_group.setLayout( new GridLayout(4, false ));
-
-		label = new Label( i2p_group, SWT.NULL );
-		label.setText( MessageText.getString( "privacy.view.lookup.info" ));
-		gd = new GridData();
-		gd.horizontalSpan = 2;
-		label.setLayoutData(gd);
-
-		label = new Label( i2p_group, SWT.NULL );
-		label.setText( MessageText.getString( "label.lookup.status" ) + ":" );
-
-
-		i2p_result_summary = new BufferedLabel(i2p_group,SWT.DOUBLE_BUFFERED);
-		gd = new GridData( GridData.FILL_HORIZONTAL );
-		//gd.horizontalIndent = 4;
-		i2p_result_summary.setLayoutData(gd);
-
-		Composite i2p_button_comp = new Composite( i2p_group, SWT.NULL );
-		i2p_button_comp.setLayout( new GridLayout(2, false ));
-
-		gd = new GridData( GridData.FILL_VERTICAL );
-		i2p_button_comp.setLayoutData(gd);
-
-		label = new Label( i2p_button_comp, SWT.NULL );
-		label.setText( MessageText.getString( "GeneralView.section.availability" ));
-
-		i2p_install_button = new Button( i2p_button_comp, SWT.PUSH );
-
-		i2p_install_button.addSelectionListener(
-			new SelectionAdapter() {
-
-				@Override
-				public void
-				widgetSelected(
-					SelectionEvent event )
-				{
-					final boolean[] result = { false };
-
-					I2PHelpers.installI2PHelper(
-						null, result,
-						new Runnable()
-						{
-							@Override
-							public void
-							run()
-							{
-								Utils.execSWTThread(
-									new Runnable()
-									{
-										@Override
-										public void
-										run()
-										{
-											updateI2PState();
-										}
-									});
-							}
-						});
-				}
-			});
-
-			// I2P peer lookup
-
-		i2p_lookup_comp = new Composite( i2p_group, SWT.BORDER );
-
-		gd = new GridData();
-		gd.widthHint = 300;
-		gd.heightHint = 150;
-		i2p_lookup_comp.setLayoutData(gd);
-
-		i2p_lookup_comp.setBackground( Colors.white );
-
-			// i2p results
-
-
-		i2p_result_list = new Text( i2p_group, SWT.BORDER | SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
-		gd = new GridData( GridData.FILL_BOTH );
-		gd.horizontalSpan = 2;
-		i2p_result_list.setLayoutData(gd);
-
-		i2p_result_list.setEditable( false );
-
-			// i2p lookup button
-
-		label = new Label( i2p_button_comp, SWT.NULL );
-		label.setText( MessageText.getString( "button.lookup.peers" ));
-
-		i2p_lookup_button = new Button( i2p_button_comp, SWT.PUSH );
-
-		i2p_lookup_button.setText( MessageText.getString( "button.search.dht" ));
-
-		i2p_lookup_button.addSelectionListener(
-			new SelectionAdapter(){
-
-				private int	search_count;
-
-				@Override
-				public void
-				widgetSelected(
-					SelectionEvent event )
-				{
-					Utils.disposeComposite( i2p_lookup_comp, false );
-
-					i2p_result_summary.setText( "" );
-
-					i2p_result_list.setText( "" );
-
-					PluginInterface i2p_pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( "azneti2phelper", true );
-
-					if ( i2p_pi != null ){
-
-						IPCInterface ipc = i2p_pi.getIPC();
-
-						Map<String,Object>	options = new HashMap<>();
-
-						options.put( "server_id", "Scraper" );
-						options.put( "server_id_transient", true );
-						options.put( "ui_composite", i2p_lookup_comp );
-
-						final byte[] hash = (byte[])i2p_lookup_button.getData( "hash" );
-
-						search_count++;
-
-						final int	search_id = search_count;
-						
-						IPCInterface callback =
-							new IPCInterface()
-							{
-								final int[] result = { -1, -1 };
-
-								@Override
-								public Object
-								invoke(
-									String 			methodName,
-									final Object[] 	params)
-
-									throws IPCException
-								{
-									if ( search_id != search_count ){
-
-										return( null );
-									}
-
-									if ( methodName.equals( "statusUpdate" )){
-
-										final int status = (Integer)params[0];
-
-										if ( 	status != TrackerPeerSource.ST_INITIALISING &&
-												status != TrackerPeerSource.ST_UPDATING ){
-
-											Utils.execSWTThread(
-												new Runnable()
-												{
-													@Override
-													public void
-													run()
-													{
-														if ( i2p_lookup_button.isDisposed() || hash != i2p_lookup_button.getData( "hash" )){
-
-															return;
-														}
-
-														i2p_lookup_button.setEnabled( true );
-
-														synchronized( result ){
-														
-															if ( result[0] != -1 ){
-														
-																try{
-																
-																	Download d = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getDownloadManager().getDownload( hash );
-																	
-																	if ( d != null ){
-																		
-																		injectResult( d, result );
-																	}
-																}catch( Throwable e ){
-																	
-																}
-															}
-														}
-														
-														if ( 	i2p_result_list.getText().length() == 0 &&
-																status != TrackerPeerSource.ST_UNAVAILABLE){
-
-															i2p_result_summary.setText( MessageText.getString( "label.no.peers.found" ));
-														}
-													}
-												});
-										}
-
-										if ( params.length == 4 ){
-
-											Utils.execSWTThread(
-												new Runnable()
-												{
-													@Override
-													public void
-													run()
-													{
-														if ( i2p_result_summary.isDisposed() || hash != i2p_lookup_button.getData( "hash" )){
-
-															return;
-														}
-
-														int	seeds		= (Integer)params[1];
-														int	leechers	= (Integer)params[2];
-														int	peers		= (Integer)params[3];
-
-														synchronized( result ){
-															
-															result[0] = seeds;
-															result[1] = leechers;
-														}
-														
-														i2p_result_summary.setText(
-															MessageText.getString(
-																"privacy.view.lookup.msg",
-																new String[]{
-																	String.valueOf( seeds ),
-																	String.valueOf( leechers ),
-																	String.valueOf( peers )}));
-													}
-												});
-										}
-
-									}else if ( methodName.equals( "msgUpdate" )){
-
-										Utils.execSWTThread(
-											new Runnable()
-											{
-												@Override
-												public void
-												run()
-												{
-													if ( i2p_result_summary.isDisposed() || hash != i2p_lookup_button.getData( "hash" )){
-
-														return;
-													}
-
-													String	msg		= (String)params[0];
-
-													i2p_result_summary.setText( msg );
-												}
-											});
-
-									}else if ( methodName.equals( "peerFound")){
-
-										Utils.execSWTThread(
-											new Runnable()
-											{
-												@Override
-												public void
-												run()
-												{
-													if ( i2p_result_list.isDisposed() || hash != i2p_lookup_button.getData( "hash" )){
-
-														return;
-													}
-
-													String 	host		= (String)params[0];
-													int		peer_type 	= (Integer)params[1];
-
-													i2p_result_list.append( host + "\r\n" );
-												}
-											});
-
-									}
-
-									return( null );
-								}
-
-								@Override
-								public boolean
-								canInvoke(
-									String methodName,
-									Object[] params )
-								{
-									return( true );
-								}
-							};
-
-
-						i2p_lookup_button.setEnabled( false );
-
-						i2p_result_summary.setText( MessageText.getString( "label.searching" ));
-
-						try{
-							ipc.invoke(
-								"lookupTorrent",
-								new Object[]{
-									"",
-									hash,
-									options,
-									callback
-								});
-
-						}catch( Throwable e ){
-
-							i2p_lookup_button.setEnabled( true );
-
-							e.printStackTrace();
-						}
-					}
-				}
-			});
-
-		Label i2p_options_info = new Label( i2p_button_comp, SWT.WRAP );
-		gd = new GridData( GridData.FILL_HORIZONTAL );
-		gd.horizontalSpan = 2;
-		gd.widthHint = 150;
-		i2p_options_info.setLayoutData(gd);
-
-		i2p_options_info.setText( MessageText.getString( "privacy.view.check.bw.info" ));
-
-		if ( !COConfigurationManager.getBooleanParameter( "privacy.view.check.bw.clicked", false )){
-
-			FontData fontData = i2p_options_info.getFont().getFontData()[0];
-			final Font bold_font = new Font( i2p_options_info.getDisplay(), new FontData( fontData.getName(), fontData.getHeight(), SWT.BOLD ));
-			i2p_options_info.setFont( bold_font);
-
-			i2p_options_info.addDisposeListener(
-				new DisposeListener() {
-					@Override
-					public void widgetDisposed(DisposeEvent e) {
-						bold_font.dispose();
-					}
-				});
-		}
-
-		i2p_options_link = new Label( i2p_button_comp, SWT.NULL );
-		gd = new GridData( GridData.FILL_HORIZONTAL );
-		gd.horizontalSpan = 2;
-		i2p_options_link.setLayoutData(gd);
-		i2p_options_link.setText( MessageText.getString( "privacy.view.check.bw" ));
-
-		i2p_options_link.setCursor(i2p_options_link.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-		i2p_options_link.setForeground(Colors.blue);
-		i2p_options_link.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDoubleClick(MouseEvent arg0) {
-				openOptions();
-			}
-			@Override
-			public void mouseUp(MouseEvent arg0) {
-				openOptions();
-			}
-
-			private void
-			openOptions()
-			{
-				COConfigurationManager.setParameter( "privacy.view.check.bw.clicked", true );
-
-				UIFunctions uif = UIFunctionsManager.getUIFunctions();
-
-				if ( uif != null ){
-
-					uif.getMDI().showEntryByID(
-							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
-							"azi2phelper.name" );
-				}
-			}
-		});
-
-		updateI2PState();
-
-		Utils.makeButtonsEqualWidth( Arrays.asList( new Button[]{ i2p_install_button, i2p_lookup_button }));
-
-		label = new Label( i2p_button_comp, SWT.NULL );
-		gd = new GridData( GridData.FILL_BOTH );
-		gd.horizontalSpan = 2;
-		label.setLayoutData(gd);
-
-
+		i2p_stack_group.setLayoutData(gd);
+
+		current_i2p_entry= new I2PStackItem( i2p_stack_group, null );
+        
+		stack_layout.topControl = current_i2p_entry.getComposite();
+		
 		Group bottom_comp = new Group( cMainComposite, SWT.NULL );
 
 		gd = new GridData( GridData.FILL_HORIZONTAL );
@@ -1094,7 +736,7 @@ public class PrivacyView
 		Utils.relayout(cMainComposite);
 	}
 
-	private void
+	private static void
 	injectResult(
 		Download		download,
 		int[]			result )
@@ -1251,7 +893,12 @@ public class PrivacyView
 										public void
 										run()
 										{
-											updateI2PState();
+											Utils.execSWTThread(new AERunnable(){
+												@Override
+												public void runSupport()
+												{
+													current_i2p_entry.updateState();
+												}});
 										}
 									});
 							}
@@ -1289,14 +936,7 @@ public class PrivacyView
 			}
 		}
 
-		i2p_lookup_button.setData( "hash", hash );
-
-		updateI2PState();
-
-		Utils.disposeComposite( i2p_lookup_comp, false );
-
-		i2p_result_summary.setText( "" );
-		i2p_result_list.setText( "" );
+		current_i2p_entry.reset( hash );
 
 		if ( old_dm != null ){
 
@@ -1799,26 +1439,6 @@ public class PrivacyView
 	    vpn_info.setText( NetworkAdmin.getSingleton().getBindStatus());
 	}
 
-	private void
-	updateI2PState()
-	{
-		Utils.execSWTThread(new AERunnable(){
-			@Override
-			public void runSupport()
-			{
-				boolean i2p_installed = I2PHelpers.isI2PInstalled();
-
-				i2p_install_button.setText( MessageText.getString( i2p_installed?"devices.installed":"privacy.view.install.i2p" ));
-
-				i2p_install_button.setEnabled( !i2p_installed );
-
-				i2p_lookup_button.setEnabled( i2p_installed && i2p_lookup_button.getData( "hash" ) != null );
-
-				i2p_options_link.setEnabled( i2p_installed );
-			}
-		});
-	}
-
 	@Override
 	public void
 	attributeEventOccurred(
@@ -1863,5 +1483,539 @@ public class PrivacyView
 		layout.marginWidth = 0;
 
 		return( layout );
+	}
+	
+	private class
+	I2PStackItem
+	{
+		private Composite	i2p_group;
+		
+		private Composite	i2p_lookup_comp;
+		private Button 		i2p_install_button;
+		private Button 		i2p_lookup_button;
+		private Label 		i2p_options_link;
+
+		private BufferedLabel 	i2p_result_summary;
+		private Text			i2p_result_list;
+		
+		private byte[]	current_hash;
+		private boolean	lookup_performed;
+		private boolean	lookup_active;
+		
+		private long	last_used		= SystemTime.getMonotonousTime();
+		
+		I2PStackItem(
+			Composite		parent,
+			byte[]			hash )
+		{
+			current_hash = hash;
+			
+			i2p_group = new Composite( parent, SWT.NULL );
+			
+			GridData gd = new GridData( GridData.FILL_HORIZONTAL );
+			i2p_group.setLayoutData(gd);
+
+			i2p_group.setLayout( new GridLayout(4, false ));
+
+			i2p_group.setData( "item", this );
+			
+			Label label = new Label( i2p_group, SWT.NULL );
+			label.setText( MessageText.getString( "privacy.view.lookup.info" ));
+			gd = new GridData();
+			gd.horizontalSpan = 2;
+			label.setLayoutData(gd);
+
+			label = new Label( i2p_group, SWT.NULL );
+			label.setText( MessageText.getString( "label.lookup.status" ) + ":" );
+
+
+			i2p_result_summary = new BufferedLabel(i2p_group,SWT.DOUBLE_BUFFERED);
+			gd = new GridData( GridData.FILL_HORIZONTAL );
+			//gd.horizontalIndent = 4;
+			i2p_result_summary.setLayoutData(gd);
+
+			Composite i2p_button_comp = new Composite( i2p_group, SWT.NULL );
+			i2p_button_comp.setLayout( new GridLayout(2, false ));
+
+			gd = new GridData( GridData.FILL_VERTICAL );
+			i2p_button_comp.setLayoutData(gd);
+
+			label = new Label( i2p_button_comp, SWT.NULL );
+			label.setText( MessageText.getString( "GeneralView.section.availability" ));
+
+			i2p_install_button = new Button( i2p_button_comp, SWT.PUSH );
+
+			i2p_install_button.addSelectionListener(
+				new SelectionAdapter() {
+
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent event )
+					{
+						final boolean[] result = { false };
+
+						I2PHelpers.installI2PHelper(
+							null, result,
+							new Runnable()
+							{
+								@Override
+								public void
+								run()
+								{
+									Utils.execSWTThread(
+										new Runnable()
+										{
+											@Override
+											public void
+											run()
+											{
+												current_i2p_entry.updateState();
+											}
+										});
+								}
+							});
+					}
+				});
+
+				// I2P peer lookup
+
+			i2p_lookup_comp = new Composite( i2p_group, SWT.BORDER );
+
+			gd = new GridData();
+			gd.widthHint = 300;
+			gd.heightHint = 150;
+			i2p_lookup_comp.setLayoutData(gd);
+
+			i2p_lookup_comp.setBackground( Colors.white );
+
+				// i2p results
+
+
+			i2p_result_list = new Text( i2p_group, SWT.BORDER | SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
+			gd = new GridData( GridData.FILL_BOTH );
+			gd.horizontalSpan = 2;
+			i2p_result_list.setLayoutData(gd);
+
+			i2p_result_list.setEditable( false );
+
+				// i2p lookup button
+
+			label = new Label( i2p_button_comp, SWT.NULL );
+			label.setText( MessageText.getString( "button.lookup.peers" ));
+
+			i2p_lookup_button = new Button( i2p_button_comp, SWT.PUSH );
+
+			i2p_lookup_button.setText( MessageText.getString( "button.search.dht" ));
+
+			i2p_lookup_button.addSelectionListener(
+				new SelectionAdapter(){
+
+					private int	search_count;
+
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent event )
+					{
+						Utils.disposeComposite( i2p_lookup_comp, false );
+
+						i2p_result_summary.setText( "" );
+
+						i2p_result_list.setText( "" );
+
+						PluginInterface i2p_pi = CoreFactory.getSingleton().getPluginManager().getPluginInterfaceByID( "azneti2phelper", true );
+
+						if ( i2p_pi != null ){
+
+							IPCInterface ipc = i2p_pi.getIPC();
+
+							Map<String,Object>	options = new HashMap<>();
+
+							options.put( "server_id", "Scraper" );
+							options.put( "server_id_transient", true );
+							options.put( "ui_composite", i2p_lookup_comp );
+
+							final byte[] hash = current_hash;
+
+							search_count++;
+
+							final int	search_id = search_count;
+							
+							IPCInterface callback =
+								new IPCInterface()
+								{
+									final int[] result = { -1, -1 };
+
+									@Override
+									public Object
+									invoke(
+										String 			methodName,
+										final Object[] 	params)
+
+										throws IPCException
+									{
+										if ( search_id != search_count ){
+
+											return( null );
+										}
+
+										if ( methodName.equals( "statusUpdate" )){
+
+											final int status = (Integer)params[0];
+
+											if ( 	status != TrackerPeerSource.ST_INITIALISING &&
+													status != TrackerPeerSource.ST_UPDATING ){
+
+												Utils.execSWTThread(
+													new Runnable()
+													{
+														@Override
+														public void
+														run()
+														{
+															if ( i2p_group.isDisposed() || !Arrays.equals( hash, current_hash )){
+
+																return;
+															}
+
+															setLookupActive( false );
+
+															synchronized( result ){
+															
+																if ( result[0] != -1 ){
+															
+																	try{
+																	
+																		Download d = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getDownloadManager().getDownload( hash );
+																		
+																		if ( d != null ){
+																			
+																			injectResult( d, result );
+																		}
+																	}catch( Throwable e ){
+																		
+																	}
+																}
+															}
+															
+															if ( 	i2p_result_list.getText().length() == 0 &&
+																	status != TrackerPeerSource.ST_UNAVAILABLE){
+
+																i2p_result_summary.setText( MessageText.getString( "label.no.peers.found" ));
+															}
+														}
+													});
+											}
+
+											if ( params.length == 4 ){
+
+												Utils.execSWTThread(
+													new Runnable()
+													{
+														@Override
+														public void
+														run()
+														{
+															if ( i2p_group.isDisposed() || !Arrays.equals( hash, current_hash )){
+
+																return;
+															}
+
+															int	seeds		= (Integer)params[1];
+															int	leechers	= (Integer)params[2];
+															int	peers		= (Integer)params[3];
+
+															synchronized( result ){
+																
+																result[0] = seeds;
+																result[1] = leechers;
+															}
+															
+															i2p_result_summary.setText(
+																MessageText.getString(
+																	"privacy.view.lookup.msg",
+																	new String[]{
+																		String.valueOf( seeds ),
+																		String.valueOf( leechers ),
+																		String.valueOf( peers )}));
+														}
+													});
+											}
+
+										}else if ( methodName.equals( "msgUpdate" )){
+
+											Utils.execSWTThread(
+												new Runnable()
+												{
+													@Override
+													public void
+													run()
+													{
+														if ( i2p_group.isDisposed() || !Arrays.equals( hash, current_hash )){
+
+															return;
+														}
+
+														String	msg		= (String)params[0];
+
+														i2p_result_summary.setText( msg );
+													}
+												});
+
+										}else if ( methodName.equals( "peerFound")){
+
+											Utils.execSWTThread(
+												new Runnable()
+												{
+													@Override
+													public void
+													run()
+													{
+														if ( i2p_group.isDisposed() || !Arrays.equals( hash, current_hash )){
+
+															return;
+														}
+
+														String 	host		= (String)params[0];
+														int		peer_type 	= (Integer)params[1];
+
+														i2p_result_list.append( host + "\r\n" );
+													}
+												});
+
+										}
+
+										return( null );
+									}
+
+									@Override
+									public boolean
+									canInvoke(
+										String methodName,
+										Object[] params )
+									{
+										return( true );
+									}
+								};
+
+
+							setLookupActive( true );
+
+							i2p_result_summary.setText( MessageText.getString( "label.searching" ));
+
+							try{
+								ipc.invoke(
+									"lookupTorrent",
+									new Object[]{
+										"",
+										hash,
+										options,
+										callback
+									});
+
+							}catch( Throwable e ){
+
+								setLookupActive( false );
+
+								e.printStackTrace();
+							}
+						}
+					}
+				});
+
+			Label i2p_options_info = new Label( i2p_button_comp, SWT.WRAP );
+			gd = new GridData( GridData.FILL_HORIZONTAL );
+			gd.horizontalSpan = 2;
+			gd.widthHint = 150;
+			i2p_options_info.setLayoutData(gd);
+
+			i2p_options_info.setText( MessageText.getString( "privacy.view.check.bw.info" ));
+
+			if ( !COConfigurationManager.getBooleanParameter( "privacy.view.check.bw.clicked", false )){
+
+				FontData fontData = i2p_options_info.getFont().getFontData()[0];
+				final Font bold_font = new Font( i2p_options_info.getDisplay(), new FontData( fontData.getName(), fontData.getHeight(), SWT.BOLD ));
+				i2p_options_info.setFont( bold_font);
+
+				i2p_options_info.addDisposeListener(
+					new DisposeListener() {
+						@Override
+						public void widgetDisposed(DisposeEvent e) {
+							bold_font.dispose();
+						}
+					});
+			}
+
+			i2p_options_link = new Label( i2p_button_comp, SWT.NULL );
+			gd = new GridData( GridData.FILL_HORIZONTAL );
+			gd.horizontalSpan = 2;
+			i2p_options_link.setLayoutData(gd);
+			i2p_options_link.setText( MessageText.getString( "privacy.view.check.bw" ));
+
+			i2p_options_link.setCursor(i2p_options_link.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+			i2p_options_link.setForeground(Colors.blue);
+			i2p_options_link.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseDoubleClick(MouseEvent arg0) {
+					openOptions();
+				}
+				@Override
+				public void mouseUp(MouseEvent arg0) {
+					openOptions();
+				}
+
+				private void
+				openOptions()
+				{
+					COConfigurationManager.setParameter( "privacy.view.check.bw.clicked", true );
+
+					UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+					if ( uif != null ){
+
+						uif.getMDI().showEntryByID(
+								MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+								"azi2phelper.name" );
+					}
+				}
+			});
+
+			updateState();
+
+			Utils.makeButtonsEqualWidth( Arrays.asList( new Button[]{ i2p_install_button, i2p_lookup_button }));
+
+			label = new Label( i2p_button_comp, SWT.NULL );
+			gd = new GridData( GridData.FILL_BOTH );
+			gd.horizontalSpan = 2;
+			label.setLayoutData(gd);
+
+		}
+		
+		private Composite
+		getComposite()
+		{
+			return( i2p_group );
+		}
+		
+		private void
+		setLookupActive(
+			boolean		active )
+		{
+			lookup_active = active;
+			
+			if ( active ){
+				
+				lookup_performed = true;
+			}
+			
+			i2p_lookup_button.setEnabled( !active );
+		}
+		
+		private void
+		reset(
+			byte[]		hash )
+		{
+			if ( Arrays.equals( hash,  current_hash )){
+								
+				updateState();
+				
+				return;
+			}
+			
+				
+			if ( hash != null ){
+				
+					// see if we have cached state
+				
+				Control[] kids = i2p_stack_group.getChildren();
+				
+				for ( Control c: kids ){
+					
+					I2PStackItem item = (I2PStackItem)c.getData( "item" );
+					
+					if ( item  != null && Arrays.equals( item.current_hash,  hash )){
+						
+						current_i2p_entry = item;
+						
+						stack_layout.topControl = c;
+						
+						i2p_stack_group.layout( true, true );
+						
+						item.updateState();
+						
+						return;
+					}
+				}
+			}
+				
+				
+			if ( lookup_performed ){
+					
+					// save this one's state by using a new one
+				
+				Control[] kids = i2p_stack_group.getChildren();
+				
+				long	oldest_time = SystemTime.getMonotonousTime();
+				Control	oldest_comp	= null;
+				
+				int	num = 0;
+				
+				for ( Control c: kids ){
+					
+					I2PStackItem item = (I2PStackItem)c.getData( "item" );
+					
+					if ( item != null ){
+						
+						num++;
+						
+						if ( item.last_used < oldest_time ){
+							
+							oldest_time		= item.last_used;
+							oldest_comp		= c;
+						}
+					}
+				}
+				
+				if ( num > MAX_LOOKUP_HISTORY ){
+					
+					oldest_comp.dispose();
+				}
+				
+				current_i2p_entry = new I2PStackItem( i2p_stack_group, hash );
+		        
+				stack_layout.topControl = current_i2p_entry.getComposite();
+
+				i2p_stack_group.layout( true, true );
+				
+			}else{
+				
+				current_hash = hash;
+					
+				updateState();
+	
+				Utils.disposeComposite( i2p_lookup_comp, false );
+	
+				i2p_result_summary.setText( "" );
+				
+				i2p_result_list.setText( "" );
+			}
+		}
+		
+		private void
+		updateState()
+		{
+			last_used = SystemTime.getMonotonousTime();
+			
+			boolean i2p_installed = I2PHelpers.isI2PInstalled();
+
+			i2p_install_button.setText( MessageText.getString( i2p_installed?"devices.installed":"privacy.view.install.i2p" ));
+
+			i2p_install_button.setEnabled( !i2p_installed );
+
+			i2p_lookup_button.setEnabled( i2p_installed && current_hash != null && !lookup_active );
+
+			i2p_options_link.setEnabled( i2p_installed );
+		}
 	}
 }
