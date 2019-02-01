@@ -982,20 +982,28 @@ TagPropertyConstraintHandler
 			// we're only bothered about assignments to tags that can have significant side-effects. Currently these are
 			// 1) execute-on-assign tags
 			// 2) tags with limits (and therefore removal policies such as 'delete download')
+			// 3) new_downloads tags that only get evaluated once
 
-			if ( tag != null ){
+			if ( new_only ){
 				
-				if (((TagFeatureExecOnAssign)tag).isAnyActionEnabled()){
+				must_check_dependencies = true;
+				
+			}else{
+				
+				if ( tag != null ){
 					
-					must_check_dependencies = true;
-					
-				}else if ( (((TagFeatureLimits)tag).getMaximumTaggables() > 0 )){
-					
-					must_check_dependencies = true;
-					
-				}else{
-					
-					must_check_dependencies = false;
+					if (((TagFeatureExecOnAssign)tag).isAnyActionEnabled()){
+						
+						must_check_dependencies = true;
+						
+					}else if ( (((TagFeatureLimits)tag).getMaximumTaggables() > 0 )){
+						
+						must_check_dependencies = true;
+						
+					}else{
+						
+						must_check_dependencies = false;
+					}
 				}
 			}
 		}
