@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.biglybt.ui.UIFunctionsManager;
@@ -179,6 +180,22 @@ public class TagUIUtilsV3
 		dialog.open();
 	}
 
+	public static void 
+	showManualTagSelectionDialog(
+		TagSelectionListener	listener )
+	{
+		TagManager tagManager = TagManagerFactory.getTagManager();
+		
+		TagType tt = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+		
+		List<Tag> all_tags = new ArrayList<>( tt.getTags());
+		
+		showTagSelectionDialog( 
+			all_tags, 
+			Collections.emptyList(),
+			listener );
+	}
+	
 	public static void 
 	showTagSelectionDialog(
 		List<Tag>				tags,

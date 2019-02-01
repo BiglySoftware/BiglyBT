@@ -1943,8 +1943,8 @@ TagDownloadWithState
 		return( getTagType().isTagTypeAuto()?new TagProperty[0]:tag_properties );
 	}
 
-	private static final boolean[] AUTO_BOTH = {true,true};
-	private static final boolean[] AUTO_NONE = {false,false};
+	private static final boolean[] AUTO_BOTH = {true,true,false};
+	private static final boolean[] AUTO_NONE = {false,false,false};
 
 	@Override
 	public boolean[]
@@ -1993,15 +1993,15 @@ TagDownloadWithState
 
 							if ( options.contains( "am=1;" )){
 
-								return( new boolean[]{ true, false });
+								return( new boolean[]{ true, false, false });
 
 							}else if ( options.contains( "am=2;" )){
 
-								return( new boolean[]{ false, true });
+								return( new boolean[]{ false, true, false });
 								
 							}else if ( options.contains( "am=3;" )){
 								
-								return( new boolean[]{ false, false });
+								return( new boolean[]{ false, false, true });
 							}
 						}
 					}

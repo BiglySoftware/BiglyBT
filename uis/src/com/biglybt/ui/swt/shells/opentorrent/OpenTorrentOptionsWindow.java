@@ -4759,8 +4759,9 @@ public class OpenTorrentOptionsWindow
 				boolean[] auto = next.isTagAuto();
 				boolean auto_add = auto[0];
 				//boolean auto_rem	= auto[1];
-
-				if (auto_add) {
+				boolean auto_new = auto[2];
+				
+				if ( auto_add || auto_new ) {
 					iter.remove();
 				}
 			}

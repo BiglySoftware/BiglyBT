@@ -79,25 +79,36 @@ public class ConfigSectionFile
 
 	@Override
 	public Composite configSectionCreate(final Composite parent) {
+		Composite cFile = new Composite(parent, SWT.NULL);
+		 
+		configSectionCreateSupport( cFile );
+		
+		return( cFile );
+	}
+	
+	private void
+	configSectionCreateSupport(
+		final Composite cFile )
+	{
 		ImageLoader imageLoader = ImageLoader.getInstance();
 		Image imgOpenFolder = imageLoader.getImage("openFolderButton");
 
-		GridData gridData;
 		Label label;
 		String sCurConfigID;
 		final ArrayList<String> allConfigIDs = new ArrayList<>();
 
-		Composite gFile = new Composite(parent, SWT.NULL);
-
+		GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
+		cFile.setLayoutData(gridData);
+	
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.marginHeight = 0;
-		gFile.setLayout(layout);
+		cFile.setLayout(layout);
 
 		int userMode = COConfigurationManager.getIntParameter("User Mode");
 
 		// Default Dir Section
-		final Group gDefaultDir = new Group(gFile, SWT.NONE);
+		final Group gDefaultDir = new Group(cFile, SWT.NONE);
 		Messages.setLanguageText(gDefaultDir,
 				"ConfigView.section.file.defaultdir.section");
 		layout = new GridLayout();
@@ -142,7 +153,7 @@ public class ConfigSectionFile
 			 */
 			@Override
 			public void handleEvent(Event event) {
-				DirectoryDialog dialog = new DirectoryDialog(parent.getShell(),
+				DirectoryDialog dialog = new DirectoryDialog(cFile.getShell(),
 						SWT.APPLICATION_MODAL);
 				dialog.setFilterPath(pathParameter.getValue());
 				dialog.setMessage(MessageText.getString("ConfigView.dialog.choosedefaultsavepath"));
@@ -247,7 +258,7 @@ public class ConfigSectionFile
 			clear_history_button.setEnabled( dirList.size() > 0 );
 		}
 
-		label = new Label(gFile, SWT.NONE);
+		label = new Label(cFile, SWT.NONE);
 		gridData = new GridData();
 		gridData.horizontalSpan = 2;
 		label.setLayoutData(gridData);
@@ -257,7 +268,7 @@ public class ConfigSectionFile
 		sCurConfigID = "XFS Allocation";
 		allConfigIDs.add(sCurConfigID);
 		if (userMode > 0 && !Constants.isWindows) {
-			BooleanParameter xfsAllocation = new BooleanParameter(gFile,
+			BooleanParameter xfsAllocation = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.label.xfs.allocation");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -272,7 +283,7 @@ public class ConfigSectionFile
 			sCurConfigID = "Zero New";
 			allConfigIDs.add(sCurConfigID);
 
-			zeroNew = new BooleanParameter(gFile, sCurConfigID,
+			zeroNew = new BooleanParameter(cFile, sCurConfigID,
 					"ConfigView.label.zeronewfiles");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -281,7 +292,7 @@ public class ConfigSectionFile
 			sCurConfigID = "Zero New Stop";
 			allConfigIDs.add(sCurConfigID);
 
-			zeroNewStop = new BooleanParameter(gFile, sCurConfigID,
+			zeroNewStop = new BooleanParameter(cFile, sCurConfigID,
 					"ConfigView.label.zeronewfiles.stop");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -298,7 +309,7 @@ public class ConfigSectionFile
 		allConfigIDs.add(sCurConfigID);
 		if (userMode > 0) {
 
-			pieceReorder = new BooleanParameter(gFile, sCurConfigID,
+			pieceReorder = new BooleanParameter(cFile, sCurConfigID,
 					"ConfigView.label.piecereorder");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -323,13 +334,13 @@ public class ConfigSectionFile
 		allConfigIDs.add(sCurConfigID);
 
 		if (userMode > 0) {
-			Label lblMinMB = new Label(gFile, SWT.NULL);
+			Label lblMinMB = new Label(cFile, SWT.NULL);
 			Messages.setLanguageText(lblMinMB, "ConfigView.label.piecereorderminmb");
 			gridData = new GridData();
 			gridData.horizontalIndent = 25;
 			lblMinMB.setLayoutData(gridData);
 
-			IntParameter minMB = new IntParameter(gFile, sCurConfigID);
+			IntParameter minMB = new IntParameter(cFile, sCurConfigID);
 			gridData = new GridData();
 			minMB.setLayoutData(gridData);
 
@@ -343,7 +354,7 @@ public class ConfigSectionFile
 		allConfigIDs.add(sCurConfigID);
 		if (userMode > 0) {
 			// incremental file creation
-			BooleanParameter incremental = new BooleanParameter(gFile, sCurConfigID,
+			BooleanParameter incremental = new BooleanParameter(cFile, sCurConfigID,
 					"ConfigView.label.incrementalfile");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -370,7 +381,7 @@ public class ConfigSectionFile
 		allConfigIDs.add(sCurConfigID);
 		if (userMode > 0) {
 			// truncate too large
-			BooleanParameter truncateLarge = new BooleanParameter(gFile,
+			BooleanParameter truncateLarge = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.section.file.truncate.too.large");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -384,7 +395,7 @@ public class ConfigSectionFile
 		BooleanParameter mergeSameSize = null;
 
 		if (userMode > 0) {
-			mergeSameSize = new BooleanParameter(gFile,
+			mergeSameSize = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.section.file.merge.same.size");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -396,7 +407,7 @@ public class ConfigSectionFile
 		sCurConfigID = "Merge Same Size Files Extended";
 		allConfigIDs.add(sCurConfigID);
 		if (mergeSameSize != null) {
-			BooleanParameter mergeSameSizeExt = new BooleanParameter(gFile,
+			BooleanParameter mergeSameSizeExt = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.section.file.merge.same.size.extended");
 			gridData = new GridData();
 			gridData.horizontalIndent = 25;
@@ -413,13 +424,13 @@ public class ConfigSectionFile
 		sCurConfigID = "Merge Same Size Files Tolerance";
 		allConfigIDs.add(sCurConfigID);
 		if (mergeSameSize != null) {
-			label = new Label(gFile, SWT.NULL );
+			label = new Label(cFile, SWT.NULL );
 			Messages.setLanguageText( label,"ConfigView.section.file.merge.same.size.tolerance");
 			gridData = new GridData();
 			gridData.horizontalIndent = 25;
 			label.setLayoutData(gridData);
 
-			IntParameter tol = new IntParameter(gFile, sCurConfigID);
+			IntParameter tol = new IntParameter(cFile, sCurConfigID);
 			gridData = new GridData();
 			tol.setLayoutData(gridData);
 			
@@ -433,7 +444,7 @@ public class ConfigSectionFile
 		allConfigIDs.add(sCurConfigID);
 		if (userMode > 0) {
 			// check on complete
-			BooleanParameter checkOnComp = new BooleanParameter(gFile, sCurConfigID,
+			BooleanParameter checkOnComp = new BooleanParameter(cFile, sCurConfigID,
 					"ConfigView.label.checkOncompletion");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -444,7 +455,7 @@ public class ConfigSectionFile
 		allConfigIDs.add(sCurConfigID);
 		if (userMode > 0) {
 			// check on complete
-			BooleanParameter checkOnSeeding = new BooleanParameter(gFile,
+			BooleanParameter checkOnSeeding = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.label.checkOnSeeding");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -455,7 +466,7 @@ public class ConfigSectionFile
 		allConfigIDs.add(sCurConfigID);
 		if (userMode > 1) {
 
-			BooleanParameter strictLocking = new BooleanParameter(gFile,
+			BooleanParameter strictLocking = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.label.strictfilelocking");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
@@ -477,7 +488,7 @@ public class ConfigSectionFile
 				// max links
 
 
-			Composite maxLinksGroup = new Composite(gFile, SWT.NULL);
+			Composite maxLinksGroup = new Composite(cFile, SWT.NULL);
 			layout = new GridLayout();
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
@@ -506,13 +517,13 @@ public class ConfigSectionFile
 			sCurConfigID = "Insufficient Space Download Restart Enable";
 			allConfigIDs.add(sCurConfigID);
 			// resume data
-			final BooleanParameter OOSDRE = new BooleanParameter(gFile,
+			final BooleanParameter OOSDRE = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.label.restart.no.space.dls");
 			gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
 			gridData.horizontalSpan = 2;
 			OOSDRE.setLayoutData(gridData);
 
-			Composite cOOSDGroup = new Composite(gFile, SWT.NULL);
+			Composite cOOSDGroup = new Composite(cFile, SWT.NULL);
 			layout = new GridLayout();
 			layout.marginHeight = 0;
 			layout.marginWidth = 4;
@@ -555,11 +566,11 @@ public class ConfigSectionFile
 			sCurConfigID = "Use Resume";
 			allConfigIDs.add(sCurConfigID);
 			// resume data
-			final BooleanParameter bpUseResume = new BooleanParameter(gFile,
+			final BooleanParameter bpUseResume = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.label.usefastresume");
 			bpUseResume.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_BEGINNING));
 
-			Composite cResumeGroup = new Composite(gFile, SWT.NULL);
+			Composite cResumeGroup = new Composite(cFile, SWT.NULL);
 			layout = new GridLayout();
 			layout.marginHeight = 0;
 			layout.marginWidth = 4;
@@ -651,13 +662,13 @@ public class ConfigSectionFile
 			allConfigIDs.add(sCurConfigID);
 
 			// Auto-Prioritize
-			label = new Label(gFile, SWT.WRAP);
+			label = new Label(cFile, SWT.WRAP);
 			gridData = new GridData();
 			gridData.widthHint = 180;
 			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "ConfigView.label.priorityExtensions");
 
-			Composite cExtensions = new Composite(gFile, SWT.NULL);
+			Composite cExtensions = new Composite(cFile, SWT.NULL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			cExtensions.setLayoutData(gridData);
 			layout = new GridLayout();
@@ -682,34 +693,37 @@ public class ConfigSectionFile
 
 		// quick view
 
-		sCurConfigID = "quick.view.exts";
-		allConfigIDs.add(sCurConfigID);
-
-		label = new Label(gFile, SWT.WRAP);
-		gridData = new GridData();
-		gridData.widthHint = 180;
-		label.setLayoutData(gridData);
-		Messages.setLanguageText(label, "ConfigView.label.quickviewexts");
-
-		Composite cQuickView = new Composite(gFile, SWT.NULL);
-		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		cQuickView.setLayoutData(gridData);
-		layout = new GridLayout();
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.numColumns = 3;
-		cQuickView.setLayout(layout);
-
-		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		new StringParameter(cQuickView, sCurConfigID ).setLayoutData(gridData);
-
-		label = new Label(cQuickView, SWT.NONE);
-		Messages.setLanguageText(label, "ConfigView.label.quickviewmaxkb");
-
-		sCurConfigID = "quick.view.maxkb";
-		allConfigIDs.add(sCurConfigID);
-		IntParameter qvmax = new IntParameter(cQuickView, sCurConfigID, 1, 9999 );
-
+		if (userMode > 0) {
+	
+			sCurConfigID = "quick.view.exts";
+			allConfigIDs.add(sCurConfigID);
+	
+			label = new Label(cFile, SWT.WRAP);
+			gridData = new GridData();
+			gridData.widthHint = 180;
+			label.setLayoutData(gridData);
+			Messages.setLanguageText(label, "ConfigView.label.quickviewexts");
+	
+			Composite cQuickView = new Composite(cFile, SWT.NULL);
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			cQuickView.setLayoutData(gridData);
+			layout = new GridLayout();
+			layout.marginHeight = 0;
+			layout.marginWidth = 0;
+			layout.numColumns = 3;
+			cQuickView.setLayout(layout);
+	
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			new StringParameter(cQuickView, sCurConfigID ).setLayoutData(gridData);
+	
+			label = new Label(cQuickView, SWT.NONE);
+			Messages.setLanguageText(label, "ConfigView.label.quickviewmaxkb");
+	
+			sCurConfigID = "quick.view.maxkb";
+			allConfigIDs.add(sCurConfigID);
+			IntParameter qvmax = new IntParameter(cQuickView, sCurConfigID, 1, 9999 );
+		}
+		
 
 		// rename incomplete
 
@@ -722,14 +736,14 @@ public class ConfigSectionFile
 
 			gridData = new GridData();
 			gridData.horizontalSpan = 1;
-			final BooleanParameter rename_incomplete = new BooleanParameter(gFile,
+			final BooleanParameter rename_incomplete = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.section.file.rename.incomplete");
 			rename_incomplete.setLayoutData(gridData);
 
 			sCurConfigID = "Rename Incomplete Files Extension";
 			allConfigIDs.add(sCurConfigID);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			StringParameter rename_incomplete_ext = new StringParameter(gFile,
+			StringParameter rename_incomplete_ext = new StringParameter(cFile,
 					sCurConfigID);
 			rename_incomplete_ext.setLayoutData(gridData);
 
@@ -744,14 +758,14 @@ public class ConfigSectionFile
 
 			gridData = new GridData();
 			gridData.horizontalSpan = 1;
-			final BooleanParameter enable_subfolder = new BooleanParameter(gFile,
+			final BooleanParameter enable_subfolder = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.section.file.subfolder.dnd");
 			rename_incomplete.setLayoutData(gridData);
 
 			sCurConfigID = "Subfolder for DND Files";
 			allConfigIDs.add(sCurConfigID);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
-			StringParameter subfolder_name = new StringParameter(gFile,
+			StringParameter subfolder_name = new StringParameter(cFile,
 					sCurConfigID);
 			subfolder_name.setLayoutData(gridData);
 
@@ -767,7 +781,7 @@ public class ConfigSectionFile
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
 			gridData.horizontalIndent=25;
-			final BooleanParameter enable_dndprefix = new BooleanParameter(gFile,
+			final BooleanParameter enable_dndprefix = new BooleanParameter(cFile,
 					sCurConfigID, "ConfigView.section.file.dnd.prefix.enable");
 			enable_dndprefix.setLayoutData(gridData);
 
@@ -793,15 +807,121 @@ public class ConfigSectionFile
 
 		sCurConfigID = "Download History Enabled";
 		allConfigIDs.add(sCurConfigID);
-		BooleanParameter recordDLHistory = new BooleanParameter(gFile, sCurConfigID,
+		BooleanParameter recordDLHistory = new BooleanParameter(cFile, sCurConfigID,
 				"ConfigView.label.record.dl.history");
 		gridData = new GridData();
 		gridData.horizontalSpan = 2;
 		recordDLHistory.setLayoutData(gridData);
 
+			// auto tag group
+		
+		{
+			sCurConfigID = "Files Auto Tag Enable";
+			allConfigIDs.add(sCurConfigID);
+		    BooleanParameter auto_tag_enable = new BooleanParameter(cFile, sCurConfigID, "label.enable.auto.tagging");
+		    gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			auto_tag_enable.setLayoutData(gridData);
+			
+			Group gAutoTag = new Group(cFile, SWT.NONE);
+			Messages.setLanguageText(gAutoTag, "label.auto.tagging");
+			layout = new GridLayout();
+			layout.numColumns = 4;
+			layout.marginHeight = 5;
+			gAutoTag.setLayout(layout);
+			gridData = new GridData(GridData.FILL_HORIZONTAL);
+			gridData.horizontalSpan = 2;
+			gAutoTag.setLayoutData(gridData);
+
+			
+		    int	num_tags = COConfigurationManager.getIntParameter( "File Auto Tag Count", 1);
+
+		    for ( int i=0;i<num_tags;i++){
+			    Label lExtensions = new Label(gAutoTag, SWT.NULL);
+			    Messages.setLanguageText(lExtensions, "ConfigView.label.file.exts");
+
+			    gridData = new GridData(GridData.FILL_HORIZONTAL);
+			    final StringParameter extsParameter =
+			    	new StringParameter(gAutoTag, "File Auto Tag Exts " + (i==0?"":(" " + i )));
+			    extsParameter.setLayoutData(gridData);
+
+			    Label lTag = new Label(gAutoTag, SWT.NULL);
+			    Messages.setLanguageText(lTag, "label.assign.to.tag");
+
+			    StringParameter tagParam =
+			    	new StringParameter(gAutoTag,  "File Auto Tag Name " + (i==0?"":(" " + i )));
+			    gridData = new GridData();
+			    gridData.widthHint = 60;
+			    tagParam.setLayoutData(gridData);
+		    }
+
+		    	// default
+		    
+		    Label lPad = new Label(gAutoTag, SWT.NULL);
+
+		    gridData = new GridData(GridData.FILL_HORIZONTAL);
+		    Label lDefault = new Label(gAutoTag, SWT.NULL);
+		    Messages.setLanguageText(lDefault, "label.assign.to.tag.default");
+		    lDefault.setLayoutData(gridData);
+
+		    Label lTag = new Label(gAutoTag, SWT.NULL);
+		    Messages.setLanguageText(lTag, "label.assign.to.tag");
+
+		    StringParameter tagParam =
+		    	new StringParameter(gAutoTag,  "File Auto Tag Name Default" );
+		    gridData = new GridData();
+		    gridData.widthHint = 60;
+		    tagParam.setLayoutData(gridData);
+		    
+		    	// add another tag
+		    
+		    Label addAnother = new Label(gAutoTag, SWT.NULL);
+		    Messages.setLanguageText(addAnother, "ConfigView.label.addanothertag");
+
+		    Composite gAddButton = new Composite(gAutoTag, SWT.NULL);
+		    gridData = new GridData(GridData.FILL_HORIZONTAL);
+		    gridData.horizontalSpan = 3;
+				gAddButton.setLayoutData(gridData);
+		    layout = new GridLayout();
+		    layout.marginHeight = 0;
+		    layout.marginWidth = 0;
+		    layout.numColumns = 2;
+		    gAddButton.setLayout(layout);
+		    Button addButton = new Button(gAddButton, SWT.PUSH);
+		    Messages.setLanguageText(addButton, "Button.add");
+
+		    addButton.addListener(SWT.Selection, new Listener() {
+			      @Override
+			      public void handleEvent(Event event) {
+
+			    	  int num = COConfigurationManager.getIntParameter( "File Auto Tag Count", 1);
+
+			    	  COConfigurationManager.setParameter( "File Auto Tag Count", num+1);
+
+			    	  Utils.disposeComposite( cFile, false );
+
+			    	  configSectionCreateSupport( cFile );
+
+			    	  cFile.layout( true,  true );
+			      }});
+		    
+		    Label pad = new Label(gAddButton, SWT.NULL);
+		    gridData = new GridData(GridData.FILL_HORIZONTAL);
+		    pad.setLayoutData( gridData);
+			
+			Control[] controls = new Control[]{ gAutoTag };
+			
+			auto_tag_enable.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(controls));
+		}
+		
+		
+		
+		
 		if ( userMode > 0 ){
 
-			Group gIgnoredFiles = new Group(gFile, SWT.NONE);
+				// ignore group 
+			
+			Group gIgnoredFiles = new Group(cFile, SWT.NONE);
 			Messages.setLanguageText(gIgnoredFiles,
 					"ConfigView.section.file.ignore.section");
 			layout = new GridLayout();
@@ -862,19 +982,19 @@ public class ConfigSectionFile
 				// file name character mappings
 
 			if (userMode > 1){
-				Label lFileCharConv = new Label(gFile, SWT.NULL);
+				Label lFileCharConv = new Label(cFile, SWT.NULL);
 				Messages.setLanguageText(lFileCharConv,
 						"ConfigView.section.file.char.conversions");
 
 				gridData = new GridData(GridData.FILL_HORIZONTAL);
 				gridData.horizontalSpan = 2;
-				new StringParameter(gFile, "File.Character.Conversions").setLayoutData(gridData);
+				new StringParameter(cFile, "File.Character.Conversions").setLayoutData(gridData);
 			}
 		}
 
 			// File Deletetion Group
 
-		Group gDeletion = new Group(gFile, SWT.NONE);
+		Group gDeletion = new Group(cFile, SWT.NONE);
 		Messages.setLanguageText(gDeletion,
 				"ConfigView.section.file.deletion.section");
 		layout = new GridLayout();
@@ -957,7 +1077,7 @@ public class ConfigSectionFile
 		}
 
 		if (userMode > 0) {
-			Group gConfigSettings = new Group(gFile, SWT.NONE);
+			Group gConfigSettings = new Group(cFile, SWT.NONE);
 			Messages.setLanguageText(gConfigSettings,
 					"ConfigView.section.file.config.section");
 			layout = new GridLayout();
@@ -983,26 +1103,10 @@ public class ConfigSectionFile
 
 			// check on complete
 			BooleanParameter backupConfig = new BooleanParameter(gConfigSettings,
-					sCurConfigID, "ConfigView.label.backupconfigfiles");
+					sCurConfigID, "ConfigView.label.backupconficFiles");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
 			backupConfig.setLayoutData(gridData);
 		}
-		/*
-		    Button buttonReset = new Button(gFile, SWT.PUSH);
-		    Messages.setLanguageText(buttonReset, "Button.reset");
-		    gridData = new GridData(GridData.FILL_VERTICAL | GridData.VERTICAL_ALIGN_END);
-		  	gridData.horizontalSpan = 2;
-		  	Utils.setLayoutData(buttonReset, gridData);
-		  	buttonReset.addSelectionListener(new SelectionAdapter() {
-		  		public void widgetSelected(SelectionEvent e) {
-		  			for (Iterator iter = allConfigIDs.iterator(); iter.hasNext();) {
-							String sConfigID = (String) iter.next();
-							COConfigurationManager.removeParameter(sConfigID);
-						}
-		  		}
-		  	});
-		*/
-		return gFile;
 	}
 }

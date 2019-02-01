@@ -428,7 +428,7 @@ TagBase
 	public boolean[]
 	isTagAuto()
 	{
-		return( new boolean[]{ false, false });
+		return( new boolean[]{ false, false, false });
 	}
 
 		// visible
