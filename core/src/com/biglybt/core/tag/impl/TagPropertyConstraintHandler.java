@@ -2741,6 +2741,18 @@ TagPropertyConstraintHandler
 												
 						if ( s2.contains( "|" )){
 							
+							if ( s2.contains( " " )){
+								String[] bits = s2.split( "\\|");
+								s2 = "";
+								for ( String bit: bits ){
+									bit = bit.trim();
+									if ( !bit.isEmpty()){
+										s2 += (s2.isEmpty()?"":"|") + bit;
+									}
+								}
+								params[1] = "\"" + s2 + "\"";
+							}
+							
 							String pat_str = "\\Q" + s2.replaceAll("[|]", "\\\\E|\\\\Q") + "\\E";
 
 							Pattern pattern = RegExUtil.getCachedPattern( "tag:constraint:" + tag.getTagUID(), pat_str, case_insensitive?0:(Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
