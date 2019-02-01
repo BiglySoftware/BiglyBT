@@ -170,7 +170,15 @@ TagPropertyConstraintHandler
 				taggableCreated(
 					Taggable		taggable )
 				{
-					apply((DownloadManager)taggable, null, false );
+					DownloadManager dm = (DownloadManager)taggable;
+					
+					long added = dm.getDownloadState().getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME );
+
+						// sanity check
+					
+					boolean	is_new = SystemTime.getCurrentTime() - added < 5*60*1000;
+					
+					apply( dm, null, false, is_new );
 				}
 			});
 	}
@@ -200,12 +208,13 @@ TagPropertyConstraintHandler
 
 						TagConstraint 	constraint 	= (TagConstraint)entry[0];
 						Object			target		= entry[1];
-
+						boolean			is_new		= (Boolean)entry[2];
+						
 						try{
 
 							if ( target instanceof DownloadManager ){
 
-								constraint.apply((DownloadManager)target);
+								constraint.apply((DownloadManager)target, is_new );
 
 							}else{
 
@@ -227,7 +236,8 @@ TagPropertyConstraintHandler
 	private static boolean
 	canProcess(
 		TagConstraint		constraint,
-		DownloadManager		dm )
+		DownloadManager		dm,
+		boolean				is_new )
 	{
 		synchronized( process_lock ){
 
@@ -237,7 +247,7 @@ TagPropertyConstraintHandler
 
 			}else{
 
-				processing_queue.add( new Object[]{ constraint, dm });
+				processing_queue.add( new Object[]{ constraint, dm, is_new });
 
 				return( false );
 			}
@@ -257,7 +267,7 @@ TagPropertyConstraintHandler
 
 			}else{
 
-				processing_queue.add( new Object[]{ constraint, dms });
+				processing_queue.add( new Object[]{ constraint, dms, false });
 
 				return( false );
 			}
@@ -362,7 +372,7 @@ TagPropertyConstraintHandler
 					Tag 		tag,
 					Taggable 	tagged )
 				{
-					apply((DownloadManager)tagged, tag, true );
+					apply((DownloadManager)tagged, tag, true, false );
 				}
 
 				@Override
@@ -371,7 +381,7 @@ TagPropertyConstraintHandler
 					Tag 		tag,
 					Taggable 	tagged )
 				{
-					apply((DownloadManager)tagged, tag, true );
+					apply((DownloadManager)tagged, tag, true, false );
 				}
 			}, false );
 	}
@@ -454,7 +464,7 @@ TagPropertyConstraintHandler
 
 							for ( TagConstraint con: entry.getValue()){
 
-								con.apply( entry.getKey());
+								con.apply( entry.getKey(), false );
 							}
 						}
 
@@ -650,7 +660,8 @@ TagPropertyConstraintHandler
 	apply(
 		final DownloadManager				dm,
 		Tag									related_tag,
-		boolean								auto )
+		boolean								auto,
+		boolean								is_new )
 	{
 		if ( dm.isDestroyed()){
 
@@ -686,7 +697,7 @@ TagPropertyConstraintHandler
 
 					for ( TagConstraint con: cons ){
 
-						con.apply( dm );
+						con.apply( dm, is_new );
 					}
 				}
 			});
@@ -866,7 +877,8 @@ TagPropertyConstraintHandler
 		
 		private final boolean		auto_add;
 		private final boolean		auto_remove;
-
+		private final boolean		new_only;		
+		
 		private final ConstraintExpr	expr;
 
 		private boolean	depends_on_download_state;
@@ -894,12 +906,20 @@ TagPropertyConstraintHandler
 
 				auto_add	= true;
 				auto_remove	= true;
-
+				new_only	= false;
+				
+			}else if ( options.contains( "am=3;" )){
+				
+				auto_add	= false;
+				auto_remove	= false;
+				new_only	= true;
+				
 			}else{
 					// 0 = add+remove; 1 = add only; 2 = remove only
 
 				auto_add 	= !options.contains( "am=2;" );
 				auto_remove = !options.contains( "am=1;" );
+				new_only	= false;
 			}
 			
 			checkStuff();			
@@ -1203,6 +1223,8 @@ TagPropertyConstraintHandler
 				return( "am=1;" );
 			}else if ( auto_remove ){
 				return( "am=2;" );
+			}else if ( new_only ){
+				return( "am=3" );
 			}else{
 				return( "am=0;" );
 			}
@@ -1210,7 +1232,8 @@ TagPropertyConstraintHandler
 
 		private void
 		apply(
-			DownloadManager			dm )
+			DownloadManager			dm,
+			boolean					is_new )
 		{
 			if ( ignoreDownload( dm )){
 
@@ -1227,14 +1250,14 @@ TagPropertyConstraintHandler
 				return;
 			}
 
-			if ( !canProcess( this, dm )){
+			if ( !canProcess( this, dm, is_new )){
 
 				return;
 			}
 
 			Set<Taggable>	existing = tag.getTagged();
 
-			applySupport( existing, dm );
+			applySupport( existing, dm, is_new );
 		}
 
 		private void
@@ -1269,16 +1292,17 @@ TagPropertyConstraintHandler
 					continue;
 				}
 
-				applySupport( existing, dm );
+				applySupport( existing, dm, false );
 			}
 		}
 
 		private void
 		applySupport(
 			Set<Taggable>		existing,
-			DownloadManager		dm )
+			DownloadManager		dm,
+			boolean				is_new )
 		{
-			applySupport2( existing, dm, must_check_dependencies, null );
+			applySupport2( existing, dm, must_check_dependencies, null, is_new );
 		}
 		
 		private void
@@ -1286,16 +1310,31 @@ TagPropertyConstraintHandler
 			Set<Taggable>		existing,
 			DownloadManager		dm,
 			boolean				check_dependencies,
-			Set<TagConstraint>	checked )
+			Set<TagConstraint>	checked,
+			boolean				is_new )
 		{
 			if ( check_dependencies && checked != null && checked.contains( this )){
 				
 				return;
 			}
 			
+			boolean	do_add = auto_add;
+			
+			if ( new_only ){
+				
+				if ( is_new ){
+					
+					do_add = true;
+					
+				}else{
+					
+					return;
+				}
+			}
+			
 			if ( testConstraint( dm, null )){
 
-				if ( auto_add ){
+				if ( do_add ){
 
 					if ( !existing.contains( dm )){
 
@@ -1320,7 +1359,7 @@ TagPropertyConstraintHandler
 										
 										//System.out.println( "checking sub-dep " + dep + ", checked=" + checked );
 										
-										dep.applySupport2( existing, dm, true, checked );
+										dep.applySupport2( existing, dm, true, checked, is_new );
 									
 									}finally{
 										
@@ -1333,7 +1372,7 @@ TagPropertyConstraintHandler
 							
 							if ( recheck ){
 								
-								applySupport2( existing, dm, false, checked );
+								applySupport2( existing, dm, false, checked, is_new );
 									
 								return;
 							}

@@ -70,6 +70,7 @@ public class TagSettingsView
 	private static final String CM_ADD_REMOVE 	= "am=0;";
 	private static final String CM_ADD_ONLY	 	= "am=1;";
 	private static final String CM_REMOVE_ONLY	= "am=2;";
+	private static final String CM_NEW_DLS		= "am=3;";
 
 	private UISWTView swtView;
 
@@ -1144,13 +1145,15 @@ public class TagSettingsView
 					String[] CM_VALUES = {
 							CM_ADD_REMOVE,
 							CM_ADD_ONLY,
-							CM_REMOVE_ONLY
+							CM_REMOVE_ONLY,
+							CM_NEW_DLS,
 					};
 
 					String[] CM_LABELS = {
 							MessageText.getString( "label.addition.and.removal" ),
 							MessageText.getString( "label.addition.only" ),
 							MessageText.getString( "label.removal.only" ),
+							MessageText.getString( "label.new.downloads" ),
 					};
 
 					params.constraintMode = new GenericStringListParameter(
