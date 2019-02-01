@@ -2593,24 +2593,38 @@ TagBase
 
 								String options = vals[1];
 
-								boolean auto_add 	= !options.contains( "am=2;" );
-								boolean auto_remove = !options.contains( "am=1;" );
+								boolean new_dls = options.contains( "am=3;" );
 
-								if ( auto_add && auto_remove ){
-
-								}else if ( auto_add || auto_remove ){
-
+								if ( new_dls ){
+								
 									value += "," + MessageText.getString( "label.scope" );
-
+									
 									value += "=";
-
-									if ( auto_add ){
-
-										value += MessageText.getString( "label.addition.only" );
-
-									}else{
-
-										value += MessageText.getString( "label.removal.only" );
+									
+									value += MessageText.getString( "label.new.downloads" );
+									
+								}else{
+									
+									boolean auto_add 	= !options.contains( "am=2;" );
+									boolean auto_remove = !options.contains( "am=1;" );
+	
+	
+									if ( auto_add && auto_remove ){
+	
+									}else if ( auto_add || auto_remove ){
+	
+										value += "," + MessageText.getString( "label.scope" );
+	
+										value += "=";
+	
+										if ( auto_add ){
+	
+											value += MessageText.getString( "label.addition.only" );
+	
+										}else{
+	
+											value += MessageText.getString( "label.removal.only" );
+										}
 									}
 								}
 							}

@@ -1998,6 +1998,10 @@ TagDownloadWithState
 							}else if ( options.contains( "am=2;" )){
 
 								return( new boolean[]{ false, true });
+								
+							}else if ( options.contains( "am=3;" )){
+								
+								return( new boolean[]{ false, false });
 							}
 						}
 					}
