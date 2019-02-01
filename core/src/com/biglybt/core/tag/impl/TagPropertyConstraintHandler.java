@@ -54,8 +54,10 @@ TagPropertyConstraintHandler
 	implements TagTypeListener, DownloadListener
 {
 	private static final Object DM_LISTENER_ADDED				= new Object();
-	private static final Object DM_FILE_FILE_NAMES 				= new Object();
-	private static final Object DM_FILE_FILE_NAMES_SELECTED 	= new Object();
+	private static final Object DM_FILE_NAMES 					= new Object();
+	private static final Object DM_FILE_NAMES_SELECTED 			= new Object();
+	private static final Object DM_FILE_EXTS					= new Object();
+	private static final Object DM_FILE_EXTS_SELECTED			= new Object();
 	
 	private static final String		EVAL_CTX_COLOURS = "colours";
 	
@@ -95,7 +97,8 @@ TagPropertyConstraintHandler
 			
 			@Override
 			public void filePriorityChanged(DownloadManager download, DiskManagerFileInfo file){
-				download.setUserData( DM_FILE_FILE_NAMES_SELECTED, null );
+				download.setUserData( DM_FILE_NAMES_SELECTED, null );
+				download.setUserData( DM_FILE_EXTS_SELECTED, null );
 			}
 		};
 		
@@ -2057,6 +2060,8 @@ TagPropertyConstraintHandler
 		private static final int	KW_MAX_UP			 	= 32;
 		private static final int	KW_MAX_DOWN			 	= 33;
 		private static final int	KW_FILE_NAMES_SELECTED	= 34;
+		private static final int	KW_FILE_EXTS			= 35;
+		private static final int	KW_FILE_EXTS_SELECTED	= 36;
 
 		static{
 			keyword_map.put( "shareratio", 				new int[]{KW_SHARE_RATIO,			DEP_RUNNING });
@@ -2126,6 +2131,10 @@ TagPropertyConstraintHandler
 			keyword_map.put( "file_names", 				new int[]{KW_FILE_NAMES,			DEP_STATIC });
 			keyword_map.put( "filenamesselected",		new int[]{KW_FILE_NAMES_SELECTED,	DEP_STATIC });
 			keyword_map.put( "file_names_selected",		new int[]{KW_FILE_NAMES_SELECTED,	DEP_STATIC });
+			keyword_map.put( "fileexts",				new int[]{KW_FILE_EXTS,				DEP_STATIC });
+			keyword_map.put( "file_exts",				new int[]{KW_FILE_EXTS,				DEP_STATIC });
+			keyword_map.put( "fileextsselected",		new int[]{KW_FILE_EXTS_SELECTED,	DEP_STATIC });
+			keyword_map.put( "file_exts_selected",		new int[]{KW_FILE_EXTS_SELECTED,	DEP_STATIC });
 			keyword_map.put( "savepath", 				new int[]{KW_SAVE_PATH,				DEP_STATIC });
 			keyword_map.put( "save_path", 				new int[]{KW_SAVE_PATH,				DEP_STATIC });
 			keyword_map.put( "savefolder", 				new int[]{KW_SAVE_FOLDER,			DEP_STATIC });
@@ -2729,24 +2738,40 @@ TagPropertyConstraintHandler
 								case_insensitive = true;
 							}
 						}
-						
-						if ( case_insensitive ){
+												
+						if ( s2.contains( "|" )){
 							
-							s2 = s2.toLowerCase( Locale.US );
-							
+							String pat_str = "\\Q" + s2.replaceAll("[|]", "\\\\E|\\\\Q") + "\\E";
+
+							Pattern pattern = RegExUtil.getCachedPattern( "tag:constraint:" + tag.getTagUID(), pat_str, case_insensitive?0:(Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+
 							for ( String s1: s1s ){
-								
-								if ( s1.toLowerCase( Locale.US).contains( s2 )){
+							
+								if ( pattern.matcher( s1 ).find()){
 									
 									return( true );
 								}
 							}
-						}else{						
-							for ( String s1: s1s ){
+						}else{
 							
-								if ( s1.contains( s2 )){
+							if ( case_insensitive ){
+								
+								s2 = s2.toLowerCase( Locale.US );
+								
+								for ( String s1: s1s ){
 									
-									return( true );
+									if ( s1.toLowerCase( Locale.US).contains( s2 )){
+										
+										return( true );
+									}
+								}
+							}else{						
+								for ( String s1: s1s ){
+								
+									if ( s1.contains( s2 )){
+										
+										return( true );
+									}
 								}
 							}
 						}
@@ -3081,7 +3106,7 @@ TagPropertyConstraintHandler
 					
 					kw = KW_FILE_NAMES;
 					
-					String[] result = (String[])dm.getUserData( DM_FILE_FILE_NAMES );
+					String[] result = (String[])dm.getUserData( DM_FILE_NAMES );
 					
 					if ( result == null ){
 						
@@ -3094,16 +3119,81 @@ TagPropertyConstraintHandler
 							result[i] = files[i].getFile( false ).getName();
 						}
 						
-						dm.setUserData( DM_FILE_FILE_NAMES, result );
+						dm.setUserData( DM_FILE_NAMES, result );
 					}
 					
 					return( result );
 					
+			}else if ( str.equals( "file_exts" ) || str.equals( "fileexts" )){
+					
+					kw = KW_FILE_EXTS;
+					
+					String[] result = (String[])dm.getUserData( DM_FILE_EXTS);
+					
+					if ( result == null ){
+						
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+						
+						Set<String>	exts = new HashSet<>();
+						
+						for ( int i=0;i<files.length;i++){
+							
+							String ext = files[i].getExtension();
+							
+							if ( ext != null && !ext.isEmpty() && !exts.contains( ext )){
+								
+								exts.add( ext.toLowerCase( Locale.US ));
+							}
+						}
+						
+						result = exts.toArray( new String[0] );
+						
+						dm.setUserData( DM_FILE_EXTS, result );
+					}
+					
+					return( result );
+					
+			}else if ( str.equals( "file_exts_selected" ) || str.equals( "fileextsselected" )){
+				
+				kw = KW_FILE_EXTS_SELECTED;
+				
+				String[] result = (String[])dm.getUserData( DM_FILE_EXTS_SELECTED);
+				
+				if ( result == null ){
+					
+					DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+					
+					Set<String>	exts = new HashSet<>();
+					
+					for ( int i=0;i<files.length;i++){
+						
+						if ( files[i].isSkipped()){
+							
+							continue;
+						}
+						
+						String ext = files[i].getExtension();
+						
+						if ( ext != null && !ext.isEmpty() && !exts.contains( ext )){
+							
+							exts.add( ext.toLowerCase( Locale.US ));
+						}
+					}
+					
+					result = exts.toArray( new String[0] );
+					
+					dm.setUserData( DM_FILE_EXTS_SELECTED, result );
+					
+					handler.checkDMListener( dm );
+				}
+				
+				return( result );
+				
 				}else if ( str.equals( "file_names_selected" ) || str.equals( "filenamesselected" )){
 					
 					kw = KW_FILE_NAMES_SELECTED;
 					
-					String[] result = (String[])dm.getUserData( DM_FILE_FILE_NAMES_SELECTED );
+					String[] result = (String[])dm.getUserData( DM_FILE_NAMES_SELECTED );
 					
 					if ( result == null ){
 						
@@ -3123,7 +3213,7 @@ TagPropertyConstraintHandler
 						
 						result = names.toArray( new String[0] );
 						
-						dm.setUserData( DM_FILE_FILE_NAMES_SELECTED, result );
+						dm.setUserData( DM_FILE_NAMES_SELECTED, result );
 						
 						handler.checkDMListener( dm );
 					}
