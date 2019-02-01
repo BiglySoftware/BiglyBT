@@ -97,9 +97,9 @@ public class SelectedContentManager
 				+ "' to "
 				+ currentlySelectedContent.length
 				+ ";"
-				+ (currentlySelectedContent.length > 0 ? currentlySelectedContent[0]
+				+ (currentlySelectedContent.length > 0 ? currentlySelectedContent[0].getDisplayName()
 						: "") + Debug.getCompressedStackTrace());
-						*/
+		*/			
 		if (currentlySelectedContent.length == 0
 				&& SelectedContentManager.viewID != null && viewID != null
 				&& !viewID.equals(SelectedContentManager.viewID)) {

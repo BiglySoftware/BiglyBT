@@ -343,7 +343,10 @@ public class MyTorrentsSuperView
 				child2);
 
 
-    if ( !SPLIT_HORIZONTALLY ){
+    if ( SPLIT_HORIZONTALLY ){
+    	
+    		// the sub-tabs are shared by both leecher/seeding views so we have to inform them which is
+    		// currently active so they accept selected-content change events correctly
     	
 	    torrentview.getComposite().addListener(SWT.FocusIn, new Listener() {
 				@Override
