@@ -116,6 +116,8 @@ public class TorrentOpenOptions
 	private Map<String, Boolean> enabledNetworks = new HashMap<>();
 
 	private List<Tag>			initialTags = new ArrayList<>();
+	private Set<Tag>			autoTags	= new HashSet<>();
+	
 	private Map<String,Object>	initialMetadata;
 	
 	private List<List<String>>	updatedTrackers;
@@ -209,6 +211,7 @@ public class TorrentOpenOptions
 		this.peerSource = toBeCloned.peerSource == null ? null : new HashMap<>(toBeCloned.peerSource);
 		this.enabledNetworks = toBeCloned.enabledNetworks == null ? null : new HashMap<>(toBeCloned.enabledNetworks);
 		this.initialTags = toBeCloned.initialTags == null ? null : new ArrayList<>(toBeCloned.initialTags);
+		this.autoTags = toBeCloned.autoTags == null ? null : new HashSet<>(toBeCloned.autoTags);
 		this.initialMetadata = BEncoder.cloneMap(toBeCloned.initialMetadata);
 		
 		if ( toBeCloned.updatedTrackers != null ){
@@ -463,6 +466,8 @@ public class TorrentOpenOptions
 	public List<Tag>
 	getInitialTags()
 	{
+		applyAutoTagging();
+		
 		return(new ArrayList<>(initialTags));
 	}
 
@@ -578,7 +583,9 @@ public class TorrentOpenOptions
 		return( hide_errors );
 	}
 
-	public TorrentOpenFileOptions[] getFiles() {
+	public TorrentOpenFileOptions[] 
+	getFiles() 
+	{
 		if (files == null && torrent != null) {
 			files = new TorrentOpenFileOptions[torrent.getFiles().length];
 
@@ -609,6 +616,11 @@ public class TorrentOpenOptions
 	public void
 	applySkipConfig()
 	{
+		if ( torrent == null ){
+			
+			return;
+		}
+		
 		TOTorrentFile[] tfiles = torrent.getFiles();
 
 		Set<String>	skip_extensons 	= TorrentUtils.getSkipExtensionsSet();
@@ -677,7 +689,194 @@ public class TorrentOpenOptions
 				files[i].setToDownload( wanted );
 			}
 		}
+		
+		applyAutoTagging();
 	}
+	
+	public void
+	applyAutoTagging()
+	{		
+		if ( !COConfigurationManager.getBooleanParameter( "Files Auto Tag Enable" )){
+			
+			return;
+		}
+	
+		Map<String,long[]>	ext_map = new HashMap<>();
+		
+		TorrentOpenFileOptions[] files = getFiles();
+
+		for ( TorrentOpenFileOptions file: files ){
+			
+			if ( !file.isToDownload()){
+				
+				continue;
+			}
+			
+			String name = file.getDestFileName();
+			
+			int pos = name.lastIndexOf( '.' );
+			
+			if ( pos != -1 ){
+				
+				String ext = name.substring( pos+1 ).trim().toLowerCase( Locale.US );
+				
+				if ( !ext.isEmpty()){
+					
+					long file_size = file.lSize;
+					
+					long[] size = ext_map.get( ext );
+					
+					if ( size == null ){
+						
+						ext_map.put( ext, new long[]{ file_size });
+						
+					}else{
+						
+						size[0] += file_size;
+					}
+				}
+			}
+		}
+		
+		int num = COConfigurationManager.getIntParameter( "Files Auto Tag Count" );
+		
+		TagManager tm = TagManagerFactory.getTagManager();	
+
+		TagType tag_type = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+		
+		List<Tag>	matched_tags	= new ArrayList<>();
+		Tag			max_match_tag	= null;
+		long		max_match_size	= -1;
+		
+		for ( int i=0; i<num; i++ ){
+			
+			String exts = COConfigurationManager.getStringParameter( "File Auto Tag Exts " + (i==0?"":(" " + i )), "");
+			
+			exts = exts.trim().toLowerCase( Locale.US );
+			
+			if ( exts.isEmpty()){
+				
+				continue;
+			}
+			
+			String tag_name 	= COConfigurationManager.getStringParameter( "File Auto Tag Name " + (i==0?"":(" " + i )), "");
+			
+			tag_name = tag_name.trim();
+			
+			if ( tag_name.isEmpty()){
+				
+				continue;
+			}
+			
+			try{			
+				Tag tag = tag_type.getTag( tag_name,  true );
+				
+				if ( tag == null ){
+					
+					tag = tag_type.createTag( tag_name, true );
+					
+					tag.setPublic( false );
+				}
+				
+				String[] bits = exts.replaceAll( ",", ";" ).split( ";" );
+			
+				boolean	matched		= false;
+				long	max_match 	= 0;
+			
+				for ( String bit: bits ){
+					
+					long[] size = ext_map.get( bit.trim());
+					
+					if ( size != null ){
+						
+						matched = true;
+						
+						if ( size[0] > max_match ){
+							
+							max_match = size[0];
+						}
+					}
+				}
+				
+				if ( matched ){
+					
+					matched_tags.add( tag );
+					
+					if ( max_match > max_match_size ){
+						
+						max_match_size 	= max_match;
+						max_match_tag	= tag;
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		initialTags.removeAll( autoTags );
+		
+		Set<Tag>	oldAutoTags = new HashSet<>( autoTags );
+		
+		autoTags.clear();
+		
+		List<Tag>	selected_tags = new ArrayList<>();
+		
+		if ( matched_tags.isEmpty()){
+			
+			String def_tag = COConfigurationManager.getStringParameter( "File Auto Tag Name Default", "" );
+
+			def_tag = def_tag.trim();
+			
+			if ( !def_tag.isEmpty()){
+			
+				try{
+					Tag tag = tag_type.getTag( def_tag,  true );
+					
+					if ( tag == null ){
+						
+						tag = tag_type.createTag( def_tag, true );
+						
+						tag.setPublic( false );
+					}
+					
+					selected_tags.add( tag );
+						
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}else{
+		
+			boolean tag_best = COConfigurationManager.getBooleanParameter( "Files Auto Tag Best Size" );
+			
+			if ( tag_best ){
+				
+				selected_tags.add( max_match_tag );
+				
+			}else{
+				
+				selected_tags.addAll( matched_tags );
+			}
+		}
+		
+		for ( Tag t: selected_tags ){
+		
+			if ( !initialTags.contains( t )){
+				
+				initialTags.add( t );
+			}
+		}
+		
+		autoTags.addAll( selected_tags );
+		
+		if ( !oldAutoTags.equals( autoTags )){
+			
+			initialTagsChanged();
+		}
+	}
+	
 	public long
 	getTotalSize()
 	{
@@ -1037,6 +1236,7 @@ public class TorrentOpenOptions
 		public void toDownloadChanged(TorrentOpenFileOptions torrentOpenFileOptions, boolean toDownload);
 		public void priorityChanged(TorrentOpenFileOptions torrentOpenFileOptions, int priority );
 		public void parentDirChanged();
+		public void initialTagsChanged();
 	}
 
 	public void fileDownloadStateChanged(
@@ -1074,6 +1274,17 @@ public class TorrentOpenOptions
 		}
 	}
 
+	public void initialTagsChanged()
+	{
+		for ( FileListener l : fileListeners) {
+			try{
+				l.initialTagsChanged();
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
+		}
+	}
+	
 	public void
 	setCompleteAction(
 		int		ca )

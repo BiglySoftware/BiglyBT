@@ -84,6 +84,12 @@ public class TorrentOpenFileOptions
 		isValid = true;
 	}
 
+	public TorrentOpenOptions
+	getTorrentOptions()
+	{
+		return( parent );
+	}
+	
 	public int
 	getIndex()
 	{

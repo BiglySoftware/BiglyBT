@@ -54,6 +54,10 @@ public class TableColumnOTOF_Download
 		if (!(ds instanceof TorrentOpenFileOptions)) {
 			return;
 		}
-		((TorrentOpenFileOptions) ds).setToDownload(set);
+		TorrentOpenFileOptions file = (TorrentOpenFileOptions)ds;
+		
+		file.setToDownload(set);
+		
+		file.getTorrentOptions().applyAutoTagging();
 	}
 }

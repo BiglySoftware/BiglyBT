@@ -408,6 +408,9 @@ public class ConfigurationDefaults {
     def.put( "Request Attention On New Download", TRUE );
     def.put( "Activate Window On External Download", TRUE );
     def.put( "Add Torrent Queue Position", ONE );
+    def.put( "Files Auto Tag Enable", FALSE );
+    def.put( "Files Auto Tag Count", ONE );		
+    def.put( "Files Auto Tag Best Size", FALSE);
     
     def.put( "Insufficient Space Download Restart Enable", FALSE );
     def.put( "Insufficient Space Download Restart Period", 10 );

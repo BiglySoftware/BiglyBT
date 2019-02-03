@@ -1802,6 +1802,11 @@ public class OpenTorrentOptionsWindow
 						}
 					}
 				}
+				
+				@Override
+				public void initialTagsChanged(){
+					buildTagButtonPanel();
+				}
 			});
 
 			if ( TagManagerFactory.getTagManager().isEnabled()){
@@ -2453,7 +2458,9 @@ public class OpenTorrentOptionsWindow
 					public void priorityChanged(TorrentOpenFileOptions torrentOpenFileOptions, int priority ){}
 					@Override
 					public void parentDirChanged(){}
-				};
+					@Override
+					public void initialTagsChanged(){}
+			};
 
 			torrentOptions.addListener( file_listener );
 
@@ -4191,6 +4198,7 @@ public class OpenTorrentOptionsWindow
 			if ( changed ){
 				updateFileButtons();
 				updateSize();
+				torrentOptions.applyAutoTagging();
 			}
 		}
 
@@ -5339,6 +5347,31 @@ public class OpenTorrentOptionsWindow
 						}
 					});
 
+					item = new MenuItem(menu, SWT.PUSH);
+					
+					Messages.setLanguageText(item, "OpenTorrentWindow.show.autotag.options");
+
+					item.addSelectionListener(new SelectionAdapter() {
+						@Override
+						public void widgetSelected(SelectionEvent e) {
+							UIFunctions uif = UIFunctionsManager.getUIFunctions();
+
+							if ( uif != null ){
+
+								JSONObject args = new JSONObject();
+
+								args.put( "select", "torrent-add-auto-tag" );
+								
+								String args_str = JSONUtils.encodeToJSON( args );
+								
+								uif.getMDI().showEntryByID(
+										MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
+										"files" + args_str );
+							}
+						}
+					});
+
+					
 					 new MenuItem(menu, SWT.SEPARATOR );
 				}
 

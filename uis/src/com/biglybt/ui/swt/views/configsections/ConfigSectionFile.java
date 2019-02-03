@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.SystemProperties;
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -816,12 +815,12 @@ public class ConfigSectionFile
 			// auto tag group
 		
 		{
-			sCurConfigID = "Files Auto Tag Enable";
-			allConfigIDs.add(sCurConfigID);
-		    BooleanParameter auto_tag_enable = new BooleanParameter(cFile, sCurConfigID, "label.enable.auto.tagging");
+		    BooleanParameter auto_tag_enable = new BooleanParameter(cFile, "Files Auto Tag Enable", "label.enable.auto.tagging");
 		    gridData = new GridData();
 			gridData.horizontalSpan = 2;
 			auto_tag_enable.setLayoutData(gridData);
+			
+			auto_tag_enable.getControl().setData( ConfigView.SELECT_KEY, "torrent-add-auto-tag" );
 			
 			Group gAutoTag = new Group(cFile, SWT.NONE);
 			Messages.setLanguageText(gAutoTag, "label.auto.tagging");
@@ -834,7 +833,7 @@ public class ConfigSectionFile
 			gAutoTag.setLayoutData(gridData);
 
 			
-		    int	num_tags = COConfigurationManager.getIntParameter( "File Auto Tag Count", 1);
+		    int	num_tags = COConfigurationManager.getIntParameter( "Files Auto Tag Count", 1);
 
 		    for ( int i=0;i<num_tags;i++){
 			    Label lExtensions = new Label(gAutoTag, SWT.NULL);
@@ -855,9 +854,18 @@ public class ConfigSectionFile
 			    tagParam.setLayoutData(gridData);
 		    }
 
-		    	// default
+		    	// select best
 		    
 		    Label lPad = new Label(gAutoTag, SWT.NULL);
+	    
+		    BooleanParameter auto_tag_best = new BooleanParameter(gAutoTag, "Files Auto Tag Best Size", "ConfigView.label.auto.tag.best.size");
+		    gridData = new GridData();
+			gridData.horizontalSpan = 3;
+			auto_tag_best.setLayoutData(gridData);
+			
+		    	// default
+		    
+		    lPad = new Label(gAutoTag, SWT.NULL);
 
 		    gridData = new GridData(GridData.FILL_HORIZONTAL);
 		    Label lDefault = new Label(gAutoTag, SWT.NULL);
@@ -894,9 +902,9 @@ public class ConfigSectionFile
 			      @Override
 			      public void handleEvent(Event event) {
 
-			    	  int num = COConfigurationManager.getIntParameter( "File Auto Tag Count", 1);
+			    	  int num = COConfigurationManager.getIntParameter( "Files Auto Tag Count", 1);
 
-			    	  COConfigurationManager.setParameter( "File Auto Tag Count", num+1);
+			    	  COConfigurationManager.setParameter( "Files Auto Tag Count", num+1);
 
 			    	  Utils.disposeComposite( cFile, false );
 
@@ -1103,7 +1111,7 @@ public class ConfigSectionFile
 
 			// check on complete
 			BooleanParameter backupConfig = new BooleanParameter(gConfigSettings,
-					sCurConfigID, "ConfigView.label.backupconficFiles");
+					sCurConfigID, "ConfigView.label.backupconfigfiles");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
 			backupConfig.setLayoutData(gridData);

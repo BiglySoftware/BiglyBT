@@ -334,6 +334,10 @@ implements PaintListener
 	}
 	
 	public boolean updateFields(List<Taggable> taggables) {
+		if (cMainComposite.isDisposed()){
+			return false;
+		}
+		
 		List<Control> layoutChanges = new ArrayList<>();
 		for (Button button : buttons) {
 
