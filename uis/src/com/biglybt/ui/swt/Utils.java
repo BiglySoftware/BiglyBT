@@ -1473,23 +1473,25 @@ public class Utils
 
 		if (!launched && Constants.isUnix) {
 
-			sFileModified = sFileModified.replaceAll( " ", "\\ " );
+			if (!fallbackLaunch("xdg-open", sFileModified)) {
 
-			if (!fallbackLaunch("xdg-open " + sFileModified)) {
+				Debug.out( "Failed to launch '" + sFileModified + "'" );
 
-				if ( !fallbackLaunch("htmlview " + sFileModified)){
-
-					Debug.out( "Failed to launch '" + sFileModified + "'" );
-				}
 			}
 		}
 	}
 
-	private static boolean fallbackLaunch(String filename) {
+	private static boolean fallbackLaunch(String command, String... args) {
 		try {
-			Runtime.getRuntime().exec(filename);
+			List<String> cmdList = new ArrayList<>();
+			cmdList.add(command);
+			cmdList.addAll(Arrays.asList(args));
+			String[] cmdArray = cmdList.toArray(new String[0]);
+
+			Runtime.getRuntime().exec(cmdArray);
+
 			return true;
-		} catch	(Exception e) {
+		} catch	(Exception ignore) {
 			return false;
 		}
 	}
