@@ -4812,6 +4812,8 @@ public class OpenTorrentOptionsWindow
 					});
 			tagButtonsUI.setEnableWhenNoTaggables(true);
 			tagButtonsUI.updateFields(null);
+			
+			tagButtonsArea.getParent().layout( true, true );
 		}
 
 		private boolean removeInitialTag(List<Tag> tags, Tag tag) {
