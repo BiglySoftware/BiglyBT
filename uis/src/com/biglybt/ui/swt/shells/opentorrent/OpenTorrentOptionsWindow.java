@@ -1805,6 +1805,7 @@ public class OpenTorrentOptionsWindow
 				
 				@Override
 				public void initialTagsChanged(){
+					updateStartOptionsHeader();
 					buildTagButtonPanel();
 				}
 			});
