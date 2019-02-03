@@ -95,7 +95,7 @@ public class ColumnProgressETA
 		addDataSourceType(DiskManagerFileInfo.class);
 		initializeAsGraphic(COLUMN_WIDTH);
 		setAlignment(ALIGN_LEAD);
-		setMinWidth(COLUMN_WIDTH);
+		setMinWidth(100);
 
 		myParameterListener = new MyParameterListener();
 		COConfigurationManager.addWeakParameterListener(myParameterListener, true,
