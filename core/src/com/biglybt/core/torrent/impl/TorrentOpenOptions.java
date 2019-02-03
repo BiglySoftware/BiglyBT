@@ -785,7 +785,14 @@ public class TorrentOpenOptions
 			
 				for ( String bit: bits ){
 					
-					long[] size = ext_map.get( bit.trim());
+					bit = bit.trim();
+					
+					if ( bit.startsWith( "." )){
+						
+						bit = bit.substring( 1 );
+					}
+					
+					long[] size = ext_map.get( bit );
 					
 					if ( size != null ){
 						
