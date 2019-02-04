@@ -4091,7 +4091,7 @@ public class Utils
 		
 		scrolled_comp.setLayoutData(gridData);
 	
-	    Composite result = new Canvas(scrolled_comp, SWT.NULL);
+	    Composite result = new Composite(scrolled_comp, SWT.NULL);
 		
 	    scrolled_comp.setContent(result);
 		scrolled_comp.addControlListener(new ControlAdapter() {
