@@ -278,6 +278,8 @@ public class GeneralView
     updateAvailability();
     updatePiecesInfo(true);
 
+    refresh();
+    
     Utils.updateScrolledComposite(scrolled_comp);
     //Utils.changeBackgroundComposite(genComposite,MainWindow.getWindow().getBackground());
   }
