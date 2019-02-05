@@ -1634,25 +1634,27 @@ public class MyTorrentsView
 		}
 	}
 
-  // @see TableSelectionListener#selected(TableRowCore[])
-  @Override
-  public void selected(TableRowCore[] rows) {
-  	updateSelectedContent();
-  	refreshTorrentMenu();
-  }
+	// @see TableSelectionListener#selected(TableRowCore[])
+	@Override
+	public void selected(TableRowCore[] rows) {
+	}
 
 	// @see TableSelectionListener#deselected(TableRowCore[])
 	@Override
 	public void deselected(TableRowCore[] rows) {
-  	updateSelectedContent();
-  	refreshTorrentMenu();
 	}
 
+	@Override
+	public void selectionChanged(TableRowCore[] selected_rows, TableRowCore[] deselected_rows){
+		updateSelectedContent();
+	  	refreshTorrentMenu();
+	}
+	
 	// @see TableSelectionListener#focusChanged(TableRowCore)
 	@Override
 	public void focusChanged(TableRowCore focus) {
 		updateSelectedContent();
-  	refreshTorrentMenu();
+		refreshTorrentMenu();
 	}
 
 	// @see TableSelectionListener#mouseEnter(TableRowCore)

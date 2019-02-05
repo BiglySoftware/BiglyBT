@@ -224,6 +224,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		if (bFireSelection) {
 			TableRowCore[] rows = getSelectedRows();
 			listener.selected(rows);
+			listener.selectionChanged(new TableRowCore[0], rows);
 			listener.focusChanged(getFocusedRow());
 		}
 	}
@@ -265,11 +266,17 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	/**
 	 * @param selectedRows
 	 */
-	public void triggerDefaultSelectedListeners(TableRowCore[] selectedRows,
-			int keyMask, int origin ) {
-		for (Iterator iter = listenersSelection.iterator(); iter.hasNext();) {
-			TableSelectionListener l = (TableSelectionListener) iter.next();
-			l.defaultSelected(selectedRows, keyMask, origin );
+	public void 
+	triggerDefaultSelectedListeners(
+		TableRowCore[] selectedRows,
+		int keyMask, int origin ) 
+	{
+		for ( TableSelectionListener l: listenersSelection) {
+			try{
+				l.defaultSelected(selectedRows, keyMask, origin );
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
 		}
 	}
 
@@ -277,9 +284,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	 * @param eventType
 	 */
 	protected void triggerLifeCycleListener(int eventType) {
-		Object[] listeners = listenersLifeCycle.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableLifeCycleListener l = (TableLifeCycleListener) listeners[i];
+		for ( TableLifeCycleListener l: listenersLifeCycle ){
 			try {
 				l.tableLifeCycleEventOccurred(this, eventType, null);
 			} catch (Exception e) {
@@ -287,15 +292,28 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			}
 		}
 	}
+	
+	public void triggerSelectionChangeListeners(TableRowCore[] selected_rows, TableRowCore[] deselected_rows) {
+		
+		for ( TableSelectionListener l: listenersSelection) {
+			try{
+				l.selectionChanged(selected_rows, deselected_rows);
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
+		}
+	}
 
-	public void triggerSelectionListeners(TableRowCore[] rows) {
+	protected void triggerSelectionListeners(TableRowCore[] rows) {
 		if (rows == null || rows.length == 0) {
 			return;
 		}
-		Object[] listeners = listenersSelection.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableSelectionListener l = (TableSelectionListener) listeners[i];
-			l.selected(rows);
+		for ( TableSelectionListener l: listenersSelection) {
+			try{
+				l.selected(rows);
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
 		}
 	}
 
@@ -303,12 +321,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		if (rows == null) {
 			return;
 		}
-		Object[] listeners = listenersSelection.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableSelectionListener l = (TableSelectionListener) listeners[i];
+		for ( TableSelectionListener l: listenersSelection) {
 			try {
 				l.deselected(rows);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				Debug.out(e);
 			}
 		}
@@ -318,9 +334,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		if (row == null) {
 			return;
 		}
-		Object[] listeners = listenersSelection.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableSelectionListener l = (TableSelectionListener) listeners[i];
+		for ( TableSelectionListener l: listenersSelection) {
 			if (enter) {
 				l.mouseEnter(row);
 			} else {
@@ -330,9 +344,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	}
 
 	protected void triggerFocusChangedListeners(TableRowCore row) {
-		Object[] listeners = listenersSelection.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableSelectionListener l = (TableSelectionListener) listeners[i];
+		for ( TableSelectionListener l: listenersSelection) {
 			l.focusChanged(row);
 		}
 	}
@@ -341,9 +353,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	 *
 	 */
 	protected void triggerTableRefreshListeners() {
-		Object[] listeners = listenersRefresh.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableRefreshListener l = (TableRefreshListener) listeners[i];
+		for (TableRefreshListener l: listenersRefresh ){
 			l.tableRefresh();
 		}
 	}
@@ -1422,7 +1432,11 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		
 		if ( !removedWithSelection.isEmpty()){
 			
-			triggerDeselectionListeners(removedWithSelection.toArray( new TableRowCore[removedWithSelection.size()] ));
+			TableRowCore[] deselected = removedWithSelection.toArray( new TableRowCore[removedWithSelection.size()] );
+			
+			triggerSelectionChangeListeners( new TableRowCore[0], deselected );
+			
+			triggerDeselectionListeners( deselected );
 		}
 
 		if (DEBUGADDREMOVE) {
@@ -2252,7 +2266,14 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 		if (somethingChanged) {
-			uiSelectionChanged(listNewlySelected.toArray(new TableRowCore[0]), oldSelectionList.toArray(new TableRowCore[0]));
+			TableRowCore[] selected 	= listNewlySelected.toArray(new TableRowCore[0]);
+			TableRowCore[] deselected	= oldSelectionList.toArray(new TableRowCore[0]);
+			
+			uiSelectionChanged( selected, deselected );
+			
+			if ( trigger ){
+				triggerSelectionChangeListeners( selected, deselected );
+			}
 		}
 
 		if (trigger && somethingChanged) {
@@ -2281,7 +2302,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			oldSelectionList.addAll(selectedRows);
 		}
 		
-		triggerSelectionListeners(oldSelectionList.toArray(new TableRowCore[0]));
+		TableRowCore[] rows = oldSelectionList.toArray(new TableRowCore[0]);
+		
+		triggerSelectionChangeListeners( rows, rows );
+		triggerSelectionListeners(rows);
 	}
 
 	public abstract boolean isSingleSelection();

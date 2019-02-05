@@ -29,6 +29,19 @@ public interface TableSelectionListener
 
 	public void deselected(TableRowCore[] rows);
 
+		/**
+		 * Use this instead of selected/deselected if it makes more sense
+		 * @param old_rows
+		 * @param new_rows
+		 */
+	
+	public default void
+	selectionChanged(
+		TableRowCore[] 		selected_rows,
+		TableRowCore[] 		deselected_rows )
+	{	
+	}
+	
 	public void focusChanged(TableRowCore focus);
 
 	default public void defaultSelected(TableRowCore[] rows, int stateMask )
