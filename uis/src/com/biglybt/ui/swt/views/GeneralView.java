@@ -835,7 +835,11 @@ public class GeneralView
 	if (pImage != null)
 		pImage.dispose();
 	pImage = null;
-  Utils.disposeComposite(genComposite);
+  
+	Utils.disposeComposite(genComposite);
+	
+	viewBuilt = false;
+	
     COConfigurationManager.removeParameterListener("Graphics Update", this);
   }
 
