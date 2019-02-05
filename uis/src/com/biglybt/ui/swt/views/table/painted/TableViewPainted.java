@@ -255,7 +255,7 @@ public class TableViewPainted
 	}
 
 	private FrequencyLimitedDispatcher	redraw_dispatcher =
-			new FrequencyLimitedDispatcher( new RedrawTableRunnable(), 100 );
+			new FrequencyLimitedDispatcher( new RedrawTableRunnable(), 250 );
 
 	{
 		redraw_dispatcher.setSingleThreaded();
@@ -1503,7 +1503,12 @@ public class TableViewPainted
 				if ( cTable == null || cTable.isDisposed()){
 					SelectedContentManager.removeCurrentlySelectedContentListener( this );
 				}else{
-					redrawTable();
+					//redrawTable();
+					TableRowCore[] rows = getSelectedRows();
+					for (TableRowCore row : rows) {
+						row.invalidate();
+						redrawRow((TableRowPainted) row, false);
+					}
 				}
 			}
 		});
