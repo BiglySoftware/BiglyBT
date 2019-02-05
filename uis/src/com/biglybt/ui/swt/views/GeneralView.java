@@ -124,6 +124,7 @@ public class GeneralView
   BufferedLabel pieceSize;
   Control lblComment;
   BufferedLabel creation_date;
+  MenuItem[]	date_menus;
   BufferedLabel privateStatus;
   Control user_comment;
   BufferedLabel hashFails;
@@ -243,20 +244,47 @@ public class GeneralView
 
     COConfigurationManager.addParameterListener("Graphics Update", this);
   }
+  
+  private boolean viewBuilt = false;
+  
 
   private void swt_refreshInfo() {
   	if (manager == null || parent == null || parent.isDisposed()){
   		ViewUtils.setViewRequiresOneDownload(genComposite);
+  		viewBuilt = false;
   		return;
   	}
-
-  	Utils.disposeComposite(genComposite, false);
 
   	piecesStateCache = new int[manager.getNbPieces()];
 
     piecesStateSkippedMarker		= 0;
     piecesStateFileBoundariesDone	= false;
 
+    if ( !viewBuilt ){
+    
+     	Utils.disposeComposite(genComposite, false);
+
+    	buildView();
+    
+    	viewBuilt = true;
+    }
+    
+    boolean persistent = manager.isPersistent();
+
+    for ( MenuItem mi: date_menus ){
+    	mi.setEnabled( persistent );
+    }
+    
+    updateAvailability();
+    updatePiecesInfo(true);
+
+    Utils.updateScrolledComposite(scrolled_comp);
+    //Utils.changeBackgroundComposite(genComposite,MainWindow.getWindow().getBackground());
+  }
+  
+  private void
+  buildView()
+  {
     this.display = parent.getDisplay();
 
     gFile = new Composite(genComposite, SWT.SHADOW_OUT);
@@ -485,9 +513,7 @@ public class GeneralView
     pieceSize.setLayoutData(gridData);
 
     	// creation date stuff
-    
-    boolean persistent = manager.isPersistent();
-    
+        
     SelectionAdapter cd_listener = 
     	new SelectionAdapter()
 		{
@@ -526,10 +552,9 @@ public class GeneralView
     
     Menu cd_menu = new Menu(label.getShell(),SWT.POP_UP);
 
-	MenuItem   mi_cd = new MenuItem( cd_menu,SWT.NONE );
-	Messages.setLanguageText( mi_cd, "menu.set.date" );
-	mi_cd.addSelectionListener( cd_listener );
-	mi_cd.setEnabled( persistent );
+	MenuItem   mi_cd1 = new MenuItem( cd_menu,SWT.NONE );
+	Messages.setLanguageText( mi_cd1, "menu.set.date" );
+	mi_cd1.addSelectionListener( cd_listener );
 	label.setMenu( cd_menu );
 
     creation_date = new BufferedLabel(gInfo, SWT.LEFT);
@@ -538,10 +563,12 @@ public class GeneralView
 
     cd_menu = new Menu(label.getShell(),SWT.POP_UP);
 
-	mi_cd = new MenuItem( cd_menu,SWT.NONE );
-	Messages.setLanguageText( mi_cd, "menu.set.date" );
-	mi_cd.addSelectionListener( cd_listener );
-	mi_cd.setEnabled( persistent );
+    MenuItem mi_cd2 = new MenuItem( cd_menu,SWT.NONE );
+	Messages.setLanguageText( mi_cd2, "menu.set.date" );
+	mi_cd2.addSelectionListener( cd_listener );
+	
+	date_menus = new MenuItem[]{ mi_cd1, mi_cd2 };
+	
 	new MenuItem( cd_menu, SWT.SEPARATOR );
 	ClipboardCopy.addCopyToClipMenu(
 		cd_menu,
@@ -641,12 +668,6 @@ public class GeneralView
     });
 
     genComposite.layout();
-
-    updateAvailability();
-    updatePiecesInfo(true);
-
-    Utils.updateScrolledComposite(scrolled_comp);
-    //Utils.changeBackgroundComposite(genComposite,MainWindow.getWindow().getBackground());
   }
 
   public Composite getComposite() {
