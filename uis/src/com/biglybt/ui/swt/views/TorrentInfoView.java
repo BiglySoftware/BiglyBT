@@ -380,8 +380,16 @@ public class TorrentInfoView
 			for (int i=0;i<cells.length;i++){
 
 				TableCellCore cell = cells[i];
-				try {cell.refresh();}
-				catch (Exception e) {Debug.printStackTrace(e, "Error refreshing cell: " + cells[i].getTableColumn().getName());}
+				
+				try {
+					cell.refresh();
+					
+					cell.redraw();
+					
+				}catch (Exception e){
+					
+					Debug.printStackTrace(e, "Error refreshing cell: " + cells[i].getTableColumn().getName());
+				}
 			}
 		}
 	}
