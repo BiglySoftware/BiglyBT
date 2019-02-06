@@ -169,8 +169,20 @@ public class UIConfigDefaultsSWT
 		def.addParameter( "Library.ShowTagButtons.CompOnly", false );
 		def.addParameter( "Library.ShowTagButtons.Inclusive", true );
 		def.addParameter( "open.torrent.window.rename.on.tlf.change", true );
-		def.addParameter( "Library.TorrentViewSplitHorizontal", true );
-
+		
+		// def.addParameter( "Library.TorrentViewSplitHorizontal", true );
+		
+		def.addParameter( "Library.TorrentViewSplitMode", 0 );
+		
+		if ( COConfigurationManager.hasParameter("Library.TorrentViewSplitHorizontal", true )){
+			
+			boolean old = COConfigurationManager.getBooleanParameter( "Library.TorrentViewSplitHorizontal");
+			
+			COConfigurationManager.setParameter( "Library.TorrentViewSplitMode", old?0:1 );
+			
+			COConfigurationManager.removeParameter( "Library.TorrentViewSplitHorizontal" );
+		}
+		
 		def.addParameter( "Library.LaunchWebsiteInBrowser", true );
 		def.addParameter( "Library.LaunchWebsiteInBrowserAnon", false );
 		def.addParameter( "Library.LaunchWebsiteInBrowserDirList", false );

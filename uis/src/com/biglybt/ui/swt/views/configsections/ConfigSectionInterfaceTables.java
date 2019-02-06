@@ -327,16 +327,29 @@ public class ConfigSectionInterfaceTables
 								SWT.LEFT, true, false, 2, 1));
 		
 
-			new BooleanParameter(cLibrary, "Library.TorrentViewSplitHorizontal", "ConfigView.section.style.TorrentViewSplitHorizontal").setLayoutData(new GridData(SWT.FILL,
-					SWT.LEFT, true, false, 2, 1));
+				// split mode
+			
+			label = new Label(cLibrary, SWT.NULL);
+			Messages.setLanguageText(label, "ConfigView.library.split.mode");
 
+			
+			String 	spltLabels[] 	= new String[4];
+			int 	splitValues[] 	= new int[spltLabels.length];
+
+			for (int i = 0; i < spltLabels.length; i++) {
+
+				spltLabels[i] 	= MessageText.getString( "ConfigView.library.split." + i );
+				splitValues[i] 	= i;
+			}
+			
+			new IntListParameter( cLibrary, "Library.TorrentViewSplitMode", spltLabels, splitValues );
+				
+				// fancy menu
 			
 			new BooleanParameter(cLibrary, "Library.showFancyMenu",  "ConfigView.section.style.ShowFancyMenu").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
 					true, false, 2, 1));
 
-
-
-			// double-click
+				// double-click
 
 			label = new Label(cLibrary, SWT.NULL);
 			Messages.setLanguageText(label, "ConfigView.label.dm.dblclick");

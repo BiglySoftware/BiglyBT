@@ -67,12 +67,17 @@ public class MyTorrentsSuperView
 {
 	private static int SASH_WIDTH = 5;
 
-	private static boolean	SPLIT_HORIZONTALLY = true;
+		// 0: incomplete top, complete bottom
+		// 1: incomplete left, complete right
+		// 2: complete top, incomplete bottom
+		// 3: complete left, incomplete right
+	
+	private static int	SPLIT_MODE = 0;	
 
 	static{
 		COConfigurationManager.addAndFireParameterListener(
-			"Library.TorrentViewSplitHorizontal",
-			(name)->{ SPLIT_HORIZONTALLY= COConfigurationManager.getBooleanParameter( name );});
+			"Library.TorrentViewSplitMode",
+			(name)->{ SPLIT_MODE= COConfigurationManager.getIntParameter( name );});
 	}
 	
 	private MyTorrentsView torrentview;
@@ -152,7 +157,9 @@ public class MyTorrentsSuperView
   	layout.marginWidth = 0;
   	child1.setLayout(layout);
 
-  	final Sash sash = Utils.createSash( form, SASH_WIDTH, SPLIT_HORIZONTALLY?SWT.HORIZONTAL:SWT.VERTICAL );
+  	boolean split_horizontally = SPLIT_MODE == 0 || SPLIT_MODE == 2;
+  	
+  	final Sash sash = Utils.createSash( form, SASH_WIDTH, split_horizontally?SWT.HORIZONTAL:SWT.VERTICAL );
 
     child2 = new Composite(form,SWT.NULL);
     layout = new GridLayout();
@@ -181,7 +188,7 @@ public class MyTorrentsSuperView
     double pct = (float)weight / 10000;
     sash.setData("PCT", new Double(pct));
 
-    if ( SPLIT_HORIZONTALLY ){
+    if ( split_horizontally ){
 	    // FormData for table child1
 	    formData = new FormData();
 	    formData.left = new FormAttachment(0, 0);
@@ -334,35 +341,40 @@ public class MyTorrentsSuperView
   }
 
   private void initializeWithCore(Core core, Composite parent) {
+
+	boolean split_horizontally 	= SPLIT_MODE == 0 || SPLIT_MODE == 2;
+	boolean switch_kids			= SPLIT_MODE == 2 || SPLIT_MODE == 3;
+
     torrentview = createTorrentView(core,
 				TableManager.TABLE_MYTORRENTS_INCOMPLETE, false, getIncompleteColumns(),
-				child1);
+				switch_kids?child2:child1);
 
     seedingview = createTorrentView(core,
 				TableManager.TABLE_MYTORRENTS_COMPLETE, true, getCompleteColumns(),
-				child2);
-
-
-    if ( SPLIT_HORIZONTALLY ){
+				switch_kids?child1:child2);
+    
+    if ( split_horizontally ){
     	
     		// the sub-tabs are shared by both leecher/seeding views so we have to inform them which is
     		// currently active so they accept selected-content change events correctly
     	
-	    torrentview.getComposite().addListener(SWT.FocusIn, new Listener() {
+    	MyTorrentsView topView 		= switch_kids?seedingview:torrentview;
+    	MyTorrentsView bottomView 	= switch_kids?torrentview:seedingview;
+    	
+    	topView.getComposite().addListener(SWT.FocusIn, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					seedingview.getTableView().getTabsCommon().setTvOverride(torrentview.getTableView());
+					bottomView.getTableView().getTabsCommon().setTvOverride(topView.getTableView());
 				}
 			});
 	
-	    seedingview.getComposite().addListener(SWT.FocusIn, new Listener() {
+    	bottomView.getComposite().addListener(SWT.FocusIn, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					seedingview.getTableView().getTabsCommon().setTvOverride(null);
+					bottomView.getTableView().getTabsCommon().setTvOverride(null);
 				}
 			});
     }
-    
 
     	// delegate selections from the incomplete view to the sub-tabs owned by the seeding view
 
@@ -390,9 +402,9 @@ public class MyTorrentsSuperView
 
 	    				TableViewSWT_TabsCommon target_tabs;
 	    				
-						if ( SPLIT_HORIZONTALLY ){
+						if ( split_horizontally ){
 
-							target_tabs = comp_tv.getTabsCommon();
+							target_tabs = switch_kids?incomp_tv.getTabsCommon():comp_tv.getTabsCommon();
 
 						}else{
 						
@@ -633,8 +645,27 @@ public class MyTorrentsSuperView
 		TableColumnCore[] 	columns,
 		Composite 			c )
 	{
-		MyTorrentsView view = new MyTorrentsView(_core, tableID,
-				isSeedingView, columns, txtFilter, cCats, SPLIT_HORIZONTALLY?isSeedingView:true  );
+		boolean split_horizontally 	= SPLIT_MODE == 0 || SPLIT_MODE == 2;
+		boolean switch_kids			= SPLIT_MODE == 2 || SPLIT_MODE == 3;
+
+		boolean support_tabs;
+		
+		if ( split_horizontally ){
+			
+			if ( switch_kids ){
+				
+				support_tabs = !isSeedingView;
+				
+			}else{
+				
+				support_tabs = isSeedingView;
+			}
+		}else{
+			
+			support_tabs = true;
+		}
+						
+		MyTorrentsView view = new MyTorrentsView( _core, tableID, isSeedingView, columns, txtFilter, cCats, support_tabs  );
 
 		try {
 			UISWTViewImpl swtView = new UISWTViewImpl(tableID, UISWTInstance.VIEW_MAIN, false);
@@ -647,19 +678,8 @@ public class MyTorrentsSuperView
 			Debug.out(e);
 		}
 
-		/*
-		c.addListener(SWT.Activate, new Listener() {
-			public void handleEvent(Event event) {
-				viewActivated();
-			}
-		});
-		c.addListener(SWT.Deactivate, new Listener() {
-			public void handleEvent(Event event) {
-				viewDeactivated();
-			}
-		});
-		*/
 		c.layout();
+		
 		return view;
 	}
 
@@ -682,7 +702,7 @@ public class MyTorrentsSuperView
 		switch (event.getType()) {
 			case UISWTViewEvent.TYPE_CREATE:
 				swtView = (UISWTView) event.getData();
-      	swtView.setToolBarListener(this);
+				swtView.setToolBarListener(this);
 				swtView.setTitle(getFullTitle());
 				break;
 
