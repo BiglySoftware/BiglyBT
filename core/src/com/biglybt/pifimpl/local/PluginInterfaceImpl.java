@@ -126,6 +126,7 @@ PluginInterfaceImpl
   {
 	  	// check we're being created by the core
 
+	  /*
 	  StackTraceElement[] stack = Thread.currentThread().getStackTrace();
 
 	  int	pos = 0;
@@ -151,7 +152,8 @@ PluginInterfaceImpl
 
 		  throw( new PluginException( "Subclassing not permitted" ));
 	  }
-
+	  */
+	  
 	  plugin				= _plugin;
 	  initialiser			= _initialiser;
 	  initialiser_key		= _initialiser_key;
@@ -166,6 +168,7 @@ PluginInterfaceImpl
 	  ipc_interface			= new IPCInterfaceImpl( initialiser, plugin );
 	  state               	= new PluginStateImpl(this, initialiser);
 
+	  /*
 	  boolean verified 	= false;
 	  boolean bad		= false;
 
@@ -200,6 +203,7 @@ PluginInterfaceImpl
 	  }
 
 	  PluginInitializer.setVerified( this, plugin, verified, bad );
+	  */
   }
 
   	@Override
