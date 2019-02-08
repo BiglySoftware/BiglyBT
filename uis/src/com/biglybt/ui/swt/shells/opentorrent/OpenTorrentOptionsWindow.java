@@ -6540,56 +6540,53 @@ public class OpenTorrentOptionsWindow
 				}else{
 	
 					newSavePath = torrentOptions.getParentDir();
+				}			
+	
+				int	 limit = COConfigurationManager.getIntParameter( "saveTo_list.max_entries" );
+
+				if ( limit >= 0 ){
+
+					List<String> oldDirList = COConfigurationManager.getStringListParameter("saveTo_list");
+					
+					newSavePath = new File( newSavePath ).getAbsolutePath();
+					
+					LinkedList<String>	newDirList	= new LinkedList<>();
+	
+					newDirList.add( newSavePath );
+					
+					Set<String>	existing = new HashSet<>();
+					
+					existing.addAll( newDirList );
+					
+					for ( String entry: oldDirList ){
+						
+						if ( !existing.contains( entry )){
+							
+							existing.add( entry );
+							
+							newDirList.add( entry );
+						}
+					}
+					
+					if ( limit > 0 ){
+						
+						while( newDirList.size() > limit ){
+							
+							newDirList.removeLast();
+						}
+					}
+
+					if ( !oldDirList.equals( newDirList )){
+						
+						COConfigurationManager.setParameter("saveTo_list", newDirList );
+						
+						COConfigurationManager.save();
+					}
 				}
-				
-				if (!newSavePath.equals(sDefaultPath)) {
-	
-					int	 limit = COConfigurationManager.getIntParameter( "saveTo_list.max_entries" );
-	
-					if ( limit >= 0 ){
-	
-						List<String> oldDirList = COConfigurationManager.getStringListParameter("saveTo_list");
-						
-						newSavePath = new File( newSavePath ).getAbsolutePath();
-						
-						LinkedList<String>	newDirList	= new LinkedList<>();
-		
-						newDirList.add( newSavePath );
-						
-						Set<String>	existing = new HashSet<>();
-						
-						existing.addAll( newDirList );
-						
-						for ( String entry: oldDirList ){
-							
-							if ( !existing.contains( entry )){
-								
-								existing.add( entry );
-								
-								newDirList.add( entry );
-							}
-						}
-						
-						if ( limit > 0 ){
-							
-							while( newDirList.size() > limit ){
-								
-								newDirList.removeLast();
-							}
-						}
-	
-						if ( !oldDirList.equals( newDirList )){
-							
-							COConfigurationManager.setParameter("saveTo_list", newDirList );
-							
-							COConfigurationManager.save();
-						}
-					}
-	
-					if (COConfigurationManager.getBooleanParameter("DefaultDir.AutoUpdate")){
-						
-						COConfigurationManager.setParameter( PARAM_DEFSAVEPATH, newSavePath );
-					}
+
+				if (COConfigurationManager.getBooleanParameter("DefaultDir.AutoUpdate")){
+					
+					COConfigurationManager.setParameter( PARAM_DEFSAVEPATH, newSavePath );
 				}
 			}
 
