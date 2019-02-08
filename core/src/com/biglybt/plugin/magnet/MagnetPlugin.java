@@ -1833,7 +1833,6 @@ MagnetPlugin
 		}
 
 		final byte[][]		result_holder 		= { null };
-		final Object[][]	result_md			= { null };
 		final Throwable[] 	result_error 		= { null };
 		final boolean[]		manually_cancelled	= { false };
 		
@@ -2145,8 +2144,63 @@ MagnetPlugin
 						first_download = false;
 					}
 
-					final DistributedDatabase db = plugin_interface.getDistributedDatabase();
+				
+					// final DistributedDatabase db = plugin_interface.getDistributedDatabase();
+					// blocking call above, nasty
+					
+					DistributedDatabase[]	db_holder	= {null};
+					AESemaphore				db_waiter	= new AESemaphore( "grab db" );
+					
+					new AEThread2( "grab ddb" ){
+						@Override
+						public void run()
+						{
+							try{
+								DistributedDatabase db = plugin_interface.getDistributedDatabase();
+								
+								synchronized( db_holder ){
+									
+									db_holder[0] = db;
+								}
+							}finally{
+								db_waiter.release();
+							}
+						}
+					}.start();
 
+					while( true ){
+						
+						if ( db_waiter.reserve( 100 )){
+							
+							break;
+						}
+						
+						if ( listener != null && listener.cancelled()){
+
+							return( null );
+						}
+
+						synchronized( result_holder ){
+
+							if ( result_holder[0] != null ){
+
+								return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+							}
+							
+							if ( manually_cancelled[0] ){
+							
+								throw( new Exception( "Manually cancelled" ));
+							}
+						}
+					}
+					
+					DistributedDatabase db;
+					
+					synchronized( db_holder ){
+						
+						db = db_holder[0];
+					}
+					
 					if ( db.isAvailable()){
 
 						final List			potential_contacts 		= new ArrayList();
