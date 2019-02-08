@@ -451,6 +451,8 @@ public class MainMDISetup
 									DownloadStubEvent event )
 								{
 									ViewTitleInfoManager.refreshTitleInfo( title_info );
+									
+									entry.redraw();
 								}
 							};
 

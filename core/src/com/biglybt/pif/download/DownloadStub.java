@@ -51,6 +51,12 @@ DownloadStub
 	public String
 	getSavePath();
 
+	public default String
+	getMainTracker()
+	{
+		return( null );
+	}
+	
 	public DownloadStubFile[]
 	getStubFiles();
 

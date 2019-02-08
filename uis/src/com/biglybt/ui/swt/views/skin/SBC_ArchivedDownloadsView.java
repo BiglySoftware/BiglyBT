@@ -208,6 +208,14 @@ public class SBC_ArchivedDownloadsView
 					}
 				});
 
+		tableManager.registerColumn(DownloadStub.class, ColumnArchiveDLMainTracker.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnArchiveDLMainTracker(column);
+					}
+				});
+
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
 					ColumnArchiveDLName.COLUMN_ID,
