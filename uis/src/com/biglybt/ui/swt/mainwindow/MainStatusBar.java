@@ -2137,6 +2137,7 @@ public class MainStatusBar
 		} else if (!state && progressBar.isVisible()) {
 			progressBar.setVisible(false);
 			progressGridData.widthHint = 0;
+			setStatusText( "" );
 			statusBar.layout();
 		}
 	}
@@ -2217,7 +2218,7 @@ public class MainStatusBar
 				/*
 				 * Update status text
 				 */
-				if (isAZ3) {
+				if (false) {
 					statusText.setText(pReport.getName());
 				} else {
 					setStatusText("!" + pReport.getName() + "!");
@@ -2230,7 +2231,7 @@ public class MainStatusBar
 				 */
 				showProgressBar(false);
 
-				if (isAZ3) {
+				if (false) {
 					statusText.setText("");
 				} else {
 					setStatusText(null);

@@ -40,6 +40,8 @@ public class AZProgressBar
 
 	private StackLayout stack = null;
 
+	private boolean visible;
+	
 	/**
 	 * Construct a progress bar initialized as incremental and no input button
 	 * @param parent
@@ -66,6 +68,8 @@ public class AZProgressBar
 		setLayout(stack);
 		pack();
 
+		visible = super.isVisible();
+		
 		setIndeterminate(isIndeterminate);
 	}
 
@@ -110,6 +114,24 @@ public class AZProgressBar
 
 	}
 
+	public void
+	setVisible(
+		boolean		b )
+	{
+		visible	= b;
+		
+		super.setVisible( b );
+	}
+	
+	public boolean
+	isVisible()
+	{
+			// we want 'visible' to not be dependent on whether the widget is actually visible on screen
+			// otherwise if app is minimized to tray things break
+		
+		return( visible );
+	}
+	
 	public int getMaximum() {
 		return incrementalProgressBar.getMaximum();
 	}
