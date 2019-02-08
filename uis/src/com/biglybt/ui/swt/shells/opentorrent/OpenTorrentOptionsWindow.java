@@ -1700,8 +1700,6 @@ public class OpenTorrentOptionsWindow
 
 		private Combo cmbStartMode;
 
-		private List<String> dirList;
-
 		private volatile boolean diskFreeInfoRefreshPending = false;
 
 		private volatile boolean diskFreeInfoRefreshRunning = false;
@@ -4329,8 +4327,11 @@ public class OpenTorrentOptionsWindow
 			});
 
 			updateDataDirCombo();
-			dirList = COConfigurationManager.getStringListParameter("saveTo_list");
+			
+			List<String> dirList = COConfigurationManager.getStringListParameter("saveTo_list");
+			
 			for (String s : dirList) {
+				
 				if (torrentOptions == null || !s.equals(torrentOptions.getParentDir())) {
 					cmbDataDir.add(s);
 				}
@@ -4390,12 +4391,17 @@ public class OpenTorrentOptionsWindow
 				txtSubFolder.setLayoutData(grid_data);
 
 				txtSubFolder.setText( top );
-				
+								
+				torrentOptions.addListener((TorrentOpenOptions.ParentDirChangedListener) () -> txtSubFolder.setText(new File (torrentOptions.getDataDir()).getName()) );
+						
 				txtSubFolder.addFocusListener(
 					new FocusListener(){
 						
 						@Override
 						public void focusLost(FocusEvent e){
+							
+							// remember we know  we're not a simple torrent here as not shown if so
+							
 							String str = txtSubFolder.getText().trim();
 							
 							File data_dir = new File( torrentOptions.getDataDir());
@@ -4410,20 +4416,7 @@ public class OpenTorrentOptionsWindow
 								
 								File new_dir = new File( data_dir.getParentFile(), str );
 								
-								torrentOptions.setExplicitDataDir( new_dir.getParentFile().getAbsolutePath(), str );
-
-								if ( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" )){
-
-									torrentOptions.setManualRename( str );
-
-								}else{
-
-									torrentOptions.setManualRename( null );
-								}
-
-								updateDataDirCombo();
-
-								cmbDataDirChanged();
+								setTopLevelFolder( new_dir, false );
 							}
 						}
 						
@@ -5577,38 +5570,7 @@ public class OpenTorrentOptionsWindow
 					}
 				}
 
-				File new_parent = newDir.getParentFile();
-
-				if ( new_parent == null ){
-
-					Debug.out( "Invalid save path, parent folder is null" );
-
-					return;
-				}
-
-				torrentOptions.setExplicitDataDir( new_parent.getAbsolutePath(), newDir.getName());
-
-				if ( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" )){
-
-					torrentOptions.setManualRename( newDir.getName());
-
-				}else{
-
-					torrentOptions.setManualRename( null );
-				}
-
-				updateDataDirCombo();
-
-				cmbDataDirChanged();
-
-
-				/* old window used to reset this - not sure why, if the user's
-				 * made some per-file changes already then we should keep them
-				for ( TorrentOpenFileOptions tfi: torrentOptions.getFiles()){
-
-					tfi.setFullDestName( null );
-				}
-				*/
+				setTopLevelFolder( newDir, false );
 			}
 		}
 
@@ -5648,40 +5610,40 @@ public class OpenTorrentOptionsWindow
 
 				File newDir = oldDir.getParentFile();
 
-				File newParent  = newDir.getParentFile();
-				if ( newParent == null ){
-
-					Debug.out( "Invalid save path, parent folder is null" );
-
-					return;
-				}
-
-				torrentOptions.setExplicitDataDir( newParent.getAbsolutePath(), newDir.getName());
-
-				if ( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" )){
-
-					torrentOptions.setManualRename( newParent.getName());
-
-				}else{
-
-					torrentOptions.setManualRename( null );
-				}
-
-				updateDataDirCombo();
-
-				cmbDataDirChanged();
-
-
-				/* old window used to reset this - not sure why, if the user's
-				 * made some per-file changes already then we should keep them
-				for ( TorrentOpenFileOptions tfi: torrentOptions.getFiles()){
-
-					tfi.setFullDestName( null );
-				}
-				*/
+				setTopLevelFolder( newDir, true );
 			}
 		}
 
+		private void
+		setTopLevelFolder(
+			File		newDir,
+			boolean		removedTop )
+		{
+			File newParent = newDir.getParentFile();
+			
+			if ( newParent == null ){
+
+				Debug.out( "Invalid save path, parent folder is null" );
+
+				return;
+			}
+			
+			torrentOptions.setExplicitDataDir( newParent.getAbsolutePath(), newDir.getName(), removedTop );
+
+			if ( COConfigurationManager.getBooleanParameter( "open.torrent.window.rename.on.tlf.change" )){
+
+				torrentOptions.setManualRename( newDir.getName());
+
+			}else{
+
+				torrentOptions.setManualRename( null );
+			}
+
+			updateDataDirCombo();
+
+			cmbDataDirChanged();
+		}
+		
 		private void changeFileDestination(TorrentOpenFileOptions[] infos, boolean allAtOnce ) {
 
 			if ( allAtOnce && infos.length > 1 ){
@@ -6554,89 +6516,79 @@ public class OpenTorrentOptionsWindow
 			{
 				String sDefaultPath = COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH);
 	
-				String dataDir;
+				String newSavePath;
 	
 				if ( torrentOptions.isExplicitDataDir()){
 	
 						// multi-file torrent with a new sub-dir means we want the default save location
 						// to be the parent, not the sub-dir
 					
-					dataDir = torrentOptions.getDataDir();
+					newSavePath = torrentOptions.getDataDir();
 	
 					if ( torrentOptions.getSubDir() != null && !torrentOptions.isSimpleTorrent()){
 						
-						dataDir = new File( dataDir ).getParent();
+							// except for in the case where the user explicitly removed the top level as in 
+							// this case the user is trying to flatten the save space out and the target dir
+							// wil be where they want subsequent things to go as well (this is explicit request
+							// from a user and a regression due to the previous change here to save parent)
+						
+						if ( !torrentOptions.isRemovedTopLevel()){
+						
+							newSavePath = new File( newSavePath ).getParent();
+						}
 					}
 				}else{
 	
-					dataDir = torrentOptions.getParentDir();
+					newSavePath = torrentOptions.getParentDir();
 				}
 				
-				if (!dataDir.equals(sDefaultPath)) {
+				if (!newSavePath.equals(sDefaultPath)) {
 	
 					int	 limit = COConfigurationManager.getIntParameter( "saveTo_list.max_entries" );
 	
 					if ( limit >= 0 ){
 	
-						// Move sDestDir to top of list
-	
-						// First, check to see if sDestDir is already in the list
-						File fDestDir = new File(dataDir);
-						int iDirPos = -1;
-						for (int i = 0; i < dirList.size(); i++) {
-							String sDirName = dirList.get(i);
-							File dir = new File(sDirName);
-							if (dir.equals(fDestDir)) {
-								iDirPos = i;
-								break;
+						List<String> oldDirList = COConfigurationManager.getStringListParameter("saveTo_list");
+						
+						newSavePath = new File( newSavePath ).getAbsolutePath();
+						
+						LinkedList<String>	newDirList	= new LinkedList<>();
+		
+						newDirList.add( newSavePath );
+						
+						Set<String>	existing = new HashSet<>();
+						
+						existing.addAll( newDirList );
+						
+						for ( String entry: oldDirList ){
+							
+							if ( !existing.contains( entry )){
+								
+								existing.add( entry );
+								
+								newDirList.add( entry );
+							}
+						}
+						
+						if ( limit > 0 ){
+							
+							while( newDirList.size() > limit ){
+								
+								newDirList.removeLast();
 							}
 						}
 	
-						// If already in list, remove it
-						if (iDirPos > 0 && iDirPos < dirList.size())
-							dirList.remove(iDirPos);
-	
-						// and add it to the top
-						dirList.add(0, dataDir );
-	
-						// Limit
-						if (limit > 0 && dirList.size() > limit){
-							dirList.remove(dirList.size() - 1);
+						if ( !oldDirList.equals( newDirList )){
+							
+							COConfigurationManager.setParameter("saveTo_list", newDirList );
+							
+							COConfigurationManager.save();
 						}
-	
-						// Temporary list cleanup
-						try {
-							for (int j = 0; j < dirList.size(); j++) {
-								File dirJ = new File(dirList.get(j));
-								for (int i = 0; i < dirList.size(); i++) {
-									try {
-										if (i == j)
-											continue;
-	
-										File dirI = new File(dirList.get(i));
-	
-										if (dirI.equals(dirJ)) {
-											dirList.remove(i);
-											// dirList shifted up, fix indexes
-											if (j > i)
-												j--;
-											i--;
-										}
-									} catch (Exception e) {
-										// Ignore
-									}
-								}
-							}
-						} catch (Exception e) {
-							// Ignore
-						}
-	
-						COConfigurationManager.setParameter("saveTo_list", dirList);
-						COConfigurationManager.save();
 					}
 	
 					if (COConfigurationManager.getBooleanParameter("DefaultDir.AutoUpdate")){
-						COConfigurationManager.setParameter( PARAM_DEFSAVEPATH, dataDir );
+						
+						COConfigurationManager.setParameter( PARAM_DEFSAVEPATH, newSavePath );
 					}
 				}
 			}

@@ -83,6 +83,7 @@ public class TorrentOpenOptions
 	private String sDestSubDir;
 
 	private boolean explicitDataDir;
+	private boolean removedTopLevel;
 
 	/** @todo: getter/setters */
 	private TOTorrent torrent;
@@ -287,13 +288,15 @@ public class TorrentOpenOptions
 	public void
 	setExplicitDataDir(
 		String		parent_dir,
-		String		sub_dir )
+		String		sub_dir,
+		boolean		_removedTopLevel )
 	{
 		sDestDir 	= parent_dir;
 		sDestSubDir	= sub_dir;
 
 		explicitDataDir	= true;
-
+		removedTopLevel	= _removedTopLevel;
+		
 		parentDirChanged();
 	}
 
@@ -301,6 +304,12 @@ public class TorrentOpenOptions
 	isExplicitDataDir()
 	{
 		return( explicitDataDir );
+	}
+	
+	public boolean
+	isRemovedTopLevel()
+	{
+		return( removedTopLevel );
 	}
 
 	public boolean
@@ -1244,6 +1253,14 @@ public class TorrentOpenOptions
 		public void priorityChanged(TorrentOpenFileOptions torrentOpenFileOptions, int priority );
 		public void parentDirChanged();
 		public void initialTagsChanged();
+	}
+	
+	public interface ParentDirChangedListener extends FileListener
+	{
+		public default void toDownloadChanged(TorrentOpenFileOptions torrentOpenFileOptions, boolean toDownload){};
+		public default  void priorityChanged(TorrentOpenFileOptions torrentOpenFileOptions, int priority ){};
+		public void parentDirChanged();
+		public default void initialTagsChanged(){};
 	}
 
 	public void fileDownloadStateChanged(
