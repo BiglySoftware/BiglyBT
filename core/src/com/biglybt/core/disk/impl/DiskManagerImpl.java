@@ -1338,7 +1338,22 @@ DiskManagerImpl
 	        	boolean successfulAlloc = false;
 
 	        	try {
-	        		successfulAlloc = writer.zeroFile( fileInfo, target_length );
+	        		
+	        		long start_from = 0;
+	        		
+	        		if ( existing_length > 0 && existing_length < target_length ){
+	        			
+	        				// if someone has stopped a download and dropped in a file that is too short 
+	        				// then we don't want to zero the entire thing in case they have a file they believe is
+	        				// partially correct and they're rechecking it
+	        			
+	        			if ( download_manager.getState() == DownloadManager.STATE_CHECKING ){
+	        				
+	        				start_from = existing_length;
+	        			}
+	        		}
+	        		
+	        		successfulAlloc = writer.zeroFile( fileInfo, start_from, target_length );
 
 	        		if ( successfulAlloc && !stop_after_start[0] ){
 	        				        			
