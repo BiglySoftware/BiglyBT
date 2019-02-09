@@ -36,6 +36,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.MenuEvent;
@@ -44,15 +45,21 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Spinner;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
@@ -100,6 +107,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
@@ -2519,21 +2527,46 @@ public class ManagerUtils {
 		Composite c_mode = so_mode.getComposite();
 		c_mode.setLayoutData( Utils.getFilledFormData());
 		
-		GridLayout layout = new GridLayout( 3, false );
+		FormLayout layout = new FormLayout();
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		c_mode.setLayout( layout);
 		
 		Button mode_link = new Button( c_mode, SWT.RADIO );
-		mode_link.setLayoutData( new GridData());
-	
+		FormData	fd = new FormData();
+		fd.top=new FormAttachment(c_mode,0);
+		fd.bottom=new FormAttachment(100);
+		mode_link.setLayoutData( fd );
+		
 		mode_link.setText( MessageText.getString( "label.link" ));
 		
 		Button mode_copy = new Button( c_mode, SWT.RADIO );
-		mode_copy.setLayoutData( new GridData());
-	
+		fd = new FormData();
+		fd.top=new FormAttachment(c_mode,0);
+		fd.bottom=new FormAttachment(100);
+		fd.left=new FormAttachment(mode_link);
+		mode_copy.setLayoutData( fd );
 		mode_copy.setText( MessageText.getString( "label.copy" ));
 		
+		CLabel tolerance = new CLabel( c_mode, SWT.CENTER );
+		fd = new FormData();
+		fd.top=new FormAttachment(c_mode,0);
+		fd.bottom=new FormAttachment(100,-2);
+		fd.left=new FormAttachment(mode_copy );
+		tolerance.setLayoutData( fd );
+		tolerance.setText( MessageText.getString( "label.tolerance.pct" ));
+		
+		Spinner spinner = new Spinner(c_mode, SWT.BORDER | SWT.RIGHT);
+		fd = new FormData();
+		fd.top=new FormAttachment(c_mode,0);
+		fd.bottom=new FormAttachment(100);
+		fd.left=new FormAttachment(tolerance,2);
+		fd.right=new FormAttachment(100);
+		
+		spinner.setLayoutData( fd );
+		spinner.setMinimum( 0 );
+		spinner.setMaximum( 10 );
+				
 		SWTSkinObjectContainer soButtonArea = (SWTSkinObjectContainer)skin.getSkinObject("bottom-area");
 		
 		StandardButtonsArea buttonsArea = new StandardButtonsArea() {
@@ -2556,6 +2589,8 @@ public class ManagerUtils {
 					
 					boolean linking = mode_link.getSelection();
 					
+					int tolerance = spinner.getSelection();
+					
 					dialog.close();
 					
 					Utils.execSWTThreadLater(
@@ -2565,7 +2600,7 @@ public class ManagerUtils {
 							public void
 							run()
 							{
-								locateFiles( dms, dm_files, shell, roots, linking );
+								locateFiles( dms, dm_files, shell, roots, linking, tolerance );
 							}
 						});
 					
@@ -2734,6 +2769,22 @@ public class ManagerUtils {
 					}
 				});
 		
+		spinner.addListener(
+				SWT.Selection, 
+				(e)->{
+					int value = spinner.getSelection();
+					
+					if ( value != 0 ){
+						
+						mode_copy.setSelection( true );
+						mode_link.setSelection( false );
+						
+						COConfigurationManager.setParameter( "find.files.search.mode", 1 );
+						state_changed.run();
+					}
+				});
+
+		
 		so_exp_text.getTextControl().addModifyListener(
 			new ModifyListener(){
 				
@@ -2837,7 +2888,8 @@ public class ManagerUtils {
 		final DiskManagerFileInfo[][]	dm_files,
 		Shell							shell,
 		String[]						search_roots,
-		boolean							is_linking )
+		boolean							is_linking,
+		int								tolerance )
 	{
 		TextViewerWindow _viewer = null;
 		
@@ -2930,6 +2982,24 @@ public class ManagerUtils {
 					
 					logLine( viewer, (bfm_start==last_log[0]?"":"\r\n") + "Found " + file_count + " files with " + file_map.size() + " distinct sizes" );
 
+					long[]	file_lengths = null;
+					
+					if ( tolerance > 0 ){
+					
+						Set<Long> lengths = file_map.keySet();
+						
+						file_lengths = new long[lengths.size()];
+						
+						int	pos = 0;
+						
+						for ( long l: lengths ){
+							
+							file_lengths[pos++] = l;
+						}
+						
+						Arrays.sort( file_lengths );
+					}
+					
 					Set<String>	all_dm_incomplete_files = null;
 
 					ConcurrentHasher hasher = ConcurrentHasher.getSingleton();
@@ -3062,6 +3132,109 @@ download_loop:
 
 									Set<File> candidates = file_map.get( file_length );
 
+									String extra_info = "";
+
+									if ( file_lengths != null ){
+																				
+										int pos = Arrays.binarySearch( file_lengths, file_length );
+										
+										if ( pos < 0 ){
+											
+											pos = 1-pos;
+										}
+										
+										long 	file_tolerance = tolerance*file_length/100;
+												
+										long	lower_limit = file_length - file_tolerance;
+										
+										int	index = pos;
+																				
+										List<Set<File>>	extra_candidates = new ArrayList<>();
+										
+										while( index >= 0 ){
+											
+											long	l = file_lengths[index--];
+											
+											if ( l < lower_limit ){
+												
+												break;
+												
+											}else{
+												
+												if ( l != file_length ){
+													
+													Set<File> x = file_map.get( l );
+													
+													if ( x != null ){
+														
+														extra_info += (extra_info.isEmpty()?"":", ") + l  + "->" + x.size();
+														
+														extra_candidates.add( x );
+													}
+												}
+											}
+										}
+										
+										long	upper_limit = file_length + file_tolerance;
+										
+										index = pos+1;
+																				
+										while( index < file_lengths.length ){
+											
+											long	l = file_lengths[index++];
+											
+											if ( l > upper_limit ){
+												
+												break;
+												
+											}else{
+												
+												if ( l != file_length ){
+													
+													Set<File> x = file_map.get( l );
+													
+													if ( x != null ){
+														
+														extra_info += (extra_info.isEmpty()?"":", ") + l  + "->" + x.size();
+														
+														extra_candidates.add( x );
+													}
+												}
+											}
+										}
+										
+										if ( !extra_candidates.isEmpty()){
+											
+											boolean duplicated = false;
+											
+											if ( candidates != null ){
+												
+												candidates = new HashSet<>( candidates );
+												
+												duplicated = true;
+											}
+											
+											for ( Set<File> s: extra_candidates ){
+												
+												if ( candidates == null ){
+													
+													candidates = s;
+													
+												}else{
+													
+													if ( !duplicated ){
+														
+														candidates = new HashSet<>( candidates );
+														
+														duplicated = true;
+													}
+													
+													candidates.addAll( s );
+												}
+											}
+										}
+									}
+									
 									if ( candidates != null ){
 
 										if ( candidates.size() > 0 ){
@@ -3171,7 +3344,11 @@ download_loop:
 
 										if ( to_file_offset < to_stop_at ){
 
-											logLine( viewer, "    " + candidates.size() + " candidate(s) for " + to_file.getRelativePath() + " (size=" + DisplayFormatters.formatByteCountToKiBEtc(to_file.getLength()) + ")");
+											logLine( 
+												viewer, 
+												"    " + candidates.size() + " candidate(s) for " + to_file.getRelativePath() + 
+												" (size=" + DisplayFormatters.formatByteCountToKiBEtc(to_file.getLength()) +
+												(extra_info.isEmpty()?"":(", extra: " + extra_info )) + ")");
 
 											byte[]	buffer = new byte[(int)piece_size];
 
