@@ -3524,7 +3524,20 @@ public class MyTorrentsView
 	}
 
 	@Override
-	public void rowRemoved(TableRowCore row) {
+	public void 
+	rowRemoved(TableRowCore row) 
+	{
+		TableRowCore[] selected = tv.getSelectedRows();
+
+		if ( selected.length > 0 ){
+			
+			Utils.execSWTThreadLater(
+				1,
+				()->{ 
+					updateSelectedContent();
+	    		  	refreshTorrentMenu();
+				});
+		}
 	}
 
 	@Override
