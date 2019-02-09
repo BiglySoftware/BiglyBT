@@ -3340,9 +3340,9 @@ download_loop:
 											to_piece_number++;
 										}
 
-										long	to_stop_at = file_length - piece_size;
+										long	overall_to_stop_at = file_length - piece_size;
 
-										if ( to_file_offset < to_stop_at ){
+										if ( to_file_offset < overall_to_stop_at ){
 
 											logLine( 
 												viewer, 
@@ -3360,8 +3360,28 @@ download_loop:
 													}
 												}
 
-												log( viewer, "        Testing " + candidate );
-
+												long 	file_to_stop_at;
+												long 	allowed_fails;
+												
+												int		failed_pieces	= 0;
+												
+												if ( tolerance == 0 ){
+													
+													file_to_stop_at = file_length - piece_size;
+													
+													allowed_fails = 0;
+													
+												}else{
+													
+													long this_file_length = candidate.length();
+															
+													file_to_stop_at = this_file_length - piece_size;
+													
+													allowed_fails = (( tolerance*this_file_length/100 ) + (piece_size-1)) / piece_size;
+												}
+												
+												log( viewer, "        Testing " + candidate + (allowed_fails==0?"":(" (max fails=" + allowed_fails + ")" )) );
+												
 												RandomAccessFile raf = null;
 
 												boolean	error 			= false;
@@ -3375,7 +3395,7 @@ download_loop:
 													long 	file_offset 	= to_file_offset;
 													int		piece_number 	= to_piece_number;
 
-													while( file_offset < to_stop_at ){
+													while( file_offset < file_to_stop_at ){
 
 														synchronized( quit ){
 															if ( quit[0] ){
@@ -3409,15 +3429,23 @@ download_loop:
 
 														}else{
 
-															hash_failed = true;
+															failed_pieces++;
+																														
+															if ( failed_pieces > allowed_fails ){
+																	
+																logLine( viewer, "X" );
 
-															failed_candidates.add( candidate.getAbsolutePath());
-
-															logLine( viewer, "X" );
-
-															break;
+																hash_failed = true;
+	
+																failed_candidates.add( candidate.getAbsolutePath());	
+	
+																break;
+																
+															}else{
+															
+																log( viewer, "x" );
+															}
 														}
-
 													}
 												}catch( Throwable e ){
 
@@ -3440,7 +3468,7 @@ download_loop:
 
 												if ( !( error || hash_failed )){
 
-													logLine( viewer, " Matched" );
+													logLine( viewer, " Matched" + (failed_pieces==0?"":(" (fails=" + failed_pieces + ")")));
 
 													if ( is_linking ){
 														
