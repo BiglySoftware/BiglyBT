@@ -3167,7 +3167,16 @@ download_loop:
 													
 													if ( x != null ){
 														
-														extra_info += (extra_info.isEmpty()?"":", ") + l  + "->" + x.size();
+														if ( extra_info.length() > 128 ){
+															
+															if ( !extra_info.endsWith( "..." )){
+																
+																extra_info += "...";
+															}		
+														}else{
+														
+															extra_info += (extra_info.isEmpty()?"":", ") + l  + "->" + x.size();
+														}
 														
 														extra_candidates.add( x );
 													}
@@ -3449,6 +3458,8 @@ download_loop:
 													}
 												}catch( Throwable e ){
 
+													e.printStackTrace();
+													
 													logLine( viewer, "X" );
 
 													error = true;
