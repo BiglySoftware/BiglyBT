@@ -216,7 +216,10 @@ CoreImpl
 	volatile boolean				stopped;
 	volatile boolean				restarting;
 
-	final CopyOnWriteList		lifecycle_listeners		= new CopyOnWriteList();
+	private final CopyOnWriteList<CoreLifecycleListener>	lifecycle_listeners		= new CopyOnWriteList<>();
+	
+	private boolean					ll_started;
+	
 	private final List				operation_listeners		= new ArrayList();
 
 	private final CopyOnWriteList<PowerManagementListener>	power_listeners = new CopyOnWriteList<>();
@@ -1375,8 +1378,15 @@ CoreImpl
 					Debug.out( "PlatformManager: init failed", e );
 				}
 
-				Iterator	it = lifecycle_listeners.iterator();
-
+				Iterator	it;
+				
+				synchronized( lifecycle_listeners ){
+				
+					it = lifecycle_listeners.iterator();
+					
+					ll_started = true;
+				}
+				
 				while( it.hasNext()){
 
 					try{
@@ -3047,11 +3057,23 @@ CoreImpl
 	addLifecycleListener(
 		CoreLifecycleListener l )
 	{
-		lifecycle_listeners.add(l);
-
+		boolean	lls;
+		
+		synchronized( lifecycle_listeners ){
+		
+			lifecycle_listeners.add(l);
+			
+			lls = ll_started;
+		}
+		
 		if ( global_manager != null ){
 
 			l.componentCreated( this, global_manager );
+		}
+		
+		if ( lls ){
+			
+			l.started( this );
 		}
 	}
 
