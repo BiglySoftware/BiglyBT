@@ -3376,7 +3376,7 @@ download_loop:
 												
 												if ( tolerance == 0 ){
 													
-													file_to_stop_at = file_length - piece_size;
+													file_to_stop_at = overall_to_stop_at;
 													
 													allowed_fails = 0;
 													
@@ -3384,6 +3384,13 @@ download_loop:
 													
 													long this_file_length = candidate.length();
 															
+														// might be too long, bring it back within range
+													
+													if ( this_file_length > file_length ){
+														
+														this_file_length = file_length;
+													}
+													
 													file_to_stop_at = this_file_length - piece_size;
 													
 													allowed_fails = (( tolerance*this_file_length/100 ) + (piece_size-1)) / piece_size;
@@ -3432,10 +3439,6 @@ download_loop:
 
 																log( viewer, "." );
 															}
-
-															file_offset += piece_size;
-															piece_number++;
-
 														}else{
 
 															failed_pieces++;
@@ -3455,10 +3458,13 @@ download_loop:
 																log( viewer, "x" );
 															}
 														}
+														
+														file_offset += piece_size;
+														piece_number++;
 													}
 												}catch( Throwable e ){
 
-													e.printStackTrace();
+													Debug.out( e );
 													
 													logLine( viewer, "X" );
 
