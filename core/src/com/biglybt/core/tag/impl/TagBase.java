@@ -640,16 +640,28 @@ TagBase
 			params = new long[0];
 		}
 		
+		boolean	changed;
+		
 		if ( colours != null && colours.length == 0 && params.length == 0 ){
+		
+			changed = false;
 			
 		}else{
 		
-			writeLongListAttribute( AT_COLORS_ID, params );
+			changed = writeLongListAttribute( AT_COLORS_ID, params );
+			
+			if ( colours == null ){
+				
+				changed = true;
+			}
 		}
 		
 		colours = params;
 
-		tag_type.fireMetadataChanged( this );
+		if ( changed ){
+		
+			tag_type.fireMetadataChanged( this );
+		}
 	}
 	
 	public boolean
