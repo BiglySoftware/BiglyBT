@@ -3175,4 +3175,130 @@ public class MenuFactory
 			  public void setData(String id, Object data) {}
 		};
 	}
+
+	public static void initSystemMenu() {
+		Display current = Display.getCurrent();
+		Menu systemMenu = current.getSystemMenu();
+		if (systemMenu != null) {
+
+			MenuItem sysServices = getItem(systemMenu, SWT.getMessage("Services"));
+			if (sysServices != null) {
+				sysServices.setEnabled(false);
+			}
+
+			MenuItem sysItem = getItem(systemMenu, SWT.ID_ABOUT);
+			if (sysItem != null) {
+				sysItem.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						AboutWindow.show();
+					}
+				});
+			}
+
+			sysItem = getItem(systemMenu, SWT.ID_PREFERENCES);
+			if (sysItem != null) {
+				sysItem.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+						if (uiFunctions != null) {
+							uiFunctions.getMDI().showEntryByID(
+									MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG);
+						}
+					}
+				});
+			}
+
+			int quitIndex = systemMenu.indexOf(getItem(systemMenu, SWT.ID_QUIT));
+			MenuItem restartItem = new MenuItem(systemMenu, SWT.CASCADE, quitIndex);
+			Messages.setLanguageText(restartItem, "MainWindow.menu.file.restart");
+			restartItem.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+					if (uiFunctions != null) {
+						uiFunctions.dispose(true, false);
+					}
+				}
+			});
+
+			// Add other menus
+			boolean isAZ3 = "az3".equalsIgnoreCase(
+					COConfigurationManager.getStringParameter("ui"));
+
+			if (!isAZ3) {
+				// add Wizard, NAT Test, Speed Test
+
+				int prefIndex = systemMenu.indexOf(
+						getItem(systemMenu, SWT.ID_PREFERENCES)) + 1;
+				MenuItem wizItem = new MenuItem(systemMenu, SWT.CASCADE, prefIndex);
+				Messages.setLanguageText(wizItem, "MainWindow.menu.file.configure");
+				wizItem.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						new ConfigureWizard(false, ConfigureWizard.WIZARD_MODE_FULL);
+					}
+				});
+
+				MenuItem natMenu = new MenuItem(systemMenu, SWT.CASCADE, prefIndex);
+				Messages.setLanguageText(natMenu, "MainWindow.menu.tools.nattest");
+				natMenu.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						new NatTestWindow();
+					}
+				});
+
+				MenuItem netstatMenu = new MenuItem(systemMenu, SWT.CASCADE, prefIndex);
+				Messages.setLanguageText(netstatMenu, "MainWindow.menu.tools.netstat");
+				netstatMenu.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+						if (uiFunctions != null) {
+
+							PluginsMenuHelper.IViewInfo[] views = PluginsMenuHelper.getInstance().getPluginViewsInfo();
+
+							for (PluginsMenuHelper.IViewInfo view : views) {
+
+								String viewID = view.viewID;
+
+								if (viewID != null && viewID.equals("aznetstatus")) {
+
+									view.openView(uiFunctions);
+								}
+							}
+						}
+					}
+				});
+
+				MenuItem speedMenu = new MenuItem(systemMenu, SWT.CASCADE, prefIndex);
+				Messages.setLanguageText(speedMenu, "MainWindow.menu.tools.speedtest");
+				speedMenu.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						new SpeedTestWizard();
+					}
+				});
+
+			}
+		}
+	}
+
+	private static MenuItem getItem(Menu menu, String title) {
+		MenuItem[] items = menu.getItems();
+		for (MenuItem item : items) {
+			if (title.equals(item.getText())) return item;
+		}
+		return null;
+	}
+
+	private static MenuItem getItem(Menu menu, int id) {
+		MenuItem[] items = menu.getItems();
+		for (MenuItem item : items) {
+			if (item.getID() == id) return item;
+		}
+		return null;
+	}
 }
