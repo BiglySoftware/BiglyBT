@@ -1118,14 +1118,25 @@ PeersViewBase
 									
 									@Override
 									public void verifyText(VerifyEvent e){
-										String str = e.text.replaceAll( "[\\r\\n]+", ", " ).trim();
+										String str = e.text.replaceAll( "[\\r\\n]+", "," );
 										
-										while( str.startsWith( "," )){
-											str = str.substring( 1 ).trim();
-										}
-										
-										while( str.endsWith( "," )){
-											str = str.substring( 0, str.length()-1).trim();
+										if ( !str.equals(e.text )){
+											
+												// tidy up from multi-line flattening
+											
+											while( str.contains( ",," )){
+												str = str.replace( ",,", "," );
+											}
+											
+											str = str.trim();
+											
+											while( str.endsWith( "," )){
+												str = str.substring( 0, str.length()-1).trim();
+											}
+											
+											while ( str.startsWith( "," )){
+												str = str.substring(1).trim();
+											}
 										}
 										
 										e.text = str;
@@ -1167,12 +1178,17 @@ PeersViewBase
 												@Override
 												public void runSupport()
 												{
-													String[] bits = sReturn.split( "," );
+													String[] bits = sReturn.replace(';', ',' ).split( "," );
 			
 													for  ( String bit: bits ){
 			
 														bit = bit.trim();
 			
+														if ( bit.isEmpty()){
+															
+															continue;
+														}
+														
 														int	pos = bit.lastIndexOf( ':' );
 			
 														if ( pos != -1 ){
