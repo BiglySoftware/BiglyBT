@@ -52,6 +52,7 @@ import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackersTracker;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.tracker.client.impl.*;
@@ -2139,10 +2140,36 @@ TRTrackerBTAnnouncerImpl
 
   	int tcp_port = announce_data_provider.getTCPListeningPortNumber();
   	
-	String	port_details =
-		announce_data_provider.getCryptoLevel()==NetworkManager.CRYPTO_OVERRIDE_REQUIRED?
-				TRTrackerUtils.getPortsForURLFullCrypto( tcp_port ):
-				TRTrackerUtils.getPortsForURL( tcp_port );
+  	AllTrackersTracker att = all_trackers.getTracker( _url );
+  	
+  	boolean disable_crypto_port = false;
+  	
+  	if ( att != null ){
+  
+  		Map<String,Object>	options = att.getOptions();
+  		
+  		if ( options != null ){
+  			
+  			Number cp = (Number)options.get( AllTrackersTracker.OPT_CRYPTO_PORT );
+	  		
+	  		if ( cp != null && cp.intValue() == 2 ){
+	  			
+	  			disable_crypto_port = true;
+	  		}
+	  	}
+  	}
+  	
+	String	port_details;
+	
+	if ( announce_data_provider.getCryptoLevel()==NetworkManager.CRYPTO_OVERRIDE_REQUIRED ){
+		
+		port_details = TRTrackerUtils.getPortsForURLFullCrypto( tcp_port );
+		
+	}else{
+		
+		port_details = TRTrackerUtils.getPortsForURL( tcp_port, disable_crypto_port );
+	}
+	
 
 		// nasty hack to deal with fact that the update tracker doesn't support port=0 (which is default with SOCKS)
 				

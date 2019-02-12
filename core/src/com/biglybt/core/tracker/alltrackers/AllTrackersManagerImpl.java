@@ -487,6 +487,14 @@ AllTrackersManagerImpl
 		}
 	}
 	
+	@Override
+	public AllTrackersTracker 
+	getTracker(URL url)
+	{
+		AllTrackersTrackerImpl tracker = register( url );
+
+		return( tracker );
+	}
 	
 	@Override
 	public void
@@ -528,6 +536,8 @@ AllTrackersManagerImpl
 		private	long		bad_since;
 		private	long		consec_fails;
 		
+		private Map<String,Object>	options;
+		
 		private boolean		registered;
 		
 		private
@@ -556,6 +566,8 @@ AllTrackersManagerImpl
 			last_bad = MapUtils.getMapLong( map, "lb", 0 );
 			bad_since = MapUtils.getMapLong( map, "bs", 0 );
 			consec_fails = MapUtils.getMapLong( map, "cf", 0 );
+			
+			options = (Map<String,Object>)map.get( "op" );
 		}
 		
 		private Map
@@ -569,6 +581,11 @@ AllTrackersManagerImpl
 			map.put( "lb",  last_bad );
 			map.put( "bs",  bad_since );
 			map.put( "cf",  consec_fails );
+			
+			if ( options != null ){
+				
+				map.put( "op", options );
+			}
 			
 			return( map );
 		}
@@ -702,6 +719,21 @@ AllTrackersManagerImpl
 		getConsecutiveFails()
 		{
 			return( consec_fails );
+		}
+		
+		@Override
+		public Map<String, Object> 
+		getOptions()
+		{
+			return( options );
+		}
+		
+		@Override
+		public void 
+		setOptions(
+			Map<String, Object> _options)
+		{
+			options = _options;
 		}
 	}
 	

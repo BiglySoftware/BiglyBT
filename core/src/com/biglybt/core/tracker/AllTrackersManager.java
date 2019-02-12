@@ -20,6 +20,7 @@ package com.biglybt.core.tracker;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.alltrackers.AllTrackersManagerImpl;
@@ -67,6 +68,10 @@ AllTrackersManager
 			URL							tracker,
 			TRTrackerScraperResponse	response );
 	
+		public AllTrackersTracker
+		getTracker(
+			URL		url );
+		
 		public void
 		addListener(
 			AllTrackersListener		listener,
@@ -102,6 +107,8 @@ AllTrackersManager
 	public interface
 	AllTrackersTracker
 	{
+		public static final String	OPT_CRYPTO_PORT	= "cp";	// Number 0=default;1=enable;2=disable
+		
 		public String
 		getTrackerName();
 		
@@ -129,5 +136,12 @@ AllTrackersManager
 		
 		public long
 		getConsecutiveFails();
+		
+		public Map<String,Object>
+		getOptions();
+		
+		public void
+		setOptions(
+			Map<String,Object>		options );
 	}
 }

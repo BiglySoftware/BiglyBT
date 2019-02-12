@@ -502,7 +502,7 @@ public class TrackerStatus {
 
 				if ( az_tracker ){
 
-					String	port_details = TRTrackerUtils.getPortsForURL( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber());
+					String	port_details = TRTrackerUtils.getPortsForURL( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber(), false );
 
 					request += port_details;
 

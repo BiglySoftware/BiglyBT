@@ -899,6 +899,76 @@ public class SBC_AllTrackersView
 		
 		assoc_item.setEnabled( hasSelection && !assoc_templates.isEmpty());
 		
+			// options
+		
+		Menu options_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
+
+		boolean opt_enabled = trackers.size() == 1;
+		
+		options_menu.setEnabled( opt_enabled );
+		
+		MenuItem options_item = new MenuItem( menu, SWT.CASCADE);
+
+		Messages.setLanguageText( options_item, "ConfigView.title.full" );
+
+		options_item.setMenu( options_menu );
+		
+		MenuItem itemOptCryptoPort = new MenuItem(options_menu, SWT.CHECK);
+
+		Messages.setLanguageText( itemOptCryptoPort, "menu.tracker.cryptoport.disabled" );
+
+		if ( opt_enabled ){
+			
+			AllTrackersTracker tracker = trackers.get(0);
+			
+			Map<String,Object> init_options = tracker.getOptions();
+			
+			if ( init_options != null ){
+				
+				Number opt = (Number)init_options.get( AllTrackersTracker.OPT_CRYPTO_PORT );
+				
+				if ( opt != null && opt.intValue() == 2 ){
+					
+					itemOptCryptoPort.setSelection( true );
+				}
+			}
+		
+			itemOptCryptoPort.addListener(
+				SWT.Selection,
+				(e)->{
+										
+					Map<String,Object> options = tracker.getOptions();
+					
+					boolean	sel = itemOptCryptoPort.getSelection();
+					
+					if ( sel ){
+						
+						if ( options == null ){
+							
+							options = new HashMap<>();
+						}
+				
+						options.put( AllTrackersTracker.OPT_CRYPTO_PORT, 2 );
+						
+						tracker.setOptions( options );
+						
+					}else{
+						
+						if ( options != null ){
+							
+							options.remove( AllTrackersTracker.OPT_CRYPTO_PORT );
+							
+							if ( options.isEmpty()){
+								
+								options = null;
+							}
+							
+							tracker.setOptions( options );
+						}
+					}
+				});
+		}
+		
 			// edit templates
 		
 		new MenuItem( menu, SWT.SEPARATOR );
@@ -1425,6 +1495,22 @@ public class SBC_AllTrackersView
 		getConsecutiveFails()
 		{
 			return( tracker.getConsecutiveFails());
+		}
+		
+		@Override
+		public 
+		Map<String, Object> 
+		getOptions()
+		{
+			return( tracker.getOptions());
+		}
+		
+		@Override
+		public void 
+		setOptions(
+			Map<String, Object> options)
+		{
+			tracker.setOptions( options );
 		}
 		
 		public Tag
