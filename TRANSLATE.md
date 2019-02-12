@@ -16,9 +16,9 @@ Visit our [BiglyBT Project Page on Crowdin](https://crowdin.com/project/BiglyBT)
 Please note that BiglyBT for Android has its own tranlation project at [BiglyBT-Android Project Page on Crowdin](https://crowdin.com/project/biglybt-android)
 
 
-### BiglyBT Internationization Plugin
+### BiglyBT Internationization Plugin (Deprecated)
 
-Prior to using Crowdin for translation management, we had a BiglyBT plugin to handle translations.  Install the [Internationalize BiglyBT Plugin](https://plugins.biglybt.com/#i18nAZ) (If it doesn't prompt to launch BiglyBT, you can copy and paste the URL into the search bar of BiglyBT).
+Prior to using Crowdin for translation management, we had a BiglyBT plugin to handle translations.  Although it has been deprecated you can still install it - see [the Wiki](https://github.com/BiglySoftware/BiglyBT/wiki/Translating-BiglyBT) 
 
 ### IntelliJ
 
