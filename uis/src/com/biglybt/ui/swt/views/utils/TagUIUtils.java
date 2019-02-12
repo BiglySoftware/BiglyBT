@@ -2934,8 +2934,8 @@ public class TagUIUtils
 
 	public static void
 	addLibraryViewTagsSubMenu(
-		final DownloadManager[] 	dms,
-		Menu 						menu_tags)
+		DownloadManager[] 		dms,
+		Menu 					menu_tags)
 	{
 		MenuItem[] items = menu_tags.getItems();
 
@@ -3035,144 +3035,61 @@ public class TagUIUtils
 			}
 		}
 
-		List<Tag>	manual_t = manual_tt.getTags();
+		List<Tag>	all_manual_t = manual_tt.getTags();
 
-		if ( manual_t.size() > 0 ){
+		if ( all_manual_t.size() > 0 ){
 
 			if ( auto_map.size() > 0 ){
 
 				new MenuItem( menu_tags, SWT.SEPARATOR );
 			}
 
-			List<String>	menu_names 		= new ArrayList<>();
-			Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
-
-			for ( Tag t: manual_t ){
-
-				if ( !( t.isTagAuto()[0] && t.isTagAuto()[1] )){ 
-
-					String name = t.getTagName( true );
-
-					menu_names.add( name );
-					menu_name_map.put( name, t );
-				}
-			}
-
-			List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
-
-			for ( Object obj: menu_structure ){
-
-				List<Tag>	bucket_tags = new ArrayList<>();
-
-				Menu	 parent_menu;
-
-				if ( obj instanceof String ){
-
-					parent_menu = menu_tags;
-
-					bucket_tags.add( menu_name_map.get((String)obj));
-
-				}else{
-
-					Object[]	entry = (Object[])obj;
-
-					List<String>	tag_names = (List<String>)entry[1];
-
-					boolean	sub_all_selected 	= true;
-					boolean sub_some_selected	= false;
-
-					for ( String name: tag_names ){
-
-						Tag sub_tag = menu_name_map.get( name );
-
-						Integer c = manual_map.get( sub_tag );
-
-						if ( c != null && c == dms.length ){
-
-							sub_some_selected = true;
-
-						}else{
-
-							sub_all_selected = false;
-						}
-
-						bucket_tags.add( sub_tag );
-					}
-
-					String mod;
-
-					if ( sub_all_selected ){
-
-						mod = " (*)";
-
-					}else if ( sub_some_selected ){
-
-						mod = " (+)";
-
-					}else{
-
-						mod = "";
-					}
-
-					Menu menu_bucket = new Menu( menu_tags.getShell(), SWT.DROP_DOWN );
-
-					MenuItem bucket_item = new MenuItem( menu_tags, SWT.CASCADE );
-
-					bucket_item.setText((String)entry[0] + mod);
-
-					bucket_item.setMenu( menu_bucket );
-
-					parent_menu = menu_bucket;
-				}
-
-				for ( final Tag t: bucket_tags ){
-
-					final MenuItem t_i = new MenuItem( parent_menu, SWT.CHECK );
-
-					String tag_name = t.getTagName( true );
-
-					Integer c = manual_map.get( t );
-
-					if ( c != null ){
-
-						if ( c == dms.length ){
-
-							t_i.setSelection( true );
-
-							t_i.setText( tag_name );
-
-						}else{
-
-							t_i.setText( tag_name + " (" + c + ")" );
-						}
-					}else{
-
-						t_i.setText( tag_name );
-					}
-
-					TagUIUtils.setMenuIcon( t_i, t );
+			Set<TagGroup>	tag_groups 		= new HashSet<>();
+			List<Tag>		tag_no_group	= new ArrayList<>();
+			
+			for ( Tag t: all_manual_t ){
+				
+				TagGroup tg = t.getGroupContainer();
+				
+				if ( tg == null || tg.getName() == null ){
 					
-					t_i.addListener(SWT.Selection, new Listener() {
-						@Override
-						public void handleEvent(Event event) {
-
-							boolean	selected = t_i.getSelection();
-
-							for ( DownloadManager dm: dms ){
-
-								if ( selected ){
-
-									t.addTaggable( dm );
-
-								}else{
-
-									t.removeTaggable( dm );
-								}
-							}
-						}
-					});
+					tag_no_group.add( t );
+					
+				}else{
+					
+					tag_groups.add( tg );
 				}
 			}
+			
+			if ( !tag_groups.isEmpty()){
+				
+				List<TagGroup> l_tg = sortTagGroups( tag_groups );
+				
+				for ( TagGroup tg: l_tg ){
+					
+					Menu menuGroup = new Menu(menu_tags.getShell(), SWT.DROP_DOWN);
+					MenuItem groupItem = new MenuItem(menu_tags, SWT.CASCADE);
+					groupItem.setText( tg.getName());
+					groupItem.setMenu(menuGroup);
+					
+					build( dms, menuGroup, manual_map, tg.getTags());
+				}
+				
+				if ( !tag_no_group.isEmpty()){
+					
+					Menu menuGroup = new Menu(menu_tags.getShell(), SWT.DROP_DOWN);
+					MenuItem groupItem = new MenuItem(menu_tags, SWT.CASCADE);
+					Messages.setLanguageText(groupItem, "menu.no.group" );
+					groupItem.setMenu(menuGroup);
+					
+					build( dms, menuGroup, manual_map, tag_no_group );
+				}
+				
+				new MenuItem( menu_tags, SWT.SEPARATOR );
+			}
+			
+			build( dms, menu_tags, manual_map, all_manual_t );
+
 		}
 
 		new MenuItem( menu_tags, SWT.SEPARATOR );
@@ -3244,6 +3161,144 @@ public class TagUIUtils
 		});
 	}
 
+	private static void
+	build(
+		DownloadManager[] 		dms,
+		Menu 					menu_tags,
+		Map<Tag,Integer>		manual_map,
+		List<Tag>				manual_t )
+	{
+		List<String>	menu_names 		= new ArrayList<>();
+		Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
+
+		for ( Tag t: manual_t ){
+
+			if ( !( t.isTagAuto()[0] && t.isTagAuto()[1] )){ 
+
+				String name = t.getTagName( true );
+
+				menu_names.add( name );
+				menu_name_map.put( name, t );
+			}
+		}
+
+		List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
+
+		for ( Object obj: menu_structure ){
+
+			List<Tag>	bucket_tags = new ArrayList<>();
+
+			Menu	 parent_menu;
+
+			if ( obj instanceof String ){
+
+				parent_menu = menu_tags;
+
+				bucket_tags.add( menu_name_map.get((String)obj));
+
+			}else{
+
+				Object[]	entry = (Object[])obj;
+
+				List<String>	tag_names = (List<String>)entry[1];
+
+				boolean	sub_all_selected 	= true;
+				boolean sub_some_selected	= false;
+
+				for ( String name: tag_names ){
+
+					Tag sub_tag = menu_name_map.get( name );
+
+					Integer c = manual_map.get( sub_tag );
+
+					if ( c != null && c == dms.length ){
+
+						sub_some_selected = true;
+
+					}else{
+
+						sub_all_selected = false;
+					}
+
+					bucket_tags.add( sub_tag );
+				}
+
+				String mod;
+
+				if ( sub_all_selected ){
+
+					mod = " (*)";
+
+				}else if ( sub_some_selected ){
+
+					mod = " (+)";
+
+				}else{
+
+					mod = "";
+				}
+
+				Menu menu_bucket = new Menu( menu_tags.getShell(), SWT.DROP_DOWN );
+
+				MenuItem bucket_item = new MenuItem( menu_tags, SWT.CASCADE );
+
+				bucket_item.setText((String)entry[0] + mod);
+
+				bucket_item.setMenu( menu_bucket );
+
+				parent_menu = menu_bucket;
+			}
+
+			for ( final Tag t: bucket_tags ){
+
+				final MenuItem t_i = new MenuItem( parent_menu, SWT.CHECK );
+
+				String tag_name = t.getTagName( true );
+
+				Integer c = manual_map.get( t );
+
+				if ( c != null ){
+
+					if ( c == dms.length ){
+
+						t_i.setSelection( true );
+
+						t_i.setText( tag_name );
+
+					}else{
+
+						t_i.setText( tag_name + " (" + c + ")" );
+					}
+				}else{
+
+					t_i.setText( tag_name );
+				}
+
+				TagUIUtils.setMenuIcon( t_i, t );
+				
+				t_i.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+
+						boolean	selected = t_i.getSelection();
+
+						for ( DownloadManager dm: dms ){
+
+							if ( selected ){
+
+								t.addTaggable( dm );
+
+							}else{
+
+								t.removeTaggable( dm );
+							}
+						}
+					}
+				});
+			}
+		}
+	}
+	
 	public static MenuItem
 	createTagSelectionMenu(
 		Menu					top_menu,
@@ -3393,6 +3448,22 @@ public class TagUIUtils
 		return( tags );
 	}
 
+	public static List<TagGroup>
+	sortTagGroups(
+		Collection<TagGroup>	_groups )
+	{
+		List<TagGroup>	groups = new ArrayList<>( _groups );
+
+		if ( groups.size() < 2 ){
+
+			return( groups );
+		}
+
+		Collections.sort( groups, getTagGroupComparator());
+
+		return( groups );
+	}
+	
 	public static Comparator<Tag>
 	getTagComparator()
 	{
@@ -3423,6 +3494,24 @@ public class TagUIUtils
 					}
 				}
 				return( comp.compare( o1.getTagName(true), o2.getTagName(true)));
+			}
+		});
+	}
+	
+	public static Comparator<TagGroup>
+	getTagGroupComparator()
+	{
+		return( new Comparator<TagGroup>()
+		{
+			final Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
+
+			@Override
+			public int
+			compare(
+				TagGroup o1, TagGroup o2)
+			{
+				
+				return( comp.compare( o1.getName(),  o2.getName()));
 			}
 		});
 	}
