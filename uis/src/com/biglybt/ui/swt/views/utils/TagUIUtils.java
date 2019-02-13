@@ -722,6 +722,29 @@ public class TagUIUtils
 	
 	public static void
 	createSideBarMenuItems(
+		Menu 		menu, 
+		TagGroup 	tag_group )
+	{
+		if ( tag_group == null || tag_group.getName() == null ){
+			
+			return;
+		}
+		
+		MenuItem exclusive_item = new MenuItem( menu, SWT.CHECK);
+		
+		exclusive_item.setText( MessageText.getString( "label.exclusive" ));
+		
+		exclusive_item.setSelection( tag_group.isExclusive());
+		
+		exclusive_item.addListener( 
+			SWT.Selection,
+			(e)->{
+				tag_group.setExclusive(exclusive_item.getSelection());
+			});
+	}
+	
+	public static void
+	createSideBarMenuItems(
 		final Menu menu, final Tag tag )
 	{
 	    int userMode = COConfigurationManager.getIntParameter("User Mode");

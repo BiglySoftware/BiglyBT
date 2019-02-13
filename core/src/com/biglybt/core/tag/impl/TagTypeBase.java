@@ -27,11 +27,13 @@ import java.util.Map;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.ListenerManager;
 import com.biglybt.core.util.ListenerManagerDispatcher;
+import com.biglybt.util.MapUtils;
 
 public abstract class
 TagTypeBase
@@ -451,6 +453,26 @@ TagTypeBase
 		}
 
 		manager.taggableAdded( this, tag, tagged );
+		
+		TagGroup tg = tag.getGroupContainer();
+		
+		if ( tg != null && tg.getName() != null && tg.isExclusive()){
+			
+			List<Tag> tags = tg.getTags();
+			
+			for ( Tag t: tags ){
+				
+				if ( t != tag && t.hasTaggable( tagged )){
+					
+					boolean[] auto = t.isTagAuto();
+					
+					if ( !auto[0] ){
+						
+						t.removeTaggable( tagged );
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -671,11 +693,13 @@ TagTypeBase
 		return( manager.writeLongListAttribute( this, tag, attr, value ));
 	}
 	
- 	protected static class
+ 	protected class
  	TagGroupImpl
  		implements TagGroup
  	{
- 		private String name;
+ 		private final String name;
+ 		
+ 		private boolean		exclusive;
  		
  		private CopyOnWriteList<Tag>	tags = new CopyOnWriteList<>();
  		
@@ -688,10 +712,54 @@ TagTypeBase
  			name	= _name;
  		}
  		
+ 		protected String
+ 		getGroupID()
+ 		{
+ 			return( name==null?"<null>":Base32.encode( name.getBytes()));
+ 		}
+ 		
+ 		protected void
+ 		importState(
+ 			Map<String,Object>		map )
+ 		{
+ 			exclusive = MapUtils.getMapBoolean( map, "x", false );
+ 		}
+ 		
+ 		protected Map<String,Object>
+ 		exportState()
+ 		{
+ 			Map<String,Object>	map = new HashMap<>();
+ 			
+ 			if ( exclusive ){
+ 				
+ 				map.put( "x", new Long(1));
+ 			}
+ 			
+ 			return( map );
+ 		}
+ 		
  		public String
  		getName()
  		{
  			return( name );
+ 		}
+ 		
+ 		public boolean
+ 		isExclusive()
+ 		{
+ 			return( exclusive );
+ 		}
+ 		
+ 		public void
+ 		setExclusive(
+ 			boolean		b )
+ 		{
+ 			if ( b != exclusive ){
+ 				
+ 				exclusive = b;
+ 				
+ 				manager.tagGroupUpdated( TagTypeBase.this, this );
+ 			}
  		}
  		
  		public List<Tag>
@@ -793,7 +861,7 @@ TagTypeBase
  					
  					tg = new TagGroupImpl( new_name );
  					
- 					manager.tagGroupCreated( tg );
+ 					manager.tagGroupCreated( this, tg );
  					
  					tag_groups.put( new_name, tg );
  				}
@@ -822,15 +890,14 @@ TagTypeBase
  					
  					result = new TagGroupImpl( name );
  					
- 					manager.tagGroupCreated( result );
+ 					manager.tagGroupCreated( this, result );
  					
  					tag_groups.put( name, result );
  				}
  				
  				return( result );
  			}
- 		}
- 		
+ 		}	
  	}
  	
 	public void

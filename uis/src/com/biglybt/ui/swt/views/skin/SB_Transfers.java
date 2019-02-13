@@ -1560,6 +1560,19 @@ public class SB_Transfers
 									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), false, prev_id );
 							
 							setTagIcon( tag, entry, true );
+							
+							if ( entry instanceof SideBarEntrySWT ){
+								final SideBarEntrySWT entrySWT = (SideBarEntrySWT) entry;
+								entrySWT.addListener(new MdiSWTMenuHackListener() {
+									@Override
+									public void menuWillBeShown(MdiEntry entry, Menu menuTree) {
+										
+										TagGroup tg = tag.getGroupContainer();
+										
+										TagUIUtils.createSideBarMenuItems(menuTree, tg );
+									}
+								});
+							}
 						}
 						
 						parent_id = group_id;

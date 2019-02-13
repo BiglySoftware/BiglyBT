@@ -8,6 +8,13 @@ TagGroup
 	public String
 	getName();
 	
+	public boolean
+	isExclusive();
+	
+	public void
+	setExclusive(
+		boolean		b );
+	
 	public List<Tag>
 	getTags();
 	

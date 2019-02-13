@@ -73,7 +73,6 @@ import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.rssgen.RSSGeneratorPlugin;
 import com.biglybt.util.MapUtils;
-import com.sun.org.apache.xml.internal.serializer.utils.Messages;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 
 public class
@@ -696,8 +695,8 @@ TagManagerImpl
 			30*1000 );
 
 
-	private Map					config;
-	private WeakReference<Map>	config_ref;
+	private Map<String,Object>					config;
+	private WeakReference<Map<String,Object>>	config_ref;
 
 	private boolean				config_dirty;
 
@@ -1805,15 +1804,28 @@ TagManagerImpl
 
 	protected void
 	tagGroupCreated(
+		TagTypeBase		tag_type,
 		TagGroupImpl	group )
 	{
+		Map<String,Object> conf = getConf( tag_type, false );
+		
+		if ( conf != null ){
+			
+			Map<String,Object>	tg_conf = (Map<String,Object>)conf.get( group.getGroupID());
+			
+			if ( tg_conf != null ){
+				
+				group.importState( tg_conf );
+			}
+		}
+		
 		PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface();
 		
 		UIManager ui_manager = pi.getUIManager();
 		
 		TableManager tm = ui_manager.getTableManager();
 		
-		String col_id = "tag.group.col." + Base32.encode(group.getName().getBytes());
+		String col_id = "tag.group.col." + group.getGroupID();
 		
 		Properties props = new Properties();
 		
@@ -1873,6 +1885,30 @@ TagManagerImpl
 				}
 			});
 	}
+	
+	protected void
+	tagGroupUpdated(
+		TagTypeBase		tag_type,
+		TagGroupImpl	group )
+	{
+		Map<String,Object> conf = getConf( tag_type, true );
+		
+		String id = group.getGroupID();
+		
+		Map<String,Object> state = group.exportState();
+		
+		if ( state.isEmpty()){
+			
+			conf.remove( id );
+			
+		}else{
+			
+			conf.put( id,  state );
+		}
+		
+		setDirty();
+	}
+	
 	
 	protected void
 	checkRSSFeeds(
@@ -2221,7 +2257,7 @@ TagManagerImpl
 		return( map );
 	}
 
-	private Map
+	private Map<String,Object>
 	getConfig()
 	{
 		synchronized( this ){
@@ -2280,7 +2316,44 @@ TagManagerImpl
 		}
 	}
 
-	private Map
+	private Map<String,Object>
+	getConf(
+		TagTypeBase	tag_type,
+		boolean		create )
+	{
+		Map<String,Object> m = getConfig();
+
+		String tt_key = String.valueOf( tag_type.getTagType());
+
+		Map<String,Object> tt = (Map<String,Object>)m.get( tt_key );
+
+		if ( tt == null ){
+
+			if ( create ){
+
+				tt = new HashMap<>();
+
+				m.put( tt_key, tt );
+
+			}else{
+
+				return( null );
+			}
+		}
+
+		Map<String,Object> conf = (Map)tt.get( "c" );
+
+		if ( conf == null && create ){
+
+			conf = new HashMap<>();
+
+			tt.put( "c", conf );
+		}
+
+		return( conf );
+	}
+	
+	private Map<String,Object>
 	getConf(
 		TagTypeBase	tag_type,
 		TagBase		tag,
