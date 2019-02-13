@@ -767,8 +767,13 @@ public class GCStringPrinter
 				//System.out.println("w2 = " + lineInfo.outputLineExtent.x + ";h=" + lineInfo.outputLineExtent.y);
 				//return -1;
 			}
-		}
 
+			if (word.length() == 0) {
+				space.append(' ');
+				return -1;
+			}
+		}
+		
 		Point ptLineAndWordSize = gc.stringExtent(outputLine + word + " ");
 		//System.out.println(ptLineAndWordSize + ";" + outputLine  + "::WordComp " + (ptLineAndWordSize.x - lineInfo.outputLineExtent.x));
 		if (ptLineAndWordSize.x > printArea.width) {

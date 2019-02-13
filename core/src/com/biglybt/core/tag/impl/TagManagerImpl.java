@@ -1845,6 +1845,8 @@ TagManagerImpl
 					column.setWidth(70);
 					column.setRefreshInterval(TableColumn.INTERVAL_LIVE);
 
+					column.setIconReference("image.tag.column", false );
+					
 					column.addCellRefreshListener(
 						(cell)->{
 							Download	dl = (Download)cell.getDataSource();
