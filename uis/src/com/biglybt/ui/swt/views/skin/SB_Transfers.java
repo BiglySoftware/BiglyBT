@@ -1575,7 +1575,7 @@ public class SB_Transfers
 			
 				// find where to locate this in the sidebar
 
-			TreeMap<Tag,String>	name_map = new TreeMap<>(TagUIUtils.getTagComparator());
+			TreeMap<Tag,String>	name_map = new TreeMap<>(TagUtils.getTagComparator());
 
 			name_map.put( tag, id );
 
@@ -1654,7 +1654,7 @@ public class SB_Transfers
 
 						}else if ( pid == TITLE_INDICATOR_TEXT_TOOLTIP ){
 
-							return( TagUIUtils.getTagTooltip( tag ));
+							return( TagUtils.getTagTooltip( tag ));
 						}
 
 						return null;

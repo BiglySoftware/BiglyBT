@@ -2848,7 +2848,7 @@ SubscriptionManagerUI
 
 		List<Tag> tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
 
-		tags = TagUIUtils.sortTags( tags );
+		tags = TagUtils.sortTags( tags );
 
 		long	tag_id = subs.getTagID();
 

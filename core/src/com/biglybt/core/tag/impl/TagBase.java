@@ -39,7 +39,6 @@ import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
-import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.util.MapUtils;
 
 public abstract class

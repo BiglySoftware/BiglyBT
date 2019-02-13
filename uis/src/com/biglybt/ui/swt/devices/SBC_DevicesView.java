@@ -48,6 +48,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
@@ -1083,7 +1084,7 @@ public class SBC_DevicesView
 
 		List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
 
-		all_tags = TagUIUtils.sortTags( all_tags );
+		all_tags = TagUtils.sortTags( all_tags );
 
 		if ( all_tags.size() > 0 ){
 

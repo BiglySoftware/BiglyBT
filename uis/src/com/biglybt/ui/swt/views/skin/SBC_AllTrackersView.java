@@ -46,6 +46,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.TagWrapper;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tracker.AllTrackersManager;
@@ -1000,7 +1001,7 @@ public class SBC_AllTrackersView
 		Menu						menu,
 		boolean						is_future )
 	{
-		Map<Tag,String>	existing_removal_templates = new TreeMap<>( TagUIUtils.getTagComparator());
+		Map<Tag,String>	existing_removal_templates = new TreeMap<>( TagUtils.getTagComparator());
 		
 		for ( Tag t: all_tags ){
 			

@@ -804,7 +804,7 @@ public class MyTorrentsView
 		}
     }
 
-    tags_to_show = TagUIUtils.sortTags( tags_to_show );
+    tags_to_show = TagUtils.sortTags( tags_to_show );
 
    	buildHeaderArea();
   	if (cCategoriesAndTags != null && !cCategoriesAndTags.isDisposed()) {
@@ -1082,7 +1082,7 @@ public class MyTorrentsView
 					Tag tag = (Tag) curButton.getData("Tag");
 
 					if (!(tag instanceof Category)) {
-						Utils.setTT(curButton,TagUIUtils.getTagTooltip(tag, true));
+						Utils.setTT(curButton,TagUtils.getTagTooltip(tag, true));
 						return;
 					}
 
@@ -1462,7 +1462,7 @@ public class MyTorrentsView
 
 							if ( tags.size() > 0 ){
 
-								tags = TagUIUtils.sortTags( tags );
+								tags = TagUtils.sortTags( tags );
 
 								for ( Tag t: tags ){
 

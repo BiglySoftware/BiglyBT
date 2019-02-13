@@ -104,6 +104,7 @@ import com.biglybt.core.security.CryptoManagerKeyListener;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableLifecycleAdapter;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
@@ -2686,7 +2687,7 @@ BuddyPluginView
 								tag_area = middle;
 							}
 
-							tags = TagUIUtils.sortTags( tags );
+							tags = TagUtils.sortTags( tags );
 
 							if ( !tags.contains( current_tag )){
 

@@ -43,6 +43,7 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
+import com.biglybt.core.tag.impl.TagTypeBase.TagGroupImpl;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
@@ -63,12 +64,16 @@ import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
 import com.biglybt.pif.tracker.web.TrackerWebPageResponse;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerEvent;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.utils.ScriptProvider;
 import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.rssgen.RSSGeneratorPlugin;
 import com.biglybt.util.MapUtils;
+import com.sun.org.apache.xml.internal.serializer.utils.Messages;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 
 public class
@@ -1798,6 +1803,77 @@ TagManagerImpl
 		return( COConfigurationManager.getBooleanParameter( "tag.manager.pub.default", true ));
 	}
 
+	protected void
+	tagGroupCreated(
+		TagGroupImpl	group )
+	{
+		PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface();
+		
+		UIManager ui_manager = pi.getUIManager();
+		
+		TableManager tm = ui_manager.getTableManager();
+		
+		String col_id = "tag.group.col." + Base32.encode(group.getName().getBytes());
+		
+		Properties props = new Properties();
+		
+		props.put( "TableColumn.header." + col_id, group.getName());
+		
+		pi.getUtilities().getLocaleUtilities().integrateLocalisedMessageBundle( props );
+		
+		tm.registerColumn(
+			Download.class,
+			col_id,
+			new TableColumnCreationListener(){
+				
+				@Override
+				public void tableColumnCreated(TableColumn column){
+					column.setAlignment(TableColumn.ALIGN_CENTER);
+					column.setPosition(TableColumn.POSITION_INVISIBLE);
+					column.setWidth(70);
+					column.setRefreshInterval(TableColumn.INTERVAL_LIVE);
+
+					column.addCellRefreshListener(
+						(cell)->{
+							Download	dl = (Download)cell.getDataSource();
+
+							if ( dl == null ){
+
+								return;
+							}
+							
+							List<Tag> tags = TagManagerImpl.this.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, PluginCoreUtils.unwrap( dl ));
+
+							String sTags = null;
+							
+							if ( tags.size() > 0 ){
+
+								tags = TagUtils.sortTags( tags );
+
+								for ( Tag t: tags ){
+
+									if ( t.getGroupContainer() == group ){
+										
+										String str = t.getTagName( true );
+	
+										if ( sTags == null ){
+											
+											sTags = str;
+											
+										}else{
+											
+											sTags += ", " + str;
+										}
+									}
+								}
+							}
+
+							cell.setText((sTags == null) ? "" : sTags );
+						});
+				}
+			});
+	}
+	
 	protected void
 	checkRSSFeeds(
 		TagBase		tag,

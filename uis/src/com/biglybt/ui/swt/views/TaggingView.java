@@ -449,7 +449,7 @@ public class TaggingView
 	{
 		List<Tag> tags = getTags();
 		
-		TagUIUtils.sortTags( tags );
+		TagUtils.sortTags( tags );
 		
 		StringBuilder content = new StringBuilder(1024);
 		

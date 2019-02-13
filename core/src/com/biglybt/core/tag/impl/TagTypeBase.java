@@ -671,7 +671,7 @@ TagTypeBase
 		return( manager.writeLongListAttribute( this, tag, attr, value ));
 	}
 	
- 	private static class
+ 	protected static class
  	TagGroupImpl
  		implements TagGroup
  	{
@@ -793,6 +793,8 @@ TagTypeBase
  					
  					tg = new TagGroupImpl( new_name );
  					
+ 					manager.tagGroupCreated( tg );
+ 					
  					tag_groups.put( new_name, tg );
  				}
  				
@@ -819,6 +821,8 @@ TagTypeBase
  				if ( result == null ){
  					
  					result = new TagGroupImpl( name );
+ 					
+ 					manager.tagGroupCreated( result );
  					
  					tag_groups.put( name, result );
  				}

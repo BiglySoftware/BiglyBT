@@ -63,6 +63,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingAverage;
@@ -3435,7 +3436,7 @@ DeviceManagerUI
 
 		List<Tag> tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
 
-		tags = TagUIUtils.sortTags( tags );
+		tags = TagUtils.sortTags( tags );
 
 		long	tag_id = device.getAutoShareToTagID();
 

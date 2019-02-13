@@ -35,6 +35,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.MenuBuildUtils;
@@ -161,7 +162,7 @@ implements PaintListener
 		} : null;
 
 
-		tags = TagUIUtils.sortTags(tags);
+		tags = TagUtils.sortTags(tags);
 		Composite g = null;
 		String group = null;
 		for (Tag tag : tags) {
@@ -213,7 +214,7 @@ implements PaintListener
 			}
 			button.addPaintListener(this);
 
-			Utils.setTT(button, TagUIUtils.getTagTooltip(tag));
+			Utils.setTT(button, TagUtils.getTagTooltip(tag));
 			
 			String iconFile = tag.getImageFile();
 
