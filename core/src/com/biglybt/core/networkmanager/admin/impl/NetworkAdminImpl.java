@@ -75,6 +75,8 @@ NetworkAdminImpl
 
 	private static final boolean	FULL_INTF_PROBE	= false;
 
+	private static final String TEST_ADDRESS = "www.google.com";
+	
 	private static InetAddress anyLocalAddress;
 	private static InetAddress anyLocalAddressIPv4;
 	private static InetAddress anyLocalAddressIPv6;
@@ -102,9 +104,9 @@ NetworkAdminImpl
 	private static final int ROUTE_CHECK_TICKS		= ROUTE_CHECK_MILLIS / INTERFACE_CHECK_MILLIS;
 
 
-	private Set<NetworkInterface>				old_network_interfaces;
+	private Set<NetworkInterface>					old_network_interfaces;
 	private final Map<String,AddressHistoryRecord>	address_history			= new HashMap<>();
-	private long								address_history_update_time;
+	private long									address_history_update_time;
 
 	private InetAddress[]				currentBindIPs			= new InetAddress[] { null };
 	private boolean						forceBind				= false;
@@ -615,9 +617,7 @@ NetworkAdminImpl
 
 			if ( fire_stuff ){
 
-				firePropertyChange( NetworkAdmin.PR_NETWORK_INTERFACES );
-
-				checkDefaultBindAddress( first_time );
+				interfacesChanged( first_time );
 			}
 		}catch( Throwable e ){
 		}
@@ -1364,7 +1364,45 @@ addressLoop:
 
 			socket.setSoTimeout( timeout );
 
-			socket.connect( new InetSocketAddress( "www.google.com", 80 ), timeout );
+			InetAddress[] addresses = AddressUtils.getAllByName( TEST_ADDRESS );
+			
+			InetAddress target = null;
+			
+			boolean is6 = bind_address instanceof Inet6Address;
+			
+			for ( InetAddress ia: addresses ){
+				
+				if ( ia instanceof Inet4Address ){
+					
+					if ( !is6 ){
+						
+						target = ia;
+						
+						break;
+					}
+				}else{
+					
+					if ( is6 ){
+						
+						target = ia;
+						
+						break;
+					}
+				}
+			}
+			
+			InetSocketAddress isa;
+			
+			if ( target == null ){
+				
+				isa = new InetSocketAddress( TEST_ADDRESS, 80 );
+				
+			}else{
+				
+				isa = new InetSocketAddress( target, 80 );
+			}
+			
+			socket.connect( isa, timeout );
 
 			return( true );
 
@@ -1501,12 +1539,32 @@ addressLoop:
 		return( null );
 	}
 
-	static final InetAddress[]		gdpa_lock = { null };
-	static AESemaphore			gdpa_sem;
-	private static long					gdpa_last_fail;
-	private static long					gdpa_last_lookup;
-	static final AESemaphore			gdpa_initial_sem = new AESemaphore( "gdpa:init" );
+	private static final InetAddress[]			gdpa_lock = { null };
+	private static AESemaphore					gdpa_sem;
+	private static long							gdpa_last_fail;
+	private static long							gdpa_last_lookup;
+	private static final AESemaphore			gdpa_initial_sem = new AESemaphore( "gdpa:init" );
 
+	private static InetAddress			gdpa6			= null;
+	private static int					gdpa6_count;
+	private static InetAddress			gdpa6_last_good	= null;
+	private static long					gdpa6_last_check;
+	private static boolean				gdpa6_checking;
+	
+	private void
+	interfacesChanged(
+		boolean		first_time )
+	{
+		synchronized( gdpa_lock ){
+			
+			gdpa6 = null;
+		}
+		
+		firePropertyChange( NetworkAdmin.PR_NETWORK_INTERFACES );
+
+		checkDefaultBindAddress( first_time );
+	}
+	
 	@Override
 	public InetAddress
 	getDefaultPublicAddress()
@@ -1629,39 +1687,162 @@ addressLoop:
 	public InetAddress
 	getDefaultPublicAddressV6()
 	{
-		return( getDefaultPublicAddressV6( false ));
-	}
-
-	@Override
-	public InetAddress
-	getDefaultPublicAddressV6(
-		boolean	peek )
-	{
-		if(!supportsIPv6)
+		if ( !supportsIPv6 ){
+			
 			return null;
-
-		// check bindings first
-		for(InetAddress addr : currentBindIPs)
-		{
-			// found a specific bind address, use that one
-			if(AddressUtils.isGlobalAddressV6(addr)){
-				return addr;
+		}
+		
+			// check bindings first
+		
+		for ( InetAddress addr : currentBindIPs ){
+			
+				// found a specific bind address, use that one
+			
+			if ( AddressUtils.isGlobalAddressV6(addr)){
+				
+				return( addr );
 			}
 		}
 
-		for(InetAddress addr : currentBindIPs){
-			// found v6 any-local address, check interfaces for a best match
-			if(addr instanceof Inet6Address && addr.isAnyLocalAddress())
-			{
-				ArrayList<InetAddress> addrs = new ArrayList<>();
-				for(NetworkInterface iface : old_network_interfaces)
-					addrs.addAll(Collections.list(iface.getInetAddresses()));
-
-				return AddressUtils.pickBestGlobalV6Address(addrs);
+		boolean	run_check = false;
+		
+		try{
+			synchronized( gdpa_lock ){
+	
+				if ( gdpa6 != null ){
+					
+					if ( SystemTime.getMonotonousTime() - gdpa6_last_check > 60*1000 ){
+						
+						run_check = gdpa6_count > 1 && !gdpa6_checking;
+					}
+					
+					return( gdpa6 );
+				}
+			}
+			
+			for ( InetAddress addr : currentBindIPs ){
+				
+					// found v6 any-local address, check interfaces for a best match
+				
+				if ( addr instanceof Inet6Address && addr.isAnyLocalAddress()){
+					
+					ArrayList<InetAddress> addrs = new ArrayList<>();
+					
+					for( NetworkInterface iface : old_network_interfaces ){
+						
+						addrs.addAll(Collections.list(iface.getInetAddresses()));
+					}
+					
+					synchronized( gdpa_lock ){
+					
+						List<InetAddress> best = AddressUtils.pickBestGlobalV6Addresses( addrs );
+						
+						gdpa6_count = best.size();
+						
+						if ( gdpa6_count == 0 ){
+							
+							gdpa6 = null;
+							
+							run_check = false;
+							
+						}else if ( gdpa6_count == 1 ){
+							
+							gdpa6 = best.get(0);
+							
+							run_check = false;
+							
+						}else{
+							
+							run_check = !gdpa6_checking;
+							
+							if ( gdpa6_last_good != null && best.contains( gdpa6_last_good )){
+								
+								gdpa6 = gdpa6_last_good;
+								
+							}else{
+								
+								gdpa6 = best.get(0);
+							}
+						}
+						
+						return( gdpa6 );
+					}
+				}
+			}
+	
+			return( null );
+			
+		}finally{
+			
+			if ( run_check ){
+				
+				synchronized( gdpa_lock ){
+					
+					if ( !gdpa6_checking ){
+						
+						gdpa6_checking = true;
+												
+						new AEThread2( "getDefaultPublicAddressV6" )
+						{
+							@Override
+							public void
+							run()
+							{
+								try{
+									for ( InetAddress addr : currentBindIPs ){
+																			
+										if ( addr instanceof Inet6Address && addr.isAnyLocalAddress()){
+										
+											ArrayList<InetAddress> addrs = new ArrayList<>();
+											
+											for( NetworkInterface iface : old_network_interfaces ){
+												
+												addrs.addAll(Collections.list(iface.getInetAddresses()));
+											}
+											
+											List<InetAddress> best = AddressUtils.pickBestGlobalV6Addresses( addrs );
+											
+											InetAddress last_good = gdpa6_last_good;
+											
+											if ( last_good != null && best.contains( last_good )){
+												
+												best.remove( last_good );
+												
+												best.add( 0, last_good );
+											}
+											
+											for ( InetAddress ia: best ){
+											
+												if ( canConnectWithBind( ia, 10*1000 )){
+													
+													synchronized( gdpa_lock ){
+														
+														gdpa6_last_good = gdpa6 = ia;
+														
+														break;
+													}
+												}
+											}
+										}
+									}
+								
+						
+								
+								}finally{
+									
+									synchronized( gdpa_lock ){
+										
+										gdpa6_last_check = SystemTime.getMonotonousTime();
+										
+										gdpa6_checking = false;
+									}
+								}
+							}
+						}.start();
+					}
+				}
 			}
 		}
-
-		return null;
 	}
 
 	@Override
@@ -3934,7 +4115,7 @@ addressLoop:
 						networkInterface.networkAddress address = (networkInterface.networkAddress)interfaces[0].getAddresses()[0];
 
 						try{
-							NetworkAdminNode[] nodes = address.getRoute( InetAddress.getByName("www.google.com"), 30000, trace_route_listener  );
+							NetworkAdminNode[] nodes = address.getRoute( InetAddress.getByName( TEST_ADDRESS ), 30000, trace_route_listener  );
 
 							for (int i=0;i<nodes.length;i++){
 
@@ -3953,7 +4134,7 @@ addressLoop:
 
 			try{
 				pingTargets(
-					InetAddress.getByName( "www.google.com" ),
+					InetAddress.getByName( TEST_ADDRESS ),
 					30000,
 					new NetworkAdminRoutesListener()
 					{
@@ -4252,7 +4433,7 @@ addressLoop:
 					}else{
 
 						try{
-							NetworkAdminNode[] nodes = getRoute( InetAddress.getByName("www.google.com"), 30000, trace_route_listener );
+							NetworkAdminNode[] nodes = getRoute( InetAddress.getByName( TEST_ADDRESS ), 30000, trace_route_listener );
 
 							for (int i=0;i<nodes.length;i++){
 

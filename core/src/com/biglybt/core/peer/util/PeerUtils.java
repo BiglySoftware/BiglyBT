@@ -216,7 +216,7 @@ public class PeerUtils {
 
 				   na_last_ip6_time = now;
 
-				   InetAddress ia = network_admin.getDefaultPublicAddressV6( true );
+				   InetAddress ia = network_admin.getDefaultPublicAddressV6();
 
 				   if ( ia != null ){
 
