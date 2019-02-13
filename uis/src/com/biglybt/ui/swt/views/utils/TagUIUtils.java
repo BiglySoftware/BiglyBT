@@ -2685,23 +2685,21 @@ public class TagUIUtils
 			return;
 		}
 		
-		List<String>	groups = new ArrayList<>();
+		List<TagGroup>	groups = new ArrayList<>();
 		
 		List<Tag> all_tags = tag_type.getTags();
 		
 		for ( Tag t : all_tags ){
 			
-			String group = t.getGroup();
+			TagGroup group = t.getGroupContainer();
 			
-			if ( group != null && group.length() > 0  && !groups.contains(group)){
+			if ( group != null && group.getName() != null  && !groups.contains(group)){
 				
 				groups.add( group );
 			}
 		}
 		
-		Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
-
-		Collections.sort( groups, comp );
+		TagUtils.sortTagGroups( groups );
 		
 		Menu groups_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
 		MenuItem groups_item = new MenuItem(menu, SWT.CASCADE );
@@ -2748,18 +2746,18 @@ public class TagUIUtils
 		
 		if ( !groups.isEmpty()){
 			
-			for ( String g: groups ){
+			for ( TagGroup g: groups ){
 				
 				MenuItem item_group = new MenuItem(groups_menu, SWT.RADIO);
 				
-				item_group.setText( g );
+				item_group.setText( g.getName());
 				
 				item_group.setSelection( g.equals( existing_group ));
 				
 				item_group.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event){
 						for ( Tag t: tagz ){
-							t.setGroup( g );
+							t.setGroup( g.getName());
 						}
 					}
 				});
@@ -2811,6 +2809,40 @@ public class TagUIUtils
 				});
 			}
 		});
+		
+		new MenuItem( groups_menu, SWT.SEPARATOR );
+
+		Menu settings_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		MenuItem settings_item = new MenuItem(groups_menu, SWT.CASCADE );
+		Messages.setLanguageText(settings_item, "TagSettingsView.title" );
+		settings_item.setMenu(settings_menu);
+		
+		if ( groups.isEmpty()){
+			
+			settings_menu.setEnabled( false );
+			
+		}else{
+			
+			for ( TagGroup g: groups ){
+				
+				Menu tg_settings_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+				MenuItem tg_settings_item = new MenuItem(settings_menu, SWT.CASCADE );
+				tg_settings_item.setText(g.getName());
+				tg_settings_item.setMenu(tg_settings_menu);
+
+				MenuItem exclusive_item = new MenuItem( tg_settings_menu, SWT.CHECK);
+				
+				exclusive_item.setText( MessageText.getString( "label.exclusive" ));
+				
+				exclusive_item.setSelection( g.isExclusive());
+				
+				exclusive_item.addListener( 
+					SWT.Selection,
+					(e)->{
+						g.setExclusive(exclusive_item.getSelection());
+					});
+			}
+		}
 	}
 	
 	public static void
