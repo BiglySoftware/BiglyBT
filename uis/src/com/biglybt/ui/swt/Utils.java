@@ -1433,8 +1433,24 @@ public class Utils
 				if ( bf.exists()){
 
 					try{
-						Process proc = Runtime.getRuntime().exec( new String[]{ bf.getAbsolutePath(), sFileModified });
-
+						if ( Constants.isOSX && browser_exe.endsWith( ".app" )){
+							
+							ProcessBuilder pb = GeneralUtils.createProcessBuilder(
+									bf.getParentFile(),
+									new String[]{
+										"open",
+										"-a",
+										browser_exe,
+										sFileModified
+									}, 
+									null );
+							
+							pb.start();
+							
+						}else{
+						
+							Process proc = Runtime.getRuntime().exec( new String[]{ bf.getAbsolutePath(), sFileModified });
+						}
 					}catch( Throwable e ){
 
 						Debug.out( e );
