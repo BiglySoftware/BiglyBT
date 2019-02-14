@@ -1824,18 +1824,22 @@ TagManagerImpl
 		UIManager ui_manager = pi.getUIManager();
 		
 		TableManager tm = ui_manager.getTableManager();
-		
-		String col_id = "tag.group.col." + group.getGroupID();
-		
+				
 		Properties props = new Properties();
 		
-		props.put( "TableColumn.header." + col_id, group.getName());
+		String col_id_text 	= "tag.group.col." + group.getGroupID();
+		String col_id_icons = "tag.group.col.icons." + group.getGroupID();
+
+		props.put( "TableColumn.header." + col_id_text, group.getName());
+		props.put( "TableColumn.header." + col_id_text + ".info", MessageText.getString( "label.tag.names" ));
+		props.put( "TableColumn.header." + col_id_icons, group.getName());
+		props.put( "TableColumn.header." + col_id_icons + ".info", MessageText.getString( "TableColumn.header.tag_icons" ));
 		
 		pi.getUtilities().getLocaleUtilities().integrateLocalisedMessageBundle( props );
 		
 		tm.registerColumn(
 			Download.class,
-			col_id,
+			col_id_text,
 			new TableColumnCreationListener(){
 				
 				@Override
@@ -1886,6 +1890,25 @@ TagManagerImpl
 						});
 				}
 			});
+		
+		tm.registerColumn(
+				Download.class,
+				col_id_icons,
+				new TableColumnCreationListener(){
+					
+					@Override
+					public void tableColumnCreated(TableColumn column){
+						try{
+							Class cla = Class.forName( "com.biglybt.ui.swt.columns.tag.ColumnTagGroupIcons");
+							
+							cla.getConstructor( TableColumn.class, TagGroup.class ).newInstance( column, group );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );;
+						}
+					}
+				});
 	}
 	
 	protected void
