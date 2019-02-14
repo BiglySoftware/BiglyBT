@@ -54,6 +54,7 @@ TagBase
 	protected static final String	AT_ORIGINAL_NAME				= "oname";
 	protected static final String	AT_IMAGE_ID						= "img.id";
 	protected static final String	AT_IMAGE_FILE					= "img.file";
+	protected static final String	AT_IMAGE_SORT_ORDER				= "img.so";
 	protected static final String	AT_COLOR_ID						= "col.rgb";
 	protected static final String	AT_COLORS_ID					= "cols";
 	protected static final String	AT_RSS_ENABLE					= "rss.enable";
@@ -133,6 +134,7 @@ TagBase
 	private long[]	colours;
 	private String	description;
 
+	private int		image_sort_order = Integer.MIN_VALUE;
 
 	private TagFeatureRateLimit		tag_rl;
 	private TagFeatureRSSFeed		tag_rss;
@@ -516,7 +518,9 @@ TagBase
 	}
 
 	@Override
-	public String getImageFile(){
+	public String 
+	getImageFile()
+	{
 		return( readStringAttribute( AT_IMAGE_FILE, null ));
 	}
 	
@@ -527,6 +531,32 @@ TagBase
 		writeStringAttribute( AT_IMAGE_FILE, id );
 		
 		tag_type.fireMetadataChanged( this );
+	}
+	
+	@Override
+	public void
+	setImageSortOrder(
+		int order)
+	{
+		image_sort_order = order;
+		
+		writeLongAttribute( AT_IMAGE_SORT_ORDER, order );
+		
+		tag_type.fireMetadataChanged( this );
+	}
+	
+	@Override
+	public int 
+	getImageSortOrder()
+	{
+		int	result = image_sort_order;
+	
+		if ( result == Integer.MIN_VALUE ){
+		
+			result = image_sort_order = readLongAttribute( AT_IMAGE_SORT_ORDER, -1L ).intValue();
+		}
+		
+		return( result );
 	}
 	
 	private int[]

@@ -44,6 +44,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 /** Display Category torrent belongs to.
@@ -115,6 +116,8 @@ public class TagIconsItem
 
 			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
 
+			tags = TagUtils.sortTagIcons( tags );
+			
 			for ( Tag tag: tags ){
 
 				String file = tag.getImageFile();

@@ -123,6 +123,13 @@ Tag
 	setImageFile(
 		String		id );
 	
+	public int
+	getImageSortOrder();
+	
+	public void
+	setImageSortOrder(
+		int		order );
+		
 	public int[]
 	getColor();
 

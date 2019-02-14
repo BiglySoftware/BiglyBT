@@ -31,6 +31,67 @@ import com.biglybt.pifimpl.local.utils.FormattersImpl;
 
 public class TagUtils{
 
+	private static final Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
+
+	private static final Comparator<Tag> tag_comparator = 
+		(o1,o2)->{
+		
+			String	g1 = o1.getGroup();
+			String	g2 = o2.getGroup();
+
+			if ( g1 != g2 ){
+				if ( g1 == null ){
+					return( 1 );
+				}else if ( g2 == null ){
+					return( -1 );
+				}else{
+
+					int	res = comp.compare( g1,  g2 );
+
+					if ( res != 0 ){
+						return( res );
+					}
+				}
+			}
+			return( comp.compare( o1.getTagName(true), o2.getTagName(true)));
+		};
+		
+		
+	private static final Comparator<Tag> tag_icon_comparator = 
+		(o1,o2)->{
+		
+			int i1 = o1.getImageSortOrder();
+			int i2 = o2.getImageSortOrder();
+			
+			int result = Integer.compare( i1,  i2 );
+			
+			if ( result == 0 ){
+			
+				result = comp.compare( o1.getTagName(true), o2.getTagName(true));
+			}
+			
+			return( result );
+		};
+			
+	private static Comparator<TagGroup> tag_group_comparator = 
+		(o1,o2)->{
+			
+			return( comp.compare( o1.getName(),  o2.getName()));
+		};
+
+		
+	public static Comparator<Tag>
+	getTagComparator()
+	{
+		return( tag_comparator );
+	}
+	
+	public static Comparator<TagGroup>
+	getTagGroupComparator()
+	{
+		return( tag_group_comparator );
+	}
+		
 	public static List<TagType>
 	sortTagTypes(
 		Collection<TagType>	_tag_types )
@@ -66,7 +127,7 @@ public class TagUtils{
 			return( tags );
 		}
 
-		Collections.sort( tags, getTagComparator());
+		Collections.sort( tags, tag_comparator);
 
 		return( tags );
 	}
@@ -86,59 +147,24 @@ public class TagUtils{
 
 		return( groups );
 	}
-	
-	public static Comparator<Tag>
-	getTagComparator()
+
+	public static List<Tag>
+	sortTagIcons(
+		Collection<Tag>	_tags )
 	{
-		return( new Comparator<Tag>()
-		{
-			final Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
+		List<Tag>	tags = new ArrayList<>( _tags );
 
-			@Override
-			public int
-			compare(
-				Tag o1, Tag o2)
-			{
-				String	g1 = o1.getGroup();
-				String	g2 = o2.getGroup();
+		if ( tags.size() < 2 ){
 
-				if ( g1 != g2 ){
-					if ( g1 == null ){
-						return( 1 );
-					}else if ( g2 == null ){
-						return( -1 );
-					}else{
+			return( tags );
+		}
 
-						int	res = comp.compare( g1,  g2 );
+		Collections.sort( tags, tag_icon_comparator);
 
-						if ( res != 0 ){
-							return( res );
-						}
-					}
-				}
-				return( comp.compare( o1.getTagName(true), o2.getTagName(true)));
-			}
-		});
-	}
-	
-	public static Comparator<TagGroup>
-	getTagGroupComparator()
-	{
-		return( new Comparator<TagGroup>()
-		{
-			final Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
-
-			@Override
-			public int
-			compare(
-				TagGroup o1, TagGroup o2)
-			{
-				
-				return( comp.compare( o1.getName(),  o2.getName()));
-			}
-		});
+		return( tags );
 	}
 
+	
 	public static String
 	getTagTooltip(
 		Tag		tag )

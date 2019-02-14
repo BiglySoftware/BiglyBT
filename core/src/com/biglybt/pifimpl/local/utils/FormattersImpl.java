@@ -163,7 +163,7 @@ FormattersImpl
 	}
 
 	@Override
-	public Comparator
+	public Comparator<String>
 	getAlphanumericComparator(
 		final boolean	ignore_case )
 	{

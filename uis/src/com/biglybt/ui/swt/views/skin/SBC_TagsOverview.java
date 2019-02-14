@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
@@ -51,6 +53,7 @@ import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.pif.UISWTInstance;
@@ -488,6 +491,14 @@ public class SBC_TagsOverview
 						new ColumnTagIcon(column);
 					}
 				});
+		
+		tableManager.registerColumn(Tag.class, ColumnTagIconSortOrder.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagIconSortOrder(column);
+					}
+				});
 
 		tableManager.registerColumn(Tag.class, ColumnTagStatus.COLUMN_ID,
 				new TableColumnCreationListener() {
@@ -800,6 +811,63 @@ public class SBC_TagsOverview
 			MenuFactory.addSeparatorMenuItem(menu);
 		}
 
+		if ( 	( sColumnName.equals( ColumnTagIcon.COLUMN_ID )) ||
+				( sColumnName.equals( ColumnTagIconSortOrder.COLUMN_ID ))){
+
+			MenuItem mi = new MenuItem(menu, SWT.PUSH);
+
+			Messages.setLanguageText(mi, "menu.set.icon.sort");
+
+			mi.addListener(SWT.Selection,
+				(e)->{
+					SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+							"tag.sort.order.title",
+							"tag.sort.order.text");
+					
+					entryWindow.allowEmptyInput( true );
+					
+					entryWindow.setWidthHint( 450 );
+					
+					entryWindow.prompt(new UIInputReceiverListener() {
+						@Override
+						public void 
+						UIInputReceiverClosed(UIInputReceiver entryWindow) 
+						{
+							if (!entryWindow.hasSubmittedInput()){
+								
+								return;
+							}
+							
+							String sReturn = entryWindow.getSubmittedInput().trim();
+							
+							if ( sReturn.isEmpty()){
+								
+								for ( Tag t: tags ){
+									
+									t.setImageSortOrder( -1 );
+								}
+							}else{
+								
+								int start = 0;
+								
+								try{
+									start = Integer.valueOf(sReturn).intValue();
+									
+								} catch (NumberFormatException er) {
+									// Ignore
+								}
+								
+								for ( Tag t: tags ){
+									
+									t.setImageSortOrder( start++ );
+								}
+							}
+						}});
+				});	
+
+			MenuFactory.addSeparatorMenuItem(menu);
+		}
+		
 		if ( tags.size() == 1 ){
 			TagUIUtils.createSideBarMenuItems( menu, tags.get(0) );
 		}else{
