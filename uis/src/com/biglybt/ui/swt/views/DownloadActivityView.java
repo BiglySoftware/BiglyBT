@@ -23,6 +23,9 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Canvas;
@@ -47,6 +50,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.core.util.GeneralUtils;
+import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.average.MovingImmediateAverage;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.selectedcontent.SelectedContent;
@@ -62,16 +66,20 @@ DownloadActivityView
 {
 	public static final String MSGID_PREFIX = "DownloadActivityView";
 
-	private static Color[]	colors = {
+	private static Color[]	mpg_colors = {
 		Colors.fadedGreen, Colors.fadedGreen,
 		Colors.blues[Colors.BLUES_DARKEST], Colors.blues[Colors.BLUES_DARKEST],
 		Colors.light_grey };
 
+	private static Color[]	eta_colors = { Colors.fadedGreen, Colors.light_grey };
+
 	private UISWTView 				swtView;
 	private boolean					legend_at_bottom;
 	private Composite				panel;
+	
 	private MultiPlotGraphic 		mpg;
-
+	private MultiPlotGraphic		eta;
+	
 	private DownloadManager 		manager;
 
 	private Composite parent;
@@ -127,8 +135,11 @@ DownloadActivityView
 		Composite parent )
 	{
 	    this.parent = parent;
-			panel = new Composite(parent,SWT.NULL);
-	    panel.setLayout(new GridLayout(legend_at_bottom?1:2, false));
+	    
+		panel = new Composite(parent,SWT.NULL);
+			   
+		panel.setLayout( new FormLayout());
+		
 	    fillPanel();
 	}
 
@@ -137,196 +148,349 @@ DownloadActivityView
 
 	    GridData gridData;
 
-	    ValueFormater formatter =
-	    	new ValueFormater()
-	    	{
-	        	@Override
-		        public String
-	        	format(
-	        		int value)
-	        	{
-	        		return DisplayFormatters.formatByteCountToKiBEtcPerSec( value );
-	        	}
-	    	};
+	    // download graphic
+	    
+	    Composite mpg_panel 	= new Composite( panel, SWT.NULL );
+	    Composite time_panel 	= new Composite( panel, SWT.NULL );
+	    
+	    {
+	    	FormData	formData = new FormData();
+	    	formData.left = new FormAttachment( 0, 0 );
+	    	formData.right = new FormAttachment( 75, 0 );
+	    	formData.top = new FormAttachment( 0, 0 );
+	    	formData.bottom = new FormAttachment( 100, 0 );
+	    	
+	    	mpg_panel.setLayoutData( formData );
+	    	
+	    	mpg_panel.setLayout(new GridLayout(legend_at_bottom?1:2, false));
 
-
-	    final ValueSourceImpl[] sources = {
-	    	new ValueSourceImpl( "Up", 0, colors, true, false, false )
-	    	{
-	    		@Override
-			    public int
-	    		getValue()
-	    		{
-	    			DownloadManager dm = manager;
-
-	    			if ( dm == null ){
-
-	    				return( 0 );
-	    			}
-
-	    			DownloadManagerStats stats = manager.getStats();
-
-	    			return((int)(stats.getDataSendRate()));
-	    		}
-	    	},
-	    	new ValueSourceImpl( "Up Smooth", 1, colors, true, false, true )
-	    	{
-	    		@Override
-			    public int
-	    		getValue()
-	    		{
-	    			DownloadManager dm = manager;
-
-	    			if ( dm == null ){
-
-	    				return( 0 );
-	    			}
-
-	    			DownloadManagerStats stats = manager.getStats();
-
-	    			return((int)(stats.getSmoothedDataSendRate()));
-	    		}
-	    	},
-	    	new ValueSourceImpl( "Down", 2, colors, false, false, false )
-	    	{
-	    		@Override
-			    public int
-	    		getValue()
-	    		{
-	    			DownloadManager dm = manager;
-
-	    			if ( dm == null ){
-
-	    				return( 0 );
-	    			}
-
-	    			DownloadManagerStats stats = manager.getStats();
-
-	    			return((int)(stats.getDataReceiveRate()));
-	    		}
-	    	},
-	    	new ValueSourceImpl( "Down Smooth", 3, colors, false, false, true )
-	    	{
-	    		@Override
-			    public int
-	    		getValue()
-	    		{
-	    			DownloadManager dm = manager;
-
-	    			if ( dm == null ){
-
-	    				return( 0 );
-	    			}
-
-	    			DownloadManagerStats stats = manager.getStats();
-
-	    			return((int)(stats.getSmoothedDataReceiveRate()));
-	    		}
-	    	},
-	    	new ValueSourceImpl( "Swarm Peer Average", 4, colors, false, true, false )
-	    	{
-	    		@Override
-			    public int
-	    		getValue()
-	    		{
-	    			DownloadManager dm = manager;
-
-	    			if ( dm == null ){
-
-	    				return( 0 );
-	    			}
-
-	    			return((int)(manager.getStats().getTotalAveragePerPeer()));
-	    		}
-	    	}
-	    };
-
-		final MultiPlotGraphic f_mpg = mpg = MultiPlotGraphic.getInstance( sources, formatter );
-
-
-		String[] color_configs = new String[] {
-				"DownloadActivityView.legend.up",
-				"DownloadActivityView.legend.up_smooth",
-				"DownloadActivityView.legend.down",
-				"DownloadActivityView.legend.down_smooth",
-				"DownloadActivityView.legend.peeraverage",
-			};
-
-		Legend.LegendListener legend_listener =
-			new Legend.LegendListener()
-			{
-				private int	hover_index = -1;
-
-				@Override
-				public void
-				hoverChange(
-					boolean 	entry,
-					int 		index )
+		    ValueFormater formatter =
+		    	new ValueFormater()
+		    	{
+		        	@Override
+			        public String
+		        	format(
+		        		int value)
+		        	{
+		        		return DisplayFormatters.formatByteCountToKiBEtcPerSec( value );
+		        	}
+		    	};
+	
+	
+		    final ValueSourceImpl[] sources = {
+		    	new ValueSourceImpl( "Up", 0, mpg_colors, true, false, false )
+		    	{
+		    		@Override
+				    public int
+		    		getValue()
+		    		{
+		    			DownloadManager dm = manager;
+	
+		    			if ( dm == null ){
+	
+		    				return( 0 );
+		    			}
+	
+		    			DownloadManagerStats stats = manager.getStats();
+	
+		    			return((int)(stats.getDataSendRate()));
+		    		}
+		    	},
+		    	new ValueSourceImpl( "Up Smooth", 1, mpg_colors, true, false, true )
+		    	{
+		    		@Override
+				    public int
+		    		getValue()
+		    		{
+		    			DownloadManager dm = manager;
+	
+		    			if ( dm == null ){
+	
+		    				return( 0 );
+		    			}
+	
+		    			DownloadManagerStats stats = manager.getStats();
+	
+		    			return((int)(stats.getSmoothedDataSendRate()));
+		    		}
+		    	},
+		    	new ValueSourceImpl( "Down", 2, mpg_colors, false, false, false )
+		    	{
+		    		@Override
+				    public int
+		    		getValue()
+		    		{
+		    			DownloadManager dm = manager;
+	
+		    			if ( dm == null ){
+	
+		    				return( 0 );
+		    			}
+	
+		    			DownloadManagerStats stats = manager.getStats();
+	
+		    			return((int)(stats.getDataReceiveRate()));
+		    		}
+		    	},
+		    	new ValueSourceImpl( "Down Smooth", 3, mpg_colors, false, false, true )
+		    	{
+		    		@Override
+				    public int
+		    		getValue()
+		    		{
+		    			DownloadManager dm = manager;
+	
+		    			if ( dm == null ){
+	
+		    				return( 0 );
+		    			}
+	
+		    			DownloadManagerStats stats = manager.getStats();
+	
+		    			return((int)(stats.getSmoothedDataReceiveRate()));
+		    		}
+		    	},
+		    	new ValueSourceImpl( "Swarm Peer Average", 4, mpg_colors, false, true, false )
+		    	{
+		    		@Override
+				    public int
+		    		getValue()
+		    		{
+		    			DownloadManager dm = manager;
+	
+		    			if ( dm == null ){
+	
+		    				return( 0 );
+		    			}
+	
+		    			return((int)(manager.getStats().getTotalAveragePerPeer()));
+		    		}
+		    	}
+		    };
+	
+			final MultiPlotGraphic f_mpg = mpg = MultiPlotGraphic.getInstance( sources, formatter );
+	
+	
+			String[] color_configs = new String[] {
+					"DownloadActivityView.legend.up",
+					"DownloadActivityView.legend.up_smooth",
+					"DownloadActivityView.legend.down",
+					"DownloadActivityView.legend.down_smooth",
+					"DownloadActivityView.legend.peeraverage",
+				};
+	
+			Legend.LegendListener legend_listener =
+				new Legend.LegendListener()
 				{
-					if ( hover_index != -1 ){
-
-						sources[hover_index].setHover( false );
+					private int	hover_index = -1;
+	
+					@Override
+					public void
+					hoverChange(
+						boolean 	entry,
+						int 		index )
+					{
+						if ( hover_index != -1 ){
+	
+							sources[hover_index].setHover( false );
+						}
+	
+						if ( entry ){
+	
+							hover_index = index;
+	
+							sources[index].setHover( true );
+						}
+	
+						f_mpg.refresh( true );
 					}
-
-					if ( entry ){
-
-						hover_index = index;
-
-						sources[index].setHover( true );
+	
+					@Override
+					public void
+					visibilityChange(
+						boolean	visible,
+						int		index )
+					{
+						sources[index].setVisible( visible );
+	
+						f_mpg.refresh( true );
 					}
-
-					f_mpg.refresh( true );
-				}
-
-				@Override
-				public void
-				visibilityChange(
-					boolean	visible,
-					int		index )
-				{
-					sources[index].setVisible( visible );
-
-					f_mpg.refresh( true );
-				}
-			};
-
-
-		if ( !legend_at_bottom ){
-
-			gridData = new GridData( GridData.FILL_VERTICAL );
-			gridData.verticalAlignment = SWT.CENTER;
-
-			Legend.createLegendComposite(panel, colors, color_configs, null, gridData, false, legend_listener );
-		}
-
-	    Composite gSpeed = new Composite(panel,SWT.NULL);
-	    gridData = new GridData(GridData.FILL_BOTH);
-	    gSpeed.setLayoutData(gridData);
-	    gSpeed.setLayout(new GridLayout());
-
-	    if ( legend_at_bottom ){
-
-			gridData = new GridData(GridData.FILL_HORIZONTAL);
-
-			Legend.createLegendComposite(panel, colors, color_configs, null, gridData, true, legend_listener );
-
+				};
+	
+	
+			if ( !legend_at_bottom ){
+	
+				gridData = new GridData( GridData.FILL_VERTICAL );
+				gridData.verticalAlignment = SWT.CENTER;
+	
+				Legend.createLegendComposite(mpg_panel, mpg_colors, color_configs, null, gridData, false, legend_listener );
+			}
+	
+		    Composite gSpeed = new Composite(mpg_panel,SWT.NULL);
+		    gridData = new GridData(GridData.FILL_BOTH);
+		    gSpeed.setLayoutData(gridData);
+		    gSpeed.setLayout(new GridLayout());
+	
+		    if ( legend_at_bottom ){
+	
+				gridData = new GridData(GridData.FILL_HORIZONTAL);
+	
+				Legend.createLegendComposite(mpg_panel, mpg_colors, color_configs, null, gridData, true, legend_listener );
+	
+		    }
+	
+		    Canvas speedCanvas = new Canvas(gSpeed,SWT.NO_BACKGROUND);
+		    gridData = new GridData(GridData.FILL_BOTH);
+		    speedCanvas.setLayoutData(gridData);
+	
+			mpg.initialize( speedCanvas, false );
 	    }
+	    
+	    	// time panel#
+	    
+	    {
+	    	FormData	formData = new FormData();
+	    	formData.left = new FormAttachment( mpg_panel, 0 );
+	    	formData.right = new FormAttachment( 100, 0 );
+	    	formData.top = new FormAttachment( 0, 0 );
+	    	formData.bottom = new FormAttachment( 100, 0 );
+	    	
+	    	time_panel.setLayoutData( formData );
+	    	
+	    	time_panel.setLayout(new GridLayout(legend_at_bottom?1:2, false));
 
-	    Canvas speedCanvas = new Canvas(gSpeed,SWT.NO_BACKGROUND);
-	    gridData = new GridData(GridData.FILL_BOTH);
-	    speedCanvas.setLayoutData(gridData);
-
-		mpg.initialize( speedCanvas, false );
+		    ValueFormater formatter =
+		    	new ValueFormater()
+		    	{
+		        	@Override
+			        public String
+		        	format(
+		        		int value)
+		        	{
+		        		return TimeFormatter.format( value );
+		        	}
+		    	};
+	
+	
+		    final ValueSourceImpl[] sources = {
+		    	new ValueSourceImpl( "ETA", 0, eta_colors, true, false, false )
+		    	{
+		    		@Override
+				    public int
+		    		getValue()
+		    		{
+		    			DownloadManager dm = manager;
+	
+		    			if ( dm == null ){
+	
+		    				return( 0 );
+		    			}
+	
+		    			DownloadManagerStats stats = manager.getStats();
+	
+		    			return((int)(stats.getETA()));
+		    		}
+		    	},
+		    	new ValueSourceImpl( "ETA Average", 1, eta_colors, false, true, false )
+		    	{
+		    		@Override
+				    public int
+		    		getValue()
+		    		{
+		    			return( eta.getAverage( 10 )[0]);
+		    		}
+		    	}
+		    };
+	
+			final MultiPlotGraphic f_eta = eta = MultiPlotGraphic.getInstance( 60, sources, formatter );
+	
+	
+			String[] color_configs = new String[] {
+					"DownloadActivityView.legend.eta",
+					"DownloadActivityView.legend.etaAverage",
+				};
+	
+			Legend.LegendListener legend_listener =
+				new Legend.LegendListener()
+				{
+					private int	hover_index = -1;
+	
+					@Override
+					public void
+					hoverChange(
+						boolean 	entry,
+						int 		index )
+					{
+						if ( hover_index != -1 ){
+	
+							sources[hover_index].setHover( false );
+						}
+	
+						if ( entry ){
+	
+							hover_index = index;
+	
+							sources[index].setHover( true );
+						}
+	
+						f_eta.refresh( true );
+					}
+	
+					@Override
+					public void
+					visibilityChange(
+						boolean	visible,
+						int		index )
+					{
+						sources[index].setVisible( visible );
+	
+						f_eta.refresh( true );
+					}
+				};
+	
+	
+			if ( !legend_at_bottom ){
+	
+				gridData = new GridData( GridData.FILL_VERTICAL );
+				gridData.verticalAlignment = SWT.CENTER;
+	
+				Legend.createLegendComposite(time_panel, eta_colors, color_configs, null, gridData, false, legend_listener );
+			}
+	
+		    Composite gSpeed = new Composite(time_panel,SWT.NULL);
+		    gridData = new GridData(GridData.FILL_BOTH);
+		    gSpeed.setLayoutData(gridData);
+		    gSpeed.setLayout(new GridLayout());
+	
+		    if ( legend_at_bottom ){
+	
+				gridData = new GridData(GridData.FILL_HORIZONTAL);
+	
+				Legend.createLegendComposite(time_panel, eta_colors, color_configs, null, gridData, true, legend_listener );
+	
+		    }
+	
+		    Canvas speedCanvas = new Canvas(gSpeed,SWT.NO_BACKGROUND);
+		    gridData = new GridData(GridData.FILL_BOTH);
+		    speedCanvas.setLayoutData(gridData);
+	
+		    eta.initialize( speedCanvas, false );
+	    }
 	}
 
 	private void
 	refresh(
 		boolean	force )
 	{
-		if (mpg == null) {
-			return;
+		if ( mpg != null ){
+	
+			mpg.refresh( force );
 		}
-		mpg.refresh( force );
+		
+		if ( eta != null ){
+			
+			eta.refresh( force );
+		}
 	}
 
 	public Composite
@@ -396,6 +560,10 @@ DownloadActivityView
 
 			mpg.reset( new int[5][0] );
 
+			eta.setActive( false );
+			
+			eta.reset( new int[2][0] );
+			
 		}else{
 
 			DownloadManagerStats stats = manager.getStats();
@@ -415,6 +583,8 @@ DownloadActivityView
 			int[] smoothed_send = new int[history_secs];
 			int[] smoothed_recv = new int[history_secs];
 
+			int[] e_history = _history[3];
+			
 			MovingImmediateAverage	send_average = GeneralUtils.getSmoothAverage();
 			MovingImmediateAverage	recv_average = GeneralUtils.getSmoothAverage();
 
@@ -440,11 +610,17 @@ DownloadActivityView
 				smoothed_recv[i] = current_smooth_recv;
 			}
 
-			int[][] history = {send_history, smoothed_send, recv_history, smoothed_recv, _history[2] };
+			int[][] mpg_history = {send_history, smoothed_send, recv_history, smoothed_recv, _history[2] };
 
-			mpg.reset( history );
+			mpg.reset( mpg_history );
 
 			mpg.setActive( true );
+				
+			int[][] eta_history = { e_history, new int[ e_history.length ] };
+			
+			eta.reset( eta_history );
+			
+			eta.setActive( true );
 		}
 	}
 
@@ -456,6 +632,11 @@ DownloadActivityView
 		 if ( mpg != null ){
 
 			 mpg.dispose();
+		 }
+		 
+		 if ( eta != null ){
+			 
+			 eta.dispose();
 		 }
 	}
 

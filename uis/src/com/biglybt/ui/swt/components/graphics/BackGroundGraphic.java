@@ -123,7 +123,7 @@ public class BackGroundGraphic implements Graphic {
 
     if(sizeChanged || bufferBackground == null) {
       Rectangle bounds = drawCanvas.getClientArea();
-      if(bounds.height < 30 || bounds.width  < 100)
+      if(bounds.height < 1 || bounds.width  < 1)
         return;
 
       if(bufferBackground != null && ! bufferBackground.isDisposed())

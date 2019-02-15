@@ -231,7 +231,7 @@ public class Legend {
 			}
 
 			data = new RowData();
-			data.width = 20;
+			data.width = 12;
 			data.height = lblDesc.computeSize(SWT.DEFAULT, SWT.DEFAULT).y - 3;
 			cColor.setLayoutData(data);
 

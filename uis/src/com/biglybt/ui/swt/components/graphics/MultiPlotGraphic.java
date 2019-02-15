@@ -140,7 +140,7 @@ MultiPlotGraphic
 					}
 				}
 
-				currentPosition = nbValues;
+				currentPosition = nbValues%maxEntries;
 			}
 		}
 
@@ -296,6 +296,47 @@ MultiPlotGraphic
 			});
 	}
 
+	public int[]
+	getAverage(
+		int		num_entries )
+	{
+	    try{
+	    	this_mon.enter();
+
+	    	int[]	averages = new int[all_values.length];
+	    		    	
+    		int start	= currentPosition-num_entries;
+    		int	end		= currentPosition;
+    			    	
+	    	if ( start < 0 ){
+		    	if ( nbValues < maxEntries ){
+	    			start = 0;
+	    		}else{
+	    			start += maxEntries;
+	    		}
+	    	}
+	    	
+	    	for ( int i=start;i<end;i++){
+	    		
+	    		int	pos = i%maxEntries;
+	    		
+	    		for ( int j=0;j<averages.length;j++){
+	    			averages[j] += all_values[j][pos];
+	    		}
+	    	}
+	    	
+	    	for ( int j=0;j<averages.length;j++){
+    			averages[j] /= num_entries;
+    		}
+	    	
+	    	return( averages );
+	    	
+	    }finally{
+
+	    	this_mon.exit();
+	    }
+	}
+	
 	private void
 	addIntsValue(
 		int[] new_values)
@@ -367,7 +408,7 @@ MultiPlotGraphic
 
 		Rectangle bounds = drawCanvas.getClientArea();
 
-		if ( bounds.height < 30 || bounds.width  < 100 || bounds.width > 10000 || bounds.height > 10000){
+		if ( bounds.height < 1 || bounds.width  < 1 || bounds.width > 10000 || bounds.height > 10000){
 
 			return;
 		}
