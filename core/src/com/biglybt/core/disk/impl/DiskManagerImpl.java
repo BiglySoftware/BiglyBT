@@ -169,6 +169,10 @@ DiskManagerImpl
     private long        allocated;
     private long        remaining;
 
+    	// this used to drive end-of-download detection, careful that it is accurate at all times (there was a bug where it wasn't and caused downloads to prematurely recheck...)
+    
+    private volatile long	remaining_excluding_dnd;
+    
 
     private final TOTorrent       torrent;
 
@@ -270,7 +274,8 @@ DiskManagerImpl
             });
 
     final AEMonitor   start_stop_mon  = new AEMonitor( "DiskManager:startStop" );
-    private final AEMonitor   file_piece_mon  = new AEMonitor( "DiskManager:filePiece" );
+    
+    private final Object   file_piece_lock  = new Object();
 
 
     public
@@ -340,8 +345,10 @@ DiskManagerImpl
         }
 
         totalLength = piece_mapper.getTotalLength();
-        remaining   = totalLength;
-
+        
+        remaining   			= totalLength;
+        remaining_excluding_dnd = remaining;
+        
         nbPieces    = torrent.getNumberOfPieces();
 
         pieceLength     = (int)torrent.getPieceLength();
@@ -1497,30 +1504,39 @@ DiskManagerImpl
 
                 skipped_file_set_changed    = false;
 
-                try{
-                    file_piece_mon.enter();
-
-                    long skipped   		= 0;
-                    long downloaded  	= 0;
-
-                    for (int i=0;i<current_files.length;i++){
-
-                        DiskManagerFileInfoImpl file = current_files[i];
-
-                        if ( file.isSkipped()){
-
-                        	skipped   += file.getLength();
-                        	downloaded  += file.getDownloaded();
-                        }
-                    }
-
-                    skipped_file_set_size 	= skipped;
-                    skipped_but_downloaded	= downloaded;
-                }finally{
-
-                    file_piece_mon.exit();
+                synchronized( file_piece_lock ){
+                	
+	                try{	
+	                    long skipped   		= 0;
+	                    long downloaded  	= 0;
+	
+	                    for (int i=0;i<current_files.length;i++){
+	
+	                        DiskManagerFileInfoImpl file = current_files[i];
+	
+	                        if ( file.isSkipped()){
+	
+	                        	skipped   += file.getLength();
+	                        	downloaded  += file.getDownloaded();
+	                        }
+	                    }
+	
+	                    skipped_file_set_size 	= skipped;
+	                    skipped_but_downloaded	= downloaded;
+	                    
+	                }finally{
+	
+	                	remaining_excluding_dnd = ( remaining - ( skipped_file_set_size - skipped_but_downloaded ));
+	                	
+	                	if ( remaining_excluding_dnd < 0 ){
+	                		
+	                		Debug.out( "remaining_excluding_dnd went negative" );
+	                		
+	                		remaining_excluding_dnd = 0;
+	                	}
+	                }
                 }
-
+                
                 DownloadManagerStats stats = download_manager.getStats();
 
                 if (stats instanceof DownloadManagerStatsImpl) {
@@ -1535,15 +1551,8 @@ DiskManagerImpl
     getRemainingExcludingDND()
     {
     	fixupSkippedCalculation();
-
-        long rem = ( remaining - ( skipped_file_set_size - skipped_but_downloaded ));
-
-        if ( rem < 0 ){
-
-            rem = 0;
-        }
-
-        return( rem );
+    	
+    	return( remaining_excluding_dnd );
     }
 
 	@Override
@@ -1590,208 +1599,222 @@ DiskManagerImpl
     {
         int piece_number =dmPiece.getPieceNumber();
         int piece_length =dmPiece.getLength();
-        try
-        {
-            file_piece_mon.enter();
-
-            if (dmPiece.isDone() != done )
-            {
-                dmPiece.setDoneSupport(done);
-
-                if (done)
-                    remaining -=piece_length;
-                else
-                    remaining +=piece_length;
-
-                DMPieceList piece_list = getPieceList( piece_number );
-
-                for (int i =0; i <piece_list.size(); i++)
-                {
-
-                    DMPieceMapEntry piece_map_entry =piece_list.get(i);
-
-                    DiskManagerFileInfoImpl this_file =piece_map_entry.getFile();
-
-                    long file_length =this_file.getLength();
-
-                    long file_done =this_file.getDownloaded();
-
-                    long file_done_before =file_done;
-
-                    if (done)
-                        file_done +=piece_map_entry.getLength();
-                    else
-                        file_done -=piece_map_entry.getLength();
-
-                    if (file_done <0)
-                    {
-                        Debug.out("piece map entry length negative");
-
-                        file_done =0;
-
-                    } else if (file_done >file_length)
-                    {
-                        Debug.out("piece map entry length too large");
-
-                        file_done =file_length;
-                    }
-
-                    if (this_file.isSkipped())
-                    {
-                        skipped_but_downloaded +=(file_done -file_done_before);
-                    }
-
-                    this_file.setDownloaded(file_done);
-
-                    	// change file modes based on whether or not the file is complete or not
-
-                    if ( file_done == file_length ){
-
-                    	try{
-                      		DownloadManagerState state = download_manager.getDownloadState();
-
-                    		try{
-
-	                    		String suffix = state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
-
-	                    		if ( suffix != null && suffix.length() > 0 ){
-
-									String prefix = state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
-
-									if ( prefix == null ){
-
-										prefix = "";
-									}
-
-	                    			File base_file = this_file.getFile( false );
-
-	                    			int	file_index = this_file.getIndex();
-
-	                    			File link = state.getFileLink( file_index, base_file );
-
-	                    			if ( link != null ){
-
-	                    				String	name = link.getName();
-
-	                    				if ( name.endsWith( suffix ) && name.length() > suffix.length()){
-
-	                    					String	new_name = name.substring( 0, name.length() - suffix.length());
-
-	                    					if ( !this_file.isSkipped()){
-
-	                    							// retain prefix for dnd files as it is there to prevent clashes
-
-		                    					if ( prefix.length() > 0 && new_name.startsWith( prefix )){
-
-		                    						new_name = new_name.substring( prefix.length());
-		                    					}
-	                    					}
-
-	                    					File new_file = new File( link.getParentFile(), new_name );
-
-	                    					if ( !new_file.exists()){
-
-	                    						this_file.renameFile( new_name );
-
-	                    						if ( base_file.equals( new_file )){
-
-	                    							state.setFileLink( file_index, base_file, null );
-
-	                    						}else{
-
-	                    							state.setFileLink( file_index, base_file, new_file );
-	                    						}
-	                    					}
-	                    				}
-	                    			}else{
-
-	                    					/* bit nasty this but I (parg) spent a while trying to find an alternative solution to this and gave up
-	                    					 * With simple torrents, if a 'file-move' operation is performed while incomplete with a suffix defined then
-	                    					 * the actual save location gets updated and the link information lost as a result (it is as if the user went and
-	                    					 * moved the file to another one that happened to end in the suffix). Detect this situation and do the best we
-	                    					 * can to remove the auto-added suffix
-	                    					 */
-
-	                    				if ( this_file.getTorrentFile().getTorrent().isSimpleTorrent()){
-
-	                    					File save_location = download_manager.getSaveLocation();
-
-	                    					String	name = save_location.getName();
-
+        
+        synchronized( file_piece_lock ){
+	        try{
+	
+	            if ( dmPiece.isDone() != done ){
+	            	
+	                dmPiece.setDoneSupport(done);
+	
+	                if (done){
+	                	
+	                    remaining -=piece_length;
+	                    
+	                }else{
+	                	
+	                    remaining +=piece_length;
+	                }
+	                
+	                DMPieceList piece_list = getPieceList( piece_number );
+	
+	                for (int i =0; i <piece_list.size(); i++){
+	
+	                    DMPieceMapEntry piece_map_entry =piece_list.get(i);
+	
+	                    DiskManagerFileInfoImpl this_file =piece_map_entry.getFile();
+	
+	                    long file_length =this_file.getLength();
+	
+	                    long file_done =this_file.getDownloaded();
+	
+	                    long file_done_before =file_done;
+	
+	                    if (done){
+	                    	
+	                        file_done +=piece_map_entry.getLength();
+	                        
+	                    }else{
+	                    	
+	                        file_done -=piece_map_entry.getLength();
+	                    }
+	                    
+	                    if (file_done <0){
+	                    	
+	                        Debug.out("piece map entry length negative");
+	
+	                        file_done = 0;
+	
+	                    }else if (file_done >file_length){
+	                    	
+	                        Debug.out("piece map entry length too large");
+	
+	                        file_done =file_length;
+	                    }
+	
+	                    if ( this_file.isSkipped()){
+	                    	
+	                        skipped_but_downloaded +=(file_done -file_done_before);
+	                    }
+	
+	                    this_file.setDownloaded(file_done);
+	
+	                    	// change file modes based on whether or not the file is complete or not
+	
+	                    if ( file_done == file_length ){
+	
+	                    	try{
+	                      		DownloadManagerState state = download_manager.getDownloadState();
+	
+	                    		try{
+	
+		                    		String suffix = state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );
+	
+		                    		if ( suffix != null && suffix.length() > 0 ){
+	
+										String prefix = state.getAttribute( DownloadManagerState.AT_DND_PREFIX );
+	
+										if ( prefix == null ){
+	
+											prefix = "";
+										}
+	
+		                    			File base_file = this_file.getFile( false );
+	
+		                    			int	file_index = this_file.getIndex();
+	
+		                    			File link = state.getFileLink( file_index, base_file );
+	
+		                    			if ( link != null ){
+	
+		                    				String	name = link.getName();
+	
 		                    				if ( name.endsWith( suffix ) && name.length() > suffix.length()){
-
+	
 		                    					String	new_name = name.substring( 0, name.length() - suffix.length());
-
+	
 		                    					if ( !this_file.isSkipped()){
-
+	
 		                    							// retain prefix for dnd files as it is there to prevent clashes
-
+	
 			                    					if ( prefix.length() > 0 && new_name.startsWith( prefix )){
-
+	
 			                    						new_name = new_name.substring( prefix.length());
 			                    					}
 		                    					}
-
-		                    					File new_file = new File( save_location.getParentFile(), new_name );
-
+	
+		                    					File new_file = new File( link.getParentFile(), new_name );
+	
 		                    					if ( !new_file.exists()){
-
+	
 		                    						this_file.renameFile( new_name );
-
-		                    						if ( save_location.equals( new_file )){
-
-		                    							state.setFileLink( 0, save_location, null );
-
+	
+		                    						if ( base_file.equals( new_file )){
+	
+		                    							state.setFileLink( file_index, base_file, null );
+	
 		                    						}else{
-
-		                    							state.setFileLink( 0, save_location, new_file );
+	
+		                    							state.setFileLink( file_index, base_file, new_file );
 		                    						}
 		                    					}
 		                    				}
-	                    				}
-	                    			}
+		                    			}else{
+	
+		                    					/* bit nasty this but I (parg) spent a while trying to find an alternative solution to this and gave up
+		                    					 * With simple torrents, if a 'file-move' operation is performed while incomplete with a suffix defined then
+		                    					 * the actual save location gets updated and the link information lost as a result (it is as if the user went and
+		                    					 * moved the file to another one that happened to end in the suffix). Detect this situation and do the best we
+		                    					 * can to remove the auto-added suffix
+		                    					 */
+	
+		                    				if ( this_file.getTorrentFile().getTorrent().isSimpleTorrent()){
+	
+		                    					File save_location = download_manager.getSaveLocation();
+	
+		                    					String	name = save_location.getName();
+	
+			                    				if ( name.endsWith( suffix ) && name.length() > suffix.length()){
+	
+			                    					String	new_name = name.substring( 0, name.length() - suffix.length());
+	
+			                    					if ( !this_file.isSkipped()){
+	
+			                    							// retain prefix for dnd files as it is there to prevent clashes
+	
+				                    					if ( prefix.length() > 0 && new_name.startsWith( prefix )){
+	
+				                    						new_name = new_name.substring( prefix.length());
+				                    					}
+			                    					}
+	
+			                    					File new_file = new File( save_location.getParentFile(), new_name );
+	
+			                    					if ( !new_file.exists()){
+	
+			                    						this_file.renameFile( new_name );
+	
+			                    						if ( save_location.equals( new_file )){
+	
+			                    							state.setFileLink( 0, save_location, null );
+	
+			                    						}else{
+	
+			                    							state.setFileLink( 0, save_location, new_file );
+			                    						}
+			                    					}
+			                    				}
+		                    				}
+		                    			}
+		                    		}
+	                    		}finally{
+	
+	                             	if ( this_file.getAccessMode() == DiskManagerFileInfo.WRITE ){
+	
+	                               		this_file.setAccessMode( DiskManagerFileInfo.READ );
+	                               	}
+	
+	                             		// only record completion during normal downloading, not rechecking etc
+	
+	                             	if ( getState() == READY ){
+	
+	                             		state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, SystemTime.getCurrentTime());
+	                             	}
 	                    		}
-                    		}finally{
-
-                             	if ( this_file.getAccessMode() == DiskManagerFileInfo.WRITE ){
-
-                               		this_file.setAccessMode( DiskManagerFileInfo.READ );
-                               	}
-
-                             		// only record completion during normal downloading, not rechecking etc
-
-                             	if ( getState() == READY ){
-
-                             		state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, SystemTime.getCurrentTime());
-                             	}
-                    		}
-                        }catch ( Throwable e ){
-
-                            setFailed("Disk access error - " +Debug.getNestedExceptionMessage(e));
-
-                            Debug.printStackTrace(e);
-                        }
-
-                        // note - we don't set the access mode to write if incomplete as we may
-                        // be rechecking a file and during this process the "file_done" amount
-                        // will not be file_length until the end. If the file is read-only then
-                        // changing to write will cause trouble!
-                    }
-                }
-
-                if ( getState() == READY ){
-
-                		// don't start firing these until we're ready otherwise we send notifications
-                		// for complete pieces during initialisation
-
-                	listeners.dispatch(LDT_PIECE_DONE_CHANGED, dmPiece);
-                }
-            }
-        } finally
-        {
-            file_piece_mon.exit();
+	                        }catch ( Throwable e ){
+	
+	                            setFailed("Disk access error - " +Debug.getNestedExceptionMessage(e));
+	
+	                            Debug.printStackTrace(e);
+	                        }
+	
+	                        // note - we don't set the access mode to write if incomplete as we may
+	                        // be rechecking a file and during this process the "file_done" amount
+	                        // will not be file_length until the end. If the file is read-only then
+	                        // changing to write will cause trouble!
+	                    }
+	                }
+	
+	                if ( getState() == READY ){
+	
+	                		// don't start firing these until we're ready otherwise we send notifications
+	                		// for complete pieces during initialisation
+	
+	                	listeners.dispatch(LDT_PIECE_DONE_CHANGED, dmPiece);
+	                }
+	            }
+	        }finally{
+	        	
+	        	remaining_excluding_dnd = ( remaining - ( skipped_file_set_size - skipped_but_downloaded ));
+	        	
+            	if ( remaining_excluding_dnd < 0 ){
+            		
+            		Debug.out( "remaining_excluding_dnd went negative" );
+            		
+            		remaining_excluding_dnd = 0;
+            	}
+	        }
         }
-
     }
 
     @Override
@@ -2454,6 +2477,8 @@ DiskManagerImpl
 	  return false;
   }
 
+  	  public long garbage;
+  	  
 	  private boolean 
 	  moveDataFiles0(
 			  SaveLocationChange loc_change, 
@@ -2467,13 +2492,13 @@ DiskManagerImpl
 		  // associated file actions being taken (switch to read only, do the 'incomplete file suffix' nonsense)
 		  // and the peer controller noting that the download is complete and kicking off these actions.
 		  // in order to ensure that the completion actions are done prior to us running here we do:
-	
-		  try{
-			  file_piece_mon.enter();
-	
-		  }finally{
-	
-			  file_piece_mon.exit();
+			  
+		  synchronized( file_piece_lock ){
+			
+			  	// I don't think the VM can remove 'unnecessary' synchronized blocks but in case try
+			  	// and do something that isn't obviously pointless
+			  
+			  garbage += remaining_excluding_dnd;
 		  }
 	
 		  File move_to_dir_name = loc_change.download_location;
