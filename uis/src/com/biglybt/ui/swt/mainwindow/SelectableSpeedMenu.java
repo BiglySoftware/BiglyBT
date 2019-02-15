@@ -330,6 +330,8 @@ public class SelectableSpeedMenu {
 				? TransferSpeedValidator.getActiveUploadParameter(gm)
 				: "Max Download Speed KBs";
 		int maxBandwidth = COConfigurationManager.getIntParameter(configKey);
+		int actualMaxBandwidth = maxBandwidth;
+		
 		final boolean unlim = (maxBandwidth == 0);
 		if (unlim && !isUpSpeed) {
 			GlobalManagerStats stats = gm.getStats();
@@ -397,12 +399,12 @@ public class SelectableSpeedMenu {
 					lastValue * 1024, true), lastValue);
 		}
 
-		if (speedScale.open(cClickedFrom, auto ? -1 : maxBandwidth, true)) {
+		if (speedScale.open(cClickedFrom, auto ? -1 : actualMaxBandwidth, true)) {
 			int value = speedScale.getValue();
 
 			if (!speedScale.wasMenuChosen() || lastValue == value) {
 				COConfigurationManager.setParameter(config_prefix + "last",
-						maxBandwidth);
+						actualMaxBandwidth);
 			}
 
 			if (value >= 0) {
