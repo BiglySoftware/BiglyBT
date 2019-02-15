@@ -361,6 +361,24 @@ public class DiskManagerPieceImpl
 	{
 		return !done &&(statusFlags &PIECE_STATUS_NEEDED) != 0;
 	}
+	
+	@Override
+	public int getRemaining(){
+		if ( done || !isNeeded()){
+			return(0);
+		}
+		boolean[] w = written;
+		if ( w == null ){
+			return( getLength());
+		}
+		int size = 0;
+		for ( int i=0;i<w.length;i++){
+			if ( !w[i] ){
+				size += getBlockSize( i );
+			}
+		}
+		return( size );
+	}
 
 	@Override
 	public void reset()

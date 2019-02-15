@@ -916,6 +916,8 @@ LWSDiskManager
 		@Override
 		public void setMergeWrite(){throw( new RuntimeException( "setChecking not implemented" ));}
 		@Override
+		public int getRemaining(){return(0);}
+		@Override
 		public void
 		setDone(
 			boolean 	b)

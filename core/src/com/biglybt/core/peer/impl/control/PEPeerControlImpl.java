@@ -206,6 +206,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private final PEPieceImpl[]	pePieces;      //pieces that are currently in progress
 	private int				nbPiecesActive;	// how many pieces are currently in progress
 
+	private long			nbBytesRemaining;	// used for stats only
+	
 	private int				nbPeersSnubbed;
 
 	private PeerIdentityDataID			_hash;
@@ -1433,12 +1435,14 @@ DiskManagerCheckRequestListener, IPFilterListener
 		if ((mainloop_loop_count %MAINLOOP_ONE_SECOND_INTERVAL) !=0)
 			return;
 
+		long remaining = 0;
+		
 		//for every piece
 		for (int i = 0; i <_nbPieces; i++) {
 			final DiskManagerPiece dmPiece =dm_pieces[i];
 			//if piece is completly written, not already checking, and not Done
-			if (dmPiece.isNeedsCheck())
-			{
+			if (dmPiece.isNeedsCheck()){
+			
 				//check the piece from the disk
 				dmPiece.setChecking();
 
@@ -1449,8 +1453,13 @@ DiskManagerCheckRequestListener, IPFilterListener
 				req.setAdHoc( false );
 
 				disk_mgr.enqueueCheckRequest(  req, this );
+			}else{
+				
+				remaining += dmPiece.getRemaining();
 			}
 		}
+		
+		nbBytesRemaining	= remaining;
 	}
 
 	/** Checks given piece to see if it's active but empty, and if so deactivates it.
@@ -1983,6 +1992,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 			seeding_mode	= true;
 
+			nbBytesRemaining = 0;
+			
 			prefer_udp_bloom = null;
 
 			piecePicker.clearEndGameChunks();
@@ -3105,7 +3116,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		if ( now < last_eta_calculation || now - last_eta_calculation > 900 ){
 
-			long dataRemaining = disk_mgr.getRemainingExcludingDND();
+			long dataRemaining = nbBytesRemaining;	// disk_mgr.getRemainingExcludingDND();
 
 			if ( dataRemaining > 0 ){
 

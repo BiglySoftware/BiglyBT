@@ -100,6 +100,8 @@ DiskManagerPiece
      */
     public boolean	    isSkipped();
 
+    public int			getRemaining();
+    
     public void 		reDownloadBlock(int blockNumber);
     public void			reset();
 
