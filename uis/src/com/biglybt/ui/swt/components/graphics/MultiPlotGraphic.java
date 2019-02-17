@@ -304,30 +304,37 @@ MultiPlotGraphic
 	    	this_mon.enter();
 
 	    	int[]	averages = new int[all_values.length];
-	    		    	
-    		int start	= currentPosition-num_entries;
-    		int	end		= currentPosition;
-    			    	
-	    	if ( start < 0 ){
-		    	if ( nbValues < maxEntries ){
-	    			start = 0;
-	    		}else{
-	    			start += maxEntries;
-	    		}
+	    		
+	    	if ( nbValues < num_entries ){
+	    		
+	    		num_entries = nbValues;
 	    	}
 	    	
-	    	for ( int i=start;i<end;i++){
+	    	if ( num_entries > 0 ){
 	    		
-	    		int	pos = i%maxEntries;
-	    		
-	    		for ( int j=0;j<averages.length;j++){
-	    			averages[j] += all_values[j][pos];
+	    		int start	= currentPosition-num_entries;
+	    			    	
+		    	if ( start < 0 ){
+			    	if ( nbValues < maxEntries ){
+		    			start = 0;
+		    		}else{
+		    			start += maxEntries;
+		    		}
+		    	}
+		    	
+		    	for ( int i=start;i<start+num_entries;i++){
+		    		
+		    		int	pos = i%maxEntries;
+		    		
+		    		for ( int j=0;j<averages.length;j++){
+		    			averages[j] += all_values[j][pos];
+		    		}
+		    	}
+		    	
+		    	for ( int j=0;j<averages.length;j++){
+	    			averages[j] /= num_entries;
 	    		}
 	    	}
-	    	
-	    	for ( int j=0;j<averages.length;j++){
-    			averages[j] /= num_entries;
-    		}
 	    	
 	    	return( averages );
 	    	
@@ -437,7 +444,7 @@ MultiPlotGraphic
 						
 						int	pos = currentPosition;
 						
-						for ( int j=0;j<maxEntries;j++){
+						for ( int j=0;j<nbValues;j++){
 							
 							newValues[j] = oldValues[pos++];
 							

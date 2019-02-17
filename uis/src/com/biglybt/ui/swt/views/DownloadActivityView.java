@@ -33,7 +33,6 @@ import org.eclipse.swt.widgets.Composite;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.ui.swt.Messages;
@@ -51,6 +50,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.TimeFormatter;
+import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.selectedcontent.SelectedContent;
@@ -71,6 +71,8 @@ DownloadActivityView
 		Colors.blues[Colors.BLUES_DARKEST], Colors.blues[Colors.BLUES_DARKEST],
 		Colors.light_grey };
 
+	private static final int ETA_AVERAGE_TICKS = 30;
+	
 	private static Color[]	eta_colors = { Colors.fadedGreen, Colors.light_grey };
 
 	private UISWTView 				swtView;
@@ -402,7 +404,7 @@ DownloadActivityView
 				    public int
 		    		getValue()
 		    		{
-		    			return( eta.getAverage( 10 )[0]);
+		    			return( eta.getAverage( ETA_AVERAGE_TICKS )[0]);
 		    		}
 		    	}
 		    };
@@ -412,7 +414,7 @@ DownloadActivityView
 		    	eta.dispose();
 		    }
 		    
-			final MultiPlotGraphic f_eta = eta = MultiPlotGraphic.getInstance( 60, sources, formatter );
+			final MultiPlotGraphic f_eta = eta = MultiPlotGraphic.getInstance( 500, sources, formatter );
 	
 	
 			String[] color_configs = new String[] {
@@ -612,7 +614,18 @@ DownloadActivityView
 
 						mpg.setActive( true );
 							
-						int[][] eta_history = { e_history, new int[ e_history.length ] };
+						MovingImmediateAverage eta_average = AverageFactory.MovingImmediateAverage( ETA_AVERAGE_TICKS );
+						
+						int[] e_average = new int[ e_history.length ];
+						
+						for ( int i=0;i<e_history.length;i++ ){
+							
+							eta_average.update( e_history[i] );
+							
+							e_average[i] = (int)eta_average.getAverage();
+						}
+						
+						int[][] eta_history = { e_history, e_average };
 						
 						eta.reset( eta_history );
 						
