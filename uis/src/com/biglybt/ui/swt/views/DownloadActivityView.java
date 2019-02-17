@@ -268,6 +268,11 @@ DownloadActivityView
 		    	}
 		    };
 	
+		    if ( mpg != null ){
+		    	
+		    	mpg.dispose();
+		    }
+		    
 			final MultiPlotGraphic f_mpg = mpg = MultiPlotGraphic.getInstance( sources, formatter );
 	
 	
@@ -402,6 +407,11 @@ DownloadActivityView
 		    	}
 		    };
 	
+		    if ( eta != null ){
+		    	
+		    	eta.dispose();
+		    }
+		    
 			final MultiPlotGraphic f_eta = eta = MultiPlotGraphic.getInstance( 60, sources, formatter );
 	
 	
@@ -538,90 +548,88 @@ DownloadActivityView
 
 		manager = newManager;
 
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (panel == null || panel.isDisposed()) {
-					return;
-				}
-				Utils.disposeComposite(panel, false);
-			  if (manager != null){
-			  	fillPanel();
-			  	parent.layout(true, true);
-			  } else {
-			  	ViewUtils.setViewRequiresOneDownload(panel);
-			  }
-			}
-		});
+		Utils.execSWTThread(
+				()->{
+					if ( panel == null || panel.isDisposed()){
+						return;
+					}
+					
+					Utils.disposeComposite(panel, false);
+					
+					if ( manager != null ){
+						
+						fillPanel();
+						
+						parent.layout(true, true);
+						
+						DownloadManagerStats stats = manager.getStats();
 
-		if ( manager == null ){
+						stats.setRecentHistoryRetention( true );
 
-			mpg.setActive( false );
+						int[][] _history = stats.getRecentHistory();
 
-			mpg.reset( new int[5][0] );
+							// reconstitute the smoothed values to the best of our ability (good enough unless we decide we want
+							// to throw more memory at remembering this more accurately...)
 
-			eta.setActive( false );
-			
-			eta.reset( new int[2][0] );
-			
-		}else{
+						int[] send_history = _history[0];
+						int[] recv_history = _history[1];
 
-			DownloadManagerStats stats = manager.getStats();
+						int	history_secs = send_history.length;
 
-			stats.setRecentHistoryRetention( true );
+						int[] smoothed_send = new int[history_secs];
+						int[] smoothed_recv = new int[history_secs];
 
-			int[][] _history = stats.getRecentHistory();
+						int[] e_history = _history[3];
+						
+						MovingImmediateAverage	send_average = GeneralUtils.getSmoothAverage();
+						MovingImmediateAverage	recv_average = GeneralUtils.getSmoothAverage();
 
-				// reconstitute the smoothed values to the best of our ability (good enough unless we decide we want
-				// to throw more memory at remembering this more accurately...)
+						int smooth_interval = GeneralUtils.getSmoothUpdateInterval();
 
-			int[] send_history = _history[0];
-			int[] recv_history = _history[1];
+						int	current_smooth_send = 0;
+						int	current_smooth_recv = 0;
+						int	pending_smooth_send = 0;
+						int	pending_smooth_recv = 0;
 
-			int	history_secs = send_history.length;
+						for ( int i=0;i<history_secs;i++){
+							pending_smooth_send += send_history[i];
+							pending_smooth_recv += recv_history[i];
 
-			int[] smoothed_send = new int[history_secs];
-			int[] smoothed_recv = new int[history_secs];
+							if ( i % smooth_interval == 0 ){
+								current_smooth_send = (int)(send_average.update( pending_smooth_send )/smooth_interval);
+								current_smooth_recv = (int)(recv_average.update( pending_smooth_recv )/smooth_interval);
 
-			int[] e_history = _history[3];
-			
-			MovingImmediateAverage	send_average = GeneralUtils.getSmoothAverage();
-			MovingImmediateAverage	recv_average = GeneralUtils.getSmoothAverage();
+								pending_smooth_send = 0;
+								pending_smooth_recv = 0;
+							}
+							smoothed_send[i] = current_smooth_send;
+							smoothed_recv[i] = current_smooth_recv;
+						}
 
-			int smooth_interval = GeneralUtils.getSmoothUpdateInterval();
+						int[][] mpg_history = {send_history, smoothed_send, recv_history, smoothed_recv, _history[2] };
 
-			int	current_smooth_send = 0;
-			int	current_smooth_recv = 0;
-			int	pending_smooth_send = 0;
-			int	pending_smooth_recv = 0;
+						mpg.reset( mpg_history );
 
-			for ( int i=0;i<history_secs;i++){
-				pending_smooth_send += send_history[i];
-				pending_smooth_recv += recv_history[i];
+						mpg.setActive( true );
+							
+						int[][] eta_history = { e_history, new int[ e_history.length ] };
+						
+						eta.reset( eta_history );
+						
+						eta.setActive( true );
+					}else{
+						
+						ViewUtils.setViewRequiresOneDownload( panel );
+						
+						mpg.setActive( false );
 
-				if ( i % smooth_interval == 0 ){
-					current_smooth_send = (int)(send_average.update( pending_smooth_send )/smooth_interval);
-					current_smooth_recv = (int)(recv_average.update( pending_smooth_recv )/smooth_interval);
+						mpg.reset( new int[5][0] );
 
-					pending_smooth_send = 0;
-					pending_smooth_recv = 0;
-				}
-				smoothed_send[i] = current_smooth_send;
-				smoothed_recv[i] = current_smooth_recv;
-			}
-
-			int[][] mpg_history = {send_history, smoothed_send, recv_history, smoothed_recv, _history[2] };
-
-			mpg.reset( mpg_history );
-
-			mpg.setActive( true );
-				
-			int[][] eta_history = { e_history, new int[ e_history.length ] };
-			
-			eta.reset( eta_history );
-			
-			eta.setActive( true );
-		}
+						eta.setActive( false );
+						
+						eta.reset( new int[2][0] );
+					}
+				});
 	}
 
 	public void

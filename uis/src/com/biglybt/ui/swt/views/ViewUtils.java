@@ -37,6 +37,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -703,9 +704,14 @@ ViewUtils
 		Utils.disposeComposite(genComposite, false);
 
 		Label lab = new Label(genComposite, SWT.NULL);
-		GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, true);
-		gridData.verticalIndent = 10;
-		lab.setLayoutData(gridData);
+		
+		if ( genComposite.getLayout() instanceof GridLayout ){
+			GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, true);
+			gridData.verticalIndent = 10;
+			lab.setLayoutData(gridData);
+		}else{
+			lab.setLayoutData( Utils.getFilledFormData());
+		}
 		Messages.setLanguageText(lab, "view.one.download.only");
 
 		genComposite.layout(true);

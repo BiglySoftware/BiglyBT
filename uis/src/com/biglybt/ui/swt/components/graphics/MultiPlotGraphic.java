@@ -419,20 +419,43 @@ MultiPlotGraphic
 
 			try{
 				this_mon.enter();
-
+				
+				boolean	cycled = nbValues == maxEntries;
+				
 				while( maxEntries < bounds.width ){
 
-					maxEntries += 1000;
+					maxEntries += 100;
 				}
 
 				for( int i=0;i<all_values.length;i++ ){
 
+					int[] oldValues	= all_values[i];
+					
 					int[] newValues = new int[maxEntries];
 
-					System.arraycopy(all_values[i], 0, newValues, 0, all_values[i].length);
+					if ( cycled ){
+						
+						int	pos = currentPosition;
+						
+						for ( int j=0;j<maxEntries;j++){
+							
+							newValues[j] = oldValues[pos++];
+							
+							if ( pos == nbValues ){
+								
+								pos = 0;
+							}
+						}
+					}else{
+						
+						System.arraycopy( oldValues, 0, newValues, 0, nbValues );
+					}
 
 					all_values[i] = newValues;
 				}
+				
+				currentPosition = nbValues;
+				
 			}finally{
 
 				this_mon.exit();
