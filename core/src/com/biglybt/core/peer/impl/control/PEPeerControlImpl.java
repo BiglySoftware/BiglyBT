@@ -3116,8 +3116,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		if ( now < last_eta_calculation || now - last_eta_calculation > 900 ){
 
-			long dataRemaining = nbBytesRemaining;	// disk_mgr.getRemainingExcludingDND();
-
+			long dataRemaining = Math.max( nbBytesRemaining, disk_mgr.getRemainingExcludingDND());
+			
 			if ( dataRemaining > 0 ){
 
 				int writtenNotChecked = 0;
