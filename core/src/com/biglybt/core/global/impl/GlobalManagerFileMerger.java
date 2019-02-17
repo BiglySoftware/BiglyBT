@@ -656,35 +656,43 @@ GlobalManagerFileMerger
 	SameSizeFiles
 	{
 		final private Set<DiskManagerFileInfo>		files;
-		final Set<SameSizeFileWrapper>		file_wrappers;
+		final private List <SameSizeFileWrapper>	file_wrappers;
 
 		final private Set<DownloadManager>			dm_set = new IdentityHashSet<>();
 
 		private boolean	completion_logged;
 
-		volatile boolean	dl_has_restarted;
+		private volatile boolean	dl_has_restarted;
 
-		volatile boolean	destroyed;
+		private volatile boolean	destroyed;
 
-		String	abandon_reason;
+		private String	abandon_reason;
 		
 		SameSizeFiles(
 			Set<DiskManagerFileInfo>		_files )
 		{
 			files 	= _files;
 
-			file_wrappers = new HashSet<>();
+			file_wrappers = new ArrayList<>( files.size());
 
-			for ( final DiskManagerFileInfo file: files ){
+				// make sure we init things before we start adding download listeners as they can 
+				// callback during the process and traverse file_wrappers (for example)
+			
+			for ( DiskManagerFileInfo file: files ){
 
-				final SameSizeFileWrapper file_wrapper = new SameSizeFileWrapper( file );
-
-				DownloadManager dm = file_wrapper.getDownloadManager();
-
-				dm_set.add( dm );
+				SameSizeFileWrapper file_wrapper = new SameSizeFileWrapper( file );
 
 				file_wrappers.add( file_wrapper );
 
+				dm_set.add( file_wrapper.getDownloadManager());
+			}
+			
+			for ( SameSizeFileWrapper file_wrapper: file_wrappers ){
+				
+				DiskManagerFileInfo file = file_wrapper.getFile();
+				
+				DownloadManager dm = file_wrapper.getDownloadManager();
+				
 				DownloadManagerPeerListenerEx dmpl =
 					new DownloadManagerPeerListenerEx(){
 
