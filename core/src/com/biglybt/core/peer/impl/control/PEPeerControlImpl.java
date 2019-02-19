@@ -3118,24 +3118,6 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 			long dataRemaining = Math.max( nbBytesRemaining, disk_mgr.getRemainingExcludingDND());
 			
-			if ( dataRemaining > 0 ){
-
-				int writtenNotChecked = 0;
-
-				for (int i = 0; i < _nbPieces; i++)
-				{
-					if (dm_pieces[i].isInteresting()){
-						writtenNotChecked +=dm_pieces[i].getNbWritten() *DiskManager.BLOCK_SIZE;
-					}
-				}
-
-				dataRemaining = dataRemaining - writtenNotChecked;
-
-				if  (dataRemaining < 0 ){
-					dataRemaining	= 0;
-				}
-			}
-
 			long	jagged_result;
 			long	smooth_result;
 
