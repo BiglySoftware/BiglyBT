@@ -1402,7 +1402,9 @@ public class SBC_AllTrackersView
 		String 				filter,
 		boolean 			regex)
 	{
-		String name = ds.getTracker().getTrackerName();
+		AllTrackersTracker tracker = ds.getTracker();
+		
+		String name = tracker.getTrackerName();
 
 		String s = regex ? filter : "\\Q" + filter.replaceAll("\\s*[|;]\\s*", "\\\\E|\\\\Q") + "\\E";
 
@@ -1417,7 +1419,16 @@ public class SBC_AllTrackersView
 
 		Pattern pattern = RegExUtil.getCachedPattern( "alltrackersview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
-		return( pattern.matcher(name).find() == match_result );
+		boolean result = pattern.matcher(name).find() == match_result;
+		
+		if ( !result ){
+			
+			String status = tracker.getStatusString();
+			
+			result = pattern.matcher(status).find() == match_result;
+		}
+		
+		return( result );
 	}
 
 	@Override
