@@ -707,7 +707,7 @@ DownloadManagerStatsImpl
 		long receive_rate 		= stats.getDataReceiveRate() + stats.getProtocolReceiveRate();
 		long peer_swarm_average = getTotalAveragePerPeer();
 
-		long eta	= getETA();
+		long eta	= Math.max( getETA(), 0);
 		
 		long	entry1 =
 			((((send_rate-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV)<<42) 	&  0x7ffffc0000000000L ) |

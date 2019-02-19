@@ -395,7 +395,7 @@ DownloadActivityView
 	
 		    			DownloadManagerStats stats = manager.getStats();
 	
-		    			return((int)(stats.getETA()));
+		    			return(Math.max((int)(stats.getETA()), 0 ));
 		    		}
 		    	},
 		    	new ValueSourceImpl( "ETA Average", 1, eta_colors, false, true, false )
