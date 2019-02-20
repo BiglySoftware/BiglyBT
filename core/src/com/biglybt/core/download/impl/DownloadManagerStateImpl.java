@@ -737,6 +737,8 @@ DownloadManagerStateImpl
 			}
 		}
 
+		new File( source_dir, state_file + ".bak" ).delete();
+		
 		File	target_state_dir = new File( source_dir, hash_str );
 
 		if ( target_state_dir.exists()){
@@ -1152,7 +1154,23 @@ DownloadManagerStateImpl
 
 	        TorrentUtils.delete( torrent );
 
-			File	dir = new File( ACTIVE_DIR, ByteFormatter.encodeString( wrapper.getBytes()));
+	        String	hash_str = ByteFormatter.encodeString( wrapper.getBytes());
+	        
+			String	state_file = hash_str + ".dat";
+			
+			File	target_state_file 	= new File( ACTIVE_DIR, state_file );
+
+			if ( target_state_file.exists()){
+
+				if ( !target_state_file.delete()){
+
+					throw( new DownloadManagerException( "Failed to delete state file: " + state_file ));
+				}
+			}
+
+			new File( ACTIVE_DIR, state_file + ".bak" ).delete();
+			
+			File	dir = new File( ACTIVE_DIR, hash_str );
 
 			if ( dir.exists() && dir.isDirectory()){
 
