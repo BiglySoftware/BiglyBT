@@ -316,6 +316,8 @@ TRTrackerServerProcessorTCP
 				String		real_ip_address		= AddressUtils.getHostAddress( remote_address );
 				String		client_ip_address	= real_ip_address;
 
+				boolean client_is_anon = AENetworkClassifier.categoriseAddress( client_ip_address  ) != AENetworkClassifier.AT_PUBLIC;
+				
 				while(pos < str.length()){
 
 					int	p1 = str.indexOf( '&', pos );
@@ -420,7 +422,7 @@ TRTrackerServerProcessorTCP
 
 								throw( new Exception( "IP override address must be resolved by the client" ));
 							}
-						}else if ( AENetworkClassifier.categoriseAddress( client_ip_address  ) == AENetworkClassifier.AT_I2P ){
+						}else if ( client_is_anon ){
 						
 							// ignore ip override as it is probably a full destination whereas the real originator is the .b32 equivalent
 							
@@ -557,22 +559,31 @@ TRTrackerServerProcessorTCP
 
 					hashes = new byte[][]{ hash };
 				}
+				
+				if ( client_is_anon ){
 
-				if ( compact_enabled ){
-
-						// >= so that if this tracker is "old" and sees a version 3+ it replies with the
-						// best it can - version 2
-
-					if ( xml_output ){
-
-						compact_mode = TRTrackerServerTorrentImpl.COMPACT_MODE_XML;
-
-					}else if ( az_ver >= 2 ){
-
-						compact_mode = TRTrackerServerTorrentImpl.COMPACT_MODE_AZ_2;
+						// no compact mode for Tor/I2P addresses
+					
+					compact_mode = TRTrackerServerTorrentImpl.COMPACT_MODE_NONE;
+					
+				}else{
+					
+					if ( compact_enabled ){
+	
+							// >= so that if this tracker is "old" and sees a version 3+ it replies with the
+							// best it can - version 2
+	
+						if ( xml_output ){
+	
+							compact_mode = TRTrackerServerTorrentImpl.COMPACT_MODE_XML;
+	
+						}else if ( az_ver >= 2 ){
+	
+							compact_mode = TRTrackerServerTorrentImpl.COMPACT_MODE_AZ_2;
+						}
 					}
 				}
-
+				
 				Map[]						root_out = new Map[1];
 				TRTrackerServerPeerImpl[]	peer_out = new TRTrackerServerPeerImpl[1];
 
