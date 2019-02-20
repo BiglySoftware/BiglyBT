@@ -33,6 +33,7 @@ ValueSource
 	public static final int STYLE_INVISIBLE		= 0x00000010;
 	public static final int STYLE_DOTTED		= 0x00000020;
 	public static final int STYLE_HIDE_LABEL	= 0x00000040;
+	public static final int STYLE_BLOB			= 0x00000080;
 
 	public String
 	getName();

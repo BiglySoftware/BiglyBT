@@ -839,6 +839,17 @@ MultiPlotGraphic
 									gcImage.fillPolygon(new int[] { x, y+7, x+7, y+7, x+3, y });
 
 									gcImage.setBackground( bg );
+								
+								}else  if (( style & ValueSource.STYLE_BLOB ) != 0 ){
+
+									int	x = bounds.width - 72;
+									int y = height - 12;
+
+									gcImage.setBackground( source.getLineColor());
+
+									gcImage.fillOval( x, y, 5, 5 );
+
+									gcImage.setBackground( bg );
 								}
 							}
 						}

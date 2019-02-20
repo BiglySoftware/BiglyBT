@@ -380,7 +380,7 @@ DownloadActivityView
 	
 	
 		    final ValueSourceImpl[] sources = {
-		    	new ValueSourceImpl( "ETA", 0, eta_colors, true, false, false )
+		    	new ValueSourceImpl( "ETA", 0, eta_colors, ValueSource.STYLE_BLOB, false, false )
 		    	{
 		    		@Override
 				    public int
@@ -398,7 +398,7 @@ DownloadActivityView
 		    			return(Math.max((int)(stats.getETA()), 0 ));
 		    		}
 		    	},
-		    	new ValueSourceImpl( "ETA Average", 1, eta_colors, false, true, false )
+		    	new ValueSourceImpl( "ETA Average", 1, eta_colors, ValueSource.STYLE_BLOB, true, false )
 		    	{
 		    		@Override
 				    public int
@@ -782,7 +782,7 @@ DownloadActivityView
 		private String			name;
 		private int				index;
 		private Color[]			colours;
-		private boolean			is_up;
+		private int				base_style;
 		private boolean			trimmable;
 
 		private boolean			is_hover;
@@ -801,11 +801,30 @@ DownloadActivityView
 			name			= _name;
 			index			= _index;
 			colours			= _colours;
-			is_up			= _is_up;
 			trimmable		= _trimmable;
 			is_dotted		= _is_dotted;
+			
+			base_style = _is_up?STYLE_UP:STYLE_DOWN;
 		}
 
+		private
+		ValueSourceImpl(
+			String					_name,
+			int						_index,
+			Color[]					_colours,
+			int						_base_style,
+			boolean					_trimmable,
+			boolean					_is_dotted )
+		{
+			name			= _name;
+			index			= _index;
+			colours			= _colours;
+			trimmable		= _trimmable;
+			is_dotted		= _is_dotted;
+			
+			base_style = _base_style;
+		}
+		
 		@Override
 		public String
 		getName()
@@ -850,7 +869,7 @@ DownloadActivityView
 				return( STYLE_INVISIBLE );
 			}
 
-			int	style = is_up?STYLE_UP:STYLE_DOWN;
+			int style = base_style;
 
 			if ( is_hover ){
 
