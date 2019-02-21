@@ -1398,9 +1398,7 @@ public class SB_Transfers
 			
 			if ( is_group != parent_is_group ){
 				
-				removeTag( tag );
-				
-				setupTag( tag );
+				resetTag( tag );
 			}
 		}
 		
@@ -1462,7 +1460,6 @@ public class SB_Transfers
 
 			return null;
 		}
-
 			/*
 			 * Can get hit here concurrently due to various threads interacting with tags...
 			 */
@@ -1857,37 +1854,57 @@ public class SB_Transfers
 		}
 	}
 
-	private void removeTag(Tag tag) {
+	private void
+	removeTag(
+		Tag tag ) 
+	{
 		MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-		if (mdi == null) {
+		
+		if ( mdi == null ){
+			
 			return;
 		}
 
-		MdiEntry entry = mdi.getEntry("Tag." + tag.getTagType().getTagType() + "." + tag.getTagID());
-
-		if (entry != null) {
-
-			entry.setUserData( AUTO_CLOSE_KEY, "" );
-
-			entry.close( true );
+		synchronized( tag_setup_lock ){
 			
-			if ( show_tag_groups ){
-			
-				String parent_id = entry.getParentID();
+			MdiEntry entry = mdi.getEntry("Tag." + tag.getTagType().getTagType() + "." + tag.getTagID());
+	
+			if (entry != null) {
+	
+				entry.setUserData( AUTO_CLOSE_KEY, "" );
+	
+				entry.close( true );
 				
-				if ( parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." )){
+				if ( show_tag_groups ){
+				
+					String parent_id = entry.getParentID();
 					
-					if ( mdi.getChildrenOf( parent_id ).isEmpty()){
+					if ( parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." )){
 						
-						MdiEntry parent_entry = mdi.getEntry( parent_id );
-						
-						parent_entry.close( true );
+						if ( mdi.getChildrenOf( parent_id ).isEmpty()){
+							
+							MdiEntry parent_entry = mdi.getEntry( parent_id );
+							
+							parent_entry.close( true );
+						}
 					}
 				}
 			}
 		}
 	}
 
+	private void
+	resetTag(
+		Tag	tag )
+	{
+		synchronized( tag_setup_lock ){
+		
+			removeTag( tag );
+		
+			setupTag( tag );
+		}
+	}
+	
 	private void
 	setTagIcon(
 		Tag			tag,

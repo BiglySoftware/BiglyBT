@@ -1490,6 +1490,13 @@ public class SideBar
 			return;
 		}
 		
+		if ( getEntry( entry.getId()) != entry ){
+		
+				// entry has been deleted/replaced in the meantime
+			
+			return;
+		}
+		
 		MdiEntry currentEntry = entry;
 		String	currentID = id;
 		
