@@ -148,6 +148,22 @@ public class TagUtils{
 		return( groups );
 	}
 
+	public static List<String>
+	sortTagGroups(
+		List<String>	_groups )
+	{
+		List<String>	groups = new ArrayList<>( _groups );
+
+		if ( groups.size() < 2 ){
+
+			return( groups );
+		}
+
+		Collections.sort( groups, comp );
+
+		return( groups );
+	}
+	
 	public static List<Tag>
 	sortTagIcons(
 		Collection<Tag>	_tags )
