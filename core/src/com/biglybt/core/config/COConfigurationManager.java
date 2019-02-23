@@ -744,6 +744,14 @@ COConfigurationManager
 	return( ConfigurationDefaults.getInstance().getParameter( parameter ));
   }
 
+	/**
+	 * Remove the given configuration parameter completely.
+	 * <br>
+	 * If parameter had a value, {@link ParameterListener}s will be fired.
+	 *
+	 * @param parameter to remove
+	 * @return true if found and removed, false if not
+	 */
   public static boolean removeParameter(String parameter) {
 		return ConfigurationManager.getInstance().removeParameter(parameter);
   }
