@@ -51,7 +51,13 @@ InfoParameter
 						|| label.getText().equals(value)) {
 					return;
 				}
+				
 				label.setText(value);
+				
+				if ( value.contains( "\n" )){
+				
+					Utils.relayoutUp( label.getControl().getParent() );
+				}
 			}
 		});
 
