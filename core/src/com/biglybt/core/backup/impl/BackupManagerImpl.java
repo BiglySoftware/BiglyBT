@@ -617,11 +617,11 @@ BackupManagerImpl
 		long	total_files		= 0;
 		long	total_copied 	= 0;
 
-		if ( depth > 16 ){
+		if ( depth > 32 ){
 
 				// lazy but whatever, our config never gets this deep
 
-			throw( new Exception( "Loop detected in backup path, abandoning" ));
+			throw( new Exception( "Backup path too deep, abandoning" ));
 		}
 
 		if ( from_file.isDirectory()){
