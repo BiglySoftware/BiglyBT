@@ -19,7 +19,7 @@
 
 package com.biglybt.core.torrentdownloader.impl;
 
-import java.util.ArrayList;
+import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManager;
@@ -31,26 +31,19 @@ import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
  *
  * @author  Tobias Minich
  */
-public class TorrentDownloaderManager implements TorrentDownloaderCallBackInterface {
+public class TorrentDownloaderManager{
 
     private static TorrentDownloaderManager man = null;
 
     private boolean logged = false;
     private boolean autostart = false;
     private GlobalManager gm = null;
-    private String downloaddir;
-    //private String error;
-    private final ArrayList running = new ArrayList();
-    private final ArrayList queued = new ArrayList();
-    private final ArrayList errors = new ArrayList();
+    
+    private final List<TorrentDownloader> 	running = new ArrayList<>();
+    private final List<TorrentDownloader>  	queued = new ArrayList<>();
+    private final List<TorrentDownloader> 	errors = new ArrayList<>();
 
     public TorrentDownloaderManager() {
-        try {
-            downloaddir = COConfigurationManager.getDirectoryParameter("Default save path");
-        } catch (Exception e) {
-            //this.error = e.getMessage();
-            downloaddir = null;
-        }
     }
 
     public static TorrentDownloaderManager getInstance() {
@@ -59,12 +52,10 @@ public class TorrentDownloaderManager implements TorrentDownloaderCallBackInterf
         return man;
     }
 
-    public void init(GlobalManager _gm, boolean _logged, boolean _autostart, String _downloaddir) {
+    public void init(GlobalManager _gm, boolean _logged, boolean _autostart ) {
         this.gm = _gm;
         this.logged = _logged;
         this.autostart = _autostart;
-        if (_downloaddir != null)
-            this.downloaddir = _downloaddir;
     }
 
     public TorrentDownloader add(TorrentDownloader dl) {
@@ -82,41 +73,23 @@ public class TorrentDownloaderManager implements TorrentDownloaderCallBackInterf
     }
 
     public TorrentDownloader download(String url, String fileordir, boolean logged) {
-        return add(TorrentDownloaderFactory.create(this, url, null, fileordir, logged));
+        return add(TorrentDownloaderFactory.create(new Callback(), url, null, fileordir, logged));
     }
 
     public TorrentDownloader download(String url, boolean logged) {
-        return add(TorrentDownloaderFactory.create(this, url, null, null, logged));
+        return add(TorrentDownloaderFactory.create(new Callback(), url, null, null, logged));
     }
 
     public TorrentDownloader download(String url, String fileordir) {
-        return add(TorrentDownloaderFactory.create(this, url, null, fileordir, this.logged));
+        return add(TorrentDownloaderFactory.create(new Callback(), url, null, fileordir, this.logged));
     }
 
     public TorrentDownloader download(String url) {
-        return add(TorrentDownloaderFactory.create(this, url, this.logged));
+        return add(TorrentDownloaderFactory.create(new Callback(), url, this.logged));
     }
-
-    @Override
-    public void TorrentDownloaderEvent(int state, com.biglybt.core.torrentdownloader.TorrentDownloader inf) {
-        switch(state) {
-            case TorrentDownloader.STATE_START:
-                if (this.queued.contains(inf))
-                    this.queued.remove(inf);
-                if (!this.running.contains(inf))
-                    this.running.add(inf);
-                break;
-            case TorrentDownloader.STATE_FINISHED:
-                remove(inf);
-                if ((gm != null) && (downloaddir != null)) {
-                    gm.addDownloadManager(inf.getFile().getAbsolutePath(), downloaddir);
-                }
-                break;
-            case TorrentDownloader.STATE_ERROR:
-                remove(inf);
-                this.errors.add(inf);
-                break;
-        }
+    
+    public TorrentDownloader downloadToLocation(String url, String save_path ) {
+        return add(TorrentDownloaderFactory.create(new Callback( save_path ), url, this.logged));
     }
 
 	/**
@@ -128,5 +101,51 @@ public class TorrentDownloaderManager implements TorrentDownloaderCallBackInterf
 		if (this.queued.contains(inf))
 		    this.queued.remove(inf);
 	}
-
+	
+	public class
+	Callback
+		implements TorrentDownloaderCallBackInterface
+	{
+		private String downloaddir;
+		
+		public
+		Callback()
+		{
+	        try {
+	            downloaddir = COConfigurationManager.getDirectoryParameter("Default save path");
+	        } catch (Exception e) {
+	            //this.error = e.getMessage();
+	            downloaddir = null;
+	        }
+		}
+		
+		private
+		Callback(
+			String path )
+		{
+	        downloaddir = path;
+		}
+		
+	    @Override
+	    public void TorrentDownloaderEvent(int state, com.biglybt.core.torrentdownloader.TorrentDownloader inf) {
+	        switch(state) {
+	            case TorrentDownloader.STATE_START:
+	                if (queued.contains(inf))
+	                    queued.remove(inf);
+	                if (!running.contains(inf))
+	                    running.add(inf);
+	                break;
+	            case TorrentDownloader.STATE_FINISHED:
+	                remove(inf);
+	                if ((gm != null) && (downloaddir != null)) {
+	                    gm.addDownloadManager(inf.getFile().getAbsolutePath(), downloaddir);
+	                }
+	                break;
+	            case TorrentDownloader.STATE_ERROR:
+	                remove(inf);
+	                errors.add(inf);
+	                break;
+	        }
+	    }
+	}
 }

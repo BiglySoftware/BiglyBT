@@ -37,6 +37,7 @@ import com.biglybt.core.peermanager.utils.PeerClassifier;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFactory;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA1Hasher;
@@ -226,7 +227,7 @@ CLCacheDiscovery
 		InetAddress 	ip,
 		int 			port )
 	{
-		if ( PeerClassifier.getClientDescription( peer_id ).startsWith( PeerClassifier.CACHE_LOGIC )){
+		if ( PeerClassifier.getClientDescription( peer_id, AENetworkClassifier.AT_PUBLIC ).startsWith( PeerClassifier.CACHE_LOGIC )){
 
 			return( new CacheDiscovery.CachePeerImpl( CachePeer.PT_CACHE_LOGIC, ip, port ));
 		}

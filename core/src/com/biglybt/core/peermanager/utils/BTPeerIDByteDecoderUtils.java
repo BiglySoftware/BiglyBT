@@ -247,7 +247,12 @@ class BTPeerIDByteDecoderUtils {
 			return decodeAlphaNumericChar(a) + "." + decodeAlphaNumericChar(b) + "." + decodeAlphaNumericChar(c);
 		}
 		else if (version_scheme == BTPeerIDByteDecoderDefinitions.VER_AZ_SKIP_FIRST_ONE_MAJ_TWO_MIN) {
+			
 			return intchar(b) + "." + intchar(c) + intchar(d);
+			
+		}else if (version_scheme == BTPeerIDByteDecoderDefinitions.VER_AZ_ONE_MAJ_TWO_MIN_ONE_TRAIL) {
+			
+				return intchar(a) + "." + intchar(b) +intchar(c) + "." + intchar(d);
 		}
 		else if (version_scheme == BTPeerIDByteDecoderDefinitions.VER_AZ_KTORRENT_STYLE) {
 			// Either something like this:
@@ -326,6 +331,21 @@ class BTPeerIDByteDecoderUtils {
 			String result = version_data.substring(0, 1);
 			for (int i=0+inc_size; i<version_data.length(); i+=inc_size) {
 				result = joinAsDotted(result, String.valueOf(version_data.charAt(i)));
+			}
+			return result;
+		}
+		else if ( version_scheme == BTPeerIDByteDecoderDefinitions.VER_BYTE_BLOCK_DOTTED_NUM) {
+			
+			String result = "";
+			for (int i=0; i<version_data.length(); i++) {
+				char c = version_data.charAt(i);
+				String str;
+				if ( c >= (int)'a' ){
+					str = String.valueOf( c - (int)'a' + 10 );
+				}else{
+					str = String.valueOf((char)c);
+				}
+				result = result.isEmpty()?str:joinAsDotted(result, str );
 			}
 			return result;
 		}

@@ -198,13 +198,6 @@ TOTorrent
 
 		throws TOTorrentException;
 
-		/**
-		 * Only supported for decentralised torrents, allows an alternative hash to be used
-		 * for them in the DHT
-		 * @param hash
-		 * @throws TOTorrentException
-		 */
-
 	public void
 	setHashOverride(
 		byte[]		hash )

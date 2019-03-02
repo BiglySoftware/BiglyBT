@@ -88,7 +88,7 @@ public class ViewQuickConfig
 
 		final Composite oparent = new Composite( ooparent, SWT.BORDER );
 		GridData gridData = new GridData(GridData.FILL_BOTH);
-		Utils.setLayoutData(oparent, gridData);
+		oparent.setLayoutData(gridData);
 
 		layout = new GridLayout(1, false);
 		layout.marginWidth 	= 0;
@@ -98,7 +98,7 @@ public class ViewQuickConfig
 
 		final Composite parent = new Composite( oparent, SWT.NULL );
 		gridData = new GridData(GridData.FILL_BOTH);
-		Utils.setLayoutData(parent, gridData);
+		parent.setLayoutData(gridData);
 
 		layout = new GridLayout(1, false);
 		layout.marginWidth 	= 0;
@@ -120,14 +120,14 @@ public class ViewQuickConfig
 			} );
 
 		gridData = new GridData(GridData.FILL_BOTH);
-		Utils.setLayoutData(sc, gridData);
+		sc.setLayoutData(gridData);
 
 		composite = new Composite( sc, SWT.NULL );
 
 		sc.setContent( composite );
 
 		gridData = new GridData(GridData.FILL_BOTH);
-		Utils.setLayoutData(composite, gridData);
+		composite.setLayoutData(gridData);
 
 		layout = new GridLayout(4, false);
 
@@ -142,7 +142,7 @@ public class ViewQuickConfig
 		Label label = new Label(composite, SWT.NULL);
 		gridData = new GridData();
 		gridData.horizontalIndent = 8;
-		Utils.setLayoutData(label,  gridData );
+		label.setLayoutData(gridData);
 		Messages.setLanguageText(label, "ConfigView.label.maxdownloads.short");
 
 		IntParameter maxDLs = new IntParameter( composite, "max downloads" );
@@ -180,7 +180,7 @@ public class ViewQuickConfig
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 4;
 
-		Utils.setLayoutData(temp_rates, gridData);
+		temp_rates.setLayoutData(gridData);
 
 		GridLayout layout = new GridLayout(10, false);
 		layout.marginWidth 	= 0;
@@ -194,7 +194,7 @@ public class ViewQuickConfig
 		Label label = new Label(temp_rates, SWT.NULL);
 		gridData = new GridData();
 		gridData.horizontalIndent=4;
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		Messages.setLanguageText( label, "label.upload.kbps", new String[]{ DisplayFormatters.getRateUnit( DisplayFormatters.UNIT_KB )});
 
 		final IntParameter tempULRate = new IntParameter( temp_rates, "global.download.rate.temp.kbps", 0, Integer.MAX_VALUE );
@@ -215,7 +215,7 @@ public class ViewQuickConfig
 		final BufferedLabel remLabel = new BufferedLabel(temp_rates, SWT.DOUBLE_BUFFERED );
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.widthHint = 150;
-		Utils.setLayoutData(remLabel,  gridData );
+		remLabel.setLayoutData(gridData);
 
 		activate.addSelectionListener(
 			new SelectionAdapter(){
@@ -380,7 +380,7 @@ public class ViewQuickConfig
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 4;
 
-		Utils.setLayoutData(temp_rates, gridData);
+		temp_rates.setLayoutData(gridData);
 
 		GridLayout layout = new GridLayout(10, false);
 		layout.marginWidth 	= 0;
@@ -394,7 +394,7 @@ public class ViewQuickConfig
 		Label label = new Label(temp_rates, SWT.NULL);
 		gridData = new GridData();
 		gridData.horizontalIndent=4;
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		Messages.setLanguageText( label, "label.upload.mb", new String[]{ DisplayFormatters.getUnit( DisplayFormatters.UNIT_MB )});
 
 		final IntParameter tempULLimit = new IntParameter( temp_rates, "global.upload.limit.temp.mb", 0, Integer.MAX_VALUE );
@@ -410,7 +410,7 @@ public class ViewQuickConfig
 		final BufferedLabel remLabel = new BufferedLabel(temp_rates, SWT.DOUBLE_BUFFERED );
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.widthHint = 200;
-		Utils.setLayoutData(remLabel,  gridData );
+		remLabel.setLayoutData(gridData);
 
 		activate.addSelectionListener(
 			new SelectionAdapter(){

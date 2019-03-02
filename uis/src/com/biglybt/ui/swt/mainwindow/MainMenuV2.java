@@ -27,6 +27,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemProperties;
+import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 
 import com.biglybt.ui.UIFunctionsManager;
@@ -95,6 +96,8 @@ public class MainMenuV2
 			DebugMenuHelper.createDebugMenuItem(menuBar);
 		}
 
+		addCommunityMenu( parent);
+		
 		addV2HelpMenu(parent);
 
 		/*
@@ -299,6 +302,10 @@ public class MainMenuV2
 		MenuFactory.createPluginsMenuItem(menuBar,true);
 	}
 
+	private void addCommunityMenu( final Shell parent ) {
+		MenuFactory.createCommunityMenuItem( menuBar );
+	}
+	
 	/**
 	 * Creates the Help menu and all its children
 	 * @param parent

@@ -102,7 +102,7 @@ TransferPanel2
 
     Composite panel = new Composite(rootPanel, SWT.NULL);
     GridData gridData = new GridData(GridData.FILL_BOTH);
-    Utils.setLayoutData(panel, gridData);
+    panel.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 2;
     panel.setLayout(layout);
@@ -110,18 +110,18 @@ TransferPanel2
     Label label = new Label(panel, SWT.WRAP);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(label, gridData);
+    label.setLayoutData(gridData);
     Messages.setLanguageText(label, "configureWizard.transfer2.message");
 
     final Group gRadio = new Group(panel, SWT.NULL);
     Messages.setLanguageText(gRadio, "configureWizard.transfer2.group");
-    Utils.setLayoutData(gRadio, gridData);
+    gRadio.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 2;
     gRadio.setLayout( layout );
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(gRadio, gridData);
+    gRadio.setLayoutData(gridData);
 
 
     	// auto button
@@ -304,7 +304,7 @@ TransferPanel2
 
     for (int i = 1; i < connection_rates.length; i++) {
 
-    	connection_labels[i] = (i<3?(dial_up+ " "):"xxx/") + DisplayFormatters.formatByteCountToBitsPerSec( connection_rates[i]/8);
+    	connection_labels[i] = (i<3?(dial_up+ " "):"xxx/") + DisplayFormatters.formatByteCountToBitsPerSec2( connection_rates[i]/8);
     }
 
     final Combo connection_speed = new Combo(gRadio, SWT.SINGLE | SWT.READ_ONLY);
@@ -335,7 +335,7 @@ TransferPanel2
     Messages.setLanguageText(manual2_label, "configureWizard.transfer2.mselect.info");
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(manual2_label,  gridData );
+    manual2_label.setLayoutData(gridData);
 
     Listener listener =
     	new Listener()
@@ -365,7 +365,7 @@ TransferPanel2
     uprate_label = new Label( panel, SWT.WRAP );
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.verticalIndent=10;
-    Utils.setLayoutData(uprate_label,  gridData );
+    uprate_label.setLayoutData(gridData);
     updateUp( 0, true );
 
     manual_mode = false;
@@ -404,7 +404,7 @@ TransferPanel2
 		uprate_label.setText(
 			MessageText.getString( "configureWizard.transfer2.rate.changed",
 			new String[]{
-				DisplayFormatters.formatByteCountToBitsPerSec( rate ) + " (" + DisplayFormatters.formatByteCountToKiBEtcPerSec( rate ) + ")" ,
+				DisplayFormatters.formatByteCountToBitsPerSec2( rate ) + " (" + DisplayFormatters.formatByteCountToKiBEtcPerSec( rate ) + ")" ,
 				DisplayFormatters.formatByteCountToKiBEtcPerSec( wizard.getUploadLimit()),
 				String.valueOf( wizard.maxActiveTorrents ),
 				String.valueOf( wizard.maxDownloads )

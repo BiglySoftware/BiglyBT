@@ -305,6 +305,11 @@ RDResumeHandler
 
 					for (int i = 0; i < pieces.length; i++){
 
+						if ( stopped ){
+							
+							break;
+						}
+						
 						check_position	= i;
 
 						DiskManagerPiece	dm_piece	= pieces[i];
@@ -350,12 +355,16 @@ RDResumeHandler
 									piece_state	= PIECE_NOT_DONE;
 									pieceCannotExist = true;
 
-									if (Logger.isEnabled())
-										Logger.log(new LogEvent(disk_manager, LOGID,
-												LogEvent.LT_WARNING, "Piece #" + i
-														+ ": file is too small, fails re-check. File size = "
-														+ file_size + ", piece needs " + expected_size));
-
+									if ( file_size > 0 ){
+											// we get 0 for DND files, don't bother logging
+										
+										if (Logger.isEnabled())
+											Logger.log(new LogEvent(disk_manager, LOGID,
+													LogEvent.LT_WARNING, "Piece #" + i
+															+ ": file is too small, fails re-check. File size = "
+															+ file_size + ", piece needs " + expected_size));
+									}
+									
 									break;
 								}
 							}

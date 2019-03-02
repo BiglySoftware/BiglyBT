@@ -55,6 +55,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import com.biglybt.ui.swt.views.IViewRequiresPeriodicUpdates;
@@ -79,6 +80,8 @@ public class TabbedEntry
 
 	private static long uniqueNumber = 0;
 
+	private Boolean	closeWasUserInitiated;
+	
 	public TabbedEntry(TabbedMDI mdi, SWTSkin skin, String id, String parentViewID) {
 		super(mdi, id, parentViewID);
 		this.skin = skin;
@@ -194,6 +197,26 @@ public class TabbedEntry
 					view.setPluginSkinObject(soContents);
 					view.initialize(viewComposite);
 
+					// without this some views get messed up layouts (chat view for example)
+					
+					viewComposite.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
+
+					soContents.addListener(
+						new SWTSkinObjectListener(){
+							
+							@Override
+							public Object eventOccured(SWTSkinObject skinObject, int eventType, Object params){
+								if ( eventType == SWTSkinObjectListener.EVENT_OBFUSCATE ){
+									Map data = new HashMap();
+									data.put( "image", (Image)params );
+									data.put( "obfuscateTitle",false );
+									
+									view.triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, data);
+								}
+								return null;
+							}
+						});
+					
 					//swtItem.setText(view.getFullTitle());
 
 					Composite iviewComposite = view.getComposite();
@@ -441,6 +464,12 @@ public class TabbedEntry
 		return true;
 	}
 
+	public boolean
+	isReallyDisposed()
+	{
+		return( swtItem == null || swtItem.isDisposed());
+	}
+	
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#show()
 	 */
@@ -570,6 +599,18 @@ public class TabbedEntry
 	public MdiEntryVitalityImage[] getVitalityImages() {
 		return new MdiEntryVitalityImage[0];
 	}
+	
+	public boolean 
+	close(boolean force, boolean userInitiated ) {
+		if (!super.close(force)) {
+			return false;
+		}
+		
+		closeWasUserInitiated = userInitiated;
+		
+		return( close( force ));
+	}
+	
 
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#close()
@@ -650,7 +691,18 @@ public class TabbedEntry
 		setSwtItem(null);
 
 		SWTThread instance = SWTThread.getInstance();
-		triggerCloseListeners(instance != null && !instance.isTerminated());
+		
+		boolean user = instance != null && !instance.isTerminated();
+		
+		if ( user ){
+			
+			if ( closeWasUserInitiated != null ){
+				
+				user = closeWasUserInitiated;
+			}
+		}
+		
+		triggerCloseListeners( user );
 
 		try {
 			setEventListener(null, false);

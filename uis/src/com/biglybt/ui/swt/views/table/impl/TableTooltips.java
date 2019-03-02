@@ -17,6 +17,7 @@
 
 package com.biglybt.ui.swt.views.table.impl;
 
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
@@ -28,7 +29,8 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
-
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.ui.common.table.TableCellCore;
 
 /**
@@ -39,6 +41,20 @@ import com.biglybt.ui.common.table.TableCellCore;
 public class TableTooltips
 	implements Listener
 {
+	public static boolean tooltips_disabled = true;
+
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Table.tooltip.disable",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String parameterName){
+					tooltips_disabled = COConfigurationManager.getBooleanParameter( "Table.tooltip.disable" );
+				}
+			});
+	}
+	
 	Shell toolTipShell = null;
 
 	Shell mainShell = null;
@@ -49,6 +65,7 @@ public class TableTooltips
 
 	private final TableViewSWT tv;
 
+	
 	/**
 	 * Initialize
 	 */
@@ -61,6 +78,7 @@ public class TableTooltips
 		composite.addListener(SWT.KeyDown, this);
 		composite.addListener(SWT.MouseMove, this);
 		composite.addListener(SWT.MouseHover, this);
+		composite.addListener(SWT.MouseExit, this);
 		mainShell.addListener(SWT.Deactivate, this);
 		tv.getComposite().addListener(SWT.Deactivate, this);
 	}
@@ -72,6 +90,10 @@ public class TableTooltips
 				if (toolTipShell != null && !toolTipShell.isDisposed())
 					toolTipShell.dispose();
 
+				if ( !Utils.getTTEnabled()){
+					return;
+				}
+				
 				TableCellCore cell = tv.getTableCell(event.x, event.y);
 				if (cell == null)
 					return;

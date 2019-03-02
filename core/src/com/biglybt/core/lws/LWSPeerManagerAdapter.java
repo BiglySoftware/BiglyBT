@@ -28,6 +28,7 @@ import com.biglybt.core.disk.DiskManagerReadRequest;
 import com.biglybt.core.disk.DiskManagerReadRequestListener;
 import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManagerAdapter;
 import com.biglybt.core.peer.PEPiece;
@@ -84,6 +85,17 @@ LWSPeerManagerAdapter
 		return( lws.getName());
 	}
 
+	@Override
+	public byte[] getTargetHash()
+	{
+		return( lws.getHash().getBytes());
+	}
+	
+	@Override
+	public int getTCPListeningPortNumber(){
+		return( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber());
+	}
+	
 	@Override
 	public PeerManagerRegistration
 	getPeerManagerRegistration()

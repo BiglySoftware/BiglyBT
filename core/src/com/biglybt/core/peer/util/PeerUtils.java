@@ -216,7 +216,7 @@ public class PeerUtils {
 
 				   na_last_ip6_time = now;
 
-				   InetAddress ia = network_admin.getDefaultPublicAddressV6( true );
+				   InetAddress ia = network_admin.getDefaultPublicAddressV6();
 
 				   if ( ia != null ){
 
@@ -459,6 +459,10 @@ public class PeerUtils {
 	 	for (int i = 8; i < 20; i++) {
 		  int pos = (int) ( Math.random() * chars.length());
 		  peerId[i] = (byte)chars.charAt(pos);
+		}
+
+		if (Constants.isAndroid) {
+			peerId[8] = 'A';
 		}
 
 		// System.out.println( "generated new peer id:" + ByteFormatter.nicePrint(peerId));

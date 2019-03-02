@@ -102,7 +102,7 @@ public class TorrentInfoView
 		sc.setExpandHorizontal(true);
 		sc.setExpandVertical(true);
 		GridData gridData = new GridData(GridData.FILL, GridData.FILL, true, true, 1, 1);
-		Utils.setLayoutData(sc, gridData);
+		sc.setLayoutData(gridData);
 
 		outer_panel = sc;
 
@@ -128,7 +128,7 @@ public class TorrentInfoView
 		configLayout.marginWidth = 0;
 		cHeader.setLayout(configLayout);
 		gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-		Utils.setLayoutData(cHeader, gridData);
+		cHeader.setLayoutData(gridData);
 
 		Display d = panel.getDisplay();
 		cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
@@ -145,11 +145,11 @@ public class TorrentInfoView
 		lHeader.setFont(headerFont);
 		lHeader.setText( " " + MessageText.getString( "authenticator.torrent" ) + " : " + download_manager.getDisplayName().replaceAll("&", "&&"));
 		gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-		Utils.setLayoutData(lHeader, gridData);
+		lHeader.setLayoutData(gridData);
 
 		Composite gTorrentInfo = new Composite(panel, SWT.NULL);
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(gTorrentInfo, gridData);
+		gTorrentInfo.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		gTorrentInfo.setLayout(layout);
@@ -159,21 +159,21 @@ public class TorrentInfoView
 
 		Label label = new Label(gTorrentInfo, SWT.NULL);
 		gridData = new GridData();
-		Utils.setLayoutData(label,  gridData );
+		label.setLayoutData(gridData);
 		label.setText( MessageText.getString( "TorrentInfoView.torrent.encoding" ) + ": " );
 
 		TOTorrent	torrent = download_manager.getTorrent();
 		BufferedLabel blabel = new BufferedLabel(gTorrentInfo, SWT.NULL);
 		gridData = new GridData();
 
-		Utils.setLayoutData(blabel,  gridData );
+		blabel.setLayoutData(gridData);
 		blabel.setText(torrent==null?"":LocaleTorrentUtil.getCurrentTorrentEncoding( torrent ));
 
 			// trackers
 
 		label = new Label(gTorrentInfo, SWT.NULL);
 		gridData = new GridData();
-		Utils.setLayoutData(label,  gridData );
+		label.setLayoutData(gridData);
 		label.setText( MessageText.getString( "label.tracker" ) + ": " );
 
 		String	trackers = "";
@@ -250,7 +250,7 @@ public class TorrentInfoView
 		}
 
 		blabel = new BufferedLabel(gTorrentInfo, SWT.WRAP);
-		Utils.setLayoutData(blabel, Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
+		blabel.setLayoutData(Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
 		blabel.setText( trackers );
 
 
@@ -259,7 +259,7 @@ public class TorrentInfoView
 		Group gColumns = new Group(panel, SWT.NULL);
 		Messages.setLanguageText(gColumns, "TorrentInfoView.columns" );
 		gridData = new GridData(GridData.FILL_BOTH);
-		Utils.setLayoutData(gColumns, gridData);
+		gColumns.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 4;
 		gColumns.setLayout(layout);
@@ -343,15 +343,15 @@ public class TorrentInfoView
 			if ( i%2 == 1 ){
 				gridData.horizontalIndent = 16;
 			}
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 			String key = ((TableColumnCore) cell.getTableColumn()).getTitleLanguageKey();
 			label.setText(MessageText.getString(key) + ": ");
-			label.setToolTipText(MessageText.getString(key + ".info", ""));
+			Utils.setTT(label,MessageText.getString(key + ".info", ""));
 
 			final Composite c = new Composite(gColumns, SWT.DOUBLE_BUFFERED);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
 			gridData.heightHint = 16;
-			Utils.setLayoutData(c, gridData);
+			c.setLayoutData(gridData);
 			cell.setControl(c);
 			cell.invalidate();
 			cell.refresh();
@@ -361,7 +361,7 @@ public class TorrentInfoView
 					Object toolTip = cell.getToolTip();
 					if (toolTip instanceof String) {
 						String s = (String) toolTip;
-						c.setToolTipText(s);
+						Utils.setTT(c,s);
 					}
 				}
 			});
@@ -380,8 +380,16 @@ public class TorrentInfoView
 			for (int i=0;i<cells.length;i++){
 
 				TableCellCore cell = cells[i];
-				try {cell.refresh();}
-				catch (Exception e) {Debug.printStackTrace(e, "Error refreshing cell: " + cells[i].getTableColumn().getName());}
+				
+				try {
+					cell.refresh();
+					
+					cell.redraw();
+					
+				}catch (Exception e){
+					
+					Debug.printStackTrace(e, "Error refreshing cell: " + cells[i].getTableColumn().getName());
+				}
 			}
 		}
 	}

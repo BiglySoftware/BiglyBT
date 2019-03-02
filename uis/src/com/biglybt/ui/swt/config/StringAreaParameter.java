@@ -23,6 +23,7 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Utils;
@@ -33,18 +34,10 @@ import com.biglybt.ui.swt.Utils;
  */
 public class StringAreaParameter extends Parameter{
 
-  private String name;
   private Text inputField;
-  private String defaultValue;
 
-  public StringAreaParameter(Composite composite,final String name) {
-    this(composite, name, COConfigurationManager.getStringParameter(name));
-  }
-
-  public StringAreaParameter(Composite composite,final String name, String defaultValue ) {
-  	super(name);
-    this.name = name;
-    this.defaultValue = defaultValue;
+  public StringAreaParameter(Composite composite, String configID) {
+  	super(configID);
     inputField = new Text(composite, SWT.BORDER | SWT.WRAP | SWT.MULTI | SWT.V_SCROLL ) {
   		// I know what I'm doing. Maybe ;)
   		@Override
@@ -77,12 +70,12 @@ public class StringAreaParameter extends Parameter{
     	}
     };
 
-    String value = COConfigurationManager.getStringParameter(name, defaultValue);
+    String value = COConfigurationManager.getStringParameter(configID);
     inputField.setText(value);
     inputField.addListener(SWT.Verify, new Listener() {
         @Override
         public void handleEvent(Event e) {
-          e.doit = COConfigurationManager.verifyParameter(name, e.text );
+          e.doit = COConfigurationManager.verifyParameter(configID, e.text );
         }
     });
 
@@ -128,11 +121,11 @@ public class StringAreaParameter extends Parameter{
   protected void
   checkValue()
   {
-	  String	old_value = COConfigurationManager.getStringParameter( name, defaultValue );
+	  String	old_value = COConfigurationManager.getStringParameter( configID );
 	  String	new_value = inputField.getText();
 
 	  if ( !old_value.equals( new_value )){
-	      COConfigurationManager.setParameter(name,new_value );
+	      COConfigurationManager.setParameter(configID, new_value );
 
 	      if( change_listeners != null ) {
 	        for (int i=0;i<change_listeners.size();i++){
@@ -142,11 +135,10 @@ public class StringAreaParameter extends Parameter{
 	  }
   }
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    inputField.setLayoutData(layoutData);
-  }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		inputField.setLayoutData(layoutData);
+	}
 
   public void setValue(final String value) {
 		Utils.execSWTThread(new AERunnable() {
@@ -160,8 +152,8 @@ public class StringAreaParameter extends Parameter{
 			}
 		});
 
-		if (!COConfigurationManager.getStringParameter(name).equals(value)) {
-			COConfigurationManager.setParameter(name, value);
+		if (!COConfigurationManager.getStringParameter(configID).equals(value)) {
+			COConfigurationManager.setParameter(configID, value);
 		}
 	}
 
@@ -186,6 +178,6 @@ public class StringAreaParameter extends Parameter{
 
   @Override
   public Object getValueObject() {
-  	return COConfigurationManager.getStringParameter(name);
+  	return COConfigurationManager.getStringParameter(configID);
   }
 }

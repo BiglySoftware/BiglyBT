@@ -84,6 +84,8 @@ DiskManagerFileInfo
 
 	public long getDownloaded();
 
+	public long getLastModified();
+	
 	public String getExtension();
 
 	public int getFirstPieceNumber();
@@ -130,6 +132,9 @@ DiskManagerFileInfo
 	public long
 	getETA();
 
+	public void
+	recheck();
+	
 	public void
 	close();
 

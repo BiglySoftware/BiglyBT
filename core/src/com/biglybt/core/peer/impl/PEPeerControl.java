@@ -37,6 +37,8 @@ public interface
 PEPeerControl
 	extends PEPeerManager
 {
+	public static final int		SNUB_MILLIS 						= 60 *1000;
+
 	public boolean
 	validateReadRequest(
 		PEPeerTransport	originator,
@@ -62,6 +64,17 @@ PEPeerControl
 	    PEPeer peer,
 	    int pieceNumber);
 
+	public int
+	getTCPListeningPortNumber();
+	
+		/**
+		 * Get torrent hash including any overrides
+		 * @return
+		 */
+	
+	public byte[]
+	getTargetHash();
+	
 	public boolean
 	isPrivateTorrent();
 
@@ -105,6 +118,10 @@ PEPeerControl
 	public void decNbPeersSnubbed();
 	public void setNbPeersSnubbed(int n);
 	public int getNbPeersSnubbed();
+	
+	public void 
+	checkSnubbing(
+		PEPeerTransport	peer );
 
 	public void
 	badPieceReported(

@@ -24,14 +24,22 @@ import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.DownloadManagerStateFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagFeatureExecOnAssign.OptionsTemplateHandler;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
+import com.biglybt.core.vuzefile.VuzeFile;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerEvent;
+import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.util.MapUtils;
 
 public abstract class
 TagBase
@@ -45,7 +53,10 @@ TagBase
 	protected static final String	AT_CAN_BE_PUBLIC				= "canpub";
 	protected static final String	AT_ORIGINAL_NAME				= "oname";
 	protected static final String	AT_IMAGE_ID						= "img.id";
+	protected static final String	AT_IMAGE_FILE					= "img.file";
+	protected static final String	AT_IMAGE_SORT_ORDER				= "img.so";
 	protected static final String	AT_COLOR_ID						= "col.rgb";
+	protected static final String	AT_COLORS_ID					= "cols";
 	protected static final String	AT_RSS_ENABLE					= "rss.enable";
 	protected static final String	AT_RATELIMIT_UP_PRI				= "rl.uppri";
 	protected static final String	AT_XCODE_TARGET					= "xcode.to";
@@ -61,16 +72,20 @@ TagBase
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR	= "rl.maxaggsr";
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION	= "rl.maxaggsr.a";
 	protected static final String	AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY	= "rl.maxaggsr.p";
+	protected static final String	AT_RATELIMIT_FP_SEEDING					= "rl.fps";
 	protected static final String	AT_PROPERTY_PREFIX				= "pp.";
-	protected static final String	AT_EOA_PREFIX					= "eoa.";
+	//protected static final String	AT_EOA_PREFIX					= "eoa.";	// meh, should be used but copy/paste error resulted in AT_PROPERTY_PREFIX being used instead 
 	protected static final String	AT_BYTES_UP						= "b.up";
 	protected static final String	AT_BYTES_DOWN					= "b.down";
 	protected static final String	AT_DESCRIPTION					= "desc";
 	protected static final String	AT_MAX_TAGGABLES				= "max.t";
 	protected static final String	AT_REMOVAL_STRATEGY				= "max.t.r";
 	protected static final String	AT_EOS_SCRIPT					= "eos.scr";
+	protected static final String	AT_EOS_OPTIONS_TEMPLATE			= "eos.ot";
+	protected static final String	AT_EOS_PM						= "eos.pm";
 	protected static final String	AT_NOTIFICATION_POST			= "noti.post";
 	protected static final String	AT_LIMIT_ORDERING				= "max.t.o";
+	protected static final String	AT_EOS_ASSIGN_TAGS				= "eos.at";
 
 	private static final String[] EMPTY_STRING_LIST = {};
 
@@ -116,8 +131,10 @@ TagBase
 	private Boolean	is_public;
 	private String	group;
 	private int[]	colour;
+	private long[]	colours;
 	private String	description;
 
+	private int		image_sort_order = Integer.MIN_VALUE;
 
 	private TagFeatureRateLimit		tag_rl;
 	private TagFeatureRSSFeed		tag_rss;
@@ -125,7 +142,7 @@ TagBase
 	private TagFeatureLimits		tag_limits;
 
 	private HashMap<String,Object>		transient_properties;
-
+	
 	protected
 	TagBase(
 		TagTypeBase			_tag_type,
@@ -166,6 +183,11 @@ TagBase
 			if ( this instanceof TagFeatureLimits ){
 
 				tag_limits = (TagFeatureLimits)this;
+			}
+			
+			if ( group != null ){
+				
+				tag_type.setTagGroup( this, null, group );
 			}
 		}
 	}
@@ -317,7 +339,7 @@ TagBase
 
 		tag_name = name;
 
-		tag_type.fireChanged( this );
+		tag_type.fireMetadataChanged( this );
 	}
 
 		// public
@@ -359,7 +381,7 @@ TagBase
 
 			writeBooleanAttribute( AT_PUBLIC, v );
 
-			tag_type.fireChanged( this );
+			tag_type.fireMetadataChanged( this );
 		}
 	}
 
@@ -407,7 +429,7 @@ TagBase
 	public boolean[]
 	isTagAuto()
 	{
-		return( new boolean[]{ false, false });
+		return( new boolean[]{ false, false, false });
 	}
 
 		// visible
@@ -430,7 +452,7 @@ TagBase
 
 			writeBooleanAttribute( AT_VISIBLE, v );
 
-			tag_type.fireChanged( this );
+			tag_type.fireMetadataChanged( this );
 		}
 	}
 
@@ -453,14 +475,25 @@ TagBase
 
 		if ( group == null || new_group == null || !group.equals(new_group)){
 
+			String	old_name = group;
+			
 			group	= new_group;
 
 			writeStringAttribute( AT_GROUP, new_group );
 
-			tag_type.fireChanged( this );
+			tag_type.setTagGroup( this, old_name, new_group );
+			
+			tag_type.fireMetadataChanged( this );
 		}
 	}
 
+	@Override
+	public TagGroup 
+	getGroupContainer()
+	{
+		return( tag_type.getTagGroup( group ));
+	}
+	
 	protected boolean
 	getVisibleDefault()
 	{
@@ -480,8 +513,52 @@ TagBase
 		String		id )
 	{
 		writeStringAttribute( AT_IMAGE_ID, id );
+		
+		tag_type.fireMetadataChanged( this );
 	}
 
+	@Override
+	public String 
+	getImageFile()
+	{
+		return( readStringAttribute( AT_IMAGE_FILE, null ));
+	}
+	
+	@Override
+	public void 
+	setImageFile(String id)
+	{
+		writeStringAttribute( AT_IMAGE_FILE, id );
+		
+		tag_type.fireMetadataChanged( this );
+	}
+	
+	@Override
+	public void
+	setImageSortOrder(
+		int order)
+	{
+		image_sort_order = order;
+		
+		writeLongAttribute( AT_IMAGE_SORT_ORDER, order );
+		
+		tag_type.fireMetadataChanged( this );
+	}
+	
+	@Override
+	public int 
+	getImageSortOrder()
+	{
+		int	result = image_sort_order;
+	
+		if ( result == Integer.MIN_VALUE ){
+		
+			result = image_sort_order = readLongAttribute( AT_IMAGE_SORT_ORDER, -1L ).intValue();
+		}
+		
+		return( result );
+	}
+	
 	private int[]
 	decodeRGB(
 		String str )
@@ -563,9 +640,59 @@ TagBase
 
 		colour = null;
 
-		tag_type.fireChanged( this );
+		tag_type.fireMetadataChanged( this );
 	}
 
+	@Override
+	public long[]
+	getColors()
+	{
+		long[] result = colours;
+
+		if ( result == null ){
+
+			result = readLongListAttribute( AT_COLORS_ID, new long[0] );
+
+			colours = result;
+		}
+
+		return( result );
+	}
+
+	@Override
+	public void
+	setColors(
+		long[]		params )
+	{
+		if ( params == null ){
+			
+			params = new long[0];
+		}
+		
+		boolean	changed;
+		
+		if ( colours != null && colours.length == 0 && params.length == 0 ){
+		
+			changed = false;
+			
+		}else{
+		
+			changed = writeLongListAttribute( AT_COLORS_ID, params );
+			
+			if ( colours == null ){
+				
+				changed = true;
+			}
+		}
+		
+		colours = params;
+
+		if ( changed ){
+		
+			tag_type.fireMetadataChanged( this );
+		}
+	}
+	
 	public boolean
 	isTagRSSFeedEnabled()
 	{
@@ -587,7 +714,7 @@ TagBase
 
 				writeBooleanAttribute( AT_RSS_ENABLE, enable );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 
 				tag_type.getTagManager().checkRSSFeeds( this, enable );
 			}
@@ -638,7 +765,7 @@ TagBase
 
 				writeStringAttribute( AT_FL_INIT_LOC, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -666,7 +793,7 @@ TagBase
 
 				writeLongAttribute( AT_FL_INIT_LOC_OPT, options );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -715,7 +842,7 @@ TagBase
 
 				writeStringAttribute( AT_FL_MOVE_COMP, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -743,7 +870,7 @@ TagBase
 
 				writeLongAttribute( AT_FL_MOVE_COMP_OPT, options );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -792,7 +919,7 @@ TagBase
 
 				writeStringAttribute( AT_FL_COPY_COMP, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -820,7 +947,7 @@ TagBase
 
 				writeLongAttribute( AT_FL_COPY_COMP_OPT, options );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -915,6 +1042,20 @@ TagBase
 		Debug.out( "not supported" );
 	}
 
+	public boolean
+	getFirstPrioritySeeding()
+	{
+		return( true );
+	}
+
+	public void
+	setFirstPrioritySeeding(
+		boolean		priority )
+	{
+		Debug.out( "not supported" );
+	}
+
+	
 		// limits
 
 	public int
@@ -938,7 +1079,7 @@ TagBase
 
 				writeLongAttribute( AT_MAX_TAGGABLES, max );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 
 				checkMaximumTaggables();
 			}
@@ -971,7 +1112,7 @@ TagBase
 
 				writeLongAttribute( AT_REMOVAL_STRATEGY, id );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -997,7 +1138,7 @@ TagBase
 
 				writeLongAttribute( AT_LIMIT_ORDERING, id );
 
-				tag_type.fireChanged( this );
+				tag_type.fireMetadataChanged( this );
 			}
 		}
 	}
@@ -1049,6 +1190,20 @@ TagBase
 	}
 
 	public boolean
+	isAnyActionEnabled()
+	{
+		for ( int action: TagFeatureExecOnAssign.ACTIONS ){
+			
+			if ( isActionEnabled(action )){
+				
+				return( true );
+			}
+		}
+		
+		return( false );
+	}
+	
+	public boolean
 	isActionEnabled(
 		int		action )
 	{
@@ -1076,6 +1231,8 @@ TagBase
 		}
 
 		writeBooleanAttribute( AT_PROPERTY_PREFIX + action, enabled );
+		
+		tag_type.fireMetadataChanged( this );
 	}
 
 	public String
@@ -1105,8 +1262,275 @@ TagBase
 		writeStringAttribute( AT_EOS_SCRIPT, script);
 
 		setActionEnabled( TagFeatureExecOnAssign.ACTION_SCRIPT, script.length() > 0 );
+		
+		tag_type.fireMetadataChanged( this );
 	}
 
+	public String
+	getPostMessageChannel()
+	{
+		String channel = readStringAttribute( AT_EOS_PM, "" );
+
+		if ( channel == null ){
+
+			channel = "";
+		}
+
+		return( channel );
+	}
+
+	public void
+	setPostMessageChannel(
+		String		channel )
+	{
+		if ( channel == null ){
+
+			channel = "";
+		}
+
+		channel = channel.trim();
+
+		writeStringAttribute( AT_EOS_PM, channel);
+
+		setActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI, channel.length() > 0 );
+		
+		tag_type.fireMetadataChanged( this );
+	}
+	
+	public OptionsTemplateHandler
+	getOptionsTemplateHandler()
+	{
+		return(
+			new OptionsTemplateHandler()
+			{
+				private CopyOnWriteList<ParameterChangeListener>	listeners = new CopyOnWriteList<>();
+
+				
+				@Override
+				public boolean 
+				isActive()
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( map != null && !map.isEmpty());
+				}
+				
+				private void
+				update(
+					Map<String,Object>		map )
+				{
+					if ( map != null && map.isEmpty()){
+						
+						map = null;
+					}
+					
+					writeMapAttribute( AT_EOS_OPTIONS_TEMPLATE, map );
+					
+					if ( map == null ){
+						
+						setActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE, false );
+						
+					}else{
+					
+						setActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE, true );
+					}
+				}
+				
+				public String
+				getName()
+				{
+					return( MessageText.getString( "label.options.template" ) + " : " + getTagName( true ));
+				}
+				
+				public int
+				getUploadRateLimitBytesPerSecond()
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( MapUtils.getMapInt(map, "gen_up", 0 ));
+				}
+				
+				public void
+				setUploadRateLimitBytesPerSecond(
+					int		limit )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, new HashMap<>());
+					
+					if ( limit == 0 ){
+						map.remove( "gen_up" );
+					}else{
+						map.put( "gen_up", limit );
+					}
+					
+					update( map );
+				}
+				
+				public int
+				getDownloadRateLimitBytesPerSecond()
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( MapUtils.getMapInt(map, "gen_down", 0 ));
+				}
+				
+				public void
+				setDownloadRateLimitBytesPerSecond(
+					int		limit )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, new HashMap<>());
+					
+					if ( limit == 0 ){
+						map.remove( "gen_down" );
+					}else{
+						map.put( "gen_down", limit );
+					}
+					
+					update( map );					
+				}
+
+				public int
+				getIntParameter(
+					String		name )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( MapUtils.getMapInt(map, name, DownloadManagerStateFactory.getIntParameterDefault(name) ));
+				}
+				
+				public void
+				setIntParameter(
+					String		name,
+					int			value )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, new HashMap<>());
+					
+					if ( value == DownloadManagerStateFactory.getIntParameterDefault(name)){
+						
+						map.remove( name );
+						
+					}else{
+						
+						map.put( name, new Long( value ));
+					}
+					
+					update( map );
+				}
+				
+				public boolean
+				getBooleanParameter(
+					String		name )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					return( MapUtils.getMapBoolean( map, name, DownloadManagerStateFactory.getBooleanParameterDefault(name) ));
+				}
+				
+				public void
+				setBooleanParameter(
+					String		name,
+					boolean		value )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, new HashMap<>());
+				
+					if ( value == DownloadManagerStateFactory.getBooleanParameterDefault(name)){
+						
+						map.remove( name );
+						
+					}else{
+						
+						map.put( name, value?1:0 );
+					}
+					
+					update( map );
+				}
+				
+				public void
+				setParameterDefault(
+					String		key )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					if ( map != null ){
+						
+						map.remove( key );
+						
+						update( map );
+						
+						for ( ParameterChangeListener l: listeners ){
+							try{
+								l.parameterChanged( this );
+							}catch( Throwable e ){
+								Debug.out( e );
+							}
+						}
+					}
+				}
+				
+				public DownloadManager
+				getDownloadManager()
+				{
+					return( null );
+				}
+		
+				@Override
+				public void addListener(ParameterChangeListener listener){
+					listeners.add( listener );
+				}
+				
+				@Override
+				public void removeListener(ParameterChangeListener listener){
+					listeners.remove( listener );
+				}
+				
+				
+				@Override
+				public void 
+				applyTo(
+					DownloadManager dm )
+				{
+					Map<String,Object> map = readMapAttribute( AT_EOS_OPTIONS_TEMPLATE, null );
+					
+					if ( map == null ){
+						
+						return;
+					}
+					
+					if ( map.containsKey( "gen_up" )){
+						
+						int up = MapUtils.getMapInt(map, "gen_up", 0 );
+						
+						dm.getStats().setUploadRateLimitBytesPerSecond( up );
+					}
+					
+					if ( map.containsKey( "gen_down" )){
+						
+						int up = MapUtils.getMapInt(map, "gen_down", 0 );
+						
+						dm.getStats().setDownloadRateLimitBytesPerSecond( up );
+					}
+					
+					DownloadManagerState state = dm.getDownloadState();
+					
+					for ( String name: map.keySet()){
+						
+						if ( name.startsWith( "gen_" )){
+							
+							continue;
+						}
+						
+						if ( DownloadManagerStateFactory.getBooleanParameterDefault( name ) != null ){
+							
+							state.setBooleanParameter(name, MapUtils.getMapBoolean(map, name, false ));
+							
+						}else if ( DownloadManagerStateFactory.getIntParameterDefault( name ) != null ){
+							
+							state.setIntParameter( name, MapUtils.getMapInt(map, name, 0 ));
+						}
+					}
+				}
+			});
+	}
+	
 		// notifications
 
 	public int
@@ -1121,6 +1545,61 @@ TagBase
 	{
 		writeLongAttribute( AT_NOTIFICATION_POST, flags );
 	}
+	
+		// assign tags
+	
+	public List<Tag>
+	getTagAssigns()
+	{
+		String[] tag_uids = readStringListAttribute( AT_EOS_ASSIGN_TAGS, new String[0] );
+
+		if ( tag_uids == null || tag_uids.length == 0 ){
+
+			return( Collections.emptyList());
+		}
+		
+		List<Tag> result = new ArrayList<>();
+
+		for ( String uid: tag_uids ){
+			
+			try{
+				Tag tag = tag_type.getTagManager().lookupTagByUID( Long.parseLong( uid ));
+				
+				if ( tag != null ){
+					
+					result.add( tag );
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		return( result );
+	}
+	
+	public void
+	setTagAssigns(
+		List<Tag>	tags )
+	{
+		if ( tags == null ){
+
+			tags = new ArrayList<>();
+		}
+
+		String[] tag_uids = new String[tags.size()];
+		
+		for ( int i=0;i<tag_uids.length;i++ ){
+			
+			tag_uids[i] = String.valueOf( tags.get(i).getTagUID());
+		}
+		
+		writeStringListAttribute( AT_EOS_ASSIGN_TAGS, tag_uids);
+
+		setActionEnabled( TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS, !tags.isEmpty());
+		
+		tag_type.fireMetadataChanged( this );
+	}
 
 		// others
 
@@ -1133,7 +1612,7 @@ TagBase
 
 		tag_type.taggableAdded( this, t );
 
-		tag_type.fireChanged( this );
+		tag_type.fireMembershipChanged( this );
 
 		if ( tag_limits != null ){
 
@@ -1150,7 +1629,7 @@ TagBase
 
 		tag_type.taggableRemoved( this, t );
 
-		tag_type.fireChanged( this );
+		tag_type.fireMembershipChanged( this );
 
 	}
 
@@ -1215,7 +1694,7 @@ TagBase
 
 		writeStringAttribute( AT_DESCRIPTION, str );
 
-		tag_type.fireChanged( this );
+		tag_type.fireMetadataChanged( this );
 	}
 
 	@Override
@@ -1244,7 +1723,7 @@ TagBase
 				transient_properties.put( property, value );
 			}
 
-			tag_type.fireChanged( this );
+			tag_type.fireMetadataChanged( this );
 		}
 	}
 
@@ -1438,6 +1917,22 @@ TagBase
 		tag_type.writeStringAttribute( this, attr, value );
 	}
 
+	protected Map<String,Object>
+	readMapAttribute(
+		String				attr,
+		Map<String,Object>	def )
+	{
+		return( tag_type.readMapAttribute( this, attr, def ));
+	}
+
+	protected void
+	writeMapAttribute(
+		String				attr,
+		Map<String,Object>	value )
+	{
+		tag_type.writeMapAttribute( this, attr, value );
+	}
+	
 	protected String[]
 	readStringListAttribute(
 		String		attr,
@@ -1454,6 +1949,22 @@ TagBase
 		return( tag_type.writeStringListAttribute( this, attr, value ));
 	}
 
+	protected long[]
+	readLongListAttribute(
+		String		attr,
+		long[]		def )
+	{
+		return( tag_type.readLongListAttribute( this, attr, def ));
+	}
+
+	protected boolean
+	writeLongListAttribute(
+		String		attr,
+		long[]		value )
+	{
+		return( tag_type.writeLongListAttribute( this, attr, value ));
+	}
+	
 	private static final Map<Long,long[][]>	session_cache = new HashMap<>();
 
 	private long[]						total_up_at_start;
@@ -1875,6 +2386,12 @@ TagBase
  			}
  		}
  	}
+ 	
+	public VuzeFile
+	getVuzeFile()
+	{
+		return( getManager().getVuzeFile( this ));
+	}
 
  	private class
  	TagPropertyImpl
@@ -1895,7 +2412,7 @@ TagBase
  		}
 
  		@Override
-	  public Tag
+ 		public Tag
  		getTag()
  		{
  			return( TagBase.this );
@@ -1924,10 +2441,74 @@ TagBase
 		}
 
 		@Override
+		public boolean
+		isEnabled()
+		{
+			return( readBooleanAttribute( AT_PROPERTY_PREFIX + "enabled." + name, true ));
+		}
+		
+		@Override
+		public void
+		setEnabled(
+			boolean	enabled )
+		{
+			if ( writeBooleanAttribute( AT_PROPERTY_PREFIX + "enabled." + name, enabled )){
+
+				for ( TagPropertyListener l: listeners ){
+
+					try{
+						l.propertyChanged( this );
+
+					}catch( Throwable e ){
+
+						Debug.out( e );
+					}
+				}
+
+				tag_type.fireMetadataChanged( TagBase.this );
+			}
+		}
+		
+		@Override
 		public void
 		setStringList(
 			String[]	value )
 		{
+			String name = getName( false );
+			
+			if ( name.equals( TagFeatureProperties.PR_CONSTRAINT )){
+				
+				String[] old_value = getStringList();
+				
+				if ( old_value.length == 0 || old_value[0].trim().isEmpty()){
+					
+					if ( value != null && value.length > 0 && !value[0].trim().isEmpty()){
+				
+						if ( !getTaggables().isEmpty()){
+							
+							UIManager ui_manager = StaticUtilities.getUIManager( 15*1000 );
+
+							if ( ui_manager!= null ){
+								
+								String desc = MessageText.getString(
+										"tag.constraint.with.manuals.desc",
+										new String[]{ getTagName( true ) });
+								
+								long res = ui_manager.showMessageBox(
+										"tag.constraint.with.manuals.title",
+										"!" + desc + "!",
+										UIManagerEvent.MT_OK | UIManagerEvent.MT_CANCEL );
+	
+								if ( res != UIManagerEvent.MT_OK ){
+									
+									return;
+								}
+							}
+						}
+					}
+				}
+			}
+			
 			if ( writeStringListAttribute( AT_PROPERTY_PREFIX + name, value )){
 
 				for ( TagPropertyListener l: listeners ){
@@ -1941,7 +2522,7 @@ TagBase
 					}
 				}
 
-				tag_type.fireChanged( TagBase.this );
+				tag_type.fireMetadataChanged( TagBase.this );
 			}
 		}
 
@@ -1970,7 +2551,7 @@ TagBase
 					}
 				}
 
-				tag_type.fireChanged( TagBase.this );
+				tag_type.fireMetadataChanged( TagBase.this );
 			}
 		}
 
@@ -1999,7 +2580,7 @@ TagBase
 					}
 				}
 
-				tag_type.fireChanged( TagBase.this );
+				tag_type.fireMetadataChanged( TagBase.this );
 			}
 		}
 
@@ -2053,24 +2634,38 @@ TagBase
 
 								String options = vals[1];
 
-								boolean auto_add 	= !options.contains( "am=2;" );
-								boolean auto_remove = !options.contains( "am=1;" );
+								boolean new_dls = options.contains( "am=3;" );
 
-								if ( auto_add && auto_remove ){
-
-								}else if ( auto_add || auto_remove ){
-
+								if ( new_dls ){
+								
 									value += "," + MessageText.getString( "label.scope" );
-
+									
 									value += "=";
-
-									if ( auto_add ){
-
-										value += MessageText.getString( "label.addition.only" );
-
-									}else{
-
-										value += MessageText.getString( "label.removal.only" );
+									
+									value += MessageText.getString( "label.new.downloads" );
+									
+								}else{
+									
+									boolean auto_add 	= !options.contains( "am=2;" );
+									boolean auto_remove = !options.contains( "am=1;" );
+	
+	
+									if ( auto_add && auto_remove ){
+	
+									}else if ( auto_add || auto_remove ){
+	
+										value += "," + MessageText.getString( "label.scope" );
+	
+										value += "=";
+	
+										if ( auto_add ){
+	
+											value += MessageText.getString( "label.addition.only" );
+	
+										}else{
+	
+											value += MessageText.getString( "label.removal.only" );
+										}
 									}
 								}
 							}
@@ -2142,8 +2737,16 @@ TagBase
 				}
 			}
 		}
+		
+		@Override
+		public String 
+		explainTaggable(
+			Taggable taggable)
+		{
+			return( tag_type.getTagManager().explain( TagBase.this, this, taggable ));
+		}
  	}
-
+ 	
 	public void
 	generate(
 		IndentWriter		writer )

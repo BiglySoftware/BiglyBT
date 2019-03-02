@@ -27,9 +27,11 @@ import java.util.Locale;
 public abstract class
 LocationProvider
 {
-	public static final long CAP_COUNTY_BY_IP		= 0x00000001;
+	public static final long CAP_COUNTY_BY_IP		= 0x00000001;	// meh
+	public static final long CAP_COUNTRY_BY_IP		= 0x00000001;
 	public static final long CAP_ISO3166_BY_IP		= 0x00000002;
 	public static final long CAP_FLAG_BY_IP			= 0x00000004;
+	public static final long CAP_FLAG_BY_CC			= 0x00000008;
 
 	public abstract String
 	getProviderName();
@@ -92,6 +94,14 @@ LocationProvider
 		return( null );
 	}
 
+	public InputStream
+	getCountryFlagForISO3166Code(
+		String			cc,
+		int				size_index )
+	{
+		return( null );
+	}
+	
 	public abstract boolean
 	isDestroyed();
 }

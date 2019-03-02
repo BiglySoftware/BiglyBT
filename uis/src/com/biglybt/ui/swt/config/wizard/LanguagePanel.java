@@ -31,7 +31,6 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 import com.biglybt.ui.swt.wizard.Wizard;
@@ -68,13 +67,13 @@ public class LanguagePanel extends AbstractWizardPanel {
 		final Label lblChoose = new Label(rootPanel, SWT.WRAP);
 		setChooseLabel(lblChoose);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(lblChoose, gridData);
+		lblChoose.setLayoutData(gridData);
 
 		final List lstLanguage = new List(rootPanel, SWT.BORDER | SWT.V_SCROLL
 				| SWT.SINGLE);
 		gridData = new GridData(GridData.FILL_BOTH);
 		gridData.heightHint = 350;
-		Utils.setLayoutData(lstLanguage, gridData);
+		lstLanguage.setLayoutData(gridData);
 
 		final Locale[] locales = MessageText.getLocales(true);
 

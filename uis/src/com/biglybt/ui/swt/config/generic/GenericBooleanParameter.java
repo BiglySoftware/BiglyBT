@@ -41,45 +41,21 @@ public class GenericBooleanParameter
 
 	GenericParameterAdapter adapter;
 
-	String name;
+	String paramID;
 
 	Button checkBox;
 
-	Boolean defaultValue;
-
 	List performers = new ArrayList();
 
-	public GenericBooleanParameter(GenericParameterAdapter adapter,
-			Composite composite, final String name) {
-		this(adapter, composite, name, adapter.getBooleanValue(name), null, null);
-	}
-
-	public GenericBooleanParameter(GenericParameterAdapter adapter,
-			Composite composite, final String name, String textKey) {
-		this(adapter, composite, name, adapter.getBooleanValue(name), textKey, null);
-	}
-
-	public GenericBooleanParameter(GenericParameterAdapter adapter,
-			Composite composite, final String name, Boolean defaultValue,
-			String textKey) {
-		this(adapter, composite, name, defaultValue, textKey, null);
-	}
-
-	public GenericBooleanParameter(GenericParameterAdapter adapter,
-			Composite composite, final String name, Boolean defaultValue) {
-		this(adapter, composite, name, defaultValue, null, null);
-	}
-
 	public GenericBooleanParameter(GenericParameterAdapter _adapter,
-			Composite composite, final String _name, Boolean _defaultValue,
+			Composite composite, final String paramID,
 			String textKey, IAdditionalActionPerformer actionPerformer) {
 		adapter = _adapter;
-		name = _name;
-		defaultValue = _defaultValue;
+		this.paramID = paramID;
 		if (actionPerformer != null) {
 			performers.add(actionPerformer);
 		}
-		Boolean value = adapter.getBooleanValue(name, defaultValue);
+		Boolean value = adapter.getBooleanValue(this.paramID);
 		checkBox = new Button(composite, SWT.CHECK);
 		if (textKey != null)
 			Messages.setLanguageText(checkBox, textKey);
@@ -100,7 +76,6 @@ public class GenericBooleanParameter
 	}
 
 	public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
 		checkBox.setLayoutData(layoutData);
 	}
 
@@ -118,16 +93,8 @@ public class GenericBooleanParameter
 		return checkBox;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String newName) {
-		name = newName;
-	}
-
 	public Boolean isSelected() {
-		return adapter.getBooleanValue(name);
+		return adapter.getBooleanValue(paramID);
 	}
 
 	public void
@@ -159,9 +126,9 @@ public class GenericBooleanParameter
 						debug("setBooleanValue to " + checkBox.getSelection()
 								+ " via setValue(int)");
 					}
-					adapter.setBooleanValue(name, checkBox.getSelection());
+					adapter.setBooleanValue(paramID, checkBox.getSelection());
 				} else {
-					adapter.setBooleanValue(name, selected);
+					adapter.setBooleanValue(paramID, selected);
 				}
 
 				if (performers.size() > 0) {
@@ -215,6 +182,6 @@ public class GenericBooleanParameter
 	}
 
 	private void debug(String string) {
-		System.out.println("[GenericBooleanParameter:" + name + "] " + string);
+		System.out.println("[GenericBooleanParameter:" + paramID + "] " + string);
 	}
 }

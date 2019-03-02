@@ -127,9 +127,9 @@ public class ClientStatsView
 		parent.setLayout(new FormLayout());
 		Layout layout = composite.getLayout();
 		if (layout instanceof GridLayout) {
-			Utils.setLayoutData(parent, new GridData(SWT.FILL, SWT.FILL, true, true));
+			parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		} else if (layout instanceof FormLayout) {
-			Utils.setLayoutData(parent, Utils.getFilledFormData());
+			parent.setLayoutData(Utils.getFilledFormData());
 		}
 
 		return parent;
@@ -142,14 +142,14 @@ public class ClientStatsView
 		FormData fd;
 		fd = Utils.getFilledFormData();
 		fd.bottom = new FormAttachment(cBottom);
-		Utils.setLayoutData(cTV, fd);
+		cTV.setLayoutData(fd);
 		fd = Utils.getFilledFormData();
 		fd.top = null;
-		Utils.setLayoutData(cBottom, fd);
+		cBottom.setLayoutData(fd);
 		cBottom.setLayout(new FormLayout());
 
 		Button btnCopy = new Button(cBottom, SWT.PUSH);
-		Utils.setLayoutData(btnCopy, new FormData());
+		btnCopy.setLayoutData(new FormData());
 		btnCopy.setText("Copy");
 		btnCopy.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -182,7 +182,7 @@ public class ClientStatsView
 		});
 
 		Button btnCopyShort = new Button(cBottom, SWT.PUSH);
-		Utils.setLayoutData(btnCopyShort, new FormData());
+		btnCopyShort.setLayoutData(new FormData());
 		btnCopyShort.setText("Copy > 1%");
 		btnCopyShort.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -350,7 +350,7 @@ public class ClientStatsView
 		});
 		fd = new FormData();
 		fd.left = new FormAttachment(btnCopy, 5);
-		Utils.setLayoutData(btnCopyShort, fd);
+		btnCopyShort.setLayoutData(fd);
 	}
 
 	@Override

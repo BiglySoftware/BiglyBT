@@ -42,6 +42,7 @@ import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.Legend;
@@ -121,16 +122,18 @@ public class ActivityView
 
 	int swarms_peer_speed = (int)stats.getTotalSwarmsPeerRate(true,false);
 
+	int kinb = DisplayFormatters.getKinB();
+	
     downSpeedGraphic.addIntsValue(
     	new int[]{ 	stats.getDataReceiveRate()+stats.getProtocolReceiveRate(),
     				stats.getProtocolReceiveRate(),
-    				COConfigurationManager.getIntParameter("Max Download Speed KBs") * 1024,
+    				COConfigurationManager.getIntParameter("Max Download Speed KBs") * kinb,
     				swarms_peer_speed });
 
     upSpeedGraphic.addIntsValue(
     	new int[]{	stats.getDataSendRate()+stats.getProtocolSendRate(),
     				stats.getProtocolSendRate(),
-    				COConfigurationManager.getIntParameter(TransferSpeedValidator.getActiveUploadParameter( manager )) * 1024,
+    				COConfigurationManager.getIntParameter(TransferSpeedValidator.getActiveUploadParameter( manager )) * kinb,
     				swarms_peer_speed });
   }
 

@@ -248,13 +248,13 @@ public class BrowserContext
 				checkURLEventPerformer);
 
 
-		browser.addOpenWindowListener(new OpenWindowListener() {
+		browser.addOpenWindowListener(new BrowserWrapper.OpenWindowListener() {
 			@Override
-			public void open(WindowEvent event) {
+			public void open(BrowserWrapper.WindowEvent event) {
 				if (browser == null || browser.isDisposed() || browser.getShell().isDisposed()) {
 					return;
 				}
-				event.required = true;
+				event.setRequired( true );
 
 				if (browser.getUrl().contains("js.debug=1")) {
 					final Shell shell = ShellFactory.createMainShell(SWT.SHELL_TRIM);
@@ -318,7 +318,7 @@ public class BrowserContext
 			@Override
 			public void changed(LocationEvent event) {
 				Browser browser = (Browser) event.widget;
-				if (browser.isDisposed() || browser.getShell().isDisposed()) {
+				if (browser == null || browser.isDisposed() || browser.getShell().isDisposed()) {
 					return;
 				}
 				debug("browser.changed " + event.location);

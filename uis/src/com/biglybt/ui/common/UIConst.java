@@ -29,9 +29,6 @@ import com.biglybt.ui.Main;
 import org.apache.commons.cli.*;
 import org.apache.commons.cli.Option.Builder;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreException;
-import com.biglybt.core.global.GlobalManager;
 
 /**
  * @author tobi
@@ -84,6 +81,11 @@ public class UIConst
 				"shutdown an existing instance of BiglyBT");
 		options.addOption(builder.build());
 
+		builder = Option.builder().longOpt("restart").desc(
+				"restart an existing instance of BiglyBT");
+		options.addOption(builder.build());
+
+		
 		builder = Option.builder().longOpt("open").desc(
 				"show the BiglyBT interface");
 		options.addOption(builder.build());
@@ -92,6 +94,11 @@ public class UIConst
 				"share a resource");
 		options.addOption(builder.build());
 
+		builder = Option.builder().longOpt("savepath").argName("path").hasArg().desc(
+				"specify the. Absolute save location for the torrent(s)");
+		options.addOption(builder.build());
+		
+		
 		
 		if (Constants.isWindows) {
 			builder = Option.builder("console").desc(

@@ -49,6 +49,7 @@ import com.biglybt.core.messenger.config.PlatformSubscriptionsMessenger;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.MetaSearchListener;
 import com.biglybt.core.metasearch.MetaSearchManagerFactory;
+import com.biglybt.core.metasearch.impl.plugin.PluginEngine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.metasearch.impl.web.rss.RSSEngine;
 import com.biglybt.core.security.CryptoECCUtils;
@@ -1848,7 +1849,19 @@ SubscriptionManagerImpl
 				}
 			}
 
-			String	json = SubscriptionImpl.getSkeletonJSON( engine, term, networks_str, 60 );
+			int period = 60;
+			
+			if ( engine instanceof PluginEngine ){
+				
+				String pid = ((PluginEngine)engine).getPluginID();
+				
+				if ( pid != null && pid.equals( "aercm" )){
+					
+					period = 5;
+				}
+			}
+			
+			String	json = SubscriptionImpl.getSkeletonJSON( engine, term, networks_str, period );
 
 			String	name 	= (String)search_parameters.get( SearchProvider.SP_SEARCH_NAME );
 
@@ -1970,7 +1983,7 @@ SubscriptionManagerImpl
 
 			String protocol = url.getProtocol().toLowerCase();
 
-			if ( ! ( protocol.equals( "azplug" ) || protocol.equals( "file" ) || protocol.equals( "vuze" ))){
+			if ( ! ( protocol.equals( "tor" ) || protocol.equals( "azplug" ) || protocol.equals( "file" ) || protocol.equals( "vuze" ))){
 
 				throw( new SubscriptionException( "Invalid URL '" + url + "'" ));
 			}
@@ -5191,9 +5204,11 @@ SubscriptionManagerImpl
 
 								String lc_url = url.toLowerCase( Locale.US );
 
-								if ( lc_url.startsWith( "http" )){
+								if ( lc_url.startsWith( "http" ) && lc_url.length() > 10 ){
 
-									String alt_url = UrlUtils.parseTextForURL( url.substring( 5 ), true );
+										// skip over initial http(s):// 
+									
+									String alt_url = UrlUtils.parseTextForURL( url.substring( 10 ), true );
 
 									if ( key.startsWith( alt_url )){
 
@@ -5784,6 +5799,8 @@ SubscriptionManagerImpl
 
 													Map<String,Object>	options = new HashMap<>();
 
+													chat.setSharedNickname( false );
+													
 													chat.sendMessage( f_msg, flags, options );
 
 												}
@@ -6774,6 +6791,8 @@ SubscriptionManagerImpl
 				hash,
 				"",
 				new InetSocketAddress[0],
+				Collections.emptyList(),
+				Collections.emptyMap(),
 				300*1000,
 				MagnetPlugin.FL_DISABLE_MD_LOOKUP );
 
@@ -7900,14 +7919,14 @@ SubscriptionManagerImpl
 						bit = bit.substring( 1, bit.length()-1 );
 
 						try{
-							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE );
+							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 						}catch( Throwable e ){
 						}
 					}else if ( bit.contains( "|" )){
 
 						try{
-							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE );
+							bit_patterns[i] = Pattern.compile( bit, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 						}catch( Throwable e ){
 						}

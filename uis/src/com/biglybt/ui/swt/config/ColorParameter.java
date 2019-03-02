@@ -23,6 +23,8 @@ package com.biglybt.ui.swt.config;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -35,8 +37,12 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 
@@ -51,7 +57,6 @@ public class ColorParameter extends Parameter implements ParameterListener {
 
 
   private Button colorChooser;
-  protected String sParamName;
   private Image img;
 
   private int r;
@@ -59,29 +64,51 @@ public class ColorParameter extends Parameter implements ParameterListener {
   private int b;
 
   public ColorParameter(final Composite composite,
-                        final String name,
-                        int _r, int _g, int _b) {
-  	super(name);
-    sParamName = name;
+          final String name,
+          int _r, int _g, int _b) {
+	  this( composite, name, _r, _g, _b, false );
+  }
+  
+  public ColorParameter(final Composite composite,
+                        String configID,
+                        int _r, int _g, int _b, boolean hasDefault) {
+  	super(configID);
     colorChooser = new Button(composite,SWT.PUSH);
-    if (name == null) {
+    if (configID == null) {
     	r = _r;
     	g = _g;
     	b = _b;
     } else {
-      r = COConfigurationManager.getIntParameter(name+".red",_r);
-      g = COConfigurationManager.getIntParameter(name+".green",_g);
-      b = COConfigurationManager.getIntParameter(name+".blue",_b);
-      COConfigurationManager.addParameterListener(sParamName, this);
+      r = COConfigurationManager.getIntParameter(configID+".red",_r);
+      g = COConfigurationManager.getIntParameter(configID+".green",_g);
+      b = COConfigurationManager.getIntParameter(configID+".blue",_b);
+      COConfigurationManager.addParameterListener(this.configID, this);
     }
     updateButtonColor(composite.getDisplay(), r, g, b);
 
-
+    if ( hasDefault ){
+	    Menu menu = new Menu( colorChooser );
+	    
+	    colorChooser.setMenu( menu );
+	    
+	    MenuItem mi = new MenuItem( menu, SWT.PUSH );
+	    
+	    mi.setText( MessageText.getString( "ConfigView.section.style.colorOverrides.reset" ));
+	    
+	    mi.addSelectionListener(
+	    	new SelectionAdapter(){
+	    		@Override
+	    		public void widgetSelected(SelectionEvent e){
+	    			 newColorChosen( null );
+	    		}	
+			});
+    }
+    
     colorChooser.addListener(SWT.Dispose, new Listener() {
       @Override
       public void handleEvent(Event e) {
-      	if (sParamName != null) {
-      		COConfigurationManager.removeParameterListener(sParamName, ColorParameter.this);
+      	if (ColorParameter.this.configID != null) {
+      		COConfigurationManager.removeParameterListener(ColorParameter.this.configID, ColorParameter.this);
       	}
         if(img != null && ! img.isDisposed()) {
           img.dispose();
@@ -119,8 +146,8 @@ public class ColorParameter extends Parameter implements ParameterListener {
         Utils.updateCustomColors( cd.getRGBs());
 
         newColorChosen(newColor);
-        if (name != null) {
-        	COConfigurationManager.setRGBParameter(name, newColor.red, newColor.green, newColor.blue);
+        if (configID != null) {
+        	COConfigurationManager.setRGBParameter(configID, newColor.red, newColor.green, newColor.blue);
         } else {
         	r = newColor.red;
         	g = newColor.green;
@@ -161,16 +188,15 @@ public class ColorParameter extends Parameter implements ParameterListener {
   }
 
   @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    colorChooser.setLayoutData(layoutData);
-  }
+	public void setLayoutData(Object layoutData) {
+		colorChooser.setLayoutData(layoutData);
+	}
 
   @Override
   public void parameterChanged(String parameterName) {
-    r = COConfigurationManager.getIntParameter(sParamName+".red");
-    g = COConfigurationManager.getIntParameter(sParamName+".green");
-    b = COConfigurationManager.getIntParameter(sParamName+".blue");
+    r = COConfigurationManager.getIntParameter(configID +".red");
+    g = COConfigurationManager.getIntParameter(configID +".green");
+    b = COConfigurationManager.getIntParameter(configID +".blue");
     updateButtonColor(colorChooser.getDisplay(), r, g, b);
   }
 
@@ -192,10 +218,10 @@ public class ColorParameter extends Parameter implements ParameterListener {
 		g = _g;
 		b = _b;
 
-		if (sParamName == null) {
+		if (configID == null) {
     	updateButtonColor(colorChooser.getDisplay(), r, g, b);
 		} else {
-			COConfigurationManager.setRGBParameter(sParamName, r, g, b);
+			COConfigurationManager.setRGBParameter(configID, r, g, b);
 		}
   }
 }

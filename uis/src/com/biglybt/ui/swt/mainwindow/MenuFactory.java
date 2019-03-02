@@ -71,18 +71,20 @@ import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.minibar.MiniBarManager;
 import com.biglybt.ui.swt.nat.NatTestWindow;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
+import com.biglybt.ui.swt.plugininstaller.InstallPluginWizard;
 import com.biglybt.ui.swt.pluginsuninstaller.UnInstallPluginWizard;
 import com.biglybt.ui.swt.sharing.ShareUtils;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.speedtest.SpeedTestWizard;
 import com.biglybt.ui.swt.update.UpdateMonitor;
+import com.biglybt.ui.swt.updater2.SWTUpdateChecker;
 import com.biglybt.ui.swt.views.stats.StatsView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.welcome.WelcomeWindow;
-
+import com.biglybt.update.CoreUpdateChecker;
 import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
@@ -156,6 +158,38 @@ public class MenuFactory
 		return createTopLevelMenuItem(menuParent, MENU_ID_VIEW);
 	}
 
+	public static void createCommunityMenuItem( Menu menuParent) {
+		final Menu communityMenu = createTopLevelMenuItem(menuParent,	MENU_ID_COMMUNITY).getMenu();
+
+		MenuBuildUtils.addMaintenanceListenerForMenu(communityMenu,
+				new MenuBuildUtils.MenuBuilder() {
+					@Override
+					public void buildMenu(Menu menu, MenuEvent menuEvent) {
+
+					MenuFactory.addMenuItem(communityMenu, MENU_ID_COMMUNITY_FORUMS,
+						new Listener() {
+							@Override
+							public void handleEvent(Event e) {
+								Utils.launch(Constants.URL_FORUMS);
+							}
+						});
+
+					MenuFactory.addMenuItem(communityMenu, MENU_ID_COMMUNITY_WIKI,
+						new Listener() {
+							@Override
+							public void handleEvent(Event e) {
+								Utils.launch(Constants.URL_WIKI);
+							}
+						});
+
+					MenuBuildUtils.addCommunityChatMenu( communityMenu );
+
+					MenuFactory.addVoteMenuItem(communityMenu);
+					MenuFactory.addBugReportMenuItem(communityMenu);
+				}
+			});
+	}
+	
 	public static Menu createTorrentMenuItem(final Menu menuParent) {
 		final Menu torrentMenu = createTopLevelMenuItem(menuParent,
 				MENU_ID_TORRENT).getMenu();
@@ -364,13 +398,19 @@ public class MenuFactory
 
 						if (path != null) {
 
-							VuzeFileHandler vfh = VuzeFileHandler.getSingleton();
+							// loadAndHandleVuzeFile may pull from network
+							Utils.getOffOfSWTThread(new AERunnable() {
+								@Override
+								public void runSupport() {
+									VuzeFileHandler vfh = VuzeFileHandler.getSingleton();
 
-							if (vfh.loadAndHandleVuzeFile(path,
-									VuzeFileComponent.COMP_TYPE_NONE) == null) {
+									if (vfh.loadAndHandleVuzeFile(path,
+											VuzeFileComponent.COMP_TYPE_NONE) == null) {
 
-								TorrentOpener.openTorrent(path);
-							}
+										TorrentOpener.openTorrent(path);
+									}
+								}
+							});
 						}
 					}
 				});
@@ -763,7 +803,7 @@ public class MenuFactory
 	}
 
 	public static MenuItem addViewToolbarMenuItem(Menu menu) {
-		final MenuItem item = addMenuItem(menu, SWT.CHECK, MENU_ID_TOOLBAR,
+		final MenuItem item = addMenuItem(menu, SWT.CHECK, isAZ3?MENU_ID_SEARCH_BAR:MENU_ID_TOOLBAR,
 				new Listener() {
 					@Override
 					public void handleEvent(Event e) {
@@ -1049,20 +1089,23 @@ public class MenuFactory
 															public void
 															closed()
 															{
-																String text = viewer.getText();
-
-																String[] lines = text.split( "\n" );
-
-																java.util.List<String> updated_lines = new ArrayList<>( Arrays.asList( lines ));
-
-																java.util.List<String> result = slh.setSchedule( updated_lines );
-
-																if ( result != null && result.size() > 0 ){
-
-																	showText(
-																			"MainWindow.menu.speed_limits.schedule.title",
-																			"MainWindow.menu.speed_limits.schedule.err",
-																			result );
+																if ( viewer.getOKPressed()){
+																	
+																	String text = viewer.getText();
+	
+																	String[] lines = text.split( "\n" );
+	
+																	java.util.List<String> updated_lines = new ArrayList<>( Arrays.asList( lines ));
+	
+																	java.util.List<String> result = slh.setSchedule( updated_lines );
+	
+																	if ( result != null && result.size() > 0 ){
+	
+																		showText(
+																				"MainWindow.menu.speed_limits.schedule.title",
+																				"MainWindow.menu.speed_limits.schedule.err",
+																				result );
+																	}
 																}
 															}
 														});
@@ -1105,6 +1148,35 @@ public class MenuFactory
 					buildMenu(
 						final Menu menu, MenuEvent menuEvent)
 					{
+						MenuItem manualInstall = new MenuItem(menu, SWT.PUSH);
+
+						Messages.setLanguageText(manualInstall, "menu.install.manual.update" );
+
+						manualInstall.addListener(
+							SWT.Selection,
+							new Listener()
+							{
+								@Override
+								public void
+								handleEvent(
+									Event arg )
+								{
+									Utils.execSWTThreadLater(
+											1,
+											new Runnable()
+											{
+												@Override
+												public void
+												run()
+												{
+													manualInstall();
+												}
+											});
+								}
+							});
+						
+						new MenuItem( menu, SWT.SEPARATOR );
+						
 						MenuItem viewTorrent = new MenuItem(menu, SWT.PUSH);
 
 						Messages.setLanguageText(viewTorrent, "torrent.view.info" );
@@ -1186,6 +1258,8 @@ public class MenuFactory
 								}
 							});
 
+						new MenuItem( menu, SWT.SEPARATOR );
+						
 						MenuItem bencodeToJSON = new MenuItem(menu, SWT.PUSH);
 
 						Messages.setLanguageText(bencodeToJSON, "menu.bencode.to.json" );
@@ -1240,6 +1314,8 @@ public class MenuFactory
 								}
 							});
 
+						new MenuItem( menu, SWT.SEPARATOR );
+						
 						MenuItem showChanges = new MenuItem(menu, SWT.PUSH);
 
 						Messages.setLanguageText(showChanges, "show.config.changes" );
@@ -1438,6 +1514,110 @@ public class MenuFactory
 		}
 	}
 
+	private static void
+	manualInstall()
+	{
+		final Shell shell = Utils.findAnyShell();
+
+		try{
+			FileDialog dialog = new FileDialog( shell, SWT.SYSTEM_MODAL | SWT.OPEN );
+
+			dialog.setFilterExtensions(new String[] { "*.jar;*.zip", Constants.FILE_WILDCARD });
+
+			dialog.setFilterNames(new String[] { "*.jar;*.zip", Constants.FILE_WILDCARD });
+
+			dialog.setFilterPath( TorrentOpener.getFilterPathTorrent());
+
+			dialog.setText(MessageText.getString( "manual.update.browse" ));
+
+			String str = dialog.open();
+
+			if ( str != null ){
+				
+				File file = new File( str );
+				
+				String	name = file.getName();
+				
+				if ( name.startsWith( "core_" )){
+					
+					Utils.getOffOfSWTThread(
+							new AERunnable()
+							{
+								@Override
+								public void
+								runSupport()
+								{
+									Map<String,Object> overrides = new HashMap<>();
+									
+									overrides.put( CoreUpdateChecker.RES_EXPLICIT_FILE, file );
+									
+									UpdateMonitor.getSingleton(CoreFactory.getSingleton()).performCheck(
+											true, false, false, overrides,
+											new UpdateCheckInstanceListener() {
+												public void
+												cancelled(
+													UpdateCheckInstance		instance )
+												{											
+												}
+
+												public void
+												complete(
+													UpdateCheckInstance		instance )
+												{	
+												}
+									});
+								}
+							});
+					
+				}else if ( name.startsWith( "plugins_" )){
+					
+					new InstallPluginWizard( str );
+					
+				}else if ( name.startsWith( "swt_" )){
+					
+					Utils.getOffOfSWTThread(
+							new AERunnable()
+							{
+								@Override
+								public void
+								runSupport()
+								{
+									Map<String,Object> overrides = new HashMap<>();
+									
+									overrides.put( SWTUpdateChecker.RES_EXPLICIT_FILE, file );
+									
+									UpdateMonitor.getSingleton(CoreFactory.getSingleton()).performCheck(
+											true, false, false, overrides,
+											new UpdateCheckInstanceListener() {
+												public void
+												cancelled(
+													UpdateCheckInstance		instance )
+												{											
+												}
+
+												public void
+												complete(
+													UpdateCheckInstance		instance )
+												{	
+												}
+									});
+								}
+							});
+				}else{
+					
+					throw( new Exception( "Unsupported file type - must start with 'core_', 'plugins_' or 'swt_'" ));
+				}
+			}
+		}catch( Throwable e ){
+			
+
+			MessageBoxShell mb = new MessageBoxShell( SWT.ERROR, MessageText.getString( "ConfigView.section.security.resetkey.error.title"), Debug.getNestedExceptionMessage( e ));
+
+ 			mb.setParent( shell );
+
+ 			mb.open( null );
+		}
+	}
 
 	private static void
 	handleTorrentView()
@@ -2375,6 +2555,16 @@ public class MenuFactory
 		}
 	}
 
+	public static MenuItem addPluginInstallFromFileItem( Menu menuParent ){
+		return addMenuItem(menuParent, MENU_ID_PLUGINS_INSTALL_FROM_FILE,
+				new Listener() {
+					@Override
+					public void handleEvent(Event e) {
+						new InstallPluginWizard();
+					}
+		});
+	}
+	
 	public static MenuItem addPluginUnInstallMenuItem(Menu menuParent) {
 		return addMenuItem(menuParent, MENU_ID_PLUGINS_UNINSTALL,
 				new Listener() {
@@ -2515,7 +2705,7 @@ public class MenuFactory
 			};
 
 
-		Menu alert_menu = new Menu( Utils.findAnyShell(), SWT.DROP_DOWN );
+		Menu alert_menu = new Menu( menu.getShell(), SWT.DROP_DOWN );
 
 		MenuItem alerts_item = new MenuItem( menu, SWT.CASCADE);
 
@@ -2716,8 +2906,12 @@ public class MenuFactory
 			MenuItem item = (MenuItem) menu;
 			if (item.getData(KEY_MENU_ID) instanceof String) {
 				String localizationKey = (String) item.getData(KEY_MENU_ID);
-				item.setText(MessageText.getString(localizationKey));
-				KeyBindings.setAccelerator(item, localizationKey);
+				if ( MessageText.keyExists( localizationKey )){
+					item.setText(MessageText.getString(localizationKey));
+					KeyBindings.setAccelerator(item, localizationKey);
+				}else{
+					Messages.updateLanguageForControl(item);
+				}
 				updateMenuText(item.getMenu());
 			} else {
 				Messages.updateLanguageForControl(item);
@@ -2980,5 +3174,131 @@ public class MenuFactory
 			  @Override
 			  public void setData(String id, Object data) {}
 		};
+	}
+
+	public static void initSystemMenu() {
+		Display current = Display.getCurrent();
+		Menu systemMenu = current.getSystemMenu();
+		if (systemMenu != null) {
+
+			MenuItem sysServices = getItem(systemMenu, SWT.getMessage("Services"));
+			if (sysServices != null) {
+				sysServices.setEnabled(false);
+			}
+
+			MenuItem sysItem = getItem(systemMenu, SWT.ID_ABOUT);
+			if (sysItem != null) {
+				sysItem.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						AboutWindow.show();
+					}
+				});
+			}
+
+			sysItem = getItem(systemMenu, SWT.ID_PREFERENCES);
+			if (sysItem != null) {
+				sysItem.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+						if (uiFunctions != null) {
+							uiFunctions.getMDI().showEntryByID(
+									MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG);
+						}
+					}
+				});
+			}
+
+			int quitIndex = systemMenu.indexOf(getItem(systemMenu, SWT.ID_QUIT));
+			MenuItem restartItem = new MenuItem(systemMenu, SWT.CASCADE, quitIndex);
+			Messages.setLanguageText(restartItem, "MainWindow.menu.file.restart");
+			restartItem.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+					if (uiFunctions != null) {
+						uiFunctions.dispose(true, false);
+					}
+				}
+			});
+
+			// Add other menus
+			boolean isAZ3 = "az3".equalsIgnoreCase(
+					COConfigurationManager.getStringParameter("ui"));
+
+			if (!isAZ3) {
+				// add Wizard, NAT Test, Speed Test
+
+				int prefIndex = systemMenu.indexOf(
+						getItem(systemMenu, SWT.ID_PREFERENCES)) + 1;
+				MenuItem wizItem = new MenuItem(systemMenu, SWT.CASCADE, prefIndex);
+				Messages.setLanguageText(wizItem, "MainWindow.menu.file.configure");
+				wizItem.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						new ConfigureWizard(false, ConfigureWizard.WIZARD_MODE_FULL);
+					}
+				});
+
+				MenuItem natMenu = new MenuItem(systemMenu, SWT.CASCADE, prefIndex);
+				Messages.setLanguageText(natMenu, "MainWindow.menu.tools.nattest");
+				natMenu.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						new NatTestWindow();
+					}
+				});
+
+				MenuItem netstatMenu = new MenuItem(systemMenu, SWT.CASCADE, prefIndex);
+				Messages.setLanguageText(netstatMenu, "MainWindow.menu.tools.netstat");
+				netstatMenu.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
+						if (uiFunctions != null) {
+
+							PluginsMenuHelper.IViewInfo[] views = PluginsMenuHelper.getInstance().getPluginViewsInfo();
+
+							for (PluginsMenuHelper.IViewInfo view : views) {
+
+								String viewID = view.viewID;
+
+								if (viewID != null && viewID.equals("aznetstatus")) {
+
+									view.openView(uiFunctions);
+								}
+							}
+						}
+					}
+				});
+
+				MenuItem speedMenu = new MenuItem(systemMenu, SWT.CASCADE, prefIndex);
+				Messages.setLanguageText(speedMenu, "MainWindow.menu.tools.speedtest");
+				speedMenu.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						new SpeedTestWizard();
+					}
+				});
+
+			}
+		}
+	}
+
+	private static MenuItem getItem(Menu menu, String title) {
+		MenuItem[] items = menu.getItems();
+		for (MenuItem item : items) {
+			if (title.equals(item.getText())) return item;
+		}
+		return null;
+	}
+
+	private static MenuItem getItem(Menu menu, int id) {
+		MenuItem[] items = menu.getItems();
+		for (MenuItem item : items) {
+			if (item.getID() == id) return item;
+		}
+		return null;
 	}
 }

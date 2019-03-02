@@ -108,13 +108,15 @@ NetUtils
 							}else if ( elapsed_millis > (Constants.isAndroid?1000:250) ){
 
 								current_check_millis = INC1_NI_CHECK_MILLIS;
-							} else {
+								
+							}else{
+								
 								current_check_millis = MIN_NI_CHECK_MILLIS;
 							}
 
 							if ( old_period != current_check_millis ){
 
-								Debug.out( "Network interface enumeration took " + elapsed_millis + ": decreased refresh frequency to " + current_check_millis + "ms" );
+								Debug.out( "Network interface enumeration took " + elapsed_millis + ": " + (old_period<current_check_millis?"increased":"decreased" ) + " refresh frequency to " + current_check_millis + "ms" );
 							}
 
 							if ( nis != null ){

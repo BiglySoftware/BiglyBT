@@ -27,6 +27,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.biglybt.core.Core;
@@ -191,6 +192,64 @@ public class TorrentOpener {
 		});
 	}
 
+  public static boolean
+  openTorrentsFromClipboard(
+		  String text )
+  {
+	  final String[] splitters = {
+			  "\r\n",
+			  "\n",
+			  "\r",
+			  "\t"
+	  };
+
+	  String[] lines = null;
+
+	  for (String splitter : splitters) {
+		  if (text.contains(splitter)) {
+			  lines = text.split(splitter);
+			  break;
+		  }
+	  }
+
+	  if ( lines == null ){
+
+		  lines = new String[]{ text };
+	  }
+
+	  boolean opened = false;
+	  
+	  for ( int i=0; i<lines.length; i++ ){
+
+		  String line = lines[i].trim();
+
+		  if ( line.startsWith("\"") && line.endsWith("\"")){
+
+			  if (line.length() < 3){
+
+				  line = "";
+
+			  }else{
+
+				  line = line.substring(1, line.length() - 2);
+			  }
+		  }
+
+		  if ( UrlUtils.isURL( line )){
+
+			  Map<String,Object>	options = new HashMap<>();
+
+			  options.put( UIFunctions.OTO_HIDE_ERRORS, true );
+
+			  TorrentOpener.openTorrent( line, options );
+			  
+			  opened = true;
+		  }
+	  }
+	  
+	  return( opened );
+  }
+  
   public static void openDroppedTorrents(DropTargetEvent event, boolean deprecated_sharing_param ){
 	  	Object data = event.data;
 
@@ -624,6 +683,12 @@ public class TorrentOpener {
 							dm_state.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
 						}
 						
+						Map<String,Object>	md = torrentOptions.getInitialMetadata();
+						
+						if ( md != null ){
+							
+							TorrentUtils.setInitialMetadata( dm, md );
+						}
 					} finally {
 
 						dm.getDownloadState().suppressStateSave(false);
@@ -659,7 +724,7 @@ public class TorrentOpener {
 						return;
 					}
 
-					if (torrentOptions.iQueueLocation == TorrentOpenOptions.QUEUELOCATION_TOP) {
+					if (torrentOptions.getQueueLocation() == TorrentOpenOptions.QUEUELOCATION_TOP) {
 						gm.moveTop(new DownloadManager[] {
 							dm
 						});
@@ -722,13 +787,16 @@ public class TorrentOpener {
 			}
 
 			if (fOriginal.length() > TorrentUtils.MAX_TORRENT_FILE_SIZE ) {
-				UIFunctionsManager.getUIFunctions().showErrorMessage(
-						"OpenTorrentWindow.mb.openError", fOriginal.toString(),
-						new String[] {
-							UrlUtils.decode(sOriginatingLocation),
-							"Too large to be a torrent"
-						});
-				return false;
+				if ( !fOriginal.getName().toLowerCase( Locale.US ).endsWith( ".biglybt" )){
+				
+					UIFunctionsManager.getUIFunctions().showErrorMessage(
+							"OpenTorrentWindow.mb.openError", fOriginal.toString(),
+							new String[] {
+								UrlUtils.decode(sOriginatingLocation),
+								"Too large to be a torrent"
+							});
+					return false;
+				}
 			}
 
 			torrentFile = TorrentUtils.copyTorrentFileToSaveDir(fOriginal, true);
@@ -898,8 +966,7 @@ public class TorrentOpener {
 				}
 			}
 
-			TorrentOpenOptions torrentOptions = optionsToClone == null
-					? new TorrentOpenOptions() : new TorrentOpenOptions(optionsToClone);
+			TorrentOpenOptions torrentOptions = optionsToClone == null?new TorrentOpenOptions( null ) : optionsToClone.getClone();
 
 			File file = pathPrefix == null ? new File(line) : new File(pathPrefix,
 					line);

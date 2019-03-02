@@ -33,24 +33,21 @@ import com.biglybt.ui.swt.Utils;
  */
 public class StringParameter extends Parameter{
 
-  private String name;
   private Text inputField;
-  private String defaultValue;
 
-  public StringParameter(Composite composite,final String name) {
-    this(composite, name, COConfigurationManager.getStringParameter(name));
-  }
+	public StringParameter(Composite composite, String configID) {
+		this(composite, configID, true, null);
+	}
 
-  public StringParameter(Composite composite,final String name, boolean generateIntermediateEvents) {
-	    this(composite, name, COConfigurationManager.getStringParameter(name),generateIntermediateEvents );
-	  }
-  public StringParameter(Composite composite,final String name, String defaultValue) {
-	  this( composite, name, defaultValue, true );
-  }
-  public StringParameter(Composite composite,final String name, String defaultValue, boolean generateIntermediateEvents ) {
-  	super(name);
-    this.name = name;
-    this.defaultValue = defaultValue;
+	public StringParameter(Composite composite, String configID,
+			boolean generateIntermediateEvents) {
+		this(composite, configID, generateIntermediateEvents, null);
+	}
+
+	public StringParameter(Composite composite, String configID,
+			boolean generateIntermediateEvents, Label relatedLabel) {
+		super(configID);
+		setRelatedLabel(relatedLabel);
     inputField = new Text(composite, SWT.BORDER) {
   		// I know what I'm doing. Maybe ;)
   		@Override
@@ -82,16 +79,16 @@ public class StringParameter extends Parameter{
     		return pt;
     	}
     };
-    String value = COConfigurationManager.getStringParameter(name, defaultValue);
+		String value = COConfigurationManager.getStringParameter(configID);
     try {
     	inputField.setText(value);
     } catch (IllegalArgumentException e) {
-    	Debug.out("IllegalArgumentException for value of " + name);
+			Debug.out("IllegalArgumentException for value of " + configID);
     }
     inputField.addListener(SWT.Verify, new Listener() {
         @Override
         public void handleEvent(Event e) {
-          e.doit = COConfigurationManager.verifyParameter(name, e.text );
+          e.doit = COConfigurationManager.verifyParameter(configID, e.text );
         }
     });
 
@@ -115,11 +112,11 @@ public class StringParameter extends Parameter{
   protected void
   checkValue()
   {
-	  String	old_value = COConfigurationManager.getStringParameter( name, defaultValue );
+	  String	old_value = COConfigurationManager.getStringParameter(configID);
 	  String	new_value = inputField.getText();
 
 	  if ( !old_value.equals( new_value )){
-	      COConfigurationManager.setParameter(name,new_value );
+	      COConfigurationManager.setParameter(configID,new_value );
 
 	      if( change_listeners != null ) {
 	        for (int i=0;i<change_listeners.size();i++){
@@ -129,11 +126,10 @@ public class StringParameter extends Parameter{
 	  }
   }
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    inputField.setLayoutData(layoutData);
-  }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		inputField.setLayoutData(layoutData);
+	}
 
   public void setValue(final String value) {
 		Utils.execSWTThread(new AERunnable() {
@@ -147,8 +143,8 @@ public class StringParameter extends Parameter{
 			}
 		});
 
-		if (!COConfigurationManager.getStringParameter(name).equals(value)) {
-			COConfigurationManager.setParameter(name, value);
+		if (!COConfigurationManager.getStringParameter(configID).equals(value)) {
+			COConfigurationManager.setParameter(configID, value);
 		}
 	}
 
@@ -171,8 +167,8 @@ public class StringParameter extends Parameter{
   	}
   }
 
-  @Override
-  public Object getValueObject() {
-  	return COConfigurationManager.getStringParameter(name);
-  }
+	@Override
+	public Object getValueObject() {
+		return COConfigurationManager.getStringParameter(configID);
+	}
 }

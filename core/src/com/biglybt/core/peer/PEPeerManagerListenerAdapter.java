@@ -52,5 +52,5 @@ PEPeerManagerListenerAdapter
   public void pieceCorrupted(PEPeerManager manager, int piece_number ){}
 
   @Override
-  public void destroyed(){}
+  public void destroyed( PEPeerManager manager){}
 }

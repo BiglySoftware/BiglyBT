@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.debug.ObfuscateShell;
+import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.donations.DonationWindow;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
@@ -41,6 +42,7 @@ import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.core.Core;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.skin.VuzeMessageBoxListener;
 
 /**
@@ -286,57 +288,32 @@ public class DebugMenuHelper
 		item.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent ev) {
+				
 				Display display = Display.getCurrent();
-				Shell[] shells = display.getShells();
-				for (int i = 0; i < shells.length; i++) {
-					try {
-						Shell shell = shells[i];
-						Image image = null;
-
-						if (shell.isDisposed() || !shell.isVisible()) {
-							continue;
-						}
-
-						if (shell.getData("class") instanceof ObfuscateShell) {
-							ObfuscateShell shellClass = (ObfuscateShell) shell.getData("class");
-
-							try {
-								image = shellClass.generateObfuscatedImage();
-							} catch (Exception e) {
-								Debug.out("Obfuscating shell " + shell, e);
-							}
-						} else {
-
-							Rectangle clientArea = shell.getClientArea();
-							image = new Image(display, clientArea.width, clientArea.height);
-
-							GC gc = new GC(shell);
-							try {
-								gc.copyArea(image, clientArea.x, clientArea.y);
-							} finally {
-								gc.dispose();
-							}
-						}
-
-						if (image != null) {
-							Shell shell2 = new Shell(display);
-							Rectangle bounds = image.getBounds();
-							Point size = shell2.computeSize(bounds.width, bounds.height);
-							shell2.setSize(size);
-							shell2.setBackgroundImage(image);
-							shell2.open();
-
-							new Clipboard(display).setContents(new Object[] {
-								image.getImageData()
-							}, new Transfer[] { ImageTransfer.getInstance() });
-						}
-
-					} catch (Exception e) {
-						Logger.log(new LogEvent(LogIDs.GUI,
-								"Creating Obfuscated Image", e));
+				
+				java.util.List<Image> shell_images = UIDebugGenerator.getShellImages();
+				
+				Image 	biggest_image = null;
+				long	biggest_area = 0;
+				
+				for ( Image image: shell_images ){
+					Shell shell2 = new Shell(display);
+					Rectangle bounds = image.getBounds();
+					long area = bounds.width * bounds.height;
+					if ( area > biggest_area ){
+						biggest_image = image;
 					}
+					Point size = shell2.computeSize(bounds.width, bounds.height);
+					shell2.setSize(size);
+					shell2.setBackgroundImage(image);
+					shell2.open();
 				}
-
+				
+				if ( biggest_image != null ){
+					new Clipboard(display).setContents(new Object[] {
+							biggest_image.getImageData()
+					}, new Transfer[] { ImageTransfer.getInstance() });
+				}
 			}
 		});
 

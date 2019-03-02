@@ -28,7 +28,6 @@ package com.biglybt.ui.swt.config;
 import org.eclipse.swt.*;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 
 
 public class
@@ -62,8 +61,7 @@ ButtonParameter
 
   @Override
   public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    button.setLayoutData(layoutData);
+	  button.setLayoutData(layoutData);
   }
 
   public Button

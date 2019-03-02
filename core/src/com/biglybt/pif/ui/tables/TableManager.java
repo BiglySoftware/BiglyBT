@@ -42,6 +42,16 @@ public interface TableManager
 
   public static final String TABLE_MYTORRENTS_ALL_BIG   = "MyLibrary.big";
 
+  public static final String[] TABLE_MYTORRENTS_ALL = {
+		  TABLE_MYTORRENTS_COMPLETE,
+		  TABLE_MYTORRENTS_INCOMPLETE,
+		  TABLE_MYTORRENTS_UNOPENED,
+		  TABLE_MYTORRENTS_COMPLETE_BIG,
+		  TABLE_MYTORRENTS_INCOMPLETE_BIG,
+		  TABLE_MYTORRENTS_UNOPENED_BIG,
+		  TABLE_MYTORRENTS_ALL_BIG,
+  };
+  
   public static final String TABLE_ACTIVITY = "Activity";
 
   public static final String TABLE_ACTIVITY_BIG = "Activity.big";

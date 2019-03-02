@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.table.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
@@ -33,20 +34,25 @@ import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
+import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.columnsetup.TableColumnSetupWindow;
 import com.biglybt.ui.swt.views.table.*;
-import com.biglybt.ui.swt.views.table.painted.TableCellPainted;
+import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 
 import com.biglybt.ui.common.table.impl.TableColumnManager;
@@ -117,6 +123,35 @@ public class TableViewSWT_Common
 		}
 	}
 
+	private boolean
+	isInExpando(
+		TableRowSWT		row,
+		TableCellCore	cell,
+		TableColumnCore	tc,
+		MouseEvent		e )
+	{
+		if ( row != null && cell instanceof TableCellSWT ){
+			
+			Rectangle expando_rect = (Rectangle)row.getData( TableRowCore.ID_EXPANDOHITAREA );
+			
+			if ( expando_rect != null ){
+				
+				String expando_column = (String)row.getData( TableRowCore.ID_EXPANDOHITCOLUMN );
+				
+				if ( expando_column != null && tc != null &&expando_column.equals( tc.getName())){
+					
+					Rectangle cell_bounds = ((TableCellSWT)cell).getBounds();
+					
+					expando_rect = new Rectangle( expando_rect.x + cell_bounds.x, expando_rect.y + cell_bounds.y, expando_rect.width, expando_rect.height );
+					
+					return( expando_rect.contains( e.x, e.y ));
+				}
+			}
+		}
+		
+		return( false );
+	}
+	
 	long lastMouseUpEventTime = 0;
 	Point lastMouseUpPos = new Point(0, 0);
 	boolean mouseDown = false;
@@ -133,30 +168,43 @@ public class TableViewSWT_Common
 		TableColumnCore tc = tv.getTableColumnByOffset(e.x);
 		TableCellCore cell = tv.getTableCell(e.x, e.y);
 		//TableRowCore row = tv.getTableRow(e.x, e.y, true);
-		mouseUp(mouseDownOnRow, cell, e.button, e.stateMask);
+		
+		boolean	in_expando = isInExpando( mouseDownOnRow, cell, tc, e );
 
-		if (e.button == 1) {
-			long time = e.time & 0xFFFFFFFFL;
-			long diff = time - lastMouseUpEventTime;
-			if (diff <= e.display.getDoubleClickTime() && diff >= 0
-					&& lastMouseUpPos.x == e.x && lastMouseUpPos.y == e.y) {
-				// Fake double click because Cocoa SWT 3650 doesn't always trigger
-				// DefaultSelection listener on a Tree on dblclick (works find in Table)
-				runDefaultAction(e.stateMask);
-				return;
-			}
-			lastMouseUpEventTime = time;
-			lastMouseUpPos = new Point(e.x, e.y);
-		}
-
-		if (cell != null && tc != null) {
+		if ( in_expando ){
+			
 			TableCellMouseEvent event = createMouseEvent(cell, e,
 					TableCellMouseEvent.EVENT_MOUSEUP, false);
 			if (event != null) {
 				tc.invokeCellMouseListeners(event);
 				cell.invokeMouseListeners(event);
-				if (event.skipCoreFunctionality) {
-					lCancelSelectionTriggeredOn = System.currentTimeMillis();
+			}
+		}else{
+			mouseUp(mouseDownOnRow, cell, e.button, e.stateMask);
+	
+			if (e.button == 1) {
+				long time = e.time & 0xFFFFFFFFL;
+				long diff = time - lastMouseUpEventTime;
+				if (diff <= e.display.getDoubleClickTime() && diff >= 0
+						&& lastMouseUpPos.x == e.x && lastMouseUpPos.y == e.y) {
+					// Fake double click because Cocoa SWT 3650 doesn't always trigger
+					// DefaultSelection listener on a Tree on dblclick (works find in Table)
+					runDefaultAction(e.stateMask, 0 );
+					return;
+				}
+				lastMouseUpEventTime = time;
+				lastMouseUpPos = new Point(e.x, e.y);
+			}
+	
+			if (cell != null && tc != null) {
+				TableCellMouseEvent event = createMouseEvent(cell, e,
+						TableCellMouseEvent.EVENT_MOUSEUP, false);
+				if (event != null) {
+					tc.invokeCellMouseListeners(event);
+					cell.invokeMouseListeners(event);
+					if (event.skipCoreFunctionality) {
+						lCancelSelectionTriggeredOn = System.currentTimeMillis();
+					}
 				}
 			}
 		}
@@ -174,37 +222,50 @@ public class TableViewSWT_Common
 		TableCellCore cell = tv.getTableCell(e.x, e.y);
 		TableColumnCore tc = cell == null ? null : cell.getTableColumnCore();
 
-		mouseDown(row, cell, e.button, e.stateMask);
-
-		if (row == null) {
-			tv.setSelectedRows(new TableRowCore[0]);
-		}
-
-		tv.editCell(null, -1); // clear out current cell editor
-
-		if (cell != null && tc != null) {
+		boolean	in_expando = isInExpando( row, cell, tc, e );
+		
+		if ( in_expando ){
+		
 			TableCellMouseEvent event = createMouseEvent(cell, e,
 					TableCellMouseEvent.EVENT_MOUSEDOWN, false);
 			if (event != null) {
 				tc.invokeCellMouseListeners(event);
 				cell.invokeMouseListeners(event);
-				tv.invokeRowMouseListener(event);
-				if (event.skipCoreFunctionality) {
-					lCancelSelectionTriggeredOn = System.currentTimeMillis();
+			}
+		}else{
+			
+			mouseDown(row, cell, e.button, e.stateMask);
+	
+			if (row == null) {
+				tv.setSelectedRows(new TableRowCore[0]);
+			}
+	
+			tv.editCell(null, -1); // clear out current cell editor
+	
+			if (cell != null && tc != null) {
+				TableCellMouseEvent event = createMouseEvent(cell, e,
+						TableCellMouseEvent.EVENT_MOUSEDOWN, false);
+				if (event != null) {
+					tc.invokeCellMouseListeners(event);
+					cell.invokeMouseListeners(event);
+					tv.invokeRowMouseListener(event);
+					if (event.skipCoreFunctionality) {
+						lCancelSelectionTriggeredOn = System.currentTimeMillis();
+					}
 				}
-			}
-			if (tc.hasInplaceEditorListener() && e.button == 1
-					&& lastClickRow == cell.getTableRowCore()) {
-				tv.editCell(tv.getTableColumnByOffset(e.x), cell.getTableRowCore().getIndex());
-			}
-			if (e.button == 1) {
-				lastClickRow = cell.getTableRowCore();
-			}
-		} else if (row != null) {
-			TableRowMouseEvent event = createMouseEvent(row, e,
-					TableCellMouseEvent.EVENT_MOUSEDOWN, false);
-			if (event != null) {
-				tv.invokeRowMouseListener(event);
+				if (tc.hasInplaceEditorListener() && e.button == 1
+						&& lastClickRow == cell.getTableRowCore()) {
+					tv.editCell(tv.getTableColumnByOffset(e.x), cell.getTableRowCore().getIndex());
+				}
+				if (e.button == 1) {
+					lastClickRow = cell.getTableRowCore();
+				}
+			} else if (row != null) {
+				TableRowMouseEvent event = createMouseEvent(row, e,
+						TableCellMouseEvent.EVENT_MOUSEDOWN, false);
+				if (event != null) {
+					tv.invokeRowMouseListener(event);
+				}
 			}
 		}
 	}
@@ -377,7 +438,7 @@ public class TableViewSWT_Common
 				&& System.currentTimeMillis() - lCancelSelectionTriggeredOn < 200) {
 			e.doit = false;
 		} else {
-			runDefaultAction(e.stateMask);
+			runDefaultAction(e.stateMask, 0);
 		}
 	}
 
@@ -444,9 +505,15 @@ public class TableViewSWT_Common
 						filter.widget.selectAll();
 						event.doit = false;
 					}
+					break;
 				}
-				break;
-
+				case 'c': { // CTRL+C
+				
+					tv.clipboardSelected();
+					event.doit = false;
+					
+					break;
+				}
 				case '+': {
 					if (Constants.isUnix) {
 						tv.expandColumns();
@@ -473,6 +540,24 @@ public class TableViewSWT_Common
 					tv.resetLastSortedOn();
 					tv.sortColumn(true);
 					break;
+				case 'v':
+					if ( event.widget != filter.widget ){
+						
+						Clipboard clipboard = new Clipboard(Display.getDefault());
+						
+						try{
+							String text = (String) clipboard.getContents(TextTransfer.getInstance());
+	
+							if (text != null && text.length() <= 2048) {
+								
+								TorrentOpener.openTorrentsFromClipboard(text);
+							}
+						}finally{
+							
+							clipboard.dispose();
+						}
+					}
+					break;
 			}
 
 		}
@@ -484,6 +569,13 @@ public class TableViewSWT_Common
 					event.doit = false;
 				} else if (event.character == 13) {
 					tv.refilter();
+				}
+			}else{
+				if ( event.keyCode == SWT.CR || event.keyCode == SWT.KEYPAD_CR){
+					
+					runDefaultAction( 0, 1 );
+					
+					return;
 				}
 			}
 		}
@@ -588,7 +680,7 @@ public class TableViewSWT_Common
 				FONT_REGEX_ERROR = new Font( filter.widget.getDisplay(), fd );
 			}
 			try {
-				Pattern.compile(filter.nextText, Pattern.CASE_INSENSITIVE);
+				Pattern.compile(filter.nextText, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 				filter.widget.setBackground(COLOR_FILTER_REGEX);
 				filter.widget.setFont( FONT_REGEX );
 
@@ -596,7 +688,7 @@ public class TableViewSWT_Common
 						"MyTorrentsView.filter.tooltip");
 			} catch (Exception e) {
 				filter.widget.setBackground(Colors.colorErrorBG);
-				filter.widget.setToolTipText(e.getMessage());
+				Utils.setTT(filter.widget,e.getMessage());
 				filter.widget.setFont( FONT_REGEX_ERROR );
 			}
 		} else {
@@ -651,7 +743,7 @@ public class TableViewSWT_Common
 				});
 	}
 
-	public void runDefaultAction(int stateMask) {
+	public void runDefaultAction(int stateMask, int origin ) {
 		// Don't allow mutliple run defaults in quick succession
 		if (lastSelectionTriggeredOn > 0
 				&& System.currentTimeMillis() - lastSelectionTriggeredOn < 200) {
@@ -662,7 +754,7 @@ public class TableViewSWT_Common
 		if (System.currentTimeMillis() - lCancelSelectionTriggeredOn > 200) {
 			lastSelectionTriggeredOn = System.currentTimeMillis();
 			TableRowCore[] selectedRows = tv.getSelectedRows();
-			tv.triggerDefaultSelectedListeners(selectedRows, stateMask);
+			tv.triggerDefaultSelectedListeners(selectedRows, stateMask, origin );
 		}
 	}
 
@@ -1042,14 +1134,7 @@ public class TableViewSWT_Common
 				menuItem.addListener(SWT.Selection, new Listener() {
 					@Override
 					public void handleEvent(Event e) {
-						tc.setVisible(!tc.isVisible());
-						TableColumnManager tcm = TableColumnManager.getInstance();
-						String tableID = tv.getTableID();
-						tcm.saveTableColumns(tv.getDataSourceType(), tableID);
-						if (tv instanceof TableStructureModificationListener) {
-							((TableStructureModificationListener) tv).tableStructureChanged(
-									true, null);
-						}
+						TableColumnSWTUtils.changeColumnVisiblity( tv, tc, !tc.isVisible() );
 					}
 				});
 			}
@@ -1151,9 +1236,26 @@ public class TableViewSWT_Common
 		itemResetColumns.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				String tableID = tv.getTableID();
-				TableColumnManager tcm = TableColumnManager.getInstance();
-				tcm.resetColumns(tv.getDataSourceType(), tableID);
+				
+				MessageBoxShell mb =
+						new MessageBoxShell(
+							MessageText.getString("table.columns.reset.dialog.title"),
+							MessageText.getString("table.columns.reset.dialog.text"),
+							new String[] {
+								MessageText.getString("Button.yes"),
+								MessageText.getString("Button.no")
+							},
+							1 );
+
+				mb.open(new UserPrompterResultListener() {
+					@Override
+					public void prompterClosed(int result) {
+						if (result == 0) {
+							String tableID = tv.getTableID();
+							TableColumnManager tcm = TableColumnManager.getInstance();
+							tcm.resetColumns(tv.getDataSourceType(), tableID);
+						}
+					}});
 			}
 		});
 
@@ -1197,7 +1299,9 @@ public class TableViewSWT_Common
 		});
 		at_item.setSelection(column.doesAutoTooltip());
 
-
+		// changed semantics to allow this to over-ride 'disable all'
+		// at_item.setEnabled( !TableTooltips.tooltips_disabled );
+		
 		// Add Plugin Context menus..
 		TableContextMenuItem[] items = column.getContextMenuItems(TableColumnCore.MENU_STYLE_HEADER);
 		if (items.length > 0) {

@@ -24,6 +24,8 @@ package com.biglybt.core.global.impl;
 
 import java.util.*;
 
+
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
@@ -45,15 +47,20 @@ import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginAdapter;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.logging.LoggerChannel;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.components.UIButton;
+import com.biglybt.pif.ui.components.UIComponent;
+import com.biglybt.pif.ui.components.UIPropertyChangeEvent;
+import com.biglybt.pif.ui.components.UIPropertyChangeListener;
+import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.pifimpl.local.PluginInitializer;
 
 
 public class
 GlobalManagerFileMerger
 {
-	private static final boolean	TRACE = false;
-
-
 	private static final int MIN_PIECES				= 5;
 	private static final int HASH_FAILS_BEFORE_QUIT	= 3;
 
@@ -67,9 +74,13 @@ GlobalManagerFileMerger
 
 	private final GlobalManagerImpl		gm;
 
+	private LoggerChannel 	log;
+	private boolean			logging_paused = true;
+	
 	boolean	initialised;
 	boolean	enabled;
 	boolean	enabled_extended;
+	int		tolerance;
 
 	final Map<HashWrapper,DownloadManager>		dm_map = new HashMap<>();
 
@@ -92,18 +103,7 @@ GlobalManagerFileMerger
 				public void
 				initializationComplete()
 				{
-					new DelayedEvent(
-						"GMFM:delay",
-						30*1000,
-						new AERunnable() {
-
-							@Override
-							public void
-							runSupport()
-							{
-								initialise();
-							}
-						});
+					initialise();
 				}
 			});
 	}
@@ -111,51 +111,172 @@ GlobalManagerFileMerger
 	void
 	initialise()
 	{
-		COConfigurationManager.addAndFireParameterListeners(
-			new String[]{ "Merge Same Size Files", "Merge Same Size Files Extended" },
+		String VIEW_NAME =  "TableColumn.header.mergeddata";
+		
+		PluginInterface plugin_interface = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface();
+		
+		log = plugin_interface.getLogger().getChannel( "Swarm Merge" );
+
+		log.setDiagnostic();
+
+		log.setForce( true );
+
+		String pause_key = VIEW_NAME + ".LoggerView.pause";
+		
+		COConfigurationManager.setParameter( pause_key, true );
+		
+		COConfigurationManager.addParameterListener(
+			pause_key,
 			new ParameterListener(){
-
+				
 				@Override
-				public void
-				parameterChanged(
-					String _name )
-				{
-					enabled 			= COConfigurationManager.getBooleanParameter( "Merge Same Size Files" );
-					enabled_extended 	= COConfigurationManager.getBooleanParameter( "Merge Same Size Files Extended" );
+				public void parameterChanged(String name ){
+				
+					setLoggingPaused( COConfigurationManager.getBooleanParameter( name ));
+				}
+			});
+		
+		UIManager	ui_manager = plugin_interface.getUIManager();
 
-					if ( initialised ){
+		BasicPluginViewModel model = ui_manager.createBasicPluginViewModel(VIEW_NAME );
 
-						syncFileSets();
+		model.setProperty( BasicPluginViewModel.PR_EXTERNAL_LOG_PAUSE, true );
+		
+		model.getStatus().setText( "Starting up..." );
+		
+		model.getActivity().setVisible( false );
+		model.getProgress().setVisible( false );
+
+		UIButton reset = model.addButton();
+		
+		reset.setLabel( "TableColumn.header.mergeddata" );
+		
+		reset.setName( "Button.reset" );
+		
+		reset.addPropertyChangeListener(
+			new UIPropertyChangeListener(){
+				
+				@Override
+				public void propertyChanged(UIPropertyChangeEvent ev){
+					if ( ev.getPropertyType() == UIComponent.PT_SELECTED ){
+						
+						log( "Resetting" );
+						
+						synchronized( dm_map ){
+
+							for ( SameSizeFiles s: sames ){
+
+								s.destroy();
+							}
+							
+							sames.clear();
+							
+							syncFileSets( true );
+						}
 					}
 				}
 			});
+		
+		model.attachLoggerChannel( log );
 
-		gm.addListener(
-			new GlobalManagerAdapter()
-			{
-				@Override
-				public void
-				downloadManagerAdded(
-					DownloadManager dm )
-				{
-					syncFileSets();
-				}
+		setLoggingPaused( true );
+		
+		new DelayedEvent(
+				"GMFM:delay",
+				30*1000,
+				new AERunnable() {
 
-				@Override
-				public void
-				downloadManagerRemoved(
-					DownloadManager dm )
-				{
-					syncFileSets();
-				}
-			},
-			false );
-
-		syncFileSets();
-
-		initialised = true;
+					@Override
+					public void
+					runSupport()
+					{
+						COConfigurationManager.addAndFireParameterListeners(
+							new String[]{ "Merge Same Size Files", "Merge Same Size Files Extended", "Merge Same Size Files Tolerance" },
+							new ParameterListener(){
+				
+								@Override
+								public void
+								parameterChanged(
+									String name )
+								{
+									enabled 			= COConfigurationManager.getBooleanParameter( "Merge Same Size Files" );
+									enabled_extended 	= COConfigurationManager.getBooleanParameter( "Merge Same Size Files Extended" );
+									
+									model.getStatus().setText( enabled?"Running":"Disabled" );
+				
+									int	old_tolerance = tolerance;
+									
+									tolerance		 	= COConfigurationManager.getIntParameter( "Merge Same Size Files Tolerance" );
+				
+									logSupport( "Complete files=" + enabled_extended + ", tolerance=" + tolerance );
+									
+									if ( initialised ){
+				
+										syncFileSets( old_tolerance != tolerance );
+									}
+								}
+							});
+				
+						gm.addListener(
+							new GlobalManagerAdapter()
+							{
+								@Override
+								public void
+								downloadManagerAdded(
+									DownloadManager dm )
+								{
+									syncFileSets( false );
+								}
+				
+								@Override
+								public void
+								downloadManagerRemoved(
+									DownloadManager dm )
+								{
+									syncFileSets( false );
+								}
+							},
+							false );
+				
+						syncFileSets( false );
+				
+						initialised = true;
+						
+					}
+				});
 	}
 
+	void
+	setLoggingPaused(
+		boolean	b )
+	{
+		logging_paused = b;
+		
+		logSupport( "Paused=" + b );
+		
+		if ( !b ){
+			
+			logCurrentState();
+		}
+	}
+	
+	void 
+	log(
+		String	str )
+	{
+		if ( !logging_paused ){
+			
+			logSupport( str );
+		}
+	}
+	
+	void 
+	logSupport(
+		String	str )
+	{
+		log.log( str );
+	}
+	
 	protected String
 	isSwarmMerging(
 		DownloadManager		dm )
@@ -193,7 +314,8 @@ GlobalManagerFileMerger
 	}
 
 	void
-	syncFileSets()
+	syncFileSets(
+		boolean		force )
 	{
 		List<DownloadManager> dms = gm.getDownloadManagers();
 
@@ -207,11 +329,16 @@ GlobalManagerFileMerger
 
 				for ( DownloadManager dm: dms ){
 
+					/* 
+					 * not sure why we were ignoring shares, one might share a local file in order to help
+					 * out a 'normal' download
+					 * 
 					if ( !dm.isPersistent()){
 
 						continue;
 					}
-
+					*/
+					
 					DownloadManagerState state = dm.getDownloadState();
 
 					if ( 	state.getFlag( DownloadManagerState.FLAG_LOW_NOISE ) ||
@@ -256,7 +383,60 @@ GlobalManagerFileMerger
 				}
 			}
 
-			if ( changed ){
+			if ( changed || force ){
+
+				Map<String,Object>	tolerance_map = new HashMap<>();
+				
+				if ( tolerance != 0 ){
+					
+					for ( DownloadManager dm: dm_map.values()){
+
+						TOTorrent torrent = dm.getTorrent();
+
+						if ( torrent == null ){
+
+							continue;
+						}
+
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+
+						for ( DiskManagerFileInfo file: files ){
+
+								// filter out small files
+
+							if ( file.getNbPieces() < MIN_PIECES ){
+
+								continue;
+							}
+								
+							String name = file.getFile( true ).getName();
+							
+							long	len = file.getLength();
+							
+							Object existing = tolerance_map.get( name );
+							
+							if ( existing == null ){
+								
+								tolerance_map.put( name, len );
+								
+							}else{
+								
+								if ( existing instanceof Long ){
+									
+									List<Long> list = new ArrayList<>(2);
+							
+									list.add((Long)existing );
+									list.add( len );
+									
+									tolerance_map.put( name, list );
+								}else{
+									
+									((List<Long>)existing).add( len );
+								}
+							}
+						}
+					}
+				}
 
 				List<Set<DiskManagerFileInfo>>	interesting = new LinkedList<>();
 
@@ -282,15 +462,67 @@ GlobalManagerFileMerger
 							continue;
 						}
 
-						long len = file.getLength();
+						long len_to_use = file.getLength();
 
-						Set<DiskManagerFileInfo> set = size_map.get( len );
+						if ( tolerance != 0 ){
+							
+							String name = file.getFile( true ).getName();
+							
+							Object o = tolerance_map.get( name );
+							
+							if ( o instanceof Long ){
+								
+							}else{
+								
+								Long[]	lengths;
+								
+								if ( o instanceof List ){
+								
+									List<Long>	list = (List<Long>)o;
+									
+									lengths = list.toArray( new Long[0] );
+									
+									Arrays.sort( lengths );
+									
+									tolerance_map.put( name, lengths );
+									
+								}else{
+									
+									lengths = (Long[])o;
+									
+								}
+								
+								long	current = lengths[0];
+								
+								if ( len_to_use > current ){
+									
+									for ( int i=1;i<lengths.length;i++){
+										
+										long	l = lengths[i];
+										
+										if ( l - current > tolerance ){
+											
+											current = l;
+										}
+										
+										if ( l == len_to_use ){
+											
+											len_to_use = current;
+											
+											break;
+										}
+									}
+								}
+							}
+						}
+						
+						Set<DiskManagerFileInfo> set = size_map.get( len_to_use );
 
 						if ( set == null ){
 
 							set = new HashSet<>();
 
-							size_map.put( len, set );
+							size_map.put( len_to_use, set );
 						}
 
 						boolean same_dm = false;
@@ -424,33 +656,43 @@ GlobalManagerFileMerger
 	SameSizeFiles
 	{
 		final private Set<DiskManagerFileInfo>		files;
-		final Set<SameSizeFileWrapper>		file_wrappers;
+		final private List <SameSizeFileWrapper>	file_wrappers;
 
 		final private Set<DownloadManager>			dm_set = new IdentityHashSet<>();
 
 		private boolean	completion_logged;
 
-		volatile boolean	dl_has_restarted;
+		private volatile boolean	dl_has_restarted;
 
-		volatile boolean	destroyed;
+		private volatile boolean	destroyed;
 
+		private String	abandon_reason;
+		
 		SameSizeFiles(
 			Set<DiskManagerFileInfo>		_files )
 		{
 			files 	= _files;
 
-			file_wrappers = new HashSet<>();
+			file_wrappers = new ArrayList<>( files.size());
 
-			for ( final DiskManagerFileInfo file: files ){
+				// make sure we init things before we start adding download listeners as they can 
+				// callback during the process and traverse file_wrappers (for example)
+			
+			for ( DiskManagerFileInfo file: files ){
 
-				final SameSizeFileWrapper file_wrapper = new SameSizeFileWrapper( file );
-
-				DownloadManager dm = file_wrapper.getDownloadManager();
-
-				dm_set.add( dm );
+				SameSizeFileWrapper file_wrapper = new SameSizeFileWrapper( file );
 
 				file_wrappers.add( file_wrapper );
 
+				dm_set.add( file_wrapper.getDownloadManager());
+			}
+			
+			for ( SameSizeFileWrapper file_wrapper: file_wrappers ){
+				
+				DiskManagerFileInfo file = file_wrapper.getFile();
+				
+				DownloadManager dm = file_wrapper.getDownloadManager();
+				
 				DownloadManagerPeerListenerEx dmpl =
 					new DownloadManagerPeerListenerEx(){
 
@@ -558,6 +800,8 @@ GlobalManagerFileMerger
 
 										if ( pm_removed ){
 
+											log( dm.getDisplayName() + " restarted ");
+											
 											dl_has_restarted = true;
 										}
 
@@ -656,8 +900,13 @@ GlobalManagerFileMerger
 			}
 
 			dl_has_restarted = true;
-
-			if ( TRACE )System.out.println( "created " + getString());
+			
+			if ( !logging_paused ){
+				
+				log( "Created" );
+				
+				logCurrentState();
+			}
 		}
 
 		boolean
@@ -885,6 +1134,8 @@ GlobalManagerFileMerger
 
 						msg += "\nTotal: " + DisplayFormatters.formatByteCountToKiBEtc( total_merged );
 
+						log( msg );
+						
 						Logger.log(
 								new LogAlert(
 									true,
@@ -916,15 +1167,11 @@ GlobalManagerFileMerger
 			}
 			msg += "\nToo many hash fails in " + failed.getDownloadManager().getDisplayName();
 
+			abandon_reason = msg;
+			
 			Logger.log( new LogEvent( LogIDs.CORE, msg ));
 
-			/* Generates too much noise
-			Logger.log(
-					new LogAlert(
-						true,
-						LogAlert.AT_INFORMATION,
-						msg ));
-			*/
+			log( msg );
 		}
 
 		String
@@ -932,25 +1179,45 @@ GlobalManagerFileMerger
 		{
 			StringBuilder msg = new StringBuilder(1024);
 
-			long	size = -1;
+			long	size_min = -1;
+			long	size_max = -1;
 
 			for ( SameSizeFileWrapper file: file_wrappers ){
 
 				DiskManagerFileInfo f = file.getFile();
 
-				if ( size == -1 ){
+				if ( size_min == -1 ){
 
-					size = f.getLength();
+					size_min = size_max = f.getLength();
+				}else{
+					
+					if ( tolerance != 0 ){
+						
+						long l2 = f.getLength();
+						
+						size_min = Math.min( size_min, l2 );
+						size_max = Math.max( size_max, l2 );
+					}
 				}
 
-				msg.append( "    " );
+				msg.append( "  " );
 				msg.append( file.getDownloadManager().getDisplayName());
 				msg.append( ": " );
 				msg.append( f.getTorrentFile().getRelativePath());
 				msg.append( "\n" );
+				
+				msg.append( "    " + file.getInfo());
+				msg.append( "\n" );
 			}
 
-			return( "Size: " + DisplayFormatters.formatByteCountToKiBEtc( size ) + "\n" + msg.toString());
+			String size_str = DisplayFormatters.formatByteCountToKiBEtc( size_min );
+			
+			if ( size_max > size_min ){
+				
+				size_str += " (+" + (size_max-size_min ) + ")";
+			}
+			
+			return( "Size: " + size_str + "\n" + msg.toString());
 		}
 
 		void
@@ -969,10 +1236,59 @@ GlobalManagerFileMerger
 					dm.removePeerListener( dmpl );
 				}
 			}
-
-			if ( TRACE )System.out.println( "destroyed " + getString());
 		}
 
+		private void
+		logCurrentState()
+		{
+			long	size_min = -1;
+			long	size_max = -1;
+
+			for ( SameSizeFileWrapper file: file_wrappers ){
+
+				DiskManagerFileInfo f = file.getFile();
+
+				if ( size_min == -1 ){
+
+					size_min = size_max = f.getLength();
+				}else{
+					
+					if ( tolerance != 0 ){
+						
+						long l2 = f.getLength();
+						
+						size_min = Math.min( size_min, l2 );
+						size_max = Math.max( size_max, l2 );
+					}
+				}
+			}
+
+			String size_str = DisplayFormatters.formatByteCountToKiBEtc( size_min );
+			
+			if ( size_max > size_min ){
+				
+				size_str += " (+" + (size_max-size_min ) + ")";
+			}
+			
+			log( "  " + size_str + ", files=" + file_wrappers.size());
+			
+			if ( completion_logged ){
+				
+				log( "    Completed" );
+				
+			}else if ( abandon_reason != null ){
+				
+				log( "    " + abandon_reason );
+				
+			}else{
+				
+				for ( SameSizeFileWrapper file: file_wrappers ){
+					
+					file.logCurrentState();
+				}
+			}
+		}
+		
 		private String
 		getString()
 		{
@@ -1008,7 +1324,7 @@ GlobalManagerFileMerger
 
 			private final boolean[]					modified_pieces;
 
-			int	pieces_completed;
+			private int	pieces_completed;
 			private int	pieces_corrupted;
 
 			private int	forced_start_piece		= 0;
@@ -1105,8 +1421,11 @@ GlobalManagerFileMerger
 				long 						offset,
 				long 						length )
 			{
-				if ( TRACE )System.out.println( "written: " + offset + "/" + length );
-
+				if ( !logging_paused ){
+				
+					logFile( "written: " + offset + "/" + length );
+				}
+				
 				final DiskManager		disk_manager	= getDiskManager();
 				final PEPeerManager	peer_manager 		= getPeerManager();
 
@@ -1172,8 +1491,11 @@ GlobalManagerFileMerger
 				final long	avail_start 			= ( first_piece_num * piece_length ) + ( first_block * DiskManager.BLOCK_SIZE );
 				final long	avail_end_inclusive 	= ( last_piece_num  * piece_length ) + ( last_block * DiskManager.BLOCK_SIZE ) + pieces[last_piece_num].getBlockSize( last_block ) - 1;
 
-				if ( TRACE )System.out.println( first_piece_num + "/" + first_block + " - " + last_piece_num + "/" + last_block  + ": " + avail_start + "-" + avail_end_inclusive );
-
+				if ( !logging_paused ){
+					
+					logFile( first_piece_num + "/" + first_block + " - " + last_piece_num + "/" + last_block  + ": " + avail_start + "-" + avail_end_inclusive );
+				}
+				
 				for ( final SameSizeFileWrapper other_file: file_wrappers ){
 
 					if ( other_file == this || other_file.isSkipped() || other_file.isComplete()){
@@ -1246,6 +1568,7 @@ GlobalManagerFileMerger
 													continue;
 												}
 
+												origin_piece.setMergeRead();
 
 												written = target_piece.getWritten();
 
@@ -1258,10 +1581,15 @@ GlobalManagerFileMerger
 
 													boolean completed_piece = target_piece.getNbWritten() == target_piece.getNbBlocks() - 1;
 
-													if ( TRACE )System.out.println( "Write from " + origin_piece_num + "/" + origin_block_num + " to " + target_piece_num + "/" + target_block_num );
-
+													if ( !logging_paused ){
+														
+														logFile( "Write from " + origin_piece_num + "/" + origin_block_num + " to " + target_piece_num + "/" + target_block_num );
+													}
+													
 													if ( other_file.writeBlock( target_piece_num, target_block_num, buffer )){
 
+														target_piece.setMergeWrite();
+														
 														buffer = null;
 
 														if ( completed_piece ){
@@ -1366,6 +1694,8 @@ GlobalManagerFileMerger
 															}
 														}
 
+														origin1_piece.setMergeRead();
+														
 														write_block = DirectByteBufferPool.getBuffer( DirectByteBuffer.AL_EXTERNAL, target_block_size );
 
 														final byte SS = DirectByteBuffer.SS_EXTERNAL;
@@ -1422,6 +1752,8 @@ GlobalManagerFileMerger
 																	continue;
 																}
 
+																origin2_piece.setMergeRead();
+																
 																read_block2.limit( SS, write_block.remaining( SS ));
 
 																write_block.put( SS, read_block2 );
@@ -1454,10 +1786,15 @@ GlobalManagerFileMerger
 															}else{
 																boolean completed_piece = target_piece.getNbWritten() == target_piece.getNbBlocks() - 1;
 
-																if ( TRACE )System.out.println( "Write from " + origin_offset + "/" + delta + "/" + target_block_size + " to " + target_piece_num + "/" + target_block_num );
-
+																if ( !logging_paused ){
+																
+																	logFile( "Write from " + origin_offset + "/" + delta + "/" + target_block_size + " to " + target_piece_num + "/" + target_block_num );
+																}
+																
 																if ( other_file.writeBlock( target_piece_num, target_block_num, write_block )){
 
+																	target_piece.setMergeWrite();
+																	
 																	write_block = null;
 
 																	if ( completed_piece ){
@@ -1560,18 +1897,14 @@ GlobalManagerFileMerger
 
 						pieces_corrupted++;
 
+						logFile( "piece " + piece_number + " corrupt, bad=" + pieces_corrupted + ", good=" + pieces_completed );
+						
 						if ( pieces_corrupted >= HASH_FAILS_BEFORE_QUIT ){
 
 							abandon( this );
 						}
 					}
 				}
-			}
-
-			long
-			getMergedByteCount()
-			{
-				return( merged_byte_counnt );
 			}
 
 			boolean
@@ -1651,7 +1984,10 @@ GlobalManagerFileMerger
 							}
 						}
 
-						if ( TRACE ){ System.out.println( "Forced pieces for " + for_piece + ": " + forced_start_piece + " -> " + forced_end_piece + " in " + download_manager.getDisplayName() + "/" + file.getTorrentFile().getRelativePath()); }
+						if ( !logging_paused ){
+						
+							logFile( "Forced pieces for " + for_piece + ": " + forced_start_piece + " -> " + forced_end_piece + " in " + download_manager.getDisplayName() + "/" + file.getTorrentFile().getRelativePath()); 
+						}
 					}
 
 					return( true );
@@ -1661,9 +1997,52 @@ GlobalManagerFileMerger
 					return( false );
 				}
 			}
+			
+			long
+			getMergedByteCount()
+			{
+				return( merged_byte_counnt );
+			}
+
+			String
+			getInfo()
+			{
+				return( 
+					"merged=" + DisplayFormatters.formatByteCountToKiBEtc( merged_byte_counnt ) +
+					", ok=" + pieces_completed + 
+					", bad=" + pieces_corrupted + 
+					", force=[" + (forced_end_piece==-1?"":(forced_start_piece + "-" + forced_end_piece)) + "]" );
+			}
+			
+			private void
+			logFile(
+				String		str )
+			{
+				log( file.getFile(true).getName() + ": " + str );
+			}
+			
+			private void
+			logCurrentState()
+			{
+				log( "      " + file.getFile(true).getName() + ": " + getInfo());
+			}
 		}
 	}
 
+	private void
+	logCurrentState()
+	{
+		synchronized( dm_map ){
+
+			log( "Same size file sets=" + sames.size());
+			
+			for ( SameSizeFiles same: sames ){
+				
+				same.logCurrentState();
+			}
+		}
+	}
+	
 	private interface
 	DownloadManagerPeerListenerEx
 		extends DownloadManagerPeerListener

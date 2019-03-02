@@ -61,6 +61,10 @@ public class IPFilterItem
     setRefreshInterval(INTERVAL_LIVE);
 	initializeAsGraphic(POSITION_INVISIBLE, 100);
 	setMinWidth(20);
+	
+	tick_icon = new UISWTGraphicImpl(ImageLoader.getInstance().getImage("tick_mark"));
+	cross_icon = new UISWTGraphicImpl(ImageLoader.getInstance().getImage("cross_mark"));
+
   }
 
 	@Override
@@ -83,10 +87,6 @@ public class IPFilterItem
     }
 
     if( ipfilter.isEnabled()){
-    	if (tick_icon == null) {
-    		tick_icon = new UISWTGraphicImpl(ImageLoader.getInstance().getImage("tick_mark"));
-    		cross_icon = new UISWTGraphicImpl(ImageLoader.getInstance().getImage("cross_mark"));
-    	}
 	    DownloadManager dm = (DownloadManager)cell.getDataSource();
 	    if (dm != null) {
 	       boolean excluded = dm.getDownloadState().getFlag( DownloadManagerState.FLAG_DISABLE_IP_FILTER );

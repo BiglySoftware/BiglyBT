@@ -154,7 +154,10 @@ public class TagStatsView
 
 	    for ( TagType tt: tm.getTagTypes()){
 
-	    	tt.addTagTypeListener( this, false );
+	    	if ( tt.getTagType() != TagType.TT_DOWNLOAD_INTERNAL ){
+	    	
+	    		tt.addTagTypeListener( this, false );
+	    	}
 	    }
 
 		panel.addListener(
@@ -192,7 +195,7 @@ public class TagStatsView
 
 		List<TagType> tag_types = tm.getTagTypes();
 
-		tag_types	= TagUIUtils.sortTagTypes( tag_types );
+		tag_types	= TagUtils.sortTagTypes( tag_types );
 
 		List<TagFeatureRateLimit>	visible_tags = new ArrayList<>();
 
@@ -202,7 +205,7 @@ public class TagStatsView
 
 				List<Tag> tags = tag_type.getTags();
 
-				tags = TagUIUtils.sortTags( tags );
+				tags = TagUtils.sortTags( tags );
 
 				for ( Tag tag: tags ){
 

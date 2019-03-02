@@ -184,34 +184,6 @@ DHTUDPPacketRequest
 		}
 	}
 
-	protected void
-	postDeserialise(
-		DataInputStream	is )
-
-		throws IOException
-	{
-		if ( protocol_version < DHTTransportUDP.PROTOCOL_VERSION_FIX_ORIGINATOR ){
-
-			if ( is.available() > 0 ){
-
-				originator_version	= is.readByte();
-
-			}else{
-
-				originator_version = protocol_version;
-			}
-
-				// if the originator is a higher version than us then we can't do anything sensible
-				// working at their version (e.g. we can't reply to them using that version).
-				// Therefore trim their perceived version back to something we can deal with
-
-			if ( originator_version > getTransport().getProtocolVersion() ){
-
-				originator_version = getTransport().getProtocolVersion();
-			}
-		}
-	}
-
 	@Override
 	public void
 	serialise(
@@ -262,20 +234,6 @@ DHTUDPPacketRequest
 		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_PACKET_FLAGS2 ){
 
 			os.writeByte( flags2 );
-		}
-	}
-
-	protected void
-	postSerialise(
-		DataOutputStream	os )
-
-		throws IOException
-	{
-		if ( protocol_version < DHTTransportUDP.PROTOCOL_VERSION_FIX_ORIGINATOR ){
-
-				// originator version is at tail so it works with older versions
-
-			os.writeByte( getTransport().getProtocolVersion());
 		}
 	}
 

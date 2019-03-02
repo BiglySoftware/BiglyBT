@@ -327,7 +327,16 @@ public class PeersGraphicView
 		  }
 	  }
 
-	  List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource );
+	  List<DownloadManager> existing = new ArrayList<>();
+	  
+	  synchronized( dm_data_lock ){
+		  for ( ManagerData data: dm_data ){
+			  
+			  existing.add( data.manager );
+		  }
+	  }
+	  
+	  List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource, existing );
 
 	  synchronized( dm_data_lock ){
 
@@ -496,7 +505,7 @@ public class PeersGraphicView
 				}
 			}
 
-			panel.setToolTipText( tt );
+			Utils.setTT(panel, tt );
 		}
     });
 
@@ -619,7 +628,7 @@ public class PeersGraphicView
 	
 										if ( mdi_entry != null ){
 	
-											mdi_entry.setDatasource(new Object[] { manager, target } );
+											mdi_entry.setDatasource(new Object[] { manager });
 										}
 	
 										Composite comp = panel.getParent();

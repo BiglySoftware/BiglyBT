@@ -128,13 +128,11 @@ public class PluginsMenuHelper
 			plugin_helper_mon.enter();
 			if (showPluginViews) {
 				createViewInfoMenuItems(pluginMenu, plugin_view_info_map);
-			}
 
-
-			MenuItem menu_plugin_logViews = MenuFactory.addLogsViewMenuItem(pluginMenu);
-			createViewInfoMenuItems(menu_plugin_logViews.getMenu(),
+				MenuItem menu_plugin_logViews = MenuFactory.addLogsViewMenuItem(pluginMenu);
+				createViewInfoMenuItems(menu_plugin_logViews.getMenu(),
 					plugin_logs_view_info_map);
-
+			}
 		} finally {
 			plugin_helper_mon.exit();
 		}
@@ -154,7 +152,27 @@ public class PluginsMenuHelper
 		}
 
 		MenuFactory.addGetPluginsMenuItem(pluginMenu);
+		
+		MenuFactory.addPluginInstallFromFileItem( pluginMenu );		
+		
 		MenuFactory.addPluginUnInstallMenuItem(pluginMenu);
+		
+		if ( !showPluginViews ){
+			
+			MenuFactory.addSeparatorMenuItem(pluginMenu);
+			
+			try{
+
+				plugin_helper_mon.enter();
+				
+				MenuItem menu_plugin_logViews = MenuFactory.addLogsViewMenuItem(pluginMenu);
+				
+				createViewInfoMenuItems(menu_plugin_logViews.getMenu(),	plugin_logs_view_info_map);
+				
+			} finally {
+				plugin_helper_mon.exit();
+			}
+		}
 	}
 
 	public void addPluginView(String sViewID, UISWTViewEventListener l) {

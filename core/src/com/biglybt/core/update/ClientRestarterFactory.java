@@ -21,19 +21,30 @@ package com.biglybt.core.update;
 
 /**
  * @author parg
- *
  */
 
 import com.biglybt.core.Core;
-import com.biglybt.core.update.impl.ClientRestarterImpl;
+
+import java.lang.reflect.Constructor;
 
 public class
-ClientRestarterFactory
-{
+ClientRestarterFactory {
+
+	public static final String DEFAULT_FACTORY = "com.biglybt.core.update.impl.ClientRestarterImpl";
+
 	public static ClientRestarter
 	create(
-		Core core )
-	{
-		return( new ClientRestarterImpl( core ));
+			Core core) {
+		String className = System.getProperty("az.factory.ClientRestarter.impl", DEFAULT_FACTORY);
+		if (className != null) {
+			try {
+				final Class<?> cla = Class.forName(className);
+				final Constructor<?> constructor = cla.getConstructor(Core.class);
+				return (ClientRestarter) constructor.newInstance(core);
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
+		}
+		return null;
 	}
 }

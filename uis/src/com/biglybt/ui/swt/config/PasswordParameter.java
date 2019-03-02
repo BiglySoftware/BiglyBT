@@ -17,15 +17,14 @@
  */
 package com.biglybt.ui.swt.config;
 
+import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
-import com.biglybt.core.config.*;
+import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA1Hasher;
@@ -39,30 +38,29 @@ public class
 PasswordParameter
 	extends Parameter
 {
-  String name;
   Text inputField;
+	private final int encoding;
 
-  public
+	public
   PasswordParameter(
   	Composite composite,
-	final String name)
+	  String configID)
   {
-  	this( composite, name, com.biglybt.pif.ui.config.PasswordParameter.ET_SHA1 );
+  	this( composite, configID, com.biglybt.pif.ui.config.PasswordParameter.ET_SHA1 );
   }
 
   public
   PasswordParameter(
   	Composite 		composite,
-	final String 	name,
-	final int		encoding )
+	  String configID,
+	  int		encoding )
   {
-  	super(name);
-    this.name = name;
+	  super(configID);
+	  this.encoding = encoding;
     inputField = new Text(composite, SWT.BORDER);
-    inputField.setEchoChar('*');
-    byte[] value = COConfigurationManager.getByteParameter(name, "".getBytes());
-    if(value.length > 0)
-      inputField.setText("***");
+	  inputField.setEchoChar('*');
+	  byte[] value = COConfigurationManager.getByteParameter(configID, "".getBytes());
+    inputField.setMessage(value.length > 0 ? MessageText.getString("ConfigView.password.isset") : "");
     inputField.addListener(SWT.Modify, new Listener() {
       @Override
       public void handleEvent(Event event) {
@@ -92,7 +90,7 @@ PasswordParameter
             encoded = password;
           }
 
-          COConfigurationManager.setParameter(name, encoded);
+          COConfigurationManager.setParameter(configID, encoded);
         } catch(Exception e) {
         	Debug.printStackTrace( e );
         }
@@ -100,31 +98,25 @@ PasswordParameter
     });
   }
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    inputField.setLayoutData(layoutData);
-  }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		inputField.setLayoutData(layoutData);
+	}
 
-  public void setValue(final String value) {
+  private void setValue(final String value) {
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				if (inputField == null || inputField.isDisposed()
-						|| inputField.getText().equals(value)) {
+				if (inputField == null || inputField.isDisposed()) {
 					return;
 				}
-				inputField.setText(value);
+
+				inputField.setMessage(value.length() > 0 ? MessageText.getString("ConfigView.password.isset") : "");
+				if (!inputField.getText().equals(value)) {
+					inputField.setText(value);
+				}
 			}
 		});
-
-    if (!COConfigurationManager.getParameter(name).equals(value)) {
-    	COConfigurationManager.setParameter(name, value);
-    }
-  }
-
-  public String getValue() {
-    return inputField.getText();
   }
 
   @Override
@@ -134,8 +126,25 @@ PasswordParameter
 
   @Override
   public void setValue(Object value) {
-  	if (value instanceof String) {
-  		setValue((String)value);
-  	}
+		// Note: setValue is only called if getValueObject returns non-null
+	  // non ET_PLAIN parameters return null, so this is only called for ET_PLAIN
+		if ((value instanceof byte[])
+				&& encoding == com.biglybt.pif.ui.config.PasswordParameter.ET_PLAIN) {
+			try {
+				setValue(new String((byte[]) value, "utf8"));
+			} catch (UnsupportedEncodingException e) {
+			}
+		}
   }
+
+	@Override
+	public Object getValueObject() {
+  	if (encoding == com.biglybt.pif.ui.config.PasswordParameter.ET_PLAIN) {
+		  Object val = COConfigurationManager.getParameter(configID);
+		  if (val instanceof byte[]) {
+		  	return val;
+		  }
+	  }
+  	return super.getValueObject();
+	}
 }

@@ -33,6 +33,9 @@ Taggable
 	public String
 	getTaggableID();
 
+	public String
+	getTaggableName();
+	
 	public TaggableResolver
 	getTaggableResolver();
 

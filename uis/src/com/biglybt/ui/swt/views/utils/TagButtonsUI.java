@@ -18,24 +18,30 @@
 
 package com.biglybt.ui.swt.views.utils;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagUtils;
+import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
-
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.Taggable;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.utils.ColorCache;
 
 /**
@@ -49,6 +55,8 @@ implements PaintListener
 
 	private ArrayList<Button> buttons;
 	private Composite cMainComposite;
+	private TagButtonTrigger trigger;
+	private boolean enableWhenNoTaggables;
 
 
 	@Override
@@ -68,12 +76,15 @@ implements PaintListener
 
 		//ImageLoader.getInstance().getImage(? "check_yes" : "check_no");
 
+		Color color = ColorCache.getColor(e.display, tag.getColor());
 		if (c != null) {
 			boolean checked = button.getSelection();
 			Point size = c.getSize();
 			Point sizeButton = button.getSize();
 			e.gc.setAntialias(SWT.ON);
-			e.gc.setForeground(ColorCache.getColor(e.display, tag.getColor()));
+			if (color != null) {
+				e.gc.setForeground(color);
+			}
 			int lineWidth = button.getSelection() ? 2 : 1;
 			e.gc.setLineWidth(lineWidth);
 
@@ -82,7 +93,9 @@ implements PaintListener
 			width += Constants.isOSX ? 5 : curve / 2;
 			if (checked) {
 				e.gc.setAlpha(0x20);
-				e.gc.setBackground(ColorCache.getColor(e.display, tag.getColor()));
+				if (color != null) {
+					e.gc.setBackground(color);
+				}
 				e.gc.fillRoundRectangle(-curve, lineWidth - 1, width + curve, size.y - lineWidth, curve, curve);
 				e.gc.setAlpha(0xff);
 			}
@@ -94,7 +107,9 @@ implements PaintListener
 		} else {
 			if (!Constants.isOSX && button.getSelection()) {
 				Point size = button.getSize();
-				e.gc.setBackground(ColorCache.getColor(e.display, tag.getColor()));
+				if (color != null) {
+					e.gc.setBackground(color);
+				}
 				e.gc.setAlpha(20);
 				e.gc.fillRectangle(0, 0, size.x, size.y);
 			}
@@ -102,9 +117,11 @@ implements PaintListener
 	}
 
 
-	public void buildTagGroup(List<Tag> tags, Composite cMainComposite, final TagButtonTrigger trigger) {
+	public void buildTagGroup(List<Tag> tags, Composite cMainComposite,
+			boolean allowContextMenu, TagButtonTrigger trigger) {
 
 		this.cMainComposite = cMainComposite;
+		this.trigger = trigger;
 
 		cMainComposite.setLayout(new GridLayout(1, false));
 
@@ -133,26 +150,19 @@ implements PaintListener
 			}
 		};
 
-		Listener menuDetectListener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
+		Listener menuDetectListener = allowContextMenu ? event -> {
+			final Button button = (Button) event.widget;
+			Menu menu = new Menu(button);
+			button.setMenu(menu);
 
-				final Button button = (Button) event.widget;
-				Menu menu = new Menu(button);
-				button.setMenu(menu);
-
-				MenuBuildUtils.addMaintenanceListenerForMenu(menu, new MenuBuilder() {
-					@Override
-					public void buildMenu(final Menu menu, MenuEvent menuEvent) {
-						Tag tag = (Tag) button.getData("Tag");
-						TagUIUtils.createSideBarMenuItems(menu, tag);
-					}
-				});
-			}
-		};
+			MenuBuildUtils.addMaintenanceListenerForMenu(menu, (menu1, menuEvent) -> {
+				Tag tag = (Tag) button.getData("Tag");
+				TagUIUtils.createSideBarMenuItems(menu1, tag);
+			});
+		} : null;
 
 
-		tags = TagUIUtils.sortTags(tags);
+		tags = TagUtils.sortTags(tags);
 		Composite g = null;
 		String group = null;
 		for (Tag tag : tags) {
@@ -170,7 +180,7 @@ implements PaintListener
 				RowLayout rowLayout = new RowLayout();
 				rowLayout.pack = true;
 				rowLayout.spacing = 5;
-				Utils.setLayout(g, rowLayout);
+				g.setLayout(rowLayout);
 			}
 
 			Composite p = new Composite(g, SWT.DOUBLE_BUFFERED);
@@ -199,13 +209,136 @@ implements PaintListener
 			}
 			button.setData("Tag", tag);
 
-			button.addListener(SWT.MenuDetect, menuDetectListener);
+			if (allowContextMenu) {
+				button.addListener(SWT.MenuDetect, menuDetectListener);
+			}
 			button.addPaintListener(this);
+
+			Utils.setTT(button, TagUtils.getTagTooltip(tag));
+			
+			String iconFile = tag.getImageFile();
+
+			if ( iconFile != null ){
+				
+				try{
+					String resource = new File( iconFile ).toURI().toURL().toExternalForm();
+												
+					ImageLoader.getInstance().getUrlImage(
+							  resource, 
+							  new Point( 20, 14 ),
+							  new ImageLoader.ImageDownloaderListener(){
+			
+								  @Override
+								  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+									  							  
+									 if ( image != null && returnedImmediately ){
+											
+										 button.setImage(image);
+										 
+										 button.addDisposeListener(
+											new DisposeListener(){
+												
+												@Override
+												public void widgetDisposed(DisposeEvent e){
+													ImageLoader.getInstance().releaseImage( key );
+												}
+											});
+										
+									 }
+								  }
+							  });
+				}catch( Throwable e ){
+				}
+			} else {
+				String id = tag.getImageID();
+				if (id != null) {
+					Image image = ImageLoader.getInstance().getImage(id);
+					if (image != null && ImageLoader.isRealImage(image)) {
+						button.setImage(image);
+
+						button.addDisposeListener(
+								new DisposeListener(){
+
+									@Override
+									public void widgetDisposed(DisposeEvent e){
+										ImageLoader.getInstance().releaseImage( id );
+									}
+								});
+					}
+				}
+			}
 		}
 	}
 
+	public void setSelectedTags( List<Tag> tags ){
+		
+		List<Control> layoutChanges = new ArrayList<>();
+		
+		Set<Tag> tag_set = new HashSet<>( tags );
+		
+		for (Button button : buttons) {
 
+			Tag tag = (Tag) button.getData("Tag");
+			if (tag == null) {
+				continue;
+			}
+			
+			boolean changed = false;
+			
+			String name = tag.getTagName(true);
+			
+			if ( !button.getText().equals(name)){
+			
+				button.setText(name);
+				
+				changed = true;
+			}
+			
+			boolean select = tag_set.contains( tag );
+			
+			if ( select != button.getSelection()){
+			
+				button.setSelection( select );
+			
+				changed = true;
+			}
+			
+			if ( changed ){
+				
+				layoutChanges.add(button);
+				
+				button.getParent().redraw();
+			}
+		}
+		
+		if (layoutChanges.size() > 0) {
+			cMainComposite.layout(layoutChanges.toArray(new Control[0]));
+		}
+	}
+	
+	public List<Tag>
+	getSelectedTags()
+	{
+		List<Tag> result = new ArrayList<>();
+		
+		for (Button button : buttons) {
+
+			if ( button.getSelection()){
+				Tag tag = (Tag) button.getData("Tag");
+				if (tag != null) {
+					result.add( tag );
+				}
+			}
+		}
+
+		return( result );
+	}
+	
 	public boolean updateFields(List<Taggable> taggables) {
+		if (cMainComposite.isDisposed()){
+			return false;
+		}
+		
 		List<Control> layoutChanges = new ArrayList<>();
 		for (Button button : buttons) {
 
@@ -239,28 +372,37 @@ implements PaintListener
 		List<Taggable> taggables )
 	{
 		if (taggables == null) {
-			button.setSelection(false);
-			button.setEnabled(false);
-			button.getParent().redraw();
-			return;
+			button.setEnabled(enableWhenNoTaggables);
+			if (!enableWhenNoTaggables) {
+				button.setSelection(false);
+				button.getParent().redraw();
+				return;
+			}
 		}
 
 		boolean hasTag = false;
 		boolean hasNoTag = false;
 
-		for (Taggable taggable : taggables) {
-			boolean curHasTag = tag.hasTaggable(taggable);
-			if (!hasTag && curHasTag) {
-				hasTag = true;
-				if (hasNoTag) {
-					break;
-				}
-			} else if (!hasNoTag && !curHasTag) {
-				hasNoTag = true;
-				if (hasTag) {
-					break;
+		Boolean override = trigger.tagSelectedOverride(tag);
+
+		if (taggables != null && override == null) {
+			for (Taggable taggable : taggables) {
+				boolean curHasTag = tag.hasTaggable(taggable);
+				if (!hasTag && curHasTag) {
+					hasTag = true;
+					if (hasNoTag) {
+						break;
+					}
+				} else if (!hasNoTag && !curHasTag) {
+					hasNoTag = true;
+					if (hasTag) {
+						break;
+					}
 				}
 			}
+		} else if (override != null) {
+			hasNoTag = !override;
+			hasTag = override;
 		}
 
 		boolean[] auto = tag.isTagAuto();
@@ -289,9 +431,14 @@ implements PaintListener
 		}
 	}
 
+	public void setEnableWhenNoTaggables(boolean enableWhenNoTaggables) {
+		this.enableWhenNoTaggables = enableWhenNoTaggables;
+	}
+
 
 	public static interface TagButtonTrigger {
 		public void tagButtonTriggered(Tag tag, boolean doTag);
+		public Boolean tagSelectedOverride(Tag tag);
 	}
 
 }

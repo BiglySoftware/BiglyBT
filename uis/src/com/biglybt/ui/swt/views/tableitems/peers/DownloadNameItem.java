@@ -21,6 +21,8 @@ import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.swt.debug.ObfuscateCellText;
+import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 
@@ -28,7 +30,7 @@ import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
  * @author Allan Crooks
  *
  */
-public class DownloadNameItem extends CoreTableColumnSWT implements TableCellRefreshListener /*, ObfuscateCellText */ {
+public class DownloadNameItem extends CoreTableColumnSWT implements TableCellRefreshListener, ObfuscateCellText{
 	public static final String COLUMN_ID = "name";
 
 	@Override
@@ -46,6 +48,7 @@ public class DownloadNameItem extends CoreTableColumnSWT implements TableCellRef
 		setRefreshInterval(INTERVAL_LIVE);
 		setType(TableColumn.TYPE_TEXT);
 		setMinWidth(100);
+		setObfuscation(true);
 	}
 
 
@@ -61,4 +64,8 @@ public class DownloadNameItem extends CoreTableColumnSWT implements TableCellRef
 		cell.setText(manager.getDisplayName());
 	}
 
+	@Override
+	public String getObfuscatedText(TableCell cell) {
+		return( UIDebugGenerator.obfuscateDownloadName((PEPeer)cell.getDataSource()));
+	}
 }

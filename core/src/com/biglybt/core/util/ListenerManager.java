@@ -132,7 +132,7 @@ ListenerManager<T>
 
 			if (new_listeners.size() > 50) {
 				if ( Constants.IS_CVS_VERSION ){
-					Debug.out( "check this out: lots of listeners!" );
+					Debug.out( "check this out: lots of listeners (" + new_listeners.size()  + ") !" );
 					if (!logged_too_many_listeners){
 						logged_too_many_listeners= true;
 						Debug.out( String.valueOf( new_listeners ));

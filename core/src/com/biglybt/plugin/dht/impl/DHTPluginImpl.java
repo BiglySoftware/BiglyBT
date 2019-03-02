@@ -37,6 +37,7 @@ import com.biglybt.core.dht.nat.DHTNATPuncherAdapter;
 import com.biglybt.core.dht.router.DHTRouterStats;
 import com.biglybt.core.dht.transport.*;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
+import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 import com.biglybt.pif.PluginConfig;
@@ -1423,6 +1424,11 @@ outer:
 		byte[]							data,
 		long							timeout )
 	{
+		if (Logger.isClosingTakingTooLong()){
+		
+			throw( new RuntimeException( "Closedown taking too long" ));
+		}
+		
 		try{
 			return(
 				dht.getTransport().writeReadTransfer(

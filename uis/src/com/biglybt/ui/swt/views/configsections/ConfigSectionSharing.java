@@ -22,16 +22,22 @@
 
 package com.biglybt.ui.swt.views.configsections;
 
+import java.util.ArrayList;
+
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 
-import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
+
+import com.biglybt.pif.ui.config.ConfigSection;
 
 public class ConfigSectionSharing implements UISWTConfigSection {
   @Override
@@ -66,7 +72,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 
     Composite gSharing = new Composite(parent, SWT.WRAP);
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(gSharing, gridData);
+		gSharing.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 2;
     layout.marginHeight = 0;
@@ -77,59 +83,76 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 	gridData = new GridData();
     Label protocol_lab = new Label(gSharing, SWT.NULL);
     Messages.setLanguageText(protocol_lab, "ConfigView.section.sharing.protocol");
-	Utils.setLayoutData(protocol_lab,  gridData );
+		protocol_lab.setLayoutData(gridData);
 
 	String[]	protocols = {"HTTP","HTTPS","UDP","DHT" };
     String[]	descs = {"HTTP","HTTPS (SSL)", "UDP", "Decentralised" };
 
-	new StringListParameter(gSharing, "Sharing Protocol", "DHT", descs, protocols );
+    StringListParameter protocol = new StringListParameter(gSharing, "Sharing Protocol", descs, protocols );
 
 	// row
 
-	GridData grid_data = new GridData();
+	GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 	grid_data.horizontalSpan = 2;
 	final BooleanParameter private_torrent =
 		new BooleanParameter(gSharing, 	"Sharing Torrent Private",
                          			"ConfigView.section.sharing.privatetorrent");
 	private_torrent.setLayoutData(grid_data);
-
-
+	
 	// row
-    gridData = new GridData();
+    gridData = new GridData( GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 2;
-	final BooleanParameter permit_dht =
+	final BooleanParameter permit_dht_backup =
 		new BooleanParameter(gSharing, "Sharing Permit DHT",
                          "ConfigView.section.sharing.permitdht");
-	permit_dht.setLayoutData( gridData );
+	permit_dht_backup.setLayoutData( gridData );
 
-	private_torrent.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( permit_dht.getControls(), true ));
 
-	private_torrent.addChangeListener(
-		new ParameterChangeAdapter()
-		{
-			@Override
-			public void
-			parameterChanged(
-				Parameter p,
-				boolean caused_internally )
+	ParameterChangeAdapter protocol_cl = 
+			new ParameterChangeAdapter()
 			{
-				if ( private_torrent.isSelected() ){
+				@Override
+				public void
+				parameterChanged(
+					Parameter p,
+					boolean caused_internally )
+				{
+					boolean not_dht = !protocol.getValue().equals( "DHT" );
+					
+					private_torrent.setEnabled( not_dht );
+					
+					permit_dht_backup.setEnabled( not_dht && !private_torrent.isSelected());
+					
+					if ( private_torrent.isSelected() ){
 
-					permit_dht.setSelected( false );
+						permit_dht_backup.setSelected( false );
+					}
 				}
-			}
-
-		});
+			};
+			
+	protocol_cl.parameterChanged( protocol, true );
+	
+	protocol.addChangeListener( protocol_cl );
+	private_torrent.addChangeListener( protocol_cl );
 
     	// row
-    gridData = new GridData();
+    gridData = new GridData( GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 2;
     new BooleanParameter(gSharing, "Sharing Add Hashes",
                          "wizard.createtorrent.extrahashes").setLayoutData( gridData );
 
+	// row
+
+	grid_data = new GridData( GridData.FILL_HORIZONTAL );
+	grid_data.horizontalSpan = 2;
+	final BooleanParameter disable_rcm =
+		new BooleanParameter(gSharing, 	"Sharing Disable RCM",
+                         			"ConfigView.section.sharing.disable_rcm");
+	disable_rcm.setLayoutData( gridData );
+	
 
     	// row
-    gridData = new GridData();
+    gridData = new GridData( GridData.FILL_HORIZONTAL );
     gridData.horizontalSpan = 2;
     BooleanParameter rescan_enable =
     	new BooleanParameter(gSharing, "Sharing Rescan Enable",
@@ -142,7 +165,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 	gridData.horizontalIndent = 25;
     Label period_label = new Label(gSharing, SWT.NULL );
     Messages.setLanguageText(period_label, "ConfigView.section.sharing.rescanperiod");
-	Utils.setLayoutData(period_label,  gridData );
+		period_label.setLayoutData(gridData);
 
     gridData = new GridData();
 	IntParameter rescan_period = new IntParameter(gSharing, "Sharing Rescan Period");
@@ -162,7 +185,7 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 	gridData = new GridData(GridData.FILL_HORIZONTAL);
 	gridData.horizontalIndent = 25;
 	gridData.horizontalSpan = 2;
-    StringParameter torrent_comment = new StringParameter(gSharing, "Sharing Torrent Comment", "" );
+    StringParameter torrent_comment = new StringParameter(gSharing, "Sharing Torrent Comment");
     torrent_comment.setLayoutData(gridData);
 
    	// row
@@ -174,6 +197,52 @@ public class ConfigSectionSharing implements UISWTConfigSection {
 
     persistent.setLayoutData( gridData );
 
+	/////////////////////// NETWORKS GROUP ///////////////////
+
+	Group networks_group = new Group(gSharing, SWT.NULL);
+	Messages.setLanguageText(networks_group,
+			"ConfigView.section.connection.group.networks");
+	GridLayout networks_layout = new GridLayout();
+	networks_group.setLayout(networks_layout);
+
+	gridData = new GridData(GridData.FILL_HORIZONTAL);
+	gridData.horizontalSpan = 2;
+		networks_group.setLayoutData(gridData);
+
+	BooleanParameter network_global = new BooleanParameter( networks_group, "Sharing Network Selection Global", "label.use.global.defaults");
+
+	java.util.List<BooleanParameter> net_params = new ArrayList<>();
+	
+	for ( String net: AENetworkClassifier.AT_NETWORKS ){
+				
+		String config_name = "Sharing Network Selection Default." + net;
+		String msg_text = "ConfigView.section.connection.networks." + net;
+		
+		BooleanParameter network = new BooleanParameter( networks_group, config_name, msg_text);
+
+		gridData = new GridData();
+		gridData.horizontalIndent = 25;
+		network.getControl().setLayoutData(gridData);
+
+		net_params.add( network );
+	}
+
+	ParameterChangeAdapter net_listener = 
+			new ParameterChangeAdapter(){	
+			@Override
+			public void parameterChanged(Parameter x, boolean caused_internally){
+				for ( BooleanParameter p: net_params ){
+					
+					p.setEnabled( !network_global.isSelected());
+				}
+			}
+		};
+	
+	net_listener.parameterChanged( null,  false );
+		
+	network_global.addChangeListener( net_listener );
+
+    
     return gSharing;
 
   }

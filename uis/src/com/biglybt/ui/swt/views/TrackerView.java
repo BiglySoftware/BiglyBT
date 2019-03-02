@@ -19,6 +19,7 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -26,12 +27,18 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerTPSListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.AERunnable;
@@ -45,6 +52,7 @@ import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.views.table.TableSelectedRowsListener;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
@@ -66,7 +74,7 @@ import com.biglybt.ui.swt.UIFunctionsSWT;
 public class TrackerView
 	extends TableViewTab<TrackerPeerSource>
 	implements 	TableLifeCycleListener, TableDataSourceChangedListener,
-				DownloadManagerTPSListener, TableViewSWTMenuFillListener
+				DownloadManagerTPSListener, TableViewSWTMenuFillListener, TableSelectionListener
 {
 	private static boolean registeredCoreSubViews = false;
 
@@ -83,6 +91,12 @@ public class TrackerView
 		new LastUpdateItem(TableManager.TABLE_TORRENT_TRACKERS),
 	};
 
+	static{
+		TableColumnManager tcManager = TableColumnManager.getInstance();
+
+		tcManager.setDefaultColumnNames( TableManager.TABLE_TORRENT_TRACKERS, basicItems );
+	}
+	
 	public static final String MSGID_PREFIX = "TrackerView";
 
 	private DownloadManager 	manager;
@@ -113,7 +127,65 @@ public class TrackerView
 		tv.addLifeCycleListener(this);
 		tv.addMenuFillListener(this);
 		tv.addTableDataSourceChangedListener(this, true);
+		tv.addSelectionListener(this, false);
 
+		tv.addKeyListener(
+			new KeyAdapter(){
+				@Override
+				public void
+				keyPressed(
+					KeyEvent e )
+				{
+					if ( e.stateMask == 0 && e.keyCode == SWT.DEL ){
+						
+						Object[] datasources = tv.getSelectedDataSources().toArray();
+							
+						List<TrackerPeerSource> pss = new ArrayList<>();
+						
+						String str = ""; 
+								
+						for ( Object object : datasources ){
+
+							TrackerPeerSource ps = (TrackerPeerSource)object;
+							
+							if ( ps.canDelete()){
+								
+								pss.add( ps );
+								
+								str += (str.isEmpty()?"":", ") + ps.getName();
+							}
+						}
+						
+						if ( !pss.isEmpty()){
+							
+							MessageBoxShell mb =
+									new MessageBoxShell(
+										MessageText.getString("message.confirm.delete.title"),
+										MessageText.getString("message.confirm.delete.text",
+												new String[] { str	}),
+										new String[] {
+											MessageText.getString("Button.yes"),
+											MessageText.getString("Button.no")
+										},
+										1 );
+
+								mb.open(new UserPrompterResultListener() {
+									@Override
+									public void prompterClosed(int result) {
+										if (result == 0) {
+											for ( TrackerPeerSource ps: pss ){
+												
+												ps.delete();
+											}
+										}
+									}});
+						}
+						
+						e.doit = false;
+					}
+				}});
+		
+								
 		tv.setEnableTabViews(enable_tabs,true,null);
 
 		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
@@ -371,7 +443,7 @@ public class TrackerView
 	tableDataSourceChanged(
 		Object newDataSource )
  {
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource );
+		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, manager );
 
 		if (newManager == manager) {
 			tv.setEnabled(manager != null);
@@ -454,20 +526,13 @@ public class TrackerView
 		tv.processDataSourceQueueSync();
 	}
 
-	@Override
-	public boolean eventOccurred(UISWTViewEvent event) {
-	    switch (event.getType()) {
+	protected void
+	updateSelectedContent()
+	{
+		Object[] dataSources = tv.getSelectedDataSources(true);
 
-	      case UISWTViewEvent.TYPE_CREATE:{
-	    	  if ( event instanceof UISWTViewEventImpl ){
+		if ( dataSources.length == 0 ){
 
-	    		  String parent = ((UISWTViewEventImpl)event).getParentID();
-
-	    		  enable_tabs = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
-	    	  }
-	    	  break;
-	      }
-	      case UISWTViewEvent.TYPE_FOCUSGAINED:
 	      	String id = "DMDetails_Sources";
 	      	if (manager != null) {
 	      		if (manager.getTorrent() != null) {
@@ -482,7 +547,60 @@ public class TrackerView
 					} else {
 						SelectedContentManager.changeCurrentlySelectedContent(id, null);
 					}
+		}else{
+			
+			SelectedContent[] sc = new SelectedContent[dataSources.length];
+			
+			for ( int i=0;i<sc.length;i++){
+				
+				sc[i] = new SelectedContent();
+			}
+			
+			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
+					sc, tv);
+		}
 
+	}
+	
+	@Override
+	public void deselected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+
+	@Override
+	public void focusChanged(TableRowCore focus) {
+	}
+
+	@Override
+	public void selected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+	
+	@Override
+	public void mouseEnter(TableRowCore row){
+	}
+
+	@Override
+	public void mouseExit(TableRowCore row){
+	}
+	
+	@Override
+	public boolean eventOccurred(UISWTViewEvent event) {
+	    switch (event.getType()) {
+
+	      case UISWTViewEvent.TYPE_CREATE:{
+	    	  if ( event instanceof UISWTViewEventImpl ){
+
+	    		  String parent = ((UISWTViewEventImpl)event).getParentID();
+
+	    		  enable_tabs = parent != null && parent.equals( UISWTInstance.VIEW_TORRENT_DETAILS );
+	    	  }
+	    	  break;
+	      }
+	      case UISWTViewEvent.TYPE_FOCUSGAINED:
+	    	  
+	    	updateSelectedContent();
+	    	
 	      	break;
 
 	      case UISWTViewEvent.TYPE_FOCUSLOST:

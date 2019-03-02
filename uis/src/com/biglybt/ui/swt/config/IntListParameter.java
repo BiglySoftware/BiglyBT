@@ -21,9 +21,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import com.biglybt.core.config.*;
+
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Utils;
 
@@ -35,41 +34,31 @@ public class IntListParameter extends Parameter {
 
   Combo list;
 	private final int[] values;
-	private final String name;
 
-  public IntListParameter(
-                          Composite composite,
-                          final String name,
-                          final String labels[],
-                          final int values[]) {
-    this(composite, name, COConfigurationManager.getIntParameter(name), labels, values);
-  }
-
-  public IntListParameter(Composite composite, final String name,
-			int defaultValue, final String labels[], final int values[]) {
-		super(name);
-		this.name = name;
+	public IntListParameter(Composite composite, String configID, String[] labels,
+			int[] values) {
+		super(configID);
 		this.values = values;
+		list = new Combo(composite, SWT.SINGLE | SWT.READ_ONLY);
 
-      if(labels.length != values.length)
-        return;
-      int value = COConfigurationManager.getIntParameter(name,defaultValue);
-      int index = findIndex(value,values);
-      list = new Combo(composite,SWT.SINGLE | SWT.READ_ONLY);
-      for(int i = 0 ; i < labels.length  ;i++) {
-        list.add(labels[i]);
-      }
+		if (labels.length != values.length) {
+			return;
+		}
+		int value = COConfigurationManager.getIntParameter(configID);
+		int index = findIndex(value, values);
+		for (String label : labels) {
+			if (Utils.isGTK) {
+				list.add(label + "    "); // Pad to force avoid truncation of selected label in control
+			} else {
+				list.add(label);
+			}
+		}
 
-      setIndex(index);
+		setIndex(index);
 
-      list.addListener(SWT.Selection, new Listener() {
-           @Override
-           public void handleEvent(Event e) {
-          	 setIndex(list.getSelectionIndex());
-           }
-         });
+		list.addListener(SWT.Selection, e -> setIndex(list.getSelectionIndex()));
 
-    }
+	}
 
   /**
 	 * @param index
@@ -90,8 +79,8 @@ public class IntListParameter extends Parameter {
   		}
   	});
 
-  	if (COConfigurationManager.getIntParameter(name) != selected_value) {
-  		COConfigurationManager.setParameter(name, selected_value);
+  	if (COConfigurationManager.getIntParameter(configID) != selected_value) {
+  		COConfigurationManager.setParameter(configID, selected_value);
   	}
 	}
 
@@ -104,11 +93,10 @@ public class IntListParameter extends Parameter {
   }
 
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    list.setLayoutData(layoutData);
-   }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		list.setLayoutData(layoutData);
+	}
 
   @Override
   public Control getControl() {
@@ -125,6 +113,6 @@ public class IntListParameter extends Parameter {
 
   @Override
   public Object getValueObject() {
-  	return new Integer(COConfigurationManager.getIntParameter(name));
+  	return COConfigurationManager.getIntParameter(configID);
   }
 }

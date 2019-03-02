@@ -759,6 +759,20 @@ DirectByteBuffer
 		}
 	}
 
+	public boolean
+	hasBeenReturnedToPool()
+	{
+		if ( pool != null ){
+			
+			synchronized( this ){
+			
+				return( buffer == null );
+			}
+		}
+		
+		return( false );
+	}
+	
 		/**
 		 * Normally you should know when a buffer is/isn't free and NOT CALL THIS METHOD
 		 * However, there are some error situations where the existing code doesn't correctly

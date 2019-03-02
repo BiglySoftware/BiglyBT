@@ -195,6 +195,9 @@ public interface UIFunctions
 
 	public static final String 	OTO_HIDE_ERRORS					= "hideErrors";			// Boolean
 	public static final boolean OTO_HIDE_ERRORS_DEFAULT			= false;
+	
+	public static final String 	OTO_DEFAULT_SAVE_PATH			= "defaultSavePath";	// String
+	public static final String	OTO_DEFAULT_SAVE_PATH_DEFAULT	= null;
 
 	/**
 	 * Opens the Torrent Add Options Window, if configured to
@@ -209,8 +212,6 @@ public interface UIFunctions
 	public void showErrorMessage(String keyPrefix, String details, String[] textParams);
 
 	public void showCreateTagDialog(TagReturner tagReturner);
-
-	public int adjustPXForDPI( int px );
 
 	void tableColumnAddedListeners(TableColumnImpl tableColumn, Object listeners);
 

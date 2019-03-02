@@ -39,7 +39,6 @@ import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 import com.biglybt.pif.platform.PlatformManagerException;
 
@@ -123,14 +122,14 @@ AssociationChecker
 		Messages.setLanguageText(user_label, "dialog.associations.prompt");
 		gridData = new GridData(GridData.FILL_BOTH);
 		gridData.horizontalSpan = 3;
-		Utils.setLayoutData(user_label, gridData);
+		user_label.setLayoutData(gridData);
 
 
-	    final Button checkBox = new Button(shell, SWT.CHECK);
+		final Button checkBox = new Button(shell, SWT.CHECK);
 	    checkBox.setSelection(true);
 		gridData = new GridData(GridData.FILL_BOTH);
 		gridData.horizontalSpan = 3;
-		Utils.setLayoutData(checkBox, gridData);
+		checkBox.setLayoutData(gridData);
 		Messages.setLanguageText(checkBox, "dialog.associations.askagain");
 
 		// line
@@ -138,9 +137,9 @@ AssociationChecker
 		Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 3;
-		Utils.setLayoutData(labelSeparator, gridData);
+		labelSeparator.setLayoutData(gridData);
 
-			// buttons
+		// buttons
 
 		new Label(shell,SWT.NULL);
 
@@ -149,8 +148,8 @@ AssociationChecker
 	 	gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 	 	gridData.grabExcessHorizontalSpace = true;
 	 	gridData.widthHint = 70;
-	 	Utils.setLayoutData(bYes, gridData);
-	 	bYes.addListener(SWT.Selection,new Listener() {
+		bYes.setLayoutData(gridData);
+		bYes.addListener(SWT.Selection,new Listener() {
 	  		@Override
 			  public void handleEvent(Event e) {
 		 		close(true, checkBox.getSelection());
@@ -162,8 +161,8 @@ AssociationChecker
 	 	gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
 	 	gridData.grabExcessHorizontalSpace = false;
 	 	gridData.widthHint = 70;
-	 	Utils.setLayoutData(bNo, gridData);
-	 	bNo.addListener(SWT.Selection,new Listener() {
+		bNo.setLayoutData(gridData);
+		bNo.addListener(SWT.Selection,new Listener() {
 	 		@Override
 		  public void handleEvent(Event e) {
 		 		close(false, checkBox.getSelection());

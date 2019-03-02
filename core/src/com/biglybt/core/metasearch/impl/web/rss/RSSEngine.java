@@ -651,7 +651,7 @@ RSSEngine
 
 						}
 					}
-
+					
 						// override existing values with explicit <torrent> entry if present
 
 					try{
@@ -764,6 +764,17 @@ RSSEngine
 						e.printStackTrace();
 					}
 
+					if ( result.getSize() <= 0 ){
+						
+						SimpleXMLParserDocumentNode n = node.getChild( "size" );
+
+						if ( n != null ){
+
+							result.setSizeFromHTML( n.getValue().trim());
+						}
+					}
+
+							
 					if ( item_hash != null && result.getHash() == null ){
 
 						result.setHash( item_hash );
@@ -808,6 +819,25 @@ RSSEngine
 						result.setTorrentLink( result.getCDPLink());
 					}
 
+						// some feeds have the cdp link as guid - grab this if cdp link is blank or same as dl link
+					
+					String latest_cdp_link  	= result.getCDPLink();
+					String latest_torrent_link	= result.getTorrentLink();
+					
+					if ( 	latest_cdp_link == null || 
+							( latest_cdp_link.length() > 0 && latest_cdp_link.equals( latest_torrent_link ))){
+						
+						try{
+							String test_url = new URL( uid ).toExternalForm();
+
+							if ( test_url.toLowerCase().startsWith( "http" )){
+
+								result.setCDPLink( test_url );
+							}
+						}catch( Throwable e ){
+						}
+					}
+					
 					if ( result.getSize() <= 0 ){
 
 						if ( desc_size != null ){

@@ -20,6 +20,8 @@
 
 package com.biglybt.core.custom;
 
+import java.io.File;
+
 public interface
 CustomizationManager
 {
@@ -34,4 +36,8 @@ CustomizationManager
 
 	public Customization[]
 	getCustomizations();
+	
+	public File
+	getNewUserCustomizationFile(
+		String		prefix );
 }

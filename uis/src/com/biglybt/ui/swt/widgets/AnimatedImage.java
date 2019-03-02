@@ -23,7 +23,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.util.AEThread2;
-import com.biglybt.ui.swt.Utils;
 
 public class AnimatedImage {
 
@@ -106,7 +105,6 @@ public class AnimatedImage {
 	}
 
 	public void setLayoutData(Object data) {
-		Utils.adjustPXForDPI(data);
 		canvas.setLayoutData(data);
 	}
 

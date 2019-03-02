@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
+import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.transport.DHTTransportAlternativeContact;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
@@ -43,6 +44,8 @@ DHTUDPPacketReplyPing
 	private static final DHTTransportAlternativeContact[] EMPTY_CONTACTS = {};
 
 	private DHTTransportAlternativeContact[]	alt_contacts = EMPTY_CONTACTS;
+
+	private Object	upload_stats;
 
 	public
 	DHTUDPPacketReplyPing(
@@ -65,14 +68,24 @@ DHTUDPPacketReplyPing
 	{
 		super( network_handler, originator, is, DHTUDPPacketHelper.ACT_REPLY_PING, trans_id );
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_VIVALDI ){
+		int protocol_version = getProtocolVersion();
+		
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_VIVALDI ){
 
 			DHTUDPUtils.deserialiseVivaldi( this, is );
 		}
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_ALT_CONTACTS ){
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_ALT_CONTACTS ){
 
 			alt_contacts = DHTUDPUtils.deserialiseAltContacts( is );
+		}
+				
+		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
+			
+			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
+
+				upload_stats = DHTUDPUtils.deserialiseUploadStats( is );
+			}
 		}
 	}
 
@@ -85,14 +98,24 @@ DHTUDPPacketReplyPing
 	{
 		super.serialise(os);
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_VIVALDI ){
+		int protocol_version = getProtocolVersion();
+		
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_VIVALDI ){
 
 			DHTUDPUtils.serialiseVivaldi( this, os );
 		}
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_ALT_CONTACTS ){
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_ALT_CONTACTS ){
 
 			DHTUDPUtils.serialiseAltContacts( os, alt_contacts );
+		}
+		
+		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
+			
+			//if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){ checked in serialiseUploadStats
+
+				DHTUDPUtils.serialiseUploadStats( protocol_version, getAction(), os );
+			//}
 		}
 	}
 
@@ -123,4 +146,9 @@ DHTUDPPacketReplyPing
 		return( alt_contacts );
 	}
 
+	protected Object
+	getUploadStats()
+	{
+		return( upload_stats );
+	}
 }

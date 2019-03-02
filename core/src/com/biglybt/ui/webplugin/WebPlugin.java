@@ -26,6 +26,7 @@ package com.biglybt.ui.webplugin;
  */
 
 import java.io.*;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -91,6 +92,9 @@ WebPlugin
 	public static final String	CONFIG_PASSWORD_ENABLE			= "Password Enable";
 	public static final boolean	CONFIG_PASSWORD_ENABLE_DEFAULT	= false;
 
+	public static final String	CONFIG_NO_PW_WHITELIST			= "Password Disabled Whitelist";
+	public static final String	CONFIG_NO_PW_WHITELIST_DEFAULT	= "localhost, 127.0.0.1, [::1], $";
+			
 	public static final String	CONFIG_PAIRING_ENABLE			= "Pairing Enable";
 	public static final boolean	CONFIG_PAIRING_ENABLE_DEFAULT	= true;
 
@@ -171,6 +175,7 @@ WebPlugin
 	private BooleanParameter		pw_enable;
 	private StringParameter			p_user_name;
 	private PasswordParameter		p_password;
+	private StringParameter			p_no_pw_whitelist;
 
 	private BooleanParameter		param_auto_auth;
 	private IntParameter			param_port_or;
@@ -666,7 +671,9 @@ WebPlugin
 
 			connection_test = config_model.addHyperlinkParameter2( "webui.connectiontest", getConnectionTestURL( p_sid ));
 
-			pairing_test = config_model.addHyperlinkParameter2( "webui.pairingtest", "http://remote.vuze.com/?sid=" + p_sid );
+			URL server_url = PairingManagerFactory.getSingleton().getWebRemoteURL();
+
+			pairing_test = config_model.addHyperlinkParameter2( "webui.pairingtest", server_url.toExternalForm() + "?sid=" + p_sid );
 
 				// listeners setup later as they depend on userame params etc
 
@@ -771,9 +778,17 @@ WebPlugin
 							PasswordParameter.ET_SHA1,
 							CONFIG_PASSWORD_DEFAULT );
 
+		p_no_pw_whitelist =
+				config_model.addStringParameter2(
+								CONFIG_NO_PW_WHITELIST,
+								"webui.nopwwhitelist",
+								CONFIG_NO_PW_WHITELIST_DEFAULT );
+		
 		pw_enable.addEnabledOnSelection( p_user_name );
 		pw_enable.addEnabledOnSelection( p_password );
 
+		pw_enable.addDisabledOnSelection(  p_no_pw_whitelist );
+		
 		ParameterListener auth_change_listener =
 			new ParameterListener()
 			{
@@ -807,7 +822,7 @@ WebPlugin
 			"webui.group.access",
 			new Parameter[]{
 				a_label1, param_mode, a_label2, param_access,
-				pw_enable, p_user_name, p_password,
+				pw_enable, p_user_name, p_password, p_no_pw_whitelist,
 			});
 
 		if ( p_sid != null ){
@@ -1024,9 +1039,13 @@ WebPlugin
 	getConnectionTestURL(
 		String		sid )
 	{
-		String res = "http://pair.vuze.com/pairing/web/test?sid=" + sid;
-
 		PairingManager pm = PairingManagerFactory.getSingleton();
+
+		URL url = pm.getServiceURL();
+		
+		url = UrlUtils.setProtocol( url, "http" );
+	
+		String res = url.toExternalForm() + "/web/test?sid=" + sid;
 
 		if ( pm.isEnabled()){
 
@@ -1287,7 +1306,7 @@ WebPlugin
 				return;
 			}
 
-			final int port	= param_port.getValue();
+			int requested_port	= param_port.getValue();
 
 			String protocol_str = param_protocol.getValue().trim();
 
@@ -1366,7 +1385,7 @@ WebPlugin
 				int			existing_port		= url.getPort()==-1?url.getDefaultPort():url.getPort();
 				InetAddress existing_bind_ip 	= tracker_context.getBindIP();
 
-				if ( 	existing_port == port &&
+				if ( 	( existing_port == requested_port || requested_port == 0 ) &&
 						existing_protocol.equalsIgnoreCase( protocol_str ) &&
 						sameAddress( bind_ip, existing_bind_ip )){
 
@@ -1377,8 +1396,6 @@ WebPlugin
 
 				tracker_context = null;
 			}
-
-
 
 			int	protocol = protocol_str.equalsIgnoreCase( "HTTP")?Tracker.PR_HTTP:Tracker.PR_HTTPS;
 
@@ -1392,7 +1409,7 @@ WebPlugin
 			}
 
 			log.log( 	LoggerChannel.LT_INFORMATION,
-						"Server initialisation: port=" + port +
+						"Server initialisation: port=" + requested_port +
 						(bind_ip == null?"":(", bind=" + bind_str + "->" + bind_ip + ")")) +
 						", protocol=" + protocol_str +
 						(root_dir.length()==0?"":(", root=" + root_dir )) +
@@ -1401,8 +1418,10 @@ WebPlugin
 			tracker_context =
 				plugin_interface.getTracker().createWebContext(
 						Constants.APP_NAME + " - " + plugin_interface.getPluginName(),
-						port, protocol, bind_ip, tc_properties );
+						requested_port, protocol, bind_ip, tc_properties );
 
+			int server_port = getServerPort();
+			
 			Boolean prop_enable_i2p = (Boolean)properties.get( PR_ENABLE_I2P );
 
 			if ( prop_enable_i2p == null || prop_enable_i2p ){
@@ -1416,7 +1435,7 @@ WebPlugin
 						{
 							Map<String,Object>	options = new HashMap<>();
 
-							options.put( AEProxyFactory.SP_PORT, port );
+							options.put( AEProxyFactory.SP_PORT, server_port );
 
 							Map<String,Object> reply =
 									AEProxyFactory.getPluginServerProxy(
@@ -1458,7 +1477,7 @@ WebPlugin
 						{
 							Map<String,Object>	options = new HashMap<>();
 
-							options.put( AEProxyFactory.SP_PORT, port );
+							options.put( AEProxyFactory.SP_PORT, server_port );
 
 							Map<String,Object> reply =
 									AEProxyFactory.getPluginServerProxy(
@@ -1538,7 +1557,7 @@ WebPlugin
 							}
 						}
 
-						boolean	result = authenticateSupport( headers, resource, user, pw );
+						boolean	result = authenticateSupport( client_address, headers, resource, user, pw );
 
 						if ( !result ){
 
@@ -1630,6 +1649,7 @@ WebPlugin
 
 					private boolean
 					authenticateSupport(
+						String		client_address,
 						String		headers,
 						URL			resource,
 						String		user,
@@ -1641,8 +1661,168 @@ WebPlugin
 
 						if ( !pw_enable.getValue()){
 
-							result = true;
+							String whitelist = p_no_pw_whitelist.getValue().trim();
+							
+							if ( whitelist.equals( "*" )){
+							
+								result = true;
+								
+							}else{
+								
+								String 	this_server_host = getHeaderField( headers, "host" );
+								
+								int		this_server_port = protocol == Tracker.PR_HTTP?80:443;
+								
+								String 	referrer = getHeaderField( headers, "referer" );
+																
+								if ( this_server_host.startsWith( "[" )){
+									
+									int	pos = this_server_host.lastIndexOf( ']' );
+									
+									if ( pos != -1 ){
+										
+										String rem = this_server_host.substring( pos+1 );
+										
+										this_server_host = this_server_host.substring( 0, pos+1 );
+										
+										pos = rem.indexOf( ':' );
+										
+										if ( pos != -1 ){
+											
+											this_server_port = Integer.parseInt( rem.substring( pos+1 ).trim());
+										}
+									}
+								}else{
+									
+									int pos = this_server_host.indexOf( ':' );
+									
+									if ( pos != -1 ){
+										
+										this_server_port = Integer.parseInt( this_server_host.substring( pos+1 ).trim());
+										
+										this_server_host = this_server_host.substring( 0,  pos );
+									}
+								}
+								
+								String[] allowed = whitelist.split( "," );
+								
+								result = false;
+								
+								String msg	= "";
+								
+								if ( this_server_port != server_port ){
+									
+									msg = "port mismatch: " + server_port + "/" + this_server_port;
+									
+								}else{
+																
+									for ( String a: allowed ){
+									
+										a = a.trim();
+										
+										if ( a.equals( "*" )){
+											
+											result = true;
+											
+											break;
+											
+										}else if ( a.equals( "$" )){
+										
+											InetAddress bind = getServerBindIP();
+											
+											if ( bind != null ){
+												
+												if ( bind instanceof Inet6Address ){
+													
+													a = "[" + bind.getHostAddress() + "]";
+													
+												}else{
+													
+													a = bind.getHostAddress();
+												}
+											}
+										}
+										
+										if ( client_address.equals( a.trim())){
+											
+											result = true;
+											
+											break;
+										}
 
+										// Support ranges (copied from code in setupAccess)
+										IPRange ip_range	= plugin_interface.getIPFilter().createRange(true);
+										
+										String aTrimmed = a.trim();
+
+										int	sep = aTrimmed.indexOf("-");
+
+										if ( sep == -1 ){
+
+											ip_range.setStartIP( aTrimmed );
+
+											ip_range.setEndIP( aTrimmed );
+
+										}else{
+
+											ip_range.setStartIP( aTrimmed.substring(0,sep).trim());
+
+											ip_range.setEndIP( aTrimmed.substring( sep+1 ).trim());
+										}
+
+										ip_range.checkValid();
+
+										if (ip_range.isValid() && ip_range.isInRange(client_address)){
+
+											result = true;
+
+											break;
+										}
+
+									}
+									
+									if ( !result ){
+										
+										msg = "host '" + client_address + "' not in whitelist";
+										
+									}else{
+										
+										if ( referrer != null ){
+											
+											result = false;
+											
+											try{
+												
+												URL url = new URL( referrer );
+												
+												int ref_port = url.getPort();
+												
+												if ( ref_port == -1 ){
+													
+													ref_port = url.getDefaultPort();
+												}
+												
+												if ( ref_port == server_port ){
+														
+													result = true;
+												}
+											}catch( Throwable e ){
+											}
+											
+											if ( !result ){
+												
+												msg = "referrer mismatch: " + referrer;
+											}
+										}
+									}
+								}
+								
+								if ( !result ){
+									
+									
+									log.log( "Access denied: No password and " + msg );
+								}
+							}
 						}else{
 
 							if ( auto_auth ){
@@ -1654,6 +1834,8 @@ WebPlugin
 
 							if ( !user.equals( p_user_name.getValue())){
 
+								log.log( "Access denied: Incorrect user name: " + user );
+								
 								result = false;
 
 							}else{
@@ -1670,6 +1852,11 @@ WebPlugin
 								}
 
 								result = Arrays.equals( hash, p_password.getValue());
+								
+								if ( !result ){
+									
+									log.log( "Access denied: Incorrect password" );
+								}
 							}
 						}
 
@@ -1782,20 +1969,21 @@ WebPlugin
 						String	headers,
 						String	field )
 					{
-						String lc_headers = headers.toLowerCase();
-
-						int p1 = lc_headers.indexOf( field.toLowerCase() + ":" );
-
-						if ( p1 != -1 ){
-
-							int	p2 = lc_headers.indexOf( '\n', p1 );
-
-							if ( p2 != -1 ){
-
-								return( headers.substring( p1+field.length()+1, p2 ).trim());
+						String[] lines = headers.split( "\n" );
+						
+						for ( String line: lines ){
+							
+							int	pos = line.indexOf( ':' );
+							
+							if ( pos != -1 ){
+								
+								if ( line.substring( 0, pos ).equalsIgnoreCase( field )){
+									
+									return( line.substring( pos+1 ).trim());
+								}
 							}
 						}
-
+						
 						return( null );
 					}
 				});
@@ -2352,7 +2540,7 @@ WebPlugin
 					return( null );
 				}
 			};
-		final ByteArrayOutputStream	baos = new ByteArrayOutputStream();
+		final ByteArrayOutputStream[]	baos = { new ByteArrayOutputStream()};
 
 		final Map	reply_headers	= new HashMap();
 
@@ -2363,9 +2551,17 @@ WebPlugin
 				public OutputStream
 				getOutputStream()
 				{
-					return( baos );
+					return( baos[0] );
 				}
 
+				@Override
+				public void 
+				setOutputStream(
+					ByteArrayOutputStream os)
+				{	
+					baos[0] = os;
+				}
+				
 				@Override
 				public void
 				setReplyStatus(
@@ -2382,6 +2578,12 @@ WebPlugin
 					reply_headers.put( "Content-Type", type );
 				}
 
+				public String
+				getContentType()
+				{
+					return( (String)reply_headers.get( "Content-Type" ));
+				}
+				
 				@Override
 				public void
 				setLastModified(
@@ -2487,7 +2689,7 @@ WebPlugin
 
 			if ( generate2( request, response, true )){
 
-				bytes = baos.toByteArray();
+				bytes = baos[0].toByteArray();
 
 			}else{
 

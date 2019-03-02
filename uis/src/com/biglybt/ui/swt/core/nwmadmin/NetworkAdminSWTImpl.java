@@ -360,7 +360,7 @@ NetworkAdminSWTImpl
 
 						status.setImage( f_icon );
 
-						status.setTooltipText( f_tip );
+						Utils.setTT(status, f_tip );
 					}
 				});
 		}

@@ -20,6 +20,11 @@
 
 package com.biglybt.core.global;
 
+import java.net.InetAddress;
+import java.util.*;
+
+import com.biglybt.core.util.CopyOnWriteList;
+
 /**
  * @author parg
  *
@@ -99,4 +104,94 @@ GlobalManagerStats
 	public void
 	discarded(
 		int		bytes );
+	
+	public interface
+	CountryDetails
+	{
+			// values are minute based (last minute, minute average)
+		
+		public String
+		getCC();
+		
+		public long
+		getTotalSent();
+		
+		public long
+		getLatestSent();
+		
+		public long
+		getAverageSent();
+		
+		public long
+		getTotalReceived();
+		
+		public long
+		getLatestReceived();
+		
+		public long
+		getAverageReceived();
+	}
+	
+	public Iterator<CountryDetails>
+	getCountryDetails();
+	
+	public interface
+	RemoteCountryStats
+	{
+		public String 
+		getCC();
+		
+			/**
+			 * 
+			 * @return bytes per MINUTE
+			 */
+		
+		public long
+		getAverageReceivedBytes();
+		
+		public long
+		getAverageSentBytes();
+	}
+	
+	public interface
+	RemoteStats
+	{
+		public InetAddress
+		getRemoteAddress();
+				
+		public RemoteCountryStats[]
+		getStats();
+	}
+	
+	public void
+	receiveRemoteStats(
+		RemoteStats		stats );
+	
+	public interface
+	AggregateStats
+	{
+		public int
+		getSamples();
+		
+		public int
+		getEstimatedPopulation();
+		
+		public int
+		getSequence();
+		
+		public long
+		getLatestReceived();
+		
+		public long
+		getLatestSent();
+		
+		public Map<String,Map<String,long[]>>
+		getStats();
+	}
+	
+	public AggregateStats
+	getAggregateRemoteStats();
+	
+	public AggregateStats
+	getAggregateLocalStats();
 }

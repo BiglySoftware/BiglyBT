@@ -86,6 +86,7 @@ DownloadManager
 	public static final int ET_NONE						= DiskManager.ET_NONE;
 	public static final int ET_OTHER					= DiskManager.ET_OTHER;
 	public static final int ET_INSUFFICIENT_SPACE		= DiskManager.ET_INSUFFICIENT_SPACE;
+	public static final int ET_STOP_DURING_INIT			= DiskManager.ET_STOP_DURING_INIT;
 
 	public static final Object UD_KEY_STOP_REASON = Download.UD_KEY_STOP_REASON;
 	
@@ -164,18 +165,12 @@ DownloadManager
         boolean remove_torrent,
         boolean remove_data );
 
-    default public void
+    public void
     setStopReason(
-    	String	reason )
-    {
-    	setUserData( UD_KEY_STOP_REASON, reason );
-    }
+    	String	reason );
     
-    default public String
-    getStopReason()
-    {
-    	return( (String)getUserData( UD_KEY_STOP_REASON ));
-    }
+    public String
+    getStopReason();
     
     /**
      * As above but definitely indicates that the stop is for removal (if for_removal is true) and therefore that any removal specific actions
@@ -193,12 +188,26 @@ DownloadManager
         boolean remove_data,
         boolean	for_removal );
 
-    public boolean
-    pause();
-
+    	/**
+    	 * 
+    	 * @param only_if_active
+    	 * @return true -> download was placed into a paused state (including if it was already paused)
+    	 */
+    
     public boolean
     pause(
-    	long	auto_resume_time );
+    	boolean		only_if_active );
+
+    	/**
+    	 * 
+    	 * @param auto_resume_time
+    	 * @return true -> download was placed into a paused state (including if it was already paused)
+    	 */
+    
+    public boolean
+    pause(
+    	boolean		only_if_active,
+    	long		auto_resume_time );
 
     public boolean
     isPaused();
@@ -206,9 +215,18 @@ DownloadManager
     public void
     resume();
 
+    public int
+    getTCPListeningPortNumber();
+    
     public long
     getAutoResumeTime();
 
+    public default void
+    setAutoResumeTime(
+    	long	time )
+    {
+    }
+    
     public GlobalManager
     getGlobalManager();
 
@@ -504,11 +522,8 @@ DownloadManager
     	 * @return -1: not moving otherwise 0->1000
     	 */
     
-    public default int
-    getMoveProgress()
-    {
-    	return( -1 );
-    }
+    public int
+    getMoveProgress();
     
         /**
          * Move data files to new location. Torrent must be in stopped/error state

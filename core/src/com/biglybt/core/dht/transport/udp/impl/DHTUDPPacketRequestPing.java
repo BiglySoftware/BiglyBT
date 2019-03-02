@@ -23,6 +23,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.dht.transport.udp.impl.packethandler.DHTUDPPacketNetworkHandler;
 
@@ -41,6 +42,8 @@ DHTUDPPacketRequestPing
 	private int[]	alt_networks			= EMPTY_INTS;
 	private int[]	alt_network_counts		= EMPTY_INTS;
 
+	private Object	upload_stats;
+	
 	public
 	DHTUDPPacketRequestPing(
 		DHTTransportUDPImpl				_transport,
@@ -62,12 +65,20 @@ DHTUDPPacketRequestPing
 	{
 		super( network_handler, is,  DHTUDPPacketHelper.ACT_REQUEST_PING, con_id, trans_id );
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_ALT_CONTACTS ){
+		int protocol_version = getProtocolVersion();
+		
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_ALT_CONTACTS ){
 
 			DHTUDPUtils.deserialiseAltContactRequest( this, is );
 		}
+		
+		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
+			
+			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
 
-		super.postDeserialise(is);
+				upload_stats = DHTUDPUtils.deserialiseUploadStats( is );
+			}
+		}
 	}
 
 	@Override
@@ -79,12 +90,20 @@ DHTUDPPacketRequestPing
 	{
 		super.serialise(os);
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_ALT_CONTACTS ){
+		int protocol_version = getProtocolVersion();
+		
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_ALT_CONTACTS ){
 
 			DHTUDPUtils.serialiseAltContactRequest( this, os );
 		}
+		
+		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
+			
+			//if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){ checked in serialiseUploadStats
 
-		super.postSerialise( os );
+				DHTUDPUtils.serialiseUploadStats( protocol_version, getAction(), os );
+			//}
+		}
 	}
 
 	protected void
@@ -107,7 +126,13 @@ DHTUDPPacketRequestPing
 	{
 		return( alt_network_counts );
 	}
-
+	
+	protected Object
+	getUploadStats()
+	{
+		return( upload_stats );
+	}
+	
 	@Override
 	public String
 	getString()

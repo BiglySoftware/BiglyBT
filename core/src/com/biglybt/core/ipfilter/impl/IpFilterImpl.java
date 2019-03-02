@@ -53,7 +53,7 @@ IpFilterImpl
 	private final static int MAX_BLOCKS_TO_REMEMBER = 500;
 
 	private static IpFilterImpl ipFilter;
-	static final AEMonitor2	class_mon	= new AEMonitor2( "IpFilter:class" );
+	static final AEMonitor	class_mon	= new AEMonitor( "IpFilter:class" );
 
 	private final IPAddressRangeManager	range_manager = new IPAddressRangeManager();
 

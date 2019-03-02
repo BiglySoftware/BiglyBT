@@ -22,6 +22,7 @@ package com.biglybt.core.peermanager.piecepicker;
 import java.util.List;
 
 import com.biglybt.core.peer.PEPeer;
+import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.util.IndentWriter;
 
@@ -35,6 +36,9 @@ public interface PiecePicker
 {
 	public static final int REQUEST_HINT_MAX_LIFE	= 120*1000;
 
+	public PEPeerManager
+	getPeerManager();
+	
     public boolean  hasDownloadablePiece();
     /** @return long value indicated serial number of current count of changes
      * to hasNeededUndonePiece.
@@ -144,6 +148,14 @@ public interface PiecePicker
 	
 	public int
 	getSequentialInfo();
+	
+	public String
+	getEGMInfo();
+	
+	public int
+	getEGMRequestCount(
+		int		piece_number,
+		int		block_number );
 	
 	public void
 	addListener(

@@ -5,7 +5,6 @@ import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.Wizard;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.stats.TransferStatsView;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
@@ -69,7 +68,7 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
 
         Composite panel = new Composite(rootPanel, SWT.NULL);
         GridData gridData = new GridData( GridData.VERTICAL_ALIGN_CENTER | GridData.FILL_HORIZONTAL );
-        Utils.setLayoutData(panel, gridData);
+        panel.setLayoutData(gridData);
         layout = new GridLayout();
         layout.numColumns = 3;
         layout.makeColumnsEqualWidth=true;
@@ -79,14 +78,16 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
         gridData = new GridData();
         gridData.horizontalSpan = 3;
         gridData.widthHint = 380;
-        Utils.setLayoutData(label, gridData);
+        label.setLayoutData(gridData);
         Messages.setLanguageText(label,"SpeedTestWizard.finish.panel.click.close");
 
+        int kinb = DisplayFormatters.getKinB();
+        
         //show the setting for upload speed
         SpeedManagerLimitEstimate upEst = speedManager.getEstimatedUploadCapacityBytesPerSec();
-        int maxUploadKbs = upEst.getBytesPerSec()/1024;
+        int maxUploadKbs = upEst.getBytesPerSec()/kinb;
         SpeedManagerLimitEstimate downEst = speedManager.getEstimatedDownloadCapacityBytesPerSec();
-        int maxDownloadKbs = downEst.getBytesPerSec()/1024;
+        int maxDownloadKbs = downEst.getBytesPerSec()/kinb;
 
         //boolean setting.
         boolean autoSpeedEnabled = COConfigurationManager.getBooleanParameter( TransferSpeedValidator.AUTO_UPLOAD_ENABLED_CONFIGKEY );
@@ -218,7 +219,7 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
         if(maxKbps==0){
             maxBitsPerSec = MessageText.getString("ConfigView.unlimited");
         }else{
-            maxBitsPerSec = DisplayFormatters.formatByteCountToBitsPerSec( maxKbps * 1024 );
+            maxBitsPerSec = DisplayFormatters.formatByteCountToBitsPerSec2( maxKbps * DisplayFormatters.getKinB());
         }
 
         c3.setText(maxBitsPerSec);

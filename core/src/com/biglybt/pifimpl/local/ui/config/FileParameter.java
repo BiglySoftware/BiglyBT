@@ -32,7 +32,6 @@ import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 public class FileParameter extends ParameterImpl implements com.biglybt.pif.ui.config.FileParameter
 {
-	private String defaultValue;
 	private String[] file_extensions;
 	public FileParameter(PluginConfigImpl config,String key, String label, String defaultValue) {
 		this(config, key, label, defaultValue, null);
@@ -41,23 +40,15 @@ public class FileParameter extends ParameterImpl implements com.biglybt.pif.ui.c
 	public FileParameter(PluginConfigImpl config,String key, String label, String defaultValue, String[] file_extensions) {
 		super(config, key, label);
 
-		this.defaultValue = defaultValue;
 		this.file_extensions = file_extensions;
+		COConfigurationManager.setStringDefault(getKey(), defaultValue);
 		config.notifyParamExists(getKey());
-		COConfigurationManager.setStringDefault(getKey(), getDefaultValue());
 
-	}
-	/**
-	 * @return Returns the defaultValue.
-	 */
-	public String getDefaultValue()
-	{
-		return defaultValue;
 	}
 
 	@Override
 	public String getValue() {
-		return( config.getUnsafeStringParameter( getKey(), getDefaultValue()));
+		return( config.getUnsafeStringParameter( getKey()));
 	}
 
 	public String[] getFileExtensions() {

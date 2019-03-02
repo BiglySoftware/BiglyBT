@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.Text;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.PasswordParameter;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
 
@@ -82,7 +81,7 @@ public class ConfigSectionInterfacePassword
 		Composite cSection = new Composite(parent, SWT.NULL);
 		gridData = new GridData(
 				GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(cSection, gridData);
+		cSection.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.marginWidth = 0;
 		layout.numColumns = 2;
@@ -116,7 +115,7 @@ public class ConfigSectionInterfacePassword
 		passwordMatch = new Label(cSection, SWT.NULL);
 		gridData = new GridData();
 		gridData.widthHint = 150;
-		Utils.setLayoutData(passwordMatch, gridData);
+		passwordMatch.setLayoutData(gridData);
 		refreshPWLabel();
 
 		t1.addModifyListener(new ModifyListener() {

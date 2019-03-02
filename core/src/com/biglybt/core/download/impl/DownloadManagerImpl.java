@@ -53,20 +53,25 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peermanager.PeerManagerRegistration;
 import com.biglybt.core.peermanager.control.PeerControlSchedulerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableResolver;
 import com.biglybt.core.torrent.*;
+import com.biglybt.core.tracker.AllTrackersManager;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
+import com.biglybt.core.util.FileUtil.ProgressListener;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.download.Download;
@@ -129,8 +134,10 @@ DownloadManagerImpl
 	private static final int LDT_COMPLETIONCHANGED 		= 3;
 	private static final int LDT_POSITIONCHANGED 		= 4;
 	private static final int LDT_FILEPRIORITYCHANGED 	= 5;
+	private static final int LDT_FILELOCATIONCHANGED 	= 6;
 
-
+	private static Object 			port_init_lock = new Object();
+	
 	private final AEMonitor	listeners_mon	= new AEMonitor( "DM:DownloadManager:L" );
 
 
@@ -168,6 +175,10 @@ DownloadManagerImpl
 					}else if ( type == LDT_POSITIONCHANGED ){
 
 						listener.positionChanged( dm, ((Integer)value[1]).intValue(), ((Integer)value[2]).intValue());
+						
+					}else if ( type == LDT_FILELOCATIONCHANGED ){
+
+						listener.fileLocationChanged( dm, (DiskManagerFileInfo)value[1]);
 					}
 				}
 			});
@@ -215,6 +226,19 @@ DownloadManagerImpl
 				}
 			}
 
+			@Override
+			public void fileLocationChanged(DownloadManager download,
+			                                DiskManagerFileInfo file){
+				for ( DownloadManagerListener listener: global_dm_listeners ){
+
+					try{
+						listener.fileLocationChanged(download, file);
+					}catch( Throwable e ){
+						Debug.out( e );
+					}
+				}
+			}
+			
 			@Override
 			public void downloadComplete(DownloadManager manager){
 				for ( DownloadManagerListener listener: global_dm_listeners ){
@@ -281,6 +305,9 @@ DownloadManagerImpl
     }
 
 
+	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
+
+	
 	private final ListenerManager<DownloadManagerListener>	listeners 	= ListenerManager.createManager(
 			"DM:ListenDispatcher",
 			new ListenerManagerDispatcher<DownloadManagerListener>()
@@ -408,7 +435,8 @@ DownloadManagerImpl
 			});
 	}
 
-
+	private static Map<String,Boolean>		save_dir_check_cache = new HashMap<>();
+	private static TimerEventPeriodic		save_dir_check_timer = null;
 
 
 	private final ListenerManager<DownloadManagerPeerListener>	peer_listeners 	= ListenerManager.createManager(
@@ -538,7 +566,7 @@ DownloadManagerImpl
 	private Object[]					read_torrent_state;
 	DownloadManagerState		download_manager_state;
 
-	TOTorrent		torrent;
+	private TOTorrent		torrent;
 	private String 			torrent_comment;
 	private String 			torrent_created_by;
 
@@ -682,6 +710,8 @@ DownloadManagerImpl
     private int		crypto_level 	= NetworkManager.CRYPTO_OVERRIDE_NONE;
     private int		message_mode	= -1;
 
+    private volatile int		tcp_port_override;
+    
 	// Only call this with STATE_QUEUED, STATE_WAITING, or STATE_STOPPED unless you know what you are doing
 
     private volatile boolean	removing;
@@ -824,6 +854,11 @@ DownloadManagerImpl
 	}
 	
 	@Override
+	public String getTaggableName(){
+		return(getDisplayName());
+	}
+	
+	@Override
 	public ExportedDataSource 
 	exportDataSource()
 	{
@@ -940,6 +975,8 @@ DownloadManagerImpl
 
 				 torrent	= download_manager_state.getTorrent();
 
+				 all_trackers.registerTorrent( torrent );
+				 
 				 setFileLinks();
 
 				 	// We can't have the identity of this download changing as this will screw up
@@ -1082,7 +1119,56 @@ DownloadManagerImpl
 
 						 File	linked_target = getSaveLocation();
 
-						 if ( !linked_target.exists()){
+						 File parent = linked_target.getParentFile();
+						 
+						 Boolean res;
+						 
+						 	// seemingly seen a lot of time taken on startup with big library checking that
+						 	// save location exists so experimenting with reducing FS accesses
+						 
+						 synchronized( save_dir_check_cache ){
+							 
+							 String key = parent.getAbsolutePath();
+							 
+							 res = save_dir_check_cache.get( key );
+							 
+							 if ( res == null ){
+								 
+								 res = parent.exists();
+								 
+								 save_dir_check_cache.put( key, res );
+								 								 
+								 if ( save_dir_check_timer == null ){
+									 
+									 save_dir_check_timer = 
+										SimpleTimer.addPeriodicEvent(
+											"sdct",
+											60*1000,
+											new TimerEventPerformer(){
+												
+												@Override
+												public void perform(TimerEvent event){
+													
+													synchronized( save_dir_check_cache ){
+														
+														if ( save_dir_check_cache.isEmpty()){
+															
+															save_dir_check_timer.cancel();
+															
+															save_dir_check_timer = null;
+															
+														}else{
+															
+															save_dir_check_cache.clear();
+														}
+													}
+												}
+											});
+								 }
+							 }
+						 }
+						 
+						 if ( !res ){
 
 							throw (new NoStackException(
 									MessageText.getString("DownloadManager.error.datamissing")
@@ -1244,6 +1330,11 @@ DownloadManagerImpl
 
 						download_manager_state.setDisplayName(title);
 					}
+				}
+				
+				if ( download_manager_state.getAndClearRecoveredStatus()){
+					
+					setFailed( "Recovered from original torrent" );
 				}
 			}catch( TOTorrentException e ){
 
@@ -1902,7 +1993,92 @@ DownloadManagerImpl
 		torrent	= null;
 	}
 
+	protected int
+	getTCPPortOverride(
+		boolean	only_if_allocated )
+	{
+		if ( tcp_port_override != 0 ){
+			
+			return( tcp_port_override>0?tcp_port_override:0 );
+		}
+		
+		if ( getTorrentHashOverride() != null ){
+							
+			if ( only_if_allocated ){
+					
+				return( -1 );
+			}
+				
+			PeerManagerRegistration reg = controller.getPeerManagerRegistration();
+				
+			if ( reg != null ){
+										
+				List<PeerManagerRegistration> others = reg.getOtherRegistrationsForHash();
+					
+				List<Integer>	existing_ports = new ArrayList<Integer>();
+							
+				for ( PeerManagerRegistration r: others ){
+						
+					int port = r.getLocalPort( true );
+						
+					if ( port > 0 ){
+						
+						existing_ports.add( port );
+					}
+				}
 
+				synchronized( port_init_lock ){
+					
+					if ( tcp_port_override == 0 ){
+						
+						tcp_port_override = TCPNetworkManager.getSingleton().getAdditionalTCPListeningPortNumber( existing_ports );
+					}
+					
+					return( tcp_port_override );
+				}
+			}else{
+					
+					// hmm, what to do
+					
+				return( -1 );
+			}
+		}else{
+		
+			tcp_port_override = -1;
+				
+			return( 0 );
+		}
+	}
+	
+	protected HashWrapper 
+	getTorrentHashOverride()
+	{
+		try{
+			if ( torrent != null ){
+				
+				return( new HashWrapper( TorrentUtils.getOriginalHash( torrent )));
+			}
+		}catch( Throwable e ){
+			
+		}
+		
+		return( null );
+	}
+	
+	@Override
+	public int 
+	getTCPListeningPortNumber()
+	{
+		int port = getTCPPortOverride( false );
+		
+		if ( port > 0 ){
+			
+			return( port );
+		}
+		
+		return( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber());
+	}
+	
 	@Override
 	public void
 	saveResumeData()
@@ -1996,6 +2172,13 @@ DownloadManagerImpl
 							getNetworks()
 							{
 								return( download_manager_state.getNetworks());
+							}
+							
+							@Override
+							public HashWrapper 
+							getTorrentHashOverride()
+							{
+								return( DownloadManagerImpl.this.getTorrentHashOverride());
 							}
 						});
 
@@ -2160,6 +2343,16 @@ DownloadManagerImpl
 	}
 
 	@Override
+	public void setStopReason(String reason) {
+		setUserData( UD_KEY_STOP_REASON, reason );
+	}
+
+	@Override
+	public String getStopReason() {
+		return((String)getUserData( UD_KEY_STOP_REASON ));
+	}
+
+	@Override
 	public void
 	stopIt(
 		int 		state_after_stopping,
@@ -2174,12 +2367,20 @@ DownloadManagerImpl
 
 		try {
 			boolean closing = state_after_stopping == DownloadManager.STATE_CLOSED;
+			
 			int curState = getState();
-			boolean alreadyStopped = curState == STATE_STOPPED
-					|| curState == STATE_STOPPING || curState == STATE_ERROR;
-			boolean skipSetTimeStopped = alreadyStopped
-					|| (closing && curState == STATE_QUEUED);
+			
+			boolean alreadyStopped = 	curState == STATE_STOPPED ||
+										curState == STATE_STOPPING || 
+										curState == STATE_ERROR;
+			
+			boolean skipSetTimeStopped = alreadyStopped	|| (closing && curState == STATE_QUEUED);
 
+			if ( alreadyStopped ){
+				
+				resume_time = 0;
+			}
+			
 			if (!skipSetTimeStopped) {
 				download_manager_state.setLongAttribute(
 						DownloadManagerState.AT_TIME_STOPPED, SystemTime.getCurrentTime());
@@ -2201,23 +2402,39 @@ DownloadManagerImpl
 
 	@Override
 	public boolean
-	pause()
+	pause(
+		boolean		only_if_active )
 	{
-		return( globalManager.pauseDownload( this ));
+		return( globalManager.pauseDownload( this, only_if_active ));
 	}
 
 	@Override
 	public boolean
 	pause(
-		long	_resume_time )
+		boolean		only_if_active,
+		long		_resume_time )
 	{
 			// obviously we should manage the timer+resumption but it works as it is at the moment...
 
+		if ( isPaused()){
+			
+			if ( only_if_active ){
+				
+				return( false );
+			}
+			
+			resume_time = _resume_time;
+			
+			return( true );
+			
+		}else{
+		
 			// we're not yet in a stopped state so indicate this with a negative value - it'll be corrected when the download stops
 
-		resume_time	= -_resume_time;
+			resume_time	= -_resume_time;
 
-		return( globalManager.pauseDownload( this ));
+			return( globalManager.pauseDownload( this, only_if_active ));
+		}
 	}
 
 	@Override
@@ -2226,6 +2443,15 @@ DownloadManagerImpl
 	{
 		return( resume_time );
 	}
+	
+	@Override
+	public void
+	setAutoResumeTime(
+		long		time )
+	{
+		resume_time	= time;
+	}
+	
 	@Override
 	public boolean
 	isPaused()
@@ -2247,14 +2473,23 @@ DownloadManagerImpl
 
 	@Override
 	public boolean requestAssumedCompleteMode() {
+		return( requestAssumedCompleteMode( false ));
+	}
+	
+	protected boolean requestAssumedCompleteMode( boolean filePriorityChanged ) {
+
 		boolean bCompleteNoDND = controller.isDownloadComplete(false);
 
-		setAssumedComplete(bCompleteNoDND);
+		setAssumedComplete(bCompleteNoDND, filePriorityChanged );
 		return bCompleteNoDND;
 	}
 
 	// Protected: Use requestAssumedCompleteMode outside of scope
 	protected void setAssumedComplete(boolean _assumedComplete) {
+		setAssumedComplete( _assumedComplete, false );
+	}
+	
+	protected void setAssumedComplete(boolean _assumedComplete, boolean filePriorityChanged ) {
 		if (_assumedComplete) {
 			long completedOn = download_manager_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
 			if (completedOn <= 0) {
@@ -2329,6 +2564,13 @@ DownloadManagerImpl
 					}
 				}
 			}
+		}else{
+			if ( filePriorityChanged ){
+				
+					// download no longer complete due to user switching file from DND - reset
+				
+				download_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, 0 );
+			}
 		}
 
 		if (assumedComplete == _assumedComplete) {
@@ -2361,15 +2603,32 @@ DownloadManagerImpl
 
 			position = globalManager.getDownloadManagers().size() + 1;
 
-			if (COConfigurationManager.getBooleanParameter(CFG_MOVE_COMPLETED_TOP)) {
-
-				globalManager.moveTop(dms);
-
-			} else {
-
-				globalManager.moveEnd(dms);
+			if ( _assumedComplete ){
+				
+				if (COConfigurationManager.getBooleanParameter( CFG_MOVE_COMPLETED_TOP )){
+	
+					globalManager.moveTop(dms);
+	
+				} else {
+	
+					globalManager.moveEnd(dms);
+				}
+			}else{
+				
+					// moved back to downloading - use the open-torrent-options default to decide where to put the download
+					
+				int qp = COConfigurationManager.getIntParameter( "Add Torrent Queue Position", 1 );
+				
+				if ( qp == 0 ){
+					
+					globalManager.moveTop(dms);
+					
+				}else{
+					
+					globalManager.moveEnd(dms);
+				}
 			}
-
+			
 			// we left a gap in incomplete list, fixup
 
 			globalManager.fixUpDownloadManagerPositions();
@@ -2640,6 +2899,8 @@ DownloadManagerImpl
 		//Debug.out("Torrent save directory changing from \"" + old_location.getPath() + "\" to \"" + new_location.getPath());
 
 		controller.fileInfoChanged();
+		
+		informLocationChange( null );
 	}
 
 	@Override
@@ -3210,25 +3471,55 @@ DownloadManagerImpl
 		}
 	}
 
-	 void informPrioritiesChange(
-			List	files )
-		{
-			controller.filePrioritiesChanged(files);
+	protected void 
+	informPrioritiesChange(
+		List	files )
+	{
+		controller.filePrioritiesChanged(files);
 
-			try{
-				listeners_mon.enter();
+		try{
+			listeners_mon.enter();
 
-				for(int i=0;i<files.size();i++)
-					listeners.dispatch( LDT_FILEPRIORITYCHANGED, new Object[]{ this, (DiskManagerFileInfo)files.get(i) });
+			for(int i=0;i<files.size();i++)
+				listeners.dispatch( LDT_FILEPRIORITYCHANGED, new Object[]{ this, (DiskManagerFileInfo)files.get(i) });
 
-			}finally{
+		}finally{
 
-				listeners_mon.exit();
-			}
-
-			requestAssumedCompleteMode();
+			listeners_mon.exit();
 		}
 
+		requestAssumedCompleteMode( true );
+	}
+
+	protected void
+	informLocationChange(
+		int	file_index )
+	{
+		try{
+			listeners_mon.enter();
+
+			listeners.dispatch( LDT_FILELOCATIONCHANGED, new Object[]{ this, getDiskManagerFileInfoSet().getFiles()[file_index] });
+
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
+	
+	protected void
+	informLocationChange(
+		DiskManagerFileInfo	file )
+	{
+		try{
+			listeners_mon.enter();
+
+			listeners.dispatch( LDT_FILELOCATIONCHANGED, new Object[]{ this, file });
+
+		}finally{
+
+			listeners_mon.exit();
+		}
+	}
 
 	protected void
 	informPriorityChange(
@@ -4239,7 +4530,9 @@ DownloadManagerImpl
 	  return( crypto_level );
   }
 
-  private int move_progress = -1;
+  private volatile int 		move_progress	= -1;
+  private volatile String	move_subtask	= "";
+  private volatile int 		move_state		= ProgressListener.ST_NORMAL;
   
   public int
   getMoveProgress()
@@ -4253,6 +4546,46 @@ DownloadManagerImpl
 	  }else{
 		  
 		  return( move_progress );
+	  }
+  }
+  
+  private String
+  getMoveSubTask()
+  {
+	  DiskManager	dm = getDiskManager();
+
+	  if ( dm != null ){
+		  
+		  File f = dm.getMoveSubTask();
+		  
+		  if ( f == null ){
+			  
+			  return( "" );
+			  
+		  }else{
+			  
+			  return( f.getName());
+		  }
+		  
+	  }else{
+		  
+		  return( move_subtask );
+	  }
+  }
+  
+  private void
+  setMoveState(
+	int	state )
+  {
+	  DiskManager	dm = getDiskManager();
+
+	  if ( dm != null ){
+		  		  
+		  dm.setMoveState( state );
+		  
+	  }else{
+		  
+		 move_state = state;
 	  }
   }
   
@@ -4331,6 +4664,11 @@ DownloadManagerImpl
 		  FileUtil.runAsTask(
 				new CoreOperationTask()
 				{
+					@Override
+					public String getName(){
+						return( getDisplayName());
+					}
+					
 					private ProgressCallback callback = 
 						new ProgressCallback()
 						{
@@ -4339,6 +4677,43 @@ DownloadManagerImpl
 							getProgress()
 							{
 								return( getMoveProgress());
+							}
+							
+							@Override
+							public String 
+							getSubTaskName()
+							{
+								return( getMoveSubTask());
+							}
+							
+							@Override
+							public int 
+							getSupportedTaskStates()
+							{
+								return( 
+									ProgressCallback.ST_PAUSE |  
+									ProgressCallback.ST_RESUME |
+									ProgressCallback.ST_CANCEL |
+									ProgressCallback.ST_SUBTASKS );
+							}
+							
+							@Override
+							public void 
+							setTaskState(
+								int state )
+							{
+								if ( state == ProgressCallback.ST_PAUSE ){
+									
+									setMoveState( ProgressListener.ST_PAUSED );
+									
+								}else if ( state == ProgressCallback.ST_RESUME ){
+									
+									setMoveState( ProgressListener.ST_NORMAL );
+
+								}else if ( state == ProgressCallback.ST_CANCEL ){
+									
+									setMoveState( ProgressListener.ST_CANCELLED );
+								}
 							}
 						};
 		  
@@ -4389,7 +4764,7 @@ DownloadManagerImpl
 
   	throws DownloadManagerException
   	{
-	  boolean is_paused = this.pause();
+	  boolean is_paused = this.pause( true );
 	  try {moveDataFilesSupport0(new_parent_dir, new_filename);}
 	  finally {if (is_paused) {this.resume();}}
   	}
@@ -4467,13 +4842,28 @@ DownloadManagerImpl
 					total_size = size;
 				}
 				
+				@Override
+				public void 
+				setCurrentFile(
+					File file )
+				{
+					move_subtask = file.getName();
+				}
+				
 				public void
 				bytesDone(
 					long	num )
 				{
 					total_done += num;
 					
-					move_progress = (int)(Math.min( 1000, (1000*total_done)/total_size ));
+					move_progress = total_size==0?0:(int)(Math.min( 1000, (1000*total_done)/total_size ));
+				}
+				
+				@Override
+				public int 
+				getState()
+				{
+					return( move_state );
 				}
 				
 				public void
@@ -4485,6 +4875,7 @@ DownloadManagerImpl
 
 		  try{
 			  move_progress = 0;
+			  move_subtask	= "";
 			  
 			  if ( old_file.equals( new_save_location )){
 	
@@ -4562,6 +4953,11 @@ DownloadManagerImpl
 	
 				  }else{
 	
+					  if ( new_save_location.isDirectory()){
+							
+						  TorrentUtils.recursiveEmptyDirDelete( new_save_location, false );
+					  }
+					  
 					  throw( new DownloadManagerException( "rename operation failed" ));
 				  }
 	
@@ -4575,6 +4971,8 @@ DownloadManagerImpl
 			  pl.complete();
 			  
 			  move_progress = -1;
+			  move_subtask	= "";
+			  move_state	= ProgressListener.ST_NORMAL;
 		  }
 	  }else{
 		  dm.moveDataFiles( new_save_location.getParentFile(), new_save_location.getName(), null );
@@ -4731,6 +5129,11 @@ DownloadManagerImpl
 			  new CoreOperationTask()
 			  {
 				  @Override
+					public String getName(){
+						return( getDisplayName());
+				  }
+				  
+				  @Override
 				  public void
 				  run(
 						  CoreOperation operation)
@@ -4782,7 +5185,7 @@ DownloadManagerImpl
 	  File torrent_file_now = new File(getTorrentFileName());
 	  if (!slc.isDifferentTorrentLocation(torrent_file_now)) {return;}
 
-	  boolean is_paused = this.pause();
+	  boolean is_paused = this.pause( true );
 	  try {moveTorrentFile0(new_parent_dir, new_name);}
 	  finally {if (is_paused) {this.resume();}}
   }
@@ -6133,7 +6536,7 @@ DownloadManagerImpl
 
 	@Override
 	public void rename(String name) throws DownloadManagerException {
-		boolean paused = this.pause();
+		boolean paused = this.pause( true );
 		try {
 			this.renameDownload(name);
 			this.getDownloadState().setAttribute(DownloadManagerState.AT_DISPLAY_NAME, name);

@@ -373,5 +373,10 @@ public class SearchResultsTabArea
 	resultsFound()
 	{
 		ViewTitleInfoManager.refreshTitleInfo( this );
+		
+		if ( mdi_entry != null ){
+			
+			mdi_entry.redraw();
+		}
 	}
 }

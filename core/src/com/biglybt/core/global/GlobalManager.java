@@ -242,7 +242,7 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 * @param dm DownloadManager to pause
 	 * @return False if DownloadManager was invalid, stopped, or pause failed
 	 */
-	public boolean pauseDownload(DownloadManager dm);
+	public boolean pauseDownload(DownloadManager dm, boolean only_if_active );
 
 	public void stopPausedDownload( DownloadManager dm );
 	
@@ -406,11 +406,6 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	fireGlobalManagerEvent(
 		int					type,
 		DownloadManager 	param );
-
-	/**
-	 * @param listener
-	 */
-	public void loadExistingTorrentsNow(boolean async);
 
 	/**
 	 * @param listener

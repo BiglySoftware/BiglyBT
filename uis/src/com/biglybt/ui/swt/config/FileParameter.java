@@ -37,8 +37,8 @@ public class FileParameter extends DirectoryParameter {
 
 	protected String[] extension_list;
 
-	public FileParameter(Composite pluginGroup, String name, String defaultValue, String[] extension_list) {
-		super(pluginGroup, name, defaultValue);
+	public FileParameter(Composite pluginGroup, String name, String[] extension_list) {
+		super(pluginGroup, name);
 		this.extension_list = extension_list;
 	}
 

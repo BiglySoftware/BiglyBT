@@ -36,6 +36,8 @@ import java.util.regex.Pattern;
  */
 public class Messages {
 
+  private static final String RESOURCE_KEY = "com.biglybt.ui.swt.Messages:res";
+  
   private static final Pattern HIG_ELLIP_EXP = Pattern.compile("([\\.]{3})"); // rec. hig style on some platforms
 	private static Listener hoverListener;
 
@@ -159,7 +161,7 @@ public class Messages {
 
   private static void
   setLanguageText(Widget widget,  String key, String[] params, boolean setTooltipOnly) {
-  	widget.setData(key);
+  	widget.setData(RESOURCE_KEY,key);
   	if(!setTooltipOnly)
       updateLanguageFromData(widget, params);
   	widget.removeListener(SWT.MouseHover, hoverListener);
@@ -167,13 +169,13 @@ public class Messages {
   }
 
 	private static void updateToolTipFromData(Widget widget, boolean showKey) {
-		String key = (String) widget.getData();
+		String key = (String) widget.getData(RESOURCE_KEY);
 		if (key == null) {
 			return;
 		}
 		if (widget instanceof Control) {
 			if (showKey) {
-				((Control) widget).setToolTipText(key);
+				Utils.setTT((Control) widget,key);
 				return;
 			}
 			if (!key.endsWith(".tooltip")) {
@@ -181,7 +183,7 @@ public class Messages {
 			}
 			String toolTip = MessageText.getString(key);
 			if (!toolTip.equals('!' + key + '!')) {
-				((Control) widget).setToolTipText(toolTip);
+				Utils.setTT((Control) widget, toolTip);
 			}
 		} else if (widget instanceof ToolItem) {
 			if (!key.endsWith(".tooltip")) {
@@ -189,7 +191,7 @@ public class Messages {
 			}
 			String toolTip = MessageText.getString(key);
 			if (!toolTip.equals('!' + key + '!')) {
-				((ToolItem) widget).setToolTipText(toolTip.replaceAll("Meta\\+",
+				Utils.setTT((ToolItem) widget,toolTip.replaceAll("Meta\\+",
 						Constants.isOSX ? "Cmd+" : "Ctrl+"));
 			}
 		} else if (widget instanceof TableColumn) {
@@ -203,7 +205,7 @@ public class Messages {
 			}
 			if (toolTip != null) {
 				try {
-					((TableColumn) widget).setToolTipText(toolTip);
+					Utils.setTT((TableColumn) widget,toolTip);
 				} catch (NoSuchMethodError e) {
 					// Pre SWT 3.2
 				}
@@ -217,10 +219,10 @@ public class Messages {
   		return;
   	}
 
-      if (widget.getData() != null) {
+      if (widget.getData(RESOURCE_KEY) != null) {
         String key = null;
         try {
-          key = (String) widget.getData();
+          key = (String) widget.getData(RESOURCE_KEY);
         } catch(ClassCastException e) {
         }
 
@@ -231,10 +233,10 @@ public class Messages {
 
         if ( params == null ){
 
-        	message = MessageText.getString((String) widget.getData());
+        	message = MessageText.getString((String) widget.getData(RESOURCE_KEY));
         }else{
 
-           	message = MessageText.getString((String) widget.getData(), params);
+           	message = MessageText.getString((String) widget.getData(RESOURCE_KEY), params);
         }
 
         if (widget instanceof MenuItem) {
@@ -247,7 +249,7 @@ public class Messages {
             menuItem.setText(indent ? "  " + message : message);
 
             if(menuItem.getAccelerator() != 0) // opt-in only for now; remove this conditional check to allow accelerators for arbitrary MenuItem objects
-                KeyBindings.setAccelerator(menuItem, (String)menuItem.getData()); // update keybinding
+                KeyBindings.setAccelerator(menuItem, (String)menuItem.getData(RESOURCE_KEY)); // update keybinding
         }
         else if (widget instanceof TableColumn) {
         	TableColumn tc = ((TableColumn) widget);
@@ -291,7 +293,7 @@ public class Messages {
   		return;
   	}
 
-  	widget.setData(key);
+  	widget.setData(RESOURCE_KEY,key);
     updateTooltipLanguageFromData(widget);
   }
 
@@ -299,20 +301,20 @@ public class Messages {
   	if (widget == null || widget.isDisposed()) {
   		return;
   	}
-		if (widget.getData() != null) {
-			String sToolTip = MessageText.getString((String) widget.getData());
+		if (widget.getData(RESOURCE_KEY) != null) {
+			String sToolTip = MessageText.getString((String) widget.getData(RESOURCE_KEY));
 			if (widget instanceof CLabel)
-				((CLabel) widget).setToolTipText(sToolTip);
+				Utils.setTT((CLabel) widget,sToolTip);
 			else if (widget instanceof Label)
-				((Label) widget).setToolTipText(sToolTip);
+				Utils.setTT((Label) widget,sToolTip);
 			else if (widget instanceof Text)
-				((Text) widget).setToolTipText(sToolTip);
+				Utils.setTT((Text) widget,sToolTip);
 			else if (widget instanceof Canvas)
-				((Canvas) widget).setToolTipText(sToolTip);
+				Utils.setTT((Canvas) widget,sToolTip);
 			else if (widget instanceof Composite)
-				((Composite) widget).setToolTipText(sToolTip);
+				Utils.setTT((Composite) widget,sToolTip);
 			else if (widget instanceof Control)
-				((Control) widget).setToolTipText(sToolTip);
+				Utils.setTT((Control) widget,sToolTip);
 			else
 				System.out.println("No cast for " + widget.getClass().getName());
 		}

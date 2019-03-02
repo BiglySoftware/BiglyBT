@@ -15,7 +15,10 @@ Getting the basics to compile from source is pretty straightforward:
 
 1. Clone the repo into your favorite IDE
 1. Mark `core/src` and `uis/src` as project roots (source modules)
-1. To the uis module, add `core/lib/*`, `uis/lib/log4j.jar` and one of the swt.jars at `/uis/lib/`
+1. To the uis module, add `core/lib/*`, `uis/lib/log4j.jar` and one of the swt.jars at `/uis/lib/`:<br>
+  `swt-win64.jar` on Windows<br>
+  `swt-cocoa-64.jar` on OSX<br>
+  `swt-linux-64.jar` on Linux (GTK)
 1. To the core module, add `core/lib/*`
 1. Make `uis` module depend on `core`.  `Core` should not depend on `uis`
 
@@ -31,3 +34,9 @@ Running is only few more steps:
   When a normal user is running the app, the working directory is where the jar, executable, and libraries (dll, so, jnilib) are.
 * If you want a separate config dir from the default one, use VM Option `-Dazureus.config.path=<some config path>`
 * Run it
+
+## Release Installer Notes
+
+We build our installers using [Install4j, multi-platform installer builder](https://www.ej-technologies.com/products/install4j/overview.html)
+
+![Install4j Logo](https://www.ej-technologies.com/images/product_banners/install4j_large.png)

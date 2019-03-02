@@ -29,14 +29,6 @@ GenericParameterAdapter
 		throw( new RuntimeException( "Not implemented" ));
 	}
 
-	public int
-	getIntValue(
-		String	key,
-		int		def )
-	{
-		throw( new RuntimeException( "Not implemented" ));
-	}
-
 	public void
 	setIntValue(
 		String	key,
@@ -55,14 +47,6 @@ GenericParameterAdapter
 	public Boolean
 	getBooleanValue(
 		String	key )
-	{
-		throw( new RuntimeException( "Not implemented" ));
-	}
-
-	public Boolean
-	getBooleanValue(
-		String		key,
-		Boolean		def )
 	{
 		throw( new RuntimeException( "Not implemented" ));
 	}
@@ -93,14 +77,6 @@ GenericParameterAdapter
 	public String
 	getStringListValue(
 		String		key )
-	{
-		throw( new RuntimeException( "Not implemented" ));
-	}
-
-	public String
-	getStringListValue(
-		String		key,
-		String		def )
 	{
 		throw( new RuntimeException( "Not implemented" ));
 	}

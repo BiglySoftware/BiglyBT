@@ -202,51 +202,56 @@ TOTorrentCreateImpl
 
 		throws TOTorrentException
 	{
-		int ignored = constructFixed( torrent_base, piece_length );
-
-			// linkage map doesn't include ignored files, if it is supplied, so take account of this when
-			// checking that linkages have resolved correctly
-
-		if ( 	linkage_map.size() > 0 &&
-				linkage_map.size() != ( linked_tf_map.size() + ignored )){
-
-			throw( new TOTorrentException( "TOTorrentCreate: unresolved linkages: required=" + linkage_map + ", resolved=" + linked_tf_map,
-					TOTorrentException.RT_DECODE_FAILS));
-		}
-
-		if ( linked_tf_map.size() > 0 ){
-
-			Map	m = getAdditionalMapProperty( TOTorrent.AZUREUS_PRIVATE_PROPERTIES );
-
-			if ( m == null ){
-
-				m = new HashMap();
-
-				setAdditionalMapProperty( TOTorrent.AZUREUS_PRIVATE_PROPERTIES, m );
+		try{
+			int ignored = constructFixed( torrent_base, piece_length );
+	
+				// linkage map doesn't include ignored files, if it is supplied, so take account of this when
+				// checking that linkages have resolved correctly
+	
+			if ( 	linkage_map.size() > 0 &&
+					linkage_map.size() != ( linked_tf_map.size() + ignored )){
+	
+				throw( new TOTorrentException( "TOTorrentCreate: unresolved linkages: required=" + linkage_map + ", resolved=" + linked_tf_map,
+						TOTorrentException.RT_DECODE_FAILS));
 			}
-
-			if ( linked_tf_map.size() < 100 ){
-
-				m.put( TorrentUtils.TORRENT_AZ_PROP_INITIAL_LINKAGE, linked_tf_map );
-
-			}else{
-
-				ByteArrayOutputStream baos = new ByteArrayOutputStream( 100*1024 );
-
-				try{
-					GZIPOutputStream gos = new GZIPOutputStream( baos );
-
-					gos.write( BEncoder.encode( linked_tf_map ));
-
-					gos.close();
-
-					m.put( TorrentUtils.TORRENT_AZ_PROP_INITIAL_LINKAGE2, baos.toByteArray() );
-
-				}catch( Throwable e ){
-
-					throw( new TOTorrentException( "Failed to serialise linkage", TOTorrentException.RT_WRITE_FAILS ));
+	
+			if ( linked_tf_map.size() > 0 ){
+	
+				Map	m = getAdditionalMapProperty( TOTorrent.AZUREUS_PRIVATE_PROPERTIES );
+	
+				if ( m == null ){
+	
+					m = new HashMap();
+	
+					setAdditionalMapProperty( TOTorrent.AZUREUS_PRIVATE_PROPERTIES, m );
+				}
+	
+				if ( linked_tf_map.size() < 100 ){
+	
+					m.put( TorrentUtils.TORRENT_AZ_PROP_INITIAL_LINKAGE, linked_tf_map );
+	
+				}else{
+	
+					ByteArrayOutputStream baos = new ByteArrayOutputStream( 100*1024 );
+	
+					try{
+						GZIPOutputStream gos = new GZIPOutputStream( baos );
+	
+						gos.write( BEncoder.encode( linked_tf_map ));
+	
+						gos.close();
+	
+						m.put( TorrentUtils.TORRENT_AZ_PROP_INITIAL_LINKAGE2, baos.toByteArray() );
+	
+					}catch( Throwable e ){
+	
+						throw( new TOTorrentException( "Failed to serialise linkage", TOTorrentException.RT_WRITE_FAILS ));
+					}
 				}
 			}
+		}finally{
+			
+			setConstructed();
 		}
 	}
 

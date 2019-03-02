@@ -900,7 +900,7 @@ SESecurityManagerImpl
 	}
 
 	private boolean													hack_constructor_tried;
-	private Constructor<SESecurityManagerImpl.SETrustingManager>	hack_constructor;
+	private Constructor	hack_constructor;
 
 	public TrustManager[]
 	getAllTrustingTrustManager()
@@ -921,6 +921,13 @@ SESecurityManagerImpl
 
 				hack_constructor_tried = true;
 
+				boolean hasClassX509ExtendedTrustManager = false;
+				try {
+					Class.forName("javax.net.ssl.X509ExtendedTrustManager");
+					hasClassX509ExtendedTrustManager = true;
+				} catch (ClassNotFoundException ignore) {
+				}
+				
 				try{
 					/* no longer needed as only Java8+
 
@@ -953,7 +960,10 @@ SESecurityManagerImpl
 							bytes );
 					*/
 
-					hack_constructor = SESecurityManagerImpl.SETrustingManager.class.getConstructor( X509TrustManager.class);
+					if (hasClassX509ExtendedTrustManager) {
+						// Android doesn't have X509ExtendedTrustManager until API24, so use reflection
+						hack_constructor =  Class.forName("com.biglybt.core.security.impl.SETrustingManager").getConstructor( X509TrustManager.class);
+					}
 
 				}catch( Throwable e ){
 				}
@@ -962,7 +972,7 @@ SESecurityManagerImpl
 			if ( hack_constructor != null ){
 
 				try{
-					all_trusting_manager = new TrustManager[]{ hack_constructor.newInstance( delegate ) };
+					all_trusting_manager = new TrustManager[]{(TrustManager) hack_constructor.newInstance( delegate )};
 
 				}catch( Throwable e ){
 				}
@@ -1002,81 +1012,6 @@ SESecurityManagerImpl
 		}finally{
 
 			this_mon.exit();
-		}
-	}
-
-	/*package com.biglybt.core.security.impl;
-
-	import java.net.Socket;
-	import java.security.cert.CertificateException;
-	import java.security.cert.X509Certificate;
-
-	import javax.net.ssl.SSLEngine;
-	import javax.net.ssl.X509ExtendedTrustManager;
-	import javax.net.ssl.X509TrustManager;
-	*/
-
-	public static class
-	SETrustingManager
-		extends X509ExtendedTrustManager
-	{
-		private X509TrustManager		delegate;
-
-		public
-		SETrustingManager(
-			X509TrustManager	_delegate )
-		{
-			delegate = _delegate;
-		}
-
-		@Override
-		public void checkClientTrusted(X509Certificate[] chain, String authType)
-				throws CertificateException {
-			if ( delegate != null ){
-				delegate.checkClientTrusted( chain, authType );
-			}
-		}
-		@Override
-		public void checkClientTrusted(X509Certificate[] chain, String authType,
-				Socket socket) throws CertificateException {
-			if ( delegate != null ){
-				delegate.checkClientTrusted( chain, authType );
-			}
-		}
-		@Override
-		public void checkClientTrusted(X509Certificate[] chain, String authType,
-				SSLEngine engine) throws CertificateException {
-			if ( delegate != null ){
-				delegate.checkClientTrusted( chain, authType );
-			}
-		}
-		@Override
-		public void checkServerTrusted(X509Certificate[] chain, String authType)
-				throws CertificateException {
-			if ( delegate != null ){
-				delegate.checkServerTrusted( chain, authType );
-			}
-		}
-		@Override
-		public void checkServerTrusted(X509Certificate[] chain, String authType,
-				Socket socket) throws CertificateException {
-			if ( delegate != null ){
-				delegate.checkServerTrusted( chain, authType );
-			}
-		}
-		@Override
-		public void checkServerTrusted(X509Certificate[] chain, String authType,
-				SSLEngine engine) throws CertificateException {
-			if ( delegate != null ){
-				delegate.checkServerTrusted( chain, authType );
-			}
-		}
-		@Override
-		public X509Certificate[] getAcceptedIssuers() {
-			if ( delegate != null ){
-				return( delegate.getAcceptedIssuers());
-			}
-			return null;
 		}
 	}
 

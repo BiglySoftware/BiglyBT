@@ -71,7 +71,7 @@ public class IpFilterEditor {
     final Text textDescription = new Text(shell, SWT.BORDER);
     GridData gridData = new GridData();
     gridData.widthHint = 300;
-    Utils.setLayoutData(textDescription, gridData);
+    textDescription.setLayoutData(gridData);
 
     label = new Label(shell, SWT.NULL);
     Messages.setLanguageText(label, "ConfigView.section.ipfilter.start");
@@ -79,7 +79,7 @@ public class IpFilterEditor {
     final Text textStartIp = new Text(shell, SWT.BORDER);
     gridData = new GridData();
     gridData.widthHint = 120;
-    Utils.setLayoutData(textStartIp, gridData);
+    textStartIp.setLayoutData(gridData);
 
     label = new Label(shell, SWT.NULL);
     Messages.setLanguageText(label, "ConfigView.section.ipfilter.end");
@@ -87,7 +87,7 @@ public class IpFilterEditor {
     final Text textEndIp = new Text(shell, SWT.BORDER);
     gridData = new GridData();
     gridData.widthHint = 120;
-    Utils.setLayoutData(textEndIp, gridData);
+    textEndIp.setLayoutData(gridData);
 
     final Button ok = new Button(shell, SWT.PUSH);
     Messages.setLanguageText(ok, "Button.ok");
@@ -96,7 +96,7 @@ public class IpFilterEditor {
     gridData = new GridData(GridData.HORIZONTAL_ALIGN_END | GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 2;
     gridData.widthHint = 100;
-    Utils.setLayoutData(ok, gridData);
+    ok.setLayoutData(gridData);
     ok.addListener(SWT.Selection, new Listener() {
       @Override
       public void handleEvent(Event arg0) {

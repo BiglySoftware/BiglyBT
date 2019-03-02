@@ -637,6 +637,22 @@ public class PlatformTorrentUtils
 	}
 
 	public static void setHasBeenOpened(DownloadManager dm, boolean opened) {
+		setHasBeenOpened( dm, -1, opened );
+	}
+	
+	public static void setHasBeenOpened(DownloadManager dm, int file_index, boolean opened) {
+		
+		if ( file_index != -1 ){
+			int ff = dm.getDownloadState().getFileFlags( file_index);
+			
+			if ( opened ){
+				ff |= DownloadManagerState.FILE_FLAG_NOT_NEW;
+			}else{
+				ff &= ~DownloadManagerState.FILE_FLAG_NOT_NEW;
+			}
+
+			dm.getDownloadState().setFileFlags( file_index, ff );
+		}
 		TOTorrent torrent = dm.getTorrent();
 		if (torrent == null) {
 			return;

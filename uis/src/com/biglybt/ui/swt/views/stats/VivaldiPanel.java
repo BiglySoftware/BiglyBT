@@ -36,7 +36,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.ui.swt.ImageRepository;
-
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.core.dht.control.DHTControlContact;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.dht.netcoords.DHTNetworkPosition;
@@ -130,7 +130,7 @@ public class VivaldiPanel {
 			public void paintControl(PaintEvent e) {
 				if (img != null && !img.isDisposed()) {
 					Rectangle bounds = img.getBounds();
-					if (bounds.width >= e.width && bounds.height >= e.height) {
+					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 						if (alpha != 255) {
 							try {
 								e.gc.setAlpha(alpha);
@@ -229,11 +229,11 @@ public class VivaldiPanel {
     					",h=" + (((int)(height*10000))/10000.0f) + 
     					")";
 
-    			canvas.setToolTipText( tt );
+    			Utils.setTT(canvas, tt );
 
     		}else{
 
-    			canvas.setToolTipText( "Use mouse wheel to scale, left+drag to move, right+drag to rotate" );
+    			Utils.setTT(canvas, "Use mouse wheel to scale, left+drag to move, right+drag to rotate" );
     		}
     	}
     });

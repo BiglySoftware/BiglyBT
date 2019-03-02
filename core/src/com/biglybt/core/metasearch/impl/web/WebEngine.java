@@ -30,6 +30,7 @@ import com.biglybt.util.MapUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.metasearch.SearchException;
 import com.biglybt.core.metasearch.SearchLoginException;
@@ -38,6 +39,7 @@ import com.biglybt.core.metasearch.impl.DateParser;
 import com.biglybt.core.metasearch.impl.DateParserRegex;
 import com.biglybt.core.metasearch.impl.EngineImpl;
 import com.biglybt.core.metasearch.impl.MetaSearchImpl;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.util.*;
@@ -64,6 +66,13 @@ WebEngine
 	static private final Pattern rootURLPattern = Pattern.compile("((?:tor:)?https?://[^/]+)");
 	static private final Pattern baseURLPattern = Pattern.compile("((?:tor:)?https?://.*/)");
 
+	static private int search_timeout_secs;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+				"search.rss.template.timeout",
+				(name)->{ search_timeout_secs = COConfigurationManager.getIntParameter( name); });
+	}
 
 	private String 			searchURLFormat;
 	private String 			timeZone;
@@ -159,7 +168,8 @@ WebEngine
 			mappings[i] =
 				new FieldMapping(
 						MapUtils.getMapString( m, "name", null ),
-					((Long)m.get( "field")).intValue());
+					((Long)m.get( "field")).intValue(),
+						MapUtils.getMapString(m, "post_filter", null));
 		}
 
 		init();
@@ -237,6 +247,7 @@ WebEngine
 
 			MapUtils.setMapString( m, "name", fm.getName());
 			m.put( "field", new Long( fm.getField()));
+			MapUtils.setMapString(m, "post_filter", fm.getPostFilter());
 
 			maps.add( m );
 		}
@@ -323,7 +334,7 @@ WebEngine
 				continue;
 			}
 
-			conv_maps.add( new FieldMapping( field_name, field_id ));
+			conv_maps.add( new FieldMapping( field_name, field_id, MapUtils.getMapString(m, "post_filter", null) ));
 		}
 
 		mappings = (FieldMapping[])conv_maps.toArray( new FieldMapping[conv_maps.size()]);
@@ -398,6 +409,11 @@ WebEngine
 				}else{
 
 					entry.put( "group_nb", fm.getName());
+				}
+
+				String filter = fm.getPostFilter();
+				if (filter != null) {
+					entry.put("post_filter", filter);
 				}
 			}
 		}
@@ -579,6 +595,11 @@ WebEngine
 
 		throws SearchException
 	{
+		if ( NetworkAdmin.getSingleton().hasMissingForcedBind()){
+
+			throw( new SearchException( "Forced bind address is missing" ));
+		}
+		
 		String searchURL = searchURLFormat;
 
 		String lc_url = searchURL.toLowerCase( Locale.US );
@@ -933,7 +954,8 @@ WebEngine
 
 						initial_url_rd.setProperty( "URL_Connect_Timeout", 10*1000 );
 
-						initial_url_rd.setProperty( "URL_Read_Timeout", 10*1000 );
+						
+						initial_url_rd.setProperty( "URL_Read_Timeout", search_timeout_secs * 1000 );
 					}
 
 					mr_rd = rdf.getMetaRefreshDownloader( initial_url_rd );

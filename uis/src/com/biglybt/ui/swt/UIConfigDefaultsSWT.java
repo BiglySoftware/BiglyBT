@@ -20,7 +20,7 @@ package com.biglybt.ui.swt;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.util.Constants;
-
+import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 
 /**
@@ -47,7 +47,15 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Open Details", false);
 		def.addParameter("Open Seeding Details", false);
 		def.addParameter("IconBar.enabled", true);
-
+		
+		def.addParameter("IconBar.visible.play", true);
+		def.addParameter("IconBar.visible.run", true);
+		def.addParameter("IconBar.visible.top", true);
+		def.addParameter("IconBar.visible.up", true);
+		def.addParameter("IconBar.visible.down", true);
+		def.addParameter("IconBar.visible.bottom", true);
+		def.addParameter("IconBar.start.stop.separate", false );
+		
 		def.addParameter("DefaultDir.BestGuess", false);
 		def.addParameter("DefaultDir.AutoUpdate", true);
 		def.addParameter("DefaultDir.AutoSave.AutoRename", true);
@@ -121,7 +129,8 @@ public class UIConfigDefaultsSWT
 		def.addParameter("auto_remove_inactive_items", false);
 		def.addParameter("show_torrents_menu", true);
 		def.addParameter("mainwindow.search.history.enabled", true);
-
+		def.addParameter("Disable All Tooltips", false);
+		
 		def.addParameter("MyTorrentsView.table.style", 0);
 
 		def.addParameter("v3.topbar.height", 60);
@@ -130,6 +139,8 @@ public class UIConfigDefaultsSWT
 		def.addParameter("ui.toolbar.uiswitcher", false);
 		def.addParameter("Table.extendedErase", false);
 		def.addParameter("Table.useTree", false);
+		def.addParameter("Table.tooltip.disable", false);
+		def.addParameter("Table.sort.intuitive", false);
 
 		if ("az2".equalsIgnoreCase(COConfigurationManager.getStringParameter("ui", "az3"))) {
 			def.addParameter("v3.Show Welcome", false);
@@ -138,9 +149,12 @@ public class UIConfigDefaultsSWT
 			def.addParameter(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY + ".viewmode", 1);
 			def.addParameter(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_DL + "DL.viewmode", 1);
 			def.addParameter(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_CD + ".viewmode", 1);
+			
+			def.addParameter("Library.ShowTabsInTorrentView", 0 );
 		}
 
-
+		def.addParameter( "list.dm.dblclick", "-1" );
+		
 		def.addParameter( "browser.external.id", "system" );
 		def.addParameter( "browser.internal.disable", false );
 		def.addParameter( "browser.internal.proxy.id", "none" );
@@ -151,9 +165,24 @@ public class UIConfigDefaultsSWT
 
 		def.addParameter( "Library.ShowCatButtons", true );
 		def.addParameter( "Library.ShowTagButtons", false );
+		def.addParameter( "Library.showFancyMenu", true );
 		def.addParameter( "Library.ShowTagButtons.CompOnly", false );
+		def.addParameter( "Library.ShowTagButtons.Inclusive", true );
 		def.addParameter( "open.torrent.window.rename.on.tlf.change", true );
-
+		
+		// def.addParameter( "Library.TorrentViewSplitHorizontal", true );
+		
+		def.addParameter( "Library.TorrentViewSplitMode", 0 );
+		
+		if ( COConfigurationManager.hasParameter("Library.TorrentViewSplitHorizontal", true )){
+			
+			boolean old = COConfigurationManager.getBooleanParameter( "Library.TorrentViewSplitHorizontal");
+			
+			COConfigurationManager.setParameter( "Library.TorrentViewSplitMode", old?0:1 );
+			
+			COConfigurationManager.removeParameter( "Library.TorrentViewSplitHorizontal" );
+		}
+		
 		def.addParameter( "Library.LaunchWebsiteInBrowser", true );
 		def.addParameter( "Library.LaunchWebsiteInBrowserAnon", false );
 		def.addParameter( "Library.LaunchWebsiteInBrowserDirList", false );
@@ -166,6 +195,47 @@ public class UIConfigDefaultsSWT
 
 		def.addParameter( "tag.add.customize.default.checked", true );
 		
-		def.addParameter( "PeersView.status.prioritysort", true );
+		def.addParameter( "MyTorrents.status.sortorder", 0 );
+		def.addParameter( "ui.forceDorkTray", false);
+		
+		if ( COConfigurationManager.hasParameter("PeersView.status.prioritysort", true )){
+			
+			boolean priority_sort = COConfigurationManager.getBooleanParameter("PeersView.status.prioritysort");
+			
+			COConfigurationManager.removeParameter( "PeersView.status.prioritysort" );
+			
+			if ( priority_sort ){
+				
+				COConfigurationManager.setParameter("MyTorrents.status.sortorder", 1 );
+			}
+		}
+		
+		int tid_def = 0;
+		
+		if ( COConfigurationManager.hasParameter("MyTorrents.status.sortorder", true )){
+			
+			tid_def = COConfigurationManager.getIntParameter("MyTorrents.status.sortorder");
+			
+			COConfigurationManager.removeParameter( "MyTorrents.status.sortorder" );
+		}
+			
+		def.addParameter( "MyTorrents.status.change.fg", true );
+		
+		for ( String tid: TableManager.TABLE_MYTORRENTS_ALL ){
+			def.addParameter( "MyTorrents.status.sortorder." + tid, 0 );
+			
+			if ( tid_def != 0 ){
+				COConfigurationManager.setParameter( "MyTorrents.status.sortorder." + tid, tid_def );
+			}
+		}
+		
+		def.addParameter( "XferStats.show.samples", true );
+		def.addParameter( "browser.external.non.pub", true );
+
+		String orderDef = "";
+		for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){
+			orderDef += (orderDef.isEmpty()?"":", ") + (i+1);
+		}
+		def.addParameter( "Side Bar Top Level Order", orderDef );
 	}
 }

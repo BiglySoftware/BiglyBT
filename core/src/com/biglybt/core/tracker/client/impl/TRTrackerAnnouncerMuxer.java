@@ -775,7 +775,7 @@ TRTrackerAnnouncerMuxer
 			{
 				try{
 					TRTrackerBTAnnouncerImpl an =
-						new TRTrackerBTAnnouncerImpl( getTorrent(), new TOTorrentAnnounceURLSet[0], networks, true, getHelper());
+						new TRTrackerBTAnnouncerImpl( getTorrentHashOverride(), getTorrent(), new TOTorrentAnnounceURLSet[0], networks, true, getHelper());
 
 					an.cloneFrom( announcer );
 
@@ -819,7 +819,7 @@ TRTrackerAnnouncerMuxer
 
 		}else{
 
-			announcer = new TRTrackerBTAnnouncerImpl( torrent, sets, networks, is_manual, getHelper());
+			announcer = new TRTrackerBTAnnouncerImpl( getTorrentHashOverride(), torrent, sets, networks, is_manual, getHelper());
 		}
 
 		for ( TOTorrentAnnounceURLSet set: sets ){
@@ -1020,6 +1020,19 @@ TRTrackerAnnouncerMuxer
 		return( null );
 	}
 
+	private HashWrapper
+	getTorrentHashOverride()
+	{
+		if ( f_provider != null ){
+			
+			return( f_provider.getTorrentHashOverride());
+			
+		}else{
+			
+			return( null );
+		}
+	}
+	
 	@Override
 	public URL
 	getTrackerURL()

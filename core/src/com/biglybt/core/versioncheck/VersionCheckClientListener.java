@@ -31,4 +31,9 @@ VersionCheckClientListener
 	public void
 	versionCheckStarted(
 		String reason );
+	
+	public void
+	versionCheckCompleted(
+		String 		reason,
+		boolean		changed );
 }

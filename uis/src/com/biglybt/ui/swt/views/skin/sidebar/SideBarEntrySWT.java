@@ -35,6 +35,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -64,6 +65,7 @@ import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
+import com.biglybt.ui.swt.skin.SWTSkinObjectListener;
 import com.biglybt.ui.swt.skin.SWTSkinProperties;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -85,7 +87,49 @@ public class SideBarEntrySWT
 	private static final boolean PAINT_BG = !Constants.isUnix;
 
 	private static final boolean DO_OUR_OWN_TREE_INDENT = true;
+		
+	private static final int		EXPANDO_WIDTH				= 12;
+	private static int				EXPANDO_INDENT;
 
+	private static boolean DO_EXPANDO_INDENT;
+	private static boolean COMPACT_SIDEBAR;
+
+	private static int				EXPANDO_LEFT_INDENT;
+	private static int				EXPANDO_INDENT_INITIAL;
+	
+	private static boolean			IMAGELEFT_HIDDEN;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[]{
+					"Side Bar Indent Expanders",
+					"Side Bar Compact View",
+					"Side Bar Hide Left Icon",
+				},
+				new ParameterListener(){
+					
+					@Override
+					public void parameterChanged(String name ){
+						
+						DO_EXPANDO_INDENT = COConfigurationManager.getBooleanParameter( "Side Bar Indent Expanders" );
+						COMPACT_SIDEBAR = COConfigurationManager.getBooleanParameter( "Side Bar Compact View" );
+						
+						boolean osx_standard = Constants.isOSX && !COMPACT_SIDEBAR;  // align things with semi-visible native twisty
+						
+						if ( osx_standard ) {
+							EXPANDO_INDENT = 15;
+						}else{
+							EXPANDO_INDENT = 10;
+						}
+						
+						EXPANDO_LEFT_INDENT 	= COMPACT_SIDEBAR?4:(osx_standard?8:10);
+						EXPANDO_INDENT_INITIAL	= EXPANDO_WIDTH + EXPANDO_LEFT_INDENT;
+						
+						IMAGELEFT_HIDDEN = COConfigurationManager.getBooleanParameter( "Side Bar Hide Left Icon" );
+					}
+				});
+	}
+	
 	private static final int SIDEBAR_SPACING = 2;
 
 	private int IMAGELEFT_SIZE = 20;
@@ -94,6 +138,20 @@ public class SideBarEntrySWT
 
 	private static final boolean ALWAYS_IMAGE_GAP = true;
 
+	private static int CLOSE_IMAGE_POSITION = 0;
+	
+	static{
+		
+		COConfigurationManager.addAndFireParameterListener(
+			"Side Bar Close Position",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String name ){
+					CLOSE_IMAGE_POSITION = COConfigurationManager.getIntParameter( name );
+				}
+			});
+	}
 	/*
 	private static final String[] default_indicator_colors = {
 		"#000000",
@@ -145,6 +203,7 @@ public class SideBarEntrySWT
 	private long 	attention_start = -1;
 	private boolean	attention_flash_on;
 
+	private Boolean	closeWasUserInitiated;
 
 	public SideBarEntrySWT(SideBar sidebar, SWTSkin _skin, String id,
 			String parentViewID) {
@@ -164,8 +223,6 @@ public class SideBarEntrySWT
 
 		this.sidebar = sidebar;
 
-		IMAGELEFT_GAP = Utils.adjustPXForDPI(IMAGELEFT_GAP);
-		IMAGELEFT_SIZE = Utils.adjustPXForDPI(IMAGELEFT_SIZE);
 		updateColors();
 	}
 
@@ -422,6 +479,17 @@ public class SideBarEntrySWT
 		});
 	}
 
+	public boolean 
+	close(boolean force, boolean userInitiated ) {
+		if (!super.close(force)) {
+			return false;
+		}
+		
+		closeWasUserInitiated = userInitiated;
+		
+		return( close( force ));
+	}
+		
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#close()
 	 */
@@ -568,6 +636,26 @@ public class SideBarEntrySWT
 					view.setPluginSkinObject(soContents);
 					view.initialize(viewComposite);
 
+						// without this some views get messed up layouts (chat view for example)
+					
+					viewComposite.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
+
+					soContents.addListener(
+							new SWTSkinObjectListener(){
+								
+								@Override
+								public Object eventOccured(SWTSkinObject skinObject, int eventType, Object params){
+									if ( eventType == SWTSkinObjectListener.EVENT_OBFUSCATE ){
+										Map data = new HashMap();
+										data.put( "image", (Image)params );
+										data.put( "obfuscateTitle",false );
+										
+										view.triggerEvent(UISWTViewEvent.TYPE_OBFUSCATE, data);
+									}
+									return null;
+								}
+							});
+					
 					if (PAINT_BG) {
 						if ( swtItem != null ){
 							swtItem.setText(view.getFullTitle());
@@ -795,6 +883,12 @@ public class SideBarEntrySWT
 
 		return true;
 	}
+	
+	public boolean
+	isReallyDisposed()
+	{
+		return( swtItem == null || swtItem.isDisposed());
+	}
 
 	/* (non-Javadoc)
 	 * @see BaseMdiEntry#show()
@@ -896,23 +990,65 @@ public class SideBarEntrySWT
 		} else if (DO_OUR_OWN_TREE_INDENT) {
 			TreeItem tempItem = treeItem.getParentItem();
 			int indent;
-			if (!isCollapseDisabled() && tempItem == null && !Utils.isGTK) {
-				indent = 22;
+			if (tempItem == null && !Utils.isGTK) {
+				indent = EXPANDO_INDENT_INITIAL;
 			} else {
-				indent = 10;
+				indent = DO_EXPANDO_INDENT?EXPANDO_INDENT_INITIAL:EXPANDO_LEFT_INDENT;
 			}
 			while (tempItem != null) {
-				indent += 10;
+				indent += EXPANDO_INDENT;
 				tempItem = tempItem.getParentItem();
 			}
 			if (SideBar.USE_NATIVE_EXPANDER && Utils.isGTK) {
 				indent += 5;
 			}
+			
+			if ( treeItem.getItemCount() > 0	&& !SideBar.USE_NATIVE_EXPANDER) {
+				// expando visible
+			}else{
+				if ( COMPACT_SIDEBAR ){
+					indent -= EXPANDO_INDENT/2;
+				}
+			}
 			itemBounds.x = indent;
 		}
-		int x1IndicatorOfs = SIDEBAR_SPACING;
+		int x1IndicatorOfs;
 		int x0IndicatorOfs = itemBounds.x;
 
+		if  ( CLOSE_IMAGE_POSITION == 2 ){
+			
+				// never 
+			
+			x1IndicatorOfs = 0;
+			
+		}else if ( CLOSE_IMAGE_POSITION == 1 ){
+			
+				// on right 
+			
+			x1IndicatorOfs = 0;
+			
+			if (isCloseable()) {
+				Image img = selected ? imgCloseSelected : imgClose;
+				Rectangle closeArea = img.getBounds();
+				closeArea.x = treeArea.width - closeArea.width - SIDEBAR_SPACING
+						- x1IndicatorOfs;
+				closeArea.y = itemBounds.y + (itemBounds.height - closeArea.height) / 2;
+				x1IndicatorOfs += closeArea.width + SIDEBAR_SPACING;
+
+				//gc.setBackground(treeItem.getBackground());
+				//gc.fillRectangle(closeArea);
+
+				gc.drawImage(img, closeArea.x, closeArea.y);
+				treeItem.setData("closeArea", closeArea);
+			}else{
+				x1IndicatorOfs += imgClose.getBounds().width + SIDEBAR_SPACING;
+			}
+		}else{
+			
+			x1IndicatorOfs = SIDEBAR_SPACING;
+		}
+		
+		
 		//System.out.println(System.currentTimeMillis() + "] refresh " + getId() + "; " + itemBounds + ";clip=" + event.gc.getClipping() + ";eb=" + event.getBounds());
 		if (viewTitleInfo != null) {
 			String textIndicator = null;
@@ -929,7 +1065,7 @@ public class SideBarEntrySWT
 				//	textSize.x = minTextSize.x + 2;
 				//}
 
-				int width = textSize.x + Utils.adjustPXForDPI(10);
+				int width = textSize.x + 10;
 				x1IndicatorOfs += width + SIDEBAR_SPACING;
 				int startX = treeArea.width - x1IndicatorOfs;
 
@@ -1012,21 +1148,24 @@ public class SideBarEntrySWT
 		//	x1IndicatorOfs = 30;
 		//}
 
-		if (isCloseable()) {
-			Image img = selected ? imgCloseSelected : imgClose;
-			Rectangle closeArea = img.getBounds();
-			closeArea.x = treeArea.width - closeArea.width - SIDEBAR_SPACING
-					- x1IndicatorOfs;
-			closeArea.y = itemBounds.y + (itemBounds.height - closeArea.height) / 2;
-			x1IndicatorOfs += closeArea.width + SIDEBAR_SPACING;
-
-			//gc.setBackground(treeItem.getBackground());
-			//gc.fillRectangle(closeArea);
-
-			gc.drawImage(img, closeArea.x, closeArea.y);
-			treeItem.setData("closeArea", closeArea);
+		if ( CLOSE_IMAGE_POSITION == 0 ){
+			
+			if (isCloseable()) {
+				Image img = selected ? imgCloseSelected : imgClose;
+				Rectangle closeArea = img.getBounds();
+				closeArea.x = treeArea.width - closeArea.width - SIDEBAR_SPACING
+						- x1IndicatorOfs;
+				closeArea.y = itemBounds.y + (itemBounds.height - closeArea.height) / 2;
+				x1IndicatorOfs += closeArea.width + SIDEBAR_SPACING;
+	
+				//gc.setBackground(treeItem.getBackground());
+				//gc.fillRectangle(closeArea);
+	
+				gc.drawImage(img, closeArea.x, closeArea.y);
+				treeItem.setData("closeArea", closeArea);
+			}
 		}
-
+		
 		MdiEntryVitalityImage[] vitalityImages = getVitalityImages();
 		for (int i = 0; i < vitalityImages.length; i++) {
 			SideBarVitalityImageSWT vitalityImage = (SideBarVitalityImageSWT) vitalityImages[i];
@@ -1069,7 +1208,10 @@ public class SideBarEntrySWT
 			suffix = null;
 			imageLeft = getImageLeft(null);
 		}
-		if (imageLeft != null) {
+		
+		if ( IMAGELEFT_HIDDEN ){
+			
+		}else if (imageLeft != null ) {
 			Rectangle clipping = gc.getClipping();
 			Utils.setClipping(gc, new Rectangle(x0IndicatorOfs, itemBounds.y, IMAGELEFT_SIZE,
 					itemBounds.height));
@@ -1205,14 +1347,13 @@ public class SideBarEntrySWT
 
 		// OSX overrides the twisty, and we can't use the default twisty
 		// on Windows because it doesn't have transparency and looks ugly
-		if (treeItem.getItemCount() > 0 && !isCollapseDisabled()
-				&& !SideBar.USE_NATIVE_EXPANDER) {
+		if (treeItem.getItemCount() > 0	&& !SideBar.USE_NATIVE_EXPANDER) {
 			gc.setAntialias(SWT.ON);
 			Color oldBG = gc.getBackground();
 			gc.setBackground(Colors.getSystemColor(event.display, SWT.COLOR_LIST_FOREGROUND));
-			int baseX = 22; // itemBounds.x;
+			int baseX = DO_EXPANDO_INDENT?itemBounds.x:EXPANDO_INDENT_INITIAL;
 			if (treeItem.getExpanded()) {
-				int xStart = 12;
+				int xStart = EXPANDO_WIDTH;
 				int arrowSize = 8;
 				int yStart = itemBounds.height - (itemBounds.height + arrowSize) / 2;
 				gc.fillPolygon(new int[] {
@@ -1224,7 +1365,7 @@ public class SideBarEntrySWT
 					itemBounds.y + yStart + arrowSize,
 				});
 			} else {
-				int xStart = 12;
+				int xStart = EXPANDO_WIDTH;
 				int arrowSize = 8;
 				int yStart = itemBounds.height - (itemBounds.height + arrowSize) / 2;
 				gc.fillPolygon(new int[] {
@@ -1372,18 +1513,29 @@ public class SideBarEntrySWT
 		mdi.removeItem(SideBarEntrySWT.this);
 
 		SWTThread instance = SWTThread.getInstance();
+		
 		boolean user = instance != null && !instance.isTerminated();
-		if (user) {
-			// It's not a user close if the parent is making the children (this entry)
-			// close.  parent will be marked disposed, so use that as a check.
-  		String parentID = getParentID();
-  		if (parentID != null) {
-  			MdiEntry entry = mdi.getEntry(parentID);
-  			if (entry != null && entry.isDisposed()) {
-  				user = false;
-  			}
-  		}
+		
+		if ( user ){
+			
+			if ( closeWasUserInitiated != null ){
+				
+				user = closeWasUserInitiated;
+				
+			}else{
+			
+					// It's not a user close if the parent is making the children (this entry)
+					// close.  parent will be marked disposed, so use that as a check.
+		  		String parentID = getParentID();
+		  		if (parentID != null) {
+		  			MdiEntry entry = mdi.getEntry(parentID);
+		  			if (entry != null && entry.isDisposed()) {
+		  				user = false;
+		  			}
+		  		}
+			}
 		}
+		
 		triggerCloseListeners(user);
 
 		SWTSkinObject so = getSkinObject();

@@ -27,13 +27,13 @@ package com.biglybt.pif.sharing;
 public interface
 ShareResourceEvent
 {
-	public static final int	ET_ATTRIBUTE_CHANGED	= 1;
+	public static final int	ET_ATTRIBUTE_CHANGED	= 1;	// data = TorrentAttribute
+	public static final int	ET_PROPERTY_CHANGED		= 2;	// data = [key,old,new]
 
 	public int
 	getType();
 
 		/**
-		 * For attribute change the value is an instance of TorrentAttribute
 		 * @return
 		 */
 

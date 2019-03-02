@@ -214,8 +214,8 @@ public class ConfigSectionSeedingAutoStarting implements UISWTConfigSection {
       boostQRPeersLabels[i] = (i+1) + " " + peers; //$NON-NLS-1$
       boostQRPeersValues[i] = (i+1);
     }
-    gridData = new GridData();
-    new IntListParameter(cNoTimeNone, "StartStopManager_iMinPeersToBoostNoSeeds", boostQRPeersLabels, boostQRPeersValues);
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    new IntListParameter(cNoTimeNone, "StartStopManager_iMinPeersToBoostNoSeeds", boostQRPeersLabels, boostQRPeersValues).setLayoutData(gridData);;
 
     Control[] controlsNoTimeNone = { cNoTimeNone };
     rparamPeerSeed.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(controlsNoTimeNone));

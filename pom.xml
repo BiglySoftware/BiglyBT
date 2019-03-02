@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.biglybt</groupId>
 	<artifactId>biglybt-parent</artifactId>
-	<version>1.0.2.1-SNAPSHOT</version>
+	<version>1.6.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>BiglyBT - Parent</name>
 
@@ -49,6 +49,11 @@
 					<groupId>io.takari.maven.plugins</groupId>
 					<artifactId>takari-lifecycle-plugin</artifactId>
 					<version>1.12.6</version>
+					<extensions>true</extensions>
+					<configuration>
+						<source>${java.version}</source>
+						<target>${java.version}</target>
+					</configuration>
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
@@ -67,6 +72,12 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>io.takari.maven.plugins</groupId>
+				<artifactId>takari-lifecycle-plugin</artifactId>
+			</plugin>
+		</plugins>
 	</build>
 
 	<scm>

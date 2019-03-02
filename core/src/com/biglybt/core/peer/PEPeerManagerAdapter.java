@@ -33,6 +33,12 @@ PEPeerManagerAdapter
 	public String
 	getDisplayName();
 
+	public byte[]
+	getTargetHash();
+	
+	public int 
+	getTCPListeningPortNumber();
+	
 	public int
 	getUploadRateLimitBytesPerSecond();
 

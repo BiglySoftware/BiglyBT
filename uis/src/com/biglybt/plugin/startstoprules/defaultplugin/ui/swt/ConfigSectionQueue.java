@@ -28,11 +28,9 @@ import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.pif.UISWTConfigSection;
 
 import com.biglybt.pif.ui.config.ConfigSection;
 
@@ -67,7 +65,7 @@ public class ConfigSectionQueue implements UISWTConfigSection
 
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL
 				| GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(cSection, gridData);
+		cSection.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		layout.marginHeight = 0;
@@ -91,20 +89,19 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		gridData = new GridData();
 		gridData.horizontalIndent = 15;
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(cMaxDownloads, gridData);
+		cMaxDownloads.setLayoutData(gridData);
 
 		ImageLoader imageLoader = ImageLoader.getInstance();
 		label = new Label(cMaxDownloads, SWT.NULL);
 		imageLoader.setLabelImage(label, "subitem");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		Utils.setLayoutData(label, gridData);
-
-		label = new Label(cMaxDownloads, SWT.NULL);
-		Messages.setLanguageText(label, "ConfigView.label.ignoreChecking");
+		label.setLayoutData(gridData);
 
 		gridData = new GridData();
-		BooleanParameter ignoreChecking = new BooleanParameter(
-				cMaxDownloads, "StartStopManager_bMaxDownloadIgnoreChecking");
+		gridData.horizontalSpan = 2;
+		BooleanParameter ignoreChecking = new BooleanParameter(cMaxDownloads,
+				"StartStopManager_bMaxDownloadIgnoreChecking",
+				"ConfigView.label.ignoreChecking");
 
 		ignoreChecking.setLayoutData(gridData);
 
@@ -126,12 +123,12 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		gridData = new GridData();
 		gridData.horizontalIndent = 15;
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(cMaxActiveOptionsArea, gridData);
+		cMaxActiveOptionsArea.setLayoutData(gridData);
 
 		label = new Label(cMaxActiveOptionsArea, SWT.NULL);
 		imageLoader.setLabelImage(label, "subitem");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 
 		gridData = new GridData();
 		BooleanParameter maxActiveWhenSeedingEnabled = new BooleanParameter(
@@ -165,12 +162,12 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		gridData = new GridData();
 		gridData.horizontalIndent = 15;
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(cMinMaxLink, gridData);
-		
+		cMinMaxLink.setLayoutData(gridData);
+
 		label = new Label(cMinMaxLink, SWT.NULL);
 		imageLoader.setLabelImage(label, "subitem");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 
 		gridData = new GridData();
 		gridData.horizontalSpan = 2;
@@ -275,12 +272,12 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		gridData = new GridData();
 		gridData.horizontalIndent = 15;
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(cMinSpeedActiveCDing, gridData);
+		cMinSpeedActiveCDing.setLayoutData(gridData);
 
 		label = new Label(cMinSpeedActiveCDing, SWT.NULL);
 		imageLoader.setLabelImage(label, "subitem");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 
 		label = new Label(cMinSpeedActiveCDing, SWT.NULL);
 		Messages.setLanguageText(label, "ConfigView.label.maxStalledSeeding");
@@ -294,7 +291,7 @@ public class ConfigSectionQueue implements UISWTConfigSection
 		label = new Label(cMinSpeedActiveCDing, SWT.NULL);
 		imageLoader.setLabelImage(label, "subitem");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 
 		gridData = new GridData();
 		gridData.horizontalSpan = 2;

@@ -58,6 +58,7 @@ public class ColumnSearchResultSite
 		Image img = entry.getIcon();
 
 		if (img != null && !img.isDisposed()) {
+			gc.fillRectangle( cellBounds );
 			Rectangle imgBounds = img.getBounds();
 			if (cellBounds.width < imgBounds.width || cellBounds.height < imgBounds.height) {
 				float dx = (float) cellBounds.width / imgBounds.width;

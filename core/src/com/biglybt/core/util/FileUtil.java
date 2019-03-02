@@ -1,4 +1,5 @@
- /*
+
+/*
  * Created on Oct 10, 2003
  * Modified Apr 14, 2004 by Alon Rohter
  * Copyright (C) Azureus Software, Inc, All Rights Reserved.
@@ -27,8 +28,11 @@ package com.biglybt.core.util;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.FileStore;
 import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributeView;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
 import java.util.*;
  import java.util.regex.Matcher;
  import java.util.regex.Pattern;
@@ -1552,9 +1556,63 @@ public class FileUtil {
     {
     	return renameFile(from_file, to_file, fail_on_existing_directory, null, null);
     }
-        
+    
     public static boolean
     renameFile(
+   		File        		from_file,
+   		File        		to_file,
+   		boolean     		fail_on_existing_directory,
+   		FileFilter  		file_filter,
+   		ProgressListener	pl )
+    {
+		FileTime from_last_modified = null;
+		FileTime from_last_access	= null;
+		FileTime from_created		= null;
+		
+   		try{
+			BasicFileAttributeView from_attributes_view 	= Files.getFileAttributeView( from_file.toPath(), BasicFileAttributeView.class);
+
+			BasicFileAttributes from_attributes = from_attributes_view.readAttributes();
+
+			from_last_modified 	= from_attributes.lastModifiedTime();
+			from_last_access	= from_attributes.lastAccessTime();
+			from_created		= from_attributes.creationTime();
+			
+		}catch( Throwable e ){
+		}
+   		
+    	boolean result = renameFileSupport( from_file, to_file, fail_on_existing_directory, file_filter, pl );
+
+    	if ( result ){
+
+    			// try to maintain the file times if they now differ 
+    		
+    		try{
+    			BasicFileAttributeView to_attributes_view 		= Files.getFileAttributeView( to_file.toPath(), BasicFileAttributeView.class);
+
+     			BasicFileAttributes to_attributes 	= to_attributes_view.readAttributes();
+
+    			FileTime to_last_modified 	= to_attributes.lastModifiedTime();
+    			FileTime to_last_access		= to_attributes.lastAccessTime();
+    			FileTime to_created			= to_attributes.creationTime();
+
+    			if (	from_last_modified.equals( to_last_modified ) && 
+    					from_last_access.equals( to_last_access ) && 
+    					from_created.equals( to_created )){
+
+    			}else{
+    				
+    				to_attributes_view.setTimes( from_last_modified, from_last_access, from_created );
+    			}
+    		}catch( Throwable e ){
+    		}
+    	}
+
+    	return( result );
+    }
+        
+    private static boolean
+    renameFileSupport(
     	File        		from_file,
     	File        		to_file,
     	boolean     		fail_on_existing_directory,
@@ -1595,6 +1653,32 @@ public class FileUtil {
 
             return( false );
         }
+        
+		if ( pl != null ){
+			
+			while( true ){
+				
+				int state =  pl.getState();
+				
+				if ( state == ProgressListener.ST_PAUSED ){
+		
+					try{
+						Thread.sleep(250);
+					}catch( Throwable e ){
+					}
+					
+				}else if ( state == ProgressListener.ST_CANCELLED ){
+					
+					Debug.out( "renameFile: Cancelled" );
+					
+					return( false );
+					
+				}else{
+					
+					break;
+				}
+			}
+		}	
         
     	File to_file_parent = to_file.getParentFile();
     	
@@ -1690,7 +1774,57 @@ public class FileUtil {
     			try{
     				// null - We don't want to use the file filter, it only refers to source paths.
     				
-                    if ( !renameFile( tf, ff, false, null, null )){
+                    if ( !renameFile( 
+                    		tf, 
+                    		ff, 
+                    		false, 
+                    		null, 
+                    		new ProgressListener()
+                    		{
+                    			public void
+                    			setTotalSize(
+                    				long	size )
+                    			{
+                    			}
+                    			
+                    			@Override
+                    			public void 
+                    			setCurrentFile(File file)
+                    			{
+                    				if ( pl != null ){
+                    					try{
+                    						pl.setCurrentFile( file );
+                    					}catch( Throwable e ){
+                    						Debug.out( e );
+                    					}
+                    				}
+                    			}
+                    			public void
+                    			bytesDone(
+                    				long	num )
+                    			{
+                    				if ( pl != null ){
+                    					try{
+                    						pl.bytesDone( -num );
+                    					}catch( Throwable e ){
+                    						Debug.out( e );
+                    					}
+                    				}
+                    			}
+                    			
+                    			public int
+                    			getState()
+                    			{
+                    				return( ST_NORMAL );
+                    			}
+                    			
+                    			public void
+                    			complete()
+                    			{
+                    				
+                    			}
+                    		}))
+                    {
     					Debug.out( "renameFile: recovery - failed to move file '" + tf.toString()
 										+ "' to '" + ff.toString() + "'" );
     				}
@@ -1708,9 +1842,22 @@ public class FileUtil {
     		boolean	same_drive = false;
     		
 			try{
+				/* FileStore is minSDK 26 on Android
 				FileStore fs1 = Files.getFileStore( from_file.toPath());
 				FileStore fs2 = Files.getFileStore( to_file_parent.toPath());
-				
+				*/
+
+				Class claPath = Class.forName("java.nio.file.Path");
+				Class claFiles = Class.forName("java.nio.file.Files");
+				Method mPath_getFileStore = claFiles.getMethod("getFileStore", claPath);
+
+				Method mToPath = from_file.getClass().getMethod("toPath");
+				/* Path */ Object from_file_toPath = mToPath.invoke(from_file);
+				/* Path */ Object to_file_parent_toPath = mToPath.invoke(to_file_parent);
+
+				/* FileStore */ Object fs1 = mPath_getFileStore.invoke(null, from_file_toPath);
+				/* FileStore */ Object fs2 = mPath_getFileStore.invoke(null, to_file_parent_toPath);
+
    				if ( fs1.equals( fs2 )){
 
    					same_drive = true;
@@ -1744,6 +1891,18 @@ public class FileUtil {
     			
     		}else{
     			
+    			if ( pl != null ){
+					
+					try{
+						
+						pl.setCurrentFile( from_file );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+				}
+    			
     			if ( from_file.renameTo( to_file )){
     				
     				if ( pl != null ){
@@ -1776,6 +1935,18 @@ public class FileUtil {
     	File				to_file,
     	ProgressListener	pl )
     {
+    	if ( pl != null ){
+			
+			try{
+				
+				pl.setCurrentFile( from_file );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+    	
     	boolean		success	= false;
 
     	// can't rename across file systems under Linux - try copy+delete
@@ -1803,6 +1974,31 @@ public class FileUtil {
 
     		while( rem > 0 ){
 
+    			if ( pl != null ){
+    				
+    				while( true ){
+    					
+    					int state =  pl.getState();
+    					
+    					if ( state == ProgressListener.ST_PAUSED ){
+    			
+    						try{
+    							Thread.sleep(250);
+    							
+    						}catch( Throwable e ){
+    						}
+    						
+    					}else if ( state == ProgressListener.ST_CANCELLED ){
+    						
+    						throw( new IOException( "Cancelled" ));
+    						   						
+    					}else{
+    						
+    						break;
+    					}
+    				}
+    			}
+    			
     			int	to_read = (int)Math.min( rem, BUFFER_SIZE );
 
     			bb.position( 0 );
@@ -2047,8 +2243,17 @@ public class FileUtil {
     	File		file,
     	String		text )
     {
+    	return( writeStringAsFile( file, text, "UTF-8" ));
+    }
+
+    public static boolean
+    writeStringAsFile(
+    	File		file,
+    	String		text,
+    	String		charset )
+    {
     	try{
-    		return( writeBytesAsFile2( file.getAbsolutePath(), text.getBytes( "UTF-8" )));
+    		return( writeBytesAsFile2( file.getAbsolutePath(), text.getBytes( charset )));
 
     	}catch( Throwable e ){
 
@@ -2057,7 +2262,7 @@ public class FileUtil {
     		return( false );
     	}
     }
-
+    
     public static void
     writeBytesAsFile(
     	String filename,
@@ -2721,13 +2926,24 @@ public class FileUtil {
 	public interface
 	ProgressListener
 	{
+		public int ST_NORMAL	= 1;
+		public int ST_PAUSED	= 2;
+		public int ST_CANCELLED	= 3;
+		
 		public void
 		setTotalSize(
 			long	size );
 		
 		public void
+		setCurrentFile(
+			File	file );
+		
+		public void
 		bytesDone(
 			long	num );
+		
+		public int
+		getState();
 		
 		public void
 		complete();

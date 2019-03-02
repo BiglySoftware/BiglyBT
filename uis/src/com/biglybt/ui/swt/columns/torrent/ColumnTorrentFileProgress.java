@@ -23,24 +23,25 @@ import java.util.Arrays;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.ui.tables.TableCellMouseEvent;
-import com.biglybt.pif.ui.tables.TableRowMouseEvent;
+import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TorrentUtil;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
-import com.biglybt.ui.swt.views.FilesViewMenuUtil;
-
-import com.biglybt.ui.common.table.TableRowCore;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinProperties;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.FontUtils;
+import com.biglybt.ui.swt.views.FilesViewMenuUtil;
+
+import com.biglybt.pif.ui.tables.TableCellMouseEvent;
+import com.biglybt.pif.ui.tables.TableRowMouseEvent;
 
 public class ColumnTorrentFileProgress
 {
@@ -131,8 +132,8 @@ public class ColumnTorrentFileProgress
 
 		if ( progressWidth > 0 ){
 			if (progressFont == null) {
-				progressFont = FontUtils.getFontWithHeight(gc.getFont(), gc,
-						PROGRESS_HEIGHT - 2);
+				progressFont = FontUtils.getFontWithHeight(gc.getFont(),
+						PROGRESS_HEIGHT - 2, SWT.DEFAULT);
 			}
 			gc.setFont(progressFont);
 			gc.setForeground(ColorCache.getSchemedColor(display, fileInfo.isSkipped()

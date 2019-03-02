@@ -328,15 +328,34 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 		formData.left = new FormAttachment(0, 0);
 		formData.right = new FormAttachment(100, 0);
 		formData.bottom = new FormAttachment(100, 0);
-		int iSplitAt = configMan.getIntParameter(props_prefix + ".SplitAt",
-				3000);
-		// Was stored at whole
-		if (iSplitAt < 100) {
-			iSplitAt *= 100;
+		
+		int iSplitAt = configMan.getIntParameter(props_prefix + ".SplitAt2", 300000 );
+
+		if ( iSplitAt == 300000 ){
+			
+				// was stored with less precision
+			
+			String legacy_key = props_prefix + ".SplitAt";
+			
+			if ( configMan.hasParameter( legacy_key, false )){
+				
+				iSplitAt = configMan.getIntParameter( legacy_key,	3000);
+				
+				configMan.removeParameter( legacy_key );
+				
+					// Was stored at whole
+				
+				if ( iSplitAt < 100 ){
+					
+					iSplitAt *= 100;
+				}
+				
+				iSplitAt *= 100;
+			}
 		}
 
 		// pct is % bottom
-		double pct = iSplitAt / 10000.0;
+		double pct = iSplitAt / 1000000.0;
 		if (pct < 0.03) {
 			pct = 0.03;
 		} else if (pct > 0.97) {
@@ -399,11 +418,19 @@ public class TableViewSWT_TabsCommon implements SelectedContentListener
 				fdHeightChanger.height = height;
 
 				Double l = new Double((double) height / area.height);
+
 				sash.setData("PCT", l);
 				if (e.detail != SWT.DRAG) {
 					ConfigurationManager configMan = ConfigurationManager.getInstance();
-					configMan.setParameter(props_prefix + ".SplitAt",
-							(int) (l.doubleValue() * 10000));
+					double d_split_at = l.doubleValue() * 1000000;
+					
+					int split_at = (int)d_split_at;
+					
+					if ( d_split_at - split_at > 0 ){
+						split_at++;
+					}
+
+					configMan.setParameter(props_prefix + ".SplitAt2", split_at);
 				}
 				form.layout();
 				// sometimes sash cheese is left

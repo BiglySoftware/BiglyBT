@@ -76,6 +76,9 @@ import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.speedmanager.SpeedManager;
 import com.biglybt.core.speedmanager.SpeedManagerAdapter;
 import com.biglybt.core.speedmanager.SpeedManagerFactory;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
@@ -213,7 +216,10 @@ CoreImpl
 	volatile boolean				stopped;
 	volatile boolean				restarting;
 
-	final CopyOnWriteList		lifecycle_listeners		= new CopyOnWriteList();
+	private final CopyOnWriteList<CoreLifecycleListener>	lifecycle_listeners		= new CopyOnWriteList<>();
+	
+	private boolean					ll_started;
+	
 	private final List				operation_listeners		= new ArrayList();
 
 	private final CopyOnWriteList<PowerManagementListener>	power_listeners = new CopyOnWriteList<>();
@@ -371,7 +377,7 @@ CoreImpl
 						getPorts()
 						{
 							return( new int[]{
-								TCPNetworkManager.getSingleton().getTCPListeningPortNumber(),
+								TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber(),
 								UDPNetworkManager.getSingleton().getUDPListeningPortNumber(),
 								UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber()});
 	
@@ -1009,19 +1015,7 @@ CoreImpl
 			pluginload.run();
 		}
 
-
-
-
-
-		// Disable async loading of existing torrents, because there are many things
-		// (like hosting) that require all the torrents to be loaded.  While we
-		// can write code for each of these cases to wait until the torrents are
-		// loaded, it's a pretty big job to find them all and fix all their quirks.
-		// Too big of a job for this late in the release stage.
-		// Other example is the tracker plugin that is coded in a way where it must
-		// always publish a complete rss feed
-
-		global_manager = GlobalManagerFactory.create(this, null, 0);
+		global_manager = GlobalManagerFactory.create( this, null );
 
 		if (stopped) {
 			System.err.println("Core stopped while starting");
@@ -1384,8 +1378,15 @@ CoreImpl
 					Debug.out( "PlatformManager: init failed", e );
 				}
 
-				Iterator	it = lifecycle_listeners.iterator();
-
+				Iterator	it;
+				
+				synchronized( lifecycle_listeners ){
+				
+					it = lifecycle_listeners.iterator();
+					
+					ll_started = true;
+				}
+				
 				while( it.hasNext()){
 
 					try{
@@ -1616,7 +1617,7 @@ CoreImpl
 			"ShutFail",
 			SystemTime.getOffsetTime( 60*1000 ),
 			new TimerEventPerformer()
-			{
+			{				
 				boolean	die_die_die;
 
 				@Override
@@ -1624,6 +1625,11 @@ CoreImpl
 				perform(
 					TimerEvent event )
 				{	
+						// it has been a minute - turn off logging if it is enabled as this can significantly
+						// slow things down
+					
+					Logger.setClosingTakingTooLong();
+					
 					last_progress.set( SystemTime.getMonotonousTime());
 					
 						// hang around while things are making progress
@@ -2163,6 +2169,7 @@ CoreImpl
 				new String[]{
 					"Prevent Sleep Downloading",
 					"Prevent Sleep FP Seeding",
+					"Prevent Sleep Tag",
 				},
 				new ParameterListener()
 				{
@@ -2180,6 +2187,16 @@ CoreImpl
 
 							boolean	active = dl || se;
 
+							if ( !active ){
+								
+								String tag = COConfigurationManager.getStringParameter( "Prevent Sleep Tag" );
+																
+								if ( !tag.trim().isEmpty()){
+								
+									active = true;
+								}
+							}
+							
 							try{
 								setPreventComputerSleep( PlatformManagerFactory.getPlatformManager(), active, "config change" );
 
@@ -2242,7 +2259,7 @@ CoreImpl
 				{
 					String	dl_act = COConfigurationManager.getStringParameter( "On Downloading Complete Do" );
 					String	se_act = COConfigurationManager.getStringParameter( "On Seeding Complete Do" );
-
+										
 					int		restart_after = COConfigurationManager.getIntParameter( "Auto Restart When Idle" );
 
 					synchronized( this ){
@@ -2307,6 +2324,17 @@ CoreImpl
 		boolean ps_downloading 	= COConfigurationManager.getBooleanParameter( "Prevent Sleep Downloading" );
 		boolean ps_fp_seed	 	= COConfigurationManager.getBooleanParameter( "Prevent Sleep FP Seeding" );
 
+		String tag_name = COConfigurationManager.getStringParameter( "Prevent Sleep Tag" );
+
+		Tag	ps_tag = null;
+		
+		tag_name = tag_name.trim();
+		
+		if ( !tag_name.isEmpty()){
+		
+			ps_tag = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTag( tag_name, true );
+		}
+		
 		String	declining_subsystems = "";
 
 		for ( PowerManagementListener l: power_listeners ){
@@ -2322,13 +2350,18 @@ CoreImpl
 				Debug.out( e );
 			}
 		}
+		
+		PlatformManager platform = PlatformManagerFactory.getPlatformManager();
 
-		if ( declining_subsystems.length() == 0 && !( ps_downloading || ps_fp_seed )){
+		if ( declining_subsystems.length() == 0 && !( ps_downloading || ps_fp_seed || ps_tag != null )){
 
+			if ( platform.getPreventComputerSleep()){
+				
+				setPreventComputerSleep( platform, false, "configuration change" );
+			}
+			
 			return;
 		}
-
-		PlatformManager platform = PlatformManagerFactory.getPlatformManager();
 
 		boolean	prevent_sleep 	= false;
 		String	prevent_reason	= null;
@@ -2338,6 +2371,11 @@ CoreImpl
 			prevent_sleep 	= true;
 			prevent_reason 	= "subsystems declined sleep: " +  declining_subsystems;
 
+		}else if ( ps_tag != null && ps_tag.getTaggedCount() > 0 ){
+			
+			prevent_sleep 	= true;
+			prevent_reason 	= "tag '" + tag_name + "' has entries";
+			
 		}else{
 
 			List<DownloadManager> managers = getGlobalManager().getDownloadManagers();
@@ -3019,11 +3057,23 @@ CoreImpl
 	addLifecycleListener(
 		CoreLifecycleListener l )
 	{
-		lifecycle_listeners.add(l);
-
+		boolean	lls;
+		
+		synchronized( lifecycle_listeners ){
+		
+			lifecycle_listeners.add(l);
+			
+			lls = ll_started;
+		}
+		
 		if ( global_manager != null ){
 
 			l.componentCreated( this, global_manager );
+		}
+		
+		if ( lls ){
+			
+			l.started( this );
 		}
 	}
 

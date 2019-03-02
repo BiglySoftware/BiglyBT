@@ -490,7 +490,7 @@ public class TabbedMDI
 		String tt = MessageText.getString("label.click.to.restore");
 		for (int i = 0; i < items.length; i++) {
 			CTabItem tabItem = items[i];
-			tabItem.setToolTipText(tt);
+			Utils.setTT(tabItem,tt);
 			Control control = tabItem.getControl();
 			if (control != null && !control.isDisposed()) {
 				tabItem.getControl().setVisible(false);
@@ -537,7 +537,7 @@ public class TabbedMDI
 
 			for (int i = 0; i < items.length; i++) {
 				CTabItem tabItem = items[i];
-				tabItem.setToolTipText(tt);
+				Utils.setTT(tabItem,tt);
 			}
 		}
 
@@ -604,7 +604,7 @@ public class TabbedMDI
   		}
 		}
 
-		MdiEntry oldEntry = currentEntry;
+		MdiEntry oldEntry = getCurrentEntrySWT();
 		if (newEntry == oldEntry && oldEntry != null) {
 			((BaseMdiEntry) newEntry).show();
 			triggerSelectionListener(newEntry, newEntry);
@@ -615,9 +615,9 @@ public class TabbedMDI
 			oldEntry.hide();
 		}
 
-		currentEntry = (MdiEntrySWT) newEntry; // assumed MdiEntrySWT
+		setCurrentEntry((MdiEntrySWT)newEntry );
 
-		if (currentEntry instanceof BaseMdiEntry) {
+		if (newEntry instanceof BaseMdiEntry) {
 			((BaseMdiEntry) newEntry).show();
 		}
 
@@ -727,7 +727,7 @@ public class TabbedMDI
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
 				if (tabFolder.getItemCount() == 0) {
-					currentEntry = null;
+					setCurrentEntry( null );
 				}
 			}
 		});
@@ -739,7 +739,7 @@ public class TabbedMDI
 
   			@Override
   			public void runSupport() {
-  				if (currentEntry != null || tabFolder.isDisposed()) {
+  				if (getCurrentEntry() != null || tabFolder.isDisposed()) {
   					return;
   				}
   				CTabItem selection = tabFolder.getSelection();

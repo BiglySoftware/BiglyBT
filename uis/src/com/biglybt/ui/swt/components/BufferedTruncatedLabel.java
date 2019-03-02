@@ -26,6 +26,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.ui.swt.Utils;
 
 /**
  * @author parg
@@ -124,7 +125,7 @@ BufferedTruncatedLabel
   	if (isDisposed()) {
   		return;
   	}
-    label.setToolTipText(toolTipText);
+    Utils.setTT(label,toolTipText);
   }
 
 }

@@ -104,6 +104,11 @@ DHTTransportUDP
 	public static final byte PROTOCOL_VERSION_PACKET_FLAGS2			= 53;	// flags2 field added to request and reply packets
 	public static final byte PROTOCOL_VERSION_PROC_TIME				= 54;	// added local processing time (5713)
 
+		// BiglyBT enhancements
+	
+	public static final byte PROTOCOL_VERSION_BBT_UPLOAD_STATS		= 55;	// 1601_B16+
+
+	
 		// multiple networks reformats the requests and therefore needs the above fix to work
 
 	public static final byte PROTOCOL_VERSION_NETWORKS				= PROTOCOL_VERSION_FIX_ORIGINATOR;
@@ -124,7 +129,7 @@ DHTTransportUDP
 
 	public static final byte PROTOCOL_VERSION_AZ_MAIN					= Helper.getVersion( PROTOCOL_VERSION_PROC_TIME );
 	public static final byte PROTOCOL_VERSION_AZ_CVS					= Helper.getVersion( PROTOCOL_VERSION_PROC_TIME );
-	public static final byte PROTOCOL_VERSION_BIGLYBT					= Helper.getVersion( PROTOCOL_VERSION_PROC_TIME );
+	public static final byte PROTOCOL_VERSION_BIGLYBT					= Helper.getVersion( PROTOCOL_VERSION_BBT_UPLOAD_STATS );
 
 	public static final byte PROTOCOL_VERSION_MIN_AZ					= Helper.getVersion( PROTOCOL_VERSION_VIVALDI_OPTIONAL );
 	public static final byte PROTOCOL_VERSION_MIN_AZ_CVS				= Helper.getVersion( PROTOCOL_VERSION_VIVALDI_OPTIONAL );

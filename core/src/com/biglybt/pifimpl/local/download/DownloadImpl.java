@@ -376,6 +376,16 @@ DownloadImpl
 	}
 
 	@Override
+	public void setStopReason(String reason) {
+		setUserData( UD_KEY_STOP_REASON, reason );
+	}
+
+	@Override
+	public String getStopReason() {
+		return((String)getUserData( UD_KEY_STOP_REASON ));
+	}
+
+	@Override
 	public void
 	stopAndQueue()
 
@@ -437,7 +447,7 @@ DownloadImpl
 	public void
 	pause()
 	{
-		download_manager.pause();
+		download_manager.pause( false );
 	}
 
 	@Override
@@ -1120,12 +1130,13 @@ DownloadImpl
 
 		return( last_scrape_result );
 	}
-
+	
 	@Override
 	public DownloadScrapeResult
-	getAggregatedScrapeResult()
+	getAggregatedScrapeResult(
+		boolean		allow_caching )
 	{
-		DownloadScrapeResult	result = getAggregatedScrapeResultSupport();
+		DownloadScrapeResult	result = getAggregatedScrapeResultSupport( allow_caching );
 
 		if ( result != null ){
 
@@ -1169,8 +1180,31 @@ DownloadImpl
 		return( result );
 	}
 
+	private volatile long 					last_asr_calc = -1;
+	private volatile DownloadScrapeResult	last_asr;
+	
 	private DownloadScrapeResult
-	getAggregatedScrapeResultSupport()
+	getAggregatedScrapeResultSupport(
+		boolean	allow_caching )
+	{
+		long	now = SystemTime.getMonotonousTime();
+		
+		DownloadScrapeResult last = last_asr;
+		
+		if ( allow_caching && last != null && now - last_asr_calc < 10*1000 ){
+			
+			return( last );
+		}
+		
+		last_asr = last = getAggregatedScrapeResultSupport0();
+		
+		last_asr_calc = now;
+		
+		return( last );
+	}
+	
+	private DownloadScrapeResult
+	getAggregatedScrapeResultSupport0()
 	{
 		List<TRTrackerScraperResponse> responses = download_manager.getGoodTrackerScrapeResponses();
 

@@ -171,7 +171,7 @@ DownloadManagerStats
 		boolean		required );
 
 		/**
-		 * Get any recent history. Returned values are send rate, receive rate and peer-swarm average
+		 * Get any recent history. Returned values are send rate, receive rate, peer-swarm average and eta
 		 * @return
 		 */
 

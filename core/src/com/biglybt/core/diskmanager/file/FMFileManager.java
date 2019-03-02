@@ -51,4 +51,8 @@ FMFileManager
 		TOTorrent			torrent,
 		int					from_index,
 		File				from_file );
+
+	public boolean
+	hasLinks(
+		TOTorrent			torrent	);
 }

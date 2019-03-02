@@ -136,6 +136,9 @@ public class ColorCache
 
 		Color color = mapColors.get(key);
 		if (color == null || color.isDisposed()) {
+			if ( device== null ){
+				return( null );	// allow peeking of cache
+			}
 			try {
 				if (red < 0) {
 					red = 0;

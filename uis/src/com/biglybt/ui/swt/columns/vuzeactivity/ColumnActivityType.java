@@ -73,7 +73,7 @@ public class ColumnActivityType
 				imgIcon = imageLoader.getUrlImage(iconID,
 						new ImageDownloaderListener() {
 							@Override
-							public void imageDownloaded(Image image,
+							public void imageDownloaded(Image image, String key, 
 							                            boolean returnedImmediately) {
 								if (returnedImmediately) {
 									return;

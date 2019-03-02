@@ -107,7 +107,7 @@ public class UISwitcherWindow
 			Label title = new Label(shell, SWT.WRAP);
 			gd = new GridData(GridData.FILL_HORIZONTAL);
 			gd.verticalIndent = 3;
-			Utils.setLayoutData(title, gd);
+			title.setLayoutData(gd);
 
 			Messages.setLanguageText(title, CFG_PREFIX + "text");
 
@@ -148,7 +148,7 @@ public class UISwitcherWindow
 
 			Composite cCenter = new Composite(shell, SWT.NONE);
 			cCenter.setLayout(new GridLayout());
-			Utils.setLayoutData(cCenter, new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
+			cCenter.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 
 			for (int i = 0; i < IDS.length; i++) {
 
@@ -156,7 +156,7 @@ public class UISwitcherWindow
 				c.setBackgroundMode(SWT.INHERIT_DEFAULT);
 				gd = new GridData(GridData.FILL_HORIZONTAL);
 				gd.verticalIndent = 0;
-				Utils.setLayoutData(c, gd);
+				c.setLayoutData(gd);
 				GridLayout gridLayout = new GridLayout(1, false);
 				gridLayout.horizontalSpacing = 0;
 				gridLayout.marginWidth = 5;
@@ -221,7 +221,7 @@ public class UISwitcherWindow
 				gd = new GridData(GridData.FILL_BOTH);
 				gd.horizontalIndent = 20;
 				gd.verticalAlignment = SWT.TOP;
-				Utils.setLayoutData(info, gd);
+				info.setLayoutData(gd);
 
 				Messages.setLanguageText(info, CFG_PREFIX + IDS[i] + ".text");
 				info.addListener(SWT.MouseDown, radioListener);
@@ -236,7 +236,7 @@ public class UISwitcherWindow
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
 			cBottom.setLayout(layout);
-			Utils.setLayoutData(cBottom, new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
+			cBottom.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 
 			btnOk = new Button(cBottom, SWT.PUSH);
 			Messages.setLanguageText(btnOk, "Button.ok");
@@ -254,7 +254,7 @@ public class UISwitcherWindow
 				}
 			});
 			gd = new GridData(GridData.HORIZONTAL_ALIGN_END);
-			Utils.setLayoutData(btnOk, gd);
+			btnOk.setLayoutData(gd);
 
 			shell.addTraverseListener(new TraverseListener() {
 				@Override

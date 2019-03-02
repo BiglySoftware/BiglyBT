@@ -20,7 +20,11 @@
 
 package com.biglybt.core.tag;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+
+import com.biglybt.core.vuzefile.VuzeFile;
 
 
 public interface
@@ -102,6 +106,9 @@ Tag
 	setGroup(
 		String		group );
 
+	public TagGroup
+	getGroupContainer();
+	
 	public String
 	getImageID();
 
@@ -109,6 +116,20 @@ Tag
 	setImageID(
 		String		id );
 
+	public String
+	getImageFile();
+
+	public void
+	setImageFile(
+		String		id );
+	
+	public int
+	getImageSortOrder();
+	
+	public void
+	setImageSortOrder(
+		int		order );
+		
 	public int[]
 	getColor();
 
@@ -116,6 +137,16 @@ Tag
 	setColor(
 		int[]		rgb );
 
+	public boolean
+	isColorDefault();
+	
+	public void
+	setColors(
+		long[]		colors );
+	
+	public long[]
+	getColors();
+	
 	public void
 	addTaggable(
 		Taggable	t );
@@ -134,6 +165,18 @@ Tag
 	hasTaggable(
 		Taggable	t );
 
+	public default List<Tag>
+	dependsOnTags()
+	{
+		return( Collections.emptyList());
+	}
+	
+	public default String
+	getStatus()
+	{
+		return( "" );
+	}
+	
 	public void
 	removeTag();
 
@@ -160,6 +203,9 @@ Tag
 	public void
 	requestAttention();
 
+	public VuzeFile
+	getVuzeFile();
+	
 	public void
 	addTagListener(
 		TagListener	listener,

@@ -252,6 +252,36 @@ implements Iterable<T>
 		}
 	}
 
+	public void
+	setAll(
+		Collection<T>	c )
+	{
+		synchronized( this ){
+
+			mutation_count++;
+
+			if ( visible ){
+
+				List<T>	new_list = use_linked_list? new LinkedList<>( c ): new ArrayList<>( c );
+
+				//mutated();
+
+				list	= new_list;
+
+				visible = false;
+
+			}else{
+				if (list == Collections.EMPTY_LIST) {
+					list = use_linked_list?new LinkedList<T>():new ArrayList<T>(initialCapacity);
+				}else{
+					list.clear();
+				}
+				
+				list.addAll( c );
+			}
+		}
+	}
+	
 	public T
 	get(
 		int		index )

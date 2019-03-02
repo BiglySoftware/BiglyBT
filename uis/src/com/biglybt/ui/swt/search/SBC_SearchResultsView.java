@@ -287,7 +287,7 @@ SBC_SearchResultsView
 				}
 				textWidget.setMessage(MessageText.getString(with?"SubscriptionResults.filter.with.words":"SubscriptionResults.filter.without.words"));
 				GridData gd = new GridData();
-				gd.widthHint = Utils.adjustPXForDPI( 100 );
+				gd.widthHint = 100;
 				textWidget.setLayoutData( gd );
 				textWidget.addModifyListener(
 					new ModifyListener() {
@@ -320,6 +320,7 @@ SBC_SearchResultsView
 					});
 			}
 
+			int kinb = DisplayFormatters.getKinB();
 
 				// min size
 
@@ -335,7 +336,7 @@ SBC_SearchResultsView
 			lblMinSize.setText(MessageText.getString("SubscriptionResults.filter.min_size"));
 			spinMinSize = new Spinner(cMinSize, SWT.BORDER);
 			spinMinSize.setMinimum(0);
-			spinMinSize.setMaximum(100*1024*1024);	// 100 TB should do...
+			spinMinSize.setMaximum(100*kinb*kinb);	// 100 TB should do...
 			spinMinSize.setSelection(minSize);
 			spinMinSize.addListener(SWT.Selection, new Listener() {
 				@Override
@@ -359,7 +360,7 @@ SBC_SearchResultsView
 			lblMaxSize.setText(MessageText.getString("SubscriptionResults.filter.max_size"));
 			spinMaxSize = new Spinner(cMaxSize, SWT.BORDER);
 			spinMaxSize.setMinimum(0);
-			spinMaxSize.setMaximum(100*1024*1024);	// 100 TB should do...
+			spinMaxSize.setMaximum(100*kinb*kinb);	// 100 TB should do...
 			spinMaxSize.setSelection(maxSize);
 			spinMaxSize.addListener(SWT.Selection, new Listener() {
 				@Override
@@ -582,7 +583,7 @@ SBC_SearchResultsView
 
 			GridData gd = new GridData();
 
-			gd.widthHint = Utils.adjustPXForDPI(size.x);
+			gd.widthHint = size.x;
 
 			results.setLayoutData( gd );
 
@@ -766,7 +767,7 @@ SBC_SearchResultsView
 
 											if ( msg != null ){
 
-												indicator.setToolTipText( msg );
+												Utils.setTT(indicator, msg );
 											}
 										}else{
 
@@ -812,11 +813,13 @@ SBC_SearchResultsView
 		if (with_keywords != null && with_keywords.length > 0) {
 			mapFilter.put("text_filter", GeneralUtils.stringJoin(Arrays.asList(with_keywords), " "));
 		}
+		long kinb = DisplayFormatters.getKinB();
+
 		if (maxSize > 0) {
-			mapFilter.put("max_size", maxSize * 1024 * 1024L);
+			mapFilter.put("max_size", maxSize * kinb * kinb);
 		}
 		if (minSize > 0) {
-			mapFilter.put("min_size", minSize * 1024 * 1024L);
+			mapFilter.put("min_size", minSize * kinb * kinb);
 		}
 		//mapFilter.put("category", "");
 		return mapFilter;
@@ -1513,11 +1516,11 @@ SBC_SearchResultsView
 
 				image_loader.getUrlImage(
 					icon,
-					new Point(0, Utils.adjustPXForDPI(16)),
+					new Point(0, 16),
 					new ImageDownloaderListener() {
 
 						@Override
-						public void imageDownloaded(Image image, boolean returnedImmediately) {
+						public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
 
 							f_x[0]	= image;
 

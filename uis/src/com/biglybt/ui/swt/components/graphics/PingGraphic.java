@@ -20,13 +20,22 @@
 package com.biglybt.ui.swt.components.graphics;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.PaintEvent;
+import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Canvas;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 /**
@@ -89,6 +98,39 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
 	externalAverage = b;
   }
 
+  @Override
+  protected void
+  addMenuItems(
+	Menu	menu )
+  {
+	  new MenuItem( menu, SWT.SEPARATOR );
+	  
+	  MenuItem mi_reset = new MenuItem( menu, SWT.PUSH );
+
+	  mi_reset.setText(  MessageText.getString( "label.clear.history" ));
+
+	  mi_reset.addListener(SWT.Selection, new Listener() {
+		  @Override
+		  public void handleEvent(Event e) {
+			  try{
+			   	this_mon.enter();
+			   	
+			   	nbValues		= 0;
+			   	currentPosition	= 0;
+			   		
+			   	for ( int i=0;i<all_values.length;i++ ){
+			   		all_values[i] = new int[all_values[i].length];
+			   	}
+			  }finally{
+				  
+				this_mon.exit();
+			  }
+			  
+			  refresh( true );
+		  }
+	  });
+  }
+  
   public void addIntsValue(int[] new_values) {
     try{
     	this_mon.enter();
@@ -130,6 +172,32 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
     }
   }
 
+  @Override
+  public void initialize(Canvas canvas) {
+  	super.initialize(canvas);
+
+  	drawCanvas.addPaintListener(new PaintListener() {
+			@Override
+			public void paintControl(PaintEvent e) {
+				if (bufferImage != null && !bufferImage.isDisposed()) {
+					Rectangle bounds = bufferImage.getBounds();
+					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
+
+						e.gc.drawImage(bufferImage, e.x, e.y, e.width, e.height, e.x, e.y,
+								e.width, e.height);
+					}
+				}
+			}
+		});
+
+  	drawCanvas.addListener(SWT.Resize, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				drawChart(true);
+			}
+		});
+  }
+  
   @Override
   public void
   refresh( boolean force )
@@ -179,9 +247,15 @@ public class PingGraphic extends ScaledGraphic implements ParameterListener {
       Rectangle bounds = drawCanvas.getClientArea();
 
       //If bufferedImage is not null, dispose it
-      if(bufferImage != null && ! bufferImage.isDisposed())
+      if(bufferImage != null && ! bufferImage.isDisposed()){
         bufferImage.dispose();
-
+      }
+      
+      if ( bounds.isEmpty()){
+    	  bufferImage = null;
+    	  return;
+      }
+      
       bufferImage = new Image(drawCanvas.getDisplay(),bounds);
 
       GC gcImage = new GC(bufferImage);

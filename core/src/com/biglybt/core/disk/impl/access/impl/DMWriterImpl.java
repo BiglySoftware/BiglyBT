@@ -166,12 +166,15 @@ DMWriterImpl
 	public boolean
 	zeroFile(
 		DiskManagerFileInfoImpl file,
-		long 					length ) throws DiskManagerException
+		long					start_from,
+		long 					overall_length ) 
+				
+		throws DiskManagerException
 	{
 		CacheFile	cache_file = file.getCacheFile();
 
 		try{
-			if( length == 0 ){ //create a zero-length file if it is listed in the torrent
+			if ( overall_length == 0 ){ //create a zero-length file if it is listed in the torrent
 
 				cache_file.setLength( 0 );
 
@@ -182,9 +185,19 @@ DMWriterImpl
 
 		        DirectByteBuffer	buffer = DirectByteBufferPool.getBuffer(DirectByteBuffer.AL_DM_ZERO,buffer_size);
 
-		        long remainder	= length;
+		        long remainder	= overall_length;
 				long written 	= 0;
 
+				if ( start_from > 0 ){
+					
+					remainder 	-= start_from;
+					written		+= start_from;
+					
+					disk_manager.setAllocated( disk_manager.getAllocated() + start_from );
+
+					disk_manager.setPercentDone((int) ((disk_manager.getAllocated() * 1000) / totalLength));
+				}
+				
 		        try{
 		        	final byte[]	blanks = new byte[1024];
 

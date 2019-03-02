@@ -38,15 +38,17 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI.TagButtonTrigger;
 
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.ui.UIFunctions.TagReturner;
 
 /**
@@ -58,7 +60,7 @@ import com.biglybt.ui.UIFunctions.TagReturner;
  *
  */
 public class TaggingView
-	implements UISWTViewCoreEventListener, TagTypeListener
+	implements UISWTViewCoreEventListenerEx, TagTypeListener
 {
 	public static final String MSGID_PREFIX = "TaggingView";
 
@@ -72,10 +74,47 @@ public class TaggingView
 
 	private Composite parent;
 
-	private TagButtonsUI tagButtonsUI;
-
+	private TagButtonsUI 	tagButtonsUI;
+	private Button			buttonExplain;
+	
 	public TaggingView() {
 	}
+	
+	@Override
+	public boolean
+	isCloneable()
+	{
+		return( true );
+	}
+
+	@Override
+	public UISWTViewCoreEventListenerEx
+	getClone()
+	{
+		return( new TaggingView());
+	}
+
+	@Override
+	public CloneConstructor
+	getCloneConstructor()
+	{
+		return( 
+			new CloneConstructor()
+			{
+				public Class<? extends UISWTViewCoreEventListenerEx>
+				getCloneClass()
+				{
+					return( TaggingView.class );
+				}
+				
+				public List<Object>
+				getParameters()
+				{
+					return( null );
+				}
+			});
+	}
+	
 
 	// @see com.biglybt.ui.swt.pif.UISWTViewEventListener#eventOccurred(com.biglybt.ui.swt.pif.UISWTViewEvent)
 	@Override
@@ -219,24 +258,12 @@ public class TaggingView
 
 		cMainComposite.setLayout(new GridLayout(1, false));
 
-		TagManager tm = TagManagerFactory.getTagManager();
-		int[] tagTypesWanted = {
-			TagType.TT_DOWNLOAD_MANUAL,
-		//TagType.TT_DOWNLOAD_CATEGORY
-		};
-
 		tagButtonsUI = new TagButtonsUI();
 
-		List<Tag> listAllTags = new ArrayList<>();
+		List<Tag> listAllTags = getTags();
 
-		for (int tagType : tagTypesWanted) {
-
-			TagType tt = tm.getTagType(tagType);
-			List<Tag> tags = tt.getTags();
-			listAllTags.addAll(tags);
-		}
 		tagButtonsUI.buildTagGroup(listAllTags, cMainComposite,
-				new TagButtonTrigger() {
+				true, new TagButtonTrigger() {
 					@Override
 					public void tagButtonTriggered(Tag tag, boolean doTag) {
 						for (Taggable taggable : taggables) {
@@ -248,12 +275,23 @@ public class TaggingView
 							swt_updateFields();
 						}
 					}
+
+					@Override
+					public Boolean tagSelectedOverride(Tag tag) {
+						return null;
+					}
 				});
 
-		Button buttonAdd = new Button(cMainComposite, SWT.PUSH);
-		buttonAdd.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, false, false));
+		Composite buttonComp = new Composite( cMainComposite, SWT.NULL );
+		
+		buttonComp.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
+		
+		buttonComp.setLayout(new GridLayout(2, false));
+		
+		Button buttonAdd = new Button(buttonComp, SWT.PUSH);
+		buttonAdd.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
 		Messages.setLanguageText(buttonAdd, "label.add.tag");
-		buttonAdd.addSelectionListener(new SelectionListener() {
+		buttonAdd.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				TagUIUtils.createManualTag(new TagReturner() {
@@ -270,12 +308,17 @@ public class TaggingView
 					}
 				});
 			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
 		});
 
+		buttonExplain = new Button(buttonComp, SWT.PUSH);
+		buttonExplain.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false));
+		Messages.setLanguageText(buttonExplain, "button.explain");
+		buttonExplain.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				explain();
+			}});
+				
 		sc.addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(ControlEvent e) {
@@ -305,12 +348,60 @@ public class TaggingView
 		if (tagButtonsUI.updateFields(taggables)) {
 			parent.layout();
 		}
+		
+		boolean has_constraint = false;
+
+		if ( taggables != null ){
+						
+			List<Tag> listAllTags = getTags();
+					
+			for ( Tag tag: listAllTags ){
+				
+				TagFeatureProperties	tfp = (TagFeatureProperties)tag;
+				
+				String[] constraint = tfp.getProperty( TagFeatureProperties.PR_CONSTRAINT ).getStringList();
+				
+				if ( constraint != null && constraint.length > 0 ){
+					
+					String s = constraint[0];
+					
+					if ( s.length() > 0 ){
+						
+						has_constraint = true;
+						
+						break;
+					}
+				}
+			}
+		}
+		
+		buttonExplain.setEnabled( has_constraint );
 	}
 
-	// @see com.biglybt.core.tag.TagTypeListener#tagTypeChanged(com.biglybt.core.tag.TagType)
+	private List<Tag>
+	getTags()
+	{
+		TagManager tm = TagManagerFactory.getTagManager();
+		
+		int[] tagTypesWanted = {
+			TagType.TT_DOWNLOAD_MANUAL,
+			//TagType.TT_DOWNLOAD_CATEGORY
+		};
+		
+		List<Tag> listAllTags = new ArrayList<>();
+
+		for (int tagType : tagTypesWanted) {
+
+			TagType tt = tm.getTagType(tagType);
+			List<Tag> tags = tt.getTags();
+			listAllTags.addAll(tags);
+		}
+		
+		return( listAllTags );
+	}
+	
 	@Override
 	public void tagTypeChanged(TagType tag_type) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -319,7 +410,7 @@ public class TaggingView
 		Tag	tag = event.getTag();
 		if ( type == TagEvent.ET_TAG_ADDED ){
 			tagAdded( tag );
-		}else if ( type == TagEvent.ET_TAG_CHANGED ){
+		}else if ( type == TagEvent.ET_TAG_MEMBERSHIP_CHANGED || type == TagEvent.ET_TAG_METADATA_CHANGED ){
 			tagChanged( tag );
 		}else if ( type == TagEvent.ET_TAG_REMOVED ){
 			tagRemoved( tag );
@@ -353,4 +444,46 @@ public class TaggingView
 		});
 	}
 
+	private void
+	explain()
+	{
+		List<Tag> tags = getTags();
+		
+		TagUtils.sortTags( tags );
+		
+		StringBuilder content = new StringBuilder(1024);
+		
+		for ( Taggable t: taggables ){
+			
+			content.append( t.getTaggableName() + "\n\n" );
+			
+			for ( Tag tag: tags ){
+				
+				TagFeatureProperties	tfp = (TagFeatureProperties)tag;
+				
+				TagProperty tfp_constraint = tfp.getProperty( TagFeatureProperties.PR_CONSTRAINT );
+				
+				String[] constraint = tfp_constraint.getStringList();
+				
+				if ( constraint != null && constraint.length > 0 ){
+					
+					String s = constraint[0];
+					
+					if ( s.length() > 0 ){
+
+						String details = tfp_constraint.explainTaggable( t );
+						
+						content.append( tag.getTagName(true) + " -> " + details + "\n" );
+					}
+				}
+			}
+			
+			content.append( "\n" );
+		}
+		
+		new TextViewerWindow(
+				MessageText.getString( "label.details" ),
+				null, content.toString(), false  );
+
+	}
 }

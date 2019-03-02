@@ -28,12 +28,16 @@ import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Shell;
 
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.debug.ObfuscateShell;
+import com.biglybt.ui.swt.debug.UIDebugGenerator;
 
 /**
  * Creates a dialog (shell) and fills it with a skinned layout
@@ -43,6 +47,7 @@ import com.biglybt.ui.swt.components.shell.ShellFactory;
  *
  */
 public class SkinnedDialog
+	implements ObfuscateShell
 {
 	private final String shellSkinObjectID;
 
@@ -59,30 +64,41 @@ public class SkinnedDialog
 	public SkinnedDialog(String skinFile, String shellSkinObjectID) {
 		this(skinFile, shellSkinObjectID, SWT.DIALOG_TRIM | SWT.RESIZE);
 	}
-
+	
 	public SkinnedDialog(String skinFile, String shellSkinObjectID, int style) {
-		this(SkinnedDialog.class.getClassLoader(), "com/biglybt/ui/skin/",
-				skinFile, shellSkinObjectID, style);
+		this(SkinnedDialog.class.getClassLoader(), skinFile, shellSkinObjectID, style);
+	}
+
+	public SkinnedDialog(ClassLoader loader, String skinFile, String shellSkinObjectID, int style) {
+		this( loader, "com/biglybt/ui/skin/", skinFile, shellSkinObjectID, style);
 	}
 
 	public SkinnedDialog(String skinFile, String shellSkinObjectID, Shell parent, int style) {
-		this(SkinnedDialog.class.getClassLoader(), "com/biglybt/ui/skin/",
-				skinFile, shellSkinObjectID, parent, style);
+		this(SkinnedDialog.class.getClassLoader(), skinFile, shellSkinObjectID, parent, style);
 	}
 
+	public SkinnedDialog(ClassLoader loader, String skinFile, String shellSkinObjectID, Shell parent, int style) {
+		this( loader, "com/biglybt/ui/skin/", skinFile, shellSkinObjectID, parent, style);
+	}
+	
 	public SkinnedDialog(ClassLoader cla, String skinPath, String skinFile,
 			String shellSkinObjectID, int style) {
 		this( cla, skinPath, skinFile, shellSkinObjectID, UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell(), style );
 	}
 
-	public SkinnedDialog(ClassLoader cla, String skinPath, String skinFile,
-			String shellSkinObjectID, Shell parent, int style)
+	public SkinnedDialog(ClassLoader cla, String skinPath, String skinFile,	String shellSkinObjectID, Shell parent, int style)
 	{
+		if ( cla == null ){
+			cla = SkinnedDialog.class.getClassLoader();
+		}
+		
 		this.shellSkinObjectID = shellSkinObjectID;
 
 		mainShell = UIFunctionsManagerSWT.getUIFunctionsSWT().getMainShell();
 		shell = ShellFactory.createShell(parent, style);
 
+		shell.setData( "class", this );
+		
 		Utils.setShellIcon(shell);
 
 		SWTSkin skin = SWTSkinFactory.getNonPersistentInstance(cla, skinPath,
@@ -124,6 +140,11 @@ public class SkinnedDialog
 		disposed = false;
 	}
 
+	@Override
+	public Image generateObfuscatedImage() {
+		return( UIDebugGenerator.generateObfuscatedImage( shell ));
+	}
+	
 	protected void setSkin(SWTSkin _skin) {
 		skin = _skin;
 	}
@@ -140,7 +161,12 @@ public class SkinnedDialog
 		skin.layout();
 
 		if (idShellMetrics != null) {
+			boolean had_metrics = Utils.hasShellMetricsConfig( idShellMetrics );
 			Utils.linkShellMetricsToConfig(shell, idShellMetrics);
+			if ( !had_metrics ){
+				Utils.centerWindowRelativeTo(shell, mainShell);
+				Utils.verifyShellRect(shell, true);
+			}
 		} else {
 			Utils.centerWindowRelativeTo(shell, mainShell);
 			Utils.verifyShellRect(shell, true);
@@ -192,7 +218,7 @@ public class SkinnedDialog
 			shell.setText(string);
 		}
 	}
-
+	
 	/**
 	 * @return the shell
 	 */

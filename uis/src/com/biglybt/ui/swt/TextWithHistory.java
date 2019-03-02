@@ -172,7 +172,7 @@ TextWithHistory
 						list.setSelection( curr );
 					}
 					e.doit = false;
-				}else if ( key == SWT.CR || key == SWT.LF ){
+				}else if ( key == SWT.CR || key == SWT.LF || key == SWT.KEYPAD_CR){
 					if (fireSelected()){
 						e.doit = false;
 					}

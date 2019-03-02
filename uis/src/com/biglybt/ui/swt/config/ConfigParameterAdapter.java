@@ -67,6 +67,9 @@ public class ConfigParameterAdapter extends GenericParameterAdapter
 					} else if (valueObject instanceof String) {
 						String s = COConfigurationManager.getStringParameter(parameterName);
 						owner.setValue(s);
+					} else if (valueObject instanceof byte[]) {
+						byte[] b = COConfigurationManager.getByteParameter(parameterName);
+						owner.setValue(b);
 					}
 				} catch (Exception e) {
 					Debug.out("parameterChanged trigger from ConfigParamAdapter "
@@ -80,11 +83,6 @@ public class ConfigParameterAdapter extends GenericParameterAdapter
 	@Override
 	public int getIntValue(String key) {
 		return (COConfigurationManager.getIntParameter(key));
-	}
-
-	@Override
-	public int getIntValue(String key, int def) {
-		return (COConfigurationManager.getIntParameter(key, def));
 	}
 
 	@Override
@@ -131,11 +129,6 @@ public class ConfigParameterAdapter extends GenericParameterAdapter
 	@Override
 	public Boolean getBooleanValue(String key) {
 		return (COConfigurationManager.getBooleanParameter(key));
-	}
-
-	@Override
-	public Boolean getBooleanValue(String key, Boolean def) {
-		return (COConfigurationManager.getBooleanParameter(key, def));
 	}
 
 	@Override

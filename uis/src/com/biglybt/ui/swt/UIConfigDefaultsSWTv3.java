@@ -90,11 +90,13 @@ public class UIConfigDefaultsSWTv3
 
 		defaults.addParameter("Library.viewmode", startAdvanced ? 1 : 0);
 		defaults.addParameter("LibraryDL.viewmode", startAdvanced ? 1 : 0);
+		defaults.addParameter("LibraryDL.UseDefaultIndicatorColor", false );
 		defaults.addParameter("LibraryUnopened.viewmode", startAdvanced ? 1 : 0);
 		defaults.addParameter("LibraryCD.viewmode", startAdvanced ? 1 : 0);
 		defaults.addParameter("Library.EnableSimpleView", 1 );
 		defaults.addParameter("Library.CatInSideBar", startAdvanced ? 1 : 0);
 		defaults.addParameter("Library.TagInSideBar", 1 );
+		defaults.addParameter("Library.TagGroupsInSideBar", false );
 		defaults.addParameter("Library.ShowTabsInTorrentView", 1 );
 		defaults.addParameter("list.dm.dblclick", "0");
 
@@ -147,12 +149,6 @@ public class UIConfigDefaultsSWTv3
   			}
 			}
 		}
-
-		// AZ3 doesn't have a View->Toolbar, so force enable
-		if (!config.getBooleanParameter("IconBar.enabled")) {
-			config.setParameter("IconBar.enabled", true);
-		}
-
 
 		if (configNeedsSave) {
 			config.save();

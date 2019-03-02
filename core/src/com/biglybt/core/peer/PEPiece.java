@@ -21,6 +21,7 @@
 package com.biglybt.core.peer;
 
 import com.biglybt.core.disk.DiskManagerPiece;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 
 
 /**
@@ -35,6 +36,7 @@ import com.biglybt.core.disk.DiskManagerPiece;
 public interface
 PEPiece
 {
+	public PiecePicker		getPiecePicker();
 	public PEPeerManager	getManager();
     public DiskManagerPiece getDMPiece();
     public int         		getPieceNumber();

@@ -19,8 +19,11 @@
 
 package com.biglybt.pif.ui.model;
 
+import java.util.List;
+
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.logging.LoggerChannelListener;
+import com.biglybt.pif.ui.components.UIButton;
 import com.biglybt.pif.ui.components.UIProgressBar;
 import com.biglybt.pif.ui.components.UITextArea;
 import com.biglybt.pif.ui.components.UITextField;
@@ -35,6 +38,8 @@ public interface
 BasicPluginViewModel
 	extends PluginViewModel
 {
+	public static final int	PR_EXTERNAL_LOG_PAUSE = 1;	// Boolean
+	
 		/**
 		 * All UI Components are initially enabled - disable if not required
 		 * @return
@@ -52,6 +57,12 @@ BasicPluginViewModel
 	public UIProgressBar
 	getProgress();
 
+	public UIButton
+	addButton();
+		
+	public List<UIButton>
+	getButtons();
+	
 	/**
 	 *
 	 * @param id
@@ -85,4 +96,13 @@ BasicPluginViewModel
 	 * @param channel The log channel to listen to.
 	 */
 	public void attachLoggerChannel(LoggerChannel channel);
+	
+	public void
+	setProperty(
+		int		property,
+		Object	value );
+	
+	public Object
+	getProperty(
+		int		property );
 }

@@ -91,7 +91,7 @@ public class TorrentFilter {
 	 */
 	private List matchWildcard( List torrents, String filter )
 	{
-		Pattern pattern = Pattern.compile(wildcardToPattern(filter), Pattern.CASE_INSENSITIVE);
+		Pattern pattern = Pattern.compile(wildcardToPattern(filter), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 		List list = new ArrayList();
 		for (Iterator iter = torrents.iterator(); iter.hasNext();) {
 			DownloadManager dm = (DownloadManager) iter.next();

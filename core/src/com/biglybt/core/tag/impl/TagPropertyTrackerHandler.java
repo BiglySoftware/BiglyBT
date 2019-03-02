@@ -21,22 +21,30 @@
 package com.biglybt.core.tag.impl;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
+import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFactory;
+import com.biglybt.core.torrent.TOTorrentListener;
 import com.biglybt.core.util.TorrentUtils;
 
 public class
 TagPropertyTrackerHandler
-	implements TagFeatureProperties.TagPropertyListener
+	implements TagFeatureProperties.TagPropertyListener, TOTorrentListener
 {
 	private final Core core;
-	final TagManagerImpl	tag_manager;
+	private final TagManagerImpl	tag_manager;
 
+	private Set<TagProperty>		properties = new HashSet<>();
+	
 	private final Map<String,List<Tag>>	tracker_host_map = new HashMap<>();
 
+	private final AtomicBoolean	sync_required = new AtomicBoolean(false);
+	
 	protected
 	TagPropertyTrackerHandler(
 		Core _core,
@@ -45,6 +53,8 @@ TagPropertyTrackerHandler
 		core	= _core;
 		tag_manager		= _tm;
 
+		TOTorrentFactory.addTorrentListener( this );
+		
 		tag_manager.addTaggableLifecycleListener(
 			Taggable.TT_DOWNLOAD,
 			new TaggableLifecycleAdapter()
@@ -54,32 +64,37 @@ TagPropertyTrackerHandler
 				initialised(
 					List<Taggable>	current_taggables )
 				{
-					TagType tt = tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+					TagType[] tts = { 
+						tag_manager.getTagType( TagType.TT_DOWNLOAD_MANUAL ), 
+						tag_manager.getTagType( TagType.TT_DOWNLOAD_INTERNAL ) };
 
-					tt.addTagTypeListener(
-						new TagTypeAdapter()
-						{
-							@Override
-							public void
-							tagAdded(
-								Tag			tag )
+					for ( TagType tt: tts ){
+						
+						tt.addTagTypeListener(
+							new TagTypeAdapter()
 							{
-								TagFeatureProperties tfp = (TagFeatureProperties)tag;
-
-								TagProperty[] props = tfp.getSupportedProperties();
-
-								for ( TagProperty prop: props ){
-
-									if ( prop.getName( false ).equals( TagFeatureProperties.PR_TRACKERS )){
-
-										hookTagProperty( prop );
-
-										break;
+								@Override
+								public void
+								tagAdded(
+									Tag			tag )
+								{
+									TagFeatureProperties tfp = (TagFeatureProperties)tag;
+	
+									TagProperty[] props = tfp.getSupportedProperties();
+	
+									for ( TagProperty prop: props ){
+	
+										if ( prop.getName( false ).equals( TagFeatureProperties.PR_TRACKERS )){
+	
+											hookTagProperty( prop );
+	
+											break;
+										}
 									}
 								}
-							}
-						},
-						true );
+							},
+							true );
+					}
 				}
 
 				@Override
@@ -96,6 +111,11 @@ TagPropertyTrackerHandler
 	hookTagProperty(
 		TagProperty		property )
 	{
+		synchronized( properties ){
+		
+			properties.add( property );
+		}
+		
 		property.addListener( this );
 
 		handleProperty( property, true );
@@ -123,10 +143,15 @@ TagPropertyTrackerHandler
 	{
 		String[] trackers = property.getStringList();
 
-		Set<String>	tag_hosts = new HashSet<>(Arrays.asList(trackers));
+		Set<String>	tag_hosts = new HashSet<>();
+		
+		for ( String tracker: trackers ){
+			
+			tag_hosts.add( tracker.toLowerCase( Locale.US ));
+		}
 
 		Tag tag = property.getTag();
-
+		
 		synchronized( tracker_host_map ){
 
 			for ( Map.Entry<String,List<Tag>> entry: tracker_host_map.entrySet()){
@@ -143,7 +168,7 @@ TagPropertyTrackerHandler
 			}
 
 			for ( String host: tag_hosts ){
-
+				
 				List<Tag> tags = tracker_host_map.get( host );
 
 				if ( tags == null ){
@@ -196,11 +221,6 @@ TagPropertyTrackerHandler
 
 		for ( DownloadManager dm: managers ){
 
-			if ( !dm.isPersistent()){
-
-				continue;
-			}
-
 			if ( tag.hasTaggable( dm )){
 
 				continue;
@@ -231,7 +251,7 @@ TagPropertyTrackerHandler
 	getAugmentedHosts(
 		DownloadManager		dm )
 	{
-		Set<String>	hosts = TorrentUtils.getUniqueTrackerHosts( dm.getTorrent());
+		Set<String>	hosts = TorrentUtils.getUniqueTrackerHosts( dm.getTorrent(), true );
 
 		Set<String>	result = new HashSet<>();
 
@@ -271,22 +291,19 @@ TagPropertyTrackerHandler
 	{
 		List<Tag>	result = new ArrayList<>();
 
-		if ( dm.isPersistent()){
+		synchronized( tracker_host_map ){
 
-			synchronized( tracker_host_map ){
+			if ( tracker_host_map.size() > 0 ){
 
-				if ( tracker_host_map.size() > 0 ){
+				Set<String> hosts = getAugmentedHosts( dm );
 
-					Set<String> hosts = getAugmentedHosts( dm );
+				for ( String host: hosts ){
 
-					for ( String host: hosts ){
+					List<Tag> tags = tracker_host_map.get( host );
 
-						List<Tag> tags = tracker_host_map.get( host );
+					if ( tags != null ){
 
-						if ( tags != null ){
-
-							result.addAll( tags );
-						}
+						result.addAll( tags );
 					}
 				}
 			}
@@ -307,6 +324,42 @@ TagPropertyTrackerHandler
 
 				tag.addTaggable( dm );
 			}
+		}
+	}
+	
+	protected void
+	sync()
+	{
+		if ( sync_required.getAndSet( false )){
+			
+			List<TagProperty>	to_do;
+			
+			synchronized( properties ){
+				
+				to_do = new ArrayList<>( properties );
+			}
+			
+			for ( TagProperty tp: to_do ){
+				
+					// only active properties require syncing - otherwise tags with no trackers defined
+					// will end up with all their taggables being removed...
+				
+				if ( tp.getStringList().length > 0 ){
+				
+					handleProperty( tp, false );
+				}
+			}
+		}
+	}
+	
+	public void
+	torrentChanged(
+		TOTorrent		torrent,
+		int				change_type )
+	{
+		if ( change_type == TOTorrentListener.CT_ANNOUNCE_URLS ){
+			
+			sync_required.set( true );
 		}
 	}
 }

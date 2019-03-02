@@ -29,6 +29,7 @@ import java.util.Map;
 import com.biglybt.core.torrent.impl.TOTorrentCreateImpl;
 import com.biglybt.core.torrent.impl.TOTorrentCreatorImpl;
 import com.biglybt.core.torrent.impl.TOTorrentDeserialiseImpl;
+import com.biglybt.core.torrent.impl.TOTorrentImpl;
 import com.biglybt.core.torrent.impl.TOTorrentXMLDeserialiser;
 
 public class
@@ -252,5 +253,19 @@ TOTorrentFactory
 		long		piece_size )
 	{
 		return( TOTorrentCreateImpl.getPieceCount( total_size, piece_size ));
+	}
+	
+	public static void
+	addTorrentListener(
+		TOTorrentListener		listener )
+	{
+		TOTorrentImpl.addGlobalListener( listener );
+	}
+	
+	public static void
+	removeTorrentListener(
+		TOTorrentListener		listener )
+	{
+		TOTorrentImpl.removeGlobalListener( listener );
 	}
 }

@@ -48,9 +48,12 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	/** Any of the First Priority rules must match */
 	public static final int FIRSTPRIORITY_ANY = 1;
 
-	public static final int	DOWNLOAD_ORDER_INDEX		= 0;
-	public static final int	DOWNLOAD_ORDER_SEED_COUNT	= 1;
-	public static final int	DOWNLOAD_ORDER_SPEED		= 2;
+	public static final int	DOWNLOAD_ORDER_INDEX				= 0;
+	public static final int	DOWNLOAD_ORDER_SEED_COUNT			= 1;
+	public static final int	DOWNLOAD_ORDER_SPEED				= 2;
+	public static final int	DOWNLOAD_ORDER_REVERSE_SEED_COUNT	= 3;
+	public static final int	DOWNLOAD_ORDER_SIZE					= 4;
+	public static final int	DOWNLOAD_ORDER_REVERSE_SIZE			= 5;
 
 	/**
 	 * Force torrent to be "Actively Seeding/Downloading" for this many ms upon
@@ -405,6 +408,10 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		return dl;
 	}
 
+	public DownloadManager getCoreDownloadObject(){
+		return( core_dm );
+	}
+	
 	public boolean isForceActive() {
 		DownloadStats stats = dl.getStats();
 		return SystemTime.getCurrentTime() - stats.getTimeStarted() <= FORCE_ACTIVE_FOR;
@@ -481,11 +488,11 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		// when bAutoStart0Peers
 		if (iRankType == StartStopRulesDefaultPlugin.RANK_TIMED
 				&& !isFirstPriority()
-				&& !(bAutoStart0Peers && rules.calcPeersNoUs(dl,dl.getAggregatedScrapeResult()) == 0 && lastScrapeResultOk)) {
+				&& !(bAutoStart0Peers && rules.calcPeersNoUs(dl,dl.getAggregatedScrapeResult( false )) == 0 && lastScrapeResultOk)) {
 			bIsActive = (state == Download.ST_SEEDING);
 
 		} else if (state != Download.ST_SEEDING
-				|| (bAutoStart0Peers && rules.calcPeersNoUs(dl,dl.getAggregatedScrapeResult()) == 0)) {
+				|| (bAutoStart0Peers && rules.calcPeersNoUs(dl,dl.getAggregatedScrapeResult( false )) == 0)) {
 			// Not active if we aren't seeding
 			// Not active if we are AutoStarting 0 Peers, and peer count == 0
 			bIsActive = false;
@@ -582,7 +589,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		// here we are seeding
 
 		lastModifiedShareRatio = stats.getShareRatio();
-		DownloadScrapeResult sr = dl.getAggregatedScrapeResult();
+		DownloadScrapeResult sr = dl.getAggregatedScrapeResult( false );
 		lastModifiedScrapeResultPeers = rules.calcPeersNoUs(dl,sr);
 		lastModifiedScrapeResultSeeds = rules.calcSeedsNoUs(dl,sr);
 
@@ -839,6 +846,18 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 					+ (iFirstPriorityType == FIRSTPRIORITY_ALL ? "all" : "any")
 					+ " criteria match:\n";
 
+		DownloadManagerState dm_state = core_dm.getDownloadState();
+		
+		if ( 	( dm_state.getTransientFlags() & 
+					( 	DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP | 
+						DownloadManagerState.TRANSIENT_FLAG_TAG_FP )) != 0 ){
+			
+			if (rules.bDebugLog)
+				sExplainFP += "Is FP: Friend(s) have interest or Tag is FP\n";
+			
+			return( true );
+		}
+		
 		if (!dl.isPersistent()) {
 			if (rules.bDebugLog)
 				sExplainFP += "Not FP: Download not persistent\n";
@@ -1110,7 +1129,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	public boolean changeChecker() {
 		if (getActivelySeeding()) {
 			int shareRatio = dl.getStats().getShareRatio();
-			int numSeeds = rules.calcSeedsNoUs(dl,dl.getAggregatedScrapeResult());
+			int numSeeds = rules.calcSeedsNoUs(dl,dl.getAggregatedScrapeResult( false ));
 
 			int	activeMaxSR = dlSpecificMaxShareRatio;
 			if ( activeMaxSR <= 0 ){

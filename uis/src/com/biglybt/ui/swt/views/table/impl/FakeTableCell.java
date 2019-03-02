@@ -963,7 +963,7 @@ public class FakeTableCell
 		if (!isDisposed()) {
 			Object	target = tooltip==null?default_tooltip:tooltip;
 
-			composite.setToolTipText(target == null ? null : target.toString());
+			Utils.setTT(composite,target == null ? null : target.toString());
 		}
 	}
 

@@ -23,6 +23,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.dht.transport.udp.impl.packethandler.DHTUDPPacketNetworkHandler;
 
@@ -40,6 +41,8 @@ DHTUDPPacketRequestFindNode
 
 	private int			node_status;
 	private int			estimated_dht_size;
+
+	private Object	upload_stats;
 
 	public
 	DHTUDPPacketRequestFindNode(
@@ -64,13 +67,24 @@ DHTUDPPacketRequestFindNode
 
 		id = DHTUDPUtils.deserialiseByteArray( is, 64 );
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_MORE_NODE_STATUS ){
+		int	protocol_version = getProtocolVersion();
+		
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_MORE_NODE_STATUS ){
 
 			node_status 		= is.readInt();
 			estimated_dht_size 	= is.readInt();
 		}
+		
+		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
+			
+			if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
 
-		super.postDeserialise(is);
+				if ( is.available() > 0 ){	// interim during 1601 betas
+				
+					upload_stats = DHTUDPUtils.deserialiseUploadStats( is );
+				}
+			}
+		}
 	}
 
 	@Override
@@ -84,14 +98,22 @@ DHTUDPPacketRequestFindNode
 
 		DHTUDPUtils.serialiseByteArray( os, id, 64 );
 
-		if ( getProtocolVersion() >= DHTTransportUDP.PROTOCOL_VERSION_MORE_NODE_STATUS ){
+		int	protocol_version = getProtocolVersion();
+
+		if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_MORE_NODE_STATUS ){
 
 			 os.writeInt( node_status );
 
 			 os.writeInt( estimated_dht_size );
 		}
+		
+		if ( getNetwork() == DHT.NW_BIGLYBT_MAIN ){
+			
+			//if ( protocol_version >= DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){ checked in serialiseUploadStats
 
-		super.postSerialise( os );
+				DHTUDPUtils.serialiseUploadStats( protocol_version, getAction(), os );
+			//}
+		}
 	}
 
 	protected void
@@ -133,6 +155,12 @@ DHTUDPPacketRequestFindNode
 		return( estimated_dht_size );
 	}
 
+	protected Object
+	getUploadStats()
+	{
+		return( upload_stats );
+	}
+	
 	@Override
 	public String
 	getString()

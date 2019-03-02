@@ -22,6 +22,8 @@
 
 package com.biglybt.ui.swt.columns.tag;
 
+import java.util.List;
+
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
@@ -99,24 +101,32 @@ ColumnTagProperties
 				String actions_str = "";
 
 				int[]	action_ids =
-					{ 	TagFeatureExecOnAssign.ACTION_DESTROY,
+					{	TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE,
+					 	TagFeatureExecOnAssign.ACTION_DESTROY,
 						TagFeatureExecOnAssign.ACTION_START,
 						TagFeatureExecOnAssign.ACTION_FORCE_START,
 						TagFeatureExecOnAssign.ACTION_NOT_FORCE_START,
 						TagFeatureExecOnAssign.ACTION_STOP,
 						TagFeatureExecOnAssign.ACTION_SCRIPT,
 						TagFeatureExecOnAssign.ACTION_PAUSE,
-						TagFeatureExecOnAssign.ACTION_RESUME };
+						TagFeatureExecOnAssign.ACTION_RESUME,
+						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI,
+						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC,
+						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS };
 
 				String[] action_keys =
-					{ 	"v3.MainWindow.button.delete",
+					{ 	"label.apply.options.template",
+						"v3.MainWindow.button.delete",
 						"v3.MainWindow.button.start",
 						"v3.MainWindow.button.forcestart",
 						"v3.MainWindow.button.notforcestart",
 						"v3.MainWindow.button.stop",
 						"label.script",
 						"v3.MainWindow.button.pause",
-						"v3.MainWindow.button.resume"};
+						"v3.MainWindow.button.resume",
+						"label.post.magnet.to.chat",
+						"label.init.save.loc.move",
+						"label.assign.tags" };
 
 				for ( int i=0; i<action_ids.length;i++ ){
 
@@ -138,6 +148,21 @@ ColumnTagProperties
 
 								actions_str += (actions_str.length()==0?"":",") +
 										MessageText.getString( action_keys[i]) + "=" + script;
+								
+							}else if ( action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ){
+								
+								List<Tag> tags = eoa.getTagAssigns();
+								
+								String tag_str = "";
+								
+								for ( Tag t: tags ){
+									
+									tag_str += (tag_str==""?"":";") + t.getTagName( true );
+								}
+								
+								actions_str += (actions_str.length()==0?"":",") +
+										MessageText.getString( action_keys[i]) + "=" + tag_str ;
+								
 							}else{
 
 								actions_str += (actions_str.length()==0?"":",") +

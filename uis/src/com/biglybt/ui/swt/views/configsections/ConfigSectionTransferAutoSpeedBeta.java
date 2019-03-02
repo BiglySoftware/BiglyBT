@@ -242,16 +242,12 @@ public class ConfigSectionTransferAutoSpeedBeta
         cSpacer.setLayoutData(gridData);
 
         //how much data to accumulate before making an adjustment.
-        Label skip = new Label(dhtGroup, SWT.NULL);
-        gridData = new GridData();
-        gridData.horizontalSpan=2;
-        gridData.horizontalAlignment=GridData.BEGINNING;
-        skip.setLayoutData(gridData);
-        //skip.setText("Skip after adjustment: ");
-        Messages.setLanguageText(skip,"ConfigTransferAutoSpeed.skip.after.adjust");
 
-        BooleanParameter skipAfterAdjustment = new BooleanParameter(dhtGroup, SpeedManagerAlgorithmProviderV2.SETTING_WAIT_AFTER_ADJUST);
+        BooleanParameter skipAfterAdjustment = new BooleanParameter(dhtGroup,
+            SpeedManagerAlgorithmProviderV2.SETTING_WAIT_AFTER_ADJUST,
+            "ConfigTransferAutoSpeed.skip.after.adjust");
         gridData = new GridData();
+        gridData.horizontalSpan = 2;
         skipAfterAdjustment.setLayoutData(gridData);
 
         //spacer

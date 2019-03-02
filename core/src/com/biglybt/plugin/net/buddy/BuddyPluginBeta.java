@@ -34,11 +34,17 @@ import java.util.regex.Pattern;
 import com.biglybt.activities.LocalActivityManager;
 import com.biglybt.activities.LocalActivityManager.LocalActivityCallback;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagFeatureProperties;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
+import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
 import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
@@ -47,6 +53,8 @@ import com.biglybt.pif.PluginEvent;
 import com.biglybt.pif.PluginEventListener;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadManagerListener;
+import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ipc.IPCException;
 import com.biglybt.pif.sharing.*;
 import com.biglybt.pif.torrent.Torrent;
@@ -82,6 +90,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	public static final int 	FLAGS_MSG_ORIGIN_RATINGS 	= 1;
 	public static final int 	FLAGS_MSG_ORIGIN_SEED_REQ 	= 2;
 	public static final int 	FLAGS_MSG_ORIGIN_SUBS	 	= 3;
+	public static final int 	FLAGS_MSG_ORIGIN_SEARCH	 	= 4;
 
 	public static final String 	FLAGS_MSG_FLASH_OVERRIDE	= "f";
 	public static final int		FLAGS_MSG_FLASH_NO 			= 0;		// def
@@ -122,6 +131,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	private boolean					shared_anon_endpoint;
 	private boolean					sound_enabled;
 	private String					sound_file;
+	
+	private boolean					flash_enabled;
 
 	private Map<String,Map<String,Object>>		opts_map;
 
@@ -155,6 +166,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		shared_anon_endpoint	= COConfigurationManager.getBooleanParameter( "azbuddy.chat.share_i2p_endpoint", true );
 		sound_enabled			= COConfigurationManager.getBooleanParameter( "azbuddy.chat.notif.sound.enable", false );
 		sound_file			 	= COConfigurationManager.getStringParameter( "azbuddy.chat.notif.sound.file", "" );
+
+		flash_enabled			= COConfigurationManager.getBooleanParameter( "azbuddy.chat.notif.flash.enable", true );
 
 		opts_map				= COConfigurationManager.getMapParameter( "azbuddy.dchat.optsmap", new HashMap<String,Map<String,Object>>());	// should migrate others to use this...
 
@@ -1113,6 +1126,28 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			plugin.fireUpdated();
 		}
 	}
+	
+	public void
+	setFlashEnabled(
+		boolean		b )
+	{
+		if ( b !=  flash_enabled ){
+
+			flash_enabled	= b;
+
+			COConfigurationManager.setParameter( "azbuddy.chat.notif.flash.enable", b );
+
+			COConfigurationManager.setDirty();
+
+			plugin.fireUpdated();
+		}
+	}
+	
+	public boolean
+	getFlashEnabled()
+	{
+		return( flash_enabled );
+	}
 
 	private void
 	allUpdated()
@@ -1138,63 +1173,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				{
 					int	type = ev.getType();
 
-					if ( type == PluginEvent.PEV_INITIAL_SHARING_COMPLETE ){
-
-						try{
-							ShareManager share_manager = plugin_interface.getShareManager();
-
-							share_manager.addListener(
-								new ShareManagerListener() {
-
-									@Override
-									public void
-									resourceModified(
-										ShareResource old_resource,
-										ShareResource new_resource )
-									{
-										checkTag( new_resource );
-									}
-
-									@Override
-									public void
-									resourceDeleted(
-										ShareResource resource )
-									{
-									}
-
-									@Override
-									public void
-									resourceAdded(
-										ShareResource resource )
-									{
-										checkTag( resource );
-									}
-
-									@Override
-									public void
-									reportProgress(
-										int percent_complete )
-									{
-									}
-
-									@Override
-									public void
-									reportCurrentTask(
-										String task_description )
-									{				}
-								});
-
-							ShareResource[] existing = share_manager.getShares();
-
-							for ( ShareResource sr: existing ){
-
-								checkTag( sr );
-							}
-						}catch( Throwable e ){
-
-							Debug.out( e );
-						}
-					}else if ( type == PluginEvent.PEV_PLUGIN_OPERATIONAL ){
+					if ( type == PluginEvent.PEV_PLUGIN_OPERATIONAL ){
 
 						pluginAdded((PluginInterface)ev.getValue());
 
@@ -1214,52 +1193,97 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				pluginAdded( pi );
 			}
 		}
-	}
-
-	private void
-	checkTag(
-		ShareResource		resource )
-	{
-		Map<String,String>	properties = resource.getProperties();
-
-		if ( properties != null ){
-
-			String ud = properties.get( ShareManager.PR_USER_DATA );
-
-			if ( ud != null && ud.equals( "buddyplugin:share" )){
-
-				try{
-
-					Torrent torrent = null;
-
-					if ( resource instanceof ShareResourceFile ){
-
-						torrent = ((ShareResourceFile)resource).getItem().getTorrent();
-
-					}else if ( resource instanceof ShareResourceDir ){
-
-						torrent = ((ShareResourceDir)resource).getItem().getTorrent();
-					}
-
+		
+		boolean check_all = COConfigurationManager.getBooleanParameter( "azbuddy.dchat.autotracker.scan", true );
+		
+		COConfigurationManager.setParameter( "azbuddy.dchat.autotracker.scan", false );
+		
+		plugin_interface.getDownloadManager().addListener(
+			new DownloadManagerListener(){
+				
+				private Set<String>	checked = new HashSet<>();
+				
+				@Override
+				public void downloadAdded(Download download){
+					
+					Torrent torrent = download.getTorrent();
+					
 					if ( torrent != null ){
-
-						Download download = plugin_interface.getPluginManager().getDefaultPluginInterface().getShortCuts().getDownload( torrent.getHash());
-
-						if ( download != null ){
-
-							tagDownload( download );
+						
+						TOTorrent to_torrent = PluginCoreUtils.unwrap( download.getTorrent());
+						
+						if ( TorrentUtils.isReallyPrivate( to_torrent )){
+							
+							Set<String> hosts = TorrentUtils.getUniqueTrackerHosts( to_torrent );
+							
+							if ( hosts.size() == 1 ){
+								
+								String tracker = DNSUtils.getInterestingHostSuffix( hosts.iterator().next());
+								
+								if ( tracker != null && !checked.contains( tracker )){
+								
+									checked.add( tracker );
+									
+									try{
+										String config_key = "azbuddy.dchat.autotracker.host." + Base32.encode( tracker.getBytes( "UTF-8" ));
+									
+										boolean done = COConfigurationManager.getBooleanParameter( config_key, false );
+										
+										if ( !done ){
+											
+											COConfigurationManager.setParameter( config_key, true );
+											
+											String chat_key = "Tracker: " + tracker;
+											
+											ChatInstance chat = getChat( AENetworkClassifier.AT_PUBLIC, chat_key );
+											
+											chat.setFavourite( true );
+											
+											BuddyPluginUI.openChat( chat );
+											
+											TagManager tm = TagManagerFactory.getTagManager();
+											
+											if ( tm.isEnabled()){
+												
+												TagType tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+												
+												Tag tag = tt.getTag( tracker, true );
+												
+												if ( tag == null ){
+													
+													tag = tt.createTag( tracker, false );
+													
+													tag.setPublic( false );
+													
+													tt.addTag( tag );
+													
+													TagFeatureProperties tfp = (TagFeatureProperties)tag;
+													
+													TagProperty tp = tfp.getProperty( TagFeatureProperties.PR_TRACKERS );
+													
+													tp.setStringList( new String[]{ tracker });
+												}
+											}
+										}
+									}catch( Throwable e ){
+										
+									}
+								}
+							}
 						}
 					}
-				}catch( Throwable e ){
-
 				}
-			}
-		}
+				
+				@Override
+				public void downloadRemoved(Download download){
+				}
+			}, check_all );
+
+		
 	}
 
-	public void
-	tagDownload(
-		Download	download )
+	public Tag
+	getDownloadTag()
 	{
 		try{
 			TagType tt = TagManagerFactory.getTagManager().getTagType( TagType.TT_DOWNLOAD_MANUAL );
@@ -1275,11 +1299,25 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				tag.setPublic( false );
 			}
 
-			tag.addTaggable( PluginCoreUtils.unwrap( download ));
+			return( tag );
 
 		}catch( Throwable e ){
 
 			Debug.out( e );
+		}
+		
+		return( null );
+	}
+	
+	public void
+	tagDownload(
+		Download	download )
+	{
+		Tag tag = getDownloadTag();
+		
+		if ( tag != null ){
+
+			tag.addTaggable( PluginCoreUtils.unwrap( download ));
 		}
 	}
 
@@ -2154,6 +2192,45 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	importDataSource(
 		Map<String,Object>		map )
 	{
+		Runnable callback = (Runnable)map.get( "callback" );
+		
+		if ( callback != null && plugin.getSWTUI() == null ){
+		
+				// bit of a hack to deal with attempt to build a chat window during initialisation (e.g. initial dashboard view)
+				// when we're not completely initialised. back off
+			
+			TimerEventPeriodic[] event = { null };
+			
+			long start = SystemTime.getMonotonousTime();
+			
+			synchronized( event ){
+				event[0] = 
+					SimpleTimer.addPeriodicEvent(
+						"initwait",
+						1000,
+						new TimerEventPerformer(){
+							
+							@Override
+							public void perform(TimerEvent e){
+							
+								synchronized( event ){
+									
+									if ( plugin.getSWTUI() != null ){
+										
+										callback.run();
+										
+										event[0].cancel();
+										
+									}else if ( SystemTime.getMonotonousTime() - start > 30*1000 ){
+										
+										event[0].cancel();
+									}
+								}
+							}
+						});
+			}
+		}
+		
 		String	network = AENetworkClassifier.internalise((String)map.get( "network" ));
 		String	key		= (String)map.get( "key" );
 		
@@ -2398,6 +2475,32 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		}
 
 		return( null );
+	}
+	
+	public List<ChatInstance>
+	peekChatInstances(
+		Download		download )
+	{
+		List<ChatInstance>	result = new ArrayList<>();
+				
+		String	key = BuddyPluginUtils.getChatKey( download );
+
+		if ( key != null ){
+
+			String[] networks = PluginCoreUtils.unwrap( download ).getDownloadState().getNetworks();
+
+			for ( String net: networks ){
+
+				ChatInstance ci = peekChatInstance( net, key );
+
+				if ( ci != null ){
+					
+					result.add( ci );
+				}
+			}
+		}
+		
+		return( result );
 	}
 
 		/**
@@ -4114,7 +4217,16 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 								ChatMessage m1,
 								ChatMessage m2 )
 							{
-								long l = m1.getTimeStamp() - m2.getTimeStamp();
+								long t1 = m1.getSequence();
+								long t2 = m2.getSequence();
+
+								if ( t1 == t2 ){
+									
+									t1 = m1.getTimeStamp();
+									t2 = m2.getTimeStamp();
+								}
+							
+								long l = t1 - t2;
 
 								if ( l < 0 ){
 									return( -1 );
@@ -4150,7 +4262,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				changed = true;
 			}
 
-			Set<ChatParticipant>	participants = new HashSet<>();
+			Set<ChatParticipant>	new_participants = new HashSet<>();
 
 			for ( int i=0;i<result.size();i++){
 
@@ -4158,7 +4270,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				ChatParticipant p = msg.getParticipant();
 
-				participants.add( p );
+				new_participants.add( p );
 
 				if ( !changed ){
 
@@ -4174,7 +4286,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				messages = result;
 
-				for ( ChatParticipant p: participants ){
+				for ( ChatParticipant p: new_participants ){
 
 					p.resetMessages();
 				}
@@ -4194,6 +4306,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				for ( ChatParticipant p: updated ){
 
 					updated( p );
+				}
+				
+				for ( ChatParticipant p: new_participants ){
+					
+					if ( p.getMessageCount() == 0 && !p.isMe()){
+						
+						removeParticipant( p );
+						
+						for ( ChatListener l: listeners ){
+
+							l.participantRemoved( p );
+						}
+					}
 				}
 			}
 
@@ -4302,9 +4427,15 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					ChatMessage m1 = list1.get( pos1 );
 					ChatMessage m2 = list2.get( pos2 );
 
-					long t1 = m1.getTimeStamp();
-					long t2 = m2.getTimeStamp();
+					long t1 = m1.getSequence();
+					long t2 = m2.getSequence();
 
+					if ( t1 == t2 ){
+						
+						t1 = m1.getTimeStamp();
+						t2 = m2.getTimeStamp();
+					}
+					
 					if ( t1 < t2 || ( t1 == t2 && m1.getUID() < m2.getUID())){
 
 						result.add( m1 );
@@ -4343,9 +4474,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			ChatMessage msg = new ChatMessage( message_uid_next.incrementAndGet(), message_map );
 
-			long sequence = msg.getSequence();
+			// long sequence = msg.getSequence();
 
-			ChatParticipant	new_participant = null;
+			ChatParticipant	new_participant 	= null;
+			ChatParticipant	dead_participant 	= null;
 
 			boolean	sort_outstanding = false;
 
@@ -4370,6 +4502,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				messages.add( msg );
 
+				byte[] pk = msg.getPublicKey();
+
 				if ( messages.size() > MSG_HISTORY_MAX ){
 
 					ChatMessage removed = messages.remove(0);
@@ -4380,7 +4514,15 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					ChatParticipant rem_part = removed.getParticipant();
 
-					rem_part.removeMessage( removed );
+					if ( rem_part.removeMessage( removed ) == 0 && !rem_part.isMe()){
+						
+							// if new message for potentially deleted participant then retain
+						
+						if ( !Arrays.equals( pk, rem_part.getPublicKey())){
+							
+							dead_participant = removeParticipant( rem_part );
+						}
+					}
 
 					if ( !rem_part.isMe()){
 
@@ -4420,10 +4562,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					}
 				}
 
-				byte[] pk = msg.getPublicKey();
-
 				ChatParticipant participant = participants.get( pk );
-
+				
 				if ( participant == null ){
 
 					new_participant = participant = new ChatParticipant( this, pk );
@@ -4514,6 +4654,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				}
 			}
 
+			if ( dead_participant != null ){
+
+				for ( ChatListener l: listeners ){
+
+					l.participantRemoved( dead_participant );
+				}
+			}
+			
 			if ( new_participant != null ){
 
 				for ( ChatListener l: listeners ){
@@ -4612,6 +4760,91 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
+		public void
+		sendMessage(
+			Download		download )
+		{
+			sendMessage( getMagnet( download, 400 ), new HashMap<String, Object>());
+		}
+		
+		public String
+		getMagnet(
+			Download		download,
+			int				size_hint )
+		{
+			String magnet = UrlUtils.getMagnetURI( download, 80 );
+
+				// we can go a bit over size_hint as underlying limit is a fair bit higher
+			
+			magnet = trimMagnet( magnet, size_hint );
+			
+			magnet += "&xl="  + download.getTorrentSize();
+			
+			DownloadScrapeResult scrape = download.getLastScrapeResult();
+
+			if ( scrape != null && scrape.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
+
+				int seeds 		= scrape.getSeedCount();
+				int leechers	 = scrape.getNonSeedCount();
+				
+				if ( seeds != -1 ){
+					magnet += "&_s="  + seeds;
+				}
+				
+				if ( leechers != -1 ){
+					magnet += "&_l="  + leechers;
+				}
+			}
+			
+			long added = PluginCoreUtils.unwrap( download ).getDownloadState().getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
+
+			magnet += "&_d="  + added;
+			
+			InetSocketAddress address = getMyAddress();
+
+			if ( address != null ){
+
+				String address_str = AddressUtils.getHostAddressForURL(address) + ":" + address.getPort();
+
+				String arg = "&xsource=" + UrlUtils.encode( address_str );
+
+				magnet += arg;
+			}
+
+			magnet += "[[$dn]]";
+
+			return( magnet );
+		}
+		
+		private String
+		trimMagnet(
+			String	magnet,
+			int		max )
+		{
+			while( magnet.length() > max ){
+				
+				int pos = magnet.lastIndexOf( '&' );
+				
+				if ( pos > 0 ) {
+					
+					String x = magnet.substring( pos+1 );
+					
+					if ( x.startsWith( "ws=" ) || x.startsWith( "tr=" )){
+						
+						magnet = magnet.substring( 0,  pos );
+						
+					}else {
+						
+						break;
+					}
+				}
+			}
+			
+			return( magnet );
+		}
+		
+		
+		
 		AsyncDispatcher	dispatcher = new AsyncDispatcher( "sendAsync" );
 
 		public void
@@ -5267,6 +5500,29 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			return( null );
 		}
 
+		private ChatParticipant
+		removeParticipant(
+			ChatParticipant p )
+		{
+			ChatParticipant result = participants.remove( p.getPublicKey());
+		
+			Iterator<List<ChatParticipant>> it = nick_clash_map.values().iterator();
+			
+			while( it.hasNext()){
+			
+				List<ChatParticipant> list = it.next();
+												
+				list.remove( p );
+				
+				if ( list.isEmpty()){
+					
+					it.remove();
+				}
+			}
+			
+			return( result );
+		}
+		
 		protected void
 		updated(
 			ChatParticipant		p )
@@ -5893,11 +6149,13 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
-		private void
+		private int
 		removeMessage(
 			ChatMessage		message )
 		{
 			participant_messages.remove( message );
+			
+			return( participant_messages.size());
 		}
 
 		private void
@@ -5922,6 +6180,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				return(new ArrayList<>(participant_messages));
 			}
+		}
+		
+		public int
+		getMessageCount()
+		{
+			return( participant_messages.size());
 		}
 
 		public boolean
@@ -6159,6 +6423,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					String my_nick = participant.getChat().getNickname( true );
 
+					my_nick = my_nick.replaceAll( " ", "\u00a0" );
+					
 					int	nick_len = my_nick.length();
 
 					List<Integer> hits = new ArrayList<>();

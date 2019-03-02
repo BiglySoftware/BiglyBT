@@ -30,14 +30,12 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-
-import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.ui.swt.pif.UISWTConfigSection;
 
 public class ConfigSectionFileTorrents implements UISWTConfigSection {
   @Override
@@ -82,12 +80,12 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
   public void
   configSectionCreateSupport(
 	final Composite cTorrent )
-{
+	{
 	ImageLoader imageLoader = ImageLoader.getInstance();
 	Image imgOpenFolder = imageLoader.getImage("openFolderButton");
 
 	GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(cTorrent, gridData);
+		cTorrent.setLayoutData(gridData);
     GridLayout layout = new GridLayout();
     layout.numColumns = 2;
     cTorrent.setLayout(layout);
@@ -103,7 +101,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalIndent = 25;
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(gSaveTorrents, gridData);
+		gSaveTorrents.setLayoutData(gridData);
     layout = new GridLayout();
     layout.marginHeight = 0;
     layout.marginWidth = 0;
@@ -121,7 +119,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     Button browse2 = new Button(gSaveTorrents, SWT.PUSH);
     browse2.setImage(imgOpenFolder);
     imgOpenFolder.setBackground(browse2.getBackground());
-    browse2.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+    Utils.setTT(browse2,MessageText.getString("ConfigView.button.browse"));
 
     browse2.addListener(SWT.Selection, new Listener() {
       /* (non-Javadoc)
@@ -138,13 +136,25 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
         }
       }
     });
-    Utils.setLayoutData(browse2, new GridData());
+		browse2.setLayoutData(new GridData());
 
     gridData = new GridData();
     gridData.horizontalSpan = 2;
     new BooleanParameter(gSaveTorrents, "Save Torrent Backup",
                         "ConfigView.label.savetorrentbackup").setLayoutData(gridData);
 
+   	// Delete saved torrents
+        
+    if ( userMode > 1 ){	
+    	   
+    	BooleanParameter deleteSaved = new BooleanParameter(gSaveTorrents, "Delete Saved Torrent Files",
+                   "ConfigView.label.deletesavedtorrents");
+    	
+    	gridData = new GridData();
+        gridData.horizontalSpan = 2;
+        deleteSaved.setLayoutData(gridData);
+    }
+    
     Control[] controls = new Control[]{ gSaveTorrents };
     IAdditionalActionPerformer grayPathAndButton1 = new ChangeSelectionActionPerformer(controls);
     saveTorrents.setAdditionalActionPerformer(grayPathAndButton1);
@@ -154,7 +164,10 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     BooleanParameter deleteTorrents = new BooleanParameter(cTorrent, "Delete Original Torrent Files",
                                                          "ConfigView.label.deletetorrents");
 
-
+    gridData = new GridData();
+    gridData.horizontalSpan = 2;
+    deleteTorrents.setLayoutData(gridData);
+    
     	// add stopped
 
     gridData = new GridData();
@@ -182,7 +195,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalIndent = 25;
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(gWatchFolder, gridData);
+		gWatchFolder.setLayoutData(gridData);
     layout = new GridLayout();
     layout.marginHeight = 0;
     layout.marginWidth = 0;
@@ -197,13 +210,13 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
 
 	    gridData = new GridData(GridData.FILL_HORIZONTAL);
 	    final StringParameter watchFolderPathParameter =
-	    	new StringParameter(gWatchFolder, "Watch Torrent Folder Path" + (i==0?"":(" " + i )), "");
+	    	new StringParameter(gWatchFolder, "Watch Torrent Folder Path" + (i==0?"":(" " + i )));
 	    watchFolderPathParameter.setLayoutData(gridData);
 
 	    Button browse4 = new Button(gWatchFolder, SWT.PUSH);
 	    browse4.setImage(imgOpenFolder);
 	    imgOpenFolder.setBackground(browse4.getBackground());
-	    browse4.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+	    Utils.setTT(browse4,MessageText.getString("ConfigView.button.browse"));
 
 	    browse4.addListener(SWT.Selection, new Listener() {
 	      @Override
@@ -222,7 +235,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
 	    Messages.setLanguageText(lTag, "label.assign.to.tag");
 
 	    StringParameter tagParam =
-	    	new StringParameter(gWatchFolder, "Watch Torrent Folder Tag" + (i==0?"":(" " + i )), "");
+	    	new StringParameter(gWatchFolder, "Watch Torrent Folder Tag" + (i==0?"":(" " + i )));
 	    gridData = new GridData();
 	    gridData.widthHint = 60;
 	    tagParam.setLayoutData(gridData);
@@ -236,7 +249,7 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     Composite gAddButton = new Composite(gWatchFolder, SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 4;
-    Utils.setLayoutData(gAddButton, gridData);
+		gAddButton.setLayoutData(gridData);
     layout = new GridLayout();
     layout.marginHeight = 0;
     layout.marginWidth = 0;
@@ -297,6 +310,13 @@ public class ConfigSectionFileTorrents implements UISWTConfigSection {
     new BooleanParameter(gWatchFolder, "Start Watched Torrents Stopped",
                          "ConfigView.label.startwatchedtorrentsstopped").setLayoutData(gridData);
 
+    	// always rename to .imported
+
+    gridData = new GridData();
+    gridData.horizontalSpan = 5;
+    new BooleanParameter(gWatchFolder, "Watch Torrent Always Rename",
+                         "ConfigView.label.watchtorrentrename").setLayoutData(gridData);
+    
     controls = new Control[]{ gWatchFolder };
     watchFolder.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(controls));
   }

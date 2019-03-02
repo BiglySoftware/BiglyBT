@@ -178,13 +178,13 @@ BufferedLabel
 			label.setData( null );
 			label.setCursor( null );
 			label.setForeground( null );
-			label.setToolTipText( null );
+			Utils.setTT(label, null );
 		}else{
 			final String[] data = new String[]{ url };
 
 			label.setData( data );
 
-			label.setToolTipText(url);
+			Utils.setTT(label,url);
 
 		    label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		    label.setForeground(Colors.blue);
@@ -234,7 +234,7 @@ BufferedLabel
   }
 
   public void setToolTipText(String toolTipText) {
-    label.setToolTipText(toolTipText);
+    Utils.setTT(label,toolTipText);
   }
 
 }

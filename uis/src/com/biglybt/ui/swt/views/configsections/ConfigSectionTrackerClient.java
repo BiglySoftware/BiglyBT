@@ -23,18 +23,19 @@
 package com.biglybt.ui.swt.views.configsections;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
+
+import com.biglybt.pif.ui.config.ConfigSection;
 
 public class
 ConfigSectionTrackerClient
@@ -105,9 +106,37 @@ ConfigSectionTrackerClient
 
     scrape.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( scrape_stopped.getControls()));
 
-    new BooleanParameter(scrapeGroup, "Tracker Client Scrape Single Only",
+    BooleanParameter	dont_scrape_never_Started =
+        	new BooleanParameter(scrapeGroup, "Tracker Client Scrape Never Started Disable",
+        							"ConfigView.section.tracker.client.scrapesneverstarteddisable");
+
+    gridData = new GridData(GridData.FILL_HORIZONTAL);
+    gridData.horizontalIndent = 25;
+		dont_scrape_never_Started.getControl().setLayoutData(gridData);
+
+    BooleanParameter aggregate = new BooleanParameter(scrapeGroup, "Tracker Client Scrape Single Only",
     							"ConfigView.section.tracker.client.scrapesingleonly");
 
+    ParameterChangeListener pcl = 
+    		new ParameterChangeAdapter()
+    		{
+		    	@Override
+		    	public void parameterChanged(Parameter p, boolean caused_internally){
+		
+		    		boolean enabled = scrape.isSelected();
+		    		boolean stopped = scrape_stopped.isSelected();
+		    		
+		    		scrape_stopped.setEnabled( enabled );
+		    		dont_scrape_never_Started.setEnabled( enabled && stopped );
+		    		aggregate.setEnabled( enabled );
+		    	}
+    		};
+    		
+	scrape.addChangeListener( pcl );
+	scrape_stopped.addChangeListener( pcl );
+	dont_scrape_never_Started.addChangeListener( pcl );
+    aggregate.addChangeListener( pcl );
+    		
     	/////////////// INFO GROUP
 
     Group infoGroup = new Group(gMainTab,SWT.NULL);
@@ -200,7 +229,7 @@ ConfigSectionTrackerClient
     label.setLayoutData(Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
     Messages.setLanguageText(label, "ConfigView.label.overrideip");
 
-    StringParameter overrideip = new StringParameter(overrideGroup, "Override Ip", "");
+    StringParameter overrideip = new StringParameter(overrideGroup, "Override Ip");
     GridData data = new GridData(GridData.FILL_HORIZONTAL);
     data.widthHint = 100;
     overrideip.setLayoutData(data);
@@ -232,12 +261,9 @@ ConfigSectionTrackerClient
     	}
     });
 
-    label = new Label(overrideGroup, SWT.WRAP);
-    label.setLayoutData(Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
-    Messages.setLanguageText(label, "ConfigView.label.noportannounce");
-
-    BooleanParameter noPortAnnounce = new BooleanParameter(overrideGroup,"Tracker Client No Port Announce");
+    BooleanParameter noPortAnnounce = new BooleanParameter(overrideGroup,"Tracker Client No Port Announce", "ConfigView.label.noportannounce");
     data = new GridData();
+    data.horizontalSpan = 2;
     noPortAnnounce.setLayoutData(data);
 
     label = new Label(overrideGroup, SWT.WRAP);

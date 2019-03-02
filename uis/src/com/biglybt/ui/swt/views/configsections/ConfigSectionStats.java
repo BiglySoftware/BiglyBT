@@ -61,8 +61,6 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class ConfigSectionStats implements UISWTConfigSection {
 
-  private static final int defaultStatsPeriod = 30;
-
   private static final int statsPeriods[] =
     {
       1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 40, 50,
@@ -167,14 +165,14 @@ public class ConfigSectionStats implements UISWTConfigSection {
 
     gridData = new GridData();
     gridData.widthHint = 150;
-    final StringParameter pathParameter = new StringParameter(gSnap, "Stats Dir", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    final StringParameter pathParameter = new StringParameter(gSnap, "Stats Dir"); //$NON-NLS-1$ //$NON-NLS-2$
     pathParameter.setLayoutData(gridData);
     controls[0] = lStatsPath;
     controls[1] = pathParameter.getControl();
     Button browse = new Button(gSnap, SWT.PUSH);
     browse.setImage(imgOpenFolder);
     imgOpenFolder.setBackground(browse.getBackground());
-    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
     controls[2] = browse;
     browse.addListener(SWT.Selection, new Listener() {
       /* (non-Javadoc)
@@ -200,7 +198,7 @@ public class ConfigSectionStats implements UISWTConfigSection {
 
     gridData = new GridData();
     gridData.widthHint = 150;
-    final StringParameter fileParameter = new StringParameter(gSnap, "Stats File", StatsWriterPeriodic.DEFAULT_STATS_FILE_NAME );
+    final StringParameter fileParameter = new StringParameter(gSnap, StatsWriterPeriodic.DEFAULT_STATS_FILE_NAME );
     fileParameter.setLayoutData(gridData);
     controls[4] = fileParameter.getControl();
     new Label(gSnap, SWT.NULL);
@@ -213,7 +211,7 @@ public class ConfigSectionStats implements UISWTConfigSection {
 
     gridData = new GridData();
     gridData.widthHint = 150;
-    final StringParameter xslParameter = new StringParameter(gSnap, "Stats XSL File", "" );
+    final StringParameter xslParameter = new StringParameter(gSnap, "Stats XSL File" );
     xslParameter.setLayoutData(gridData);
     controls[6] = xslParameter.getControl();
     Label lxslDetails = new Label(gSnap, SWT.NULL);
@@ -263,7 +261,7 @@ public class ConfigSectionStats implements UISWTConfigSection {
     }
 
     controls[9] = lSaveFreq;
-    controls[10] = new IntListParameter(gSnap, "Stats Period", defaultStatsPeriod, spLabels, spValues).getControl();
+    controls[10] = new IntListParameter(gSnap, "Stats Period", spLabels, spValues).getControl();
     new Label(gSnap, SWT.NULL);
 
     	// ROW
@@ -379,7 +377,7 @@ public class ConfigSectionStats implements UISWTConfigSection {
     	wsValues[i] = i+1;
     }
 
-    IntListParameter week_start = new IntListParameter(gLong, "long.term.stats.weekstart", Calendar.SUNDAY, wsLabels, wsValues);
+    IntListParameter week_start = new IntListParameter(gLong, "long.term.stats.weekstart", wsLabels, wsValues);
 
     	// month start
 

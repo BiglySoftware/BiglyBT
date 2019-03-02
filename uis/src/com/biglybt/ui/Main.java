@@ -197,7 +197,7 @@ public class Main
 			}
 
 			if (DEBUG_STARTUPTIME) {
-				logTime("UIConst.setAzureusCore");
+				logTime("UIConst.set" + Constants.AZUREUS_NAME + "Core");
 			}
 
 			UIConst.processArgs(commands, options, args);

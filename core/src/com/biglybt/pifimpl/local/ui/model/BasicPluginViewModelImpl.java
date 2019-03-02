@@ -26,16 +26,19 @@ package com.biglybt.pifimpl.local.ui.model;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.logging.LoggerChannel;
 import com.biglybt.pif.logging.LoggerChannelListener;
+import com.biglybt.pif.ui.components.UIButton;
 import com.biglybt.pif.ui.components.UIProgressBar;
 import com.biglybt.pif.ui.components.UITextArea;
 import com.biglybt.pif.ui.components.UITextField;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.pifimpl.local.ui.UIManagerImpl;
+import com.biglybt.pifimpl.local.ui.components.UIButtonImpl;
 import com.biglybt.pifimpl.local.ui.components.UIProgressBarImpl;
 import com.biglybt.pifimpl.local.ui.components.UITextAreaImpl;
 import com.biglybt.pifimpl.local.ui.components.UITextFieldImpl;
@@ -54,6 +57,10 @@ BasicPluginViewModelImpl
 	private UIProgressBar	progress;
 	private String sConfigSectionID;
 
+	private List<UIButton>	buttons = new ArrayList<>();
+	
+	private Map<Integer,Object>	properties;
+	
 	public
 	BasicPluginViewModelImpl(
 		UIManagerImpl	_ui_manager,
@@ -90,6 +97,24 @@ BasicPluginViewModelImpl
 	}
 
 	@Override
+	public UIButton 
+	addButton()
+	{
+		UIButton res = new UIButtonImpl();
+		
+		buttons.add( res );
+		
+		return( res );
+	}
+	
+	@Override
+	public List<UIButton> 
+	getButtons()
+	{
+		return( buttons );
+	}
+	
+	@Override
 	public PluginInterface
 	getPluginInterface()
 	{
@@ -124,6 +149,37 @@ BasicPluginViewModelImpl
 		return sConfigSectionID;
 	}
 
+	public void
+	setProperty(
+		int		property,
+		Object	value )
+	{
+		synchronized( this ){
+			
+			if ( properties == null ){
+				
+				properties = new HashMap<>();
+			}
+			
+			properties.put( property, value);
+		}
+	}
+	
+	public Object
+	getProperty(
+		int		property )
+	{
+		synchronized( this ){
+			
+			if ( properties == null ){
+				
+				return( null );
+			}
+			
+			return( properties.get( property ));
+		}
+	}
+	
 	@Override
 	public void
 	destroy()

@@ -144,4 +144,11 @@ TagFeatureRateLimit
 	public void
 	setTagMaxAggregateShareRatioHasPriority(
 		boolean	has_priority );
+	
+	public boolean
+	getFirstPrioritySeeding();
+
+	public void
+	setFirstPrioritySeeding(
+		boolean	has_priority );
 }

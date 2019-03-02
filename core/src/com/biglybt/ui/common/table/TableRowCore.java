@@ -31,6 +31,9 @@ import com.biglybt.pif.ui.tables.TableRowMouseEvent;
  */
 public interface TableRowCore extends TableRow
 {
+	public static final String ID_EXPANDOHITCOLUMN 	= "expandoHitColumn";	// data = String
+	public static final String ID_EXPANDOHITAREA 	= "expandoHitArea";		// data = Rectangle
+
 	/** Invalidates Row */
 	public void invalidate();
 
@@ -66,6 +69,12 @@ public interface TableRowCore extends TableRow
 	@Override
 	public int getIndex();
 
+	public boolean
+	setVisibleRowIndex( int index );
+		
+	public int
+	getVisibleRowIndex();
+	
 	/** Adjust cell height.  Don't use if any other column/cell uses setImage()
 	 *
 	 * @param iHeight new Row Height.  Will not reduce row's height (SWT)
@@ -117,6 +126,11 @@ public interface TableRowCore extends TableRow
 
 	public void redraw(boolean doChildren);
 
+	public boolean refilter();
+	
+	public boolean
+	isHidden();
+	
 	/**
 	 * @return
 	 */
@@ -177,6 +191,8 @@ public interface TableRowCore extends TableRow
 
 	TableRowCore[] getSubRowsWithNull();
 
+	TableRowCore[] getSubRowsRecursive( boolean includeHidden );
+
 	void removeSubRow(Object datasource);
 
 	public int getHeight();
@@ -194,4 +210,8 @@ public interface TableRowCore extends TableRow
 	 */
 	
 	public void fakeRedraw( String column_name );
+	
+	public void
+	setRequestAttention(
+		boolean	on );
 }

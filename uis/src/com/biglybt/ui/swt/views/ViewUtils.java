@@ -37,12 +37,18 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.impl.DiskManagerImpl;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagDownload;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
@@ -698,9 +704,14 @@ ViewUtils
 		Utils.disposeComposite(genComposite, false);
 
 		Label lab = new Label(genComposite, SWT.NULL);
-		GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, true);
-		gridData.verticalIndent = 10;
-		lab.setLayoutData(gridData);
+		
+		if ( genComposite.getLayout() instanceof GridLayout ){
+			GridData gridData = new GridData(SWT.CENTER, SWT.CENTER, true, true);
+			gridData.verticalIndent = 10;
+			lab.setLayoutData(gridData);
+		}else{
+			lab.setLayoutData( Utils.getFilledFormData());
+		}
 		Messages.setLanguageText(lab, "view.one.download.only");
 
 		genComposite.layout(true);
@@ -715,41 +726,56 @@ ViewUtils
 
 	}
 
+		
 	public static DownloadManager
 	getDownloadManagerFromDataSource(
-		Object dataSource )
+		Object 			dataSource,
+		DownloadManager	existing )
 	{
 		DownloadManager manager = null;
+		
+		if ( dataSource instanceof Object[] && ((Object[])dataSource).length == 1 ){
+			dataSource = ((Object[])dataSource)[0];
+		}
+		
 		if (dataSource instanceof Object[]) {
-			Object[] newDataSources = (Object[]) dataSource;
-			if (newDataSources.length == 1) {
-				Object temp = ((Object[]) dataSource)[0];
-				if (temp instanceof DownloadManager) {
-					manager = (DownloadManager) temp;
-				} else if (temp instanceof DiskManagerFileInfo) {
-					manager = ((DiskManagerFileInfo) temp).getDownloadManager();
-				}
-			}else{
-				for ( Object o: newDataSources ){
-					if (o instanceof DownloadManager){
-						if ( manager == null ){
-							manager = (DownloadManager)o;
-						}else if ( manager != o ){
-							manager = null;
-							break;
-						}
-					}else if ( o instanceof DiskManagerFileInfo ){
-						DownloadManager temp = ((DiskManagerFileInfo)o).getDownloadManager();
+			Object[] newDataSources = (Object[])dataSource;
+			
+			for ( Object o: newDataSources ){
+				if (o instanceof DownloadManager){
+					if ( manager == null ){
+						manager = (DownloadManager)o;
+					}else if ( manager != o ){
+						manager = null;
+						break;
+					}
+				}else if ( o instanceof DiskManagerFileInfo ){
+					DownloadManager temp = ((DiskManagerFileInfo)o).getDownloadManager();
+					if ( manager == null ){
+						manager = temp;
+					}else if ( manager != temp ){
+						manager = null;
+						break;
+					}
+				}else if ( o instanceof PEPiece ){
+					PEPiece piece = (PEPiece)o;
+					DiskManager diskManager = piece.getDMPiece().getManager();
+					if (diskManager instanceof DiskManagerImpl) {
+						DiskManagerImpl dmi = (DiskManagerImpl) diskManager;
+						DownloadManager temp = dmi.getDownloadManager();
 						if ( manager == null ){
 							manager = temp;
 						}else if ( manager != temp ){
 							manager = null;
 							break;
 						}
-					}else{
-						manager = null;
-						break;
 					}
+				}else if ( dataSource instanceof Tag ){
+					manager = existing;
+					break;
+				}else{
+					manager = null;
+					break;
 				}
 			}
 		} else {
@@ -757,6 +783,15 @@ ViewUtils
 				manager = (DownloadManager) dataSource;
 			} else if (dataSource instanceof DiskManagerFileInfo) {
 				manager = ((DiskManagerFileInfo) dataSource).getDownloadManager();
+			}else if ( dataSource instanceof PEPiece ){
+				PEPiece piece = (PEPiece)dataSource;
+				DiskManager diskManager = piece.getDMPiece().getManager();
+				if (diskManager instanceof DiskManagerImpl) {
+					DiskManagerImpl dmi = (DiskManagerImpl) diskManager;
+					manager = dmi.getDownloadManager();
+				}
+			}else if ( dataSource instanceof Tag ){
+				manager = existing;
 			}
 		}
 		return( manager );
@@ -764,33 +799,32 @@ ViewUtils
 
 	public static java.util.List<DownloadManager>
 	getDownloadManagersFromDataSource(
-		Object dataSource )
+		Object 								dataSource,
+		java.util.List<DownloadManager>		existing )
 	{
 		Set<DownloadManager> managers = new LinkedHashSet<>();	// maintain order
 		if (dataSource instanceof Object[]) {
 			Object[] newDataSources = (Object[]) dataSource;
-			if (newDataSources.length == 1) {
-				Object temp = ((Object[]) dataSource)[0];
-				if (temp instanceof DownloadManager) {
-					managers.add((DownloadManager) temp);
-				} else if (temp instanceof DiskManagerFileInfo) {
-					managers.add(((DiskManagerFileInfo) temp).getDownloadManager());
+			for ( Object o: newDataSources ){
+				if ( o instanceof Tag ){
+					return( existing );
 				}
-			}else{
-				for ( Object o: newDataSources ){
-					if (o instanceof DownloadManager){
-						managers.add((DownloadManager)o);
-					}else if ( o instanceof DiskManagerFileInfo ){
-						DownloadManager temp = ((DiskManagerFileInfo)o).getDownloadManager();
-						managers.add((DownloadManager)temp);
-					}
+				DownloadManager dm = getDownloadManagerFromDataSource( o, null );
+				
+				if ( dm != null ){
+					managers.add( dm );
 				}
 			}
 		} else {
-			if (dataSource instanceof DownloadManager) {
-				managers.add((DownloadManager) dataSource);
-			} else if (dataSource instanceof DiskManagerFileInfo) {
-				managers.add(((DiskManagerFileInfo) dataSource).getDownloadManager());
+			if ( dataSource instanceof Tag ){
+				
+				return( existing );
+			}
+			
+			DownloadManager dm = getDownloadManagerFromDataSource( dataSource, null );
+			
+			if ( dm != null ){
+				managers.add( dm );
 			}
 		}
 		return( new ArrayList<>( managers ));

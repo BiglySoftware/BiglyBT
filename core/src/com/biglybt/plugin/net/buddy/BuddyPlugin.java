@@ -259,11 +259,13 @@ BuddyPlugin
 	private Set<String>	public_tags_or_categories = new HashSet<>();
 
 	private boolean lan_local_peers;
+	private boolean fp_enable;
 
 	private BuddyPluginBeta		beta_plugin;
 
 	private BuddyPluginViewInterface	swt_ui;
-
+	private List<Runnable>				swt_ui_waiters = new ArrayList<>();
+	
 	public static void
 	load(
 		PluginInterface		plugin_interface )
@@ -416,6 +418,22 @@ BuddyPlugin
 
 		lan_local_peers = buddies_lan_local.getValue();
 
+		final BooleanParameter buddies_fp_enable 	= config.addBooleanParameter2("azbuddy.tracker.fp.enable", "azbuddy.tracker.fp.enable", true );
+
+		buddies_fp_enable.addListener(
+				new ParameterListener()
+				{
+					@Override
+					public void
+					parameterChanged(
+						Parameter 	param )
+					{
+						fp_enable = buddies_fp_enable.getValue();
+					}
+				});
+
+		fp_enable = buddies_fp_enable.getValue();
+		
 		cat_pub.addListener(
 			new ParameterListener()
 			{
@@ -433,7 +451,7 @@ BuddyPlugin
 			new Parameter[]{
 					classic_enabled_param, nick_name_param, online_status_param,
 					protocol_speed, enable_chat_notifications, cat_pub, tracker_enable, tracker_so_enable,
-					buddies_lan_local
+					buddies_lan_local, buddies_fp_enable,
 			});
 
 			// decentralised stuff
@@ -449,6 +467,8 @@ BuddyPlugin
 				});
 
 
+		config.addLabelParameter2("azbuddy.dchat.more.settings");
+		
 
 			// config end
 
@@ -597,11 +617,26 @@ BuddyPlugin
 					if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
 
 						try{
-							swt_ui = (BuddyPluginViewInterface)Class.forName("com.biglybt.plugin.net.buddy.swt.BuddyPluginView").getConstructor(
-								new Class[]{ BuddyPlugin.class, UIInstance.class, String.class } ).newInstance(
-									new Object[]{ BuddyPlugin.this, instance, VIEW_ID } );
+							synchronized( swt_ui_waiters ){
+								
+								swt_ui = (BuddyPluginViewInterface)Class.forName("com.biglybt.plugin.net.buddy.swt.BuddyPluginView").getConstructor(
+									new Class[]{ BuddyPlugin.class, UIInstance.class, String.class } ).newInstance(
+										new Object[]{ BuddyPlugin.this, instance, VIEW_ID } );
 
-							// new BuddyPluginView( BuddyPlugin.this, swt_ui, VIEW_ID );
+								for ( Runnable r: swt_ui_waiters ){
+									
+									try{
+										
+										r.run();
+										
+									}catch( Throwable e ){
+										
+										Debug.out( e );
+									}
+								}
+								
+								swt_ui_waiters.clear();
+							}
 
 						}catch( Throwable e ){
 							e.printStackTrace();
@@ -718,6 +753,12 @@ BuddyPlugin
 	getPeersAreLANLocal()
 	{
 		return( lan_local_peers );
+	}
+	
+	public boolean
+	getFPEnabled()
+	{
+		return( fp_enable );
 	}
 
 	protected void
@@ -3657,6 +3698,23 @@ BuddyPlugin
 	}
 
 	protected void
+	addSWTUIWaiter(
+		Runnable	r )
+	{
+		synchronized( swt_ui_waiters ){
+			
+			if ( swt_ui != null ){
+				
+				r.run();
+				
+			}else{
+				
+				swt_ui_waiters.add( r );
+			}
+		}
+	}
+	
+	protected void
 	rethrow(
 		String		reason,
 		Throwable	e )
@@ -4068,6 +4126,8 @@ BuddyPlugin
 							hash,
 							"",
 							new InetSocketAddress[0],
+							Collections.emptyList(),
+							Collections.emptyMap(),
 							timeout,
 							MagnetPlugin.FL_NONE );
 

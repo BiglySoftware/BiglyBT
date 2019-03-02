@@ -20,6 +20,7 @@
 
 package com.biglybt.core.tag.impl;
 
+import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.download.DownloadManager;
@@ -32,15 +33,20 @@ import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
+import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 
 public class
 TagDownloadWithState
 	extends TagWithState
 	implements TagDownload
 {
+	private static Object	FP_DL_KEY = new Object();
+	
 	private int upload_rate_limit;
 	private int download_rate_limit;
 
@@ -62,8 +68,9 @@ TagDownloadWithState
 	private int		max_aggregate_share_ratio;
 	private int		max_aggregate_share_ratio_action;
 	private boolean	max_aggregate_share_ratio_priority;
-
-
+	private boolean	fp_seeding;
+	private boolean fp_seeding_ever;
+	
 	private boolean	supports_xcode;
 	private boolean	supports_file_location;
 
@@ -244,6 +251,7 @@ TagDownloadWithState
 		max_aggregate_share_ratio			= readLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR, 0L ).intValue();
 		max_aggregate_share_ratio_action	= readLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION, (long)TagFeatureRateLimit.SR_AGGREGATE_ACTION_DEFAULT ).intValue();
 		max_aggregate_share_ratio_priority	= readBooleanAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY, TagFeatureRateLimit.AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY_DEFAULT );
+		fp_seeding							= readBooleanAttribute( AT_RATELIMIT_FP_SEEDING, false );
 
 		addTagListener(
 			new TagListener()
@@ -271,6 +279,11 @@ TagDownloadWithState
 					if ( max_share_ratio > 0 ){
 
 						updateMaxShareRatio( manager, max_share_ratio );
+					}
+					
+					if ( fp_seeding ){
+						
+						updateFPSeeding( manager, true );
 					}
 				}
 
@@ -304,6 +317,11 @@ TagDownloadWithState
 					if ( max_share_ratio > 0 ){
 
 						updateMaxShareRatio( manager, 0 );
+					}
+					
+					if ( fp_seeding ){
+						
+						updateFPSeeding( manager, false );
 					}
 				}
 
@@ -378,11 +396,77 @@ TagDownloadWithState
 
 				dm.updateAutoUploadPriority( UPLOAD_PRIORITY_ADDED_KEY, false );
 			}
+			
+			if ( fp_seeding ){
+				
+				updateFPSeeding( dm, false );
+			}
 		}
 
 		super.removeTag();
 	}
 
+	private static final AsyncDispatcher move_dispatcher = new AsyncDispatcher( "tag:eos_move" );
+
+	private static void
+	moveDownload(
+		DownloadManager			dm,
+		TagFeatureFileLocation	fl )
+	{
+		move_dispatcher.dispatch(
+			new AERunnable()
+			{
+				@Override
+				public void
+				runSupport()
+				{
+					File save_loc = fl.getTagInitialSaveFolder();
+					
+					long	options = fl.getTagInitialSaveOptions();
+
+					boolean set_data 	= (options&TagFeatureFileLocation.FL_DATA) != 0;
+					boolean set_torrent = (options&TagFeatureFileLocation.FL_TORRENT) != 0;
+
+					if ( set_data ){
+
+						File existing_save_loc = dm.getSaveLocation();
+
+						if ( dm.getTorrent().isSimpleTorrent()){
+							
+							existing_save_loc = existing_save_loc.getParentFile();
+						}
+						
+						if ( ! ( existing_save_loc.equals( save_loc ))){
+
+							try{
+								dm.moveDataFilesLive( save_loc );
+
+							}catch( Throwable e ){
+
+								Debug.out( e );
+							}
+						}
+					}
+
+					if ( set_torrent ){
+
+						File old_torrent_file = new File( dm.getTorrentFileName());
+
+						if ( old_torrent_file.exists()){
+
+							try{
+								dm.setTorrentFile( save_loc, old_torrent_file.getName());
+
+							}catch( Throwable e ){
+
+								Debug.out( e );
+							}
+						}
+					}
+				}
+			});
+	}
+	
 	@Override
 	public void
 	addTaggable(
@@ -458,7 +542,7 @@ TagDownloadWithState
 
 										}else{
 
-											dm.pause();
+											dm.pause( true );
 										}
 
 										// recheck here in case it is an 'archive' action that requires
@@ -521,6 +605,120 @@ TagDownloadWithState
 						}
 					}
 
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI )){
+
+						String chat = getPostMessageChannel();
+
+						if ( chat.length() > 0 ){
+
+							rs_async.dispatch(
+								new AERunnable()
+								{
+									@Override
+									public void
+									runSupport()
+									{
+										String[] bits = chat.split( ":", 2 );
+										
+										String net = bits[0].startsWith( "Public")?AENetworkClassifier.AT_PUBLIC:AENetworkClassifier.AT_I2P;
+										
+										String key = bits[1].trim();
+										
+										SimpleTimer.addEvent(
+											"EOS:PM",
+											SystemTime.getOffsetTime( 250 ),
+											new TimerEventPerformer(){
+											
+												final private long start = SystemTime.getMonotonousTime();
+												
+												@Override
+												public void perform(TimerEvent event){
+														
+													ChatInstance chat = BuddyPluginUtils.getChat(net, key);
+													
+													if ( chat != null && chat.isAvailable()){
+													
+														chat.sendMessage(  PluginCoreUtils.wrap( dm ));
+														
+													}else{
+												
+														if ( SystemTime.getMonotonousTime() - start >= 10*60*1000 ){
+															
+															Debug.out( "EOS:PM Abandoned sending of magnet to " + chat );
+															
+														}else{
+														
+															SimpleTimer.addEvent( "EOS:PM", SystemTime.getOffsetTime( 5000 ), this );
+														}
+													}
+												}
+											});
+										
+									}
+								});
+						}
+					}
+				
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE )){
+	
+						OptionsTemplateHandler handler = getOptionsTemplateHandler();
+	
+						if ( handler.isActive()){
+							rs_async.dispatch(
+								new AERunnable()
+								{
+									@Override
+									public void
+									runSupport()
+									{
+										handler.applyTo( dm );
+									}
+								});
+						}
+					}
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC )){
+					
+						if ( getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+							
+							TagFeatureFileLocation fl = (TagFeatureFileLocation)this;
+							
+							if ( fl.supportsTagInitialSaveFolder()){
+								
+								File f = fl.getTagInitialSaveFolder();
+								
+								if ( f != null ){
+									
+									moveDownload( dm, fl );
+								}
+							}
+						}
+					}
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS )){
+						
+						List<Tag> tags = getTagAssigns();
+						
+						if ( !tags.isEmpty()){
+
+							rs_async.dispatch(
+								new AERunnable()
+								{
+									@Override
+									public void
+									runSupport()
+									{
+										for ( Tag t: tags ){
+										
+											if ( !t.hasTaggable( dm )){
+											
+												t.addTaggable( dm );
+											}
+										}
+									}
+								});
+						}
+					}
 				}
 			}
 		}else{
@@ -775,7 +973,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_UP, upload_rate_limit );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 	}
 
 	@Override
@@ -815,7 +1013,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_DOWN, download_rate_limit );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 	}
 
 	@Override
@@ -893,7 +1091,7 @@ TagDownloadWithState
 			}
 		}
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 	}
 
 	@Override
@@ -949,7 +1147,7 @@ TagDownloadWithState
 			dm.getDownloadState().setIntParameter( DownloadManagerState.PARAM_MIN_SHARE_RATIO, sr );
 		}
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 	}
 
 	@Override
@@ -1005,7 +1203,7 @@ TagDownloadWithState
 			dm.getDownloadState().setIntParameter( DownloadManagerState.PARAM_MAX_SHARE_RATIO, sr );
 		}
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkIndividualShareRatio();
 	}
@@ -1031,7 +1229,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_MAX_SR_ACTION, action );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkIndividualShareRatio();
 	}
@@ -1071,7 +1269,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR, sr );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkAggregateShareRatio();
 	}
@@ -1097,7 +1295,7 @@ TagDownloadWithState
 
 		writeLongAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_ACTION, action );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkAggregateShareRatio();
 	}
@@ -1123,13 +1321,39 @@ TagDownloadWithState
 
 		writeBooleanAttribute( AT_RATELIMIT_MAX_AGGREGATE_SR_PRIORITY, priority );
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		checkIndividualShareRatio();
 
 		checkAggregateShareRatio();
 	}
 
+	@Override
+	public boolean
+	getFirstPrioritySeeding()
+	{
+		return( fp_seeding );
+	}
+
+	@Override
+	public void
+	setFirstPrioritySeeding(
+		boolean		b )
+	{
+		if ( b == fp_seeding ){
+
+			return;
+		}
+
+		fp_seeding	= b;
+
+		writeBooleanAttribute( AT_RATELIMIT_FP_SEEDING, b );
+
+		getTagType().fireMetadataChanged( this );
+
+		checkFPSeeding();
+	}
+	
 	private void
 	updateStuff()
 	{
@@ -1345,6 +1569,78 @@ TagDownloadWithState
 		}
 	}
 
+	private void
+	checkFPSeeding()
+	{
+		if ( fp_seeding ){
+							
+			fp_seeding_ever = true;
+		}
+
+		if ( !fp_seeding_ever ){
+			
+			return;
+		}
+		
+		Set<DownloadManager> dms = new HashSet<>(getTaggedDownloads());
+
+		Iterator<DownloadManager> it = dms.iterator();
+
+			// don't pause incomplete downloads!
+
+		while( it.hasNext()){
+
+			DownloadManager dm = it.next();
+
+			updateFPSeeding( dm, fp_seeding );
+		}
+	}
+	
+	private void
+	updateFPSeeding(
+		DownloadManager		dm,
+		boolean				fp_seed )
+	
+	{
+		if ( fp_seed ){
+			
+			fp_seeding_ever = true;
+		}
+		
+		synchronized( FP_DL_KEY ){
+			
+			Map<DownloadManager,String> map = (Map<DownloadManager,String>)dm.getUserData( FP_DL_KEY );
+			
+			if ( fp_seed ){
+				
+				if ( map == null ){
+					
+					map = new IdentityHashMap<>();
+					
+					dm.setUserData( FP_DL_KEY, map );
+					
+					dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, true );
+				}
+				
+				map.put( dm, "" );
+				
+			}else{
+				
+				if ( map != null ){
+					
+					map.remove( dm );
+					
+					if ( map.isEmpty()){
+						
+						dm.setUserData( FP_DL_KEY, null );
+						
+						dm.getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_TAG_FP, false );
+					}
+				}
+			}
+		}
+	}
+	
 	@Override
 	protected void
 	sync()
@@ -1355,6 +1651,8 @@ TagDownloadWithState
 
 		checkMaximumTaggables();
 
+		checkFPSeeding();
+		
 		super.sync();
 	}
 
@@ -1510,7 +1808,7 @@ TagDownloadWithState
 							public void
 							runSupport()
 							{
-								dm.pause();
+								dm.pause( true );
 							}
 						});
 				}
@@ -1545,11 +1843,16 @@ TagDownloadWithState
 					TagFeatureExecOnAssign.ACTION_NOT_FORCE_START |
 					TagFeatureExecOnAssign.ACTION_STOP |
 					TagFeatureExecOnAssign.ACTION_PAUSE |
-					TagFeatureExecOnAssign.ACTION_SCRIPT );
+					TagFeatureExecOnAssign.ACTION_SCRIPT |
+					TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE |
+					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI |
+					TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC |
+					TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS );
 
 		}else if ( getTagType().getTagType() == TagType.TT_DOWNLOAD_STATE ){
 
-			return( TagFeatureExecOnAssign.ACTION_SCRIPT );
+			return( TagFeatureExecOnAssign.ACTION_SCRIPT |
+					TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI );
 
 		}else{
 
@@ -1600,7 +1903,7 @@ TagDownloadWithState
 	{
 		writeStringAttribute( AT_XCODE_TARGET, uid==null?null:(uid + "\n" + name ));
 
-		getTagType().fireChanged( this );
+		getTagType().fireMetadataChanged( this );
 
 		getManager().featureChanged( this, TagFeature.TF_XCODE );
 	}
@@ -1640,8 +1943,8 @@ TagDownloadWithState
 		return( getTagType().isTagTypeAuto()?new TagProperty[0]:tag_properties );
 	}
 
-	private static final boolean[] AUTO_BOTH = {true,true};
-	private static final boolean[] AUTO_NONE = {false,false};
+	private static final boolean[] AUTO_BOTH = {true,true,false};
+	private static final boolean[] AUTO_NONE = {false,false,false};
 
 	@Override
 	public boolean[]
@@ -1690,11 +1993,15 @@ TagDownloadWithState
 
 							if ( options.contains( "am=1;" )){
 
-								return( new boolean[]{ true, false });
+								return( new boolean[]{ true, false, false });
 
 							}else if ( options.contains( "am=2;" )){
 
-								return( new boolean[]{ false, true });
+								return( new boolean[]{ false, true, false });
+								
+							}else if ( options.contains( "am=3;" )){
+								
+								return( new boolean[]{ false, false, true });
 							}
 						}
 					}
@@ -1876,5 +2183,35 @@ TagDownloadWithState
 				}
 			}
 		}
+	}
+	
+	@Override
+	public List<Tag>
+	dependsOnTags()
+	{
+		return( new ArrayList<Tag>( getManager().getDependsOnTags( this )));
+	}
+	
+	@Override
+	public String
+	getStatus()
+	{
+		String result = "";
+		
+		String error = (String)getTransientProperty( Tag.TP_CONSTRAINT_ERROR );
+		
+		if ( error != null ){
+			
+			result += "Error: " + error;
+		}
+		
+		String other = getManager().getTagStatus( this );
+		
+		if ( other != null ){
+			
+			result += (result.isEmpty()?"":"; ") + other;
+		}
+		
+		return( result );
 	}
 }

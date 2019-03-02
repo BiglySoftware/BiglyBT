@@ -31,7 +31,6 @@ import com.biglybt.core.internat.MessageText;
 
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
@@ -74,7 +73,7 @@ public class ConfigSectionConnectionDNS implements UISWTConfigSection {
 
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL
 				| GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(cSection, gridData);
+		cSection.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		cSection.setLayout(layout);
@@ -84,7 +83,7 @@ public class ConfigSectionConnectionDNS implements UISWTConfigSection {
 			Label label = new Label(cSection, SWT.WRAP);
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 
 			final String[] modeKeys = { "ConfigView.section.mode.beginner",
 					"ConfigView.section.mode.intermediate",
@@ -114,7 +113,7 @@ public class ConfigSectionConnectionDNS implements UISWTConfigSection {
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 2;
 		gridData.widthHint = 200;  // needed for wrap
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 
 		gridData = new GridData();
 		gridData.horizontalSpan = 2;

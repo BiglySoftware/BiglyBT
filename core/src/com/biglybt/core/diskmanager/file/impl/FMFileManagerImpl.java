@@ -247,6 +247,11 @@ FMFileManagerImpl
 	}
 
 	@Override
+	public boolean hasLinks(TOTorrent torrent) {
+		return getLinksEntry(torrent).hasLinks();
+	}
+
+	@Override
 	public FMFile
 	createFile(
 		FMFileOwner	owner,

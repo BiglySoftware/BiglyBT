@@ -136,7 +136,7 @@ ConfigSectionTrackerServer
     label = new Label(gMainTab, SWT.NULL);
     Messages.setLanguageText(label, "ConfigView.section.tracker.ip");
 
-    final StringParameter tracker_ip = new StringParameter(gMainTab, "Tracker IP", "" );
+    final StringParameter tracker_ip = new StringParameter(gMainTab, "Tracker IP" );
 
     gridData = new GridData();
     gridData.widthHint = 120;
@@ -184,7 +184,7 @@ ConfigSectionTrackerServer
     gridData = new GridData();
     tracker_port.setLayoutData( gridData );
 
-    final StringParameter tracker_port_backup = new StringParameter(gMainTab, "Tracker Port Backups", "" );
+    final StringParameter tracker_port_backup = new StringParameter(gMainTab, "Tracker Port Backups" );
 
     gridData = new GridData();
     gridData.widthHint = 100;
@@ -205,7 +205,7 @@ ConfigSectionTrackerServer
     gridData = new GridData();
     tracker_port_ssl.setLayoutData( gridData );
 
-    final StringParameter tracker_port_ssl_backup = new StringParameter(gMainTab, "Tracker Port SSL Backups", "" );
+    final StringParameter tracker_port_ssl_backup = new StringParameter(gMainTab, "Tracker Port SSL Backups" );
 
     gridData = new GridData();
     gridData.widthHint = 100;
@@ -461,7 +461,7 @@ ConfigSectionTrackerServer
     label = new Label(gMainTab, SWT.NULL);
     Messages.setLanguageText(label, "ConfigView.section.tracker.username");
 
-    final StringParameter tracker_username = new StringParameter(gMainTab, "Tracker Username", "" );
+    final StringParameter tracker_username = new StringParameter(gMainTab, "Tracker Username" );
 
     gridData = new GridData();
     gridData.widthHint = 100;
@@ -746,7 +746,7 @@ ConfigSectionTrackerServer
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 3;
 
-    new StringParameter(gMainTab, "Tracker Banned Clients", "" ).setLayoutData(gridData);
+    new StringParameter(gMainTab, "Tracker Banned Clients" ).setLayoutData(gridData);
 
 
     // Networks Group //

@@ -314,6 +314,8 @@ public class MainMenuV3
 				}
 			}
 
+			MenuFactory.addViewToolbarMenuItem(viewMenu);
+			
 			/////////
 
 			MenuItem itemStatusBar = MenuFactory.createTopLevelMenuItem(viewMenu,
@@ -364,15 +366,14 @@ public class MainMenuV3
 			boolean needsSep = false;
 			boolean enabled = COConfigurationManager.getBooleanParameter("Beta Programme Enabled");
 			if (enabled) {
-				MenuFactory.addMenuItem(viewMenu, SWT.CHECK, PREFIX_V2 + ".view.beta",
-						new Listener() {
-							@Override
-							public void handleEvent(Event event) {
-								MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-								if (mdi != null) {
-									mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_BETAPROGRAM);
-								}
-							}
+				MenuFactory.addMenuItem(viewMenu, PREFIX_V2 + ".view.beta", new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
+						if (mdi != null) {
+							mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_BETAPROGRAM);
+						}
+					}
 				});
 				needsSep = true;
 			}
@@ -475,6 +476,12 @@ public class MainMenuV3
 		} catch (Exception e) {
 			Debug.out("Error creating View Menu", e);
 		}
+	}
+	
+	private void
+	addCommunityMenu()
+	{
+		MenuFactory.createCommunityMenuItem(menuBar);
 	}
 
 	/**
@@ -585,45 +592,6 @@ public class MainMenuV3
 			return menuBar;
 		}
 		return MenuFactory.findMenu(menuBar, id);
-	}
-
-	private void addCommunityMenu() {
-		MenuItem item = MenuFactory.createTopLevelMenuItem(menuBar,	MENU_ID_COMMUNITY);
-
-		final Menu communityMenu = item.getMenu();
-
-		communityMenu.addListener(
-			SWT.Show,
-			new Listener()
-			{
-				@Override
-				public void
-				handleEvent( Event event)
-				{
-					Utils.disposeSWTObjects( communityMenu.getItems());
-
-					MenuFactory.addMenuItem(communityMenu, MENU_ID_COMMUNITY_FORUMS,
-						new Listener() {
-							@Override
-							public void handleEvent(Event e) {
-								Utils.launch(Constants.URL_FORUMS);
-							}
-						});
-
-					MenuFactory.addMenuItem(communityMenu, MENU_ID_COMMUNITY_WIKI,
-						new Listener() {
-							@Override
-							public void handleEvent(Event e) {
-								Utils.launch(Constants.URL_WIKI);
-							}
-						});
-
-					MenuBuildUtils.addCommunityChatMenu( communityMenu );
-
-					MenuFactory.addVoteMenuItem(communityMenu);
-					MenuFactory.addBugReportMenuItem(communityMenu);
-				}
-			});
 	}
 
 	//====================================

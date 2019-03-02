@@ -61,19 +61,24 @@ public class PriorityItem
 
 			int	st = fileInfo.getStorageType();
 
-			if (	(	st == DiskManagerFileInfo.ST_COMPACT ||
+			if ( st < 0 ){
+				
+				tmp		= "";
+				sortval = Integer.MIN_VALUE;
+				
+			}else if (	(	st == DiskManagerFileInfo.ST_COMPACT ||
 						st == DiskManagerFileInfo.ST_REORDER_COMPACT ) &&
 					fileInfo.isSkipped()){
 
 				tmp = MessageText.getString("FileItem.delete");
 
-				sortval = Integer.MIN_VALUE;
+				sortval = Integer.MIN_VALUE+1;
 
 			}else if ( fileInfo.isSkipped()){
 
 				tmp = MessageText.getString("FileItem.donotdownload");
 
-				sortval = Integer.MIN_VALUE+1;
+				sortval = Integer.MIN_VALUE+2;
 
 			}else{
 

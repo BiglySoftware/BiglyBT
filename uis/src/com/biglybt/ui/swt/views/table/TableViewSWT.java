@@ -50,6 +50,8 @@ public interface TableViewSWT<DATASOURCETYPE>
 
 	public Composite getComposite();
 
+	public Rectangle getClientArea();
+	
 	TableRowCore getRow(DropTargetEvent event);
 
 	/**
@@ -126,6 +128,8 @@ public interface TableViewSWT<DATASOURCETYPE>
 	 * @since 4.1.0.9
 	 */
 	void enableFilterCheck(Text txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck);
+	
+	void enableFilterCheck(Text txtFilter, com.biglybt.ui.common.table.TableViewFilterCheck<DATASOURCETYPE> filterCheck, boolean filterSubRows);
 
 	Text getFilterControl();
 
@@ -227,7 +231,7 @@ public interface TableViewSWT<DATASOURCETYPE>
 	TableViewSWTFilter getSWTFilter();
 
 	void triggerDefaultSelectedListeners(TableRowCore[] selectedRows,
-			int stateMask);
+			int stateMask, int origin );
 
 	void sortColumn(boolean bForceDataRefresh);
 
@@ -241,6 +245,10 @@ public interface TableViewSWT<DATASOURCETYPE>
 
 	boolean isTabViewsEnabled();
 
+	public void setExpandEnabled( boolean b );
+	
+	public boolean isExpandEnabled();
+	
 	boolean getTabViewsExpandedByDefault();
 
 	String[] getTabViewsRestrictedTo();

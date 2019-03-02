@@ -111,20 +111,6 @@ public class SystemWarningWindow
 		this.parent = parent;
 		this.historyPosition = historyPosition;
 
-		WIDTH = Utils.adjustPXForDPI(WIDTH);
-
-		BORDER_X = Utils.adjustPXForDPI(BORDER_X);
-
-		BORDER_Y0 = Utils.adjustPXForDPI(BORDER_Y0);
-
-		BORDER_Y1 = Utils.adjustPXForDPI(BORDER_Y1);
-
-		GAP_Y = Utils.adjustPXForDPI(GAP_Y);
-
-		GAP_BUTTON_Y = Utils.adjustPXForDPI(GAP_BUTTON_Y);
-
-		GAP_Y_TITLE_COUNT = Utils.adjustPXForDPI(GAP_Y_TITLE_COUNT);
-
 		String amb_key_suffix;
 		switch (logAlert.entryType) {
 			case LogAlert.AT_ERROR:

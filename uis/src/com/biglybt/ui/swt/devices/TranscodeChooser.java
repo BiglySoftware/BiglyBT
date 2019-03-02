@@ -24,10 +24,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import com.biglybt.core.devices.Device;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.skin.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
@@ -35,14 +31,17 @@ import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.devices.Device;
+import com.biglybt.core.devices.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-
-import com.biglybt.core.devices.*;
+import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
@@ -257,18 +256,18 @@ public abstract class TranscodeChooser
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 10);
 		fd.top = new FormAttachment(cmbXCode, 0, SWT.CENTER);
-		Utils.setLayoutData(btnNoPrompt, fd);
+		btnNoPrompt.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.right = new FormAttachment(100, -10);
 		fd.top = new FormAttachment(0, 5);
 		fd.bottom = new FormAttachment(100, -5);
-		Utils.setLayoutData(cmbXCode, fd);
+		cmbXCode.setLayoutData(fd);
 
 		fd = new FormData();
 		fd.right = new FormAttachment(cmbXCode, -5);
 		fd.top = new FormAttachment(cmbXCode, 0, SWT.CENTER);
-		Utils.setLayoutData(lblXCode, fd);
+		lblXCode.setLayoutData(fd);
 
 		int userMode = COConfigurationManager.getIntParameter("User Mode");
 		if (userMode == 0) {
@@ -585,7 +584,7 @@ public abstract class TranscodeChooser
 			Image image = imageLoader.getUrlImage(iconURL,
 					new ImageLoader.ImageDownloaderListener() {
 						@Override
-						public void imageDownloaded(Image image, boolean returnedImmediately) {
+						public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
 							if (!returnedImmediately) {
 								if (lblImage.isDisposed()) {
 									return;
@@ -595,7 +594,7 @@ public abstract class TranscodeChooser
 								GridData gridData = (GridData) lblImage.getLayoutData();
 								gridData.heightHint = bounds.height + 10;
 								gridData.widthHint = bounds.width + 16;
-								Utils.setLayoutData(lblImage, gridData);
+								lblImage.setLayoutData(gridData);
 								lblImage.getShell().layout(new Control[] {
 									lblImage
 								});
@@ -611,7 +610,7 @@ public abstract class TranscodeChooser
 				gridData.widthHint = bounds.width + 16;
 			}
 		}
-		Utils.setLayoutData(lblImage, gridData);
+		lblImage.setLayoutData(gridData);
 
 		Label label = new Label(c, SWT.WRAP | SWT.CENTER);
 		if (listenerMouseInout != null) {
@@ -620,7 +619,7 @@ public abstract class TranscodeChooser
 		label.addListener(SWT.MouseUp, clickListener);
 		label.addListener(SWT.MouseDown, clickListener);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(label, gridData);
+		label.setLayoutData(gridData);
 		String s = name;
 		//s += " (via " + profile.getProvider().getName() + ")";
 		label.setText(s);
@@ -670,9 +669,9 @@ public abstract class TranscodeChooser
 			}
 		});
 
-		fontDevice = FontUtils.getFontWithHeight(parent.getFont(), null, 16, SWT.BOLD);
-		fontDeviceDesc = FontUtils.getFontWithHeight(parent.getFont(), null, 16,
-				SWT.NONE);
+		Font baseFont = parent.getFont();
+		fontDevice = FontUtils.getFontWithStyle(baseFont, SWT.BOLD, 1.1f);
+		fontDeviceDesc = FontUtils.getFontWithStyle(baseFont, SWT.NONE, 1.1f);
 
 		/**
 		PaintListener paintListener = new PaintListener() {
@@ -839,7 +838,7 @@ public abstract class TranscodeChooser
 		} else {
 			fd.top = new FormAttachment(lastButton, 15);
 		}
-		Utils.setLayoutData(button, fd);
+		button.setLayoutData(fd);
 
 		if (shortDescription != null && shortDescription.length() > 0) {
 			Label label = new Label(parent, SWT.None);
@@ -848,7 +847,7 @@ public abstract class TranscodeChooser
 			fd = new FormData();
 			fd.top = new FormAttachment(button, 0, SWT.CENTER);
 			fd.left = new FormAttachment(button, 5);
-			Utils.setLayoutData(label, fd);
+			label.setLayoutData(fd);
 		}
 
 		return button;

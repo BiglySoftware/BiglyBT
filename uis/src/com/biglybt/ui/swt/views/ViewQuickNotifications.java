@@ -69,7 +69,7 @@ public class ViewQuickNotifications
 
 		GridData gridData = new GridData(GridData.FILL_BOTH);
 
-		Utils.setLayoutData(composite, gridData);
+		composite.setLayoutData(gridData);
 
 		GridLayout layout = new GridLayout(2, false);
 		layout.marginLeft = layout.marginRight = layout.marginTop = layout.marginBottom = 0;
@@ -81,13 +81,13 @@ public class ViewQuickNotifications
 		notification_icon = new Label(composite,SWT.NONE);
 		gridData = new GridData();
 		gridData.widthHint = 20;
-		Utils.setLayoutData(notification_icon, gridData);
+		notification_icon.setLayoutData(gridData);
 
 			// text
 
 		notification_text = new Label(composite,SWT.DOUBLE_BUFFERED);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(notification_text, gridData);
+		notification_text.setLayoutData(gridData);
 
 		MouseAdapter	listener =
 			new MouseAdapter()
@@ -108,7 +108,7 @@ public class ViewQuickNotifications
 		more_text = new BufferedLabel(composite,SWT.NONE);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 2;
-		Utils.setLayoutData(more_text, gridData);
+		more_text.setLayoutData(gridData);
 		notification_text.setData( "" );
 
 		Control[] controls = { composite, notification_icon, notification_text, more_text.getControl() };

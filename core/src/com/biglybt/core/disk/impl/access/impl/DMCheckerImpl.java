@@ -822,6 +822,15 @@ DMCheckerImpl
 
 						    											CacheFile	cache_file = file_info.getCacheFile();
 
+						    											if ( 	!read_flush && 
+						    													file_info.getStorageType() == DiskManagerFileInfoImpl.ST_REORDER ){
+						    											
+						    													// got to ensure written to disk before setting complete as the re-order
+						    													// logic requires this 
+						    												
+						    												cache_file.flushCache( piece_entry.getOffset(), piece_entry.getLength());
+						    											}
+						    											
 						    											cache_file.setPieceComplete( pieceNumber, f_buffer );
 						    										}
 						    									}

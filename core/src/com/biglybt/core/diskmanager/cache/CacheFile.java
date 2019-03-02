@@ -23,6 +23,7 @@ import java.io.File;
 
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.FileUtil;
 
 /**
  * @author parg
@@ -51,7 +52,9 @@ CacheFile
 
 	public void
 	moveFile(
-		File		new_file )
+		File						new_file,
+		FileUtil.ProgressListener	pl )
+
 
 		throws CacheFileManagerException;
 
@@ -165,6 +168,13 @@ CacheFile
 
 		throws CacheFileManagerException;
 
+	public void
+	flushCache(
+		long		offset,
+		int			length )
+
+		throws CacheFileManagerException;
+	
 		/**
 		 * flushes the cache and discards entries
 		 * @throws CacheFileManagerException
@@ -189,6 +199,9 @@ CacheFile
 	public long
 	getSessionBytesWritten();
 
+	public long
+	getLastModified();
+	
 	public void
 	delete()
 

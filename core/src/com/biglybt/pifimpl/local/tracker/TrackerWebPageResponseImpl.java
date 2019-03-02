@@ -47,8 +47,9 @@ TrackerWebPageResponseImpl
 {
 	private static final String	NL			= "\r\n";
 
-	private ByteArrayOutputStream	baos = new ByteArrayOutputStream(2048);
-
+	private ByteArrayOutputStream	baos 		= new ByteArrayOutputStream(2048);
+	private boolean					baos_set	= false;
+	
 	private String				content_type = "text/html";
 
 	private int					reply_status	= 200;
@@ -103,6 +104,13 @@ TrackerWebPageResponseImpl
 		content_type	= type;
 	}
 
+	@Override
+	public String 
+	getContentType()
+	{
+		return( content_type );
+	}
+	
 	@Override
 	public void
 	setReplyStatus(
@@ -222,6 +230,14 @@ TrackerWebPageResponseImpl
 	{
 		return( baos );
 	}
+	
+	public void
+	setOutputStream(
+		ByteArrayOutputStream	_baos )
+	{
+		baos		= _baos;
+		baos_set	= true;
+	}
 
 	@Override
 	public OutputStream
@@ -229,6 +245,11 @@ TrackerWebPageResponseImpl
 
 		throws IOException
 	{
+		if ( baos_set ){
+			
+			throw( new IOException( "OutputStream already set" ));
+		}
+		
 		raw_output = true;
 
 		return( request.getOutputStream());
@@ -356,7 +377,7 @@ TrackerWebPageResponseImpl
 
 				gzos.write( reply_bytes );
 
-				gzos.finish();
+				gzos.close();
 
 				reply_bytes = temp.toByteArray();
 
@@ -423,13 +444,20 @@ TrackerWebPageResponseImpl
 
 		throws IOException
 	{
+		// strip parameters from relative_url
+		int paramPos = relative_url.indexOf('?');
+		if (paramPos >= 0) {
+			relative_url = relative_url.substring(0, paramPos);
+		}
 		String	target = root_dir + relative_url.replace('/',File.separatorChar);
 
 		File canonical_file = new File(target).getCanonicalFile();
+		
+		File canonical_root = new File(root_dir).getCanonicalFile();
 
 			// make sure some fool isn't trying to use ../../ to escape from web dir
 
-		if ( !canonical_file.toString().toLowerCase().startsWith( root_dir.toLowerCase())){
+		if ( !canonical_file.toString().toLowerCase().startsWith( canonical_root.toString().toLowerCase())){
 
 			return( false );
 		}

@@ -18,7 +18,6 @@
 package com.biglybt.ui.swt.config;
 
 import org.eclipse.swt.widgets.Control;
-import com.biglybt.ui.swt.Utils;
 
 /**
  * For plugins to add a generic SWT widget to the config page
@@ -30,8 +29,8 @@ public class UISWTParameter extends Parameter {
 
 	private Control control;
 
-	public UISWTParameter(Control control, String name) {
-		super(name);
+	public UISWTParameter(Control control, String configID) {
+		super(configID);
 		this.control = control;
 	}
 
@@ -57,7 +56,6 @@ public class UISWTParameter extends Parameter {
 	 */
 	@Override
 	public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
 		this.control.setLayoutData(layoutData);
 	}
 

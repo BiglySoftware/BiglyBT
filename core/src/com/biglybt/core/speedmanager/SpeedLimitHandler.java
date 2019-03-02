@@ -4861,7 +4861,7 @@ SpeedLimitHandler
 
 							if ( !download.isPaused()){
 
-								download.pause();
+								download.pause( true );
 							}
 							
 							download.setStopReason( "Speed Limit Handler: Tag " + tag.getTagName( true ));

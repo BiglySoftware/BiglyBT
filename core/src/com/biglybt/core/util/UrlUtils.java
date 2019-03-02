@@ -108,6 +108,36 @@ public class UrlUtils
 	}
 
 	public static String
+	getURLForm(
+		InetAddress		address,
+		int				port )
+	{
+		if ( address instanceof Inet6Address ){
+			
+			return( "[" + address.getHostAddress() + "]:" + port );
+			
+		}else{
+			
+			return(address.getHostAddress() + ":" + port );
+		}
+	}
+	
+	public static String
+	getURLForm(
+		String			address,
+		int				port )
+	{
+		if ( address.indexOf( ':' ) != -1 ){
+			
+			return( "[" + address + "]:" + port );
+			
+		}else{
+			
+			return( address + ":" + port );
+		}
+	}
+	
+	public static String
 	getMagnetURI(
 		byte[]		hash,
 		String		name,
@@ -1387,6 +1417,19 @@ public class UrlUtils
 
 	public static String
 	getCanonicalString(
+		String		str )
+	{
+		try{
+			return( getCanonicalString( new URL( str )));
+			
+		}catch( Throwable e ){
+		}
+		
+		return( str );
+	}
+	
+	public static String
+	getCanonicalString(
 		URL		url )
 	{
 		String protocol = url.getProtocol();
@@ -1395,26 +1438,18 @@ public class UrlUtils
 
 			protocol = protocol.toLowerCase( Locale.US );
 
-			url = UrlUtils.setProtocol( url, protocol );
+			url = setProtocol( url, protocol );
 		}
 
-		int	port = url.getPort();
+		int	port 			= url.getPort();
+		int	default_port	= url.getDefaultPort();
+		
+		if ( port == default_port ){
 
-		if ( protocol.equals( "http" ) || protocol.equals( "https" )){
-
-			if ( port == url.getDefaultPort()){
-
-				url = UrlUtils.setPort( url, 0 );
-			}
-		}else{
-
-			if ( port == -1 ){
-
-				url = UrlUtils.setPort( url, url.getDefaultPort());
-			}
+			url = UrlUtils.setPort( url, 0 );
 		}
 
-		return( url.toString());
+		return( url.toExternalForm());
 	}
 
 		/**

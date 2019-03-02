@@ -48,6 +48,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
@@ -389,6 +390,8 @@ public class SBC_DevicesView
 			ColumnTJ_Completion.COLUMN_ID,
 		};
 		tcm.setDefaultColumnNames(TABLE_DEVICE_LIBRARY, defaultQColumns);
+		tcm.setDefaultColumnNames(TABLE_DEVICE_LIBRARY + ":type=1", defaultQColumns);
+		
 	}
 
 	// @see SkinView#skinObjectShown(SWTSkinObject, java.lang.Object)
@@ -1002,6 +1005,8 @@ public class SBC_DevicesView
 					itemCategory.setText(categories[i].getName());
 					itemCategory.setData("Category", categories[i]);
 
+					TagUIUtils.setMenuIcon( itemCategory, categories[i] );
+					
 					itemCategory.addListener(SWT.Selection, new Listener() {
 						@Override
 						public void handleEvent(Event event) {
@@ -1079,7 +1084,7 @@ public class SBC_DevicesView
 
 		List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
 
-		all_tags = TagUIUtils.sortTags( all_tags );
+		all_tags = TagUtils.sortTags( all_tags );
 
 		if ( all_tags.size() > 0 ){
 
@@ -1233,6 +1238,8 @@ public class SBC_DevicesView
 
 					t_i.setSelection( selected );
 
+					TagUIUtils.setMenuIcon( t_i, t );
+					
 					t_i.addListener(SWT.Selection, new Listener() {
 						@Override
 						public void handleEvent(Event event) {

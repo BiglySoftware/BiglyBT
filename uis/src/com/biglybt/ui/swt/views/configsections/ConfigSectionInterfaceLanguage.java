@@ -92,6 +92,9 @@ public class ConfigSectionInterfaceLanguage implements UISWTConfigSection {
     int iUsingLocale = -1;
     for( int i=0; i < locales.length; i++ ) {
       Locale locale = locales[ i ];
+      
+      locale = MessageText.getDisplaySubstitute( locale );
+      
       String sName = locale.getDisplayName(locale);
       String sName2 = locale.getDisplayName();
       if (!sName.equals(sName2)) {
@@ -128,7 +131,7 @@ public class ConfigSectionInterfaceLanguage implements UISWTConfigSection {
       }
     });
 
-    BooleanParameter uc = new BooleanParameter( cMain, "label.lang.upper.case", false, "label.lang.upper.case" );
+    BooleanParameter uc = new BooleanParameter( cMain, "label.lang.upper.case",  "label.lang.upper.case" );
 
     uc.addChangeListener( new ParameterChangeAdapter() {
         @Override

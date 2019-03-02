@@ -22,6 +22,7 @@ package com.biglybt.ui.swt.columns.torrent;
 
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.skin.TorrentListViewsUtils;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -118,6 +119,11 @@ public class ColumnStream
 	}
 
 	private boolean noIconForYou(Object ds, TableCell cell) {
+		if ( ds instanceof FilesView.FilesViewTreeNode){
+			if (! (( FilesView.FilesViewTreeNode)ds).isLeaf()){
+				return( true );
+			}
+		}
 		if (!(ds instanceof DownloadManager)) {
 			return false;
 		}
@@ -202,6 +208,11 @@ public class ColumnStream
 		if (event.eventType == TableRowMouseEvent.EVENT_MOUSEDOWN
 				&& event.button == 1) {
 			Object ds = event.cell.getDataSource();
+			if ( ds instanceof FilesView.FilesViewTreeNode){
+				if (! (( FilesView.FilesViewTreeNode)ds).isLeaf()){
+					return;
+				}
+			}
 			if (PlayUtils.canStreamDS(ds, -1,true) || PlayUtils.canPlayDS(ds, -1,true)) {
 				TorrentListViewsUtils.playOrStreamDataSource(ds, "column", true, false);
 			}

@@ -27,6 +27,7 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.*;
 
+import com.biglybt.core.category.Category;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeerManager;
@@ -55,8 +56,12 @@ MagnetPluginMDDownloader
 	final private byte[]				hash;
 	final private Set<String>			networks;
 	final private InetSocketAddress[]	addresses;
+	final private List<String>			tags;
+	final private Map<String,Object>	initial_metadata;
 	final private String				args;
 
+	private volatile com.biglybt.core.download.DownloadManager		core_dm;
+	
 	private volatile boolean		started;
 	private volatile boolean		cancelled;
 	private volatile boolean		completed;
@@ -73,6 +78,8 @@ MagnetPluginMDDownloader
 		byte[]				_hash,
 		Set<String>			_networks,
 		InetSocketAddress[]	_addresses,
+		List<String>		_tags,
+		Map<String,Object>	_initial_metadata,
 		String				_args )
 	{
 		plugin				= _plugin;
@@ -80,6 +87,8 @@ MagnetPluginMDDownloader
 		hash				= _hash;
 		networks			= _networks;
 		addresses			= _addresses;
+		tags				= _tags;
+		initial_metadata	= _initial_metadata;
 		args				= _args;
 	}
 
@@ -117,13 +126,13 @@ MagnetPluginMDDownloader
 		}
 	}
 
-	protected void
+	protected boolean
 	cancel()
 	{
-		cancelSupport( false );
+		return( cancelSupport( false ));
 	}
 
-	private void
+	private boolean
 	cancelSupport(
 		boolean	internal )
 	{
@@ -143,7 +152,7 @@ MagnetPluginMDDownloader
 
 				if ( cancelled || completed ){
 
-					return;
+					return( cancelled );
 				}
 
 				cancelled	= true;
@@ -157,6 +166,9 @@ MagnetPluginMDDownloader
 
 				request.cancel();
 			}
+			
+			return( true );
+			
 		}finally{
 
 			running_sem.releaseForever();
@@ -168,6 +180,12 @@ MagnetPluginMDDownloader
 		}
 	}
 
+	protected com.biglybt.core.download.DownloadManager
+	getDownloadManager()
+	{
+		return( core_dm );
+	}
+	
 	private void
 	startSupport(
 		final DownloadListener		listener )
@@ -323,7 +341,9 @@ MagnetPluginMDDownloader
 
 			String	display_name = MessageText.getString( "MagnetPlugin.use.md.download.name", new String[]{ name });
 
-			DownloadManagerState state = PluginCoreUtils.unwrap( download ).getDownloadState();
+			core_dm = PluginCoreUtils.unwrap( download );
+			
+			DownloadManagerState state = core_dm.getDownloadState();
 
 			state.setDisplayName( display_name + ".torrent" );
 
@@ -386,6 +406,8 @@ MagnetPluginMDDownloader
 				}
 			}
 
+			plugin.setInitialMetadata( core_dm, tags, initial_metadata );
+			
 			final Set<String> peer_networks = new HashSet<>();
 
 			final List<Map<String,Object>> peers_for_cache = new ArrayList<>();
@@ -862,11 +884,11 @@ MagnetPluginMDDownloader
 					}
 				}catch( Throwable e ){
 				}
-
+				
 				listener.complete( torrent, peer_networks );
 
 			}else{
-
+					
 				if ( cancelled ){
 
 					throw( new Exception( "Download cancelled" ));
@@ -911,6 +933,25 @@ MagnetPluginMDDownloader
 			try{
 				if ( download != null ){
 
+						// unfortunately the tags and category get lost on download removal so cache them
+					
+					List<String> latest_tags =  plugin.getInitialTags( core_dm );
+					
+					if ( !latest_tags.isEmpty()){
+					
+						core_dm.setUserData( MagnetPlugin.DM_TAG_CACHE, latest_tags );
+					}
+					
+					Category cat = core_dm.getDownloadState().getCategory();
+					
+					if ( cat != null ){
+						
+						if ( cat.getType() == Category.TYPE_USER ){
+
+							core_dm.setUserData( MagnetPlugin.DM_CATEGORY_CACHE, cat.getName());
+						}
+					}
+					
 					try{
 						download.stop();
 
@@ -977,7 +1018,7 @@ MagnetPluginMDDownloader
 		reportProgress(
 			int		downloaded,
 			int		total_size );
-
+		
 		public void
 		complete(
 			TOTorrent		torrent,

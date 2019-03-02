@@ -129,22 +129,35 @@ TagPropertyTrackerTemplateHandler
 
 				if ( torrent != null ){
 
-					List<List<String>> trackers = TorrentUtils.announceGroupsToList( torrent );
-
+					List<List<String>> existing_trackers = TorrentUtils.announceGroupsToList( torrent );
+					
+					List<List<String>> new_trackers;
+					
 					if ( type.equals( "m" )){
 
-						trackers = TorrentUtils.mergeAnnounceURLs( trackers, template_trackers );
+						new_trackers = TorrentUtils.mergeAnnounceURLs( existing_trackers, template_trackers );
 
 					}else if ( type.equals( "r" )){
 
-						trackers = template_trackers;
+						new_trackers = template_trackers;
 
 					}else{
 
-						trackers = TorrentUtils.removeAnnounceURLs( trackers, template_trackers, true );
+						new_trackers = TorrentUtils.removeAnnounceURLs( existing_trackers, template_trackers, true );
 					}
 
-					TorrentUtils.listToAnnounceGroups( trackers, torrent );
+					if ( !TorrentUtils.areIdentical( new_trackers, existing_trackers )){
+					
+						TorrentUtils.listToAnnounceGroups( new_trackers, torrent );
+						
+						try{
+							TorrentUtils.writeToFile(torrent);
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}
 				}
 			 }
 		 }

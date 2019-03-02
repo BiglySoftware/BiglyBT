@@ -445,7 +445,14 @@ public class UISWTViewImpl
 			data = PluginCoreUtils.convert(datasource, useCoreDataSource);
 			if (initialDatasource == null) {
 				initialDatasource = datasource;
+			}else if ( datasource == null ){
+					// explicit clearing of datasource - we need to forget the initial one as it will be
+					// re-instated incorrectly if the view is subsequently switched to. This was happening in sub-tabs
+					// when a download was selected, then deselected (ctrl+click) - the active sub-tab view was cleared
+					// but the other ones still remembered the selection when switched to
+				initialDatasource = null;
 			}
+			
 			if (eventListener == null) {
 				return true;
 			}
@@ -787,8 +794,14 @@ public class UISWTViewImpl
 					}
 				}
 			}
+			
 			composite.layout();
 			composite.setLayoutDeferred(false);
+			
+				// issues with scroll bars not sizing correctly in Library view - is fixed by doign this...
+			
+			Utils.relayoutUp( composite );
+			
 			composite.setRedraw(true);
 		}
 	}

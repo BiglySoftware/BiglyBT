@@ -21,6 +21,7 @@
 package com.biglybt.pifimpl.local.download;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +30,10 @@ import java.util.Map;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.StringInterner;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TorrentUtils;
+import com.biglybt.core.util.TrackersUtil;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadException;
 import com.biglybt.pif.download.DownloadRemovalVetoException;
@@ -51,6 +54,7 @@ DownloadStubImpl
 	private final long						size;
 	private final long						date_created;
 	private final String					save_path;
+	private final String					main_tracker;
 	private final DownloadStubFileImpl[]	files;
 	private final String[]					manual_tags;
 	private final int						share_ratio;
@@ -96,6 +100,17 @@ DownloadStubImpl
 		DownloadStats stats = temp_download.getStats();
 
 		share_ratio = stats.getShareRatio();
+		
+		URL tracker = torrent.getAnnounceURL();
+		
+		if ( tracker != null && !TorrentUtils.isDecentralised( tracker )){
+			
+			main_tracker = tracker.toExternalForm();
+			
+		}else{
+			
+			main_tracker = null;
+		}
 	}
 
 	protected
@@ -111,7 +126,7 @@ DownloadStubImpl
 		size 			= MapUtils.getMapLong( _map, "s", 0 );
 		save_path		= MapUtils.getMapString( _map, "l", null );
 		gm_map 			= (Map<String,Object>)_map.get( "gm" );
-
+		
 		List<Map<String,Object>>	file_list = (List<Map<String,Object>>)_map.get( "files" );
 
 		if ( file_list == null ){
@@ -147,6 +162,17 @@ DownloadStubImpl
 		attributes = (Map<String,Object>)_map.get( "attr" );
 
 		share_ratio	= MapUtils.getMapInt( _map, "sr", -1 );
+		
+		String tracker 	= MapUtils.getMapString( _map, "tr", null );
+		
+		if ( tracker == null ){
+			
+			main_tracker = null;
+			
+		}else{
+			
+			main_tracker	= StringInterner.intern( tracker );
+		}
 	}
 
 	public Map<String,Object>
@@ -197,6 +223,11 @@ DownloadStubImpl
 			map.put( "sr", new Long( share_ratio ));
 		}
 
+		if ( main_tracker != null ){
+			
+			MapUtils.setMapString(map, "tr", main_tracker );
+		}
+		
 		return( map );
 	}
 
@@ -274,6 +305,13 @@ DownloadStubImpl
 		return( save_path );
 	}
 
+	@Override
+	public String 
+	getMainTracker()
+	{
+		return( main_tracker );
+	}
+	
 	@Override
 	public DownloadStubFile[]
 	getStubFiles()

@@ -29,8 +29,12 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SimpleTimer;
@@ -136,7 +140,7 @@ MultiPlotGraphic
 					}
 				}
 
-				currentPosition = nbValues;
+				currentPosition = nbValues%maxEntries;
 			}
 		}
 
@@ -163,7 +167,7 @@ MultiPlotGraphic
 				public void paintControl(PaintEvent e) {
 					if (bufferImage != null && !bufferImage.isDisposed()) {
 						Rectangle bounds = bufferImage.getBounds();
-						if (bounds.width >= e.width && bounds.height >= e.height) {
+						if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 
 							e.gc.drawImage(bufferImage, e.x, e.y, e.width, e.height, e.x, e.y, e.width, e.height);
 						}
@@ -181,6 +185,39 @@ MultiPlotGraphic
 	  	setActive( is_active );
 	}
 
+	  @Override
+	  protected void
+	  addMenuItems(
+		Menu	menu )
+	  {
+		  new MenuItem( menu, SWT.SEPARATOR );
+		  
+		  MenuItem mi_reset = new MenuItem( menu, SWT.PUSH );
+
+		  mi_reset.setText(  MessageText.getString( "label.clear.history" ));
+
+		  mi_reset.addListener(SWT.Selection, new Listener() {
+			  @Override
+			  public void handleEvent(Event e) {
+				  try{
+				   	this_mon.enter();
+				   	
+				   	nbValues		= 0;
+				   	currentPosition	= 0;
+			 		
+				   	for ( int i=0;i<all_values.length;i++ ){
+				   		all_values[i] = new int[all_values[i].length];
+				   	}		
+				  }finally{
+					  
+					this_mon.exit();
+				  }
+				  
+				  refresh( true );
+			  }
+		  });
+	  }
+	  
 	public void
 	setActive(
 		boolean	active )
@@ -259,6 +296,54 @@ MultiPlotGraphic
 			});
 	}
 
+	public int[]
+	getAverage(
+		int		num_entries )
+	{
+	    try{
+	    	this_mon.enter();
+
+	    	int[]	averages = new int[all_values.length];
+	    		
+	    	if ( nbValues < num_entries ){
+	    		
+	    		num_entries = nbValues;
+	    	}
+	    	
+	    	if ( num_entries > 0 ){
+	    		
+	    		int start	= currentPosition-num_entries;
+	    			    	
+		    	if ( start < 0 ){
+			    	if ( nbValues < maxEntries ){
+		    			start = 0;
+		    		}else{
+		    			start += maxEntries;
+		    		}
+		    	}
+		    	
+		    	for ( int i=start;i<start+num_entries;i++){
+		    		
+		    		int	pos = i%maxEntries;
+		    		
+		    		for ( int j=0;j<averages.length;j++){
+		    			averages[j] += all_values[j][pos];
+		    		}
+		    	}
+		    	
+		    	for ( int j=0;j<averages.length;j++){
+	    			averages[j] /= num_entries;
+	    		}
+	    	}
+	    	
+	    	return( averages );
+	    	
+	    }finally{
+
+	    	this_mon.exit();
+	    }
+	}
+	
 	private void
 	addIntsValue(
 		int[] new_values)
@@ -330,7 +415,7 @@ MultiPlotGraphic
 
 		Rectangle bounds = drawCanvas.getClientArea();
 
-		if ( bounds.height < 30 || bounds.width  < 100 || bounds.width > 10000 || bounds.height > 10000){
+		if ( bounds.height < 1 || bounds.width  < 1 || bounds.width > 10000 || bounds.height > 10000){
 
 			return;
 		}
@@ -341,20 +426,43 @@ MultiPlotGraphic
 
 			try{
 				this_mon.enter();
-
+				
+				boolean	cycled = nbValues == maxEntries;
+				
 				while( maxEntries < bounds.width ){
 
-					maxEntries += 1000;
+					maxEntries += 100;
 				}
 
 				for( int i=0;i<all_values.length;i++ ){
 
+					int[] oldValues	= all_values[i];
+					
 					int[] newValues = new int[maxEntries];
 
-					System.arraycopy(all_values[i], 0, newValues, 0, all_values[i].length);
+					if ( cycled ){
+						
+						int	pos = currentPosition;
+						
+						for ( int j=0;j<nbValues;j++){
+							
+							newValues[j] = oldValues[pos++];
+							
+							if ( pos == nbValues ){
+								
+								pos = 0;
+							}
+						}
+					}else{
+						
+						System.arraycopy( oldValues, 0, newValues, 0, nbValues );
+					}
 
 					all_values[i] = newValues;
 				}
+				
+				currentPosition = nbValues;
+				
 			}finally{
 
 				this_mon.exit();
@@ -729,6 +837,17 @@ MultiPlotGraphic
 									gcImage.setBackground( source.getLineColor());
 
 									gcImage.fillPolygon(new int[] { x, y+7, x+7, y+7, x+3, y });
+
+									gcImage.setBackground( bg );
+								
+								}else  if (( style & ValueSource.STYLE_BLOB ) != 0 ){
+
+									int	x = bounds.width - 72;
+									int y = height - 12;
+
+									gcImage.setBackground( source.getLineColor());
+
+									gcImage.fillOval( x, y, 5, 5 );
 
 									gcImage.setBackground( bg );
 								}

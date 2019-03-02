@@ -41,7 +41,6 @@ import com.biglybt.ui.swt.components.LinkArea;
 import com.biglybt.ui.swt.components.StringListChooser;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.IMainStatusBar;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
@@ -229,7 +228,7 @@ UpdateWindow
     for(int i = 0 ; i < names.length ; i++) {
       TableColumn column = new TableColumn(table, i==0?SWT.LEFT:SWT.RIGHT);
       Messages.setLanguageText(column,"UpdateWindow.columns." + names[i]);
-      column.setWidth(Utils.adjustPXForDPI(sizes[i]));
+      column.setWidth(sizes[i]);
     }
     table.setHeaderVisible(true);
 

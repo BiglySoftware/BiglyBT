@@ -18,13 +18,7 @@ package com.biglybt.ui.swt.components;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
@@ -99,11 +93,11 @@ public class StringListChooser {
     data = new GridData(GridData.FILL_HORIZONTAL);
     data.horizontalSpan = 2;
     data.heightHint = 30;
-    Utils.setLayoutData(label, data);
+    label.setLayoutData(data);
 
     data = new GridData(GridData.FILL_HORIZONTAL);
     data.horizontalSpan = 2;
-    Utils.setLayoutData(combo, data);
+    combo.setLayoutData(data);
 
     data = new GridData();
     data.widthHint = 80;
@@ -111,13 +105,13 @@ public class StringListChooser {
     data.grabExcessVerticalSpace = true;
     data.verticalAlignment = SWT.END;
     data.horizontalAlignment = SWT.END;
-    Utils.setLayoutData(ok, data);
+    ok.setLayoutData(data);
 
     data = new GridData();
     data.grabExcessVerticalSpace = true;
     data.verticalAlignment = SWT.END;
     data.widthHint = 80;
-    Utils.setLayoutData(cancel, data);
+    cancel.setLayoutData(data);
 
     shell.setSize(300,150);
     shell.layout();

@@ -184,19 +184,19 @@ LocaleUtil
    * string
    *
    * @param array String in an byte array
-   * @return list of candidates.  Valid candidates have getDecoder() non-null
+   * @return list of candidates.  All candidates have getDecoder() non-null
    */
-  protected LocaleUtilDecoderCandidate[]
+  protected List<LocaleUtilDecoderCandidate>
   getCandidates(
 	byte[] array )
   {
-	LocaleUtilDecoderCandidate[] candidates = new LocaleUtilDecoderCandidate[all_decoders.length];
+  	List<LocaleUtilDecoderCandidate> candidates = new ArrayList<>();
 
 	boolean show_less_likely_conversions = COConfigurationManager.getBooleanParameter("File.Decoder.ShowLax" );
 
 	for (int i = 0; i < all_decoders.length; i++){
 
-	  candidates[i] = new LocaleUtilDecoderCandidate(i);
+		LocaleUtilDecoderCandidate candidate = new LocaleUtilDecoderCandidate(i);
 
 	  try{
 			LocaleUtilDecoder decoder = all_decoders[i];
@@ -205,7 +205,8 @@ LocaleUtil
 
 			if ( str != null ){
 
-				candidates[i].setDetails( decoder, str );
+				candidate.setDetails( decoder, str );
+				candidates.add(candidate);
 			}
 	  } catch (Exception ignore) {
 
@@ -233,49 +234,5 @@ LocaleUtil
 
 	return candidates;
   }
-
-  /**
-   * Determine which decoders are candidates for handling the supplied type of
-   * string
-   *
-   * @param array String in a byte array
-   * @return list of possibly valid decoders.  LocaleUtilDecoder
-   */
-  protected List
-  getCandidateDecoders(
-  	byte[]		array )
-  {
-  	LocaleUtilDecoderCandidate[] 	candidates = getCandidates( array );
-
-  	List	decoders = new ArrayList();
-
-  	for (int i=0;i<candidates.length;i++){
-
-  		LocaleUtilDecoder	d = candidates[i].getDecoder();
-
-  		if (d != null)
-  			decoders.add(d);
-  	}
-
-  	return decoders;
-  }
-
-  /**
-   *
-   * @param array
-   * @return List of LocaleUtilDecoderCandidate
-   */
-  protected List getCandidatesAsList(byte[] array) {
-		LocaleUtilDecoderCandidate[] candidates = getCandidates(array);
-
-		List candidatesList = new ArrayList();
-
-		for (int i = 0; i < candidates.length; i++) {
-			if (candidates[i].getDecoder() != null)
-				candidatesList.add(candidates[i]);
-		}
-
-		return candidatesList;
-	}
 
 }

@@ -75,7 +75,8 @@ public class GCStringPrinter
 	private static final int MAX_WORD_LEN = 4000;
 
 	private boolean cutoff;
-
+	private boolean truncated;
+	
 	private boolean isWordCut;
 
 	private GC gc;
@@ -561,6 +562,8 @@ public class GCStringPrinter
 
 		}
 
+		truncated = cutoff;
+		
 		cutoff |= size.y > printArea.height | preferredSize.x > size.x;
 		return !cutoff;
 	}
@@ -764,8 +767,13 @@ public class GCStringPrinter
 				//System.out.println("w2 = " + lineInfo.outputLineExtent.x + ";h=" + lineInfo.outputLineExtent.y);
 				//return -1;
 			}
-		}
 
+			if (word.length() == 0) {
+				space.append(' ');
+				return -1;
+			}
+		}
+		
 		Point ptLineAndWordSize = gc.stringExtent(outputLine + word + " ");
 		//System.out.println(ptLineAndWordSize + ";" + outputLine  + "::WordComp " + (ptLineAndWordSize.x - lineInfo.outputLineExtent.x));
 		if (ptLineAndWordSize.x > printArea.width) {
@@ -1518,6 +1526,10 @@ public class GCStringPrinter
 		return cutoff;
 	}
 
+	public boolean isTruncated(){
+		return truncated;
+	}
+	
 	public void setImages(Image[] images) {
 		this.images = images;
 	}

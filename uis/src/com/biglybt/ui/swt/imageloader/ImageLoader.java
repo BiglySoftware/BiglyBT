@@ -96,8 +96,7 @@ public class ImageLoader
 	public static synchronized ImageLoader getInstance() {
 		if (instance == null) {
 			if (Utils.isDisplayDisposed()) {
-				System.err.println("Calling getInstance after display disposed: " + Debug.getCompressedStackTrace());
-				return null;
+				throw new SWTException("Calling getInstance after display disposed");
 			}
 			instance = new ImageLoader(Display.getDefault(), null);
 			// always add az2 icons to instance
@@ -292,12 +291,12 @@ public class ImageLoader
 				if (index > 0) {
 					String sTryFile = value.substring(0, index) + suffix
 							+ value.substring(index);
-					images[i] = loadImage(display, cl, sTryFile, sKey, scale);
+					images[i] = loadImage(display, cl, sTryFile, sKey);
 
 					if (images[i] == null) {
 						sTryFile = value.substring(0, index) + suffix.replace('-', '_')
 								+ value.substring(index);
-						images[i] = loadImage(display, cl, sTryFile, sKey, scale);
+						images[i] = loadImage(display, cl, sTryFile, sKey);
 					}
 				}
 
@@ -317,14 +316,14 @@ public class ImageLoader
 				if (useIndex == -1) {
 					String sTryFile = origFile.substring(0, index) + suffix
 							+ origFile.substring(index);
-					image = loadImage(display, cl, sTryFile, sKey, scale);
+					image = loadImage(display, cl, sTryFile, sKey);
 
 						// not in repo
 
 					if (image == null) {
 						sTryFile = origFile.substring(0, index) + suffix.replace('-', '_')
 								+ origFile.substring(index);
-						image = loadImage(display, cl, sTryFile, sKey, scale);
+						image = loadImage(display, cl, sTryFile, sKey);
 
 							// not in repo
 					}
@@ -338,7 +337,7 @@ public class ImageLoader
 
 					if ( image == null ){
 
-						image = loadImage(display, cl, sTryFile, sTryFile, scale);
+						image = loadImage(display, cl, sTryFile, sTryFile);
 
 						if ( isRealImage(image)){
 
@@ -355,7 +354,7 @@ public class ImageLoader
 							if (!isRealImage(image)) {
 
 								image = loadImage(display, cl, sTryFileNonDisabled,
-										sTryFileNonDisabled, scale);
+										sTryFileNonDisabled);
 
 								if ( isRealImage(image)) {
 
@@ -394,7 +393,7 @@ public class ImageLoader
 
 				}else{
 
-					image = loadImage(display, cl, values[locationStart], sKey, scale);
+					image = loadImage(display, cl, values[locationStart], sKey);
 
 					if ( isRealImage(image)) {
 
@@ -452,7 +451,7 @@ public class ImageLoader
 	}
 
 	private Image loadImage(Display display, ClassLoader cl, String res,
-			String sKey, boolean scale) {
+			String sKey) {
 		Image img = null;
 
 		//System.out.println("LoadImage " + sKey + " - " + res);
@@ -479,7 +478,7 @@ public class ImageLoader
 						if (index > 0) {
 							String sTryFile = sParentFile.substring(0, index) + sSuffix
 									+ sParentFile.substring(index);
-							img = loadImage(display, cl, sTryFile, sKey, scale);
+							img = loadImage(display, cl, sTryFile, sKey);
 
 							if (img != null) {
 								break;
@@ -487,7 +486,7 @@ public class ImageLoader
 
 							sTryFile = sParentFile.substring(0, index)
 									+ sSuffix.replace('-', '_') + sParentFile.substring(index);
-							img = loadImage(display, cl, sTryFile, sKey, scale);
+							img = loadImage(display, cl, sTryFile, sKey);
 
 							if (img != null) {
 								break;
@@ -533,8 +532,6 @@ public class ImageLoader
 						releaseImage(id);
 					}
 					//System.err.println("ImageRepository:loadImage:: Resource not found: " + res);
-				} else if (scale) {
-					img = Utils.adjustPXForDPI(display, img);
 				}
 			} catch (Throwable e) {
 				System.err.println("ImageRepository:loadImage:: Resource not found: "
@@ -1194,7 +1191,7 @@ public class ImageLoader
 
 		if (imageExists(imageKey)) {
 			Image image = getImage(imageKey);
-			l.imageDownloaded(image, true);
+			l.imageDownloaded(image, imageKey, true);
 			return image;
 		}
 
@@ -1224,14 +1221,14 @@ public class ImageLoader
 							}
 						}
 						putRefInfoToImageMap(imageKey, new ImageLoaderRefInfo(image));
-						l.imageDownloaded(image, true);
+						l.imageDownloaded(image, imageKey, true);
 						return image;
 					} finally {
 						fis.close();
 					}
 				} catch (Throwable e) {
 					System.err.println(e.getMessage() + " for " + url + " at " + cache_file);
-					Debug.printStackTrace(e);
+					//Debug.printStackTrace(e);
 				}
 			}else{
 
@@ -1251,7 +1248,7 @@ public class ImageLoader
 									// downloaded
 								if (imageExists(f_imageKey)) {
 									Image image = getImage(f_imageKey);
-									l.imageDownloaded(image, false);
+									l.imageDownloaded(image, imageKey, false);
 									return;
 								}
 								FileUtil.writeBytesAsFile(cache_file.getAbsolutePath(), imageBytes);
@@ -1271,7 +1268,7 @@ public class ImageLoader
   									}
   								}
   								putRefInfoToImageMap(f_imageKey, new ImageLoaderRefInfo(image));
-  								l.imageDownloaded(image, false);
+  								l.imageDownloaded(image, imageKey, false);
 								} catch (SWTException swte) {
 									//  org.eclipse.swt.SWTException: Unsupported or unrecognized format
 									System.err.println(swte.getMessage() + " for " + f_imageKey + " at " + cache_file);
@@ -1325,7 +1322,7 @@ public class ImageLoader
 
 	public static interface ImageDownloaderListener
 	{
-		public void imageDownloaded(Image image, boolean returnedImmediately);
+		public void imageDownloaded(Image image, String key, boolean returnedImmediately);
 	}
 
 	// @see com.biglybt.core.util.AEDiagnosticsEvidenceGenerator#generate(com.biglybt.core.util.IndentWriter)

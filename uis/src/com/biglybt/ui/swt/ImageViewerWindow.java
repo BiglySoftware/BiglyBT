@@ -20,6 +20,7 @@ package com.biglybt.ui.swt;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -30,12 +31,7 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
@@ -80,7 +76,7 @@ public class ImageViewerWindow {
     GridData gridData = new GridData(  GridData.FILL_HORIZONTAL );
    // gridData.widthHint = 200;
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(label, gridData);
+    label.setLayoutData(gridData);
 
     final ScrolledComposite sc = new ScrolledComposite(shell, SWT.H_SCROLL | SWT.V_SCROLL);
     sc.setExpandHorizontal(true);
@@ -89,7 +85,7 @@ public class ImageViewerWindow {
     gridData.widthHint = 500;
     gridData.heightHint = 400;
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(sc, gridData);
+    sc.setLayoutData(gridData);
 
     layout = new GridLayout();
 	layout.horizontalSpacing = 0;
@@ -104,7 +100,7 @@ public class ImageViewerWindow {
     Label img_label = new Label(img_comp, SWT.BORDER );
     img_label.setAlignment( SWT.CENTER );
     gridData = new GridData(  GridData.FILL_BOTH );
-    Utils.setLayoutData(img_label, gridData);
+    img_label.setLayoutData(gridData);
 
     sc.setContent( img_comp );
     sc.addControlListener(new ControlAdapter() {
@@ -153,13 +149,13 @@ public class ImageViewerWindow {
 
     label = new Label(shell, SWT.NONE);
     gridData = new GridData( GridData.FILL_HORIZONTAL );
-    Utils.setLayoutData(label, gridData);
+    label.setLayoutData(gridData);
 
     ok = new Button(shell, SWT.PUSH);
     ok.setText(MessageText.getString("Button.ok"));
     gridData = new GridData();
     gridData.widthHint = 70;
-    Utils.setLayoutData(ok, gridData);
+    ok.setLayoutData(gridData);
     shell.setDefaultButton(ok);
     ok.addListener(SWT.Selection, new Listener() {
       @Override

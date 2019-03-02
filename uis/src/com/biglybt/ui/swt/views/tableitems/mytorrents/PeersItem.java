@@ -31,8 +31,8 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
-import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
@@ -185,12 +185,17 @@ public class PeersItem extends CoreTableColumnSWT implements
 		}
 
 		@Override
-		public void scrapeResult(TRTrackerScraperResponse response) {
-			if (checkScrapeResult(response)) {
-				lTotalPeers = response.getPeers();
+		protected void updateSeedsPeers( Download download, boolean use_cache ){
+			if ( download != null ){
+				DownloadScrapeResult result = download.getAggregatedScrapeResult( use_cache );
+				
+				if ( result.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
+					
+					lTotalPeers = result.getNonSeedCount();
+				}
 			}
 		}
-
+		
 		@Override
 		public void refresh(TableCell cell) {
 			super.refresh(cell);
@@ -201,10 +206,7 @@ public class PeersItem extends CoreTableColumnSWT implements
 				lConnectedPeers = dm.getNbPeers();
 
 				if (lTotalPeers == -1) {
-					TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
-					if (response != null && response.isValid()) {
-						lTotalPeers = response.getPeers();
-					}
+					updateSeedsPeers( getDownload(), true );
 				}
 
 				if (cell instanceof TableCellSWT) {
@@ -302,10 +304,13 @@ public class PeersItem extends CoreTableColumnSWT implements
 					sToolTip += lTotalPeers + " "
 							+ MessageText.getString("GeneralView.label.in_swarm");
 				} else {
-					TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
-					sToolTip += "?? " + MessageText.getString("GeneralView.label.in_swarm");
-					if (response != null)
-						sToolTip += "(" + response.getStatusString() + ")";
+					Download d = getDownload();
+					if ( d != null ){
+						DownloadScrapeResult response = d.getAggregatedScrapeResult( true );
+						sToolTip += "?? " + MessageText.getString("GeneralView.label.in_swarm");
+						if (response != null)
+							sToolTip += "(" + response.getStatus() + ")";
+					}
 				}
 
 				int activationCount = dm.getActivationCount();

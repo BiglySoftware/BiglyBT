@@ -424,8 +424,8 @@ NetStatusProtocolTester
 				boolean	test = adjusted_originator.getAddress().isLoopbackAddress();
 
 				if ( 	test ||
-						(	tcp_man.isTCPListenerEnabled() &&
-							tcp_man.getTCPListeningPortNumber() == ddb.getLocalContact().getAddress().getPort() &&
+						(	tcp_man.isDefaultTCPListenerEnabled() &&
+							tcp_man.getDefaultTCPListeningPortNumber() == ddb.getLocalContact().getAddress().getPort() &&
 							SystemTime.getCurrentTime() - tcp_man.getLastIncomingNonLocalConnectionTime() <= 24*60*60*1000 )){
 
 					byte[]	their_hash	= (byte[])request.get( "h" );

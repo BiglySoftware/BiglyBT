@@ -23,13 +23,13 @@ package com.biglybt.ui.swt.systray;
 import java.io.File;
 import java.util.Locale;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.CoreRunningListener;
-import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
@@ -38,27 +38,24 @@ import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
-import com.biglybt.core.util.*;
-import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.ui.common.util.MenuItemManager;
-import com.biglybt.ui.swt.Alerts;
-import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.SelectableSpeedMenu;
-import com.biglybt.ui.swt.views.utils.ManagerUtils;
-
 import com.biglybt.core.tag.TagDownload;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.util.*;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.updater.UIUpdatableAlways;
+import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.SelectableSpeedMenu;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
+
+import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.ui.config.ConfigSection;
 
 /**
  * @author Olivier Chalouhi
@@ -117,6 +114,9 @@ public class SystemTraySWT
 			public void coreRunning(Core core) {
 				SystemTraySWT.core = core;
 				gm = core.getGlobalManager();
+				if (Constants.isUnix) {
+					ensureDorkBoxPlugin(core);
+				}
 			}
 		});
 
@@ -130,7 +130,7 @@ public class SystemTraySWT
 				} else {
 					MessageText.removeListener(SystemTraySWT.this);
 					if (trayItem != null && !trayItem.isDisposed()) {
-						trayItem.setToolTipText(null);
+						Utils.setTT(trayItem,null);
 					}
 				}
 			}
@@ -157,7 +157,7 @@ public class SystemTraySWT
 		trayItem = TrayDelegateFactory.createTrayItem(tray);
 
 		File imageFile = new File(SystemProperties.getApplicationPath(), "biglybt-lightgray.svg");
-		trayIconImageID = Constants.isOSX ? "osx_tray" : Constants.isUnix ? "nix_tray" : Utils.getScaleRatio() > 1 ? "logo32" : "logo16";
+		trayIconImageID = Constants.isOSX ? "osx_tray" : Constants.isUnix ? "nix_tray" : "logo32";
 		trayItem.setImage(trayIconImageID, imageFile);
 
 		trayItem.setVisible(true);
@@ -213,6 +213,24 @@ public class SystemTraySWT
 		});
 
 		uiFunctions.getUIUpdater().addUpdater(this);
+	}
+
+	private void ensureDorkBoxPlugin(Core core) {
+		String pid = "dorkboxupdater";
+
+		PluginManager pm = core.getPluginManager();
+		if (pm.getPluginInterfaceByID(pid) != null) {
+			return;
+		}
+
+		UIFunctions uif = UIFunctionsManager.getUIFunctions();
+		if (uif == null) {
+			Debug.out("UIFunctions unavailable - can't install plugin");
+			return;
+		}
+
+		uif.installPlugin(pid, pid + ".install", result -> {
+		});
 	}
 
 	public void fillMenu(final Menu menu) {
@@ -586,11 +604,11 @@ public class SystemTraySWT
 	  			toolTip.append( alertsKeyVal.replaceAll("%1", "" + alerts));
 	  		}
 
-	  		trayItem.setToolTipText(toolTip.toString());
+	  		Utils.setTT(trayItem,toolTip.toString());
 		}
 
 
-		if (Constants.isUnix && gm != null) {
+		if (!(tray instanceof TraySWT)) {
 			GlobalManagerStats stats = gm.getStats();
 
 			long l = (stats.getDataReceiveRate() + stats.getDataSendRate()) / 1024;

@@ -232,7 +232,7 @@ ConfigSectionSecurity
 
 	    gridData.widthHint = 150;
 
-	    final StringParameter pathParameter = new StringParameter(gSecurity, "Security.JAR.tools.dir", ""); //$NON-NLS-1$ //$NON-NLS-2$
+	    final StringParameter pathParameter = new StringParameter(gSecurity, "Security.JAR.tools.dir");
 
 	    pathParameter.setLayoutData(gridData);
 
@@ -242,7 +242,7 @@ ConfigSectionSecurity
 
 	    imgOpenFolder.setBackground(browse.getBackground());
 
-	    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+	    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
 
 	    browse.addListener(SWT.Selection, new Listener() {
 	      @Override

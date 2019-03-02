@@ -40,7 +40,8 @@ import com.biglybt.ui.swt.Utils;
 public class SpeedScaleShell
 {
 	private static final boolean MOUSE_ONLY_UP_EXITS = true;
-
+	private static final int AD_ACCEPT_DELAY = 500;
+	
 	private int OPTION_HEIGHT = 15;
 
 	private int TEXT_HEIGHT = 32;
@@ -115,19 +116,6 @@ public class SpeedScaleShell
 		bigPageIncrement = 100;
 		cancelled = true;
 		menuChosen = false;
-
-		OPTION_HEIGHT = Utils.adjustPXForDPI(OPTION_HEIGHT);
-		TEXT_HEIGHT = Utils.adjustPXForDPI(TEXT_HEIGHT);
-		SCALER_HEIGHT = Utils.adjustPXForDPI(SCALER_HEIGHT);
-		HEIGHT = Utils.adjustPXForDPI(HEIGHT);
-		MIN_WIDTH = Utils.adjustPXForDPI(MIN_WIDTH);
-		PADDING_X0 = Utils.adjustPXForDPI(PADDING_X0);
-		PADDING_X1 = Utils.adjustPXForDPI(PADDING_X1);
-		MARKER_HEIGHT = Utils.adjustPXForDPI(MARKER_HEIGHT);
-		MARKER_WIDTH = Utils.adjustPXForDPI(MARKER_WIDTH);
-		PX_2 = Utils.adjustPXForDPI(PX_2);
-		PX_5 = Utils.adjustPXForDPI(PX_5);
-		PX_10 = Utils.adjustPXForDPI(PX_10);
 	}
 
 	/**
@@ -142,6 +130,7 @@ public class SpeedScaleShell
 	 */
 	public boolean open(final Control cClickedFrom, final int startValue,
 			boolean _assumeInitiallyDown) {
+		long openTime = SystemTime.getMonotonousTime();
 		value = startValue;
 		this.assumeInitiallyDown = _assumeInitiallyDown;
 		if (assumeInitiallyDown) {
@@ -222,8 +211,35 @@ public class SpeedScaleShell
 		});
 
 		final MouseMoveListener mouseMoveListener = new MouseMoveListener() {
-			@Override
+			private MouseEvent pending_event;
+
+			@Override			
 			public void mouseMove(MouseEvent e) {
+				long now = SystemTime.getMonotonousTime();
+				long rem = now - openTime;
+				if ( assumeInitiallyDown &&  rem < AD_ACCEPT_DELAY ){
+					pending_event = e;
+					SimpleTimer.addEvent("updater",
+							SystemTime.getOffsetTime(CLOSE_DELAY), new TimerEventPerformer() {
+						@Override
+						public void perform(TimerEvent event) {
+							Utils.execSWTThread(new AERunnable() {
+								@Override
+								public void runSupport() {
+									if ( pending_event == e ){
+										pending_event = null;
+										if ( !composite.isDisposed()){
+											mouseMove(e);
+										}
+									}
+								}
+							});
+						}
+					});
+					
+					return;
+				}
+				pending_event = null;
 				Point ptOnDisplay = ((Control) e.widget).toDisplay(e.x, e.y);
 				Point ptOnComposite = composite.toControl(ptOnDisplay);
 				lastMoveHadMouseDown = false;
@@ -290,6 +306,7 @@ public class SpeedScaleShell
 
 			@Override
 			public void mouseUp(MouseEvent e) {
+				boolean temp = assumeInitiallyDown;
 				Point ptOnDisplay = ((Control) e.widget).toDisplay(e.x, e.y);
 				Point ptOnComposite = composite.toControl(ptOnDisplay);
 				if (assumeInitiallyDown && e.widget == composite) {
@@ -308,6 +325,11 @@ public class SpeedScaleShell
 					bMouseDown = true;
 				}
 				if (bMouseDown) {
+					long now = SystemTime.getMonotonousTime();
+					if ( temp && now - openTime < AD_ACCEPT_DELAY ){
+						return;
+					}
+					
 					if (ptOnComposite.y > HEIGHT - SCALER_HEIGHT) {
 						setValue(getValueFromMousePos(ptOnComposite.x));
 						setCancelled(false);
@@ -387,7 +409,7 @@ public class SpeedScaleShell
 					// aw
 				}
 
-				e.gc.setLineWidth(Utils.adjustPXForDPI(1));
+				e.gc.setLineWidth(1);
 
 				e.gc.setForeground(
 						Colors.getSystemColor(display, SWT.COLOR_WIDGET_NORMAL_SHADOW));
@@ -444,7 +466,7 @@ public class SpeedScaleShell
 								Colors.getSystemColor(display, SWT.COLOR_LIST_FOREGROUND));
 					}
 
-					int ovalGap = Utils.adjustPXForDPI(6);
+					int ovalGap = 6;
 					float ovalPadding = ovalGap / 2.0f;
 					int ovalSize = OPTION_HEIGHT - ovalGap;
 					float xCenter = (ovalSize / 2.0f) + PX_2;
@@ -481,7 +503,7 @@ public class SpeedScaleShell
 					if (extent.x > WIDTH - PX_10) {
 						extent.x = WIDTH - PX_10;
 					}
-					int yTypedValue = Utils.adjustPXForDPI(15);
+					int yTypedValue = 15;
 					Rectangle rect = new Rectangle(WIDTH - (PX_10 - 2) - extent.x, yTypedValue - 1,
 							extent.x + PX_5,
 							extent.y + (PX_5 - 1) + (yTypedValue - 1) > TEXT_HEIGHT
@@ -528,7 +550,7 @@ public class SpeedScaleShell
 						} catch (Exception e) {
 						}
 					}
-					int y = Utils.adjustPXForDPI(15);
+					int y = 15;
 					gc.drawLine(WIDTH - PX_5, y + 1, WIDTH - PX_5, y + OPTION_HEIGHT);
 				} finally {
 					gc.dispose();

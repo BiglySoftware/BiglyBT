@@ -212,4 +212,7 @@ public class PeersSuperView
 	public void peerManagerRemoved(PEPeerManager manager) {}
 	@Override
 	public void peerManagerWillBeAdded(PEPeerManager manager) {}
+	
+	protected void
+	updateSelectedContent(){}
 }

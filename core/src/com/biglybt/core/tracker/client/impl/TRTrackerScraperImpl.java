@@ -28,6 +28,8 @@ package com.biglybt.core.tracker.client.impl;
 import java.net.URL;
 
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
 import com.biglybt.core.tracker.client.*;
 import com.biglybt.core.tracker.client.impl.bt.TRTrackerBTScraperImpl;
 import com.biglybt.core.tracker.client.impl.dht.TRTrackerDHTScraperImpl;
@@ -66,6 +68,8 @@ TRTrackerScraperImpl
 					listener.scrapeReceived((TRTrackerScraperResponse)value);
 				}
 			});
+
+	private static final AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
 
 	public static TRTrackerScraperImpl
 	create()
@@ -220,6 +224,8 @@ TRTrackerScraperImpl
 	scrapeReceived(
 		TRTrackerScraperResponse		response )
 	{
+		all_trackers.updateTracker( response.getURL(), response );
+		
 		listeners.dispatch( LDT_SCRAPE_RECEIVED, response );
 	}
 

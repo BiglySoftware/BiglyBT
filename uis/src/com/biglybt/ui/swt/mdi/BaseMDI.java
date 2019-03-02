@@ -65,7 +65,7 @@ public abstract class BaseMDI
 	extends SkinView
 	implements MultipleDocumentInterfaceSWT, UIUpdatable
 {
-	protected MdiEntrySWT currentEntry;
+	private MdiEntrySWT currentEntry;
 
 	private Map<String, MdiEntryCreationListener> mapIdToCreationListener = new LightHashMap<>();
 	private Map<String, MdiEntryCreationListener2> mapIdToCreationListener2 = new LightHashMap<>();
@@ -87,6 +87,8 @@ public abstract class BaseMDI
 
 	private String closeableConfigFile = "sidebarauto.config";
 
+	private volatile boolean initialized;
+	
 	@Override
 	public void addListener(MdiListener l) {
 		synchronized (listeners) {
@@ -255,6 +257,13 @@ public abstract class BaseMDI
 		return currentEntry;
 	}
 
+	protected void
+	setCurrentEntry(
+		MdiEntrySWT		entry )
+	{
+		currentEntry = entry;
+	}
+	
 	@Override
 	public MdiEntry[] getEntries() {
 		return getEntries( new MdiEntry[0]);
@@ -480,6 +489,8 @@ public abstract class BaseMDI
 
 							}finally{
 
+								initialized = true;
+								
 								wait_sem.release();
 							}
 						}
@@ -706,7 +717,9 @@ public abstract class BaseMDI
 
 				MdiEntry entry = getEntry(id);
 
-				if ( entry != null && entry.isAdded()){
+					// entries that are 'dispose-on-focus-lost' will report as 'not added' if this has occurred
+				
+				if ( entry != null && ( entry.isAdded() || !entry.isReallyDisposed())){
 
 					mapAutoOpen.put(id, entry.getAutoOpenInfo());
 
@@ -1051,5 +1064,9 @@ public abstract class BaseMDI
 		}
 	}
 
+	@Override
+	public boolean isInitialized(){
+		return initialized;
+	}
 
 }

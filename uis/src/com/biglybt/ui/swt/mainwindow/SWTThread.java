@@ -74,7 +74,6 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 
 	private Monitor primaryMonitor;
 	protected boolean displayDisposed;
-	private boolean isRetinaDisplay;
 
   private
   SWTThread(
@@ -237,33 +236,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				}
 			});
 
-			try {
-
-				Class<?> ehancerClass = Class.forName("com.biglybt.ui.swt.osx.CocoaUIEnhancer");
-
-				Method mGetInstance = ehancerClass.getMethod("getInstance", new Class[0]);
-				Object claObj = mGetInstance.invoke(null, new Object[0] );
-
-				Method mHookAppMenu = claObj.getClass().getMethod("hookApplicationMenu", new Class[] {});
-				if (mHookAppMenu != null) {
-					mHookAppMenu.invoke(claObj, new Object[0]);
-				}
-
-				Method mHookDocOpen = claObj.getClass().getMethod("hookDocumentOpen", new Class[] {});
-				if (mHookDocOpen != null) {
-					mHookDocOpen.invoke(claObj, new Object[0]);
-				}
-
-				Method mIsRetinaDisplay = claObj.getClass().getMethod("isRetinaDisplay");
-				if (mIsRetinaDisplay != null) {
-					isRetinaDisplay = (Boolean) mIsRetinaDisplay.invoke(claObj);
-				}
-
-
-			} catch (Throwable e) {
-
-				Debug.printStackTrace(e);
-			}
+			MenuFactory.initSystemMenu();
 		}
 
 		if (app != null) {
@@ -341,8 +314,6 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
       }
     }
   }
-
-
 
   public void terminate() {
     terminated = true;
@@ -422,10 +393,6 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 
 	public Monitor getPrimaryMonitor() {
 		return primaryMonitor;
-	}
-
-	public boolean isRetinaDisplay() {
-		return isRetinaDisplay;
 	}
 
 	public void terminateSWTOnly() {

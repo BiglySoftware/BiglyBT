@@ -42,9 +42,15 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
+import com.biglybt.core.tag.impl.TagTypeBase.TagGroupImpl;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.DataSourceResolver.DataSourceImporter;
+import com.biglybt.core.vuzefile.VuzeFile;
+import com.biglybt.core.vuzefile.VuzeFileComponent;
+import com.biglybt.core.vuzefile.VuzeFileHandler;
+import com.biglybt.core.vuzefile.VuzeFileProcessor;
 import com.biglybt.core.xml.util.XMLEscapeWriter;
 import com.biglybt.core.xml.util.XUXmlWriter;
 import com.biglybt.pif.PluginInterface;
@@ -56,7 +62,13 @@ import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
 import com.biglybt.pif.tracker.web.TrackerWebPageResponse;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerEvent;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.utils.ScriptProvider;
+import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.PluginUtils;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.rssgen.RSSGeneratorPlugin;
@@ -237,7 +249,7 @@ TagManagerImpl
 
 					response.setContentType( "text/html; charset=UTF-8" );
 
-					pw.println( "<HTML><HEAD><TITLE>Vuze Tag Feeds</TITLE></HEAD><BODY>" );
+					pw.println( "<HTML><HEAD><TITLE>" + Constants.APP_NAME + " Tag Feeds</TITLE></HEAD><BODY>" );
 
 					Map<String,String>	lines = new TreeMap<>();
 
@@ -683,8 +695,8 @@ TagManagerImpl
 			30*1000 );
 
 
-	private Map					config;
-	private WeakReference<Map>	config_ref;
+	private Map<String,Object>					config;
+	private WeakReference<Map<String,Object>>	config_ref;
 
 	private boolean				config_dirty;
 
@@ -697,7 +709,8 @@ TagManagerImpl
 
 	private final Map<Long,LifecycleHandlerImpl>			lifecycle_handlers = new HashMap<>();
 
-	private TagPropertyUntaggedHandler	untagged_handler;
+	private TagPropertyTrackerHandler 		auto_tracker;
+	private TagPropertyUntaggedHandler		untagged_handler;
 
 	private TagPropertyConstraintHandler	constraint_handler;
 
@@ -709,6 +722,86 @@ TagManagerImpl
 		DataSourceResolver.registerExporter( this );
 		
 		AEDiagnostics.addWeakEvidenceGenerator( this );
+		
+		VuzeFileHandler.getSingleton().addProcessor(
+				new VuzeFileProcessor()
+				{
+					@Override
+					public void
+					process(
+						VuzeFile[]		files,
+						int				expected_types )
+					{
+						for (int i=0;i<files.length;i++){
+
+							VuzeFile	vf = files[i];
+
+							VuzeFileComponent[] comps = vf.getComponents();
+
+								// do tracker templates first as maybe needed by Tag... If other uses of templates 
+								// are added then we need to address the dependency issue in a more generic way
+							
+							for (int j=0;j<comps.length;j++){
+
+								VuzeFileComponent comp = comps[j];
+
+								int	type = comp.getType();
+
+								if ( type == VuzeFileComponent.COMP_TYPE_TRACKER_TEMPLATE ){
+
+									Map map = comp.getContent();
+											
+									map = BDecoder.decodeStrings( map );
+									
+									String tt_name = (String)map.get( "name");
+									
+									List<List<String>>	tt_template = (List<List<String>>)map.get( "template" );
+									
+									Map<String,List<List<String>>> m_t = TrackersUtil.getInstance().getMultiTrackers();
+									
+									if ( m_t.containsKey( tt_name )){
+										
+										Debug.out( "Tracker template '" + tt_name + "' already exists, ignoring import" );
+										
+									}else{
+										
+										TrackersUtil.getInstance().addMultiTracker( tt_name, tt_template );
+										
+										comp.setProcessed();
+									}
+								}
+							}
+							
+							for (int j=0;j<comps.length;j++){
+
+								VuzeFileComponent comp = comps[j];
+
+								int	type = comp.getType();
+
+								if ( type == VuzeFileComponent.COMP_TYPE_TAG ){
+									
+									Tag tag = importVuzeFile( comp.getContent());
+									
+									if ( tag != null ){
+									
+										comp.setProcessed();
+										
+										UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
+
+										String details = MessageText.getString(
+												"tag.import.ok.desc",
+												new String[]{ tag.getTagName( true )});
+
+										ui_manager.showMessageBox(
+												"tag.import.ok.title",
+												"!" + details + "!",
+												UIManagerEvent.MT_OK );
+									}
+								}
+							}
+						}
+					}
+				});
 	}
 
 	@Override
@@ -728,7 +821,7 @@ TagManagerImpl
 
 		Core core = CoreFactory.getSingleton();
 
-		final TagPropertyTrackerHandler auto_tracker = new TagPropertyTrackerHandler( core, this );
+		auto_tracker = new TagPropertyTrackerHandler( core, this );
 
 		untagged_handler = new TagPropertyUntaggedHandler( core, this );
 
@@ -951,6 +1044,8 @@ TagManagerImpl
 
 						((TagTypeBase)tt).sync();
 					}
+					
+					auto_tracker.sync();
 				}
 			});
 	}
@@ -1197,9 +1292,11 @@ TagManagerImpl
 
 		if ( script_type == "" ){
 
-			Debug.out( "Unrecognised script type: " + script );
+			String error = "Unrecognised script type: " + script;
+					
+			Debug.out( error  );
 
-			return( null );
+			return( new Exception( error ));
 		}
 
 		boolean	provider_found = false;
@@ -1244,9 +1341,9 @@ TagManagerImpl
 
 				}catch( Throwable e ){
 
-					Debug.out( e );
-
-					return( null );
+					Debug.out( e );;
+					
+					return( e );
 				}
 			}
 		}
@@ -1304,6 +1401,8 @@ TagManagerImpl
 
 			ttdm.addTag( tag );
 		}
+		
+		TagTypeDownloadInternal ttdi = new TagTypeDownloadInternal( resolver );
 	}
 
 	private void
@@ -1560,6 +1659,27 @@ TagManagerImpl
 	}
 
 	@Override
+	public List<Tag> 
+	getTagsByName(
+		String name, 
+		boolean is_localized)
+	{
+		List<Tag>	result = new ArrayList<Tag>();
+
+		for ( TagType tt: tag_types ){
+
+			Tag t = tt.getTag( name, is_localized );
+			
+			if ( t != null ){
+				
+				result.add( t );
+			}
+		}
+
+		return( result );
+	}
+	
+	@Override
 	public Tag
 	lookupTagByUID(
 		long	tag_uid )
@@ -1683,6 +1803,139 @@ TagManagerImpl
 	}
 
 	protected void
+	tagGroupCreated(
+		TagTypeBase		tag_type,
+		TagGroupImpl	group )
+	{
+		Map<String,Object> conf = getConf( tag_type, false );
+		
+		if ( conf != null ){
+			
+			Map<String,Object>	tg_conf = (Map<String,Object>)conf.get( group.getGroupID());
+			
+			if ( tg_conf != null ){
+				
+				group.importState( tg_conf );
+			}
+		}
+		
+		PluginInterface pi = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface();
+		
+		UIManager ui_manager = pi.getUIManager();
+		
+		TableManager tm = ui_manager.getTableManager();
+				
+		Properties props = new Properties();
+		
+		String col_id_text 	= "tag.group.col." + group.getGroupID();
+		String col_id_icons = "tag.group.col.icons." + group.getGroupID();
+
+		props.put( "TableColumn.header." + col_id_text, group.getName());
+		props.put( "TableColumn.header." + col_id_text + ".info", MessageText.getString( "label.tag.names" ));
+		props.put( "TableColumn.header." + col_id_icons, group.getName());
+		props.put( "TableColumn.header." + col_id_icons + ".info", MessageText.getString( "TableColumn.header.tag_icons" ));
+		
+		pi.getUtilities().getLocaleUtilities().integrateLocalisedMessageBundle( props );
+		
+		tm.registerColumn(
+			Download.class,
+			col_id_text,
+			new TableColumnCreationListener(){
+				
+				@Override
+				public void tableColumnCreated(TableColumn column){
+					column.setAlignment(TableColumn.ALIGN_CENTER);
+					column.setPosition(TableColumn.POSITION_INVISIBLE);
+					column.setWidth(70);
+					column.setRefreshInterval(TableColumn.INTERVAL_LIVE);
+
+					column.setIconReference("image.tag.column", false );
+					
+					column.addCellRefreshListener(
+						(cell)->{
+							Download	dl = (Download)cell.getDataSource();
+
+							if ( dl == null ){
+
+								return;
+							}
+							
+							List<Tag> tags = TagManagerImpl.this.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, PluginCoreUtils.unwrap( dl ));
+
+							String sTags = null;
+							
+							if ( tags.size() > 0 ){
+
+								tags = TagUtils.sortTags( tags );
+
+								for ( Tag t: tags ){
+
+									if ( t.getGroupContainer() == group ){
+										
+										String str = t.getTagName( true );
+	
+										if ( sTags == null ){
+											
+											sTags = str;
+											
+										}else{
+											
+											sTags += ", " + str;
+										}
+									}
+								}
+							}
+
+							cell.setText((sTags == null) ? "" : sTags );
+						});
+				}
+			});
+		
+		tm.registerColumn(
+				Download.class,
+				col_id_icons,
+				new TableColumnCreationListener(){
+					
+					@Override
+					public void tableColumnCreated(TableColumn column){
+						try{
+							Class cla = Class.forName( "com.biglybt.ui.swt.columns.tag.ColumnTagGroupIcons");
+							
+							cla.getConstructor( TableColumn.class, TagGroup.class ).newInstance( column, group );
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );;
+						}
+					}
+				});
+	}
+	
+	protected void
+	tagGroupUpdated(
+		TagTypeBase		tag_type,
+		TagGroupImpl	group )
+	{
+		Map<String,Object> conf = getConf( tag_type, true );
+		
+		String id = group.getGroupID();
+		
+		Map<String,Object> state = group.exportState();
+		
+		if ( state.isEmpty()){
+			
+			conf.remove( id );
+			
+		}else{
+			
+			conf.put( id,  state );
+		}
+		
+		setDirty();
+	}
+	
+	
+	protected void
 	checkRSSFeeds(
 		TagBase		tag,
 		boolean		enable )
@@ -1718,6 +1971,30 @@ TagManagerImpl
 		}
 	}
 
+	protected String
+	getTagStatus(
+		Tag	tag )
+	{
+		if ( constraint_handler != null ){
+		
+			return( constraint_handler.getTagStatus( tag ));
+		}
+		
+		return( null );
+	}
+	
+	protected Set<Tag>
+	getDependsOnTags(
+		Tag	tag )
+	{
+		if ( constraint_handler != null ){
+			
+			return( constraint_handler.getDependsOnTags( tag ));
+		}
+		
+		return( Collections.emptySet());
+	}
+	
 	@Override
 	public void
 	addTagManagerListener(
@@ -2005,7 +2282,7 @@ TagManagerImpl
 		return( map );
 	}
 
-	private Map
+	private Map<String,Object>
 	getConfig()
 	{
 		synchronized( this ){
@@ -2064,7 +2341,44 @@ TagManagerImpl
 		}
 	}
 
-	private Map
+	private Map<String,Object>
+	getConf(
+		TagTypeBase	tag_type,
+		boolean		create )
+	{
+		Map<String,Object> m = getConfig();
+
+		String tt_key = String.valueOf( tag_type.getTagType());
+
+		Map<String,Object> tt = (Map<String,Object>)m.get( tt_key );
+
+		if ( tt == null ){
+
+			if ( create ){
+
+				tt = new HashMap<>();
+
+				m.put( tt_key, tt );
+
+			}else{
+
+				return( null );
+			}
+		}
+
+		Map<String,Object> conf = (Map)tt.get( "c" );
+
+		if ( conf == null && create ){
+
+			conf = new HashMap<>();
+
+			tt.put( "c", conf );
+		}
+
+		return( conf );
+	}
+	
+	private Map<String,Object>
 	getConf(
 		TagTypeBase	tag_type,
 		TagBase		tag,
@@ -2120,6 +2434,36 @@ TagManagerImpl
 		return( conf );
 	}
 
+	protected void
+	setConf(
+		int			tag_type,
+		int			tag_id,
+		Map			conf )
+	{
+		Map m = getConfig();
+
+		String tt_key = String.valueOf( tag_type );
+
+		Map tt = (Map)m.get( tt_key );
+
+		if ( tt == null ){
+
+			tt = new HashMap();
+
+			m.put( tt_key, tt );
+		}
+
+		String t_key = String.valueOf( tag_id );
+
+		Map t = new HashMap();
+
+		tt.put( t_key, t );
+
+		t.put( "c", conf );
+		
+		setDirty();
+	}
+	
 	protected Boolean
 	readBooleanAttribute(
 		TagTypeBase	tag_type,
@@ -2291,6 +2635,73 @@ TagManagerImpl
 		}
 	}
 
+	protected Map<String,Object>
+	readMapAttribute(
+		TagTypeBase			tag_type,
+		TagBase				tag,
+		String				attr,
+		Map<String,Object>	def )
+	{
+		try{
+			synchronized( this ){
+
+				Map conf = getConf( tag_type, tag, false );
+
+				if ( conf == null ){
+
+					return( def );
+				}
+
+				Map m = (Map)conf.get( attr );
+				
+				if ( m == null ){
+					
+					return( def );
+				}
+				
+				return( BEncoder.cloneMap( m ));
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+
+			return( def );
+		}
+	}
+
+	protected void
+	writeMapAttribute(
+		TagTypeBase			tag_type,
+		TagBase				tag,
+		String				attr,
+		Map<String,Object>	value )
+	{
+		try{
+			synchronized( this ){
+
+				Map conf = getConf( tag_type, tag, true );
+
+				Map old = (Map)conf.get( attr );
+
+				if ( old == value ){
+
+					return;
+
+				}else if ( old != null && value != null && BEncoder.mapsAreIdentical( old, value )){
+
+					return;
+				}
+
+				conf.put( attr, value );
+
+				setDirty();
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+		}
+	}
+	
 	protected String[]
 	readStringListAttribute(
 		TagTypeBase		tag_type,
@@ -2388,6 +2799,117 @@ TagManagerImpl
 		}
 	}
 
+	protected long[]
+	readLongListAttribute(
+		TagTypeBase		tag_type,
+		TagBase			tag,
+		String			attr,
+		long[]			def )
+	{
+		try{
+			synchronized( this ){
+
+				Map conf = getConf( tag_type, tag, false );
+
+				if ( conf == null ){
+
+					return( def );
+				}
+
+				List<Long> vals =(List)conf.get( attr );
+
+				if ( vals == null ){
+
+					return( def );
+				}
+
+				long[] result = new long[vals.size()];
+				
+				for ( int i=0;i<result.length;i++){
+					result[i] = vals.get(i);
+				}
+				
+				return( result );
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+
+			return( def );
+		}
+	}
+
+	protected boolean
+	writeLongListAttribute(
+		TagTypeBase		tag_type,
+		TagBase			tag,
+		String			attr,
+		long[]			value )
+	{
+		try{
+			synchronized( this ){
+
+				Map conf = getConf( tag_type, tag, true );
+
+				List<Long> old = (List)conf.get( attr );
+
+				if ( old == null && value == null ){
+
+					return( false );
+
+				}else if ( old != null && value != null ){
+
+					if ( value.length == old.size()){
+
+						boolean diff = false;
+
+						for ( int i=0;i<value.length;i++){
+
+							long old_value = old.get(i);
+
+							if ( old_value  != value[i]){
+
+								diff = true;
+
+								break;
+							}
+						}
+
+						if ( !diff ){
+
+							return( false );
+						}
+					}
+				}
+
+				if ( value == null ){
+
+					conf.remove( attr );
+					
+				}else{
+
+					List<Long> l = new ArrayList<>( value.length );
+					
+					for ( long v: value ){
+						
+						l.add( v );
+					}
+					
+					conf.put( attr, l);
+				}
+
+				setDirty();
+
+				return( true );
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+
+			return( false );
+		}
+	}
+	
 	protected void
 	removeConfig(
 		TagType	tag_type )
@@ -2670,6 +3192,98 @@ TagManagerImpl
 		}
 	}
 
+	private Tag
+	importVuzeFile(
+		Map		content )
+	{
+		TagTypeDownloadManual tt = (TagTypeDownloadManual)getTagType( TagType.TT_DOWNLOAD_MANUAL );
+		
+		TagDownloadWithState tag = tt.importTag((Map)content.get( "tag" ), (Map)content.get( "config" ));
+				
+		tt.addTag( tag );
+		
+		return( tag );
+	}
+	
+	public VuzeFile
+	getVuzeFile(
+		TagBase	tag )
+	{
+		if ( tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+			
+			TagWithState tws = (TagWithState)tag;
+			
+			VuzeFile	vf = VuzeFileHandler.getSingleton().create();
+	
+			Map	map = new HashMap();
+		
+			Map tag_map = new HashMap();
+
+			tws.exportDetails( vf, tag_map,  false );
+			
+			Map conf = getConf( tag.getTagType(), tag, false );
+			
+			map.put( "tag", tag_map );
+			
+			map.put( "config", conf );
+		
+			vf.addComponent( VuzeFileComponent.COMP_TYPE_TAG, map );
+	
+			return( vf );
+			
+		}else{
+			
+			return( null );
+		}
+	}
+	
+	@Override
+	public VuzeFile 
+	exportTags(
+		List<Tag> tags)
+	{
+		VuzeFile	vf = VuzeFileHandler.getSingleton().create();
+		
+		for ( Tag tag: tags ){
+			
+			if ( tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+				
+				TagWithState tws = (TagWithState)tag;
+	
+				Map	map = new HashMap();
+			
+				Map tag_map = new HashMap();
+		
+				tws.exportDetails( vf, tag_map,  false );
+				
+				Map conf = getConf( tws.getTagType(), tws, false );
+				
+				map.put( "tag", tag_map );
+				
+				map.put( "config", conf );
+			
+				vf.addComponent( VuzeFileComponent.COMP_TYPE_TAG, map );
+			}
+		}
+
+		return( vf );
+	}
+	
+	protected String
+	explain(
+		Tag				tag,
+		TagProperty		property,
+		Taggable		taggable )
+	{
+		if ( property.getName( false ) == TagFeatureProperties.PR_CONSTRAINT ){
+			
+			return( constraint_handler.explain( tag, taggable ));
+			
+		}else{
+			
+			return( "" );
+		}
+	}
 	@Override
 	public void
 	generate(

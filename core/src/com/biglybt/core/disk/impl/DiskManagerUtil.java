@@ -725,6 +725,11 @@ DiskManagerUtil
 		            	}
 
 		            	@Override
+		            	public long getLastModified(){
+		            		return( getFile( true ).lastModified());
+		            	}
+		            	
+		            	@Override
 			            public void
 		            	setDownloaded(
 		            		long    l )
@@ -1213,6 +1218,12 @@ DiskManagerUtil
 	                		return( -1 );
 	                	}
 
+	                	@Override
+	                	public void recheck()
+	                	{
+	                		DiskManagerFactory.recheckFile( getDownloadManager(), this );
+	                	}
+	                	
 	                	@Override
 		                public void
 	                	close()

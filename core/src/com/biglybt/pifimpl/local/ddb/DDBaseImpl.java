@@ -398,6 +398,23 @@ DDBaseImpl
 		return( dht.isExtendedUseAllowed());
 	}
 
+	protected boolean
+	isTorrentXferEnabled()
+	{
+			// must use the public DHTPlugin to grab parameter setting
+		
+		PluginInterface dht_pi =
+				core.getPluginManager().getPluginInterfaceByClass(
+							DHTPlugin.class );
+	
+		if ( dht_pi == null ){
+			
+			return( false );
+		}
+		
+		return(((DHTPlugin)dht_pi.getPlugin()).isTorrentXferEnabled());
+	}
+	
 	@Override
 	public DistributedDatabaseContact
 	getLocalContact()

@@ -49,8 +49,9 @@ import com.biglybt.core.util.*;
 public class PiecePickerImpl
 implements PiecePicker
 {
-	private static final boolean	LOG_RTA	= false;
-
+	private static final boolean	LOG_RTA				= false;
+	private static final boolean 	EGM_IS_BLOCK_BASED	= true;
+	
 	private static final LogIDs LOGID = LogIDs.PIECES;
 
 	/** min ms for recalculating availability - reducing this has serious ramifications */
@@ -111,8 +112,14 @@ implements PiecePicker
 	private static final long RTA_END_GAME_MODE_SIZE_TRIGGER	= 16 * DiskManager.BLOCK_SIZE;
 	private static final long END_GAME_MODE_RESERVED_TRIGGER	= 5 * 1024*1024;
 	private static final long END_GAME_MODE_SIZE_TRIGGER		= 20 * 1024*1024;
-	private static final long END_GAME_MODE_TIMEOUT				= 60 * END_GAME_MODE_SIZE_TRIGGER / DiskManager.BLOCK_SIZE;
-
+	
+	private static final long RTA_END_GAME_MODE_SIZE_TRIGGER_BLOCKS	= RTA_END_GAME_MODE_SIZE_TRIGGER / DiskManager.BLOCK_SIZE;
+	private static final long END_GAME_MODE_RESERVED_TRIGGER_BLOCKS	= END_GAME_MODE_RESERVED_TRIGGER / DiskManager.BLOCK_SIZE;
+	private static final long END_GAME_MODE_SIZE_TRIGGER_BLOCKS		= END_GAME_MODE_SIZE_TRIGGER / DiskManager.BLOCK_SIZE;
+	
+	private static final long END_GAME_MODE_TIMEOUT				= 120*1000;
+	
+	
 	protected static volatile boolean	firstPiecePriority	=COConfigurationManager.getBooleanParameter("Prioritize First Piece" );
 	protected static volatile boolean	completionPriority	=COConfigurationManager.getBooleanParameter("Prioritize Most Completed Files");
 	/** event # of user settings controlling priority changes */
@@ -138,7 +145,8 @@ implements PiecePicker
 	private final List<PEPiece>	rarestStartedPieces; //List of pieces started as rarest first
 
 	protected final AEMonitor availabilityMon = new AEMonitor("PiecePicker:avail");
-	private final AEMonitor endGameModeChunks_mon =new AEMonitor("PiecePicker:EGM");
+	
+	private final Object endGameModeChunkLock = new Object();
 
 	protected volatile int	nbPiecesDone;
 
@@ -197,8 +205,9 @@ implements PiecePicker
 	private volatile boolean	endGameModeAbandoned;
 	private volatile long		timeEndGameModeEntered;
 	/** The list of chunks needing to be downloaded (the mechanism change when entering end-game mode) */
-	private List 				endGameModeChunks;
-
+	private LinkedList<EndGameModeChunk> 	endGameModeChunks;
+	private Map<Long,EndGameModeChunk>		endGameModeChunkMap;
+	
 	private long				lastProviderRecalcTime;
 	private final CopyOnWriteList		rta_providers = new CopyOnWriteList();
 	private long[]				provider_piece_rtas;
@@ -330,7 +339,11 @@ implements PiecePicker
 		diskManager.addListener(diskManagerListener);
 	}
 
-
+	@Override
+	public PEPeerManager getPeerManager(){
+		return( peerControl);
+	}
+	
 	@Override
 	public final void addHavePiece(final PEPeer peer, final int pieceNumber)
 	{
@@ -1076,11 +1089,14 @@ implements PiecePicker
 								allocated = findPieceInEndGameMode(pt, maxRequests);
 							}
 
-							if ( allocated == 0 )
+							if ( allocated == 0 ){
+								
 								break;
-							else
+								
+							}else{
+								
 								total_allocated += allocated;
-
+							}
 						}
 					}finally{
 
@@ -1545,7 +1561,7 @@ implements PiecePicker
 
 			//create piece manually
 
-			pePiece =new PEPieceImpl(pt.getManager(), dmPieces[pieceNumber], peerSpeed >>1);
+			pePiece =new PEPieceImpl(this, dmPieces[pieceNumber], peerSpeed >>1);
 
 			// Assign the created piece to the pieces array.
 			peerControl.addPiece(pePiece, pieceNumber, pt);
@@ -1873,7 +1889,7 @@ implements PiecePicker
 
 						// create piece manually
 
-						pePiece = new PEPieceImpl( pt.getManager(), dmPieces[piece_min_rta_index], peerSpeed >>1 );
+						pePiece = new PEPieceImpl( this, dmPieces[piece_min_rta_index], peerSpeed >>1 );
 
 						// Assign the created piece to the pieces array.
 
@@ -2401,102 +2417,229 @@ implements PiecePicker
 			return;
 		}
 
-		int active_pieces 	= 0;
-		int reserved_pieces	= 0;
-
-		for (int i =0; i <nbPieces; i++){
-
-			final DiskManagerPiece dmPiece =dmPieces[i];
-
-				// If the piece isn't even Needed, or doesn't need more downloading, simply continue
-
-			if (!dmPiece.isDownloadable()){
-
-				continue;
-			}
-
-			final PEPiece pePiece = pePieces[i];
-
-			if ( pePiece != null ){
-
-				if ( pePiece.isDownloaded()){
-
+			// test a block-based version as logic should be piece-size dependent
+		
+		if ( EGM_IS_BLOCK_BASED ){
+			
+				// when doing RTA we don't want EGM to kick in too early as it interfers with progressive
+				// playback by increasing discard. So we use a smaller trigger value to limit the impact
+		
+			boolean	use_rta_egm = rta_providers.size() > 0;
+		
+			long	trigger_blocks	= use_rta_egm?RTA_END_GAME_MODE_SIZE_TRIGGER_BLOCKS:END_GAME_MODE_SIZE_TRIGGER_BLOCKS;
+	
+		
+			int active_blocks 	= 0;
+			int reserved_blocks	= 0;
+	
+			for (int i =0; i <nbPieces; i++){
+	
+				final DiskManagerPiece dmPiece =dmPieces[i];
+	
+					// If the piece isn't even Needed, or doesn't need more downloading, simply continue
+	
+				if (!dmPiece.isDownloadable()){
+	
 					continue;
 				}
-
-				if ( dmPiece.isNeeded()){
-
-						// If the piece is being downloaded (fully requested), count it and continue
-
-					if ( pePiece.isRequested() ){
-
-						active_pieces++ ;
-
+	
+				final PEPiece pePiece = pePieces[i];
+	
+				if ( pePiece != null ){
+	
+					if ( pePiece.isDownloaded()){
+	
 						continue;
 					}
-
-						// https://jira.vuze.com/browse/SUP-154
-						// If we have a piece reserved to a slow peer then this can prevent end-game
-						// mode from being entered and result poopy end-of-dl speeds
-
-					if ( pePiece.getReservedBy() != null ){
-
-						reserved_pieces++;
-
-						if ( reserved_pieces * diskManager.getPieceLength() > END_GAME_MODE_RESERVED_TRIGGER ){
-
-							return;
+	
+					if ( dmPiece.isNeeded()){
+	
+							// If the piece is being downloaded (fully requested), count it and continue
+	
+						if ( pePiece.isRequested() ){
+	
+							boolean written[] = dmPiece.getWritten();
+	
+							if ( written == null ){
+	
+								if (!dmPiece.isDone()){
+	
+									active_blocks += pePiece.getNbBlocks();
+								}
+							}else{
+	
+								for (int j =0; j <written.length; j++ ){
+	
+									if (!written[j]){
+										
+										active_blocks++;
+									}
+								}
+							}
+							
+							if ( active_blocks > trigger_blocks ){
+								
+								return;
+							}
+	
+							continue;
 						}
-
-						continue;
+	
+							// https://jira.vuze.com/browse/SUP-154
+							// If we have a piece reserved to a slow peer then this can prevent end-game
+							// mode from being entered and result poopy end-of-dl speeds
+	
+						if ( pePiece.getReservedBy() != null ){
+	
+							boolean written[] = dmPiece.getWritten();
+	
+							if ( written ==null){
+	
+								if (!dmPiece.isDone()){
+	
+									reserved_blocks += pePiece.getNbBlocks();
+								}
+							}else{
+	
+								for (int j =0; j <written.length; j++ ){
+	
+									if (!written[j]){
+										
+										reserved_blocks++;
+									}
+								}
+							}
+	
+							if ( reserved_blocks  > END_GAME_MODE_RESERVED_TRIGGER_BLOCKS ){
+	
+								return;
+							}
+	
+							continue;
+						}
 					}
 				}
+	
+					// Else, some piece is Needed, not downloaded/fully requested; this isn't end game mode
+	
+				return;
 			}
-
-				// Else, some piece is Needed, not downloaded/fully requested; this isn't end game mode
-
-			return;
-		}
-
-			// when doing RTA we don't want EGM to kick in too early as it interfers with progressive
-			// playback by increasing discard. So we use a smaller trigger value to limit the impact
-
-		boolean	use_rta_egm = rta_providers.size() > 0;
-
-		long	remaining = active_pieces * (long)diskManager.getPieceLength();
-
-		long	trigger	= use_rta_egm?RTA_END_GAME_MODE_SIZE_TRIGGER:END_GAME_MODE_SIZE_TRIGGER;
-
-			// only flip into end-game mode if < trigger size left
-
-		if ( remaining <= trigger ){
-
-			try{
-				endGameModeChunks_mon.enter();
-
-				endGameModeChunks = new ArrayList();
-
+	
+			synchronized( endGameModeChunkLock ){
+	
+				endGameModeChunks = new LinkedList<>();
+	
+				endGameModeChunkMap	= new HashMap<>();
+				
 				timeEndGameModeEntered = mono_now;
-
+	
 				endGameMode = true;
-
+	
 				computeEndGameModeChunks();
-
+	
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(diskManager.getTorrent(), LOGID, "Entering end-game mode: "
 							+peerControl.getDisplayName()));
-			// System.out.println("End-Game Mode activated");
-			}finally{
-
-				endGameModeChunks_mon.exit();
+				// System.out.println("End-Game Mode activated");
+			
+			}
+		}else{
+			
+			int active_pieces 	= 0;
+			int reserved_pieces	= 0;
+	
+			for (int i =0; i <nbPieces; i++){
+	
+				final DiskManagerPiece dmPiece =dmPieces[i];
+	
+					// If the piece isn't even Needed, or doesn't need more downloading, simply continue
+	
+				if (!dmPiece.isDownloadable()){
+	
+					continue;
+				}
+	
+				final PEPiece pePiece = pePieces[i];
+	
+				if ( pePiece != null ){
+	
+					if ( pePiece.isDownloaded()){
+	
+						continue;
+					}
+	
+					if ( dmPiece.isNeeded()){
+	
+							// If the piece is being downloaded (fully requested), count it and continue
+	
+						if ( pePiece.isRequested() ){
+	
+							active_pieces++ ;
+	
+							continue;
+						}
+	
+							// https://jira.vuze.com/browse/SUP-154
+							// If we have a piece reserved to a slow peer then this can prevent end-game
+							// mode from being entered and result poopy end-of-dl speeds
+	
+						if ( pePiece.getReservedBy() != null ){
+	
+							reserved_pieces++;
+	
+							if ( reserved_pieces * diskManager.getPieceLength() > END_GAME_MODE_RESERVED_TRIGGER ){
+	
+								return;
+							}
+	
+							continue;
+						}
+					}
+				}
+	
+					// Else, some piece is Needed, not downloaded/fully requested; this isn't end game mode
+	
+				return;
+			}
+	
+				// when doing RTA we don't want EGM to kick in too early as it interfers with progressive
+				// playback by increasing discard. So we use a smaller trigger value to limit the impact
+	
+			boolean	use_rta_egm = rta_providers.size() > 0;
+	
+			long	remaining = active_pieces * (long)diskManager.getPieceLength();
+	
+			long	trigger	= use_rta_egm?RTA_END_GAME_MODE_SIZE_TRIGGER:END_GAME_MODE_SIZE_TRIGGER;
+	
+				// only flip into end-game mode if < trigger size left
+	
+			if ( remaining <= trigger ){
+	
+				synchronized( endGameModeChunkLock ){
+	
+					endGameModeChunks = new LinkedList<>();
+	
+					endGameModeChunkMap = new HashMap<>();
+					
+					timeEndGameModeEntered = mono_now;
+	
+					endGameMode = true;
+	
+					computeEndGameModeChunks();
+	
+					if (Logger.isEnabled())
+						Logger.log(new LogEvent(diskManager.getTorrent(), LOGID, "Entering end-game mode: "
+								+peerControl.getDisplayName()));
+				// System.out.println("End-Game Mode activated");
+				
+				}
 			}
 		}
 	}
 
 	private void computeEndGameModeChunks()
 	{
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			for (int i =0; i <nbPieces; i++ ){
 
@@ -2513,7 +2656,7 @@ implements PiecePicker
 
 				if (pePiece ==null){
 
-					pePiece = new PEPieceImpl(peerControl,dmPiece,0);
+					pePiece = new PEPieceImpl(this,dmPiece,0);
 
 					peerControl.addPiece(pePiece,i, null);
 				}
@@ -2526,21 +2669,33 @@ implements PiecePicker
 
 						for (int j =0; j <pePiece.getNbBlocks(); j++ ){
 
-							endGameModeChunks.add(new EndGameModeChunk(pePiece, j));
+							EndGameModeChunk chunk = new EndGameModeChunk(pePiece, j);
+							
+							endGameModeChunks.add( chunk );
+							
+							endGameModeChunkMap.put( new Long( ((long)i) << 32 | j ), chunk );
 						}
 					}
 				}else{
 
 					for (int j =0; j <written.length; j++ ){
 
-						if (!written[j])
-							endGameModeChunks.add(new EndGameModeChunk(pePiece, j));
+						if (!written[j]){
+							
+							EndGameModeChunk chunk = new EndGameModeChunk(pePiece, j);
+							
+							endGameModeChunks.add( chunk );
+						
+							endGameModeChunkMap.put( new Long( ((long)i) << 32 | j ), chunk );
+						}
 					}
 				}
 			}
-		}finally{
-
-			endGameModeChunks_mon.exit();
+			
+			if ( reverse_block_order ){
+				
+				Collections.reverse( endGameModeChunks );
+			}
 		}
 	}
 
@@ -2570,18 +2725,20 @@ implements PiecePicker
 			return;
 		}
 
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			final int nbChunks =pePiece.getNbBlocks();
 
-			for (int i =0; i <nbChunks; i++ ){
+			int piece_number = pePiece.getPieceNumber();
+			
+			for (int i=0; i <nbChunks; i++ ){
 
-				endGameModeChunks.add(new EndGameModeChunk(pePiece, i));
+				EndGameModeChunk chunk = new EndGameModeChunk(pePiece, i);
+				
+				endGameModeChunks.add( chunk );
+				
+				endGameModeChunkMap.put( new Long(((long)piece_number) << 32 | i ), chunk );
 			}
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
@@ -2598,61 +2755,56 @@ implements PiecePicker
 			return 0;
 		}
 
-			// Ok, we try one, if it doesn't work, we'll try another next time
+		synchronized( endGameModeChunkLock ){
 
-		try{
-			endGameModeChunks_mon.enter();
+			Iterator<EndGameModeChunk>	it = endGameModeChunks.iterator();
+						
+			while( it.hasNext()){
 
-			final int nbChunks =endGameModeChunks.size();
+				EndGameModeChunk chunk = it.next();
 
-			if (nbChunks >0){
+				int pieceNumber = chunk.getPieceNumber();
 
-				final int random =RandomUtils.generateRandomIntUpto(nbChunks);
+				if ( dmPieces[pieceNumber].isWritten(chunk.getBlockNumber())){
 
-				final EndGameModeChunk chunk =(EndGameModeChunk) endGameModeChunks.get(random);
+					it.remove();
 
-				final int pieceNumber =chunk.getPieceNumber();
+					endGameModeChunkMap.remove( new Long(((long)pieceNumber) << 32 | chunk.getBlockNumber()));
+				
+				}else{
 
-				if (dmPieces[pieceNumber].isWritten(chunk.getBlockNumber())){
+					PEPiece	pePiece = pePieces[pieceNumber];
 
-					endGameModeChunks.remove(chunk);
+					if ( pt.isPieceAvailable(pieceNumber) && pePiece != null ){
 
-					return 0;
-				}
-
-				final PEPiece	pePiece = pePieces[pieceNumber];
-
-				if ( pt.isPieceAvailable(pieceNumber) && pePiece != null ){
-
-					if ( ( !pt.isSnubbed() || availability[pieceNumber] <=peerControl.getNbPeersSnubbed()) &&
-							pt.request(pieceNumber, chunk.getOffset(), chunk.getLength(),false) != null ){
-
-						pePiece.setRequested(pt, chunk.getBlockNumber());
-
-						pt.setLastPiece(pieceNumber);
-
-						return( 1 );
-
-					}else{
-
-
-						return( 0 );
+						if ( ( !pt.isSnubbed() || availability[pieceNumber] <=peerControl.getNbPeersSnubbed()) &&
+								pt.request(pieceNumber, chunk.getOffset(), chunk.getLength(),false) != null ){
+	
+							pePiece.setRequested(pt, chunk.getBlockNumber());
+	
+							pt.setLastPiece(pieceNumber);
+	
+							chunk.requested();
+							
+								// stick it at the end
+							
+							it.remove();
+							
+							endGameModeChunks.add( chunk );
+														
+							return( 1 );
+						}
 					}
 				}
 			}
-
-				// we're here because there are no endgame mode chunks left
-				// either the torrent is done or something unusual happened
-				// cleanup anyway and allow a proper re-entry into endgame mode if neccessary
-
-			leaveEndGameMode();
-
-		}finally{
-
-			endGameModeChunks_mon.exit();
+						
+			if ( endGameModeChunks.isEmpty()){
+				
+				leaveEndGameMode();
+			}
+			
+			return( 0 );
 		}
-
-		return 0;
 	}
 
 	@Override
@@ -2666,8 +2818,7 @@ implements PiecePicker
 			return;
 		}
 
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			final Iterator iter =endGameModeChunks.iterator();
 
@@ -2678,11 +2829,10 @@ implements PiecePicker
 				if ( chunk.equals(pieceNumber, offset)){
 
 					iter.remove();
+					
+					endGameModeChunkMap.remove( new Long( ((long)(pieceNumber)) << 32 | chunk.getBlockNumber()));
 				}
 			}
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
@@ -2695,24 +2845,20 @@ implements PiecePicker
 			return;
 		}
 
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			endGameModeChunks.clear();
 
+			endGameModeChunkMap.clear();
+			
 			endGameMode = false;
-
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
 	protected void
 	leaveEndGameMode()
 	{
-		try{
-			endGameModeChunks_mon.enter();
+		synchronized( endGameModeChunkLock ){
 
 			if ( endGameMode ){
 
@@ -2726,11 +2872,10 @@ implements PiecePicker
 
 				endGameModeChunks.clear();
 
+				endGameModeChunkMap.clear();
+				
 				timeEndGameModeEntered = 0;
 			}
-		}finally{
-
-			endGameModeChunks_mon.exit();
 		}
 	}
 
@@ -2739,8 +2884,7 @@ implements PiecePicker
 	{
 		if ( !endGameModeAbandoned ){
 
-			try{
-				endGameModeChunks_mon.enter();
+			synchronized( endGameModeChunkLock ){
 
 				endGameModeAbandoned = true;
 
@@ -2751,10 +2895,6 @@ implements PiecePicker
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(diskManager.getTorrent(), LOGID, "Abandoning end-game mode: "
 							+peerControl.getDisplayName()));
-
-			}finally{
-
-				endGameModeChunks_mon.exit();
 			}
 		}
 	}
@@ -3303,6 +3443,49 @@ implements PiecePicker
 	getSequentialInfo()
 	{
 		return( sequentialDownload );
+	}
+	
+	public String
+	getEGMInfo()
+	{
+		if ( endGameModeAbandoned ){
+			
+			return( "abandoned" );
+			
+		}else if ( endGameMode ){
+			
+			synchronized( endGameModeChunkLock ){
+			
+				long elapsed = SystemTime.getMonotonousTime()- timeEndGameModeEntered;
+					 
+				String str = "rem=" + (END_GAME_MODE_TIMEOUT-elapsed)/1000 + "s";
+
+				str += ",chunks=" + endGameModeChunks.size();
+				
+				return( str );
+			}
+		}else{
+			
+			return( null );
+		}
+	}
+	
+	@Override
+	public int 
+	getEGMRequestCount(
+		int piece_number, int block_number)
+	{
+		synchronized( endGameModeChunkLock ){
+		
+			EndGameModeChunk chunk = endGameModeChunkMap.get( new Long( ((long)piece_number) << 32 | block_number ));
+			
+			if ( chunk == null ){
+				
+				return( 0 );
+			}
+			
+			return( chunk.getRequestCount());
+		}
 	}
 	
 	@Override

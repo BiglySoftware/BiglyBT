@@ -36,22 +36,27 @@ import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.skin.SWTSkinObjectText;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Control;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AERunnableBoolean;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.toolbar.*;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pifimpl.UIToolBarItemImpl;
 import com.biglybt.ui.swt.pifimpl.UIToolBarManagerCore;
 import com.biglybt.ui.swt.pifimpl.UIToolBarManagerImpl;
@@ -72,18 +77,19 @@ import org.eclipse.swt.widgets.Display;
 public class ToolBarView
 	extends SkinView
 	implements SelectedContentListener, ToolBarManagerListener,
-        ToolBarItem.ToolBarItemListener
+        ToolBarItem.ToolBarItemListener, ParameterListener
 {
 	private static boolean DEBUG = false;
 
 	private static toolbarButtonListener buttonListener;
-
+	
 	private Map<UIToolBarItem, ToolBarItemSO> mapToolBarItemToSO = new HashMap<>();
 
 	private boolean showText = true;
 
 	private boolean initComplete = false;
-
+	private boolean rebuilding;
+	
 	private boolean showCalled = false;
 
 	private ArrayList<ToolBarViewListener> listeners = new ArrayList<>(
@@ -93,6 +99,8 @@ public class ToolBarView
 
 	private boolean firstTimeEver = true;
 
+	private Set<String>	visible_items = new HashSet<>();
+	
 	public ToolBarView() {
 		tbm = (UIToolBarManagerCore) UIToolBarManagerImpl.getInstance();
 	}
@@ -108,8 +116,8 @@ public class ToolBarView
 	// @see SkinView#showSupport(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object skinObjectInitialShow(SWTSkinObject skinObject, Object params) {
-		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals(
-				"az2");
+		
+		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals( "az2");
 
 		if (uiClassic && !"global-toolbar".equals(skinObject.getViewID())) {
 			skinObject.setVisible(false);
@@ -137,25 +145,86 @@ public class ToolBarView
 		buttonListener = new toolbarButtonListener();
 
 
-		if (firstTimeEver) {
+		if ( firstTimeEver ){
+			
 			firstTimeEver = false;
+			
+			if ( !uiClassic ){
+				
+				COConfigurationManager.addParameterListener( "IconBar.enabled", this );
+			}
+			
 			setupToolBarItems(uiClassic);
+			
+			TorrentUtil.init();
 		}
+		
 		tbm.addListener(this);
 
-		if (uiClassic) {
+		build();
+		
+		return( null );
+	}
+	
+	private void
+	build()
+	{
+		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals( "az2");
+		
+		UIToolBarItem[] items = tbm.getAllToolBarItems();
+		
+		removeItemListeners();
+		
+		visible_items.clear();
+		
+		COConfigurationManager.addParameterListener( "IconBar.start.stop.separate", this );
+		
+		boolean start_top_sep = COConfigurationManager.getBooleanParameter( "IconBar.start.stop.separate", false );
+		
+		for ( UIToolBarItem item: items ){
+			
+			String id = item.getID();
+		
+			String key = "IconBar.visible." + id;
+			
+			COConfigurationManager.addParameterListener( key , this );
+			
+			if ( COConfigurationManager.getBooleanParameter( key, true )){
+			
+				if ( start_top_sep && ( id.equals( "startstop" ))){
+					
+					continue;
+				}
+				
+				if ( !start_top_sep && ( id.equals( "start" ) || id.equals( "stop" ))){
+					
+					continue;
+				}
+				
+				visible_items.add( id );
+			}
+		}
+		
+		if ( uiClassic || !COConfigurationManager.getBooleanParameter( "IconBar.enabled" )) {
+			
 			bulkSetupItems("classic", "toolbar.area.sitem");
 		}
+		
 		bulkSetupItems(UIToolBarManager.GROUP_MAIN, "toolbar.area.sitem");
+		
 		bulkSetupItems("views", "toolbar.area.vitem");
 
 		String[] groupIDs = tbm.getGroupIDs();
+		
 		for (String groupID : groupIDs) {
-			if ("classic".equals(groupID)
-					|| UIToolBarManager.GROUP_MAIN.equals(groupID)
-					|| "views".equals(groupID)) {
+			
+			if (	"classic".equals(groupID) ||
+					UIToolBarManager.GROUP_MAIN.equals(groupID) || 
+					"views".equals(groupID)){
+				
 				continue;
 			}
+			
 			bulkSetupItems(groupID, "toolbar.area.sitem");
 		}
 
@@ -170,14 +239,62 @@ public class ToolBarView
 				}
 			}
 		}
-
-		return null;
 	}
 
+	private void
+	rebuild()
+	{
+		synchronized( mapToolBarItemToSO ){
+			
+			if ( rebuilding ){
+				
+				return;
+			}
+			
+			rebuilding = true;
+		}
+		
+		Utils.execSWTThread(
+			new Runnable()
+			{
+				@Override
+				public void run(){
+
+					synchronized( mapToolBarItemToSO ){
+						
+						rebuilding = false;
+						
+						Set<String>	groups = new HashSet<>();
+
+						for ( ToolBarItemSO so: mapToolBarItemToSO.values()){
+	
+							groups.add( so.getBase().getGroupID());
+						}
+	
+						for ( String group: groups ){
+							SWTSkinObjectContainer groupSO = getGroupSO(group);
+							SWTSkinObject[] children = groupSO.getChildren();
+							for (SWTSkinObject so : children) {
+								so.dispose();
+							}
+							groupSO.dispose();
+						}
+	
+						mapToolBarItemToSO.clear();
+					}
+					
+					build();
+
+					Utils.relayout( soMain.getControl());
+				}
+			});
+	}
+	
 	private void setupToolBarItems(boolean uiClassic) {
 		ToolBarItem item;
 
-		if (uiClassic) {
+		{	// always add these items, whether they are shown or not is decided later
+			
 			// ==OPEN
 			item = createItem(this, "open", "image.toolbar.open", "Button.add.torrent");
 			item.setDefaultActivationListener(new UIToolBarActivationListener() {
@@ -185,9 +302,39 @@ public class ToolBarView
 				public boolean toolBarItemActivated(ToolBarItem item,
 				                                    long activationType, Object datasource) {
 					if (activationType != ACTIVATIONTYPE_NORMAL) {
-						return false;
+						
+						Boolean result = Utils.execSWTThreadWithBool(
+							"open",
+							new AERunnableBoolean(){
+								
+								@Override
+								public boolean runSupport(){
+									Clipboard clipboard = new Clipboard(Display.getDefault());
+									
+									try{
+										String text = (String) clipboard.getContents(TextTransfer.getInstance());
+				
+										if (text != null && text.length() <= 2048) {
+											
+											if ( TorrentOpener.openTorrentsFromClipboard(text)){
+											
+												return( true );
+											}
+										}
+									}finally{
+										
+										clipboard.dispose();
+									}
+									
+									return false;
+								}
+							}, 1000 );
+						
+						return( result != null && result );
 					}
+					
 					UIFunctionsManagerSWT.getUIFunctionsSWT().openTorrentWindow();
+					
 					return true;
 				}
 			});
@@ -238,6 +385,8 @@ public class ToolBarView
 				}
 			});
 			tbm.addToolBarItem(item, false);
+			
+			
 		}
 
 		// ==run
@@ -369,52 +518,42 @@ public class ToolBarView
 			});
 			tbm.addToolBarItem(item, false);
 		}
-		/*
-				// ==start
-				item = createItemSO(this, "start", "image.toolbar.start", "iconBar.start");
-				item.setDefaultActivation(new UIToolBarActivationListener() {
-					public boolean toolBarItemActivated(ToolBarItem item, long activationType) {
-						if (activationType != ACTIVATIONTYPE_NORMAL) {
-							return false;
-						}
-						DownloadManager[] dms = SelectedContentManager.getDMSFromSelectedContent();
-						if (dms != null) {
-							TorrentUtil.queueDataSources(dms, true);
-							return true;
-						}
-						return false;
-					}
-				});
-				addToolBarItem(item, "toolbar.area.sitem", so2nd);
-				//SWTSkinObjectContainer so = (SWTSkinObjectContainer) item.getSkinButton().getSkinObject();
-				//so.setDebugAndChildren(true);
-				addSeperator(so2nd);
-
-				// ==stop
-				item = createItemSO(this, "stop", "image.toolbar.stop", "iconBar.stop");
-				item.setDefaultActivation(new UIToolBarActivationListener() {
-					public boolean toolBarItemActivated(ToolBarItem item, long activationType) {
-						if (activationType != ACTIVATIONTYPE_NORMAL) {
-							return false;
-						}
-		 				ISelectedContent[] currentContent = SelectedContentManager.getCurrentlySelectedContent();
-						TorrentUtil.stopDataSources(currentContent);
-						return true;
-					}
-				});
-				addToolBarItem(item, "toolbar.area.sitem", so2nd);
-				addSeperator(so2nd);
-		*/
-		// ==startstop
-		item = createItem(this, "startstop", "image.toolbar.startstop.start",
-				"iconBar.startstop");
-		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(
-				UIToolBarActivationListener.ACTIVATIONTYPE_NORMAL) {
+	
+		// ==start
+		item = createItem(this, "start", "image.toolbar.startstop.start", "iconBar.start");
+		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT() {
 			@Override
 			public void toolBarItemActivated_OffSWT(ToolBarItem item,
 					long activationType, Object datasource) {
 				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
-				TorrentUtil.stopOrStartDataSources(selected);
+				TorrentUtil.queueDataSources(selected,true,activationType == ACTIVATIONTYPE_HELD);
+			}
+		});
+		
+		tbm.addToolBarItem(item, false);
+
+		// ==stop
+		item = createItem(this, "stop", "image.toolbar.startstop.stop", "iconBar.stop");
+		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(){
+			@Override
+			public void toolBarItemActivated_OffSWT(ToolBarItem item,
+					long activationType, Object datasource) {
+				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
+				TorrentUtil.stopDataSources(selected,activationType == ACTIVATIONTYPE_HELD);
+			}
+		});
+		
+		tbm.addToolBarItem(item, false);
+		
+		// ==startstop
+		item = createItem(this, "startstop", "image.toolbar.startstop.start",
+				"iconBar.startstop");
+		item.setDefaultActivationListener(new UIToolBarActivationListener_OffSWT(){
+			@Override
+			public void toolBarItemActivated_OffSWT(ToolBarItem item,
+					long activationType, Object datasource) {
+				ISelectedContent[] selected = SelectedContentManager.getCurrentlySelectedContent();
+				TorrentUtil.stopOrStartDataSources(selected,activationType == ACTIVATIONTYPE_HELD);
 			}
 		});
 		tbm.addToolBarItem(item, false);
@@ -450,6 +589,11 @@ public class ToolBarView
 		}
 	}
 
+	@Override
+	public void parameterChanged(String parameterName){
+		rebuild();
+	}
+	
 	@Override
 	public void currentlySelectedContentChanged(
 			ISelectedContent[] currentContent, String viewID) {
@@ -499,11 +643,25 @@ public class ToolBarView
 		return super.skinObjectHidden(skinObject, params);
 	}
 
+	private void
+	removeItemListeners()
+	{
+		for ( String id: visible_items ){
+			COConfigurationManager.removeParameterListener( "IconBar.visible." + id , this );
+		}
+		
+		COConfigurationManager.removeParameterListener( "IconBar.start.stop.separate", this );
+	}
+	
 	// @see SkinView#skinObjectDestroyed(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
 		tbm.removeListener(this);
 
+		removeItemListeners();
+		
+		COConfigurationManager.removeParameterListener( "IconBar.enabled", this );
+		
 		return super.skinObjectDestroyed(skinObject, params);
 	}
 
@@ -877,36 +1035,56 @@ public class ToolBarView
 	}
 
 	private void bulkSetupItems(String groupID, String templatePrefix) {
-		String[] idsByGroup = tbm.getToolBarIDsByGroup(groupID);
-		SWTSkinObjectContainer groupSO = getGroupSO(groupID);
-		SWTSkinObject[] children = groupSO.getChildren();
-		for (SWTSkinObject so : children) {
-			so.dispose();
-		}
-
-		for (int i = 0; i < idsByGroup.length; i++) {
-			String itemID = idsByGroup[i];
-			UIToolBarItem item = tbm.getToolBarItem(itemID);
-			if (item instanceof ToolBarItem) {
-
-
-				int position = 0;
-				int size = idsByGroup.length;
-				if (size == 1) {
-					position = SWT.SINGLE;
-				} else if (i == 0) {
-					position = SWT.LEFT;
-				} else if (i == size - 1) {
-					addSeperator(groupID);
-					position = SWT.RIGHT;
-				} else {
-					addSeperator(groupID);
-				}
-				createItemSO((ToolBarItem) item, templatePrefix, position);
+		String[] idsByGroupAll = tbm.getToolBarIDsByGroup(groupID);
+		SWTSkinObjectContainer groupSO = peekGroupSO(groupID);
+		if ( groupSO != null ){
+			SWTSkinObject[] children = groupSO.getChildren();
+			for (SWTSkinObject so : children) {
+				so.dispose();
 			}
 		}
 
-		addNonToolBar("toolbar.area.sitem.left2", groupID);
+		List<String> idsByGroup = new ArrayList<>();
+		
+		for ( String id: idsByGroupAll ){
+			
+			if ( visible_items.contains( id )){
+				
+				idsByGroup.add( id );
+			}
+		}
+		
+		int size = idsByGroup.size();
+
+		if ( size > 0 ){
+			
+				// only peeked above, create now as group is required
+			
+			groupSO = getGroupSO(groupID);
+			
+			for (int i = 0; i < size; i++) {
+				String itemID = idsByGroup.get(i);
+				UIToolBarItem item = tbm.getToolBarItem(itemID);
+				if (item instanceof ToolBarItem) {
+	
+	
+					int position = 0;
+					if (size == 1) {
+						position = SWT.SINGLE;
+					} else if (i == 0) {
+						position = SWT.LEFT;
+					} else if (i == size - 1) {
+						addSeperator(groupID);
+						position = SWT.RIGHT;
+					} else {
+						addSeperator(groupID);
+					}
+					createItemSO((ToolBarItem) item, templatePrefix, position);
+				}
+			}
+	
+			addNonToolBar("toolbar.area.sitem.left2", groupID);
+		}
 	}
 
 	private Control getLastControl(String groupID) {
@@ -921,7 +1099,13 @@ public class ToolBarView
 	private void createItemSO(ToolBarItem item, String templatePrefix,
 			 int position) {
 
-		ToolBarItemSO existingItemSO = mapToolBarItemToSO.get(item);
+		ToolBarItemSO existingItemSO;
+		
+		synchronized( mapToolBarItemToSO ){
+			
+			existingItemSO = mapToolBarItemToSO.get(item);
+		}
+		
 		if (existingItemSO != null) {
 			SWTSkinObject so = existingItemSO.getSO();
 			if (so != null) {
@@ -958,6 +1142,14 @@ public class ToolBarView
 		}
 	}
 
+	private SWTSkinObjectContainer peekGroupSO(String groupID) {
+		String soID = "toolbar-group-" + groupID;
+		SWTSkinObjectContainer soGroup = (SWTSkinObjectContainer) skin.getSkinObjectByID(
+				soID, soMain);
+		
+		return( soGroup );
+	}
+	
 	private SWTSkinObjectContainer getGroupSO(String groupID) {
 		String soID = "toolbar-group-" + groupID;
 		SWTSkinObjectContainer soGroup = (SWTSkinObjectContainer) skin.getSkinObjectByID(
@@ -986,7 +1178,7 @@ public class ToolBarView
 		if (toolTip != null) {
 			so.setTooltipID("!" + toolTip + "!");
 		} else {
-			so.setTooltipID(item.getTooltipID());
+			so.setTooltipID(item.getToolTipID());
 		}
 		so.setData("toolbaritem", item);
 		SWTSkinButtonUtility btn = (SWTSkinButtonUtility) so.getData("btn");
@@ -1003,13 +1195,23 @@ public class ToolBarView
 			((SWTSkinObjectText) soTitle).setTextID(item.getTextID());
 			itemSO.setSkinTitle((SWTSkinObjectText) soTitle);
 		}
-		mapToolBarItemToSO.put(item, itemSO);
+		
+		synchronized( mapToolBarItemToSO ){
+		
+			mapToolBarItemToSO.put(item, itemSO);
+		}
 	}
 
 	// @see ToolBarItem.ToolBarItemListener#uiFieldChanged(ToolBarItem)
 	@Override
 	public void uiFieldChanged(ToolBarItem item) {
-		ToolBarItemSO itemSO = mapToolBarItemToSO.get(item);
+		ToolBarItemSO itemSO;
+		
+		synchronized( mapToolBarItemToSO ){
+			
+			itemSO = mapToolBarItemToSO.get(item);
+		}
+		
 		if (itemSO != null) {
 			itemSO.updateUI();
 		}
@@ -1126,119 +1328,30 @@ public class ToolBarView
 	// @see com.biglybt.ui.swt.pifimpl.UIToolBarManagerImpl.ToolBarManagerListener#toolbarItemRemoved(com.biglybt.pif.ui.toolbar.UIToolBarItem)
 	@Override
 	public void toolbarItemRemoved(final UIToolBarItem toolBarItem) {
-		ToolBarItemSO itemSO = mapToolBarItemToSO.get(toolBarItem);
-		if (itemSO == null) {
-			return;
+		
+		ToolBarItemSO itemSO;
+		
+		synchronized( mapToolBarItemToSO ){
+			
+			itemSO = mapToolBarItemToSO.remove(toolBarItem);
 		}
-
-		itemSO.dispose();
-		final SWTSkinObject so = itemSO.getSO();
-		if (so != null) {
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-
-					String groupID = toolBarItem.getGroupID();
-
-					// removing just one breaks somewhere
-					// disable and bulk build all the toolbar items.
-					final String[] idsByGroup = new String[0]; // tbm.getToolBarIDsByGroup(groupID);
-
-					if (idsByGroup.length <= 1) {
-						boolean b = initComplete;
-						initComplete = false;
-						bulkSetupItems(groupID, "toolbar.area.sitem");
-						initComplete = b;
-						so.getParent().relayout();
-						return;
-					}
-
-					int posToolBarItem = -1;
-					String id = toolBarItem.getID();
-
-
-					Control soControl = so.getControl();
-
-
-					SWTSkinObject middleSO = mapToolBarItemToSO.get(
-							tbm.getToolBarItem(idsByGroup[idsByGroup.length / 2])).getSO();
-
-
-					SWTSkinObject[] children = ((SWTSkinObjectContainer) so.getParent()).getChildren();
-					int middle = -1;
-					for (int i = 0; i < children.length; i++) {
-						if (children[i] == middleSO) {
-							middle = i;
-							break;
-						}
-					}
-
-					if (middle == -1) {
-						return;
-					}
-
-
-					children[middle].dispose();
-					children[middle + 1].dispose();
-
-					Control controlLeft = children[middle - 1].getControl();
-					FormData fd = (FormData) children[middle + 2].getControl().getLayoutData();
-					fd.left.control = controlLeft;
-					Utils.relayout(children[middle + 2].getControl());
-
-					int positionInGroup = 0;
-					UIToolBarItem curItem = tbm.getToolBarItem(idsByGroup[positionInGroup]);
-
-					children = ((SWTSkinObjectContainer) so.getParent()).getChildren();
-					for (int i = 0; i < children.length; i++) {
-						SWTSkinObject child = children[i];
-
-						ToolBarItem item = (ToolBarItem) child.getData("toolbaritem");
-						if (item != null && item.getGroupID().equals(groupID)) {
-
-							ToolBarItemSO toolBarItemSO = mapToolBarItemToSO.get(curItem);
-							initSO(child, toolBarItemSO);
-							positionInGroup++;
-							if (positionInGroup >= idsByGroup.length) {
-								break;
-							}
-							curItem = tbm.getToolBarItem(idsByGroup[positionInGroup]);
-						}
-					}
-
-					so.getParent().relayout();
-				}
-			});
+		
+		if ( itemSO != null) {
+	
+			rebuild();
 		}
-		mapToolBarItemToSO.remove(toolBarItem);
 	}
 
-	// @see com.biglybt.ui.swt.pifimpl.UIToolBarManagerImpl.ToolBarManagerListener#toolbarItemAdded(com.biglybt.pif.ui.toolbar.UIToolBarItem)
 	@Override
 	public void toolbarItemAdded(final UIToolBarItem item) {
 		if (isVisible()) {
-  		if (item instanceof ToolBarItem) {
-  			ToolBarItem toolBarItem = (ToolBarItem) item;
-  			toolBarItem.addToolBarItemListener(this);
-  		}
+			if (item instanceof ToolBarItem) {
+				ToolBarItem toolBarItem = (ToolBarItem) item;
+				toolBarItem.addToolBarItemListener(this);
+			}
 		}
 
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				boolean b = initComplete;
-				initComplete = false;
-				bulkSetupItems(item.getGroupID(), "toolbar.area.sitem");
-				initComplete = b;
-
-				Utils.execSWTThreadLater(0, new Runnable() {
-					@Override
-					public void run() {
-						Utils.relayout(soMain.getControl());
-					}
-				});
-			}
-		});
+		rebuild();
 	}
 
 	public abstract static class UIToolBarActivationListener_OffSWT

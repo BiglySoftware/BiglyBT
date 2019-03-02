@@ -55,14 +55,16 @@ Constants
 	public static final String  VERSION_SERVER_V4 	= "version.biglybt.com";
 	public static final String  VERSION_SERVER_V6 	= "version6.biglybt.com";
 
-	public static final String DHT_SEED_ADDRESS_V4			= "dht.vuze.com";
-	public static final String DHT_SEED_ADDRESS_V6			= "dht6.vuze.com";
-	public static final String DHT_SEED_ADDRESS_V6_TUNNEL	= "dht6tunnel.vuze.com";
+	public static final String DHT_SEED_ADDRESS_V4			= "dht.biglybt.com";
+	public static final String DHT_SEED_ADDRESS_V6			= "dht6.biglybt.com";
+	public static final String DHT_SEED_ADDRESS_V6_TUNNEL	= "dht6tunnel.biglybt.com";
 
-	public static final String NAT_TEST_SERVER		= "nettest.vuze.com";
-	public static final String NAT_TEST_SERVER_HTTP	= "http://nettest.vuze.com/";
+	public static final String NAT_TEST_TCP_SERVER		= "nettest.biglybt.com";
+	public static final String NAT_TEST_UDP_SERVER		= "nettestudp.biglybt.com";
+	public static final String NAT_TEST_SERVER_HTTP		= "http://nettest.biglybt.com/";
 
-	public static final String PAIRING_URL			= "https://pair.vuze.com/pairing";
+	public static final String PAIRING_SERVER			= "pair.vuze.com";
+	public static final String WEB_REMOTE_SERVER		= "remote.vuze.com";
 
 	public static final String SPEED_TEST_SERVER	= "speedtest.vuze.com";
 
@@ -153,10 +155,10 @@ Constants
 	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "1.2.0.1_CVS";
+	public static final String AZUREUS_VERSION  = "1.8.0.1_B01";
 	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
 	public static final String AZUREUS_SUBVER	  = "";
-	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1201" + "-").getBytes();  //MUST be 8 chars long!
+	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1801" + "-").getBytes();  //MUST be 8 chars long!
 
 	private static final boolean FORCE_NON_CVS = System.getProperty( "az.force.noncvs", "0" ).equals( "1" );
 
@@ -186,6 +188,7 @@ Constants
 	public static final boolean isWindowsVistaOrHigher;
 	public static final boolean isWindows7OrHigher;
 	public static final boolean isWindows8OrHigher;
+	public static final boolean isWindows10OrHigher;
 
 
 	// Common Patterns
@@ -250,6 +253,7 @@ Constants
 				isWindowsVistaOrHigher 	= false;
 				isWindows7OrHigher		= false;
 				isWindows8OrHigher		= false;
+				isWindows10OrHigher		= false;
 
 			}else{
 				float f_ver = ver.floatValue();
@@ -258,6 +262,7 @@ Constants
 				isWindowsVistaOrHigher 	= f_ver >= 6;
 				isWindows7OrHigher	 	= f_ver >= 6.1f;
 				isWindows8OrHigher	 	= f_ver >= 6.2f;
+				isWindows10OrHigher		= f_ver >= 10.0f;
 
 				if ( isWindowsVista ){
 
@@ -315,6 +320,8 @@ Constants
 			isWindowsVistaOrHigher 	= false;
 			isWindows7OrHigher 		= false;
 			isWindows8OrHigher 		= false;
+			isWindows10OrHigher		= false;
+
 		}
 	}
 

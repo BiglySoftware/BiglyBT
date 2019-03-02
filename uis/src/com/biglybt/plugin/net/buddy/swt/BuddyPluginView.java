@@ -73,6 +73,12 @@ import com.biglybt.pif.ui.menus.MenuContext;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
+import com.biglybt.pif.ui.tables.TableCell;
+import com.biglybt.pif.ui.tables.TableCellMouseEvent;
+import com.biglybt.pif.ui.tables.TableCellMouseListener;
+import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
@@ -87,6 +93,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.CoreFactory;
@@ -97,6 +104,7 @@ import com.biglybt.core.security.CryptoManagerKeyListener;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.tag.TaggableLifecycleAdapter;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
@@ -140,6 +148,9 @@ BuddyPluginView
 	private statusUpdater statusUpdater;
 	private TaggableLifecycleAdapter taggableLifecycleAdapter;
 
+	private TableColumnCreationListener		columnMessagePending;
+	private final List<TableColumn> columns = new ArrayList<>();
+	
 	public
 	BuddyPluginView(
 		BuddyPlugin		_plugin,
@@ -429,7 +440,7 @@ BuddyPluginView
 
 			label.setText( label_text = MessageText.getString( "azbuddy.tracker.bbb.status.title" ));
 			
-			label.setTooltipText( MessageText.getString( "azbuddy.tracker.bbb.status.title.tooltip" ));
+			Utils.setTT(label, MessageText.getString( "azbuddy.tracker.bbb.status.title.tooltip" ));
 
 			tracker = plugin.getTracker();
 
@@ -636,7 +647,7 @@ BuddyPluginView
 
 					status.setImage( iconNLI );
 
-					status.setTooltipText( MessageText.getString( "azbuddy.tracker.bbb.status.nli" ));
+					Utils.setTT(status, MessageText.getString( "azbuddy.tracker.bbb.status.nli" ));
 
 					disableUpdates();
 
@@ -671,7 +682,7 @@ BuddyPluginView
 
 						status.setImage( iconIDLE );
 
-						status.setTooltipText( MessageText.getString( "azbuddy.tracker.bbb.status.idle" ));
+						Utils.setTT(status, MessageText.getString( "azbuddy.tracker.bbb.status.idle" ));
 
 						disableUpdates();
 
@@ -750,7 +761,7 @@ BuddyPluginView
 										tt = MessageText.getString( "azbuddy.tracker.bbb.status.inout" ) + ": " + DisplayFormatters.formatByteCountToKiBEtcPerSec( tracker.getNetworkReceiveBytesPerSecond()) + "/" + DisplayFormatters.formatByteCountToKiBEtcPerSec( tracker.getNetworkSendBytesPerSecond());
 									}
 
-									status.setTooltipText( tt );
+									Utils.setTT(status, tt );
 								}
 							}
 						}
@@ -791,6 +802,7 @@ BuddyPluginView
 	private Image				bs_chat_gray;
 	private Image				bs_chat_gray_text;
 	private Image				bs_chat_green;
+	private Image				bs_chat_red;
 
 	private void
 	checkBetaInit()
@@ -846,6 +858,7 @@ BuddyPluginView
 					bs_chat_gray		= imageLoader.getImage( "dchat_gray" );
 					bs_chat_gray_text 	= imageLoader.getImage( "dchat_gray_text" );
 					bs_chat_green 		= imageLoader.getImage( "dchat_green" );
+					bs_chat_red 		= imageLoader.getImage( "dchat_red" );
 
 					setBetaStatus( bs_chat_gray );
 
@@ -1112,6 +1125,125 @@ BuddyPluginView
 
 				ui_instance.addView(table_id, "azbuddy.ui.menu.chat",	listener );
 			}
+			
+			TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
+			
+			TableCellRefreshListener	msg_refresh_listener =
+					new TableCellRefreshListener()
+					{
+						@Override
+						public void
+						refresh(
+							TableCell _cell )
+						{
+							TableCellSWT cell = (TableCellSWT)_cell;
+
+							Download	dl = (Download)cell.getDataSource();
+
+							if ( dl == null ){
+
+								return;
+							}
+							
+							List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
+
+							boolean	is_pending = false;
+							
+							for ( ChatInstance instance: instances ){
+								
+								if ( instance.getMessageOutstanding()){
+									
+									is_pending = true;
+								}
+							}
+
+							Image	graphic;
+							String	tooltip;
+							int		sort_order;
+
+							if ( is_pending ){
+								
+								graphic 	= bs_chat_gray_text;
+								tooltip		= MessageText.getString( "TableColumn.header.chat.msg.out" );
+								sort_order	= 1;
+								
+							}else{
+								
+								graphic 	= null;
+								tooltip		= MessageText.getString( "label.no.messages" );
+								sort_order	= 0;
+							}
+
+							cell.setMarginHeight(0);
+							cell.setGraphic( graphic );
+							cell.setToolTip( tooltip );
+
+							cell.setSortValue( sort_order );
+
+							cell.setCursorID( graphic==null?SWT.CURSOR_ARROW:SWT.CURSOR_HAND );
+						}
+					};
+
+				TableCellMouseListener	msg_mouse_listener =
+					new TableCellMouseListener()
+					{
+						@Override
+						public void
+						cellMouseTrigger(
+							TableCellMouseEvent event )
+						{					
+							if ( event.eventType == TableCellMouseEvent.EVENT_MOUSEUP ){
+
+								TableCell cell = event.cell;
+
+								Download	dl = (Download)cell.getDataSource();
+
+								if ( dl != null ){
+									
+									List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
+									
+									for ( ChatInstance instance: instances ){
+										
+										if ( instance.getMessageOutstanding()){
+											
+											try{
+												BuddyPluginUtils.getBetaPlugin().showChat( instance  );
+												
+											}catch( Throwable e ){
+												
+												Debug.out( e );
+											}
+										}
+									}
+								}
+							}
+						}
+					};
+			
+			
+			
+			columnMessagePending = new TableColumnCreationListener() {
+				@Override
+				public void tableColumnCreated(TableColumn result) {
+					result.setAlignment(TableColumn.ALIGN_CENTER);
+					result.setPosition(TableColumn.POSITION_LAST);
+					result.setWidth(32);
+					result.setRefreshInterval(TableColumn.INTERVAL_INVALID_ONLY);
+					result.setType(TableColumn.TYPE_GRAPHIC);
+
+					result.addCellRefreshListener(msg_refresh_listener);
+					result.addCellMouseListener(msg_mouse_listener);
+					result.setIconReference("dchat_gray", true);
+					
+					synchronized( columns ){
+						
+						columns.add(result);
+					}
+				}
+			};
+			
+			table_manager.registerColumn( Download.class, "azbuddy.ui.column.msgpending", columnMessagePending );
+			
 		}else{
 
 			for ( String table_id: views ){
@@ -1131,6 +1263,20 @@ BuddyPluginView
 			}
 
 			beta_subviews.clear();
+			
+			if ( columnMessagePending != null) {
+				
+				TableManager	table_manager = plugin.getPluginInterface().getUIManager().getTableManager();
+				
+				table_manager.unregisterColumn(Download.class, "azbuddy.ui.column.msgpending",	columnMessagePending);
+				
+				columnMessagePending = null;
+				
+				synchronized( columns ){
+					
+					columns.clear();
+				}
+			}
 		}
 	}
 
@@ -1279,7 +1425,7 @@ BuddyPluginView
 
 			if ( beta_status != null ){
 
-				beta_status.setTooltipText( text );
+				Utils.setTT(beta_status, text );
 			}
 
 			buildMenu( instances );
@@ -1330,6 +1476,14 @@ BuddyPluginView
 		Control				comp_maybe_null,
 		ChatMessage			pending_message )
 	{
+		synchronized( columns ){
+
+			for ( TableColumn column : columns ){
+
+				column.invalidateCells();
+			}
+		}
+		
 		synchronized( pending_msg_map ){
 
 			String key = chat.getNetAndKey();
@@ -1391,8 +1545,9 @@ BuddyPluginView
 
 										Iterator<Map.Entry<String,Object[]>> it = pending_msg_map.entrySet().iterator();
 
-										boolean	has_new = false;
-
+										boolean	has_new 	= false;
+										boolean has_mine	= false;
+										
 										while( it.hasNext()){
 
 											Map.Entry<String,Object[]> map_entry = it.next();
@@ -1407,6 +1562,11 @@ BuddyPluginView
 
 											}else{
 
+												if ( chat.hasUnseenMessageWithNick()){
+													
+													has_mine = true;
+												}
+												
 												HashSet<Control> comps = ((HashSet<Control>)entry[1]);
 
 												Iterator<Control>	control_it = comps.iterator();
@@ -1472,9 +1632,16 @@ BuddyPluginView
 												playSound();
 											}
 
-											beta_status.setTooltipText( tt_text );
+											Utils.setTT(beta_status, tt_text );
 
-											setBetaStatus( tick_count%2==0?bs_chat_gray_text:bs_chat_green);
+											Image image = has_mine?bs_chat_red:bs_chat_green;
+											
+											if ( plugin.getBeta().getFlashEnabled() && tick_count%2==0 ){
+											
+												image = bs_chat_gray_text;
+											}
+											
+											setBetaStatus( image );
 										}
 
 										prev_instances = current_instances;
@@ -1532,7 +1699,7 @@ BuddyPluginView
 	{
 		List<StyleRange>	ranges = new ArrayList<>();
 
-		String msg = BuddyPluginViewBetaChat.renderMessage(null, chat, message, message.getMessage(), message.getMessageType(), 0, ranges, null, null, null);
+		String msg = BuddyPluginViewBetaChat.renderMessage(null, chat, message, message.getMessage(), message.getMessageType(), 0, ranges, null, null, null, null );
 
 		StringBuilder new_msg = new StringBuilder();
 
@@ -1877,49 +2044,70 @@ BuddyPluginView
 		Map<String,Object>		properties,
 		ViewListener			listener )
 	{
-		Composite	swt_composite = (Composite)properties.get( BuddyPluginViewInterface.VP_SWT_COMPOSITE );
-
-		ChatInstance	chat = (ChatInstance)properties.get( BuddyPluginViewInterface.VP_CHAT );
-
-		if ( chat != null ){
-
-			final BuddyPluginViewBetaChat view = new BuddyPluginViewBetaChat( BuddyPluginView.this, plugin, chat, swt_composite );
-
-			return(
-				new View()
+		boolean is_swt = Utils.isSWTThread();
+		
+		AERunnableObject runnable = 
+			new AERunnableObject()
+			{
+				public Object
+				runSupport()
 				{
-					@Override
-					public void
-					activate()
-					{
-						view.activate();
+					Composite	swt_composite = (Composite)properties.get( BuddyPluginViewInterface.VP_SWT_COMPOSITE );
+
+					try{				
+						ChatInstance	chat = (ChatInstance)properties.get( BuddyPluginViewInterface.VP_CHAT );
+				
+						if ( chat != null ){
+				
+							final BuddyPluginViewBetaChat view = new BuddyPluginViewBetaChat( BuddyPluginView.this, plugin, chat, swt_composite );
+				
+							return(
+								new View()
+								{
+									@Override
+									public void
+									activate()
+									{
+										view.activate();
+									}
+				
+									@Override
+									public void
+									handleDrop(
+										String drop)
+									{
+										view.handleExternalDrop( drop );
+									}
+				
+									@Override
+									public void
+									destroy()
+									{
+										view.close();
+									}
+								});
+						}else{
+							BetaSubViewHolder view = new BetaSubViewHolder();
+				
+							DownloadAdapter	download = (DownloadAdapter)properties.get( BuddyPluginViewInterface.VP_DOWNLOAD );
+				
+							view.initialise( swt_composite, download, listener );
+				
+							return( view );
+						}
+					}finally{
+						
+						if ( !is_swt ){
+							
+							Utils.relayout( swt_composite );
+						}
 					}
-
-					@Override
-					public void
-					handleDrop(
-						String drop)
-					{
-						view.handleExternalDrop( drop );
-					}
-
-					@Override
-					public void
-					destroy()
-					{
-						view.close();
-					}
-				});
-		}else{
-			BetaSubViewHolder view = new BetaSubViewHolder();
-
-
-			DownloadAdapter	download = (DownloadAdapter)properties.get( BuddyPluginViewInterface.VP_DOWNLOAD );
-
-			view.initialise( swt_composite, download, listener );
-
-			return( view );
-		}
+				}
+			};
+			
+		Object result = is_swt?runnable.runSupport():Utils.execSWTThreadWithObject( "chatbuild", runnable, 10*1000 );
+		
+		return((View)result);
 	}
 
 	private class
@@ -2039,7 +2227,7 @@ BuddyPluginView
 			composite.setLayout(layout);
 
 			GridData grid_data = new GridData(GridData.FILL_BOTH );
-			Utils.setLayoutData(composite, grid_data);
+			composite.setLayoutData(grid_data);
 
 			if ( !download_only_mode ){
 
@@ -2054,7 +2242,7 @@ BuddyPluginView
 				lhs.setLayout(layout);
 				grid_data = new GridData(GridData.FILL_VERTICAL );
 				//grid_data.widthHint = 200;
-				Utils.setLayoutData(lhs, grid_data);
+				lhs.setLayoutData(grid_data);
 
 				Button downloads = new Button( lhs, SWT.TOGGLE );
 				downloads.setText( MessageText.getString( "v3.MainWindow.button.download" ));
@@ -2089,7 +2277,7 @@ BuddyPluginView
 				middle.setLayout(layout);
 				grid_data = new GridData(GridData.FILL_VERTICAL );
 				grid_data.widthHint = 0;
-				Utils.setLayoutData(middle, grid_data);
+				middle.setLayoutData(grid_data);
 
 				middle.setText( "" );
 
@@ -2142,9 +2330,9 @@ BuddyPluginView
 
 			tab_folder.setTabHeight(20);
 			grid_data = new GridData(GridData.FILL_BOTH);
-			Utils.setLayoutData(tab_folder, grid_data);
+			tab_folder.setLayoutData(grid_data);
 
-				// public
+			// public
 
 			public_item = new CTabItem(tab_folder, SWT.NULL);
 
@@ -2156,7 +2344,7 @@ BuddyPluginView
 			public_item.setControl( public_composite );
 
 			grid_data = new GridData(GridData.FILL_BOTH );
-			Utils.setLayoutData(public_composite, grid_data);
+			public_composite.setLayoutData(grid_data);
 			public_composite.setData( "tabitem", public_item );
 
 				// anon
@@ -2174,7 +2362,7 @@ BuddyPluginView
 				anon_item.setControl( anon_composite );
 
 				grid_data = new GridData(GridData.FILL_BOTH );
-				Utils.setLayoutData(anon_composite, grid_data);
+				anon_composite.setLayoutData(grid_data);
 				anon_composite.setData( "tabitem", anon_item );
 			}
 
@@ -2190,7 +2378,7 @@ BuddyPluginView
 				neither_item.setControl( neither_composite );
 
 				grid_data = new GridData(GridData.FILL_BOTH );
-				Utils.setLayoutData(neither_composite, grid_data);
+				neither_composite.setLayoutData(grid_data);
 				neither_composite.setData( "tabitem", neither_item );
 
 				layout = new GridLayout();
@@ -2337,7 +2525,7 @@ BuddyPluginView
 
 						GridData grid_data = new GridData(GridData.FILL_VERTICAL );
 						grid_data.widthHint = 0;
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 					}else if ( mode == CHAT_TRACKERS ){
 
@@ -2363,7 +2551,7 @@ BuddyPluginView
 						layout.numColumns = 1;
 						middle.setLayout(layout);
 						GridData grid_data = new GridData(GridData.FILL_VERTICAL );
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 						Set<String>	reduced_trackers = new HashSet<>();
 
@@ -2437,7 +2625,7 @@ BuddyPluginView
 						if (download == null) {
 							grid_data.exclude = true;
 						}
-						Utils.setLayoutData(lhs, grid_data);
+						lhs.setLayoutData(grid_data);
 
 
 						middle.setVisible( true );
@@ -2475,7 +2663,7 @@ BuddyPluginView
 						layout.numColumns = 1;
 						middle.setLayout(layout);
 						grid_data = new GridData(GridData.FILL_VERTICAL );
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 						int	num_tags = tags.size();
 
@@ -2499,7 +2687,7 @@ BuddyPluginView
 								tag_area = middle;
 							}
 
-							tags = TagUIUtils.sortTags( tags );
+							tags = TagUtils.sortTags( tags );
 
 							if ( !tags.contains( current_tag )){
 
@@ -2542,7 +2730,7 @@ BuddyPluginView
 						layout.numColumns = 1;
 						middle.setLayout(layout);
 						GridData grid_data = new GridData(GridData.FILL_VERTICAL );
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 						final List<Button>	buttons = new ArrayList<>();
 
@@ -2594,7 +2782,7 @@ BuddyPluginView
 						layout.numColumns = 1;
 						middle.setLayout(layout);
 						GridData grid_data = new GridData(GridData.FILL_VERTICAL );
-						Utils.setLayoutData(middle, grid_data);
+						middle.setLayoutData(grid_data);
 
 						List<String[]>	list = plugin.getBeta().getFavourites();
 
@@ -2663,7 +2851,7 @@ BuddyPluginView
 
 								button.setText( short_name );
 								button.setAlignment( SWT.LEFT );
-								button.setToolTipText( long_name );
+								Utils.setTT(button, long_name );
 
 								button.setData( net + ":" + key );
 
@@ -2775,7 +2963,7 @@ BuddyPluginView
 				    }
 				};
 
-			Utils.setLayoutData(scrollable,  new GridData(GridData.FILL_VERTICAL ));
+			scrollable.setLayoutData(new GridData(GridData.FILL_VERTICAL ));
 
 			final Composite scrollChild = new Composite( scrollable, SWT.NONE );
 
@@ -2787,7 +2975,7 @@ BuddyPluginView
 			gLayoutChild.marginWidth 		= 0;
 			gLayoutChild.marginHeight		= 0;
 			scrollChild.setLayout(gLayoutChild);
-			Utils.setLayoutData(scrollChild,  new GridData(GridData.FILL_VERTICAL ));
+			scrollChild.setLayoutData(new GridData(GridData.FILL_VERTICAL ));
 
 			scrollable.setContent(scrollChild);
 			scrollable.setExpandVertical(true);
@@ -3153,7 +3341,7 @@ BuddyPluginView
 
 												BuddyPluginViewBetaChat view = new BuddyPluginViewBetaChat( BuddyPluginView.this, plugin, chat, chat_composite );
 
-												((CTabItem)chat_composite.getData("tabitem")).setToolTipText( key );
+												Utils.setTT(((CTabItem)chat_composite.getData("tabitem")),key );
 
 												chat_composite.layout( true, true );
 
@@ -3193,7 +3381,7 @@ BuddyPluginView
 
 					label.setText( MessageText.getString( "v3.MainWindow.view.wait" ));
 					GridData grid_data = new GridData(GridData.FILL_BOTH );
-					Utils.setLayoutData(label, grid_data);
+					label.setLayoutData(grid_data);
 
 				}
 

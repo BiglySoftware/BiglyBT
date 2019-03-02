@@ -26,9 +26,11 @@ import java.util.*;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.download.DownloadManagerAvailability;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentAnnounceURLSet;
+import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.TrackerPeerSourceAdapter;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
@@ -36,6 +38,7 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncerDataProvider;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerFactory;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.pif.PluginInterface;
@@ -110,6 +113,13 @@ DownloadManagerAvailabilityImpl
 								getNetworks()
 								{
 									return( _enabled_networks );
+								}
+								
+								@Override
+								public HashWrapper 
+								getTorrentHashOverride()
+								{
+									return( null );
 								}
 							});
 
@@ -187,6 +197,12 @@ DownloadManagerAvailabilityImpl
 			    				boolean	estimate )
 			    			{
 			    				return( 0 );
+			    			}
+			    						    			
+			    			public int
+			    			getTCPListeningPortNumber()
+			    			{
+			    				return( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber());
 			    			}
 
 			    			@Override

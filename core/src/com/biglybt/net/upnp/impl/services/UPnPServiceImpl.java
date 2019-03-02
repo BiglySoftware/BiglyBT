@@ -31,12 +31,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.net.upnp.*;
 import com.biglybt.net.upnp.impl.device.UPnPDeviceImpl;
 import com.biglybt.net.upnp.services.UPnPSpecificService;
 import com.biglybt.pif.utils.xml.simpleparser.SimpleXMLParserDocument;
 import com.biglybt.pif.utils.xml.simpleparser.SimpleXMLParserDocumentNode;
+import com.biglybt.util.StringCompareUtils;
 
 public class
 UPnPServiceImpl
@@ -352,19 +354,19 @@ UPnPServiceImpl
 	public UPnPSpecificService
 	getSpecificService()
 	{
-		if ( service_type.equalsIgnoreCase("urn:schemas-upnp-org:service:WANIPConnection:1")){
+		if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANIPConnection:")){
 
 			return( new UPnPSSWANIPConnectionImpl( this ));
 
-		}else if ( service_type.equalsIgnoreCase("urn:schemas-upnp-org:service:WANPPPConnection:1")){
+		}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANPPPConnection:")){
 
 			return( new UPnPSSWANPPPConnectionImpl( this ));
 
-		}else if ( service_type.equalsIgnoreCase("urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1")){
+		}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:")){
 
 			return( new UPnPSSWANCommonInterfaceConfigImpl( this ));
 
-		}else if ( service_type.equalsIgnoreCase("urn:schemas-upnp-org:service:VuzeOfflineDownloaderService:1")){
+		}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:VuzeOfflineDownloaderService:")){
 
 			return( new UPnPSSOfflineDownloaderImpl( this ));
 

@@ -35,6 +35,7 @@ import com.biglybt.core.disk.DiskManagerFactory;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.*;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
+import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.LogRelation;
@@ -60,10 +61,11 @@ DownloadManagerStateImpl
 
 
 	private static final LogIDs LOGID = LogIDs.DISK;
-	private static final String			RESUME_KEY				= "resume";
-	private static final String			TRACKER_CACHE_KEY		= "tracker_cache";
-	private static final String			ATTRIBUTE_KEY			= "attributes";
-	private static final String			AZUREUS_PROPERTIES_KEY	= "azureus_properties";
+	private static final String			RESUME_KEY						= "resume";
+	private static final String			TRACKER_CACHE_KEY				= "tracker_cache";
+	private static final String			ATTRIBUTE_KEY					= "attributes";
+	private static final String			AZUREUS_PROPERTIES_KEY			= "azureus_properties";
+	private static final String			AZUREUS_PRIVATE_PROPERTIES_KEY	= "azureus_private_properties";
 
 	private static final File			ACTIVE_DIR;
 
@@ -103,6 +105,96 @@ DownloadManagerStateImpl
 		TorrentUtils.registerMapFluff( new String[] {TRACKER_CACHE_KEY,RESUME_KEY} );
 	}
 
+	private static Object
+	getDefaultOverride(
+		String		name,
+		Object		value )
+	{
+			// default overrides
+	
+			// **** note - if you add to these make sure you extend the parameter listeners
+			// registered as well (see static initialiser at top)
+	
+		if ( name == PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED ){
+	
+			if ( COConfigurationManager.getBooleanParameter( "enable.seedingonly.maxuploads" )){
+	
+				value = Boolean.TRUE;
+			}
+	
+		}else if ( name == PARAM_MAX_UPLOADS_WHEN_SEEDING ){
+	
+			int	def = COConfigurationManager.getIntParameter( "Max Uploads Seeding" );
+	
+			value = new Integer( def );
+	
+		}else if ( name == PARAM_MAX_UPLOADS ){
+	
+			int	def = COConfigurationManager.getIntParameter("Max Uploads" );
+	
+			value = new Integer( def );
+	
+		}else if ( name == PARAM_MAX_PEERS ){
+	
+			int	def = COConfigurationManager.getIntParameter( "Max.Peer.Connections.Per.Torrent" );
+	
+			value = new Integer( def );
+	
+		}else if ( name == PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED ){
+	
+			if ( COConfigurationManager.getBooleanParameter( "Max.Peer.Connections.Per.Torrent.When.Seeding.Enable" )){
+	
+				value = Boolean.TRUE;
+			}
+	
+		}else if ( name == PARAM_MAX_PEERS_WHEN_SEEDING ){
+	
+			int	def = COConfigurationManager.getIntParameter( "Max.Peer.Connections.Per.Torrent.When.Seeding" );
+	
+			value = new Integer( def );
+	
+		}else if ( name == PARAM_MAX_SEEDS ){
+	
+			value = new Integer(COConfigurationManager.getIntParameter( "Max Seeds Per Torrent" ));
+	
+		}else if ( name == PARAM_RANDOM_SEED ){
+	
+			long	rand = random.nextLong();
+		
+			value = new Long( rand );
+		}
+		
+		return( value );
+	}
+	
+	public static Integer
+	getIntParameterDefault(
+		String	name )
+	{
+		Object value = default_parameters.get( name );
+		
+		if ( value != null ){
+			
+			value = getDefaultOverride( name, value );
+		}
+		
+		return( value instanceof Number?((Number)value).intValue():null );
+	}
+	
+	public static Boolean
+	getBooleanParameterDefault(
+		String	name )
+	{
+		Object value = default_parameters.get( name );
+		
+		if ( value != null ){
+			
+			value = getDefaultOverride( name, value );
+		}
+		
+		return( value instanceof Boolean?(Boolean)value: null );
+	}
+	
 	private static final AEMonitor	class_mon	= new AEMonitor( "DownloadManagerState:class" );
 
 	static final Map<HashWrapper,DownloadManagerStateImpl>		state_map 					= new HashMap<>();
@@ -172,6 +264,8 @@ DownloadManagerStateImpl
 
 	private int supressWrites = 0;
 
+	private boolean recovered;
+	
 	private static final ThreadLocal		tls_wbr	=
 		new ThreadLocal()
 		{
@@ -183,7 +277,9 @@ DownloadManagerStateImpl
 			}
 		};
 
-	private static DownloadManagerState
+	private int transient_flags;
+		
+	private static DownloadManagerStateImpl
 	getDownloadState(
 		DownloadManagerImpl				download_manager,
 		TOTorrent						original_torrent,
@@ -246,6 +342,8 @@ DownloadManagerStateImpl
 
 		File	saved_file = getStateFile( torrent_hash );
 
+		boolean	was_corrupt = false;
+		
 		if ( saved_file.exists()){
 
 			try{
@@ -253,6 +351,8 @@ DownloadManagerStateImpl
 
 			}catch( Throwable e ){
 
+				was_corrupt = true;
+				
 				Debug.out( "Failed to load download state for " + saved_file, e );
 			}
 		}
@@ -261,12 +361,19 @@ DownloadManagerStateImpl
 
 		if ( saved_state == null ){
 
-			TorrentUtils.copyToFile( original_torrent, saved_file );
+			copyTorrentToActive( original_torrent, saved_file, was_corrupt );
 
 			saved_state = TorrentUtils.readDelegateFromFile( saved_file, false );
 		}
 
-		return( getDownloadState( null, original_torrent, saved_state ));
+		DownloadManagerStateImpl state = getDownloadState( null, original_torrent, saved_state );
+		
+		if ( was_corrupt ){
+			
+			state.setRecovered();
+		}
+		
+		return( state );
 	}
 
 	protected static DownloadManagerState
@@ -311,12 +418,15 @@ DownloadManagerStateImpl
 
 				}catch( Throwable e ){
 
-					Debug.out( "Failed to load download state for " + saved_file );
+					Debug.out( "Failed to load download state for " + saved_file, e );
 				}
 			}
 		}
 
+		
 			// if saved state not found then recreate from original torrent if required
+
+		boolean	was_corrupt = false;
 
 		if ( saved_state == null ){
 
@@ -325,14 +435,16 @@ DownloadManagerStateImpl
 			torrent_hash = original_torrent.getHash();
 
 			File	saved_file = getStateFile( torrent_hash );
-
+			
 			if ( saved_file.exists()){
-
+				
 				try{
 					saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
 
 				}catch( Throwable e ){
 
+					was_corrupt = true;
+					
 					Debug.out( "Failed to load download state for " + saved_file );
 				}
 			}
@@ -344,13 +456,18 @@ DownloadManagerStateImpl
 					// and do stuff like write it somewhere else which would screw us
 					// up)
 
-				TorrentUtils.copyToFile( original_torrent, saved_file );
+				copyTorrentToActive( original_torrent, saved_file, was_corrupt );
 
 				saved_state = TorrentUtils.readDelegateFromFile( saved_file, discard_pieces );
 			}
 		}
 
-		DownloadManagerState res = getDownloadState( download_manager, original_torrent, saved_state );
+		DownloadManagerStateImpl res = getDownloadState( download_manager, original_torrent, saved_state );
+
+		if ( was_corrupt ){
+			
+			res.setRecovered();
+		}
 
 		if ( inactive ){
 
@@ -360,6 +477,54 @@ DownloadManagerStateImpl
 		return( res );
 	}
 
+	private static void
+	copyTorrentToActive(
+		TOTorrent		torrent_file,
+		File			state_file,
+		boolean			was_corrupt )
+	
+		throws TOTorrentException
+	{
+		TorrentUtils.copyToFile( torrent_file, state_file );
+		
+		if ( was_corrupt ){
+			
+    		Logger.log(
+    			new LogAlert(
+    				torrent_file, 
+    				LogAlert.REPEATABLE,
+					 LogAlert.AT_ERROR,
+					"Recovered download from original torrent: " + TorrentUtils.getLocalisedName(torrent_file)));
+		}
+		
+		if (	COConfigurationManager.getBooleanParameter("Save Torrent Files") && 
+				COConfigurationManager.getBooleanParameter("Delete Saved Torrent Files")){
+			
+			try{
+					// torrent might not have been persisted yet so don't insist of file name being present
+				
+				String file_str = TorrentUtils.getTorrentFileName( torrent_file, false  );
+				
+				if ( file_str != null ){
+					
+					File file = new File( file_str );
+					
+					File torrentDir = new File(COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory"));
+	
+					if ( torrentDir.isDirectory() && torrentDir.equals( file.getParentFile())){
+						
+						file.delete();
+						
+						new File( file.getAbsolutePath() + ".bak" ).delete();
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+	}
+	
 	protected static File
 	getStateFile(
 		byte[]		torrent_hash )
@@ -383,9 +548,8 @@ DownloadManagerStateImpl
 			return;
 		}
 
-		try{
-
-			BufferedInputStream is = new BufferedInputStream( new GZIPInputStream( new FileInputStream( file )));
+		try( 	FileInputStream fis = new FileInputStream( file );
+				BufferedInputStream is = new BufferedInputStream( new GZIPInputStream( fis ))){
 
 			try{
 
@@ -408,18 +572,9 @@ DownloadManagerStateImpl
 					}
 				}
 
-				is.close();
-
 			}catch( IOException e){
 
 				Debug.printStackTrace( e );
-			}finally{
-
-				try{
-					is.close();
-
-				}catch( Throwable e ){
-				}
 			}
 		}catch( Throwable e ){
 
@@ -582,6 +737,8 @@ DownloadManagerStateImpl
 			}
 		}
 
+		new File( source_dir, state_file + ".bak" ).delete();
+		
 		File	target_state_dir = new File( source_dir, hash_str );
 
 		if ( target_state_dir.exists()){
@@ -710,6 +867,26 @@ DownloadManagerStateImpl
 		}
 	}
 
+	private void
+	setRecovered()
+	{
+		recovered = true;
+	}
+	
+	@Override
+	public boolean
+	getAndClearRecoveredStatus()
+	{
+		if ( recovered ){
+			
+			recovered = false;
+			
+			return( true );
+		}
+		
+		return( false );
+	}
+	
 	@Override
 	public void
 	clearTrackerResponseCache()
@@ -977,7 +1154,23 @@ DownloadManagerStateImpl
 
 	        TorrentUtils.delete( torrent );
 
-			File	dir = new File( ACTIVE_DIR, ByteFormatter.encodeString( wrapper.getBytes()));
+	        String	hash_str = ByteFormatter.encodeString( wrapper.getBytes());
+	        
+			String	state_file = hash_str + ".dat";
+			
+			File	target_state_file 	= new File( ACTIVE_DIR, state_file );
+
+			if ( target_state_file.exists()){
+
+				if ( !target_state_file.delete()){
+
+					throw( new DownloadManagerException( "Failed to delete state file: " + state_file ));
+				}
+			}
+
+			new File( ACTIVE_DIR, state_file + ".bak" ).delete();
+			
+			File	dir = new File( ACTIVE_DIR, hash_str );
 
 			if ( dir.exists() && dir.isDirectory()){
 
@@ -1084,6 +1277,45 @@ DownloadManagerStateImpl
 		return( getLongAttribute( AT_FLAGS ));
 	}
 
+	public void
+	setTransientFlag(
+		long		flag,
+		boolean		set )
+	{
+		long old_value = transient_flags;
+		
+		long new_value;
+		
+		if ( set ){
+			
+			new_value = old_value | flag;
+			
+		}else{
+			
+			new_value = old_value & ~flag;
+		}
+		
+		if ( old_value != new_value ){
+			
+			transient_flags = (int)new_value;
+			
+			informWritten( AT_TRANSIENT_FLAGS );
+		}
+	}
+
+	public boolean
+	getTransientFlag(
+		long		flag )
+	{
+		return(( transient_flags & flag ) != 0 );
+	}
+
+	public long
+	getTransientFlags()
+	{
+		return( transient_flags );
+	}
+	
 	@Override
 	public boolean parameterExists(String name) {
 		return parameters.containsKey(name);
@@ -1141,60 +1373,11 @@ DownloadManagerStateImpl
 
 				}else{
 
-						// default overrides
+					value = getDefaultOverride( name, value );
+					
+					if ( name == PARAM_RANDOM_SEED ){
 
-						// **** note - if you add to these make sure you extend the parameter listeners
-						// registered as well (see static initialiser at top)
-
-					if ( name == PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED ){
-
-						if ( COConfigurationManager.getBooleanParameter( "enable.seedingonly.maxuploads" )){
-
-							value = Boolean.TRUE;
-						}
-
-					}else if ( name == PARAM_MAX_UPLOADS_WHEN_SEEDING ){
-
-						int	def = COConfigurationManager.getIntParameter( "Max Uploads Seeding" );
-
-						value = new Integer( def );
-
-					}else if ( name == PARAM_MAX_UPLOADS ){
-
-						int	def = COConfigurationManager.getIntParameter("Max Uploads" );
-
-						value = new Integer( def );
-
-					}else if ( name == PARAM_MAX_PEERS ){
-
-						int	def = COConfigurationManager.getIntParameter( "Max.Peer.Connections.Per.Torrent" );
-
-						value = new Integer( def );
-
-					}else if ( name == PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED ){
-
-						if ( COConfigurationManager.getBooleanParameter( "Max.Peer.Connections.Per.Torrent.When.Seeding.Enable" )){
-
-							value = Boolean.TRUE;
-						}
-
-					}else if ( name == PARAM_MAX_PEERS_WHEN_SEEDING ){
-
-						int	def = COConfigurationManager.getIntParameter( "Max.Peer.Connections.Per.Torrent.When.Seeding" );
-
-						value = new Integer( def );
-
-					}else if ( name == PARAM_MAX_SEEDS ){
-
-						value = new Integer(COConfigurationManager.getIntParameter( "Max Seeds Per Torrent" ));
-
-					}else if ( name == PARAM_RANDOM_SEED ){
-
-						long	rand = random.nextLong();
-
-						setLongParameter( name, rand );
-
-						value = new Long( rand );
+						setLongParameter( name, (Long)value );
 					}
 				}
 			}
@@ -1821,6 +2004,8 @@ DownloadManagerStateImpl
 		}
 
 		setListAttribute( AT_FILE_LINKS2, list );
+		
+		download_manager.informLocationChange( source_index );
 	}
 
 	@Override
@@ -1888,6 +2073,8 @@ DownloadManagerStateImpl
 		}
 
 		setListAttribute( AT_FILE_LINKS2, list );
+		
+		download_manager.informLocationChange( null );
 	}
 
 	@Override
@@ -1928,9 +2115,9 @@ DownloadManagerStateImpl
 			}
 
 			setListAttribute( AT_FILE_LINKS2, list );
+			
+			download_manager.informLocationChange( null );
 		}
-
-		//System.out.println( "clearFileLinks" );
 	}
 
 	@Override
@@ -2053,6 +2240,54 @@ DownloadManagerStateImpl
 		return( res );
 	}
 
+	@Override
+	public int getFileFlags(int file_index){
+		Map map  = getMapAttribute( AT_FILE_FLAGS );
+		
+		if ( map == null ){
+			
+			return(0);
+		}
+		
+		String key = String.valueOf( file_index );
+		
+		Number result = (Number)map.get( key );
+		
+		return( result==null?0:result.intValue());
+	}
+
+	@Override
+	public void setFileFlags(int file_index, int flags){
+		Map map  = getMapAttribute( AT_FILE_FLAGS );
+		
+		if ( map == null ){
+			
+			map = new HashMap();
+			
+		}else{
+			
+			map = BEncoder.cloneMap( map );
+		}
+		
+		String key = String.valueOf( file_index );
+
+		if ( flags == 0 ){
+			
+			map.remove( key );
+			
+			if ( map.isEmpty()){
+				
+				map = null;
+			}
+		}else{
+			
+			map.put( key,  flags );
+			
+		}
+		
+		setMapAttribute( AT_FILE_FLAGS, map );
+	}
+	    
 	@Override
 	public boolean
 	isOurContent()
@@ -2769,6 +3004,12 @@ DownloadManagerStateImpl
 			return( null );
 		}
 
+		public boolean
+		getAndClearRecoveredStatus()
+		{
+			return( false );
+		}
+		
 		@Override
 		public DownloadManager
 		getDownloadManager()
@@ -2846,6 +3087,26 @@ DownloadManagerStateImpl
 			return 0;
 		}
 
+		public void
+		setTransientFlag(
+			long		flag,
+			boolean		set )
+		{
+		}
+
+		public boolean
+		getTransientFlag(
+			long		flag )
+		{
+			return( false );
+		}
+
+		public long
+		getTransientFlags()
+		{
+			return( 0 );
+		}
+		
 		@Override
 		public void
 		setParameterDefault(
@@ -3109,6 +3370,16 @@ DownloadManagerStateImpl
 		}
 
 		@Override
+		public int getFileFlags(int file_index){
+			return 0;
+		}
+
+		@Override
+		public void setFileFlags(int file_index, int flags){
+
+		}
+		    
+		@Override
 		public void
 		setActive(boolean active )
 		{
@@ -3202,28 +3473,29 @@ DownloadManagerStateImpl
 		extends 	LogRelation
 		implements 	TorrentUtils.ExtendedTorrent
 	{
-		private final DownloadManagerImpl	download_manager;
+		final DownloadManagerImpl	download_manager;
 
-		private final String		torrent_file;
-		private HashWrapper	torrent_hash_wrapper;
-		private Map			cache;
-		private Map			cache_attributes;
-		private Map			cache_azp;
+		final String		torrent_file;
+		HashWrapper			torrent_hash_wrapper;
+		Map					cache;
+		Map					cache_attributes;
+		Map					cache_azp;
+		Map					cache_azpp;
 
 		volatile TorrentUtils.ExtendedTorrent		delegate;
-		private TOTorrentException							fixup_failure;
+		TOTorrentException							fixup_failure;
 
-		private boolean		discard_pieces;
-		private boolean		logged_failure;
+		boolean		discard_pieces;
+		boolean		logged_failure;
 
-		private Boolean		simple_torrent;
-		private long		size;
-		private int			file_count;
+		Boolean		simple_torrent;
+		long		size;
+		int			file_count;
 
-		private URL										announce_url;
-		cacheGroup								announce_group;
+		URL								announce_url;
+		cacheGroup						announce_group;
 
-		private volatile boolean		discard_fluff;
+		volatile boolean		discard_fluff;
 
 		protected
 		CachedStateWrapper(
@@ -3240,6 +3512,7 @@ DownloadManagerStateImpl
 
 			cache_attributes 	= (Map)cache.get( "attributes" );
 			cache_azp 			= (Map)cache.get( "azp" );
+			cache_azpp 			= (Map)cache.get( "azpp" );
 
 			if ( _force_piece_discard ){
 
@@ -3321,8 +3594,9 @@ DownloadManagerStateImpl
 			cache.put( "encoding", state.getAdditionalStringProperty( "encoding" ));
 			cache.put( "torrent filename", state.getAdditionalStringProperty( "torrent filename" ));
 
-			cache.put( "attributes", state.getAdditionalMapProperty( ATTRIBUTE_KEY ));
-			cache.put( "azp", state.getAdditionalMapProperty( AZUREUS_PROPERTIES_KEY ));
+			cache.put( "attributes", 	state.getAdditionalMapProperty( ATTRIBUTE_KEY ));
+			cache.put( "azp", 			state.getAdditionalMapProperty( AZUREUS_PROPERTIES_KEY ));
+			cache.put( "azpp", 			state.getAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES_KEY ));
 
 			try{
 				cache.put( "au", state.getAnnounceURL().toExternalForm());
@@ -3626,6 +3900,13 @@ DownloadManagerStateImpl
 
 								cache_azp = null;
 							}
+							
+							if ( cache_azpp != null ){
+
+								delegate.setAdditionalMapProperty( AZUREUS_PRIVATE_PROPERTIES_KEY, cache_azpp );
+
+								cache_azpp = null;
+							}
 
 							announce_url = null;
 
@@ -3704,6 +3985,8 @@ DownloadManagerStateImpl
 
 			saved_file = getStateFile( torrent_hash_wrapper.getBytes());
 
+			boolean	was_corrupt = false;
+			
 			if ( saved_file.exists()){
 
 				try{
@@ -3711,6 +3994,8 @@ DownloadManagerStateImpl
 
 				}catch( Throwable e ){
 
+					was_corrupt = true;
+					
 					Debug.out( "Failed to load download state for " + saved_file );
 				}
 			}
@@ -3720,8 +4005,16 @@ DownloadManagerStateImpl
 				// and do stuff like write it somewhere else which would screw us
 				// up)
 
-			TorrentUtils.copyToFile( original_torrent, saved_file );
+			copyTorrentToActive( original_torrent, saved_file, was_corrupt );
 
+			if ( was_corrupt ){
+				
+				if ( download_manager != null ){
+					
+					download_manager.setFailed( "Recovered from original torrent" );
+				}
+			}
+			
 			return( TorrentUtils.readDelegateFromFile( saved_file, discard_pieces ));
 		}
 
@@ -4303,17 +4596,25 @@ DownloadManagerStateImpl
        	{
 			Map	c = cache_attributes;
 
-			if ( c != null &&  name.equals( "attributes" )){
+			if ( c != null &&  name.equals( ATTRIBUTE_KEY )){
 
 				return( c );
 			}
 
 			c = cache_azp;
 
-			if ( c != null &&  name.equals( "azureus_properties" )){
+			if ( c != null &&  name.equals( AZUREUS_PROPERTIES_KEY )){
 
 				return( c );
 			}
+			
+			c = cache_azpp;
+
+			if ( c != null &&  name.equals( AZUREUS_PRIVATE_PROPERTIES_KEY )){
+
+				return( c );
+			}
+
 
 	   		if ( fixup()){
 

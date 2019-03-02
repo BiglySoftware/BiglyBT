@@ -17,17 +17,26 @@
  */
 package com.biglybt.ui.swt;
 
+import java.util.ArrayList;
+
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.*;
-import org.eclipse.swt.layout.*;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.UIInputValidator;
 import com.biglybt.ui.swt.pifimpl.AbstractUISWTInputReceiver;
+
+import com.biglybt.pif.ui.UIInputValidator;
 
 /**
  * @author amc1
@@ -40,9 +49,12 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 	private Shell shell;
 	private int textLimit;
+	private boolean resizeable;
 	private Combo text_entry_combo;
 	private Text text_entry_text;
 
+	private java.util.List<VerifyListener> verify_listeners = new ArrayList<>();
+	
 	public SimpleTextEntryWindow() {
 	}
 
@@ -63,6 +75,13 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 		setLocalisedMessage(MessageText.getString(sLabelKey, p1));
 	}
 
+	public void
+	addVerifyListener(
+		VerifyListener		l )
+	{
+		verify_listeners.add( l );
+	}
+	
 	@Override
 	protected void promptForInput() {
 		Utils.execSWTThread(new Runnable() {
@@ -91,7 +110,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 		if (parent == null) {
 			parent = Utils.findAnyShell();
 		}
-		shell = com.biglybt.ui.swt.components.shell.ShellFactory.createShell(parent, SWT.DIALOG_TRIM);
+		shell = com.biglybt.ui.swt.components.shell.ShellFactory.createShell(parent, SWT.DIALOG_TRIM | (resizeable?SWT.RESIZE:0 ));
 
 		display = shell.getDisplay();
 		if (this.title != null) {
@@ -115,9 +134,9 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    	label.setText(this.messages[i]);
 
 	    	// 330 is the current default width.
-	    	gridData = new GridData();
+	    	gridData = resizeable?new GridData(GridData.FILL_HORIZONTAL):new GridData();
 	    	gridData.widthHint = width_hint;
-		    Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 	    }
 
 	    // Create Text object with pre-entered text.
@@ -210,6 +229,17 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 	    });
 
+	    for ( VerifyListener l: verify_listeners ){
+			if ( text_entry_text != null ){
+				
+				text_entry_text.addVerifyListener( l );
+				
+			}else if ( text_entry_combo != null ){
+
+				text_entry_combo.addVerifyListener( l );
+			}
+	    }
+	    
 	    // Default behaviour - single mode results in default height of 1 line,
 	    // multiple lines has default height of 3.
 	    int line_height = this.line_height;
@@ -217,12 +247,14 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    	line_height = (this.multiline_mode) ? 3 : 1;
 	    }
 
-	    gridData = new GridData();
+	    gridData = resizeable?new GridData(GridData.FILL_BOTH):new GridData();
 	    gridData.widthHint = width_hint;
-	    if (text_entry_text != null)
+	    if (text_entry_text != null){
 	    	gridData.minimumHeight = text_entry_text.getLineHeight() * line_height;
-	    gridData.heightHint = gridData.minimumHeight;
-	    Utils.setLayoutData(text_entry, gridData);
+	    	gridData.heightHint = gridData.minimumHeight;
+	    }
+
+		text_entry.setLayoutData(gridData);
 
 	    Composite panel = new Composite(shell, SWT.NULL);
 	    final RowLayout rLayout = new RowLayout();
@@ -230,27 +262,19 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    rLayout.marginLeft = 0;
 	    rLayout.marginBottom = 0;
 	    rLayout.marginRight = 0;
-	    try {
-	    	rLayout.fill = true;
-	    } catch (NoSuchFieldError e) {
-	    	// SWT 2.x
-	    }
+    	rLayout.fill = true;
+	   
 	    rLayout.spacing = Utils.BUTTON_MARGIN;
 	    panel.setLayout(rLayout);
 	    gridData = new GridData();
 	    gridData.horizontalAlignment = SWT.END;
-	    Utils.setLayoutData(panel, gridData);
+		panel.setLayoutData(gridData);
 
-	    Button ok;
-	    Button cancel;
-	    if (Constants.isOSX) {
-	    	cancel = createAlertButton(panel, "Button.cancel");
-	    	ok = createAlertButton(panel, "Button.ok");
-	    } else {
-	    	ok = createAlertButton(panel, "Button.ok");
-	    	cancel = createAlertButton(panel, "Button.cancel");
-	    }
+	    Button[] buttons = Utils.createOKCancelButtons(panel);
 
+	    Button ok 		= buttons[0];
+	    Button cancel 	= buttons[1];
+	    
 	    ok.addListener(SWT.Selection, new Listener() {
 
 	    	private void showError(String text) {
@@ -353,19 +377,6 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    shell.open();
 	  }
 
-  private static Button createAlertButton(final Composite panel, String localizationKey)
-  {
-      final Button button = new Button(panel, SWT.PUSH);
-      button.setText(MessageText.getString(localizationKey));
-      final RowData rData = new RowData();
-      rData.width = Math.max(
-              Utils.BUTTON_MINWIDTH,
-              button.computeSize(SWT.DEFAULT,  SWT.DEFAULT).x
-        );
-      button.setLayoutData(rData);
-      return button;
-  }
-
   @Override
   public void setTextLimit(int limit) {
   	textLimit = limit;
@@ -380,6 +391,13 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 				}
 			}
 		});
+  }
+  
+  public void
+  setResizeable(
+		boolean b )
+  {
+	  resizeable = b;
   }
 
   public void

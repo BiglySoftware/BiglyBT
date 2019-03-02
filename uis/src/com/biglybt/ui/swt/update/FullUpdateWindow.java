@@ -138,9 +138,9 @@ public class FullUpdateWindow
 				}
 			});
 
-			browser.addOpenWindowListener(new OpenWindowListener() {
+			browser.addOpenWindowListener(new BrowserWrapper.OpenWindowListener() {
 				@Override
-				public void open(WindowEvent event) {
+				public void open(BrowserWrapper.WindowEvent event) {
 					final BrowserWrapper subBrowser = Utils.createSafeBrowser(shell,
 							SWT.NONE);
 					if (subBrowser == null) {
@@ -311,9 +311,9 @@ public class FullUpdateWindow
 
 				Utils.centreWindow(shell);
 
-				browser.setUrl( "http://www.vuze.com/download" );
+				browser.setUrl( Constants.URL_CLIENT_HOME );
 
-				browser.setText( "Update available, please go to www.vuze.com to update." );
+				browser.setText( "Update available, please go to www.biglybt.com to update." );
 
 				shell.open();
 			}

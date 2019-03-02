@@ -39,10 +39,11 @@ TagTypeListener
 	TagEvent
 	{
 		public int ET_TAG_ADDED						= 0;
-		public int ET_TAG_CHANGED					= 1;
+		public int ET_TAG_MEMBERSHIP_CHANGED		= 1;
 		public int ET_TAG_REMOVED					= 2;
 		public int ET_TAG_ATTENTION_REQUESTED		= 3;
-
+		public int ET_TAG_METADATA_CHANGED			= 4;
+		
 		public Tag
 		getTag();
 

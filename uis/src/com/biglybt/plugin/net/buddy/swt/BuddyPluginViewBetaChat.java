@@ -21,7 +21,6 @@
 package com.biglybt.plugin.net.buddy.swt;
 
 import java.io.File;
-import java.net.InetSocketAddress;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -63,6 +62,8 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
@@ -88,17 +89,19 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.SubscriptionResult;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
-import com.biglybt.core.util.AddressUtils;
+import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -110,7 +113,6 @@ import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
-import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.sharing.ShareResourceDir;
 import com.biglybt.pif.sharing.ShareResourceFile;
@@ -152,13 +154,17 @@ BuddyPluginViewBetaChat
 	private static final boolean TEST_LOOPBACK_CHAT = System.getProperty( "az.chat.loopback.enable", "0" ).equals( "1" );
 	private static final boolean DEBUG_ENABLED		= BuddyPluginBeta.DEBUG_ENABLED;
 
-	private static final int	MAX_MSG_CHUNK_LENGTH	= 400;
-	private static final int	MAX_MSG_OVERALL_LENGTH	= 2048;
+	private static final int	MAX_MSG_CHUNK_ENABLE	= 500;	// won't chunk if not exceeded
+	private static final int	MAX_MSG_CHUNK_LENGTH	= 400;	// chunk size
+	private static final int	MAX_MSG_OVERALL_LENGTH	= 2048;	// max user can enter in input field
+	
 
 	private static final Set<BuddyPluginViewBetaChat>	active_windows = new HashSet<>();
 
 	private static boolean auto_ftux_popout_done	= false;
 
+	private static Map<String,String>	text_cache = new HashMap<>();
+	
 	protected static void
 	createChatWindow(
 		BuddyPluginView	view,
@@ -232,7 +238,7 @@ BuddyPluginViewBetaChat
 	private Button 					shared_nick_button;
 	private Text 					nickname;
 
-	private Text 					input_area;
+	private Text					input_area;
 
 	private DropTarget[]			drop_targets;
 
@@ -551,8 +557,8 @@ BuddyPluginViewBetaChat
 			layout.marginWidth = 0;
 			parent.setLayout(layout);
 			GridData grid_data = new GridData(GridData.FILL_BOTH );
-			Utils.setLayoutData(parent, grid_data);
-	
+			parent.setLayoutData(grid_data);
+
 			Composite sash_area = new Composite( parent, SWT.NONE );
 			layout = new GridLayout();
 			layout.numColumns = 1;
@@ -562,12 +568,12 @@ BuddyPluginViewBetaChat
 	
 			grid_data = new GridData(GridData.FILL_BOTH );
 			grid_data.horizontalSpan = 2;
-			Utils.setLayoutData(sash_area, grid_data);
-	
-		    final SashForm sash = new SashForm(sash_area,SWT.HORIZONTAL );
-		    grid_data = new GridData(GridData.FILL_BOTH );
-		    Utils.setLayoutData(sash, grid_data);
-	
+			sash_area.setLayoutData(grid_data);
+
+			final SashForm sash = new SashForm(sash_area,SWT.HORIZONTAL );
+			grid_data = new GridData(GridData.FILL_BOTH );
+			sash.setLayoutData(grid_data);
+
 			final Composite lhs = new Composite(sash, SWT.NONE);
 	
 			layout = new GridLayout();
@@ -579,8 +585,8 @@ BuddyPluginViewBetaChat
 			lhs.setLayout(layout);
 			grid_data = new GridData(GridData.FILL_BOTH );
 			grid_data.widthHint = 300;
-			Utils.setLayoutData(lhs, grid_data);
-	
+			lhs.setLayoutData(grid_data);
+
 			buildStatus( parent, lhs );
 	
 			Composite log_holder = buildFTUX( lhs, SWT.BORDER );
@@ -601,7 +607,7 @@ BuddyPluginViewBetaChat
 			grid_data = new GridData(GridData.FILL_BOTH);
 			grid_data.horizontalSpan = 1;
 			//grid_data.horizontalIndent = 4;
-			Utils.setLayoutData(log, grid_data);
+			log.setLayoutData(grid_data);
 			//log.setIndent( 4 );
 	
 			log.setEditable( false );
@@ -1062,16 +1068,7 @@ BuddyPluginViewBetaChat
 	
 										ChatParticipant participant = (ChatParticipant)data;
 	
-										String name = "@" + participant.getName( true );
-	
-										String existing = input_area.getText();
-	
-										if ( existing.length() > 0 && !existing.endsWith( " " )){
-	
-											name = " " + name;
-										}
-	
-										input_area.append( name );
+										addNickString( participant );
 									}
 								}
 							}
@@ -1158,7 +1155,7 @@ BuddyPluginViewBetaChat
 										}
 									}
 	
-									log.setToolTipText( MessageText.getString( "label.right.click.for.options" ) + tt_extra );
+									Utils.setTT(log, MessageText.getString( "label.right.click.for.options" ) + tt_extra );
 	
 	
 									StyleRange derp;
@@ -1195,7 +1192,7 @@ BuddyPluginViewBetaChat
 	
 						if ( !active ){
 	
-							log.setToolTipText( "" );
+							Utils.setTT(log, "" );
 	
 							if ( old_range != null ){
 	
@@ -1261,9 +1258,9 @@ BuddyPluginViewBetaChat
 			grid_data = new GridData(GridData.FILL_VERTICAL );
 			int rhs_width=Constants.isWindows?150:160;
 			grid_data.widthHint = rhs_width;
-			Utils.setLayoutData(rhs, grid_data);
-	
-				// options
+			rhs.setLayoutData(grid_data);
+
+			// options
 	
 			Composite top_right = buildHelp( rhs );
 	
@@ -1281,25 +1278,25 @@ BuddyPluginViewBetaChat
 			nick_area.setLayout(layout);
 			grid_data = new GridData(GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan=3;
-			Utils.setLayoutData(nick_area, grid_data);
-	
+			nick_area.setLayoutData(grid_data);
+
 			Label label = new Label( nick_area, SWT.NULL );
 			label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.nick" ));
 			grid_data = new GridData();
 			//grid_data.horizontalIndent=4;
-			Utils.setLayoutData(label, grid_data);
-	
+			label.setLayoutData(grid_data);
+
 			nickname = new Text( nick_area, SWT.BORDER );
 			grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan=1;
-			Utils.setLayoutData(nickname,  grid_data );
-	
+			nickname.setLayoutData(grid_data);
+
 			nickname.setText( chat.getNickname( false ));
 			nickname.setMessage( chat.getDefaultNickname());
 	
 			label = new Label( nick_area, SWT.NULL );
 			label.setText( lu.getLocalisedMessageText( "label.shared" ));
-			label.setToolTipText( lu.getLocalisedMessageText( "azbuddy.dchat.shared.tooltip" ));
+			Utils.setTT(label, lu.getLocalisedMessageText( "azbuddy.dchat.shared.tooltip" ));
 	
 			shared_nick_button = new Button( nick_area, SWT.CHECK );
 	
@@ -1346,7 +1343,7 @@ BuddyPluginViewBetaChat
 			if ( !Constants.isWindows ){
 				grid_data.horizontalIndent = 2;
 			}
-			Utils.setLayoutData(table_header_left,  grid_data );
+			table_header_left.setLayoutData(grid_data);
 			table_header_left.setText(MessageText.getString( "PeersView.state.pending" ));
 	
 			LinkLabel link = 
@@ -1381,8 +1378,8 @@ BuddyPluginViewBetaChat
 			for (int i = 0; i < headers.length; i++){
 	
 				TableColumn tc = new TableColumn(buddy_table, aligns[i]);
-	
-				tc.setWidth(Utils.adjustPXForDPI(sizes[i]));
+
+				tc.setWidth(sizes[i]);
 	
 				Messages.setLanguageText(tc, headers[i]);
 			}
@@ -1391,9 +1388,9 @@ BuddyPluginViewBetaChat
 	
 		    grid_data = new GridData(GridData.FILL_BOTH);
 		    // grid_data.heightHint = buddy_table.getHeaderHeight() * 3;
-			Utils.setLayoutData(buddy_table, grid_data);
-	
-	
+			buddy_table.setLayoutData(grid_data);
+
+
 			buddy_table.addListener(
 				SWT.SetData,
 				new Listener()
@@ -1504,16 +1501,7 @@ BuddyPluginViewBetaChat
 	
 						ChatParticipant	participant = (ChatParticipant)item.getData();
 	
-						String name = "@" + participant.getName( true );
-	
-						String existing = input_area.getText();
-	
-						if ( existing.length() > 0 && !existing.endsWith( " " )){
-	
-							name = " " + name;
-						}
-	
-						input_area.append( name );
+						addNickString( participant );
 	
 					}
 				});
@@ -1589,10 +1577,26 @@ BuddyPluginViewBetaChat
 			grid_data.horizontalSpan = 1;
 			grid_data.heightHint = 30;
 			grid_data.horizontalIndent = 4;
-			Utils.setLayoutData(input_area, grid_data);
-	
+			input_area.setLayoutData(grid_data);
+
+			//input_area.setIndent( 4 );
+			
 			input_area.setTextLimit( MAX_MSG_OVERALL_LENGTH );
 	
+			input_area.addVerifyListener(
+				new VerifyListener(){
+					
+					@Override
+					public void verifyText(VerifyEvent ev){
+							// ctrl+i by default maps to \t
+						
+						if ( ev.text.equals( "\t" )){
+								
+							ev.doit = false;
+						}
+					}
+				});
+			
 			input_area.addKeyListener(
 				new KeyListener()
 				{
@@ -1606,7 +1610,7 @@ BuddyPluginViewBetaChat
 					keyPressed(
 						KeyEvent e)
 					{
-						if ( e.keyCode == SWT.CR ){
+						if ( e.keyCode == SWT.CR || e.keyCode == SWT.KEYPAD_CR){
 	
 							e.doit = false;
 	
@@ -1621,7 +1625,7 @@ BuddyPluginViewBetaChat
 	
 							if ( message.length() > 0 ){
 	
-								sendMessage(  message );
+								sendMessage(  message, true );
 	
 								history.addFirst( message );
 	
@@ -1635,6 +1639,8 @@ BuddyPluginViewBetaChat
 								buffered_message = "";
 	
 								input_area.setText( "" );
+								
+								text_cache.put( chat.getNetAndKey(), "" );
 							}
 						}else if ( e.keyCode == SWT.ARROW_UP ){
 	
@@ -1706,6 +1712,63 @@ BuddyPluginViewBetaChat
 								if ( key == 'a' ){
 	
 									input_area.selectAll();
+									
+								}else if ( key == 'b' || key == 'i' ){
+									
+									String emp = key == 'b'?"**":"*";
+									
+									String 	sel = input_area.getSelectionText();
+									
+									Point p = input_area.getSelection();
+
+									// unfortunately double-click to select grabs trailing spaces so trim back
+									
+									while( sel.endsWith( " " )){
+										
+										sel = sel.substring( 0, sel.length() - 1 );
+										
+										p.y--;
+									}
+									
+									if ( !sel.isEmpty()){
+										
+										/*
+										int[] range = input_area.getSelectionRanges();
+										
+										int emp_len = emp.length();
+										
+										if ( sel.startsWith( emp ) && sel.endsWith( emp ) && sel.length() >= emp_len * 2 ){
+											
+											input_area.replaceTextRange( range[0], range[1], sel.substring(emp_len, sel.length() - emp_len ));
+											
+											input_area.setSelection( range[0], range[0] + range[1] - emp_len*2 );
+											
+										}else{
+											
+											input_area.replaceTextRange( range[0], range[1], emp + sel + emp );
+											
+											input_area.setSelection( range[0], range[0] + range[1] + emp_len*2 );
+										}
+										*/
+																				
+										int emp_len = emp.length();
+										
+										String text = input_area.getText();
+																				
+										if ( sel.startsWith( emp ) && sel.endsWith( emp ) && sel.length() >= emp_len * 2 ){
+										
+											input_area.setText( text.substring( 0,  p.x ) + sel.substring(emp_len, sel.length() - emp_len ) + text.substring( p.y ));
+											
+											p.y -= emp_len*2;
+										}else{
+											
+											input_area.setText( text.substring( 0,  p.x ) + emp + sel+ emp  + text.substring( p.y ));
+											
+											p.y += emp_len*2;
+										}
+										
+										input_area.setSelection( p );
+									}
 								}
 							}
 						}
@@ -1719,6 +1782,30 @@ BuddyPluginViewBetaChat
 					}
 				});
 	
+			input_area.addDisposeListener(
+				new DisposeListener(){
+					
+					@Override
+					public void widgetDisposed(DisposeEvent arg0){
+						
+						if ( input_area != null ){
+							
+							String text = input_area.getText();
+							
+							text_cache.put( chat.getNetAndKey(), text );
+						}
+					}
+				});
+			
+			String cached_text = text_cache.get( chat.getNetAndKey());
+			
+			if ( cached_text != null && !cached_text.isEmpty()){
+				
+				input_area.setText( cached_text );
+				
+				input_area.setSelection( cached_text.length());
+			}
+			
 			Composite button_area = new Composite( bottom_area, SWT.NULL );
 	
 			layout = new GridLayout();
@@ -1856,7 +1943,7 @@ BuddyPluginViewBetaChat
 			layout.marginWidth = 0;
 			parent.setLayout(layout);
 			GridData grid_data = new GridData(GridData.FILL_BOTH );
-			Utils.setLayoutData(parent, grid_data);
+			parent.setLayoutData(grid_data);
 
 			Composite status_area = new Composite( parent, SWT.NULL );
 			grid_data = new GridData(GridData.FILL_HORIZONTAL );
@@ -2048,7 +2135,7 @@ BuddyPluginViewBetaChat
 															
 												link = link.trim();
 												
-												sendMessage( link );
+												sendMessage( link, false );
 												
 												String rendered = renderMessage( link );
 
@@ -2085,7 +2172,7 @@ BuddyPluginViewBetaChat
 		ftux_stack = new Composite(parent, SWT.NONE);
 		GridData grid_data = new GridData(GridData.FILL_BOTH );
 		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(ftux_stack,  grid_data );
+		ftux_stack.setLayoutData(grid_data);
 
         final StackLayout stack_layout = new StackLayout();
         ftux_stack.setLayout(stack_layout);
@@ -2119,14 +2206,14 @@ BuddyPluginViewBetaChat
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
 		grid_data.heightHint = 30;
-		Utils.setLayoutData(ftux_top_area, grid_data);
+		ftux_top_area.setLayoutData(grid_data);
 		ftux_top_area.setBackground( ftux_dark_bg );
 
 
 		Label ftux_top = new Label( ftux_top_area, SWT.WRAP );
 		grid_data = new GridData(SWT.LEFT, SWT.CENTER, true, true );
 		grid_data.horizontalIndent = 8;
-		Utils.setLayoutData(ftux_top, grid_data);
+		ftux_top.setLayoutData(grid_data);
 
 		ftux_top.setAlignment( SWT.LEFT );
 		ftux_top.setBackground( ftux_dark_bg );
@@ -2140,7 +2227,7 @@ BuddyPluginViewBetaChat
 		grid_data = new GridData();
 		grid_data.heightHint=40;
 		grid_data.widthHint=0;
-		Utils.setLayoutData(ftux_hack, grid_data);
+		ftux_hack.setLayoutData(grid_data);
 
 		final StyledText ftux_middle = new StyledText( ftux_holder, SWT.READ_ONLY | SWT.V_SCROLL | SWT.WRAP | SWT.NO_FOCUS );
 
@@ -2148,7 +2235,7 @@ BuddyPluginViewBetaChat
 		grid_data.horizontalSpan = 1;
 		grid_data.verticalIndent = 4;
 		grid_data.horizontalIndent = 16;
-		Utils.setLayoutData(ftux_middle, grid_data);
+		ftux_middle.setLayoutData(grid_data);
 
 		ftux_middle.setBackground( ftux_light_bg );
 
@@ -2196,18 +2283,18 @@ BuddyPluginViewBetaChat
 
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(ftux_check_area,  grid_data );
+		ftux_check_area.setLayoutData(grid_data);
 		ftux_check_area.setBackground(  ftux_light_bg );
 
 		final Button ftux_check = new Button( ftux_check_area, SWT.CHECK );
 		grid_data = new GridData();
 		grid_data.horizontalIndent = 16;
-		Utils.setLayoutData(ftux_check,  grid_data );
+		ftux_check.setLayoutData(grid_data);
 		ftux_check.setBackground(  ftux_light_bg );
 
 		Label ftux_check_test = new Label( ftux_check_area, SWT.WRAP );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(ftux_check_test, grid_data);
+		ftux_check_test.setLayoutData(grid_data);
 
 		ftux_check_test.setBackground( ftux_light_bg );
 		ftux_check_test.setText( info2_text );
@@ -2219,7 +2306,7 @@ BuddyPluginViewBetaChat
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
 		grid_data.horizontalIndent = 16;
-		Utils.setLayoutData(ftux_bottom, grid_data);
+		ftux_bottom.setLayoutData(grid_data);
 
 		ftux_bottom.setBackground( ftux_light_bg );
 		ftux_bottom.setFont( bold_font );
@@ -2272,7 +2359,7 @@ BuddyPluginViewBetaChat
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
 		grid_data.verticalIndent = 4;
-		Utils.setLayoutData(ftux_line,  grid_data );
+		ftux_line.setLayoutData(grid_data);
 
 		Composite ftux_button_area = new Composite( ftux_holder, SWT.NULL );
 		layout = new GridLayout();
@@ -2281,19 +2368,19 @@ BuddyPluginViewBetaChat
 
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 2;
-		Utils.setLayoutData(ftux_button_area,  grid_data );
+		ftux_button_area.setLayoutData(grid_data);
 		ftux_button_area.setBackground( Colors.white );
 
 		Label filler = new Label( ftux_button_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		Utils.setLayoutData(filler,  grid_data );
+		filler.setLayoutData(grid_data);
 		filler.setBackground( Colors.white );
 
 		final Button ftux_accept = new Button( ftux_button_area, SWT.PUSH );
 		grid_data = new GridData();
 		grid_data.horizontalAlignment = SWT.RIGHT;
 		grid_data.widthHint = 60;
-		Utils.setLayoutData(ftux_accept, grid_data);
+		ftux_accept.setLayoutData(grid_data);
 
 		ftux_accept.setText( MessageText.getString( "label.accept" ));
 
@@ -2399,12 +2486,12 @@ BuddyPluginViewBetaChat
 		if ( !sharing_view ) {
 			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			//grid_data.heightHint = 50;
-			Utils.setLayoutData(top_right, grid_data);
-	
+			top_right.setLayoutData(grid_data);
+
 			Label label = new Label( top_right, SWT.NULL );
 			grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			grid_data.horizontalSpan=can_popout?1:2;
-			Utils.setLayoutData(label, grid_data);
+			label.setLayoutData(grid_data);
 		}
 		
 		LinkLabel link = new LinkLabel( top_right, "label.help", lu.getLocalisedMessageText( "azbuddy.dchat.link.url" ));
@@ -2424,11 +2511,11 @@ BuddyPluginViewBetaChat
 			GridData grid_data = new GridData();
 			grid_data.widthHint=image.getBounds().width;
 			grid_data.heightHint=image.getBounds().height;
-			Utils.setLayoutData(pop_out, grid_data);
+			pop_out.setLayoutData(grid_data);
 
 			pop_out.setCursor(pop_out.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 
-			pop_out.setToolTipText( MessageText.getString( "label.pop.out" ));
+			Utils.setTT(pop_out, MessageText.getString( "label.pop.out" ));
 
 			pop_out.addMouseListener(new MouseAdapter() {
 				@Override
@@ -2489,12 +2576,13 @@ BuddyPluginViewBetaChat
 			final Image rss_image_normal 	= ImageLoader.getInstance().getImage("image.sidebar.subscriptions");
 			final Image rss_image_gray		= ImageLoader.getInstance().getImage("image.sidebar.subscriptions-gray");
 			rss_button.setImage(rss_image_gray);
+			rss_button.setCursor(parent.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 			GridData grid_data = new GridData(GridData.FILL_HORIZONTAL );
 			grid_data.widthHint = rss_image_gray.getBounds().width;
 			grid_data.heightHint = rss_image_gray.getBounds().height;
 			rss_button.setLayoutData(grid_data);
 	
-			rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
+			Utils.setTT(rss_button, MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
 	
 			rss_button.addMouseTrackListener(
 				new MouseTrackAdapter(){
@@ -2531,7 +2619,7 @@ BuddyPluginViewBetaChat
 			rss_button.setLayoutData(grid_data);
 			//rss_button.setEnabled(false);
 	
-			rss_button.setToolTipText( MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
+			Utils.setTT(rss_button, MessageText.getString( "azbuddy.dchat.rss.subscribe.info"));
 	
 			rss_button.addSelectionListener(
 				new SelectionAdapter(){
@@ -2615,7 +2703,7 @@ BuddyPluginViewBetaChat
 		status = new BufferedLabel( component, SWT.LEFT | SWT.DOUBLE_BUFFERED );
 		GridData grid_data = new GridData(GridData.FILL_HORIZONTAL);
 
-		Utils.setLayoutData(status, grid_data);
+		status.setLayoutData(grid_data);
 		status.setText( MessageText.getString( "PeersView.state.pending" ));
 
 		Image image = ImageLoader.getInstance().getImage( "cog_down" );
@@ -2623,7 +2711,7 @@ BuddyPluginViewBetaChat
 		grid_data = new GridData();
 		grid_data.widthHint=image.getBounds().width;
 		grid_data.heightHint=image.getBounds().height;
-		Utils.setLayoutData(menu_drop, grid_data);
+		menu_drop.setLayoutData(grid_data);
 
 		menu_drop.setCursor(menu_drop.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 
@@ -3194,7 +3282,7 @@ BuddyPluginViewBetaChat
 					});
 
 			final MenuItem sis_mi = new MenuItem( status_menu, SWT.PUSH );
-			sis_mi.setText( MessageText.getString( "label.show.in.sidebar" ));
+			sis_mi.setText( MessageText.getString( Utils.isAZ2UI()?"label.show.in.tab":"label.show.in.sidebar" ));
 
 			sis_mi.addSelectionListener(
 					new SelectionAdapter() {
@@ -3528,6 +3616,8 @@ BuddyPluginViewBetaChat
 				widgetSelected(
 					SelectionEvent e)
 				{
+					boolean	changed = false;
+					
 					for ( ChatParticipant participant: participants ){
 
 						if ( !participant.isPinned()){
@@ -3537,8 +3627,16 @@ BuddyPluginViewBetaChat
 								participant.setPinned( true );
 
 								setProperties( participant );
+								
+								changed = true;
 							}
 						}
+					}
+					
+
+					if ( changed ){
+
+						messagesChanged();
 					}
 				}
 			});
@@ -3557,6 +3655,8 @@ BuddyPluginViewBetaChat
 				widgetSelected(
 					SelectionEvent e)
 				{
+					boolean	changed = false;
+					
 					for ( ChatParticipant participant: participants ){
 
 						if ( participant.isPinned()){
@@ -3564,7 +3664,15 @@ BuddyPluginViewBetaChat
 							participant.setPinned( false );
 
 							setProperties( participant );
+							
+							changed = true;
 						}
+					}
+					
+
+					if ( changed ){
+
+						messagesChanged();
 					}
 				}
 			});
@@ -4121,11 +4229,18 @@ BuddyPluginViewBetaChat
 
 							networks_str += (networks_str.length()==0?"":",") + net;
 						}
-
-						properties.put( ShareManager.PR_PERSONAL, "true" );
+						
+						Utils.setPeronalShare( properties );
+						
 						properties.put( ShareManager.PR_NETWORKS, networks_str );
-						properties.put( ShareManager.PR_USER_DATA, "buddyplugin:share" );
 
+						Tag tag = plugin.getBeta().getDownloadTag();
+
+						if ( tag != null ){
+							
+							properties.put( ShareManager.PR_TAGS, String.valueOf( tag.getTagUID()));
+						}
+						
 						Torrent 	torrent;
 
 						try{
@@ -4184,79 +4299,13 @@ BuddyPluginViewBetaChat
 		Download		download,
 		DropAccepter	accepter )
 	{
-		String magnet = UrlUtils.getMagnetURI( download, 80 );
-
-			// we can go a bit over MAX_MSG_LENGTH as underlying limit is a fair bit higher
-		
-		magnet = trimMagnet( magnet, MAX_MSG_CHUNK_LENGTH );
-		
-		magnet += "&xl="  + download.getTorrentSize();
-		
-		DownloadScrapeResult scrape = download.getLastScrapeResult();
-
-		if ( scrape != null && scrape.getResponseType() == DownloadScrapeResult.RT_SUCCESS ){
-
-			int seeds 		= scrape.getSeedCount();
-			int leechers	 = scrape.getNonSeedCount();
-			
-			if ( seeds != -1 ){
-				magnet += "&_s="  + seeds;
-			}
-			
-			if ( leechers != -1 ){
-				magnet += "&_l="  + leechers;
-			}
-		}
-		
-		long added = PluginCoreUtils.unwrap( download ).getDownloadState().getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
-
-		magnet += "&_d="  + added;
-		
-		InetSocketAddress address = chat.getMyAddress();
-
-		if ( address != null ){
-
-			String address_str = AddressUtils.getHostAddress(address) + ":" + address.getPort();
-
-			String arg = "&xsource=" + UrlUtils.encode( address_str );
-
-			magnet += arg;
-		}
-
-		magnet += "[[$dn]]";
+		String magnet = chat.getMagnet( download, MAX_MSG_CHUNK_LENGTH );
 
 		plugin.getBeta().tagDownload( download );
 
 		download.setForceStart( true );
 
 		accepter.accept( magnet );
-	}
-	
-	private String
-	trimMagnet(
-		String	magnet,
-		int		max )
-	{
-		while( magnet.length() > MAX_MSG_CHUNK_LENGTH ){
-			
-			int pos = magnet.lastIndexOf( '&' );
-			
-			if ( pos > 0 ) {
-				
-				String x = magnet.substring( pos+1 );
-				
-				if ( x.startsWith( "ws=" ) || x.startsWith( "tr=" )){
-					
-					magnet = magnet.substring( 0,  pos );
-					
-				}else {
-					
-					break;
-				}
-			}
-		}
-		
-		return( magnet );
 	}
 
 	private void
@@ -4555,7 +4604,8 @@ BuddyPluginViewBetaChat
 
 	protected void
 	sendMessage(
-		String		text )
+		String		text,
+		boolean		do_chunking )
 	{
 		//logChatMessage( plugin.getNickname(), Colors.green, text );
 
@@ -4589,48 +4639,106 @@ BuddyPluginViewBetaChat
 			}
 		}catch( Throwable e ){
 		}
-
-		while( text.length() > MAX_MSG_CHUNK_LENGTH ){
-			
-			char[]	chars = text.toCharArray();
-			
-			int	pos = MAX_MSG_CHUNK_LENGTH-1;
-			
-			boolean chunked = false;
-			
-				// don't allow chunks to get too small
-			
-			while( pos > MAX_MSG_CHUNK_LENGTH/2 ){
 				
-				if ( chars[pos] == ' ' ){
+		if ( do_chunking && text.length() > MAX_MSG_CHUNK_ENABLE ){
+
+				// we want to avoid splitting emphasized text such as <b>blah blah</b>
+
+			boolean	hacked = false;
+
+			Pattern p = getEmphasisPattern();
+			
+			Matcher m = p.matcher( text );
+	
+			boolean result = m.find();
+	
+			if ( result ){
+	
+				StringBuffer sb = new StringBuffer();
+	
+		    	while( result ){
+		    				
+		    		String match_start	= m.group(1);
+		    		String emp_text 	= m.group(3);	    		
+		    		String match_end 	= m.group(4);	    		
+		    			    		
+		    		if ( emp_text.contains( " " )){
+		    		
+			    		emp_text = emp_text.replaceAll( " ", "\\\\u00a0" );
+	
+		    			hacked = true;
+		    		}
+		    		
+		    		m.appendReplacement(sb, Matcher.quoteReplacement( match_start + emp_text + match_end ));
+	
+		    		result = m.find();
+		    	}   	
+		    	
+				m.appendTail(sb);
+	
+				text = sb.toString();
+			}	
+			
+			while( text.length() > MAX_MSG_CHUNK_LENGTH ){
+				
+				char[]	chars = text.toCharArray();
+				
+				int	pos = MAX_MSG_CHUNK_LENGTH-1;
+				
+				boolean chunked = false;
+				
+					// don't allow chunks to get too small
+				
+				while( pos > MAX_MSG_CHUNK_LENGTH/2 ){
 					
-					String chunk = text.substring( 0, pos ).trim();
+					if ( chars[pos] == ' ' ){
+						
+						String chunk = text.substring( 0, pos ).trim();
+						
+						if ( !chunk.isEmpty()){
+							
+							if ( hacked ){
+								
+								chunk = chunk.replaceAll( "\\\\u00a0", " " );
+							}
+							
+							chat.sendMessage( chunk, new HashMap<String, Object>());
+						}
+						
+						text = text.substring( pos ).trim();
+						
+						chunked = true;
+						
+						break;
+					}
+					
+					pos--;
+				}
+				
+				if ( !chunked ){
+					
+					String chunk = text.substring( 0, MAX_MSG_CHUNK_LENGTH ).trim();
 					
 					if ( !chunk.isEmpty()){
+					
+						if ( hacked ){
+							
+							chunk = chunk.replaceAll( "\\\\u00a0", " " );
+						}
 						
 						chat.sendMessage( chunk, new HashMap<String, Object>());
 					}
 					
-					text = text.substring( pos ).trim();
-					
-					chunked = true;
-					
-					break;
+					text = text.substring( MAX_MSG_CHUNK_LENGTH ).trim();
 				}
-				
-				pos--;
 			}
 			
-			if ( !chunked ){
+			if ( text.length() > 0 ){
 				
-				String chunk = text.substring( 0, MAX_MSG_CHUNK_LENGTH ).trim();
-				
-				if ( !chunk.isEmpty()){
-				
-					chat.sendMessage( chunk, new HashMap<String, Object>());
+				if ( hacked ){
+					
+					text = text.replaceAll( "\\\\u00a0", " " );
 				}
-				
-				text = text.substring( MAX_MSG_CHUNK_LENGTH ).trim();
 			}
 		}
 		
@@ -4738,12 +4846,24 @@ BuddyPluginViewBetaChat
 		}
 	}
 
+	private boolean change_pending;
+	
 	@Override
 	public void
 	messagesChanged()
 	{
 		if ( log != null && !log.isDisposed()){
 
+			synchronized( this ){
+				
+				if ( change_pending ){
+					
+					return;
+				}
+				
+				change_pending = true;
+			}
+			
 			Utils.execSWTThread(
 				new Runnable()
 				{
@@ -4751,6 +4871,11 @@ BuddyPluginViewBetaChat
 					public void
 					run()
 					{
+						synchronized( BuddyPluginViewBetaChat.this ){
+							
+							change_pending = false;
+						}
+						
 						if ( log.isDisposed()){
 
 							return;
@@ -4827,6 +4952,43 @@ BuddyPluginViewBetaChat
 	}
 
 	private void
+	addNickString(
+		ChatParticipant	participant )
+	{
+		String name = "@" + participant.getName( true );
+		
+		name = name.replaceAll( " ", "\\\\u00a0" );
+		
+		String existing = input_area.getText();
+
+		int caret = input_area.getCaretPosition();
+					
+		if ( caret > 0 ){
+			
+			char prev = existing.charAt( caret-1 );
+				
+			if ( prev != ' ' ){
+					
+				name = " " + name;
+			}
+		}
+		
+		if ( caret < existing.length()){
+				
+			char next = existing.charAt( caret );
+				
+			if ( next != ' ' ){
+					
+				name = name + " ";
+			}
+		}
+		
+		input_area.setSelection( caret, caret );
+		
+		input_area.insert( name );
+	}
+	
+	private void
 	logChatMessages(
 		ChatMessage[]		all_messages )
 	{
@@ -4849,8 +5011,40 @@ BuddyPluginViewBetaChat
 
 				continue;
 			}
+			
+			byte[] raw_message = message.getRawMessage();
+			
+			boolean use_raw_message = false;
+			
+			if ( raw_message != null && raw_message.length > 3 ){
+				
+				if ( raw_message[0] == 'd' && Character.isDigit( raw_message[1] ) && raw_message[raw_message.length-1] == 'e' ){
+					
+					try{
+						Map m = BDecoder.decode( raw_message );
+						
+						use_raw_message = true;
+						
+					}catch( Throwable e ){
+						
+					}
+				}
+			}
 
-			String original_msg		= message.getMessage();
+			String original_msg;
+			
+			if ( use_raw_message ){
+				
+				original_msg = Base32.encode( raw_message );
+				
+				if ( original_msg.length() > 20 ){
+					
+					original_msg = original_msg.substring( 0, 20 ) + "...";
+				}
+			}else{
+				
+				original_msg = message.getMessage();
+			}
 
 			if ( !message.isIgnored() && original_msg.length() > 0 ){
 
@@ -5043,7 +5237,7 @@ BuddyPluginViewBetaChat
 
 				final int start = initial_log_length + appended.length();
 
-				String rendered_msg = renderMessage( beta, chat, message, original_msg, message_type, start, new_ranges, info_font, info_colour, bold_font );
+				String rendered_msg = renderMessage( beta, chat, message, original_msg, message_type, start, new_ranges, info_font, info_colour, bold_font, italic_font );
 
 				appended.append( rendered_msg );
 
@@ -5149,7 +5343,9 @@ BuddyPluginViewBetaChat
 				int max_lines 	= beta.getMaxUILines();
 				int max_chars	= beta.getMaxUICharsKB() * 1024;
 
-				while ( messages.size() > max_lines || log.getText().length() > max_chars ){
+				int	total_to_remove = 0;
+				
+				while ( messages.size() > max_lines || log.getText().length() - total_to_remove > max_chars ){
 
 					if ( it == null ){
 
@@ -5165,7 +5361,12 @@ BuddyPluginViewBetaChat
 
 					it.remove();
 
-					log.replaceTextRange( 0,  to_remove, "" );
+					total_to_remove += to_remove;
+				}
+				
+				if ( total_to_remove > 0 ){
+					
+					log.replaceTextRange( 0,  total_to_remove, "" );
 
 					log_styles = log.getStyleRanges();
 				}
@@ -5228,7 +5429,7 @@ BuddyPluginViewBetaChat
 	{
 		List<StyleRange>	ranges = new ArrayList<>();
 
-		String msg = renderMessage(null, chat, null,str,  ChatMessage.MT_NORMAL, 0, ranges, null, null, null);
+		String msg = renderMessage(null, chat, null,str,  ChatMessage.MT_NORMAL, 0, ranges, null, null, null, null );
 		
 		return( msg );
 
@@ -5310,6 +5511,78 @@ BuddyPluginViewBetaChat
 		return( text );
 	}
 	
+	private static Pattern
+	getEmphasisPattern()
+	{
+		return( RegExUtil.getCachedPattern( "BPVBC:emphasis", "(?i)([\\*_]{1,2}|(?:[<\\[]([bi])[>\\]]))([^\\n]+?)(\\1|(?:[<\\[]/\\2[>\\]]))" ));
+	}
+	
+	private static String
+	expandEmphasis(
+		String		text )
+	{
+			// *dadasd*
+		
+		if ( !(text.contains( "*" ) || text.contains( "_" ) || text.contains( "<" ) || text.contains( "[" ))){
+			
+			return( text );
+		}
+		
+		try{	
+			Pattern p = getEmphasisPattern();
+	
+			Matcher m = p.matcher( text );
+	
+			boolean result = m.find();
+	
+			if ( result ){
+	
+				StringBuffer sb = new StringBuffer();
+	
+		    	while( result ){
+	
+		    		String existing = sb.toString();
+		    		
+		    		int start = m.start(1);
+		    		
+		    		boolean pad = false;
+		    		
+		    		if ( start > 0 && !Character.isWhitespace( text.charAt( start-1 ))){
+		    		
+		    			pad = true;
+		    		}
+		    		
+		    		if ( existing.endsWith( "]]" )){
+		    			
+		    			sb.append( " " );
+		    		}
+		    				
+		    		String match	= m.group(1);
+		    		
+		    		boolean is_italic = match.length()==1 || match.toLowerCase(Locale.US).contains( "i" );
+		    		
+		    		String str 		= m.group(3);
+		    		 
+		    		m.appendReplacement(sb, Matcher.quoteReplacement( (pad?" ":"") + "chat:" + (is_italic?"italic":"bold") + "[[" + UrlUtils.encode( str ) + "]]"));
+	
+		    		result = m.find();
+		    	}
+	
+		    	if ( sb.toString().endsWith( "]]" )){
+	    			
+	    			sb.append( " " );
+	    		}
+		    	
+				m.appendTail(sb);
+	
+				text = sb.toString();
+			}
+		}catch( Throwable e ){
+		}
+		
+		return( text );
+	}
+	
 	protected static String
 	renderMessage(
 		BuddyPluginBeta		beta,
@@ -5321,10 +5594,9 @@ BuddyPluginViewBetaChat
 		List<StyleRange>	new_ranges,
 		Font				info_font,
 		Color				info_colour,
-		Font				bold_font )
-	{
-		original_msg = expandResources( original_msg );
-				
+		Font				bold_font,
+		Font				italic_font )
+	{	
 		String msg = original_msg;
 
 		try{
@@ -5486,6 +5758,11 @@ BuddyPluginViewBetaChat
 
 							int	hpos = str.lastIndexOf( "[[" );
 
+							if ( hpos < qpos ){
+								
+								hpos = -1;
+							}
+							
 							String[]	bits = str.substring( qpos+1, hpos==-1?str.length():hpos ).split( "&" );
 
 							for ( String bit: bits ){
@@ -5537,10 +5814,25 @@ BuddyPluginViewBetaChat
 
 						String str = (String)obj;
 
+						if ( message_type == ChatMessage.MT_NORMAL ){
+							
+							str = expandResources( str );
+							
+							if ( bold_font != null && message != null ){
+							
+								if ( message.getFlagOrigin() == BuddyPluginBeta.FLAGS_MSG_ORIGIN_USER ){
+								
+									str = expandEmphasis( str );
+								}
+							}
+						}
+						
 						if ( params.size() > 0 ){
 
-							segments.set( i, expand( params, str, true ));
+							str = expand( params, str, true );
 						}
+						
+						segments.set( i, str );
 					}
 				}
 
@@ -5559,6 +5851,8 @@ BuddyPluginViewBetaChat
 						try{
 							String my_nick = chat.getNickname( true );
 
+							my_nick = my_nick.replaceAll( " ", "\u00a0" );
+							
 							if ( 	my_nick.length() > 0 &&
 									segment_str.contains( my_nick ) &&
 									message_type ==  ChatMessage.MT_NORMAL ){
@@ -5784,6 +6078,8 @@ BuddyPluginViewBetaChat
 
 								boolean	will_work = true;
 
+								Font	fail_font = bold_font;
+								
 								try{
 
 									String lc_url = url_str.toLowerCase( Locale.US );
@@ -5803,8 +6099,14 @@ BuddyPluginViewBetaChat
 												will_work = false;
 											}
 										}
-									}else if ( lc_url.startsWith( "chat:nick" )){
+									}else if ( lc_url.startsWith( "chat:nick" ) || lc_url.startsWith( "chat:bold" )){
 
+										will_work = false;
+										
+									}else if ( lc_url.startsWith( "chat:italic" )){
+										
+										fail_font = italic_font;
+										
 										will_work = false;
 									}
 								}catch( Throwable e ){
@@ -5832,7 +6134,7 @@ BuddyPluginViewBetaChat
 									StyleRange styleRange 	= new MyStyleRange( message );
 									styleRange.start 		= this_style_start;
 									styleRange.length 		= this_style_length;
-									styleRange.font 		= bold_font;
+									styleRange.font 		= fail_font;
 
 									new_ranges.add( styleRange);
 								}

@@ -237,7 +237,7 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 
 
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		final StringParameter pathParameter = new StringParameter(gDefaultDir, "br.backup.auto.dir", "" );
+		final StringParameter pathParameter = new StringParameter(gDefaultDir, "br.backup.auto.dir");
 		pathParameter.setLayoutData(gridData);
 
 		if ( pathParameter.getValue().length() == 0 ){
@@ -249,7 +249,7 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 		Button browse = new Button(gDefaultDir, SWT.PUSH);
 		browse.setImage(imgOpenFolder);
 		imgOpenFolder.setBackground(browse.getBackground());
-		browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+		Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
 
 		browse.addListener(SWT.Selection, new Listener() {
 			/* (non-Javadoc)
@@ -492,18 +492,21 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 																public void
 																runSupport()
 																{
-																	if ( str.endsWith( "..." )){
-
-																		viewer.append( str );
-
-																	}else{
-
-																		viewer.append( str + "\r\n" );
-																	}
-
-																	if ( complete ){
-
-																		viewer.setOKEnabled( true );
+																	if ( !viewer.isDisposed()){
+																		
+																		if ( str.endsWith( "..." )){
+	
+																			viewer.append( str );
+	
+																		}else{
+	
+																			viewer.append( str + "\r\n" );
+																		}
+	
+																		if ( complete ){
+	
+																			viewer.setOKEnabled( true );
+																		}
 																	}
 																}
 															});
@@ -520,6 +523,12 @@ public class ConfigSectionBackupRestore implements UISWTConfigSection {
 			        }
 			    });
 
+	    
+	    BooleanParameter chkRestorePause = new BooleanParameter(gRestore, "br.restore.autopause", "br.restore.autopause");
+		gridData = new GridData(GridData.FILL_HORIZONTAL);
+		gridData.horizontalSpan = 2;
+		chkRestorePause.setLayoutData(gridData);
+		
 		return( cBR );
 	}
 

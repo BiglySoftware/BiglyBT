@@ -26,6 +26,8 @@ import java.net.Socket;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.proxy.AEProxyAddressMapper;
+import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.tracker.server.TRTrackerServerException;
 import com.biglybt.core.tracker.server.impl.tcp.TRTrackerServerProcessorTCP;
 import com.biglybt.core.tracker.server.impl.tcp.TRTrackerServerTCP;
@@ -44,6 +46,9 @@ TRBlockingServerProcessor
 	protected static final int KEEP_ALIVE_SOCKET_TIMEOUT				= 30*1000;
 
 	private static final LogIDs LOGID = LogIDs.TRACKER;
+	
+	private static final AEProxyAddressMapper proxy_address_mapper = AEProxyFactory.getAddressMapper();
+
 	protected final Socket				socket;
 
 
@@ -70,7 +75,10 @@ TRBlockingServerProcessor
 		boolean	keep_alive = getServer().isKeepAliveEnabled();
 
 		try{
-			InputStream	is = new BufferedInputStream( socket.getInputStream());
+			InputStream inputStream = socket.getInputStream();
+			int available = inputStream.available();
+			int bufferSize = available >= 16384 ? 16384 : 8192;
+			InputStream	is = new BufferedInputStream(inputStream, bufferSize);
 
 			while( true ){
 
@@ -372,6 +380,14 @@ TRBlockingServerProcessor
 
 							keep_alive = false;
 						}
+						
+						InetSocketAddress local_sa 	= (InetSocketAddress)socket.getLocalSocketAddress();
+						InetSocketAddress remote_sa = (InetSocketAddress)socket.getRemoteSocketAddress();
+						
+						AEProxyAddressMapper.AppliedPortMapping applied_mapping = proxy_address_mapper.applyPortMapping( remote_sa.getAddress(), remote_sa.getPort());
+
+						remote_sa = applied_mapping.getAddress();
+
 
 						if ( head ){
 
@@ -381,8 +397,8 @@ TRBlockingServerProcessor
 										header,
 										lowercase_header,
 										url,
-										(InetSocketAddress)socket.getLocalSocketAddress(),
-										(InetSocketAddress)socket.getRemoteSocketAddress(),
+										local_sa,
+										remote_sa,
 										false,
 										keep_alive,
 										post_is,
@@ -421,8 +437,8 @@ TRBlockingServerProcessor
 										header,
 										lowercase_header,
 										url,
-										(InetSocketAddress)socket.getLocalSocketAddress(),
-										(InetSocketAddress)socket.getRemoteSocketAddress(),
+										local_sa,
+										remote_sa,
 										false,
 										keep_alive,
 										post_is,

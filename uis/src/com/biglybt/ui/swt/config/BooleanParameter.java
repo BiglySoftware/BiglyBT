@@ -19,7 +19,7 @@ package com.biglybt.ui.swt.config;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import com.biglybt.core.config.*;
+
 import com.biglybt.ui.swt.config.generic.GenericBooleanParameter;
 
 /**
@@ -29,46 +29,10 @@ import com.biglybt.ui.swt.config.generic.GenericBooleanParameter;
 public class BooleanParameter extends Parameter{
   protected GenericBooleanParameter	delegate;
 
-  public BooleanParameter(Composite composite, final String name) {
-  	super(name);
-	  delegate = new GenericBooleanParameter( config_adapter, composite,name,COConfigurationManager.getBooleanParameter(name),null,null);
-  }
-
-  public BooleanParameter(Composite composite, final String name, String textKey) {
-  	super(name);
-	  delegate = new GenericBooleanParameter( config_adapter, composite, name, COConfigurationManager.getBooleanParameter(name),
+  public BooleanParameter(Composite composite, final String configID, String textKey) {
+  	super(configID);
+	  delegate = new GenericBooleanParameter( config_adapter, composite, configID,
          textKey, null);
-  }
-
-  /**
-   * @deprecated defaultValue should be set via ConfigurationDefaults, not passed by the caller
-   */
-  public BooleanParameter(Composite composite, final String name, boolean defaultValue, String textKey) {
-  	super(name);
-	  delegate = new GenericBooleanParameter( config_adapter, composite,name,defaultValue,textKey,null);
-  }
-
-  /**
-   * @deprecated defaultValue should be set via ConfigurationDefaults, not passed by the caller
-   */
-  public BooleanParameter(Composite composite, final String name, boolean defaultValue) {
-  	super(name);
-	  delegate = new GenericBooleanParameter( config_adapter, composite,name,defaultValue,null,null);
-  }
-
-  /**
-   * @deprecated defaultValue should be set via ConfigurationDefaults, not passed by the caller
-   */
-  public
-  BooleanParameter(
-  		Composite composite,
-		final String _name,
-        boolean _defaultValue,
-        String textKey,
-        IAdditionalActionPerformer actionPerformer)
-  {
-  	super(_name);
-	  delegate = new GenericBooleanParameter( config_adapter, composite, _name, _defaultValue, textKey, actionPerformer );
   }
 
   @Override
@@ -90,14 +54,6 @@ public class BooleanParameter extends Parameter{
   @Override
   public Control getControl() {
     return delegate.getControl();
-  }
-
-  public String getName() {
-  	return delegate.getName();
-  }
-
-  public void setName(String newName) {
-  	delegate.setName( newName );
   }
 
   public Boolean

@@ -60,6 +60,7 @@ TRTrackerUtils
 
 	private static String		bind_ip;
 
+	private static int			ports_tcp_port;
 	private static String		ports_for_url;
 	private static String		ports_for_url_with_crypto;
 
@@ -91,9 +92,13 @@ TRTrackerUtils
 				parameterChanged(
 					String parameterName )
 				{
-					String	port 				= computePortsForURL( false, true );
-			  		String 	port_with_crypto 	= computePortsForURL( true, false );
+		 			int tcp_port_num	= COConfigurationManager.getIntParameter( "TCP.Listen.Port" );
+		 			
+					String	port 				= computePortsForURL( tcp_port_num, false, true, false );
+			  		String 	port_with_crypto 	= computePortsForURL( tcp_port_num, true, false, false );
 
+			  		ports_tcp_port = tcp_port_num;
+			  		
 			  		if ( ports_for_url != null && ( !ports_for_url.equals( port ))){
 
 			  			synchronized( listeners ){
@@ -147,8 +152,10 @@ TRTrackerUtils
 
 	private static String
 	computePortsForURL(
-		boolean	force_crypto,
-		boolean	allow_incoming )
+		int			for_tcp_port,
+		boolean		force_crypto,
+		boolean		allow_incoming,
+		boolean		disable_cryptoport )
 	{
 		boolean socks_peer_inform	=
 			COConfigurationManager.getBooleanParameter("Proxy.Data.Enable")&&
@@ -169,7 +176,7 @@ TRTrackerUtils
 	  			udp_port_num	= 0;
 	  		}else{
 
-	 			tcp_port_num	= COConfigurationManager.getIntParameter( "TCP.Listen.Port" );
+	 			tcp_port_num	= for_tcp_port;
 	 			udp_port_num	= COConfigurationManager.getIntParameter( "UDP.Listen.Port" );
 	  		}
 
@@ -197,7 +204,14 @@ TRTrackerUtils
 
   			port += "&requirecrypto=1";
 
- 			port += "&port=0&cryptoport=" + tcp_port_num;
+  			if ( disable_cryptoport ){
+  				
+  				port += "&port=" + tcp_port_num;
+  				
+  			}else{
+  				
+  				port += "&port=0&cryptoport=" + tcp_port_num;
+  			}
 
  		}else{
 
@@ -216,8 +230,14 @@ TRTrackerUtils
 	 				(!COConfigurationManager.getBooleanParameter( "network.transport.encrypted.fallback.incoming") ) &&
 	 				COConfigurationManager.getBooleanParameter( "network.transport.encrypted.use.crypto.port" )){
 
-	 			port += "&port=0&cryptoport=" + tcp_port_num;
-
+	 			if ( disable_cryptoport ){
+	 				
+	 				port += "&port=" + tcp_port_num;
+	 				
+	 			}else{
+	 			
+	 				port += "&port=0&cryptoport=" + tcp_port_num;
+	 			}
 	 		}else{
 
 	 			port += "&port=" + tcp_port_num;
@@ -641,15 +661,37 @@ TRTrackerUtils
 	}
 
  	public static String
-	getPortsForURL()
+	getPortsForURL(
+		int			required_tcp_port,
+		boolean		disable_crypto_port )
   	{
-  		return( ports_for_url );
+ 		if ( disable_crypto_port ){
+ 			
+ 				// lazy, no caching as uncommon option
+ 			
+ 			return( computePortsForURL( required_tcp_port, false, true, true ));
+ 			
+ 		}else{
+ 			
+	 		if ( required_tcp_port == ports_tcp_port ){
+	  		
+	 			return( ports_for_url );
+	 		}
+	 		
+	 		return( computePortsForURL( required_tcp_port, false, true, false ));
+ 		}
   	}
 
  	public static String
- 	getPortsForURLFullCrypto()
+ 	getPortsForURLFullCrypto(
+ 		int	required_tcp_port )
  	{
- 		return( ports_for_url_with_crypto );
+ 		if ( required_tcp_port == ports_tcp_port ){
+ 			
+ 			return( ports_for_url_with_crypto );
+ 		}
+ 		
+		return( computePortsForURL( required_tcp_port, true, false, false ));
  	}
 
  	public static boolean

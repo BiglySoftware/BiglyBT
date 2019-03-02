@@ -29,6 +29,7 @@ import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -40,6 +41,7 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.MenuBuildUtils;
@@ -50,9 +52,6 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-
-import com.biglybt.core.peermanager.piecepicker.PiecePicker;
-
 
 
 public class FileInfoView
@@ -87,8 +86,6 @@ public class FileInfoView
 	private int loopFactor = 0;
 
 	private DiskManagerFileInfo file;
-
-	private Font font = null;
 
 	Image img = null;
 
@@ -385,14 +382,6 @@ public class FileInfoView
 					},
 				new GridData(SWT.FILL,SWT.DEFAULT, true, false, 2, 1));
 
-		int iFontPixelsHeight = 10;
-		int iFontPointHeight = (iFontPixelsHeight * 72)
-				/ Utils.getDPIRaw( fileInfoCanvas.getDisplay()).y;
-		Font f = fileInfoCanvas.getFont();
-		FontData[] fontData = f.getFontData();
-		fontData[0].setHeight(iFontPointHeight);
-		font = new Font(fileInfoCanvas.getDisplay(), fontData);
-
 		return fileInfoComposite;
 	}
 
@@ -628,11 +617,6 @@ public class FileInfoView
 		if (img != null && !img.isDisposed()) {
 			img.dispose();
 			img = null;
-		}
-
-		if (font != null && !font.isDisposed()) {
-			font.dispose();
-			font = null;
 		}
 	}
 

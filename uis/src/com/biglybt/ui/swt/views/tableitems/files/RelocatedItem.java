@@ -57,21 +57,30 @@ public class RelocatedItem
 
     	File source = fileInfo.getFile( false );
 
-    	File target = fileInfo.getDownloadManager().getDownloadState().getFileLink( fileInfo.getIndex(), source );
-
-    	if ( target == null ){
-
+    	int index = fileInfo.getIndex();
+    	
+    	if ( index < 0 ){
+    		
     		relocated = false;
-
+    		
     	}else{
-
-	    	if ( target == source ){
-
+    		
+	    	File target = fileInfo.getDownloadManager().getDownloadState().getFileLink( index, source );
+	
+	    	if ( target == null ){
+	
 	    		relocated = false;
-
+	
 	    	}else{
-
-	    		relocated = !target.equals( source );
+	
+		    	if ( target == source ){
+	
+		    		relocated = false;
+	
+		    	}else{
+	
+		    		relocated = !target.equals( source );
+		    	}
 	    	}
     	}
     }

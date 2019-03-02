@@ -24,7 +24,6 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncerResponse;
-import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 import com.biglybt.pif.download.Download;
@@ -84,8 +83,7 @@ public class TrackerStatusItem extends CoreTableColumnSWT implements
 		}
 
 		@Override
-		public void scrapeResult(TRTrackerScraperResponse response) {
-			checkScrapeResult(response);
+		protected void updateSeedsPeers( Download d, boolean cache ){			
 		}
 
 		@Override

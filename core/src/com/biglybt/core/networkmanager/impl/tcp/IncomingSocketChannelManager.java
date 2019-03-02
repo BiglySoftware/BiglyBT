@@ -222,7 +222,12 @@ public class IncomingSocketChannelManager
 	 *
 	 * @return port number
 	 */
-  public int getTCPListeningPortNumber() {  return tcp_listen_port;  }
+  
+  public int 
+  getTCPListeningPortNumber() 
+  {  
+	  return tcp_listen_port;  
+  }
 
   public void
   setExplicitBindAddress(
@@ -490,22 +495,28 @@ public class IncomingSocketChannelManager
 	  return( last_non_local_connection_time );
   }
 
-  void restart() {
-  	try{
-  		this_mon.enter();
+	void restart() {
+		// Usually called because of config change (often from UI thread)
+		new AEThread2("Restart ISCM", true) {
+			@Override
+			public void run() {
+				try{
+					this_mon.enter();
 
-  		for(int i=0;i<serverSelectors.length;i++)
-  			serverSelectors[i].stop();
-  		serverSelectors = new VirtualServerChannelSelector[0];
-  	}finally{
+					for(int i=0;i<serverSelectors.length;i++)
+						serverSelectors[i].stop();
+					serverSelectors = new VirtualServerChannelSelector[0];
+				}finally{
 
-  		this_mon.exit();
-  	}
+					this_mon.exit();
+				}
 
-  	try{ Thread.sleep( 1000 );  }catch( Throwable t ) { t.printStackTrace();  }
+				try{ Thread.sleep( 1000 );  }catch( Throwable t ) { t.printStackTrace();  }
 
-  	start();
-  }
+				start();
+			}
+		}.start();
+	}
 
 
 

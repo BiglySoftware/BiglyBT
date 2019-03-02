@@ -35,6 +35,7 @@ import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.ViewUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -49,7 +50,7 @@ public abstract class ColumnDateSizer
 	implements TableCellRefreshListener, TableCellToolTipListener
 {
 	private static int PADDING = 10;
-	private final ParameterListener configDateFormatListener;
+	private ParameterListener configDateFormatListener;
 	int curFormat = 0;
 
 	int[] maxWidthUsed = new int[TimeFormatter.DATEFORMATS_DESC.length];
@@ -64,9 +65,30 @@ public abstract class ColumnDateSizer
 
 	private ViewUtils.CustomDateFormat cdf;
 
+	private boolean sortInvalidToBottom	= false;
+			
+	public
+	ColumnDateSizer(
+		String 	sName,
+		int 	iAlignment,
+        int 	iPosition,
+        int 	iWidth,
+        String 	sTableID )
+	{
+		super( sName, iAlignment, iPosition, iWidth, sTableID );
+		
+		init();
+	}
+	
 	public ColumnDateSizer(Class forDataSourceType, String columnID, int width, String tableID) {
 		super(forDataSourceType, columnID, ALIGN_TRAIL, width, tableID);
 
+		init();
+	}
+	
+	private void
+	init()
+	{
 		final TableContextMenuItem menuShowTime = addContextMenuItem(
 				"TableColumn.menu.date_added.time", MENU_STYLE_HEADER);
 		menuShowTime.setStyle(TableContextMenuItem.STYLE_CHECK);
@@ -162,7 +184,7 @@ public abstract class ColumnDateSizer
 	}
 
 	public void refresh(final TableCell cell, final long timestamp, long sort_order, final String prefix ) {
-		if (!cell.setSortValue(sort_order) && cell.isValid()) {
+		if (!setSortValue(cell,sort_order) && cell.isValid()) {
 			return;
 		}
 
@@ -365,4 +387,35 @@ public abstract class ColumnDateSizer
 	public void cellHoverComplete(TableCell cell) {
 		cell.setToolTip(null);
 	}
+	
+	public void
+	setSortInvalidToBottom(
+		boolean		b )
+	{
+		sortInvalidToBottom = b;
+	}
+	
+	private boolean
+	setSortValue(
+		TableCell		cell,
+		long			value )
+	{
+		if ( sortInvalidToBottom && value <= 0 ){
+			
+			value = isSortAscending()?Long.MAX_VALUE:Long.MIN_VALUE;
+		}
+		
+		return( cell.setSortValue( value ));
+	}
+	
+	@Override
+	public void 
+	setSortAscending(
+		boolean bAscending)
+	{		
+		super.setSortAscending( bAscending );
+		
+		invalidateCells();
+	}
+	
 }

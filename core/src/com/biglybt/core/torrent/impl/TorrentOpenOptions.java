@@ -19,6 +19,7 @@ package com.biglybt.core.torrent.impl;
 
 import java.io.File;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
@@ -29,10 +30,14 @@ import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 import com.biglybt.plugin.I2PHelpers;
+import com.biglybt.ui.UIFunctions;
 
 
 /**
@@ -43,10 +48,11 @@ import com.biglybt.plugin.I2PHelpers;
  */
 public class TorrentOpenOptions
 {
-	private final static String PARAM_DEFSAVEPATH = "Default save path";
+	private final static String PARAM_DEFSAVEPATH 		= "Default save path";
+	private final static String PARAM_MOVEWHENDONE 		= "Move Completed When Done";
+	private final static String PARAM_QUEUEPOSITION 	= "Add Torrent Queue Position";
 
-	private final static String PARAM_MOVEWHENDONE = "Move Completed When Done";
-
+	
 	public final static int QUEUELOCATION_BOTTOM = 1;
 
 	public final static int QUEUELOCATION_TOP = 0;
@@ -77,6 +83,7 @@ public class TorrentOpenOptions
 	private String sDestSubDir;
 
 	private boolean explicitDataDir;
+	private boolean removedTopLevel;
 
 	/** @todo: getter/setters */
 	private TOTorrent torrent;
@@ -85,8 +92,7 @@ public class TorrentOpenOptions
 
 	private int iStartID;
 
-	/** @todo: getter/setters */
-	public int iQueueLocation;
+	private int iQueueLocation;
 
 	public boolean bSequentialDownload;
 	
@@ -110,8 +116,11 @@ public class TorrentOpenOptions
 
 	private Map<String, Boolean> enabledNetworks = new HashMap<>();
 
-	private List<Tag>	initialTags = new ArrayList<>();
-
+	private List<Tag>			initialTags = new ArrayList<>();
+	private Set<Tag>			autoTags	= new HashSet<>();
+	
+	private Map<String,Object>	initialMetadata;
+	
 	private List<List<String>>	updatedTrackers;
 
 	private int max_up;
@@ -137,9 +146,14 @@ public class TorrentOpenOptions
 	 * @param torrent
 	 * @param bDeleteFileOnCancel
 	 */
-	public TorrentOpenOptions(String sFileName, TOTorrent torrent,
-			boolean bDeleteFileOnCancel) {
-		this();
+	public 
+	TorrentOpenOptions(
+		String 					sFileName, 
+		TOTorrent 				torrent,
+		boolean 				bDeleteFileOnCancel,
+		Map<String,Object>		options ) 
+	{
+		this( options );
 		this.bDeleteFileOnCancel = bDeleteFileOnCancel;
 		bDeleteFileOnCancelSet = true;
 		this.sFileName = sFileName;
@@ -147,13 +161,25 @@ public class TorrentOpenOptions
 		this.setTorrent(torrent);
 	}
 
-	public TorrentOpenOptions() {
+	public 
+	TorrentOpenOptions(
+		Map<String,Object>		options ) 
+	{
 		iStartID = getDefaultStartMode();
-		iQueueLocation = QUEUELOCATION_BOTTOM;
+		iQueueLocation = COConfigurationManager.getIntParameter( PARAM_QUEUEPOSITION, QUEUELOCATION_BOTTOM );
 		bSequentialDownload = false;
 		isValid = true;
-		this.sDestDir = COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH);
-
+		
+		if ( options != null ){
+			
+			sDestDir = (String)options.get( UIFunctions.OTO_DEFAULT_SAVE_PATH );
+		}
+		
+		if ( sDestDir == null ){
+		
+			sDestDir = COConfigurationManager.getStringParameter(PARAM_DEFSAVEPATH);
+		}
+		
 		for (int i = 0; i < AENetworkClassifier.AT_NETWORKS.length; i++) {
 
 			String nn = AENetworkClassifier.AT_NETWORKS[i];
@@ -168,7 +194,7 @@ public class TorrentOpenOptions
 	 * clones everything except files and torrent
 	 * @param toBeCloned
 	 */
-	public TorrentOpenOptions(TorrentOpenOptions toBeCloned) {
+	private TorrentOpenOptions(TorrentOpenOptions toBeCloned) {
 		this.sOriginatingLocation = toBeCloned.sOriginatingLocation;
 		this.sFileName = toBeCloned.sFileName;
 		this.sDestDir = toBeCloned.sDestDir;
@@ -186,7 +212,9 @@ public class TorrentOpenOptions
 		this.peerSource = toBeCloned.peerSource == null ? null : new HashMap<>(toBeCloned.peerSource);
 		this.enabledNetworks = toBeCloned.enabledNetworks == null ? null : new HashMap<>(toBeCloned.enabledNetworks);
 		this.initialTags = toBeCloned.initialTags == null ? null : new ArrayList<>(toBeCloned.initialTags);
-
+		this.autoTags = toBeCloned.autoTags == null ? null : new HashSet<>(toBeCloned.autoTags);
+		this.initialMetadata = BEncoder.cloneMap(toBeCloned.initialMetadata);
+		
 		if ( toBeCloned.updatedTrackers != null ){
 			updatedTrackers = new ArrayList<>();
 			for (List<String> l: toBeCloned.updatedTrackers){
@@ -200,6 +228,12 @@ public class TorrentOpenOptions
 		this.hide_errors		= toBeCloned.hide_errors;
 	}
 
+	public TorrentOpenOptions
+	getClone()
+	{
+		return( new TorrentOpenOptions( this ));
+	}
+	
 	public static int getDefaultStartMode() {
 		return (COConfigurationManager.getBooleanParameter("Default Start Torrents Stopped"))
 				? STARTMODE_STOPPED : STARTMODE_QUEUED;
@@ -254,13 +288,15 @@ public class TorrentOpenOptions
 	public void
 	setExplicitDataDir(
 		String		parent_dir,
-		String		sub_dir )
+		String		sub_dir,
+		boolean		_removedTopLevel )
 	{
 		sDestDir 	= parent_dir;
 		sDestSubDir	= sub_dir;
 
 		explicitDataDir	= true;
-
+		removedTopLevel	= _removedTopLevel;
+		
 		parentDirChanged();
 	}
 
@@ -268,6 +304,12 @@ public class TorrentOpenOptions
 	isExplicitDataDir()
 	{
 		return( explicitDataDir );
+	}
+	
+	public boolean
+	isRemovedTopLevel()
+	{
+		return( removedTopLevel );
 	}
 
 	public boolean
@@ -288,7 +330,22 @@ public class TorrentOpenOptions
 	{
 		iStartID = m;
 	}
+	
+	public int
+	getQueueLocation()
+	{
+		return( iQueueLocation );
+	}
 
+	public void
+	setQueueLocation(
+		int		l )
+	{
+		iQueueLocation = l;
+		
+		COConfigurationManager.setParameter( PARAM_QUEUEPOSITION, l );
+	}
+	
 	public Map<String, Boolean>
 	getEnabledNetworks()
 	{
@@ -418,6 +475,8 @@ public class TorrentOpenOptions
 	public List<Tag>
 	getInitialTags()
 	{
+		applyAutoTagging();
+		
 		return(new ArrayList<>(initialTags));
 	}
 
@@ -428,6 +487,12 @@ public class TorrentOpenOptions
 		initialTags = tags;
 	}
 
+	public Map<String,Object>
+	getInitialMetadata()
+	{
+		return( initialMetadata );
+	}
+	
 	public void
 	setDirty()
 	{
@@ -527,46 +592,307 @@ public class TorrentOpenOptions
 		return( hide_errors );
 	}
 
-	public TorrentOpenFileOptions[] getFiles() {
+	public TorrentOpenFileOptions[] 
+	getFiles() 
+	{
 		if (files == null && torrent != null) {
-			TOTorrentFile[] tfiles = torrent.getFiles();
-			files = new TorrentOpenFileOptions[tfiles.length];
+			files = new TorrentOpenFileOptions[torrent.getFiles().length];
 
-			Set<String>	skip_extensons = TorrentUtils.getSkipExtensionsSet();
-
-			long	skip_min_size = COConfigurationManager.getLongParameter( "File.Torrent.AutoSkipMinSizeKB" )*1024L;
-
-			for (int i = 0; i < files.length; i++) {
-				TOTorrentFile	torrentFile = tfiles[i];
-
-				String 	orgFullName = torrentFile.getRelativePath(); // translated to locale
-				String	orgFileName = new File(orgFullName).getName();
-
-				boolean	wanted = true;
-
-				if ( skip_min_size > 0 && torrentFile.getLength() < skip_min_size ){
-
-					wanted = false;
-
-				}else if ( skip_extensons.size() > 0 ){
-
-					int	pos = orgFileName.lastIndexOf( '.' );
-
-					if ( pos != -1 ){
-
-						String	ext = orgFileName.substring( pos+1 );
-
-						wanted = !skip_extensons.contains( ext );
-					}
-				}
-
-				files[i] = new TorrentOpenFileOptions( this, i, orgFullName, orgFileName, torrentFile.getLength(), wanted );
-			}
+			applySkipConfig();
 		}
 
 		return files;
 	}
 
+	public void
+	rebuildOriginalNames()
+	{
+		if (files == null) {
+			return;
+		}
+		TOTorrentFile[] tfiles = torrent.getFiles();
+		for (int i = 0; i < files.length; i++) {
+			TOTorrentFile	torrentFile = tfiles[i];
+
+			if (files[i] != null) {
+				files[i].orgFullName = torrentFile.getRelativePath(); // translated to locale
+				files[i].orgFileName = new File(files[i].orgFullName).getName();
+			}
+		}
+
+	}
+
+	public void
+	applySkipConfig()
+	{
+		if ( torrent == null ){
+			
+			return;
+		}
+		
+		TOTorrentFile[] tfiles = torrent.getFiles();
+
+		Set<String>	skip_extensons 	= TorrentUtils.getSkipExtensionsSet();
+		Set<Object>	skip_files 		= TorrentUtils.getSkipFileSet();
+
+		long	skip_min_size = COConfigurationManager.getLongParameter( "File.Torrent.AutoSkipMinSizeKB" )*1024L;
+
+		for (int i = 0; i < files.length; i++) {
+			TOTorrentFile	torrentFile = tfiles[i];
+
+			String 	orgFullName = torrentFile.getRelativePath(); // translated to locale
+			String	orgFileName = new File(orgFullName).getName();
+
+			boolean	wanted = true;
+
+			if ( skip_min_size > 0 && torrentFile.getLength() < skip_min_size ){
+
+				wanted = false;
+
+			}else if ( skip_extensons.size() > 0 ){
+
+				int	pos = orgFileName.lastIndexOf( '.' );
+
+				if ( pos != -1 ){
+
+					String	ext = orgFileName.substring( pos+1 );
+
+					wanted = !skip_extensons.contains( ext );
+				}
+			}
+			
+			if ( wanted && !skip_files.isEmpty()){
+			
+				if ( skip_files.contains(orgFileName.toLowerCase())){
+					
+					wanted = false;
+					
+				}else{
+					
+					for ( Object o: skip_files ){
+						
+						if ( o instanceof Pattern ){
+						
+							try{
+								if ( ((Pattern)o).matcher( orgFileName ).matches()){
+									
+									wanted = false;
+									
+									break;
+								}
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					}
+				}
+			}
+
+			if ( files[i] == null ){
+				
+				files[i] = new TorrentOpenFileOptions( this, i, orgFullName, orgFileName, torrentFile.getLength(), wanted );
+				
+			}else{
+				
+				files[i].setToDownload( wanted );
+			}
+		}
+		
+		applyAutoTagging();
+	}
+	
+	public void
+	applyAutoTagging()
+	{		
+		if ( !COConfigurationManager.getBooleanParameter( "Files Auto Tag Enable" )){
+			
+			return;
+		}
+	
+		Map<String,long[]>	ext_map = new HashMap<>();
+		
+		TorrentOpenFileOptions[] files = getFiles();
+
+		for ( TorrentOpenFileOptions file: files ){
+			
+			if ( !file.isToDownload()){
+				
+				continue;
+			}
+			
+			String name = file.getDestFileName();
+			
+			int pos = name.lastIndexOf( '.' );
+			
+			if ( pos != -1 ){
+				
+				String ext = name.substring( pos+1 ).trim().toLowerCase( Locale.US );
+				
+				if ( !ext.isEmpty()){
+					
+					long file_size = file.lSize;
+					
+					long[] size = ext_map.get( ext );
+					
+					if ( size == null ){
+						
+						ext_map.put( ext, new long[]{ file_size });
+						
+					}else{
+						
+						size[0] += file_size;
+					}
+				}
+			}
+		}
+		
+		int num = COConfigurationManager.getIntParameter( "Files Auto Tag Count" );
+		
+		TagManager tm = TagManagerFactory.getTagManager();	
+
+		TagType tag_type = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
+		
+		List<Tag>	matched_tags	= new ArrayList<>();
+		Tag			max_match_tag	= null;
+		long		max_match_size	= -1;
+		
+		for ( int i=0; i<num; i++ ){
+			
+			String exts = COConfigurationManager.getStringParameter( "File Auto Tag Exts " + (i==0?"":(" " + i )), "");
+			
+			exts = exts.trim().toLowerCase( Locale.US );
+			
+			if ( exts.isEmpty()){
+				
+				continue;
+			}
+			
+			String tag_name 	= COConfigurationManager.getStringParameter( "File Auto Tag Name " + (i==0?"":(" " + i )), "");
+			
+			tag_name = tag_name.trim();
+			
+			if ( tag_name.isEmpty()){
+				
+				continue;
+			}
+			
+			try{			
+				Tag tag = tag_type.getTag( tag_name,  true );
+				
+				if ( tag == null ){
+					
+					tag = tag_type.createTag( tag_name, true );
+					
+					tag.setPublic( false );
+				}
+				
+				String[] bits = exts.replaceAll( ",", ";" ).split( ";" );
+			
+				boolean	matched		= false;
+				long	max_match 	= 0;
+			
+				for ( String bit: bits ){
+					
+					bit = bit.trim();
+					
+					if ( bit.startsWith( "." )){
+						
+						bit = bit.substring( 1 );
+					}
+					
+					long[] size = ext_map.get( bit );
+					
+					if ( size != null ){
+						
+						matched = true;
+						
+						if ( size[0] > max_match ){
+							
+							max_match = size[0];
+						}
+					}
+				}
+				
+				if ( matched ){
+					
+					matched_tags.add( tag );
+					
+					if ( max_match > max_match_size ){
+						
+						max_match_size 	= max_match;
+						max_match_tag	= tag;
+					}
+				}
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+			}
+		}
+		
+		initialTags.removeAll( autoTags );
+		
+		Set<Tag>	oldAutoTags = new HashSet<>( autoTags );
+		
+		autoTags.clear();
+		
+		List<Tag>	selected_tags = new ArrayList<>();
+		
+		if ( matched_tags.isEmpty()){
+			
+			String def_tag = COConfigurationManager.getStringParameter( "File Auto Tag Name Default", "" );
+
+			def_tag = def_tag.trim();
+			
+			if ( !def_tag.isEmpty()){
+			
+				try{
+					Tag tag = tag_type.getTag( def_tag,  true );
+					
+					if ( tag == null ){
+						
+						tag = tag_type.createTag( def_tag, true );
+						
+						tag.setPublic( false );
+					}
+					
+					selected_tags.add( tag );
+						
+				}catch( Throwable e ){
+					
+					Debug.out( e );
+				}
+			}
+		}else{
+		
+			boolean tag_best = COConfigurationManager.getBooleanParameter( "Files Auto Tag Best Size" );
+			
+			if ( tag_best ){
+				
+				selected_tags.add( max_match_tag );
+				
+			}else{
+				
+				selected_tags.addAll( matched_tags );
+			}
+		}
+		
+		for ( Tag t: selected_tags ){
+		
+			if ( !initialTags.contains( t )){
+				
+				initialTags.add( t );
+			}
+		}
+		
+		autoTags.addAll( selected_tags );
+		
+		if ( !oldAutoTags.equals( autoTags )){
+			
+			initialTagsChanged();
+		}
+	}
+	
 	public long
 	getTotalSize()
 	{
@@ -713,7 +1039,8 @@ public class TorrentOpenOptions
 
 			// Force a check on the encoding, will prompt user if we dunno
 			try {
-				LocaleTorrentUtil.getTorrentEncoding(torrent);
+				LocaleTorrentUtil.getTorrentEncoding(torrent, true,
+						COConfigurationManager.getBooleanParameter("File.Decoder.Prompt"));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -885,6 +1212,29 @@ public class TorrentOpenOptions
 				}
 			}
 
+			List<String> it = TorrentUtils.getInitialTags( torrent );
+			
+			if ( !it.isEmpty()){
+				
+				try{
+					TagManager tm = TagManagerFactory.getTagManager();
+					
+					for ( String tag: it ){
+						
+						Tag t = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTag( tag,  true );
+						
+						if ( t != null ){
+							
+							initialTags.add( t );
+						}
+					}
+					
+				}catch( Throwable e ){
+				}
+			}
+			
+			initialMetadata = TorrentUtils.getInitialMetadata( torrent );
+			
 			renameDuplicates();
 		}
 	}
@@ -902,6 +1252,15 @@ public class TorrentOpenOptions
 		public void toDownloadChanged(TorrentOpenFileOptions torrentOpenFileOptions, boolean toDownload);
 		public void priorityChanged(TorrentOpenFileOptions torrentOpenFileOptions, int priority );
 		public void parentDirChanged();
+		public void initialTagsChanged();
+	}
+	
+	public interface ParentDirChangedListener extends FileListener
+	{
+		public default void toDownloadChanged(TorrentOpenFileOptions torrentOpenFileOptions, boolean toDownload){};
+		public default  void priorityChanged(TorrentOpenFileOptions torrentOpenFileOptions, int priority ){};
+		public void parentDirChanged();
+		public default void initialTagsChanged(){};
 	}
 
 	public void fileDownloadStateChanged(
@@ -939,6 +1298,17 @@ public class TorrentOpenOptions
 		}
 	}
 
+	public void initialTagsChanged()
+	{
+		for ( FileListener l : fileListeners) {
+			try{
+				l.initialTagsChanged();
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
+		}
+	}
+	
 	public void
 	setCompleteAction(
 		int		ca )

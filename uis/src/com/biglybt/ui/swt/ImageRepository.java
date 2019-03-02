@@ -74,7 +74,6 @@ public class ImageRepository
 	/**
 	   * Gets an image for a file associated with a given program
 	   *
-	   * @param program the Program
 	   */
 	public static Image getIconFromExtension(File file, String ext, boolean bBig,
 			boolean minifolder) {
@@ -488,8 +487,6 @@ public class ImageRepository
 
 									flag = new Image( display, is);
 
-									flag = Utils.adjustPXForDPI( display, flag );
-
 									//System.out.println( "Created flag image for " + cc_key );
 
 								}finally{
@@ -587,9 +584,95 @@ public class ImageRepository
 
 							flag = new Image( display, is);
 
-							flag = Utils.adjustPXForDPI( display, flag );
-
 							//System.out.println( "Created flag image for " + cc_key );
+
+						}finally{
+
+							is.close();
+						}
+					}else{
+
+						flag = flag_none;
+					}
+
+					flag_cache.put( cc_key, flag );
+				}
+
+			}catch( Throwable e ){
+
+			}
+		}
+
+		if ( flag == flag_none ){
+
+			return( null );
+		}
+
+		return( flag );
+	}
+
+	public static Image
+	getCountryFlag(
+		String			cc,
+		boolean			small )
+	{
+		if ( cc == null ){
+
+			return( null );
+		}
+
+		if ( AENetworkClassifier.internalise( cc ) == cc ){
+			
+			final String key = "net_" + cc + (small?"_s":"_b" );
+
+			Image i = net_images.get( key );
+
+			if ( i == null ){
+
+				Utils.execSWTThread(
+					new Runnable()
+					{
+						@Override
+						public void
+						run()
+						{
+							Image i = ImageLoader.getInstance().getImage( key );
+
+							net_images.put( key, i );
+						}
+					},
+					false );
+
+				i = net_images.get( key );
+			}
+
+			if ( ImageLoader.isRealImage( i )){
+
+				return( i );
+			}
+		}
+		
+		Image flag = null;
+
+		LocationProvider fp = getFlagProvider();
+
+		if ( fp != null ){
+
+			try{
+				String cc_key = cc + (small?".s":".l");
+
+				flag = flag_cache.get( cc_key );
+
+				if ( flag == null ){
+
+					InputStream is = fp.getCountryFlagForISO3166Code( cc, small?0:1 );
+
+					if ( is != null ){
+
+						try{
+							Display display = Display.getDefault();
+
+							flag = new Image( display, is);
 
 						}finally{
 

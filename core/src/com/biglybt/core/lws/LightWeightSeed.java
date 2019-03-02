@@ -33,6 +33,7 @@ import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerManagerFactory;
@@ -161,6 +162,21 @@ LightWeightSeed
 		return( hash );
 	}
 
+	@Override
+	public byte[] 
+	getHashOverride()
+	{
+		return( null );
+	}
+	
+	@Override
+	public int 
+	getLocalPort(
+		boolean only_if_allocated )
+	{
+		return( 0 );
+	}
+	
 	public URL
 	getAnnounceURL()
 	{
@@ -619,6 +635,12 @@ LightWeightSeed
 					{
 						return 0;
 					}
+					
+	    			public int
+	    			getTCPListeningPortNumber()
+	    			{
+	    				return( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber());
+	    			}
 
 					@Override
 					public int

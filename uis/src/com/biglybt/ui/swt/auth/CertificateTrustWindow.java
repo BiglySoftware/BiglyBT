@@ -42,7 +42,6 @@ import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 
 public class
@@ -138,7 +137,7 @@ CertificateTrustWindow
 			Messages.setLanguageText(info_label, "security.certtruster.intro");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(info_label, gridData);
+			info_label.setLayoutData(gridData);
 
 			// resource
 
@@ -146,13 +145,13 @@ CertificateTrustWindow
 			Messages.setLanguageText(resource_label, "security.certtruster.resource");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 1;
-			Utils.setLayoutData(resource_label, gridData);
+			resource_label.setLayoutData(gridData);
 
 			Label resource_value = new Label(shell,SWT.WRAP);
 			resource_value.setText(resource.replaceAll("&", "&&"));
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(resource_value, gridData);
+			resource_value.setLayoutData(gridData);
 
 			// issued by
 
@@ -160,13 +159,13 @@ CertificateTrustWindow
 			Messages.setLanguageText(issued_by_label, "security.certtruster.issuedby");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 1;
-			Utils.setLayoutData(issued_by_label, gridData);
+			issued_by_label.setLayoutData(gridData);
 
 			Label issued_by_value = new Label(shell,SWT.NULL);
 			issued_by_value.setText(extractCN(cert.getIssuerDN().getName()).replaceAll("&", "&&"));
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(issued_by_value, gridData);
+			issued_by_value.setLayoutData(gridData);
 
 			// issued to
 
@@ -174,13 +173,13 @@ CertificateTrustWindow
 			Messages.setLanguageText(issued_to_label, "security.certtruster.issuedto");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 1;
-			Utils.setLayoutData(issued_to_label, gridData);
+			issued_to_label.setLayoutData(gridData);
 
 			Label issued_to_value = new Label(shell,SWT.NULL);
 			issued_to_value.setText(extractCN(cert.getSubjectDN().getName()).replaceAll("&", "&&"));
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(issued_to_value, gridData);
+			issued_to_value.setLayoutData(gridData);
 
 			// prompt
 
@@ -188,14 +187,14 @@ CertificateTrustWindow
 			Messages.setLanguageText(prompt_label, "security.certtruster.prompt");
 			gridData = new GridData(GridData.FILL_BOTH);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(prompt_label, gridData);
+			prompt_label.setLayoutData(gridData);
 
 				// line
 
 			Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = 3;
-			Utils.setLayoutData(labelSeparator, gridData);
+			labelSeparator.setLayoutData(gridData);
 
 				// buttons
 
@@ -205,7 +204,7 @@ CertificateTrustWindow
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(comp, gridData);
+			comp.setLayoutData(gridData);
 			GridLayout layoutButtons = new GridLayout();
 			layoutButtons.numColumns = 2;
 			comp.setLayout(layoutButtons);
@@ -217,7 +216,7 @@ CertificateTrustWindow
 			gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 			gridData.grabExcessHorizontalSpace = true;
 			gridData.widthHint = 70;
-			Utils.setLayoutData(bYes, gridData);
+			bYes.setLayoutData(gridData);
 			bYes.addListener(SWT.Selection,new Listener() {
 				@Override
 				public void handleEvent(Event e) {
@@ -230,7 +229,7 @@ CertificateTrustWindow
 			gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
 			gridData.grabExcessHorizontalSpace = false;
 			gridData.widthHint = 70;
-			Utils.setLayoutData(bNo, gridData);
+			bNo.setLayoutData(gridData);
 			bNo.addListener(SWT.Selection,new Listener() {
 				@Override
 				public void handleEvent(Event e) {

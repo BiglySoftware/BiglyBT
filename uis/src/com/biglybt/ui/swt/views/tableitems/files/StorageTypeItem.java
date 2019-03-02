@@ -55,7 +55,9 @@ public class StorageTypeItem
       tmp = "";
     } else {
       int st = fileInfo.getStorageType();
-      if (st == DiskManagerFileInfo.ST_LINEAR ){
+      if ( st < 0 ){
+    	tmp = "";
+      }else  if (st == DiskManagerFileInfo.ST_LINEAR ){
         tmp = MessageText.getString("FileItem.storage.linear");
       }else if ( st == DiskManagerFileInfo.ST_COMPACT ){
         tmp = MessageText.getString("FileItem.storage.compact");

@@ -142,6 +142,7 @@ DHTPlugin
 	private boolean[]           ipfilter_logging = new boolean[1];
 	private BooleanParameter	warn_user;
 	private BooleanParameter	prefer_i2p;
+	private BooleanParameter	torrent_xfer;
 	
 	private UPnPMapping upnp_mapping;
 
@@ -246,6 +247,8 @@ DHTPlugin
 					AERunStateHandler.setDHTSleeping( sleeping.getValue());
 				}
 			});
+		
+		torrent_xfer = config.addBooleanParameter2( "dht.torrent_xfer.enable", "dht.torrent_xfer.enable", true );
 		
 		final BooleanParameter	advanced = config.addBooleanParameter2( "dht.advanced", "dht.advanced", false );
 
@@ -2163,6 +2166,19 @@ DHTPlugin
 		return( AERunStateHandler.isDHTSleeping());
 	}
 
+	public boolean
+	isTorrentXferEnabled()
+	{
+		if ( torrent_xfer == null ){
+			
+			return( false );
+			
+		}else{
+			
+			return( torrent_xfer.getValue());
+		}
+	}
+	
 	public DHT[]
 	getDHTs()
 	{

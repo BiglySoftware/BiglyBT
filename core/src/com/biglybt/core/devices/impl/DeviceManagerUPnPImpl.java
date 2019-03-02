@@ -36,6 +36,7 @@ import com.biglybt.core.devices.TranscodeTarget;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.UUIDGenerator;
 import com.biglybt.net.upnp.*;
 import com.biglybt.net.upnp.services.UPnPWANConnection;
@@ -1005,14 +1006,14 @@ DeviceManagerUPnPImpl
 
 			String	service_type = service.getServiceType();
 
-			if ( 	service_type.equalsIgnoreCase( "urn:schemas-upnp-org:service:WANIPConnection:1") ||
-					service_type.equalsIgnoreCase( "urn:schemas-upnp-org:service:WANPPPConnection:1")){
+			if ( 	GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANIPConnection:") ||
+					GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:WANPPPConnection:")){
 
 				UPnPWANConnection	wan_service = (UPnPWANConnection)service.getSpecificService();
 
 				igd_services.add( wan_service );
 
-			}else if ( service_type.equals( "urn:schemas-upnp-org:service:ContentDirectory:1" )){
+			}else if ( GeneralUtils.startsWithIgnoreCase( service_type, "urn:schemas-upnp-org:service:ContentDirectory:" )){
 
 				new_devices.add( new DeviceContentDirectoryImpl( manager, device, service ));
 			}
@@ -1023,7 +1024,7 @@ DeviceManagerUPnPImpl
 			new_devices.add( new DeviceInternetGatewayImpl( manager, device, igd_services ));
 		}
 
-		if ( device.getDeviceType().equals( "urn:schemas-upnp-org:device:MediaRenderer:1" )){
+		if ( GeneralUtils.startsWithIgnoreCase( device.getDeviceType(), "urn:schemas-upnp-org:device:MediaRenderer:" )){
 
 			new_devices.add( new DeviceMediaRendererImpl( manager, device ));
 		}

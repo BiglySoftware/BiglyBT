@@ -87,7 +87,7 @@ public interface MdiEntry extends UIPluginView
 
 	public void setImageLeftID(String string);
 
-	public void setCollapseDisabled(boolean b);
+	//public void setCollapseDisabled(boolean b);
 
 	public void addListener(MdiEntryDropListener listener);
 
@@ -101,6 +101,8 @@ public interface MdiEntry extends UIPluginView
 
 	public boolean isDisposed();
 
+	public boolean isReallyDisposed();
+	
 	public ViewTitleInfo getViewTitleInfo();
 
 	public void setViewTitleInfo(ViewTitleInfo viewTitleInfo);
@@ -112,6 +114,8 @@ public interface MdiEntry extends UIPluginView
 	public MdiEntryVitalityImage[] getVitalityImages();
 
 	public boolean close(boolean forceClose);
+	
+	public boolean close(boolean forceClose, boolean userInitiated );
 
 	public void updateUI();
 

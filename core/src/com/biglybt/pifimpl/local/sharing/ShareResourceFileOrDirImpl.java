@@ -44,8 +44,10 @@ import com.biglybt.core.torrent.TOTorrentFactory;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.sharing.ShareException;
 import com.biglybt.pif.sharing.ShareItem;
+import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.sharing.ShareResource;
 import com.biglybt.pif.sharing.ShareResourceDeletionVetoException;
+import com.biglybt.pif.sharing.ShareResourceEvent;
 import com.biglybt.pif.sharing.ShareResourceWillBeDeletedListener;
 import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pifimpl.local.torrent.TorrentImpl;
@@ -289,6 +291,11 @@ ShareResourceFileOrDirImpl
 				TorrentUtils.setDecentralised( to_torrent );
 			}
 
+			if ( COConfigurationManager.getBooleanParameter( "Sharing Disable RCM" )){
+			
+				TorrentUtils.setFlag( to_torrent, TorrentUtils.TORRENT_FLAG_DISABLE_RCM, true );
+			}
+			
 			DownloadManagerState	download_manager_state =
 				DownloadManagerStateFactory.getDownloadState( to_torrent );
 
@@ -461,5 +468,42 @@ ShareResourceFileOrDirImpl
 	getProperties()
 	{
 		return( properties );
+	}
+	
+	@Override
+	public void 
+	setProperties(
+		Map<String, String> props)
+	{
+		for ( Map.Entry<String,String> entry: props.entrySet()){
+			
+			String 	key 		= entry.getKey();
+			String	new_value 	= entry.getValue();
+			
+			String old_value = properties.get( key );
+
+			if ( key.equals( ShareManager.PR_TAGS )){
+												
+				if ( !new_value.equals( old_value )){
+					
+					properties.put( key, new_value );
+					
+					if ( old_value == null ){
+						
+						old_value = "";
+					}
+
+					fireChangeEvent( ShareResourceEvent.ET_PROPERTY_CHANGED, new String[]{ key, old_value, new_value });
+				}
+			}else{
+				
+				if ( !new_value.equals( old_value )){
+				
+					Debug.out( "Unsupported property change" );
+				}
+			}
+		}
+		
+		manager.configDirty();
 	}
 }

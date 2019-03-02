@@ -95,8 +95,23 @@ NetStatusProtocolTesterBT
 					return( new byte[][]{ my_hash });
 				}
 
+				@Override
+				public byte[] 
+				getHashOverride()
+				{
+					return( null );
+				}
+				
+				@Override
+				public int 
+				getLocalPort(
+					boolean only_if_allocated )
+				{
+					return( 0 );
+				}
+				
 	          	@Override
-		          public boolean
+		        public boolean
 	          	manualRoute(
 	          		NetworkConnection		connection )
 	          	{
@@ -108,7 +123,7 @@ NetStatusProtocolTesterBT
 	          	}
 
 	          	@Override
-		          public boolean
+		        public boolean
 	          	isPeerSourceEnabled(
 	          		String					peer_source )
 	          	{
@@ -116,7 +131,7 @@ NetStatusProtocolTesterBT
 	          	}
 
 	          	@Override
-		          public boolean
+		        public boolean
 	          	activateRequest(
 	          		InetSocketAddress		remote_address )
 	          	{
@@ -124,14 +139,14 @@ NetStatusProtocolTesterBT
 	          	}
 
 	          	@Override
-		          public void
+		        public void
 	          	deactivateRequest(
 	          		InetSocketAddress		remote_address )
 	          	{
 	          	}
 
 	          	@Override
-		          public String
+		        public String
 	          	getDescription()
 	          	{
 	          		return( "NetStatusPlugin - router" );

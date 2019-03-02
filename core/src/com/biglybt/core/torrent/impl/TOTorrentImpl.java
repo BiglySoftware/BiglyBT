@@ -63,6 +63,24 @@ TOTorrentImpl
 	protected static final List	TK_ADDITIONAL_OK_ATTRS =
 		Arrays.asList(new String[]{ TK_COMMENT_UTF8, AZUREUS_PROPERTIES, TK_WEBSEED_BT, TK_WEBSEED_GR });
 
+	
+	
+	private static CopyOnWriteList<TOTorrentListener>		global_listeners = new CopyOnWriteList<>();
+	
+	public static void
+	addGlobalListener(
+		TOTorrentListener		listener )
+	{
+		global_listeners.add( listener );
+	}
+	
+	public static void
+	removeGlobalListener(
+		TOTorrentListener		listener )
+	{
+		global_listeners.remove( listener );
+	}
+	
 	private byte[]							torrent_name;
 	private byte[]							torrent_name_utf8;
 
@@ -95,6 +113,8 @@ TOTorrentImpl
 
 	protected final AEMonitor this_mon 	= new AEMonitor( "TOTorrent" );
 
+	private boolean	constructing = true;
+	
 	/**
 	 * Constructor for deserialisation
 	 */
@@ -135,6 +155,12 @@ TOTorrentImpl
 		}
 	}
 
+	protected void
+	setConstructed()
+	{
+		constructing = false;
+	}
+	
 	@Override
 	public void
 	serialiseToBEncodedFile(
@@ -243,8 +269,16 @@ TOTorrentImpl
               //only use newly saved file if it got this far, i.e. it was written successfully
 
             if ( temp.length() > 1L ) {
-            	output_file.delete(); // Will fail silently if it doesn't exist.
-                temp.renameTo( output_file );
+            	
+            	if ( output_file.exists() && !output_file.delete()){
+            		
+            		Debug.out( "Failed to delete " + output_file );
+            	}
+            	
+                if ( !temp.renameTo( output_file )){
+                	
+                	Debug.out( "Failed to rename '" + temp + "' to '" + output_file + "'" );
+                }
             }
 
 		}catch( TOTorrentException e ){
@@ -708,7 +742,7 @@ TOTorrentImpl
 				SHA1Hasher s = new SHA1Hasher();
 
 				torrent_hash = s.calculateHash(BEncoder.encode(info));
-
+				
 			}else{
 
 				torrent_hash = torrent_hash_override;
@@ -742,15 +776,6 @@ TOTorrentImpl
 								TOTorrentException.RT_HASH_FAILS ));
 			}
 		}
-
-		/* support this for fixing borked torrents
-		if ( !TorrentUtils.isDecentralised( announce_url )){
-
-			throw( new TOTorrentException(
-						"Hash override can only be set on decentralised torrents",
-						TOTorrentException.RT_HASH_FAILS ));
-		}
-		*/
 
 		torrent_hash_override = hash;
 
@@ -1311,6 +1336,11 @@ TOTorrentImpl
 	fireChanged(
 		int	type )
 	{
+		if ( constructing ){
+			
+			return;
+		}
+		
 		List<TOTorrentListener> to_fire = null;
 
 		try{
@@ -1336,6 +1366,17 @@ TOTorrentImpl
 
 					Debug.out(e);
 				}
+			}
+		}
+		
+		for ( TOTorrentListener l: global_listeners ){
+			
+			try{
+				l.torrentChanged( this, type );
+
+			}catch( Throwable e ){
+
+				Debug.out(e);
 			}
 		}
 	}

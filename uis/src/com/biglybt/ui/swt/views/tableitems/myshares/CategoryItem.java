@@ -45,7 +45,7 @@ CategoryItem
 	public
 	CategoryItem()
 	{
-		super("category", POSITION_LAST, 400, TableManager.TABLE_MYSHARES);
+		super("category", POSITION_LAST, 100, TableManager.TABLE_MYSHARES);
 
 		setRefreshInterval(INTERVAL_LIVE);
 	}

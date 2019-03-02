@@ -63,6 +63,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingAverage;
@@ -816,10 +817,12 @@ DeviceManagerUI
 
 		// max xcode
 
+		int kinb = DisplayFormatters.getKinB();
+		
 		final IntParameter max_xcode =
 			configModel.addIntParameter2(
 				"device.config.xcode.maxbps", "device.config.xcode.maxbps",
-				(int)(device_manager.getTranscodeManager().getQueue().getMaxBytesPerSecond()/1024),
+				(int)(device_manager.getTranscodeManager().getQueue().getMaxBytesPerSecond()/kinb),
 				0, Integer.MAX_VALUE );
 
 		max_xcode.addListener(
@@ -830,7 +833,7 @@ DeviceManagerUI
 				parameterChanged(
 					Parameter param)
 				{
-					device_manager.getTranscodeManager().getQueue().setMaxBytesPerSecond( max_xcode.getValue()*1024 );
+					device_manager.getTranscodeManager().getQueue().setMaxBytesPerSecond( max_xcode.getValue()*kinb );
 				}
 			});
 
@@ -2338,7 +2341,7 @@ DeviceManagerUI
 							DiskManagerFileInfo file = (DiskManagerFileInfo)obj;
 
 							try{
-								if ( file.getDownload().getState() == Download.ST_ERROR ){
+								if ( file.getIndex() < 0 || file.getDownload().getState() == Download.ST_ERROR ){
 
 									enabled = false;
 								}
@@ -3433,7 +3436,7 @@ DeviceManagerUI
 
 		List<Tag> tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
 
-		tags = TagUIUtils.sortTags( tags );
+		tags = TagUtils.sortTags( tags );
 
 		long	tag_id = device.getAutoShareToTagID();
 
@@ -3525,6 +3528,8 @@ DeviceManagerUI
 
 				m.setData(Boolean.valueOf(assigned_tag == tag));
 
+				TagUIUtils.setMenuIcon( m, tag );
+				
 				m.addListener(
 					new MenuItemListener()
 					{
@@ -4897,7 +4902,7 @@ DeviceManagerUI
 
 											}
 
-											info.setToolTipText( tooltip );
+											Utils.setTT(info, tooltip );
 										}
 									});
 
@@ -4920,7 +4925,7 @@ DeviceManagerUI
 
 												last_style = style;
 
-												info.setToolTipText( "" );
+												Utils.setTT(info, "" );
 											}
 										}catch( Throwable e ){
 										}
@@ -5221,7 +5226,7 @@ DeviceManagerUI
 								@Override
 								public void run(){
 									
-									UPnPService service = findService( (DeviceUPnP)device, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1" );
+									UPnPService service = findService( (DeviceUPnP)device, "urn:schemas-upnp-org:service:WANCommonInterfaceConfig:" );
 									
 									if ( service != null ){
 										
@@ -5569,8 +5574,8 @@ DeviceManagerUI
 									run()
 									{
 										max_up_down.setText( 
-											DisplayFormatters.formatByteCountToBitsPerSec( result[1]/8 ) + ", " +
-											DisplayFormatters.formatByteCountToBitsPerSec( result[0]/8 ));
+											DisplayFormatters.formatByteCountToBitsPerSec2( result[1]/8 ) + ", " +
+											DisplayFormatters.formatByteCountToBitsPerSec2( result[0]/8 ));
 									}
 								});
 					}catch( Throwable e ){
@@ -5634,7 +5639,7 @@ DeviceManagerUI
 		{
 			for ( UPnPService service: device.getServices()){
 				
-				if ( service.getServiceType().equalsIgnoreCase( type )){
+				if ( GeneralUtils.startsWithIgnoreCase( service.getServiceType(), type )){
 					
 					return( service );
 				}
@@ -5711,7 +5716,7 @@ DeviceManagerUI
 	  								for ( String id: ids ){
 	  									ImageLoader.getInstance().getUrlImage(id, new ImageDownloaderListener() {
 	  										@Override
-	  										public void imageDownloaded(Image image, boolean returnedImmediately) {
+	  										public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
 	  											ViewTitleInfoManager.refreshTitleInfo( deviceView.this );
 	  										}	
 	  									});

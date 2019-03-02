@@ -27,8 +27,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.CoreRunningListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.PaintEvent;
@@ -38,6 +36,9 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
@@ -48,11 +49,10 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.util.PeerUtils;
+import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.pif.Plugin;
-import com.biglybt.pif.PluginInterface;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.ImageRepository;
 import com.biglybt.ui.swt.Messages;
@@ -63,10 +63,11 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-
-import com.biglybt.core.Core;
-import com.biglybt.core.peermanager.piecepicker.util.BitFlags;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.util.MapUtils;
+
+import com.biglybt.pif.Plugin;
+import com.biglybt.pif.PluginInterface;
 
 /**
  * Piece Map subview for Peers View.
@@ -229,17 +230,17 @@ public class PeerInfoView
 		layout.marginWidth = 0;
 		peerInfoComposite.setLayout(layout);
 		gridData = new GridData(GridData.FILL, GridData.FILL, true, true);
-		Utils.setLayoutData(peerInfoComposite, gridData);
+		peerInfoComposite.setLayoutData(gridData);
 
 		imageLabel = new Label(peerInfoComposite, SWT.NULL);
 		gridData = new GridData();
 		if (ImageRepository.hasCountryFlags( false ) || countryLocator != null)
 			gridData.widthHint = 28;
-		Utils.setLayoutData(imageLabel, gridData);
+		imageLabel.setLayoutData(gridData);
 
 		topLabel = new Label(peerInfoComposite, SWT.NULL);
 		gridData = new GridData(SWT.FILL, SWT.DEFAULT, false, false);
-		Utils.setLayoutData(topLabel, gridData);
+		topLabel.setLayoutData(gridData);
 
 		sc = new ScrolledComposite(peerInfoComposite, SWT.V_SCROLL);
 		sc.setExpandHorizontal(true);
@@ -251,12 +252,12 @@ public class PeerInfoView
 		layout.marginWidth = 0;
 		sc.setLayout(layout);
 		gridData = new GridData(GridData.FILL, GridData.FILL, true, true, 2, 1);
-		Utils.setLayoutData(sc, gridData);
+		sc.setLayoutData(gridData);
 		sc.getVerticalBar().setIncrement(BLOCK_SIZE);
 
 		peerInfoCanvas = new Canvas(sc, SWT.NO_REDRAW_RESIZE | SWT.NO_BACKGROUND);
 		gridData = new GridData(GridData.FILL, SWT.DEFAULT, true, false);
-		Utils.setLayoutData(peerInfoCanvas, gridData);
+		peerInfoCanvas.setLayoutData(gridData);
 		peerInfoCanvas.addPaintListener(new PaintListener() {
 			@Override
 			public void paintControl(PaintEvent e) {
@@ -329,13 +330,7 @@ public class PeerInfoView
 						"PeersView.BlockView.AvailCount" }, new GridData(SWT.FILL,
 						SWT.DEFAULT, true, false, 2, 1));
 
-		int iFontPixelsHeight = 10;
-		int iFontPointHeight = (iFontPixelsHeight * 72)
-				/ Utils.getDPIRaw( peerInfoCanvas.getDisplay()).y;
-		Font f = peerInfoCanvas.getFont();
-		FontData[] fontData = f.getFontData();
-		fontData[0].setHeight(iFontPointHeight);
-		font = new Font(peerInfoCanvas.getDisplay(), fontData);
+		font = FontUtils.getFontPercentOf(peerInfoCanvas.getFont(), 0.7f);
 
 		return peerInfoComposite;
 	}
@@ -379,9 +374,9 @@ public class PeerInfoView
 				String[] country_details = PeerUtils.getCountryDetails( peer );
 
 				if ( country_details != null && country_details.length == 2 ){
-					imageLabel.setToolTipText(country_details[0] + "- " + country_details[1]);
+					Utils.setTT(imageLabel,country_details[0] + "- " + country_details[1]);
 				}else{
-					imageLabel.setToolTipText( "" );
+					Utils.setTT(imageLabel, "" );
 				}
 			}else if (countryLocator != null) {
 					try {
@@ -394,7 +389,7 @@ public class PeerInfoView
 								"getIPISO3166", new Class[] { String.class }).invoke(
 								countryLocator, new Object[] { peer.getIp() });
 
-						imageLabel.setToolTipText(sCode + "- " + sCountry);
+						Utils.setTT(imageLabel,sCode + "- " + sCountry);
 
 						InputStream is = countryLocator.getClass().getClassLoader()
 								.getResourceAsStream(
@@ -413,7 +408,7 @@ public class PeerInfoView
 						// ignore
 					}
 			}else{
-				imageLabel.setToolTipText( "" );
+				Utils.setTT(imageLabel, "" );
 			}
 
 		}

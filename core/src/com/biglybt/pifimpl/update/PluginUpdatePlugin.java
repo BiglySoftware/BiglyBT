@@ -773,15 +773,16 @@ PluginUpdatePlugin
 						// the end of current to avoid confusion
 
 					log.log( LoggerChannel.LT_INFORMATION,
-								"    Current: " + az_plugin_version +
+								"Plugin: " + plugin_id + " versions (current=" + az_plugin_version +
 								(comp==0&&sf_plugin_version.endsWith( "_CVS")?"_CVS":"")+
-								", Latest: " + sf_plugin_version + (pi_version_info==null?"":" [" + pi_version_info + "]"));
+								", latest=" + sf_plugin_version + (pi_version_info==null?"":" [" + pi_version_info + "]") + ")");
 
-					checker.reportProgress( "    current=" + az_plugin_version + (comp==0&&sf_plugin_version.endsWith( "_CVS")?"_CVS":"") + ", latest=" + sf_plugin_version );
+					checker.reportProgress( "Plugin: " + plugin_id + "versions (current=" + az_plugin_version +
+								(comp==0&&sf_plugin_version.endsWith( "_CVS")?"_CVS":"") + ", latest=" + sf_plugin_version + ")");
 
 					if ( comp < 0 && ! ( pi_being_checked.getPlugin() instanceof UpdatableComponent)){
 
-							// only update if newer verison + plugin itself doesn't handle
+							// only update if newer version + plugin itself doesn't handle
 							// the update
 
 						String sf_plugin_download	= details.getDownloadURL();

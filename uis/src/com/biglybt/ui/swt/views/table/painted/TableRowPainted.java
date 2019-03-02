@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.views.table.painted;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -34,6 +35,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableCellSWTBase;
 import com.biglybt.ui.swt.views.table.impl.TableRowSWTBase;
@@ -59,16 +61,22 @@ public class TableRowPainted
 
 	private Object subRows_sync;
 
-	private int subRowsHeight;
+	private int subRowsHeightUseAccessors;
 
 	private TableCellCore cellSort;
 
-	private int height = 0;
-
+	private int 	heightUseAccessors = 0;
+	private boolean	isHidden;
+	
 	private boolean initializing = true;
 
 	private Color colorFG = null;
 
+	private Object			colorLock = new Object();
+	
+	private CopyOnWriteList<Object[]>	FGRequesters = new CopyOnWriteList<>(1);
+	private CopyOnWriteList<Object[]>	BGRequesters = new CopyOnWriteList<>(1);
+	
 	public TableRowPainted(TableRowCore parentRow, TableViewPainted tv,
 			Object dataSource, boolean triggerHeightChange) {
 		// in theory, TableRowPainted could have its own sync
@@ -86,15 +94,104 @@ public class TableRowPainted
 					sortColumn.getPosition());
 		}
 
-		if (height == 0) {
-			setHeight(tv.getRowDefaultHeight(), false);
+		isHidden = parentRow != null && tv.getFilterSubRows() && !tv.isFiltered( dataSource );
+		
+		setHeight(tv.getRowDefaultHeight(), false);
+		
+		if ( dataSource instanceof TableRowSWTChildController ){
+			
+			TableRowSWTChildController c = (TableRowSWTChildController)dataSource;
+			
+			setExpanded( c.isExpanded(), false );
+			
+			Object[] kids = c.getChildDataSources();
+			
+			if ( kids != null && kids.length > 0 ){
+				
+				setSubItems( kids, false );
+			}
 		}
+		
 		initializing = false;
 		if (triggerHeightChange) {
-			heightChanged(0, height);
+			heightChanged(0, getFullHeight());
 		}
+		
+		tv.rowCreated();
 	}
 
+	public boolean
+	refilter()
+	{		
+		boolean changed = false;
+		
+		synchronized( subRows_sync ){
+				
+			if ( subRows != null ){
+				
+				for ( TableRowPainted subrow : subRows) {
+					
+					if ( subrow.refilter()){
+						
+						changed = true;
+					}
+				}
+			}
+			
+			Object ds = getDataSource( true );
+			
+			boolean newHidden = !getViewPainted().isFiltered( ds );
+		
+			if ( newHidden != isHidden ){
+			
+				TableRowCore row = this;
+				
+				boolean	expanded = true;
+				
+				while( expanded ){
+					
+					row = row.getParentRowCore();
+					
+					if ( row == null ){
+						
+						break;
+					}
+					
+					expanded = row.isExpanded();
+				}
+				
+				int	old_height = getHeight();
+				
+				isHidden = newHidden;
+
+				int	new_height = getHeight();
+
+				if ( expanded ){										
+					
+					heightChanged( old_height, new_height);
+				
+					changed = true;
+					
+				}else{
+				
+					row = getParentRowCore();
+					
+					if ( row instanceof TableRowPainted){
+						((TableRowPainted) row).subRowHeightChanged( old_height, new_height);
+					}
+				}
+			}
+		}
+		
+		return( changed );
+	}
+	
+	public boolean
+	isHidden()
+	{
+		return( isHidden );
+	}
+	
 	private void buildCells() {
 		//debug("buildCells " + Debug.getCompressedStackTrace());
 		TableColumnCore[] visibleColumns = getView().getVisibleColumns();
@@ -159,7 +256,7 @@ public class TableRowPainted
 	 */
 	public void swt_paintGC(GC gc, Rectangle drawBounds, int rowStartX,
 			int rowStartY, int pos, boolean isTableSelected, boolean isTableEnabled) {
-		if (isRowDisposed() || gc == null || gc.isDisposed() || drawBounds == null) {
+		if (isRowDisposed() || gc == null || gc.isDisposed() || drawBounds == null || isHidden ) {
 			return;
 		}
 		// done by caller
@@ -172,6 +269,7 @@ public class TableRowPainted
 			return;
 		}
 
+		boolean isAttention = isRequestAttention();
 		boolean isSelected = isSelected();
 		boolean isSelectedNotFocused = isSelected && !isTableSelected;
 
@@ -184,33 +282,33 @@ public class TableRowPainted
 		Color altColor;
 		Color bg;
 		if (isTableEnabled) {
-  		altColor = Colors.alternatingColors[pos >= 0 ? pos % 2 : 0];
-  		if (altColor == null) {
-  			altColor = gc.getDevice().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
-  		}
-  		if (isSelected) {
-  			Color color;
-  			color = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION);
-  			gc.setBackground(color);
-  		} else {
-  			gc.setBackground(altColor);
-  		}
-
-  		bg = getBackground();
-  		if (bg == null) {
-  			bg = gc.getBackground();
-  		} else {
-  			gc.setBackground(bg);
-  		}
-
-  		if (isSelected) {
-  			shadowColor = fg;
-  			fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
-  		} else {
-  			if (fg == null) {
-  				fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_FOREGROUND);
-  			}
-  		}
+	  		altColor = Colors.alternatingColors[pos >= 0 ? pos % 2 : 0];
+	  		if (altColor == null) {
+	  			altColor = gc.getDevice().getSystemColor(SWT.COLOR_LIST_BACKGROUND);
+	  		}
+	  		if (isSelected) {
+	  			Color color;
+	  			color = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION);
+	  			gc.setBackground(color);
+	  		} else {
+	  			gc.setBackground(altColor);
+	  		}
+	
+	  		bg = getBackground();
+	  		if (bg == null) {
+	  			bg = gc.getBackground();
+	  		} else {
+	  			gc.setBackground(bg);
+	  		}
+	
+	  		if (isSelected) {
+	  			shadowColor = fg;
+	  			fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_SELECTION_TEXT);
+	  		} else {
+	  			if (fg == null) {
+	  				fg = gc.getDevice().getSystemColor(SWT.COLOR_LIST_FOREGROUND);
+	  			}
+	  		}
 		} else {
 			Device device = gc.getDevice();
 			altColor = Colors.getSystemColor(device, SWT.COLOR_WIDGET_BACKGROUND);
@@ -223,6 +321,12 @@ public class TableRowPainted
 
 			fg = Colors.getSystemColor(device, SWT.COLOR_WIDGET_NORMAL_SHADOW);
 		}
+		
+		if ( isAttention ){
+			bg = Colors.fadedRed;
+			gc.setBackground( bg );
+		}
+		
 		gc.setForeground(fg);
 
 		int rowAlpha = getAlpha();
@@ -238,16 +342,21 @@ public class TableRowPainted
 			}
 			if (mTableCells != null) {
 				for (TableColumn tc : visibleColumns) {
+					
 					TableCellCore cell = mTableCells.get(tc.getName());
+					
 					int w = tc.getWidth();
-					if (!(cell instanceof TableCellPainted) || cell.isDisposed()) {
-						gc.fillRectangle(x, rowStartY, w, getHeight());
-						x += w;
-						continue;
-					}
-					TableCellPainted cellSWT = (TableCellPainted) cell;
+					
 					Rectangle r = new Rectangle(x, rowStartY, w, getHeight());
-					cellSWT.setBoundsRaw(r);
+
+					TableCellPainted cellSWT = null;
+					
+					if ( cell instanceof TableCellPainted && !cell.isDisposed()) {
+						
+						cellSWT = (TableCellPainted) cell;
+						
+						cellSWT.setBoundsRaw(r);
+					}
 					if (drawBounds.intersects(r)) {
 						//paintedRow = true;
 						gc.setAlpha(255);
@@ -268,6 +377,14 @@ public class TableRowPainted
 							}
 						}
 						gc.setAlpha(rowAlpha);
+						
+						if ( cellSWT == null ){
+							
+							x += w;
+							
+							continue;
+						}
+						
 						if (swt_paintCell(gc, cellSWT.getBounds(), cellSWT, shadowColor)) {
 							// row color may have changed; this would update the color
 							// for all new cells.  However, setting color triggers a
@@ -427,6 +544,14 @@ public class TableRowPainted
 				oldFont = gc.getFont();
 				gc.setFont(FontUtils.getAnyFontBold(gc));
 				gcChanged = true;
+			}else if (fontStyle == SWT.ITALIC) {
+				oldFont = gc.getFont();
+					// On Windows 10 for some reason some people get pixelated italic fonts as it seems text antialias default is off :( 
+				if ( Constants.isWindows ){
+					gc.setTextAntialias(SWT.ON);
+				}
+				gc.setFont(FontUtils.getAnyFontItalic(gc));
+				gcChanged = true;
 			}
 
 			if (!cell.isUpToDate()) {
@@ -516,7 +641,13 @@ public class TableRowPainted
 					gc.setAlpha(textOpacity);
 					gcChanged = true;
 				} else if (textOpacity > 255) {
-					gc.setFont(FontUtils.getAnyFontBold(gc));
+					boolean is_italic = ( gc.getFont().getFontData()[0].getStyle() & SWT.ITALIC ) != 0; 
+					if ( is_italic ){
+						gc.setFont(FontUtils.getAnyFontBoldItalic(gc));
+					}else{
+						gc.setFont(FontUtils.getAnyFontBold(gc));
+					}
+					
 					//gc.setTextAntialias(SWT.ON);
 					//gc.setAlpha(textOpacity & 255);
 					gcChanged = true;
@@ -531,7 +662,6 @@ public class TableRowPainted
 					GCStringPrinter sp = new GCStringPrinter(gc, text, cellBounds, true,
 							cellBounds.height > 20, style);
 
-					boolean fit;
 					if (shadowColor != null) {
 						Color oldFG = gc.getForeground();
 						gc.setForeground(shadowColor);
@@ -546,12 +676,12 @@ public class TableRowPainted
 
 						cellBounds.x -= 1;
 						cellBounds.y -= 1;
-						fit = sp.printString2(gc, cellBounds, style);
+						sp.printString2(gc, cellBounds, style);
 					} else {
-						fit = sp.printString();
+						sp.printString();
 					}
 
-					if (fit) {
+					if ( !sp.isTruncated()) {
 
 						cell.setDefaultToolTip(null);
 					} else {
@@ -728,9 +858,12 @@ public class TableRowPainted
 
 	@Override
 	public int getFullHeight() {
+		if ( isHidden ){
+			return( 0 );
+		}
 		int h = getHeight();
 		if (numSubItems > 0 && isExpanded()) {
-			h += subRowsHeight;
+			h += subRowsHeightUseAccessors;
 		}
 		return h;
 	}
@@ -746,12 +879,27 @@ public class TableRowPainted
 		getViewPainted().rowHeightChanged(this, oldHeight, newHeight);
 		TableRowCore row = getParentRowCore();
 		if (row instanceof TableRowPainted) {
-			((TableRowPainted) row).subRowHeightChanged(this, oldHeight, newHeight);
+			((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
 		}
 	}
 
-	public void subRowHeightChanged(TableRowCore row, int oldHeight, int newHeight) {
-		subRowsHeight += (newHeight - oldHeight);
+	private void
+	setSubRowsHeight(
+		int		h )
+	{
+		subRowsHeightUseAccessors = h;
+	}
+	
+	protected void subRowHeightChanged( int oldHeight, int newHeight) {
+		int old = subRowsHeightUseAccessors;
+		subRowsHeightUseAccessors += (newHeight - oldHeight);
+		
+		if ( old != subRowsHeightUseAccessors && isExpanded() ){
+			TableRowCore row = getParentRowCore();
+			if (row instanceof TableRowPainted) {
+				((TableRowPainted) row).subRowHeightChanged( old, subRowsHeightUseAccessors);
+			}
+		}
 	}
 
 	public boolean setDrawOffset(Point drawOffset) {
@@ -825,6 +973,11 @@ public class TableRowPainted
 
 	@Override
 	public void setSubItemCount(int length) {
+		setSubItemCount( length, true );
+	}
+	
+	private void setSubItemCount(int length, boolean triggerHeightListener ) {
+
 		numSubItems = length;
 		if (isExpanded() && subDataSources.length == length) {
 			if (DEBUG_SUBS) {
@@ -838,13 +991,28 @@ public class TableRowPainted
 			for (int i = 0; i < newSubRows.length; i++) {
 				newSubRows[i] = new TableRowPainted(this, tv, subDataSources[i], false);
 				newSubRows[i].setTableItem(i, false);
-				h += newSubRows[i].getHeight();
+				h += newSubRows[i].getFullHeight();
 			}
 
 			int oldHeight = getFullHeight();
-			subRowsHeight = h;
-			getViewPainted().rowHeightChanged(this, oldHeight, getFullHeight());
-			getViewPainted().triggerListenerRowAdded(newSubRows);
+			
+			setSubRowsHeight( h );
+			
+			int newHeight = getFullHeight();
+			
+			TableRowCore row = getParentRowCore();
+			if (row instanceof TableRowPainted) {
+				((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
+			}
+			
+			TableViewPainted tvp = getViewPainted();
+
+			if ( triggerHeightListener ){
+					
+				tvp.rowHeightChanged(this, oldHeight, newHeight );
+			}
+			
+			tvp.triggerListenerRowAdded(newSubRows);
 
 			subRows = newSubRows;
 		}
@@ -866,11 +1034,15 @@ public class TableRowPainted
 
 	@Override
 	public void setSubItems(Object[] datasources) {
+		setSubItems( datasources, true );
+	}
+	
+	private void setSubItems(Object[] datasources, boolean triggerHeightListeners) {
 		deleteExistingSubRows();
 		synchronized (subRows_sync) {
 			subDataSources = datasources;
-			subRowsHeight = 0;
-			setSubItemCount(datasources.length);
+			setSubRowsHeight( 0 );
+			setSubItemCount(datasources.length, triggerHeightListeners);
 		}
 	}
 
@@ -881,6 +1053,38 @@ public class TableRowPainted
 		}
 	}
 
+	@Override
+	public TableRowCore[] getSubRowsRecursive(boolean includeHidden){
+		synchronized (subRows_sync) {
+			
+			List<TableRowCore>	result = new ArrayList<>();
+			
+			getSubRowsRecursive( result, getSubRowsWithNull(), includeHidden );
+			
+			return( result.toArray( new TableRowCore[ result.size()]));
+		}
+	}
+	
+	private void
+	getSubRowsRecursive(
+		List<TableRowCore>	result,
+		TableRowCore[]		rows,
+		boolean 			includeHidden )
+	{
+		for ( TableRowCore row: rows ){
+			
+			if ( includeHidden || !row.isHidden()){
+			
+				result.add( row );
+			
+				if ( includeHidden || row.isExpanded()){
+				
+					getSubRowsRecursive( result, row.getSubRowsWithNull(), includeHidden);
+				}
+			}
+		}
+	}
+	
 	@Override
 	public void removeSubRow(Object datasource) {
 		synchronized (subRows_sync) {
@@ -913,13 +1117,20 @@ public class TableRowPainted
 
 	@Override
 	public void setExpanded(boolean b) {
+		setExpanded( b, true );
+	}
+	
+	private void setExpanded(boolean b, boolean triggerHeightChange ) {
 		if ( canExpand() ){
 			int oldHeight = getFullHeight();
 			super.setExpanded(b);
 			synchronized (subRows_sync) {
 				TableRowPainted[] newSubRows = null;
-				if (b && (subRows == null || subRows.length != numSubItems)
-						&& subDataSources != null && subDataSources.length == numSubItems) {
+				if (	b &&
+						(subRows == null || subRows.length != numSubItems) &&
+						subDataSources != null && 
+						subDataSources.length == numSubItems) 
+				{
 					if (DEBUG_SUBS) {
 						debug("building subrows " + numSubItems);
 					}
@@ -932,24 +1143,50 @@ public class TableRowPainted
 						newSubRows[i] = new TableRowPainted(this, tv, subDataSources[i],
 								false);
 						newSubRows[i].setTableItem(i, false);
-						h += newSubRows[i].getHeight();
+						h += newSubRows[i].getFullHeight();
 					}
 
-					subRowsHeight = h;
+					setSubRowsHeight( h );
 
 					subRows = newSubRows;
 				}
 
-				getViewPainted().rowHeightChanged(this, oldHeight, getFullHeight());
-
+				int newHeight = getFullHeight();
+				
+				TableRowCore row = getParentRowCore();
+				if (row instanceof TableRowPainted) {
+					((TableRowPainted) row).subRowHeightChanged( oldHeight, newHeight);
+				}
+				
+				if ( triggerHeightChange ){
+					
+					getViewPainted().rowHeightChanged(this, oldHeight, newHeight);
+				}
+				
 				if (newSubRows != null) {
 					getViewPainted().triggerListenerRowAdded(newSubRows);
 				}
 
 			}
+			
+			Object ds = getDataSource( true );
+			
+			if ( ds instanceof TableRowSWTChildController ){
+				
+				((TableRowSWTChildController)ds).setExpanded( b );
+			}
+			
+			TableViewPainted tvp = getViewPainted();
+
+			if ( triggerHeightChange ){
+			
+				tvp.tableMutated();
+			}
+			
 			if (isVisible()) {
-				getViewPainted().visibleRowsChanged();
-				getViewPainted().redrawTable();
+
+				tvp.visibleRowsChanged();
+				tvp.redrawTable();
 			}
 		}
 	}
@@ -992,25 +1229,142 @@ public class TableRowPainted
 		return true;
 	}
 
+
+	@Override
+	public Color getForeground() {
+		if ( colorFG != null ){
+			
+			return( colorFG );
+		}
+		
+		List<Object[]> list = FGRequesters.getList();
+		
+		if ( !list.isEmpty()){
+			
+			return((Color)list.get(0)[1]);
+		}
+		
+		return( null );
+	}
+
+	@Override
+	public Color 
+	getBackground() 
+	{
+		List<Object[]> list = BGRequesters.getList();
+		
+		if ( !list.isEmpty()){
+			
+			return((Color)list.get(0)[1]);
+		}
+		
+		return( null );	
+	}
+
+	@Override
+	public void 
+	requestForegroundColor(
+		ColorRequester 	requester,
+		Color			color )
+	{
+		requestColor( FGRequesters, requester, color );
+	}
+	
+	@Override
+	public void 
+	requestBackgroundColor(
+		ColorRequester	requester,
+		Color			color )
+	{
+		requestColor( BGRequesters, requester, color );
+	}
+	
+	private void
+	requestColor(
+		CopyOnWriteList<Object[]>	cow,
+		ColorRequester				requester,
+		Color						color )
+	{
+		boolean	changed = false;
+		
+		try{
+			synchronized( colorLock ){
+				
+				int index 		= 0;
+				int	insert_at	= -1;
+				
+				for ( Object[] entry: cow ){
+				
+					ColorRequester r = (ColorRequester)entry[0];
+					
+					if ( r == requester ){
+						
+						if ( color == null ){
+					
+							cow.remove( entry );
+							
+							changed = true;
+							
+						}else{
+							
+							if ( !color.equals( (Color)entry[1])){
+								
+								entry[1] = color;
+								
+								changed = true;
+							}
+						}
+						
+						return;
+					}
+					
+					if ( insert_at == -1 && r.getPriority() < requester.getPriority()){
+						
+						insert_at = index;
+					}
+					
+					index++;
+				}
+				
+				if ( color != null ){
+					
+					Object[] new_entry = { requester, color };
+					
+					if ( insert_at >= 0 ){
+						
+						cow.add( insert_at, new_entry );
+						
+					}else{
+						
+						cow.add( new_entry );
+					}
+					
+					changed = true;
+				}
+			}
+		}finally{
+			
+			if ( changed ){
+				
+				Utils.getOffOfSWTThread(new AERunnable() {
+					@Override
+					public void runSupport() {
+						redraw(false, false);
+					}
+				});
+			}
+		}
+	}
+	
+	@Override
+	public void setBackgroundImage(Image image) {
+		//TODO
+	}
+
 	@Override
 	public boolean setIconSize(Point pt) {
 		//TODO
 		return false;
-	}
-
-	@Override
-	public Color getForeground() {
-		return colorFG;
-	}
-
-	@Override
-	public Color getBackground() {
-		return null;
-	}
-
-	@Override
-	public void setBackgroundImage(Image image) {
-		//TODO
 	}
 
 	/* (non-Javadoc)
@@ -1018,7 +1372,10 @@ public class TableRowPainted
 	 */
 	@Override
 	public int getHeight() {
-		return height == 0 ? getView().getRowDefaultHeight() : height;
+		if ( isHidden ){
+			return( 0 );
+		}
+		return heightUseAccessors == 0 ? getView().getRowDefaultHeight() : heightUseAccessors;
 	}
 
 	/* (non-Javadoc)
@@ -1033,13 +1390,16 @@ public class TableRowPainted
 	}
 
 	public boolean setHeight(int newHeight, boolean trigger) {
-		if (height == newHeight) {
+		if (heightUseAccessors == newHeight) {
 			return false;
 		}
-		int oldHeight = height;
-		height = newHeight;
+		int oldHeight = heightUseAccessors;
+		heightUseAccessors = newHeight;
 		if (trigger && !initializing) {
-			heightChanged(oldHeight, newHeight);
+			int heightToReport = isHidden?0:newHeight;
+			if ( oldHeight != heightToReport ){
+				heightChanged(oldHeight, heightToReport);
+			}
 		}
 
 		return true;

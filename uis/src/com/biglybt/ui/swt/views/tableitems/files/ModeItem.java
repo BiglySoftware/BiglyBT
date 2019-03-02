@@ -58,8 +58,8 @@ public class ModeItem
     }
 
 
-    String sText =
-      MessageText.getString( value == DiskManagerFileInfo.WRITE ? "FileItem.write" : "FileItem.read" );
+    String sText = value<0?"": MessageText.getString( value == DiskManagerFileInfo.WRITE ? "FileItem.write" : "FileItem.read" );
+    
     cell.setText(sText);
   }
 }

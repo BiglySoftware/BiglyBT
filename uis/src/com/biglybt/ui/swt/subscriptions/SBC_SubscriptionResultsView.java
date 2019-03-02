@@ -33,6 +33,8 @@ import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.Subscription;
+import com.biglybt.core.subs.SubscriptionDownloadListener;
+import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionListener;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.SubscriptionResultFilter;
@@ -262,7 +264,9 @@ SBC_SubscriptionResultsView
 
 					final SubscriptionResultFilter f_filters = filters;
 
-
+					with_keywords 		= filters.getWithWords();
+					without_keywords	= filters.getWithoutWords();
+					
 					pFilterUpdater = new Runnable()
 					{
 						@Override
@@ -334,7 +338,7 @@ SBC_SubscriptionResultsView
 				final Text textWithKW = new Text(cWithKW, SWT.BORDER);
 				textWithKW.setMessage(MessageText.getString(with?"SubscriptionResults.filter.with.words":"SubscriptionResults.filter.without.words"));
 				GridData gd = new GridData();
-				gd.widthHint = Utils.adjustPXForDPI( 100 );
+				gd.widthHint = 100;
 				textWithKW.setLayoutData( gd );
 				textWithKW.addModifyListener(
 					new ModifyListener() {
@@ -367,7 +371,8 @@ SBC_SubscriptionResultsView
 					});
 			}
 
-
+			int kinb = DisplayFormatters.getKinB();
+			
 				// min size
 
 			label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
@@ -382,7 +387,7 @@ SBC_SubscriptionResultsView
 			lblMinSize.setText(MessageText.getString("SubscriptionResults.filter.min_size"));
 			Spinner spinMinSize = new Spinner(cMinSize, SWT.BORDER);
 			spinMinSize.setMinimum(0);
-			spinMinSize.setMaximum(100*1024*1024);	// 100 TB should do...
+			spinMinSize.setMaximum(100*kinb*kinb);	// 100 TB should do...
 			spinMinSize.setSelection(minSize);
 			spinMinSize.addListener(SWT.Selection, new Listener() {
 				@Override
@@ -406,7 +411,7 @@ SBC_SubscriptionResultsView
 			lblMaxSize.setText(MessageText.getString("SubscriptionResults.filter.max_size"));
 			Spinner spinMaxSize = new Spinner(cMaxSize, SWT.BORDER);
 			spinMaxSize.setMinimum(0);
-			spinMaxSize.setMaximum(100*1024*1024);	// 100 TB should do...
+			spinMaxSize.setMaximum(100*kinb*kinb);	// 100 TB should do...
 			spinMaxSize.setSelection(maxSize);
 			spinMaxSize.addListener(SWT.Selection, new Listener() {
 				@Override
@@ -446,6 +451,63 @@ SBC_SubscriptionResultsView
 						}
 					}
 				});
+				
+				label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
+				label.setLayoutData(new RowData(-1, sepHeight));
+				
+				Button more = new Button( vFilters,SWT.PUSH );
+				more.setText( MessageText.getString( "Subscription.menu.forcecheck" ));
+				more.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+
+						try{
+							more.setEnabled( false );
+							
+							ds.getManager().getScheduler().download( 
+								ds, 
+								true,
+								new SubscriptionDownloadListener(){
+									
+									public void
+									complete(
+										Subscription		subs )
+									{
+										done();
+									}
+
+									public void
+									failed(
+										Subscription			subs,
+										SubscriptionException	error )
+									{
+										done();
+									}
+									
+									private void
+									done()
+									{
+										Utils.execSWTThread(
+											new Runnable(){
+												
+												@Override
+												public void run(){
+													if ( !more.isDisposed()){
+														
+														more.setEnabled( true );
+													}
+												}
+											});
+									}
+								});
+
+						}catch( Throwable e ){
+
+							Debug.out( e );
+						}
+					}
+				});
+				
 			}
 
 			parent.layout(true);

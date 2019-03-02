@@ -2768,6 +2768,8 @@ SubscriptionManagerUI
 
 					m.setData(Boolean.valueOf(assigned_category != null && assigned_category.equals(cat.getName())));
 
+					TagUIUtils.setMenuIcon( m, cat );
+							
 					m.addListener(
 						new MenuItemListener()
 						{
@@ -2846,7 +2848,7 @@ SubscriptionManagerUI
 
 		List<Tag> tags = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags();
 
-		tags = TagUIUtils.sortTags( tags );
+		tags = TagUtils.sortTags( tags );
 
 		long	tag_id = subs.getTagID();
 
@@ -2938,6 +2940,8 @@ SubscriptionManagerUI
 
 				m.setData(Boolean.valueOf(assigned_tag == tag));
 
+				TagUIUtils.setMenuIcon( m, tag );
+				
 				m.addListener(
 					new MenuItemListener()
 					{

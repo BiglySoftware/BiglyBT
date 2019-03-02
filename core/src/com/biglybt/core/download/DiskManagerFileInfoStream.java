@@ -153,6 +153,13 @@ DiskManagerFileInfoStream
 	}
 
 	@Override
+	public long 
+	getLastModified()
+	{
+		return( 0 );
+	}
+	
+	@Override
 	public long
 	getLength()
 	{

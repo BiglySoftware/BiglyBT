@@ -32,6 +32,7 @@ import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.DirectByteBuffer;
+import com.biglybt.core.util.FileUtil;
 
 public class
 CacheFileWithoutCache
@@ -73,12 +74,13 @@ CacheFileWithoutCache
 	@Override
 	public void
 	moveFile(
-		File		new_file )
+		File						new_file,
+		FileUtil.ProgressListener	pl )
 
 		throws CacheFileManagerException
 	{
 		try{
-			file.moveFile( new_file );
+			file.moveFile( new_file, pl );
 
 		}catch( FMFileManagerException e ){
 
@@ -407,6 +409,16 @@ CacheFileWithoutCache
 		}
 	}
 
+	public void
+	flushCache(
+		long		offset,
+		int			length )
+
+		throws CacheFileManagerException
+	{
+		flushCache();
+	}
+	
 	@Override
 	public void
 	clearCache()
@@ -452,6 +464,13 @@ CacheFileWithoutCache
 		return( bytes_written );
 	}
 
+	@Override
+	public long
+	getLastModified()
+	{
+		return( file.getLastModified());
+	}
+	
 	@Override
 	public void
 	delete()

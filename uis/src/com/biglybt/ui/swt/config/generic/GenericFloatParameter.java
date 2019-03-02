@@ -18,11 +18,8 @@
 package com.biglybt.ui.swt.config.generic;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Utils;
 
@@ -35,14 +32,9 @@ public class GenericFloatParameter {
 	private GenericParameterAdapter adapter;
 	private String name;
 
-  public GenericFloatParameter(GenericParameterAdapter adapter,Composite composite, final String name) {
-    adapter.getFloatValue( name );
-    initialize(adapter,composite,name);
-  }
-
-  public GenericFloatParameter(GenericParameterAdapter adapter,Composite composite, final String name,
-                        float minValue, float maxValue, boolean allowZero,
-                        int digitsAfterDecimal) {
+	public GenericFloatParameter(GenericParameterAdapter adapter,
+			Composite composite, final String name, float minValue, float maxValue,
+			boolean allowZero, int digitsAfterDecimal) {
     adapter.getFloatValue( name );
     initialize(adapter,composite,name);
     fMinValue = minValue;
@@ -89,7 +81,7 @@ public class GenericFloatParameter {
             }
           }
           // don't inform of intermediate values as stupid to do so
-          // adapter.setFloatValue(name, val);
+          // adapter.setFloatValue(paramID, val);
         }
         catch (Exception e) {}
       }
@@ -153,8 +145,7 @@ public class GenericFloatParameter {
   }
 
   public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    inputField.setLayoutData(layoutData);
+	  inputField.setLayoutData(layoutData);
   }
 
   public Control

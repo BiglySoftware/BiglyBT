@@ -134,7 +134,6 @@ public class SWTSkinPropertiesImpl
 				result = (int) (getEmHeightPX() * em);
 			} else {
 				result = Integer.parseInt(value);
-				result = Utils.adjustPXForDPI(result);
 			}
 		} catch (NumberFormatException e) {
 			// ignore error.. it might be valid to store a non-numeric..

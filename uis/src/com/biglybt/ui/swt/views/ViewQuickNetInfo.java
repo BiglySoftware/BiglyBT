@@ -75,7 +75,7 @@ public class ViewQuickNetInfo
 
 		GridData gridData = new GridData(GridData.FILL_BOTH);
 
-		Utils.setLayoutData(composite, gridData);
+		composite.setLayoutData(gridData);
 
 		GridLayout layout = new GridLayout(4, false);
 
@@ -87,7 +87,7 @@ public class ViewQuickNetInfo
 		Messages.setLanguageText(label,"SpeedView.stats.asn");
 		asn = new BufferedLabel(composite,SWT.NONE);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(asn, gridData);
+		asn.setLayoutData(gridData);
 
 			// IP
 
@@ -95,7 +95,7 @@ public class ViewQuickNetInfo
 		Messages.setLanguageText(label,"label.current_ip");
 		current_ip = new BufferedLabel(composite,SWT.NONE);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
-		Utils.setLayoutData(current_ip, gridData);
+		current_ip.setLayoutData(gridData);
 
 
 	}

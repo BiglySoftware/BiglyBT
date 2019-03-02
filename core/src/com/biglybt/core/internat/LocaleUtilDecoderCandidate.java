@@ -89,18 +89,7 @@ LocaleUtilDecoderCandidate
 	  return( res );
 	}
 
-	/* removed as this removed valid decoders that happen to decode to the same thing for the current
-
-	public boolean equals(Object obj) {
-	  LocaleUtilDecoderCandidate other = (LocaleUtilDecoderCandidate) obj;
-
-	 if ( value == null && other.value == null ){
-		return( true );
-	 }else if ( value == null || other.value == null ){
-		return( false );
-	 }else{
-		return( value.equals( other.value ));
-	 }
+	public int getIndex() {
+		return index;
 	}
-	*/
-  }
+}

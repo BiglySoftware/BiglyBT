@@ -28,19 +28,29 @@ import java.util.List;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Display;
+
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
+import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.pif.ui.tables.TableContextMenuItem;
+import com.biglybt.pif.ui.tables.TableRow;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
-
+import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.utils.ColorCache;
 
 /** Display Category torrent belongs to.
@@ -49,7 +59,7 @@ import com.biglybt.ui.swt.utils.ColorCache;
  */
 public class TagColorsItem
        extends CoreTableColumnSWT
-       implements TableCellRefreshListener, TableCellSWTPaintListener
+       implements TableCellRefreshListener, TableCellSWTPaintListener, ParameterListener
 {
 	private static TagManager tag_manager = TagManagerFactory.getTagManager();
 
@@ -57,6 +67,12 @@ public class TagColorsItem
 
 	public static final String COLUMN_ID = "tag_colors";
 
+	private static String CFG_SHOW_DEF_COLOURS = "TagColorsItem.showdefcolours";
+	
+	private static TableRowSWT.ColorRequester	color_requester = ()-> 10;
+	
+	private static boolean show_default_colours;
+	
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
 		info.addCategories(new String[] { CAT_CONTENT });
@@ -66,8 +82,54 @@ public class TagColorsItem
 	public TagColorsItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_LEAD, 70, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
+				
+		show_default_colours	 = COConfigurationManager.getBooleanParameter(CFG_SHOW_DEF_COLOURS);
+
+		COConfigurationManager.addWeakParameterListener(this, false, CFG_SHOW_DEF_COLOURS);
+
+		
+		TableContextMenuItem menuShowIcon = addContextMenuItem(
+				"menu.show.default.colors", MENU_STYLE_HEADER);
+		menuShowIcon.setStyle(TableContextMenuItem.STYLE_CHECK);
+		menuShowIcon.addFillListener(new MenuItemFillListener() {
+			@Override
+			public void menuWillBeShown(MenuItem menu, Object data) {
+				menu.setData(Boolean.valueOf(show_default_colours));
+			}
+		});
+
+		menuShowIcon.addMultiListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				COConfigurationManager.setParameter(CFG_SHOW_DEF_COLOURS,
+						((Boolean) menu.getData()).booleanValue());
+			}
+		});
 	}
 
+	@Override
+	public void remove() {
+		super.remove();
+	}
+
+	@Override
+	public void reset() {
+		super.reset();
+
+		COConfigurationManager.removeParameter( CFG_SHOW_DEF_COLOURS );
+	}
+
+
+	@Override
+	public void parameterChanged(String parameterName) {
+		setShowDefaultColours( COConfigurationManager.getBooleanParameter(CFG_SHOW_DEF_COLOURS));
+	}
+
+	public void setShowDefaultColours(boolean b) {
+		show_default_colours = b;
+		invalidateCells();
+	}
+	
 	@Override
 	public void refresh(TableCell cell) {
 		String sTags = null;
@@ -77,18 +139,163 @@ public class TagColorsItem
 
 			if ( tags.size() > 0 ){
 
-				for ( Tag t: tags ){
+				for ( Tag tag: tags ){
 
-					String str = t.getTagName( true );
+					String str = tag.getTagName( true );
 
 					if ( sTags == null ){
 						sTags = str;
 					}else{
 						sTags += ", " + str;
 					}
+										
+	
+				}
+			}
+			
+			int[] 	row_fg_color 		= null;
+			int[] 	row_bg_color 		= null;
+			
+			long	row_fg_color_priority 	= -1;
+			long	row_fg_color_uuid		= -1;
+			
+			long	row_bg_color_priority 	= -1;
+			long	row_bg_color_uuid		= -1;
+			
+			for ( Tag tag: tags ){
+						
+				long[] colours = tag.getColors();
+				
+				if ( colours.length > 0 ){
+
+					long	priority;
+					
+					long	uuid = tag.getTagUID();
+					
+					if ( colours.length >= 3 ){
+						
+						priority = colours[2];
+						
+					}else{
+						
+						priority = uuid;
+					}
+				
+					boolean	set_fg = false;
+					boolean	set_bg = false;
+					
+					long	fg = colours[0];
+
+					if ( fg >= 0 ){
+						
+						if ( row_fg_color_priority == -1 || row_fg_color_priority < priority ){
+												
+							set_fg = true;
+							
+						}else if ( row_fg_color_priority == priority ){
+							
+							if ( row_fg_color_uuid <  uuid ){
+															
+								set_fg = true;
+							}
+						}
+					}
+					
+					long	bg = colours.length>1?colours[1]:-1;
+					
+					if ( bg >= 0 ){
+						
+						if ( row_bg_color_priority == -1 || row_bg_color_priority < priority ){
+												
+							set_bg = true;
+							
+						}else if ( row_bg_color_priority == priority ){
+							
+							if ( row_bg_color_uuid <  uuid ){
+															
+								set_bg = true;
+							}
+						}
+					}
+					
+					if ( set_fg ){
+																			
+						row_fg_color = new int[]{ (int)((fg>>16)&0x00ff), (int)((fg>>8)&0x00ff), ((int)fg&0x00ff)};
+						
+						row_fg_color_priority	= priority;
+						row_fg_color_uuid		= uuid;
+
+					}
+					
+					if ( set_bg ){
+									
+						row_bg_color = new int[]{ (int)((bg>>16)&0x00ff), (int)((bg>>8)&0x00ff), ((int)bg&0x00ff)};
+			
+						row_bg_color_priority	= priority;
+						row_bg_color_uuid		= uuid;
+					}
+				}
+			}
+			
+			TableRow row = cell.getTableRow();
+			
+			if ( row instanceof TableRowSWT ){
+						
+				boolean	missing_fg = false;
+				boolean	missing_bg = false;
+				
+				Color fg = null;
+				Color bg = null;
+				
+				if ( row_fg_color != null ){
+					
+					fg = ColorCache.getColor( null, row_fg_color );
+					
+					if ( fg == null ){
+						
+						missing_fg = true;
+					}
+				}
+
+				
+				if ( row_bg_color != null ){
+					
+					bg = ColorCache.getColor( null, row_bg_color );
+					
+					if ( bg == null ){
+						
+						missing_bg = true;
+					}
+				}
+				
+				if ( missing_fg ){
+					
+					int[] f_row_color = row_fg_color;
+					
+					Utils.execSWTThread(
+						()->{
+							((TableRowSWT)row).requestForegroundColor( color_requester, ColorCache.getColor( Display.getCurrent(), f_row_color ));
+						});
+				}else{
+				
+					((TableRowSWT)row).requestForegroundColor( color_requester, fg);
+				}
+				
+				if ( missing_bg ){
+					
+					int[] f_row_color = row_bg_color;
+					
+					Utils.execSWTThread(
+						()->{
+							((TableRowSWT)row).requestBackgroundColor( color_requester, ColorCache.getColor( Display.getCurrent(), f_row_color ));
+						});
+				}else{
+				
+					((TableRowSWT)row).requestBackgroundColor( color_requester, bg );
 				}
 			}
 		}
+		
 		cell.setSortValue( sTags );
 		cell.setToolTip((sTags == null) ? "" : sTags );
 	}
@@ -100,19 +307,23 @@ public class TagColorsItem
 
 		List<Color> colors = new ArrayList<>();
 
-
-		if (dm != null) {
+		if ( dm != null ){
 
 			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
-
+			
 			for ( Tag tag: tags ){
 
 				int[] rgb = tag.getColor();
 
-				if ( rgb != null && rgb.length == 3 ){
+				if ( rgb != null && rgb.length == 3 && ( show_default_colours || !tag.isColorDefault())){
 
-					colors.add( ColorCache.getColor( gc.getDevice(), rgb ));
-				}
+					Color color = ColorCache.getColor( gc.getDevice(), rgb );
+					
+					if ( color != null ){
+					
+						colors.add( color );
+					}
+				}						
 			}
 		}
 
@@ -165,4 +376,6 @@ public class TagColorsItem
 			}
 		}
 	}
+	
+	
 }

@@ -28,9 +28,12 @@ import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.common.table.TableView;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabFolder;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.download.DownloadManager;
@@ -44,8 +47,11 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.components.Legend;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pif.UISWTViewEventListener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
+import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
 import com.biglybt.ui.swt.views.piece.MyPieceDistributionView;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -56,10 +62,15 @@ import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.pieces.*;
 
 import com.biglybt.core.peermanager.piecepicker.PiecePicker;
+import com.biglybt.core.util.Base32;
+import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableDataSourceChangedListener;
 import com.biglybt.ui.common.table.TableLifeCycleListener;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableSelectionListener;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
@@ -81,6 +92,7 @@ public class PiecesView
 	TableDataSourceChangedListener,
 	TableLifeCycleListener,
 	TableViewSWTMenuFillListener,
+	TableSelectionListener,
 	UISWTViewCoreEventListenerEx
 {
 	private static boolean registeredCoreSubViews = false;
@@ -177,6 +189,7 @@ public class PiecesView
 		tv.addTableDataSourceChangedListener(this, true);
 		tv.addMenuFillListener(this);
 		tv.addLifeCycleListener(this);
+		tv.addSelectionListener(this, false);
 
 		return tv;
 	}
@@ -383,7 +396,7 @@ public class PiecesView
 			return;
 		}
 
-		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource );
+		DownloadManager newManager = ViewUtils.getDownloadManagerFromDataSource( newDataSource, manager );
 
 		if (newManager == manager) {
 			tv.setEnabled(manager != null);
@@ -510,6 +523,86 @@ public class PiecesView
 		}
 
 	}
+	
+	  @Override
+	  public void defaultSelected(TableRowCore[] rows, int keyMask, int origin) {
+		 
+		  if ( rows.length == 1 ){
+			  
+			PEPiece piece = (PEPiece)rows[0].getDataSource(); 
+			
+			try{
+				String dm_id = "DMDetails_" + Base32.encode( manager.getTorrent().getHash());
+
+				MdiEntry mdi_entry = UIFunctionsManager.getUIFunctions().getMDI().getEntry( dm_id );
+
+				if ( mdi_entry != null ){
+
+					mdi_entry.setDatasource(new Object[] { manager });
+				}
+
+					// ugly hack to find other tab
+				
+				Composite main_comp = tv.getComposite();
+
+				Composite piv_comp = null;
+				
+				for ( int i=0;i<2;i++ ){
+					
+					Composite comp = i==0?main_comp:piv_comp;
+					
+					while( comp != null ){
+	
+						if ( piv_comp == null ){
+						
+							piv_comp = (Composite)comp.getData( PieceInfoView.KEY_INSTANCE );
+						}
+						
+						if ( comp instanceof CTabFolder ){
+	
+							CTabFolder tf = (CTabFolder)comp;
+	
+							CTabItem[] items = tf.getItems();
+	
+							for ( CTabItem item: items ){
+	
+								UISWTViewCore view = (UISWTViewCore)item.getData("TabbedEntry");
+	
+								UISWTViewEventListener listener = view.getEventListener();
+	
+								if ( listener instanceof UISWTViewEventListenerHolder ){
+	
+									listener = ((UISWTViewEventListenerHolder)listener).getDelegatedEventListener( view );
+								}
+	
+								if ( listener instanceof PieceInfoView ){
+	
+									tf.setSelection( item );
+	
+									Event ev = new Event();
+	
+									ev.item = item;
+	
+										// manual setSelection doesn't file selection event - derp
+	
+									tf.notifyListeners( SWT.Selection, ev );
+	
+									((PieceInfoView)listener).selectPiece( piece );
+	
+									return;
+								}
+							}
+						}
+	
+						comp = comp.getParent();
+					}
+					
+				}
+			}catch( Throwable e ){
+
+			}
+		  }
+	  }
 
 	/**
 	 * @return the manager
@@ -518,6 +611,65 @@ public class PiecesView
 		return manager;
 	}
 
+	protected void
+	updateSelectedContent()
+	{
+		Object[] dataSources = tv.getSelectedDataSources(true);
+
+		if ( dataSources.length == 0 ){
+
+	      	String id = "DMDetails_Pieces";
+	      	
+	      	if (manager != null) {
+	      		if (manager.getTorrent() != null) {
+	      			id += "." + manager.getInternalName();
+	      		} else {
+	      			id += ":" + manager.getSize();
+	      		}
+	      		SelectedContentManager.changeCurrentlySelectedContent(id,
+	      				new SelectedContent[] {
+	      						new SelectedContent(manager)
+	      		});
+	      	} else {
+	      		SelectedContentManager.changeCurrentlySelectedContent(id, null);
+	      	}
+		}else{
+			
+			SelectedContent[] sc = new SelectedContent[dataSources.length];
+			
+			for ( int i=0;i<sc.length;i++){
+				
+				sc[i] = new SelectedContent();
+			}
+			
+			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(),
+					sc, tv);
+		}
+
+	}
+	
+	@Override
+	public void deselected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+
+	@Override
+	public void focusChanged(TableRowCore focus) {
+	}
+
+	@Override
+	public void selected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+	
+	@Override
+	public void mouseEnter(TableRowCore row){
+	}
+
+	@Override
+	public void mouseExit(TableRowCore row){
+	}
+	
 	@Override
 	public boolean eventOccurred(UISWTViewEvent event) {
 	    switch (event.getType()) {
@@ -532,24 +684,11 @@ public class PiecesView
 	    	  break;
 	      }
 	      case UISWTViewEvent.TYPE_FOCUSGAINED:
-	      	String id = "DMDetails_Pieces";
 
 	      	setFocused( true );	// do this here to pick up corrent manager before rest of code
 
-	      	if (manager != null) {
-	      		if (manager.getTorrent() != null) {
-	  					id += "." + manager.getInternalName();
-	      		} else {
-	      			id += ":" + manager.getSize();
-	      		}
-						SelectedContentManager.changeCurrentlySelectedContent(id,
-								new SelectedContent[] {
-									new SelectedContent(manager)
-						});
-					} else {
-						SelectedContentManager.changeCurrentlySelectedContent(id, null);
-					}
-
+	      	updateSelectedContent();
+	      	
 		    break;
 	      case UISWTViewEvent.TYPE_FOCUSLOST:
 	    	  setFocused( false );

@@ -24,6 +24,8 @@ import java.util.*;
 
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.tag.TagManager;
@@ -39,6 +41,7 @@ import com.biglybt.pif.PluginListener;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.*;
 import com.biglybt.pif.logging.LoggerChannel;
+import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
@@ -502,6 +505,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		configModel.addIntParameter2("StartStopManager_Downloading_iSortType",
 				"ConfigView.label.downloading.autoReposition", DefaultRankCalculator.DOWNLOAD_ORDER_INDEX );
 
+		configModel.addBooleanParameter2("StartStopManager_bAddForDownloadingSR1",
+				"ConfigView.label.downloading.addsr1", true);
+		
 		configModel.addIntParameter2("StartStopManager_Downloading_iTestTimeSecs",
 				PREFIX_RES + "testTime", 120 );
 
@@ -662,6 +668,19 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			}
 		}
 	}
+	
+	private class StartStopDownloadStateAttributeListener implements DownloadManagerStateAttributeListener
+	{
+		@Override
+		public void attributeEventOccurred(com.biglybt.core.download.DownloadManager download, String attribute,
+				int event_type){
+			DefaultRankCalculator dlData = downloadDataMap.get(PluginCoreUtils.wrap( download ));
+			
+			if ( dlData != null ){
+				requestProcessCycle( dlData );
+			}
+		}
+	}
 
 	/** Update SeedingRank when a new scrape result comes in.
 	 */
@@ -748,10 +767,13 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 		private DownloadActivationListener download_activation_listener;
 
+		private StartStopDownloadStateAttributeListener download_state_attribute_listener;
+		
 		public StartStopDMListener() {
 			download_tracker_listener = new StartStopDMTrackerListener();
 			download_listener = new StartStopDownloadListener();
 			download_activation_listener = new StartStopDownloadActivationListener();
+			download_state_attribute_listener = new StartStopDownloadStateAttributeListener();
 		}
 
 		@Override
@@ -767,6 +789,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				download.addListener(download_listener);
 				download.addTrackerListener(download_tracker_listener, false);
 				download.addActivationListener(download_activation_listener);
+				
+				dlData.getCoreDownloadObject().getDownloadState().addListener(
+						download_state_attribute_listener, DownloadManagerState.AT_TRANSIENT_FLAGS, DownloadManagerStateAttributeListener.WRITTEN );
 			}
 
 			if (dlData != null) {
@@ -785,7 +810,11 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			download.removeActivationListener(download_activation_listener);
 
 			DefaultRankCalculator dlData = downloadDataMap.remove( download );
+			
 			if ( dlData != null ) {
+				dlData.getCoreDownloadObject().getDownloadState().removeListener(
+						download_state_attribute_listener, DownloadManagerState.AT_TRANSIENT_FLAGS, DownloadManagerStateAttributeListener.WRITTEN );
+
 				sortedArrayCache = null;
 				dlData.destroy();
 			}
@@ -1287,7 +1316,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 					boolean bScrapeOk = true;
 					if (!bOkToStartSeeding) {
 						bScrapeOk = scrapeResultOk(download);
-						if (calcSeedsNoUs(download,download.getAggregatedScrapeResult()) == 0 && bScrapeOk)
+						if (calcSeedsNoUs(download,download.getAggregatedScrapeResult( false )) == 0 && bScrapeOk)
 							bOkToStartSeeding = true;
 						else if ((download.getSeedingRank() > 0)
 								&& (state == Download.ST_QUEUED || state == Download.ST_READY)
@@ -1687,7 +1716,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			return;
 
-		}else if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT ){
+		}else if ( 	iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT || 
+					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SEED_COUNT){
 
 			Collections.sort(
 				downloads,
@@ -1699,8 +1729,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						DefaultRankCalculator d1,
 						DefaultRankCalculator d2)
 					{
-						DownloadScrapeResult s1 = d1.getDownloadObject().getAggregatedScrapeResult();
-						DownloadScrapeResult s2 = d2.getDownloadObject().getAggregatedScrapeResult();
+						DownloadScrapeResult s1 = d1.getDownloadObject().getAggregatedScrapeResult( true );
+						DownloadScrapeResult s2 = d2.getDownloadObject().getAggregatedScrapeResult( true );
 
 						int result = s2.getSeedCount() - s1.getSeedCount();
 
@@ -1708,8 +1738,15 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 							result = s2.getNonSeedCount() - s1.getNonSeedCount();
 						}
+						
+						if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT ){
 
-						return( result );
+							return( result );
+							
+						}else{
+							
+							return( -result );
+						}
 					}
 				});
 
@@ -1719,6 +1756,44 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 				if ( drc.dl.getPosition() != (i+1)){
 
+					drc.dl.moveTo( i+1 );
+				}
+			}
+		}else if ( 	iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SIZE || 
+					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SIZE){
+
+			Collections.sort(
+				downloads,
+				new Comparator<DefaultRankCalculator>()
+				{
+					@Override
+					public int
+					compare(
+						DefaultRankCalculator d1,
+						DefaultRankCalculator d2)
+					{
+						long l1 = d1.getCoreDownloadObject().getStats().getSizeExcludingDND();
+						long l2 = d2.getCoreDownloadObject().getStats().getSizeExcludingDND();
+	
+						int result = Long.compare( l2, l1 );
+						
+						if ( iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SIZE ){
+	
+							return( result );
+							
+						}else{
+							
+							return( -result );
+						}
+					}
+				});
+	
+			for ( int i=0;i<downloads.size();i++){
+	
+				DefaultRankCalculator drc = downloads.get(i);
+	
+				if ( drc.dl.getPosition() != (i+1)){
+	
 					drc.dl.moveTo( i+1 );
 				}
 			}
@@ -2677,7 +2752,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	}
 
 	private boolean scrapeResultOk(Download download) {
-		DownloadScrapeResult sr = download.getAggregatedScrapeResult();
+		DownloadScrapeResult sr = download.getAggregatedScrapeResult( false );
 		return (sr.getResponseType() == DownloadScrapeResult.RT_SUCCESS);
 	}
 
@@ -2761,11 +2836,16 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			
 			if ( is_fp ){
 				
-				fp_tag.addTaggable( dm );
+				if ( !fp_tag.hasTaggable( dm )){
 				
+					fp_tag.addTaggable( dm );
+				}
 			}else{
 				
-				fp_tag.removeTaggable( dm );
+				if ( fp_tag.hasTaggable( dm )){
+				
+					fp_tag.removeTaggable( dm );
+				}
 			}
 		}
 	}

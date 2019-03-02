@@ -1,7 +1,5 @@
-/*
- * Created on Oct 21, 2010
- *
- * Copyright (C) Azureus Software, Inc, All Rights Reserved.
+/* *
+ * Copyright (C) Bigly Software, Inc, All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1492,6 +1490,8 @@ public class SB_Dashboard
 		
 		g.setLayout( new GridLayout());
 
+		g.setData( Utils.RELAYOUT_UP_STOP_HERE, true );
+		
 		try {
 			if ( g instanceof Group ){
 				
@@ -1561,31 +1561,8 @@ public class SB_Dashboard
 					
 					@Override
 					public void widgetSelected(SelectionEvent arg0){
-						SkinnedDialog skinnedDialog =
-								new SkinnedDialog(
-										"skin3_dlg_sidebar_popout",
-										"shell",
-										null,	// standalone
-										SWT.RESIZE | SWT.MAX | SWT.DIALOG_TRIM);
-	
-						SWTSkin skin = skinnedDialog.getSkin();
-	
-						SWTSkinObjectContainer cont = 
-							BaseMdiEntry.importStandAlone(
-								(SWTSkinObjectContainer)skin.getSkinObject( "content-area" ), 
-								item.getState(),
-								null );
-	
-						if ( cont != null ){
-	
-							skinnedDialog.setTitle( item.getTitle());
-	
-							skinnedDialog.open();
-	
-						}else{
-	
-							skinnedDialog.close();
-						}
+						
+						BaseMdiEntry.popoutStandAlone( item.getTitle(), item.getState(), null );
 					}
 				});
 			

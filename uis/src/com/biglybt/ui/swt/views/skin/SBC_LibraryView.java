@@ -40,6 +40,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagGroup;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
@@ -324,7 +325,12 @@ public class SBC_LibraryView
 
 												if ( viewMode == provider.view_mode && provider.enabled ){
 
-													MainMDISetup.getSb_transfers().triggerCountRefreshListeners();
+													SB_Transfers xfers = MainMDISetup.getSb_transfers();
+													
+													if ( xfers != null ){
+														
+														xfers.triggerCountRefreshListeners();
+													}
 												}
 											}
 										}
@@ -438,6 +444,17 @@ public class SBC_LibraryView
 										s += " - " + desc;
 									}
 
+								}else if (datasource instanceof TagGroup ) {
+									
+									String id = "library.taggroup.header";
+
+									TagGroup tg = (TagGroup)datasource;
+									
+									s = MessageText.getString(id,
+											new String[] {
+												tg.getName(),
+												String.valueOf( tg.getTags().size())});
+									
 								} else {
 									String id = "library.all.header";
 									if (stats.numComplete + stats.numIncomplete != 1) {

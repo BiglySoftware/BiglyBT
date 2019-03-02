@@ -17,8 +17,6 @@
 
 package com.biglybt.pifimpl.local.ui.tables;
 
-
-import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.ui.UIRuntimeException;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;

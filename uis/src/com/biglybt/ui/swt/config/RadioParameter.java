@@ -17,16 +17,13 @@
  */
 package com.biglybt.ui.swt.config;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import com.biglybt.core.config.*;
-import com.biglybt.ui.swt.Utils;
+import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.config.COConfigurationManager;
 
 /**
  * @author TuxPaper
@@ -71,11 +68,10 @@ public class RadioParameter extends Parameter{
     });
   }
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-    radioButton.setLayoutData(layoutData);
-  }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		radioButton.setLayoutData(layoutData);
+	 }
 
   public void setAdditionalActionPerformer(IAdditionalActionPerformer actionPerformer) {
     performers.add(actionPerformer);

@@ -217,8 +217,7 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 
     final InetSocketAddress	address = protocol_endpoint.getAddress();
 
-    if ( !address.equals( ProxyLoginHandler.DEFAULT_SOCKS_SERVER_ADDRESS )){
-
+    if ( !ProxyLoginHandler.isDefaultProxy( address )){
 
     			// see if a plugin can handle this connection
 
@@ -260,6 +259,24 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 		}
     }
 
+    
+    InetSocketAddress to_connect;
+
+    PluginProxy pp = plugin_proxy;
+
+    if ( is_socks ){
+
+    	to_connect = ProxyLoginHandler.getProxyAddress( address );
+
+    }else if ( pp != null ){
+
+    	to_connect = (InetSocketAddress)pp.getProxy().address();
+
+    }else{
+
+    	to_connect = address;
+    }
+    
     final TCPTransportImpl transport_instance = this;
 
 
@@ -316,7 +333,7 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
         			close( "Proxy login failed" );
         			listener.connectFailure( failure_msg );
         		}
-        	});
+        	}, to_connect );
         }else if ( pp != null ){
 
            	if (Logger.isEnabled()){
@@ -368,8 +385,7 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
 
         				listener.connectFailure( failure_msg );
         			}
-        		},
-        		"V4a", "", "" );
+        		});
 
         }else {  //direct connection established, notify
         	handleCrypto( address, channel, initial_data, priority, listener );
@@ -379,29 +395,18 @@ public class TCPTransportImpl extends TransportImpl implements Transport {
       @Override
       public void connectFailure(Throwable failure_msg ) {
         connect_request_key = null;
+        
+        if ( is_socks ){
+        	
+        	ProxyLoginHandler.proxyFailed( to_connect, failure_msg );
+        }
+        
         setConnectResult( false );
         listener.connectFailure( failure_msg );
       }
     };
 
     connect_request_key = connect_listener;
-
-    InetSocketAddress to_connect;
-
-    PluginProxy pp = plugin_proxy;
-
-    if ( is_socks ){
-
-    	to_connect = ProxyLoginHandler.getProxyAddress( address );
-
-    }else if ( pp != null ){
-
-    	to_connect = (InetSocketAddress)pp.getProxy().address();
-
-    }else{
-
-    	to_connect = address;
-    }
 
     TCPNetworkManager.getSingleton().getConnectDisconnectManager().requestNewConnection( to_connect, connect_listener, priority );
   }

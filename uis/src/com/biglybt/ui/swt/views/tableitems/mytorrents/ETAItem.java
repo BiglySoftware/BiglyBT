@@ -30,7 +30,6 @@ import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
-import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.ViewUtils;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 

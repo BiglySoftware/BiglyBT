@@ -62,5 +62,5 @@ PEPeerManagerListener
 
   public void pieceCorrupted( PEPeerManager manager, int piece_number );
 
-  public void destroyed();
+  public void destroyed( PEPeerManager manager );
 }

@@ -65,8 +65,6 @@ DHTUDPPacketRequestKeyBlock
 
 		key_block_request 	= DHTUDPUtils.deserialiseByteArray( is, 255 );
 		key_block_signature = DHTUDPUtils.deserialiseByteArray( is, 65535 );
-
-		super.postDeserialise(is);
 	}
 
 	@Override
@@ -82,8 +80,6 @@ DHTUDPPacketRequestKeyBlock
 
 		DHTUDPUtils.serialiseByteArray( os, key_block_request, 255 );
 		DHTUDPUtils.serialiseByteArray( os, key_block_signature , 65535);
-
-		super.postSerialise( os );
 	}
 
 	public void

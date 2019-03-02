@@ -28,7 +28,6 @@ import com.biglybt.pif.ui.components.UIComponent;
 import com.biglybt.pif.ui.components.UIPropertyChangeEvent;
 import com.biglybt.pif.ui.components.UIPropertyChangeListener;
 import com.biglybt.pifimpl.local.ui.config.UITextAreaImpl;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 
 
@@ -110,7 +109,6 @@ TextAreaParameter
 			}
 		}
 
-  	Utils.adjustPXForDPI(layoutData);
 		text_area.setLayoutData(layoutData);
 	}
 

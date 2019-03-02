@@ -25,8 +25,10 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.pif.sharing.ShareException;
@@ -41,6 +43,10 @@ import com.biglybt.core.history.DownloadHistoryEvent;
 import com.biglybt.core.history.DownloadHistoryListener;
 import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tracker.AllTrackersManager;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackers;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackersEvent;
+import com.biglybt.core.tracker.AllTrackersManager.AllTrackersListener;
 import com.biglybt.core.tracker.host.TRHost;
 import com.biglybt.core.tracker.host.TRHostListener;
 import com.biglybt.core.tracker.host.TRHostTorrent;
@@ -93,6 +99,46 @@ public class MainMDISetup
 	private static ShareManagerListener shareManagerListener;
 	private static SB_Vuze sb_vuze;
 
+	public static Set<String>	hiddenTopLevelIDs = new HashSet<>();
+	
+	private static String[] preferredOrder = MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT;
+
+	static{
+		String order = COConfigurationManager.getStringParameter( "Side Bar Top Level Order", "" ).trim();
+		
+		if ( !order.isEmpty()){
+		
+			hiddenTopLevelIDs.addAll( Arrays.asList( preferredOrder ));
+			
+			List<String> newOrder = new ArrayList<>();
+			
+			String[] bits = order.split( "," );
+			
+			for ( String bit: bits ){
+				bit = bit.trim();
+				if ( bit.isEmpty()){
+					continue;
+				}
+				
+				try{
+					int pos = Integer.parseInt( bit );
+					
+					String id = preferredOrder[pos-1];
+					
+					if ( hiddenTopLevelIDs.remove( id )){
+						
+						newOrder.add( id );
+					}
+				}catch( Throwable e ){
+					
+				}
+			}
+			
+			preferredOrder = newOrder.toArray( new String[newOrder.size()]);
+		}
+	}
+
+	
 	public static void setupSideBar(final MultipleDocumentInterfaceSWT mdi,
 	                                final MdiListener l) {
 		if (Utils.isAZ2UI()) {
@@ -405,6 +451,8 @@ public class MainMDISetup
 									DownloadStubEvent event )
 								{
 									ViewTitleInfoManager.refreshTitleInfo( title_info );
+									
+									entry.redraw();
 								}
 							};
 
@@ -593,6 +641,71 @@ public class MainMDISetup
 						return entry;
 					}
 				});
+		
+		// all trackers
+
+	mdi.registerEntry(MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS,
+			new MdiEntryCreationListener() {
+				@Override
+				public MdiEntry createMDiEntry(String id) {
+
+					AllTrackers	all_trackers = AllTrackersManager.getAllTrackers();
+					
+					final ViewTitleInfo title_info =
+						new ViewTitleInfo()
+						{
+							@Override
+							public Object
+							getTitleInfoProperty(
+								int propertyID)
+							{
+								if ( propertyID == TITLE_INDICATOR_TEXT ){
+
+									return( String.valueOf( all_trackers.getTrackerCount()));
+								}
+
+								return null;
+							}
+						};
+
+					MdiEntry entry = mdi.createEntryFromSkinRef(
+							MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+							MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS, "alltrackersview",
+							"{mdi.entry.alltrackersview}",
+							title_info, null, true, null);
+
+					entry.setImageLeftID("image.sidebar.alltrackers");
+
+					AllTrackersListener at_listener =
+							new AllTrackersListener()
+							{
+								@Override
+								public void trackerEventOccurred(AllTrackersEvent event)
+								{
+									if ( event.getEventType() != AllTrackersEvent.ET_TRACKER_UPDATED ){
+									
+										ViewTitleInfoManager.refreshTitleInfo( title_info );
+									}
+								}
+							};
+
+					all_trackers.addListener( at_listener, false );
+
+					entry.addListener(
+						new MdiCloseListener() {
+
+							@Override
+							public void
+							mdiEntryClosed(
+								MdiEntry entry, boolean userClosed)
+							{
+								all_trackers.removeListener( at_listener );
+							}
+						});
+
+					return entry;
+				}
+			});
 
 			// torrent options
 
@@ -677,7 +790,7 @@ public class MainMDISetup
 							MdiEntry entry = ((MultipleDocumentInterfaceSWT) mdi).createEntryFromEventListener(
 									MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
 									ConfigView.class,
-									MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, true, null,
+									MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG, true, section,
 									null);
 
 							entry.setImageLeftID( "image.sidebar.config" );
@@ -691,77 +804,92 @@ public class MainMDISetup
 				});
 
 		try {
-			final ShareManager share_manager = pi.getShareManager();
-			if (share_manager.getShares().length > 0) {
-				mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES);
-			} else {
-				shareManagerListener = new ShareManagerListener() {
-
-					@Override
-					public void resourceModified(ShareResource old_resource,
-					                             ShareResource new_resource) {
-					}
-
-					@Override
-					public void resourceDeleted(ShareResource resource) {
-					}
-
-					@Override
-					public void resourceAdded(ShareResource resource) {
-						share_manager.removeListener(this);
-						mdi.loadEntryByID(
-								MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES, false);
-					}
-
-					@Override
-					public void reportProgress(int percent_complete) {
-					}
-
-					@Override
-					public void reportCurrentTask(String task_description) {
-					}
-				};
-				share_manager.addListener(shareManagerListener);
+			if ( !COConfigurationManager.getBooleanParameter( "my.shares.view.auto.open.done", false )){
+				
+				final ShareManager share_manager = pi.getShareManager();
+				if (share_manager.getShares().length > 0) {
+					// stop showing this by default
+					// mdi.showEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES);
+				} else {
+					shareManagerListener = new ShareManagerListener() {
+						boolean done = false;
+						@Override
+						public void resourceModified(ShareResource old_resource,
+						                             ShareResource new_resource) {
+						}
+	
+						@Override
+						public void resourceDeleted(ShareResource resource) {
+						}
+	
+						@Override
+						public void resourceAdded(ShareResource resource) {
+							if (done) {
+								return;
+							}
+							done = true;
+							share_manager.removeListener(this);
+							
+							COConfigurationManager.setParameter( "my.shares.view.auto.open.done", true );
+							
+							mdi.loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES, false);
+						}
+	
+						@Override
+						public void reportProgress(int percent_complete) {
+						}
+	
+						@Override
+						public void reportCurrentTask(String task_description) {
+						}
+					};
+					share_manager.addListener(shareManagerListener);
+				}
 			}
-
-
 		} catch (Throwable t) {
 		}
 
-		// Load Tracker View on first host of file
-		TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
-		trackerHostListener = new TRHostListener() {
-			boolean done = false;
-
-			@Override
-			public void torrentRemoved(TRHostTorrent t) {
-			}
-
-			@Override
-			public void torrentChanged(TRHostTorrent t) {
-			}
-
-			@Override
-			public void torrentAdded(TRHostTorrent t) {
-				if (done) {
-					return;
-				}
+		try{
+			if ( !COConfigurationManager.getBooleanParameter( "my.tracker.view.auto.open.done", false )){
+	
+				// Load Tracker View on first host of file
 				TRHost trackerHost = CoreFactory.getSingleton().getTrackerHost();
-				trackerHost.removeListener(this);
-				done = true;
-				mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER,
-						false);
+				trackerHostListener = new TRHostListener() {
+					boolean done = false;
+		
+					@Override
+					public void torrentRemoved(TRHostTorrent t) {
+					}
+		
+					@Override
+					public void torrentChanged(TRHostTorrent t) {
+					}
+		
+					@Override
+					public void torrentAdded(TRHostTorrent t) {
+						if (done) {
+							return;
+						}
+						done = true;
+						trackerHost.removeListener(this);
+						
+						COConfigurationManager.setParameter( "my.tracker.view.auto.open.done", true );
+						
+						mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER,	false);
+					}
+		
+					@Override
+					public boolean handleExternalRequest(InetSocketAddress client_address,
+					                                     String user, String url, URL absolute_url, String header, InputStream is,
+					                                     OutputStream os, AsyncController async)
+							throws IOException {
+						return false;
+					}
+				};
+				trackerHost.addListener(trackerHostListener);
 			}
-
-			@Override
-			public boolean handleExternalRequest(InetSocketAddress client_address,
-			                                     String user, String url, URL absolute_url, String header, InputStream is,
-			                                     OutputStream os, AsyncController async)
-					throws IOException {
-				return false;
-			}
-		};
-		trackerHost.addListener(trackerHostListener);
+		} catch (Throwable t) {
+		}
 
 		UIManager uim = pi.getUIManager();
 		if (uim != null) {
@@ -819,6 +947,18 @@ public class MainMDISetup
 							MultipleDocumentInterface.SIDEBAR_SECTION_DOWNLOAD_HISTORY );
 				}
 			});
+			
+			menuItem = uim.getMenuManager().addMenuItem(
+					MenuManager.MENU_MENUBAR, "alltrackersview.view.heading");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+			menuItem.addListener(new MenuItemListener() {
+				@Override
+				public void selected(MenuItem menu, Object target) {
+					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID(
+							MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS );
+				}
+			});
+
 		}
 
 		//		System.out.println("Activate sidebar " + startTab + " took "
@@ -892,16 +1032,7 @@ public class MainMDISetup
 	}
 
 	private static void setupSidebarVuzeUI(final MultipleDocumentInterfaceSWT mdi) {
-		MdiEntry entry;
-
-		String[] preferredOrder = new String[] {
-			MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,
-			MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-			MultipleDocumentInterface.SIDEBAR_HEADER_VUZE,
-			MultipleDocumentInterface.SIDEBAR_HEADER_DISCOVERY,
-			MultipleDocumentInterface.SIDEBAR_HEADER_DEVICES,
-			MultipleDocumentInterface.SIDEBAR_HEADER_PLUGINS,
-		};
+		
 		mdi.setPreferredOrder(preferredOrder);
 
 		sb_dashboard = new SB_Dashboard(mdi);
@@ -973,16 +1104,22 @@ public class MainMDISetup
 
 		sb_transfers = new SB_Transfers(mdi, true);
 		sb_vuze = new SB_Vuze(mdi);
+		
 		new SB_Discovery(mdi);
 
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD,false);
 		
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY, false);
-		mdi.loadEntryByID(
-				MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED, false);
-		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS,
-				false);
+		
+		if ( COConfigurationManager.getBooleanParameter( "Show New In Side Bar" )){
+		
+			mdi.loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED, false);
+		}
+		
+		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_SUBSCRIPTIONS, false);
+		
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_DEVICES, false);
+		
 		mdi.loadEntryByID(MultipleDocumentInterface.SIDEBAR_SECTION_ACTIVITIES, false);
 	}
 

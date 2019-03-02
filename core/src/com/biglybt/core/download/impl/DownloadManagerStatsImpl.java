@@ -96,9 +96,9 @@ DownloadManagerStatsImpl
 
 	private static final int HISTORY_MAX_SECS = 30*60;
 	private volatile boolean history_retention_required;
-	private long[]	history;
-	private int		history_pos;
-	private boolean	history_wrapped;
+	private long[][]	history;
+	private int			history_pos;
+	private boolean		history_wrapped;
 
 	private int	last_sr_progress = -1;
 
@@ -481,8 +481,12 @@ DownloadManagerStatsImpl
 	{
 		boolean running = download_manager.getPeerManager() != null;
 
+		boolean forced = false;
+		
 		if ( running ){
 
+			forced = download_manager.isForceStart();
+			
 			download_manager.stopIt( DownloadManager.STATE_STOPPED, false, false );
 		}
 
@@ -507,6 +511,11 @@ DownloadManagerStatsImpl
 		if ( running ){
 
 			download_manager.setStateWaiting();
+			
+			if ( forced ){
+				
+				download_manager.setForceStart( true );
+			}
 		}
 	}
 
@@ -567,7 +576,7 @@ DownloadManagerStatsImpl
 
 				if ( !history_retention_required ){
 
-					history 	= new long[HISTORY_MAX_SECS];
+					history 	= new long[HISTORY_MAX_SECS][2];
 
 					history_pos	= 0;
 
@@ -582,7 +591,8 @@ DownloadManagerStatsImpl
 		}
 	}
 
-	private static final int HISTORY_DIV = 64;
+	private static final int HISTORY_RATE_DIV = 64;
+	private static final int HISTORY_TIME_DIV = 60;
 
 	@Override
 	public int[][]
@@ -592,14 +602,14 @@ DownloadManagerStatsImpl
 
 			if ( history == null ){
 
-				return( new int[3][0] );
+				return( new int[4][0] );
 
 			}else{
 
 				int	entries = history_wrapped?HISTORY_MAX_SECS:history_pos;
 				int	start	= history_wrapped?history_pos:0;
 
-				int[][] result = new int[3][entries];
+				int[][] result = new int[4][entries];
 
 				int	pos = start;
 
@@ -610,15 +620,19 @@ DownloadManagerStatsImpl
 						pos = 0;
 					}
 
-					long entry = history[pos++];
+					long entry1 = history[pos][0];
+					long entry2 = history[pos++][1];
 
-					int	send_rate 	= (int)((entry>>42)&0x001fffffL);
-					int	recv_rate 	= (int)((entry>>21)&0x001fffffL);
-					int	swarm_rate 	= (int)((entry)&0x001fffffL);
+					int	send_rate 	= (int)((entry1>>42)&0x001fffffL);
+					int	recv_rate 	= (int)((entry1>>21)&0x001fffffL);
+					int	swarm_rate 	= (int)((entry1)&0x001fffffL);
 
-					result[0][i] = send_rate*HISTORY_DIV;
-					result[1][i] = recv_rate*HISTORY_DIV;
-					result[2][i] = swarm_rate*HISTORY_DIV;
+					int	eta 	= (int)((entry2)&0x001fffffL);
+
+					result[0][i] = send_rate*HISTORY_RATE_DIV;
+					result[1][i] = recv_rate*HISTORY_RATE_DIV;
+					result[2][i] = swarm_rate*HISTORY_RATE_DIV;
+					result[3][i] = eta*HISTORY_TIME_DIV;
 				}
 
 				return( result );
@@ -693,17 +707,22 @@ DownloadManagerStatsImpl
 		long receive_rate 		= stats.getDataReceiveRate() + stats.getProtocolReceiveRate();
 		long peer_swarm_average = getTotalAveragePerPeer();
 
-		long	entry =
-			((((send_rate-1+HISTORY_DIV/2)/HISTORY_DIV)<<42) 	&  0x7ffffc0000000000L ) |
-			((((receive_rate-1+HISTORY_DIV/2)/HISTORY_DIV)<<21)  & 0x000003ffffe00000L ) |
-			((((peer_swarm_average-1+HISTORY_DIV/2)/HISTORY_DIV))& 0x00000000001fffffL );
+		long eta	= Math.max( getETA(), 0);
+		
+		long	entry1 =
+			((((send_rate-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV)<<42) 	&  0x7ffffc0000000000L ) |
+			((((receive_rate-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV)<<21)  & 0x000003ffffe00000L ) |
+			((((peer_swarm_average-1+HISTORY_RATE_DIV/2)/HISTORY_RATE_DIV))& 0x00000000001fffffL );
 
+		long	entry2 =
+			((((eta-1+HISTORY_TIME_DIV/2)/HISTORY_TIME_DIV))& 0x00000000001fffffL );
 
 		synchronized( this ){
 
 			if ( history != null ){
 
-				history[history_pos++] = entry;
+				history[history_pos][0] 	= entry1;
+				history[history_pos++][1] 	= entry2;
 
 				if ( history_pos == HISTORY_MAX_SECS ){
 

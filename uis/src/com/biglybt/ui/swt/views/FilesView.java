@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views;
 
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -36,7 +37,9 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
+import com.biglybt.core.disk.DiskManagerFileInfoListener;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
@@ -46,20 +49,29 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.IdentityHashSet;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.ui.tables.TableRowRefreshListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.TableViewFilterCheck.TableViewFilterCheckEx;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.Messages;
@@ -67,15 +79,20 @@ import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
+import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.pifimpl.UISWTViewEventImpl;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.file.FileInfoView;
+import com.biglybt.ui.swt.views.table.TableRowSWT;
+import com.biglybt.ui.swt.views.table.TableRowSWTChildController;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
+import com.biglybt.ui.swt.views.table.utils.TableColumnSWTUtils;
 import com.biglybt.ui.swt.views.tableitems.files.*;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.AlertsItem;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
@@ -105,11 +122,13 @@ public class FilesView
     new PathItem(),
     new PathNameItem(),
     new SizeItem(),
+    new SizeBytesItem(),
     new DoneItem(),
     new PercentItem(),
     new FirstPieceItem(),
     new PieceCountItem(),
     new RemainingPiecesItem(),
+    new PiecesDoneAndCountItem(),
     new ProgressGraphItem(),
     new ModeItem(),
     new PriorityItem(),
@@ -126,6 +145,8 @@ public class FilesView
     new FileWriteSpeedItem(),
     new FileETAItem(),
     new RelocatedItem(),
+    new FileModifiedItem(),
+    new DownloadNameItem(),
   };
 
   static{
@@ -141,16 +162,19 @@ public class FilesView
   private boolean	enable_tabs = true;
 
   public boolean hide_dnd_files;
+  public boolean tree_view;
 
-	private volatile long selection_size;
-	private volatile long selection_done;
+  private volatile long selection_size;
+  private volatile long selection_size_with_dnd;
+  private volatile long selection_done;
 
   MenuItem path_item;
 
   TableViewSWT<DiskManagerFileInfo> tv;
 	private final boolean allowTabViews;
 	Button btnShowDND;
-	Label lblHeader;
+	Button btnTreeView;
+	BufferedLabel lblHeader;
 
 	private boolean	disableTableWhenEmpty	= true;
 
@@ -212,6 +236,9 @@ public class FilesView
 		if (allowTabViews) {
 	  		tv.setEnableTabViews(enable_tabs,true,null);
 		}
+		
+		tv.setExpandEnabled( true );
+		
 		basicItems = new TableColumnCore[0];
 
   		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
@@ -228,6 +255,24 @@ public class FilesView
 		tv.addLifeCycleListener(this);
 		tv.addKeyListener(this);
 
+		tv.addRefreshListener( 
+			new TableRowRefreshListener(){
+				
+				@Override
+				public void 
+				rowRefresh(TableRow row){
+					if ( row instanceof TableRowSWT ){
+						Object ds =  ((TableRowSWT)row).getDataSource( true );
+		
+						if ( ds instanceof FilesViewNodeInner ){
+							
+							((TableRowSWT)row).setFontStyle( SWT.ITALIC );
+							((TableRowSWT)row).setAlpha( 220 );
+						}
+					}
+				}
+			});
+		
 		return tv;
 	}
 
@@ -294,6 +339,8 @@ public class FilesView
 		cTop.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 		cTop.setLayout(new FormLayout());
 
+			// hide dnd
+		
 		btnShowDND = new Button(cTop, SWT.CHECK);
 		Messages.setLanguageText(btnShowDND, "FilesView.hide.dnd");
 		btnShowDND.addSelectionListener(new SelectionListener() {
@@ -311,10 +358,44 @@ public class FilesView
 
 		btnShowDND.setSelection(hide_dnd_files);
 
-		lblHeader = new Label(cTop, SWT.CENTER);
+			// tree view
+		
+		btnTreeView = new Button(cTop, SWT.CHECK);
+		Messages.setLanguageText(btnTreeView, "OpenTorrentWindow.tree.view");
+		btnTreeView.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				tree_view = btnTreeView.getSelection();
+				
+				COConfigurationManager.setParameter("FilesView.use.tree", tree_view);
+				
+				if ( tree_view ){
+					
+					TableColumnSWTUtils.changeColumnVisiblity( tv, tv.getTableColumn( "name" ), true );
+				}
+				
+				force_refresh = true;
+				
+				tableRefresh();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
+
+		tree_view = COConfigurationManager.getBooleanParameter("FilesView.use.tree");
+
+		btnTreeView.setSelection(tree_view);
+		
+			// dunno why but doesnt draw on Linux with double-buffering
+		
+		lblHeader = new BufferedLabel(cTop, SWT.CENTER | ( Constants.isLinux?0: SWT.DOUBLE_BUFFERED));
 
 		BubbleTextBox bubbleTextBox = new BubbleTextBox(cTop, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
-		bubbleTextBox.getTextWidget().setMessage(MessageText.getString("TorrentDetailsView.filter"));
+		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
+		FontUtils.fontToWidgetHeight(bubbleTextWidget);
+		bubbleTextWidget.setMessage(MessageText.getString("TorrentDetailsView.filter"));
 
 		FormData fd = Utils.getFilledFormData();
 		fd.left = null;
@@ -328,10 +409,15 @@ public class FilesView
 		fd = new FormData();
 		fd.top = new FormAttachment(bubbleTextBox.getParent(), 10, SWT.CENTER);
 		fd.left = new FormAttachment(btnShowDND, 10);
+		btnTreeView.setLayoutData(fd);
+		
+		fd = new FormData();
+		fd.top = new FormAttachment(bubbleTextBox.getParent(), 10, SWT.CENTER);
+		fd.left = new FormAttachment(btnTreeView, 10);
 		fd.right = new FormAttachment(bubbleTextBox.getParent(), -10);
 		lblHeader.setLayoutData(fd);
 
-		tv.enableFilterCheck(bubbleTextBox.getTextWidget(), this);
+		tv.enableFilterCheck(bubbleTextWidget, this, true );
 
 		Composite tableParent = new Composite(parent, SWT.NONE);
 
@@ -350,7 +436,7 @@ public class FilesView
   // @see TableDataSourceChangedListener#tableDataSourceChanged(java.lang.Object)
 	@Override
 	public void tableDataSourceChanged(Object newDataSource) {
-		List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource );
+		List<DownloadManager> newManagers = ViewUtils.getDownloadManagersFromDataSource( newDataSource, managers );
 
 		if (newManagers.size() == managers.size()){
 			boolean diff = false;
@@ -445,6 +531,59 @@ public class FilesView
 
 			tv.refilter();
 		}
+		
+		if ( tree_view ){
+			
+			file = tree_file_map.get( file.getTorrentFile());
+		}
+		
+		if ( file != null ){
+			
+			TableRowCore[] rows = tv.getVisibleRows();
+			
+			for ( TableRowCore row: rows ){
+				
+				DiskManagerFileInfo row_file = (DiskManagerFileInfo)row.getDataSource( true );
+				
+				if ( 	row_file == file || 
+						( 	row_file.getIndex() == file.getIndex() && 
+							row_file.getDownloadManager() == file.getDownloadManager())){
+				
+					while( row != null ){
+						
+						row.redraw();
+					
+						row = row.getParentRowCore();
+					}
+				}
+			}
+		}
+	}
+	
+	@Override
+	public void 
+	fileLocationChanged(
+		DownloadManager 		download, 
+		DiskManagerFileInfo 	file )
+	{
+		if ( file == null ){
+			
+			tv.columnInvalidate("path", true);
+			tv.columnInvalidate("pathname", true);
+		
+			tv.refreshTable(false);
+			
+		}else{
+			
+			TableRowCore row = tv.getRow( file );
+			
+			if ( row != null ){
+				
+				row.invalidate( true );
+				
+				row.refresh( true );
+			}
+		}
 	}
 
 	@Override
@@ -470,6 +609,13 @@ public class FilesView
 			return( true );
 		}
 
+		if ( tree_view && ds instanceof FilesViewNodeInner ){
+			
+				// don't filter intermediate tree nodes
+			
+			return( true );
+		}
+		
 		try {
 			File file = ds.getFile(true);
 
@@ -486,7 +632,7 @@ public class FilesView
 				match_result = false;
 			}
 
-			Pattern pattern = RegExUtil.getCachedPattern( "fv:search", s, Pattern.CASE_INSENSITIVE);
+			Pattern pattern = RegExUtil.getCachedPattern( "fv:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 			return( pattern.matcher(name).find() == match_result );
 
@@ -511,8 +657,9 @@ public class FilesView
 	}
 
 	public void updateSelectedContent() {
-		long	total_size 	= 0;
-		long	total_done	= 0;
+		long	total_size 			= 0;
+		long	total_dnd 			= 0;
+		long	total_done			= 0;
 
 		Object[] dataSources = tv.getSelectedDataSources(true);
 		List<SelectedContent> listSelected = new ArrayList<>(dataSources.length);
@@ -521,8 +668,9 @@ public class FilesView
 				DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) ds;
 				listSelected.add(new SelectedContent(fileInfo.getDownloadManager(),
 						fileInfo.getIndex()));
-				if ( !fileInfo.isSkipped()){
-
+				if ( fileInfo.isSkipped()){
+					total_dnd += fileInfo.getLength();
+				}else{
 					total_size 	+= fileInfo.getLength();
 					total_done	+= fileInfo.getDownloaded();
 				}
@@ -531,8 +679,9 @@ public class FilesView
 
 
 
-		selection_size	= total_size;
-		selection_done	= total_done;
+		selection_size			= total_size;
+		selection_size_with_dnd	= total_dnd + total_size;
+		selection_done			= total_done;
 
 		updateHeader();
 
@@ -544,10 +693,10 @@ public class FilesView
 
 	// @see TableSelectionListener#defaultSelected(TableRowCore[])
 	@Override
-	public void defaultSelected(TableRowCore[] rows, int stateMask) {
+	public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
 		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) tv.getFirstSelectedDataSource();
 
-		if ( fileInfo == null ){
+		if ( fileInfo == null || fileInfo.getIndex() == -1 ){
 
 			return;
 		}
@@ -564,7 +713,25 @@ public class FilesView
 
 		String mode = COConfigurationManager.getStringParameter("list.dm.dblclick");
 
+		if ( origin == 1 ){
+			String enter_mode = COConfigurationManager.getStringParameter("list.dm.enteraction");
+			if ( !enter_mode.equals( "-1" )){
+				mode = enter_mode;
+			}
+		}
+		
 		switch (mode) {
+			case "1":{
+
+				DownloadManager dm = fileInfo.getDownloadManager();
+				
+				if ( dm != null ){
+				
+					UIFunctionsManager.getUIFunctions().getMDI().showEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_DETAILS, dm );
+				}
+				
+				break;
+			}
 			case "2":
 
 				boolean openMode = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
@@ -626,17 +793,27 @@ public class FilesView
 
 			Object[] data_sources = tv.getSelectedDataSources().toArray();
 
-			DiskManagerFileInfo[] files = new DiskManagerFileInfo[data_sources.length];
+			List<DiskManagerFileInfo> files = new ArrayList<>();
 
 			for ( int i=0;i<data_sources.length;i++ ){
-				files[i] = (DiskManagerFileInfo)data_sources[i];
+				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
+				
+				if ( file instanceof FilesView.FilesViewNodeInner ){
+					continue;
+				}
+				
+				files.add( file );
 			}
 
-			FilesViewMenuUtil.fillMenu(
-				tv,
-				menu,
-				new DownloadManager[]{ managers.get(0) },
-				new DiskManagerFileInfo[][]{ files });
+			if ( !files.isEmpty()){
+				
+				FilesViewMenuUtil.fillMenu(
+					tv,
+					sColumnName,
+					menu,
+					new DownloadManager[]{ managers.get(0) },
+					new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) });
+			}
 		}else{
 
 			Object[] data_sources = tv.getSelectedDataSources().toArray();
@@ -649,6 +826,10 @@ public class FilesView
 
 				DiskManagerFileInfo file = (DiskManagerFileInfo)ds;
 
+				if ( file instanceof FilesView.FilesViewNodeInner ){
+					continue;
+				}
+				
 				DownloadManager dm = file.getDownloadManager();
 
 				List<DiskManagerFileInfo> list = map.get(dm);
@@ -676,7 +857,9 @@ public class FilesView
 				files_list[i] = list.toArray( new DiskManagerFileInfo[list.size()]);
 			}
 
-			FilesViewMenuUtil.fillMenu(tv, menu, manager_list, files_list );
+			if ( files_list.length > 0 ){
+				FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list );
+			}
 		}
 	}
 
@@ -693,64 +876,12 @@ public class FilesView
 	    if (tv.isDisposed())
 	      return;
 
-	    DiskManagerFileInfo files[] = getFileInfo();
-
-	    if (files != null && (this.force_refresh || !doAllExist(files))) {
-	    	this.force_refresh = false;
-
-	    	List<DiskManagerFileInfo> datasources = tv.getDataSources();
-	    	if(datasources.size() == files.length)
-	    	{
-	    		// check if we actually have to replace anything
-	    		ArrayList<DiskManagerFileInfo> toAdd = new ArrayList<>(Arrays.asList(files));
-		    	ArrayList<DiskManagerFileInfo> toRemove = new ArrayList<>();
-			    for (DiskManagerFileInfo info : datasources) {
-				    if (files[info.getIndex()] == info)
-					    toAdd.set(info.getIndex(), null);
-				    else
-					    toRemove.add(info);
-			    }
-		    	tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[toRemove.size()]));
-		    	tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[toAdd.size()]));
-		    	tv.tableInvalidate();
-	    	} else
-	    	{
-		    	tv.removeAllTableRows();
-
-		    	DiskManagerFileInfo filesCopy[] = new DiskManagerFileInfo[files.length];
-			    System.arraycopy(files, 0, filesCopy, 0, files.length);
-
-			    tv.addDataSources(filesCopy);
-	    	}
-
-		    tv.processDataSourceQueue();
-	    }
+	    updateTable();
+	    
   	} finally {
   		refreshing = false;
   	}
   }
-
-  /**
-	 * @since 3.0.0.7
-	 */
-	private boolean doAllExist(DiskManagerFileInfo[] files) {
-		for (DiskManagerFileInfo fileinfo : files) {
-			if (tv.isFiltered(fileinfo)) {
-				// We can't just use tv.dataSourceExists(), since it does a .equals()
-				// comparison, and we want a reference comparison
-
-				TableRowCore row = tv.getRow(fileinfo);
-				if (row == null) {
-					return false;
-				}
-				// reference comparison
-				if (row.getDataSource(true) != fileinfo) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
 
   /* SubMenu for column specific tasks.
    */
@@ -814,30 +945,6 @@ public class FilesView
 		}
 	}
 
-
-  private DiskManagerFileInfo[]
-  getFileInfo()
-  {
-	  if (managers.size() == 0 ){
-
-		  return null;
-
-	  }else if ( managers.size() == 1 ){
-
-		  return( managers.get(0).getDiskManagerFileInfoSet().getFiles());
-
-	  }else{
-
-		  List<DiskManagerFileInfo>	temp = new ArrayList<>();
-
-		  for ( DownloadManager dm: managers ){
-
-			  temp.addAll( Arrays.asList( dm.getDiskManagerFileInfoSet().getFiles()));
-		  }
-
-		  return( temp.toArray( new DiskManagerFileInfo[ temp.size()]));
-	  }
-  }
 
   // Used to notify us of when we need to refresh - normally for external changes to the
   // file links.
@@ -1001,7 +1108,7 @@ public class FilesView
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if (e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0) {
-			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), true, false);
+			FilesViewMenuUtil.rename(tv, tv.getSelectedDataSources(true), true, false,false);
 			e.doit = false;
 		}
 	}
@@ -1050,27 +1157,37 @@ public class FilesView
 			}
 			return;
 		}
-		int total = 0;
 
-		for ( DownloadManager manager: managers ){
-			total += manager.getNumFileInfos();
+		int	total_rows		= 0;
+		int	visible_rows;
+		
+		if ( tree_view ){
+			
+			int[]	nums = tv.getRowAndSubRowCount();
+			
+			total_rows 		= nums[0];
+			visible_rows	= nums[1];
+		}else{
+			for ( DownloadManager manager: managers ){
+				total_rows += manager.getNumFileInfos();
+			}
+
+			visible_rows = tv.getRowCount();
 		}
-
-		int numInList = tv.getRowCount();
-
+		
 		String s;
-
+	
 		s = MessageText.getString("library.unopened.header"
-				+ (total > 1 ? ".p" : ""), new String[] {
-					String.valueOf(total)
-				});
-		if (total != numInList) {
+				+ (total_rows > 1 ? ".p" : ""), new String[] {
+					String.valueOf(total_rows)
+					});
+		if (total_rows != visible_rows) {
 			s = MessageText.getString("v3.MainWindow.xofx", new String[] {
-				String.valueOf(numInList),
+				String.valueOf(visible_rows),
 				s
 			});
 		}
-
+		
 		s += getSelectionText();
 
 		final String sHeader = s;
@@ -1100,13 +1217,21 @@ public class FilesView
 				MessageText.getString(
 				"label.num_selected", new String[]{ String.valueOf( selection_count )});
 
-		if ( selection_size > 0 ){
+		if ( selection_size_with_dnd > 0 ){
 
-			if ( selection_size == selection_done ){
-
-				str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + ")";
+			if ( selection_size == selection_size_with_dnd ){
+				
+				if ( selection_size == selection_done ){
+	
+					str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + ")";
+					
+				}else{
+					
+					str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_done ) + "/" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + ")";
+	
+				}
 			}else{
-				str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_done ) + "/" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + ")";
+				str += " (" + DisplayFormatters.formatByteCountToKiBEtc( selection_done ) + "/" + DisplayFormatters.formatByteCountToKiBEtc( selection_size ) + "/" + DisplayFormatters.formatByteCountToKiBEtc( selection_size_with_dnd ) + ")";
 
 			}
 		}
@@ -1120,4 +1245,964 @@ public class FilesView
 	{
 		disableTableWhenEmpty	= b;
 	}
+	
+	private void
+	updateTable()
+	{
+		if ( !tree_view ){
+			
+			updateFlatView();
+			
+		}else{
+			
+			updateTreeView();
+		}
+	}
+	
+	private FilesViewNodeInner	current_root;
+	private Map<TOTorrentFile,FilesViewNodeLeaf>	tree_file_map = new IdentityHashMap<>();
+	
+	private void
+	updateTreeView()
+	{
+		int	num_managers = managers.size();
+		
+		if ( num_managers == 0 ){
+			
+			if ( tv.getRowCount() > 0 ){
+				
+				tv.removeAllTableRows();
+				
+				tv.processDataSourceQueue();
+			}
+			
+			current_root = null;
+			
+		}else if ( num_managers == 1 ){
+			
+			DownloadManager dm =  managers.get(0);
+			
+			if ( force_refresh || current_root == null || current_root.dm != dm ||  tv.getRowCount() == 0 ){
+
+				force_refresh = false;
+
+				tv.removeAllTableRows();
+
+				char file_separator = File.separatorChar;
+
+				FilesViewNodeInner root = current_root = new FilesViewNodeInner( dm, dm.getDisplayName(), null );
+
+				tree_file_map.clear();
+				
+				DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
+
+				for ( DiskManagerFileInfo file: files ){
+
+					FilesViewNodeInner node = root;
+
+					TOTorrentFile t_file = file.getTorrentFile();
+
+					String path = t_file.getRelativePath();
+
+					int	pos = 0;
+				
+
+					while( true ){
+
+						int p = path.indexOf( file_separator, pos );
+
+						String	bit;
+
+						if ( p == -1 ){
+
+							FilesViewNodeLeaf leaf = new FilesViewNodeLeaf( path, file, node );
+							
+							node.addFile( leaf );
+
+							tree_file_map.put( t_file, leaf );
+							
+							break;
+							
+						}else{
+
+							bit = path.substring( pos, p );
+
+							pos = p+1;
+						
+							FilesViewNodeInner n = (FilesViewNodeInner)node.getChild( bit );
+
+							if ( n == null ){
+	
+								n = new FilesViewNodeInner( dm, bit, node );
+	
+								node.addChild( n );
+							}
+							node = n;
+						}
+					}
+				}			
+
+				tv.addDataSource( root );
+
+				tv.processDataSourceQueueSync();
+			}
+		}else{
+			
+			if ( current_root != null ){
+				
+				Object[] kids = current_root.getChildDataSources();
+				
+				if ( kids.length != num_managers ){
+					
+					force_refresh = true;
+					
+				}else{
+					
+					Set<DownloadManager> kids_set = new IdentityHashSet<>();
+				
+					for ( Object k: kids ){
+						
+						kids_set.add(((FilesViewNodeInner)k).getDownloadManager());
+					}
+					
+					for ( int i=0;i<num_managers;i++){
+						
+						if ( !kids_set.contains( managers.get(i))){
+							
+							force_refresh = true;
+						}
+					}
+				}
+			}
+		
+			if ( force_refresh || current_root == null || tv.getRowCount() == 0 ){
+				
+				current_root = new FilesViewNodeInner( null, MessageText.getString( "label.downloads" ), null );
+				
+				tree_file_map.clear();
+				
+				force_refresh = false;
+
+				tv.removeAllTableRows();
+
+				char file_separator = File.separatorChar;
+
+				int num = 0;
+				
+				for ( DownloadManager dm: managers ){
+				
+					num++;
+					
+					FilesViewNodeInner root =  new FilesViewNodeInner( dm, "(" + num + ") " + dm.getDisplayName(), current_root );
+	
+					current_root.addChild( root );
+					
+					DiskManagerFileInfo files[] = dm.getDiskManagerFileInfoSet().getFiles();
+
+					for ( DiskManagerFileInfo file: files ){
+	
+						FilesViewNodeInner node = root;
+	
+						TOTorrentFile t_file = file.getTorrentFile();
+	
+						String path = t_file.getRelativePath();
+	
+						int	pos = 0;
+					
+	
+						while( true ){
+	
+							int p = path.indexOf( file_separator, pos );
+	
+							String	bit;
+	
+							if ( p == -1 ){
+	
+								FilesViewNodeLeaf leaf = new FilesViewNodeLeaf( path, file, node );
+								
+								node.addFile( leaf );
+	
+								tree_file_map.put( t_file, leaf );
+								
+								break;
+								
+							}else{
+	
+								bit = path.substring( pos, p );
+	
+								pos = p+1;
+							
+								FilesViewNodeInner n = (FilesViewNodeInner)node.getChild( bit );
+	
+								if ( n == null ){
+		
+									n = new FilesViewNodeInner( dm, bit, node );
+		
+									node.addChild( n );
+								}
+								node = n;
+							}
+						}
+					}			
+				}
+				
+				tv.addDataSource( current_root );
+
+				tv.processDataSourceQueueSync();
+			}
+		}
+	}
+	
+	private static Comparator tree_comp = new FormattersImpl().getAlphanumericComparator( true );
+
+	public interface
+	FilesViewTreeNode
+	{
+		public String
+		getName();
+		
+		public int
+		getDepth();
+		
+		public boolean
+		isLeaf();
+		
+		public int
+		getSkippedState();
+		
+		public void
+		setSkipped(
+			boolean		b );
+		
+		public void
+		recheck();
+		
+		public long
+		getLength();
+		
+		public long
+		getDownloaded();
+		
+		public void
+		getPieceInfo(
+			int[]	data );
+	}
+	
+	private static class
+	FilesViewNodeInner
+		implements DiskManagerFileInfo, FilesViewTreeNode, TableRowSWTChildController
+	{
+		private final DownloadManager						dm;
+		private final String								name;
+		private final FilesViewNodeInner					parent;
+		private final Map<String,FilesViewTreeNode>			kids = new TreeMap<>( tree_comp );
+		
+		private boolean				expanded	= true;
+		
+		private long	size;
+		private int[]	pieceInfo;
+		
+		private
+		FilesViewNodeInner(
+			DownloadManager			_dm,
+			String					_name,
+			FilesViewNodeInner		_parent )
+		{
+			dm		= _dm;
+			name	= _name;
+			parent	= _parent;
+		}
+		
+		@Override
+		public boolean 
+		isLeaf()
+		{
+			return( false );
+		}
+		
+		private FilesViewTreeNode
+		getChild(
+			String	name )
+		{
+			return( kids.get(name));
+		}
+
+		private void
+		addChild(
+			FilesViewNodeInner		child )
+		{
+			kids.put( child.getName(), child );
+		}
+		
+		public String
+		getName()
+		{
+			return( name );
+		}
+		
+		public boolean
+		isExpanded()
+		{
+			return( expanded );
+		}
+		
+		public void
+		setExpanded(
+			boolean	e )
+		{
+			expanded = e;
+		}
+		
+		public int
+		getDepth()
+		{
+			if ( parent == null ){
+				return( 0 );
+			}else{
+				return( parent.getDepth() + 1 );
+			}
+		}
+		
+		private void
+		addFile(
+			FilesViewNodeLeaf		f )
+		{
+			kids.put( f.getName(), f );
+		}
+		
+		public Object[]
+		getChildDataSources()
+		{
+			return( kids.values().toArray());
+		}
+		
+		public void 
+		setPriority(int p)
+		{
+		}
+
+		public void 
+		setSkipped(
+			boolean b )
+		{	
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				kid.setSkipped( b );
+			}
+		}
+
+
+		public boolean
+		setLink(
+			File	link_destination )
+		{
+			return( false );
+		}
+
+		public boolean 
+		setLinkAtomic(File link_destination)
+		{
+			return( false );
+		}
+
+		public boolean 
+		setLinkAtomic(File link_destination, FileUtil.ProgressListener pl )
+		{
+			return( false );
+		}
+
+		public File
+		getLink()
+		{
+			return( null );
+		}
+
+		public boolean 
+		setStorageType(int type )
+		{
+			return( false );
+		}
+
+		public int
+		getStorageType()
+		{
+			return( -1 );
+		}
+
+		public int 
+		getAccessMode()
+		{
+			return( -1 );
+		}
+
+		public long 
+		getDownloaded()
+		{
+			long	temp = 0;
+			
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				temp += kid.getDownloaded();
+			}
+			
+			return( temp );
+		}
+
+		public long 
+		getLastModified()
+		{
+			return( -1 );
+		}
+		
+		public String 
+		getExtension()
+		{
+			return( "" );
+		}
+
+		public int 
+		getFirstPieceNumber()
+		{
+			if ( dm == null ){
+				return( -1 );
+			}
+			
+			if ( pieceInfo == null ){
+				getPieceInfo();
+			}
+			return( pieceInfo[0] );
+		}
+
+		public int 
+		getLastPieceNumber()
+		{
+			if ( dm == null ){
+				return( -1 );
+			}
+			
+			if ( pieceInfo == null ){
+				getPieceInfo();
+			}
+			return( pieceInfo[1] );
+		}
+
+		private void
+		getPieceInfo()
+		{
+			int[] temp = { Integer.MAX_VALUE, 0 };
+			getPieceInfo(temp);
+			pieceInfo = temp;
+		}
+		
+		public void
+		getPieceInfo(
+			int[]	data )
+		{
+			for ( FilesViewTreeNode kid: kids.values()){
+				kid.getPieceInfo(data);
+			}
+		}
+		
+		public int 
+		getNbPieces()
+		{
+			if ( dm == null ){
+				return( -1 );
+			}
+			
+			return( getLastPieceNumber() - getFirstPieceNumber() + 1 );
+		}
+		
+		public long 
+		getLength()
+		{
+			if ( size == 0 ){
+			
+				long	temp = 0;
+				
+				for ( FilesViewTreeNode kid: kids.values()){
+					
+					temp += kid.getLength();
+				}
+				
+				size = temp;
+			}
+			
+			return( size );
+		}
+
+		public int 
+		getPriority()
+		{
+			return( -1 );
+		}
+
+		public boolean 
+		isSkipped()
+		{
+			return( false );
+		}
+		
+		public int
+		getSkippedState()
+		{
+			boolean	all_skipped 	= true;
+			boolean all_not_skipped	= true;
+			
+			for ( FilesViewTreeNode kid: kids.values()){
+				
+				int	state = kid.getSkippedState();
+				
+				if ( state == 0 ){
+					all_not_skipped = false;
+				}else if ( state == 1 ){
+					all_skipped = false;
+				}else{
+					return( 2 );
+				}
+			}
+			
+			if ( all_skipped ){
+				return( 0 );
+			}else if ( all_not_skipped ){
+				return(  1 );
+			}else{
+				return( 2 );
+			}
+		}
+
+		public int	
+		getIndex()
+		{
+			return( -1 );
+		}
+
+		public DownloadManager	
+		getDownloadManager()
+		{
+			return( dm );
+		}
+
+		public DiskManager 
+		getDiskManager()
+		{
+			return( dm==null?null:dm.getDiskManager());
+		}
+
+		public File 
+		getFile( boolean follow_link )
+		{
+			return( new File( name ));
+		}
+
+		public TOTorrentFile
+		getTorrentFile()
+		{
+			return( null );
+		}
+
+		public DirectByteBuffer
+		read(
+			long	offset,
+			int		length )
+
+			throws IOException
+		{
+			throw( new IOException( "Not implemented" ));
+		}
+
+		public void
+		flushCache()
+
+			throws	Exception
+		{
+		}
+
+		public int
+		getReadBytesPerSecond()
+		{
+			return( -1 );
+		}
+
+		public int
+		getWriteBytesPerSecond()
+		{
+			return( -1 );
+		}
+
+		public long
+		getETA()
+		{
+			return( -1 );
+		}
+		
+		@Override
+		public void 
+		recheck()
+		{
+		}
+
+		public void
+		close()
+		{}
+
+		public void
+		addListener(
+			DiskManagerFileInfoListener	listener )
+		{}
+
+		public void
+		removeListener(
+			DiskManagerFileInfoListener	listener )
+		{}
+	}
+	
+	private static class
+	FilesViewNodeLeaf
+		implements DiskManagerFileInfo, FilesViewTreeNode
+	{
+		private final String					name;
+		private final FilesViewNodeInner		parent;
+		private final DiskManagerFileInfo		delegate;
+		
+		private
+		FilesViewNodeLeaf(
+			String				_name,
+			DiskManagerFileInfo	_delegate,
+			FilesViewNodeInner	_parent )
+		{
+			name		= _name;
+			delegate	= _delegate;
+			parent		= _parent;
+		}
+		
+		@Override
+		public String
+		getName()
+		{
+			return( name );
+		}
+		@Override
+		public boolean 
+		isLeaf()
+		{
+			return( true );
+		}
+		
+		public int
+		getDepth()
+		{
+			return( parent.getDepth() + 1 );
+		}
+		
+		public void 
+		setPriority(int p)
+		{
+			delegate.setPriority(p);
+		}
+		
+
+		public void setSkipped(boolean b)
+		{	
+			delegate.setSkipped(b);
+		}
+
+
+		public boolean
+		setLink(
+			File	link_destination )
+		{
+			return( delegate.setLink(link_destination));
+		}
+
+		public boolean 
+		setLinkAtomic(File link_destination)
+		{
+			return( delegate.setLinkAtomic(link_destination));
+		}
+
+		public boolean 
+		setLinkAtomic(File link_destination, FileUtil.ProgressListener pl )
+		{
+			return( delegate.setLinkAtomic(link_destination, pl));
+		}
+
+		public File
+		getLink()
+		{
+			return( delegate.getLink());
+		}
+
+		public boolean 
+		setStorageType(int type )
+		{
+			return( delegate.setStorageType(type));
+		}
+
+		public int
+		getStorageType()
+		{
+			return( delegate.getStorageType());
+		}
+
+		public int 
+		getAccessMode()
+		{
+			return( delegate.getAccessMode());
+		}
+
+		public long 
+		getDownloaded()
+		{
+			return( delegate.getDownloaded());
+		}
+
+		public long 
+		getLastModified()
+		{
+			return( delegate.getLastModified());
+		}
+		
+		public String 
+		getExtension()
+		{
+			return( delegate.getExtension());
+		}
+
+		public int 
+		getFirstPieceNumber()
+		{
+			return( delegate.getFirstPieceNumber());
+		}
+
+		public int 
+		getLastPieceNumber()
+		{
+			return( delegate.getLastPieceNumber());
+		}
+
+		public void
+		getPieceInfo(
+			int[]	data )
+		{
+			int first 	= getFirstPieceNumber();
+			int last	= getLastPieceNumber();
+			
+			if ( first < data[0] ){
+				data[0] = first;
+			}
+			
+			if ( last > data[1] ){
+				data[1] = last;
+			}
+		}
+		
+		public long 
+		getLength()
+		{
+			return( delegate.getLength());
+		}
+
+		public int 
+		getNbPieces()
+		{
+			return( delegate.getNbPieces());
+		}
+
+		public int 
+		getPriority()
+		{
+			return( delegate.getPriority());
+		}
+
+		public boolean 
+		isSkipped()
+		{
+			return( delegate.isSkipped());
+		}
+		
+		public int
+		getSkippedState()
+		{
+			if ( delegate.isSkipped()){
+				return( 0 );
+			}else{
+				return( 1 );
+			}
+		}
+
+		public int	
+		getIndex()
+		{
+			return( delegate.getIndex());
+		}
+
+		public DownloadManager	
+		getDownloadManager()
+		{
+			return( delegate.getDownloadManager());
+		}
+
+		public DiskManager 
+		getDiskManager()
+		{
+			return( delegate.getDiskManager());
+		}
+
+		public File 
+		getFile( boolean follow_link )
+		{
+			return( delegate.getFile(follow_link));
+		}
+
+		public TOTorrentFile
+		getTorrentFile()
+		{
+			return( delegate.getTorrentFile());
+		}
+
+		public DirectByteBuffer
+		read(
+			long	offset,
+			int		length )
+
+			throws IOException
+		{
+			return( delegate.read(offset, length));
+		}
+
+		public void
+		flushCache()
+
+			throws	Exception
+		{
+			delegate.flushCache();
+		}
+
+		public int
+		getReadBytesPerSecond()
+		{
+			return( delegate.getReadBytesPerSecond());
+		}
+
+		public int
+		getWriteBytesPerSecond()
+		{
+			return( delegate.getWriteBytesPerSecond());
+		}
+
+		public long
+		getETA()
+		{
+			return( delegate.getETA());
+		}
+		
+		@Override
+		public void recheck()
+		{
+			delegate.recheck();
+		}
+
+		public void
+		close()
+		{
+			delegate.close();
+		}
+
+		public void
+		addListener(
+			DiskManagerFileInfoListener	listener )
+		{
+			delegate.addListener(listener);
+		}
+
+		public void
+		removeListener(
+			DiskManagerFileInfoListener	listener )
+		{
+			delegate.removeListener(listener);
+		}
+	}
+	
+		
+	private void
+	updateFlatView()
+	{
+	    DiskManagerFileInfo files[] = getFileInfo();
+
+	    if (files != null && (this.force_refresh || !doAllExist(files))) {
+	    	this.force_refresh = false;
+
+	    	List<DiskManagerFileInfo> datasources = tv.getDataSources();
+	    	if(datasources.size() == files.length)
+	    	{
+	    		// check if we actually have to replace anything
+	    		ArrayList<DiskManagerFileInfo> toAdd = new ArrayList<>(Arrays.asList(files));
+		    	ArrayList<DiskManagerFileInfo> toRemove = new ArrayList<>();
+			    for (DiskManagerFileInfo info : datasources) {
+				    if (info.getIndex() != -1 && files[info.getIndex()] == info)
+					    toAdd.set(info.getIndex(), null);
+				    else
+					    toRemove.add(info);
+			    }
+		    	tv.removeDataSources(toRemove.toArray(new DiskManagerFileInfo[toRemove.size()]));
+		    	tv.addDataSources(toAdd.toArray(new DiskManagerFileInfo[toAdd.size()]));
+		    	tv.tableInvalidate();
+	    	} else
+	    	{
+		    	tv.removeAllTableRows();
+
+		    	DiskManagerFileInfo filesCopy[] = new DiskManagerFileInfo[files.length];
+			    System.arraycopy(files, 0, filesCopy, 0, files.length);
+
+			    tv.addDataSources(filesCopy);
+	    	}
+
+		    tv.processDataSourceQueue();
+	    }
+	}
+	
+	private DiskManagerFileInfo[]
+			getFileInfo()
+	{
+		if (managers.size() == 0 ){
+
+			return null;
+
+		}else if ( managers.size() == 1 ){
+
+			return( managers.get(0).getDiskManagerFileInfoSet().getFiles());
+
+		}else{
+
+			List<DiskManagerFileInfo>	temp = new ArrayList<>();
+
+			for ( DownloadManager dm: managers ){
+
+				temp.addAll( Arrays.asList( dm.getDiskManagerFileInfoSet().getFiles()));
+			}
+
+			return( temp.toArray( new DiskManagerFileInfo[ temp.size()]));
+		}
+	}
+	  
+	private boolean doAllExist(DiskManagerFileInfo[] files) {
+		for (DiskManagerFileInfo fileinfo : files) {
+			if (tv.isFiltered(fileinfo)) {
+				// We can't just use tv.dataSourceExists(), since it does a .equals()
+				// comparison, and we want a reference comparison
+
+				TableRowCore row = tv.getRow(fileinfo);
+				if (row == null) {
+					return false;
+				}
+				// reference comparison
+				if (row.getDataSource(true) != fileinfo) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 }

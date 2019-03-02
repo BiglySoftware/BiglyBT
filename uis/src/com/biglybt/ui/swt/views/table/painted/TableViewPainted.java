@@ -21,14 +21,17 @@ package com.biglybt.ui.swt.views.table.painted;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.internal.DPIUtil;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
@@ -53,7 +56,6 @@ import com.biglybt.ui.swt.debug.UIDebugGenerator;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.HSLColor;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
@@ -85,11 +87,14 @@ public class TableViewPainted
 
 	private static final boolean DEBUG_WITH_SHELL = false;
 
-	public static final boolean DIRECT_DRAW = Constants.isOSX && SWTThread.getInstance().isRetinaDisplay();
+	public static final boolean DIRECT_DRAW = (Constants.isOSX
+			|| Constants.isUnix) && DPIUtil.getDeviceZoom() != 100;
 
 	private static final int DEFAULT_HEADER_HEIGHT = 27;
 
 	private static final boolean DEBUG_REDRAW_CLIP = false;
+
+	private static final boolean expand_enabled_default = COConfigurationManager.getBooleanParameter("Table.useTree");
 
 	private Composite cTable;
 
@@ -110,9 +115,10 @@ public class TableViewPainted
 	 */
 	LinkedHashSet<TableRowPainted> visibleRows = new LinkedHashSet<>();
 
-	Object visibleRows_sync = new Object();
+	private Object lock = new Object();
 
-	Object lock = new Object();
+	//Object visibleRows_sync = new Object();	// got a deadlock between this and lock when separate so consolidated
+	private Object visibleRows_sync = lock;
 
 	/**
 	 * Up to date table client area.  So far, the best places to refresh
@@ -173,6 +179,13 @@ public class TableViewPainted
 
 	private Canvas sCanvasImage;
 
+	private boolean	filterSubRows;
+	
+	private boolean expandEnabled = expand_enabled_default;
+	
+	private AtomicInteger	mutationCount 	= new AtomicInteger(0);
+	private int				lastMC			= -1;
+	
 	private class
 	RefreshTableRunnable
 		extends AERunnable
@@ -242,7 +255,7 @@ public class TableViewPainted
 	}
 
 	private FrequencyLimitedDispatcher	redraw_dispatcher =
-			new FrequencyLimitedDispatcher( new RedrawTableRunnable(), 100 );
+			new FrequencyLimitedDispatcher( new RedrawTableRunnable(), 250 );
 
 	{
 		redraw_dispatcher.setSingleThreaded();
@@ -548,54 +561,121 @@ public class TableViewPainted
 			return;
 		}
 		TableRowCore[] selectedRows = getSelectedRows();
-		TableRowCore firstRow = selectedRows.length > 0 ? selectedRows[0]
-				: getRow(0);
-		TableRowCore parentFirstRow = firstRow;
-		while (parentFirstRow.getParentRowCore() != null) {
-			parentFirstRow = parentFirstRow.getParentRowCore();
-		}
-		TableRowCore parentClickedRow = clickedRow;
-		while (parentClickedRow.getParentRowCore() != null) {
-			parentClickedRow = parentClickedRow.getParentRowCore();
-		}
-		int startPos;
-		int endPos;
-		if (parentFirstRow == parentClickedRow) {
-			startPos = parentFirstRow == firstRow ? -1 : firstRow.getIndex();
-			endPos = parentClickedRow == clickedRow ? -1 : clickedRow.getIndex();
-		} else {
-			startPos = indexOf(parentFirstRow);
-			endPos = indexOf(parentClickedRow);
-			if (endPos == -1 || startPos == -1) {
+		TableRowCore firstRow = selectedRows.length > 0 ? selectedRows[0]: getRow(0);
+		
+		ArrayList<TableRowCore> rowsToSelect;
+		
+		if ( getFilterSubRows()){
+			
+			TableRowCore[] rows = getRowsAndSubRows( false );
+			
+			int startPos 	= -1;
+			int endPos		= -1;
+			
+			for ( int i=0;i<rows.length;i++){
+				TableRowCore row = rows[i];
+				if ( row == firstRow ){
+					startPos = i;
+				}
+				if ( row == clickedRow ){
+					endPos = i;
+				}
+			}
+			
+			if ( startPos == -1 || endPos == -1 ){
 				return;
 			}
-		}
-		ArrayList<TableRowCore> rowsToSelect = new ArrayList<>(Arrays.asList(selectedRows));
-		TableRowCore curRow = firstRow;
-		do {
-			if (!rowsToSelect.contains(curRow)) {
+			
+			boolean reverse = endPos < startPos;
+			
+			if ( reverse ){
+				int temp = endPos;
+				endPos = startPos;
+				startPos = temp;
+			}
+
+			rowsToSelect = new ArrayList<>( endPos - startPos + 1);
+			for ( int i=startPos;i<=endPos;i++){
+				rowsToSelect.add( rows[i] );
+			}
+			
+			if ( reverse ){
+				Collections.reverse( rowsToSelect );
+			}
+		}else{
+				// broken for full table support
+			
+			TableRowCore parentFirstRow = firstRow;
+			while (parentFirstRow.getParentRowCore() != null) {
+				parentFirstRow = parentFirstRow.getParentRowCore();
+			}
+			TableRowCore parentClickedRow = clickedRow;
+			while (parentClickedRow.getParentRowCore() != null) {
+				parentClickedRow = parentClickedRow.getParentRowCore();
+			}
+			int startPos;
+			int endPos;
+			if (parentFirstRow == parentClickedRow) {
+				startPos = parentFirstRow == firstRow ? -1 : firstRow.getIndex();
+				endPos = parentClickedRow == clickedRow ? -1 : clickedRow.getIndex();
+			} else {
+				startPos = indexOf(parentFirstRow);
+				endPos = indexOf(parentClickedRow);
+				if (endPos == -1 || startPos == -1) {
+					return;
+				}
+			}
+			rowsToSelect = new ArrayList<>(Arrays.asList(selectedRows));
+			TableRowCore curRow = firstRow;
+			do {
+				if (!rowsToSelect.contains(curRow)) {
+					rowsToSelect.add(curRow);
+				}
+				TableRowCore newRow = (startPos < endPos) ? getNextRow(curRow) : getPreviousRow(curRow);
+	
+					// prevent infinite loop if things go wonky (which they have been soon to do!)
+				if ( newRow == curRow ){
+					break;
+				}else{
+					curRow = newRow;
+				}
+	
+			} while (curRow != clickedRow && curRow != null);
+			if (curRow != null && !rowsToSelect.contains(curRow)) {
 				rowsToSelect.add(curRow);
 			}
-			TableRowCore newRow = (startPos < endPos) ? getNextRow(curRow) : getPreviousRow(curRow);
-
-				// prevent infinite loop if things go wonky (which they have been soon to do!)
-			if ( newRow == curRow ){
-				break;
-			}else{
-				curRow = newRow;
-			}
-
-		} while (curRow != clickedRow && curRow != null);
-		if (curRow != null && !rowsToSelect.contains(curRow)) {
-			rowsToSelect.add(curRow);
 		}
+		
 		setSelectedRows(rowsToSelect.toArray(new TableRowCore[0]));
 		setFocusedRow(clickedRow);
 	}
 
 	protected TableRowCore getPreviousRow(TableRowCore relativeToRow) {
-		TableRowCore rowToSelect = null;
-		if (relativeToRow != null) {
+		
+		if (relativeToRow == null) {
+			return( getRow(0));
+		}
+		
+		if ( getFilterSubRows()){
+			
+				// inefficient...
+			
+			TableRowCore[] rows = getRowsAndSubRows( false );
+						
+			for ( int i=rows.length-1;i>0;i--){
+			
+				if ( rows[i] == relativeToRow ){
+					
+					return( rows[i-1] );
+				}
+			}
+			
+			return( getRow(0) );
+			
+		}else{
+				// existing logic below broken for 'full table' - can't be bothered to fix it
+			TableRowCore rowToSelect = null;
+			
 			TableRowCore parentRow = relativeToRow.getParentRowCore();
 			if (parentRow == null) {
 				TableRowCore row = getRow(indexOf(relativeToRow) - 1);
@@ -612,18 +692,40 @@ public class TableViewPainted
 					rowToSelect = parentRow;
 				}
 			}
+	
+			if  ( rowToSelect == null ){
+				return( getRow(0));
+			}
+			return rowToSelect;
 		}
-		if (rowToSelect == null) {
-			rowToSelect = getRow(0);
-		}
-		return rowToSelect;
 	}
 
 	protected TableRowCore getNextRow(TableRowCore relativeToRow) {
-		TableRowCore rowToSelect = null;
 		if (relativeToRow == null) {
-			rowToSelect = getRow(0);
-		} else {
+			return( getRow(0));
+		}
+
+		if ( getFilterSubRows()){
+			
+				// inefficient...
+			
+			TableRowCore[] rows = getRowsAndSubRows( false );
+						
+			for ( int i=0;i<rows.length-1;i++){
+			
+				if ( rows[i] == relativeToRow ){
+											
+					return( rows[i+1] );
+				}
+			}
+			
+			return( rows[rows.length-1]);
+			
+		}else{
+				// existing logic below broken for 'full table' - can't be bothered to fix it
+			
+			TableRowCore rowToSelect = null;
+	
 			if (relativeToRow.isExpanded() && relativeToRow.getSubItemCount() > 0) {
 				TableRowCore[] subRowsWithNull = relativeToRow.getSubRowsWithNull();
 				for (TableRowCore row : subRowsWithNull) {
@@ -639,7 +741,7 @@ public class TableViewPainted
 				TableRowCore parentRow = relativeToRow.getParentRowCore();
 				if (parentRow != null) {
 					rowToSelect = parentRow.getSubRow(relativeToRow.getIndex() + 1);
-
+	
 					if (rowToSelect == null) {
 						rowToSelect = getRow(parentRow.getIndex() + 1);
 					}
@@ -647,8 +749,9 @@ public class TableViewPainted
 					rowToSelect = getRow(relativeToRow.getIndex() + 1);
 				}
 			}
+	
+			return rowToSelect;
 		}
-		return rowToSelect;
 	}
 
 	/* (non-Javadoc)
@@ -669,6 +772,9 @@ public class TableViewPainted
 		TableRowCore[] rows = getSelectedRows();
 		for (TableRowCore row : rows) {
 			sToClipboard += "\n";
+			TableRowPainted p_row = (TableRowPainted)row;
+			p_row.setShown( true, true );
+			p_row.refresh( true, true );
 			for (int j = 0; j < visibleColumns.length; j++) {
 				TableColumnCore column = visibleColumns[j];
 				if (j != 0) {
@@ -695,7 +801,16 @@ public class TableViewPainted
 		return cTable == null || cTable.isDisposed();
 	}
 
-
+	@Override 
+	public TableRowCore[]
+	getVisibleRows()
+	{
+		synchronized( visibleRows_sync ){
+			
+			return( visibleRows.toArray( new TableRowCore[ visibleRows.size()]));
+		}
+	}
+	
 	@Override
 	public void refreshTable(final boolean bForceSort) {
 		refreshTableRunnable.setForceSort(bForceSort);
@@ -816,7 +931,6 @@ public class TableViewPainted
 	 */
 	@Override
 	public void setRowDefaultHeight(int iHeight) {
-		iHeight = Utils.adjustPXForDPI(iHeight);
 		setRowDefaultHeightPX(iHeight);
 	}
 
@@ -927,6 +1041,16 @@ public class TableViewPainted
 	public boolean canHaveSubItems() {
 		return true;
 	}
+	
+	public void setExpandEnabled( boolean b )
+	{
+		expandEnabled = b;
+	}
+	
+	public boolean isExpandEnabled(){
+		return( expandEnabled );
+	}
+	
 
 	/* (non-Javadoc)
 	 * @see TableView#setHeaderVisible(boolean)
@@ -1196,8 +1320,7 @@ public class TableViewPainted
 
 		cHeaderArea = new Canvas(cTableComposite, SWT.DOUBLE_BUFFERED);
 
-		fontHeader = FontUtils.getFontWithHeight(cHeaderArea.getFont(), null,
-				Utils.adjustPXForDPI(12));
+		fontHeader = FontUtils.getFontPercentOf(cHeaderArea.getFont(), 0.9f);
 		fontHeaderSmall = FontUtils.getFontPercentOf(fontHeader, 0.8f);
 		cHeaderArea.setFont(fontHeader);
 
@@ -1220,7 +1343,7 @@ public class TableViewPainted
 
 		headerHeight = configMan.getIntParameter("Table.headerHeight");
 		if (headerHeight <= 0) {
-			headerHeight = Utils.adjustPXForDPI(DEFAULT_HEADER_HEIGHT);
+			headerHeight = DEFAULT_HEADER_HEIGHT;
 		}
 
 		FormData fd = Utils.getFilledFormData();
@@ -1380,7 +1503,12 @@ public class TableViewPainted
 				if ( cTable == null || cTable.isDisposed()){
 					SelectedContentManager.removeCurrentlySelectedContentListener( this );
 				}else{
-					redrawTable();
+					//redrawTable();
+					TableRowCore[] rows = getSelectedRows();
+					for (TableRowCore row : rows) {
+						row.invalidate();
+						redrawRow((TableRowPainted) row, false);
+					}
 				}
 			}
 		});
@@ -1516,8 +1644,8 @@ public class TableViewPainted
 							cHeaderArea.setCursor(e.display.getSystemCursor(cursorID));
 							TableColumnCore column = getTableColumnByOffset(e.x);
 
-							if (column == null) {
-								cHeaderArea.setToolTipText(null);
+							if (column == null || ( TableTooltips.tooltips_disabled && !column.doesAutoTooltip())){
+								Utils.setTT(cHeaderArea,null);
 							} else {
 								String info = MessageText.getString(
 										column.getTitleLanguageKey() + ".info", (String) null);
@@ -1527,9 +1655,9 @@ public class TableViewPainted
 									if (info != null) {
 										tt += "\n" + info;
 									}
-									cHeaderArea.setToolTipText(tt);
+									Utils.setTT(cHeaderArea,tt);
 								} else {
-									cHeaderArea.setToolTipText(info);
+									Utils.setTT(cHeaderArea,info);
 								}
 							}
 						}
@@ -1669,6 +1797,20 @@ public class TableViewPainted
 		});
 	}
 
+	protected void
+	rowCreated()
+	{
+		mutationCount.incrementAndGet();
+	}
+	
+	public void
+	tableMutated()
+	{
+		super.tableMutated();
+		
+		mutationCount.incrementAndGet();
+	}
+	
 	@Override
 	public void tableStructureChanged(final boolean columnAddedOrRemoved,
 			final Class forPluginDataSourceType) {
@@ -1705,7 +1847,20 @@ public class TableViewPainted
 		if (cTable == null || cTable.isDisposed()) {
 			return;
 		}
-
+		
+		int mut = mutationCount.get();
+		
+		if ( mut != lastMC ){			
+			boolean changed = numberAllVisibleRows();
+			if ( changed ){
+					// not actually sure we need this any more
+				if ( canvasImage != null ){
+					drawBounds = canvasImage.getBounds();
+				}
+			}
+			lastMC = mut;
+		}
+		
 		int end = drawBounds.y + drawBounds.height;
 
 		gc.setFont(cTable.getFont());
@@ -1716,30 +1871,35 @@ public class TableViewPainted
 
 		boolean isTableSelected = isTableSelected();
 		boolean isTableEnabled = cTable.isEnabled();
+		
 		for (TableRowPainted row : visibleRows) {
 			TableRowPainted paintedRow = row;
-			if (pos == -1) {
-				pos = row.getIndex();
-			} else {
-				pos++;
-			}
-			Point drawOffset = paintedRow.getDrawOffset();
-			int rowStartX = 0;
-			if (DIRECT_DRAW) {
-				rowStartX = -drawOffset.x;
-			}
-			int rowStartY = drawOffset.y - clientArea.y;
 			int rowHeight = paintedRow.getHeight();
-			//debug("Paint " + drawBounds.x + "x" + drawBounds.y + " " + drawBounds.width + "x" + drawBounds.height + "; Row=" +row.getIndex() + ";clip=" + gc.getClipping() +";drawOffset=" + drawOffset);
-			if (drawBounds.intersects(rowStartX, rowStartY, 9999, rowHeight)) {
-				// ensure full row height
-				int diffY2 = (rowStartY + rowHeight) - (drawBounds.y + drawBounds.height);
-				if (diffY2 > 0 ) {
-					drawBounds.height += diffY2;
-					Utils.setClipping(gc, drawBounds);
+			
+			if ( rowHeight > 0 ){
+				if (pos == -1) {
+					pos	= row.getVisibleRowIndex();
+				} else {
+					pos++;
 				}
-				paintedRow.swt_paintGC(gc, drawBounds, rowStartX, rowStartY, pos,
-						isTableSelected, isTableEnabled);
+				Point drawOffset = paintedRow.getDrawOffset();
+				int rowStartX = 0;
+				if (DIRECT_DRAW) {
+					rowStartX = -drawOffset.x;
+				}
+				int rowStartY = drawOffset.y - clientArea.y;
+				
+				//debug("Paint " + drawBounds.x + "x" + drawBounds.y + " " + drawBounds.width + "x" + drawBounds.height + "; Row=" +row.getIndex() + ";clip=" + gc.getClipping() +";drawOffset=" + drawOffset);
+				if (drawBounds.intersects(rowStartX, rowStartY, 9999, rowHeight)) {
+					// ensure full row height
+					int diffY2 = (rowStartY + rowHeight) - (drawBounds.y + drawBounds.height);
+					if (diffY2 > 0 ) {
+						drawBounds.height += diffY2;
+						Utils.setClipping(gc, drawBounds);
+					}
+					paintedRow.swt_paintGC(gc, drawBounds, rowStartX, rowStartY, pos,
+							isTableSelected, isTableEnabled);
+				}
 			}
 			oldRow = row;
 		}
@@ -1894,9 +2054,9 @@ public class TableViewPainted
 */
 			if (isSortColumn) {
 				// draw sort indicator
-				int arrowHeight = Utils.adjustPXForDPI(6);
+				int arrowHeight = 6;
 				int arrowY = (headerHeight / 2) - (arrowHeight / 2);
-				int arrowHalfW = Utils.adjustPXForDPI(4);
+				int arrowHalfW = 4;
 				int middle = w - arrowHalfW - 4;
 				wText = w - (arrowHalfW * 2) - 5;
 				int y1, y2;
@@ -2093,10 +2253,20 @@ public class TableViewPainted
 		return new Point(x, y);
 	}
 
-	// @see com.biglybt.ui.swt.views.table.TableViewSWT#enableFilterCheck(org.eclipse.swt.widgets.Text, TableViewFilterCheck)
 	@Override
-	public void enableFilterCheck(Text txtFilter,
-	                              TableViewFilterCheck<Object> filterCheck) {
+	public void 
+	enableFilterCheck(Text txtFilter, TableViewFilterCheck<Object> filterCheck) {
+		enableFilterCheck( txtFilter, filterCheck, false );
+	}
+	@Override
+	public void 
+	enableFilterCheck(
+		Text txtFilter,
+	    TableViewFilterCheck<Object> filterCheck,
+	    boolean						 filterSubRows ) 
+	{
+		this.filterSubRows = filterSubRows;
+		
 		TableViewSWTFilter<?> filter = getSWTFilter();
 		if (filter != null) {
 			if (filter.widget != null && !filter.widget.isDisposed()) {
@@ -2133,6 +2303,12 @@ public class TableViewPainted
 		refilter();
 	}
 
+	protected boolean
+	getFilterSubRows()
+	{
+		return( filterSubRows );
+	}
+	
 	@Override
 	public Text
 	getFilterControl()
@@ -2271,7 +2447,7 @@ public class TableViewPainted
 		if (parameterName == null || parameterName.equals("Table.headerHeight")) {
 			headerHeight = configMan.getIntParameter("Table.headerHeight");
 			if (headerHeight == 0) {
-				headerHeight = Utils.adjustPXForDPI(DEFAULT_HEADER_HEIGHT);
+				headerHeight = DEFAULT_HEADER_HEIGHT;
 			}
 			setHeaderVisible(getHeaderVisible());
 		}
@@ -2933,7 +3109,9 @@ public class TableViewPainted
 				break;
 			}
 		}
-		if (!focusInSelection) {
+		if (focusInSelection) {
+			reaffirmSelection();
+		}else{
 			setFocusedRow(newSelectionArray.length == 0 ? null : newSelectionArray[0]);
 		}
 	}
@@ -3216,12 +3394,12 @@ public class TableViewPainted
 						if (row == parentFocusedRow) {
 							if (parentFocusedRow != rowToShow) {
 								y += row.getHeight();
-								TableRowCore[] subRowsWithNull = parentFocusedRow.getSubRowsWithNull();
+								TableRowCore[] subRowsWithNull = parentFocusedRow.getSubRowsRecursive( false );
 								for (TableRowCore subrow : subRowsWithNull) {
 									if (subrow == rowToShow) {
 										break;
 									}
-									y += ((TableRowPainted) subrow).getFullHeight();
+									y += ((TableRowPainted) subrow).getHeight();
 								}
 							}
 							break;
@@ -3240,6 +3418,28 @@ public class TableViewPainted
 		});
 	}
 
+	@Override
+	public void scrollVertically(int distance){
+		Utils.execSWTThread(new AERunnable() {
+			@Override
+			public void runSupport() {
+				if (isDisposed()) {
+					return;
+				}
+				int pos = vBar.getSelection();
+				if ( distance > 0 ){
+					pos += distance;
+					pos = Math.min( pos,vBar.getMaximum());
+					vBar.setSelection( pos );
+				}else{
+					pos += distance;
+					pos = Math.max( pos,vBar.getMinimum());
+					vBar.setSelection( pos );
+				}
+				swt_vBarChanged();
+			}});
+	}
+		
 	boolean qdRowHeightChanged = false;
 	public void rowHeightChanged(final TableRowCore row, int oldHeight,
 			int newHeight) {

@@ -816,7 +816,7 @@ public class SBC_DownloadHistoryView
 			match_result = false;
 		}
 
-		Pattern pattern = RegExUtil.getCachedPattern( "downloadhistoryview:search", s, Pattern.CASE_INSENSITIVE);
+		Pattern pattern = RegExUtil.getCachedPattern( "downloadhistoryview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 		boolean bOurs;
 

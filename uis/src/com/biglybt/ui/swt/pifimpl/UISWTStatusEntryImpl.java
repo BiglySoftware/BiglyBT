@@ -141,15 +141,15 @@ public class UISWTStatusEntryImpl implements UISWTStatusEntry, MainStatusBar.CLa
 
 	private void update0(CLabelPadding label) {
 		label.setText(text);
-		label.setToolTipText(tooltip);
+		Utils.setTT(label,tooltip);
 		if ( check_scaled_image ){
 			check_scaled_image = false;
 			if ( scaled_image != null ){
 				scaled_image.dispose();
 				scaled_image = null;
-			}
-			if ( original_image != null &&  Utils.adjustPXForDPIRequired( original_image )){
-				scaled_image = Utils.adjustPXForDPI( label.getDisplay(), original_image );
+			}			
+			if ( original_image != null && original_image.isDisposed()){
+				original_image = null;
 			}
 		}
 		label.setImage(image_enabled ? (scaled_image==null?original_image:scaled_image) : null);

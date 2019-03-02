@@ -132,8 +132,10 @@ core/lib/libWIN32Access/ipch/
 .idea/
 /uis/src/tux/
 *.DS_Store
+/build/
 
 #maven
 /target
 
 Bigly*.jar
+

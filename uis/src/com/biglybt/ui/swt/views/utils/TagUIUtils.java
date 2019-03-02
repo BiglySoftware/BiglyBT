@@ -28,6 +28,10 @@ import com.biglybt.pif.ui.UIInstance;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.MenuEvent;
+import org.eclipse.swt.events.MenuListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.*;
 
@@ -41,6 +45,8 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.util.*;
+import com.biglybt.core.vuzefile.VuzeFile;
+import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
@@ -62,12 +68,16 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
+import com.biglybt.ui.swt.mdi.BaseMdiEntry;
+import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.ViewUtils;
 import com.biglybt.ui.swt.views.ViewUtils.SpeedAdapter;
@@ -93,31 +103,63 @@ public class TagUIUtils
 	setupSideBarMenus(
 		final MenuManager	menuManager )
 	{
-		com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
-				+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-				"ConfigView.section.style.TagInSidebar");
-		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
-
-		menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
-
-		menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
-			@Override
-			public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
-				boolean b = COConfigurationManager.getBooleanParameter("Library.TagInSideBar");
-				COConfigurationManager.setParameter("Library.TagInSideBar", !b);
-			}
-		});
-
-		menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
-			@Override
-			public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
-				menu.setData(Boolean.valueOf(COConfigurationManager.getBooleanParameter("Library.TagInSideBar")));
-			}
-		});
-
+			// show tags in sidebar
+		
+		{
+			com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
+					+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+					"ConfigView.section.style.TagInSidebar");
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
+	
+			menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
+				@Override
+				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+					boolean b = COConfigurationManager.getBooleanParameter("Library.TagInSideBar");
+					COConfigurationManager.setParameter("Library.TagInSideBar", !b);
+				}
+			});
+	
+			menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
+				@Override
+				public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+					menu.setData(Boolean.valueOf(COConfigurationManager.getBooleanParameter("Library.TagInSideBar")));
+				}
+			});
+		}
+		
+			// show tag groups
+		
+		{
+			com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
+					+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
+					"!    " + MessageText.getString("ConfigView.section.style.TagGroupsInSidebar") + "!" );
+			menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+	
+			menuItem.setStyle(com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK);
+	
+			menuItem.addListener(new com.biglybt.pif.ui.menus.MenuItemListener() {
+				@Override
+				public void selected(com.biglybt.pif.ui.menus.MenuItem menu, Object target) {
+					boolean b = COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
+					COConfigurationManager.setParameter("Library.TagGroupsInSideBar", !b);
+				}
+			});
+	
+			menuItem.addFillListener(new com.biglybt.pif.ui.menus.MenuItemFillListener() {
+				@Override
+				public void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem menu, Object data) {
+					menu.setData(Boolean.valueOf(COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar")));
+					menu.setEnabled( COConfigurationManager.getBooleanParameter("Library.TagInSideBar"));
+				}
+			});
+		}
+		
+		
 			// tag options
 
-		menuItem = menuManager.addMenuItem("sidebar."
+		com.biglybt.pif.ui.menus.MenuItem menuItem = menuManager.addMenuItem("sidebar."
 				+ MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 				"label.tags");
 		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
@@ -281,6 +323,8 @@ public class TagUIUtils
 
 								m.setData(Boolean.valueOf(tag.isVisible()));
 
+								setMenuIcon( m, tag );
+								
 								m.addListener(
 									new MenuItemListener()
 									{
@@ -509,6 +553,83 @@ public class TagUIUtils
 	}
 
 	public static void
+	setMenuIcon(
+		com.biglybt.pif.ui.menus.MenuItem		m,
+		Tag										tag )
+	{
+		String image_file = tag.getImageFile();
+		
+		if ( image_file != null ){
+			
+			try{
+				String resource = new File( image_file ).toURI().toURL().toExternalForm();
+														
+				ImageLoader.getInstance().getUrlImage(
+						  resource, 
+						  new Point( 16, 16 ),
+						  new ImageLoader.ImageDownloaderListener(){
+		
+							  @Override
+							  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+								  							  
+								 if ( image != null && returnedImmediately ){
+									 															 
+									 m.setGraphic( new UISWTGraphicImpl( image ));
+									 
+									 // dunno when to :( ImageLoader.getInstance().releaseImage( key );
+								 }
+							  }
+						  });
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+	}
+	
+	public static void
+	setMenuIcon(
+		MenuItem		m,
+		Tag				tag )
+	{
+		String image_file = tag.getImageFile();
+		
+		if ( image_file != null ){
+			
+			try{
+				String resource = new File( image_file ).toURI().toURL().toExternalForm();
+														
+				ImageLoader.getInstance().getUrlImage(
+						  resource, 
+						  new Point( 16, 16 ),
+						  new ImageLoader.ImageDownloaderListener(){
+		
+							  @Override
+							  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+								  							  
+								 if ( image != null && returnedImmediately ){
+									 															 
+									m.setImage( image );
+									 
+									m.addDisposeListener(
+										new DisposeListener(){
+											
+											@Override
+											public void widgetDisposed(DisposeEvent e){
+												ImageLoader.getInstance().releaseImage( key );
+											}
+										});
+								 }
+							  }
+						  });
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+	}
+	
+	public static void
 	checkTagSharing(
 		boolean		start_of_day )
 	{
@@ -583,6 +704,46 @@ public class TagUIUtils
 	}
 
 	public static void
+	createSideBarMenuItemsDelayed(
+		final Menu menu, final Tag tag )
+	{
+		menu.addMenuListener(new MenuListener() {
+			@Override
+			public void menuShown(MenuEvent e){
+				Utils.disposeSWTObjects((Object[]) menu.getItems());
+				createSideBarMenuItems( menu, tag );
+			}
+			@Override
+			public void menuHidden(MenuEvent e){
+			
+			}
+		});
+	}
+	
+	public static void
+	createSideBarMenuItems(
+		Menu 		menu, 
+		TagGroup 	tag_group )
+	{
+		if ( tag_group == null || tag_group.getName() == null ){
+			
+			return;
+		}
+		
+		MenuItem exclusive_item = new MenuItem( menu, SWT.CHECK);
+		
+		exclusive_item.setText( MessageText.getString( "label.exclusive" ));
+		
+		exclusive_item.setSelection( tag_group.isExclusive());
+		
+		exclusive_item.addListener( 
+			SWT.Selection,
+			(e)->{
+				tag_group.setExclusive(exclusive_item.getSelection());
+			});
+	}
+	
+	public static void
 	createSideBarMenuItems(
 		final Menu menu, final Tag tag )
 	{
@@ -623,25 +784,32 @@ public class TagUIUtils
 				eoa_item.setMenu( eoa_menu );
 
 				int[]	action_ids =
-					{ 	TagFeatureExecOnAssign.ACTION_DESTROY,
+					{ 	TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE,
+						TagFeatureExecOnAssign.ACTION_DESTROY,
 						TagFeatureExecOnAssign.ACTION_START,
 						TagFeatureExecOnAssign.ACTION_FORCE_START,
 						TagFeatureExecOnAssign.ACTION_NOT_FORCE_START,
 						TagFeatureExecOnAssign.ACTION_STOP,
 						TagFeatureExecOnAssign.ACTION_PAUSE,
 						TagFeatureExecOnAssign.ACTION_RESUME,
-						TagFeatureExecOnAssign.ACTION_SCRIPT };
-
+						TagFeatureExecOnAssign.ACTION_SCRIPT,
+						TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI,
+						TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC,
+						TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS };
 
 				String[] action_keys =
-					{ 	"v3.MainWindow.button.delete",
+					{ 	"label.apply.options.template",
+						"v3.MainWindow.button.delete",
 						"v3.MainWindow.button.start",
 						"v3.MainWindow.button.forcestart",
 						"v3.MainWindow.button.notforcestart",
 						"v3.MainWindow.button.stop",
 						"v3.MainWindow.button.pause",
 						"v3.MainWindow.button.resume",
-						"label.script" };
+						"label.script",
+						"label.post.magnet.to.chat",
+						"label.init.save.loc.move",
+						"label.assign.tags"};
 
 				for ( int i=0;i<action_ids.length;i++ ){
 
@@ -649,7 +817,34 @@ public class TagUIUtils
 
 					if ( tf_eoa.supportsAction( action_id )){
 
-						if ( action_id == TagFeatureExecOnAssign.ACTION_SCRIPT ){
+						if ( action_id == TagFeatureExecOnAssign.ACTION_APPLY_OPTIONS_TEMPLATE ){
+							
+							final MenuItem opts_item = new MenuItem( eoa_menu, SWT.CHECK);
+							
+							opts_item.setText( 
+								MessageText.getString( action_keys[i] ) + "..." );
+							
+							opts_item.setSelection( tf_eoa.getOptionsTemplateHandler().isActive());
+							
+							opts_item.addListener( SWT.Selection, new Listener(){
+								@Override
+								public void
+								handleEvent(Event event)
+								{
+									UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+									
+									if (uiFunctions != null){
+										
+										uiFunctions.getMDI().showEntryByID(
+												
+											MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS,
+												tf_eoa.getOptionsTemplateHandler());
+									}
+								}});
+							
+							new MenuItem( eoa_menu, SWT.SEPARATOR);
+							
+						}else if ( action_id == TagFeatureExecOnAssign.ACTION_SCRIPT ){
 
 							final MenuItem action_item = new MenuItem( eoa_menu, SWT.PUSH);
 
@@ -695,6 +890,73 @@ public class TagUIUtils
 									});
 								}});
 
+						}else if ( action_id == TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI ){
+
+							String chat_str = tf_eoa.getPostMessageChannel();
+							
+							MenuBuildUtils.addChatSelectionMenu( 
+								eoa_menu,
+								"label.post.magnet.to.chat",
+								chat_str,
+								new MenuBuildUtils.ChatSelectionListener(){
+									
+									@Override
+									public void chatSelected( String chat ){
+										tf_eoa.setPostMessageChannel( chat );
+									}
+								});
+							
+						}else if ( action_id == TagFeatureExecOnAssign.ACTION_ASSIGN_TAGS ){
+							
+							final MenuItem action_item = new MenuItem( eoa_menu, SWT.PUSH);
+
+							List<Tag> tags = tf_eoa.getTagAssigns();
+
+							String msg = MessageText.getString( action_keys[i] );
+
+							String tag_str = "";
+							
+							for ( Tag t: tags ){
+								
+								tag_str += (tag_str==""?"":",") + t.getTagName( true );
+							}
+							
+							if ( !tag_str.isEmpty()){
+
+								msg += ": " + tag_str;
+							}
+
+							msg += "...";
+
+							action_item.setText( msg );
+
+							action_item.addListener( SWT.Selection, new Listener(){
+								@Override
+								public void
+								handleEvent(Event event)
+								{
+									TagManager tagManager = TagManagerFactory.getTagManager();
+									
+									TagType tt = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+									
+									List<Tag> all_tags = new ArrayList<>( tt.getTags());
+
+									all_tags.remove( tag );
+									
+									TagUIUtilsV3.showTagSelectionDialog( 
+										all_tags, 
+										tags,
+										new TagUIUtilsV3.TagSelectionListener()
+										{
+											@Override
+											public void selected(List<Tag> tags){
+												
+												tf_eoa.setTagAssigns( tags );
+											}
+										});
+								}
+							});
+							
 						}else{
 
 							final MenuItem action_item = new MenuItem( eoa_menu, SWT.CHECK);
@@ -711,6 +973,22 @@ public class TagUIUtils
 										tf_eoa.setActionEnabled( action_id, action_item.getSelection());
 									}
 								});
+							
+							if ( action_id == TagFeatureExecOnAssign.ACTION_MOVE_INIT_SAVE_LOC ){
+								
+								TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+								
+								boolean enable = false;
+								
+								if ( fl.supportsTagInitialSaveFolder()){
+									
+									File f = fl.getTagInitialSaveFolder();
+									
+									enable = f != null;
+								}
+								
+								action_item.setEnabled( enable );
+							}
 						}
 					}
 				}
@@ -886,6 +1164,19 @@ public class TagUIUtils
 			createNonAutoMenuItems(menu, tag, tag_type, menuShowHide);
 		}
 
+		if ( tag_type.getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+
+			MenuItem itemExport = new MenuItem(menu, SWT.PUSH);
+			
+			Messages.setLanguageText(itemExport,"Subscription.menu.export");
+			itemExport.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					export( Arrays.asList( tag));
+				}
+			});
+		}
+		
 		MenuItem menuSettings = new MenuItem(menu, SWT.PUSH);
 		Messages.setLanguageText(menuSettings, "TagSettingsView.title");
 		menuSettings.addListener(SWT.Selection, new Listener() {
@@ -1739,8 +2030,9 @@ public class TagUIUtils
 					}else{
 						String[] val = tp.getStringList();
 
-						String def_str;
-
+						String 	def_str;
+						String	msg_str = null;
+						
 						if ( val == null || val.length == 0 ){
 
 							def_str = "";
@@ -1751,13 +2043,23 @@ public class TagUIUtils
 
 							for ( String v: val ){
 
-								def_str += (def_str.length()==0?"":", ") + v;
+								if ( def_str.length() > 100 && msg_str == null ){
+									
+									msg_str = def_str + "...";
+								}
+
+								def_str += (def_str.length()==0?"":", ") + v;								
 							}
 						}
 
+						if ( msg_str == null ){
+							
+							msg_str = def_str;
+						}
+						
 						MenuItem set_item = new MenuItem( props_menu, SWT.PUSH);
 
-						set_item.setText( tp.getName( true ) + (def_str.length()==0?"":(" (" + def_str + ") ")) + "..." );
+						set_item.setText( tp.getName( true ) + (msg_str.length()==0?"":(" (" + msg_str + ") ")) + "..." );
 
 						final String f_def_str = def_str;
 
@@ -1975,93 +2277,124 @@ public class TagUIUtils
 
 				t_item.setMenu(t_menu);
 
-				String[] existing = tf_xcode.getTagTranscodeTarget();
-
-				for ( final TrancodeUIUtils.TranscodeTarget tt : tts ){
-
-					TrancodeUIUtils.TranscodeProfile[] profiles = tt.getProfiles();
-
-					if ( profiles.length > 0 ){
-
-						final Menu tt_menu = new Menu(t_menu.getShell(), SWT.DROP_DOWN);
-
-						final MenuItem tt_item = new MenuItem(t_menu, SWT.CASCADE);
-
-						tt_item.setText(tt.getName());
-
-						tt_item.setMenu(tt_menu);
-
-						for (final TrancodeUIUtils.TranscodeProfile tp : profiles) {
-
-							final MenuItem p_item = new MenuItem(tt_menu, SWT.CHECK);
-
-							p_item.setText(tp.getName());
-
-							boolean	selected = existing != null	&& existing[0].equals(tp.getUID());
-
-							if ( selected ){
-
-								Utils.setMenuItemImage(tt_item, "graytick");
+				
+				t_menu.addMenuListener(
+					new MenuListener(){
+						
+						@Override
+						public void menuShown(MenuEvent e){
+							for ( MenuItem mi: t_menu.getItems()){
+								mi.dispose();
 							}
+							
+							String[] existing = tf_xcode.getTagTranscodeTarget();
 
-							p_item.setSelection(selected );
+							for ( final TrancodeUIUtils.TranscodeTarget tt : tts ){
 
-							p_item.addListener(SWT.Selection, new Listener(){
-								@Override
-								public void handleEvent(Event event) {
+								TrancodeUIUtils.TranscodeProfile[] profiles = tt.getProfiles();
 
-									String name = tt.getName() + " - " + tp.getName();
+								if ( profiles.length > 0 ){
 
-									if ( p_item.getSelection()){
+									final Menu tt_menu = new Menu(t_menu.getShell(), SWT.DROP_DOWN);
 
-										tf_xcode.setTagTranscodeTarget( tp.getUID(), name );
+									final MenuItem tt_item = new MenuItem(t_menu, SWT.CASCADE);
 
-									}else{
+									tt_item.setText(tt.getName());
 
-										tf_xcode.setTagTranscodeTarget( null, null );
+									tt_item.setMenu(tt_menu);
+
+									for (final TrancodeUIUtils.TranscodeProfile tp : profiles) {
+
+										final MenuItem p_item = new MenuItem(tt_menu, SWT.CHECK);
+
+										p_item.setText(tp.getName());
+
+										boolean	selected = existing != null	&& existing[0].equals(tp.getUID());
+
+										if ( selected ){
+
+											Utils.setMenuItemImage(tt_item, "graytick");
+										}
+
+										p_item.setSelection(selected );
+
+										p_item.addListener(SWT.Selection, new Listener(){
+											@Override
+											public void handleEvent(Event event) {
+
+												String name = tt.getName() + " - " + tp.getName();
+
+												if ( p_item.getSelection()){
+
+													tf_xcode.setTagTranscodeTarget( tp.getUID(), name );
+
+												}else{
+
+													tf_xcode.setTagTranscodeTarget( null, null );
+												}
+											}
+										});
 									}
-								}
-							});
-						}
 
-						new MenuItem(tt_menu, SWT.SEPARATOR );
+									new MenuItem(tt_menu, SWT.SEPARATOR );
 
-						final MenuItem no_xcode_item = new MenuItem(tt_menu, SWT.CHECK);
+									final MenuItem no_xcode_item = new MenuItem(tt_menu, SWT.CHECK);
 
-						final String never_str = MessageText.getString( "v3.menu.device.defaultprofile.never" );
+									final String never_str = MessageText.getString( "v3.menu.device.defaultprofile.never" );
 
-						no_xcode_item.setText( never_str );
+									no_xcode_item.setText( never_str );
 
-						final String never_uid = tt.getID() + "/blank";
+									final String never_uid = tt.getID() + "/blank";
 
-						boolean	selected = existing != null	&& existing[0].equals(never_uid);
+									boolean	selected = existing != null	&& existing[0].equals(never_uid);
 
-						if ( selected ){
+									if ( selected ){
 
-							Utils.setMenuItemImage(tt_item, "graytick");
-						}
+										Utils.setMenuItemImage(tt_item, "graytick");
+									}
 
-						no_xcode_item.setSelection(selected );
+									no_xcode_item.setSelection(selected );
 
-						no_xcode_item.addListener(SWT.Selection, new Listener(){
+									no_xcode_item.addListener(SWT.Selection, new Listener(){
 
-							@Override
-							public void handleEvent(Event event) {
+										@Override
+										public void handleEvent(Event event) {
 
-								String name = tt.getName() + " - " + never_str;
+											String name = tt.getName() + " - " + never_str;
 
-								if ( no_xcode_item.getSelection()){
+											if ( no_xcode_item.getSelection()){
 
-									tf_xcode.setTagTranscodeTarget( never_uid, name );
+												tf_xcode.setTagTranscodeTarget( never_uid, name );
 
-								}else{
+											}else{
 
-									tf_xcode.setTagTranscodeTarget( null, null );
+												tf_xcode.setTagTranscodeTarget( null, null );
+											}
+										}
+									});	
 								}
 							}
-						});
-					}
-				}
+						}
+						
+						@Override
+						public void menuHidden(MenuEvent e){
+							MenuItem[] items = t_menu.getItems();
+							
+							Utils.execSWTThreadLater(
+								1,
+								new Runnable(){
+									
+									@Override
+									public void run(){
+										for ( MenuItem mi: items){
+											mi.dispose();
+										}
+									}
+								});
+							
+						}
+					});
+				
 			}
 		}
 	}
@@ -2227,6 +2560,8 @@ public class TagUIUtils
 
 					Messages.setLanguageText(showTag, t.getTagName( false ));
 
+					setMenuIcon( showTag, t );
+					
 					showTag.addListener(SWT.Selection, new Listener() {
 						@Override
 						public void handleEvent(Event event){
@@ -2240,11 +2575,11 @@ public class TagUIUtils
 	}
 
 	private static void
-		createNonAutoMenuItems(
-				final Menu menu,
-				final Tag tag,
-				final TagType tag_type,
-				Menu[] menuShowHide)
+	createNonAutoMenuItems(
+		Menu 		menu,
+		Tag 		tag,
+		TagType 	tag_type,
+		Menu[] 		menuShowHide )
 	{
 
 		if ( tag_type.hasTagTypeFeature( TagFeature.TF_PROPERTIES )){
@@ -2319,56 +2654,134 @@ public class TagUIUtils
 				}
 			}
 		}
+		
+		List<Tag> tags = new ArrayList<>();
+		
+		tags.add( tag );
 
-		/*
-		MenuItem item_create = new MenuItem( menu, SWT.PUSH);
+		createTagGroupMenu( menu, tag_type, tags );
+		
+		MenuItem itemDelete = new MenuItem(menu, SWT.PUSH);
 
-		Messages.setLanguageText(item_create, "label.add.tag");
-		item_create.addListener(SWT.Selection, new Listener() {
+		Utils.setMenuItemImage(itemDelete, "delete");
+
+		Messages.setLanguageText(itemDelete, "FileItem.delete");
+		itemDelete.addListener(SWT.Selection, new Listener() {
+			@Override
 			public void handleEvent(Event event) {
-
-				createManualTag(null);
+				tag.removeTag();
 			}
 		});
-		*/
+	}
 
-		/* Seldom Used: Color can be set in Tags Overview
-		MenuItem itemSetColor = new MenuItem(menu, SWT.PUSH);
-
-		itemSetColor.setText( MessageText.getString( "label.color") + "..." );
-
-		itemSetColor.addListener(SWT.Selection, new Listener() {
-			public void handleEvent(Event event) {
-
-				int[] existing = tag.getColor();
-
-				RGB e_rg = existing==null?null:new RGB(existing[0],existing[1],existing[2]);
-
-				RGB rgb = Utils.showColorDialog( menu.getShell(), e_rg );
-
-				if ( rgb != null ){
-
-					tag.setColor( new int[]{ rgb.red, rgb.green, rgb.blue });
+	private static void
+	createTagGroupMenu(
+		Menu			menu,
+		TagType			tag_type,
+		List<Tag>		tagz )
+	{
+		if ( tag_type.getTagType() != TagType.TT_DOWNLOAD_MANUAL || tagz.isEmpty()){
+			
+			return;
+		}
+		
+		List<TagGroup>	groups = new ArrayList<>();
+		
+		List<Tag> all_tags = tag_type.getTags();
+		
+		for ( Tag t : all_tags ){
+			
+			TagGroup group = t.getGroupContainer();
+			
+			if ( group != null && group.getName() != null  && !groups.contains(group)){
+				
+				groups.add( group );
+			}
+		}
+		
+		TagUtils.sortTagGroups( groups );
+		
+		Menu groups_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		MenuItem groups_item = new MenuItem(menu, SWT.CASCADE );
+		Messages.setLanguageText(groups_item, "TableColumn.header.tag.group" );
+		groups_item.setMenu(groups_menu);
+		
+		String existing_group = tagz.get(0).getGroup();
+		
+		if ( existing_group == null ){
+		
+			existing_group = "";
+		}
+		
+		for ( Tag t: tagz ){
+			
+			String g = t.getGroup();
+			
+			if ( g == null ){
+				
+				g = "";
+			}
+			
+			if ( !g.equals( existing_group )){
+				
+				existing_group = null;
+				
+				break;
+			}
+		}
+		
+		MenuItem item_none = new MenuItem(groups_menu, SWT.RADIO);
+		Messages.setLanguageText(item_none, "label.none" );
+		item_none.addListener(SWT.Selection, new Listener() {
+			public void handleEvent(Event event){
+				for ( Tag t: tagz ){
+					t.setGroup( null );
 				}
 			}
 		});
-	 */
+		
+		item_none.setSelection( existing_group != null && existing_group.isEmpty() );
+		
+		new MenuItem( groups_menu, SWT.SEPARATOR );
+		
+		if ( !groups.isEmpty()){
+			
+			for ( TagGroup g: groups ){
+				
+				MenuItem item_group = new MenuItem(groups_menu, SWT.RADIO);
+				
+				item_group.setText( g.getName());
+				
+				item_group.setSelection( g.equals( existing_group ));
+				
+				item_group.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event){
+						for ( Tag t: tagz ){
+							t.setGroup( g.getName());
+						}
+					}
+				});
+			}
+		
+			new MenuItem( groups_menu, SWT.SEPARATOR );
+		}
+		
+		MenuItem item_add = new MenuItem(groups_menu, SWT.PUSH);
 
-		MenuItem itemGroup = new MenuItem(menu, SWT.PUSH);
-
-		Messages.setLanguageText(itemGroup, "MyTorrentsView.menu.group");
-		itemGroup.addListener(SWT.Selection, new Listener() {
+		final String f_existing_group = existing_group;
+				
+		Messages.setLanguageText(item_add, "menu.add.group");
+		item_add.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
 						"TagGroupWindow.title", "TagGroupWindow.message");
 
-				String group = tag.getGroup();
-
-				if ( group == null ){
-					group = "";
+				if ( f_existing_group != null ){
+					
+					entryWindow.setPreenteredText( f_existing_group, false );
 				}
-				entryWindow.setPreenteredText( group, false );
+				
 				entryWindow.selectPreenteredText( true );
 
 				entryWindow.prompt(new UIInputReceiverListener() {
@@ -2384,7 +2797,9 @@ public class TagUIUtils
 							if (group.length() == 0) {
 								group = null;
 							}
-							tag.setGroup(group);
+							for ( Tag t: tagz ){
+								t.setGroup(group);
+							}
 
 						} catch (Throwable e) {
 
@@ -2394,20 +2809,42 @@ public class TagUIUtils
 				});
 			}
 		});
+		
+		new MenuItem( groups_menu, SWT.SEPARATOR );
 
-		MenuItem itemDelete = new MenuItem(menu, SWT.PUSH);
+		Menu settings_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+		MenuItem settings_item = new MenuItem(groups_menu, SWT.CASCADE );
+		Messages.setLanguageText(settings_item, "TagSettingsView.title" );
+		settings_item.setMenu(settings_menu);
+		
+		if ( groups.isEmpty()){
+			
+			settings_menu.setEnabled( false );
+			
+		}else{
+			
+			for ( TagGroup g: groups ){
+				
+				Menu tg_settings_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+				MenuItem tg_settings_item = new MenuItem(settings_menu, SWT.CASCADE );
+				tg_settings_item.setText(g.getName());
+				tg_settings_item.setMenu(tg_settings_menu);
 
-		Utils.setMenuItemImage(itemDelete, "delete");
-
-		Messages.setLanguageText(itemDelete, "FileItem.delete");
-		itemDelete.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				tag.removeTag();
+				MenuItem exclusive_item = new MenuItem( tg_settings_menu, SWT.CHECK);
+				
+				exclusive_item.setText( MessageText.getString( "label.exclusive" ));
+				
+				exclusive_item.setSelection( g.isExclusive());
+				
+				exclusive_item.addListener( 
+					SWT.Selection,
+					(e)->{
+						g.setExclusive(exclusive_item.getSelection());
+					});
 			}
-		});
+		}
 	}
-
+	
 	public static void
 	createSideBarMenuItems(
 		final Menu 			menu,
@@ -2445,6 +2882,8 @@ public class TagUIUtils
 			return;
 		}
 
+		TagType tag_type = tags.get(0).getTagType();
+		
 		MenuItem itemShow = new MenuItem(menu, SWT.PUSH);
 
 		Messages.setLanguageText(itemShow, "Button.bar.show");
@@ -2473,47 +2912,18 @@ public class TagUIUtils
 
 		itemHide.setEnabled( can_hide );
 
-		MenuItem itemGroup = new MenuItem(menu, SWT.PUSH);
+		createTagGroupMenu( menu, tag_type, tags );
 
-		Messages.setLanguageText(itemGroup, "MyTorrentsView.menu.group");
-		itemGroup.addListener(SWT.Selection, new Listener() {
+		MenuItem itemExport = new MenuItem(menu, SWT.PUSH);
+		
+		Messages.setLanguageText(itemExport,"Subscription.menu.export");
+		itemExport.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
-				SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-						"TagGroupWindow.title", "TagGroupWindow.message");
-
-
-				entryWindow.setPreenteredText( "", false );
-				entryWindow.selectPreenteredText( true );
-
-				entryWindow.prompt(new UIInputReceiverListener() {
-					@Override
-					public void UIInputReceiverClosed(UIInputReceiver entryWindow) {
-						if ( !entryWindow.hasSubmittedInput()) {
-							return;
-						}
-
-						try{
-							String group = entryWindow.getSubmittedInput().trim();
-
-							if ( group.length() == 0 ){
-								group = null;
-							}
-
-							for ( Tag tag: tags ){
-
-								tag.setGroup( group );
-							}
-						}catch( Throwable e ){
-
-							Debug.out( e );
-						}
-					}
-				});
-
+				export(tags);
 			}
 		});
-
+		
 		com.biglybt.pif.ui.menus.MenuItem[] items = MenuItemManager.getInstance().getAllAsArray(
 				MenuManager.MENU_TAG_CONTEXT);
 
@@ -2579,8 +2989,8 @@ public class TagUIUtils
 
 	public static void
 	addLibraryViewTagsSubMenu(
-		final DownloadManager[] 	dms,
-		Menu 						menu_tags)
+		DownloadManager[] 		dms,
+		Menu 					menu_tags)
 	{
 		MenuItem[] items = menu_tags.getItems();
 
@@ -2605,7 +3015,7 @@ public class TagUIUtils
 
 				TagType tt = t.getTagType();
 
-				if ( tt.isTagTypeAuto() || t.isTagAuto()[0] || t.isTagAuto()[1]){
+				if ( tt.isTagTypeAuto() || ( t.isTagAuto()[0] &&  t.isTagAuto()[1])){
 
 					List<Tag> x = auto_map.get( tt );
 
@@ -2634,7 +3044,7 @@ public class TagUIUtils
 			Messages.setLanguageText(autoItem, "wizard.maketorrent.auto" );
 			autoItem.setMenu(menuAuto);
 
-			List<TagType>	auto_tags = sortTagTypes( auto_map.keySet());
+			List<TagType>	auto_tags = TagUtils.sortTagTypes( auto_map.keySet());
 
 			for ( TagType tt: auto_tags ){
 
@@ -2653,7 +3063,7 @@ public class TagUIUtils
 					tag_counts.put( t, i==null?1:i+1 );
 				}
 
-				tags = sortTags( tag_counts.keySet());
+				tags = TagUtils.sortTags( tag_counts.keySet());
 
 				int	 num = 0;
 
@@ -2680,144 +3090,61 @@ public class TagUIUtils
 			}
 		}
 
-		List<Tag>	manual_t = manual_tt.getTags();
+		List<Tag>	all_manual_t = manual_tt.getTags();
 
-		if ( manual_t.size() > 0 ){
+		if ( all_manual_t.size() > 0 ){
 
 			if ( auto_map.size() > 0 ){
 
 				new MenuItem( menu_tags, SWT.SEPARATOR );
 			}
 
-			List<String>	menu_names 		= new ArrayList<>();
-			Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
-
-			for ( Tag t: manual_t ){
-
-					// don't allow manual adding of taggables to auto-tags
-
-				if ( !t.isTagAuto()[0]){
-
-					String name = t.getTagName( true );
-
-					menu_names.add( name );
-					menu_name_map.put( name, t );
-				}
-			}
-
-			List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
-
-			for ( Object obj: menu_structure ){
-
-				List<Tag>	bucket_tags = new ArrayList<>();
-
-				Menu	 parent_menu;
-
-				if ( obj instanceof String ){
-
-					parent_menu = menu_tags;
-
-					bucket_tags.add( menu_name_map.get((String)obj));
-
+			Set<TagGroup>	tag_groups 		= new HashSet<>();
+			List<Tag>		tag_no_group	= new ArrayList<>();
+			
+			for ( Tag t: all_manual_t ){
+				
+				TagGroup tg = t.getGroupContainer();
+				
+				if ( tg == null || tg.getName() == null ){
+					
+					tag_no_group.add( t );
+					
 				}else{
-
-					Object[]	entry = (Object[])obj;
-
-					List<String>	tag_names = (List<String>)entry[1];
-
-					boolean	sub_all_selected 	= true;
-					boolean sub_some_selected	= false;
-
-					for ( String name: tag_names ){
-
-						Tag sub_tag = menu_name_map.get( name );
-
-						Integer c = manual_map.get( sub_tag );
-
-						if ( c != null && c == dms.length ){
-
-							sub_some_selected = true;
-
-						}else{
-
-							sub_all_selected = false;
-						}
-
-						bucket_tags.add( sub_tag );
-					}
-
-					String mod;
-
-					if ( sub_all_selected ){
-
-						mod = " (*)";
-
-					}else if ( sub_some_selected ){
-
-						mod = " (+)";
-
-					}else{
-
-						mod = "";
-					}
-
-					Menu menu_bucket = new Menu( menu_tags.getShell(), SWT.DROP_DOWN );
-
-					MenuItem bucket_item = new MenuItem( menu_tags, SWT.CASCADE );
-
-					bucket_item.setText((String)entry[0] + mod);
-
-					bucket_item.setMenu( menu_bucket );
-
-					parent_menu = menu_bucket;
-				}
-
-				for ( final Tag t: bucket_tags ){
-
-					final MenuItem t_i = new MenuItem( parent_menu, SWT.CHECK );
-
-					String tag_name = t.getTagName( true );
-
-					Integer c = manual_map.get( t );
-
-					if ( c != null ){
-
-						if ( c == dms.length ){
-
-							t_i.setSelection( true );
-
-							t_i.setText( tag_name );
-
-						}else{
-
-							t_i.setText( tag_name + " (" + c + ")" );
-						}
-					}else{
-
-						t_i.setText( tag_name );
-					}
-
-					t_i.addListener(SWT.Selection, new Listener() {
-						@Override
-						public void handleEvent(Event event) {
-
-							boolean	selected = t_i.getSelection();
-
-							for ( DownloadManager dm: dms ){
-
-								if ( selected ){
-
-									t.addTaggable( dm );
-
-								}else{
-
-									t.removeTaggable( dm );
-								}
-							}
-						}
-					});
+					
+					tag_groups.add( tg );
 				}
 			}
+			
+			if ( !tag_groups.isEmpty()){
+				
+				List<TagGroup> l_tg = TagUtils.sortTagGroups( tag_groups );
+				
+				for ( TagGroup tg: l_tg ){
+					
+					Menu menuGroup = new Menu(menu_tags.getShell(), SWT.DROP_DOWN);
+					MenuItem groupItem = new MenuItem(menu_tags, SWT.CASCADE);
+					groupItem.setText( tg.getName());
+					groupItem.setMenu(menuGroup);
+					
+					build( dms, menuGroup, manual_map, tg.getTags());
+				}
+				
+				if ( !tag_no_group.isEmpty()){
+					
+					Menu menuGroup = new Menu(menu_tags.getShell(), SWT.DROP_DOWN);
+					MenuItem groupItem = new MenuItem(menu_tags, SWT.CASCADE);
+					Messages.setLanguageText(groupItem, "menu.no.group" );
+					groupItem.setMenu(menuGroup);
+					
+					build( dms, menuGroup, manual_map, tag_no_group );
+				}
+				
+				new MenuItem( menu_tags, SWT.SEPARATOR );
+			}
+			
+			build( dms, menu_tags, manual_map, all_manual_t );
+
 		}
 
 		new MenuItem( menu_tags, SWT.SEPARATOR );
@@ -2846,206 +3173,296 @@ public class TagUIUtils
 				});
 			}
 		});
-	}
+		
+		MenuItem item_pop = new MenuItem( menu_tags, SWT.PUSH);
 
-	public static List<TagType>
-	sortTagTypes(
-		Collection<TagType>	_tag_types )
-	{
-		List<TagType>	tag_types = new ArrayList<>( _tag_types );
-
-		Collections.sort(
-			tag_types,
-			new Comparator<TagType>()
-			{
-				final Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
-
-				@Override
-				public int
-				compare(
-					TagType o1, TagType o2)
-				{
-					return( comp.compare( o1.getTagTypeName(true), o2.getTagTypeName(true)));
-				}
-			});
-
-		return( tag_types );
-	}
-
-	public static List<Tag>
-	sortTags(
-		Collection<Tag>	_tags )
-	{
-		List<Tag>	tags = new ArrayList<>( _tags );
-
-		if ( tags.size() < 2 ){
-
-			return( tags );
-		}
-
-		Collections.sort( tags, getTagComparator());
-
-		return( tags );
-	}
-
-	public static Comparator<Tag>
-	getTagComparator()
-	{
-		return( new Comparator<Tag>()
-		{
-			final Comparator<String> comp = new FormattersImpl().getAlphanumericComparator( true );
-
+		Messages.setLanguageText(item_pop, "menu.tagging.view");
+		item_pop.addListener(SWT.Selection, new Listener() {
 			@Override
-			public int
-			compare(
-				Tag o1, Tag o2)
-			{
-				String	g1 = o1.getGroup();
-				String	g2 = o2.getGroup();
+			public void handleEvent(Event event){
+								
+				String data = "{\"mdi\":\"tabbed\",\"event_listener\":{\"name\":\"com.biglybt.ui.swt.views.TaggingView\"},\"id\":\"TaggingView\",\"control_type\":0,\"skin_id\":\"com.biglybt.ui.skin.skin3\"}";
+				
+				Map<String,Object> map = BDecoder.decodeStrings( BDecoder.decodeFromJSON( data ));
 
-				if ( g1 != g2 ){
-					if ( g1 == null ){
-						return( 1 );
-					}else if ( g2 == null ){
-						return( -1 );
-					}else{
+				Map<String,Object> dms_exports = DataSourceResolver.exportDataSource( dms );
 
-						int	res = comp.compare( g1,  g2 );
+				map.put( "data_source", dms_exports );
+				
+				String title;
+				
+				if ( dms.length == 1 ){
+					
+					title = MessageText.getString( "authenticator.torrent" ) + " : " + dms[0].getDisplayName().replaceAll("&", "&&");
+					
+				}else{
+					String	str = "";
 
-						if ( res != 0 ){
-							return( res );
-						}
+					for (int i=0;i<Math.min( 3, dms.length ); i ++ ){
+
+						str += (i==0?"":", ") + dms[i].getDisplayName().replaceAll("&", "&&");
 					}
+
+					if ( dms.length > 3 ){
+
+						str += "...";
+					}
+
+					title = dms.length + " " + MessageText.getString( "ConfigView.section.torrents" ) + " : " + str;
 				}
-				return( comp.compare( o1.getTagName(true), o2.getTagName(true)));
+				
+				BaseMdiEntry.popoutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map, "TagUIUtils:TaggingView" );
 			}
 		});
 	}
 
-	public static String
-	getTagTooltip(
-		Tag		tag )
+	private static void
+	build(
+		DownloadManager[] 		dms,
+		Menu 					menu_tags,
+		Map<Tag,Integer>		manual_map,
+		List<Tag>				manual_t )
 	{
-		return( getTagTooltip( tag, false ));
-	}
+		List<String>	menu_names 		= new ArrayList<>();
+		Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
 
-	public static String
-	getTagTooltip(
-		Tag			tag,
-		boolean		skip_name )
+		for ( Tag t: manual_t ){
+
+			if ( !( t.isTagAuto()[0] && t.isTagAuto()[1] )){ 
+
+				String name = t.getTagName( true );
+
+				menu_names.add( name );
+				menu_name_map.put( name, t );
+			}
+		}
+
+		List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
+
+		for ( Object obj: menu_structure ){
+
+			List<Tag>	bucket_tags = new ArrayList<>();
+
+			Menu	 parent_menu;
+
+			if ( obj instanceof String ){
+
+				parent_menu = menu_tags;
+
+				bucket_tags.add( menu_name_map.get((String)obj));
+
+			}else{
+
+				Object[]	entry = (Object[])obj;
+
+				List<String>	tag_names = (List<String>)entry[1];
+
+				boolean	sub_all_selected 	= true;
+				boolean sub_some_selected	= false;
+
+				for ( String name: tag_names ){
+
+					Tag sub_tag = menu_name_map.get( name );
+
+					Integer c = manual_map.get( sub_tag );
+
+					if ( c != null && c == dms.length ){
+
+						sub_some_selected = true;
+
+					}else{
+
+						sub_all_selected = false;
+					}
+
+					bucket_tags.add( sub_tag );
+				}
+
+				String mod;
+
+				if ( sub_all_selected ){
+
+					mod = " (*)";
+
+				}else if ( sub_some_selected ){
+
+					mod = " (+)";
+
+				}else{
+
+					mod = "";
+				}
+
+				Menu menu_bucket = new Menu( menu_tags.getShell(), SWT.DROP_DOWN );
+
+				MenuItem bucket_item = new MenuItem( menu_tags, SWT.CASCADE );
+
+				bucket_item.setText((String)entry[0] + mod);
+
+				bucket_item.setMenu( menu_bucket );
+
+				parent_menu = menu_bucket;
+			}
+
+			for ( final Tag t: bucket_tags ){
+
+				final MenuItem t_i = new MenuItem( parent_menu, SWT.CHECK );
+
+				String tag_name = t.getTagName( true );
+
+				Integer c = manual_map.get( t );
+
+				if ( c != null ){
+
+					if ( c == dms.length ){
+
+						t_i.setSelection( true );
+
+						t_i.setText( tag_name );
+
+					}else{
+
+						t_i.setText( tag_name + " (" + c + ")" );
+					}
+				}else{
+
+					t_i.setText( tag_name );
+				}
+
+				TagUIUtils.setMenuIcon( t_i, t );
+				
+				t_i.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+
+						boolean	selected = t_i.getSelection();
+
+						for ( DownloadManager dm: dms ){
+
+							if ( selected ){
+
+								t.addTaggable( dm );
+
+							}else{
+
+								t.removeTaggable( dm );
+							}
+						}
+					}
+				});
+			}
+		}
+	}
+	
+	public static MenuItem
+	createTagSelectionMenu(
+		Menu					top_menu,
+		String					resource,
+		List<Tag>				tags,
+		TagSelectionListener	listener )
 	{
-		TagType tag_type = tag.getTagType();
+		Menu menu = new Menu( top_menu.getShell(), SWT.DROP_DOWN);
 
-		String 	str = skip_name?"":(tag_type.getTagTypeName( true ) + ": " + tag.getTagName( true ));
+		MenuItem top_item = new MenuItem( top_menu, SWT.CASCADE);
 
-		String desc = tag.getDescription();
+		Messages.setLanguageText( top_item, resource );
 
-		if ( desc != null ){
+		top_item.setMenu( menu );
+	
+		List<String>	menu_names 		= new ArrayList<>();
+		Map<String,Tag>	menu_name_map 	= new IdentityHashMap<>();
 
-			if ( str.length() > 0 ){
+		for ( Tag t: tags ){
+			
+			String name = t.getTagName( true );
 
-				str += "\r\n";
-			}
-
-			str += desc;
+			menu_names.add( name );
+			menu_name_map.put( name, t );
 		}
 
-		if ( tag_type.hasTagTypeFeature( TagFeature.TF_RATE_LIMIT )){
+		List<Object>	menu_structure = MenuBuildUtils.splitLongMenuListIntoHierarchy( menu_names, MAX_TOP_LEVEL_TAGS_IN_MENU );
 
-			TagFeatureRateLimit rl = (TagFeatureRateLimit)tag;
+		for ( Object obj: menu_structure ){
 
-			String 	up_str 		= "";
-			String	down_str 	= "";
+			List<Tag>	bucket_tags = new ArrayList<>();
 
-			int	limit_up = rl.getTagUploadLimit();
+			Menu parent_menu;
 
-			if ( limit_up > 0 ){
+			if ( obj instanceof String ){
 
-				up_str += MessageText.getString( "label.limit" ) + "=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( limit_up );
-			}
+				parent_menu = menu;
 
-			int current_up 		= rl.getTagCurrentUploadRate();
+				bucket_tags.add( menu_name_map.get((String)obj));
 
-			if ( current_up >= 0 ){
+			}else{
 
-				up_str += (up_str.length()==0?"":", " ) + MessageText.getString( "label.current" ) + "=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( current_up);
-			}
+				Object[]	entry = (Object[])obj;
 
-			int	limit_down = rl.getTagDownloadLimit();
+				List<String>	tag_names = (List<String>)entry[1];
 
-			if ( limit_down > 0 ){
+				for ( String name: tag_names ){
 
-				down_str += MessageText.getString( "label.limit" ) + "=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( limit_down );
-			}
+					Tag sub_tag = menu_name_map.get( name );
 
-			int current_down 		= rl.getTagCurrentDownloadRate();
-
-			if ( current_down >= 0 ){
-
-				down_str += (down_str.length()==0?"":", " ) + MessageText.getString( "label.current" ) + "=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( current_down);
-			}
-
-
-			if ( up_str.length() > 0 ){
-
-				str += "\r\n    " + MessageText.getString("iconBar.up") + ": " + up_str;
-			}
-
-			if ( down_str.length() > 0 ){
-
-				str += "\r\n    " + MessageText.getString("iconBar.down") + ": " + down_str;
-			}
-
-
-			int up_pri = rl.getTagUploadPriority();
-
-			if ( up_pri > 0 ){
-
-				str += "\r\n    " + MessageText.getString("cat.upload.priority");
-			}
-		}
-
-		if ( tag_type.hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )) {
-
-			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
-
-			if ( fl.supportsTagInitialSaveFolder()){
-
-				File init_loc = fl.getTagInitialSaveFolder();
-
-				if ( init_loc != null ){
-
-					str += "\r\n    " + MessageText.getString("label.init.save.loc") + "=" + init_loc.getAbsolutePath();
+					bucket_tags.add( sub_tag );
 				}
+
+				Menu menu_bucket = new Menu(menu.getShell(), SWT.DROP_DOWN );
+
+				MenuItem bucket_item = new MenuItem( menu, SWT.CASCADE );
+
+				bucket_item.setText((String)entry[0]);
+
+				bucket_item.setMenu( menu_bucket );
+
+				parent_menu = menu_bucket;
 			}
 
-			if ( fl.supportsTagMoveOnComplete()){
+			for ( final Tag t: bucket_tags ){
 
-				File move_on_comp = fl.getTagMoveOnCompleteFolder();
+				MenuItem mi = new MenuItem( parent_menu, SWT.PUSH );
 
-				if ( move_on_comp != null ){
+				Messages.setLanguageText(mi, t.getTagName( false ));
 
-					str += "\r\n    " + MessageText.getString("label.move.on.comp") + "=" + move_on_comp.getAbsolutePath();
-				}
-			}
-			if ( fl.supportsTagCopyOnComplete()){
-
-				File copy_on_comp = fl.getTagCopyOnCompleteFolder();
-
-				if ( copy_on_comp != null ){
-
-					str += "\r\n    " + MessageText.getString("label.copy.on.comp") + "=" + copy_on_comp.getAbsolutePath();
-				}
+				setMenuIcon( mi, t );
+				
+				mi.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						
+						listener.selected( t );
+					}});
 			}
 		}
+		
+		new MenuItem( menu , SWT.SEPARATOR );
 
-		if ( str.startsWith( "\r\n" )){
+		MenuItem item_create = new MenuItem( menu, SWT.PUSH);
 
-			str = str.substring(2);
-		}
+		Messages.setLanguageText(item_create, "label.add.tag");
+		
+		item_create.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
 
-		return( str );
+				createManualTag(new UIFunctions.TagReturner() {
+					@Override
+					public void returnedTags(Tag[] tags) {
+						if ( tags != null ){
+							
+							for ( Tag tag: tags ){
+								
+								listener.selected( tag );
+							}
+						}
+					}
+				});
+			}
+		});
+		
+		return( top_item );
 	}
+	
 
 	private static void
 	showFilesView(
@@ -3136,5 +3553,58 @@ public class TagUIUtils
 		shell.setText( tag.getTagName(true));
 
 		shell.open();
+	}
+	
+	protected static void
+	export(
+		final List<Tag>			tags )
+	{
+		Utils.execSWTThread(
+			new AERunnable()
+			{
+				@Override
+				public void
+				runSupport()
+				{
+					FileDialog dialog =
+						new FileDialog( Utils.findAnyShell(), SWT.SYSTEM_MODAL | SWT.SAVE );
+
+					dialog.setFilterPath( TorrentOpener.getFilterPathData() );
+
+					dialog.setText(MessageText.getString("tag.export.select.template.file"));
+
+					dialog.setFilterExtensions(VuzeFileHandler.getVuzeFileFilterExtensions());
+
+					dialog.setFilterNames(VuzeFileHandler.getVuzeFileFilterExtensions());
+
+					String path = TorrentOpener.setFilterPathData( dialog.open());
+
+					if ( path != null ){
+
+						if ( !VuzeFileHandler.isAcceptedVuzeFileName( path )){
+
+							path = VuzeFileHandler.getVuzeFileName( path );
+						}
+
+						try{
+							VuzeFile vf = TagManagerFactory.getTagManager().exportTags( tags );
+
+							vf.write( new File( path ));
+
+						}catch( Throwable e ){
+
+							Debug.out( e );
+						}
+					}
+				}
+			});
+	}
+	
+	public interface
+	TagSelectionListener
+	{
+		public void
+		selected(
+			Tag		tag );
 	}
 }

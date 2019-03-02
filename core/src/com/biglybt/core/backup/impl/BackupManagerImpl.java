@@ -33,6 +33,7 @@ import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
+import com.biglybt.core.custom.CustomizationManagerFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
@@ -616,11 +617,11 @@ BackupManagerImpl
 		long	total_files		= 0;
 		long	total_copied 	= 0;
 
-		if ( depth > 16 ){
+		if ( depth > 32 ){
 
 				// lazy but whatever, our config never gets this deep
 
-			throw( new Exception( "Loop detected in backup path, abandoning" ));
+			throw( new Exception( "Backup path too deep, abandoning" ));
 		}
 
 		if ( from_file.isDirectory()){
@@ -1124,6 +1125,15 @@ BackupManagerImpl
 
 				File[] files = backup_folder.listFiles();
 
+				if ( COConfigurationManager.getBooleanParameter("br.restore.autopause")){
+					
+					File	cf = CustomizationManagerFactory.getSingleton().getNewUserCustomizationFile( "restore_ap" );
+			
+					FileUtil.writeStringAsFile(
+						cf,
+						"Pause\\ Downloads\\ On\\ Start\\ After\\ Resume=bool:true" );
+				}
+				
 				if ( current_user_dir.equals( backup_user_dir )){
 
 					listener.reportProgress( "Directories are the same, no patching required" );

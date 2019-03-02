@@ -95,7 +95,7 @@ public class ConfigSectionInterfaceColor implements UISWTConfigSection {
 		label = new Label(cArea, SWT.NULL);
 		Messages.setLanguageText(label, "ConfigView.section.color");
 		ColorParameter colorScheme = new ColorParameter(cArea, "Color Scheme", 0,
-				128, 255);
+				128, 255, false);
 		gridData = new GridData();
 		gridData.widthHint = 50;
 		colorScheme.setLayoutData(gridData);
@@ -126,12 +126,12 @@ public class ConfigSectionInterfaceColor implements UISWTConfigSection {
 					+ sColorsToOverride[i]);
 			ColorParameter colorParm = new ColorParameter(cColorOverride, sConfigID,
 					colorsToOverride[i].getRed(), colorsToOverride[i].getGreen(),
-					colorsToOverride[i].getBlue()) {
+					colorsToOverride[i].getBlue(), false) {
 				@Override
 				public void newColorChosen(RGB newColor) {
-					COConfigurationManager.setParameter(sParamName + ".override", true);
+					COConfigurationManager.setParameter(configID + ".override", true);
 					for (int i = 0; i < sColorsToOverride.length; i++) {
-						if (sParamName.equals("Colors." + sColorsToOverride[i])) {
+						if (configID.equals("Colors." + sColorsToOverride[i])) {
 							btnColorReset[i].setEnabled(true);
 							break;
 						}
@@ -206,7 +206,7 @@ public class ConfigSectionInterfaceColor implements UISWTConfigSection {
 					final ColorParameter colorParm = new ColorParameter(cColorOverride, null,
 							existing==null?-1:existing.getRed(),
 							existing==null?-1:existing.getGreen(),
-							existing==null?-1:existing.getBlue()) {
+							existing==null?-1:existing.getBlue(), false) {
 						@Override
 						public void newColorChosen(RGB newColor) {
 							COConfigurationManager.setParameter( key, newColor.red+","+newColor.green+","+newColor.blue );

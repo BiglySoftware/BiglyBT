@@ -90,6 +90,8 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	void columnInvalidate(String sColumnName);
 
+	void columnInvalidate(String sColumnName, boolean forceRefresh );
+
 	/**
 	 * @param tableColumn
 	 */
@@ -145,6 +147,8 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	TableRowCore[] getRows();
 
+	public TableRowCore[] getRowsAndSubRows( boolean includeHidden );
+	
 	/** Returns an array of all selected Data Sources.  Null data sources are
 	 * ommitted.
 	 *
@@ -294,6 +298,8 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	TableColumnCore[] getVisibleColumns();
 
+	TableRowCore[] getVisibleRows();
+	
 	/**
 	 * @param dataSources
 	 */
@@ -306,6 +312,8 @@ public interface TableView<DATASOURCETYPE>
 	 */
 	int getSelectedRowsSize();
 
+	public void scrollVertically( int distance );
+	
 	/**
 	 * @param row
 	 * @return
@@ -421,6 +429,8 @@ public interface TableView<DATASOURCETYPE>
 
 	int getRowCount();
 
+	int[] getRowAndSubRowCount();
+	
 	void resetLastSortedOn();
 
 	TableColumnCore[] getAllColumns();

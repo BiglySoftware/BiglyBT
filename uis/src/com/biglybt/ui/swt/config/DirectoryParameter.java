@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import com.biglybt.core.internat.MessageText;
-
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 /**
@@ -48,13 +48,12 @@ DirectoryParameter
 	public
 	DirectoryParameter(
 		final Composite pluginGroup,
-		String			name,
-		String			defaultValue )
+		String			configID )
 	{
-  	super(name);
+  	super(configID);
 	  	controls = new Control[2];
 
-	    sp = new StringParameter(pluginGroup, name, defaultValue);
+		sp = new StringParameter(pluginGroup, configID);
 
 	    controls[0] = sp.getControl();
 	    GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -62,7 +61,7 @@ DirectoryParameter
 
 	    Button browse = new Button(pluginGroup, SWT.PUSH);
 	    ImageLoader.getInstance().setButtonImage(browse, getBrowseImageResource());
-	    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+	    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
 
 	    browse.addListener(SWT.Selection, new Listener() {
 	      @Override

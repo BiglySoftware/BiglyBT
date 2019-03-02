@@ -30,6 +30,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
@@ -62,7 +63,7 @@ PropertiesWindow
 	    GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 	    gridData.horizontalSpan = 3;
 
-		Utils.setLayoutData(scrollable,  gridData );
+		scrollable.setLayoutData(gridData);
 
 		/*
 		 * Main content composite where panels will be created
@@ -93,7 +94,7 @@ PropertiesWindow
 
 	    gridData = new GridData(GridData.FILL_BOTH);
 	    gridData.horizontalSpan = 3;
-	    Utils.setLayoutData(main, gridData);
+		main.setLayoutData(gridData);
 
 	    for (int i=0;i<keys.length;i++){
 
@@ -129,13 +130,13 @@ PropertiesWindow
 
 		    gridData = new GridData();
 		    gridData.verticalAlignment = GridData.VERTICAL_ALIGN_FILL;
-		    Utils.setLayoutData(msg_label, gridData);
+			msg_label.setLayoutData(gridData);
 
 		    BufferedLabel	val_label = new BufferedLabel(main,SWT.WRAP);
 		    val_label.setText( value );
 		    gridData = new GridData(GridData.FILL_HORIZONTAL);
 		    gridData.horizontalIndent = 6;
-		    Utils.setLayoutData(val_label, gridData);
+			val_label.setLayoutData(gridData);
 
 		    field_map.put( key, val_label );
 	    }
@@ -145,7 +146,7 @@ PropertiesWindow
 		Label labelSeparator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 3;
-		Utils.setLayoutData(labelSeparator, gridData);
+		labelSeparator.setLayoutData(gridData);
 
 			// buttons
 
@@ -156,20 +157,20 @@ PropertiesWindow
 	 	gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.HORIZONTAL_ALIGN_END | GridData.HORIZONTAL_ALIGN_FILL);
 	 	gridData.grabExcessHorizontalSpace = true;
 	 	gridData.widthHint = 70;
-	 	Utils.setLayoutData(bOk, gridData);
-	 	bOk.addListener(SWT.Selection,new Listener() {
-	  		@Override
-			  public void handleEvent(Event e) {
-		 		close();
-	   		}
-		 });
+		bOk.setLayoutData(gridData);
+		bOk.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				close();
+			}
+		});
 
 	 	Button bCancel = new Button(shell,SWT.PUSH);
 	 	Messages.setLanguageText(bCancel, "Button.cancel");
 	 	gridData = new GridData(GridData.HORIZONTAL_ALIGN_END);
 	 	gridData.grabExcessHorizontalSpace = false;
 	 	gridData.widthHint = 70;
-	 	Utils.setLayoutData(bCancel, gridData);
+		bCancel.setLayoutData(gridData);
 	 	bCancel.addListener(SWT.Selection,new Listener() {
 	 		@Override
 		  public void handleEvent(Event e) {

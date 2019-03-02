@@ -20,8 +20,11 @@
 
 package com.biglybt.ui.swt;
 
-import org.eclipse.swt.SWTError;
-import org.eclipse.swt.browser.*;
+import org.eclipse.swt.browser.CloseWindowListener;
+import org.eclipse.swt.browser.LocationListener;
+import org.eclipse.swt.browser.ProgressListener;
+import org.eclipse.swt.browser.StatusTextListener;
+import org.eclipse.swt.browser.TitleListener;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.*;
 
@@ -51,23 +54,7 @@ BrowserWrapper
 
 		}else{
 
-			try{
-				return( new BrowserWrapperSWT( composite, style ));
-
-			}catch( SWTError error ){
-				Control[] children = composite.getChildren();
-				for (Control child : children) {
-					if (child instanceof Browser) {
-						try {
-							child.dispose();
-						} catch (Throwable t) {
-
-						}
-					}
-				}
-
-				return( new BrowserWrapperFake( composite, style, error ));
-			}
+			return( BrowserWrapperSWTFactory.create( composite, style ));
 		}
 	}
 
@@ -81,10 +68,6 @@ BrowserWrapper
 
 	public abstract Composite
 	getControl();
-
-	public abstract void
-	setBrowser(
-		WindowEvent		event );
 
 	public abstract  void
 	setVisible(
@@ -184,6 +167,10 @@ BrowserWrapper
 		OpenWindowListener		l );
 
 	public abstract void
+	setBrowser(
+		WindowEvent		event );
+	
+	public abstract void
 	addCloseWindowListener(
 		CloseWindowListener		l );
 
@@ -213,7 +200,7 @@ BrowserWrapper
 	{
 		private BrowserFunction		delegate;
 
-		protected void
+		public void
 		bind(
 			BrowserFunction		_delegate )
 		{
@@ -247,5 +234,21 @@ BrowserWrapper
 
 			Debug.out( "wrong" );
 		}
+	}
+	
+	public interface
+	OpenWindowListener
+	{
+		public void
+		open(
+			WindowEvent		event );
+	}
+	
+	public interface
+	WindowEvent
+	{
+		public void
+		setRequired(
+			boolean		required );
 	}
 }

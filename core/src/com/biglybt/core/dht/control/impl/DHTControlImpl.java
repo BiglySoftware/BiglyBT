@@ -833,7 +833,10 @@ DHTControlImpl
 
 				DHTTransportContact	contact = transport.importContact( dais, false );
 
-				imported_state.put( new HashWrapper( contact.getID()), new Object[]{time_alive, contact });
+				if ( contact != null ){
+				
+					imported_state.put( new HashWrapper( contact.getID()), new Object[]{time_alive, contact });
+				}
 
 			}catch( DHTTransportException e ){
 

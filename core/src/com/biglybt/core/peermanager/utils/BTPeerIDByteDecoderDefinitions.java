@@ -49,6 +49,7 @@ public class BTPeerIDByteDecoderDefinitions {
 	static final String VER_AZ_FOUR_DIGITS = "1.2.3.4";
 	static final String VER_AZ_V_FOUR_DIGITS = "v1.2.3.4";
 	static final String VER_AZ_TWO_MAJ_TWO_MIN = "12.34";
+	static final String VER_AZ_ONE_MAJ_TWO_MIN_ONE_TRAIL = "1.23.4";
 	static final String VER_AZ_SKIP_FIRST_ONE_MAJ_TWO_MIN = "2.34";
 	static final String VER_AZ_KTORRENT_STYLE = "1.2.3=[RD].4";
 	static final String VER_AZ_TRANSMISSION_STYLE = "transmission";
@@ -60,6 +61,7 @@ public class BTPeerIDByteDecoderDefinitions {
 	static final String VER_BLOCK = "abcde"; // Is given as a block in the peer ID, we show the same block
 	static final String VER_DOTTED_BLOCK = "a.b.c.d.e"; // Is given as a dotted block in the peer ID, we show the block in the same dotted format.
 	static final String VER_BYTE_BLOCK_DOTTED_CHAR = "abcde -> a.b.c.d.e"; // Is given a block in the peer ID, but should be displayed in a dotted format.
+	static final String VER_BYTE_BLOCK_DOTTED_NUM  = "abcde -> n.o.p.q.r"; // Is given a block in the peer ID, but should be displayed in a dotted format but converted to digits a->10,b->11 etc.
 	static final String VER_TWOBYTE_BLOCK_DOTTED_CHAR = "abcde -> ab.cd"; // Is given a block in the peer ID, but should be displayed in a dotted format.
 	static final String VER_BITS_ON_WHEELS = "BOW-STYLE";
 	static final String VER_TWO_BYTE_THREE_PART = "ab -> a . b/10 . b%10";
@@ -129,7 +131,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		return (String)mainline_style_code_map.get(peer_id.substring(0, 1));
 	}
 
-	public static String getAzStyleClientVersion(String client_name, String peer_id) {
+	public static String getAzStyleClientVersion(String client_name, String peer_id, String net ) {
 		String version_scheme = (String)az_client_version_map.get(client_name);
 		if (version_scheme == NO_VERSION) {return null;}
 		try {
@@ -138,7 +140,7 @@ public class BTPeerIDByteDecoderDefinitions {
 			);
 		}
 		catch (Exception e) {
-			BTPeerIDByteDecoder.logUnknownClient(peer_id);
+			BTPeerIDByteDecoder.logUnknownClient(peer_id, net);
 			return null;
 		}
 	}
@@ -154,7 +156,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		return null;
 	}
 
-	public static String getSubstringStyleClientVersion(ClientData client_data, String peer_id, byte[] peer_id_bytes) {
+	public static String getSubstringStyleClientVersion(ClientData client_data, String peer_id, byte[] peer_id_bytes, String net) {
 		VersionNumberData verdata = client_data.version_data;
 		if (verdata == null) {return null;}
 
@@ -178,7 +180,7 @@ public class BTPeerIDByteDecoderDefinitions {
 			else {return client_data.client_name + verdata.fmt.replaceFirst("%s", version_string);}
 		}
 		catch (Exception e) {
-			BTPeerIDByteDecoder.logUnknownClient(peer_id);
+			BTPeerIDByteDecoder.logUnknownClient(peer_id, net);
 			return null;
 		}
 	}
@@ -460,10 +462,13 @@ public class BTPeerIDByteDecoderDefinitions {
 		addVersionedClient(client, VER_BYTE_BLOCK_DOTTED_CHAR, 3);
 
 		client = addSimpleClient("BitTorrent", "-BT");		// BitTorrent 7.9.1 appeared with this: -BTnnn-
-		addVersionedClient(client, VER_BYTE_BLOCK_DOTTED_CHAR, 3);
+		addVersionedClient(client, VER_BYTE_BLOCK_DOTTED_NUM, 3);
 
 		client = addSimpleClient("BitLord", "-BL");
 		addVersionedClient(client, VER_BITLORD, 6, 3);
+		
+		addAzStyle( "PI", "PicoTorrent", VER_AZ_ONE_MAJ_TWO_MIN_ONE_TRAIL);
+
 	}
 
 	static class ClientData {

@@ -206,6 +206,7 @@ AEWin32Access
 	/**
 	 * @return
 	 * @throws AEWin32AccessException
+	 * @deprecated - Shell Folders became User Shell Folders and this doesn't exist...
 	 */
 	String getCommonAppData() throws AEWin32AccessException;
 

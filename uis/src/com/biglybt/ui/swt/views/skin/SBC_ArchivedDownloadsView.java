@@ -199,6 +199,22 @@ public class SBC_ArchivedDownloadsView
 						new ColumnArchiveShareRatio(column);
 					}
 				});
+		
+		tableManager.registerColumn(DownloadStub.class, ColumnArchiveDLSaveLocation.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnArchiveDLSaveLocation(column);
+					}
+				});
+
+		tableManager.registerColumn(DownloadStub.class, ColumnArchiveDLMainTracker.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnArchiveDLMainTracker(column);
+					}
+				});
 
 		tableManager.setDefaultColumnNames(TABLE_NAME,
 				new String[] {
@@ -773,7 +789,7 @@ public class SBC_ArchivedDownloadsView
 				match_result = false;
 			}
 
-			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE);
+			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 
 			boolean result = !match_result;
@@ -808,7 +824,7 @@ public class SBC_ArchivedDownloadsView
 				match_result = false;
 			}
 
-			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE);
+			Pattern pattern = RegExUtil.getCachedPattern( "archiveview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 			return( pattern.matcher(name).find() == match_result );
 		}

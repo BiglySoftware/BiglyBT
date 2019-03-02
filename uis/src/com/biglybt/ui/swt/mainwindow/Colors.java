@@ -561,6 +561,30 @@ public class Colors implements ParameterListener {
 	}
 	
 	public Color
+	getSlightlyFadedColor(
+		Color	c )
+	{
+		HSLColor hslColor = new HSLColor();
+		hslColor.initHSLbyRGB(c.getRed(), c.getGreen(), c.getBlue());
+		
+		int iSat = hslColor.getSaturation();
+		int luminence = hslColor.getLuminence();
+		if (luminence < 20) {
+			if (iSat > 10) {
+				hslColor.setSaturation((int)(iSat / 1.25));
+				hslColor.brighten(1.12f);
+			}
+		} else {
+			if (iSat > 10) {
+				hslColor.setSaturation((int)(iSat / 1.25));
+				hslColor.brighten(0.63f);
+			} 
+		}
+
+		return( ColorCache.getColor(display, hslColor.getRed(),	hslColor.getGreen(), hslColor.getBlue()));
+	}
+	
+	public Color
 	getLighterColor(
 		Color	c,
 		int		percent )

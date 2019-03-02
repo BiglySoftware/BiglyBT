@@ -43,8 +43,10 @@ public interface
 UIManager
 {
 	/**
+	 * Creates a basic plugin view model and places it inside the
+	 * plugins section of the configuration page.
 	 *
-	 * @param section_name
+	 * @param section_name Message Bundle resource id for the config model.  This will be used as the name of the config page, as well as an unique id
 	 * @return BasicPluginConfigModel
 	 * @since 2.1.0.0
 	 */
@@ -57,8 +59,8 @@ UIManager
 	 * Creates a basic plugin view model and adds it to the plugin in one step.
 	 * view is placed inside the plugins section of the configuration page.
 	 *
-	 * @param parent_section
-	 * @param section_name  see {@link com.biglybt.pif.ui.config.ConfigSection}.SECTION_*
+	 * @param parent_section see {@link com.biglybt.pif.ui.config.ConfigSection}.SECTION_*
+	 * @param section_name  Message Bundle resource id for the config model.  This will be used as the name of the config page, as well as an unique id
 	 * @return BasicPluginConfigModel
 	 * @since 2.1.0.0
 	 */

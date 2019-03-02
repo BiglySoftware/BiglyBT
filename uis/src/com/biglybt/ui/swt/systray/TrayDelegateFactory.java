@@ -16,24 +16,37 @@
 
 package com.biglybt.ui.swt.systray;
 
-import java.io.File;
+import java.lang.reflect.Method;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 
 /**
  * Created by TuxPaper on 6/29/2017.
  */
 public class TrayDelegateFactory
 {
+
 	static TrayDelegate getTray(Display display) {
 		if (Constants.isUnix) {
 			try {
-				return (TrayDelegate) Class.forName(
+				TrayDelegate delegate = (TrayDelegate) Class.forName(
 						"com.biglybt.ui.swt.systray.TrayDork").newInstance();
+				if (delegate != null) {
+					Method mGetSystemTray = delegate.getClass().getDeclaredMethod("getSystemTray");
+					Object o = mGetSystemTray.invoke(delegate);
+
+					Method mGetMenu = o.getClass().getMethod("getMenu");
+					Object menu = mGetMenu.invoke(o);
+					if (menu != null) {
+						return delegate;
+					}
+				}
 			} catch (Throwable ignore) {
+				Debug.outNoStack(ignore.getMessage());
 			}
 		}
 		return new TraySWT(display);

@@ -31,16 +31,23 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.ui.UIFunctions.TagReturner;
 import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.Debug;
@@ -60,6 +67,7 @@ import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.sharing.ShareUtils;
+import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
@@ -67,6 +75,7 @@ import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.myshares.CategoryItem;
 import com.biglybt.ui.swt.views.tableitems.myshares.NameItem;
 import com.biglybt.ui.swt.views.tableitems.myshares.PersistentItem;
+import com.biglybt.ui.swt.views.tableitems.myshares.TagsItem;
 import com.biglybt.ui.swt.views.tableitems.myshares.TypeItem;
 
 import com.biglybt.ui.UIFunctions;
@@ -90,17 +99,24 @@ implements ShareManagerListener,
         TableRefreshListener, TableSelectionListener, ViewTitleInfo2,
 		UIPluginViewToolBarListener, UISWTViewCoreEventListenerEx
 {
-  private static final TableColumnCore[] basicItems = {
-    new NameItem(),
-    new TypeItem(),
-	new CategoryItem(),
-	new PersistentItem()
-  };
+	private static final TableColumnCore[] basicItems = {
+			new NameItem(),
+			new TypeItem(),
+			new CategoryItem(),
+			new TagsItem(),
+			new PersistentItem()
+	};
 
+	static{
+		TableColumnManager tcManager = TableColumnManager.getInstance();
+
+		tcManager.setDefaultColumnNames( TableManager.TABLE_MYSHARES, basicItems );
+	}
+	
 	protected static final TorrentAttribute	category_attribute =
 		TorrentManagerImpl.getSingleton().getAttribute( TorrentAttribute.TA_CATEGORY );
 
-	private Menu			menuCategory;
+	//private Menu			menuCategory;
 
 	private TableViewSWT<ShareResource> tv;
 
@@ -311,25 +327,66 @@ implements ShareManagerListener,
   fillMenu(
   	String sColumnName, final Menu menu)
   {
-  	Shell shell = menu.getShell();
-		/*
-	   final MenuItem itemStart = new MenuItem(menu, SWT.PUSH);
-	   Messages.setLanguageText(itemStart, "MySharesView.menu.start"); //$NON-NLS-1$
-	   itemStart.setImage(ImageRepository.getImage("start"));
+	    final MenuItem itemTags = new MenuItem(menu, SWT.CASCADE);
+	    itemTags.setText( MessageText.getString( "label.tags" ) + "..." ); 
 
-	   final MenuItem itemStop = new MenuItem(menu, SWT.PUSH);
-	   Messages.setLanguageText(itemStop, "MySharesView.menu.stop"); //$NON-NLS-1$
-	   itemStop.setImage(ImageRepository.getImage("stop"));
-	   */
-
-	    menuCategory = new Menu(shell, SWT.DROP_DOWN);
+	    itemTags.addListener( SWT.Selection, new Listener(){
+			@Override
+			public void
+			handleEvent(Event event)
+			{
+				TagManager tagManager = TagManagerFactory.getTagManager();
+				
+				TagType tt = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+				
+				List<Tag> all_tags = new ArrayList<>( tt.getTags());
+				
+				TagUIUtilsV3.showTagSelectionDialog( 
+					all_tags, 
+					Collections.emptyList(),
+					new TagUIUtilsV3.TagSelectionListener()
+					{
+						@Override
+						public void selected(List<Tag> tags){
+							
+							String tags_str = "";
+							
+							for ( Tag t: tags ){
+								
+								tags_str += (tags_str.isEmpty()?"":",") + t.getTagUID();
+							}
+							
+							final String f = tags_str;
+							
+						    tv.runForSelectedRows(new TableGroupRowRunner() {
+							      @Override
+							      public void run(TableRowCore row) {
+							      
+							      	ShareResource sr = ((ShareResource)row.getDataSource(true));
+							      	
+							      	Map<String,String> props = sr.getProperties();
+							      	
+							      	props = new HashMap<>( props );
+							      			
+							      	props.put( ShareManager.PR_TAGS, f );
+							      	
+							      	sr.setProperties( props );
+							      }
+							    });
+						}
+					});
+			}
+		});	
+	    
+  		Menu menuCategory = new Menu( menu.getShell(), SWT.DROP_DOWN);
 	    final MenuItem itemCategory = new MenuItem(menu, SWT.CASCADE);
-	    Messages.setLanguageText(itemCategory, "MyTorrentsView.menu.setCategory"); //$NON-NLS-1$
-	    //itemCategory.setImage(ImageRepository.getImage("speed"));
+	    Messages.setLanguageText(itemCategory, "MyTorrentsView.menu.setCategory"); 
+	  
 	    itemCategory.setMenu(menuCategory);
 
-	    addCategorySubMenu();
-
+	    addCategorySubMenu( menuCategory );    
+	    
+	    
 	    new MenuItem(menu, SWT.SEPARATOR);
 
 	   final MenuItem itemRemove = new MenuItem(menu, SWT.PUSH);
@@ -381,7 +438,7 @@ implements ShareManagerListener,
  	  	}
 	}
 
-	 private void addCategorySubMenu() {
+	 private void addCategorySubMenu( Menu menuCategory ) {
 	    MenuItem[] items = menuCategory.getItems();
 	    int i;
 	    for (i = 0; i < items.length; i++) {
@@ -414,6 +471,7 @@ implements ShareManagerListener,
 	          itemCategory.setText(categories[i].getName());
 	          itemCategory.setData("Category", categories[i]);
 
+	          TagUIUtils.setMenuIcon( itemCategory, categories[i] ); 
 	          itemCategory.addListener(SWT.Selection, new Listener() {
 	            @Override
 	            public void handleEvent(Event event) {
@@ -663,7 +721,7 @@ implements ShareManagerListener,
 
         		Download	download = dm.getDownload( t );
 
-        		if ( tracker_torrent == null || download == null ){
+        		if ( download == null ){
 
         			continue;
         		}
@@ -681,9 +739,11 @@ implements ShareManagerListener,
         				}catch( Throwable e ){
         				}
 
-        				try{
-        					tracker_torrent.stop();
-        				}catch( Throwable e ){
+        				if ( tracker_torrent != null ){
+	        				try{
+	        					tracker_torrent.stop();
+	        				}catch( Throwable e ){
+	        				}
         				}
         			}
 
@@ -696,9 +756,11 @@ implements ShareManagerListener,
         				}catch( Throwable e ){
         				}
 
-        				try{
-        					tracker_torrent.start();
-        				}catch( Throwable e ){
+        				if ( tracker_torrent != null ){
+	        				try{
+	        					tracker_torrent.start();
+	        				}catch( Throwable e ){
+	        				}
         				}
         			}
         		}

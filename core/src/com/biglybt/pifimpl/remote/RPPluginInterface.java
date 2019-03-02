@@ -46,9 +46,6 @@ import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.torrent.TorrentManager;
 import com.biglybt.pif.tracker.Tracker;
 import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.pif.ui.config.Parameter;
-import com.biglybt.pif.ui.config.PluginConfigUIFactory;
 import com.biglybt.pif.update.UpdateManager;
 import com.biglybt.pif.utils.ShortCuts;
 import com.biglybt.pif.utils.Utilities;
@@ -237,24 +234,6 @@ RPPluginInterface
   	}
 
 	@Override
-	public void addConfigUIParameters(Parameter[] parameters, String displayName)
-	{
-		notSupported();
-	}
-
-	@Override
-	public void addConfigSection(ConfigSection tab)
-	{
-		notSupported();
-	}
-
-	@Override
-	public void removeConfigSection(ConfigSection tab)
-	{
-		notSupported();
-	}
-
-	@Override
 	public Tracker
 	getTracker()
 	{
@@ -412,14 +391,6 @@ RPPluginInterface
 	}
 
 	@Override
-	public PluginConfigUIFactory getPluginConfigUIFactory()
-	{
-		notSupported();
-
-		return( null );
-	}
-
-	@Override
 	public ClassLoader
 	getPluginClassLoader()
 	{
@@ -543,12 +514,6 @@ RPPluginInterface
 		PluginEventListener	l )
 	{
 		notSupported();
-	}
-
-	@Override
-	public ConfigSection[] getConfigSections() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

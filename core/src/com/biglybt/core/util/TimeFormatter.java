@@ -18,7 +18,9 @@
 package com.biglybt.core.util;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -30,24 +32,80 @@ import com.biglybt.core.internat.MessageText.MessageTextListener;
  *
  */
 public class TimeFormatter {
-  // XXX should be i18n'd
+ 
+	public static final int	TS_SECOND	= 0;
+	public static final int	TS_MINUTE	= 1;
+	public static final int	TS_HOUR		= 2;
+	public static final int	TS_DAY		= 3;
+	public static final int	TS_YEAR		= 4;
+	
 	static final String[] TIME_SUFFIXES 	= { "s", "m", "h", "d", "y" };
 
 	static final String[] TIME_SUFFIXES_2 	= { "sec", "min", "hr", "day", "wk", "mo", "yr" };
 
-	public static final String[] DATEFORMATS_DESC = new String[] {
-		"EEEE, MMMM d, yyyy GG",
-		"EEEE, MMMM d, yyyy",
-		"EEE, MMMM d, yyyy",
-		"MMMM d, ''yy",
-		"EEE, MMM d, ''yy",
-		"MMM d, yyyy",
-		"MMM d, ''yy",
-		"yyyy/MM/dd",
-		"''yy/MM/dd",
-		"MMM dd",
-		"MM/dd",
-	};
+	public static String
+	getLongSuffix(
+		int		unit )
+	{
+		return( TIME_SUFFIXES_2[unit]);
+	}
+	
+	public static final String[] DATEFORMATS_DESC;
+	
+	static{
+		String[] defs = new String[] {
+			"EEEE, MMMM d, yyyy GG",
+			"EEEE, MMMM d, yyyy",
+			"EEE, MMMM d, yyyy",
+			"MMMM d, ''yy",
+			"EEE, MMM d, ''yy",
+			"MMM d, yyyy",
+			"MMM d, ''yy",
+			"yyyy/MM/dd",
+			"''yy/MM/dd",
+			"MMM dd",
+			"MM/dd",
+		};
+		
+		String formats = MessageText.getString( "column.date.formats" );
+		
+		if ( formats != null ){
+			
+			String[] bits = formats.split( ";" );
+			
+			List<String> list = new ArrayList<>( bits.length);
+			
+			for ( String bit: bits ){
+				
+				bit = bit.trim();
+				
+				if ( bit.length() > 0 ){
+					
+					try{
+						new SimpleDateFormat( bit );
+					
+						list.add( bit );
+						
+					}catch( Throwable e ){
+						
+						System.err.println( "Invalid date format: " + bit );
+					}
+				}
+			}
+			
+			if ( list.size() > 0 ){
+				
+				DATEFORMATS_DESC = list.toArray(new String[list.size()]);
+				
+			}else{
+				
+				DATEFORMATS_DESC = defs;
+			}
+		}else{
+			
+			DATEFORMATS_DESC = defs;
+		}
+	}
 
 	private static final SimpleDateFormat http_date_format =
 		new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US );
@@ -197,6 +255,16 @@ public class TimeFormatter {
 	format3(
 		long 	time_secs )
 	{
+		return( format3( time_secs, null ));
+	}
+	
+	static final long[] TIME_LUMPS = { 1, 60, 60*60, 24*60*60, 7*24*60*60, 30*24*60*60, 365*24*60*60L };
+	
+	public static String
+	format3(
+		long 	time_secs,
+		long[]	sort_time )
+	{
 		if (time_secs == Constants.CRAPPY_INFINITY_AS_INT || time_secs >= Constants.CRAPPY_INFINITE_AS_LONG)
 			return Constants.INFINITY_STRING;
 
@@ -221,6 +289,10 @@ public class TimeFormatter {
 		int start = vals.length - 1;
 		while (vals[start] == 0 && start > 0) {
 			start--;
+		}
+		
+		if ( sort_time != null ){
+			sort_time[0] = vals[start] * TIME_LUMPS[start];
 		}
 
 		String result = vals[start] + " " + TIME_SUFFIXES_2[start];

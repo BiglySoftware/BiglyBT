@@ -422,6 +422,22 @@ ShareResourceDirContentsImpl
 	{
 		return( properties );
 	}
+	
+	@Override
+	public void 
+	setProperties(
+		Map<String, String> props)
+	{
+		properties.putAll( props );
+		
+		for ( ShareResource sr: children ){
+			
+			sr.setProperties(props);
+		}
+		
+		manager.configDirty();
+	}
+	
 
 	protected class
 	shareNode
@@ -616,6 +632,17 @@ ShareResourceDirContentsImpl
 			return( null );
 		}
 
+		@Override
+		public void 
+		setProperties(
+			Map<String, String> props)
+		{
+			for (int i=0;i<node_children.length;i++){
+
+				node_children[i].setProperties( props );
+			}
+		}
+		
 		@Override
 		public boolean
 		isPersistent()

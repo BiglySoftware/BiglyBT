@@ -50,7 +50,7 @@ public class PEPieceImpl
 	private static final LogIDs LOGID = LogIDs.PIECES;
 
 	private final DiskManagerPiece	dmPiece;
-	private final PEPeerManager		manager;
+	private final PiecePicker		piecePicker;
 
 	private final int       nbBlocks;       // number of blocks in this piece
     private long            creationTime;
@@ -84,12 +84,12 @@ public class PEPieceImpl
      * @param _pieceSpeed the speed threshold for potential new requesters
      */
 	public PEPieceImpl(
-		PEPeerManager 		_manager,
+		PiecePicker 		_picker,
 		DiskManagerPiece	_dm_piece,
         int                 _pieceSpeed)
 	{
         creationTime =SystemTime.getCurrentTime();
-		manager =_manager;
+        piecePicker =_picker;
 		dmPiece =_dm_piece;
         speed =_pieceSpeed;
 
@@ -332,6 +332,8 @@ public class PEPieceImpl
 
 		int cleared = 0;
 
+		PEPeerManager manager = piecePicker.getPeerManager();
+		
 		for (int i=0; i<nbBlocks; i++){
 
 			if (!downloaded[i] &&!dmPiece.isWritten(i)){
@@ -762,13 +764,17 @@ public class PEPieceImpl
 		}
 	}
 
+	@Override
+	public PiecePicker getPiecePicker(){
+		return( piecePicker );
+	}
 	/**
 	 * @return Returns the manager.
 	 */
 	@Override
 	public PEPeerManager getManager()
 	{
-		return manager;
+		return piecePicker.getPeerManager();
 	}
 
 	@Override
@@ -830,7 +836,7 @@ public class PEPieceImpl
     @Override
     public int getAvailability()
     {
-        return manager.getAvailability(dmPiece.getPieceNumber());
+        return piecePicker.getPeerManager().getAvailability(dmPiece.getPieceNumber());
     }
 
     /** This support method returns how many blocks have already been
@@ -889,15 +895,13 @@ public class PEPieceImpl
 	{
 		String	text  = "";
 
-		PiecePicker pp = manager.getPiecePicker();
-
 		text	+= ( isRequestable()?"reqable,":"" );
 		text	+= "req=" + getNbRequests() + ",";
 		text	+= ( isRequested()?"reqstd,":"" );
 		text	+= ( isDownloaded()?"downed,":"" );
 		text	+= ( getReservedBy()!=null?"resrv,":"" );
 		text	+= "speed=" + getSpeed() + ",";
-		text	+= ( pp==null?("pri=" + getResumePriority()):pp.getPieceString(dmPiece.getPieceNumber()));
+		text	+= ( piecePicker==null?("pri=" + getResumePriority()):piecePicker.getPieceString(dmPiece.getPieceNumber()));
 
 		if ( text.endsWith(",")){
 			text = text.substring(0,text.length()-1);

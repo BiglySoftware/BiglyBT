@@ -21,25 +21,28 @@
 package com.biglybt.ui.swt.pifimpl;
 
 import java.util.*;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Debug;
+import com.biglybt.pif.ui.components.UIButton;
+import com.biglybt.pif.ui.components.UIComponent;
 import com.biglybt.pif.ui.components.UIPropertyChangeEvent;
 import com.biglybt.pif.ui.components.UIPropertyChangeListener;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
@@ -47,10 +50,6 @@ import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
 
 
 /**
@@ -212,7 +211,7 @@ BasicPluginViewImpl
     gridLayout.numColumns = 2;
     panel.setLayout(gridLayout);
 	gridData = new GridData(GridData.FILL_BOTH);
-	Utils.setLayoutData(panel, gridData);
+		panel.setLayoutData(gridData);
 
     /*
      * Status       : [Status Text]
@@ -235,7 +234,7 @@ BasicPluginViewImpl
 	if (sConfigSectionID == null){
 		gridData.horizontalSpan = 2;
 	}
-	Utils.setLayoutData(topSection, gridData);
+		topSection.setLayoutData(gridData);
 
     if(model.getStatus().getVisible()) {
       Label statusTitle = new Label(topSection,SWT.NULL);
@@ -243,7 +242,7 @@ BasicPluginViewImpl
 
       status = new BufferedLabel(topSection,SWT.NULL);
       gridData = new GridData(GridData.FILL_HORIZONTAL);
-      Utils.setLayoutData(status, gridData);
+			status.setLayoutData(gridData);
     }
 
     if(model.getActivity().getVisible()) {
@@ -252,7 +251,7 @@ BasicPluginViewImpl
 
       task = new BufferedLabel(topSection,SWT.NULL);
       gridData = new GridData(GridData.FILL_HORIZONTAL);
-      Utils.setLayoutData(task, gridData);
+			task.setLayoutData(gridData);
     }
 
     if(model.getProgress().getVisible()) {
@@ -263,9 +262,32 @@ BasicPluginViewImpl
       progress.setMaximum(100);
       progress.setMinimum(0);
       gridData = new GridData(GridData.FILL_HORIZONTAL);
-      Utils.setLayoutData(progress, gridData);
+			progress.setLayoutData(gridData);
     }
 
+    List<Button>	all_buttons = new ArrayList<>();
+    
+    List<UIButton>	buttons = model.getButtons();
+    
+    if ( !buttons.isEmpty()){
+    	for ( UIButton b: buttons ){
+    		Label buttonTitle = new Label(topSection,SWT.NULL);
+    		Messages.setLanguageText(buttonTitle, b.getLabel());
+    		Button button = new Button( topSection, SWT.PUSH );
+    		Messages.setLanguageText(button, b.getName());
+    		
+    		all_buttons.add( button );
+    		
+    		button.addSelectionListener(
+    			new SelectionAdapter(){
+    				@Override
+    				public void widgetSelected(SelectionEvent e){
+    					b.setProperty(UIComponent.PT_SELECTED, true );
+    				}
+				});
+    	}
+    }
+    
     if (sConfigSectionID != null) {
     	Composite configSection = new Composite(panel, SWT.NONE);
         gridLayout = new GridLayout();
@@ -274,7 +296,7 @@ BasicPluginViewImpl
         gridLayout.marginWidth = 2;
         configSection.setLayout(gridLayout);
         gridData = new GridData(GridData.END | GridData.VERTICAL_ALIGN_END );
-        Utils.setLayoutData(configSection, gridData);
+			configSection.setLayoutData(gridData);
         //Label padding = new Label(configSection,SWT.NULL);
         //gridData = new GridData(GridData.FILL_HORIZONTAL);
         //Utils.setLayoutData(padding, gridData);
@@ -291,7 +313,7 @@ BasicPluginViewImpl
 	      	 }
     		}
     	});
-    	Utils.setLayoutData(btnConfig, new GridData());
+			btnConfig.setLayoutData(new GridData());
     }
 
     if(model.getLogArea().getVisible()) {
@@ -304,6 +326,8 @@ BasicPluginViewImpl
     	Button button = new Button( topSection, SWT.PUSH );
     	Messages.setLanguageText(button,"plugins.basicview.clear");
 
+    	all_buttons.add( button );
+    	
     	button.addListener(SWT.Selection, new Listener() {
     		@Override
 		    public void handleEvent(Event event)
@@ -314,7 +338,7 @@ BasicPluginViewImpl
     	log = new StyledText(panel,SWT.READ_ONLY | SWT.V_SCROLL | SWT.H_SCROLL | SWT.BORDER);
     	gridData = new GridData(GridData.FILL_BOTH);
     	gridData.horizontalSpan = 2;
-    	Utils.setLayoutData(log, gridData);
+			log.setLayoutData(gridData);
 
 		ClipboardCopy.addCopyToClipMenu(
 				log,
@@ -365,18 +389,18 @@ BasicPluginViewImpl
         bottomSection.setLayout(gridLayout);
     	gridData = new GridData(GridData.FILL_HORIZONTAL);
    		gridData.horizontalSpan = 2;
-   		Utils.setLayoutData(bottomSection, gridData);
+			bottomSection.setLayoutData(gridData);
 
-   			// include
+			// include
 
     	Label label = new Label(bottomSection, SWT.NONE);
-    	Utils.setLayoutData(label, new GridData());
-    	Messages.setLanguageText(label, "LoggerView.includeOnly");
+			label.setLayoutData(new GridData());
+			Messages.setLanguageText(label, "LoggerView.includeOnly");
 
     	final Text inclText = new Text(bottomSection, SWT.BORDER);
     	gridData = new GridData();
     	gridData.widthHint = 200;
-    	Utils.setLayoutData(inclText, gridData);
+			inclText.setLayoutData(gridData);
     	inclText.addModifyListener(new ModifyListener()
     	{
     		@Override
@@ -388,7 +412,7 @@ BasicPluginViewImpl
     			{
     				try
     				{
-    					inclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE);
+    					inclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
     					inclText.setBackground(null);
     				} catch (PatternSyntaxException e1)
     				{
@@ -403,13 +427,13 @@ BasicPluginViewImpl
     		// exclude
 
     	label = new Label(bottomSection, SWT.NONE);
-    	Utils.setLayoutData(label, new GridData());
-    	Messages.setLanguageText(label, "LoggerView.excludeAll");
+			label.setLayoutData(new GridData());
+			Messages.setLanguageText(label, "LoggerView.excludeAll");
 
     	final Text exclText = new Text(bottomSection, SWT.BORDER);
     	gridData = new GridData();
     	gridData.widthHint = 200;
-    	Utils.setLayoutData(exclText, gridData);
+			exclText.setLayoutData(gridData);
     	exclText.addModifyListener(new ModifyListener()
     	{
     		@Override
@@ -421,7 +445,7 @@ BasicPluginViewImpl
     			{
     				try
     				{
-    					exclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE);
+    					exclusionFilter = Pattern.compile(newExpression, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     					exclText.setBackground(null);
     				} catch (PatternSyntaxException e1)
     				{
@@ -435,20 +459,55 @@ BasicPluginViewImpl
 
     		// pause
 
+		String config_key = model.getName() + ".LoggerView.pause";
+
 		Button buttonPause = new Button(bottomSection, SWT.CHECK);
 		Messages.setLanguageText(buttonPause, "LoggerView.pause");
 		gridData = new GridData();
-		Utils.setLayoutData(buttonPause, gridData);
+			buttonPause.setLayoutData(gridData);
+
 		buttonPause.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (e.widget == null || !(e.widget instanceof Button))
 					return;
 				Button btn = (Button) e.widget;
-				paused = btn.getSelection();
+				
+				boolean sel = btn.getSelection();
+				
+				Object o = model.getProperty( BasicPluginViewModel.PR_EXTERNAL_LOG_PAUSE );
+				
+				boolean external_pause_control = false;
+				
+				if ( o instanceof Boolean ){
+				
+					external_pause_control = (Boolean)o;
+				}
+				
+				if ( !external_pause_control){
+					paused = sel;
+				}
+				
+				COConfigurationManager.setParameter( config_key, sel );
 			}
 		});
-
+		
+		COConfigurationManager.addAndFireParameterListener(
+			config_key,
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String name){
+					boolean	paused = COConfigurationManager.getBooleanParameter( name, false );
+					
+					buttonPause.setSelection( paused );
+				}
+			});
+    }
+    
+    if ( all_buttons.size() > 1 ){
+    	
+    	Utils.makeButtonsEqualWidth( all_buttons );
     }
 
   }

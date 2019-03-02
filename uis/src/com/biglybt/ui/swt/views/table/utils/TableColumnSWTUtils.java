@@ -20,6 +20,10 @@ package com.biglybt.ui.swt.views.table.utils;
 import org.eclipse.swt.SWT;
 
 import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.ui.common.table.TableStructureEventDispatcher;
+import com.biglybt.ui.common.table.TableStructureModificationListener;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
 
 /**
  * @author TuxPaper
@@ -49,6 +53,7 @@ public class TableColumnSWTUtils
 		return swt;
 	}
 
+	/*
     private static int convertSWTAlignmentToColumn(int align) {
 		if ((align & SWT.LEAD) != 0) {
 			return TableColumn.ALIGN_LEAD;
@@ -59,4 +64,22 @@ public class TableColumnSWTUtils
 		}
 		return TableColumn.ALIGN_LEAD;
 	}
+    */
+	
+    public static void
+    changeColumnVisiblity(
+    	TableViewSWT<?>		tv,
+    	TableColumn			tc,
+    	boolean				b )
+    {
+    	tc.setVisible( b );
+		TableColumnManager tcm = TableColumnManager.getInstance();
+		String tableID = tv.getTableID();
+		tcm.saveTableColumns(tv.getDataSourceType(), tableID);
+		if (tv instanceof TableStructureModificationListener) {
+			((TableStructureModificationListener<?>) tv).tableStructureChanged(
+					true, null);
+		}
+		TableStructureEventDispatcher.getInstance(tableID).tableStructureChanged(true, null);
+    }
 }

@@ -79,7 +79,7 @@ public class WelcomePanel extends AbstractWizardPanel {
 
     Composite panel = new Composite(rootPanel, SWT.NULL);
     GridData gridData = new GridData(GridData.FILL_BOTH);
-    Utils.setLayoutData(panel, gridData);
+    panel.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 1;
     panel.setLayout(layout);
@@ -100,8 +100,8 @@ public class WelcomePanel extends AbstractWizardPanel {
     gridData = new GridData();
     final Group gRadio = new Group(panel, SWT.WRAP);
     Messages.setLanguageText(gRadio, "ConfigView.section.mode.title");
-    Utils.setLayoutData(gRadio, gridData);
-    Utils.setLayout(gRadio, new RowLayout(SWT.HORIZONTAL));
+    gRadio.setLayoutData(gridData);
+    gRadio.setLayout(new RowLayout(SWT.HORIZONTAL));
 
     Button button0 = new Button (gRadio, SWT.RADIO);
     Messages.setLanguageText(button0, "ConfigView.section.mode.beginner");
@@ -133,7 +133,7 @@ public class WelcomePanel extends AbstractWizardPanel {
     gridData = new GridData(GridData.FILL_BOTH);
     gridData.widthHint = 380;
     gridData.heightHint = 50;
-    Utils.setLayoutData(labl, gridData);
+    labl.setLayoutData(gridData);
 	text[0] = MessageText.getString("ConfigView.section.mode." + initsMode);
 	labl.setText(text[0]);
 	labl.addListener (SWT.Selection, new Listener () {
@@ -146,7 +146,7 @@ public class WelcomePanel extends AbstractWizardPanel {
     Group gWiki = new Group(panel, SWT.WRAP);
     gridData = new GridData();
     gridData.widthHint = 350;
-    Utils.setLayoutData(gWiki, gridData);
+    gWiki.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 1;
     layout.marginHeight = 1;
@@ -161,7 +161,7 @@ public class WelcomePanel extends AbstractWizardPanel {
 	    linkLabel.setForeground(Colors.blue);
 	    gridData = new GridData(GridData.FILL_HORIZONTAL);
 	    gridData.horizontalIndent = 10;
-	    Utils.setLayoutData(linkLabel,  gridData );
+	    linkLabel.setLayoutData(gridData);
 	    linkLabel.addMouseListener(new MouseAdapter() {
 	      @Override
 	      public void mouseDoubleClick(MouseEvent arg0) {

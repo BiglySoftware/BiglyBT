@@ -422,7 +422,7 @@ CategoryManagerImpl
 
 			response.setContentType( "text/html; charset=UTF-8" );
 
-			pw.println( "<HTML><HEAD><TITLE>Vuze Category Feeds</TITLE></HEAD><BODY>" );
+			pw.println( "<HTML><HEAD><TITLE>" + Constants.APP_NAME + " Category Feeds</TITLE></HEAD><BODY>" );
 
 			Map<String,String>	lines = new TreeMap<>();
 

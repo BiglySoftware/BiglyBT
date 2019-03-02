@@ -128,7 +128,7 @@ public class PieceGraphView
 			public void paintControl(PaintEvent e) {
 				if (img != null && !img.isDisposed()) {
 					Rectangle bounds = img.getBounds();
-					if (bounds.width >= e.width && bounds.height >= e.height) {
+					if (bounds.width >= ( e.width + e.x ) && bounds.height >= ( e.height + e.y )) {
 						e.gc.drawImage(img, e.x, e.y, e.width, e.height, e.x, e.y, e.width,
 								e.height);
 					}

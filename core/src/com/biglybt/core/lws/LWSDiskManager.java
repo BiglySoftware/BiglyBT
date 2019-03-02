@@ -568,6 +568,17 @@ LWSDiskManager
     	return( -1 );
     }
 
+    @Override
+    public File 
+    getMoveSubTask()
+    {
+    	return( null );
+    }
+    
+    @Override
+    public void setMoveState(int state){
+    }
+    
 	@Override
 	public boolean
 	checkBlockConsistencyForWrite(
@@ -896,6 +907,16 @@ LWSDiskManager
 		@Override
 		public void			setReadCount(short c){}
 
+		@Override
+		public boolean isMergeRead(){throw( new RuntimeException( "setChecking not implemented" ));}
+		@Override
+		public boolean isMergeWrite(){throw( new RuntimeException( "setChecking not implemented" ));}
+		@Override
+		public void setMergeRead(){throw( new RuntimeException( "setChecking not implemented" ));}
+		@Override
+		public void setMergeWrite(){throw( new RuntimeException( "setChecking not implemented" ));}
+		@Override
+		public int getRemaining(){return(0);}
 		@Override
 		public void
 		setDone(

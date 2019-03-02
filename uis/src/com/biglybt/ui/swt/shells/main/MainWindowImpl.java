@@ -1910,7 +1910,7 @@ public class MainWindowImpl
 
 																	last_text = text;
 
-																	addTorrentsFromClipboard(text);
+																	TorrentOpener.openTorrentsFromClipboard(text);
 																}
 															}
 														}
@@ -1997,58 +1997,6 @@ public class MainWindowImpl
 		}
 	}
 
-	private void
-	addTorrentsFromClipboard(
-		String		text )
-	{
-		final String[] splitters = {
-				"\r\n",
-				"\n",
-				"\r",
-				"\t"
-			};
-
-		String[] lines = null;
-
-		for (String splitter : splitters) {
-			if (text.contains(splitter)) {
-				lines = text.split(splitter);
-				break;
-			}
-		}
-
-		if ( lines == null ){
-
-			lines = new String[]{ text };
-		}
-
-		for ( int i=0; i<lines.length; i++ ){
-
-			String line = lines[i].trim();
-
-			if ( line.startsWith("\"") && line.endsWith("\"")){
-
-				if (line.length() < 3){
-
-					line = "";
-
-				}else{
-
-					line = line.substring(1, line.length() - 2);
-				}
-			}
-
-			if ( UrlUtils.isURL( line )){
-
-				Map<String,Object>	options = new HashMap<>();
-
-				options.put( UIFunctions.OTO_HIDE_ERRORS, true );
-
-				TorrentOpener.openTorrent( line, options );
-			}
-		}
-	}
-
 
 	/**
 	 * @param skinObject
@@ -2091,50 +2039,7 @@ public class MainWindowImpl
 			}
 		});
 
-		text.addListener(SWT.Resize, new Listener() {
-			Font lastFont = null;
-			int	lastHeight = -1;
-
-			@Override
-			public void handleEvent(Event event) {
-				Text text = (Text) event.widget;
-
-				int h = text.getClientArea().height - 2;
-				if (Utils.isGTK3) {
-					// GTK3 has border included in clientArea
-					h -= 5;
-				} else if (Utils.isGTK && h > 18) {
-					h = 18;
-				}
-
-				if ( h == lastHeight ){
-					return;
-				}
-
-				lastHeight = h;
-				Font font = FontUtils.getFontWithHeight(text.getFont(), null, h);
-				if (font != null) {
-					text.setFont(font);
-
-					if ( lastFont == null ){
-
-						text.addDisposeListener(new DisposeListener() {
-							@Override
-							public void widgetDisposed(DisposeEvent e) {
-								Text text = (Text) e.widget;
-								text.setFont(null);
-								Utils.disposeSWTObjects(lastFont);
-							}
-						});
-
-					}else{
-						Utils.disposeSWTObjects(lastFont);
-					}
-
-					lastFont = font;
-				}
-			}
-		});
+		FontUtils.fontToWidgetHeight(text);
 
 		text.setTextLimit(2048);	// URIs can get pretty long...
 
@@ -2151,7 +2056,7 @@ public class MainWindowImpl
 
 		String tooltip = MessageText.getString( "v3.MainWindow.search.tooltip" );
 
-		text.setToolTipText( tooltip );
+		Utils.setTT(text, tooltip );
 
 		SWTSkinProperties properties = skinObject.getProperties();
 		Color colorSearchTextBG = properties.getColor("color.search.text.bg");
@@ -2196,7 +2101,7 @@ public class MainWindowImpl
 					text.setText("");
 					return;
 				}
-				if (event.character == SWT.CR) {
+				if (event.character == SWT.CR || event.keyCode == SWT.KEYPAD_CR) {
 					if ( event.doit){
 						String expression = text.getText();
 
@@ -2412,67 +2317,7 @@ public class MainWindowImpl
 
 	@Override
 	public Image generateObfuscatedImage() {
-		// 3.2 TODO: Obfuscate! (esp advanced view)
-
-		Rectangle shellBounds = shell.getBounds();
-		Rectangle shellClientArea = shell.getClientArea();
-
-		Display display = shell.getDisplay();
-		if (display.isDisposed()) {
-			return null;
-		}
-		Image fullImage = new Image(display, shellBounds.width, shellBounds.height);
-		Image subImage = new Image(display, shellClientArea.width, shellClientArea.height);
-
-		GC gc = new GC(display);
-		try {
-			gc.copyArea(fullImage, shellBounds.x, shellBounds.y);
-		} finally {
-			gc.dispose();
-		}
-		GC gcShell = new GC(shell);
-		try {
-			gcShell.copyArea(subImage, 0, 0);
-		} finally {
-			gcShell.dispose();
-		}
-		GC gcFullImage = new GC(fullImage);
-		try {
-			Point location = shell.toDisplay(0, 0);
-			gcFullImage.drawImage(subImage, location.x - shellBounds.x, location.y
-					- shellBounds.y);
-		} finally {
-			gcFullImage.dispose();
-		}
-		subImage.dispose();
-
-		Control[] children = shell.getChildren();
-		for (Control control : children) {
-			SWTSkinObject so = (SWTSkinObject) control.getData("SkinObject");
-			if (so instanceof ObfuscateImage) {
-				ObfuscateImage oi = (ObfuscateImage) so;
-				oi.obfuscatedImage(fullImage);
-			}
-		}
-
-		Rectangle monitorClientArea = shell.getMonitor().getClientArea();
-		Rectangle trimmedShellBounds = shellBounds.intersection(monitorClientArea);
-
-		if (!trimmedShellBounds.equals(shellBounds)) {
-			subImage = new Image(display, trimmedShellBounds.width,
-					trimmedShellBounds.height);
-			GC gcCrop = new GC(subImage);
-			try {
-				gcCrop.drawImage(fullImage, shellBounds.x - trimmedShellBounds.x,
-						shellBounds.y - trimmedShellBounds.y);
-			} finally {
-				gcCrop.dispose();
-				fullImage.dispose();
-				fullImage = subImage;
-			}
-		}
-
-		return fullImage;
+		return( UIDebugGenerator.generateObfuscatedImage( shell ));
 	}
 
 	// @see MdiListener#mdiEntrySelected(MdiEntry, MdiEntry)

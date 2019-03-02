@@ -106,7 +106,7 @@ public class UI extends com.biglybt.ui.common.UITemplateHeadless implements IUse
 			e.printStackTrace();
 		}
 
-	    TorrentDownloaderFactory.initManager(core.getGlobalManager(), true, true, COConfigurationManager.getStringParameter("Default save path") );
+	    TorrentDownloaderFactory.initManager(core.getGlobalManager(), true, true );
 	}
 
 	/**

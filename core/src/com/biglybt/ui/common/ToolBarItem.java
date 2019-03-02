@@ -41,8 +41,6 @@ public interface ToolBarItem
 
 	public void setAlwaysAvailable(boolean b);
 
-	public String getTooltipID();
-
 	public UIToolBarActivationListener getDefaultActivationListener();
 
 	public void addToolBarItemListener(ToolBarItemListener l);

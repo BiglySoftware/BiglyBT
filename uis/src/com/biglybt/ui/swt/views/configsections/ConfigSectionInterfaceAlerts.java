@@ -292,7 +292,7 @@ public class ConfigSectionInterfaceAlerts
 
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 
-		final StringParameter e_pathParameter = new StringParameter(cArea,playKeyConfig, "");
+		final StringParameter e_pathParameter = new StringParameter(cArea,playKeyConfig);
 
 		if (e_pathParameter.getValue().length() == 0) {
 
@@ -307,7 +307,7 @@ public class ConfigSectionInterfaceAlerts
 
 		imgOpenFolder.setBackground(d_browse.getBackground());
 
-		d_browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+		Utils.setTT(d_browse,MessageText.getString("ConfigView.button.browse"));
 
 		d_browse.addListener(SWT.Selection, new Listener() {
 			@Override
@@ -350,6 +350,6 @@ public class ConfigSectionInterfaceAlerts
 		Messages.setLanguageText(d_sound_info, "ConfigView.section.interface.wavlocation.info");
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.widthHint = 100;
-		Utils.setLayoutData(d_sound_info, gridData);
+		d_sound_info.setLayoutData(gridData);
 	}
 }

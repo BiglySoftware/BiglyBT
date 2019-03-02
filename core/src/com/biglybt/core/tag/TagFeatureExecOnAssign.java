@@ -22,20 +22,44 @@
 
 package com.biglybt.core.tag;
 
+import java.util.List;
+
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerOptionsHandler;
+
 public interface
 TagFeatureExecOnAssign
 	extends TagFeature
 {
-	public static final int ACTION_NONE				= 0x0000;
-	public static final int ACTION_DESTROY			= 0x0001;
-	public static final int ACTION_START			= 0x0002;
-	public static final int ACTION_STOP				= 0x0004;
-	public static final int ACTION_FORCE_START		= 0x0008;
-	public static final int ACTION_NOT_FORCE_START	= 0x0010;
-	public static final int ACTION_SCRIPT			= 0x0020;
-	public static final int ACTION_PAUSE			= 0x0040;
-	public static final int ACTION_RESUME			= 0x0080;
+	public static final int ACTION_NONE						= 0x0000;
+	public static final int ACTION_DESTROY					= 0x0001;
+	public static final int ACTION_START					= 0x0002;
+	public static final int ACTION_STOP						= 0x0004;
+	public static final int ACTION_FORCE_START				= 0x0008;
+	public static final int ACTION_NOT_FORCE_START			= 0x0010;
+	public static final int ACTION_SCRIPT					= 0x0020;
+	public static final int ACTION_PAUSE					= 0x0040;
+	public static final int ACTION_RESUME					= 0x0080;
+	public static final int ACTION_APPLY_OPTIONS_TEMPLATE	= 0x0100;
+	public static final int ACTION_POST_MAGNET_URI			= 0x0200;
+	public static final int ACTION_MOVE_INIT_SAVE_LOC		= 0x0400;
+	public static final int ACTION_ASSIGN_TAGS				= 0x0800;
 
+	public static final int[] ACTIONS = {
+			ACTION_DESTROY,
+			ACTION_START,
+			ACTION_STOP,
+			ACTION_FORCE_START,
+			ACTION_NOT_FORCE_START,
+			ACTION_SCRIPT,
+			ACTION_PAUSE,
+			ACTION_RESUME,
+			ACTION_APPLY_OPTIONS_TEMPLATE,
+			ACTION_POST_MAGNET_URI,
+			ACTION_MOVE_INIT_SAVE_LOC,
+			ACTION_ASSIGN_TAGS,
+	};
+	
 	public int
 	getSupportedActions();
 
@@ -43,6 +67,9 @@ TagFeatureExecOnAssign
 	supportsAction(
 		int		action );
 
+	public boolean
+	isAnyActionEnabled();
+	
 	public boolean
 	isActionEnabled(
 		int		action );
@@ -58,4 +85,34 @@ TagFeatureExecOnAssign
 	public void
 	setActionScript(
 		String		script );
+	
+	public OptionsTemplateHandler
+	getOptionsTemplateHandler();
+	
+	public List<Tag>
+	getTagAssigns();
+	
+	public void
+	setTagAssigns(
+		List<Tag>	tags );
+	
+	public interface
+	OptionsTemplateHandler
+		extends DownloadManagerOptionsHandler
+	{
+		public boolean
+		isActive();
+		
+		public void
+		applyTo(
+			DownloadManager		dm );
+	}
+	
+	public String
+	getPostMessageChannel();
+
+	public void
+	setPostMessageChannel(
+		String		chat );
+	
 }

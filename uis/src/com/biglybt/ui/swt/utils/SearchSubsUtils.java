@@ -215,7 +215,7 @@ SearchSubsUtils
 				match_result = false;
 			}
 
-			Pattern pattern = Pattern.compile(s, Pattern.CASE_INSENSITIVE);
+			Pattern pattern = Pattern.compile(s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 			if ( hash_filter ){
 

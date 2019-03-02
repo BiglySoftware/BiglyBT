@@ -151,12 +151,10 @@ public class PeerManager implements CoreStatsProvider {
 
 
 
-	private final Map<HashWrapper,List<PeerManagerRegistrationImpl>> registered_legacy_managers 	= new HashMap<>();
-	private final Map<String,PeerManagerRegistrationImpl>			 registered_links				= new HashMap<>();
+	private final Map<HashWrapper,CopyOnWriteList<PeerManagerRegistrationImpl>> registered_legacy_managers 	= new HashMap<>();
+	private final Map<String,PeerManagerRegistrationImpl>			 			registered_links				= new HashMap<>();
 
 	private final ByteBuffer legacy_handshake_header;
-
-	private final AEMonitor	managers_mon = new AEMonitor( "PeerManager:managers" );
 
 
 	private PeerManager() {
@@ -196,15 +194,13 @@ public class PeerManager implements CoreStatsProvider {
 			long	total_snubbed_peers			= 0;
 			long	total_stalled_pending_load	= 0;
 
-			try{
+			synchronized( registered_legacy_managers ){
 
-				managers_mon.enter();
-
-				Iterator<List<PeerManagerRegistrationImpl>>	it = registered_legacy_managers.values().iterator();
+				Iterator<CopyOnWriteList<PeerManagerRegistrationImpl>>	it = registered_legacy_managers.values().iterator();
 
 				while( it.hasNext()){
 
-					List<PeerManagerRegistrationImpl>	registrations = it.next();
+					CopyOnWriteList<PeerManagerRegistrationImpl>	registrations = it.next();
 
 					Iterator<PeerManagerRegistrationImpl>	it2 = registrations.iterator();
 
@@ -222,10 +218,8 @@ public class PeerManager implements CoreStatsProvider {
 						}
 					}
 				}
-			}finally{
-
-				managers_mon.exit();
 			}
+			
 			if ( types.contains( CoreStats.ST_PEER_MANAGER_PEER_COUNT )){
 
 				values.put( CoreStats.ST_PEER_MANAGER_PEER_COUNT, new Long( total_peers ));
@@ -259,9 +253,9 @@ public class PeerManager implements CoreStatsProvider {
 			@Override
 			public Object
 			matches(
-					TransportHelper		transport,
-					ByteBuffer 			to_compare,
-					int 				port )
+				TransportHelper		transport,
+				ByteBuffer 			to_compare,
+				int 				local_port )
 			{
 				InetSocketAddress	address = transport.getAddress();
 
@@ -280,18 +274,37 @@ public class PeerManager implements CoreStatsProvider {
 
 					to_compare.get( hash );
 
-					try{
-						managers_mon.enter();
+					CopyOnWriteList<PeerManagerRegistrationImpl>	registrations;
+					
+					synchronized( registered_legacy_managers ){
+						
+						registrations = registered_legacy_managers.get( new HashWrapper( hash ));
+					}
+					
+					if ( registrations != null ){
 
-						List<PeerManagerRegistrationImpl>	registrations = registered_legacy_managers.get( new HashWrapper( hash ));
-
-						if ( registrations != null ){
-
-							routing_data = registrations.get(0);
+						routing_data = registrations.get(0);
+						
+						if ( registrations.size() > 1 ){
+							
+							for ( PeerManagerRegistrationImpl r: registrations ){
+								
+								PeerManagerRegistrationAdapter adapter = r.getAdapter();
+								
+								if ( adapter.getHashOverride() != null ){
+									
+									if ( local_port == adapter.getLocalPort( true )){	// only if allocated as if it is't it is an out-of-date connection
+										
+										routing_data = r;
+										
+										break;
+									}
+								}else{
+									
+									routing_data = r;	// default non-override
+								}
+							}
 						}
-					}finally{
-
-						managers_mon.exit();
 					}
 				}
 
@@ -415,19 +428,14 @@ public class PeerManager implements CoreStatsProvider {
 	{
 		PeerManagerRegistrationImpl	routing_data = null;
 
-		try{
+		synchronized( registered_legacy_managers ){
 
-			managers_mon.enter();
-
-			List<PeerManagerRegistrationImpl>	registrations = registered_legacy_managers.get( new HashWrapper( hash ));
+			CopyOnWriteList<PeerManagerRegistrationImpl>	registrations = registered_legacy_managers.get( new HashWrapper( hash ));
 
 			if ( registrations != null ){
 
 				routing_data = registrations.get(0);
 			}
-		}finally{
-
-			managers_mon.exit();
 		}
 
 		if ( routing_data != null ){
@@ -466,8 +474,7 @@ public class PeerManager implements CoreStatsProvider {
 	{
 		byte[]	hash;
 
-		try{
-			managers_mon.enter();
+		synchronized( registered_legacy_managers ){
 
 			PeerManagerRegistrationImpl	registration = registered_links.get( link );
 
@@ -477,10 +484,6 @@ public class PeerManager implements CoreStatsProvider {
 			}
 
 			hash = registration.getHash();
-
-		}finally{
-
-			managers_mon.exit();
 		}
 
 		return( manualMatchHash( address, hash ));
@@ -502,19 +505,15 @@ public class PeerManager implements CoreStatsProvider {
 		HashWrapper						hash,
 		PeerManagerRegistrationAdapter  adapter )
 	{
-		try{
-			managers_mon.enter();
+		synchronized( registered_legacy_managers ){
 
-			// normally we only get a max of 1 of these. However, due to DownloadManager crazyness
-			// we can get an extra one when adding a download that already exists...
-
-			List<PeerManagerRegistrationImpl>	registrations = registered_legacy_managers.get( hash );
+			CopyOnWriteList<PeerManagerRegistrationImpl>	registrations = registered_legacy_managers.get( hash );
 
 			byte[][]	secrets = adapter.getSecrets();
 
 			if ( registrations == null ){
 
-				registrations = new ArrayList<>(1);
+				registrations = new CopyOnWriteList<>(1);
 
 				registered_legacy_managers.put( hash, registrations );
 
@@ -525,11 +524,25 @@ public class PeerManager implements CoreStatsProvider {
 
 			registrations.add( registration );
 
+			byte[] override = adapter.getHashOverride();
+			
+			if ( override != null ){
+				
+				HashWrapper ov_hw = new HashWrapper( override );
+				
+				CopyOnWriteList<PeerManagerRegistrationImpl>	ov_registrations = registered_legacy_managers.get( ov_hw );
+
+				if ( ov_registrations == null ){
+
+					ov_registrations = new CopyOnWriteList<>(1);
+
+					registered_legacy_managers.put( ov_hw, ov_registrations );
+				}
+
+				ov_registrations.add( registration );
+			}
+			
 			return( registration );
-
-		}finally{
-
-			managers_mon.exit();
 		}
 	}
 
@@ -539,8 +552,8 @@ public class PeerManager implements CoreStatsProvider {
 	PeerManagerRegistrationImpl
 		implements PeerManagerRegistration
 	{
-		private final HashWrapper 					hash;
-		final PeerManagerRegistrationAdapter	adapter;
+		private final HashWrapper 						hash;
+		private final PeerManagerRegistrationAdapter	adapter;
 
 		private PEPeerControl					download;
 
@@ -572,7 +585,51 @@ public class PeerManager implements CoreStatsProvider {
 		{
 			return( hash.getBytes() );
 		}
+		
+		public int
+		getLocalPort(
+			boolean	only_if_allocated )
+		{
+			return( adapter.getLocalPort( only_if_allocated ));
+		}
 
+	    public List<PeerManagerRegistration>
+	    getOtherRegistrationsForHash()
+	    {
+	    	List<PeerManagerRegistration> result = new ArrayList<>();
+	    	
+	    	HashWrapper hw;
+	    	
+	    	byte[] ho_b = adapter.getHashOverride();
+	    	
+	    	if ( ho_b == null ){
+	    		
+	    		hw = hash;
+	    		
+	    	}else{
+	    		
+	    		hw = new HashWrapper( ho_b );
+	    	}
+	    		
+	    	synchronized( registered_legacy_managers ){
+    							
+    			CopyOnWriteList<PeerManagerRegistrationImpl>	ov_registrations = registered_legacy_managers.get( hw );
+
+				if ( ov_registrations != null ){
+
+					for ( PeerManagerRegistrationImpl r: ov_registrations ){
+						
+						if ( r != this ){
+							
+							result.add( r );
+						}
+					}
+				}
+	    	}
+	    	
+	    	return( result );
+	    }
+	    
 		@Override
 		public TOTorrentFile
 		getLink(
@@ -597,9 +654,8 @@ public class PeerManager implements CoreStatsProvider {
 
 			throws Exception
 		{
-			try{
-				managers_mon.enter();
-
+			synchronized( registered_legacy_managers ){
+				
 				if ( registered_links.get( link ) != null ){
 
 					throw( new Exception( "Duplicate link '" + link + "'" ));
@@ -608,10 +664,6 @@ public class PeerManager implements CoreStatsProvider {
 				registered_links.put( link, this );
 
 				//System.out.println( "Added link '" + link + "'" );
-
-			}finally{
-
-				managers_mon.exit();
 			}
 
 			synchronized( this ){
@@ -630,14 +682,9 @@ public class PeerManager implements CoreStatsProvider {
 		removeLink(
 			String			link )
 		{
-			try{
-				managers_mon.enter();
+			synchronized( registered_legacy_managers ){
 
 				registered_links.remove( link );
-
-			}finally{
-
-				managers_mon.exit();
 			}
 
 			synchronized( this ){
@@ -662,8 +709,7 @@ public class PeerManager implements CoreStatsProvider {
 		{
 			List<Object[]>	connections = null;
 
-			try{
-				managers_mon.enter();
+			synchronized( registered_legacy_managers ){
 
 				active_control = _active_control;
 
@@ -677,10 +723,6 @@ public class PeerManager implements CoreStatsProvider {
 				connections = pending_connections;
 
 				pending_connections = null;
-
-			}finally{
-
-				managers_mon.exit();
 			}
 
 			if ( connections != null ){
@@ -702,8 +744,7 @@ public class PeerManager implements CoreStatsProvider {
 		public void
 		deactivate()
 		{
-			try{
-				managers_mon.enter();
+			synchronized( registered_legacy_managers ){
 
 				if ( download == null ){
 
@@ -734,10 +775,6 @@ public class PeerManager implements CoreStatsProvider {
 
 					pending_connections = null;
 				}
-
-			}finally{
-
-				managers_mon.exit();
 			}
 		}
 
@@ -745,8 +782,7 @@ public class PeerManager implements CoreStatsProvider {
 		public void
 		unregister()
 		{
-			try{
-				managers_mon.enter();
+			synchronized( registered_legacy_managers ){
 
 				if ( active_control != null ){
 
@@ -755,7 +791,7 @@ public class PeerManager implements CoreStatsProvider {
 					deactivate();
 				}
 
-				List<PeerManagerRegistrationImpl>	registrations = registered_legacy_managers.get( hash );
+				CopyOnWriteList<PeerManagerRegistrationImpl>	registrations = registered_legacy_managers.get( hash );
 
 				if ( registrations == null ){
 
@@ -777,6 +813,29 @@ public class PeerManager implements CoreStatsProvider {
 					}
 				}
 
+				byte[] override = adapter.getHashOverride();
+				
+				if ( override != null ){
+					
+					HashWrapper ov_hw = new HashWrapper( override );
+					
+					CopyOnWriteList<PeerManagerRegistrationImpl>	ov_registrations = registered_legacy_managers.get( ov_hw );
+
+					if ( ov_registrations == null ){
+
+						Debug.out( "manager already deregistered" );
+
+					}else{
+
+						if ( ov_registrations.remove( this )){
+
+						}else{
+
+							Debug.out( "manager already deregistered" );
+						}
+					}
+				}
+				
 				synchronized( this ){
 
 					if ( links != null ){
@@ -789,9 +848,6 @@ public class PeerManager implements CoreStatsProvider {
 						}
 					}
 				}
-			}finally{
-
-				managers_mon.exit();
 			}
 		}
 
@@ -799,8 +855,7 @@ public class PeerManager implements CoreStatsProvider {
 		isKnownSeed(
 			InetSocketAddress		address )
 		{
-			try{
-				managers_mon.enter();
+			synchronized( registered_legacy_managers ){
 
 				if ( known_seeds == null ){
 
@@ -808,10 +863,6 @@ public class PeerManager implements CoreStatsProvider {
 				}
 
 				return( known_seeds.contains( AddressUtils.getAddressBytes( address )));
-
-			}finally{
-
-				managers_mon.exit();
 			}
 		}
 
@@ -819,8 +870,7 @@ public class PeerManager implements CoreStatsProvider {
 		setKnownSeed(
 				InetSocketAddress		address )
 		{
-			try{
-				managers_mon.enter();
+			synchronized( registered_legacy_managers ){
 
 				if ( known_seeds == null ){
 
@@ -831,10 +881,6 @@ public class PeerManager implements CoreStatsProvider {
 				// same NAT will have to connect to each other using LAN peer finder
 
 				known_seeds.add( AddressUtils.getAddressBytes( address ));
-
-			}finally{
-
-				managers_mon.exit();
 			}
 		}
 
@@ -870,8 +916,7 @@ public class PeerManager implements CoreStatsProvider {
 
 			boolean	register_for_timeouts = false;
 
-			try{
-				managers_mon.enter();
+			synchronized( registered_legacy_managers ){
 
 				control = active_control;
 
@@ -905,9 +950,6 @@ public class PeerManager implements CoreStatsProvider {
 						}
 					}
 				}
-			}finally{
-
-				managers_mon.exit();
 			}
 
 			// do this outside the monitor as the timeout code calls us back holding the timeout monitor
@@ -927,8 +969,7 @@ public class PeerManager implements CoreStatsProvider {
 		protected boolean
 		timeoutCheck()
 		{
-			try{
-				managers_mon.enter();
+			synchronized( registered_legacy_managers ){
 
 				if ( pending_connections == null ){
 
@@ -970,10 +1011,6 @@ public class PeerManager implements CoreStatsProvider {
 				}
 
 				return( pending_connections != null );
-
-			}finally{
-
-				managers_mon.exit();
 			}
 		}
 

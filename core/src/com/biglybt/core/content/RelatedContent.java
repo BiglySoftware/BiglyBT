@@ -184,6 +184,9 @@ RelatedContent
 	public abstract int
 	getLastSeenSecs();
 
+	public abstract int
+	getFirstSeenSecs();
+	
 	public String
 	getTracker()
 	{

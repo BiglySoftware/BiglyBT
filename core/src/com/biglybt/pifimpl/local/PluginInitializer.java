@@ -204,6 +204,7 @@ PluginInitializer
 					"false"},
         };
 
+  /*
   static VerifiedPluginHolder verified_plugin_holder;
 
   static{
@@ -212,7 +213,8 @@ PluginInitializer
 		  verified_plugin_holder = new VerifiedPluginHolder();
 	  }
   }
-
+  */
+  
   private static PluginInitializer	singleton;
   private static AEMonitor			class_mon	= new AEMonitor( "PluginInitializer");
 
@@ -1887,7 +1889,7 @@ PluginInitializer
   		}
   	}
 
-  	verified_plugin_holder.removeValue( pi );
+  	// verified_plugin_holder.removeValue( pi );
   }
 
   protected void reloadPlugin(PluginInterfaceImpl pi) throws PluginException {
@@ -2333,6 +2335,7 @@ PluginInitializer
 		}
 	}
 
+	/*
 	protected static void
 	setVerified(
 		PluginInterfaceImpl		pi,
@@ -2438,6 +2441,7 @@ PluginInitializer
 		return( true );
 	}
 
+	
 	private static final class
 	VerifiedPluginHolder
 	{
@@ -2598,4 +2602,5 @@ PluginInitializer
 			return( request[1] );
 		}
 	}
+	*/
 }

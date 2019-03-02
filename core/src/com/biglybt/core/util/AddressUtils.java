@@ -435,32 +435,56 @@ AddressUtils
 	 * picks 1 global-scoped address out of a list based on the heuristic
 	 * "true" ipv6/tunnel broker > 6to4 > teredo
 	 *
-	 * @return null if no proper v6 address is found, best one otherwise
+	 * @return empty list if no proper v6 address is found, best one otherwise
 	 */
-	public static InetAddress pickBestGlobalV6Address(List<InetAddress> addrs)
-	{
-		InetAddress bestPick = null;
-		int currentRanking = 0;
-		for(InetAddress addr : addrs)
-		{
-			if(!isGlobalAddressV6(addr))
-				continue;
-			int ranking = 3;
-			if(isTeredo(addr))
-				ranking = 1;
-			else if(is6to4(addr))
-				ranking = 2;
 
-			if(ranking > currentRanking)
-			{
-				bestPick = addr;
+	public static List<InetAddress> 
+	pickBestGlobalV6Addresses(
+		List<InetAddress> 	addrs )
+	{
+		List<InetAddress> bestPicks = new ArrayList<>();;
+		
+		int currentRanking = 0;
+		
+		for ( InetAddress addr : addrs){
+			
+			if (!isGlobalAddressV6(addr)){
+				
+				continue;
+			}
+			
+			int ranking;
+			
+			if (isTeredo(addr)){
+				
+				ranking = 1;
+				
+			}else if(is6to4(addr)){
+				
+				ranking = 2;
+				
+			}else{
+				
+				ranking = 3;
+			}
+
+			if ( ranking > currentRanking ){
+			
+				bestPicks.clear();
+				
+				bestPicks.add( addr );
+				
 				currentRanking = ranking;
+				
+			}else if ( ranking == currentRanking ){
+				
+				bestPicks.add( addr );
 			}
 		}
 
-		return bestPick;
+		return bestPicks;
 	}
-
+	
 	public static InetAddress
 	getByName(
 		String		host )
@@ -524,6 +548,27 @@ AddressUtils
 		}
 	}
 
+	public static String
+	getHostAddressForURL(
+		InetSocketAddress	address )
+	{
+		if ( address.isUnresolved()){
+
+			return( address.getHostName());
+
+		}else{
+			
+			if ( address.getAddress() instanceof Inet6Address ){
+
+				return( "[" + address.getAddress().getHostAddress() + "]" );
+				
+			}else{
+				
+				return( address.getAddress().getHostAddress());
+			}
+		}
+	}
+	
 	public static String
 	getHostNameNoResolve(
 		InetSocketAddress	address )

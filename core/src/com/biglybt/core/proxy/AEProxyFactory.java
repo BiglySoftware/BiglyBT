@@ -66,6 +66,7 @@ AEProxyFactory
 	}
 
 	public static final String PO_PEER_NETWORKS = "peer_networks";
+	public static final String PO_LOCAL_PORT	= "local_port";
 
 	public static PluginProxy
 	getPluginProxy(

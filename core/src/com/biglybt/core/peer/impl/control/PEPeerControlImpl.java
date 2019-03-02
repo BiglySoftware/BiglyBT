@@ -111,7 +111,14 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private static final int	CHECK_REASON_BAD_PIECE_CHECK	= 5;
 
 	private static final int	SEED_CHECK_WAIT_MARKER	= 65526;
-
+	
+	private static final long	REQ_TIMEOUT_DATA_AGE_SEED_MILLIS	= 120*1000;
+	private static final long	REQ_TIMEOUT_DATA_AGE_LEECH_MILLIS	= 60*1000;
+	
+	private static final long	REQ_TIMEOUT_OLDEST_REQ_AGE_MILLIS	= 120*1000;
+	
+	private static final long	RESERVED_PIECE_TIMEOUT_MILLIS = 120*1000;
+	
 		// config
 
 	private static boolean 	disconnect_seeds_when_seeding;
@@ -199,6 +206,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private final PEPieceImpl[]	pePieces;      //pieces that are currently in progress
 	private int				nbPiecesActive;	// how many pieces are currently in progress
 
+	private long			nbBytesRemaining;	// used for stats only
+	
 	private int				nbPeersSnubbed;
 
 	private PeerIdentityDataID			_hash;
@@ -226,6 +235,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 	private static final int MAINLOOP_TWENTY_SECOND_INTERVAL = MAINLOOP_ONE_SECOND_INTERVAL * 20;
 	private static final int MAINLOOP_THIRTY_SECOND_INTERVAL = MAINLOOP_ONE_SECOND_INTERVAL * 30;
 	private static final int MAINLOOP_SIXTY_SECOND_INTERVAL = MAINLOOP_ONE_SECOND_INTERVAL * 60;
+	private static final int MAINLOOP_FIVE_MINUTE_INTERVAL = MAINLOOP_SIXTY_SECOND_INTERVAL * 5;
 	private static final int MAINLOOP_TEN_MINUTE_INTERVAL = MAINLOOP_SIXTY_SECOND_INTERVAL * 10;
 
 
@@ -327,6 +337,22 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 	};
 
+	private static final int MAX_SEEDING_SEED_DISCONNECT_HISTORY 	= 256;
+	private static final int SEEDING_SEED_DISCONNECT_TIMEOUT		= 10*60*1000;
+	
+			
+	private final Map<String,Long>	seeding_seed_disconnects =
+		new LinkedHashMap<String,Long>(MAX_SEEDING_SEED_DISCONNECT_HISTORY,0.75f,true)
+		{
+			@Override
+			protected boolean
+			removeEldestEntry(
+				Map.Entry<String,Long> eldest)
+			{
+				return size() > MAX_SEEDING_SEED_DISCONNECT_HISTORY;
+			}
+		};
+		
 	private static final int UDP_RECONNECT_MIN_MILLIS	= 10*1000;
 	private long	last_udp_reconnect;
 
@@ -541,7 +567,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 			final DiskManagerPiece dmPiece =dm_pieces[i];
 			if (!dmPiece.isDone() &&dmPiece.getNbWritten() >0)
 			{
-				addPiece(new PEPieceImpl(this, dmPiece, 0), i, true, null );
+				addPiece(new PEPieceImpl(piecePicker, dmPiece, 0), i, true, null );
 			}
 		}
 
@@ -638,7 +664,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		for( int i=0; i < peer_manager_listeners.size(); i++ ) {
 
-			((PEPeerManagerListener)peer_manager_listeners.get(i)).destroyed();
+			((PEPeerManagerListener)peer_manager_listeners.get(i)).destroyed( this );
 		}
 
 		sweepList = Collections.emptyList();
@@ -657,6 +683,20 @@ DiskManagerCheckRequestListener, IPFilterListener
 		return( partition_id );
 	}
 
+	@Override
+	public int 
+	getTCPListeningPortNumber()
+	{
+		return( adapter.getTCPListeningPortNumber());
+	}
+	
+	@Override
+	public byte[] 
+	getTargetHash()
+	{
+		return( adapter.getTargetHash());
+	}
+	
 	@Override
 	public boolean
 	isDestroyed()
@@ -748,7 +788,28 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 			checkSeeds();
 
-			if(!seeding_mode) {
+			if ( seeding_mode ){
+				
+				if ( mainloop_loop_count % MAINLOOP_FIVE_MINUTE_INTERVAL != 0 ){
+					
+					synchronized( seeding_seed_disconnects ){
+						
+						long now = SystemTime.getMonotonousTime();
+						
+						Iterator<Map.Entry<String,Long>> it = seeding_seed_disconnects.entrySet().iterator();
+						
+						while( it.hasNext()){
+							
+							Map.Entry<String,Long> entry = it.next();
+							
+							if ( now - entry.getValue() > SEEDING_SEED_DISCONNECT_TIMEOUT ){
+								
+								it.remove();
+							}
+						}
+					}
+				}
+			}else{
 				// if we're not finished
 
 				checkRequests();
@@ -1277,6 +1338,27 @@ DiskManagerCheckRequestListener, IPFilterListener
 			return( "Peer source '" + peer_source + "' is not enabled" );
 		}
 
+		if ( seeding_mode && disconnect_seeds_when_seeding ){
+			
+			String key = address + ":" + tcp_port;
+			
+			synchronized( seeding_seed_disconnects ){
+			
+				Long prev = seeding_seed_disconnects.get( key );
+				
+				if ( prev != null ){
+					
+					if ( SystemTime.getMonotonousTime() - prev > SEEDING_SEED_DISCONNECT_TIMEOUT ){
+						
+						seeding_seed_disconnects.remove( key );
+						
+					}else{
+						
+						return( "Ignore recent seeds when seeding" );
+					}
+				}
+			}
+		}
 		boolean	is_priority_connection 	= false;
 		boolean	force					= false;
 		
@@ -1353,12 +1435,14 @@ DiskManagerCheckRequestListener, IPFilterListener
 		if ((mainloop_loop_count %MAINLOOP_ONE_SECOND_INTERVAL) !=0)
 			return;
 
+		long remaining = 0;
+		
 		//for every piece
 		for (int i = 0; i <_nbPieces; i++) {
 			final DiskManagerPiece dmPiece =dm_pieces[i];
 			//if piece is completly written, not already checking, and not Done
-			if (dmPiece.isNeedsCheck())
-			{
+			if (dmPiece.isNeedsCheck()){
+			
 				//check the piece from the disk
 				dmPiece.setChecking();
 
@@ -1369,8 +1453,13 @@ DiskManagerCheckRequestListener, IPFilterListener
 				req.setAdHoc( false );
 
 				disk_mgr.enqueueCheckRequest(  req, this );
+			}else{
+				
+				remaining += dmPiece.getRemaining();
 			}
 		}
+		
+		nbBytesRemaining	= remaining;
 	}
 
 	/** Checks given piece to see if it's active but empty, and if so deactivates it.
@@ -1427,11 +1516,11 @@ DiskManagerCheckRequestListener, IPFilterListener
 			// yet needing requests still/again
 			if (pePiece !=null)
 			{
-				final long timeSinceActivity =pePiece.getTimeSinceLastActivity()/1000;
+				final long timeSinceActivityMillis = pePiece.getTimeSinceLastActivity();
 
 				int pieceSpeed =pePiece.getSpeed();
 				// block write speed slower than piece speed
-				if (pieceSpeed > 0 && timeSinceActivity*pieceSpeed*0.25 > DiskManager.BLOCK_SIZE/1024)
+				if (pieceSpeed > 0 && (timeSinceActivityMillis/1000)*pieceSpeed*0.25 > DiskManager.BLOCK_SIZE/1024)
 				{
 					if(pePiece.getNbUnrequested() > 2)
 						pePiece.setSpeed(pieceSpeed-1);
@@ -1440,8 +1529,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 				}
 
 
-				if(timeSinceActivity > 120)
-				{
+				if(timeSinceActivityMillis > RESERVED_PIECE_TIMEOUT_MILLIS){
 					pePiece.setSpeed(0);
 					// has reserved piece gone stagnant?
 					final String reservingPeer =pePiece.getReservedBy();
@@ -1904,6 +1992,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 			seeding_mode	= true;
 
+			nbBytesRemaining = 0;
+			
 			prefer_udp_bloom = null;
 
 			piecePicker.clearEndGameChunks();
@@ -2012,6 +2102,11 @@ DiskManagerCheckRequestListener, IPFilterListener
 				_timeStartedSeeding_mono 	= -1;
 				_timeFinished				= 0;
 
+				synchronized( seeding_seed_disconnects ){
+					
+					seeding_seed_disconnects.clear();
+				}
+				
 				Logger.log(
 						new LogEvent(	disk_mgr.getTorrent(), LOGID,
 								"Turning off seeding mode for PEPeerManager"));
@@ -2063,21 +2158,30 @@ DiskManagerCheckRequestListener, IPFilterListener
 				if (expired !=null &&expired.size() >0)
 				{   // now we know there's a request that's > 60 seconds old
 					final boolean isSeed =pc.isSeed();
-					// snub peers that haven't sent any good data for a minute
-					final long timeSinceGoodData =pc.getTimeSinceGoodDataReceived();
-					if (timeSinceGoodData <0 ||timeSinceGoodData >60 *1000)
-						pc.setSnubbed(true);
-
+					
+					checkSnubbing( pc );
+					
 					//Only cancel first request if more than 2 mins have passed
 					DiskManagerReadRequest request =(DiskManagerReadRequest) expired.get(0);
 
-					final long timeSinceData =pc.getTimeSinceLastDataMessageReceived();
-					final boolean noData =(timeSinceData <0) ||timeSinceData >(1000 *(isSeed ?120 :60));
-					final long timeSinceOldestRequest = now - request.getTimeCreated(now);
+					long timeSinceData =pc.getTimeSinceLastDataMessageReceived();
+					
+					long dataTimeout 	= isSeed?REQ_TIMEOUT_DATA_AGE_SEED_MILLIS:REQ_TIMEOUT_DATA_AGE_LEECH_MILLIS;
+					long requestTimeout	= REQ_TIMEOUT_OLDEST_REQ_AGE_MILLIS;
+							
+					if ( pc.getNetwork() != AENetworkClassifier.AT_PUBLIC ){
+						
+						dataTimeout 	*= 2;
+						requestTimeout 	*= 2;
+					}
+					
+					boolean noData = timeSinceData < 0 || timeSinceData > dataTimeout;					
+					
+					long timeSinceOldestRequest = now - request.getTimeCreated(now);
 
 
 					//for every expired request
-					for (int j = (timeSinceOldestRequest >120 *1000 && noData)  ? 0 : 1; j < expired.size(); j++)
+					for (int j = (timeSinceOldestRequest > requestTimeout && noData)  ? 0 : 1; j < expired.size(); j++)
 					{
 						//get the request object
 						request =(DiskManagerReadRequest) expired.get(j);
@@ -2098,6 +2202,41 @@ DiskManagerCheckRequestListener, IPFilterListener
 		}
 	}
 
+	@Override
+	public void
+	checkSnubbing(
+		PEPeerTransport	peer )
+	{
+			// snub peers that haven't sent any good data for a minute
+		
+		long timeSinceGoodData = peer.getTimeSinceGoodDataReceived();
+		
+		boolean pub = peer.getNetwork() == AENetworkClassifier.AT_PUBLIC;
+		
+		if ( pub ){
+			
+			if ( timeSinceGoodData < 0 || timeSinceGoodData > SNUB_MILLIS ){
+				
+				peer.setSnubbed( true );
+			}
+		}else{
+			
+				// experimental stuff for non-public peers
+			
+			int	connected = _seeds + _peers;
+			
+			if ( connected < 8 ){
+				
+				return;
+			}
+			
+			if ( timeSinceGoodData < 0 || timeSinceGoodData > SNUB_MILLIS * 2 ){
+				
+				peer.setSnubbed( true );
+			}
+		}
+	}
+	
 	private void
 	updateTrackerAnnounceInterval()
 	{
@@ -2977,26 +3116,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 
 		if ( now < last_eta_calculation || now - last_eta_calculation > 900 ){
 
-			long dataRemaining = disk_mgr.getRemainingExcludingDND();
-
-			if ( dataRemaining > 0 ){
-
-				int writtenNotChecked = 0;
-
-				for (int i = 0; i < _nbPieces; i++)
-				{
-					if (dm_pieces[i].isInteresting()){
-						writtenNotChecked +=dm_pieces[i].getNbWritten() *DiskManager.BLOCK_SIZE;
-					}
-				}
-
-				dataRemaining = dataRemaining - writtenNotChecked;
-
-				if  (dataRemaining < 0 ){
-					dataRemaining	= 0;
-				}
-			}
-
+			long dataRemaining = Math.max( nbBytesRemaining, disk_mgr.getRemainingExcludingDND());
+			
 			long	jagged_result;
 			long	smooth_result;
 
@@ -3436,6 +3557,16 @@ DiskManagerCheckRequestListener, IPFilterListener
 		if ( pc.isSeed()){
 
 			last_seed_disconnect_time = SystemTime.getCurrentTime();
+			
+			if ( seeding_mode && disconnect_seeds_when_seeding ){
+				
+				String key = pc.getIp() + ":" + pc.getTCPListenPort();
+				
+				synchronized( seeding_seed_disconnects ){
+				
+					seeding_seed_disconnects.put( key, SystemTime.getMonotonousTime());
+				}
+			}
 		}
 
 		adapter.removePeer(pc);  //async downloadmanager notification

@@ -15,6 +15,8 @@ import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.VerifyEvent;
+import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -40,6 +42,7 @@ import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.IdentityHashSet;
@@ -59,6 +62,8 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableLifeCycleListener;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.common.table.TableSelectionListener;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
@@ -130,7 +135,7 @@ import com.biglybt.ui.swt.views.tableitems.peers.UpSpeedLimitItem;
 public abstract class 
 PeersViewBase
 	extends TableViewTab<PEPeer>
-	implements UISWTViewCoreEventListenerEx, TableLifeCycleListener, TableViewSWTMenuFillListener
+	implements UISWTViewCoreEventListenerEx, TableLifeCycleListener, TableViewSWTMenuFillListener, TableSelectionListener
 {
 	static TableColumnCore[] getBasicColumnItems(String table_id) {
 		return new TableColumnCore[] {
@@ -350,6 +355,8 @@ PeersViewBase
 		tv.addLifeCycleListener(this);
 		
 		tv.addMenuFillListener(this);
+		
+		tv.addSelectionListener(this, false);
 		
 		return tv;
 	}	
@@ -971,13 +978,14 @@ PeersViewBase
 	}
 	
 	private static String
-	getMyPeerDetails()
+	getMyPeerDetails(
+		DownloadManager		dm )
 	{
 		InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
 
 		InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
 		
-		int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+		int port = dm.getTCPListeningPortNumber();
 		
 		String	str = "";
 			
@@ -1018,7 +1026,7 @@ PeersViewBase
 				handleEvent(
 						Event event)
 				{
-					String str = getMyPeerDetails();
+					String str = getMyPeerDetails( man );
 					
 					if ( str.isEmpty()){
 						
@@ -1061,7 +1069,7 @@ PeersViewBase
 				{
 					List<PEPeer> peers = pm.getPeers();
 					
-					String str = getMyPeerDetails();
+					String str = getMyPeerDetails( man );
 					
 					for ( PEPeer peer: peers ){
 						
@@ -1104,7 +1112,37 @@ PeersViewBase
 						String def = COConfigurationManager.getStringParameter( "add.peers.default", "" );
 
 						entryWindow.setPreenteredText( String.valueOf( def ), false );
-
+						
+						entryWindow.addVerifyListener(
+					    		new VerifyListener(){
+									
+									@Override
+									public void verifyText(VerifyEvent e){
+										String str = e.text.replaceAll( "[\\r\\n]+", "," );
+										
+										if ( !str.equals(e.text )){
+											
+												// tidy up from multi-line flattening
+											
+											while( str.contains( ",," )){
+												str = str.replace( ",,", "," );
+											}
+											
+											str = str.trim();
+											
+											while( str.endsWith( "," )){
+												str = str.substring( 0, str.length()-1).trim();
+											}
+											
+											while ( str.startsWith( "," )){
+												str = str.substring(1).trim();
+											}
+										}
+										
+										e.text = str;
+									}
+								});
+						
 						entryWindow.prompt(
 								new UIInputReceiverListener()
 								{
@@ -1134,32 +1172,45 @@ PeersViewBase
 											return;
 										}
 
-										String[] bits = sReturn.split( "," );
-
-										for  ( String bit: bits ){
-
-											bit = bit.trim();
-
-											int	pos = bit.lastIndexOf( ':' );
-
-											if ( pos != -1 ){
-
-												String host = bit.substring( 0, pos ).trim();
-												String port = bit.substring( pos+1 ).trim();
-
-												try{
-													int	i_port = Integer.parseInt( port );
-
-													pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
-
-												}catch( Throwable e ){
-
+										Utils.getOffOfSWTThread(
+											new AERunnable(){
+												
+												@Override
+												public void runSupport()
+												{
+													String[] bits = sReturn.replace(';', ',' ).split( "," );
+			
+													for  ( String bit: bits ){
+			
+														bit = bit.trim();
+			
+														if ( bit.isEmpty()){
+															
+															continue;
+														}
+														
+														int	pos = bit.lastIndexOf( ':' );
+			
+														if ( pos != -1 ){
+			
+															String host = bit.substring( 0, pos ).trim();
+															String port = bit.substring( pos+1 ).trim();
+			
+															try{
+																int	i_port = Integer.parseInt( port );
+			
+																pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+			
+															}catch( Throwable e ){
+			
+															}
+														}else{
+			
+															pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+														}
+													}
 												}
-											}else{
-
-												pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
-											}
-										}
+											});
 									}
 								});
 					}
@@ -1189,6 +1240,35 @@ PeersViewBase
 
 			new MenuItem( menuThisColumn, SWT.SEPARATOR );
 		}
+	}
+	
+	protected abstract void
+	updateSelectedContent();
+	
+	@Override
+	public void deselected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+
+	@Override
+	public void focusChanged(TableRowCore focus) {
+	}
+
+	@Override
+	public void selected(TableRowCore[] rows) {
+		updateSelectedContent();
+	}
+	
+	@Override
+	public void defaultSelected(TableRowCore[] rows, int stateMask){
+	}
+	
+	@Override
+	public void mouseEnter(TableRowCore row){
+	}
+
+	@Override
+	public void mouseExit(TableRowCore row){
 	}
 	
 	private static abstract class

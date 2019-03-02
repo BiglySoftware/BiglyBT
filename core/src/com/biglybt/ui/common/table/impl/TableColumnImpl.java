@@ -24,6 +24,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
@@ -37,6 +38,7 @@ import com.biglybt.pif.ui.UIRuntimeException;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.ui.tables.TableContextMenuItemImpl;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsManager.UIFCallback;
@@ -66,18 +68,21 @@ public class TableColumnImpl
 
 	private static UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
 
-	private static int
-	adjustPXForDPI(
-		int	px )
-	{
-		if ( uiFunctions == null ){
-
-			return( px );
-		}
-
-		return( uiFunctions.adjustPXForDPI( px ));
+	private static Comparator<String> intuitiveComparator = FormattersImpl.getAlphanumericComparator2( true );
+	private static boolean	intiutiveSorting;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Table.sort.intuitive",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String parameterName){
+					intiutiveSorting = COConfigurationManager.getBooleanParameter( "Table.sort.intuitive"  );
+				}
+			});	
 	}
-
+	
 	/** Internal Name/ID of the column **/
 	private String sName;
 
@@ -198,7 +203,7 @@ public class TableColumnImpl
 		iConsecutiveErrCount = 0;
 		lLastSortValueChange = 0;
 		bVisible = false;
-		iMinWidth = adjustPXForDPI(16);
+		iMinWidth = 16;
 		iPosition = POSITION_INVISIBLE;
 		int iSortDirection = COConfigurationManager.getIntParameter(CFG_SORTDIRECTION);
 		bSortAscending = iSortDirection == 1 ? false : true;
@@ -214,8 +219,8 @@ public class TableColumnImpl
 
 		this.iAlignment = this.iDefaultAlignment =  iAlignment;
 		setPosition(iPosition);
-		this.iWidth = this.iDefaultWidth = adjustPXForDPI(iWidth);
-		this.iMinWidth = adjustPXForDPI(16);
+		this.iWidth = this.iDefaultWidth = iWidth;
+		this.iMinWidth = 16;
 		this.iInterval = iInterval;
 	}
 
@@ -228,8 +233,8 @@ public class TableColumnImpl
 
 		this.iAlignment = this.iDefaultAlignment = iAlignment;
 		setPosition(iPosition);
-		this.iWidth = this.iDefaultWidth = adjustPXForDPI(iWidth);
-		this.iMinWidth = adjustPXForDPI(16);
+		this.iWidth = this.iDefaultWidth = iWidth;
+		this.iMinWidth = 16;
 	}
 
 	@Override
@@ -271,7 +276,7 @@ public class TableColumnImpl
 
 	@Override
 	public void setWidth(int realPXWidth) {
-		setWidthPX(adjustPXForDPI(realPXWidth));
+		setWidthPX(realPXWidth);
 	}
 
 	@Override
@@ -1481,11 +1486,19 @@ public class TableColumnImpl
 			boolean c0isString = c0 instanceof String;
 			boolean c1isString = c1 instanceof String;
 			if (c0isString && c1isString) {
-				if (bSortAscending) {
-					return ((String) c0).compareToIgnoreCase((String) c1);
+				if ( intiutiveSorting ){		
+					if (bSortAscending) {
+						return ( intuitiveComparator.compare( (String)c0, (String)c1 ));
+					}
+	
+					return ( intuitiveComparator.compare( (String)c1, (String)c0 ));
+				}else{
+					if (bSortAscending) {
+						return ((String) c0).compareToIgnoreCase((String) c1);
+					}
+	
+					return ((String) c1).compareToIgnoreCase((String) c0);
 				}
-
-				return ((String) c1).compareToIgnoreCase((String) c0);
 			}
 
 			int val;
@@ -1552,8 +1565,6 @@ public class TableColumnImpl
 	// @see com.biglybt.pif.ui.tables.TableColumn#setMinWidth(int)
 	@Override
 	public void setMinWidth(int minwidth) {
-		// :(
-		minwidth = adjustPXForDPI(minwidth);
 		if (minwidth > iMaxWidth && iMaxWidth >= 0) {
 			iMaxWidth = minwidth;
 		}
@@ -1575,8 +1586,6 @@ public class TableColumnImpl
 	// @see com.biglybt.pif.ui.tables.TableColumn#setMaxWidth(int)
 	@Override
 	public void setMaxWidth(int maxwidth) {
-		// :(
-		maxwidth = adjustPXForDPI(maxwidth);
 		if (maxwidth >= 0 && maxwidth < iMinWidth) {
 			iMinWidth = maxwidth;
 		}

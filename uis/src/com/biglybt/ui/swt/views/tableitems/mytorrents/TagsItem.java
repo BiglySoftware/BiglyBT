@@ -30,12 +30,12 @@ import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
-import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
+import com.biglybt.core.tag.TagUtils;
 
 /** Display Category torrent belongs to.
  *
@@ -71,7 +71,7 @@ public class TagsItem
 
 			if ( tags.size() > 0 ){
 
-				tags = TagUIUtils.sortTags( tags );
+				tags = TagUtils.sortTags( tags );
 
 				for ( Tag t: tags ){
 

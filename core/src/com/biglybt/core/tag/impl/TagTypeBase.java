@@ -27,10 +27,13 @@ import java.util.Map;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
+import com.biglybt.core.util.Base32;
+import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.ListenerManager;
 import com.biglybt.core.util.ListenerManagerDispatcher;
+import com.biglybt.util.MapUtils;
 
 public abstract class
 TagTypeBase
@@ -43,10 +46,11 @@ TagTypeBase
 	private final String	tag_type_name;
 
 	private static final int TTL_ADD 					= 1;
-	private static final int TTL_CHANGE 				= 2;
-	private static final int TTL_REMOVE 				= 3;
-	private static final int TTL_TYPE_CHANGE 			= 4;
-	private static final int TTL_ATTENTION_REQUESTED 	= 5;
+	private static final int TTL_TAG_MEMBERHIP_CHANGE 	= 2; 
+	private static final int TTL_TAG_METADATA_CHANGE 	= 3; 
+	private static final int TTL_REMOVE 				= 4;
+	private static final int TTL_TYPE_CHANGE 			= 5;
+	private static final int TTL_ATTENTION_REQUESTED 	= 6;
 
 	private static final TagManagerImpl manager = TagManagerImpl.getSingleton();
 
@@ -75,9 +79,13 @@ TagTypeBase
 
 							event_type	= TagTypeListener.TagEvent.ET_TAG_ADDED;
 
-						}else if ( type == TTL_CHANGE ){
+						}else if ( type == TTL_TAG_METADATA_CHANGE ){
 
-							event_type	= TagTypeListener.TagEvent.ET_TAG_CHANGED;
+							event_type	= TagTypeListener.TagEvent.ET_TAG_METADATA_CHANGED;
+
+						}else if ( type == TTL_TAG_MEMBERHIP_CHANGE ){
+
+							event_type	= TagTypeListener.TagEvent.ET_TAG_MEMBERSHIP_CHANGED;
 
 						}else if ( type == TTL_REMOVE ){
 
@@ -110,6 +118,8 @@ TagTypeBase
 			});
 
 	private final Map<Taggable,List<TagListener>>	tag_listeners = new HashMap<>();
+
+	private Map<String,TagGroupImpl>	tag_groups = new HashMap<>();
 
 	protected
 	TagTypeBase(
@@ -352,10 +362,17 @@ TagTypeBase
 	}
 
 	protected void
-	fireChanged(
+	fireMembershipChanged(
 		Tag	t )
 	{
-		tt_listeners.dispatch( TTL_CHANGE, t );
+		tt_listeners.dispatch( TTL_TAG_MEMBERHIP_CHANGE, t );
+	}
+	
+	protected void
+	fireMetadataChanged(
+		Tag	t )
+	{
+		tt_listeners.dispatch( TTL_TAG_METADATA_CHANGE, t );
 	}
 
 	@Override
@@ -436,6 +453,26 @@ TagTypeBase
 		}
 
 		manager.taggableAdded( this, tag, tagged );
+		
+		TagGroup tg = tag.getGroupContainer();
+		
+		if ( tg != null && tg.getName() != null && tg.isExclusive()){
+			
+			List<Tag> tags = tg.getTags();
+			
+			for ( Tag t: tags ){
+				
+				if ( t != tag && t.hasTaggable( tagged )){
+					
+					boolean[] auto = t.isTagAuto();
+					
+					if ( !auto[0] ){
+						
+						t.removeTaggable( tagged );
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -602,6 +639,24 @@ TagTypeBase
 		manager.writeStringAttribute( this, tag, attr, value );
 	}
 
+	protected Map<String,Object>
+	readMapAttribute(
+		TagBase				tag,
+		String				attr,
+		Map<String,Object>	def )
+	{
+		return( manager.readMapAttribute( this, tag, attr, def ));
+	}
+
+	protected void
+	writeMapAttribute(
+		TagBase				tag,
+		String				attr,
+		Map<String,Object>	value )
+	{
+		manager.writeMapAttribute( this, tag, attr, value );
+	}
+	
 	protected String[]
 	readStringListAttribute(
 		TagBase		tag,
@@ -620,6 +675,231 @@ TagTypeBase
 		return( manager.writeStringListAttribute( this, tag, attr, value ));
 	}
 
+	protected long[]
+	readLongListAttribute(
+		TagBase		tag,
+		String		attr,
+		long[]		def )
+	{
+		return( manager.readLongListAttribute( this, tag, attr, def ));
+	}
+
+	protected boolean
+	writeLongListAttribute(
+		TagBase		tag,
+		String		attr,
+		long[]	value )
+	{
+		return( manager.writeLongListAttribute( this, tag, attr, value ));
+	}
+	
+ 	protected class
+ 	TagGroupImpl
+ 		implements TagGroup
+ 	{
+ 		private final String name;
+ 		
+ 		private boolean		exclusive;
+ 		
+ 		private CopyOnWriteList<Tag>	tags = new CopyOnWriteList<>();
+ 		
+ 		private CopyOnWriteList<TagGroupListener>	listeners = new CopyOnWriteList<>();
+ 		
+ 		private
+ 		TagGroupImpl(
+ 			String		_name )
+ 		{
+ 			name	= _name;
+ 		}
+ 		
+ 		protected String
+ 		getGroupID()
+ 		{
+ 			return( name==null?"<null>":Base32.encode( name.getBytes()));
+ 		}
+ 		
+ 		protected void
+ 		importState(
+ 			Map<String,Object>		map )
+ 		{
+ 			exclusive = MapUtils.getMapBoolean( map, "x", false );
+ 		}
+ 		
+ 		protected Map<String,Object>
+ 		exportState()
+ 		{
+ 			Map<String,Object>	map = new HashMap<>();
+ 			
+ 			if ( exclusive ){
+ 				
+ 				map.put( "x", new Long(1));
+ 			}
+ 			
+ 			return( map );
+ 		}
+ 		
+ 		public String
+ 		getName()
+ 		{
+ 			return( name );
+ 		}
+ 		
+ 		public boolean
+ 		isExclusive()
+ 		{
+ 			return( exclusive );
+ 		}
+ 		
+ 		public void
+ 		setExclusive(
+ 			boolean		b )
+ 		{
+ 			if ( b != exclusive ){
+ 				
+ 				exclusive = b;
+ 				
+ 				manager.tagGroupUpdated( TagTypeBase.this, this );
+ 			}
+ 		}
+ 		
+ 		public List<Tag>
+ 		getTags()
+ 		{
+ 			return( tags.getList());
+ 		}
+ 		
+ 		protected void
+ 		addTag(
+ 			Tag	tag )
+ 		{
+ 			if ( !tags.contains( tag )){
+ 				
+	 			tags.add( tag );
+	 			
+	 			for( TagGroupListener l: listeners ){
+	 				
+	 				try{
+	 					l.tagAdded(tag);
+	 					
+	 				}catch( Throwable e ){
+	 					
+	 					Debug.out( e );
+	 				}
+	 			}
+ 			}
+ 		}
+ 		
+ 		protected void
+ 		removeTag(
+ 			Tag	tag )
+ 		{
+ 			if ( tags.contains( tag )){
+ 				
+	 			tags.remove( tag );
+	 			
+	 			for( TagGroupListener l: listeners ){
+	 				
+	 				try{
+	 					l.tagRemoved(tag);
+	 					
+	 				}catch( Throwable e ){
+	 					
+	 					Debug.out( e );
+	 				}
+	 			}
+ 			}
+ 		}
+ 		
+ 		
+ 		public void
+ 		addListener(
+ 			TagGroupListener	l,
+ 			boolean				fire_for_existing )
+ 		{
+ 			listeners.add( l );
+ 			
+ 			if ( fire_for_existing ){
+ 				
+ 				for ( Tag t: tags ){
+ 					
+ 					l.tagAdded( t );
+ 				}
+ 			}
+ 		}
+ 		
+ 		public void
+ 		removeListener(
+ 			TagGroupListener	l )
+ 		{
+ 			listeners.remove( l );
+ 		}
+ 	}
+ 	
+ 	protected void
+ 	setTagGroup(
+ 		Tag		tag,
+ 		String	old_name,
+ 		String	new_name )
+ 	{
+ 		synchronized( this ){
+ 			
+ 			if ( old_name != null ){
+ 				
+ 				TagGroupImpl tg = tag_groups.get( old_name );
+ 				
+ 				if ( tg != null ){
+ 					
+ 					tg.removeTag( tag );
+ 				}
+ 			}
+ 			
+ 			if ( new_name != null ){
+ 				
+ 				TagGroupImpl tg = tag_groups.get( new_name );
+ 				
+ 				if ( tg == null ){
+ 					
+ 					tg = new TagGroupImpl( new_name );
+ 					
+ 					manager.tagGroupCreated( this, tg );
+ 					
+ 					tag_groups.put( new_name, tg );
+ 				}
+ 				
+ 				tg.addTag( tag );
+ 			}
+ 		}
+ 		
+ 	}
+ 	
+ 	protected TagGroup
+ 	getTagGroup(
+ 		String		name )
+ 	{
+ 		if ( name == null ){
+ 			
+ 			return( new TagGroupImpl( null ));
+ 			
+ 		}else{
+ 			
+ 			synchronized( this ){
+ 				
+ 				TagGroupImpl result = tag_groups.get( name );
+ 				
+ 				if ( result == null ){
+ 					
+ 					result = new TagGroupImpl( name );
+ 					
+ 					manager.tagGroupCreated( this, result );
+ 					
+ 					tag_groups.put( name, result );
+ 				}
+ 				
+ 				return( result );
+ 			}
+ 		}	
+ 	}
+ 	
 	public void
 	generate(
 		IndentWriter		writer )

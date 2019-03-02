@@ -20,15 +20,17 @@
 package com.biglybt.core.networkmanager.impl.tcp;
 
 
-import java.net.InetAddress;
 import java.nio.channels.CancelledKeyException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.networkmanager.VirtualChannelSelector;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.util.AEThread2;
@@ -124,9 +126,15 @@ TCPNetworkManager
 
 	private final TCPConnectionManager connect_disconnect_manager = new TCPConnectionManager();
 
-	private final IncomingSocketChannelManager incoming_socketchannel_manager =
-		new IncomingSocketChannelManager( "TCP.Listen.Port", "TCP.Listen.Port.Enable" );
+	private final IncomingSocketChannelManager default_incoming_socketchannel_manager = 
+			new IncomingSocketChannelManager( "TCP.Listen.Port", "TCP.Listen.Port.Enable" );
 
+	{
+		COConfigurationManager.setParameter( "TCP.Listen.AdditionalPorts", new ArrayList<>());
+	}
+	
+	private List<IncomingSocketChannelManager>	additional_incoming_socketchannel_managers = new ArrayList<>();
+	
 	long	read_select_count;
 	long	write_select_count;
 
@@ -265,24 +273,10 @@ TCPNetworkManager
 	    write_selector_thread.start();
 	}
 
-	public void
-	setExplicitBindAddress(
-			InetAddress	address )
+	public IncomingSocketChannelManager
+	getDefaultIncomingSocketManager()
 	{
-		incoming_socketchannel_manager.setExplicitBindAddress( address );
-	}
-
-	public void
-	clearExplicitBindAddress()
-	{
-		incoming_socketchannel_manager.clearExplicitBindAddress();
-	}
-
-	public boolean
-	isEffectiveBindAddress(
-			InetAddress		address )
-	{
-		return( incoming_socketchannel_manager.isEffectiveBindAddress( address ));
+		return( default_incoming_socketchannel_manager );
 	}
 
 		/**
@@ -311,9 +305,9 @@ TCPNetworkManager
 
 
 	public boolean
-	isTCPListenerEnabled()
+	isDefaultTCPListenerEnabled()
 	{
-		return( incoming_socketchannel_manager.isEnabled());
+		return( default_incoming_socketchannel_manager.isEnabled());
 	}
 
 	/**
@@ -322,14 +316,60 @@ TCPNetworkManager
 	 */
 
 	public int
-	getTCPListeningPortNumber()
+	getDefaultTCPListeningPortNumber()
 	{
-		return( incoming_socketchannel_manager.getTCPListeningPortNumber());
+		return( default_incoming_socketchannel_manager.getTCPListeningPortNumber());
 	}
 
 	public long
 	getLastIncomingNonLocalConnectionTime()
 	{
-		return( incoming_socketchannel_manager.getLastNonLocalConnectionTime());
+		return( default_incoming_socketchannel_manager.getLastNonLocalConnectionTime());
+	}
+	
+	public int
+	getAdditionalTCPListeningPortNumber(
+		List<Integer>		excluded_ports )
+	{
+		synchronized( additional_incoming_socketchannel_managers ){
+			
+			for ( IncomingSocketChannelManager x: additional_incoming_socketchannel_managers ){
+				
+				int port = x.getTCPListeningPortNumber();
+				
+				if ( !excluded_ports.contains( port )){
+					
+					return( port );
+				}
+			}
+			
+			try{
+				int new_port = NetworkAdmin.getSingleton().getBindablePort( 0 );
+				
+				int	new_id = additional_incoming_socketchannel_managers.size() + 1;
+				
+				String key = "TCP.Listen.AdditionalPort." + new_id;
+				
+				COConfigurationManager.setParameter( key, new_port );
+				
+				IncomingSocketChannelManager manager = new IncomingSocketChannelManager( key, "TCP.Listen.Port.Enable" );
+				
+				additional_incoming_socketchannel_managers.add( manager );
+				
+				List<Long> port_list = (List<Long>)COConfigurationManager.getListParameter( "TCP.Listen.AdditionalPorts", new ArrayList<>());
+				
+				port_list.add( new Long( new_port ));
+				
+				COConfigurationManager.setParameter( "TCP.Listen.AdditionalPorts", port_list );
+				
+				return( new_port );
+				
+			}catch( Throwable e ){
+				
+				Debug.out( e );
+				
+				return( 0 );
+			}
+		}
 	}
 }

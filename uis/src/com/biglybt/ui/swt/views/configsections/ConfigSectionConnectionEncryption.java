@@ -31,7 +31,6 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
@@ -126,7 +125,7 @@ public class ConfigSectionConnectionEncryption
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 2;
 		gridData.widthHint = 200; // needed for wrap
-		Utils.setLayoutData(lcrypto, gridData);
+		lcrypto.setLayoutData(gridData);
 
 		gridData = new GridData();
 		gridData.horizontalSpan = 2;
@@ -167,8 +166,7 @@ public class ConfigSectionConnectionEncryption
 		Messages.setLanguageText(lmin,
 				"ConfigView.section.connection.encryption.min_encryption_level");
 		final StringListParameter min_level = new StringListParameter(cEncryptLevel,
-				"network.transport.encrypted.min_level", encryption_types[1],
-				dropLabels, dropValues);
+				"network.transport.encrypted.min_level", dropLabels, dropValues);
 
 		Label lcryptofb = new Label(gCrypto, SWT.WRAP);
 		Messages.setLanguageText(lcryptofb,
@@ -176,7 +174,7 @@ public class ConfigSectionConnectionEncryption
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.horizontalSpan = 2;
 		gridData.widthHint = 200; // needed for wrap
-		Utils.setLayoutData(lcryptofb, gridData);
+		lcryptofb.setLayoutData(gridData);
 
 		BooleanParameter fallback_outgoing = new BooleanParameter(gCrypto,
 				"network.transport.encrypted.fallback.outgoing",

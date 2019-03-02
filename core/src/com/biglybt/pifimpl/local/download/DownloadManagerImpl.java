@@ -1300,11 +1300,12 @@ DownloadManagerImpl
 
 					Tag t = it.next();
 
-					if ( t.isTagAuto()[0]){	// ignore auto_add tags
+					//if ( t.isTagAuto()[0]){	// ignore auto_add tags
 
-						it.remove();
+						// it.remove(); decided to keep these as they can be useful documentation
+						// we just skip them on restore
 
-					}else if ( t.getTagName( true ).equals( restored_tag_name )){
+					if ( t.getTagName( true ).equals( restored_tag_name )){
 
 						it.remove();
 					}
@@ -1444,7 +1445,10 @@ DownloadManagerImpl
 
 						if ( tag != null ){
 
-							tag.addTaggable( core_dm );
+							if ( !tag.isTagAuto()[0] ){
+							
+								tag.addTaggable( core_dm );
+							}
 						}
 					}
 				}

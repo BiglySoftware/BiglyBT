@@ -24,12 +24,8 @@ package com.biglybt.ui.swt.views.configsections;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
-import com.biglybt.core.stats.CoreStats;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,24 +33,26 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.List;
+
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.logging.impl.FileLogging;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
+import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.util.AEDiagnostics;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.config.*;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.networkmanager.admin.NetworkAdmin;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -106,7 +104,7 @@ public class ConfigSectionLogging implements UISWTConfigSection {
 
     Composite gLogging = new Composite(parent, SWT.NULL);
     gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    Utils.setLayoutData(gLogging, gridData);
+		gLogging.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 2;
     gLogging.setLayout(layout);
@@ -152,7 +150,7 @@ public class ConfigSectionLogging implements UISWTConfigSection {
     Button browse = new Button(cArea, SWT.PUSH);
     browse.setImage(imgOpenFolder);
     imgOpenFolder.setBackground(browse.getBackground());
-    browse.setToolTipText(MessageText.getString("ConfigView.button.browse"));
+    Utils.setTT(browse,MessageText.getString("ConfigView.button.browse"));
     browse.addListener(SWT.Selection, new Listener() {
       /* (non-Javadoc)
        * @see org.eclipse.swt.widgets.Listener#handleEvent(org.eclipse.swt.widgets.Event)
@@ -189,7 +187,7 @@ public class ConfigSectionLogging implements UISWTConfigSection {
     {
     	Label timeStampLbl = new Label(cArea, SWT.NULL);
     	Messages.setLanguageText(timeStampLbl, "ConfigView.section.logging.timestamp");
-    	Utils.setLayoutData(timeStampLbl, new GridData());
+			timeStampLbl.setLayoutData(new GridData());
     	StringParameter timeStamp = new StringParameter(cArea,"Logging Timestamp");
     	gridData = new GridData();
     	gridData.horizontalSpan = 2;
@@ -210,7 +208,7 @@ public class ConfigSectionLogging implements UISWTConfigSection {
     gLogIDs.setLayout(layout);
     gridData = new GridData(SWT.BEGINNING, SWT.BEGINNING, true, true);
     gridData.horizontalSpan = 2;
-    Utils.setLayoutData(gLogIDs, gridData);
+		gLogIDs.setLayoutData(gridData);
 
     final List listLogTypes = new List(gLogIDs, SWT.BORDER | SWT.SINGLE
 				| SWT.V_SCROLL);
@@ -310,6 +308,26 @@ public class ConfigSectionLogging implements UISWTConfigSection {
     udp_transport.setLayoutData(gridData);
     */
 
+    if (userMode > 0 ){
+    	
+	    Composite cDebugFiles = new Composite(gLogging, SWT.NULL);
+	    layout = new GridLayout();
+	    layout.marginHeight = 0;
+	    layout.marginWidth = 0;
+	    layout.numColumns = 3;
+	    cDebugFiles.setLayout(layout);
+	    gridData = new GridData(GridData.FILL_HORIZONTAL);
+	    gridData.horizontalSpan = 2;
+	    cDebugFiles.setLayoutData(gridData);
+	    
+	    Label l_debug_file_size = new Label(cDebugFiles, SWT.NULL);
+		Messages.setLanguageText(l_debug_file_size, "ConfigView.section.logging.debugfilesize");
+		l_debug_file_size.setLayoutData(new GridData());
+		
+	    new IntParameter(cDebugFiles, "Logger.DebugFiles.SizeKB", 10, Integer.MAX_VALUE);
+	    new Label(cDebugFiles, SWT.NULL).setLayoutData( new GridData( GridData.FILL_HORIZONTAL));
+    }
+    
     if (userMode > 1){
 
 	    	// advanced option

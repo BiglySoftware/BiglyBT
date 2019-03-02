@@ -19,21 +19,16 @@
  */
 package com.biglybt.ui.swt;
 
-import com.biglybt.core.Core;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.Core;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.ipfilter.*;
 import com.biglybt.core.util.Constants;
@@ -122,9 +117,8 @@ BlockedIpsWindow
     formData.right = new FormAttachment(100,0);
     formData.top = new FormAttachment(0,0);
     formData.bottom = new FormAttachment(40,0);
-    Utils.setLayoutData(textBlocked, formData);
-    textBlocked.setText(ipsBlocked);
-
+		textBlocked.setLayoutData(formData);
+		textBlocked.setText(ipsBlocked);
 
     // label blocked area
 
@@ -134,7 +128,7 @@ BlockedIpsWindow
     formData.top = new FormAttachment(textBlocked);
     formData.right = new FormAttachment(btnClear);
     formData.left = new FormAttachment(0,0);
-    Utils.setLayoutData(blockedInfo,  formData );
+		blockedInfo.setLayoutData(formData);
 
     	// clear button
 
@@ -145,8 +139,8 @@ BlockedIpsWindow
     formData.right = new FormAttachment(95,0 );
     //formData.bottom = new FormAttachment(textBanned);
     formData.width = 70;
-    Utils.setLayoutData(btnClear, formData);
-    btnClear.addListener(SWT.Selection,new Listener() {
+		btnClear.setLayoutData(formData);
+		btnClear.addListener(SWT.Selection, new Listener() {
 
     @Override
     public void handleEvent(Event e) {
@@ -164,8 +158,8 @@ BlockedIpsWindow
     formData.right = new FormAttachment(100,0);
     formData.top = new FormAttachment(btnClear);
     formData.bottom = new FormAttachment(btnOk);
-    Utils.setLayoutData(textBanned, formData);
-    textBanned.setText(ipsBanned);
+		textBanned.setLayoutData(formData);
+		textBanned.setText(ipsBanned);
 
     	// label banned area
 
@@ -175,7 +169,7 @@ BlockedIpsWindow
     formData.right = new FormAttachment(btnReset);
     formData.left = new FormAttachment(0,0);
     formData.bottom = new FormAttachment(100,0);
-    Utils.setLayoutData(bannedInfo,  formData );
+		bannedInfo.setLayoutData(formData);
 
     	// reset button
 
@@ -184,8 +178,8 @@ BlockedIpsWindow
     formData.right = new FormAttachment(btnOk);
     formData.bottom = new FormAttachment(100,0);
     formData.width = 70;
-    Utils.setLayoutData(btnReset, formData);
-    btnReset.addListener(SWT.Selection,new Listener() {
+		btnReset.setLayoutData(formData);
+		btnReset.addListener(SWT.Selection, new Listener() {
 
     @Override
     public void handleEvent(Event e) {
@@ -202,8 +196,8 @@ BlockedIpsWindow
     formData.right = new FormAttachment(95,0);
     formData.bottom = new FormAttachment(100,0);
     formData.width = 70;
-    Utils.setLayoutData(btnOk, formData);
-    btnOk.addListener(SWT.Selection,new Listener() {
+		btnOk.setLayoutData(formData);
+		btnOk.addListener(SWT.Selection, new Listener() {
 
     @Override
     public void handleEvent(Event e) {

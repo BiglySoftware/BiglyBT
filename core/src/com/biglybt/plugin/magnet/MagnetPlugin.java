@@ -38,6 +38,7 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
@@ -87,6 +88,7 @@ import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderFactory;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.util.MapUtils;
 
 /**
  * @author parg
@@ -119,6 +121,9 @@ MagnetPlugin
 	
 	public static final String[] SOURCE_STRINGS = new String[ SOURCE_KEYS.length ];
 
+	protected static final Object	DM_TAG_CACHE 		= new Object();
+	protected static final Object	DM_CATEGORY_CACHE 	= new Object();
+	
 	private PluginInterface		plugin_interface;
 
 	private CopyOnWriteList		listeners = new CopyOnWriteList();
@@ -337,7 +342,10 @@ MagnetPlugin
 
 								if ( tag.isPublic()){
 
-									cb_data += "&tag=" + UrlUtils.encode( tag.getTagName( true ));
+									if ( !tag.isTagAuto()[0]){
+									
+										cb_data += "&tag=" + UrlUtils.encode( tag.getTagName( true ));
+									}
 								}
 							}
 						}
@@ -361,20 +369,22 @@ MagnetPlugin
 							
 							if ( networks.contains( AENetworkClassifier.AT_PUBLIC ) && !cb_data.contains( "xsource=" )){
 								
+								DownloadManager dm = download==null?null:PluginCoreUtils.unwrap( download );
+								
 								InetAddress ip = NetworkAdmin.getSingleton().getDefaultPublicAddress();
 
 								InetAddress ip_v6 = NetworkAdmin.getSingleton().getDefaultPublicAddressV6();
 								
-								int port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+								int port = dm==null?TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber():dm.getTCPListeningPortNumber();
 
 								if ( ip != null && port > 0 ){
 									
-									cb_data += "&xsource=" + UrlUtils.encode( ip.getHostAddress() + ":" + port );
+									cb_data += "&xsource=" +  UrlUtils.encode( UrlUtils.getURLForm( ip,  port ));
 								}
 								
 								if ( ip_v6 != null && port > 0 ){
 									
-									cb_data += "&xsource=" + UrlUtils.encode( ip_v6.getHostAddress() + ":" + port );
+									cb_data += "&xsource=" +  UrlUtils.encode( UrlUtils.getURLForm( ip_v6,  port ));
 								}
 																	
 								int	extra = sources_extra_param.getValue();
@@ -392,9 +402,7 @@ MagnetPlugin
 									if ( download != null ){
 										
 										Set<String>	added = new HashSet<>();
-										
-										DownloadManager dm = PluginCoreUtils.unwrap( download );
-										
+																				
 										PEPeerManager pm = dm.getPeerManager();
 										
 										if ( pm != null ){
@@ -411,7 +419,7 @@ MagnetPlugin
 													
 													if ( peer_port > 0 ){
 																													
-														cb_data += "&xsource=" + UrlUtils.encode( peer_ip + ":" + peer_port );
+														cb_data += "&xsource=" +  UrlUtils.encode( UrlUtils.getURLForm( peer_ip, peer_port ));
 														
 														added.add( peer_ip );
 														
@@ -446,7 +454,7 @@ MagnetPlugin
 															
 															if ( peer_port > 0 ){
 																															
-																cb_data += "&xsource=" + UrlUtils.encode( peer_ip + ":" + peer_port );
+																cb_data += "&xsource=" + UrlUtils.encode( UrlUtils.getURLForm( peer_ip, peer_port ));
 																
 																added.add( peer_ip );
 																
@@ -526,16 +534,17 @@ MagnetPlugin
 				}
 			};
 
-		final TableContextMenuItem menu1 = plugin_interface.getUIManager().getTableManager().addContextMenuItem(TableManager.TABLE_MYTORRENTS_INCOMPLETE, "MagnetPlugin.contextmenu.exporturi" );
-		final TableContextMenuItem menu2 = plugin_interface.getUIManager().getTableManager().addContextMenuItem(TableManager.TABLE_MYTORRENTS_COMPLETE, 	"MagnetPlugin.contextmenu.exporturi" );
-		final TableContextMenuItem menu3 = plugin_interface.getUIManager().getTableManager().addContextMenuItem(TableManager.TABLE_MYSHARES, 	"MagnetPlugin.contextmenu.exporturi" );
+		List<TableContextMenuItem>	menus = new ArrayList<>();
+		
+		for ( String table: TableManager.TABLE_MYTORRENTS_ALL ){
+				
+			TableContextMenuItem menu = plugin_interface.getUIManager().getTableManager().addContextMenuItem(table, "MagnetPlugin.contextmenu.exporturi" );
 
-		menu1.addMultiListener( listener );
-		menu1.setHeaderCategory(MenuItem.HEADER_SOCIAL);
-		menu2.addMultiListener( listener );
-		menu2.setHeaderCategory(MenuItem.HEADER_SOCIAL);
-		menu3.addMultiListener( listener );
-		menu3.setHeaderCategory(MenuItem.HEADER_SOCIAL);
+			menu.addMultiListener( listener );
+			menu.setHeaderCategory(MenuItem.HEADER_SOCIAL);
+			
+			menus.add( menu );
+		}
 
 		uri_handler.addListener(
 			new MagnetURIHandlerListener()
@@ -607,7 +616,7 @@ MagnetPlugin
 
 								byte[] torrent_data = torrent.writeToBEncodedData();
 
-								torrent_data = addTrackersAndWebSeedsEtc( torrent_data, args, new HashSet<String>());
+								torrent_data = addTrackersAndWebSeedsEtc( torrent_data, args, new HashSet<String>(), Collections.emptyList(), Collections.emptyMap());
 
 								return( torrent_data);
 							}
@@ -617,7 +626,7 @@ MagnetPlugin
 						Debug.printStackTrace(e);
 					}
 
-					return( recoverableDownload( muh_listener, hash, args, sources, timeout, false ));
+					return( recoverableDownload( muh_listener, hash, args, sources, Collections.emptyList(), Collections.emptyMap(), timeout, false ));
 				}
 
 				@Override
@@ -694,7 +703,7 @@ MagnetPlugin
 							try{
 								Class.forName("com.biglybt.plugin.magnet.swt.MagnetPluginUISWT").getConstructor(
 									new Class[]{ UIInstance.class, TableContextMenuItem[].class }).newInstance(
-										new Object[]{ instance, new TableContextMenuItem[]{ menu1, menu2, menu3 }} );
+										new Object[]{ instance, menus.toArray( new TableContextMenuItem[menus.size()])} );
 
 							}catch( Throwable e ){
 
@@ -797,7 +806,10 @@ MagnetPlugin
 
 					@Override
 					public void
-					closedownInitiated(){}
+					closedownInitiated()
+					{
+						updateRecoverableDownloads();
+					}
 
 					@Override
 					public void
@@ -839,8 +851,10 @@ MagnetPlugin
 		
 		boolean recover = magnet_recovery.getValue();
 
-		if ( recover ){
+		if ( recover && !active.isEmpty()){
 		
+			ThreadPool tp = new ThreadPool( "Magnet Recovery", 16, true );
+			
 			for ( Map map: active.values()){
 					
 				//System.out.println( "Recovering: " + map );
@@ -884,90 +898,153 @@ MagnetPlugin
 						sources = l_ias.toArray( new InetSocketAddress[l_ias.size()]);
 					}
 					
+					List<String> l_tags = null;
+					
+					try{
+						l_tags = BDecoder.decodeStrings((List)map.get( "tags" ));
+						
+					}catch( Throwable e ){
+					}
+					
+					List<String> f_tags = l_tags;
+					
+					Map<String,Object>	other_metadata = (Map<String,Object>)map.get( "other_metadata" );
+										
 					long timeout = (Long)map.get( "timeout" );
 					
 					final InetSocketAddress[] f_sources = sources;
 					
-					new AEThread2( "Magnet Recovery")
-					{
-						public void
-						run()
+					tp.run(
+						new AERunnable()
 						{
-							try{
-								byte[] result = recoverableDownload( null, hash, args, f_sources, timeout, true );
-								
-								if ( result != null ){
+							public void
+							runSupport()
+							{
+								try{
+									byte[] result = recoverableDownload( null, hash, args, f_sources, f_tags, other_metadata, timeout, true );
 									
-									TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( result );
-									
-									String	torrent_name = FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( torrent ) + ".torrent", false );
-									
-									File torrent_file;
-									
-									String dir = null;
-									
-								    if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")){
-								    	
-										dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
+									if ( result != null ){
 										
-										if ( dir != null ){
+										TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( result );
+										
+										String	torrent_name = FileUtil.convertOSSpecificChars( TorrentUtils.getLocalisedName( torrent ) + ".torrent", false );
+										
+										File torrent_file;
+										
+										String dir = null;
+										
+									    if ( COConfigurationManager.getBooleanParameter("Save Torrent Files")){
+									    	
+											dir = COConfigurationManager.getDirectoryParameter("General_sDefaultTorrent_Directory");
 											
-											if ( dir.length() > 0 ){
+											if ( dir != null ){
 												
-												File f = new File( dir );
-												
-												if ( !f.exists()){
+												if ( dir.length() > 0 ){
 													
-													f.mkdirs();
-												}
-												
-												if ( !( f.isDirectory() && f.canWrite())){
-												
+													File f = new File( dir );
+													
+													if ( !f.exists()){
+														
+														f.mkdirs();
+													}
+													
+													if ( !( f.isDirectory() && f.canWrite())){
+													
+														dir = null;
+													}
+												}else{
+													
 													dir = null;
 												}
-											}else{
-												
-												dir = null;
 											}
-										}
-								    }
-								    
-								    if ( dir != null ){
-								    	
-								    	torrent_file = new File( dir, torrent_name );
-								    	
-								    }else {
-								    	
-								    	torrent_file = new File( AETemporaryFileHandler.getTempDirectory(), torrent_name );
-								    }
-								    
-								    if ( torrent_file.exists()){
-								    	
-								    	torrent_file = AETemporaryFileHandler.createTempFile();
-								    }
-								      
-								    torrent.serialiseToBEncodedFile( torrent_file );
+									    }
+									    
+									    if ( dir != null ){
+									    	
+									    	torrent_file = new File( dir, torrent_name );
+									    	
+									    }else {
+									    	
+									    	torrent_file = new File( AETemporaryFileHandler.getTempDirectory(), torrent_name );
+									    }
+									    
+									    if ( torrent_file.exists()){
+									    	
+									    	torrent_file = AETemporaryFileHandler.createTempFile();
+									    }
+									      
+									    torrent.serialiseToBEncodedFile( torrent_file );
+										
+										UIFunctions uif = UIFunctionsManager.getUIFunctions();
+										
+										TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
+										
+										torrentOptions.setDeleteFileOnCancel( true );
+										torrentOptions.sFileName			= torrent_file.getAbsolutePath();
+										torrentOptions.setTorrent( torrent );
+										
+										uif.addTorrentWithOptions( false, torrentOptions );
+									}
+								}catch( Throwable e ){
 									
-									UIFunctions uif = UIFunctionsManager.getUIFunctions();
-									
-									TorrentOpenOptions torrentOptions = new TorrentOpenOptions();
-									
-									torrentOptions.setDeleteFileOnCancel( true );
-									torrentOptions.sFileName			= torrent_file.getAbsolutePath();
-									torrentOptions.setTorrent( torrent );
-									
-									uif.addTorrentWithOptions( false, torrentOptions );
+									Debug.out( e );
 								}
-							}catch( Throwable e ){
-								
-								Debug.out( e );
 							}
-						}
-					}.start();				
-								
+						});
+														
 				}catch( Throwable e ){
 					
 					Debug.out( e );
+				}
+			}
+		}
+	}
+	
+	private void
+	updateRecoverableDownloads()
+	{
+		boolean recover = magnet_recovery.getValue();
+		
+		if ( recover ){
+			
+			synchronized( download_activities ){
+				
+				Map<String,Map> active = COConfigurationManager.getMapParameter( "MagnetPlugin.active.magnets", new HashMap());
+			
+				if ( active.size() > 0 ){
+					
+					active = BEncoder.cloneMap( active );
+					
+					boolean do_update = false;
+					
+					for ( Map map: active.values()){
+						
+						//System.out.println( "Recovering: " + map );
+							
+						try{
+							byte[]	hash = (byte[])map.get( "hash" );
+							
+							Download download = plugin_interface.getDownloadManager().getDownload( hash );
+							
+							if ( download != null ){
+								
+								com.biglybt.core.download.DownloadManager		core_dm = PluginCoreUtils.unwrap( download );
+
+								if ( updateInitialMetadata( map, core_dm )){
+									
+									do_update = true;
+								}
+								
+							}
+						}catch( Throwable e ){
+							
+						}
+					}
+					
+					if ( do_update ){
+					
+						COConfigurationManager.setParameter( "MagnetPlugin.active.magnets", active );
+					}
 				}
 			}
 		}
@@ -979,6 +1056,8 @@ MagnetPlugin
 		final byte[]								hash,
 		final String								args,
 		final InetSocketAddress[]					sources,
+		List<String>								tags,
+		Map<String,Object>							other_metadata,
 		final long									timeout,
 		boolean										is_recovering )
 	
@@ -1029,6 +1108,16 @@ MagnetPlugin
 							Debug.out( e );
 						}
 					}
+				}
+				
+				if ( tags != null ){
+					
+					map.put( "tags", tags );
+				}
+				
+				if ( other_metadata != null ){
+					
+					map.put( "other_metadata", other_metadata );
 				}
 				
 				map.put( "timeout", timeout );
@@ -1097,6 +1186,8 @@ MagnetPlugin
 					hash,
 					args,
 					sources,
+					tags,
+					other_metadata,
 					timeout,
 					is_recovering?MagnetPlugin.FL_NO_MD_LOOKUP_DELAY:MagnetPlugin.FL_NONE );
 			
@@ -1180,47 +1271,78 @@ MagnetPlugin
 		byte[]								hash,
 		String								args,
 		InetSocketAddress[]					sources,
+		List<String>						tags,
+		Map<String,Object>					other_metadata,
 		long								timeout,
 		int									flags )
 
 		throws MagnetURIHandlerException
 	{
-		DownloadResult result = downloadSupport( listener, hash, args, sources, timeout, flags );
+		DownloadResult result = downloadSupport( listener, hash, args, sources, tags, other_metadata, timeout, flags );
 
 		if ( result == null ){
 
 			return( null );
 		}
 
-		return( addTrackersAndWebSeedsEtc( result, args  ));
+		return( addTrackersAndWebSeedsEtc( result, args, tags, other_metadata  ));
 	}
 
 	private byte[]
 	addTrackersAndWebSeedsEtc(
 		DownloadResult		result,
-		String				args )
+		String				args,
+		List<String>		tags,
+		Map<String,Object>	other_metadata )
 	{
 		byte[]		torrent_data 	= result.getTorrentData();
 		Set<String>	networks		= result.getNetworks();
 
-		return( addTrackersAndWebSeedsEtc( torrent_data, args, networks ));
+		DownloadManager dm = result.getDownload();
+		
+		if ( dm != null ){
+			
+			tags = (List<String>)dm.getUserData( DM_TAG_CACHE );
+			
+			other_metadata = TorrentUtils.getInitialMetadata( dm );
+			
+			String category = (String)dm.getUserData( DM_CATEGORY_CACHE );
+			
+			if ( category != null ){
+				
+				MapUtils.setMapString( other_metadata, "category", category );
+			}
+		}
+		
+		return( addTrackersAndWebSeedsEtc( torrent_data, args, networks, tags, other_metadata ));
 	}
 
 	private byte[]
 	addTrackersAndWebSeedsEtc(
-		byte[]			torrent_data,
-		String			args,
-		Set<String>		networks )
+		byte[]				torrent_data,
+		String				args,
+		Set<String>			networks,
+		List<String>		initial_tags,
+		Map<String,Object>	other_metadata )
 	{
+		if ( initial_tags == null ){
+			
+			initial_tags = Collections.emptyList();
+		}
+		
+		if ( other_metadata == null ){
+			
+			other_metadata = Collections.emptyMap();
+		}
+		
 		List<String>	new_web_seeds 	= new ArrayList<>();
 		List<String>	new_trackers 	= new ArrayList<>();
 
 		Set<String>	tags			= new HashSet<>();
-
+		
 		if ( args != null ){
 
 			String[] bits = args.split( "&" );
-
 
 			for ( String bit: bits ){
 
@@ -1252,7 +1374,7 @@ MagnetPlugin
 			}
 		}
 
-		if ( new_web_seeds.size() > 0 || new_trackers.size() > 0 || networks.size() > 0 ){
+		if ( new_web_seeds.size() > 0 || new_trackers.size() > 0 || networks.size() > 0 || !initial_tags.isEmpty() || !other_metadata.isEmpty()){
 
 			try{
 				TOTorrent torrent = TOTorrentFactory.deserialiseFromBEncodedByteArray( torrent_data );
@@ -1366,6 +1488,11 @@ MagnetPlugin
 					update_torrent = true;
 				}
 
+				if ( setInitialMetadata( torrent, initial_tags, other_metadata )){
+					
+					update_torrent = true;
+				}
+				
 				if ( update_torrent ){
 
 					torrent_data = BEncoder.encode( torrent.serialiseToMap());
@@ -1376,7 +1503,155 @@ MagnetPlugin
 
 		return( torrent_data );
 	}
+	
+	protected List<String>
+	getInitialTags(
+		DownloadManager		from_dm )
+	{
+		List<String> tag_names = new ArrayList<>();
 
+		try{
+			List<Tag> tags = TagManagerFactory.getTagManager().getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, from_dm );
+			
+			if ( !tags.isEmpty()){
+													
+				for ( Tag t: tags ){
+					
+					if ( !t.isTagAuto()[0]){
+					
+						tag_names.add( t.getTagName( true ));
+					}
+				}
+			}
+		}catch( Throwable e ){	
+		}
+		
+		return( tag_names );
+	}
+	
+	protected boolean
+	updateInitialMetadata(
+		Map					map,
+		DownloadManager		from_dm )
+	{
+			// update persistent magnet metadata
+		
+		List<String> tag_names = getInitialTags( from_dm );
+		
+		boolean	updated = false;
+		
+		if ( !tag_names.isEmpty()){
+			
+			map.put( "tags", tag_names );
+			
+			updated = true;
+			
+		}else{
+			
+			if ( map.remove( "tags" ) != null ){
+				
+				updated = true;
+			}
+		}
+		
+		Map<String,Object>	other_metadata = TorrentUtils.getInitialMetadata( from_dm );
+	
+		if ( !other_metadata.isEmpty()){
+		
+			map.put( "other_metadata", other_metadata );
+			
+			updated = true;
+			
+		}else{
+			
+			if ( map.remove( "other_metadata" ) != null ){
+				
+				updated = true;
+			}
+		}
+		
+		return( updated );
+	}
+	
+	protected void
+	setInitialMetadata(
+		TOTorrent			torrent,
+		DownloadManager		from_dm )
+	{
+			// md download complete, save into torrent to be picked up when added
+		
+		List<String> tag_names = getInitialTags( from_dm );
+		
+		if ( !tag_names.isEmpty()){
+		
+			TorrentUtils.setInitialTags( torrent, tag_names );
+		}
+		
+		Map<String,Object>	other_metadata = TorrentUtils.getInitialMetadata( from_dm );
+		
+		if ( !other_metadata.isEmpty()){
+			
+			TorrentUtils.setInitialMetadata( torrent, other_metadata );
+		}
+	}
+	
+	protected void
+	setInitialMetadata(
+		DownloadManager		to_dm,
+		List<String>		tags,
+		Map<String,Object>	other_metadata )
+	{
+			// re-populate metadata into md download
+		
+		if ( tags != null ){
+			
+			try{
+				TagManager tm = TagManagerFactory.getTagManager();
+				
+				for ( String tn: tags ){
+					
+					Tag tag = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTag( tn, true );
+					
+					if ( tag != null ){
+						
+						tag.addTaggable( to_dm );
+					}
+				}	
+			}catch( Throwable e ){
+			}
+		}
+		
+		if ( other_metadata != null && !other_metadata.isEmpty()){
+			
+			TorrentUtils.setInitialMetadata( to_dm, other_metadata );
+		}
+	}
+	
+	private boolean
+	setInitialMetadata(
+		TOTorrent			torrent,
+		List<String>		tags,
+		Map<String,Object>	other_metadata )
+	{
+		boolean	update = false;
+		
+		if ( !tags.isEmpty()){
+			
+			TorrentUtils.setInitialTags( torrent, new ArrayList<>(tags));
+
+			update = true;
+		}
+		
+		if ( !other_metadata.isEmpty()){
+			
+			TorrentUtils.setInitialMetadata( torrent, other_metadata );
+
+			update = true;
+		}
+		
+		return( update );
+	}
+	
 	private static ByteArrayHashMap<DownloadActivity>	download_activities = new ByteArrayHashMap<>();
 
 	private static class
@@ -1434,6 +1709,8 @@ MagnetPlugin
  		byte[]							hash,
  		String							args,
  		InetSocketAddress[]				sources,
+ 		List<String>					tags,
+ 		Map<String,Object>				initial_metadata,
  		long							timeout,
  		int								flags )
 
@@ -1462,7 +1739,7 @@ MagnetPlugin
 
 	 		try{
 
-	 			activity.setResult( _downloadSupport( listener, hash, args, sources, timeout, flags ));
+	 			activity.setResult( _downloadSupport( listener, hash, args, sources, tags, initial_metadata, timeout, flags ));
 
 	 		}catch( Throwable e ){
 
@@ -1487,8 +1764,36 @@ MagnetPlugin
 		final byte[]							hash,
 		final String							args,
 		final InetSocketAddress[]				sources,
+		List<String>							tags,
+		Map<String,Object>						initial_metadata,
 		long									_timeout,
 		int										flags )
+
+		throws MagnetURIHandlerException
+	{
+		DownloadManager[] download = { null };
+		
+		DownloadResult	result = _downloadSupport( listener, hash, args, sources, tags, initial_metadata, _timeout, flags, download );
+		
+		if ( result != null ){
+		
+			result.setDownload( download[0] );
+		}
+		
+		return( result );
+	}
+	
+	private DownloadResult
+	_downloadSupport(
+		final MagnetPluginProgressListener		listener,
+		final byte[]							hash,
+		final String							args,
+		final InetSocketAddress[]				sources,
+		List<String>							tags,
+		Map<String,Object>						initial_metadata,
+		long									_timeout,
+		int										flags,
+		DownloadManager[]						cancelled_download )
 
 		throws MagnetURIHandlerException
 	{
@@ -1744,7 +2049,7 @@ MagnetPlugin
 									return;
 								}
 
-								md_downloader[0] = mdd = new MagnetPluginMDDownloader( MagnetPlugin.this, plugin_interface, hash, networks_enabled, sources, args );
+								md_downloader[0] = mdd = new MagnetPluginMDDownloader( MagnetPlugin.this, plugin_interface, hash, networks_enabled, sources, tags, initial_metadata, args );
 							}
 
 							if ( listener != null ){
@@ -1761,12 +2066,12 @@ MagnetPlugin
 										int		total_size )
 									{
 										if ( listener != null ){
-  										listener.reportActivity( getMessageText( "report.md.progress", String.valueOf( downloaded + "/" + total_size ) ));
+											listener.reportActivity( getMessageText( "report.md.progress", String.valueOf( downloaded + "/" + total_size ) ));
 
-  										listener.reportCompleteness( 100*downloaded/total_size );
+											listener.reportCompleteness( 100*downloaded/total_size );
 										}
 									}
-
+									
 									@Override
 									public void
 									complete(
@@ -1839,8 +2144,63 @@ MagnetPlugin
 						first_download = false;
 					}
 
-					final DistributedDatabase db = plugin_interface.getDistributedDatabase();
+				
+					// final DistributedDatabase db = plugin_interface.getDistributedDatabase();
+					// blocking call above, nasty
+					
+					DistributedDatabase[]	db_holder	= {null};
+					AESemaphore				db_waiter	= new AESemaphore( "grab db" );
+					
+					new AEThread2( "grab ddb" ){
+						@Override
+						public void run()
+						{
+							try{
+								DistributedDatabase db = plugin_interface.getDistributedDatabase();
+								
+								synchronized( db_holder ){
+									
+									db_holder[0] = db;
+								}
+							}finally{
+								db_waiter.release();
+							}
+						}
+					}.start();
 
+					while( true ){
+						
+						if ( db_waiter.reserve( 100 )){
+							
+							break;
+						}
+						
+						if ( listener != null && listener.cancelled()){
+
+							return( null );
+						}
+
+						synchronized( result_holder ){
+
+							if ( result_holder[0] != null ){
+
+								return( new DownloadResult( result_holder[0], networks_enabled, additional_networks ));
+							}
+							
+							if ( manually_cancelled[0] ){
+							
+								throw( new Exception( "Manually cancelled" ));
+							}
+						}
+					}
+					
+					DistributedDatabase db;
+					
+					synchronized( db_holder ){
+						
+						db = db_holder[0];
+					}
+					
 					if ( db.isAvailable()){
 
 						final List			potential_contacts 		= new ArrayList();
@@ -2455,9 +2815,13 @@ MagnetPlugin
 
 					md_delay_event.cancel();
 
-					if ( md_downloader[0] != null ){
+					MagnetPluginMDDownloader downloader = md_downloader[0];
+					
+					if ( downloader != null ){
 
-						 md_downloader[0].cancel();
+						downloader.cancel();
+							
+						cancelled_download[0] = downloader.getDownloadManager();
 					}
 				}
 			}
@@ -2660,6 +3024,8 @@ MagnetPlugin
 		private byte[]		data;
 		private Set<String>	networks;
 
+		private DownloadManager		dm;
+		
 		private
 		DownloadResult(
 			byte[]			torrent_data,
@@ -2674,6 +3040,19 @@ MagnetPlugin
 			networks.addAll( additional_networks );
 		}
 
+		private void
+		setDownload(
+			DownloadManager		_dm )
+		{
+			dm		= _dm;
+		}
+		
+		private DownloadManager
+		getDownload()
+		{
+			return( dm );
+		}
+		
 		private byte[]
 		getTorrentData()
 		{

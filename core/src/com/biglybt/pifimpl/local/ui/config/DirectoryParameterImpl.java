@@ -35,8 +35,6 @@ DirectoryParameterImpl
 	extends		ParameterImpl
 	implements 	DirectoryParameter
 {
-	private String defaultValue;
-
 	public
 	DirectoryParameterImpl(
 		PluginConfigImpl 	config,
@@ -46,24 +44,16 @@ DirectoryParameterImpl
 	{
 		super( config, key, label );
 
-		this.defaultValue = defaultValue;
+		COConfigurationManager.setStringDefault(getKey(), defaultValue);
 
 		config.notifyParamExists(getKey());
-		COConfigurationManager.setStringDefault(getKey(), getDefaultValue());
-	}
-	/**
-	 * @return Returns the defaultValue.
-	 */
-	public String getDefaultValue()
-	{
-		return defaultValue;
 	}
 
 	@Override
 	public String
 	getValue()
 	{
-		return( config.getUnsafeStringParameter( getKey(), getDefaultValue()));
+		return( config.getUnsafeStringParameter( getKey()));
 	}
 
 	@Override

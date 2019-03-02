@@ -97,7 +97,6 @@ DHTUDPPacketRequestQueryStorage
 			}
 
 		}
-		super.postDeserialise(is);
 	}
 
 	@Override
@@ -132,8 +131,6 @@ DHTUDPPacketRequestQueryStorage
 				os.write( suffix );
 			}
 		}
-
-		super.postSerialise( os );
 	}
 
 	protected void

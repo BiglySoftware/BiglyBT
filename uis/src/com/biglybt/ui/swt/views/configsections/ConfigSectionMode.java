@@ -29,26 +29,21 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.*;
 
-import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.RememberedDecisionsManager;
+import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.pif.UISWTConfigSection;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
+
+import com.biglybt.pif.ui.config.ConfigSection;
 
 
 
@@ -112,7 +107,7 @@ public class ConfigSectionMode implements UISWTConfigSection {
     final Group gRadio = new Group(cMode, SWT.WRAP);
     Messages.setLanguageText(gRadio, "ConfigView.section.mode.title");
     gRadio.setLayoutData(gridData);
-    Utils.setLayout(gRadio, new RowLayout(SWT.HORIZONTAL));
+		gRadio.setLayout(new RowLayout(SWT.HORIZONTAL));
 
     Button button0 = new Button (gRadio, SWT.RADIO);
     Messages.setLanguageText(button0, "ConfigView.section.mode.beginner");
@@ -146,8 +141,7 @@ public class ConfigSectionMode implements UISWTConfigSection {
     final Label label = new Label(cMode, SWT.WRAP);
     gridData.horizontalSpan = 4;
     gridData.horizontalIndent=10;
-    Utils.setLayoutData(label, gridData);
-
+		label.setLayoutData(gridData);
 
     final Label linkLabel = new Label(cMode, SWT.NULL);
     linkLabel.setText( MessageText.getString( "ConfigView.label.please.visit.here" ));
@@ -156,7 +150,7 @@ public class ConfigSectionMode implements UISWTConfigSection {
     linkLabel.setForeground(Colors.blue);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     //gridData.horizontalIndent = 10;
-    Utils.setLayoutData(linkLabel,  gridData );
+		linkLabel.setLayoutData(gridData);
     linkLabel.addMouseListener(new MouseAdapter() {
       @Override
       public void mouseDoubleClick(MouseEvent arg0) {
@@ -169,7 +163,7 @@ public class ConfigSectionMode implements UISWTConfigSection {
     });
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 4;
-    Utils.setLayoutData(linkLabel, gridData);
+		linkLabel.setLayoutData(gridData);
     ClipboardCopy.addCopyToClipMenu( linkLabel );
 
     final Runnable setModeText =
@@ -255,20 +249,19 @@ public class ConfigSectionMode implements UISWTConfigSection {
     Label padding = new Label(cMode, SWT.NULL );
     gridData = new GridData();
     gridData.horizontalSpan = 3;
-    Utils.setLayoutData(padding,  gridData );
+		padding.setLayoutData(gridData);
 
     	// reset to defaults
 
     Label blank = new Label(cMode, SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     gridData.horizontalSpan = 4;
-    Utils.setLayoutData(blank, gridData);
-
+		blank.setLayoutData(gridData);
 
 	Composite gReset = new Composite(cMode, SWT.WRAP);
     gridData = new GridData();
     gridData.horizontalSpan = 4;
-    Utils.setLayoutData(gReset, gridData);
+		gReset.setLayoutData(gridData);
     layout = new GridLayout();
     layout.numColumns = 3;
     layout.marginWidth = 0;
@@ -319,7 +312,7 @@ public class ConfigSectionMode implements UISWTConfigSection {
 
     padding = new Label(gReset, SWT.NULL );
     gridData = new GridData();
-    Utils.setLayoutData(padding,  gridData );
+		padding.setLayoutData(gridData);
 
     return cMode;
   }

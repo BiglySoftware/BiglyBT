@@ -27,6 +27,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.impl.DHTLog;
 import com.biglybt.core.dht.netcoords.DHTNetworkPosition;
@@ -34,6 +35,9 @@ import com.biglybt.core.dht.netcoords.DHTNetworkPositionManager;
 import com.biglybt.core.dht.netcoords.vivaldi.ver1.VivaldiPositionFactory;
 import com.biglybt.core.dht.transport.*;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
+import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.global.GlobalManagerStats.*;
+
 import com.biglybt.core.util.*;
 
 /**
@@ -1480,5 +1484,445 @@ DHTUDPUtils
 		}
 
 		return( result_list );
+	}
+	
+	private static final int					MAX_CC_STATS	= 24;	// must be even
+	private static final int					CALC_PERIOD		= 60*1000;
+	private static volatile long				last_calc		= SystemTime.getMonotonousTime() - ( CALC_PERIOD + 1 );
+	
+	private static volatile CountryDetails[]	last_details_recv	= new CountryDetails[0];
+	private static volatile CountryDetails[]	last_details_sent	= new CountryDetails[0];
+	
+	private static volatile long				last_details_recv_total;
+	private static volatile long				last_details_sent_total;
+	
+	private static volatile GlobalManagerStats	gm_stats;
+	
+	//private static Average	send_freq = Average.getInstance( 1000, 10 );
+	
+	private static volatile long	last_upload_stats;
+	
+	protected static void
+	serialiseUploadStats(
+		int						protocol_version,
+		int						packet_type,
+		DataOutputStream		os )
+	
+		throws IOException
+	{
+			// full set of stats = 11 + 24*12= about 300 bytes. so limit to 3 per sec
+		
+		//send_freq.addValue(1);
+		//System.out.println( send_freq.getAverage() + " - " + packet_type );
+		
+		if ( protocol_version < DHTTransportUDP.PROTOCOL_VERSION_BBT_UPLOAD_STATS ){
+		
+			return;
+		}
+		
+		long	now = SystemTime.getMonotonousTime();
+		
+		if ( now - last_upload_stats < 333 ){
+			
+			os.writeByte( 0xff );	// special case meaning 'no stats'
+			
+			return;
+		}
+		
+		last_upload_stats = now;
+		
+		if ( now - last_calc > CALC_PERIOD ){
+
+			if ( gm_stats == null ){
+				
+				gm_stats = CoreFactory.getSingleton().getGlobalManager().getStats();
+			}
+			
+			Iterator<CountryDetails>	it = gm_stats.getCountryDetails();
+			
+			List<CountryDetails>	recvs = new ArrayList<>(128);
+			List<CountryDetails>	sents = new ArrayList<>(128);
+			
+			Map<CountryDetails,Long>	recv_cache = new HashMap<>();
+			Map<CountryDetails,Long>	sent_cache = new HashMap<>();
+				
+			long	recv_total	= 0;
+			long	sent_total	= 0;
+			
+			while( it.hasNext()){
+				
+				CountryDetails cd = it.next();
+				
+				if ( cd.getCC().isEmpty()){
+					
+					continue;
+				}
+				
+				long recv = cd.getAverageReceived();
+				
+				if ( recv > 0 ){
+			
+					recv_total += recv;
+					
+					recvs.add( cd );
+					
+					recv_cache.put( cd,  recv );
+				}
+				
+				long sent = cd.getAverageSent();
+				
+				if ( sent > 0 ){
+			
+					sent_total += sent;
+					
+					sents.add( cd );
+					
+					sent_cache.put( cd,  sent );
+				}
+			}
+						
+			CountryDetails[] recvs_a = recvs.toArray( new CountryDetails[0] );
+			
+			Arrays.sort(
+				recvs_a,
+				new Comparator<CountryDetails>(){
+					@Override
+					public int 
+					compare(
+						CountryDetails o1, 
+						CountryDetails o2)
+					{
+						Long l1 = (Long)recv_cache.get(o1);
+						Long l2 = (Long)recv_cache.get(o2);
+						
+						return( Long.compare( l2, l1 ));
+					}
+				});
+				
+			CountryDetails[] sents_a = sents.toArray( new CountryDetails[0] );
+			
+			Arrays.sort(
+				sents_a,
+				new Comparator<CountryDetails>(){
+					@Override
+					public int 
+					compare(
+						CountryDetails o1, 
+						CountryDetails o2)
+					{
+						Long l1 = (Long)sent_cache.get(o1);
+						Long l2 = (Long)sent_cache.get(o2);
+						
+						return( Long.compare( l2, l1 ));
+					}
+				});
+			
+			last_details_recv_total	= recv_total;
+			last_details_sent_total	= sent_total;
+			
+			last_details_recv = recvs_a;
+			last_details_sent = sents_a;
+			
+			last_calc = now;
+		}
+				
+		CountryDetails[] details_recv = last_details_recv;
+		CountryDetails[] details_sent = last_details_sent;
+		
+		os.writeByte( 0x02 );	// version
+			
+		os.writeFloat( last_details_recv_total );
+		os.writeFloat( last_details_sent_total );
+		
+		int num_recv 	= details_recv.length;
+		int num_sent	= details_sent.length;
+		
+		if ( num_recv + num_sent > MAX_CC_STATS ){
+			
+			final int half = MAX_CC_STATS/2;
+						
+			if ( num_recv < half ){
+				
+				num_sent = MAX_CC_STATS - num_recv;
+				
+			}else if ( num_sent < half ){
+				
+				num_recv = MAX_CC_STATS - num_sent;
+				
+			}else{
+				
+				num_recv = num_sent = half;
+			}
+		}
+		
+		for ( int loop=0;loop<2;loop++){
+			
+			CountryDetails[]	details;
+			int					records;
+
+			if ( loop == 0 ){
+				details	= details_recv;
+				records	= num_recv;
+			}else{
+				details	= details_sent;
+				records	= num_sent;
+			}
+			
+			os.writeByte((byte)records );
+						
+			for ( int i=0;i<records;i++){
+				
+				CountryDetails cd = details[i];
+				
+				String cc = cd.getCC();
+				
+				if ( cc.length() > 2 ){
+					
+					if ( cc.equals( AENetworkClassifier.AT_I2P )){
+						
+						cc = "X0";
+						
+					}else if ( cc.equals( AENetworkClassifier.AT_TOR )){
+						
+						cc = "X1";
+						
+					}else{
+						
+						cc = "X2";
+					}
+				}
+				
+				os.writeByte((byte)cc.charAt(0));
+				os.writeByte((byte)cc.charAt(1));
+								
+				os.writeFloat( loop==0?cd.getAverageReceived():cd.getAverageSent());
+			}
+		}
+	}
+	
+	protected static Object
+	deserialiseUploadStats(
+		DataInputStream			is )
+	
+		throws IOException
+	{
+		try{
+			byte version = is.readByte();
+			
+			if ( version == 0 || version == 1 ){
+							
+				int records = (int)(is.readByte() & 0x00ff );
+				
+				if ( records > 0 && records <= MAX_CC_STATS ){
+					
+					RemoteCountryStats[]	stats = new RemoteCountryStats[records];
+					
+					for ( int i=0;i<records;i++){
+						
+						byte c1 = is.readByte();
+						byte c2 = is.readByte();
+						
+						String cc = "" + (char)c1 + (char)c2;
+						
+						if ( c1 == 'X' ){
+							
+							if ( cc.equals( "X0" )){
+							
+								cc = AENetworkClassifier.AT_I2P;
+								
+							}else if ( cc.equals( "X1" )){
+								
+								cc = AENetworkClassifier.AT_TOR;
+								
+							}else{
+								
+							}
+						}
+						
+						String f_cc = cc;
+						
+						long 	bytes;
+						
+						if ( version == 0 ){
+							
+							bytes = ((long)( is.readInt() & 0x00000000ffffffff ))*1024;
+												
+						}else if ( version == 1 ){
+							
+							bytes= (long)is.readFloat();
+							
+						}else{
+							
+							bytes	= 0;
+						}
+						
+						stats[i] = 
+							new RemoteCountryStats()
+							{
+								public String 
+								getCC()
+								{
+									return( f_cc );
+								}
+							
+								public long
+								getAverageReceivedBytes()
+								{
+									return( bytes );
+								}
+								
+								@Override
+								public long 
+								getAverageSentBytes()
+								{
+									return( 0 );
+								}
+							};
+					}
+					
+					return( stats );
+				
+				}else{
+					
+					return( null );
+				}
+			}else if ( version == 2 ){
+				
+				long	total_recv	= (long)is.readFloat();
+				long	total_sent	= (long)is.readFloat();
+								
+				Map<String,long[]>	stats_map = new HashMap<>();
+				
+				stats_map.put( "", new long[]{ total_recv, total_sent });
+				
+				for ( int loop=0;loop<2;loop++){
+					
+					int records = (int)(is.readByte() & 0x00ff );
+					
+					if ( records > 0 && records <= MAX_CC_STATS ){
+												
+						for ( int i=1;i<=records;i++){
+							
+							byte c1 = is.readByte();
+							byte c2 = is.readByte();
+							
+							String cc = "" + (char)c1 + (char)c2;
+							
+							if ( c1 == 'X' ){
+								
+								if ( cc.equals( "X0" )){
+								
+									cc = AENetworkClassifier.AT_I2P;
+									
+								}else if ( cc.equals( "X1" )){
+									
+									cc = AENetworkClassifier.AT_TOR;
+									
+								}else{
+									
+								}
+							}
+							
+							long[] values = stats_map.get( cc );
+							
+							if ( values == null ){
+								
+								values = new long[2];
+								
+								stats_map.put( cc, values );
+							}
+							
+							values[loop] = (long)is.readFloat();
+						}
+					}
+				}
+				
+				RemoteCountryStats[]	stats = new RemoteCountryStats[stats_map.size()];
+				
+				int	pos = 0;
+				
+				for ( Map.Entry<String,long[]> entry: stats_map.entrySet()){
+					
+					long[]	values 	= entry.getValue();
+					String	cc		= entry.getKey();
+					
+					final long	recv 	= values[0];
+					final long	sent	= values[1];
+					
+					stats[pos++] = 
+						new RemoteCountryStats()
+						{
+							public String 
+							getCC()
+							{
+								return( cc );
+							}
+						
+							public long
+							getAverageReceivedBytes()
+							{
+								return( recv );
+							}
+							
+							@Override
+							public long 
+							getAverageSentBytes()
+							{
+								return( sent );
+							}
+						};
+				}
+				
+				return( stats );
+				
+			}else{
+				
+					// note that version 0xff is used to indicate no stats have been sent
+				
+				return( null );
+			}
+		}catch( Throwable e ){
+			
+			if ( Constants.IS_CVS_VERSION ){
+			
+				Debug.out(e);
+			}
+			
+			return( null );
+		}
+	}
+	
+	protected static void
+	receiveUploadStats(
+		DHTTransportUDPContactImpl	contact,
+		Object						_stats )
+	{		
+		if ( _stats == null ){
+			
+			return;
+		}
+	
+		RemoteCountryStats[]	stats = (RemoteCountryStats[])_stats;
+		
+		InetAddress address = contact.getTransportAddress().getAddress();
+		
+		if ( gm_stats == null ){
+			
+			gm_stats = CoreFactory.getSingleton().getGlobalManager().getStats();
+		}
+		
+		gm_stats.receiveRemoteStats(
+			new RemoteStats()
+			{	
+				@Override
+				public RemoteCountryStats[] getStats(){
+					return( stats );
+				}
+								
+				@Override
+				public InetAddress getRemoteAddress(){
+					return( address );
+				}
+			});
 	}
 }

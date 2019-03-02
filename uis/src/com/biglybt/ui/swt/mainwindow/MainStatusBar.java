@@ -16,7 +16,6 @@
  */
 package com.biglybt.ui.swt.mainwindow;
 
-import java.net.URL;
 import java.text.NumberFormat;
 import java.util.*;
 
@@ -291,7 +290,7 @@ public class MainStatusBar
 		//Either the Status Text
 		statusText = new CLabel(statusBar, borderFlag);
 		statusText.setForeground(fgColor);
-		Utils.setLayoutData(statusText, new GridData(GridData.FILL_HORIZONTAL
+		statusText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL
 				| GridData.VERTICAL_ALIGN_FILL));
 
 		addStatusBarMenu(statusText);
@@ -335,7 +334,7 @@ public class MainStatusBar
 		progressBar.setVisible(false);
 		progressGridData = new GridData(SWT.CENTER, SWT.CENTER, false, false);
 		progressGridData.widthHint = 5;
-		Utils.setLayoutData(progressBar, progressGridData);
+		progressBar.setLayoutData(progressGridData);
 
 		// addRIP();
 
@@ -345,7 +344,7 @@ public class MainStatusBar
 
 		progressViewerImageLabel = new CLabelPadding(statusBar, SWT.NONE);
 		// image set below after adding listener
-		progressViewerImageLabel.setToolTipText(MessageText.getString("Progress.reporting.statusbar.button.tooltip"));
+		Utils.setTT( progressViewerImageLabel, MessageText.getString("Progress.reporting.statusbar.button.tooltip"));
 		progressViewerImageLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(MouseEvent e) {
@@ -448,7 +447,7 @@ public class MainStatusBar
 
 		dhtStatus = new CLabelPadding(statusBar, borderFlag);
 		dhtStatus.setText("");
-		dhtStatus.setToolTipText(MessageText.getString("MainWindow.dht.status.tooltip"));
+		Utils.setTT( dhtStatus,MessageText.getString("MainWindow.dht.status.tooltip"));
 
 		Utils.addAndFireParameterListener(mapConfigListeners, true,
 				"Status Area Show DDB", new ParameterListener() {
@@ -1041,7 +1040,7 @@ public class MainStatusBar
 						}
 					};
 
-					feedback.setToolTipText(MessageText.getString("statusbar.feedback.tooltip"));
+					Utils.setTT(feedback,MessageText.getString("statusbar.feedback.tooltip"));
 					feedback.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 					feedback.setForeground(Colors.blue);
 					feedback.addListener(SWT.MouseUp, feedback_listener);
@@ -1122,7 +1121,7 @@ public class MainStatusBar
 
 				ClipboardCopy.addCopyToClipMenu( menu, url_str );
 
-				feedback.setToolTipText( url_str );
+				Utils.setTT( feedback, url_str );
 
 				feedback.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 				feedback.setForeground(Colors.blue);
@@ -1227,7 +1226,7 @@ public class MainStatusBar
 					+ Constants.AZUREUS_VERSION + ")!";
 			setStatusImageKey(STATUS_ICON_WARN);
 		} else if (!Constants.isOSX && COConfigurationManager.getStringParameter("ui").equals("az2")) { //don't show official version numbers for OSX L&F
-			statusTextKey = Constants.APP_NAME + " " + Constants.AZUREUS_VERSION;
+			statusTextKey = "!" + Constants.APP_NAME + " " + Constants.AZUREUS_VERSION + "!";
 			setStatusImageKey(null);
 		}
 
@@ -1381,7 +1380,9 @@ public class MainStatusBar
 			GlobalManager gm = core.getGlobalManager();
 			GlobalManagerStats stats = gm.getStats();
 
-			int dl_limit = NetworkManager.getMaxDownloadRateBPS() / 1024;
+			int kinb = DisplayFormatters.getKinB();
+			
+			int dl_limit = NetworkManager.getMaxDownloadRateBPS() / kinb;
 			long rec_data = stats.getDataReceiveRate();
 			long rec_prot = stats.getProtocolReceiveRate();
 
@@ -1397,11 +1398,11 @@ public class MainStatusBar
 			boolean auto_up = TransferSpeedValidator.isAutoSpeedActive(gm)
 					&& TransferSpeedValidator.isAutoUploadAvailable(core);
 
-			int ul_limit_norm = NetworkManager.getMaxUploadRateBPSNormal() / 1024;
+			int ul_limit_norm = NetworkManager.getMaxUploadRateBPSNormal() / kinb;
 
 			String seeding_only;
 			if (NetworkManager.isSeedingOnlyUploadRate()) {
-				int ul_limit_seed = NetworkManager.getMaxUploadRateBPSSeedingOnly() / 1024;
+				int ul_limit_seed = NetworkManager.getMaxUploadRateBPSSeedingOnly() / kinb;
 				if (ul_limit_seed == 0) {
 					seeding_only = "+" + Constants.INFINITY_STRING + "K";
 				} else {
@@ -1487,19 +1488,19 @@ public class MainStatusBar
 			switch (dht_status) {
 				case DHTPlugin.STATUS_RUNNING:
 
-					dhtStatus.setToolTipText(MessageText.getString("MainWindow.dht.status.tooltip"));
+					Utils.setTT(dhtStatus,MessageText.getString("MainWindow.dht.status.tooltip"));
 					dhtStatus.setText(MessageText.getString("MainWindow.dht.status.users").replaceAll(
 							"%1", numberFormat.format(dht_count)));
 
 					/*
 					if ( reachable ){
 						dhtStatus.setImage(ImageRepository.getImage("greenled"));
-						dhtStatus.setToolTipText(MessageText
+						Utils.setTT(dhtStatus.MessageText
 								.getString("MainWindow.dht.status.tooltip"));
 						dhtStatus.setText(MessageText.getString("MainWindow.dht.status.users").replaceAll("%1", numberFormat.format(dht_count)));
 					} else {
 						dhtStatus.setImage(ImageRepository.getImage("yellowled"));
-						dhtStatus.setToolTipText(MessageText
+						Utils.setTT( dhtStatus,MessageText
 								.getString("MainWindow.dht.status.unreachabletooltip"));
 						dhtStatus.setText(MessageText
 								.getString("MainWindow.dht.status.unreachable"));
@@ -1610,7 +1611,7 @@ public class MainStatusBar
 			if ( !nat_info.isEmpty() ){
 				tt += "\n" + nat_info;
 			}
-			natStatus.setToolTipText( tt );
+			Utils.setTT(natStatus, tt );
 			lastNATInfo		= nat_info;
 			
 			natStatus.setText(MessageText.getString(statusID));
@@ -1712,7 +1713,7 @@ public class MainStatusBar
 
 			ratio_str = (ratio / 1000) + "." + partial;
 
-			srStatus.setToolTipText(MessageText.getString(tooltipID, new String[] {
+			Utils.setTT( srStatus,MessageText.getString(tooltipID, new String[] {
 				ratio_str
 			}));
 
@@ -1746,7 +1747,7 @@ public class MainStatusBar
 				+ "/"
 				+ numberFormat.format(core.getIpFilterManager().getBadIps().getNbBadIps()));
 
-		ipBlocked.setToolTipText(MessageText.getString("MainWindow.IPs.tooltip",
+		Utils.setTT(ipBlocked,MessageText.getString("MainWindow.IPs.tooltip",
 				new String[] {
 					ip_filter.isEnabled()?
 					DisplayFormatters.formatDateShort(ip_filter.getLastUpdateTime()):MessageText.getString( "ipfilter.disabled" )
@@ -1759,7 +1760,7 @@ public class MainStatusBar
 	@Override
 	public void setDebugInfo(String string) {
 		if (statusText != null && !statusText.isDisposed())
-			statusText.setToolTipText(string);
+			Utils.setTT(statusText,string);
 	}
 
 	@Override
@@ -1817,20 +1818,20 @@ public class MainStatusBar
 				{
 					@Override
 					public void mouseEnter(MouseEvent e) {
-						//CLabelPadding.super.setToolTipText( tooltip_text );
 						hovering = true;
 					}
 
 					@Override
 					public void mouseExit(MouseEvent e) {
-						//CLabelPadding.super.setToolTipText( "" );
 						hovering = false;
 					}
 					@Override
 					public void mouseHover(MouseEvent e) {
 						String existing = CLabelPadding.super.getToolTipText();
 						if ( existing == null || !existing.equals( tooltip_text )){
-							CLabelPadding.super.setToolTipText( tooltip_text );
+							if ( Utils.getTTEnabled()){
+								CLabelPadding.super.setToolTipText( tooltip_text );
+							}
 						}
 					}
 				});
@@ -1852,7 +1853,9 @@ public class MainStatusBar
 
 			if ( hovering ){
 
-				super.setToolTipText( str );
+				if ( Utils.getTTEnabled()){
+					super.setToolTipText( str );
+				}
 			}
 		}
 
@@ -2087,7 +2090,7 @@ public class MainStatusBar
 				}
 				UpdateableCLabel result = new UpdateableCLabel(plugin_label_composite, borderFlag,
 						updater);
-				Utils.setLayoutData(result, new GridData(GridData.FILL_BOTH));
+				result.setLayoutData(new GridData(GridData.FILL_BOTH));
 				layoutPluginComposite();
 				updater.created(result);
 			}
@@ -2134,6 +2137,7 @@ public class MainStatusBar
 		} else if (!state && progressBar.isVisible()) {
 			progressBar.setVisible(false);
 			progressGridData.widthHint = 0;
+			setStatusText( "" );
 			statusBar.layout();
 		}
 	}
@@ -2214,7 +2218,7 @@ public class MainStatusBar
 				/*
 				 * Update status text
 				 */
-				if (isAZ3) {
+				if (false) {
 					statusText.setText(pReport.getName());
 				} else {
 					setStatusText("!" + pReport.getName() + "!");
@@ -2227,7 +2231,7 @@ public class MainStatusBar
 				 */
 				showProgressBar(false);
 
-				if (isAZ3) {
+				if (false) {
 					statusText.setText("");
 				} else {
 					setStatusText(null);

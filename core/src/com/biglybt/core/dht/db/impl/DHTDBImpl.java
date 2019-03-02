@@ -39,6 +39,7 @@ import com.biglybt.core.dht.transport.DHTTransportValue;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
+import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.bloom.BloomFilter;
 import com.biglybt.core.util.bloom.BloomFilterFactory;
@@ -944,6 +945,11 @@ DHTDBImpl
 
 				values_published++;
 
+				if ( Logger.isClosingTakingTooLong()){
+					
+					break;
+				}
+				
 				control.putEncodedKey( key.getHash(), "Republish orig: " + key_num + " of " + key_tot, values.get(i), 0, true );
 			}
 		}
@@ -1307,6 +1313,11 @@ DHTDBImpl
 						DHT.FLAG_LOOKUP_FOR_STORE );
 
 				sem.reserve();
+				
+				if ( Logger.isClosingTakingTooLong()){
+					
+					break;
+				}
 			}
 
 			try{

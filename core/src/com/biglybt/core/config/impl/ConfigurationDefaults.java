@@ -222,6 +222,7 @@ public class ConfigurationDefaults {
     def.put("Check Pieces on Completion", TRUE);
     def.put("Merge Same Size Files", TRUE );
     def.put("Merge Same Size Files Extended", FALSE );
+    def.put("Merge Same Size Files Tolerance", ZERO );
     def.put("Stop Ratio", new Float(0));
     def.put("Stop Peers Ratio", ZERO);
     def.put("Disconnect Seed", TRUE);
@@ -252,7 +253,8 @@ public class ConfigurationDefaults {
 
     def.put("Allow Same IP Peers",FALSE);
     def.put("Use Super Seeding",FALSE);
-
+    def.put("StartStopManager_bAddForDownloadingSR1", TRUE);
+    
     def.put("Start On Login", FALSE );
     def.put("Start In Low Resource Mode", FALSE );
     def.put("LRMS UI", TRUE );
@@ -269,6 +271,8 @@ public class ConfigurationDefaults {
     def.put("Prompt To Abort Shutdown", TRUE );
     def.put("Prevent Sleep Downloading", TRUE );
     def.put("Prevent Sleep FP Seeding", FALSE );
+    def.put("Prevent Sleep Tag", "" );
+
     def.put("Auto Restart When Idle", ZERO );
 
     def.put( "Download History Enabled", TRUE );
@@ -322,6 +326,7 @@ public class ConfigurationDefaults {
       for (int j = 0; j <= 3; j++)
         def.put("bLog" + logComponents[i] + "-" + j, TRUE);
     def.put("Logger.DebugFiles.Enabled", TRUE);
+    def.put("Logger.DebugFiles.SizeKB", 256 );
     def.put("Logger.DebugFiles.Enabled.Force", FALSE );
     def.put("Logging Enable UDP Transport", FALSE);
 
@@ -345,10 +350,20 @@ public class ConfigurationDefaults {
     def.put( "Proxy.Data.SOCKS.version", "V4" );
     def.put( "Proxy.Data.SOCKS.inform", TRUE);
     def.put( "Proxy.Data.Same", TRUE);
-    def.put( "Proxy.Data.Host", "" );
-    def.put( "Proxy.Data.Port", "" );
-    def.put( "Proxy.Data.Username", "<none>" );
-    def.put( "Proxy.Data.Password", "" );
+    
+    for ( int i=1;i<=COConfigurationManager.MAX_DATA_SOCKS_PROXIES;i++){
+    	if ( i == 1 ){
+		    def.put( "Proxy.Data.Host", "" );
+		    def.put( "Proxy.Data.Port", "" );
+		    def.put( "Proxy.Data.Username", "<none>" );
+		    def.put( "Proxy.Data.Password", "" );
+    	}else{
+    		def.put( "Proxy.Data.Host." + i, "" );
+ 		    def.put( "Proxy.Data.Port." + i, "" );
+ 		    def.put( "Proxy.Data.Username." + i, "<none>" );
+ 		    def.put( "Proxy.Data.Password." + i, "" );
+    	}
+    }
 
     def.put( "DNS Alt Servers", "8.8.8.8" );
     def.put( "DNS Alt Servers SOCKS Enable", TRUE );
@@ -369,6 +384,7 @@ public class ConfigurationDefaults {
     def.put( "Watch Torrent Folder Interval", ONE );	// deprecated, use secs below, migrated in checker
     def.put( "Watch Torrent Folder Interval Secs", SIXTY );
     def.put( "Start Watched Torrents Stopped", FALSE );
+    def.put( "Watch Torrent Always Rename", FALSE );
     def.put( "Watch Torrent Folder Path", "" );
     def.put( "Watch Torrent Folder Path Count", ONE );
     def.put( "Prioritize First Piece", FALSE );
@@ -376,6 +392,7 @@ public class ConfigurationDefaults {
     def.put( "Piece Picker Request Hint Enabled", TRUE );
     def.put( "Use Lazy Bitfield", FALSE );
     def.put( "Zero New", FALSE );
+    def.put( "Zero New Stop", FALSE );
     def.put( "XFS Allocation", FALSE );
     def.put( "Copy And Delete Data Rather Than Move", FALSE);
     def.put( "Move If On Same Drive", FALSE);
@@ -390,7 +407,11 @@ public class ConfigurationDefaults {
     def.put( "Show Timestamp For Alerts", FALSE);
     def.put( "Request Attention On New Download", TRUE );
     def.put( "Activate Window On External Download", TRUE );
-
+    def.put( "Add Torrent Queue Position", ONE );
+    def.put( "Files Auto Tag Enable", FALSE );
+    def.put( "Files Auto Tag Count", ONE );		
+    def.put( "Files Auto Tag Best Size", FALSE);
+    
     def.put( "Insufficient Space Download Restart Enable", FALSE );
     def.put( "Insufficient Space Download Restart Period", 10 );
 
@@ -410,13 +431,15 @@ public class ConfigurationDefaults {
     def.put( "Save Torrent Files", TRUE );
     def.put( "General_sDefaultTorrent_Directory", SystemProperties.getUserPath()+"torrents");
     def.put( "Delete Original Torrent Files", FALSE );
-
+    def.put( "Delete Saved Torrent Files", FALSE );
 
     def.put( "Bind IP", "" );
     def.put( "Check Bind IP On Start", TRUE );
     def.put( "Enforce Bind IP", FALSE);
+    def.put( "Enforce Bind IP Pause", FALSE);
     def.put( "Show IP Bindings Icon", TRUE );
 
+    def.put( "Stats Period", Long.valueOf(30) );
     def.put( "Stats Export Peer Details", FALSE );
     def.put( "Stats Export File Details", FALSE );
     def.put( "Stats XSL File", "" );
@@ -425,8 +448,11 @@ public class ConfigurationDefaults {
     def.put( "Stats Dir", "" );
     def.put( "Stats File", StatsWriterPeriodic.DEFAULT_STATS_FILE_NAME );
     def.put( "long.term.stats.enable", TRUE );
+    def.put( "long.term.stats.weekstart", Calendar.SUNDAY );
     def.put( "Stats Smoothing Secs", new Long( 2*60 ));
     def.put( "File.Torrent.AutoSkipExtensions", "" );
+    def.put( "File.Torrent.AutoSkipFiles", "" );
+    def.put( "File.Torrent.AutoSkipFiles.RegExp", FALSE );
     def.put( "File.Torrent.AutoSkipMinSizeKB", ZERO );
     def.put( "File.Torrent.IgnoreFiles", TOTorrent.DEFAULT_IGNORE_FILES );
     def.put( "File.save.peers.max", new Long( TRTrackerAnnouncer.DEFAULT_PEERS_TO_CACHE ) );
@@ -492,6 +518,7 @@ public class ConfigurationDefaults {
     def.put( "Tracker Client Scrape Enable", TRUE);
     def.put( "Tracker Client Scrape Total Disable", FALSE );
     def.put( "Tracker Client Scrape Stopped Enable", TRUE);
+    def.put( "Tracker Client Scrape Never Started Disable", TRUE);
     def.put( "Tracker Client Scrape Single Only", FALSE);
     def.put( "Tracker Server Full Scrape Enable", TRUE );
     def.put( "Tracker Server Not Found Redirect", "" );
@@ -504,6 +531,10 @@ public class ConfigurationDefaults {
     def.put( "Tracker Network Selection Default.Public", TRUE);
     def.put( "Tracker Network Selection Default.I2P", TRUE);
     def.put( "Tracker Network Selection Default.Tor", TRUE);
+    def.put( "Sharing Network Selection Global", TRUE );
+    def.put( "Sharing Network Selection Default.Public", TRUE );
+    def.put( "Sharing Network Selection Default.I2P", FALSE );
+    def.put( "Sharing Network Selection Default.Tor", FALSE );
 
     def.put( "Peer Source Selection Default.Tracker", TRUE);
     def.put( "Peer Source Selection Default.DHT", TRUE);
@@ -527,6 +558,7 @@ public class ConfigurationDefaults {
     def.put( "Sharing Torrent Comment", "" );
     def.put( "Sharing Permit DHT", TRUE);
     def.put( "Sharing Torrent Private", FALSE);
+    def.put( "Sharing Disable RCM", FALSE);
     def.put( "Sharing Is Persistent", FALSE);
 
     def.put( "File.Decoder.Prompt", FALSE );
@@ -584,7 +616,7 @@ public class ConfigurationDefaults {
     def.put( "Enable System Tray", TRUE);
     def.put( "System Tray Disabled Override", FALSE);
     def.put( "Show Status In Window Title", FALSE );
-    def.put( "config.style.table.defaultSortOrder", ZERO);
+    def.put( "config.style.table.defaultSortOrder", 3 );
     def.put( "Ignore.peer.ports", "0" );
     def.put( "Security.JAR.tools.dir", "" );
     def.put( "security.cert.auto.install", TRUE );
@@ -725,9 +757,18 @@ public class ConfigurationDefaults {
     def.put( "Show Side Bar", TRUE );
     def.put( "Side Bar Top Level Gap", ONE );
     def.put( "Show Options In Side Bar", FALSE );
-
+    def.put( "Show New In Side Bar", TRUE );
+    def.put( "Show Downloading In Side Bar", TRUE );
+    def.put( "Side Bar Close Position", ZERO );
+    def.put( "Side Bar Indent Expanders", TRUE );
+    def.put( "Side Bar Compact View", FALSE );
+    def.put( "Side Bar Hide Left Icon", FALSE );
+    
     def.put( "Share Ratio Progress Interval", 1000L );	// thousandths
 
+    def.put( "search.showRCMView", FALSE );
+    def.put( "search.rss.template.timeout", 20 );
+    
     def.put( "installer.mode", "" );		// the type of the last installer used (see installer code for values)
 }
 

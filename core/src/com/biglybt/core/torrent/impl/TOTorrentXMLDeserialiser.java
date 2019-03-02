@@ -83,121 +83,127 @@ TOTorrentXMLDeserialiser
 
 			TOTorrentImpl	torrent = new TOTorrentImpl();
 
-			SimpleXMLParserDocumentNode[] kids = doc.getChildren();
-
-			URL		announce_url 					= null;
-
-			byte[]	torrent_hash 			= null;
-			byte[]	torrent_hash_override 	= null;
-
-			for (int i=0;i<kids.length;i++){
-
-				SimpleXMLParserDocumentNode	kid = kids[i];
-
-				String	name = kid.getName();
-
-				if ( name.equalsIgnoreCase( "ANNOUNCE_URL")){
-
-					try{
-
-						announce_url = new URL(kid.getValue());
-
-					}catch( MalformedURLException e ){
-
-						throw( new TOTorrentException( "ANNOUNCE_URL malformed", TOTorrentException.RT_DECODE_FAILS));
-					}
-
-				}else if ( name.equalsIgnoreCase( "ANNOUNCE_LIST")){
-
-					SimpleXMLParserDocumentNode[]	set_nodes = kid.getChildren();
-
-					TOTorrentAnnounceURLGroup group = torrent.getAnnounceURLGroup();
-
-					TOTorrentAnnounceURLSet[]	sets = new TOTorrentAnnounceURLSet[set_nodes.length];
-
-					for (int j=0;j<sets.length;j++){
-
-						SimpleXMLParserDocumentNode[]	url_nodes = set_nodes[j].getChildren();
-
-						URL[] urls = new URL[url_nodes.length];
-
-						for (int k=0;k<urls.length;k++){
-
-							try{
-
-								urls[k] = new URL(url_nodes[k].getValue());
-
-							}catch( MalformedURLException e ){
-
-								throw( new TOTorrentException( "ANNOUNCE_LIST malformed", TOTorrentException.RT_DECODE_FAILS));
-							}
+			try{
+				SimpleXMLParserDocumentNode[] kids = doc.getChildren();
+	
+				URL		announce_url 					= null;
+	
+				byte[]	torrent_hash 			= null;
+				byte[]	torrent_hash_override 	= null;
+	
+				for (int i=0;i<kids.length;i++){
+	
+					SimpleXMLParserDocumentNode	kid = kids[i];
+	
+					String	name = kid.getName();
+	
+					if ( name.equalsIgnoreCase( "ANNOUNCE_URL")){
+	
+						try{
+	
+							announce_url = new URL(kid.getValue());
+	
+						}catch( MalformedURLException e ){
+	
+							throw( new TOTorrentException( "ANNOUNCE_URL malformed", TOTorrentException.RT_DECODE_FAILS));
 						}
-
-						sets[j] = group.createAnnounceURLSet( urls );
+	
+					}else if ( name.equalsIgnoreCase( "ANNOUNCE_LIST")){
+	
+						SimpleXMLParserDocumentNode[]	set_nodes = kid.getChildren();
+	
+						TOTorrentAnnounceURLGroup group = torrent.getAnnounceURLGroup();
+	
+						TOTorrentAnnounceURLSet[]	sets = new TOTorrentAnnounceURLSet[set_nodes.length];
+	
+						for (int j=0;j<sets.length;j++){
+	
+							SimpleXMLParserDocumentNode[]	url_nodes = set_nodes[j].getChildren();
+	
+							URL[] urls = new URL[url_nodes.length];
+	
+							for (int k=0;k<urls.length;k++){
+	
+								try{
+	
+									urls[k] = new URL(url_nodes[k].getValue());
+	
+								}catch( MalformedURLException e ){
+	
+									throw( new TOTorrentException( "ANNOUNCE_LIST malformed", TOTorrentException.RT_DECODE_FAILS));
+								}
+							}
+	
+							sets[j] = group.createAnnounceURLSet( urls );
+						}
+	
+						group.setAnnounceURLSets( sets );
+	
+					}else if ( name.equalsIgnoreCase( "COMMENT")){
+	
+						torrent.setComment( readLocalisableString( kid ));
+	
+					}else if ( name.equalsIgnoreCase( "CREATED_BY")){
+	
+						torrent.setCreatedBy( readLocalisableString(kid));
+	
+					}else if ( name.equalsIgnoreCase( "CREATION_DATE")){
+	
+						torrent.setCreationDate( readGenericLong( kid ).longValue());
+	
+					}else if ( name.equalsIgnoreCase( "TORRENT_HASH")){
+	
+						torrent_hash	= readGenericBytes( kid );
+	
+					}else if ( name.equalsIgnoreCase( "TORRENT_HASH_OVERRIDE")){
+	
+						torrent_hash_override	= readGenericBytes( kid );
+	
+					}else if ( name.equalsIgnoreCase( "INFO" )){
+	
+						decodeInfo( kid, torrent );
+	
+					}else{
+	
+						mapEntry entry = readGenericMapEntry( kid );
+	
+						torrent.addAdditionalProperty( entry.name, entry.value );
 					}
-
-					group.setAnnounceURLSets( sets );
-
-				}else if ( name.equalsIgnoreCase( "COMMENT")){
-
-					torrent.setComment( readLocalisableString( kid ));
-
-				}else if ( name.equalsIgnoreCase( "CREATED_BY")){
-
-					torrent.setCreatedBy( readLocalisableString(kid));
-
-				}else if ( name.equalsIgnoreCase( "CREATION_DATE")){
-
-					torrent.setCreationDate( readGenericLong( kid ).longValue());
-
-				}else if ( name.equalsIgnoreCase( "TORRENT_HASH")){
-
-					torrent_hash	= readGenericBytes( kid );
-
-				}else if ( name.equalsIgnoreCase( "TORRENT_HASH_OVERRIDE")){
-
-					torrent_hash_override	= readGenericBytes( kid );
-
-				}else if ( name.equalsIgnoreCase( "INFO" )){
-
-					decodeInfo( kid, torrent );
-
-				}else{
-
-					mapEntry entry = readGenericMapEntry( kid );
-
-					torrent.addAdditionalProperty( entry.name, entry.value );
 				}
-			}
-
-			if ( announce_url == null ){
-
-				throw( new TOTorrentException( "ANNOUNCE_URL missing", TOTorrentException.RT_DECODE_FAILS));
-			}
-
-			torrent.setAnnounceURL( announce_url );
-
-			if ( torrent_hash_override != null ){
-
-				try{
-					torrent.setHashOverride( torrent_hash_override );
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace( e );
+	
+				if ( announce_url == null ){
+	
+					throw( new TOTorrentException( "ANNOUNCE_URL missing", TOTorrentException.RT_DECODE_FAILS));
 				}
-			}
-
-			if ( torrent_hash != null ){
-
-				if ( !Arrays.equals( torrent.getHash(), torrent_hash )){
-
-					throw( 	new TOTorrentException( "Hash differs - declared TORRENT_HASH and computed hash differ. If this really is the intent (unlikely) then remove the TORRENT_HASH element",
-							TOTorrentException.RT_DECODE_FAILS));
+	
+				torrent.setAnnounceURL( announce_url );
+	
+				if ( torrent_hash_override != null ){
+	
+					try{
+						torrent.setHashOverride( torrent_hash_override );
+	
+					}catch( Throwable e ){
+	
+						Debug.printStackTrace( e );
+					}
 				}
+	
+				if ( torrent_hash != null ){
+	
+					if ( !Arrays.equals( torrent.getHash(), torrent_hash )){
+	
+						throw( 	new TOTorrentException( "Hash differs - declared TORRENT_HASH and computed hash differ. If this really is the intent (unlikely) then remove the TORRENT_HASH element",
+								TOTorrentException.RT_DECODE_FAILS));
+					}
+				}
+	
+				return( torrent );
+				
+			}finally{
+				
+				torrent.setConstructed();
 			}
-
-			return( torrent );
 		}else{
 
 			throw( new TOTorrentException( "Invalid root element", TOTorrentException.RT_DECODE_FAILS));

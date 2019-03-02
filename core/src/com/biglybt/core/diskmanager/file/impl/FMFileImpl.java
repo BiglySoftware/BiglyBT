@@ -66,10 +66,12 @@ FMFileImpl
 	}
 
 	private final FMFileManagerImpl	manager;
-	private final FMFileOwner			owner;
+	private final FMFileOwner		owner;
+	
 	private int					access_mode			= FM_READ;
 
 	private File				linked_file;
+	private long				last_modified;
 	private String				canonical_path;
 	private RandomAccessFile	raf;
 
@@ -135,6 +137,8 @@ FMFileImpl
 
 			file_access = new FMFileAccessController( this, _type );
 
+			last_modified = linked_file.lastModified();
+			
 			ok	= true;
 
 		}catch( Throwable e ){
@@ -178,6 +182,8 @@ FMFileImpl
 		try{
 			file_access = new FMFileAccessController( this, basis.file_access.getStorageType());
 
+			last_modified = linked_file.lastModified();
+			
 		}catch( Throwable e ){
 
 			if ( e instanceof FMFileManagerException ){
@@ -287,7 +293,8 @@ FMFileImpl
 	@Override
 	public void
 	moveFile(
-		File		new_unlinked_file )
+		File						new_unlinked_file,
+		FileUtil.ProgressListener	pl )
 
 		throws FMFileManagerException
 	{
@@ -337,7 +344,7 @@ FMFileImpl
 
 			createDirs( new_linked_file );
 
-			if ( !linked_file.exists() || FileUtil.renameFile( linked_file, new_linked_file )) {
+			if ( !linked_file.exists() || FileUtil.renameFile( linked_file, new_linked_file, pl )) {
 
 				linked_file		= new_linked_file;
 				canonical_path	= new_canonical_path;
@@ -570,6 +577,8 @@ FMFileImpl
 
 		raf = new RandomAccessFile( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
+		last_modified = linked_file.lastModified();
+		
 		Debug.outNoStack( "Recovered connection to " + getName() + " after access failure" );
 	}
 
@@ -591,6 +600,8 @@ FMFileImpl
 
 			raf = new RandomAccessFile( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
+			last_modified = linked_file.lastModified();
+			
 		}catch( FileNotFoundException e ){
 
 			int st = file_access.getStorageType();
@@ -607,6 +618,8 @@ FMFileImpl
 
 				raf = new RandomAccessFile( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
+				last_modified = linked_file.lastModified();
+				
 				ok = true;
 
 			}catch( Throwable f ){
@@ -781,6 +794,8 @@ FMFileImpl
 
 			file_access.write( raf, buffers, position );
 
+			last_modified = SystemTime.getCurrentTime();
+			
 		}catch( FMFileManagerException e ){
 
 			if (OUTPUT_REOPEN_RELATED_ERRORS) {Debug.printStackTrace(e);}
@@ -790,6 +805,8 @@ FMFileImpl
 
 				file_access.write( raf, buffers, position );
 
+				last_modified = SystemTime.getCurrentTime();
+				
 			}catch( Throwable e2 ){
 
 				throw( e );
@@ -803,6 +820,14 @@ FMFileImpl
 	{
 		return( raf != null );
 	}
+	
+	@Override
+	public long
+	getLastModified()
+	{
+		return( last_modified );
+	}
+	
 
 		// file reservation is used to manage the possibility of multiple torrents
 		// refering to the same file. Initially introduced to stop a common problem

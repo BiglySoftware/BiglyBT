@@ -276,7 +276,7 @@ public class SWTSkinObjectImage
 
 		final String sURL = properties.getStringValue(sConfigID + ".url");
 		if (sURL != null && sURL.length() > 0) {
-			canvas.setToolTipText(sURL);
+			Utils.setTT(canvas,sURL);
 			canvas.addListener(SWT.MouseUp, new Listener() {
 				@Override
 				public void handleEvent(Event arg0) {
@@ -660,7 +660,7 @@ public class SWTSkinObjectImage
 				final ImageLoader imageLoader = skin.getImageLoader(properties);
 				imageLoader.getUrlImage(url, new ImageDownloaderListener() {
 					@Override
-					public void imageDownloaded(Image image, boolean returnedImmediately) {
+					public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
 						setCanvasImage(url, null);
 						imageLoader.releaseImage(url);
 					}

@@ -26,13 +26,18 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.dnd.*;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
@@ -49,12 +54,14 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.disk.DiskManagerEvent;
 import com.biglybt.pif.disk.DiskManagerListener;
 import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -65,13 +72,15 @@ import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
-import com.biglybt.ui.swt.components.BufferedLabel;
+import com.biglybt.ui.swt.components.BufferedTruncatedLabel;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.pif.UISWTStatusEntry;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.systray.TrayItemDelegate;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 
 /**
@@ -80,8 +89,6 @@ import com.biglybt.ui.swt.utils.SWTRunnable;
  */
 public class Utils
 {
-	private static final int DEFAULT_DPI = Constants.isOSX ? 72 : 96;
-
 	public static final String GOOD_STRING = "(/|,jI~`gy";
 
 	public static final boolean isGTK = SWT.getPlatform().equals("gtk");
@@ -124,7 +131,8 @@ public class Utils
 	private static int userMode;
 
 	private static boolean isAZ2;
-
+	private static boolean isAZ3;
+	
 	private static AEDiagnosticsEvidenceGenerator evidenceGenerator;
 
 	private static ParameterListener configUserModeListener;
@@ -170,23 +178,20 @@ public class Utils
 		configUIListener = new ParameterListener() {
 			@Override
 			public void parameterChanged(String parameterName) {
-				isAZ2 = "az2".equals(COConfigurationManager.getStringParameter("ui"));
+				String ui = COConfigurationManager.getStringParameter("ui");
+				isAZ2 = ui.equals( "az2" );
+				isAZ3 = ui.equals( "az3" );
 			}
 		};
 		COConfigurationManager.addAndFireParameterListener("User Mode", configUserModeListener);
 		COConfigurationManager.addAndFireParameterListener("ui", configUIListener);
 		// no need to listen, changing param requires restart
-    boolean smallOSXControl = COConfigurationManager.getBooleanParameter("enable_small_osx_fonts");
-    BUTTON_MARGIN = Constants.isOSX ? (smallOSXControl ? 10 : 12) : 6;
+		boolean smallOSXControl = COConfigurationManager.getBooleanParameter("enable_small_osx_fonts");
+		BUTTON_MARGIN = Constants.isOSX ? (smallOSXControl ? 10 : 12) : 6;
 	}
 
 	private static Set<DiskManagerFileInfo>	quick_view_active = new HashSet<>();
 	private static TimerEventPeriodic		quick_view_event;
-
-	private static Point dpi;
-
-	// Alpha and BW palette definitions from org.eclipse.ui.internal.decorators.DecorationImageBuilder
-	private static PaletteData ALPHA_PALETTE, BW_PALETTE;
 
 	public static void
 	initialize(
@@ -194,27 +199,6 @@ public class Utils
 	{
 		isGTK3 = isGTK && System.getProperty("org.eclipse.swt.internal.gtk.version",
 				"2").startsWith("3");
-		getDPI();	// cache now to prevent invalid-thread access under some conditions later
-					// in particular during plugin init of a custome column
-					/*	org.eclipse.swt.SWTException: Invalid thread access
-					    at org.eclipse.swt.SWT.error(SWT.java:4457)
-					    at org.eclipse.swt.SWT.error(SWT.java:4372)
-					    at org.eclipse.swt.SWT.error(SWT.java:4343)
-					    at org.eclipse.swt.widgets.Display.error(Display.java:1258)
-					    at org.eclipse.swt.widgets.Display.checkDevice(Display.java:764)
-					    at org.eclipse.swt.graphics.Device.getDPI(Device.java:466)
-					    at com.biglybt.ui.swt.Utils.getDPI(Utils.java:3641)
-					    at com.biglybt.ui.swt.Utils.adjustPXForDPI(Utils.java:3654)
-					    at TableColumnImpl.init(TableColumnImpl.java:184)
-					 */
-
-		RGB[] rgbs = new RGB[256];
-		for (int i = 0; i < rgbs.length; i++) {
-			rgbs[i] = new RGB(i, i, i);
-		}
-
-		ALPHA_PALETTE = new PaletteData(rgbs);
-		BW_PALETTE = new PaletteData(new RGB[] { new RGB(0, 0, 0), new RGB(255, 255, 255) });
 	}
 
 	public static void
@@ -224,9 +208,27 @@ public class Utils
 	}
 	
 	public static boolean isAZ2UI() {
+		if ( configUIListener == null ){
+			Debug.out( "hmm" );
+		}
 		return isAZ2;
 	}
 
+	public static boolean isAZ3UI() {
+		if ( configUIListener == null ){
+			Debug.out( "hmm" );
+		}
+		return isAZ3;
+	}
+	
+	public static int getUserMode() {
+		if ( configUserModeListener == null ){
+			Debug.out( "hmm" );
+		}
+		return userMode;
+	}
+
+	
 	public static void disposeComposite(Composite composite, boolean disposeSelf) {
 		if (composite == null || composite.isDisposed())
 			return;
@@ -239,7 +241,7 @@ public class Utils
 				}
 				try {
 					control.dispose();
-				} catch (SWTException e) {
+				} catch (Throwable e) {
 					Debug.printStackTrace(e);
 				}
 			}
@@ -248,7 +250,7 @@ public class Utils
 		if (!composite.isDisposed() && disposeSelf)
 			try {
 				composite.dispose();
-			} catch (SWTException e) {
+			} catch (Throwable e) {
 				Debug.printStackTrace(e);
 			}
 	}
@@ -783,43 +785,12 @@ public class Utils
 		try {
 			if (shellIcons == null) {
 
-				String[] shellIconNames;
-
-				if (Constants.isWindows) {
-					// Windows, SWT sets ICON_SMALL (used for titlebar) and ICON_BIG
-					// (used for alt-tab).  It doesn't pick the best size for ICON_SMALL
-					float ratio = getScaleRatio();
-					if (ratio <= 1) {
-						shellIconNames = new String[] {
-							"logo16",
-							"logo128"
-						};
-					} else if (ratio <= 2) {
-						shellIconNames = new String[] {
-							"logo32",
-							"logo128"
-						};
-					}
-					if (ratio <= 4) {
-						shellIconNames = new String[] {
-							"logo64",
-							"logo128"
-						};
-					} else {
-						shellIconNames = new String[] {
-							"logo128",
-							"logo128"
-						};
-					}
-
-				} else {
-					shellIconNames = new String[] {
+				String[] shellIconNames = new String[] {
 						"logo16",
 						"logo32",
 						"logo64",
 						"logo128"
-					};
-				}
+				};
 
 				ArrayList<Image> listShellIcons = new ArrayList<>(
 						shellIconNames.length);
@@ -947,13 +918,83 @@ public class Utils
 	 *
 	 * @since 3.0.4.3
 	 */
-	private static boolean execSWTThread(final Runnable code, final int msLater) {
+	
+		// only time the async_seq is 0 is when there is not active async_runner
+	
+		// this doesn't work properly if we have code running dispatch loops (e.g. TextViewer::goModal)
+		// as this blocks the async_runner and subsequent events don't get run :(
+	
+	static final boolean USE_ASYNC_EXEC_QUEUE = false;
+	
+	static AtomicInteger async_seq = new AtomicInteger();
+	
+	static ConcurrentLinkedQueue<Object[]>	async_exec_q = new ConcurrentLinkedQueue<>();
+	
+	
+	static Runnable async_runner =
+		new Runnable()
+		{
+			public void
+			run()
+			{
+				int	spins = 0;
+				
+				Integer	last = -1;
+				
+				while( true ){
+					
+					Object[] r = async_exec_q.poll();
+					
+					if ( r == null ){
+						
+						if ( async_seq.compareAndSet( last+1, 0 )){
+							
+							break;
+							
+						}else{
+							
+								// something has been added to, or is in the process of being added to, 
+								// the queue between it being empty and the attempt to exit
+														
+							if ( ++spins >= 10 ){
+								
+								try{	
+									Thread.sleep(1);
+									
+								}catch( Throwable e ){
+								}
+							}
+							
+							continue;
+						}
+					}
+					
+					spins = 0;
+					
+					try{
+						((Runnable)r[0]).run();
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
+					}
+					
+					last = (Integer)r[1];
+					
+					//System.out.println( last + ": run" );
+				}
+			}			
+		};
+		
+	private static boolean execSWTThread(final Runnable code, final int msLater) {		
 		final Display display = getDisplay(false);
+
 		if (display == null) {
 			if (code == null) {
 				return false;
 			}
 			if (code instanceof SWTRunnable) {
+				// SWTRunnable is wrapped in try/catch, so we don't need one here
 				code.run();
 				return true;
 			}
@@ -965,34 +1006,52 @@ public class Utils
 
 		boolean isSWTThread = display.getThread() == Thread.currentThread();
 		if (msLater < 0 && isSWTThread) {
-			if (queue == null) {
-				code.run();
-			} else {
-				long lStartTimeRun = SystemTime.getCurrentTime();
+			try {
+				if (queue == null) {
+					code.run();
+				} else {
+					long lStartTimeRun = SystemTime.getCurrentTime();
 
-				code.run();
+					code.run();
 
-				long wait = SystemTime.getCurrentTime() - lStartTimeRun;
-				if (wait > 700) {
-					diag_logger.log(SystemTime.getCurrentTime() + "] took " + wait
-							+ "ms to run " + Debug.getCompressedStackTrace(-5));
+					long wait = SystemTime.getCurrentTime() - lStartTimeRun;
+					if (wait > 700) {
+						diag_logger.log(SystemTime.getCurrentTime() + "] took " + wait
+								+ "ms to run " + Debug.getCompressedStackTrace(new Throwable(), 2, -2, false));
+					}
 				}
+			} catch (Throwable t) {
+				DebugLight.printStackTrace(t);
 			}
 		} else if (msLater >= -1) {
 			try {
 				if (queue == null) {
 					if (msLater <= 0) {
-						display.asyncExec(code);
+						
+						if ( USE_ASYNC_EXEC_QUEUE ){
+					
+							int my_seq = async_seq.getAndIncrement();
+							
+							async_exec_q.add( new Object[]{ code, my_seq });
+							
+							if ( my_seq == 0 ){
+							
+								display.asyncExec( async_runner );
+	
+							}
+						}else{
+							display.asyncExec(makeRunnableSafe(code));
+						}
 					} else {
 						if(isSWTThread) {
-							display.timerExec(msLater, code);
+							display.timerExec(msLater, makeRunnableSafe(code));
 						} else {
   						SimpleTimer.addEvent("execSWTThreadLater",
   								SystemTime.getOffsetTime(msLater), new TimerEventPerformer() {
   									@Override
 									  public void perform(TimerEvent event) {
   										if (!display.isDisposed()) {
-  											display.asyncExec(code);
+  											display.asyncExec(makeRunnableSafe(code));
   										}
   									}
   								});
@@ -1003,7 +1062,7 @@ public class Utils
 
 					diag_logger.log(SystemTime.getCurrentTime() + "] + Q. size= "
 							+ queue.size() + ";in=" + msLater + "; add " + code + " via "
-							+ Debug.getCompressedStackTrace(-5));
+							+ Debug.getCompressedStackTrace(new Throwable(), 2, -2, false));
 					final long lStart = SystemTime.getCurrentTime();
 
 					final Display fDisplay = display;
@@ -1028,7 +1087,11 @@ public class Utils
 										Debug.out("Error while execSWTThread w/disposed Display", e);
 									}
 								} else {
-									code.run();
+									try {
+										code.run();
+									} catch (Throwable t) {
+										Debug.out("execSWTThread " + code, t);
+									}
 								}
 							} finally {
 								long runTIme = SystemTime.getCurrentTime() - lStartTimeRun;
@@ -1080,10 +1143,23 @@ public class Utils
 				return false;
 			}
 		} else {
-			display.syncExec(code);
+			display.syncExec(makeRunnableSafe(code));
 		}
 
 		return true;
+	}
+
+	private static Runnable makeRunnableSafe(Runnable code) {
+		if (!(code instanceof AERunnable) && !(code instanceof SWTRunnable)) {
+			return new AERunnable() {
+				@Override
+				public void runSupport() {
+					code.run();
+				}
+			};
+		}
+
+		return code;
 	}
 
 	/**
@@ -1178,6 +1254,8 @@ public class Utils
 							public void
 							run()
 							{
+								PlatformTorrentUtils.setHasBeenOpened( fileInfo.getDownloadManager(), fileInfo.getIndex(), true);
+								
 								launch(fileInfo.getFile(true).toString());
 							}
 						});
@@ -1336,7 +1414,7 @@ public class Utils
 
 				eb_choice = COConfigurationManager.getStringParameter( "browser.external.id", "system" );
 
-				use_plugins = COConfigurationManager.getBooleanParameter( "browser.external.non.pub", true );
+				use_plugins = COConfigurationManager.getBooleanParameter( "browser.external.non.pub" );
 
 				if ( net_type != AENetworkClassifier.AT_PUBLIC && use_plugins ){
 
@@ -1355,8 +1433,24 @@ public class Utils
 				if ( bf.exists()){
 
 					try{
-						Process proc = Runtime.getRuntime().exec( new String[]{ bf.getAbsolutePath(), sFileModified });
-
+						if ( Constants.isOSX && browser_exe.endsWith( ".app" )){
+							
+							ProcessBuilder pb = GeneralUtils.createProcessBuilder(
+									bf.getParentFile(),
+									new String[]{
+										"open",
+										"-a",
+										browser_exe,
+										sFileModified
+									}, 
+									null );
+							
+							pb.start();
+							
+						}else{
+						
+							Process proc = Runtime.getRuntime().exec( new String[]{ bf.getAbsolutePath(), sFileModified });
+						}
 					}catch( Throwable e ){
 
 						Debug.out( e );
@@ -1395,15 +1489,26 @@ public class Utils
 
 		if (!launched && Constants.isUnix) {
 
-			sFileModified = sFileModified.replaceAll( " ", "\\ " );
+			if (!fallbackLaunch("xdg-open", sFileModified)) {
 
-			if (!Program.launch("xdg-open " + sFileModified)) {
+				Debug.out( "Failed to launch '" + sFileModified + "'" );
 
-				if ( !Program.launch("htmlview " + sFileModified)){
-
-					Debug.out( "Failed to launch '" + sFileModified + "'" );
-				}
 			}
+		}
+	}
+
+	private static boolean fallbackLaunch(String command, String... args) {
+		try {
+			List<String> cmdList = new ArrayList<>();
+			cmdList.add(command);
+			cmdList.addAll(Arrays.asList(args));
+			String[] cmdArray = cmdList.toArray(new String[0]);
+
+			Runtime.getRuntime().exec(cmdArray);
+
+			return true;
+		} catch	(Exception ignore) {
+			return false;
 		}
 	}
 
@@ -1848,7 +1953,8 @@ public class Utils
 	}
 
 	public static boolean linkShellMetricsToConfig(final Shell shell,
-			final String sConfigPrefix) {
+			final String sConfigPrefix) 
+	{
 		boolean isMaximized = COConfigurationManager.getBooleanParameter(sConfigPrefix
 				+ ".maximized");
 
@@ -1870,10 +1976,12 @@ public class Utils
 				if (i == 4) {
 					Rectangle shellBounds = new Rectangle(values[0], values[1],
 							values[2], values[3]);
+					
 					if (shellBounds.width > 100 && shellBounds.height > 50) {
-  					shell.setBounds(shellBounds);
-  					verifyShellRect(shell, true);
-  					bDidResize = true;
+				
+						shell.setBounds(shellBounds);
+						verifyShellRect(shell, true);
+						bDidResize = true;
 					}
 				}
 			} catch (Exception e) {
@@ -1889,6 +1997,21 @@ public class Utils
 		return bDidResize;
 	}
 
+	public static boolean hasShellMetricsConfig( String sConfigPrefix )
+	{
+		if ( COConfigurationManager.doesParameterNonDefaultExist( sConfigPrefix + ".maximized")){
+			
+			return( true );
+		}
+		
+		if ( COConfigurationManager.doesParameterNonDefaultExist( sConfigPrefix + ".rectangle")){
+			
+			return( true );
+		}
+		
+		return( false );
+	}
+	
 	private static class ShellMetricsResizeListener
 		implements Listener
 	{
@@ -1961,19 +2084,8 @@ public class Utils
 		return formData;
 	}
 
-	public static int pixelsToPoint(int pixels, int dpi) {
-		int ret = (int) Math.round((pixels * 72.0) / dpi);
-		return ret;
-	}
-
-    private static int pixelsToPoint(double pixels, int dpi) {
-		int ret = (int) Math.round((pixels * 72.0) / dpi);
-		return ret;
-	}
-
 	public static void drawImageCenterScaleDown(GC gc, Image imgSrc, Rectangle area) {
 		Rectangle imgSrcBounds = imgSrc.getBounds();
-		Rectangle imgSrcBoundsAdj = Utils.adjustPXForDPI(imgSrcBounds);
 		if (area.width < imgSrcBounds.width || area.height < imgSrcBounds.height) {
 			float dx = (float) area.width / imgSrcBounds.width;
 			float dy = (float) area.height / imgSrcBounds.height ;
@@ -1985,10 +2097,10 @@ public class Utils
 					area.x + (area.width - newX) / 2, area.y +  (area.height - newY) / 2, newX, newY);
 		} else {
 			//drawMode = DRAW_CENTER;
-			int x = (area.width - imgSrcBoundsAdj.width) / 2;
-			int y = (area.height - imgSrcBoundsAdj.height) / 2;
+			int x = (area.width - imgSrcBounds.width) / 2;
+			int y = (area.height - imgSrcBounds.height) / 2;
 			gc.drawImage(imgSrc, 0, 0, imgSrcBounds.width, imgSrcBounds.height,
-					area.x + x, area.y + y, imgSrcBoundsAdj.width, imgSrcBoundsAdj.height);
+					area.x + x, area.y + y, imgSrcBounds.width, imgSrcBounds.height);
 		}
 
 	}
@@ -2213,19 +2325,28 @@ public class Utils
 	}
 
 	public static Shell findAnyShell() {
+		return findAnyShell(true);
+	}
+
+	public static Shell findAnyShell(boolean preferMainShell) {
+		Shell fallBackShell = null;
+
 		// Pick the main shell if we can
 		UIFunctionsSWT uiFunctions = UIFunctionsManagerSWT.getUIFunctionsSWT();
 		if (uiFunctions != null) {
 			Shell shell = uiFunctions.getMainShell();
 			if (shell != null && !shell.isDisposed()) {
-				return shell;
+				if (preferMainShell) {
+					return shell;
+				}
+				fallBackShell = shell;
 			}
 		}
 
 		// Get active shell from current display if we can
 		Display current = Display.getCurrent();
 		if (current == null) {
-			return null;
+			return fallBackShell;
 		}
 		Shell shell = current.getActiveShell();
 		if (shell != null && !shell.isDisposed()) {
@@ -2235,14 +2356,14 @@ public class Utils
 		// Get first shell of current display if we can
 		Shell[] shells = current.getShells();
 		if (shells.length == 0) {
-			return null;
+			return fallBackShell;
 		}
 
 		if (shells[0] != null && !shells[0].isDisposed()) {
 			return shells[0];
 		}
 
-		return null;
+		return fallBackShell;
 	}
 
 	public static boolean verifyShellRect(Shell shell, boolean bAdjustIfInvalid) {
@@ -3041,27 +3162,60 @@ public class Utils
 
 		for ( Button button: buttons ){
 
-			width = Math.max( width, button.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x );
+			if ( button != null ){
+			
+				width = Math.max( width, button.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x );
+			}
 		}
 
 		for ( Button button: buttons ){
-			Object	data = button.getLayoutData();
-			if ( data != null ){
-				if ( data instanceof GridData ){
-					((GridData)data).widthHint = width;
-				}else if ( data instanceof FormData ){
-					((FormData)data).width = width;
+			if ( button != null ){
+				Object	data = button.getLayoutData();
+				if ( data != null ){
+					if ( data instanceof GridData ){
+						((GridData)data).widthHint = width;
+					}else if ( data instanceof FormData ){
+						((FormData)data).width = width;
+					}else{
+						Debug.out( "Expected GridData/FormData" );
+					}
 				}else{
-					Debug.out( "Expected GridData/FormData" );
+					data = new GridData();
+					((GridData) data).widthHint = width;
+					button.setLayoutData( data );
 				}
-			}else{
-				data = new GridData();
-				((GridData) data).widthHint = width;
-				button.setLayoutData( data );
 			}
 		}
 	}
 
+	public static Button[]
+	createOKCancelButtons(
+		Composite panel )
+	{
+	    Button ok;
+	    Button cancel;
+	    if (Constants.isOSX) {
+	    	cancel = Utils.createAlertButton(panel, "Button.cancel");
+	    	ok = Utils.createAlertButton(panel, "Button.ok");
+	    } else {
+	    	ok = Utils.createAlertButton(panel, "Button.ok");
+	    	cancel = Utils.createAlertButton(panel, "Button.cancel");
+	    }
+	    return( new Button[]{ ok, cancel });
+	}
+	public static Button createAlertButton(final Composite panel, String localizationKey)
+	{
+		final Button button = new Button(panel, SWT.PUSH);
+		button.setText(MessageText.getString(localizationKey));
+		final RowData rData = new RowData();
+		rData.width = Math.max(
+				Utils.BUTTON_MINWIDTH,
+				button.computeSize(SWT.DEFAULT,  SWT.DEFAULT).x
+				);
+		button.setLayoutData(rData);
+		return button;
+	}
+	  
 	private static Map truncatedTextCache = new HashMap();
 
 	private static ThreadPool tp = new ThreadPool("GetOffSWT", 3, true);
@@ -3185,7 +3339,7 @@ public class Utils
 		final BrowserWrapper browser = BrowserWrapper.createBrowser(parent, style);
   		browser.addDisposeListener(new DisposeListener() {
   			@Override
-			  public void widgetDisposed(DisposeEvent e)
+			  public void widgetDisposed(DisposeEvent event)
   			{
   					/*
   					 * Intent here seems to be to run all pending events through the queue to ensure
@@ -3198,49 +3352,50 @@ public class Utils
   					 * the browser. So added timeout
   					 */
 
-  				browser.setUrl("about:blank");
-
-  				browser.setVisible(false);
-
-  				final boolean[]	done = {false};
-
-  				final long start = SystemTime.getMonotonousTime();
-
-  				execSWTThreadLater(
-  					250,
-  					new Runnable()
-  					{
-  						@Override
-						  public void
-  						run()
-  						{
-  							synchronized( done ){
-
-  								done[0] = true;
-  							}
-  						}
-  					});
-
-  				while(!e.display.isDisposed() && e.display.readAndDispatch()){
-
-  					synchronized( done ){
-
-  						if ( done[0] || SystemTime.getMonotonousTime() - start > 500 ){
-
-  							break;
-  						}
-  					}
+  				try{
+	  				browser.setUrl("about:blank");
+	
+	  				browser.setVisible(false);
+	
+	  				final boolean[]	done = {false};
+	
+	  				final long start = SystemTime.getMonotonousTime();
+	
+	  				execSWTThreadLater(
+	  					250,
+	  					new Runnable()
+	  					{
+	  						@Override
+							  public void
+	  						run()
+	  						{
+	  							synchronized( done ){
+	
+	  								done[0] = true;
+	  							}
+	  						}
+	  					});
+	
+	  				while(!event.display.isDisposed() && event.display.readAndDispatch()){
+	
+	  					synchronized( done ){
+	
+	  						if ( done[0] || SystemTime.getMonotonousTime() - start > 500 ){
+	
+	  							break;
+	  						}
+	  					}
+	  				}
+  				}catch( Throwable e ){
+  					
   				}
   			}
   		});
   		return browser ;
 		} catch (Throwable e) {
+			e.printStackTrace();
 		}
 		return null;
-	}
-
-	public static int getUserMode() {
-		return userMode;
 	}
 
 	public static Point getLocationRelativeToShell(Control control) {
@@ -3831,7 +3986,16 @@ public class Utils
 		Composite	form,
 		int			SASH_WIDTH )
 	{
-	    final Sash sash = new Sash(form, SWT.HORIZONTAL);
+		return( createSash( form, SASH_WIDTH, SWT.HORIZONTAL ));
+	}
+	
+	public static Sash
+	createSash(
+		Composite	form,
+		int			SASH_WIDTH,
+		int			style )
+	{
+	    final Sash sash = new Sash(form, style );
 	    Image image = new Image(sash.getDisplay(), 9, SASH_WIDTH);
 	    ImageData imageData = image.getImageData();
 	    int[] row = new int[imageData.width];
@@ -3896,10 +4060,15 @@ public class Utils
 		return parent;
 	}
 
+	public static final String RELAYOUT_UP_STOP_HERE	= "com.biglybt.ui.swt.Utils.RELAYOUT_UP_STOP_HERE";
+	
 	public static void relayoutUp(Composite c) {
 		while (c != null && !c.isDisposed()) {
 			Composite newParent = c.getParent();
 			if (newParent == null) {
+				break;
+			}
+			if ( newParent.getData( RELAYOUT_UP_STOP_HERE ) != null ){
 				break;
 			}
 			try {
@@ -3913,6 +4082,44 @@ public class Utils
 		}
 	}
 
+	public static Composite
+	createScrolledComposite(
+		Composite parent )
+	{
+		parent.setLayout( new GridLayout( 1, true ));
+		
+		ScrolledComposite scrolled_comp = new ScrolledComposite( parent , SWT.V_SCROLL );
+		
+		scrolled_comp.setExpandHorizontal(true);
+		
+		scrolled_comp.setExpandVertical(true);
+		
+		GridLayout layout = new GridLayout();
+		
+		layout.horizontalSpacing = 0;
+		layout.verticalSpacing = 0;
+		layout.marginHeight = 0;
+		layout.marginWidth = 0;
+		
+		scrolled_comp.setLayout(layout);
+		
+		GridData gridData = new GridData(GridData.FILL_BOTH );
+		
+		scrolled_comp.setLayoutData(gridData);
+	
+	    Composite result = new Composite(scrolled_comp, SWT.NULL);
+		
+	    scrolled_comp.setContent(result);
+		scrolled_comp.addControlListener(new ControlAdapter() {
+			@Override
+			public void controlResized(ControlEvent e) {
+				updateScrolledComposite(scrolled_comp);
+			}
+		});
+		
+		return( result );
+	}
+	
 	public static void updateScrolledComposite(ScrolledComposite sc) {
 		Control content = sc.getContent();
 		if (content != null && !content.isDisposed()) {
@@ -4014,341 +4221,6 @@ public class Utils
 	    sash.addListener(SWT.Resize, sash_listener );
 	}
 
-	public static float getScaleRatio() {
-		return getDPI().x / (float) DEFAULT_DPI;
-	}
-
-	private static Point getDPI() {
-		if (dpi == null) {
-			boolean enableForceDPI = COConfigurationManager.getBooleanParameter("enable.ui.forceDPI");
-			if (enableForceDPI) {
-				int forceDPI = COConfigurationManager.getIntParameter("Force DPI");
-				if (forceDPI > 0) {
-					dpi = new Point(forceDPI, forceDPI);
-					return dpi;
-				}
-			}
-			Display display = getDisplay();
-			if (display == null) {
-				return new Point(0, 0);
-			}
-			dpi = getDPIRaw( display );
-			COConfigurationManager.setIntDefault("Force DPI", dpi.x);
-			if (dpi.x <= 96 || dpi.y <= 96) {
-				dpi = new Point(0, 0);
-			}
-		}
-		return dpi;
-	}
-
-	private static boolean logged_invalid_dpi = false;
-
-	public static Point
-	getDPIRaw(
-		Device		device )
-	{
-		Point p = device.getDPI();
-
-		if ( p.x < 0 || p.y < 0 || p.x > 8192 || p.y > 8192 ){
-
-			if ( !logged_invalid_dpi ){
-
-				logged_invalid_dpi = true;
-
-				Debug.outNoStack( "Invalid DPI: " + p );
-			}
-
-			return( new Point( 96, 96 ));
-		}
-
-		return( p );
-	}
-
-
-	public static int adjustPXForDPI(int unadjustedPX) {
-		if (unadjustedPX == 0) {
-			return unadjustedPX;
-		}
-		int xDPI = getDPI().x;
-		if (xDPI == 0) {
-			return unadjustedPX;
-		}
-		return unadjustedPX * xDPI / DEFAULT_DPI;
-	}
-
-	public static Rectangle adjustPXForDPI(Rectangle bounds) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			return bounds;
-		}
-		return new Rectangle(bounds.x * dpi.x / DEFAULT_DPI,
-				bounds.y * dpi.y / DEFAULT_DPI, bounds.width * dpi.x / DEFAULT_DPI,
-				bounds.height * dpi.y / DEFAULT_DPI);
-	}
-
-	public static Point adjustPXForDPI(Point size) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			return size;
-		}
-		return new Point(size.x * dpi.x / DEFAULT_DPI,
-				size.y * dpi.y / DEFAULT_DPI);
-	}
-
-	public static void adjustPXForDPI(FormData fd) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			return;
-		}
-		adjustPXForDPI(fd.left);
-		adjustPXForDPI(fd.right);
-		adjustPXForDPI(fd.top);
-		adjustPXForDPI(fd.bottom);
-		if (fd.width > 0) {
-			fd.width = adjustPXForDPI(fd.width);
-		}
-		if (fd.height > 0) {
-			fd.height = adjustPXForDPI(fd.height);
-		}
-	}
-
-	public static void adjustPXForDPI(FormAttachment fa) {
-		if (fa == null) {
-			return;
-		}
-		if (fa.offset != 0) {
-			fa.offset = adjustPXForDPI(fa.offset);
-		}
-	}
-
-	public static void setLayoutData(Control widget, GridData layoutData) {
-		adjustPXForDPI(layoutData);
-		widget.setLayoutData(layoutData);
-	}
-
-	private static void adjustPXForDPI(GridData layoutData) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			return;
-		}
-		if (layoutData.heightHint > 0) {
-			layoutData.heightHint = adjustPXForDPI(layoutData.heightHint);
-		}
-		if (layoutData.horizontalIndent > 0) {
-			layoutData.horizontalIndent = adjustPXForDPI(layoutData.horizontalIndent);
-		}
-		if (layoutData.minimumHeight > 0) {
-			layoutData.minimumHeight = adjustPXForDPI(layoutData.minimumHeight);
-		}
-		if (layoutData.verticalIndent > 0) {
-			layoutData.verticalIndent = adjustPXForDPI(layoutData.verticalIndent);
-		}
-		if (layoutData.minimumWidth > 0) {
-			layoutData.minimumWidth = adjustPXForDPI(layoutData.minimumWidth);
-		}
-		if (layoutData.widthHint > 0) {
-			layoutData.widthHint = adjustPXForDPI(layoutData.widthHint);
-		}
-	}
-
-	public static void setLayoutData(Control widget, FormData layoutData) {
-		adjustPXForDPI(layoutData);
-		widget.setLayoutData(layoutData);
-	}
-
-	public static void setLayoutData(Control item, RowData rowData) {
-		if (rowData.height > 0) {
-			rowData.height = adjustPXForDPI(rowData.height);
-		}
-		if (rowData.width > 0) {
-			rowData.width = adjustPXForDPI(rowData.width);
-		}
-		item.setLayoutData(rowData);
-	}
-
-	public static void setLayoutData(BufferedLabel label, GridData gridData) {
-		adjustPXForDPI(gridData);
-		label.setLayoutData(gridData);
-	}
-
-	public static void adjustPXForDPI(Object layoutData) {
-		if (layoutData instanceof GridData) {
-			GridData gd = (GridData) layoutData;
-			adjustPXForDPI(gd);
-		} else if (layoutData instanceof FormData) {
-			FormData fd = (FormData) layoutData;
-			adjustPXForDPI(fd);
-		} else if (layoutData instanceof RowData) {
-			RowData fd = (RowData) layoutData;
-			adjustPXForDPI(fd);
-		}
-	}
-
-	private static final WeakHashMap<Image,String>	scaled_images = new WeakHashMap<>();
-	private static int	scaled_imaged_check_count = 0;
-
-	public static boolean
-	adjustPXForDPIRequired(
-		Image		image )
-	{
-		Point dpi = Utils.getDPI();
-		if (dpi.x > 0) {
-			return( !scaled_images.containsKey( image ));
-		}else{
-			return( false );
-		}
-	}
-
-	private static ImageData autoScaleImageData(Device device, final ImageData imageData, float scaleFactor) {
-		int width = imageData.width;
-		int height = imageData.height;
-		int scaledWidth = Math.round(width * scaleFactor);
-		int scaledHeight = Math.round(height * scaleFactor);
-
-
-		ImageData imageMaskData = null;
-
-		if (imageData.getTransparencyType() == SWT.TRANSPARENCY_ALPHA) {
-			imageMaskData = new ImageData(width, height, 8, ALPHA_PALETTE, 0, imageData.alphaData);
-		} else if (imageData.getTransparencyType() == SWT.TRANSPARENCY_PIXEL || imageData.getTransparencyType() == SWT.TRANSPARENCY_MASK) {
-			ImageData transparencyMaskData = imageData.getTransparencyMask();
-			imageMaskData = new ImageData(width, height, 1, BW_PALETTE, transparencyMaskData.scanlinePad, transparencyMaskData.data);
-		}
-
-		Image original = new Image(device, imageData);
-		Image originalMask = null;
-
-		if (imageMaskData != null) {
-			originalMask = new Image(device, imageMaskData);
-		}
-
-		/* Create a 24 bit image data with alpha channel */
-		ImageData resultData = new ImageData(scaledWidth, scaledHeight, 24, new PaletteData(0xFF, 0xFF00, 0xFF0000));
-		ImageData resultMaskData = null;
-
-		if (imageMaskData != null) {
-			resultMaskData = new ImageData(scaledWidth, scaledHeight, imageMaskData.depth, imageMaskData.palette);
-		}
-
-		Image result = new Image(device, resultData);
-		Image resultMask = null;
-
-		GC gc = new GC(result);
-		gc.setAntialias(SWT.ON);
-		gc.drawImage(original, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
-		gc.dispose();
-
-		if (resultMaskData != null) {
-			resultMask = new Image(device, resultMaskData);
-			gc = new GC(resultMask);
-			gc.setAntialias(SWT.ON);
-			gc.drawImage(originalMask, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
-			gc.dispose();
-		}
-
-		original.dispose();
-		originalMask.dispose();
-
-		ImageData scaledResult = result.getImageData();
-
-		if (resultMask != null) {
-			ImageData scaledResultMaskData = resultMask.getImageData();
-
-			// Convert 1-bit mask
-			if (scaledResultMaskData.depth == 1) {
-				scaledResult.maskPad = scaledResultMaskData.scanlinePad;
-				scaledResult.maskData = scaledResultMaskData.data;
-			} else {
-				scaledResult.alphaData = scaledResultMaskData.data;
-			}
-		}
-
-		result.dispose();
-		resultMask.dispose();
-		return scaledResult;
-	}
-
-	public static Image
-	adjustPXForDPI(
-		Display		display,
-		Image		image )
-	{
-		Point dpi = Utils.getDPI();
-
-		if (dpi.x > 0) {
-
-			try{
-				Rectangle bounds = image.getBounds();
-				Rectangle newBounds = Utils.adjustPXForDPI(bounds);
-
-				Image newImage = new Image(display, autoScaleImageData(display, image.getImageData(), dpi.x / DEFAULT_DPI));
-
-//				ImageData scaledTo = image.getImageData().scaledTo(newBounds.width, newBounds.height);
-//
-//				Image newImage = new Image(display, scaledTo);
-
-				if ( scaled_imaged_check_count++ % 100 == 0 ){
-					Iterator<Image> it = scaled_images.keySet().iterator();
-					while( it.hasNext()){
-						if ( it.next().isDisposed()){
-							it.remove();
-						}
-					}
-				}
-
-				scaled_images.put( newImage, "" );
-
-				image.dispose();
-
-				return( newImage );
-
-			}catch( Throwable e ){
-
-				Debug.out( "Image DPI adjustment failed: " + Debug.getNestedExceptionMessage(e), e);
-			}
-		}
-
-		return( image );
-	}
-
-	public static void setLayout(Composite composite, GridLayout layout) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			composite.setLayout(layout);
-			return;
-		}
-
-		layout.marginBottom = adjustPXForDPI(layout.marginBottom);
-		layout.marginHeight = adjustPXForDPI(layout.marginHeight);
-		layout.marginLeft = adjustPXForDPI(layout.marginLeft);
-		layout.marginRight = adjustPXForDPI(layout.marginRight);
-		layout.marginTop = adjustPXForDPI(layout.marginTop);
-		layout.marginWidth = adjustPXForDPI(layout.marginWidth);
-		layout.horizontalSpacing = adjustPXForDPI(layout.horizontalSpacing);
-		layout.verticalSpacing = adjustPXForDPI(layout.verticalSpacing);
-
-		composite.setLayout(layout);
-	}
-
-	public static void setLayout(Composite composite, RowLayout layout) {
-		Point dpi = getDPI();
-		if (dpi.x == 0) {
-			composite.setLayout(layout);
-			return;
-		}
-
-		layout.marginBottom = adjustPXForDPI(layout.marginBottom);
-		layout.marginHeight = adjustPXForDPI(layout.marginHeight);
-		layout.marginLeft = adjustPXForDPI(layout.marginLeft);
-		layout.marginRight = adjustPXForDPI(layout.marginRight);
-		layout.marginTop = adjustPXForDPI(layout.marginTop);
-		layout.marginWidth = adjustPXForDPI(layout.marginWidth);
-		layout.spacing = adjustPXForDPI(layout.spacing);
-
-
-		composite.setLayout(layout);
-	}
-
 	public static void setClipping(GC gc, Rectangle r) {
 		if (r == null) {
 			if (isGTK3) {
@@ -4397,7 +4269,142 @@ public class Utils
 		mapListeners.clear();
 	}
 
+	public static void
+	ensureDisplayUpdated( Display display )
+	{
+		long start = SystemTime.getMonotonousTime();
+		
+		// make sure display is up to date
+		while (display.readAndDispatch()) {
+			
+			if ( SystemTime.getMonotonousTime() - start > 5000 ){
+				
+				// hmmm, somert wrong
+				
+				return;
+			}
+		}
+	}
+	
+	public static void
+	setPeronalShare(
+		Map<String, String> properties )
+	{
+		UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
+		if ( uif != null ){
+			
+			UIFunctionsUserPrompter prompter = 
+				uif.getUserPrompter( 
+					MessageText.getString( "personal.share.prompt.title"), 
+					MessageText.getString( "personal.share.prompt.text"), 
+					new String[] {
+							MessageText.getString("Button.ok"),
+					}, 
+					0);
+		
+			prompter.setRemember(
+					"personal.share.info",
+					false,
+					MessageText.getString("MessageBoxWindow.nomoreprompting"));
+			
+
+			prompter.setAutoCloseInMS(0);
+
+			prompter.open(null);
+
+			prompter.waitUntilClosed();
+		}
+		
+		properties.put(ShareManager.PR_PERSONAL, "true");
+	}
+
+	
+	
+	private static boolean tt_enabled = false;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Disable All Tooltips",
+			new ParameterListener(){
+				
+				@Override
+				public void parameterChanged(String name){
+					tt_enabled = !COConfigurationManager.getBooleanParameter( name );
+				}
+			});
+	}
+	
+	public static boolean
+	getTTEnabled()
+	{
+		return( tt_enabled ); 
+	}
+	
+	public static void
+	setTT(
+		Control		c,
+		String		text )
+	{
+		c.setToolTipText( tt_enabled?text:null );
+	}	
+	
+	public static void
+	setTT(
+		BufferedTruncatedLabel		c,
+		String						text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		CTabItem			c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		UISWTStatusEntry	c,
+		String				text )
+	{
+		c.setTooltipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		TableColumn			c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		ToolItem			c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		TrayItem			c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
+	public static void
+	setTT(
+		TrayItemDelegate	c,
+		String				text )
+	{
+		c.setToolTipText( tt_enabled?text:null  );
+	}
+	
 	public static void dispose() {
 		shellIcons = null;
 		icon128 = null;

@@ -235,7 +235,8 @@ public class ConsoleInput extends Thread {
 	 */
 	public void downloadRemoteTorrent( String url, final String outputDir )
 	{
-		TorrentDownloader downloader = TorrentDownloaderFactory.create(new TorrentDownloaderCallBackInterface() {
+		TorrentDownloader downloader = TorrentDownloaderFactory.create(
+			TorrentDownloaderManager.getInstance().new Callback(){
 			@Override
 			public void
 			TorrentDownloaderEvent(
@@ -252,7 +253,7 @@ public class ConsoleInput extends Thread {
 						out.println( "Torrent file download failed: " + inf.getError());
 					}
 
-					TorrentDownloaderManager.getInstance().TorrentDownloaderEvent(state, inf);
+					super.TorrentDownloaderEvent(state, inf);
 				}
 			}
 		}, url, null, null, true);
@@ -743,7 +744,7 @@ public class ConsoleInput extends Thread {
 			out.println("Saving aliases to: " + aliasesFile.getCanonicalPath());
 			FileOutputStream fo = new FileOutputStream(aliasesFile);
 			try{
-				aliases.store(fo, "This aliases file was automatically written by Azureus");
+				aliases.store(fo, "This aliases file was automatically written by " + Constants.AZUREUS_NAME);
 			}finally{
 				fo.close();
 			}

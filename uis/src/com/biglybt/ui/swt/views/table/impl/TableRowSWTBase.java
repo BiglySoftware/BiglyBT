@@ -44,9 +44,6 @@ public abstract class TableRowSWTBase
 {
 	public static boolean DEBUG_ROW_PAINT = false;
 
-	private static final boolean expand_enabled = COConfigurationManager.getBooleanParameter("Table.useTree");
-
-
 	protected Object lock;
 
 	private final TableViewSWT tv;
@@ -57,6 +54,8 @@ public abstract class TableRowSWTBase
 
 	private int lastIndex = -1;
 
+	private int visibleRowIndex = -1;
+	
 	protected Map<String, TableCellCore> mTableCells;
 
 	private boolean bDisposed;
@@ -77,6 +76,7 @@ public abstract class TableRowSWTBase
 
 	private boolean expanded;
 
+	private boolean isAttention;
 
 	public TableRowSWTBase(Object lock, TableRowCore parentRow, TableViewSWT tv,
 			Object dataSource) {
@@ -272,6 +272,23 @@ public abstract class TableRowSWTBase
 		return tv.indexOf(this);
 	}
 
+	public boolean
+	setVisibleRowIndex( int index )
+	{
+		if ( index != visibleRowIndex ){
+			visibleRowIndex = index;
+			invalidate();
+			return( true );
+		}
+		return(false);
+	}
+		
+	public int
+	getVisibleRowIndex()
+	{
+		return( visibleRowIndex );
+	}
+	
 	/* (non-Javadoc)
 	 * @see TableRowCore#getTableCellCore(java.lang.String)
 	 */
@@ -503,7 +520,7 @@ public abstract class TableRowSWTBase
 	public boolean
 	canExpand()
 	{
-		return( expand_enabled );
+		return( tv.isExpandEnabled());
 	}
 
 	/* (non-Javadoc)
@@ -562,6 +579,22 @@ public abstract class TableRowSWTBase
 		return tv.getTableID();
 	}
 
+	@Override
+	public void setRequestAttention(boolean on){
+		if ( on != isAttention ){
+		
+			isAttention = on;
+			
+			redraw();
+		}
+	}
+	
+	public boolean
+	isRequestAttention()
+	{
+		return( isAttention );
+	}
+	
 	/* (non-Javadoc)
 	 * @see com.biglybt.ui.swt.views.table.TableRowSWT#setForeground(org.eclipse.swt.graphics.Color)
 	 */

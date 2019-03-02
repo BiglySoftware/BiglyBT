@@ -71,6 +71,12 @@ public class ChangeSelectionActionPerformer implements IAdditionalActionPerforme
   	this.controls = controls;
 	reverse_sense = _reverse_sense;
   }
+  
+  public void
+  setReverseSense( boolean b )
+  {
+	  reverse_sense = b;
+  }
 
   /* (non-Javadoc)
    * @see com.biglybt.ui.swt.AdditionalActionPerformer#performAction()

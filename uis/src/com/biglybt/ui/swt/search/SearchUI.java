@@ -147,8 +147,11 @@ SearchUI
 				}
 			});
 
-		// open rcm on search
-		final BooleanParameter paramRCMWindow =
-				configModel.addBooleanParameter2("search.showRCMView", "search.showRCMView", false);
+			// open rcm on search
+		
+		configModel.addBooleanParameter2( "!search.showRCMView!", "search.showRCMView", false);
+		
+		configModel.addIntParameter2( "!search.rss.template.timeout!", "search.rss.template.timeout", 20 );
+		
 	}
 }

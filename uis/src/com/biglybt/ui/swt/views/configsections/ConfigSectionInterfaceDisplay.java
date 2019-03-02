@@ -26,28 +26,28 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 
-import com.biglybt.core.CoreFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.AEThread2;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.FileUtil;
-import com.biglybt.platform.PlatformManagerCapabilities;
-import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.core.proxy.AEProxyFactory;
+import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.platform.PlatformManagerCapabilities;
+import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.config.*;
 import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
-import com.biglybt.core.proxy.AEProxyFactory;
 
 
 public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
@@ -84,7 +84,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 		GridLayout layout;
 		GridData gridData;
 		Composite cSection = new Composite(parent, SWT.NULL);
-		Utils.setLayoutData(cSection, new GridData(GridData.FILL_BOTH));
+		cSection.setLayoutData(new GridData(GridData.FILL_BOTH));
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		cSection.setLayout(layout);
@@ -93,32 +93,47 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 		Group gVarious = new Group(cSection, SWT.NULL);
 		layout = new GridLayout();
-		layout.numColumns = 1;
+		layout.numColumns = 2;
 		gVarious.setLayout(layout);
-		Utils.setLayoutData(gVarious, new GridData(GridData.FILL_HORIZONTAL));
+		gVarious.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		gVarious.setText( MessageText.getString( "label.various" ));
 
 
-		new BooleanParameter(gVarious, "Show Download Basket", "ConfigView.section.style.showdownloadbasket");
-
-		if (!isAZ3) {
-			new BooleanParameter(gVarious, "IconBar.enabled", "ConfigView.section.style.showiconbar");
-		}
-
-		new BooleanParameter(gVarious, "suppress_file_download_dialog", "ConfigView.section.interface.display.suppress.file.download.dialog");
-
-		new BooleanParameter(gVarious, "Suppress Sharing Dialog", "ConfigView.section.interface.display.suppress.sharing.dialog");
-
-		new BooleanParameter(gVarious, "show_torrents_menu", "Menu.show.torrent.menu");
+		BooleanParameter bp = new BooleanParameter(gVarious, "Show Download Basket", "ConfigView.section.style.showdownloadbasket");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
+		
+		bp = new BooleanParameter(gVarious, "suppress_file_download_dialog", "ConfigView.section.interface.display.suppress.file.download.dialog");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
+		
+		bp = new BooleanParameter(gVarious, "Suppress Sharing Dialog", "ConfigView.section.interface.display.suppress.sharing.dialog");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
+		
+		bp = new BooleanParameter(gVarious, "show_torrents_menu", "Menu.show.torrent.menu");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
 
 		if ( !Constants.isUnix ){
 				// TextWithHistory issues on Linux
-			new BooleanParameter(gVarious, "mainwindow.search.history.enabled", "search.history.enable");
+			bp = new BooleanParameter(gVarious, "mainwindow.search.history.enabled", "search.history.enable");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			bp.setLayoutData(gridData);
 		}
 
 		if (Constants.isWindowsXP) {
 			final Button enableXPStyle = new Button(gVarious, SWT.CHECK);
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			enableXPStyle.setLayoutData(gridData);
+			
 			Messages.setLanguageText(enableXPStyle, "ConfigView.section.style.enableXPStyle");
 
 			boolean enabled = false;
@@ -168,35 +183,111 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 		}
 
 		if (Constants.isOSX) {
-			new BooleanParameter(gVarious, "enable_small_osx_fonts", "ConfigView.section.style.osx_small_fonts");
+			bp = new BooleanParameter(gVarious, "enable_small_osx_fonts", "ConfigView.section.style.osx_small_fonts");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			bp.setLayoutData(gridData);
 		}
 
 		// Reuse the labels of the other menu actions.
 		if (PlatformManagerFactory.getPlatformManager().hasCapability(PlatformManagerCapabilities.ShowFileInBrowser)) {
-			BooleanParameter bp = new BooleanParameter(gVarious, "MyTorrentsView.menu.show_parent_folder_enabled", "ConfigView.section.style.use_show_parent_folder");
+			bp = new BooleanParameter(gVarious, "MyTorrentsView.menu.show_parent_folder_enabled", "ConfigView.section.style.use_show_parent_folder");
+			gridData = new GridData();
+			gridData.horizontalSpan = 2;
+			bp.setLayoutData(gridData);
+			
 			Messages.setLanguageText(bp.getControl(), "ConfigView.section.style.use_show_parent_folder", new String[] {
 				MessageText.getString("MyTorrentsView.menu.open_parent_folder"),
 				MessageText.getString("MyTorrentsView.menu.explore"),
 			});
 
 			if (Constants.isOSX) {
-				new BooleanParameter(gVarious, "FileBrowse.usePathFinder",
+				bp = new BooleanParameter(gVarious, "FileBrowse.usePathFinder",
 						"ConfigView.section.style.usePathFinder");
+				gridData = new GridData();
+				gridData.horizontalSpan = 2;
+				bp.setLayoutData(gridData);
 			}
 		}
 
 		if (userMode > 0) {
-  		final BooleanParameter paramEnableForceDPI = new BooleanParameter(
-  				gVarious, "enable.ui.forceDPI", "ConfigView.section.style.forceDPI");
-  		paramEnableForceDPI.setLayoutData(new GridData());
-			IntParameter forceDPI = new IntParameter(gVarious, "Force DPI", 0,
-					Integer.MAX_VALUE);
-			forceDPI.setLayoutData(new GridData());
-			paramEnableForceDPI.setAdditionalActionPerformer(
-					new ChangeSelectionActionPerformer(forceDPI.getControl()));
+	  		final BooleanParameter paramEnableForceDPI = new BooleanParameter(
+	  				gVarious, "enable.ui.forceDPI", "ConfigView.section.style.forceDPI");
+	  		paramEnableForceDPI.setLayoutData(new GridData());
+				IntParameter forceDPI = new IntParameter(gVarious, "Force DPI", 0,
+						Integer.MAX_VALUE);
+				forceDPI.setLayoutData(new GridData());
+				paramEnableForceDPI.setAdditionalActionPerformer(
+						new ChangeSelectionActionPerformer(forceDPI.getControl()));
 		}
+		
+		bp = new BooleanParameter(gVarious, "Disable All Tooltips", "ConfigView.section.style.disable.all.tt");
+		gridData = new GridData();
+		gridData.horizontalSpan = 2;
+		bp.setLayoutData(gridData);
 
+			// toolbar
+		
+		{
+			Group gToolBar = new Group(cSection, SWT.NULL);
+			Messages.setLanguageText(gToolBar, "MainWindow.menu.view.iconbar" );
+			
+			int gToolBarSpan = 5 + (isAZ3?2:2);
+			layout = new GridLayout();
+			layout.numColumns = gToolBarSpan;
+			gToolBar.setLayout(layout);
+			gToolBar.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
+			BooleanParameter enabled = null;
+			
+				// row 1
+			
+			if (!isAZ3) {
+				enabled = new BooleanParameter(gToolBar, "IconBar.enabled", "ConfigView.section.style.showiconbar");
+				
+				GridData gd = new GridData();
+				gd.horizontalSpan = gToolBarSpan;
+				
+				enabled.setLayoutData( gd );
+			}
+
+				// row 2
+			
+			if ( isAZ3 ){
+				new BooleanParameter(gToolBar, "IconBar.visible.play", "iconBar.stream");
+			}
+			
+			new BooleanParameter(gToolBar, "IconBar.visible.run", "iconBar.run");
+			
+			if ( !isAZ3 ){
+				new BooleanParameter(gToolBar, "IconBar.visible.top", "iconBar.top");
+			}
+			
+			new BooleanParameter(gToolBar, "IconBar.visible.up", "iconBar.up");
+			
+			new BooleanParameter(gToolBar, "IconBar.visible.down", "iconBar.down");
+			
+			if ( !isAZ3 ){
+				new BooleanParameter(gToolBar, "IconBar.visible.bottom", "iconBar.bottom");
+			}
+			
+			new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_RECHECK, "MyTorrentsView.menu.recheck");
+			
+			new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_CHECK_FILES, "MyTorrentsView.menu.checkfilesexist");
+			
+			if ( isAZ3 ){
+				new BooleanParameter(gToolBar, "IconBar.visible." + TorrentUtil.TU_ITEM_SHOW_SIDEBAR, "v3.MainWindow.menu.view.sidebar");
+			}
+			
+				// row 3
+			
+			BooleanParameter sss = new BooleanParameter(gToolBar, "IconBar.start.stop.separate", "ConfigView.section.style.start.stop.separate");
+			
+			GridData gd = new GridData();
+			gd.horizontalSpan = gToolBarSpan;
+			
+			sss.setLayoutData( gd );
+		}
 
 			// sidebar
 
@@ -205,21 +296,108 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			Group gSideBar = new Group(cSection, SWT.NULL);
 			Messages.setLanguageText(gSideBar, "v3.MainWindow.menu.view.sidebar" );
 			layout = new GridLayout();
-			layout.numColumns = 2;
+			layout.numColumns = 3;
 			gSideBar.setLayout(layout);
-			Utils.setLayoutData(gSideBar, new GridData(GridData.FILL_HORIZONTAL));
+			gSideBar.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 			new BooleanParameter(gSideBar, "Show Side Bar", "sidebar.show");
 			label = new Label(gSideBar, SWT.NULL);
-
+			label = new Label(gSideBar, SWT.NULL);
+			
 			label = new Label(gSideBar, SWT.NULL);
 			Messages.setLanguageText(label, "sidebar.top.level.gap" );
 
 			new IntParameter(gSideBar, "Side Bar Top Level Gap", 0, 5 );
-
-			new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
+			label = new Label(gSideBar, SWT.NULL);
+			
+				// top level order
+			
+			label = new Label(gSideBar, SWT.NULL);
+			GridData gd = new GridData();
+			gd.horizontalSpan = 2;
+			label.setLayoutData( gd );
+			
+			String orderStr = "";
+			
+			for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){
+				orderStr += (orderStr.isEmpty()?"":", ") + 
+						(i+1) + "=" +
+						MessageText.getString( "sidebar." + MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT[i]);
+			}
+			
+			Messages.setLanguageText(label, "sidebar.header.order", new String[]{ orderStr });
+			
+			StringParameter order = new StringParameter(gSideBar, "Side Bar Top Level Order", false);
+			order.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
+			
+			BooleanParameter sso = new BooleanParameter(gSideBar, "Show Options In Side Bar", "sidebar.show.options");
+			gd = new GridData();
+			gd.horizontalSpan = 3;
+			sso.setLayoutData( gd );
+			
+			BooleanParameter showNew = new BooleanParameter(gSideBar, "Show New In Side Bar", "sidebar.show.new");
+			label = new Label(gSideBar, SWT.NULL);
+			label = new Label(gSideBar, SWT.NULL);
+			
+			showNew.addChangeListener(
+				new ParameterChangeAdapter(){
+					
+					@Override
+					public void parameterChanged(Parameter p, boolean caused_internally){
+						if ( showNew.isSelected()){
+							UIFunctionsManager.getUIFunctions().getMDI().loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED, false );
+						}else{
+							UIFunctionsManager.getUIFunctions().getMDI().closeEntry(  MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_UNOPENED );
+						}
+					}
+				});
+			
+			BooleanParameter showDL = new BooleanParameter(gSideBar, "Show Downloading In Side Bar", "sidebar.show.downloading");
+			label = new Label(gSideBar, SWT.NULL);
 			label = new Label(gSideBar, SWT.NULL);
 
+			showDL.addChangeListener(
+					new ParameterChangeAdapter(){
+						
+						@Override
+						public void parameterChanged(Parameter p, boolean caused_internally){
+							if ( showDL.isSelected()){
+								UIFunctionsManager.getUIFunctions().getMDI().loadEntryByID( MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_DL, false );
+							}else{
+								UIFunctionsManager.getUIFunctions().getMDI().closeEntry(  MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_DL );
+							}
+						}
+					});
+			
+			BooleanParameter hideicon = new BooleanParameter(gSideBar, "Side Bar Hide Left Icon", "sidebar.hide.icon");
+			gd = new GridData();
+			gd.horizontalSpan = 3;
+			hideicon.setLayoutData( gd );
+
+			
+			label = new Label(gSideBar, SWT.NULL);
+			Messages.setLanguageText(label, "sb.close.icon.position" );
+			
+			String[] cp_labs = {
+					MessageText.getString( "sb.close.indicator.left" ),
+					MessageText.getString( "sb.close.right" ),
+					MessageText.getString( "sb.close.never" ),
+			};
+		
+		    new IntListParameter(gSideBar, "Side Bar Close Position", cp_labs, new int[]{ 0, 1, 2 });
+		    
+		    if ( !Utils.isGTK ){
+		    	
+				BooleanParameter indent = new BooleanParameter(gSideBar, "Side Bar Indent Expanders", "sidebar.indent.expanders");
+				gd = new GridData();
+				gd.horizontalSpan = 3;
+				indent.setLayoutData( gd );
+	
+				BooleanParameter compact = new BooleanParameter(gSideBar, "Side Bar Compact View", "sidebar.compact.view");
+				gd = new GridData();
+				gd.horizontalSpan = 3;
+				compact.setLayoutData( gd );
+		    }
 		}
 
 			// status bar
@@ -229,7 +407,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		cStatusBar.setLayout(layout);
-		Utils.setLayoutData(cStatusBar, new GridData(GridData.FILL_HORIZONTAL));
+		cStatusBar.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		new BooleanParameter(cStatusBar, "Status Area Show SR", "ConfigView.section.style.status.show_sr");
 		new BooleanParameter(cStatusBar, "Status Area Show NAT",  "ConfigView.section.style.status.show_nat");
@@ -245,7 +423,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			layout = new GridLayout();
 			layout.numColumns = 1;
 			cUnits.setLayout(layout);
-			Utils.setLayoutData(cUnits, new GridData(GridData.FILL_HORIZONTAL));
+			cUnits.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 			new BooleanParameter(cUnits, "config.style.useSIUnits", "ConfigView.section.style.useSIUnits");
 
@@ -270,7 +448,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 	        Messages.setLanguageText(formatters_group, "ConfigView.label.general.formatters");
 	        layout = new GridLayout();
 	        formatters_group.setLayout(layout);
-	        Utils.setLayoutData(formatters_group, new GridData(GridData.FILL_HORIZONTAL));
+	        formatters_group.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 	        StringAreaParameter formatters = new StringAreaParameter(formatters_group, "config.style.formatOverrides" );
 	        gridData = new GridData(GridData.FILL_HORIZONTAL);
 	        gridData.heightHint = formatters.getPreferredHeight( 3 );
@@ -282,11 +460,13 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			layout.marginWidth = 0;
 			layout.numColumns = 3;
 			format_info.setLayout(layout);
-			Utils.setLayoutData(format_info, new GridData(GridData.FILL_HORIZONTAL));
+			format_info.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-	    	new LinkLabel(format_info, "ConfigView.label.general.formatters.link", MessageText.getString( "ConfigView.label.general.formatters.link.url" ));
+			new LinkLabel(format_info, "ConfigView.label.general.formatters.link",
+					MessageText.getString(
+							"ConfigView.label.general.formatters.link.url"));
 
-	    	label = new Label(format_info, SWT.NULL);
+			label = new Label(format_info, SWT.NULL);
 			Messages.setLanguageText(label, "GeneralView.label.status");
 
 	        InfoParameter	info_param = new InfoParameter(format_info, "config.style.formatOverrides.status" );
@@ -303,17 +483,17 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			layout = new GridLayout();
 			layout.numColumns = 1;
 			gExternalBrowser.setLayout(layout);
-			Utils.setLayoutData(gExternalBrowser, new GridData(GridData.FILL_HORIZONTAL));
+			gExternalBrowser.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 			gExternalBrowser.setText( MessageText.getString( "config.external.browser" ));
 			label = new Label(gExternalBrowser, SWT.WRAP);
 			Messages.setLanguageText(label, "config.external.browser.info1");
-			Utils.setLayoutData(label, Utils.getWrappableLabelGridData(1, 0));
+			label.setLayoutData(Utils.getWrappableLabelGridData(1, 0));
 			label = new Label(gExternalBrowser, SWT.WRAP);
 			Messages.setLanguageText(label, "config.external.browser.info2");
-			Utils.setLayoutData(label, Utils.getWrappableLabelGridData(1, 0));
+			label.setLayoutData(Utils.getWrappableLabelGridData(1, 0));
 
-				// browser selection
+			// browser selection
 
 			final java.util.List<String[]> browser_choices = new ArrayList<>();
 
@@ -341,7 +521,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 			final Composite cEBArea = new Composite(gExternalBrowser, SWT.WRAP);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cEBArea, gridData);
+			cEBArea.setLayoutData(gridData);
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			layout.marginHeight = 0;
@@ -352,7 +532,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 			final Composite cEB = new Group(cEBArea, SWT.WRAP);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cEB, gridData);
+			cEB.setLayoutData(gridData);
 			layout = new GridLayout();
 			layout.numColumns = browser_choices.size();
 			layout.marginHeight = 0;
@@ -398,9 +578,9 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
 			manualArea.setLayout( layout);
-			Utils.setLayoutData(manualArea, new GridData(GridData.FILL_HORIZONTAL));
+			manualArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-			final Parameter manualProg = new FileParameter(manualArea, "browser.external.prog","", new String[]{});
+			final Parameter manualProg = new FileParameter(manualArea, "browser.external.prog", new String[]{});
 
 			manualProg.setEnabled( existing_index == 1 );
 
@@ -448,11 +628,11 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 				layout = new GridLayout(2,false);
 				layout.marginHeight = 0;
 				nonPubArea.setLayout(layout);
-				Utils.setLayoutData(nonPubArea, new GridData(GridData.FILL_HORIZONTAL));
+				nonPubArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 				String temp = MessageText.getString( "config.external.browser.non.pub", new String[]{ pi_names });
 
-				BooleanParameter non_pub = new BooleanParameter( nonPubArea, "browser.external.non.pub", true, "!" + temp + "!" );
+				BooleanParameter non_pub = new BooleanParameter( nonPubArea, "browser.external.non.pub", "!" + temp + "!" );
 			}
 
 				// test launch
@@ -461,7 +641,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			layout = new GridLayout(4,false);
 			layout.marginHeight = 0;
 			testArea.setLayout(layout);
-			Utils.setLayoutData(testArea, new GridData(GridData.FILL_HORIZONTAL));
+			testArea.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 			label = new Label(testArea, SWT.WRAP);
 			Messages.setLanguageText(label, "config.external.browser.test");
@@ -472,9 +652,9 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 		    final Text test_url = new Text( testArea, SWT.BORDER );
 
-		    Utils.setLayoutData(test_url, new GridData(GridData.FILL_HORIZONTAL));
+			test_url.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		    test_url.setText( "http://www.vuze.com/" );
+			test_url.setText( Constants.URL_CLIENT_HOME );
 
 		    test_button.addListener(SWT.Selection,
 		    		new Listener()
@@ -518,7 +698,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 				    });
 
 			label = new Label(testArea, SWT.NULL);
-			Utils.setLayoutData(label, new GridData(GridData.FILL_HORIZONTAL));
+			label.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		}
 
@@ -529,13 +709,13 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			layout = new GridLayout();
 			layout.numColumns = 1;
 			gInternalBrowser.setLayout(layout);
-			Utils.setLayoutData(gInternalBrowser, new GridData(GridData.FILL_HORIZONTAL));
+			gInternalBrowser.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 			gInternalBrowser.setText( MessageText.getString( "config.internal.browser" ));
 
 			label = new Label(gInternalBrowser, SWT.WRAP);
 			gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "config.internal.browser.info1");
 
 
@@ -543,12 +723,12 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 			label = new Label(gInternalBrowser, SWT.WRAP);
 			gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
 			gridData.horizontalIndent = 15;
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "config.browser.internal.disable.info");
 
 			label = new Label(gInternalBrowser, SWT.WRAP);
 			gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "config.internal.browser.info3");
 
 			java.util.List<PluginInterface> pis = AEProxyFactory.getPluginHTTPProxyProviders( true );
@@ -567,7 +747,7 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 			final Composite cIPArea = new Composite(gInternalBrowser, SWT.WRAP);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cIPArea, gridData);
+			cIPArea.setLayoutData(gridData);
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			layout.marginHeight = 0;
@@ -575,12 +755,12 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 
 			label = new Label(cIPArea, SWT.WRAP);
 			gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "config.internal.browser.proxy.select");
 
 			final Composite cIP = new Group(cIPArea, SWT.WRAP);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
-			Utils.setLayoutData(cIP, gridData);
+			cIP.setLayoutData(gridData);
 			layout = new GridLayout();
 			layout.numColumns = proxy_choices.size();
 			layout.marginHeight = 0;
@@ -663,13 +843,13 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		gRefresh.setLayout(layout);
-		Utils.setLayoutData(gRefresh, new GridData(GridData.FILL_HORIZONTAL));
+		gRefresh.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		label = new Label(gRefresh, SWT.NULL);
 		Messages.setLanguageText(label, "ConfigView.section.style.guiUpdate");
 		int[] values = { 10, 25, 50, 100, 250, 500, 1000, 2000, 5000, 10000, 15000 };
 		String[] labels = { "10 ms", "25 ms", "50 ms", "100 ms", "250 ms", "500 ms", "1 s", "2 s", "5 s", "10 s", "15 s" };
-		new IntListParameter(gRefresh, "GUI Refresh", 1000, labels, values);
+		new IntListParameter(gRefresh, "GUI Refresh", labels, values);
 
 		label = new Label(gRefresh, SWT.NULL);
 		Messages.setLanguageText(label, "ConfigView.section.style.inactiveUpdate");

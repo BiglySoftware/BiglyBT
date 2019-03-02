@@ -34,6 +34,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
 import com.biglybt.core.proxy.AEProxyFactory;
 import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
@@ -230,6 +231,11 @@ public class TrackerStatus {
   	{
   		//LGLogger.log( "updateSingleHash():: force=" + force + ", async=" +async+ ", url=" +scrapeURL+ ", hash=" +ByteFormatter.nicePrint(hash, true) );
 
+  		if ( Logger.isClosingTakingTooLong()){
+  			
+  			return;
+  		}
+  		
   		if ( scrapeURL == null ){
   			if (Logger.isEnabled()) {
 					Logger.log(new LogEvent(TorrentUtils.getDownloadManager(hash), LOGID,
@@ -496,7 +502,7 @@ public class TrackerStatus {
 
 				if ( az_tracker ){
 
-					String	port_details = TRTrackerUtils.getPortsForURL();
+					String	port_details = TRTrackerUtils.getPortsForURL( TCPNetworkManager.getSingleton().getDefaultTCPListeningPortNumber(), false );
 
 					request += port_details;
 

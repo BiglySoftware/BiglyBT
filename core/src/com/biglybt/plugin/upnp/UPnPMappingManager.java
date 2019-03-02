@@ -81,6 +81,8 @@ UPnPMappingManager
 
 
 		addConfigPort( "upnp.mapping.dataport", true, "TCP.Listen.Port.Enable", "TCP.Listen.Port" );
+		
+		addConfigPortList( "upnp.mapping.dataport", true, "TCP.Listen.Port.Enable", "TCP.Listen.AdditionalPorts" );
 
 		addConfigPort( "upnp.mapping.dataport", true, "HTTP.Data.Listen.Port.Enable", "HTTP.Data.Listen.Port" );
 
@@ -305,6 +307,76 @@ UPnPMappingManager
 				});
 	}
 
+	protected void
+	addConfigPortList(
+		String			name_resource,
+		boolean			tcp,
+		final String	enabler_param_name,
+		final String	list_param_name )
+	{
+		COConfigurationManager.addAndFireParameterListener(
+			list_param_name,
+			new ParameterListener(){
+				List<Long>	existing_ports = new ArrayList<>();
+				
+				@Override
+				public void 
+				parameterChanged(
+					String parameterName)
+				{
+					synchronized( existing_ports ){
+						
+						boolean	enabled = COConfigurationManager.getBooleanParameter(enabler_param_name);
+						
+						List<Long>	ports = (List<Long>)COConfigurationManager.getListParameter( list_param_name, new ArrayList<>());
+	
+						for ( Long port: ports ){
+							
+							if ( !existing_ports.contains( port )){
+								
+								existing_ports.add( port );
+								
+								UPnPMapping	mapping = addMapping( name_resource, tcp, port.intValue(), enabled );
+	
+								mapping.addListener(
+										new UPnPMappingListener()
+										{
+											@Override
+											public void
+											mappingChanged(
+												UPnPMapping mapping)
+											{
+												Debug.out( "not supported" );
+											}
+			
+											@Override
+											public void
+											mappingDestroyed(
+												UPnPMapping	mapping )
+											{
+											}
+										});
+			
+								addConfigListener(
+										enabler_param_name,
+										new ParameterListener()
+										{
+											@Override
+											public void
+											parameterChanged(
+												String	name )
+											{
+												mapping.setEnabled( COConfigurationManager.getBooleanParameter(enabler_param_name));
+											}
+										});
+							}
+						}
+					}
+				}
+			});	
+
+	}
+	
 	protected void
 	addConfigPortX(
 		final String	name_resource,

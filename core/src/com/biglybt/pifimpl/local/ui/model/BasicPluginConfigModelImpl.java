@@ -28,14 +28,15 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.pifimpl.local.PluginConfigImpl;
+import com.biglybt.pifimpl.local.ui.UIManagerImpl;
+import com.biglybt.pifimpl.local.ui.config.FileParameter;
+import com.biglybt.pifimpl.local.ui.config.*;
+
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.components.UITextArea;
 import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
-import com.biglybt.pifimpl.local.ui.UIManagerImpl;
-import com.biglybt.pifimpl.local.ui.config.*;
-import com.biglybt.pifimpl.local.ui.config.FileParameter;
 
 public class
 BasicPluginConfigModelImpl
@@ -166,6 +167,34 @@ BasicPluginConfigModelImpl
 		parameters.add(res);
 
 		return (res);
+	}
+
+	@Override
+	public IntListParameter
+	addIntListParameter2(
+			String 		key,
+			String 		resource_name,
+			int[] 		values,
+			String[]	labels,
+			int	 	defaultValue )
+	{
+		IntListParameterImpl res = new IntListParameterImpl(configobj,
+				resolveKey(key), resource_name, defaultValue, values, labels);
+
+		parameters.add(res);
+
+		return (res);
+	}
+
+	@Override
+	public FloatParameter addFloatParameter2(String key, String resource_name,
+			float defaultValue, float minValue, float maxValue, boolean allowZero,
+			int digitsAfterDecimal) {
+		FloatParameterImpl res = new FloatParameterImpl(configobj, resolveKey(key),
+				resource_name, defaultValue, minValue, maxValue, digitsAfterDecimal);
+		parameters.add(res);
+
+		return res;
 	}
 
 	@Override

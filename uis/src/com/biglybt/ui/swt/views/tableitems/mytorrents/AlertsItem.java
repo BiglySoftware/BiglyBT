@@ -118,20 +118,23 @@ public class AlertsItem
 
 			DownloadManager dm = fi.getDownloadManager();
 
-			Map<String,String> map =  dm.getDownloadState().getMapAttribute( DownloadManagerState.AT_DL_FILE_ALERTS  );
-
-			if ( map != null && map.size() > 0 ){
-
-				String prefix = fi.getIndex() + ".";
-
-				for ( String k: map.keySet()){
-
-					if ( k.startsWith( prefix )){
-
-						icon 	= black_tick_icon;
-						sort	= 2;
-
-						break;
+			if ( dm != null ){
+				
+				Map<String,String> map =  dm.getDownloadState().getMapAttribute( DownloadManagerState.AT_DL_FILE_ALERTS  );
+	
+				if ( map != null && map.size() > 0 ){
+	
+					String prefix = fi.getIndex() + ".";
+	
+					for ( String k: map.keySet()){
+	
+						if ( k.startsWith( prefix )){
+	
+							icon 	= black_tick_icon;
+							sort	= 2;
+	
+							break;
+						}
 					}
 				}
 			}

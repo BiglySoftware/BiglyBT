@@ -31,6 +31,7 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -53,7 +54,6 @@ import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.download.Download;
-import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.GraphicURI;
 import com.biglybt.pif.ui.menus.MenuBuilder;
@@ -134,7 +134,7 @@ public class TorrentMenuFancy
 				lblRight = new Label(cRow, SWT.NONE);
 				GridData gd = new GridData();
 				gd.horizontalIndent = 10;
-				Utils.setLayoutData(lblRight, gd);
+				lblRight.setLayoutData(gd);
 				lblRight.setEnabled(false);
 			}
 			return lblRight;
@@ -244,7 +244,7 @@ public class TorrentMenuFancy
 
 	private Listener headerListener;
 
-	private TableViewSWT<?> tv;
+	private TableViewSWT<DownloadManager> tv;
 
 	private boolean isSeedingView;
 
@@ -278,7 +278,7 @@ public class TorrentMenuFancy
 
 	private PaintListener paintListenerArrow;
 
-	public TorrentMenuFancy(final TableViewSWT<?> tv,
+	public TorrentMenuFancy(final TableViewSWT<DownloadManager> tv,
 			final boolean isSeedingView, Shell parentShell,
 			final DownloadManager[] dms, final String tableID) {
 		this.tv = tv;
@@ -293,12 +293,24 @@ public class TorrentMenuFancy
 			public void handleEvent(Event event) {
 				FancyRowInfo rowInfo = findRowInfo(event.widget);
 				if (rowInfo != null) {
+				
+					Rectangle row_bounds =  rowInfo.getRow().getBounds();
+					
 					if (!rowInfo.keepMenu()) {
 						shell.dispose();
 					}
 
-					if (rowInfo.getListener() != null) {
-						rowInfo.getListener().handleEvent(event);
+					if ( rowInfo.getListener() != null) {
+						
+							// make sure we are still in the area of the row 
+						
+						row_bounds.x = row_bounds.y = 0;
+						
+						if ( row_bounds.contains( event.x, event.y )){
+
+							rowInfo.getListener().handleEvent(event);
+							
+						}
 					}
 				} else {
 					shell.dispose();
@@ -311,7 +323,7 @@ public class TorrentMenuFancy
 			public void paintControl(PaintEvent e) {
 				Control c = (Control) e.widget;
 				Point size = c.getSize();
-				int arrowSize = Utils.adjustPXForDPI(8);
+				int arrowSize = 8;
 				int xStart = size.x - arrowSize;
 				int yStart = size.y - (size.y + arrowSize) / 2;
 				e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_FOREGROUND));
@@ -736,7 +748,7 @@ public class TorrentMenuFancy
 			}
 			fd.left = new FormAttachment(0, 0);
 			fd.right = new FormAttachment(100, 0);
-			Utils.setLayoutData(child, fd);
+			child.setLayoutData(fd);
 			lastControl = child;
 		}
 
@@ -771,7 +783,7 @@ public class TorrentMenuFancy
 					}
 					fd.left = new FormAttachment(0, 0);
 					fd.right = new FormAttachment(100, 0);
-					Utils.setLayoutData(child, fd);
+					child.setLayoutData(fd);
 					lastControl = child;
 				}
 				shell.layout(true, true);
@@ -850,7 +862,7 @@ public class TorrentMenuFancy
 		GridData gd = new GridData();
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = SWT.FILL;
-		Utils.setLayoutData(cQuickCommands, gd);
+		cQuickCommands.setLayoutData(gd);
 
 		// Queue
 		createActionButton(dms, cQuickCommands, "MyTorrentsView.menu.queue",
@@ -878,7 +890,7 @@ public class TorrentMenuFancy
 			final boolean newForceStart = !forceStart;
 
 			createActionButton(dms, cQuickCommands, "MyTorrentsView.menu.forceStart",
-					"forcestart", forceStartEnabled, forceStart ? SWT.BORDER : SWT.PUSH,
+					"forcestart", forceStartEnabled, !newForceStart,
 					new ListenerDMTask(dms) {
 						@Override
 						public void run(DownloadManager dm) {
@@ -1052,7 +1064,8 @@ public class TorrentMenuFancy
 							boolean changeUrl = hasSelection;
 							boolean manualUpdate = true;
 							boolean allStopped = true;
-
+							boolean canMove = true;
+									
 							int userMode = COConfigurationManager.getIntParameter("User Mode");
 							final boolean use_open_containing_folder = COConfigurationManager.getBooleanParameter("MyTorrentsView.menu.show_parent_folder_enabled");
 
@@ -1061,6 +1074,7 @@ public class TorrentMenuFancy
 
 								allStopped &= stopped;
 
+								canMove = canMove && dm.canMoveDataFiles();
 								if (userMode < 2) {
 									TRTrackerAnnouncer trackerClient = dm.getTrackerClient();
 
@@ -1074,7 +1088,7 @@ public class TorrentMenuFancy
 							}
 
 							TorrentUtil.addTrackerTorrentMenu(menu, dms, changeUrl,
-									manualUpdate, allStopped, use_open_containing_folder);
+									manualUpdate, allStopped, use_open_containing_folder, canMove );
 						}
 
 					});
@@ -1099,17 +1113,17 @@ public class TorrentMenuFancy
 
 		if (userMode > 0 && hasSelection) {
 
-			boolean can_pause = false;
+			boolean can_pause_for = false;
 
 			for (int i = 0; i < dms.length; i++) {
 				DownloadManager dm = dms[i];
-				if (ManagerUtils.isPauseable(dm)) {
-					can_pause = true;
+				if (dm.isPaused() || ManagerUtils.isPauseable(dm)) {
+					can_pause_for = true;
 					break;
 				}
 			}
 
-			if ( can_pause ){
+			if ( can_pause_for ){
 
 				createRow(detailArea, "MainWindow.menu.transfers.pausetransfersfor",
 					null, new Listener() {
@@ -1303,18 +1317,6 @@ public class TorrentMenuFancy
 							}
 
 							boolean fileRescan = allScanSelected || allScanNotSelected;
-
-							final MenuItem itemFileMoveTorrent = new MenuItem(menu, SWT.PUSH);
-							Messages.setLanguageText(itemFileMoveTorrent,
-									"MyTorrentsView.menu.movetorrent");
-							itemFileMoveTorrent.addListener(SWT.Selection,
-									new ListenerDMTask(dms) {
-										@Override
-										public void run(DownloadManager[] dms) {
-											TorrentUtil.moveTorrentFile(parentShell, dms);
-										}
-									});
-							itemFileMoveTorrent.setEnabled(fileMove);
 
 							final MenuItem itemFileRescan = new MenuItem(menu, SWT.CHECK);
 							Messages.setLanguageText(itemFileRescan,
@@ -1637,7 +1639,7 @@ public class TorrentMenuFancy
 		//row.getRightLabel().setText("\u25B6");
 		Label rightLabel = row.getRightLabel();
 		GridData gd = new GridData(12, SWT.DEFAULT);
-		Utils.setLayoutData(rightLabel, gd);
+		rightLabel.setLayoutData(gd);
 		row.getRightLabel().addPaintListener(paintListenerArrow);
 
 		return row;
@@ -1674,9 +1676,9 @@ public class TorrentMenuFancy
 
 		cRow.setData("ID", rowInfo);
 		GridLayout gridLayout = new GridLayout(4, false);
-		gridLayout.marginWidth = Utils.adjustPXForDPI(1);
-		gridLayout.marginHeight = Utils.adjustPXForDPI(3);
-		gridLayout.marginRight = Utils.adjustPXForDPI(4);
+		gridLayout.marginWidth = 1;
+		gridLayout.marginHeight = 3;
+		gridLayout.marginRight = 4;
 		gridLayout.horizontalSpacing = 0;
 		gridLayout.verticalSpacing = 0;
 		cRow.setLayout(gridLayout);
@@ -1686,7 +1688,7 @@ public class TorrentMenuFancy
 		Label lblIcon = new Label(cRow, SWT.CENTER | SWT.NONE);
 		gridData = new GridData();
 		gridData.widthHint = 20;
-		Utils.setLayoutData(lblIcon, gridData);
+		lblIcon.setLayoutData(gridData);
 		if (keyImage != null) {
 			ImageLoader.getInstance().setLabelImage(lblIcon, keyImage);
 		}
@@ -1695,13 +1697,13 @@ public class TorrentMenuFancy
 		gridData = new GridData();
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.horizontalIndent = 2;
-		Utils.setLayoutData(item, gridData);
+		item.setLayoutData(gridData);
 		Messages.setLanguageText(item, keyTitle);
 
 		Label lblCheck = new Label(cRow, SWT.CENTER);
 		gridData = new GridData();
 		gridData.widthHint = 13;
-		Utils.setLayoutData(lblCheck, gridData);
+		lblCheck.setLayoutData(gridData);
 
 		if (triggerListener != null) {
 			Utils.addListenerAndChildren(cRow, triggerOnUp ? SWT.MouseUp
@@ -1758,12 +1760,12 @@ public class TorrentMenuFancy
 			Composite cParent, String keyToolTip, String keyImage, boolean enable,
 			Listener listener) {
 		return createActionButton(dms, cParent, keyToolTip, keyImage, enable,
-				SWT.BORDER, listener);
+				false, listener);
 	}
 
 	private Control createActionButton(final DownloadManager[] dms,
 			Composite cParent, String keyToolTip, final String keyImage,
-			boolean enable, int style, final Listener listener) {
+			boolean enable, boolean selected, final Listener listener) {
 		final Canvas item = new Canvas(cParent, SWT.NO_BACKGROUND
 				| SWT.DOUBLE_BUFFERED);
 
@@ -1775,18 +1777,23 @@ public class TorrentMenuFancy
 				Control c = (Control) e.widget;
 				if (e.type == SWT.Paint) {
 					Point size = c.getSize();
+					
+					GC gc = e.gc;
+					
+					gc.fillRectangle(0, 0, size.x, size.y );
 					if (inWidget) {
-						e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
+						gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
 					} else {
-						e.gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
+						gc.setBackground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW));
 					}
-					e.gc.setAdvanced(true);
-					e.gc.setAntialias(SWT.ON);
-					e.gc.fillRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
-					e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_DARK_SHADOW));
-					e.gc.drawRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
-					e.gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
-					e.gc.drawRoundRectangle(1, 1, size.x - 3, size.y - 3, 6, 6);
+					gc.setAdvanced(true);
+					gc.setAntialias(SWT.ON);
+					
+					gc.fillRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
+					gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_DARK_SHADOW));
+					gc.drawRoundRectangle(0, 0, size.x - 1, size.y - 1, 6, 6);
+					gc.setForeground(Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW));
+					gc.drawRoundRectangle(1, 1, size.x - 3, size.y - 3, 6, 6);
 
 					Image image = ImageLoader.getInstance().getImage(
 							c.isEnabled() ? keyImage : keyImage + "-disabled");
@@ -1794,7 +1801,19 @@ public class TorrentMenuFancy
 					int x = size.x / 2 - bounds.width / 2;
 					int y = size.y / 2 - bounds.height / 2;
 
-					e.gc.drawImage(image, x, y);
+					gc.drawImage(image, x, y);
+					
+					if ( selected && c.isEnabled()){
+						
+						image = ImageLoader.getInstance().getImage( "blacktick" );
+						
+						bounds = image.getBounds();
+						
+						x = 2;
+						y = size.y / 2 - bounds.height / 2;
+						
+						gc.drawImage(image, x, y);
+					}
 				} else if (e.type == SWT.MouseEnter) {
 					inWidget = true;
 					c.redraw();
@@ -1820,7 +1839,7 @@ public class TorrentMenuFancy
 		item.setEnabled(enable);
 
 		RowData rowData = new RowData(30, 21);
-		Utils.setLayoutData(item, rowData);
+		item.setLayoutData(rowData);
 
 		return item;
 	}
@@ -1994,26 +2013,43 @@ public class TorrentMenuFancy
 
 		// personal share
 		if (isSeedingView) {
-			createRow(detailArea, "MyTorrentsView.menu.create_personal_share", null,
-					new ListenerDMTask(dms, false) {
-						@Override
-						public void run(DownloadManager dm) {
-							File file = dm.getSaveLocation();
+			boolean	can_share_pers = dms.length > 0;
 
-							Map<String, String> properties = new HashMap<>();
+			for ( DownloadManager dm: dms ){
 
-							properties.put(ShareManager.PR_PERSONAL, "true");
+				File file = dm.getSaveLocation();
 
-							if (file.isFile()) {
-
-								ShareUtils.shareFile(file.getAbsolutePath(), properties);
-
-							} else if (file.isDirectory()) {
-
-								ShareUtils.shareDir(file.getAbsolutePath(), properties);
+				if ( !file.exists()){
+					
+					can_share_pers = false;
+					
+					break;
+				}
+			}
+			
+			if ( can_share_pers ){
+				
+				createRow(detailArea, "MyTorrentsView.menu.create_personal_share", null,
+						new ListenerDMTask(dms, false) {
+							@Override
+							public void run(DownloadManager dm) {
+								File file = dm.getSaveLocation();
+	
+								Map<String, String> properties = new HashMap<>();
+		
+								Utils.setPeronalShare( properties );
+								
+								if (file.isFile()) {
+	
+									ShareUtils.shareFile(file.getAbsolutePath(), properties);
+	
+								} else if (file.isDirectory()) {
+	
+									ShareUtils.shareDir(file.getAbsolutePath(), properties);
+								}
 							}
-						}
-					});
+						});
+			}
 		}
 
 	}
@@ -2042,6 +2078,19 @@ public class TorrentMenuFancy
 			}
 			return;
 		}
+		
+			// Disabled items are removed from fancy menus - if you want to change this then you will need to
+			// code up a disabled look for the rows as currently they just show as normal but aren't selectable
+			// which ain't good
+		
+		if (!item.isEnabled()) {
+			if (DEBUG_MENU) {
+				System.out.println("Menu Not enabled: " + item.getText() + ": "
+						+ item.getMenuID());
+			}
+			return;
+		}
+		
 
 		Graphic graphic = item.getGraphic();
 		FancyRowInfo row;
@@ -2050,7 +2099,9 @@ public class TorrentMenuFancy
 			System.out.println("Menu " + item.getText() + ": " + item.getMenuID());
 		}
 
-		if (item.getStyle() == com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU) {
+		int style = item.getStyle();
+		
+		if ( style == com.biglybt.pif.ui.menus.MenuItem.STYLE_MENU) {
 
 			row = createMenuRow(detailArea, item.getResourceKey(), null,
 					new FancyMenuRowInfoListener() {
@@ -2115,6 +2166,16 @@ public class TorrentMenuFancy
 
 						@Override
 						public boolean run(TableRowCore[] rows) {
+							
+							if ( style == com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK ){
+								
+								Boolean b = (Boolean)item.getData();
+								
+								boolean newSel = !(b != null && b);
+								
+								item.setData( newSel );
+							}
+							
 							if (rows.length != 0) {
 								((MenuItemImpl) item).invokeListenersMulti(getTarget(item));
 							}
@@ -2122,6 +2183,13 @@ public class TorrentMenuFancy
 						}
 
 					});
+			
+			if ( style == com.biglybt.pif.ui.menus.MenuItem.STYLE_CHECK ){
+				
+				Boolean b = (Boolean)item.getData();
+									
+				row.setSelection(  b != null && b );
+			}
 		}
 
 		row.setEnabled(item.isEnabled());

@@ -30,6 +30,7 @@ import java.util.List;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.net.upnp.services.UPnPWANConnection;
 import com.biglybt.net.upnp.services.UPnPWANConnectionPortMapping;
@@ -339,7 +340,7 @@ UPnPPluginService
 	{
 		if ( service_mapping.isExternal()){
 
-			log.log( "Mapping " + service_mapping.getString() + " not removed as not created by Azureus" );
+			log.log( "Mapping " + service_mapping.getString() + " not removed as not created by " + Constants.AZUREUS_NAME );
 
 		}else{
 			int	persistent	=  UPnPMapping.PT_DEFAULT;

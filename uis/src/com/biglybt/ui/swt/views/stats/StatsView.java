@@ -249,6 +249,10 @@ public class StatsView
 		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
 				TagStatsView.MSGID_PREFIX, TagStatsView.class,
 				null );
+		
+		pluginUI.addView(UISWTInstance.VIEW_STATISTICS,
+				XferStatsView.MSGID_PREFIX, XferStatsView.class,
+				null );
 
 		registeredCoreSubViews = true;
 

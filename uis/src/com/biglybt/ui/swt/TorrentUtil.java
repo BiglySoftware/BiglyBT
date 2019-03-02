@@ -50,6 +50,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
@@ -73,9 +74,14 @@ import com.biglybt.pif.download.DownloadStub.DownloadStubEx;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.UIPluginView;
 import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.ui.swt.exporttorrent.wizard.ExportTorrentWizard;
 import com.biglybt.ui.swt.minibar.DownloadBar;
@@ -97,6 +103,7 @@ import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UserPrompterResultListener;
+import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.common.table.TableView;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
@@ -110,7 +117,240 @@ import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
  */
 public class TorrentUtil
 {
-
+	private static final String TU_GROUP			= "tu.group";
+	
+	public static final String	TU_ITEM_RECHECK			= "tui.recheck";
+	public static final String	TU_ITEM_CHECK_FILES		= "tui.checkfiles";
+	public static final String	TU_ITEM_SHOW_SIDEBAR	= "tui.showsidebar";
+	
+	private static final String[] TU_ITEMS = {
+			TU_ITEM_RECHECK,
+			TU_ITEM_CHECK_FILES,
+			TU_ITEM_SHOW_SIDEBAR,
+	};
+	
+	private static boolean	initialised;
+	
+	public static synchronized void
+	init()
+	{
+		if ( initialised ){
+			
+			return;
+		}
+		
+		initialised = true;
+		
+		for ( String id: TU_ITEMS ){
+		
+			String key = "IconBar.visible." + id;
+		
+			if ( !COConfigurationManager.hasParameter( key, false )){
+		
+				COConfigurationManager.setParameter( key, false );
+			}
+		}
+		
+		UIManager ui_manager = CoreFactory.getSingleton().getPluginManager().getDefaultPluginInterface().getUIManager();
+		
+		ui_manager.addUIListener(
+				new UIManagerListener()
+				{
+					private List<UIToolBarItem>	items = new ArrayList<>();
+					
+					private boolean attached;
+					
+					@Override
+					public void
+					UIAttached(
+						UIInstance		instance )
+					{
+						if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
+							
+							attached = true;
+							
+							UIToolBarManager tbm = instance.getToolBarManager();
+							
+							if ( tbm != null ){
+								
+								UIToolBarItem refresh_item = tbm.createToolBarItem( TU_ITEM_RECHECK );
+							
+								refresh_item.setGroupID( TU_GROUP );
+								
+								refresh_item.setImageID( "recheck" );
+								
+								refresh_item.setToolTipID( "MyTorrentsView.menu.recheck" );
+								
+								refresh_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										List<DownloadManager>	dms = getDMs( datasource );
+										
+										for ( DownloadManager dm: dms ){
+											
+											if ( dm.canForceRecheck()){
+												
+												dm.forceRecheck();
+											}
+										}
+										
+										return( true );
+									}});
+								
+								addItem( tbm, refresh_item );
+								
+									// check files exist
+								
+								UIToolBarItem cfe_item = tbm.createToolBarItem( TU_ITEM_CHECK_FILES );
+								
+								cfe_item.setGroupID( TU_GROUP );
+								
+								cfe_item.setImageID( "filesexist" );
+								
+								cfe_item.setToolTipID( "MyTorrentsView.menu.checkfilesexist" );
+								
+								cfe_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										List<DownloadManager>	dms = getDMs( datasource );
+										
+										for ( DownloadManager dm: dms ){
+											
+											dm.filesExist( true );
+										}
+										
+										return( true );
+									}});
+								
+								addItem( tbm, cfe_item );
+								
+									// show sidebar 
+								
+								UIToolBarItem ssb_item = tbm.createToolBarItem( TU_ITEM_SHOW_SIDEBAR);
+								
+								ssb_item.setGroupID( TU_GROUP );
+								
+								ssb_item.setImageID( "sidebar" );
+													
+								COConfigurationManager.addAndFireParameterListener( 
+									"Show Side Bar",
+									new ParameterListener(){
+										
+										@Override
+										public void parameterChanged(String name ){
+											
+											if ( attached ){
+													
+												if ( COConfigurationManager.getBooleanParameter( "IconBar.visible." + TU_ITEM_SHOW_SIDEBAR )){
+													
+													UIFunctions uiFunctions = UIFunctionsManager.getUIFunctions();
+													
+												  	if ( uiFunctions != null ){
+												  		
+												  		uiFunctions.refreshIconBar();
+												  	}
+												}
+											}else{
+												
+												COConfigurationManager.removeParameterListener( name, this );
+											}
+	
+										}
+									});
+																
+								ssb_item.setToolTipID( "v3.MainWindow.menu.view.sidebar" );
+								
+								ssb_item.setDefaultActivationListener(new UIToolBarActivationListener() {
+									@Override
+									public boolean 
+									toolBarItemActivated(
+										ToolBarItem 	item, 
+										long 			activationType,
+									    Object 			datasource) 
+									{	
+										boolean ss = COConfigurationManager.getBooleanParameter( "Show Side Bar" );
+										
+										COConfigurationManager.setParameter( "Show Side Bar", !ss );
+										
+										return( true );
+									}});
+								
+								addItem( tbm, ssb_item );
+							}
+						}
+					}
+					
+					private List<DownloadManager>
+					getDMs(
+						Object		ds )
+					{
+						List<DownloadManager>	result = new ArrayList<>();
+						
+						if ( ds instanceof Download ){
+							
+							result.add( PluginCoreUtils.unwrap((Download)ds));
+							
+						}else if ( ds instanceof Object[]){
+							
+							Object[] objs = (Object[])ds;
+							
+							for ( Object obj: objs ){
+								
+								if ( obj instanceof Download ){
+									
+									result.add( PluginCoreUtils.unwrap((Download)obj));
+								}
+							}
+						}
+						
+						return( result );
+					}
+					
+					private void
+					addItem(
+						UIToolBarManager		tbm,
+						UIToolBarItem			item )
+					{
+						items.add( item );
+						
+						tbm.addToolBarItem( item );
+					}
+					
+					@Override
+					public void
+					UIDetached(
+						UIInstance		instance )
+					{
+						if ( instance.getUIType().equals(UIInstance.UIT_SWT )){
+							
+							attached = false;
+							
+							UIToolBarManager tbm = instance.getToolBarManager();
+							
+							if ( tbm != null){
+								
+								for ( UIToolBarItem item: items ){
+									
+									tbm.removeToolBarItem( item.getID());
+								}
+							}
+							
+							items.clear();
+						}
+					}
+				});
+	}
+	
 	// selected_dl_types -> 0 (determine that automatically), +1 (downloading), +2 (seeding), +3 (mixed - not used by anything yet)
 	public static void fillTorrentMenu(final Menu menu,
 																		 final DownloadManager[] dms, final Core core,
@@ -556,7 +796,7 @@ public class TorrentUtil
 		itemTracker.setMenu(menuTracker);
 		itemExplore.setEnabled(hasSelection);
 		addTrackerTorrentMenu(menuTracker, dms, changeUrl, manualUpdate,
-				allStopped, use_open_containing_folder);
+				allStopped, use_open_containing_folder, fileMove );
 
 		// advanced > files
 
@@ -779,7 +1019,7 @@ public class TorrentUtil
 		Utils.setMenuItemImage(itemArchive, "archive");
 		itemArchive.addListener(SWT.Selection, new ListenerDMTask(dms) {
 			@Override
-			public void run(DownloadManager dm) {
+			public void run(DownloadManager[] todo) {
 				ManagerUtils.moveToArchive( ar_dms, null );
 			}
 		});
@@ -1095,15 +1335,15 @@ public class TorrentUtil
 		// Advanced > Pause For..
 		if (userMode > 0) {
 
-			boolean can_pause = false;
+			boolean can_pause_for = false;
 
 			for (int i = 0; i < dms.length; i++) {
 
 				DownloadManager dm = dms[i];
 
-				if (ManagerUtils.isPauseable(dm)) {
+				if ( dm.isPaused() || ManagerUtils.isPauseable(dm)) {
 
-					can_pause = true;
+					can_pause_for = true;
 
 					break;
 				}
@@ -1111,7 +1351,7 @@ public class TorrentUtil
 
 			final MenuItem itemPauseFor = new MenuItem(menuAdvanced, SWT.PUSH);
 
-			itemPauseFor.setEnabled(can_pause);
+			itemPauseFor.setEnabled(can_pause_for);
 
 			Messages.setLanguageText(itemPauseFor,
 					"MainWindow.menu.transfers.pausetransfersfor");
@@ -1206,7 +1446,7 @@ public class TorrentUtil
 
 					Map<String, String> properties = new HashMap<>();
 
-					properties.put(ShareManager.PR_PERSONAL, "true");
+					Utils.setPeronalShare( properties );;
 
 					if (file.isFile()) {
 
@@ -1219,21 +1459,22 @@ public class TorrentUtil
 				}
 			});
 
-			// XXX: Takes a very long time with many files..
-			/*
+
 			boolean	can_share_pers = dms.length > 0;
 
 			for ( DownloadManager dm: dms ){
 
-				if ( !( dm.isDownloadComplete( true ) && dm.filesExist( true ))){
+				File file = dm.getSaveLocation();
 
+				if ( !file.exists()){
+					
 					can_share_pers = false;
+					
 					break;
 				}
 			}
 
 			itemPersonalShare.setEnabled( can_share_pers );
-			*/
 		}
 
 		// ---
@@ -1571,7 +1812,7 @@ public class TorrentUtil
 
 			DownloadManager dm = dms[i];
 
-			if (ManagerUtils.isPauseable(dm)) {
+			if ( dm.isPaused() || ManagerUtils.isPauseable(dm)) {
 
 				dms_to_pause.add(dm);
 			}
@@ -1772,7 +2013,7 @@ public class TorrentUtil
 
 	protected static void addTrackerTorrentMenu(final Menu menuTracker,
 			final DownloadManager[] dms, boolean changeUrl, boolean manualUpdate,
-			boolean allStopped, final boolean use_open_containing_folder) {
+			boolean allStopped, final boolean use_open_containing_folder, boolean canMove) {
 		
 		Shell shell = Utils.findAnyShell();
 		
@@ -2166,6 +2407,20 @@ public class TorrentUtil
 		});
 		itemTorrentDL.setEnabled(dms.length == 1);
 
+			// move torrent
+		
+		final MenuItem itemFileMoveTorrent = new MenuItem(menuTracker, SWT.PUSH);
+		Messages.setLanguageText(itemFileMoveTorrent,
+				"MyTorrentsView.menu.movetorrent");
+		itemFileMoveTorrent.addListener(SWT.Selection,
+				new ListenerDMTask(dms) {
+					@Override
+					public void run(DownloadManager[] dms) {
+						TorrentUtil.moveTorrentFile(shell, dms);
+					}
+				});
+		itemFileMoveTorrent.setEnabled(canMove);
+		
 			// switch torrent
 		
 		final MenuItem itemTorrentSwitch = new MenuItem(menuTracker, SWT.PUSH);
@@ -2494,7 +2749,7 @@ public class TorrentUtil
 		}
 	}
 	
-	public static void repositionManual(final TableView tv,
+	public static void repositionManual(final TableView<DownloadManager> tv,
 			final DownloadManager[] dms, final Shell shell,
 			final boolean isSeedingView) {
 		SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
@@ -2519,14 +2774,11 @@ public class TorrentUtil
 				}
 
 				Core core = CoreFactory.getSingleton();
+				
 				if (core == null) {
 					return;
 				}
-				int size = core.getGlobalManager().downloadManagerCount(
-						isSeedingView);
-				if (newPosition > size)
-					newPosition = size;
-
+				
 				if (newPosition <= 0) {
 					MessageBox mb = new MessageBox(shell, SWT.ICON_ERROR | SWT.OK);
 					mb.setText(MessageText.getString("MyTorrentsView.dialog.NumberError.title"));
@@ -2586,6 +2838,7 @@ public class TorrentUtil
 				if (category.getType() == Category.TYPE_USER) {
 					final MenuItem itemCategory = new MenuItem(menuCategory, SWT.PUSH);
 					itemCategory.setText(category.getName());
+					TagUIUtils.setMenuIcon( itemCategory, categories[i] ); 
 					itemCategory.addListener(SWT.Selection, new ListenerDMTask(dms) {
 						@Override
 						public void run(DownloadManager dm) {
@@ -2617,35 +2870,134 @@ public class TorrentUtil
 		});
 
 	}
-
-	private static void moveSelectedTorrentsTo(TableView tv,
-			DownloadManager[] dms, int iNewPos) {
-		if (dms == null || dms.length == 0) {
+	
+	private static void 
+	moveSelectedTorrentsTo(
+		TableView<DownloadManager> 	tv,
+		DownloadManager[] 			selected_dms, 
+		int 						iNewPos ) 
+	{
+		if ( selected_dms == null || selected_dms.length == 0 ){
+			
 			return;
 		}
-
-		TableColumnCore sortColumn = tv == null ? null : tv.getSortColumn();
-		boolean isSortAscending = sortColumn == null ? true
-				: sortColumn.isSortAscending();
-
-		for (int i = 0; i < dms.length; i++) {
-			DownloadManager dm = dms[i];
-			int iOldPos = dm.getPosition();
-
-			dm.getGlobalManager().moveTo(dm, iNewPos);
-			if (isSortAscending) {
-				if (iOldPos > iNewPos)
-					iNewPos++;
-			} else {
-				if (iOldPos < iNewPos)
-					iNewPos--;
+		
+			// managers might be both incomplete and complete (coming from simple library view) so best
+			// solution is to split and treat separately (obviously iNewPos doesn't really make sense to both
+			// but whatever...)
+		
+		GlobalManager gm = selected_dms[0].getGlobalManager();
+				
+		List<DownloadManager>	selected_incomplete = new ArrayList<>();
+		List<DownloadManager>	selected_complete	= new ArrayList<>();
+		
+		for ( DownloadManager dm: selected_dms ){
+			
+			if ( dm.isDownloadComplete( false )){
+				selected_complete.add( dm );
+			}else{
+				selected_incomplete.add( dm );
 			}
 		}
+		
+		List<DownloadManager> all_dms = gm.getDownloadManagers();
 
-		if (tv != null) {
-			boolean bForceSort = sortColumn.getName().equals("#");
-			tv.columnInvalidate("#");
-			tv.refreshTable(bForceSort);
+		List<DownloadManager>	all_incomplete	= new ArrayList<>();
+		List<DownloadManager>	all_complete	= new ArrayList<>();
+		
+		for ( DownloadManager dm: all_dms ){
+			
+			if ( dm.isDownloadComplete( false )){
+				all_complete.add( dm );
+			}else{
+				all_incomplete.add( dm );
+			}
+		}
+		
+		if ( !selected_incomplete.isEmpty()){
+			
+			moveSelectedTorrentsTo( gm, all_incomplete, selected_incomplete, iNewPos );
+		}
+		
+		if ( !selected_complete.isEmpty()){
+			
+			moveSelectedTorrentsTo( gm, all_complete, selected_complete, iNewPos );
+		}
+	
+		TableColumnCore sortColumn = tv.getSortColumn();
+
+		boolean bForceSort = sortColumn.getName().equals("#");
+		
+		tv.columnInvalidate("#");
+		
+		tv.refreshTable(bForceSort);
+	}
+	
+
+	private static void 
+	moveSelectedTorrentsTo(
+		GlobalManager				gm,
+		List<DownloadManager>		all_dms, 
+		List<DownloadManager>		selected_dms,
+		int 						iNewPos ) 
+	{		
+		int num_selected = selected_dms.size();
+	
+		// selected downloads are in the required order relative to iNewPos
+		// problem is that some of the selection's positions might screw things up - if you put download X in the right location
+		// and then go to position Y next, but Y happens to be before X in the list, then X will be shunted down into the wrong place
+		// when Y is removed
+		// easiest fix is to fill positions < iNewPos before moving downloads into place
+		 
+		int num_dms = all_dms.size();
+		
+		if ( iNewPos > num_dms ){
+		
+				// invalid index -> end of selection ends up a max
+			
+			iNewPos = num_dms - num_selected + 1;
+		}
+		
+		if ( iNewPos > 1 ){
+						
+			all_dms.sort(
+				new Comparator<DownloadManager>()
+				{
+					@Override
+					public int compare(DownloadManager o1, DownloadManager o2){
+						return( o1.getPosition() - o2.getPosition());
+					}
+				});
+			
+			IdentityHashSet<DownloadManager> moving = new IdentityHashSet<>( selected_dms );
+			
+			int pos		= 1;
+			int to_move = iNewPos-1;
+			
+			for ( DownloadManager dm: all_dms ){
+							
+				if ( !moving.contains( dm )){
+					
+					gm.moveTo( dm, pos++ );
+					
+					to_move--;
+					
+					if ( to_move == 0 ){
+						
+						break;
+					}
+				}
+			}
+		}
+				
+		for ( DownloadManager dm: selected_dms ){
+			
+			gm.moveTo(dm, iNewPos++);
+
+			if ( iNewPos > num_dms ){
+				
+				iNewPos = 1;
+			}
 		}
 	}
 
@@ -2812,6 +3164,10 @@ public class TorrentUtil
 	}
 
 	public static void stopOrStartDataSources(Object[] datasources) {
+		stopOrStartDataSources(datasources,false);
+	}
+	
+	public static void stopOrStartDataSources(Object[] datasources,boolean force_or_pause) {
 		DownloadManager[] dms = toDMS(datasources);
 		DiskManagerFileInfo[] dmfi = toDMFI(datasources);
 		if (dms.length == 0 && dmfi.length == 0) {
@@ -2819,16 +3175,23 @@ public class TorrentUtil
 		}
 		boolean doStop = shouldStopGroup(datasources);
 		if (doStop) {
-			stopDataSources(datasources);
+			stopDataSources(datasources, force_or_pause);
 		} else {
-			queueDataSources(datasources, true);
+			queueDataSources(datasources, true, force_or_pause);
 		}
 	}
 
 	public static void stopDataSources(Object[] datasources) {
+		stopDataSources(datasources,false);
+	}
+	public static void stopDataSources(Object[] datasources, boolean pause) {
 		DownloadManager[] dms = toDMS(datasources);
 		for (DownloadManager dm : dms) {
-			ManagerUtils.stop(dm, null);
+			if (pause){
+				ManagerUtils.pause(dm, null);
+			}else{
+				ManagerUtils.stop(dm, null);
+			}
 		}
 		DiskManagerFileInfo[] fileInfos = toDMFI(datasources);
 		if (fileInfos.length > 0) {
@@ -2846,9 +3209,18 @@ public class TorrentUtil
 
 	public static void queueDataSources(Object[] datasources,
 			boolean startStoppedParents) {
+		queueDataSources( datasources, startStoppedParents, false );
+	}
+	
+	public static void queueDataSources(Object[] datasources,
+			boolean startStoppedParents, boolean force) {
 		DownloadManager[] dms = toDMS(datasources);
 		for (DownloadManager dm : dms) {
-			ManagerUtils.queue(dm, null);
+			if ( force ){
+				dm.setForceStart( true );
+			}else{
+				ManagerUtils.queue(dm, null);
+			}
 		}
 		DiskManagerFileInfo[] fileInfos = toDMFI(datasources);
 		if (fileInfos.length > 0) {
@@ -2858,7 +3230,11 @@ public class TorrentUtil
 			if (startStoppedParents) {
 				for (DiskManagerFileInfo fileInfo : fileInfos) {
 					if (fileInfo.getDownloadManager().getState() == DownloadManager.STATE_STOPPED) {
-						ManagerUtils.queue(fileInfo.getDownloadManager(), null);
+						if ( force ){
+							fileInfo.getDownloadManager().setForceStart( true );
+						}else{
+							ManagerUtils.queue(fileInfo.getDownloadManager(), null);
+						}
 					}
 				}
 			}
@@ -2900,7 +3276,10 @@ public class TorrentUtil
 		text_entry.setTitle(msg_key_prefix + "title");
 		text_entry.setMessage(msg_key_prefix + "message");
 		text_entry.setPreenteredText(suggested, false);
+		text_entry.setWidthHint( 500 );
+		text_entry.setLineHeight( 10 );
 		text_entry.setMultiLine(true);
+		text_entry.setResizeable( true );
 		text_entry.prompt(new UIInputReceiverListener() {
 			@Override
 			public void UIInputReceiverClosed(UIInputReceiver text_entry) {
@@ -2943,6 +3322,7 @@ public class TorrentUtil
 		text_entry.setMessage(msg_key_prefix + "message");
 		text_entry.setPreenteredText(desc, false);
 		text_entry.setMultiLine(true);
+		text_entry.setResizeable( true );
 		text_entry.setWidthHint( 500 );
 		text_entry.setLineHeight( 16 );
 		text_entry.prompt(new UIInputReceiverListener() {
@@ -3241,8 +3621,12 @@ public class TorrentUtil
 		boolean canStop = false;
 		boolean canRemoveFileInfo = false;
 		boolean canRunFileInfo = false;
+		boolean canCheckExist = false;
+		
 		boolean hasDM = false;
 
+		boolean canRecheck = false;
+		
 		if (currentContent.length > 0 && hasRealDM) {
 
 				// well, in fact, we can have hasRealDM set to true here (because tv isn't null) and actually not have a real dm.
@@ -3251,6 +3635,9 @@ public class TorrentUtil
 			boolean canMoveUp = false;
 			boolean canMoveDown = false;
 			boolean canDownload = false;
+			
+			canCheckExist = true;
+			
 			GlobalManager gm = null;
 			for (int i = 0; i < currentContent.length; i++) {
 				ISelectedContent content = currentContent[i];
@@ -3265,6 +3652,12 @@ public class TorrentUtil
 					gm = dm.getGlobalManager();
 				}
 
+				int state = dm.getState();
+				
+				canCheckExist &= (	state == DownloadManager.STATE_ERROR ||
+									state == DownloadManager.STATE_STOPPED || 
+									state == DownloadManager.STATE_QUEUED );
+				
 				int fileIndex = content.getFileIndex();
 				if (fileIndex == -1) {
 					if (!canMoveUp && gm.isMoveableUp(dm)) {
@@ -3309,25 +3702,23 @@ public class TorrentUtil
 						}
 					}
 				}
+				
+				canRecheck = canRecheck || dm.canForceRecheck();
 			}
 
 			boolean canRemove = hasDM || canRemoveFileInfo;
+			
+			mapNewToolbarStates.put("remove", canRemove ? UIToolBarItem.STATE_ENABLED : 0);
 
-			mapNewToolbarStates.put("remove", canRemove ? UIToolBarItem.STATE_ENABLED
-					: 0);
-
-			mapNewToolbarStates.put("download", canDownload ? UIToolBarItem.STATE_ENABLED
-					: 0);
+			mapNewToolbarStates.put("download", canDownload ? UIToolBarItem.STATE_ENABLED : 0);
 
 			// actually we roll the dm indexes when > 1 selected and we get
 			// to the top/bottom, so only enforce this for single selection :)
 
 			if (currentContent.length == 1) {
-				mapNewToolbarStates.put("up", canMoveUp ? UIToolBarItem.STATE_ENABLED
-						: 0);
-				mapNewToolbarStates.put("down", canMoveDown
-						? UIToolBarItem.STATE_ENABLED : 0);
-			}
+				mapNewToolbarStates.put("up", canMoveUp ? UIToolBarItem.STATE_ENABLED : 0);
+				mapNewToolbarStates.put("down", canMoveDown	? UIToolBarItem.STATE_ENABLED : 0);
+			}			
 		}
 
 		boolean canRun = has1Selection
@@ -3406,6 +3797,13 @@ public class TorrentUtil
 			}
 		}
 
+		mapNewToolbarStates.put( TU_ITEM_RECHECK, canRecheck ? UIToolBarItem.STATE_ENABLED : 0);
+		mapNewToolbarStates.put( TU_ITEM_CHECK_FILES, canCheckExist ? UIToolBarItem.STATE_ENABLED : 0);
+		
+		boolean ss = COConfigurationManager.getBooleanParameter( "Show Side Bar" );
+		
+		mapNewToolbarStates.put( TU_ITEM_SHOW_SIDEBAR, UIToolBarItem.STATE_ENABLED | (ss?UIToolBarItem.STATE_DOWN:0));
+
 		return mapNewToolbarStates;
 	}
 
@@ -3418,6 +3816,7 @@ public class TorrentUtil
 			final AERunnable deleteFailed, final boolean forcePrompt) {
 
 		TorrentUtils.runTorrentDelete(
+			dms,
 			new Runnable()
 			{
 				@Override
@@ -3511,7 +3910,9 @@ public class TorrentUtil
 
 				final int index = i;
 
-				TorrentUtils.startTorrentDelete();
+				DownloadManager[] current_dms = dms.clone();
+				
+				TorrentUtils.startTorrentDelete( current_dms );
 
 				final boolean[] endDone = { false };
 
@@ -3533,7 +3934,7 @@ public class TorrentUtil
 
 									if ( !endDone[0] ){
 
-										TorrentUtils.endTorrentDelete();
+										TorrentUtils.endTorrentDelete( current_dms );
 
 										endDone[0] = true;
 									}
@@ -3549,7 +3950,7 @@ public class TorrentUtil
 
 						if ( !endDone[0] ){
 
-							TorrentUtils.endTorrentDelete();
+							TorrentUtils.endTorrentDelete( dms );
 
 							endDone[0] = true;
 						}
@@ -3569,6 +3970,7 @@ public class TorrentUtil
 			final boolean deleteTorrent) {
 
 		TorrentUtils.runTorrentDelete(
+				dms,
 				new Runnable()
 				{
 					@Override

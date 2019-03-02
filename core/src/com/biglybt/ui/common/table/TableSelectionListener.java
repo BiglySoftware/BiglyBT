@@ -29,9 +29,30 @@ public interface TableSelectionListener
 
 	public void deselected(TableRowCore[] rows);
 
+		/**
+		 * Use this instead of selected/deselected if it makes more sense
+		 * @param old_rows
+		 * @param new_rows
+		 */
+	
+	public default void
+	selectionChanged(
+		TableRowCore[] 		selected_rows,
+		TableRowCore[] 		deselected_rows )
+	{	
+	}
+	
 	public void focusChanged(TableRowCore focus);
 
-	public void defaultSelected(TableRowCore[] rows, int stateMask);
+	default public void defaultSelected(TableRowCore[] rows, int stateMask )
+	{
+		System.err.println( new Exception( "Implement one of the two defaultSelected methods" ));
+	}
+
+	default public void defaultSelected(TableRowCore[] rows, int stateMask, int orgin )
+	{
+		defaultSelected( rows, stateMask );
+	}
 
 	public void mouseEnter(TableRowCore row);
 

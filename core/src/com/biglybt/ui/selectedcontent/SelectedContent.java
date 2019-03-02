@@ -133,8 +133,33 @@ public class SelectedContent implements ISelectedContent
 
 	// @see ISelectedContent#getDisplayName()
 	@Override
-	public String getDisplayName() {
-		return displayName;
+	public String 
+	getDisplayName() 
+	{
+		String 	str = displayName;
+		
+		if ( displayName == null || displayName.isEmpty()){
+			
+			if ( dm != null ){
+			
+				str = dm.getDisplayName();
+				
+			}else if ( torrent != null ){
+				
+				str = new String( torrent.getName());
+				
+			}else if ( downloadInfo != null ){
+				
+				str = downloadInfo.getDownloadURL();
+			}
+			
+			if ( file_index >= 0 ){
+				
+				str += " (file=" + file_index + ")";
+			}
+		}
+		
+		return( str );
 	}
 
 	// @see ISelectedContent#setDisplayName(java.lang.String)

@@ -1651,8 +1651,12 @@ DHTTransportUDPImpl
 
 							requestSendReplyProcessor( contact, handler, packet, elapsed_time );
 
-							receiveAltContacts((DHTUDPPacketReplyPing)packet );
+							DHTUDPPacketReplyPing reply = (DHTUDPPacketReplyPing)packet;
+							
+							receiveAltContacts( reply );
 
+							DHTUDPUtils.receiveUploadStats( contact, reply.getUploadStats());
+							
 							stats.pingOK();
 
 							long	proc_time = packet.getProcessingTime();
@@ -2144,11 +2148,13 @@ DHTTransportUDPImpl
 									throw( new Exception( "connection id mismatch: sender=" + from_address + ",packet=" + packet.getString()));
 								}
 
-								contact.setInstanceIDAndVersion( packet.getTargetInstanceID(), packet.getProtocolVersion());
-
+								contact.setInstanceIDAndVersion( packet.getTargetInstanceID(), packet.getProtocolVersion());						
+								
 								requestSendReplyProcessor( contact, handler, packet, elapsed_time );
 
 								DHTUDPPacketReplyStore	reply = (DHTUDPPacketReplyStore)packet;
+
+								DHTUDPUtils.receiveUploadStats( contact, reply.getUploadStats());
 
 								stats.storeOK();
 
@@ -2898,6 +2904,8 @@ outer:
 
 						DHTUDPPacketRequestPing ping = (DHTUDPPacketRequestPing)request;
 
+						DHTUDPUtils.receiveUploadStats( originating_contact, ping.getUploadStats());
+
 						DHTUDPPacketReplyPing	reply =
 							new DHTUDPPacketReplyPing(
 									this,
@@ -2906,7 +2914,7 @@ outer:
 									originating_contact );
 
 						sendAltContacts( ping, reply );
-
+						
 						requestReceiveReplyProcessor( originating_contact, reply );
 
 						packet_handler_stub.send( reply, request.getAddress());
@@ -3102,6 +3110,8 @@ outer:
 
 							request_handler.setTransportEstimatedDHTSize( find_request.getEstimatedDHTSize());
 						}
+
+						DHTUDPUtils.receiveUploadStats( originating_contact, find_request.getUploadStats());
 
 						DHTTransportContact[]	res =
 							request_handler.findNodeRequest(

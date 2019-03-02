@@ -91,7 +91,7 @@ public class WelcomeWindow {
 
     cWhatsNew = new Composite(shell, SWT.BORDER);
     data = new GridData(GridData.FILL_BOTH);
-    Utils.setLayoutData(cWhatsNew, data);
+    cWhatsNew.setLayoutData(data);
     cWhatsNew.setLayout(new FillLayout());
 
     Button bClose = new Button(shell,SWT.PUSH);
@@ -99,7 +99,7 @@ public class WelcomeWindow {
     data = new GridData();
     data.widthHint = 70;
     data.horizontalAlignment = Constants.isOSX ? SWT.CENTER : SWT.RIGHT;
-    Utils.setLayoutData(bClose, data);
+    bClose.setLayoutData(data);
 
     Listener closeListener = new Listener() {
       @Override

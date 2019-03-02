@@ -31,10 +31,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -83,9 +80,8 @@ public class ConfigSectionInterfaceTables
 
 	@Override
 	public Composite configSectionCreate(final Composite parent) {
-		int userMode = COConfigurationManager.getIntParameter("User Mode");
-		boolean isAZ3 = COConfigurationManager.getStringParameter("ui").equals(
-				"az3");
+		int userMode = Utils.getUserMode();
+		boolean isAZ3 = Utils.isAZ3UI();
 
 		// "Display" Sub-Section:
 		// ----------------------
@@ -95,7 +91,7 @@ public class ConfigSectionInterfaceTables
 		GridLayout layout;
 		GridData gridData;
 		Composite cSection = new Composite(parent, SWT.NULL);
-		Utils.setLayoutData(cSection, new GridData(GridData.FILL_BOTH));
+		cSection.setLayoutData(new GridData(GridData.FILL_BOTH));
 		layout = new GridLayout();
 		layout.numColumns = 1;
 		cSection.setLayout(layout);
@@ -106,23 +102,28 @@ public class ConfigSectionInterfaceTables
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			cGeneral.setLayout(layout);
-			Utils.setLayoutData(cGeneral, new GridData( GridData.FILL_HORIZONTAL ));
+			cGeneral.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
 			label = new Label(cGeneral, SWT.NULL);
 			Messages.setLanguageText(label, "ConfigView.section.style.defaultSortOrder");
 			int[] sortOrderValues = {
 				0,
 				1,
-				2
+				2,
+				3
 			};
 			String[] sortOrderLabels = {
 				MessageText.getString("ConfigView.section.style.defaultSortOrder.asc"),
 				MessageText.getString("ConfigView.section.style.defaultSortOrder.desc"),
-				MessageText.getString("ConfigView.section.style.defaultSortOrder.flip")
+				MessageText.getString("ConfigView.section.style.defaultSortOrder.flip"),
+				MessageText.getString("ConfigView.section.style.defaultSortOrder.same")
 			};
 			new IntListParameter(cGeneral, "config.style.table.defaultSortOrder",
 					sortOrderLabels, sortOrderValues);
 
+			new BooleanParameter(cGeneral, "Table.sort.intuitive", "ConfigView.section.table.sort.intuitive").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
+					true, false, 2, 1));
+			
 			if (userMode > 0) {
 				label = new Label(cGeneral, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.section.style.guiUpdate");
@@ -152,7 +153,7 @@ public class ConfigSectionInterfaceTables
 					"10 s",
 					"15 s"
 				};
-				new IntListParameter(cGeneral, "GUI Refresh", 1000, labels, values);
+				new IntListParameter(cGeneral, "GUI Refresh", labels, values);
 
 				label = new Label(cGeneral, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.section.style.graphicsUpdate");
@@ -210,7 +211,7 @@ public class ConfigSectionInterfaceTables
 				Messages.setLanguageText(chkCustomDate, "ConfigView.section.style.customDateFormat");
 				chkCustomDate.setSelection(cdEnabled);
 
-				final StringParameter paramCustomDate = new StringParameter(cGeneral, "Table.column.dateformat", "");
+				final StringParameter paramCustomDate = new StringParameter(cGeneral, "Table.column.dateformat");
 				paramCustomDate.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 				paramCustomDate.setEnabled(cdEnabled);
 				paramCustomDate.addChangeListener(new ParameterChangeAdapter() {
@@ -247,6 +248,10 @@ public class ConfigSectionInterfaceTables
 					public void widgetDefaultSelected(SelectionEvent e) {
 					}
 				});
+				
+				new BooleanParameter(cGeneral, "Table.tooltip.disable", "ConfigView.section.table.disable.tooltips").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
+						true, false, 2, 1));
+
 			}
 		}
 
@@ -256,7 +261,7 @@ public class ConfigSectionInterfaceTables
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			cLibrary.setLayout(layout);
-			Utils.setLayoutData(cLibrary, new GridData( GridData.FILL_HORIZONTAL ));
+			cLibrary.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
 				// User tree
 
@@ -283,8 +288,18 @@ public class ConfigSectionInterfaceTables
 
 			if (isAZ3) {
 
-				new BooleanParameter(cLibrary, "Library.TagInSideBar", "ConfigView.section.style.TagInSidebar").setLayoutData(new GridData(SWT.FILL,
-								SWT.LEFT, true, false, 2, 1));
+				BooleanParameter show_tags = new BooleanParameter(cLibrary, "Library.TagInSideBar", "ConfigView.section.style.TagInSidebar");
+				
+				show_tags.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false, 2, 1));
+				
+				
+				BooleanParameter show_tag_groups =new BooleanParameter(cLibrary, "Library.TagGroupsInSideBar", "ConfigView.section.style.TagGroupsInSidebar");
+
+				gridData = new GridData(SWT.FILL,SWT.LEFT, true, false, 2, 1);
+				gridData.horizontalIndent = 25;
+				show_tag_groups.setLayoutData( gridData );
+				
+				show_tags.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( show_tag_groups ));
 			}
 
 			BooleanParameter show_tag = new BooleanParameter(cLibrary, "Library.ShowTagButtons", "ConfigView.section.style.ShowTagButtons");
@@ -297,20 +312,44 @@ public class ConfigSectionInterfaceTables
 			gridData.horizontalIndent = 25;
 			show_tag_comp_only.setLayoutData( gridData );
 
+
+			BooleanParameter tag_inclusive =new BooleanParameter(cLibrary, "Library.ShowTagButtons.Inclusive", "ConfigView.section.style.ShowTagButtons.Inclusive");
+
+			gridData = new GridData(SWT.FILL,SWT.LEFT, true, false, 2, 1);
+			gridData.horizontalIndent = 25;
+			tag_inclusive.setLayoutData( gridData );
+
+			
 			show_tag.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( show_tag_comp_only ));
+			show_tag.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( tag_inclusive ));
 
-			if (isAZ3) {
-
-				new BooleanParameter(cLibrary, "Library.ShowTabsInTorrentView", "ConfigView.section.style.ShowTabsInTorrentView").setLayoutData(new GridData(SWT.FILL,
+			new BooleanParameter(cLibrary, "Library.ShowTabsInTorrentView", "ConfigView.section.style.ShowTabsInTorrentView").setLayoutData(new GridData(SWT.FILL,
 								SWT.LEFT, true, false, 2, 1));
-			}
+		
 
-			new BooleanParameter(cLibrary, "Library.showFancyMenu", true, "ConfigView.section.style.ShowFancyMenu").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
+				// split mode
+			
+			label = new Label(cLibrary, SWT.NULL);
+			Messages.setLanguageText(label, "ConfigView.library.split.mode");
+
+			
+			String 	spltLabels[] 	= new String[4];
+			int 	splitValues[] 	= new int[spltLabels.length];
+
+			for (int i = 0; i < spltLabels.length; i++) {
+
+				spltLabels[i] 	= MessageText.getString( "ConfigView.library.split." + i );
+				splitValues[i] 	= i;
+			}
+			
+			new IntListParameter( cLibrary, "Library.TorrentViewSplitMode", spltLabels, splitValues );
+				
+				// fancy menu
+			
+			new BooleanParameter(cLibrary, "Library.showFancyMenu",  "ConfigView.section.style.ShowFancyMenu").setLayoutData(new GridData(SWT.FILL, SWT.LEFT,
 					true, false, 2, 1));
 
-
-
-			// double-click
+				// double-click
 
 			label = new Label(cLibrary, SWT.NULL);
 			Messages.setLanguageText(label, "ConfigView.label.dm.dblclick");
@@ -343,7 +382,7 @@ public class ConfigSectionInterfaceTables
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.horizontalSpan = 2;
 			gridData.horizontalIndent = 25;
-			Utils.setLayoutData(cLaunchWeb, gridData);
+			cLaunchWeb.setLayoutData(gridData);
 
 			BooleanParameter web_in_browser =
 					new BooleanParameter(cLaunchWeb, "Library.LaunchWebsiteInBrowser", "library.launch.web.in.browser");
@@ -353,6 +392,32 @@ public class ConfigSectionInterfaceTables
 
 			web_in_browser.setAdditionalActionPerformer( new ChangeSelectionActionPerformer( web_in_browser_anon ));
 
+				// enter action
+			
+			label = new Label(cLibrary, SWT.NULL);
+			Messages.setLanguageText(label, "ConfigView.label.dm.enteraction");
+
+			String[] enterOptions = {
+				"ConfigView.option.dm.enter.sameasdblclick",
+				"ConfigView.option.dm.dblclick.play",
+				"ConfigView.option.dm.dblclick.details",
+				"ConfigView.option.dm.dblclick.show",
+				"ConfigView.option.dm.dblclick.launch",
+				"ConfigView.option.dm.dblclick.launch.qv",
+				"ConfigView.option.dm.dblclick.open.browser",
+			};
+
+			String enterLabels[] = new String[enterOptions.length];
+			String enterValues[] = new String[enterOptions.length];
+
+			for (int i = 0; i < enterOptions.length; i++) {
+
+				enterLabels[i] = MessageText.getString(enterOptions[i]);
+				enterValues[i] = "" + (i-1);
+			}
+			
+			new StringListParameter(cLibrary, "list.dm.enteraction", enterLabels, enterValues);
+			
 				// Launch helpers
 
 			Group cLaunch = new Group(cLibrary, SWT.NULL);
@@ -362,19 +427,19 @@ public class ConfigSectionInterfaceTables
 			cLaunch.setLayout(layout);
 			gridData = new GridData( GridData.FILL_HORIZONTAL );
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cLaunch, gridData);
+			cLaunch.setLayoutData(gridData);
 
-		    Label	info_label = new Label( cLaunch, SWT.WRAP );
-		    Messages.setLanguageText( info_label, "ConfigView.label.lh.info" );
-		    gridData = Utils.getWrappableLabelGridData(5, GridData.HORIZONTAL_ALIGN_FILL );
-		    Utils.setLayoutData(info_label,  gridData );
+			Label	info_label = new Label( cLaunch, SWT.WRAP );
+			Messages.setLanguageText( info_label, "ConfigView.label.lh.info" );
+			gridData = Utils.getWrappableLabelGridData(5, GridData.HORIZONTAL_ALIGN_FILL );
+			info_label.setLayoutData(gridData);
 
 			for ( int i=0;i<4;i++){
 
 				label = new Label(cLaunch, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.label.lh.ext");
 
-				StringParameter exts = new StringParameter(cLaunch, "Table.lh" + i + ".exts", "");
+				StringParameter exts = new StringParameter(cLaunch, "Table.lh" + i + ".exts");
 				gridData = new GridData();
 				gridData.widthHint = 200;
 				exts.setLayoutData( gridData );
@@ -382,7 +447,7 @@ public class ConfigSectionInterfaceTables
 				label = new Label(cLaunch, SWT.NULL);
 				Messages.setLanguageText(label, "ConfigView.label.lh.prog");
 
-				final FileParameter prog = new FileParameter(cLaunch, "Table.lh" + i + ".prog", "", new String[0]);
+				final FileParameter prog = new FileParameter(cLaunch, "Table.lh" + i + ".prog", new String[0]);
 
 				gridData = new GridData();
 				gridData.widthHint = 400;
@@ -468,7 +533,7 @@ public class ConfigSectionInterfaceTables
 			layout = new GridLayout();
 			layout.numColumns = 2;
 			cSeachSubs.setLayout(layout);
-			Utils.setLayoutData(cSeachSubs, new GridData( GridData.FILL_HORIZONTAL ));
+			cSeachSubs.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
 
 			new BooleanParameter(

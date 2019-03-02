@@ -129,6 +129,11 @@ DiskManagerFileInfoDelegate
 	}
 
 	@Override
+	public long getLastModified(){
+		return( delegate.getLastModified());
+	}
+	
+	@Override
 	public long
 	getLength()
 	{

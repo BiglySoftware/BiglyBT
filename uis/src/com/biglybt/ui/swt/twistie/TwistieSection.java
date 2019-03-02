@@ -24,6 +24,8 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
+import com.biglybt.ui.swt.Utils;
+
 public class TwistieSection
 	extends Composite
 	implements ITwistieConstants
@@ -168,7 +170,7 @@ public class TwistieSection
 	@Override
 	public void setToolTipText(String string) {
 		if (null != label && !label.isDisposed()) {
-			label.setToolTipText(string);
+			Utils.setTT(label,string);
 		}
 	}
 

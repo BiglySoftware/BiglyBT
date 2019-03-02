@@ -1330,14 +1330,15 @@ CacheFileWithCache
 	@Override
 	public void
 	moveFile(
-		File		new_file )
+		File						new_file,
+		FileUtil.ProgressListener	pl )
 
 		throws CacheFileManagerException
 	{
 		try{
 			flushCachePublic( true, -1 );
 
-			file.moveFile( new_file );
+			file.moveFile( new_file, pl );
 
 		}catch( FMFileManagerException e ){
 
@@ -1708,6 +1709,24 @@ CacheFileWithCache
 		}
 	}
 
+	public void
+	flushCache(
+		long		file_position,
+		int			length )
+
+		throws CacheFileManagerException
+	{
+		try{
+			flushCache( file_position, length, false, -1, 0, -1 );
+			
+			file.flush();
+
+		}catch( FMFileManagerException e ){
+
+			manager.rethrow(this,e);
+		}
+	}
+	
 	@Override
 	public void
 	clearCache()
@@ -1778,6 +1797,13 @@ CacheFileWithCache
 		return( bytes_written );
 	}
 
+	@Override
+	public long
+	getLastModified()
+	{
+		return( file.getLastModified());
+	}
+	
 	@Override
 	public void
 	delete()

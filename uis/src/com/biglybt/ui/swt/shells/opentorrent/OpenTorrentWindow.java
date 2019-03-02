@@ -261,7 +261,7 @@ public class OpenTorrentWindow
 			};
 		}
 
-		TorrentOpener.openTorrentsFromStrings(new TorrentOpenOptions(), parent, null, lines, newReferrer,
+		TorrentOpener.openTorrentsFromStrings(new TorrentOpenOptions( null ), parent, null, lines, newReferrer,
 				this, false);
 	}
 
@@ -608,7 +608,7 @@ public class OpenTorrentWindow
 		if (state == TorrentDownloader.STATE_INIT) {
 		} else if (state == TorrentDownloader.STATE_FINISHED) {
 			File file = inf.getFile();
-			TorrentOpenOptions torrentOptions = new TorrentOpenOptions();
+			TorrentOpenOptions torrentOptions = new TorrentOpenOptions( null );
 			if (!TorrentOpener.mergeFileIntoTorrentInfo(file.getAbsolutePath(),
 					inf.getURL(), torrentOptions)) {
 				if (file.exists())
@@ -660,7 +660,7 @@ public class OpenTorrentWindow
 				&& btnPasteOpen.isVisible() != bTorrentInClipboard) {
 			btnPasteOpen.setVisible(bTorrentInClipboard);
 			if (bTorrentInClipboard) {
-				btnPasteOpen.setToolTipText(sClipText);
+				Utils.setTT(btnPasteOpen,sClipText);
 			}
 		}
 

@@ -36,6 +36,8 @@ import java.util.zip.GZIPInputStream;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.category.Category;
+import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFactory;
@@ -50,6 +52,7 @@ import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.torrent.*;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pifimpl.local.utils.resourcedownloader.ResourceDownloaderFactoryImpl;
+import com.biglybt.util.MapUtils;
 
 
 public class
@@ -114,6 +117,7 @@ TorrentUtils
 
 	public static final int TORRENT_FLAG_LOW_NOISE			= 0x00000001;
 	public static final int TORRENT_FLAG_METADATA_TORRENT	= 0x00000002;
+	public static final int TORRENT_FLAG_DISABLE_RCM		= 0x00000004;
 
 	private static final String		TORRENT_AZ_PROP_DHT_BACKUP_ENABLE		= "dht_backup_enable";
 	private static final String		TORRENT_AZ_PROP_DHT_BACKUP_REQUESTED	= "dht_backup_requested";
@@ -123,10 +127,13 @@ TorrentUtils
 	public static final String		TORRENT_AZ_PROP_OBTAINED_FROM			= "obtained_from";
 	private static final String		TORRENT_AZ_PROP_NETWORK_CACHE			= "network_cache";
 	private static final String		TORRENT_AZ_PROP_TAG_CACHE				= "tag_cache";
+	private static final String		TORRENT_AZ_PROP_INITIAL_TAGS			= "initial_tags";
+	private static final String		TORRENT_AZ_PROP_INITIAL_METADATA		= "other_metadata";
 	private static final String		TORRENT_AZ_PROP_PEER_CACHE				= "peer_cache";
 	private static final String		TORRENT_AZ_PROP_PEER_CACHE_VALID		= "peer_cache_valid";
 	public static final String		TORRENT_AZ_PROP_INITIAL_LINKAGE			= "initial_linkage";
 	public static final String		TORRENT_AZ_PROP_INITIAL_LINKAGE2		= "initial_linkage2";
+	public static final String		TORRENT_AZ_PROP_ORIGINAL_HASH			= "original_hash";
 
 	private static final String		MEM_ONLY_TORRENT_PATH		= "?/\\!:mem_only:!\\/?";
 
@@ -146,9 +153,10 @@ TorrentUtils
 			}
 		};
 
-	private static volatile Set<String>		ignore_files_set;
-	private static volatile Set<String>		skip_extensions_set;
-
+	private static Set<String>		ignore_files_set;
+	private static Set<String>		skip_extensions_set;
+	private static Set<Object>		skip_file_set;
+	
 	private static boolean bSaveTorrentBackup;
 
 	private static final CopyOnWriteList<torrentAttributeListener>			torrent_attribute_listeners 	= new CopyOnWriteList<>();
@@ -462,11 +470,28 @@ TorrentUtils
 
 		throws TOTorrentException
 	{
+		return( getTorrentFileName( torrent, true ));
+	}
+	
+	public static String
+	getTorrentFileName(
+		TOTorrent		torrent,
+		boolean			is_mandatory )
+
+		throws TOTorrentException
+	{
     	String str = torrent.getAdditionalStringProperty("torrent filename");
 
     	if ( str == null ){
 
-    		throw( new TOTorrentException("TorrentUtils::getTorrentFileName: no 'torrent filename' attribute defined", TOTorrentException.RT_FILE_NOT_FOUND));
+    		if ( is_mandatory ){
+    		
+    			throw( new TOTorrentException("TorrentUtils::getTorrentFileName: no 'torrent filename' attribute defined", TOTorrentException.RT_FILE_NOT_FOUND));
+    			
+    		}else{
+    			
+    			return( null );
+    		}
     	}
 
     	if ( str.equals( MEM_ONLY_TORRENT_PATH )){
@@ -621,6 +646,14 @@ TorrentUtils
 	getUniqueTrackerHosts(
 		TOTorrent	torrent )
 	{
+		return( getUniqueTrackerHosts( torrent, false ));
+	}
+	
+	public static Set<String>
+	getUniqueTrackerHosts(
+		TOTorrent	torrent,
+		boolean		include_port )
+	{
 		Set<String>	hosts = new HashSet<>();
 
 		if ( torrent != null ){
@@ -633,7 +666,24 @@ TorrentUtils
 
 				if ( host != null ){
 
-					hosts.add( host.toLowerCase( Locale.US ));
+					host = host.toLowerCase( Locale.US );
+					
+					hosts.add( host);
+					
+					if ( include_port ){
+						
+						int port = announce_url.getPort();
+						
+						if ( port == -1 ){
+							
+							port = announce_url.getDefaultPort();
+						}
+						
+						if ( port > 0 ){
+							
+							hosts.add( host + ":" + port );
+						}
+					}
 				}
 			}
 
@@ -651,7 +701,24 @@ TorrentUtils
 
 					if ( host != null ){
 
-						hosts.add( host.toLowerCase( Locale.US ));
+						host = host.toLowerCase( Locale.US );
+						
+						hosts.add( host );
+						
+						if ( include_port ){
+							
+							int port = u.getPort();
+							
+							if ( port == -1 ){
+								
+								port = u.getDefaultPort();
+							}
+							
+							if ( port > 0 ){
+								
+								hosts.add( host + ":" + port );
+							}
+						}
 					}
 				}
 			}
@@ -856,7 +923,86 @@ TorrentUtils
 
 		return( groups );
 	}
-
+	
+	private static List<List<String>>
+	expandTrackerLists(
+		List<List<String>>	groups )
+	{
+		List<List<String>> result = new ArrayList<>();
+		
+		Set<String>	tracker_lists = new HashSet<>();
+		
+		Set<String>	existing = new HashSet<>();
+		
+		for ( List<String> group: groups ){
+		
+			List<String>	new_group = new ArrayList<>();
+			
+			for ( String url: group ){
+				
+				if ( url.startsWith( "trackerlist:" )){
+					
+					tracker_lists.add( url );
+					
+				}else{
+					
+					new_group.add( url );
+											
+					existing.add( UrlUtils.getCanonicalString( url ));
+				}
+			}
+			
+			if ( !new_group.isEmpty()){
+				
+				result.add( new_group );
+			}
+		}
+		
+		if ( !tracker_lists.isEmpty()){
+			
+			for ( String tl: tracker_lists ){
+				
+				try{
+					InputStream is = ResourceDownloaderFactoryImpl.getSingleton().create( new URL( tl )).download();
+				
+					try{
+						String list = FileUtil.readInputStreamAsString( is, 32*1024, "UTF-8" );
+						
+						String[] bits = list.split( "\n" );
+						
+						for ( String bit: bits ){
+							
+							bit = bit.trim();
+							
+							if ( !bit.isEmpty()){
+								
+								bit = UrlUtils.getCanonicalString( bit );
+								
+								if ( !existing.contains( bit )){
+									
+									existing.add( bit );
+										
+									List<String> new_group = new ArrayList<>();
+									
+									new_group.add( bit );
+									
+									result.add( new_group );
+								}
+							}
+						}					
+					}finally{
+						
+						is.close();
+					}
+				}catch( Throwable e ){
+					
+				}
+			}
+		}
+		
+		return( result );
+	}
+	
 		/**
 		 * This method DOES NOT MODIFY THE TORRENT
 		 * @param groups
@@ -869,6 +1015,8 @@ TorrentUtils
 		List<List<String>>		groups,
 		TOTorrent				torrent )
 	{
+		groups = expandTrackerLists( groups );
+
 		List<TOTorrentAnnounceURLSet> sets = new ArrayList<>();
 
 		for ( List<String> group: groups ){
@@ -898,6 +1046,8 @@ TorrentUtils
 		List<List<String>>		groups,
 		TOTorrent				torrent )
 	{
+		groups = expandTrackerLists( groups );
+		
 			// if the new groups no longer contain the main announce url then we replace this with the first in the groups. The primary reason for this
 			// is that the DNS TXT record munging code always considers the announce-url as input to the generation of (potentially) modified URLs and if we
 			// leave the announce-url there it will magically re-appear
@@ -961,7 +1111,8 @@ TorrentUtils
 
 					// hmm, no valid urls at all
 
-				torrent.setAnnounceURL( new URL( NO_VALID_URL_URL ));
+				
+				torrent.setAnnounceURL( getDecentralisedURL( torrent ));
 
 			}else{
 
@@ -1294,7 +1445,7 @@ TorrentUtils
 		removeSet.add( NO_VALID_URL_URL );	// this results in removal of this dummy url if present
 		for ( List<String> l: remove_urls ){
 			for ( String s: l ){
-				removeSet.add( s.toLowerCase( Locale.US ));
+				removeSet.add( UrlUtils.getCanonicalString( s.toLowerCase( Locale.US )));
 			}
 		}
 		Iterator<List<String>> it1 = base_urls.iterator();
@@ -1308,6 +1459,8 @@ TorrentUtils
 				}else{
 					url = url.toLowerCase( Locale.US );
 
+					url = UrlUtils.getCanonicalString( url );
+					
 					if ( use_prefix_match ){
 
 						for ( String s: removeSet ){
@@ -1366,6 +1519,45 @@ TorrentUtils
 		return( result );
 	}
 
+	public static boolean
+	areIdentical(
+		List<List<String>>	ll1,
+		List<List<String>>	ll2 )
+	{
+		if ( ll1 == null && ll2 == null ){
+			return( true );
+		}else if ( ll1 == null || ll2 == null ){
+			return( false );
+		}
+		
+		int	len = ll1.size();
+		
+		if ( len != ll2.size()){
+			
+			return( false );
+		}
+		
+		for ( int i=0;i<len;i++){
+			List<String> l1 = ll1.get(i);
+			List<String> l2 = ll2.get(i);
+			
+			int l = l1.size();
+			
+			if ( l != l2.size()){
+				
+				return( false );
+			}
+			
+			for ( int j=0;j<l;j++){
+				if ( !l1.get(j).equals(l2.get(j))){
+					return( false );
+				}
+			}
+		}
+		
+		return( true );
+	}
+	
 	public static boolean
 	replaceAnnounceURL(
 		TOTorrent		torrent,
@@ -1831,12 +2023,12 @@ TorrentUtils
 	public static void
 	setTagCache(
 		TOTorrent		torrent,
-		List<String>	networks )
+		List<String>	tags )
 	{
 		Map	m = getAzureusPrivateProperties( torrent );
 
 		try{
-			m.put( TORRENT_AZ_PROP_TAG_CACHE, networks );
+			m.put( TORRENT_AZ_PROP_TAG_CACHE, tags );
 
 		}catch( Throwable e ){
 
@@ -1879,6 +2071,251 @@ TorrentUtils
 		return( result );
 	}
 
+	public static void
+	setInitialTags(
+		TOTorrent		torrent,
+		List<String>	tags )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			m.put( TORRENT_AZ_PROP_INITIAL_TAGS, tags );
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+	}
+
+	public static List<String>
+	getInitialTags(
+		TOTorrent		torrent )
+	{
+		List<String>	result = new ArrayList<>();
+
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			List l = (List)m.get( TORRENT_AZ_PROP_INITIAL_TAGS );
+
+			if ( l != null ){
+
+				for (Object o: l ){
+
+					if ( o instanceof String ){
+
+						result.add((String)o);
+
+					}else if ( o instanceof byte[] ){
+
+						String s = new String((byte[])o, "UTF-8" );
+
+						result.add( s );
+					}
+				}
+			}
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+
+		return( result );
+	}
+	
+	public static void
+	setInitialMetadata(
+		TOTorrent				torrent,
+		Map<String,Object>		metadata )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			m.put( TORRENT_AZ_PROP_INITIAL_METADATA, metadata );
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+	}
+	
+	public static Map<String,Object>
+	getInitialMetadata(
+		TOTorrent		torrent )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			return( (Map<String,Object>)m.get( TORRENT_AZ_PROP_INITIAL_METADATA));
+
+	
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+
+		return( Collections.emptyMap());
+	}
+	
+	public static Map<String,Object>
+	getInitialMetadata(
+		DownloadManager		dm )
+	{
+		Map<String,Object>	metadata = new HashMap<>();
+
+		try{		
+			DownloadManagerState	dms = dm.getDownloadState();
+			
+			String comment = dms.getUserComment();
+			
+			if ( comment != null && !comment.isEmpty()){
+				
+				MapUtils.setMapString( metadata, "comment", comment );
+			}
+			
+				// category also manually set in MagnetPlugin when metadata extracted after dm removed from gm
+			
+			Category cat = dms.getCategory();
+			
+			if ( cat != null ){
+				
+				if ( cat.getType() == Category.TYPE_USER ){
+					
+					MapUtils.setMapString( metadata, "category", cat.getName());
+				}
+			}
+			
+			TOTorrent torrent = dm.getTorrent();
+			
+			if ( torrent != null ){
+				
+				byte[] thumbnail = PlatformTorrentUtils.getContentThumbnail( torrent );
+				
+				if ( thumbnail != null ){
+					
+					String type = PlatformTorrentUtils.getContentThumbnailType( torrent );
+					
+					metadata.put( "thumbnail", thumbnail );
+					
+					MapUtils.setMapString( metadata, "thumbnail_type", type );
+				}
+			}
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+		
+		return( metadata );
+	}
+	
+	public static void
+	setInitialMetadata(
+		DownloadManager			dm,
+		Map<String,Object>		metadata )
+	{
+		try{
+			if ( metadata == null || metadata.isEmpty()){
+				
+				return;
+			}
+			
+			DownloadManagerState	dms = dm.getDownloadState();
+	
+			String comment = MapUtils.getMapString( metadata, "comment", null );
+			
+			if ( comment != null ){
+				
+				dms.setUserComment( comment );
+			}
+			
+			String category = MapUtils.getMapString( metadata, "category", null );
+	
+			if ( category != null ){
+				
+				Category cat = CategoryManager.getCategory( category );
+				
+				if ( cat != null ){
+				
+					dms.setCategory(cat);
+				}
+			}
+			
+			byte[] thumbnail = (byte[])metadata.get( "thumbnail" );
+			
+			if ( thumbnail != null ){
+				
+				TOTorrent torrent = dm.getTorrent();
+				
+				if ( torrent != null ){
+					
+					String type = MapUtils.getMapString( metadata, "thumbnail_type", null );
+					
+					PlatformTorrentUtils.setContentThumbnail( torrent, thumbnail, type );
+				}
+			}
+						
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
+	
+	public static void
+	setOriginalHash(
+		TOTorrent		torrent,
+		byte[]			hash )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			m.put( TORRENT_AZ_PROP_ORIGINAL_HASH, hash );
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+	}
+	
+	public static byte[]
+	getOriginalHash(
+		TOTorrent		torrent )
+	{
+		Map	m = getAzureusPrivateProperties( torrent );
+
+		try{
+			return((byte[])m.get( TORRENT_AZ_PROP_ORIGINAL_HASH ));
+
+		}catch( Throwable e ){
+
+			Debug.printStackTrace(e);
+		}
+		
+		return( null );
+	}
+	
+	public static byte[]
+	getHashForDisplay(
+		TOTorrent		torrent )
+	{
+		if ( torrent == null ){
+			
+			return( null );
+		}
+		
+		byte[] hash = getOriginalHash( torrent );
+		
+		if ( hash == null ){
+			
+			try{
+				hash = torrent.getHash();
+				
+			}catch( Throwable e ){
+			}
+		}
+		
+		return( hash );
+	}
+	
 	public static void
 	setPeerCache(
 		TOTorrent		torrent,
@@ -2337,7 +2774,94 @@ TorrentUtils
 		return( skip_extensions_set );
 	}
 
+	public static Set<Object>
+	getSkipFileSet()
+	{
+		return(getSkipFileSetSupport(false));
+	}
 
+	private static synchronized Set<Object>
+	getSkipFileSetSupport(
+		boolean	force )
+	{
+		if ( skip_file_set == null || force ){
+
+			Set<Object>		new_skip_set	= new HashSet<>();
+
+			String	skip_list 	= COConfigurationManager.getStringParameter( "File.Torrent.AutoSkipFiles" );
+			boolean	regexpr		= COConfigurationManager.getBooleanParameter( "File.Torrent.AutoSkipFiles.RegExp" );
+
+			skip_list = skip_list.replace( ',', ';' );
+
+			if ( skip_file_set == null ){
+
+					// first time - add the listener
+
+				COConfigurationManager.addParameterListener(
+					new String[]{ "File.Torrent.AutoSkipFiles", "File.Torrent.AutoSkipFiles.RegExp" },
+					new ParameterListener()
+					{
+						@Override
+						public void
+						parameterChanged(
+							String parameterName)
+						{
+							getSkipFileSetSupport( true );
+						}
+					});
+			}
+
+			int	pos = 0;
+
+			while( true ){
+
+				int	p1 = skip_list.indexOf( ";", pos );
+
+				String	bit;
+
+				if ( p1 == -1 ){
+
+					bit = skip_list.substring(pos);
+
+				}else{
+
+					bit	= skip_list.substring( pos, p1 );
+
+					pos	= p1+1;
+				}
+
+				bit = bit.trim();
+				
+				if ( !bit.isEmpty()){
+					
+					if ( regexpr ){
+						
+						try{
+							
+							new_skip_set.add( Pattern.compile( bit, Pattern.CASE_INSENSITIVE ));
+							
+						}catch( Throwable e ){
+							
+							Debug.out( e );
+						}
+					}else{
+						
+						new_skip_set.add( bit.toLowerCase());	// default locale here
+					}
+				}
+
+				if ( p1 == -1 ){
+
+					break;
+				}
+			}
+
+			skip_file_set = new_skip_set;
+		}
+
+		return( skip_file_set );
+	}
+	
 		// ignore files
 
 	public static Set<String>
@@ -3481,10 +4005,24 @@ TorrentUtils
 				return( false );
 			}
 		}
+		
+		File parent = f.getParentFile();
 
 		File active_dir = FileUtil.getUserFile( "active" );
 
-		return( !active_dir.equals( f.getParentFile()));
+		if ( active_dir.equals( parent )){
+			
+			return( false );
+		}
+		
+		File shares_dir = FileUtil.getUserFile( "shares" );
+
+		if ( shares_dir.equals( parent ) || shares_dir.equals( parent.getParentFile())){
+			
+			return( false );
+		}
+		
+		return( true );
 	}
 
 	/**
@@ -3551,12 +4089,10 @@ TorrentUtils
 
 			hash = new byte[20];
 		} else {
-			try {
-				hash = torrent.getHash();
+			
+			hash = getHashForDisplay( torrent );
 
-			} catch (TOTorrentException e) {
-
-				Debug.printStackTrace(e);
+			if ( hash == null ){
 
 				hash = new byte[20];
 			}
@@ -3862,7 +4398,7 @@ TorrentUtils
 
 	private static final Pattern txt_pattern = Pattern.compile( "(UDP|TCP):([0-9]+)");
 
-	private static DNSTXTEntry
+	public static DNSTXTEntry
 	getDNSTXTEntry(
 		URL		url )
 	{
@@ -4219,9 +4755,11 @@ TorrentUtils
 
 					DNSTXTPortInfo	first_port 	= ports.get(0);
 
-					if ( url_port != first_port.getPort()){
+					int target_port = first_port.getPort();
+					
+					if ( url_port != target_port ){
 
-						url = UrlUtils.setPort( url, first_port.getPort());
+						url = UrlUtils.setPort( url, target_port==url.getDefaultPort()?0:target_port );
 					}
 
 					if ( url_is_tcp == first_port.isTCP()){
@@ -4247,11 +4785,15 @@ TorrentUtils
 	applyAllDNSMods(
 		URL		url )
 	{
+		List<URL> default_result = new ArrayList<>(1);
+		
+		default_result.add( url );
+		
 		if ( DNS_HANDLING_ENABLE ){
 
 			DNSTXTEntry txt_entry = getDNSTXTEntry( url );
 
-			if ( txt_entry != null && txt_entry.hasRecords()){
+			if ( txt_entry != null && txt_entry.hasRecords()){		
 
 				boolean url_is_tcp 	= url.getProtocol().toLowerCase().startsWith( "http" );
 				int		url_port	= url.getPort();
@@ -4265,7 +4807,7 @@ TorrentUtils
 
 				if ( ports.size() == 0 ){
 
-					return( null );
+					return( null );	// NULL here as no valid ports
 
 				}else{
 
@@ -4275,9 +4817,11 @@ TorrentUtils
 
 						URL	mod_url = url;
 
-						if ( url_port != port.getPort()){
+						int target_port = port.getPort();
+						
+						if ( url_port != target_port ){
 
-							mod_url = UrlUtils.setPort( mod_url, port.getPort());
+							mod_url = UrlUtils.setPort( mod_url, target_port==mod_url.getDefaultPort()?0:target_port );
 						}
 
 						if ( url_is_tcp != port.isTCP()){
@@ -4292,11 +4836,11 @@ TorrentUtils
 				}
 			}else{
 
-				return( null );
+				return( default_result );
 			}
 		}else{
 
-			return( null );
+			return( default_result );
 		}
 	}
 
@@ -4374,9 +4918,11 @@ TorrentUtils
 							int		url_port 	= url.getPort();
 							boolean url_is_tcp 	= url.getProtocol().toLowerCase().startsWith( "http" );
 
-							if ( url_port != port.getPort()){
+							int target_port = port.getPort();
+							
+							if ( url_port != target_port ){
 
-								url = UrlUtils.setPort( url, port.getPort());
+								url = UrlUtils.setPort( url, target_port==url.getDefaultPort()?0:target_port );
 							}
 
 							if ( url_is_tcp != port.isTCP()){
@@ -4476,7 +5022,7 @@ TorrentUtils
        	}
 	}
 
-	private static class
+	public static class
 	DNSTXTEntry
 	{
 		private final long					create_time = SystemTime.getMonotonousTime();
@@ -4505,7 +5051,7 @@ TorrentUtils
 			has_records = has;
 		}
 
-		private boolean
+		public boolean
 		hasRecords()
 		{
 			return( has_records );
@@ -4550,7 +5096,7 @@ TorrentUtils
 			return( true );
 		}
 
-		private String
+		public String
 		getString()
 		{
 			if ( has_records ){
@@ -4617,38 +5163,141 @@ TorrentUtils
 			return( (is_tcp?"TCP" :"UDP ") + port );
 		}
 	}
-
+	
+	private static CopyOnWriteList<PotentialTorrentDeletionListener>		ptd_listeners 	= new CopyOnWriteList<>();
+	private static Map<DownloadManager, Integer>							ptd_map			= new IdentityHashMap<>();
+	private static Map<PotentialTorrentDeletionListener,DownloadManager[]>	ptdl_last		= new HashMap<>();
+	
 	public static void
-	startTorrentDelete()
+	startTorrentDelete(
+		DownloadManager[]		dms )
 	{
-		long val = torrent_delete_level.incrementAndGet();
+		torrent_delete_level.incrementAndGet();
 
-		//System.out.println( "delete level++ -> " + val );
+		synchronized( ptd_map ){
+			
+			for ( DownloadManager dm: dms ){
+				
+				if ( dm == null ){
+					
+					continue;
+				}
+				
+				Integer num = ptd_map.get( dm );
+				
+				if ( num == null ){
+					
+					ptd_map.put( dm, 1 );
+					
+				}else{
+					
+					ptd_map.put( dm, num + 1 );
+				}
+			}
+			
+			DownloadManager[] new_dms = ptd_map.keySet().toArray( new DownloadManager[ ptd_map.size()] );
+			
+			for ( PotentialTorrentDeletionListener l: ptd_listeners ){
+				
+				DownloadManager[] old_dms = ptdl_last.get( l );
+				
+				ptdl_last.put( l, new_dms );
+				
+				l.potentialDeletionChanged( old_dms==null?new DownloadManager[0]:old_dms, new_dms );
+			}
+		}
 	}
 
 	public static void
-	endTorrentDelete()
+	endTorrentDelete(
+		DownloadManager[]		dms )
 	{
-		long val = torrent_delete_level.decrementAndGet();
+		torrent_delete_level.decrementAndGet();
 
-		//System.out.println( "delete level-- -> " + val );
+		synchronized( ptd_map ){
+			
+			for ( DownloadManager dm: dms ){
+				
+				if ( dm == null ){
+					
+					continue;
+				}
+
+				Integer num = ptd_map.get( dm );
+				
+				if ( num != null ){
+															
+					if ( num == 1 ){
+						
+						ptd_map.remove( dm );
+						
+					}else{
+					
+						ptd_map.put( dm, num - 1 );
+					}
+				}
+			}
+			
+			DownloadManager[] new_dms = ptd_map.keySet().toArray( new DownloadManager[ ptd_map.size()] );
+			
+			for ( PotentialTorrentDeletionListener l: ptd_listeners ){
+				
+				DownloadManager[] old_dms = ptdl_last.get( l );
+				
+				ptdl_last.put( l, new_dms );
+				
+				l.potentialDeletionChanged( old_dms==null?new DownloadManager[0]:old_dms, new_dms );
+			}
+		}
 	}
 
 	public static void
 	runTorrentDelete(
-		Runnable 	target )
+		DownloadManager[]		dms,
+		Runnable 				target )
 	{
+		DownloadManager[] current_dms = dms.clone();
+		
 		try{
-			startTorrentDelete();
+			startTorrentDelete( current_dms );
 
 			target.run();
 
 		}finally{
 
-			endTorrentDelete();
+			endTorrentDelete( current_dms );
 		}
 	}
 
+	public interface
+	PotentialTorrentDeletionListener
+	{
+		public void
+		potentialDeletionChanged(
+			DownloadManager[]		old_dms,
+			DownloadManager[]		new_dms );	
+	}
+	
+	public static void
+	addPotentialTorrentDeletionListener(
+		PotentialTorrentDeletionListener		l )
+	{
+		ptd_listeners.add( l );
+	}
+	
+	public static void
+	removePotentialTorrentDeletionListener(
+		PotentialTorrentDeletionListener		l )
+	{	
+		ptd_listeners.remove( l );
+	
+		synchronized( ptd_map ){
+
+			ptdl_last.remove( l );
+		}
+	}
+	
+	
 	public static boolean
 	isTorrentDeleting()
 	{

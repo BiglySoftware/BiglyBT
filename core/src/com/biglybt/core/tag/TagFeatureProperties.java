@@ -73,6 +73,13 @@ TagFeatureProperties
 		public Long
 		getLong();
 
+		public boolean
+		isEnabled();
+		
+		public void
+		setEnabled(
+			boolean	enabled );
+		
 		public String
 		getString();
 
@@ -86,6 +93,10 @@ TagFeatureProperties
 
 		public void
 		syncListeners();
+		
+		public String
+		explainTaggable(
+			Taggable	taggable );
 	}
 
 	public interface

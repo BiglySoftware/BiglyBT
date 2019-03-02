@@ -47,6 +47,7 @@ import com.biglybt.core.networkmanager.admin.*;
 import com.biglybt.core.networkmanager.impl.http.HTTPNetworkManager;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.networkmanager.impl.udp.UDPNetworkManager;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
 import com.biglybt.core.proxy.socks.AESocksProxy;
 import com.biglybt.core.proxy.socks.AESocksProxyFactory;
@@ -74,6 +75,8 @@ NetworkAdminImpl
 
 	private static final boolean	FULL_INTF_PROBE	= false;
 
+	private static final String TEST_ADDRESS = "www.google.com";
+	
 	private static InetAddress anyLocalAddress;
 	private static InetAddress anyLocalAddressIPv4;
 	private static InetAddress anyLocalAddressIPv6;
@@ -101,9 +104,9 @@ NetworkAdminImpl
 	private static final int ROUTE_CHECK_TICKS		= ROUTE_CHECK_MILLIS / INTERFACE_CHECK_MILLIS;
 
 
-	private Set<NetworkInterface>				old_network_interfaces;
+	private Set<NetworkInterface>					old_network_interfaces;
 	private final Map<String,AddressHistoryRecord>	address_history			= new HashMap<>();
-	private long								address_history_update_time;
+	private long									address_history_update_time;
 
 	private InetAddress[]				currentBindIPs			= new InetAddress[] { null };
 	private boolean						forceBind				= false;
@@ -263,19 +266,121 @@ NetworkAdminImpl
 				coreRunning(
 					Core core )
 				{
-					try{
-						Class.forName("com.biglybt.ui.swt.core.nwmadmin.NetworkAdminSWTImpl").getConstructor(
-							new Class[]{ Core.class, NetworkAdminImpl.class }).newInstance(
-								new Object[]{ core, NetworkAdminImpl.this });
-
-					}catch( Throwable e ){
-					}
+					setup( core );
 				}
 			});
 
 		initialised = true;
 	}
 
+	private void
+	setup(
+		Core	core )
+	{
+		try{
+			Class.forName("com.biglybt.ui.swt.core.nwmadmin.NetworkAdminSWTImpl").getConstructor(
+				new Class[]{ Core.class, NetworkAdminImpl.class }).newInstance(
+					new Object[]{ core, NetworkAdminImpl.this });
+
+		}catch( Throwable e ){
+		}
+		
+		COConfigurationManager.addAndFireParameterListeners(
+				new String[] { "Enforce Bind IP", "Enforce Bind IP Pause" },
+				new ParameterListener()
+				{
+					private Object	lock = new Object();
+					
+					private TimerEventPeriodic	timer;
+							
+					private boolean	paused;
+					
+					TimerEventPerformer listener = (event_unused) -> 
+						{	
+							boolean	enforce 		= COConfigurationManager.getBooleanParameter( "Enforce Bind IP");
+							boolean	enforce_pause 	= COConfigurationManager.getBooleanParameter( "Enforce Bind IP Pause");
+
+							boolean bad = enforce && enforce_pause && hasMissingForcedBind();
+							
+							synchronized( lock ){
+								
+								if ( bad || paused ){
+								
+									paused = bad;
+																							
+									List<DownloadManager> dms = core.getGlobalManager().getDownloadManagers();
+									
+									for ( DownloadManager dm: dms ){
+										
+										if ( paused ){
+											
+											if ( !dm.isPaused()){
+											
+												int state = dm.getState();
+												
+												if (	state != DownloadManager.STATE_ERROR && 
+														state != DownloadManager.STATE_STOPPED && 
+														state != DownloadManager.STATE_STOPPING ){
+													
+													if ( dm.pause( true )){
+														
+														dm.setStopReason( "{label.binding.missing}" );
+													}
+												}
+											}
+										}else{
+											
+											if ( dm.isPaused()){
+												
+												String reason = dm.getStopReason();
+												
+												if ( reason != null && reason.equals( "{label.binding.missing}" )){
+													
+													dm.resume();
+												}
+											}
+										}
+									}
+								}
+							}
+						};
+						
+					@Override
+					public void
+					parameterChanged(
+						String parameterName )
+					{
+						boolean	enforce 		= COConfigurationManager.getBooleanParameter( "Enforce Bind IP");
+						boolean	enforce_pause 	= COConfigurationManager.getBooleanParameter( "Enforce Bind IP Pause");
+						
+						synchronized( lock ){
+							
+							if ( enforce && enforce_pause ){
+								
+								if ( timer == null ){
+							
+									timer = 
+										SimpleTimer.addPeriodicEvent(
+											"bind checker",
+											10*1000,
+											listener );
+								}
+							}else{
+								
+								if ( timer != null ){
+					
+									timer.cancel();
+									
+									timer = null;
+									
+									listener.perform( null );
+								}
+							}		
+						}
+					}
+				});
+	}
+	
 	private void
 	checkDNSSPI()
 	{
@@ -512,9 +617,7 @@ NetworkAdminImpl
 
 			if ( fire_stuff ){
 
-				firePropertyChange( NetworkAdmin.PR_NETWORK_INTERFACES );
-
-				checkDefaultBindAddress( first_time );
+				interfacesChanged( first_time );
 			}
 		}catch( Throwable e ){
 		}
@@ -1261,7 +1364,45 @@ addressLoop:
 
 			socket.setSoTimeout( timeout );
 
-			socket.connect( new InetSocketAddress( "www.google.com", 80 ), timeout );
+			InetAddress[] addresses = AddressUtils.getAllByName( TEST_ADDRESS );
+			
+			InetAddress target = null;
+			
+			boolean is6 = bind_address instanceof Inet6Address;
+			
+			for ( InetAddress ia: addresses ){
+				
+				if ( ia instanceof Inet4Address ){
+					
+					if ( !is6 ){
+						
+						target = ia;
+						
+						break;
+					}
+				}else{
+					
+					if ( is6 ){
+						
+						target = ia;
+						
+						break;
+					}
+				}
+			}
+			
+			InetSocketAddress isa;
+			
+			if ( target == null ){
+				
+				isa = new InetSocketAddress( TEST_ADDRESS, 80 );
+				
+			}else{
+				
+				isa = new InetSocketAddress( target, 80 );
+			}
+			
+			socket.connect( isa, timeout );
 
 			return( true );
 
@@ -1398,12 +1539,32 @@ addressLoop:
 		return( null );
 	}
 
-	static final InetAddress[]		gdpa_lock = { null };
-	static AESemaphore			gdpa_sem;
-	private static long					gdpa_last_fail;
-	private static long					gdpa_last_lookup;
-	static final AESemaphore			gdpa_initial_sem = new AESemaphore( "gdpa:init" );
+	private static final InetAddress[]			gdpa_lock = { null };
+	private static AESemaphore					gdpa_sem;
+	private static long							gdpa_last_fail;
+	private static long							gdpa_last_lookup;
+	private static final AESemaphore			gdpa_initial_sem = new AESemaphore( "gdpa:init" );
 
+	private static InetAddress			gdpa6			= null;
+	private static int					gdpa6_count;
+	private static InetAddress			gdpa6_last_good	= null;
+	private static long					gdpa6_last_check;
+	private static boolean				gdpa6_checking;
+	
+	private void
+	interfacesChanged(
+		boolean		first_time )
+	{
+		synchronized( gdpa_lock ){
+			
+			gdpa6 = null;
+		}
+		
+		firePropertyChange( NetworkAdmin.PR_NETWORK_INTERFACES );
+
+		checkDefaultBindAddress( first_time );
+	}
+	
 	@Override
 	public InetAddress
 	getDefaultPublicAddress()
@@ -1526,39 +1687,162 @@ addressLoop:
 	public InetAddress
 	getDefaultPublicAddressV6()
 	{
-		return( getDefaultPublicAddressV6( false ));
-	}
-
-	@Override
-	public InetAddress
-	getDefaultPublicAddressV6(
-		boolean	peek )
-	{
-		if(!supportsIPv6)
+		if ( !supportsIPv6 ){
+			
 			return null;
-
-		// check bindings first
-		for(InetAddress addr : currentBindIPs)
-		{
-			// found a specific bind address, use that one
-			if(AddressUtils.isGlobalAddressV6(addr)){
-				return addr;
+		}
+		
+			// check bindings first
+		
+		for ( InetAddress addr : currentBindIPs ){
+			
+				// found a specific bind address, use that one
+			
+			if ( AddressUtils.isGlobalAddressV6(addr)){
+				
+				return( addr );
 			}
 		}
 
-		for(InetAddress addr : currentBindIPs){
-			// found v6 any-local address, check interfaces for a best match
-			if(addr instanceof Inet6Address && addr.isAnyLocalAddress())
-			{
-				ArrayList<InetAddress> addrs = new ArrayList<>();
-				for(NetworkInterface iface : old_network_interfaces)
-					addrs.addAll(Collections.list(iface.getInetAddresses()));
-
-				return AddressUtils.pickBestGlobalV6Address(addrs);
+		boolean	run_check = false;
+		
+		try{
+			synchronized( gdpa_lock ){
+	
+				if ( gdpa6 != null ){
+					
+					if ( SystemTime.getMonotonousTime() - gdpa6_last_check > 60*1000 ){
+						
+						run_check = gdpa6_count > 1 && !gdpa6_checking;
+					}
+					
+					return( gdpa6 );
+				}
+			}
+			
+			for ( InetAddress addr : currentBindIPs ){
+				
+					// found v6 any-local address, check interfaces for a best match
+				
+				if ( addr instanceof Inet6Address && addr.isAnyLocalAddress()){
+					
+					ArrayList<InetAddress> addrs = new ArrayList<>();
+					
+					for( NetworkInterface iface : old_network_interfaces ){
+						
+						addrs.addAll(Collections.list(iface.getInetAddresses()));
+					}
+					
+					synchronized( gdpa_lock ){
+					
+						List<InetAddress> best = AddressUtils.pickBestGlobalV6Addresses( addrs );
+						
+						gdpa6_count = best.size();
+						
+						if ( gdpa6_count == 0 ){
+							
+							gdpa6 = null;
+							
+							run_check = false;
+							
+						}else if ( gdpa6_count == 1 ){
+							
+							gdpa6 = best.get(0);
+							
+							run_check = false;
+							
+						}else{
+							
+							run_check = !gdpa6_checking;
+							
+							if ( gdpa6_last_good != null && best.contains( gdpa6_last_good )){
+								
+								gdpa6 = gdpa6_last_good;
+								
+							}else{
+								
+								gdpa6 = best.get(0);
+							}
+						}
+						
+						return( gdpa6 );
+					}
+				}
+			}
+	
+			return( null );
+			
+		}finally{
+			
+			if ( run_check ){
+				
+				synchronized( gdpa_lock ){
+					
+					if ( !gdpa6_checking ){
+						
+						gdpa6_checking = true;
+												
+						new AEThread2( "getDefaultPublicAddressV6" )
+						{
+							@Override
+							public void
+							run()
+							{
+								try{
+									for ( InetAddress addr : currentBindIPs ){
+																			
+										if ( addr instanceof Inet6Address && addr.isAnyLocalAddress()){
+										
+											ArrayList<InetAddress> addrs = new ArrayList<>();
+											
+											for( NetworkInterface iface : old_network_interfaces ){
+												
+												addrs.addAll(Collections.list(iface.getInetAddresses()));
+											}
+											
+											List<InetAddress> best = AddressUtils.pickBestGlobalV6Addresses( addrs );
+											
+											InetAddress last_good = gdpa6_last_good;
+											
+											if ( last_good != null && best.contains( last_good )){
+												
+												best.remove( last_good );
+												
+												best.add( 0, last_good );
+											}
+											
+											for ( InetAddress ia: best ){
+											
+												if ( canConnectWithBind( ia, 10*1000 )){
+													
+													synchronized( gdpa_lock ){
+														
+														gdpa6_last_good = gdpa6 = ia;
+														
+														break;
+													}
+												}
+											}
+										}
+									}
+								
+						
+								
+								}finally{
+									
+									synchronized( gdpa_lock ){
+										
+										gdpa6_last_check = SystemTime.getMonotonousTime();
+										
+										gdpa6_checking = false;
+									}
+								}
+							}
+						}.start();
+					}
+				}
 			}
 		}
-
-		return null;
 	}
 
 	@Override
@@ -1670,13 +1954,13 @@ addressLoop:
 
 		TCPNetworkManager	tcp_manager = TCPNetworkManager.getSingleton();
 
-		if ( tcp_manager.isTCPListenerEnabled()){
+		if ( tcp_manager.isDefaultTCPListenerEnabled()){
 
 			protocols.add(
 					new NetworkAdminProtocolImpl(
 							core,
 							NetworkAdminProtocol.PT_TCP,
-							tcp_manager.getTCPListeningPortNumber()));
+							tcp_manager.getDefaultTCPListeningPortNumber()));
 		}
 
 		UDPNetworkManager	udp_manager = UDPNetworkManager.getSingleton();
@@ -1770,23 +2054,47 @@ addressLoop:
 			res.add( p1 );
 		}
 
+			// add in the configured one in case not restarted (restart transfers to the above props)
+		
+  		host = COConfigurationManager.getStringParameter("Proxy.Host");
+  		port = COConfigurationManager.getStringParameter("Proxy.Port");
+  		
+  		user = COConfigurationManager.getStringParameter("Proxy.Username");
+  		if ( user.trim().equalsIgnoreCase("<none>")){
+			user = "";
+		}
+  		password = COConfigurationManager.getStringParameter("Proxy.Password");
+
+		NetworkAdminSocksProxyImpl	p2 = new NetworkAdminSocksProxyImpl( host, port, user, password );
+
+		if ( p2.isConfigured()){
+
+			if ( !p1.isConfigured() || !p1.sameAs( p2 )){
+			
+				res.add( p2 );
+			}
+		}
+		
 		if ( 	COConfigurationManager.getBooleanParameter( "Proxy.Data.Enable" ) &&
 				!COConfigurationManager.getBooleanParameter( "Proxy.Data.Same" )){
 
-			host 	= COConfigurationManager.getStringParameter( "Proxy.Data.Host" );
-			port	= COConfigurationManager.getStringParameter( "Proxy.Data.Port" );
-			user	= COConfigurationManager.getStringParameter( "Proxy.Data.Username" );
-
-			if ( user.trim().equalsIgnoreCase("<none>")){
-				user = "";
-			}
-			password = COConfigurationManager.getStringParameter( "Proxy.Data.Password" );
-
-			NetworkAdminSocksProxyImpl	p2 = new NetworkAdminSocksProxyImpl( host, port, user, password );
-
-			if ( p2.isConfigured()){
-
-				res.add( p2 );
+			for ( int i=1;i<=COConfigurationManager.MAX_DATA_SOCKS_PROXIES;i++){
+				String suffix = i==1?"":("."+i);
+				host 	= COConfigurationManager.getStringParameter( "Proxy.Data.Host" + suffix );
+				port	= COConfigurationManager.getStringParameter( "Proxy.Data.Port" + suffix );
+				user	= COConfigurationManager.getStringParameter( "Proxy.Data.Username" + suffix );
+	
+				if ( user.trim().equalsIgnoreCase("<none>")){
+					user = "";
+				}
+				password = COConfigurationManager.getStringParameter( "Proxy.Data.Password" + suffix );
+	
+				NetworkAdminSocksProxyImpl	pn = new NetworkAdminSocksProxyImpl( host, port, user, password );
+	
+				if ( pn.isConfigured()){
+	
+					res.add( pn );
+				}
 			}
 		}
 
@@ -2770,7 +3078,8 @@ addressLoop:
 
 		Set<NetworkConnectionBase> connections = NetworkManager.getSingleton().getConnections();
 
-		Map<InetAddress,int[]>	lookup_map 	= new HashMap<>();
+		Map<InetAddress,int[]>	public_lookup_map 		= new HashMap<>();
+		Map<String,int[]>		non_public_lookup_map 	= new HashMap<>();
 
 		for ( NetworkConnectionBase connection: connections ){
 
@@ -2780,33 +3089,61 @@ addressLoop:
 
 				Transport transport = (Transport)tb;
 
-				TransportStartpoint start = transport.getTransportStartpoint();
+				InetSocketAddress notional_address = connection.getEndpoint().getNotionalAddress();
 
-				if ( start != null ){
+				String ip    = AddressUtils.getHostAddress( notional_address );
 
-					InetSocketAddress socket_address = start.getProtocolStartpoint().getAddress();
-
-					if ( socket_address != null ){
-
-						InetAddress address = socket_address.getAddress();
-
-						int[]	counts = lookup_map.get( address );
-
-						if ( counts == null ){
-
-							counts = new int[2];
-
-							lookup_map.put( address, counts );
+				String network	= AENetworkClassifier.categoriseAddress( ip );
+				
+				if ( network == AENetworkClassifier.AT_PUBLIC ){
+					
+					TransportStartpoint start = transport.getTransportStartpoint();
+	
+					if ( start != null ){
+	
+						InetSocketAddress socket_address = start.getProtocolStartpoint().getAddress();
+	
+						if ( socket_address != null ){
+	
+							InetAddress address = socket_address.getAddress();
+	
+							int[]	counts = public_lookup_map.get( address );
+	
+							if ( counts == null ){
+	
+								counts = new int[2];
+	
+								public_lookup_map.put( address, counts );
+							}
+	
+							if ( connection.isIncoming()){
+	
+								counts[0]++;
+	
+							}else{
+	
+								counts[1]++;
+							}
 						}
+					}
+				}else{
+					
+					int[]	counts = non_public_lookup_map.get( network );
+					
+					if ( counts == null ){
 
-						if ( connection.isIncoming()){
+						counts = new int[2];
 
-							counts[0]++;
+						non_public_lookup_map.put( network, counts );
+					}
 
-						}else{
+					if ( connection.isIncoming()){
 
-							counts[1]++;
-						}
+						counts[0]++;
+
+					}else{
+
+						counts[1]++;
 					}
 				}
 			}
@@ -2834,7 +3171,7 @@ addressLoop:
 
 		boolean	unbound_connections = false;
 
-		if ( lookup_map.size() == 0 ){
+		if ( public_lookup_map.size() + non_public_lookup_map.size() == 0 ){
 
 			str += "\n" + MessageText.getString( "label.no.connections" );
 
@@ -2842,14 +3179,22 @@ addressLoop:
 
 			String con_str = "";
 
-			for ( Map.Entry<InetAddress,int[]> entry: lookup_map.entrySet()){
+			for ( Map.Entry<InetAddress,int[]> entry: public_lookup_map.entrySet()){
 
 				InetAddress address = entry.getKey();
 				int[]		counts	= entry.getValue();
 
 				String s;
 
-				if ( address.isAnyLocalAddress()){
+				if ( address.isLoopbackAddress()){
+					
+						// ignore loopback addresses as these are used to black-hole things when
+						// the binding is down
+					
+					continue;
+					
+				}else if ( address.isAnyLocalAddress()){
+				
 
 					s = "*";
 
@@ -2870,6 +3215,18 @@ addressLoop:
 				con_str += (con_str.length()==0?"":"; ") + s.toLowerCase();
 			}
 
+			for ( Map.Entry<String,int[]> entry: non_public_lookup_map.entrySet()){
+
+				String		net 	= entry.getKey();
+				int[]		counts	= entry.getValue();
+
+				String s = net;
+
+				s += " - " + MessageText.getString( "label.in" ) + "=" + counts[0] + ", " + MessageText.getString( "label.out" ) + "=" + counts[1];
+
+				con_str += (con_str.length()==0?"":"; ") + s.toLowerCase();
+			}
+			
 			str += "\n" + MessageText.getString( "label.connections" ) + ": " + con_str;
 		}
 
@@ -3758,7 +4115,7 @@ addressLoop:
 						networkInterface.networkAddress address = (networkInterface.networkAddress)interfaces[0].getAddresses()[0];
 
 						try{
-							NetworkAdminNode[] nodes = address.getRoute( InetAddress.getByName("www.google.com"), 30000, trace_route_listener  );
+							NetworkAdminNode[] nodes = address.getRoute( InetAddress.getByName( TEST_ADDRESS ), 30000, trace_route_listener  );
 
 							for (int i=0;i<nodes.length;i++){
 
@@ -3777,7 +4134,7 @@ addressLoop:
 
 			try{
 				pingTargets(
-					InetAddress.getByName( "www.google.com" ),
+					InetAddress.getByName( TEST_ADDRESS ),
 					30000,
 					new NetworkAdminRoutesListener()
 					{
@@ -4076,7 +4433,7 @@ addressLoop:
 					}else{
 
 						try{
-							NetworkAdminNode[] nodes = getRoute( InetAddress.getByName("www.google.com"), 30000, trace_route_listener );
+							NetworkAdminNode[] nodes = getRoute( InetAddress.getByName( TEST_ADDRESS ), 30000, trace_route_listener );
 
 							for (int i=0;i<nodes.length;i++){
 

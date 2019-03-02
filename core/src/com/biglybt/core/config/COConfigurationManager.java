@@ -59,6 +59,8 @@ COConfigurationManager
 
 	public static final boolean	ENABLE_MULTIPLE_UDP_PORTS	= false;
 
+	public static final int	MAX_DATA_SOCKS_PROXIES = 3;
+	
 	private static boolean	pre_initialised;
 
 	public static synchronized void
@@ -232,16 +234,12 @@ COConfigurationManager
 			    //if ( Constants.IS_CVS_VERSION && ( Constants.isOSX || Constants.isWindows )){
 			    // everyone gets this as we use it to force prevent resolution when running socks
 
-			  	if ( Constants.isJava9OrHigher ){
-			  		
-			  		AENameServiceJava9.init();
-			  		
-			  	}else{
-			    
-			  		System.setProperty("sun.net.spi.nameservice.provider.1","dns,aednsproxy");
-			  	}
-			  	
-			    //}
+				if (!Constants.isJava9OrHigher || !AENameServiceJava9.init()) {
+
+					System.setProperty("sun.net.spi.nameservice.provider.1", "dns,aednsproxy");
+				}
+
+				//}
 
 			    SystemProperties.determineApplicationName();
 
@@ -625,6 +623,14 @@ COConfigurationManager
 	}
 
 	public static void
+	removeParameterListeners(String[] parameters, ParameterListener listener)
+	{
+		for ( String parameter: parameters ){
+			ConfigurationManager.getInstance().removeParameterListener(parameter, listener);
+		}
+	}
+	
+	public static void
 	removeListener(
 		COConfigurationListener		listener )
 	{
@@ -738,6 +744,14 @@ COConfigurationManager
 	return( ConfigurationDefaults.getInstance().getParameter( parameter ));
   }
 
+	/**
+	 * Remove the given configuration parameter completely.
+	 * <br>
+	 * If parameter had a value, {@link ParameterListener}s will be fired.
+	 *
+	 * @param parameter to remove
+	 * @return true if found and removed, false if not
+	 */
   public static boolean removeParameter(String parameter) {
 		return ConfigurationManager.getInstance().removeParameter(parameter);
   }

@@ -32,38 +32,12 @@ import com.biglybt.core.global.impl.GlobalManagerImpl;
 public class
 GlobalManagerFactory
 {
-	/*
 	public static GlobalManager
 	create(
-		Core						core,
+		Core 							core,
 		GlobalMangerProgressListener 	operation )
-	{
-		return( new GlobalManagerImpl( operation, 0 ));
-	}
 
-	public static GlobalManager
-	create(
-		Core						core )
 	{
-		return( new GlobalManagerImpl( null, 0 ));
+		return( new GlobalManagerImpl( core, operation ));
 	}
-	*/
-	public static GlobalManager
-	create(
-		Core core,
-		GlobalMangerProgressListener 	operation,
-		long 							existingTorrentLoadDelay)
-	{
-		return( new GlobalManagerImpl( core, operation, existingTorrentLoadDelay ));
-	}
-
-	/*
-	public static GlobalManager
-	create(
-		Core						core,
-		long 							existingTorrentLoadDelay)
-	{
-		return( new GlobalManagerImpl( null, existingTorrentLoadDelay ));
-	}
-	*/
 }

@@ -301,11 +301,11 @@ public class SWTSkinObjectBasic
 			public void handleEvent(Event event) {
 				String id = getTooltipID(true);
 				if (id == null) {
-					control.setToolTipText(null);
+					Utils.setTT(control,null);
 				} else if (id.startsWith("!") && id.endsWith("!")) {
-					control.setToolTipText(id.substring(1, id.length() - 1));
+					Utils.setTT(control,id.substring(1, id.length() - 1));
 				} else {
-					control.setToolTipText(MessageText.getString(id, (String) null));
+					Utils.setTT(control,MessageText.getString(id, (String) null));
 				}
 			}
 		});
@@ -1121,6 +1121,7 @@ public class SWTSkinObjectBasic
 		if (!isVisible()) {
 			return image;
 		}
+		triggerListeners( SWTSkinObjectListener.EVENT_OBFUSCATE , image );
 		Point ourOfs = Utils.getLocationRelativeToShell(control);
 		if (obfuscatedImageGenerator == null) {
 			if (skinView instanceof ObfuscateImage) {

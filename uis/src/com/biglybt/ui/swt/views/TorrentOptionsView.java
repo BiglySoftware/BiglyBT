@@ -32,12 +32,14 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerOptionsHandler;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStateAttributeListener;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
@@ -56,7 +58,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
 TorrentOptionsView
-	implements DownloadManagerStateAttributeListener, UISWTViewCoreEventListener
+	implements UISWTViewCoreEventListener, DownloadManagerOptionsHandler.ParameterChangeListener
 {
 		// adhoc parameters need explicit code to reset default values below
 
@@ -65,8 +67,8 @@ TorrentOptionsView
 
 	public static final String MSGID_PREFIX = "TorrentOptionsView";
 
-	private boolean						multi_view;
-	private DownloadManager[]			managers;
+	private boolean								multi_view;
+	private DownloadManagerOptionsHandler[]		managers;
 
 	private GenericParameterAdapter	ds_param_adapter	= new downloadStateParameterAdapter();
 	private GenericParameterAdapter	adhoc_param_adapter	= new adhocParameterAdapter();
@@ -128,9 +130,9 @@ TorrentOptionsView
 
 			Layout parentLayout = parent.getLayout();
 			if (parentLayout instanceof FormLayout) {
-				Utils.setLayoutData(panel, Utils.getFilledFormData());
+				panel.setLayoutData(Utils.getFilledFormData());
 			} else {
-				Utils.setLayoutData(panel, new GridData(GridData.FILL_BOTH));
+				panel.setLayoutData(new GridData(GridData.FILL_BOTH));
 			}
 		}
 
@@ -149,7 +151,7 @@ TorrentOptionsView
 		configLayout.marginWidth = 0;
 		cHeader.setLayout(configLayout);
 		GridData gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-		Utils.setLayoutData(cHeader, gridData);
+		cHeader.setLayoutData(gridData);
 
 		Display d = panel.getDisplay();
 		cHeader.setBackground(Colors.getSystemColor(d, SWT.COLOR_LIST_SELECTION));
@@ -166,13 +168,17 @@ TorrentOptionsView
 		lHeader.setFont(headerFont);
 
 		if ( managers.length == 1 ){
-			lHeader.setText( " " + MessageText.getString( "authenticator.torrent" ) + " : " + managers[0].getDisplayName().replaceAll("&", "&&"));
+			if ( managers[0].getDownloadManager() == null ){
+				lHeader.setText( " " + managers[0].getName().replaceAll("&", "&&"));
+			}else{
+				lHeader.setText( " " + MessageText.getString( "authenticator.torrent" ) + " : " + managers[0].getName().replaceAll("&", "&&"));
+			}
 		}else{
 			String	str = "";
 
 			for (int i=0;i<Math.min( 3, managers.length ); i ++ ){
 
-				str += (i==0?"":", ") + managers[i].getDisplayName().replaceAll("&", "&&");
+				str += (i==0?"":", ") + managers[i].getName().replaceAll("&", "&&");
 			}
 
 			if ( managers.length > 3 ){
@@ -184,12 +190,12 @@ TorrentOptionsView
 		}
 
 		gridData = new GridData(GridData.FILL_HORIZONTAL | GridData.VERTICAL_ALIGN_CENTER);
-		Utils.setLayoutData(lHeader, gridData);
+		lHeader.setLayoutData(gridData);
 
 		Group gTorrentOptions = new Group(panel, SWT.NULL);
 		Messages.setLanguageText(gTorrentOptions, "ConfigView.section.transfer");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(gTorrentOptions, gridData);
+		gTorrentOptions.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		gTorrentOptions.setLayout(layout);
@@ -203,7 +209,7 @@ TorrentOptionsView
 
 		Label label = new Label(gTorrentOptions, SWT.NULL);
 		gridData = new GridData();
-		Utils.setLayoutData(label,  gridData );
+		label.setLayoutData(gridData);
 		label.setText(k_unit + " " + MessageText.getString( "GeneralView.label.maxuploadspeed.tooltip" ));
 
 		GenericIntParameter max_upload = new GenericIntParameter(
@@ -218,7 +224,7 @@ TorrentOptionsView
 
 			label = new Label(gTorrentOptions, SWT.NULL);
 			gridData = new GridData();
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "TorrentOptionsView.param.max.uploads.when.busy");
 
 			GenericIntParameter max_upload_when_busy = new GenericIntParameter(
@@ -233,7 +239,7 @@ TorrentOptionsView
 
 		label = new Label(gTorrentOptions, SWT.NULL);
 		gridData = new GridData();
-		Utils.setLayoutData(label,  gridData );
+		label.setLayoutData(gridData);
 		label.setText(k_unit + " " + MessageText.getString( "GeneralView.label.maxdownloadspeed.tooltip" ));
 
 		GenericIntParameter max_download = new GenericIntParameter(
@@ -247,7 +253,7 @@ TorrentOptionsView
 		if (userMode > 0) {
 			label = new Label(gTorrentOptions, SWT.NULL);
 			gridData = new GridData();
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "TorrentOptionsView.param.max.uploads" );
 
 			GenericIntParameter max_uploads = new GenericIntParameter(
@@ -269,12 +275,12 @@ TorrentOptionsView
 			gridData = new GridData();
 			gridData.horizontalIndent = 15;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cMaxUploadsOptionsArea, gridData);
+			cMaxUploadsOptionsArea.setLayoutData(gridData);
 
 			label = new Label(cMaxUploadsOptionsArea, SWT.NULL);
 			ImageLoader.getInstance().setLabelImage(label, "subitem");
 			gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 
 			gridData = new GridData();
 			GenericBooleanParameter	max_uploads_when_seeding_enabled =
@@ -282,8 +288,7 @@ TorrentOptionsView
 						ds_param_adapter,
 						cMaxUploadsOptionsArea,
 						DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED,
-						false,
-						"TorrentOptionsView.param.alternative.value.enable");
+						"TorrentOptionsView.param.alternative.value.enable", null);
 			ds_parameters.put( DownloadManagerState.PARAM_MAX_UPLOADS_WHEN_SEEDING_ENABLED, max_uploads_when_seeding_enabled );
 			max_uploads_when_seeding_enabled.setLayoutData( gridData );
 
@@ -303,7 +308,7 @@ TorrentOptionsView
 
 			label = new Label(gTorrentOptions, SWT.NULL);
 			gridData = new GridData();
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "TorrentOptionsView.param.max.peers");
 
 			GenericIntParameter max_peers = new GenericIntParameter(ds_param_adapter,
@@ -323,12 +328,12 @@ TorrentOptionsView
 			gridData = new GridData();
 			gridData.horizontalIndent = 15;
 			gridData.horizontalSpan = 2;
-			Utils.setLayoutData(cMaxPeersOptionsArea, gridData);
+			cMaxPeersOptionsArea.setLayoutData(gridData);
 
 			label = new Label(cMaxPeersOptionsArea, SWT.NULL);
 			ImageLoader.getInstance().setLabelImage(label, "subitem");
 			gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-			Utils.setLayoutData(label, gridData);
+			label.setLayoutData(gridData);
 
 			gridData = new GridData();
 			GenericBooleanParameter	max_peers_when_seeding_enabled =
@@ -336,8 +341,7 @@ TorrentOptionsView
 						ds_param_adapter,
 						cMaxPeersOptionsArea,
 						DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED,
-						false,
-						"TorrentOptionsView.param.alternative.value.enable");
+						"TorrentOptionsView.param.alternative.value.enable", null);
 			ds_parameters.put( DownloadManagerState.PARAM_MAX_PEERS_WHEN_SEEDING_ENABLED, max_peers_when_seeding_enabled );
 			max_peers_when_seeding_enabled.setLayoutData( gridData );
 
@@ -357,7 +361,7 @@ TorrentOptionsView
 
 			label = new Label(gTorrentOptions, SWT.NULL);
 			gridData = new GridData();
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "TorrentOptionsView.param.max.seeds" );
 
 			GenericIntParameter max_seeds = new GenericIntParameter(
@@ -374,7 +378,7 @@ TorrentOptionsView
 
 			label = new Label(gTorrentOptions, SWT.NULL);
 			gridData = new GridData();
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "TorrentOptionsView.param.upload.priority" );
 
 			gridData = new GridData();
@@ -391,7 +395,7 @@ TorrentOptionsView
 
 			label = new Label(gTorrentOptions, SWT.NULL);
 			gridData = new GridData();
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "TableColumn.header.min_sr" );
 
 			gridData = new GridData();
@@ -409,7 +413,7 @@ TorrentOptionsView
 
 			label = new Label(gTorrentOptions, SWT.NULL);
 			gridData = new GridData();
-			Utils.setLayoutData(label,  gridData );
+			label.setLayoutData(gridData);
 			Messages.setLanguageText(label, "TableColumn.header.max_sr" );
 
 			gridData = new GridData();
@@ -445,14 +449,14 @@ TorrentOptionsView
 			    });
 
 	    for (int i=0;i<managers.length;i++){
-	    	managers[i].getDownloadState().addListener(this, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN);
+	    	managers[i].addListener(this);
 	    }
 
 
 		Group gTorrentInfo = new Group(panel, SWT.NULL);
 		Messages.setLanguageText(gTorrentInfo, "label.aggregate.info");
 		gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		Utils.setLayoutData(gTorrentInfo, gridData);
+		gTorrentInfo.setLayoutData(gridData);
 		layout = new GridLayout();
 		layout.numColumns = 2;
 		gTorrentInfo.setLayout(layout);
@@ -537,9 +541,11 @@ TorrentOptionsView
 			        public void
 					handleEvent(Event event)
 			        {
-			        	for ( DownloadManager dm: managers ){
+			        	for ( DownloadManagerOptionsHandler dm: managers ){
 
-			        		dm.getStats().resetTotalBytesSentReceived( 0, 0 );
+			        		if ( dm.getDownloadManager() != null ){
+			        			dm.getDownloadManager().getStats().resetTotalBytesSentReceived( 0, 0 );
+			        		}
 			        	}
 			        }
 			    });
@@ -550,7 +556,7 @@ TorrentOptionsView
 	private void
 	refresh()
 	{
-		if ( agg_size == null ){
+		if ( agg_size == null || managers.length == 0 || managers[0].getDownloadManager() == null ){
 
 				// not yet init
 
@@ -571,9 +577,9 @@ TorrentOptionsView
 
 		for (int i=0;i<managers.length;i++){
 
-			DownloadManager	dm = managers[i];
+			DownloadManagerOptionsHandler	dm = managers[i];
 
-			DownloadManagerStats stats = dm.getStats();
+			DownloadManagerStats stats = dm.getDownloadManager().getStats();
 
 			total_size += stats.getSizeExcludingDND();
 
@@ -650,7 +656,7 @@ TorrentOptionsView
 
 		    for (int i=0;i<managers.length;i++){
 
-		    	managers[i].getDownloadState().setParameterDefault( key );
+		    	managers[i].setParameterDefault( key );
 		    }
 		}
 
@@ -676,8 +682,10 @@ TorrentOptionsView
 	 * @see com.biglybt.core.download.DownloadManagerStateAttributeListener#attributeEventOccurred(com.biglybt.core.download.DownloadManager, java.lang.String, int)
 	 */
 	@Override
-	public void attributeEventOccurred(DownloadManager dm, String attribute_name, int event_type) {
-		final DownloadManagerState state = dm.getDownloadState();
+	public void
+	parameterChanged(
+		DownloadManagerOptionsHandler manager )
+	{
 		Utils.execSWTThread(new Runnable() {
 			@Override
 			public void	run() {
@@ -689,15 +697,15 @@ TorrentOptionsView
 
 					if (param instanceof GenericIntParameter) {
 						GenericIntParameter	int_param = (GenericIntParameter)param;
-						int	value = state.getIntParameter( key );
+						int	value = manager.getIntParameter( key );
 						int_param.setValue( value );
 					} else if (param instanceof GenericBooleanParameter) {
 						GenericBooleanParameter	bool_param = (GenericBooleanParameter)param;
-						boolean	value = state.getBooleanParameter( key );
+						boolean	value = manager.getBooleanParameter( key );
 						bool_param.setSelected( value );
 					} else if (param instanceof GenericFloatParameter) {
 						GenericFloatParameter	float_param = (GenericFloatParameter)param;
-						float	value = state.getIntParameter( key )/1000f;
+						float	value = manager.getIntParameter( key )/1000f;
 						float_param.setValue( value );
 					} else {
 						Debug.out( "Unknown parameter type: " + param.getClass());
@@ -729,9 +737,7 @@ TorrentOptionsView
 
 		if (managers != null) {
 			for (int i = 0; i < managers.length; i++) {
-				managers[i].getDownloadState().removeListener(this,
-						DownloadManagerState.AT_PARAMETERS,
-						DownloadManagerStateAttributeListener.WRITTEN);
+				managers[i].removeListener( this );
 			}
 		}
 	}
@@ -747,40 +753,31 @@ TorrentOptionsView
 		getIntValue(
 			String	key )
 		{
-			return( getIntValue( key, 0 ));
-		}
-
-		@Override
-		public int
-		getIntValue(
-			String	key,
-			int		def )
-		{
 			if ( key == MAX_UPLOAD ){
-				int	result = def;
+				int	result = 0;
 
 				for (int i=0;i<managers.length;i++){
-					int	val = managers[i].getStats().getUploadRateLimitBytesPerSecond()/DisplayFormatters.getKinB();
+					int	val = managers[i].getUploadRateLimitBytesPerSecond()/DisplayFormatters.getKinB();
 
 					if ( i==0 ){
 						result = val;
 					}else if ( result != val ){
-						return( def );
+						return( 0 );
 					}
 				}
 
 				return( result );
 
 			}else if ( key == MAX_DOWNLOAD ){
-				int	result = def;
+				int	result = 0;
 
 				for (int i=0;i<managers.length;i++){
-					int	val = managers[i].getStats().getDownloadRateLimitBytesPerSecond()/DisplayFormatters.getKinB();
+					int	val = managers[i].getDownloadRateLimitBytesPerSecond()/DisplayFormatters.getKinB();
 
 					if ( i==0 ){
 						result = val;
 					}else if ( result != val ){
-						return( def );
+						return( 0 );
 					}
 				}
 
@@ -800,21 +797,21 @@ TorrentOptionsView
 			if ( key == MAX_UPLOAD ){
 				for (int i=0;i<managers.length;i++){
 
-					DownloadManager	manager = managers[i];
+					DownloadManagerOptionsHandler	manager = managers[i];
 
-					if ( value != manager.getStats().getUploadRateLimitBytesPerSecond()/DisplayFormatters.getKinB()){
+					if ( value != manager.getUploadRateLimitBytesPerSecond()/DisplayFormatters.getKinB()){
 
-						manager.getStats().setUploadRateLimitBytesPerSecond(value*DisplayFormatters.getKinB());
+						manager.setUploadRateLimitBytesPerSecond(value*DisplayFormatters.getKinB());
 					}
 				}
 			}else if ( key == MAX_DOWNLOAD ){
 				for (int i=0;i<managers.length;i++){
 
-					DownloadManager	manager = managers[i];
+					DownloadManagerOptionsHandler	manager = managers[i];
 
-					if ( value != manager.getStats().getDownloadRateLimitBytesPerSecond()/DisplayFormatters.getKinB()){
+					if ( value != manager.getDownloadRateLimitBytesPerSecond()/DisplayFormatters.getKinB()){
 
-						manager.getStats().setDownloadRateLimitBytesPerSecond(value*DisplayFormatters.getKinB());
+						manager.setDownloadRateLimitBytesPerSecond(value*DisplayFormatters.getKinB());
 					}
 				}
 			}else{
@@ -832,24 +829,15 @@ TorrentOptionsView
 		getIntValue(
 			String	key )
 		{
-			return( getIntValue( key, 0 ));
-		}
-
-		@Override
-		public int
-		getIntValue(
-			String	key,
-			int		def )
-		{
-			int	result = def;
+			int	result = 0;
 
 			for (int i=0;i<managers.length;i++){
-				int	val = managers[i].getDownloadState().getIntParameter( key );
+				int	val = managers[i].getIntParameter( key );
 
 				if ( i==0 ){
 					result = val;
 				}else if ( result != val ){
-					return( def );
+					return( 0 );
 				}
 			}
 
@@ -864,11 +852,11 @@ TorrentOptionsView
 		{
 			for (int i=0;i<managers.length;i++){
 
-				DownloadManager	manager = managers[i];
+				DownloadManagerOptionsHandler	manager = managers[i];
 
-				if ( value != manager.getDownloadState().getIntParameter( key )){
+				if ( value != manager.getIntParameter( key )){
 
-					manager.getDownloadState().setIntParameter( key, value );
+					manager.setIntParameter( key, value );
 				}
 			}
 		}
@@ -878,24 +866,15 @@ TorrentOptionsView
 		getBooleanValue(
 			String	key )
 		{
-			return( getBooleanValue(key,false));
-		}
-
-		@Override
-		public Boolean
-		getBooleanValue(
-			String		key,
-			Boolean		def )
-		{
-			boolean	result = def;
+			boolean	result = false;
 
 			for (int i=0;i<managers.length;i++){
-				boolean	val = managers[i].getDownloadState().getBooleanParameter( key );
+				boolean	val = managers[i].getBooleanParameter( key );
 
 				if ( i==0 ){
 					result = val;
 				}else if ( result != val ){
-					return( def );
+					return( false );
 				}
 			}
 
@@ -910,11 +889,11 @@ TorrentOptionsView
 		{
 			for (int i=0;i<managers.length;i++){
 
-				DownloadManager	manager = managers[i];
+				DownloadManagerOptionsHandler	manager = managers[i];
 
-				if ( value != manager.getDownloadState().getBooleanParameter( key )){
+				if ( value != manager.getBooleanParameter( key )){
 
-					manager.getDownloadState().setBooleanParameter( key, value );
+					manager.setBooleanParameter( key, value );
 				}
 			}
 		}
@@ -927,7 +906,7 @@ TorrentOptionsView
 			int	result = 0;
 
 			for (int i=0;i<managers.length;i++){
-				int	val = managers[i].getDownloadState().getIntParameter( key );
+				int	val = managers[i].getIntParameter( key );
 
 				if ( i==0 ){
 					result = val;
@@ -949,43 +928,49 @@ TorrentOptionsView
 
 			for (int i=0;i<managers.length;i++){
 
-				DownloadManager	manager = managers[i];
+				DownloadManagerOptionsHandler	manager = managers[i];
 
-				if ( value != manager.getDownloadState().getIntParameter( key )){
+				if ( value != manager.getIntParameter( key )){
 
-					manager.getDownloadState().setIntParameter( key, value );
+					manager.setIntParameter( key, value );
 				}
 			}
 		}
 	}
 
 	private void dataSourceChanged(Object newDataSource) {
-		DownloadManager[] old_managers = managers;
+		DownloadManagerOptionsHandler[] old_managers = managers;
 		if (old_managers != null) {
 			for (int i = 0; i < old_managers.length; i++) {
-				old_managers[i].getDownloadState().removeListener(this,
-						DownloadManagerState.AT_PARAMETERS,
-						DownloadManagerStateAttributeListener.WRITTEN);
+				old_managers[i].removeListener( this );
 			}
 		}
 		if (newDataSource instanceof DownloadManager) {
 			multi_view = false;
-			managers = new DownloadManager[] { (DownloadManager) newDataSource };
+			managers = new DownloadManagerOptionsHandler[] { new DMWrapper( (DownloadManager) newDataSource )};
+		}else if ( newDataSource instanceof DownloadManagerOptionsHandler ){
+			multi_view = false;
+			managers = new DownloadManagerOptionsHandler[] {(DownloadManagerOptionsHandler)newDataSource};
 		} else if (newDataSource instanceof DownloadManager[]) {
 			multi_view = true;
-			managers = (DownloadManager[]) newDataSource;
+			Object[] objs = (Object[])newDataSource;
+			managers = new DownloadManagerOptionsHandler[objs.length];
+			for ( int i=0;i<objs.length;i++){
+				managers[i] = new DMWrapper((DownloadManager)objs[i]);
+			}
 		}else if ( newDataSource instanceof Object[]){
 			Object[] objs = (Object[])newDataSource;
 			if ( objs.length > 0 ){
 				if ( objs[0] instanceof DownloadManager ){
-					managers = new DownloadManager[objs.length];
+					managers = new DownloadManagerOptionsHandler[objs.length];
 					for ( int i=0;i<objs.length;i++){
-						managers[i] = (DownloadManager)objs[i];
+						managers[i] = new DMWrapper((DownloadManager)objs[i]);
 					}
 					multi_view = true;
 				}
 			}
 		}
+		
 		if (parent != null && !parent.isDisposed()) {
 			Utils.execSWTThread(new AERunnable() {
 				@Override
@@ -1034,4 +1019,114 @@ TorrentOptionsView
 
     return true;
   }
+	
+	private static class
+	DMWrapper
+		implements DownloadManagerOptionsHandler, DownloadManagerStateAttributeListener
+	{
+		private DownloadManager		dm;
+		
+		private CopyOnWriteList<ParameterChangeListener>	listeners = new CopyOnWriteList<>();
+		
+		private
+		DMWrapper(
+			DownloadManager		_dm )
+		{
+			dm	= _dm;
+		}
+		
+		@Override 
+		public String getName(){
+			return( dm.getDisplayName());
+		}
+		@Override
+		public void setIntParameter(String name, int value){
+			dm.getDownloadState().setIntParameter(name, value);
+		}
+		
+		@Override
+		public int getIntParameter(String name){
+			return( dm.getDownloadState().getIntParameter(name));
+		}
+		
+		@Override
+		public void setBooleanParameter(String name, boolean value){
+			dm.getDownloadState().setBooleanParameter(name, value);
+		}
+		
+		@Override
+		public boolean getBooleanParameter(String name){
+			return( dm.getDownloadState().getBooleanParameter(name));
+		}
+		
+		@Override
+		public void setParameterDefault(String key){
+			dm.getDownloadState().setParameterDefault( key );
+		}
+		
+		@Override
+		public int
+		getUploadRateLimitBytesPerSecond()
+		{
+			return( dm.getStats().getUploadRateLimitBytesPerSecond());
+		}
+		
+		@Override
+		public void
+		setUploadRateLimitBytesPerSecond(
+			int		limit )
+		{
+			dm.getStats().setUploadRateLimitBytesPerSecond( limit );
+		}
+		
+		@Override
+		public int
+		getDownloadRateLimitBytesPerSecond()
+		{
+			return( dm.getStats().getDownloadRateLimitBytesPerSecond());
+		}
+		
+		@Override
+		public void
+		setDownloadRateLimitBytesPerSecond(
+			int		limit )
+		{
+			dm.getStats().setDownloadRateLimitBytesPerSecond( limit );
+		}
+		
+		@Override
+		public DownloadManager getDownloadManager(){
+			return( dm );
+		}
+		
+		@Override
+		public void attributeEventOccurred(DownloadManager dm, String attribute_name, int event_type) {
+			for (ParameterChangeListener l: listeners ){
+				try{
+					l.parameterChanged( this );
+				}catch( Throwable e ){
+					Debug.out( e );
+				}
+			}
+		}
+		
+		@Override
+		public void
+		addListener(
+			ParameterChangeListener	listener )
+		{
+			listeners.add( listener );
+			
+			dm.getDownloadState().addListener(this, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN);
+		}
+		@Override
+		public void
+		removeListener(
+			ParameterChangeListener	listener )
+		{
+			listeners.remove( listener );
+			
+			dm.getDownloadState().removeListener(this, DownloadManagerState.AT_PARAMETERS, DownloadManagerStateAttributeListener.WRITTEN);
+		}
+	}
 }

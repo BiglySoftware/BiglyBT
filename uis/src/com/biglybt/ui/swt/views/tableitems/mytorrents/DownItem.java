@@ -24,11 +24,19 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.pif.ui.tables.TableContextMenuItem;
+import com.biglybt.ui.common.table.TableRowCore;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 
 
@@ -61,6 +69,81 @@ public class DownItem
 		addDataSourceType(DiskManagerFileInfo.class);
     setRefreshInterval(INTERVAL_LIVE);
     setMinWidthAuto(true);
+    
+    TableContextMenuItem menuItem = addContextMenuItem("label.set.downloaded");
+
+	menuItem.setStyle(MenuItem.STYLE_PUSH);
+
+	menuItem.addMultiListener(new MenuItemListener() {
+		@Override
+		public void selected(MenuItem menu, Object target) {
+			final Object[] dms = (Object[])target;
+
+			SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+					"set.downloaded.win.title", "set.downloaded.win.msg");
+
+			entryWindow.setPreenteredText( "-1", false );
+			entryWindow.selectPreenteredText( true );
+
+			entryWindow.prompt(new UIInputReceiverListener() {
+				@Override
+				public void UIInputReceiverClosed(UIInputReceiver receiver) {
+					if (!receiver.hasSubmittedInput()) {
+						return;
+					}
+
+					try{
+						String str = receiver.getSubmittedInput().trim();
+
+						if ( str.startsWith( "-" )){
+						
+							double copies = Double.parseDouble( str.substring(1));
+
+							for ( Object object: dms ){
+								if (object instanceof TableRowCore) {
+									object = ((TableRowCore) object).getDataSource(true);
+								}
+	
+								DownloadManager dm = (DownloadManager)object;
+	
+								DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+
+								long total_size = 0;
+
+								for ( DiskManagerFileInfo file: files ){
+
+									if ( !file.isSkipped()){
+
+										total_size += file.getLength();
+									}
+								}
+								
+								dm.getStats().resetTotalBytesSentReceived(-1, (long)( total_size*copies));
+							}
+							
+						}else{
+							long bytes = Long.parseLong( str);
+
+							for ( Object object: dms ){
+								if (object instanceof TableRowCore) {
+									object = ((TableRowCore) object).getDataSource(true);
+								}
+	
+								DownloadManager dm = (DownloadManager)object;
+								
+								dm.getStats().resetTotalBytesSentReceived(-1,  bytes );
+							}
+						}
+
+					}catch( Throwable e ){
+
+						Debug.out( e );
+					}
+
+				}
+			});
+
+		}});
   }
 
   @Override

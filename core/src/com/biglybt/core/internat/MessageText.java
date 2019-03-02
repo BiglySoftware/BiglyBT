@@ -499,20 +499,21 @@ public class MessageText {
 			if (jar != null) {
 				try {
 					// System.out.println("jar: " + jar.getAbsolutePath());
-					JarFile jarFile = new JarFile(jar);
-					Enumeration entries = jarFile.entries();
-					ArrayList list = new ArrayList(250);
-					while (entries.hasMoreElements()) {
-						JarEntry jarEntry = (JarEntry) entries.nextElement();
-						if (jarEntry.getName().startsWith(bundleFolder)
-								&& jarEntry.getName().endsWith(extension)) {
-							// System.out.println("jarEntry: " + jarEntry.getName());
-							list.add(jarEntry.getName().substring(
-									bundleFolder.length() - prefix.length()));
-							// "MessagesBundle_de_DE.properties"
+					try (JarFile jarFile = new JarFile(jar) ){
+						Enumeration entries = jarFile.entries();
+						ArrayList list = new ArrayList(250);
+						while (entries.hasMoreElements()) {
+							JarEntry jarEntry = (JarEntry) entries.nextElement();
+							if (jarEntry.getName().startsWith(bundleFolder)
+									&& jarEntry.getName().endsWith(extension)) {
+								// System.out.println("jarEntry: " + jarEntry.getName());
+								list.add(jarEntry.getName().substring(
+										bundleFolder.length() - prefix.length()));
+								// "MessagesBundle_de_DE.properties"
+							}
 						}
+						bundles = (String[]) list.toArray(new String[list.size()]);
 					}
-					bundles = (String[]) list.toArray(new String[list.size()]);
 				} catch (Exception e) {
 					Debug.printStackTrace(e);
 				}
@@ -579,7 +580,8 @@ public class MessageText {
         String locale = sBundle.substring(prefix.length() + 1, sBundle.length() - extension.length());
         //System.out.println("Locale: " + locale);
         String[] sLocalesSplit = locale.split("_", 3);
-        if (sLocalesSplit.length > 0 && sLocalesSplit[0].length() == 2) {
+				if (sLocalesSplit.length > 0 && (sLocalesSplit[0].length() == 2
+						|| sLocalesSplit[0].length() == 3)) {
           if (sLocalesSplit.length == 3) {
           	foundLocalesList.add( new Locale(sLocalesSplit[0], sLocalesSplit[1], sLocalesSplit[2]));
           } else if (sLocalesSplit.length == 2 && sLocalesSplit[1].length() == 2) {
@@ -603,10 +605,13 @@ public class MessageText {
 
     if (sort) {
       try{
-  	    Arrays.sort(foundLocales, new Comparator() {
+  	    Arrays.sort(foundLocales, new Comparator<Locale>() {
   	      @Override
-	        public final int compare (Object a, Object b) {
-  	        return ((Locale)a).getDisplayName((Locale)a).compareToIgnoreCase(((Locale)b).getDisplayName((Locale)b));
+	        public final int compare (Locale a, Locale b) {
+  	    	  a = getDisplaySubstitute(a);
+  	    	  b = getDisplaySubstitute(b);
+  	        
+  	    	  return(a.getDisplayName(a).compareToIgnoreCase(b.getDisplayName(b)));
   	      }
   	    });
       }catch( Throwable e ){
@@ -822,6 +827,36 @@ public class MessageText {
   }
   */
 
+  private static final Map<String,Locale> substitutes = new HashMap<>();
+  
+  static{
+	  if ( new Locale( "vls", "BE" ).getDisplayLanguage().equals( "vls" )){
+	  
+		  substitutes.put( "vls_BE", new Locale( "nl", "BE" ));
+	  }
+  }
+  
+  public static Locale
+  getDisplaySubstitute(
+	Locale		l )
+  {
+	  if ( substitutes.isEmpty()){
+		  
+		  return( l );
+	  }
+	  
+	  Locale res =  substitutes.get( l.getLanguage() + "_" +  l.getCountry());
+	
+	  if ( res != null ){
+		  
+		  return( res );
+		  
+	  }else{
+		
+		return( l );
+	}
+  }
+  
   public static interface
   MessageTextListener
   {

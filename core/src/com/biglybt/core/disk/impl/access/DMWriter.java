@@ -41,7 +41,10 @@ DMWriter
 	public boolean
 	zeroFile(
 		DiskManagerFileInfoImpl file,
-		long 					length ) throws DiskManagerException;
+		long					start_from,
+		long 					overall_length ) 
+		
+		throws DiskManagerException;
 
 	public DiskManagerWriteRequest
 	createWriteRequest(

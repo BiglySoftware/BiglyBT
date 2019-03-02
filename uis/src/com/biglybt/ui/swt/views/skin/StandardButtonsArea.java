@@ -148,7 +148,7 @@ public abstract class StandardButtonsArea
 		rowLayout.center = true;
 		rowLayout.spacing = 8;
 		rowLayout.pack = false;
-		Utils.setLayout(cButtonArea, rowLayout);
+		cButtonArea.setLayout(rowLayout);
 
 		buttons = new Button[buttonIDs.length];
 		for (int i = 0; i < buttonIDs.length; i++) {
@@ -169,12 +169,12 @@ public abstract class StandardButtonsArea
 			RowData rowData = new RowData();
 			Point size = button.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 			size.x += BUTTON_PADDING;
-			int minButtonWidth = Utils.adjustPXForDPI(MIN_BUTTON_WIDTH);
+			int minButtonWidth = MIN_BUTTON_WIDTH;
 			if (size.x < minButtonWidth) {
 				size.x = minButtonWidth;
 			}
 			rowData.width = size.x;
-			Utils.setLayoutData(button, rowData);
+			button.setLayoutData(rowData);
 
 			if (defaultButtonPos == i) {
 				def_button = button;

@@ -224,6 +224,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		if (bFireSelection) {
 			TableRowCore[] rows = getSelectedRows();
 			listener.selected(rows);
+			listener.selectionChanged(new TableRowCore[0], rows);
 			listener.focusChanged(getFocusedRow());
 		}
 	}
@@ -265,11 +266,17 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	/**
 	 * @param selectedRows
 	 */
-	public void triggerDefaultSelectedListeners(TableRowCore[] selectedRows,
-			int keyMask) {
-		for (Iterator iter = listenersSelection.iterator(); iter.hasNext();) {
-			TableSelectionListener l = (TableSelectionListener) iter.next();
-			l.defaultSelected(selectedRows, keyMask);
+	public void 
+	triggerDefaultSelectedListeners(
+		TableRowCore[] selectedRows,
+		int keyMask, int origin ) 
+	{
+		for ( TableSelectionListener l: listenersSelection) {
+			try{
+				l.defaultSelected(selectedRows, keyMask, origin );
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
 		}
 	}
 
@@ -277,9 +284,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	 * @param eventType
 	 */
 	protected void triggerLifeCycleListener(int eventType) {
-		Object[] listeners = listenersLifeCycle.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableLifeCycleListener l = (TableLifeCycleListener) listeners[i];
+		for ( TableLifeCycleListener l: listenersLifeCycle ){
 			try {
 				l.tableLifeCycleEventOccurred(this, eventType, null);
 			} catch (Exception e) {
@@ -287,15 +292,28 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 			}
 		}
 	}
+	
+	public void triggerSelectionChangeListeners(TableRowCore[] selected_rows, TableRowCore[] deselected_rows) {
+		
+		for ( TableSelectionListener l: listenersSelection) {
+			try{
+				l.selectionChanged(selected_rows, deselected_rows);
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
+		}
+	}
 
-	public void triggerSelectionListeners(TableRowCore[] rows) {
+	protected void triggerSelectionListeners(TableRowCore[] rows) {
 		if (rows == null || rows.length == 0) {
 			return;
 		}
-		Object[] listeners = listenersSelection.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableSelectionListener l = (TableSelectionListener) listeners[i];
-			l.selected(rows);
+		for ( TableSelectionListener l: listenersSelection) {
+			try{
+				l.selected(rows);
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
 		}
 	}
 
@@ -303,12 +321,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		if (rows == null) {
 			return;
 		}
-		Object[] listeners = listenersSelection.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableSelectionListener l = (TableSelectionListener) listeners[i];
+		for ( TableSelectionListener l: listenersSelection) {
 			try {
 				l.deselected(rows);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				Debug.out(e);
 			}
 		}
@@ -318,9 +334,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		if (row == null) {
 			return;
 		}
-		Object[] listeners = listenersSelection.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableSelectionListener l = (TableSelectionListener) listeners[i];
+		for ( TableSelectionListener l: listenersSelection) {
 			if (enter) {
 				l.mouseEnter(row);
 			} else {
@@ -330,9 +344,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	}
 
 	protected void triggerFocusChangedListeners(TableRowCore row) {
-		Object[] listeners = listenersSelection.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableSelectionListener l = (TableSelectionListener) listeners[i];
+		for ( TableSelectionListener l: listenersSelection) {
 			l.focusChanged(row);
 		}
 	}
@@ -341,9 +353,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	 *
 	 */
 	protected void triggerTableRefreshListeners() {
-		Object[] listeners = listenersRefresh.toArray();
-		for (int i = 0; i < listeners.length; i++) {
-			TableRefreshListener l = (TableRefreshListener) listeners[i];
+		for (TableRefreshListener l: listenersRefresh ){
 			l.tableRefresh();
 		}
 	}
@@ -526,7 +536,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 			int numSubRows = rows[i].getSubItemCount();
 			if (numSubRows > 0) {
-				TableRowCore[] subRows = rows[i].getSubRowsWithNull();
+				TableRowCore[] subRows = rows[i].getSubRowsRecursive(false);
 				for (TableRowCore subRow : subRows) {
 					if (subRow != null) {
 						runner.run(subRow, isRowVisible(subRow));
@@ -586,6 +596,25 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				debug("filter: unfilteredArray is " + unfilteredArray.length);
 			}
 
+			if (getFilterSubRows()){
+				
+				boolean changed = false;
+				for (Iterator<TableRowCore> iter = sortedRows.iterator(); iter.hasNext();) {
+					TableRowCore row = iter.next();
+					for ( TableRowCore sr: row.getSubRowsWithNull()){
+						if (sr.refilter()){
+							
+							changed = true;
+						}
+					}
+				}
+				
+				if ( changed ){
+					tableMutated();
+					redrawTable();
+				}
+			}
+			
 			Set<DATASOURCETYPE> existing = new HashSet<>(
 					getDataSources());
 			List<DATASOURCETYPE> listRemoves = new ArrayList<>();
@@ -631,6 +660,12 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		return( filter.checker.filterCheck( ds, filter.text, filter.regex ));
 	}
 
+	protected abstract boolean
+	getFilterSubRows();
+	
+	protected abstract void
+	redrawTable();
+	
 	protected void debug(String s) {
 		AEDiagnosticsLogger diag_logger = AEDiagnostics.getLogger("table");
 		diag_logger.log(SystemTime.getCurrentTime() + ":" + getTableID() + ": " + s);
@@ -885,6 +920,142 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 	}
 
+	public TableRowCore[] getRowsAndSubRows( boolean includeHidden ) {
+		synchronized (rows_sync) {
+			List<TableRowCore>	result = new ArrayList<>();
+			
+			getRowsAndSubRows( result, sortedRows.toArray( new TableRowCore[sortedRows.size()]), includeHidden );
+			
+			return( result.toArray( new TableRowCore[ result.size()]));
+		}
+	}
+	
+	private void
+	getRowsAndSubRows(
+		List<TableRowCore>	result,
+		TableRowCore[]		rows,
+		boolean 			includeHidden )
+	{
+		for ( TableRowCore row: rows ){
+			
+			if ( includeHidden || !row.isHidden()){
+			
+				result.add( row );
+			
+				if ( includeHidden || row.isExpanded()){
+				
+					getRowsAndSubRows( result, row.getSubRowsWithNull(), includeHidden);
+				}
+			}
+		}
+	}
+	
+	protected boolean
+	numberAllVisibleRows()
+	{
+		boolean changed = false;
+		synchronized( rows_sync ){
+			int	pos = 0;
+			for ( TableRowCore row: sortedRows ){
+				
+				if ( row.isHidden()){
+					
+					continue;
+				}
+				
+				if (row.setVisibleRowIndex( pos++ )){
+					changed = true;
+				}
+				
+				if ( row.isExpanded()){
+					
+					TableRowCore[] kids = row.getSubRowsWithNull();
+					
+					pos = numberAllVisibleRows( kids, pos );
+					
+					if ( pos < 0 ){
+						changed = true;
+						pos = -pos;
+					}
+				}
+			}
+		}
+		return( changed );
+	}
+	
+	private int
+	numberAllVisibleRows(
+		TableRowCore[]		rows,
+		int					pos )
+	{
+		boolean changed = false;
+		for ( TableRowCore row: rows ){
+			if ( row.isHidden()){
+				
+				continue;
+			}
+			
+			if (row.setVisibleRowIndex( pos++ )){
+				changed = true;
+			}
+			
+			if ( row.isExpanded()){
+				
+				TableRowCore[] kids = row.getSubRowsWithNull();
+				
+				pos = numberAllVisibleRows( kids, pos );
+				
+				if ( pos < 0 ){
+					changed = true;
+					pos = -pos;
+				}
+			}
+		}
+		
+		return( changed?-pos:pos );
+	}
+	
+	@Override
+	public int[] 
+	getRowAndSubRowCount()
+	{
+		int[]	result= { 0, 0 };
+		
+		synchronized (rows_sync) {
+			
+			getRowAndSubRowCount( sortedRows.toArray( new TableRowCore[sortedRows.size()]), result, false);
+		}
+		
+		return( result );
+	}
+		
+	private void
+	getRowAndSubRowCount(
+		TableRowCore[]	rows,
+		int[]			result,
+		boolean			isHidden )
+	{
+		for ( TableRowCore row: rows ){
+			
+			result[0]++;
+			
+			boolean	hidden = isHidden || row.isHidden();
+			
+			if ( !hidden ){
+				
+				result[1]++;
+				
+				if ( !row.isExpanded()){
+					
+					hidden = true;
+				}
+			}
+			
+			getRowAndSubRowCount( row.getSubRowsWithNull(), result, hidden );
+		}
+	}
+	
+					
 	// @see TableView#getRow(java.lang.Object)
 	@Override
 	public TableRowCore getRow(DATASOURCETYPE dataSource) {
@@ -1204,7 +1375,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		ArrayList<TableRowCore> itemsToRemove = new ArrayList<>();
 		ArrayList<Integer> indexesToRemove = new ArrayList<>();
 
-		int numRemovedHavingSelection = 0;
+		ArrayList<TableRowCore> removedWithSelection = new ArrayList<>();
 		synchronized (rows_sync) {
   		for (int i = 0; i < dataSources.length; i++) {
   			if (dataSources[i] == null) {
@@ -1227,14 +1398,13 @@ public abstract class TableViewImpl<DATASOURCETYPE>
     				}
   				}
 
-  				if (item.isSelected()) {
-  					numRemovedHavingSelection++;
-  				}
   				itemsToRemove.add(item);
   				mapDataSourceToRow.remove(dataSources[i]);
   				triggerListenerRowRemoved(item);
   				sortedRows.remove(item);
-  				selectedRows.remove(item);
+  				if ( selectedRows.remove(item)){
+  					removedWithSelection.add( item );
+  				}
 
   				rows_removed++;
   			}
@@ -1259,6 +1429,15 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				row.delete();
 			}
 		}
+		
+		if ( !removedWithSelection.isEmpty()){
+			
+			TableRowCore[] deselected = removedWithSelection.toArray( new TableRowCore[removedWithSelection.size()] );
+			
+			triggerSelectionChangeListeners( new TableRowCore[0], deselected );
+			
+			triggerDeselectionListeners( deselected );
+		}
 
 		if (DEBUGADDREMOVE) {
 			debug("<< Remove " + itemsToRemove.size() + " rows. now "
@@ -1267,7 +1446,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	}
 
-	private void
+	public void
 	tableMutated()
 	{
 		filter f = filter;
@@ -1318,7 +1497,8 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 
 			boolean needsUpdate = false;
-
+			boolean	orderChanged = false;
+			
 			synchronized (rows_sync) {
 				if (bForceDataRefresh && sortColumn != null) {
 					String sColumnID = sortColumn.getName();
@@ -1353,6 +1533,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					TableRowCore row = sortedRows.get(i);
 					boolean visible = row.isVisible();
 					if (row.setTableItem(i, visible)) {
+						orderChanged=true;
 						if (visible) {
 							needsUpdate = true;
 						}
@@ -1365,6 +1546,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				debug("Sort: numMoves= " + iNumMoves + ";needUpdate?" + needsUpdate);
 			}
 
+			if (orderChanged) {
+				tableMutated();
+				
+			}	
 			if (needsUpdate) {
 				visibleRowsChanged();
 			}
@@ -1578,23 +1763,33 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 	// see common.TableView
 	@Override
 	public void columnInvalidate(final String sColumnName) {
+		columnInvalidate(sColumnName,false);
+	}
+
+	@Override
+	public void columnInvalidate(final String sColumnName, boolean mustRefresh ) {
 		TableColumnCore tc = TableColumnManager.getInstance().getTableColumnCore(
 				getTableID(), sColumnName);
 		if (tc != null) {
-			columnInvalidate(tc, tc.getType() == TableColumnCore.TYPE_TEXT_ONLY);
+			columnInvalidate(tc, tc.getType() == TableColumnCore.TYPE_TEXT_ONLY || mustRefresh );
 		}
 	}
-
+	
 	public void columnInvalidate(TableColumnCore tableColumn,
 			final boolean bMustRefresh) {
 		final String sColumnName = tableColumn.getName();
-
+		boolean isSortColumn = getSortColumn() == tableColumn;
+				
 		runForAllRows(new TableGroupRowRunner() {
 			@Override
 			public void run(TableRowCore row) {
 				TableCellCore cell = row.getTableCellCore(sColumnName);
 				if (cell != null) {
 					cell.invalidate(bMustRefresh);
+					if ( bMustRefresh && isSortColumn ){
+							// force immediate update to sort updates straight away
+						cell.refresh(true,true,true);
+					}
 				}
 			}
 		});
@@ -1650,7 +1845,19 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		removeAllTableRows();
 		processDataSourceQueueSync();
 
-		if (columnAddedOrRemoved) {
+		boolean	orderChanged = false;
+		
+		if ( columnsOrdered.length > 1 && !columnAddedOrRemoved ){
+			
+			for ( int i=0;i<columnsOrdered.length-2;i++){
+				if ( columnsOrdered[i].getPosition() > columnsOrdered[i+1].getPosition()){
+					
+					orderChanged = true;
+					break;
+				}
+			}
+		}
+		if (columnAddedOrRemoved || orderChanged) {
 			tableColumns = TableColumnManager.getInstance().getAllTableColumnCoreAsArray(
 					getDataSourceType(), tableID);
 			ArrayList<TableColumnCore> listVisibleColumns = new ArrayList<>();
@@ -1937,8 +2144,10 @@ public abstract class TableViewImpl<DATASOURCETYPE>
   					sortColumn.setSortAscending(true);
   				} else if (iSortDirection == 1) {
   					sortColumn.setSortAscending(false);
-  				} else {
+  				} else if (iSortDirection == 2) {
   					sortColumn.setSortAscending(!sortColumn.isSortAscending());
+  				}else{
+  					//same
   				}
 
   				TableColumnManager.getInstance().setDefaultSortColumnName(tableID, sortColumn.getName(), true );
@@ -2057,7 +2266,14 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 		if (somethingChanged) {
-			uiSelectionChanged(listNewlySelected.toArray(new TableRowCore[0]), oldSelectionList.toArray(new TableRowCore[0]));
+			TableRowCore[] selected 	= listNewlySelected.toArray(new TableRowCore[0]);
+			TableRowCore[] deselected	= oldSelectionList.toArray(new TableRowCore[0]);
+			
+			uiSelectionChanged( selected, deselected );
+			
+			if ( trigger ){
+				triggerSelectionChangeListeners( selected, deselected );
+			}
 		}
 
 		if (trigger && somethingChanged) {
@@ -2072,6 +2288,25 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 
 	}
+	
+	protected void
+	reaffirmSelection()
+	{
+		List<TableRowCore> oldSelectionList = new ArrayList<>();
+
+		synchronized (rows_sync) {
+			if (selectedRows.size() == 0 ){
+				return;
+			}
+
+			oldSelectionList.addAll(selectedRows);
+		}
+		
+		TableRowCore[] rows = oldSelectionList.toArray(new TableRowCore[0]);
+		
+		triggerSelectionChangeListeners( rows, rows );
+		triggerSelectionListeners(rows);
+	}
 
 	public abstract boolean isSingleSelection();
 
@@ -2085,7 +2320,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	@Override
 	public void selectAll() {
-		setSelectedRows(getRows(), true);
+		setSelectedRows( getFilterSubRows()?getRowsAndSubRows( false ):getRows(), true);
 	}
 
 	public String getFilterText() {

@@ -19,7 +19,7 @@ package com.biglybt.ui.swt.views.skin;
 
 import java.util.*;
 
-import com.biglybt.core.util.AEMonitor2;
+import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Debug;
 
 import com.biglybt.ui.swt.skin.SWTSkinObject;
@@ -36,7 +36,7 @@ public class SkinViewManager
 
 	private static Map<Class<?>, List<SkinView>> mapSkinViews = new HashMap<>();
 
-	private static AEMonitor2 mon_skinViews = new AEMonitor2("skinViews");
+	private static AEMonitor mon_skinViews = new AEMonitor("skinViews");
 
 	/**
 	 * Map SkinObjectID to skin view

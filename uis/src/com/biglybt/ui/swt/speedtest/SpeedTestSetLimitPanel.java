@@ -4,19 +4,12 @@ import com.biglybt.core.CoreFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.stats.TransferStatsView;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
@@ -62,16 +55,18 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
     public SpeedTestSetLimitPanel(Wizard wizard, IWizardPanel previousPanel, int upload, long maxup, int download, long maxdown) {
         super(wizard, previousPanel);
 
-        downloadHitLimit 	= download > maxdown - 20*1024;
-        uploadHitLimit 		= upload > maxup - 20*1024;
+        int	kinb = DisplayFormatters.getKinB();
+        
+        downloadHitLimit 	= download > maxdown - 20*kinb;
+        uploadHitLimit 		= upload > maxup - 20*kinb;
 
-        measuredUploadKbps =upload/1024;
+        measuredUploadKbps =upload/kinb;
         if(measuredUploadKbps<5){
             uploadTestRan = false;
         }
 
 
-        measuredDownloadKbps =download/1024;
+        measuredDownloadKbps =download/kinb;
         if(measuredDownloadKbps<5){
             downloadTestRan = false;
         }
@@ -98,7 +93,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
 
         Composite panel = new Composite(rootPanel, SWT.NULL);
         GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-        Utils.setLayoutData(panel, gridData);
+        panel.setLayoutData(gridData);
 
         layout = new GridLayout();
         layout.numColumns = 4;
@@ -107,14 +102,14 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         Label explain = new Label(panel, SWT.WRAP);
         gridData = new GridData(GridData.FILL_HORIZONTAL);
         gridData.horizontalSpan = 4;
-        Utils.setLayoutData(explain, gridData);
+        explain.setLayoutData(gridData);
         Messages.setLanguageText(explain,"SpeedTestWizard.set.upload.panel.explain");
 
         //spacer line
         Label spacer = new Label(panel, SWT.NULL);
         gridData = new GridData();
         gridData.horizontalSpan = 4;
-        Utils.setLayoutData(spacer, gridData);
+        spacer.setLayoutData(gridData);
 
         Label spacer1 = new Label(panel, SWT.NULL);
         gridData = new GridData();
@@ -123,25 +118,25 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         Label bytesCol = new Label(panel, SWT.NULL);
         gridData = new GridData();
         gridData.widthHint=80;
-        Utils.setLayoutData(bytesCol, gridData);
+        bytesCol.setLayoutData(gridData);
         Messages.setLanguageText(bytesCol,"SpeedTestWizard.set.upload.bytes.per.sec");
 
         Label bitsCol = new Label(panel, SWT.NULL);
         gridData = new GridData();
         gridData.widthHint=80;
-        Utils.setLayoutData(bitsCol, gridData);
+        bitsCol.setLayoutData(gridData);
         Messages.setLanguageText(bitsCol,"SpeedTestWizard.set.upload.bits.per.sec");
 
         Label confLevel = new Label(panel, SWT.NULL);
         gridData = new GridData();
         gridData.widthHint=80;
-        Utils.setLayoutData(confLevel, gridData);
+        confLevel.setLayoutData(gridData);
         Messages.setLanguageText(confLevel,"SpeedTestWizard.set.limit.conf.level");
 
         //upload limit label.
         Label ul = new Label(panel, SWT.NULL );
         gridData = new GridData();
-        Utils.setLayoutData(ul, gridData);
+        ul.setLayoutData(gridData);
         Messages.setLanguageText(
         		ul,
                 "SpeedView.stats.estupcap",
@@ -150,7 +145,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         final Text uploadLimitSetting = new Text(panel, SWT.BORDER );
         gridData = new GridData(GridData.BEGINNING);
         gridData.widthHint=80;
-        Utils.setLayoutData(uploadLimitSetting, gridData);
+        uploadLimitSetting.setLayoutData(gridData);
 
         int uploadCapacity = determineRateSettingEx(measuredUploadKbps,uploadTestRan,true);
 
@@ -161,14 +156,15 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         uploadLimitSetting.setText( ""+uploadCapacity );
         uploadLimitSetting.addListener(SWT.Verify, new NumberListener(uploadLimitSetting));
 
-
+        int kinb = DisplayFormatters.getKinB();
+        
         //echo
         final Label echo = new Label(panel, SWT.NULL);
         gridData = new GridData();
         gridData.horizontalSpan = 1;
         gridData.widthHint = 80;
-        Utils.setLayoutData(echo, gridData);
-        echo.setText( DisplayFormatters.formatByteCountToBitsPerSec(uploadCapacity*1024) );
+        echo.setLayoutData(gridData);
+        echo.setText( DisplayFormatters.formatByteCountToBitsPerSec2(uploadCapacity*kinb) );
         //This space has a change listener the updates in bits/sec.
 
         //want a change listener to update the echo label which has the value in bits/sec.
@@ -188,7 +184,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         //download limit label.
         Label dl = new Label( panel, SWT.NULL );
         gridData = new GridData();
-        Utils.setLayoutData(dl, gridData);
+        dl.setLayoutData(gridData);
         Messages.setLanguageText(
                 dl,
                 "SpeedView.stats.estdowncap",
@@ -197,7 +193,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         final Text downloadLimitSetting = new Text(panel, SWT.BORDER);
         gridData = new GridData(GridData.BEGINNING);
         gridData.widthHint=80;
-        Utils.setLayoutData(downloadLimitSetting, gridData);
+        downloadLimitSetting.setLayoutData(gridData);
 
         int bestDownloadSetting = determineRateSettingEx(measuredDownloadKbps,downloadTestRan,false);
 
@@ -209,8 +205,8 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         gridData = new GridData();
         gridData.horizontalSpan = 1;
         gridData.widthHint = 80;
-        Utils.setLayoutData(downEcho, gridData);
-        downEcho.setText( DisplayFormatters.formatByteCountToBitsPerSec(bestDownloadSetting*1024) );
+        downEcho.setLayoutData(gridData);
+        downEcho.setText( DisplayFormatters.formatByteCountToBitsPerSec2(bestDownloadSetting*kinb) );
 
         //convert bytes to bits on the fly for user.
         downloadLimitSetting.addListener(SWT.Modify, new ByteConversionListener(downEcho, downloadLimitSetting) );
@@ -233,7 +229,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
 
             //Since cable modems can over estimate upload need to drop type setting to estimate.
             sm.setEstimatedUploadCapacityBytesPerSec(
-        			measuredUploadKbps*1024,
+        			measuredUploadKbps*kinb,
         			uploadHitLimit?	// parg: as far as I can tell this stuff is deliberate, probably because the 'measured' conf settings screwed things up
         				SpeedManagerLimitEstimate.TYPE_ESTIMATED :SpeedManagerLimitEstimate.TYPE_ESTIMATED);
         }
@@ -241,7 +237,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         if ( downloadTestRan ){
 
         	sm.setEstimatedDownloadCapacityBytesPerSec(
-        			measuredDownloadKbps*1024,
+        			measuredDownloadKbps*kinb,
         			downloadHitLimit?
         				SpeedManagerLimitEstimate.TYPE_MEASURED_MIN :SpeedManagerLimitEstimate.TYPE_MEASURED);
         }
@@ -250,7 +246,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         Messages.setLanguageText(apply, "SpeedTestWizard.set.upload.button.apply" );
         gridData = new GridData();
         gridData.widthHint = 70;
-        Utils.setLayoutData(apply, gridData);
+        apply.setLayoutData(gridData);
         apply.addListener(SWT.Selection, new Listener(){
             @Override
             public void handleEvent(Event event){
@@ -314,7 +310,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         //switch column width to 5 columns.
         Composite resultsPanel = new Composite(rootPanel, SWT.NULL);
         gridData = new GridData( GridData.VERTICAL_ALIGN_END | GridData.FILL_HORIZONTAL );
-        Utils.setLayoutData(resultsPanel, gridData);
+        resultsPanel.setLayoutData(gridData);
 
         layout = new GridLayout();
         layout.numColumns = 5;
@@ -492,7 +488,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         gridData.horizontalSpan = 1;
         gridData.horizontalAlignment = GridData.CENTER;
         c4.setLayoutData(gridData);
-        c4.setText( DisplayFormatters.formatByteCountToBitsPerSec(rate) );
+        c4.setText( DisplayFormatters.formatByteCountToBitsPerSec2(rate) );
 
         //spacer column
         Label c5 = new Label(panel, SWT.NULL);
@@ -522,14 +518,16 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
             est = speedManager.getEstimatedDownloadCapacityBytesPerSec();
         }
 
+        int kinb = DisplayFormatters.getKinB();
+        
         //Use previous value if no test of this type ran.
         if( !testRan ){
-            retVal = est.getBytesPerSec()/1024;
+            retVal = est.getBytesPerSec()/kinb;
         }
 
         //if the previous set to Manually use that value.
         if( est.getEstimateType()==SpeedManagerLimitEstimate.TYPE_MANUAL ){
-            retVal = est.getBytesPerSec()/1024;
+            retVal = est.getBytesPerSec()/kinb;
         }
 
         return retVal;
@@ -577,7 +575,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
             try{
                 int newValInt = Integer.parseInt(newVal);
                 if( echoLbl!=null ){
-                    echoLbl.setText( DisplayFormatters.formatByteCountToBitsPerSec(newValInt*1024) );
+                    echoLbl.setText( DisplayFormatters.formatByteCountToBitsPerSec2(newValInt*DisplayFormatters.getKinB()));
                 }
             }catch(Throwable t){
                 //echo.setText(" - ");

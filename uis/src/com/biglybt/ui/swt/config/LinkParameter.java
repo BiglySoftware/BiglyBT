@@ -25,12 +25,14 @@ package com.biglybt.ui.swt.config;
  *
  */
 
-import org.eclipse.swt.*;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
+
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
 
 
@@ -72,11 +74,10 @@ LinkParameter
 	}
   }
 
-  @Override
-  public void setLayoutData(Object layoutData) {
-  	Utils.adjustPXForDPI(layoutData);
-	  link_label.setLayoutData(layoutData);
-  }
+	@Override
+	public void setLayoutData(Object layoutData) {
+		link_label.setLayoutData(layoutData);
+	}
 
   @Override
   public Control getControl()

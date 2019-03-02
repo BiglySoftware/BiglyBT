@@ -673,7 +673,7 @@ implements PEPeerTransport
 
 		if ( use_crypto ){
 
-			BTHandshake handshake = new BTHandshake( manager.getHash(),
+			BTHandshake handshake = new BTHandshake( manager.getTargetHash(),
 					manager.getPeerId(),
                     manager.getExtendedMessagingMode(), other_peer_handshake_version );
 
@@ -823,6 +823,10 @@ implements PEPeerTransport
 						if ( property_name == AEProxyFactory.PO_PEER_NETWORKS ){
 
 							return( manager.getAdapter().getEnabledNetworks());
+							
+						}else if ( property_name.equals( "local_port" )){
+							
+							return( manager.getAdapter().getTCPListeningPortNumber());
 						}
 
 						return( null );
@@ -1080,7 +1084,7 @@ implements PEPeerTransport
 	{
 		SHA1Hasher sha1 = new SHA1Hasher();
 		sha1.update(sessionSecret);
-		sha1.update(manager.getHash());
+		sha1.update(manager.getTargetHash());
 		sha1.update(getIp().getBytes());
 		mySessionID = sha1.getHash();
 		checkForReconnect(mySessionID);
@@ -1138,7 +1142,7 @@ implements PEPeerTransport
 				}
 			}
 
-			BTHandshake handshake =	new BTHandshake( manager.getHash(),
+			BTHandshake handshake =	new BTHandshake( manager.getTargetHash(),
 					manager.getPeerId(), msg_mode, other_peer_handshake_version );
 
 			if (Logger.isEnabled())
@@ -1151,8 +1155,8 @@ implements PEPeerTransport
 	}
 
 	private void sendLTHandshake() {
-		String client_name = (String)ClientIDManagerImpl.getSingleton().getProperty(  manager.getHash(), ClientIDGenerator.PR_CLIENT_NAME );
-		int localTcpPort = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+		String client_name = (String)ClientIDManagerImpl.getSingleton().getProperty(  manager.getTargetHash(), ClientIDGenerator.PR_CLIENT_NAME );
+		int localTcpPort = manager.getTCPListeningPortNumber();
 		String tcpPortOverride = COConfigurationManager.getStringParameter("TCP.Listen.Port.Override");
 		try
 		{
@@ -1219,7 +1223,7 @@ implements PEPeerTransport
 			avail_vers[i] = avail_msgs[i].getVersion();
 		}
 
-		int local_tcp_port = TCPNetworkManager.getSingleton().getTCPListeningPortNumber();
+		int local_tcp_port = manager.getTCPListeningPortNumber();
 		int local_udp_port = UDPNetworkManager.getSingleton().getUDPListeningPortNumber();
 		int local_udp2_port = UDPNetworkManager.getSingleton().getUDPNonDataListeningPortNumber();
 		String tcpPortOverride = COConfigurationManager.getStringParameter("TCP.Listen.Port.Override");
@@ -2132,9 +2136,7 @@ implements PEPeerTransport
 				if (!closing)
 				{   // may have unchoked us, gotten a request, then choked without filling it - snub them
 					// if they actually have data coming in, they'll be unsnubbed as soon as it writes
-					final long timeSinceGoodData =getTimeSinceGoodDataReceived();
-					if (timeSinceGoodData ==-1 ||timeSinceGoodData >60 *1000)
-						setSnubbed(true);
+					manager.checkSnubbing( this );
 				}
 				for (int i = requested.size() - 1; i >= 0; i--) {
 					final DiskManagerReadRequest request =(DiskManagerReadRequest) requested.remove(i);
@@ -2524,7 +2526,7 @@ implements PEPeerTransport
 			closeConnectionInternally("peer sent another handshake after the initial connect");
 		}
 
-		if( !Arrays.equals( manager.getHash(), handshake.getDataHash() ) ) {
+		if( !Arrays.equals( manager.getTargetHash(), handshake.getDataHash() ) ) {
 			closeConnectionInternally( "handshake has wrong infohash" );
 			handshake.destroy();
 			return;
@@ -2533,7 +2535,7 @@ implements PEPeerTransport
 		peer_id = handshake.getPeerId();
 
 		// Decode a client identification string from the given peerID
-		this.client_peer_id = this.client = StringInterner.intern(PeerClassifier.getClientDescription( peer_id ));
+		this.client_peer_id = this.client = StringInterner.intern(PeerClassifier.getClientDescription( peer_id, network ));
 
 		//make sure the client type is not banned
 		if( !PeerClassifier.isClientTypeAllowed( client ) ) {
@@ -3785,7 +3787,7 @@ implements PEPeerTransport
 				manager.discarded( this, length );
 
 				if( manager.isInEndGameMode() ) {  //we're probably in end-game mode then
-					if (last_good_data_time !=-1 &&now -last_good_data_time <=60 *1000)
+					if (last_good_data_time !=-1 &&now -last_good_data_time <= PEPeerControl.SNUB_MILLIS )
 						setSnubbed(false);
 					last_good_data_time =now;
 					requests_discarded_endgame++;
@@ -4936,7 +4938,7 @@ implements PEPeerTransport
 						connection.getOutgoingMessageQueue().addMessage( new UTPeerExchange(adds, drops, null, (byte)0), false);
 					}
 					else {
-						connection.getOutgoingMessageQueue().addMessage( new AZPeerExchange( manager.getHash(), adds, drops, other_peer_pex_version ), false );
+						connection.getOutgoingMessageQueue().addMessage( new AZPeerExchange( manager.getTargetHash(), adds, drops, other_peer_pex_version ), false );
 					}
 				}
 			}else{
@@ -5095,7 +5097,7 @@ implements PEPeerTransport
 
 							manager.writeBlock( piece_number, 0, data, this, false);
 
-							if ( last_good_data_time !=-1 && now -last_good_data_time <=60 *1000 ){
+							if ( last_good_data_time !=-1 && now -last_good_data_time <= PEPeerControl.SNUB_MILLIS ){
 
 								setSnubbed( false );
 							}
@@ -5682,13 +5684,17 @@ implements PEPeerTransport
 	generateFastSet(
 		int		num )
 	{
-		return( generateFastSet( manager.getHash(), getIp(), nbPieces, num ));
+		return( generateFastSet( manager.getTargetHash(), getIp(), nbPieces, num ));
 	}
 
 	@Override
 	public int getTaggableType() {return TT_PEER;}
    	@Override
     public String getTaggableID(){ return( null ); }
+   	@Override
+   	public String getTaggableName(){
+   		return( getIp());
+   	}
 	@Override
 	public TaggableResolver	getTaggableResolver(){ return( null ); }
 	@Override

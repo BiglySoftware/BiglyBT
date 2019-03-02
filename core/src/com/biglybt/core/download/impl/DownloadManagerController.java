@@ -40,6 +40,7 @@ import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.*;
 import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
@@ -558,6 +559,12 @@ DownloadManagerController
 
 						return((int)((current_local+1023)/1024 ));
 					}
+					
+	    			public int
+	    			getTCPListeningPortNumber()
+	    			{
+	    				return( DownloadManagerController.this.getTCPListeningPortNumber());
+	    			}
 
 					@Override
 					public int
@@ -1142,7 +1149,14 @@ DownloadManagerController
 
 		}else if (diskManagerState == DiskManager.FAULTY){
 
-			return DownloadManager.STATE_ERROR;
+			if ( dm.getErrorType() == DiskManager.ET_STOP_DURING_INIT ){
+				
+				return DownloadManager.STATE_STOPPED;
+				
+			}else{
+			
+				return DownloadManager.STATE_ERROR;
+			}
 		}
 
 		return DownloadManager.STATE_ERROR;
@@ -1420,6 +1434,28 @@ DownloadManagerController
 		}
 	}
 
+	@Override
+	public byte[] 
+	getHashOverride()
+	{
+		HashWrapper hw = download_manager.getTorrentHashOverride();
+		
+		if ( hw != null ){
+			
+			return( hw.getBytes());
+		}
+		
+		return( null );
+	}
+	
+	@Override
+	public int 
+	getLocalPort(
+		boolean	only_if_allocated )
+	{
+		return( download_manager.getTCPPortOverride( only_if_allocated ));
+	}
+	
 		// secrets for outbound connections, based on level of target
 
 	@Override
@@ -1434,8 +1470,16 @@ DownloadManagerController
 
 			if ( crypto_level == PeerItemFactory.CRYPTO_LEVEL_1 ){
 
-				secret = torrent.getHash();
-
+				HashWrapper override = download_manager.getTorrentHashOverride();
+				
+				if ( override != null ){
+					
+					secret = override.getBytes();
+					
+				}else{
+				
+					secret = torrent.getHash();
+				}
 			}else{
 
 				secret = getSecret2( torrent );
@@ -1692,7 +1736,40 @@ DownloadManagerController
 			activation_count = bloom.getEntryCount();
 		}
 	}
-
+	
+	@Override
+	public byte[]
+	getTargetHash()
+	{
+		HashWrapper hw = download_manager.getTorrentHashOverride();
+		
+		if ( hw != null ){
+			
+			return( hw.getBytes());
+		}
+		
+		TOTorrent torrent = download_manager.getTorrent();
+		
+		if ( torrent != null ){
+			
+			try{
+				return( torrent.getHash());
+				
+			}catch( Throwable e ){
+				
+			}
+		}
+		
+		return( null );
+	}
+	
+	@Override
+	public int 
+	getTCPListeningPortNumber()
+	{
+		return( download_manager.getTCPListeningPortNumber());
+	}
+	
 	public int
 	getActivationCount()
 	{
@@ -1777,14 +1854,20 @@ DownloadManagerController
 		int			type,
 		String		reason )
 	{
-		if ( reason != null ){
-
-			errorDetail = reason;
+		if( type == DownloadManager.ET_STOP_DURING_INIT ){
+			
+			stopIt( DownloadManager.STATE_STOPPED, false, false, false );
+			
+		}else{
+			if ( reason != null ){
+	
+				errorDetail = reason;
+			}
+	
+			errorType	= type;
+	
+			stopIt( DownloadManager.STATE_ERROR, false, false, false );
 		}
-
-		errorType	= type;
-
-		stopIt( DownloadManager.STATE_ERROR, false, false, false );
 	}
 
 	public boolean
@@ -2895,6 +2978,12 @@ DownloadManagerController
 		{
 			return( delegate.getDownloaded());
 		}
+		
+		@Override
+		public long getLastModified()
+		{
+			return( delegate.getLastModified());
+		}
 
 		@Override
 		public String
@@ -3037,6 +3126,12 @@ DownloadManagerController
 			return( delegate.getETA());
 		}
 
+		@Override
+		public void recheck()
+		{
+			delegate.recheck();
+		}
+		
 		@Override
 		public void
 		close()
@@ -3344,7 +3439,17 @@ DownloadManagerController
 
 								long	amount_downloaded = (completed*dm.getTotalLength())/1000;
 
-								stats.setSavedDownloadedUploaded( amount_downloaded, amount_downloaded );
+								boolean	sr1 = COConfigurationManager.getBooleanParameter("StartStopManager_bAddForDownloadingSR1");
+
+								if ( sr1 ){
+								
+									stats.setSavedDownloadedUploaded( amount_downloaded, amount_downloaded );
+									
+								}else{
+									
+									stats.setSavedDownloadedUploaded( amount_downloaded, 0 );
+
+								}
 							}
 						}else{
 							// see GlobalManager for comment on this

@@ -1168,12 +1168,12 @@ public abstract class TableCellSWTBase
 
 	@Override
 	public Object getToolTip() {
-		return oToolTip;
+		return ( TableTooltips.tooltips_disabled && !tableColumn.doesAutoTooltip())?null:oToolTip;
 	}
 
 	@Override
 	public Object getDefaultToolTip() {
-		return defaultToolTip;
+		return ( TableTooltips.tooltips_disabled && !tableColumn.doesAutoTooltip())?null:defaultToolTip;
 	}
 
 	@Override
@@ -1235,7 +1235,7 @@ public abstract class TableCellSWTBase
   	sb.append((flag & FLAG_TOOLTIPISAUTO) > 0 ? 'T' : onlySet ? ' ' : 't');
   	sb.append((flag & FLAG_UPTODATE) > 0 ? 'U' : onlySet ? ' ' : 'u');
   	sb.append((flag & FLAG_VALID) > 0 ? 'V' : onlySet ? ' ' : 'v');
-  	sb.append((flag & FLAG_VISUALLY_CHANGED_SINCE_REFRESH) > 0 ? "VC" : onlySet ? ' ' : "vc");
+  	sb.append((flag & FLAG_VISUALLY_CHANGED_SINCE_REFRESH) > 0 ? "VC" : onlySet ? " " : "vc");
   	return sb.toString();
   }
 

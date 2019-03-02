@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
@@ -45,11 +47,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.pif.UISWTInstance;
@@ -480,6 +484,39 @@ public class SBC_TagsOverview
 					}
 				});
 
+		tableManager.registerColumn(Tag.class, ColumnTagIcon.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagIcon(column);
+					}
+				});
+		
+		tableManager.registerColumn(Tag.class, ColumnTagIconSortOrder.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagIconSortOrder(column);
+					}
+				});
+
+		tableManager.registerColumn(Tag.class, ColumnTagStatus.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagStatus(column);
+					}
+				});
+
+		tableManager.registerColumn(Tag.class, ColumnTagDependsOn.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagDependsOn(column);
+					}
+				});
+
+		
 		tableManager.setDefaultColumnNames(TABLE_TAGS,
 				new String[] {
 					ColumnTagColor.COLUMN_ID,
@@ -491,6 +528,7 @@ public class SBC_TagsOverview
 					ColumnTagDownRate.COLUMN_ID,
 					ColumnTagUpLimit.COLUMN_ID,
 					ColumnTagDownLimit.COLUMN_ID,
+					ColumnTagStatus.COLUMN_ID,
 				});
 
 		tableManager.setDefaultSortColumnName(TABLE_TAGS, ColumnTagName.COLUMN_ID);
@@ -773,6 +811,63 @@ public class SBC_TagsOverview
 			MenuFactory.addSeparatorMenuItem(menu);
 		}
 
+		if ( 	( sColumnName.equals( ColumnTagIcon.COLUMN_ID )) ||
+				( sColumnName.equals( ColumnTagIconSortOrder.COLUMN_ID ))){
+
+			MenuItem mi = new MenuItem(menu, SWT.PUSH);
+
+			Messages.setLanguageText(mi, "menu.set.icon.sort");
+
+			mi.addListener(SWT.Selection,
+				(e)->{
+					SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+							"tag.sort.order.title",
+							"tag.sort.order.text");
+					
+					entryWindow.allowEmptyInput( true );
+					
+					entryWindow.setWidthHint( 450 );
+					
+					entryWindow.prompt(new UIInputReceiverListener() {
+						@Override
+						public void 
+						UIInputReceiverClosed(UIInputReceiver entryWindow) 
+						{
+							if (!entryWindow.hasSubmittedInput()){
+								
+								return;
+							}
+							
+							String sReturn = entryWindow.getSubmittedInput().trim();
+							
+							if ( sReturn.isEmpty()){
+								
+								for ( Tag t: tags ){
+									
+									t.setImageSortOrder( -1 );
+								}
+							}else{
+								
+								int start = 0;
+								
+								try{
+									start = Integer.valueOf(sReturn).intValue();
+									
+								} catch (NumberFormatException er) {
+									// Ignore
+								}
+								
+								for ( Tag t: tags ){
+									
+									t.setImageSortOrder( start++ );
+								}
+							}
+						}});
+				});	
+
+			MenuFactory.addSeparatorMenuItem(menu);
+		}
+		
 		if ( tags.size() == 1 ){
 			TagUIUtils.createSideBarMenuItems( menu, tags.get(0) );
 		}else{
@@ -910,24 +1005,24 @@ public class SBC_TagsOverview
 			match_result = false;
 		}
 
-		Pattern pattern = RegExUtil.getCachedPattern( "tagsoverview:search", s, Pattern.CASE_INSENSITIVE);
+		Pattern pattern = RegExUtil.getCachedPattern( "tagsoverview:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 
 		return( pattern.matcher(name).find() == match_result );
 	}
 
-	// @see com.biglybt.core.tag.TagManagerListener#tagTypeAdded(com.biglybt.core.tag.TagManager, com.biglybt.core.tag.TagType)
 	@Override
 	public void tagTypeAdded(TagManager manager, TagType tag_type) {
-		tag_type.addTagTypeListener(this, true);
+		if ( Constants.IS_CVS_VERSION || tag_type.getTagType() != TagType.TT_DOWNLOAD_INTERNAL ){
+			
+			tag_type.addTagTypeListener(this, true);
+		}
 	}
 
-	// @see com.biglybt.core.tag.TagManagerListener#tagTypeRemoved(com.biglybt.core.tag.TagManager, com.biglybt.core.tag.TagType)
 	@Override
 	public void tagTypeRemoved(TagManager manager, TagType tag_type) {
 		tag_type.removeTagTypeListener(this);
 	}
 
-	// @see com.biglybt.core.tag.TagTypeListener#tagTypeChanged(com.biglybt.core.tag.TagType)
 	@Override
 	public void tagTypeChanged(TagType tag_type) {
 		tv.tableInvalidate();
@@ -939,7 +1034,7 @@ public class SBC_TagsOverview
 		Tag	tag = event.getTag();
 		if ( type == TagEvent.ET_TAG_ADDED ){
 			tagAdded( tag );
-		}else if ( type == TagEvent.ET_TAG_CHANGED ){
+		}else if ( type == TagEvent.ET_TAG_MEMBERSHIP_CHANGED || type == TagEvent.ET_TAG_METADATA_CHANGED ){
 			tagChanged( tag );
 		}else if ( type == TagEvent.ET_TAG_REMOVED ){
 			tagRemoved( tag );

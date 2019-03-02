@@ -21,6 +21,7 @@
 package com.biglybt.ui.swt.update;
 
 import java.io.File;
+import java.util.Map;
 
 import com.biglybt.core.Core;
 import com.biglybt.ui.UIFunctions;
@@ -475,6 +476,17 @@ public class UpdateMonitor
 		final boolean						isRecheck,
 		final UpdateCheckInstanceListener 	l )
 	{
+		performCheck( bForce, automatic, isRecheck, null, l );
+	}
+	
+	public void
+	performCheck(
+		final boolean 						bForce,
+		final boolean 						automatic,
+		final boolean						isRecheck,
+		final Map<String,Object>			explicitResources,
+		final UpdateCheckInstanceListener 	l )
+	{
 		long now = SystemTime.getCurrentTime();
 
 		if ( isRecheck ){
@@ -537,6 +549,11 @@ public class UpdateMonitor
 						? UpdateCheckInstance.UCI_INSTALL : UpdateCheckInstance.UCI_UPDATE,
 						"update.instance.update");
 
+				if ( explicitResources != null ){
+					
+					current_update_instance.setProperty( UpdateCheckInstance.PT_RESOURCE_OVERRIDES, explicitResources );
+				}
+				
 				if (!automatic) {
 
 					current_update_instance.setAutomatic(false);

@@ -18,31 +18,44 @@
 package com.biglybt.ui.swt;
 
 import java.util.*;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 
 public class TextViewerWindow {
-  private Shell shell;
-  private Text txtInfo;
-  private  Button ok;
-
+	
+  private boolean reuseWindow;
+  
+  private boolean modal;
+  private boolean defer_modal;
+  
+  private final Shell shell;
+  private final Text txtInfo;
+  
+  private final Composite buttonArea;
+  
+  private Button ok;
+  private Button cancel;
+  
+  private boolean	cancel_enabled;
+  
+  private Font	np_font;
+  
+  private boolean ok_pressed;
+  
+  
   private List<TextViewerWindowListener> listeners = new ArrayList<>();
 
   public
@@ -68,8 +81,11 @@ public class TextViewerWindow {
 
   public
   TextViewerWindow(
-	Shell parent_shell, String sTitleID, String sMessageID, String sText, boolean modal, boolean defer_modal )
+	Shell parent_shell, String sTitleID, String sMessageID, String sText, boolean _modal, boolean _defer_modal )
   {
+	modal = _modal;
+	defer_modal = _defer_modal;
+	
     if ( modal ){
 
     	if ( parent_shell == null ){
@@ -97,24 +113,26 @@ public class TextViewerWindow {
     Utils.setShellIcon(shell);
 
     GridLayout layout = new GridLayout();
-    layout.numColumns = 2;
+    layout.numColumns = 3;
     shell.setLayout(layout);
 
     Label label = new Label(shell, SWT.NONE);
     if (sMessageID != null) label.setText(MessageText.keyExists(sMessageID)?MessageText.getString(sMessageID):sMessageID);
     GridData gridData = new GridData(  GridData.FILL_HORIZONTAL );
     gridData.widthHint = 200;
-    gridData.horizontalSpan = 2;
-    Utils.setLayoutData(label, gridData);
+    gridData.horizontalSpan = 3;
+    label.setLayoutData(gridData);
 
-    txtInfo = new Text(shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL);
+    txtInfo = new Text(shell, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL | SWT.WRAP);
     gridData = new GridData(  GridData.FILL_BOTH );
     gridData.widthHint = 600;
     gridData.heightHint = 400;
-    gridData.horizontalSpan = 2;
-    Utils.setLayoutData(txtInfo, gridData);
+    gridData.horizontalSpan = 3;
+    txtInfo.setLayoutData(gridData);
     txtInfo.setText(sText);
-
+    
+    np_font = new Font(shell.getDisplay(), "Courier", txtInfo.getFont().getFontData()[0].getHeight(), SWT.NORMAL);
+    
     txtInfo.addKeyListener(new KeyListener() {
 
 			@Override
@@ -137,34 +155,21 @@ public class TextViewerWindow {
 
     });
 
-    label = new Label(shell, SWT.NONE);
-    gridData = new GridData( GridData.FILL_HORIZONTAL );
-    Utils.setLayoutData(label, gridData);
+    buttonArea = new Composite(shell, SWT.NULL );
+    buttonArea.setLayout( new GridLayout(  3, false ));
+    gridData = new GridData(  GridData.FILL_HORIZONTAL );
+    gridData.horizontalSpan = 3;
+    buttonArea.setLayoutData(gridData);
 
-    ok = new Button(shell, SWT.PUSH);
-    ok.setText(MessageText.getString("Button.ok"));
-    gridData = new GridData();
-    gridData.widthHint = 70;
-    Utils.setLayoutData(ok, gridData);
-    shell.setDefaultButton(ok);
-    ok.addListener(SWT.Selection, new Listener() {
-      @Override
-      public void handleEvent(Event event) {
-        try {
-        	shell.dispose();
-        }
-        catch (Exception e) {
-        	Debug.printStackTrace( e );
-        }
-      }
-    });
-
+    buildButtons();
+    
 	shell.addListener(SWT.Traverse, new Listener() {
 		@Override
 		public void handleEvent(Event e) {
 			if ( e.character == SWT.ESC){
 				if ( ok.isEnabled()){
-					shell.dispose();
+					
+					closeWindow();
 				}
 			}
 		}
@@ -178,6 +183,14 @@ public class TextViewerWindow {
 			widgetDisposed(
 				DisposeEvent arg0)
 			{
+				if ( reuseWindow ){
+					Debug.out( "What?" );
+				}
+				if ( np_font != null ){
+					np_font.dispose();
+					np_font = null;
+				}
+				
 				for ( TextViewerWindowListener l: listeners ){
 
 					l.closed();
@@ -195,11 +208,118 @@ public class TextViewerWindow {
   }
 
   public void
+  setReuseWindow()
+  {
+	  reuseWindow = true;
+	  
+	  shell.addListener (
+			SWT.Close, new Listener () 
+			{
+				public void handleEvent (Event event) {
+					event.doit = false;
+					closeWindow();
+				}
+			});
+  }
+  
+  public void
+  reset()
+  {
+	  listeners.clear();
+	  
+	  txtInfo.setText( "" );
+	  shell.setVisible( true );  
+
+	  Utils.centreWindow( shell );
+	  
+	    if ( modal && !defer_modal ){
+	    	goModal();
+	    }
+  }
+  
+  private void
+  buildButtons()
+  {
+	  Utils.disposeComposite( buttonArea, false );
+
+	  Label label = new Label(buttonArea, SWT.NONE);
+	  GridData gridData = new GridData( GridData.FILL_HORIZONTAL );
+	  label.setLayoutData(gridData);
+
+	  if ( cancel_enabled ){
+		  if (Constants.isOSX) {
+			  cancel = new Button(buttonArea, SWT.PUSH);
+			  ok = new Button(buttonArea, SWT.PUSH);
+		  }else{
+			  ok = new Button(buttonArea, SWT.PUSH);
+			  cancel = new Button(buttonArea, SWT.PUSH);
+		  }
+		  cancel.setText(MessageText.getString("Button.cancel"));
+	  }else{
+		  cancel = null;
+		  ok = new Button(buttonArea, SWT.PUSH);
+	  }
+	  ok.setText(MessageText.getString("Button.ok"));
+
+	  Utils.makeButtonsEqualWidth( Arrays.asList( ok, cancel ));
+
+	  shell.setDefaultButton(ok);
+	  
+	  ok.addListener(SWT.Selection, new Listener() {
+		  @Override
+		  public void handleEvent(Event event) {
+			  try {
+				  ok_pressed = true;
+
+				  closeWindow();
+			  }
+			  catch (Exception e) {
+				  Debug.printStackTrace( e );
+			  }
+		  }
+	  });
+
+	  if ( cancel != null ){
+		  cancel.addListener(SWT.Selection, new Listener() {
+			  @Override
+			  public void handleEvent(Event event) {
+				  try {
+					  closeWindow();
+				  }
+				  catch (Exception e) {
+					  Debug.printStackTrace( e );
+				  }
+			  }
+		  });
+	  }
+	  
+	  buttonArea.layout( true, true );
+  }
+
+  private void 
+  closeWindow()
+  {
+	  if ( reuseWindow ){
+		  shell.setVisible( false );
+		  
+			for ( TextViewerWindowListener l: listeners ){
+
+				l.closed();
+			}
+	  }else{
+		  if ( !shell.isDisposed()){
+		  
+			  shell.dispose();
+		  }
+	  }
+  }
+  
+  public void
   goModal()
   {
 	    Display display = Utils.getDisplay();
 
-	  	while (!shell.isDisposed()){
+	  	while ( (!shell.isDisposed()) && shell.isVisible()){
     		if (!display.readAndDispatch()) display.sleep();
 	  	}
   }
@@ -219,10 +339,21 @@ public class TextViewerWindow {
   {
 	  txtInfo.append( str );
 
-	  txtInfo.setSelection( txtInfo.getTextLimit());
+	  if ( str.contains( "\n" )){
+	  
+		  	// only scroll if the newly added text contains a new-line
+		  	// otherwise things get twitchy
+		  
+		  txtInfo.setSelection( txtInfo.getTextLimit());
+	  }
   }
 
-
+  public boolean
+  getOKPressed()
+  {
+	  return( ok_pressed );
+  }
+  
   public String
   getText()
   {
@@ -243,6 +374,10 @@ public class TextViewerWindow {
 	boolean	editable )
   {
 	  txtInfo.setEditable( editable );
+	 
+	  cancel_enabled = true;
+	  
+	  buildButtons();
   }
 
   public void
@@ -251,7 +386,22 @@ public class TextViewerWindow {
   {
 	  ok.setEnabled( enabled );
   }
+  
+  public void
+  setCancelEnabled(
+	boolean	enabled )
+  {
+	  if ( cancel != null ){
+		  cancel.setEnabled( enabled );
+	  }
+  }
 
+  public void
+  setNonProportionalFont()
+  {
+	  txtInfo.setFont( np_font );
+  }
+  
   public void
   addListener(
 	 TextViewerWindowListener		l )
@@ -268,10 +418,7 @@ public class TextViewerWindow {
   public void
   close()
   {
-	  if ( !shell.isDisposed()){
-
-		  shell.dispose();
-	  }
+	 closeWindow();
   }
   public interface
   TextViewerWindowListener

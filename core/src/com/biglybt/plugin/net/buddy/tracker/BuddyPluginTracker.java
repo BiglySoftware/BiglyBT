@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerAdapter;
 import com.biglybt.core.peer.PEPeerManager;
@@ -112,7 +113,8 @@ BuddyPluginTracker
 	private Set<Download>	tracked_downloads		= new HashSet<>();
 	private int				download_set_id;
 
-	private Set<Download>	last_processed_download_set;
+	private Set<Download>	last_processed_download_set	= new HashSet<>();
+	
 	private int				last_processed_download_set_id;
 
 	private Map<HashWrapper,List<Download>>	short_id_map	= new HashMap<>();
@@ -271,8 +273,6 @@ BuddyPluginTracker
 		}
 
 		Map<BuddyPluginBuddy,List<Download>>	peers_to_check = new HashMap<>();
-
-		Map<PartialBuddy,List<Download>>		partials_to_check = new HashMap<>();
 		
 		Set<Download> active_set = new HashSet<>();
 
@@ -475,13 +475,32 @@ BuddyPluginTracker
 
 		Map	diff_map = new HashMap();
 
+		Set<Download>	downloads_with_remote_incomplete = new HashSet<>();
+		
 		for (int i=0;i<online.size();i++){
 
 			BuddyPluginBuddy	buddy = (BuddyPluginBuddy)online.get(i);
 
 			BuddyTrackingData buddy_data = getBuddyData( buddy );
 
-			buddy_data.updateLocal( downloads, downloads_id, diff_map );
+			buddy_data.updateLocal( downloads, downloads_id, diff_map, downloads_with_remote_incomplete );
+		}
+		
+		Set<Download>	temp = new HashSet<>( downloads );
+		
+		if ( plugin.getFPEnabled()){
+			
+			for ( Download d: downloads_with_remote_incomplete ){
+				
+				temp.remove( d );
+				
+				PluginCoreUtils.unwrap( d ).getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, true );
+			}
+		}
+		
+		for ( Download d: temp ){
+						
+			PluginCoreUtils.unwrap( d ).getDownloadState().setTransientFlag( DownloadManagerState.TRANSIENT_FLAG_FRIEND_FP, false );
 		}
 	}
 
@@ -748,11 +767,24 @@ outer:
 		if ( is_new ){
 			
 			try{
-				if ( plugin.getPeersAreLANLocal() && !peer.isLANLocal()){
+				if ( plugin.getPeersAreLANLocal()){
 					
 					AddressUtils.addLANRateLimitAddress( InetAddress.getByName( pb.ip ));
 					
-					peer.resetLANLocalStatus();
+					if ( !peer.isLANLocal()){
+					
+						peer.resetLANLocalStatus();
+					}
+					
+					Peer[] peers = download.getPeerManager().getPeers( pb.ip );
+				
+					for ( Peer p: peers ){
+						
+						if ( p != peer && !p.isLANLocal()){
+							
+							p.resetLANLocalStatus();
+						}
+					}
 				}
 			}catch( Throwable e ){
 				
@@ -1997,7 +2029,8 @@ outer:
 		updateLocal(
 			Set<Download>		downloads,
 			int					id,
-			Map					diff_map )
+			Map					diff_map,
+			Set<Download>		downloads_with_remote_incomplete )
 		{
 			if ( consecutive_fails > 0 ){
 
@@ -2046,6 +2079,11 @@ outer:
 
 						buddyDownloadData	bdd = entry.getValue();
 
+						if ( !bdd.isRemoteComplete()){
+							
+							downloads_with_remote_incomplete.add( d );
+						}
+						
 						boolean	local_complete = d.isComplete( false );
 
 						if ( local_complete != bdd.isLocalComplete()){
@@ -2068,8 +2106,8 @@ outer:
 
 					msg.put( "seeding", new Long( seeding_only?1:0 ));
 
-					msg.put( "change", 		change_details[0] );
-					msg.put( "change_s", 	change_details[1] );
+					msg.put( "changed", 		change_details[0] );
+					msg.put( "changed_s", 	change_details[1] );
 
 					sendTrackerMessage( REQUEST_TRACKER_CHANGE, msg );
 				}
@@ -2354,10 +2392,20 @@ outer:
 
 				reply_type	= REPLY_TRACKER_STATUS;
 
-				Map downloads = importFullIDs((byte[])msg_in.get( "changed" ), (byte[])msg_in.get( "changed_s" ));
+					// bug - message was incorrectly being send with "change" and "change_s" 
+				
+				if ( msg_in.containsKey( "change" )){
+					
+					Map downloads = importFullIDs((byte[])msg_in.get( "change" ), (byte[])msg_in.get( "change_s" ));
 
-				updateCommonDownloads( downloads, true );
+					updateCommonDownloads( downloads, true );
 
+				}else{
+					
+					Map downloads = importFullIDs((byte[])msg_in.get( "changed" ), (byte[])msg_in.get( "changed_s" ));
+
+					updateCommonDownloads( downloads, true );
+				}
 			}else if ( type == REQUEST_TRACKER_ADD ){
 
 				reply_type	= REPLY_TRACKER_ADD;
@@ -2442,15 +2490,20 @@ outer:
 
 				downloadData download_data = (downloadData)download.getUserData( BuddyPluginTracker.class );
 
-				if ( download_data != null ){
-
-					System.arraycopy(
-						download_data.getID().getBytes(),
-						0,
-						res,
-						i * SHORT_ID_SIZE,
-						SHORT_ID_SIZE );
+				if ( download_data == null ){
+   					
+						// might have been removed if we have un-tracked the download. temporarily create a new one so
+						// we can communicate removal correctly.
+					
+					download_data = new downloadData( download );
 				}
+				
+				System.arraycopy(
+					download_data.getID().getBytes(),
+					0,
+					res,
+					i * SHORT_ID_SIZE,
+					SHORT_ID_SIZE );
 			}
 
 			return( res );
@@ -2494,17 +2547,22 @@ outer:
 
    				downloadData download_data = (downloadData)download.getUserData( BuddyPluginTracker.class );
 
-   				if ( download_data != null ){
-
-   					System.arraycopy(
-   						download_data.getID().getBytes(),
-   						0,
-   						hashes,
-   						i * FULL_ID_SIZE,
-   						FULL_ID_SIZE );
-
-   					states[i] = download.isComplete( false )?(byte)0x01:(byte)0x00;
+   				if ( download_data == null ){
+   					
+   						// might have been removed if we have un-tracked the download. temporarily create a new one so
+   						// we can communicate removal correctly.
+   					
+   					download_data = new downloadData( download );
    				}
+
+				System.arraycopy(
+					download_data.getID().getBytes(),
+					0,
+					hashes,
+					i * FULL_ID_SIZE,
+					FULL_ID_SIZE );
+
+				states[i] = download.isComplete( false )?(byte)0x01:(byte)0x00;
    			}
 
    			return( new byte[][]{ hashes, states });

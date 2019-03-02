@@ -292,7 +292,7 @@ public class ProgressReporterWindow
 
 		final Button autoClearButton = new Button(toolbarPanel, SWT.CHECK);
 		autoClearButton.setText(MessageText.getString("Progress.reporting.window.remove.auto"));
-		autoClearButton.setToolTipText(MessageText.getString("Progress.reporting.window.remove.auto.tooltip"));
+		Utils.setTT(autoClearButton,MessageText.getString("Progress.reporting.window.remove.auto.tooltip"));
 		autoClearButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER,
 				false, false));
 
@@ -303,7 +303,7 @@ public class ProgressReporterWindow
 
 		final Button clearInActiveButton = new Button(toolbarPanel, SWT.NONE);
 		clearInActiveButton.setText(MessageText.getString("Progress.reporting.window.remove.now"));
-		clearInActiveButton.setToolTipText(MessageText.getString("Progress.reporting.window.remove.now.tooltip"));
+		Utils.setTT(clearInActiveButton,MessageText.getString("Progress.reporting.window.remove.now.tooltip"));
 		clearInActiveButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, false,
 				false));
 		clearInActiveButton.setEnabled(!COConfigurationManager.getBooleanParameter("auto_remove_inactive_items"));

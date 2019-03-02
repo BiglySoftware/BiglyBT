@@ -47,7 +47,6 @@ import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.ui.*;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
-import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
@@ -63,7 +62,6 @@ import com.biglybt.ui.swt.minibar.AllTransfersBar;
 import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 @SuppressWarnings("unused")
@@ -811,6 +809,16 @@ UISWTInstanceImpl
 	}
 
 	@Override
+	public void promptUser(String title, String text, String[] options,
+			int defaultOption, UIMessageListener listener) {
+
+		MessageBoxShell mb = new MessageBoxShell(title, text, options,
+				defaultOption);
+		mb.open(listener == null ? null
+				: result -> listener.UIMessageClosed(result));
+	}
+
+	@Override
 	public void showDownloadBar(Download download, final boolean display) {
 		if (!(download instanceof DownloadImpl)) {return;}
 		final DownloadManager dm = ((DownloadImpl)download).getDownload();
@@ -1032,8 +1040,6 @@ UISWTInstanceImpl
 
 				Image image = new Image(display, imageData);
 
-				image = Utils.adjustPXForDPI( display,  image );
-
 				listDisposeOnUnload.add(image);
 
 				return image;
@@ -1106,6 +1112,12 @@ UISWTInstanceImpl
 		public int promptUser(String title, String text, String[] options,
 		                      int defaultOption) {
 			return delegate.promptUser(title, text, options, defaultOption);
+		}
+
+		@Override
+		public void promptUser(String title, String text, String[] options,
+				int defaultOption, UIMessageListener listener) {
+			delegate.promptUser(title, text, options, defaultOption, listener);
 		}
 
 		@Override

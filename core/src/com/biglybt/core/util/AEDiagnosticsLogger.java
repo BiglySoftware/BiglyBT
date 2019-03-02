@@ -35,7 +35,7 @@ AEDiagnosticsLogger
 	private static final int	MAX_PENDING = 8*1024;
 
 	private final String 			name;
-	private int				max_size;
+	private int[]					max_size;
 	private final File			debug_dir;
 	private boolean			timestamp_enable				= true;
 	private boolean			force;
@@ -65,7 +65,7 @@ AEDiagnosticsLogger
 	AEDiagnosticsLogger(
 		File		_debug_dir,
 		String		_name,
-		int			_max_size,
+		int[]		_max_size,
 		boolean		_direct_writes )
 	{
 		debug_dir		= _debug_dir;
@@ -121,7 +121,7 @@ AEDiagnosticsLogger
 	setMaxFileSize(
 		int		_max_size )
 	{
-		max_size	= _max_size;
+		max_size[0]	= _max_size;
 	}
 
 	public void
@@ -328,7 +328,7 @@ AEDiagnosticsLogger
 				 *  to explicitly check for its existence.
 				 */
 
-			if ( log_file.length() >= max_size ){
+			if ( log_file.length() >= max_size[0] ){
 
 				if ( current_writer != null ){
 
@@ -348,7 +348,13 @@ AEDiagnosticsLogger
 
 			if ( current_writer == null ){
 
-				current_writer = new PrintWriter( new OutputStreamWriter( new FileOutputStream( log_file, true ), "UTF-8" ));
+				FileOutputStream os = new FileOutputStream(log_file, true);
+				if (log_file.length() == 0) {
+					// UTF-8 BOM
+					os.write(new byte[] { (byte) 239, (byte) 187, (byte) 191 });
+				}
+
+				current_writer = new PrintWriter( new OutputStreamWriter(os, "UTF-8" ));
 			}
 
 			current_writer.println( str );
@@ -388,7 +394,7 @@ AEDiagnosticsLogger
 					 *  to explicitly check for its existence.
 					 */
 
-				if ( log_file.length() >= max_size ){
+				if ( log_file.length() >= max_size[0] ){
 
 					if ( current_writer != null ){
 

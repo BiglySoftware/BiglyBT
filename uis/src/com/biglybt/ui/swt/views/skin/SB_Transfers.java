@@ -20,8 +20,13 @@
 
 package com.biglybt.ui.swt.views.skin;
 
+import java.io.File;
 import java.util.*;
 
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.Core;
@@ -54,18 +59,23 @@ import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
+import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MdiSWTMenuHackListener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
+import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.PeersGeneralView;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
@@ -83,6 +93,7 @@ public class SB_Transfers
 	private static final Object AUTO_CLOSE_KEY 		= new Object();
 	private static final Object TAG_DATA_KEY		= new Object();
 	private static final Object TAG_INDICATOR_KEY	= new Object();
+	private static final Object TAG_IMAGE_KEY		= new Object();
 
 	private static final String ID_VITALITY_ACTIVE = "image.sidebar.vitality.dl";
 
@@ -90,17 +101,22 @@ public class SB_Transfers
 	private final HasBeenOpenedListener hasBeenOpenedListener;
 
 	private CategoryListener categoryListener;
-	private TagListener tagListener;
 	private DownloadManagerListener dmListener;
 	private GlobalManagerAdapter gmListener;
 	private TimerEventPeriodic timerEventPeriodic;
 	private CategoryManagerListener categoryManagerListener;
+
 	private TagManagerListener	tagManagerListener;
 	private TagTypeListener tagTypeListener;
+	private TagListener tagListener;
+
 	private final Object	tag_listener_lock = new Object();
 	private ParameterListener paramTagsInSidebarListener;
+	private ParameterListener paramTagGroupsInSidebarListener;
 	private ParameterListener paramCatInSidebarListener;
 
+	private long last_dl_entry_load;
+	
 	private Set<MdiEntry>				redraw_pending = new HashSet<>();
 		
 	private FrequencyLimitedDispatcher	redraw_disp = 
@@ -143,6 +159,8 @@ public class SB_Transfers
 	
 	public static class stats
 	{
+		int total = 0;
+		
 		int numSeeding = 0;
 
 		int numDownloading = 0;
@@ -174,6 +192,7 @@ public class SB_Transfers
 			stats		other )
 		{
 			return(
+					total							== other.total &&
 					numSeeding 						== other.numSeeding &&
 					numDownloading 					== other.numDownloading &&
 					numQueued 						== other.numQueued &&
@@ -190,6 +209,7 @@ public class SB_Transfers
 		copyFrom(
 			stats		other )
 		{
+			total								= other.total;
 			numSeeding 							= other.numSeeding;
 			numDownloading 						= other.numDownloading;
 			numQueued 							= other.numQueued;
@@ -229,7 +249,8 @@ public class SB_Transfers
 	protected boolean	header_show_rates;
 	protected volatile OverallStats totalStats;
 
-
+	protected boolean	show_tag_groups;
+	
 
 	public SB_Transfers(final MultipleDocumentInterfaceSWT mdi, boolean vuze_ui ) {
 		statsNoLowNoise = new stats();
@@ -288,14 +309,14 @@ public class SB_Transfers
 			hasBeenOpenedListener = new HasBeenOpenedListener() {
 				@Override
 				public void hasBeenOpenedChanged(DownloadManager dm, boolean opened) {
-					recountUnopened();
-					refreshAllLibraries();
+					synchronized (statsLock) {
+						recountItems();
+						refreshAllLibraries();
+					}
 				}
 			};
 			PlatformTorrentUtils.addHasBeenOpenedListener(hasBeenOpenedListener);
-	
-			addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY);
-	
+		
 			mdi.addListener(new MdiEntryLoadedListener() {
 				@Override
 				public void mdiEntryLoaded(MdiEntry entry) {
@@ -344,6 +365,8 @@ public class SB_Transfers
 
 				triggerCountRefreshListeners();
 
+				refreshAllLibraries();
+				
 				synchronized (this) {
 
 					if (header_show_rates) {
@@ -376,7 +399,10 @@ public class SB_Transfers
 		};
 		COConfigurationManager.addAndFireParameterListeners(
 				new String[]{
-						"MyTorrentsView.showuptime", "MyTorrentsView.showrates"
+						"MyTorrentsView.showuptime", 
+						"MyTorrentsView.showrates",
+						SideBar.SIDEBAR_SECTION_LIBRARY + ".viewmode"
+
 				}, configListenerShow);
 
 	}
@@ -439,11 +465,13 @@ public class SB_Transfers
 		MdiEntry infoLibraryUn = mdi.createEntryFromSkinRef(
 				SideBar.SIDEBAR_HEADER_TRANSFERS,
 				SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED, "library",
-				"{sidebar.LibraryUnopened}", null, null, false,
+				"{sidebar.LibraryUnopened}", null, null, true,
 				SideBar.SIDEBAR_SECTION_LIBRARY);
+		
 		infoLibraryUn.setImageLeftID("image.sidebar.unopened");
 
-		addMenuUnwatched(SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
+		addGeneralLibraryMenus(infoLibraryUn,SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
+		
 		infoLibraryUn.setViewTitleInfo(new ViewTitleInfo() {
 			@Override
 			public Object getTitleInfoProperty(int propertyID) {
@@ -454,10 +482,35 @@ public class SB_Transfers
 				return null;
 			}
 		});
+		
+		infoLibraryUn.addListener(
+			new MdiCloseListener(){
+				
+				@Override
+				public void 
+				mdiEntryClosed(
+					MdiEntry entry, 
+					boolean userClosed)
+				{
+					if ( userClosed ){
+						if ( Constants.isCVSVersion()){
+							Debug.out( "New entry closed by user" );
+						}
+						COConfigurationManager.setParameter( "Show New In Side Bar", false );
+					}
+				}
+			});
+		
 		return infoLibraryUn;
 	}
 
-	private void addMenuUnwatched(String id) {
+	private static void addGeneralLibraryMenus( MdiEntry entry, String id ){
+		addMenuUnwatched( id );
+		
+		addMenuCollapseAll( entry, id );
+	}
+	
+	private static void addMenuUnwatched(String id) {
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 		MenuManager menuManager = uim.getMenuManager();
@@ -480,6 +533,51 @@ public class SB_Transfers
 									if (!PlatformTorrentUtils.getHasBeenOpened(dm)
 											&& dm.getAssumedComplete()) {
 										PlatformTorrentUtils.setHasBeenOpened(dm, true);
+									}
+								}
+							}
+						});
+			}
+		});
+	}
+	
+	private static void addMenuCollapseAll( MdiEntry entry, String id ){
+		PluginInterface pi = PluginInitializer.getDefaultInterface();
+		UIManager uim = pi.getUIManager();
+		MenuManager menuManager = uim.getMenuManager();
+		MenuItem menuItem = menuManager.addMenuItem("sidebar." + id, "menu.collapse.all");
+		menuItem.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		menuItem.addListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				CoreWaiterSWT.waitForCore(TriggerInThread.ANY_THREAD,
+						new CoreRunningListener() {
+							@Override
+							public void coreRunning(Core core) {
+								Composite comp = ((MdiEntrySWT)entry).getComposite();
+								process( comp );
+							}	
+							
+							private void
+							process(
+								Composite	comp )
+							{
+									// don't like this but meh
+								
+								Object obj = comp.getData( "MyTorrentsView.instance" );
+								
+								if ( obj != null ){
+									
+									((MyTorrentsView)obj).collapseAll();
+								}
+								
+								Control[] kids = comp.getChildren();
+								
+								for ( Control k: kids ){
+									
+									if ( k instanceof Composite ){
+										
+										process((Composite)k);
 									}
 								}
 							}
@@ -514,11 +612,13 @@ public class SB_Transfers
 		};
 
 		MdiEntry entry = mdi.createEntryFromSkinRef(
-				SideBar.SIDEBAR_HEADER_TRANSFERS, SideBar.SIDEBAR_SECTION_LIBRARY_DL,
+				SideBar.SIDEBAR_HEADER_TRANSFERS, SideBar.SIDEBAR_SECTION_LIBRARY_CD,
 				"library", "{sidebar.LibraryDL}",
 				titleInfoSeeding, null, false, null);
 		entry.setImageLeftID("image.sidebar.downloading");
 
+		addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY_CD);
+		
 		MdiEntryVitalityImage vitalityImage = entry.addVitalityImage(ID_VITALITY_ALERT);
 		vitalityImage.setVisible(false);
 
@@ -560,16 +660,28 @@ public class SB_Transfers
 
 					int	current = statsNoLowNoise.numIncomplete;
 
-					if (current > 0)
+					if (current > 0){
 						return current + ""; // + " of " + numIncomplete;
-				}
-
-				if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
+					}
+				}else if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
 					return MessageText.getString("sidebar.LibraryDL.tooltip",
 							new String[] {
 								"" + statsNoLowNoise.numIncomplete,
 								"" + statsNoLowNoise.numDownloading
 							});
+				}else if (propertyID == TITLE_INDICATOR_COLOR) {
+					
+					if ( COConfigurationManager.getBooleanParameter("LibraryDL.UseDefaultIndicatorColor")){
+						return( null );
+					}else{
+						if ( statsNoLowNoise.numDownloading > 0 ){
+							return( new int[]{ 96, 160, 96 });
+						}else if ( statsNoLowNoise.numErrorInComplete > 0 ){
+							return( new int[]{ 132, 16, 58 } );
+						}else{
+							return( null );
+						}
+					}
 				}
 
 				return null;
@@ -578,18 +690,60 @@ public class SB_Transfers
 		MdiEntry entry = mdi.createEntryFromSkinRef(
 				SideBar.SIDEBAR_HEADER_TRANSFERS, SideBar.SIDEBAR_SECTION_LIBRARY_DL,
 				"library", "{sidebar.LibraryDL}",
-				titleInfoDownloading, null, false, null);
+				titleInfoDownloading, null, true, null);
 
 		entry_holder[0] = entry;
 
 		entry.setImageLeftID("image.sidebar.downloading");
 
+		addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+		
+		entry.addListener(
+			new MdiCloseListener(){
+				
+				@Override
+				public void 
+				mdiEntryClosed(MdiEntry entry, boolean userClosed){
+				
+					if ( userClosed ){
+						if ( Constants.isCVSVersion()){
+							Debug.out( "Downloading entry closed by user" );
+						}
+						
+						COConfigurationManager.setParameter( "Show Downloading In Side Bar", false );
+					}
+				}
+			});
+		
 		MdiEntryVitalityImage vitalityImage = entry.addVitalityImage(ID_VITALITY_ACTIVE);
 		vitalityImage.setVisible(false);
 
 		vitalityImage = entry.addVitalityImage(ID_VITALITY_ALERT);
 		vitalityImage.setVisible(false);
 
+		String parentID = "sidebar." + SideBar.SIDEBAR_SECTION_LIBRARY_DL;
+
+		MenuManager menu_manager = PluginInitializer.getDefaultInterface().getUIManager().getMenuManager();
+		
+		MenuItem mi = menu_manager.addMenuItem( parentID, "menu.use.default.indicator.color" );
+		mi.setDisposeWithUIDetach(UIInstance.UIT_SWT);
+		mi.setStyle( MenuItem.STYLE_CHECK );
+		mi.setData( COConfigurationManager.getBooleanParameter("LibraryDL.UseDefaultIndicatorColor"));
+		
+		mi.addListener(
+			new MenuItemListener()
+			{
+				@Override
+				public void
+				selected(
+					MenuItem mi, Object target )
+				{
+					COConfigurationManager.setParameter("LibraryDL.UseDefaultIndicatorColor", mi.isSelected());
+					
+					entry.redraw();
+				}
+			});
+		
 		return entry;
 	}
 
@@ -682,36 +836,9 @@ public class SB_Transfers
 				}
 			}
 		};
-		COConfigurationManager.addAndFireParameterListener("Library.CatInSideBar",
-				paramCatInSidebarListener);
+		COConfigurationManager.addAndFireParameterListener("Library.CatInSideBar",	paramCatInSidebarListener);
 
-		tagListener = new TagListener() {
-			@Override
-			public void
-			taggableAdded(
-				Tag tag,
-				Taggable tagged )
-			{
-				refreshTagSideBar( tag );
-			}
-
-			@Override
-			public void
-			taggableSync(
-				Tag 		tag )
-			{
-				refreshTagSideBar( tag );
-			}
-
-			@Override
-			public void
-			taggableRemoved(
-				Tag			tag,
-				Taggable	tagged )
-			{
-				refreshTagSideBar( tag );
-			}
-		};
+		show_tag_groups = Utils.isAZ3UI() && COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
 
 		paramTagsInSidebarListener = new ParameterListener() {
 
@@ -731,12 +858,25 @@ public class SB_Transfers
 			}
 
 		};
-		COConfigurationManager.addAndFireParameterListener("Library.TagInSideBar",
-				paramTagsInSidebarListener);
+		
+		COConfigurationManager.addAndFireParameterListener("Library.TagInSideBar", paramTagsInSidebarListener);
 
+		paramTagGroupsInSidebarListener = new ParameterListener() {
 
+			@Override
+			public void parameterChanged(String parameterName) {
+							
+				removeTagManagerListeners(true);
+					
+				show_tag_groups = Utils.isAZ3UI() && COConfigurationManager.getBooleanParameter("Library.TagGroupsInSideBar");
 
+				addTagManagerListeners();
+			}
+		};
+				
+		COConfigurationManager.addParameterListener("Library.TagGroupsInSideBar", paramTagGroupsInSidebarListener);
 
+		
 		final GlobalManager gm = core.getGlobalManager();
 		dmListener = new DownloadManagerAdapter() {
 			@Override
@@ -811,8 +951,8 @@ public class SB_Transfers
 							statsNoLowNoise.numStoppedIncomplete++;
 						}
 					}
-					recountUnopened();
 					updateErrorTooltip( gm, stats);
+					recountItems();
 					refreshAllLibraries();
 				}
 			}
@@ -832,7 +972,6 @@ public class SB_Transfers
 				}
 
 				synchronized (statsLock) {
-					recountUnopened();
 					if (dm.getAssumedComplete()) {
 						stats.numComplete--;
 						Boolean wasDownloadingB = (Boolean) dm.getUserData("wasDownloading");
@@ -859,6 +998,8 @@ public class SB_Transfers
 					if (wasQueued) {
 						stats.numQueued--;
 					}
+					
+					recountItems();
 					refreshAllLibraries();
 				}
 
@@ -870,11 +1011,8 @@ public class SB_Transfers
 				dm.addListener(dmListener, false);
 
 				synchronized (statsLock) {
-					recountUnopened();
-
 					downloadManagerAdded(dm, statsNoLowNoise);
 					downloadManagerAdded(dm, statsWithLowNoise);
-					refreshAllLibraries();
 				}
 			}
 
@@ -904,6 +1042,9 @@ public class SB_Transfers
 							dm.setUserData("wasDownloading", Boolean.FALSE);
 						}
 					}
+					
+					recountItems();
+					refreshAllLibraries();
 				}
 			}
 		};
@@ -1033,6 +1174,11 @@ public class SB_Transfers
 			if (!PlatformTorrentUtils.getHasBeenOpened(dm) && dm.getAssumedComplete()) {
 				statsNoLowNoise.numUnOpened++;
 			}
+			
+			statsWithLowNoise.total++;
+			if ( !lowNoise ){
+				statsNoLowNoise.total++;
+			}
 		}
 
 		statsWithLowNoise.numUnOpened = statsNoLowNoise.numUnOpened;
@@ -1097,12 +1243,14 @@ public class SB_Transfers
 			return;
 		}
 
-		MdiEntry entry = mdi.getEntry("Cat."
-				+ Base32.encode(category.getName().getBytes()));
+		MdiEntry entry = mdi.getEntry("Cat." + Base32.encode(category.getName().getBytes()));
+		
 		if (entry == null) {
 			return;
 		}
 
+		requestRedraw( entry );
+		
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 	}
 
@@ -1140,6 +1288,8 @@ public class SB_Transfers
 		if (entry != null) {
 			entry.setImageLeftID("image.sidebar.library");
 
+			addGeneralLibraryMenus( entry, id );
+			
 			entry.addListener(new MdiEntryDropListener() {
 				@Override
 				public boolean mdiEntryDrop(MdiEntry entry, Object payload) {
@@ -1213,7 +1363,9 @@ public class SB_Transfers
 			return;
 		}
 
-		MdiEntry entry = mdi.getEntry("Tag." + tag.getTagType().getTagType() + "." + tag.getTagID());
+		String tag_id = "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
+		
+		MdiEntry entry = mdi.getEntry( tag_id );
 
 		if ( entry == null ){
 
@@ -1232,26 +1384,45 @@ public class SB_Transfers
 			return;
 		}
 
-		String old_title = entry.getTitle();
-
 		String tag_title = tag.getTagName( true );
+
+		if ( show_tag_groups ){
+			
+			String group = tag.getGroup();
+			
+			String parent_id = entry.getParentID();
+			
+			boolean is_group		= group != null && !group.isEmpty();
+			
+			boolean parent_is_group = parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." + (is_group?group:"" ));
+			
+			if ( is_group != parent_is_group ){
+				
+				resetTag( tag );
+			}
+		}
+		
+		String old_title = entry.getTitle();
 
 		if ( !old_title.equals( tag_title )){
 
 			entry.setTitle( tag_title );
 		}
 		
-		Integer num = (Integer)entry.getUserData( TAG_INDICATOR_KEY );
-
-		int tag_count = tag.getTaggedCount();
+		setTagIcon( tag, entry, false );
 		
-		if ( num == null || num != tag_count ){
+		Object[] tik = (Object[])entry.getUserData( TAG_INDICATOR_KEY );
+
+		int 	tag_count 	= tag.getTaggedCount();
+		int[] 	tag_colour	= tag.getColor();
+		
+		if ( tik == null || (Integer)tik[0] != tag_count || !Arrays.equals((int[])tik[1], tag_colour )){
 			
-			entry.setUserData( TAG_INDICATOR_KEY, tag_count );
+			entry.setUserData( TAG_INDICATOR_KEY, new Object[]{ tag_count, tag_colour });
 			
 			requestRedraw( entry );
 		}
-		
+			
 		ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
 
 		Object[] tag_data = (Object[])entry.getUserData( TAG_DATA_KEY );
@@ -1289,7 +1460,6 @@ public class SB_Transfers
 
 			return null;
 		}
-
 			/*
 			 * Can get hit here concurrently due to various threads interacting with tags...
 			 */
@@ -1298,14 +1468,124 @@ public class SB_Transfers
 
 			String id = "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
 
+			String parent_id = MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS;
+			
+			String group_id  = null;
+			
+			if ( show_tag_groups ){
+				
+				String tag_group = tag.getGroup();
+				
+				if ( tag_group != null && !tag_group.isEmpty()){
+					
+					if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD ){
+						
+						group_id = "Tag." + tag.getTagType().getTagType() + ".group." + tag_group;
+						
+						if ( mdi.getEntry( group_id ) == null ){
+						
+							ViewTitleInfo viewTitleInfo =
+									new ViewTitleInfo()
+									{
+										@Override
+										public Object
+										getTitleInfoProperty(
+											int pid )
+										{
+											if ( pid == TITLE_TEXT ) {
+												
+												return( tag_group );
+												
+											}else if ( pid == TITLE_INDICATOR_TEXT ){
+	
+												
+	
+											}else if ( pid == TITLE_INDICATOR_COLOR ){
+	
+	
+											}else if ( pid == TITLE_INDICATOR_TEXT_TOOLTIP ){
+	
+												
+											}
+	
+											return null;
+										}
+									};
+									
+									// find where to locate this in the sidebar
+
+							TreeMap<String,String>	name_map = new TreeMap<>(FormattersImpl.getAlphanumericComparator2(true));
+
+							name_map.put( tag_group, group_id );
+
+							List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
+							
+							for ( MdiEntry kid: kids ){
+								
+								String prefix = "Tag." + tag.getTagType().getTagType() + ".group.";
+								
+								String kid_id = kid.getId();
+
+								if ( kid_id.startsWith( prefix )){
+									
+									name_map.put( kid_id.substring( prefix.length()), kid_id );
+								}
+							}
+
+							String	prev_id = null;
+
+							for ( String this_id: name_map.values()){
+
+								if ( this_id == group_id ){
+
+									break;
+								}
+
+								prev_id = this_id;
+							}
+
+							if ( prev_id == null && name_map.size() > 1 ){
+
+								Iterator<String>	it = name_map.values().iterator();
+
+								it.next();
+
+								prev_id = "~" + it.next();
+							}
+							
+							MdiEntry entry = mdi.createEntryFromSkinRef(
+									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), false, prev_id );
+							
+							setTagIcon( tag, entry, true );
+							
+							if ( entry instanceof SideBarEntrySWT ){
+								final SideBarEntrySWT entrySWT = (SideBarEntrySWT) entry;
+								entrySWT.addListener(new MdiSWTMenuHackListener() {
+									@Override
+									public void menuWillBeShown(MdiEntry entry, Menu menuTree) {
+										
+										TagGroup tg = tag.getGroupContainer();
+										
+										TagUIUtils.createSideBarMenuItems(menuTree, tg );
+									}
+								});
+							}
+						}
+						
+						parent_id = group_id;
+					}
+				}
+			}
+			
 			if ( mdi.getEntry( id ) != null ){
 
 				return null;
 			}
 
+			
 				// find where to locate this in the sidebar
 
-			TreeMap<Tag,String>	name_map = new TreeMap<>(TagUIUtils.getTagComparator());
+			TreeMap<Tag,String>	name_map = new TreeMap<>(TagUtils.getTagComparator());
 
 			name_map.put( tag, id );
 
@@ -1315,9 +1595,17 @@ public class SB_Transfers
 
 					String tid = "Tag." + tag.getTagType().getTagType() + "." + t.getTagID();
 
-					if ( mdi.getEntry( tid ) != null ){
+					MdiEntry entry = mdi.getEntry( tid );
+					
+					if ( entry  != null ){
 
-						name_map.put( t, tid );
+						String this_group = t.getGroup();
+						
+						if ( 	( group_id == null && ( this_group==null || this_group.isEmpty() )) ||
+								( group_id != null && entry.getParentID().equals( group_id ))){
+						
+							name_map.put( t, tid );
+						}
 					}
 				}
 			}
@@ -1376,7 +1664,7 @@ public class SB_Transfers
 
 						}else if ( pid == TITLE_INDICATOR_TEXT_TOOLTIP ){
 
-							return( TagUIUtils.getTagTooltip( tag ));
+							return( TagUtils.getTagTooltip( tag ));
 						}
 
 						return null;
@@ -1394,13 +1682,14 @@ public class SB_Transfers
 				String name = tag.getTagName( true );
 
 				entry = mdi.createEntryFromSkinRef(
-						MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, id, "library",
-						name, viewTitleInfo, tag, closable, prev_id);
+						parent_id, id, "library", name, viewTitleInfo, tag, closable, prev_id );
+				
+				addGeneralLibraryMenus( entry, id );
+				
 			}else{
 
 				entry = mdi.createEntryFromEventListener(
-							MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-							new PeersGeneralView( tag ), id, closable, null, prev_id);
+							parent_id, new PeersGeneralView( tag ), id, closable, null, prev_id );
 
 				entry.setViewTitleInfo( viewTitleInfo );
 			}
@@ -1421,6 +1710,25 @@ public class SB_Transfers
 									// userClosed isn't all we want - it just means we're not closing the app... So to prevent
 									// a deselection of 'show tags in sidebar' 'user-closing' the entries we need this test
 
+								
+								if ( show_tag_groups ){
+									
+									String parent_id = entry.getParentID();
+									
+									if ( parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." )){
+										
+										if ( mdi.getChildrenOf( parent_id ).isEmpty()){
+											
+											MdiEntry parent_entry = mdi.getEntry( parent_id );
+											
+											if ( parent_entry != null ){
+											
+												parent_entry.close( true );
+											}
+										}
+									}
+								}
+								
 								if ( COConfigurationManager.getBooleanParameter("Library.TagInSideBar")){
 
 									tag.setVisible( false );
@@ -1431,17 +1739,8 @@ public class SB_Transfers
 			}
 
 			if (entry != null) {
-				String image_id = tag.getImageID();
 
-				if ( image_id != null ){
-					entry.setImageLeftID( image_id );
-				}else if ( tag.getTagType().getTagType() == TagType.TT_PEER_IPSET ){
-					entry.setImageLeftID("image.sidebar.tag-red");
-				}else if ( tag.getTagType().isTagTypePersistent()){
-					entry.setImageLeftID("image.sidebar.tag-green");
-				}else{
-					entry.setImageLeftID("image.sidebar.tag-blue");
-				}
+				setTagIcon( tag, entry, false );
 			}
 
 			if (entry instanceof SideBarEntrySWT) {
@@ -1555,22 +1854,130 @@ public class SB_Transfers
 		}
 	}
 
-	private void removeTag(Tag tag) {
+	private void
+	removeTag(
+		Tag tag ) 
+	{
 		MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
-		if (mdi == null) {
+		
+		if ( mdi == null ){
+			
 			return;
 		}
 
-		MdiEntry entry = mdi.getEntry("Tag." + tag.getTagType().getTagType() + "." + tag.getTagID());
-
-		if (entry != null) {
-
-			entry.setUserData( AUTO_CLOSE_KEY, "" );
-
-			entry.close( true );
+		synchronized( tag_setup_lock ){
+			
+			MdiEntry entry = mdi.getEntry("Tag." + tag.getTagType().getTagType() + "." + tag.getTagID());
+	
+			if (entry != null) {
+	
+				entry.setUserData( AUTO_CLOSE_KEY, "" );
+	
+				entry.close( true );
+				
+				if ( show_tag_groups ){
+				
+					String parent_id = entry.getParentID();
+					
+					if ( parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." )){
+						
+						if ( mdi.getChildrenOf( parent_id ).isEmpty()){
+							
+							MdiEntry parent_entry = mdi.getEntry( parent_id );
+							
+							parent_entry.close( true );
+						}
+					}
+				}
+			}
 		}
 	}
 
+	private void
+	resetTag(
+		Tag	tag )
+	{
+		synchronized( tag_setup_lock ){
+		
+			removeTag( tag );
+		
+			setupTag( tag );
+		}
+	}
+	
+	private void
+	setTagIcon(
+		Tag			tag,
+		MdiEntry	entry,
+		boolean		default_only )
+	{
+		if ( !default_only ){
+			
+			String image_file = tag.getImageFile();
+			
+			if ( image_file == null ){
+				
+				image_file = "";
+			}
+			
+			String existing = (String)entry.getUserData( TAG_IMAGE_KEY );
+			
+			if ( existing == image_file || ( existing != null && existing.equals( image_file ))){
+				
+				return;
+			}
+			
+			entry.setUserData( TAG_IMAGE_KEY, image_file );
+			
+			if ( !image_file.isEmpty()){
+				
+				String fif = image_file;
+						
+				Utils.execSWTThread(
+					new Runnable(){
+						
+						@Override
+						public void run(){
+							try{
+								String resource = new File( fif ).toURI().toURL().toExternalForm();
+								
+								ImageLoader.getInstance().getUrlImage(
+									resource, 
+									new Point( 20, 14 ),
+									new ImageLoader.ImageDownloaderListener(){
+										
+										@Override
+										public void imageDownloaded(Image image, String key, boolean returnedImmediately){
+											((MdiEntrySWT)entry).setImageLeftID( key );
+											
+										}
+									});
+								
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					});
+				
+				return;
+			}
+		}
+		
+		((MdiEntrySWT)entry).setImageLeft( null );
+		
+		String image_id = tag.getImageID();
+
+		if ( image_id != null ){
+			entry.setImageLeftID( image_id );
+		}else if ( tag.getTagType().getTagType() == TagType.TT_PEER_IPSET ){
+			entry.setImageLeftID("image.sidebar.tag-red");
+		}else if ( tag.getTagType().isTagTypePersistent()){
+			entry.setImageLeftID("image.sidebar.tag-green");
+		}else{
+			entry.setImageLeftID("image.sidebar.tag-blue");
+		}
+	}
 
 		// -------------------
 
@@ -1674,17 +2081,23 @@ public class SB_Transfers
 		return( dm_state );
 	}
 
-	void recountUnopened() {
+	void recountItems() {
 		if (!CoreFactory.isCoreRunning()) {
 			return;
 		}
 		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-		List<?> dms = gm.getDownloadManagers();
+		List<DownloadManager> dms = gm.getDownloadManagers();
+		statsNoLowNoise.total = 0;
+		statsWithLowNoise.total = 0;
 		statsNoLowNoise.numUnOpened = 0;
-		for (Iterator<?> iter = dms.iterator(); iter.hasNext();) {
-			DownloadManager dm = (DownloadManager) iter.next();
+		for (Iterator<DownloadManager> iter = dms.iterator(); iter.hasNext();) {
+			DownloadManager dm = iter.next();
 			if (!PlatformTorrentUtils.getHasBeenOpened(dm) && dm.getAssumedComplete()) {
 				statsNoLowNoise.numUnOpened++;
+			}
+			statsWithLowNoise.total++;
+			if ( !PlatformTorrentUtils.isAdvancedViewOnly(dm)){
+				statsNoLowNoise.total++;
 			}
 		}
 		statsWithLowNoise.numUnOpened = statsNoLowNoise.numUnOpened;
@@ -1722,17 +2135,39 @@ public class SB_Transfers
 			return;
 		}
 
-		if (statsNoLowNoise.numIncomplete > 0) {
-			MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
-			if (entry == null) {
-				mdi.loadEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY_DL, false);
+			// don't mess with things until MDI initialized as it might be auto-opening views
+		
+		if ( mdi.isInitialized()){
+			
+			boolean showDownloading = COConfigurationManager.getBooleanParameter( "Show Downloading In Side Bar" );
+	
+			if ( showDownloading && statsNoLowNoise.numIncomplete > 0){
+				
+				MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+				
+				if (entry == null) {
+					long now = SystemTime.getMonotonousTime();
+					
+						// prevent rapid show/hides and also trt and work around bug where 2 Downloading entries have
+						// been seen to get created (lame fix I know)
+					
+					if ( now - last_dl_entry_load > 5000 ){
+						
+						last_dl_entry_load = now;
+											
+						mdi.loadEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY_DL, false);
+					}
+				}
+			} else {
+				MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+				if (entry != null) {
+					entry.close(true, false);
+				}
 			}
-		} else {
-			MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
-			if (entry != null) {
-				entry.close(true);
-			}
+		}else{
+			refreshAllLibraries();
 		}
+		
 		MdiEntry entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY_DL);
 		if (entry != null) {
 			MdiEntryVitalityImage[] vitalityImages = entry.getVitalityImages();
@@ -1743,7 +2178,8 @@ public class SB_Transfers
 					continue;
 				}
 				if (imageID.equals(ID_VITALITY_ACTIVE)) {
-					vitalityImage.setVisible(statsNoLowNoise.numDownloading > 0);
+					//replace this annoying spinner with color change
+					//vitalityImage.setVisible(statsNoLowNoise.numDownloading > 0);
 
 				} else if (imageID.equals(ID_VITALITY_ALERT)) {
 					vitalityImage.setVisible(statsNoLowNoise.numErrorInComplete > 0);
@@ -1781,6 +2217,13 @@ public class SB_Transfers
 			
 			requestRedraw( entry );
 		}
+		
+		entry = mdi.getEntry(SideBar.SIDEBAR_SECTION_LIBRARY);
+		if (entry != null) {
+			ViewTitleInfoManager.refreshTitleInfo(entry.getViewTitleInfo());
+			
+			requestRedraw( entry );
+		}
 	}
 
 	public static String getTableIdFromFilterMode(int torrentFilterMode,
@@ -1806,6 +2249,34 @@ public class SB_Transfers
 
 				return;
 			}
+			
+			tagListener = new TagListener() {
+				@Override
+				public void
+				taggableAdded(
+					Tag tag,
+					Taggable tagged )
+				{
+					refreshTagSideBar( tag );
+				}
+
+				@Override
+				public void
+				taggableSync(
+					Tag 		tag )
+				{
+					refreshTagSideBar( tag );
+				}
+
+				@Override
+				public void
+				taggableRemoved(
+					Tag			tag,
+					Taggable	tagged )
+				{
+					refreshTagSideBar( tag );
+				}
+			};
 
 			tagTypeListener = new TagTypeListener() {
 				@Override
@@ -1829,7 +2300,7 @@ public class SB_Transfers
 					Tag tag = event.getTag();
 					if (type == TagEvent.ET_TAG_ADDED) {
 						tagAdded(tag);
-					} else if (type == TagEvent.ET_TAG_CHANGED) {
+					} else if ( type == TagEvent.ET_TAG_MEMBERSHIP_CHANGED || type == TagEvent.ET_TAG_METADATA_CHANGED ) {
 						tagChanged(tag);
 					} else if (type == TagEvent.ET_TAG_REMOVED) {
 						tagRemoved(tag);
@@ -1872,8 +2343,10 @@ public class SB_Transfers
 				@Override
 				public void tagTypeAdded(TagManager manager, TagType tag_type) {
 					synchronized (tag_listener_lock) {
-						if (tag_type.getTagType() != TagType.TT_DOWNLOAD_CATEGORY
-								&& tagTypeListener != null) {
+						int tt = tag_type.getTagType();
+						
+						if (	( tt != TagType.TT_DOWNLOAD_CATEGORY && tt != TagType.TT_DOWNLOAD_INTERNAL ) &&
+								tagTypeListener != null) {
 
 							tag_type.addTagTypeListener(tagTypeListener, true);
 						}
@@ -1977,19 +2450,18 @@ public class SB_Transfers
 		// should already be empty if everyone removed their listeners..
 		listeners.clear();
 
-		COConfigurationManager.removeParameterListener("MyTorrentsView.showuptime",
-				configListenerShow);
-		COConfigurationManager.removeParameterListener("MyTorrentsView.showrates",
-				configListenerShow);
+		COConfigurationManager.removeParameterListener("MyTorrentsView.showuptime",	configListenerShow);
+		COConfigurationManager.removeParameterListener("MyTorrentsView.showrates", configListenerShow);
+		COConfigurationManager.removeParameterListener(SideBar.SIDEBAR_SECTION_LIBRARY + ".viewmode", configListenerShow);
+		
 		if (timerEventShowUptime != null) {
 			timerEventShowUptime.cancel();
 			timerEventShowUptime = null;
 		}
 
-		COConfigurationManager.removeParameterListener("Library.TagInSideBar",
-				paramTagsInSidebarListener);
-		COConfigurationManager.removeParameterListener("Library.CatInSideBar",
-				paramCatInSidebarListener);
+		COConfigurationManager.removeParameterListener("Library.TagInSideBar", paramTagsInSidebarListener);
+		COConfigurationManager.removeParameterListener("Library.TagGroupsInSideBar", paramTagGroupsInSidebarListener);
+		COConfigurationManager.removeParameterListener("Library.CatInSideBar", paramCatInSidebarListener);
 	}
 
 	protected interface countRefreshListener
@@ -1997,7 +2469,7 @@ public class SB_Transfers
 		void countRefreshed(stats statsWithLowNoise, stats statsNoLowNoise);
 	}
 
-	private static class MyMdiEntryCreationListener implements MdiEntryCreationListener {
+	private class MyMdiEntryCreationListener implements MdiEntryCreationListener {
 		private final MultipleDocumentInterfaceSWT mdi;
 
 		public MyMdiEntryCreationListener(MultipleDocumentInterfaceSWT mdi) {
@@ -2006,12 +2478,53 @@ public class SB_Transfers
 
 		@Override
 		public MdiEntry createMDiEntry(String id) {
+			
+			ViewTitleInfo titleInfo = new ViewTitleInfo() {
+				@Override
+				public Object getTitleInfoProperty(int propertyID) {
+					
+					int	total_wln	= statsWithLowNoise.total;
+					int	total_nln 	= statsNoLowNoise.total;
+
+					if (propertyID == TITLE_INDICATOR_TEXT) {
+
+						int viewmode = COConfigurationManager.getIntParameter( SideBar.SIDEBAR_SECTION_LIBRARY + ".viewmode", SBC_LibraryView.MODE_BIGTABLE );
+						
+						if ( 	total_wln == total_nln || 
+								viewmode == SBC_LibraryView.MODE_SMALLTABLE ||
+								!COConfigurationManager.getBooleanParameter( "Library.EnableSimpleView" )){
+							
+							return( String.valueOf( total_wln ));
+							
+						}else{
+							
+							return( total_nln + " | " + total_wln );
+						}
+					}else if (propertyID == TITLE_INDICATOR_TEXT_TOOLTIP) {
+						
+						if ( total_wln != total_nln  ){
+							
+							return(
+								MessageText.getString( "v3.MainWindow.menu.view.asSimpleList") + "=" + total_nln + ", " +
+								MessageText.getString( "v3.MainWindow.menu.view.asAdvancedList") + "=" + total_wln );
+						}
+					}else if (propertyID == TITLE_INDICATOR_COLOR) {
+						
+					}
+
+					return null;
+				}
+			};
+			
 			MdiEntry entry = mdi.createEntryFromSkinRef(
 					SideBar.SIDEBAR_HEADER_TRANSFERS,
 					SideBar.SIDEBAR_SECTION_LIBRARY, "library", "{sidebar."
-							+ SideBar.SIDEBAR_SECTION_LIBRARY + "}", null, null, false,
+							+ SideBar.SIDEBAR_SECTION_LIBRARY + "}", titleInfo, null, false,
 					"");
 			entry.setImageLeftID("image.sidebar.library");
+			
+			addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY);
+
 			return entry;
 		}
 	}
