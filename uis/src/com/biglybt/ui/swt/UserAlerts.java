@@ -200,29 +200,15 @@ UserAlerts
 
 		  @Override
 		  public void
-		  fileAccessModeChanged(
-			  DiskManagerFileInfo		file,
-			  int						old_mode,
-			  int						new_mode )
+		  fileCompleted(
+			  DiskManagerFileInfo		file )
 		  {
 			  DownloadManager dm = file.getDownloadManager();
 
 			  if ( dm != null ){
 
-				  if ( 	old_mode == DiskManagerFileInfo.WRITE &&
-						  new_mode == DiskManagerFileInfo.READ &&
-						  file.getDownloaded() == file.getLength()){
-
-					  activityFinished( dm, file );
-				  }
+				 activityFinished( dm, file );	 
 			  }
-
-			  /*
-			  System.out.println(
-				  "amc:" +
-				  file.getDownloadManager().getDisplayName() + "/" +
-				  file.getName() + ":" + old_mode + " -> " + new_mode );
-			  */
 		  }
 	  };
 

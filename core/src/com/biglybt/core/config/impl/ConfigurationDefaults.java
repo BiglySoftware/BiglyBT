@@ -229,6 +229,7 @@ public class ConfigurationDefaults {
     def.put("Seeding Piece Check Recheck Enable", TRUE );
     def.put("priorityExtensions", "");
     def.put("priorityExtensionsIgnoreCase", FALSE);
+    def.put("file.auto.sequential.exts", "");
     def.put("quick.view.exts", ".nfo;.txt;.rar;.gif;.jpg;.png;.bmp" );
     def.put("quick.view.maxkb", new Long( 512 ));
 

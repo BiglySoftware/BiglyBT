@@ -91,12 +91,6 @@ DiskManagerHelper
 	public String getStorageType(int fileIndex);
 
 	public void
-	accessModeChanged(
-		DiskManagerFileInfoImpl		file,
-		int							old_mode,
-		int							new_mode );
-
-	public void
     skippedFileSetChanged(
 	    	DiskManagerFileInfo	file );
 

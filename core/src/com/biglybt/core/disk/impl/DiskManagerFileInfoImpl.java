@@ -171,14 +171,7 @@ DiskManagerFileInfoImpl
 
   	throws CacheFileManagerException
   {
-	int	old_mode =  cache_file.getAccessMode();
-
   	cache_file.setAccessMode( mode==DiskManagerFileInfo.READ?CacheFile.CF_READ:CacheFile.CF_WRITE );
-
-  	if ( old_mode != mode ){
-
-  		diskManager.accessModeChanged( this, old_mode, mode );
-  	}
   }
 
   @Override
@@ -348,7 +341,7 @@ DiskManagerFileInfoImpl
    * @param string
    */
   public void setExtension(String string) {
-	extension = StringInterner.intern(string);
+	extension = string.startsWith( "." )?StringInterner.intern(string):string;
   }
 
   /**

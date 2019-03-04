@@ -40,9 +40,9 @@ DiskManagerListener
 	pieceDoneChanged(
 		DiskManagerPiece		piece );
 
-	public void
-	fileAccessModeChanged(
-		DiskManagerFileInfo		file,
-		int						old_mode,
-		int						new_mode );
+	public default void
+	fileCompleted(
+		DiskManagerFileInfo		file )
+	{
+	}
 }

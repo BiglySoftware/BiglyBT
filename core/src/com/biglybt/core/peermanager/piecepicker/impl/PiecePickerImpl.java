@@ -3333,13 +3333,6 @@ implements PiecePicker
 				}
 			}
 		}
-
-		@Override
-		public final void fileAccessModeChanged(DiskManagerFileInfo file, int old_mode, int new_mode)
-		{
-			//file done (write to read)
-			//starting to upload from the file (read to write)
-		}
 	}
 
 	@Override

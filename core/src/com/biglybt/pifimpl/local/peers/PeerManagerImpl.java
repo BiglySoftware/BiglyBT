@@ -893,15 +893,6 @@ PeerManagerImpl
 					new pieceFacade( piece.getPieceNumber()));
 		}
 
-		@Override
-		public void
-		fileAccessModeChanged(
-			DiskManagerFileInfo		file,
-			int						old_mode,
-			int						new_mode )
-		{
-		}
-
 		protected void
 		fireEvent(
 			final int			type,

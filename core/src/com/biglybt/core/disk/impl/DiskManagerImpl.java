@@ -138,6 +138,50 @@ DiskManagerImpl
     			}
     		});
     }
+    
+    static volatile Set<String>	priority_file_exts 				= new HashSet<>();
+    static volatile boolean		priority_file_exts_ignore_case 	= false;
+    
+    static{
+      	COConfigurationManager.addAndFireParameterListeners(
+    		new String[]{
+    			"priorityExtensions",
+    			"priorityExtensionsIgnoreCase" },
+    		new ParameterListener()
+    		{
+    			@Override
+			    public void
+    			parameterChanged(
+    				String parameterName )
+    			{
+    				Set<String> new_exts = new HashSet<>();
+    				
+    				String 	extensions = COConfigurationManager.getStringParameter("priorityExtensions","");
+					boolean bIgnoreCase = COConfigurationManager.getBooleanParameter("priorityExtensionsIgnoreCase");
+
+    				if(!extensions.equals("")) {
+    					StringTokenizer st = new StringTokenizer(extensions,";");
+    					while(st.hasMoreTokens()) {
+    						String extension = st.nextToken();
+    						extension = extension.trim();
+    						if(!extension.startsWith(".")){
+    							extension = "." + extension;
+    						}
+    						
+    						if ( bIgnoreCase ){
+    							extension = extension.toLowerCase( Locale.US );
+    						}
+    						
+    						new_exts.add( extension );
+    					}
+    				}
+    				
+    				priority_file_exts 				= new_exts;
+    				priority_file_exts_ignore_case	= bIgnoreCase;
+    			}
+    		});
+      	
+    }
 
     private static final DiskManagerRecheckScheduler      recheck_scheduler       = new DiskManagerRecheckScheduler();
     private static final DiskManagerAllocationScheduler   allocation_scheduler    = new DiskManagerAllocationScheduler();
@@ -219,7 +263,7 @@ DiskManagerImpl
     private static final int LDT_STATECHANGED           = 1;
     private static final int LDT_PRIOCHANGED            = 2;
     private static final int LDT_PIECE_DONE_CHANGED     = 3;
-    private static final int LDT_ACCESS_MODE_CHANGED    = 4;
+    private static final int LDT_FILE_COMPLETED		    = 4;
 
     protected static final ListenerManager<DiskManagerListener>    listeners_aggregator    = ListenerManager.createAsyncManager(
             "DiskM:ListenAggregatorDispatcher",
@@ -246,14 +290,9 @@ DiskManagerImpl
 
                         listener.pieceDoneChanged((DiskManagerPiece)value);
 
-                    }else if (type == LDT_ACCESS_MODE_CHANGED) {
+                    }else if (type == LDT_FILE_COMPLETED) {
 
-                        Object[]    o = (Object[])value;
-
-                        listener.fileAccessModeChanged(
-                            (DiskManagerFileInfo)o[0],
-                            ((Integer)o[1]).intValue(),
-                            ((Integer)o[2]).intValue());
+                        listener.fileCompleted((DiskManagerFileInfo)value );
                     }
                 }
             });
@@ -1092,21 +1131,20 @@ DiskManagerImpl
                     //[ 807483 ] Prioritize .nfo files in new torrents
                     //Implemented a more general way of dealing with it.
 
-                String extensions = COConfigurationManager.getStringParameter("priorityExtensions","");
-
-                if(!extensions.equals("")) {
-                    boolean bIgnoreCase = COConfigurationManager.getBooleanParameter("priorityExtensionsIgnoreCase");
-                    StringTokenizer st = new StringTokenizer(extensions,";");
-                    while(st.hasMoreTokens()) {
-                        String extension = st.nextToken();
-                        extension = extension.trim();
-                        if(!extension.startsWith("."))
-                            extension = "." + extension;
-                        boolean bHighPriority = (bIgnoreCase) ?
-                                              fileInfo.getExtension().equalsIgnoreCase(extension) :
-                                              fileInfo.getExtension().equals(extension);
-                        if (bHighPriority)
-                            fileInfo.setPriority(1);
+                Set<String>	pfe = priority_file_exts;
+                
+                if (!pfe.isEmpty()){
+                	
+                    String e = fileInfo.getExtension();
+                    
+                    if ( priority_file_exts_ignore_case ){
+                    	
+                    	e = e.toLowerCase( Locale.US );
+                    }
+                    
+                    if ( pfe.contains( e )){
+                            
+                    	fileInfo.setPriority(1);
                     }
                 }
 
@@ -1779,6 +1817,8 @@ DiskManagerImpl
 	                             	if ( getState() == READY ){
 	
 	                             		state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, SystemTime.getCurrentTime());
+	                             		
+	    	                    		listeners.dispatch( LDT_FILE_COMPLETED, this_file );
 	                             	}
 	                    		}
 	                        }catch ( Throwable e ){
@@ -1792,7 +1832,7 @@ DiskManagerImpl
 	                        // be rechecking a file and during this process the "file_done" amount
 	                        // will not be file_length until the end. If the file is read-only then
 	                        // changing to write will cause trouble!
-	                    }
+	                      }
 	                }
 	
 	                if ( getState() == READY ){
@@ -1815,18 +1855,6 @@ DiskManagerImpl
             	}
 	        }
         }
-    }
-
-    @Override
-    public void
-    accessModeChanged(
-        DiskManagerFileInfoImpl     file,
-        int                         old_mode,
-        int                         new_mode )
-    {
-        listeners.dispatch(
-            LDT_ACCESS_MODE_CHANGED,
-            new Object[]{ file, new Integer(old_mode), new Integer(new_mode)});
     }
 
     @Override

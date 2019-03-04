@@ -390,12 +390,6 @@ public class PiecesItem
 		});
 	}
 
-	// @see com.biglybt.core.disk.DiskManagerListener#fileAccessModeChanged(com.biglybt.core.disk.DiskManagerFileInfo, int, int)
-	@Override
-	public void fileAccessModeChanged(DiskManagerFileInfo file, int old_mode,
-	                                  int new_mode) {
-	}
-
 	// @see com.biglybt.core.disk.DiskManagerListener#filePriorityChanged(com.biglybt.core.disk.DiskManagerFileInfo)
 	@Override
 	public void filePriorityChanged(DiskManagerFileInfo file) {

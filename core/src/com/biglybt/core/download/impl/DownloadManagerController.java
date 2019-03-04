@@ -2781,8 +2781,6 @@ DownloadManagerController
 							@Override
 							public void pieceDoneChanged(DiskManagerPiece piece) {}
 
-							@Override
-							public void fileAccessModeChanged(DiskManagerFileInfo file, int old_mode, int new_mode) {}
 						});
 					} finally {
 						initialising[0] = false;
@@ -3354,11 +3352,6 @@ DownloadManagerController
 		@Override
 		public void pieceDoneChanged(DiskManagerPiece piece) {
 		}
-
-		@Override
-		public void fileAccessModeChanged(DiskManagerFileInfo file, int old_mode,
-		                                  int new_mode) {
-		}
 	}
 
 	private class DiskManagerListener_Default implements DiskManagerListener {
@@ -3494,15 +3487,5 @@ DownloadManagerController
 			DiskManagerPiece	piece )
 		{
 		}
-
-		@Override
-		public void
-		fileAccessModeChanged(
-			DiskManagerFileInfo		file,
-			int						old_mode,
-			int						new_mode )
-		{
-		}
-
 	}
 }

@@ -784,15 +784,6 @@ LWSDiskManager
 
   	@Override
 	  public void
-  	accessModeChanged(
-  		DiskManagerFileInfoImpl		file,
-  		int							old_mode,
-  		int							new_mode )
-  	{
-  	}
-
-  	@Override
-	  public void
     skippedFileSetChanged(
   	   	DiskManagerFileInfo	file )
   	{

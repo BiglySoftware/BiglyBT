@@ -179,6 +179,55 @@ DiskManagerCheckRequestListener, IPFilterListener
 			});
 	}
 
+    static volatile Set<String>	auto_sequential_file_exts 				= new HashSet<>();
+    
+    static{
+      	COConfigurationManager.addAndFireParameterListeners(
+    		new String[]{
+    			"file.auto.sequential.exts" },
+    		new ParameterListener()
+    		{
+    			@Override
+			    public void
+    			parameterChanged(
+    				String parameterName )
+    			{
+    				Set<String> new_exts = new HashSet<>();
+    				
+    				String 	extensions = COConfigurationManager.getStringParameter( "file.auto.sequential.exts", "" );
+    				
+    				extensions = extensions.trim();
+    				
+    				if ( !extensions.isEmpty()){
+    					
+    					extensions = extensions.toLowerCase( Locale.US );
+    					
+    					extensions = extensions.replace( ';', ',' );
+    					
+    					String[] bits = extensions.split( "," );
+    					
+    					for ( String bit: bits ){
+    						
+    						bit = bit.trim();
+    						
+    						if ( !bit.isEmpty()){
+    							
+    							if ( !bit.startsWith( "." )){
+    								
+    								bit = "." + bit;
+    							}
+    							
+    							new_exts.add( bit );
+    						}
+    					}
+    				}
+    				
+    				auto_sequential_file_exts = new_exts;
+     			}
+    		});
+      	
+    }
+    
 	private static final IpFilter ip_filter = IpFilterManagerFactory.getSingleton().getIPFilter();
 
 	private volatile boolean	is_running 		= false;
@@ -539,6 +588,33 @@ DiskManagerCheckRequestListener, IPFilterListener
 		piecePicker = PiecePickerFactory.create( this );
 
 		ip_filter.addListener( this );
+		
+		disk_mgr.addListener(
+			new DiskManagerListener(){
+				
+				@Override
+				public void stateChanged(int oldState, int newState){
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void pieceDoneChanged(DiskManagerPiece piece){
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void filePriorityChanged(DiskManagerFileInfo file){
+					// TODO Auto-generated method stub
+					
+				}
+				
+				@Override
+				public void fileCompleted(DiskManagerFileInfo file){
+					checkAutoSequentialFiles( file );
+				}
+			});
 	}
 
 
@@ -623,6 +699,8 @@ DiskManagerCheckRequestListener, IPFilterListener
 		PeerNATTraverser.getSingleton().register( this );
 
 		PeerControlSchedulerFactory.getSingleton(partition_id).register(this);
+		
+		checkAutoSequentialFiles( null );
 	}
 
 	@Override
@@ -6026,6 +6104,58 @@ DiskManagerCheckRequestListener, IPFilterListener
 			});
 	}
 
+	private void
+	checkAutoSequentialFiles(
+		DiskManagerFileInfo		done_file )
+	{
+		boolean was_active = false;
+		
+		if ( done_file != null ){
+			
+			int seq_info = piecePicker.getSequentialInfo();
+			
+			if ( seq_info > 0 && done_file.getFirstPieceNumber() == ( seq_info - 1 ) ){
+				
+				was_active = true;
+			}
+		}
+		
+        Set<String> asfe = auto_sequential_file_exts;
+        
+        boolean set_seq = false;
+        
+        if ( !asfe.isEmpty()){
+        	
+        	DiskManagerFileInfo[] files = disk_mgr.getFileSet().getFiles();
+        	
+        	for ( DiskManagerFileInfo file: files ){
+        		
+        		if ( file.isSkipped() || file.getDownloaded() == file.getLength()){
+        			
+        			continue;
+        		}
+        	
+	        	String e = file.getExtension();
+	        	
+	        	e = e.toLowerCase( Locale.US );
+	        	
+	        	if ( asfe.contains( e )){
+	        		
+	        		piecePicker.setSequentialAscendingFrom( file.getFirstPieceNumber());
+	        		
+	        		set_seq = true;
+	        		
+	        		break;
+	        	}
+        	}
+        }
+        
+        if ( was_active && !set_seq ){
+        	
+        	piecePicker.clearSequential();
+        }
+	}
+	
 	@Override
 	public void
 	generateEvidence(
