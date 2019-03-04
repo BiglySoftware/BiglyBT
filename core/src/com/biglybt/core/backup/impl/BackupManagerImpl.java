@@ -669,7 +669,9 @@ BackupManagerImpl
 							name.endsWith( ".zip" )			||	// most likely not interesting
 							name.endsWith( ".dll" )			||	// might be in use, no big deal
 							name.endsWith( ".so" )			||	// might be in use, no big deal
-							full_name.contains( File.separator + "cache" + File.separator )	// caches can be in use, no big deal
+							full_name.contains( File.separator + "cache" + File.separator )	|| // caches can be in use, no big deal
+							full_name.contains( File.separator + "netdb" + File.separator + "routerinfo-") ||	// troublesome i2p files
+							full_name.contains( File.separator + "peerprofiles" + File.separator + "profile-")	// troublesome i2p files
 							){
 
 						return( new long[]{ total_files, total_copied });
