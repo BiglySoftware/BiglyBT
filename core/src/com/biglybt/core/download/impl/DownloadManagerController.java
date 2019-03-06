@@ -46,6 +46,7 @@ import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.PeerManagerRegistration;
 import com.biglybt.core.peermanager.PeerManagerRegistrationAdapter;
 import com.biglybt.core.peermanager.peerdb.PeerItemFactory;
+import com.biglybt.core.peermanager.piecepicker.PiecePicker;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.torrent.TOTorrentException;
 import com.biglybt.core.torrent.TOTorrentFile;
@@ -653,15 +654,33 @@ DownloadManagerController
 			
 			dm_attribute_listener = new DownloadManagerStateAttributeListener(){
 				
+				boolean	did_set;
+				
 				@Override
 				public void attributeEventOccurred(DownloadManager download, String attribute, int event_type){
 					
+						// this fires on any flag change so make sure we only clear the seq flag if we set it
+						// otherwise this interferes with other seq settings
+					
 					boolean seq = download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD );
 					
+					PiecePicker pp = temp.getPiecePicker();
+					
 					if ( seq ){
-						temp.getPiecePicker().setSequentialAscendingFrom( 0 );
+						
+						if ( pp.getSequentialInfo() == 0 ){
+						
+							pp.setSequentialAscendingFrom( 0 );
+						
+							did_set = true;
+						}
+						
 					}else{
-						temp.getPiecePicker().clearSequential();
+						
+						if ( did_set ){
+						
+							pp.clearSequential();
+						}
 					}
 				}
 			};

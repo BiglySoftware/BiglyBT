@@ -1116,7 +1116,22 @@ public class PieceInfoView
 		
 		if ( seq_info != 0 ){
 			
-			topLabelLHS += "; seq=" + seq_info;
+			int			seq_from;
+			boolean		asc;
+			
+			if ( seq_info > 0 ){
+				
+				seq_from 	= seq_info-1;
+				
+				asc			= true;
+				
+			}else{
+			
+				seq_from	= - ( seq_info + 1 );
+				asc			= false;
+			}
+			
+			topLabelLHS += "; seq=" + seq_from + (asc?'+':'-');
 		}
 		
 		String egm_info = picker.getEGMInfo();
