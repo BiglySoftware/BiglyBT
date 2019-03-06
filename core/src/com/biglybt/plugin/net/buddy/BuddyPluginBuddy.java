@@ -65,7 +65,8 @@ BuddyPluginBuddy
 	private String			public_key;
 	private String			nick_name;
 	private List<Long>		recent_ygm;
-
+	private boolean			is_transient;
+	
 	private int				last_status_seq;
 
 	private long			post_time;
@@ -122,6 +123,10 @@ BuddyPluginBuddy
 	private Set<String>			rss_remote_cats;
 	private Set<String>			rss_cats_read;
 
+	private List<String>		profile_info;
+	private boolean				profile_info_outstanding;
+	private long				profile_info_last = -1;
+	
 	private AESemaphore			outgoing_connect_sem = new AESemaphore( "BPB:outcon", 1 );
 
 	private volatile boolean	closing;
@@ -140,7 +145,8 @@ BuddyPluginBuddy
 		String		_rss_remote_cats,
 		int			_last_status_seq,
 		long		_last_time_online,
-		List<Long>	_recent_ygm )
+		List<Long>	_recent_ygm,
+		boolean		_is_transient )
 	{
 		plugin				= _plugin;
 		created_time		= _created_time;
@@ -154,7 +160,8 @@ BuddyPluginBuddy
 		last_status_seq		= _last_status_seq;
 		last_time_online	= _last_time_online;
 		recent_ygm			= _recent_ygm;
-
+		is_transient		= _is_transient;
+		
 		persistent_msg_handler = new BuddyPluginBuddyMessageHandler( this, new File(plugin.getBuddyConfigDir(), public_key ));
 	}
 
@@ -250,6 +257,19 @@ BuddyPluginBuddy
 		authorised = _a;
 	}
 
+	public boolean
+	isTransient()
+	{
+		return( is_transient );
+	}
+	
+	public void
+	setTransient(
+		boolean		b )
+	{
+		is_transient = b;
+	}
+	
 	public String
 	getPublicKey()
 	{
@@ -814,6 +834,73 @@ BuddyPluginBuddy
 		return( last_time_online );
 	}
 
+	public List<String>
+	getProfileInfo()
+	{
+		synchronized( this ){
+			
+			if ( profile_info != null ){
+				
+				return( profile_info );
+			}
+			
+			long now = SystemTime.getMonotonousTime();
+			
+			if ( profile_info_outstanding || now - profile_info_last < 60*1000 ){
+				
+				return( null );
+			}
+			
+			profile_info_last			= now;
+			profile_info_outstanding 	= true;
+		}
+		
+		try{
+			plugin.getAZ2Handler().sendAZ2ProfileInfo(
+				this,
+				new HashMap<>(),
+				new BuddyPluginAZ2TrackerListener(){
+					
+					@Override
+					public Map<String, Object> 
+					messageReceived(
+						BuddyPluginBuddy 		buddy, 
+						Map<String, Object> 	message)
+					{
+						synchronized( BuddyPluginBuddy.this ){
+							
+							profile_info_outstanding = false;
+							
+							profile_info = BDecoder.decodeStrings((List)message.get( "props" ));
+						}
+						
+						return( null );
+					}
+					
+					@Override
+					public void
+					messageFailed(
+						BuddyPluginBuddy buddy, 
+						Throwable cause)
+					{
+						synchronized( BuddyPluginBuddy.this ){
+							
+							profile_info_outstanding = false;
+						}
+					}
+				});
+			
+		}catch( Throwable e ){
+		
+			synchronized( this ){
+				
+				profile_info_outstanding = false;
+			}
+		}
+		
+		return( null );
+	}
+	
 	public BuddyPlugin.cryptoResult
 	encrypt(
 		byte[]		payload )
@@ -1360,6 +1447,16 @@ BuddyPluginBuddy
 
 		throws BuddyPluginException
 	{
+		if ( isTransient()){
+			
+			long type = (Long)content.get( "type" );
+			
+			if ( subsystem != BuddyPlugin.SUBSYSTEM_AZ2 || type != BuddyPluginAZ2.RT_AZ2_REQUEST_PROFILE_INFO ){
+		
+				throw( new BuddyPluginException( "Message " + subsystem + "/" + type + " not enabled for transient buddies" ));
+			}
+		}
+		
 		boolean too_many_messages = false;
 
 		synchronized( this ){
@@ -1959,7 +2056,10 @@ BuddyPluginBuddy
 			plugin.fireDetailsChanged( this );
 		}
 
-		plugin.logMessage( getString());
+		if ( !isTransient()){
+		
+			plugin.logMessage( this,  getString());
+		}
 	}
 
 	protected boolean
@@ -2211,7 +2311,7 @@ BuddyPluginBuddy
 	logMessage(
 		String	str )
 	{
-		plugin.logMessage( getShortString() + ": " + str );
+		plugin.logMessage( this, getShortString() + ": " + str );
 	}
 
 	protected GenericMessageConnection
@@ -2409,7 +2509,7 @@ BuddyPluginBuddy
 	log(
 		String		str )
 	{
-		plugin.log( str );
+		plugin.log( this, str );
 	}
 
 	protected void
@@ -2417,7 +2517,7 @@ BuddyPluginBuddy
 		String		str,
 		Throwable 	e )
 	{
-		plugin.log( str, e );
+		plugin.log( this, str, e );
 	}
 
 	public String

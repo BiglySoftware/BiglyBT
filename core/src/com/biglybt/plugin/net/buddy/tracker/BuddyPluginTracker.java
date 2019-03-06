@@ -793,7 +793,7 @@ outer:
 			
 			markBuddyPeer( download, peer );
 			
-			plugin.logMessage( "Partial buddy added: " + download.getName() + " - " + pb );
+			plugin.logMessage( null, "Partial buddy added: " + download.getName() + " - " + pb );
 
 			plugin.partialBuddyAdded( pb );
 			
@@ -904,7 +904,7 @@ outer:
 			}
 		}
 		
-		plugin.logMessage( "Partial buddy removed: " + pb );
+		plugin.logMessage( null, "Partial buddy removed: " + pb );
 		
 		plugin.partialBuddyRemoved( pb );
 	}
@@ -955,7 +955,7 @@ outer:
 			
 			unmarkBuddyPeer( peer );
 	
-			plugin.logMessage( "Partial buddy removed: " + download.getName() + " - " + pb );
+			plugin.logMessage( null, "Partial buddy removed: " + download.getName() + " - " + pb );
 			
 			plugin.partialBuddyRemoved( pb );
 			
@@ -1905,7 +1905,7 @@ outer:
 	log(
 		String		str )
 	{
-		plugin.log( "Tracker: " + str );
+		plugin.log( null, "Tracker: " + str );
 	}
 
 	protected void
@@ -1930,7 +1930,7 @@ outer:
 		String		str,
 		Throwable 	e )
 	{
-		plugin.log( "Tracker: " + str, e );
+		plugin.log( null, "Tracker: " + str, e );
 	}
 
 	public class

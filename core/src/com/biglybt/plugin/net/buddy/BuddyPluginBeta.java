@@ -221,7 +221,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		hide_search_subs		= COConfigurationManager.getBooleanParameter( "azbuddy.dchat.ui.hide.search_subs", false );
 
 		SimpleTimer.addPeriodicEvent(
-			"BPB:checkfave",
+			"BPB:timer",
 			30*1000,
 			new TimerEventPerformer()
 			{
@@ -230,7 +230,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				perform(
 					TimerEvent event )
 				{
-					checkFavourites();
+					tick();
 				}
 			});
 
@@ -370,7 +370,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	{
 		setBooleanOption( net, key, "fave", b );
 
-		checkFavourites();
+		tick();
 	}
 
 	public List<String[]>
@@ -403,7 +403,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	}
 
 	private void
-	checkFavourites()
+	tick()
 	{
 		dispatcher.dispatch(
 			new AERunnable()
@@ -477,19 +477,44 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							BuddyPluginUtils.betaInit( BuddyPluginBeta.this );
 						}
 					}
+					
+					for ( ChatInstance chat: chat_instances_list ){
+						
+						ChatParticipant[] participants = chat.getParticipants();
+						
+						for ( ChatParticipant p: participants ){
+							
+							String fk = p.getFriendKey();
+							
+							if ( fk != null ){
+								
+								if ( p.getProfileData() != null ){
+									
+									if ( p.getProfileDataAgeMillis() < 60*60*1000 ){
+										
+										continue;
+									}
+								}
+								
+								BuddyPluginBuddy buddy = plugin.peekBuddy( fk );
+								
+								List<String> profile_info = buddy.getProfileInfo();
+								
+								if ( profile_info != null ){
+									
+									p.setProfileData( profile_info );
+									
+									if ( buddy.isTransient()){
+									
+										buddy.remove();
+									}
+								}
+							}
+						}
+					}
 				}
 			});
 	}
-
-/*
- * 			String chat_key_base = "azbuddy.chat." + getNetAndKey();
-
-			String shared_key 	= chat_key_base + ".shared";
-			String nick_key 	= chat_key_base + ".nick";
-
-			is_shared_nick 	= COConfigurationManager.getBooleanParameter( shared_key, true );
-			instance_nick 	= COConfigurationManager.getStringParameter( nick_key, "" );
- */
 
 		// nick
 
@@ -6033,7 +6058,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private Boolean				is_me;
 
 		private byte[]				friend_key;
-
+		private List<String>		profile_data;
+		private long				profile_data_set;
+		
 		private
 		ChatParticipant(
 			ChatInstance		_chat,
@@ -6133,10 +6160,37 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			return( !nickname.equals( pkToString( pk )));
 		}
 
-		public byte[]
+		public String
 		getFriendKey()
 		{
-			return( friend_key );
+			byte[] fk = friend_key;
+			
+			return( fk==null?null:Base32.encode( fk ));
+		}
+		
+		public List<String>
+		getProfileData()
+		{
+			return( profile_data );
+		}
+		
+		public void
+		setProfileData(
+			List<String>		d )
+		{
+			profile_data		= d;
+			profile_data_set	= SystemTime.getMonotonousTime();
+		}
+		
+		public long
+		getProfileDataAgeMillis()
+		{
+			if ( profile_data_set == 0 ){
+				
+				return( -1 );
+			}
+			
+			return( SystemTime.getMonotonousTime() - profile_data_set );
 		}
 		
 		private void
@@ -6149,8 +6203,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			message.setIgnored( is_ignored || is_spammer );
 
-			friend_key = message.getFriendKey();
-
+			if ( message.getMessageType() == ChatMessage.MT_NORMAL ){
+				
+				friend_key = message.getFriendKey();
+			}
+			
 			String new_nickname = message.getNickName();
 
 			if ( !nickname.equals( new_nickname )){
@@ -6177,7 +6234,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			message.setIgnored( is_ignored || is_spammer );
 
-			friend_key = message.getFriendKey();
+			if ( message.getMessageType() == ChatMessage.MT_NORMAL ){
+				
+				friend_key = message.getFriendKey();
+			}
 			
 			String new_nickname = message.getNickName();
 

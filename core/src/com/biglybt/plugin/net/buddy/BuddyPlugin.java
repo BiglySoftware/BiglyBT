@@ -918,7 +918,7 @@ BuddyPlugin
 
 				if ( buddy.getIP() != null && !buddy.isConnected()){
 
-					log( "Attempting reconnect to " + buddy.getString());
+					log( buddy, "Attempting reconnect to " + buddy.getString());
 
 					buddy.sendKeepAlive();
 				}
@@ -926,7 +926,7 @@ BuddyPlugin
 
 		}catch( Throwable e ){
 
-			log( "Initialisation failed", e );
+			log( null, "Initialisation failed", e );
 
 			fireClassicInitialised( false );
 		}
@@ -1066,6 +1066,23 @@ BuddyPlugin
 		return( enable_chat_notifications );
 	}
 
+	public List<String>
+	getProfileInfo()
+	{
+		// Debug.out( "TODO" );
+		
+		if ( false ){
+			
+			return( null );
+		}
+		
+		List<String>	props = new ArrayList<>();
+		
+		props.add( "email=test@toast" );
+		
+		return( props );
+	}
+	
 	protected String
 	normaliseCat(
 		String		str )
@@ -1324,7 +1341,7 @@ BuddyPlugin
 
 																	if ( !buddy.isAuthorised()){
 
-																		log( "Incoming connection from " + originator + " failed as for unauthorised buddy" );
+																		log( buddy, "Incoming connection from " + originator + " failed as for unauthorised buddy" );
 
 																		return( false );
 																	}
@@ -1346,12 +1363,12 @@ BuddyPlugin
 
 																if ( tooManyUnauthConnections( originator )){
 
-																	log( "Too many recent unauthorised connections from " + originator );
+																	log( null, "Too many recent unauthorised connections from " + originator );
 
 																	return( false );
 																}
 
-																BuddyPluginBuddy buddy = addBuddy( other_key_str, SUBSYSTEM_AZ2, false );
+																BuddyPluginBuddy buddy = addBuddy( other_key_str, SUBSYSTEM_AZ2, false, false );
 
 																if ( buddy != null ){
 
@@ -1366,13 +1383,13 @@ BuddyPlugin
 															}
 														}
 
-														log( "Incoming connection from " + originator + " failed due to pk mismatch" );
+														log( null, "Incoming connection from " + originator + " failed due to pk mismatch" );
 
 														return( false );
 
 													}catch( Throwable e ){
 
-														log( "Incomming connection from " + originator + " failed", e );
+														log( null, "Incomming connection from " + originator + " failed", e );
 
 														return( false );
 													}
@@ -1385,7 +1402,7 @@ BuddyPlugin
 
 								connection.close();
 
-								log( "Incoming connection from " + originator + " failed", e );
+								log( null, "Incoming connection from " + originator + " failed", e );
 							}
 
 							return( true );
@@ -1394,7 +1411,7 @@ BuddyPlugin
 
 		}catch( Throwable e ){
 
-			log( "Failed to register message listener", e );
+			log( null, "Failed to register message listener", e );
 		}
 	}
 
@@ -1816,7 +1833,7 @@ BuddyPlugin
 
 					}catch( Throwable e ){
 
-						log( "Failed to publish details", e );
+						log( null, "Failed to publish details", e );
 
 						return;
 					}
@@ -1838,7 +1855,7 @@ BuddyPlugin
 
 		if ( key_to_remove != null ){
 
-			log( "Removing old status publish: " + existing_details.getString());
+			log( null, "Removing old status publish: " + existing_details.getString());
 
 			try{
 				ddb.delete(
@@ -1855,7 +1872,7 @@ BuddyPlugin
 
 			}catch( Throwable e ){
 
-				log( "Failed to remove existing publish", e );
+				log( null, "Failed to remove existing publish", e );
 			}
 		}
 
@@ -1867,7 +1884,7 @@ BuddyPlugin
 
 			if ( ip.isLoopbackAddress() || ip.isLinkLocalAddress() || ip.isSiteLocalAddress()){
 
-				log( "Can't publish as ip address is invalid: " + details.getString());
+				log( null, "Can't publish as ip address is invalid: " + details.getString());
 
 				return;
 			}
@@ -1939,7 +1956,7 @@ BuddyPlugin
 
 				if ( log_this ){
 
-					logMessage( "Publishing status starts: " + details.getString());
+					logMessage(null,  "Publishing status starts: " + details.getString());
 				}
 
 				last_publish_start = SystemTime.getMonotonousTime();
@@ -1981,11 +1998,11 @@ BuddyPlugin
 
 				if ( log_this ){
 
-					logMessage( "My status publish complete" );
+					logMessage( null, "My status publish complete" );
 				}
 			}catch( Throwable e ){
 
-				logMessage( "Failed to publish online status", e );
+				logMessage( null, "Failed to publish online status", e );
 
 				if ( failed_to_get_key ){
 
@@ -1999,7 +2016,7 @@ BuddyPlugin
 						if ( 	last_publish_start == 0 ||
 								SystemTime.getMonotonousTime() - last_publish_start > STATUS_REPUBLISH_PERIOD ){
 
-							log( "Rescheduling publish as failed to get key" );
+							log( null, "Rescheduling publish as failed to get key" );
 
 							republish_delay_event = SimpleTimer.addEvent(
 								"BuddyPlugin:republish",
@@ -2046,7 +2063,7 @@ BuddyPlugin
 	protected void
 	closedown()
 	{
-		logMessage( "Closing down" );
+		logMessage( null, "Closing down" );
 
 		List<BuddyPluginBuddy>	buddies = getAllBuddies();
 
@@ -2067,7 +2084,7 @@ BuddyPlugin
 
 			boolean	restarting = CoreFactory.isCoreAvailable() ? CoreFactory.getSingleton().isRestarting() : false;
 
-			logMessage( "   closing buddy connections" );
+			logMessage( null, "   closing buddy connections" );
 
 			for (int i=0;i<buddies.size();i++){
 
@@ -2076,7 +2093,7 @@ BuddyPlugin
 
 			if ( !restarting ){
 
-				logMessage( "   updating online status" );
+				logMessage( null, "   updating online status" );
 
 				List	contacts = new ArrayList();
 
@@ -2121,7 +2138,7 @@ BuddyPlugin
 
 				}catch( Throwable e ){
 
-					log( "Failed to remove existing publish", e );
+					log( null, "Failed to remove existing publish", e );
 				}
 			}
 		}
@@ -2243,7 +2260,7 @@ BuddyPlugin
 							String	loc_cat = decodeString((byte[])details.get( "lc" ));
 							String	rem_cat = decodeString((byte[])details.get( "rc" ));
 
-							BuddyPluginBuddy buddy = new BuddyPluginBuddy( this, created_time, subsystem, true, key, nick, ver, loc_cat, rem_cat, last_seq, last_time_online, recent_ygm );
+							BuddyPluginBuddy buddy = new BuddyPluginBuddy( this, created_time, subsystem, true, key, nick, ver, loc_cat, rem_cat, last_seq, last_time_online, recent_ygm, false );
 
 							byte[]	ip_bytes = (byte[])details.get( "ip" );
 
@@ -2261,7 +2278,7 @@ BuddyPlugin
 								}
 							}
 
-							logMessage( "Loaded buddy " + buddy.getString());
+							logMessage( buddy, "Loaded buddy " + buddy.getString());
 
 							buddies.add( buddy );
 
@@ -2318,7 +2335,7 @@ BuddyPlugin
 
 					BuddyPluginBuddy buddy = (BuddyPluginBuddy)buddies.get(i);
 
-					if ( !buddy.isAuthorised()){
+					if ( buddy.isTransient() || !buddy.isAuthorised()){
 
 						continue;
 					}
@@ -2409,14 +2426,15 @@ BuddyPlugin
 			setClassicEnabled( true );
 		}
 
-		return( addBuddy( key, subsystem, true ));
+		return( addBuddy( key, subsystem, true, false ));
 	}
 
 	protected BuddyPluginBuddy
 	addBuddy(
 		String		key,
 		int			subsystem,
-		boolean		authorised )
+		boolean		authorised,
+		boolean		for_peek )
 	{
 		if ( key.length() == 0 || !verifyPublicKey( key )){
 
@@ -2429,6 +2447,8 @@ BuddyPlugin
 			// and authorise it and send the added event (we don't fire added events for
 			// unauthorised buddies)
 
+		boolean	transient_changed = false;
+		
 		synchronized( this ){
 
 			for (int i=0;i<buddies.size();i++){
@@ -2439,16 +2459,25 @@ BuddyPlugin
 
 					if ( buddy.getSubsystem() != subsystem ){
 
-						log( "Buddy " + buddy.getString() + ": subsystem changed from " + buddy.getSubsystem() + " to " + subsystem );
+						log( buddy, "Buddy " + buddy.getString() + ": subsystem changed from " + buddy.getSubsystem() + " to " + subsystem );
 
 						buddy.setSubsystem( subsystem );
 
 						saveConfig( true );
 					}
 
+					if ( buddy.isTransient() && !for_peek ){
+						
+						buddy.setTransient( false );
+						
+						transient_changed = true;
+						
+						saveConfig( true );
+					}
+					
 					if ( authorised && !buddy.isAuthorised()){
 
-						log( "Buddy " + buddy.getString() + ": no authorised" );
+						log( buddy, "Buddy " + buddy.getString() + ": no authorised" );
 
 						buddy.setAuthorised( true );
 
@@ -2464,7 +2493,7 @@ BuddyPlugin
 			if ( buddy_to_return == null ){
 
 				buddy_to_return =
-					new BuddyPluginBuddy( this, SystemTime.getCurrentTime(), subsystem, authorised, key, null, VERSION_CURRENT, null, null, 0, 0, null );
+					new BuddyPluginBuddy( this, SystemTime.getCurrentTime(), subsystem, authorised, key, null, VERSION_CURRENT, null, null, 0, 0, null, for_peek );
 
 				buddies.add( buddy_to_return );
 
@@ -2472,23 +2501,40 @@ BuddyPlugin
 
 				if ( !authorised ){
 
-					log( "Added unauthorised buddy: " + buddy_to_return.getString());
+					log( buddy_to_return, "Added unauthorised buddy: " + buddy_to_return.getString());
 				}
 			}
 
 			if ( buddy_to_return.isAuthorised()){
 
-				logMessage( "Added buddy " + buddy_to_return.getString());
+				logMessage( buddy_to_return, "Added buddy " + buddy_to_return.getString());
 
 				saveConfig( true );
 			}
 		}
 
+		if ( transient_changed ){
+			
+			fireRemoved( buddy_to_return );
+		}
+		
 		fireAdded( buddy_to_return );
 
 		return( buddy_to_return );
 	}
 
+	public BuddyPluginBuddy
+	peekBuddy(
+		String		key )
+	{
+		if ( !isClassicEnabled()){
+
+			setClassicEnabled( true );
+		}
+		
+		return( addBuddy( key, SUBSYSTEM_AZ2, true, true ));
+	}
+	
 	protected void
 	removeBuddy(
 		BuddyPluginBuddy 	buddy )
@@ -2502,7 +2548,7 @@ BuddyPlugin
 
 			buddies_map.remove( buddy.getPublicKey());
 
-			logMessage( "Removed friend " + buddy.getString());
+			logMessage( buddy, "Removed buddy " + buddy.getString());
 
 			saveConfig( true );
 		}
@@ -2591,7 +2637,7 @@ BuddyPlugin
 
 		}catch( Throwable e ){
 
-			logMessage( "Failed to access public key", e );
+			logMessage( null, "Failed to access public key", e );
 
 			return( null );
 		}
@@ -2732,7 +2778,7 @@ BuddyPlugin
 			return;
 		}
 
-		log( "Updating buddy status: " + buddy.getString());
+		log( buddy, "Updating buddy status: " + buddy.getString());
 
 		try{
 			final byte[]	public_key = buddy.getRawPublicKey();
@@ -2775,7 +2821,7 @@ BuddyPlugin
 								}
 							}catch( Throwable e ){
 
-								log( "Read failed", e );
+								log( buddy, "Read failed", e );
 							}
 						}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
 									type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
@@ -2815,7 +2861,7 @@ BuddyPlugin
 
 									buddy.statusCheckFailed();
 
-									log( "Status decode failed", e );
+									log( buddy, "Status decode failed", e );
 								}
 							}
 						}
@@ -2828,7 +2874,7 @@ BuddyPlugin
 
 			buddy.statusCheckFailed();
 
-			log( "Friend status update failed: " + buddy.getString(), e );
+			log( buddy, "Friend status update failed: " + buddy.getString(), e );
 		}
 	}
 
@@ -2854,7 +2900,7 @@ BuddyPlugin
 
 			}else{
 
-				logMessage( "Signature verification failed" );
+				logMessage( null, "Signature verification failed" );
 
 				return( null );
 			}
@@ -3118,7 +3164,7 @@ BuddyPlugin
 
 			DistributedDatabaseValue	value = ddb.createValue( BEncoder.encode( envelope ));
 
-			logMessage( reason + " starts: " + payload );
+			logMessage( buddy, reason + " starts: " + payload );
 
 			DistributedDatabaseKey	key = getYGMKey( buddy.getRawPublicKey(), reason );
 
@@ -3135,7 +3181,7 @@ BuddyPlugin
 						if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
 								type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
 
-							logMessage( reason + " complete"  );
+							logMessage( buddy, reason + " complete"  );
 
 							listener.complete();
 						}
@@ -3160,7 +3206,7 @@ BuddyPlugin
 	checkMessagePending(
 		int	tick_count )
 	{
-		log( "Checking YGM" );
+		log( null, "Checking YGM" );
 
 		if ( tick_count % YGM_BLOOM_LIFE_TICKS == 0 ){
 
@@ -3214,11 +3260,11 @@ BuddyPlugin
 
 									if ( buddy == null ){
 
-										log( "YGM entry from unknown friend '" + pk_str + "' - ignoring" );
+										log( buddy, "YGM entry from unknown friend '" + pk_str + "' - ignoring" );
 
 									}else{
 
-										log( "YGM entry from unauthorised friend '" + pk_str + "' - ignoring" );
+										log( buddy, "YGM entry from unauthorised friend '" + pk_str + "' - ignoring" );
 									}
 
 									byte[] address = event.getContact().getAddress().getAddress().getAddress();
@@ -3255,7 +3301,7 @@ BuddyPlugin
 								}
 							}catch( Throwable e ){
 
-								log( "Read failed", e );
+								log( null, "Read failed", e );
 							}
 						}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
 									type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
@@ -3293,7 +3339,7 @@ BuddyPlugin
 
 				DistributedDatabaseValue	value = ddb.createValue( BEncoder.encode( envelope ));
 
-				logMessage( reason2 + " starts" );
+				logMessage( null, reason2 + " starts" );
 
 				ddb.write(
 					new DistributedDatabaseListener()
@@ -3307,7 +3353,7 @@ BuddyPlugin
 
 							if ( type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
 
-								logMessage( reason2 + " complete"  );
+								logMessage( null, reason2 + " complete"  );
 							}
 						}
 					},
@@ -3317,7 +3363,7 @@ BuddyPlugin
 
 		}catch( Throwable e ){
 
-			logMessage( "YGM check failed", e );
+			logMessage( null, "YGM check failed", e );
 		}
 	}
 
@@ -3721,7 +3767,7 @@ BuddyPlugin
 
 		throws BuddyPluginException
 	{
-		logMessage( reason, e );
+		logMessage( null, reason, e );
 
 		if ( e instanceof CryptoManagerPasswordException ){
 
@@ -3942,7 +3988,7 @@ BuddyPlugin
 		final Object[] 		result 		= { null };
 		final AESemaphore	result_sem 	= new AESemaphore( "BuddyPlugin:upt" );
 
-		log( "Attempting to download torrent for " + Base32.encode( hash ));
+		log( buddy, "Attempting to download torrent for " + Base32.encode( hash ));
 
 			// first try and get torrent direct from the buddy
 
@@ -3978,7 +4024,7 @@ BuddyPlugin
 							try{
 								byte[] bytes = (byte[])message.get( "torrent" );
 
-								log( "    torrent downloaded from buddy" );
+								log( buddy, "    torrent downloaded from buddy" );
 
 								setResult( bytes );
 
@@ -4092,7 +4138,7 @@ BuddyPlugin
 								reportActivity(
 									String	str )
 								{
-									log( "    MagnetDownload: " + str );
+									log( buddy, "    MagnetDownload: " + str );
 								}
 
 								@Override
@@ -4137,7 +4183,7 @@ BuddyPlugin
 
 						}else{
 
-							log( "    torrent downloaded from magnet" );
+							log( buddy, "    torrent downloaded from magnet" );
 
 							setResult( torrent_data );
 						}
@@ -4192,7 +4238,7 @@ BuddyPlugin
 
 		if ( result[0] == null ){
 
-			log( "    torrent download timeout" );
+			log( buddy, "    torrent download timeout" );
 
 			throw( new IPCException( "Timeout" ));
 
@@ -4204,7 +4250,7 @@ BuddyPlugin
 
 			IPCException error = (IPCException)result[0];
 
-			log( "    torrent downloaded failed: " + Debug.getNestedExceptionMessage( error ));
+			log( buddy, "    torrent downloaded failed: " + Debug.getNestedExceptionMessage( error ));
 
 			throw( error );
 		}
@@ -4512,25 +4558,33 @@ BuddyPlugin
 
 	public void
 	logMessage(
-		String		str,
-		Throwable	e )
+		BuddyPluginBuddy	buddy,
+		String				str,
+		Throwable			e )
 	{
-		logMessage( str + ": " + Debug.getNestedExceptionMessage(e), true );
+		logMessage( buddy, str + ": " + Debug.getNestedExceptionMessage(e), true );
 	}
 
 	public void
 	logMessage(
-		String		str )
+		BuddyPluginBuddy	buddy,
+		String				str )
 	{
-		logMessage( str, false );
+		logMessage( buddy, str, false );
 	}
 
 	public void
 	logMessage(
-		String		str,
-		boolean		is_error )
+		BuddyPluginBuddy	buddy,
+		String				str,
+		boolean				is_error )
 	{
-		log( str );
+		if ( buddy != null && buddy.isTransient()){
+			
+			return;
+		}
+		
+		log( buddy, str );
 
 		Iterator it = listeners.iterator();
 
@@ -4548,16 +4602,28 @@ BuddyPlugin
 
 	public void
 	log(
-		String		str )
+		BuddyPluginBuddy	buddy,
+		String				str )
 	{
+		if ( buddy != null && buddy.isTransient()){
+			
+			return;
+		}
+
 		logger.log( str );
 	}
 
 	public void
 	log(
-		String		str,
-		Throwable	e )
+		BuddyPluginBuddy	buddy,
+		String				str,
+		Throwable			e )
 	{
+		if ( buddy != null && buddy.isTransient()){
+			
+			return;
+		}
+		
 		logger.log( str + ": " + Debug.getNestedExceptionMessageAndStack( e ));
 	}
 

@@ -45,6 +45,11 @@ BuddyPluginAZ2
 	public static final int RT_AZ2_REQUEST_RSS			= 9;
 	public static final int RT_AZ2_REPLY_RSS			= 10;
 
+	public static final int RT_AZ2_REQUEST_PROFILE_INFO			= 11;
+	public static final int RT_AZ2_REPLY_PROFILE_INFO			= 12;
+
+	
+	
 	public static final int CHAT_MSG_TYPE_TEXT						= 1;
 	public static final int CHAT_MSG_TYPE_PARTICIPANTS_ADDED		= 2;
 	public static final int CHAT_MSG_TYPE_PARTICIPANTS_REMOVED		= 3;
@@ -82,7 +87,12 @@ BuddyPluginAZ2
 
 							if ( !from_buddy.isAuthorised()){
 
-								throw( new BuddyPluginException( "Unauthorised" ));
+								int	type = ((Long)request.get( "type" )).intValue();
+
+								if ( type != RT_AZ2_REQUEST_PROFILE_INFO ){
+									
+									throw( new BuddyPluginException( "Unauthorised" ));
+								}
 							}
 
 							return( processAZ2Request( from_buddy, request ));
@@ -107,7 +117,7 @@ BuddyPluginAZ2
 
 		throws BuddyPluginException
 	{
-		logMessage( "AZ2 request received: " + from_buddy.getString() + " -> " + request );
+		logMessage( from_buddy, "AZ2 request received: " + from_buddy.getString() + " -> " + request );
 
 		int	type = ((Long)request.get( "type" )).intValue();
 
@@ -269,12 +279,29 @@ BuddyPluginAZ2
 
 				throw( new BuddyPluginException( "Failed to handle rss", e ));
 			}
+			
+		}else if (  type == RT_AZ2_REQUEST_PROFILE_INFO ){
+
+			List<String> info = plugin.getProfileInfo();
+			
+			if ( info == null ){
+			
+				throw( new BuddyPluginException( "Unauthorised" ));
+			}
+			
+			Map<String,Object> res = new HashMap<>();
+
+			reply.put( "msg", res );
+			reply.put( "type", new Long( RT_AZ2_REPLY_PROFILE_INFO ));
+
+			res.put( "props", info );
+				
 		}else{
 
 			throw( new BuddyPluginException( "Unrecognised request type " + type ));
 		}
 
-		logMessage( "AZ2 reply sent: " + from_buddy.getString() + " <- " + reply );
+		logMessage( from_buddy, "AZ2 reply sent: " + from_buddy.getString() + " <- " + reply );
 
 		return( reply );
 	}
@@ -298,7 +325,7 @@ BuddyPluginAZ2
 			chats.put( id, chat );
 		}
 
-		logMessage( "Chat " + chat.getID() + " created" );
+		logMessage( null, "Chat " + chat.getID() + " created" );
 
 		informCreated( chat );
 
@@ -316,7 +343,7 @@ BuddyPluginAZ2
 			chats.remove( chat.getID());
 		}
 
-		logMessage( "Chat " + chat.getID() + " destroyed" );
+		logMessage( null, "Chat " + chat.getID() + " destroyed" );
 
 		informDestroyed( chat );
 	}
@@ -360,7 +387,7 @@ BuddyPluginAZ2
 
 		}catch( Throwable e ){
 
-			logMessageAndPopup( "Send message failed", e );
+			logMessageAndPopup( buddy, "Send message failed", e );
 		}
 	}
 
@@ -379,7 +406,7 @@ BuddyPluginAZ2
 
 		}catch( Throwable e ){
 
-			logMessageAndPopup( "Send message failed", e );
+			logMessageAndPopup( buddy, "Send message failed", e );
 		}
 	}
 
@@ -399,7 +426,7 @@ BuddyPluginAZ2
 
 		}catch( Throwable e ){
 
-			logMessageAndPopup( "Send torrent failed", e );
+			logMessageAndPopup( buddy, "Send torrent failed", e );
 		}
 	}
 
@@ -409,7 +436,7 @@ BuddyPluginAZ2
 		Map										msg,
 		final BuddyPluginAZ2TrackerListener		listener )
 	{
-		logMessage( "AZ2 request sent: " + buddy.getString() + " <- " + msg );
+		logMessage( buddy, "AZ2 request sent: " + buddy.getString() + " <- " + msg );
 
 		try{
 			Map	request = new HashMap();
@@ -451,7 +478,7 @@ BuddyPluginAZ2
 
 		}catch( Throwable e ){
 
-			logMessageAndPopup( "Send message failed", e );
+			logMessageAndPopup( buddy, "Send message failed", e );
 		}
 	}
 
@@ -461,7 +488,7 @@ BuddyPluginAZ2
 		Map										msg,
 		final BuddyPluginAZ2TrackerListener		listener )
 	{
-		logMessage( "AZ2 request sent: " + buddy.getString() + " <- " + msg );
+		logMessage( buddy, "AZ2 request sent: " + buddy.getString() + " <- " + msg );
 
 		try{
 			Map	request = new HashMap();
@@ -503,10 +530,62 @@ BuddyPluginAZ2
 
 		}catch( Throwable e ){
 
-			logMessage( "Send message failed", e );
+			logMessage( buddy, "Send message failed", e );
 		}
 	}
 
+	public void
+	sendAZ2ProfileInfo(
+		BuddyPluginBuddy						buddy,
+		Map										msg,
+		final BuddyPluginAZ2TrackerListener		listener )
+	{
+		logMessage( buddy, "AZ2 request sent: " + buddy.getString() + " <- " + msg );
+
+		try{
+			Map	request = new HashMap();
+
+			request.put( "type", new Long( RT_AZ2_REQUEST_PROFILE_INFO ));
+			request.put( "msg", msg );
+
+			buddy.sendMessage(
+				BuddyPlugin.SUBSYSTEM_AZ2,
+				request,
+				SEND_TIMEOUT,
+				new BuddyPluginBuddyReplyListener()
+				{
+					@Override
+					public void
+					replyReceived(
+						BuddyPluginBuddy		from_buddy,
+						Map						reply )
+					{
+						int type = ((Long)reply.get( "type")).intValue();
+
+						if ( type != RT_AZ2_REPLY_PROFILE_INFO ){
+
+							sendFailed( from_buddy, new BuddyPluginException( "Mismatched reply type" ));
+						}
+
+						listener.messageReceived( from_buddy, (Map)reply.get( "msg" ));
+					}
+
+					@Override
+					public void
+					sendFailed(
+						BuddyPluginBuddy		to_buddy,
+						BuddyPluginException	cause )
+					{
+						listener.messageFailed( to_buddy, cause );
+					}
+				});
+
+		}catch( Throwable e ){
+
+			logMessage( buddy, "Send message failed", e );
+		}
+	}
+	
 	protected void
 	sendMessage(
 		BuddyPluginBuddy	buddy,
@@ -514,7 +593,7 @@ BuddyPluginAZ2
 
 		throws BuddyPluginException
 	{
-		logMessage( "AZ2 request sent: " + buddy.getString() + " <- " + request );
+		logMessage( buddy, "AZ2 request sent: " + buddy.getString() + " <- " + request );
 
 		buddy.getMessageHandler().queueMessage(
 				BuddyPlugin.SUBSYSTEM_AZ2,
@@ -552,17 +631,24 @@ BuddyPluginAZ2
 
 	protected void
 	logMessageAndPopup(
-		String		str,
-		Throwable	e )
+		BuddyPluginBuddy	buddy,
+		String				str,
+		Throwable			e )
 	{
-		logMessageAndPopup( str + ": " + Debug.getNestedExceptionMessage(e));
+		logMessageAndPopup( buddy, str + ": " + Debug.getNestedExceptionMessage(e));
 	}
 
 	protected void
 	logMessageAndPopup(
-		String		str )
+		BuddyPluginBuddy	buddy,
+		String				str )
 	{
-		logMessage( str );
+		if ( buddy.isTransient()){
+			
+			return;
+		}
+		
+		logMessage( buddy, str );
 
 		plugin.getPluginInterface().getUIManager().showMessageBox(
 			"azbuddy.msglog.title", "!" + str + "!", UIManagerEvent.MT_OK );
@@ -570,17 +656,19 @@ BuddyPluginAZ2
 
 	protected void
 	logMessage(
-		String		str )
+		BuddyPluginBuddy	buddy,
+		String				str )
 	{
-		plugin.logMessage( str );
+		plugin.logMessage( buddy, str );
 	}
 
 	protected void
 	logMessage(
-		String		str,
-		Throwable 	e )
+		BuddyPluginBuddy	buddy,
+		String				str,
+		Throwable 			e )
 	{
-		plugin.logMessage( str + ": " + Debug.getNestedExceptionMessage(e));
+		plugin.logMessage( buddy, str + ": " + Debug.getNestedExceptionMessage(e));
 	}
 
 	public class

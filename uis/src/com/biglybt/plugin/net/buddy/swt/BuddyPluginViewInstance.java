@@ -3161,6 +3161,11 @@ BuddyPluginViewInstance
 						public void
 						run()
 						{
+							if ( buddy.isTransient()){
+								
+								return;
+							}
+							
 							if ( !buddy_table.isDisposed()){
 
 								if ( !buddies.contains( buddy )){
@@ -3380,7 +3385,7 @@ BuddyPluginViewInstance
 	{
 		if ( log_to_plugin ){
 
-			plugin.log( str );
+			plugin.log( null, str );
 		}
 
 		if ( !log.isDisposed()){

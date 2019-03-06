@@ -626,6 +626,11 @@ BuddyPluginView
 				
 				for ( BuddyPluginBuddy b: buddies ){
 					
+					if ( b.isTransient()){
+						
+						continue;
+					}
+					
 					if ( b.isOnline( false )){
 						num_online++;
 					}
