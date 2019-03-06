@@ -96,8 +96,6 @@ import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
@@ -124,7 +122,6 @@ import com.biglybt.pif.ui.UIManagerEvent;
 import com.biglybt.pif.utils.LocaleUtilities;
 import com.biglybt.pif.utils.search.SearchResult;
 import com.biglybt.pif.utils.subscriptions.SubscriptionManager;
-import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
@@ -1369,11 +1366,19 @@ BuddyPluginViewBetaChat
 			buddy_table = new Table(rhs, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.VIRTUAL);
 	
 			String[] headers = {
-					"azbuddy.ui.table.name" };
+				"azbuddy.ui.table.name",
+				"!#!",
+				"!+!"};
 	
-			int[] sizes = { rhs_width-10 };
+			int[] sizes = {
+				rhs_width-10,
+				30,
+				20};
 	
-			int[] aligns = { SWT.LEFT };
+			int[] aligns = { 
+				SWT.LEFT,
+				SWT.RIGHT,
+				SWT.LEFT };
 	
 			for (int i = 0; i < headers.length; i++){
 	
@@ -1387,7 +1392,7 @@ BuddyPluginViewBetaChat
 		    buddy_table.setHeaderVisible(true);
 	
 		    grid_data = new GridData(GridData.FILL_BOTH);
-		    // grid_data.heightHint = buddy_table.getHeaderHeight() * 3;
+		    
 			buddy_table.setLayoutData(grid_data);
 
 
@@ -3824,11 +3829,32 @@ BuddyPluginViewBetaChat
 
 		item.setData( participant );
 
-		item.setText(0, participant.getName( ftux_ok ));
-
-		setProperties( item, participant );
-
+		updateItem( item );
+		
 		return( participant );
+	}
+	
+	private void
+	updateItem(
+		TableItem		item )
+	{
+		ChatParticipant	participant = (ChatParticipant)item.getData();
+				
+		String[] values = {
+			participant.getName( ftux_ok ),
+			String.valueOf(participant.getMessageCount( true )),
+			participant.getFriendKey()!=null?"*":""
+		};
+		
+		for ( int i=0;i<values.length;i++){
+			
+			if ( !values[i].equals( item.getText( i ))){
+			
+				item.setText(i, values[i] );
+			}
+		}
+		
+		setProperties( item, participant );
 	}
 
 	private void
@@ -4569,17 +4595,15 @@ BuddyPluginViewBetaChat
 						for ( TableItem item: items ){
 
 							if ( item.getData() == participant ){
-
-								setProperties( item, participant );
-
+								
 								String old_name = item.getText(0);
 
 								if ( !old_name.equals( name )){
 
-									item.setText( 0, name );
-
 									table_resort_required = true;
 								}
+								
+								updateItem( item );
 							}
 						}
 					}

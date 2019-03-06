@@ -35,7 +35,6 @@ import com.biglybt.activities.LocalActivityManager;
 import com.biglybt.activities.LocalActivityManager.LocalActivityCallback;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManagerState;
-import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
 import com.biglybt.core.tag.Tag;
@@ -56,7 +55,6 @@ import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadManagerListener;
 import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ipc.IPCException;
-import com.biglybt.pif.sharing.*;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -132,6 +130,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	private boolean					sound_enabled;
 	private String					sound_file;
 	
+	private boolean					post_friend_key;
 	private boolean					flash_enabled;
 
 	private Map<String,Map<String,Object>>		opts_map;
@@ -166,6 +165,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		shared_anon_endpoint	= COConfigurationManager.getBooleanParameter( "azbuddy.chat.share_i2p_endpoint", true );
 		sound_enabled			= COConfigurationManager.getBooleanParameter( "azbuddy.chat.notif.sound.enable", false );
 		sound_file			 	= COConfigurationManager.getStringParameter( "azbuddy.chat.notif.sound.file", "" );
+
+		post_friend_key			= COConfigurationManager.getBooleanParameter( "azbuddy.chat.post_friend_key", false );
 
 		flash_enabled			= COConfigurationManager.getBooleanParameter( "azbuddy.chat.notif.flash.enable", true );
 
@@ -1049,7 +1050,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	setPrivateChatState(
 		int		state )
 	{
-		if ( state !=  private_chat_state ){
+		if ( state != private_chat_state ){
 
 			private_chat_state	= state;
 
@@ -1061,6 +1062,28 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		}
 	}
 
+	public void
+	setPostFriendKey(
+		boolean		b )
+	{
+		if ( b != post_friend_key ){
+
+			post_friend_key	= b;
+
+			COConfigurationManager.setParameter( "azbuddy.chat.post_friend_key", b );
+
+			COConfigurationManager.setDirty();
+
+			plugin.fireUpdated();
+		}	
+	}
+	
+	public boolean
+	getPostFriendKey()
+	{
+		return( post_friend_key );
+	}
+	
 	public boolean
 	getSharedAnonEndpoint()
 	{
@@ -2895,7 +2918,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private boolean 	enable_notification_posts;
 		private boolean		disable_new_msg_indications;
 		private String		display_name;
-		
+				
 		private boolean		destroyed;
 
 		private
@@ -4310,7 +4333,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				for ( ChatParticipant p: new_participants ){
 					
-					if ( p.getMessageCount() == 0 && !p.isMe()){
+					if ( p.getMessageCount( false ) == 0 && !p.isMe()){
 						
 						removeParticipant( p );
 						
@@ -5347,6 +5370,21 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 						payload.put( "f", flags );
 					}
+					
+					if ( plugin.isClassicEnabled() && getPostFriendKey() && !isAnonymous()){
+					
+						try{
+							String key_str = plugin.getPublicKey();
+							
+							if ( key_str != null && !key_str.isEmpty()){
+								
+								payload.put( "f_pk", Base32.decode( key_str ));
+							}
+						}catch( Throwable e ){
+							
+							Debug.out(e);
+						}
+					}
 
 					options.put( "content", BEncoder.encode( payload ));
 
@@ -5994,6 +6032,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 		private Boolean				is_me;
 
+		private byte[]				friend_key;
+
 		private
 		ChatParticipant(
 			ChatInstance		_chat,
@@ -6093,6 +6133,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			return( !nickname.equals( pkToString( pk )));
 		}
 
+		public byte[]
+		getFriendKey()
+		{
+			return( friend_key );
+		}
+		
 		private void
 		addMessage(
 			ChatMessage		message )
@@ -6102,6 +6148,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			message.setParticipant( this );
 
 			message.setIgnored( is_ignored || is_spammer );
+
+			friend_key = message.getFriendKey();
 
 			String new_nickname = message.getNickName();
 
@@ -6113,12 +6161,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				nickname = new_nickname;
 
-				chat.updated( this );
-
 			}else{
 
 				message.setNickClash( isNickClash());
 			}
+			
+			chat.updated( this );
 		}
 
 		private boolean
@@ -6129,6 +6177,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			message.setIgnored( is_ignored || is_spammer );
 
+			friend_key = message.getFriendKey();
+			
 			String new_nickname = message.getNickName();
 
 			if ( !nickname.equals( new_nickname )){
@@ -6183,9 +6233,30 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		}
 		
 		public int
-		getMessageCount()
+		getMessageCount(
+			boolean		explicit_only )
 		{
-			return( participant_messages.size());
+			if ( explicit_only ){
+				
+				int	total = 0;
+				
+				synchronized( chat.chat_lock ){
+
+					for ( ChatMessage message: participant_messages ){
+						
+						if ( message.getMessageType() == ChatMessage.MT_NORMAL && !message.isIgnored()){
+							
+							total++;
+						}
+					}
+				}
+				
+				return( total );
+				
+			}else{
+			
+				return( participant_messages.size());
+			}
 		}
 
 		public boolean
@@ -6343,6 +6414,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private int								seen_state = SEEN_UNKNOWN;
 		private int[]							nick_locations;
 
+		private byte[]		friend_key;
+		
 		private
 		ChatMessage(
 			int						_uid,
@@ -6362,6 +6435,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			Number	l_seq = (Number)payload.get( "seq" );
 
 			sequence = l_seq==null?0:l_seq.longValue();
+			
+			friend_key = (byte[])payload.get( "f_pk" );
 		}
 
 		protected int
@@ -6383,6 +6458,12 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			return( participant );
 		}
 
+		private byte[]
+		getFriendKey()
+		{
+			return( friend_key );
+		}
+		
 		private void
 		setNickClash(
 			boolean	clash )

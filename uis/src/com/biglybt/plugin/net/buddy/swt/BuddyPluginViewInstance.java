@@ -798,7 +798,43 @@ BuddyPluginViewInstance
 
 		private_chat_pinned.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
 		pc_pinned_only.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
+		
+			// integration
+		
+		Group integ_area = new Group( main, SWT.NULL );
+		layout = new GridLayout();
+		layout.numColumns = 3;
+		integ_area.setLayout(layout);
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 3;
+		integ_area.setLayoutData(grid_data);
 
+		integ_area.setText( lu.getLocalisedMessageText( "label.integration" ));
+				
+		Label lab = new Label( integ_area, SWT.NULL );
+		
+		lab.setText( lu.getLocalisedMessageText( "azbuddy.dchat.send.friend.key" ));
+
+		Button integ_fk_enable = new Button( integ_area, SWT.CHECK );
+
+		label = new Label( integ_area, SWT.NULL );
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		label.setLayoutData(grid_data);
+
+		integ_fk_enable.addSelectionListener(
+				new SelectionAdapter()
+				{
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent ev )
+					{
+						plugin_beta.setPostFriendKey( integ_fk_enable.getSelection());
+					}
+				});
+	
+		integ_fk_enable.setSelection( plugin_beta.getPostFriendKey());
+		
 			// import
 
 		Group import_area = new Group( main, SWT.NULL );
@@ -1122,6 +1158,8 @@ BuddyPluginViewInstance
 										private_chat_pinned.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
 										pc_pinned_only.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
 
+										integ_fk_enable.setSelection( plugin_beta.getPostFriendKey());
+										
 										String str = plugin_beta.getSoundFile();
 
 										if ( str.length() == 0 ){
