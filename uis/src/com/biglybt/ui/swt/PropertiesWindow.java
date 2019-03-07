@@ -20,6 +20,7 @@
 package com.biglybt.ui.swt;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -143,6 +144,10 @@ PropertiesWindow
 
 		    BufferedLabel	val_label = new BufferedLabel(main,SWT.WRAP);
 		    val_label.setText( value );
+		    if ( value.toLowerCase( Locale.US ).startsWith( "http" )){
+		    	val_label.setLink( value );
+		    }
+		    
 		    gridData = new GridData(GridData.FILL_HORIZONTAL);
 		    gridData.horizontalIndent = 6;
 			val_label.setLayoutData(gridData);
