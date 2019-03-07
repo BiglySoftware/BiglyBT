@@ -35,6 +35,8 @@ Parameter
 	public static final int MODE_INTERMEDIATE	= 1;
 	public static final int MODE_ADVANCED		= 2;
 
+	public static final String	PR_DISABLE_WRAPPING_SUPPORT	= "disable-wrap";		// Boolean
+	
 	/**
 	 * Sets whether the UI object for this parameter is enabled (changeable) or
 	 * disabled (not changeable, and usually grayed out)
@@ -186,4 +188,13 @@ Parameter
 
 	public boolean
 	hasBeenSet();
+	
+	public void
+	setProperty(
+		String		property,
+		Object		value );
+	
+	public Object
+	getProperty(
+		String		property );
 }

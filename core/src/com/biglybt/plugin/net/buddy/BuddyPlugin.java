@@ -69,6 +69,7 @@ import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManagerListener;
+import com.biglybt.pif.ui.components.UITextArea;
 import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.config.ParameterListener;
 import com.biglybt.pif.ui.menus.MenuItem;
@@ -189,7 +190,9 @@ BuddyPlugin
 
 	private BooleanParameter 		beta_enabled_param;
 
-
+	private StringParameter 		profile_param;
+	private List<String>			public_profile	= new ArrayList<>();
+	
 	private boolean			ready_to_publish;
 	private publishDetails	current_publish		= new publishDetails();
 	private publishDetails	latest_publish		= current_publish;
@@ -446,12 +449,45 @@ BuddyPlugin
 				}
 			});
 
+		HyperlinkParameter profile_link = 
+			config.addHyperlinkParameter2( 
+				"azbuddy.profile.info", MessageText.getString( "azbuddy.profile.info.url" ));
+
+		profile_link.setProperty( Parameter.PR_DISABLE_WRAPPING_SUPPORT, true );
+		
+		profile_param = config.addStringParameter2( "azbuddy.profile.info", "", "" );
+		
+		profile_param.setMultiLine( 5 );
+		profile_param.setGenerateIntermediateEvents( false );
+		
+		profile_param.addListener(
+				new ParameterListener()
+				{
+					@Override
+					public void
+					parameterChanged(
+						Parameter 	param )
+					{
+						updateProfile();
+					}
+				});
+	
+		updateProfile();
+		
+		ParameterGroup profile_group = config.createGroup(
+				"azbuddy.public.profile",
+				new Parameter[]{
+						profile_link, profile_param
+				});
+		
+		profile_group.setNumberOfColumns( 2 );
+		
 		config.createGroup(
 			"label.friends",
 			new Parameter[]{
 					classic_enabled_param, nick_name_param, online_status_param,
 					protocol_speed, enable_chat_notifications, cat_pub, tracker_enable, tracker_so_enable,
-					buddies_lan_local, buddies_fp_enable,
+					buddies_lan_local, buddies_fp_enable, profile_group,
 			});
 
 			// decentralised stuff
@@ -675,8 +711,14 @@ BuddyPlugin
 					cat_pub.setEnabled( classic_enabled );
 					tracker_enable.setEnabled( classic_enabled );
 
-					tracker_so_enable.setEnabled( tracker_enable.getValue());
+					tracker_so_enable.setEnabled( classic_enabled && tracker_enable.getValue());
 
+					buddies_lan_local.setEnabled( classic_enabled );
+					
+					buddies_fp_enable.setEnabled( classic_enabled );
+					
+					profile_group.setEnabled( classic_enabled );
+					
 						// only toggle overall state on a real change
 
 					if ( param != null ){
@@ -1066,21 +1108,37 @@ BuddyPlugin
 		return( enable_chat_notifications );
 	}
 
-	public List<String>
-	getProfileInfo()
+	private void
+	updateProfile()
 	{
-		// Debug.out( "TODO" );
+		String str = profile_param.getValue();
 		
-		if ( false ){
+		List<String> profile = new ArrayList<>();
+		
+		String[] lines = str.split( "\\n" );
+		
+		for ( String line: lines ){
 			
-			return( null );
+			line = line.trim();
+			
+			if ( !line.isEmpty()){
+				
+				String[] bits = line.split( "=", 2 );
+				
+				if ( bits.length == 2 ){
+					
+					profile.add( bits[0].trim() + "=" + bits[1].trim());
+				}
+			}
 		}
 		
-		List<String>	props = new ArrayList<>();
-		
-		props.add( "email=test@toast" );
-		
-		return( props );
+		public_profile = profile;
+	}
+	
+	public List<String>
+	getProfileInfo()
+	{		
+		return( public_profile );
 	}
 	
 	protected String
@@ -4579,7 +4637,7 @@ BuddyPlugin
 		String				str,
 		boolean				is_error )
 	{
-		if ( buddy != null && buddy.isTransient()){
+		if ( buddy != null && ( buddy.isTransient() || ! buddy.isAuthorised())){
 			
 			return;
 		}
@@ -4605,7 +4663,7 @@ BuddyPlugin
 		BuddyPluginBuddy	buddy,
 		String				str )
 	{
-		if ( buddy != null && buddy.isTransient()){
+		if ( buddy != null && ( buddy.isTransient() || ! buddy.isAuthorised())){
 			
 			return;
 		}
@@ -4619,7 +4677,7 @@ BuddyPlugin
 		String				str,
 		Throwable			e )
 	{
-		if ( buddy != null && buddy.isTransient()){
+		if ( buddy != null && ( buddy.isTransient() || ! buddy.isAuthorised())){
 			
 			return;
 		}

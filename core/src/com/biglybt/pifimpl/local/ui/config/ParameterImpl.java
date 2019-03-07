@@ -22,7 +22,9 @@ package com.biglybt.pifimpl.local.ui.config;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
@@ -59,6 +61,8 @@ ParameterImpl
 
 	private ParameterGroupImpl	parameter_group;
 
+	private Map<String,Object> 	properties;
+	
 	public
 	ParameterImpl(
 		PluginConfigImpl	_config,
@@ -363,6 +367,41 @@ ParameterImpl
 		return( COConfigurationManager.doesParameterNonDefaultExist( key ));
 	}
 
+	@Override
+	public Object 
+	getProperty(
+		String property )
+	{
+		synchronized( this ){
+			
+			if ( properties == null ){
+				
+				return( null );
+				
+			}else{
+				
+				return( properties.get( property ));
+			}
+		}
+	}
+	
+	@Override
+	public void 
+	setProperty(
+		String property, 
+		Object value)
+	{
+		synchronized( this ){
+			
+			if ( properties == null ){
+				
+				properties = new HashMap<>();	
+			}
+			
+			properties.put( property, value );
+		}
+	}
+	
 	private void triggerLabelChanged(String text, boolean isKey) {
 		if (impl_listeners == null) {
 			return;

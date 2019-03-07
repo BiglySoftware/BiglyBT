@@ -30,6 +30,8 @@ import java.util.*;
 
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.config.FloatParameter;
+import com.biglybt.ui.swt.mainwindow.Colors;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
@@ -238,7 +240,7 @@ BasicPluginConfigImpl
 
 					String resource_name = pg.getResourceName();
 
-					boolean use_composite = resource_name == null || tab_folder != null;
+					boolean use_composite = resource_name == null || resource_name.isEmpty() || tab_folder != null;
 
 					current_composite = use_composite?new Composite( group_parent, SWT.NONE ):new Group( group_parent, SWT.NULL);
 
@@ -274,6 +276,7 @@ BasicPluginConfigImpl
 
 					group_map.put( pg, current_composite );
 
+					// current_composite.setBackground( Colors.blue );
 				}else{
 
 					current_composite = comp;
@@ -689,13 +692,25 @@ BasicPluginConfigImpl
 
 					// label
 
-				GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
-				gridData.horizontalSpan	= 2;
-				// for wrap to work
+				Boolean disable_wrap = (Boolean)param.getProperty( com.biglybt.pif.ui.config.Parameter.PR_DISABLE_WRAPPING_SUPPORT );
+				
+				if ( disable_wrap != null && disable_wrap ){
+					
+					GridData gridData = new GridData();
+					
+					gridData.horizontalSpan	= 2;
 
-				gridData.widthHint = 300;
+					label.setLayoutData(gridData);
+					
+				}else{
+					GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+					gridData.horizontalSpan	= 2;
+					// for wrap to work
+	
+					gridData.widthHint = 300;
 
-				label.setLayoutData(gridData);
+					label.setLayoutData(gridData);
+				}
 
 				swt_param	= null;
 			} else {
@@ -712,6 +727,12 @@ BasicPluginConfigImpl
 
 			}else{
 
+				/*
+				if ( label != null ){
+					label.setBackground( Colors.red );
+				}
+				*/
+				
 				Control[]	c = swt_param.getControls();
 
 				Object[] moo = new Object[c.length+(label==null?1:2)];
