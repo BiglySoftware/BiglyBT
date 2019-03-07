@@ -454,6 +454,11 @@ SpeedLimitHandler
 
 		lines.add( "" );
 		lines.add( "Scheduler" );
+		
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.setTime( new Date());
+
+		lines.add( "    Current Time: " + cal.get( Calendar.HOUR_OF_DAY ) + ":" + cal.get( Calendar.MINUTE ));
 		lines.add( "    Rules defined: " + current_rules.size());
 		lines.add( "    Active rule: " + (rule==null?"None":rule.getString()));
 
