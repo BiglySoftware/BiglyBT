@@ -211,7 +211,29 @@ public class ClipboardCopy {
 			  public String
 			  getText()
 			  {
-				  return((String)control.getData());
+				  Object o = control.getData();
+	  
+				  if ( o instanceof String ){
+					  
+					  return((String)o);
+					  
+				  }else if ( o instanceof String[]){
+					  
+					  String[] strs = (String[])o;
+					  
+					  String str = "";
+					  
+					  for ( String s: strs ){
+						  
+						  str += (str.isEmpty()?"":", ") + s;
+					  }
+					  
+					  return( str );
+					  
+				  }else{
+					  
+					  return( String.valueOf( o ));
+				  }
 			  }
 		});
   }
