@@ -45,6 +45,15 @@ PropertiesWindow
 
 	public
 	PropertiesWindow(
+		String					object_name,
+		java.util.List<String>	keys,
+		java.util.List<String>	values )
+	{
+		this( object_name, keys.toArray(new String[0]), values.toArray( new String[0]));
+	}
+	
+	public
+	PropertiesWindow(
 		String		object_name,
 		String[]	keys,
 		String[]	values )

@@ -484,32 +484,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						
 						for ( ChatParticipant p: participants ){
 							
-							String fk = p.getFriendKey();
-							
-							if ( fk != null ){
-								
-								if ( p.getProfileData() != null ){
-									
-									if ( p.getProfileDataAgeMillis() < 60*60*1000 ){
-										
-										continue;
-									}
-								}
-								
-								BuddyPluginBuddy buddy = plugin.peekBuddy( fk );
-								
-								List<String> profile_info = buddy.getProfileInfo();
-								
-								if ( profile_info != null ){
-									
-									p.setProfileData( profile_info );
-									
-									if ( buddy.isTransient()){
-									
-										buddy.remove();
-									}
-								}
-							}
+							p.checkProfileData();
 						}
 					}
 				}
@@ -1095,6 +1070,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			post_friend_key	= b;
 
+			if ( post_friend_key ){
+				
+				plugin.setClassicEnabled( true );
+			}
+			
 			COConfigurationManager.setParameter( "azbuddy.chat.post_friend_key", b );
 
 			COConfigurationManager.setDirty();
@@ -6058,7 +6038,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private Boolean				is_me;
 
 		private byte[]				friend_key;
+		
 		private List<String>		profile_data;
+		private boolean				profile_data_peeked;
 		private long				profile_data_set;
 		
 		private
@@ -6168,9 +6150,47 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			return( fk==null?null:Base32.encode( fk ));
 		}
 		
+		protected void
+		checkProfileData()
+		{
+			String fk = getFriendKey();
+			
+			if ( fk != null ){
+				
+				if ( profile_data != null ){
+					
+					if ( getProfileDataAgeMillis() < 60*60*1000 ){
+						
+						return;
+					}
+				}
+				
+				profile_data_peeked = true;
+				
+				BuddyPluginBuddy buddy = plugin.peekBuddy( fk );
+				
+				List<String> profile_info = buddy.getProfileInfo();
+				
+				if ( profile_info != null ){
+					
+					setProfileData( profile_info );
+					
+					if ( buddy.isTransient()){
+					
+						buddy.remove();
+					}
+				}
+			}
+		}
+		
 		public List<String>
 		getProfileData()
 		{
+			if ( profile_data == null && !profile_data_peeked ){
+				
+				checkProfileData();
+			}
+			
 			return( profile_data );
 		}
 		
@@ -6182,7 +6202,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			profile_data_set	= SystemTime.getMonotonousTime();
 		}
 		
-		public long
+		private long
 		getProfileDataAgeMillis()
 		{
 			if ( profile_data_set == 0 ){

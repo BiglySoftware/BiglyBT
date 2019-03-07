@@ -125,6 +125,7 @@ import com.biglybt.pif.utils.subscriptions.SubscriptionManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.swt.Messages;
+import com.biglybt.ui.swt.PropertiesWindow;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.FixedURLTransfer;
@@ -1487,6 +1488,45 @@ BuddyPluginViewBetaChat
 					});
 	
 	
+			buddy_table.addMouseTrackListener(
+				new MouseTrackAdapter(){
+					
+					@Override
+					public void 
+					mouseHover(
+						MouseEvent e )
+					{
+						TableItem item = buddy_table.getItem( new Point( e.x, e.y ));
+						
+						String tt = null;
+						
+						if ( item != null ){
+							
+							ChatParticipant	participant = (ChatParticipant)item.getData();
+							
+							if ( participant.getFriendKey() != null ){
+								
+								List<String> profile = participant.getProfileData();
+								
+								if ( profile == null ){
+									
+									tt = MessageText.getString( "label.profile.pending" );
+								}else{
+									
+									tt = MessageText.getString( "label.profile" );
+									
+									for ( String p: profile ){
+										
+										tt += "\n    " + p;
+									}
+								}
+							}
+						}
+						
+						buddy_table.setToolTipText( tt );
+					}
+				});
+			
 			buddy_table.addMouseListener(
 				new MouseAdapter()
 				{
@@ -3759,6 +3799,51 @@ BuddyPluginViewBetaChat
 					}
 				});
 
+			if ( participants.size() == 1 ){
+				
+				ChatParticipant participant = participants.get(0);
+				
+				boolean is_me = Arrays.equals( participant.getPublicKey(), chat_pk );
+				
+				String fk = participant.getFriendKey();
+				
+				final MenuItem add_fk_item = new MenuItem(menu, SWT.PUSH);
+	
+				add_fk_item.setText( lu.getLocalisedMessageText( "azbuddy.add.friend.key" ));
+	
+				add_fk_item.addSelectionListener(
+					new SelectionAdapter()
+					{
+						@Override
+						public void
+						widgetSelected(
+							SelectionEvent e)
+						{
+							if ( !plugin.isClassicEnabled()){
+								
+								plugin.setClassicEnabled( true );
+							}
+								
+							plugin.addBuddy( fk, BuddyPlugin.SUBSYSTEM_AZ2 );
+							
+							try{
+								ChatInstance chat = participant.createPrivateChat();
+
+								createChatWindow( view, plugin, chat);
+
+								String message = "!azbuddy.add.friend.key.msg[" + UrlUtils.encode( getFriendURI()) + "]!";
+																	
+								chat.sendMessage(message, null);
+								
+							}catch( Throwable f ){
+
+								Debug.out( f );
+							}
+						}
+					});
+				
+				add_fk_item.setEnabled( fk != null && !is_me && !chat.isAnonymous());
+			}
 			
 			boolean	pc_enable = false;
 
@@ -3779,6 +3864,51 @@ BuddyPluginViewBetaChat
 
 		if ( participants.size() == 1 ){
 
+			if ( !chat.isAnonymous()){
+				
+				new MenuItem(menu, SWT.SEPARATOR );
+
+				ChatParticipant participant = participants.get(0);
+							
+				String fk = participant.getFriendKey();
+				
+				final MenuItem mi_profile = new MenuItem( menu, SWT.PUSH );
+
+				mi_profile.setText( lu.getLocalisedMessageText( "label.profile" ) + "..." );
+
+				mi_profile.addSelectionListener(
+					new SelectionAdapter() {
+
+						@Override
+						public void
+						widgetSelected(
+							SelectionEvent e )
+						{
+							List<String> props = participant.getProfileData();
+							
+							List<String>	names 	= new ArrayList<String>();
+							List<String>	values 	= new ArrayList<String>();
+							
+							for ( String prop: props ){
+								
+								String[] bits = prop.split( "=", 2 );
+								
+								if ( bits.length == 2 ){
+									
+									names.add( "!" + bits[0] + "!" );
+									values.add( bits[1] );
+								}
+							}
+							
+							new PropertiesWindow( 
+								lu.getLocalisedMessageText( "label.profile" ),
+								names, values );
+						}
+					});
+				
+				mi_profile.setEnabled( fk != null && participant.getProfileData() != null );
+			}
+			
 			new MenuItem(menu, SWT.SEPARATOR );
 
 			final MenuItem mi_copy_clip = new MenuItem( menu, SWT.PUSH );

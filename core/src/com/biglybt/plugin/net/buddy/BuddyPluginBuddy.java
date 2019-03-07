@@ -867,11 +867,27 @@ BuddyPluginBuddy
 						BuddyPluginBuddy 		buddy, 
 						Map<String, Object> 	message)
 					{
+						InetAddress ip = buddy.getIP();
+						
 						synchronized( BuddyPluginBuddy.this ){
 							
 							profile_info_outstanding = false;
 							
-							profile_info = BDecoder.decodeStrings((List)message.get( "props" ));
+							List<String> info = BDecoder.decodeStrings((List)message.get( "props" ));
+							
+							List<String> result = new ArrayList<>();
+							
+							for ( String i: info ){
+							
+								if ( ip != null ){
+
+									i = i.replaceAll( "(?i)\\Q${ip}\\E", ip.getHostAddress());
+								}
+								
+								result.add( i );
+							}
+							
+							profile_info = result;
 						}
 						
 						return( null );

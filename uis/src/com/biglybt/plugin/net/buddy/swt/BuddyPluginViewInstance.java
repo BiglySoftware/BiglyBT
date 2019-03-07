@@ -835,6 +835,13 @@ BuddyPluginViewInstance
 	
 		integ_fk_enable.setSelection( plugin_beta.getPostFriendKey());
 		
+		lab = new Label( integ_area, SWT.NULL );
+		
+		lab.setText( lu.getLocalisedMessageText( "azbuddy.dchat.send.friend.key.info" ));
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 3;
+		lab.setLayoutData(grid_data);
+		
 			// import
 
 		Group import_area = new Group( main, SWT.NULL );
