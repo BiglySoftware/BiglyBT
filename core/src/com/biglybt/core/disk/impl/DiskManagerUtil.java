@@ -229,92 +229,104 @@ DiskManagerUtil
 
 		    if ( to_link.equals( existing_file )){
 
-		            // already pointing to the right place
-
-		        return( true );
-		    }
-
-		    for (int i=0;i<info.length;i++){
-
-		        if ( to_link.equals( info[i].getFile( true ))){
-
-		            Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-		                            "Attempt to link to existing file '" + info[i].getFile(true)
-		                                    + "'"));
-
-		            return( false );
-		        }
-		    }
-
-		    if ( to_link.exists()){
-
-		        if ( !existing_file.exists()){
-
-		                // using a new file, make sure we recheck
-
-		            download_manager.recheckFile( file_info );
-
-		        }else{
-
-			        		// On OSX (at least) a rename of a file here all that has changed is the capitalisation results in us getting here
-			        		// as the 'to_link.exists()' returns true for the file even though case differs
-			        	
-			        	if ( 	to_link.getParent().equals( existing_file.getParent()) &&
-			        			to_link.getName().equalsIgnoreCase( existing_file.getName())){
-			        		
-			            if ( !FileUtil.renameFile( existing_file, to_link )){
-
-			                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-			                    "Failed to rename '" + existing_file.toString() + "'" ));
-
-			                return( false );
-			            }
-			        	}else{
-			        	
-				        	Object	skip_delete = download_manager.getUserData( "set_link_dont_delete_existing" );
-		
-				        		// user is manually re-targetting a file - this hack is to stop us from deleting the old file which
-				        		// we really have no right to go and delete
-		
-				        	if ( ( skip_delete instanceof Boolean ) && (Boolean)skip_delete ){
-		
-				        		 download_manager.recheckFile( file_info );
-		
-				        	}else{
-		
-				                if ( FileUtil.deleteWithRecycle(
-				                		existing_file,
-				                		download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ))){
-		
-					                    // new file, recheck
-		
-					                download_manager.recheckFile( file_info );
-		
-					            }else{
-		
-					                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-					                        "Failed to delete '" + existing_file.toString() + "'"));
-		
-					                return( false );
-					            }
-				        	}
-			        }
-		        }
-		    }else{
-
-		        if ( existing_file.exists()){
-
-		            if ( !FileUtil.renameFile( existing_file, to_link, pl )){
+		    		// feh, on windows we get a true result here if the files just differ in case :(
+		    	
+		    	if ( 	to_link.getParent().equals( existing_file.getParent()) &&
+		    			!to_link.getName().equals( existing_file.getName()) && 
+	        			to_link.getName().equalsIgnoreCase( existing_file.getName())){
+	        		
+		            if ( !FileUtil.renameFile( existing_file, to_link )){
 
 		                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
 		                    "Failed to rename '" + existing_file.toString() + "'" ));
 
 		                return( false );
 		            }
-		        }
+		    	}
+		    }else{
+
+			    for (int i=0;i<info.length;i++){
+	
+			        if ( to_link.equals( info[i].getFile( true ))){
+	
+			            Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
+			                            "Attempt to link to existing file '" + info[i].getFile(true)
+			                                    + "'"));
+	
+			            return( false );
+			        }
+			    }
+	
+			    if ( to_link.exists()){
+	
+			        if ( !existing_file.exists()){
+	
+			                // using a new file, make sure we recheck
+	
+			            download_manager.recheckFile( file_info );
+	
+			        }else{
+	
+				        		// On OSX (at least) a rename of a file here all that has changed is the capitalisation results in us getting here
+				        		// as the 'to_link.exists()' returns true for the file even though case differs
+				        	
+				        	if ( 	to_link.getParent().equals( existing_file.getParent()) &&
+				        			to_link.getName().equalsIgnoreCase( existing_file.getName())){
+				        		
+					            if ( !FileUtil.renameFile( existing_file, to_link )){
+		
+					                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
+					                    "Failed to rename '" + existing_file.toString() + "'" ));
+		
+					                return( false );
+					            }
+				        	}else{
+				        	
+					        	Object	skip_delete = download_manager.getUserData( "set_link_dont_delete_existing" );
+			
+					        		// user is manually re-targetting a file - this hack is to stop us from deleting the old file which
+					        		// we really have no right to go and delete
+			
+					        	if ( ( skip_delete instanceof Boolean ) && (Boolean)skip_delete ){
+			
+					        		 download_manager.recheckFile( file_info );
+			
+					        	}else{
+			
+					                if ( FileUtil.deleteWithRecycle(
+					                		existing_file,
+					                		download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_LOW_NOISE ))){
+			
+						                    // new file, recheck
+			
+						                download_manager.recheckFile( file_info );
+			
+						            }else{
+			
+						                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
+						                        "Failed to delete '" + existing_file.toString() + "'"));
+			
+						                return( false );
+						            }
+					        	}
+				        }
+			        }
+			    }else{
+	
+			        if ( existing_file.exists()){
+	
+			            if ( !FileUtil.renameFile( existing_file, to_link, pl )){
+	
+			                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
+			                    "Failed to rename '" + existing_file.toString() + "'" ));
+	
+			                return( false );
+			            }
+			        }
+			    }
 		    }
 	    }
-
+	    
 	    DownloadManagerState    state = download_manager.getDownloadState();
 
 	    state.setFileLink( file_info.getIndex(), from_file, to_link );

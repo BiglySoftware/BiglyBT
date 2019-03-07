@@ -1972,8 +1972,8 @@ DownloadManagerStateImpl
 
 				return;
 			}
-		}else if ( existing != null && existing.equals( link_destination )){
-
+		}else if ( existing != null && existing.getAbsolutePath().equals( link_destination.getAbsolutePath())){
+			
 			return;
 		}
 
@@ -2033,7 +2033,7 @@ DownloadManagerStateImpl
 
 					continue;
 				}
-			}else if ( existing != null && existing.equals( link_destination )){
+			}else if ( existing != null && existing.getAbsolutePath().equals( link_destination.getAbsolutePath())){
 
 				continue;
 			}
