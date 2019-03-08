@@ -1468,6 +1468,27 @@ public class Utils
 
 				return;
 			}
+		}else if ( lc_sFile.startsWith( "magnet:" )){
+			
+			TorrentOpener.openTorrent(sFileOriginal);
+			
+			return;
+			
+		}else if ( lc_sFile.startsWith( "azplug:?" )){
+
+			String plug_uri = sFileOriginal;
+
+			try{
+				URLConnection connection = new URL( plug_uri ).openConnection();
+
+				connection.connect();
+
+				String res = FileUtil.readInputStreamAsString( connection.getInputStream(), 2048 );
+
+				return;
+
+			}catch( Throwable e ){
+			}
 		}else if ( lc_sFile.startsWith( "chat:" )){
 
 			String plug_uri = "azplug:?id=azbuddy&arg=" + UrlUtils.encode( sFileModified );

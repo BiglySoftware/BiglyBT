@@ -30,11 +30,13 @@ package com.biglybt.core.util.protocol.azplug;
  import java.util.Map;
 
  import com.biglybt.core.CoreFactory;
- import com.biglybt.core.subs.SubscriptionManager;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.subs.SubscriptionManager;
  import com.biglybt.core.subs.SubscriptionManagerFactory;
  import com.biglybt.core.util.Debug;
  import com.biglybt.core.util.UrlUtils;
- import com.biglybt.core.vuzefile.VuzeFileHandler;
+import com.biglybt.core.util.protocol.URLConnectionExt;
+import com.biglybt.core.vuzefile.VuzeFileHandler;
  import com.biglybt.pif.PluginInterface;
  import com.biglybt.pif.ipc.IPCException;
  import com.biglybt.pif.ipc.IPCInterface;
@@ -47,6 +49,7 @@ package com.biglybt.core.util.protocol.azplug;
 public class
 AZPluginConnection
 	extends HttpURLConnection
+	implements URLConnectionExt
 {
 	private int		response_code	= HTTP_OK;
 	private String	response_msg	= "OK";
@@ -177,6 +180,76 @@ AZPluginConnection
 		}
 	}
 
+	@Override
+	public String 
+	getFriendlyName()
+	{
+		try{
+	
+			String url = getURL().toString();
+	
+			int	pos = url.indexOf( "?" );
+	
+			if ( pos == -1 ){
+	
+				throw( new IOException( "Malformed URL - ? missing" ));
+			}
+	
+			url = url.substring( pos+1 );
+	
+			String[]	bits = url.split( "&" );
+	
+			Map args = new HashMap();
+	
+			for (int i=0;i<bits.length;i++ ){
+	
+				String	bit = bits[i];
+	
+				String[] x = bit.split( "=" );
+	
+				if ( x.length == 2 ){
+	
+					String	lhs = x[0];
+					String	rhs = UrlUtils.decode(x[1] );
+	
+					args.put( lhs.toLowerCase(), rhs );
+				}
+			}
+	
+			String	plugin_id = (String)args.get( "id" );
+	
+			if ( plugin_id == null ){
+	
+				throw( new IOException( "Plugin id missing" ));
+			}
+	
+			String	plugin_name = (String)args.get( "name" );
+			String	arg			= (String)args.get( "arg" );
+	
+			if ( arg == null ){
+	
+				arg = "";
+			}
+		
+			if ( plugin_id.equals( "subscription" )){
+				
+				Map<String,String> temp = UrlUtils.decodeArgs(  arg.substring( arg.indexOf( '?' ) + 1 ));
+				
+				String name = temp.get( "name" );
+				
+				if ( name != null ){
+					
+					return( MessageText.getString( "subscriptions.column.name" ) + " - " + name );
+				}
+				
+			}
+		}catch( Throwable e ){
+			
+		}
+		
+		return( url.toExternalForm());
+	}
+	
     @Override
     public Map<String,List<String>>
     getHeaderFields()

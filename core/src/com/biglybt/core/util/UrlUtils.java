@@ -33,6 +33,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.security.SESecurityManager;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.util.protocol.URLConnectionExt;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAnnounceURLList;
@@ -493,6 +494,55 @@ public class UrlUtils
 		return( hash );
 	}
 
+	public static URL
+	getRawURL(
+		String		url )
+	{
+		try{
+			URL u = new URL( url );
+			
+			String protocol = u.getProtocol();
+			
+			if ( protocol != null && !protocol.isEmpty()){
+				
+				return( u );
+			}
+			
+		}catch( Throwable e ){
+		}
+		
+		return( null );
+	}
+	
+	public static String
+	getFriendlyName(
+		URL		url )
+	{
+		try{
+			URLConnection con = url.openConnection();
+			
+			try{
+				if ( con instanceof URLConnectionExt ){
+					
+					return(((URLConnectionExt)con).getFriendlyName());
+				}
+			}finally{
+				
+				if ( con instanceof HttpURLConnection ){
+					
+					try{
+						((HttpURLConnection)con).disconnect();
+						
+					}catch( Throwable e ){
+					}
+				}
+			}
+		}catch( Throwable e ){
+		}
+		
+		return( url.toExternalForm());
+	}
+	
 	/**
 	 * test string for possibility that it's an URL.  Considers 40 byte hex
 	 * strings as URLs

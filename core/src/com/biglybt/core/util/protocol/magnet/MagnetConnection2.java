@@ -27,8 +27,10 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import com.biglybt.core.util.*;
+import com.biglybt.core.util.protocol.URLConnectionExt;
 
 
 /**
@@ -39,6 +41,7 @@ import com.biglybt.core.util.*;
 public class
 MagnetConnection2
 	extends HttpURLConnection
+	implements URLConnectionExt
 {
 	private static final String	NL			= "\r\n";
 
@@ -116,6 +119,35 @@ MagnetConnection2
 		handler	= _handler;
 	}
 
+	@Override
+	public String 
+	getFriendlyName()
+	{
+		//magnet:?xt=urn:btih:MU75MCBLFOA5Y5RGFS3KCU7SNVUPJJQW&dn=BigBuckBunny&xsource=86.17
+		
+		try{
+			String str = url.toExternalForm();
+		
+			Map<String,String> args = UrlUtils.decodeArgs(  str.substring( str.indexOf( '?' ) + 1 ));
+			
+			String name = args.get( "dn" );
+			
+			if ( name == null ){
+				
+				name = args.get( "xt" );
+			}
+			
+			if ( name != null ){
+				
+				return( "magnet - " + name );
+			}
+		}catch( Throwable e ){
+			
+		}
+		
+		return( url.toExternalForm());
+	}
+	
 	@Override
 	public void
 	connect()
@@ -264,16 +296,20 @@ MagnetConnection2
 	disconnect()
 	{
 		try{
-			output_stream.close();
-
+			if ( output_stream != null ){
+			
+				output_stream.close();
+			}
 		}catch( Throwable e ){
 
 			Debug.printStackTrace(e);
 		}
 
 		try{
-			input_stream.close();
-
+			if ( input_stream != null ){
+				
+				input_stream.close();
+			}
 		}catch( Throwable e ){
 
 			Debug.printStackTrace(e);

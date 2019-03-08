@@ -19,6 +19,7 @@
 
 package com.biglybt.ui.swt;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 
@@ -143,9 +145,18 @@ PropertiesWindow
 			msg_label.setLayoutData(gridData);
 
 		    BufferedLabel	val_label = new BufferedLabel(main,SWT.WRAP);
-		    val_label.setText( value );
-		    if ( value.toLowerCase( Locale.US ).startsWith( "http" )){
-		    	val_label.setLink( value );
+		    
+		    URL url = UrlUtils.getRawURL( value );
+		    
+		    if ( url == null ){
+		    
+		    	val_label.setText( value );
+		    	
+		    }else{
+		    
+		    	val_label.setText( UrlUtils.getFriendlyName( url ));
+		    	
+			   	val_label.setLink( url.toExternalForm());
 		    }
 		    
 		    gridData = new GridData(GridData.FILL_HORIZONTAL);

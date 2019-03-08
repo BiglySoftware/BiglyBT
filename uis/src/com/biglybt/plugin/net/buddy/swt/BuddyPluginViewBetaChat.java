@@ -1511,11 +1511,28 @@ BuddyPluginViewBetaChat
 								if ( profile == null ){
 									
 									tt = MessageText.getString( "label.profile.pending" );
+									
 								}else{
 									
 									tt = MessageText.getString( "label.profile" );
 									
 									for ( String p: profile ){
+										
+										String[] bits = p.split( "=", 2 );
+										
+										if ( bits.length == 2 ){
+											
+											String val = bits[1];
+											
+											URL u = UrlUtils.getRawURL(val);
+											
+											if ( u != null ){
+												
+												val = UrlUtils.getFriendlyName( u );
+											}
+											
+											p = bits[0] + "=" + val;
+										}
 										
 										tt += "\n    " + p;
 									}
@@ -3888,6 +3905,12 @@ BuddyPluginViewBetaChat
 							
 							List<String>	names 	= new ArrayList<String>();
 							List<String>	values 	= new ArrayList<String>();
+							
+							names.add( "label.help" );
+							values.add (MessageText.getString( "azbuddy.profile.info.url" ));
+							
+							names.add( "" );
+							values.add( "" );
 							
 							for ( String prop: props ){
 								

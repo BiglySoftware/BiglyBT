@@ -6169,17 +6169,16 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				BuddyPluginBuddy buddy = plugin.peekBuddy( fk );
 				
-				List<String> profile_info = buddy.getProfileInfo();
-				
-				if ( profile_info != null ){
-					
-					setProfileData( profile_info );
-					
-					if ( buddy.isTransient()){
-					
-						buddy.remove();
-					}
-				}
+				buddy.getProfileInfo(
+					(profile_info)->{
+													
+						setProfileData( profile_info );
+						
+						if ( buddy.isTransient()){
+						
+							buddy.remove();
+						}
+					});
 			}
 		}
 		

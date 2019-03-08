@@ -834,21 +834,30 @@ BuddyPluginBuddy
 		return( last_time_online );
 	}
 
-	public List<String>
-	getProfileInfo()
+	public interface
+	ProfileUpdateInformer
+	{
+		public void
+		received(
+			List<String>		profile );
+	}
+	
+	public void
+	getProfileInfo(
+		ProfileUpdateInformer	informer )
 	{
 		synchronized( this ){
 			
 			if ( profile_info != null ){
 				
-				return( profile_info );
+				informer.received( profile_info );
 			}
 			
 			long now = SystemTime.getMonotonousTime();
 			
 			if ( profile_info_outstanding || now - profile_info_last < 60*1000 ){
 				
-				return( null );
+				return;
 			}
 			
 			profile_info_last			= now;
@@ -869,13 +878,13 @@ BuddyPluginBuddy
 					{
 						InetAddress ip = buddy.getIP();
 						
+						List<String> result = new ArrayList<>();
+
 						synchronized( BuddyPluginBuddy.this ){
 							
 							profile_info_outstanding = false;
 							
-							List<String> info = BDecoder.decodeStrings((List)message.get( "props" ));
-							
-							List<String> result = new ArrayList<>();
+							List<String> info = BDecoder.decodeStrings((List)message.get( "props" ));							
 							
 							for ( String i: info ){
 							
@@ -889,6 +898,8 @@ BuddyPluginBuddy
 							
 							profile_info = result;
 						}
+						
+						informer.received( result );
 						
 						return( null );
 					}
@@ -913,8 +924,6 @@ BuddyPluginBuddy
 				profile_info_outstanding = false;
 			}
 		}
-		
-		return( null );
 	}
 	
 	public BuddyPlugin.cryptoResult
