@@ -3493,14 +3493,16 @@ BuddyPluginViewBetaChat
 		String key = plugin.getPublicKey();
 
 		String uri = "chat:friend:?key=" + key;
-
+		
+		/* doesn't look great and there's some bug that sometimes doesn't render it as a link so rather confusing...
+		 
 		String my_nick = chat.getNickname( false );
 
 		if ( my_nick.length() > 0 ){
 
 			uri += "[[" + UrlUtils.encode( "Friend Key for " + my_nick ) + "]]";
 		}
-		
+		*/
 		return( uri );
 	}
 
