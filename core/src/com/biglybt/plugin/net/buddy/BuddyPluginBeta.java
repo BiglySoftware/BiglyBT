@@ -6150,6 +6150,21 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			return( fk==null?null:Base32.encode( fk ));
 		}
 		
+		public boolean
+		isFriend()
+		{
+			String fk = getFriendKey();
+			
+			if ( fk == null ){
+				
+				return( false );
+			}
+			
+			BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
+			
+			return( buddy != null && buddy.isAuthorised() && !buddy.isTransient());
+		}
+		
 		protected void
 		checkProfileData()
 		{

@@ -106,7 +106,11 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FrequencyLimitedDispatcher;
 import com.biglybt.core.util.RandomUtils;
 import com.biglybt.core.util.RegExUtil;
+import com.biglybt.core.util.SimpleTimer;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEvent;
+import com.biglybt.core.util.TimerEventPerformer;
+import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
@@ -143,6 +147,7 @@ import com.biglybt.ui.swt.shells.MessageBoxShell;
 
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
+import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
@@ -259,6 +264,8 @@ BuddyPluginViewBetaChat
 	private boolean	ftux_ok;
 	private boolean	build_complete;
 
+	private TimerEventPeriodic timer;
+	
 	private
 	BuddyPluginViewBetaChat(
 		BuddyPluginView	_view,
@@ -510,6 +517,25 @@ BuddyPluginViewBetaChat
 			
 			throw( e );
 		}
+		
+		timer = 
+			SimpleTimer.addPeriodicEvent( 
+			"timer",
+			15*1000,
+			(ev)->{
+
+				Utils.execSWTThread(
+					()->{
+						if ( parent.isDisposed()){
+							
+							timer.cancel();
+							
+							return;
+						}
+						
+						timerTick();
+					});
+			});
 	}
 	
 	private void
@@ -1369,16 +1395,16 @@ BuddyPluginViewBetaChat
 			String[] headers = {
 				"azbuddy.ui.table.name",
 				"!#!",
-				"!+!"};
+				"label.friend"};
 	
 			int[] sizes = {
 				rhs_width-10,
 				30,
-				20};
+				50};
 	
 			int[] aligns = { 
 				SWT.LEFT,
-				SWT.RIGHT,
+				SWT.CENTER,
 				SWT.LEFT };
 	
 			for (int i = 0; i < headers.length; i++){
@@ -1504,7 +1530,23 @@ BuddyPluginViewBetaChat
 							
 							ChatParticipant	participant = (ChatParticipant)item.getData();
 							
-							if ( participant.getFriendKey() != null ){
+							String fk = participant.getFriendKey();
+							
+							if ( fk  != null ){
+								
+								BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
+								
+								String nick = "";
+								
+								if ( buddy != null ){
+									
+									String n = buddy.getNickName();
+									
+									if ( n != null && !n.isEmpty()){
+										
+										nick = ": " + n;
+									}
+								}
 								
 								List<String> profile = participant.getProfileData();
 								
@@ -1514,7 +1556,7 @@ BuddyPluginViewBetaChat
 									
 								}else{
 									
-									tt = MessageText.getString( "label.profile" );
+									tt = MessageText.getString( "label.profile" ) + nick;
 									
 									for ( String p: profile ){
 										
@@ -3777,58 +3819,18 @@ BuddyPluginViewBetaChat
 					}
 				});
 
-			final MenuItem send_fk_item = new MenuItem(menu, SWT.PUSH);
+				// friends sub menu
+			{
+				Menu friends_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
+				MenuItem friends_item = new MenuItem( menu, SWT.CASCADE);
+				friends_item.setMenu(friends_menu);
+				friends_item.setText(  MessageText.getString( "Views.plugins.azbuddy.title" ));
 
-			send_fk_item.setText( lu.getLocalisedMessageText( "label.send.friend.key" ) );
-
-			send_fk_item.addSelectionListener(
-				new SelectionAdapter()
-				{
-					@Override
-					public void
-					widgetSelected(
-						SelectionEvent e)
-					{
-						if ( !plugin.isClassicEnabled()){
-							
-							plugin.setClassicEnabled( true );
-						}
-						
-						for ( ChatParticipant participant: participants ){
-
-							if ( TEST_LOOPBACK_CHAT || !Arrays.equals( participant.getPublicKey(), chat_pk )){
-
-								try{
-									ChatInstance chat = participant.createPrivateChat();
-
-									createChatWindow( view, plugin, chat);
-
-									String message = "!azbuddy.send.friend.key.msg[" + UrlUtils.encode( getFriendURI()) + "]!";
-																		
-									chat.sendMessage(message, null);
-									
-								}catch( Throwable f ){
-
-									Debug.out( f );
-								}
-							}
-						}
-					}
-				});
-
-			if ( participants.size() == 1 ){
-				
-				ChatParticipant participant = participants.get(0);
-				
-				boolean is_me = Arrays.equals( participant.getPublicKey(), chat_pk );
-				
-				String fk = participant.getFriendKey();
-				
-				final MenuItem add_fk_item = new MenuItem(menu, SWT.PUSH);
+				final MenuItem send_fk_item = new MenuItem(friends_menu, SWT.PUSH);
 	
-				add_fk_item.setText( lu.getLocalisedMessageText( "azbuddy.add.friend.key" ));
+				send_fk_item.setText( lu.getLocalisedMessageText( "label.send.friend.key" ) );
 	
-				add_fk_item.addSelectionListener(
+				send_fk_item.addSelectionListener(
 					new SelectionAdapter()
 					{
 						@Override
@@ -3840,45 +3842,222 @@ BuddyPluginViewBetaChat
 								
 								plugin.setClassicEnabled( true );
 							}
-								
-							plugin.addBuddy( fk, BuddyPlugin.SUBSYSTEM_AZ2 );
 							
-							try{
-								ChatInstance chat = participant.createPrivateChat();
-
-								createChatWindow( view, plugin, chat);
-
-								String message = "!azbuddy.add.friend.key.msg[" + UrlUtils.encode( getFriendURI()) + "]!";
-																	
-								chat.sendMessage(message, null);
+							for ( ChatParticipant participant: participants ){
+	
+								boolean is_me = Arrays.equals( participant.getPublicKey(), chat_pk );
 								
-							}catch( Throwable f ){
-
-								Debug.out( f );
+								boolean is_friend = participant.isFriend();
+								
+								if ( ! (is_friend || is_me )){
+	
+									try{
+										ChatInstance chat = participant.createPrivateChat();
+	
+										createChatWindow( view, plugin, chat);
+	
+										String message = "!azbuddy.send.friend.key.msg[" + UrlUtils.encode( getFriendURI()) + "]!";
+																			
+										chat.sendMessage(message, null);
+										
+									}catch( Throwable f ){
+	
+										Debug.out( f );
+									}
+								}
 							}
 						}
 					});
-				
-				add_fk_item.setEnabled( fk != null && !is_me && !chat.isAnonymous());
-			}
-			
-			boolean	pc_enable = false;
+	
+				if ( participants.size() == 1 ){
+					
+					ChatParticipant participant = participants.get(0);
+					
+					boolean is_me = Arrays.equals( participant.getPublicKey(), chat_pk );
+					
+					String fk = participant.getFriendKey();
+					
+					boolean is_friend = participant.isFriend();
 
-			if ( chat_pk != null ){
+					final MenuItem add_fk_item = new MenuItem(friends_menu, SWT.PUSH);
+		
+					add_fk_item.setText( lu.getLocalisedMessageText( "azbuddy.add.friend.key" ));
+		
+					add_fk_item.addSelectionListener(
+						new SelectionAdapter()
+						{
+							@Override
+							public void
+							widgetSelected(
+								SelectionEvent e)
+							{
+								if ( !plugin.isClassicEnabled()){
+									
+									plugin.setClassicEnabled( true );
+								}
+									
+								plugin.addBuddy( fk, BuddyPlugin.SUBSYSTEM_AZ2 );
+								
+								try{
+									ChatInstance chat = participant.createPrivateChat();
+	
+									createChatWindow( view, plugin, chat);
+	
+									String message = "!azbuddy.add.friend.key.msg[" + UrlUtils.encode( getFriendURI()) + "]!";
+																		
+									chat.sendMessage(message, null);
+									
+								}catch( Throwable f ){
+	
+									Debug.out( f );
+								}
+							}
+						});
+					
+					add_fk_item.setEnabled( fk != null && !is_me && !is_friend && !chat.isAnonymous());
+					
+					if ( is_friend ){
+						
+						BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
+						
+						final MenuItem cat_share_item = new MenuItem(friends_menu, SWT.PUSH);
 
-				for ( ChatParticipant participant: participants ){
+						cat_share_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.cat.share" ) );
 
-					if ( !Arrays.equals( participant.getPublicKey(), chat_pk )){
+						cat_share_item.addSelectionListener(
+							new SelectionAdapter()
+							{
+								@Override
+								public void
+								widgetSelected(
+									SelectionEvent event )
+								{
+									SimpleTextEntryWindow entryWindow = 
+											new SimpleTextEntryWindow(
+											"azbuddy.ui.menu.cat.set",
+											"azbuddy.ui.menu.cat.set_msg" );								
 
-						pc_enable = true;
+									entryWindow.prompt(new UIInputReceiverListener() {
+										@Override
+										public void UIInputReceiverClosed(UIInputReceiver prompter) {
+											String cats = prompter.getSubmittedInput();
+
+											if ( cats != null ){
+
+												cats = cats.trim();
+
+												if ( cats.equalsIgnoreCase( "None" )){
+
+													cats = "";
+												}
+
+												buddy.setLocalAuthorisedRSSTagsOrCategories( cats );
+											}
+										}
+									});
+
+								}
+							});
+
+							// cats - subscribe
+
+						final Menu cat_subs_menu = new Menu(friends_menu.getShell(), SWT.DROP_DOWN);
+						final MenuItem cat_subs_item = new MenuItem(friends_menu, SWT.CASCADE);
+						Messages.setLanguageText(cat_subs_item, "azbuddy.ui.menu.cat_subs" );
+						cat_subs_item.setMenu(cat_subs_menu);
+
+						cat_subs_menu.addMenuListener(
+							new MenuListener()
+							{
+								@Override
+								public void
+								menuShown(
+									MenuEvent arg0 )
+								{
+									MenuItem[] items = cat_subs_menu.getItems();
+
+									for (int i = 0; i < items.length; i++){
+
+										items[i].dispose();
+									}
+
+									Set<String> cats = buddy.getRemoteAuthorisedRSSTagsOrCategories();
+
+									if ( cats != null ){
+
+										for ( final String cat: cats ){
+	
+											final MenuItem subs_item = new MenuItem( cat_subs_menu, SWT.PUSH );
+	
+											subs_item.setText( cat );
+	
+											subs_item.addSelectionListener(
+												new SelectionAdapter()
+												{
+													@Override
+													public void
+													widgetSelected(
+														SelectionEvent event )
+													{
+														if ( buddy.isRemoteRSSTagOrCategoryAuthorised( cat )){
+	
+															try{
+																buddy.subscribeToCategory( cat );
+	
+															}catch( Throwable e ){
+	
+																
+															}
+														}
+													}
+												});
+											}
+									}
+								}
+
+								@Override
+								public void
+								menuHidden(
+									MenuEvent arg0 )
+								{
+								}
+							});
+
 					}
 				}
+				
+				boolean	pc_enable 	= false;
+				boolean sk_enable	= false;
+				
+				if ( chat_pk != null ){
+	
+					for ( ChatParticipant participant: participants ){
+	
+						boolean is_me = Arrays.equals( participant.getPublicKey(), chat_pk );
+						
+						boolean is_friend = participant.isFriend();
+
+						if ( !is_me ){
+	
+							if ( !is_friend ){
+								
+								sk_enable = true;
+							}
+							
+							pc_enable = true;
+						}
+					}
+				}
+	
+				private_chat_item.setEnabled( pc_enable  );
+				
+				send_fk_item.setEnabled( sk_enable  && !chat.isAnonymous());
+				
+				friends_item.setEnabled( !participants.isEmpty());
 			}
-
-			private_chat_item.setEnabled( pc_enable || TEST_LOOPBACK_CHAT );
-			send_fk_item.setEnabled((pc_enable || TEST_LOOPBACK_CHAT ) && !chat.isAnonymous());
 		}
-
+		
+		
 		if ( participants.size() == 1 ){
 
 			if ( !chat.isAnonymous()){
@@ -3911,7 +4090,7 @@ BuddyPluginViewBetaChat
 							
 							names.add( "" );
 							values.add( "" );
-							
+													
 							for ( String prop: props ){
 								
 								String[] bits = prop.split( "=", 2 );
@@ -3923,8 +4102,22 @@ BuddyPluginViewBetaChat
 								}
 							}
 							
+							BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
+							
+							String nick = "";
+							
+							if ( buddy != null ){
+								
+								String n = buddy.getNickName();
+								
+								if ( n != null && !n.isEmpty()){
+									
+									nick = ": " + n;
+								}
+							}
+							
 							new PropertiesWindow( 
-								lu.getLocalisedMessageText( "label.profile" ),
+								lu.getLocalisedMessageText( "label.profile" ) + nick,
 								names, values );
 						}
 					});
@@ -3967,6 +4160,25 @@ BuddyPluginViewBetaChat
 		}
 	}
 
+	private void
+	timerTick()
+	{
+		for ( TableItem ti: buddy_table.getItems()){
+			
+			ChatParticipant	participant = (ChatParticipant)ti.getData();
+			
+			if ( participant != null ){
+				
+				String status = participant.isFriend()?"*":(participant.getFriendKey()!=null?"+":"");
+				
+				if ( !ti.getText( 2 ).equals( status )){
+					
+					ti.setText( 2, status );
+				}
+			}
+		}
+	}
+	
 	private ChatParticipant
 	setItemData(
 		TableItem		item )
@@ -3996,7 +4208,7 @@ BuddyPluginViewBetaChat
 		String[] values = {
 			participant.getName( ftux_ok ),
 			String.valueOf(participant.getMessageCount( true )),
-			participant.getFriendKey()!=null?"*":""
+			participant.isFriend()?"*":(participant.getFriendKey()!=null?"+":"")
 		};
 		
 		for ( int i=0;i<values.length;i++){
