@@ -6200,6 +6200,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		public List<String>
 		getProfileData()
 		{
+			if ( isMe()){
+				
+				return( plugin.getProfileInfo());
+			}
+			
 			if ( profile_data == null && !profile_data_peeked ){
 				
 				checkProfileData();

@@ -1570,7 +1570,7 @@ BuddyPluginViewBetaChat
 											
 											if ( u != null ){
 												
-												val = UrlUtils.getFriendlyName( u );
+												val = UrlUtils.getFriendlyName( u, val );
 											}
 											
 											p = bits[0] + "=" + val;

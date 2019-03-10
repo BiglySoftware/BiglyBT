@@ -154,7 +154,7 @@ PropertiesWindow
 		    	
 		    }else{
 		    
-		    	val_label.setText( UrlUtils.getFriendlyName( url ));
+		    	val_label.setText( UrlUtils.getFriendlyName( url, value ));
 		    	
 			   	val_label.setLink( url.toExternalForm());
 		    }

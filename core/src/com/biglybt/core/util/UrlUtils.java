@@ -498,6 +498,16 @@ public class UrlUtils
 	getRawURL(
 		String		url )
 	{
+		if ( url.endsWith( "]]" )){
+			
+			int pos = url.lastIndexOf( "[[" );
+			
+			if ( pos != -1 ){
+		
+				url = url.substring( 0, pos );
+			}
+		}
+		
 		try{
 			URL u = new URL( url );
 			
@@ -516,8 +526,19 @@ public class UrlUtils
 	
 	public static String
 	getFriendlyName(
-		URL		url )
+		URL			url,
+		String		url_str )
 	{
+		if ( url_str.endsWith( "]]" )){
+			
+			int pos = url_str.lastIndexOf( "[[" );
+			
+			if ( pos != -1 ){
+		
+				return( decode( url_str.substring( pos + 2, url_str.length() - 2 )));
+			}
+		}
+
 		try{
 			URLConnection con = url.openConnection();
 			
