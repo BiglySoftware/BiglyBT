@@ -43,6 +43,8 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
  */
 public class GCStringPrinter
 {
+	private static final String ELLIPSIS = "\u2026";	// "..."
+	
 	private static final boolean DEBUG = false;
 
 	private static final String GOOD_STRING = "(/|,jI~`gy";
@@ -684,7 +686,7 @@ public class GCStringPrinter
 				len -= 2;
 			}
 			outputLine.setLength(len);
-			outputLine.append("\u2026");
+			outputLine.append( ELLIPSIS );
 			cutoff = true;
 			if (DEBUG) {
 				System.out.println("set cutoff");
@@ -870,7 +872,7 @@ public class GCStringPrinter
 						len -= 2;
 					}
 					outputLine.setLength(len);
-					outputLine.append("\u2026");
+					outputLine.append( ELLIPSIS );
 					cutoff = true;
 					if (DEBUG) {
 						System.out.println("set cutoff");
@@ -904,7 +906,7 @@ public class GCStringPrinter
 						len -= 2;
 					}
 					outputLine.setLength(len);
-					outputLine.append("\u2026");
+					outputLine.append( ELLIPSIS );
 					cutoff = true;
 					if (DEBUG) {
 						System.out.println("set cutoff");
