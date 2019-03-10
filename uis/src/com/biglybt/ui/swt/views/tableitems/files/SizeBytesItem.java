@@ -39,7 +39,6 @@ public class SizeBytesItem
   /** Default Constructor */
   public SizeBytesItem() {
     super("sizebytes", ALIGN_TRAIL, POSITION_INVISIBLE, 70, TableManager.TABLE_TORRENT_FILES);
-    setMinWidthAuto(true);
   }
 
 	@Override

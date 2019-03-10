@@ -38,8 +38,6 @@ SizeItem
 		String tableID )
 	{
 		super( "size", ALIGN_TRAIL, POSITION_LAST, 70, tableID );
-
-		 setMinWidthAuto(true);
 	}
 
 	@Override

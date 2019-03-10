@@ -39,7 +39,6 @@ public class FileExtensionItem
 	{
 		super( DATASOURCE_TYPE, COLUMN_ID, ALIGN_CENTER, 50, sTableID);
 		addDataSourceType(DiskManagerFileInfo.class);
-		setMinWidthAuto(true);
 	}
 
 	@Override

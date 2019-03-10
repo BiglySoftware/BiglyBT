@@ -55,7 +55,6 @@ public class DoneItem
       setPosition(POSITION_LAST);
     else
       setPosition(POSITION_INVISIBLE);
-    setMinWidthAuto(true);
   }
 
 	@Override

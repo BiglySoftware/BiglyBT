@@ -95,7 +95,6 @@ public class PeersItem extends CoreTableColumnSWT implements
 	public PeersItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_CENTER, 60, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
-		setMinWidthAuto(true);
 
 		showIcon	 = COConfigurationManager.getBooleanParameter(CFG_SHOW_ICON);
 

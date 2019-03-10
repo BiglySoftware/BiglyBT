@@ -44,7 +44,6 @@ public class FilesDoneItem
 	public FilesDoneItem(String sTableID) {
 	  super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_CENTER, 50, sTableID);
 	  setRefreshInterval(5);
-    setMinWidthAuto(true);
   }
 
 	@Override

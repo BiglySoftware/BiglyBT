@@ -56,7 +56,6 @@ public class AvgAvailItem
   public AvgAvailItem(String sTableID) {
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 50, sTableID);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
 
     iTimesBy = 1;
     for (int i = 1; i < numZeros; i++)

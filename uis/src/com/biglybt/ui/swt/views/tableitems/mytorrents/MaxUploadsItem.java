@@ -46,7 +46,6 @@ public class MaxUploadsItem
   public MaxUploadsItem(String sTableID) {
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 30, sTableID);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
 
     TableContextMenuItem menuItem = addContextMenuItem("TableColumn.menu.maxuploads");
     menuItem.setStyle(TableContextMenuItem.STYLE_MENU);

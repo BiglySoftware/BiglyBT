@@ -60,7 +60,6 @@ public class DownSpeedItem
 	addDataSourceType(DiskManagerFileInfo.class);
     setRefreshInterval(INTERVAL_LIVE);
     setUseCoreDataSource(false);
-    setMinWidthAuto(true);
   }
 
 	@Override

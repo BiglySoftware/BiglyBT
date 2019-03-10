@@ -38,7 +38,6 @@ public class RemainingPiecesItem
   public RemainingPiecesItem() {
     super("remaining", ALIGN_TRAIL, POSITION_LAST, 60, TableManager.TABLE_TORRENT_FILES);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
   }
 
 	@Override

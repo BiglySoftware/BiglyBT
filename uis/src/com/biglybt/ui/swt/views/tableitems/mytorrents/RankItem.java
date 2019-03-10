@@ -88,9 +88,7 @@ public class RankItem
 				core.getGlobalManager().addListener(gmListener);
 			}
 		});
-    setMaxWidthAuto(true);
-    setMinWidthAuto(true);
-
+ 
     showIconKey = "RankColumn.showUpDownIcon." + (sTableID.endsWith( ".big" )?"big":"small" );
 
 	TableContextMenuItem menuShowIcon = addContextMenuItem(

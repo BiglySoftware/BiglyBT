@@ -106,7 +106,6 @@ public class SeedsItem
 	public SeedsItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_CENTER, 60, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
-		setMinWidthAuto(true);
 
 		iFC_MinSeeds = COConfigurationManager.getIntParameter(CFG_FC_SEEDSTART);
 		iFC_NumPeers = COConfigurationManager.getIntParameter(CFG_FC_NUMPEERS);

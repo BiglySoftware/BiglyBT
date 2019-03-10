@@ -248,7 +248,6 @@ public class PeerFilesView
 		{
 			super( "%", ALIGN_TRAIL, POSITION_LAST, 60, TABLEID_PEER_FILES );
 			setRefreshInterval(INTERVAL_LIVE);
-			setMinWidthAuto(true);
 		}
 
 		@Override

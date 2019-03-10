@@ -38,7 +38,6 @@ public class DoneItem
   public DoneItem() {
     super("done", ALIGN_TRAIL, POSITION_LAST, 70, TableManager.TABLE_TORRENT_FILES);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
   }
 
 	@Override

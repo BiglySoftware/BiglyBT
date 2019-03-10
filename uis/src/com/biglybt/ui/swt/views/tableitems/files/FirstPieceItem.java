@@ -34,7 +34,6 @@ public class FirstPieceItem
   /** Default Constructor */
   public FirstPieceItem() {
     super("firstpiece", ALIGN_TRAIL, POSITION_LAST, 75, TableManager.TABLE_TORRENT_FILES);
-    setMinWidthAuto(true);
   }
 
 	@Override

@@ -49,7 +49,6 @@ public class SecondsDownloadingItem
   public SecondsDownloadingItem(String sTableID) {
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
   }
 
 	@Override

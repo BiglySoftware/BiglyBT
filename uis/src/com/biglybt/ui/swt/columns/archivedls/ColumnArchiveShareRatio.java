@@ -46,7 +46,6 @@ public class ColumnArchiveShareRatio
 	{
 		column.setWidth(70);
 		column.setAlignment(TableColumn.ALIGN_TRAIL );
-		column.setMinWidthAuto(true);
 
 		column.addListeners(this);
 	}

@@ -298,48 +298,7 @@ public interface TableColumn {
    */
   public void setWidthLimits(int min, int max);
 
-  /**
-   * Sets whether the max width is automatically set.  Depending on the UI,
-   * automatically setting the max width usually results in the maximum width
-   * being grown to fit the largest text set for any cell (past or present).
-   * Therefore, the column will never grow larger than the largest text it
-   * contains or contained.
-   *
-   * @param automaxwidth
-   *
-   * @since 3.0.0.7
-   */
-  public void setMaxWidthAuto(boolean automaxwidth);
-
-  /**
-   * Retrieve whether the max width is automatically being set.
-   *
-   * @return max width auto setting state
-   *
-   * @since 3.0.0.7
-   */
-  public boolean isMaxWidthAuto();
-
-  /**
-   * Sets whether the min width of the column is automatically set.  Depending
-   * on the UI, automatically setting the min width usually results in the
-   * column never shrinking below the maximum text width ever encountered.
-   *
-   * @param autowidth
-   *
-   * @since 3.0.0.7
-   */
-  public void setMinWidthAuto(boolean autowidth);
-
-  /**
-   * Retrieve whether the min width is automatically being set
-   *
-   * @return min width auto setting state
-   *
-   * @since 3.0.0.7
-   */
-  public boolean isMinWidthAuto();
-
+ 
   /**
    * Sets the preferred width of the column.  When the UI is in auto-expand
    * mode and space is made available, the columns will first fill to their

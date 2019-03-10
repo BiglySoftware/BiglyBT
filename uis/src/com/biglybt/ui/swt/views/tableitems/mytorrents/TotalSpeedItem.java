@@ -49,8 +49,7 @@ public class TotalSpeedItem
   public TotalSpeedItem(String sTableID) {
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
-  }
+   }
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {

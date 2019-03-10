@@ -69,7 +69,6 @@ public class ShareRatioItem
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 73, sTableID);
 		setType(TableColumn.TYPE_TEXT);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
 
     setPosition(POSITION_LAST);
 

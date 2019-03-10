@@ -41,8 +41,6 @@ public class FilesLinkedItem
 
 	public FilesLinkedItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_CENTER, 50, sTableID);
-
-		setMinWidthAuto(true);
 	}
 
 	@Override

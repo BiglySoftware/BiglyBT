@@ -45,8 +45,7 @@ public class SwarmMaxCompletion
 	public SwarmMaxCompletion(String sTableID) {
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
     setRefreshInterval(INTERVAL_GRAPHIC);
-    setMinWidthAuto(true);
-  }
+   }
 
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {

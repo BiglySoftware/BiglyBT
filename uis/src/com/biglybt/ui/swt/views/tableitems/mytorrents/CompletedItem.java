@@ -35,7 +35,6 @@ public class CompletedItem extends CoreTableColumnSWT implements TableCellRefres
 	/** Default Constructor */
 	public CompletedItem(String sTableID) {
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 50, sTableID);
-		setMinWidthAuto(true);
 	}
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {

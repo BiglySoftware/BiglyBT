@@ -40,8 +40,6 @@ implements TableCellRefreshListener
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_LEAD, 120, sTableID);
 
 		setRefreshInterval(INTERVAL_LIVE);
-
-		setMinWidthAuto(true);
 	}
 
 	@Override

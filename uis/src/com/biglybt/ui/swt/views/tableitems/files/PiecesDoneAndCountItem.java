@@ -38,7 +38,6 @@ public class PiecesDoneAndCountItem
   public PiecesDoneAndCountItem() {
     super("piecesdoneof", ALIGN_CENTER, POSITION_INVISIBLE, 60, TableManager.TABLE_TORRENT_FILES);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
   }
 
 	@Override

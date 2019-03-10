@@ -40,7 +40,6 @@ public class ColumnSizeWithDND
   public ColumnSizeWithDND(String sTableID) {
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
 
     setPosition(POSITION_LAST);
   }

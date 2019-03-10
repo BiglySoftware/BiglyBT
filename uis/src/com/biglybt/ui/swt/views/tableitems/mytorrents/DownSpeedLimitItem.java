@@ -48,7 +48,6 @@ implements TableCellRefreshListener
 	public DownSpeedLimitItem(String sTableID) {
 	  super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 35, sTableID);
 	  setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
 	}
 
 	@Override

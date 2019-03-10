@@ -57,7 +57,6 @@ public class SizeItem
 		super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
 		addDataSourceType(DiskManagerFileInfo.class);
 		setRefreshInterval(INTERVAL_GRAPHIC);
-		setMinWidthAuto(true);
 	}
 
 	@Override

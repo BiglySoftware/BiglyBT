@@ -68,8 +68,7 @@ public class DownItem
     super(DATASOURCE_TYPE, COLUMN_ID, ALIGN_TRAIL, 70, sTableID);
 		addDataSourceType(DiskManagerFileInfo.class);
     setRefreshInterval(INTERVAL_LIVE);
-    setMinWidthAuto(true);
-    
+     
     TableContextMenuItem menuItem = addContextMenuItem("label.set.downloaded");
 
 	menuItem.setStyle(MenuItem.STYLE_PUSH);

@@ -32,7 +32,6 @@ public class RelocatedItem
 	public RelocatedItem() {
 		super("relocated", ALIGN_CENTER, POSITION_INVISIBLE, 70, TableManager.TABLE_TORRENT_FILES);
 		setRefreshInterval(INTERVAL_LIVE);
-		setMinWidthAuto(true);
 	}
 
 	@Override

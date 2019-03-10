@@ -62,8 +62,7 @@ public class UpSpeedItem
 		setType(TableColumn.TYPE_TEXT);
     setRefreshInterval(INTERVAL_LIVE);
     setUseCoreDataSource(false);
-    setMinWidthAuto(true);
-  }
+   }
 
   @Override
   public void fillTableColumnInfo(TableColumnInfo info) {

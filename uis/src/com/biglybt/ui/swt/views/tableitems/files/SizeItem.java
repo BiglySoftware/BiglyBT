@@ -38,7 +38,6 @@ public class SizeItem
   /** Default Constructor */
   public SizeItem() {
     super("size", ALIGN_TRAIL, POSITION_LAST, 70, TableManager.TABLE_TORRENT_FILES);
-    setMinWidthAuto(true);
   }
 
 	@Override

@@ -52,7 +52,6 @@ public class ColumnDoneWithDND
     addDataSourceType(DiskManagerFileInfo.class);
     setRefreshInterval(INTERVAL_LIVE);
     setPosition(POSITION_INVISIBLE);
-    setMinWidthAuto(true);
   }
 
 	@Override

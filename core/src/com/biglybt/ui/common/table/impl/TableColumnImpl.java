@@ -161,10 +161,6 @@ public class TableColumnImpl
 
 	private boolean bVisible;
 
-	private boolean bMaxWidthAuto = false;
-
-	private boolean bWidthAuto;
-
 	private int iPreferredWidth;
 
 	private boolean bPreferredWidthAuto = true;
@@ -1633,30 +1629,6 @@ public class TableColumnImpl
 			}
 		}
 		invalidateCells();
-	}
-
-	// @see com.biglybt.pif.ui.tables.TableColumn#isMaxWidthAuto()
-	@Override
-	public boolean isMaxWidthAuto() {
-		return bMaxWidthAuto;
-	}
-
-	// @see com.biglybt.pif.ui.tables.TableColumn#setMaxWidthAuto(boolean)
-	@Override
-	public void setMaxWidthAuto(boolean automaxwidth) {
-		bMaxWidthAuto = automaxwidth;
-	}
-
-	// @see com.biglybt.pif.ui.tables.TableColumn#isMinWidthAuto()
-	@Override
-	public boolean isMinWidthAuto() {
-		return bWidthAuto;
-	}
-
-	// @see com.biglybt.pif.ui.tables.TableColumn#setMinWidthAuto(boolean)
-	@Override
-	public void setMinWidthAuto(boolean autominwidth) {
-		bWidthAuto = autominwidth;
 	}
 
 	// @see com.biglybt.pif.ui.tables.TableColumn#getPreferredWidth()
