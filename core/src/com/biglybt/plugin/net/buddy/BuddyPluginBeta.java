@@ -24,6 +24,7 @@ package com.biglybt.plugin.net.buddy;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -6200,9 +6201,39 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		public List<String>
 		getProfileData()
 		{
-			if ( isMe()){
+			String fk = getFriendKey();
+			
+				// short circuit for testing purposes
+			
+			if ( fk != null ){
 				
-				return( plugin.getProfileInfo());
+				if ( fk.equals( plugin.getPublicKey())){
+					
+					List<String> info = plugin.getProfileInfo();
+					
+					BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
+						
+					if ( buddy != null ){
+			
+						InetAddress ip = buddy.getIP();
+						
+						if ( ip != null ){
+							
+							List<String>	result = new ArrayList<>();
+							
+							for ( String i: info ){
+						
+								i = i.replaceAll( "(?i)\\Q${ip}\\E", ip.getHostAddress());
+								
+								result.add( i );
+							}
+							
+							info = result;
+						}
+					}
+					
+					return( info );
+				}
 			}
 			
 			if ( profile_data == null && !profile_data_peeked ){
