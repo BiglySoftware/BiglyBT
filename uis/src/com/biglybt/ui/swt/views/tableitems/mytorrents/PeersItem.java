@@ -85,7 +85,8 @@ public class PeersItem extends CoreTableColumnSWT implements
 
 
 	private boolean showIcon;
-
+	private boolean	showIconEverBeenTrue;
+	
 	@Override
 	public void fillTableColumnInfo(TableColumnInfo info) {
 		info.addCategories(new String[] { CAT_SWARM });
@@ -97,7 +98,11 @@ public class PeersItem extends CoreTableColumnSWT implements
 		setRefreshInterval(INTERVAL_LIVE);
 
 		showIcon	 = COConfigurationManager.getBooleanParameter(CFG_SHOW_ICON);
-
+		
+		if ( showIcon ){
+			showIconEverBeenTrue = true;
+		}
+		
 		COConfigurationManager.addWeakParameterListener(this, false, CFG_SHOW_ICON);
 
 
@@ -165,6 +170,9 @@ public class PeersItem extends CoreTableColumnSWT implements
 
 	public void setShowIcon(boolean b) {
 		showIcon = b;
+		if ( b ){
+			showIconEverBeenTrue = true;
+		}
 		invalidateCells();
 	}
 
@@ -212,7 +220,7 @@ public class PeersItem extends CoreTableColumnSWT implements
 
 					int[] i2p_info = (int[])dm.getUserData( DHTTrackerPlugin.DOWNLOAD_USER_DATA_I2P_SCRAPE_KEY );
 
-					Image icon = none_img;
+					Image icon = showIconEverBeenTrue?none_img:null;
 
 					if ( showIcon && i2p_info != null ){
 
