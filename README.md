@@ -22,13 +22,13 @@ Getting the basics to compile from source is pretty straightforward:
 1. To the core module, add `core/lib/*`
 1. Make `uis` module depend on `core`.  `Core` should not depend on `uis`
 
-Intellij will do all these steps for you with its wizard, and the only change you need to make is to remove one of the swt.jar files it found.
+Intellij will do all these steps for you with its wizard.
 
 ## Running in Dev Environment
 
 Running is only few more steps:
 
-* Main class is `com.biglybt.ui.Main` in `uis`
+* Main class is `com.biglybt.ui.Main` in module `uis`
 * Working Directory should be a new folder, since the app will write things to it. Put the `aereg.dll` or `libOSXAccess.jnilib` in there.
   
   When a normal user is running the app, the working directory is where the jar, executable, and libraries (dll, so, jnilib) are.

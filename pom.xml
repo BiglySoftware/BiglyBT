@@ -12,9 +12,16 @@
 	<properties>
         <project.build.sourceEncoding>8859_1</project.build.sourceEncoding>
         <java.version>1.8</java.version>
+		<swt.version>4.9</swt.version> <!-- build uses libs in uis/libs/*.jar -->
+		<junit.jupiter.version>5.4.0</junit.jupiter.version>
 	</properties>
 	
 	<repositories>
+		<repository>
+			<id>maven-eclipse-repo-fork</id><!-- a repository for swt 4.9 binaries -->
+			<url>https://lislei.github.io/maven-eclipse.github.io/maven</url>
+		</repository>
+		<!--
 		<repository>
 			<id>maven-eclipse-repo</id>
 			<url>http://maven-eclipse.github.io/maven</url>
@@ -23,22 +30,109 @@
 			<id>maven-eclipse-repo-dev</id>
 			<url>http://maven-eclipse.github.io/dev-releases/maven</url>
 		</repository>
+		-->
 	</repositories>
 
     <prerequisites>
         <maven>3.3.9</maven>
     </prerequisites>
 
+	<modules>
+		<module>core</module>
+		<module>uis</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+
+			<dependency>
+				<groupId>com.biglybt</groupId>
+				<artifactId>biglybt-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>1.2.17</version>
+			</dependency>
+
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>${junit.jupiter.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.12.1</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
 	<profiles>
 		<profile>
-			<id>standard</id>
+			<id>mac-swt</id>
 			<activation>
-				<activeByDefault>true</activeByDefault>
+				<os>
+					<family>mac</family>
+				</os>
 			</activation>
-			<modules>
-				<module>core</module>
-				<module>uis</module>
-			</modules>
+			<dependencies>
+				<dependency>
+					<groupId>org.eclipse.swt</groupId>
+					<artifactId>org.eclipse.swt.cocoa.macosx.x86_64</artifactId>
+					<version>${swt.version}</version>
+					<scope>provided</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>linux-swt</id>
+			<activation>
+				<os>
+					<family>linux</family>
+				</os>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.eclipse.swt</groupId>
+					<artifactId>org.eclipse.swt.gtk.linux.x86_64</artifactId>
+					<version>${swt.version}</version>
+					<scope>provided</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+
+		<profile>
+			<id>windows-swt</id>
+			<activation>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<dependencies>
+				<dependency>
+					<groupId>org.eclipse.swt</groupId>
+					<artifactId>org.eclipse.swt.win32.win32.x86_64</artifactId>
+					<version>${swt.version}</version>
+					<scope>provided</scope>
+				</dependency>
+			</dependencies>
 		</profile>
 	</profiles>
 
@@ -69,6 +163,11 @@
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-shade-plugin</artifactId>
 					<version>3.0.0</version>
+				</plugin>
+				<!-- JUnit 5 requires Surefire version 2.22.1 or higher -->
+				<plugin>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.22.1</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
