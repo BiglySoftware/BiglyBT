@@ -69,8 +69,7 @@ public class SeedsItem
 	private static String textNotStartedNoScrape;
 
 	private boolean showIcon;
-	private boolean showIconEverBeenTrue;
-	
+
 	private static Image i2p_img;
 	private static Image none_img;
 
@@ -112,10 +111,6 @@ public class SeedsItem
 		iFC_NumPeers = COConfigurationManager.getIntParameter(CFG_FC_NUMPEERS);
 		showIcon	 = COConfigurationManager.getBooleanParameter(CFG_SHOW_ICON);
 
-		if ( showIcon ){
-			showIconEverBeenTrue = true;
-		}
-		
 		COConfigurationManager.addWeakParameterListener(this, false,
 				CFG_FC_SEEDSTART, CFG_FC_NUMPEERS, CFG_SHOW_ICON);
 
@@ -161,9 +156,6 @@ public class SeedsItem
 
 	public void setShowIcon(boolean b) {
 		showIcon = b;
-		if ( b ){
-			showIconEverBeenTrue = true;
-		}
 		invalidateCells();
 	}
 
@@ -215,7 +207,7 @@ public class SeedsItem
 
 					int[] i2p_info = (int[])dm.getUserData( DHTTrackerPlugin.DOWNLOAD_USER_DATA_I2P_SCRAPE_KEY );
 
-					Image icon = showIconEverBeenTrue?none_img:null;
+					Image icon = showIcon?none_img:null;
 
 					if ( i2p_info != null && showIcon ){
 
