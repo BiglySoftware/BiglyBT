@@ -117,6 +117,7 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 			MessageText.getString("TableColumn.header.size"),
 			MessageText.getString("label.reverse.size"),
 			MessageText.getString("label.speed"),
+			MessageText.getString("TableColumn.header.eta"),
 		};
 
 	int orderValues[] =
@@ -125,18 +126,13 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 			DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SEED_COUNT,
 			DefaultRankCalculator.DOWNLOAD_ORDER_SIZE,
 			DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SIZE,
-			DefaultRankCalculator.DOWNLOAD_ORDER_SPEED
+			DefaultRankCalculator.DOWNLOAD_ORDER_SPEED,
+			DefaultRankCalculator.DOWNLOAD_ORDER_ETA,
 		};
 
 	final IntListParameter sort_type =
 		new IntListParameter(cDownloading, "StartStopManager_Downloading_iSortType",
 			orderLabels, orderValues);
-
-	gridData = new GridData();
-	gridData.horizontalSpan = 2;
-
-	new BooleanParameter(cDownloading, "StartStopManager_bAddForDownloadingSR1",
-               "ConfigView.label.downloading.addsr1").setLayoutData(gridData);
 
     Group gSpeed = new Group(cDownloading, SWT.NULL);
     gridData = new GridData(GridData.FILL_HORIZONTAL);
@@ -178,6 +174,16 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
     reTest.setLayoutData(gridData);
     reTest.setMinimumValue( 0 );
 
+    	// active as well as queued
+    
+	gridData = new GridData();
+	gridData.horizontalSpan = 2;
+	
+	BooleanParameter testActive = new BooleanParameter(gSpeed, "StartStopManager_Downloading_bTestActive",
+	               		"ConfigView.label.downloading.testActive");
+	
+	testActive.setLayoutData(gridData);
+	
     ParameterChangeListener listener =
     	new ParameterChangeAdapter()
     	{
@@ -187,16 +193,25 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 	    		Parameter	p,
 	    		boolean		caused_internally )
 	    	{
-    			boolean is_speed = ((Integer)sort_type.getValueObject()) == DefaultRankCalculator.DOWNLOAD_ORDER_SPEED;
+	    		int type = ((Integer)sort_type.getValueObject());
+	    		
+    			boolean is_speed = type == DefaultRankCalculator.DOWNLOAD_ORDER_SPEED || type == DefaultRankCalculator.DOWNLOAD_ORDER_ETA;
 
     			testTime.setEnabled( is_speed );
     			reTest.setEnabled( is_speed );
+    			testActive.setEnabled( is_speed );
 	    	}
     	};
 
     sort_type.addChangeListener( listener );
 
     listener.parameterChanged( null, false );
+
+	gridData = new GridData();
+	gridData.horizontalSpan = 2;
+
+	new BooleanParameter(cDownloading, "StartStopManager_bAddForDownloadingSR1",
+               "ConfigView.label.downloading.addsr1").setLayoutData(gridData);
 
     return cDownloading;
   }

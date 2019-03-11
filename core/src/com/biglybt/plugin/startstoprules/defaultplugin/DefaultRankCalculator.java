@@ -54,6 +54,7 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	public static final int	DOWNLOAD_ORDER_REVERSE_SEED_COUNT	= 3;
 	public static final int	DOWNLOAD_ORDER_SIZE					= 4;
 	public static final int	DOWNLOAD_ORDER_REVERSE_SIZE			= 5;
+	public static final int	DOWNLOAD_ORDER_ETA					= 6;
 
 	/**
 	 * Force torrent to be "Actively Seeding/Downloading" for this many ms upon
@@ -423,6 +424,12 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		return( dl.getState() == Download.ST_QUEUED );
 	}
 
+	public boolean
+	isDownloading()
+	{
+		return( dl.getState() == Download.ST_DOWNLOADING );
+	}
+	
 	/**
 	 * Retrieves whether the torrent is "actively" downloading
 	 *
@@ -1029,6 +1036,9 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 	private long 	dlr_test_start_time;
 	private long 	dlr_test_bytes_start;
 	private int		dlr_test_average_bytes_per_sec = -1;
+	
+	private long	dlr_test_eta	= -1;
+	
 
 	public void
 	setDLRInactive()
@@ -1067,10 +1077,12 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 
 			dlr_test_average_bytes_per_sec = (int)((dlr_test_bytes_end-dlr_test_bytes_start)*1000/elapsed);
 
+			dlr_test_eta = core_dm.getStats().getSmoothedETA();
+			
 			if (rules.bDebugLog) {
 				rules.log.log(
 					dl.getTorrent(), LoggerChannel.LT_INFORMATION,
-					"download speed test ends - average=" + dlr_test_average_bytes_per_sec );
+					"download speed test ends - average=" + dlr_test_average_bytes_per_sec + ", eta=" + dlr_test_eta );
 			}
 		}
 
@@ -1089,6 +1101,27 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 		return( dlr_test_average_bytes_per_sec );
 	}
 
+	public long
+	getDLRLastTestETA()
+	{
+		if ( dlr_test_eta == -1 ){
+			
+			if ( isDownloading()){
+				
+					// if we haven't tested yet then use current
+				
+				long current = core_dm.getStats().getSmoothedETA();
+				 
+				if ( current > 0 ){
+					 
+					return( current );
+				}
+			}
+		}
+		
+		return( dlr_test_eta );
+	}
+	
 	public String
 	getDLRTrace()
 	{
@@ -1103,7 +1136,8 @@ public class DefaultRankCalculator implements DownloadManagerStateAttributeListe
 				return(
 					"tested; " +
 					TimeFormatter.format(( SystemTime.getMonotonousTime() - dlr_test_start_time )/1000) + " ago; " +
-					"rate=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( dlr_test_average_bytes_per_sec ));
+					"rate=" + DisplayFormatters.formatByteCountToKiBEtcPerSec( dlr_test_average_bytes_per_sec ) +
+					", eta=" + dlr_test_eta );
 
 			}else{
 

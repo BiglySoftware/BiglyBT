@@ -208,7 +208,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 	private int		iDownloadSortType;
 	private int		iDownloadTestTimeMillis;
 	private int		iDownloadReTestMillis;
-
+	private boolean bDownloadTestActive;
+	
 	private boolean	bTagFirstPriority;
 	
 	private static boolean bAlreadyInitialized = false;
@@ -513,6 +514,9 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 		configModel.addIntParameter2("StartStopManager_Downloading_iRetestTimeMins",
 				PREFIX_RES + "reTest", 30 );
+
+		configModel.addBooleanParameter2("StartStopManager_Downloading_bTestActive",
+				PREFIX_RES + "testActive", false );
 
 		configModel.destroy();
 	}
@@ -998,6 +1002,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 			iDownloadTestTimeMillis	= plugin_config.getUnsafeIntParameter("StartStopManager_Downloading_iTestTimeSecs")*1000;
 			iDownloadReTestMillis	= plugin_config.getUnsafeIntParameter("StartStopManager_Downloading_iRetestTimeMins")*60*1000;
+			bDownloadTestActive		= plugin_config.getUnsafeBooleanParameter("StartStopManager_Downloading_bTestActive");
 
 			bTagFirstPriority = plugin_config.getUnsafeBooleanParameter("StartStopManager_bTagFirstPriority");
 
@@ -1698,7 +1703,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			return;
 		}
 
-		if ( iDownloadSortType != DefaultRankCalculator.DOWNLOAD_ORDER_SPEED ){
+		if ( 	iDownloadSortType != DefaultRankCalculator.DOWNLOAD_ORDER_SPEED &&
+				iDownloadSortType != DefaultRankCalculator.DOWNLOAD_ORDER_ETA ){
 
 				// cancel any existing speed ordering stuff
 
@@ -1717,7 +1723,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			return;
 
 		}else if ( 	iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT || 
-					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SEED_COUNT){
+					iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SEED_COUNT ){
 
 			Collections.sort(
 				downloads,
@@ -1865,6 +1871,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				dlr_current_active = null;
 			}
 
+			boolean is_rate = iDownloadSortType == DefaultRankCalculator.DOWNLOAD_ORDER_SPEED;
+
 			if ( dlr_current_active == null ){
 
 				DefaultRankCalculator	to_test = null;
@@ -1911,6 +1919,46 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 						}
 					}
 				}
+				
+				if ( to_test == null && bDownloadTestActive){
+					
+						// test running ones at least once
+						
+					for ( DefaultRankCalculator drc: downloads ){
+
+						if ( drc.isDownloading()){
+
+							long last_test = drc.getDLRLastTestTime();
+
+							if ( last_test == 0 ){
+
+									// never tested, take first we find
+
+								to_test = drc;
+
+								break;
+
+							}else{
+
+								if ( iDownloadReTestMillis > 0 ){
+
+										// see if it qualifies for a retest, take oldest test
+
+									long	tested_ago = mono_now - last_test;
+
+									if ( tested_ago >= adjustedReTest ){
+
+										if ( tested_ago > oldest_test ){
+
+											oldest_test = tested_ago;
+											to_test		= drc;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 
 				if ( to_test != null ){
 
@@ -1926,6 +1974,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 				downloads,
 				new Comparator<DefaultRankCalculator>()
 				{
+					private Map<DefaultRankCalculator,Long>	eta_map = new HashMap<>();
+					
 					@Override
 					public int
 					compare(
@@ -1940,12 +1990,24 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 							return( 1 );
 						}
-
-						int	speed1 = o1.getDLRLastTestSpeed();
-						int	speed2 = o2.getDLRLastTestSpeed();
-
-						int	res = speed2 - speed1;
-
+						
+						int	res;
+						
+						if ( is_rate ){
+							
+							int	speed1 = o1.getDLRLastTestSpeed();
+							int	speed2 = o2.getDLRLastTestSpeed();
+	
+							res = speed2 - speed1;
+							
+						}else{
+							
+							long	eta1 = getETA( o1 );
+							long	eta2 = getETA( o2 );
+	
+							res = Long.compare( eta1,  eta2 );
+						}
+						
 						if ( res == 0  ){
 
 							res = o1.dl.getPosition() - o2.dl.getPosition();
@@ -1954,13 +2016,29 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 						return( res );
 					}
+					
+					private long
+					getETA(
+						DefaultRankCalculator	o )
+					{
+						Long l = eta_map.get( o );
+						
+						if ( l == null ){
+							
+							l = o.getDLRLastTestETA();
+						
+							eta_map.put( o, l );
+						}
+						
+						return( l );
+					}
 				});
-
+			
 			for ( int i=0;i<downloads.size();i++){
 
 				DefaultRankCalculator drc = downloads.get(i);
 
-				if ( drc.getDLRLastTestSpeed() > 0 ){
+				if ( is_rate?drc.getDLRLastTestSpeed() > 0 : drc.getDLRLastTestETA() > 0 ){
 
 					if ( drc.dl.getPosition() != (i+1)){
 
