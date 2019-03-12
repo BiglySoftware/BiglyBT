@@ -3197,6 +3197,8 @@ public class Utils
 						((GridData)data).widthHint = width;
 					}else if ( data instanceof FormData ){
 						((FormData)data).width = width;
+					}else if ( data instanceof RowData ){
+						((RowData)data).width = width;
 					}else{
 						Debug.out( "Expected GridData/FormData" );
 					}

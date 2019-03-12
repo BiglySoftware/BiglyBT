@@ -16,8 +16,13 @@
  */
 package com.biglybt.ui.swt.shells;
 
+import java.io.File;
+import java.util.Arrays;
+import java.util.Locale;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.download.DownloadManager;
@@ -28,7 +33,8 @@ import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.common.RememberedDecisionsManager;
 
 /**
@@ -82,26 +88,84 @@ public class AdvRenameWindow
 				}
 			}
 		});
-
+		
 		Messages.setLanguageText(shell, "AdvRenameWindow.title");
 
 		Label lblMessage = new Label(shell, SWT.WRAP);
 		Messages.setLanguageText(lblMessage, "AdvRenameWindow.message");
 
-		final Text txtInput = new Text(shell, SWT.BORDER);
+		Color faded = Colors.dark_grey;
+		
+			// input
+		
+		Text txtInput = new Text(shell, SWT.BORDER);
 		txtInput.setText(dm == null ? "" : dm.getDisplayName());
 
-		final Button btnDisplayName = new Button(shell, SWT.CHECK);
-		Messages.setLanguageText(btnDisplayName,
-				"MyTorrentsView.menu.rename.displayed");
+		String display_name 	=  dm.getDisplayName();
+		String save_path		= dm.getSaveLocation().getName();
+		String torrent_name		= new File(dm.getTorrentFileName()).getName();
+		
+		if ( torrent_name.toLowerCase( Locale.US ).endsWith( ".torrent" )){
+			
+			torrent_name = torrent_name.substring( 0, torrent_name.length() - 8 );
+		}
+		
+			// options
+		
+				// display 
 
-		final Button btnSavePath = new Button(shell, SWT.CHECK);
-		Messages.setLanguageText(btnSavePath,
-				"MyTorrentsView.menu.rename.save_path");
+		Button btnDisplayName = new Button(shell, SWT.CHECK);
+		Messages.setLanguageText(btnDisplayName,"MyTorrentsView.menu.rename.displayed");
+		
+		Label btnDisplayValue = new Label( shell, SWT.NONE );
+		btnDisplayValue.setForeground( faded );
+		btnDisplayValue.setText( display_name );
+		
+		Label btnDisplayPad = new Label( shell, SWT.NONE );
+		
+		Button btnDisplayUse = new Button(shell, SWT.PUSH);
+		//btnDisplayUse.setForeground( faded );
+		Messages.setLanguageText(btnDisplayUse,"label.use");
+		btnDisplayUse.setData( display_name );
+		
+				// save
+		
+		Button btnSavePath = new Button(shell, SWT.CHECK);
+		Messages.setLanguageText(btnSavePath,"MyTorrentsView.menu.rename.save_path");
 
-		final Button btnTorrent = new Button(shell, SWT.CHECK);
+		Label btnSavePathValue = new Label( shell, SWT.NONE );
+		btnSavePathValue.setText( save_path );
+		btnSavePathValue.setForeground( faded );
+		
+		Label btnSavePathPad = new Label( shell, SWT.NONE );
+		
+		Button btnSavePathUse = new Button(shell, SWT.PUSH);
+		Messages.setLanguageText(btnSavePathUse,"label.use");
+		//btnSavePathUse.setForeground( faded );
+		btnSavePathUse.setData( save_path );
+		
+				// torrent
+		
+		Button btnTorrent = new Button(shell, SWT.CHECK);
 		Messages.setLanguageText(btnTorrent, "AdvRenameWindow.rename.torrent");
 
+		Label btnTorrentValue = new Label( shell, SWT.NONE );
+		btnTorrentValue.setText( torrent_name );
+		btnTorrentValue.setForeground( faded );
+		
+		Label btnTorrentPad = new Label( shell, SWT.NONE );
+
+		Button btnTorrentUse = new Button(shell, SWT.PUSH);
+		//btnTorrentUse.setForeground( faded );
+		Messages.setLanguageText(btnTorrentUse,"label.use");
+		btnTorrentUse.setData( torrent_name );
+		
+			// separator
+		
+		Label separator = new Label(shell,SWT.SEPARATOR | SWT.HORIZONTAL);
+		
+			// buttons
+		
 		Composite cButtons = new Composite(shell, SWT.NONE);
 		RowLayout rowLayout = new RowLayout(SWT.HORIZONTAL);
 		rowLayout.fill = true;
@@ -110,6 +174,7 @@ public class AdvRenameWindow
 
 		Button btnReset = new Button(cButtons, SWT.PUSH);
 		Messages.setLanguageText(btnReset, "Button.reset");
+		btnReset.setLayoutData(new RowData());
 		btnReset.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -121,8 +186,11 @@ public class AdvRenameWindow
 			}
 		});
 
-		Button btnOk = new Button(cButtons, SWT.PUSH);
-		Messages.setLanguageText(btnOk, "Button.ok");
+		Button[] buttons = Utils.createOKCancelButtons( cButtons );
+		
+		Button btnOk 		= buttons[0];
+		Button btnCancel 	= buttons[1];
+		
 		shell.setDefaultButton(btnOk);
 		btnOk.addSelectionListener(new SelectionListener() {
 			@Override
@@ -156,8 +224,7 @@ public class AdvRenameWindow
 			}
 		});
 
-		Button btnCancel = new Button(cButtons, SWT.PUSH);
-		Messages.setLanguageText(btnCancel, "Button.cancel");
+		
 		btnCancel.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -169,6 +236,15 @@ public class AdvRenameWindow
 			}
 		});
 
+		for ( Button b: new Button[]{ btnDisplayUse, btnSavePathUse, btnTorrentUse }){
+			
+			b.addSelectionListener(
+				SelectionListener.widgetSelectedAdapter(
+					(e)->{
+						txtInput.setText((String)e.widget.getData());
+					}));
+		}
+		
 		shell.setLayout(new FormLayout());
 
 		FormData fd;
@@ -185,24 +261,80 @@ public class AdvRenameWindow
 		fd.width = 300;
 		txtInput.setLayoutData(fd);
 
+			// display value
+		
 		fd = new FormData();
-		fd.top = new FormAttachment(txtInput, 5);
+		fd.top = new FormAttachment(btnDisplayUse, 0, SWT.CENTER );
 		fd.left = new FormAttachment(0, 8);
-		fd.right = new FormAttachment(100, -3);
 		btnDisplayName.setLayoutData(fd);
 
 		fd = new FormData();
-		fd.top = new FormAttachment(btnDisplayName, 2);
-		fd.left = new FormAttachment(0, 8);
+		fd.top = new FormAttachment(btnDisplayUse, 0, SWT.CENTER );
+		fd.left = new FormAttachment(btnDisplayName, 40);
+		btnDisplayValue.setLayoutData(fd);
+	
+		fd = new FormData();
+		fd.left = new FormAttachment(btnDisplayValue, 0);
+		fd.right = new FormAttachment(btnDisplayUse, -8);
+		btnDisplayPad.setLayoutData(fd);
+	
+		fd = new FormData();
+		fd.top = new FormAttachment(txtInput, 5 );
 		fd.right = new FormAttachment(100, -3);
+		fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
+		btnDisplayUse.setLayoutData(fd);	
+		
+			// save path
+		
+		fd = new FormData();
+		fd.top = new FormAttachment(btnSavePathUse, 0, SWT.CENTER );
+		fd.left = new FormAttachment(0, 8);
 		btnSavePath.setLayoutData(fd);
 
 		fd = new FormData();
-		fd.top = new FormAttachment(btnSavePath, 2);
-		fd.left = new FormAttachment(0, 8);
+		fd.top = new FormAttachment(btnSavePathUse, 0, SWT.CENTER );
+		fd.left = new FormAttachment(btnDisplayValue, 0, SWT.LEFT );
+		btnSavePathValue.setLayoutData(fd);
+	
+		fd = new FormData();
+		fd.left = new FormAttachment(btnSavePathValue, 0);
+		fd.right = new FormAttachment(btnSavePathUse, -8);
+		btnSavePathPad.setLayoutData(fd);
+
+		fd = new FormData();
+		fd.top = new FormAttachment(btnDisplayUse, 5 );
 		fd.right = new FormAttachment(100, -3);
+		fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
+		btnSavePathUse.setLayoutData(fd);
+		
+			// torrent
+		
+		fd = new FormData();
+		fd.top = new FormAttachment(btnTorrentUse, 0, SWT.CENTER );
+		fd.left = new FormAttachment(0, 8);
 		btnTorrent.setLayoutData(fd);
 
+		fd = new FormData();
+		fd.top = new FormAttachment(btnTorrentUse, 0, SWT.CENTER );
+		fd.left = new FormAttachment(btnSavePathValue, 0, SWT.LEFT );
+		btnTorrentValue.setLayoutData(fd);
+	
+		fd = new FormData();
+		fd.left = new FormAttachment(btnTorrentValue, 0);
+		fd.right = new FormAttachment(btnTorrentUse, -8);
+		btnTorrentPad.setLayoutData(fd);
+
+		fd = new FormData();
+		fd.top = new FormAttachment(btnSavePathUse, 5 );
+		fd.right = new FormAttachment(100, -3);
+		fd.width = btnTorrentUse.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x;
+		btnTorrentUse.setLayoutData(fd);
+
+		
+		
+		
+		
+		
 		int renameDecisions = RememberedDecisionsManager.getRememberedDecision("adv.rename");
 		if ((renameDecisions & RENAME_DISPLAY) > 0) {
 			btnDisplayName.setSelection(true);
@@ -213,12 +345,24 @@ public class AdvRenameWindow
 		if ((renameDecisions & RENAME_TORRENT) > 0) {
 			btnTorrent.setSelection(true);
 		}
-
+		
+			// separator
+		
 		fd = new FormData();
-		fd.top = new FormAttachment(btnTorrent, 5);
+		fd.top = new FormAttachment(btnTorrentUse, 2);
+		fd.left = new FormAttachment(0, 3);
+		fd.right = new FormAttachment(100, -3);
+		separator.setLayoutData(fd);
+		
+			// buttons
+		
+		fd = new FormData();
+		fd.top = new FormAttachment(separator, 5);
 		fd.right = new FormAttachment(100, -3);
 		fd.bottom = new FormAttachment(100, -3);
 		cButtons.setLayoutData(fd);
+
+		Utils.makeButtonsEqualWidth( Arrays.asList(btnReset, btnOk,btnCancel ));
 
 		shell.pack();
 		Utils.centreWindow(shell);
