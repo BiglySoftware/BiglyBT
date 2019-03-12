@@ -19,7 +19,8 @@
 
 package com.biglybt.core.diskmanager.file.impl;
 
-import java.io.RandomAccessFile;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.util.DirectByteBuffer;
@@ -34,20 +35,20 @@ FMFileAccess
 
 	public long
 	getLength(
-		RandomAccessFile		raf )
+		FileAccessor		fa )
 
 		throws FMFileManagerException;
 
 	public void
 	setLength(
-		RandomAccessFile		raf,
-		long					length )
+		FileAccessor		fa,
+		long				length )
 
 		throws FMFileManagerException;
 
 	public void
 	read(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		DirectByteBuffer[]	buffers,
 		long				offset )
 
@@ -55,7 +56,7 @@ FMFileAccess
 
 	public void
 	write(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		DirectByteBuffer[]		buffers,
 		long					position )
 
@@ -72,7 +73,7 @@ FMFileAccess
 
 	public void
 	setPieceComplete(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		int					piece_number,
 		DirectByteBuffer	piece_data )
 
@@ -83,4 +84,45 @@ FMFileAccess
 
 	public String
 	getString();
+	
+	public interface
+	FileAccessor
+	{
+		public FileChannel
+		getChannel();
+		
+		public long
+		getLength()
+		
+			throws IOException;
+		
+		public void
+		setLength(
+			long	len )
+		
+			throws IOException;
+		
+		public long
+		getPosition()
+			
+			throws IOException;
+		
+		public void
+		setPosition(
+			long		pos )
+		
+			throws IOException;
+		
+		public void
+		write(
+			int		b )
+		
+			throws IOException;
+		
+		public void
+		close()
+		
+			throws IOException;
+	}
+
 }

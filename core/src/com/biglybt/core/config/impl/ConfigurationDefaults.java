@@ -394,6 +394,7 @@ public class ConfigurationDefaults {
     def.put( "Use Lazy Bitfield", FALSE );
     def.put( "Zero New", FALSE );
     def.put( "Zero New Stop", FALSE );
+    def.put( "Enable Sparse Files", FALSE );
     def.put( "XFS Allocation", FALSE );
     def.put( "Copy And Delete Data Rather Than Move", FALSE);
     def.put( "Move If On Same Drive", FALSE);

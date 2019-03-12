@@ -20,8 +20,17 @@
 package com.biglybt.core.diskmanager.file.impl;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.OpenOption;
+import java.nio.file.StandardOpenOption;
+import java.util.HashSet;
+import java.util.Set;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.torrent.TOTorrent;
@@ -41,6 +50,16 @@ FMFileAccessController
 
 			Debug.out( "*** Piece reordering storage forced ***" );
 		}
+	}
+	
+	private static boolean enable_sparse_files;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+		"Enable Sparse Files",
+		(n)->{
+			enable_sparse_files = COConfigurationManager.getBooleanParameter( n );
+		});
 	}
 	private final FMFileImpl	owner;
 
@@ -173,7 +192,7 @@ FMFileAccessController
 
 		File	file = owner.getLinkedFile();
 
-		RandomAccessFile raf = null;
+		FileAccessor fa = null;
 
 		boolean	ok	= false;
 
@@ -194,7 +213,7 @@ FMFileAccessController
 
 			if ( file.exists()){
 
-				raf = new RandomAccessFile( file, FMFileImpl.WRITE_ACCESS_MODE);
+				fa = new FileAccessorRAF( file, FMFileImpl.WRITE_ACCESS_MODE);
 
 					// due to the simplistic implementation of compact we only actually need to deal with
 					// the last piece of the file (first piece is in the right place already)
@@ -210,7 +229,7 @@ FMFileAccessController
 					 compact_access = (FMFileAccessCompact)target_access;
 				}
 
-				long	length = file_access.getLength( raf );
+				long	length = file_access.getLength( fa );
 
 				long	last_piece_start 	= compact_access.getLastPieceStart();
 				long	last_piece_length 	= compact_access.getLastPieceLength();
@@ -233,7 +252,7 @@ FMFileAccessController
 
 					try{
 
-						file_access.read( raf, new DirectByteBuffer[]{ buffer }, last_piece_start );
+						file_access.read( fa, new DirectByteBuffer[]{ buffer }, last_piece_start );
 
 							// see if we need to truncate
 
@@ -241,17 +260,17 @@ FMFileAccessController
 
 							long	first_piece_length = compact_access.getFirstPieceLength();
 
-							long	physical_length = raf.length();
+							long	physical_length = fa.getLength();
 
 							if ( physical_length > first_piece_length ){
 
-								raf.setLength( first_piece_length );
+								fa.setLength( first_piece_length );
 							}
 						}
 
 						buffer.flip( DirectByteBuffer.AL_FILE );
 
-						target_access.write( raf, new DirectByteBuffer[]{ buffer }, last_piece_start );
+						target_access.write( fa, new DirectByteBuffer[]{ buffer }, last_piece_start );
 
 					}finally{
 
@@ -265,16 +284,16 @@ FMFileAccessController
 
 						long	first_piece_length = compact_access.getFirstPieceLength();
 
-						long	physical_length = raf.length();
+						long	physical_length = fa.getLength();
 
 						if ( physical_length > first_piece_length ){
 
-							raf.setLength( first_piece_length );
+							fa.setLength( first_piece_length );
 						}
 					}
 				}
 
-				target_access.setLength( raf, length );
+				target_access.setLength( fa, length );
 
 				target_access.flush();
 			}
@@ -293,10 +312,10 @@ FMFileAccessController
 		}finally{
 
 			try{
-				if ( raf != null ){
+				if ( fa != null ){
 
 					try{
-						raf.close();
+						fa.close();
 
 					}catch( Throwable e ){
 
@@ -403,22 +422,22 @@ FMFileAccessController
 	@Override
 	public long
 	getLength(
-		RandomAccessFile		raf )
+		FileAccessor		fa )
 
 		throws FMFileManagerException
 	{
-		return( file_access.getLength( raf ));
+		return( file_access.getLength( fa ));
 	}
 
 	@Override
 	public void
 	setLength(
-		RandomAccessFile		raf,
-		long					length )
+		FileAccessor		fa,
+		long				length )
 
 		throws FMFileManagerException
 	{
-		file_access.setLength( raf, length );
+		file_access.setLength( fa, length );
 	}
 
 	@Override
@@ -432,37 +451,37 @@ FMFileAccessController
 	@Override
 	public void
 	setPieceComplete(
-		RandomAccessFile	raf,
-		int					piece_number,
-		DirectByteBuffer	piece_data )
+		FileAccessor			fa,
+		int						piece_number,
+		DirectByteBuffer		piece_data )
 
 		throws FMFileManagerException
 	{
-		file_access.setPieceComplete( raf, piece_number, piece_data );
+		file_access.setPieceComplete( fa, piece_number, piece_data );
 	}
 
 	@Override
 	public void
 	read(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		DirectByteBuffer[]	buffers,
 		long				offset )
 
 		throws FMFileManagerException
 	{
-		file_access.read( raf, buffers, offset );
+		file_access.read( fa, buffers, offset );
 	}
 
 	@Override
 	public void
 	write(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		DirectByteBuffer[]		buffers,
 		long					position )
 
 		throws FMFileManagerException
 	{
-		file_access.write( raf, buffers, position );
+		file_access.write( fa, buffers, position );
 	}
 
 	@Override
@@ -486,5 +505,178 @@ FMFileAccessController
 	getString()
 	{
 		return( "type=" + type + ",acc=" + file_access.getString());
+	}
+		
+	public static class
+	FileAccessorRAF
+		implements FileAccessor
+	{
+		private RandomAccessFile		raf;
+		
+		public
+		FileAccessorRAF(
+			File			file,
+			String			access_mode )
+		
+			throws FileNotFoundException
+		{
+			if ( enable_sparse_files && !file.exists()){
+				
+				try{
+					Set<OpenOption>	options = new HashSet<>();
+					
+					options.add( StandardOpenOption.WRITE );
+					options.add( StandardOpenOption.CREATE_NEW );
+					options.add( StandardOpenOption.SPARSE );
+					
+					FileChannel fc = FileChannel.open( file.toPath(), options );
+					
+					fc.close();
+					
+				}catch( Throwable e ){
+					
+				}
+			}
+			
+			raf = new RandomAccessFile( file, access_mode );
+		}
+		
+		public FileChannel
+		getChannel()
+		{
+			return( raf.getChannel());
+		}
+		
+		public long
+		getLength()
+		
+			throws IOException
+		{
+			return( raf.length());
+		}
+		
+		public void
+		setLength(
+			long	len )
+		
+			throws IOException
+		{
+			raf.setLength( len );
+		}
+		
+		public long
+		getPosition()
+			
+			throws IOException
+		{
+			return( raf.getFilePointer());
+		}
+		
+		public void
+		setPosition(
+			long		pos )
+		
+			throws IOException
+		{
+			raf.seek(pos);
+		}
+		
+		public void
+		write(
+			int		b )
+		
+			throws IOException
+		{
+			raf.write( b );
+		}
+		
+		public void
+		close()
+		
+			throws IOException
+		{
+			raf.close();
+		}
+	}
+	
+	public static class
+	FileAccessorFileChannel
+		implements FileAccessor
+	{
+		private FileChannel		fc;
+		
+		private
+		FileAccessorFileChannel()
+		{
+			// not tried using this yet but ready for future mebe!
+		}
+		
+		public FileChannel
+		getChannel()
+		{
+			return( fc );
+		}
+		
+		public long
+		getLength()
+		
+			throws IOException
+		{
+			return( fc.size());
+		}
+		
+		public void
+		setLength(
+			long	len )
+		
+			throws IOException
+		{
+			long size = fc.size();
+			
+			if ( len < size ){
+				
+				fc.truncate( len );
+				
+			}else if ( len > size ){
+				
+				fc.position( len - 1 );
+				
+				write( 0 );
+			}
+		}
+		
+		public long
+		getPosition()
+			
+			throws IOException
+		{
+			return( fc.position());
+		}
+		
+		public void
+		setPosition(
+			long		pos )
+		
+			throws IOException
+		{
+			fc.position( pos );
+		}
+		
+		public void
+		write(
+			int		b )
+		
+			throws IOException
+		{
+			fc.write( ByteBuffer.wrap( new byte[]{ (byte)b }));
+		}
+		
+		public void
+		close()
+		
+			throws IOException
+		{
+			fc.close();
+		}
 	}
 }

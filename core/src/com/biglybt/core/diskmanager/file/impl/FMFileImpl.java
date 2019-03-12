@@ -27,13 +27,13 @@ package com.biglybt.core.diskmanager.file.impl;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.diskmanager.file.FMFile;
 import com.biglybt.core.diskmanager.file.FMFileManagerException;
 import com.biglybt.core.diskmanager.file.FMFileOwner;
+import com.biglybt.core.diskmanager.file.impl.FMFileAccess.FileAccessor;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.*;
 
@@ -44,8 +44,8 @@ FMFileImpl
 	protected static final String		READ_ACCESS_MODE	= "r";
 	protected static final String		WRITE_ACCESS_MODE	= "rw"; // "rwd"; - removing this to improve performance
 
-	private static final Map			file_map = new HashMap();
-	private static final AEMonitor	file_map_mon	= new AEMonitor( "FMFile:map");
+	private static final Map			file_map 		= new HashMap();
+	private static final AEMonitor		file_map_mon	= new AEMonitor( "FMFile:map");
 
 	// If there is an exception that occurs, which causes us to try and perform
 	// a reopen, setting this flag to true will print it to debug.
@@ -73,7 +73,7 @@ FMFileImpl
 	private File				linked_file;
 	private long				last_modified;
 	private String				canonical_path;
-	private RandomAccessFile	raf;
+	private FileAccessor		fa;
 
 	private FMFileAccessController		file_access;
 
@@ -504,7 +504,7 @@ FMFileImpl
 		throws FMFileManagerException
 	{
 		try{
-			return( file_access.getLength( raf ));
+			return( file_access.getLength( fa ));
 
 		}catch( FMFileManagerException e ){
 
@@ -513,7 +513,7 @@ FMFileImpl
 			try{
 				reopen( e );
 
-				return( file_access.getLength( raf ));
+				return( file_access.getLength( fa ));
 
 			}catch( Throwable e2 ){
 
@@ -529,7 +529,7 @@ FMFileImpl
 		throws FMFileManagerException
 	{
 		try{
-			file_access.setLength( raf, length );
+			file_access.setLength( fa, length );
 
 		}catch( FMFileManagerException e ){
 
@@ -538,7 +538,7 @@ FMFileImpl
 			try{
 				reopen( e );
 
-				file_access.setLength( raf, length );
+				file_access.setLength( fa, length );
 
 			}catch( Throwable e2 ){
 
@@ -558,11 +558,11 @@ FMFileImpl
 			throw( cause );
 		}
 
-		if ( raf != null ){
+		if ( fa != null ){
 
 			try{
 
-				raf.close();
+				fa.close();
 
 			}catch( Throwable e ){
 
@@ -575,7 +575,7 @@ FMFileImpl
 
 		file_access.aboutToOpen();
 
-		raf = new RandomAccessFile( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+		fa = new FMFileAccessController.FileAccessorRAF( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
 		last_modified = linked_file.lastModified();
 		
@@ -588,7 +588,7 @@ FMFileImpl
 
 		throws FMFileManagerException
 	{
-		if ( raf != null ){
+		if ( fa != null ){
 
 			throw( new FMFileManagerException( "file already open" ));
 		}
@@ -598,7 +598,7 @@ FMFileImpl
 		try{
 			file_access.aboutToOpen();
 
-			raf = new RandomAccessFile( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+			fa = new FMFileAccessController.FileAccessorRAF( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
 			last_modified = linked_file.lastModified();
 			
@@ -616,7 +616,7 @@ FMFileImpl
 
 				linked_file.createNewFile();
 
-				raf = new RandomAccessFile( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
+				fa = new FMFileAccessController.FileAccessorRAF( linked_file, access_mode==FM_READ?READ_ACCESS_MODE:WRITE_ACCESS_MODE);
 
 				last_modified = linked_file.lastModified();
 				
@@ -655,7 +655,7 @@ FMFileImpl
 			flush_exception = e;
 		}
 
-		if ( raf == null ){
+		if ( fa == null ){
 
 				// may have previously been implicitly closed, tidy up if required
 
@@ -668,7 +668,7 @@ FMFileImpl
 		}else{
 
 			try{
-				raf.close();
+				fa.close();
 
 			}catch( Throwable e ){
 
@@ -676,7 +676,7 @@ FMFileImpl
 
 			}finally{
 
-				raf	= null;
+				fa	= null;
 
 				if ( explicit ){
 
@@ -716,7 +716,7 @@ FMFileImpl
 
 		throws FMFileManagerException
 	{
-		file_access.setPieceComplete( raf, piece_number, piece_data );
+		file_access.setPieceComplete( fa, piece_number, piece_data );
 	}
 
 	@Override
@@ -755,7 +755,7 @@ FMFileImpl
 	{
 		try{
 
-			file_access.read( raf, buffers, position );
+			file_access.read( fa, buffers, position );
 
 		}catch( FMFileManagerException e ){
 
@@ -764,7 +764,7 @@ FMFileImpl
 			try{
 				reopen( e );
 
-				file_access.read( raf, buffers, position );
+				file_access.read( fa, buffers, position );
 
 			}catch( Throwable e2 ){
 
@@ -792,7 +792,7 @@ FMFileImpl
 	{
 		try{
 
-			file_access.write( raf, buffers, position );
+			file_access.write( fa, buffers, position );
 
 			last_modified = SystemTime.getCurrentTime();
 			
@@ -803,7 +803,7 @@ FMFileImpl
 			try{
 				reopen( e );
 
-				file_access.write( raf, buffers, position );
+				file_access.write( fa, buffers, position );
 
 				last_modified = SystemTime.getCurrentTime();
 				
@@ -818,7 +818,7 @@ FMFileImpl
 	public boolean
 	isOpen()
 	{
-		return( raf != null );
+		return( fa != null );
 	}
 	
 	@Override
@@ -1176,7 +1176,7 @@ FMFileImpl
 		else
 			sPaths = "can=" + Debug.secretFileName(canonical_path) + ",link="
 					+ Debug.secretFileName(linked_file.toString());
-		return sPaths + ",raf=" + raf + ",acc=" + access_mode + ",ctrl = "
+		return sPaths + ",fa=" + fa + ",acc=" + access_mode + ",ctrl = "
 				+ file_access.getString();
 	}
 

@@ -32,6 +32,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
@@ -257,91 +258,101 @@ public class ConfigSectionFile
 			xfsAllocation.setLayoutData(gridData);
 		}
 
-		BooleanParameter zeroNew = null;
-		BooleanParameter zeroNewStop = null;
-
-		if (userMode > 0) {
-			// zero new files
-			zeroNew = new BooleanParameter(cFile, "Zero New",
+		if ( userMode > 0 ){
+			
+				// zero new files
+			
+			BooleanParameter zeroNew = new BooleanParameter(cFile, "Zero New",
 					"ConfigView.label.zeronewfiles");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
 			zeroNew.setLayoutData(gridData);
 
-			zeroNewStop = new BooleanParameter(cFile, "Zero New Stop",
-					"ConfigView.label.zeronewfiles.stop");
+				BooleanParameter zeroNewStop = new BooleanParameter(cFile, "Zero New Stop",
+						"ConfigView.label.zeronewfiles.stop");
+				gridData = new GridData();
+				gridData.horizontalSpan = 2;
+				gridData.horizontalIndent = 25;
+				zeroNewStop.setLayoutData(gridData);
+			
+				// sparse
+			
+			BooleanParameter sparseFiles = new BooleanParameter(cFile, "Enable Sparse Files",
+					"ConfigView.label.spare.file.enable");
+			
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
-			gridData.horizontalIndent = 25;
-			zeroNewStop.setLayoutData(gridData);
+			sparseFiles.setLayoutData(gridData);
+				
+				// reorder 
 			
-			zeroNew.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(
-					zeroNewStop));
-		}
-
-		BooleanParameter pieceReorder = null;
-
-		if (userMode > 0) {
-
-			pieceReorder = new BooleanParameter(cFile, "Enable reorder storage mode",
+			BooleanParameter pieceReorder = new BooleanParameter(cFile, "Enable reorder storage mode",
 					"ConfigView.label.piecereorder");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
 			pieceReorder.setLayoutData(gridData);
 
-			//Make the reorder checkbox (button) deselect when zero new is used
-			Button[] btnReorder = {
-				(Button) pieceReorder.getControl()
-			};
-			zeroNew.setAdditionalActionPerformer(new ExclusiveSelectionActionPerformer(
-					btnReorder));
+		
+				Label lblMinMB = new Label(cFile, SWT.NULL);
+				Messages.setLanguageText(lblMinMB, "ConfigView.label.piecereorderminmb");
+				gridData = new GridData();
+				gridData.horizontalIndent = 25;
+				lblMinMB.setLayoutData(gridData);
+	
+				IntParameter minMB = new IntParameter(cFile, "Reorder storage mode min MB");
+				gridData = new GridData();
+				minMB.setLayoutData(gridData);
 
-			//Make the zero new checkbox(button) deselct when reorder is used
-			Button[] btnZeroNew = {
-				(Button) zeroNew.getControl()
-			};
-			pieceReorder.setAdditionalActionPerformer(new ExclusiveSelectionActionPerformer(
-					btnZeroNew));
-		}
-
-		if (userMode > 0) {
-			Label lblMinMB = new Label(cFile, SWT.NULL);
-			Messages.setLanguageText(lblMinMB, "ConfigView.label.piecereorderminmb");
-			gridData = new GridData();
-			gridData.horizontalIndent = 25;
-			lblMinMB.setLayoutData(gridData);
-
-			IntParameter minMB = new IntParameter(cFile, "Reorder storage mode min MB");
-			gridData = new GridData();
-			minMB.setLayoutData(gridData);
-
-			pieceReorder.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(
-					lblMinMB));
-			pieceReorder.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(
-					minMB));
-		}
-
-		if (userMode > 0) {
-			// incremental file creation
+		
+				// incremental file creation
+				
 			BooleanParameter incremental = new BooleanParameter(cFile, "Enable incremental file creation",
 					"ConfigView.label.incrementalfile");
 			gridData = new GridData();
 			gridData.horizontalSpan = 2;
 			incremental.setLayoutData(gridData);
-
-			//Make the incremental checkbox (button) deselect when zero new is used
-			Button[] btnIncremental = {
-				(Button) incremental.getControl()
+			
+			ParameterChangeListener listener = (n,internal)->{
+				
+					// these are mutually exclusive
+				
+				boolean zero 	= zeroNew.isSelected();
+				boolean sparse 	= sparseFiles.isSelected();
+				boolean reorder	= pieceReorder.isSelected();
+				boolean inc 	= incremental.isSelected();
+				
+				if ( zero ){
+					sparse 	= false;
+					reorder	= false;
+					inc		= false;
+				}else if ( sparse ){
+					reorder	= false;
+					inc		= false;
+				}else if ( reorder ){
+					inc = false;
+				}else if ( inc ){
+				}else{
+					zero = sparse = reorder = inc = true;
+				}
+				
+				zeroNew.setEnabled( zero );
+				zeroNewStop.setEnabled( zero && zeroNew.isSelected());
+				
+				sparseFiles.setEnabled( sparse );
+				
+				pieceReorder.setEnabled( reorder );
+				lblMinMB.setEnabled( reorder && pieceReorder.isSelected());
+				minMB.setEnabled( reorder && pieceReorder.isSelected());
+				
+				incremental.setEnabled( inc );
 			};
-			zeroNew.setAdditionalActionPerformer(new ExclusiveSelectionActionPerformer(
-					btnIncremental));
 
-			//Make the zero new checkbox(button) deselct when incremental is used
-			Button[] btnZeroNew = {
-				(Button) zeroNew.getControl()
-			};
-			incremental.setAdditionalActionPerformer(new ExclusiveSelectionActionPerformer(
-					btnZeroNew));
+			for ( BooleanParameter p: new BooleanParameter[]{ zeroNew, zeroNewStop, sparseFiles, pieceReorder, incremental }){
+				
+				p.addChangeListener(listener);
+			}
+			
+			listener.parameterChanged( null, false );
 		}
 
 			// truncate too large

@@ -40,8 +40,8 @@ ParameterChangeListener
 	 * @param p
 	 * @param toValue
 	 */
-	public void
-	intParameterChanging(Parameter p, int toValue);
+	public default void
+	intParameterChanging(Parameter p, int toValue){}
 
 	/**
 	 * A boolean parameter is about to change.
@@ -51,8 +51,8 @@ ParameterChangeListener
 	 * @param p
 	 * @param toValue
 	 */
-	public void
-	booleanParameterChanging(Parameter p, boolean toValue);
+	public default void
+	booleanParameterChanging(Parameter p, boolean toValue){}
 
 	/**
 	 * A String parameter is about to change.
@@ -62,8 +62,8 @@ ParameterChangeListener
 	 * @param p
 	 * @param toValue
 	 */
-	public void
-	stringParameterChanging(Parameter p, String toValue);
+	public default void
+	stringParameterChanging(Parameter p, String toValue){}
 
 	/**
 	 * A double/float parameter is about to change.
@@ -73,6 +73,6 @@ ParameterChangeListener
 	 * @param p
 	 * @param toValue
 	 */
-	public void
-	floatParameterChanging(Parameter owner, double toValue);
+	public default void
+	floatParameterChanging(Parameter owner, double toValue){}
 }

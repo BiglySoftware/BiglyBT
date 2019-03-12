@@ -20,7 +20,6 @@
 package com.biglybt.core.diskmanager.file.impl;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -65,14 +64,14 @@ FMFileAccessLinear
 	@Override
 	public long
 	getLength(
-		RandomAccessFile		raf )
+		FileAccessor		fa )
 
 		throws FMFileManagerException
 	{
 		try{
 			AEThread2.setDebug( owner );
 
-			return( raf.length());
+			return( fa.getLength());
 
 		}catch( Throwable e ){
 
@@ -83,7 +82,7 @@ FMFileAccessLinear
 	@Override
 	public void
 	setLength(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		long					length )
 
 		throws FMFileManagerException
@@ -92,7 +91,7 @@ FMFileAccessLinear
 			AEThread2.setDebug( owner );
 
 			try{
-				raf.setLength( length );
+				fa.setLength( length );
 
 			}catch( IOException e ){
 
@@ -107,7 +106,7 @@ FMFileAccessLinear
 						throw( e );
 					}
 
-					long	required 	= length - raf.length();
+					long	required 	= length - fa.getLength();
 
 					if ( required > 0 ){
 
@@ -128,12 +127,12 @@ FMFileAccessLinear
 
 					if ( required > 0 ){
 
-						long	old_pos = raf.getFilePointer();
+						long	old_pos = fa.getPosition();
 
 						try{
-							raf.seek( length-1 );
+							fa.setPosition( length-1 );
 
-							raf.write( 0 );
+							fa.write( 0 );
 
 						}catch( IOException f ){
 
@@ -142,7 +141,7 @@ FMFileAccessLinear
 						}finally{
 
 							try{
-								raf.seek( old_pos );
+								fa.setPosition( old_pos );
 
 							}catch( Throwable f ){
 							}
@@ -174,7 +173,7 @@ FMFileAccessLinear
 	@Override
 	public void
 	setPieceComplete(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		int					piece_number,
 		DirectByteBuffer	piece_data )
 
@@ -184,18 +183,18 @@ FMFileAccessLinear
 
 	public void
 	read(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		DirectByteBuffer	buffer,
 		long				offset )
 
 		throws FMFileManagerException
 	{
-		if (raf == null){
+		if ( fa == null){
 
-			throw new FMFileManagerException( "read: raf is null" );
+			throw new FMFileManagerException( "read: fa is null" );
 		}
 
-		FileChannel fc = raf.getChannel();
+		FileChannel fc = fa.getChannel();
 
 		if ( !fc.isOpen()){
 
@@ -232,18 +231,18 @@ FMFileAccessLinear
 	@Override
 	public void
 	read(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		DirectByteBuffer[]	buffers,
 		long				offset )
 
 		throws FMFileManagerException
 	{
-		if ( raf == null ){
+		if ( fa == null ){
 
-			throw new FMFileManagerException( "read: raf is null" );
+			throw new FMFileManagerException( "read: fa is null" );
 		}
 
-		FileChannel fc = raf.getChannel();
+		FileChannel fc = fa.getChannel();
 
 		if ( !fc.isOpen()){
 
@@ -373,7 +372,7 @@ FMFileAccessLinear
 		}catch ( Throwable e ){
 
 			try{
-				Debug.out( "Read failed: " + owner.getString() + ": raf open=" + raf.getChannel().isOpen() + ", len=" + raf.length() + ",off=" + offset );
+				Debug.out( "Read failed: " + owner.getString() + ": raf open=" + fa.getChannel().isOpen() + ", len=" + fa.getLength() + ",off=" + offset );
 
 			}catch( IOException f ){
 			}
@@ -410,17 +409,17 @@ FMFileAccessLinear
 	@Override
 	public void
 	write(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		DirectByteBuffer[]		buffers,
 		long					position )
 
 		throws FMFileManagerException
 	{
-		if ( raf == null){
+		if ( fa == null){
 			throw( new FMFileManagerException( "write fails: raf is null" ));
 		}
 
-		FileChannel fc = raf.getChannel();
+		FileChannel fc = fa.getChannel();
 
 		if ( !fc.isOpen()){
 

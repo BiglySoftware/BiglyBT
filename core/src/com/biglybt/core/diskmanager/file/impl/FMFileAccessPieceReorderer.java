@@ -21,8 +21,8 @@ package com.biglybt.core.diskmanager.file.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -197,7 +197,7 @@ FMFileAccessPieceReorderer
 	@Override
 	public long
 	getLength(
-		RandomAccessFile		raf )
+		FileAccessor		fa )
 
 		throws FMFileManagerException
 	{
@@ -230,7 +230,7 @@ FMFileAccessPieceReorderer
 
 					if ( current_length == max_length ){
 
-						long physical_length = raf.length();
+						long physical_length = fa.getLength();
 
 						if ( physical_length == current_length ){
 
@@ -243,7 +243,7 @@ FMFileAccessPieceReorderer
 
 				if ( attempt_recovery ){
 
-					long physical_length = raf.length();
+					long physical_length = fa.getLength();
 
 					if ( physical_length > current_length ){
 
@@ -279,14 +279,14 @@ FMFileAccessPieceReorderer
 
 		}else{
 
-			return( delegate.getLength(raf));
+			return( delegate.getLength( fa ));
 		}
 	}
 
 	@Override
 	public void
 	setLength(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		long					length )
 
 		throws FMFileManagerException
@@ -306,13 +306,13 @@ FMFileAccessPieceReorderer
 			}
 		}else{
 
-			delegate.setLength( raf, length );
+			delegate.setLength( fa, length );
 		}
 	}
 
 	protected long
 	getPieceOffset(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		int					piece_number,
 		boolean				allocate_if_needed )
 
@@ -323,7 +323,7 @@ FMFileAccessPieceReorderer
 			readConfig();
 		}
 
-		int index = getPieceIndex( raf, piece_number, allocate_if_needed );
+		int index = getPieceIndex( fa, piece_number, allocate_if_needed );
 
 		if ( index < 0 ){
 
@@ -345,7 +345,7 @@ FMFileAccessPieceReorderer
 
 	protected int
 	readWritePiece(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		DirectByteBuffer[]		buffers,
 		int						piece_number,
 		int						piece_offset,
@@ -395,7 +395,7 @@ FMFileAccessPieceReorderer
 
 		try{
 
-			long piece_start = getPieceOffset( raf, piece_number, !is_read );
+			long piece_start = getPieceOffset( fa, piece_number, !is_read );
 
 			if ( TRACE ){
 				System.out.println( str + " to " + piece_number + "/" + piece_offset + "/" + this_piece_size + "/" + piece_space + "/" + rem_space + "/" + piece_start );
@@ -410,11 +410,11 @@ FMFileAccessPieceReorderer
 
 			if ( is_read ){
 
-				delegate.read( raf, buffers, piece_io_position );
+				delegate.read( fa, buffers, piece_io_position );
 
 			}else{
 
-				delegate.write( raf, buffers, piece_io_position );
+				delegate.write( fa, buffers, piece_io_position );
 			}
 
 			return( piece_space - rem_space );
@@ -430,7 +430,7 @@ FMFileAccessPieceReorderer
 
 	protected void
 	readWrite(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		DirectByteBuffer[]		buffers,
 		long					position,
 		boolean					is_read )
@@ -472,7 +472,7 @@ FMFileAccessPieceReorderer
 				piece_offset	= (int)( offset % piece_size );
 			}
 
-			int	count = readWritePiece( raf, buffers, piece_number, piece_offset, is_read );
+			int	count = readWritePiece( fa, buffers, piece_number, piece_offset, is_read );
 
 			if ( count == 0 ){
 
@@ -519,7 +519,7 @@ FMFileAccessPieceReorderer
 	@Override
 	public void
 	read(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		DirectByteBuffer[]		buffers,
 		long					position )
 
@@ -527,18 +527,18 @@ FMFileAccessPieceReorderer
 	{
 		if ( num_pieces >= MIN_PIECES_REORDERABLE ){
 
-			readWrite( raf, buffers, position, true );
+			readWrite( fa, buffers, position, true );
 
 		}else{
 
-			delegate.read( raf, buffers, position );
+			delegate.read( fa, buffers, position );
 		}
 	}
 
 	@Override
 	public void
 	write(
-		RandomAccessFile		raf,
+		FileAccessor			fa,
 		DirectByteBuffer[]		buffers,
 		long					position )
 
@@ -546,11 +546,11 @@ FMFileAccessPieceReorderer
 	{
 		if ( num_pieces >= MIN_PIECES_REORDERABLE ){
 
-			readWrite( raf, buffers, position, false );
+			readWrite( fa, buffers, position, false );
 
 		}else{
 
-			delegate.write( raf, buffers, position );
+			delegate.write( fa, buffers, position );
 		}
 	}
 
@@ -641,7 +641,7 @@ FMFileAccessPieceReorderer
 	@Override
 	public void
 	setPieceComplete(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		int					piece_number,
 		DirectByteBuffer	piece_data )
 
@@ -670,7 +670,7 @@ FMFileAccessPieceReorderer
 				return;
 			}
 
-			int	store_index = getPieceIndex( raf, piece_number, false );
+			int	store_index = getPieceIndex( fa, piece_number, false );
 
 			if ( store_index == -1 ){
 
@@ -709,15 +709,15 @@ FMFileAccessPieceReorderer
 				long	store_offset = first_piece_length + ((store_index-1)*(long)piece_size );
 				long	swap_offset	 = first_piece_length + ((piece_number-1)*(long)piece_size );
 
-				delegate.read( raf, temp_buffers, swap_offset );
+				delegate.read( fa, temp_buffers, swap_offset );
 
 				piece_data.position( SS_FILE, 0 );
 
-				delegate.write( raf, new DirectByteBuffer[]{ piece_data }, swap_offset );
+				delegate.write( fa, new DirectByteBuffer[]{ piece_data }, swap_offset );
 
 				temp_buffer.position( SS_FILE, 0 );
 
-				delegate.write( raf, temp_buffers, store_offset );
+				delegate.write( fa, temp_buffers, store_offset );
 
 				piece_map[ piece_number ] 			= piece_number;
 				piece_reverse_map[ piece_number ] 	= piece_number;
@@ -731,13 +731,13 @@ FMFileAccessPieceReorderer
 
 					long	file_length = swap_offset + last_piece_length;
 
-					if ( delegate.getLength( raf ) > file_length ){
+					if ( delegate.getLength( fa ) > file_length ){
 
 						if ( TRACE ){
 							System.out.println( "    truncating file to correct length of " + file_length );
 						}
 
-						delegate.setLength( raf, file_length );
+						delegate.setLength( fa, file_length );
 					}
 				}
 			}finally{
@@ -746,13 +746,13 @@ FMFileAccessPieceReorderer
 			}
 		}else{
 
-			delegate.setPieceComplete( raf, piece_number, piece_data );
+			delegate.setPieceComplete( fa, piece_number, piece_data );
 		}
 	}
 
 	protected int
 	getPieceIndex(
-		RandomAccessFile	raf,
+		FileAccessor		fa,
 		int					piece_number,
 		boolean				allocate_if_needed )
 
@@ -792,11 +792,11 @@ FMFileAccessPieceReorderer
 						long	store_offset 	= first_piece_length + ((store_index-1)*(long)piece_size );
 						long	swap_offset 	= first_piece_length + ((swap_index-1)*(long)piece_size );
 
-						delegate.read( raf, temp_buffers, swap_offset );
+						delegate.read( fa, temp_buffers, swap_offset );
 
 						temp_buffer.position( SS_FILE, 0 );
 
-						delegate.write( raf, temp_buffers, store_offset );
+						delegate.write( fa, temp_buffers, store_offset );
 
 						piece_map[ store_index ] 			= store_index;
 						piece_reverse_map[ store_index ] 	= store_index;
@@ -808,13 +808,13 @@ FMFileAccessPieceReorderer
 
 							long	file_length = store_offset + last_piece_length;
 
-							if ( delegate.getLength( raf ) > file_length ){
+							if ( delegate.getLength( fa ) > file_length ){
 
 								if ( TRACE ){
 									System.out.println( "    truncating file to correct length of " + file_length );
 								}
 
-								delegate.setLength( raf, file_length );
+								delegate.setLength( fa, file_length );
 							}
 						}
 
