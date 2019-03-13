@@ -96,6 +96,9 @@ import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AEThread2;
@@ -143,8 +146,7 @@ import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-
-
+import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
@@ -3922,6 +3924,8 @@ BuddyPluginViewBetaChat
 						
 						BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
 						
+							// cats - share
+						
 						final MenuItem cat_share_item = new MenuItem(friends_menu, SWT.PUSH);
 
 						cat_share_item.setText( lu.getLocalisedMessageText( "azbuddy.ui.menu.cat.share" ) );
@@ -3934,30 +3938,48 @@ BuddyPluginViewBetaChat
 								widgetSelected(
 									SelectionEvent event )
 								{
-									SimpleTextEntryWindow entryWindow = 
-											new SimpleTextEntryWindow(
-											"azbuddy.ui.menu.cat.set",
-											"azbuddy.ui.menu.cat.set_msg" );								
-
-									entryWindow.prompt(new UIInputReceiverListener() {
-										@Override
-										public void UIInputReceiverClosed(UIInputReceiver prompter) {
-											String cats = prompter.getSubmittedInput();
-
-											if ( cats != null ){
-
-												cats = cats.trim();
-
-												if ( cats.equalsIgnoreCase( "None" )){
-
-													cats = "";
-												}
-
-												buddy.setLocalAuthorisedRSSTagsOrCategories( cats );
-											}
+									Set<String> enabled_tags = buddy.getLocalAuthorisedRSSTagsOrCategories();
+									
+									TagManager tm = TagManagerFactory.getTagManager();
+									
+									List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_CATEGORY ).getTags();
+									
+									all_tags.addAll( tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags());
+									
+									Map<String,Tag>	tag_map = new HashMap<>();
+									
+									for ( Tag t: all_tags ){
+										
+										tag_map.put( t.getTagName( true ), t );
+									}
+									
+									List<Tag> selected_tags = new ArrayList<>();
+									
+									for ( String s: enabled_tags ){
+									
+										Tag t = tag_map.get( s );
+											
+										if ( t != null ){
+											
+											selected_tags.add( t );
 										}
-									});
-
+									}
+									
+									TagUIUtilsV3.showTagSelectionDialog( 
+										all_tags, 
+										selected_tags,
+										false,
+										(tags)->{
+											
+											Set<String>	tag_names = new HashSet<>();
+											
+											for ( Tag t: tags ){
+												
+												tag_names.add( t.getTagName( true ));
+											}
+											
+											buddy.setLocalAuthorisedRSSTagsOrCategories( tag_names );
+										});
 								}
 							});
 
@@ -3968,6 +3990,10 @@ BuddyPluginViewBetaChat
 						Messages.setLanguageText(cat_subs_item, "azbuddy.ui.menu.cat_subs" );
 						cat_subs_item.setMenu(cat_subs_menu);
 
+						Set<String> cats = buddy.getRemoteAuthorisedRSSTagsOrCategories();
+
+						cat_subs_item.setEnabled( cats != null && !cats.isEmpty());
+						
 						cat_subs_menu.addMenuListener(
 							new MenuListener()
 							{
@@ -3983,16 +4009,16 @@ BuddyPluginViewBetaChat
 										items[i].dispose();
 									}
 
-									Set<String> cats = buddy.getRemoteAuthorisedRSSTagsOrCategories();
-
 									if ( cats != null ){
 
 										for ( final String cat: cats ){
 	
-											final MenuItem subs_item = new MenuItem( cat_subs_menu, SWT.PUSH );
+											final MenuItem subs_item = new MenuItem( cat_subs_menu, SWT.CHECK );
 	
 											subs_item.setText( cat );
 	
+											subs_item.setSelection( buddy.isSubscribedToCategory( cat ));
+											
 											subs_item.addSelectionListener(
 												new SelectionAdapter()
 												{

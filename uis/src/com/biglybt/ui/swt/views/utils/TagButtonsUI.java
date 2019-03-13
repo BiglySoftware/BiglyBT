@@ -39,7 +39,6 @@ import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -58,7 +57,8 @@ implements PaintListener
 	private TagButtonTrigger trigger;
 	private boolean enableWhenNoTaggables;
 
-
+	private boolean disableAuto = true;
+	
 	@Override
 	public void paintControl(PaintEvent e) {
 		Button button;
@@ -202,7 +202,7 @@ implements PaintListener
 			buttons.add(button);
 			boolean[] auto = tag.isTagAuto();
 
-			if ( auto[0] && auto[1] ){
+			if ( auto[0] && auto[1] && disableAuto ){
 				button.setEnabled( false );
 			}else{
 				button.addSelectionListener(selectionListener);
@@ -431,6 +431,13 @@ implements PaintListener
 		}
 	}
 
+	public void
+	setDisableAuto(
+		boolean	b )
+	{
+		disableAuto = b;
+	}
+	
 	public void setEnableWhenNoTaggables(boolean enableWhenNoTaggables) {
 		this.enableWhenNoTaggables = enableWhenNoTaggables;
 	}

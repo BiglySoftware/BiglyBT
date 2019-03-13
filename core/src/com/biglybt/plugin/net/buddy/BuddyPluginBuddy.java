@@ -27,6 +27,9 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.*;
 
+import com.biglybt.core.metasearch.Engine;
+import com.biglybt.core.metasearch.impl.web.WebEngine;
+import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionManager;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.util.*;
@@ -591,18 +594,40 @@ BuddyPluginBuddy
 	}
 
 	public boolean
-	isSubscribedToTagOrCategory(
-		String	cat,
-		String	creator_ref )
+	isSubscribedToCategory(
+		String	cat )
 	{
-		if ( creator_ref == null ){
+		SubscriptionManager manager = SubscriptionManagerFactory.getSingleton();
 
-			return( false );
+		if ( manager != null ){
+
+			String u = getSubscriptionURL(cat).toExternalForm();
+			
+			try{
+				Subscription[] subs = manager.getSubscriptions( true );
+				
+				for ( Subscription s: subs ){
+					
+					Engine engine = s.getEngine();
+					
+					if ( engine instanceof WebEngine ){
+						
+						if ( u.equals(((WebEngine)engine).getSearchUrl( true ))){
+							
+							return( true );
+						}
+					}
+				}
+			}catch( Throwable e ){
+	
+				
+			}
 		}
-
-		return( creator_ref.equals( getPublicKey() + ":" + cat ));
+		
+		return( false );
 	}
 
+	
 	protected String
 	catsToString(
 		Set<String>	cats )

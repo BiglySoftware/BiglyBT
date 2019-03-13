@@ -204,6 +204,16 @@ public class TagUIUtilsV3
 		List<Tag>				selected_tags,
 		TagSelectionListener	listener )
 	{
+		showTagSelectionDialog( tags, selected_tags, true, listener );
+	}
+	
+	public static void 
+	showTagSelectionDialog(
+		List<Tag>				tags,
+		List<Tag>				selected_tags,
+		boolean					disable_auto,
+		TagSelectionListener	listener )
+	{
 		final SkinnedDialog dialog = new SkinnedDialog("skin3_dlg_selecttags", "shell",	SWT.DIALOG_TRIM | SWT.RESIZE );
 		
 		SWTSkin skin = dialog.getSkin();
@@ -222,6 +232,8 @@ public class TagUIUtilsV3
 			
 			TagButtonsUI tagButtonsUI = new TagButtonsUI();
 					
+			tagButtonsUI.setDisableAuto( disable_auto );
+			
 			tagButtonsUI.buildTagGroup(
 				tags, comp, false, 
 				new TagButtonsUI.TagButtonTrigger(){

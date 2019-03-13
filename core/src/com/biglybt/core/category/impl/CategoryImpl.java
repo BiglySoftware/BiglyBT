@@ -180,6 +180,13 @@ CategoryImpl
   }
 
   @Override
+  public String
+  getGroup()
+  {
+	  return( MessageText.getString( "TableColumn.header.category" ));
+  }
+  
+  @Override
   public List<DownloadManager> getDownloadManagers(List<DownloadManager> all_dms) {
 	  if ( type == Category.TYPE_USER ){
 		  return managers;
