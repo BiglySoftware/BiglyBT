@@ -19,6 +19,7 @@ package com.biglybt.ui.swt.shells;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
@@ -34,7 +35,6 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.common.RememberedDecisionsManager;
 
 /**
@@ -99,11 +99,32 @@ public class AdvRenameWindow
 			// input
 		
 		Text txtInput = new Text(shell, SWT.BORDER);
-		txtInput.setText(dm == null ? "" : dm.getDisplayName());
-
+				
+		Consumer<String> text_setter = str->{
+						
+			txtInput.setText( str );
+			
+			int	pos = str.lastIndexOf( '.' );
+			
+			if ( pos <= 0 ){
+				
+				txtInput.selectAll();
+				
+			}else{
+				
+				txtInput.setSelection( 0, pos );
+			}
+			
+			txtInput.setFocus();
+		};
+		
+		
 		String display_name 	=  dm.getDisplayName();
 		String save_path		= dm.getSaveLocation().getName();
 		String torrent_name		= new File(dm.getTorrentFileName()).getName();
+		
+		text_setter.accept( display_name );
+
 		
 		if ( torrent_name.toLowerCase( Locale.US ).endsWith( ".torrent" )){
 			
@@ -178,7 +199,7 @@ public class AdvRenameWindow
 		btnReset.addSelectionListener(new SelectionListener() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				txtInput.setText(TorrentUtils.getLocalisedName(dm.getTorrent()));
+				text_setter.accept(TorrentUtils.getLocalisedName(dm.getTorrent()));
 			}
 
 			@Override
@@ -240,8 +261,8 @@ public class AdvRenameWindow
 			
 			b.addSelectionListener(
 				SelectionListener.widgetSelectedAdapter(
-					(e)->{
-						txtInput.setText((String)e.widget.getData());
+					e->{
+						text_setter.accept((String)e.widget.getData());
 					}));
 		}
 		
