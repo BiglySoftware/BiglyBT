@@ -253,6 +253,7 @@ public class Win32UIEnhancer
 	}
 
 	public static Image getFileIcon(File file, boolean big) {
+		if ( true )return(null);
 		try {
   		int flags = SHGFI_ICON;
   		flags |= big ? SHGFI_LARGEICON : SHGFI_SMALLICON;
