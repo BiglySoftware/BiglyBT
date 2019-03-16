@@ -69,7 +69,6 @@ import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pif.ui.components.UITextArea;
 import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.config.ParameterListener;
 import com.biglybt.pif.ui.menus.MenuItem;
@@ -87,6 +86,7 @@ import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.magnet.MagnetPlugin;
 import com.biglybt.plugin.magnet.MagnetPluginProgressListener;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
+import com.biglybt.util.MapUtils;
 
 public class
 BuddyPlugin
@@ -194,19 +194,14 @@ BuddyPlugin
 	private List<String>			public_profile	= new ArrayList<>();
 	
 	private boolean			ready_to_publish;
-	private publishDetails	current_publish		= new publishDetails();
-	private publishDetails	latest_publish		= current_publish;
-	private long			last_publish_start;
-	private TimerEvent		republish_delay_event;
-
+	
+	private CopyOnWriteList<DDBDetails>	ddb_details = new CopyOnWriteList<>();
+	
 	private BloomFilter		unauth_bloom;
 	private long			unauth_bloom_create_time;
 	private BloomFilter	ygm_unauth_bloom;
 
 
-	private AsyncDispatcher	publish_dispatcher = new AsyncDispatcher();
-
-	private	DistributedDatabase 	ddb;
 
 	private CryptoHandler ecc_handler = CryptoManagerFactory.getSingleton().getECCHandler();
 
@@ -233,8 +228,6 @@ BuddyPlugin
 	private Random	random = RandomUtils.SECURE_RANDOM;
 
 	private BuddyPluginAZ2		az2_handler;
-
-	private List<DistributedDatabaseContact>	publish_write_contacts = new ArrayList<>();
 
 	private int		status_seq;
 
@@ -854,28 +847,36 @@ BuddyPlugin
 	startup()
 	{
 		try{
-			ddb = plugin_interface.getDistributedDatabase();
+			List<DistributedDatabase> ddbs = plugin_interface.getUtilities().getDistributedDatabases( new String[]{ AENetworkClassifier.AT_PUBLIC, });//  AENetworkClassifier.AT_I2P });
 
-			if ( !ddb.isAvailable()){
+			for ( DistributedDatabase ddb: ddbs ){
+			
+				if ( ddb.isAvailable()){
+					
+					DDBDetails details = new DDBDetails( ddb );
+					
+					ddb_details.add( details );
+				
+					// pick up initial values before enabling
 
-				throw( new Exception( "DDB Unavailable" ));
+					ddb.addListener(
+						new DistributedDatabaseListener()
+						{
+							@Override
+							public void
+							event(
+								DistributedDatabaseEvent event )
+							{
+								if ( event.getType() == DistributedDatabaseEvent.ET_LOCAL_CONTACT_CHANGED ){
+
+									updateIP();
+								}
+							}
+						});
+				}
 			}
-				// pick up initial values before enabling
+			
 
-			ddb.addListener(
-				new DistributedDatabaseListener()
-				{
-					@Override
-					public void
-					event(
-						DistributedDatabaseEvent event )
-					{
-						if ( event.getType() == DistributedDatabaseEvent.ET_LOCAL_CONTACT_CHANGED ){
-
-							updateIP();
-						}
-					}
-				});
 
 			updateIP();
 
@@ -908,7 +909,10 @@ BuddyPlugin
 					keyChanged(
 						CryptoHandler handler )
 					{
-						updateKey();
+						for ( DDBDetails details: ddb_details ){
+
+							details.updateKey();
+						}
 					}
 
 					@Override
@@ -920,10 +924,11 @@ BuddyPlugin
 
 						if ( unlocked ){
 
-							if ( latest_publish.isEnabled()){
-
-								updatePublish( latest_publish );
+							for ( DDBDetails details: ddb_details ){
+								
+								details.updatePublish();
 							}
+							
 						}else{
 
 							new AEThread2( "BuddyPlugin:disc", true )
@@ -1002,18 +1007,11 @@ BuddyPlugin
 
 	protected void
 	setClassicEnabledInternal(
-		boolean		_enabled )
+		boolean		enabled )
 	{
-		synchronized( this ){
-
-			if ( latest_publish.isEnabled() != _enabled ){
-
-				publishDetails new_publish = latest_publish.getCopy();
-
-				new_publish.setEnabled( _enabled );
-
-				updatePublish( new_publish );
-			}
+		for ( DDBDetails details: ddb_details ){
+			
+			details.setEnabled( enabled );
 		}
 	}
 
@@ -1063,7 +1061,14 @@ BuddyPlugin
 	public int
 	getOnlineStatus()
 	{
-		return( latest_publish.getOnlineStatus());
+		List<DDBDetails> temp = ddb_details.getList();
+		
+		if ( temp.size() > 0 ){
+			
+			return( temp.get(0).getOnlineStatus());
+		}
+		
+		return( STATUS_ONLINE );
 	}
 
 	public boolean
@@ -1354,7 +1359,7 @@ BuddyPlugin
 								return( false );
 							}
 
-							final String originator = connection.getEndpoint().getNotionalAddress().getAddress().getHostAddress();
+							final String originator = AddressUtils.getHostAddress( connection.getEndpoint().getNotionalAddress());
 
 							if ( TRACE ){
 								System.out.println( "accept " + originator );
@@ -1669,57 +1674,18 @@ BuddyPlugin
 	protected void
 	updateListenPorts()
 	{
-		synchronized( this ){
-
-			int	tcp_port = COConfigurationManager.getIntParameter( "TCP.Listen.Port" );
-			boolean	tcp_enabled = COConfigurationManager.getBooleanParameter( "TCP.Listen.Port.Enable" );
-			int	udp_port = COConfigurationManager.getIntParameter("UDP.Listen.Port" );
-			boolean	udp_enabled = COConfigurationManager.getBooleanParameter( "UDP.Listen.Port.Enable" );
-
-			if ( !tcp_enabled ){
-
-				tcp_port = 0;
-			}
-
-			if ( !udp_enabled ){
-
-				udp_port = 0;
-			}
-
-			if ( 	latest_publish.getTCPPort() != tcp_port ||
-					latest_publish.getUDPPort() != udp_port ){
-
-				publishDetails new_publish = latest_publish.getCopy();
-
-				new_publish.setTCPPort( tcp_port );
-				new_publish.setUDPPort( udp_port );
-
-				updatePublish( new_publish );
-			}
+		for ( DDBDetails details: ddb_details ){
+			
+			details.updateListenPorts();
 		}
 	}
 
 	protected void
 	updateIP()
 	{
-		if ( ddb == null || !ddb.isAvailable()){
-
-			return;
-		}
-
-		synchronized( this ){
-
-			InetAddress public_ip = ddb.getLocalContact().getAddress().getAddress();
-
-			if ( 	latest_publish.getIP() == null ||
-					!latest_publish.getIP().equals( public_ip )){
-
-				publishDetails new_publish = latest_publish.getCopy();
-
-				new_publish.setIP( public_ip );
-
-				updatePublish( new_publish );
-			}
+		for ( DDBDetails details: ddb_details ){
+			
+			details.updateIP();
 		}
 	}
 
@@ -1733,19 +1699,10 @@ BuddyPlugin
 
 			new_nick = null;
 		}
-
-		synchronized( this ){
-
-			String	old_nick = latest_publish.getNickName();
-
-			if ( !stringsEqual( new_nick, old_nick )){
-
-				publishDetails new_publish = latest_publish.getCopy();
-
-				new_publish.setNickName( new_nick );
-
-				updatePublish( new_publish );
-			}
+		
+		for ( DDBDetails details: ddb_details ){
+			
+			details.updateNickName( new_nick );
 		}
 	}
 
@@ -1753,21 +1710,13 @@ BuddyPlugin
 	updateOnlineStatus(
 		int		new_status )
 	{
-		boolean	changed;
+		boolean	changed = false;
 
-		synchronized( this ){
-
-			int	old_status = latest_publish.getOnlineStatus();
-
-			changed = old_status != new_status;
-
-			if ( changed ){
-
-				publishDetails new_publish = latest_publish.getCopy();
-
-				new_publish.setOnlineStatus( new_status );
-
-				updatePublish( new_publish );
+		for ( DDBDetails details: ddb_details ){
+			
+			if ( details.updateOnlineStatus( new_status )){
+				
+				changed = true;
 			}
 		}
 
@@ -1817,305 +1766,18 @@ BuddyPlugin
 		return( s1.equals( s2 ));
 	}
 
-	protected void
-	updateKey()
-	{
-		synchronized( this ){
-
-			publishDetails new_publish = latest_publish.getCopy();
-
-			new_publish.setPublicKey( null );
-
-			updatePublish( new_publish );
-		}
-	}
-
-	protected void
-	updatePublish(
-		final publishDetails	details )
-	{
-		latest_publish = details;
-
-		if ( ddb == null || !ready_to_publish ){
-
-			return;
-		}
-
-		publish_dispatcher.dispatch(
-			new AERunnable()
-			{
-				@Override
-				public void
-				runSupport()
-				{
-						// only execute the most recent publish
-
-					if ( publish_dispatcher.getQueueSize() > 0 ){
-
-						return;
-					}
-
-					updatePublishSupport( details );
-				}
-			});
-	}
-
-	protected void
-	updatePublishSupport(
-		publishDetails	details )
-	{
-		byte[]	key_to_remove = null;
-
-		publishDetails	existing_details;
-
-		boolean	log_this;
-
-		synchronized( this ){
-
-			log_this = !current_publish.getString().equals( details.getString());
-
-			existing_details = current_publish;
-
-			if ( !details.isEnabled()){
-
-				if ( current_publish.isPublished()){
-
-					key_to_remove	= current_publish.getPublicKey();
-				}
-			}else{
-
-				if ( details.getPublicKey() == null ){
-
-					try{
-						details.setPublicKey( ecc_handler.getPublicKey( "Creating online status key" ));
-
-					}catch( Throwable e ){
-
-						log( null, "Failed to publish details", e );
-
-						return;
-					}
-				}
-
-				if ( current_publish.isPublished()){
-
-					byte[]	existing_key = current_publish.getPublicKey();
-
-					if ( !Arrays.equals( existing_key, details.getPublicKey())){
-
-						key_to_remove = existing_key;
-					}
-				}
-			}
-
-			current_publish = details;
-		}
-
-		if ( key_to_remove != null ){
-
-			log( null, "Removing old status publish: " + existing_details.getString());
-
-			try{
-				ddb.delete(
-					new DistributedDatabaseListener()
-					{
-						@Override
-						public void
-						event(
-							DistributedDatabaseEvent		event )
-						{
-						}
-					},
-					getStatusKey( key_to_remove, "Friend status de-registration for old key" ));
-
-			}catch( Throwable e ){
-
-				log( null, "Failed to remove existing publish", e );
-			}
-		}
-
-		if ( details.isEnabled()){
-
-				// ensure we have a sensible ip
-
-			InetAddress ip = details.getIP();
-
-			if ( ip.isLoopbackAddress() || ip.isLinkLocalAddress() || ip.isSiteLocalAddress()){
-
-				log( null, "Can't publish as ip address is invalid: " + details.getString());
-
-				return;
-			}
-
-			details.setPublished( true );
-
-			Map	payload = new HashMap();
-
-			if ( details.getTCPPort() > 0 ){
-
-				payload.put( "t", new Long(  details.getTCPPort() ));
-			}
-
-			if (  details.getUDPPort() > 0 ){
-
-				payload.put( "u", new Long( details.getUDPPort() ));
-			}
-
-			payload.put( "i", ip.getAddress());
-
-			String	nick = details.getNickName();
-
-			if ( nick != null ){
-
-				if ( nick.length() > 32 ){
-
-					nick = nick.substring( 0, 32 );
-				}
-
-				payload.put( "n", nick );
-			}
-
-			payload.put( "o", new Long( details.getOnlineStatus()));
-
-			int	next_seq = ++status_seq;
-
-			if ( next_seq == 0 ){
-
-				next_seq = ++status_seq;
-			}
-
-			details.setSequence( next_seq );
-
-			payload.put( "s", new Long( next_seq ));
-
-			payload.put( "v", new Long( VERSION_CURRENT ));
-
-			boolean	failed_to_get_key = true;
-
-			try{
-				byte[] data = BEncoder.encode( payload );
-
-				DistributedDatabaseKey	key = getStatusKey( details.getPublicKey(), "My buddy status registration " + payload );
-
-				byte[] signature = ecc_handler.sign( data, "Friend online status" );
-
-				failed_to_get_key = false;
-
-				byte[]	signed_payload = new byte[ 1 + signature.length + data.length ];
-
-				signed_payload[0] = (byte)signature.length;
-
-				System.arraycopy( signature, 0, signed_payload, 1, signature.length );
-				System.arraycopy( data, 0, signed_payload, 1 + signature.length, data.length );
-
-				DistributedDatabaseValue	value = ddb.createValue( signed_payload );
-
-				final AESemaphore	sem = new AESemaphore( "BuddyPlugin:reg" );
-
-				if ( log_this ){
-
-					logMessage(null,  "Publishing status starts: " + details.getString());
-				}
-
-				last_publish_start = SystemTime.getMonotonousTime();
-
-				ddb.write(
-					new DistributedDatabaseListener()
-					{
-						private List<DistributedDatabaseContact>	write_contacts = new ArrayList<>();
-
-						@Override
-						public void
-						event(
-							DistributedDatabaseEvent		event )
-						{
-							int	type = event.getType();
-
-							if ( type == DistributedDatabaseEvent.ET_VALUE_WRITTEN ){
-
-								write_contacts.add( event.getContact());
-
-							}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
-										type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
-
-								synchronized( publish_write_contacts ){
-
-									publish_write_contacts.clear();
-
-									publish_write_contacts.addAll( write_contacts );
-								}
-
-								sem.release();
-							}
-						}
-					},
-					key,
-					value );
-
-				sem.reserve();
-
-				if ( log_this ){
-
-					logMessage( null, "My status publish complete" );
-				}
-			}catch( Throwable e ){
-
-				logMessage( null, "Failed to publish online status", e );
-
-				if ( failed_to_get_key ){
-
-					synchronized( this ){
-
-						if ( republish_delay_event != null ){
-
-							return;
-						}
-
-						if ( 	last_publish_start == 0 ||
-								SystemTime.getMonotonousTime() - last_publish_start > STATUS_REPUBLISH_PERIOD ){
-
-							log( null, "Rescheduling publish as failed to get key" );
-
-							republish_delay_event = SimpleTimer.addEvent(
-								"BuddyPlugin:republish",
-								SystemTime.getCurrentTime() + 60*1000,
-								new TimerEventPerformer()
-								{
-									@Override
-									public void
-									perform(
-										TimerEvent event)
-									{
-										synchronized( BuddyPlugin.this ){
-
-											republish_delay_event = null;
-										}
-
-										if ( 	last_publish_start == 0 ||
-												SystemTime.getMonotonousTime() - last_publish_start > STATUS_REPUBLISH_PERIOD ){
-
-											if ( latest_publish.isEnabled()){
-
-												updatePublish( latest_publish );
-											}
-										}
-									}
-								});
-
-						}
-					}
-				}
-			}
-		}
-	}
-
 	protected int
 	getCurrentStatusSeq()
 	{
-		synchronized( this ){
+		for ( DDBDetails details: ddb_details ){
+		
+			synchronized( this ){
 
-			return( current_publish.getSequence());
+				return( details.current_publish.getSequence());
+			}
 		}
+		
+		return( 0 );
 	}
 
 	protected void
@@ -2138,106 +1800,10 @@ BuddyPlugin
 			}
 		}
 
-		if ( ddb != null ){
-
-			boolean	restarting = CoreFactory.isCoreAvailable() ? CoreFactory.getSingleton().isRestarting() : false;
-
-			logMessage( null, "   closing buddy connections" );
-
-			for (int i=0;i<buddies.size();i++){
-
-				((BuddyPluginBuddy)buddies.get(i)).sendCloseRequest( restarting );
-			}
-
-			if ( !restarting ){
-
-				logMessage( null, "   updating online status" );
-
-				List	contacts = new ArrayList();
-
-				synchronized( publish_write_contacts ){
-
-					contacts.addAll( publish_write_contacts );
-				}
-
-				byte[] key_to_remove;
-
-				synchronized( this ){
-
-					key_to_remove	= current_publish.getPublicKey();
-				}
-
-				if ( contacts.size() == 0 || key_to_remove == null ){
-
-					return;
-				}
-
-				DistributedDatabaseContact[] contact_a = new DistributedDatabaseContact[contacts.size()];
-
-				contacts.toArray( contact_a );
-
-				try{
-					ddb.delete(
-						new DistributedDatabaseListener()
-						{
-							@Override
-							public void
-							event(
-								DistributedDatabaseEvent		event )
-							{
-								if ( event.getType() == DistributedDatabaseEvent.ET_VALUE_DELETED ){
-
-									// System.out.println( "Deleted status from " + event.getContact().getName());
-								}
-							}
-						},
-						getStatusKey( key_to_remove, "Friend status de-registration for closedown" ),
-						contact_a );
-
-				}catch( Throwable e ){
-
-					log( null, "Failed to remove existing publish", e );
-				}
-			}
+		for ( DDBDetails details: ddb_details ){
+			
+			details.closedown();
 		}
-	}
-
-	protected DistributedDatabaseKey
-	getStatusKey(
-		byte[]	public_key,
-		String	reason )
-
-		throws Exception
-	{
-		byte[]	key_prefix = "azbuddy:status".getBytes();
-
-		byte[]	key_bytes = new byte[ key_prefix.length + public_key.length ];
-
-		System.arraycopy( key_prefix, 0, key_bytes, 0, key_prefix.length );
-		System.arraycopy( public_key, 0, key_bytes, key_prefix.length, public_key.length );
-
-		DistributedDatabaseKey key = ddb.createKey( key_bytes, reason );
-
-		return( key );
-	}
-
-	protected DistributedDatabaseKey
-	getYGMKey(
-		byte[]	public_key,
-		String	reason )
-
-		throws Exception
-	{
-		byte[]	key_prefix = "azbuddy:ygm".getBytes();
-
-		byte[]	key_bytes = new byte[ key_prefix.length + public_key.length ];
-
-		System.arraycopy( key_prefix, 0, key_bytes, 0, key_prefix.length );
-		System.arraycopy( public_key, 0, key_bytes, key_prefix.length, public_key.length );
-
-		DistributedDatabaseKey key = ddb.createKey( key_bytes, reason );
-
-		return( key );
 	}
 
 	protected void
@@ -2330,9 +1896,20 @@ BuddyPlugin
 									int	tcp_port = ((Long)details.get( "tcp" )).intValue();
 									int	udp_port = ((Long)details.get( "udp" )).intValue();
 
-									buddy.setCachedStatus( ip, tcp_port, udp_port );
+									buddy.setCachedStatus( new InetSocketAddress( ip, 0 ), tcp_port, udp_port );
 
 								}catch( Throwable e ){
+								}
+							}else{
+								
+								String host = MapUtils.getMapString( details, "host", null );
+								
+								if ( host != null ){
+									
+									int	tcp_port = ((Long)details.get( "tcp" )).intValue();
+									int	udp_port = ((Long)details.get( "udp" )).intValue();
+
+									buddy.setCachedStatus( InetSocketAddress.createUnresolved(host, 0), tcp_port, udp_port );
 								}
 							}
 
@@ -2440,13 +2017,21 @@ BuddyPlugin
 
 					if ( connected ){
 
-						InetAddress	ip 			= buddy.getIP();
-						int			tcp_port	= buddy.getTCPPort();
-						int			udp_port	= buddy.getUDPPort();
+						InetSocketAddress	isa 		= buddy.getIP();
+						int					tcp_port	= buddy.getTCPPort();
+						int					udp_port	= buddy.getUDPPort();
 
-						if ( ip != null ){
+						if ( isa != null ){
 
-							map.put( "ip", ip.getAddress());
+							if ( isa.isUnresolved()){
+								
+								map.put( "host", AddressUtils.getHostAddress( isa ));
+								
+							}else{
+								
+								map.put( "ip", isa.getAddress().getAddress());
+							}
+							
 							map.put( "tcp", new Long( tcp_port ));
 							map.put( "udp", new Long( udp_port ));
 						}
@@ -2735,9 +2320,9 @@ BuddyPlugin
 
 					if ( tick_count % STATUS_REPUBLISH_TICKS == 0 ){
 
-						if ( latest_publish.isEnabled()){
-
-							updatePublish( latest_publish );
+						for ( DDBDetails details: ddb_details ){
+							
+							details.updatePublish();
 						}
 					}
 
@@ -2838,101 +2423,33 @@ BuddyPlugin
 
 		log( buddy, "Updating buddy status: " + buddy.getString());
 
-		try{
-			final byte[]	public_key = buddy.getRawPublicKey();
-
-			DistributedDatabaseKey	key =
-				getStatusKey( public_key, "Friend status check for " + buddy.getName());
-
-			ddb.read(
-				new DistributedDatabaseListener()
-				{
-					private long	latest_time;
-					private Map		status;
-
-					@Override
-					public void
-					event(
-						DistributedDatabaseEvent		event )
-					{
-						int	type = event.getType();
-
-						if ( type == DistributedDatabaseEvent.ET_VALUE_READ ){
-
-							try{
-								DistributedDatabaseValue value = event.getValue();
-
-								long time = value.getCreationTime();
-
-								if ( time > latest_time ){
-
-									byte[] signed_stuff = (byte[])value.getValue( byte[].class );
-
-									Map	new_status = verifyAndExtract( signed_stuff, public_key );
-
-									if ( new_status != null ){
-
-										status = new_status;
-
-										latest_time = time;
-									}
-								}
-							}catch( Throwable e ){
-
-								log( buddy, "Read failed", e );
-							}
-						}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
-									type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
-
-							if ( status == null ){
-
-								buddy.statusCheckFailed();
-
-							}else{
-
-								try{
-									Long	l_tcp_port = (Long)status.get( "t" );
-									Long	l_udp_port = (Long)status.get( "u" );
-
-									int	tcp_port = l_tcp_port==null?0:l_tcp_port.intValue();
-									int udp_port = l_udp_port==null?0:l_udp_port.intValue();
-
-									InetAddress ip = InetAddress.getByAddress((byte[])status.get("i"));
-
-									String	nick = decodeString((byte[])status.get( "n" ));
-
-									Long	l_seq = (Long)status.get( "s" );
-
-									int		seq = l_seq==null?0:l_seq.intValue();
-
-									Long	l_os = (Long)status.get( "o" );
-
-									int		os = l_os==null?BuddyPlugin.STATUS_ONLINE:l_os.intValue();
-
-									Long	l_ver = (Long)status.get( "v" );
-
-									int		ver = l_ver==null?VERSION_INITIAL:l_ver.intValue();
-
-									buddy.statusCheckComplete( latest_time, ip, tcp_port, udp_port, nick, os, seq, ver );
-
-								}catch( Throwable e ){
-
-									buddy.statusCheckFailed();
-
-									log( buddy, "Status decode failed", e );
-								}
-							}
+		List<DDBDetails>	temp = ddb_details.getList();
+		
+		Runnable callback = 
+			new Runnable()
+			{
+				private int count;
+			
+				@Override
+				public void run(){
+					
+					synchronized( this ){
+						
+						count++;
+						
+						if ( count != temp.size()){
+							
+							return;
 						}
 					}
-				},
-				key,
-				120*1000 );
-
-		}catch( Throwable e ){
-
-			buddy.statusCheckFailed();
-
-			log( buddy, "Friend status update failed: " + buddy.getString(), e );
+					
+					buddy.statusCheckFailed();
+				}
+			};
+			
+		for ( DDBDetails details: temp ){
+			
+			details.updateBuddyStatus( buddy, callback );
 		}
 	}
 
@@ -3200,53 +2717,60 @@ BuddyPlugin
 	protected void
 	setMessagePending(
 		BuddyPluginBuddy			buddy,
-		final operationListener		listener )
+		operationListener			_listener )
 
 		throws BuddyPluginException
 	{
+		operationListener listener = 
+			new operationListener()
+			{
+				boolean	fired;
+				
+				@Override
+				public void complete(){
+					synchronized( this ){
+						
+						if ( fired ){
+							return;
+						}
+						
+						fired = true;
+					}
+					_listener.complete();
+				}
+			};
+			
 		try{
 			checkAvailable();
 
-			final String	reason = "Friend YGM write for " + buddy.getName();
-
-			Map	payload = new HashMap();
-
-			payload.put( "r", new Long( random.nextLong()));
-
-			byte[] signed_payload = signAndInsert( payload, reason);
-
-			Map	envelope = new HashMap();
-
-			envelope.put( "pk", ecc_handler.getPublicKey( reason ));
-			envelope.put( "ss", signed_payload );
-
-			DistributedDatabaseValue	value = ddb.createValue( BEncoder.encode( envelope ));
-
-			logMessage( buddy, reason + " starts: " + payload );
-
-			DistributedDatabaseKey	key = getYGMKey( buddy.getRawPublicKey(), reason );
-
-			ddb.write(
-				new DistributedDatabaseListener()
+			List<DDBDetails> temp = ddb_details.getList();
+			
+			operationListener listener_wrapper =
+				new operationListener()
 				{
+					int	count = 0;
+				
 					@Override
-					public void
-					event(
-						DistributedDatabaseEvent		event )
+					public void 
+					complete()
 					{
-						int	type = event.getType();
-
-						if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
-								type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
-
-							logMessage( buddy, reason + " complete"  );
-
-							listener.complete();
+						synchronized( this ){
+							count++;
+							
+							if ( count < temp.size()){
+								
+								return;
+							}
 						}
+						
+						listener.complete();
 					}
-				},
-				key,
-				value );
+				};
+				
+			for ( DDBDetails details: temp ){
+				
+				details.setMessagePending( buddy, listener_wrapper );
+			}
 
 		}catch( Throwable e ){
 
@@ -3274,154 +2798,9 @@ BuddyPlugin
 			}
 		}
 
-		try{
-			String	reason = "Friend YGM check";
-
-			byte[] public_key = ecc_handler.getPublicKey( reason );
-
-			DistributedDatabaseKey	key = getYGMKey( public_key, reason );
-
-			ddb.read(
-				new DistributedDatabaseListener()
-				{
-					private List		new_ygm_buddies = new ArrayList();
-					private boolean	 	unauth_permitted = false;
-
-					@Override
-					public void
-					event(
-						DistributedDatabaseEvent		event )
-					{
-						int	type = event.getType();
-
-						if ( type == DistributedDatabaseEvent.ET_VALUE_READ ){
-
-							try{
-								DistributedDatabaseValue value = event.getValue();
-
-								byte[]	envelope = (byte[])value.getValue( byte[].class );
-
-								Map	map = BDecoder.decode( envelope );
-
-								byte[]	pk = (byte[])map.get( "pk" );
-
-								if ( pk == null ){
-
-									return;
-								}
-
-								String	pk_str = Base32.encode( pk );
-
-								BuddyPluginBuddy buddy = getBuddyFromPublicKey( pk_str );
-
-								if ( buddy == null || !buddy.isAuthorised() ){
-
-									if ( buddy == null ){
-
-										log( buddy, "YGM entry from unknown friend '" + pk_str + "' - ignoring" );
-
-									}else{
-
-										log( buddy, "YGM entry from unauthorised friend '" + pk_str + "' - ignoring" );
-									}
-
-									byte[] address = event.getContact().getAddress().getAddress().getAddress();
-
-									synchronized( BuddyPlugin.this ){
-
-										if ( ygm_unauth_bloom == null ){
-
-											ygm_unauth_bloom = BloomFilterFactory.createAddOnly(512);
-										}
-
-										if ( !ygm_unauth_bloom.contains( address )){
-
-											ygm_unauth_bloom.add( address );
-
-											unauth_permitted = true;
-										}
-									}
-								}else{
-
-									byte[]	signed_stuff = (byte[])map.get( "ss" );
-
-									Map	payload = verifyAndExtract( signed_stuff, pk );
-
-									if ( payload != null ){
-
-										long	rand = ((Long)payload.get("r")).longValue();
-
-										if ( buddy.addYGMMarker( rand )){
-
-											new_ygm_buddies.add( buddy );
-										}
-									}
-								}
-							}catch( Throwable e ){
-
-								log( null, "Read failed", e );
-							}
-						}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
-									type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
-
-							if ( new_ygm_buddies.size() > 0 || unauth_permitted ){
-
-								BuddyPluginBuddy[] b = new BuddyPluginBuddy[new_ygm_buddies.size()];
-
-								new_ygm_buddies.toArray( b );
-
-								fireYGM( b );
-							}
-						}
-					}
-				},
-				key,
-				120*1000,
-				DistributedDatabase.OP_EXHAUSTIVE_READ );
-
-			boolean	write_bogus_ygm = false;
-
-			synchronized( this ){
-
-				if ( !bogus_ygm_written ){
-
-					bogus_ygm_written = write_bogus_ygm = true;
-				}
-			}
-
-			if ( write_bogus_ygm ){
-
-				final String	reason2 = "Friend YGM write for myself";
-
-				Map	envelope = new HashMap();
-
-				DistributedDatabaseValue	value = ddb.createValue( BEncoder.encode( envelope ));
-
-				logMessage( null, reason2 + " starts" );
-
-				ddb.write(
-					new DistributedDatabaseListener()
-					{
-						@Override
-						public void
-						event(
-							DistributedDatabaseEvent		event )
-						{
-							int	type = event.getType();
-
-							if ( type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
-
-								logMessage( null, reason2 + " complete"  );
-							}
-						}
-					},
-					key,
-					value );
-			}
-
-		}catch( Throwable e ){
-
-			logMessage( null, "YGM check failed", e );
+		for ( DDBDetails details: ddb_details ){
+			
+			details.checkMessagePending();
 		}
 	}
 
@@ -4685,27 +4064,946 @@ BuddyPlugin
 		logger.log( str + ": " + Debug.getNestedExceptionMessageAndStack( e ));
 	}
 
+	private class
+	DDBDetails
+	{
+		private DistributedDatabase	ddb;
+	
+		private PublishDetails	current_publish;
+		private PublishDetails	latest_publish;
+		private long			last_publish_start;
+		private TimerEvent		republish_delay_event;
+
+		private List<DistributedDatabaseContact>	publish_write_contacts = new ArrayList<>();
+
+		private AsyncDispatcher	publish_dispatcher = new AsyncDispatcher();
+
+		private
+		DDBDetails(
+			DistributedDatabase		_ddb )
+		{
+			ddb = _ddb;
+
+			latest_publish = current_publish = new PublishDetails( ddb.getNetwork());
+		}
+		
+		private void
+		setEnabled(
+			boolean		_enabled )
+		{
+			synchronized( this ){
+
+				if ( latest_publish.isEnabled() != _enabled ){
+
+					PublishDetails new_publish = latest_publish.getCopy();
+
+					new_publish.setEnabled( _enabled );
+
+					updatePublish( new_publish );
+				}
+			}
+		}
+		
+		protected void
+		updateListenPorts()
+		{
+			synchronized( this ){
+
+				int	tcp_port;
+				int udp_port;
+				
+				if ( latest_publish.getNetwork() == AENetworkClassifier.AT_PUBLIC ){
+					
+					tcp_port = COConfigurationManager.getIntParameter( "TCP.Listen.Port" );
+					
+					boolean	tcp_enabled = COConfigurationManager.getBooleanParameter( "TCP.Listen.Port.Enable" );
+					
+					udp_port = COConfigurationManager.getIntParameter("UDP.Listen.Port" );
+					
+					boolean	udp_enabled = COConfigurationManager.getBooleanParameter( "UDP.Listen.Port.Enable" );
+		
+					if ( !tcp_enabled ){
+		
+						tcp_port = 0;
+					}
+		
+					if ( !udp_enabled ){
+		
+						udp_port = 0;
+					}
+				}else{
+					
+					tcp_port	= 6881;
+					udp_port	= 0;
+				}
+				
+				if ( 	latest_publish.getTCPPort() != tcp_port ||
+						latest_publish.getUDPPort() != udp_port ){
+
+					PublishDetails new_publish = latest_publish.getCopy();
+
+					new_publish.setTCPPort( tcp_port );
+					new_publish.setUDPPort( udp_port );
+
+					updatePublish( new_publish );
+				}
+			}
+		}
+		
+		protected void
+		updateIP()
+		{
+			if ( ddb == null || !ddb.isAvailable()){
+
+				return;
+			}
+
+			synchronized( this ){
+
+				InetSocketAddress public_ip = ddb.getLocalContact().getAddress();
+
+				if ( 	latest_publish.getIP() == null ||
+						!latest_publish.getIP().equals( public_ip )){
+
+					PublishDetails new_publish = latest_publish.getCopy();
+
+					new_publish.setIP( public_ip );
+
+					updatePublish( new_publish );
+				}
+			}
+		}
+		
+		protected void
+		updateNickName(
+			String		new_nick )
+		{
+			synchronized( this ){
+
+				String	old_nick = latest_publish.getNickName();
+
+				if ( !stringsEqual( new_nick, old_nick )){
+
+					PublishDetails new_publish = latest_publish.getCopy();
+
+					new_publish.setNickName( new_nick );
+
+					updatePublish( new_publish );
+				}
+			}
+		}
+		
+		protected boolean
+		updateOnlineStatus(
+			int		new_status )
+		{
+			boolean	changed;
+			
+			synchronized( this ){
+
+				int	old_status = latest_publish.getOnlineStatus();
+
+				changed = old_status != new_status;
+
+				if ( changed ){
+
+					PublishDetails new_publish = latest_publish.getCopy();
+
+					new_publish.setOnlineStatus( new_status );
+
+					updatePublish( new_publish );
+				}
+			}
+
+			return( changed );
+		}
+		
+		private int
+		getOnlineStatus()
+		{
+			return( latest_publish.getOnlineStatus());
+		}
+		
+		private void
+		checkMessagePending()
+		{
+			try{
+				String	reason = "Friend YGM check";
+
+				byte[] public_key = ecc_handler.getPublicKey( reason );
+
+				DistributedDatabaseKey	key = getYGMKey( public_key, reason );
+
+				ddb.read(
+					new DistributedDatabaseListener()
+					{
+						private List		new_ygm_buddies = new ArrayList();
+						private boolean	 	unauth_permitted = false;
+
+						@Override
+						public void
+						event(
+							DistributedDatabaseEvent		event )
+						{
+							int	type = event.getType();
+
+							if ( type == DistributedDatabaseEvent.ET_VALUE_READ ){
+
+								try{
+									DistributedDatabaseValue value = event.getValue();
+
+									byte[]	envelope = (byte[])value.getValue( byte[].class );
+
+									Map	map = BDecoder.decode( envelope );
+
+									byte[]	pk = (byte[])map.get( "pk" );
+
+									if ( pk == null ){
+
+										return;
+									}
+
+									String	pk_str = Base32.encode( pk );
+
+									BuddyPluginBuddy buddy = getBuddyFromPublicKey( pk_str );
+
+									if ( buddy == null || !buddy.isAuthorised() ){
+
+										if ( buddy == null ){
+
+											log( buddy, "YGM entry from unknown friend '" + pk_str + "' - ignoring" );
+
+										}else{
+
+											log( buddy, "YGM entry from unauthorised friend '" + pk_str + "' - ignoring" );
+										}
+
+										byte[] address = event.getContact().getAddress().getAddress().getAddress();
+
+										synchronized( BuddyPlugin.this ){
+
+											if ( ygm_unauth_bloom == null ){
+
+												ygm_unauth_bloom = BloomFilterFactory.createAddOnly(512);
+											}
+
+											if ( !ygm_unauth_bloom.contains( address )){
+
+												ygm_unauth_bloom.add( address );
+
+												unauth_permitted = true;
+											}
+										}
+									}else{
+
+										byte[]	signed_stuff = (byte[])map.get( "ss" );
+
+										Map	payload = verifyAndExtract( signed_stuff, pk );
+
+										if ( payload != null ){
+
+											long	rand = ((Long)payload.get("r")).longValue();
+
+											if ( buddy.addYGMMarker( rand )){
+
+												new_ygm_buddies.add( buddy );
+											}
+										}
+									}
+								}catch( Throwable e ){
+
+									log( null, "Read failed", e );
+								}
+							}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
+										type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
+
+								if ( new_ygm_buddies.size() > 0 || unauth_permitted ){
+
+									BuddyPluginBuddy[] b = new BuddyPluginBuddy[new_ygm_buddies.size()];
+
+									new_ygm_buddies.toArray( b );
+
+									fireYGM( b );
+								}
+							}
+						}
+					},
+					key,
+					120*1000,
+					DistributedDatabase.OP_EXHAUSTIVE_READ );
+
+				boolean	write_bogus_ygm = false;
+
+				synchronized( this ){
+
+					if ( !bogus_ygm_written ){
+
+						bogus_ygm_written = write_bogus_ygm = true;
+					}
+				}
+
+				if ( write_bogus_ygm ){
+
+					final String	reason2 = "Friend YGM write for myself";
+
+					Map	envelope = new HashMap();
+
+					DistributedDatabaseValue	value = ddb.createValue( BEncoder.encode( envelope ));
+
+					logMessage( null, reason2 + " starts" );
+
+					ddb.write(
+						new DistributedDatabaseListener()
+						{
+							@Override
+							public void
+							event(
+								DistributedDatabaseEvent		event )
+							{
+								int	type = event.getType();
+
+								if ( type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
+
+									logMessage( null, reason2 + " complete"  );
+								}
+							}
+						},
+						key,
+						value );
+				}
+
+			}catch( Throwable e ){
+
+				logMessage( null, "YGM check failed", e );
+			}
+		}
+		
+		protected void
+		setMessagePending(
+			BuddyPluginBuddy			buddy,
+			operationListener			listener )
+
+			throws BuddyPluginException
+		{
+			try{
+				final String	reason = "Friend YGM write for " + buddy.getName();
+
+				Map	payload = new HashMap();
+
+				payload.put( "r", new Long( random.nextLong()));
+
+				byte[] signed_payload = signAndInsert( payload, reason);
+
+				Map	envelope = new HashMap();
+
+				envelope.put( "pk", ecc_handler.getPublicKey( reason ));
+				envelope.put( "ss", signed_payload );
+
+				DistributedDatabaseValue	value = ddb.createValue( BEncoder.encode( envelope ));
+
+				logMessage( buddy, reason + " starts: " + payload );
+
+				DistributedDatabaseKey	key = getYGMKey( buddy.getRawPublicKey(), reason );
+
+				ddb.write(
+					new DistributedDatabaseListener()
+					{
+						@Override
+						public void
+						event(
+							DistributedDatabaseEvent		event )
+						{
+							int	type = event.getType();
+
+							if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
+									type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
+
+								logMessage( buddy, reason + " complete"  );
+
+								listener.complete();
+							}
+						}
+					},
+					key,
+					value );
+
+			}catch( Throwable e ){
+
+				try{
+					rethrow( "Failed to publish YGM", e );
+
+				}finally{
+
+					listener.complete();
+				}
+			}
+		}
+		
+		protected void
+		updateKey()
+		{
+			synchronized( this ){
+
+				PublishDetails new_publish = latest_publish.getCopy();
+
+				new_publish.setPublicKey( null );
+
+				updatePublish( new_publish );
+			}
+		}
+
+		protected void
+		updatePublish()
+		{
+			if ( latest_publish.isEnabled()){
+
+				updatePublish( latest_publish );
+			}
+		}
+		
+		protected void
+		updatePublish(
+			final PublishDetails	details )
+		{
+			latest_publish = details;
+
+			if ( ddb == null || !ready_to_publish ){
+
+				return;
+			}
+
+			publish_dispatcher.dispatch(
+				new AERunnable()
+				{
+					@Override
+					public void
+					runSupport()
+					{
+							// only execute the most recent publish
+
+						if ( publish_dispatcher.getQueueSize() > 0 ){
+
+							return;
+						}
+
+						updatePublishSupport( details );
+					}
+				});
+		}
+
+		protected void
+		updatePublishSupport(
+			PublishDetails	details )
+		{
+			byte[]	key_to_remove = null;
+
+			PublishDetails	existing_details;
+
+			boolean	log_this;
+
+			synchronized( this ){
+
+				log_this = !current_publish.getString().equals( details.getString());
+
+				existing_details = current_publish;
+
+				if ( !details.isEnabled()){
+
+					if ( current_publish.isPublished()){
+
+						key_to_remove	= current_publish.getPublicKey();
+					}
+				}else{
+
+					if ( details.getPublicKey() == null ){
+
+						try{
+							details.setPublicKey( ecc_handler.getPublicKey( "Creating online status key" ));
+
+						}catch( Throwable e ){
+
+							log( null, "Failed to publish details", e );
+
+							return;
+						}
+					}
+
+					if ( current_publish.isPublished()){
+
+						byte[]	existing_key = current_publish.getPublicKey();
+
+						if ( !Arrays.equals( existing_key, details.getPublicKey())){
+
+							key_to_remove = existing_key;
+						}
+					}
+				}
+
+				current_publish = details;
+			}
+
+			if ( key_to_remove != null ){
+
+				log( null, "Removing old status publish: " + existing_details.getString());
+
+				try{
+					ddb.delete(
+						new DistributedDatabaseListener()
+						{
+							@Override
+							public void
+							event(
+								DistributedDatabaseEvent		event )
+							{
+							}
+						},
+						getStatusKey( key_to_remove, "Friend status de-registration for old key" ));
+
+				}catch( Throwable e ){
+
+					log( null, "Failed to remove existing publish", e );
+				}
+			}
+
+			if ( details.isEnabled()){
+
+					// ensure we have a sensible ip
+
+				InetSocketAddress 	isa = details.getIP();
+				InetAddress			ia	= isa.getAddress();
+				
+				if ( ia != null && ( ia.isLoopbackAddress() || ia.isLinkLocalAddress() || ia.isSiteLocalAddress())){
+
+					log( null, "Can't publish as ip address is invalid: " + details.getString());
+
+					return;
+				}
+
+				details.setPublished( true );
+
+				Map	payload = new HashMap();
+
+				if ( details.getTCPPort() > 0 ){
+
+					payload.put( "t", new Long(  details.getTCPPort() ));
+				}
+
+				if (  details.getUDPPort() > 0 ){
+
+					payload.put( "u", new Long( details.getUDPPort() ));
+				}
+				
+				if ( ia != null ){
+					
+					payload.put( "i", ia.getAddress());
+					
+				}else{
+					
+					String ip_str = AddressUtils.getHostAddress( isa );
+
+					payload.put( "h", ip_str );
+				}
+				
+				String	nick = details.getNickName();
+
+				if ( nick != null ){
+
+					if ( nick.length() > 32 ){
+
+						nick = nick.substring( 0, 32 );
+					}
+
+					payload.put( "n", nick );
+				}
+
+				payload.put( "o", new Long( details.getOnlineStatus()));
+
+				int	next_seq = ++status_seq;
+
+				if ( next_seq == 0 ){
+
+					next_seq = ++status_seq;
+				}
+
+				details.setSequence( next_seq );
+
+				payload.put( "s", new Long( next_seq ));
+
+				payload.put( "v", new Long( VERSION_CURRENT ));
+
+				boolean	failed_to_get_key = true;
+
+				try{
+					byte[] data = BEncoder.encode( payload );
+
+					DistributedDatabaseKey	key = getStatusKey( details.getPublicKey(), "My buddy status registration " + payload );
+
+					byte[] signature = ecc_handler.sign( data, "Friend online status" );
+
+					failed_to_get_key = false;
+
+					byte[]	signed_payload = new byte[ 1 + signature.length + data.length ];
+
+					signed_payload[0] = (byte)signature.length;
+
+					System.arraycopy( signature, 0, signed_payload, 1, signature.length );
+					System.arraycopy( data, 0, signed_payload, 1 + signature.length, data.length );
+
+					DistributedDatabaseValue	value = ddb.createValue( signed_payload );
+
+					final AESemaphore	sem = new AESemaphore( "BuddyPlugin:reg" );
+
+					if ( log_this ){
+
+						logMessage(null,  "Publishing status starts: " + details.getString());
+					}
+
+					last_publish_start = SystemTime.getMonotonousTime();
+
+					ddb.write(
+						new DistributedDatabaseListener()
+						{
+							private List<DistributedDatabaseContact>	write_contacts = new ArrayList<>();
+
+							@Override
+							public void
+							event(
+								DistributedDatabaseEvent		event )
+							{
+								int	type = event.getType();
+
+								if ( type == DistributedDatabaseEvent.ET_VALUE_WRITTEN ){
+
+									write_contacts.add( event.getContact());
+
+								}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
+											type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
+
+									synchronized( publish_write_contacts ){
+
+										publish_write_contacts.clear();
+
+										publish_write_contacts.addAll( write_contacts );
+									}
+
+									sem.release();
+								}
+							}
+						},
+						key,
+						value );
+
+					sem.reserve();
+
+					if ( log_this ){
+
+						logMessage( null, "My status publish complete" );
+					}
+				}catch( Throwable e ){
+
+					logMessage( null, "Failed to publish online status", e );
+
+					if ( failed_to_get_key ){
+
+						synchronized( this ){
+
+							if ( republish_delay_event != null ){
+
+								return;
+							}
+
+							if ( 	last_publish_start == 0 ||
+									SystemTime.getMonotonousTime() - last_publish_start > STATUS_REPUBLISH_PERIOD ){
+
+								log( null, "Rescheduling publish as failed to get key" );
+
+								republish_delay_event = SimpleTimer.addEvent(
+									"BuddyPlugin:republish",
+									SystemTime.getCurrentTime() + 60*1000,
+									new TimerEventPerformer()
+									{
+										@Override
+										public void
+										perform(
+											TimerEvent event)
+										{
+											synchronized( BuddyPlugin.this ){
+
+												republish_delay_event = null;
+											}
+
+											if ( 	last_publish_start == 0 ||
+													SystemTime.getMonotonousTime() - last_publish_start > STATUS_REPUBLISH_PERIOD ){
+
+												if ( latest_publish.isEnabled()){
+
+													updatePublish( latest_publish );
+												}
+											}
+										}
+									});
+
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		protected void
+		updateBuddyStatus(
+			BuddyPluginBuddy	buddy,
+			Runnable			failed_callback )
+		{
+			try{
+				final byte[]	public_key = buddy.getRawPublicKey();
+
+				DistributedDatabaseKey	key =
+					getStatusKey( public_key, "Friend status check for " + buddy.getName());
+
+				ddb.read(
+					new DistributedDatabaseListener()
+					{
+						private long	latest_time;
+						private Map		status;
+
+						@Override
+						public void
+						event(
+							DistributedDatabaseEvent		event )
+						{
+							int	type = event.getType();
+
+							if ( type == DistributedDatabaseEvent.ET_VALUE_READ ){
+
+								try{
+									DistributedDatabaseValue value = event.getValue();
+
+									long time = value.getCreationTime();
+
+									if ( time > latest_time ){
+
+										byte[] signed_stuff = (byte[])value.getValue( byte[].class );
+
+										Map	new_status = verifyAndExtract( signed_stuff, public_key );
+
+										if ( new_status != null ){
+
+											status = new_status;
+
+											latest_time = time;
+										}
+									}
+								}catch( Throwable e ){
+
+									log( buddy, "Read failed", e );
+								}
+							}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
+										type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
+
+								if ( status == null ){
+
+									failed_callback.run();
+
+								}else{
+
+									try{
+										Long	l_tcp_port = (Long)status.get( "t" );
+										Long	l_udp_port = (Long)status.get( "u" );
+
+										int	tcp_port = l_tcp_port==null?0:l_tcp_port.intValue();
+										int udp_port = l_udp_port==null?0:l_udp_port.intValue();
+
+										byte[] b = (byte[])status.get("i");
+										
+										InetSocketAddress ias;
+										
+										if ( b != null ){
+										
+											InetAddress ip = InetAddress.getByAddress( b );
+											
+											ias = new InetSocketAddress( ip, 0 );
+											
+										}else{
+											
+											String host = MapUtils.getMapString( status, "h", null );
+											
+											ias = InetSocketAddress.createUnresolved( host, 0 );
+										}
+										
+										String	nick = decodeString((byte[])status.get( "n" ));
+
+										Long	l_seq = (Long)status.get( "s" );
+
+										int		seq = l_seq==null?0:l_seq.intValue();
+
+										Long	l_os = (Long)status.get( "o" );
+
+										int		os = l_os==null?BuddyPlugin.STATUS_ONLINE:l_os.intValue();
+
+										Long	l_ver = (Long)status.get( "v" );
+
+										int		ver = l_ver==null?VERSION_INITIAL:l_ver.intValue();
+
+										buddy.statusCheckComplete( latest_time, ias, tcp_port, udp_port, nick, os, seq, ver );
+
+									}catch( Throwable e ){
+
+										failed_callback.run();
+
+										log( buddy, "Status decode failed", e );
+									}
+								}
+							}
+						}
+					},
+					key,
+					120*1000 );
+
+			}catch( Throwable e ){
+
+				failed_callback.run();
+
+				log( buddy, "Friend status update failed: " + buddy.getString(), e );
+			}
+		}
+		
+		protected DistributedDatabaseKey
+		getStatusKey(
+			byte[]	public_key,
+			String	reason )
+
+			throws Exception
+		{
+			byte[]	key_prefix = "azbuddy:status".getBytes();
+
+			byte[]	key_bytes = new byte[ key_prefix.length + public_key.length ];
+
+			System.arraycopy( key_prefix, 0, key_bytes, 0, key_prefix.length );
+			System.arraycopy( public_key, 0, key_bytes, key_prefix.length, public_key.length );
+
+			DistributedDatabaseKey key = ddb.createKey( key_bytes, reason );
+
+			return( key );
+		}
+
+		protected DistributedDatabaseKey
+		getYGMKey(
+			byte[]	public_key,
+			String	reason )
+
+			throws Exception
+		{
+			byte[]	key_prefix = "azbuddy:ygm".getBytes();
+
+			byte[]	key_bytes = new byte[ key_prefix.length + public_key.length ];
+
+			System.arraycopy( key_prefix, 0, key_bytes, 0, key_prefix.length );
+			System.arraycopy( public_key, 0, key_bytes, key_prefix.length, public_key.length );
+
+			DistributedDatabaseKey key = ddb.createKey( key_bytes, reason );
+
+			return( key );
+		}
+		
+		private void
+		closedown()
+		{
+			if ( ddb != null ){
+	
+				boolean	restarting = CoreFactory.isCoreAvailable() ? CoreFactory.getSingleton().isRestarting() : false;
+	
+				logMessage( null, "   closing buddy connections" );
+	
+				for (int i=0;i<buddies.size();i++){
+	
+					((BuddyPluginBuddy)buddies.get(i)).sendCloseRequest( restarting );
+				}
+	
+				if ( !restarting ){
+	
+					logMessage( null, "   updating online status" );
+	
+					List	contacts = new ArrayList();
+	
+					synchronized( publish_write_contacts ){
+	
+						contacts.addAll( publish_write_contacts );
+					}
+	
+					byte[] key_to_remove;
+	
+					synchronized( this ){
+	
+						key_to_remove	= current_publish.getPublicKey();
+					}
+	
+					if ( contacts.size() == 0 || key_to_remove == null ){
+	
+						return;
+					}
+	
+					DistributedDatabaseContact[] contact_a = new DistributedDatabaseContact[contacts.size()];
+	
+					contacts.toArray( contact_a );
+	
+					try{
+						ddb.delete(
+							new DistributedDatabaseListener()
+							{
+								@Override
+								public void
+								event(
+									DistributedDatabaseEvent		event )
+								{
+									if ( event.getType() == DistributedDatabaseEvent.ET_VALUE_DELETED ){
+	
+										// System.out.println( "Deleted status from " + event.getContact().getName());
+									}
+								}
+							},
+							getStatusKey( key_to_remove, "Friend status de-registration for closedown" ),
+							contact_a );
+	
+					}catch( Throwable e ){
+	
+						log( null, "Failed to remove existing publish", e );
+					}
+				}
+			}
+		}
+	}
+	
 	private static class
-	publishDetails
+	PublishDetails
 		implements Cloneable
 	{
-		private byte[]			public_key;
-		private InetAddress		ip;
-		private int				tcp_port;
-		private int				udp_port;
-		private String			nick_name;
-		private int				online_status		= STATUS_ONLINE;
+		private final String				network;
+		
+		private byte[]				public_key;
+		private InetSocketAddress	ip;
+		private int					tcp_port;
+		private int					udp_port;
+		private String				nick_name;
+		private int					online_status		= STATUS_ONLINE;
 
-		private boolean			enabled;
-		private boolean			published;
+		private boolean				enabled;
+		private boolean				published;
 
-		private int				sequence;
+		private int					sequence;
 
-		protected publishDetails
+		private
+		PublishDetails(
+			String		_network )
+		{
+			network	= _network;
+		}
+		
+		protected PublishDetails
 		getCopy()
 		{
 			try{
-				publishDetails copy = (publishDetails)clone();
+				PublishDetails copy = (PublishDetails)clone();
 
 				copy.published = false;
 
@@ -4716,7 +5014,13 @@ BuddyPlugin
 				return( null);
 			}
 		}
-
+		
+		protected String
+		getNetwork()
+		{
+			return( network );
+		}
+		
 		protected boolean
 		isPublished()
 		{
@@ -4769,7 +5073,7 @@ BuddyPlugin
 			public_key	= k;
 		}
 
-		protected InetAddress
+		protected InetSocketAddress
 		getIP()
 		{
 			return( ip );
@@ -4777,7 +5081,7 @@ BuddyPlugin
 
 		protected void
 		setIP(
-			InetAddress	_ip )
+			InetSocketAddress	_ip )
 		{
 			ip	= _ip;
 		}

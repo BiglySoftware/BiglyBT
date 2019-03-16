@@ -72,10 +72,11 @@ BuddyPluginBuddy
 	
 	private int				last_status_seq;
 
-	private long			post_time;
-	private InetAddress		current_ip;
-	private int				tcp_port;
-	private int				udp_port;
+	private long				post_time;
+	private InetSocketAddress	current_ip;
+	private int					tcp_port;
+	private int					udp_port;
+	
 	private int				online_status	= BuddyPlugin.STATUS_ONLINE;	// default
 
 	private int				version		= BuddyPlugin.VERSION_CHAT;	// assume everyone now supports chat
@@ -734,13 +735,13 @@ BuddyPluginBuddy
 		plugin.removeBuddy( this );
 	}
 
-	public InetAddress
+	public InetSocketAddress
 	getIP()
 	{
 		return( current_ip );
 	}
 
-	public InetAddress
+	public InetSocketAddress
 	getAdjustedIP()
 	{
 		if ( current_ip == null ){
@@ -748,38 +749,43 @@ BuddyPluginBuddy
 			return( null );
 		}
 
-		InetSocketAddress address = new InetSocketAddress( current_ip, tcp_port );
+		if ( current_ip.isUnresolved()){
+			
+			return( current_ip );
+		}
+		
+		InetSocketAddress address = new InetSocketAddress( current_ip.getAddress(), tcp_port );
 
 		InetSocketAddress adjusted_address = AddressUtils.adjustTCPAddress( address, true );
 
 		if ( adjusted_address != address ){
 
-			return( adjusted_address.getAddress());
+			return( adjusted_address );
 		}
 
-		address = new InetSocketAddress( current_ip, udp_port );
+		address = new InetSocketAddress( current_ip.getAddress(), udp_port );
 
 		adjusted_address = AddressUtils.adjustUDPAddress( address, true );
 
 		if ( adjusted_address != address ){
 
-			return( adjusted_address.getAddress());
+			return( adjusted_address );
 		}
 
 		return( current_ip );
 	}
 
-	public List<InetAddress>
+	public List<InetSocketAddress>
 	getAdjustedIPs()
 	{
-		List<InetAddress>	result = new ArrayList<>();
+		List<InetSocketAddress>	result = new ArrayList<>();
 
 		if ( current_ip == null ){
 
 			return( result );
 		}
 
-		InetAddress adjusted = getAdjustedIP();
+		InetSocketAddress adjusted = getAdjustedIP();
 
 		if ( adjusted == current_ip ){
 
@@ -787,12 +793,12 @@ BuddyPluginBuddy
 
 		}else{
 
-			List l = AddressUtils.getLANAddresses( adjusted.getHostAddress());
+			List<String> l = AddressUtils.getLANAddresses( AddressUtils.getHostAddress( adjusted ));
 
 			for (int i=0;i<l.size();i++){
 
 				try{
-					result.add( InetAddress.getByName((String)l.get(i)));
+					result.add( new InetSocketAddress( InetAddress.getByName(l.get(i)),0));
 
 				}catch( Throwable e ){
 
@@ -901,7 +907,7 @@ BuddyPluginBuddy
 						BuddyPluginBuddy 		buddy, 
 						Map<String, Object> 	message)
 					{
-						InetAddress ip = buddy.getIP();
+						InetSocketAddress ip = buddy.getIP();
 						
 						List<String> result = new ArrayList<>();
 
@@ -915,7 +921,7 @@ BuddyPluginBuddy
 							
 								if ( ip != null ){
 
-									i = i.replaceAll( "(?i)\\Q${ip}\\E", ip.getHostAddress());
+									i = i.replaceAll( "(?i)\\Q${ip}\\E", AddressUtils.getHostAddress( ip ));
 								}
 								
 								result.add( i );
@@ -1940,19 +1946,47 @@ BuddyPluginBuddy
 
 	private void
 	setAddress(
-		InetAddress	address )
+		InetSocketAddress	address )
 	{
 		if ( plugin.getPeersAreLANLocal()){
 
 			AddressUtils.addLANRateLimitAddress( address );
 		}
 	}
+	
+	private boolean
+	addressesEqual(
+		InetSocketAddress	ias1,
+		InetSocketAddress	ias2 )
+	{
+		if ( ias1 == null && ias2 == null ){
+			
+			return( true );
+			
+		}else if ( ias1 == null || ias2 == null ){
+			
+			return( false );
+		}
+		
+		if ( ias1.isUnresolved() && ias2.isUnresolved()){
+			
+			return( AddressUtils.getHostAddress( ias1 ).equals( AddressUtils.getHostAddress( ias2 )));
+			
+		}else if ( ias1.isUnresolved() || ias2.isUnresolved()){
+			
+			return( false );
+			
+		}else{
+			
+			return( ias1.getAddress().equals( ias2.getAddress()));
+		}
+	}
 
 	protected void
 	setCachedStatus(
-		InetAddress		_ip,
-		int				_tcp_port,
-		int				_udp_port )
+		InetSocketAddress		_ip,
+		int						_tcp_port,
+		int						_udp_port )
 	{
 		setAddress( _ip );
 
@@ -1969,14 +2003,14 @@ BuddyPluginBuddy
 
 	protected void
 	statusCheckComplete(
-		long			_post_time,
-		InetAddress		_ip,
-		int				_tcp_port,
-		int				_udp_port,
-		String			_nick_name,
-		int				_online_status,
-		int				_status_seq,
-		int				_version )
+		long				_post_time,
+		InetSocketAddress	_ias,
+		int					_tcp_port,
+		int					_udp_port,
+		String				_nick_name,
+		int					_online_status,
+		int					_status_seq,
+		int					_version )
 	{
 		boolean	details_change 	= false;
 		boolean	config_dirty 	= false;
@@ -2046,14 +2080,14 @@ BuddyPluginBuddy
 
 				post_time	= _post_time;
 
-				if ( 	!addressesEqual( current_ip, _ip ) ||
+				if ( 	!addressesEqual( current_ip, _ias ) ||
 						tcp_port != _tcp_port ||
 						udp_port != _udp_port ||
 						version	 < _version ){
 
-					setAddress( _ip );
+					setAddress( _ias );
 
-					current_ip		= _ip;
+					current_ip		= _ias;
 					tcp_port		= _tcp_port;
 					udp_port		= _udp_port;
 
@@ -2109,25 +2143,6 @@ BuddyPluginBuddy
 		if ( !isTransient()){
 		
 			plugin.logMessage( this,  getString());
-		}
-	}
-
-	protected boolean
-	addressesEqual(
-		InetAddress		ip1,
-		InetAddress		ip2 )
-	{
-		if ( ip1 == null && ip2 == null ){
-
-			return( true );
-
-		}else if ( ip1 == null || ip2 == null ){
-
-			return( false );
-
-		}else{
-
-			return( ip1.equals( ip2 ));
 		}
 	}
 
@@ -2349,7 +2364,7 @@ BuddyPluginBuddy
 			((buddyConnection)to_close.get(i)).close();
 		}
 
-		InetAddress ip = current_ip;
+		InetSocketAddress ip = current_ip;
 
 		if ( ip != null ){
 
@@ -2376,9 +2391,9 @@ BuddyPluginBuddy
 			throw( new BuddyPluginException( "Messaging system unavailable" ));
 		}
 
-		InetAddress ip = getIP();
+		InetSocketAddress isa = getIP();
 
-		if ( ip == null ){
+		if ( isa == null ){
 
 			throw( new BuddyPluginException( "Friend offline (no usable IP address)" ));
 		}
@@ -2386,20 +2401,27 @@ BuddyPluginBuddy
 		InetSocketAddress	tcp_target	= null;
 		InetSocketAddress	udp_target	= null;
 
-		int	tcp_port = getTCPPort();
-
-		if ( tcp_port > 0 ){
-
-			tcp_target = new InetSocketAddress( ip, tcp_port );
+		if ( isa.isUnresolved()){
+			
+			tcp_target = InetSocketAddress.createUnresolved( AddressUtils.getHostAddress( isa ), tcp_port );
+			
+		}else{
+			
+			int	tcp_port = getTCPPort();
+	
+			if ( tcp_port > 0 ){
+	
+				tcp_target = new InetSocketAddress( isa.getAddress(), tcp_port );
+			}
+	
+			int	udp_port = getUDPPort();
+	
+			if ( udp_port > 0 ){
+	
+				udp_target = new InetSocketAddress( isa.getAddress(), udp_port );
+			}
 		}
-
-		int	udp_port = getUDPPort();
-
-		if ( udp_port > 0 ){
-
-			udp_target = new InetSocketAddress( ip, udp_port );
-		}
-
+		
 		InetSocketAddress	notional_target = tcp_target;
 
 		if ( notional_target == null ){

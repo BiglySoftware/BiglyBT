@@ -316,6 +316,18 @@ AddressUtils
 
 	public static void
 	addLANRateLimitAddress(
+		InetSocketAddress		address )
+	{
+		InetAddress ia = address.getAddress();
+		
+		if ( ia != null ){
+			
+			addLANRateLimitAddress( ia );
+		}
+	}
+	
+	public static void
+	addLANRateLimitAddress(
 		InetAddress		address )
 	{
 		synchronized( pending_addresses ){
@@ -372,6 +384,18 @@ AddressUtils
 		}
 	}
 
+	public static void
+	removeLANRateLimitAddress(
+		InetSocketAddress		address )
+	{
+		InetAddress ia = address.getAddress();
+		
+		if ( ia != null ){
+			
+			removeLANRateLimitAddress( ia );
+		}
+	}
+	
 	public static void
 	removeLANRateLimitAddress(
 		InetAddress		address )

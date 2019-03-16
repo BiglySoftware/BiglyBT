@@ -358,7 +358,9 @@ GenericMessageConnectionImpl
 
 		gen_tcp.addTCP( tcp_ep );
 
-		final GenericMessageConnectionDirect tcp_delegate = new GenericMessageConnectionDirect( msg_id, msg_desc, gen_tcp, stream_crypto, shared_secrets );
+		int crypto = MessageManagerImpl.adjustCrypto( gen_tcp, stream_crypto );
+		
+		final GenericMessageConnectionDirect tcp_delegate = new GenericMessageConnectionDirect( msg_id, msg_desc, gen_tcp, crypto, shared_secrets );
 
 		tcp_delegate.setOwner( this );
 

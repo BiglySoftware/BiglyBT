@@ -21,6 +21,7 @@
 package com.biglybt.plugin.net.buddy.swt;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -2036,11 +2037,11 @@ BuddyPluginViewInstance
 				getToolTip(
 					BuddyPluginBuddy	buddy )
 				{
-					List<InetAddress> addresses = buddy.getAdjustedIPs();
+					List<InetSocketAddress> addresses = buddy.getAdjustedIPs();
 
-					InetAddress	ip	= buddy.getIP();
+					InetSocketAddress	ip	= buddy.getIP();
 
-					InetAddress adj = buddy.getAdjustedIP();
+					InetSocketAddress 	adj = buddy.getAdjustedIP();
 
 					String	str = "";
 
@@ -2050,15 +2051,15 @@ BuddyPluginViewInstance
 
 					}else if ( ip == adj ){
 
-						str = ip.getHostAddress();
+						str = AddressUtils.getHostAddress( ip );
 
 					}else{
 
-						str = ip.getHostAddress() + "{";
+						str = AddressUtils.getHostAddress( ip ) + "{";
 
 						for (int i=0;i<addresses.size();i++){
 
-							str += (i==0?"":"/") + addresses.get(i).getHostAddress();
+							str += (i==0?"":"/") + AddressUtils.getHostAddress( addresses.get(i));
 						}
 
 						str += "}";

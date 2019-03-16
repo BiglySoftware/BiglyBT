@@ -28,12 +28,15 @@ import java.util.Map;
 import com.biglybt.core.Core;
 import com.biglybt.core.nat.NATTraversalHandler;
 import com.biglybt.core.nat.NATTraverser;
+import com.biglybt.core.networkmanager.ConnectionEndpoint;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.ProtocolEndpoint;
 import com.biglybt.core.networkmanager.impl.TransportHelper;
 import com.biglybt.core.peermanager.messaging.MessageStreamDecoder;
 import com.biglybt.core.peermanager.messaging.MessageStreamEncoder;
 import com.biglybt.core.peermanager.messaging.MessageStreamFactory;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA1Simple;
 import com.biglybt.pif.PluginInterface;
@@ -122,9 +125,35 @@ public class MessageManagerImpl implements MessageManager, NATTraversalHandler {
   };
 
 
+  public static int
+  adjustCrypto(
+	GenericMessageEndpointImpl	endpoint,
+	int							crypto )
+  {		
+	  return( adjustCrypto( endpoint.getConnectionEndpoint(), crypto ));
+  }  
+  
+  public static int
+  adjustCrypto(
+	 ConnectionEndpoint		endpoint,
+	int						crypto )
+  {		
+	  ProtocolEndpoint[] pes = endpoint.getProtocols();
+		
+	  if ( pes.length == 1 && pes[0].getType() == ProtocolEndpoint.PROTOCOL_TCP ){
 
+		  InetSocketAddress isa = pes[0].getAddress();
 
+		  if ( AENetworkClassifier.categoriseAddress( isa ) != AENetworkClassifier.AT_PUBLIC ){
 
+			  crypto = MessageManager.STREAM_ENCRYPTION_NONE;
+		  }
+	  }
+
+	  return( crypto );
+  }
+
+  
 
   public static synchronized MessageManagerImpl
   getSingleton(Core core)

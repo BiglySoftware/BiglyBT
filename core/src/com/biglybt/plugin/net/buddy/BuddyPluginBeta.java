@@ -6215,7 +6215,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						
 					if ( buddy != null ){
 			
-						InetAddress ip = buddy.getIP();
+						InetSocketAddress ip = buddy.getIP();
 						
 						if ( ip != null ){
 							
@@ -6223,7 +6223,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							
 							for ( String i: info ){
 						
-								i = i.replaceAll( "(?i)\\Q${ip}\\E", ip.getHostAddress());
+								i = i.replaceAll( "(?i)\\Q${ip}\\E", AddressUtils.getHostAddress( ip ));
 								
 								result.add( i );
 							}

@@ -21,6 +21,7 @@
 package com.biglybt.plugin.net.buddy.tracker;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -372,7 +373,7 @@ BuddyPluginTracker
 				continue;
 			}
 
-			InetAddress ip 			= buddy.getAdjustedIP();
+			InetSocketAddress ip 			= buddy.getAdjustedIP();
 
 			if ( ip == null ){
 
@@ -395,7 +396,7 @@ BuddyPluginTracker
 					continue;
 				}
 
-				Peer[] existing_peers = pm.getPeers( ip.getHostAddress());
+				Peer[] existing_peers = pm.getPeers( AddressUtils.getHostAddress( ip ));
 
 				boolean	connected = false;
 
@@ -421,12 +422,12 @@ BuddyPluginTracker
 
 				if ( connected ){
 
-					log( download.getName() + " - peer " + ip.getHostAddress() + " already connected" );
+					log( download.getName() + " - peer " +  AddressUtils.getHostAddress( ip ) + " already connected" );
 
 					continue;
 				}
 
-				log( download.getName() + " - connecting to peer " + ip.getHostAddress());
+				log( download.getName() + " - connecting to peer " +  AddressUtils.getHostAddress( ip ));
 
 				PEPeerManager c_pm = PluginCoreUtils.unwrap( pm );
 
@@ -436,7 +437,7 @@ BuddyPluginTracker
 
 				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
 
-				c_pm.addPeer( ip.getHostAddress(), tcp_port, udp_port, true, user_data );
+				c_pm.addPeer(  AddressUtils.getHostAddress( ip ), tcp_port, udp_port, true, user_data );
 			}
 		}
 	}
@@ -1961,11 +1962,11 @@ outer:
 		protected void
 		updateIP()
 		{
-			InetAddress	latest_ip = buddy.getAdjustedIP();
+			InetSocketAddress	latest_ip = buddy.getAdjustedIP();
 
 			if ( latest_ip != null ){
 
-				current_ip	= latest_ip.getHostAddress();
+				current_ip	= AddressUtils.getHostAddress( latest_ip );
 
 				log( "IP set to " + current_ip );
 			}
@@ -1974,7 +1975,7 @@ outer:
 		protected boolean
 		hasIPChanged()
 		{
-			InetAddress	latest_ip = buddy.getAdjustedIP();
+			InetSocketAddress	latest_ip = buddy.getAdjustedIP();
 
 			if ( latest_ip == null && current_ip == null ){
 
@@ -1986,7 +1987,7 @@ outer:
 
 			}else{
 
-				return(	!current_ip.equals( latest_ip.getHostAddress()));
+				return(	!current_ip.equals( AddressUtils.getHostAddress( latest_ip )));
 			}
 		}
 

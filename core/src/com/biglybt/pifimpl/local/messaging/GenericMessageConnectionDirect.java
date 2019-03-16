@@ -19,12 +19,14 @@
 
 package com.biglybt.pifimpl.local.messaging;
 
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.biglybt.core.networkmanager.*;
 import com.biglybt.core.peermanager.messaging.Message;
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.pif.messaging.MessageException;
@@ -45,12 +47,14 @@ GenericMessageConnectionDirect
 	protected static GenericMessageConnectionDirect
 	receive(
 		GenericMessageEndpointImpl	endpoint,
-		String				msg_id,
-		String				msg_desc,
-		int					stream_crypto,
-		byte[][]			shared_secrets )
+		String						msg_id,
+		String						msg_desc,
+		int							stream_crypto,
+		byte[][]					shared_secrets )
 	{
-		GenericMessageConnectionDirect direct_connection = new GenericMessageConnectionDirect( msg_id, msg_desc, endpoint, stream_crypto, shared_secrets );
+		int crypto = MessageManagerImpl.adjustCrypto( endpoint, stream_crypto );
+		
+		GenericMessageConnectionDirect direct_connection = new GenericMessageConnectionDirect( msg_id, msg_desc, endpoint, crypto, shared_secrets );
 
 		return( direct_connection );
 	}
@@ -347,14 +351,16 @@ GenericMessageConnectionDirect
 		ConnectionEndpoint cep = endpoint.getConnectionEndpoint();
 
 		cep = cep.getLANAdjustedEndpoint();
-
+		
+		int crypto = MessageManagerImpl.adjustCrypto( cep, stream_crypto );
+		
 		connection =
 			NetworkManager.getSingleton().createConnection(
 				cep,
 				new GenericMessageEncoder(),
 				new GenericMessageDecoder( msg_id, msg_desc ),
-				stream_crypto != MessageManager.STREAM_ENCRYPTION_NONE, 			// use crypto
-				stream_crypto != MessageManager.STREAM_ENCRYPTION_RC4_REQUIRED, 	// allow fallback
+				crypto != MessageManager.STREAM_ENCRYPTION_NONE, 			// use crypto
+				crypto != MessageManager.STREAM_ENCRYPTION_RC4_REQUIRED, 	// allow fallback
 				shared_secrets );
 
 		ByteBuffer	initial_data = ByteBuffer.wrap( msg_id.getBytes());
