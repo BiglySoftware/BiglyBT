@@ -42,6 +42,7 @@ import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pif.utils.security.SEPublicKey;
 import com.biglybt.pif.utils.security.SEPublicKeyLocator;
 import com.biglybt.pif.utils.security.SESecurityManager;
+import com.biglybt.plugin.net.buddy.BuddyPlugin.DDBDetails;
 
 
 public class
@@ -73,6 +74,7 @@ BuddyPluginBuddy
 	private int				last_status_seq;
 
 	private long				post_time;
+	
 	private InetSocketAddress	current_ip;
 	private int					tcp_port;
 	private int					udp_port;
@@ -1309,7 +1311,7 @@ BuddyPluginBuddy
 
 				close_request.put( "r", new Long( restarting?1:0));
 
-				close_request.put( "os", new Long( plugin.getCurrentStatusSeq()));
+				close_request.put( "os", new Long( plugin.getCurrentStatusSeq(c.getDDBDetails())));
 
 				final buddyMessage	message =
 					new buddyMessage( BuddyPlugin.SUBSYSTEM_INTERNAL, close_request, 60*1000 );
@@ -1734,7 +1736,18 @@ BuddyPluginBuddy
 							// aquisition
 
 						GenericMessageConnection generic_connection = outgoingConnection();
-
+						
+						InetSocketAddress address = generic_connection.getEndpoint().getNotionalAddress();
+						
+						String net = AENetworkClassifier.categoriseAddress( address );
+						
+						DDBDetails	ddb_details =  plugin.getDDBDetails( net );
+						
+						if ( ddb_details== null ){
+							
+							throw( new Exception( "No ddb_details for " + net ));
+							
+						}
 						synchronized( this ){
 
 							if ( current_message != allocated_message ){
@@ -1745,7 +1758,7 @@ BuddyPluginBuddy
 
 							}else{
 
-								bc = new buddyConnection( generic_connection, true );
+								bc = new buddyConnection( ddb_details, generic_connection, true );
 
 								inform_dirty = connections.size() == 0;
 
@@ -1932,8 +1945,6 @@ BuddyPluginBuddy
 				}
 			}finally{
 
-				status_check_count++;
-
 				check_active = false;
 			}
 		}
@@ -2003,6 +2014,7 @@ BuddyPluginBuddy
 
 	protected void
 	statusCheckComplete(
+		DDBDetails			_ddb_details,
 		long				_post_time,
 		InetSocketAddress	_ias,
 		int					_tcp_port,
@@ -2026,6 +2038,20 @@ BuddyPluginBuddy
 
 		synchronized( this ){
 
+				// don't handle the public/mix-dht very well, just prioritize public over I2P and stick
+				// with it else we'll trash between the two addresses and doign a better job isn't really
+				// worth the effort
+			
+			status_check_count++;
+			
+			if ( status_check_count > 1 && AENetworkClassifier.categoriseAddress( _ias ) != AENetworkClassifier.AT_PUBLIC ){
+				
+				if ( current_ip != null && AENetworkClassifier.categoriseAddress( current_ip ) == AENetworkClassifier.AT_PUBLIC ){
+				
+					return;
+				}
+			}
+			
 			try{
 					// do we explicitly know that this sequence number denotes an offline buddy
 
@@ -2118,8 +2144,6 @@ BuddyPluginBuddy
 					details_change	= true;
 				}
 			}finally{
-
-				status_check_count++;
 
 				check_active = false;
 			}
@@ -2515,22 +2539,24 @@ BuddyPluginBuddy
 
 	protected void
 	incomingConnection(
+		DDBDetails					_ddb_details,
 		GenericMessageConnection	_connection )
 
 		throws BuddyPluginException
 	{
-		addConnection( _connection );
+		addConnection( _ddb_details, _connection );
 	}
 
 	protected void
 	addConnection(
+		DDBDetails						_ddb_details,
 		GenericMessageConnection		_connection )
 
 		throws BuddyPluginException
 	{
 		//int	size;
 
-		buddyConnection bc = new buddyConnection( _connection, false );
+		buddyConnection bc = new buddyConnection( _ddb_details, _connection, false );
 
 		boolean inform_dirty = false;
 
@@ -2595,7 +2621,7 @@ BuddyPluginBuddy
 	public String
 	getString()
 	{
-		return( "pk=" +  getShortString() + (nick_name==null?"":(",nick=" + nick_name)) + ",ip=" + current_ip + ",tcp=" + tcp_port + ",udp=" + udp_port + ",online=" + online + ",age=" + (SystemTime.getCurrentTime() - post_time ));
+		return( "pk=" +  getShortString() + (nick_name==null?"":(",nick=" + nick_name)) + ",ip=" + AddressUtils.getHostAddress( current_ip ) + ",tcp=" + tcp_port + ",udp=" + udp_port + ",online=" + online + ",age=" + (SystemTime.getCurrentTime() - post_time ));
 	}
 
 	protected class
@@ -2769,6 +2795,8 @@ BuddyPluginBuddy
 	buddyConnection
 		implements fragmentHandlerReceiver
 	{
+		final private DDBDetails				ddb_details;
+		
 		private fragmentHandler					fragment_handler;
 		private int								connection_id;
 		private boolean							outgoing;
@@ -2787,9 +2815,12 @@ BuddyPluginBuddy
 
 		protected
 		buddyConnection(
+			DDBDetails						_ddb_details,
 			GenericMessageConnection		_connection,
 			boolean							_outgoing )
 		{
+			ddb_details = _ddb_details;
+			
 			fragment_handler	= new fragmentHandler( _connection, this );
 
 			outgoing	= _outgoing;
@@ -2811,6 +2842,12 @@ BuddyPluginBuddy
 			fragment_handler.start();
 		}
 
+		protected DDBDetails
+		getDDBDetails()
+		{
+			return( ddb_details );
+		}
+		
 		protected boolean
 		isConnected()
 		{

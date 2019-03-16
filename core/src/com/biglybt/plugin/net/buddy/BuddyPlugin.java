@@ -847,8 +847,8 @@ BuddyPlugin
 	startup()
 	{
 		try{
-			List<DistributedDatabase> ddbs = plugin_interface.getUtilities().getDistributedDatabases( new String[]{ AENetworkClassifier.AT_PUBLIC, });//  AENetworkClassifier.AT_I2P });
-
+			List<DistributedDatabase> ddbs = plugin_interface.getUtilities().getDistributedDatabases( new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P });
+			
 			for ( DistributedDatabase ddb: ddbs ){
 			
 				if ( ddb.isAvailable()){
@@ -1359,8 +1359,36 @@ BuddyPlugin
 								return( false );
 							}
 
-							final String originator = AddressUtils.getHostAddress( connection.getEndpoint().getNotionalAddress());
+							DDBDetails	details = null;
 
+							InetSocketAddress address = connection.getEndpoint().getNotionalAddress();
+							
+							final String originator = AddressUtils.getHostAddress(  address );
+
+							String net = AENetworkClassifier.categoriseAddress( address );
+							
+							for ( DDBDetails d: ddb_details ){
+								
+								if ( d.getNetwork() == net ){
+									
+									details = d ;
+									
+									break;
+								}
+							}
+							
+							if ( details == null ){
+								
+								if ( TRACE ){
+									
+									System.out.println( "accept - no details for " + net );
+								}
+								
+								return( false );
+							}
+							
+							final DDBDetails f_details = details;
+							
 							if ( TRACE ){
 								System.out.println( "accept " + originator );
 							}
@@ -1409,7 +1437,7 @@ BuddyPlugin
 																		return( false );
 																	}
 
-																	buddy.incomingConnection((GenericMessageConnection)context );
+																	buddy.incomingConnection( f_details, (GenericMessageConnection)context );
 
 																	return( true );
 																}
@@ -1435,7 +1463,7 @@ BuddyPlugin
 
 																if ( buddy != null ){
 
-																	buddy.incomingConnection((GenericMessageConnection)context );
+																	buddy.incomingConnection( f_details, (GenericMessageConnection)context );
 
 																	return( true );
 
@@ -1766,18 +1794,26 @@ BuddyPlugin
 		return( s1.equals( s2 ));
 	}
 
-	protected int
-	getCurrentStatusSeq()
+	protected DDBDetails
+	getDDBDetails(
+		String 	net )
 	{
 		for ( DDBDetails details: ddb_details ){
-		
-			synchronized( this ){
-
-				return( details.current_publish.getSequence());
+			
+			if ( net == details.getNetwork()){
+				
+				return( details );
 			}
 		}
 		
-		return( 0 );
+		return( null );
+	}
+	
+	protected int
+	getCurrentStatusSeq(
+		DDBDetails		details )
+	{
+		return( details.current_publish.getSequence());
 	}
 
 	protected void
@@ -4064,7 +4100,7 @@ BuddyPlugin
 		logger.log( str + ": " + Debug.getNestedExceptionMessageAndStack( e ));
 	}
 
-	private class
+	protected class
 	DDBDetails
 	{
 		private DistributedDatabase	ddb;
@@ -4085,6 +4121,12 @@ BuddyPlugin
 			ddb = _ddb;
 
 			latest_publish = current_publish = new PublishDetails( ddb.getNetwork());
+		}
+		
+		public String
+		getNetwork()
+		{
+			return( ddb.getNetwork());
 		}
 		
 		private void
@@ -4845,7 +4887,7 @@ BuddyPlugin
 
 										int		ver = l_ver==null?VERSION_INITIAL:l_ver.intValue();
 
-										buddy.statusCheckComplete( latest_time, ias, tcp_port, udp_port, nick, os, seq, ver );
+										buddy.statusCheckComplete( DDBDetails.this, latest_time, ias, tcp_port, udp_port, nick, os, seq, ver );
 
 									}catch( Throwable e ){
 

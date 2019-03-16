@@ -562,6 +562,11 @@ AddressUtils
 	getHostAddress(
 		InetSocketAddress	address )
 	{
+		if ( address == null ){
+			
+			return( "" );
+		}
+		
 		if ( address.isUnresolved()){
 
 			return( address.getHostName());
