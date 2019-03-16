@@ -25,7 +25,10 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
@@ -48,6 +51,7 @@ import com.biglybt.pif.utils.LocationProvider;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.ui.skin.SkinProperties;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
@@ -75,6 +79,45 @@ public class ImageRepository
 	   * Gets an image for a file associated with a given program
 	   *
 	   */
+	
+	private static transient Set<String>	ignore_icon_exts;
+	
+	static{
+		
+		COConfigurationManager.addWeakParameterListener(
+				(n)->{
+					String val = COConfigurationManager.getStringParameter( n );
+					
+					val = val.replace( ';', ' ' );
+					val = val.replace( ',', ' ' );
+					
+					val = val.toLowerCase( Locale.US );
+					
+					String[] bits = val.split( " " );
+					
+					Set<String> exts = new HashSet<>();
+					
+					for ( String b: bits ){
+						
+						b = b.trim();
+						
+						if ( !b.isEmpty()){
+														
+							if ( !b.startsWith( "." )){
+								
+								b = "." + b;
+							}
+							
+							exts.add( b );
+						}
+					}
+					
+					ignore_icon_exts = exts;
+				},
+				true,
+				"Ignore Icon Exts" );		
+	}
+	
 	public static Image getIconFromExtension(File file, String ext, boolean bBig,
 			boolean minifolder) {
 		Image image = null;
@@ -98,6 +141,14 @@ public class ImageRepository
 			ImageData imageData = null;
 
 			if (Constants.isWindows) {
+					
+					// Alcohol causing crashes on various file types. Really can't be bothered
+				
+				if ( ignore_icon_exts.contains( ext.toLowerCase( Locale.US  ))){
+					
+					return ImageLoader.getInstance().getImage(minifolder ? "folder" : "transparent");
+				}
+				
 				try {
 					//Image icon = Win32UIEnhancer.getFileIcon(new File(path), big);
 

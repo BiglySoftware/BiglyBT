@@ -219,6 +219,29 @@ public class ConfigSectionInterfaceDisplay implements UISWTConfigSection {
 				forceDPI.setLayoutData(new GridData());
 				paramEnableForceDPI.setAdditionalActionPerformer(
 						new ChangeSelectionActionPerformer(forceDPI.getControl()));
+				
+			if ( Constants.isWindows ){
+				
+				Composite iconCOmp = new Composite(gVarious, SWT.NULL);
+				layout = new GridLayout();
+				layout.marginHeight = 0;
+				layout.marginWidth = 0;
+				layout.numColumns = 2;
+				iconCOmp.setLayout(layout);
+				
+				gridData = new GridData(GridData.FILL_HORIZONTAL);
+				gridData.horizontalSpan = 2;
+				iconCOmp.setLayoutData(gridData);
+					
+				label = new Label(iconCOmp, SWT.NONE);
+				
+				Messages.setLanguageText(label, "ConfigView.label.ignore.icon.exts");
+				
+				StringParameter ignore_exts = new StringParameter(iconCOmp, "Ignore Icon Exts" );
+
+				gridData = new GridData(GridData.FILL_HORIZONTAL);
+				ignore_exts.setLayoutData(gridData);
+			}
 		}
 		
 		bp = new BooleanParameter(gVarious, "Disable All Tooltips", "ConfigView.section.style.disable.all.tt");

@@ -21,6 +21,9 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.util.Constants;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.platform.PlatformManager;
+import com.biglybt.platform.PlatformManagerCapabilities;
+import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 
 /**
@@ -130,6 +133,25 @@ public class UIConfigDefaultsSWT
 		def.addParameter("show_torrents_menu", true);
 		def.addParameter("mainwindow.search.history.enabled", true);
 		def.addParameter("Disable All Tooltips", false);
+
+		def.addParameter("Ignore Icon Exts", "" );
+		
+		if ( Constants.isWindows ){
+			try{
+				PlatformManager	p_man = PlatformManagerFactory.getPlatformManager();
+	
+				if ( 	p_man.getPlatformType() == PlatformManager.PT_WINDOWS &&
+						p_man.hasCapability( PlatformManagerCapabilities.TestNativeAvailability )){
+					
+					if ( p_man.testNativeAvailability( "AxShlex.dll" )){
+						
+						def.addParameter("Ignore Icon Exts", ".img;.mds;.iso;.bwt;.b5t;.b6t;.ccd;.isz;.cue;.cdi;.pdi;.nrg" );
+					}
+				}
+			}catch( Throwable e ){
+				
+			}
+		}
 		
 		def.addParameter("MyTorrentsView.table.style", 0);
 
