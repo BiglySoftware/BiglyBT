@@ -42,6 +42,7 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.tag.TagFeatureProperties.TagPropertyListener;
+import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
@@ -2026,6 +2027,7 @@ TagPropertyConstraintHandler
 		private static final int FT_HAS_TAG_AGE		= 28;
 		private static final int FT_LOWERCASE		= 29;		
 		private static final int FT_SET_COLOURS		= 30;		
+		private static final int FT_IS_NEW			= 31;		
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2299,6 +2301,12 @@ TagPropertyConstraintHandler
 				}else if ( func_name.equals( "isLowNoise" )){
 
 					fn_type = FT_IS_LOW_NOISE;
+
+					params_ok = num_params == 0;
+
+				}else if ( func_name.equals( "isNew" )){
+
+					fn_type = FT_IS_NEW;
 
 					params_ok = num_params == 0;
 
@@ -2690,6 +2698,10 @@ TagPropertyConstraintHandler
 					case FT_IS_LOW_NOISE:{
 
 						return( dm.getDownloadState().getFlag(DownloadManagerState.FLAG_LOW_NOISE ));
+					}
+					case FT_IS_NEW:{
+						
+						return(  dm.getAssumedComplete() && !PlatformTorrentUtils.getHasBeenOpened(dm));
 					}
 					case FT_IS_PAUSED:{
 
