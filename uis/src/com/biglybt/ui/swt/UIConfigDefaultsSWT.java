@@ -17,9 +17,12 @@
 
 package com.biglybt.ui.swt;
 
+import java.io.File;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.SystemProperties;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
@@ -137,16 +140,59 @@ public class UIConfigDefaultsSWT
 		def.addParameter("Ignore Icon Exts", "" );
 		
 		if ( Constants.isWindows ){
+			
 			try{
-				PlatformManager	p_man = PlatformManagerFactory.getPlatformManager();
-	
-				if ( 	p_man.getPlatformType() == PlatformManager.PT_WINDOWS &&
-						p_man.hasCapability( PlatformManagerCapabilities.TestNativeAvailability )){
+				if ( Constants.getCurrentVersion().equals( "1.8.0.1_B33" )){
 					
-					if ( p_man.testNativeAvailability( "AxShlex.dll" )){
+					COConfigurationManager.removeParameter( "Ignore Icon Exts" );
+				}
+				
+				boolean found = false;
+				
+				File parent = new File( SystemProperties.getApplicationPath()).getParentFile();
+				
+				String test = "Alcohol Soft";
+				
+				if ( new File( parent, test ).exists()){
+					
+					found = true;
+			
+				}else{
+					
+					String str = parent.getAbsolutePath();
+										
+					if ( str.endsWith( "(x86)")){
 						
-						def.addParameter("Ignore Icon Exts", ".img;.mds;.iso;.bwt;.b5t;.b6t;.ccd;.isz;.cue;.cdi;.pdi;.nrg" );
+						str = str.substring( 0, str.length() - 5  ).trim();
+						
+					}else{
+						
+						str += " (x86)";
 					}
+					
+					if ( new File( str, test ).exists()){
+						
+						found = true;
+					}
+				}
+				
+				if ( !found ){
+					
+					PlatformManager	p_man = PlatformManagerFactory.getPlatformManager();
+		
+					if ( 	p_man.getPlatformType() == PlatformManager.PT_WINDOWS &&
+							p_man.hasCapability( PlatformManagerCapabilities.TestNativeAvailability )){
+						
+						if ( p_man.testNativeAvailability( Constants.is64Bit?"AxShlex64.dll":"AxShlex.dll" )){
+							
+							found = true;
+						}
+					}
+				}
+				
+				if ( found ){
+					
+					def.addParameter("Ignore Icon Exts", ".img;.mds;.iso;.bwt;.b5t;.b6t;.ccd;.isz;.cue;.cdi;.pdi;.nrg" );
 				}
 			}catch( Throwable e ){
 				
