@@ -106,7 +106,7 @@ Constants
 		DEFAULT_CHARSET	= dc;
 	}
 
-	public static final Locale LOCALE_ENGLISH = new Locale("en", "");
+	public static final Locale LOCALE_ENGLISH = Locale.ENGLISH;
 
 	static{
 		try{

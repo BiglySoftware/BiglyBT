@@ -139,3 +139,9 @@ core/lib/libWIN32Access/ipch/
 
 Bigly*.jar
 
+##
+## running tests produces some runtime generated files:
+##
+*/plugins/azupdater/plugin.properties
+/*.ddl
+/libOSXAccess.jnilib

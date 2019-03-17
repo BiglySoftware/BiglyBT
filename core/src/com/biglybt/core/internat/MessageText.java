@@ -44,13 +44,13 @@ import com.biglybt.core.util.SystemProperties;
 @SuppressWarnings("restriction")
 public class MessageText {
 
-	public static final Locale LOCALE_ENGLISH = Constants.LOCALE_ENGLISH;
+	public static final Locale LOCALE_ENGLISH = Locale.ENGLISH;
 
-	public static final Locale LOCALE_DEFAULT = new Locale("", ""); // == english
+	public static final Locale LOCALE_DEFAULT = Locale.ROOT; // == english
 
 	private static Locale LOCALE_CURRENT = LOCALE_DEFAULT;
 
-	private static final String BUNDLE_NAME;
+	static final String BUNDLE_NAME;
 
 	private static final Map<String, String> DEFAULT_EXPANSIONS = new HashMap<>();
 
@@ -116,29 +116,11 @@ public class MessageText {
 	  Locale	old_locale = getCurrentLocale();
 
 		String savedLocaleString = COConfigurationManager.getStringParameter("locale");
+		Locale savedLocale = parseFormattedLocaleString(savedLocaleString);
 
-		Locale savedLocale;
-		String[] savedLocaleStrings = savedLocaleString.split("_", 3);
-		if (savedLocaleStrings.length > 0 && savedLocaleStrings[0].length() == 2) {
-			if (savedLocaleStrings.length == 3) {
-				savedLocale = new Locale(savedLocaleStrings[0], savedLocaleStrings[1],
-						savedLocaleStrings[2]);
-			} else if (savedLocaleStrings.length == 2
-					&& savedLocaleStrings[1].length() == 2) {
-				savedLocale = new Locale(savedLocaleStrings[0], savedLocaleStrings[1]);
-			} else {
-				savedLocale = new Locale(savedLocaleStrings[0]);
-			}
-		} else {
-			if (savedLocaleStrings.length == 3 && savedLocaleStrings[0].length() == 0
-					&& savedLocaleStrings[2].length() > 0) {
-				savedLocale = new Locale(savedLocaleStrings[0], savedLocaleStrings[1],
-						savedLocaleStrings[2]);
-			} else {
-				savedLocale = Locale.getDefault();
-			}
+		if (!Locale.ROOT.equals(savedLocale)) {
+			MessageText.changeLocale(savedLocale, forceReload);
 		}
-		MessageText.changeLocale(savedLocale,forceReload);
 
 		COConfigurationManager
 				.setParameter("locale.set.complete.count", COConfigurationManager
@@ -501,7 +483,7 @@ public class MessageText {
 					// System.out.println("jar: " + jar.getAbsolutePath());
 					try (JarFile jarFile = new JarFile(jar) ){
 						Enumeration entries = jarFile.entries();
-						ArrayList list = new ArrayList(250);
+						ArrayList<String> list = new ArrayList<>(250);
 						while (entries.hasMoreElements()) {
 							JarEntry jarEntry = (JarEntry) entries.nextElement();
 							if (jarEntry.getName().startsWith(bundleFolder)
@@ -512,7 +494,7 @@ public class MessageText {
 								// "MessagesBundle_de_DE.properties"
 							}
 						}
-						bundles = (String[]) list.toArray(new String[list.size()]);
+						bundles = list.toArray(new String[0]);
 					}
 				} catch (Exception e) {
 					Debug.printStackTrace(e);
@@ -531,11 +513,11 @@ public class MessageText {
       });
     }
 
-    HashSet bundleSet = new HashSet();
+    HashSet<String> bundleSet = new HashSet<>();
 
     // Add local first
     File localDir = new File(SystemProperties.getUserPath());
-    String localBundles[] = localDir.list(new FilenameFilter() {
+    String[] localBundles = localDir.list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {
         return name.startsWith(prefix) && name.endsWith(extension);
@@ -545,13 +527,12 @@ public class MessageText {
     	// can be null if user path is borked
 
     if ( localBundles != null ){
-
-    	bundleSet.addAll(Arrays.asList(localBundles));
+    	Collections.addAll(bundleSet, localBundles);
     }
 
     // Add AppDir 2nd
     File appDir = new File(SystemProperties.getApplicationPath());
-    String appBundles[] = appDir.list(new FilenameFilter() {
+    String[] appBundles = appDir.list(new FilenameFilter() {
       @Override
       public boolean accept(File dir, String name) {
         return name.startsWith(prefix) && name.endsWith(extension);
@@ -559,49 +540,28 @@ public class MessageText {
     });
 
     	// can be null if app path is borked
-
     if ( appBundles != null ){
-
-    	bundleSet.addAll(Arrays.asList(appBundles));
+    	Collections.addAll(bundleSet, appBundles);
     }
     // Any duplicates will be ignored
-    bundleSet.addAll(Arrays.asList(bundles));
+		Collections.addAll(bundleSet, bundles);
 
-    List foundLocalesList = new ArrayList(bundleSet.size());
+    List<Locale> foundLocalesList = new ArrayList<>(bundleSet.size());
 
   	foundLocalesList.add( LOCALE_ENGLISH );
 
-    Iterator val = bundleSet.iterator();
-    while (val.hasNext()) {
-      String sBundle = (String)val.next();
+		for (String sBundle : bundleSet) {
+			if (prefix.length() + 1 < sBundle.length() - extension.length()) {
+				String locale = sBundle.substring(prefix.length() + 1, sBundle.length() - extension.length());
+				Locale parsedLocale = parseFormattedLocaleString(locale);
+				if (!Locale.ROOT.equals(parsedLocale)) {
+					//System.out.println("Locale: " + locale);
+					foundLocalesList.add(parsedLocale);
+				}
+			}
+		}
 
-      // System.out.println("ResourceBundle: " + bundles[i]);
-      if (prefix.length() + 1 < sBundle.length() - extension.length()) {
-        String locale = sBundle.substring(prefix.length() + 1, sBundle.length() - extension.length());
-        //System.out.println("Locale: " + locale);
-        String[] sLocalesSplit = locale.split("_", 3);
-				if (sLocalesSplit.length > 0 && (sLocalesSplit[0].length() == 2
-						|| sLocalesSplit[0].length() == 3)) {
-          if (sLocalesSplit.length == 3) {
-          	foundLocalesList.add( new Locale(sLocalesSplit[0], sLocalesSplit[1], sLocalesSplit[2]));
-          } else if (sLocalesSplit.length == 2 && sLocalesSplit[1].length() == 2) {
-          	foundLocalesList.add( new Locale(sLocalesSplit[0], sLocalesSplit[1]));
-          } else {
-          	foundLocalesList.add( new Locale(sLocalesSplit[0]));
-          }
-        } else {
-          if (sLocalesSplit.length == 3 &&
-              sLocalesSplit[0].length() == 0 &&
-              sLocalesSplit[2].length() > 0) {
-          	foundLocalesList.add( new Locale(sLocalesSplit[0], sLocalesSplit[1], sLocalesSplit[2]));
-          }
-        }
-       }
-    }
-
-    Locale[] foundLocales = new Locale[foundLocalesList.size()];
-
-    foundLocalesList.toArray( foundLocales );
+		Locale[] foundLocales = foundLocalesList.toArray(new Locale[0]);
 
     if (sort) {
       try{
@@ -865,5 +825,31 @@ public class MessageText {
 		Locale	old_locale,
 		Locale	new_locale );
   }
+
+	/**
+	 * @return matching Locale or {@link Locale#ROOT} if unrecognized format or imparsable.
+	 */
+	static Locale parseFormattedLocaleString(String savedLocaleString) {
+		Locale.Builder localeBuilder = new Locale.Builder();
+		String[] savedLocaleStrings = savedLocaleString.split("_", 3);
+
+		if (savedLocaleStrings.length < 2 || savedLocaleStrings.length > 3) {
+			return Locale.ROOT;
+		}
+
+		localeBuilder.setLanguage(savedLocaleStrings[0]);
+
+		boolean hasScript = savedLocaleStrings[1].length() == 4;
+		if (hasScript) {
+			localeBuilder.setScript(savedLocaleStrings[1]);
+		} else {
+			localeBuilder.setRegion(savedLocaleStrings[1]);
+			if (savedLocaleStrings.length == 3) {
+				localeBuilder.setVariant(savedLocaleStrings[2]);
+			}
+		}
+
+		return localeBuilder.build();
+	}
 
 }
