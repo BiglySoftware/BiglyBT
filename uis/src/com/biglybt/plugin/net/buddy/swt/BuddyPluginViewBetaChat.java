@@ -1383,7 +1383,7 @@ BuddyPluginViewBetaChat
 					
 							if ( !plugin.isClassicEnabled()){
 								
-								plugin.setClassicEnabled( true );
+								plugin.setClassicEnabled( true, false );
 							}					
 
 							beta.selectClassicTab();
@@ -3480,7 +3480,7 @@ BuddyPluginViewBetaChat
 									widgetSelected(
 										SelectionEvent event )
 									{
-										plugin.setClassicEnabled( true );
+										plugin.setClassicEnabled( true, false );
 									}
 								});
 
@@ -3844,7 +3844,7 @@ BuddyPluginViewBetaChat
 						{
 							if ( !plugin.isClassicEnabled()){
 								
-								plugin.setClassicEnabled( true );
+								plugin.setClassicEnabled( true, false );
 							}
 							
 							for ( ChatParticipant participant: participants ){
@@ -3897,7 +3897,7 @@ BuddyPluginViewBetaChat
 							{
 								if ( !plugin.isClassicEnabled()){
 									
-									plugin.setClassicEnabled( true );
+									plugin.setClassicEnabled( true, false );
 								}
 									
 								plugin.addBuddy( fk, BuddyPlugin.SUBSYSTEM_AZ2 );

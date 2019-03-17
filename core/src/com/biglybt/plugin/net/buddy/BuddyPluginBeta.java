@@ -1073,7 +1073,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			if ( post_friend_key ){
 				
-				plugin.setClassicEnabled( true );
+				plugin.setClassicEnabled( true, false );
 			}
 			
 			COConfigurationManager.setParameter( "azbuddy.chat.post_friend_key", b );
@@ -1530,7 +1530,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			if ( !plugin.isClassicEnabled()){
 				
-				plugin.setClassicEnabled( true );
+				plugin.setClassicEnabled( true, false );
 			}
 			
 			if ( !key.equals( plugin.getPublicKey())){
@@ -6185,16 +6185,19 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				BuddyPluginBuddy buddy = plugin.peekBuddy( fk );
 				
-				buddy.getProfileInfo(
-					(profile_info)->{
-													
-						setProfileData( profile_info );
-						
-						if ( buddy.isTransient()){
-						
-							buddy.remove();
-						}
-					});
+				if ( buddy != null ){
+					
+					buddy.getProfileInfo(
+						(profile_info)->{
+														
+							setProfileData( profile_info );
+							
+							if ( buddy.isTransient()){
+							
+								buddy.remove();
+							}
+						});
+				}
 			}
 		}
 		

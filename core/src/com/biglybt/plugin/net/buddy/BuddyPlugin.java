@@ -824,8 +824,8 @@ BuddyPlugin
 			return;
 		}
 
-		String enabledConfigID = "PluginInfo." + plugin_interface.getPluginID()
-				+ ".enabled";
+		String enabledConfigID = "PluginInfo." + plugin_interface.getPluginID()	+ ".enabled";
+		
 		configEnabledListener = new com.biglybt.core.config.ParameterListener() {
 			@Override
 			public void parameterChanged(
@@ -833,6 +833,7 @@ BuddyPlugin
 				fireEnabledStateChanged();
 			}
 		};
+		
 		COConfigurationManager.addParameterListener(enabledConfigID,
 				configEnabledListener);
 	}
@@ -993,16 +994,31 @@ BuddyPlugin
 		return( classic_enabled_param.getValue());
 	}
 
-	public void
+	public boolean
 	setClassicEnabled(
-		boolean		enabled )
+		boolean		enabled,
+		boolean		auto )
 	{
-		if (classic_enabled_param == null){
+		if ( classic_enabled_param == null ){
 
-			return;
+			return( false );
+		}
+		
+		if ( enabled && auto && !classic_enabled_param.getValue()){
+			
+			PluginConfig config = plugin_interface.getPluginconfig();
+			
+			if ( config.getPluginBooleanParameter( "classic.auto.enable.done", false )){
+				
+				return( false );
+			}
+			
+			config.setPluginParameter( "classic.auto.enable.done", true );
 		}
 
 		classic_enabled_param.setValue( enabled );
+		
+		return( enabled );
 	}
 
 	protected void
@@ -1091,7 +1107,7 @@ BuddyPlugin
 			
 			if ( !isClassicEnabled()){
 				
-				setClassicEnabled( true );
+				setClassicEnabled( true, true );
 			}
 		}
 		
@@ -2102,7 +2118,7 @@ BuddyPlugin
 	{
 		if ( !isClassicEnabled()){
 
-			setClassicEnabled( true );
+			setClassicEnabled( true, false );
 		}
 
 		return( addBuddy( key, subsystem, true, false ));
@@ -2208,7 +2224,10 @@ BuddyPlugin
 	{
 		if ( !isClassicEnabled()){
 
-			setClassicEnabled( true );
+			if ( !setClassicEnabled( true, true )){
+				
+				return( null );
+			}
 		}
 		
 		return( addBuddy( key, SUBSYSTEM_AZ2, true, true ));
