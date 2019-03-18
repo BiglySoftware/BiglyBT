@@ -482,7 +482,7 @@ SpeedManagerImpl
 					contactAdded(
 						DHTSpeedTesterContact contact )
 					{
-						if ( core.getInstanceManager().isLANAddress(contact.getAddress().getAddress())){
+						if ( core.getInstanceManager().isLANAddress(contact.getAddress())){
 
 							contact.destroy();
 

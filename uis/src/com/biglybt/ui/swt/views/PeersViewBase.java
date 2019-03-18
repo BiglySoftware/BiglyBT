@@ -786,7 +786,7 @@ PeersViewBase
 			Messages.setLanguageText(boost_item, "PeersView.menu.boost");
 			boost_item.setSelection( has_pb );
 			
-			boost_item.setEnabled( has_public );
+			boost_item.setEnabled( true );//has_public );
 			
 			boost_item.addListener(SWT.Selection, new PeersRunner(peers) {
 				@Override
@@ -794,7 +794,7 @@ PeersViewBase
 					
 					boolean sel = boost_item.getSelection();
 					
-					if ( AENetworkClassifier.categoriseAddress( peer.getIp()) == AENetworkClassifier.AT_PUBLIC ){
+					if ( true ){//AENetworkClassifier.categoriseAddress( peer.getIp()) == AENetworkClassifier.AT_PUBLIC ){
 						
 						DownloadManager dm = peer_dm_map.get( peer );
 	

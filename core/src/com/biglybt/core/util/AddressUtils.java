@@ -265,23 +265,6 @@ AddressUtils
 	isLANLocalAddress(
 		InetSocketAddress	socket_address )
 	{
-		InetAddress address = socket_address.getAddress();
-
-		return( isLANLocalAddress( address ));
-	}
-
-	public static byte
-	isLANLocalAddress(
-		InetAddress	address )
-
-	{
-			// if someone passes us an unresolved address then handle sensibly
-
-		if ( address == null ){
-
-			return( LAN_LOCAL_NO );
-		}
-
 		ClientInstanceManager im = getInstanceManager();
 
 		if ( im == null || !im.isInitialized()){
@@ -289,7 +272,7 @@ AddressUtils
 			return( LAN_LOCAL_MAYBE );
 		}
 
-		return( im.isLANAddress( address )? LAN_LOCAL_YES:LAN_LOCAL_NO);
+		return( im.isLANAddress( socket_address )? LAN_LOCAL_YES:LAN_LOCAL_NO);
 	}
 
 	public static byte
@@ -298,9 +281,15 @@ AddressUtils
 	{
 		byte is_lan_local = LAN_LOCAL_MAYBE;
 
-		try {
-			is_lan_local = isLANLocalAddress( HostNameToIPResolver.syncResolve( address ));
-
+		try{
+			if ( AENetworkClassifier.categoriseAddress( address ) == AENetworkClassifier.AT_PUBLIC ){
+			
+				is_lan_local = isLANLocalAddress( new InetSocketAddress( HostNameToIPResolver.syncResolve( address ), 0 ));
+				
+			}else{
+				
+				is_lan_local = isLANLocalAddress( InetSocketAddress.createUnresolved( address, 0 ));
+			}
 		}catch( UnknownHostException e ){
 
 		}catch( Throwable t ){
@@ -311,24 +300,13 @@ AddressUtils
 		return is_lan_local;
 	}
 
-	private static Set<InetAddress>	pending_addresses = new HashSet<>();
-	private static TimerEventPeriodic	pa_timer;
+	private static Set<InetSocketAddress>	pending_addresses = new HashSet<>();
+	private static TimerEventPeriodic		pa_timer;
 
-	public static void
-	addLANRateLimitAddress(
-		InetSocketAddress		address )
-	{
-		InetAddress ia = address.getAddress();
-		
-		if ( ia != null ){
-			
-			addLANRateLimitAddress( ia );
-		}
-	}
 	
 	public static void
 	addLANRateLimitAddress(
-		InetAddress		address )
+		InetSocketAddress		address )
 	{
 		synchronized( pending_addresses ){
 
@@ -357,7 +335,7 @@ AddressUtils
 
 										if ( im != null && im.isInitialized()){
 
-											for ( InetAddress address : pending_addresses ){
+											for ( InetSocketAddress address : pending_addresses ){
 
 												try{
 													im.addLANAddress( address );
@@ -386,19 +364,7 @@ AddressUtils
 
 	public static void
 	removeLANRateLimitAddress(
-		InetSocketAddress		address )
-	{
-		InetAddress ia = address.getAddress();
-		
-		if ( ia != null ){
-			
-			removeLANRateLimitAddress( ia );
-		}
-	}
-	
-	public static void
-	removeLANRateLimitAddress(
-		InetAddress		address )
+			InetSocketAddress		address )
 	{
 		synchronized( pending_addresses ){
 
@@ -577,6 +543,22 @@ AddressUtils
 		}
 	}
 
+	public static InetSocketAddress
+	getSocketAddress(
+		String		host )
+	
+		throws UnknownHostException
+	{
+		if ( AENetworkClassifier.categoriseAddress( host ) == AENetworkClassifier.AT_PUBLIC ){
+			
+			return( new InetSocketAddress( InetAddress.getByName( host ), 0 ));
+			
+		}else{
+			
+			return( InetSocketAddress.createUnresolved( host, 0 ));
+		}
+	}
+	
 	public static String
 	getHostAddressForURL(
 		InetSocketAddress	address )

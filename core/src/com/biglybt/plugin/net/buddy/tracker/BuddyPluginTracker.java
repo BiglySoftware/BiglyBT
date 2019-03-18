@@ -769,8 +769,10 @@ outer:
 			
 			try{
 				if ( plugin.getPeersAreLANLocal()){
+										
+					InetSocketAddress isa = AddressUtils.getSocketAddress( pb.ip );
 					
-					AddressUtils.addLANRateLimitAddress( InetAddress.getByName( pb.ip ));
+					AddressUtils.addLANRateLimitAddress( isa );
 					
 					if ( !peer.isLANLocal()){
 					
@@ -868,7 +870,9 @@ outer:
 		try{
 			if ( do_lan ){
 				
-				AddressUtils.removeLANRateLimitAddress( InetAddress.getByName( pb.ip ));
+				InetSocketAddress isa = AddressUtils.getSocketAddress( pb.ip );
+
+				AddressUtils.removeLANRateLimitAddress( isa );
 			}
 		}catch( Throwable e ){
 			
@@ -945,7 +949,9 @@ outer:
 			try{
 				if ( plugin.getPeersAreLANLocal() && peer.isLANLocal()){
 					
-					AddressUtils.removeLANRateLimitAddress( InetAddress.getByName( pb.ip ));
+					InetSocketAddress isa = AddressUtils.getSocketAddress( pb.ip );
+
+					AddressUtils.removeLANRateLimitAddress( isa );
 					
 					peer.resetLANLocalStatus();
 				}

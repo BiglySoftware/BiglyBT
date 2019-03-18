@@ -52,7 +52,7 @@ ClientInstanceManager
 
 	public ClientInstanceTracked[]
 	track(
-		byte[]								hash,
+		byte[]									hash,
 		ClientInstanceTracked.TrackTarget		target );
 
 	public InetSocketAddress
@@ -67,11 +67,7 @@ ClientInstanceManager
 
 	public boolean
 	isLANAddress(
-		InetAddress			address );
-
-	public boolean
-	isExternalAddress(
-		InetAddress			address );
+		InetSocketAddress	address );
 
 	public boolean
 	addLANSubnet(
@@ -81,11 +77,11 @@ ClientInstanceManager
 
 	public void
 	addLANAddress(
-		InetAddress			address );
+		InetSocketAddress	address );
 
 	public void
 	removeLANAddress(
-		InetAddress			address );
+		InetSocketAddress	address );
 
 	public boolean
 	getIncludeWellKnownLANs();

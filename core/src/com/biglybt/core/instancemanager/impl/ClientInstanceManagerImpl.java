@@ -185,12 +185,11 @@ ClientInstanceManagerImpl
 	private volatile Map<InetSocketAddress,InetSocketAddress>			udp2_ext_to_lan	= new HashMap<>();
 
 	private volatile Set<InetAddress>			lan_addresses	= new HashSet<>();
-	private volatile Set<InetAddress>			ext_addresses	= new HashSet<>();
 
 	private volatile List<Pattern>					lan_subnets		= new ArrayList<>();
 	private volatile List<InetSocketAddress>		explicit_peers 	= new ArrayList<>();
 
-	private CopyOnWriteSet<InetAddress>	explicit_addresses = new CopyOnWriteSet<>(false);
+	private CopyOnWriteSet<InetSocketAddress>	explicit_addresses = new CopyOnWriteSet<>(false);
 
 	private volatile boolean		include_well_known_lans	= true;
 
@@ -868,20 +867,11 @@ ClientInstanceManagerImpl
 
 			if ( !lan_addresses.contains( internal_address )){
 
-				Set	new_lan_addresses = new HashSet( lan_addresses );
+				Set<InetAddress>	new_lan_addresses = new HashSet<>( lan_addresses );
 
 				new_lan_addresses.add( internal_address );
 
 				lan_addresses	= new_lan_addresses;
-			}
-
-			if ( !ext_addresses.contains( external_address )){
-
-				Set	new_ext_addresses = new HashSet( ext_addresses );
-
-				new_ext_addresses.add( external_address );
-
-				ext_addresses	= new_ext_addresses;
 			}
 		}finally{
 
@@ -976,84 +966,116 @@ ClientInstanceManagerImpl
 	@Override
 	public boolean
 	isLANAddress(
-		InetAddress			address )
+		InetSocketAddress			isa )
 	{
 		if ( DISABLE_LAN_LOCAL_STUFF ){
 
 			return( false );
 		}
 
-		if ( address == null ){
+		InetAddress address = isa.getAddress();
+		
+		if ( address != null ){
 
-			return( false );
-		}
-
-		Set<String>	sp = data_socks_proxies;
-
-		if ( sp != null ){
-
-			if ( sp.contains( address.getHostAddress())){
-
-				return( false );
+			Set<String>	sp = data_socks_proxies;
+	
+			if ( sp != null ){
+	
+				if ( sp.contains( address.getHostAddress())){
+	
+					return( false );
+				}
 			}
-		}
-
-		if ( include_well_known_lans ){
-
-			if ( 	address.isLoopbackAddress() ||
-					address.isLinkLocalAddress() ||
-					address.isSiteLocalAddress()){
-
-				return( true );
-			}
-		}
-
-		String	host_address = address.getHostAddress();
-
-		for (int i=0;i<lan_subnets.size();i++){
-
-			Pattern	p = (Pattern)lan_subnets.get(i);
-
-			if ( p.matcher( host_address ).matches()){
-
-				return( true );
-			}
-		}
-
-		if ( lan_addresses.contains( address )){
-
-			return( true );
-		}
-
-		if ( explicit_peers.size() > 0 ){
-
-			Iterator	it = explicit_peers.iterator();
-
-			while( it.hasNext()){
-
-				if (((InetSocketAddress)it.next()).getAddress().equals( address )){
-
+	
+			if ( include_well_known_lans ){
+	
+				if ( 	address.isLoopbackAddress() ||
+						address.isLinkLocalAddress() ||
+						address.isSiteLocalAddress()){
+	
 					return( true );
 				}
 			}
+	
+			String	host_address = address.getHostAddress();
+	
+			for (int i=0;i<lan_subnets.size();i++){
+	
+				Pattern	p = (Pattern)lan_subnets.get(i);
+	
+				if ( p.matcher( host_address ).matches()){
+	
+					return( true );
+				}
+			}
+	
+			if ( lan_addresses.contains( address )){
+	
+				return( true );
+			}
+	
+			if ( explicit_peers.size() > 0 ){
+	
+				Iterator	it = explicit_peers.iterator();
+	
+				while( it.hasNext()){
+	
+					if (((InetSocketAddress)it.next()).getAddress().equals( address )){
+	
+						return( true );
+					}
+				}
+			}
 		}
-
-		return( explicit_addresses.contains( address ));
+		
+		if ( isa.getPort() != 0 ){
+			
+			isa = setPort( isa, 0 );
+		}
+		
+		return( explicit_addresses.contains( isa ));
 	}
 
 	@Override
 	public void
-	addLANAddress(InetAddress address)
+	addLANAddress(InetSocketAddress isa)
 	{
-		explicit_addresses.add( address );
+		if ( isa.getPort() != 0 ){
+			
+			isa = setPort( isa, 0 );
+		}
+	
+		explicit_addresses.add( isa );
 	}
 
 	@Override
-	public void removeLANAddress(InetAddress address)
+	public void 
+	removeLANAddress(InetSocketAddress isa)
 	{
-		explicit_addresses.remove( address );
+		if ( isa.getPort() != 0 ){
+			
+			isa = setPort( isa, 0 );
+		}
+	
+		explicit_addresses.remove( isa );
 	}
 
+	private InetSocketAddress
+	setPort(
+		InetSocketAddress		isa,
+		int						port )
+	{
+		if ( isa.isUnresolved()){
+			
+			return( InetSocketAddress.createUnresolved( isa.getHostName(), port));
+			
+		}else{
+			
+			return( new InetSocketAddress( isa.getAddress(), port ));
+			
+		}
+	}
+	
 	@Override
 	public boolean
 	addLANSubnet(
@@ -1189,14 +1211,6 @@ ClientInstanceManagerImpl
 		}
 
 		return( new_peer );
-	}
-
-	@Override
-	public boolean
-	isExternalAddress(
-		InetAddress			address )
-	{
-		return( ext_addresses.contains( address ));
 	}
 
 	@Override

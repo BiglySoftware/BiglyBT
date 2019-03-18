@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.Inet6Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
@@ -616,10 +617,10 @@ IpFilterImpl
 	{
 		//In all cases, block banned ip addresses
 
-		  if(isBanned(ipAddress)){
+		if(isBanned(ipAddress)){
 
-			  return true;
-		  }
+			return true;
+		}
 
 		if ( !isEnabled()){
 
@@ -642,7 +643,7 @@ IpFilterImpl
 
 	  	//never block lan local addresses
 
-	  if ( AddressUtils.isLANLocalAddress( ipAddress ) == AddressUtils.LAN_LOCAL_YES ){
+	  if ( AddressUtils.isLANLocalAddress( new InetSocketAddress( ipAddress, 0 )) == AddressUtils.LAN_LOCAL_YES ){
 
 		  return false;
 	  }
