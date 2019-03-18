@@ -64,13 +64,22 @@ AEProxyAddressMapper
 
 	public PortMapping
 	registerPortMapping(
-		int		local_port,
-		String	ip );
+		int						proxy_port,
+		String					remote_ip );
 
 	public PortMapping
 	registerPortMapping(
+		int						proxy_port,
+		String					remote_ip,
+		Map<String,Object>		properties );
+
+	public PortMapping
+	registerPortMapping(
+		int						proxy_port,
 		int						local_port,
-		String					ip,
+		String					local_ip,
+		int						remote_port,
+		String					remote_ip,
 		Map<String,Object>		properties );
 
 	public AppliedPortMapping
@@ -89,7 +98,10 @@ AEProxyAddressMapper
 	AppliedPortMapping
 	{
 		public InetSocketAddress
-		getAddress();
+		getLocalAddress();
+
+		public InetSocketAddress
+		getRemoteAddress();
 
 		public Map<String,Object>
 		getProperties();

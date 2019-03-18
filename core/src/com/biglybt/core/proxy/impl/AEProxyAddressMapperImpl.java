@@ -29,6 +29,7 @@ import java.util.Map;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxyAddressMapper;
+import com.biglybt.core.proxy.AEProxyAddressMapper.PortMapping;
 import com.biglybt.core.util.*;
 
 /**
@@ -254,14 +255,14 @@ AEProxyAddressMapperImpl
 	@Override
 	public PortMapping
 	registerPortMapping(
-		int		local_port,
-		String	ip )
+		int		proxy_port,
+		String	remote_ip )
 	{
-		PortMappingImpl mapping = new PortMappingImpl( ip, local_port, null );
+		PortMappingImpl mapping = new PortMappingImpl( proxy_port, null, 6881, remote_ip, 6881, null );
 
 		synchronized( port_mappings ){
 
-			port_mappings.put( local_port, mapping );
+			port_mappings.put( proxy_port, mapping );
 		}
 
 		return( mapping );
@@ -270,27 +271,48 @@ AEProxyAddressMapperImpl
 	@Override
 	public PortMapping
 	registerPortMapping(
-		int						local_port,
-		String					ip,
+		int						proxy_port,
+		String					remote_ip,
 		Map<String,Object>		properties )
 	{
-		PortMappingImpl mapping = new PortMappingImpl( ip, local_port, properties );
+		PortMappingImpl mapping = new PortMappingImpl( proxy_port, null, 6881, remote_ip, 6881, properties );
 
 		synchronized( port_mappings ){
 
-			port_mappings.put( local_port, mapping );
+			port_mappings.put( proxy_port, mapping );
 		}
 
 		return( mapping );
 	}
 
 	@Override
+	public PortMapping
+	registerPortMapping(
+		int						proxy_port,
+		int						local_port,
+		String					local_ip,
+		int						remote_port,
+		String					remote_ip,
+		Map<String,Object>		properties )
+	{ 
+		PortMappingImpl mapping = new PortMappingImpl( proxy_port, local_ip, local_port, remote_ip, remote_port, properties );
+
+		synchronized( port_mappings ){
+
+			port_mappings.put( proxy_port, mapping );
+		}
+
+		return( mapping );
+	}
+	
+	@Override
 	public AppliedPortMapping
 	applyPortMapping(
 		InetAddress		address,
 		int				port )
 	{
-		InetSocketAddress result;
+		InetSocketAddress local_address;
+		InetSocketAddress remote_address;
 
 		PortMappingImpl mapping;
 
@@ -301,7 +323,8 @@ AEProxyAddressMapperImpl
 
 		if ( mapping == null ){
 
-			result = new InetSocketAddress( address, port );
+			local_address	= null;
+			remote_address 	= new InetSocketAddress( address, port );
 
 		}else{
 
@@ -315,55 +338,94 @@ AEProxyAddressMapperImpl
 			if (	bind_ip == null && address.isLoopbackAddress() ||
 					bind_ip != null && bind_ip.equals( address )){
 
-				String ip = mapping.getIP();
+				String remote_ip = mapping.getRemoteIP();
 
-				if ( AENetworkClassifier.categoriseAddress( ip ) == AENetworkClassifier.AT_PUBLIC ){
+				if ( AENetworkClassifier.categoriseAddress( remote_ip ) == AENetworkClassifier.AT_PUBLIC ){
 
-					result = new InetSocketAddress( ip, port );
+					local_address	= null;
+					remote_address 	= new InetSocketAddress( remote_ip, port );
 
 				}else{
-
-						// default to port 6881 here - might need to fix this up one day if this doesn't
-						// remain the sensible default
-
-					result = InetSocketAddress.createUnresolved( ip, 6881 );
+					
+					String local_ip = mapping.getLocalIP();
+					
+					if ( local_ip == null ){
+						
+						local_address	= null;
+						
+					}else{
+						
+						local_address = InetSocketAddress.createUnresolved( local_ip, mapping.getLocalPort());
+					}
+					
+					remote_address = InetSocketAddress.createUnresolved( remote_ip, mapping.getRemotePort());
 				}
+				
 			}else{
 
-				result = new InetSocketAddress( address, port );
+				local_address	= null;
+				remote_address 	= new InetSocketAddress( address, port );
 			}
 		}
 
 		//System.out.println( "Applying mapping: " + address + "/" + port + " -> " + result );
 
-		return( new AppliedPortMappingImpl( result, mapping==null?null:mapping.getProperties()));
+		return( new AppliedPortMappingImpl( local_address, remote_address, mapping==null?null:mapping.getProperties()));
 	}
 
 	private class
 	PortMappingImpl
 		implements PortMapping
 	{
-		private final String				ip;
-		private final int					port;
+		private final int					proxy_port;
+		
+		private final String				local_ip;
+		private final int					local_port;
+		private final String				remote_ip;
+		private final int					remote_port;
 		private final Map<String,Object>	properties;
 
 		private
 		PortMappingImpl(
-			String				_ip,
-			int					_port,
+			int					_proxy_port,
+			String				_local_ip,
+			int					_local_port,
+			String				_remote_ip,
+			int					_remote_port,
 			Map<String,Object>	_properties )
 		{
-			ip				= _ip;
-			port			= _port;
-			properties		= _properties;
+			proxy_port			= _proxy_port;
+			local_ip			= _local_ip;
+			local_port			= _local_port;
+			remote_ip			= _remote_ip;
+			remote_port			= _remote_port;
+			properties			= _properties;
 		}
 
 		private String
-		getIP()
+		getLocalIP()
 		{
-			return( ip );
+			return( local_ip );
 		}
 
+		private int
+		getLocalPort()
+		{
+			return( local_port );
+		}
+
+		private String
+		getRemoteIP()
+		{
+			return( remote_ip );
+		}
+
+		private int
+		getRemotePort()
+		{
+			return( remote_port );
+		}
+		
 		public Map<String,Object>
 		getProperties()
 		{
@@ -376,7 +438,7 @@ AEProxyAddressMapperImpl
 		{
 			synchronized( port_mappings ){
 
-				port_mappings.remove( port );
+				port_mappings.remove( proxy_port );
 			}
 		}
 	}
@@ -385,25 +447,35 @@ AEProxyAddressMapperImpl
 	AppliedPortMappingImpl
 		implements AppliedPortMapping
 	{
-		private final InetSocketAddress		address;
+		private final InetSocketAddress		local_address;
+		private final InetSocketAddress		remote_address;
 		private final Map<String,Object>	properties;
 
 		private
 		AppliedPortMappingImpl(
-			InetSocketAddress	_address,
+			InetSocketAddress	_local_address,
+			InetSocketAddress	_remote_address,
 			Map<String,Object>	_properties )
 		{
-			address		= _address;
-			properties	= _properties;
+			local_address		= _local_address;
+			remote_address		= _remote_address;
+			properties			= _properties;
 		}
 
 		@Override
 		public InetSocketAddress
-		getAddress()
+		getRemoteAddress()
 		{
-			return( address );
+			return( remote_address );
 		}
 
+		@Override
+		public InetSocketAddress
+		getLocalAddress()
+		{
+			return( local_address );
+		}
+		
 		@Override
 		public Map<String,Object>
 		getProperties()

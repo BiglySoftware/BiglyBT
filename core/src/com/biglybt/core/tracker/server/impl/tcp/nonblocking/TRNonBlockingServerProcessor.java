@@ -403,7 +403,7 @@ TRNonBlockingServerProcessor
 				
 				AEProxyAddressMapper.AppliedPortMapping applied_mapping = proxy_address_mapper.applyPortMapping( remote_sa.getAddress(), remote_sa.getPort());
 
-				remote_sa = applied_mapping.getAddress();
+				remote_sa = applied_mapping.getRemoteAddress();
 			    
 				ByteArrayOutputStream	response =
 					process( 	request_header,

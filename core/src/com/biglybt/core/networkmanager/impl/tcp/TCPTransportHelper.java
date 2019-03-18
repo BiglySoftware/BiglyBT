@@ -88,7 +88,7 @@ TCPTransportHelper
 
 	    AEProxyAddressMapper.AppliedPortMapping applied_mapping = proxy_address_mapper.applyPortMapping( socket.getInetAddress(), socket.getPort());
 
-	    InetSocketAddress	tcp_address = applied_mapping.getAddress();
+	    InetSocketAddress	tcp_address = applied_mapping.getRemoteAddress();
 
 	    return( tcp_address );
 	}
