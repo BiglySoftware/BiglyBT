@@ -145,6 +145,16 @@ public class NetworkManager {
   private final List<WriteController> 	write_controllers;
   private final List<ReadController> 	read_controllers;
 
+  private TransferProcessor upload_processor;
+
+  private TransferProcessor download_processor;
+
+
+  private TransferProcessor lan_upload_processor;
+
+  private TransferProcessor lan_download_processor;
+
+
   {
 	 int	num_read = COConfigurationManager.getIntParameter( "network.control.read.processor.count" );
 
@@ -163,6 +173,130 @@ public class NetworkManager {
 
 		 write_controllers.add( new WriteController());
 	 }
+	 
+	  upload_processor = new TransferProcessor(
+			  TransferProcessor.TYPE_UPLOAD,
+			  new LimitedRateGroup()
+			  {
+				  @Override
+				  public String
+				  getName()
+				  {
+					  return( "global_up" );
+				  }
+				  @Override
+				  public int
+				  getRateLimitBytesPerSecond()
+				  {
+					  return max_upload_rate_bps;
+				  }
+				  @Override
+				  public boolean
+				  isDisabled()
+				  {
+					  return( max_upload_rate_bps == -1 );
+				  }
+				  @Override
+				  public void
+				  updateBytesUsed(
+						  int	used )
+				  {
+				  }
+			  },
+			  write_controllers.size() > 1 );
+	  
+	  download_processor = new TransferProcessor(
+			  TransferProcessor.TYPE_DOWNLOAD,
+			  new LimitedRateGroup()
+			  {
+				  @Override
+				  public String
+				  getName()
+				  {
+					  return( "global_down" );
+				  }
+				  @Override
+				  public int
+				  getRateLimitBytesPerSecond()
+				  {
+					  return max_download_rate_bps;
+				  }
+				  @Override
+				  public boolean
+				  isDisabled()
+				  {
+					  return( max_download_rate_bps == -1 );
+				  }
+				  @Override
+				  public void
+				  updateBytesUsed(
+						  int	used )
+				  {
+				  }
+			  },
+			  read_controllers.size() > 1 );
+	  
+	  lan_upload_processor = new TransferProcessor(
+			  TransferProcessor.TYPE_UPLOAD,
+			  new LimitedRateGroup()
+			  {
+				  @Override
+				  public String
+				  getName()
+				  {
+					  return( "global_lan_up" );
+				  }
+				  @Override
+				  public int
+				  getRateLimitBytesPerSecond()
+				  {
+					  return max_lan_upload_rate_bps;
+				  }
+				  @Override
+				  public boolean
+				  isDisabled()
+				  {
+					  return( max_lan_upload_rate_bps == -1 );
+				  }
+				  @Override
+				  public void
+				  updateBytesUsed(
+						  int	used )
+				  {
+				  }
+			  },
+			  write_controllers.size() > 1 );
+	  
+	  lan_download_processor = new TransferProcessor(
+			  TransferProcessor.TYPE_DOWNLOAD,
+			  new LimitedRateGroup()
+			  {
+				  @Override
+				  public String
+				  getName()
+				  {
+					  return( "global_lan_down" );
+				  }
+				  @Override
+				  public int
+				  getRateLimitBytesPerSecond()
+				  {
+					  return max_lan_download_rate_bps;
+				  }
+				  @Override
+				  public boolean
+				  isDisabled()
+				  {
+					  return( max_lan_download_rate_bps == -1 );
+				  }
+				  @Override
+				  public void
+				  updateBytesUsed(
+						  int	used )
+				  {
+				  }
+			  },
+			  read_controllers.size() > 1 );
   }
 
 
@@ -172,15 +306,6 @@ public class NetworkManager {
 	  return( write_controllers );
   }
   
-  private TransferProcessor upload_processor;
-
-  private TransferProcessor download_processor;
-
-
-  private TransferProcessor lan_upload_processor;
-
-  private TransferProcessor lan_download_processor;
-
   public static boolean
   isLANRateEnabled()
   {
@@ -264,126 +389,6 @@ public class NetworkManager {
   }
 
   public void initialize(Core _core) {
-	  upload_processor = new TransferProcessor(
-			  TransferProcessor.TYPE_UPLOAD,
-			  new LimitedRateGroup()
-			  {
-				  @Override
-				  public String
-				  getName()
-				  {
-					  return( "global_up" );
-				  }
-				  @Override
-				  public int
-				  getRateLimitBytesPerSecond()
-				  {
-					  return max_upload_rate_bps;
-				  }
-				  @Override
-				  public boolean
-				  isDisabled()
-				  {
-					  return( max_upload_rate_bps == -1 );
-				  }
-				  @Override
-				  public void
-				  updateBytesUsed(
-						  int	used )
-				  {
-				  }
-			  },
-			  write_controllers.size() > 1 );
-	  download_processor = new TransferProcessor(
-			  TransferProcessor.TYPE_DOWNLOAD,
-			  new LimitedRateGroup()
-			  {
-				  @Override
-				  public String
-				  getName()
-				  {
-					  return( "global_down" );
-				  }
-				  @Override
-				  public int
-				  getRateLimitBytesPerSecond()
-				  {
-					  return max_download_rate_bps;
-				  }
-				  @Override
-				  public boolean
-				  isDisabled()
-				  {
-					  return( max_download_rate_bps == -1 );
-				  }
-				  @Override
-				  public void
-				  updateBytesUsed(
-						  int	used )
-				  {
-				  }
-			  },
-			  read_controllers.size() > 1 );
-	  lan_upload_processor = new TransferProcessor(
-			  TransferProcessor.TYPE_UPLOAD,
-			  new LimitedRateGroup()
-			  {
-				  @Override
-				  public String
-				  getName()
-				  {
-					  return( "global_lan_up" );
-				  }
-				  @Override
-				  public int
-				  getRateLimitBytesPerSecond()
-				  {
-					  return max_lan_upload_rate_bps;
-				  }
-				  @Override
-				  public boolean
-				  isDisabled()
-				  {
-					  return( max_lan_upload_rate_bps == -1 );
-				  }
-				  @Override
-				  public void
-				  updateBytesUsed(
-						  int	used )
-				  {
-				  }
-			  },
-			  write_controllers.size() > 1 );
-	  lan_download_processor = new TransferProcessor(
-			  TransferProcessor.TYPE_DOWNLOAD,
-			  new LimitedRateGroup()
-			  {
-				  @Override
-				  public String
-				  getName()
-				  {
-					  return( "global_lan_down" );
-				  }
-				  @Override
-				  public int
-				  getRateLimitBytesPerSecond()
-				  {
-					  return max_lan_download_rate_bps;
-				  }
-				  @Override
-				  public boolean
-				  isDisabled()
-				  {
-					  return( max_lan_download_rate_bps == -1 );
-				  }
-				  @Override
-				  public void
-				  updateBytesUsed(
-						  int	used )
-				  {
-				  }
-			  },
-			  read_controllers.size() > 1 );
 
 	HTTPNetworkManager.getSingleton();
 

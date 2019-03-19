@@ -43,6 +43,8 @@ import com.biglybt.pif.messaging.MessageException;
 import com.biglybt.pif.messaging.generic.GenericMessageConnection;
 import com.biglybt.pif.messaging.generic.GenericMessageConnectionListener;
 import com.biglybt.pif.messaging.generic.GenericMessageEndpoint;
+import com.biglybt.pif.messaging.generic.GenericMessageStartpoint;
+import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.RateLimiter;
 import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pif.utils.security.SEPublicKey;
@@ -225,6 +227,20 @@ SESTSConnectionImpl
 			});
 	}
 
+	@Override
+	public GenericMessageStartpoint 
+	getStartpoint()
+	{
+		return( connection.getStartpoint());
+	}
+	
+	@Override
+	public Connection
+	getConnection()
+	{
+		return( connection.getConnection());
+	}
+	
 	protected int
 	getConnectMethodCount()
 	{

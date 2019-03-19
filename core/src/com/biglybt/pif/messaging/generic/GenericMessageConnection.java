@@ -20,6 +20,7 @@
 package com.biglybt.pif.messaging.generic;
 
 import com.biglybt.pif.messaging.MessageException;
+import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.RateLimiter;
 import com.biglybt.pif.utils.PooledByteBuffer;
 
@@ -34,11 +35,21 @@ GenericMessageConnection
 	public GenericMessageEndpoint
 	getEndpoint();
 
+		/**
+		 * @return may be null if unknown
+		 */
+	
+	public GenericMessageStartpoint
+	getStartpoint();
+
 	public void
 	connect()
 
 		throws MessageException;
 
+	public Connection
+	getConnection();
+	
 	public void
 	send(
 		PooledByteBuffer			message )

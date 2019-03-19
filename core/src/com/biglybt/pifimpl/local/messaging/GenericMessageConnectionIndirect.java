@@ -33,6 +33,8 @@ import com.biglybt.pif.messaging.MessageException;
 import com.biglybt.pif.messaging.generic.GenericMessageConnection;
 import com.biglybt.pif.messaging.generic.GenericMessageEndpoint;
 import com.biglybt.pif.messaging.generic.GenericMessageHandler;
+import com.biglybt.pif.messaging.generic.GenericMessageStartpoint;
+import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.RateLimiter;
 import com.biglybt.pif.utils.PooledByteBuffer;
 
@@ -540,6 +542,20 @@ GenericMessageConnectionIndirect
 		return( endpoint );
 	}
 
+	@Override
+	public GenericMessageStartpoint 
+	getStartpoint()
+	{
+		return( null );
+	}
+
+	@Override
+	public Connection 
+	getConnection()
+	{
+		return( null );
+	}
+	
 	@Override
 	public void
 	addInboundRateLimiter(

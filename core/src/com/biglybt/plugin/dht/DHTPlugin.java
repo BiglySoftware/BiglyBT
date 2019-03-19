@@ -818,6 +818,13 @@ DHTPlugin
 				});
 
 	}
+	
+	@Override
+	public InetSocketAddress 
+	getConnectionOrientedEndpoint()
+	{
+		return( getLocalAddress().getAddress());
+	}
 
 	protected void
 	changePort(

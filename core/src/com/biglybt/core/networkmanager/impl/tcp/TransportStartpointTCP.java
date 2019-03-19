@@ -26,11 +26,15 @@ import java.nio.channels.SocketChannel;
 import com.biglybt.core.networkmanager.ProtocolEndpoint;
 import com.biglybt.core.networkmanager.ProtocolStartpoint;
 import com.biglybt.core.networkmanager.TransportStartpoint;
+import com.biglybt.core.proxy.AEProxyAddressMapper;
+import com.biglybt.core.proxy.AEProxyFactory;
 
 public class
 TransportStartpointTCP
 	implements TransportStartpoint, ProtocolStartpoint
 {
+	private static final AEProxyAddressMapper proxy_address_mapper = AEProxyFactory.getAddressMapper();
+
 	private final TransportEndpointTCP		ep;
 
 	public
@@ -73,6 +77,34 @@ TransportStartpointTCP
 		return( null );
 	}
 
+	@Override
+	public InetSocketAddress
+	getNotionalAddress()
+	{
+		SocketChannel channel = ep.getSocketChannel();
+
+		if ( channel != null ){
+
+			Socket socket = channel.socket();
+
+			if ( socket != null ){
+
+			    AEProxyAddressMapper.AppliedPortMapping applied_mapping = proxy_address_mapper.applyPortMapping( socket.getInetAddress(), socket.getPort());
+
+			    InetSocketAddress	tcp_address = applied_mapping.getLocalAddress();
+			    
+			    if ( tcp_address != null ){
+			    
+			    	return( tcp_address );
+			    }
+			    
+			    return((InetSocketAddress)socket.getLocalSocketAddress());
+			}
+		}
+
+		return( null );
+	}
+	
 	@Override
 	public String
 	getDescription()

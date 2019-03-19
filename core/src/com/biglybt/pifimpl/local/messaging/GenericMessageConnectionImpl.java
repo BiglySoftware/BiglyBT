@@ -34,6 +34,8 @@ import com.biglybt.pif.messaging.MessageException;
 import com.biglybt.pif.messaging.generic.GenericMessageConnection;
 import com.biglybt.pif.messaging.generic.GenericMessageConnectionListener;
 import com.biglybt.pif.messaging.generic.GenericMessageEndpoint;
+import com.biglybt.pif.messaging.generic.GenericMessageStartpoint;
+import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.RateLimiter;
 import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pifimpl.local.utils.PooledByteBufferImpl;
@@ -119,6 +121,33 @@ GenericMessageConnectionImpl
 		return( endpoint==null?delegate.getEndpoint():endpoint);
 	}
 
+	@Override
+	public GenericMessageStartpoint 
+	getStartpoint()
+	{
+		if ( delegate != null ){
+			
+			return( delegate.getStartpoint());
+			
+		}else{
+			
+			return( null );
+		}
+	}
+	
+	@Override
+	public Connection 
+	getConnection()
+	{
+		if ( delegate != null ){
+			
+			return( delegate.getConnection());
+			
+		}else{
+			
+			return( null );
+		}
+	}
 	@Override
 	public int
 	getMaximumMessageSize()

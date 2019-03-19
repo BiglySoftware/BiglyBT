@@ -23,6 +23,8 @@ import java.nio.ByteBuffer;
 
 import com.biglybt.pif.messaging.MessageException;
 import com.biglybt.pif.messaging.generic.GenericMessageEndpoint;
+import com.biglybt.pif.messaging.generic.GenericMessageStartpoint;
+import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.RateLimiter;
 import com.biglybt.pif.utils.PooledByteBuffer;
 
@@ -36,6 +38,9 @@ GenericMessageConnectionAdapter
 	public GenericMessageEndpoint
 	getEndpoint();
 
+	public GenericMessageStartpoint
+	getStartpoint();
+	
 	public int
 	getMaximumMessageSize();
 
@@ -53,6 +58,9 @@ GenericMessageConnectionAdapter
 	public void
 	accepted();
 
+	public Connection
+	getConnection();
+	
 	public void
 	send(
 		PooledByteBuffer			message )

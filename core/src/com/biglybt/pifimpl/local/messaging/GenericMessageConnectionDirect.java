@@ -33,8 +33,11 @@ import com.biglybt.pif.messaging.MessageException;
 import com.biglybt.pif.messaging.MessageManager;
 import com.biglybt.pif.messaging.generic.GenericMessageConnection;
 import com.biglybt.pif.messaging.generic.GenericMessageEndpoint;
+import com.biglybt.pif.messaging.generic.GenericMessageStartpoint;
+import com.biglybt.pif.network.Connection;
 import com.biglybt.pif.network.RateLimiter;
 import com.biglybt.pif.utils.PooledByteBuffer;
+import com.biglybt.pifimpl.local.network.ConnectionImpl;
 import com.biglybt.pifimpl.local.utils.PooledByteBufferImpl;
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl;
 
@@ -67,6 +70,7 @@ GenericMessageConnectionDirect
 	private byte[][]					shared_secrets;
 	private GenericMessageEndpointImpl	endpoint;
 	private NetworkConnection			connection;
+	private ConnectionImpl				plugin_connection;
 
 	private volatile boolean	connected;
 	private boolean				processing;
@@ -264,6 +268,8 @@ GenericMessageConnectionDirect
 	{
 		connection		= _connection;
 
+		plugin_connection = new ConnectionImpl( connection, true );
+		
 		connection.connect(
 				ProtocolEndpoint.CONNECT_PRIORITY_MEDIUM,
 				new NetworkConnection.ConnectionListener()
@@ -338,6 +344,34 @@ GenericMessageConnectionDirect
 	}
 
 	@Override
+	public GenericMessageStartpoint 
+	getStartpoint()
+	{
+		if ( connection != null ){
+			
+			TransportStartpoint sp = connection.getTransport().getTransportStartpoint();
+			
+				// null for UDP as not implemented :(
+			
+			if ( sp != null ){
+			
+				InetSocketAddress address = sp.getProtocolStartpoint().getNotionalAddress();
+			
+				return( (GenericMessageStartpoint)()-> address );
+			}
+		}
+		
+		return( null );
+	}
+	
+	@Override
+	public Connection 
+	getConnection()
+	{
+		return( plugin_connection );
+	}
+	
+	@Override
 	public void
 	connect(
 		ByteBuffer													upper_initial_data,
@@ -363,6 +397,8 @@ GenericMessageConnectionDirect
 				crypto != MessageManager.STREAM_ENCRYPTION_RC4_REQUIRED, 	// allow fallback
 				shared_secrets );
 
+		plugin_connection = new ConnectionImpl( connection, false );
+		
 		ByteBuffer	initial_data = ByteBuffer.wrap( msg_id.getBytes());
 
 		if ( upper_initial_data != null ){

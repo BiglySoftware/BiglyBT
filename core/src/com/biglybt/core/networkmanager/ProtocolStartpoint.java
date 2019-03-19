@@ -30,6 +30,9 @@ ProtocolStartpoint
 	public InetSocketAddress
 	getAddress();
 
+	public InetSocketAddress
+	getNotionalAddress();
+	
 	public String
 	getDescription();
 }

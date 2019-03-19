@@ -59,6 +59,9 @@ DHTPluginInterface
 	public DHTPluginContact
 	getLocalAddress();
 
+	public InetSocketAddress
+	getConnectionOrientedEndpoint();
+	
 	public String
 	getNetwork();
 

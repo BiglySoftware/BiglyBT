@@ -543,6 +543,14 @@ AddressUtils
 		}
 	}
 
+	public static boolean
+	sameHost(
+		InetSocketAddress		a1,
+		InetSocketAddress		a2 )
+	{
+		return( getHostAddress( a1 ).equals( getHostAddress( a2 )));
+	}
+	
 	public static InetSocketAddress
 	getSocketAddress(
 		String		host )

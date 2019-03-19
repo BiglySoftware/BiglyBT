@@ -28,7 +28,12 @@ import java.net.URLEncoder;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreComponent;
+import com.biglybt.core.CoreException;
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreLifecycleAdapter;
+import com.biglybt.core.CoreLifecycleListener;
 import com.biglybt.core.config.*;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
@@ -62,6 +67,7 @@ import com.biglybt.pif.messaging.MessageManager;
 import com.biglybt.pif.messaging.generic.GenericMessageConnection;
 import com.biglybt.pif.messaging.generic.GenericMessageHandler;
 import com.biglybt.pif.messaging.generic.GenericMessageRegistration;
+import com.biglybt.pif.messaging.generic.GenericMessageStartpoint;
 import com.biglybt.pif.network.ConnectionManager;
 import com.biglybt.pif.network.RateLimiter;
 import com.biglybt.pif.peers.Peer;
@@ -769,17 +775,37 @@ BuddyPlugin
 				public void
 				closedownInitiated()
 				{
-					saveConfig( true );
-
-					closedown();
-
-					beta_plugin.closedown();
+					// meh, moved this to core listener below as we need to closedown before 
+					// i2p plugin so connections aren't torn down before we can tidily close
 				}
 
 				@Override
 				public void
 				closedownComplete()
 				{
+				}
+			});
+		
+		CoreFactory.getSingleton().addLifecycleListener(
+			new CoreLifecycleAdapter(){
+				
+				@Override
+				public boolean 
+				syncInvokeRequired()
+				{
+					return( true );
+				}
+				
+				@Override
+				public void 
+				stopping(
+					Core core)
+				{	
+					saveConfig( true );
+
+					closedown();
+
+					beta_plugin.closedown();
 				}
 			});
 	}
@@ -849,7 +875,7 @@ BuddyPlugin
 	{
 		try{
 			List<DistributedDatabase> ddbs = plugin_interface.getUtilities().getDistributedDatabases( new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P });
-			
+						
 			for ( DistributedDatabase ddb: ddbs ){
 			
 				if ( ddb.isAvailable()){
@@ -1401,6 +1427,52 @@ BuddyPlugin
 								}
 								
 								return( false );
+							}
+							
+							// need to check that this connection is for the correct local endpoint to prevent a
+							// speculative connection over the non-mix one being treated as mix and leaking
+							// info...
+							
+							if ( details.getNetwork() != AENetworkClassifier.AT_PUBLIC ){
+								
+								boolean ok = false;
+								
+								GenericMessageStartpoint start = connection.getStartpoint();
+								
+								InetSocketAddress start_address = null;
+								InetSocketAddress ddb_address1	= null;
+								InetSocketAddress ddb_address2	= null;
+								
+								if ( start != null ){
+									
+									start_address = start.getNotionalAddress();
+									
+									ddb_address1 = details.getDDB().getDHTPlugin().getConnectionOrientedEndpoint();
+									
+									ok = AddressUtils.sameHost( start_address, ddb_address1 );
+									
+									if ( !ok ){
+										
+										ddb_address2 = details.getDDB().getLocalContact().getAddress();
+
+										if ( ddb_address2 != null ){
+											
+											ok = AddressUtils.sameHost( start_address, ddb_address2 );
+										}
+									}
+								}
+								
+								System.out.println( "accept from " + originator + " - " + start_address + "/" + ddb_address1 + "/" + ddb_address2 );
+
+								if ( !ok ){
+									
+									if ( TRACE ){
+										
+										System.out.println( "accept - ddb address mismatch: " + start_address + "/" + ddb_address1 + "/" + ddb_address2 );
+									}
+									
+									return( false );
+								}
 							}
 							
 							final DDBDetails f_details = details;
@@ -2027,69 +2099,75 @@ BuddyPlugin
 						continue;
 					}
 
-					Map	map = new HashMap();
-
-					map.put( "ct", new Long( buddy.getCreatedTime()));
-
-					map.put( "pk", buddy.getPublicKey());
-
-					List	ygm = buddy.getYGMMarkers();
-
-					if ( ygm != null ){
-
-						map.put( "ygm", ygm );
-					}
-
-					String	nick = buddy.getNickName();
-
-					if ( nick != null ){
-
-						map.put( "n", nick );
-					}
-
-					map.put( "ls", new Long( buddy.getLastStatusSeq()));
-
-					map.put( "lo", new Long( buddy.getLastTimeOnline()));
-
-					map.put( "ss", new Long( buddy.getSubsystem()));
-
-					map.put( "v", new Long( buddy.getVersion()));
-
-					if ( buddy.getLocalAuthorisedRSSTagsOrCategoriesAsString() != null ){
-						map.put( "lc", buddy.getLocalAuthorisedRSSTagsOrCategoriesAsString());
-					}
-
-					if ( buddy.getRemoteAuthorisedRSSTagsOrCategoriesAsString() != null ){
-						map.put( "rc", buddy.getRemoteAuthorisedRSSTagsOrCategoriesAsString());
-					}
-
-					boolean connected =
-						buddy.isConnected() ||
-						( connected_at_close != null && connected_at_close.contains( buddy ));
-
-					if ( connected ){
-
-						InetSocketAddress	isa 		= buddy.getIP();
-						int					tcp_port	= buddy.getTCPPort();
-						int					udp_port	= buddy.getUDPPort();
-
-						if ( isa != null ){
-
-							if ( isa.isUnresolved()){
-								
-								map.put( "host", AddressUtils.getHostAddress( isa ));
-								
-							}else{
-								
-								map.put( "ip", isa.getAddress().getAddress());
-							}
-							
-							map.put( "tcp", new Long( tcp_port ));
-							map.put( "udp", new Long( udp_port ));
+					try{
+						Map	map = new HashMap();
+	
+						map.put( "ct", new Long( buddy.getCreatedTime()));
+	
+						map.put( "pk", buddy.getPublicKey());
+	
+						List	ygm = buddy.getYGMMarkers();
+	
+						if ( ygm != null ){
+	
+							map.put( "ygm", ygm );
 						}
+	
+						String	nick = buddy.getNickName();
+	
+						if ( nick != null ){
+	
+							map.put( "n", nick );
+						}
+	
+						map.put( "ls", new Long( buddy.getLastStatusSeq()));
+	
+						map.put( "lo", new Long( buddy.getLastTimeOnline()));
+	
+						map.put( "ss", new Long( buddy.getSubsystem()));
+	
+						map.put( "v", new Long( buddy.getVersion()));
+	
+						if ( buddy.getLocalAuthorisedRSSTagsOrCategoriesAsString() != null ){
+							map.put( "lc", buddy.getLocalAuthorisedRSSTagsOrCategoriesAsString());
+						}
+	
+						if ( buddy.getRemoteAuthorisedRSSTagsOrCategoriesAsString() != null ){
+							map.put( "rc", buddy.getRemoteAuthorisedRSSTagsOrCategoriesAsString());
+						}
+	
+						boolean connected =
+							buddy.isConnected() ||
+							( connected_at_close != null && connected_at_close.contains( buddy ));
+	
+						if ( connected ){
+	
+							InetSocketAddress	isa 		= buddy.getIP();
+							int					tcp_port	= buddy.getTCPPort();
+							int					udp_port	= buddy.getUDPPort();
+	
+							if ( isa != null ){
+	
+								if ( isa.isUnresolved()){
+									
+									map.put( "host", AddressUtils.getHostAddress( isa ));
+									
+								}else{
+									
+									map.put( "ip", isa.getAddress().getAddress());
+								}
+								
+								map.put( "tcp", new Long( tcp_port ));
+								map.put( "udp", new Long( udp_port ));
+							}
+						}
+	
+						buddies_config.add( map );
+						
+					}catch( Throwable e ){
+						
+						Debug.out( e );
 					}
-
-					buddies_config.add( map );
 				}
 
 				Map	map = new HashMap();
@@ -4122,7 +4200,7 @@ BuddyPlugin
 	protected class
 	DDBDetails
 	{
-		private DistributedDatabase	ddb;
+		private final DistributedDatabase	ddb;
 	
 		private PublishDetails	current_publish;
 		private PublishDetails	latest_publish;
@@ -4140,6 +4218,12 @@ BuddyPlugin
 			ddb = _ddb;
 
 			latest_publish = current_publish = new PublishDetails( ddb.getNetwork());
+		}
+		
+		public DistributedDatabase
+		getDDB()
+		{
+			return( ddb );
 		}
 		
 		public String
@@ -4221,7 +4305,7 @@ BuddyPlugin
 
 			synchronized( this ){
 
-				InetSocketAddress public_ip = ddb.getLocalContact().getAddress();
+				InetSocketAddress public_ip = ddb.getDHTPlugin().getConnectionOrientedEndpoint();
 
 				if ( 	latest_publish.getIP() == null ||
 						!latest_publish.getIP().equals( public_ip )){
