@@ -325,9 +325,6 @@ Constants
 		}
 	}
 
-	public static final boolean isOSX_10_5_OrHigher;
-	public static final boolean isOSX_10_6_OrHigher;
-	public static final boolean isOSX_10_7_OrHigher;
 	public static final boolean isOSX_10_8_OrHigher;
 
 	static{
@@ -347,20 +344,13 @@ Constants
 
 					second_digit = Integer.parseInt( bits[1] );
 				}
-			}catch( Throwable e ){
-
+			}catch( Throwable ignored ){
 			}
 
-			isOSX_10_5_OrHigher = true; // Used by plugins, always true since we won't run unless we are 10.7
-			isOSX_10_6_OrHigher = true;
-			isOSX_10_7_OrHigher = true;
 			isOSX_10_8_OrHigher = first_digit > 10 || ( first_digit == 10 && second_digit >= 8 );
 
 		}else{
 
-			isOSX_10_5_OrHigher = false;
-			isOSX_10_6_OrHigher = false;
-			isOSX_10_7_OrHigher = false;
 			isOSX_10_8_OrHigher = false;
 		}
 	}
