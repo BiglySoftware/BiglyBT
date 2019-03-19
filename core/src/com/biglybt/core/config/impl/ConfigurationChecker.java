@@ -144,7 +144,7 @@ ConfigurationChecker
 	  			}
 	  		});
 
-	  	if ( Constants.isWindowsVistaOrHigher && Constants.isJava7OrHigher ){
+	  	if ( Constants.isWindowsVistaOrHigher ){
 
 	  		COConfigurationManager.addAndFireParameterListener(
 		  		"IPV4 Prefer Stack",

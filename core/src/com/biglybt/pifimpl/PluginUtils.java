@@ -19,11 +19,6 @@
 
 package com.biglybt.pifimpl;
 
-/**
- * @author parg
- *
- */
-
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.UIFunctions;
@@ -71,21 +66,6 @@ PluginUtils
 			if ( uif == null ){
 
 				return;
-			}
-
-			if ( !Constants.isJava8OrHigher ){
-
-				String title = MessageText.getString("azjscripter.install.fail.jver");
-
-				String text = MessageText.getString("azjscripter.install.fail.jver.text" );
-
-				UIFunctionsUserPrompter prompter = uif.getUserPrompter(title, text, new String[]{
-					MessageText.getString("Button.ok"),
-				}, 0);
-
-				prompter.setAutoCloseInMS(0);
-
-				prompter.open(null);
 			}
 
 			String title = MessageText.getString("azjscripter.install");
