@@ -2837,7 +2837,7 @@ MagnetPlugin
 		String									args )
 	{
 		if ( listener != null ){
-			listener.reportActivity( getMessageText( "report.secondarylookup", null ));
+			listener.reportActivity( getMessageText( "report.secondarylookup"));
 		}
 
 		PluginProxy	plugin_proxy = null;
@@ -2891,7 +2891,7 @@ MagnetPlugin
 					{
 						try{
 							if ( listener != null ){
-								listener.reportActivity( getMessageText( "report.secondarylookup.ok", null ));
+								listener.reportActivity( getMessageText( "report.secondarylookup.ok" ));
 							}
 
 							synchronized( result ){

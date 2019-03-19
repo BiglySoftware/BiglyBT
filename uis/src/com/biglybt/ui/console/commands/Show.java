@@ -102,7 +102,7 @@ public class Show extends IConsoleCommand {
 		if (subCommand.equalsIgnoreCase("options") || subCommand.equalsIgnoreCase("o")) {
 			ci.invokeCommand("set", null);
 		} else if(subCommand.equalsIgnoreCase("files") || subCommand.equalsIgnoreCase("f")) {
-			ci.invokeCommand("add", Arrays.asList( new String[] { "--list"} ));
+			ci.invokeCommand("add", Collections.singletonList( "--list"));
 		} else if (subCommand.equalsIgnoreCase("torrents") || subCommand.equalsIgnoreCase("t")) {
 			ci.out.println("> -----");
 			ci.torrents.clear();

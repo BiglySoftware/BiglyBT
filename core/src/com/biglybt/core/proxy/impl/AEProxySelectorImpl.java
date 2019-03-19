@@ -44,7 +44,7 @@ AEProxySelectorImpl
 
 	private static final AEProxySelectorImpl		singleton = new AEProxySelectorImpl();
 
-	private static final List<Proxy>		no_proxy_list = Arrays.asList( new Proxy[]{ Proxy.NO_PROXY });
+	private static final List<Proxy>		no_proxy_list = Collections.singletonList( Proxy.NO_PROXY);
 
 	private static final ThreadLocal<Integer>		tls	=
 		new ThreadLocal<Integer>()
@@ -426,7 +426,7 @@ AEProxySelectorImpl
 			}
 		}
 
-		return( Arrays.asList( new Proxy[]{ active.select()}));
+		return( Collections.singletonList( active.select()));
 	}
 
 	private void
