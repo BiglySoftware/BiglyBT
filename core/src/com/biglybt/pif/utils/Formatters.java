@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.Map;
 
-import com.biglybt.core.util.Constants;
-
 /**
  * @author parg
  *
@@ -33,9 +31,6 @@ import com.biglybt.core.util.Constants;
 public interface
 Formatters
 {
-	public String BYTE_ENCODING = Constants.BYTE_ENCODING;
-	public String TEXT_ENCODING = Constants.DEFAULT_ENCODING;
-
 	public String
 	formatByteCountToKiBEtc(
 		long		bytes );

@@ -20,7 +20,6 @@
 
 package com.biglybt.core.tracker.server.impl.tcp;
 
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -343,7 +342,7 @@ TRTrackerServerProcessorTCP
 					}
 
 					String	lhs = token.substring( 0, p2 ).toLowerCase();
-					String	rhs = URLDecoder.decode(token.substring( p2+1 ), Constants.BYTE_ENCODING );
+					String rhs = URLDecoder.decode(token.substring(p2 + 1), Constants.BYTE_ENCODING.name());
 
 					// System.out.println( "param:" + lhs + " = " + rhs );
 

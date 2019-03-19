@@ -20,12 +20,6 @@
 
 package com.biglybt.core.tracker.server.impl;
 
-/**
- * @author parg
- *
- */
-
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -738,10 +732,6 @@ TRTrackerServerTorrentImpl
 
 			return( peer );
 
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new TRTrackerServerException( "Encoding fails", e ));
-
 		}finally{
 
 				// note we can bail out here through a return when there are too many IP overrides
@@ -982,15 +972,11 @@ TRTrackerServerTorrentImpl
 
 			checkForPeerListCompaction( false );
 
-			try{
-				Object o = peer_reuse_map.remove( new String( peer.getIPAsRead(), Constants.BYTE_ENCODING ) + ":" + peer.getTCPPort());
+			String peerIPPortAddress = new String(peer.getIPAsRead(), Constants.BYTE_ENCODING) + ':' + peer.getTCPPort();
+			Object o = peer_reuse_map.remove(peerIPPortAddress);
 
-				if ( o == null ){
-
-					Debug.out(" TRTrackerServerTorrent::removePeer: peer_reuse_map doesn't contain peer");
-				}
-
-			}catch( UnsupportedEncodingException e ){
+			if (o == null) {
+				Debug.out(" TRTrackerServerTorrent::removePeer: peer_reuse_map doesn't contain peer");
 			}
 
 			if ( biased_peers != null ){
@@ -2995,14 +2981,7 @@ TRTrackerServerTorrentImpl
 			boolean		_seed,
 			boolean		_biased )
 		{
-			try{
-				ip = _ip_str.getBytes( Constants.BYTE_ENCODING );
-
-			}catch( UnsupportedEncodingException e  ){
-
-				Debug.printStackTrace(e);
-			}
-
+			ip = _ip_str.getBytes(Constants.BYTE_ENCODING);
 			tcp_port	= (short)_tcp_port;
 			udp_port	= (short)_udp_port;
 			http_port	= (short)_http_port;
@@ -3041,16 +3020,8 @@ TRTrackerServerTorrentImpl
 		}
 
 		@Override
-		public String
-        getIP()
-		{
-			try{
-				return( new String( ip, Constants.BYTE_ENCODING ));
-
-			}catch( UnsupportedEncodingException e ){
-
-				return( new String( ip ));
-			}
+		public String getIP() {
+			return new String(ip, Constants.BYTE_ENCODING);
 		}
 
 		protected boolean
@@ -3102,18 +3073,8 @@ TRTrackerServerTorrentImpl
 			return((flags & flag ) != 0 );
 		}
 
-		protected byte[]
-		getIPAddressBytes()
-		{
-			try{
-				return( HostNameToIPResolver.hostAddressToBytes( new String( ip, Constants.BYTE_ENCODING )));
-
-			}catch( UnsupportedEncodingException e  ){
-
-				Debug.printStackTrace(e);
-
-				return( null );
-			}
+		protected byte[] getIPAddressBytes() {
+			return HostNameToIPResolver.hostAddressToBytes(new String(ip, Constants.BYTE_ENCODING));
 		}
 
 		@Override

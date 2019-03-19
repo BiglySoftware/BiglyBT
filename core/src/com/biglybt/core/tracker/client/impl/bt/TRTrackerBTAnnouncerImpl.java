@@ -68,7 +68,6 @@ import com.biglybt.pif.download.DownloadAnnounceResult;
 import com.biglybt.pif.download.DownloadAnnounceResultPeer;
 import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 
-
 /**
  *
  * This class handles communication with the tracker
@@ -257,17 +256,19 @@ TRTrackerBTAnnouncerImpl
 
 	try {
 
-		this.info_hash += URLEncoder.encode(new String(torrent_hash_target.getBytes(), Constants.BYTE_ENCODING), Constants.BYTE_ENCODING).replaceAll("\\+", "%20");
+			info_hash += URLEncoder.encode(
+					new String(torrent_hash_target.getBytes(), Constants.BYTE_ENCODING),
+					Constants.BYTE_ENCODING.name()).replaceAll("\\+", "%20");
 
-		this.tracker_peer_id_str += URLEncoder.encode(new String(tracker_peer_id, Constants.BYTE_ENCODING), Constants.BYTE_ENCODING).replaceAll("\\+", "%20");
+			tracker_peer_id_str += URLEncoder.encode(
+					new String(tracker_peer_id, Constants.BYTE_ENCODING),
+					Constants.BYTE_ENCODING.name()).replaceAll("\\+", "%20");
 
 	}catch (UnsupportedEncodingException e){
 
 		Logger.log(new LogEvent(torrent, LOGID, "URL encode fails", e));
 
 	  throw( new TRTrackerAnnouncerException( "TRTrackerAnnouncer: URL encode fails"));
-
-
 	}
 
 	timer_event_action =

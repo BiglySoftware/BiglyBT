@@ -70,10 +70,11 @@ Constants
 
 	public static final String[] AZUREUS_DOMAINS = { "azureusplatform.com", "azureus.com", "aelitis.com", "vuze.com", "biglybt.com" };
 
-	public static final String DEFAULT_ENCODING 	= "UTF8";
-	public static final String BYTE_ENCODING 		= "ISO-8859-1";
-	public static final Charset	BYTE_CHARSET;
-	public static final Charset	DEFAULT_CHARSET;
+	public static final Charset UTF_8 = Charset.forName("UTF-8");
+	public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+
+	public static final Charset DEFAULT_ENCODING = UTF_8;
+	public static final Charset BYTE_ENCODING = ISO_8859_1;
 
 	public static final int	DEFAULT_INSTANCE_PORT	= 6880;
 	public static final int	INSTANCE_PORT;
@@ -89,21 +90,6 @@ Constants
 		}
 
 		INSTANCE_PORT = ip;
-
-		Charset	bc 	= null;
-		Charset	dc	= null;
-
-		try{
-			bc 	= Charset.forName( Constants.BYTE_ENCODING );
-			dc	= Charset.forName( Constants.DEFAULT_ENCODING );
-
-		}catch( Throwable e ){
-
-			e.printStackTrace();
-		}
-
-		BYTE_CHARSET 	= bc;
-		DEFAULT_CHARSET	= dc;
 	}
 
 	public static final Locale LOCALE_ENGLISH = Locale.ENGLISH;

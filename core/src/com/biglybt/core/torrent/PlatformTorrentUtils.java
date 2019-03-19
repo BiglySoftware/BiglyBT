@@ -17,7 +17,6 @@
 
 package com.biglybt.core.torrent;
 
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.*;
@@ -166,12 +165,7 @@ public class PlatformTorrentUtils
 		if (obj instanceof String) {
 			return (String) obj;
 		} else if (obj instanceof byte[]) {
-			try {
-				return new String((byte[]) obj, Constants.DEFAULT_ENCODING);
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			return new String((byte[]) obj, Constants.DEFAULT_ENCODING);
 		}
 
 		return null;

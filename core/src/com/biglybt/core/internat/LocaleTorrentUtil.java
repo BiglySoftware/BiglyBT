@@ -372,8 +372,7 @@ public class LocaleTorrentUtil
 			// "System" means use the system encoding
 
 			if (encoding.equalsIgnoreCase("system")) {
-
-				canonical_requested_name = localeUtil.getSystemEncoding();
+				canonical_requested_name = localeUtil.getSystemEncoding().name();
 
 			} else if (encoding.equalsIgnoreCase(LocaleUtilDecoderFallback.NAME)) {
 
@@ -432,7 +431,7 @@ public class LocaleTorrentUtil
 
 		throws LocaleUtilEncodingException
 	{
-		setTorrentEncoding(torrent, Constants.DEFAULT_ENCODING);
+		setTorrentEncoding(torrent, Constants.DEFAULT_ENCODING.name());
 	}
 
 	static public String getCurrentTorrentEncoding(TOTorrent torrent) {

@@ -20,16 +20,11 @@
 
 package com.biglybt.core.xml.util;
 
-/**
- * @author parg
- */
-
 import java.io.*;
 import java.util.*;
 
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
 
 public class
 XUXmlWriter
@@ -61,16 +56,7 @@ XUXmlWriter
 	setOutputStream(
 		OutputStream	_output_stream )
 	{
-		try{
-
-			writer	= new PrintWriter( new OutputStreamWriter(_output_stream , Constants.DEFAULT_ENCODING ));
-
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.printStackTrace( e );
-
-			writer = new PrintWriter( _output_stream );
-		}
+		writer = new PrintWriter(new OutputStreamWriter(_output_stream, Constants.DEFAULT_ENCODING));
 	}
 
 	protected void
@@ -456,18 +442,10 @@ XUXmlWriter
 	{
 		boolean	use_bytes = true;
 
-		String	utf_string = null;
+		String utf_string = new String(content, Constants.DEFAULT_ENCODING);
 
-		try{
-			utf_string = new String(content,Constants.DEFAULT_ENCODING);
-
-			if ( Arrays.equals(
-					content,
-					utf_string.getBytes( Constants.DEFAULT_ENCODING))){
-
-				use_bytes = false;
-			}
-		}catch( UnsupportedEncodingException e ){
+		if (Arrays.equals(content, utf_string.getBytes(Constants.DEFAULT_ENCODING))) {
+			use_bytes = false;
 		}
 
 		writeLineRaw( "<" + tag + " encoding=\""+(use_bytes?"bytes":"utf8") + "\">" +
@@ -495,18 +473,5 @@ XUXmlWriter
 		*/
 	}
 
-	protected String
-	getUTF(
-		byte[]	bytes )
-	{
-		try{
-			return( new String(bytes,Constants.DEFAULT_ENCODING));
 
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.printStackTrace( e );
-
-			return( "" );
-		}
-	}
 }
