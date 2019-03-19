@@ -91,16 +91,10 @@ public class LTHandshake implements LTMessage {
 	}
 
 	public String getBencodedString() {
-		if (this.bencoded_string == null) {
-			try {
-				this.bencoded_string = new String(this.getBencodedData(), Constants.BYTE_ENCODING);
-			}
-			catch (java.io.UnsupportedEncodingException uee) {
-				this.bencoded_string = "";
-				Debug.printStackTrace(uee);
-			}
+		if (bencoded_string == null) {
+			bencoded_string = new String(this.getBencodedData(), Constants.BYTE_ENCODING);
 		}
-		return this.bencoded_string;
+		return bencoded_string;
 	}
 
 	public byte[] getBencodedData() {
@@ -121,8 +115,7 @@ public class LTHandshake implements LTMessage {
 	public String getClientName() {
 		byte[] client_name = (byte[])data_dict.get("v");
 		if (client_name == null) {return null;}
-		try {return new String(client_name, Constants.DEFAULT_ENCODING);}
-		catch (java.io.IOException ioe) {return null;}
+		return new String(client_name, Constants.DEFAULT_ENCODING);
 	}
 
 	public boolean isUploadOnly() {

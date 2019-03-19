@@ -19,12 +19,6 @@
 
 package com.biglybt.core.internat;
 
-/**
- * @author parg
- *
- */
-
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharsetDecoder;
@@ -33,7 +27,6 @@ import java.util.Arrays;
 
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
 
 
 public class
@@ -132,12 +125,7 @@ LocaleUtilDecoderReal
 	}
 
 	@Override
-	public String
-	decodeString(
-		byte[]		bytes )
-
-		throws UnsupportedEncodingException
-	{
+	public String decodeString(byte[] bytes) {
 		if ( bytes == null ){
 
 			return( null );
@@ -188,17 +176,7 @@ LocaleUtilDecoderReal
 			// ignore
 		}
 
-		try{
-
-				// no joy, default
-
-			return( new String( bytes, Constants.DEFAULT_ENCODING ));
-
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.printStackTrace( e );
-
-			return( new String( bytes ));
-		}
+		// no joy, default
+		return new String(bytes, Constants.DEFAULT_ENCODING);
 	}
 }

@@ -67,7 +67,6 @@ import com.biglybt.core.util.*;
 import com.biglybt.pif.dht.mainline.MainlineDHTProvider;
 import com.biglybt.pif.network.ConnectionManager;
 
-
 /**
  * @author Olivier
  *
@@ -1191,12 +1190,7 @@ public class GlobalManagerImpl
 
 	        String sCategory = null;
 	        if (save_download_state.containsKey("category")){
-	        	try{
-	        		sCategory = new String((byte[]) save_download_state.get("category"), Constants.DEFAULT_ENCODING);
-	        	}catch( UnsupportedEncodingException e ){
-
-	        		Debug.printStackTrace(e);
-	        	}
+						sCategory = new String((byte[]) save_download_state.get("category"), Constants.DEFAULT_ENCODING);
 	        }
 
 	        if (sCategory != null) {

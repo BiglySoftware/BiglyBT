@@ -133,26 +133,14 @@ TOTorrentImpl
 		String		_torrent_name,
 		URL			_announce_url,
 		boolean		_simple_torrent )
-
-		throws TOTorrentException
 	{
 		created	= true;
 
-		try{
+		torrent_name = _torrent_name.getBytes(Constants.DEFAULT_ENCODING);
+		torrent_name_utf8 = torrent_name;
 
-			torrent_name		= _torrent_name.getBytes( Constants.DEFAULT_ENCODING );
-
-			torrent_name_utf8	= torrent_name;
-
-			setAnnounceURL( _announce_url );
-
-			simple_torrent		= _simple_torrent;
-
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new TOTorrentException( 	"Unsupported encoding for '" + _torrent_name + "'",
-											TOTorrentException.RT_UNSUPPORTED_ENCODING));
-		}
+		setAnnounceURL(_announce_url);
+		simple_torrent = _simple_torrent;
 	}
 
 	protected void
@@ -558,24 +546,12 @@ TOTorrentImpl
 	}
 
 	@Override
-	public void
-	setComment(
-		String	_comment )
-	{
-		try{
+	public void setComment(String _comment) {
+		byte[] utf8_comment = _comment.getBytes(Constants.UTF_8);
 
-			byte[]	utf8_comment = _comment.getBytes( Constants.DEFAULT_ENCODING );
+		setComment(utf8_comment);
 
-			setComment( utf8_comment );
-
-			setAdditionalByteArrayProperty( TK_COMMENT_UTF8, utf8_comment );
-
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.printStackTrace( e );
-
-			comment = null;
-		}
+		setAdditionalByteArrayProperty(TK_COMMENT_UTF8, utf8_comment);
 	}
 
 	@Override
@@ -650,20 +626,8 @@ TOTorrentImpl
 		created_by	= _created_by;
 	}
 
-	protected void
-	setCreatedBy(
-		String		_created_by )
-	{
-		try{
-
-			setCreatedBy( _created_by.getBytes( Constants.DEFAULT_ENCODING ));
-
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.printStackTrace( e );
-
-			created_by = null;
-		}
+	protected void setCreatedBy(String _created_by) {
+		setCreatedBy(_created_by.getBytes(Constants.DEFAULT_ENCODING));
 	}
 
 	@Override
@@ -935,40 +899,13 @@ TOTorrentImpl
 	}
 
 	@Override
-	public void
-	setAdditionalStringProperty(
-		String		name,
-		String		value )
-	{
-		try{
-
-			setAdditionalByteArrayProperty( name, writeStringToMetaData( value ));
-
-		}catch( TOTorrentException e ){
-
-				// hide encoding exceptions as default encoding must be available
-
-			Debug.printStackTrace( e );
-		}
+	public void setAdditionalStringProperty(String name, String value) {
+		setAdditionalByteArrayProperty(name, writeStringToMetaData(value));
 	}
 
 	@Override
-	public String
-	getAdditionalStringProperty(
-		String		name )
-	{
-		try{
-
-			return( readStringFromMetaData( getAdditionalByteArrayProperty(name)));
-
-		}catch( TOTorrentException e ){
-
-				// hide encoding exceptions as default encoding must be available
-
-			Debug.printStackTrace( e );
-
-			return( null );
-		}
+	public String getAdditionalStringProperty(String name) {
+		return readStringFromMetaData(getAdditionalByteArrayProperty(name));
 	}
 
 	@Override
@@ -1146,8 +1083,6 @@ TOTorrentImpl
 	readStringFromMetaData(
 		Map		meta_data,
 		String	name )
-
-		throws TOTorrentException
 	{
 		Object	obj = meta_data.get(name);
 
@@ -1159,25 +1094,12 @@ TOTorrentImpl
 		return( null );
 	}
 
-	protected String
-	readStringFromMetaData(
-		byte[]		value )
-
-		throws TOTorrentException
-	{
-		try{
-			if ( value == null ){
-
-				return( null );
-			}
-
-			return(	new String(value, Constants.DEFAULT_ENCODING ));
-
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new TOTorrentException( 	"Unsupported encoding for '" + value + "'",
-											TOTorrentException.RT_UNSUPPORTED_ENCODING));
+	protected String readStringFromMetaData(byte[] value) {
+		if (value == null) {
+			return (null);
 		}
+
+		return new String(value, Constants.DEFAULT_ENCODING);
 	}
 
 	protected void
@@ -1185,27 +1107,12 @@ TOTorrentImpl
 		Map		meta_data,
 		String	name,
 		String	value )
-
-		throws TOTorrentException
 	{
 		meta_data.put( name, writeStringToMetaData( value ));
 	}
 
-	protected byte[]
-	writeStringToMetaData(
-		String		value )
-
-		throws TOTorrentException
-	{
-		try{
-
-			return(	value.getBytes( Constants.DEFAULT_ENCODING ));
-
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new TOTorrentException( 	"Unsupported encoding for '" + value + "'",
-											TOTorrentException.RT_UNSUPPORTED_ENCODING));
-		}
+	protected byte[] writeStringToMetaData(String value) {
+		return value.getBytes(Constants.DEFAULT_ENCODING);
 	}
 
 	protected URL
@@ -1268,14 +1175,8 @@ TOTorrentImpl
 				String	key = (String)info_it.next();
 				Object	value = additional_info_properties.get( key );
 
-				try{
-
-					System.out.println( "info prop '" + key + "' = '" +
-										( value instanceof byte[]?new String((byte[])value, Constants.DEFAULT_ENCODING):value.toString()) + "'" );
-				}catch( UnsupportedEncodingException e){
-
-					System.out.println( "info prop '" + key + "' = unsupported encoding!!!!");
-				}
+				System.out.println("info prop '" + key + "' = '" +
+						(value instanceof byte[] ? new String((byte[]) value, Constants.DEFAULT_ENCODING) : value) + "'");
 			}
 
 			Iterator it = additional_properties.keySet().iterator();
@@ -1285,14 +1186,8 @@ TOTorrentImpl
 				String	key = (String)it.next();
 				Object	value = additional_properties.get( key );
 
-				try{
-
-					System.out.println( "prop '" + key + "' = '" +
-										( value instanceof byte[]?new String((byte[])value, Constants.DEFAULT_ENCODING):value.toString()) + "'" );
-				}catch( UnsupportedEncodingException e){
-
-					System.out.println( "prop '" + key + "' = unsupported encoding!!!!");
-				}
+				System.out.println("prop '" + key + "' = '" +
+						(value instanceof byte[] ? new String((byte[]) value, Constants.DEFAULT_ENCODING) : value) + "'");
 			}
 
 			if ( pieces == null ){
@@ -1314,14 +1209,7 @@ TOTorrentImpl
 
 				for (int j=0;j<path_comps.length;j++){
 
-					try{
-
-						path_str += (j==0?"":File.separator) + new String( path_comps[j], Constants.DEFAULT_ENCODING );
-
-					}catch( UnsupportedEncodingException e ){
-
-						System.out.println( "file - unsupported encoding!!!!");
-					}
+					path_str += (j == 0 ? "" : File.separator) + new String(path_comps[j], Constants.DEFAULT_ENCODING);
 				}
 
 				System.out.println( "\t" + path_str + " (" + files[i].getLength() + ")" );

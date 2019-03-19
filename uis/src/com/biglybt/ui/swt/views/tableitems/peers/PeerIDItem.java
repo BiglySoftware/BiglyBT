@@ -49,14 +49,10 @@ public class PeerIDItem extends CoreTableColumnSWT implements
 
 		byte[] peer_id = peer.getId();
 		if (peer_id == null) {cell.setText(""); return;}
-		try {
-			String text = new String(peer_id, 0, peer_id.length, Constants.BYTE_ENCODING);
-			text = text.replace((char)12, (char)32); // Replace newlines.
-			text = text.replace((char)10, (char)32);
-			cell.setText(text);
-		}
-		catch (java.io.UnsupportedEncodingException uee) {
-			cell.setText("");
-		}
+
+		String text = new String(peer_id, 0, peer_id.length, Constants.BYTE_ENCODING);
+		text = text.replace((char) 12, (char) 32); // Replace newlines.
+		text = text.replace((char) 10, (char) 32);
+		cell.setText(text);
 	}
 }

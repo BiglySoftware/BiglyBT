@@ -56,11 +56,6 @@ import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 import com.biglybt.util.MapUtils;
 
-/**
- * @author Olivier
- *
- */
-
 /** One TrackerStatus object handles scrape functionality for all torrents
  * on one tracker.
  */
@@ -462,7 +457,7 @@ public class TrackerStatus {
 
 						info_hash += URLEncoder.encode(
 								new String(hash.getBytes(), Constants.BYTE_ENCODING),
-								Constants.BYTE_ENCODING).replaceAll("\\+", "%20");
+								Constants.BYTE_ENCODING.name()).replaceAll("\\+", "%20");
 
 						Object[]	extensions = scraper.getExtensions(hash);
 

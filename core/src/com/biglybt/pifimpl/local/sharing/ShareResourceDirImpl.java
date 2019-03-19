@@ -71,8 +71,6 @@ ShareResourceDirImpl
 		ShareManagerImpl	_manager,
 		File				_file,
 		Map					_map )
-
-		throws ShareException
 	{
 		super( _manager, ST_DIR, _file, _map );
 	}

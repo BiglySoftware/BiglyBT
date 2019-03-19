@@ -76,12 +76,8 @@ SimpleXMLParserDocumentImpl
 
 		throws SimpleXMLParserDocumentException
 	{
-		try{
-			create( new ByteArrayInputStream( data.getBytes( Constants.DEFAULT_ENCODING )));
 
-		}catch( UnsupportedEncodingException e ){
-
-		}
+		create(new ByteArrayInputStream(data.getBytes(Constants.DEFAULT_ENCODING)));
 	}
 
 	public

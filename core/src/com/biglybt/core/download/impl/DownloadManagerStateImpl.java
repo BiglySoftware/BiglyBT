@@ -2323,15 +2323,8 @@ DownloadManagerStateImpl
 				return( null );
 			}
 
-			try{
-				return( new String( bytes, Constants.DEFAULT_ENCODING ));
+			return new String(bytes, Constants.DEFAULT_ENCODING);
 
-			}catch( UnsupportedEncodingException e ){
-
-				Debug.printStackTrace(e);
-
-				return( null );
-			}
 		}finally{
 
 			this_mon.exit();
@@ -2358,22 +2351,12 @@ DownloadManagerStateImpl
 				}
 			}else{
 
-				try{
-					byte[]	existing_bytes = (byte[])attributes.get( attribute_name );
+				byte[] existing_bytes = (byte[]) attributes.get(attribute_name);
+				byte[] new_bytes = attribute_value.getBytes(Constants.DEFAULT_ENCODING);
 
-					byte[]	new_bytes = attribute_value.getBytes( Constants.DEFAULT_ENCODING );
-
-					if ( 	existing_bytes == null ||
-							!Arrays.equals( existing_bytes, new_bytes )){
-
-						attributes.put( attribute_name, new_bytes );
-
-						write_required = changed = true;
-					}
-
-				}catch( UnsupportedEncodingException e ){
-
-					Debug.printStackTrace(e);
+				if (existing_bytes == null || !Arrays.equals(existing_bytes, new_bytes)) {
+					attributes.put(attribute_name, new_bytes);
+					write_required = changed = true;
 				}
 			}
 		}finally{
@@ -2506,14 +2489,8 @@ DownloadManagerStateImpl
 			Object o = values.get(idx);
 			if (o instanceof byte[]) {
 				byte[] bytes = (byte[]) o;
-				String s = null;
-				try {
-					s = StringInterner.intern(new String(bytes, Constants.DEFAULT_ENCODING));
-				} catch (UnsupportedEncodingException e) {
-					Debug.printStackTrace(e);
-				}
-				if (s != null)
-					values.set(idx, s);
+				String s = StringInterner.intern(new String(bytes, Constants.DEFAULT_ENCODING));
+				values.set(idx, s);
 				return s;
 			} else if (o instanceof String) {
 				return (String) o;
@@ -2585,23 +2562,11 @@ DownloadManagerStateImpl
 					if ( o instanceof byte[] ){
 
 						byte[]	bytes = (byte[])o;
+						String s = StringInterner.intern(new String(bytes, Constants.DEFAULT_ENCODING));
 
-						String s = null;
+						res.add(s);
+						values.set(i, s);
 
-						try{
-
-							s = StringInterner.intern(new String( bytes, Constants.DEFAULT_ENCODING ));
-
-						}catch( UnsupportedEncodingException e ){
-
-							Debug.printStackTrace(e);
-						}
-
-						if(s != null)
-						{
-							res.add(s);
-							values.set(i, s);
-						}
 					}else if ( o instanceof String ){
 
 						res.add( o );
