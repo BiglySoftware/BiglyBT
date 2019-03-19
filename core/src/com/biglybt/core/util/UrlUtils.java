@@ -1912,26 +1912,8 @@ public class UrlUtils
 
 		throws Exception
 	{
-			// some versions of java 6 don't support the creation of unconnected sockets
-			// which is required to allow connect timeout to be set before connecting
-			// think it only actually affected SSL because the SSL Factory had a bug
 
-		boolean is_java_17_plus = Constants.isJava7OrHigher;
-
-			// try without regard for broken versions
-
-		try{
-			return( connectSocketAndWrite( is_ssl, target_host, target_port, bytes, connect_timeout, read_timeout, false ));
-
-		}catch( Exception e ){
-
-			if ( is_java_17_plus ){
-
-				throw( e );
-			}
-
-			return( connectSocketAndWrite( is_ssl, target_host, target_port, bytes, connect_timeout, read_timeout, true ));
-		}
+		return( connectSocketAndWrite( is_ssl, target_host, target_port, bytes, connect_timeout, read_timeout, false ));
 	}
 
 	public static Socket

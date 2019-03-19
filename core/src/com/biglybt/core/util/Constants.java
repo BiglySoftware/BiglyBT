@@ -390,7 +390,7 @@ Constants
 		API_LEVEL		= api_level;
 	}
 
-	public static final boolean isJava7OrHigher;
+	public static final boolean isJava7OrHigher = !isAndroid;
 	public static final boolean isJava8OrHigher;
 	public static final boolean isJava9OrHigher;
 	public static final boolean isJava10OrHigher;
@@ -403,7 +403,6 @@ Constants
 
 		// then again, from 1.9 (9) we have http://openjdk.java.net/jeps/223
 
-		boolean	_7plus;
 		boolean	_8plus;
 		boolean	_9plus;
 		boolean	_10plus;
@@ -425,7 +424,6 @@ Constants
 			int	first	= Integer.parseInt( bits[0] );
 			int	second 	= bits.length==1?0:Integer.parseInt( bits[1] );
 
-			_7plus = first > 1 || second >= 7;
 			_8plus = first > 1 || second >= 8;
 			_9plus = first > 1 || second >= 9;
 
@@ -437,13 +435,11 @@ Constants
 
 			e.printStackTrace();
 
-			_7plus = false;	// derp
 			_8plus = false;	// derp
 			_9plus = false;	// derp
 			_10plus = false;	// derp
 		}
 
-		isJava7OrHigher 	= _7plus;
 		isJava8OrHigher	= _8plus;
 		isJava9OrHigher	= _9plus;
 		isJava10OrHigher	= _10plus;

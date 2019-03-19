@@ -440,7 +440,7 @@ public class ConfigSectionConnectionAdvanced
 		new BooleanParameter(cSection, "IPV6 Prefer Addresses",
 				"network.ipv6.prefer.addresses");
 
-		if (Constants.isWindowsVistaOrHigher && Constants.isJava7OrHigher) {
+		if (Constants.isWindowsVistaOrHigher) {
 
 			new BooleanParameter(cSection, "IPV4 Prefer Stack",
 					"network.ipv4.prefer.stack");
