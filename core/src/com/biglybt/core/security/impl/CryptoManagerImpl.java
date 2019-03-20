@@ -59,12 +59,15 @@ CryptoManagerImpl
 	}
 
 	private byte[]				secure_id;
-	private final CryptoHandler		ecc_handler;
 	private final CopyOnWriteList		password_handlers	= new CopyOnWriteList();
 	private final CopyOnWriteList		keychange_listeners	= new CopyOnWriteList();
 
 	private final Map	session_passwords =	Collections.synchronizedMap( new HashMap());
 
+	private final CryptoHandler		ecc_handler;
+
+	private final Map<Integer,CryptoHandler>	ecc_handlers = new HashMap<>();
+	
 	protected
 	CryptoManagerImpl()
 	{
@@ -93,6 +96,8 @@ CryptoManagerImpl
 		}
 
 		ecc_handler = new CryptoHandlerECC( this, 1 );
+		
+		ecc_handlers.put( 1, ecc_handler );
 	}
 
 	protected void
@@ -209,6 +214,26 @@ CryptoManagerImpl
 	getECCHandler()
 	{
 		return( ecc_handler );
+	}
+	
+	@Override
+	public CryptoHandler 
+	getECCHandler(
+		int instance)
+	{
+		synchronized( ecc_handlers ){
+			
+			CryptoHandler h = ecc_handlers.get( instance );
+			
+			if ( h == null ){
+				
+				h = new CryptoHandlerECC( this, instance );
+				
+				ecc_handlers.put( instance, h );
+			}
+			
+			return( h );
+		}
 	}
 
 	protected byte[]

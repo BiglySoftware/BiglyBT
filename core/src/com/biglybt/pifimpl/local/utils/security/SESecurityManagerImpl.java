@@ -244,6 +244,20 @@ SESecurityManagerImpl
 
 	@Override
 	public SEPublicKey
+	getPublicKey(
+		int		key_type,
+		int		instance,
+		String	reason_resource )
+
+		throws Exception
+	{
+		byte[]	encoded = core.getCryptoManager().getECCHandler( instance ).getPublicKey( reason_resource );
+
+		return( new SEPublicKeyImpl( key_type, encoded ));
+	}
+	
+	@Override
+	public SEPublicKey
 	decodePublicKey(
 		byte[]	encoded )
 	{

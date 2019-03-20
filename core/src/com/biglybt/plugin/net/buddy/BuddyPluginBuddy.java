@@ -41,7 +41,6 @@ import com.biglybt.pif.messaging.generic.GenericMessageRegistration;
 import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pif.utils.security.SEPublicKey;
 import com.biglybt.pif.utils.security.SEPublicKeyLocator;
-import com.biglybt.pif.utils.security.SESecurityManager;
 import com.biglybt.plugin.net.buddy.BuddyPluginNetwork.DDBDetails;
 
 
@@ -2488,12 +2487,9 @@ BuddyPluginBuddy
 
 			String reason = "Friend: Outgoing connection establishment";
 
-			SESecurityManager sec_man = plugin_network.getSecurityManager();
-
-			con = sec_man.getSTSConnection(
+			con = plugin_network.getSTSConnection(
 					con,
-					sec_man.getPublicKey( SEPublicKey.KEY_TYPE_ECC_192, reason ),
-
+					reason,
 					new SEPublicKeyLocator()
 					{
 						@Override
@@ -2517,10 +2513,8 @@ BuddyPluginBuddy
 								return( false );
 							}
 						}
-					},
-					reason,
-					BuddyPluginNetwork.BLOCK_CRYPTO );
-
+					});
+			
 			con.connect();
 
 			return( con );

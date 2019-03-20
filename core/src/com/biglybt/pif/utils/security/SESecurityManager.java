@@ -135,6 +135,14 @@ SESecurityManager
 		throws Exception;
 
 	public SEPublicKey
+	getPublicKey(
+		int		key_type,
+		int		instance,
+		String	reason_resource )
+
+		throws Exception;
+
+	public SEPublicKey
 	decodePublicKey(
 		byte[]	encoded )
 

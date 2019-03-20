@@ -200,8 +200,8 @@ BuddyPlugin
 		logger.setDiagnostic();
 
 		plugin_networks = new BuddyPluginNetwork[]{ 
-			new BuddyPluginNetwork( plugin_interface, this, AENetworkClassifier.AT_PUBLIC ),
-			// new BuddyPluginNetwork( plugin_interface, this, AENetworkClassifier.AT_I2P )
+			//new BuddyPluginNetwork( plugin_interface, this, AENetworkClassifier.AT_PUBLIC ),
+			 new BuddyPluginNetwork( plugin_interface, this, AENetworkClassifier.AT_I2P )
 		};
 		
 		final LocaleUtilities lu = plugin_interface.getUtilities().getLocaleUtilities();

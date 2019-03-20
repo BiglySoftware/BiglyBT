@@ -134,8 +134,6 @@ BuddyPluginNetwork
 
 	private CopyOnWriteList<BuddyPluginBuddyRequestListener>	request_listeners	= new CopyOnWriteList<>();
 
-	private CryptoHandler ecc_handler;
-
 	private List<BuddyPluginBuddy>	buddies 	= new ArrayList<>();
 
 	private List<BuddyPluginBuddy>	connected_at_close;
@@ -143,6 +141,7 @@ BuddyPluginNetwork
 	private Map<String,BuddyPluginBuddy>		buddies_map	= new HashMap<>();
 	
 	private SESecurityManager	sec_man;
+	private CryptoHandler 		ecc_handler;
 
 	private GenericMessageRegistration	msg_registration;
 
@@ -179,7 +178,8 @@ BuddyPluginNetwork
 		}
 		
 		sec_man 		= plugin_interface.getUtilities().getSecurityManager();
-		ecc_handler 	= CryptoManagerFactory.getSingleton().getECCHandler();
+		
+		ecc_handler 	= CryptoManagerFactory.getSingleton().getECCHandler(target_network == AENetworkClassifier.AT_PUBLIC?1:2 );
 		
 		az2_handler = new BuddyPluginAZ2( this );
 	}
@@ -546,9 +546,9 @@ BuddyPluginNetwork
 								plugin.addRateLimiters( connection );
 
 								connection =
-									sec_man.getSTSConnection(
+										getSTSConnection(
 											connection,
-											sec_man.getPublicKey( SEPublicKey.KEY_TYPE_ECC_192, reason ),
+											reason,
 											new SEPublicKeyLocator()
 											{
 												@Override
@@ -632,9 +632,7 @@ BuddyPluginNetwork
 														return( false );
 													}
 												}
-											},
-											reason,
-											BLOCK_CRYPTO );
+											});
 
 							}catch( Throwable e ){
 
@@ -653,6 +651,23 @@ BuddyPluginNetwork
 		}
 	}
 
+	protected GenericMessageConnection
+	getSTSConnection(
+		GenericMessageConnection	connection,
+		String						reason,
+		SEPublicKeyLocator			locator )
+	
+		throws Exception
+	{	
+		return( 
+			sec_man.getSTSConnection(
+				connection,
+				sec_man.getPublicKey( SEPublicKey.KEY_TYPE_ECC_192, target_network==AENetworkClassifier.AT_PUBLIC?1:2, reason ),
+				locator,
+				reason,
+				BLOCK_CRYPTO ));
+	}
+			
 	protected boolean
 	tooManyUnauthConnections(
 		String	originator )

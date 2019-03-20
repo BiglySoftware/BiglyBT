@@ -38,6 +38,15 @@ CryptoManager
 	public CryptoHandler
 	getECCHandler();
 
+		/**
+		 * @param instance   1 = global handler, 2 = anonynmous friends
+		 * @return
+		 */
+	
+	public CryptoHandler
+	getECCHandler(
+		int			instance );
+	
 	public byte[]
 	obfuscate(
 		byte[]		data );
