@@ -150,6 +150,7 @@ import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
+import com.biglybt.plugin.net.buddy.BuddyPluginNetwork;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class
@@ -3900,7 +3901,7 @@ BuddyPluginViewBetaChat
 									plugin.setClassicEnabled( true, false );
 								}
 									
-								plugin.addBuddy( fk, BuddyPlugin.SUBSYSTEM_AZ2 );
+								plugin.addBuddy( fk, BuddyPluginNetwork.SUBSYSTEM_AZ2 );
 								
 								try{
 									ChatInstance chat = participant.createPrivateChat();

@@ -112,6 +112,7 @@ import com.biglybt.plugin.net.buddy.BuddyPluginAZ2Listener;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatMessage;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
+import com.biglybt.plugin.net.buddy.BuddyPluginNetwork;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
@@ -273,8 +274,10 @@ BuddyPluginView
 				}
 			};
 			
-			plugin.getAZ2Handler().addListener(buddyPluginAZ2Listener);
-	
+			for ( BuddyPluginNetwork pn: plugin.getPluginNetworks()){
+				
+				pn.getAZ2Handler().addListener(buddyPluginAZ2Listener);
+			}
 		
 			buddyStatusInit = SimpleTimer.addEvent("BuddyStatusInit", SystemTime.getOffsetTime(1000),
 					new TimerEventPerformer() {
@@ -980,7 +983,11 @@ BuddyPluginView
 			}
 
 			if (buddyPluginAZ2Listener != null) {
-				plugin.getAZ2Handler().removeListener(buddyPluginAZ2Listener);
+				
+				for ( BuddyPluginNetwork pn: plugin.getPluginNetworks()){
+					
+					pn.getAZ2Handler().removeListener(buddyPluginAZ2Listener);
+				}
 			}
 
 			if (beta_status != null) {

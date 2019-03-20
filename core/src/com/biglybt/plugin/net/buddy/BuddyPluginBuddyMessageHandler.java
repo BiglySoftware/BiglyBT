@@ -132,7 +132,7 @@ BuddyPluginBuddyMessageHandler
 				last_pending_success = now;
 			}
 
-			if ( last_pending_success > 0 && now - last_pending_success >= BuddyPlugin.PERSISTENT_MSG_RETRY_PERIOD ){
+			if ( last_pending_success > 0 && now - last_pending_success >= BuddyPluginNetwork.PERSISTENT_MSG_RETRY_PERIOD ){
 
 				request_dispatch = true;
 
@@ -142,7 +142,7 @@ BuddyPluginBuddyMessageHandler
 
 			}else{
 
-				request_dispatch = now - last_failure >= BuddyPlugin.PERSISTENT_MSG_RETRY_PERIOD;
+				request_dispatch = now - last_failure >= BuddyPluginNetwork.PERSISTENT_MSG_RETRY_PERIOD;
 			}
 		}
 
@@ -701,7 +701,7 @@ BuddyPluginBuddyMessageHandler
 
 		try{
 
-			BuddyPlugin.cryptoResult result = buddy.encrypt( BEncoder.encode( content ));
+			BuddyPlugin.CryptoResult result = buddy.encrypt( BEncoder.encode( content ));
 
 			Map	store_map = new HashMap();
 
@@ -823,7 +823,7 @@ BuddyPluginBuddyMessageHandler
 			try{
 				message =
 					new BuddyPluginBuddyMessage(
-							this, id, BuddyPlugin.SUBSYSTEM_MSG_TYPE_BASE + type, msg, 0, SystemTime.getCurrentTime());
+							this, id, BuddyPluginNetwork.SUBSYSTEM_MSG_TYPE_BASE + type, msg, 0, SystemTime.getCurrentTime());
 
 				storeExplicitMessage( message );
 
@@ -855,7 +855,7 @@ BuddyPluginBuddyMessageHandler
 					try{
 						BuddyPluginBuddyMessage msg = restoreMessage(messages.get(i));
 
-						if ( msg.getSubsystem() == BuddyPlugin.SUBSYSTEM_MSG_TYPE_BASE + type ){
+						if ( msg.getSubsystem() == BuddyPluginNetwork.SUBSYSTEM_MSG_TYPE_BASE + type ){
 
 							result.add( msg );
 						}

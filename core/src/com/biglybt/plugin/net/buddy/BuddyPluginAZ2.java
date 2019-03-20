@@ -57,7 +57,7 @@ BuddyPluginAZ2
 
 	private static final int SEND_TIMEOUT = 2*60*1000;
 
-	private BuddyPlugin		plugin;
+	private BuddyPluginNetwork		plugin_network;
 
 	private Map				chats 		= new HashMap();
 
@@ -67,11 +67,11 @@ BuddyPluginAZ2
 
 	protected
 	BuddyPluginAZ2(
-		BuddyPlugin		_plugin )
+		BuddyPluginNetwork		_plugin_network )
 	{
-		plugin	= _plugin;
+		plugin_network	= _plugin_network;
 
-		plugin.addRequestListener(
+		plugin_network.addRequestListener(
 				new BuddyPluginBuddyRequestListener()
 				{
 					@Override
@@ -83,7 +83,7 @@ BuddyPluginAZ2
 
 						throws BuddyPluginException
 					{
-						if ( subsystem == BuddyPlugin.SUBSYSTEM_AZ2 ){
+						if ( subsystem == BuddyPluginNetwork.SUBSYSTEM_AZ2 ){
 
 							if ( !from_buddy.isAuthorised()){
 
@@ -139,7 +139,7 @@ BuddyPluginAZ2
 		}else if (  type == RT_AZ2_REQUEST_SEND_TORRENT ){
 
 			try{
-				final Torrent	torrent = plugin.getPluginInterface().getTorrentManager().createFromBEncodedData((byte[])request.get( "torrent" ));
+				final Torrent	torrent = plugin_network.getPluginInterface().getTorrentManager().createFromBEncodedData((byte[])request.get( "torrent" ));
 
 				new AEThread2( "torrentAdder", true )
 				{
@@ -147,7 +147,7 @@ BuddyPluginAZ2
 					public void
 					run()
 					{
-						PluginInterface pi = plugin.getPluginInterface();
+						PluginInterface pi = plugin_network.getPluginInterface();
 
 						String msg = pi.getUtilities().getLocaleUtilities().getLocalisedMessageText(
 								"azbuddy.addtorrent.msg",
@@ -261,7 +261,7 @@ BuddyPluginAZ2
 
 					byte[]	if_mod 	= (byte[])msg.get( "if_mod" );
 
-					BuddyPlugin.feedDetails feed = plugin.getRSS( from_buddy, category, if_mod==null?null:new String( if_mod, "UTF-8" ));
+					BuddyPlugin.FeedDetails feed = plugin_network.getPlugin().getRSS( from_buddy, category, if_mod==null?null:new String( if_mod, "UTF-8" ));
 
 					res.put( "rss", feed.getContent());
 
@@ -269,7 +269,7 @@ BuddyPluginAZ2
 
 				}else{
 
-					res.put( "torrent", plugin.getRSSTorrent( from_buddy, category, hash ));
+					res.put( "torrent", plugin_network.getPlugin().getRSSTorrent( from_buddy, category, hash ));
 				}
 			}catch( BuddyPluginException e  ){
 
@@ -282,7 +282,7 @@ BuddyPluginAZ2
 			
 		}else if (  type == RT_AZ2_REQUEST_PROFILE_INFO ){
 
-			List<String> info = plugin.getProfileInfo();
+			List<String> info = plugin_network.getProfileInfo();
 			
 			if ( info == null ){
 			
@@ -445,7 +445,7 @@ BuddyPluginAZ2
 			request.put( "msg", msg );
 
 			buddy.sendMessage(
-				BuddyPlugin.SUBSYSTEM_AZ2,
+				BuddyPluginNetwork.SUBSYSTEM_AZ2,
 				request,
 				SEND_TIMEOUT,
 				new BuddyPluginBuddyReplyListener()
@@ -497,7 +497,7 @@ BuddyPluginAZ2
 			request.put( "msg", msg );
 
 			buddy.sendMessage(
-				BuddyPlugin.SUBSYSTEM_AZ2,
+				BuddyPluginNetwork.SUBSYSTEM_AZ2,
 				request,
 				SEND_TIMEOUT,
 				new BuddyPluginBuddyReplyListener()
@@ -549,7 +549,7 @@ BuddyPluginAZ2
 			request.put( "msg", msg );
 
 			buddy.sendMessage(
-				BuddyPlugin.SUBSYSTEM_AZ2,
+				BuddyPluginNetwork.SUBSYSTEM_AZ2,
 				request,
 				SEND_TIMEOUT,
 				new BuddyPluginBuddyReplyListener()
@@ -596,7 +596,7 @@ BuddyPluginAZ2
 		logMessage( buddy, "AZ2 request sent: " + buddy.getString() + " <- " + request );
 
 		buddy.getMessageHandler().queueMessage(
-				BuddyPlugin.SUBSYSTEM_AZ2,
+				BuddyPluginNetwork.SUBSYSTEM_AZ2,
 				request,
 				SEND_TIMEOUT );
 	}
@@ -650,7 +650,7 @@ BuddyPluginAZ2
 		
 		logMessage( buddy, str );
 
-		plugin.getPluginInterface().getUIManager().showMessageBox(
+		plugin_network.getPluginInterface().getUIManager().showMessageBox(
 			"azbuddy.msglog.title", "!" + str + "!", UIManagerEvent.MT_OK );
 	}
 
@@ -659,7 +659,7 @@ BuddyPluginAZ2
 		BuddyPluginBuddy	buddy,
 		String				str )
 	{
-		plugin.logMessage( buddy, str );
+		plugin_network.logMessage( buddy, str );
 	}
 
 	protected void
@@ -668,7 +668,7 @@ BuddyPluginAZ2
 		String				str,
 		Throwable 			e )
 	{
-		plugin.logMessage( buddy, str + ": " + Debug.getNestedExceptionMessage(e));
+		plugin_network.logMessage( buddy, str + ": " + Debug.getNestedExceptionMessage(e));
 	}
 
 	public class
@@ -688,7 +688,7 @@ BuddyPluginAZ2
 		{
 			id		= _id;
 
-			plugin.addListener( this );
+			plugin_network.getPlugin().addListener( this );
 		}
 
 		public String
@@ -796,7 +796,7 @@ BuddyPluginAZ2
 
 					String pk = new String((byte[])participant.get( "pk" ));
 
-					if ( !pk.equals( plugin.getPublicKey())){
+					if ( !pk.equals( plugin_network.getPublicKey())){
 
 						addParticipant( pk );
 					}
@@ -865,7 +865,7 @@ BuddyPluginAZ2
 		{
 			chatParticipant p;
 
-			BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( pk );
+			BuddyPluginBuddy buddy = plugin_network.getBuddyFromPublicKey( pk );
 
 			synchronized( participants ){
 
@@ -1007,7 +1007,7 @@ BuddyPluginAZ2
 		public void
 		destroy()
 		{
-			plugin.removeListener( this );
+			plugin_network.getPlugin().removeListener( this );
 
 			destroyChat( this );
 		}

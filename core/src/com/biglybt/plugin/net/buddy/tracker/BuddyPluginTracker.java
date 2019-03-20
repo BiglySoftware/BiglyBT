@@ -41,6 +41,7 @@ import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterListener;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.plugin.net.buddy.BuddyPluginNetwork;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginAZ2TrackerListener;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
@@ -135,9 +136,9 @@ BuddyPluginTracker
 
 	public
 	BuddyPluginTracker(
-		BuddyPlugin					_plugin,
-		final BooleanParameter 		tracker_enable,
-		final BooleanParameter		tracker_so_enable )
+		BuddyPlugin				_plugin,
+		BooleanParameter 		tracker_enable,
+		BooleanParameter		tracker_so_enable )
 	{
 		plugin		= _plugin;
 
@@ -217,7 +218,10 @@ BuddyPluginTracker
 
 		plugin.addListener( this );
 
-		plugin.getAZ2Handler().addTrackerListener( this );
+		for ( BuddyPluginNetwork pn: plugin.getPluginNetworks()){
+			
+			pn.getAZ2Handler().addTrackerListener( this );
+		}
 
 		plugin.getPluginInterface().getDownloadManager().addListener( this, true );
 	}
@@ -1777,7 +1781,7 @@ outer:
 		msg.put( "type", new Long( type ));
 		msg.put( "msg", body );
 
-		plugin.getAZ2Handler().sendAZ2TrackerMessage(
+		buddy.getPluginNetwork().getAZ2Handler().sendAZ2TrackerMessage(
 				buddy,
 				msg,
 				BuddyPluginTracker.this );

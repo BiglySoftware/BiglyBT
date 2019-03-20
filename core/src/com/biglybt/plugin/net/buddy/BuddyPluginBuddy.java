@@ -42,13 +42,13 @@ import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pif.utils.security.SEPublicKey;
 import com.biglybt.pif.utils.security.SEPublicKeyLocator;
 import com.biglybt.pif.utils.security.SESecurityManager;
-import com.biglybt.plugin.net.buddy.BuddyPlugin.DDBDetails;
+import com.biglybt.plugin.net.buddy.BuddyPluginNetwork.DDBDetails;
 
 
 public class
 BuddyPluginBuddy
 {
-	private static final boolean TRACE = BuddyPlugin.TRACE;
+	private static final boolean TRACE = BuddyPluginNetwork.TRACE;
 
 	private static final int CONNECTION_IDLE_TIMEOUT	= 5*60*1000;
 	private static final int CONNECTION_KEEP_ALIVE		= 1*60*1000;
@@ -62,7 +62,8 @@ BuddyPluginBuddy
 	private static final int RT_REPLY_ERROR		= 99;
 
 
-	private BuddyPlugin		plugin;
+	private BuddyPluginNetwork		plugin_network;
+	
 	private long			created_time;
 	private int				subsystem;
 	private boolean			authorised;
@@ -81,7 +82,7 @@ BuddyPluginBuddy
 	
 	private int				online_status	= BuddyPlugin.STATUS_ONLINE;	// default
 
-	private int				version		= BuddyPlugin.VERSION_CHAT;	// assume everyone now supports chat
+	private int				version		= BuddyPluginNetwork.VERSION_CHAT;	// assume everyone now supports chat
 
 	private boolean			online;
 	private long			last_time_online;
@@ -140,21 +141,21 @@ BuddyPluginBuddy
 
 	protected
 	BuddyPluginBuddy(
-		BuddyPlugin	_plugin,
-		long		_created_time,
-		int			_subsystem,
-		boolean		_authorised,
-		String		_pk,
-		String		_nick_name,
-		int			_version,
-		String		_rss_local_cats,
-		String		_rss_remote_cats,
-		int			_last_status_seq,
-		long		_last_time_online,
-		List<Long>	_recent_ygm,
-		boolean		_is_transient )
+		BuddyPluginNetwork	_plugin_network,
+		long				_created_time,
+		int					_subsystem,
+		boolean				_authorised,
+		String				_pk,
+		String				_nick_name,
+		int					_version,
+		String				_rss_local_cats,
+		String				_rss_remote_cats,
+		int					_last_status_seq,
+		long				_last_time_online,
+		List<Long>			_recent_ygm,
+		boolean				_is_transient )
 	{
-		plugin				= _plugin;
+		plugin_network		= _plugin_network;
 		created_time		= _created_time;
 		subsystem			= _subsystem;
 		authorised			= _authorised;
@@ -168,9 +169,15 @@ BuddyPluginBuddy
 		recent_ygm			= _recent_ygm;
 		is_transient		= _is_transient;
 		
-		persistent_msg_handler = new BuddyPluginBuddyMessageHandler( this, new File(plugin.getBuddyConfigDir(), public_key ));
+		persistent_msg_handler = new BuddyPluginBuddyMessageHandler( this, new File(plugin_network.getBuddyConfigDir(), public_key ));
 	}
 
+	public BuddyPluginNetwork
+	getPluginNetwork()
+	{
+		return( plugin_network );
+	}
+	
 	protected void
 	setInitialStatus(
 		long	now,
@@ -186,10 +193,10 @@ BuddyPluginBuddy
 		}
 	}
 
-	protected BuddyPlugin
+	protected BuddyPluginNetwork
 	getPlugin()
 	{
-		return( plugin );
+		return( plugin_network );
 	}
 
 	public BuddyPluginBuddyMessageHandler
@@ -201,7 +208,7 @@ BuddyPluginBuddy
 	protected void
 	persistentDispatchPending()
 	{
-		plugin.persistentDispatchPending( this );
+		plugin_network.persistentDispatchPending( this );
 	}
 
 	protected void
@@ -220,7 +227,7 @@ BuddyPluginBuddy
 	readConfigFile(
 		File		name )
 	{
-		return( plugin.readConfigFile( name ));
+		return( plugin_network.readConfigFile( name ));
 	}
 
 	public boolean
@@ -228,7 +235,7 @@ BuddyPluginBuddy
 		File		name,
 		Map			data )
 	{
-		return( plugin.writeConfigFile( name, data ));
+		return( plugin_network.writeConfigFile( name, data ));
 	}
 
 	protected long
@@ -314,7 +321,7 @@ BuddyPluginBuddy
 
 			version = v;
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 		}
 	}
 
@@ -340,7 +347,7 @@ BuddyPluginBuddy
 	addLocalAuthorisedRSSTagOrCategory(
 		String	category )
 	{
-		category = plugin.normaliseCat( category );
+		category = BuddyPlugin.normaliseCat( category );
 
 		boolean dirty;
 
@@ -359,9 +366,9 @@ BuddyPluginBuddy
 
 		if ( dirty ){
 
-			plugin.setConfigDirty();
+			plugin_network.setConfigDirty();
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 
 				// tell buddy of change
 
@@ -376,7 +383,7 @@ BuddyPluginBuddy
 	removeLocalAuthorisedRSSTagOrCategory(
 		String	category )
 	{
-		category = plugin.normaliseCat( category );
+		category = BuddyPlugin.normaliseCat( category );
 
 		boolean	dirty;
 
@@ -394,9 +401,9 @@ BuddyPluginBuddy
 
 		if ( dirty ){
 
-			plugin.setConfigDirty();
+			plugin_network.setConfigDirty();
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 
 				// tell buddy of change
 
@@ -418,7 +425,7 @@ BuddyPluginBuddy
 	setLocalAuthorisedRSSTagsOrCategories(
 		Set<String>		new_cats )
 	{
-		plugin.normaliseCats( new_cats );
+		BuddyPlugin.normaliseCats( new_cats );
 
 		boolean dirty;
 
@@ -432,9 +439,9 @@ BuddyPluginBuddy
 
 		if ( dirty ){
 
-			plugin.setConfigDirty();
+			plugin_network.setConfigDirty();
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 
 				// tell buddy of change
 
@@ -461,7 +468,7 @@ BuddyPluginBuddy
 	setRemoteAuthorisedRSSTagsOrCategories(
 		Set<String>		new_cats )
 	{
-		plugin.normaliseCats( new_cats );
+		BuddyPlugin.normaliseCats( new_cats );
 
 		boolean	dirty;
 
@@ -475,9 +482,9 @@ BuddyPluginBuddy
 
 		if ( dirty ){
 
-			plugin.setConfigDirty();
+			plugin_network.setConfigDirty();
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 		}
 	}
 
@@ -485,7 +492,7 @@ BuddyPluginBuddy
 	isLocalRSSTagOrCategoryAuthorised(
 		String	category )
 	{
-		category = plugin.normaliseCat( category );
+		category = BuddyPlugin.normaliseCat( category );
 
 		synchronized( rss_lock ){
 
@@ -502,7 +509,7 @@ BuddyPluginBuddy
 	isRemoteRSSTagOrCategoryAuthorised(
 		String	category )
 	{
-		category = plugin.normaliseCat( category );
+		category = BuddyPlugin.normaliseCat( category );
 
 		synchronized( rss_lock ){
 
@@ -535,7 +542,7 @@ BuddyPluginBuddy
 
 			// not persisted currently - plugin.setConfigDirty();
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 		}
 	}
 
@@ -714,7 +721,7 @@ BuddyPluginBuddy
 
 			online_status = s;
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 		}
 	}
 
@@ -734,7 +741,7 @@ BuddyPluginBuddy
 	{
 		persistent_msg_handler.destroy();
 
-		plugin.removeBuddy( this );
+		plugin_network.removeBuddy( this );
 	}
 
 	public InetSocketAddress
@@ -898,7 +905,7 @@ BuddyPluginBuddy
 		}
 		
 		try{
-			plugin.getAZ2Handler().sendAZ2ProfileInfo(
+			plugin_network.getAZ2Handler().sendAZ2ProfileInfo(
 				this,
 				new HashMap<>(),
 				new BuddyPluginAZ2TrackerListener(){
@@ -959,22 +966,22 @@ BuddyPluginBuddy
 		}
 	}
 	
-	public BuddyPlugin.cryptoResult
+	public BuddyPlugin.CryptoResult
 	encrypt(
 		byte[]		payload )
 
 		throws BuddyPluginException
 	{
-		return( plugin.encrypt( this, payload ));
+		return( plugin_network.encrypt( this, payload ));
 	}
 
-	public BuddyPlugin.cryptoResult
+	public BuddyPlugin.CryptoResult
 	decrypt(
 		byte[]		payload )
 
 		throws BuddyPluginException
 	{
-		return( plugin.decrypt( this, payload, getName() ));
+		return( plugin_network.decrypt( this, payload, getName() ));
 	}
 
 	public boolean
@@ -985,7 +992,7 @@ BuddyPluginBuddy
 		throws BuddyPluginException
 	{
 
-		return( plugin.verify( this, payload, signature ));
+		return( plugin_network.verify( this, payload, signature ));
 	}
 
 	public BuddyPluginBuddyMessage
@@ -1020,9 +1027,9 @@ BuddyPluginBuddy
 			ygm_active = true;
 		}
 
-		plugin.setMessagePending(
+		plugin_network.setMessagePending(
 			this,
-			new BuddyPlugin.operationListener()
+			new BuddyPluginNetwork.operationListener()
 			{
 				@Override
 				public void
@@ -1087,9 +1094,9 @@ BuddyPluginBuddy
 			latest_ygm_time = SystemTime.getCurrentTime();
 		}
 
-		plugin.setConfigDirty();
+		plugin_network.setConfigDirty();
 
-		plugin.fireDetailsChanged( this );
+		plugin_network.fireDetailsChanged( this );
 
 		return( true );
 	}
@@ -1100,7 +1107,7 @@ BuddyPluginBuddy
 	{
 		last_message_received = str;
 
-		plugin.fireDetailsChanged( this );
+		plugin_network.fireDetailsChanged( this );
 	}
 
 	public String
@@ -1167,7 +1174,7 @@ BuddyPluginBuddy
 	{
 		received_frag_details = num_received + "/" + total;
 
-		plugin.fireDetailsChanged( this );
+		plugin_network.fireDetailsChanged( this );
 	}
 
 	public String
@@ -1234,22 +1241,22 @@ BuddyPluginBuddy
 
 		persistentDispatchPending();
 
-		plugin.fireDetailsChanged( this );
+		plugin_network.fireDetailsChanged( this );
 	}
 
 	public void
 	ping()
 		throws BuddyPluginException
 	{
-		plugin.checkAvailable();
+		plugin_network.checkAvailable();
 
 		try{
 			Map	ping_request = new HashMap();
 
-			ping_request.put( "type", new Long( BuddyPlugin.RT_INTERNAL_REQUEST_PING ));
+			ping_request.put( "type", new Long( BuddyPluginNetwork.RT_INTERNAL_REQUEST_PING ));
 
 			sendMessage(
-				BuddyPlugin.SUBSYSTEM_INTERNAL,
+				BuddyPluginNetwork.SUBSYSTEM_INTERNAL,
 				ping_request,
 				60*1000,
 				new BuddyPluginBuddyReplyListener()
@@ -1307,14 +1314,14 @@ BuddyPluginBuddy
 			try{
 				Map	close_request = new HashMap();
 
-				close_request.put( "type", new Long( BuddyPlugin.RT_INTERNAL_REQUEST_CLOSE ));
+				close_request.put( "type", new Long( BuddyPluginNetwork.RT_INTERNAL_REQUEST_CLOSE ));
 
 				close_request.put( "r", new Long( restarting?1:0));
 
-				close_request.put( "os", new Long( plugin.getCurrentStatusSeq(c.getDDBDetails())));
+				close_request.put( "os", new Long( plugin_network.getCurrentStatusSeq(c.getDDBDetails())));
 
 				final buddyMessage	message =
-					new buddyMessage( BuddyPlugin.SUBSYSTEM_INTERNAL, close_request, 60*1000 );
+					new buddyMessage( BuddyPluginNetwork.SUBSYSTEM_INTERNAL, close_request, 60*1000 );
 
 				message.setListener(
 						new BuddyPluginBuddyReplyListener()
@@ -1398,7 +1405,7 @@ BuddyPluginBuddy
 
 				if ( details_change ){
 
-					plugin.fireDetailsChanged( this );
+					plugin_network.fireDetailsChanged( this );
 				}
 			}
 		}catch( Throwable e ){
@@ -1416,7 +1423,7 @@ BuddyPluginBuddy
 
 		throws BuddyPluginException
 	{
-		plugin.checkAvailable();
+		plugin_network.checkAvailable();
 
 		boolean	wait = false;
 
@@ -1431,7 +1438,7 @@ BuddyPluginBuddy
 
 				if ( SystemTime.getCurrentTime() - last_status_check_time > 30*1000 ){
 
-					plugin.updateBuddyStatus( this );
+					plugin_network.updateBuddyStatus( this );
 
 					wait	= true;
 				}
@@ -1509,7 +1516,7 @@ BuddyPluginBuddy
 			
 			long type = (Long)content.get( "type" );
 			
-			if ( subsystem != BuddyPlugin.SUBSYSTEM_AZ2 || type != BuddyPluginAZ2.RT_AZ2_REQUEST_PROFILE_INFO ){
+			if ( subsystem != BuddyPluginNetwork.SUBSYSTEM_AZ2 || type != BuddyPluginAZ2.RT_AZ2_REQUEST_PROFILE_INFO ){
 		
 				throw( new BuddyPluginException( "Message " + subsystem + "/" + type + " not enabled for transient buddies" ));
 			}
@@ -1741,7 +1748,7 @@ BuddyPluginBuddy
 						
 						String net = AENetworkClassifier.categoriseAddress( address );
 						
-						DDBDetails	ddb_details =  plugin.getDDBDetails( net );
+						DDBDetails	ddb_details =  plugin_network.getDDBDetails( net );
 						
 						if ( ddb_details== null ){
 							
@@ -1797,7 +1804,7 @@ BuddyPluginBuddy
 
 		if ( inform_dirty ){
 
-			plugin.setConfigDirty();
+			plugin_network.setConfigDirty();
 		}
 	}
 
@@ -1816,7 +1823,7 @@ BuddyPluginBuddy
 
 		if ( size == 0 ){
 
-			plugin.setConfigDirty();
+			plugin_network.setConfigDirty();
 		}
 
 		if ( size == 0 && bc.isConnected() && !bc.isClosing() && !bc.isRemoteClosing()){
@@ -1890,7 +1897,7 @@ BuddyPluginBuddy
 
 			// connection failed, see if we need to attempt to re-establish
 
-		plugin.fireDetailsChanged( this );
+		plugin_network.fireDetailsChanged( this );
 
 		dispatchMessage();
 	}
@@ -1951,7 +1958,7 @@ BuddyPluginBuddy
 
 		if ( details_change ){
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 		}
 	}
 
@@ -1959,7 +1966,7 @@ BuddyPluginBuddy
 	setAddress(
 		InetSocketAddress	address )
 	{
-		if ( plugin.getPeersAreLANLocal()){
+		if ( plugin_network.getPeersAreLANLocal()){
 
 			AddressUtils.addLANRateLimitAddress( address );
 		}
@@ -2083,7 +2090,7 @@ BuddyPluginBuddy
 
 				}else{
 
-					timed_out =  now - last_time_online >= BuddyPlugin.STATUS_REPUBLISH_PERIOD * 3 ;
+					timed_out =  now - last_time_online >= BuddyPluginNetwork.STATUS_REPUBLISH_PERIOD * 3 ;
 				}
 
 				if ( online ){
@@ -2136,7 +2143,7 @@ BuddyPluginBuddy
 					details_change	= true;
 				}
 
-				if ( !plugin.stringsEqual( nick_name, _nick_name )){
+				if ( !plugin_network.stringsEqual( nick_name, _nick_name )){
 
 					nick_name	= _nick_name;
 
@@ -2151,7 +2158,7 @@ BuddyPluginBuddy
 
 		if ( config_dirty ){
 
-			plugin.setConfigDirty();
+			plugin_network.setConfigDirty();
 		}
 
 		if ( details_change ){
@@ -2161,12 +2168,12 @@ BuddyPluginBuddy
 				persistentDispatchPending();
 			}
 
-			plugin.fireDetailsChanged( this );
+			plugin_network.fireDetailsChanged( this );
 		}
 
 		if ( !isTransient()){
 		
-			plugin.logMessage( this,  getString());
+			plugin_network.logMessage( this,  getString());
 		}
 	}
 
@@ -2290,11 +2297,11 @@ BuddyPluginBuddy
 			try{
 				Map	ping_request = new HashMap();
 
-				ping_request.put( "type", new Long( BuddyPlugin.RT_INTERNAL_REQUEST_PING ));
+				ping_request.put( "type", new Long( BuddyPluginNetwork.RT_INTERNAL_REQUEST_PING ));
 
 				sendMessageSupport(
 					ping_request,
-					BuddyPlugin.SUBSYSTEM_INTERNAL,
+					BuddyPluginNetwork.SUBSYSTEM_INTERNAL,
 					60*1000,
 					new BuddyPluginBuddyReplyListener()
 					{
@@ -2400,7 +2407,7 @@ BuddyPluginBuddy
 	logMessage(
 		String	str )
 	{
-		plugin.logMessage( this, getShortString() + ": " + str );
+		plugin_network.logMessage( this, getShortString() + ": " + str );
 	}
 
 	protected GenericMessageConnection
@@ -2408,7 +2415,7 @@ BuddyPluginBuddy
 
 		throws BuddyPluginException
 	{
-		GenericMessageRegistration msg_registration = plugin.getMessageRegistration();
+		GenericMessageRegistration msg_registration = plugin_network.getMessageRegistration();
 
 		if ( msg_registration == null ){
 
@@ -2477,11 +2484,11 @@ BuddyPluginBuddy
 
 			con = msg_registration.createConnection( endpoint );
 
-			plugin.addRateLimiters( con );
+			plugin_network.getPlugin().addRateLimiters( con );
 
 			String reason = "Friend: Outgoing connection establishment";
 
-			SESecurityManager sec_man = plugin.getSecurityManager();
+			SESecurityManager sec_man = plugin_network.getSecurityManager();
 
 			con = sec_man.getSTSConnection(
 					con,
@@ -2512,7 +2519,7 @@ BuddyPluginBuddy
 						}
 					},
 					reason,
-					BuddyPlugin.BLOCK_CRYPTO );
+					BuddyPluginNetwork.BLOCK_CRYPTO );
 
 			con.connect();
 
@@ -2578,7 +2585,7 @@ BuddyPluginBuddy
 
 		if ( inform_dirty ){
 
-			plugin.setConfigDirty();
+			plugin_network.setConfigDirty();
 		}
 	}
 
@@ -2607,7 +2614,7 @@ BuddyPluginBuddy
 	log(
 		String		str )
 	{
-		plugin.log( this, str );
+		plugin_network.log( this, str );
 	}
 
 	protected void
@@ -2615,7 +2622,7 @@ BuddyPluginBuddy
 		String		str,
 		Throwable 	e )
 	{
-		plugin.log( this, str, e );
+		plugin_network.log( this, str, e );
 	}
 
 	public String
@@ -3035,8 +3042,8 @@ BuddyPluginBuddy
 			send_map.put( "req", request );
 			send_map.put( "ss", new Long( msg.getSubsystem()));
 			send_map.put( "id", new Long( msg.getID()));
-			send_map.put( "oz", new Long( plugin.getOnlineStatus()));
-			send_map.put( "v", new Long( BuddyPlugin.VERSION_CURRENT ));
+			send_map.put( "oz", new Long( plugin_network.getOnlineStatus()));
+			send_map.put( "v", new Long( BuddyPluginNetwork.VERSION_CURRENT ));
 
 			String	loc_cat = getLocalAuthorisedRSSTagsOrCategoriesAsString();
 
@@ -3129,7 +3136,7 @@ BuddyPluginBuddy
 
 						try{
 
-							reply = plugin.requestReceived( BuddyPluginBuddy.this, subsystem.intValue(), request );
+							reply = plugin_network.requestReceived( BuddyPluginBuddy.this, subsystem.intValue(), request );
 
 						}catch( Throwable e ){
 
@@ -3157,7 +3164,7 @@ BuddyPluginBuddy
 					reply_map.put( "ss", subsystem );
 					reply_map.put( "type", new Long( reply_type ));
 					reply_map.put( "id", data_map.get( "id" ) );
-					reply_map.put( "oz", new Long( plugin.getOnlineStatus()));
+					reply_map.put( "oz", new Long( plugin_network.getOnlineStatus()));
 
 					String	loc_cat = getLocalAuthorisedRSSTagsOrCategoriesAsString();
 
@@ -3387,7 +3394,7 @@ BuddyPluginBuddy
 
 				int	data_length = data.length;
 
-				plugin.checkMaxMessageSize( data_length );
+				plugin_network.checkMaxMessageSize( data_length );
 
 				int	max_chunk = connection.getMaximumMessageSize() - 1024;
 
@@ -3414,7 +3421,7 @@ BuddyPluginBuddy
 
 							Map	chunk_map = new HashMap();
 
-							chunk_map.put( "type", new Long( BuddyPlugin.RT_INTERNAL_FRAGMENT ));
+							chunk_map.put( "type", new Long( BuddyPluginNetwork.RT_INTERNAL_FRAGMENT ));
 							chunk_map.put( "f", new Long( fragment_id ));
 							chunk_map.put( "l", new Long( data_length ));
 							chunk_map.put( "c", new Long( max_chunk ));
@@ -3425,7 +3432,7 @@ BuddyPluginBuddy
 							byte[] chunk_data = BEncoder.encode( chunk_map );
 
 							PooledByteBuffer chunk_buffer =
-								plugin.getPluginInterface().getUtilities().allocatePooledByteBuffer( chunk_data );
+								plugin_network.getPluginInterface().getUtilities().allocatePooledByteBuffer( chunk_data );
 
 							try{
 								connection.send( chunk_buffer );
@@ -3446,7 +3453,7 @@ BuddyPluginBuddy
 				}else{
 
 					PooledByteBuffer buffer =
-						plugin.getPluginInterface().getUtilities().allocatePooledByteBuffer( data );
+						plugin_network.getPluginInterface().getUtilities().allocatePooledByteBuffer( data );
 
 					try{
 
@@ -3494,7 +3501,7 @@ BuddyPluginBuddy
 
 				Map	data_map = BDecoder.decode( content );
 
-				if (((Long)data_map.get( "type" )).intValue() == BuddyPlugin.RT_INTERNAL_FRAGMENT ){
+				if (((Long)data_map.get( "type" )).intValue() == BuddyPluginNetwork.RT_INTERNAL_FRAGMENT ){
 
 					Map	chunk_map = data_map;
 
@@ -3507,7 +3514,7 @@ BuddyPluginBuddy
 
 					byte[]	chunk_data = (byte[])chunk_map.get("d" );
 
-					plugin.checkMaxMessageSize( data_length );
+					plugin_network.checkMaxMessageSize( data_length );
 
 					fragmentAssembly assembly;
 

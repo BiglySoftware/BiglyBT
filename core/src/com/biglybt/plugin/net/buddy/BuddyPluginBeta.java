@@ -1535,7 +1535,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			
 			if ( !key.equals( plugin.getPublicKey())){
 
-				plugin.addBuddy(key, BuddyPlugin.SUBSYSTEM_AZ2 );
+				plugin.addBuddy(key, BuddyPluginNetwork.SUBSYSTEM_AZ2 );
 
 				plugin.getSWTUI().selectClassicTab();
 			}

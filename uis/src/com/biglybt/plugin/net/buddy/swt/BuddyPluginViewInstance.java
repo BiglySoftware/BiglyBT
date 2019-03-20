@@ -62,7 +62,7 @@ import com.biglybt.ui.swt.shells.MessageBoxShell;
 
 public class
 BuddyPluginViewInstance
-	implements BuddyPluginListener, PartialBuddyListener, BuddyPluginBuddyRequestListener
+	implements BuddyPluginListener, PartialBuddyListener
 {
 	private static final int LOG_NORMAL 	= 1;
 	private static final int LOG_SUCCESS 	= 2;
@@ -1458,7 +1458,7 @@ BuddyPluginViewInstance
 				widgetSelected(
 					SelectionEvent e )
 				{
-					plugin.addBuddy( control_text.getText().trim(), BuddyPlugin.SUBSYSTEM_AZ2 );
+					plugin.addBuddy( control_text.getText().trim(), BuddyPluginNetwork.SUBSYSTEM_AZ2 );
 
 					control_text.setText( "" );
 				}
@@ -1725,8 +1725,6 @@ BuddyPluginViewInstance
 
 		plugin.addPartialBuddyListener( this );
 		
-		plugin.addRequestListener( this );
-
 		init_complete	= true;
 
 		updateTable();
@@ -2253,7 +2251,7 @@ BuddyPluginViewInstance
 
 										BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
 
-										plugin.getAZ2Handler().sendAZ2Message( buddy, text );
+										buddy.getPluginNetwork().getAZ2Handler().sendAZ2Message( buddy, text );
 									}
 								}
 							}
@@ -2290,7 +2288,7 @@ BuddyPluginViewInstance
 						buddies[i] = buddy;
 					}
 
-					plugin.getAZ2Handler().createChat( buddies );
+					plugin.createChat( buddies );
 				}
 			});
 
@@ -2386,7 +2384,7 @@ BuddyPluginViewInstance
 							try{
 								byte[]	contents = str.getBytes( "UTF-8" );
 
-								BuddyPlugin.cryptoResult result = buddy.encrypt( contents );
+								BuddyPlugin.CryptoResult result = buddy.encrypt( contents );
 
 								sb.append( "key: " );
 								sb.append( plugin.getPublicKey());
@@ -2467,7 +2465,7 @@ BuddyPluginViewInstance
 									if ( buddy != null ){
 
 										try{
-											BuddyPlugin.cryptoResult result = buddy.decrypt( payload );
+											BuddyPlugin.CryptoResult result = buddy.decrypt( payload );
 
 											byte[] sha1 = new SHA1Simple().calculateHash( result.getChallenge());
 
@@ -3342,33 +3340,6 @@ BuddyPluginViewInstance
 	{
 	}
 
-	@Override
-	public Map
-	requestReceived(
-		BuddyPluginBuddy	from_buddy,
-		int					subsystem,
-		Map					request )
-
-		throws BuddyPluginException
-	{
-		return( null );
-	}
-
-	@Override
-	public void
-	pendingMessages(
-		BuddyPluginBuddy[]	from_buddies )
-	{
-		String	str = "";
-
-		for (int i=0;i<from_buddies.length;i++){
-
-			str += (str.length()==0?"":",") + from_buddies[i].getName();
-		}
-
-		print( "YGM received: " + str );
-	}
-
 	protected void
 	print(
 		String		str,
@@ -3474,8 +3445,6 @@ BuddyPluginViewInstance
 		plugin.removeListener( this );
 
 		plugin.removePartialBuddyListener( this );
-		
-		plugin.removeRequestListener( this );
 	}
 
 	protected class
