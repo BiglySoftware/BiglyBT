@@ -38,6 +38,10 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.security.*;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
+import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.PluginInterface;
@@ -59,6 +63,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 
 public class
 BuddyPluginViewInstance
@@ -2739,37 +2744,87 @@ BuddyPluginViewInstance
 				widgetSelected(
 					SelectionEvent event )
 				{
-					UIInputReceiver prompter = ui_instance.getInputReceiver();
+					TableItem[] selection = buddy_table.getSelection();
 
-					prompter.setLocalisedTitle( lu.getLocalisedMessageText( "azbuddy.ui.menu.cat.set" ));
-					prompter.setLocalisedMessage( lu.getLocalisedMessageText( "azbuddy.ui.menu.cat.set_msg" ));
+					List<BuddyPluginBuddy>	buddies = new ArrayList<>();
+					
+					Set<String> enabled_tags = new HashSet<>();
 
-					prompter.prompt(new UIInputReceiverListener() {
-						@Override
-						public void UIInputReceiverClosed(UIInputReceiver prompter) {
-							String cats = prompter.getSubmittedInput();
+					for (int i=0;i<selection.length;i++){
 
-							if ( cats != null ){
+						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
 
-								cats = cats.trim();
-
-								if ( cats.equalsIgnoreCase( "None" )){
-
-									cats = "";
-								}
-
-								TableItem[] selection = buddy_table.getSelection();
-
-								for (int i=0;i<selection.length;i++){
-
-									BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
-
-									buddy.setLocalAuthorisedRSSTagsOrCategories( cats );
+						buddies.add( buddy );
+						
+						Set<String> et = buddy.getLocalAuthorisedRSSTagsOrCategories();
+						
+						if ( et == null ){
+							
+							enabled_tags.clear();
+							
+							break;
+							
+						}else{
+							
+							if ( i == 0 ){
+								
+								enabled_tags.addAll( et );
+								
+							}else{
+								
+								enabled_tags.retainAll( et );
+								
+								if ( enabled_tags.isEmpty()){
+									
+									break;
 								}
 							}
 						}
-					});
-
+					}
+					
+					TagManager tm = TagManagerFactory.getTagManager();
+					
+					List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_CATEGORY ).getTags();
+					
+					all_tags.addAll( tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags());
+					
+					Map<String,Tag>	tag_map = new HashMap<>();
+					
+					for ( Tag t: all_tags ){
+						
+						tag_map.put( t.getTagName( true ), t );
+					}
+					
+					List<Tag> selected_tags = new ArrayList<>();
+					
+					for ( String s: enabled_tags ){
+					
+						Tag t = tag_map.get( s );
+							
+						if ( t != null ){
+							
+							selected_tags.add( t );
+						}
+					}
+					
+					TagUIUtilsV3.showTagSelectionDialog( 
+						all_tags, 
+						selected_tags,
+						false,
+						(tags)->{
+							
+							Set<String>	tag_names = new HashSet<>();
+							
+							for ( Tag t: tags ){
+								
+								tag_names.add( t.getTagName( true ));
+							}
+							
+							for ( BuddyPluginBuddy buddy: buddies ){
+							
+								buddy.setLocalAuthorisedRSSTagsOrCategories( tag_names );
+							}
+						});
 				}
 			});
 
@@ -2797,12 +2852,16 @@ BuddyPluginViewInstance
 
 					final TableItem[] selection = buddy_table.getSelection();
 
+					List<BuddyPluginBuddy>	buddies = new ArrayList<>();
+					
 					Set<String> avail_cats = new TreeSet<>();
 
 					for (int i=0;i<selection.length;i++){
 
 						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
 
+						buddies.add( buddy );
+						
 						Set<String> cats = buddy.getRemoteAuthorisedRSSTagsOrCategories();
 
 						if ( cats != null ){
@@ -2813,10 +2872,27 @@ BuddyPluginViewInstance
 
 					for ( final String cat: avail_cats ){
 
-						final MenuItem subs_item = new MenuItem( cat_subs_menu, SWT.PUSH );
-
+						final MenuItem subs_item = new MenuItem( cat_subs_menu, SWT.CHECK );
+						
 						subs_item.setText( cat );
 
+						boolean	all_subs 	= true;
+						boolean some_subs 	= false;
+						
+						for ( BuddyPluginBuddy buddy: buddies ){
+							
+							if ( buddy.isSubscribedToCategory( cat )){
+								
+								some_subs = true;
+								
+							}else{
+								
+								all_subs = false;
+							}
+						}
+						
+						subs_item.setSelection( all_subs );
+						
 						subs_item.addSelectionListener(
 							new SelectionAdapter()
 							{
