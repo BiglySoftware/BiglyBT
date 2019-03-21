@@ -22,6 +22,7 @@ package com.biglybt.plugin.net.buddy;
 
 import java.util.*;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.torrent.Torrent;
@@ -177,6 +178,10 @@ BuddyPluginAZ2
 
 			String	id = new String((byte[])msg.get( "id" ));
 
+			int	chat_msg_type = ((Long)msg.get( "type")).intValue();
+
+			boolean dont_create_chat = chat_msg_type == CHAT_MSG_TYPE_PARTICIPANTS_REMOVED;
+			
 			chatInstance	chat;
 			boolean			new_chat = false;
 
@@ -186,28 +191,34 @@ BuddyPluginAZ2
 
 				 if ( chat == null ){
 
-					 if ( chats.size() > 32 ){
-
-						 throw( new BuddyPluginException( "Too many chats" ));
+					 if ( !dont_create_chat ){
+						 
+						 if ( chats.size() > 32 ){
+	
+							 throw( new BuddyPluginException( "Too many chats" ));
+						 }
+	
+						 chat = new chatInstance( id );
+	
+						 chats.put( id, chat );
+	
+						 new_chat = true;
 					 }
-
-					 chat = new chatInstance( id );
-
-					 chats.put( id, chat );
-
-					 new_chat = true;
 				 }
 			}
 
-			if ( new_chat ){
-
-				informCreated( chat );
+			if ( chat != null ){
+				
+				if ( new_chat ){
+	
+					informCreated( chat );
+				}
+	
+				chat.addParticipant( from_buddy );
+	
+				chat.process( from_buddy, msg );
 			}
-
-			chat.addParticipant( from_buddy );
-
-			chat.process( from_buddy, msg );
-
+			
 			reply.put( "type", new Long( RT_AZ2_REPLY_CHAT ));
 
 		}else if (  type == RT_AZ2_REQUEST_TRACK ){
@@ -678,7 +689,8 @@ BuddyPluginAZ2
 		private String		id;
 
 		private Map				participants 	= new HashMap();
-		private CopyOnWriteList	listeners 		= new CopyOnWriteList();
+		
+		private CopyOnWriteList<BuddyPluginAZ2ChatListener>	listeners 		= new CopyOnWriteList<>();
 
 		private List			history			= new ArrayList();
 
@@ -720,12 +732,10 @@ BuddyPluginAZ2
 
 			if ( p != null ){
 
-				Iterator it = listeners.iterator();
-
-				while( it.hasNext()){
+				for ( BuddyPluginAZ2ChatListener l: listeners ){
 
 					try{
-						((BuddyPluginAZ2ChatListener)it.next()).participantRemoved( p );
+						l.participantRemoved( p );
 
 					}catch( Throwable e ){
 
@@ -744,12 +754,10 @@ BuddyPluginAZ2
 
 			if ( p != null ){
 
-				Iterator it = listeners.iterator();
-
-				while( it.hasNext()){
-
+				for ( BuddyPluginAZ2ChatListener l: listeners ){
+					
 					try{
-						((BuddyPluginAZ2ChatListener)it.next()).participantChanged( p );
+						l.participantChanged( p );
 
 					}catch( Throwable e ){
 
@@ -770,8 +778,6 @@ BuddyPluginAZ2
 
 			if ( type == CHAT_MSG_TYPE_TEXT ){
 
-				Iterator it = listeners.iterator();
-
 				synchronized( history ){
 
 					history.add( new chatMessage( p.getName(), msg ));
@@ -782,10 +788,10 @@ BuddyPluginAZ2
 					}
 				}
 
-				while( it.hasNext()){
-
+				for ( BuddyPluginAZ2ChatListener l: listeners ){
+					
 					try{
-						((BuddyPluginAZ2ChatListener)it.next()).messageReceived( p, msg );
+						l.messageReceived( p, msg );
 
 					}catch( Throwable e ){
 
@@ -805,6 +811,44 @@ BuddyPluginAZ2
 					if ( !pk.equals( plugin_network.getPublicKey())){
 
 						addParticipant( pk );
+					}
+				}
+			}else if ( type == CHAT_MSG_TYPE_PARTICIPANTS_REMOVED ){
+			
+				List added = (List)msg.get( "p" );
+
+				for (int i=0;i<added.size();i++){
+
+					Map	participant = (Map)added.get(i);
+
+					String pk = new String((byte[])participant.get( "pk" ));
+
+					if ( !pk.equals( plugin_network.getPublicKey())){
+
+						removeParticipant( pk );
+					}
+				}
+				
+				Map quit_msg = new HashMap();
+				
+				String quit_str = "/quit";
+				
+				try{
+					quit_msg.put( "line", quit_str.getBytes( "UTF-8" ));
+
+				}catch( Throwable e ){
+
+					quit_msg.put( "line", quit_str.getBytes());
+				}
+				
+				for ( BuddyPluginAZ2ChatListener l: listeners ){
+					
+					try{
+						l.messageReceived( p, quit_msg );
+
+					}catch( Throwable e ){
+
+						Debug.printStackTrace(e);
 					}
 				}
 			}
@@ -910,6 +954,23 @@ BuddyPluginAZ2
 			return( p );
 		}
 
+		public void
+		removeParticipant(
+			String			pk )
+		{
+			chatParticipant p;
+			
+			synchronized( participants ){
+
+				p = (chatParticipant)participants.get( pk );
+			}
+
+			if ( p != null ){
+				
+				removeParticipant( p );
+			}
+		}
+		
 		public chatParticipant
 		addParticipant(
 			BuddyPluginBuddy	buddy )
@@ -1013,6 +1074,22 @@ BuddyPluginAZ2
 		public void
 		destroy()
 		{
+			Map	msg = new HashMap();
+
+			msg.put( "type", new Long( CHAT_MSG_TYPE_PARTICIPANTS_REMOVED ));
+
+			List	removed = new ArrayList();
+
+			msg.put( "p", removed );
+
+			Map map = new HashMap();
+			
+			map.put( "pk", plugin_network.getPublicKey());
+
+			removed.add( map );
+			
+			sendMessageBase( msg );
+			
 			plugin_network.getPlugin().removeListener( this );
 
 			destroyChat( this );

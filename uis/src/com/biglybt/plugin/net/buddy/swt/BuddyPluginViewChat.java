@@ -433,7 +433,14 @@ BuddyPluginViewChat
 
 			log.append( "\n" );
 
+		}else if ( msg.equals( "/quit" )){
+			
+			String quit = lu.getLocalisedMessageText( "azbuddy.chat.quit", new String[]{ buddy_name }) + "\n";
+
+			log.append( quit );
+			
 		}else{
+			
 			String says = lu.getLocalisedMessageText( "azbuddy.chat.says", new String[]{ buddy_name }) + "\n";
 
 			log.append( says );
