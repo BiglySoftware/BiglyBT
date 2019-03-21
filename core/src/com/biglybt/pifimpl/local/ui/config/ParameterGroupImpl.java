@@ -99,6 +99,19 @@ ParameterGroupImpl
 		return( num_columns );
 	}
 
+	@Override
+	public void
+	setEnabled(
+		boolean	e )
+	{
+		super.setEnabled( e );
+		
+		for ( ParameterImpl p: parameters ){
+			
+			p.setEnabled( e );
+		}
+	}
+	
 	public ParameterImpl[]
 	getParameters()
 	{

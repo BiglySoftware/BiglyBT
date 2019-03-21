@@ -20,7 +20,6 @@
 
 package com.biglybt.plugin.net.buddy.swt;
 
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -44,6 +43,7 @@ import com.biglybt.pif.PluginConfig;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.*;
 import com.biglybt.pif.utils.LocaleUtilities;
+import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.plugin.net.buddy.*;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
 import com.biglybt.ui.UIFunctions;
@@ -166,7 +166,7 @@ BuddyPluginViewInstance
 				@Override
 				public void enabledStateChanged(boolean _classic_enabled, boolean _beta_enabled){
 					
-					if ( composite.isDisposed()){
+					if ( composite == null || composite.isDisposed()){
 						
 						plugin.removeListener( this );
 						
@@ -1743,6 +1743,8 @@ BuddyPluginViewInstance
 		
 		addBuddyTable( anon_area, false );
 
+		Utils.setEnabled( anon_area, I2PHelpers.isI2PInstalled());
+		
 		Label pblab = new Label( child1, SWT.NULL );
 		
 		pblab.setText( lu.getLocalisedMessageText( "label.partial.friends" ));
@@ -1757,6 +1759,9 @@ BuddyPluginViewInstance
 		log.setLayoutData(grid_data);
 		log.setIndent( 4 );
 
+		public_buddies.clear();
+		anon_buddies.clear();
+		
 		List<BuddyPluginBuddy> buddies = plugin.getBuddies();
 
 		for ( BuddyPluginBuddy buddy: buddies ){

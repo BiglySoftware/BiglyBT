@@ -228,6 +228,28 @@ public class Utils
 		return userMode;
 	}
 
+	public static void setEnabled(Composite composite, boolean enabled) {
+		if (composite == null || composite.isDisposed()){
+			return;
+		}
+		
+		for ( Control control: composite.getChildren()){
+		
+			if ( control != null && !control.isDisposed()){
+				
+				if ( control instanceof Composite ){
+					
+					setEnabled((Composite) control, enabled);
+					
+				}else{
+					
+					control.setEnabled( enabled );
+				}
+			}
+		}
+		
+		composite.setEnabled( enabled );
+	}
 	
 	public static void disposeComposite(Composite composite, boolean disposeSelf) {
 		if (composite == null || composite.isDisposed())

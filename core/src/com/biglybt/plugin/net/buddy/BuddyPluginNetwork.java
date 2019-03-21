@@ -2033,7 +2033,7 @@ BuddyPluginNetwork
 
 				BuddyPluginBuddy	buddy = (BuddyPluginBuddy)buddies.get(i);
 
-				if ( buddy.isAuthorised()){
+				if ( buddy.isAuthorised() && !buddy.isTransient()){
 
 					result.add( buddy );
 				}

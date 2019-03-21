@@ -61,4 +61,16 @@ ParameterTabFolderImpl
 	{
 
 	}
+	
+	@Override
+	public void 
+	setEnabled(boolean e){
+	
+		super.setEnabled(e);
+		
+		for ( ParameterGroupImpl g: groups ){
+			
+			g.setEnabled( e );
+		}
+	}
 }

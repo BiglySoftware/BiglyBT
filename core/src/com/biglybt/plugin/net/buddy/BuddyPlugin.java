@@ -91,13 +91,13 @@ import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.tables.TableRow;
-import com.biglybt.pif.update.UpdateException;
 import com.biglybt.pif.utils.DelayedTask;
 import com.biglybt.pif.utils.LocaleListener;
 import com.biglybt.pif.utils.LocaleUtilities;
 import com.biglybt.pif.utils.UTTimerEvent;
 import com.biglybt.pif.utils.UTTimerEventPerformer;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
+import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
 
 public class
@@ -237,8 +237,9 @@ BuddyPlugin
 
 		classic_enabled_param = config.addBooleanParameter2( "azbuddy.enabled", "azbuddy.enabled", false );
 
-		ParameterTabFolder	network_tab = config.createTabFolder();
-
+		ParameterTabFolder	network_tab 		= config.createTabFolder();
+		ParameterGroup		network_anon_item 	= null;
+		
 		for ( int i=0;i<2;i++){
 		
 			boolean is_pub_tab = i == 0;
@@ -327,7 +328,7 @@ BuddyPlugin
 					new Parameter[]{ 
 							nick_param, os_param, profile_group
 					});
-	
+				
 			if ( is_pub_tab ){
 				nick_name_public_param		= nick_param;
 				online_status_public_param	= os_param;
@@ -336,18 +337,15 @@ BuddyPlugin
 				nick_name_anon_param		= nick_param;
 				online_status_anon_param	= os_param;
 				profile_anon_param			= profile_param;
+				
+				network_anon_item = network_item;
 			}
 			
 			network_tab.addTab( network_item );
 		}
 		
-		
 		updateProfiles();
-
-		
-		
-		
-		
+	
 			// protocol speed
 
 		final IntParameter	protocol_speed = config.addIntParameter2( "azbuddy.protocolspeed", "azbuddy.protocolspeed", 32 );
@@ -647,6 +645,8 @@ BuddyPlugin
 				}
 			});
 
+		final ParameterGroup f_network_anon_item = network_anon_item;
+		
 		ParameterListener enabled_listener =
 			new ParameterListener()
 			{
@@ -675,6 +675,8 @@ BuddyPlugin
 					buddies_fp_enable.setEnabled( classic_enabled );
 					
 					network_tab.setEnabled( classic_enabled );
+					
+					f_network_anon_item.setEnabled( classic_enabled && I2PHelpers.isI2PInstalled());
 					
 						// only toggle overall state on a real change
 

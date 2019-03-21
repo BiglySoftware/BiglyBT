@@ -832,6 +832,33 @@ BasicPluginConfigImpl
 			}
 		};
 
+		for ( Map.Entry<ParameterGroupImpl, Composite> entry: group_map.entrySet()){
+			
+			ParameterGroupImpl 	pg 		= entry.getKey();
+			Composite			comp	= entry.getValue();
+			
+			ParameterImplListener gl =
+				new ParameterImplListener()
+				{
+					@Override
+					public void enabledChanged(ParameterImpl parameter){
+						
+						comp.setEnabled( parameter.isEnabled());
+					}
+					@Override
+					public void labelChanged(ParameterImpl parameter, String text, boolean bIsKey){
+					
+					}
+				};
+				
+			pg.addImplListener( gl );
+			
+			if ( !pg.isEnabled()){
+				
+				comp.setEnabled( false );
+			}
+		}
+		
 		for (int i=0;i<parameters.length;i++){
 
 			final ParameterImpl	param = 	(ParameterImpl)parameters[i];
