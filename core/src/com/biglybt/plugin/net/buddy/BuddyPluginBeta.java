@@ -24,7 +24,6 @@ package com.biglybt.plugin.net.buddy;
 
 import java.io.*;
 import java.lang.ref.WeakReference;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.*;
