@@ -142,7 +142,7 @@ public class UIConfigDefaultsSWT
 		if ( Constants.isWindows ){
 			
 			try{
-				if ( Constants.getCurrentVersion().equals( "1.8.0.1_B33" )){
+				if ( Constants.getCurrentVersion().equals( "1.8.0.1_B35" )){
 					
 					COConfigurationManager.removeParameter( "Ignore Icon Exts" );
 				}
