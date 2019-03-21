@@ -168,18 +168,13 @@ BuddyPluginNetwork
 		plugin					= _plugin;
 		target_network			= _target_network;
 		
-		if ( target_network == AENetworkClassifier.AT_PUBLIC ){
-			
-			config_file_name = "friends.config";
-			
-		}else{
-			
-			config_file_name = "friends_a.config";
-		}
+		boolean is_pub = isPublicNetwork();
+					
+		config_file_name = is_pub?"friends.config":"friends_a.config";
 		
 		sec_man 		= plugin_interface.getUtilities().getSecurityManager();
 		
-		ecc_handler 	= CryptoManagerFactory.getSingleton().getECCHandler(target_network == AENetworkClassifier.AT_PUBLIC?1:2 );
+		ecc_handler 	= CryptoManagerFactory.getSingleton().getECCHandler( is_pub?1:2 );
 		
 		az2_handler = new BuddyPluginAZ2( this );
 	}
@@ -188,6 +183,18 @@ BuddyPluginNetwork
 	getPlugin()
 	{
 		return( plugin );
+	}
+	
+	public String
+	getTargetNetwork()
+	{
+		return( target_network );
+	}
+	
+	public boolean
+	isPublicNetwork()
+	{
+		return( target_network == AENetworkClassifier.AT_PUBLIC );
 	}
 	
 	protected void
@@ -213,7 +220,7 @@ BuddyPluginNetwork
 		try{
 			String[] ddb_nets;
 			
-			if ( target_network == AENetworkClassifier.AT_PUBLIC ){
+			if ( isPublicNetwork()){
 			
 				ddb_nets = new String[]{ AENetworkClassifier.AT_PUBLIC, AENetworkClassifier.AT_I2P };
 				
@@ -380,7 +387,7 @@ BuddyPluginNetwork
 	protected List<String>
 	getProfileInfo()
 	{
-		return( plugin.getProfileInfo());
+		return( plugin.getProfileInfo( isPublicNetwork()));
 	}
 	
 	protected void
@@ -443,7 +450,7 @@ BuddyPluginNetwork
 
 			msg_registration =
 				plugin_interface.getMessageManager().registerGenericMessageType(
-					target_network==AENetworkClassifier.AT_PUBLIC?"AZBUDDY":"BGBUDDYA", 
+					isPublicNetwork()?"AZBUDDY":"BGBUDDYA", 
 					"Buddy message handler (" + target_network + ")",
 					STREAM_CRYPTO,
 					new GenericMessageHandler()
@@ -521,8 +528,6 @@ BuddyPluginNetwork
 									}
 								}
 								
-								System.out.println( "accept from " + originator + " - " + start_address + "/" + ddb_address1 + "/" + ddb_address2 );
-
 								if ( !ok ){
 									
 									if ( TRACE ){
@@ -662,7 +667,7 @@ BuddyPluginNetwork
 		return( 
 			sec_man.getSTSConnection(
 				connection,
-				sec_man.getPublicKey( SEPublicKey.KEY_TYPE_ECC_192, target_network==AENetworkClassifier.AT_PUBLIC?1:2, reason ),
+				sec_man.getPublicKey( SEPublicKey.KEY_TYPE_ECC_192, isPublicNetwork()?1:2, reason ),
 				locator,
 				reason,
 				BLOCK_CRYPTO ));

@@ -691,6 +691,12 @@ BuddyPluginAZ2
 			plugin_network.getPlugin().addListener( this );
 		}
 
+		public BuddyPluginNetwork
+		getPluginNetwork()
+		{
+			return( plugin_network );
+		}
+		
 		public String
 		getID()
 		{

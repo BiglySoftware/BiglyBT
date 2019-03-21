@@ -177,6 +177,12 @@ BuddyPluginBuddy
 		return( plugin_network );
 	}
 	
+	public boolean
+	isPublicNetwork()
+	{
+		return( plugin_network.isPublicNetwork());
+	}
+	
 	protected void
 	setInitialStatus(
 		long	now,

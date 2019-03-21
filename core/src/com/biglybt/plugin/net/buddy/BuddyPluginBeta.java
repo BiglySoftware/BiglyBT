@@ -1483,7 +1483,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String protocol;
 		String key 		= null;
 		String format	= null;
-
+		
 		if ( pos != -1 ){
 
 			protocol = url_str.substring( 0, pos ).toLowerCase( Locale.US );
@@ -1526,16 +1526,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			throw( new Exception( "Key missing" ));
 		}
 
-		if ( protocol.startsWith( "chat:friend" )){
+		if ( protocol.startsWith( "chat:friend" ) || protocol.startsWith( "chat:anon:friend" )){
 
 			if ( !plugin.isClassicEnabled()){
 				
 				plugin.setClassicEnabled( true, false );
 			}
 			
-			if ( !key.equals( plugin.getPublicKey())){
+			boolean is_pub = protocol.startsWith( "chat:friend" );
+			
+			if ( !key.equals( plugin.getPublicKey( is_pub ))){
 
-				plugin.addBuddy(key, BuddyPluginNetwork.SUBSYSTEM_AZ2 );
+				plugin.addBuddy( is_pub, key, BuddyPluginNetwork.SUBSYSTEM_AZ2 );
 
 				plugin.getSWTUI().selectClassicTab();
 			}
@@ -5377,10 +5379,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						payload.put( "f", flags );
 					}
 					
-					if ( plugin.isClassicEnabled() && getPostFriendKey() && !isAnonymous()){
+					if ( plugin.isClassicEnabled() && getPostFriendKey()){
 					
 						try{
-							String key_str = plugin.getPublicKey();
+							String key_str = plugin.getPublicKey( !isAnonymous());
 							
 							if ( key_str != null && !key_str.isEmpty()){
 								
@@ -6183,7 +6185,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				
 				profile_data_peeked = true;
 				
-				BuddyPluginBuddy buddy = plugin.peekBuddy( fk );
+				BuddyPluginBuddy buddy = plugin.peekBuddy( !chat.isAnonymous(), fk );
 				
 				if ( buddy != null ){
 					
@@ -6210,9 +6212,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			
 			if ( fk != null ){
 				
-				if ( fk.equals( plugin.getPublicKey())){
+				boolean is_pub = !chat.isAnonymous();
+				
+				if ( fk.equals( plugin.getPublicKey( is_pub ))){
 					
-					List<String> info = plugin.getProfileInfo();
+					List<String> info = plugin.getProfileInfo( is_pub );
 					
 					BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
 						

@@ -28,6 +28,9 @@ CryptoHandler
 	public int
 	getType();
 
+	public int
+	getInstance();
+	
 		/**
 		 * Explicit unlock request
 		 * @throws CryptoManagerException

@@ -27,6 +27,9 @@ SEPublicKey
 	public int
 	getType();
 
+	public int
+	getInstance();
+	
 		/**
 		 * Gets a generic encoded form that includes type identification information. So
 		 * don't treat this as a raw encoding as it can only sensibly be used to later

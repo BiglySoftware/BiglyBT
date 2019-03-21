@@ -352,7 +352,7 @@ BuddyPluginViewChat
 			msg.put( "line", text.getBytes());
 		}
 
-		logChatMessage( plugin.getNickname(), Colors.green, msg );
+		logChatMessage( plugin.getNickname( chat.getPluginNetwork().isPublicNetwork()), Colors.green, msg );
 
 		chat.sendMessage( msg );
 	}

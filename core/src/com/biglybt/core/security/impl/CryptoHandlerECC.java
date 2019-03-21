@@ -50,7 +50,8 @@ CryptoHandlerECC
 
 
 	final CryptoManagerImpl		manager;
-
+	final int					instance_id;
+	
 	private String				CONFIG_PREFIX = CryptoManager.CRYPTO_CONFIG_PREFIX + "ecc.";
 
 	private PrivateKey			use_method_private_key;
@@ -63,8 +64,9 @@ CryptoHandlerECC
 		CryptoManagerImpl		_manager,
 		int						_instance_id )
 	{
-		manager	= _manager;
-
+		manager		= _manager;
+		instance_id	= _instance_id;
+		
 		CONFIG_PREFIX += _instance_id + ".";
 
 			// migration away from system managed keys
@@ -101,6 +103,13 @@ CryptoHandlerECC
 		return( CryptoManager.HANDLER_ECC );
 	}
 
+	@Override
+	public int
+	getInstance()
+	{
+		return( instance_id );
+	}
+	
 	@Override
 	public void
 	unlock()

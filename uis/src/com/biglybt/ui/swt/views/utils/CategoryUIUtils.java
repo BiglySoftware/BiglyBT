@@ -300,7 +300,7 @@ public class CategoryUIUtils
 
 						final MenuItem itemShare = new MenuItem(share_menu, SWT.CHECK);
 
-						itemShare.setText(buddy.getName());
+						itemShare.setText(buddy.getName() + ( buddy.isPublicNetwork()?"":(" (" + MessageText.getString( "label.anon.medium" ) + ")")));
 
 						itemShare.setSelection(auth || is_public);
 

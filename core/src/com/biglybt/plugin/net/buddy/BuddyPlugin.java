@@ -81,6 +81,7 @@ import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterGroup;
 import com.biglybt.pif.ui.config.ParameterListener;
+import com.biglybt.pif.ui.config.ParameterTabFolder;
 import com.biglybt.pif.ui.config.StringListParameter;
 import com.biglybt.pif.ui.config.StringParameter;
 import com.biglybt.pif.ui.menus.MenuItem;
@@ -90,6 +91,7 @@ import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.tables.TableContextMenuItem;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.pif.update.UpdateException;
 import com.biglybt.pif.utils.DelayedTask;
 import com.biglybt.pif.utils.LocaleListener;
 import com.biglybt.pif.utils.LocaleUtilities;
@@ -139,16 +141,25 @@ BuddyPlugin
 	public static final String[] STATUS_STRINGS = new String[ STATUS_KEYS.length ];
 
 	private BooleanParameter 		classic_enabled_param;
-	private StringParameter 		nick_name_param;
-	private StringListParameter 	online_status_param;
+	
+	private StringParameter 		nick_name_public_param;
+	private StringListParameter 	online_status_public_param;
+	private StringParameter 		profile_public_param;
+	
+	private StringParameter 		nick_name_anon_param;
+	private StringListParameter 	online_status_anon_param;
+	private StringParameter 		profile_anon_param;
+
+
+	private List<String>			public_profile_list	= new ArrayList<>();
+	private List<String>			anon_profile_list	= new ArrayList<>();
+
 	private BooleanParameter 		enable_chat_notifications;
 	private StringParameter 		cat_pub;
 
 
 	private BooleanParameter 		beta_enabled_param;
 
-	private StringParameter 		profile_param;
-	private List<String>			public_profile	= new ArrayList<>();
 
 	private BuddyPluginTracker	buddy_tracker;
 
@@ -200,7 +211,7 @@ BuddyPlugin
 		logger.setDiagnostic();
 
 		plugin_networks = new BuddyPluginNetwork[]{ 
-			//new BuddyPluginNetwork( plugin_interface, this, AENetworkClassifier.AT_PUBLIC ),
+			 new BuddyPluginNetwork( plugin_interface, this, AENetworkClassifier.AT_PUBLIC ),
 			 new BuddyPluginNetwork( plugin_interface, this, AENetworkClassifier.AT_I2P )
 		};
 		
@@ -226,54 +237,117 @@ BuddyPlugin
 
 		classic_enabled_param = config.addBooleanParameter2( "azbuddy.enabled", "azbuddy.enabled", false );
 
-			// nickname
+		ParameterTabFolder	network_tab = config.createTabFolder();
 
-		nick_name_param = config.addStringParameter2( "azbuddy.nickname", "azbuddy.nickname", "" );
-
-		nick_name_param.setGenerateIntermediateEvents( false );
-
-		nick_name_param.addListener(
-				new ParameterListener()
-				{
-					@Override
-					public void
-					parameterChanged(
-						Parameter	param )
+		for ( int i=0;i<2;i++){
+		
+			boolean is_pub_tab = i == 0;
+			
+			String suffix = is_pub_tab?"":".anon";
+			
+				// nickname
+				
+			StringParameter nick_param = config.addStringParameter2( "azbuddy.nickname" + suffix, "azbuddy.nickname", "" );
+	
+			nick_param.setGenerateIntermediateEvents( false );
+	
+			nick_param.addListener(
+					new ParameterListener()
 					{
-						updateNickName( nick_name_param.getValue());
-					}
-				});
-
-			// online status
-
-		String[]	os_values 	= STATUS_VALUES;
-		String[]	os_labels	= STATUS_STRINGS;
-
-		online_status_param = config.addStringListParameter2(
-				"azbuddy.online_status", "azbuddy.online_status",
-				os_values,
-				os_labels,
-				os_values[0] );
-
-		online_status_param.addListener(
-				new ParameterListener()
-				{
-					@Override
-					public void
-					parameterChanged(
-						Parameter	param )
+						@Override
+						public void
+						parameterChanged(
+							Parameter	param )
+						{
+							updateNickName( is_pub_tab, nick_param.getValue());
+						}
+					});
+	
+				// online status
+	
+			String[]	os_values 	= STATUS_VALUES;
+			String[]	os_labels	= STATUS_STRINGS;
+	
+			StringListParameter os_param = config.addStringListParameter2(
+					"azbuddy.online_status" + suffix, "azbuddy.online_status",
+					os_values,
+					os_labels,
+					os_values[0] );
+	
+			os_param.addListener(
+					new ParameterListener()
 					{
-						 int status = Integer.parseInt( online_status_param.getValue());
+						@Override
+						public void
+						parameterChanged(
+							Parameter	param )
+						{
+							updateOnlineStatus( is_pub_tab, Integer.parseInt( os_param.getValue()));
+						}
+					});
+	
+			os_param.setVisible( SUPPORT_ONLINE_STATUS  ); // If we add this then use proper message texts in the STATUS_STRINGS
+	
+			
+			HyperlinkParameter profile_link = 
+					config.addHyperlinkParameter2( 
+						"azbuddy.profile.info", MessageText.getString( "azbuddy.profile.info.url" ));
+	
+			profile_link.setProperty( Parameter.PR_DISABLE_WRAPPING_SUPPORT, true );
+			
+			StringParameter profile_param = config.addStringParameter2( "azbuddy.profile.info" + suffix, "", "" );
+			
+			profile_param.setMultiLine( 5 );
+			profile_param.setGenerateIntermediateEvents( false );
+			
+			profile_param.addListener(
+					new ParameterListener()
+					{
+						@Override
+						public void
+						parameterChanged(
+							Parameter 	param )
+						{
+							updateProfiles();
+						}
+					});
+				
+			ParameterGroup profile_group = config.createGroup(
+					is_pub_tab?"azbuddy.public.profile":"azbuddy.anon.profile",
+					new Parameter[]{
+							profile_link, profile_param
+					});
+			
+			profile_group.setNumberOfColumns( 2 );
+			
+						
+			ParameterGroup network_item = 
+					config.createGroup( 
+					is_pub_tab?"label.public":"label.anon",
+					new Parameter[]{ 
+							nick_param, os_param, profile_group
+					});
+	
+			if ( is_pub_tab ){
+				nick_name_public_param		= nick_param;
+				online_status_public_param	= os_param;
+				profile_public_param		= profile_param;
+			}else{
+				nick_name_anon_param		= nick_param;
+				online_status_anon_param	= os_param;
+				profile_anon_param			= profile_param;
+			}
+			
+			network_tab.addTab( network_item );
+		}
+		
+		
+		updateProfiles();
 
-						 for ( BuddyPluginNetwork pn: plugin_networks ){
-
-							 pn.updateOnlineStatus( status );
-						 }
-					}
-				});
-
-		online_status_param.setVisible( SUPPORT_ONLINE_STATUS  ); // If we add this then use proper message texts in the STATUS_STRINGS
-
+		
+		
+		
+		
 			// protocol speed
 
 		final IntParameter	protocol_speed = config.addIntParameter2( "azbuddy.protocolspeed", "azbuddy.protocolspeed", 32 );
@@ -358,45 +432,14 @@ BuddyPlugin
 				}
 			});
 
-		HyperlinkParameter profile_link = 
-			config.addHyperlinkParameter2( 
-				"azbuddy.profile.info", MessageText.getString( "azbuddy.profile.info.url" ));
 
-		profile_link.setProperty( Parameter.PR_DISABLE_WRAPPING_SUPPORT, true );
-		
-		profile_param = config.addStringParameter2( "azbuddy.profile.info", "", "" );
-		
-		profile_param.setMultiLine( 5 );
-		profile_param.setGenerateIntermediateEvents( false );
-		
-		profile_param.addListener(
-				new ParameterListener()
-				{
-					@Override
-					public void
-					parameterChanged(
-						Parameter 	param )
-					{
-						updateProfile();
-					}
-				});
-	
-		updateProfile();
-		
-		ParameterGroup profile_group = config.createGroup(
-				"azbuddy.public.profile",
-				new Parameter[]{
-						profile_link, profile_param
-				});
-		
-		profile_group.setNumberOfColumns( 2 );
 		
 		config.createGroup(
 			"label.friends",
 			new Parameter[]{
-					classic_enabled_param, nick_name_param, online_status_param,
+					classic_enabled_param, network_tab,
 					protocol_speed, enable_chat_notifications, cat_pub, tracker_enable, tracker_so_enable,
-					buddies_lan_local, buddies_fp_enable, profile_group,
+					buddies_lan_local, buddies_fp_enable
 			});
 
 			// decentralised stuff
@@ -484,7 +527,7 @@ BuddyPlugin
 							TableContextMenuItem item =
 								plugin_interface.getUIManager().getTableManager().addContextMenuItem(
 									parent,
-									"!" + buddy.getName() + (online?"":(" - " +  MessageText.getString( "label.disconnected" ))) + "!");
+									"!" + ( buddy.getName() + ( buddy.isPublicNetwork()?"":(" (" + MessageText.getString( "label.anon.medium" ) + ")" ))  ) + (online?"":(" - " +  MessageText.getString( "label.disconnected" ))) + "!");
 
 							item.addMultiListener(
 								new MenuItemListener()
@@ -614,8 +657,12 @@ BuddyPlugin
 				{
 					boolean classic_enabled = classic_enabled_param.getValue();
 
-					nick_name_param.setEnabled( classic_enabled );
-					online_status_param.setEnabled( classic_enabled );
+					nick_name_public_param.setEnabled( classic_enabled );
+					online_status_public_param.setEnabled( classic_enabled );
+					
+					nick_name_anon_param.setEnabled( classic_enabled );
+					online_status_anon_param.setEnabled( classic_enabled );
+
 					protocol_speed.setEnabled( classic_enabled );
 					enable_chat_notifications.setEnabled( classic_enabled );
 					cat_pub.setEnabled( classic_enabled );
@@ -627,7 +674,7 @@ BuddyPlugin
 					
 					buddies_fp_enable.setEnabled( classic_enabled );
 					
-					profile_group.setEnabled( classic_enabled );
+					network_tab.setEnabled( classic_enabled );
 					
 						// only toggle overall state on a real change
 
@@ -852,9 +899,14 @@ BuddyPlugin
 			STATUS_STRINGS[i] = lu.getLocalisedMessageText( "azbuddy." + STATUS_KEYS[i] );
 		}
 
-		if ( online_status_param != null ){
+		if ( online_status_public_param != null ){
 
-			online_status_param.setLabels( STATUS_STRINGS );
+			online_status_public_param.setLabels( STATUS_STRINGS );
+		}
+		
+		if ( online_status_anon_param != null ){
+
+			online_status_anon_param.setLabels( STATUS_STRINGS );
 		}
 	}
 
@@ -881,23 +933,47 @@ BuddyPlugin
 	}
 	
 	public String
-	getNickname()
+	getNickname(
+		boolean public_network )
 	{
-		return(  nick_name_param.getValue());
+		return(( public_network?nick_name_public_param:nick_name_anon_param ).getValue());
 	}
 
 	public void
 	setNickname(
-		String	str )
+		boolean		public_network,
+		String		str )
 	{
-		nick_name_param.setValue( str );
+		if ( public_network ){
+		
+			nick_name_public_param.setValue( str );
+			
+		}else{
+			
+			nick_name_anon_param.setValue( str );
+		}
 	}
 
+	public int
+	getOnlineStatus(
+		boolean public_network )
+	{
+		return( Integer.parseInt(( public_network?online_status_public_param:online_status_anon_param ).getValue()));
+	}
+	
 	public void
 	setOnlineStatus(
+		boolean	public_network,
 		int		status )
 	{
-		online_status_param.setValue( "" + status );
+		if ( public_network ){
+		
+			online_status_public_param.setValue( "" + status );
+			
+		}else{
+			
+			online_status_anon_param.setValue( "" + status );
+		}
 	}
 	
 	public void
@@ -1139,9 +1215,18 @@ BuddyPlugin
 	}
 
 	private void
-	updateProfile()
+	updateProfiles()
 	{
-		String str = profile_param.getValue();
+		public_profile_list = updateProfileSupport( profile_public_param );
+		
+		anon_profile_list 	= updateProfileSupport( profile_anon_param );
+	}
+	
+	private List<String>
+	updateProfileSupport(
+		StringParameter		param )
+	{
+		String str = param.getValue();
 		
 		List<String> profile = new ArrayList<>();
 		
@@ -1161,8 +1246,8 @@ BuddyPlugin
 				}
 			}
 		}
-		
-		public_profile = profile;
+	
+		return( profile );
 	}
 		
 	protected static String
@@ -1770,6 +1855,22 @@ BuddyPlugin
 		}
 	}
 	
+	private BuddyPluginNetwork
+	getPluginNetwork(
+		boolean	pub )
+	{
+		String target = pub?AENetworkClassifier.AT_PUBLIC:AENetworkClassifier.AT_I2P;
+		
+		for ( BuddyPluginNetwork net: plugin_networks ){
+			
+			if ( net.getTargetNetwork() == target ){
+				
+				return( net );
+			}
+		}
+		
+		return( null );
+	}
 		// STUFF THAT NEEDS FIXING FOR MULTI-NETWORK SUPPORT
 	
 	private void
@@ -1779,9 +1880,11 @@ BuddyPlugin
 		
 		for ( BuddyPluginNetwork pn: plugin_networks ){
 			
-			String nick = nick_name_param.getValue();
+			boolean is_pub = pn.isPublicNetwork();
+			
+			String nick = getNickname( is_pub );
 
-			int status = Integer.parseInt( online_status_param.getValue());
+			int status = getOnlineStatus( is_pub );
 
 			boolean enabled = classic_enabled_param.getValue();
 			
@@ -1853,66 +1956,138 @@ BuddyPlugin
 	
 	private void
 	updateNickName(
+		boolean		public_network,
 		String		nick )
 	{
-		for ( BuddyPluginNetwork pn: plugin_networks ){
+		BuddyPluginNetwork	net = getPluginNetwork( public_network );
 		
-			pn.updateNickName( nick );
+		if ( net != null ){
+		
+			net.updateNickName( nick );
+		}
+	}
+	
+	private void
+	updateOnlineStatus(
+		boolean		public_network,
+		int			status )
+	{
+		BuddyPluginNetwork	net = getPluginNetwork( public_network );
+		
+		if ( net != null ){
+		
+			net.updateOnlineStatus( status );
 		}
 	}
 	
 	public String
-	getPublicKey()
+	getPublicKey(
+		boolean		public_network )
 	{
-		return( plugin_networks[0].getPublicKey());
+		BuddyPluginNetwork	net = getPluginNetwork( public_network );
+		
+		if ( net != null ){
+		
+			return( net.getPublicKey());
+		}
+		
+		return( null );
 	}
 	
 	public List<String>
-	getProfileInfo()
-	{		
-		return( public_profile );
+	getProfileInfo(
+		boolean		public_network )
+	{
+		if ( public_network ){
+		
+			return( public_profile_list  );
+			
+		}else{
+			
+			return( anon_profile_list  );
+		}
 	}
 
 	public byte[]
 	sign(
+		boolean		public_network,
 		byte[]		payload )
 	
 		throws BuddyPluginException
 	{
-		return( plugin_networks[0].sign(payload));
+		BuddyPluginNetwork	net = getPluginNetwork( public_network );
+		
+		if ( net != null ){
+		
+			return( net.sign(payload));
+		}
+		
+		throw( new BuddyPluginException( "Invalid net" ));
 	}
 	
 	public boolean
 	verify(
+		boolean				public_network,
 		String				pk,
 		byte[]				payload,
 		byte[]				signature )
 
 		throws BuddyPluginException
 	{
-		return( plugin_networks[0].verify(pk, payload, signature));
+		BuddyPluginNetwork	net = getPluginNetwork( public_network );
+		
+		if ( net != null ){
+
+			return( net.verify(pk, payload, signature));
+		}
+		
+		throw( new BuddyPluginException( "Invalid net" ));
 	}
 	
 	public boolean
 	verifyPublicKey(
+		boolean		public_network,
 		String		key )
 	{
-		return( plugin_networks[0].verifyPublicKey(key));
+		BuddyPluginNetwork	net = getPluginNetwork( public_network );
+		
+		if ( net != null ){
+			
+			return( net.verifyPublicKey(key));
+		}
+		
+		return( false );
 	}
 	
 	public BuddyPluginBuddy
 	addBuddy(
+		boolean		public_network,
 		String		key,
 		int			subsystem )
 	{
-		return( plugin_networks[0].addBuddy(key, subsystem));
+		BuddyPluginNetwork	net = getPluginNetwork( public_network );
+		
+		if ( net != null ){
+			
+			return( net.addBuddy(key, subsystem));
+		}
+		
+		return( null );
 	}
 	
 	public BuddyPluginBuddy
 	peekBuddy(
+		boolean		public_network,
 		String		key )
 	{
-		return( plugin_networks[0].peekBuddy(key));
+		BuddyPluginNetwork	net = getPluginNetwork( public_network );
+		
+		if ( net != null ){
+		
+			return( net.peekBuddy(key));
+		}
+		
+		return( null );
 	}
 	
 	public List<BuddyPluginBuddy>

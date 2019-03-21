@@ -190,7 +190,7 @@ SESTSConnectionImpl
 			rateLimit( connection.getEndpoint().getNotionalAddress());
 		}
 
-		sts_engine	= core.getCryptoManager().getECCHandler().getSTSEngine( reason );
+		sts_engine	= core.getCryptoManager().getECCHandler( my_public_key.getInstance()).getSTSEngine( reason );
 
 		connection.addListener(
 			new GenericMessageConnectionListener()
@@ -524,7 +524,7 @@ SESTSConnectionImpl
 
 						if ( !key_locator.accept(
 								SESTSConnectionImpl.this,
-								new SEPublicKeyImpl( my_public_key.getType(), rem_key ))){
+								new SEPublicKeyImpl( my_public_key.getType(), my_public_key.getInstance(), rem_key ))){
 
 							throw( new MessageException( "remote public key not accepted" ));
 						}
@@ -581,7 +581,7 @@ SESTSConnectionImpl
 
 						if ( !key_locator.accept(
 								SESTSConnectionImpl.this,
-								new SEPublicKeyImpl( my_public_key.getType(), rem_key ))){
+								new SEPublicKeyImpl( my_public_key.getType(), my_public_key.getInstance(), rem_key ))){
 
 								// this is just here to prevent unwanted spew  during closedown process
 

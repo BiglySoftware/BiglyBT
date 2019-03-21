@@ -3408,11 +3408,6 @@ BuddyPluginViewBetaChat
 	addFriendsMenu(
 		Menu		menu )
 	{
-		if ( chat.isAnonymous()){
-
-			return;
-		}
-
 		final Menu friends_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
 		MenuItem friends_menu_item = new MenuItem( menu, SWT.CASCADE);
 		friends_menu_item.setMenu(friends_menu);
@@ -3447,12 +3442,14 @@ BuddyPluginViewBetaChat
 									widgetSelected(
 										SelectionEvent event )
 									{
-										String uri = getFriendURI();
+										String uri = getFriendURI( !chat.isAnonymous());
 
 										input_area.append( uri  );
 									}
 								});
 
+						mi.setEnabled( !chat.isReadOnly());
+						
 						new MenuItem(friends_menu, SWT.SEPARATOR );
 
 						mi = new MenuItem( friends_menu, SWT.PUSH );
@@ -3491,11 +3488,12 @@ BuddyPluginViewBetaChat
 	}
 	
 	private String
-	getFriendURI()
+	getFriendURI(
+		boolean	is_pub )
 	{
-		String key = plugin.getPublicKey();
+		String key = plugin.getPublicKey( is_pub );
 
-		String uri = "chat:friend:?key=" + key;
+		String uri = (is_pub?"chat":"chat:anon" ) + ":friend:?key=" + key;
 		
 		/* doesn't look great and there's some bug that sometimes doesn't render it as a link so rather confusing...
 		 
@@ -3826,6 +3824,8 @@ BuddyPluginViewBetaChat
 
 				// friends sub menu
 			{
+				boolean is_public_chat = !chat.isAnonymous();
+				
 				Menu friends_menu = new Menu(menu.getShell(), SWT.DROP_DOWN);
 				MenuItem friends_item = new MenuItem( menu, SWT.CASCADE);
 				friends_item.setMenu(friends_menu);
@@ -3861,7 +3861,7 @@ BuddyPluginViewBetaChat
 	
 										createChatWindow( view, plugin, chat);
 	
-										String message = "!azbuddy.send.friend.key.msg[" + UrlUtils.encode( getFriendURI()) + "]!";
+										String message = "!azbuddy.send.friend.key.msg[" + UrlUtils.encode( getFriendURI( is_public_chat )) + "]!";
 																			
 										chat.sendMessage(message, null);
 										
@@ -3901,14 +3901,14 @@ BuddyPluginViewBetaChat
 									plugin.setClassicEnabled( true, false );
 								}
 									
-								plugin.addBuddy( fk, BuddyPluginNetwork.SUBSYSTEM_AZ2 );
+								plugin.addBuddy( is_public_chat, fk, BuddyPluginNetwork.SUBSYSTEM_AZ2 );
 								
 								try{
 									ChatInstance chat = participant.createPrivateChat();
 	
 									createChatWindow( view, plugin, chat);
 	
-									String message = "!azbuddy.add.friend.key.msg[" + UrlUtils.encode( getFriendURI()) + "]!";
+									String message = "!azbuddy.add.friend.key.msg[" + UrlUtils.encode( getFriendURI( is_public_chat )) + "]!";
 																		
 									chat.sendMessage(message, null);
 									
@@ -3919,7 +3919,7 @@ BuddyPluginViewBetaChat
 							}
 						});
 					
-					add_fk_item.setEnabled( fk != null && !is_me && !is_friend && !chat.isAnonymous());
+					add_fk_item.setEnabled( fk != null && !is_me && !is_friend );
 					
 					if ( is_friend ){
 						
@@ -4080,7 +4080,7 @@ BuddyPluginViewBetaChat
 	
 				private_chat_item.setEnabled( pc_enable  );
 				
-				send_fk_item.setEnabled( sk_enable  && !chat.isAnonymous());
+				send_fk_item.setEnabled( sk_enable );
 				
 				friends_item.setEnabled( !participants.isEmpty());
 			}
@@ -4089,70 +4089,67 @@ BuddyPluginViewBetaChat
 		
 		if ( participants.size() == 1 ){
 
-			if ( !chat.isAnonymous()){
-				
-				new MenuItem(menu, SWT.SEPARATOR );
+			new MenuItem(menu, SWT.SEPARATOR );
 
-				ChatParticipant participant = participants.get(0);
-							
-				String fk = participant.getFriendKey();
-				
-				final MenuItem mi_profile = new MenuItem( menu, SWT.PUSH );
+			ChatParticipant participant = participants.get(0);
+						
+			String fk = participant.getFriendKey();
+			
+			final MenuItem mi_profile = new MenuItem( menu, SWT.PUSH );
 
-				mi_profile.setText( lu.getLocalisedMessageText( "label.profile" ) + "..." );
+			mi_profile.setText( lu.getLocalisedMessageText( "label.profile" ) + "..." );
 
-				mi_profile.addSelectionListener(
-					new SelectionAdapter() {
+			mi_profile.addSelectionListener(
+				new SelectionAdapter() {
 
-						@Override
-						public void
-						widgetSelected(
-							SelectionEvent e )
-						{
-							List<String> props = participant.getProfileData();
+					@Override
+					public void
+					widgetSelected(
+						SelectionEvent e )
+					{
+						List<String> props = participant.getProfileData();
+						
+						List<String>	names 	= new ArrayList<String>();
+						List<String>	values 	= new ArrayList<String>();
+						
+						names.add( "label.help" );
+						values.add (MessageText.getString( "azbuddy.profile.info.url" ));
+						
+						names.add( "" );
+						values.add( "" );
+												
+						for ( String prop: props ){
 							
-							List<String>	names 	= new ArrayList<String>();
-							List<String>	values 	= new ArrayList<String>();
+							String[] bits = prop.split( "=", 2 );
 							
-							names.add( "label.help" );
-							values.add (MessageText.getString( "azbuddy.profile.info.url" ));
-							
-							names.add( "" );
-							values.add( "" );
-													
-							for ( String prop: props ){
+							if ( bits.length == 2 ){
 								
-								String[] bits = prop.split( "=", 2 );
-								
-								if ( bits.length == 2 ){
-									
-									names.add( "!" + bits[0] + "!" );
-									values.add( bits[1] );
-								}
+								names.add( "!" + bits[0] + "!" );
+								values.add( bits[1] );
 							}
-							
-							BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
-							
-							String nick = "";
-							
-							if ( buddy != null ){
-								
-								String n = buddy.getNickName();
-								
-								if ( n != null && !n.isEmpty()){
-									
-									nick = ": " + n;
-								}
-							}
-							
-							new PropertiesWindow( 
-								lu.getLocalisedMessageText( "label.profile" ) + nick,
-								names, values );
 						}
-					});
-				
-				mi_profile.setEnabled( fk != null && participant.getProfileData() != null );
-			}
+						
+						BuddyPluginBuddy buddy = plugin.getBuddyFromPublicKey( fk );
+						
+						String nick = "";
+						
+						if ( buddy != null ){
+							
+							String n = buddy.getNickName();
+							
+							if ( n != null && !n.isEmpty()){
+								
+								nick = ": " + n;
+							}
+						}
+						
+						new PropertiesWindow( 
+							lu.getLocalisedMessageText( "label.profile" ) + nick,
+							names, values );
+					}
+				});
+			
+			mi_profile.setEnabled( fk != null && participant.getProfileData() != null );
 			
 			new MenuItem(menu, SWT.SEPARATOR );
 

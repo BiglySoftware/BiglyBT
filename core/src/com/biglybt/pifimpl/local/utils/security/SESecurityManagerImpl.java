@@ -239,7 +239,7 @@ SESecurityManagerImpl
 	{
 		byte[]	encoded = core.getCryptoManager().getECCHandler().getPublicKey( reason_resource );
 
-		return( new SEPublicKeyImpl( key_type, encoded ));
+		return( new SEPublicKeyImpl( key_type, 1, encoded ));
 	}
 
 	@Override
@@ -253,16 +253,9 @@ SESecurityManagerImpl
 	{
 		byte[]	encoded = core.getCryptoManager().getECCHandler( instance ).getPublicKey( reason_resource );
 
-		return( new SEPublicKeyImpl( key_type, encoded ));
+		return( new SEPublicKeyImpl( key_type, instance, encoded ));
 	}
 	
-	@Override
-	public SEPublicKey
-	decodePublicKey(
-		byte[]	encoded )
-	{
-		return( SEPublicKeyImpl.decode( encoded ));
-	}
 
 	@Override
 	public GenericMessageConnection

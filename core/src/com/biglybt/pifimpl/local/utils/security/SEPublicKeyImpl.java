@@ -28,29 +28,19 @@ public class
 SEPublicKeyImpl
 	implements SEPublicKey
 {
-	public static SEPublicKey
-	decode(
-		byte[]	encoded )
-	{
-		int	type = encoded[0]&0xff;
-
-		byte[]	x = new byte[encoded.length-1];
-
-		System.arraycopy( encoded, 1, x, 0, x.length );
-
-		return( new SEPublicKeyImpl( type, x ));
-	}
-
 	private int		type;
+	private int		instance;
 	private byte[]	encoded;
 	private int		hashcode;
 
 	protected
 	SEPublicKeyImpl(
 		int			_type,
+		int			_instance,
 		byte[]		_encoded )
 	{
 		type		= _type;
+		instance	= _instance;
 		encoded		= _encoded;
 		hashcode	= new HashWrapper( encoded ).hashCode();
 	}
@@ -62,6 +52,13 @@ SEPublicKeyImpl
 		return( type );
 	}
 
+	@Override
+	public int 
+	getInstance()
+	{
+		return( instance );
+	}
+	
 	@Override
 	public byte[]
 	encodePublicKey()

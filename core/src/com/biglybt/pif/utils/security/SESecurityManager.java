@@ -142,11 +142,6 @@ SESecurityManager
 
 		throws Exception;
 
-	public SEPublicKey
-	decodePublicKey(
-		byte[]	encoded )
-
-		throws Exception;
 
 		/**
 		 * Returns a proxy generic STS connection for incoming connection requests
