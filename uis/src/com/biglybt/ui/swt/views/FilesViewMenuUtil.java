@@ -1847,7 +1847,7 @@ public class FilesViewMenuUtil
 				}
 				// File does not exist.
 				else {
-					new_storage_type = compact_target;
+					new_storage_type = delete_action?compact_target:non_compact_target;
 				}
 			}else{
 				new_storage_type = non_compact_target;
