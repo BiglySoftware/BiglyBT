@@ -20,14 +20,8 @@
 
 package com.biglybt.pifimpl.local.sharing;
 
-/**
- * @author parg
- *
- */
-
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
@@ -144,8 +138,6 @@ ShareResourceFileOrDirImpl
 		int					_type,
 		File				_file,
 		Map					_map )
-
-		throws ShareException
 	{
 		super( _manager, _type, _map );
 
@@ -373,20 +365,12 @@ ShareResourceFileOrDirImpl
 
 		throws ShareException
 	{
-		try{
-			File file = new File(new String((byte[])map.get("file"), Constants.DEFAULT_ENCODING ));
+		File file = new File(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING_CHARSET));
 
-			if ( type == ST_FILE ){
-
-				return( new ShareResourceFileImpl( manager, file, map ));
-
-			}else{
-				return( new ShareResourceDirImpl( manager, file, map ));
-
-			}
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new ShareException( "internal error", e ));
+		if (type == ST_FILE) {
+			return new ShareResourceFileImpl(manager, file, map);
+		} else {
+			return new ShareResourceDirImpl(manager, file, map);
 		}
 	}
 
@@ -398,14 +382,7 @@ ShareResourceFileOrDirImpl
 		super.serialiseResource( map );
 
 		map.put( "type", new Long(getType()));
-
-		try{
-			map.put( "file", file.toString().getBytes( Constants.DEFAULT_ENCODING));
-
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.printStackTrace( e );
-		}
+		map.put( "file", file.toString().getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 
 		if ( personal_key != null ){
 

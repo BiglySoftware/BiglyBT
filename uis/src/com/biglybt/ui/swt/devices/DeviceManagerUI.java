@@ -4486,7 +4486,7 @@ DeviceManagerUI
 					public List<Object>
 					getParameters()
 					{
-						return( Arrays.asList( new String[]{ parent_key, device.getID()}));
+						return( Arrays.asList( parent_key, device.getID()));
 					}
 				});
 		}

@@ -1,7 +1,47 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2019.xx.yy | BiglyBT 1.8.0.1
+2019.xx.yy | BiglyBT 1.9.0.0
+
+
+FEATURE: UI    | Option to split the advanced library view vertically (and select location of complete/incomplete panes) [Parg]
+FEATURE: UI    | nl_BE: New Flemish translation [Pierre VdC]
+FEATURE: UI    | Support returning to the PrivacyView for lookup results [Parg]
+FEATURE: UI    | Add save-location to archive view [Parg]
+FEATURE: UI    | Add main-tracker to archive view [Parg]
+FEATURE: Core  | Option to pause/resume downloads when network force-bind lost [Parg]
+FEATURE: Core  | Option to control search template/RSS feed read timeouts [Parg]
+FEATURE: Tag   | Added binary + decimal unit suffixes to constraints [Parg]
+FEATURE: Tag   | Added control of Library row colors (foreground+background) on tag assignment [Parg]
+FEATURE: Tag   | Added max_up and max_down constraint variables [Parg]
+FEATURE: Tag   | Warn if setting a tag constraint might remove existing manual assignments [Parg]
+FEATURE: Tag   | Added file_names_selectged variable (ignores skipped files) [Parg]
+FEATURE: Tag   | New constraint scope of 'new downloads' to be applied once only on download addition [Parg]
+FEATURE: Tag   | Auto tag based on file extensions [Parg]
+
+
+CHANGE: UI     | Added reference to more settings/info from Friends plugin config page [Parg]
+CHANGE: UI     | Use aggregate scrape results for seeds/peers item columns [Parg]
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | sl_SI: Slovenian translation update [upwinxp]
+CHANGE: UI     | yo_NG: Yoruba translation update [zoneboy,fatherfaith]
+CHANGE: UI     | no_NO: Norwegian translation update [lislei]
+CHANGE: UI     | Always add save-path to history, even if same as default [Parg]
+CHANGE: Core   | Archive auto-add tags as well and ignore on restore for documentation purposes [Parg]
+CHANGE: Core   | Don't allocate entire file if existing is shorter during rechecking [Parg]
+CHANGE: Plug   | Removed deprecated PluginConfigUIFactory and related classes [TuxPaper]
+
+BUGFIX: UI     | Improve twisty alignment [Parg]
+BUGFIX: UI     | Fix incorrect button being disabled when no templates in template editor [Parg]
+BUGFIX: UI     | Fix tag assignment menu inconsistency [Parg]
+BUGFIX: UI     | Clear tag constraint errors when constraint removed [Parg]
+BUGFIX: UI     | Fix general view not being rebuilt [Parg]
+BUGFIX: UI     | Fix status bar progress not clearing on min/max of BiglyBT [Parg]
+BUGFIX: Core   | Fix JSON Web Engines matching no more than 9 results [Parg]
+BUGFIX: Core   | Fix launching files on Linux 64 [tsoliman]
+BUGFIX: Core   | Fix launching files that contain spaces on Linux [tsoliman]
+BUGFIX: core   | Fix potential delay download magnets during startup [Parg]
+
 
 2019.01.21 | BiglyBT 1.8.0.0
 

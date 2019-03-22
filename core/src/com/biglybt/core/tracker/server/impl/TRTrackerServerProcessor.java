@@ -20,12 +20,6 @@
 
 package com.biglybt.core.tracker.server.impl;
 
-/**
- * @author parg
- *
- */
-
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -346,20 +340,13 @@ TRTrackerServerProcessor
 
 					String	str_hash;
 
-					try{
-						str_hash = new String( hash, Constants.BYTE_ENCODING );
+					str_hash = new String(hash, Constants.BYTE_ENCODING_CHARSET);
 
-							// skip duplicates
-
-						if ( i > 0 && files.get( str_hash ) != null ){
-
-							continue;
-						}
-
-					}catch( UnsupportedEncodingException e ){
-
+					// skip duplicates
+					if (i > 0 && files.get(str_hash) != null) {
 						continue;
 					}
+
 
 					torrent = server.getTorrent( hash );
 
@@ -458,20 +445,13 @@ TRTrackerServerProcessor
 
 				byte[]	torrent_hash = this_torrent.getHash().getHash();
 
-				try{
-					String	str_hash = new String( torrent_hash,Constants.BYTE_ENCODING );
+				String str_hash = new String(torrent_hash, Constants.BYTE_ENCODING_CHARSET);
 
-					// System.out.println( "tracker - encoding: " + ByteFormatter.nicePrint(torrent_hash) + " -> " + ByteFormatter.nicePrint( str_hash.getBytes( Constants.BYTE_ENCODING )));
+				// System.out.println( "tracker - encoding: " + ByteFormatter.nicePrint(torrent_hash) + " -> " + ByteFormatter.nicePrint( str_hash.getBytes( Constants.BYTE_ENCODING )));
 
-					Map	hash_entry = this_torrent.exportScrapeToMap( request, client_ip_address, true );
+				Map hash_entry = this_torrent.exportScrapeToMap(request, client_ip_address, true);
 
-					files.put( str_hash, hash_entry );
-
-				}catch( UnsupportedEncodingException e ){
-
-					throw( new TRTrackerServerException( "Encoding error", e ));
-
-				}
+				files.put(str_hash, hash_entry);
 			}
 
 			Map	root = new HashMap();

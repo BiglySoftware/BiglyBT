@@ -145,43 +145,34 @@ CategoryManagerImpl
 
       List catList = (List) map.get("categories");
       for (int i = 0; i < catList.size(); i++) {
-        Map mCategory = (Map) catList.get(i);
-        try {
-          String catName = new String((byte[]) mCategory.get("name"), Constants.DEFAULT_ENCODING);
+				Map mCategory = (Map) catList.get(i);
+				String catName = new String((byte[]) mCategory.get("name"), Constants.DEFAULT_ENCODING_CHARSET);
 
-          Long l_maxup 		= (Long)mCategory.get( "maxup" );
-          Long l_maxdown 	= (Long)mCategory.get( "maxdown" );
-          Map<String,String>	attributes = BDecoder.decodeStrings((Map)mCategory.get( "attr" ));
+				Long l_maxup = (Long) mCategory.get("maxup");
+				Long l_maxdown = (Long) mCategory.get("maxdown");
+				Map<String, String> attributes = BDecoder.decodeStrings((Map) mCategory.get("attr"));
 
-          if ( attributes == null ){
+				if (attributes == null) {
+					attributes = new HashMap<>();
+				}
 
-        	  attributes = new HashMap<>();
-          }
+				if (catName.equals(UNCAT_NAME)) {
+					catUncategorized.setUploadSpeed(l_maxup == null ? 0 : l_maxup.intValue());
+					catUncategorized.setDownloadSpeed(l_maxdown == null ? 0 : l_maxdown.intValue());
+					catUncategorized.setAttributes(attributes);
 
-          if ( catName.equals( UNCAT_NAME )){
+				} else if (catName.equals(ALL_NAME)) {
+					catAll.setAttributes(attributes);
 
-        	  catUncategorized.setUploadSpeed(l_maxup==null?0:l_maxup.intValue());
-        	  catUncategorized.setDownloadSpeed(l_maxdown==null?0:l_maxdown.intValue());
-        	  catUncategorized.setAttributes( attributes );
-
-          }else if ( catName.equals( ALL_NAME )){
-
-              catAll.setAttributes( attributes );
-
-          }else{
-	          categories.put(
-	        	catName,
-	        	  new CategoryImpl(
-	        		  this,
-	        		  catName,
-	        		  l_maxup==null?0:l_maxup.intValue(),
-	        		  l_maxdown==null?0:l_maxdown.intValue(),
-	        			attributes ));
-          }
-        }
-        catch (UnsupportedEncodingException e1) {
-          //Do nothing and process next.
-        }
+				} else {
+					categories.put(catName,
+							new CategoryImpl(
+									this,
+									catName,
+									l_maxup == null ? 0 : l_maxup.intValue(),
+									l_maxdown == null ? 0 : l_maxdown.intValue(),
+									attributes));
+				}
       }
     }
     catch (FileNotFoundException e) {

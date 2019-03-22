@@ -20,11 +20,6 @@
 
 package com.biglybt.core.util.protocol.wss;
 
-/**
- * @author parg
- *
- */
-
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -33,7 +28,6 @@ import java.net.URLStreamHandler;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEThread2;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ipc.IPCException;
@@ -111,7 +105,6 @@ Handler
 			public void
 			run()
 			{
-				boolean	installing = false;
 
 				try{
 					UIFunctions uif = UIFunctionsManager.getUIFunctions();
@@ -146,48 +139,19 @@ Handler
 
 					boolean	install = prompter.waitUntilClosed() == 0;
 
-					if ( install ){
-
-						if ( !Constants.isJava7OrHigher ){
-
-							title = MessageText.getString("azwebtorrent.install.fail.jver");
-
-							text = MessageText.getString("azwebtorrent.install.fail.jver.text" );
-
-							prompter = uif.getUserPrompter(title, text, new String[]{
-								MessageText.getString("Button.ok"),
-							}, 0);
-
-							prompter.setAutoCloseInMS(0);
-
-							prompter.open(null);
-
-						}else{
-
-							uif.installPlugin(
-								"azwebtorrent",
-								"azwebtorrent.install",
-								new UIFunctions.actionListener()
-								{
-									@Override
-									public void
-									actionComplete(
-										Object		result )
-									{
-									}
-								});
-
-							installing = true;
-						}
+					if ( install == false) {
+						return;
 					}
 
-					return;
+					uif.installPlugin("azwebtorrent", "azwebtorrent.install",
+							new UIFunctions.actionListener()
+							{
+								@Override public void actionComplete(Object result) {
+								}
+							});
+
 
 				}finally{
-
-					if ( !installing ){
-
-					}
 				}
 			}
 		}.start();

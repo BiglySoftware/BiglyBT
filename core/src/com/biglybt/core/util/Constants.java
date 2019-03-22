@@ -70,10 +70,17 @@ Constants
 
 	public static final String[] AZUREUS_DOMAINS = { "azureusplatform.com", "azureus.com", "aelitis.com", "vuze.com", "biglybt.com" };
 
+	public static final Charset UTF_8 = Charset.forName("UTF-8");
+	public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
+
+	@Deprecated
 	public static final String DEFAULT_ENCODING 	= "UTF8";
+	
+	@Deprecated
 	public static final String BYTE_ENCODING 		= "ISO-8859-1";
-	public static final Charset	BYTE_CHARSET;
-	public static final Charset	DEFAULT_CHARSET;
+
+	public static final Charset DEFAULT_ENCODING_CHARSET 	= UTF_8;
+	public static final Charset BYTE_ENCODING_CHARSET 		= ISO_8859_1;
 
 	public static final int	DEFAULT_INSTANCE_PORT	= 6880;
 	public static final int	INSTANCE_PORT;
@@ -89,21 +96,6 @@ Constants
 		}
 
 		INSTANCE_PORT = ip;
-
-		Charset	bc 	= null;
-		Charset	dc	= null;
-
-		try{
-			bc 	= Charset.forName( Constants.BYTE_ENCODING );
-			dc	= Charset.forName( Constants.DEFAULT_ENCODING );
-
-		}catch( Throwable e ){
-
-			e.printStackTrace();
-		}
-
-		BYTE_CHARSET 	= bc;
-		DEFAULT_CHARSET	= dc;
 	}
 
 	public static final Locale LOCALE_ENGLISH = Locale.ENGLISH;
@@ -155,7 +147,7 @@ Constants
 	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "1.8.0.1_B01";
+	public static final String AZUREUS_VERSION  = "1.8.0.1_B36";
 	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
 	public static final String AZUREUS_SUBVER	  = "";
 	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1801" + "-").getBytes();  //MUST be 8 chars long!
@@ -325,9 +317,6 @@ Constants
 		}
 	}
 
-	public static final boolean isOSX_10_5_OrHigher;
-	public static final boolean isOSX_10_6_OrHigher;
-	public static final boolean isOSX_10_7_OrHigher;
 	public static final boolean isOSX_10_8_OrHigher;
 
 	static{
@@ -347,20 +336,13 @@ Constants
 
 					second_digit = Integer.parseInt( bits[1] );
 				}
-			}catch( Throwable e ){
-
+			}catch( Throwable ignored ){
 			}
 
-			isOSX_10_5_OrHigher = true; // Used by plugins, always true since we won't run unless we are 10.7
-			isOSX_10_6_OrHigher = true;
-			isOSX_10_7_OrHigher = true;
 			isOSX_10_8_OrHigher = first_digit > 10 || ( first_digit == 10 && second_digit >= 8 );
 
 		}else{
 
-			isOSX_10_5_OrHigher = false;
-			isOSX_10_6_OrHigher = false;
-			isOSX_10_7_OrHigher = false;
 			isOSX_10_8_OrHigher = false;
 		}
 	}
@@ -400,7 +382,7 @@ Constants
 		API_LEVEL		= api_level;
 	}
 
-	public static final boolean isJava7OrHigher;
+	public static final boolean isJava7OrHigher = !isAndroid;
 	public static final boolean isJava8OrHigher;
 	public static final boolean isJava9OrHigher;
 	public static final boolean isJava10OrHigher;
@@ -413,7 +395,6 @@ Constants
 
 		// then again, from 1.9 (9) we have http://openjdk.java.net/jeps/223
 
-		boolean	_7plus;
 		boolean	_8plus;
 		boolean	_9plus;
 		boolean	_10plus;
@@ -435,7 +416,6 @@ Constants
 			int	first	= Integer.parseInt( bits[0] );
 			int	second 	= bits.length==1?0:Integer.parseInt( bits[1] );
 
-			_7plus = first > 1 || second >= 7;
 			_8plus = first > 1 || second >= 8;
 			_9plus = first > 1 || second >= 9;
 
@@ -447,13 +427,11 @@ Constants
 
 			e.printStackTrace();
 
-			_7plus = false;	// derp
 			_8plus = false;	// derp
 			_9plus = false;	// derp
 			_10plus = false;	// derp
 		}
 
-		isJava7OrHigher 	= _7plus;
 		isJava8OrHigher	= _8plus;
 		isJava9OrHigher	= _9plus;
 		isJava10OrHigher	= _10plus;

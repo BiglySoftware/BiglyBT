@@ -21,11 +21,9 @@
 package com.biglybt.pifimpl.local.sharing;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
 import com.biglybt.pif.sharing.ShareException;
 import com.biglybt.pif.sharing.ShareItem;
 import com.biglybt.pif.torrent.Torrent;
@@ -64,8 +62,6 @@ ShareItemImpl
 		ShareResourceImpl	_resource,
 		byte[]				_fingerprint,
 		String				_save_location )
-
-		throws ShareException
 	{
 		resource				= _resource;
 		fingerprint				= _fingerprint;
@@ -140,33 +136,17 @@ ShareItemImpl
 		Map		map )
 	{
 		map.put( "ihash", fingerprint );
-
-		try{
-			map.put( "ifile", torrent_save_location.getBytes( Constants.DEFAULT_ENCODING ) );
-
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.printStackTrace( e );
-		}
+		map.put( "ifile", torrent_save_location.getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 	}
 
 	protected static ShareItemImpl
 	deserialiseItem(
 		ShareResourceImpl	resource,
 		Map					map )
-
-		throws ShareException
 	{
-		try{
-			byte[]	hash = (byte[])map.get( "ihash");
+		byte[] hash = (byte[]) map.get("ihash");
+		String save_location = new String((byte[]) map.get("ifile"), Constants.DEFAULT_ENCODING_CHARSET);
 
-			String	save_location = new String((byte[])map.get("ifile"), Constants.DEFAULT_ENCODING );
-
-			return( new ShareItemImpl(resource,hash,save_location));
-
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new ShareException( "internal error", e ));
-		}
+		return new ShareItemImpl(resource, hash, save_location);
 	}
 }

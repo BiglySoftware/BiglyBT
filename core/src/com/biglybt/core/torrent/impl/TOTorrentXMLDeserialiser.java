@@ -20,13 +20,7 @@
 
 package com.biglybt.core.torrent.impl;
 
-/**
- * @author parg
- *
- */
-
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -492,14 +486,7 @@ TOTorrentXMLDeserialiser
 			return( readGenericBytes( kid ));
 		}
 
-		try{
-
-			return( kid.getValue().getBytes( Constants.DEFAULT_ENCODING ));
-
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new TOTorrentException( "bytes invalid - unsupported encoding", TOTorrentException.RT_DECODE_FAILS));
-		}
+		return kid.getValue().getBytes(Constants.DEFAULT_ENCODING_CHARSET);
 	}
 
 	protected List

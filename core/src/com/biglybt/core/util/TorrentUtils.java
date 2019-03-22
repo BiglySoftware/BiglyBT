@@ -20,11 +20,6 @@
 
 package com.biglybt.core.util;
 
-/**
- * @author parg
- *
- */
-
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -53,7 +48,6 @@ import com.biglybt.core.torrent.*;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pifimpl.local.utils.resourcedownloader.ResourceDownloaderFactoryImpl;
 import com.biglybt.util.MapUtils;
-
 
 public class
 TorrentUtils
@@ -1638,7 +1632,7 @@ TorrentUtils
 
 			if ( decoder == null ){
 
-				return( new String(torrent.getName(),Constants.DEFAULT_ENCODING));
+				return( new String(torrent.getName(),Constants.DEFAULT_ENCODING_CHARSET));
 			}
 
 			return( decoder.decodeString(torrent.getName()));
@@ -1870,13 +1864,7 @@ TorrentUtils
 
 		}else if ( obj instanceof byte[] ){
 
-			try{
-				return new String((byte[]) obj, Constants.DEFAULT_ENCODING);
-
-			}catch ( UnsupportedEncodingException e ){
-
-				e.printStackTrace();
-			}
+			return new String((byte[]) obj, Constants.DEFAULT_ENCODING_CHARSET);
 		}
 
 		return null;

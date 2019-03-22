@@ -696,7 +696,7 @@ TRTrackerServerProcessorUDP
 
 					String	hash_str = (String)it.next();
 
-					hashes[pos] = hash_str.getBytes( Constants.BYTE_ENCODING );
+					hashes[pos] = hash_str.getBytes( Constants.BYTE_ENCODING_CHARSET );
 
 					Map	details = (Map)files.get( hash_str );
 

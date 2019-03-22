@@ -20,7 +20,6 @@
 
 package com.biglybt.core.torrent.impl;
 
-
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
@@ -69,44 +68,34 @@ TOTorrentFileImpl
 
 		is_utf8	= true;
 
-		try{
+		Vector temp = new Vector();
 
+		int pos = 0;
 
-			Vector	temp = new Vector();
+		while (true) {
 
-			int	pos = 0;
+			int p1 = _path.indexOf(File.separator, pos);
 
-			while(true){
+			if (p1 == -1) {
 
-				int	p1 = _path.indexOf( File.separator, pos );
-
-				if ( p1 == -1 ){
-
-					temp.add( _path.substring( pos ).getBytes( Constants.DEFAULT_ENCODING ));
-
-					break;
-				}
-
-				temp.add( _path.substring( pos, p1 ).getBytes( Constants.DEFAULT_ENCODING ));
-
-				pos = p1+1;
+				temp.add(_path.substring(pos).getBytes(Constants.DEFAULT_ENCODING_CHARSET));
+				break;
 			}
 
-			path_components		= new byte[temp.size()][];
+			temp.add(_path.substring(pos, p1).getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 
-			temp.copyInto( path_components );
-
-			path_components_utf8		= new byte[temp.size()][];
-
-			temp.copyInto( path_components_utf8 );
-
-			checkComponents();
-
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new TOTorrentException( 	"Unsupported encoding for '" + _path + "'",
-											TOTorrentException.RT_UNSUPPORTED_ENCODING));
+			pos = p1 + 1;
 		}
+
+		path_components = new byte[temp.size()][];
+
+		temp.copyInto(path_components);
+
+		path_components_utf8 = new byte[temp.size()][];
+
+		temp.copyInto(path_components_utf8);
+
+		checkComponents();
 	}
 
 	protected

@@ -20,7 +20,6 @@
 package com.biglybt.core.peermanager.utils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 
 import com.biglybt.core.internat.MessageText;
@@ -40,7 +39,7 @@ public class BTPeerIDByteDecoder {
 	}
 
 	private static String logUnknownClient0(byte[] peer_id_bytes) throws IOException {
-		String text = new String(peer_id_bytes, 0, 20, Constants.BYTE_ENCODING);
+		String text = new String(peer_id_bytes, 0, 20, Constants.BYTE_ENCODING_CHARSET);
 		text = text.replace((char)12, (char)32);
 		text = text.replace((char)10, (char)32);
 
@@ -48,11 +47,8 @@ public class BTPeerIDByteDecoder {
 	}
 
 	private static String asUTF8ByteString(String text) {
-		try {
-			byte[] utf_bytes = text.getBytes(Constants.DEFAULT_ENCODING);
-			return ByteFormatter.encodeString(utf_bytes);
-		}
-		catch (UnsupportedEncodingException uee) {return "";}
+		byte[] utf_bytes = text.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
+		return ByteFormatter.encodeString(utf_bytes);
 	}
 
 	private static final HashSet logged_discrepancies = new HashSet();
@@ -124,15 +120,11 @@ public class BTPeerIDByteDecoder {
 	}
 
 	static void logUnknownClient(String peer_id, String net ) {
-		try {logUnknownClient(peer_id.getBytes(Constants.BYTE_ENCODING), net==AENetworkClassifier.AT_PUBLIC);}
-		catch (UnsupportedEncodingException uee) {}
+		logUnknownClient(peer_id.getBytes(Constants.BYTE_ENCODING_CHARSET), net == AENetworkClassifier.AT_PUBLIC);
 	}
 
 	public static String decode0(byte[] peer_id_bytes, String net) {
-
-		String peer_id = null;
-		try {peer_id = new String(peer_id_bytes, Constants.BYTE_ENCODING);}
-		catch (UnsupportedEncodingException uee) {return "";}
+		String peer_id = new String(peer_id_bytes, Constants.BYTE_ENCODING_CHARSET);
 
 		// We store the result here.
 		String client = null;
@@ -274,7 +266,7 @@ public class BTPeerIDByteDecoder {
 			}
 
 			try {
-				String peer_id_as_string = new String(peer_id, Constants.BYTE_ENCODING);
+				String peer_id_as_string = new String(peer_id, Constants.BYTE_ENCODING_CHARSET);
 
 				boolean is_az_style = BTPeerIDByteDecoderUtils.isAzStyle(peer_id_as_string);
 
@@ -384,38 +376,33 @@ public class BTPeerIDByteDecoder {
 	}
 
 	protected static String getPrintablePeerID(byte[] peer_id, char fallback_char) {
-		String	sPeerID = "";
 		byte[] peerID = new byte[ peer_id.length ];
 		System.arraycopy( peer_id, 0, peerID, 0, peer_id.length );
 
-		try {
-			for (int i = 0; i < peerID.length; i++) {
-				int b = (0xFF & peerID[i]);
-				if (b < 32 || b > 127)
-					peerID[i] = (byte)fallback_char;
-			}
-			sPeerID = new String(peerID, Constants.BYTE_ENCODING);
+		for (int i = 0; i < peerID.length; i++) {
+			int b = (0xFF & peerID[i]);
+			if (b < 32 || b > 127)
+				peerID[i] = (byte) fallback_char;
 		}
-		catch (UnsupportedEncodingException ignore) {}
-		catch (Throwable e) {}
+		String sPeerID = new String(peerID, Constants.BYTE_ENCODING_CHARSET);
 
-		return( sPeerID );
+		return sPeerID;
 	}
 
 	private static String makePeerIDReadableAndUsable(byte[] peer_id) {
 		boolean as_ascii = true;
-		for (int i=0; i<peer_id.length; i++) {
+		for (int i = 0; i < peer_id.length; i++) {
 			int b = 0xFF & peer_id[i];
-			if (b < 32 || b > 127 || b == 10 || b == 9 || b==13) {
+			if (b < 32 || b > 127 || b == 10 || b == 9 || b == 13) {
 				as_ascii = false;
 				break;
 			}
 		}
 		if (as_ascii) {
-			try {return new String(peer_id, Constants.BYTE_ENCODING);}
-			catch (UnsupportedEncodingException uee) {return "";}
+			return new String(peer_id, Constants.BYTE_ENCODING_CHARSET);
+		} else {
+			return ByteFormatter.encodeString(peer_id);
 		}
-		else {return ByteFormatter.encodeString(peer_id);}
 	}
 
 	static byte[] peerIDStringToBytes(String peer_id) throws Exception {
@@ -432,7 +419,7 @@ public class BTPeerIDByteDecoder {
 			}
 		}
 		else if (peer_id.length() == 20) {
-			byte_peer_id = peer_id.getBytes(Constants.BYTE_ENCODING);
+			byte_peer_id = peer_id.getBytes(Constants.BYTE_ENCODING_CHARSET);
 		}
 		else {
 			throw new IllegalArgumentException(peer_id);

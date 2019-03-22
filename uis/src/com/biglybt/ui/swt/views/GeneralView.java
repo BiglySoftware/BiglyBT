@@ -47,6 +47,7 @@ import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.*;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
@@ -62,8 +63,6 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.util.MapUtils;
-
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 
 /**
  * View of General information on the torrent
@@ -798,13 +797,10 @@ public class GeneralView
     String creation_date = DisplayFormatters.formatDate(manager.getTorrentCreationDate()*1000);
     byte[] created_by = torrent == null ? null : torrent.getCreatedBy();
     if (created_by != null) {
-    	try {
-    		creation_date = MessageText.getString("GeneralView.torrent_created_on_and_by", new String[] {
-    			creation_date, new String(created_by, Constants.DEFAULT_ENCODING)
-    		});
-    	}
-    	catch (java.io.UnsupportedEncodingException e) {/* forget it */}
-    }
+			creation_date = MessageText.getString("GeneralView.torrent_created_on_and_by", new String[] {
+					creation_date, new String(created_by, Constants.DEFAULT_ENCODING_CHARSET)
+			});
+		}
 
     setInfos(
       manager.getDisplayName(),

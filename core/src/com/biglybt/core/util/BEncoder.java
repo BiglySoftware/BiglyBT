@@ -21,7 +21,6 @@ package com.biglybt.core.util;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -114,7 +113,7 @@ BEncoder
 
             }else{
 
-	            ByteBuffer	bb 	= Constants.DEFAULT_CHARSET.encode( tempString );
+							ByteBuffer bb = Constants.DEFAULT_ENCODING_CHARSET.encode(tempString);
 
 	            writeInt( bb.limit() );
 
@@ -172,15 +171,9 @@ BEncoder
 						String key = (String) o_key;
 						if (byte_keys)
 						{
-							try
-							{
-								encodeObject(Constants.BYTE_CHARSET.encode(key));
-								if (!encodeObject(value))
-									encodeObject("");
-							} catch (UnsupportedEncodingException e)
-							{
-								throw (new IOException("BEncoder: unsupport encoding: " + e.getMessage()));
-							}
+							encodeObject(Constants.BYTE_ENCODING_CHARSET.encode(key));
+							if (!encodeObject(value))
+								encodeObject("");
 						} else
 						{
 								// if we put non-ascii chars in as keys we can get horrible expanding

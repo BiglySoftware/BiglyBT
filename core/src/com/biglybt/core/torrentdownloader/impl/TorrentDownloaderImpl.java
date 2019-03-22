@@ -47,7 +47,6 @@ import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 import com.biglybt.pifimpl.local.utils.xml.rss.RSSUtils;
 
-
 /**
  * @author Tobias Minich
  */
@@ -630,7 +629,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
 	        	tmp = tmp.substring(0,param_pos);
 	        }
 
-	        filename = URLDecoder.decode(tmp, Constants.DEFAULT_ENCODING );
+	        filename = URLDecoder.decode(tmp, Constants.DEFAULT_ENCODING_CHARSET.name());
 
 	        if ( filename.length() == 0 ){
 
@@ -642,7 +641,7 @@ public class TorrentDownloaderImpl extends AEThread implements TorrentDownloader
         if (filename.startsWith("\"") && filename.endsWith("\""))
           filename = filename.substring(1, filename.lastIndexOf('\"'));
 
-        filename = URLDecoder.decode(filename, Constants.DEFAULT_ENCODING );
+		  	filename = URLDecoder.decode(filename, Constants.DEFAULT_ENCODING_CHARSET.name());
 
         	// this code removes any parent directories from the filename we've extracted
 

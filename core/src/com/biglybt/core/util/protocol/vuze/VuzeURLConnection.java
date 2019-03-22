@@ -71,7 +71,7 @@ VuzeURLConnection
 
 		str = str.substring( pos+1 );
 
-		byte[]	bytes = str.getBytes( Constants.BYTE_ENCODING );
+		byte[]	bytes = str.getBytes( Constants.BYTE_ENCODING_CHARSET );
 
 		VuzeFile vf = VuzeFileHandler.getSingleton().loadVuzeFile( bytes );
 

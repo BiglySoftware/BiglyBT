@@ -20,7 +20,6 @@
 
 package com.biglybt.core.tracker.server.impl.tcp;
 
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -343,13 +342,13 @@ TRTrackerServerProcessorTCP
 					}
 
 					String	lhs = token.substring( 0, p2 ).toLowerCase();
-					String	rhs = URLDecoder.decode(token.substring( p2+1 ), Constants.BYTE_ENCODING );
+					String rhs = URLDecoder.decode(token.substring(p2 + 1), Constants.BYTE_ENCODING_CHARSET.name());
 
 					// System.out.println( "param:" + lhs + " = " + rhs );
 
 					if ( lhs.equals( "info_hash" )){
 
-						byte[] b = rhs.getBytes(Constants.BYTE_ENCODING);
+						byte[] b = rhs.getBytes(Constants.BYTE_ENCODING_CHARSET);
 
 						if ( hash == null ){
 
@@ -369,7 +368,7 @@ TRTrackerServerProcessorTCP
 
 					}else if ( lhs.equals( "peer_id" )){
 
-						peer_id	= new HashWrapper(rhs.getBytes(Constants.BYTE_ENCODING));
+						peer_id	= new HashWrapper(rhs.getBytes(Constants.BYTE_ENCODING_CHARSET));
 
 					}else if ( lhs.equals( "no_peer_id" )){
 

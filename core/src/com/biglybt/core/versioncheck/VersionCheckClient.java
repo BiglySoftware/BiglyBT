@@ -1771,7 +1771,7 @@ public class VersionCheckClient {
 			Object val = map.get(key);
 			if (val instanceof byte[]) {
 				String as_bytes = ByteFormatter.nicePrint((byte[])val);
-				String as_text = new String((byte[])val, Constants.BYTE_ENCODING);
+				String as_text = new String((byte[])val, Constants.BYTE_ENCODING_CHARSET);
 				res.put(key, as_text + " [" + as_bytes + "]");
 			}
 		}

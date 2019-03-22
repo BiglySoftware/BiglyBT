@@ -20,13 +20,6 @@
 
 package com.biglybt.core.tracker.client.impl;
 
-import java.io.UnsupportedEncodingException;
-
-/**
- * @author parg
- *
- */
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -173,7 +166,7 @@ TRTrackerAnnouncerFactoryImpl
 			}
 		}
 	}
-	
+
  	public static byte[]
 	getAnonymousPeerId(
 		String	my_ip,
@@ -186,32 +179,26 @@ TRTrackerAnnouncerFactoryImpl
   		anon_peer_id[0] = (byte)'[';
   		anon_peer_id[1] = (byte)']';
 
-  		try{
-	  		byte[]	ip_bytes 	= my_ip.getBytes( Constants.DEFAULT_ENCODING );
-	  		int		ip_len		= ip_bytes.length;
+		byte[] ip_bytes = my_ip.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
+		int ip_len = ip_bytes.length;
 
-	  		if ( ip_len > 18 ){
+		if (ip_len > 18) {
+			ip_len = 18;
+		}
 
-	  			ip_len = 18;
-	  		}
+		System.arraycopy(ip_bytes, 0, anon_peer_id, 2, ip_len);
 
-	  		System.arraycopy( ip_bytes, 0, anon_peer_id, 2, ip_len );
+		int port_copy = my_port;
 
-	  		int	port_copy = my_port;
+		for (int j = 2 + ip_len; j < 20; j++) {
 
-	  		for (int j=2+ip_len;j<20;j++){
+			anon_peer_id[j] = (byte) (port_copy & 0xff);
 
-	  			anon_peer_id[j] = (byte)(port_copy&0xff);
+			port_copy >>= 8;
+		}
 
-	  			port_copy >>= 8;
-	  		}
-  		}catch( UnsupportedEncodingException e ){
-
-  			Debug.printStackTrace( e );
-  		}
-
-  		return( anon_peer_id );
-   }
+		return anon_peer_id;
+	}
 	
 	public static List<TRTrackerAnnouncerResponsePeer>
 	getCachedPeers(

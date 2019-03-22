@@ -68,7 +68,6 @@ import com.biglybt.pif.download.DownloadAnnounceResult;
 import com.biglybt.pif.download.DownloadAnnounceResultPeer;
 import com.biglybt.pifimpl.local.clientid.ClientIDManagerImpl;
 
-
 /**
  *
  * This class handles communication with the tracker
@@ -257,17 +256,19 @@ TRTrackerBTAnnouncerImpl
 
 	try {
 
-		this.info_hash += URLEncoder.encode(new String(torrent_hash_target.getBytes(), Constants.BYTE_ENCODING), Constants.BYTE_ENCODING).replaceAll("\\+", "%20");
+			info_hash += URLEncoder.encode(
+					new String(torrent_hash_target.getBytes(), Constants.BYTE_ENCODING_CHARSET),
+					Constants.BYTE_ENCODING_CHARSET.name()).replaceAll("\\+", "%20");
 
-		this.tracker_peer_id_str += URLEncoder.encode(new String(tracker_peer_id, Constants.BYTE_ENCODING), Constants.BYTE_ENCODING).replaceAll("\\+", "%20");
+			tracker_peer_id_str += URLEncoder.encode(
+					new String(tracker_peer_id, Constants.BYTE_ENCODING_CHARSET),
+					Constants.BYTE_ENCODING_CHARSET.name()).replaceAll("\\+", "%20");
 
 	}catch (UnsupportedEncodingException e){
 
 		Logger.log(new LogEvent(torrent, LOGID, "URL encode fails", e));
 
 	  throw( new TRTrackerAnnouncerException( "TRTrackerAnnouncer: URL encode fails"));
-
-
 	}
 
 	timer_event_action =
@@ -2861,7 +2862,7 @@ TRTrackerBTAnnouncerImpl
 
     			     		// explicit failure from the tracker
 
-    			       failure_reason = new String( failure_reason_bytes, Constants.DEFAULT_ENCODING);
+    			       failure_reason = new String( failure_reason_bytes, Constants.DEFAULT_ENCODING_CHARSET);
 
     			       return( new TRTrackerAnnouncerResponseImpl( url, torrent_hash_actual, TRTrackerAnnouncerResponse.ST_REPORTED_ERROR, getErrorRetryInterval(), failure_reason ));
 
@@ -3250,7 +3251,7 @@ TRTrackerBTAnnouncerImpl
 
 									//get the peer ip address
 
-								String base_ip = new String((byte[]) s_ip, Constants.DEFAULT_ENCODING);
+								String base_ip = new String((byte[]) s_ip, Constants.DEFAULT_ENCODING_CHARSET);
 
 								String ip = AddressUtils.convertToShortForm( base_ip );
 
@@ -3647,7 +3648,7 @@ TRTrackerBTAnnouncerImpl
 							failure_reason = "error: " + e.getMessage();
 
 						} else {
-  						failure_reason = new String( failure_reason_bytes, Constants.DEFAULT_ENCODING);
+  						failure_reason = new String( failure_reason_bytes, Constants.DEFAULT_ENCODING_CHARSET);
 						}
 
 						return(

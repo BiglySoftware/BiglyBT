@@ -471,7 +471,7 @@ ClientIDManagerImpl
 						break;
 					}
 
-					header += new String( buffer, 0, len, Constants.BYTE_ENCODING );
+					header += new String( buffer, 0, len, Constants.BYTE_ENCODING_CHARSET );
 
 					if ( 	header.endsWith( NL+NL ) ||
 						header.contains(NL + NL)){
@@ -627,7 +627,7 @@ ClientIDManagerImpl
 							is_ssl,
 							target_host,
 							target_port,
-							header_out.getBytes(Constants.BYTE_ENCODING ),
+							header_out.getBytes(Constants.BYTE_ENCODING_CHARSET ),
 							connect_timeout,
 							read_timeout );
 

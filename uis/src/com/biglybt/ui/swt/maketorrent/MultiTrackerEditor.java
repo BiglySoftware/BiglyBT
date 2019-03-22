@@ -175,7 +175,7 @@ public class MultiTrackerEditor {
 	      }
 	    });
 
-	    Utils.makeButtonsEqualWidth( Arrays.asList( new Button[]{ btnOK }));
+	    Utils.makeButtonsEqualWidth( Collections.singletonList( btnOK));
 	    
 	    shell.setDefaultButton( btnOK );
 

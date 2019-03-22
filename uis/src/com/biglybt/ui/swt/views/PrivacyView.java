@@ -1883,7 +1883,7 @@ public class PrivacyView
 
 			updateState();
 
-			Utils.makeButtonsEqualWidth( Arrays.asList( new Button[]{ i2p_install_button, i2p_lookup_button }));
+			Utils.makeButtonsEqualWidth( Arrays.asList( i2p_install_button, i2p_lookup_button));
 
 			label = new Label( i2p_button_comp, SWT.NULL );
 			gd = new GridData( GridData.FILL_BOTH );

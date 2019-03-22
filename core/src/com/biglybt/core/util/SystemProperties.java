@@ -22,6 +22,7 @@ package com.biglybt.core.util;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Properties;
 
 import com.biglybt.core.internat.LocaleUtil;
@@ -463,7 +464,7 @@ public class SystemProperties {
     		p = r.exec( "env" );
     	}
 
-    	String system_encoding = LocaleUtil.getSingleton().getSystemEncoding();
+			Charset system_encoding = LocaleUtil.getSingleton().getSystemEncoding();
 
     	if (Logger.isEnabled())
 				Logger.log(new LogEvent(LOGID,

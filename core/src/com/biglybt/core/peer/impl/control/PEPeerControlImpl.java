@@ -1976,7 +1976,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 		PEPeerTransport		originator )
 	{
 		try{
-			byte[] key = originator.getIp().getBytes( Constants.BYTE_ENCODING );
+			byte[] key = originator.getIp().getBytes( Constants.BYTE_ENCODING_CHARSET );
 
 			synchronized( naughty_fast_extension_bloom ){
 
@@ -2003,7 +2003,7 @@ DiskManagerCheckRequestListener, IPFilterListener
 		PEPeerTransport		originator )
 	{
 		try{
-			byte[] key = originator.getIp().getBytes( Constants.BYTE_ENCODING );
+			byte[] key = originator.getIp().getBytes( Constants.BYTE_ENCODING_CHARSET );
 
 			synchronized( naughty_fast_extension_bloom ){
 

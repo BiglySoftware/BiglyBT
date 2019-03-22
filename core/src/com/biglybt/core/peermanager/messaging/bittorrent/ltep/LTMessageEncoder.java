@@ -83,7 +83,7 @@ public class LTMessageEncoder implements MessageStreamEncoder {
 				String ext_name;
 				Object ext_key = extension.getKey();
 				if (ext_key instanceof byte[]) {
-					ext_name = new String((byte[])ext_key, Constants.DEFAULT_ENCODING);
+					ext_name = new String((byte[])ext_key, Constants.DEFAULT_ENCODING_CHARSET);
 				}
 				else if (ext_key instanceof String) {
 					ext_name = (String)ext_key;

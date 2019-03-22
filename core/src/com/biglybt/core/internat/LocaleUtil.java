@@ -33,20 +33,27 @@ public class
 LocaleUtil
 {
 
-  private static final String systemEncoding = System.getProperty("file.encoding");
+	/**
+	 * Android note: The Android platform default is always UTF-8.
+	 */
+	private static final Charset systemEncoding = Charset.defaultCharset();
 
   private static final String[] manual_charset = {
-	systemEncoding,	// must be first entry due to code below that gets the system decoder
+  	Charset.defaultCharset().name(), // must be first entry due to code below that gets the system decoder
 	"Big5","EUC-JP","EUC-KR","GB18030","GB2312","GBK","ISO-2022-JP","ISO-2022-KR",
 	"Shift_JIS","KOI8-R",
 	"TIS-620",	// added for bug #1008848
-	Constants.DEFAULT_ENCODING,"windows-1251",Constants.BYTE_ENCODING
+			Constants.DEFAULT_ENCODING_CHARSET.name(),
+			"windows-1251",
+			Constants.BYTE_ENCODING_CHARSET.name()
   };
 
 	// the general ones *must* also be members of the above manual ones
 
-  protected static final String[] generalCharsets = {
-	Constants.BYTE_ENCODING, Constants.DEFAULT_ENCODING, systemEncoding
+	protected static final Charset[] generalCharsets = {
+			Constants.BYTE_ENCODING_CHARSET,
+			Constants.DEFAULT_ENCODING_CHARSET,
+			Charset.defaultCharset()
   };
 
    private static final LocaleUtil singleton = new LocaleUtil();
@@ -151,10 +158,8 @@ LocaleUtil
 	decoders.toArray( all_decoders);
   }
 
-  public String
-  getSystemEncoding()
-  {
-  	return( systemEncoding );
+	public Charset getSystemEncoding() {
+  	return systemEncoding;
   }
 
   public LocaleUtilDecoder[]

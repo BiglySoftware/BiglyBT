@@ -138,7 +138,7 @@ TagPropertyUntaggedHandler
 				taggableCreated(
 					Taggable		taggable )
 				{
-					addDownloads( Arrays.asList( new DownloadManager[]{ (DownloadManager)taggable }));
+					addDownloads( Collections.singletonList( (DownloadManager)taggable));
 				}
 			});
 	}

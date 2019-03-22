@@ -20,13 +20,7 @@
 
 package com.biglybt.pifimpl.local.sharing;
 
-/**
- * @author parg
- *
- */
-
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -335,7 +329,7 @@ ShareResourceDirContentsImpl
 		
 		return( null );
 	}
-	
+
 	@Override
 	protected void
 	serialiseResource(
@@ -344,16 +338,8 @@ ShareResourceDirContentsImpl
 		super.serialiseResource( map );
 
 		map.put( "type", new Long(getType()));
-
 		map.put( "recursive", new Long(recursive?1:0));
-
-		try{
-			map.put( "file", root.toString().getBytes( Constants.DEFAULT_ENCODING));
-
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.printStackTrace( e );
-		}
+		map.put("file", root.toString().getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 
 		if ( personal_key != null ){
 
@@ -373,19 +359,13 @@ ShareResourceDirContentsImpl
 
 		throws ShareException
 	{
-		try{
-			File root = new File(new String((byte[])map.get("file"), Constants.DEFAULT_ENCODING));
+		File root = new File(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING_CHARSET));
 
-			boolean	recursive = ((Long)map.get("recursive")).longValue() == 1;
+		boolean recursive = ((Long) map.get("recursive")).longValue() == 1;
 
-			ShareResourceImpl res  = new ShareResourceDirContentsImpl( manager, root, recursive, map );
+		ShareResourceImpl res = new ShareResourceDirContentsImpl(manager, root, recursive, map);
 
-			return( res );
-
-		}catch( UnsupportedEncodingException e ){
-
-			throw( new ShareException( "internal error", e ));
-		}
+		return res;
 	}
 
 	@Override
