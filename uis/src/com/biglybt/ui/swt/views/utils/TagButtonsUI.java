@@ -41,6 +41,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.utils.ColorCache;
 
 /**
@@ -212,6 +213,7 @@ implements PaintListener
 			if (allowContextMenu) {
 				button.addListener(SWT.MenuDetect, menuDetectListener);
 			}
+			button.setBackground( p.getBackground());
 			button.addPaintListener(this);
 
 			Utils.setTT(button, TagUtils.getTagTooltip(tag));
