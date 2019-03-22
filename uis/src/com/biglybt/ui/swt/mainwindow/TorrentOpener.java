@@ -646,6 +646,13 @@ public class TorrentOpener {
 							}
 						}
 
+						String user_comment = torrentOptions.getUserComment();
+						
+						if ( user_comment != null && !user_comment.isEmpty()){
+							
+							dm_state.setUserComment( user_comment);
+						}
+						
 						List<Tag> initialTags = torrentOptions.getInitialTags();
 
 						for ( Tag t: initialTags ){

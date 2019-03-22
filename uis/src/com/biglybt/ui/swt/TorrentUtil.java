@@ -24,6 +24,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -3269,13 +3270,30 @@ public class TorrentUtil
 		}
 		DownloadManager dm = dms[0];
 
+		promptUserForComment( 
+			dm.getDownloadState().getUserComment(),
+			(value_to_set)->{
+				ListenerDMTask task = new ListenerDMTask(dms) {
+					@Override
+					public void run(DownloadManager dm) {
+						dm.getDownloadState().setUserComment(value_to_set);
+					}
+				};
+				task.go();
+			});
+	}
+	
+	public static void promptUserForComment(
+		String				text,
+		Consumer<String>	consumer )
+	{
+
 		// Create dialog box.
-		String suggested = dm.getDownloadState().getUserComment();
 		String msg_key_prefix = "MyTorrentsView.menu.edit_comment.enter.";
 		SimpleTextEntryWindow text_entry = new SimpleTextEntryWindow();
 		text_entry.setTitle(msg_key_prefix + "title");
 		text_entry.setMessage(msg_key_prefix + "message");
-		text_entry.setPreenteredText(suggested, false);
+		text_entry.setPreenteredText(text, false);
 		text_entry.setWidthHint( 500 );
 		text_entry.setLineHeight( 10 );
 		text_entry.setMultiLine(true);
@@ -3286,13 +3304,7 @@ public class TorrentUtil
 				if (text_entry.hasSubmittedInput()) {
 					String value = text_entry.getSubmittedInput();
 					final String value_to_set = (value.length() == 0) ? null : value;
-					ListenerDMTask task = new ListenerDMTask(dms) {
-						@Override
-						public void run(DownloadManager dm) {
-							dm.getDownloadState().setUserComment(value_to_set);
-						}
-					};
-					task.go();
+					consumer.accept(  value_to_set );
 				}
 			}
 		});

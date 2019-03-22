@@ -74,6 +74,7 @@ import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
+import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIConfigDefaultsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
@@ -3975,7 +3976,7 @@ public class OpenTorrentOptionsWindow
 			line.setLayoutData(gridData);
 
 			Composite cButtonsBottom = new Composite(cButtonsArea, SWT.NULL);
-			layout = new GridLayout(5,false);
+			layout = new GridLayout(7,false);
 			layout.marginWidth = layout.marginHeight = layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
 			cButtonsBottom.setLayout(layout);
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
@@ -4095,6 +4096,31 @@ public class OpenTorrentOptionsWindow
 			gridData = new GridData( GridData.FILL_HORIZONTAL);
 			pad2.setLayoutData(gridData);
 
+				// local user comment
+			
+			Button local_comment = new Button( cButtonsBottom, SWT.PUSH );
+			local_comment.setToolTipText( MessageText.getString( "TableColumn.header.comment.info" ));
+			
+			local_comment.setImage( ImageLoader.getInstance().getImage("no_comment"));
+			
+			local_comment.addSelectionListener(
+				SelectionListener.widgetSelectedAdapter(
+					(e)->{
+						TorrentUtil.promptUserForComment(
+							torrentOptions.getUserComment(),
+							(str)->{
+								torrentOptions.setUserComment( str );
+								
+								local_comment.setImage( 
+									ImageLoader.getInstance().getImage(str==null||str.isEmpty()?"no_comment":"comment"));
+							});
+					} ));
+				
+			Label sep = new Label( cButtonsBottom, SWT.SEPARATOR );
+			gridData = new GridData();
+			gridData.heightHint = 15;
+			sep.setLayoutData(gridData);
+			
 				// privacy add mode
 
 			btnPrivacy = new Button(cButtonsBottom, SWT.TOGGLE);

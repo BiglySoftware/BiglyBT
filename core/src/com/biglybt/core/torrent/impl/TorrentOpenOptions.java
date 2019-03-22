@@ -116,6 +116,8 @@ public class TorrentOpenOptions
 
 	private Map<String, Boolean> enabledNetworks = new HashMap<>();
 
+	private String 				userComment;
+	
 	private List<Tag>			initialTags = new ArrayList<>();
 	private Set<Tag>			autoTags	= new HashSet<>();
 	
@@ -211,6 +213,7 @@ public class TorrentOpenOptions
 		// this.files = ... // no clone
 		this.peerSource = toBeCloned.peerSource == null ? null : new HashMap<>(toBeCloned.peerSource);
 		this.enabledNetworks = toBeCloned.enabledNetworks == null ? null : new HashMap<>(toBeCloned.enabledNetworks);
+		this.userComment = toBeCloned.userComment;
 		this.initialTags = toBeCloned.initialTags == null ? null : new ArrayList<>(toBeCloned.initialTags);
 		this.autoTags = toBeCloned.autoTags == null ? null : new HashSet<>(toBeCloned.autoTags);
 		this.initialMetadata = BEncoder.cloneMap(toBeCloned.initialMetadata);
@@ -359,7 +362,20 @@ public class TorrentOpenOptions
 	{
 		enabledNetworks.put( net, enabled );
 	}
+	
+	public String
+	getUserComment()
+	{
+		return( userComment );
+	}
 
+	public void
+	setUserComment(
+		String		str )
+	{
+		userComment	= str;
+	}
+	
 	public String getDataDir() {
 		if (torrent.isSimpleTorrent())
 			return sDestDir;
