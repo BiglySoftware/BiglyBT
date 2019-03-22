@@ -20,11 +20,12 @@ package com.biglybt.ui.swt;
 import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
-import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -34,6 +35,8 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.UrlUtils;
+import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.pifimpl.AbstractUISWTInputReceiver;
 
 import com.biglybt.pif.ui.UIInputValidator;
@@ -52,7 +55,8 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	private boolean resizeable;
 	private Combo text_entry_combo;
 	private Text text_entry_text;
-
+	private Label link_label;
+	
 	private java.util.List<VerifyListener> verify_listeners = new ArrayList<>();
 	
 	public SimpleTextEntryWindow() {
@@ -196,7 +200,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 		    	text_entry_combo.setText(this.preentered_text);
 	    	}
 	    }
-
+	    
 	    // TAB will take them out of the text entry box.
 	    text_entry.addTraverseListener(new TraverseListener() {
 	    	@Override
@@ -256,8 +260,24 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 		text_entry.setLayoutData(gridData);
 
-	    Composite panel = new Composite(shell, SWT.NULL);
-	    final RowLayout rLayout = new RowLayout();
+		Composite bottom_panel = new Composite(shell, SWT.NULL);
+		gridData = new GridData( GridData.FILL_HORIZONTAL );
+		bottom_panel.setLayoutData(gridData); 
+		GridLayout gLayout = new GridLayout( 2, false );
+		gLayout.marginTop = 0;
+		gLayout.marginLeft = 0;
+		gLayout.marginBottom = 0;
+		gLayout.marginRight = 0;
+		gLayout.marginHeight = 0;
+		gLayout.marginWidth = 0;
+		bottom_panel.setLayout( gLayout );
+		
+		link_label = new Label( bottom_panel, SWT.NULL );
+		gridData = new GridData( GridData.FILL_HORIZONTAL );
+		link_label.setLayoutData(gridData); 
+			
+	    Composite button_panel = new Composite(bottom_panel, SWT.NULL);
+	    RowLayout rLayout = new RowLayout();
 	    rLayout.marginTop = 0;
 	    rLayout.marginLeft = 0;
 	    rLayout.marginBottom = 0;
@@ -265,12 +285,12 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
     	rLayout.fill = true;
 	   
 	    rLayout.spacing = Utils.BUTTON_MARGIN;
-	    panel.setLayout(rLayout);
+	    button_panel.setLayout(rLayout);
 	    gridData = new GridData();
 	    gridData.horizontalAlignment = SWT.END;
-		panel.setLayoutData(gridData);
+	    button_panel.setLayoutData(gridData);
 
-	    Button[] buttons = Utils.createOKCancelButtons(panel);
+	    Button[] buttons = Utils.createOKCancelButtons(button_panel);
 
 	    Button ok 		= buttons[0];
 	    Button cancel 	= buttons[1];
@@ -344,6 +364,20 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	        }
 	      });
 
+	    if ( text_entry_text != null ){
+	    	
+	    	text_entry_text.addFocusListener(
+		    	new FocusAdapter(){
+		    		@Override
+		    		public void focusLost(FocusEvent e){
+					
+		    			checkText();
+		    		}
+				});
+	    	
+	    	checkText();
+	    }
+	    
 	    shell.setDefaultButton(ok);
 
 		shell.addListener(SWT.Traverse, new Listener() {
@@ -377,6 +411,24 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	    shell.open();
 	  }
 
+	private void
+	checkText()
+	{
+		String url = UrlUtils.parseTextForURL( text_entry_text.getText(), true );
+		
+		if ( url != null ){
+			
+			link_label.setText( url );
+			
+			LinkLabel.makeLinkedLabel( link_label, url );
+			
+		}else{
+			link_label.setText( "" );
+			
+			LinkLabel.removeLinkedLabel( link_label );
+		}
+	}
+	
   @Override
   public void setTextLimit(int limit) {
   	textLimit = limit;

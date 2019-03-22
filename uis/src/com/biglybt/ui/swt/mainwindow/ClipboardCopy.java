@@ -43,6 +43,9 @@ import com.biglybt.ui.swt.Utils;
  */
 public class ClipboardCopy {
 
+	  private static String MENU_ITEM_KEY 		= "ClipboardCopy.mi";
+	  private static String MOUSE_LISTENER_KEY 	= "ClipboardCopy.ml";
+	
   public static void
   copyToClipBoard(
     final String    data )
@@ -75,7 +78,14 @@ public class ClipboardCopy {
 	final Control				control,
 	final copyToClipProvider	provider )
   {
-	  control.addMouseListener(
+	  MouseAdapter ml = (MouseAdapter)control.getData( MOUSE_LISTENER_KEY );
+	  
+	  if ( ml != null ){
+	  
+		  control.removeMouseListener( ml );
+	  }
+	  
+	  ml =
 		  new MouseAdapter()
 		  {
 			  @Override
@@ -103,6 +113,8 @@ public class ClipboardCopy {
 				  final Menu menu = new Menu(control.getShell(),SWT.POP_UP);
 
 				  MenuItem   item = new MenuItem( menu,SWT.NONE );
+
+				  item.setData( MENU_ITEM_KEY, "" );
 
 				  String	msg_text_id;
 
@@ -148,7 +160,11 @@ public class ClipboardCopy {
 
 				  menu.setVisible( true );
 			  }
-		  });
+		  };
+	  
+	  control.setData( MOUSE_LISTENER_KEY, ml );
+	  
+	  control.addMouseListener( ml );
   }
 
   public static void
@@ -156,7 +172,17 @@ public class ClipboardCopy {
 	final Menu		menu,
 	final String	text )
   {
+	  for ( MenuItem e: menu.getItems()){
+		  
+		  if ( e.getData( MENU_ITEM_KEY ) != null ){
+			  
+			  e.dispose();
+		  }
+	  }
+	  
 	  MenuItem   item = new MenuItem( menu,SWT.NONE );
+
+	  item.setData( MENU_ITEM_KEY, "" );
 
 	  String	msg_text_id= "label.copy.to.clipboard";
 
@@ -180,8 +206,18 @@ public class ClipboardCopy {
 	final Menu					menu,
 	final copyToClipProvider	provider )
   {
+	  for ( MenuItem e: menu.getItems()){
+		  
+		  if ( e.getData( MENU_ITEM_KEY ) != null ){
+			  
+			  e.dispose();
+		  }
+	  }
+	  
 	  MenuItem   item = new MenuItem( menu,SWT.NONE );
 
+	  item.setData( MENU_ITEM_KEY, "" );
+	  
 	  String	msg_text_id= "label.copy.to.clipboard";
 
 	  item.setText( MessageText.getString( msg_text_id ));
@@ -199,6 +235,19 @@ public class ClipboardCopy {
 		  });
   }
 
+  public static void
+  removeCopyToClipMenu(
+	final Menu					menu )
+  {
+	  for ( MenuItem e: menu.getItems()){
+		  
+		  if ( e.getData( MENU_ITEM_KEY ) != null ){
+			  
+			  e.dispose();
+		  }
+	  }	
+  }
+	
   public static void
   addCopyToClipMenu(
 	final Control				control )
@@ -236,6 +285,18 @@ public class ClipboardCopy {
 				  }
 			  }
 		});
+  }
+  
+  public static void
+  removeCopyToClipMenu(
+		Control		control )
+  {
+	  MouseAdapter ml = (MouseAdapter)control.getData( MOUSE_LISTENER_KEY );
+	  
+	  if ( ml != null ){
+	  
+		  control.removeMouseListener( ml );
+	  }
   }
 
   public interface

@@ -672,7 +672,21 @@ public class UrlUtils
 				}
 			}
 		}
-		if (strURL != null) {
+		if ( strURL != null ){
+			
+				// we're never going to want raw whitespace in the url, even though new URL(...) accepts them...
+			
+			char[] chars = strURL.toCharArray();
+			
+			for ( int i=0;i<chars.length;i++){
+				
+				if ( Character.isWhitespace( chars[i] )){
+					
+					strURL = strURL.substring( 0, i );
+					
+					break;
+				}
+			}
 			return strURL;
 		}
 

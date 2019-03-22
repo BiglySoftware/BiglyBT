@@ -33,6 +33,8 @@ import com.biglybt.ui.swt.mainwindow.Colors;
 public class
 LinkLabel
 {
+	private static final String MOUSE_LISTENER_KEY = "LinkLabel.ml";
+	
 	private final Label	linkLabel;
 	public
 	LinkLabel(
@@ -100,23 +102,59 @@ LinkLabel
 			Utils.setTT(label,hyperlink.replaceAll("&", "&&"));
 		}
 	    label.setCursor(label.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
+	    
 	    label.setForeground(Colors.blue);
-	    label.addMouseListener(new MouseAdapter() {
-	      @Override
-	      public void mouseDoubleClick(MouseEvent arg0) {
-	      	Utils.launch((String) ((Label) arg0.widget).getData());
-	      }
-	      @Override
-	      public void mouseUp(MouseEvent arg0) {
-	      	Utils.launch((String) ((Label) arg0.widget).getData());
-	      }
-	    });
+	    
+	    MouseAdapter ml = (MouseAdapter)label.getData( MOUSE_LISTENER_KEY );
+	    
+	    if ( ml != null ){
+	    	
+	    	label.removeMouseListener(ml);
+	    }
+	    
+	    ml = 
+	    	new MouseAdapter() {
+		      @Override
+		      public void mouseDoubleClick(MouseEvent arg0) {
+		    	  launch( arg0 );
+		      }
+		      @Override
+		      public void mouseUp(MouseEvent arg0) {
+		    	  launch( arg0 );
+		      }
+		      private void
+		      launch(
+		    	  MouseEvent	arg0 )
+		      {
+		    	  String url = (String) ((Label) arg0.widget).getData();
+		    	  
+		    	  if ( url != null ){
+		    		  Utils.launch( url );
+		    	  }
+		    	  
+		      }
+		    };
+		   
+		label.setData( MOUSE_LISTENER_KEY, ml );
+		label.addMouseListener( ml );
+		
 	    ClipboardCopy.addCopyToClipMenu( label );
 	}
 
 	public static void updateLinkedLabel(Label label, String hyperlink) {
 		label.setData(hyperlink);
 		Utils.setTT(label,hyperlink);
+	}
+	
+	public static void removeLinkedLabel(Label label ) {
+		label.setCursor(null );
+	    label.setForeground(null);
+	    label.setData( null );
+	    MouseAdapter ml = (MouseAdapter)label.getData( MOUSE_LISTENER_KEY );
+	    if ( ml != null ){
+	    	label.removeMouseListener(ml);
+	    }
+	    ClipboardCopy.removeCopyToClipMenu( label );
 	}
 	
 	public static void makeLinkedLabel(Label label, Runnable runnable) {
