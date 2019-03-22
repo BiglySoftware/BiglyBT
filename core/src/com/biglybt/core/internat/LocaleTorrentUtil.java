@@ -431,7 +431,7 @@ public class LocaleTorrentUtil
 
 		throws LocaleUtilEncodingException
 	{
-		setTorrentEncoding(torrent, Constants.DEFAULT_ENCODING.name());
+		setTorrentEncoding(torrent, Constants.DEFAULT_ENCODING_CHARSET.name());
 	}
 
 	static public String getCurrentTorrentEncoding(TOTorrent torrent) {

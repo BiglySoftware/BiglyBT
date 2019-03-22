@@ -136,7 +136,7 @@ ShareItemImpl
 		Map		map )
 	{
 		map.put( "ihash", fingerprint );
-		map.put( "ifile", torrent_save_location.getBytes(Constants.DEFAULT_ENCODING));
+		map.put( "ifile", torrent_save_location.getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 	}
 
 	protected static ShareItemImpl
@@ -145,7 +145,7 @@ ShareItemImpl
 		Map					map )
 	{
 		byte[] hash = (byte[]) map.get("ihash");
-		String save_location = new String((byte[]) map.get("ifile"), Constants.DEFAULT_ENCODING);
+		String save_location = new String((byte[]) map.get("ifile"), Constants.DEFAULT_ENCODING_CHARSET);
 
 		return new ShareItemImpl(resource, hash, save_location);
 	}

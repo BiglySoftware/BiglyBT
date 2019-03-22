@@ -1190,7 +1190,7 @@ public class GlobalManagerImpl
 
 	        String sCategory = null;
 	        if (save_download_state.containsKey("category")){
-						sCategory = new String((byte[]) save_download_state.get("category"), Constants.DEFAULT_ENCODING);
+						sCategory = new String((byte[]) save_download_state.get("category"), Constants.DEFAULT_ENCODING_CHARSET);
 	        }
 
 	        if (sCategory != null) {
@@ -2557,7 +2557,7 @@ public class GlobalManagerImpl
 		  boolean	persistent = lPersistent==null || lPersistent.longValue()==1;
 
 
-		  String fileName = new String((byte[]) mDownload.get("torrent"), Constants.DEFAULT_ENCODING);
+		  String fileName = new String((byte[]) mDownload.get("torrent"), Constants.DEFAULT_ENCODING_CHARSET);
 
 		  if ( progress_listener != null &&  SystemTime.getCurrentTime() - lastListenerUpdate > 100) {
 			  lastListenerUpdate = SystemTime.getCurrentTime();
@@ -2587,11 +2587,11 @@ public class GlobalManagerImpl
 
 			  byte[] torrent_save_file_bytes 	= (byte[]) mDownload.get("save_file");
 
-			  torrent_save_dir	= new String(torrent_save_dir_bytes, Constants.DEFAULT_ENCODING);
+			  torrent_save_dir	= new String(torrent_save_dir_bytes, Constants.DEFAULT_ENCODING_CHARSET);
 
 			  if ( torrent_save_file_bytes != null ){
 
-				  torrent_save_file	= new String(torrent_save_file_bytes, Constants.DEFAULT_ENCODING);
+				  torrent_save_file	= new String(torrent_save_file_bytes, Constants.DEFAULT_ENCODING_CHARSET);
 			  }else{
 
 				  torrent_save_file	= null;
@@ -2599,7 +2599,7 @@ public class GlobalManagerImpl
 		  }else{
 
 			  byte[] savePathBytes = (byte[]) mDownload.get("path");
-			  torrent_save_dir 	= new String(savePathBytes, Constants.DEFAULT_ENCODING);
+			  torrent_save_dir 	= new String(savePathBytes, Constants.DEFAULT_ENCODING_CHARSET);
 			  torrent_save_file	= null;
 		  }
 

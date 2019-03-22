@@ -56,7 +56,7 @@ XUXmlWriter
 	setOutputStream(
 		OutputStream	_output_stream )
 	{
-		writer = new PrintWriter(new OutputStreamWriter(_output_stream, Constants.DEFAULT_ENCODING));
+		writer = new PrintWriter(new OutputStreamWriter(_output_stream, Constants.DEFAULT_ENCODING_CHARSET));
 	}
 
 	protected void
@@ -442,9 +442,9 @@ XUXmlWriter
 	{
 		boolean	use_bytes = true;
 
-		String utf_string = new String(content, Constants.DEFAULT_ENCODING);
+		String utf_string = new String(content, Constants.DEFAULT_ENCODING_CHARSET);
 
-		if (Arrays.equals(content, utf_string.getBytes(Constants.DEFAULT_ENCODING))) {
+		if (Arrays.equals(content, utf_string.getBytes(Constants.DEFAULT_ENCODING_CHARSET))) {
 			use_bytes = false;
 		}
 

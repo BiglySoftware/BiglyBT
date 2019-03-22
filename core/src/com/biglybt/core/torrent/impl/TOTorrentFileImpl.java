@@ -78,11 +78,11 @@ TOTorrentFileImpl
 
 			if (p1 == -1) {
 
-				temp.add(_path.substring(pos).getBytes(Constants.DEFAULT_ENCODING));
+				temp.add(_path.substring(pos).getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 				break;
 			}
 
-			temp.add(_path.substring(pos, p1).getBytes(Constants.DEFAULT_ENCODING));
+			temp.add(_path.substring(pos, p1).getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 
 			pos = p1 + 1;
 		}

@@ -798,7 +798,7 @@ public class GeneralView
     byte[] created_by = torrent == null ? null : torrent.getCreatedBy();
     if (created_by != null) {
 			creation_date = MessageText.getString("GeneralView.torrent_created_on_and_by", new String[] {
-					creation_date, new String(created_by, Constants.DEFAULT_ENCODING)
+					creation_date, new String(created_by, Constants.DEFAULT_ENCODING_CHARSET)
 			});
 		}
 

@@ -39,7 +39,7 @@ public class BTPeerIDByteDecoder {
 	}
 
 	private static String logUnknownClient0(byte[] peer_id_bytes) throws IOException {
-		String text = new String(peer_id_bytes, 0, 20, Constants.BYTE_ENCODING);
+		String text = new String(peer_id_bytes, 0, 20, Constants.BYTE_ENCODING_CHARSET);
 		text = text.replace((char)12, (char)32);
 		text = text.replace((char)10, (char)32);
 
@@ -47,7 +47,7 @@ public class BTPeerIDByteDecoder {
 	}
 
 	private static String asUTF8ByteString(String text) {
-		byte[] utf_bytes = text.getBytes(Constants.DEFAULT_ENCODING);
+		byte[] utf_bytes = text.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
 		return ByteFormatter.encodeString(utf_bytes);
 	}
 
@@ -120,11 +120,11 @@ public class BTPeerIDByteDecoder {
 	}
 
 	static void logUnknownClient(String peer_id, String net ) {
-		logUnknownClient(peer_id.getBytes(Constants.BYTE_ENCODING), net == AENetworkClassifier.AT_PUBLIC);
+		logUnknownClient(peer_id.getBytes(Constants.BYTE_ENCODING_CHARSET), net == AENetworkClassifier.AT_PUBLIC);
 	}
 
 	public static String decode0(byte[] peer_id_bytes, String net) {
-		String peer_id = new String(peer_id_bytes, Constants.BYTE_ENCODING);
+		String peer_id = new String(peer_id_bytes, Constants.BYTE_ENCODING_CHARSET);
 
 		// We store the result here.
 		String client = null;
@@ -266,7 +266,7 @@ public class BTPeerIDByteDecoder {
 			}
 
 			try {
-				String peer_id_as_string = new String(peer_id, Constants.BYTE_ENCODING);
+				String peer_id_as_string = new String(peer_id, Constants.BYTE_ENCODING_CHARSET);
 
 				boolean is_az_style = BTPeerIDByteDecoderUtils.isAzStyle(peer_id_as_string);
 
@@ -384,7 +384,7 @@ public class BTPeerIDByteDecoder {
 			if (b < 32 || b > 127)
 				peerID[i] = (byte) fallback_char;
 		}
-		String sPeerID = new String(peerID, Constants.BYTE_ENCODING);
+		String sPeerID = new String(peerID, Constants.BYTE_ENCODING_CHARSET);
 
 		return sPeerID;
 	}
@@ -399,7 +399,7 @@ public class BTPeerIDByteDecoder {
 			}
 		}
 		if (as_ascii) {
-			return new String(peer_id, Constants.BYTE_ENCODING);
+			return new String(peer_id, Constants.BYTE_ENCODING_CHARSET);
 		} else {
 			return ByteFormatter.encodeString(peer_id);
 		}
@@ -419,7 +419,7 @@ public class BTPeerIDByteDecoder {
 			}
 		}
 		else if (peer_id.length() == 20) {
-			byte_peer_id = peer_id.getBytes(Constants.BYTE_ENCODING);
+			byte_peer_id = peer_id.getBytes(Constants.BYTE_ENCODING_CHARSET);
 		}
 		else {
 			throw new IllegalArgumentException(peer_id);

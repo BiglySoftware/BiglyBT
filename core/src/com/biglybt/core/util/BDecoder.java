@@ -200,7 +200,7 @@ public class BDecoder
 	private int keyBytesLen = 0;
 	private CharBuffer keyCharsBuffer = USE_NEW_BDECODER ? null : CharBuffer.allocate(32);
 
-	private final CharsetDecoder keyDecoder = USE_NEW_BDECODER ? null : Constants.BYTE_ENCODING.newDecoder();
+	private final CharsetDecoder keyDecoder = USE_NEW_BDECODER ? null : Constants.BYTE_ENCODING_CHARSET.newDecoder();
 
 	private Object
 	decodeInputStream(
@@ -603,7 +603,7 @@ public class BDecoder
 							dbis.skip(skipBytes);
 						}
 
-						String key = new String(keyBytes, 0, keyLength, Constants.BYTE_ENCODING);
+						String key = new String(keyBytes, 0, keyLength, Constants.BYTE_ENCODING_CHARSET);
 
 						// keys often repeat a lot - intern to save space
 						if (internKeys)

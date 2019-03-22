@@ -339,7 +339,7 @@ ShareResourceDirContentsImpl
 
 		map.put( "type", new Long(getType()));
 		map.put( "recursive", new Long(recursive?1:0));
-		map.put("file", root.toString().getBytes(Constants.DEFAULT_ENCODING));
+		map.put("file", root.toString().getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 
 		if ( personal_key != null ){
 
@@ -359,7 +359,7 @@ ShareResourceDirContentsImpl
 
 		throws ShareException
 	{
-		File root = new File(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING));
+		File root = new File(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING_CHARSET));
 
 		boolean recursive = ((Long) map.get("recursive")).longValue() == 1;
 

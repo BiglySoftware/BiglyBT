@@ -1207,9 +1207,9 @@ TRTrackerServerImpl
 
 						String	hash_str = pos==-1?bit:bit.substring(0,pos);
 
-						hash_str = URLDecoder.decode(hash_str, Constants.BYTE_ENCODING.name());
+						hash_str = URLDecoder.decode(hash_str, Constants.BYTE_ENCODING_CHARSET.name());
 
-						byte[]	hash = hash_str.getBytes(Constants.BYTE_ENCODING);
+						byte[]	hash = hash_str.getBytes(Constants.BYTE_ENCODING_CHARSET);
 
 						if ( Arrays.equals( hash, torrent.getHash().getBytes())){
 

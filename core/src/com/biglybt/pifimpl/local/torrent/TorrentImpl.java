@@ -335,7 +335,7 @@ TorrentImpl
 			return( decoder.getName());
 		}
 
-		return Constants.DEFAULT_ENCODING.name();
+		return Constants.DEFAULT_ENCODING_CHARSET.name();
 	}
 
 	@Override
@@ -351,7 +351,7 @@ TorrentImpl
 	@Override
 	public void
 	setDefaultEncoding() throws TorrentEncodingException {
-		setEncoding(Constants.DEFAULT_ENCODING.name());
+		setEncoding(Constants.DEFAULT_ENCODING_CHARSET.name());
 	}
 
 	protected String

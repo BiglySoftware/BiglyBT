@@ -73,8 +73,14 @@ Constants
 	public static final Charset UTF_8 = Charset.forName("UTF-8");
 	public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
 
-	public static final Charset DEFAULT_ENCODING = UTF_8;
-	public static final Charset BYTE_ENCODING = ISO_8859_1;
+	@Deprecated
+	public static final String DEFAULT_ENCODING 	= "UTF8";
+	
+	@Deprecated
+	public static final String BYTE_ENCODING 		= "ISO-8859-1";
+
+	public static final Charset DEFAULT_ENCODING_CHARSET 	= UTF_8;
+	public static final Charset BYTE_ENCODING_CHARSET 		= ISO_8859_1;
 
 	public static final int	DEFAULT_INSTANCE_PORT	= 6880;
 	public static final int	INSTANCE_PORT;
@@ -141,7 +147,7 @@ Constants
 	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "1.8.0.1_B01";
+	public static final String AZUREUS_VERSION  = "1.8.0.1_B36";
 	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
 	public static final String AZUREUS_SUBVER	  = "";
 	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "1801" + "-").getBytes();  //MUST be 8 chars long!

@@ -81,7 +81,7 @@ StringInterner
 		try{
 			for (int i=0;i<COMMON_KEYS.length;i++){
 
-				byte_map.put( COMMON_KEYS[i].getBytes(Constants.BYTE_ENCODING), COMMON_KEYS[i] );
+				byte_map.put( COMMON_KEYS[i].getBytes(Constants.BYTE_ENCODING_CHARSET), COMMON_KEYS[i] );
 				managedInterningSet.add(new WeakStringEntry(COMMON_KEYS[i]));
 			}
 		}catch( Throwable e ){

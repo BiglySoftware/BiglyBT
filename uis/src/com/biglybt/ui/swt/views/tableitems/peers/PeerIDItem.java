@@ -50,7 +50,7 @@ public class PeerIDItem extends CoreTableColumnSWT implements
 		byte[] peer_id = peer.getId();
 		if (peer_id == null) {cell.setText(""); return;}
 
-		String text = new String(peer_id, 0, peer_id.length, Constants.BYTE_ENCODING);
+		String text = new String(peer_id, 0, peer_id.length, Constants.BYTE_ENCODING_CHARSET);
 		text = text.replace((char) 12, (char) 32); // Replace newlines.
 		text = text.replace((char) 10, (char) 32);
 		cell.setText(text);

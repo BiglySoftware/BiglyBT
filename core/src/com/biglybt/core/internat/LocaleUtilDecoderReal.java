@@ -177,6 +177,6 @@ LocaleUtilDecoderReal
 		}
 
 		// no joy, default
-		return new String(bytes, Constants.DEFAULT_ENCODING);
+		return new String(bytes, Constants.DEFAULT_ENCODING_CHARSET);
 	}
 }

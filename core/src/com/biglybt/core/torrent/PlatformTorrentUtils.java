@@ -165,7 +165,7 @@ public class PlatformTorrentUtils
 		if (obj instanceof String) {
 			return (String) obj;
 		} else if (obj instanceof byte[]) {
-			return new String((byte[]) obj, Constants.DEFAULT_ENCODING);
+			return new String((byte[]) obj, Constants.DEFAULT_ENCODING_CHARSET);
 		}
 
 		return null;

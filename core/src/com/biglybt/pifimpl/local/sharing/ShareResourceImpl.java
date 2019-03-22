@@ -85,7 +85,7 @@ ShareResourceImpl
 				String	key = (String)keys.next();
 
 				try{
-					String	value = new String((byte[])attrs.get(key), Constants.DEFAULT_ENCODING );
+					String	value = new String((byte[])attrs.get(key), Constants.DEFAULT_ENCODING_CHARSET );
 
 					TorrentAttribute ta = TorrentManagerImpl.getSingleton().getAttribute( key );
 
@@ -123,7 +123,7 @@ ShareResourceImpl
 			try{
 				if ( value != null ){
 
-					attrs.put( ta.getName(), value.getBytes( Constants.DEFAULT_ENCODING ));
+					attrs.put( ta.getName(), value.getBytes( Constants.DEFAULT_ENCODING_CHARSET ));
 
 				}
 			}catch( Throwable e ){

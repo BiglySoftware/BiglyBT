@@ -128,7 +128,7 @@ TRBlockingServerProcessor
 						}
 					}
 
-					String	header = new String( buffer, 0, header_pos, Constants.BYTE_ENCODING );
+					String	header = new String( buffer, 0, header_pos, Constants.BYTE_ENCODING_CHARSET );
 
 					if ( Logger.isEnabled()){
 

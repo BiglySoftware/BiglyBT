@@ -1359,7 +1359,7 @@ EngineImpl
 
 			byte[] bytes = vf.exportToBytes();
 
-			String url_str = "vuze://?body=" + new String( bytes, Constants.BYTE_ENCODING );
+			String url_str = "vuze://?body=" + new String( bytes, Constants.BYTE_ENCODING_CHARSET );
 
 			boolean is_anon = isAnonymous();
 

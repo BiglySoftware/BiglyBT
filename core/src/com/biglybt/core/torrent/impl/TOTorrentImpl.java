@@ -136,7 +136,7 @@ TOTorrentImpl
 	{
 		created	= true;
 
-		torrent_name = _torrent_name.getBytes(Constants.DEFAULT_ENCODING);
+		torrent_name = _torrent_name.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
 		torrent_name_utf8 = torrent_name;
 
 		setAnnounceURL(_announce_url);
@@ -627,7 +627,7 @@ TOTorrentImpl
 	}
 
 	protected void setCreatedBy(String _created_by) {
-		setCreatedBy(_created_by.getBytes(Constants.DEFAULT_ENCODING));
+		setCreatedBy(_created_by.getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 	}
 
 	@Override
@@ -1099,7 +1099,7 @@ TOTorrentImpl
 			return (null);
 		}
 
-		return new String(value, Constants.DEFAULT_ENCODING);
+		return new String(value, Constants.DEFAULT_ENCODING_CHARSET);
 	}
 
 	protected void
@@ -1112,7 +1112,7 @@ TOTorrentImpl
 	}
 
 	protected byte[] writeStringToMetaData(String value) {
-		return value.getBytes(Constants.DEFAULT_ENCODING);
+		return value.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
 	}
 
 	protected URL
@@ -1176,7 +1176,7 @@ TOTorrentImpl
 				Object	value = additional_info_properties.get( key );
 
 				System.out.println("info prop '" + key + "' = '" +
-						(value instanceof byte[] ? new String((byte[]) value, Constants.DEFAULT_ENCODING) : value) + "'");
+						(value instanceof byte[] ? new String((byte[]) value, Constants.DEFAULT_ENCODING_CHARSET) : value) + "'");
 			}
 
 			Iterator it = additional_properties.keySet().iterator();
@@ -1187,7 +1187,7 @@ TOTorrentImpl
 				Object	value = additional_properties.get( key );
 
 				System.out.println("prop '" + key + "' = '" +
-						(value instanceof byte[] ? new String((byte[]) value, Constants.DEFAULT_ENCODING) : value) + "'");
+						(value instanceof byte[] ? new String((byte[]) value, Constants.DEFAULT_ENCODING_CHARSET) : value) + "'");
 			}
 
 			if ( pieces == null ){
@@ -1209,7 +1209,7 @@ TOTorrentImpl
 
 				for (int j=0;j<path_comps.length;j++){
 
-					path_str += (j == 0 ? "" : File.separator) + new String(path_comps[j], Constants.DEFAULT_ENCODING);
+					path_str += (j == 0 ? "" : File.separator) + new String(path_comps[j], Constants.DEFAULT_ENCODING_CHARSET);
 				}
 
 				System.out.println( "\t" + path_str + " (" + files[i].getLength() + ")" );

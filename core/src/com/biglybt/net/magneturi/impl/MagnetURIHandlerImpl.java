@@ -156,7 +156,7 @@ MagnetURIHandlerImpl
 
 										        if ( address.equals("localhost") || address.equals("127.0.0.1")) {
 
-										        	BufferedReader br = new BufferedReader(new InputStreamReader(sck.getInputStream(),Constants.DEFAULT_ENCODING));
+										        	BufferedReader br = new BufferedReader(new InputStreamReader(sck.getInputStream(),Constants.DEFAULT_ENCODING_CHARSET));
 
 										        	String line = br.readLine();
 

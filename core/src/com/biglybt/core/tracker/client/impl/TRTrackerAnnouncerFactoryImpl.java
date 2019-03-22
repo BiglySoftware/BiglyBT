@@ -179,7 +179,7 @@ TRTrackerAnnouncerFactoryImpl
   		anon_peer_id[0] = (byte)'[';
   		anon_peer_id[1] = (byte)']';
 
-		byte[] ip_bytes = my_ip.getBytes(Constants.DEFAULT_ENCODING);
+		byte[] ip_bytes = my_ip.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
 		int ip_len = ip_bytes.length;
 
 		if (ip_len > 18) {

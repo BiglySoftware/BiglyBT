@@ -113,7 +113,7 @@ BEncoder
 
             }else{
 
-							ByteBuffer bb = Constants.DEFAULT_ENCODING.encode(tempString);
+							ByteBuffer bb = Constants.DEFAULT_ENCODING_CHARSET.encode(tempString);
 
 	            writeInt( bb.limit() );
 
@@ -171,7 +171,7 @@ BEncoder
 						String key = (String) o_key;
 						if (byte_keys)
 						{
-							encodeObject(Constants.BYTE_ENCODING.encode(key));
+							encodeObject(Constants.BYTE_ENCODING_CHARSET.encode(key));
 							if (!encodeObject(value))
 								encodeObject("");
 						} else

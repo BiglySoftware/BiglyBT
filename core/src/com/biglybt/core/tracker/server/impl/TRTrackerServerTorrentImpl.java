@@ -176,7 +176,7 @@ TRTrackerServerTorrentImpl
 				if ( peer != null ){
 
 					try{
-						String	reuse_key = new String( peer.getIPAsRead(), Constants.BYTE_ENCODING ) + ":" + peer.getTCPPort();
+						String	reuse_key = new String( peer.getIPAsRead(), Constants.BYTE_ENCODING_CHARSET ) + ":" + peer.getTCPPort();
 
 						peer_map.put( peer.getPeerId(), peer );
 
@@ -295,11 +295,11 @@ TRTrackerServerTorrentImpl
 			long	dl_diff	= 0;
 			long	le_diff = 0;
 
-			byte[]	ip_address_bytes = ip_address.getBytes( Constants.BYTE_ENCODING );
+			byte[]	ip_address_bytes = ip_address.getBytes( Constants.BYTE_ENCODING_CHARSET );
 
 			if ( peer == null ){
 
-				String	reuse_key = new String( ip_address_bytes, Constants.BYTE_ENCODING ) + ":" + tcp_port;
+				String	reuse_key = new String( ip_address_bytes, Constants.BYTE_ENCODING_CHARSET ) + ":" + tcp_port;
 
 				byte	last_NAT_status	= loopback?TRTrackerServerPeer.NAT_CHECK_OK:TRTrackerServerPeer.NAT_CHECK_UNKNOWN;
 
@@ -518,9 +518,9 @@ TRTrackerServerTorrentImpl
 
 							// same peer id so same port
 
-						String 	old_key = new String( old_ip, Constants.BYTE_ENCODING ) + ":" + old_port;
+						String 	old_key = new String( old_ip, Constants.BYTE_ENCODING_CHARSET ) + ":" + old_port;
 
-						String	new_key = new String( ip_address_bytes, Constants.BYTE_ENCODING ) + ":" + tcp_port;
+						String	new_key = new String( ip_address_bytes, Constants.BYTE_ENCODING_CHARSET ) + ":" + tcp_port;
 
 							// it is possible, on address change, that the target address already exists and is
 							// (was) being used by another peer. Given that this peer has taken over its address
@@ -972,7 +972,7 @@ TRTrackerServerTorrentImpl
 
 			checkForPeerListCompaction( false );
 
-			String peerIPPortAddress = new String(peer.getIPAsRead(), Constants.BYTE_ENCODING) + ':' + peer.getTCPPort();
+			String peerIPPortAddress = new String(peer.getIPAsRead(), Constants.BYTE_ENCODING_CHARSET) + ':' + peer.getTCPPort();
 			Object o = peer_reuse_map.remove(peerIPPortAddress);
 
 			if (o == null) {
@@ -2981,7 +2981,7 @@ TRTrackerServerTorrentImpl
 			boolean		_seed,
 			boolean		_biased )
 		{
-			ip = _ip_str.getBytes(Constants.BYTE_ENCODING);
+			ip = _ip_str.getBytes(Constants.BYTE_ENCODING_CHARSET);
 			tcp_port	= (short)_tcp_port;
 			udp_port	= (short)_udp_port;
 			http_port	= (short)_http_port;
@@ -3021,7 +3021,7 @@ TRTrackerServerTorrentImpl
 
 		@Override
 		public String getIP() {
-			return new String(ip, Constants.BYTE_ENCODING);
+			return new String(ip, Constants.BYTE_ENCODING_CHARSET);
 		}
 
 		protected boolean
@@ -3074,7 +3074,7 @@ TRTrackerServerTorrentImpl
 		}
 
 		protected byte[] getIPAddressBytes() {
-			return HostNameToIPResolver.hostAddressToBytes(new String(ip, Constants.BYTE_ENCODING));
+			return HostNameToIPResolver.hostAddressToBytes(new String(ip, Constants.BYTE_ENCODING_CHARSET));
 		}
 
 		@Override
@@ -3175,7 +3175,7 @@ TRTrackerServerTorrentImpl
 		{
 			try{
 
-				return( ip.getBytes( Constants.BYTE_ENCODING ));
+				return( ip.getBytes( Constants.BYTE_ENCODING_CHARSET ));
 
 			}catch( Throwable e ){
 

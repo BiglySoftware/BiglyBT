@@ -92,7 +92,7 @@ public class LTHandshake implements LTMessage {
 
 	public String getBencodedString() {
 		if (bencoded_string == null) {
-			bencoded_string = new String(this.getBencodedData(), Constants.BYTE_ENCODING);
+			bencoded_string = new String(this.getBencodedData(), Constants.BYTE_ENCODING_CHARSET);
 		}
 		return bencoded_string;
 	}
@@ -115,7 +115,7 @@ public class LTHandshake implements LTMessage {
 	public String getClientName() {
 		byte[] client_name = (byte[])data_dict.get("v");
 		if (client_name == null) {return null;}
-		return new String(client_name, Constants.DEFAULT_ENCODING);
+		return new String(client_name, Constants.DEFAULT_ENCODING_CHARSET);
 	}
 
 	public boolean isUploadOnly() {

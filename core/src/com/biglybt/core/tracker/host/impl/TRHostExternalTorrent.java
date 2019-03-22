@@ -335,7 +335,7 @@ TRHostExternalTorrent
 	{
 		try{
 
-			additional_properties.put(name,value.getBytes(Constants.DEFAULT_ENCODING));
+			additional_properties.put(name,value.getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 
 		}catch( Throwable e ){
 
@@ -363,7 +363,7 @@ TRHostExternalTorrent
 				return( null );
 			}
 
-			return( new String((byte[])obj,Constants.DEFAULT_ENCODING));
+			return( new String((byte[])obj,Constants.DEFAULT_ENCODING_CHARSET));
 
 		}catch( Throwable e ){
 

@@ -1604,7 +1604,7 @@ ConfigurationManager
 		byte[]	bytes )
 	{
 		try{
-			return( new String( bytes, Constants.DEFAULT_ENCODING ));
+			return( new String( bytes, Constants.DEFAULT_ENCODING_CHARSET ));
 
 		}catch( Throwable e ){
 
@@ -1622,7 +1622,7 @@ ConfigurationManager
 		}
 
 		try{
-			return( str.getBytes( Constants.DEFAULT_ENCODING ));
+			return( str.getBytes( Constants.DEFAULT_ENCODING_CHARSET ));
 
 		}catch( Throwable e ){
 

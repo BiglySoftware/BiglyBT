@@ -1632,7 +1632,7 @@ TorrentUtils
 
 			if ( decoder == null ){
 
-				return( new String(torrent.getName(),Constants.DEFAULT_ENCODING));
+				return( new String(torrent.getName(),Constants.DEFAULT_ENCODING_CHARSET));
 			}
 
 			return( decoder.decodeString(torrent.getName()));
@@ -1864,7 +1864,7 @@ TorrentUtils
 
 		}else if ( obj instanceof byte[] ){
 
-			return new String((byte[]) obj, Constants.DEFAULT_ENCODING);
+			return new String((byte[]) obj, Constants.DEFAULT_ENCODING_CHARSET);
 		}
 
 		return null;

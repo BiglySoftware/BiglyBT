@@ -43,16 +43,16 @@ LocaleUtil
 	"Big5","EUC-JP","EUC-KR","GB18030","GB2312","GBK","ISO-2022-JP","ISO-2022-KR",
 	"Shift_JIS","KOI8-R",
 	"TIS-620",	// added for bug #1008848
-			Constants.DEFAULT_ENCODING.name(),
+			Constants.DEFAULT_ENCODING_CHARSET.name(),
 			"windows-1251",
-			Constants.BYTE_ENCODING.name()
+			Constants.BYTE_ENCODING_CHARSET.name()
   };
 
 	// the general ones *must* also be members of the above manual ones
 
 	protected static final Charset[] generalCharsets = {
-			Constants.BYTE_ENCODING,
-			Constants.DEFAULT_ENCODING,
+			Constants.BYTE_ENCODING_CHARSET,
+			Constants.DEFAULT_ENCODING_CHARSET,
 			Charset.defaultCharset()
   };
 

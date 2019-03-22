@@ -77,7 +77,7 @@ SimpleXMLParserDocumentImpl
 		throws SimpleXMLParserDocumentException
 	{
 
-		create(new ByteArrayInputStream(data.getBytes(Constants.DEFAULT_ENCODING)));
+		create(new ByteArrayInputStream(data.getBytes(Constants.DEFAULT_ENCODING_CHARSET)));
 	}
 
 	public

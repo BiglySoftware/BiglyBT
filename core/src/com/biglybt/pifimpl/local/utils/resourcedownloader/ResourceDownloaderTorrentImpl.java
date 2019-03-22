@@ -296,7 +296,7 @@ ResourceDownloaderTorrentImpl
 	downloadTorrent()
 	{
 		try{
-			String name = new String( torrent_holder[0].getName(), Constants.DEFAULT_ENCODING );
+			String name = new String( torrent_holder[0].getName(), Constants.DEFAULT_ENCODING_CHARSET );
 
 			informActivity( getLogIndent() + "Downloading: " + name );
 

@@ -456,8 +456,8 @@ public class TrackerStatus {
 								+ "info_hash=";
 
 						info_hash += URLEncoder.encode(
-								new String(hash.getBytes(), Constants.BYTE_ENCODING),
-								Constants.BYTE_ENCODING.name()).replaceAll("\\+", "%20");
+								new String(hash.getBytes(), Constants.BYTE_ENCODING_CHARSET),
+								Constants.BYTE_ENCODING_CHARSET.name()).replaceAll("\\+", "%20");
 
 						Object[]	extensions = scraper.getExtensions(hash);
 
@@ -697,7 +697,7 @@ public class TrackerStatus {
 							response.setStatus(TRTrackerScraperResponse.ST_ERROR,
 									MessageText.getString(SS + "error")
 											+ new String(failure_reason_bytes,
-													Constants.DEFAULT_ENCODING));
+													Constants.DEFAULT_ENCODING_CHARSET));
 
 							// notifiy listeners
 
@@ -760,7 +760,7 @@ public class TrackerStatus {
 
 					// retrieve the scrape data for the relevent infohash
 					Map scrapeMap = (Map) mapFiles.get(new String(response.getHash().getBytes(),
-							Constants.BYTE_ENCODING));
+							Constants.BYTE_ENCODING_CHARSET));
 
 					if (scrapeMap == null) {
 						// some trackers that return only 1 hash return a random one!
@@ -1590,7 +1590,7 @@ public class TrackerStatus {
 
 									// System.out.println("got hash:" + ByteFormatter.nicePrint( resp_hash, true ));
 
-									files.put( new String(resp_hash, Constants.BYTE_ENCODING), file );
+									files.put( new String(resp_hash, Constants.BYTE_ENCODING_CHARSET), file );
 
 									file.put( "complete", new Long(complete[i]));
 									file.put( "downloaded", new Long(downloaded[i]));
@@ -1627,7 +1627,7 @@ public class TrackerStatus {
 									file.put( "complete", new Long(complete[i]));
 									file.put( "downloaded", new Long(downloaded[i]));
 									file.put( "incomplete", new Long(incomplete[i]));
-									files.put( new String(hash.getBytes(), Constants.BYTE_ENCODING), file );
+									files.put( new String(hash.getBytes(), Constants.BYTE_ENCODING_CHARSET), file );
 								}
 
 								// System.out.println("got hash:" + ByteFormatter.nicePrint( resp_hash, true ));

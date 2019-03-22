@@ -486,7 +486,7 @@ TOTorrentXMLDeserialiser
 			return( readGenericBytes( kid ));
 		}
 
-		return kid.getValue().getBytes(Constants.DEFAULT_ENCODING);
+		return kid.getValue().getBytes(Constants.DEFAULT_ENCODING_CHARSET);
 	}
 
 	protected List

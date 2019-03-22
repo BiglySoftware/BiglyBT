@@ -75,7 +75,7 @@ BiglyBTURLConnection
 
 			str = str.substring(pos + 5);
 
-			byte[] bytes = str.getBytes(Constants.BYTE_ENCODING);
+			byte[] bytes = str.getBytes(Constants.BYTE_ENCODING_CHARSET);
 
 			VuzeFile vf = VuzeFileHandler.getSingleton().loadVuzeFile(bytes);
 

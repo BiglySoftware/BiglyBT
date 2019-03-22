@@ -146,7 +146,7 @@ CategoryManagerImpl
       List catList = (List) map.get("categories");
       for (int i = 0; i < catList.size(); i++) {
 				Map mCategory = (Map) catList.get(i);
-				String catName = new String((byte[]) mCategory.get("name"), Constants.DEFAULT_ENCODING);
+				String catName = new String((byte[]) mCategory.get("name"), Constants.DEFAULT_ENCODING_CHARSET);
 
 				Long l_maxup = (Long) mCategory.get("maxup");
 				Long l_maxdown = (Long) mCategory.get("maxdown");

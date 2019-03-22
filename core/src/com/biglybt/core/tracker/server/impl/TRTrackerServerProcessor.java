@@ -340,7 +340,7 @@ TRTrackerServerProcessor
 
 					String	str_hash;
 
-					str_hash = new String(hash, Constants.BYTE_ENCODING);
+					str_hash = new String(hash, Constants.BYTE_ENCODING_CHARSET);
 
 					// skip duplicates
 					if (i > 0 && files.get(str_hash) != null) {
@@ -445,7 +445,7 @@ TRTrackerServerProcessor
 
 				byte[]	torrent_hash = this_torrent.getHash().getHash();
 
-				String str_hash = new String(torrent_hash, Constants.BYTE_ENCODING);
+				String str_hash = new String(torrent_hash, Constants.BYTE_ENCODING_CHARSET);
 
 				// System.out.println( "tracker - encoding: " + ByteFormatter.nicePrint(torrent_hash) + " -> " + ByteFormatter.nicePrint( str_hash.getBytes( Constants.BYTE_ENCODING )));
 

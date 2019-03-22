@@ -125,7 +125,7 @@ TRHostConfigImpl
 						if ( file_b != null ){
 
 							try{
-								File	file = new File( new String( file_b, Constants.BYTE_ENCODING ));
+								File	file = new File( new String( file_b, Constants.BYTE_ENCODING_CHARSET ));
 
 								torrent = TorrentUtils.readFromFile( file, true, true );
 
@@ -321,7 +321,7 @@ TRHostConfigImpl
 							try{
 								String	file = TorrentUtils.getTorrentFileName( torrent.getTorrent());
 
-								t_map.put( "torrent_file", file.getBytes( Constants.BYTE_ENCODING ));
+								t_map.put( "torrent_file", file.getBytes( Constants.BYTE_ENCODING_CHARSET ));
 
 							}catch( Throwable e ){
 
@@ -348,7 +348,7 @@ TRHostConfigImpl
 						s_map.put( "bytesout", new Long(bytes_out));
 
 
-						stats_entry.append( new String(name, Constants.DEFAULT_ENCODING ));
+						stats_entry.append( new String(name, Constants.DEFAULT_ENCODING_CHARSET ));
 						stats_entry.append(",");
 						stats_entry.append( ByteFormatter.nicePrint(hash,true));
 						stats_entry.append(",");

@@ -2323,7 +2323,7 @@ DownloadManagerStateImpl
 				return( null );
 			}
 
-			return new String(bytes, Constants.DEFAULT_ENCODING);
+			return new String(bytes, Constants.DEFAULT_ENCODING_CHARSET);
 
 		}finally{
 
@@ -2352,7 +2352,7 @@ DownloadManagerStateImpl
 			}else{
 
 				byte[] existing_bytes = (byte[]) attributes.get(attribute_name);
-				byte[] new_bytes = attribute_value.getBytes(Constants.DEFAULT_ENCODING);
+				byte[] new_bytes = attribute_value.getBytes(Constants.DEFAULT_ENCODING_CHARSET);
 
 				if (existing_bytes == null || !Arrays.equals(existing_bytes, new_bytes)) {
 					attributes.put(attribute_name, new_bytes);
@@ -2489,7 +2489,7 @@ DownloadManagerStateImpl
 			Object o = values.get(idx);
 			if (o instanceof byte[]) {
 				byte[] bytes = (byte[]) o;
-				String s = StringInterner.intern(new String(bytes, Constants.DEFAULT_ENCODING));
+				String s = StringInterner.intern(new String(bytes, Constants.DEFAULT_ENCODING_CHARSET));
 				values.set(idx, s);
 				return s;
 			} else if (o instanceof String) {
@@ -2562,7 +2562,7 @@ DownloadManagerStateImpl
 					if ( o instanceof byte[] ){
 
 						byte[]	bytes = (byte[])o;
-						String s = StringInterner.intern(new String(bytes, Constants.DEFAULT_ENCODING));
+						String s = StringInterner.intern(new String(bytes, Constants.DEFAULT_ENCODING_CHARSET));
 
 						res.add(s);
 						values.set(i, s);

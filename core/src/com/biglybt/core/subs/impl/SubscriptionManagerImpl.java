@@ -1739,7 +1739,7 @@ SubscriptionManagerImpl
 
 					// hack to minimise encoded url length for our own urls
 
-				singleton_details.put( "key", url.toExternalForm().getBytes( Constants.BYTE_ENCODING ));
+				singleton_details.put( "key", url.toExternalForm().getBytes( Constants.BYTE_ENCODING_CHARSET ));
 
 			}else{
 				singleton_details.put( "key", url.toExternalForm().getBytes( "UTF-8" ));

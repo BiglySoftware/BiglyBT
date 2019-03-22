@@ -365,7 +365,7 @@ ShareResourceFileOrDirImpl
 
 		throws ShareException
 	{
-		File file = new File(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING));
+		File file = new File(new String((byte[]) map.get("file"), Constants.DEFAULT_ENCODING_CHARSET));
 
 		if (type == ST_FILE) {
 			return new ShareResourceFileImpl(manager, file, map);
@@ -382,7 +382,7 @@ ShareResourceFileOrDirImpl
 		super.serialiseResource( map );
 
 		map.put( "type", new Long(getType()));
-		map.put( "file", file.toString().getBytes(Constants.DEFAULT_ENCODING));
+		map.put( "file", file.toString().getBytes(Constants.DEFAULT_ENCODING_CHARSET));
 
 		if ( personal_key != null ){
 
