@@ -52,7 +52,7 @@ public class MessageText {
 
 	static final String BUNDLE_NAME;
 
-	private static final Map<String, String> DEFAULT_EXPANSIONS = new HashMap<>();
+	private static final Map<String, Object> CONSTANTS = new HashMap<>();
 
 	public static final String DEFAULT_BUNDLE_NAME = "com.biglybt.internat.MessagesBundle";
 
@@ -64,9 +64,9 @@ public class MessageText {
 
 	private static final Map pluginLocalizationPaths = new HashMap();
 	private static final Collection pluginResourceBundles = new ArrayList();
-	private static IntegratedResourceBundle RESOURCE_BUNDLE;
+	static IntegratedResourceBundle RESOURCE_BUNDLE;
 	private static Set platform_specific_keys = new HashSet();
-	private static final Pattern PAT_PARAM_ALPHA = Pattern.compile("\\{([^0-9].+?)\\}");
+	private static final Pattern PAT_PARAM_ALPHA = Pattern.compile("(\\{([^0-9].+?)\\})");
 
 
 	private static int bundle_fail_count = 0;
@@ -100,12 +100,16 @@ public class MessageText {
 
   private static IntegratedResourceBundle DEFAULT_BUNDLE = RESOURCE_BUNDLE;
 
+	/**
+	 * Sets keys for system wide constants
+	 */
   public static void
   updateProductName()
   {
-	  DEFAULT_EXPANSIONS.put( "base.product.name", 		Constants.APP_NAME );
-	  DEFAULT_EXPANSIONS.put( "base.wiki.url", 			Constants.URL_WIKI );
-	  DEFAULT_EXPANSIONS.put( "base.client.url", 			Constants.URL_CLIENT_HOME );
+	  CONSTANTS.put("base.product.name", Constants.APP_NAME);
+	  CONSTANTS.put("base.wiki.url", Constants.URL_WIKI);
+	  CONSTANTS.put("base.client.url", Constants.URL_CLIENT_HOME);
+
   }
 
   public static void loadBundle() {
@@ -353,7 +357,14 @@ public class MessageText {
   		return "";
   	}
 
-		String value = RESOURCE_BUNDLE.getString(key);
+	  String value;
+
+  	Object defaultValue = CONSTANTS.get(key);
+  	if (defaultValue != null) {
+  		value = String.valueOf(defaultValue);
+	  } else {
+  		value = RESOURCE_BUNDLE.getString(key);
+	  }
 
 		return expandValue(value);
 	}
@@ -363,20 +374,19 @@ public class MessageText {
 	  if (value != null && value.indexOf('}') > 0) {
 		  Matcher matcher = PAT_PARAM_ALPHA.matcher(value);
 		  while (matcher.find()) {
-			  String key = matcher.group(1);
+			  String key = matcher.group(2);
+			  String expression = matcher.group(1);
+				String text = null;
+
 			  try {
-				  String text = DEFAULT_EXPANSIONS.get( key );
-
-				  if ( text == null ){
-					  text = getResourceBundleString(key);
-				  }
-
-				  if (text != null) {
-					  value = value.replaceAll("\\Q{" + key + "}\\E", text);
-				  }
-			  } catch (MissingResourceException e) {
-				  // ignore error
+				  text = getResourceBundleString(key);
+			  } catch (MissingResourceException ignore) {
+				  // no substitution for particular key
 			  }
+
+			  if (text != null) {
+					value = value.replace(expression, text);
+				}
 		  }
 	  }
 	  return value;

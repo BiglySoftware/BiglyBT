@@ -1,15 +1,16 @@
 package com.biglybt.core.internat;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.testutil.junit5.DefaultTestCoreConfiguration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 
 @ExtendWith(DefaultTestCoreConfiguration.class)
 public class MessageTextTest
@@ -139,6 +140,43 @@ public class MessageTextTest
 		assertThat(twoLinesOfArabicLetters.replace("\n", ""))
 				.isEqualTo(twoArabicLetters);
 	}
+
+	@Test
+	public void defaultKeyIsRegistered() {
+		assertThat(MessageText.getString("base.product.name"))
+				.isEqualTo(Constants.APP_NAME);
+	}
+
+	@ExtendWith(DefaultTestCoreConfiguration.class)
+	static class SubstitutionAlgorithmTests
+	{
+		static final String APP_NAME = Constants.APP_NAME;
+
+		@Test
+		public void singleSubstitution() {
+			String expandableString = "{base.product.name}";
+			assertThat(MessageText.expandValue(expandableString))
+					.isEqualTo(APP_NAME);
+		}
+
+		@Test
+		public void multipleSubstitutions() {
+			String expandableString = "{base.product.name}}{{base.product.name}";
+			assertThat(MessageText.expandValue(expandableString))
+					.isEqualTo(APP_NAME + "}{" + APP_NAME);
+		}
+
+		@Test
+		public void unknownSubstitutionKeyIsLeftUnaltered() {
+			String expandableString = "{no.key.defined}";
+			assertThat(MessageText.expandValue(expandableString))
+					.isEqualTo("{no.key.defined}");
+		}
+
+
+
+	}
+
 
 
 }

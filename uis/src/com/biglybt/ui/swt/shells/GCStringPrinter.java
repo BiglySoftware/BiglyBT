@@ -43,7 +43,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
  */
 public class GCStringPrinter
 {
-	private static final String ELLIPSIS = "\u2026";	// "..."
+	private static final char ELLIPSIS = '\u2026';	// "..." - same as &hellip; in html
 	
 	private static final boolean DEBUG = false;
 
