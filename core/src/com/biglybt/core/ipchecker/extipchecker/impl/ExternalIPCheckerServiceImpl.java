@@ -20,17 +20,14 @@
 
 package com.biglybt.core.ipchecker.extipchecker.impl;
 
-/**
- * @author parg
- *
- */
-
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Vector;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.internat.StringSupplier;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerService;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerServiceListener;
 import com.biglybt.core.util.AEMonitor;
@@ -43,11 +40,10 @@ ExternalIPCheckerServiceImpl
 	implements ExternalIPCheckerService, Cloneable
 {
 	private static final int		MAX_PAGE_SIZE	= 4096;
-	private static final String	MSG_KEY_ROOT	= "IPChecker.external";
 
-	private final String		name;
-	private final String		description;
-	private final String		url;
+	private final String name;
+	private final StringSupplier description;
+	private final String url;
 
 	boolean		completed;
 
@@ -58,11 +54,13 @@ ExternalIPCheckerServiceImpl
 
 	protected
 	ExternalIPCheckerServiceImpl(
-		String	name_key )
+      String serviceName,
+			String serviceUrl,
+			StringSupplier serviceDescription)
 	{
-		name 		= MessageText.getString( name_key + ".name" );
-		description = MessageText.getString( name_key + ".description" );
-		url			= MessageText.getString( name_key + ".url" );
+		name = serviceName;
+		description = serviceDescription;
+		url = serviceUrl;
 	}
 
 	@Override
@@ -129,7 +127,7 @@ ExternalIPCheckerServiceImpl
 
 								if ( !completed ){
 
-									informFailure( "timeout" );
+									informFailure("IPChecker.external.timeout");
 
 									setComplete();
 								}
@@ -157,13 +155,8 @@ ExternalIPCheckerServiceImpl
 		completed = true;
 	}
 
-	protected String
-	loadPage(
-		String		url_string )
-	{
+	protected String loadPage(URL url) {
 		try{
-
-			URL	url = new URL( url_string );
 
 			HttpURLConnection	connection 	= null;
 			InputStream			is			= null;
@@ -197,7 +190,7 @@ ExternalIPCheckerServiceImpl
 
 				}else{
 
-					informFailure( "httpinvalidresponse", "" + response );
+					informFailure( "IPChecker.external.httpinvalidresponse", String.valueOf(response) );
 
 					return( null );
 				}
@@ -221,7 +214,7 @@ ExternalIPCheckerServiceImpl
 			}
 		}catch( Throwable e ){
 
-			informFailure( "httploadfail", e.toString());
+			informFailure("IPChecker.external.httploadfail", e.toString());
 
 			return( null );
 		}
@@ -239,7 +232,7 @@ ExternalIPCheckerServiceImpl
 
 			if ( p1 == -1 ){
 
-				informFailure( "ipnotfound"  );
+				informFailure("IPChecker.external.ipnotfound");
 
 				return( null );
 			}
@@ -289,7 +282,7 @@ ExternalIPCheckerServiceImpl
 			pos	= p1+1;
 		}
 
-		informFailure( "ipnotfound"  );
+		informFailure("IPChecker.external.ipnotfound");
 
 		return( null );
 	}
@@ -305,7 +298,7 @@ ExternalIPCheckerServiceImpl
 	public String
 	getDescription()
 	{
-		return( description );
+		return description.get();
 	}
 
 	@Override
@@ -364,10 +357,9 @@ ExternalIPCheckerServiceImpl
 
 				timeout_sem.releaseForever();
 
-				String	message = MessageText.getString( MSG_KEY_ROOT + "." + msg_key );
+				String message = MessageText.getString(msg_key);
 
 				if ( extra != null ){
-
 					message += ": " + extra;
 				}
 
@@ -400,19 +392,19 @@ ExternalIPCheckerServiceImpl
 	protected void
 	reportProgress(
 			String		msg_key,
-			String		extra )
+			Object		extra )
 	{
 		try{
 			this_mon.enter();
 
 			if ( !completed ){
 
-				String	message = MessageText.getString( MSG_KEY_ROOT.concat(".").concat(msg_key) );
+				String message = MessageText.getString(msg_key);
 
-				if ( extra != null ){
-
-					message = message.concat(": ").concat(extra);
+				if (extra != null) {
+					message += ": " + extra;
 				}
+
 				for ( int i=0;i<listeners.size();i++){
 
 					((ExternalIPCheckerServiceListener)listeners.elementAt(i)).reportProgress( this, message );
@@ -453,6 +445,18 @@ ExternalIPCheckerServiceImpl
 		}finally{
 
 			this_mon.exit();
+		}
+	}
+
+	/**
+	 * Constructs an url without throwing checked exceptions.
+	 */
+	protected static URL url(String urlSpec) {
+		try {
+			return new URL(urlSpec);
+		} catch (MalformedURLException e) {
+			Debug.out(e);
+			throw new RuntimeException(e);
 		}
 	}
 }
