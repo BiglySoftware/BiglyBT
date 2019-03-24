@@ -20,6 +20,8 @@
 
 package com.biglybt.core.ipchecker.extipchecker.impl;
 
+import com.biglybt.core.internat.MessageText;
+
 /**
  * @author parg
  *
@@ -28,11 +30,14 @@ public class
 ExternalIPCheckerServiceNoLookup
 	extends ExternalIPCheckerServiceImpl
 {
-	protected
-	ExternalIPCheckerServiceNoLookup(
-		String		key )
+	protected static final String SERVICE_NAME = "No-IP";
+
+	protected static final String SERVICE_URL = "http://www.no-ip.com/";
+
+	ExternalIPCheckerServiceNoLookup()
 	{
-		super( key );
+		super(SERVICE_NAME, SERVICE_URL, MessageText.getStringProvider(
+				"IPChecker.external.service.no-ip.description"));
 	}
 
 	@Override

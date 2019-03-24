@@ -754,38 +754,6 @@ public class MessageText {
 		return true;
 	}
 
-/**
- * Reverts Locale back to default, and removes the config settin.
- * Notifications of change should be done by the caller.
- */
-  /*
-  @SuppressWarnings("restriction")
-	public static void revertToDefaultLocale() {
-  	// Aside from the last 2 lines, this is Sun's code that is run
-  	// at startup to determine the locale.  Too bad they didn't provide
-  	// a way to call this code explicitly..
-    String language, region, country, variant;
-    language = System.getProperty("user.language", "en");
-    // for compatibility, check for old user.region property
-    region = System.getProperty("user.region");
-    if (region != null) {
-        // region can be of form country, country_variant, or _variant
-        int i = region.indexOf('_');
-        if (i >= 0) {
-            country = region.substring(0, i);
-            variant = region.substring(i + 1);
-        } else {
-            country = region;
-            variant = "";
-        }
-    } else {
-        country = System.getProperty("user.country", "");
-        variant = System.getProperty("user.variant", "");
-    }
-    changeLocale(new Locale(language, country, variant));
-    COConfigurationManager.removeParameter("locale");
-  }
-  */
 
   private static final Map<String,Locale> substitutes = new HashMap<>();
   
@@ -850,6 +818,27 @@ public class MessageText {
 		}
 
 		return localeBuilder.build();
+	}
+
+	/**
+	 * Supplier of localized string for given key.
+	 * The string construction is lazy evaluated.
+	 */
+	public static StringSupplier getStringProvider(
+			final String key,
+			final String... params) {
+		return new StringSupplier()
+		{
+			@Override
+			public String get() {
+				return getString(key, params);
+			}
+
+			@Override
+			public String toString() {
+				return "key=" + key; //debug view
+			}
+		};
 	}
 
 }

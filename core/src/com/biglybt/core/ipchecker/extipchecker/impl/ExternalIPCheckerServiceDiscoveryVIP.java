@@ -20,6 +20,10 @@
 
 package com.biglybt.core.ipchecker.extipchecker.impl;
 
+import java.net.URL;
+
+import com.biglybt.core.internat.MessageText;
+
 /**
  * @author parg
  *
@@ -28,11 +32,15 @@ public class
 ExternalIPCheckerServiceDiscoveryVIP
 	extends ExternalIPCheckerServiceSimple
 {
-	protected static final String	CHECKER_URL	= "http://ip.discoveryvip.com/ip.asp";
+	protected static final URL CHECKER_URL = url("http://ip.discoveryvip.com/ip.asp");
 
-	protected
+	protected static final String SERVICE_NAME = "Discoveryvip";
+
+	protected static final String SERVICE_URL = "http://ip.discoveryvip.com/";
+
 	ExternalIPCheckerServiceDiscoveryVIP()
 	{
-		super( "IPChecker.external.service.discoveryvip", CHECKER_URL );
+		super(CHECKER_URL, SERVICE_NAME, SERVICE_URL, MessageText.getStringProvider(
+				"IPChecker.external.service.discoveryvip.description"));
 	}
 }

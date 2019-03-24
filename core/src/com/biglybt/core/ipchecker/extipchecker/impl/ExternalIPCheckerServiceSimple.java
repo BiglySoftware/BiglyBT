@@ -20,6 +20,10 @@
 
 package com.biglybt.core.ipchecker.extipchecker.impl;
 
+import java.net.URL;
+
+import com.biglybt.core.internat.StringSupplier;
+
 /**
  * @author parg
  *
@@ -28,16 +32,12 @@ public class
 ExternalIPCheckerServiceSimple
 	extends ExternalIPCheckerServiceImpl
 {
-	protected final String	url;
+	protected final URL url;
 
 	protected
-	ExternalIPCheckerServiceSimple(
-		String		_key,
-		String		_url )
-	{
-		super( _key );
-
-		url		= _url;
+	ExternalIPCheckerServiceSimple(URL checkerUrl, String serviceName, String serviceUrl, StringSupplier description) {
+		super(serviceName, serviceUrl, description);
+		url = checkerUrl;
 	}
 
 	@Override
@@ -48,30 +48,22 @@ ExternalIPCheckerServiceSimple
 	}
 
 	@Override
-	public void
-	initiateCheck(
-		long		timeout )
-	{
-		super.initiateCheck( timeout );
-	}
-
-	@Override
 	protected void
 	initiateCheckSupport()
 	{
-		reportProgress( "loadingwebpage", url );
+		reportProgress( "IPChecker.external.loadingwebpage", url);
 
 		String	page = loadPage( url );
 
 		if ( page != null ){
 
-			reportProgress( "analysingresponse" );
+			reportProgress( "IPChecker.external.analysingresponse" );
 
 			String	IP = extractIPAddress( page );
 
 			if ( IP != null ){
 
-				reportProgress( "addressextracted", IP );
+				reportProgress( "IPChecker.external.addressextracted", IP );
 
 				informSuccess( IP );
 			}

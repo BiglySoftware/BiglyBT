@@ -20,11 +20,6 @@
 
 package com.biglybt.core.ipchecker.extipchecker.impl;
 
-/**
- * @author parg
- *
- */
-
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPChecker;
 import com.biglybt.core.ipchecker.extipchecker.ExternalIPCheckerService;
 
@@ -32,15 +27,12 @@ public class
 ExternalIPCheckerImpl
 	implements ExternalIPChecker
 {
-	static final ExternalIPCheckerService[]	services;
+	private static final ExternalIPCheckerService[] services = {
+		new ExternalIPCheckerServiceDynDNS(),
+		new ExternalIPCheckerServiceDiscoveryVIP(),
+		new ExternalIPCheckerServiceNoLookup(),
+	};
 
-	static{
-		services = new ExternalIPCheckerService[]{
-							new ExternalIPCheckerServiceDynDNS(),
-							new ExternalIPCheckerServiceDiscoveryVIP(),
-							new ExternalIPCheckerServiceNoLookup( "IPChecker.external.service.no-ip" ),
-						};
-	}
 	@Override
 	public ExternalIPCheckerService[]
 	getServices()

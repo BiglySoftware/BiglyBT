@@ -20,6 +20,10 @@
 
 package com.biglybt.core.ipchecker.extipchecker.impl;
 
+import java.net.URL;
+
+import com.biglybt.core.internat.MessageText;
+
 /**
  * @author parg
  *
@@ -28,11 +32,15 @@ public class
 ExternalIPCheckerServiceDynDNS
 	extends ExternalIPCheckerServiceSimple
 {
-	protected static final String	CHECKER_URL	= "http://checkip.dyndns.org/";
+	protected static final URL CHECKER_URL = url("http://checkip.dyndns.org/");
 
-	protected
+	protected static final String SERVICE_NAME = "DynDNS";
+
+	protected static final String SERVICE_URL = "https://www.dyndns.org/";
+
 	ExternalIPCheckerServiceDynDNS()
 	{
-		super( "IPChecker.external.service.dyndns", CHECKER_URL );
+		super(CHECKER_URL, SERVICE_NAME, SERVICE_URL, MessageText.getStringProvider(
+				"IPChecker.external.service.dyndns.description"));
 	}
 }
