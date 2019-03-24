@@ -19,7 +19,7 @@
 package com.biglybt.ui.config;
 
 import com.biglybt.core.config.ConfigKeys.*;
-import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.HyperlinkParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
@@ -44,7 +44,7 @@ public class ConfigSectionConnectionDNS
 		add(new LabelParameterImpl("ConfigView.section.dns.info"));
 
 		add(new HyperlinkParameterImpl("ConfigView.label.please.visit.here",
-				MessageText.getString("ConfigView.section.dns.url")));
+				Wiki.DNS));
 
 		add(new StringParameterImpl(Connection.SCFG_DNS_ALT_SERVERS,
 				"ConfigView.section.dns.alts"));

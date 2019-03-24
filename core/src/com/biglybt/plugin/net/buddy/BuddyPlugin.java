@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -54,6 +55,7 @@ import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.core.util.UrlUtils;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.core.util.protocol.azplug.AZPluginConnection;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.core.xml.util.XUXmlWriter;
@@ -76,7 +78,6 @@ import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pif.ui.config.BooleanParameter;
-import com.biglybt.pif.ui.config.HyperlinkParameter;
 import com.biglybt.pif.ui.config.IntParameter;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterGroup;
@@ -216,6 +217,11 @@ BuddyPlugin
 		};
 		
 		final LocaleUtilities lu = plugin_interface.getUtilities().getLocaleUtilities();
+		Properties l10n_constants = new Properties();
+		l10n_constants.put("azbuddy.classic.link.url", Wiki.FRIENDS);
+		l10n_constants.put("azbuddy.dchat.link.url", Wiki.DECENTRALIZED_CHAT);
+//	  l10n_conarNRA.put("azbuddy.profile.info.url", Wiki.FRIENDS__PUBLIC_PROFILE);
+		lu.integrateLocalisedMessageBundle(l10n_constants);
 
 		lu.addListener(
 			new LocaleListener()
@@ -289,12 +295,12 @@ BuddyPlugin
 	
 			os_param.setVisible( SUPPORT_ONLINE_STATUS  ); // If we add this then use proper message texts in the STATUS_STRINGS
 	
-			
+
 			StringParameter profile_param = config.addStringParameter2( "azbuddy.profile.info" + suffix, "", "" );
 			profile_param.setLabelText(
 					"<a href=\"" + MessageText.getString("azbuddy.profile.info.url")
 							+ "\">" + MessageText.getString("azbuddy.profile.info") + "</a>");
-			
+
 			profile_param.setMultiLine( 5 );
 			profile_param.setGenerateIntermediateEvents( false );
 			

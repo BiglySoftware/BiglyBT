@@ -356,7 +356,7 @@ CryptoWindow
 
 				final Label linkLabel = new Label(shell, SWT.NULL);
 				linkLabel.setText(MessageText.getString("ConfigView.label.please.visit.here"));
-				linkLabel.setData( Constants.URL_WIKI+ "w/Public_Private_Keys");
+				linkLabel.setData(Wiki.PUBLIC_PRIVATE_KEYS);
 				linkLabel.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
 				linkLabel.setForeground(Colors.blue);
 				gridData = new GridData();
@@ -365,12 +365,11 @@ CryptoWindow
 				linkLabel.addMouseListener(new MouseAdapter() {
 					@Override
 					public void mouseDoubleClick(MouseEvent arg0) {
-						Utils.launch((String) ((Label) arg0.widget).getData());
+						Utils.launch(arg0.widget.getData());
 					}
-
 					@Override
 					public void mouseDown(MouseEvent arg0) {
-						Utils.launch((String) ((Label) arg0.widget).getData());
+						Utils.launch(arg0.widget.getData());
 					}
 				});
 				ClipboardCopy.addCopyToClipMenu( linkLabel );

@@ -32,6 +32,7 @@ import com.biglybt.core.speedmanager.SpeedManagerListener;
 import com.biglybt.core.speedmanager.impl.SpeedManagerImpl;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -312,7 +313,7 @@ public class ConfigSectionTransferAutoSpeedSelect
 		add("s1", new LabelParameterImpl(""));
 
 		add(new HyperlinkParameterImpl("!" + Constants.APP_NAME + " Wiki AutoSpeed (beta)!", "Utils.link.visit",
-				Constants.URL_WIKI + "w/Auto_Speed"));
+				Wiki.AUTO_SPEED));
 	}
 
 	protected String getMBitLimit(LimitToTextHelper helper, long value) {

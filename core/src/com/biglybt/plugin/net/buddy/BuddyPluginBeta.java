@@ -5082,7 +5082,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						try{
 							if ( command.equals( "/help" )){
 
-								String link = MessageText.getString( "azbuddy.dchat.link.url" );
+								String link = Wiki.DECENTRALIZED_CHAT;
 
 								sendLocalMessage( "label.see.x.for.help", new String[]{ link }, ChatMessage.MT_INFO );
 

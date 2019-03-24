@@ -246,7 +246,7 @@ AEThreadMonitor
 						new LogAlert(
 							false,
 							LogAlert.AT_WARNING,
-							"High CPU usage detected in networking code - see <a href=\"" + Constants.URL_WIKI + "/w/High_CPU_Usage\">The Wiki</a> for possible solutions" ));
+							"High CPU usage detected in networking code - see <a href=\"" + Wiki.HIGH_CPU_USAGE + "\">The Wiki</a> for possible solutions" ));
 
 				}
 

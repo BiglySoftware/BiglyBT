@@ -25,10 +25,10 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
 
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.config.*;
@@ -619,7 +619,7 @@ public class StartStopConfigModel
 		// wiki link
 
 		model.addHyperlinkParameter2("ConfigView.label.please.visit.here",
-				Constants.URL_WIKI + "w/Downloading_Rules");
+				Wiki.DOWNLOADING_RULES);
 
 		// sort type
 

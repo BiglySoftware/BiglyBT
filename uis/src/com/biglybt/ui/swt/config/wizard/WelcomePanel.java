@@ -26,11 +26,19 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.*;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
@@ -66,11 +74,12 @@ public class WelcomePanel extends AbstractWizardPanel {
     		"ConfigView.section.mode.advanced.wiki.main",
     		"ConfigView.section.mode.intermediate.wiki.publish"
     };
-    final String[] links = { Constants.URL_WIKI + "w/This_funny_word",
-    		Constants.URL_WIKI+ "w/HostingFiles",
-    		Constants.URL_WIKI+ "w/Main_Page",
-    		Constants.URL_WIKI+ "w/PublishingFiles"
-    };
+		final String[] links = {
+			Wiki.DEFINITIONS,
+			Wiki.HOSTING_FILES,
+			Wiki.MAIN_PAGE,
+			Wiki.PUBLISHING_FILES,
+		};
 
     Composite rootPanel = wizard.getPanel();
     GridLayout layout = new GridLayout();

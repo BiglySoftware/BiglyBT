@@ -27,7 +27,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.backup.BackupManager;
 import com.biglybt.core.backup.BackupManagerFactory;
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.ui.config.*;
@@ -72,7 +72,7 @@ public class ConfigSectionBackupRestore
 
 		add(SECTION_ID + ".link",
 				new HyperlinkParameterImpl("ConfigView.label.please.visit.here",
-						Constants.URL_WIKI + "w/Backup_And_Restore"));
+						Wiki.BACKUP_AND_RESTORE));
 
 		// backup
 

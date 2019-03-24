@@ -19,8 +19,8 @@
 package com.biglybt.ui.config;
 
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.ui.config.Parameter;
@@ -43,7 +43,7 @@ public class ConfigSectionTransferAutoSpeedClassic
 		add(new LabelParameterImpl("ConfigView.section.transfer.autospeed.info"));
 
 		add(new HyperlinkParameterImpl("ConfigView.label.please.visit.here",
-				Constants.URL_WIKI + "w/Auto_Speed"));
+				Wiki.AUTO_SPEED));
 
 		String[] units = {
 			DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB)

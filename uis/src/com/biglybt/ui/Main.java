@@ -33,6 +33,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.impl.CoreSingleInstanceClient;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.launcher.Launcher;
 import com.biglybt.ui.common.IUserInterface;
 import com.biglybt.ui.common.StartServer;
@@ -146,7 +147,9 @@ public class Main
 
 						String msg = "There appears to be another process already listening on socket [127.0.0.1:"
 								+ Constants.INSTANCE_PORT
-								+ "].\n\nLocate and terminate the other program or change the control port - <a href=\"" + Constants.URL_WIKI + "w/Commandline_options#Changing_the_Control_Port\">see the wiki for details</a>.";
+								+ "].\n\nLocate and terminate the other program or change the control port - <a href=\""
+								             + Wiki.COMMANDLINE_OPTIONS__CHANGING_CONTROL_PORT
+								             + "\">see the wiki for details</a>.";
 
 						System.err.println(msg);
 						return;

@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.List;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import org.eclipse.swt.SWT;
@@ -305,7 +306,7 @@ public class PrivacyView
 		Label label = new Label( overview_comp, SWT.NULL );
 		label.setText( MessageText.getString( "privacy.view.intro" ));
 
-		LinkLabel link = new LinkLabel( overview_comp, "label.read.more", MessageText.getString( "privacy.view.wiki.url" ));
+		new LinkLabel( overview_comp, "label.read.more", Wiki.PRIVACY_VIEW);
 
 			// slider component
 
