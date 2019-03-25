@@ -785,87 +785,90 @@ public class SBC_TagsOverview
 			}
 		}
 
-		if ( 	( sColumnName.equals( ColumnTagUpSession.COLUMN_ID ) && tags_su.size() > 0 ) ||
-				( sColumnName.equals( ColumnTagDownSession.COLUMN_ID ) && tags_sd.size() > 0 )){
-
-			final boolean is_up = sColumnName.equals( ColumnTagUpSession.COLUMN_ID );
-
-			MenuItem mi = new MenuItem(menu, SWT.PUSH);
-
-			Messages.setLanguageText(mi, "menu.reset.session.stats");
-
-			mi.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					for ( TagFeatureRateLimit rl: is_up?tags_su:tags_sd ){
-
-						if ( is_up ){
-							rl.resetTagSessionUploadTotal();
-						}else{
-							rl.resetTagSessionDownloadTotal();
+		if ( sColumnName != null ){
+			
+			if ( 	( sColumnName.equals( ColumnTagUpSession.COLUMN_ID ) && tags_su.size() > 0 ) ||
+					( sColumnName.equals( ColumnTagDownSession.COLUMN_ID ) && tags_sd.size() > 0 )){
+	
+				final boolean is_up = sColumnName.equals( ColumnTagUpSession.COLUMN_ID );
+	
+				MenuItem mi = new MenuItem(menu, SWT.PUSH);
+	
+				Messages.setLanguageText(mi, "menu.reset.session.stats");
+	
+				mi.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						for ( TagFeatureRateLimit rl: is_up?tags_su:tags_sd ){
+	
+							if ( is_up ){
+								rl.resetTagSessionUploadTotal();
+							}else{
+								rl.resetTagSessionDownloadTotal();
+							}
 						}
 					}
-				}
-			});
-
-			MenuFactory.addSeparatorMenuItem(menu);
-		}
-
-		if ( 	( sColumnName.equals( ColumnTagIcon.COLUMN_ID )) ||
-				( sColumnName.equals( ColumnTagIconSortOrder.COLUMN_ID ))){
-
-			MenuItem mi = new MenuItem(menu, SWT.PUSH);
-
-			Messages.setLanguageText(mi, "menu.set.icon.sort");
-
-			mi.addListener(SWT.Selection,
-				(e)->{
-					SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-							"tag.sort.order.title",
-							"tag.sort.order.text");
-					
-					entryWindow.allowEmptyInput( true );
-					
-					entryWindow.setWidthHint( 450 );
-					
-					entryWindow.prompt(new UIInputReceiverListener() {
-						@Override
-						public void 
-						UIInputReceiverClosed(UIInputReceiver entryWindow) 
-						{
-							if (!entryWindow.hasSubmittedInput()){
-								
-								return;
-							}
-							
-							String sReturn = entryWindow.getSubmittedInput().trim();
-							
-							if ( sReturn.isEmpty()){
-								
-								for ( Tag t: tags ){
+				});
+	
+				MenuFactory.addSeparatorMenuItem(menu);
+			}
+	
+			if ( 	( sColumnName.equals( ColumnTagIcon.COLUMN_ID )) ||
+					( sColumnName.equals( ColumnTagIconSortOrder.COLUMN_ID ))){
+	
+				MenuItem mi = new MenuItem(menu, SWT.PUSH);
+	
+				Messages.setLanguageText(mi, "menu.set.icon.sort");
+	
+				mi.addListener(SWT.Selection,
+					(e)->{
+						SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+								"tag.sort.order.title",
+								"tag.sort.order.text");
+						
+						entryWindow.allowEmptyInput( true );
+						
+						entryWindow.setWidthHint( 450 );
+						
+						entryWindow.prompt(new UIInputReceiverListener() {
+							@Override
+							public void 
+							UIInputReceiverClosed(UIInputReceiver entryWindow) 
+							{
+								if (!entryWindow.hasSubmittedInput()){
 									
-									t.setImageSortOrder( -1 );
-								}
-							}else{
-								
-								int start = 0;
-								
-								try{
-									start = Integer.valueOf(sReturn).intValue();
-									
-								} catch (NumberFormatException er) {
-									// Ignore
+									return;
 								}
 								
-								for ( Tag t: tags ){
+								String sReturn = entryWindow.getSubmittedInput().trim();
+								
+								if ( sReturn.isEmpty()){
 									
-									t.setImageSortOrder( start++ );
+									for ( Tag t: tags ){
+										
+										t.setImageSortOrder( -1 );
+									}
+								}else{
+									
+									int start = 0;
+									
+									try{
+										start = Integer.valueOf(sReturn).intValue();
+										
+									} catch (NumberFormatException er) {
+										// Ignore
+									}
+									
+									for ( Tag t: tags ){
+										
+										t.setImageSortOrder( start++ );
+									}
 								}
-							}
-						}});
-				});	
-
-			MenuFactory.addSeparatorMenuItem(menu);
+							}});
+					});	
+	
+				MenuFactory.addSeparatorMenuItem(menu);
+			}
 		}
 		
 		if ( tags.size() == 1 ){
