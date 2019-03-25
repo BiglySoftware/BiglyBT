@@ -503,8 +503,8 @@ public class DateParserRegex extends DateParser {
 		dateParser.parseDate("20-Dec-07");	//
 		dateParser.parseDate("2009-01-12 at 03:36:38" );
 		dateParser.parseDate("2013-08-11T18:30:00.000Z" );
-		dateParser.parseDate("12小时前");
-		dateParser.parseDate("12 小时前");
+		dateParser.parseDate("12\u5C0F\u65F6\u524D");
+		dateParser.parseDate("12 \u5C0F\u65F6\u524D");
 	}
 
 
