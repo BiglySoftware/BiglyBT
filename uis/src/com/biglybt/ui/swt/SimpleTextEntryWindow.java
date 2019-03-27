@@ -56,6 +56,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	private Combo text_entry_combo;
 	private Text text_entry_text;
 	private Label link_label;
+	private boolean detect_urls;
 	
 	private java.util.List<VerifyListener> verify_listeners = new ArrayList<>();
 	
@@ -414,18 +415,20 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	private void
 	checkText()
 	{
-		String url = UrlUtils.parseTextForURL( text_entry_text.getText(), true );
-		
-		if ( url != null ){
+		if ( detect_urls ){
+			String url = UrlUtils.parseTextForURL( text_entry_text.getText(), true );
 			
-			link_label.setText( url );
-			
-			LinkLabel.makeLinkedLabel( link_label, url );
-			
-		}else{
-			link_label.setText( "" );
-			
-			LinkLabel.removeLinkedLabel( link_label );
+			if ( url != null ){
+				
+				link_label.setText( url );
+				
+				LinkLabel.makeLinkedLabel( link_label, url );
+				
+			}else{
+				link_label.setText( "" );
+				
+				LinkLabel.removeLinkedLabel( link_label );
+			}
 		}
 	}
 	
@@ -452,6 +455,13 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 	  resizeable = b;
   }
 
+  public void
+  setDetectURLs(
+		 boolean	b )
+  {
+	  detect_urls = b;
+  }
+  
   public void
   setParentShell(
 	Shell		shell )

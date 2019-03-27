@@ -3298,6 +3298,8 @@ public class TorrentUtil
 		text_entry.setLineHeight( 10 );
 		text_entry.setMultiLine(true);
 		text_entry.setResizeable( true );
+		text_entry.setDetectURLs( true );
+		
 		text_entry.prompt(new UIInputReceiverListener() {
 			@Override
 			public void UIInputReceiverClosed(UIInputReceiver text_entry) {
