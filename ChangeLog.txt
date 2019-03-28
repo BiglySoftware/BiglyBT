@@ -1,7 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2019.xx.yy | BiglyBT 1.9.0.0
+2019.03.28 | BiglyBT 1.9.0.0
 
 
 FEATURE: UI    | Option to split the advanced library view vertically (and select location of complete/incomplete panes) [Parg]
