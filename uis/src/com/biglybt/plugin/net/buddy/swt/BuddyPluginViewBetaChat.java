@@ -3585,8 +3585,6 @@ BuddyPluginViewBetaChat
 
 							participant.setIgnored( true );
 
-							setProperties( participant );
-
 							changed = true;
 						}
 					}
@@ -3594,6 +3592,8 @@ BuddyPluginViewBetaChat
 					if ( changed ){
 
 						messagesChanged();
+						
+						participantsChanged();
 					}
 				}
 			});
@@ -3620,8 +3620,6 @@ BuddyPluginViewBetaChat
 
 							participant.setIgnored( false );
 
-							setProperties( participant );
-
 							changed = true;
 						}
 					}
@@ -3629,6 +3627,8 @@ BuddyPluginViewBetaChat
 					if ( changed ){
 
 						messagesChanged();
+						
+						participantsChanged();
 					}
 				}
 			});
@@ -3657,8 +3657,6 @@ BuddyPluginViewBetaChat
 
 							participant.setSpammer( true );
 
-							setProperties( participant );
-
 							changed = true;
 						}
 					}
@@ -3666,6 +3664,8 @@ BuddyPluginViewBetaChat
 					if ( changed ){
 
 						messagesChanged();
+						
+						participantsChanged();
 					}
 				}
 			});
@@ -3692,8 +3692,6 @@ BuddyPluginViewBetaChat
 
 							participant.setSpammer( false );
 
-							setProperties( participant );
-
 							changed = true;
 						}
 					}
@@ -3701,6 +3699,8 @@ BuddyPluginViewBetaChat
 					if ( changed ){
 
 						messagesChanged();
+						
+						participantsChanged();
 					}
 				}
 			});
@@ -4284,7 +4284,7 @@ BuddyPluginViewBetaChat
 
 					item.setFont( 0, italic_font );
 
-				}else if ( p.isNickClash()){
+				}else if ( p.isNickClash( true )){
 
 					item.setForeground( 0, Colors.red );
 
@@ -5017,6 +5017,15 @@ BuddyPluginViewBetaChat
 		updateTable( true );
 	}
 
+	private void
+	participantsChanged()
+	{
+		for ( TableItem ti: buddy_table.getItems()){
+
+			updateItem( ti );
+		}
+	}
+	
 	protected void
 	sendMessage(
 		String		text,
@@ -5524,7 +5533,7 @@ BuddyPluginViewBetaChat
 
 					colour = Colors.fadedGreen;
 
-				}else if ( message.isNickClash()){
+				}else if ( message.isNickClash( true )){
 
 					colour = Colors.red;
 				}

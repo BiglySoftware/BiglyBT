@@ -5641,6 +5641,32 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				}
 			}
 		}
+		
+		private boolean
+		getOtherNickClashesHidden(
+			ChatParticipant		p )
+		{
+			synchronized( chat_lock ){
+				
+				List<ChatParticipant> list = nick_clash_map.get( p.getName( true ));
+			
+				if ( list != null ){
+					
+					for ( ChatParticipant x: list ){
+						
+						if ( x != p ){
+							
+							if ( !( x.isSpammer() || x.isIgnored())){
+								
+								return( false );
+							}
+						}
+					}
+				}
+			}
+			
+			return( true );
+		}
 
 		public ChatMessage
 		getLastMessageRequiringAttention()
@@ -6491,6 +6517,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		{
 			return( nick_clash );
 		}
+		
+		public boolean
+		isNickClash(
+			boolean	ignore_hidden)
+		{
+			if ( ignore_hidden && nick_clash ){
+				
+				return( !chat.getOtherNickClashesHidden( this ));
+			}
+			
+			return( nick_clash );
+		}
 
 		private void
 		setNickClash(
@@ -6606,10 +6644,22 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		{
 			is_nick_clash = clash;
 		}
-
+		
 		public boolean
 		isNickClash()
 		{
+			return( is_nick_clash );
+		}
+
+		public boolean
+		isNickClash(
+			boolean	ignore_hidden )
+		{
+			if ( is_nick_clash && ignore_hidden ){
+			
+				return( participant.isNickClash( true ));
+			}
+			
 			return( is_nick_clash );
 		}
 
