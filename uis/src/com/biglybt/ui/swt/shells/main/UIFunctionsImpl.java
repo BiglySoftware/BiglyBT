@@ -96,6 +96,7 @@ import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.update.FullUpdateWindow;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
+import com.biglybt.ui.swt.utils.TorrentUIUtilsV3;
 import com.biglybt.ui.swt.views.skin.*;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog.SkinnedDialogClosedListener;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
@@ -1363,13 +1364,9 @@ public class UIFunctionsImpl
 	
 										if ( existed_for > 15*1000 ){
 	
-											MessageBoxShell mb = new MessageBoxShell(SWT.OK,
-													MSG_ALREADY_EXISTS, new String[] {
-														":" + torrentOptions.sOriginatingLocation,
-														fExistingName,
-														MessageText.getString(MSG_ALREADY_EXISTS_NAME),
-													});
-											mb.open(null);
+											TorrentUIUtilsV3.showTorrentAlreadyAdded(
+												":" + torrentOptions.sOriginatingLocation,
+												fExistingName );
 										}
 									}
 								}

@@ -19,6 +19,8 @@ package com.biglybt.ui.swt.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,6 +30,7 @@ import com.biglybt.ui.swt.*;
 import com.biglybt.util.DataSourceUtils;
 import com.biglybt.util.PlayUtils;
 import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.RememberedDecisionsManager;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.views.skin.TorrentListViewsUtils;
 import org.eclipse.swt.SWT;
@@ -51,7 +54,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-
+import com.biglybt.ui.swt.shells.MessageSlideShell;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.ui.selectedcontent.DownloadUrlInfo;
@@ -66,8 +69,7 @@ public class TorrentUIUtilsV3
 {
 	private final static String MSG_ALREADY_EXISTS = "OpenTorrentWindow.mb.alreadyExists";
 
-	private final static String MSG_ALREADY_EXISTS_NAME = MSG_ALREADY_EXISTS
-			+ ".default.name";
+	private final static String MSG_ALREADY_EXISTS_NAME = MSG_ALREADY_EXISTS + ".default.name";
 
 	//catches http://www.vuze.com/download/CHJW43PLS277RC7U3S5XRS2PZ4UUG7RS.torrent
 	private static final Pattern hashPattern = Pattern.compile("download/([A-Z0-9]{32})\\.torrent");
@@ -133,12 +135,9 @@ public class TorrentUIUtilsV3
 
 						}.start();
 					} else {
-						new MessageBoxShell(SWT.OK,
-								MSG_ALREADY_EXISTS, new String[] {
-									" ",
-									dm.getDisplayName(),
-									MessageText.getString(MSG_ALREADY_EXISTS_NAME),
-								}).open(null);
+						showTorrentAlreadyAdded(
+							" ",
+							dm.getDisplayName());
 					}
 					return;
 				}
@@ -469,5 +468,72 @@ public class TorrentUIUtilsV3
 		 * @since 4.0.0.5
 		 */
 		public void contentImageLoaded(Image image, boolean wasReturned);
+	}
+	
+	private static List<MessageBoxShell>	active_aa_dialogs = new ArrayList<>();
+	
+	public static void
+	showTorrentAlreadyAdded(
+		String		originating_loc,
+		String		name )
+	{
+		String remember_id = "OpenTorrentWindow.mb.alreadyExists";
+		
+		if ( RememberedDecisionsManager.getRememberedDecision( remember_id ) < 0 ){
+		
+			MessageBoxShell mb = new MessageBoxShell(SWT.OK,
+				MSG_ALREADY_EXISTS, 
+				new String[] {
+					originating_loc,
+					name,
+					MessageText.getString(MSG_ALREADY_EXISTS_NAME),
+				});
+			
+			mb.setRemember(
+				remember_id, false,
+				MessageText.getString("MessageBoxWindow.nomoreprompting"));	
+			
+			synchronized( active_aa_dialogs ){
+				
+				active_aa_dialogs.add( mb );
+			}		
+			
+			mb.open(
+				(e)->{
+			
+					boolean kill_em = RememberedDecisionsManager.getRememberedDecision( remember_id ) >= 0;
+					
+					synchronized( active_aa_dialogs ){
+						
+						active_aa_dialogs.remove( mb );
+						
+						if ( kill_em ){
+							
+							Utils.execSWTThread(()->{
+								
+								for ( MessageBoxShell x: active_aa_dialogs ){
+									
+									x.close();
+								}
+							});
+							
+							active_aa_dialogs.clear();
+						}
+					}
+				});
+		}else{
+			
+			new MessageSlideShell(
+					Display.getCurrent(), 
+					SWT.ICON_INFORMATION,
+					MSG_ALREADY_EXISTS, 
+					null, 
+					new String[]{
+						originating_loc,
+						name,
+						MessageText.getString(MSG_ALREADY_EXISTS_NAME),
+					}, 
+					3 );
+		}
 	}
 }
