@@ -51,6 +51,7 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Label;
@@ -2531,28 +2532,23 @@ public class ManagerUtils {
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		c_mode.setLayout( layout);
-		
-		Button mode_link = new Button( c_mode, SWT.RADIO );
+				
+		Combo mode_combo = new Combo( c_mode, SWT.READ_ONLY );
 		FormData	fd = new FormData();
 		fd.top=new FormAttachment(c_mode,0);
 		fd.bottom=new FormAttachment(100);
-		mode_link.setLayoutData( fd );
+		mode_combo.setLayoutData( fd );
 		
-		mode_link.setText( MessageText.getString( "label.link" ));
-		
-		Button mode_copy = new Button( c_mode, SWT.RADIO );
-		fd = new FormData();
-		fd.top=new FormAttachment(c_mode,0);
-		fd.bottom=new FormAttachment(100);
-		fd.left=new FormAttachment(mode_link);
-		mode_copy.setLayoutData( fd );
-		mode_copy.setText( MessageText.getString( "label.copy" ));
+		mode_combo.setItems(
+				MessageText.getString( "label.link" ),
+				MessageText.getString( "label.copy" ),
+				MessageText.getString( "label.move" ));
 		
 		CLabel tolerance = new CLabel( c_mode, SWT.CENTER );
 		fd = new FormData();
 		fd.top=new FormAttachment(c_mode,0);
 		fd.bottom=new FormAttachment(100,-2);
-		fd.left=new FormAttachment(mode_copy );
+		fd.left=new FormAttachment(mode_combo );
 		tolerance.setLayoutData( fd );
 		tolerance.setText( MessageText.getString( "label.tolerance.pct" ));
 		
@@ -2587,7 +2583,7 @@ public class ManagerUtils {
 						roots = new String[]{ so_exp_text.getText().trim() };
 					}
 					
-					boolean linking = mode_link.getSelection();
+					int mode = mode_combo.getSelectionIndex();
 					
 					int tolerance = spinner.getSelection();
 					
@@ -2600,7 +2596,7 @@ public class ManagerUtils {
 							public void
 							run()
 							{
-								locateFiles( dms, dm_files, shell, roots, linking, tolerance );
+								locateFiles( dms, dm_files, shell, roots, mode, tolerance );
 							}
 						});
 					
@@ -2654,11 +2650,7 @@ public class ManagerUtils {
 					
 					int mode = COConfigurationManager.getIntParameter( "find.files.search.mode", 0 );
 					
-					if ( mode == 0 ){
-						mode_link.setSelection( true );
-					}else{
-						mode_copy.setSelection( true );
-					}
+					mode_combo.select( mode );
 				}
 			};
 			
@@ -2747,28 +2739,18 @@ public class ManagerUtils {
 					}
 				}});
 
-		mode_link.addSelectionListener(
+		mode_combo.addSelectionListener(
 			new SelectionAdapter(){
 				@Override
 				public void widgetSelected(SelectionEvent e){
-					if ( mode_link.getSelection()){
-						COConfigurationManager.setParameter( "find.files.search.mode", 0 );
-						state_changed.run();
-					}
+					int index = mode_combo.getSelectionIndex();
+					
+					COConfigurationManager.setParameter( "find.files.search.mode", index );
+					
+					state_changed.run();
 				}
 			});
-		
-		mode_copy.addSelectionListener(
-				new SelectionAdapter(){
-					@Override
-					public void widgetSelected(SelectionEvent e){
-						if ( mode_copy.getSelection()){
-							COConfigurationManager.setParameter( "find.files.search.mode", 1 );
-							state_changed.run();
-						}
-					}
-				});
-		
+				
 		spinner.addListener(
 				SWT.Selection, 
 				(e)->{
@@ -2776,11 +2758,18 @@ public class ManagerUtils {
 					
 					if ( value != 0 ){
 						
-						mode_copy.setSelection( true );
-						mode_link.setSelection( false );
+						int index = mode_combo.getSelectionIndex();
 						
-						COConfigurationManager.setParameter( "find.files.search.mode", 1 );
-						state_changed.run();
+						if ( index == 0 ){
+						
+							index = 1;
+						
+							mode_combo.select( index );
+							
+							COConfigurationManager.setParameter( "find.files.search.mode", index );
+							
+							state_changed.run();
+						}
 					}
 				});
 
@@ -2888,7 +2877,7 @@ public class ManagerUtils {
 		final DiskManagerFileInfo[][]	dm_files,
 		Shell							shell,
 		String[]						search_roots,
-		boolean							is_linking,
+		int								mode,
 		int								tolerance )
 	{
 		TextViewerWindow _viewer = null;
@@ -3065,7 +3054,7 @@ public class ManagerUtils {
 
 							Set<String>	dm_files = null;
 
-							Map<DiskManagerFileInfo,File>		links_or_copies_established = new HashMap<>();
+							Map<DiskManagerFileInfo,File>		actions_established = new HashMap<>();
 
 							Map<DiskManagerFileInfo,Set<String>> unmatched_files =
 								new TreeMap<>(
@@ -3093,7 +3082,7 @@ public class ManagerUtils {
 							int	already_complete	= 0;
 							int skipped				= 0;
 							
-							int	link_or_copy_count = 0;
+							int	action_count = 0;
 
 							try{
 
@@ -3487,7 +3476,7 @@ download_loop:
 
 													logLine( viewer, " Matched" + (failed_pieces==0?"":(" (fails=" + failed_pieces + ")")));
 
-													if ( is_linking ){
+													if ( mode == 0 ){
 														
 														try{
 															dm.setUserData( "set_link_dont_delete_existing", true );
@@ -3496,13 +3485,13 @@ download_loop:
 	
 																logLine( viewer, "        Link successful" );
 	
-																links_or_copies_established.put( file, candidate );
+																actions_established.put( file, candidate );
 	
-																link_or_copy_count++;
+																action_count++;
 	
 																matched = true;
 	
-																if ( link_or_copy_count > MAX_LINKS ){
+																if ( action_count > MAX_LINKS ){
 	
 																	logLine( viewer, "    " + LINK_LIMIT_MSG );
 	
@@ -3521,23 +3510,46 @@ download_loop:
 														
 														File target = file.getFile( true );
 														
-														logLine( viewer, "        Copying " + candidate + " to " + target );
+														if ( mode == 1 ){
+															
+															logLine( viewer, "        Copying " + candidate + " to " + target );
+																	
+															boolean ok = FileUtil.copyFile( candidate,  target );
+															
+															if ( ok ){
 																
-														boolean ok = FileUtil.copyFile( candidate,  target );
-														
-														if ( ok ){
-															
-															logLine( viewer, "        Copy successful" );
-															
-															links_or_copies_established.put( file, candidate );
-
-															link_or_copy_count++;
-
-															matched = true;
-															
+																logLine( viewer, "        Copy successful" );
+																
+																actions_established.put( file, candidate );
+	
+																action_count++;
+	
+																matched = true;
+																
+															}else{
+																
+																logLine( viewer, "        Copy failed" );
+															}
 														}else{
 															
-															logLine( viewer, "        Copy failed" );
+															logLine( viewer, "        Moving " + candidate + " to " + target );
+															
+															boolean ok = FileUtil.renameFile( candidate,  target );
+															
+															if ( ok ){
+																
+																logLine( viewer, "        Move successful" );
+																
+																actions_established.put( file, candidate );
+	
+																action_count++;
+	
+																matched = true;
+																
+															}else{
+																
+																logLine( viewer, "        Move failed" );
+															}
 														}
 													}
 													
@@ -3561,15 +3573,15 @@ download_loop:
 								}
 							}
 
-							logLine( viewer, "    Matched=" + links_or_copies_established.size() + ", complete=" + already_complete + ", ignored as not selected for download=" + skipped + ", no candidates=" + no_candidates + ", remaining=" + unmatched_files.size() + " (total=" + files.length + ")");
+							logLine( viewer, "    Matched=" + actions_established.size() + ", complete=" + already_complete + ", ignored as not selected for download=" + skipped + ", no candidates=" + no_candidates + ", remaining=" + unmatched_files.size() + " (total=" + files.length + ")");
 
-							if ( links_or_copies_established.size() > 0 && unmatched_files.size() > 0 ){
+							if ( actions_established.size() > 0 && unmatched_files.size() > 0 ){
 
 								logLine( viewer, "    Looking for other potential name-based matches" );
 
 								File overall_root = null;
 
-								for ( Map.Entry<DiskManagerFileInfo,File> entry: links_or_copies_established.entrySet()){
+								for ( Map.Entry<DiskManagerFileInfo,File> entry: actions_established.entrySet()){
 
 									DiskManagerFileInfo dm_file = entry.getKey();
 									File				root	= entry.getValue();
@@ -3622,7 +3634,7 @@ download_loop:
 
 									logLine( viewer, "        Root folder is " + overall_root.getAbsolutePath());
 
-									int links_or_copies_ok = 0;
+									int actions_ok = 0;
 
 									for ( Map.Entry<DiskManagerFileInfo,Set<String>> entry: unmatched_files.entrySet()){
 
@@ -3648,18 +3660,18 @@ download_loop:
 
 											if ( !entry.getValue().contains( expected_file.getAbsolutePath())){
 
-												if ( is_linking ){
+												if ( mode == 0 ){
 													
 													try{
 														dm.setUserData( "set_link_dont_delete_existing", true );
 	
 														if ( file.setLink( expected_file )){
 	
-															links_or_copies_ok++;
+															actions_ok++;
 	
-															link_or_copy_count++;
+															action_count++;
 	
-															if ( link_or_copy_count > MAX_LINKS ){
+															if ( action_count > MAX_LINKS ){
 	
 																logLine( viewer, "        " + LINK_LIMIT_MSG );
 	
@@ -3674,35 +3686,45 @@ download_loop:
 													
 													File target = file.getFile( true );
 													
-													logLine( viewer, "            Copying " + expected_file + " to " + target );
+													if ( mode == 1 ){
+														
+														logLine( viewer, "            Copying " + expected_file + " to " + target );
+																
+														boolean ok = FileUtil.copyFile( expected_file,  target );
+														
+														if ( ok ){
 															
-													boolean ok = FileUtil.copyFile( expected_file,  target );
-													
-													if ( ok ){
+															actions_ok++;
+															
+															action_count++;
+														}
+													}else{
 														
-														links_or_copies_ok++;
+														logLine( viewer, "            Moving " + expected_file + " to " + target );
 														
-														link_or_copy_count++;
+														boolean ok = FileUtil.renameFile( expected_file,  target );
+														
+														if ( ok ){
+															
+															actions_ok++;
+															
+															action_count++;
+														}
 													}
 												}
 											}
 										}
 									}
 
-									if ( is_linking ){
-									
-										logLine( viewer, "        Linked " + links_or_copies_ok + " of " + unmatched_files.size());
-										
-									}else{
-										
-										logLine( viewer, "        Copied " + links_or_copies_ok + " of " + unmatched_files.size());
-									}
+									String action_str = mode==0?"Linked":(mode==1?"Copied":"Moved" );
+																		
+									logLine( viewer, "        " + action_str + " " + actions_ok + " of " + unmatched_files.size());
 								}
 							}
 							
 						}finally{
 
-							if ( link_or_copy_count > 0 ){
+							if ( action_count > 0 ){
 
 								dm.forceRecheck();
 
