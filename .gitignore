@@ -139,6 +139,10 @@ core/lib/libWIN32Access/ipch/
 
 Bigly*.jar
 
+#gradle
+.gradle/
+gradle.properties
+
 ##
 ## running tests produces some runtime generated files:
 ##

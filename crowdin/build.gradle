@@ -1,0 +1,108 @@
+plugins {
+    id 'base'
+}
+
+defaultTasks = ['usage']
+
+ext.NOT_SET = '<not set>'
+ext.commit = findProperty('commit') ?: NOT_SET
+
+task usage {
+    doFirst {
+        println "To stage extracted changes from l10n files: \n\t gradlew clean stageLocalizations -Pcommit <id>"
+    }
+}
+
+class StageGitCommits extends DefaultTask {
+    @Input
+    def commit = project.ext.commit
+
+    @Optional
+    @Input
+    def diff
+
+    @Input
+    def folder
+
+    @OutputDirectory
+    def outputDir = project.file('build/l10n-diffs/')
+
+    def stageDir
+
+
+    @TaskAction
+    void findDiff() {
+        if (commit == project.NOT_SET) {
+            throw IllegalArgumentException("Must supply commit <hash>")
+        }
+        outputDir.mkdirs()
+
+        project.exec {
+            commandLine 'git', 'show', '--no-patch', commit
+        }
+
+        def out = new ByteArrayOutputStream()
+        project.exec {
+            executable = 'git'
+            args 'diff'
+            args '--diff-algorithm=minimal'
+            args '--diff-filter=M' //only files modified
+            args '--ignore-blank-lines'
+            args '--relative='+ folder //only in this location
+            args commit + '~', commit
+
+            //store the output instead of printing to the console:
+            standardOutput = out;
+        }
+
+        diff = out.toString()
+        stageDir = new File(outputDir, commit)
+    }
+}
+
+
+
+task extract(type: StageGitCommits) {
+
+    folder = 'core/src/com/biglybt/internat/'
+
+    //extracting added lines
+    doLast {
+        project.delete(stageDir) //clean sheets
+        stageDir.mkdir()
+
+        def file = null
+        def ln = System.getProperty('line.separator')
+        def counter = '' //#token written to console representing lines found
+
+        diff.eachLine {
+            if (it.startsWith('+++ b')) {
+                def filename = it.substring(5)
+                file = project.file("${stageDir}/${folder}/${filename}")
+                file.parentFile.mkdirs()
+                file.createNewFile()
+                logger.quiet counter
+                logger.quiet "staging $file"
+            } else if (it.startsWith('+')) {
+                file << it.substring(1) + ln
+                counter += '+'
+                logger.info it.substring(1)
+            }
+        }
+        logger.quiet counter
+    }
+}
+
+task stageLocalizations(type: Zip) {
+    dependsOn extract
+
+    from { extract.stageDir }
+    archiveName = "translation-updates-${commit}.zip"
+    destinationDir = extract.outputDir
+
+    doLast {
+        logger.lifecycle "Created ${archiveName} in ${destinationDir}"
+    }
+
+}
+
