@@ -1299,6 +1299,8 @@ BuddyPluginView
 	registerUI(
 		ChatInstance		chat )
 	{
+		chat.setHasBeenViewed();
+		
 		synchronized( pending_msg_map ){
 
 			Integer num = chat_uis.get( chat );

@@ -480,11 +480,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 					
 					for ( ChatInstance chat: chat_instances_list ){
 						
-						ChatParticipant[] participants = chat.getParticipants();
-						
-						for ( ChatParticipant p: participants ){
+						if ( chat.getHasBeenViewed()){
 							
-							p.checkProfileData();
+							ChatParticipant[] participants = chat.getParticipants();
+							
+							for ( ChatParticipant p: participants ){
+								
+								p.checkProfileData();
+							}
 						}
 					}
 				}
@@ -2925,7 +2928,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		private boolean 	enable_notification_posts;
 		private boolean		disable_new_msg_indications;
 		private String		display_name;
-				
+			
+		private boolean		has_been_viewed;
+		
 		private boolean		destroyed;
 
 		private
@@ -3197,6 +3202,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 			}
 		}
 
+		public void
+		setHasBeenViewed()
+		{
+			has_been_viewed = true;
+		}
+		
+		public boolean
+		getHasBeenViewed()
+		{
+			return( has_been_viewed );
+		}
+		
 		public boolean
 		getSaveMessages()
 		{
@@ -5385,7 +5402,14 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							
 							if ( key_str != null && !key_str.isEmpty()){
 								
-								payload.put( "f_pk", Base32.decode( key_str ));
+									// restrict to chats that only have explicit nicknames, the reason being
+									// some maintenance channels are very busy and we don't want to accidentally
+									// trigger an incoming deluge of profile requests by accident....
+								
+								if ( !getNickname( true ).equals( getDefaultNickname())){
+								
+									payload.put( "f_pk", Base32.decode( key_str ));
+								}
 							}
 						}catch( Throwable e ){
 							

@@ -285,6 +285,9 @@ SESTSConnectionImpl
 				throw( new IOException( "Too many recent connection attempts (sts)"));
 			}
 
+			/*
+			 * This is a bad idea as it just backs up the processing loop
+			 * 
 			long	since_last = now - last_incoming_sts_create;
 
 			long	delay = 100 - since_last;
@@ -301,7 +304,8 @@ SESTSConnectionImpl
 				}catch( Throwable e ){
 				}
 			}
-
+			*/
+			
 			last_incoming_sts_create = now;
 		}
 	}
@@ -491,6 +495,8 @@ SESTSConnectionImpl
 
 							// write our auth
 
+						//System.out.println( "auth " + connection.getEndpoint().getNotionalAddress() );
+						
 						sts_engine.getAuth( out_buffer );
 
 						sent_auth 	= true;

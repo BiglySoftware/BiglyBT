@@ -77,7 +77,7 @@ ProtocolDecoderPHE
 	private static final BigInteger	DH_G_BI = new BigInteger( DH_G, 16 );
 
 	private static KeyPairGenerator		dh_key_generator;
-	private static long					last_dh_incoming_key_generate;
+	//private static long					last_dh_incoming_key_generate;
 
 	private static final int			BLOOM_RECREATE				= 30*1000;
 	private static final int			BLOOM_INCREASE				= 1000;
@@ -1977,6 +1977,9 @@ ProtocolDecoderPHE
 					throw( new IOException( "Too many recent connection attempts (phe)"));
 				}
 
+				/*
+				 * This is a pretty bad ideasas it simply stalls the entire read process and backs it up
+				 * 
 				long	since_last = now - last_dh_incoming_key_generate;
 
 				long	delay = 100 - since_last;
@@ -1993,6 +1996,7 @@ ProtocolDecoderPHE
 				}
 
 				last_dh_incoming_key_generate = now;
+				*/
 			}
 
 			KeyPair	res = dh_key_generator.generateKeyPair();

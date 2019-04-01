@@ -273,7 +273,8 @@ public class VirtualChannelSelectorImpl {
     private int	consec_select_fails;
     private long consec_select_fails_start;
 
-    private final LinkedList<Object> 	register_cancel_list 		= new LinkedList<>();
+    private final Map<AbstractSelectableChannel,Object> 	register_cancel_list 		= new LinkedHashMap<>();
+    
     private final AEMonitor 			register_cancel_list_mon	= new AEMonitor( "VirtualChannelSelector:RCL");
 
     private final HashMap<AbstractSelectableChannel, Boolean> paused_states = new HashMap<>();
@@ -514,24 +515,12 @@ public class VirtualChannelSelectorImpl {
         			// ensure that there's only one operation outstanding for a given channel
         			// at any one time (the latest operation requested )
 
-        		for (Iterator<Object> it = register_cancel_list.iterator();it.hasNext();){
-
-        			Object	obj = it.next();
-
-    				if ( channel == obj ||
-       						(	obj instanceof RegistrationData &&
-    								((RegistrationData)obj).channel == channel )){
-
-    					return( true );
-        			}
-        		}
+        		return( register_cancel_list.containsKey( channel ));
 
         	}finally{
 
         		register_cancel_list_mon.exit();
         	} 
-    	  	
-    	  	return( false );
          }
     }
 
@@ -559,25 +548,11 @@ public class VirtualChannelSelectorImpl {
     			// ensure that there's only one operation outstanding for a given channel
     			// at any one time (the latest operation requested )
 
-    		for (Iterator<Object> it = register_cancel_list.iterator();it.hasNext();){
-
-    			Object	obj = it.next();
-
-    			if ( 	channel == obj ||
-    					(	obj instanceof RegistrationData &&
-    								((RegistrationData)obj).channel == channel )){
-
-    						// remove existing cancel or register
-
-    				it.remove();
-
-    				break;
-    			}
-    		}
+    		register_cancel_list.remove( channel );
 
 			pauseSelects((AbstractSelectableChannel)channel );
 
-  			register_cancel_list.add( channel );
+  			register_cancel_list.put( channel, channel );
 
     	}finally{
 
@@ -611,23 +586,11 @@ public class VirtualChannelSelectorImpl {
     			// ensure that there's only one operation outstanding for a given channel
     			// at any one time (the latest operation requested )
 
-    		for (Iterator<Object> it = register_cancel_list.iterator();it.hasNext();){
-
-    			Object	obj = it.next();
-
-				if ( channel == obj ||
-   						(	obj instanceof RegistrationData &&
-								((RegistrationData)obj).channel == channel )){
-
-					it.remove();
-
-					break;
-    			}
-    		}
+    		register_cancel_list.remove( channel );
 
 			paused_states.remove( channel );
 
-  			register_cancel_list.add( new RegistrationData( channel, listener, attachment ));
+  			register_cancel_list.put( channel, new RegistrationData( channel, listener, attachment ));
 
     	}finally{
 
@@ -640,7 +603,7 @@ public class VirtualChannelSelectorImpl {
     public int select( long timeout ) {
 
       long select_start_time = SystemTime.getCurrentTime();
-
+      
       if( selector == null ) {
     	long mono_now = SystemTime.getMonotonousTime();
     	if (( mono_now - last_reopen_attempt > 60*1000 ) && !destroyed){
@@ -678,9 +641,13 @@ public class VirtualChannelSelectorImpl {
       		// that the logic used when adding a cancel (the removal of any matching entries) does
       		// not cause the entry we're processing to be removed
 
-        while( register_cancel_list.size() > 0 ){
+        while( !register_cancel_list.isEmpty()){
 
-          Object	obj = register_cancel_list.remove(0);
+          Iterator<Object> it = register_cancel_list.values().iterator();
+        	          
+          Object	obj = it.next();
+          
+          it.remove();
 
           if ( obj instanceof AbstractSelectableChannel ){
 

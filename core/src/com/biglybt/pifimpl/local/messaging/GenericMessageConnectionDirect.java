@@ -26,7 +26,8 @@ import java.util.List;
 
 import com.biglybt.core.networkmanager.*;
 import com.biglybt.core.peermanager.messaging.Message;
-import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AsyncDispatcher;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DirectByteBuffer;
 import com.biglybt.pif.messaging.MessageException;
@@ -47,6 +48,8 @@ GenericMessageConnectionDirect
 {
 	public static final int MAX_MESSAGE_SIZE	= GenericMessageDecoder.MAX_MESSAGE_LENGTH;
 
+	private static AsyncDispatcher dispatcher = new AsyncDispatcher( "GMReceiver" );
+	
 	protected static GenericMessageConnectionDirect
 	receive(
 		GenericMessageEndpointImpl	endpoint,
@@ -511,6 +514,7 @@ GenericMessageConnectionDirect
 	    connection.getIncomingMessageQueue().registerQueueListener(
 	    		new IncomingMessageQueue.MessageQueueListener()
 	    		{
+
 	    			@Override
 				    public boolean
 	    			messageReceived(
@@ -518,9 +522,30 @@ GenericMessageConnectionDirect
 	    			{
 	    				GenericMessage	message = (GenericMessage)_message;
 
-	    				owner.receive( message );
-
-	    				return( true );
+	    				dispatcher.dispatch(
+	    					new AERunnable(){
+								
+								@Override
+								public void runSupport(){
+																
+				    				if ( dispatcher.getQueueSize() > 10 ){
+				    					
+				    						// flooding, best approach is to kill the connection
+				    					
+				    					try{
+				    						close();
+				    						
+				    					}catch( Throwable e ){
+				    						
+				    					}
+				    				}else{
+		    				
+				    					owner.receive( message );
+				    				}
+								}
+	    					});
+	    					
+			    		return( true );
 	    			}
 
 	    			@Override

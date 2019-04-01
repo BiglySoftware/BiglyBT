@@ -621,14 +621,17 @@ BuddyPluginNetwork
 
 																}else{
 
+																	log( null, "Incoming connection from " + originator + " failed due to pk mismatch" );
+
 																	return( false );
 																}
+															}else{
+															
+																log( null, "Incoming connection from " + originator + " rejected, too many unauthorised buddies" );
+																
+																return( false );
 															}
 														}
-
-														log( null, "Incoming connection from " + originator + " failed due to pk mismatch" );
-
-														return( false );
 
 													}catch( Throwable e ){
 
