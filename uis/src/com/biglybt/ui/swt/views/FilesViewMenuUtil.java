@@ -1986,6 +1986,13 @@ public class FilesViewMenuUtil
 								}
 							}
 
+								// explicit revert - overwrite 
+							
+							if ( file_nolink.exists()){
+								
+								file_nolink.delete();
+							}
+							
 							affected_files.add( file_info );
 
 							moveFile(
