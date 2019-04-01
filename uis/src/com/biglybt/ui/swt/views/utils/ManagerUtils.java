@@ -2540,9 +2540,9 @@ public class ManagerUtils {
 		mode_combo.setLayoutData( fd );
 		
 		mode_combo.setItems(
-				MessageText.getString( "label.link" ),
-				MessageText.getString( "label.copy" ),
-				MessageText.getString( "label.move" ));
+				MessageText.getString( "label.link" ) + "    ",	// shitty layout doesn't give sufficient width for all options
+				MessageText.getString( "label.copy" ) + "    ",
+				MessageText.getString( "label.move" ) + "    ");
 		
 		CLabel tolerance = new CLabel( c_mode, SWT.CENTER );
 		fd = new FormData();
@@ -3510,6 +3510,11 @@ download_loop:
 														
 														File target = file.getFile( true );
 														
+														if ( target.exists()){
+															
+															target.delete();
+														}
+														
 														if ( mode == 1 ){
 															
 															logLine( viewer, "        Copying " + candidate + " to " + target );
@@ -3685,6 +3690,11 @@ download_loop:
 												}else{
 													
 													File target = file.getFile( true );
+													
+													if ( target.exists()){
+														
+														target.delete();
+													}
 													
 													if ( mode == 1 ){
 														
