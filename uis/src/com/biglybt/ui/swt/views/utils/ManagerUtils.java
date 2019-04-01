@@ -2871,6 +2871,9 @@ public class ManagerUtils {
 	private static List<TextViewerWindow>	lf_windows 	= new ArrayList<>();
 	private static final boolean			lf_reuse	= Constants.isWindows10OrHigher;
 	
+	private static final long	LOG_TICK_DOT_MIN = 250;
+	private static final long	LOG_TICK_DOT_MAX = 2500;
+	
 	private static void
 	locateFiles(
 		final DownloadManager[]			dms,
@@ -2952,7 +2955,7 @@ public class ManagerUtils {
 
 					long bfm_start = SystemTime.getMonotonousTime();
 					
-					long[] last_log = { bfm_start, 0 };
+					long[] log_details = { bfm_start, 0, bfm_start };
 
 					for ( String root: search_roots ){
 						
@@ -2964,12 +2967,12 @@ public class ManagerUtils {
 						
 						File dir = new File( root );
 						
-						logLine( viewer, (bfm_start==last_log[0]?"":"\r\n") + new SimpleDateFormat().format( new Date()) +  ": Enumerating files in " + dir );
+						logLine( viewer, (bfm_start==log_details[0]?"":"\r\n") + new SimpleDateFormat().format( new Date()) +  ": Enumerating files in " + dir );
 		
-						file_count += buildFileMap( viewer, dir, file_map, last_log, quit );
+						file_count += buildFileMap( viewer, dir, file_map, log_details, quit );
 					}
 					
-					logLine( viewer, (bfm_start==last_log[0]?"":"\r\n") + "Found " + file_count + " files with " + file_map.size() + " distinct sizes" );
+					logLine( viewer, (bfm_start==log_details[0]?"":"\r\n") + "Found " + file_count + " files with " + file_map.size() + " distinct sizes" );
 
 					long[]	file_lengths = null;
 					
@@ -3392,8 +3395,10 @@ download_loop:
 												boolean	error 			= false;
 												boolean	hash_failed		= false;
 
-												long	last_ok_log = SystemTime.getMonotonousTime();
-
+												long	log_start	= SystemTime.getMonotonousTime();
+												long	last_ok_log = log_start;
+												long	dot_count	= 0;
+												
 												try{
 													raf = new RandomAccessFile( candidate, "r" );
 
@@ -3422,10 +3427,21 @@ download_loop:
 
 															long now = SystemTime.getMonotonousTime();
 
-															if ( now - last_ok_log >= 250 ){
+															long elapsed = now - log_start;
+															
+															long delay = Math.min( LOG_TICK_DOT_MIN + ( (LOG_TICK_DOT_MAX-LOG_TICK_DOT_MIN) * elapsed )/60000, LOG_TICK_DOT_MAX );																
+															
+															if ( now - last_ok_log >= delay ){
 
 																last_ok_log = now;
-
+																
+																if ( dot_count == 80 ){
+																
+																	logLine( viewer, "" );
+																}
+																
+																dot_count++;
+																
 																log( viewer, "." );
 															}
 														}else{
@@ -3804,7 +3820,7 @@ download_loop:
 		TextViewerWindow		viewer,
 		File					dir,
 		Map<Long,Set<File>>		map,
-		long[]					last_log,
+		long[]					log_details,
 		boolean[]				quit )
 	{
 		File[] files = dir.listFiles();
@@ -3824,23 +3840,27 @@ download_loop:
 				
 				long	now = SystemTime.getMonotonousTime();
 
-				if ( now - last_log[0] > 250 ){
+				long elapsed = now - log_details[2];
+				
+				long delay = Math.min( LOG_TICK_DOT_MIN + ( (LOG_TICK_DOT_MAX-LOG_TICK_DOT_MIN) * elapsed )/60000, LOG_TICK_DOT_MAX );																
 
-					if ( last_log[1]++ > 80 ){
+				if ( now - log_details[0] > delay ){
+
+					if ( log_details[1]++ > 80 ){
 						
 						logLine( viewer, "" );
 						
-						last_log[1] = 1;
+						log_details[1] = 1;
 					}
 					
 					log( viewer, "." );
 
-					last_log[0] = now;
+					log_details[0] = now;
 				}
 
 				if ( f.isDirectory()){
 
-					total_files += buildFileMap( viewer, f, map, last_log, quit );
+					total_files += buildFileMap( viewer, f, map, log_details, quit );
 
 				}else{
 
