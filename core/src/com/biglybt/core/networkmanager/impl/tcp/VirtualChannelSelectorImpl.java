@@ -268,7 +268,6 @@ public class VirtualChannelSelectorImpl {
 	*/
 
     protected Selector selector;
-    private final SelectorGuard selector_guard;
 
     private int	consec_select_fails;
     private long consec_select_fails_start;
@@ -309,39 +308,6 @@ public class VirtualChannelSelectorImpl {
       pause_after_select	= _pause_after_select;
       randomise_keys		= _randomise_keys;
 
-      String type;
-      switch( INTEREST_OP ) {
-        case VirtualChannelSelector.OP_CONNECT:
-          type = "OP_CONNECT";  break;
-        case VirtualChannelSelector.OP_READ:
-          type = "OP_READ";  break;
-        default:
-          type = "OP_WRITE";  break;
-      }
-
-
-      selector_guard = new SelectorGuard( type, new SelectorGuard.GuardListener() {
-        @Override
-        public boolean safeModeSelectEnabled() {
-          return parent.isSafeSelectionModeEnabled();
-        }
-
-        @Override
-        public void spinDetected() {
-          closeExistingSelector();
-          try {  Thread.sleep( 1000 );  }catch( Throwable x ) {x.printStackTrace();}
-          parent.enableSafeSelectionMode();
-        }
-
-        @Override
-        public void failureDetected() {
-          try {  Thread.sleep( 10000 );  }catch( Throwable x ) {x.printStackTrace();}
-          closeExistingSelector();
-          try {  Thread.sleep( 1000 );  }catch( Throwable x ) {x.printStackTrace();}
-          selector = openNewSelector();
-        }
-      });
-
       selector = openNewSelector();
     }
 
@@ -355,7 +321,7 @@ public class VirtualChannelSelectorImpl {
       try {
         sel = getSelector();
 
-        AEDiagnostics.logWithStack( "seltrace", "Selector created for '" + parent.getName() + "'," + selector_guard.getType());
+        AEDiagnostics.logWithStack( "seltrace", "Selector created for '" + parent.getName() );
       }
       catch (Throwable t) {
         Debug.out( "ERROR: caught exception on Selector.open()", t );
@@ -369,7 +335,7 @@ public class VirtualChannelSelectorImpl {
           try {
             sel = getSelector();
 
-            AEDiagnostics.logWithStack( "seltrace", "Selector created for '" + parent.getName() + "'," + selector_guard.getType());
+            AEDiagnostics.logWithStack( "seltrace", "Selector created for '" + parent.getName() );
 
             break;
 
@@ -744,8 +710,6 @@ public class VirtualChannelSelectorImpl {
 
       int count = 0;
 
-      selector_guard.markPreSelectTime();
-
       try{
     	  count = selector.select( timeout );
 
@@ -856,7 +820,6 @@ public class VirtualChannelSelectorImpl {
       }
       */
 
-      selector_guard.verifySelectorIntegrity( count, SystemTime.TIME_GRANULARITY_MILLIS /2 );
 
       if( !selector.isOpen() )  return count;
 
@@ -1210,7 +1173,7 @@ public class VirtualChannelSelectorImpl {
       try{
         selector.close();
 
-        AEDiagnostics.log( "seltrace", "Selector destroyed for '" + parent.getName() + "'," + selector_guard.getType());
+        AEDiagnostics.log( "seltrace", "Selector destroyed for '" + parent.getName() );
       }
       catch( Throwable t ) { t.printStackTrace(); }
     }
