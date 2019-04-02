@@ -1529,9 +1529,18 @@ BuddyPluginViewBetaChat
 						
 						String tt = null;
 						
-						if ( item != null ){
+						try{
+							if ( item == null ){
+							
+								return;
+							}
 							
 							ChatParticipant	participant = (ChatParticipant)item.getData();
+							
+							if ( participant == null ){
+								
+								return;
+							}
 							
 							String fk = participant.getFriendKey();
 							
@@ -1583,9 +1592,38 @@ BuddyPluginViewBetaChat
 									}
 								}
 							}
-						}
+							
+							List<ChatMessage> messages = participant.getMessages();
+							
+							int	 num = messages.size();
+							
+							if ( num > 0 ){
+								
+								tt += "\nMessages";
+								
+								int	start = Math.max( num-6, 0 );
+								
+								if ( start > 0 ){
+									
+									tt += "\n    ...";
+								}
+								
+								for ( int i=start;i<messages.size();i++){
+									
+									String str = messages.get(i).getMessage();
+											
+									if ( str.length() > 50 ){
+										
+										str = str.substring( 0,  47 ) + "...";
+									}
+									
+									tt += "\n    " + str;
+								}
+							}
+						}finally{
 						
-						buddy_table.setToolTipText( tt );
+							buddy_table.setToolTipText( tt );
+						}
 					}
 				});
 			
@@ -4230,22 +4268,25 @@ BuddyPluginViewBetaChat
 		TableItem		item )
 	{
 		ChatParticipant	participant = (ChatParticipant)item.getData();
+			
+		if ( participant != null ){
+			
+			String[] values = {
+				participant.getName( ftux_ok ),
+				String.valueOf(participant.getMessageCount( true )),
+				participant.isFriend()?"*":(participant.getFriendKey()!=null?"+":"")
+			};
+			
+			for ( int i=0;i<values.length;i++){
 				
-		String[] values = {
-			participant.getName( ftux_ok ),
-			String.valueOf(participant.getMessageCount( true )),
-			participant.isFriend()?"*":(participant.getFriendKey()!=null?"+":"")
-		};
-		
-		for ( int i=0;i<values.length;i++){
-			
-			if ( !values[i].equals( item.getText( i ))){
-			
-				item.setText(i, values[i] );
+				if ( !values[i].equals( item.getText( i ))){
+				
+					item.setText(i, values[i] );
+				}
 			}
+			
+			setProperties( item, participant );
 		}
-		
-		setProperties( item, participant );
 	}
 
 	private void
