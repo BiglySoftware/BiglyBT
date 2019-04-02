@@ -84,7 +84,7 @@ BuddyPluginNetwork
 
 	protected static final boolean TRACE = false;
 
-	private static final int	MAX_UNAUTH_BUDDIES	= 16;
+	private static final int	MAX_UNAUTH_BUDDIES	= 1024;
 
 	private static final int	BUDDY_STATUS_CHECK_PERIOD_MIN	= 3*60*1000;
 	private static final int	BUDDY_STATUS_CHECK_PERIOD_INC	= 1*60*1000;
@@ -599,7 +599,7 @@ BuddyPluginNetwork
 																	unauth_count++;
 																}
 															}
-
+															
 																// no existing authorised buddy
 
 															if ( unauth_count < MAX_UNAUTH_BUDDIES ){
