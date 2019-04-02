@@ -1599,7 +1599,7 @@ BuddyPluginViewBetaChat
 							
 							if ( num > 0 ){
 								
-								tt += "\nMessages";
+								tt = ( tt==null?"":(tt+"\n")) +  MessageText.getString( "label.messages" );
 								
 								int	start = Math.max( num-6, 0 );
 								
