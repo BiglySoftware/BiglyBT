@@ -3562,7 +3562,7 @@ BuddyPluginViewBetaChat
 
 			if ( DEBUG_ENABLED ){
 
-				System.out.println( participant.getName() + "/" + participant.getAddress());
+				System.out.println( participant.getName() + "/" + participant.getAddress() + " - pk=" + Base32.encode( participant.getPublicKey()));
 
 				List<ChatMessage>	messages = participant.getMessages();
 
