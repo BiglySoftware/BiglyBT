@@ -721,7 +721,7 @@ GenericMessageConnectionImpl
 				handled = true;
 
 			}catch( Throwable f ){
-
+				
 				buffer.returnToPool();
 
 				if ( !( f instanceof MessageException )){
@@ -733,7 +733,8 @@ GenericMessageConnectionImpl
 
 		if ( !handled && !( closed || closing )){
 
-			Debug.out( "GenericMessage: incoming message not handled" );
+			// get this on some processing paths
+			// Debug.out( "GenericMessage: incoming message not handled" );
 		}
 	}
 
