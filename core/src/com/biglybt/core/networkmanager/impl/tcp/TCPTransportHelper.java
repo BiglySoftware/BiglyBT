@@ -28,14 +28,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import com.biglybt.core.logging.LogAlert;
-import com.biglybt.core.logging.Logger;
 import com.biglybt.core.networkmanager.VirtualChannelSelector;
 import com.biglybt.core.networkmanager.VirtualChannelSelector.VirtualSelectorListener;
 import com.biglybt.core.networkmanager.impl.TransportHelper;
 import com.biglybt.core.proxy.AEProxyAddressMapper;
 import com.biglybt.core.proxy.AEProxyFactory;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TimeFormatter;
 
@@ -57,8 +54,6 @@ TCPTransportHelper
 
 	private long remainingBytesToScatter = 0;
 
-	private static boolean enable_efficient_io = !Constants.JAVA_VERSION.startsWith("1.4");
-
 	private	final SocketChannel	channel;
 
 	private ByteBuffer	delayed_write;
@@ -68,7 +63,6 @@ TCPTransportHelper
 	boolean	trace;
 
 	private volatile InetSocketAddress	tcp_address;
-
 	private volatile boolean closed;
 
 	public TCPTransportHelper( SocketChannel _channel ) {
@@ -88,7 +82,7 @@ TCPTransportHelper
 
 	    AEProxyAddressMapper.AppliedPortMapping applied_mapping = proxy_address_mapper.applyPortMapping( socket.getInetAddress(), socket.getPort());
 
-	    InetSocketAddress	tcp_address = applied_mapping.getRemoteAddress();
+	    tcp_address = applied_mapping.getRemoteAddress();
 
 	    return( tcp_address );
 	}
@@ -285,28 +279,12 @@ TCPTransportHelper
 
 			// log( buffers, array_offset, length );
 
-			if ( enable_efficient_io && remainingBytesToScatter < 1 ){
+			if ( remainingBytesToScatter < 1 ){
 
-				try{
-					written_sofar = channel.write( buffers, array_offset, length );
+				written_sofar = channel.write(buffers, array_offset, length);
 
-				}catch( IOException ioe ) {
-
-					//a bug only fixed in Tiger (1.5 series):
-					//http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4854354
-					String msg = ioe.getMessage();
-					if( msg != null && msg.equals( "A non-blocking socket operation could not be completed immediately" ) ) {
-						enable_efficient_io = false;
-						Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_WARNING,
-								"WARNING: Multi-buffer socket write failed; "
-								+ "switching to single-buffer mode.\n"
-								+ "Upgrade to JRE 1.5 (5.0) series to fix this problem!"));
-					}
-					throw ioe;
-				}
 			}else{
-
-					//single-buffer mode
+				  //single-buffer mode
 
 				for( int i=array_offset; i < (array_offset + length); i++ ) {
 
@@ -408,40 +386,7 @@ TCPTransportHelper
 
 		long bytes_read = 0;
 
-		if( enable_efficient_io ) {
-			try{
-				bytes_read = channel.read( buffers, array_offset, length );
-			}
-			catch( IOException ioe ) {
-				//a bug only fixed in Tiger (1.5 series):
-				//http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4854354
-				String msg = ioe.getMessage();
-				if( msg != null && msg.equals( "A non-blocking socket operation could not be completed immediately" ) ) {
-					enable_efficient_io = false;
-					Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_WARNING,
-							"WARNING: Multi-buffer socket read failed; switching to single-buffer mode.\n"
-							+ "Upgrade to JRE 1.5 (5.0) series to fix this problem!"));
-				}
-
-				throw ioe;
-			}
-		}else{
-				//single-buffer mode
-
-			for( int i=array_offset; i < (array_offset + length); i++ ) {
-
-				int data_length = buffers[ i ].remaining();
-
-				int read = channel.read( buffers[ i ] );
-
-				bytes_read += read;
-
-				if( read < data_length ) {
-
-					break;
-				}
-			}
-		}
+		bytes_read = channel.read(buffers, array_offset, length);
 
 		if ( bytes_read < 0 ){
 
