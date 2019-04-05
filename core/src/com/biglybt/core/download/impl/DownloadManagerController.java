@@ -886,8 +886,8 @@ DownloadManagerController
 
 			int	state = getState();
 
-			if ( 	state == DownloadManager.STATE_STOPPED ||
-					( state == DownloadManager.STATE_ERROR && getDiskManager() == null )) {
+			if ( 	( state == DownloadManager.STATE_STOPPED || state == DownloadManager.STATE_ERROR ) && 
+					getDiskManager() == null ){
 
 				//already in stopped state, just do removals if necessary
 

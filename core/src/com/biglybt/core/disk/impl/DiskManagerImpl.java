@@ -719,7 +719,7 @@ DiskManagerImpl
             }
         }
 
-        if ( getState() == DiskManager.READY ){
+        if ( getState() == DiskManager.READY || ( getState() == DiskManager.FAULTY && errorType == ET_STOP_DURING_INIT )){
 
             try{
 
