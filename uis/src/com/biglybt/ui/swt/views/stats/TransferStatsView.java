@@ -263,7 +263,7 @@ public class TransferStatsView
 
     GridLayout panelLayout = new GridLayout();
     panelLayout.numColumns = 5;
-    panelLayout.makeColumnsEqualWidth = true;
+    panelLayout.makeColumnsEqualWidth = false;
     generalStatsPanel.setLayout(panelLayout);
 
 
@@ -522,8 +522,17 @@ public class TransferStatsView
   private void
   createConnectionPanel()
   {
-	  connectionPanel = new Composite(mainPanel,SWT.NONE);
+	  Composite connectionHeader = new Composite(mainPanel,SWT.NONE);
 	  GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+	  connectionHeader.setLayoutData(gridData);
+	  
+	  GridLayout chLayout = new GridLayout();
+	  chLayout.numColumns = 4;
+	  chLayout.makeColumnsEqualWidth = true;
+	  connectionHeader.setLayout(chLayout);
+	  
+	  connectionPanel = new Composite(mainPanel,SWT.NONE);
+	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  connectionPanel.setLayoutData(gridData);
 
 	  GridLayout panelLayout = new GridLayout();
@@ -531,8 +540,9 @@ public class TransferStatsView
 	  panelLayout.makeColumnsEqualWidth = true;
 	  connectionPanel.setLayout(panelLayout);
 
-	  Composite conn_area = new Composite( connectionPanel, SWT.NULL );
+	  Composite conn_area = new Composite( connectionHeader, SWT.NULL );
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
+	  gridData.horizontalSpan = 3;
 	  conn_area.setLayoutData(gridData);
 
 	  panelLayout = new GridLayout();
@@ -546,7 +556,7 @@ public class TransferStatsView
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  connection_label.setLayoutData(gridData);
 
-	  Composite upload_area = new Composite( connectionPanel, SWT.NULL );
+	  Composite upload_area = new Composite( connectionHeader, SWT.NULL );
 	  gridData = new GridData(GridData.FILL_HORIZONTAL);
 	  upload_area.setLayoutData(gridData);
 
