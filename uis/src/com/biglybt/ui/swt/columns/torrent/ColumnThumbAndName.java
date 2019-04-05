@@ -570,10 +570,10 @@ public class ColumnThumbAndName
 
 
 
-		String prefix = fileInfo.getDownloadManager().getSaveLocation().toString();
+		String prefix = fileInfo.getDownloadManager().getSaveLocation().toString() + File.separator;
 		String s = fileInfo.getFile(true).toString();
 		if (s.startsWith(prefix)) {
-			s = s.substring(prefix.length() + 1);
+			s = s.substring(prefix.length());
 		}
 		if ( fileInfo.isSkipped()){
 
