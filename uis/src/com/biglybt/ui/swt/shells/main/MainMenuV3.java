@@ -254,8 +254,10 @@ public class MainMenuV3
 					@Override
 					public void handleEvent(Event event) {
 						if (event.keyCode == binding_info.accelerator ){
-							Utils.disposeSWTObjects(viewMenu.getItems());
-							buildSimpleViewMenu(viewMenu, event.keyCode);
+							if ( !viewMenu.isDisposed()){
+								Utils.disposeSWTObjects(viewMenu.getItems());
+								buildSimpleViewMenu(viewMenu, event.keyCode);
+							}
 						}
 					}
 				});
