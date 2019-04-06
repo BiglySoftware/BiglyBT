@@ -304,7 +304,7 @@ CoreStats
 		}
 	}
 
-	public static Map
+	public static Map<String, Object>
 	getStats(
 		Set		types )
 	{
@@ -374,7 +374,7 @@ CoreStats
 			}
 		}
 
-		Map	result = getStatsSupport( expanded );
+		Map<String, Object> result = getStatsSupport( expanded );
 
 		Map	ave = averages;
 
@@ -418,11 +418,11 @@ CoreStats
 		return( result );
 	}
 
-	protected static Map
+	protected static Map<String, Object>
 	getStatsSupport(
 		Set		types )
 	{
-		Map	result = new HashMap();
+		Map<String, Object>	result = new HashMap<>();
 
 		Iterator it = providers.iterator();
 
