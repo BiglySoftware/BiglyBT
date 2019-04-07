@@ -1901,12 +1901,10 @@ public class FilesView
 			delegate.setPriority(p);
 		}
 		
-
 		public void setSkipped(boolean b)
 		{	
-			delegate.setSkipped(b);
+			ManagerUtils.setFileSkipped( delegate, b );
 		}
-
 
 		public boolean
 		setLink(

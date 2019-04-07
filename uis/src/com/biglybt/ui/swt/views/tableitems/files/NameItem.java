@@ -52,6 +52,7 @@ import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.pif.ui.menus.MenuItem;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.*;
@@ -560,7 +561,7 @@ public class NameItem extends CoreTableColumnSWT implements
 									}
 								}
 								
-								fileInfo.setSkipped( !fileInfo.isSkipped());
+								ManagerUtils.setFileSkipped( fileInfo, !fileInfo.isSkipped());
 							}
 						}
 					}

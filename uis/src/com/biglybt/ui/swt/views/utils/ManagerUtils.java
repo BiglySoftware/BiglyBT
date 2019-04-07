@@ -3984,4 +3984,53 @@ download_loop:
 
 
 	}
+	
+	/**
+	 * Takes account of whether the download has ever been started and if not selects between normal/delete 
+	 * as opposed to normal/do-not-download
+	 * @param file_info
+	 * @param skipped
+	 */
+	
+	public static void
+	setFileSkipped(
+		DiskManagerFileInfo		file_info,
+		boolean					skipped )
+	{
+		if ( skipped ){
+			
+			DownloadManager dm = file_info.getDownloadManager();
+			
+			if ( dm != null && dm.getState() == DownloadManager.STATE_STOPPED ){
+				
+				if ( !dm.isDataAlreadyAllocated() && dm.getStats().getSecondsDownloading() <= 0 ){
+			
+					if ( !file_info.getFile( true ).exists()){
+						
+						int existing_storage_type = file_info.getStorageType();
+						
+						int compact_target;
+						
+						if ( existing_storage_type == DiskManagerFileInfo.ST_COMPACT || existing_storage_type == DiskManagerFileInfo.ST_LINEAR ){
+							
+							compact_target 		= DiskManagerFileInfo.ST_COMPACT;
+							
+						}else{
+							
+							compact_target 		= DiskManagerFileInfo.ST_REORDER_COMPACT;
+						}
+						
+						int new_storage_type = compact_target;
+						
+						if ( existing_storage_type != new_storage_type ){
+							
+							file_info.setStorageType( new_storage_type );
+						}
+					}
+				}
+			}
+		}
+		
+		file_info.setSkipped( skipped );
+	}
 }
