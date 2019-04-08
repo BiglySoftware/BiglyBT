@@ -20,12 +20,12 @@ package com.biglybt.ui.swt.columns.tag;
 import java.io.File;
 
 import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 
 import com.biglybt.core.tag.Tag;
 import com.biglybt.pif.ui.tables.*;
+
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
@@ -90,22 +90,15 @@ public class ColumnTagIcon
 				ImageLoader.getInstance().getUrlImage(
 						  resource, 
 						  size,
-						  new ImageLoader.ImageDownloaderListener(){
-		
-							  @Override
-							  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
-								  							  
-								 if ( image != null && returnedImmediately ){
-									 
-									 Rectangle cell_bounds 	= cell.getBounds();
-									 Rectangle img_bounds 	= image.getBounds();
-									 
-									 gc.drawImage( image,  cell_bounds.x + (size.x-img_bounds.width)/2,  cell_bounds.y + (size.y - img_bounds.height)/2 );
-									 
-									 ImageLoader.getInstance().releaseImage( key );
-								 }
-							  }
-						  });
+						(image, key, returnedImmediately) -> {
+
+							if ( image != null && returnedImmediately ){
+
+								Utils.drawImageCenterScaleDown(gc, image, cell.getBounds());
+
+								ImageLoader.getInstance().releaseImage( key );
+							}
+						});
 				
 			}catch( Throwable e ){
 				
