@@ -371,12 +371,12 @@ public class SkinPropertiesImpl
 
 	@Override
 	public String getStringValue(String name, String[] params) {
-		return getValue(name, params);
+		return getValue(name, params, true);
 	}
 
 	@Override
 	public String getStringValue(String name, String[] params, String def) {
-		String s = getValue(name, params);
+		String s = getValue(name, params, true);
 		return (s == null) ? def : s;
 	}
 
