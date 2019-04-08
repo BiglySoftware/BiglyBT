@@ -1030,6 +1030,8 @@ DiskManagerImpl
 
         DownloadManagerState	state = download_manager.getDownloadState();
 
+        long alloc_strategy = state.getLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY );
+
         try{
             allocation_scheduler.register( this );
 
@@ -1196,7 +1198,7 @@ DiskManagerImpl
                         	if ( !compact ){
 	                        		// file is too small
 
-	                         	if ( !allocateFile( fileInfo, data_file, existing_length, target_length, stop_after_start )){
+	                         	if ( !allocateFile( fileInfo, data_file, existing_length, target_length, stop_after_start, alloc_strategy )){
 
 	                      			// aborted
 
@@ -1232,7 +1234,7 @@ DiskManagerImpl
 
                     try{
 
-                    	if ( !allocateFile( fileInfo, data_file, -1, target_length, stop_after_start )){
+                    	if ( !allocateFile( fileInfo, data_file, -1, target_length, stop_after_start, alloc_strategy )){
 
                       			// aborted
 
@@ -1298,7 +1300,8 @@ DiskManagerImpl
     	File						data_file,
     	long						existing_length,	// -1 if not exists
     	long						target_length,
-    	boolean[]					stop_after_start )
+    	boolean[]					stop_after_start,
+    	long						alloc_strategy )
 
     	throws Throwable
     {
@@ -1318,8 +1321,10 @@ DiskManagerImpl
         }
 
         fileInfo.setAccessMode( DiskManagerFileInfo.WRITE );
-
-        if ( COConfigurationManager.getBooleanParameter("Enable incremental file creation" )){
+        
+        boolean def_strategy = alloc_strategy == DownloadManagerState.FAS_DEFAULT;
+        
+        if ( def_strategy && COConfigurationManager.getBooleanParameter("Enable incremental file creation" )){
 
                 //  do incremental stuff
 
@@ -1333,7 +1338,8 @@ DiskManagerImpl
 
 	            //fully allocate. XFS borks with zero length files though
 
-	        if ( 	target_length > 0 &&
+	        if ( 	def_strategy &&
+	        		target_length > 0 &&
 	        		!Constants.isWindows &&
 	        		COConfigurationManager.getBooleanParameter("XFS Allocation") ){
 
@@ -1378,7 +1384,9 @@ DiskManagerImpl
 
 	            allocated += target_length;
 
-	        }else if( COConfigurationManager.getBooleanParameter("Zero New") ) {  //zero fill
+	        }else if ( COConfigurationManager.getBooleanParameter( "Zero New" ) || 
+	        			( 	alloc_strategy == DownloadManagerState.FAS_ZERO_NEW || 
+	        				alloc_strategy == DownloadManagerState.FAS_ZERO_NEW_STOP )) {  //zero fill
 
 	        	boolean successfulAlloc = false;
 
@@ -1402,7 +1410,7 @@ DiskManagerImpl
 
 	        		if ( successfulAlloc && !stop_after_start[0] ){
 	        				        			
-	        			if ( COConfigurationManager.getBooleanParameter("Zero New Stop")){
+	        			if ( COConfigurationManager.getBooleanParameter("Zero New Stop") || alloc_strategy == DownloadManagerState.FAS_ZERO_NEW_STOP ){
 	        			
 		        			if ( !download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
 

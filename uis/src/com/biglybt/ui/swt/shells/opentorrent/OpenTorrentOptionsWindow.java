@@ -162,8 +162,11 @@ public class OpenTorrentOptionsWindow
 	private final static String[] MSGKEY_STARTMODES = {
 		"OpenTorrentWindow.startMode.queued",
 		"OpenTorrentWindow.startMode.stopped",
+		"ManagerItem.paused",
 		"OpenTorrentWindow.startMode.forceStarted",
-		"OpenTorrentWindow.startMode.seeding"
+		"OpenTorrentWindow.startMode.seeding",
+		"OpenTorrentWindow.startMode.alloc.stopped",
+		"OpenTorrentWindow.startMode.alloc.paused",
 	};
 
 	public static final String TABLEID_TORRENTS = "OpenTorrentTorrent";

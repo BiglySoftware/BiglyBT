@@ -57,13 +57,14 @@ public class TorrentOpenOptions
 
 	public final static int QUEUELOCATION_TOP = 0;
 
-	public final static int STARTMODE_FORCESTARTED = 2;
+	public final static int STARTMODE_QUEUED 				= 0;
+	public final static int STARTMODE_STOPPED 				= 1;
+	public final static int STARTMODE_PAUSED 				= 2;
+	public final static int STARTMODE_FORCESTARTED 			= 3;
+	public final static int STARTMODE_SEEDING 				= 4;
+	public final static int STARTMODE_ALLOCATED_AND_STOPPED = 5;
+	public final static int STARTMODE_ALLOCATED_AND_PAUSED	= 6;
 
-	public final static int STARTMODE_QUEUED = 0;
-
-	public final static int STARTMODE_SEEDING = 3;
-
-	public final static int STARTMODE_STOPPED = 1;
 
 	/** Where the torrent came from.  Could be a file, URL, or some other text */
 	/** @todo: getter/setters */

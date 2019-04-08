@@ -46,6 +46,7 @@ import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerInitialisationAdapter;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
@@ -488,8 +489,10 @@ public class TorrentOpener {
 					boolean reorder_mode = COConfigurationManager.getBooleanParameter("Enable reorder storage mode");
 					int reorder_mode_min_mb = COConfigurationManager.getIntParameter("Reorder storage mode min MB");
 
+					DownloadManagerState dms = dm.getDownloadState();
+					
 					try {
-						dm.getDownloadState().suppressStateSave(true);
+						dms.suppressStateSave(true);
 
 						boolean[] toSkip = new boolean[fileInfos.length];
 						boolean[] toCompact = new boolean[fileInfos.length];
@@ -517,7 +520,7 @@ public class TorrentOpener {
 									// Can't use fileInfo.setLink(fDest) as it renames
 									// the existing file if there is one
 
-									dm.getDownloadState().setFileLink(iIndex,
+									dms.setFileLink(iIndex,
 											fileInfo.getFile(false), fDest);
 								}
 
@@ -570,7 +573,7 @@ public class TorrentOpener {
 
 								if ( fileRename != null && fileRename.length() > 0 ){
 
-									dm.getDownloadState().setDisplayName( fileRename );
+									dms.setDisplayName( fileRename );
 								}
 							}
 						}else{
@@ -580,7 +583,7 @@ public class TorrentOpener {
 							if ( 	folderRename != null &&
 									folderRename.length() > 0 ){
 
-								dm.getDownloadState().setDisplayName( folderRename );
+								dms.setDisplayName( folderRename );
 							}
 						}
 
@@ -618,18 +621,16 @@ public class TorrentOpener {
 							dm.getStats().setDownloadRateLimitBytesPerSecond( maxDown*kInB );
 						}
 
-						DownloadManagerState dm_state = dm.getDownloadState();
-
 						if (torrentOptions.disableIPFilter) {
 
-							dm_state.setFlag(
+							dms.setFlag(
 									DownloadManagerState.FLAG_DISABLE_IP_FILTER, true);
 						}
 
 						if (torrentOptions.peerSource != null) {
 							for (String peerSource : torrentOptions.peerSource.keySet()) {
 								boolean enable = torrentOptions.peerSource.get(peerSource);
-								dm_state.setPeerSourceEnabled(peerSource, enable);
+								dms.setPeerSourceEnabled(peerSource, enable);
 							}
 						}
 
@@ -637,11 +638,11 @@ public class TorrentOpener {
 
 						if ( enabledNetworks != null ){
 
-							if ( !dm_state.getFlag( DownloadManagerState.FLAG_INITIAL_NETWORKS_SET )){
+							if ( !dms.getFlag( DownloadManagerState.FLAG_INITIAL_NETWORKS_SET )){
 
 								for (String net : enabledNetworks.keySet()) {
 									boolean enable = enabledNetworks.get(net);
-									dm_state.setNetworkEnabled(net, enable);
+									dms.setNetworkEnabled(net, enable);
 								}
 							}
 						}
@@ -650,7 +651,7 @@ public class TorrentOpener {
 						
 						if ( user_comment != null && !user_comment.isEmpty()){
 							
-							dm_state.setUserComment( user_comment);
+							dms.setUserComment( user_comment);
 						}
 						
 						List<Tag> initialTags = torrentOptions.getInitialTags();
@@ -680,14 +681,81 @@ public class TorrentOpener {
 						
 						if ( torrentOptions.bSequentialDownload ) {
 							
-							dm_state.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );
+							dms.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );
+						}
+						
+						int startMode =  torrentOptions.getStartMode();
+						
+						if ( startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_STOPPED || startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_PAUSED ){
+							
+							dms.setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
+							
+							if ( startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_PAUSED  ){
+								
+								dm.addListener(
+									new DownloadManagerAdapter()
+									{
+										public void 
+										stateChanged(
+											DownloadManager 	manager, 
+											int 				state ){
+																						
+											if ( state == DownloadManager.STATE_STOPPED ){
+											
+												dm.removeListener( this );
+												
+													// hate this but the underlying state is actually STOPPING which means
+													// an immediate pause will fail :( 
+												
+												new AEThread2( "pauser" ){
+													@Override
+													public void run(){
+														long start = SystemTime.getMonotonousTime();
+														
+														while( true ){
+															
+															if ( dm.getState() == DownloadManager.STATE_STOPPED ){
+																
+																dm.pause( false );
+																
+																break;
+																
+															}else{
+																
+																if ( SystemTime.getMonotonousTime() - start > 10*1000 ){
+																	
+																	Debug.out( "Abandoning pause-on-start, timeout" );
+																	
+																	break;
+																	
+																}else{
+																	try{
+																		Thread.sleep( 100 );
+																		
+																	}catch( Throwable e ){
+																	}
+																}
+															}
+														}
+													}
+												}.start();	
+												
+											}else if (	state == DownloadManager.STATE_DOWNLOADING ||
+														state == DownloadManager.STATE_SEEDING || 
+														state == DownloadManager.STATE_ERROR ){
+												
+												dm.removeListener( this );
+											}
+										}
+									});
+							}
 						}
 						
 						File moc = torrentOptions.getMoveOnComplete();
 						
 						if ( moc != null ){
 							
-							dm_state.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
+							dms.setAttribute( DownloadManagerState.AT_MOVE_ON_COMPLETE_DIR, moc.getAbsolutePath());
 						}
 						
 						Map<String,Object>	md = torrentOptions.getInitialMetadata();
@@ -698,7 +766,7 @@ public class TorrentOpener {
 						}
 					} finally {
 
-						dm.getDownloadState().suppressStateSave(false);
+						dms.suppressStateSave(false);
 					}
 				}
 			};
@@ -713,34 +781,53 @@ public class TorrentOpener {
 					} catch (TOTorrentException e1) {
 					}
 
-					int iStartState = (torrentOptions.getStartMode() == TorrentOpenOptions.STARTMODE_STOPPED)
-							? DownloadManager.STATE_STOPPED : DownloadManager.STATE_QUEUED;
+					int startMode = torrentOptions.getStartMode();
+					
+					int iStartState;
+					
+					if ( startMode == TorrentOpenOptions.STARTMODE_STOPPED || startMode == TorrentOpenOptions.STARTMODE_PAUSED ){
+						
+						iStartState = DownloadManager.STATE_STOPPED;
+						
+					}else{
+						
+							// stopped/paused+allocated needs the download to be queued - it will auto-stop after allocation
+						
+						iStartState = DownloadManager.STATE_QUEUED;
+					}
 
 					GlobalManager gm = core.getGlobalManager();
 
 					DownloadManager dm = gm.addDownloadManager(torrentOptions.sFileName,
 							hash, torrentOptions.getParentDir(), torrentOptions.getSubDir(),
 							iStartState, true,
-							torrentOptions.getStartMode() == TorrentOpenOptions.STARTMODE_SEEDING, dmia);
+							startMode == TorrentOpenOptions.STARTMODE_SEEDING, dmia);
 
-					// If dm is null, most likely there was an error printed.. let's hope
-					// the user was notified and skip the error quietly.
-					// We don't have to worry about deleting the file (info.bDelete..)
-					// since gm.addDown.. will handle it.
-					if (dm == null) {
+						// If dm is null, most likely there was an error printed.. let's hope
+						// the user was notified and skip the error quietly.
+						// We don't have to worry about deleting the file (info.bDelete..)
+						// since gm.addDown.. will handle it.
+					
+					if ( dm == null ){
+						
 						return;
 					}
 
-					if (torrentOptions.getQueueLocation() == TorrentOpenOptions.QUEUELOCATION_TOP) {
+					if ( torrentOptions.getQueueLocation() == TorrentOpenOptions.QUEUELOCATION_TOP ){
+						
 						gm.moveTop(new DownloadManager[] {
 							dm
 						});
 					}
 
-					if (torrentOptions.getStartMode() == TorrentOpenOptions.STARTMODE_FORCESTARTED) {
+					if ( startMode == TorrentOpenOptions.STARTMODE_FORCESTARTED ){
+						
 						dm.setForceStart(true);
+						
+					}else if ( startMode == TorrentOpenOptions.STARTMODE_PAUSED ){
+						
+						dm.pause( false );
 					}
-
 				}
 			});
 

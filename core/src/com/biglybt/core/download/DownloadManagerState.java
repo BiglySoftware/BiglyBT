@@ -37,6 +37,10 @@ import com.biglybt.pif.download.Download;
 public interface
 DownloadManagerState
 {
+	public static final long   FAS_DEFAULT					= 0;
+	public static final long   FAS_ZERO_NEW					= 1;
+	public static final long   FAS_ZERO_NEW_STOP			= 2;
+	
 	public static final String AT_VERSION					= "version";
 	public static final String AT_CATEGORY					= "category";
 	public static final String AT_NETWORKS					= "networks";
@@ -81,6 +85,7 @@ DownloadManagerState
 	public static final String AT_LAST_ADDED_TO_ACTIVE_TAG	= "last.act.tag";	// long - last time added to active tag
 	public static final String AT_MOVE_ON_COMPLETE_DIR		= "moc.dir";		// String - explicit move-on-complete folder
 	public static final String AT_FILE_FLAGS				= "ff";
+	public static final String AT_FILE_ALLOC_STRATEGY		= "fas";			// long
 	
 	public static final String AT_TRANSIENT_FLAGS			= "t_flags";
 
@@ -94,6 +99,7 @@ DownloadManagerState
 		{ AT_SCRAPE_CACHE_SOURCE,					new Integer( 0 )},
 		{ AT_REORDER_MIN_MB,						new Integer( -1 )},
 		{ AT_SHARE_RATIO_PROGRESS,					new Long( 0 )},
+		{ AT_FILE_ALLOC_STRATEGY,					new Long( FAS_DEFAULT )},
 	};
 
 	public static final long FLAG_ONLY_EVER_SEEDED						= Download.FLAG_ONLY_EVER_SEEDED;
