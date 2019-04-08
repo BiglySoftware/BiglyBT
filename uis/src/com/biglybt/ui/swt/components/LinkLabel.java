@@ -120,7 +120,9 @@ LinkLabel
 		      }
 		      @Override
 		      public void mouseUp(MouseEvent arg0) {
-		    	  launch( arg0 );
+		    	  if (arg0.button == 1) {
+		    	  	launch( arg0 );
+			      }
 		      }
 		      private void
 		      launch(
@@ -163,12 +165,14 @@ LinkLabel
 	    label.setForeground(Colors.blue);
 	    label.addMouseListener(new MouseAdapter() {
 	      @Override
-	      public void mouseDoubleClick(MouseEvent arg0) {
+	      public void mouseDoubleClick(MouseEvent e) {
 	      	runnable.run();
 	      }
 	      @Override
-	      public void mouseUp(MouseEvent arg0) {
-	    	  runnable.run();
+	      public void mouseUp(MouseEvent e) {
+		      if (e.button == 1) {
+		      	runnable.run();
+		      }
 	      }
 	    });
 	}
