@@ -26,6 +26,7 @@ import java.util.List;
 
 import com.biglybt.core.util.*;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
@@ -83,7 +84,8 @@ public class FilesViewMenuUtil
 		String							columnName,
 		final Menu 						menu,
 		final DownloadManager[] 		manager_list,
-		final DiskManagerFileInfo[][] 	files_list )
+		final DiskManagerFileInfo[][] 	files_list,
+		boolean							multi_dl_view )
 	{
 		Shell shell = menu.getShell();
 
@@ -707,6 +709,27 @@ public class FilesViewMenuUtil
 							}
 						}
 					});
+			
+			new MenuItem( menu, SWT.SEPARATOR );
+		}
+		
+		if ( all_files.size() == 1 && multi_dl_view ){
+			
+			DownloadManager dm = all_files.get(0).getDownloadManager();
+			
+			if ( dm != null ){
+				
+				MenuItem show = new MenuItem(menu, SWT.PUSH);
+				
+				Messages.setLanguageText(show, "menu.show.download");
+
+				show.addSelectionListener(
+					SelectionListener.widgetSelectedAdapter(
+						(e)->{
+							
+							dm.requestAttention();
+						}));
+			}
 			
 			new MenuItem( menu, SWT.SEPARATOR );
 		}

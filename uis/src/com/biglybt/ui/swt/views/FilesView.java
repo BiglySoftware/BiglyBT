@@ -812,7 +812,8 @@ public class FilesView
 					sColumnName,
 					menu,
 					new DownloadManager[]{ managers.get(0) },
-					new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) });
+					new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) },
+					false );
 			}
 		}else{
 
@@ -858,7 +859,7 @@ public class FilesView
 			}
 
 			if ( files_list.length > 0 ){
-				FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list );
+				FilesViewMenuUtil.fillMenu(tv, sColumnName, menu, manager_list, files_list, true );
 			}
 		}
 	}

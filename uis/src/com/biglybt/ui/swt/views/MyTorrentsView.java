@@ -179,7 +179,11 @@ public class MyTorrentsView
 
 							row.setSelected( true );
 						}
-
+						
+						if ( !row.isVisible()){
+								
+							tv.showRow( row );
+						}
 					}
 				}
 			}
@@ -1945,7 +1949,8 @@ public class MyTorrentsView
   					sColumnName,
   					menu,
   					new DownloadManager[]{ firstFileDM },
-  					new DiskManagerFileInfo[][]{ listFileInfos.toArray(new DiskManagerFileInfo[0])});
+  					new DiskManagerFileInfo[][]{ listFileInfos.toArray(new DiskManagerFileInfo[0])},
+  					false );
   			return;
   		}
 		}
