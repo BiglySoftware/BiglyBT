@@ -332,17 +332,33 @@ public class IpFilterAutoLoaderImpl
 					fin = new FileInputStream(filtersFile);
 					bin = new BufferedInputStream(fin, 16384);
 				} else if (headerBytes[0] == 0x50 && headerBytes[1] == 0x4b) {
+					// We pick the largest file in the zip, but we should someday consider
+					// merging all files into zip into one, if there's a case where
+					// a zip file contains multiple ip list files.
+					long largestSize = 0;
+					long largestPos = -1;
 					ZipInputStream zip = new ZipInputStream(bin);
 
 					ZipEntry zipEntry = zip.getNextEntry();
-					// Skip small files
-					while (zipEntry != null && zipEntry.getSize() < 1024 * 1024) {
+					int zipPos = 0;
+					while (zipEntry != null) {
+						zipPos++;
+						long size = zipEntry.getSize();
+						if (size > largestSize) {
+							largestPos = zipPos;
+						}
 						zipEntry = zip.getNextEntry();
 					}
 
-					if (zipEntry == null) {
+					if (largestPos < 0) {
 						return;
 					}
+					bin.reset();
+					zip = new ZipInputStream(bin);
+					for (int i = 0; i < largestPos; i++) {
+						zip.getNextEntry();
+					}
+
 					filtersFile = FileUtil.getUserFile("ipfilter.ext");
 					FileUtil.copyFile(zip, filtersFile);
 					fin = new FileInputStream(filtersFile);
