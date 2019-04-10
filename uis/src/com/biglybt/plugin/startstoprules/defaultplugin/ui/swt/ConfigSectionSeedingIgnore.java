@@ -62,26 +62,26 @@ public class ConfigSectionSeedingIgnore
 		IntParameterImpl ignoreRatioPeersSeedStart = new IntParameterImpl(
 				"StartStopManager_iIgnoreRatioPeersSeedStart",
 				"ConfigView.label.seeding.fakeFullCopySeedStart", 0, 9999);
-		add(ignoreRatioPeersSeedStart);
+		add(ignoreRatioPeersSeedStart, listIgnore);
 		ignoreRatioPeersSeedStart.setSuffixLabelKey("ConfigView.label.seeds");
 		ignoreRatioPeersSeedStart.setIndent(1, true);
 
 		// Share Ratio
 		FloatParameterImpl stopRatio = new FloatParameterImpl("Stop Ratio",
 				"ConfigView.label.seeding.ignoreShareRatio", 1, -1, 1);
-		add(stopRatio);
+		add(stopRatio, listIgnore);
 		stopRatio.setSuffixLabelText(":1");
 
 		IntParameterImpl ignoreShareRatioSeedStart = new IntParameterImpl(
 				"StartStopManager_iIgnoreShareRatioSeedStart",
 				"ConfigView.label.seeding.fakeFullCopySeedStart", 0, 9999);
-		add(ignoreShareRatioSeedStart);
+		add(ignoreShareRatioSeedStart, listIgnore);
 		ignoreShareRatioSeedStart.setSuffixLabelKey("ConfigView.label.seeds");
 		ignoreShareRatioSeedStart.setIndent(1, true);
 
 		// Ignore 0 Peers
 		add(new BooleanParameterImpl("StartStopManager_bIgnore0Peers",
-				"ConfigView.label.seeding.ignore0Peers"));
+				"ConfigView.label.seeding.ignore0Peers"), listIgnore);
 
 		add(new ParameterGroupImpl("ConfigView.label.seeding.ignore", listIgnore));
 	}
