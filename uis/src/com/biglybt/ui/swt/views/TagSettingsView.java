@@ -19,6 +19,7 @@
 package com.biglybt.ui.swt.views;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,34 +30,26 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.config.ColorParameter;
-import com.biglybt.ui.swt.config.IconParameter;
-import com.biglybt.ui.swt.config.generic.GenericBooleanParameter;
-import com.biglybt.ui.swt.config.generic.GenericFloatParameter;
-import com.biglybt.ui.swt.config.generic.GenericIntParameter;
-import com.biglybt.ui.swt.config.generic.GenericParameterAdapter;
-import com.biglybt.ui.swt.config.generic.GenericStringListParameter;
+import com.biglybt.ui.swt.config.*;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-import org.gudy.bouncycastle.util.Arrays;
-
-import com.biglybt.core.tag.*;
-import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
-import com.biglybt.core.util.GeneralUtils;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.utils.FontUtils;
 
 /**
@@ -86,60 +79,60 @@ public class TagSettingsView
 	{
 		private Control cName;
 
-		private ColorParameter tagColor;
-		
-		private IconParameter tagIcon;
+		private ColorSwtParameter tagColor;
 
-		private GenericIntParameter maxDownloadSpeed;
+		private IconSwtParameter tagIcon;
 
-		private GenericIntParameter maxUploadSpeed;
+		private IntSwtParameter maxDownloadSpeed;
 
-		private GenericBooleanParameter viewInSideBar;
+		private IntSwtParameter maxUploadSpeed;
 
-		private GenericBooleanParameter isPublic;
+		private BooleanSwtParameter viewInSideBar;
 
-		public GenericBooleanParameter uploadPriority;
-		
-		public GenericBooleanParameter firstPrioritySeeding;
+		private BooleanSwtParameter isPublic;
 
-		public GenericFloatParameter min_sr;
+		public BooleanSwtParameter uploadPriority;
 
-		public GenericFloatParameter max_sr;
+		public BooleanSwtParameter firstPrioritySeeding;
 
-		public GenericStringListParameter	max_sr_action;
+		public FloatSwtParameter min_sr;
 
-		public GenericFloatParameter max_aggregate_sr;
+		public FloatSwtParameter max_sr;
 
-		public GenericStringListParameter	max_aggregate_sr_action;
+		public StringListSwtParameter	max_sr_action;
 
-		public GenericBooleanParameter	max_aggregate_sr_priority;
+		public FloatSwtParameter max_aggregate_sr;
+
+		public StringListSwtParameter	max_aggregate_sr_action;
+
+		public BooleanSwtParameter	max_aggregate_sr_priority;
 
 		public folderOption 			initalSaveFolder;
-		public GenericBooleanParameter	initalSaveData;
-		public GenericBooleanParameter	initalSaveTorrent;
+		public BooleanSwtParameter	initalSaveData;
+		public BooleanSwtParameter	initalSaveTorrent;
 
 		public folderOption 			moveOnCompleteFolder;
-		public GenericBooleanParameter	moveOnCompleteData;
-		public GenericBooleanParameter	moveOnCompleteTorrent;
+		public BooleanSwtParameter	moveOnCompleteData;
+		public BooleanSwtParameter	moveOnCompleteTorrent;
 
 		public folderOption 			copyOnCompleteFolder;
-		public GenericBooleanParameter	copyOnCompleteData;
-		public GenericBooleanParameter	copyOnCompleteTorrent;
+		public BooleanSwtParameter	copyOnCompleteData;
+		public BooleanSwtParameter	copyOnCompleteTorrent;
 
 		public Text		 	constraints;
 		public Label		constraintError;
-		public GenericBooleanParameter 		constraintEnabled;
-		public GenericStringListParameter 	constraintMode;
+		public BooleanSwtParameter 		constraintEnabled;
+		public StringListSwtParameter 	constraintMode;
 
-		public GenericIntParameter tfl_max_taggables;
+		public IntSwtParameter tfl_max_taggables;
 
-		public GenericStringListParameter	tfl_removal_policy;
+		public StringListSwtParameter	tfl_removal_policy;
 
-		public GenericStringListParameter	tfl_ordering;
+		public StringListSwtParameter	tfl_ordering;
 
-		public GenericBooleanParameter	notification_post_add;
+		public BooleanSwtParameter	notification_post_add;
 
-		public GenericBooleanParameter	notification_post_remove;
+		public BooleanSwtParameter	notification_post_remove;
 	}
 
 	private Params params = null;
@@ -289,7 +282,7 @@ public class TagSettingsView
 
 				if (tagColor != null) {
 	  				int[] color = tag.getColor();
-	  				if (!Arrays.areEqual(tagColor, color)) {
+	  				if (!Arrays.equals(tagColor, color)) {
 	  					tagColor = null;
 	  				}
 				}
@@ -367,8 +360,6 @@ public class TagSettingsView
 			}
 
 			// Field: Color
-			label = new Label(cSection1, SWT.NONE);
-			Messages.setLanguageText(label, "label.color");
 			if (tagColor == null) {
 				tagColor = new int[] { 0, 0, 0 };
 			}
@@ -430,10 +421,11 @@ public class TagSettingsView
 
 			// Field: Visible
 
-			params.viewInSideBar = new GenericBooleanParameter(
-					new BooleanParameterAdapter() {
+			params.viewInSideBar = new BooleanSwtParameter(cSection2, "viewInSidebar",
+					"TagSettings.viewInSideBar", null,
+					new BooleanSwtParameter.ValueProcessor() {
 						@Override
-						public Boolean getBooleanValue(String key) {
+						public Boolean getValue(BooleanSwtParameter p) {
 							int isTagVisible = -1;
 							for (Tag tag : tags) {
 								isTagVisible = updateIntBoolean(tag.isVisible(), isTagVisible);
@@ -442,22 +434,28 @@ public class TagSettingsView
 						}
 
 						@Override
-						public void setBooleanValue(String key, boolean value) {
+						public boolean setValue(BooleanSwtParameter p, Boolean value) {
+							boolean changed = tags.length == 0;
 							for (Tag tag : tags) {
-								tag.setVisible(value);
+								if (!tag.isVisible() == value) {
+									tag.setVisible(value);
+									changed = true;
+								}
 							}
+							return changed;
 						}
-					}, cSection2, null, "TagSettings.viewInSideBar", null);
+					});
 			gd = new GridData();
 			gd.horizontalSpan = 4;
 			params.viewInSideBar.setLayoutData(gd);
 
 			// Field: Public
 			if (canBePublic == 1) {
-				params.isPublic = new GenericBooleanParameter(
-						new BooleanParameterAdapter() {
+				params.isPublic = new BooleanSwtParameter(cSection2, "tag.isPublic",
+						"TagAddWindow.public.checkbox", null,
+						new BooleanSwtParameter.ValueProcessor() {
 							@Override
-							public Boolean getBooleanValue(String key) {
+							public Boolean getValue(BooleanSwtParameter p) {
 								int val = -1;
 								for (Tag tag : tags) {
 									val = updateIntBoolean(tag.isPublic(), val);
@@ -466,12 +464,17 @@ public class TagSettingsView
 							}
 
 							@Override
-							public void setBooleanValue(String key, boolean value) {
+							public boolean setValue(BooleanSwtParameter p, Boolean value) {
+								boolean changed = tags.length == 0;
 								for (Tag tag : tags) {
-									tag.setPublic(value);
+									if (tag.isPublic() != value) {
+										tag.setPublic(value);
+										changed = true;
+									}
 								}
+								return changed;
 							}
-						}, cSection2, null, "TagAddWindow.public.checkbox", null);
+						});
 				gd = new GridData();
 				gd.horizontalSpan = 4;
 				params.isPublic.setLayoutData(gd);
@@ -518,7 +521,7 @@ public class TagSettingsView
 							"tag.maxDownloadSpeed", "", null, -1, Integer.MAX_VALUE,
 							new IntSwtParameter.ValueProcessor() {
 								@Override
-								public int getIntValue(String key) {
+								public Integer getValue(IntSwtParameter p) {
 									int limit = rls[0].getTagDownloadLimit();
 									if (numTags > 1) {
 										for (int i = 1; i < rls.length; i++) {
@@ -528,26 +531,33 @@ public class TagSettingsView
 											}
 										}
 									}
-									return limit < 0 ? limit : limit / DisplayFormatters.getKinB();
+									return limit < 0 ? limit
+											: limit / DisplayFormatters.getKinB();
 								}
 
 								@Override
-								public void setIntValue(String key, int value) {
-									for (TagFeatureRateLimit rl : rls) {
-  									if (value == -1) {
-  										rl.setTagDownloadLimit(-1);
-  									} else {
-  										rl.setTagDownloadLimit(value * DisplayFormatters.getKinB());
-  									}
+								public boolean setValue(IntSwtParameter p, Integer value) {
+									if (value == null) {
+										return false;
 									}
+									for (TagFeatureRateLimit rl : rls) {
+										if (value == -1) {
+											rl.setTagDownloadLimit(-1);
+										} else {
+											rl.setTagDownloadLimit(
+													value * DisplayFormatters.getKinB());
+										}
+									}
+									return true;
 								}
 
 								@Override
-								public boolean resetIntDefault(String key) {
+								public boolean resetToDefault(IntSwtParameter p) {
 									return false;
 								}
-							}, gTransfer, null, -1, Integer.MAX_VALUE);
-					params.maxDownloadSpeed.setLayoutData(gd);
+							});
+					params.maxDownloadSpeed.setLabelText(k_unit + " " + MessageText.getString(
+							"GeneralView.label.maxdownloadspeed.tooltip"));
 					params.maxDownloadSpeed.setZeroHidden(numTags > 1);
 
 					cols_used += 2;
@@ -556,12 +566,11 @@ public class TagSettingsView
 				// Upload Limit
 				if (supportsTagUploadLimit) {
 
-					gd = new GridData();
-					//gd.horizontalSpan = 3;
-					params.maxUploadSpeed = new GenericIntParameter(
-							new GenericParameterAdapter() {
+					params.maxUploadSpeed = new IntSwtParameter(gTransfer,
+							"tag.maxUploadSpeed", "", null, 1, Integer.MAX_VALUE,
+							new IntSwtParameter.ValueProcessor() {
 								@Override
-								public int getIntValue(String key) {
+								public Integer getValue(IntSwtParameter p) {
 									int limit = rls[0].getTagUploadLimit();
 									if (numTags > 1) {
 										for (int i = 1; i < rls.length; i++) {
@@ -571,25 +580,27 @@ public class TagSettingsView
 											}
 										}
 									}
-									return limit < 0 ? limit : limit / DisplayFormatters.getKinB();
+									return limit < 0 ? limit
+											: limit / DisplayFormatters.getKinB();
 								}
 
 								@Override
-								public void setIntValue(String key, int value) {
+								public boolean setValue(IntSwtParameter p, Integer value) {
 									for (TagFeatureRateLimit rl : rls) {
-									if (value == -1) {
-										rl.setTagUploadLimit(value);
-									} else {
-										rl.setTagUploadLimit(value * DisplayFormatters.getKinB());
-									}}
+										if (value == -1) {
+											rl.setTagUploadLimit(value);
+										} else {
+											rl.setTagUploadLimit(value * DisplayFormatters.getKinB());
+										}
+									}
+									return true;
 								}
 
 								@Override
-								public boolean resetIntDefault(String key) {
+								public boolean resetToDefault(IntSwtParameter p) {
 									return false;
 								}
-							}, gTransfer, null, -1, Integer.MAX_VALUE);
-					params.maxUploadSpeed.setLayoutData(gd);
+							});
 					params.maxUploadSpeed.setZeroHidden(numTags > 1);
 					params.maxUploadSpeed.setLabelText(k_unit + " " + MessageText.getString(
 							"GeneralView.label.maxuploadspeed.tooltip"));
@@ -599,24 +610,32 @@ public class TagSettingsView
 
 				// Field: Upload Priority
 				if (hasTagUploadPriority) {
-					params.uploadPriority = new GenericBooleanParameter(
-							new BooleanParameterAdapter() {
+					params.uploadPriority = new BooleanSwtParameter(gTransfer,
+							"tag.uploadPriority", "cat.upload.priority", null,
+							new BooleanSwtParameter.ValueProcessor() {
 								@Override
-								public Boolean getBooleanValue(String key) {
+								public Boolean getValue(BooleanSwtParameter p) {
 									int value = -1;
 									for (TagFeatureRateLimit rl : rls) {
-										value = updateIntBoolean(rl.getTagUploadPriority() > 0, value);
+										value = updateIntBoolean(rl.getTagUploadPriority() > 0,
+												value);
 									}
 									return value == 2 ? null : value == 1;
 								}
 
 								@Override
-								public void setBooleanValue(String key, boolean value) {
+								public boolean setValue(BooleanSwtParameter p, Boolean value) {
+									boolean changed = rls.length == 0;
+									int priority = value ? 1 : 0;
 									for (TagFeatureRateLimit rl : rls) {
-										rl.setTagUploadPriority(value ? 1 : 0);
+										if (rl.getTagUploadPriority() != priority) {
+											rl.setTagUploadPriority(priority);
+											changed = true;
+										}
 									}
+									return changed;
 								}
-							}, gTransfer, null, "cat.upload.priority", null);
+							});
 					gd = new GridData();
 					gd.horizontalSpan = 6 - cols_used;
 					params.uploadPriority.setLayoutData(gd);
@@ -628,42 +647,45 @@ public class TagSettingsView
 							null, 0, Float.MAX_VALUE, true, 3,
 							new FloatSwtParameter.ValueProcessor() {
 								@Override
-								public float getFloatValue(String key) {
+								public Float getValue(FloatSwtParameter p) {
 									return rls[0].getTagMinShareRatio() / 1000f;
 								}
 
 								@Override
-								public void setFloatValue(String key, float value) {
-									rls[0].setTagMinShareRatio((int) (value * 1000));
+								public boolean setValue(FloatSwtParameter p, Float value) {
+									int newValue = (int) (value * 1000);
+									if (rls[0].getTagMinShareRatio() == newValue) {
+										return false;
+									}
+									rls[0].setTagMinShareRatio(newValue);
+									return true;
 								}
-							}, gTransfer, null, 0, Float.MAX_VALUE, true, 3);
-					gd = new GridData();
-					//gd.horizontalSpan = 3;
-					gd.widthHint = 75;
-					params.min_sr.setLayoutData(gd);
+							});
 				}
 
 				// Field: Max Share
 				if (numTags == 1 && rls[0].getTagMaxShareRatio() >= 0) {
 
-					params.max_sr = new GenericFloatParameter(
-							new GenericParameterAdapter() {
+					params.max_sr = new FloatSwtParameter(gTransfer, "tag.max_sr",
+							"TableColumn.header.max_sr", null, 0, Float.MAX_VALUE, true, 3,
+							new FloatSwtParameter.ValueProcessor() {
 								@Override
-								public float getFloatValue(String key) {
+								public Float getValue(FloatSwtParameter p) {
 									return rls[0].getTagMaxShareRatio() / 1000f;
 								}
 
 								@Override
-								public void setFloatValue(String key, float value) {
-									rls[0].setTagMaxShareRatio((int) (value * 1000));
+								public boolean setValue(FloatSwtParameter p, Float value) {
+									int newValue = (int) (value * 1000);
+									if (rls[0].getTagMaxShareRatio() == newValue) {
+										return false;
+									}
+									rls[0].setTagMaxShareRatio(newValue);
 
-									updateTagSRParams( params );
+									updateTagSRParams(params);
+									return true;
 								}
-							}, gTransfer, null, 0, Float.MAX_VALUE, true, 3);
-					gd = new GridData();
-					//gd.horizontalSpan = 3;
-					gd.widthHint = 75;
-					params.max_sr.setLayoutData(gd);
+							});
 
 						// max sr action
 
@@ -679,27 +701,28 @@ public class TagSettingsView
 							MessageText.getString( "v3.MainWindow.button.stop" ),
 					};
 
-					label = new Label(gTransfer, SWT.NONE);
-					Messages.setLanguageText(label, "label.when.exceeded");
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 					label.setLayoutData(gd);
-					params.max_sr_action = new GenericStringListParameter(
-							new GenericParameterAdapter() {
+					params.max_sr_action = new StringListSwtParameter(gTransfer,
+							"max_sr_action", "label.when.exceeded", null, ST_ACTION_VALUES, ST_ACTION_LABELS,
+							true,
+							new StringListSwtParameter.ValueProcessor() {
 								@Override
-								public String
-								getStringListValue(
-									String		key )
-								{
-									return( "" + rls[0].getTagMaxShareRatioAction());
+								public String getValue(StringListSwtParameter p) {
+									return ("" + rls[0].getTagMaxShareRatioAction());
 								}
 
 								@Override
-								public void setStringListValue(String key, String value) {
-									rls[0].setTagMaxShareRatioAction( Integer.parseInt( value ));
+								public boolean setValue(StringListSwtParameter p,
+										String value) {
+									int val = Integer.parseInt(value);
+									if (rls[0].getTagMaxShareRatioAction() != val) {
+										rls[0].setTagMaxShareRatioAction(val);
+										return true;
+									}
+									return false;
 								}
-							},
-							gTransfer, "max_sr_action", ST_ACTION_LABELS,
-							ST_ACTION_VALUES );
+							});
 				}
 
 				// Field: Max Aggregate Share
@@ -708,21 +731,22 @@ public class TagSettingsView
 							"tag.max_aggregate_sr", "TableColumn.header.max_aggregate_sr", null, 0, Float.MAX_VALUE, true, 3,
 							new FloatSwtParameter.ValueProcessor() {
 								@Override
-								public float getFloatValue(String key) {
+								public Float getValue(FloatSwtParameter p) {
 									return rls[0].getTagMaxAggregateShareRatio() / 1000f;
 								}
 
 								@Override
-								public void setFloatValue(String key, float value) {
-									rls[0].setTagMaxAggregateShareRatio((int) (value * 1000));
+								public boolean setValue(FloatSwtParameter p, Float value) {
+									int newValue = (int) (value * 1000);
+									if (rls[0].getTagMaxAggregateShareRatio() == newValue) {
+										return false;
+									}
+									rls[0].setTagMaxAggregateShareRatio(newValue);
 
-									updateTagSRParams( params );
+									updateTagSRParams(params);
+									return true;
 								}
-							}, gTransfer, null, 0, Float.MAX_VALUE, true, 3);
-					gd = new GridData();
-					//gd.horizontalSpan = 3;
-					gd.widthHint = 75;
-					params.max_aggregate_sr.setLayoutData(gd);
+							});
 
 						// max sr action
 
@@ -736,50 +760,50 @@ public class TagSettingsView
 							MessageText.getString( "v3.MainWindow.button.stop" ),
 					};
 
-					label = new Label(gTransfer, SWT.NONE);
-					Messages.setLanguageText(label, "label.when.exceeded");
-					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					label.setLayoutData(gd);
-					params.max_aggregate_sr_action = new GenericStringListParameter(
-							new GenericParameterAdapter() {
+					params.max_aggregate_sr_action = new StringListSwtParameter(gTransfer,
+							"tag.max_aggregate_sr_action", "label.when.exceeded", null,
+							ST_ACTION_VALUES, ST_ACTION_LABELS, true,
+							new StringListSwtParameter.ValueProcessor() {
 								@Override
-								public String
-								getStringListValue(
-									String		key )
-								{
-									return( "" + rls[0].getTagMaxAggregateShareRatioAction());
+								public String getValue(StringListSwtParameter p) {
+									return ("" + rls[0].getTagMaxAggregateShareRatioAction());
 								}
 
 								@Override
-								public void setStringListValue(String key, String value) {
-									rls[0].setTagMaxAggregateShareRatioAction( Integer.parseInt( value ));
+								public boolean setValue(StringListSwtParameter p, String value) {
+									int val = Integer.parseInt(value);
+									if (rls[0].getTagMaxAggregateShareRatioAction() != val) {
+										rls[0].setTagMaxAggregateShareRatioAction(val);
+										return true;
+									}
+									return false;
 								}
-							},
-							gTransfer, "max_aggregate_sr_action",
-							ST_ACTION_LABELS, ST_ACTION_VALUES );
+							});
+					params.max_aggregate_sr_action.getRelatedControl().setLayoutData(
+							new GridData(SWT.BEGINNING, SWT.CENTER, false, false));
 
 						// aggregate has priority
 
 					// XXX Can we move the label to textKey?
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
 					label.setLayoutData(gd);
-					params.max_aggregate_sr_priority = new GenericBooleanParameter(
-							new BooleanParameterAdapter() {
+					params.max_aggregate_sr_priority = new BooleanSwtParameter(gTransfer,
+							"tag.max_aggregate_sr_priority", "label.aggregate.has.priority",
+							null, new BooleanSwtParameter.ValueProcessor() {
 								@Override
-								public Boolean
-								getBooleanValue(String key)
-								{
-									return( rls[0].getTagMaxAggregateShareRatioHasPriority());
+								public Boolean getValue(BooleanSwtParameter p) {
+									return (rls[0].getTagMaxAggregateShareRatioHasPriority());
 								}
 
 								@Override
-								public void
-								setBooleanValue(String key, boolean value)
-								{
-									 rls[0].setTagMaxAggregateShareRatioHasPriority( value );
+								public boolean setValue(BooleanSwtParameter p, Boolean value) {
+									if (rls[0].getTagMaxAggregateShareRatioHasPriority() == value) {
+										return false;
+									}
+									rls[0].setTagMaxAggregateShareRatioHasPriority(value);
+									return true;
 								}
-							},
-							gTransfer, "max_aggregate_sr_priority", null, null );
+							});
 
 					updateTagSRParams( params );
 				}
@@ -787,24 +811,31 @@ public class TagSettingsView
 				cols_used = 0;
 				
 				if (supportsFPSeeding) {
-					params.firstPrioritySeeding = new GenericBooleanParameter(
-							new BooleanParameterAdapter() {
+					params.firstPrioritySeeding = new BooleanSwtParameter(gTransfer,
+							"tag.firstPrioritySeeding", "label.first.priority.seeding", null,
+							new BooleanSwtParameter.ValueProcessor() {
 								@Override
-								public Boolean getBooleanValue(String key) {
+								public Boolean getValue(BooleanSwtParameter p) {
 									int value = -1;
 									for (TagFeatureRateLimit rl : rls) {
-										value = updateIntBoolean(rl.getFirstPrioritySeeding(), value);
+										value = updateIntBoolean(rl.getFirstPrioritySeeding(),
+												value);
 									}
 									return value == 2 ? null : value == 1;
 								}
 
 								@Override
-								public void setBooleanValue(String key, boolean value) {
+								public boolean setValue(BooleanSwtParameter p, Boolean value) {
+									boolean changed = rls.length == 0;
 									for (TagFeatureRateLimit rl : rls) {
-										rl.setFirstPrioritySeeding(value);
+										if (rl.getFirstPrioritySeeding() != value) {
+											rl.setFirstPrioritySeeding(value);
+											changed = true;
+										}
 									}
+									return changed;
 								}
-							}, gTransfer, null, "label.first.priority.seeding", null);
+							});
 					gd = new GridData();
 					gd.horizontalSpan = 6 - cols_used;
 					params.firstPrioritySeeding.setLayoutData(gd);
@@ -850,43 +881,57 @@ public class TagSettingsView
 								}
 							};
 
-						params.initalSaveData = new GenericBooleanParameter(
-								new BooleanParameterAdapter() {
+						params.initalSaveData = new BooleanSwtParameter(gFiles,
+								"tag.initalSaveData", "label.move.data", null,
+								new BooleanSwtParameter.ValueProcessor() {
 									@Override
-									public Boolean getBooleanValue(String key) {
-										return(( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_DATA ) != 0);
+									public Boolean getValue(BooleanSwtParameter p) {
+										return ((fl.getTagInitialSaveOptions()
+												& TagFeatureFileLocation.FL_DATA) != 0);
 									}
 
 									@Override
-									public void setBooleanValue(String key, boolean value) {
+									public boolean setValue(BooleanSwtParameter p,
+											Boolean value) {
 										long flags = fl.getTagInitialSaveOptions();
-										if ( value ){
+										if (value) {
 											flags |= TagFeatureFileLocation.FL_DATA;
-										}else{
+										} else {
 											flags &= ~TagFeatureFileLocation.FL_DATA;
 										}
-										fl.setTagInitialSaveOptions(flags);
+										if (fl.getTagInitialSaveOptions() != flags) {
+											fl.setTagInitialSaveOptions(flags);
+											return true;
+										}
+										return false;
 									}
-								}, gFiles, null, "label.move.data", null);
+								});
 
-						params.initalSaveTorrent = new GenericBooleanParameter(
-								new BooleanParameterAdapter() {
+						params.initalSaveTorrent = new BooleanSwtParameter(gFiles,
+								"tag.initalSaveTorrent", "label.move.torrent", null,
+								new BooleanSwtParameter.ValueProcessor() {
 									@Override
-									public Boolean getBooleanValue(String key) {
-										return(( fl.getTagInitialSaveOptions() & TagFeatureFileLocation.FL_TORRENT ) != 0);
+									public Boolean getValue(BooleanSwtParameter p) {
+										return ((fl.getTagInitialSaveOptions()
+												& TagFeatureFileLocation.FL_TORRENT) != 0);
 									}
 
 									@Override
-									public void setBooleanValue(String key, boolean value) {
+									public boolean setValue(BooleanSwtParameter p,
+											Boolean value) {
 										long flags = fl.getTagInitialSaveOptions();
-										if ( value ){
+										if (value) {
 											flags |= TagFeatureFileLocation.FL_TORRENT;
-										}else{
+										} else {
 											flags &= ~TagFeatureFileLocation.FL_TORRENT;
 										}
-										fl.setTagInitialSaveOptions(flags);
+										if (fl.getTagInitialSaveOptions() != flags) {
+											fl.setTagInitialSaveOptions(flags);
+											return true;
+										}
+										return false;
 									}
-								}, gFiles, null, "label.move.torrent", null);
+								});
 
 					}
 
@@ -915,43 +960,53 @@ public class TagSettingsView
 								}
 							};
 
-						params.moveOnCompleteData = new GenericBooleanParameter(
-								new BooleanParameterAdapter() {
+						params.moveOnCompleteData = new BooleanSwtParameter(gFiles,
+								"tag.moveOnCompleteData", "label.move.data", null,
+								new BooleanSwtParameter.ValueProcessor() {
 									@Override
-									public Boolean getBooleanValue(String key) {
+									public Boolean getValue(BooleanSwtParameter p) {
 										return(( fl.getTagMoveOnCompleteOptions() & TagFeatureFileLocation.FL_DATA ) != 0);
 									}
 
 									@Override
-									public void setBooleanValue(String key, boolean value) {
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
 										long flags = fl.getTagMoveOnCompleteOptions();
 										if ( value ){
 											flags |= TagFeatureFileLocation.FL_DATA;
 										}else{
 											flags &= ~TagFeatureFileLocation.FL_DATA;
 										}
-										fl.setTagMoveOnCompleteOptions(flags);
+										if (fl.getTagMoveOnCompleteOptions() != flags) {
+											fl.setTagMoveOnCompleteOptions(flags);
+											return true;
+										}
+										return false;
 									}
-								}, gFiles, null, "label.move.data", null);
+								});
 
-						params.moveOnCompleteTorrent = new GenericBooleanParameter(
-								new BooleanParameterAdapter() {
+						params.moveOnCompleteTorrent = new BooleanSwtParameter(gFiles,
+								"tag.moveOnCompleteTorrent", "label.move.torrent", null,
+								new BooleanSwtParameter.ValueProcessor() {
 									@Override
-									public Boolean getBooleanValue(String key) {
+									public Boolean getValue(BooleanSwtParameter p) {
 										return(( fl.getTagMoveOnCompleteOptions() & TagFeatureFileLocation.FL_TORRENT ) != 0);
 									}
 
 									@Override
-									public void setBooleanValue(String key, boolean value) {
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
 										long flags = fl.getTagMoveOnCompleteOptions();
 										if ( value ){
 											flags |= TagFeatureFileLocation.FL_TORRENT;
 										}else{
 											flags &= ~TagFeatureFileLocation.FL_TORRENT;
 										}
-										fl.setTagMoveOnCompleteOptions(flags);
+										if (fl.getTagMoveOnCompleteOptions() != flags) {
+											fl.setTagMoveOnCompleteOptions(flags);
+											return true;
+										}
+										return false;
 									}
-								}, gFiles, null, "label.move.torrent", null);
+								});
 					}
 
 					if ( fl.supportsTagCopyOnComplete()){
@@ -977,43 +1032,54 @@ public class TagSettingsView
 								}
 							};
 
-						params.copyOnCompleteData = new GenericBooleanParameter(
-								new BooleanParameterAdapter() {
+						params.copyOnCompleteData = new BooleanSwtParameter(gFiles,
+								"tag.copyOnCompleteData", "label.copy.data", null,
+								new BooleanSwtParameter.ValueProcessor() {
 									@Override
-									public Boolean getBooleanValue(String key) {
-										return(( fl.getTagCopyOnCompleteOptions() & TagFeatureFileLocation.FL_DATA ) != 0);
+									public Boolean getValue(BooleanSwtParameter p) {
+										return ((fl.getTagCopyOnCompleteOptions()
+												& TagFeatureFileLocation.FL_DATA) != 0);
 									}
 
 									@Override
-									public void setBooleanValue(String key, boolean value) {
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
 										long flags = fl.getTagCopyOnCompleteOptions();
 										if ( value ){
 											flags |= TagFeatureFileLocation.FL_DATA;
 										}else{
 											flags &= ~TagFeatureFileLocation.FL_DATA;
 										}
-										fl.setTagCopyOnCompleteOptions(flags);
+										if (fl.getTagCopyOnCompleteOptions() != flags) {
+											fl.setTagCopyOnCompleteOptions(flags);
+											return true;
+										}
+										return false;
 									}
-								}, gFiles, null, "label.copy.data", null);
+								});
 
-						params.copyOnCompleteTorrent = new GenericBooleanParameter(
-								new BooleanParameterAdapter() {
+						params.copyOnCompleteTorrent = new BooleanSwtParameter(gFiles,
+								"tag.copyOnCompleteTorrent", "label.copy.torrent", null,
+								new BooleanSwtParameter.ValueProcessor() {
 									@Override
-									public Boolean getBooleanValue(String key) {
+									public Boolean getValue(BooleanSwtParameter p) {
 										return(( fl.getTagCopyOnCompleteOptions() & TagFeatureFileLocation.FL_TORRENT ) != 0);
 									}
 
 									@Override
-									public void setBooleanValue(String key, boolean value) {
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
 										long flags = fl.getTagCopyOnCompleteOptions();
 										if ( value ){
 											flags |= TagFeatureFileLocation.FL_TORRENT;
 										}else{
 											flags &= ~TagFeatureFileLocation.FL_TORRENT;
 										}
-										fl.setTagCopyOnCompleteOptions(flags);
+										if (fl.getTagCopyOnCompleteOptions() != flags) {
+											fl.setTagCopyOnCompleteOptions(flags);
+											return true;
+										}
+										return false;
 									}
-								}, gFiles, null, "label.copy.torrent", null);
+								});
 					}
 				}
 			}
@@ -1123,23 +1189,24 @@ public class TagSettingsView
 					});
 					Messages.setLanguageText(btnResetConstraint, "Button.reset");
 				
-					params.constraintEnabled = new GenericBooleanParameter(
-							new BooleanParameterAdapter() {
+					params.constraintEnabled = new BooleanSwtParameter(cConstraintOptions,
+							"tag.constraintEnabled", "label.enabled", null,
+							new BooleanSwtParameter.ValueProcessor() {
 								@Override
-								public Boolean getBooleanValue(String key) {
+								public Boolean getValue(BooleanSwtParameter p) {
 									return(propConstraint.isEnabled());
 								}
 
 								@Override
-								public void setBooleanValue(String key, boolean value) {
+								public boolean setValue(BooleanSwtParameter p, Boolean value) {
+									if (propConstraint.isEnabled() == value) {
+										return false;
+									}
 									propConstraint.setEnabled( value );
-								
+									return true;
 								}
-							}, gConstraint, null, "label.enabled", null);
+							});
 					
-					Label constraintMode = new Label(gConstraint, SWT.NULL );
-					Messages.setLanguageText(constraintMode, "label.scope");
-
 					String[] CM_VALUES = {
 							CM_ADD_REMOVE,
 							CM_ADD_ONLY,
@@ -1154,29 +1221,27 @@ public class TagSettingsView
 							MessageText.getString( "label.new.downloads" ),
 					};
 
-					params.constraintMode = new GenericStringListParameter(
-							new GenericParameterAdapter() {
+					params.constraintMode = new StringListSwtParameter(cConstraintOptions,
+							"tag_constraint_action_mode", "label.scope", null, CM_VALUES,
+							CM_LABELS, true, new StringListSwtParameter.ValueProcessor() {
 								@Override
-								public String
-								getStringListValue(
-									String		key )
-								{
+								public String getValue(StringListSwtParameter p) {
 									String[] list = propConstraint.getStringList();
 
-									if ( list.length > 1 && list[1] != null ){
+									if (list.length > 1 && list[1] != null) {
 
-										return( list[1]);
+										return (list[1]);
 
-									}else{
+									} else {
 
-										return( CM_ADD_REMOVE );
+										return (CM_ADD_REMOVE);
 									}
 								}
 
 								@Override
-								public void setStringListValue(String key, String value) {
+								public boolean setValue(StringListSwtParameter p, String value) {
 
-									if ( value == null || value.length() == 0 ){
+									if (value == null || value.length() == 0) {
 
 										value = CM_ADD_REMOVE;
 									}
@@ -1187,9 +1252,7 @@ public class TagSettingsView
 
 									return true;
 								}
-							},
-							gConstraint, "tag_constraint_action_mode",
-							CM_LABELS, CM_VALUES );
+							});
 
 					Link lblAboutConstraint = new Link(cConstraintOptions, SWT.WRAP);
 					lblAboutConstraint.setText(
@@ -1233,89 +1296,74 @@ public class TagSettingsView
 									return tfl.getMaximumTaggables();
 								}
 
-							@Override
-							public void setIntValue(String key, int value) {
-								tfl.setMaximumTaggables( value );
-							}
-						}, gLimits, null, 0, Integer.MAX_VALUE );
+								@Override
+								public boolean setValue(IntSwtParameter p, Integer value) {
+									tfl.setMaximumTaggables( value );
+									return true;
+								}
+							} );
 
 						// we really don't want partial values to be set as the consequences may be very
 						// unwanted if a removal policy is already set...
 
 					params.tfl_max_taggables.disableTimedSave();
 
-					label = new Label(gLimits, SWT.NONE);
-					Messages.setLanguageText(label, "label.removal.policy");
-
-					params.tfl_removal_policy =
-						new GenericStringListParameter(
-							new GenericParameterAdapter()
-							{
-								@Override
-								public String
-								getStringListValue(
-									String		key )
-								{
-									return( String.valueOf( tfl.getRemovalStrategy()));
-								}
-
-								@Override
-								public void
-								setStringListValue(
-									String		key,
-									String		value )
-								{
-									tfl.setRemovalStrategy( value==null?TagFeatureLimits.RS_DEFAULT:Integer.parseInt( value ));
-								}
-							},
-							gLimits, null,
-							new String[]{
-								"",
-								MessageText.getString( "MyTorrentsView.menu.archive" ),
-								MessageText.getString( "Button.deleteContent.fromLibrary" ),
-								MessageText.getString( "Button.deleteContent.fromComputer" ),
-								MessageText.getString( "label.move.to.old.tag" ),
-							},
-							new String[]{
+					params.tfl_removal_policy = new StringListSwtParameter(gLimits,
+							"tag.tfl_removal_policy", "label.removal.policy", null,
+							new String[] {
 								"0",
 								"1",
 								"2",
 								"3",
-								"4"});
-
-					label = new Label(gLimits, SWT.NONE);
-					Messages.setLanguageText(label, "label.ordering");
-
-					params.tfl_ordering =
-						new GenericStringListParameter(
-							new GenericParameterAdapter()
-							{
+								"4"
+							}, new String[] {
+								"",
+								MessageText.getString("MyTorrentsView.menu.archive"),
+								MessageText.getString("Button.deleteContent.fromLibrary"),
+								MessageText.getString("Button.deleteContent.fromComputer"),
+								MessageText.getString("label.move.to.old.tag"),
+							}, true, new StringListSwtParameter.ValueProcessor() {
 								@Override
-								public String
-								getStringListValue(
-									String		key )
-								{
-									return( String.valueOf( tfl.getOrdering()));
+								public String getValue(StringListSwtParameter p) {
+									return (String.valueOf(tfl.getRemovalStrategy()));
 								}
 
 								@Override
-								public void
-								setStringListValue(
-									String		key,
-									String		value )
-								{
-									tfl.setOrdering( value==null?TagFeatureLimits.OP_DEFAULT:Integer.parseInt( value ));
+								public boolean setValue(StringListSwtParameter p, String value) {
+									int val = value == null
+											? TagFeatureLimits.RS_DEFAULT : Integer.parseInt(value);
+									if (tfl.getRemovalStrategy() != val) {
+										tfl.setRemovalStrategy(val);
+										return true;
+									}
+									return false;
 								}
-							},
-							gLimits, null,
-							new String[]{
-								MessageText.getString( "label.time.added.to.vuze" ),
-								MessageText.getString( "label.time.added.to.tag" ),
-							},
-							new String[]{
+							});
+
+					params.tfl_ordering = new StringListSwtParameter(gLimits,
+							"tag.tfl_ordering", "label.ordering", null, new String[] {
 								"0",
 								"1",
-								});
+							}, new String[] {
+								MessageText.getString("label.time.added.to.vuze"),
+								MessageText.getString("label.time.added.to.tag"),
+							}, true, new StringListSwtParameter.ValueProcessor() {
+								@Override
+								public String getValue(StringListSwtParameter p) {
+									return (String.valueOf(tfl.getOrdering()));
+								}
+
+								@Override
+								public boolean setValue(StringListSwtParameter p, String value) {
+									int val = value == null ? TagFeatureLimits.OP_DEFAULT
+											: Integer.parseInt(value);
+									if (tfl.getOrdering() != val) {
+										tfl.setOrdering(val);
+										return true;
+									}
+									return false;
+								}
+							});
 				}
 			}
 
@@ -1337,43 +1385,53 @@ public class TagSettingsView
 				label = new Label(gNotifications, SWT.NONE);
 				label.setText( MessageText.getString( "tag.notification.post" ) + ":" );
 
-				params.notification_post_add = new GenericBooleanParameter(
-						new BooleanParameterAdapter() {
+				params.notification_post_add = new BooleanSwtParameter(gNotifications,
+						"tag.notification_post_add", "label.on.addition", null,
+						new BooleanSwtParameter.ValueProcessor() {
 							@Override
-							public Boolean getBooleanValue(String key) {
+							public Boolean getValue(BooleanSwtParameter p) {
 								return(( tfn.getPostingNotifications() & TagFeatureNotifications.NOTIFY_ON_ADD ) != 0);
 							}
 
 							@Override
-							public void setBooleanValue(String key, boolean value) {
+							public boolean setValue(BooleanSwtParameter p, Boolean value) {
 								int flags = tfn.getPostingNotifications();
 								if ( value ){
 									flags |= TagFeatureNotifications.NOTIFY_ON_ADD;
 								}else{
 									flags &= ~TagFeatureNotifications.NOTIFY_ON_ADD;
 								}
-								tfn.setPostingNotifications(flags);
+								if (tfn.getPostingNotifications() != flags) {
+									tfn.setPostingNotifications(flags);
+									return true;
+								}
+								return false;
 							}
-						}, gNotifications, null, "label.on.addition", null);
+						});
 
-				params.notification_post_remove = new GenericBooleanParameter(
-						new BooleanParameterAdapter() {
+				params.notification_post_remove = new BooleanSwtParameter(
+						gNotifications, "tag.notification_post_remove", "label.on.removal",
+						null, new BooleanSwtParameter.ValueProcessor() {
 							@Override
-							public Boolean getBooleanValue(String key) {
+							public Boolean getValue(BooleanSwtParameter p) {
 								return(( tfn.getPostingNotifications() & TagFeatureNotifications.NOTIFY_ON_REMOVE ) != 0 );
 							}
 
 							@Override
-							public void setBooleanValue(String key, boolean value) {
+							public boolean setValue(BooleanSwtParameter p, Boolean value) {
 								int flags = tfn.getPostingNotifications();
 								if ( value ){
 									flags |= TagFeatureNotifications.NOTIFY_ON_REMOVE;
 								}else{
 									flags &= ~TagFeatureNotifications.NOTIFY_ON_REMOVE;
 								}
-								tfn.setPostingNotifications(flags);
+								if (tfn.getPostingNotifications() != flags) {
+									tfn.setPostingNotifications(flags);
+									return true;
+								}
+								return false;
 							}
-						}, gNotifications, null, "label.on.removal", null);
+						});
 			}
 
 			swt_updateFields();
@@ -1496,7 +1554,7 @@ public class TagSettingsView
 
 			if (tagColor != null) {
 				int[] color = tag.getColor();
-				if (!Arrays.areEqual(tagColor, color)) {
+				if (!Arrays.equals(tagColor, color)) {
 					tagColor = null;
 				}
 			}
@@ -1520,11 +1578,11 @@ public class TagSettingsView
 		}
 
 		if (params.viewInSideBar != null) {
-			params.viewInSideBar.refresh();
+			params.viewInSideBar.refreshControl();
 		}
 
 		if (params.isPublic != null) {
-			params.isPublic.refresh();
+			params.isPublic.refreshControl();
 		}
 
 		if (params.maxDownloadSpeed != null) {
@@ -1535,13 +1593,13 @@ public class TagSettingsView
 		}
 
 		if (params.uploadPriority != null) {
-			params.uploadPriority.refresh();
+			params.uploadPriority.refreshControl();
 		}
 		if (params.min_sr != null) {
-			params.min_sr.refresh();
+			params.min_sr.refreshControl();
 		}
 		if (params.max_sr != null) {
-			params.max_sr.refresh();
+			params.max_sr.refreshControl();
 		}
 
 		if (params.initalSaveFolder != null) {
@@ -1589,7 +1647,7 @@ public class TagSettingsView
 		}
 
 		if (params.tfl_max_taggables != null) {
-			params.tfl_max_taggables.refresh();
+			params.tfl_max_taggables.refreshControl();
 		}
 	}
 
@@ -1619,14 +1677,5 @@ public class TagSettingsView
 				}
 			}
 		});
-	}
-
-
-	private static abstract class BooleanParameterAdapter extends GenericParameterAdapter {
-		@Override
-		public abstract Boolean getBooleanValue(String key);
-
-		@Override
-		public abstract void setBooleanValue(String key, boolean value);
 	}
 }
