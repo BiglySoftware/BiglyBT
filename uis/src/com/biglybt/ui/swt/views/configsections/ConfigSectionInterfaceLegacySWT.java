@@ -61,7 +61,7 @@ public class ConfigSectionInterfaceLegacySWT
 
 		BooleanParameterImpl bpFancyTab = new BooleanParameterImpl(
 				"GUI_SWT_bFancyTab", "ConfigView.section.style.useFancyTabs");
-		add(bpCustomTab);
+		add(bpFancyTab);
 
 		bpCustomTab.addEnabledOnSelection(bpFancyTab);
 	}
