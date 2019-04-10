@@ -97,8 +97,7 @@ public class LinkSwtParameter
 
 		if (doGridData(composite) && labelKey == null) {
 			GridLayout parentLayout = (GridLayout) composite.getLayout();
-			if (parentLayout.numColumns == 2
-					&& composite.getChildren().length % 2 == 1) {
+			if (parentLayout.numColumns >= 2) {
 				GridData gridData = Utils.getWrappableLabelGridData(2,
 						GridData.FILL_HORIZONTAL);
 				link_label.setLayoutData(gridData);
