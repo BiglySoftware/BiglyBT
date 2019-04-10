@@ -102,6 +102,7 @@ import com.biglybt.ui.swt.views.skin.SkinnedDialog.SkinnedDialogClosedListener;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 /**
  * @author TuxPaper
@@ -1697,6 +1698,16 @@ public class UIFunctionsImpl
 		if (listeners instanceof TableCellSWTPaintListener) {
 				tableColumn.addCellOtherListener("SWTPaint", listeners);
 		}
+	}
+
+	@Override
+	public void copyToClipboard(String text) {
+		ClipboardCopy.copyToClipBoard(text);
+	}
+
+	@Override
+	public void showInExplorer(File f) {
+		Utils.execSWTThread(() -> ManagerUtils.open(f));
 	}
 
 	public void dispose() {

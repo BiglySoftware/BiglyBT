@@ -17,6 +17,7 @@
 package com.biglybt.ui;
 
 
+import java.io.File;
 import java.util.Map;
 
 import com.biglybt.core.CoreComponent;
@@ -214,6 +215,10 @@ public interface UIFunctions
 	public void showCreateTagDialog(TagReturner tagReturner);
 
 	void tableColumnAddedListeners(TableColumnImpl tableColumn, Object listeners);
+
+	void copyToClipboard(String text);
+
+	void showInExplorer(File f);
 
 	public interface
 	TagReturner

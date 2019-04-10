@@ -20,6 +20,7 @@
 
 package com.biglybt.ui.swt.shells.main;
 
+import java.io.File;
 import java.util.Map;
 
 import com.biglybt.core.*;
@@ -57,6 +58,7 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.systray.SystemTraySWT;
 
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 public class
 MainWindowDelayStub
@@ -1108,6 +1110,16 @@ MainWindowDelayStub
 		@Override
 		public void tableColumnAddedListeners(TableColumnImpl tableColumn, Object listeners) {
 			log("tableColumnAddedListeners");
+		}
+
+		@Override
+		public void copyToClipboard(String text) {
+			ClipboardCopy.copyToClipBoard(text);
+		}
+
+		@Override
+		public void showInExplorer(File f) {
+			ManagerUtils.open(f);
 		}
 	}
 }
