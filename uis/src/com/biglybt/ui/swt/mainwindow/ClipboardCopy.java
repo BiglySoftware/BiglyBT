@@ -24,15 +24,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.MenuAdapter;
-import org.eclipse.swt.events.MenuEvent;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.ui.swt.Utils;
 
@@ -50,27 +47,12 @@ public class ClipboardCopy {
   copyToClipBoard(
     final String    data )
   {
-	  Runnable do_it =
-		new Runnable()
-	  	{
-		  @Override
-		  public void
-		  run()
-		  {
-			  new Clipboard(Utils.getDisplay()).setContents(
-					  new Object[] {data.replaceAll("\\x00", " " )  },
-					  new Transfer[] {TextTransfer.getInstance()});
-		  }
-	  	};
-
-	  if ( Utils.isSWTThread()){
-
-		  do_it.run();
-
-	  }else{
-
-		  Utils.execSWTThread( do_it );
-	  }
+		Utils.execSWTThread(
+				() -> new Clipboard(Utils.getDisplay()).setContents(new Object[] {
+					data.replaceAll("\\x00", " ")
+				}, new Transfer[] {
+					TextTransfer.getInstance()
+				}));
   }
 
   public static void
@@ -278,7 +260,10 @@ public class ClipboardCopy {
 					  }
 					  
 					  return( str );
-					  
+
+				  }else if (control instanceof Label) {
+					  return ((Label) control).getText();
+
 				  }else{
 					  
 					  return( String.valueOf( o ));
