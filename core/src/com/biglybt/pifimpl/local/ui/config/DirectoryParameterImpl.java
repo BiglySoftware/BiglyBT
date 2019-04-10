@@ -1,5 +1,4 @@
 /*
- * File    : GenericParameter.java
  * Created : Nov 21, 2003
  * By      : epall
  *
@@ -27,33 +26,44 @@ package com.biglybt.pifimpl.local.ui.config;
  */
 
 import com.biglybt.core.config.COConfigurationManager;
+
 import com.biglybt.pif.ui.config.DirectoryParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 public class
 DirectoryParameterImpl
 	extends		ParameterImpl
 	implements 	DirectoryParameter
 {
-	public
-	DirectoryParameterImpl(
-		PluginConfigImpl 	config,
-		String 			key,
-		String 			label,
-		String 			defaultValue)
-	{
-		super( config, key, label );
+	private String keyDialogTitle;
+	private String keyDialogMessage;
+	private String hintKey;
 
-		COConfigurationManager.setStringDefault(getKey(), defaultValue);
-
-		config.notifyParamExists(getKey());
+	public DirectoryParameterImpl(String key, String labelKey) {
+		super(key, labelKey);
 	}
 
 	@Override
 	public String
 	getValue()
 	{
-		return( config.getUnsafeStringParameter( getKey()));
+		return COConfigurationManager.getStringParameter(configKey);
+	}
+
+	@Override
+	public void setDialogTitleKey(String key) {
+		keyDialogTitle = key;
+	}
+
+	public String getKeyDialogTitle() {
+		return keyDialogTitle;
+	}
+
+	public void setDialogMessageKey(String key) {
+		keyDialogMessage = key;
+	}
+
+	public String getKeyDialogMessage() {
+		return keyDialogMessage;
 	}
 
 	@Override
@@ -61,6 +71,23 @@ DirectoryParameterImpl
 	setValue(
 		String		str )
 	{
-		config.setUnsafeStringParameter( getKey(), str );
+		COConfigurationManager.setParameter(configKey, str );
+	}
+
+	@Override
+	public String getHintKey() {
+		return hintKey;
+	}
+
+	@Override
+	public void setHintKey(String hintKey) {
+		this.hintKey = hintKey;
+		refreshControl();
+	}
+
+	@Override
+	public void setHintText(String text) {
+		this.hintKey = text == null ? null : "!" + text + "!";
+		refreshControl();
 	}
 }

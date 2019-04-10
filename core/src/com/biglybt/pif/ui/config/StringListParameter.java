@@ -20,13 +20,41 @@
 package com.biglybt.pif.ui.config;
 
 /**
- * @author parg
+ * An String config parameter that's limited to a list of values.  Values are
+ * usually shown to user in friendly text representations.
  *
+ * @see IntListParameter
+ *
+ * @since BiglyBT 1.0.0.0
  */
 public interface
 StringListParameter
-	extends Parameter
+	extends Parameter, ParameterWithSuffix
 {
+	/**
+	 * Dropdown style.  Default.
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
+	int TYPE_DROPDOWN = 0;
+
+	/**
+	 * Compact style of radio buttons. Typically will display all options in one row
+	 */
+	//int TYPE_RADIO_COMPACT = 1;
+
+	/**
+	 * List style of radio buttons. Typically will display each option on a new row
+	 */
+	//int TYPE_RADIO_LIST = 2;
+
+	/**
+	 * Listbox style. Typically will display each option on a new row
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	int TYPE_LISTBOX = 3;
+
 	public void
 	setValue(
 		String	value );
@@ -37,4 +65,8 @@ StringListParameter
 	public void
 	setLabels(
 		String[]	labels );
+
+	void setListType(int listType);
+
+	int getListType();
 }

@@ -636,11 +636,14 @@ TagBase
 	setColor(
 		int[]		rgb )
 	{
-		writeStringAttribute( AT_COLOR_ID, encodeRGB( rgb ));
+
+		boolean changed = writeStringAttribute( AT_COLOR_ID, encodeRGB( rgb ));
 
 		colour = null;
 
-		tag_type.fireMetadataChanged( this );
+		if (changed) {
+			tag_type.fireMetadataChanged( this );
+		}
 	}
 
 	@Override
@@ -763,9 +766,11 @@ TagBase
 
 			}else if ( existing == null || folder == null || !existing.equals( folder )){
 
-				writeStringAttribute( AT_FL_INIT_LOC, folder==null?null:folder.getAbsolutePath());
+				boolean changed = writeStringAttribute( AT_FL_INIT_LOC, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireMetadataChanged( this );
+				if (changed) {
+					tag_type.fireMetadataChanged( this );
+				}
 			}
 		}
 	}
@@ -840,9 +845,11 @@ TagBase
 
 			}else if ( existing == null || folder == null || !existing.equals( folder )){
 
-				writeStringAttribute( AT_FL_MOVE_COMP, folder==null?null:folder.getAbsolutePath());
+				boolean changed = writeStringAttribute( AT_FL_MOVE_COMP, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireMetadataChanged( this );
+				if (changed) {
+					tag_type.fireMetadataChanged( this );
+				}
 			}
 		}
 	}
@@ -917,9 +924,11 @@ TagBase
 
 			}else if ( existing == null || folder == null || !existing.equals( folder )){
 
-				writeStringAttribute( AT_FL_COPY_COMP, folder==null?null:folder.getAbsolutePath());
+				boolean changed = writeStringAttribute( AT_FL_COPY_COMP, folder==null?null:folder.getAbsolutePath());
 
-				tag_type.fireMetadataChanged( this );
+				if (changed) {
+					tag_type.fireMetadataChanged( this );
+				}
 			}
 		}
 	}
@@ -1259,11 +1268,13 @@ TagBase
 
 		script = script.trim();
 
-		writeStringAttribute( AT_EOS_SCRIPT, script);
+		boolean changed = writeStringAttribute(AT_EOS_SCRIPT, script);
 
-		setActionEnabled( TagFeatureExecOnAssign.ACTION_SCRIPT, script.length() > 0 );
-		
-		tag_type.fireMetadataChanged( this );
+		if (changed) {
+			setActionEnabled( TagFeatureExecOnAssign.ACTION_SCRIPT, script.length() > 0 );
+
+			tag_type.fireMetadataChanged( this );
+		}
 	}
 
 	public String
@@ -1290,11 +1301,13 @@ TagBase
 
 		channel = channel.trim();
 
-		writeStringAttribute( AT_EOS_PM, channel);
+		boolean changed = writeStringAttribute( AT_EOS_PM, channel);
 
-		setActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI, channel.length() > 0 );
-		
-		tag_type.fireMetadataChanged( this );
+		if (changed) {
+			setActionEnabled( TagFeatureExecOnAssign.ACTION_POST_MAGNET_URI, channel.length() > 0 );
+
+			tag_type.fireMetadataChanged( this );
+		}
 	}
 	
 	public OptionsTemplateHandler
@@ -1692,9 +1705,11 @@ TagBase
 
 		description = str;
 
-		writeStringAttribute( AT_DESCRIPTION, str );
+		boolean changed = writeStringAttribute( AT_DESCRIPTION, str );
 
-		tag_type.fireMetadataChanged( this );
+		if (changed) {
+			tag_type.fireMetadataChanged( this );
+		}
 	}
 
 	@Override
@@ -1909,12 +1924,15 @@ TagBase
 		return( tag_type.readStringAttribute( this, attr, def ));
 	}
 
-	protected void
+	/**
+	 * @return Whether attribute was changed from existing value
+	 */
+	protected boolean
 	writeStringAttribute(
 		String	attr,
 		String	value )
 	{
-		tag_type.writeStringAttribute( this, attr, value );
+		return tag_type.writeStringAttribute( this, attr, value );
 	}
 
 	protected Map<String,Object>

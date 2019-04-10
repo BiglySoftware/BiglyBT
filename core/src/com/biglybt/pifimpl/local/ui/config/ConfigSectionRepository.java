@@ -25,15 +25,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.ui.config.BaseConfigSection;
+
 import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.config.ConfigSection;
 
 public class ConfigSectionRepository {
 
   private static ConfigSectionRepository 	instance;
   private static AEMonitor					class_mon	= new AEMonitor( "ConfigSectionRepository:class");
 
-  private Map<ConfigSection,ConfigSectionHolder> items;
+	private Map<BaseConfigSection, ConfigSectionHolder> items;
 
   private ConfigSectionRepository() {
    items = new LinkedHashMap<>();
@@ -52,7 +53,7 @@ public class ConfigSectionRepository {
   	}
   }
 
-  public void addConfigSection(ConfigSection item, PluginInterface pi ) {
+	public void addConfigSection(BaseConfigSection item, PluginInterface pi) {
   	try{
   		class_mon.enter();
 
@@ -64,7 +65,7 @@ public class ConfigSectionRepository {
     }
   }
 
-  public void removeConfigSection(ConfigSection item) {
+	public void removeConfigSection(BaseConfigSection item) {
 	  	try{
 	  		class_mon.enter();
 
@@ -76,7 +77,7 @@ public class ConfigSectionRepository {
 	    }
 	  }
 
-  public ArrayList<ConfigSection> getList() {
+	public ArrayList<BaseConfigSection> getList() {
 	 	try{
 	  		class_mon.enter();
 

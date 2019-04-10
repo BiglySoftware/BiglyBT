@@ -30,46 +30,22 @@ import java.security.MessageDigest;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA1Hasher;
+
 import com.biglybt.pif.ui.config.PasswordParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 public class
 PasswordParameterImpl
 	extends 	ParameterImpl
 	implements 	PasswordParameter
 {
-	protected  	byte[] 	defaultValue;
 	protected 	int		encoding_type;
+	private int widthInCharacters;
 
-	public
-	PasswordParameterImpl(
-		PluginConfigImpl 	config,
-		String 				key,
-		String 				label,
-		int					_encoding_type,
-		byte[] 				_default_value)
-	{
-		super(config,key, label);
+	public PasswordParameterImpl(String key, String labelKey,
+			int _encoding_type) {
+		super(key, labelKey);
 
 		encoding_type	= _encoding_type;
-
-		if ( _default_value == null ){
-
-			defaultValue = new byte[0];
-
-		}else{
-
-			defaultValue = encode( _default_value );
-		}
-
-		config.notifyParamExists(getKey());
-
-		COConfigurationManager.setByteDefault( getKey(), defaultValue );
-	}
-
-	public byte[] getDefaultValue()
-	{
-		return( defaultValue );
 	}
 
 	@Override
@@ -88,7 +64,7 @@ PasswordParameterImpl
 			encoded = encode( plain_password );
 		}
 
-		config.setUnsafeByteParameter( getKey(), encoded );
+		COConfigurationManager.setParameter(getConfigKeyName(), encoded );
 	}
 
 	public int
@@ -101,7 +77,7 @@ PasswordParameterImpl
 	public byte[]
 	getValue()
 	{
-		return config.getUnsafeByteParameter(getKey(), getDefaultValue());
+		return COConfigurationManager.getByteParameter(getConfigKeyName());
 	}
 
 	protected byte[]
@@ -122,9 +98,9 @@ PasswordParameterImpl
 		}
    	}
 
-	protected byte[]
+	public byte[]
 	encode(
-		byte[]		bytes )
+			byte[] bytes)
 	{
 		if ( encoding_type == ET_SHA1 ){
 
@@ -145,4 +121,15 @@ PasswordParameterImpl
 
 		return( bytes );
 	}
+
+	@Override
+	public void setWidthInCharacters(int widthInCharacters) {
+		this.widthInCharacters = widthInCharacters;
+	}
+
+	@Override
+	public int getWidthInCharacters() {
+		return widthInCharacters;
+	}
+
 }

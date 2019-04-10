@@ -19,7 +19,6 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 import com.biglybt.pif.ui.config.FloatParameter;
 
@@ -37,19 +36,17 @@ public class FloatParameterImpl
 
 	private boolean allowZero = true;
 
-	public FloatParameterImpl(PluginConfigImpl config, String key, String label,
-			float defaultValue) {
-		super(config, key, label);
-		COConfigurationManager.setFloatDefault(getKey(), defaultValue);
-		config.notifyParamExists(getKey());
+	private String suffixLabelKey;
+
+	public FloatParameterImpl(String configKey, String labelKey) {
+		super(configKey, labelKey);
 
 		this.limited = false;
 	}
 
-	public FloatParameterImpl(PluginConfigImpl config, String key, String label,
-			float defaultValue, float minValue, float maxValue,
-			int numDigitsAfterDecimal) {
-		this(config, key, label, defaultValue);
+	public FloatParameterImpl(String configKey, String labelKey, float minValue,
+			float maxValue, int numDigitsAfterDecimal) {
+		this(configKey, labelKey);
 		this.min_value = minValue;
 		this.max_value = maxValue;
 		this.numDigitsAfterDecimal = numDigitsAfterDecimal;
@@ -73,12 +70,12 @@ public class FloatParameterImpl
 
 	@Override
 	public float getValue() {
-		return config.getUnsafeIntParameter(getKey());
+		return COConfigurationManager.getIntParameter(configKey);
 	}
 
 	@Override
 	public void setValue(float b) {
-		config.setUnsafeFloatParameter(getKey(), b);
+		COConfigurationManager.setParameter(configKey, b);
 	}
 
 	public boolean isLimited() {
@@ -93,5 +90,22 @@ public class FloatParameterImpl
 	@Override
 	public float getMaxValue() {
 		return max_value;
+	}
+
+	@Override
+	public String getSuffixLabelKey() {
+		return suffixLabelKey;
+	}
+
+	@Override
+	public void setSuffixLabelKey(String suffixLabelKey) {
+		this.suffixLabelKey = suffixLabelKey;
+		refreshControl();
+	}
+
+	@Override
+	public void setSuffixLabelText(String text) {
+		this.suffixLabelKey = "!" + text + "!";
+		refreshControl();
 	}
 }

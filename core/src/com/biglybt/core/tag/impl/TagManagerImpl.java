@@ -2602,7 +2602,10 @@ TagManagerImpl
 		}
 	}
 
-	protected void
+	/**
+	 * @return Whether attribute was changed from existing value
+	 */
+	protected boolean
 	writeStringAttribute(
 		TagTypeBase		tag_type,
 		TagBase			tag,
@@ -2618,11 +2621,11 @@ TagManagerImpl
 
 				if ( old == value ){
 
-					return;
+					return false;
 
 				}else if ( old != null && value != null && old.equals( value )){
 
-					return;
+					return false;
 				}
 
 				MapUtils.setMapString( conf, attr, value );
@@ -2633,6 +2636,7 @@ TagManagerImpl
 
 			Debug.out( e );
 		}
+		return true;
 	}
 
 	protected Map<String,Object>

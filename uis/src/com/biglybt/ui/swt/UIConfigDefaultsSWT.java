@@ -299,6 +299,7 @@ public class UIConfigDefaultsSWT
 		
 		def.addParameter( "XferStats.show.samples", true );
 		def.addParameter( "browser.external.non.pub", true );
+		def.addParameter( "browser.external.test.url", Constants.URL_CLIENT_HOME );
 
 		String orderDef = "";
 		for (int i=0;i<MultipleDocumentInterface.SIDEBAR_HEADER_ORDER_DEFAULT.length;i++){

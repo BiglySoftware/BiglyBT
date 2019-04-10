@@ -630,13 +630,16 @@ TagTypeBase
 		return( manager.readStringAttribute( this, tag, attr, def ));
 	}
 
-	protected void
+	/**
+	 * @return Whether attribute was changed from existing value
+	 */
+	protected boolean
 	writeStringAttribute(
 		TagBase	tag,
 		String	attr,
 		String	value )
 	{
-		manager.writeStringAttribute( this, tag, attr, value );
+		return manager.writeStringAttribute( this, tag, attr, value );
 	}
 
 	protected Map<String,Object>

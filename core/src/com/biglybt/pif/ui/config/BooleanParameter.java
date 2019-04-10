@@ -22,10 +22,11 @@ package com.biglybt.pif.ui.config;
 /**
  * @author parg
  *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addBooleanParameter2(String, String, boolean)
  */
 public interface
 BooleanParameter
-	extends EnablerParameter
+	extends EnablerParameter, ParameterWithSuffix
 {
 	public boolean
 	getValue();

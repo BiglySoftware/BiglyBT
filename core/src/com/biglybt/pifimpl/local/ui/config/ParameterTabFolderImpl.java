@@ -39,7 +39,7 @@ ParameterTabFolderImpl
 	public
 	ParameterTabFolderImpl()
 	{
-		super( null, "", "" );
+		super("", "" );
 	}
 
 	@Override

@@ -71,6 +71,12 @@ public class SystemTraySWT
 	private final String trayIconImageID;
 	private long lastUnixVal = -1;
 
+	public static synchronized boolean
+	hasTray()
+	{
+		return singleton != null;
+	}
+
 	public static synchronized SystemTraySWT
 	getTray()
 	{

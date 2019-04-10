@@ -18,158 +18,71 @@
 
 package com.biglybt.plugin.startstoprules.defaultplugin.ui.swt;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.config.BooleanParameter;
-import com.biglybt.ui.swt.config.FloatParameter;
-import com.biglybt.ui.swt.config.IntParameter;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
+import com.biglybt.pifimpl.local.ui.config.*;
+import com.biglybt.ui.config.ConfigSectionImpl;
+
+import com.biglybt.pif.ui.config.Parameter;
 
 /** Config Section for items that make us ignore torrents when seeding
  * @author TuxPaper
  * @created Jan 12, 2004
  */
-public class ConfigSectionSeedingIgnore implements UISWTConfigSection {
-  @Override
-  public String configSectionGetParentSection() {
-    return "queue.seeding";
-  }
+public class ConfigSectionSeedingIgnore
+	extends ConfigSectionImpl
+{
 
-  @Override
-  public String configSectionGetName() {
-    return "queue.seeding.ignore";
-  }
+	public static final String SECTION_ID = "queue.seeding.ignore";
 
-  @Override
-  public void configSectionSave() {
-  }
-
-  @Override
-  public void configSectionDelete() {
-  }
-
-	@Override
-	public int maxUserMode() {
-		return 0;
+	public ConfigSectionSeedingIgnore() {
+		super(SECTION_ID, ConfigSectionSeeding.SECTION_ID);
 	}
 
-  @Override
-  public Composite configSectionCreate(Composite parent) {
-    // Seeding Automation Setup
-    GridData gridData;
-    GridLayout layout;
-    Label label;
+	@Override
+	public void build() {
+		// Seeding Automation Setup
 
-    Composite cIgnoreRules = new Composite(parent, SWT.NULL);
+		add(new LabelParameterImpl("ConfigView.label.autoSeedingIgnoreInfo"));
 
-    layout = new GridLayout();
-    layout.numColumns = 3;
-    layout.marginHeight = 0;
-    cIgnoreRules.setLayout(layout);
+		List<Parameter> listIgnore = new ArrayList<>();
 
-    label = new Label(cIgnoreRules, SWT.WRAP);
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
-    gridData.horizontalSpan = 3;
-    gridData.widthHint = 300;
-		label.setLayoutData(gridData);
-    Messages.setLanguageText(label, "ConfigView.label.autoSeedingIgnoreInfo"); //$NON-NLS-1$
+		IntParameterImpl ignoreSeedCount = new IntParameterImpl(
+				"StartStopManager_iIgnoreSeedCount", "ConfigView.label.ignoreSeeds", 0,
+				9999);
+		add(ignoreSeedCount, listIgnore);
+		ignoreSeedCount.setSuffixLabelKey("ConfigView.label.seeds");
 
-	Composite cIgnore = new Group(cIgnoreRules, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 3;
-    layout.verticalSpacing = 6;
-	cIgnore.setLayout(layout);
-    gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		cIgnore.setLayoutData(gridData);
-	Messages.setLanguageText(cIgnore, "ConfigView.label.seeding.ignore");
+		IntParameterImpl stopPeersRatio = new IntParameterImpl("Stop Peers Ratio",
+				"ConfigView.label.seeding.ignoreRatioPeers", 0, 9999);
+		add(stopPeersRatio, listIgnore);
+		stopPeersRatio.setSuffixLabelKey("ConfigView.label.peers");
 
+		IntParameterImpl ignoreRatioPeersSeedStart = new IntParameterImpl(
+				"StartStopManager_iIgnoreRatioPeersSeedStart",
+				"ConfigView.label.seeding.fakeFullCopySeedStart", 0, 9999);
+		add(ignoreRatioPeersSeedStart);
+		ignoreRatioPeersSeedStart.setSuffixLabelKey("ConfigView.label.seeds");
+		ignoreRatioPeersSeedStart.setIndent(1, true);
 
-    label = new Label(cIgnore, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.ignoreSeeds"); //$NON-NLS-1$
-    gridData = new GridData();
-    new IntParameter(cIgnore, "StartStopManager_iIgnoreSeedCount", 0, 9999).setLayoutData(gridData);
-    label = new Label(cIgnore, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeds");
+		// Share Ratio
+		FloatParameterImpl stopRatio = new FloatParameterImpl("Stop Ratio",
+				"ConfigView.label.seeding.ignoreShareRatio", 1, -1, 1);
+		add(stopRatio);
+		stopRatio.setSuffixLabelText(":1");
 
-    label = new Label(cIgnore, SWT.WRAP);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.ignoreRatioPeers"); //$NON-NLS-1$
-    gridData = new GridData();
-    new IntParameter(cIgnore, "Stop Peers Ratio", 0, 9999).setLayoutData(gridData);
-    label = new Label(cIgnore, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.peers");
+		IntParameterImpl ignoreShareRatioSeedStart = new IntParameterImpl(
+				"StartStopManager_iIgnoreShareRatioSeedStart",
+				"ConfigView.label.seeding.fakeFullCopySeedStart", 0, 9999);
+		add(ignoreShareRatioSeedStart);
+		ignoreShareRatioSeedStart.setSuffixLabelKey("ConfigView.label.seeds");
+		ignoreShareRatioSeedStart.setIndent(1, true);
 
-    Composite cArea = new Composite(cIgnore, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 4;
-    layout.marginWidth = 0;
-    layout.marginHeight = 0;
-    cArea.setLayout(layout);
-    gridData = new GridData();
-    gridData.horizontalIndent = 15;
-    gridData.horizontalSpan = 3;
-		cArea.setLayoutData(gridData);
+		// Ignore 0 Peers
+		add(new BooleanParameterImpl("StartStopManager_bIgnore0Peers",
+				"ConfigView.label.seeding.ignore0Peers"));
 
-		label = new Label(cArea, SWT.NULL);
-		ImageLoader.getInstance().setLabelImage(label, "subitem");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		label.setLayoutData(gridData);
-
-    label = new Label(cArea, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.fakeFullCopySeedStart");
-
-    gridData = new GridData();
-    new IntParameter(cArea, "StartStopManager_iIgnoreRatioPeersSeedStart", 0, 9999).setLayoutData(gridData);
-    label = new Label(cArea, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeds");
-
-    // Share Ratio
-    label = new Label(cIgnore, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.ignoreShareRatio");
-    gridData = new GridData();
-    gridData.widthHint = 50;
-    new FloatParameter(cIgnore, "Stop Ratio", 1, -1, true, 1).setLayoutData(gridData);
-    label = new Label(cIgnore, SWT.NULL);
-    label.setText(":1");
-
-    cArea = new Composite(cIgnore, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 4;
-    layout.marginWidth = 0;
-    layout.marginHeight = 0;
-    cArea.setLayout(layout);
-    gridData = new GridData();
-    gridData.horizontalIndent = 15;
-    gridData.horizontalSpan = 3;
-		cArea.setLayoutData(gridData);
-
-    label = new Label(cArea, SWT.NULL);
-		ImageLoader.getInstance().setLabelImage(label, "subitem");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		label.setLayoutData(gridData);
-
-    label = new Label(cArea, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.fakeFullCopySeedStart");
-
-    gridData = new GridData();
-    new IntParameter(cArea, "StartStopManager_iIgnoreShareRatioSeedStart", 0, 9999).setLayoutData(gridData);
-    label = new Label(cArea, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeds");
-
-    // Ignore 0 Peers
-    gridData = new GridData();
-    gridData.horizontalSpan = 3;
-    new BooleanParameter(cIgnore,
-                         "StartStopManager_bIgnore0Peers",
-                         "ConfigView.label.seeding.ignore0Peers").setLayoutData(gridData);
-
-    return cIgnoreRules;
-  }
+		add(new ParameterGroupImpl("ConfigView.label.seeding.ignore", listIgnore));
+	}
 }
-

@@ -19,6 +19,8 @@
 
 package com.biglybt.pifimpl.local.ui.config;
 
+import java.util.List;
+
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterGroup;
 
@@ -41,10 +43,18 @@ ParameterGroupImpl
 
 	public
 	ParameterGroupImpl(
-		String			_resource,
-		Parameter[]		_parameters )
+			String			_resource,
+			List<? extends  Parameter> _parameters )
 	{
-		super( null, "", "" );
+		this(_resource, _parameters.toArray(new Parameter[0]));
+	}
+
+	public
+	ParameterGroupImpl(
+			String			_resource,
+		Parameter...		_parameters )
+	{
+		super(null, "" );
 
 		resource = _resource;
 
@@ -83,6 +93,15 @@ ParameterGroupImpl
 	getResourceName()
 	{
 		return( resource );
+	}
+
+
+	public ParameterGroupImpl
+	setNumberOfColumns2(
+			int		num )
+	{
+		num_columns		= num;
+		return this;
 	}
 
 	@Override

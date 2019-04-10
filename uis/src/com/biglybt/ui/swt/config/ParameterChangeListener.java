@@ -19,60 +19,13 @@
 
 package com.biglybt.ui.swt.config;
 
-/**
- * @author parg
- *
- */
-
 public interface
-ParameterChangeListener
+ParameterChangeListener<PARAMTYPE extends SwtParameter>
 {
-	public void
+	/**
+	 * Triggered off SWT Thread
+	 */
+	void 
 	parameterChanged(
-		Parameter	p,
-		boolean		caused_internally );
-
-	/**
-	 * An int parameter is about to change.
-	 * <p>
-	 * Not called when parameter set via COConfigurationManager.setParameter
-	 *
-	 * @param p
-	 * @param toValue
-	 */
-	public default void
-	intParameterChanging(Parameter p, int toValue){}
-
-	/**
-	 * A boolean parameter is about to change.
-	 * <p>
-	 * Not called when parameter set via COConfigurationManager.setParameter
-	 *
-	 * @param p
-	 * @param toValue
-	 */
-	public default void
-	booleanParameterChanging(Parameter p, boolean toValue){}
-
-	/**
-	 * A String parameter is about to change.
-	 * <p>
-	 * Not called when parameter set via COConfigurationManager.setParameter
-	 *
-	 * @param p
-	 * @param toValue
-	 */
-	public default void
-	stringParameterChanging(Parameter p, String toValue){}
-
-	/**
-	 * A double/float parameter is about to change.
-	 * <p>
-	 * Not called when parameter set via COConfigurationManager.setParameter
-	 *
-	 * @param p
-	 * @param toValue
-	 */
-	public default void
-	floatParameterChanging(Parameter owner, double toValue){}
+			PARAMTYPE p );
 }

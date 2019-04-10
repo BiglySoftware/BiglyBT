@@ -24,8 +24,8 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -56,14 +56,6 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.PluginManager;
-import com.biglybt.pif.disk.DiskManagerEvent;
-import com.biglybt.pif.disk.DiskManagerListener;
-import com.biglybt.pif.platform.PlatformManagerException;
-import com.biglybt.pif.sharing.ShareManager;
-import com.biglybt.pif.ui.Graphic;
-import com.biglybt.pif.utils.PooledByteBuffer;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
@@ -82,6 +74,15 @@ import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.systray.TrayItemDelegate;
 import com.biglybt.ui.swt.utils.SWTRunnable;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.PluginManager;
+import com.biglybt.pif.disk.DiskManagerEvent;
+import com.biglybt.pif.disk.DiskManagerListener;
+import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.pif.sharing.ShareManager;
+import com.biglybt.pif.ui.Graphic;
+import com.biglybt.pif.utils.PooledByteBuffer;
 
 /**
  * @author Olivier
@@ -587,6 +588,13 @@ public class Utils
 	public static Display getDisplayIfNotDisposing() {
 		SWTThread swt = SWTThread.getInstance();
 		return swt == null || swt.isTerminated() ? null : swt.getDisplay();
+	}
+
+	public static RowLayout getSimpleRowLayout(boolean fill) {
+		RowLayout rowLayout = new RowLayout();
+		rowLayout.marginLeft = rowLayout.marginRight = rowLayout.marginTop = rowLayout.marginBottom = 0;
+		rowLayout.fill = fill;
+		return rowLayout;
 	}
 
 	private static class URLDropTarget
@@ -1434,7 +1442,7 @@ public class Utils
 
 				}
 
-				eb_choice = COConfigurationManager.getStringParameter( "browser.external.id", "system" );
+				eb_choice = COConfigurationManager.getStringParameter( "browser.external.id" );
 
 				use_plugins = COConfigurationManager.getBooleanParameter( "browser.external.non.pub" );
 
@@ -2819,6 +2827,12 @@ public class Utils
 		return gridData;
 	}
 
+	public static GridData getHSpanGridData(int hspan, int styles) {
+		GridData gridData = new GridData(styles);
+		gridData.horizontalSpan = hspan;
+		return gridData;
+	}
+
   public static Image createAlphaImage(Device device, int width, int height) {
 		return createAlphaImage(device, width, height, (byte) 0);
 	}
@@ -3263,7 +3277,8 @@ public class Utils
 	  
 	private static Map truncatedTextCache = new HashMap();
 
-	private static ThreadPool tp = new ThreadPool("GetOffSWT", 3, true);
+	public static final String THREAD_NAME_OFFSWT = "GetOffSWT";
+	private static ThreadPool tp = new ThreadPool(THREAD_NAME_OFFSWT, 3, true);
 
 	private static class TruncatedTextResult {
 		String text;
@@ -3319,17 +3334,28 @@ public class Utils
 	}
 
 	/**
-	 * @param bg
+	 * @param color
 	 * @return
 	 *
 	 * @since 3.1.1.1
 	 */
-	public static String toColorHexString(Color bg) {
-		StringBuffer sb = new StringBuffer();
-		twoHex(sb, bg.getRed());
-		twoHex(sb, bg.getGreen());
-		twoHex(sb, bg.getBlue());
-		return sb.toString();
+	public static String toColorHexString(Color color) {
+		return toColorHexString(color.getRed(), color.getRed(), color.getBlue(),
+				color.getAlpha());
+	}
+
+	public static String toColorHexString(int r, int g, int b, int a) {
+		// left 0 padding is done by adding a bit beyond the MSB, and then
+		// chopping off the extra first char
+		long l = r << 16 | g << 8 | b;
+		if (a != 255) {
+			l |= a << 24;
+			l |= 1L << 32;
+		} else {
+			l |= 1L << 24;
+		}
+		String s = Long.toHexString(l).toUpperCase();
+		return s.substring(1);
 	}
 
 	private static void twoHex(StringBuffer sb, int h) {
@@ -3372,9 +3398,48 @@ public class Utils
 		mb.open(null);
 	}
 
-	public static void getOffOfSWTThread(AERunnable runnable) {
-		tp.run(runnable);
+	public static void getOffOfSWTThread(Runnable runnable) {
+		AERunnable r = (runnable instanceof AERunnable) ? (AERunnable) runnable : new AERunnable() {
+			@Override
+			public void runSupport() {
+				runnable.run();
+			}
+		};
+		tp.run(r);
 	}
+
+
+	/**
+	 * Run code on SWT Thread if we are calling from non-SWT Thread.  Otherwise,
+	 * do nothing and return false
+	 * <p/>
+	 * Use Case:<br>
+	 * <pre>
+	 * void foo() {
+	 *   if (Utils.runIfNotSWTThread(this::foo)) {
+	 *     return;
+	 *   }
+	 *   // Do SWT Stuff
+	 * }
+	 * </pre>
+	 * Use Case:<br>
+	 * <pre>
+	 * void foo(Object param) {
+	 *   if (Utils.runIfNotSWTThread(() -> foo(param)) {
+	 *     return;
+	 *   }
+	 *   // Do SWT Stuff
+	 * }
+	 * </pre>
+	 */
+	public static boolean runIfNotSWTThread(Runnable code) {
+		if (!isSWTThread()) {
+			execSWTThread(code);
+			return true;
+		}
+		return false;
+	}
+
 
 	public static BrowserWrapper
 	createSafeBrowser(

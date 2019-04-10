@@ -21,6 +21,7 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,55 +34,59 @@ import com.biglybt.pif.config.ConfigParameterListener;
 import com.biglybt.pif.ui.config.EnablerParameter;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterListener;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
+import com.biglybt.pif.ui.config.ParameterValidator;
+import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
 
 /**
  * @author epall
  *
  */
-public class
+public abstract class
 ParameterImpl
 	implements EnablerParameter, com.biglybt.core.config.ParameterListener
 {
-	protected 	PluginConfigImpl	config;
-	private 	String 			key;
+	final protected  	String configKey;
 	private 	String 			labelKey;
 	private 	String 			label;
 	private		int				mode = MODE_BEGINNER;
 
-	private	boolean	enabled							= true;
+	private	Boolean	enabled							= null;
 	private boolean	visible							= true;
-	private boolean generate_intermediate_events	= true;
+	private boolean generate_intermediate_events	= false;
 
 	private List<Parameter> toDisable;
 	private List<Parameter> toEnable;
 
-	private List listeners;
+	private List change_listeners;
 	private List<ParameterImplListener> impl_listeners;
+	private List<ParameterValidator> validator_listeners = new ArrayList<>();
 
 	private ParameterGroupImpl	parameter_group;
+	private int indent;
+	private boolean fancyIndent;
+	private String refID;
+	private String[] allowedUiTypes;
 
-	private Map<String,Object> 	properties;
-	
 	public
 	ParameterImpl(
-		PluginConfigImpl	_config,
-		String 			_key,
-		String 			_labelKey )
+			String coreConfigKey,
+			String _labelKey)
 	{
-		config	= _config;
-		key		= _key;
+		this.configKey = coreConfigKey;
 		labelKey 	= _labelKey;
 		if ("_blank".equals(labelKey)) {
 			labelKey = "!!";
 		}
 	}
 	/**
-	 * @return Returns the key.
+	 * @deprecated(forRemoval=true) Use {@link #getConfigKeyName()}
+	 *
+	 * @note XXX Advanced Statistics still uses this
 	 */
+	@Deprecated
 	public String getKey()
 	{
-		return key;
+		return configKey;
 	}
 
 	@Override
@@ -91,31 +96,47 @@ ParameterImpl
 		}
 		if (parameter instanceof ParameterGroupImpl) {
 			ParameterImpl[] parameters = ((ParameterGroupImpl) parameter).getParameters();
-			Collections.addAll(toDisable, parameters);
-			return;
+			for (ParameterImpl p : parameters) {
+				addDisabledOnSelection(p);
+			}
 		}
 		toDisable.add(parameter);
 	}
 
 	@Override
-	public void addEnabledOnSelection(Parameter parameter) {
+	public void addDisabledOnSelection(Parameter... parameters) {
+		for (Parameter parameter : parameters) {
+			addDisabledOnSelection(parameter);
+		}
+	}
+
+	@Override
+	public void addEnabledOnSelection(Parameter paramToEnable) {
 		if (toEnable == null) {
 			toEnable = new ArrayList<>(1);
 		}
-		if (parameter instanceof ParameterGroupImpl) {
-			ParameterImpl[] parameters = ((ParameterGroupImpl) parameter).getParameters();
-			Collections.addAll(toEnable, parameters);
-			return;
+		if (paramToEnable instanceof ParameterGroupImpl) {
+			ParameterImpl[] parameters = ((ParameterGroupImpl) paramToEnable).getParameters();
+			for (ParameterImpl p : parameters) {
+				addEnabledOnSelection(p);
+			}
 		}
-		toEnable.add(parameter);
+		toEnable.add(paramToEnable);
 	}
 
-	public List getDisabledOnSelectionParameters() {
-		return toDisable == null ? Collections.EMPTY_LIST : toDisable;
+	@Override
+	public void addEnabledOnSelection(Parameter... parameters) {
+		for (Parameter parameter : parameters) {
+			addEnabledOnSelection(parameter);
+		}
 	}
 
-	public List getEnabledOnSelectionParameters() {
-		return toEnable == null ? Collections.EMPTY_LIST : toEnable;
+	public List<Parameter> getDisabledOnSelectionParameters() {
+		return toDisable == null ? Collections.emptyList(): toDisable;
+	}
+
+	public List<Parameter> getEnabledOnSelectionParameters() {
+		return toEnable == null ? Collections.emptyList() : toEnable;
 	}
 
 	@Override
@@ -126,14 +147,14 @@ ParameterImpl
 		fireParameterChanged();
 	}
 
-	protected void
+	public void
 	fireParameterChanged()
 	{
-		if (listeners == null) {
+		if (change_listeners == null) {
 			return;
 		}
 		// toArray() since listener trigger may remove listeners
-		Object[] listenerArray = listeners.toArray();
+		Object[] listenerArray = change_listeners.toArray();
 		for (int i = 0; i < listenerArray.length; i++) {
 			try {
 				Object o = listenerArray[i];
@@ -157,6 +178,9 @@ ParameterImpl
 	setEnabled(
 		boolean	e )
 	{
+		if (enabled != null && enabled == e) {
+			return;
+		}
 		enabled = e;
 
 		if (impl_listeners == null) {
@@ -179,7 +203,7 @@ ParameterImpl
 	public boolean
 	isEnabled()
 	{
-		return( enabled );
+		return( enabled == null ? true : enabled );
 	}
 
 	@Override
@@ -189,9 +213,11 @@ ParameterImpl
 		return( mode );
 	}
 
+
 	@Override
 	public void
 	setMinimumRequiredUserMode(
+		//@org.intellij.lang.annotations.MagicConstant(intValues = {com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED})
 		int 	_mode )
 	{
 		mode	= _mode;
@@ -203,6 +229,7 @@ ParameterImpl
 		boolean	_visible )
 	{
 		visible	= _visible;
+		refreshControl();
 	}
 
 	@Override
@@ -245,14 +272,14 @@ ParameterImpl
 	addListener(
 		ParameterListener	l )
 	{
-		if (listeners == null) {
-			listeners = new ArrayList(1);
+		if (change_listeners == null) {
+			change_listeners = new ArrayList(1);
 		}
-		listeners.add(l);
+		change_listeners.add(l);
 
-		if ( listeners.size() == 1 ){
+		if ( configKey != null && change_listeners.size() == 1 ){
 
-			COConfigurationManager.addParameterListener( key, this );
+			COConfigurationManager.addWeakParameterListener(this,  false, configKey);
 		}
 	}
 
@@ -261,14 +288,14 @@ ParameterImpl
 	removeListener(
 		ParameterListener	l )
 	{
-		if (listeners == null) {
+		if (change_listeners == null) {
 			return;
 		}
-		listeners.remove(l);
+		change_listeners.remove(l);
 
-		if ( listeners.size() == 0 ){
+		if ( configKey != null && change_listeners.size() == 0 ){
 
-			COConfigurationManager.removeParameterListener( key, this );
+			COConfigurationManager.removeParameterListener(configKey, this );
 		}
 	}
 
@@ -297,14 +324,14 @@ ParameterImpl
 	addConfigParameterListener(
 		ConfigParameterListener	l )
 	{
-		if (listeners == null) {
-			listeners = new ArrayList(1);
+		if (change_listeners == null) {
+			change_listeners = new ArrayList(1);
 		}
-		listeners.add(l);
+		change_listeners.add(l);
 
-		if ( listeners.size() == 1 ){
+		if ( configKey != null && change_listeners.size() == 1 ){
 
-			COConfigurationManager.addParameterListener( key, this );
+			COConfigurationManager.addWeakParameterListener(this,  false, configKey);
 		}
 	}
 
@@ -313,20 +340,48 @@ ParameterImpl
 	removeConfigParameterListener(
 		ConfigParameterListener	l )
 	{
-		if (listeners == null) {
+		if (change_listeners == null) {
 			return;
 		}
-		listeners.remove(l);
+		change_listeners.remove(l);
 
-		if ( listeners.size() == 0 ){
+		if ( configKey != null && change_listeners.size() == 0 ){
 
-			COConfigurationManager.removeParameterListener( key, this );
+			COConfigurationManager.removeParameterListener(configKey, this );
 		}
 	}
 
 	@Override
+	public void addValidator(ParameterValidator validator) {
+		validator_listeners.add(validator);
+	}
+
+	public ValidationInfo validate(Object newValue) {
+		ValidationInfo resultValidation = new ValidationInfo(true);
+
+		ParameterValidator[] validators = validator_listeners.toArray(new ParameterValidator[0]);
+		for (ParameterValidator validator : validators) {
+			ValidationInfo validationInfo = validator.isValidParameterValue(this, newValue);
+			if (validationInfo == null) {
+				continue;
+			}
+			if (!validationInfo.valid) {
+				resultValidation = validationInfo;
+				break;
+			} else if (validationInfo.info != null) {
+				if (resultValidation.info == null) {
+					resultValidation.info = validationInfo.info;
+				} else {
+					resultValidation.info += "\n" + validationInfo.info;
+				}
+			}
+		}
+		return resultValidation;
+	}
+
+	@Override
 	public String getLabelText() {
-		if (label == null) {
+		if (label == null && labelKey != null) {
 			label = MessageText.getString(labelKey);
 		}
 		return label;
@@ -342,7 +397,7 @@ ParameterImpl
 
 	@Override
 	public String getLabelKey() {
-		return labelKey;
+		return labelKey == null ? label == null ? null : "!" + label + "!" : labelKey;
 	}
 
 	@Override
@@ -354,54 +409,19 @@ ParameterImpl
 	}
 
 	@Override
-	public String
+	public final String
 	getConfigKeyName()
 	{
-		return( key );
+		return(configKey);
 	}
 
 	@Override
 	public boolean
 	hasBeenSet()
 	{
-		return( COConfigurationManager.doesParameterNonDefaultExist( key ));
+		return configKey != null && COConfigurationManager.doesParameterNonDefaultExist(configKey);
 	}
 
-	@Override
-	public Object 
-	getProperty(
-		String property )
-	{
-		synchronized( this ){
-			
-			if ( properties == null ){
-				
-				return( null );
-				
-			}else{
-				
-				return( properties.get( property ));
-			}
-		}
-	}
-	
-	@Override
-	public void 
-	setProperty(
-		String property, 
-		Object value)
-	{
-		synchronized( this ){
-			
-			if ( properties == null ){
-				
-				properties = new HashMap<>();	
-			}
-			
-			properties.put( property, value );
-		}
-	}
-	
 	private void triggerLabelChanged(String text, boolean isKey) {
 		if (impl_listeners == null) {
 			return;
@@ -420,14 +440,77 @@ ParameterImpl
 		}
 	}
 
+	public void refreshControl() {
+		if (impl_listeners == null) {
+			return;
+		}
+		// toArray() since listener trigger may remove listeners
+		Object[] listenersArray = impl_listeners.toArray();
+		for (int i = 0; i < listenersArray.length; i++) {
+			try {
+				ParameterImplListener l = (ParameterImplListener) listenersArray[i];
+				l.refreshControl(this);
+
+			} catch (Throwable f) {
+
+				Debug.printStackTrace(f);
+			}
+		}
+	}
+
 	public void
 	destroy()
 	{
-		listeners = null;
+		change_listeners = null;
 		impl_listeners = null;
 		toDisable = null;
 		toEnable = null;
 
-		COConfigurationManager.removeParameterListener( key, this );
+		if (configKey != null) {
+			COConfigurationManager.removeParameterListener(configKey, this );
+		}
+	}
+
+	@Override
+	public void setIndent(int indent, boolean fancy) {
+		this.indent = indent;
+		this.fancyIndent = fancy;
+	}
+
+	public int getIndent() {
+		return indent;
+	}
+
+	public boolean isIndentFancy() {
+		return fancyIndent;
+	}
+
+	public void setReferenceID(String refID) {
+		this.refID = refID;
+	}
+
+	public String getReferenceID() {
+		return refID;
+	}
+
+	public void setAllowedUiTypes(String... uiTypes) {
+		if (uiTypes != null) {
+			Arrays.sort(uiTypes);
+		}
+		this.allowedUiTypes = uiTypes;
+	}
+
+	public boolean isForUIType(String uiType) {
+		if (allowedUiTypes == null) {
+			return true;
+		}
+		return Arrays.binarySearch(allowedUiTypes, uiType) >= 0;
+	}
+
+	public boolean resetToDefault() {
+		if (configKey == null) {
+			return false;
+		}
+		return COConfigurationManager.removeParameter(configKey);
 	}
 }

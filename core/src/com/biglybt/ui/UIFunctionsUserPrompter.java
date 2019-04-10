@@ -25,6 +25,10 @@ package com.biglybt.ui;
  */
 public interface UIFunctionsUserPrompter
 {
+	String ICON_WARNING = "warning";
+	String ICON_INFO = "info";
+	String ICON_ERROR = "error";
+
 	/**
 	 * Returns the number milliseconds the prompt will wait around until it auto
 	 * closes.  Timer starts after the user is prompted (when {@link #open()} is

@@ -27,10 +27,10 @@ package com.biglybt.pifimpl.local.ui.model;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.pifimpl.local.PluginConfigImpl;
 import com.biglybt.pifimpl.local.ui.UIManagerImpl;
-import com.biglybt.pifimpl.local.ui.config.FileParameter;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.PluginInterface;
@@ -115,7 +115,9 @@ BasicPluginConfigModelImpl
 		String 		resource_name,
 		boolean 	defaultValue )
 	{
-		BooleanParameterImpl res = new BooleanParameterImpl(configobj, resolveKey(key), resource_name, defaultValue );
+		BooleanParameterImpl res = new BooleanParameterImpl(resolveKey(key), resource_name );
+		COConfigurationManager.setBooleanDefault( res.getConfigKeyName(), defaultValue );
+		configobj.notifyParamExists(res.getConfigKeyName());
 
 		parameters.add( res );
 
@@ -129,7 +131,9 @@ BasicPluginConfigModelImpl
 		String 		resource_name,
 		String  	defaultValue )
 	{
-		StringParameterImpl res = new StringParameterImpl(configobj, resolveKey(key), resource_name, defaultValue );
+		StringParameterImpl res = new StringParameterImpl(resolveKey(key), resource_name );
+		COConfigurationManager.setStringDefault( res.getConfigKeyName(), defaultValue);
+		configobj.notifyParamExists(res.getConfigKeyName());
 
 		parameters.add( res );
 
@@ -144,7 +148,11 @@ BasicPluginConfigModelImpl
 		String[]	values,
 		String	 	defaultValue )
 	{
-		StringListParameterImpl res = new StringListParameterImpl(configobj, resolveKey(key), resource_name, defaultValue, values, values );
+		StringListParameterImpl res = new StringListParameterImpl(
+				resolveKey(key), resource_name, values, values);
+		COConfigurationManager.setStringDefault(res.getConfigKeyName(),
+				defaultValue);
+		configobj.notifyParamExists(res.getConfigKeyName());
 
 		parameters.add( res );
 
@@ -160,9 +168,11 @@ BasicPluginConfigModelImpl
 		String[]	labels,
 		String	 	defaultValue )
 	{
-		StringListParameterImpl res = new StringListParameterImpl(configobj,
-				resolveKey(key), resource_name, defaultValue,
-				values, labels);
+		StringListParameterImpl res = new StringListParameterImpl(
+				resolveKey(key), resource_name, values, labels);
+		COConfigurationManager.setStringDefault(res.getConfigKeyName(),
+				defaultValue);
+		configobj.notifyParamExists(res.getConfigKeyName());
 
 		parameters.add(res);
 
@@ -178,8 +188,10 @@ BasicPluginConfigModelImpl
 			String[]	labels,
 			int	 	defaultValue )
 	{
-		IntListParameterImpl res = new IntListParameterImpl(configobj,
-				resolveKey(key), resource_name, defaultValue, values, labels);
+		IntListParameterImpl res = new IntListParameterImpl(
+				resolveKey(key), resource_name, values, labels);
+		COConfigurationManager.setIntDefault(res.getConfigKeyName(), defaultValue);
+		configobj.notifyParamExists(res.getConfigKeyName());
 
 		parameters.add(res);
 
@@ -190,8 +202,10 @@ BasicPluginConfigModelImpl
 	public FloatParameter addFloatParameter2(String key, String resource_name,
 			float defaultValue, float minValue, float maxValue, boolean allowZero,
 			int digitsAfterDecimal) {
-		FloatParameterImpl res = new FloatParameterImpl(configobj, resolveKey(key),
-				resource_name, defaultValue, minValue, maxValue, digitsAfterDecimal);
+		FloatParameterImpl res = new FloatParameterImpl(resolveKey(key),
+				resource_name, minValue, maxValue, digitsAfterDecimal);
+		COConfigurationManager.setFloatDefault(res.getConfigKeyName(), defaultValue);
+		configobj.notifyParamExists(res.getConfigKeyName());
 		parameters.add(res);
 
 		return res;
@@ -205,7 +219,11 @@ BasicPluginConfigModelImpl
 		int			encoding_type,
 		byte[]	 	defaultValue )
 	{
-		PasswordParameterImpl res = new PasswordParameterImpl(configobj, resolveKey(key), resource_name, encoding_type, defaultValue );
+		PasswordParameterImpl res = new PasswordParameterImpl(
+				resolveKey(key), resource_name, encoding_type );
+		COConfigurationManager.setByteDefault( res.getConfigKeyName(),
+				defaultValue == null ? new byte[0] : res.encode(defaultValue)  );
+		configobj.notifyParamExists(res.getConfigKeyName());
 
 		parameters.add( res );
 
@@ -219,7 +237,9 @@ BasicPluginConfigModelImpl
 		String 		resource_name,
 		int	 		defaultValue )
 	{
-		IntParameterImpl res = new IntParameterImpl(configobj, resolveKey(key), resource_name, defaultValue );
+		IntParameterImpl res = new IntParameterImpl(resolveKey(key), resource_name );
+		COConfigurationManager.setIntDefault( res.getConfigKeyName(), defaultValue );
+		configobj.notifyParamExists(res.getConfigKeyName());
 
 		parameters.add( res );
 
@@ -235,7 +255,10 @@ BasicPluginConfigModelImpl
 		int         min_value,
 		int         max_value)
 	{
-		IntParameterImpl res = new IntParameterImpl(configobj, resolveKey(key), resource_name, defaultValue, min_value, max_value );
+		IntParameterImpl res = new IntParameterImpl(resolveKey(key), resource_name, min_value, max_value );
+		COConfigurationManager.setIntDefault( res.getConfigKeyName(), defaultValue );
+		configobj.notifyParamExists(res.getConfigKeyName());
+
 		parameters.add( res );
 		return( res );
 	}
@@ -247,7 +270,10 @@ BasicPluginConfigModelImpl
 		String 		resource_name,
 		String 		defaultValue )
 	{
-		DirectoryParameterImpl res = new DirectoryParameterImpl(configobj, resolveKey(key), resource_name, defaultValue );
+		DirectoryParameterImpl res = new DirectoryParameterImpl(resolveKey(key), resource_name );
+
+		COConfigurationManager.setStringDefault(res.getConfigKeyName(), defaultValue);
+		configobj.notifyParamExists(res.getConfigKeyName());
 
 		parameters.add( res );
 
@@ -270,7 +296,10 @@ BasicPluginConfigModelImpl
 			String 		resource_name,
 			String 		defaultValue,
 		    String[]    file_extensions) {
-		FileParameter res = new FileParameter(configobj, resolveKey(key), resource_name, defaultValue, file_extensions);
+		FileParameterImpl res = new FileParameterImpl(resolveKey(key), resource_name, file_extensions);
+		configobj.notifyParamExists(res.getConfigKeyName());
+		COConfigurationManager.setStringDefault(res.getConfigKeyName(), defaultValue);
+
 		parameters.add(res);
 		return res;
 	}
@@ -281,7 +310,7 @@ BasicPluginConfigModelImpl
 	addLabelParameter2(
 		String		resource_name )
 	{
-		LabelParameterImpl res = new LabelParameterImpl(configobj, key_prefix, resource_name );
+		LabelParameterImpl res = new LabelParameterImpl(resource_name );
 
 		parameters.add( res );
 
@@ -294,7 +323,7 @@ BasicPluginConfigModelImpl
 		String		resource_name,
 		String		value )
 	{
-		InfoParameterImpl res = new InfoParameterImpl(configobj, resolveKey(resource_name), resource_name, value );
+		InfoParameterImpl res = new InfoParameterImpl(resolveKey(resource_name), resource_name, value );
 
 		parameters.add( res );
 
@@ -304,7 +333,7 @@ BasicPluginConfigModelImpl
 	@Override
 	public com.biglybt.pif.ui.config.HyperlinkParameter
 	addHyperlinkParameter2(String resource_name, String url_location) {
-		HyperlinkParameterImpl res = new HyperlinkParameterImpl(configobj, key_prefix, resource_name, url_location);
+		HyperlinkParameterImpl res = new HyperlinkParameterImpl(resource_name, url_location);
 		parameters.add(res);
 		return res;
 	}
@@ -312,15 +341,17 @@ BasicPluginConfigModelImpl
 	@Override
 	public com.biglybt.pif.ui.config.ColorParameter
 	addColorParameter2(String key, String resource_name, int r, int g, int b) {
-		ColorParameterImpl res = new ColorParameterImpl(configobj, resolveKey(key), resource_name, r, g, b);
+		ColorParameterImpl res = new ColorParameterImpl(resolveKey(key), resource_name);
+		configobj.notifyRGBParamExists(res.getConfigKeyName());
+		COConfigurationManager.setRGBDefault(res.getConfigKeyName(), r, g, b);
 		parameters.add(res);
 		return res;
 	}
 
 	@Override
-	public com.biglybt.pif.ui.config.UIParameter
-	addUIParameter2(com.biglybt.pif.ui.config.UIParameterContext context, String resource_name) {
-		UIParameterImpl res = new UIParameterImpl(configobj, context, key_prefix, resource_name);
+	public UIParameter
+	addUIParameter2(UIParameterContext context, String resource_name) {
+		UIParameterImpl res = new UIParameterImpl(context, resource_name);
 		parameters.add(res);
 		return res;
 	}
@@ -331,7 +362,7 @@ BasicPluginConfigModelImpl
 		String 		label_resource_name,
 		String		action_resource_name )
 	{
-		ActionParameterImpl res = new ActionParameterImpl(configobj, label_resource_name, action_resource_name );
+		ActionParameterImpl res = new ActionParameterImpl(label_resource_name, action_resource_name );
 
 		parameters.add( res );
 
@@ -343,7 +374,7 @@ BasicPluginConfigModelImpl
 	addTextArea(
 		String		resource_name )
 	{
-		UITextAreaImpl res = new UITextAreaImpl( configobj, resource_name );
+		UITextAreaImpl res = new UITextAreaImpl(resource_name );
 
 		parameters.add( res );
 

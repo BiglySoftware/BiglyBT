@@ -39,6 +39,7 @@ import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.updater.UIUpdater.UIUpdaterListener;
+import com.biglybt.ui.config.ConfigSectionConnectionAdvanced;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -245,7 +246,7 @@ NetworkAdminSWTImpl
 
 														uif.getMDI().showEntryByID(
 																MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
-																"connection.advanced");
+																ConfigSectionConnectionAdvanced.SECTION_ID);
 													}
 												}
 											});

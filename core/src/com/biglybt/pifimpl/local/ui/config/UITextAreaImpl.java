@@ -24,7 +24,6 @@ package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.pif.ui.components.UIPropertyChangeListener;
 import com.biglybt.pif.ui.components.UITextArea;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 
 public class
@@ -36,10 +35,9 @@ UITextAreaImpl
 
 	public
 	UITextAreaImpl(
-		PluginConfigImpl		config,
 		String					resource_name )
 	{
-		super( config, resource_name, resource_name );
+		super(resource_name, resource_name);
 
 		text_area = new com.biglybt.pifimpl.local.ui.components.UITextAreaImpl();
 	}
@@ -97,6 +95,7 @@ UITextAreaImpl
 	setVisible(
 		boolean		visible )
 	{
+		// TODO: visible was never implemented..
 		super.setEnabled( visible );
 
 		text_area.setEnabled(visible );

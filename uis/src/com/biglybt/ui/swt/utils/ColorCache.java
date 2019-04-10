@@ -273,6 +273,12 @@ public class ColorCache
 					}
 
 					String x_value = COConfigurationManager.getStringParameter( config_name, def_value );
+					
+					if ("null".equals(x_value)) {
+						// c_value might explicely request null as default, such as
+						// "config.sking.color.foo:null"
+						return null;
+					}
 
 						// default values get scheme adjustments applied, explicit values don't as the
 						// user has selected them

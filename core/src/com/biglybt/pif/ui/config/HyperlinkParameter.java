@@ -20,6 +20,7 @@ package com.biglybt.pif.ui.config;
 /**
  * @author Allan Crooks
  *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addHyperlinkParameter2(String, String)
  */
 public interface HyperlinkParameter extends LabelParameter {
 	public void setHyperlink(String url_location);

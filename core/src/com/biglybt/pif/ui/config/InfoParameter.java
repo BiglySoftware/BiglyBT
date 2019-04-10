@@ -20,8 +20,11 @@
 package com.biglybt.pif.ui.config;
 
 /**
+ * A label and a value together.  Not linked to a config key
+ *
  * @author parg
  *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addInfoParameter2(String, String)
  */
 
 public interface

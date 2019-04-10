@@ -19,7 +19,6 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 import com.biglybt.pif.ui.config.IntListParameter;
 
@@ -31,13 +30,16 @@ public class IntListParameterImpl
 
 	private String[] labels;
 
-	public IntListParameterImpl(PluginConfigImpl config, String key, String label,
-			int defaultValue, int[] values, String[] labels) {
-		super(config, key, label);
-		COConfigurationManager.setIntDefault(getKey(), defaultValue);
+	private int listType;
+
+	private String suffixLabelKey;
+
+	public IntListParameterImpl(String key, String labelKey, int[] values,
+			String[] labels) {
+		super(key, labelKey);
+
 		this.values = values;
 		this.labels = labels;
-		config.notifyParamExists(getKey());
 	}
 
 	public int[] getValues() {
@@ -55,11 +57,38 @@ public class IntListParameterImpl
 
 	@Override
 	public int getValue() {
-		return config.getUnsafeIntParameter(getKey());
+		return COConfigurationManager.getIntParameter(getConfigKeyName());
 	}
 
 	@Override
 	public void setValue(int value) {
-		config.setUnsafeIntParameter(getKey(), value);
+		COConfigurationManager.setParameter(getConfigKeyName(), value);
+	}
+
+	@Override
+	public void setListType(int listType) {
+		this.listType = listType;
+	}
+
+	@Override
+	public int getListType() {
+		return listType;
+	}
+
+	@Override
+	public String getSuffixLabelKey() {
+		return suffixLabelKey;
+	}
+
+	@Override
+	public void setSuffixLabelKey(String suffixLabelKey) {
+		this.suffixLabelKey = suffixLabelKey;
+		refreshControl();
+	}
+
+	@Override
+	public void setSuffixLabelText(String text) {
+		this.suffixLabelKey = "!" + text + "!";
+		refreshControl();
 	}
 }

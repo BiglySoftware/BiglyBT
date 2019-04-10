@@ -17,10 +17,6 @@
 
 package com.biglybt.ui.swt.views;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.CoreLifecycleAdapter;
-import com.biglybt.core.CoreRunningListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -29,27 +25,28 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreLifecycleAdapter;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManagerStats;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.core.util.SimpleTimer;
-import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.TimerEvent;
-import com.biglybt.core.util.TimerEventPerformer;
-import com.biglybt.core.util.TimerEventPeriodic;
+import com.biglybt.core.util.*;
+import com.biglybt.ui.config.ConfigSectionStartShutdown;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BufferedLabel;
-import com.biglybt.ui.swt.config.IntParameter;
-import com.biglybt.ui.swt.config.Parameter;
-import com.biglybt.ui.swt.config.ParameterChangeAdapter;
+import com.biglybt.ui.swt.config.FileSwtParameter;
+import com.biglybt.ui.swt.config.IntSwtParameter;
+import com.biglybt.ui.swt.config.ParameterChangeListener;
+import com.biglybt.ui.swt.config.StringListSwtParameter;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
-import com.biglybt.ui.swt.views.configsections.ConfigSectionStartShutdown;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 /**
@@ -135,7 +132,7 @@ public class ViewQuickConfig
 
 			// done downloading - 2
 
-		ConfigSectionStartShutdown.addDoneDownloadingOption( composite, false );
+		addDoneDownloadingOption( composite, false );
 
 			// max simul down - 2
 
@@ -145,15 +142,9 @@ public class ViewQuickConfig
 		label.setLayoutData(gridData);
 		Messages.setLanguageText(label, "ConfigView.label.maxdownloads.short");
 
-		IntParameter maxDLs = new IntParameter( composite, "max downloads" );
+		IntSwtParameter maxDLs = new IntSwtParameter( composite, "max downloads", null, null, null );
 
-		maxDLs.addChangeListener(
-			new ParameterChangeAdapter(){
-				@Override
-				public void parameterChanged(Parameter p, boolean caused_internally){
-					COConfigurationManager.setDirty();
-				}
-			});
+		maxDLs.addChangeListener(p -> COConfigurationManager.setDirty());
 		
 		addTemporaryRates( composite );
 		
@@ -197,17 +188,17 @@ public class ViewQuickConfig
 		label.setLayoutData(gridData);
 		Messages.setLanguageText( label, "label.upload.kbps", new String[]{ DisplayFormatters.getRateUnit( DisplayFormatters.UNIT_KB )});
 
-		final IntParameter tempULRate = new IntParameter( temp_rates, "global.download.rate.temp.kbps", 0, Integer.MAX_VALUE );
+		final IntSwtParameter tempULRate = new IntSwtParameter( temp_rates, "global.download.rate.temp.kbps", null, null, 0, Integer.MAX_VALUE, null );
 
 		label = new Label(temp_rates, SWT.NULL);
 		Messages.setLanguageText( label, "label.download.kbps", new String[]{ DisplayFormatters.getRateUnit( DisplayFormatters.UNIT_KB )});
 
-		final IntParameter tempDLRate = new IntParameter( temp_rates, "global.upload.rate.temp.kbps", 0, Integer.MAX_VALUE );
+		final IntSwtParameter tempDLRate = new IntSwtParameter( temp_rates, "global.upload.rate.temp.kbps", null, null, 0, Integer.MAX_VALUE, null );
 
 		label = new Label(temp_rates, SWT.NULL);
 		Messages.setLanguageText( label, "label.duration.mins" );
 
-		final IntParameter tempMins 	= new IntParameter( temp_rates, "global.rate.temp.min", 0, Integer.MAX_VALUE );
+		final IntSwtParameter tempMins 	= new IntSwtParameter( temp_rates, "global.rate.temp.min", null, null, 0, Integer.MAX_VALUE, null );
 
 		final Button activate = new Button( temp_rates, SWT.TOGGLE );
 		Messages.setLanguageText( activate, "label.activate" );
@@ -354,20 +345,7 @@ public class ViewQuickConfig
 				}
 			});
 
-		activate.setEnabled( tempMins.getValue() > 0 );
-
-		tempMins.addChangeListener(
-			new ParameterChangeAdapter()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter p,
-					boolean caused_internally)
-				{
-					activate.setEnabled( tempMins.getValue() > 0 );
-				}
-			});
+		tempMins.addAndFireChangeListener(p -> Utils.execSWTThread(() -> activate.setEnabled( p.getValue() > 0 )));
 	}
 
 	private void
@@ -397,12 +375,12 @@ public class ViewQuickConfig
 		label.setLayoutData(gridData);
 		Messages.setLanguageText( label, "label.upload.mb", new String[]{ DisplayFormatters.getUnit( DisplayFormatters.UNIT_MB )});
 
-		final IntParameter tempULLimit = new IntParameter( temp_rates, "global.upload.limit.temp.mb", 0, Integer.MAX_VALUE );
+		final IntSwtParameter tempULLimit = new IntSwtParameter( temp_rates, "global.upload.limit.temp.mb", null, null, 0, Integer.MAX_VALUE, null );
 
 		label = new Label(temp_rates, SWT.NULL);
 		Messages.setLanguageText( label, "label.download.mb", new String[]{ DisplayFormatters.getUnit( DisplayFormatters.UNIT_MB )});
 
-		final IntParameter tempDLLimit = new IntParameter( temp_rates, "global.download.limit.temp.mb", 0, Integer.MAX_VALUE );
+		final IntSwtParameter tempDLLimit = new IntSwtParameter( temp_rates, "global.download.limit.temp.mb", null, null, 0, Integer.MAX_VALUE, null );
 
 		final Button activate = new Button( temp_rates, SWT.TOGGLE );
 		Messages.setLanguageText( activate, "label.activate" );
@@ -611,18 +589,8 @@ public class ViewQuickConfig
 
 		activate.setEnabled( tempULLimit.getValue() > 0 || tempDLLimit.getValue() > 0 );
 
-		ParameterChangeAdapter adapter = 
-			new ParameterChangeAdapter()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter p,
-					boolean caused_internally)
-				{
-					activate.setEnabled( tempULLimit.getValue() > 0 || tempDLLimit.getValue() > 0 );
-				}
-			};
+		ParameterChangeListener adapter =
+				p -> Utils.execSWTThread(() -> activate.setEnabled( tempULLimit.getValue() > 0 || tempDLLimit.getValue() > 0 ));
 			
 		tempULLimit.addChangeListener( adapter );
 		tempDLLimit.addChangeListener( adapter );
@@ -678,4 +646,29 @@ public class ViewQuickConfig
 
     return true;
   }
+
+	public static void
+	addDoneDownloadingOption(
+			Composite		comp,
+			boolean			include_script_setting )
+	{
+		String[][]	action_details = ConfigSectionStartShutdown.getActionDetails();
+
+		StringListSwtParameter dc = new StringListSwtParameter(comp,
+				"On Downloading Complete Do", "ConfigView.label.stop.downcomp", null,
+				action_details[1], action_details[0], true, null);
+
+		if ( include_script_setting ){
+
+
+			final FileSwtParameter dc_script = new FileSwtParameter(comp, "On Downloading Complete Script",  "label.script.to.run", new String[0], null);
+
+			boolean	is_script = dc.getValue().startsWith( "RunScript" );
+
+			dc_script.setEnabled( is_script );
+
+			dc.addChangeListener(
+					p -> dc_script.setEnabled(dc.getValue().startsWith("RunScript")));
+		}
+	}
 }

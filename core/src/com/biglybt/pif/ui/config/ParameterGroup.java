@@ -20,14 +20,18 @@
 package com.biglybt.pif.ui.config;
 
 /**
- * @author parg
- *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addLabelParameter2(String)
  */
-
 public interface
 ParameterGroup
 	extends Parameter
 {
+	/**
+	 * Set number of "columns" group will have.  A column is typically one
+	 * parameter, including its label.
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
 	public void
 	setNumberOfColumns(
 		int		num );

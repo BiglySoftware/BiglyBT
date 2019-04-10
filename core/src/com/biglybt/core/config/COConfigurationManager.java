@@ -433,12 +433,21 @@ COConfigurationManager
 	*/
 
 	public static boolean
-	setRGBParameter(String parameter, int red, int green, int blue)
+	setRGBParameter(String parameter, int red, int green, int blue, Boolean override)
 	{
-		return ConfigurationManager.getInstance().setRGBParameter( parameter, red, green, blue);
+		return ConfigurationManager.getInstance().setRGBParameter( parameter, red, green, blue, override);
 	}
 
-	public static boolean setRGBParameter(String parameter, int[] rgb, boolean override) {
+	public static void
+	setRGBDefault(String parameter, int red, int green, int blue)
+	{
+		ConfigurationDefaults defaults = ConfigurationDefaults.getInstance();
+		defaults.addParameter( parameter + ".red", red);
+		defaults.addParameter( parameter + ".green", green);
+		defaults.addParameter( parameter + ".blue", blue);
+	}
+
+	public static boolean setRGBParameter(String parameter, int[] rgb, Boolean override) {
 		return ConfigurationManager.getInstance().setRGBParameter(parameter, rgb, override);
 	}
 

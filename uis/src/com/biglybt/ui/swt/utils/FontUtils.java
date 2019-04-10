@@ -21,10 +21,7 @@ import java.lang.reflect.Method;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Device;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.ui.swt.Utils;
@@ -307,5 +304,14 @@ public class FontUtils
 		} while (newPX > pxMaxHeight);
 
 		return font;
+	}
+
+	public static double getCharacterWidth(Font f) {
+		GC gc = new GC(f.getDevice());
+		gc.setFont(f);
+		FontMetrics metrics = gc.getFontMetrics();
+		Double d = metrics.getAverageCharacterWidth();
+		gc.dispose();
+		return d;
 	}
 }

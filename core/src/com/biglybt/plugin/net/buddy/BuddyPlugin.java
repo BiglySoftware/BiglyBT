@@ -290,13 +290,10 @@ BuddyPlugin
 			os_param.setVisible( SUPPORT_ONLINE_STATUS  ); // If we add this then use proper message texts in the STATUS_STRINGS
 	
 			
-			HyperlinkParameter profile_link = 
-					config.addHyperlinkParameter2( 
-						"azbuddy.profile.info", MessageText.getString( "azbuddy.profile.info.url" ));
-	
-			profile_link.setProperty( Parameter.PR_DISABLE_WRAPPING_SUPPORT, true );
-			
 			StringParameter profile_param = config.addStringParameter2( "azbuddy.profile.info" + suffix, "", "" );
+			profile_param.setLabelText(
+					"<a href=\"" + MessageText.getString("azbuddy.profile.info.url")
+							+ "\">" + MessageText.getString("azbuddy.profile.info") + "</a>");
 			
 			profile_param.setMultiLine( 5 );
 			profile_param.setGenerateIntermediateEvents( false );
@@ -316,12 +313,10 @@ BuddyPlugin
 			ParameterGroup profile_group = config.createGroup(
 					is_pub_tab?"azbuddy.public.profile":"azbuddy.anon.profile",
 					new Parameter[]{
-							profile_link, profile_param
+							profile_param
 					});
-			
-			profile_group.setNumberOfColumns( 2 );
-			
-						
+
+
 			ParameterGroup network_item = 
 					config.createGroup( 
 					is_pub_tab?"label.public":"label.anon",

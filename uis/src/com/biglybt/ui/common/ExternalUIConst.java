@@ -99,10 +99,6 @@ public class ExternalUIConst {
 		parameterlegacy.put("Tracker_UserName","Tracker Username");
 		parameterlegacy.put("Tracker_Password","Tracker Password");
 
-		int[] logComponents = { 0, 1, 2, 4 };
-		for (int i = 0; i < logComponents.length; i++)
-			for (int j = 0; j <= 3; j++)
-				parameterlegacy.put("Logger_bLog" + logComponents[i] + "-" + j,"bLog" + logComponents[i] + "-" + j);
 	}
 
 	public static void registerDefaults() {

@@ -35,8 +35,6 @@ Parameter
 	public static final int MODE_INTERMEDIATE	= 1;
 	public static final int MODE_ADVANCED		= 2;
 
-	public static final String	PR_DISABLE_WRAPPING_SUPPORT	= "disable-wrap";		// Boolean
-	
 	/**
 	 * Sets whether the UI object for this parameter is enabled (changeable) or
 	 * disabled (not changeable, and usually grayed out)
@@ -126,6 +124,8 @@ Parameter
 	 *
 	 * @param l Listener to add
 	 *
+	 * @note Don't assume Thread when ParameterListener is triggered, especially for SWT calls
+	 *
 	 * @since 2.1.0.2
 	 */
 	public void
@@ -142,6 +142,20 @@ Parameter
 	public void
 	removeListener(
 		ParameterListener	l );
+
+	/**
+	 * Adds a validator to this parameter.  The Validator will be called
+	 * when the user tries to change the value.
+	 * <p/>
+	 * For parameters that have a text field, the validator will be called on
+	 * each edit of the field. This allows you to notify the user of a potential
+	 * error while they type.
+	 * <p/>
+	 * Subclasses may have helper functions that cast the "toValue" for you.
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	public void addValidator(ParameterValidator validator);
 
 	/**
 	 * Retrieve the actual text of the label associated with this parameter.
@@ -188,13 +202,10 @@ Parameter
 
 	public boolean
 	hasBeenSet();
-	
-	public void
-	setProperty(
-		String		property,
-		Object		value );
-	
-	public Object
-	getProperty(
-		String		property );
+
+	/**
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setIndent(int indent, boolean fancy);
 }

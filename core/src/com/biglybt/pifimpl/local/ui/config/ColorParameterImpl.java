@@ -18,64 +18,66 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
+
 import com.biglybt.pif.ui.config.ColorParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 /**
  * @author Allan Crooks
  *
  */
-public class ColorParameterImpl extends ParameterImpl implements ColorParameter {
+public class ColorParameterImpl
+	extends ParameterImpl
+	implements ColorParameter
+{
 
-	private int r;
-	private int g;
-	private int b;
+	private String suffixLabelKey;
 
-	private final int orig_r;
-	private final int orig_g;
-	private final int orig_b;
-
-	public ColorParameterImpl(PluginConfigImpl config, String key, String label, int _r, int _g, int _b) {
-		super(config, key, label);
-
-		config.notifyRGBParamExists(getKey());
-		COConfigurationManager.setIntDefault(getKey() + ".red", r);
-		COConfigurationManager.setIntDefault(getKey() + ".green", g);
-		COConfigurationManager.setIntDefault(getKey() + ".blue", b);
-		COConfigurationManager.setBooleanDefault(getKey() + ".override", false);
-
-		orig_r = r = _r;
-		orig_g = g = _g;
-		orig_b = b = _b;
+	public ColorParameterImpl(String configKey, String label) {
+		super(configKey, label);
 	}
 
 	@Override
-	public int getRedValue() {return this.r;}
+	public int getRedValue() {
+		return COConfigurationManager.getIntParameter(configKey + ".red");}
 	@Override
-	public int getGreenValue() {return this.g;}
+	public int getGreenValue() {
+		return COConfigurationManager.getIntParameter(configKey + ".green");}
 	@Override
-	public int getBlueValue() {return this.b;}
-
-	public void reloadParamDataFromConfig(boolean override) {
-		int[] rgb = config.getUnsafeColorParameter(getKey());
-		this.r = rgb[0];
-		this.g = rgb[1];
-		this.b = rgb[2];
-		config.setUnsafeBooleanParameter(getKey() + ".override", override);
-	}
+	public int getBlueValue() {
+		return COConfigurationManager.getIntParameter(configKey + ".blue");}
 
 	@Override
 	public void setRGBValue(int r, int g, int b) {
-		this.r = r; this.g = g; this.b = b;
-		config.setUnsafeColorParameter(getKey(), new int[] {r, g, b}, true);
+		COConfigurationManager.setRGBParameter(configKey, r, g, b, true);
 	}
 
-	public void resetToDefault() {
-		config.setUnsafeColorParameter(getKey(), new int[] {orig_r, orig_g, orig_b}, false);
+	@Override
+	public boolean resetToDefault() {
+		if (configKey == null) {
+			return false;
+		}
+		return COConfigurationManager.removeRGBParameter(configKey);
 	}
 
 	public boolean isOverridden() {
-		return config.getUnsafeBooleanParameter(getKey() + ".override");
+		return COConfigurationManager.getBooleanParameter(configKey + ".override");
 	}
 
+
+	@Override
+	public String getSuffixLabelKey() {
+		return suffixLabelKey;
+	}
+
+	@Override
+	public void setSuffixLabelKey(String suffixLabelKey) {
+		this.suffixLabelKey = suffixLabelKey;
+		refreshControl();
+	}
+
+	@Override
+	public void setSuffixLabelText(String text) {
+		this.suffixLabelKey = text == null ? null : "!" + text + "!";
+		refreshControl();
+	}
 }

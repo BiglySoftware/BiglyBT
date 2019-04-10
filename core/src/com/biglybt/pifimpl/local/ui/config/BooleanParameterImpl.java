@@ -21,55 +21,48 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.config.impl.ConfigurationDefaults;
-import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
+
 import com.biglybt.pif.ui.config.BooleanParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
-/**
- * @author Olivier
- *
- */
-public class
-BooleanParameterImpl
-	extends 	ParameterImpl
-	implements 	BooleanParameter
+public class BooleanParameterImpl
+	extends ParameterImpl
+	implements BooleanParameter
 {
-	public
-	BooleanParameterImpl(
-		PluginConfigImpl	config,
-		String 			key,
-		String 			label,
-		boolean 		defaultValue)
-	{
-		super( config, key, label);
-		COConfigurationManager.setBooleanDefault( getKey(), defaultValue );
-		config.notifyParamExists(getKey());
-	}
+	private String suffixLabelKey;
 
-	public boolean getDefaultValue() {
-		try {
-			return ConfigurationDefaults.getInstance().getBooleanParameter(getKey());
-		} catch (ConfigurationParameterNotFoundException e) {
-			return false;
-		}
+	public BooleanParameterImpl(String configKey, String labelKey) {
+		super(configKey, labelKey);
 	}
 
 	@Override
 	public boolean getValue() {
-		return config.getUnsafeBooleanParameter(getKey(), getDefaultValue());
+		return COConfigurationManager.getBooleanParameter(configKey);
 	}
 
 	@Override
 	public void setValue(boolean b) {
-		config.setUnsafeBooleanParameter(getKey(), b);
+		COConfigurationManager.setParameter(configKey, b);
 	}
 
 	@Override
-	public void
-	setDefaultValue(
-		boolean		defaultValue )
-	{
-		COConfigurationManager.setBooleanDefault( getKey(), defaultValue );
+	public void setDefaultValue(boolean defaultValue) {
+		COConfigurationManager.setBooleanDefault(configKey, defaultValue);
+	}
+
+	@Override
+	public String getSuffixLabelKey() {
+		return suffixLabelKey;
+	}
+
+	@Override
+	public void setSuffixLabelKey(String suffixLabelKey) {
+		this.suffixLabelKey = suffixLabelKey;
+		refreshControl();
+	}
+
+	@Override
+	public void setSuffixLabelText(String text) {
+		this.suffixLabelKey = "!" + text + "!";
+		refreshControl();
 	}
 }

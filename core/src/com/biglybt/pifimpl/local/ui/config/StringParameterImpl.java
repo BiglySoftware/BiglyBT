@@ -21,25 +21,37 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.pif.ui.config.StringParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
-public class StringParameterImpl extends ParameterImpl implements StringParameter
+import com.biglybt.pif.ui.config.ParameterValidator;
+import com.biglybt.pif.ui.config.StringParameter;
+
+public class StringParameterImpl
+	extends ParameterImpl
+	implements StringParameter
 {
 	private int		line_count;
 
-	public StringParameterImpl(PluginConfigImpl config,String key, String label, String defaultValue)
-	{
-		super(config,key, label);
-		COConfigurationManager.setStringDefault(getKey(), defaultValue);
-		config.notifyParamExists(getKey());
+	private int widthInCharacters;
+
+	private String validChars;
+
+	private boolean validCharsCaseSensitive;
+
+	private String suffixLabelKey;
+
+	private int textLimit;
+
+	private String hintKey;
+
+	public StringParameterImpl(String coreConfigKey, String labelKey) {
+		super(coreConfigKey, labelKey);
 	}
 
 	@Override
 	public String
 	getValue()
 	{
-		return( config.getUnsafeStringParameter( getKey()));
+		return COConfigurationManager.getStringParameter(configKey);
 	}
 
 	@Override
@@ -47,7 +59,7 @@ public class StringParameterImpl extends ParameterImpl implements StringParamete
 	setValue(
 		String	s )
 	{
-		config.setUnsafeStringParameter(getKey(), s);
+		COConfigurationManager.setParameter(configKey, s);
 	}
 
 	@Override
@@ -62,5 +74,79 @@ public class StringParameterImpl extends ParameterImpl implements StringParamete
 	getMultiLine()
 	{
 		return( line_count );
+	}
+
+	@Override
+	public void setWidthInCharacters(int widthInCharacters) {
+		this.widthInCharacters = widthInCharacters;
+	}
+
+	@Override
+	public int getWidthInCharacters() {
+		return widthInCharacters;
+	}
+
+	@Override
+	public void setValidChars(String chars, boolean caseSensitive) {
+		this.validChars = chars;
+		this.validCharsCaseSensitive = caseSensitive;
+	}
+
+	@Override
+	public void addStringValidator(
+			ParameterValidator<String> stringParamValidator) {
+		addValidator(stringParamValidator);
+	}
+
+	public String getValidChars() {
+		return validChars;
+	}
+
+	public boolean isValidCharsCaseSensitive() {
+		return validCharsCaseSensitive;
+	}
+
+	@Override
+	public String getSuffixLabelKey() {
+		return suffixLabelKey;
+	}
+
+	@Override
+	public void setSuffixLabelKey(String suffixLabelKey) {
+		this.suffixLabelKey = suffixLabelKey;
+		refreshControl();
+	}
+
+	@Override
+	public void setSuffixLabelText(String text) {
+		this.suffixLabelKey = "!" + text + "!";
+		refreshControl();
+	}
+
+	@Override
+	public void setTextLimit(int textLimit) {
+		this.textLimit = textLimit;
+	}
+
+	@Override
+	public int getTextLimit() {
+		return textLimit;
+	}
+
+	@Override
+	public String getHintKey() {
+		return hintKey;
+	}
+
+	@Override
+	public void setHintKey(String hintKey) {
+		this.hintKey = hintKey;
+		refreshControl();
+	}
+
+	@Override
+	public void setHintText(String text) {
+		this.hintKey = text == null ? null : "!" + text + "!";
+		refreshControl();
 	}
 }

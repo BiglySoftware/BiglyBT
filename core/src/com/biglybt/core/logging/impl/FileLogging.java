@@ -170,7 +170,7 @@ public class FileLogging implements ILogEventListener {
 					int logType = indexToLogType(i);
 					for (int j = 0; j < configurableLOGIDs.length; j++) {
 						if (!config.getBooleanParameter("bLog." + logType + "."
-								+ configurableLOGIDs[j], true))
+								+ configurableLOGIDs[j]))
 							ignoredComponents[i].add(configurableLOGIDs[j]);
 					}
 				}

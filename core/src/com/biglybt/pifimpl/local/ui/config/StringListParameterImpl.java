@@ -21,28 +21,21 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
+
 import com.biglybt.pif.ui.config.StringListParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 public class StringListParameterImpl extends ParameterImpl implements StringListParameter
 {
 	private String[] values;
 	private String[] labels;
+	private int listType = TYPE_DROPDOWN;
+	private String suffixLabelKey;
 
-
-	public StringListParameterImpl(
-			PluginConfigImpl	config,
-			String key,
-			String label,
-			String defaultValue,
-			String[] values,
-			String[] labels)
-	{
-		super(config,key, label);
-		COConfigurationManager.setStringDefault(getKey(), defaultValue);
+	public StringListParameterImpl(String configKey, String labelKey,
+			String[] values, String[] labels) {
+		super(configKey, labelKey);
 		this.values = values;
 		this.labels = labels;
-		config.notifyParamExists(getKey());
 	}
 
 
@@ -68,7 +61,7 @@ public class StringListParameterImpl extends ParameterImpl implements StringList
 	public String
 	getValue()
 	{
-		return( config.getUnsafeStringParameter(getKey()));
+		return( COConfigurationManager.getStringParameter(getConfigKeyName()));
 	}
 
 	@Override
@@ -76,6 +69,33 @@ public class StringListParameterImpl extends ParameterImpl implements StringList
 	setValue(
 		String	s )
 	{
-		config.setUnsafeStringParameter(getKey(), s);
+		COConfigurationManager.setParameter(getConfigKeyName(), s);
+	}
+
+	@Override
+	public void setListType(int listType) {
+		this.listType = listType;
+	}
+
+	@Override
+	public int getListType() {
+		return listType;
+	}
+
+	@Override
+	public String getSuffixLabelKey() {
+		return suffixLabelKey;
+	}
+
+	@Override
+	public void setSuffixLabelKey(String suffixLabelKey) {
+		this.suffixLabelKey = suffixLabelKey;
+		refreshControl();
+	}
+
+	@Override
+	public void setSuffixLabelText(String text) {
+		this.suffixLabelKey = "!" + text + "!";
+		refreshControl();
 	}
 }

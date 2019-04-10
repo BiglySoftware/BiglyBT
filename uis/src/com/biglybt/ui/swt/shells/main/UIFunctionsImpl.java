@@ -183,12 +183,6 @@ public class UIFunctionsImpl
 	@Override
 	public void bringToFront(final boolean tryTricks) {
 
-		String debug = COConfigurationManager.getStringParameter( "adv.setting.ui.debug.window.show", "" );
-
-		if ( debug.equals( "1" )){
-			Debug.out( "UIF::bringToFront" );
-		}
-
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {

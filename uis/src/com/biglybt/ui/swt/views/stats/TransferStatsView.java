@@ -71,6 +71,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerStats;
+import com.biglybt.core.speedmanager.*;
 import com.biglybt.core.stats.transfer.OverallStats;
 import com.biglybt.core.stats.transfer.StatsFactory;
 import com.biglybt.core.util.AENetworkClassifier;
@@ -103,11 +104,6 @@ import com.biglybt.core.networkmanager.TransportStartpoint;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.proxy.AEProxySelector;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
-import com.biglybt.core.speedmanager.SpeedManager;
-import com.biglybt.core.speedmanager.SpeedManagerLimitEstimate;
-import com.biglybt.core.speedmanager.SpeedManagerPingMapper;
-import com.biglybt.core.speedmanager.SpeedManagerPingSource;
-import com.biglybt.core.speedmanager.SpeedManagerPingZone;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
@@ -166,7 +162,7 @@ public class TransferStatsView
 	private plotView[]	plot_views;
 	private zoneView[] 	zone_views;
 
-	private limitToTextHelper	limit_to_text = new limitToTextHelper();
+	private LimitToTextHelper limit_to_text = new LimitToTextHelper();
 
 	private final DecimalFormat formatter = new DecimalFormat( "##.#" );
 
@@ -2097,162 +2093,6 @@ public class TransferStatsView
 			}
 
 			COConfigurationManager.removeParameterListener("Graphics Update",this);
-	  }
-  }
-
-  public static class
-  limitToTextHelper
-  {
-	  String	msg_text_unknown;
-	  String	msg_text_estimate;
-	  String	msg_text_choke_estimate;
-	  String	msg_text_measured_min;
-	  String	msg_text_measured;
-	  String	msg_text_manual;
-	  String	msg_unlimited;
-
-	  String[]	setable_types;
-
-	  public
-	  limitToTextHelper()
-	  {
-		  msg_text_unknown			= MessageText.getString( "SpeedView.stats.unknown" );
-		  msg_text_estimate			= MessageText.getString( "SpeedView.stats.estimate" );
-		  msg_text_choke_estimate	= MessageText.getString( "SpeedView.stats.estimatechoke" );
-		  msg_text_measured			= MessageText.getString( "SpeedView.stats.measured" );
-		  msg_text_measured_min		= MessageText.getString( "SpeedView.stats.measuredmin" );
-		  msg_text_manual			= MessageText.getString( "SpeedView.stats.manual" );
-
-		  msg_unlimited			= MessageText.getString( "ConfigView.unlimited" );
-
-		  setable_types =  new String[]{ "", msg_text_estimate, msg_text_measured, msg_text_manual };
-	  }
-
-	  public String[]
-	  getSettableTypes()
-	  {
-		  return( setable_types );
-	  }
-
-	  public String
-	  getSettableType(
-		  SpeedManagerLimitEstimate limit )
-	  {
-		  float type = limit.getEstimateType();
-
-		  String	text;
-
-		  if ( type == SpeedManagerLimitEstimate.TYPE_UNKNOWN){
-
-			  text = "";
-
-		  }else if ( type == SpeedManagerLimitEstimate.TYPE_MANUAL){
-
-			  text = msg_text_manual;
-
-		  }else if ( type == SpeedManagerLimitEstimate.TYPE_MEASURED){
-
-			  text = msg_text_measured;
-
-		  }else if ( type == SpeedManagerLimitEstimate.TYPE_MEASURED_MIN){
-
-			  text = msg_text_measured;
-
-		  }else if ( type == SpeedManagerLimitEstimate.TYPE_CHOKE_ESTIMATED){
-
-			  text = msg_text_estimate;
-
-		  }else{
-
-			  text = msg_text_estimate;
-		  }
-
-		  return( text );  	  }
-
-	  public String
-	  typeToText(
-		float 	type )
-	  {
-		  String	text;
-
-		  if ( type == SpeedManagerLimitEstimate.TYPE_UNKNOWN){
-
-			  text = msg_text_unknown;
-
-		  }else if ( type == SpeedManagerLimitEstimate.TYPE_MANUAL){
-
-			  text = msg_text_manual;
-
-		  }else if ( type == SpeedManagerLimitEstimate.TYPE_MEASURED){
-
-			  text = msg_text_measured;
-
-		  }else if ( type == SpeedManagerLimitEstimate.TYPE_MEASURED_MIN){
-
-			  text = msg_text_measured_min;
-
-		  }else if ( type == SpeedManagerLimitEstimate.TYPE_CHOKE_ESTIMATED){
-
-			  text = msg_text_choke_estimate;
-
-		  }else{
-
-			  text = msg_text_estimate;
-		  }
-
-		  return( text );
-	  }
-
-	  public float
-	  textToType(
-		String	text )
-	  {
-		  if ( text.equals( msg_text_estimate )){
-
-			  return( SpeedManagerLimitEstimate.TYPE_ESTIMATED);
-
-		  }else if ( text.equals( msg_text_choke_estimate )){
-
-			  return( SpeedManagerLimitEstimate.TYPE_CHOKE_ESTIMATED);
-
-		  }else if ( text.equals( msg_text_measured )){
-
-			  return( SpeedManagerLimitEstimate.TYPE_MEASURED);
-
-		  }else if ( text.equals( msg_text_manual )){
-
-			  return( SpeedManagerLimitEstimate.TYPE_MANUAL);
-
-		  }else{
-
-			  return( SpeedManagerLimitEstimate.TYPE_UNKNOWN);
-		  }
-	  }
-
-	  public String
-	  getLimitText(
-		 SpeedManagerLimitEstimate	limit )
-	  {
-		  float type = limit.getEstimateType();
-
-		  String	text = typeToText( type );
-
-		  int	l = limit.getBytesPerSec();
-
-		  if ( l == 0 ){
-
-			  return( msg_unlimited + " (" + text + ")");
-
-		  }else{
-
-			  return( DisplayFormatters.formatByteCountToKiBEtcPerSec( l ) + " (" + text + ")");
-		  }
-	  }
-
-	  public String
-	  getUnlimited()
-	  {
-		  return( msg_unlimited );
 	  }
   }
 

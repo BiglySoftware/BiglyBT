@@ -8,9 +8,9 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.speedmanager.LimitToTextHelper;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.views.stats.TransferStatsView;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 import com.biglybt.ui.swt.wizard.Wizard;
@@ -49,7 +49,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
     private Combo upConfLevelCombo;
 
     private SpeedManager speedManager;
-    private TransferStatsView.limitToTextHelper helper;
+    private LimitToTextHelper helper;
 
 
     public SpeedTestSetLimitPanel(Wizard wizard, IWizardPanel previousPanel, int upload, long maxup, int download, long maxdown) {
@@ -72,7 +72,7 @@ public class SpeedTestSetLimitPanel extends AbstractWizardPanel {
         }
 
         speedManager = CoreFactory.getSingleton().getSpeedManager();
-        helper = new TransferStatsView.limitToTextHelper();
+        helper = new LimitToTextHelper();
     }
 
     /**

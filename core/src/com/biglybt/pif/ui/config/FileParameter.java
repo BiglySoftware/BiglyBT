@@ -21,11 +21,21 @@ package com.biglybt.pif.ui.config;
 
 /**
  * @since 2.5.0.1
+ *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addFileParameter2(String, String, String, String[])
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addFileParameter2(String, String, String)
  */
 public interface
 FileParameter
-	extends Parameter
+	extends Parameter, ParameterWithHint
 {
 	public String
 	getValue();
+
+	/**
+	 * Title of the dialog box shown when user clicks the browse button
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setDialogTitleKey(String key);
 }

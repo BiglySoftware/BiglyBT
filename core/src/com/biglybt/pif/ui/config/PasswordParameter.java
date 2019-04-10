@@ -41,4 +41,18 @@ PasswordParameter
 	public void
 	setValue(
 		String	plain_password );
+
+	/**
+	 * Set a width hint for displaying the text field
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setWidthInCharacters(int widthInCharacters);
+
+	/**
+	 * @return width hint in characters for displaying the text field
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	int getWidthInCharacters();
 }

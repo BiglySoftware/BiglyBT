@@ -651,29 +651,36 @@ ConfigurationManager
 	  return( true );
   }
 
-	public boolean setRGBParameter(String parameter, int red, int green, int blue) {
+	public boolean setRGBParameter(String parameter, int red, int green, int blue, Boolean override) {
     boolean bAnyChanged = false;
     bAnyChanged |= setParameter(parameter + ".red", red);
     bAnyChanged |= setParameter(parameter + ".green", green);
     bAnyChanged |= setParameter(parameter + ".blue", blue);
+    if (override != null) {
+	    bAnyChanged |= setParameter(parameter + ".override", override);
+    }
     if (bAnyChanged)
       notifyParameterListeners(parameter);
 
     return bAnyChanged;
 	}
 
-	public boolean setRGBParameter(String parameter, int[] rgb, boolean override) {
+	public boolean setRGBParameter(String parameter, int[] rgb, Boolean override) {
+  	if (rgb != null) {
+  		if (rgb.length < 3) {
+				System.err.println("Invalid array for setRGBParameter(\"" + parameter
+						+ "\", " + Arrays.toString(rgb) + ", " + override);
+				return false;
+		  }
+		  return setRGBParameter(parameter, rgb[0], rgb[1], rgb[2], override);
+	  }
+
 		boolean changed = false;
-		if (rgb == null) {
-			changed |= removeParameter(parameter + ".override");
-			changed |= removeParameter(parameter + ".red");
-			changed |= removeParameter(parameter + ".green");
-			changed |= removeParameter(parameter + ".blue");
-		}
-		else {
-			changed |= setParameter(parameter + ".override", override);
-			changed |= setRGBParameter(parameter, rgb[0], rgb[1], rgb[2]);
-		}
+		changed |= removeParameter(parameter + ".override");
+		changed |= removeParameter(parameter + ".red");
+		changed |= removeParameter(parameter + ".green");
+		changed |= removeParameter(parameter + ".blue");
+
 		if (changed) {
 			notifyParameterListeners(parameter);
 		}

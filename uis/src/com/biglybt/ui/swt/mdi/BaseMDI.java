@@ -994,7 +994,7 @@ public abstract class BaseMDI
 
 							if (pi == cs.getPluginInterface()) {
 
-								relevant_sections.add(cs.configSectionGetName());
+								relevant_sections.add(cs.getConfigSectionID());
 							}
 						}
 

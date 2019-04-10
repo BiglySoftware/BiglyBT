@@ -22,8 +22,8 @@ package com.biglybt.plugin.net.buddy.swt;
 
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.*;
@@ -31,22 +31,24 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.security.*;
+import com.biglybt.core.security.CryptoHandler;
+import com.biglybt.core.security.CryptoManager;
+import com.biglybt.core.security.CryptoManagerFactory;
+import com.biglybt.core.security.CryptoManagerKeyListener;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginConfig;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.*;
-import com.biglybt.pif.utils.LocaleUtilities;
 import com.biglybt.plugin.I2PHelpers;
 import com.biglybt.plugin.net.buddy.*;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
@@ -56,14 +58,20 @@ import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.LinkLabel;
-import com.biglybt.ui.swt.config.IntParameter;
-import com.biglybt.ui.swt.config.Parameter;
-import com.biglybt.ui.swt.config.ParameterChangeAdapter;
+import com.biglybt.ui.swt.config.IntSwtParameter;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
+
+import com.biglybt.pif.PluginConfig;
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManagerEvent;
+import com.biglybt.pif.utils.LocaleUtilities;
 
 public class
 BuddyPluginViewInstance
@@ -80,10 +88,10 @@ BuddyPluginViewInstance
 	private final BuddyPluginTracker	tracker;
 
 	private Composite			composite;
-	
+
 	private Table 				public_buddy_table;
 	private Table 				anon_buddy_table;
-	
+
 	private Table 				partial_buddy_table;
 	private StyledText 			log;
 
@@ -451,51 +459,25 @@ BuddyPluginViewInstance
 
 			// max lines
 
-		label = new Label( ui_area, SWT.NULL );
-		label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.ui.max.lines" ) );
-
-		final IntParameter max_lines = new IntParameter(ui_area,
-				"azbuddy.chat.temp.ui.max.lines", 128, Integer.MAX_VALUE );
+		IntSwtParameter max_lines = new IntSwtParameter(ui_area,
+				"azbuddy.chat.temp.ui.max.lines", "azbuddy.dchat.ui.max.lines", null,
+				128, Integer.MAX_VALUE, null);
 
 		max_lines.setValue( beta.getMaxUILines());
 
-		max_lines.addChangeListener(
-			new ParameterChangeAdapter()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter 	p,
-					boolean 	caused_internally )
-				{
-					beta.setMaxUILines( max_lines.getValue());
-				}
-			});
+		max_lines.addChangeListener(p -> beta.setMaxUILines( p.getValue()));
 
 		label = new Label( ui_area, SWT.NULL );
 
 		// max chars
 
-		label = new Label( ui_area, SWT.NULL );
-		label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.ui.max.kb" ) );
-
-		final IntParameter max_chars = new IntParameter(ui_area,
-			"azbuddy.chat.temp.ui.max.chars", 1, 512 );
+		IntSwtParameter max_chars = new IntSwtParameter(ui_area,
+				"azbuddy.chat.temp.ui.max.chars", "azbuddy.dchat.ui.max.kb", null, 1,
+				512, null);
 
 		max_chars.setValue( beta.getMaxUICharsKB());
 
-		max_chars.addChangeListener(
-			new ParameterChangeAdapter()
-			{
-				@Override
-				public void
-				parameterChanged(
-					Parameter 	p,
-					boolean 	caused_internally )
-				{
-					beta.setMaxUICharsKB( max_chars.getValue());
-				}
-			});
+		max_chars.addChangeListener(p -> beta.setMaxUICharsKB( p.getValue()));
 
 		label = new Label( ui_area, SWT.NULL );
 
@@ -808,9 +790,9 @@ BuddyPluginViewInstance
 
 		private_chat_pinned.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
 		pc_pinned_only.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
-		
+
 			// integration
-		
+
 		Group integ_area = new Group( main, SWT.NULL );
 		layout = new GridLayout();
 		layout.numColumns = 3;
@@ -820,9 +802,9 @@ BuddyPluginViewInstance
 		integ_area.setLayoutData(grid_data);
 
 		integ_area.setText( lu.getLocalisedMessageText( "label.integration" ));
-				
+
 		Label lab = new Label( integ_area, SWT.NULL );
-		
+
 		lab.setText( lu.getLocalisedMessageText( "azbuddy.dchat.send.friend.key" ));
 
 		Button integ_fk_enable = new Button( integ_area, SWT.CHECK );
@@ -842,16 +824,16 @@ BuddyPluginViewInstance
 						plugin_beta.setPostFriendKey( integ_fk_enable.getSelection());
 					}
 				});
-	
+
 		integ_fk_enable.setSelection( plugin_beta.getPostFriendKey());
-		
+
 		lab = new Label( integ_area, SWT.NULL );
-		
+
 		lab.setText( lu.getLocalisedMessageText( "azbuddy.dchat.send.friend.key.info" ));
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
 		lab.setLayoutData(grid_data);
-		
+
 			// import
 
 		Group import_area = new Group( main, SWT.NULL );
@@ -1176,7 +1158,7 @@ BuddyPluginViewInstance
 										pc_pinned_only.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
 
 										integ_fk_enable.setSelection( plugin_beta.getPostFriendKey());
-										
+
 										String str = plugin_beta.getSoundFile();
 
 										if ( str.length() == 0 ){
@@ -1432,8 +1414,8 @@ BuddyPluginViewInstance
 		form.setLayout(flayout);
 		GridData gridData = new GridData(GridData.FILL_BOTH);
 		form.setLayoutData(gridData);
-		
-		
+
+
 		final Composite child1 = new Composite(form,SWT.NULL);
 		layout = new GridLayout();
 		layout.numColumns = 1;
@@ -1442,8 +1424,8 @@ BuddyPluginViewInstance
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
 		child1.setLayout(layout);
-		
-		
+
+
 		CTabFolder tab_folder = new CTabFolder(child1, SWT.LEFT);
 
 		tab_folder.setBorderVisible(true);
@@ -1455,11 +1437,11 @@ BuddyPluginViewInstance
 		Composite	public_area	= null;
 		CTabItem 	anon_item 	= null;
 		Composite	anon_area	= null;
-		
+
 		for ( int i=0;i<2;i++){
-			
+
 			boolean	is_pub_tab = i==0;
-			
+
 			CTabItem 	tab_item = new CTabItem(tab_folder, SWT.NULL);
 			Composite 	tab_area = new Composite( tab_folder, SWT.NULL );
 
@@ -1470,11 +1452,11 @@ BuddyPluginViewInstance
 				anon_item 	= tab_item;
 				anon_area	= tab_area;
 			}
-			
+
 			tab_item.setText( lu.getLocalisedMessageText( is_pub_tab?"label.public":"label.anon" ));
-			
+
 			tab_item.setControl( tab_area );
-			
+
 			layout = new GridLayout();
 			layout.numColumns = 1;
 			layout.horizontalSpacing = 0;
@@ -1482,30 +1464,30 @@ BuddyPluginViewInstance
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
 			tab_area.setLayout(layout);
-			
-			
+
+
 			final Composite controls = new Composite(tab_area, SWT.NONE);
 			layout = new GridLayout();
 			layout.numColumns = 5;
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
-			controls.setLayout(layout);		
-	
+			controls.setLayout(layout);
+
 			grid_data = new GridData( GridData.FILL_HORIZONTAL );
 			controls.setLayoutData( grid_data );;
-			
+
 			Label control_label = new Label( controls, SWT.NULL );
 			control_label.setText( lu.getLocalisedMessageText( "azbuddy.ui.new_buddy" ) + " " );
-	
+
 			final Text control_text = new Text( controls, SWT.BORDER );
 			gridData = new GridData(GridData.FILL_HORIZONTAL);
 			control_text.setLayoutData(gridData);
-	
+
 			final Button control_button = new Button( controls, SWT.NULL );
 			control_button.setText( lu.getLocalisedMessageText( "Button.add" ));
-	
+
 			control_button.setEnabled( false );
-	
+
 			control_text.addModifyListener(
 				new ModifyListener() {
 		        	@Override
@@ -1516,7 +1498,7 @@ BuddyPluginViewInstance
 						control_button.setEnabled( plugin.verifyPublicKey( is_pub_tab, control_text.getText().trim()));
 		        	}
 		        });
-	
+
 			control_button.addSelectionListener(
 				new SelectionAdapter()
 				{
@@ -1526,49 +1508,49 @@ BuddyPluginViewInstance
 						SelectionEvent e )
 					{
 						plugin.addBuddy( is_pub_tab, control_text.getText().trim(), BuddyPluginNetwork.SUBSYSTEM_AZ2 );
-	
+
 						control_text.setText( "" );
 					}
 				});
-	
+
 			final Label control_lab_pk = new Label( controls, SWT.NULL );
 			control_lab_pk.setText( lu.getLocalisedMessageText( "azbuddy.ui.mykey" ) + " ");
-	
+
 			final Label control_val_pk = new Label( controls, SWT.NULL );
 			gridData = new GridData();
 			control_val_pk.setLayoutData(gridData);
-	
+
 			ClipboardCopy.addCopyToClipMenu(
 					control_val_pk,
 					new ClipboardCopy.copyToClipProvider(){
-						
+
 						@Override
 						public String getText(){
 							return((String)control_val_pk.getData("key"));
 						}
 					});
-			
+
 			control_val_pk.setData( "key", "" );
-			
+
 	    	final CryptoManager crypt_man = CryptoManagerFactory.getSingleton();
-	
+
 	    	int ecc_inst = is_pub_tab?1:2;
-	    	
+
 			byte[]	public_key = crypt_man.getECCHandler( ecc_inst ).peekPublicKey();
-	
+
 			if ( public_key == null ){
-	
+
 			    Messages.setLanguageText(control_val_pk, "ConfigView.section.security.publickey.undef");
-	
+
 			}else{
 				String str = Base32.encode( public_key );
-				
+
 				control_val_pk.setData( "key", str );
 				control_val_pk.setText( truncate( str ));
 			}
-	
+
 		    Messages.setLanguageText(control_val_pk, "ConfigView.copy.to.clipboard.tooltip", true);
-	
+
 		    control_val_pk.setCursor(main.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
 		    control_val_pk.setForeground(Colors.blue);
 		    control_val_pk.addMouseListener(new MouseAdapter() {
@@ -1586,7 +1568,7 @@ BuddyPluginViewInstance
 	    			new Clipboard(control_val_pk.getDisplay()).setContents(new Object[] {control_val_pk.getData( "key" )}, new Transfer[] {TextTransfer.getInstance()});
 		    	}
 		    });
-	
+
 			cryptoManagerKeyListener = new CryptoManagerKeyListener() {
 				@Override
 				public void
@@ -1594,13 +1576,13 @@ BuddyPluginViewInstance
 					CryptoHandler handler )
 				{
 					if ( control_val_pk.isDisposed()){
-	
+
 						crypt_man.removeKeyListener( this );
-	
+
 					}else if ( handler.getType() == CryptoManager.HANDLER_ECC ){
-	
+
 						if ( handler.getInstance() == ecc_inst ){
-							
+
 							control_val_pk.getDisplay().asyncExec(
 									new Runnable()
 									{
@@ -1609,36 +1591,36 @@ BuddyPluginViewInstance
 										run()
 										{
 											byte[]	public_key = handler.peekPublicKey();
-		
+
 											if ( public_key == null ){
-		
+
 												Messages.setLanguageText(control_val_pk, "ConfigView.section.security.publickey.undef");
 												control_val_pk.setData( "key", "" );
 											}else{
-		
+
 												String str =  Base32.encode( public_key );
-												
+
 												control_val_pk.setText( truncate( str ));
 												control_val_pk.setData( "key", str );
 											}
-		
+
 											controls.layout();
 										}
 									});
 						}
 					}
 				}
-	
+
 				@Override
 				public void
 				keyLockStatusChanged(
-						CryptoHandler handler) 
+						CryptoHandler handler)
 				{
 				}
 			};
-			
+
 			crypt_man.addKeyListener(cryptoManagerKeyListener);
-	
+
 			main.addDisposeListener(new DisposeListener() {
 				@Override
 				public void widgetDisposed(DisposeEvent e) {
@@ -1745,11 +1727,11 @@ BuddyPluginViewInstance
 			// table
 
 		Comparator<BuddyPluginBuddy> comparator = addBuddyTable( public_area, true );
-		
+
 		addBuddyTable( anon_area, false );
 
 		Utils.setEnabled( anon_area, I2PHelpers.isI2PInstalled());
-		
+
 		Label pblab = new Label( child1, SWT.NULL );
 		
 		pblab.setText( lu.getLocalisedMessageText( "label.partial.friends" ));
@@ -1766,17 +1748,17 @@ BuddyPluginViewInstance
 
 		public_buddies.clear();
 		anon_buddies.clear();
-		
+
 		List<BuddyPluginBuddy> buddies = plugin.getBuddies();
 
 		for ( BuddyPluginBuddy buddy: buddies ){
-			
+
 			if ( buddy.isPublicNetwork()){
-				
+
 				public_buddies.add( buddy );
-				
+
 			}else{
-				
+
 				anon_buddies.add( buddy );
 			}
 
@@ -1800,7 +1782,7 @@ BuddyPluginViewInstance
 		plugin.addPartialBuddyListener( this );
 		
 		tab_folder.setSelection( public_item );
-		
+
 		init_complete	= true;
 
 		updateTable( true );
@@ -1817,7 +1799,7 @@ BuddyPluginViewInstance
 		Table buddy_table = new Table(child1, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.VIRTUAL);
 
 		List<BuddyPluginBuddy>	buddies;
-		
+
 		if ( is_public ){
 			public_buddy_table	= buddy_table;
 			buddies				= public_buddies;
@@ -1825,7 +1807,7 @@ BuddyPluginViewInstance
 			anon_buddy_table	= buddy_table;
 			buddies				= anon_buddies;
 		}
-		
+
 		final String[] headers = {
 				"azbuddy.ui.table.name",
 				"azbuddy.ui.table.online",
@@ -2747,7 +2729,7 @@ BuddyPluginViewInstance
 					TableItem[] selection = buddy_table.getSelection();
 
 					List<BuddyPluginBuddy>	buddies = new ArrayList<>();
-					
+
 					Set<String> enabled_tags = new HashSet<>();
 
 					for (int i=0;i<selection.length;i++){
@@ -2755,73 +2737,73 @@ BuddyPluginViewInstance
 						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
 
 						buddies.add( buddy );
-						
+
 						Set<String> et = buddy.getLocalAuthorisedRSSTagsOrCategories();
-						
+
 						if ( et == null ){
-							
+
 							enabled_tags.clear();
-							
+
 							break;
-							
+
 						}else{
-							
+
 							if ( i == 0 ){
-								
+
 								enabled_tags.addAll( et );
-								
+
 							}else{
-								
+
 								enabled_tags.retainAll( et );
-								
+
 								if ( enabled_tags.isEmpty()){
-									
+
 									break;
 								}
 							}
 						}
 					}
-					
+
 					TagManager tm = TagManagerFactory.getTagManager();
-					
+
 					List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_CATEGORY ).getTags();
-					
+
 					all_tags.addAll( tm.getTagType( TagType.TT_DOWNLOAD_MANUAL ).getTags());
-					
+
 					Map<String,Tag>	tag_map = new HashMap<>();
-					
+
 					for ( Tag t: all_tags ){
-						
+
 						tag_map.put( t.getTagName( true ), t );
 					}
-					
+
 					List<Tag> selected_tags = new ArrayList<>();
-					
+
 					for ( String s: enabled_tags ){
-					
+
 						Tag t = tag_map.get( s );
-							
+
 						if ( t != null ){
-							
+
 							selected_tags.add( t );
 						}
 					}
-					
-					TagUIUtilsV3.showTagSelectionDialog( 
-						all_tags, 
+
+					TagUIUtilsV3.showTagSelectionDialog(
+						all_tags,
 						selected_tags,
 						false,
 						(tags)->{
-							
+
 							Set<String>	tag_names = new HashSet<>();
-							
+
 							for ( Tag t: tags ){
-								
+
 								tag_names.add( t.getTagName( true ));
 							}
-							
+
 							for ( BuddyPluginBuddy buddy: buddies ){
-							
+
 								buddy.setLocalAuthorisedRSSTagsOrCategories( tag_names );
 							}
 						});
@@ -2853,7 +2835,7 @@ BuddyPluginViewInstance
 					final TableItem[] selection = buddy_table.getSelection();
 
 					List<BuddyPluginBuddy>	buddies = new ArrayList<>();
-					
+
 					Set<String> avail_cats = new TreeSet<>();
 
 					for (int i=0;i<selection.length;i++){
@@ -2861,7 +2843,7 @@ BuddyPluginViewInstance
 						BuddyPluginBuddy buddy = (BuddyPluginBuddy)selection[i].getData();
 
 						buddies.add( buddy );
-						
+
 						Set<String> cats = buddy.getRemoteAuthorisedRSSTagsOrCategories();
 
 						if ( cats != null ){
@@ -2873,26 +2855,26 @@ BuddyPluginViewInstance
 					for ( final String cat: avail_cats ){
 
 						final MenuItem subs_item = new MenuItem( cat_subs_menu, SWT.CHECK );
-						
+
 						subs_item.setText( cat );
 
 						boolean	all_subs 	= true;
 						boolean some_subs 	= false;
-						
+
 						for ( BuddyPluginBuddy buddy: buddies ){
-							
+
 							if ( buddy.isSubscribedToCategory( cat )){
-								
+
 								some_subs = true;
-								
+
 							}else{
-								
+
 								all_subs = false;
 							}
 						}
-						
+
 						subs_item.setSelection( all_subs );
-						
+
 						subs_item.addSelectionListener(
 							new SelectionAdapter()
 							{
@@ -3325,10 +3307,10 @@ BuddyPluginViewInstance
 					}
 				}
 			});
-		
+
 		List<BuddyPluginBuddy> 	buddies 	= is_pub?public_buddies:anon_buddies;
 		Table					buddy_table = is_pub?public_buddy_table:anon_buddy_table;
-		
+
 		if ( !buddies.contains( buddy )){
 
 			buddy_table.getDisplay().asyncExec(
@@ -3339,10 +3321,10 @@ BuddyPluginViewInstance
 						run()
 						{
 							if ( buddy.isTransient()){
-								
+
 								return;
 							}
-							
+
 							if ( !buddy_table.isDisposed()){
 
 								if ( !buddies.contains( buddy )){
@@ -3363,7 +3345,7 @@ BuddyPluginViewInstance
 		final BuddyPluginBuddy	buddy )
 	{
 		boolean is_pub = buddy.isPublicNetwork();
-		
+
 		List<BuddyPluginBuddy> 	buddies 	= is_pub?public_buddies:anon_buddies;
 		Table					buddy_table = is_pub?public_buddy_table:anon_buddy_table;
 
@@ -3394,7 +3376,7 @@ BuddyPluginViewInstance
 		final BuddyPluginBuddy	buddy )
 	{
 		boolean is_pub = buddy.isPublicNetwork();
-		
+
 		Table					buddy_table = is_pub?public_buddy_table:anon_buddy_table;
 
 		if ( !buddy_table.isDisposed()){

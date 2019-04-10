@@ -265,12 +265,12 @@ public class Initializer
 			return;
 		}
 
-		// Ensure colors initialized
-		Colors.getInstance();
-
 		UIConfigDefaultsSWT.initialize();
 
 		UIConfigDefaultsSWTv3.initialize(core);
+
+		// Ensure colors initialized
+		Colors.getInstance();
 
 		checkInstallID();
 

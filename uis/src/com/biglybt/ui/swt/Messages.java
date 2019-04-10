@@ -17,6 +17,8 @@
  */
 package com.biglybt.ui.swt;
 
+import java.util.regex.Pattern;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
 import org.eclipse.swt.custom.CTabFolder;
@@ -27,8 +29,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.components.DoubleBufferedLabel;
-
-import java.util.regex.Pattern;
+import com.biglybt.util.StringCompareUtils;
 
 
 /**
@@ -59,7 +60,7 @@ public class Messages {
     if (widget == null || widget.isDisposed())
       return;
 
-    updateLanguageFromData(widget,null);	// OK, so we loose parameters on language change...
+    updateLanguageFromData(widget);	// OK, so we loose parameters on language change...
   	widget.removeListener(SWT.MouseHover, hoverListener);
   	widget.addListener(SWT.MouseHover, hoverListener);
 
@@ -101,7 +102,7 @@ public class Messages {
         Table table = (Table) widget;
         TableColumn[] columns = table.getColumns();
         for (int i = 0; i < columns.length; i++) {
-          updateLanguageFromData(columns[i], null);
+          updateLanguageFromData(columns[i]);
         }
         updateLanguageForControl(table.getMenu());
 
@@ -140,27 +141,41 @@ public class Messages {
       TreeItem treeitem = (TreeItem) widget;
       TreeItem[] treeitems = treeitem.getItems();
       for (int i = 0; i < treeitems.length; i++) {
-        updateLanguageFromData(treeitems[i], null);
+        updateLanguageFromData(treeitems[i]);
         updateLanguageForControl(treeitems[i]);
       }
     }
 
   }
 
-  public static void setLanguageText(Widget widget, String key) {
-    setLanguageText(widget, key, false);
-  }
+	// Needed only because old plugins use this signature
+	public static void setLanguageText(Widget widget, String key) {
+		setLanguageText(widget, key, false);
+	}
 
-  public static void setLanguageText(Widget widget,  String key, String[]params) {
-    setLanguageText(widget, key, params, false);
-  }
+	public static void setLanguageText(Widget widget, String key,
+			String... params) {
+		setLanguageText(widget, key, false, params);
+	}
 
-  public static void setLanguageText(Widget widget,  String key, boolean setTooltipOnly) {
-  	setLanguageText( widget, key, null, setTooltipOnly );
-  }
+	/**
+	 * Updates text only if they key is different
+	 */
+	public static void updateLanguageKey(Widget widget, String key,
+			String... params) {
+		if (widget == null || widget.isDisposed()) {
+			return;
+		}
+		String oldKey = (String) widget.getData(RESOURCE_KEY);
+		if (StringCompareUtils.equals(key, oldKey)) {
+			return;
+		}
+		widget.setData(RESOURCE_KEY, key);
+		updateLanguageFromData(widget, params);
+	}
 
-  private static void
-  setLanguageText(Widget widget,  String key, String[] params, boolean setTooltipOnly) {
+	public static void setLanguageText(Widget widget, String key,
+			boolean setTooltipOnly, String... params) {
   	widget.setData(RESOURCE_KEY,key);
   	if(!setTooltipOnly)
       updateLanguageFromData(widget, params);
@@ -214,79 +229,77 @@ public class Messages {
 	}
 
 
-  private static void updateLanguageFromData(Widget widget,String[] params) {
-  	if (widget == null || widget.isDisposed()) {
-  		return;
-  	}
+	private static void updateLanguageFromData(Widget widget, String... params) {
+		if (widget == null || widget.isDisposed()) {
+			return;
+		}
 
-      if (widget.getData(RESOURCE_KEY) != null) {
-        String key = null;
-        try {
-          key = (String) widget.getData(RESOURCE_KEY);
-        } catch(ClassCastException e) {
-        }
+		String key = null;
+		try {
+			key = (String) widget.getData(RESOURCE_KEY);
+		} catch (ClassCastException e) {
+		}
 
-        if(key == null) return;
-        if(key.endsWith(".tooltip")) return;
+		if (key == null || key.endsWith(".tooltip")) {
+			return;
+		}
 
-        String	message;
+		String message = params == null ? MessageText.getString(key)
+				: MessageText.getString(key, params);
 
-        if ( params == null ){
+		if (widget instanceof Label) {
+			// Disable Mnemonic when & is before a space.  Otherwise, it's most
+			// likely meant to be a Mnemonic
+			((Label) widget).setText(message.replaceAll("& ", "&& "));
 
-        	message = MessageText.getString((String) widget.getData(RESOURCE_KEY));
-        }else{
+		} else if (widget instanceof MenuItem) {
+			final MenuItem menuItem = ((MenuItem) widget);
+			boolean indent = (menuItem.getData("IndentItem") != null);
 
-           	message = MessageText.getString((String) widget.getData(RESOURCE_KEY), params);
-        }
+			if (Constants.isOSX) {
+				message = HIG_ELLIP_EXP.matcher(message).replaceAll("\u2026"); // hig style - ellipsis
+			}
 
-        if (widget instanceof MenuItem) {
-            final MenuItem menuItem = ((MenuItem) widget);
-            boolean indent = (menuItem.getData("IndentItem") != null);
+			menuItem.setText(indent ? "  " + message : message);
 
-            if(Constants.isOSX)
-                message = HIG_ELLIP_EXP.matcher(message).replaceAll("\u2026"); // hig style - ellipsis
+			if (menuItem.getAccelerator() != 0) {
+				// opt-in only for now; remove this conditional check to allow accelerators for arbitrary MenuItem objects
+				KeyBindings.setAccelerator(menuItem,
+						(String) menuItem.getData(RESOURCE_KEY)); // update keybinding
+			}
 
-            menuItem.setText(indent ? "  " + message : message);
+		} else if (widget instanceof Item) {
+			// Must be after MenuItem, since MenuItem is Item, but we extra logic
+			((Item) widget).setText(message);
 
-            if(menuItem.getAccelerator() != 0) // opt-in only for now; remove this conditional check to allow accelerators for arbitrary MenuItem objects
-                KeyBindings.setAccelerator(menuItem, (String)menuItem.getData(RESOURCE_KEY)); // update keybinding
-        }
-        else if (widget instanceof TableColumn) {
-        	TableColumn tc = ((TableColumn) widget);
-          tc.setText(message);
-        } else if (widget instanceof Label)
-        	// Disable Mnemonic when & is before a space.  Otherwise, it's most
-        	// likely meant to be a Mnemonic
-          ((Label) widget).setText(message.replaceAll("& ", "&& "));
-        else if (widget instanceof CLabel)
-          ((CLabel) widget).setText(message.replaceAll("& ", "&& "));
-        else if (widget instanceof Group)
-           ((Group) widget).setText(message);
-        else if (widget instanceof Button)
-           ((Button) widget).setText(message);
-        else if (widget instanceof CTabItem)
-           ((CTabItem) widget).setText(message);
-        else if (widget instanceof TabItem)
-           ((TabItem) widget).setText(message);
-        else if (widget instanceof TreeItem)
-          ((TreeItem) widget).setText(message);
-        else if(widget instanceof Shell)
-          ((Shell) widget).setText(message);
-        else if(widget instanceof ToolItem)
-            ((ToolItem) widget).setText(message);
-        else if(widget instanceof Text)
-          ((Text) widget).setText(message);
-        else if(widget instanceof TreeColumn)
-          ((TreeColumn) widget).setText(message);
-        else if(widget instanceof DoubleBufferedLabel)
-            ((DoubleBufferedLabel) widget).setText(message);
-        else if(widget instanceof Canvas)
-          ; // get a few of these
-        else{
-          Debug.out( "No cast for " + widget.getClass().getName());
-        }
-      }
-  }
+		} else if (widget instanceof CLabel) {
+			((CLabel) widget).setText(message.replaceAll("& ", "&& "));
+
+		} else if (widget instanceof Group) {
+			((Group) widget).setText(message);
+
+		} else if (widget instanceof Button) {
+			((Button) widget).setText(message);
+
+		} else if (widget instanceof Decorations) {
+			((Decorations) widget).setText(message);
+
+		} else if (widget instanceof Text) {
+			((Text) widget).setText(message);
+
+		} else if (widget instanceof Link) {
+			((Link) widget).setText(message.replaceAll("& ", "&& "));
+
+		} else if (widget instanceof DoubleBufferedLabel) {
+			((DoubleBufferedLabel) widget).setText(message);
+
+		} else if (widget instanceof Canvas) {
+			; // get a few of these
+
+		} else {
+			Debug.out("No cast for " + widget.getClass().getName());
+		}
+	}
 
   public static void setLanguageTooltip(Widget widget, String key) {
   	if (widget == null || widget.isDisposed()) {

@@ -71,15 +71,11 @@ import com.biglybt.ui.common.table.TableSelectionListener;
 import com.biglybt.ui.common.table.TableViewFilterCheck;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
+import com.biglybt.ui.config.ConfigSectionFile;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.SimpleTextEntryWindow;
-import com.biglybt.ui.swt.TorrentUtil;
-import com.biglybt.ui.swt.UIConfigDefaultsSWT;
-import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.config.generic.GenericIntParameter;
-import com.biglybt.ui.swt.config.generic.GenericParameterAdapter;
+import com.biglybt.ui.swt.config.IntSwtParameter;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -1447,39 +1443,31 @@ public class OpenTorrentOptionsWindow
 	{
 		String text;
 
-		String hide = COConfigurationManager.getStringParameter( "adv.setting.ui.torrent.options.title.hide", "" );
-
-		if ( hide.equals( "1" )){
-
-			text = "rand=" + Math.abs( new Random().nextLong());
-
-		}else{
-			int num = open_instances.size();
+		int num = open_instances.size();
 
 
-			if ( num == 1 ){
+		if ( num == 1 ){
 
-					// use a display name consistent with core
+				// use a display name consistent with core
 
-				TorrentOpenOptions options = open_instances.get(0).getOptions();
+			TorrentOpenOptions options = open_instances.get(0).getOptions();
 
-				text = options.getTorrentName();
+			text = options.getTorrentName();
 
-				TOTorrent t = options.getTorrent();
+			TOTorrent t = options.getTorrent();
 
-				if ( t != null ){
+			if ( t != null ){
 
-					String str = PlatformTorrentUtils.getContentTitle( t );
+				String str = PlatformTorrentUtils.getContentTitle( t );
 
-					if ( str != null && str.length() > 0 ){
+				if ( str != null && str.length() > 0 ){
 
-						text = str;
-					}
+					text = str;
 				}
-			}else{
-
-				text =  MessageText.getString("label.num.torrents",new String[]{ String.valueOf( open_instances.size())});
 			}
+		}else{
+
+			text =  MessageText.getString("label.num.torrents",new String[]{ String.valueOf( open_instances.size())});
 		}
 
 		dlg.setTitle(MessageText.getString("OpenTorrentOptions.title") + " [" + text + "]");
@@ -5361,7 +5349,7 @@ public class OpenTorrentOptionsWindow
 
 								JSONObject args = new JSONObject();
 
-								args.put( "select", "torrent-add-auto-skip" );
+								args.put( "select", ConfigSectionFile.REFID_TORRENT_ADD_AUTO_SKIP);
 								
 								String args_str = JSONUtils.encodeToJSON( args );
 								
@@ -5385,7 +5373,7 @@ public class OpenTorrentOptionsWindow
 
 								JSONObject args = new JSONObject();
 
-								args.put( "select", "torrent-add-auto-tag" );
+								args.put( "select", ConfigSectionFile.REFID_TORRENT_ADD_AUTO_TAG);
 								
 								String args_str = JSONUtils.encodeToJSON( args );
 								
@@ -5988,50 +5976,47 @@ public class OpenTorrentOptionsWindow
 			parent.setBackgroundMode( SWT.INHERIT_FORCE );	// win 7 classic theme shows grey background without this
 			parent.setLayout( new GridLayout(4, false));
 
-			GridData gridData = new GridData();
-			Label label = new Label(parent, SWT.NULL);
-			label.setText( MessageText.getString( "TableColumn.header.maxupspeed") + "[" + DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB  ) + "]" );
-
-			gridData = new GridData();
-			GenericIntParameter paramMaxUploadSpeed =
-				new GenericIntParameter(
-					new IntAdapter()
-					{
+			IntSwtParameter paramMaxUploadSpeed = new IntSwtParameter(parent,
+					"torrentoptions.config.uploadspeed", "TableColumn.header.maxupspeed",
+					"", 0, Integer.MAX_VALUE, new IntSwtParameter.ValueProcessor() {
 						@Override
-						public void
-						setIntValue(
-							String	key,
-							int		value )
-						{
-							torrentOptions.setMaxUploadSpeed( value );
+						public Integer getValue(IntSwtParameter p) {
+							return torrentOptions.getMaxUploadSpeed();
 						}
-					},
-					parent,
-					"torrentoptions.config.uploadspeed", 0, Integer.MAX_VALUE );
 
-			paramMaxUploadSpeed.setLayoutData(gridData);
-
-			label = new Label(parent, SWT.NULL);
-			label.setText( MessageText.getString( "TableColumn.header.maxdownspeed") + "[" + DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB  ) + "]" );
-
-			gridData = new GridData();
-			GenericIntParameter paramMaxDownloadSpeed =
-				new GenericIntParameter(
-					new IntAdapter()
-					{
 						@Override
-						public void
-						setIntValue(
-							String	key,
-							int		value )
-						{
-							torrentOptions.setMaxDownloadSpeed( value );
+						public boolean setValue(IntSwtParameter p, Integer value) {
+							if (torrentOptions.getMaxUploadSpeed() != value) {
+								torrentOptions.setMaxUploadSpeed(value);
+								return true;
+							}
+							return false;
 						}
-					},
-					parent,
-					"torrentoptions.config.downloadspeed", 0, Integer.MAX_VALUE );
+					});
+			paramMaxUploadSpeed.setSuffixLabelText(
+					DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB));
 
-			paramMaxDownloadSpeed.setLayoutData(gridData);
+			IntSwtParameter paramMaxDownloadSpeed = new IntSwtParameter(parent,
+					"torrentoptions.config.downloadspeed",
+					"TableColumn.header.maxdownspeed", "", 0, Integer.MAX_VALUE,
+					new IntSwtParameter.ValueProcessor() {
+						@Override
+						public Integer getValue(IntSwtParameter p) {
+							return torrentOptions.getMaxDownloadSpeed();
+						}
+
+						@Override
+						public boolean setValue(IntSwtParameter p, Integer value) {
+							if (torrentOptions.getMaxDownloadSpeed() != value) {
+								torrentOptions.setMaxDownloadSpeed(value);
+								return true;
+							}
+							return false;
+						}
+					});
+			paramMaxDownloadSpeed.setSuffixLabelText(
+					DisplayFormatters.getRateUnit(DisplayFormatters.UNIT_KB));
+
 		}
 
 		private void setupIPFilterOption(SWTSkinObjectContainer so) {
@@ -6666,28 +6651,6 @@ public class OpenTorrentOptionsWindow
 		public void
 		instanceChanged(
 			OpenTorrentInstance		instance );
-	}
-
-	private static class
-	IntAdapter
-		extends GenericParameterAdapter
-	{
-		@Override
-		public int
-		getIntValue(
-			String	key )
-		{
-			return( 0 );
-		}
-
-
-		@Override
-		public boolean
-		resetIntDefault(
-			String	key )
-		{
-			return( false );
-		}
 	}
 
 	public static Tag getExistingTag(List<Tag> initialTags, String tagName) {

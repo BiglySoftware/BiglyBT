@@ -18,32 +18,30 @@
 
 package com.biglybt.ui.swt.shells;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.*;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
-import com.biglybt.ui.swt.BrowserWrapper;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.UIFunctionsUserPrompter;
+import com.biglybt.ui.UserPrompterResultListener;
+import com.biglybt.ui.common.RememberedDecisionsManager;
+import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.shells.GCStringPrinter.URLInfo;
-
-import com.biglybt.ui.UserPrompterResultListener;
-import com.biglybt.ui.UIFunctionsUserPrompter;
-import com.biglybt.ui.common.RememberedDecisionsManager;
-import com.biglybt.ui.swt.UISkinnableManagerSWT;
-import com.biglybt.ui.swt.UISkinnableSWTListener;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.shells.GCStringPrinter.URLInfo;
 import com.biglybt.ui.swt.utils.ColorCache;
 
 /**
@@ -281,6 +279,8 @@ public class MessageBoxShell
 	}
 
 	private void triggerResultListener(final int returnVal) {
+		// TODO: use Utils.getOffOfSWTThread, ensure call listener implimentations
+		// can handle non-SWT thread
 		Utils.execSWTThreadLater(0, new AERunnable() {
 			@Override
 			public void runSupport() {
@@ -1086,6 +1086,10 @@ public class MessageBoxShell
 
 	@Override
 	public void setIconResource(String resource) {
+		if (Utils.runIfNotSWTThread(() -> setIconResource(resource))) {
+			return;
+		}
+
 		iconImageID = null;
 		if (resource.equals("info")) {
 			iconImage = Display.getDefault().getSystemImage(SWT.ICON_INFORMATION);

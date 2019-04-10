@@ -18,226 +18,133 @@
 
 package com.biglybt.plugin.startstoprules.defaultplugin.ui.swt;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.internat.MessageText;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.IntListParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.IntParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
 import com.biglybt.plugin.startstoprules.defaultplugin.StartStopRulesDefaultPlugin;
+import com.biglybt.ui.config.ConfigSectionImpl;
+
+import com.biglybt.pif.ui.config.IntListParameter;
+import com.biglybt.pif.ui.config.Parameter;
 
 /** Auto Starting specific options
  * @author TuxPaper
  * @created Jan 12, 2004
  */
-public class ConfigSectionSeedingAutoStarting implements UISWTConfigSection {
-  @Override
-  public String configSectionGetParentSection() {
-		return "queue.seeding";
-  }
+public class ConfigSectionSeedingAutoStarting
+	extends ConfigSectionImpl
+{
 
-	@Override
-	public String configSectionGetName() {
-		return "queue.seeding.autoStarting";
+	public static final String SECTION_ID = "queue.seeding.autoStarting";
+
+	public ConfigSectionSeedingAutoStarting() {
+		super(SECTION_ID, ConfigSectionSeeding.SECTION_ID);
 	}
 
-  @Override
-  public void configSectionSave() {
-  }
-
-  @Override
-  public void configSectionDelete() {
-  }
-
 	@Override
-	public int maxUserMode() {
-		return 0;
+	public void build() {
+		// Seeding Automation Setup
+
+		// ** Begin Rank Type area
+		// Rank Type area.  Encompases the 4 (or more) options groups
+
+		int[] rankValues = {
+			StartStopRulesDefaultPlugin.RANK_SPRATIO,
+			StartStopRulesDefaultPlugin.RANK_SEEDCOUNT,
+			StartStopRulesDefaultPlugin.RANK_PEERCOUNT,
+			StartStopRulesDefaultPlugin.RANK_TIMED,
+			StartStopRulesDefaultPlugin.RANK_NONE
+		};
+		String[] rankLabels = {
+			MessageText.getString("ConfigView.label.seeding.rankType.peerSeed"),
+			MessageText.getString("ConfigView.label.seeding.rankType.seed"),
+			MessageText.getString("ConfigView.label.seeding.rankType.peer"),
+			MessageText.getString("ConfigView.label.seeding.rankType.timedRotation"),
+			MessageText.getString("ConfigView.label.seeding.rankType.none")
+		};
+
+		IntListParameterImpl paramRankType = new IntListParameterImpl(
+				"StartStopManager_iRankType", null, rankValues, rankLabels);
+		add(paramRankType);
+		paramRankType.setListType(IntListParameter.TYPE_RADIO_LIST);
+
+		// Seed Count options
+
+		IntParameterImpl paramSeedFallback = new IntParameterImpl(
+				"StartStopManager_iRankTypeSeedFallback",
+				"ConfigView.label.seeding.rankType.seed.fallback", 0,
+				Integer.MAX_VALUE);
+		add(paramSeedFallback);
+		paramSeedFallback.setSuffixLabelKey("ConfigView.label.seeds");
+
+		ParameterGroupImpl pgSeedOptions = new ParameterGroupImpl(
+				"ConfigView.label.seeding.rankType.seed.options", paramSeedFallback);
+		add(pgSeedOptions);
+
+		// timed rotation ranking type
+
+		IntParameterImpl paramMinSeedingTimeWithPeers = new IntParameterImpl(
+				"StartStopManager_iTimed_MinSeedingTimeWithPeers",
+				"ConfigView.label.seeding.rankType.timed.minTimeWithPeers", 0,
+				Integer.MAX_VALUE);
+		add(paramMinSeedingTimeWithPeers);
+
+		ParameterGroupImpl pgTimedOptions = new ParameterGroupImpl(
+				"ConfigView.label.seeding.rankType.timed.options",
+				paramMinSeedingTimeWithPeers);
+		add(pgTimedOptions);
+
+		ParameterGroupImpl pgRankTypeOptions = new ParameterGroupImpl(null,
+				pgSeedOptions, pgTimedOptions);
+		add("pgRankTypeOptions", pgRankTypeOptions);
+
+		add(new ParameterGroupImpl("ConfigView.label.seeding.rankType",
+				paramRankType, pgRankTypeOptions).setNumberOfColumns2(2));
+
+		// ** End Rank Type area
+
+		List<Parameter> listPSorSC = new ArrayList<>();
+
+		add(new BooleanParameterImpl("StartStopManager_bPreferLargerSwarms",
+				"ConfigView.label.seeding.preferLargerSwarms"), listPSorSC);
+
+		final String[] boostQRPeersLabels = new String[9];
+		final int[] boostQRPeersValues = new int[9];
+		String peers = MessageText.getString("ConfigView.text.peers");
+		for (int i = 0; i < boostQRPeersValues.length; i++) {
+			boostQRPeersLabels[i] = (i + 1) + " " + peers; //$NON-NLS-1$
+			boostQRPeersValues[i] = (i + 1);
+		}
+		add(new IntListParameterImpl("StartStopManager_iMinPeersToBoostNoSeeds",
+				"ConfigView.label.minPeersToBoostNoSeeds", boostQRPeersValues,
+				boostQRPeersLabels), listPSorSC);
+
+		ParameterGroupImpl pgPSorSC = new ParameterGroupImpl(null, listPSorSC);
+		add("sas.pgPSorSC", pgPSorSC);
+
+		paramRankType.addListener(param -> {
+			int rankType = paramRankType.getValue();
+			pgSeedOptions.setVisible(
+					rankType == StartStopRulesDefaultPlugin.RANK_SEEDCOUNT);
+			pgTimedOptions.setVisible(
+					rankType == StartStopRulesDefaultPlugin.RANK_TIMED);
+			pgPSorSC.setVisible(rankType == StartStopRulesDefaultPlugin.RANK_SPRATIO
+					|| rankType == StartStopRulesDefaultPlugin.RANK_SEEDCOUNT);
+			pgSeedOptions.setEnabled(
+					rankType == StartStopRulesDefaultPlugin.RANK_SEEDCOUNT);
+			pgTimedOptions.setEnabled(
+					rankType == StartStopRulesDefaultPlugin.RANK_TIMED);
+			pgPSorSC.setEnabled(rankType == StartStopRulesDefaultPlugin.RANK_SPRATIO
+					|| rankType == StartStopRulesDefaultPlugin.RANK_SEEDCOUNT);
+		});
+		paramRankType.fireParameterChanged();
+
+		add(new BooleanParameterImpl("StartStopManager_bAutoStart0Peers",
+				"ConfigView.label.seeding.autoStart0Peers"));
 	}
-
-  @Override
-  public Composite configSectionCreate(Composite parent) {
-    // Seeding Automation Setup
-    GridData gridData;
-    GridLayout layout;
-    Label label;
-
-    Composite gQR = new Composite(parent, SWT.NULL);
-
-    layout = new GridLayout();
-    layout.numColumns = 1;
-    layout.marginHeight = 0;
-    gQR.setLayout(layout);
-    gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    gQR.setLayoutData(gridData);
-
-
-    // ** Begin Rank Type area
-    // Rank Type area.  Encompases the 4 (or more) options groups
-
-    Composite cRankType = new Group(gQR, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 2;
-    layout.verticalSpacing = 2;
-    cRankType.setLayout(layout);
-    gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-    cRankType.setLayoutData(gridData);
-    Messages.setLanguageText(cRankType, "ConfigView.label.seeding.rankType");
-
-    // Seeds:Peer options
-    RadioParameter rparamPeerSeed =
-        new RadioParameter(cRankType, "StartStopManager_iRankType",
-                           StartStopRulesDefaultPlugin.RANK_SPRATIO);
-    Messages.setLanguageText(rparamPeerSeed.getControl(), "ConfigView.label.seeding.rankType.peerSeed");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    rparamPeerSeed.setLayoutData(gridData);
-
-    new Label(cRankType, SWT.NULL);
-
-
-    // Seed Count options
-    RadioParameter rparamSeedCount =
-        new RadioParameter(cRankType, "StartStopManager_iRankType",
-                           StartStopRulesDefaultPlugin.RANK_SEEDCOUNT);
-    Messages.setLanguageText(rparamSeedCount.getControl(), "ConfigView.label.seeding.rankType.seed");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    rparamSeedCount.setLayoutData(gridData);
-
-    Group gSeedCount = new Group(cRankType, SWT.NULL);
-    layout = new GridLayout();
-    layout.marginHeight = 2;
-    layout.marginWidth = 2;
-    layout.numColumns = 3;
-    gSeedCount.setLayout(layout);
-    gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-    gridData.verticalSpan = 1;
-    gSeedCount.setLayoutData(gridData);
-    Messages.setLanguageText(gSeedCount, "ConfigView.label.seeding.rankType.seed.options");
-
-    label = new Label(gSeedCount, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.rankType.seed.fallback");
-
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    IntParameter intParamFallBack = new IntParameter(gSeedCount, "StartStopManager_iRankTypeSeedFallback", 0, Integer.MAX_VALUE);
-    intParamFallBack.setLayoutData(gridData);
-
-    Label labelFallBackSeeds = new Label(gSeedCount, SWT.NULL);
-    label.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_BEGINNING));
-    Messages.setLanguageText(labelFallBackSeeds, "ConfigView.label.seeds");
-
-    Control[] controlsSeedCount = { gSeedCount };
-    rparamSeedCount.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(controlsSeedCount));
-
-
-    // weigted peer count ranking type
-    RadioParameter rparamPeer =
-        new RadioParameter(cRankType, "StartStopManager_iRankType",
-                           StartStopRulesDefaultPlugin.RANK_PEERCOUNT);
-    Messages.setLanguageText(rparamPeer.getControl(), "ConfigView.label.seeding.rankType.peer");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    rparamPeer.setLayoutData(gridData);
-
-    new Label(cRankType, SWT.NULL);
-
-    // timed rotation ranking type
-    RadioParameter rparamTimed =
-        new RadioParameter(cRankType, "StartStopManager_iRankType",
-                           StartStopRulesDefaultPlugin.RANK_TIMED);
-    Messages.setLanguageText(rparamTimed.getControl(), "ConfigView.label.seeding.rankType.timedRotation");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    rparamTimed.setLayoutData(gridData);
-
-    Group gTimed = new Group(cRankType, SWT.NULL);
-    layout = new GridLayout();
-    layout.marginHeight = 2;
-    layout.marginWidth = 2;
-    layout.numColumns = 2;
-    gTimed.setLayout(layout);
-    gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-    gridData.verticalSpan = 1;
-    gTimed.setLayoutData(gridData);
-    Messages.setLanguageText(gTimed, "ConfigView.label.seeding.rankType.timed.options");
-
-    label = new Label(gTimed, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.rankType.timed.minTimeWithPeers");
-
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    IntParameter intParamTimedPeersMinTime = new IntParameter(gTimed, "StartStopManager_iTimed_MinSeedingTimeWithPeers", 0, Integer.MAX_VALUE);
-    intParamTimedPeersMinTime.setLayoutData(gridData);
-
-    Control[] controlsTimed = { gTimed };
-    rparamTimed.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(controlsTimed));
-
-
-    // No Ranking
-    RadioParameter rparamNone =
-        new RadioParameter(cRankType, "StartStopManager_iRankType",
-                           StartStopRulesDefaultPlugin.RANK_NONE);
-    Messages.setLanguageText(rparamNone.getControl(), "ConfigView.label.seeding.rankType.none");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-    rparamNone.setLayoutData(gridData);
-
-    new Label(cRankType, SWT.NULL);
-
-    // ** End Rank Type area
-
-
-    Composite cNoTimeNone = new Composite(gQR, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 2;
-    cNoTimeNone.setLayout(layout);
-    gridData = new GridData();
-    layout.marginHeight = 0;
-    layout.marginWidth = 0;
-    cNoTimeNone.setLayoutData(gridData);
-
-    gridData = new GridData();
-    gridData.horizontalSpan = 2;
-    new BooleanParameter(cNoTimeNone,
-                         "StartStopManager_bPreferLargerSwarms",
-                         "ConfigView.label.seeding.preferLargerSwarms").setLayoutData(gridData);
-
-
-
-    label = new Label(cNoTimeNone, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.minPeersToBoostNoSeeds"); //$NON-NLS-1$
-    final String boostQRPeersLabels[] = new String[9];
-    final int boostQRPeersValues[] = new int[9];
-    String peers = MessageText.getString("ConfigView.text.peers");
-    for (int i = 0; i < boostQRPeersValues.length; i++) {
-      boostQRPeersLabels[i] = (i+1) + " " + peers; //$NON-NLS-1$
-      boostQRPeersValues[i] = (i+1);
-    }
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
-    new IntListParameter(cNoTimeNone, "StartStopManager_iMinPeersToBoostNoSeeds", boostQRPeersLabels, boostQRPeersValues).setLayoutData(gridData);;
-
-    Control[] controlsNoTimeNone = { cNoTimeNone };
-    rparamPeerSeed.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(controlsNoTimeNone));
-    rparamSeedCount.setAdditionalActionPerformer(new ChangeSelectionActionPerformer(controlsNoTimeNone));
-
-    int iRankType = COConfigurationManager.getIntParameter("StartStopManager_iRankType");
-    boolean enable = (iRankType == StartStopRulesDefaultPlugin.RANK_SPRATIO ||
-                      iRankType == StartStopRulesDefaultPlugin.RANK_SEEDCOUNT);
-    controlsSetEnabled(controlsNoTimeNone, enable);
-
-
-    new BooleanParameter(gQR, "StartStopManager_bAutoStart0Peers",
-                         "ConfigView.label.seeding.autoStart0Peers");
-
-    return gQR;
-  }
-  private void controlsSetEnabled(Control[] controls, boolean bEnabled) {
-    for(int i = 0 ; i < controls.length ; i++) {
-      if (controls[i] instanceof Composite)
-        controlsSetEnabled(((Composite)controls[i]).getChildren(), bEnabled);
-      controls[i].setEnabled(bEnabled);
-    }
-  }
 }
-

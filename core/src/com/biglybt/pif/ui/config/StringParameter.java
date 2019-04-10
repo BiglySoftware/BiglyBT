@@ -26,7 +26,7 @@ package com.biglybt.pif.ui.config;
 
 public interface
 StringParameter
-	extends Parameter
+	extends Parameter, ParameterWithSuffix, ParameterWithHint
 {
 	public void
 	setValue(
@@ -43,4 +43,49 @@ StringParameter
 	public void
 	setMultiLine(
 		int	visible_line_count );
+
+	/**
+	 * Set a width hint for displaying the text field
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setWidthInCharacters(int widthInCharacters);
+
+	/**
+	 * @return width hint in characters for displaying the text field
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	int getWidthInCharacters();
+
+	/**
+	 * Limit characters to a list
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setValidChars(String chars, boolean caseSensitive);
+
+	/**
+	 * Same as {@link #addValidator(ParameterValidator)}, but
+	 * casts the "toValue" to String.
+	 *
+	 * @see #addValidator(ParameterValidator)
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void addStringValidator(
+			ParameterValidator<String> stringParamValidator);
+
+	/**
+	 * Limit the number of characters for Parameter
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setTextLimit(int textLimit);
+
+	/**
+	 * Get the character limit for Parameter
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	int getTextLimit();
 }

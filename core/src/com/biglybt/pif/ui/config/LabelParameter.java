@@ -20,6 +20,8 @@
 package com.biglybt.pif.ui.config;
 
 /**
+ * A single label. Not linked to a config key.
+ *
  * @author parg
  *
  */

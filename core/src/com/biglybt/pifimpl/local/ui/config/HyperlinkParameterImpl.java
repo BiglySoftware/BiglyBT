@@ -18,19 +18,28 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.pif.ui.config.HyperlinkParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 /**
  * @author Allan Crooks
  *
  */
-public class HyperlinkParameterImpl extends LabelParameterImpl implements
-		HyperlinkParameter {
+public class HyperlinkParameterImpl
+	extends LabelParameterImpl
+	implements HyperlinkParameter
+{
+
+	private final String linkTextKey;
 
 	private String hyperlink;
 
-	public HyperlinkParameterImpl(PluginConfigImpl config, String key, String label, String hyperlink) {
-		super(config, key, label);
+	public HyperlinkParameterImpl(String linkTextKey, String hyperlink) {
+		this(linkTextKey, null, hyperlink);
+	}
+
+	public HyperlinkParameterImpl(String linkTextKey, String labelKey,
+			String hyperlink) {
+		super(labelKey);
+		this.linkTextKey = linkTextKey;
 		this.hyperlink = hyperlink;
 	}
 
@@ -43,6 +52,10 @@ public class HyperlinkParameterImpl extends LabelParameterImpl implements
 	public void setHyperlink(String url_location) {
 		this.hyperlink = url_location;
 
-		fireParameterChanged();
+		refreshControl();
+	}
+
+	public String getLinkTextKey() {
+		return linkTextKey;
 	}
 }

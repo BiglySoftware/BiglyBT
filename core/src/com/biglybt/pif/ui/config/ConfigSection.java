@@ -21,51 +21,28 @@
 package com.biglybt.pif.ui.config;
 
 /**
- * Base class for adding "ConfigSection"s.<p>
- * This class does nothing.  Extend the subinterfaces to add a section to a
- * particular type of view (currently only SWT is supported).
+ * Common Config Section names
  */
-public interface ConfigSection {
-  /**
-   * Configuration panel will be added to main configuration view area
-   */
-  public static final String SECTION_ROOT = "root";
-  /**
-   * Configuration panel will be added to the plugins view area.
-   */
-  public static final String SECTION_PLUGINS = "plugins";
-  public static final String SECTION_TRACKER = "tracker";
-  public static final String SECTION_FILES = "files";
-  public static final String SECTION_INTERFACE = "style";
-  public static final String SECTION_CONNECTION = "server";
-  public static final String SECTION_TRANSFER = "transfer";
+public interface ConfigSection
+{
+	/**
+	 * Configuration panel will be added to main configuration view area
+	 */
+	public static final String SECTION_ROOT = "root";
 
-  /**
-   * Returns section you want your configuration panel to be under.
-   * See SECTION_* constants.  To add a subsection to your own ConfigSection,
-   * return the configSectionGetName result of your parent.<br>
-   */
-  public String configSectionGetParentSection();
+	/**
+	 * Configuration panel will be added to the plugins view area.
+	 */
+	public static final String SECTION_PLUGINS = "plugins";
 
-  /**
-   * In order for the plugin to display its section correctly, a key in the
-   * Plugin language file will need to contain
-   * <TT>ConfigView.section.<i>&lt;configSectionGetName() result&gt;</i>=The Section name.</TT><br>
-   *
-   * @return The name of the configuration section
-   */
-  public String configSectionGetName();
+	public static final String SECTION_TRACKER = "tracker";
 
-  /**
-   * User selected Save.
-   * All saving of non-plugin tabs have been completed, as well as
-   * saving of plugins that implement com.biglybt.pif.ui.config
-   * parameters.
-   */
-  public void configSectionSave();
+	public static final String SECTION_FILES = "files";
 
-  /**
-   * Config view is closing
-   */
-  public void configSectionDelete();
+	public static final String SECTION_INTERFACE = "style";
+
+	public static final String SECTION_CONNECTION = "server";
+
+	public static final String SECTION_TRANSFER = "transfer";
+
 }

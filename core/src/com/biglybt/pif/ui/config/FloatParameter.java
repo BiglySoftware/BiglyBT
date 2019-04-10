@@ -18,8 +18,13 @@
 
 package com.biglybt.pif.ui.config;
 
+/**
+ * Config parameter representing a float value
+ *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addFloatParameter2(String, String, float, float, float, boolean, int)
+ */
 public interface FloatParameter
-	extends Parameter
+	extends Parameter, ParameterWithSuffix
 {
 	boolean isAllowZero();
 

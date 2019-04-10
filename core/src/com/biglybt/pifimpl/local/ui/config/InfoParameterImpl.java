@@ -24,8 +24,9 @@ package com.biglybt.pifimpl.local.ui.config;
  *
  */
 
+import com.biglybt.core.config.COConfigurationManager;
+
 import com.biglybt.pif.ui.config.InfoParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 
 public class
@@ -33,23 +34,33 @@ InfoParameterImpl
 	extends 	ParameterImpl
 	implements 	InfoParameter
 {
-	public
-	InfoParameterImpl(
-		PluginConfigImpl 	config,
-		String 				key,
-		String 				label,
-		String				value )
-	{
-		super( config, key, label);
+	// Used when no config key
+	String value = null;
+	private boolean textSelectable;
 
-		setValue( value );
+	/**
+	 *
+	 * If configKey != null:<br>
+	 *   [label][config value]<br>
+	 * If configKey == null:<br>
+	 *   [label][value]<br>
+	 */
+	public InfoParameterImpl(String configKey, String labelKey, String value) {
+		super(configKey, labelKey);
+
+		if (configKey == null) {
+			setValue( value );
+		}
 	}
 
 	@Override
 	public String
 	getValue()
 	{
-		return( config.getUnsafeStringParameter( getKey(), "" ));
+		if (configKey == null) {
+			return value;
+		}
+		return COConfigurationManager.getStringParameter(configKey);
 	}
 
 	@Override
@@ -57,6 +68,28 @@ InfoParameterImpl
 	setValue(
 		String	s )
 	{
-		config.setUnsafeStringParameter(getKey(), s);
+		if (configKey == null) {
+			value = s;
+			fireParameterChanged();
+			return;
+		}
+		COConfigurationManager.setParameter(configKey, s);
+	}
+
+
+	/**
+	 * Whether portions of the text are selectable by the user
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	public void setTextSelectable(boolean selectable) {
+		this.textSelectable = selectable;
+	}
+
+	/**
+	 * @since BiglyBT 1.9.0.1
+	 */
+	public boolean isTextSelectable() {
+		return textSelectable;
 	}
 }

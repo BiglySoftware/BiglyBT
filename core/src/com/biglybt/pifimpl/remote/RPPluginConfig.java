@@ -197,7 +197,7 @@ RPPluginConfig
 	{
 	  	notSupported();
 
-	  	return(null);
+	  	return("");
 	}
 
 	@Override

@@ -22,10 +22,11 @@ package com.biglybt.pif.ui.config;
 /**
  * @author parg
  *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addDirectoryParameter2(String, String, String)
  */
 public interface
 DirectoryParameter
-	extends Parameter
+	extends Parameter, ParameterWithHint
 {
 	public void
 	setValue(
@@ -33,4 +34,19 @@ DirectoryParameter
 
 	public String
 	getValue();
+
+	/**
+	 * Title of the dialog box shown when user clicks the browse button
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setDialogTitleKey(String key);
+
+	/**
+	 * Message for the dialog box shown when user clicks the browse button
+	 *
+	 * @note: disabled because Windows doesn't show a message anymore :(
+	 * @since BiglyBT 1.9.0.1
+	 */
+	//void setDialogMessageKey(String key);
 }

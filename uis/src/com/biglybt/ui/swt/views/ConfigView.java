@@ -17,55 +17,69 @@
  */
 package com.biglybt.ui.swt.views;
 
+import java.util.List;
 import java.util.*;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.*;
+import org.eclipse.swt.custom.*;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
-import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.Timer;
-import com.biglybt.core.util.*;
-import com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository;
+import com.biglybt.pifimpl.local.ui.config.*;
+import com.biglybt.ui.config.*;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.LinkLabel;
+import com.biglybt.ui.swt.config.*;
+import com.biglybt.ui.swt.config.actionperformer.DualChangeSelectionActionPerformer;
+import com.biglybt.ui.swt.config.actionperformer.IAdditionalActionPerformer;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-import com.biglybt.ui.swt.pif.UISWTInstance;
+import com.biglybt.ui.swt.pif.UISWTParameterContext;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
+import com.biglybt.ui.swt.pifimpl.MultiParameterImplListenerSWT;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.configsections.*;
 import com.biglybt.util.JSONUtils;
 
 import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.config.ActionParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.pif.ui.config.IntListParameter;
+import com.biglybt.pif.ui.config.Parameter;
 
 public class ConfigView implements UISWTViewCoreEventListenerEx {
-  public static final String VIEW_ID = UISWTInstance.VIEW_CONFIG;
-  private static final LogIDs LOGID = LogIDs.GUI;
+	private static final LogIDs LOGID = LogIDs.GUI;
   public static final String sSectionPrefix = "ConfigView.section.";
 
-  public static final String SELECT_KEY	= "ConfigView.select_key";
-  
-  final Map<TreeItem, ConfigSection> sections = new HashMap<>();
+	// For highligting via showSeection.  option map contains "select" key with "value".
+	// (multiple) config widgets can setData(SELECT_KEY, "value"), which means they will be
+	// highlighted
+	public static final String SELECT_KEY	= "ConfigView.select_key";
+	public static final String TREEITEMDATA_CONFIGSECTION = "ConfigSectionSWT";
+	public static final String TREEITEMDATA_PANEL = "Panel";
+	private static Font groupFont = null;
+
+	final Map<TreeItem, BaseConfigSection> sections = new HashMap<>();
   // Only access on SWT Thread
-  final java.util.List<ConfigSection> sectionsCreated = new ArrayList<>(1);
+	final List<BaseConfigSection> sectionsCreated = new ArrayList<>(1);
   Composite cConfig;
   Composite cConfigSection;
   StackLayout layoutConfigSection;
@@ -74,7 +88,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   Font headerFont;
   Font filterFoundFont;
   Tree tree;
-  ArrayList<ConfigSection> pluginSections;
+	ArrayList<BaseConfigSection> pluginSections;
 
 	private Timer filterDelayTimer;
 	private String filterText = "";
@@ -84,13 +98,15 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 	public ConfigView() {
   }
-	
+
+	@Override
 	public boolean
 	isCloneable()
 	{
 		return( true );
 	}
 
+	@Override
 	public UISWTViewCoreEventListenerEx
 	getClone()
 	{
@@ -101,21 +117,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	public CloneConstructor
 	getCloneConstructor()
 	{
-		return( 
-			new CloneConstructor()
-			{
-				public Class<? extends UISWTViewCoreEventListenerEx>
-				getCloneClass()
-				{
-					return( ConfigView.class );
-				}
-				
-				public java.util.List<Object>
-				getParameters()
-				{
-					return( null );
-				}
-			});
+		return () -> ConfigView.class;
 	}
 
   private void initialize(final Composite composite) {
@@ -170,7 +172,8 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
       Display d = composite.getDisplay();
       GridLayout configLayout;
 
-      SashForm form = new SashForm(cConfig,SWT.HORIZONTAL);
+	    assert cConfig != null;
+	    SashForm form = new SashForm(cConfig,SWT.HORIZONTAL);
       gridData = new GridData(GridData.FILL_BOTH);
 	    form.setLayoutData(gridData);
 
@@ -187,12 +190,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 			Composite cFilterArea = bubbleTextBox.getParent();
 
       txtFilter.setMessage(MessageText.getString("ConfigView.filter"));
-      txtFilter.addModifyListener(new ModifyListener() {
-      	@Override
-	      public void modifyText(ModifyEvent e) {
-      		filterTree(txtFilter.getText());
-      	}
-      });
+      txtFilter.addModifyListener(e -> filterTree(txtFilter.getText()));
 
       tree = new Tree(cLeftSide, SWT.NONE);
       FontData[] fontData = tree.getFont().getFontData();
@@ -272,31 +270,28 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 				  if ( id != null ){
 
-						SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+						UIInputReceiver entryWindow = new SimpleTextEntryWindow(
 								"config.dialog.shortcut.title",
 								"config.dialog.shortcut.text");
 						entryWindow.setPreenteredText(COConfigurationManager.getStringParameter( "config.section.shortcut.key." + id, "" ), false);
 						entryWindow.setTextLimit(1);
-						entryWindow.prompt(new UIInputReceiverListener() {
-							@Override
-							public void UIInputReceiverClosed(UIInputReceiver entryWindow) {
-								if (!entryWindow.hasSubmittedInput()) {
-									return;
+						entryWindow.prompt(ew -> {
+							if (!ew.hasSubmittedInput()) {
+								return;
+							}
+							String sReturn = ew.getSubmittedInput();
+							if ( sReturn != null ){
+
+								sReturn = sReturn.trim();
+
+								if ( sReturn.length() > 1 ){
+
+									sReturn = sReturn.substring(0,1);
 								}
-								String sReturn = entryWindow.getSubmittedInput();
-								if ( sReturn != null ){
 
-									sReturn = sReturn.trim();
+								COConfigurationManager.setParameter( "config.section.shortcut.key." + id, sReturn );
 
-									if ( sReturn.length() > 1 ){
-
-										sReturn = sReturn.substring(0,1);
-									}
-
-									COConfigurationManager.setParameter( "config.section.shortcut.key." + id, sReturn );
-
-									updateHeader( tree_item );
-								}
+								updateHeader( tree_item );
 							}
 						});
 				  }
@@ -351,60 +346,63 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
      */
     pluginSections = ConfigSectionRepository.getInstance().getList();
 
-    ConfigSection[] internalSections = {
+		BaseConfigSection[] internalSections = {
                                          new ConfigSectionMode(),
                                          new ConfigSectionStartShutdown(),
-                                         new ConfigSectionBackupRestore(),
+                                         new ConfigSectionBackupRestoreSWT(),
                                          new ConfigSectionConnection(),
-                                         new ConfigSectionConnectionProxy(),
+                                         new ConfigSectionConnectionProxySWT(),
                                          new ConfigSectionConnectionAdvanced(),
                                          new ConfigSectionConnectionEncryption(),
                                          new ConfigSectionConnectionDNS(),
                                          new ConfigSectionTransfer(),
                                          new ConfigSectionTransferAutoSpeedSelect(),
-                                         new ConfigSectionTransferAutoSpeed(),
-                                         new ConfigSectionTransferAutoSpeedBeta(),
+                                         new ConfigSectionTransferAutoSpeedClassic(),
+                                         new ConfigSectionTransferAutoSpeedV2(),
                                          new ConfigSectionTransferLAN(),
                                          new ConfigSectionFile(),
                                          new ConfigSectionFileMove(),
                                          new ConfigSectionFileTorrents(),
                                          new ConfigSectionFileTorrentsDecoding(),
                                          new ConfigSectionFilePerformance(),
-                                         new ConfigSectionInterface(),
-                                         new ConfigSectionInterfaceLanguage(),
-                                         new ConfigSectionInterfaceStart(),
-                                         new ConfigSectionInterfaceDisplay(),
-                                         new ConfigSectionInterfaceTables(),
-                                         new ConfigSectionInterfaceColor(),
-                                         new ConfigSectionInterfaceAlerts(),
-                                         new ConfigSectionInterfacePassword(),
-                                         new ConfigSectionInterfaceLegacy(),
-                                         new ConfigSectionIPFilter(),
-                                         new ConfigSectionPlugins(),
+                                         new ConfigSectionInterfaceSWT(),
+                                         new ConfigSectionInterfaceLanguageSWT(),
+                                         new ConfigSectionInterfaceStartSWT(),
+                                         new ConfigSectionInterfaceDisplaySWT(),
+                                         new ConfigSectionInterfaceTablesSWT(),
+                                         new ConfigSectionInterfaceColorSWT(),
+                                         new ConfigSectionInterfaceAlertsSWT(),
+                                         new ConfigSectionInterfacePasswordSWT(),
+                                         new ConfigSectionInterfaceLegacySWT(),
+                                         new ConfigSectionIPFilterSWT(),
+                                         new ConfigSectionPluginsSWT(),
                                          new ConfigSectionStats(),
                                          new ConfigSectionTracker(),
                                          new ConfigSectionTrackerClient(),
-                                         new ConfigSectionTrackerServer(),
-                                         new ConfigSectionSecurity(),
+                                         new ConfigSectionTrackerServerSWT(),
+                                         new ConfigSectionSecuritySWT(),
                                          new ConfigSectionSharing(),
                                          new ConfigSectionLogging()
                                         };
 
     pluginSections.addAll(0, Arrays.asList(internalSections));
 
-		for (ConfigSection section : pluginSections) {
+		ConfigSectionRebuildRunner rebuildSectionRunnable = configSection -> Utils.execSWTThread(
+				() -> ensureSectionBuilt(
+						findTreeItem(configSection.getConfigSectionID()), true));
 
-			if (!(section instanceof UISWTConfigSection)) {
-				continue;
-			}
+		for (BaseConfigSection section : pluginSections) {
+
+			section.setRebuildRunner(rebuildSectionRunnable);
+
 
 			String name;
 			try {
-				name = section.configSectionGetName();
+				name = section.getConfigSectionID();
 			} catch (Exception e) {
 				Logger.log(new LogEvent(LOGID, "A ConfigSection plugin caused an "
 						+ "error while trying to call its "
-						+ "configSectionGetName function", e));
+						+ "getConfigSectionID function", e));
 				name = "Bad Plugin";
 			}
 
@@ -422,7 +420,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 			try {
 				TreeItem treeItem;
-				String location = section.configSectionGetParentSection();
+				String location = section.getParentSectionID();
 
 				if (location == null || location.length() == 0
 						|| location.equalsIgnoreCase(ConfigSection.SECTION_ROOT)) {
@@ -463,9 +461,9 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 						(event) -> setupSC((ScrolledComposite) event.widget));
 
 				Messages.setLanguageText(treeItem, section_key);
-				treeItem.setData("Panel", sc);
+				treeItem.setData(TREEITEMDATA_PANEL, sc);
 				treeItem.setData("ID", name);
-				treeItem.setData("ConfigSectionSWT", section);
+				treeItem.setData(TREEITEMDATA_CONFIGSECTION, section);
 
 				sections.put(treeItem, section);
 
@@ -477,53 +475,46 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
     final Display d = composite.getDisplay();
 
-    final Listener shortcut_listener =
-    	new Listener()
-		{
-			@Override
-			public void
-			handleEvent(
-				Event e)
-			{
-				  if ((e.stateMask & ( SWT.MOD1 | SWT.CONTROL )) != 0 || e.keyCode == SWT.COMMAND ){
+		final Listener shortcut_listener = e -> {
+			if ((e.stateMask & (SWT.MOD1 | SWT.CONTROL)) == 0 && e.keyCode != SWT.COMMAND) {
+				return;
+			}
 
-				  char key = e.character;
+			char key = e.character;
 
-				  if (key <= 26 && key > 0){
-					  key += 'a' - 1;
-				  }
+			if (key <= 26 && key > 0){
+				key += 'a' - 1;
+			}
 
-				  if ((e.stateMask & SWT.SHIFT )!= 0 ){
-					  key = Character.toUpperCase(key);
-				  }
-				  if ( !Character.isISOControl( key )){
+			if ((e.stateMask & SWT.SHIFT )!= 0 ){
+				key = Character.toUpperCase(key);
+			}
+			if ( !Character.isISOControl( key )){
 
-					  for ( TreeItem ti: sections.keySet()){
+				for ( TreeItem ti: sections.keySet()){
 
-						  if ( ti.isDisposed()){
-							  continue;
-						  }
-						  
-						  String id = (String)ti.getData( "ID" );
+					if ( ti.isDisposed()){
+						continue;
+					}
 
-						  if ( id != null ){
+					String id = (String)ti.getData( "ID" );
 
-							  String shortcut = COConfigurationManager.getStringParameter( "config.section.shortcut.key." + id, "" );
+					if ( id != null ){
 
-							  if ( shortcut.equals( String.valueOf( key ))){
+						String shortcut = COConfigurationManager.getStringParameter( "config.section.shortcut.key." + id, "" );
 
-								  //findFocus( cConfig );
+						if ( shortcut.equals( String.valueOf( key ))){
 
-								  selectSection( id, true );
+							//findFocus( cConfig );
 
-								  e.doit = false;
+							selectSection( id, true );
 
-								  break;
-							  }
-						  }
-					  }
-				  }
-			  }
+							e.doit = false;
+
+							break;
+						}
+					}
+				}
 			}
 		};
 
@@ -556,7 +547,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   }
 
 
-	private void setupSC(ScrolledComposite sc) {
+	private static void setupSC(ScrolledComposite sc) {
 		if (sc == null) {
 			return;
 		}
@@ -573,9 +564,6 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	}
 
 
-  /**
-	 * @param text
-	 */
 	protected void filterTree(String text) {
 		filterText = text;
 		if (filterDelayTimer != null) {
@@ -583,78 +571,73 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 		}
 
 		filterDelayTimer = new Timer("Filter");
-		filterDelayTimer.addEvent(SystemTime.getCurrentTime() + 300,
-				new TimerEventPerformer() {
-					@Override
-					public void perform(TimerEvent event) {
-						filterDelayTimer.destroy();
-						filterDelayTimer = null;
+		filterDelayTimer.addEvent(SystemTime.getCurrentTime() + 300, event -> {
+			filterDelayTimer.destroy();
+			filterDelayTimer = null;
 
-						Utils.execSWTThread(new AERunnable() {
-							@Override
-							public void runSupport() {
-								if (filterDelayTimer != null) {
-									return;
-								}
-								if (tree == null || tree.isDisposed()){
-									return;
-								}
+			Utils.execSWTThread(() -> {
+				if (filterDelayTimer != null) {
+					return;
+				}
+				if (tree == null || tree.isDisposed()) {
+					return;
+				}
 
-								Shell shell = tree.getShell();
-								if (shell != null) {
-									shell.setCursor(shell.getDisplay().getSystemCursor(
-											SWT.CURSOR_WAIT));
-								}
-								try {
-									ArrayList<TreeItem> foundItems = new ArrayList<>();
-									TreeItem[] items = tree.getItems();
-									try {
-										tree.setRedraw(false);
-										for (int i = 0; i < items.length; i++) {
-											items[i].setExpanded(false);
-										}
+				Shell shell = tree.getShell();
+				if (shell != null) {
+					shell.setCursor(shell.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
+				}
+				try {
+					ArrayList<TreeItem> foundItems = new ArrayList<>();
+					TreeItem[] items = tree.getItems();
+					try {
+						tree.setRedraw(false);
+						for (TreeItem item : items) {
+							item.setExpanded(false);
+						}
 
-										filterTree(items, filterText, foundItems);
-									} finally {
-										tree.setRedraw(true);
-									}
-								} finally {
-									if (shell != null) {
-										shell.setCursor(null);
-									}
-									TreeItem[] selection = tree.getSelection();
-									if (selection != null && selection.length > 0) {
-										showSection(selection[0],false, null);
-									}
-								}
-							}
-						});
+						filterTree(items, filterText, foundItems);
+					} finally {
+						tree.setRedraw(true);
 					}
-				});
+				} finally {
+					if (shell != null) {
+						shell.setCursor(null);
+					}
+					TreeItem[] selection = tree.getSelection();
+					if (selection.length > 0) {
+						showSection(selection[0], false, null);
+					}
+				}
+			});
+		});
 	}
 
 	protected void filterTree(TreeItem[] items, String text,
 			ArrayList<TreeItem> foundItems) {
 		text = text.toLowerCase();
-		for (int i = 0; i < items.length; i++) {
-			ensureSectionBuilt(items[i], false);
-			ScrolledComposite composite = (ScrolledComposite) items[i].getData("Panel");
+		for (TreeItem item : items) {
+			ensureSectionBuilt(item, false);
+			ScrolledComposite composite = (ScrolledComposite) item.getData(TREEITEMDATA_PANEL);
+			if (composite == null || composite.isDisposed()) {
+				continue;
+			}
 
 			if (text.length() > 0
-					&& (items[i].getText().toLowerCase().contains(text) || compositeHasText(
-							composite, text))) {
-				foundItems.add(items[i]);
+					&& (item.getText().toLowerCase().contains(text) || compositeHasText(
+					composite, text))) {
+				foundItems.add(item);
 
-				ensureExpandedTo(items[i]);
-				items[i].setFont(filterFoundFont);
+				ensureExpandedTo(item);
+				item.setFont(filterFoundFont);
 			} else {
-				items[i].setFont(null);
+				item.setFont(null);
 			}
-			filterTree(items[i].getItems(), text, foundItems);
+			filterTree(item.getItems(), text, foundItems);
 		}
 	}
 
-	private void ensureExpandedTo(TreeItem item) {
+	private static void ensureExpandedTo(TreeItem item) {
     TreeItem itemParent = item.getParentItem();
   	if (itemParent != null) {
   		itemParent.setExpanded(true);
@@ -667,7 +650,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	 * @param text
 	 * @return
 	 */
-	private boolean compositeHasText(Composite composite, String text) {
+	private static boolean compositeHasText(Composite composite, String text) {
 		Control[] children = composite.getChildren();
 
 		for (Control child : children) {
@@ -683,8 +666,8 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 				if (((Button) child).getText().toLowerCase().contains(text)) {
 					return true;
 				}
-			} else if (child instanceof List) {
-				String[] items = ((List) child).getItems();
+			} else if (child instanceof org.eclipse.swt.widgets.List) {
+				String[] items = ((org.eclipse.swt.widgets.List) child).getItems();
 				for (String item : items) {
 					if (item.toLowerCase().contains(text)) {
 						return true;
@@ -709,10 +692,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 		return false;
 	}
 
-	private void
-	saveLatestSelection(
-		TreeItem	item )
-	{
+	private static void saveLatestSelection(TreeItem item) {
 		String path = "";
 
 		while( item != null ){
@@ -728,6 +708,10 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	private TreeItem
 	getLatestSelection()
 	{
+		if (tree == null || tree.isDisposed()) {
+			return null;
+		}
+
 		String path = COConfigurationManager.getStringParameter( "ConfigView.section.last.selection", "" );
 
 		String[] bits = path.split( "\\$" );
@@ -782,9 +766,9 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	{
 		saveLatestSelection( section );
 
-		ScrolledComposite item = (ScrolledComposite)section.getData("Panel");
+		ScrolledComposite item = (ScrolledComposite)section.getData(TREEITEMDATA_PANEL);
 
-		if (item != null) {
+		if (item != null && layoutConfigSection != null && cConfigSection != null) {
 
 			ensureSectionBuilt(section, true);
 
@@ -808,20 +792,15 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 						
 						Utils.execSWTThreadLater(
 							1,
-							new Runnable()
-							{
-								public void
-								run()
-								{
+								() -> {
 									Rectangle itemRect = item.getDisplay().map( hit.getParent(), item, hit.getBounds());
-																		
+
 									Point origin = item.getOrigin();
-																		
+
 									origin.y = itemRect.y;
-									
+
 									item.setOrigin(origin);
-								}
-							});
+								});
 					}
 				}
 			}
@@ -850,8 +829,8 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 				if (((Button) child).getText().toLowerCase().contains(text)) {
 					hilightControl(child,text,true);
 				}
-			} else if (child instanceof List) {
-				String[] items = ((List)child).getItems();
+			} else if (child instanceof org.eclipse.swt.widgets.List) {
+				String[] items = ((org.eclipse.swt.widgets.List)child).getItems();
 				for (String item : items) {
 					if (item.toLowerCase().contains(text)) {
 						hilightControl(child,text,true);
@@ -872,7 +851,12 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	}
 	
 	private Control hilightText2(Composite c, String select) {
-		
+		String cSelectKey = (String)c.getData( SELECT_KEY );
+		if (select.equals(cSelectKey)){
+			hilightControl(c, "", false);
+			return null;
+		}
+
 		Control first_control 	= null;
 		
 		Control[] children = c.getChildren();
@@ -888,7 +872,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 			String select_key = (String)child.getData( SELECT_KEY );
 			
-			if ( select_key != null && select.equals( select_key )){
+			if (select.equals(select_key)){
 			
 				if ( first_control == null ){
 					
@@ -916,31 +900,30 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 				// so use alternative 
 			
 			Composite parent = child.getParent();
+			if (parent == null) {
+				return;
+			}
 			
-			parent.addPaintListener(
-				new PaintListener(){
-					
-					@Override
-					public void paintControl(PaintEvent e){
-						GC gc = e.gc;
-						
-						gc.setAdvanced(true);
-						gc.setAntialias(SWT.ON);
-								
-						Point pp = parent.toDisplay(0, 0);
-						Point cp = child.toDisplay(0, 0 );
-						
-						Rectangle bounds = child.getBounds();
-						
-						
-						int	width 	= bounds.width;
-						int height	= bounds.height;
-						
-						gc.setForeground(Colors.fadedRed );
-						
-						gc.drawRectangle( cp.x-pp.x-1, cp.y-pp.y-1, width+2, height+2 );						
-					}
-				});
+			parent.addPaintListener(e -> {
+				GC gc = e.gc;
+
+				assert gc != null;
+				gc.setAdvanced(true);
+				gc.setAntialias(SWT.ON);
+
+				Point pp = parent.toDisplay(0, 0);
+				Point cp = child.toDisplay(0, 0 );
+
+				Rectangle bounds = child.getBounds();
+
+
+				int	width 	= bounds.width;
+				int height	= bounds.height;
+
+				gc.setForeground(Colors.fadedRed );
+
+				gc.drawRectangle( cp.x-pp.x-1, cp.y-pp.y-1, width+2, height+2 );
+			});
 					
 			Object ld = child.getLayoutData();
 			
@@ -971,56 +954,124 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	}
 
 	private void ensureSectionBuilt(TreeItem treeSection, boolean recreateIfAlreadyThere) {
-    ScrolledComposite item = (ScrolledComposite)treeSection.getData("Panel");
+		if (treeSection == null) {
+			return;
+		}
+    ScrolledComposite item = (ScrolledComposite)treeSection.getData(TREEITEMDATA_PANEL);
 
 		if (item == null) {
 			return;
 		}
 
-		ConfigSection configSection = (ConfigSection)treeSection.getData("ConfigSectionSWT");
+		BaseConfigSection configSection = (BaseConfigSection) treeSection.getData(TREEITEMDATA_CONFIGSECTION);
 
-		if (configSection != null) {
-
-		  Control previous = item.getContent();
-		  if (previous instanceof Composite) {
-			  if (!recreateIfAlreadyThere) {
-				  return;
-			  }
-			  configSection.configSectionDelete();
-		    sectionsCreated.remove(configSection);
-		    Utils.disposeComposite((Composite)previous,true);
-		  }
-
-		  Composite c = ((UISWTConfigSection)configSection).configSectionCreate(item);
-
-			  // we need to do this here as, on GTK at least, leaving it until later causes check/radio-boxes not
-			  // to layout correctly after their font is changed
-
-		  if (filterText != null && filterText.length() > 0) {
-			    hilightText(c, filterText);
-
-		  }
-
-		  sectionsCreated.add(configSection);
-
-		  item.setContent(c);
+		if (configSection == null) {
+			return;
 		}
+
+		Control previous = item.getContent();
+		if (previous instanceof Composite) {
+			if (!recreateIfAlreadyThere) {
+				return;
+			}
+			configSection.deleteConfigSection();
+			sectionsCreated.remove(configSection);
+			// This is a must! For some reason, if we have a wrapped label in
+			// the content, changing the content to another composite without first
+			// nulling it will result in nothing being shown.
+			item.setContent(null);
+			Utils.disposeComposite((Composite)previous,true);
+		}
+
+		Composite c = new Composite(item, SWT.NULL);
+
+		GridData gridData = new GridData(GridData.FILL_BOTH);
+		c.setLayoutData(gridData);
+		GridLayout layout = new GridLayout();
+		layout.numColumns = 2;
+		c.setLayout(layout);
+
+		int minUserMode = configSection.getMinUserMode();
+		if (minUserMode > Parameter.MODE_BEGINNER
+				&& minUserMode > COConfigurationManager.getIntParameter(ConfigKeys.ICFG_USER_MODE)) {
+			buildUnavailableSection(c,
+					COConfigurationManager.getIntParameter(ConfigKeys.ICFG_USER_MODE), minUserMode);
+		} else {
+			if (!configSection.isBuilt()) {
+				configSection.build();
+				configSection.postBuild();
+			}
+			Parameter[] paramArray = configSection.getParamArray();
+			Map<ParameterImpl, BaseSwtParameter> mapParamToSwtParam = new HashMap<>();
+			if (paramArray.length > 0) {
+				ParameterImplListener parameterImplListener = new MultiParameterImplListenerSWT(
+						mapParamToSwtParam);
+				buildScreen(c, paramArray, mapParamToSwtParam,
+						parameterImplListener);
+			}
+
+			if (configSection instanceof BaseConfigSectionSWT) {
+				((BaseConfigSectionSWT) configSection).configSectionCreate(c, mapParamToSwtParam);
+			}
+		}
+
+			// we need to do this here as, on GTK at least, leaving it until later causes check/radio-boxes not
+			// to layout correctly after their font is changed
+
+		if (filterText.length() > 0) {
+			hilightText(c, filterText);
+
+		}
+
+		sectionsCreated.add(configSection);
+
+		item.setContent(c);
 	}
 
-  private void updateHeader(TreeItem section) {
-		if (section == null)
+	private static void buildUnavailableSection(Composite parent,
+			int userMode, int requiredMode) {
+		Label label = new Label(parent, SWT.WRAP);
+		label.setLayoutData(
+				Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
+
+		final String[] modeKeys = {
+			"ConfigView.section.mode.beginner",
+			"ConfigView.section.mode.intermediate",
+			"ConfigView.section.mode.advanced"
+		};
+
+		String param1, param2;
+		if (requiredMode < modeKeys.length)
+			param1 = MessageText.getString(modeKeys[requiredMode]);
+		else
+			param1 = String.valueOf(requiredMode);
+
+		if (userMode < modeKeys.length)
+			param2 = MessageText.getString(modeKeys[userMode]);
+		else
+			param2 = String.valueOf(userMode);
+
+		label.setText(MessageText.getString("ConfigView.notAvailableForMode",
+				new String[] {
+					param1,
+					param2
+				}));
+	}
+
+	private void updateHeader(TreeItem section) {
+		if (section == null || lHeader == null) {
 			return;
+		}
 
 		lHeader.setData( "TreeItem", section );
 
-		int userMode = COConfigurationManager.getIntParameter("User Mode");
+		int userMode = COConfigurationManager.getIntParameter(ConfigKeys.ICFG_USER_MODE);
 		int maxUsermode = 0;
 		try
 		{
-			ConfigSection sect = sections.get(section);
-			if (sect instanceof UISWTConfigSection)
-			{
-				maxUsermode = ((UISWTConfigSection) sect).maxUserMode();
+			BaseConfigSection sect = sections.get(section);
+			if (sect != null) {
+				maxUsermode = sect.getMaxUserMode();
 			}
 		} catch (Error e)
 		{
@@ -1029,11 +1080,11 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 		String id = (String)section.getData( "ID" );
 
-		String shortcut = COConfigurationManager.getStringParameter( "config.section.shortcut.key." + id, null );
+		String shortcut = COConfigurationManager.getStringParameter( "config.section.shortcut.key." + id, "" );
 
 		String sc_text;
 
-		if ( shortcut != null && shortcut.length() > 0 ){
+		if (shortcut.length() > 0){
 
 			sc_text = "      (Ctrl+" + shortcut.charAt(0) + ")";
 		}else{
@@ -1065,8 +1116,8 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 		  if (o instanceof String) {
 			  return (String)o;
 		  }
-		  else if (o instanceof TreeItem) {
-			  return ((TreeItem)o).getText();
+			else if (o instanceof Item) {
+				return ((Item) o).getText();
 		  }
 		  else {
 				throw new ClassCastException("object is not String or TreeItem: "
@@ -1126,7 +1177,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	 return null;
   }
 
-  private TreeItem findTreeItem(TreeItem item, String ID) {
+	private static TreeItem findTreeItem(TreeItem item, String ID) {
   	if (item == null || item.isDisposed()) {
   		return null;
 	  }
@@ -1146,6 +1197,9 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   }
 
   private void initSaveButton() {
+		if (cConfig == null) {
+			return;
+		}
 	  Composite cButtons = new Composite(cConfig, SWT.NONE);
 	  GridLayout gridLayout = new GridLayout();
 	  gridLayout.verticalSpacing = gridLayout.marginHeight = 0;
@@ -1178,6 +1232,9 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   }
 
   private void initApplyCloseButton() {
+		if (cConfig == null) {
+			return;
+		}
   	Composite cButtons = new Composite(cConfig, SWT.NONE);
   	GridLayout gridLayout = new GridLayout();
 		gridLayout.horizontalSpacing = gridLayout.verticalSpacing = gridLayout.marginHeight = gridLayout.marginWidth = 0;
@@ -1227,7 +1284,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   		return;
 	  }
 	  TreeItem[] selection = tree.getSelection();
-	  if (selection != null && selection.length > 0) {
+		if (selection.length > 0) {
 		  updateHeader(selection[0]);
 	  }
 	  if (swtView != null) {
@@ -1236,9 +1293,9 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   }
 
   private void delete() {
-  	for (ConfigSection section : sectionsCreated) {
+		for (BaseConfigSection section : sectionsCreated) {
     	try {
-    		section.configSectionDelete();
+    		section.deleteConfigSection();
     	} catch (Exception e) {
     		Debug.out("Error while deleting config section", e);
     	}
@@ -1249,13 +1306,11 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
   	}
 	  if (tree != null && !tree.isDisposed()) {
 		  TreeItem[] items = tree.getItems();
-		  if (items != null) {
-			  for (TreeItem item : items) {
-				  Composite c = (Composite) item.getData("Panel");
-				  Utils.disposeComposite(c);
-				  item.setData("Panel", null);
-				  item.setData("ConfigSectionSWT", null);
-			  }
+			for (TreeItem item : items) {
+				Composite c = (Composite) item.getData(TREEITEMDATA_PANEL);
+				Utils.disposeComposite(c);
+				item.setData(TREEITEMDATA_PANEL, null);
+				item.setData(TREEITEMDATA_CONFIGSECTION, null);
 		  }
 	  }
     Utils.disposeComposite(cConfig);
@@ -1265,7 +1320,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 		filterFoundFont = null;
   }
 
-  private String getFullTitle() {
+	private static String getFullTitle() {
   	/*
   	 * Using resolveLocalizationKey because there are different version for Classic vs. Vuze
   	 */
@@ -1305,8 +1360,8 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 		COConfigurationManager.save();
 
 		if (null != pluginSections) {
-			for (ConfigSection section : pluginSections) {
-				section.configSectionSave();
+			for (BaseConfigSection section : pluginSections) {
+				section.saveConfigSection();
 			}
 		}
 	}
@@ -1354,4 +1409,545 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
     return true;
   }
 
+	private static void buildScreen(final Composite main_tab,
+			Parameter[] parameters,
+			Map<ParameterImpl, BaseSwtParameter> mapParamToSwtParam,
+			ParameterImplListener parameterImplListener) {
+		int userMode = Utils.getUserMode();
+
+		// main tab set up
+
+		Composite curComposite = main_tab;
+
+		Map<ParameterGroupImpl, Composite> group_map = new HashMap<>();
+
+		Map<ParameterTabFolderImpl, CTabFolder> tab_folder_map = new HashMap<>();
+		Map<ParameterGroupImpl, Composite> tab_map = new HashMap<>();
+
+		for (int i = 0; i < parameters.length; i++) {
+
+			ParameterImpl param = (ParameterImpl) parameters[i];
+
+			if (param.getMinimumRequiredUserMode() > userMode) {
+
+				continue;
+			}
+
+			ParameterGroupImpl pg = param.getGroup();
+
+			if (pg != null && pg.getGroup() != null
+					&& group_map.get(pg.getGroup()) == null
+					&& tab_folder_map.get(pg.getGroup()) == null) {
+
+				// Parent group hasn't been created yet.
+				// Hack in a label to parent group, so it gets created
+				// doesn't solve deeper nesting
+				i--;
+				param = new ParameterImpl(null, null) {
+				};
+				pg = pg.getGroup();
+				param.setGroup(pg);
+			}
+
+			if (pg == null) {
+
+				curComposite = main_tab;
+
+			} else {
+
+				ParameterTabFolderImpl tab_folder = pg.getTabFolder();
+
+				if (tab_folder != null) {
+					curComposite = handleTabFolder(userMode, curComposite, group_map,
+							tab_folder_map, tab_map, pg, tab_folder);
+				}
+
+				Composite comp = group_map.get(pg);
+
+				if (comp == null) {
+
+					ParameterGroupImpl pgParent = pg.getGroup();
+
+					boolean nested = pgParent != null || tab_folder != null;
+
+					if (tab_folder == null) {
+						Composite composite = group_map.get(pgParent);
+						if (composite != null) {
+							curComposite = composite;
+						}
+					}
+
+					Composite group_parent = nested ? curComposite : main_tab;
+
+					String resource_name = pg.getResourceName();
+
+					boolean use_composite = resource_name == null || tab_folder != null;
+
+					curComposite = use_composite ? new Composite(group_parent, SWT.NONE)
+							: new Group(group_parent, SWT.NULL);
+					curComposite.setBackgroundMode(SWT.INHERIT_DEFAULT);
+
+					Control relatedControl = null;
+					if (!use_composite) {
+						Canvas gap = new Canvas(group_parent, SWT.NULL);
+						relatedControl = gap;
+						gap.setData("gap", true);
+						GridData gridData = new GridData();
+						gridData.widthHint = 1;
+						gridData.heightHint = 2;
+						gridData.horizontalSpan = ((GridLayout) group_parent.getLayout()).numColumns;
+						gap.setLayoutData(gridData);
+
+						Messages.setLanguageText(curComposite, resource_name);
+						if (groupFont == null) {
+							groupFont = FontUtils.getFontPercentOf(curComposite.getFont(),
+									1.25f);
+						}
+						curComposite.setFont(groupFont);
+					}
+
+					if (group_parent.getLayout() instanceof GridLayout) {
+						GridData grid_data = new GridData(GridData.FILL_HORIZONTAL);
+
+						grid_data.horizontalSpan = 2;
+
+						if (pg.getMinimumRequiredUserMode() > userMode) {
+
+							curComposite.setVisible(false);
+
+							grid_data.widthHint = 0;
+							grid_data.heightHint = 0;
+						}
+
+						grid_data.horizontalIndent = pg.getIndent() * 20;
+
+						if (!use_composite) {
+							Control[] children = group_parent.getChildren();
+							// last = gap widget
+							// last - 1 = us
+							// last - 2 = gap widget or previous control
+							if (children.length > 3
+									&& children[children.length - 3].getData("gap") == null) {
+								grid_data.verticalIndent = 5;
+							}
+						}
+
+						curComposite.setLayoutData(grid_data);
+					}
+
+					int numColumns = pg.getNumberColumns();
+
+					if (numColumns > 0) {
+						GridLayout layout = new GridLayout();
+
+						layout.numColumns = numColumns * 2;
+
+						if (use_composite) {
+							layout.marginWidth = layout.marginHeight = 0;
+						} else {
+							layout.marginTop = 5;
+						}
+
+						curComposite.setLayout(layout);
+					} else {
+						RowLayout layout = new RowLayout();
+						layout.marginLeft = pg.getIndent() * 20;
+						layout.marginRight = 0;
+						layout.spacing = 5;
+						layout.center = true;
+						curComposite.setLayout(layout);
+					}
+
+					group_map.put(pg, curComposite);
+
+					UISWTParameter swt_param = new GroupSWTParameter(curComposite, pg,
+							relatedControl);
+
+					int indent = pg.getIndent();
+					if (indent > 0) {
+						swt_param.setIndent(indent, param.isIndentFancy());
+					}
+
+					String refID = pg.getReferenceID();
+					if (refID != null) {
+						// TODO: Migrate to a field
+						swt_param.getMainControl().setData(SELECT_KEY, refID);
+					}
+
+					mapParamToSwtParam.put(pg, swt_param);
+
+				} else {
+
+					curComposite = comp;
+				}
+			}
+
+			String label_key = param.getLabelKey();
+
+			if (label_key == null) {
+				String labelText = param.getLabelText();
+				if (labelText != null) {
+					label_key = "!" + labelText + "!";
+				}
+			}
+
+			String key = param.getConfigKeyName();
+
+			//System.out.println( "key = " + key );
+
+			final BaseSwtParameter swt_param;
+
+			if (param instanceof HyperlinkParameterImpl) {
+				// check must be before LabelParameterImpl
+
+				swt_param = new LinkSwtParameter(curComposite,
+						(HyperlinkParameterImpl) param);
+
+			} else if (param instanceof LabelParameterImpl) {
+				// check must be after HyperlinkParameterImpl
+
+				swt_param = new InfoSwtParameter(curComposite,
+						(LabelParameterImpl) param);
+
+			} else if (param instanceof BooleanParameterImpl) {
+
+				swt_param = new BooleanSwtParameter(curComposite,
+						(BooleanParameterImpl) param);
+
+			} else if (param instanceof IntParameterImpl) {
+
+				swt_param = new IntSwtParameter(curComposite, (IntParameterImpl) param);
+
+			} else if (param instanceof FloatParameterImpl) {
+
+				swt_param = new FloatSwtParameter(curComposite,
+						(FloatParameterImpl) param);
+
+			} else if (param instanceof ColorParameterImpl) {
+
+				swt_param = new ColorSwtParameter(curComposite,
+						(ColorParameterImpl) param);
+
+			} else if (param instanceof StringParameterImpl) {
+
+				StringParameterImpl s_param = (StringParameterImpl) param;
+
+				int num_lines = s_param.getMultiLine();
+
+				if (num_lines <= 1) {
+
+					swt_param = new StringSwtParameter(curComposite, s_param);
+
+				} else {
+
+					swt_param = new StringAreaSwtParameter(curComposite, key, label_key,
+							num_lines, null);
+
+				}
+			} else if (param instanceof InfoParameterImpl) {
+
+				swt_param = new InfoSwtParameter(curComposite,
+						(InfoParameterImpl) param);
+
+			} else if (param instanceof StringListParameterImpl) {
+
+				swt_param = new StringListSwtParameter(curComposite,
+						(StringListParameterImpl) param);
+
+			} else if (param instanceof IntListParameterImpl) {
+
+				IntListParameterImpl il_param = (IntListParameterImpl) param;
+
+				int listType = il_param.getListType();
+				if (listType == IntListParameter.TYPE_RADIO_LIST
+						|| listType == IntListParameter.TYPE_RADIO_COMPACT) {
+					swt_param = new IntRadioListSwtParameter(curComposite, il_param);
+				} else {
+
+					swt_param = new IntListSwtParameter(curComposite, il_param);
+				}
+
+			} else if (param instanceof PasswordParameterImpl) {
+
+				swt_param = new PasswordSwtParameter(curComposite,
+						(PasswordParameterImpl) param);
+
+			} else if (param instanceof FileParameterImpl) {
+
+				swt_param = new FileSwtParameter(curComposite,
+						(FileParameterImpl) param);
+
+			} else if (param instanceof DirectoryParameterImpl) {
+
+				swt_param = new DirectorySwtParameter(curComposite,
+						(DirectoryParameterImpl) param);
+
+			} else if (param instanceof ActionParameterImpl) {
+
+				ActionParameterImpl _param = (ActionParameterImpl) param;
+
+				if (_param.getStyle() == ActionParameter.STYLE_BUTTON) {
+
+					swt_param = new ButtonSwtParameter(curComposite,
+							(ActionParameterImpl) param);
+
+				} else {
+
+					swt_param = new LinkSwtParameter(curComposite,
+							(ActionParameterImpl) param);
+				}
+
+			} else if (param instanceof UIParameterImpl) {
+				if (((UIParameterImpl) param).getContext() instanceof UISWTParameterContext) {
+					UISWTParameterContext context = (UISWTParameterContext) ((UIParameterImpl) param).getContext();
+					Composite internal_composite = new Composite(curComposite, SWT.NULL);
+					GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+					gridData.horizontalSpan = param.getLabelKey() == null
+							|| param.getLabelText() == null ? 2 : 1;
+					internal_composite.setLayoutData(gridData);
+					boolean initialised_component = true;
+					try {
+						context.create(internal_composite);
+					} catch (Exception e) {
+						Debug.printStackTrace(e);
+						initialised_component = false;
+					}
+
+					if (initialised_component) {
+						swt_param = new UISWTParameter(internal_composite,
+								param.getConfigKeyName());
+					} else {
+						swt_param = null;
+					}
+				} else {
+					swt_param = null;
+				}
+
+			} else if (param instanceof UITextAreaImpl) {
+
+				swt_param = new TextAreaSwtParameter(curComposite,
+						((UITextAreaImpl) param));
+
+			} else {
+				swt_param = null;
+			}
+
+			if (swt_param != null) {
+
+				int indent = param.getIndent();
+				if (indent > 0) {
+					swt_param.setIndent(indent, param.isIndentFancy());
+				}
+
+				String refID = param.getReferenceID();
+				if (refID != null) {
+					// TODO: Migrate to a field
+					swt_param.getMainControl().setData(SELECT_KEY, refID);
+				}
+
+				mapParamToSwtParam.put(param, swt_param);
+			}
+		}
+
+		for (Parameter parameter : parameters) {
+
+			final ParameterImpl param = (ParameterImpl) parameter;
+
+			param.addImplListener(parameterImplListener);
+
+			if (!param.isEnabled()) {
+
+				BaseSwtParameter swtParam = mapParamToSwtParam.get(param);
+
+				if (swtParam != null) {
+					swtParam.setEnabled(false);
+				}
+			}
+
+			if (!param.isVisible()) {
+
+				BaseSwtParameter swtParam = mapParamToSwtParam.get(param);
+
+				if (swtParam != null) {
+					swtParam.setVisible(false);
+				}
+			}
+
+			List<BaseSwtParameter> swtParamsToEnable = new ArrayList<>();
+
+			List<Parameter> listEnableOnSelection = param.getEnabledOnSelectionParameters();
+			for (Parameter enable_param : listEnableOnSelection) {
+
+				BaseSwtParameter stuff = mapParamToSwtParam.get(enable_param);
+
+				if (stuff != null) {
+
+					swtParamsToEnable.add(stuff);
+				}
+			}
+
+			List<BaseSwtParameter> swtParamsToDisable = new ArrayList<>();
+
+			List<Parameter> listDisableOnSelection = param.getDisabledOnSelectionParameters();
+			for (Parameter disable_param : listDisableOnSelection) {
+
+				BaseSwtParameter swtParameter = mapParamToSwtParam.get(disable_param);
+
+				if (swtParameter != null) {
+
+					swtParamsToDisable.add(swtParameter);
+				}
+			}
+
+			if (swtParamsToEnable.size() + swtParamsToDisable.size() > 0) {
+
+				IAdditionalActionPerformer<Boolean> ap = new DualChangeSelectionActionPerformer(
+						swtParamsToEnable.toArray(new BaseSwtParameter[0]),
+						swtParamsToDisable.toArray(new BaseSwtParameter[0]));
+
+				BaseSwtParameter swtParameter = mapParamToSwtParam.get(param);
+
+				// might not be visible (e.g. user mode too low) in which case it won't be in the map
+
+				if (swtParameter instanceof BooleanSwtParameter) {
+
+					((BooleanSwtParameter) swtParameter).setAdditionalActionPerformer(ap);
+				}
+			}
+		}
+	}
+
+	private static Composite handleTabFolder(int userMode,
+			Composite current_composite, Map<ParameterGroupImpl, Composite> group_map,
+			Map<ParameterTabFolderImpl, CTabFolder> tab_folder_map,
+			Map<ParameterGroupImpl, Composite> tab_map, ParameterGroupImpl pg,
+			ParameterTabFolderImpl tab_folder) {
+		GridLayout layout;
+		ParameterGroupImpl tab_group = tab_folder.getGroup();
+
+		CTabFolder	tf = tab_folder_map.get( tab_folder );
+
+		if ( tf == null ){
+
+			Composite tab_parent = current_composite;
+
+			if ( tab_group != null ){
+
+				String tg_resource = tab_group.getResourceName();
+
+				if ( tg_resource != null ){
+
+					tab_parent = group_map.get( tab_group );
+
+					if ( tab_parent == null ){
+
+						tab_parent = new Group( current_composite, SWT.NULL);
+
+						Messages.setLanguageText(tab_parent, tg_resource );
+
+						if (current_composite.getLayout() instanceof GridLayout) {
+
+							GridData gridData = new GridData(GridData.FILL_HORIZONTAL );
+
+							gridData.horizontalSpan = 2;
+
+							if ( tab_group.getMinimumRequiredUserMode() > userMode ){
+
+								tab_parent.setVisible( false );
+
+								gridData.widthHint = 0;
+								gridData.heightHint = 0;
+							}
+
+							tab_parent.setLayoutData(gridData);
+						}
+
+						layout = new GridLayout();
+
+						layout.numColumns = tab_group.getNumberColumns() * 2;
+
+						tab_parent.setLayout(layout);
+
+						group_map.put( tab_group, tab_parent );
+					}
+				}
+			}
+
+			tf = new CTabFolder( tab_parent, SWT.LEFT );
+
+			tf.setBorderVisible( tab_group == null );
+
+			tf.setTabHeight(20);
+
+			GridData grid_data = new GridData( GridData.FILL_HORIZONTAL );
+
+			grid_data.horizontalSpan = 2;
+
+			if ( tab_folder.getMinimumRequiredUserMode() > userMode ){
+
+				tf.setVisible( false );
+
+				grid_data.widthHint = 0;
+				grid_data.heightHint = 0;
+			}
+
+			tf.setLayoutData(grid_data);
+
+			tab_folder_map.put( tab_folder, tf );
+		}
+
+		Composite tab_composite = tab_map.get( pg );
+
+		if ( tab_composite == null ){
+
+			CTabItem tab_item = new CTabItem(tf, SWT.NULL);
+
+			String tab_name = pg.getResourceName();
+
+			if ( tab_name != null ){
+
+				Messages.setLanguageText( tab_item, tab_name );
+			}
+
+			tab_composite = new Composite( tf, SWT.NONE );
+			tab_item.setControl( tab_composite );
+
+			layout = new GridLayout();
+			layout.numColumns = 2;
+
+			tab_composite.setLayout(layout);
+
+			GridData grid_data = new GridData(GridData.FILL_BOTH);
+
+			if ( pg.getMinimumRequiredUserMode() > userMode ){
+
+				tab_composite.setVisible( false );
+
+				grid_data.widthHint = 0;
+				grid_data.heightHint = 0;
+			}
+
+			tab_composite.setLayoutData(grid_data);
+
+			if ( tf.getItemCount() == 1 ){
+
+				tf.setSelection( tab_item );
+			}
+
+			tab_map.put( pg, tab_composite );
+		}
+
+		current_composite = tab_composite;
+		return current_composite;
+	}
+
+	private static class GroupSWTParameter
+		extends UISWTParameter
+	{
+		public GroupSWTParameter(Composite current_composite, ParameterGroupImpl pg,
+				Control relatedControl) {
+			super(current_composite, pg);
+			setRelatedControl(relatedControl);
+		}
+	}
 }

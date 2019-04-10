@@ -19,44 +19,29 @@ package com.biglybt.ui.swt.config;
 
 import org.eclipse.swt.widgets.Control;
 
+import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
+
 /**
  * For plugins to add a generic SWT widget to the config page
  *
  * @author Allan Crooks
  *
  */
-public class UISWTParameter extends Parameter {
-
-	private Control control;
+public class UISWTParameter extends BaseSwtParameter {
 
 	public UISWTParameter(Control control, String configID) {
 		super(configID);
-		this.control = control;
+		setMainControl(control);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.config.Parameter#setValue(java.lang.Object)
-	 */
+	public UISWTParameter(Control control, ParameterImpl pg) {
+		super(null);
+		setMainControl(control);
+		setPluginParameter(pg);
+	}
+
 	@Override
-	public void setValue(Object value) {
-		// TODO Auto-generated method stub
-
+	public Object getValue() {
+		return null;
 	}
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.config.IParameter#getControl()
-	 */
-	@Override
-	public Control getControl() {
-		return this.control;
-	}
-
-	/* (non-Javadoc)
-	 * @see com.biglybt.ui.swt.config.IParameter#setLayoutData(java.lang.Object)
-	 */
-	@Override
-	public void setLayoutData(Object layoutData) {
-		this.control.setLayoutData(layoutData);
-	}
-
 }

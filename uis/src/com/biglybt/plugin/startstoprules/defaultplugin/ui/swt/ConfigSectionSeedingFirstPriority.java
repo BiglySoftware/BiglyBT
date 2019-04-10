@@ -18,241 +18,187 @@
 
 package com.biglybt.plugin.startstoprules.defaultplugin.ui.swt;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.config.BooleanParameter;
-import com.biglybt.ui.swt.config.IntListParameter;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
-
+import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.IntListParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
 import com.biglybt.plugin.startstoprules.defaultplugin.DefaultRankCalculator;
+import com.biglybt.ui.config.ConfigSectionImpl;
+
+import com.biglybt.pif.ui.config.Parameter;
 
 /** First Priority Specific options.
  * @author TuxPaper
  * @created Jan 12, 2004
  */
 public class ConfigSectionSeedingFirstPriority
-	implements UISWTConfigSection
+	extends ConfigSectionImpl
 {
-	@Override
-	public String configSectionGetParentSection() {
-		return "queue.seeding";
+
+	public static final String SECTION_ID = "queue.seeding.firstPriority";
+
+	public ConfigSectionSeedingFirstPriority() {
+		super(SECTION_ID, ConfigSectionSeeding.SECTION_ID);
 	}
 
 	@Override
-	public String configSectionGetName() {
-		return "queue.seeding.firstPriority";
-	}
+	public void build() {
+		// Seeding Automation Setup
 
-	@Override
-	public void configSectionSave() {
-	}
+		add(new LabelParameterImpl("ConfigView.label.seeding.firstPriority.info"));
 
-	@Override
-	public void configSectionDelete() {
-	}
+		// Group FP
 
-	@Override
-	public int maxUserMode() {
-		return 0;
-	}
+		List<Parameter> listFP = new ArrayList<>();
 
-	@Override
-	public Composite configSectionCreate(Composite parent) {
-    // Seeding Automation Setup
-    GridData gridData;
-    GridLayout layout;
-    Label label;
-    Composite cArea, cArea1;
+		// row
+		String[] fpLabels = {
+			MessageText.getString("ConfigView.text.all"),
+			MessageText.getString("ConfigView.text.any")
+		};
+		int[] fpValues = {
+			DefaultRankCalculator.FIRSTPRIORITY_ALL,
+			DefaultRankCalculator.FIRSTPRIORITY_ANY
+		};
+		IntListParameterImpl firstPriorityType = new IntListParameterImpl(
+				"StartStopManager_iFirstPriority_Type",
+				"ConfigView.label.seeding.firstPriority", fpValues, fpLabels);
+		add(firstPriorityType);
+		firstPriorityType.setSuffixLabelKey(
+				"ConfigView.label.seeding.firstPriority.following");
 
-    Composite cFirstPriorityArea = new Composite(parent, SWT.NULL);
+		// visual tweak so drop down doesn't align with future parameter controls
+		add("pgFirstPriorityType", new ParameterGroupImpl(null, firstPriorityType),
+				listFP);
 
-    layout = new GridLayout();
-    layout.numColumns = 2;
-    layout.marginHeight = 0;
-    cFirstPriorityArea.setLayout(layout);
-    gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		cFirstPriorityArea.setLayoutData(gridData);
+		// row
+		String[] minQueueLabels = new String[55];
+		int[] minQueueValues = new int[55];
+		minQueueLabels[0] = "1:2 (" + 0.5 + ")";
+		minQueueValues[0] = 500;
+		minQueueLabels[1] = "3:4 (" + 0.75 + ")";
+		minQueueValues[1] = 750;
+		minQueueLabels[2] = "1:1";
+		minQueueValues[2] = 1000;
+		minQueueLabels[3] = "5:4 (" + 1.25 + ")";
+		minQueueValues[3] = 1250;
+		minQueueLabels[4] = "3:2 (" + 1.50 + ")";
+		minQueueValues[4] = 1500;
+		minQueueLabels[5] = "7:4 (" + 1.75 + ")";
+		minQueueValues[5] = 1750;
+		for (int i = 6; i < minQueueLabels.length; i++) {
+			minQueueLabels[i] = i - 4 + ":1";
+			minQueueValues[i] = (i - 4) * 1000;
+		}
+		add(new IntListParameterImpl("StartStopManager_iFirstPriority_ShareRatio",
+				"ConfigView.label.seeding.firstPriority.shareRatio", minQueueValues,
+				minQueueLabels), listFP);
 
+		String sMinutes = MessageText.getString("ConfigView.text.minutes");
+		String sHours = MessageText.getString("ConfigView.text.hours");
 
-    label = new Label(cFirstPriorityArea, SWT.WRAP);
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
-    gridData.horizontalSpan = 2;
-    gridData.widthHint = 300;
-		label.setLayoutData(gridData);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.info");
+		// row
+		String[] dlTimeLabels = new String[15];
+		int[] dlTimeValues = new int[15];
+		dlTimeLabels[0] = MessageText.getString("ConfigView.text.ignore");
+		dlTimeValues[0] = 0;
+		for (int i = 1; i < dlTimeValues.length; i++) {
+			dlTimeLabels[i] = "<= " + (i + 2) + " " + sHours;
+			dlTimeValues[i] = (i + 2) * 60;
+		}
+		add(new IntListParameterImpl("StartStopManager_iFirstPriority_DLMinutes",
+				"ConfigView.label.seeding.firstPriority.DLMinutes", dlTimeValues,
+				dlTimeLabels), listFP);
 
-    // ** Begin No Touch area
+		// row
+		String[] seedTimeLabels = new String[15];
+		int[] seedTimeValues = new int[15];
+		seedTimeLabels[0] = MessageText.getString("ConfigView.text.ignore");
+		seedTimeValues[0] = 0;
+		seedTimeLabels[1] = "<= 90 " + sMinutes;
+		seedTimeValues[1] = 90;
+		for (int i = 2; i < seedTimeValues.length; i++) {
+			seedTimeLabels[i] = "<= " + i + " " + sHours;
+			seedTimeValues[i] = i * 60;
+		}
+		add(new IntListParameterImpl(
+				"StartStopManager_iFirstPriority_SeedingMinutes",
+				"ConfigView.label.seeding.firstPriority.seedingMinutes", seedTimeValues,
+				seedTimeLabels), listFP);
 
-// Group FP
+		add(new ParameterGroupImpl("ConfigView.label.seeding.firstPriority.FP",
+				listFP));
 
-	Composite cFP = new Group(cFirstPriorityArea, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 2;
-    layout.verticalSpacing = 6;
-    cFP.setLayout(layout);
-    gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		cFP.setLayoutData(gridData);
-		Messages.setLanguageText(cFP, "ConfigView.label.seeding.firstPriority.FP");
+		//	 Group Ignore FP
 
-	// row
-	cArea = new Composite(cFP, SWT.NULL);
-    layout = new GridLayout();
-    layout.marginHeight = 0;
-    layout.marginWidth = 0;
-    layout.numColumns = 3;
-    cArea.setLayout(layout);
-	gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    gridData.horizontalSpan = 3;
-		cArea.setLayoutData(gridData);
-	label = new Label(cArea, SWT.NULL);
-	Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority");
-	String fpLabels[] = { MessageText.getString("ConfigView.text.all"),
-			MessageText.getString("ConfigView.text.any") };
-	int fpValues[] = { DefaultRankCalculator.FIRSTPRIORITY_ALL,
-			DefaultRankCalculator.FIRSTPRIORITY_ANY };
-	new IntListParameter(cArea, "StartStopManager_iFirstPriority_Type",
-			fpLabels, fpValues);
-	label = new Label(cArea, SWT.NULL);
-	Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.following");
+		List<Parameter> listIgnoreFP = new ArrayList<>();
 
-    // row
-    label = new Label(cFP, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.shareRatio");
-    String minQueueLabels[] = new String[55];
-    int minQueueValues[] = new int[55];
-    minQueueLabels[0] = "1:2 (" + 0.5 + ")";
-    minQueueValues[0] = 500;
-	minQueueLabels[1] = "3:4 (" + 0.75 +")";
-	minQueueValues[1] = 750;
-	minQueueLabels[2] = "1:1";
-	minQueueValues[2] = 1000;
-	minQueueLabels[3] = "5:4 (" + 1.25 +")";
-	minQueueValues[3] = 1250;
-	minQueueLabels[4] = "3:2 (" + 1.50 +")";
-	minQueueValues[4] = 1500;
-	minQueueLabels[5] = "7:4 (" + 1.75 +")";
-	minQueueValues[5] = 1750;
-    for (int i = 6; i < minQueueLabels.length; i++) {
-      minQueueLabels[i] = i - 4 + ":1";
-      minQueueValues[i] = (i - 4) * 1000;
-    }
-    new IntListParameter(cFP, "StartStopManager_iFirstPriority_ShareRatio",
-                         minQueueLabels, minQueueValues);
+		// Ignore S:P Ratio
+		String[] ignoreSPRatioLabels = new String[15];
+		int[] ignoreSPRatioValues = new int[15];
+		ignoreSPRatioLabels[0] = MessageText.getString("ConfigView.text.ignore");
+		ignoreSPRatioValues[0] = 0;
+		for (int i = 1; i < ignoreSPRatioLabels.length; i++) {
+			ignoreSPRatioLabels[i] = i * 10 + " " + ":1";
+			ignoreSPRatioValues[i] = i * 10;
+		}
+		add(new IntListParameterImpl(
+				"StartStopManager_iFirstPriority_ignoreSPRatio",
+				"ConfigView.label.seeding.firstPriority.ignoreSPRatio",
+				ignoreSPRatioValues, ignoreSPRatioLabels), listIgnoreFP);
 
-	String sMinutes = MessageText.getString("ConfigView.text.minutes");
-    String sHours = MessageText.getString("ConfigView.text.hours");
+		//	 Ignore 0 Peers
+		add(new BooleanParameterImpl("StartStopManager_bFirstPriority_ignore0Peer",
+				"ConfigView.label.seeding.firstPriority.ignore0Peer"), listIgnoreFP);
 
-    // row
-    label = new Label(cFP, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.DLMinutes");
-
-    String dlTimeLabels[] = new String[15];
-    int dlTimeValues[] = new int[15];
-    dlTimeLabels[0] = MessageText.getString("ConfigView.text.ignore");
-    dlTimeValues[0] = 0;
-    for (int i = 1; i < dlTimeValues.length; i++) {
-      dlTimeLabels[i] = "<= " + (i + 2) + " " + sHours ;
-      dlTimeValues[i] = (i + 2) * 60;
-    }
-    new IntListParameter(cFP, "StartStopManager_iFirstPriority_DLMinutes",
-                         dlTimeLabels, dlTimeValues);
-
-	label = new Label(cFirstPriorityArea, SWT.WRAP);
-
-    // row
-    label = new Label(cFP, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.seedingMinutes");
-
-    String seedTimeLabels[] = new String[15];
-    int seedTimeValues[] = new int[15];
-    seedTimeLabels[0] = MessageText.getString("ConfigView.text.ignore");
-    seedTimeValues[0] = 0;
-    seedTimeLabels[1] = "<= 90 " + sMinutes;
-    seedTimeValues[1] = 90;
-    for (int i = 2; i < seedTimeValues.length; i++) {
-      seedTimeLabels[i] = "<= " + i + " " + sHours ;
-      seedTimeValues[i] = i * 60;
-    }
-    new IntListParameter(cFP, "StartStopManager_iFirstPriority_SeedingMinutes",
-                         seedTimeLabels, seedTimeValues);
-
-
-
-//	 Group Ignore FP
-
-    Composite cIgnoreFP = new Group(cFirstPriorityArea, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 2;
-    layout.verticalSpacing = 6;
-	cIgnoreFP.setLayout(layout);
-    gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL | GridData.VERTICAL_ALIGN_FILL);
-    gridData.horizontalSpan = 2;
-		cIgnoreFP.setLayoutData(gridData);
-    Messages.setLanguageText(cIgnoreFP, "ConfigView.label.seeding.firstPriority.ignore");
-
-	// Ignore S:P Ratio
-	label = new Label(cIgnoreFP, SWT.NULL);
-	Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.ignoreSPRatio");
-	String ignoreSPRatioLabels[] = new String[15];
-    int ignoreSPRatioValues[] = new int[15];
-	ignoreSPRatioLabels[0] = MessageText.getString("ConfigView.text.ignore");
-	ignoreSPRatioValues[0] = 0;
-    for (int i = 1; i < ignoreSPRatioLabels.length; i++) {
-		ignoreSPRatioLabels[i] = i * 10 + " " + ":1" ;
-		ignoreSPRatioValues[i] = i * 10;
-    }
-	new IntListParameter(cIgnoreFP, "StartStopManager_iFirstPriority_ignoreSPRatio",
-							ignoreSPRatioLabels, ignoreSPRatioValues);
-
-	//	 Ignore 0 Peers
-    new BooleanParameter(cIgnoreFP,
-                         "StartStopManager_bFirstPriority_ignore0Peer",
-                         "ConfigView.label.seeding.firstPriority.ignore0Peer");
-
-		label = new Label(cIgnoreFP, SWT.NULL);
-
-    // Ignore idle hours
-		label = new Label(cIgnoreFP, SWT.NULL);
-		Messages.setLanguageText(label,
-				"ConfigView.label.seeding.firstPriority.ignoreIdleHours");
-		int[] availIdleHours = { 2, 3, 4, 5, 6, 7, 8, 12, 18, 24, 48, 72, 168 };
-		String ignoreIdleHoursLabels[] = new String[availIdleHours.length + 1];
-		int ignoreIdleHoursValues[] = new int[availIdleHours.length + 1];
+		// Ignore idle hours
+		int[] availIdleHours = {
+			2,
+			3,
+			4,
+			5,
+			6,
+			7,
+			8,
+			12,
+			18,
+			24,
+			48,
+			72,
+			168
+		};
+		String[] ignoreIdleHoursLabels = new String[availIdleHours.length + 1];
+		int[] ignoreIdleHoursValues = new int[availIdleHours.length + 1];
 		ignoreIdleHoursLabels[0] = MessageText.getString("ConfigView.text.ignore");
 		ignoreIdleHoursValues[0] = 0;
 		for (int i = 0; i < availIdleHours.length; i++) {
 			ignoreIdleHoursLabels[i + 1] = availIdleHours[i] + " " + sHours;
 			ignoreIdleHoursValues[i + 1] = availIdleHours[i];
 		}
-		new IntListParameter(cIgnoreFP,
+		add(new IntListParameterImpl(
 				"StartStopManager_iFirstPriority_ignoreIdleHours",
-				ignoreIdleHoursLabels, ignoreIdleHoursValues);
+				"ConfigView.label.seeding.firstPriority.ignoreIdleHours",
+				ignoreIdleHoursValues, ignoreIdleHoursLabels), listIgnoreFP);
 
-	//	 row
-	cArea1 = new Composite(cIgnoreFP, SWT.NULL);
-    layout = new GridLayout();
-    layout.marginHeight = 0;
-    layout.marginWidth = 0;
-    layout.numColumns = 2;
-    cArea1.setLayout(layout);
-	gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-    gridData.horizontalSpan = 2;
-		cArea1.setLayoutData(gridData);
-	label = new Label(cArea1, SWT.NULL);
-	Messages.setLanguageText(label, "ConfigView.label.seeding.firstPriority.ignore.info");
+		//	 row
 
-	new BooleanParameter(
-			cFirstPriorityArea,
-            "StartStopManager_bTagFirstPriority",
-            "ConfigView.label.queue.tagfirstpriority");
+		LabelParameterImpl fpIgnoreInfo = new LabelParameterImpl(
+				"ConfigView.label.seeding.firstPriority.ignore.info");
+		add(fpIgnoreInfo, listIgnoreFP);
+		// hack the /n out
+		fpIgnoreInfo.setLabelText(
+				fpIgnoreInfo.getLabelText().replaceAll("\n", " "));
 
-    return cFirstPriorityArea;
-  }
+		add(new ParameterGroupImpl("ConfigView.label.seeding.firstPriority.ignore",
+				listIgnoreFP));
+
+		add(new BooleanParameterImpl(
+
+				"StartStopManager_bTagFirstPriority",
+				"ConfigView.label.queue.tagfirstpriority"));
+	}
 }

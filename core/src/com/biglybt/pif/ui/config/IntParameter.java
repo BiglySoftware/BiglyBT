@@ -22,16 +22,57 @@ package com.biglybt.pif.ui.config;
 /**
  * @author parg
  *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addIntParameter2(String, String, int)
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addIntParameter2(String, String, int, int, int)
  */
-
 public interface
 IntParameter
-	extends Parameter
+	extends Parameter, ParameterWithSuffix
 {
+	/**
+	 * @since BiglyBT 1.0.0.0
+	 */
 	public int
 	getValue();
 
+	/**
+	 * @since BiglyBT 1.0.0.0
+	 */
 	public void
 	setValue(
 		int	v );
+
+	/**
+	 * @return Whether the parameter has a min and max value set
+	 * @since BiglyBT 1.9.0.1
+	 */
+	boolean isLimited();
+
+	/**
+	 * @since BiglyBT 1.9.0.1
+	 */
+	int getMinValue();
+
+	/**
+	 * @since BiglyBT 1.9.0.1
+	 */
+	int getMaxValue();
+
+	/**
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setMinValue(int min_value);
+
+	/**
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setMaxValue(int max_value);
+
+	/**
+	 * Same as {@link #addValidator(ParameterValidator)}, but
+	 * casts the "toValue" to Integer.
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void addIntegerValidator(ParameterValidator<Integer> validator);
 }

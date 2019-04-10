@@ -22,20 +22,23 @@ package com.biglybt.pifimpl.local.ui.config;
 
 import java.lang.ref.WeakReference;
 
+import com.biglybt.ui.config.BaseConfigSection;
+import com.biglybt.ui.config.ConfigSectionImpl;
+
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.config.ConfigSection;
 
 public class
-ConfigSectionHolder
-	implements ConfigSection
-{
-	private ConfigSection					section;
+ConfigSectionHolder extends ConfigSectionImpl {
+	private BaseConfigSection section;
 	private WeakReference<PluginInterface>	pi;
 	protected
 	ConfigSectionHolder(
-		ConfigSection		_section,
+		BaseConfigSection _section,
 		PluginInterface		_pi )
 	{
+		super(_section.getConfigSectionID(), ConfigSection.SECTION_ROOT);
+
 		section		= _section;
 
 		if ( _pi != null ){
@@ -45,31 +48,26 @@ ConfigSectionHolder
 	}
 
 	@Override
-	public String
-	configSectionGetParentSection()
-	{
-		return( section.configSectionGetParentSection());
-	}
-
-	@Override
-	public String
-	configSectionGetName()
-	{
-		return( section.configSectionGetName());
+	public void build() {
 	}
 
 	@Override
 	public void
-	configSectionSave()
+	saveConfigSection()
 	{
-		section.configSectionSave();
+		section.saveConfigSection();
 	}
 
 	@Override
 	public void
-	configSectionDelete()
+	deleteConfigSection()
 	{
-		section.configSectionDelete();
+		section.deleteConfigSection();
+	}
+
+	@Override
+	public void requestRebuild() {
+		section.requestRebuild();
 	}
 
 	public PluginInterface

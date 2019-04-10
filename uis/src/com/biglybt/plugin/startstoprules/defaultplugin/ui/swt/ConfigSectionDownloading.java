@@ -18,23 +18,16 @@
 
 package com.biglybt.plugin.startstoprules.defaultplugin.ui.swt;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Constants;
+import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.plugin.startstoprules.defaultplugin.DefaultRankCalculator;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
+import com.biglybt.ui.config.ConfigSectionImpl;
 
+import com.biglybt.pif.ui.config.Parameter;
 
 /** Seeding Automation Specific options
  * @author TuxPaper
@@ -42,76 +35,29 @@ import com.biglybt.ui.swt.pif.UISWTConfigSection;
  *
  * TODO: StartStopManager_fAddForSeedingULCopyCount
  */
-public class ConfigSectionDownloading implements UISWTConfigSection {
-  @Override
-  public String configSectionGetParentSection() {
-    return "queue";
-  }
+public class ConfigSectionDownloading
+	extends ConfigSectionImpl
+{
 
-  @Override
-  public String configSectionGetName() {
-    return "queue.downloading";
-  }
+	public static final String SECTION_ID = "queue.downloading";
 
-  @Override
-  public void configSectionSave() {
-  }
-
-  @Override
-  public void configSectionDelete() {
-  }
-
-	@Override
-	public int maxUserMode() {
-		return 0;
+	public ConfigSectionDownloading() {
+		super(SECTION_ID,  ConfigSectionQueue.SECTION_ID);
 	}
 
-  @Override
-  public Composite configSectionCreate(Composite parent) {
-    // Seeding Automation Setup
-    GridData gridData;
-    GridLayout layout;
-    Label label;
+	@Override
+	public void build() {
+		// Seeding Automation Setup
 
-    Composite cDownloading = new Composite(parent, SWT.NULL);
+		// wiki link
 
-    layout = new GridLayout();
-    layout.numColumns = 2;
-    layout.marginHeight = 0;
-    cDownloading.setLayout(layout);
-    gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		cDownloading.setLayoutData(gridData);
-
-    	// wiki link
-
-	final Label linkLabel = new Label(cDownloading, SWT.NULL);
-	linkLabel.setText(MessageText.getString("ConfigView.label.please.visit.here"));
-	linkLabel.setData( Constants.URL_WIKI + "w/Downloading_Rules");
-	linkLabel.setCursor(linkLabel.getDisplay().getSystemCursor(SWT.CURSOR_HAND));
-	linkLabel.setForeground(Colors.blue);
-	gridData = new GridData();
-	gridData.horizontalSpan = 2;
-	linkLabel.setLayoutData(gridData);
-	linkLabel.addMouseListener(new MouseAdapter() {
-		@Override
-		public void mouseDoubleClick(MouseEvent arg0) {
-			Utils.launch((String) ((Label) arg0.widget).getData());
-		}
-
-		@Override
-		public void mouseDown(MouseEvent arg0) {
-			Utils.launch((String) ((Label) arg0.widget).getData());
-		}
-	});
-	ClipboardCopy.addCopyToClipMenu( linkLabel );
+		add(new HyperlinkParameterImpl("ConfigView.label.please.visit.here",
+				Constants.URL_WIKI + "w/Downloading_Rules"));
 
 		// sort type
 
-	label = new Label(cDownloading, SWT.NULL);
-	Messages.setLanguageText(label, "label.prioritize.downloads.based.on");
-
-	String orderLabels[] =
-		{	MessageText.getString("label.order"),
+		String[] orderLabels = {
+			MessageText.getString("label.order"),
 			MessageText.getString("label.seed.count"),
 			MessageText.getString("label.reverse.seed.count"),
 			MessageText.getString("TableColumn.header.size"),
@@ -120,8 +66,8 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 			MessageText.getString("TableColumn.header.eta"),
 		};
 
-	int orderValues[] =
-		{ 	DefaultRankCalculator.DOWNLOAD_ORDER_INDEX,
+		int[] orderValues = {
+			DefaultRankCalculator.DOWNLOAD_ORDER_INDEX,
 			DefaultRankCalculator.DOWNLOAD_ORDER_SEED_COUNT,
 			DefaultRankCalculator.DOWNLOAD_ORDER_REVERSE_SEED_COUNT,
 			DefaultRankCalculator.DOWNLOAD_ORDER_SIZE,
@@ -130,98 +76,53 @@ public class ConfigSectionDownloading implements UISWTConfigSection {
 			DefaultRankCalculator.DOWNLOAD_ORDER_ETA,
 		};
 
-	final IntListParameter sort_type =
-		new IntListParameter(cDownloading, "StartStopManager_Downloading_iSortType",
-			orderLabels, orderValues);
+		IntListParameterImpl sort_type = new IntListParameterImpl(
+				"StartStopManager_Downloading_iSortType",
+				"label.prioritize.downloads.based.on", orderValues, orderLabels);
+		add(sort_type);
 
-    Group gSpeed = new Group(cDownloading, SWT.NULL);
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
+		List<Parameter> listSpeed = new ArrayList<>();
 
-    layout = new GridLayout();
-    layout.numColumns = 2;
-    //layout.marginHeight = 0;
-    gSpeed.setLayout(layout);
-    gridData = new GridData(GridData.FILL_HORIZONTAL );
-    gridData.horizontalSpan = 2;
-		gSpeed.setLayoutData(gridData);
+		// info
 
-    gSpeed.setText( MessageText.getString( "label.speed.options" ));
-  	// info
+		add(new LabelParameterImpl("ConfigView.label.downloading.info"), listSpeed);
 
-    label = new Label(gSpeed, SWT.WRAP);
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
-    gridData.horizontalSpan = 2;
-    gridData.widthHint = 300;
-		label.setLayoutData(gridData);
-    Messages.setLanguageText(label, "ConfigView.label.downloading.info");
+		// test time
 
+		IntParameterImpl testTime = new IntParameterImpl(
+				"StartStopManager_Downloading_iTestTimeSecs",
+				"ConfigView.label.downloading.testTime");
+		add(testTime, listSpeed);
+		testTime.setMinValue(60);
 
-    	// test time
+		// re-test
 
-    label = new Label(gSpeed, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.downloading.testTime");
-    gridData = new GridData();
-    final IntParameter testTime = new IntParameter(gSpeed, "StartStopManager_Downloading_iTestTimeSecs");
-    testTime.setLayoutData(gridData);
-    testTime.setMinimumValue( 60 );
+		IntParameterImpl reTest = new IntParameterImpl(
+				"StartStopManager_Downloading_iRetestTimeMins",
+				"ConfigView.label.downloading.reTest");
+		add(reTest, listSpeed);
+		reTest.setMinValue(0);
 
-    	// re-test
+		BooleanParameterImpl testActive = new BooleanParameterImpl(
+				"StartStopManager_Downloading_bTestActive",
+				"ConfigView.label.downloading.testActive");
+		add(testActive, listSpeed);
 
-    label = new Label(gSpeed, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.downloading.reTest");
-    gridData = new GridData();
-    final IntParameter reTest = new IntParameter(gSpeed, "StartStopManager_Downloading_iRetestTimeMins");
-    reTest.setLayoutData(gridData);
-    reTest.setMinimumValue( 0 );
+		sort_type.addListener(p -> {
+			int type = sort_type.getValue();
 
-    	// active as well as queued
-    
-	gridData = new GridData();
-	gridData.horizontalSpan = 2;
-	
-	BooleanParameter testActive = new BooleanParameter(gSpeed, "StartStopManager_Downloading_bTestActive",
-	               		"ConfigView.label.downloading.testActive");
-	
-	testActive.setLayoutData(gridData);
-	
-    ParameterChangeListener listener =
-    	new ParameterChangeAdapter()
-    	{
-	    	@Override
-		    public void
-	    	parameterChanged(
-	    		Parameter	p,
-	    		boolean		caused_internally )
-	    	{
-	    		int type = ((Integer)sort_type.getValueObject());
-	    		
-    			boolean is_speed = type == DefaultRankCalculator.DOWNLOAD_ORDER_SPEED || type == DefaultRankCalculator.DOWNLOAD_ORDER_ETA;
+			boolean is_speed = type == DefaultRankCalculator.DOWNLOAD_ORDER_SPEED || type == DefaultRankCalculator.DOWNLOAD_ORDER_ETA;
 
-    			testTime.setEnabled( is_speed );
-    			reTest.setEnabled( is_speed );
-    			testActive.setEnabled( is_speed );
-	    	}
-    	};
+			testTime.setEnabled(is_speed);
+			reTest.setEnabled(is_speed);
+			testActive.setEnabled(is_speed);
+		});
+		sort_type.fireParameterChanged();
 
-    sort_type.addChangeListener( listener );
+		add(new ParameterGroupImpl("label.speed.options", listSpeed));
 
-    listener.parameterChanged( null, false );
+		add(new BooleanParameterImpl("StartStopManager_bAddForDownloadingSR1",
+				"ConfigView.label.downloading.addsr1"));
 
-	gridData = new GridData();
-	gridData.horizontalSpan = 2;
-
-	new BooleanParameter(cDownloading, "StartStopManager_bAddForDownloadingSR1",
-               "ConfigView.label.downloading.addsr1").setLayoutData(gridData);
-
-    return cDownloading;
-  }
-
-  private void controlsSetEnabled(Control[] controls, boolean bEnabled) {
-    for(int i = 0 ; i < controls.length ; i++) {
-      if (controls[i] instanceof Composite)
-        controlsSetEnabled(((Composite)controls[i]).getChildren(), bEnabled);
-      controls[i].setEnabled(bEnabled);
-    }
-  }
+	}
 }
-

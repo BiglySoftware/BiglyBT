@@ -20,7 +20,6 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.pif.ui.config.ActionParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 /**
  * @author parg
@@ -35,21 +34,23 @@ ActionParameterImpl
 	private String	action_resource;
 	private int		style	= STYLE_BUTTON;
 
-	public
-	ActionParameterImpl(
-		PluginConfigImpl 	config,
-		String 			label_resource_name,
-		String			action_resource_name )
-	{
-		super( config, label_resource_name, label_resource_name);
+	public ActionParameterImpl(String labelKey, String actionTextKey) {
+		super(null, labelKey);
 
-		action_resource	= action_resource_name;
+		action_resource	= actionTextKey;
 	}
 
+	@Override
 	public String
 	getActionResource()
 	{
 		return( action_resource );
+	}
+
+	@Override
+	public void setActionResource(String action_resource) {
+		this.action_resource = action_resource;
+		this.refreshControl();
 	}
 
 	@Override

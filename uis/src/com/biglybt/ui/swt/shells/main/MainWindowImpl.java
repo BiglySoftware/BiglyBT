@@ -1582,12 +1582,6 @@ public class MainWindowImpl
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				String debug = COConfigurationManager.getStringParameter( "adv.setting.ui.debug.window.show", "" );
-
-				if ( debug.equals( "1" )){
-					Debug.out( "MW::setVisible" );
-				}
-
 				boolean currentlyVisible = shell.getVisible() && !shell.getMinimized();
 				if (visible && !currentlyVisible) {
 					if (COConfigurationManager.getBooleanParameter("Password enabled")) {
@@ -2380,6 +2374,10 @@ public class MainWindowImpl
 
 	@Override
 	public void setSelectedLanguageItem() {
+		if (!Utils.isThisThreadSWT()) {
+			Utils.execSWTThread(this::setSelectedLanguageItem);
+			return;
+		}
 		Messages.updateLanguageForControl(shell);
 
 		if (systemTraySWT != null) {

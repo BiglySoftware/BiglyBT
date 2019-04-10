@@ -1,11 +1,11 @@
 package com.biglybt.ui.swt.speedtest;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.speedmanager.LimitToTextHelper;
 import com.biglybt.ui.swt.wizard.AbstractWizardPanel;
 import com.biglybt.ui.swt.wizard.Wizard;
 import com.biglybt.ui.swt.wizard.IWizardPanel;
 import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.views.stats.TransferStatsView;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.internat.MessageText;
@@ -40,7 +40,7 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
 {
 
     SpeedManager speedManager;
-    TransferStatsView.limitToTextHelper helper;
+    LimitToTextHelper helper;
 
 
 
@@ -48,7 +48,7 @@ public class SpeedTestFinishPanel extends AbstractWizardPanel
         super(wizard, previousPanel);
 
         speedManager = CoreFactory.getSingleton().getSpeedManager();
-        helper = new TransferStatsView.limitToTextHelper();
+        helper = new LimitToTextHelper();
     }
 
 

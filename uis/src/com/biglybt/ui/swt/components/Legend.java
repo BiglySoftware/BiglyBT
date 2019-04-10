@@ -190,7 +190,7 @@ public class Legend {
 
 						if ( rgb != null ){
 
-							config.setRGBParameter(keys[index], rgb.red, rgb.green, rgb.blue);
+							config.setRGBParameter(keys[index], rgb.red, rgb.green, rgb.blue, true);
 						}
 					}else{
 

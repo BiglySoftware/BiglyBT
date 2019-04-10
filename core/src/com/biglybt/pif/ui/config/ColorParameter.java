@@ -20,8 +20,9 @@ package com.biglybt.pif.ui.config;
 /**
  * @author Allan Crooks
  *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addColorParameter2(String, String, int, int, int)
  */
-public interface ColorParameter extends Parameter {
+public interface ColorParameter extends Parameter, ParameterWithSuffix {
 	public int getRedValue();
 	public int getGreenValue();
 	public int getBlueValue();

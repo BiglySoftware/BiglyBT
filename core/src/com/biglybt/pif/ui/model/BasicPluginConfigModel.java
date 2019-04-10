@@ -24,31 +24,20 @@ import com.biglybt.pif.ui.config.*;
 
 /**
  * This object represents a configuration section.
- *
- * <p>
- *
- * If you specify "_blank" as a resource name (the label for the parameter),
- * (or use the {@link #BLANK_RESOURCE} constant defined here), then this will
- * be a blank label (available since 3.0.5.3).
  */
 public interface
 BasicPluginConfigModel
 	extends PluginConfigModel {
 
 	/**
-	 * @since 3.0.5.3
-	 */
-	public String BLANK_RESOURCE = "_blank";
-
-
-	/**
+	 * Add a new Boolean Plugin Parameter to the Config Model.
+	 * <br>
+	 * Typically shown as a checkbox
 	 *
-	 * @param key
-	 * @param resource_name
-	 * @param defaultValue
-	 * @return
+	 * @param key Plugin config key
+	 * @param resource_name Label resource key
 	 *
-	 * @since 2.1.0.2
+	 * @since Azureus 2.1.0.2
 	 */
 	public BooleanParameter
 	addBooleanParameter2(
@@ -57,12 +46,12 @@ BasicPluginConfigModel
 		boolean 	defaultValue );
 
 	/**
+	 * Add a new String Plugin Parameter to the Config Model
 	 *
-	 * @param key
-	 * @param resource_name
-	 * @param defaultValue
-	 * @return
-	 * @since 2.1.0.2
+	 * @param key Plugin config key
+	 * @param resource_name Label resource key
+	 *
+	 * @since Azurues 2.1.0.2
 	 */
 	public StringParameter
 	addStringParameter2(
@@ -71,13 +60,17 @@ BasicPluginConfigModel
 		String	 	defaultValue );
 
 	/**
+	 * Add to the Config Model a new String plugin parameter which is limited to a set list
+	 * <br>
+	 * Typically shown as a drop down list, or a list box
 	 *
-	 * @param key
-	 * @param resource_name
-	 * @param values
-	 * @param defaultValue
-	 * @return
-	 * @since 2.1.0.2
+	 * @param key Plugin config key
+	 * @param resource_name Label resource key
+	 * @param values List of available values
+	 *
+	 * @since Azureus 2.1.0.2
+	 *
+	 * @deprecated Use {@link BasicPluginConfigModel#addStringListParameter2(String, String, String[], String[], String)}
 	 */
 	public StringListParameter
 	addStringListParameter2(
@@ -87,14 +80,15 @@ BasicPluginConfigModel
 		String	 	defaultValue );
 
 	/**
+	 * Add to the Config Model a new String plugin parameter which is limited to a set list
+	 * <br>
+	 * Typically shown as a drop down list, or a list box
 	 *
-	 * @param key
-	 * @param resource_name
-	 * @param values
+	 * @param key Plugin config key
+	 * @param resource_name Label resource key
 	 * @param labels A list of localised message strings corresponding to each value.
-	 * @param defaultValue
-	 * @return
-	 * @since 2.3.0.6
+	 *
+	 * @since Azureus 2.3.0.6
 	 */
 	public StringListParameter
 	addStringListParameter2(
@@ -105,7 +99,12 @@ BasicPluginConfigModel
 		String	 	defaultValue );
 
 	/**
+	 * Add to the Config Model a new integer plugin parameter which is limited to a set list
+	 * <br>
+	 * Typically shown as a set of radio buttons
 	 *
+	 * @param key Plugin config key
+	 * @param resource_name Label resource key
 	 * @param labels A list of localised message strings corresponding to each value.
 	 *
 	 * @since BiglyBT 1.7.0.1
@@ -119,6 +118,10 @@ BasicPluginConfigModel
 			int	      defaultValue );
 
 	/**
+	 * Add a new float Plugin Parameter to the Config Model
+	 *
+	 * @param key Plugin config key
+	 * @param resource_name Label resource key
 	 *
 	 * @since BiglyBT 1.7.0.1
 	 */
@@ -181,20 +184,21 @@ BasicPluginConfigModel
 		int         max_value);
 
 	/**
+	 * Displays a single label. Not linked to a config key.
 	 *
-	 * @param resource_name
-	 * @return
-	 * @since 2.1.0.2
+	 * @param resource_name  MessageBundle key
+	 * @since Azureus 2.1.0.2
 	 */
 	public LabelParameter
 	addLabelParameter2(
 		String 		resource_name );
 
 	/**
-	 * @since 4005
-	 * @param resource_name
-	 * @param value
-	 * @return
+	 * Display a label and a value together.  Not linked to a config key.
+	 *
+	 * @since Vuze 4005
+	 * @param resource_name  MessageBundle key
+	 * @param value String value
 	 */
 
 	public InfoParameter
@@ -210,10 +214,10 @@ BasicPluginConfigModel
 	/**
 	 *
 	 * @param key
-	 * @param resource_name
+	 * @param resource_name  MessageBundle key
 	 * @param defaultValue
 	 * @return
-	 * @since 2.1.0.2
+	 * @since Azureus 2.1.0.2
 	 */
 	public DirectoryParameter
 	addDirectoryParameter2(
@@ -252,11 +256,12 @@ BasicPluginConfigModel
 		String[]    file_extensions);
 
 	/**
+	 * Adds an actionable UI widget, usually a displayed as button or a link
 	 *
-	 * @param label_resource_name
-	 * @param action_resource_name
-	 * @return
-	 * @since 2.1.0.2
+	 * @param label_resource_name Text before the button
+	 * @param action_resource_name Button Text
+
+	 * @since Azureus 2.1.0.2
 	 */
 	public ActionParameter
 	addActionParameter2(
@@ -277,20 +282,26 @@ BasicPluginConfigModel
 	/**
 	 * Creates a {@link UIParameter} object to add to this config model object.
 	 *
-	 * @since 3.0.5.3
+	 * @since Vuze 3.0.5.3
+	 *
+	 * @param resource_name Not Used. null recommended.
 	 */
-	public UIParameter addUIParameter2(UIParameterContext context, String name);
+	public UIParameter addUIParameter2(UIParameterContext context, String resource_name);
 
+	/**
+	 * Creates a read-only text area similar to a label, but typically allows
+	 * scrollbars and copying of portions of text.
+	 */
 	public UITextArea
 	addTextArea(
 		String	resource_name );
 
 	/**
+	 * Creates a group around a list of Parameters.
+	 * Typically displayed in a border when there's a resource_name, or borderless
+	 * when there isn't.
 	 *
-	 * @param resource_name
-	 * @param parameters
-	 * @return
-	 * @since 2.3.0.0
+	 * @since Azureus 2.3.0.0
 	 */
 	public ParameterGroup
 	createGroup(

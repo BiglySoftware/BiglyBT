@@ -18,18 +18,9 @@
 
 package com.biglybt.plugin.startstoprules.defaultplugin.ui.swt;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
-
-import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.config.*;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.pif.UISWTConfigSection;
+import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.IntParameterImpl;
+import com.biglybt.ui.config.ConfigSectionImpl;
 
 /** Seeding Automation Specific options
  * @author TuxPaper
@@ -37,204 +28,83 @@ import com.biglybt.ui.swt.pif.UISWTConfigSection;
  *
  * TODO: StartStopManager_fAddForSeedingULCopyCount
  */
-public class ConfigSectionSeeding implements UISWTConfigSection {
-  @Override
-  public String configSectionGetParentSection() {
-    return "queue";
-  }
+public class ConfigSectionSeeding
+	extends ConfigSectionImpl
+{
 
-  @Override
-  public String configSectionGetName() {
-    return "queue.seeding";
-  }
+	public static final String SECTION_ID = "queue.seeding";
 
-  @Override
-  public void configSectionSave() {
-  }
-
-  @Override
-  public void configSectionDelete() {
-  }
-
-	@Override
-	public int maxUserMode() {
-		return 0;
+	public ConfigSectionSeeding() {
+		super(SECTION_ID, ConfigSectionQueue.SECTION_ID);
 	}
 
-  @Override
-  public Composite configSectionCreate(Composite parent) {
-    // Seeding Automation Setup
-    GridData gridData;
-    GridLayout layout;
-    Label label;
+	@Override
+	public void build() {
+		// Seeding Automation Setup
 
-    Composite cSeeding = new Composite(parent, SWT.NULL);
+		// General Seeding Options
 
-    layout = new GridLayout();
-    layout.numColumns = 2;
-    layout.marginHeight = 0;
-    cSeeding.setLayout(layout);
-    gridData = new GridData(GridData.VERTICAL_ALIGN_FILL | GridData.HORIZONTAL_ALIGN_FILL);
-		cSeeding.setLayoutData(gridData);
+		add(new IntParameterImpl("StartStopManager_iMinSeedingTime",
+				"ConfigView.label.minSeedingTime", 0, Integer.MAX_VALUE));
 
-    	// General Seeding Options
+		// don't start more seeds
 
-    label = new Label(cSeeding, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.minSeedingTime");
-    gridData = new GridData();
-    new IntParameter(cSeeding, "StartStopManager_iMinSeedingTime", 0, Integer.MAX_VALUE).setLayoutData(gridData);
+		BooleanParameterImpl dontStartMore = new BooleanParameterImpl(
+				"StartStopManager_bStartNoMoreSeedsWhenUpLimitMet",
+				"ConfigView.label.bStartNoMoreSeedsWhenUpLimitMet");
+		add(dontStartMore);
 
-    	// don't start more seeds
+		IntParameterImpl slack = new IntParameterImpl(
+				"StartStopManager_bStartNoMoreSeedsWhenUpLimitMetSlack",
+				"ConfigView.label.bStartNoMoreSeedsWhenUpLimitMetSlack", 0,
+				Integer.MAX_VALUE);
+		add(slack);
+		slack.setIndent(1, true);
 
-    gridData = new GridData();
-    gridData.horizontalSpan = 2;
-    final BooleanParameter dontStartMore =
-    	new BooleanParameter(cSeeding, "StartStopManager_bStartNoMoreSeedsWhenUpLimitMet",
-                         "ConfigView.label.bStartNoMoreSeedsWhenUpLimitMet");
-    dontStartMore.setLayoutData(gridData);
+		BooleanParameterImpl slackIsPercent = new BooleanParameterImpl(
+				"StartStopManager_bStartNoMoreSeedsWhenUpLimitMetPercent",
+				"ConfigView.label.bStartNoMoreSeedsWhenUpLimitMetPercent");
+		add(slackIsPercent);
+		slackIsPercent.setIndent(1, true);
 
+		dontStartMore.addEnabledOnSelection(slack, slackIsPercent);
 
-    final Composite cDontStartOptions = new Composite(cSeeding, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 3;
-    layout.marginWidth = 0;
-    layout.marginHeight = 0;
-    cDontStartOptions.setLayout(layout);
-    gridData = new GridData();
-    gridData.horizontalIndent = 15;
-    gridData.horizontalSpan = 2;
-		cDontStartOptions.setLayoutData(gridData);
+		// disconnect seeds when seeding
 
-	label = new Label(cDontStartOptions, SWT.NULL);
-	ImageLoader.getInstance().setLabelImage(label, "subitem");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		label.setLayoutData(gridData);
+		add(new BooleanParameterImpl("Disconnect Seed",
+				"ConfigView.label.disconnetseed"));
 
-    Label xlabel = new Label(cDontStartOptions, SWT.NULL);
-    Messages.setLanguageText(xlabel, "ConfigView.label.bStartNoMoreSeedsWhenUpLimitMetSlack");
-    gridData = new GridData();
-    IntParameter slack = new IntParameter(cDontStartOptions, "StartStopManager_bStartNoMoreSeedsWhenUpLimitMetSlack", 0, Integer.MAX_VALUE);
-    slack.setLayoutData(gridData);
+		add(new BooleanParameterImpl("Use Super Seeding",
+				"ConfigView.label.userSuperSeeding"));
 
-		label = new Label(cDontStartOptions, SWT.NULL);
-		ImageLoader.getInstance().setLabelImage(label, "subitem");
-		gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		label.setLayoutData(gridData);
+		add(new BooleanParameterImpl("StartStopManager_bAutoReposition",
+				"ConfigView.label.seeding.autoReposition"));
 
-    gridData = new GridData();
-    gridData.horizontalSpan = 2;
-    BooleanParameter slackIsPercent = new BooleanParameter(cDontStartOptions, "StartStopManager_bStartNoMoreSeedsWhenUpLimitMetPercent",
-                         "ConfigView.label.bStartNoMoreSeedsWhenUpLimitMetPercent");
-    slackIsPercent.setLayoutData(gridData);
+		add(new IntParameterImpl("StartStopManager_iAddForSeedingDLCopyCount",
+				"ConfigView.label.seeding.addForSeedingDLCopyCount", 0,
+				Integer.MAX_VALUE));
 
-    dontStartMore.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( slack, slackIsPercent ));
-    dontStartMore.setAdditionalActionPerformer(new ChangeSelectionActionPerformer( xlabel ));
+		IntParameterImpl paramFakeFullCopy = new IntParameterImpl(
+				"StartStopManager_iNumPeersAsFullCopy",
+				"ConfigView.label.seeding.numPeersAsFullCopy", 0, Integer.MAX_VALUE);
+		add(paramFakeFullCopy);
+		paramFakeFullCopy.setSuffixLabelKey("ConfigView.label.peers");
 
-    	// disconnect seeds when seeding
+		IntParameterImpl fakeFullCopySeedStart = new IntParameterImpl(
+				"StartStopManager_iFakeFullCopySeedStart",
+				"ConfigView.label.seeding.fakeFullCopySeedStart", 0, Integer.MAX_VALUE);
+		add(fakeFullCopySeedStart);
+		fakeFullCopySeedStart.setSuffixLabelKey("ConfigView.label.seeds");
+		fakeFullCopySeedStart.setIndent(1, true);
 
-    gridData = new GridData();
-    gridData.horizontalSpan = 2;
-    new BooleanParameter(cSeeding, "Disconnect Seed",
-                         "ConfigView.label.disconnetseed").setLayoutData(gridData);
-
-    gridData = new GridData();
-    gridData.horizontalSpan = 2;
-    new BooleanParameter(cSeeding, "Use Super Seeding",
-                         "ConfigView.label.userSuperSeeding").setLayoutData(gridData);
-
-    gridData = new GridData();
-    gridData.horizontalSpan = 2;
-    new BooleanParameter(cSeeding, "StartStopManager_bAutoReposition",
-                         "ConfigView.label.seeding.autoReposition").setLayoutData(gridData);
-
-    label = new Label(cSeeding, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.addForSeedingDLCopyCount");
-    gridData = new GridData();
-    new IntParameter(cSeeding, "StartStopManager_iAddForSeedingDLCopyCount", 0, Integer.MAX_VALUE).setLayoutData(gridData);
-
-    label = new Label(cSeeding, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.numPeersAsFullCopy");
-
-    Composite cArea = new Composite(cSeeding, SWT.NULL);
-    layout = new GridLayout();
-    layout.marginHeight = 0;
-    layout.marginWidth = 0;
-    layout.numColumns = 2;
-    cArea.setLayout(layout);
-    gridData = new GridData();
-		cArea.setLayoutData(gridData);
-
-    gridData = new GridData();
-    final IntParameter paramFakeFullCopy = new IntParameter(cArea, "StartStopManager_iNumPeersAsFullCopy", 0, Integer.MAX_VALUE);
-    paramFakeFullCopy.setLayoutData(gridData);
-
-    label = new Label(cArea, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.peers");
-    gridData = new GridData(GridData.FILL_HORIZONTAL);
-		cArea.setLayoutData(gridData);
-
-    final Composite cFullCopyOptionsArea = new Composite(cSeeding, SWT.NULL);
-    layout = new GridLayout();
-    layout.numColumns = 4;
-    layout.marginWidth = 0;
-    layout.marginHeight = 0;
-    cFullCopyOptionsArea.setLayout(layout);
-    gridData = new GridData();
-    gridData.horizontalIndent = 15;
-    gridData.horizontalSpan = 2;
-		cFullCopyOptionsArea.setLayoutData(gridData);
-
-		label = new Label(cFullCopyOptionsArea, SWT.NULL);
-		ImageLoader.getInstance().setLabelImage(label, "subitem");
-    gridData = new GridData(GridData.VERTICAL_ALIGN_BEGINNING);
-		label.setLayoutData(gridData);
-
-    label = new Label(cFullCopyOptionsArea, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeding.fakeFullCopySeedStart");
-
-    gridData = new GridData();
-    new IntParameter(cFullCopyOptionsArea, "StartStopManager_iFakeFullCopySeedStart", 0, Integer.MAX_VALUE).setLayoutData(gridData);
-    label = new Label(cFullCopyOptionsArea, SWT.NULL);
-    Messages.setLanguageText(label, "ConfigView.label.seeds");
-
-
-    final int iNumPeersAsFullCopy = COConfigurationManager.getIntParameter("StartStopManager_iNumPeersAsFullCopy");
-    controlsSetEnabled(cFullCopyOptionsArea.getChildren(), iNumPeersAsFullCopy != 0);
-
-    paramFakeFullCopy.addChangeListener(new ParameterChangeAdapter() {
-			@Override
-			public void parameterChanged(Parameter p, boolean caused_internally) {
-				Utils.execSWTThread(new AERunnable() {
-					@Override
-					public void runSupport() {
-						try {
-							int value = paramFakeFullCopy.getValue();
-							boolean enabled = (value != 0);
-							if (cFullCopyOptionsArea.getEnabled() != enabled) {
-								cFullCopyOptionsArea.setEnabled(enabled);
-								controlsSetEnabled(cFullCopyOptionsArea.getChildren(), enabled);
-							}
-						} catch (Exception e) {
-						}
-					}
-				});
+		paramFakeFullCopy.addListener(p -> {
+			try {
+				int iNumPeersAsFullCopy = paramFakeFullCopy.getValue();
+				boolean enabled = (iNumPeersAsFullCopy != 0);
+				fakeFullCopySeedStart.setEnabled(enabled);
+			} catch (Exception ignored) {
 			}
 		});
-    paramFakeFullCopy.getControl().addListener(SWT.Modify, new Listener() {
-        @Override
-        public void handleEvent(Event event) {
-        }
-    });
-
-    return cSeeding;
-  }
-
-  private void controlsSetEnabled(Control[] controls, boolean bEnabled) {
-    for(int i = 0 ; i < controls.length ; i++) {
-      if (controls[i] instanceof Composite)
-        controlsSetEnabled(((Composite)controls[i]).getChildren(), bEnabled);
-      controls[i].setEnabled(bEnabled);
-    }
-  }
+		paramFakeFullCopy.fireParameterChanged();
+	}
 }
-

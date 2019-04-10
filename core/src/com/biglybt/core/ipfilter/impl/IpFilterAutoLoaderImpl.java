@@ -69,6 +69,8 @@ public class IpFilterAutoLoaderImpl
 		COConfigurationManager.setLongDefault(CFG_AUTOLOAD_LAST, 0);
 		COConfigurationManager.setLongDefault(CFG_AUTOLOAD_DAYS, 7);
 		COConfigurationManager.setStringDefault(CFG_AUTOLOAD_FILE, "");
+
+		COConfigurationManager.addParameterListener(CFG_AUTOLOAD_DAYS, parameterName -> setNextAutoDownload(false));
 	}
 
 	/**

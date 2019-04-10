@@ -27,6 +27,13 @@ package com.biglybt.pif.ui.config;
 public interface
 ParameterListener
 {
+	/**
+	 * Parameter has changed.
+	 * <p/>
+	 * <b>Don't assume Thread, especially for SWT calls</b>
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
 	public void
 	parameterChanged(
 		Parameter	param );

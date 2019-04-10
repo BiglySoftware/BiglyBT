@@ -19,26 +19,18 @@
 
 package com.biglybt.pifimpl.local.ui.config;
 
-/**
- * @author parg
- *
- */
-
 import com.biglybt.pif.ui.config.LabelParameter;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
-
-public class
-LabelParameterImpl
-	extends 	ParameterImpl
-	implements 	LabelParameter
+/**
+ * A single label. Not linked to a config key.
+ *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addLabelParameter2(String)
+ */
+public class LabelParameterImpl
+	extends ParameterImpl
+	implements LabelParameter
 {
-	public
-	LabelParameterImpl(
-		PluginConfigImpl 	config,
-		String 			key,
-		String 			label)
-	{
-		super( config, key, label);
+	public LabelParameterImpl(String labelKey) {
+		super(null, labelKey);
 	}
 }

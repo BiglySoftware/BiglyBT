@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.speedmanager.impl.SpeedManagerImpl;
 import com.biglybt.core.speedmanager.impl.v2.SMConst;
 import com.biglybt.core.speedmanager.impl.v2.SpeedLimitConfidence;
@@ -322,10 +323,17 @@ public class ConfigurationDefaults {
     def.put("Logging Dir", "");
     def.put("Logging Timestamp", "HH:mm:ss.SSS");
     def.put("Logging Max Size", new Long(5));
-    int[] logComponents = { 0, 1, 2, 4 };
-    for (int i = 0; i < logComponents.length; i++)
-      for (int j = 0; j <= 3; j++)
-        def.put("bLog" + logComponents[i] + "-" + j, TRUE);
+
+    //final int[] logTypes = { LogEvent.LT_INFORMATION, LogEvent.LT_WARNING, LogEvent.LT_ERROR };
+	  final int[] logTypes = { 0, 1, 3 }; // direct numbers in case LogEvent causes initialization loops
+    LogIDs[] configurableLOGIDs = {LogIDs.STDOUT, LogIDs.ALERT, LogIDs.CORE,
+        LogIDs.DISK, LogIDs.GUI, LogIDs.NET, LogIDs.NWMAN, LogIDs.PEER,
+        LogIDs.PLUGIN, LogIDs.TRACKER, LogIDs.CACHE, LogIDs.PIECES }; // FileLogging.configurableLOGIDs
+    for (LogIDs logID : configurableLOGIDs) {
+      for (int logType : logTypes) {
+        def.put("bLog." + logType + "." + logID.toString(), TRUE);
+      }
+    }
     def.put("Logger.DebugFiles.Enabled", TRUE);
     def.put("Logger.DebugFiles.SizeKB", 256 );
     def.put("Logger.DebugFiles.Enabled.Force", FALSE );
@@ -731,7 +739,7 @@ public class ConfigurationDefaults {
 	    def.put(SpeedManagerAlgorithmProviderV2.SETTING_DHT_BAD_TOLERANCE, new Long(500) );
 
 	    	//**** NOTE! This default can be overridden in ConfigurationChecker
-	    def.put(SpeedManagerImpl.CONFIG_VERSION, new Long(2) );	// 1 == classic, 2 == beta
+	    def.put(SpeedManagerImpl.CONFIG_VERSION, 2 );	// 1 == classic, 2 == beta
 
 	    def.put( SpeedLimitMonitor.DOWNLOAD_CONF_LIMIT_SETTING, SpeedLimitConfidence.NONE.getString() );
 	    def.put( SpeedLimitMonitor.UPLOAD_CONF_LIMIT_SETTING, SpeedLimitConfidence.NONE.getString() );
@@ -825,7 +833,7 @@ public class ConfigurationDefaults {
 
   public long getLongParameter(String p) throws ConfigurationParameterNotFoundException {
 	    checkParameterExists(p);
-	    return ((Long) def.get(p)).longValue();
+	    return ((Number) def.get(p)).longValue();
   }
 
   public float getFloatParameter(String p) throws ConfigurationParameterNotFoundException {

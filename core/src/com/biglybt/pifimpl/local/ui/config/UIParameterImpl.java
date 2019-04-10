@@ -19,19 +19,21 @@ package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.pif.ui.config.UIParameter;
 import com.biglybt.pif.ui.config.UIParameterContext;
-import com.biglybt.pifimpl.local.PluginConfigImpl;
 
 /**
  * @author Allan Crooks
  *
  */
-public class UIParameterImpl extends ParameterImpl implements UIParameter {
+public class UIParameterImpl
+	extends ParameterImpl
+	implements UIParameter
+{
 
 	private UIParameterContext context;
 
-	public UIParameterImpl(PluginConfigImpl	_config, UIParameterContext _context, String _key, String _label) {
-		super(_config, _key, _label);
-		this.context = _context;
+	public UIParameterImpl(UIParameterContext context, String labelKey) {
+		super(null, labelKey);
+		this.context = context;
 	}
 
 	@Override

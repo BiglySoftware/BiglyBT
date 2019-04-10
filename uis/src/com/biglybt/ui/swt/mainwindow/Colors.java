@@ -18,20 +18,23 @@
  * Place, Suite 330, Boston, MA 02111-1307 USA
  */
 package com.biglybt.ui.swt.mainwindow;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import com.biglybt.core.util.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
-import com.biglybt.core.logging.*;
+import com.biglybt.core.logging.LogEvent;
+import com.biglybt.core.logging.LogIDs;
+import com.biglybt.core.logging.Logger;
+import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.Utils;
-
 import com.biglybt.ui.swt.utils.ColorCache;
 /**
  * @author Olivier Chalouhi
@@ -91,14 +94,10 @@ public class Colors implements ParameterListener {
 	private final ParameterListener configListener;
 
   private void allocateBlues() {
-    int r = 0;
-    int g = 128;
-    int b = 255;
+	  int r = COConfigurationManager.getIntParameter("Color Scheme.red");
+	  int g = COConfigurationManager.getIntParameter("Color Scheme.green");
+	  int b = COConfigurationManager.getIntParameter("Color Scheme.blue");
     try {
-      r = COConfigurationManager.getIntParameter("Color Scheme.red", r);
-      g = COConfigurationManager.getIntParameter("Color Scheme.green", g);
-      b = COConfigurationManager.getIntParameter("Color Scheme.blue", b);
-
       boolean bGrayScale = (r == b) && (b == g);
 
       HSLColor hslDefault = new HSLColor();
@@ -299,13 +298,13 @@ public class Colors implements ParameterListener {
 
     public AllocateColor(String sName, final Color colorDefault, Color colorOld) {
 			this.sName = sName;
-			Utils.execSWTThread(new AERunnable() {
-				@Override
-				public void runSupport() {
-					if (!colorDefault.isDisposed())
-						AllocateColor.this.rgbDefault = colorDefault.getRGB();
-					else
-						AllocateColor.this.rgbDefault = new RGB(0, 0, 0);
+			Utils.execSWTThread(() -> {
+				if (!colorDefault.isDisposed()) {
+					AllocateColor.this.rgbDefault = colorDefault.getRGB();
+					COConfigurationManager.setRGBDefault("Colors." + sName,
+							rgbDefault.red, rgbDefault.green, rgbDefault.blue);
+				} else {
+					AllocateColor.this.rgbDefault = new RGB(0, 0, 0);
 				}
 			}, false);
 		}
@@ -319,19 +318,16 @@ public class Colors implements ParameterListener {
     public void runSupport() {
       if (COConfigurationManager.getBooleanParameter("Colors." + sName + ".override")) {
         newColor = ColorCache.getColor(display,
-           COConfigurationManager.getIntParameter("Colors." + sName + ".red",
-                                                  rgbDefault.red),
-           COConfigurationManager.getIntParameter("Colors." + sName + ".green",
-                                                  rgbDefault.green),
-           COConfigurationManager.getIntParameter("Colors." + sName + ".blue",
-                                                  rgbDefault.blue));
+           COConfigurationManager.getIntParameter("Colors." + sName + ".red"),
+           COConfigurationManager.getIntParameter("Colors." + sName + ".green"),
+           COConfigurationManager.getIntParameter("Colors." + sName + ".blue"));
       } else {
         newColor = ColorCache.getColor(display, rgbDefault.red,
         		rgbDefault.green, rgbDefault.blue);
         // Since the color is not longer overriden, reset back to default
         // so that the user sees the correct color in Config.
         COConfigurationManager.setRGBParameter("Colors." + sName,
-						rgbDefault.red, rgbDefault.green, rgbDefault.blue);
+						rgbDefault.red, rgbDefault.green, rgbDefault.blue, null);
       }
     }
   }
@@ -405,13 +401,9 @@ public class Colors implements ParameterListener {
 			  };
 
 	  COConfigurationManager.addParameterListener("Color Scheme", configListener);
-	  COConfigurationManager.addParameterListener("Colors.progressBar.override", configListener);
 	  COConfigurationManager.addParameterListener("Colors.progressBar", configListener);
-	  COConfigurationManager.addParameterListener("Colors.error.override", configListener);
 	  COConfigurationManager.addParameterListener("Colors.error", configListener);
-	  COConfigurationManager.addParameterListener("Colors.warning.override", configListener);
 	  COConfigurationManager.addParameterListener("Colors.warning", configListener);
-	  COConfigurationManager.addParameterListener("Colors.altRow.override", configListener);
 	  COConfigurationManager.addParameterListener("Colors.altRow", configListener);
 
 

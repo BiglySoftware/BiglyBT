@@ -25,20 +25,56 @@ package com.biglybt.pif.ui.config;
  * @author Olivier
  *
  */
-public interface EnablerParameter extends Parameter {
+public interface EnablerParameter
+	extends Parameter
+{
 
-  /**
-   * enables parameter when EnablerParameter is selected.<br>
-   * parameter is disabled is EnablerParameter isn't selected.
-   * @param parameter the Parameter to act on
-   */
-  public void addEnabledOnSelection(Parameter parameter);
+	/**
+	 * disables parameter when EnablerParameter is selected.
+	 *
+	 * @param parametersToDisable the Parameter to act on
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void addDisabledOnSelection(Parameter... parametersToDisable);
 
-  /**
-   * disables parameter when EnablerParameter is selected.<br>
-   * parameter is enabled is EnablerParameter isn't selected.
-   * @param parameter the Parameter to act on
-   */
-  public void addDisabledOnSelection(Parameter parameter);
+	/**
+	 * disables parameter when EnablerParameter is selected.
+	 *
+	 * @param parameterToDisable the Parameter to act on
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
+	void addDisabledOnSelection(Parameter parameterToDisable);
 
+	/**
+	 * enables paramToEnable when this EnablerParameter is selected (checked).<br>
+	 * paramToEnable is disabled when this EnablerParameter isn't selected (checked).
+	 * <p/>
+	 * Note: When this EnableParameter is disabled, paramToEnable's state will not be modified.
+	 * In cases where parameter1 is enabled by its parent, and parameter1 enabled children,
+	 * you must also parent.addEnabledOnSelection(children) if you want the children
+	 * to be disabled when parent is unselected (unchecked).
+	 *
+	 * @param paramToEnable the Parameter to act on
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
+	void addEnabledOnSelection(Parameter paramToEnable);
+
+
+	/**
+	 * enables paramToEnable when this EnablerParameter is selected (checked).<br>
+	 * paramToEnable is disabled when this EnablerParameter isn't selected (checked).
+	 * <p/>
+	 * Note: When this EnableParameter is disabled, parametersToDisable's state will not be modified.
+	 * In cases where parameter1 is enabled by its parent, and parameter1 enabled children,
+	 * you must also parent.addEnabledOnSelection(children) if you want the children
+	 * to be disabled when parent is unselected (unchecked).
+	 *
+	 * @param parametersToEnable the Parameter to act on
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void addEnabledOnSelection(Parameter... parametersToEnable);
 }

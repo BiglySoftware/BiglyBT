@@ -22,14 +22,42 @@ package com.biglybt.pif.ui.config;
 /**
  * @author parg
  *
+ * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addActionParameter2(String, String)
  */
-
 public interface
 ActionParameter
 	extends Parameter
 {
+	/**
+	 * Action Parameter will be styled as a button
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
 	public static final int STYLE_BUTTON		= 1;
+
+	/**
+	 * Action Parameter will be styled as a hyperlink
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
 	public static final int STYLE_LINK			= 2;
+
+	/**
+	 * Returns the messagebundle key for the action's text
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
+	String
+	getActionResource();
+
+	/**
+	 * Set the action's text
+	 *
+	 * @param action_resource messagebundle key
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
+	void setActionResource(String action_resource);
 
 	public void
 	setStyle(
