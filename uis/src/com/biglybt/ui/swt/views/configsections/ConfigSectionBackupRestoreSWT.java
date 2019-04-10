@@ -72,6 +72,11 @@ public class ConfigSectionBackupRestoreSWT
 
 	private void doManualBackup(BackupManager backup_manager,
 			Runnable stats_updater) {
+		if (Utils.runIfNotSWTThread(
+				() -> doManualBackup(backup_manager, stats_updater))) {
+			return;
+		}
+
 		if (shell == null) {
 			shell = Utils.findAnyShell();
 		}
@@ -98,6 +103,10 @@ public class ConfigSectionBackupRestoreSWT
 	}
 
 	private void restoreBackup() {
+		if (Utils.runIfNotSWTThread(this::restoreBackup)) {
+			return;
+		}
+
 		String def_dir = COConfigurationManager.getStringParameter(
 				SCFG_BACKUP_FOLDER_DEFAULT);
 
@@ -232,6 +241,11 @@ public class ConfigSectionBackupRestoreSWT
 		final Runnable		stats_updater )
 
 	{
+		if (Utils.runIfNotSWTThread(
+				() -> runBackup(backup_manager, path, stats_updater))) {
+			return;
+		}
+
 		final TextViewerWindow viewer =
 			new TextViewerWindow(
 					MessageText.getString( "br.backup.progress" ),
