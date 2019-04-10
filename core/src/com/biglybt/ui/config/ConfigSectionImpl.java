@@ -165,6 +165,9 @@ public abstract class ConfigSectionImpl
 		if (name == null || name.isEmpty()) {
 			if (param instanceof HyperlinkParameter) {
 				name = ((HyperlinkParameter) param).getHyperlink();
+				if (mapPluginParams.containsKey(name)) {
+					name += "/" + param.toString();
+				}
 			} else if (param instanceof ActionParameter) {
 				name = ((ActionParameter) param).getActionResource() + ","
 						+ param.getLabelKey();
