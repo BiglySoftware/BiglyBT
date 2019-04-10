@@ -302,7 +302,7 @@ public class ConfigSectionConnection
 			}
 
 			// Gap
-			add(new LabelParameterImpl(""), listNetworks);
+			add("con.net.gap0", new LabelParameterImpl(""), listNetworks);
 
 			add(new BooleanParameterImpl(BCFG_NETWORK_SELECTION_PROMPT,
 					"ConfigView.section.connection.networks.prompt"), listNetworks);
