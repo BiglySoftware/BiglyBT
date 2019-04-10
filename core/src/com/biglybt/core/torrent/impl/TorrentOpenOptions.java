@@ -27,6 +27,7 @@ import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
+import com.biglybt.core.download.impl.DownloadManagerAdapter;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.Tag;
@@ -57,6 +58,16 @@ public class TorrentOpenOptions
 
 	public final static int QUEUELOCATION_TOP = 0;
 
+	public final static String[] STARTMODE_KEYS = {
+			"OpenTorrentWindow.startMode.queued",
+			"OpenTorrentWindow.startMode.stopped",
+			"ManagerItem.paused",
+			"OpenTorrentWindow.startMode.forceStarted",
+			"OpenTorrentWindow.startMode.seeding",
+			"OpenTorrentWindow.startMode.alloc.stopped",
+			"OpenTorrentWindow.startMode.alloc.paused",
+		};
+	
 	public final static int STARTMODE_QUEUED 				= 0;
 	public final static int STARTMODE_STOPPED 				= 1;
 	public final static int STARTMODE_PAUSED 				= 2;
@@ -65,6 +76,15 @@ public class TorrentOpenOptions
 	public final static int STARTMODE_ALLOCATED_AND_STOPPED = 5;
 	public final static int STARTMODE_ALLOCATED_AND_PAUSED	= 6;
 
+	public final static int[] STARTMODE_VALUES = {
+		STARTMODE_QUEUED,
+		STARTMODE_STOPPED,
+		STARTMODE_PAUSED,
+		STARTMODE_FORCESTARTED,
+		STARTMODE_SEEDING,
+		STARTMODE_ALLOCATED_AND_STOPPED,
+		STARTMODE_ALLOCATED_AND_PAUSED
+	};
 
 	/** Where the torrent came from.  Could be a file, URL, or some other text */
 	/** @todo: getter/setters */
@@ -1372,6 +1392,114 @@ public class TorrentOpenOptions
 				}catch( Throwable e ){
 				}
 			}
+		}
+	}
+	
+		// helpers
+	
+	public static int
+	addModePreCreate(
+		int		startMode )
+	{
+		int iStartState;
+		
+		if ( startMode == TorrentOpenOptions.STARTMODE_STOPPED || startMode == TorrentOpenOptions.STARTMODE_PAUSED ){
+			
+			iStartState = DownloadManager.STATE_STOPPED;
+			
+		}else{
+			
+				// stopped/paused+allocated needs the download to be queued - it will auto-stop after allocation
+			
+			iStartState = DownloadManager.STATE_QUEUED;
+		}
+
+		return( iStartState );
+	}
+	
+	public static void
+	addModeDuringCreate(
+		int					startMode,
+		DownloadManager		dm )
+	{
+		if ( startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_STOPPED || startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_PAUSED ){
+			
+			dm.getDownloadState().setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
+			
+			if ( startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_PAUSED  ){
+				
+				dm.addListener(
+					new DownloadManagerAdapter()
+					{
+						public void 
+						stateChanged(
+							DownloadManager 	manager, 
+							int 				state ){
+																		
+							if ( state == DownloadManager.STATE_STOPPED ){
+							
+								dm.removeListener( this );
+								
+									// hate this but the underlying state is actually STOPPING which means
+									// an immediate pause will fail :( 
+								
+								new AEThread2( "pauser" ){
+									@Override
+									public void run(){
+										long start = SystemTime.getMonotonousTime();
+										
+										while( true ){
+											
+											if ( dm.getState() == DownloadManager.STATE_STOPPED ){
+												
+												dm.pause( false );
+												
+												break;
+												
+											}else{
+												
+												if ( SystemTime.getMonotonousTime() - start > 10*1000 ){
+													
+													Debug.out( "Abandoning pause-on-start, timeout" );
+													
+													break;
+													
+												}else{
+													try{
+														Thread.sleep( 100 );
+														
+													}catch( Throwable e ){
+													}
+												}
+											}
+										}
+									}
+								}.start();	
+								
+							}else if (	state == DownloadManager.STATE_DOWNLOADING ||
+										state == DownloadManager.STATE_SEEDING || 
+										state == DownloadManager.STATE_ERROR ){
+								
+								dm.removeListener( this );
+							}
+						}
+					});
+			}
+		}
+	}
+	
+	public static void
+	addModePostCreate(
+		int					startMode,
+		DownloadManager		dm )
+	{
+		if ( startMode == TorrentOpenOptions.STARTMODE_FORCESTARTED ){
+			
+			dm.setForceStart(true);
+			
+		}else if ( startMode == TorrentOpenOptions.STARTMODE_PAUSED ){
+			
+			dm.pause( false );
 		}
 	}
 }

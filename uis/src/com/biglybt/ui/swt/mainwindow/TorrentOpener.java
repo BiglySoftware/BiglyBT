@@ -683,73 +683,8 @@ public class TorrentOpener {
 							
 							dms.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );
 						}
-						
-						int startMode =  torrentOptions.getStartMode();
-						
-						if ( startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_STOPPED || startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_PAUSED ){
-							
-							dms.setLongAttribute( DownloadManagerState.AT_FILE_ALLOC_STRATEGY, DownloadManagerState.FAS_ZERO_NEW_STOP );
-							
-							if ( startMode == TorrentOpenOptions.STARTMODE_ALLOCATED_AND_PAUSED  ){
-								
-								dm.addListener(
-									new DownloadManagerAdapter()
-									{
-										public void 
-										stateChanged(
-											DownloadManager 	manager, 
-											int 				state ){
-																						
-											if ( state == DownloadManager.STATE_STOPPED ){
-											
-												dm.removeListener( this );
 												
-													// hate this but the underlying state is actually STOPPING which means
-													// an immediate pause will fail :( 
-												
-												new AEThread2( "pauser" ){
-													@Override
-													public void run(){
-														long start = SystemTime.getMonotonousTime();
-														
-														while( true ){
-															
-															if ( dm.getState() == DownloadManager.STATE_STOPPED ){
-																
-																dm.pause( false );
-																
-																break;
-																
-															}else{
-																
-																if ( SystemTime.getMonotonousTime() - start > 10*1000 ){
-																	
-																	Debug.out( "Abandoning pause-on-start, timeout" );
-																	
-																	break;
-																	
-																}else{
-																	try{
-																		Thread.sleep( 100 );
-																		
-																	}catch( Throwable e ){
-																	}
-																}
-															}
-														}
-													}
-												}.start();	
-												
-											}else if (	state == DownloadManager.STATE_DOWNLOADING ||
-														state == DownloadManager.STATE_SEEDING || 
-														state == DownloadManager.STATE_ERROR ){
-												
-												dm.removeListener( this );
-											}
-										}
-									});
-							}
-						}
+						TorrentOpenOptions.addModeDuringCreate( torrentOptions.getStartMode(), dm );
 						
 						File moc = torrentOptions.getMoveOnComplete();
 						
@@ -783,19 +718,8 @@ public class TorrentOpener {
 
 					int startMode = torrentOptions.getStartMode();
 					
-					int iStartState;
+					int iStartState = TorrentOpenOptions.addModePreCreate( startMode );
 					
-					if ( startMode == TorrentOpenOptions.STARTMODE_STOPPED || startMode == TorrentOpenOptions.STARTMODE_PAUSED ){
-						
-						iStartState = DownloadManager.STATE_STOPPED;
-						
-					}else{
-						
-							// stopped/paused+allocated needs the download to be queued - it will auto-stop after allocation
-						
-						iStartState = DownloadManager.STATE_QUEUED;
-					}
-
 					GlobalManager gm = core.getGlobalManager();
 
 					DownloadManager dm = gm.addDownloadManager(torrentOptions.sFileName,
@@ -820,14 +744,7 @@ public class TorrentOpener {
 						});
 					}
 
-					if ( startMode == TorrentOpenOptions.STARTMODE_FORCESTARTED ){
-						
-						dm.setForceStart(true);
-						
-					}else if ( startMode == TorrentOpenOptions.STARTMODE_PAUSED ){
-						
-						dm.pause( false );
-					}
+					TorrentOpenOptions.addModePostCreate(startMode, dm );					
 				}
 			});
 

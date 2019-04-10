@@ -181,7 +181,8 @@ public final class ConfigKeys {
 		public static final String BCFG_FILE_MOVE_SUBDIR_IS_DEFAULT = "File.move.subdir_is_default";
 		public static final String ICFG_WATCH_TORRENT_FOLDER_PATH_COUNT = "Watch Torrent Folder Path Count";
 		public static final String ICFG_WATCH_TORRENT_FOLDER_INTERVAL_SECS = "Watch Torrent Folder Interval Secs";
-		public static final String BCFG_START_WATCHED_TORRENTS_STOPPED = "Start Watched Torrents Stopped";
+		//public static final String BCFG_START_WATCHED_TORRENTS_STOPPED = "Start Watched Torrents Stopped";
+		public static final String ICFG_WATCH_TORRENT_FOLDER_ADD_MODE = "Watch Torrents Add Mode";
 		public static final String BCFG_WATCH_TORRENT_ALWAYS_RENAME = "Watch Torrent Always Rename";
 		public static final String BCFG_SAVE_TORRENT_FILES = "Save Torrent Files";
 		public static final String SCFG_GENERAL_DEFAULT_TORRENT_DIRECTORY = "General_sDefaultTorrent_Directory";

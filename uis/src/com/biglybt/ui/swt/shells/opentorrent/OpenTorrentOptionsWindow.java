@@ -155,16 +155,6 @@ public class OpenTorrentOptionsWindow
 		"OpenTorrentWindow.addPosition.last"
 	};
 
-	private final static String[] MSGKEY_STARTMODES = {
-		"OpenTorrentWindow.startMode.queued",
-		"OpenTorrentWindow.startMode.stopped",
-		"ManagerItem.paused",
-		"OpenTorrentWindow.startMode.forceStarted",
-		"OpenTorrentWindow.startMode.seeding",
-		"OpenTorrentWindow.startMode.alloc.stopped",
-		"OpenTorrentWindow.startMode.alloc.paused",
-	};
-
 	public static final String TABLEID_TORRENTS = "OpenTorrentTorrent";
 	public static final String TABLEID_FILES 	= "OpenTorrentFile";
 
@@ -3865,7 +3855,7 @@ public class OpenTorrentOptionsWindow
 				return;
 			}
 
-			String optionText = MessageText.getString(MSGKEY_STARTMODES[torrentOptions.getStartMode()])
+			String optionText = MessageText.getString(TorrentOpenOptions.STARTMODE_KEYS[torrentOptions.getStartMode()])
 					+ ", "
 					+ MessageText.getString(MSGKEY_QUEUELOCATIONS[torrentOptions.getQueueLocation()]);
 
@@ -6293,9 +6283,9 @@ public class OpenTorrentOptionsWindow
 			if (cmbStartMode == null)
 				return;
 
-			String[] sItemsText = new String[MSGKEY_STARTMODES.length];
-			for (int i = 0; i < MSGKEY_STARTMODES.length; i++) {
-				String sText = MessageText.getString(MSGKEY_STARTMODES[i]);
+			String[] sItemsText = new String[TorrentOpenOptions.STARTMODE_KEYS.length];
+			for (int i = 0; i < sItemsText.length; i++) {
+				String sText = MessageText.getString(TorrentOpenOptions.STARTMODE_KEYS[i]);
 				sItemsText[i] = sText;
 			}
 			cmbStartMode.setItems(sItemsText);

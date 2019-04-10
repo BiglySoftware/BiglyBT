@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -188,10 +189,26 @@ public class ConfigSectionFileTorrents
 				listWatch);
 
 		// add stopped
-
+		/*
 		add(new BooleanParameterImpl(BCFG_START_WATCHED_TORRENTS_STOPPED,
 				"ConfigView.label.startwatchedtorrentsstopped"), listWatch);
+		*/
+		
+		// add mode
+				
+		String[]	addModeLabels = new String[TorrentOpenOptions.STARTMODE_KEYS.length];
+		
+		for ( int i=0;i< addModeLabels.length;i++){
+			addModeLabels[i] = MessageText.getString( TorrentOpenOptions.STARTMODE_KEYS[i] );
+		}
+		
+		add(new IntListParameterImpl(
+				ICFG_WATCH_TORRENT_FOLDER_ADD_MODE,
+				"OpenTorrentWindow.startMode",
+				TorrentOpenOptions.STARTMODE_VALUES, addModeLabels),
+				listWatch );
 
+		
 		// always rename to .imported
 
 		add(new BooleanParameterImpl(BCFG_WATCH_TORRENT_ALWAYS_RENAME,

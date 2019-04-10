@@ -879,6 +879,20 @@ ConfigurationChecker
 	    	changed = true;
 	    }
 
+	    if ( COConfigurationManager.doesParameterNonDefaultExist( "Start Watched Torrents Stopped" )){
+
+	    	boolean stopped = COConfigurationManager.getBooleanParameter( "Start Watched Torrents Stopped" );
+
+	    	COConfigurationManager.removeParameter( "Start Watched Torrents Stopped" );
+
+	    	if ( stopped ){
+	    	
+	    		COConfigurationManager.setParameter("Watch Torrents Add Mode", 1 );	// mode = stopped
+	    	}
+
+	    	changed = true;
+	    }
+	    
 	    if(changed) {
 	      COConfigurationManager.save();
 	    }

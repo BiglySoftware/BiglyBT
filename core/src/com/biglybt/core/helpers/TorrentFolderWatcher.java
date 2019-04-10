@@ -44,6 +44,7 @@ import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.*;
 import com.biglybt.core.util.protocol.magnet.MagnetConnection2;
 
@@ -231,9 +232,7 @@ public class TorrentFolderWatcher {
 			String torrent_save_path = COConfigurationManager
 					.getStringParameter("General_sDefaultTorrent_Directory");
 
-			int start_state = COConfigurationManager
-					.getBooleanParameter("Start Watched Torrents Stopped")
-					? DownloadManager.STATE_STOPPED : DownloadManager.STATE_QUEUED;
+			int start_mode = COConfigurationManager.getIntParameter( "Watch Torrents Add Mode" );
 
 			boolean always_rename = COConfigurationManager.getBooleanParameter("Watch Torrent Always Rename");
 
@@ -446,6 +445,8 @@ public class TorrentFolderWatcher {
 											boolean 				for_seeding )
 										{
 											applyTag( dm, tag_name );
+											
+											TorrentOpenOptions.addModeDuringCreate( start_mode, dm );
 										}
 									};
 	
@@ -455,6 +456,7 @@ public class TorrentFolderWatcher {
 									} catch (Exception e) { }
 	
 									
+									int start_state = TorrentOpenOptions.addModePreCreate(start_mode);
 									
 									if ( always_rename || !save_torrents) {
 	
@@ -479,6 +481,8 @@ public class TorrentFolderWatcher {
 										// might have already existed, check tagging
 										
 									applyTag( dm, tag_name );
+									
+									TorrentOpenOptions.addModePostCreate(start_mode, dm );	
 									
 									if (Logger.isEnabled())
 										Logger.log(new LogEvent(LOGID, "Auto-imported "
