@@ -2041,6 +2041,19 @@ public class MyTorrentsView
 						// System.out.println("DragSetData");
 						event.data = eventData;
 					}
+					
+					@Override
+					public void dragFinished(DragSourceEvent event){
+							// might be able to do this synchronously but not convinced of ordering as we 
+							// need the location to remain valid until the drop is complete...
+						
+						Utils.execSWTThreadLater(
+							10,
+							()->{
+								drag_drop_location_start = -1;
+							});
+					}
+					
 				});
 			}
 
