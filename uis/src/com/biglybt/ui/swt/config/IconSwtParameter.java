@@ -3,12 +3,18 @@ package com.biglybt.ui.swt.config;
 import java.io.File;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MenuListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -73,6 +79,19 @@ public class IconSwtParameter
 			setValue(newFile);
 		});
 
+	    Menu menu = new Menu( iconChooser );
+		    
+	    iconChooser.setMenu( menu );
+		    
+	    MenuItem mi = new MenuItem( menu, SWT.PUSH );
+		    
+	    mi.setText( MessageText.getString( "menu.reset.icon" ));
+		
+	    mi.addSelectionListener( SelectionListener.widgetSelectedAdapter(
+	    	(e)->{ setValue( null );}));
+	    
+	    menu.addMenuListener( MenuListener.menuShownAdapter(
+	    	(e)->{ mi.setEnabled( !valueProcessor.isDefaultValue( this ));}));
 	}
 
 	private void releaseImage() {
@@ -116,9 +135,14 @@ public class IconSwtParameter
 						(image, key, returnedImmediately) -> {
 
 							iconChooser.setImage(image);
-
+							
 							if (image != null) {
 								imgResource = key;
+							}
+							
+							if ( !returnedImmediately ){
+							
+								Utils.relayout(iconChooser);
 							}
 						});
 
