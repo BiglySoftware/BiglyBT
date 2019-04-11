@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -142,6 +143,9 @@ public class ColorSwtParameter
 				"ConfigView.section.style.colorOverrides.reset");
 		mi.addListener(SWT.Selection, (e) -> resetToDefault());
 
+		menu.addMenuListener( MenuListener.menuShownAdapter(
+			    	(e)->{ mi.setEnabled( !isDefaultValue());}));
+		
 		colorChooser.addListener(SWT.Dispose, e -> {
 			if (img != null && !img.isDisposed()) {
 				img.dispose();

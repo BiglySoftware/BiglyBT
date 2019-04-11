@@ -384,6 +384,18 @@ public class TagSettingsView
 							}
 							return true;
 						}
+						
+						@Override
+						public boolean isDefaultValue(ColorSwtParameter p) {
+							
+							return( Arrays.equals( getValue(p), tags[0].getTagType().getColorDefault()));
+						}
+
+						@Override
+						public boolean resetToDefault(ColorSwtParameter p) {
+							setValue(p, null);
+							return true;
+						}
 					});
 
 			String finalTagIconFile = tagIconFile;
