@@ -1965,6 +1965,8 @@ TagDownloadWithState
 
 			if ( type == TagFeatureProperties.PT_BOOLEAN ){
 
+					// PR_UNTAGGED
+				
 				Boolean b = prop.getBoolean();
 
 				if ( b != null && b ){
@@ -1985,28 +1987,51 @@ TagDownloadWithState
 
 				if ( vals != null && vals.length > 0 ){
 
-					if ( name.equals( TagFeatureProperties.PR_CONSTRAINT ) && vals.length > 1 ){
+					if ( name.equals( TagFeatureProperties.PR_CONSTRAINT )){
+						
+							// PR_CONSTRAINT
+						
+						if ( !prop.isEnabled()){
+							
+							return( AUTO_NONE );	// currently only constraints can be disabled
+						}
+						
+						String constraint	= vals[0];						
+						
+						if ( constraint == null || constraint.trim().isEmpty()){
+							
+							return( AUTO_NONE );
+						}
+						
+						if ( vals.length > 1 ){
 
-						String options = vals[1];
-
-						if ( options != null ){
-
-							if ( options.contains( "am=1;" )){
-
-								return( new boolean[]{ true, false, false });
-
-							}else if ( options.contains( "am=2;" )){
-
-								return( new boolean[]{ false, true, false });
-								
-							}else if ( options.contains( "am=3;" )){
-								
-								return( new boolean[]{ false, false, true });
+							String options 		= vals[1];
+		
+							if ( options != null ){
+	
+								if ( options.contains( "am=1;" )){
+	
+									return( new boolean[]{ true, false, false });
+	
+								}else if ( options.contains( "am=2;" )){
+	
+									return( new boolean[]{ false, true, false });
+									
+								}else if ( options.contains( "am=3;" )){
+									
+									return( new boolean[]{ false, false, true });
+								}
 							}
 						}
+	
+						return( AUTO_BOTH );
+						
+					}else{
+						
+							// PR_TRACKERS
+						
+						return( AUTO_BOTH );
 					}
-
-					return( AUTO_BOTH );
 				}
 			}
 		}
