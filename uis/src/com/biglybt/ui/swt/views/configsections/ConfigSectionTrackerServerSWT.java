@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.views.configsections;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.ui.config.ConfigSectionTrackerServer;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.auth.CertificateCreatorWindow;
 import com.biglybt.ui.swt.ipchecker.IpCheckerWizard;
 
@@ -28,10 +29,10 @@ public class ConfigSectionTrackerServerSWT
 	extends ConfigSectionTrackerServer
 {
 	public ConfigSectionTrackerServerSWT() {
-		init(mapPluginParams -> {
+		init(mapPluginParams -> Utils.execSWTThread(() -> {
 			IpCheckerWizard wizard = new IpCheckerWizard();
 			wizard.setIpSetterCallBack(ip -> COConfigurationManager.setParameter(
 					ConfigKeys.Tracker.SCFG_TRACKER_IP, ip));
-		}, mapPluginParams -> new CertificateCreatorWindow());
+		}), mapPluginParams -> new CertificateCreatorWindow());
 	}
 }
