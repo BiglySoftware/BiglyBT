@@ -61,15 +61,31 @@ public class IntParameterImpl
 	public int
 	getValue()
 	{
-		return COConfigurationManager.getIntParameter(configKey);
+		if (!storedAsString) {
+			return COConfigurationManager.getIntParameter(configKey);
+		}
+
+		String valFromConfig = COConfigurationManager.getStringParameter(configKey);
+		int val = valueWhenBlank;
+		try {
+			if (!valFromConfig.isEmpty()) {
+				val = Integer.parseInt(valFromConfig);
+			}
+		} catch (Exception ignore) {
+		}
+		return val;
 	}
 
 	@Override
 	public void
 	setValue(
-		int	b )
+		int	value )
 	{
-		COConfigurationManager.setParameter(configKey, b );
+		if (!storedAsString) {
+			COConfigurationManager.setParameter(configKey, value);
+		} else {
+			COConfigurationManager.setParameter(configKey, "" + value);
+		}
 	}
 
 	@Override
