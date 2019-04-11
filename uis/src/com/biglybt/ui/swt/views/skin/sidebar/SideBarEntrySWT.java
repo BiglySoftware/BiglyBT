@@ -1086,13 +1086,10 @@ public class SideBarEntrySWT
 
 				if ( color instanceof int[] ){
 
-					gc.setBackground(ColorCache.getColor( gc.getDevice(),(int[])color ));
-
-				}else{
-
-					gc.setBackground( default_color );
+					default_color = ColorCache.getColor( gc.getDevice(),(int[])color );
 				}
 
+				gc.setBackground( default_color );
 
 				/*
 				if (selected) {
@@ -1125,11 +1122,16 @@ public class SideBarEntrySWT
 					double brightness = Math.sqrt( red*red*0.299+green*green*0.587+blue*blue*0.114);
 
 					if ( brightness >= 130 ){
+						
 						text_color = Colors.black;
+						
+						gc.setForeground( text_color );
+						
+					}else{
+
+						gc.setForeground( default_color );
 					}
-
-					gc.setBackground( default_color );
-
+					
 					gc.drawRoundRectangle(startX, startY, width, height, textSize.y * 2 / 3,
 							height * 2 / 3);
 				}
