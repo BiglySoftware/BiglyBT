@@ -501,6 +501,10 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 		return false;
 	}
 
+	public boolean isDefaultValue(){
+		return( valueProcessor != null && valueProcessor.isDefaultValue(thisTyped));
+	}
+	
 	protected void setPluginParameter(Parameter pluginParam) {
 		this.pluginParam = pluginParam;
 		if (pluginParam == null) {

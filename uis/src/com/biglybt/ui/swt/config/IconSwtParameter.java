@@ -88,10 +88,11 @@ public class IconSwtParameter
 	    mi.setText( MessageText.getString( "menu.reset.icon" ));
 		
 	    mi.addSelectionListener( SelectionListener.widgetSelectedAdapter(
-	    	(e)->{ setValue( null );}));
+	    	(e)->{ resetToDefault();}));
 	    
 	    menu.addMenuListener( MenuListener.menuShownAdapter(
-	    	(e)->{ mi.setEnabled( !valueProcessor.isDefaultValue( this ));}));
+	    	(e)->{ mi.setEnabled( !isDefaultValue());}));
+	    
 	}
 
 	private void releaseImage() {
