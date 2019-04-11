@@ -1456,8 +1456,11 @@ public class SideBarEntrySWT
 			if (this == sidebar.draggingOver) {
 				Color c = skin.getSkinProperties().getColor("color.sidebar.drag.fg");
 				gc.setForeground(c);
-				gc.setLineWidth(5);
-				gc.drawRectangle(drawBounds);
+				final int line_width = 2;
+				gc.setLineWidth(line_width);
+				Rectangle temp = new Rectangle( drawBounds.x+line_width, drawBounds.y+line_width, drawBounds.width-( line_width*2 ), drawBounds.height-( line_width*2 ));
+				
+				gc.drawRectangle(temp);
 			}
 		}
 		return fgText;
