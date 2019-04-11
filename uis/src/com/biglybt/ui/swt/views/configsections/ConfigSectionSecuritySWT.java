@@ -37,6 +37,7 @@ import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.config.ConfigSectionSecurity;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.auth.CertificateCreatorWindow;
 import com.biglybt.ui.swt.config.BaseSwtParameter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
@@ -55,7 +56,7 @@ public class ConfigSectionSecuritySWT
 	public ConfigSectionSecuritySWT() {
 		init(mapPluginParams -> new CertificateCreatorWindow(),
 				// Backup Keys
-				mapPluginParams -> {
+				mapPluginParams -> Utils.execSWTThread(() -> {
 
 					FileDialog dialog = new FileDialog(shell, SWT.APPLICATION_MODAL);
 
@@ -86,9 +87,9 @@ public class ConfigSectionSecuritySWT
 							mb.open(null);
 						}
 					}
-				},
+				}),
 				// Restore Keys
-				mapPluginParams -> {
+				mapPluginParams -> Utils.execSWTThread(() -> {
 					FileDialog dialog = new FileDialog(shell, SWT.APPLICATION_MODAL);
 
 					String target = dialog.open();
@@ -152,7 +153,7 @@ public class ConfigSectionSecuritySWT
 							mb.open(null);
 						}
 					}
-				});
+				}));
 	}
 
 	@Override
