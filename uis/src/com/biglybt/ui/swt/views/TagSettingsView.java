@@ -366,6 +366,13 @@ public class TagSettingsView
 
 			int[] origTagColor = tagColor == null ? new int[] { 0, 0, 0 } : tagColor;
 			
+				// trick is that when a tag's explicit colour is that of the tag-type-default then
+				// we set the actual tag's colour to null. This is because there is a distinction in how
+				// the sidebar renders indicator values when a tag has no explicit colour (as opposed to an
+				// explicit colour that happens to be the same as the tag type default)
+			
+			int[] defaultColor = tags[0].getTagType().getColorDefault();
+			
 			params.tagColor = new ColorSwtParameter(cSection1, "tagColor",
 					"label.color", null, false,
 					new SwtParameterValueProcessor<ColorSwtParameter, int[]>() {
@@ -379,6 +386,11 @@ public class TagSettingsView
 						@Override
 						public boolean setValue(ColorSwtParameter p, int[] value) {
 							curColor = value;
+							
+							if ( Arrays.equals( value,  defaultColor )){
+								value = null;
+							}
+							
 							for (Tag tag : tags) {
 								tag.setColor(value);
 							}
@@ -388,12 +400,12 @@ public class TagSettingsView
 						@Override
 						public boolean isDefaultValue(ColorSwtParameter p) {
 							
-							return( Arrays.equals( getValue(p), tags[0].getTagType().getColorDefault()));
+							return( Arrays.equals( getValue(p), defaultColor ));
 						}
 
 						@Override
 						public boolean resetToDefault(ColorSwtParameter p) {
-							setValue(p, null);
+							setValue(p, defaultColor);
 							return true;
 						}
 					});
