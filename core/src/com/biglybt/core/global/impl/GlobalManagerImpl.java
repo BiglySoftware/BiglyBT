@@ -1432,7 +1432,7 @@ public class GlobalManagerImpl
   	try{
   		removal_listeners.dispatchWithException(LDT_MANAGER_WBR, new Object[] {
 				manager,
-				new Boolean(remove_torrent),
+				Boolean.valueOf(remove_torrent),
 			  Boolean.valueOf(remove_data)
 			});
 
