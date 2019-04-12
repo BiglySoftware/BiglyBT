@@ -42,6 +42,16 @@ BasicPluginConfigImpl
 	}
 
 	@Override
+	public void deleteConfigSection() {
+		// Prevent Parameters created via BasicPluginConfigModel from being destroyed
+		// They are only created once and used multiple times.
+		// Must be before super.
+		mapPluginParams.clear();
+		
+		super.deleteConfigSection();
+	}
+
+	@Override
 	public void build() {
 		// Normally, this is where we would build the map of Parameter objects
 		// But, Plugins come with the Parameters already created
