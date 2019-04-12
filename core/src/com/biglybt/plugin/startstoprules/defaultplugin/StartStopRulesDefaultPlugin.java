@@ -260,10 +260,7 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 		// We always need to do this in order to set up configuration defaults
 		UIManager manager = pi.getUIManager();
 
-		// TODO: don't name it Q
-		final BasicPluginConfigModel configModel = manager.createBasicPluginConfigModel(
-				ConfigSection.SECTION_ROOT, "Q");
-		setupConfigModel(configModel);
+		new StartStopConfigModel(pi);
 
 		pi.addListener(new PluginListener() {
 			@Override
@@ -336,14 +333,8 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 
 					if ( instance.getUIType().equals(UIInstance.UIT_SWT) ){
 
-							// We have our own config model :)
-
-						configModel.destroy();
-
 						try{
-							swt_ui = (UIAdapter)Class.forName("com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.StartStopRulesDefaultPluginSWTUI").getConstructor(
-									new Class[]{ PluginInterface.class }).newInstance(
-											new Object[]{ pi } );
+							swt_ui = (UIAdapter)Class.forName("com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.StartStopRulesDefaultPluginSWTUI").newInstance();
 
 						}catch( Throwable e ){
 
@@ -361,164 +352,6 @@ public class StartStopRulesDefaultPlugin implements Plugin,
 			Debug.printStackTrace(e);
 		}
 		reloadConfigParams();
-	}
-
-	/**
-	 * @param configModel
-	 *
-	 */
-	private void setupConfigModel(BasicPluginConfigModel configModel) {
-		String PREFIX_RES = "ConfigView.label.seeding.";
-
-		configModel.addIntParameter2(
-				"StartStopManager_iRankType",
-				"ConfigView.label.seeding.rankType",
-				StartStopRulesDefaultPlugin.RANK_SPRATIO);
-		configModel.addIntParameter2("StartStopManager_iRankTypeSeedFallback",
-				"ConfigView.label.seeding.rankType.seed.fallback", 0);
-		configModel.addIntParameter2("StartStopManager_iTimed_MinSeedingTimeWithPeers",
-				"ConfigView.label.seeding.rankType.timed.minTimeWithPeers", 0);
-
-		configModel.addBooleanParameter2("StartStopManager_bAutoReposition",
-				"ConfigView.label.seeding.autoReposition", false);
-		configModel.addIntParameter2("StartStopManager_iMinSeedingTime",
-				"ConfigView.label.minSeedingTime", 60 * 10);
-
-		// ignore rules subsection
-		// ---------
-		configModel.addBooleanParameter2("StartStopManager_bIgnore0Peers",
-				"ConfigView.label.seeding.ignore0Peers", true);
-		configModel.addIntParameter2("StartStopManager_iIgnoreSeedCount",
-				"ConfigView.label.ignoreSeeds", 0);
-
-		// for "Stop Peers Ratio" ignore rule
-		configModel.addIntParameter2("StartStopManager_iIgnoreRatioPeersSeedStart",
-				"ConfigView.label.seeding.fakeFullCopySeedStart", 0);
-
-		// for "Stop Ratio" ignore rule
-		configModel.addIntParameter2("StartStopManager_iIgnoreShareRatioSeedStart",
-				"ConfigView.label.seeding.fakeFullCopySeedStart", 0);
-
-		// Auto Starting
-		// ---------
-		configModel.addBooleanParameter2("StartStopManager_bPreferLargerSwarms",
-				"ConfigView.label.seeding.preferLargerSwarms", true);
-		configModel.addBooleanParameter2("StartStopManager_bAutoStart0Peers",
-				"ConfigView.label.seeding.autoStart0Peers", false);
-		configModel.addIntParameter2("StartStopManager_iMinPeersToBoostNoSeeds",
-				"ConfigView.label.minPeersToBoostNoSeeds", 1);
-
-		// queue section
-		// ---------
-
-		configModel.addBooleanParameter2("StartStopManager_bMaxDownloadIgnoreChecking",
-				"ConfigView.label.ignoreChecking", false);
-
-		configModel.addBooleanParameter2("StartStopManager_bMaxMinDLLinked",
-				"ConfigView.label.maxmindownloadlinked", false);
-
-		configModel.addIntParameter2("StartStopManager_iMinSpeedForActiveDL",
-				"ConfigView.label.minSpeedForActiveDL", 512);
-		configModel.addIntParameter2("StartStopManager_iMinSpeedForActiveSeeding",
-				"ConfigView.label.minSpeedForActiveSeeding", 512);
-		configModel.addIntParameter2("StartStopManager_iMaxStalledSeeding",
-				"ConfigView.label.maxStalledSeeding", 5);
-		configModel.addBooleanParameter2("StartStopManager_bMaxStalledSeedingIgnoreZP",
-				"ConfigView.label.maxStalledSeedingIgnoreZP", true);
-
-
-		configModel.addBooleanParameter2("StartStopManager_bDebugLog",
-				"ConfigView.label.queue.debuglog", false);
-		configModel.addBooleanParameter2("StartStopManager_bNewSeedsMoveTop",
-				"ConfigView.label.queue.newseedsmovetop", true);
-		configModel.addBooleanParameter2("StartStopManager_bRetainForceStartWhenComplete",
-				"ConfigView.label.queue.retainforce", false);
-
-		configModel.addIntParameter2(
-				"StartStopManager_iMaxActiveTorrentsWhenSeeding",
-				"ConfigView.label.queue.maxactivetorrentswhenseeding", 0);
-		configModel.addBooleanParameter2(
-				"StartStopManager_bMaxActiveTorrentsWhenSeedingEnabled",
-				"ConfigView.label.queue.maxactivetorrentswhenseeding", false);
-
-		configModel.addBooleanParameter2(
-				"StartStopManager_bStopOnceBandwidthMet",
-				"ConfigView.label.queue.stoponcebandwidthmet", true);
-
-		// first Priority subsection
-		// ---------
-		configModel.addIntParameter2("StartStopManager_iFirstPriority_Type",
-				"ConfigView.label.seeding.firstPriority",
-				DefaultRankCalculator.FIRSTPRIORITY_ANY);
-
-		configModel.addIntParameter2("StartStopManager_iFirstPriority_ShareRatio",
-				"ConfigView.label.seeding.firstPriority.shareRatio", 500);
-
-		configModel.addIntParameter2(
-				"StartStopManager_iFirstPriority_SeedingMinutes",
-				"ConfigView.label.seeding.firstPriority.seedingMinutes", 0);
-
-		configModel.addIntParameter2("StartStopManager_iFirstPriority_DLMinutes",
-				"ConfigView.label.seeding.firstPriority.DLMinutes", 0);
-
-		// for ignore FP rules
-		configModel.addIntParameter2(
-				"StartStopManager_iFirstPriority_ignoreSPRatio",
-				"ConfigView.label.seeding.firstPriority.ignoreSPRatio", 0);
-
-		configModel.addBooleanParameter2(
-				"StartStopManager_bFirstPriority_ignore0Peer",
-				"ConfigView.label.seeding.firstPriority.ignore0Peer",
-				!COConfigurationManager.getStringParameter("ui", "").equals("az2"));
-
-		configModel.addIntParameter2(
-				"StartStopManager_iFirstPriority_ignoreIdleHours",
-				"ConfigView.label.seeding.firstPriority.ignoreIdleHours", 24);
-
-		configModel.addBooleanParameter2(
-				"StartStopManager_bTagFirstPriority",
-				"ConfigView.label.queue.tagfirstpriority", false );
-
-		
-		// seeding subsection
-
-		configModel.addIntParameter2("StartStopManager_iAddForSeedingDLCopyCount",
-				"ConfigView.label.seeding.addForSeedingDLCopyCount", 1);
-
-		configModel.addIntParameter2("StartStopManager_iNumPeersAsFullCopy",
-				PREFIX_RES + "numPeersAsFullCopy", 0);
-		configModel.addIntParameter2("StartStopManager_iFakeFullCopySeedStart",
-				PREFIX_RES + "fakeFullCopySeedStart", 1);
-
-		configModel.addBooleanParameter2("StartStopManager_bStartNoMoreSeedsWhenUpLimitMet",
-				"ConfigView.label.seeding.StartStopManager_bStartNoMoreSeedsWhenUpLimitMet", false);
-
-		configModel.addBooleanParameter2("StartStopManager_bStartNoMoreSeedsWhenUpLimitMetPercent",
-				"ConfigView.label.seeding.bStartNoMoreSeedsWhenUpLimitMetPercent", true);
-
-		configModel.addIntParameter2("StartStopManager_bStartNoMoreSeedsWhenUpLimitMetSlack",
-				"ConfigView.label.seeding.bStartNoMoreSeedsWhenUpLimitMetSlack", 95);
-
-		// downloading subsection
-
-		PREFIX_RES = "ConfigView.label.downloading.";
-
-		configModel.addIntParameter2("StartStopManager_Downloading_iSortType",
-				"ConfigView.label.downloading.autoReposition", DefaultRankCalculator.DOWNLOAD_ORDER_INDEX );
-
-		configModel.addBooleanParameter2("StartStopManager_bAddForDownloadingSR1",
-				"ConfigView.label.downloading.addsr1", true);
-		
-		configModel.addIntParameter2("StartStopManager_Downloading_iTestTimeSecs",
-				PREFIX_RES + "testTime", 120 );
-
-		configModel.addIntParameter2("StartStopManager_Downloading_iRetestTimeMins",
-				PREFIX_RES + "reTest", 30 );
-
-		configModel.addBooleanParameter2("StartStopManager_Downloading_bTestActive",
-				PREFIX_RES + "testActive", false );
-
-		configModel.destroy();
 	}
 
 	public static DefaultRankCalculator getRankCalculator(Download dl) {

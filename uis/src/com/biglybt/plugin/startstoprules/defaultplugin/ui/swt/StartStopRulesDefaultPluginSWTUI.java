@@ -42,16 +42,6 @@ public class
 StartStopRulesDefaultPluginSWTUI
 	implements StartStopRulesDefaultPlugin.UIAdapter
 {
-	public StartStopRulesDefaultPluginSWTUI(PluginInterface pi) {
-		ConfigSectionRepository csrep = ConfigSectionRepository.getInstance();
-		csrep.addConfigSection(new ConfigSectionQueue(), pi);
-		csrep.addConfigSection(new ConfigSectionDownloading(), pi);
-		csrep.addConfigSection(new ConfigSectionSeeding(), pi);
-		csrep.addConfigSection(new ConfigSectionSeedingAutoStarting(), pi);
-		csrep.addConfigSection(new ConfigSectionSeedingFirstPriority(), pi);
-		csrep.addConfigSection(new ConfigSectionSeedingIgnore(), pi);
-	}
-
 	@Override
 	public void openDebugWindow(final DefaultRankCalculator dlData) {
 		final Shell shell = new Shell(Display.getCurrent(), SWT.ON_TOP
