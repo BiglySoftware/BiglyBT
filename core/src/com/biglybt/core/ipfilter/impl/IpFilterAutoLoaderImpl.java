@@ -355,7 +355,10 @@ public class IpFilterAutoLoaderImpl
 					if (largestPos < 0) {
 						return;
 					}
-					bin.reset();
+					bin.close();
+					fin.close();
+					fin = new FileInputStream(filtersFile);
+					bin = new BufferedInputStream(fin, 16384);
 					zip = new ZipInputStream(bin);
 					for (int i = 0; i < largestPos; i++) {
 						zip.getNextEntry();
