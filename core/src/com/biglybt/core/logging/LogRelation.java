@@ -56,17 +56,17 @@ public class LogRelation {
 	}
 
 	public final Object queryForClass(Class c) {
-		return queryForClass(c, getQueryableInterfaces());
+		return queryForClass(c, getQueryableInterfaces(), new HashSet<>());
 	}
 
-	private boolean running = false;
-
-	protected final Object queryForClass(Class c, Object[] queryObjects) {
+	private Object queryForClass(Class c, Object[] queryObjects,
+			HashSet<LogRelation> stack) {
+		boolean running = stack.contains(this);
 		if (running || queryObjects == null)
 			return null;
 
 		try {
-			running = true;
+			stack.add(this);
 
 			if (c.isInstance(this))
 				return this;
@@ -81,7 +81,7 @@ public class LogRelation {
 			for (int i = 0; i < queryObjects.length; i++) {
 				if (queryObjects[i] instanceof LogRelation) {
 					Object obj = ((LogRelation) queryObjects[i]).queryForClass(c,
-							((LogRelation) queryObjects[i]).getQueryableInterfaces());
+							((LogRelation) queryObjects[i]).getQueryableInterfaces(), stack);
 					if (obj != null)
 						return obj;
 				}
@@ -89,7 +89,7 @@ public class LogRelation {
 
 			return null;
 		} finally {
-			running = false;
+			stack.remove(this);
 		}
 	}
 }
