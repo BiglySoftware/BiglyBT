@@ -21,6 +21,7 @@
 package com.biglybt.pif.ui.config;
 
 import com.biglybt.pif.config.ConfigParameter;
+import com.biglybt.pif.config.ConfigParameterListener;
 
 /**
  * represents a generic parameter description
@@ -200,6 +201,14 @@ Parameter
 
 	public String getConfigKeyName();
 
+	/**
+	 * Indicates if a value has been set for the parameter.  If no value has
+	 * been set, the default value will be used.
+	 * <p/>
+	 * To capture a "reset to default" event, you can {@link #addListener(ParameterListener)} or
+	 * {@link #addConfigParameterListener(ConfigParameterListener)}, and check
+	 * if hasBeenSet is false.
+	 */
 	public boolean
 	hasBeenSet();
 
@@ -208,4 +217,11 @@ Parameter
 	 * @since BiglyBT 1.9.0.1
 	 */
 	void setIndent(int indent, boolean fancy);
+
+	/**
+	 * Resets the parameter to its default value
+	 * 
+	 * @return true - value was reset; false - already reset
+	 */
+	boolean resetToDefault();
 }

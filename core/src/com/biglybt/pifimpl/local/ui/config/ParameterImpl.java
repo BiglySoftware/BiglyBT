@@ -507,6 +507,7 @@ ParameterImpl
 		return Arrays.binarySearch(allowedUiTypes, uiType) >= 0;
 	}
 
+	@Override
 	public boolean resetToDefault() {
 		if (configKey == null) {
 			return false;
