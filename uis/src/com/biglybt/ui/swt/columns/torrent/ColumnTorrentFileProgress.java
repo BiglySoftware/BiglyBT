@@ -18,7 +18,7 @@
 
 package com.biglybt.ui.swt.columns.torrent;
 
-import java.util.Arrays;
+import java.util.Collections;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
@@ -253,9 +253,7 @@ public class ColumnTorrentFileProgress
 					@Override
 					public void handleEvent(Event event) {
 						FilesViewMenuUtil.changePriority(FilesViewMenuUtil.PRIORITY_HIGH,
-								Arrays.asList(new DiskManagerFileInfo[] {
-										fileInfo
-								}));
+								Collections.singletonList(fileInfo));
 					}
 				});
 				itemHigh.setSelection(fileInfo.getPriority() != 0);
@@ -266,9 +264,7 @@ public class ColumnTorrentFileProgress
 					@Override
 					public void handleEvent(Event event) {
 						FilesViewMenuUtil.changePriority(FilesViewMenuUtil.PRIORITY_NORMAL,
-								Arrays.asList(new DiskManagerFileInfo[] {
-										fileInfo
-								}));
+								Collections.singletonList(fileInfo));
 					}
 				});
 				itemNormal.setSelection(fileInfo.getPriority() == 0);
@@ -284,9 +280,7 @@ public class ColumnTorrentFileProgress
 					public void handleEvent(Event event) {
 						FilesViewMenuUtil.changePriority(
 								FilesViewMenuUtil.PRIORITY_SKIPPED,
-								Arrays.asList(new DiskManagerFileInfo[] {
-										fileInfo
-								}));
+								Collections.singletonList(fileInfo));
 					}
 				});
 				itemStop.setEnabled(!canStart);
@@ -301,9 +295,7 @@ public class ColumnTorrentFileProgress
 						}
 
 						FilesViewMenuUtil.changePriority(FilesViewMenuUtil.PRIORITY_NORMAL,
-								Arrays.asList(new DiskManagerFileInfo[] {
-										fileInfo
-								}));
+								Collections.singletonList(fileInfo));
 					}
 				});
 				itemStart.setEnabled(canStart);
@@ -316,9 +308,7 @@ public class ColumnTorrentFileProgress
 					@Override
 					public void handleEvent(Event event) {
 						FilesViewMenuUtil.changePriority(FilesViewMenuUtil.PRIORITY_DELETE,
-								Arrays.asList(new DiskManagerFileInfo[] {
-										fileInfo
-								}));
+								Collections.singletonList(fileInfo));
 					}
 				});
 

@@ -20,8 +20,11 @@
 
 package com.biglybt.ui.swt.pifimpl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -137,7 +140,7 @@ BasicPluginViewImpl
 				{
 					String id = model.getPluginInterface().getPluginID() + "/" + model.getName();
 					
-					return( Arrays.asList( id ));
+					return Collections.singletonList(id);
 				}
 			});
 	}

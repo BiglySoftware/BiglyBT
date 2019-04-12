@@ -19,14 +19,11 @@
  */
 package com.biglybt.ui.swt.views;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-
-import org.eclipse.swt.widgets.Menu;
 
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.tag.Tag;
@@ -35,7 +32,6 @@ import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.ui.common.table.TableView;
-
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
@@ -88,7 +84,7 @@ PeersGeneralView
 				public List<Object>
 				getParameters()
 				{
-					return( Arrays.asList( tag.getTagUID()));
+					return Collections.singletonList(tag.getTagUID());
 				}
 			});
 	}
