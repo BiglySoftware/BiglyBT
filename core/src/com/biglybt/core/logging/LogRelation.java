@@ -22,6 +22,8 @@
 
 package com.biglybt.core.logging;
 
+import java.util.HashSet;
+
 /**
  * @author TuxPaper
  *
