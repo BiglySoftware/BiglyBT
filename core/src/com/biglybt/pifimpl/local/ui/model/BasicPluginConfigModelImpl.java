@@ -388,6 +388,7 @@ BasicPluginConfigModelImpl
 		com.biglybt.pif.ui.config.Parameter[]	_parameters )
 	{
 		ParameterGroupImpl	pg = new ParameterGroupImpl( _resource_name, _parameters );
+		parameters.add(pg);
 
 		return( pg );
 	}
