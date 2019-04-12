@@ -118,6 +118,15 @@ public class IntParameterImpl
 		return storedAsString;
 	}
 
+	/**
+	 * Note: We can't easily propogate this to {@link IntParameter}, because
+	 * {@link com.biglybt.pif.ui.model.BasicPluginConfigModel#addIntParameter2(String, String, int)}
+	 * sets the default value to int before setStoredAsString can be called. This
+	 * introducing a window where retrieving the parameter value may cause a cast
+	 * error.
+	 * <p/>
+	 * Plus, we don't want to encourage plugins to store ints as strings.
+	 */
 	public void setStoredAsString(boolean storedAsString, int valueWhenBlank) {
 		this.storedAsString = storedAsString;
 		this.valueWhenBlank = valueWhenBlank;
