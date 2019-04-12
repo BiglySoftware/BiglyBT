@@ -21,10 +21,16 @@
 package com.biglybt.ui.swt.views.utils;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import com.biglybt.pif.ui.UIInstance;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -50,10 +56,10 @@ import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
 import com.biglybt.ui.UIFunctions;
@@ -1172,7 +1178,7 @@ public class TagUIUtils
 			itemExport.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					export( Arrays.asList( tag));
+					export( Collections.singletonList(tag));
 				}
 			});
 		}

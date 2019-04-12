@@ -547,7 +547,7 @@ DeviceImpl
 			return( Collections.EMPTY_LIST );
 		}
 		
-		return( Arrays.asList( image_id ));
+		return Collections.singletonList(image_id);
 	}
 	
 	@Override

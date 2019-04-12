@@ -25,7 +25,6 @@ import java.applet.AudioClip;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -198,7 +197,7 @@ BuddyPluginView
 				public List<Object>
 				getParameters()
 				{
-					return( Arrays.asList( VIEW_ID ));
+					return Collections.singletonList(VIEW_ID);
 				}
 			});
 	}

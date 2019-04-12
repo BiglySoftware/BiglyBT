@@ -19,11 +19,17 @@
  */
 package com.biglybt.ui.swt.views;
 
-
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
@@ -222,7 +228,7 @@ public class FilesView
 				public List<Object>
 				getParameters()
 				{
-					return( Arrays.asList(  allowTabViews  ));
+					return Collections.singletonList(allowTabViews);
 				}
 			});
 	}
