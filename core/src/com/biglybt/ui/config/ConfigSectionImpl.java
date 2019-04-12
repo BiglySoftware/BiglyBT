@@ -175,6 +175,9 @@ public abstract class ConfigSectionImpl
 				name = ((ParameterGroupImpl) param).getResourceName();
 				if (name == null || name.isEmpty()) {
 					name = param.getLabelKey();
+					if (name == null || name.isEmpty()) {
+						name = param.toString();
+					}
 				}
 			} else if (param instanceof UIParameterImpl) {
 				name = param.toString();
