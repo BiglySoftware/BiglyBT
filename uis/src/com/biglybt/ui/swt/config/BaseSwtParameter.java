@@ -533,6 +533,11 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 
 	@Override
 	public void setVisible(boolean visible) {
+		if (DEBUG && !Thread.currentThread().getName().startsWith(
+			Utils.THREAD_NAME_OFFSWT)) {
+			debug("setVisible " + visible);
+		}
+
 		if (Utils.runIfNotSWTThread(() -> setVisible(visible))) {
 			return;
 		}
