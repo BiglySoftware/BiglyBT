@@ -27,6 +27,7 @@ import com.biglybt.pifimpl.local.ui.config.ActionParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.widgets.ButtonWithMinWidth;
 
 import com.biglybt.pif.ui.config.ActionParameter;
 
@@ -55,7 +56,7 @@ public class ButtonSwtParameter
 
 		createStandardLabel(composite, labelKey);
 
-		button = new Button(composite, SWT.PUSH);
+		button = new ButtonWithMinWidth(composite, SWT.PUSH, 40);
 		setMainControl(button);
 
 		Messages.setLanguageText(button, buttonTextKey);

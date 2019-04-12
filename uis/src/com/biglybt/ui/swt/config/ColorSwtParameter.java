@@ -43,6 +43,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.utils.ColorCache;
 import com.biglybt.ui.swt.utils.FontUtils;
+import com.biglybt.ui.swt.widgets.ButtonWithMinWidth;
 
 import com.biglybt.pif.ui.config.ColorParameter;
 import com.biglybt.pif.ui.config.Parameter;
@@ -103,7 +104,7 @@ public class ColorSwtParameter
 			}
 		}
 
-		colorChooser = new ButtonWithMinWidth(parent);
+		colorChooser = new ButtonWithMinWidth(parent, SWT.PUSH, 40);
 		setMainControl(colorChooser);
 
 		if (doGridData(composite)) {
@@ -377,23 +378,4 @@ public class ColorSwtParameter
 
 	}
 
-	private static class ButtonWithMinWidth extends Button {
-		public ButtonWithMinWidth(Composite parent) {
-			super(parent, SWT.PUSH);
-		}
-
-		@SuppressWarnings("MethodDoesntCallSuperMethod")
-		@Override
-		protected void checkSubclass() {
-		}
-
-		@Override
-		public Point computeSize(int wHint, int hHint, boolean changed) {
-			Point point = super.computeSize(wHint, hHint, changed);
-			if (point.x > 0 && point.x < 40) {
-				point.x = 40;
-			}
-			return point;
-		}
-	}
 }
