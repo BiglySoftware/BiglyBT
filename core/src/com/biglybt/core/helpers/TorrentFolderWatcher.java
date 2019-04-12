@@ -148,11 +148,6 @@ public class TorrentFolderWatcher {
 							break;
 						}
 
-						if ( remaining < 250 ){
-
-							remaining = 250;
-						}
-
 						wait_sem.reserve( remaining );
 					}
 
