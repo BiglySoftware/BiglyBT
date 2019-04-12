@@ -303,10 +303,11 @@ BasicPluginConfigModel
 	 *
 	 * @since Azureus 2.3.0.0
 	 */
+	// Note: Up until BiglyBT 1.9.0.0, parameters was Parameter[]. varargs generate the same signature
 	public ParameterGroup
 	createGroup(
 		String		resource_name,
-		Parameter[]	parameters );
+		Parameter...	parameters );
 
 	/**
 	 * @since 5601
