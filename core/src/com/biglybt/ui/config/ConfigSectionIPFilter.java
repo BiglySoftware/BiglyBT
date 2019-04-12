@@ -29,6 +29,7 @@ import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManager;
 import com.biglybt.core.ipfilter.impl.IpFilterAutoLoaderImpl;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -151,7 +152,13 @@ public class ConfigSectionIPFilter
 			COConfigurationManager.setParameter(
 					IpFilterAutoLoaderImpl.CFG_AUTOLOAD_LAST, 0);
 			try {
-				filter.reloadSync();
+				if (UrlUtils.isURL(pathParameter.getValue())) {
+					// Note: We don't have a way to detect when async is done, sot the
+					// button disabling sucks
+					filter.reload();
+				} else {
+					filter.reloadSync();
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
