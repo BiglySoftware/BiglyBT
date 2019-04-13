@@ -90,8 +90,7 @@ PeerControlSchedulerPrioritised
 						}
 					}
 
-					for (int i=0;i<pending_registrations.size();i++)
-						instances.add( pending_registrations.get(i));
+					instances.addAll(pending_registrations);
 
 					pending_registrations.clear();
 

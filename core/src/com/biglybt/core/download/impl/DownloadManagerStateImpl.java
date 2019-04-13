@@ -1742,19 +1742,15 @@ DownloadManagerStateImpl
 	      boolean enabled) {
 	    List	values = getListAttributeSupport( AT_NETWORKS );
 	    boolean alreadyEnabled = values.contains(network);
-	    List	l = new ArrayList();
 
 	    if(enabled && !alreadyEnabled) {
-	      for (int i=0;i<values.size();i++){
-	        l.add(values.get(i));
-	      }
+	    	List<String> l = new ArrayList<>(values.size() + 1);
+		    l.addAll(values);
 	      l.add(network);
 	      setListAttribute( AT_NETWORKS, l );
 	    }
 	    if(!enabled && alreadyEnabled) {
-	      for (int i=0;i<values.size();i++){
-	        l.add(values.get(i));
-	      }
+		    List<String> l = new ArrayList<>(values);
 	      l.remove(network);
 	      setListAttribute( AT_NETWORKS, l );
 	    }
@@ -1929,22 +1925,16 @@ DownloadManagerStateImpl
 		  }
 
 		  List	values = getListAttributeSupport( AT_PEER_SOURCES );
-
 		  boolean alreadyEnabled = values.contains(source);
 
-		  List	l = new ArrayList();
-
 		  if(enabled && !alreadyEnabled) {
-		    for (int i=0;i<values.size();i++){
-		      l.add(values.get(i));
-		    }
+			  List<String> l = new ArrayList<>(values.size() + 1);
+			  l.addAll(values);
 		    l.add(source);
 		    setListAttribute( AT_PEER_SOURCES, l );
 		  }
 		  if(!enabled && alreadyEnabled) {
-		    for (int i=0;i<values.size();i++){
-		      l.add(values.get(i));
-		    }
+			  List<String> l = new ArrayList<>(values);
 		    l.remove(source);
 		    setListAttribute( AT_PEER_SOURCES, l );
 		  }

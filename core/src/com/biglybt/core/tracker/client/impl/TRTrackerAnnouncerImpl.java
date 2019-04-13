@@ -492,10 +492,7 @@ TRTrackerAnnouncerImpl
 						"TRTrackerClient: merged peer sets: p1 = " + peers.size()
 								+ ", p2 = " + p2.size()));
 
-			for (int i=0;i<p2.size();i++){
-
-				peers.add( p2.get( i ));
-			}
+			peers.addAll(p2);
 		}
 
 		res.put( "tracker_peers", peers );
