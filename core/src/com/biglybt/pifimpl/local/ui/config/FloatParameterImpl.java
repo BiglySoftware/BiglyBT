@@ -70,7 +70,7 @@ public class FloatParameterImpl
 
 	@Override
 	public float getValue() {
-		return COConfigurationManager.getIntParameter(configKey);
+		return COConfigurationManager.getFloatParameter(configKey);
 	}
 
 	@Override
