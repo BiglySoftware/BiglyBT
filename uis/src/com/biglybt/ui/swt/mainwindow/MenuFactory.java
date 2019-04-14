@@ -2396,7 +2396,7 @@ public class MenuFactory
 		return addMenuItem(menu, MENU_ID_COMMUNITY_WIKI, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				Utils.launch(Constants.AZUREUS_WIKI);
+				Utils.launch(Constants.URL_WIKI);
 			}
 		});
 	}

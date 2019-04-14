@@ -81,7 +81,7 @@ public class ConfigSectionFilePerformance
 				"ConfigView.section.file.perf.cache.size.explain", new String[]{
 						DisplayFormatters.formatByteCountToKiBEtc(mb_32),
 						DisplayFormatters.formatByteCountToKiBEtc(max_mem_bytes),
-						Constants.AZUREUS_WIKI
+						Constants.URL_WIKI
 				}));
 
 		// don't cache smaller than
