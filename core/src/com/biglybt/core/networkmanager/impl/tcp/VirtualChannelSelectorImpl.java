@@ -320,27 +320,7 @@ public class VirtualChannelSelectorImpl {
       }
 
 
-      selector_guard = new SelectorGuard( type, new SelectorGuard.GuardListener() {
-        @Override
-        public boolean safeModeSelectEnabled() {
-          return parent.isSafeSelectionModeEnabled();
-        }
-
-        @Override
-        public void spinDetected() {
-          closeExistingSelector();
-          try {  Thread.sleep( 1000 );  }catch( Throwable x ) {x.printStackTrace();}
-          parent.enableSafeSelectionMode();
-        }
-
-        @Override
-        public void failureDetected() {
-          try {  Thread.sleep( 10000 );  }catch( Throwable x ) {x.printStackTrace();}
-          closeExistingSelector();
-          try {  Thread.sleep( 1000 );  }catch( Throwable x ) {x.printStackTrace();}
-          selector = openNewSelector();
-        }
-      });
+      selector_guard = new SelectorGuard( type);
 
       selector = openNewSelector();
     }
@@ -911,9 +891,7 @@ public class VirtualChannelSelectorImpl {
     	  }
       }
 
-      boolean	randy = randomise_keys;
-
-      if ( randy ){
+	    if (randomise_keys){
 
     	  Collections.shuffle( ready_keys );
       }

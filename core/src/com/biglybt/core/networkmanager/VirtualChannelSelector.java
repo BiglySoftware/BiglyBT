@@ -41,7 +41,7 @@ public class VirtualChannelSelector {
   public static final int OP_READ   = SelectionKey.OP_READ;
   public static final int OP_WRITE  = SelectionKey.OP_WRITE;
 
-  private boolean SAFE_SELECTOR_MODE_ENABLED = TEST_SAFE_MODE || COConfigurationManager.getBooleanParameter( "network.tcp.enable_safe_selector_mode" );
+  private boolean SAFE_SELECTOR_MODE_ENABLED = TEST_SAFE_MODE;
 
   private static final boolean TEST_SAFE_MODE	= false;
 
@@ -421,14 +421,6 @@ public class VirtualChannelSelector {
   }
 
   public boolean isSafeSelectionModeEnabled() {  return SAFE_SELECTOR_MODE_ENABLED;  }
-
-  public void enableSafeSelectionMode() {
-    if( !SAFE_SELECTOR_MODE_ENABLED ) {
-      SAFE_SELECTOR_MODE_ENABLED = true;
-      COConfigurationManager.setParameter( "network.tcp.enable_safe_selector_mode", true );
-      initSafeMode();
-    }
-  }
 
   public boolean
   selectSuccess(
