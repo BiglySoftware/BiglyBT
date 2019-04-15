@@ -32,9 +32,9 @@ import java.nio.channels.SocketChannel;
 
 public interface VirtualServerChannelSelector {
 
-  public void start();
+  public void startProcessing();
 
-  public void stop();
+  public void stopProcessing();
 
   public boolean isRunning();
 

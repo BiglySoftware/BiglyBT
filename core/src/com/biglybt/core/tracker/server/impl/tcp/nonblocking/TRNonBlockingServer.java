@@ -166,7 +166,7 @@ TRNonBlockingServer
 
 			accept_server = VirtualServerChannelSelectorFactory.createBlocking( address, 0, this );
 
-			accept_server.start();
+			accept_server.startProcessing();
 
 			if ( _port == 0 ){
 
@@ -657,7 +657,7 @@ TRNonBlockingServer
 	{
 		closed	= true;
 
-		accept_server.stop();
+		accept_server.stopProcessing();
 
 		destroySupport();
 	}

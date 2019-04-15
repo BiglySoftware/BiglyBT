@@ -95,7 +95,7 @@ VirtualNonBlockingServerChannelSelector
    *
    */
   @Override
-  public void start() {
+  public void startProcessing() {
   	try{
   		this_mon.enter();
 
@@ -150,7 +150,7 @@ VirtualNonBlockingServerChannelSelector
    * Stop the server.
    */
   @Override
-  public void stop() {
+  public void stopProcessing() {
   	try{
   		this_mon.enter();
 

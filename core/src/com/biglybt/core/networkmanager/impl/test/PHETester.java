@@ -68,7 +68,7 @@ PHETester
 						}
 					});
 
-		accept_server.start();
+		accept_server.startProcessing();
 
 		new Thread()
 		{

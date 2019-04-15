@@ -94,7 +94,7 @@ public class IncomingSocketChannelManager
         int port = COConfigurationManager.getIntParameter( port_config_key );
         if( port != tcp_listen_port ) {
         	tcp_listen_port = port;
-          restart();
+        	restartProcessing();
         }
       }
     });
@@ -102,7 +102,7 @@ public class IncomingSocketChannelManager
     COConfigurationManager.addParameterListener( port_enable_config_key, new ParameterListener() {
         @Override
         public void parameterChanged(String parameterName) {
-          restart();
+        	restartProcessing();
         }
       });
 
@@ -113,7 +113,7 @@ public class IncomingSocketChannelManager
         int size = COConfigurationManager.getIntParameter( "network.tcp.socket.SO_RCVBUF" );
         if( size != so_rcvbuf_size ) {
           so_rcvbuf_size = size;
-          restart();
+          restartProcessing();
         }
       }
     });
@@ -136,7 +136,7 @@ public class IncomingSocketChannelManager
 
 			        	default_bind_addresses = addresses;
 
-			        	restart();
+			        	restartProcessing();
 			        }
     			}
     		}
@@ -144,7 +144,7 @@ public class IncomingSocketChannelManager
 
 
     //start processing
-    start();
+    startProcessing();
 
 
     	//run a daemon thread to poll listen port for connectivity
@@ -195,7 +195,7 @@ public class IncomingSocketChannelManager
 										String error = t.getMessage() == null ? "<null>" : t.getMessage();
 										String msg = "Listen server socket on [" + inet_address + ": " + tcp_listen_port + "] does not appear to be accepting inbound connections.\n[" + error + "]\nAuto-repairing listen service....\n";
 										Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_WARNING, msg));
-										restart();
+										restartProcessing();
 										listenFailCounts[i] = 0;
 									}
 								}
@@ -236,7 +236,7 @@ public class IncomingSocketChannelManager
 	  explicit_bind_address 	= address;
 	  explicit_bind_address_set	= true;
 
-	  restart();
+	  restartProcessing();
   }
 
   public void
@@ -245,7 +245,7 @@ public class IncomingSocketChannelManager
 	  explicit_bind_address		= null;
 	  explicit_bind_address_set	= false;
 
-	  restart();
+	  restartProcessing();
   }
 
   protected InetAddress[]
@@ -374,7 +374,9 @@ public class IncomingSocketChannelManager
   private final VirtualServerChannelSelector.SelectListener selectListener = new TcpSelectListener();
 
 
-  private void start() {
+  private void 
+  startProcessing()
+  {  
 		try
 		{
 			this_mon.enter();
@@ -424,7 +426,7 @@ public class IncomingSocketChannelManager
 							serverSelector = VirtualServerChannelSelectorFactory.createBlocking(address, so_rcvbuf_size, selectListener);
 						else
 							serverSelector = VirtualServerChannelSelectorFactory.createNonBlocking(address, so_rcvbuf_size, selectListener);
-						serverSelector.start();
+						serverSelector.startProcessing();
 
 						tempSelectors.add(serverSelector);
 					}
@@ -495,28 +497,28 @@ public class IncomingSocketChannelManager
 	  return( last_non_local_connection_time );
   }
 
-	void restart() {
-		// Usually called because of config change (often from UI thread)
-		new AEThread2("Restart ISCM", true) {
-			@Override
-			public void run() {
-				try{
-					this_mon.enter();
+  void restartProcessing() {
+	  // Usually called because of config change (often from UI thread)
+	  new AEThread2("Restart ISCM", true) {
+		  @Override
+		  public void run() {
+			  try{
+				  this_mon.enter();
 
-					for(int i=0;i<serverSelectors.length;i++)
-						serverSelectors[i].stop();
-					serverSelectors = new VirtualServerChannelSelector[0];
-				}finally{
+				  for(int i=0;i<serverSelectors.length;i++)
+					  serverSelectors[i].stopProcessing();
+				  serverSelectors = new VirtualServerChannelSelector[0];
+			  }finally{
 
-					this_mon.exit();
-				}
+				  this_mon.exit();
+			  }
 
-				try{ Thread.sleep( 1000 );  }catch( Throwable t ) { t.printStackTrace();  }
+			  try{ Thread.sleep( 1000 );  }catch( Throwable t ) { t.printStackTrace();  }
 
-				start();
-			}
-		}.start();
-	}
+			  startProcessing();
+		  }
+	  }.start();
+  }
 
 
 
