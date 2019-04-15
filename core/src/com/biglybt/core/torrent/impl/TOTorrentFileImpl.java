@@ -357,8 +357,6 @@ TOTorrentFileImpl
 	}
 
 	/**
-	 * @return
-	 *
 	 * @since 4.1.0.5
 	 */
 	public Map serializeToMap() {
@@ -366,57 +364,41 @@ TOTorrentFileImpl
 
 		file_map.put( TOTorrentImpl.TK_LENGTH, new Long( getLength()));
 
-		List path = new ArrayList();
+		List<byte[]> path = new ArrayList<>();
 
 		file_map.put( TOTorrentImpl.TK_PATH, path );
 
 		byte[][]	path_comps = getPathComponentsBasic();
 
 		if (path_comps != null) {
-  		for (int j=0;j<path_comps.length;j++){
-
-  			path.add( path_comps[j]);
-  		}
+			Collections.addAll(path, path_comps);
 		}
 
 		if (path_comps != null && isUTF8()){
 
-			List utf8_path = new ArrayList();
+			List<byte[]> utf8_path = new ArrayList<>();
 
 			file_map.put( TOTorrentImpl.TK_PATH_UTF8, utf8_path );
 
-			for (int j=0;j<path_comps.length;j++){
+			Collections.addAll(utf8_path, path_comps);
 
-				utf8_path.add( path_comps[j]);
-			}
 		} else {
 
 			byte[][]	utf8_path_comps = getPathComponentsUTF8();
 
 			if (utf8_path_comps != null) {
-  			List utf8_path = new ArrayList();
+  			List<byte[]> utf8_path = new ArrayList<>();
 
   			file_map.put( TOTorrentImpl.TK_PATH_UTF8, utf8_path );
 
-  			for (int j=0;j<utf8_path_comps.length;j++){
-
-  				utf8_path.add( utf8_path_comps[j]);
-  			}
+  			Collections.addAll(utf8_path, utf8_path_comps);
 			}
 		}
 
 		Map file_additional_properties = getAdditionalProperties();
 
 		if ( file_additional_properties != null ){
-
-			Iterator prop_it = file_additional_properties.keySet().iterator();
-
-			while( prop_it.hasNext()){
-
-				String	key = (String)prop_it.next();
-
-				file_map.put( key, file_additional_properties.get( key ));
-			}
+			file_map.putAll(file_additional_properties);
 		}
 
 		return file_map;

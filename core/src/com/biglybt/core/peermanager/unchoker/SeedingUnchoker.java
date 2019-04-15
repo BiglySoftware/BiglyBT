@@ -207,9 +207,7 @@ public class SeedingUnchoker implements Unchoker {
         }
       }
 
-      for( int i=0; i < to_unchoke.size(); i++ ) {
-        unchokes.add( to_unchoke.get( i ) );
-      }
+	    unchokes.addAll(to_unchoke);
 
     }
 

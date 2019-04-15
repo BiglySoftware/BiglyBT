@@ -1804,10 +1804,7 @@ TRTrackerServerTorrentImpl
 					}
 				}
 
-				for (int i=0;i<added.size();i++){
-
-					queued_peers.add( added.get(i));
-				}
+				queued_peers.addAll( added);
 			}
 
 			Map	root = new TreeMap();	// user TreeMap to pre-sort so encoding quicker
