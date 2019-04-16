@@ -42,12 +42,12 @@ BiglyBT comes in several editions for different operating systems.
 Mac OSX, Linux and Windows uses the full BiglyBT-API based on Java 8.
 
 Android edition is based on Java 8, but is limited to the minimum Android SDK version in use.
-BiglyBT-API for Android is maintained on a dedicated branch [`andriod`](https://github.com/BiglySoftware/BiglyBT/tree/android).
-This api is consumed by the [BiglyBT-Andriod](https://github.com/BiglySoftware/BiglyBT-Android) project.
+BiglyBT-API for Android is maintained on a dedicated branch [`android`](https://github.com/BiglySoftware/BiglyBT/tree/android).
+This api is consumed by the [BiglyBT-Android](https://github.com/BiglySoftware/BiglyBT-Android) project.
 
 For code portability and easy merging it is strongly advised to use JDK features only
 covered by the minimum Android SDK level. 
-The currently minimum SDK level is `15` (Andriod 4.0.3 - Ice Cream Sandwich)
+The currently minimum SDK level is `15` (Android 4.0.3 - Ice Cream Sandwich)
 
 Generally, Android embraces the Java 7 API as well as a subset of Java 8 features.
 
