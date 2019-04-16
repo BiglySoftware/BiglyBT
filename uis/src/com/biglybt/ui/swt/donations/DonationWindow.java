@@ -311,28 +311,18 @@ public class DonationWindow
 
 		if ( !browser.isFake()){
 
-			SimpleTimer.addEvent("donation.pageload", SystemTime.getOffsetTime(15000),
-					new TimerEventPerformer() {
-						@Override
-						public void perform(TimerEvent event) {
-							if (!pageLoadedOk) {
-								Utils.execSWTThread(new AERunnable() {
-									@Override
-									public void runSupport() {
-										Debug.out("Page Didn't Load:" + url);
-										shell.dispose();
-										if (showNoLoad) {
-											new MessageBoxShell(SWT.OK,
-	  											MessageText.getString("DonationWindow.noload.title"),
-	  											MessageText.getString("DonationWindow.noload.text",
-															new String[] {
-																url
-															})).open(null);
-										}
-									}
-								});
-							}
+			SimpleTimer.addEvent("donation.pageload", SystemTime.getOffsetTime(5000),
+					event -> {
+						if (pageLoadedOk) {
+							return;
 						}
+						Utils.execSWTThread(() -> {
+							Debug.out("Page Didn't Load:" + url);
+							shell.dispose();
+							if (showNoLoad) {
+								Utils.launch(Constants.URL_DONATION);
+							}
+						});
 					});
 		}
 
