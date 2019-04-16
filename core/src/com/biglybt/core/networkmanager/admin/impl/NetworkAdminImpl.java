@@ -2039,55 +2039,65 @@ addressLoop:
 	public NetworkAdminSocksProxy[]
 	getSocksProxies()
 	{
-		String host = System.getProperty( "socksProxyHost", "" ).trim();
-		String port = System.getProperty( "socksProxyPort", "" ).trim();
+		boolean	enable_proxy 	= COConfigurationManager.getBooleanParameter("Enable.Proxy");
+	    boolean enable_socks	= COConfigurationManager.getBooleanParameter("Enable.SOCKS");
 
-		String user 		= System.getProperty("java.net.socks.username", "" ).trim();
-		String password 	= System.getProperty("java.net.socks.password", "").trim();
+		List<NetworkAdminSocksProxy>	res = new ArrayList<>();
 
-		List	res = new ArrayList();
-
-		NetworkAdminSocksProxyImpl	p1 = new NetworkAdminSocksProxyImpl( host, port, user, password );
-
-		if ( p1.isConfigured()){
-
-			res.add( p1 );
-		}
-
-			// add in the configured one in case not restarted (restart transfers to the above props)
+	    if ( enable_proxy && enable_socks ){
+	    	
+			String host = System.getProperty( "socksProxyHost", "" ).trim();
+			String port = System.getProperty( "socksProxyPort", "" ).trim();
+	
+			String user 		= System.getProperty("java.net.socks.username", "" ).trim();
+			String password 	= System.getProperty("java.net.socks.password", "").trim();
 		
-  		host = COConfigurationManager.getStringParameter("Proxy.Host");
-  		port = COConfigurationManager.getStringParameter("Proxy.Port");
-  		
-  		user = COConfigurationManager.getStringParameter("Proxy.Username");
-  		if ( user.trim().equalsIgnoreCase("<none>")){
-			user = "";
-		}
-  		password = COConfigurationManager.getStringParameter("Proxy.Password");
-
-		NetworkAdminSocksProxyImpl	p2 = new NetworkAdminSocksProxyImpl( host, port, user, password );
-
-		if ( p2.isConfigured()){
-
-			if ( !p1.isConfigured() || !p1.sameAs( p2 )){
-			
-				res.add( p2 );
+			NetworkAdminSocksProxyImpl	p1 = new NetworkAdminSocksProxyImpl( host, port, user, password );
+	
+			if ( p1.isConfigured()){
+	
+				res.add( p1 );
 			}
-		}
-		
+	
+				// add in the configured one in case not restarted (restart transfers to the above props)
+			
+	  		host = COConfigurationManager.getStringParameter("Proxy.Host");
+	  		port = COConfigurationManager.getStringParameter("Proxy.Port");
+	  		
+	  		user = COConfigurationManager.getStringParameter("Proxy.Username");
+	  		
+	  		if ( user.trim().equalsIgnoreCase("<none>")){
+				user = "";
+			}
+	  		
+	  		password = COConfigurationManager.getStringParameter("Proxy.Password");
+	
+			NetworkAdminSocksProxyImpl	p2 = new NetworkAdminSocksProxyImpl( host, port, user, password );
+	
+			if ( p2.isConfigured()){
+	
+				if ( !p1.isConfigured() || !p1.sameAs( p2 )){
+				
+					res.add( p2 );
+				}
+			}
+	    }
+	    
 		if ( 	COConfigurationManager.getBooleanParameter( "Proxy.Data.Enable" ) &&
 				!COConfigurationManager.getBooleanParameter( "Proxy.Data.Same" )){
 
 			for ( int i=1;i<=COConfigurationManager.MAX_DATA_SOCKS_PROXIES;i++){
+				
 				String suffix = i==1?"":("."+i);
-				host 	= COConfigurationManager.getStringParameter( "Proxy.Data.Host" + suffix );
-				port	= COConfigurationManager.getStringParameter( "Proxy.Data.Port" + suffix );
-				user	= COConfigurationManager.getStringParameter( "Proxy.Data.Username" + suffix );
+				
+				String host 	= COConfigurationManager.getStringParameter( "Proxy.Data.Host" + suffix );
+				String port		= COConfigurationManager.getStringParameter( "Proxy.Data.Port" + suffix );
+				String user	= COConfigurationManager.getStringParameter( "Proxy.Data.Username" + suffix );
 	
 				if ( user.trim().equalsIgnoreCase("<none>")){
 					user = "";
 				}
-				password = COConfigurationManager.getStringParameter( "Proxy.Data.Password" + suffix );
+				String password = COConfigurationManager.getStringParameter( "Proxy.Data.Password" + suffix );
 	
 				NetworkAdminSocksProxyImpl	pn = new NetworkAdminSocksProxyImpl( host, port, user, password );
 	
@@ -2098,7 +2108,7 @@ addressLoop:
 			}
 		}
 
-		return((NetworkAdminSocksProxy[])res.toArray(new NetworkAdminSocksProxy[res.size()]));
+		return(res.toArray(new NetworkAdminSocksProxy[res.size()]));
 	}
 
 	@Override
