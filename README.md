@@ -15,7 +15,7 @@ Getting the basics to compile from source is pretty straightforward:
 
 1. Clone the repo into your favorite IDE
 1. Mark `core/src` and `uis/src` as project roots (source modules)
-1. To the uis module, add `core/lib/*`, `uis/lib/log4j.jar` and one of the swt.jars at `/uis/lib/`:<br>
+1. To the uis module, add `core/lib/*` and one of the swt.jars at `/uis/lib/`:<br>
   `swt-win64.jar` on Windows<br>
   `swt-cocoa-64.jar` on OSX<br>
   `swt-linux-64.jar` on Linux (GTK)

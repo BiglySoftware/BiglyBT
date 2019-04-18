@@ -32,18 +32,12 @@ import java.util.Properties;
 import java.util.Vector;
 
 import com.biglybt.core.*;
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.varia.DenyAllFilter;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.torrentdownloader.TorrentDownloader;
-import com.biglybt.core.torrentdownloader.TorrentDownloaderCallBackInterface;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
 import com.biglybt.core.torrentdownloader.impl.TorrentDownloaderManager;
 import com.biglybt.core.util.Constants;
@@ -151,14 +145,6 @@ public class ConsoleInput extends Thread {
 		this.controlling 	= false;
 		this.br 			= new CommandReader( new InputStreamReader( new ByteArrayInputStream(new byte[0])));
 
-		if (Logger.getRootLogger().getAppender("ConsoleAppender")==null) {
-	      Appender app;
-	      app = new ConsoleAppender(new PatternLayout(PatternLayout.TTCC_CONVERSION_PATTERN));
-	      app.setName("ConsoleAppender");
-	      app.addFilter( new DenyAllFilter() );  //'log off' by default
-	      Logger.getRootLogger().addAppender(app);
-	    }
-
 		initialise();
 	}
 
@@ -256,7 +242,7 @@ public class ConsoleInput extends Thread {
 					super.TorrentDownloaderEvent(state, inf);
 				}
 			}
-		}, url, null, null, true);
+		}, url, null, null, null);
 		TorrentDownloaderManager.getInstance().add(downloader);
 	}
 
@@ -337,7 +323,6 @@ public class ConsoleInput extends Thread {
 		registerCommand(new TorrentPublish());
 		registerCommand(new TorrentForceStart());
 		registerCommand(new TorrentLog());
-		registerCommand(new Log());
 		registerCommand(new Move());
 		registerCommand(new RunState());
 		registerCommand(new Share());

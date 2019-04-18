@@ -20,11 +20,6 @@ import java.util.Locale;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.varia.DenyAllFilter;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreLifecycleAdapter;
@@ -59,23 +54,10 @@ public class UI
 	/*public UI() {
 	}*/
 
-	public static void initRootLogger() {
-		if (Logger.getRootLogger().getAppender("ConsoleAppender") == null) {
-			Appender app;
-			app = new ConsoleAppender(
-					new PatternLayout(PatternLayout.TTCC_CONVERSION_PATTERN));
-			app.setName("ConsoleAppender");
-			app.addFilter(new DenyAllFilter()); //'log off' by default
-			Logger.getRootLogger().addAppender(app);
-		}
-	}
-
 	@Override
 	public void init(boolean first, boolean others) {
 		super.init(first, others);
 		System.setProperty("java.awt.headless", "true");
-
-		initRootLogger();
 	}
 
 	public void buildCommandLine(Options options) {
@@ -130,15 +112,13 @@ public class UI
 							Thread.sleep(10);
 						}
 					} catch (java.io.FileNotFoundException e) {
-						Logger.getLogger("biglybt").error(
-								"Script file not found: " + e.toString());
+						System.err.println("Script file not found: " + e.toString());
 					} catch (Exception e) {
-						Logger.getLogger("biglybt").error(
-								"Error invocating the script processor: " + e.toString());
+						System.err.println("Error invocating the script processor: " + e.toString());
 					}
-				} else
-					Logger.getLogger("biglybt").error(
-							"ConsoleInput class not found. You need the console ui package to use '-e'");
+				} else {
+					System.err.println("ConsoleInput class not found. You need the console ui package to use '-e'");
+				}
 			}
 
 			if (commands.hasOption('c')) {
@@ -160,11 +140,11 @@ public class UI
 							Thread.sleep(10);
 						}
 					} catch (Exception e) {
-						Logger.getLogger("biglybt").error(
+						System.err.println(
 								"Error invocating the script processor: " + e.toString());
 					}
 				} else
-					Logger.getLogger("biglybt").error(
+					System.err.println(
 							"ConsoleInput class not found. You need the console ui package to use '-e'");
 			}
 
@@ -187,7 +167,7 @@ public class UI
 					
 					if ( f.isFile()){
 						
-						Logger.getLogger("biglybt").error( "--savepath value '" + f.getAbsolutePath() + "' is a file, ignoring ");
+						System.err.println( "--savepath value '" + f.getAbsolutePath() + "' is a file, ignoring ");
 						
 						save_path = null;
 					}
@@ -197,7 +177,7 @@ public class UI
 					
 					if ( !f.exists()){
 						
-						Logger.getLogger("biglybt").error( "--savepath value '" + f.getAbsolutePath() + "' can't be created, ignoring ");
+						System.err.println( "--savepath value '" + f.getAbsolutePath() + "' can't be created, ignoring ");
 
 						save_path = null;
 					}
@@ -214,7 +194,7 @@ public class UI
 				openTorrent(arg, save_path );
 			}
 		} else {
-			Logger.getLogger("biglybt").error("No commands to process");
+			System.err.println("No commands to process");
 		}
 
 		return args;
@@ -233,7 +213,17 @@ public class UI
 
 		UIConst.startTime = new Date();
 
-		Logger.getLogger("biglybt").fatal(
+		System.out.println();
+
+		// Unless a system property tells us not to, we'll take stdout and stderr offline.
+		if (!"on".equals(
+			System.getProperty(SystemProperties.SYSPROP_CONSOLE_NOISY))
+			&& isFirst()) {
+			com.biglybt.core.logging.Logger.allowLoggingToStdErr(false);
+		}
+
+
+		System.out.println(
 				Constants.APP_NAME + " started at " + temp.format(UIConst.startTime));
 
 		core.addLifecycleListener(new CoreLifecycleAdapter() {
@@ -247,7 +237,7 @@ public class UI
 			public void stopped(Core core) {
 				super.stopped(core);
 				SimpleDateFormat temp = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
-				Logger.getLogger("biglybt").fatal(
+				System.out.println(
 						Constants.APP_NAME + " stopped at " + temp.format(new Date()));
 
 			}
@@ -303,7 +293,7 @@ public class UI
 		} catch (UIException e) {
 			e.printStackTrace();
 		}
-		TorrentDownloaderFactory.initManager(core.getGlobalManager(), true, true );
+		TorrentDownloaderFactory.initManager(core.getGlobalManager(), true );
 
 		if (created_console && System.getProperty(
 				SystemProperties.SYSPROP_CONSOLE_MULTIUSER) != null) {
@@ -378,12 +368,12 @@ public class UI
 
 		try {
 			if (!TorrentUtils.isTorrentFile(fileName)) {//$NON-NLS-1$
-				Logger.getLogger("biglybt.ui.console").error(
+				System.err.println(
 						fileName + " doesn't seem to be a torrent file. Not added.");
 				return;
 			}
 		} catch (Exception e) {
-			Logger.getLogger("biglybt.ui.console").error("Something is wrong with "
+			System.err.println("Something is wrong with "
 					+ fileName + ". Not added. (Reason: " + e.getMessage() + ")");
 			return;
 		}
@@ -396,8 +386,7 @@ public class UI
 				}
 				core.getGlobalManager().addDownloadManager(fileName, downloadDir);
 			} catch (Exception e) {
-				Logger.getLogger("biglybt.ui.console").error(
-						"The torrent " + fileName + " could not be added.", e);
+				System.err.println("The torrent " + fileName + " could not be added. " + e);
 			}
 		}
 	}
