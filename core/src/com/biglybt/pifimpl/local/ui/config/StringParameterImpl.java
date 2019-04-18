@@ -149,4 +149,9 @@ public class StringParameterImpl
 		this.hintKey = text == null ? null : "!" + text + "!";
 		refreshControl();
 	}
+
+	@Override
+	public Object getValueObject() {
+		return getValue();
+	}
 }

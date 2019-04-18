@@ -140,4 +140,9 @@ UITextAreaImpl
 	{
 		text_area.removePropertyChangeListener(l);
 	}
+
+	@Override
+	public Object getValueObject() {
+		return getText();
+	}
 }

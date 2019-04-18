@@ -32,6 +32,7 @@ ActionParameterImpl
 	implements ActionParameter
 {
 	private String	action_resource;
+	private String actionID;
 	private int		style	= STYLE_BUTTON;
 
 	public ActionParameterImpl(String labelKey, String actionTextKey) {
@@ -61,10 +62,25 @@ ActionParameterImpl
 		style	= _style;
 	}
 
+
+	@Override
+	public Object getValueObject() {
+		return null;
+	}
+
 	@Override
 	public int
 	getStyle()
 	{
 		return( style );
+	}
+
+	@Override
+	public String getActionID() {
+		return actionID == null ? action_resource : actionID;
+	}
+
+	public void setActionID(String actionID) {
+		this.actionID = actionID;
 	}
 }

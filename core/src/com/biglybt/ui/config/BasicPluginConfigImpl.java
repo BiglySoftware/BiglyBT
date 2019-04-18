@@ -17,12 +17,11 @@
  *
  */
 
-package com.biglybt.ui.swt.pifimpl;
+package com.biglybt.ui.config;
 
 import java.lang.ref.WeakReference;
 
 import com.biglybt.pifimpl.local.ui.config.*;
-import com.biglybt.ui.config.ConfigSectionImpl;
 
 import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;

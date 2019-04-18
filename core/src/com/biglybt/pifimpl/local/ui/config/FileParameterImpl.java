@@ -52,6 +52,11 @@ public class FileParameterImpl
 		return COConfigurationManager.getStringParameter( getConfigKeyName());
 	}
 
+	@Override
+	public Object getValueObject() {
+		return getValue();
+	}
+
 	public String getFileNameHint() {
 		return fileNameHint;
 	}

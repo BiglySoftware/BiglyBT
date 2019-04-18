@@ -20,6 +20,7 @@
 package com.biglybt.pifimpl.local.ui;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.*;
 
@@ -27,17 +28,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.logging.LoggerChannel;
-import com.biglybt.pif.torrent.Torrent;
-import com.biglybt.pif.ui.*;
-import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pif.ui.model.BasicPluginConfigModel;
-import com.biglybt.pif.ui.model.BasicPluginViewModel;
-import com.biglybt.pif.ui.model.PluginConfigModel;
-import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository;
 import com.biglybt.pifimpl.local.ui.menus.MenuManagerImpl;
 import com.biglybt.pifimpl.local.ui.model.BasicPluginConfigModelImpl;
 import com.biglybt.pifimpl.local.ui.model.BasicPluginViewModelImpl;
@@ -46,9 +37,21 @@ import com.biglybt.ui.IUIIntializer;
 import com.biglybt.ui.common.UIInstanceBase;
 import com.biglybt.ui.common.table.impl.TableContextMenuManager;
 import com.biglybt.ui.common.util.MenuItemManager;
+import com.biglybt.ui.config.BasicPluginConfigImpl;
 import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentListener;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.logging.LoggerChannel;
+import com.biglybt.pif.torrent.Torrent;
+import com.biglybt.pif.ui.*;
+import com.biglybt.pif.ui.config.ConfigSection;
+import com.biglybt.pif.ui.menus.MenuManager;
+import com.biglybt.pif.ui.model.BasicPluginConfigModel;
+import com.biglybt.pif.ui.model.BasicPluginViewModel;
+import com.biglybt.pif.ui.model.PluginConfigModel;
+import com.biglybt.pif.ui.tables.TableManager;
 
 
 
@@ -71,7 +74,8 @@ UIManagerImpl
 
 	protected static List<UIInstanceFactory>		ui_factories		= new ArrayList<>();
 	protected static List<UIManagerEventAdapter>	ui_event_history	= new ArrayList<>();
-	protected static List<BasicPluginConfigModel>	configModels 		= new ArrayList<>();
+	private static Map<BasicPluginConfigModel, BasicPluginConfigImpl> 	config_view_map = new HashMap<>();
+
 
 
 	protected PluginInterface		pi;
@@ -136,14 +140,16 @@ UIManagerImpl
 		try{
   			class_mon.enter();
 
-			configModels.add(model);
+			BasicPluginConfigImpl view = new BasicPluginConfigImpl(new WeakReference<>(model));
+
+			config_view_map.put( model, view );
+
+			ConfigSectionRepository.getInstance().addConfigSection(view, model.getPluginInterface());
 
 		}finally{
 
 			class_mon.exit();
 		}
-
-		fireEvent( pi, UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_CREATED, model );
 
 		return( model );
 	}
@@ -155,14 +161,19 @@ UIManagerImpl
 		try{
   			class_mon.enter();
 
-			configModels.remove(model);
+			BasicPluginConfigImpl view = config_view_map.get( model );
+
+			if ( view != null ){
+
+				ConfigSectionRepository.getInstance().removeConfigSection(view);
+
+			}
 
 		}finally{
 
 			class_mon.exit();
 		}
 
-		fireEvent( pi, UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_DESTROYED, model );
 	}
 
 	@Override
@@ -172,7 +183,7 @@ UIManagerImpl
 		try{
   			class_mon.enter();
 
-			return (PluginConfigModel[]) configModels.toArray(new PluginConfigModel[0]);
+			return config_view_map.keySet().toArray(new PluginConfigModel[0]);
 
 		}finally{
 
@@ -603,8 +614,7 @@ UIManagerImpl
 
  			// some events need to be replayed when new UIs attach
 
- 		if ( 	type == UIManagerEvent.ET_PLUGIN_VIEW_MODEL_CREATED ||
- 				type == UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_CREATED) {
+ 		if ( 	type == UIManagerEvent.ET_PLUGIN_VIEW_MODEL_CREATED) {
 
  			delivered = true;
 
@@ -618,8 +628,7 @@ UIManagerImpl
  				class_mon.exit();
  			}
 
-		} else if (type == UIManagerEvent.ET_PLUGIN_VIEW_MODEL_DESTROYED
-				|| type == UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_DESTROYED) {
+		} else if (type == UIManagerEvent.ET_PLUGIN_VIEW_MODEL_DESTROYED) {
 
  				// remove any corresponding history events for creation of these entities
 
@@ -636,8 +645,7 @@ UIManagerImpl
 
 	 				int	e_type = e.getType();
 
-	 				if ( 	e_type == UIManagerEvent.ET_PLUGIN_VIEW_MODEL_CREATED ||
-	 		 				e_type == UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_CREATED){
+	 				if ( 	e_type == UIManagerEvent.ET_PLUGIN_VIEW_MODEL_CREATED){
 
 	 					if ( e.getData() == event.getData()){
 

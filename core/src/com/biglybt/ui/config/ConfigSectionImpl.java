@@ -19,25 +19,27 @@
 package com.biglybt.ui.config;
 
 import java.lang.ref.WeakReference;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Pattern;
 
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.logging.LogEvent;
+import com.biglybt.core.logging.LogIDs;
+import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.UIParameterImpl;
 
-import com.biglybt.pif.ui.config.ActionParameter;
-import com.biglybt.pif.ui.config.ConfigSection;
-import com.biglybt.pif.ui.config.HyperlinkParameter;
-import com.biglybt.pif.ui.config.Parameter;
+import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 
 public abstract class ConfigSectionImpl
 	implements BaseConfigSection
 {
+	public static final String L10N_SECTION_PREFIX = "ConfigView.section.";
+
 	public interface ConfigDetailsCallback
 	{
 		void run(Map<String, ParameterImpl> mapPluginParams);
@@ -187,15 +189,17 @@ public abstract class ConfigSectionImpl
 		}
 		if (name == null || name.isEmpty()) {
 			if (Constants.isCVSVersion()) {
-				Debug.out(getConfigSectionID() + "] param (" + param
-						+ ") missing config key, use #add(key, ...). Will make up name");
+				Logger.log(new LogEvent(LogIDs.PLUGIN, LogEvent.LT_WARNING,
+						getConfigSectionID() + "] param (" + param
+								+ ") missing config key, use #add(key, ...). Will make up name"));
 			}
 			name = param.toString();
 		}
 		if (warnExists && mapPluginParams.containsKey(name)) {
 			if (Constants.isCVSVersion()) {
-				Debug.out(getConfigSectionID() + "] Already have key '" + name + "' "
-						+ mapPluginParams.get(name));
+				Logger.log(new LogEvent(LogIDs.PLUGIN, LogEvent.LT_WARNING,
+						getConfigSectionID() + "] Already have key '" + name + "' "
+								+ mapPluginParams.get(name)));
 			}
 			name += "/";
 		}
@@ -210,6 +214,15 @@ public abstract class ConfigSectionImpl
 	@Override
 	public final ParameterImpl getPluginParam(String key) {
 		return mapPluginParams.get(key);
+	}
+
+	public final String findPluginParamKey(Parameter param) {
+		for (String key : mapPluginParams.keySet()) {
+			if (param == mapPluginParams.get(key)) {
+				return key;
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -261,4 +274,30 @@ public abstract class ConfigSectionImpl
 		return maxMode;
 	}
 
+	public String getSectionNameKey() {
+		String section_key = L10N_SECTION_PREFIX + sectionID;
+
+		// Plugins don't use prefix by default (via UIManager.createBasicPluginConfigModel).
+		// However, when a plugin overrides the name via BasicPluginConfigModel.setLocalizedName(..)
+		// it creates a message bundle key with the prefix.  Therefore,
+		// key with prefix overrides name key.
+		if (!MessageText.keyExists(section_key)
+				&& MessageText.keyExists(sectionID)) {
+			section_key = sectionID;
+		}
+
+		return section_key;
+
+	}
+
+	@Override
+	public List<Parameter> search(Pattern regex) {
+		List result = new ArrayList();
+		for (ParameterImpl parameter : mapPluginParams.values()) {
+			if (parameter.search(regex)) {
+				result.add(parameter);
+			}
+		}
+		return result;
+	}
 }

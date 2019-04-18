@@ -58,7 +58,25 @@ public interface IntListParameter
 
 	int getValue();
 
+	/**
+	 * List of labels displayed to user
+	 * 
+	 * @since BiglyBT 1.9.0.1
+	 */
+	String[] getLabels();
+
+	/**
+	 * Set list of labels displayed to user
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
 	void setLabels(String[] labels);
+
+	/**
+	 * List of values that can be stored to config
+	 * @since BiglyBT 1.9.0.1
+	 */
+	int[] getValues();
 
 	/**
 	 * Set List type.

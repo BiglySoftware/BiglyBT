@@ -34,6 +34,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
+import com.biglybt.core.html.HTMLUtils;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SimpleTimer;
@@ -198,7 +199,7 @@ public class ColorSwtParameter
 		if (DEBUG) {
 			int[] value = getValue();
 			debug("refreshControl " + (value == null ? value
-					: Utils.toColorHexString(value[0], value[1], value[2], 255)));
+					: HTMLUtils.toColorHexString(value[0], value[1], value[2], 255)));
 		}
 		Utils.execSWTThread(() -> {
 			if (colorChooser.isDisposed()) {
@@ -239,7 +240,7 @@ public class ColorSwtParameter
 				gc.dispose();
 			}
 			colorChooser.setImage(img);
-			String hexCode = "#" + Utils.toColorHexString(rgb[0], rgb[1], rgb[2], 255);
+			String hexCode = "#" + HTMLUtils.toColorHexString(rgb[0], rgb[1], rgb[2], 255);
 			if (showHexCode) {
 				colorChooser.setText(hexCode);
 			} else {

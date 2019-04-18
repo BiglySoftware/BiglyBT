@@ -26,8 +26,6 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.util.*;
 
-import com.biglybt.ui.common.UIInstanceBase;
-import com.biglybt.ui.swt.mainwindow.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -41,6 +39,25 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.AETemporaryFileHandler;
 import com.biglybt.core.util.Debug;
+import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.PluginInterfaceImpl;
+import com.biglybt.pifimpl.local.download.DownloadImpl;
+import com.biglybt.pifimpl.local.ui.UIManagerImpl;
+import com.biglybt.ui.IUIIntializer;
+import com.biglybt.ui.common.UIInstanceBase;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.IMainStatusBar;
+import com.biglybt.ui.swt.mainwindow.SWTThread;
+import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.minibar.AllTransfersBar;
+import com.biglybt.ui.swt.minibar.DownloadBar;
+import com.biglybt.ui.swt.pif.*;
+import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
+
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.torrent.Torrent;
@@ -49,28 +66,12 @@ import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 import com.biglybt.pif.ui.model.BasicPluginViewModel;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pif.ui.toolbar.UIToolBarManager;
-import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.pifimpl.local.PluginInterfaceImpl;
-import com.biglybt.pifimpl.local.download.DownloadImpl;
-import com.biglybt.pifimpl.local.ui.UIManagerImpl;
-import com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository;
-import com.biglybt.ui.IUIIntializer;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.components.shell.ShellFactory;
-import com.biglybt.ui.swt.minibar.AllTransfersBar;
-import com.biglybt.ui.swt.minibar.DownloadBar;
-import com.biglybt.ui.swt.pif.*;
-import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 @SuppressWarnings("unused")
 public class
 UISWTInstanceImpl
 	implements UIInstanceFactory, UISWTInstance, UIManagerEventListener, UIInstanceBase
 {
-	private Map<BasicPluginConfigModel,BasicPluginConfigImpl> 	config_view_map = new WeakHashMap<>();
-
 	// Map<ParentId, Map<ViewId, Listener>>
 	private Map<String,Map<String,UISWTViewEventListenerHolder>> views = new HashMap<>();
 
@@ -422,38 +423,6 @@ UISWTInstanceImpl
 					// method lower down.
 					String sViewID = model.getName().replaceAll(" ", ".");
 					removeViews(UISWTInstance.VIEW_MAIN, sViewID);
-				}
-
-				break;
-			}
-			case UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_CREATED:
-			{
-				if ( data instanceof BasicPluginConfigModel ){
-
-					BasicPluginConfigModel	model = (BasicPluginConfigModel)data;
-
-					BasicPluginConfigImpl view = new BasicPluginConfigImpl(new WeakReference<>(model));
-
-					config_view_map.put( model, view );
-
-			  	ConfigSectionRepository.getInstance().addConfigSection(view, model.getPluginInterface());
-				}
-
-				break;
-			}
-			case UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_DESTROYED:
-			{
-				if ( data instanceof BasicPluginConfigModel ){
-
-					BasicPluginConfigModel	model = (BasicPluginConfigModel)data;
-
-					BasicPluginConfigImpl view = config_view_map.get( model );
-
-					if ( view != null ){
-
-				  	ConfigSectionRepository.getInstance().removeConfigSection(view);
-
-					}
 				}
 
 				break;

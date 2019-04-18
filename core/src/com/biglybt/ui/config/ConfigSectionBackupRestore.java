@@ -37,7 +37,7 @@ import static com.biglybt.core.config.ConfigKeys.BackupRestore.*;
 public class ConfigSectionBackupRestore
 	extends ConfigSectionImpl
 {
-	private static final String SECTION_ID = "backuprestore";
+	public static final String SECTION_ID = "backuprestore";
 
 	public static final String PP_BACKUP_LAST_TIME = "lasttime";
 

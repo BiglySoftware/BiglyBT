@@ -18,11 +18,27 @@
 package com.biglybt.pif.ui.config;
 
 /**
- * @author Allan Crooks
- *
+ * Parameter representing a link to be clicked.  Can be URI or file
+ * 
  * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addHyperlinkParameter2(String, String)
  */
-public interface HyperlinkParameter extends LabelParameter {
-	public void setHyperlink(String url_location);
-	public String getHyperlink();
+public interface HyperlinkParameter
+	extends Parameter
+{
+	/**
+	 * @since BiglyBT 1.0.0.0
+	 */
+	void setHyperlink(String url_location);
+
+	/**
+	 * @since BiglyBT 1.0.0.0
+	 */
+	String getHyperlink();
+
+	/**
+	 * The messagebundle key for the link text
+	 * 
+	 * @since BiglyBT 1.9.0.1
+	 */
+	String getLinkTextKey();
 }

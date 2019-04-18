@@ -42,10 +42,12 @@ public class IntListParameterImpl
 		this.labels = labels;
 	}
 
+	@Override
 	public int[] getValues() {
 		return values;
 	}
 
+	@Override
 	public String[] getLabels() {
 		return labels;
 	}
@@ -58,6 +60,11 @@ public class IntListParameterImpl
 	@Override
 	public int getValue() {
 		return COConfigurationManager.getIntParameter(getConfigKeyName());
+	}
+
+	@Override
+	public Object getValueObject() {
+		return getValue();
 	}
 
 	@Override

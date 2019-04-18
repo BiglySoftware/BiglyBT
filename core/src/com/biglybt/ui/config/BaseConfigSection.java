@@ -18,6 +18,9 @@
 
 package com.biglybt.ui.config;
 
+import java.util.List;
+import java.util.regex.Pattern;
+
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
 
 import com.biglybt.pif.ui.config.Parameter;
@@ -89,4 +92,8 @@ public interface BaseConfigSection
 	void postBuild();
 
 	boolean isBuilt();
+
+	String getSectionNameKey();
+
+	List<Parameter> search(Pattern regex);
 }

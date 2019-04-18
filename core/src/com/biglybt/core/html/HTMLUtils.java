@@ -445,4 +445,18 @@ HTMLUtils
 			System.out.println( "    " + entry[0] + ((int[])entry[1])[0] + "," + ((int[])entry[1])[1] );
 		}
 	}
+
+	public static String toColorHexString(int r, int g, int b, int a) {
+		// left 0 padding is done by adding a bit beyond the MSB, and then
+		// chopping off the extra first char
+		long l = r << 16 | g << 8 | b;
+		if (a != 255) {
+			l |= a << 24;
+			l |= 1L << 32;
+		} else {
+			l |= 1L << 24;
+		}
+		String s = Long.toHexString(l).toUpperCase();
+		return s.substring(1);
+	}
 }

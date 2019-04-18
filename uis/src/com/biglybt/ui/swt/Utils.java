@@ -50,6 +50,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.html.HTMLUtils;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -3340,22 +3341,8 @@ public class Utils
 	 * @since 3.1.1.1
 	 */
 	public static String toColorHexString(Color color) {
-		return toColorHexString(color.getRed(), color.getRed(), color.getBlue(),
+		return HTMLUtils.toColorHexString(color.getRed(), color.getRed(), color.getBlue(),
 				color.getAlpha());
-	}
-
-	public static String toColorHexString(int r, int g, int b, int a) {
-		// left 0 padding is done by adding a bit beyond the MSB, and then
-		// chopping off the extra first char
-		long l = r << 16 | g << 8 | b;
-		if (a != 255) {
-			l |= a << 24;
-			l |= 1L << 32;
-		} else {
-			l |= 1L << 24;
-		}
-		String s = Long.toHexString(l).toUpperCase();
-		return s.substring(1);
 	}
 
 	private static void twoHex(StringBuffer sb, int h) {

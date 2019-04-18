@@ -41,4 +41,9 @@ public class UIParameterImpl
 		return this.context;
 	}
 
+	@Override
+	public Object getValueObject() {
+		return null;
+	}
+
 }

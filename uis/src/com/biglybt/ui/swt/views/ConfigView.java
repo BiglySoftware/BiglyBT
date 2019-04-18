@@ -67,7 +67,6 @@ import com.biglybt.pif.ui.config.Parameter;
 
 public class ConfigView implements UISWTViewCoreEventListenerEx {
 	private static final LogIDs LOGID = LogIDs.GUI;
-  public static final String sSectionPrefix = "ConfigView.section.";
 
 	// For highligting via showSeection.  option map contains "select" key with "value".
 	// (multiple) config widgets can setData(SELECT_KEY, "value"), which means they will be
@@ -395,27 +394,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 			section.setRebuildRunner(rebuildSectionRunnable);
 
-
-			String name;
-			try {
-				name = section.getConfigSectionID();
-			} catch (Exception e) {
-				Logger.log(new LogEvent(LOGID, "A ConfigSection plugin caused an "
-						+ "error while trying to call its "
-						+ "getConfigSectionID function", e));
-				name = "Bad Plugin";
-			}
-
-			String section_key = sSectionPrefix + name;
-
-			// Plugins don't use prefix by default (via UIManager.createBasicPluginConfigModel).
-			// However, when a plugin overrides the name via BasicPluginConfigModel.setLocalizedName(..)
-			// it creates a message bundle key with the prefix.  Therefore,
-			// key with prefix overrides name key.
-			if (!MessageText.keyExists(section_key) && MessageText.keyExists(name)) {
-				section_key = name;
-			}
-
+			String section_key = section.getSectionNameKey();
 			String section_name = MessageText.getString(section_key);
 
 			try {
@@ -462,14 +441,14 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 				Messages.setLanguageText(treeItem, section_key);
 				treeItem.setData(TREEITEMDATA_PANEL, sc);
-				treeItem.setData("ID", name);
+				treeItem.setData("ID", section.getConfigSectionID());
 				treeItem.setData(TREEITEMDATA_CONFIGSECTION, section);
 
 				sections.put(treeItem, section);
 
 			} catch (Exception e) {
-				Logger.log(new LogEvent(LOGID, "ConfigSection plugin '" + name
-						+ "' caused an error", e));
+				Logger.log(new LogEvent(LOGID, "ConfigSection plugin '"
+						+ section.getConfigSectionID() + "' caused an error", e));
 			}
 	  }
 
