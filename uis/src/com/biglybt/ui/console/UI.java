@@ -29,7 +29,6 @@ import org.apache.log4j.varia.DenyAllFilter;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.torrent.HasBeenOpenedListener;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.SystemProperties;
@@ -452,19 +451,11 @@ public class UI
 			{
 				break;
 			}
-			case UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_CREATED: // data is PluginConfigModel (or subtype)
-			{
-				break;
-			}
 			case UIManagerEvent.ET_COPY_TO_CLIPBOARD: // data is String
 			{
 				break;
 			}
 			case UIManagerEvent.ET_PLUGIN_VIEW_MODEL_DESTROYED: // data is PluginViewModel (or subtype)
-			{
-				break;
-			}
-			case UIManagerEvent.ET_PLUGIN_CONFIG_MODEL_DESTROYED: // data is PluginConfigModel (or subtype)
 			{
 				break;
 			}
