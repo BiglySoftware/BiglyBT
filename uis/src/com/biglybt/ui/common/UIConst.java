@@ -17,9 +17,7 @@
 
 package com.biglybt.ui.common;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.util.Date;
 import java.util.LinkedHashMap;
 
@@ -124,7 +122,7 @@ public class UIConst
 		final PrintStream oldOut = System.out;
 		try {
 			ByteArrayOutputStream newOut = new ByteArrayOutputStream();
-			System.setOut(new PrintStream(newOut));
+			System.setOut(new PrintStreamTempCapture(newOut));
 
 			for (IUserInterface ui : UIConst.UIS.values()) {
 				args = ui.processArgs(commands, args);
@@ -151,6 +149,13 @@ public class UIConst
 	public static void removeUI(String ui) {
 		if (UIS != null) {
 			UIS.remove(ui);
+		}
+	}
+	
+	// Used to easily identity PrintStream when looking at System.out 
+	private static class PrintStreamTempCapture extends PrintStream {
+		public PrintStreamTempCapture(OutputStream out) {
+			super(out);
 		}
 	}
 }
