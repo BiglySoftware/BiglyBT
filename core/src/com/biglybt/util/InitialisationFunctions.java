@@ -26,12 +26,10 @@ import com.biglybt.core.devices.DeviceManagerFactory;
 import com.biglybt.core.download.DownloadManagerEnhancer;
 import com.biglybt.core.metasearch.MetaSearchManagerFactory;
 import com.biglybt.core.metasearch.MetaSearchManagerListener;
-import com.biglybt.core.peer.cache.CacheDiscovery;
 import com.biglybt.core.subs.SubscriptionManagerFactory;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadManager;
 import com.biglybt.pif.download.DownloadWillBeAddedListener;
@@ -44,17 +42,13 @@ import com.biglybt.ui.UIFunctionsManager;
 
 public class InitialisationFunctions
 {
-	private static final String EXTENSION_PREFIX = "azid";
-
 	public static void earlyInitialisation(Core core) {
 
-		DownloadManagerEnhancer dme = DownloadManagerEnhancer.initialise(core);
+		DownloadManagerEnhancer.initialise(core);
 
 		hookDownloadAddition();
 
 		PlatformContentDirectory.register();
-
-		CacheDiscovery.initialise( dme );
 
 		MetaSearchManagerFactory.preInitialise();
 
