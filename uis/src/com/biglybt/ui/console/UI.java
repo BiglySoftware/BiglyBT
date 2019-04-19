@@ -249,31 +249,7 @@ public class UI
 		boolean created_console = false;
 
 		if (console == null || !console.isAlive()) {
-//      ConsoleInput.printconsolehelp(System.out);
-			System.out.println();
-
-			PrintStream this_out = System.out;
-
-			// Unless a system property tells us not to, we'll take stdout and stderr offline.
-			if (!"on".equals(
-					System.getProperty(SystemProperties.SYSPROP_CONSOLE_NOISY))
-					&& isFirst()) {
-				// We'll hide any output to stdout or stderr - we don't want to litter our
-				// view.
-				PrintStream ps = new PrintStream(new java.io.OutputStream() {
-					@Override
-					public void write(int c) {
-					}
-
-					@Override
-					public void write(byte[] b, int i1, int i2) {
-					}
-				});
-				System.setOut(ps);
-				System.setErr(ps);
-				com.biglybt.core.logging.Logger.allowLoggingToStdErr(false);
-			}
-			console = new ConsoleInput("Main", core, System.in, this_out,
+			console = new ConsoleInput("Main", core, System.in, System.out,
 					Boolean.TRUE);
 			console.printwelcome();
 			console.printconsolehelp();

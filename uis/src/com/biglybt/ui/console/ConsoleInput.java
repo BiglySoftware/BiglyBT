@@ -83,6 +83,10 @@ public class ConsoleInput extends Thread {
 	private final List helpItems = new ArrayList();
 	private final UserProfile userProfile;
 
+	public final List<LogEvent> errorLogEvents = new ArrayList<>();
+	private int numNewErrorLogEvents = 0;
+	private boolean waitingForInput = false;
+
 	/**
 	 * can be used by plugins to register console commands since they may not have access to
 	 * each ConsoleInput object that is created.
@@ -120,6 +124,16 @@ public class ConsoleInput extends Thread {
 		this.userProfile 	= profile;
 		this.controlling = _controlling.booleanValue();
 		this.br = new CommandReader(_in);
+
+		com.biglybt.core.logging.Logger.addListener((ILogEventListener) event -> {
+			if (event.entryType == LogEvent.LT_ERROR) {
+				errorLogEvents.add(event);
+				if (waitingForInput && numNewErrorLogEvents == 0) {
+					System.out.println("New error(s) logged. Use `show errors` to view.");
+				}
+				numNewErrorLogEvents++;
+			}
+		});
 
 		//System.out.println( "ConsoleInput: initializing..." );
 		initialise();
@@ -590,7 +604,7 @@ public class ConsoleInput extends Thread {
 				return true;
 			} catch (Exception e)
 			{
-				out.println("> Invoking Command '"+command+"' failed. Exception: "+ Debug.getNestedExceptionMessage(e));
+				out.println("> Invoking Command '"+command+"' failed. Exception: "+ Debug.getNestedExceptionMessage(e) + "; " + Debug.getCompressedStackTrace(e, 0, 5, false));
 				return false;
 			}
 		} else
@@ -602,12 +616,19 @@ public class ConsoleInput extends Thread {
 		List<String> comargs;
 		running = true;
 		while (running) {
+			if (numNewErrorLogEvents > 0) {
+				System.out.println(numNewErrorLogEvents + " new errors logged. Use `show errors` to view.");
+				numNewErrorLogEvents = 0;
+			}
 			try {
+				waitingForInput = true;
 				String line = br.readLine();
+				waitingForInput = false;
 				comargs = br.parseCommandLine(line);
 			} catch (Exception e) {
 				out.println("Stopping console input reader because of exception: " + e.getMessage());
 				running = false;
+				waitingForInput = false;
 				break;
 			}
 			if (!comargs.isEmpty()) {
