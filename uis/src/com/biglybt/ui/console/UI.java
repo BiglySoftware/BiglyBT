@@ -242,9 +242,6 @@ public class UI
 
 			}
 		});
-		if (core.isStarted()) {
-			startUI();
-		}
 	}
 
 	private void startUI() {
