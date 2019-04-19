@@ -40,6 +40,7 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
 
 import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ActionParameter;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -241,6 +242,7 @@ public class ConfigSectionStartShutdown
 				ActionParameterImpl show_folder_button = new ActionParameterImpl(
 						"jvm.show.file", "!" + option_file.getAbsolutePath() + "!");
 				add(show_folder_button, Parameter.MODE_INTERMEDIATE, listJVM);
+				show_folder_button.setAllowedUiTypes(UIInstance.UIT_SWT);
 				show_folder_button.setStyle(ActionParameter.STYLE_LINK);
 				show_folder_button.addListener(param -> UIFunctionsManager.getUIFunctions().showInExplorer(option_file));
 

@@ -337,6 +337,7 @@ public class ConsoleInput extends Thread {
 		registerCommand(new Plugin());
 		registerCommand(new Pairing());
 		registerCommand(new Archive());
+		registerCommand(new Config());
 
 		try{
 			registerCommand(new Subscriptions());

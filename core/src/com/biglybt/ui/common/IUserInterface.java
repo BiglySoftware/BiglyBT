@@ -39,7 +39,7 @@ public interface IUserInterface {
    * The UI should not be started at this stage.
    *
    * @param first This UI Instance is the first on the command line and should take control of singular stuff (LocaleUtil and torrents added via Command Line).
-   * @param others Indicates wether other UIs run along.
+   * @param others Indicates whether other UIs run along.
    */
   public void init(boolean first, boolean others);
 

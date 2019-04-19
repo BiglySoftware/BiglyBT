@@ -275,6 +275,11 @@ public abstract class ConfigSectionImpl
 	}
 
 	public String getSectionNameKey() {
+		return getSectionNameKey(sectionID);
+	}
+
+	public static String getSectionNameKey(String sectionID) {
+	
 		String section_key = L10N_SECTION_PREFIX + sectionID;
 
 		// Plugins don't use prefix by default (via UIManager.createBasicPluginConfigModel).
@@ -287,7 +292,6 @@ public abstract class ConfigSectionImpl
 		}
 
 		return section_key;
-
 	}
 
 	@Override
