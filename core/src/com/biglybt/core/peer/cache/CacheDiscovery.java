@@ -192,10 +192,7 @@ CacheDiscovery
 
 				CachePeer[] peers = discoverers[i].lookup( torrent );
 
-				for (int j=0;j<peers.length;j++){
-
-					result.add( peers[i] );
-				}
+				Collections.addAll(result, peers);
 			}
 
 			res = result.toArray( new CachePeer[result.size()]);
