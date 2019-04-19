@@ -208,13 +208,6 @@ for JNADIR in $SHARED_JAR_CHECK_DIRS; do
 	fi
 done
 
-for SHAREDJARDIR in $SHARED_JAR_CHECK_DIRS; do
-	if [ -f "${SHAREDJARDIR}/log4j.jar" ]; then
-		CLASSPATH="${CLASSPATH:+${CLASSPATH}:}${SHAREDJARDIR}/log4j.jar"
-		break
-	fi
-done
-
 #Note: package eclipse-swt is stored in /usr/lib/java, but is usually outdated
 #      and often has different UI quirks that we haven't worked around yet
 
