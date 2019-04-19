@@ -1307,6 +1307,10 @@ public class Utils
 		launch( url.toExternalForm());
 	}
 
+	public static void launch(Object urlOrFile) {
+		launch( String.valueOf(urlOrFile));
+	}
+
 	public static void
 	launch(
 		String sFile )

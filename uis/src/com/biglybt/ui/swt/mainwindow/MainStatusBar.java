@@ -613,7 +613,7 @@ public class MainStatusBar
 						ConfigSection.SECTION_CONNECTION);
 
 				if (PluginInitializer.getDefaultInterface().getConnectionManager().getNATStatus() != ConnectionManager.NAT_OK) {
-					Utils.launch(Constants.AZUREUS_WIKI + "NAT_problem");
+					Utils.launch(Wiki.NAT_PROBLEM);
 				}
 			}
 		};

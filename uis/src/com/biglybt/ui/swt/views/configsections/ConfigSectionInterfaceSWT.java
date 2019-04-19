@@ -28,6 +28,7 @@ import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.TrackersUtil;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
@@ -232,7 +233,7 @@ public class ConfigSectionInterfaceSWT
 				"ConfigView.label.allowSendVersion"));
 
 		add(new HyperlinkParameterImpl("ConfigView.label.version.info.link",
-				Constants.URL_WIKI + "w/Version.azureusplatform.com"));
+				Wiki.VERSION_AZUREUSPLATFORM));
 
 		if (!Constants.isOSX) {
 

@@ -50,18 +50,18 @@ public interface PluginInterface {
 
 	/**
 	 * Retrieve the name of the application.
-     *
-     * @return the Application's name
-     *
-     * @since 2.1.0.0
-     */
+   *
+   * @return the Application's name
+   *
+   * @since 2.1.0.0
+   */
 	public String getAzureusName();
 
 	/**
 	 * Returns the name of the application that the user sees - if you need to
 	 * display the name of the program, you should use this method.
 	 *
-	 * @return 3.0.5.3
+	 * @since 3.0.5.3
 	 */
 	public String getApplicationName();
 
@@ -113,13 +113,11 @@ public interface PluginInterface {
 
   /**
    * Gives access to the sharing functionality
-   * @return
    *
    * @since 2.0.7.0
    */
   public ShareManager
   getShareManager()
-
   	throws ShareException;
 
   /**
@@ -133,7 +131,6 @@ public interface PluginInterface {
 
   /**
    * access to various utility functions
-   * @return
    *
    * @since 2.1.0.0
    */
@@ -143,7 +140,6 @@ public interface PluginInterface {
   /**
    * access to a set of convenience routines for doing things in a quicker, although less
    * structured, fashion
-   * @return
    *
    * @since 2.1.0.0
    */
@@ -152,7 +148,6 @@ public interface PluginInterface {
 
   /**
    * access to UI extension features
-   * @return
    *
    * @since 2.1.0.0
    */
@@ -162,7 +157,6 @@ public interface PluginInterface {
   /**
    * access to the update manager used to update plugins. required for non-Azureus SF hosted
    * plugins (SF ones are managed automatically)
-   * @return
    *
    * @since 2.1.0.0
    */
@@ -191,9 +185,7 @@ public interface PluginInterface {
    * gives access to the per-user plugin directory. Useful for shared plugins that need to store
    * per-user state. Will be same as getPluginDirectoryName for per-user installed plugins
    * directory may not yet exist
-   * @return
    */
-
   public String getPerUserPluginDirectoryName();
 
   /**
@@ -215,7 +207,6 @@ public interface PluginInterface {
 
   /**
    * Returns an identifier used to identify this particular plugin
-   * @return
    *
    * @since 2.1.0.0
    */
@@ -223,7 +214,7 @@ public interface PluginInterface {
   getPluginID();
 
 	/**
-   * gives access to the plugin config interface
+   * Gives access to the plugin config interface
    * @return the PluginConfig object associated with this plugin
    */
   public PluginConfig getPluginconfig();
@@ -231,7 +222,6 @@ public interface PluginInterface {
 
 	/**
    * gives access to the ClassLoader used to load the plugin
-   * @return
    *
    * @since 2.0.8.0
    */
@@ -245,9 +235,7 @@ public interface PluginInterface {
 	 * this will cause no end of problems.
 	 * @param plugin	must implement Plugin
 	 * @param id        the unique id of this plugin (used to scope config params etc)
-	 * @return
 	 */
-
   public PluginInterface
   getLocalPluginInterface(
 	Class		plugin,
@@ -255,17 +243,14 @@ public interface PluginInterface {
 
   	throws PluginException;
 
-  	/**
-  	 * get the inter-plugin-communcations interface for this plugin
-  	 * @return
-  	 */
-
+	/**
+	 * Get the inter-plugin-communications interface for this plugin
+	 */
   public IPCInterface
   getIPC ();
 
   /**
    * Gives access to the plugin itself
-   * @return
    *
    * @since 2.1.0.0
    */
@@ -274,29 +259,24 @@ public interface PluginInterface {
 
 
 	/**
-  	 * Indicates whether or not the current thread is the one responsible for running
-  	 * plugin initialisation
-  	 * @return
-  	 */
-
+ 	 * Indicates whether or not the current thread is the one responsible for running
+ 	 * plugin initialisation
+ 	 */
   public boolean
   isInitialisationThread();
 
   /**
    * gives access to the plugin manager
-   * @return
    *
    * @since 2.1.0.0
    */
   public PluginManager
   getPluginManager();
 
-  	/**
-  	 *
-  	 * @return
-  	 * @since 2.2.0.3
-  	 */
-
+	/**
+	 *
+	 * @since 2.2.0.3
+	 */
   public ClientIDManager
   getClientIDManager();
 
@@ -320,16 +300,13 @@ public interface PluginInterface {
   /**
    * Get the distributed database
    * @since 2.2.0.3
-   * @return
    */
   public DistributedDatabase
   getDistributedDatabase();
 
   /**
    * Gets the platform manager that gives access to native functionality
-   * @return
    */
-
   public PlatformManager
   getPlatformManager();
 
@@ -349,12 +326,11 @@ public interface PluginInterface {
   removeListener(
   	PluginListener	l );
 
-  	/**
-  	 * Fire a plugin-specific event. See PluginEvent for details of type values to use
-  	 * @since 2403
-  	 * @param event
-  	 */
-
+	/**
+	 * Fire a plugin-specific event. See PluginEvent for details of type values to use
+	 * @since 2.4.0.3
+	 * @param event plugin event
+	 */
   public void
   firePluginEvent(
 	PluginEvent		event );

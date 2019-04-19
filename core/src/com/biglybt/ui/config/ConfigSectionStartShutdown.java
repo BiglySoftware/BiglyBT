@@ -28,9 +28,9 @@ import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AEJavaManagement;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
@@ -223,7 +223,7 @@ public class ConfigSectionStartShutdown
 			// wiki link
 
 			add(new HyperlinkParameterImpl("ConfigView.label.please.visit.here",
-					Constants.URL_WIKI + "w/Java_VM_memory_usage"),
+					Wiki.JAVA_VM_MEMORY_USAGE),
 					Parameter.MODE_INTERMEDIATE, listJVM);
 
 			// info

@@ -3111,7 +3111,7 @@ SpeedLimitHandler
 	{
 		List<String>	result = new ArrayList<>();
 
-		result.add( "# Enter rules on separate lines below this section - see " + Constants.URL_WIKI + "w/Speed_Limit_Scheduler for more details" );
+		result.add( "# Enter rules on separate lines below this section - see " + Wiki.SPEED_LIMIT_SCHEDULER + " for more details" );
 		result.add( "# Rules are of the following types:" );
 		result.add( "#    enable=(yes|no)   - controls whether the entire schedule is enabled or not (default=yes)" );
 		result.add( "#    <frequency> <profile_name> from <time> to <time> [extension]*" );

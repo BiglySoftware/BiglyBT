@@ -209,7 +209,7 @@ public class AboutWindow {
 				Constants.URL_CLIENT_HOME,
 				Constants.URL_BUG_REPORTS,
 				Constants.URL_FORUMS,
-				Constants.AZUREUS_WIKI,
+				Constants.URL_WIKI,
 				Constants.PLUGINS_WEB_SITE,
 				"http://ezhdqq3jjpsqg65l.onion"
 			}

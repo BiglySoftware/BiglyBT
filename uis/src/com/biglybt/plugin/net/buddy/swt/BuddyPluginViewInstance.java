@@ -309,7 +309,7 @@ BuddyPluginViewInstance
 
 		label.setText(  lu.getLocalisedMessageText( "azbuddy.dchat.info" ));
 
-		new LinkLabel(info_area, "ConfigView.label.please.visit.here", lu.getLocalisedMessageText( "azbuddy.dchat.link.url" ));
+		new LinkLabel(info_area, "ConfigView.label.please.visit.here", Wiki.DECENTRALIZED_CHAT);
 
 		label = new Label( info_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
@@ -1376,7 +1376,7 @@ BuddyPluginViewInstance
 
 		label.setText(  lu.getLocalisedMessageText( "azbuddy.classic.info" ));
 
-		new LinkLabel(info_area, "ConfigView.label.please.visit.here", lu.getLocalisedMessageText( "azbuddy.classic.link.url" ));
+		new LinkLabel(info_area, "ConfigView.label.please.visit.here", Wiki.FRIENDS);
 
 		label = new Label( info_area, SWT.NULL );
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );

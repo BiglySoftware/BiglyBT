@@ -24,7 +24,7 @@ import java.util.List;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.TransferSpeedValidator;
-import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -37,9 +37,6 @@ import static com.biglybt.core.config.ConfigKeys.Transfer.*;
 public class ConfigSectionTransfer
 	extends ConfigSectionImpl
 {
-	private static final String URL_GOOD_SETTINGS = Constants.URL_WIKI
-			+ "w/Good_settings";
-
 	public ConfigSectionTransfer() {
 		super(ConfigSection.SECTION_TRANSFER, ConfigSection.SECTION_ROOT);
 	}
@@ -82,7 +79,7 @@ public class ConfigSectionTransfer
 			// wiki link
 
 			add(new HyperlinkParameterImpl("ConfigView.section.transfer.speeds.wiki",
-					"Utils.link.visit", URL_GOOD_SETTINGS));
+					"Utils.link.visit", Wiki.GOOD_SETTINGS));
 		}
 
 		add(new IntParameterImpl(ICFG_MAX_UPLOADS_WHEN_BUSY_INC_MIN_SECS,

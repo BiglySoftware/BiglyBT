@@ -31,6 +31,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ui.menus.MenuItem;
@@ -363,7 +364,7 @@ public class PeersItem extends CoreTableColumnSWT implements
 				int[] i2p_info = (int[])dm.getUserData( DHTTrackerPlugin.DOWNLOAD_USER_DATA_I2P_SCRAPE_KEY );
 
 				if ( i2p_info != null && i2p_info[1] > 0 ){
-					Utils.launch(MessageText.getString( "privacy.view.wiki.url" ));
+					Utils.launch(Wiki.PRIVACY_VIEW);
 				}
 		  }
 	}

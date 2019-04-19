@@ -44,8 +44,8 @@ import com.biglybt.core.devices.DeviceManager;
 import com.biglybt.core.devices.DeviceManagerFactory;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pif.PluginException;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.installer.InstallablePlugin;
@@ -143,12 +143,12 @@ public class DevicesFTUX
 		}
 
 		Link lblLearnMore = new Link(shell, SWT.NONE);
-		lblLearnMore.setText("<A HREF=\"" + Constants.URL_DEVICES_FAQ + "\">"
+		lblLearnMore.setText("<A HREF=\"" + Wiki.DEVICES_FAQ + "\">"
 				+ MessageText.getString("label.learnmore") + "</A>");
 		lblLearnMore.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				Utils.launch(Constants.URL_DEVICES_FAQ);
+				Utils.launch(Wiki.DEVICES_FAQ);
 			}
 		});
 

@@ -25,6 +25,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -210,7 +211,7 @@ public class ConfigSectionConnection
 
 			add(new HyperlinkParameterImpl(
 					"ConfigView.section.connection.serverport.wiki", "Utils.link.visit",
-					Constants.URL_WIKI + "w/Why_ports_like_6881_are_no_good_choice"));
+					Wiki.WHY_PORTS_LIKE_6881_ARE_NO_GOOD_CHOICE));
 		}
 
 		if (userMode > 0) {
@@ -221,7 +222,7 @@ public class ConfigSectionConnection
 			HyperlinkParameterImpl paramVisitHere = new HyperlinkParameterImpl(
 					"ConfigView.label.please.visit.here",
 					"ConfigView.section.connection.group.http.info",
-					Constants.URL_WIKI + "w/HTTP_Seeding");
+					Wiki.HTTP_SEEDING);
 			add(paramVisitHere, listHTTP);
 
 			BooleanParameterImpl paramEnableHTTP = new BooleanParameterImpl(

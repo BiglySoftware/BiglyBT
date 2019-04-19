@@ -21,7 +21,7 @@ package com.biglybt.ui.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -50,7 +50,7 @@ public class ConfigSectionConnectionEncryption
 
 		add(new HyperlinkParameterImpl(
 				"ConfigView.section.connection.encryption.encrypt.info.link",
-				Constants.URL_WIKI + "w/Avoid_traffic_shaping"), listEncrypt);
+				Wiki.AVOID_TRAFFIC_SHAPING), listEncrypt);
 
 		BooleanParameterImpl paramEncryptRequire = new BooleanParameterImpl(
 				BCFG_NETWORK_TRANSPORT_ENCRYPTED_REQUIRE,

@@ -28,6 +28,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
@@ -56,7 +57,7 @@ public class ConfigSectionConnectionAdvanced
 
 		add(new HyperlinkParameterImpl(
 				"ConfigView.section.connection.advanced.info.link",
-				MessageText.getString("ConfigView.section.connection.advanced.url")));
+				Wiki.ADVANCED_NETWORK_SETTINGS));
 
 		///////////////////////   ADVANCED SOCKET SETTINGS GROUP //////////
 
