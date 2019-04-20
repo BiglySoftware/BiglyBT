@@ -33,4 +33,9 @@ public class LabelParameterImpl
 	public LabelParameterImpl(String labelKey) {
 		super(null, labelKey);
 	}
+
+	@Override
+	public Object getValueObject() {
+		return null;
+	}
 }

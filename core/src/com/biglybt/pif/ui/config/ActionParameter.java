@@ -20,8 +20,10 @@
 package com.biglybt.pif.ui.config;
 
 /**
- * @author parg
- *
+ * Parameter representing an action. 
+ * Not backed by a config key.
+ * Usually a displayed as button or a link.
+ * 
  * @see com.biglybt.pif.ui.model.BasicPluginConfigModel#addActionParameter2(String, String)
  */
 public interface
@@ -58,6 +60,22 @@ ActionParameter
 	 * @since BiglyBT 1.0.0.0
 	 */
 	void setActionResource(String action_resource);
+
+	/**
+	 * unique id for the action.  Used for UIs without widgets, like console ui
+	 * <p/>
+	 * By default, the actionid is the same as {@link #getActionResource()}
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	String getActionID();
+
+	/**
+	 * Set unique id for the action.  Used for UIs without widgets, like console ui
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	void setActionID(String actionID);
 
 	public void
 	setStyle(

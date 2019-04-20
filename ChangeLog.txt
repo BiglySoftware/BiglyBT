@@ -3,8 +3,14 @@ BIGLYBT CHANGELOG
 
 2019.xx.yy | BiglyBT 1.9.0.1
 
-2019.03.28 | BiglyBT 1.9.0.0
+FEATURE: UI    | Most config parameters now have a "Reset to Default" option on right click of their label [TuxPaper]   
+FEATURE: UI    | Console UI: Config sections and parameters now available via `config` command [TuxPaper]  
 
+CHANGE:  UI    | Config Sections restructured. Minor visual changes, but should mostly operate the same [TuxPaper] 
+
+
+
+2019.03.28 | BiglyBT 1.9.0.0
 
 FEATURE: UI    | Option to split the advanced library view vertically (and select location of complete/incomplete panes) [Parg]
 FEATURE: UI    | nl_BE: New Flemish translation [Pierre VdC]
@@ -89,6 +95,8 @@ BUGFIX: Core   | Fix sequential flag being cleared on other flag changes [Parg]
 BUGFIX: Core   | Fix case-only file name changes not having any affect [Parg]
 BUGFIX: Core   | Attempt to detect Alcohol 120 and disable related file icons on Windows as causing crash/hang [Parg]
 BUGFIX: Core   | Always honour file priority delete/DND settings [Parg]
+
+
 
 2019.01.21 | BiglyBT 1.8.0.0
 
@@ -187,6 +195,8 @@ BUGFIX: Core   | Fix biglybt.log not correctly writing UTF-8 chars longer than o
 BUGFIX: Core   | Fix deadlock in table display [Parg]
 BUGFIX: Core   | Decentralized chat messages sometime out of order [Parg]
 
+
+
 2018.10.18 | BiglyBT 1.7.0.0
 
 FEATURE: UI    | CTRL+C to copy table contents in all table views [Parg]
@@ -234,6 +244,7 @@ BUGFIX: Core   | Fix repeat archive bug with multi-select [Parg]
 BUGFIX: Core   | Fix Tag filtering NPE and synchronize correctly [Parg]
 BUGFIX: Core   | When torrent file has UTF keys along with an invalid encoding value use the right keys [TuxPaper]
 BUGFIX: Core   | Switch to use User Shell Folders on Windows [Parg]
+
 
 
 2018.07.30 | BiglyBT 1.6.0.0
@@ -289,6 +300,7 @@ BUGFIX: Core   | Remote Friend seeding status change not being picked up [Parg]
 BUGFIX: Core   | Fixed Friend download removal bug [Parg]
 BUGFIX: Core   | Handle download removal from tag with fp seeding [Parg]
 BUGFIX: Core   | Bring back –restart command line switch [Parg]
+
 
 
 2018.04.10 | BiglyBT 1.5.0.0
@@ -364,6 +376,7 @@ BUGFIX: Plug   | 'Command Runner' plugin command combo-list wasn't showing on OS
 BUGFIX: Core   | Fixed 'piece marked as complete but not yet allocation' bug [Parg]
 BUGFIX: Core   | Fix share torrents being deleted incorrectly [Parg]
 BUGFIX: Core   | Fix bug in restoration of file flags [Parg]
+
 
 
 2018.01.08 | BiglyBT 1.4.0.0

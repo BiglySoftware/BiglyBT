@@ -20,19 +20,14 @@
 package com.biglybt.net.upnp.impl.device;
 
 
-/**
- * @author parg
- *
- */
-
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.NetworkInterface;
 import java.net.URL;
 import java.util.*;
 
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.net.upnp.*;
 import com.biglybt.net.upnp.impl.UPnPImpl;
 import com.biglybt.pif.utils.xml.simpleparser.SimpleXMLParserDocument;
@@ -213,7 +208,7 @@ UPnPRootDeviceImpl
 						upnp.logAlert(
 								"Device '" + model + "', version '" + version +
 								"' has known problems with UPnP. Please update to the latest software version (see " +
-								(url==null?"the manufacturer's web site":url) + ") and refer to " + Constants.URL_WIKI + "w/UPnP",
+								(url==null?"the manufacturer's web site":url) + ") and refer to " + Wiki.UPNP,
 								false,
 								UPnPLogListener.TYPE_ONCE_EVER );
 					}

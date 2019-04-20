@@ -90,7 +90,8 @@ public class ConfigSectionInterfaceStartSWT
 
 		ActionParameterImpl ui_switcher_button = new ActionParameterImpl(
 				"ConfigView.label.ui_switcher", "ConfigView.label.ui_switcher_button");
-
+		add( ui_switcher_button );
+		
 		ui_switcher_button.addListener(param -> Utils.execSWTThread(
 				() -> UISwitcherUtil.openSwitcherWindow()));
 	}

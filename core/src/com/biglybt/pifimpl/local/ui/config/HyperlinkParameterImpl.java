@@ -24,7 +24,7 @@ import com.biglybt.pif.ui.config.HyperlinkParameter;
  *
  */
 public class HyperlinkParameterImpl
-	extends LabelParameterImpl
+	extends ParameterImpl
 	implements HyperlinkParameter
 {
 
@@ -38,7 +38,7 @@ public class HyperlinkParameterImpl
 
 	public HyperlinkParameterImpl(String linkTextKey, String labelKey,
 			String hyperlink) {
-		super(labelKey);
+		super(null, labelKey);
 		this.linkTextKey = linkTextKey;
 		this.hyperlink = hyperlink;
 	}
@@ -55,6 +55,12 @@ public class HyperlinkParameterImpl
 		refreshControl();
 	}
 
+	@Override
+	public Object getValueObject() {
+		return hyperlink;
+	}
+
+	@Override
 	public String getLinkTextKey() {
 		return linkTextKey;
 	}

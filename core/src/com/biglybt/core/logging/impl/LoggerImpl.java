@@ -16,9 +16,7 @@
  */
 package com.biglybt.core.logging.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,10 +24,7 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.config.impl.ConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.*;
-import com.biglybt.core.util.AEDiagnostics;
-import com.biglybt.core.util.AEDiagnosticsLogger;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.SystemProperties;
+import com.biglybt.core.util.*;
 
 /**
  * Logging tool
@@ -117,8 +112,8 @@ public class LoggerImpl {
 				if (psOldErr == null)
 					psOldErr = System.err;
 
-				psErr = new PrintStream(new RedirectorStream(psOldErr, LogIDs.STDERR,
-						LogEvent.LT_ERROR), true, "utf-8");
+				psErr = new RedirectorPrintStream(psOldErr, LogIDs.STDERR,
+						LogEvent.LT_ERROR);
 
 				System.setErr(psErr);
 			}
@@ -186,13 +181,15 @@ public class LoggerImpl {
 			if (count == 0) {
 				return;
 			}
-			if (buf[count - 1] != '\n') {
+			if (buf[count - 1] != '\n' && count < 2048) {
 				return;
 			}
 
 			String s = toString("utf-8");
-			if (!bLogToStdOut) {
-				ps.print(s);
+			if (s.endsWith("\r\n")) {
+				s = s.substring(0, s.length() - 2);
+			} else if (s.endsWith("\n")) {
+				s = s.substring(0, s.length() - 1);
 			}
 			log(new LogEvent(logID, logType, s));
 			super.reset();
@@ -225,8 +222,9 @@ public class LoggerImpl {
 		}
 		*/
 
-		if (bLogToStdOut && psOldOut != null)
+		if ((bLogToStdOut || event.logID == LogIDs.STDOUT) && psOldOut != null) {
 			psOldOut.println(event.text);
+		}
 
 		if (event.entryType == LogEvent.LT_ERROR) {
 			if ( AEDiagnostics.isStartupComplete()){
@@ -236,8 +234,12 @@ public class LoggerImpl {
 				}catch( Throwable e ){
 				}
 			}
-			if (logToStdErrAllowed && psOldErr != null && event.logID != LogIDs.STDERR) {
-				psOldErr.println("[" + event.logID + "] " + event.text);
+			if (logToStdErrAllowed && psOldErr != null) {
+				if (event.logID == LogIDs.STDERR) {
+					psOldErr.println(event.text);
+				} else {
+					psOldErr.println("[" + event.logID + "] " + event.text);
+				}
 			}
 		}
 		if (bEventLoggingEnabled)
@@ -353,5 +355,15 @@ public class LoggerImpl {
 
 	public void allowLoggingToStdErr(boolean allowed) {
 		this.logToStdErrAllowed = allowed;
+	}
+
+	// Used to easily identity PrintStream when looking at System.out 
+	private class RedirectorPrintStream
+		extends PrintStream
+	{
+		public RedirectorPrintStream(PrintStream ps, LogIDs logID, int logType)
+				throws UnsupportedEncodingException {
+			super(new RedirectorStream(ps, logID, logType), true, "utf-8");
+		}
 	}
 }

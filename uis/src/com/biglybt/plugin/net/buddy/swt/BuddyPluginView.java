@@ -489,7 +489,7 @@ BuddyPluginView
 					{
 						try{
 							plugin.getPluginInterface().getUIManager().openURL(
-									new URL( MessageText.getString( "azbuddy.classic.link.url" )));
+									UrlUtils.getRawURL(Wiki.FRIENDS));
 
 						}catch( Throwable e ){
 

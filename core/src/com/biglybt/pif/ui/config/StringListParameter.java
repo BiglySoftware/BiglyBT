@@ -62,9 +62,26 @@ StringListParameter
 	public String
 	getValue();
 
-	public void
-	setLabels(
-		String[]	labels );
+	/**
+	 * List of labels displayed to user
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	String[] getLabels();
+
+	/**
+	 * Set list of labels displayed to user
+	 *
+	 * @since BiglyBT 1.0.0.0
+	 */
+	void setLabels(String[] labels);
+
+	/**
+	 * List of values that can be stored to config
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	String[] getValues();
 
 	void setListType(int listType);
 

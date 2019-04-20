@@ -23,18 +23,14 @@ package com.biglybt.pifimpl.local.ui.config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.regex.Pattern;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.config.ConfigParameterListener;
-import com.biglybt.pif.ui.config.EnablerParameter;
-import com.biglybt.pif.ui.config.Parameter;
-import com.biglybt.pif.ui.config.ParameterListener;
-import com.biglybt.pif.ui.config.ParameterValidator;
+import com.biglybt.pif.ui.config.*;
 import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
 
 /**
@@ -513,5 +509,34 @@ ParameterImpl
 			return false;
 		}
 		return COConfigurationManager.removeParameter(configKey);
+	}
+
+	@Override
+	public Object getValueObject() {
+		if (configKey == null) {
+			return null;
+		}
+		return COConfigurationManager.getParameter(configKey);
+	}
+
+	public boolean search(Pattern regex) {
+		
+		if (configKey != null && regex.matcher(configKey).find()) {
+			return true;
+		}
+		String labelText = getLabelText();
+		if (labelText != null && regex.matcher(labelText).find()) {
+			return true;
+		}
+		if (this instanceof ParameterWithSuffix) {
+			String suffixLabelKey = ((ParameterWithSuffix) this).getSuffixLabelKey();
+			if (suffixLabelKey != null && !suffixLabelKey.isEmpty()) {
+				String suffix = MessageText.getString(suffixLabelKey);
+				if (regex.matcher(suffix).find()) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }

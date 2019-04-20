@@ -29,6 +29,8 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.logging.LogEvent;
+import com.biglybt.core.logging.LogRelation;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerManagerStats;
@@ -36,10 +38,7 @@ import com.biglybt.core.peer.PEPeerStats;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
-import com.biglybt.core.util.AEDiagnostics;
-import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.core.util.IndentWriter;
-import com.biglybt.core.util.TorrentUtils;
+import com.biglybt.core.util.*;
 import com.biglybt.plugin.dht.DHTPlugin;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.ui.console.ConsoleInput;
@@ -339,6 +338,36 @@ public class Show extends IConsoleCommand {
 			}catch( Throwable e ){
 
 				ci.out.println( e );
+			}
+
+		} else if (subCommand.equalsIgnoreCase("errors")) {
+			List<LogEvent> errorLogEvents = ci.getErrorLogEvents();
+			if (errorLogEvents.size() == 0) {
+				System.out.println("No error logs since last time.");
+			}
+			for (LogEvent event : errorLogEvents) {
+				final StringBuffer buf = new StringBuffer();
+
+				buf.append(DisplayFormatters.formatDate(event.timeStamp.getTime()) + "] ");
+				buf.append("{").append(event.logID).append("} ");
+
+				buf.append(event.text);
+				if (event.relatedTo != null) {
+					buf.append("; \t| ");
+					for (int j = 0; j < event.relatedTo.length; j++) {
+						Object obj = event.relatedTo[j];
+						if (j > 0)
+							buf.append("; ");
+						if (obj instanceof LogRelation) {
+							buf.append(((LogRelation) obj).getRelationText());
+						} else if (obj != null) {
+							buf.append(obj.getClass().getName()).append(": '").append(
+								obj.toString()).append("'");
+						}
+					}
+				}
+				
+				System.out.println(buf);
 			}
 
 		} else {

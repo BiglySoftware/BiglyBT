@@ -56,6 +56,10 @@ If you want to signal support for a feature that you think BiglyBT should have, 
 
 In order to ensure the distinction that BiglyBT and Vuze are two separate, unaffiliated products, we will not directly link to wiki.vuze.com, even though the features and support documentation is virtually identical.  We are slowly writing our own wiki pages, but can always use your help.
 
+## Write Code
+
+See our [Coding Guidelines](CODING_GUIDELINES.md)
+
 # Special Note for Tracker Owners
 
 We've always given tracker owner's feature requests and complaints top priority.  For example, we were the first client to implement the min_request_interval after a tracker owner contacted us with a spec proposal.

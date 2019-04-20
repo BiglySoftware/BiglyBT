@@ -136,4 +136,23 @@ ParameterGroupImpl
 	{
 		return( parameters );
 	}
+	
+	public int size(boolean countChildren) {
+		if (!countChildren) {
+			return parameters.length;
+		}
+		int count = parameters.length;
+		for (ParameterImpl param : parameters) {
+			if (param instanceof ParameterGroupImpl) {
+				count += ((ParameterGroupImpl) param).size(true);
+			}
+		}
+		return count;
+	}
+
+	@Override
+	public Object getValueObject() {
+		return null;
+	}
 }
+

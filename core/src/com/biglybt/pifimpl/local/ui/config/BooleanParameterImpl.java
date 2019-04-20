@@ -40,6 +40,11 @@ public class BooleanParameterImpl
 	}
 
 	@Override
+	public Object getValueObject() {
+		return getValue();
+	}
+
+	@Override
 	public void setValue(boolean b) {
 		COConfigurationManager.setParameter(configKey, b);
 	}

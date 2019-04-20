@@ -50,6 +50,11 @@ DirectoryParameterImpl
 	}
 
 	@Override
+	public Object getValueObject() {
+		return getValue();
+	}
+
+	@Override
 	public void setDialogTitleKey(String key) {
 		keyDialogTitle = key;
 	}

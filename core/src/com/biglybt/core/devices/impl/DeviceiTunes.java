@@ -207,15 +207,7 @@ DeviceiTunes
 	public URL
 	getWikiURL()
 	{
-		try{
-			return( new URL( MessageText.getString( "device.wiki.itunes" )) );
-
-		}catch( Throwable e ){
-
-			Debug.out( e );
-
-			return( null );
-		}
+		return UrlUtils.getRawURL(Wiki.DEVICES_ITUNES_TIPS);
 	}
 
 	@Override

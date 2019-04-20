@@ -1,13 +1,26 @@
 # BiglyBT
 
-Source for BiglyBT, open source bittorrent client.
+Source for BiglyBT, a feature filled, open source, ad-free, bittorrent client.  BiglyBT is forked from Vuze/Azureus and is being maintained by two of the original developers as well as members of the community.  With over 15 years of development, there's a good chance we have the features you are looking for, as well as the decade old bugs you aren't looking for :)
 
+* [Official BiglyBT site](https://www.biglybt.com)
 * [Ways to Contribute](CONTRIBUTING.md)
 * [Translation Information](TRANSLATE.md)
 * [Feature Voting Page](https://vote.biglybt.com)
+* [Coding Guidelines](CODING_GUIDELINES.md)
 
 ## Donations
-Bitcoin Cash (BCH)/Bitcoin Blockstream (BTC): 1BiGLYBT38ttJhvZkjGc5mCw5uKoRHcUmr
+
+
+| Method | Address |
+|:--|:--|
+| PayPal | [BiglyBT's Donation Page](https://www.biglybt.com/donation/donate.php) |
+| BCH/BTC/BSG/BSV | 1BiGLYBT38ttJhvZkjGc5mCw5uKoRHcUmr |
+| DASH            | XjDwmSrDPQBaLzCkuRHZaFzHf7mTVxkW9K |
+| DOGE | DMXWdEtPUJc5p2sbHGo77SvqFXKTR8Vff1 |
+| ETH/ETC | 0x4e609B5EF88C8aA8Ab73945fD1ba68c9E27faC75 |
+| LTC | LKGc2utCrGfojpYsX3naT9n1AxjLiZ5MMG |
+| TRX/BTT | TAbsb7pjEEWNpXFvPf49rfVhFSB2e3dAM7 |
+| XRP | rPFKfbx2tuzMMaz7Zy99M6CquHKgp9srSb |
 
 ## Setting up Dev Environment
 
@@ -15,7 +28,7 @@ Getting the basics to compile from source is pretty straightforward:
 
 1. Clone the repo into your favorite IDE
 1. Mark `core/src` and `uis/src` as project roots (source modules)
-1. To the uis module, add `core/lib/*`, `uis/lib/log4j.jar` and one of the swt.jars at `/uis/lib/`:<br>
+1. To the uis module, add `core/lib/*` and one of the swt.jars at `/uis/lib/`:<br>
   `swt-win64.jar` on Windows<br>
   `swt-cocoa-64.jar` on OSX<br>
   `swt-linux-64.jar` on Linux (GTK)
@@ -34,33 +47,6 @@ Running is only few more steps:
   When a normal user is running the app, the working directory is where the jar, executable, and libraries (dll, so, jnilib) are.
 * If you want a separate config dir from the default one, use VM Option `-Dazureus.config.path=<some config path>`
 * Run it
-
-
-## Compatibility and API profiles
-
-BiglyBT comes in several editions for different operating systems. 
-Mac OSX, Linux and Windows uses the full BiglyBT-API based on Java 8.
-
-Android edition is based on Java 8, but is limited to the minimum Android SDK version in use.
-BiglyBT-API for Android is maintained on a dedicated branch [`android`](https://github.com/BiglySoftware/BiglyBT/tree/android).
-This api is consumed by the [BiglyBT-Android](https://github.com/BiglySoftware/BiglyBT-Android) project.
-
-For code portability and easy merging it is strongly advised to use JDK features only
-covered by the minimum Android SDK level. 
-The currently minimum SDK level is `15` (Android 4.0.3 - Ice Cream Sandwich)
-
-Generally, Android embraces the Java 7 API as well as a subset of Java 8 features.
-
-Please consult the [android API](https://developer.android.com/reference/packages) for details on API levels.
-
-
-### Known limitations and restrictions
-
- * `java.lang.Long#compare(long, long)` - android level 19 (restricted)
- * `try-with-resources` - android level 19 (restricted)
- * `java.nio.charset.StandardCharsets` - android level 19 (restricted)
- * `java.util.stream`, `java.util.function` etc - android level 24+ (unsupported)
-
 
 ## Release Installer Notes
 

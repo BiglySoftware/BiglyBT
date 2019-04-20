@@ -35,7 +35,6 @@ public class TorrentDownloaderManager{
 
     private static TorrentDownloaderManager man = null;
 
-    private boolean logged = false;
     private boolean autostart = false;
     private GlobalManager gm = null;
     
@@ -52,9 +51,8 @@ public class TorrentDownloaderManager{
         return man;
     }
 
-    public void init(GlobalManager _gm, boolean _logged, boolean _autostart ) {
+    public void init(GlobalManager _gm, boolean _autostart ) {
         this.gm = _gm;
-        this.logged = _logged;
         this.autostart = _autostart;
     }
 
@@ -72,24 +70,16 @@ public class TorrentDownloaderManager{
         return dl;
     }
 
-    public TorrentDownloader download(String url, String fileordir, boolean logged) {
-        return add(TorrentDownloaderFactory.create(new Callback(), url, null, fileordir, logged));
-    }
-
-    public TorrentDownloader download(String url, boolean logged) {
-        return add(TorrentDownloaderFactory.create(new Callback(), url, null, null, logged));
-    }
-
     public TorrentDownloader download(String url, String fileordir) {
-        return add(TorrentDownloaderFactory.create(new Callback(), url, null, fileordir, this.logged));
+        return add(TorrentDownloaderFactory.create(new Callback(), url, null, null, fileordir));
     }
 
     public TorrentDownloader download(String url) {
-        return add(TorrentDownloaderFactory.create(new Callback(), url, this.logged));
+        return add(TorrentDownloaderFactory.create(new Callback(), url, null, null, null));
     }
     
     public TorrentDownloader downloadToLocation(String url, String save_path ) {
-        return add(TorrentDownloaderFactory.create(new Callback( save_path ), url, this.logged));
+        return add(TorrentDownloaderFactory.create(new Callback( save_path ), url, null, null, null));
     }
 
 	/**

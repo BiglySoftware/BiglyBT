@@ -35,12 +35,9 @@ import com.biglybt.core.CoreLifecycleAdapter;
 import com.biglybt.core.util.SystemProperties;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import org.apache.log4j.Logger;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
-import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.ui.common.IUserInterface;
-import com.biglybt.ui.common.UIConst;
 import com.biglybt.ui.console.ConsoleInput;
 import com.biglybt.ui.console.UserProfile;
 import com.biglybt.ui.console.multiuser.MultiUserConsoleInput;
@@ -106,7 +103,7 @@ public class UI extends com.biglybt.ui.common.UITemplateHeadless implements IUse
 			e.printStackTrace();
 		}
 
-	    TorrentDownloaderFactory.initManager(core.getGlobalManager(), true, true );
+	    TorrentDownloaderFactory.initManager(core.getGlobalManager(), true );
 	}
 
 	/**

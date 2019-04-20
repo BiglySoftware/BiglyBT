@@ -35,6 +35,7 @@ import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.platform.PlatformManagerCapabilities;
 import com.biglybt.platform.PlatformManagerFactory;
@@ -413,7 +414,7 @@ public class ConfigSectionInterfaceDisplaySWT
 		formatters.setMultiLine(3);
 
 		add(new HyperlinkParameterImpl("ConfigView.label.general.formatters.link",
-				MessageText.getString("ConfigView.label.general.formatters.link.url")),
+				Wiki.INTERFACE_FORMAT_OVERRIDES),
 				Parameter.MODE_INTERMEDIATE, listFormatters);
 
 		add(new InfoParameterImpl("config.style.formatOverrides.status",

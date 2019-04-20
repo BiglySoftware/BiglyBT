@@ -34,7 +34,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.FileUtil;
 import com.biglybt.core.util.SystemProperties;
-
+import com.biglybt.core.util.Wiki;
 
 /**
  * @author Arbeiten
@@ -109,6 +109,27 @@ public class MessageText {
 	  CONSTANTS.put("base.product.name", Constants.APP_NAME);
 	  CONSTANTS.put("base.wiki.url", Constants.URL_WIKI);
 	  CONSTANTS.put("base.client.url", Constants.URL_CLIENT_HOME);
+
+	  CONSTANTS.put("Alert.failed.update.url", Wiki.FAILED_UPDATE);
+	  CONSTANTS.put("alltrackers.link.url", Wiki.ALL_TRACKERS_VIEW);
+	  CONSTANTS.put("restart.error.url", Wiki.RESTARTING_ISSUES);
+	  CONSTANTS.put("unix.script.new.manual.url", Wiki.UNIX_STARTUP_SCRIPT);
+	  CONSTANTS.put("wiki.fat32", Wiki.FAT32_FILE_SIZE_LIMIT);
+	  CONSTANTS.put("url.wiki.app.disappears", Wiki.APPLICATION_DISSAPEARS);
+	  CONSTANTS.put("url.wiki.failed.update", Wiki.FAILED_UPDATE);
+	  CONSTANTS.put("url.wiki.swt.cant.autoupdate", Wiki.SWT_CANT_AUTO_UPDATE);
+
+
+	  /* unused expansion keys are left out */
+//	  CONSTANTS.put("ConfigView.label.general.formatters.link.url", Wiki.INTERFACE_FORMAT_OVERRIDES);
+//	  CONSTANTS.put("ConfigView.section.connection.advanced.url", Wiki.ADVANCED_NETWORK_SETTINGS);
+//	  CONSTANTS.put("ConfigView.section.connection.pairing.srp.url", Wiki.SECURE_REMOTE_PASSWORD); //todo: rename key
+//	  CONSTANTS.put("ConfigView.section.connection.pairing.url", Wiki.PAIRING);
+//	  CONSTANTS.put("ConfigView.section.dns.url", Wiki.DNS);
+//	  CONSTANTS.put("MainWindow.menu.speed_limits.wiki.url", Wiki.SPEED_LIMIT_SCHEDULER);
+//	  CONSTANTS.put("faq.legal.url", Wiki.FAQ_LEGAL);
+//	  CONSTANTS.put("privacy.view.wiki.url", Wiki.PRIVACY_VIEW);
+//	  CONSTANTS.put("device.wiki.itunes", Wiki.DEVICES_ITUNES_TIPS);
 
   }
 

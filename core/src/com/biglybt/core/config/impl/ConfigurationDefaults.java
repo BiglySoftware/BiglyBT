@@ -41,11 +41,6 @@ import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerFactory;
 
 /**
- *
- * @author  Tobias Minich
- */
-
-/**
  * Some (proposed) option naming conventions:
  * - Starts with a general identifier
  *   General_ for, well, general things =)
@@ -61,6 +56,8 @@ import com.biglybt.platform.PlatformManagerFactory;
  *   special validity checks in the webinterface option parsing code.
  *   (Namely they are created if they don't exist and the option isn't changed
  *   with a logged error if a normal file of the same name exists)
+ *
+ * @author Tobias Minich
  */
 
 public class ConfigurationDefaults {
@@ -671,8 +668,6 @@ public class ConfigurationDefaults {
     def.put( "filechannel.rt.buffer.pieces", new Long( 5 ));
 
     def.put( "BT Request Max Block Size", new Long(65536));
-    def.put( "network.tcp.enable_safe_selector_mode", FALSE );
-    def.put( "network.tcp.safe_selector_mode.chunk_size", SIXTY );
 
     def.put( "network.transport.encrypted.require", FALSE );
     def.put( "network.transport.encrypted.min_level", "RC4" );

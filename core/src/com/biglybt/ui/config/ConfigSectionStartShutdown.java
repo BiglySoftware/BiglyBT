@@ -28,9 +28,9 @@ import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
 import com.biglybt.core.util.AEJavaManagement;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerCapabilities;
@@ -40,6 +40,7 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.UIFunctionsUserPrompter;
 
 import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.config.ActionParameter;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
@@ -223,7 +224,7 @@ public class ConfigSectionStartShutdown
 			// wiki link
 
 			add(new HyperlinkParameterImpl("ConfigView.label.please.visit.here",
-					Constants.URL_WIKI + "w/Java_VM_memory_usage"),
+					Wiki.JAVA_VM_MEMORY_USAGE),
 					Parameter.MODE_INTERMEDIATE, listJVM);
 
 			// info
@@ -241,6 +242,7 @@ public class ConfigSectionStartShutdown
 				ActionParameterImpl show_folder_button = new ActionParameterImpl(
 						"jvm.show.file", "!" + option_file.getAbsolutePath() + "!");
 				add(show_folder_button, Parameter.MODE_INTERMEDIATE, listJVM);
+				show_folder_button.setAllowedUiTypes(UIInstance.UIT_SWT);
 				show_folder_button.setStyle(ActionParameter.STYLE_LINK);
 				show_folder_button.addListener(param -> UIFunctionsManager.getUIFunctions().showInExplorer(option_file));
 

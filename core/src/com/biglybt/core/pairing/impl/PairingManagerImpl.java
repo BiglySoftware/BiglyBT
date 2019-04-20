@@ -225,7 +225,7 @@ PairingManagerImpl
 		BasicPluginConfigModel configModel = ui_manager.createBasicPluginConfigModel(
 				ConfigSection.SECTION_CONNECTION, CONFIG_SECTION_ID);
 
-		configModel.addHyperlinkParameter2( "ConfigView.label.please.visit.here", MessageText.getString( "ConfigView.section.connection.pairing.url" ));
+		configModel.addHyperlinkParameter2( "ConfigView.label.please.visit.here", Wiki.PAIRING);
 
 		param_enable = configModel.addBooleanParameter2( "pairing.enable", "pairing.enable", false );
 
@@ -296,7 +296,7 @@ PairingManagerImpl
 
 		LabelParameter	param_srp_info = configModel.addLabelParameter2( "pairing.srp.info" );
 
-		HyperlinkParameter param_srp_link = configModel.addHyperlinkParameter2( "label.more.info.here", MessageText.getString( "ConfigView.section.connection.pairing.srp.url" ));
+		HyperlinkParameter param_srp_link = configModel.addHyperlinkParameter2( "label.more.info.here", Wiki.SECURE_REMOTE_PASSWORD);
 
 		param_srp_enable 	= configModel.addBooleanParameter2( "pairing.srp.enable", "pairing.srp.enable", false );
 

@@ -383,19 +383,6 @@ ConfigurationChecker
 	    }else {  //this is a pre-existing installation, called every time after first
 
 
-
-	    	if // disable safe selector mode enabled at some point in the past if we're on java 6 or higher and/or not on windows
-	    	(	COConfigurationManager.getBooleanParameter("network.tcp.enable_safe_selector_mode")
-	    		&& !(Constants.isWindows &&
-	    			(Constants.JAVA_VERSION.startsWith("1.4") ||
-	    			Constants.JAVA_VERSION.startsWith("1.5"))
-	    		)
-	    	)
-	    	{
-	    		COConfigurationManager.removeParameter("network.tcp.enable_safe_selector_mode");
-	    		changed = true;
-	    	}
-
 	    	// transition from tracker-only port override to global port override
 	    	if(COConfigurationManager.doesParameterNonDefaultExist("TCP.Announce.Port"))
 	    	{

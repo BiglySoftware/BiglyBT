@@ -64,6 +64,11 @@ InfoParameterImpl
 	}
 
 	@Override
+	public Object getValueObject() {
+		return getValue();
+	}
+
+	@Override
 	public void
 	setValue(
 		String	s )

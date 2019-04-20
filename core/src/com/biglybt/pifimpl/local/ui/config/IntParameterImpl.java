@@ -77,6 +77,11 @@ public class IntParameterImpl
 	}
 
 	@Override
+	public Object getValueObject() {
+		return getValue();
+	}
+
+	@Override
 	public void
 	setValue(
 		int	value )

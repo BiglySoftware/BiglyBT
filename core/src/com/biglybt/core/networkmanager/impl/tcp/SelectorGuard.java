@@ -18,8 +18,6 @@
  */
 package com.biglybt.core.networkmanager.impl.tcp;
 
-import com.biglybt.core.logging.LogAlert;
-import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemTime;
@@ -37,10 +35,12 @@ import com.biglybt.core.util.SystemTime;
  *   http://developer.java.sun.com/developer/bugParade/bugs/4850373.html
  *   http://developer.java.sun.com/developer/bugParade/bugs/4881228.html
  * Fixed in JVM 1.4.2_05+ and 1.5b2+
+ *
+ * The workaround applied for the above is Thread.sleep() to avoid CPU hogging.
+ *
  */
 public class SelectorGuard {
   private static final int SELECTOR_SPIN_THRESHOLD    = 200;
-  private static final int SELECTOR_FAILURE_THRESHOLD = 10000;
   private static final int MAX_IGNORES = 5;
 
   private boolean marked = false;
@@ -49,16 +49,14 @@ public class SelectorGuard {
   private long select_op_time;
 
   private final String type;
-  private final GuardListener listener;
   private int ignores = 0;
 
 
   /**
    * Create a new SelectorGuard with the given failed count threshold.
    */
-  public SelectorGuard( String _type, GuardListener _listener ) {
+  public SelectorGuard( String _type) {
     this.type = _type;
-    this.listener = _listener;
   }
 
   public String
@@ -113,49 +111,17 @@ public class SelectorGuard {
 
 
     if( consecutiveZeroSelects > SELECTOR_SPIN_THRESHOLD ) {
-      if( Constants.isWindows && (Constants.JAVA_VERSION.startsWith("1.4") || Constants.JAVA_VERSION.startsWith("1.5"))) {
-        //Under windows, it seems that selector spin can sometimes appear when >63 socket channels are registered with a selector
-    	//Should be fixed in later 1.5, but play it safe and assume 1.6 or newer only.
-        if( !listener.safeModeSelectEnabled() ) {
-          String msg = "Likely faulty socket selector detected: reverting to safe-mode socket selection. [JRE " +Constants.JAVA_VERSION+"]\n";
-          msg += "Please see " +Constants.AZUREUS_WIKI+ "LikelyFaultySocketSelector for help.";
-          Debug.out( msg );
-          Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_WARNING, msg));
-
-          consecutiveZeroSelects = 0;
-          listener.spinDetected();
-          return;
-        }
-      }
-      else {
-        //under linux, it seems that selector spin is somewhat common, but normal??? behavior, so just sleep a bit
-        consecutiveZeroSelects = 0;
-        try{  Thread.sleep( 50 );  }catch( Throwable t) {t.printStackTrace();}
-        return;
-      }
-    }
-
-
-    if( consecutiveZeroSelects > SELECTOR_FAILURE_THRESHOLD ) {  //should only happen under Windows + JRE 1.4
-      String msg = "Likely network disconnect/reconnect: Repairing socket channel selector. [JRE " +Constants.JAVA_VERSION+"]\n";
-      msg += "Please see " +Constants.AZUREUS_WIKI+ "LikelyNetworkDisconnectReconnect for help.";
-      Debug.out( msg );
-      Logger.log(new LogAlert(LogAlert.UNREPEATABLE, LogAlert.AT_WARNING, msg));
-
+      //it seems that selector spin is somewhat common, but normal??? behavior, so just sleep a bit
       consecutiveZeroSelects = 0;
-      listener.failureDetected();
+      try {
+        Thread.sleep(50);
+      } catch (Throwable t) {
+        t.printStackTrace();
+      }
       return;
     }
 
     //not yet over the count threshold
-  }
-
-
-
-  public interface GuardListener {
-    public boolean safeModeSelectEnabled();
-    public void spinDetected();
-    public void failureDetected();
   }
 
 }

@@ -24,8 +24,8 @@ import java.util.List;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.security.*;
 import com.biglybt.core.util.Base32;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -191,7 +191,7 @@ public class ConfigSectionSecurity
 		// wiki link
 
 		add(new HyperlinkParameterImpl("ConfigView.label.please.visit.here",
-				Constants.URL_WIKI + "w/Public_Private_Keys"), listCrypto);
+				Wiki.PUBLIC_PRIVATE_KEYS), listCrypto);
 
 		// publick key display
 

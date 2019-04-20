@@ -18,6 +18,7 @@
 package com.biglybt.pifimpl.local.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.html.HTMLUtils;
 
 import com.biglybt.pif.ui.config.ColorParameter;
 
@@ -34,6 +35,13 @@ public class ColorParameterImpl
 
 	public ColorParameterImpl(String configKey, String label) {
 		super(configKey, label);
+	}
+
+
+	@Override
+	public Object getValueObject() {
+		return "#" + HTMLUtils.toColorHexString(getRedValue(), getGreenValue(),
+				getBlueValue(), 255);
 	}
 
 	@Override

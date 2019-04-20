@@ -28,6 +28,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.AEThread2;
+import com.biglybt.core.util.BDecoder;
+import com.biglybt.core.util.Base32;
+import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.FrequencyLimitedDispatcher;
+import com.biglybt.core.util.RandomUtils;
+import com.biglybt.core.util.RegExUtil;
+import com.biglybt.core.util.SimpleTimer;
+import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimerEventPeriodic;
+import com.biglybt.core.util.UrlUtils;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.plugin.net.buddy.BuddyPlugin;
 import com.biglybt.plugin.net.buddy.BuddyPluginUI;
 import org.eclipse.swt.SWT;
@@ -99,22 +114,6 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.tag.TagType;
-import com.biglybt.core.util.AENetworkClassifier;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.AEThread2;
-import com.biglybt.core.util.BDecoder;
-import com.biglybt.core.util.Base32;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.FrequencyLimitedDispatcher;
-import com.biglybt.core.util.RandomUtils;
-import com.biglybt.core.util.RegExUtil;
-import com.biglybt.core.util.SimpleTimer;
-import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.TimerEvent;
-import com.biglybt.core.util.TimerEventPerformer;
-import com.biglybt.core.util.TimerEventPeriodic;
-import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
@@ -2460,7 +2459,7 @@ BuddyPluginViewBetaChat
 		{
 			int	start	= ftux_bottom.getText().length();
 
-			String url 		= MessageText.getString( "faq.legal.url" );
+			String url = Wiki.FAQ_LEGAL;
 			String url_text	= MessageText.getString( "label.more.dot" );
 
 			ftux_bottom.append( url_text );
@@ -2638,8 +2637,8 @@ BuddyPluginViewBetaChat
 			grid_data.horizontalSpan=can_popout?1:2;
 			label.setLayoutData(grid_data);
 		}
-		
-		LinkLabel link = new LinkLabel( top_right, "label.help", lu.getLocalisedMessageText( "azbuddy.dchat.link.url" ));
+
+		LinkLabel link = new LinkLabel( top_right, "label.help", Wiki.DECENTRALIZED_CHAT);
 		//grid_data.horizontalAlignment = SWT.END;
 		//link.getlabel().setLayoutData( grid_data );
 
@@ -4151,7 +4150,7 @@ BuddyPluginViewBetaChat
 						List<String>	values 	= new ArrayList<String>();
 						
 						names.add( "label.help" );
-						values.add (MessageText.getString( "azbuddy.profile.info.url" ));
+						values.add(Wiki.FRIENDS__PUBLIC_PROFILE);
 						
 						names.add( "" );
 						values.add( "" );

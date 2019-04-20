@@ -32,18 +32,12 @@ import java.util.Properties;
 import java.util.Vector;
 
 import com.biglybt.core.*;
-import org.apache.log4j.Appender;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.varia.DenyAllFilter;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.torrentdownloader.TorrentDownloader;
-import com.biglybt.core.torrentdownloader.TorrentDownloaderCallBackInterface;
 import com.biglybt.core.torrentdownloader.TorrentDownloaderFactory;
 import com.biglybt.core.torrentdownloader.impl.TorrentDownloaderManager;
 import com.biglybt.core.util.Constants;
@@ -89,6 +83,10 @@ public class ConsoleInput extends Thread {
 	private final List helpItems = new ArrayList();
 	private final UserProfile userProfile;
 
+	private final List<LogEvent> errorLogEvents = new ArrayList<>();
+	private int numNewErrorLogEvents = 0;
+	private boolean waitingForInput = false;
+
 	/**
 	 * can be used by plugins to register console commands since they may not have access to
 	 * each ConsoleInput object that is created.
@@ -127,6 +125,16 @@ public class ConsoleInput extends Thread {
 		this.controlling = _controlling.booleanValue();
 		this.br = new CommandReader(_in);
 
+		com.biglybt.core.logging.Logger.addListener((ILogEventListener) event -> {
+			if (event.entryType == LogEvent.LT_ERROR) {
+				errorLogEvents.add(event);
+				if (waitingForInput && numNewErrorLogEvents == 0) {
+					System.out.println("New error(s) logged. Use `show errors` to view.");
+				}
+				numNewErrorLogEvents++;
+			}
+		});
+
 		//System.out.println( "ConsoleInput: initializing..." );
 		initialise();
 		//System.out.println( "ConsoleInput: initialized OK" );
@@ -150,14 +158,6 @@ public class ConsoleInput extends Thread {
 		this.userProfile 	= UserProfile.DEFAULT_USER_PROFILE;
 		this.controlling 	= false;
 		this.br 			= new CommandReader( new InputStreamReader( new ByteArrayInputStream(new byte[0])));
-
-		if (Logger.getRootLogger().getAppender("ConsoleAppender")==null) {
-	      Appender app;
-	      app = new ConsoleAppender(new PatternLayout(PatternLayout.TTCC_CONVERSION_PATTERN));
-	      app.setName("ConsoleAppender");
-	      app.addFilter( new DenyAllFilter() );  //'log off' by default
-	      Logger.getRootLogger().addAppender(app);
-	    }
 
 		initialise();
 	}
@@ -256,7 +256,7 @@ public class ConsoleInput extends Thread {
 					super.TorrentDownloaderEvent(state, inf);
 				}
 			}
-		}, url, null, null, true);
+		}, url, null, null, null);
 		TorrentDownloaderManager.getInstance().add(downloader);
 	}
 
@@ -337,7 +337,6 @@ public class ConsoleInput extends Thread {
 		registerCommand(new TorrentPublish());
 		registerCommand(new TorrentForceStart());
 		registerCommand(new TorrentLog());
-		registerCommand(new Log());
 		registerCommand(new Move());
 		registerCommand(new RunState());
 		registerCommand(new Share());
@@ -352,6 +351,7 @@ public class ConsoleInput extends Thread {
 		registerCommand(new Plugin());
 		registerCommand(new Pairing());
 		registerCommand(new Archive());
+		registerCommand(new Config());
 
 		try{
 			registerCommand(new Subscriptions());
@@ -604,7 +604,7 @@ public class ConsoleInput extends Thread {
 				return true;
 			} catch (Exception e)
 			{
-				out.println("> Invoking Command '"+command+"' failed. Exception: "+ Debug.getNestedExceptionMessage(e));
+				out.println("> Invoking Command '"+command+"' failed. Exception: "+ Debug.getNestedExceptionMessage(e) + "; " + Debug.getCompressedStackTrace(e, 0, 5, false));
 				return false;
 			}
 		} else
@@ -616,12 +616,19 @@ public class ConsoleInput extends Thread {
 		List<String> comargs;
 		running = true;
 		while (running) {
+			if (numNewErrorLogEvents > 0) {
+				System.out.println(numNewErrorLogEvents + " new errors logged. Use `show errors` to view.");
+				numNewErrorLogEvents = 0;
+			}
 			try {
+				waitingForInput = true;
 				String line = br.readLine();
+				waitingForInput = false;
 				comargs = br.parseCommandLine(line);
 			} catch (Exception e) {
 				out.println("Stopping console input reader because of exception: " + e.getMessage());
 				running = false;
+				waitingForInput = false;
 				break;
 			}
 			if (!comargs.isEmpty()) {
@@ -907,5 +914,12 @@ public class ConsoleInput extends Thread {
 	getGlobalManager()
 	{
 		return( core.getGlobalManager());
+	}
+
+	public List<LogEvent> getErrorLogEvents() {
+		ArrayList<LogEvent> logEvents = new ArrayList<>(errorLogEvents);
+		errorLogEvents.clear();
+		numNewErrorLogEvents = 0;
+		return logEvents;
 	}
 }

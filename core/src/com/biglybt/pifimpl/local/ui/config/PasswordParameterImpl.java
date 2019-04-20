@@ -132,4 +132,9 @@ PasswordParameterImpl
 		return widthInCharacters;
 	}
 
+	@Override
+	public Object getValueObject() {
+		return getValue();
+	}
+
 }

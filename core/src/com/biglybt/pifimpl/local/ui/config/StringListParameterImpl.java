@@ -39,11 +39,13 @@ public class StringListParameterImpl extends ParameterImpl implements StringList
 	}
 
 
+	@Override
 	public String[] getValues()
 	{
 	  return values;
 	}
 
+	@Override
 	public String[] getLabels()
 	{
 	  return labels;
@@ -97,5 +99,10 @@ public class StringListParameterImpl extends ParameterImpl implements StringList
 	public void setSuffixLabelText(String text) {
 		this.suffixLabelKey = "!" + text + "!";
 		refreshControl();
+	}
+
+	@Override
+	public Object getValueObject() {
+		return getValue();
 	}
 }

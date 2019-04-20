@@ -73,4 +73,9 @@ ParameterTabFolderImpl
 			g.setEnabled( e );
 		}
 	}
+
+	@Override
+	public Object getValueObject() {
+		return null;
+	}
 }

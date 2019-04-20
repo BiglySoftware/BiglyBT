@@ -74,6 +74,11 @@ public class FloatParameterImpl
 	}
 
 	@Override
+	public Object getValueObject() {
+		return getValue();
+	}
+
+	@Override
 	public void setValue(float b) {
 		COConfigurationManager.setParameter(configKey, b);
 	}

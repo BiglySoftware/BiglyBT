@@ -30,7 +30,6 @@ import com.biglybt.core.proxy.AEProxyFactory.PluginProxy;
 import com.biglybt.core.torrentdownloader.impl.TorrentDownloaderImpl;
 import com.biglybt.core.torrentdownloader.impl.TorrentDownloaderManager;
 import com.biglybt.core.util.AENetworkClassifier;
-import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TorrentUtils;
 import com.biglybt.core.util.UrlUtils;
 
@@ -39,21 +38,6 @@ import com.biglybt.core.util.UrlUtils;
  * @author  Tobias Minich
  */
 public class TorrentDownloaderFactory {
-
-	/** {@link TorrentDownloaderImpl} */
-	private static final String CLA_NORMAL = "com.biglybt.core.torrentdownloader.impl.TorrentDownloaderImpl";
-	/** {@link com.biglybt.core.torrentdownloader.impl.TorrentDownloaderLoggedImpl} */
-	private static final String CLA_LOGGED = "com.biglybt.core.torrentdownloader.impl.TorrentDownloaderLoggedImpl";
-
-  private static TorrentDownloaderImpl getClass(boolean logged) {
-    try {
-      return (TorrentDownloaderImpl) Class.forName(logged ? CLA_LOGGED : CLA_NORMAL).newInstance();
-    } catch (Exception e) {
-    	Debug.printStackTrace( e );
-      return null;
-    }
-  }
-
   /**
    * creates and initializes a TorrentDownloader object with the specified parameters.
    * NOTE: this does not actually start the TorrentDownloader object
@@ -64,30 +48,8 @@ public class TorrentDownloaderFactory {
    *        torrent file should be saved to. if a default save directory is not specified, this will be used instead.
    * 		even if a default save directory is specified, if this parameter path refers to a file, the filename will
    * 		be used when saving the torrent
-   * @param whether or not logging is enabled for the torrent download. this is performed through the TorrentDownloaderLoggedImpl class which is only available in the uis project
    * @return
    */
-  public static TorrentDownloader
-  create(
-  	TorrentDownloaderCallBackInterface 	callback,
-	String 								url,
-	String								referrer,
-	String 								fileordir,
-	boolean 							logged )
-  {
-	  return( create( callback, url, referrer, null, fileordir, logged ));
-  }
-
-  public static TorrentDownloader
-  create(
-  		TorrentDownloaderCallBackInterface 	callback,
-		String 								url,
-		String								referrer,
-		String 								fileordir )
-  {
-    return create(callback, url, referrer, fileordir, false );
-  }
-
   public static TorrentDownloader
   create(
   		TorrentDownloaderCallBackInterface 	callback,
@@ -96,59 +58,15 @@ public class TorrentDownloaderFactory {
 		Map									request_properties,
 		String 								fileordir)
   {
-	  return( create( callback, url, referrer, request_properties, fileordir, false ));
+	  return( new TorrentDownloadRetrier( callback, url, referrer, request_properties, fileordir ));
   }
 
-  private static TorrentDownloader
-  create(
-  		TorrentDownloaderCallBackInterface 	callback,
-		String 								url,
-		String								referrer,
-		Map									request_properties,
-		String 								fileordir,
-		boolean								logged )
-  {
-	  return( new TorrentDownloadRetrier( callback, url, referrer, request_properties, fileordir, logged ));
-  }
-
-  public static TorrentDownloader create(TorrentDownloaderCallBackInterface callback, String url, boolean logged) {
-    return create(callback, url, null, null, logged);
-  }
-
-  public static TorrentDownloader create(TorrentDownloaderCallBackInterface callback, String url) {
-      return create(callback, url, null, null, false);
-  }
-
-  public static TorrentDownloader create(String url, String fileordir, boolean logged) {
-    return create(null, url, null, fileordir, logged);
-  }
-
-  public static TorrentDownloader create(String url, String fileordir) {
-    return create(null, url, null, fileordir, false);
-  }
-
-  public static TorrentDownloader create(String url, boolean logged) {
-    return create(null, url, null, null, logged);
-  }
-
-  public static TorrentDownloader create(String url) {
-    return create(null, url, null, null, false);
-  }
-
-  public static void initManager(GlobalManager gm, boolean logged, boolean autostart ) {
-    TorrentDownloaderManager.getInstance().init(gm, logged, autostart);
-  }
-
-  public static TorrentDownloader downloadManaged(String url, String fileordir, boolean logged) {
-    return TorrentDownloaderManager.getInstance().download(url, fileordir, logged);
+  public static void initManager(GlobalManager gm, boolean autostart ) {
+    TorrentDownloaderManager.getInstance().init(gm,  autostart);
   }
 
   public static TorrentDownloader downloadManaged(String url, String fileordir) {
     return TorrentDownloaderManager.getInstance().download(url, fileordir);
-  }
-
-  public static TorrentDownloader downloadManaged(String url, boolean logged) {
-    return TorrentDownloaderManager.getInstance().download(url, logged);
   }
 
   public static TorrentDownloader downloadManaged(String url) {
@@ -167,7 +85,6 @@ public class TorrentDownloaderFactory {
 		final private String								referrer;
 		final private Map									request_properties;
 		final private String 								fileordir;
-		final private boolean								logged;
 
 		private volatile TorrentDownloaderImpl	delegate;
 
@@ -190,14 +107,12 @@ public class TorrentDownloaderFactory {
   			String 										_url,
   			String										_referrer,
   			Map											_request_properties,
-  			String 										_fileordir,
-  			boolean										_logged )
+  			String 										_fileordir )
   		{
   			url					= _url;
   			referrer			= _referrer;
   			request_properties	= _request_properties;
   			fileordir			= _fileordir;
-  			logged				= _logged;
 
   			TorrentDownloaderCallBackInterface callback			=
   				new TorrentDownloaderCallBackInterface()
@@ -349,7 +264,7 @@ public class TorrentDownloaderFactory {
 
   	  									if ( plugin_proxy != null ){
 
-	  	  									delegate = TorrentDownloaderFactory.getClass( logged );
+	  	  									delegate = new TorrentDownloaderImpl();
 
 	  	  									if ( sdp_set ){
 
@@ -396,7 +311,7 @@ public class TorrentDownloaderFactory {
 
   							if ( retry_url != null ){
 
-	  				 			delegate = TorrentDownloaderFactory.getClass( logged );
+	  				 			delegate = new TorrentDownloaderImpl();
 
 	  				 			if ( sdp_set ){
 
@@ -435,7 +350,7 @@ public class TorrentDownloaderFactory {
 
   				};
 
-  			delegate = TorrentDownloaderFactory.getClass( logged );
+  			delegate = new TorrentDownloaderImpl();
 
   			delegate.init( callback, url, null, referrer, request_properties, fileordir );
   		}

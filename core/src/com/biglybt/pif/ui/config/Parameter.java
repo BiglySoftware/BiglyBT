@@ -224,4 +224,12 @@ Parameter
 	 * @return true - value was reset; false - already reset
 	 */
 	boolean resetToDefault();
+
+	/**
+	 * Retrieve the parameter's value as an Object.  Subclasses will usually have
+	 * a getValue() that will return a specific type.
+	 *
+	 * @since BiglyBT 1.9.0.1
+	 */
+	Object getValueObject();
 }

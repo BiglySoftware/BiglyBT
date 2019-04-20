@@ -120,7 +120,7 @@ SpeedTestPanel
 
         final Label linkLabel = new Label(azWiki, SWT.NULL);
         linkLabel.setText( Constants.APP_NAME + " Wiki Speed Test" );
-        linkLabel.setData( Constants.URL_WIKI + "w/Speed_Test_FAQ");
+        linkLabel.setData( Wiki.SPEED_TEST_FAQ);
         linkLabel.setCursor(display.getSystemCursor(SWT.CURSOR_HAND));
         linkLabel.setForeground(Colors.blue);
         azwGridData = new GridData();
@@ -129,11 +129,11 @@ SpeedTestPanel
 	    linkLabel.addMouseListener(new MouseAdapter() {
 	      @Override
 	      public void mouseDoubleClick(MouseEvent arg0) {
-	      	Utils.launch((String) ((Label) arg0.widget).getData());
+		      Utils.launch(arg0.widget.getData());
 	      }
 	      @Override
 	      public void mouseUp(MouseEvent arg0) {
-	      	Utils.launch((String) ((Label) arg0.widget).getData());
+		      Utils.launch(arg0.widget.getData());
 	      }
 	    });
 

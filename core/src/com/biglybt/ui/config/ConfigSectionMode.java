@@ -23,7 +23,7 @@ import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Wiki;
 import com.biglybt.pifimpl.local.ui.config.*;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -55,9 +55,9 @@ public class ConfigSectionMode
 //    };
 
 		final String[] links = {
-			Constants.URL_WIKI + "w/Mode#Beginner",
-			Constants.URL_WIKI + "w/Mode#Intermediate",
-			Constants.URL_WIKI + "w/Mode#Advanced"
+				Wiki.MODE_BEGINNER,
+				Wiki.MODE_INTERMEDIATE,
+				Wiki.MODE_ADVANCED,
 		};
 
 		int userMode = COConfigurationManager.getIntParameter(ICFG_USER_MODE);
