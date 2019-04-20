@@ -83,7 +83,7 @@ public class ConsoleInput extends Thread {
 	private final List helpItems = new ArrayList();
 	private final UserProfile userProfile;
 
-	public final List<LogEvent> errorLogEvents = new ArrayList<>();
+	private final List<LogEvent> errorLogEvents = new ArrayList<>();
 	private int numNewErrorLogEvents = 0;
 	private boolean waitingForInput = false;
 
@@ -914,5 +914,12 @@ public class ConsoleInput extends Thread {
 	getGlobalManager()
 	{
 		return( core.getGlobalManager());
+	}
+
+	public List<LogEvent> getErrorLogEvents() {
+		ArrayList<LogEvent> logEvents = new ArrayList<>(errorLogEvents);
+		errorLogEvents.clear();
+		numNewErrorLogEvents = 0;
+		return logEvents;
 	}
 }

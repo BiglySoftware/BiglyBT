@@ -341,10 +341,11 @@ public class Show extends IConsoleCommand {
 			}
 
 		} else if (subCommand.equalsIgnoreCase("errors")) {
-			if (ci.errorLogEvents.size() == 0) {
+			List<LogEvent> errorLogEvents = ci.getErrorLogEvents();
+			if (errorLogEvents.size() == 0) {
 				System.out.println("No error logs since last time.");
 			}
-			for (LogEvent event : ci.errorLogEvents) {
+			for (LogEvent event : errorLogEvents) {
 				final StringBuffer buf = new StringBuffer();
 
 				buf.append(DisplayFormatters.formatDate(event.timeStamp.getTime()) + "] ");
@@ -368,7 +369,6 @@ public class Show extends IConsoleCommand {
 				
 				System.out.println(buf);
 			}
-			ci.errorLogEvents.clear();
 
 		} else {
 			if ((ci.torrents == null) || (ci.torrents != null) && ci.torrents.isEmpty()) {
