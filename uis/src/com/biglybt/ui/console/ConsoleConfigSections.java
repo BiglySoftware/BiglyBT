@@ -30,6 +30,18 @@ import com.biglybt.pif.ui.config.Parameter;
 
 public class ConsoleConfigSections
 {
+	public static final class ParameterWithConfigSection
+	{
+		public BaseConfigSection configSection;
+
+		public Parameter parameter;
+
+		public ParameterWithConfigSection(BaseConfigSection configSection,
+				Parameter parameter) {
+			this.configSection = configSection;
+			this.parameter = parameter;
+		}
+	}
 
 	private static ConsoleConfigSections instance;
 
@@ -116,7 +128,7 @@ public class ConsoleConfigSections
 		return configSections;
 	}
 
-	public Parameter getParameter(String configKey) {
+	public ParameterWithConfigSection getParameter(String configKey) {
 		List<BaseConfigSection> sections = getAllConfigSections(false);
 		for (BaseConfigSection section : sections) {
 			boolean needsBuild = !section.isBuilt();
@@ -128,7 +140,7 @@ public class ConsoleConfigSections
 
 				ParameterImpl pluginParam = section.getPluginParam(configKey);
 				if (pluginParam != null) {
-					return pluginParam;
+					return new ParameterWithConfigSection(section, pluginParam);
 				}
 			} finally {
 				if (needsBuild) {

@@ -11,17 +11,16 @@
 package com.biglybt.ui.console.commands;
 
 import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.SHA1Hasher;
 import com.biglybt.ui.common.ExternalUIConst;
 import com.biglybt.ui.common.util.StringPattern;
+import com.biglybt.ui.console.ConsoleConfigSections;
+import com.biglybt.ui.console.ConsoleConfigSections.ParameterWithConfigSection;
 import com.biglybt.ui.console.ConsoleInput;
+import com.biglybt.ui.console.util.PrintUtils;
 
 
 /**
@@ -84,7 +83,6 @@ public class Set extends IConsoleCommand {
 //		else
 //			ci.out.println("> converting " + origParamName + " to " + parameter);
 
-		Parameter param;
 		switch( args.size() )
 		{
 			case 1:
@@ -96,13 +94,21 @@ public class Set extends IConsoleCommand {
 				}
 				else
 				{
+					ParameterWithConfigSection paramInfo = ConsoleConfigSections.getInstance().getParameter(internal_name);
+					if (paramInfo != null) {
+						PrintUtils.printParam(ci.out, paramInfo.configSection, true, paramInfo.parameter, false);
+						break;
+					}
+
 					// try to display the value of the specified parameter
 					if( ! COConfigurationManager.doesParameterDefaultExist( internal_name ) )
 					{
 						ci.out.println("> Command 'set': Parameter '" + external_name + "' unknown.");
 						return;
 					}
-					param = Parameter.get(internal_name,external_name);
+
+
+					ParameterDeprecated param = ParameterDeprecated.get(internal_name,external_name);
 
 					ci.out.println( param.getString( false ) );
 				}
@@ -114,7 +120,7 @@ public class Set extends IConsoleCommand {
 				if( args.size() == 2 )
 				{
 					// guess the parameter type by getting the current value and determining its type
-					param = Parameter.get( internal_name, external_name );
+					ParameterDeprecated param = ParameterDeprecated.get( internal_name, external_name );
 					type = param.getType();
 				}
 				else
@@ -170,6 +176,13 @@ public class Set extends IConsoleCommand {
 				if( success ) {
 					COConfigurationManager.save();
 					ci.out.println("> Parameter '" + external_name + "' set to '" + setto + "'. [" + type + "]");
+
+					ParameterWithConfigSection paramInfo = ConsoleConfigSections.getInstance().getParameter(
+							internal_name);
+					if (paramInfo != null) {
+						PrintUtils.printParam(ci.out, paramInfo.configSection, true,
+								paramInfo.parameter, false);
+					}
 				}
 				else ci.out.println("ERROR: invalid type given");
 
@@ -201,7 +214,7 @@ public class Set extends IConsoleCommand {
 			}
 			if( sp.matches(external_name) )
 			{
-				Parameter param = Parameter.get( internal_name, external_name );
+				ParameterDeprecated param = ParameterDeprecated.get( internal_name, external_name );
 
 				if ( non_defaults ){
 
@@ -226,7 +239,7 @@ public class Set extends IConsoleCommand {
 	 * verify a parameter's type and value as well as whether or not a value has been set.
 	 * @author pauld
 	 */
-	private static class Parameter
+	private static class ParameterDeprecated
 	{
 		private static final int PARAM_INT 		= 1;
 		private static final int PARAM_BOOLEAN 	= 2;
@@ -238,7 +251,7 @@ public class Set extends IConsoleCommand {
 		 * @param parameter
 		 * @return
 		 */
-		public static Parameter
+		public static ParameterDeprecated
 		get(
 			String	internal_name,
 			String	external_name )
@@ -253,7 +266,7 @@ public class Set extends IConsoleCommand {
 					if( nextchar == 'i' )
 					{
 						int value = COConfigurationManager.getIntParameter(internal_name, Integer.MIN_VALUE);
-						return new Parameter(internal_name, external_name, value == Integer.MIN_VALUE ? (Integer)null : new Integer(value) );
+						return new ParameterDeprecated(internal_name, external_name, value == Integer.MIN_VALUE ? (Integer)null : new Integer(value) );
 					}
 					else if( nextchar == 'b' )
 					{
@@ -261,17 +274,17 @@ public class Set extends IConsoleCommand {
 						if( COConfigurationManager.getIntParameter(internal_name, Integer.MIN_VALUE) != Integer.MIN_VALUE )
 						{
 							boolean b = COConfigurationManager.getBooleanParameter(internal_name);
-							return new Parameter(internal_name, external_name, Boolean.valueOf(b));
+							return new ParameterDeprecated(internal_name, external_name, Boolean.valueOf(b));
 						}
 						else
 						{
-							return new Parameter(internal_name, external_name, (Boolean)null);
+							return new ParameterDeprecated(internal_name, external_name, (Boolean)null);
 						}
 					}
 					else
 					{
 						String value = COConfigurationManager.getStringParameter(internal_name, NULL_STRING);
-						return new Parameter( internal_name, external_name, NULL_STRING.equals(value) ? null : value);
+						return new ParameterDeprecated( internal_name, external_name, NULL_STRING.equals(value) ? null : value);
 					}
 				} catch (Throwable e){
 
@@ -285,42 +298,42 @@ public class Set extends IConsoleCommand {
 
 					int value = COConfigurationManager.getIntParameter(internal_name, Integer.MIN_VALUE);
 
-					return new Parameter(internal_name, external_name, value == Integer.MIN_VALUE ? (Integer)null : new Integer(value) );
+					return new ParameterDeprecated(internal_name, external_name, value == Integer.MIN_VALUE ? (Integer)null : new Integer(value) );
 
 				}else if ( v instanceof Boolean ){
 
 					boolean value = COConfigurationManager.getBooleanParameter( internal_name );
 
-					return new Parameter( internal_name, external_name, Boolean.valueOf( value ));
+					return new ParameterDeprecated( internal_name, external_name, Boolean.valueOf( value ));
 
 				}else if ( v instanceof String || v instanceof byte[] ){
 
 					String value = COConfigurationManager.getStringParameter(internal_name);
 
-					return new Parameter( internal_name, external_name, NULL_STRING.equals(value) ? null : value);
+					return new ParameterDeprecated( internal_name, external_name, NULL_STRING.equals(value) ? null : value);
 				}else{
 
-					return new Parameter( internal_name, external_name, v, PARAM_OTHER );
+					return new ParameterDeprecated( internal_name, external_name, v, PARAM_OTHER );
 				}
 			}catch( Throwable e2 ){
 
-				return new Parameter( internal_name, external_name, v, PARAM_OTHER );
+				return new ParameterDeprecated( internal_name, external_name, v, PARAM_OTHER );
 			}
 		}
 
-		public Parameter( String iname, String ename, Boolean val )
+		public ParameterDeprecated( String iname, String ename, Boolean val )
 		{
 			this(iname,ename, val, PARAM_BOOLEAN);
 		}
-		public Parameter( String iname, String ename, Integer val )
+		public ParameterDeprecated( String iname, String ename, Integer val )
 		{
 			this(iname,ename, val, PARAM_INT);
 		}
-		public Parameter( String iname, String ename, String val )
+		public ParameterDeprecated( String iname, String ename, String val )
 		{
 			this(iname,ename, val, PARAM_STRING);
 		}
-		private Parameter( String _iname, String _ename, Object _val, int _type )
+		private ParameterDeprecated( String _iname, String _ename, Object _val, int _type )
 		{
 			type = _type;
 			iname = _iname;
@@ -392,17 +405,18 @@ public class Set extends IConsoleCommand {
 				}
 			}
 		}
-
-		protected String
-		quoteIfNeeded(
-			String	str )
-		{
-			if ( str.indexOf(' ') == -1 ){
-
-				return( str );
-			}
-
-			return( "\"" + str + "\"" );
-		}
 	}
+
+	protected static String
+	quoteIfNeeded(
+		String str)
+	{
+		if ( str.indexOf(' ') == -1 ){
+
+			return( str );
+		}
+
+		return( "\"" + str + "\"" );
+	}
+
 }
