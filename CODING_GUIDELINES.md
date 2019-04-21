@@ -12,9 +12,15 @@ One of the styles is documented at [BiglyBT/PreferencesJavaCodeStyleFormatter.xm
 
 ## Common Code Styles
 
-* Tab Indent
+* Tab indent
+* Column limit is generally 80. We thought about increasing this once, but IDEs keep stealing width with docked windows, plus side-by-side diffs have less of a chance of wrapping.
 * `!isFoo()` instead of `false == isFoo()` or `isFoo() == false`
 * Constants over Enums
+* `if`, `else`, `for`, `do`, and `while` statements should always have `{` braces `}`.  Opening brace typically should be on the same line (Egyptian Brackets)
+* We have no standard for opening braces on class and method declarations :( Probably because the [K&R style](https://en.wikipedia.org/wiki/Indentation_style#K&R_style) wants a newline, but there's a common Java variant that wants same line.
+* Prefer early `return` over nested `if` statements. This is a soft rule, so go with what looks easier to understand.
+* Whitespace, variable names:  Don't ask ;)  Go with surrounding code or with what looks ok.
+* If existing code isn't following the rules above, leave it unless you are modifying the code around it, aka "make commit diffs as small as possible" 
  
 ## Compatibility and API profiles
 
