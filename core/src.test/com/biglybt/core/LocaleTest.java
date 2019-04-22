@@ -26,7 +26,7 @@ public class LocaleTest
 	}
 
 	@Test
-	public void emptyLocaleBuiderReturnsRootLocale() {
+	public void emptyLocaleBuilderReturnsRootLocale() {
 		assertThat(new Locale.Builder().build())
 				.isSameAs(Locale.ROOT);
 	}
