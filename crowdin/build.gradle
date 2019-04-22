@@ -33,7 +33,7 @@ class StageGitCommits extends DefaultTask {
     @TaskAction
     void findDiff() {
         if (commit == project.NOT_SET) {
-            throw IllegalArgumentException("Must supply commit <hash>")
+            throw IllegalArgumentException("Must supply -Pcommit=<hash>")
         }
         outputDir.mkdirs()
 
@@ -93,7 +93,7 @@ task extract(type: StageGitCommits) {
     }
 }
 
-task stageLocalizations(type: Zip) {
+task stageLocalizations(type: Zip, description: 'Assembles a zip for translation diffs') {
     dependsOn extract
 
     from { extract.stageDir }
@@ -106,3 +106,165 @@ task stageLocalizations(type: Zip) {
 
 }
 
+
+project.ext.CROWDIN_BASE_URL = "https://api.crowdin.com/api/";
+project.ext.CROWDIN_PROJECT_IDENTIFIER = "biglybt";
+
+
+
+task uploadLocalizationDiffs(description: 'Uploads translation diffs via Crowdin REST API') {
+    dependsOn stageLocalizations, extract
+
+    doFirst {
+
+        assert project.hasProperty('CROWDIN_ACCOUNT_USERNAME') // should be defined in gradle.properties (required)
+        assert project.hasProperty('CROWDIN_ACCOUNT_KEY') // should be defined in gradle.properties (required)
+
+        //documentation https://support.crowdin.com/api/upload-translation/
+        def url = "${CROWDIN_BASE_URL}project/${CROWDIN_PROJECT_IDENTIFIER}/upload-translation"
+        def branch = 'master'
+
+        project.files(extract).asFileTree.each { stagedFile ->
+
+            def crowdinLanguageCode = crowdinLanguageCodeFromLocalFileNameConvention(stagedFile.name)
+            if (!crowdinLanguageCode) return
+
+            HttpURLConnection urlConnection = new URL(url).openConnection() as HttpURLConnection
+            urlConnection.setRequestMethod("POST")
+            urlConnection.setDoInput(true);
+            urlConnection.setDoOutput(true);
+
+            String boundary = 'theseImprovedTranslationStrings_987654321'
+            byte[] boundaryStart = '--theseImprovedTranslationStrings_987654321\r\n'.getBytes("UTF-8")
+            byte[] boundaryEndMultipart = '--theseImprovedTranslationStrings_987654321--'.getBytes("UTF-8")
+            urlConnection.addRequestProperty("Content-Type", "multipart/form-data; charset=UTF-8; boundary=" + boundary);
+
+            /**
+             * Dear Java JEPs
+             *
+             * Why be content with not having an build in API for making rest calls in 2019?
+             */
+            urlConnection.getOutputStream().with { out ->
+
+                out.write(boundaryStart);
+                sendField(out, 'login', CROWDIN_ACCOUNT_USERNAME);
+
+                out.write(boundaryStart);
+                sendField(out, 'account-key', CROWDIN_ACCOUNT_KEY);
+
+                out.write(boundaryStart);
+                sendField(out, 'language', crowdinLanguageCode);
+
+                out.write(boundaryStart);
+                sendField(out, 'import_duplicates', 'true');
+
+                out.write(boundaryStart);
+                sendField(out, 'import_eq_suggestions', 'true');
+
+                out.write(boundaryStart);
+                sendFile(out, "$branch/core/src/com/biglybt/internat/MessagesBundle.properties", stagedFile.newInputStream(), stagedFile.name)
+
+                //ends this multipart
+                out.write(boundaryEndMultipart);
+                out.flush()
+            }
+
+            logger.lifecycle "uploading translation ${stagedFile.name} to Crowdin ..."
+
+            urlConnection.connect();
+
+            logger.quiet urlConnection.getResponseCode() + ' - ' + urlConnection.getResponseMessage()
+            if (urlConnection.getErrorStream()) logger.quiet urlConnection.getErrorStream()?.text
+        }
+
+    }
+
+
+    project.ext.crowdinLanguageCodeFromLocalFileNameConvention = { filename ->
+        def code = [
+                'ar-SA' : '_ar_SA.properties',
+                'bg'    : '_bg_BG.properties',
+                'bn'    : '_bn_BD.properties',
+                'bs'    : '_bs_BA.properties',
+                'ca'    : '_ca_AD.properties',
+                'ceb'   : '_ceb_PH.properties',
+                'cs'    : '_cs_CZ.properties',
+                'da'    : '_da_DK.properties',
+                'de'    : '_de_DE.properties',
+                'el'    : '_el_GR.properties',
+                'en-GB' : '_en_GB.properties',
+                'en-US' : '_en_US_classic.properties', //*
+                'es-ES' : '_es_ES.properties',
+                'es-VE' : '_es_VE.properties',
+                'eu'    : '_eu.properties', //not picked up by Java/BiglyBT... guessing it's Basque ??
+                'fil'   : '_fil_PH.properties',
+                'fi'    : '_fi_FI.properties',
+                'fr'    : '_fr_FR.properties',
+                'fy-NL' : '_fy_NL.properties',
+                'en-gl' : '_gl_ES.properties', //custom code in Crowdin: "Galician" / Gallegan (Spain). Note: "Gallegan is not the desired name, use 'Galician'"
+                'hu'    : '_hu_HU.properties',
+                'hy-AM' : '_hy_AM.properties',
+                'id'    : '_in_ID.properties',
+                'it'    : '_it_IT.properties',
+                'he'    : '_iw_IL.properties',
+                'ja'    : '_ja_JP.properties',
+                'ka'    : '_ka_GE.properties',
+                'km'    : '_km_KH.properties',
+                'ko'    : '_ko_KR.properties',
+                'li'    : '_li_NL.properties',
+                'lt'    : '_lt_LT.properties',
+                'mk'    : '_mk_MK.properties',
+                'ms'    : '_ms_SG.properties',
+                'nl'    : '_nl_NL.properties',
+                'no'    : '_no_NO.properties',
+                'oc'    : '_oc.properties', //* Occitan: not picked up by Java/BiglyBT?
+                'pcm'   : '_pcm_NG.properties', //Nigerian Pidgin
+                'pl'    : '_pl_PL.properties',
+                'pt-BR' : '_pt_BR.properties',
+                'pt-PT' : '_pt_PT.properties',
+                'ro'    : '_ro_RO.properties',
+                'ru'    : '_ru_RU.properties',
+                'sk'    : '_sk_SK.properties',
+                'sl'    : '_sl_SI.properties',
+                'sr'    : '_sr.properties', //* not picked up by Java/BiglyBT?
+                'sr-CS' : '_sr_Latn.properties',
+                'sv-SE' : '_sv_SE.properties',
+                'th'    : '_th_TH.properties',
+                'tl'    : '_tl_PH.properties',
+                'tr'    : '_tr_TR.properties',
+                'uk'    : '_uk_UA.properties',
+                'ur-IN' : '_ur_IN.properties',
+                'ur-PK' : '_ur_PK.properties',
+                'vi'    : '_vi_VN.properties',
+                'vls-BE': '_vls_BE.properties',
+                'yo'    : '_yo_NG.properties',
+                'zh-CN' : '_zh_CN.properties',
+                'zh-TW' : '_zh_TW.properties', //Taiwan - Chinese Traditional
+        ].find { filename.endsWith it.value }?.key
+
+        if (!code && filename.contains('_')) {
+            throw new IllegalArgumentException("ERROR: no language mapping for Crowdin for ${filename}")
+        }
+        logger.info "crowdin langue code=$code for file ${filename}"
+        return code
+    }
+
+    project.ext.sendField = { OutputStream out, String name, String field ->
+        String o = "Content-Disposition: form-data; name=\"" + URLEncoder.encode(name, "UTF-8") + "\"\r\n\r\n";
+        out.write(o.getBytes("UTF-8"));
+        out.write(URLEncoder.encode(field, "UTF-8").getBytes("UTF-8"));
+        out.write("\r\n".getBytes("UTF-8"));
+    }
+
+    //ps: no urlencode of files name array (name=files[...]) as Crowdin does't flavour that (pun intended)
+    project.ext.sendFile = { OutputStream out, String name, InputStream is, String filename ->
+        String o = "Content-Disposition: form-data; name=\"files[" + name + "]\"; filename=\"" + URLEncoder.encode(filename, "UTF-8") + "\"\r\n\r\n";
+        out.write(o.getBytes("UTF-8"));
+        byte[] buffer = new byte[2048];
+        for (int n = 0; n >= 0; n = is.read(buffer))
+            out.write(buffer, 0, n);
+        out.write("\r\n".getBytes("UTF-8"));
+    }
+
+
+}
