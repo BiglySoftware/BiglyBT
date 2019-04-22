@@ -770,29 +770,24 @@ DownloadHistoryManagerImpl
 
 		// System.out.println( "loading " + file );
 
-		try{
-			if ( FileUtil.resilientConfigFileExists( file )){
+		if (FileUtil.resilientConfigFileExists(file)) {
+			Map map = FileUtil.readResilientConfigFile(file);
 
-				Map map = FileUtil.readResilientConfigFile( file );
+			List<Map<String, Object>> list = (List<Map<String, Object>>) map.get("records");
+			if (list != null) {
 
-				List<Map<String,Object>>	list = (List<Map<String,Object>>)map.get( "records" );
+				for (Map<String, Object> m : list) {
 
-				for ( Map<String,Object> m: list ){
+					try {
+						DownloadHistoryImpl record = new DownloadHistoryImpl(result, m);
+						result.put(record.getUID(), record);
 
-					try{
-						DownloadHistoryImpl record = new DownloadHistoryImpl( result, m );
+					} catch (Throwable e) {
 
-						result.put( record.getUID(), record );
-
-					}catch( Throwable e ){
-
-						Debug.out( e );
+						Debug.out(e);
 					}
 				}
 			}
-		}catch( Throwable e ){
-
-			Debug.out( e );
 		}
 
 		return( result );
@@ -814,15 +809,8 @@ DownloadHistoryManagerImpl
 
 			for ( DownloadHistoryImpl record: records.values()){
 
-				try{
-					Map<String,Object>	m = record.exportToMap();
-
-					list.add( m );
-
-				}catch( Throwable e ){
-
-					Debug.out( e );
-				}
+				Map<String, Object> m = record.exportToMap();
+				list.add(m);
 			}
 
 			FileUtil.writeResilientConfigFile( file, map );
@@ -914,6 +902,9 @@ DownloadHistoryManagerImpl
 			updateCompleteTime( dms );
 		}
 
+		/**
+		 * @throws IOException when decoding fails
+		 */
 		DownloadHistoryImpl(
 			Map<Long,DownloadHistoryImpl>		_history_ref,
 			Map<String,Object>					map )
@@ -926,8 +917,8 @@ DownloadHistoryManagerImpl
 				uid		= (Long)map.get( "u" );
 				hash	= (byte[])map.get("h");
 
-				name 			= new String((byte[])map.get( "n"), "UTF-8" );
-				save_location 	= new String((byte[])map.get( "s"), "UTF-8" );
+				name = new String((byte[]) map.get("n"), Constants.UTF_8);
+				save_location = new String((byte[]) map.get("s"), Constants.UTF_8);
 
 				Long l_size		= (Long)map.get( "z" );
 
@@ -936,10 +927,6 @@ DownloadHistoryManagerImpl
 				add_time 		= (Long)map.get( "a" );
 				complete_time 	= (Long)map.get( "c" );
 				remove_time 	= (Long)map.get( "r" );
-
-			}catch( IOException e ){
-
-				throw( e );
 
 			}catch( Throwable e ){
 
@@ -954,23 +941,19 @@ DownloadHistoryManagerImpl
 			history_ref	= ref;
 		}
 
-		Map<String,Object>
-		exportToMap()
+		Map<String, Object> exportToMap() {
+			Map<String, Object> map = new LightHashMap<>();
 
-			throws IOException
-		{
-			Map<String,Object> map = new LightHashMap<>();
+			map.put("u", uid);
+			map.put("h", hash);
+			map.put("n", name.getBytes(Constants.UTF_8));
+			map.put("z", size);
+			map.put("s", save_location.getBytes(Constants.UTF_8));
+			map.put("a", add_time);
+			map.put("c", complete_time);
+			map.put("r", remove_time);
 
-			map.put( "u", uid );
-			map.put( "h", hash );
-			map.put( "n", name.getBytes( "UTF-8" ));
-			map.put( "z", size );
-			map.put( "s", save_location.getBytes( "UTF-8" ));
-			map.put( "a", add_time );
-			map.put( "c", complete_time );
-			map.put( "r", remove_time );
-
-			return( map );
+			return map;
 		}
 
 		boolean
