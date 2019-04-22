@@ -171,8 +171,6 @@ DeviceTivoManager
 	encodeBeacon(
 		boolean		is_broadcast,
 		int			my_port )
-
-		throws IOException
 	{
 		String beacon =
 			"tivoconnect=1" + LF +
@@ -183,18 +181,15 @@ DeviceTivoManager
 			"platform=pc" + LF +
 			"services=TiVoMediaServer:" + my_port + "/http";
 
-		return( beacon.getBytes( "ISO-8859-1" ));
+		return beacon.getBytes(Constants.ISO_8859_1);
 	}
 
 	protected Map<String,String>
 	decodeBeacon(
 		byte[]		buffer,
 		int			length )
-
-		throws IOException
 	{
-		String str = new String( buffer, 0, length, "ISO-8859-1" );
-
+		String str = new String(buffer, 0, length, Constants.ISO_8859_1);
 		String[]	lines = str.split( LF );
 
 		Map<String,String>	map = new HashMap<>();
