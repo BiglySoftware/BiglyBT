@@ -118,7 +118,7 @@ task uploadLocalizationDiffs(description: 'Uploads translation diffs via Crowdin
     doFirst {
 
         assert project.hasProperty('CROWDIN_ACCOUNT_USERNAME') // should be defined in gradle.properties (required)
-        assert project.hasProperty('CROWDIN_ACCOUNT_KEY') // should be defined in gradle.properties (required)
+        assert project.hasProperty('CROWDIN_ACCOUNT_KEY') // should be defined in gradle.properties (required) - see https://crowdin.com/settings#api-key
 
         //documentation https://support.crowdin.com/api/upload-translation/
         def url = "${CROWDIN_BASE_URL}project/${CROWDIN_PROJECT_IDENTIFIER}/upload-translation"
