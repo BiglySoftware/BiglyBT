@@ -181,6 +181,7 @@ task uploadLocalizationDiffs(description: 'Uploads translation diffs via Crowdin
 
 
     project.ext.crowdinLanguageCodeFromLocalFileNameConvention = { filename ->
+        //language definitions at https://support.crowdin.com/api/language-codes/
         def code = [
                 'ar-SA' : '_ar_SA.properties',
                 'bg'    : '_bg_BG.properties',
