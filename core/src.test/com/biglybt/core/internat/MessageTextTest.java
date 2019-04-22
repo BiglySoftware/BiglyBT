@@ -57,6 +57,23 @@ public class MessageTextTest
 	}
 
 	@Test
+	public void languageCodeLocalizationsAreLinked() {
+		Locale[] locales = MessageText.getLocales(false);
+		assertThat(locales)
+				.describedAs("property files with only language code")
+				.contains(new Locale("eu")); //Basque
+	}
+
+	@Test
+	public void languageCodeWithVariantIsLinked() {
+		Locale[] locales = MessageText.getLocales(false);
+		assertThat(locales)
+				.describedAs("property files with only language code and optional variant")
+				.contains(new Locale.Builder().setLanguage("sr").build(), //Serbian
+						new Locale.Builder().setLanguage("sr").setScript("Latn").build()); //Serbian latin script
+	}
+
+	@Test
 	public void mixedTextDirections() {
 		MessageText.changeLocale(new Locale("ar", "SA"));
 
