@@ -832,11 +832,15 @@ public class MessageText {
 		Locale.Builder localeBuilder = new Locale.Builder();
 		String[] savedLocaleStrings = savedLocaleString.split("_", 3);
 
-		if (savedLocaleStrings.length < 2 || savedLocaleStrings.length > 3) {
+		if (savedLocaleStrings.length < 1 || savedLocaleStrings.length > 3) {
 			return Locale.ROOT;
 		}
 
 		localeBuilder.setLanguage(savedLocaleStrings[0]);
+
+		if (savedLocaleStrings.length == 1) {
+			return localeBuilder.build(); //language code only
+		}
 
 		boolean hasScript = savedLocaleStrings[1].length() == 4;
 		if (hasScript) {

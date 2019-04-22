@@ -19,7 +19,7 @@ public class PropertyFilesTest
 {
 
 	@Test
-	public void noSplitlinesInPropopertyFilesForLocalizations()
+	public void noSplitlinesInPropertyFilesForLocalizations()
 			throws Exception {
 		Locale[] locales = MessageText.getLocales(false);
 
@@ -28,7 +28,7 @@ public class PropertyFilesTest
 			if (locale == MessageText.LOCALE_ENGLISH || locale == Locale.ROOT ) {
 				resourcePath += ".properties";
 			} else {
-				resourcePath += resourceBundeSuffixFor(locale);
+				resourcePath += resourceBundleSuffixFor(locale);
 			}
 
 			try (InputStream is = MessageText.class.getClassLoader().getResourceAsStream(resourcePath)) {
@@ -49,7 +49,7 @@ public class PropertyFilesTest
 		}
 	}
 
-	private static String resourceBundeSuffixFor(Locale locale) {
+	private static String resourceBundleSuffixFor(Locale locale) {
 		String suffix = "";
 		if (Locale.ROOT != locale) {
 			if (!locale.getLanguage().isEmpty()) {
