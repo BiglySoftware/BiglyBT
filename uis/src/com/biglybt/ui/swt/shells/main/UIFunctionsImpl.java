@@ -659,7 +659,7 @@ public class UIFunctionsImpl
 
 	@Override
 	public void refreshTorrentMenu() {
-		if (!isTorrentMenuVisible) {
+		if (!isTorrentMenuVisible || Utils.isDisplayDisposed()) {
 			return;
 		}
 		try {
