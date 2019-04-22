@@ -21,12 +21,10 @@
 package com.biglybt.core.subs.impl;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.security.KeyPair;
 import java.util.*;
 
-import com.biglybt.util.MapUtils;
 import org.gudy.bouncycastle.util.encoders.Base64;
 import org.json.simple.JSONObject;
 
@@ -48,6 +46,7 @@ import com.biglybt.core.util.DataSourceResolver.ExportedDataSource;
 import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.util.JSONUtils;
+import com.biglybt.util.MapUtils;
 
 public class
 SubscriptionImpl
@@ -299,8 +298,6 @@ SubscriptionImpl
 	SubscriptionImpl(
 		SubscriptionManagerImpl		_manager,
 		Map							map )
-
-		throws IOException
 	{
 		manager	= _manager;
 
@@ -378,16 +375,12 @@ SubscriptionImpl
 		sig_data_size	= body.getSigDataSize();
 	}
 
-	protected Map
-	toMap()
-
-		throws IOException
-	{
+	protected Map toMap() {
 		synchronized( this ){
 
 			Map	map = new HashMap();
 
-			map.put( "name", name.getBytes( "UTF-8" ));
+			map.put( "name", name.getBytes(Constants.UTF_8));
 
 			map.put( "public_key", public_key );
 
@@ -459,12 +452,12 @@ SubscriptionImpl
 
 			if ( creator_ref != null ){
 
-				map.put( "cref", creator_ref.getBytes( "UTF-8" ));
+				map.put( "cref", creator_ref.getBytes(Constants.UTF_8));
 			}
 
 			if ( category != null ){
 
-				map.put( "cat", category.getBytes( "UTF-8" ));
+				map.put( "cat", category.getBytes(Constants.UTF_8));
 			}
 
 			if ( tag_id != -1 ){
@@ -479,20 +472,16 @@ SubscriptionImpl
 
 			if ( parent != null ){
 
-				map.put( "par", parent.getBytes( "UTF-8" ));
+				map.put( "par", parent.getBytes(Constants.UTF_8));
 			}
 
 			return( map );
 		}
 	}
 
-	protected void
-	fromMap(
-		Map		map )
+	protected void fromMap(Map map) {
 
-		throws IOException
-	{
-		name				= new String((byte[])map.get( "name"), "UTF-8" );
+		name				= new String((byte[])map.get( "name"), Constants.UTF_8);
 		public_key			= (byte[])map.get( "public_key" );
 		private_key			= (byte[])map.get( "private_key" );
 		version				= ((Long)map.get( "version" )).intValue();
@@ -529,8 +518,7 @@ SubscriptionImpl
 		byte[]	b_local_name = (byte[])map.get( "local_name" );
 
 		if ( b_local_name != null ){
-
-			local_name = new String( b_local_name, "UTF-8" );
+			local_name = new String( b_local_name, Constants.UTF_8);
 		}
 
 		List	l_assoc = (List)map.get( "assoc" );
@@ -558,15 +546,13 @@ SubscriptionImpl
 		byte[] b_cref = (byte[])map.get( "cref" );
 
 		if ( b_cref != null ){
-
-			creator_ref = new String( b_cref, "UTF-8" );
+			creator_ref = new String( b_cref, Constants.UTF_8);
 		}
 
 		byte[] b_cat = (byte[])map.get( "cat" );
 
 		if ( b_cat != null ){
-
-			category = new String( b_cat, "UTF-8" );
+			category = new String( b_cat, Constants.UTF_8);
 		}
 
 		Long l_tag_id = (Long)map.get( "tag" );
@@ -586,8 +572,7 @@ SubscriptionImpl
 		byte[] b_parent = (byte[])map.get( "par" );
 
 		if ( b_parent != null ){
-
-			parent = new String( b_parent, "UTF-8" );
+			parent = new String( b_parent, Constants.UTF_8);
 		}
 	}
 
