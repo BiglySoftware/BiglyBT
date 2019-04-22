@@ -2052,8 +2052,6 @@ PairingManagerImpl
 	getString(
 		Map<String,Object>	map,
 		String				name )
-
-		throws IOException
 	{
 		byte[]	bytes = (byte[])map.get(name);
 
@@ -2062,7 +2060,7 @@ PairingManagerImpl
 			return( null );
 		}
 
-		return( new String( bytes, "UTF-8" ));
+		return new String( bytes, Constants.UTF_8);
 	}
 
 	@Override
