@@ -22,6 +22,7 @@ package com.biglybt.core.util;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.*;
 
@@ -37,15 +38,32 @@ import com.biglybt.util.JSONUtils;
 public class BDecoder
 {
 	public static final int MAX_BYTE_ARRAY_SIZE		= 128*1024*1024;
+
 	private static final int MAX_MAP_KEY_SIZE		= 64*1024;
 
-	private static final boolean USE_NEW_BDECODER = System.getProperty("bdecoder.new", "0").equals("1");
+	private static final boolean NEWDECODER_FOR_DEF_CHARSET = System.getProperty("bdecoder.new", "0").equals("1");
+
 	private static final boolean TRACE	= false;
 
+	private static final byte[]	PORTABLE_ROOT;
+
 	private boolean recovery_mode;
+
 	private boolean	verify_map_order;
 
-	private final static byte[]	PORTABLE_ROOT;
+	private boolean useNewDecoder;
+
+	private final CharsetDecoder keyDecoder; // old decoder only
+
+	private final Charset keyCharset; // new decoder only
+
+	private int keyBytesLen = 0;
+
+	private ByteBuffer keyBytesBuffer; // old decoder only
+
+	private byte[] keyBytes; // new decoder only
+
+	private CharBuffer keyCharsBuffer; // old decoder only
 
 	static{
 		byte[]	portable = null;
@@ -64,6 +82,45 @@ public class BDecoder
 
 		PORTABLE_ROOT = portable;
 	}
+
+	/**
+	 * Create a BDecoder using BYTE_ENCODING_CHARSET (ISO_8859_1)
+	 */
+	public
+	BDecoder()
+	{
+		this(Constants.BYTE_ENCODING_CHARSET, NEWDECODER_FOR_DEF_CHARSET);
+	}
+
+	/**
+	 * Create a BDecoder using specified charset.
+	 * <p/>
+	 * New decoder will be used, which can handle UTF-8 properly
+	 */
+	public
+	BDecoder(
+		Charset	keyCharset )
+	{
+		this(keyCharset, true);
+	}
+
+	private
+	BDecoder(
+		Charset	keyCharset,
+		boolean	useNewDecoder )
+	{
+		this.keyCharset = keyCharset;
+		this.useNewDecoder = useNewDecoder;
+		if (useNewDecoder) {
+			keyDecoder = null;
+			keyBytes = new byte[32];
+		} else {
+			keyDecoder = keyCharset.newDecoder();
+			keyBytesBuffer = ByteBuffer.allocate(32);
+			keyCharsBuffer = CharBuffer.allocate(32);
+		}
+	}
+
 
 	public static Map<String,Object>
 	decode(
@@ -94,11 +151,6 @@ public class BDecoder
 		return( new BDecoder().decodeStream( is ));
 	}
 
-
-	public
-	BDecoder()
-	{
-	}
 
 	public Map<String,Object>
 	decodeByteArray(
@@ -156,7 +208,7 @@ public class BDecoder
 
 		throws IOException
 	{
-		Object	res = USE_NEW_BDECODER
+		Object	res = useNewDecoder
 				? decodeInputStream2(data, "", 0, internKeys)
 				: decodeInputStream(data, "", 0, internKeys);
 
@@ -178,7 +230,7 @@ public class BDecoder
 
 		throws IOException
 	{
-		Object res = USE_NEW_BDECODER 
+		Object res = useNewDecoder 
 				? decodeInputStream2(data, "", 0, internKeys)
 				: decodeInputStream(data, "", 0, internKeys);
 
@@ -193,14 +245,6 @@ public class BDecoder
 
 		return((Map<String, Object>)res );
 	}
-
-	// reuseable objects for key decoding
-	private ByteBuffer keyBytesBuffer = USE_NEW_BDECODER ? null : ByteBuffer.allocate(32);
-	private byte[] keyBytes = USE_NEW_BDECODER ? new byte[32] : null;
-	private int keyBytesLen = 0;
-	private CharBuffer keyCharsBuffer = USE_NEW_BDECODER ? null : CharBuffer.allocate(32);
-
-	private final CharsetDecoder keyDecoder = USE_NEW_BDECODER ? null : Constants.BYTE_ENCODING_CHARSET.newDecoder();
 
 	private Object
 	decodeInputStream(
@@ -329,6 +373,14 @@ public class BDecoder
 					keyDecoder.reset();
 					keyDecoder.decode(keyBytesBuffer,keyCharsBuffer,true);
 					keyDecoder.flush(keyCharsBuffer);
+					/* XXX Should be keyCharsBuffer.position() and not limit()
+					 * .position() is where the decode ended, 
+					 * .limit() is keyLength in bytes.
+					 * Limit may be larger than needed since some chars are built from
+					 * multiple bytes. Not changing code because limit and position are 
+					 * always (?) the same for ISO-8859-1, and for other encodings we 
+					 * use the new decoder, which handles size correctly 
+					 */
 					String key = new String(keyCharsBuffer.array(),0,keyCharsBuffer.limit());
 
 					// keys often repeat a lot - intern to save space
@@ -603,7 +655,7 @@ public class BDecoder
 							dbis.skip(skipBytes);
 						}
 
-						String key = new String(keyBytes, 0, keyLength, Constants.BYTE_ENCODING_CHARSET);
+						String key = new String(keyBytes, 0, keyLength, keyCharset);
 
 						// keys often repeat a lot - intern to save space
 						if (internKeys)
