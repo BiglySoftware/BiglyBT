@@ -250,20 +250,13 @@ Engine
 	getSubscription();
 
 	public Map<String,Object>
-	exportToBencodedMap()
+	exportToBencodedMap();
 
-		throws IOException;
-
-	public Map<String,Object>
-	exportToBencodedMap(
-		boolean		generic )
-
-		throws IOException;
+	public Map<String, Object>
+	exportToBencodedMap(boolean generic);
 
 	public String
-	exportToJSONString()
-
-		throws IOException;
+	exportToJSONString();
 
 	public void
 	exportToVuzeFile(

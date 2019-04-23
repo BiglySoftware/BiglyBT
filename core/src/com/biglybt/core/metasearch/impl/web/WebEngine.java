@@ -26,7 +26,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.biglybt.util.MapUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -50,6 +49,7 @@ import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloader;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderException;
 import com.biglybt.pif.utils.resourcedownloader.ResourceDownloaderFactory;
+import com.biglybt.util.MapUtils;
 import com.biglybt.util.UrlFilter;
 
 public abstract class
@@ -180,8 +180,6 @@ WebEngine
 	exportToBencodedMap(
 		Map		map,
 		boolean	generic )
-
-		throws IOException
 	{
 		super.exportToBencodedMap( map, generic );
 
@@ -346,8 +344,6 @@ WebEngine
 	protected void
 	exportToJSONObject(
 		JSONObject		res )
-
-		throws IOException
 	{
 		super.exportToJSONObject( res );
 

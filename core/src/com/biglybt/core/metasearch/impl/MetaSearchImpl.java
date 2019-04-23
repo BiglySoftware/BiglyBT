@@ -1269,16 +1269,8 @@ MetaSearchImpl
 
 		for ( Engine engine: engines ){
 
-			try{
-				vf.addComponent(
-					VuzeFileComponent.COMP_TYPE_METASEARCH_TEMPLATE,
+			vf.addComponent(VuzeFileComponent.COMP_TYPE_METASEARCH_TEMPLATE,
 					engine.exportToBencodedMap());
-
-			}catch( IOException e ){
-
-				Debug.out( e );
-			}
-
 		}
 
 		try{

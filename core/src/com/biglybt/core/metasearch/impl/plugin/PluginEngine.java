@@ -117,8 +117,6 @@ PluginEngine
 	@Override
 	public Map
 	exportToBencodedMap()
-
-		throws IOException
 	{
 		return( exportToBencodedMap( false ));
 	}
@@ -127,8 +125,6 @@ PluginEngine
 	public Map
 	exportToBencodedMap(
 		boolean	generic )
-
-		throws IOException
 	{
 		Map	res = new HashMap();
 

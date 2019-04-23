@@ -24,11 +24,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
 
-import com.biglybt.util.MapUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -49,6 +49,7 @@ import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.util.JSONUtils;
+import com.biglybt.util.MapUtils;
 
 
 public abstract class
@@ -275,8 +276,6 @@ EngineImpl
 	exportToBencodedMap(
 		Map			map,
 		boolean		generic )
-
-		throws IOException
 	{
 		map.put( "type", new Long( type ));
 
@@ -364,8 +363,6 @@ EngineImpl
 	protected void
 	exportToJSONObject(
 		JSONObject		res )
-
-		throws IOException
 	{
 		exportJSONMappings( res, "value_map", first_level_mapping, true );
 		exportJSONMappings( res, "ctype_map", second_level_mapping, false );
@@ -388,8 +385,6 @@ EngineImpl
 		JSONObject		map,
 		String			str,
 		boolean			level_1 )
-
-		throws IOException
 	{
 		List	result = new ArrayList();
 
@@ -428,23 +423,27 @@ EngineImpl
 
 					JSONObject mapping = (JSONObject)mappings.get(i);
 
-					String	from_str 	= URLDecoder.decode((String)mapping.get( level_1?"from_string":"cat_string" ),"UTF-8");
+					String	from_str 	= null;
+					try {
+						from_str = URLDecoder.decode((String)mapping.get( level_1?"from_string":"cat_string" ),"UTF-8");
+					} catch (UnsupportedEncodingException ignored) {
+					}
 
 					if ( from_str == null ){
 
 						log( "'from' value missing in " + mapping );
-
 						continue;
 					}
 
-					from_str 	= URLDecoder.decode( from_str, "UTF-8" );
-
-					String	to_str 		= URLDecoder.decode((String)mapping.get( level_1?"to_string":"media_type" ),"UTF-8");
+					String	to_str 		= null;
+					try {
+						to_str = URLDecoder.decode((String)mapping.get( level_1?"to_string":"media_type" ),"UTF-8");
+					} catch (UnsupportedEncodingException ignored) {
+					}
 
 					if ( to_str == null ){
 
 						log( "'to' value missing in " + mapping );
-
 						continue;
 					}
 
@@ -550,8 +549,6 @@ EngineImpl
 		Map		map,
 		String	name,
 		List	mappings )
-
-		throws IOException
 	{
 		List	l = new ArrayList();
 
@@ -591,8 +588,6 @@ EngineImpl
 	@Override
 	public String
 	exportToJSONString()
-
-		throws IOException
 	{
 		JSONObject	obj = new JSONObject();
 

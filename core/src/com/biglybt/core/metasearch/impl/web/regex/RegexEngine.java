@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.biglybt.util.MapUtils;
 import org.json.simple.JSONObject;
 
 import com.biglybt.core.metasearch.*;
@@ -41,6 +40,7 @@ import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TimeLimitedTask;
 import com.biglybt.core.util.UrlUtils;
+import com.biglybt.util.MapUtils;
 
 public class
 RegexEngine
@@ -162,8 +162,6 @@ RegexEngine
 	@Override
 	public Map
 	exportToBencodedMap()
-
-		throws IOException
 	{
 		return( exportToBencodedMap( false ));
 	}
@@ -172,8 +170,6 @@ RegexEngine
 	public Map
 	exportToBencodedMap(
 		boolean		generic )
-
-		throws IOException
 	{
 		Map	res = new HashMap();
 
@@ -188,8 +184,6 @@ RegexEngine
 	protected void
 	exportToJSONObject(
 		JSONObject		res )
-
-		throws IOException
 	{
 		res.put( "regexp", UrlUtils.encode( pattern_str ));
 

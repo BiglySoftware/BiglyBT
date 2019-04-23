@@ -137,8 +137,6 @@ RSSEngine
 	@Override
 	public Map
 	exportToBencodedMap()
-
-		throws IOException
 	{
 		return( exportToBencodedMap( false ));
 	}
@@ -147,8 +145,6 @@ RSSEngine
 	public Map
 	exportToBencodedMap(
 		boolean	generic )
-
-		throws IOException
 	{
 		Map	res = new HashMap();
 
