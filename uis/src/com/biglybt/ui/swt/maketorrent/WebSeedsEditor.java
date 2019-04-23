@@ -282,7 +282,10 @@ public class WebSeedsEditor {
       Iterator iter2 = ((List)entry.getValue()).iterator();
       while(iter2.hasNext()) {
         String url =  (String) iter2.next();
-        newTracker(itemRoot,url);
+        if ( validURL( url )){
+        
+        	newTracker(itemRoot,url);
+        }
       }
     }
   }

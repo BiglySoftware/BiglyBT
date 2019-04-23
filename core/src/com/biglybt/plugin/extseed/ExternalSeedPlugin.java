@@ -208,6 +208,14 @@ ExternalSeedPlugin
 	downloadAdded(
 		Download	download )
 	{
+		downloadAdded( download, false );
+	}
+	
+	public void
+	downloadAdded(
+		Download	download,
+		boolean		changed )
+	{
 		Torrent	torrent = download.getTorrent();
 
 		if ( torrent == null ){
@@ -219,29 +227,36 @@ ExternalSeedPlugin
 
 		for (int i=0;i<factories.length;i++){
 
-
-			String attributeID = "no-ext-seeds-" + factories[i].getClass().getSimpleName();
+			String attributeID = "no-ext-seeds-1-" + factories[i].getClass().getSimpleName();
+			
 			TorrentAttribute attribute = plugin_interface.getTorrentManager().getPluginAttribute( attributeID );
 
-			boolean noExternalSeeds = download.getBooleanAttribute(attribute);
-			if (noExternalSeeds) {
-				continue;
+			if ( !changed ){
+				
+				boolean noExternalSeeds = download.getBooleanAttribute(attribute);
+				
+				if ( noExternalSeeds ){
+					
+					continue;
+				}
 			}
-
+			
 			ExternalSeedReader[]	x = factories[i].getSeedReaders( this, download );
 
-			if (x.length == 0) {
+			if ( x.length == 0 ){
+				
 				download.setBooleanAttribute(attribute, true);
-			} else {
+				
+			}else{
 
-  			for (int j=0;j<x.length;j++){
-
-  				ExternalSeedReader	reader = x[j];
-
-  				ExternalSeedPeer	peer = new ExternalSeedPeer( this, download, reader );
-
-  				peers.add( peer );
-  			}
+	  			for (int j=0;j<x.length;j++){
+	
+	  				ExternalSeedReader	reader = x[j];
+	
+	  				ExternalSeedPeer	peer = new ExternalSeedPeer( this, download, reader );
+	
+	  				peers.add( peer );
+	  			}
 			}
 		}
 
@@ -254,7 +269,7 @@ ExternalSeedPlugin
 	{
 		downloadRemoved( download );
 
-		downloadAdded( download );
+		downloadAdded( download, true );
 	}
 
 	public List<ExternalSeedPeer>
@@ -270,12 +285,7 @@ ExternalSeedPlugin
 
 			for (int i=0;i<factories.length;i++){
 
-				String attributeID = "no-ext-seeds-" + factories[i].getClass().getSimpleName();
-				TorrentAttribute attribute = plugin_interface.getTorrentManager().getPluginAttribute( attributeID );
-
 				ExternalSeedReader[]	x = factories[i].getSeedReaders( this, download, config );
-
-				download.setBooleanAttribute(attribute, x.length == 0);
 
 				for (int j=0;j<x.length;j++){
 
