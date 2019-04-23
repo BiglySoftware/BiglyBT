@@ -35,6 +35,7 @@ import com.biglybt.core.devices.DeviceMediaRenderer;
 import com.biglybt.core.devices.TranscodeTarget;
 import com.biglybt.core.util.AEThread2;
 import com.biglybt.core.util.Base32;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.GeneralUtils;
 import com.biglybt.core.util.UUIDGenerator;
@@ -919,15 +920,7 @@ DeviceManagerUPnPImpl
 				// be used as a key in a bencoded map
 				// migrated from prefix of "devices.upnp.uid." to "devices.upnp.uid2."
 
-			String un_key;
-
-			try{
-				un_key = Base32.encode( unique_name.getBytes( "UTF-8" ));
-
-			}catch( Throwable e ){
-
-				un_key = Base32.encode( unique_name.getBytes());
-			}
+			String un_key = Base32.encode(unique_name.getBytes(Constants.UTF_8));
 
 			String	new_key = "devices.upnp.uid2." + un_key;
 

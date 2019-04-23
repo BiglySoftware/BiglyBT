@@ -136,10 +136,7 @@ public class UIConst
 				}
 			}
 
-			try {
-				sb.append(new String(newOut.toByteArray(), "utf8"));
-			} catch (UnsupportedEncodingException e) {
-			}
+			sb.append(new String(newOut.toByteArray(), Constants.UTF_8));
 			return sb.toString();
 		} finally {
 			System.setOut(oldOut);

@@ -827,13 +827,8 @@ ConfigurationManager
 
 	  }else if ( o_value instanceof byte[] ){
 
-		  try{
-			  value = new String((byte[])o_value, "UTF-8" );
+			value = new String((byte[]) o_value, Constants.UTF_8);
 
-		  }catch( UnsupportedEncodingException e ){
-
-			  value = null;
-		  }
 	  }else{
 
 		  value = String.valueOf( o_value );
@@ -1339,19 +1334,12 @@ ConfigurationManager
 		Object	value	= propertiesMap.get(key);
 
 		if ( value instanceof byte[] ){
-
-			try{
-				value = new String((byte[])value, "UTF-8" );
-
-			}catch( Throwable e ){
-
-			}
+				value = new String((byte[]) value, Constants.UTF_8);
 		}
 
 		if ( value instanceof String ){
 
 			if (((String)value).toLowerCase( Locale.US ).endsWith( ".b32.i2p" )){
-
 				return( true );
 			}
 		}

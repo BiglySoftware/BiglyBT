@@ -997,17 +997,11 @@ BackupManagerImpl
 				mods += patch((List)value, from, to );
 
 			}else if ( value instanceof byte[] ){
+				String str = new String((byte[]) value, Constants.UTF_8);
 
-				try{
-					String	str = new String((byte[])value, "UTF-8" );
-
-					if ( str.startsWith( from )){
-
-						new_value = to + str.substring( from.length());
-
-						mods++;
-					}
-				}catch( Throwable e ){
+				if (str.startsWith(from)) {
+					new_value = to + str.substring(from.length());
+					mods++;
 				}
 			}
 
@@ -1058,17 +1052,11 @@ BackupManagerImpl
 				mods += patch((List)entry, from , to );
 
 			}else if ( entry instanceof byte[] ){
+				String str = new String((byte[]) entry, Constants.UTF_8);
 
-				try{
-					String	str = new String((byte[])entry, "UTF-8" );
-
-					if ( str.startsWith( from )){
-
-						list.set( i, to + str.substring( from.length()));
-
-						mods++;
-					}
-				}catch( Throwable e ){
+				if (str.startsWith(from)) {
+					list.set(i, to + str.substring(from.length()));
+					mods++;
 				}
 			}
 		}

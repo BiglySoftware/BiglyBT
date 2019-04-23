@@ -77,17 +77,11 @@ SubscriptionResultImpl
 
 		String	key1_str =  result.getEngine().getId() + ":" + result.getName();
 
-		try{
-			byte[] sha1 = new SHA1Simple().calculateHash( key1_str.getBytes( "UTF-8" ));
+		byte[] key1_sha = new SHA1Simple().calculateHash(key1_str.getBytes(Constants.UTF_8));
 
-			key1 = new byte[10];
+		key1 = new byte[10];
 
-			System.arraycopy( sha1, 0, key1, 0, 10 );
-
-		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
-		}
+		System.arraycopy(key1_sha, 0, key1, 0, 10);
 
 		String	uid = result.getUID();
 
@@ -95,17 +89,11 @@ SubscriptionResultImpl
 
 			String	key2_str = result.getEngine().getId() + ":" + uid;
 
-			try{
-				byte[] sha1 = new SHA1Simple().calculateHash( key2_str.getBytes( "UTF-8" ));
+			byte[] key2_sha = new SHA1Simple().calculateHash(key2_str.getBytes(Constants.UTF_8));
 
-				key2 = new byte[10];
+			key2 = new byte[10];
 
-				System.arraycopy( sha1, 0, key2, 0, 10 );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-			}
+			System.arraycopy(key2_sha, 0, key2, 0, 10);
 		}
 	}
 
@@ -129,12 +117,9 @@ SubscriptionResultImpl
 
 		}else{
 
-			try{
-				result_json	= new String((byte[])map.get( "result_json" ), "UTF-8" );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
+			Object result_json_bytes = map.get("result_json");
+			if (result_json_bytes != null) {
+				result_json = new String((byte[]) result_json_bytes, Constants.UTF_8);
 			}
 		}
 	}
@@ -279,12 +264,8 @@ SubscriptionResultImpl
 
 		}else{
 
-			try{
-				map.put( "result_json", result_json.getBytes( "UTF-8" ));
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
+			if (result_json != null) {
+				map.put("result_json", result_json.getBytes(Constants.UTF_8));
 			}
 		}
 

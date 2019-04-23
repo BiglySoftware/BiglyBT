@@ -4006,13 +4006,8 @@ DownloadManagerStateImpl
 
 				byte[] name = (byte[])c.get( "utf8name" );
 				if (name != null) {
-					String utf8name;
-					try {
-						utf8name = new String(name, "utf8");
-					} catch (UnsupportedEncodingException e) {
-						return null;
-					}
-					if (utf8name.length() == 0) {
+					String utf8name = new String(name, Constants.UTF_8);
+					if (utf8name.isEmpty()) {
 						return null;
 					}
 					return utf8name;
@@ -4437,15 +4432,7 @@ DownloadManagerStateImpl
 					return( null );
 				}
 
-				try{
-					return( new String( res, "UTF8" ));
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace( e );
-
-					return( null );
-				}
+				return new String( res, Constants.UTF_8);
 			}
 
 	   		if ( fixup()){

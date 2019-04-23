@@ -32,6 +32,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.utils.LocaleUtilities;
 import com.biglybt.plugin.net.buddy.*;
@@ -344,13 +345,7 @@ BuddyPluginViewChat
 	{
 		Map	msg = new HashMap();
 
-		try{
-			msg.put( "line", text.getBytes( "UTF-8" ));
-
-		}catch( Throwable e ){
-
-			msg.put( "line", text.getBytes());
-		}
+		msg.put("line", text.getBytes(Constants.UTF_8));
 
 		logChatMessage( plugin.getNickname( chat.getPluginNetwork().isPublicNetwork()), Colors.green, msg );
 
@@ -397,15 +392,7 @@ BuddyPluginViewChat
 	{
 		byte[]	line = (byte[])map.get( "line" );
 
-		String msg;
-
-		try{
-			msg = new String( line, "UTF-8" );
-
-		}catch( Throwable e ){
-
-			msg = new String( line );
-		}
+		String msg = new String(line, Constants.UTF_8);
 
 		if ( buddy_name.length() > 32 ){
 

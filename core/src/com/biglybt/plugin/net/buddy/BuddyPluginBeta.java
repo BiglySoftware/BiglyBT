@@ -821,11 +821,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		String		name,
 		String		value )
 	{
-		try{
-			setByteArrayOption( net, key, name, value.getBytes( "UTF-8" ));
-
-		}catch( Throwable e ){
-
+		if (value != null) {
+			setByteArrayOption(net, key, name, value.getBytes(Constants.UTF_8));
 		}
 	}
 
@@ -839,13 +836,7 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		byte[]	bytes = getByteArrayOption( net, key, name );
 
 		if ( bytes != null ){
-
-			try{
-				return( new String( bytes, "UTF-8" ));
-
-			}catch( Throwable e ){
-
-			}
+			return new String(bytes, Constants.UTF_8);
 		}
 
 		return( def );
@@ -877,34 +868,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		return( null );
 	}
 
-	private String
-	encodeKey(
-		String	key )
-	{
-		try{
-			return( Base32.encode( key.getBytes( "UTF-8" )));
-
-		}catch( Throwable e ){
-
-			Debug.out( e);
-
-			return( "" );
+	private String encodeKey(String key) {
+		if (key != null) {
+			return Base32.encode(key.getBytes(Constants.UTF_8));
 		}
+		return "";
 	}
 
-	private String
-	decodeKey(
-		String		key )
-	{
-		try{
-			return( new String( Base32.decode( key ),"UTF-8" ));
-
-		}catch( Throwable e ){
-
-			Debug.out( e);
-
-			return( "" );
+	private String decodeKey(String key) {
+		if ( key != null) {
+			return new String(Base32.decode(key), Constants.UTF_8);
 		}
+		return "";
 	}
 
 	private Object
@@ -6931,7 +6906,6 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		public String
 		getMessage()
 		{
-			try{
 				String	report = (String)map.get( "error" );
 
 				if ( report != null ){
@@ -6963,20 +6937,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					if ( msg_bytes != null ){
 
-						return( new String( msg_bytes, "UTF-8" ));
-					}
+					return new String(msg_bytes, Constants.UTF_8);
 				}
-
-
-
-				return( new String((byte[])map.get( "content" ), "UTF-8" ));
-
-			}catch( Throwable e ){
-
-				Debug.out( e );
-
-				return( "" );
 			}
+
+			return new String((byte[]) map.get("content"), Constants.UTF_8);
 		}
 
 		public byte[]
@@ -7145,15 +7110,10 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 				byte[] nick = (byte[])payload.get( "nick" );
 
 				if ( nick != null ){
+					String str = new String(nick, Constants.UTF_8);
 
-					try{
-						String str = new String( nick, "UTF-8" );
-
-						if ( str.length() > 0 ){
-
-							return( str );
-						}
-					}catch( Throwable e ){
+					if (str.length() > 0) {
+						return str;
 					}
 				}
 			}

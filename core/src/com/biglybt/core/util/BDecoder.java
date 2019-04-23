@@ -68,16 +68,9 @@ public class BDecoder
 	static{
 		byte[]	portable = null;
 
-		try{
-			String root = System.getProperty(SystemProperties.SYSPROP_PORTABLE_ROOT, "" );
-
-			if ( root.length() > 0 ){
-
-				portable = root.getBytes( "UTF-8" );
-			}
-		}catch( Throwable e ){
-
-			e.printStackTrace();
+		String root = System.getProperty(SystemProperties.SYSPROP_PORTABLE_ROOT, null );
+		if (root != null) {
+			portable = root.getBytes(Constants.UTF_8);
 		}
 
 		PORTABLE_ROOT = portable;
@@ -1318,14 +1311,8 @@ public class BDecoder
 			Object	value = entry.getValue();
 
 			if ( value instanceof byte[]){
+				entry.setValue(new String((byte[]) value, Constants.UTF_8));
 
-				try{
-					entry.setValue( new String((byte[])value,"UTF-8" ));
-
-				}catch( Throwable e ){
-
-					System.err.println(e);
-				}
 			}else if ( value instanceof Map ){
 
 				decodeStrings((Map)value );
@@ -1359,16 +1346,9 @@ public class BDecoder
 			Object value = list.get(i);
 
 			if ( value instanceof byte[]){
+				String str = new String((byte[]) value, Constants.UTF_8);
+				list.set(i, str);
 
-				try{
-					String str = new String((byte[])value, "UTF-8" );
-
-					list.set( i, str );
-
-				}catch( Throwable e ){
-
-					System.err.println(e);
-				}
 			}else if ( value instanceof Map ){
 
 				decodeStrings((Map)value );
@@ -1424,34 +1404,31 @@ public class BDecoder
 
      	}else if ( obj instanceof String ){
 
- 			String s = (String)obj;
+			String s = (String) obj;
 
-     		try{
+			int len = s.length();
 
-     			int	len = s.length();
+			if (len >= 6 && s.startsWith("\\x") && s.endsWith("\\x")) {
 
-     			if ( len >= 6 && s.startsWith( "\\x" ) && s.endsWith( "\\x" )){
+				byte[] result = new byte[(len - 4) / 2];
 
-     				byte[]	result = new byte[(len-4)/2];
+				int pos = 2;
 
-     				int	pos = 2;
+				for (int i = 0; i < result.length; i++) {
 
-     				for ( int i=0;i<result.length;i++){
+					try {
+						result[i] = (byte) Integer.parseInt(s.substring(pos, pos + 2), 16);
+					} catch (NumberFormatException e) {
+						return s.getBytes(Constants.UTF_8); //invalid hex string...
+					}
 
-     					result[i] = (byte)Integer.parseInt( s.substring( pos, pos+2 ), 16 );
+					pos += 2;
+				}
 
-     					pos += 2;
-     				}
+				return (result);
+			}
 
-     				return( result );
-     			}
-
-     			return(s.getBytes( "UTF-8" ));
-
-     		}catch( Throwable e ){
-
-     			return(s.getBytes());
-     		}
+			return s.getBytes(Constants.UTF_8);
 
      	}else if ( obj instanceof Long ){
 

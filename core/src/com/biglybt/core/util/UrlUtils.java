@@ -837,24 +837,21 @@ public class UrlUtils
 			byte[] decode = Base64.decode(base64);
 			if (decode != null && decode.length > 0) {
 				// Format is AA/<name>/<size>/<hash>/ZZ
-				try {
-					String decodeString = new String(decode, "utf8");
-					pattern = Pattern.compile("AA.*/(.*)/ZZ", Pattern.CASE_INSENSITIVE);
-					matcher = pattern.matcher(decodeString);
-					if (matcher.find()) {
-						String hash = matcher.group(1);
-						String magnet = parseTextForMagnets(hash);
-						if (magnet != null) {
-							pattern = Pattern.compile("AA/(.*)/[0-9]+", Pattern.CASE_INSENSITIVE);
-							matcher = pattern.matcher(decodeString);
-							if (matcher.find()) {
-								String name = matcher.group(1);
-								return magnet + "&dn=" + encode(name);
-							}
-							return magnet;
+				String decodeString = new String(decode, Constants.UTF_8);
+				pattern = Pattern.compile("AA.*/(.*)/ZZ", Pattern.CASE_INSENSITIVE);
+				matcher = pattern.matcher(decodeString);
+				if (matcher.find()) {
+					String hash = matcher.group(1);
+					String magnet = parseTextForMagnets(hash);
+					if (magnet != null) {
+						pattern = Pattern.compile("AA/(.*)/[0-9]+", Pattern.CASE_INSENSITIVE);
+						matcher = pattern.matcher(decodeString);
+						if (matcher.find()) {
+							String name = matcher.group(1);
+							return magnet + "&dn=" + encode(name);
 						}
+						return magnet;
 					}
-				} catch (UnsupportedEncodingException e) {
 				}
 			}
 		}
@@ -1252,38 +1249,31 @@ public class UrlUtils
 	{
 		String	headers_to_use = getBrowserHeadersToUse( null );
 
-		Map	result = new HashMap();
+		Map<String, String>	result = new HashMap<>();
 
-		try{
+		String header_string = new String(Base64.decode(headers_to_use), Constants.UTF_8);
 
-			String header_string = new String( Base64.decode( headers_to_use ), "UTF-8" );
+		String[] headers = header_string.split("\n");
 
-			String[]	headers = header_string.split( "\n" );
+		for (String header : headers) {
 
-			for (int i=0;i<headers.length;i++ ){
+			int pos = header.indexOf(':');
 
-				String	header = headers[i];
+			if (pos != -1) {
 
-				int	pos = header.indexOf( ':' );
+				String lhs = header.substring(0, pos).trim();
+				String rhs = header.substring(pos + 1).trim();
 
-				if ( pos != -1 ){
+				if (!(lhs.equalsIgnoreCase("Host") || lhs.equalsIgnoreCase("Referer"))) {
 
-					String	lhs = header.substring(0,pos).trim();
-					String	rhs	= header.substring(pos+1).trim();
-
-					if ( !( lhs.equalsIgnoreCase( "Host") ||
-							lhs.equalsIgnoreCase( "Referer" ))){
-
-						result.put( lhs, rhs );
-					}
+					result.put(lhs, rhs);
 				}
 			}
+		}
 
-			if ( referer != null && referer.length() > 0){
+		if (referer != null && referer.length() > 0) {
 
-				result.put( "Referer", referer );
-			}
-		}catch( Throwable e ){
+			result.put("Referer", referer);
 		}
 
 		return( result );

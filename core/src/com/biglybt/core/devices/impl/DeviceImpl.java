@@ -1701,22 +1701,13 @@ DeviceImpl
 	{
 		synchronized( persistent_properties ){
 
-			try{
-				byte[]	value = (byte[])persistent_properties.get( prop );
+			byte[] value = (byte[]) persistent_properties.get(prop);
 
-				if ( value == null ){
-
-					return( def );
-				}
-
-				return( new String( value, "UTF-8" ));
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-
-				return( def );
+			if (value == null) {
+				return def;
 			}
+
+			return new String(value, Constants.UTF_8);
 		}
 	}
 
@@ -1733,22 +1724,14 @@ DeviceImpl
 
 			if ( !existing.equals( value )){
 
-				try{
-					if ( value == null ){
+				if (value == null) {
+					persistent_properties.remove(prop);
 
-						persistent_properties.remove( prop );
-
-					}else{
-
-						persistent_properties.put( prop, value.getBytes( "UTF-8" ));
-					}
-
-					dirty = true;
-
-				}catch( Throwable e ){
-
-					Debug.printStackTrace(e);
+				} else {
+					persistent_properties.put(prop, value.getBytes(Constants.UTF_8));
 				}
+
+				dirty = true;
 			}
 		}
 
@@ -2030,31 +2013,20 @@ DeviceImpl
 	{
 		synchronized( persistent_properties ){
 
-			try{
-				List<byte[]>	values = (List<byte[]>)persistent_properties.get( prop );
+			List<byte[]> values = (List<byte[]>) persistent_properties.get(prop);
 
-				if ( values == null ){
-
-					return( new String[0] );
-				}
-
-				String[]	res = new String[values.size()];
-
-				int	pos = 0;
-
-				for (byte[] value: values ){
-
-					res[pos++] = new String( value, "UTF-8" );
-				}
-
-				return( res );
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-
-				return( new String[0] );
+			if (values == null) {
+				return new String[0];
 			}
+
+			String[] res = new String[values.size()];
+
+			int pos = 0;
+			for (byte[] value : values) {
+				res[pos++] = new String(value, Constants.UTF_8);
+			}
+
+			return res;
 		}
 	}
 
@@ -2066,27 +2038,18 @@ DeviceImpl
 		boolean dirty = false;
 
 		synchronized( persistent_properties ){
+			List<byte[]> values_list = new ArrayList<>(values.length);
 
-			try{
-				List<byte[]> values_list = new ArrayList<>();
-
-				for (String value: values ){
-
-					values_list.add( value.getBytes( "UTF-8" ));
-				}
-
-				persistent_properties.put( prop, values_list );
-
-				dirty = true;
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
+			for (String value : values) {
+				values_list.add(value.getBytes(Constants.UTF_8));
 			}
+
+			persistent_properties.put(prop, values_list);
+
+			dirty = true;
 		}
 
-		if ( dirty ){
-
+		if (dirty) {
 			setDirty();
 		}
 	}

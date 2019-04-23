@@ -505,14 +505,13 @@ CustomizationManagerImpl
 		throws CustomizationException
 	{
 		try{
-			String	name 	= new String((byte[])map.get( "name" ), "UTF-8" );
 
-			String	version = new String((byte[])map.get( "version" ), "UTF-8" );
-
+			String version = new String((byte[]) map.get("version"), Constants.UTF_8);
 			if ( !Constants.isValidVersionFormat( version )){
-
 				throw( new CustomizationException( "Invalid version specification: " + version ));
 			}
+
+			String name = new String((byte[]) map.get("name"), Constants.UTF_8);
 
 			byte[]	data = (byte[])map.get( "data" );
 

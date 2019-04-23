@@ -17,7 +17,6 @@
  */
 package com.biglybt.ui.swt.config;
 
-import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 
 import org.eclipse.swt.SWT;
@@ -26,6 +25,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SHA1Hasher;
 import com.biglybt.pifimpl.local.ui.config.PasswordParameterImpl;
@@ -165,10 +165,7 @@ public class PasswordSwtParameter
 			if (value == null) {
 				return;
 			}
-			try {
-				setUiValue(new String(value, "utf8"));
-			} catch (UnsupportedEncodingException ignore) {
-			}
+			setUiValue(new String(value, Constants.UTF_8));
 		}
 	}
 

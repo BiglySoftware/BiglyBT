@@ -22,7 +22,6 @@ package com.biglybt.plugin.net.buddy;
 
 import java.util.*;
 
-import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.torrent.Torrent;
@@ -125,14 +124,9 @@ BuddyPluginAZ2
 		Map	reply = new HashMap();
 
 		if ( type == RT_AZ2_REQUEST_MESSAGE ){
-
-			try{
-				String	msg = new String( (byte[])request.get( "msg" ), "UTF8" );
-
-				from_buddy.setLastMessageReceived( msg );
-
-			}catch( Throwable e ){
-
+			byte[] msgBytes = (byte[]) request.get("msg");
+			if (msgBytes != null) {
+				from_buddy.setLastMessageReceived(new String(msgBytes, Constants.UTF_8));
 			}
 
 			reply.put( "type", new Long( RT_AZ2_REPLY_MESSAGE ));

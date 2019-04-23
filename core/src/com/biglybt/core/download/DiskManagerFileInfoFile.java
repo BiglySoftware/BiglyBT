@@ -22,6 +22,7 @@ package com.biglybt.core.download;
 
 import java.io.File;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.QTFastStartRAF;
@@ -43,15 +44,8 @@ DiskManagerFileInfoFile
 	DiskManagerFileInfoFile(
 		File		_file )
 	{
-		file		= _file;
-
-		try{
-			hash		= new SHA1Simple().calculateHash( file.getAbsolutePath().getBytes( "UTF-8" ));
-
-		}catch( Throwable e ){
-
-			Debug.out(e);
-		}
+		file = _file;
+		hash = new SHA1Simple().calculateHash(file.getAbsolutePath().getBytes(Constants.UTF_8));
 	}
 
 	@Override

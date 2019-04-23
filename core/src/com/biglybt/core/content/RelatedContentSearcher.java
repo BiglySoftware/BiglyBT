@@ -22,7 +22,6 @@
 
 package com.biglybt.core.content;
 
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -1855,21 +1854,16 @@ RelatedContentSearcher
 
 			for ( String word: non_dht_words_rand ){
 
-				try{
-					byte[]	bytes = word.getBytes( "UTF8" );
+				byte[] bytes = word.getBytes(Constants.UTF_8);
 
-					all_bloom.add( bytes );
+				all_bloom.add(bytes);
 
-					if ( all_bloom.getEntryCount() >= KEY_BLOOM_MAX_ENTRIES ){
+				if (all_bloom.getEntryCount() >= KEY_BLOOM_MAX_ENTRIES) {
+					break;
+				}
 
-						break;
-					}
-
-					if ( non_dht_bloom.getEntryCount() < KEY_BLOOM_MAX_ENTRIES ){
-
-						non_dht_bloom.add( bytes );
-					}
-				}catch( Throwable e ){
+				if (non_dht_bloom.getEntryCount() < KEY_BLOOM_MAX_ENTRIES) {
+					non_dht_bloom.add(bytes);
 				}
 			}
 
@@ -1879,16 +1873,12 @@ RelatedContentSearcher
 
 			for ( String word: dht_only_words_rand ){
 
-				try{
-					byte[]	bytes = word.getBytes( "UTF8" );
+				byte[] bytes = word.getBytes(Constants.UTF_8);
 
-					all_bloom.add( bytes );
+				all_bloom.add(bytes);
 
-					if ( all_bloom.getEntryCount() >= KEY_BLOOM_MAX_ENTRIES ){
-
-						break;
-					}
-				}catch( Throwable e ){
+				if (all_bloom.getEntryCount() >= KEY_BLOOM_MAX_ENTRIES) {
+					break;
 				}
 			}
 
@@ -2286,168 +2276,163 @@ outer:
 
 		List<DistributedDatabaseContact>	result = new ArrayList<>();
 
-		try{
-			String[]	 bits = Constants.PAT_SPLIT_SPACE.split(term.toLowerCase());
+		String[]	 bits = Constants.PAT_SPLIT_SPACE.split(term.toLowerCase());
 
-				// note that we don't need to unescape tags in this process as tags are escaped when
-				// inserted into the blooms and include the 'tag:' prefix
+		// note that we don't need to unescape tags in this process as tags are escaped when
+		// inserted into the blooms and include the 'tag:' prefix
 
-			int[]			bit_types 		= new int[bits.length];
-			byte[][]		bit_bytes	 	= new byte[bit_types.length][];
-			byte[][][]		extras			= new byte[bit_types.length][][];
+		int[]			bit_types 		= new int[bits.length];
+		byte[][]		bit_bytes	 	= new byte[bit_types.length][];
+		byte[][][]		extras			= new byte[bit_types.length][][];
 
-			for (int i=0;i<bits.length;i++){
+		for (int i=0;i<bits.length;i++){
 
-				String bit = bits[i].trim();
+			String bit = bits[i].trim();
 
-				if ( bit.length() > 0 ){
+			if ( bit.length() > 0 ){
 
-					char	c = bit.charAt(0);
+				char	c = bit.charAt(0);
 
-					if ( c == '+' ){
+				if ( c == '+' ){
 
-						bit_types[i] = 1;
+					bit_types[i] = 1;
 
-						bit = bit.substring(1);
+					bit = bit.substring(1);
 
-					}else if ( c == '-' ){
+				}else if ( c == '-' ){
 
-						bit_types[i] = 2;
+					bit_types[i] = 2;
 
-						bit = bit.substring(1);
-					}
-
-					if ( bit.startsWith( "(" ) && bit.endsWith((")"))){
-
-						bit_types[i] = 3;	// ignore
-
-					}else if ( bit.contains( "|" )){
-
-						String[]	parts = bit.split( "\\|" );
-
-						List<String>	p = new ArrayList<>();
-
-						for ( String part: parts ){
-
-							part = part.trim();
-
-							if ( part.length() > 0 ){
-
-								p.add( part );
-							}
-						}
-
-						if ( p.size() == 0 ){
-
-							bit_types[i] = 3;
-
-						}else{
-
-							bit_types[i] = 4;
-
-							extras[i] = new byte[p.size()][];
-
-							for ( int j=0;j<p.size();j++){
-
-								extras[i][j] = p.get(j).getBytes( "UTF8" );
-							}
-						}
-					}
-
-					bit_bytes[i] = bit.getBytes( "UTF8" );
+					bit = bit.substring(1);
 				}
-			}
 
-			synchronized( harvested_blooms ){
+				if ( bit.startsWith( "(" ) && bit.endsWith((")"))){
 
-				for ( ForeignBloom fb: harvested_blooms.values()){
+					bit_types[i] = 3;	// ignore
 
-					if ( is_popularity ){
+				}else if ( bit.contains( "|" )){
 
-						result.add( fb.getContact());
+					String[]	parts = bit.split( "\\|" );
+
+					List<String>	p = new ArrayList<>();
+
+					for ( String part: parts ){
+
+						part = part.trim();
+
+						if ( part.length() > 0 ){
+
+							p.add( part );
+						}
+					}
+
+					if ( p.size() == 0 ){
+
+						bit_types[i] = 3;
 
 					}else{
 
-						BloomFilter filter = fb.getFilter();
+						bit_types[i] = 4;
 
-						boolean	failed 	= false;
-						int		matches	= 0;
+						extras[i] = new byte[p.size()][];
 
-						for (int i=0;i<bit_bytes.length;i++){
+						for ( int j=0;j<p.size();j++){
 
-							byte[]	bit = bit_bytes[i];
-
-							if ( bit == null || bit.length == 0 ){
-
-								continue;
-							}
-
-							int	type = bit_types[i];
-
-							if ( type == 3 ){
-
-								continue;
-							}
-
-							if ( type == 0 || type == 1 ){
-
-								if ( filter.contains( bit )){
-
-									matches++;
-
-								}else{
-
-									failed	= true;
-
-									break;
-								}
-							}else if ( type == 2 ){
-
-								if ( !filter.contains( bit )){
-
-									matches++;
-
-								}else{
-
-									failed	= true;
-
-									break;
-								}
-							}else if ( type == 4 ){
-
-								byte[][]	parts = extras[i];
-
-								int	old_matches = matches;
-
-								for ( byte[] p: parts ){
-
-									if ( filter.contains( p )){
-
-										matches++;
-
-										break;
-									}
-								}
-
-								if ( matches == old_matches ){
-
-									failed = true;
-
-									break;
-								}
-							}
-						}
-
-						if ( matches > 0 && !failed ){
-
-							result.add( fb.getContact());
+							extras[i][j] = p.get(j).getBytes(Constants.UTF_8);
 						}
 					}
 				}
-			}
-		}catch( UnsupportedEncodingException e ){
 
-			Debug.out( e );
+				bit_bytes[i] = bit.getBytes(Constants.UTF_8);
+			}
+		}
+
+		synchronized( harvested_blooms ){
+
+			for ( ForeignBloom fb: harvested_blooms.values()){
+
+				if ( is_popularity ){
+
+					result.add( fb.getContact());
+
+				}else{
+
+					BloomFilter filter = fb.getFilter();
+
+					boolean	failed 	= false;
+					int		matches	= 0;
+
+					for (int i=0;i<bit_bytes.length;i++){
+
+						byte[]	bit = bit_bytes[i];
+
+						if ( bit == null || bit.length == 0 ){
+
+							continue;
+						}
+
+						int	type = bit_types[i];
+
+						if ( type == 3 ){
+
+							continue;
+						}
+
+						if ( type == 0 || type == 1 ){
+
+							if ( filter.contains( bit )){
+
+								matches++;
+
+							}else{
+
+								failed	= true;
+
+								break;
+							}
+						}else if ( type == 2 ){
+
+							if ( !filter.contains( bit )){
+
+								matches++;
+
+							}else{
+
+								failed	= true;
+
+								break;
+							}
+						}else if ( type == 4 ){
+
+							byte[][]	parts = extras[i];
+
+							int	old_matches = matches;
+
+							for ( byte[] p: parts ){
+
+								if ( filter.contains( p )){
+
+									matches++;
+
+									break;
+								}
+							}
+
+							if ( matches == old_matches ){
+
+								failed = true;
+
+								break;
+							}
+						}
+					}
+
+					if ( matches > 0 && !failed ){
+
+						result.add( fb.getContact());
+					}
+				}
+			}
 		}
 
 		return( result );

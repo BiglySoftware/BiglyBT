@@ -593,23 +593,15 @@ BuddyPluginUtils
 			// use torrent name here to canonicalize things in case user has renamed download display name
 			// also it is more important to get a consistent string rather than something correctly localised
 
-		String	torrent_name = null;
+		TOTorrent to_torrent = PluginCoreUtils.unwrap( torrent );
 
-		try{
-			TOTorrent to_torrent = PluginCoreUtils.unwrap( torrent );
+		String torrent_name = to_torrent.getUTF8Name();
 
-			torrent_name = to_torrent.getUTF8Name();
-
-			if ( torrent_name == null ){
-
-				torrent_name = new String( to_torrent.getName(), "UTF-8" );
-			}
-		}catch( Throwable e ){
-
+		if (torrent_name == null && to_torrent.getName() != null) {
+			torrent_name = new String(to_torrent.getName(), Constants.UTF_8);
 		}
 
 		if ( torrent_name == null ){
-
 			torrent_name = torrent.getName();
 		}
 

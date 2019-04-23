@@ -20,7 +20,6 @@
 
 package com.biglybt.ui.common.table.impl;
 
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
@@ -1057,13 +1056,10 @@ public class TableColumnImpl
 			if (o instanceof String) {
 				return (String) o;
 			} else if (o instanceof byte[]) {
-				try {
-					String s = new String((byte[]) o, "utf-8");
-					// write it back to the map, so we don't continually create new String objects
-					userData.put(key, s);
-					return( s );
-				} catch (UnsupportedEncodingException e) {
-				}
+				String s = new String((byte[]) o, Constants.UTF_8);
+				// write it back to the map, so we don't continually create new String objects
+				userData.put(key, s);
+				return( s );
 			}
 		}
 		return null;

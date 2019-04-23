@@ -27,7 +27,6 @@ package com.biglybt.core.global.impl;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -2653,7 +2652,7 @@ public class GlobalManagerImpl
 					Long[] array_file_priorities = new Long[0];
 			  	for (Object key : map_file_priorities.keySet()) {
 						long priority = Long.parseLong(key.toString());
-						String indexRanges = new String((byte[]) map_file_priorities.get(key), "utf-8");
+						String indexRanges = new String((byte[]) map_file_priorities.get(key), Constants.UTF_8);
 						String[] rangesStrings = indexRanges.split(",");
 
 						if (array_file_priorities.length == 0 && rangesStrings.length > 1) {
@@ -2686,11 +2685,7 @@ public class GlobalManagerImpl
 				  return( dm );
 			  }
 		  }
-	  }
-	  catch (UnsupportedEncodingException e1) {
-		  //Do nothing and process next.
-	  }
-	  catch (Throwable e) {
+	  } catch (Throwable e) {
 		  Logger.log(new LogEvent(LOGID,
 				  "Error while loading downloads.  " +
 				  "One download may not have been added to the list.", e));

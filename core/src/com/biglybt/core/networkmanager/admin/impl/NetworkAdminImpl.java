@@ -3619,20 +3619,13 @@ addressLoop:
 		}.start();
 	}
 
-	private String
-	getConfigKey(
-		NetworkInterface	intf )
-	{
-		try{
-			return( Base32.encode( intf.getName().getBytes( "UTF-8" )));
-
-		}catch( Throwable e ){
-
-			Debug.out( e );
-
-			return( "derp" );
+	private String getConfigKey(NetworkInterface intf) {
+		if (intf.getName() != null) {
+			return Base32.encode(intf.getName().getBytes(Constants.UTF_8));
 		}
+		return "derp";
 	}
+
 	private int
 	categoriseIntf(
 		NetworkInterface	intf )

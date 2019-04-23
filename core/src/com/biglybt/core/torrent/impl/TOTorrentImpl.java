@@ -508,12 +508,7 @@ TOTorrentImpl
 	public String
 	getUTF8Name()
 	{
-		try {
-			return torrent_name_utf8 == null ? null : new String(torrent_name_utf8,
-					"utf8");
-		} catch (UnsupportedEncodingException e) {
-			return null;
-		}
+		return torrent_name_utf8 == null ? null : new String(torrent_name_utf8, Constants.UTF_8);
 	}
 
 	protected void

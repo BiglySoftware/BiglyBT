@@ -3629,11 +3629,7 @@ SpeedLimitHandler
     	String				key,
     	String				s )
     {
-    	try{
-    		map.put( key, s.getBytes( "UTF-8" ));
-
-    	}catch( Throwable e ){
-    	}
+	    map.put(key, s.getBytes(Constants.UTF_8));
     }
 
     private String
@@ -3649,12 +3645,8 @@ SpeedLimitHandler
 
        	}else if ( obj instanceof byte[] ){
 
-    		try{
-    			return( new String((byte[])obj, "UTF-8" ));
-
-    		}catch( Throwable e ){
-	    	}
-       	}
+	        return new String((byte[]) obj, Constants.UTF_8);
+        }
 
     	return( null );
     }

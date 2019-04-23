@@ -17,7 +17,7 @@
 
 package com.biglybt.ui.console.util;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.KeySpec;
@@ -30,6 +30,8 @@ import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.DESedeKeySpec;
 
 import org.gudy.bouncycastle.util.encoders.Base64;
+
+import com.biglybt.core.util.Constants;
 
 /**
  * utility class to encrypt strings. this class was taken from the examples at:
@@ -45,7 +47,7 @@ public class StringEncrypter
 	private SecretKeyFactory     keyFactory;
 	private Cipher               cipher;
 
-	private static final String     UNICODE_FORMAT               = "UTF8";
+	private static final Charset UNICODE_FORMAT = Constants.UTF_8;
 
 	public StringEncrypter( String encryptionScheme ) throws EncryptionException
 	{
@@ -83,10 +85,6 @@ public class StringEncrypter
 
 		}
 		catch (InvalidKeyException e)
-		{
-			throw new EncryptionException( e );
-		}
-		catch (UnsupportedEncodingException e)
 		{
 			throw new EncryptionException( e );
 		}
@@ -154,9 +152,6 @@ public class StringEncrypter
 
 	public static class EncryptionException extends Exception
 	{
-		/**
-		 *
-		 */
 		private static final long serialVersionUID = -8767982102667004210L;
 
 		public EncryptionException( Throwable t )

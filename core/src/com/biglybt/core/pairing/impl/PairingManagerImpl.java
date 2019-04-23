@@ -475,14 +475,8 @@ PairingManagerImpl
 				byte[] b_ps = (byte[])vc_data.get( "pairing_server" );
 		
 				if ( b_ps != null ){
-						
-					try{
-						String ps = new String( b_ps, "UTF-8" );
-							
-						_SERVICE_URL = ps;
-						
-					}catch( Throwable e ){
-					}
+
+					_SERVICE_URL = new String(b_ps, Constants.UTF_8);
 				}else{
 					
 					_SERVICE_URL = DEFAULT_SERVICE_URL;
@@ -493,14 +487,8 @@ PairingManagerImpl
 				byte[] b_ts = (byte[])vc_data.get( "tunnel_server" );
 				
 				if ( b_ts != null ){
-					
-					try{
-						String ts = new String( b_ts, "UTF-8" );
-						
-						_TUNNEL_SERVER = ts;
-						
-					}catch( Throwable e ){
-					}
+
+					_TUNNEL_SERVER = new String(b_ts, Constants.UTF_8);
 				}else{
 					
 					_TUNNEL_SERVER = DEFAULT_TUNNEL_SERVER;
@@ -511,13 +499,12 @@ PairingManagerImpl
 				byte[] b_wr = (byte[])vc_data.get( "web_remote_server" );
 		
 				if ( b_wr != null ){
-					
+
+					String wr = new String( b_wr, Constants.UTF_8);
+
 					try{
-						String wr = new String( b_wr, "UTF-8" );
-						
 						_WEB_REMOTE_URL = new URL( wr );
-						
-					}catch( Throwable e ){
+					}catch(MalformedURLException ignored ){
 					}
 				}else{
 					

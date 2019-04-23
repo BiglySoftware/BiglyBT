@@ -2769,19 +2769,10 @@ DiskManagerImpl
 			  }
 	
 			  String	abs_path = move_to_dir_name.getAbsolutePath();
-	
-			  String	_average_config_key = null;
-	
-			  try{
-				  _average_config_key = "dm.move.target.abps." + Base32.encode( abs_path.getBytes( "UTF-8" ));
-	
-			  }catch( Throwable e ){
-	
-				  Debug.out(e );
-			  }
-	
-			  final String average_config_key	= _average_config_key;
-	
+
+			  final String	average_config_key = "dm.move.target.abps." +
+						Base32.encode(abs_path.getBytes(Constants.UTF_8));
+
 			  // lazy here for rare case where all non-zero length files are links
 	
 			  if ( total_bytes == 0 ){

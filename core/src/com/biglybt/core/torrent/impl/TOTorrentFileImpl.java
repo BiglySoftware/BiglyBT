@@ -274,13 +274,7 @@ TOTorrentFileImpl
 			for (int j = 0; j < pathComponentsUTF8.length; j++) {
 
 				try {
-					String comp;
-					try {
-						comp =  new String(pathComponentsUTF8[j], "utf8");
-					} catch (UnsupportedEncodingException e) {
-						System.out.println("file - unsupported encoding!!!!");
-						comp = "UnsupportedEncoding";
-					}
+					String comp = new String(pathComponentsUTF8[j], Constants.UTF_8);
 
 					comp = FileUtil.convertOSSpecificChars(comp, j != pathComponentsUTF8.length-1 );
 

@@ -19,7 +19,6 @@
 
 package com.biglybt.core.networkmanager.impl.http;
 
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
@@ -46,6 +45,7 @@ import com.biglybt.core.stats.CoreStats;
 import com.biglybt.core.stats.CoreStatsProvider;
 import com.biglybt.core.torrent.TOTorrentFile;
 import com.biglybt.core.util.BEncoder;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.core.util.Debug;
 
@@ -704,13 +704,7 @@ HTTPNetworkManager
 	{
 		byte[]	bytes;
 
-		try{
-			bytes = data.getBytes( "ISO-8859-1" );
-
-		}catch( UnsupportedEncodingException e ){
-
-			bytes = data.getBytes();
-		}
+		bytes = data.getBytes(Constants.ISO_8859_1);
 
 		final ByteBuffer bb = ByteBuffer.wrap( bytes );
 

@@ -33,6 +33,7 @@ import com.biglybt.core.messenger.PlatformMessengerException;
 import com.biglybt.core.security.CryptoECCUtils;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
+import com.biglybt.core.util.Constants;
 
 public class
 PlatformSubscriptionsMessenger
@@ -303,15 +304,7 @@ PlatformSubscriptionsMessenger
 
 			}else if ( obj instanceof byte[] ){
 
-				byte[]	bytes = (byte[])obj;
-
-				try{
-					return( new String( bytes, "UTF-8" ));
-
-				}catch( Throwable e ){
-
-					return( new String( bytes ));
-				}
+				return new String((byte[])obj, Constants.UTF_8);
 			}else{
 
 				return( null );

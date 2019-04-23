@@ -4398,19 +4398,11 @@ RelatedContentManager
 			int	tag_len = bytes[pos++]&0x000000ff;
 
 			if ( tag_len > MAX_TAG_LENGTH ){
-
 				break;
 			}
 
-			try{
-				tags.add( new String( bytes, pos, tag_len, "UTF-8" ));
-
-				pos += tag_len;
-
-			}catch( Throwable e ){
-
-				break;
-			}
+			tags.add(new String(bytes, pos, tag_len, Constants.UTF_8));
+			pos += tag_len;
 		}
 
 		if ( tags.size() == 0 ){

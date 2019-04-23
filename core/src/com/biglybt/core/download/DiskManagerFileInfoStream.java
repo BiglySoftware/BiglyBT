@@ -54,13 +54,7 @@ DiskManagerFileInfoStream
 		stream_factory		= _stream_factory;
 		save_to				= _save_to;
 
-		try{
-			hash		= new SHA1Simple().calculateHash( _save_to.getAbsolutePath().getBytes( "UTF-8" ));
-
-		}catch( Throwable e ){
-
-			Debug.out(e);
-		}
+		hash = new SHA1Simple().calculateHash(_save_to.getAbsolutePath().getBytes(Constants.UTF_8));
 	}
 
 	public boolean

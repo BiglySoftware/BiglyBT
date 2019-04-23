@@ -17,7 +17,6 @@
 
 package com.biglybt.util;
 
-import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 import org.gudy.bouncycastle.util.encoders.Base64;
@@ -25,6 +24,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 
 
@@ -121,10 +121,7 @@ public class JSONUtils
 			Object[] array = (Object[]) value;
 			value = encodeToJSONArray(Arrays.asList(array));
 		} else if (value instanceof byte[]) {
-			try {
-				value = new String((byte[]) value, "utf-8");
-			} catch (UnsupportedEncodingException e) {
-			}
+			value = new String((byte[]) value, Constants.UTF_8);
 		} else if (value instanceof boolean[]) {
 			boolean[] array = (boolean[]) value;
 			ArrayList<Object> list = new ArrayList<>();
@@ -151,9 +148,6 @@ public class JSONUtils
 	}
 
 	/**
-	 * @param value
-	 * @return
-	 *
 	 * @since 3.0.1.5
 	 */
 	private static JSONArray encodeToJSONArray(Collection list) {

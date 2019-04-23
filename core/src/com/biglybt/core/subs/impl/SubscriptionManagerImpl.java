@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import com.biglybt.util.MapUtils;
 import org.gudy.bouncycastle.util.encoders.Base64;
 
 import com.biglybt.core.Core;
@@ -92,6 +91,7 @@ import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatMessage;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
+import com.biglybt.util.MapUtils;
 import com.biglybt.util.UrlFilter;
 
 
@@ -7789,20 +7789,10 @@ SubscriptionManagerImpl
 		}
 	}
 
-	private byte[]
-	getKeyBytes(
-		String		key )
-	{
-		try{
-			return( key.getBytes( "UTF-8" ));
-
-		}catch( UnsupportedEncodingException e ){
-
-			Debug.out( e );
-
-			return( key.getBytes());
-		}
+	private byte[] getKeyBytes(String key) {
+		return key.getBytes(Constants.UTF_8);
 	}
+
 	private AEDiagnosticsLogger
 	getLogger()
 	{

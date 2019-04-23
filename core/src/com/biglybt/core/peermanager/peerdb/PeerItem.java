@@ -19,7 +19,6 @@
 
 package com.biglybt.core.peermanager.peerdb;
 
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -27,6 +26,7 @@ import java.util.Arrays;
 import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.peer.util.PeerUtils;
 import com.biglybt.core.util.AENetworkClassifier;
+import com.biglybt.core.util.Constants;
 import com.biglybt.pif.peers.PeerDescriptor;
 
 
@@ -51,23 +51,18 @@ public class PeerItem implements PeerDescriptor {
   protected PeerItem( String _address, int _tcp_port, byte _source, byte _handshake, int _udp_port, byte _crypto_level, int _up_speed  ) {
     byte[] raw;
     network = AENetworkClassifier.categoriseAddress( _address );
-    try{
-	    if ( network == AENetworkClassifier.AT_PUBLIC ){
-		    try{
-		      //see if we can resolve the address into a compact raw IPv4/6 byte array (4 or 16 bytes)
-		      InetAddress ip = InetAddress.getByName( _address );
-		      raw = ip.getAddress();
-		    }
-		    catch( UnknownHostException e ) {
-		      //not a standard IPv4/6 address, so just use the full string bytes
-		      raw = _address.getBytes( "ISO8859-1" );
-		    }
-	    }else{
-	    	raw = _address.getBytes( "ISO8859-1" );
-	    }
-    }catch( UnsupportedEncodingException e ){
-    	raw = _address.getBytes();
-    }
+	  if (network == AENetworkClassifier.AT_PUBLIC) {
+		  try {
+			  //see if we can resolve the address into a compact raw IPv4/6 byte array (4 or 16 bytes)
+			  InetAddress ip = InetAddress.getByName(_address);
+			  raw = ip.getAddress();
+		  } catch (UnknownHostException e) {
+			  //not a standard IPv4/6 address, so just use the full string bytes
+			  raw = _address.getBytes(Constants.ISO_8859_1);
+		  }
+	  } else {
+		  raw = _address.getBytes(Constants.ISO_8859_1);
+	  }
 
     address = raw;
     tcp_port = (short)_tcp_port;
@@ -119,22 +114,17 @@ public class PeerItem implements PeerDescriptor {
 
 
   public String getAddressString() {
-	try{
-		if ( network == AENetworkClassifier.AT_PUBLIC ){
-		    try{
-		      //see if it's an IPv4/6 address (4 or 16 bytes)
-		      return InetAddress.getByAddress( address ).getHostAddress();
-		    }
-		    catch( UnknownHostException e ) {
-		      //not a standard IPv4/6 address, so just return as full string
-		      return new String( address, "ISO8859-1" );
-		    }
-		}else{
-			 return new String( address, "ISO8859-1" );
-		}
-	}catch( UnsupportedEncodingException e ){
-		return( new String( address ));
-	}
+	  if (network == AENetworkClassifier.AT_PUBLIC) {
+		  try {
+			  //see if it's an IPv4/6 address (4 or 16 bytes)
+			  return InetAddress.getByAddress(address).getHostAddress();
+		  } catch (UnknownHostException e) {
+			  //not a standard IPv4/6 address, so just return as full string
+			  return new String(address, Constants.ISO_8859_1);
+		  }
+	  } else {
+		  return new String(address, Constants.ISO_8859_1);
+	  }
   }
 
   @Override

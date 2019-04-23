@@ -95,13 +95,7 @@ DiskManagerFileInfoURL
 			}
 		}
 
-		try{
-			hash		= new SHA1Simple().calculateHash( ( "DiskManagerFileInfoURL" +  url.toExternalForm()).getBytes( "UTF-8" ));
-
-		}catch( Throwable e ){
-
-			Debug.out(e);
-		}
+		hash = new SHA1Simple().calculateHash(("DiskManagerFileInfoURL" + url.toExternalForm()).getBytes(Constants.UTF_8));
 
 		String file_name;
 

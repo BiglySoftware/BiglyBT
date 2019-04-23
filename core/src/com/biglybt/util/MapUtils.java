@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.UrlUtils;
 import org.gudy.bouncycastle.util.encoders.Base64;
 
@@ -90,26 +91,21 @@ public class MapUtils
 		if (map == null) {
 			return def;
 		}
-		try {
-			Object o = map.get(key);
-			if (o == null && !map.containsKey(key)) {
-				return def;
-			}
-			// NOTE: The above returns def when map doesn't contain the key,
-			//       which suggests below we would return the null when o is null.
-			//       But we don't! And now, some callers rely on this :(
-
-			if (o instanceof String) {
-				return (String) o;
-			}
-			if (o instanceof byte[]) {
-				return new String((byte[]) o, "utf-8");
-			}
-			return def;
-		} catch (Throwable t) {
-			Debug.out(t);
+		Object o = map.get(key);
+		if (o == null && !map.containsKey(key)) {
 			return def;
 		}
+		// NOTE: The above returns def when map doesn't contain the key,
+		//       which suggests below we would return the null when o is null.
+		//       But we don't! And now, some callers rely on this :(
+
+		if (o instanceof String) {
+			return (String) o;
+		}
+		if (o instanceof byte[]) {
+			return new String((byte[]) o, Constants.UTF_8);
+		}
+		return def;
 	}
 
 	public static String[]
@@ -137,12 +133,7 @@ public class MapUtils
 		if ( obj instanceof String ){
 			return((String)obj);
 		}else if ( obj instanceof byte[]){
-
-			try{
-				return new String((byte[])obj, "UTF-8");
-			}catch( Throwable e ){
-
-			}
+			return new String((byte[]) obj, Constants.UTF_8);
 		}
 		return( null );
 	}
@@ -156,14 +147,10 @@ public class MapUtils
 			Debug.out( "Map is null!" );
 			return;
 		}
-		try{
-			if ( val == null ){
-				map.remove( key );
-			}else{
-				map.put( key, val.getBytes( "utf-8" ));
-			}
-		}catch( Throwable e ){
-			Debug.out(e);
+		if (val == null) {
+			map.remove(key);
+		} else {
+			map.put(key, val.getBytes(Constants.UTF_8));
 		}
 	}
 
@@ -423,13 +410,8 @@ public class MapUtils
 
 			}else if ( obj instanceof byte[] ){
 
-				try{
-					res[i] = new String((byte[])obj, "UTF-8" );
+				res[i] = new String((byte[])obj, Constants.UTF_8);
 
-				}catch( UnsupportedEncodingException e ){
-
-					e.printStackTrace();
-				}
 			}
 		}
 
@@ -446,15 +428,8 @@ public class MapUtils
 
 		map.put( key, l );
 
-		for (int i=0;i<data.length;i++){
-
-			try{
-				l.add( data[i].getBytes( "UTF-8" ));
-
-			}catch( UnsupportedEncodingException e ){
-
-				e.printStackTrace();
-			}
+		for (String datum : data) {
+			l.add(datum.getBytes(Constants.UTF_8));
 		}
 	}
 

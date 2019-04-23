@@ -382,13 +382,7 @@ XUXmlWriter
 	{
 		if ( generic_simple ){
 
-			try{
-				writeLineRaw( escapeXML( new String(bytes, "UTF-8" )));
-
-			}catch( Throwable e ){
-
-				e.printStackTrace();
-			}
+			writeLineRaw(escapeXML(new String(bytes, Constants.UTF_8)));
 		}else{
 
 			writeTag( "BYTES", encodeBytes( bytes ));

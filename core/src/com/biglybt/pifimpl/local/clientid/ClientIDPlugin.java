@@ -36,7 +36,6 @@ import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.clientid.ClientIDGenerator;
 import com.biglybt.pif.ui.config.*;
-
 import com.biglybt.pif.ui.model.BasicPluginConfigModel;
 
 /**
@@ -172,15 +171,11 @@ ClientIDPlugin
 				id[6]	= (byte)ML_BIGLY_VERSION.charAt( ML_BIGLY_VERSION.length()-1 );
 			}
 		}else{
-			
-			try{
-				byte[] b_prefix = "-AZ5750".getBytes( "ISO-8859-1" );
-			
-				for ( int i=0;i<b_prefix.length;i++){
-					
-					id[i] = b_prefix[i];
-				}
-			}catch( Throwable e ){
+
+			byte[] b_prefix = "-AZ5750".getBytes(Constants.ISO_8859_1);
+
+			for (int i = 0; i < b_prefix.length && i < id.length; i++) {
+				id[i] = b_prefix[i];
 			}
 		}
 		

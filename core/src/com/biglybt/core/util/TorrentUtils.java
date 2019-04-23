@@ -1907,24 +1907,17 @@ TorrentUtils
 	{
 		Map	m = getAzureusPrivateProperties( torrent );
 
-		try{
-			str = str.trim();
 
-			if ( str == null || str.length() == 0 ){
+		if (str == null || str.trim().isEmpty()) {
 
-				m.remove( TORRENT_AZ_PROP_OBTAINED_FROM );
+			m.remove(TORRENT_AZ_PROP_OBTAINED_FROM);
 
-			}else{
+		} else {
 
-				m.put( TORRENT_AZ_PROP_OBTAINED_FROM, str.getBytes( "UTF-8" ));
-			}
-
-			fireAttributeListener( torrent, TORRENT_AZ_PROP_OBTAINED_FROM, str );
-
-		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
+			m.put(TORRENT_AZ_PROP_OBTAINED_FROM, str.getBytes(Constants.UTF_8));
 		}
+
+		fireAttributeListener(torrent, TORRENT_AZ_PROP_OBTAINED_FROM, str);
 	}
 
 	public static String
@@ -1937,13 +1930,7 @@ TorrentUtils
 
 		if ( from != null ){
 
-			try{
-				return( new String( from, "UTF-8" ));
-
-			}catch( Throwable e ){
-
-				Debug.printStackTrace(e);
-			}
+			return new String(from, Constants.UTF_8);
 		}
 
 		return( null );
@@ -1973,36 +1960,31 @@ TorrentUtils
 
 		Map	m = getAzureusPrivateProperties( torrent );
 
-		try{
-			List l = (List)m.get( TORRENT_AZ_PROP_NETWORK_CACHE );
+		List l = (List) m.get(TORRENT_AZ_PROP_NETWORK_CACHE);
 
-			if ( l != null ){
+		if (l != null) {
 
-				for (Object o: l ){
+			for (Object o : l) {
 
-					if ( o instanceof String ){
+				if (o instanceof String) {
 
-						result.add((String)o);
+					result.add((String) o);
 
-					}else if ( o instanceof byte[] ){
+				} else if (o instanceof byte[]) {
 
-						String s = new String((byte[])o, "UTF-8" );
+					String s = new String((byte[]) o, Constants.UTF_8);
 
-						for ( String x: AENetworkClassifier.AT_NETWORKS ){
+					for (String x : AENetworkClassifier.AT_NETWORKS) {
 
-							if ( s.equals( x )){
+						if (s.equals(x)) {
 
-								result.add( x );
+							result.add(x);
 
-								break;
-							}
+							break;
 						}
 					}
 				}
 			}
-		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
 		}
 
 		return( result );
@@ -2032,28 +2014,23 @@ TorrentUtils
 
 		Map	m = getAzureusPrivateProperties( torrent );
 
-		try{
-			List l = (List)m.get( TORRENT_AZ_PROP_TAG_CACHE );
+		List l = (List) m.get(TORRENT_AZ_PROP_TAG_CACHE);
 
-			if ( l != null ){
+		if (l != null) {
 
-				for (Object o: l ){
+			for (Object o : l) {
 
-					if ( o instanceof String ){
+				if (o instanceof String) {
 
-						result.add((String)o);
+					result.add((String) o);
 
-					}else if ( o instanceof byte[] ){
+				} else if (o instanceof byte[]) {
 
-						String s = new String((byte[])o, "UTF-8" );
+					String s = new String((byte[]) o, Constants.UTF_8);
 
-						result.add( s );
-					}
+					result.add(s);
 				}
 			}
-		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
 		}
 
 		return( result );
@@ -2083,28 +2060,23 @@ TorrentUtils
 
 		Map	m = getAzureusPrivateProperties( torrent );
 
-		try{
-			List l = (List)m.get( TORRENT_AZ_PROP_INITIAL_TAGS );
+		List l = (List) m.get(TORRENT_AZ_PROP_INITIAL_TAGS);
 
-			if ( l != null ){
+		if (l != null) {
 
-				for (Object o: l ){
+			for (Object o : l) {
 
-					if ( o instanceof String ){
+				if (o instanceof String) {
 
-						result.add((String)o);
+					result.add((String) o);
 
-					}else if ( o instanceof byte[] ){
+				} else if (o instanceof byte[]) {
 
-						String s = new String((byte[])o, "UTF-8" );
+					String s = new String((byte[]) o, Constants.UTF_8);
 
-						result.add( s );
-					}
+					result.add(s);
 				}
 			}
-		}catch( Throwable e ){
-
-			Debug.printStackTrace(e);
 		}
 
 		return( result );
@@ -4480,17 +4452,7 @@ TorrentUtils
 
 		if ( is_new ){
 
-			String _config_key = "";
-
-			try{
-				_config_key = "dns.txts.cache." + Base32.encode( host.getBytes( "UTF-8" ));
-
-			}catch( Throwable e ){
-
-				Debug.out( e );
-			}
-
-			final String config_key	= _config_key;
+			final String config_key = "dns.txts.cache." + Base32.encode(host.getBytes(Constants.UTF_8));
 
 			if ( TRACE_DNS ){
 				System.out.println( "Updating DNS records for " + host );
@@ -4606,41 +4568,36 @@ TorrentUtils
 						txts = (List<String>)result[1];
 					}
 
-					try{
-						if ( txts == null ){
+					if (txts == null) {
 
-							txts = new ArrayList<>();
+						txts = new ArrayList<>();
 
-							if ( txts_cache == null ){
+						if (txts_cache == null) {
 
-								if ( TRACE_DNS ){
-									System.out.println( "    No cache" );
-								}
-							}else{
-
-								for ( Object o: txts_cache ){
-
-									txts.add( new String((byte[])o, "UTF-8" ));
-								}
-
-								if ( TRACE_DNS ){
-									System.out.println( "    Using cache: " + txts );
-								}
+							if (TRACE_DNS) {
+								System.out.println("    No cache");
 							}
-						}else{
+						} else {
 
-							txts_cache = new ArrayList();
+							for (Object o : txts_cache) {
 
-							for ( String str: txts ){
-
-								txts_cache.add( str.getBytes( "UTF-8" ));
+								txts.add(new String((byte[]) o, Constants.UTF_8));
 							}
 
-							COConfigurationManager.setParameter( config_key, txts_cache );
+							if (TRACE_DNS) {
+								System.out.println("    Using cache: " + txts);
+							}
 						}
-					}catch( Throwable e ){
+					} else {
 
-						Debug.out( e );
+						txts_cache = new ArrayList(txts.size());
+
+						for (String str : txts) {
+
+							txts_cache.add(str.getBytes(Constants.UTF_8));
+						}
+
+						COConfigurationManager.setParameter(config_key, txts_cache);
 					}
 				}
 

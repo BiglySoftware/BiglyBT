@@ -486,45 +486,39 @@ BEncoder
        		o = String.valueOf((Double)o);
 	    } else if ( o instanceof BEncodableObject ) {
     		o = ((BEncodableObject) o).toBencodeObject();
-       	}else if ( o instanceof byte[] ){
-       		try{
-       			byte[] b = (byte[])o;
 
-       			String s = new String(b,"UTF-8");
+			} else if (o instanceof byte[]) {
+				byte[] b = (byte[]) o;
 
-       			byte[] temp = s.getBytes( "UTF-8" );
+				String s = new String(b, Constants.UTF_8);
+				byte[] temp = s.getBytes(Constants.UTF_8);
 
-       				// if converting the raw byte array into a UTF string and back again doesn't result in
-       				// the same bytes then things ain't gonna work dump as a demarked hex string that
-       				// can be recognized and handled in BDecoder appropriately
+				// if converting the raw byte array into a UTF string and back again doesn't result in
+				// the same bytes then things ain't gonna work dump as a demarked hex string that
+				// can be recognized and handled in BDecoder appropriately
 
-       			if ( !Arrays.equals( b, temp )){
-
-       				StringBuilder sb = new StringBuilder( b.length * 2 + 4 );
+				if (!Arrays.equals(b, temp)) {
+					StringBuilder sb = new StringBuilder(b.length * 2 + 4);
 
 					sb.append("\\x");
 
-       				for ( byte x: b ){
-       					String ss=Integer.toHexString(x&0xff);
-    					for(int k=0;k<2-ss.length();k++){
-    						sb.append('0');
-    					}
-    					sb.append(ss);
-       				}
-
+					for (byte x : b) {
+						String ss = Integer.toHexString(x & 0xff);
+						for (int k = 0; k < 2 - ss.length(); k++) {
+							sb.append('0');
+						}
+						sb.append(ss);
+					}
 					sb.append("\\x");
 
-       				o = sb.toString();
+					o = sb.toString();
 
-       			}else{
+				} else {
+					o = s;
+				}
+			}
 
-       				o = s;
-       			}
-       		}catch( Throwable e ){
-       		}
-       	}
-
-    	return( o );
+			return o;
     }
 
     public static boolean isEncodable(Object toCheck) {

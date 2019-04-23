@@ -22,6 +22,7 @@ package com.biglybt.pifimpl.local.ddb;
 import java.io.*;
 import java.util.*;
 
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
 import com.biglybt.core.util.SHA1Simple;
@@ -54,13 +55,8 @@ DDBaseHelpers
 
 		}else if ( obj instanceof String ){
 
-			try{
-				res = ((String)obj).getBytes("UTF-8");
+			res = ((String) obj).getBytes(Constants.UTF_8);
 
-			}catch( UnsupportedEncodingException e ){
-
-				throw( new DistributedDatabaseException( "charset error", e ));
-			}
 		}else if (	obj instanceof Byte ||
 					obj instanceof Short ||
 					obj instanceof Integer ||
@@ -101,19 +97,11 @@ DDBaseHelpers
 		throws DistributedDatabaseException
 	{
 		if ( target == byte[].class ){
-
 			return( data );
 
 		}else if ( target == String.class ){
+			return new String(data, Constants.UTF_8);
 
-			try{
-
-				return( new String( data, "UTF-8" ));
-
-			}catch( UnsupportedEncodingException e ){
-
-				throw( new DistributedDatabaseException( "charset error", e ));
-			}
 		}else{
 
 			try{

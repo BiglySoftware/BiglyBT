@@ -328,16 +328,9 @@ CoreUpdateChecker
 				byte[]	info_b = (byte[])decoded.get( "info" );
 	
 				String	info = null;
-	
+
 				if ( info_b != null ){
-	
-					try{
-						info = new String( info_b, "UTF-8" );
-	
-					}catch( Throwable e ){
-	
-						Debug.printStackTrace( e );
-					}
+					info = new String(info_b, Constants.UTF_8);
 				}
 	
 				byte[] info_url_bytes = (byte[])decoded.get("info_url");
@@ -503,15 +496,7 @@ CoreUpdateChecker
 
 			  if ( message_bytes != null && message_bytes.length > 0 ){
 
-				  String  message;
-
-				  try{
-					  message = new String(message_bytes, "UTF-8" );
-
-				  }catch( Throwable e ){
-
-					  message = new String( message_bytes );
-				  }
+					String message = new String(message_bytes, Constants.UTF_8);
 
 				  String sig_key;
 
