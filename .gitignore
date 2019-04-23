@@ -180,6 +180,7 @@ core/lib/libWIN32Access/ipch/
 /uis/src/tux/
 *.DS_Store
 /build/
+.classpath
 
 Bigly*.jar
 
