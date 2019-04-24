@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.core.util.Constants;
 
 public class TwistieSection
 	extends Composite
@@ -46,7 +47,10 @@ public class TwistieSection
 		*/
 	public TwistieSection(Composite parent, int style) {
 		super(parent, SWT.NONE);
-		setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+			setBackgroundMode(SWT.INHERIT_FORCE);
+		}
 		GridLayout gLayout = new GridLayout();
 		gLayout.marginHeight = 0;
 		gLayout.marginWidth = 0;
@@ -209,7 +213,10 @@ public class TwistieSection
 
 		public TwistieContentPanel(Composite parent, int style) {
 			super(parent, style);
-			setBackgroundMode(SWT.INHERIT_FORCE);
+			if (Constants.isWindows) {
+				// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+				setBackgroundMode(SWT.INHERIT_FORCE);
+			}
 		}
 
 		private void _setLayoutData(GridData gData) {

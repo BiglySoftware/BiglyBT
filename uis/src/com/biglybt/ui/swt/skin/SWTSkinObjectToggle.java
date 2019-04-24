@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.core.util.AERunnable;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 
@@ -61,9 +62,11 @@ public class SWTSkinObjectToggle
 			createOn = (Composite) parent.getControl();
 		}
 
-		// WinXP Classic Theme will not bring though parent's background image
-		// without FORCEing the background mode
-		createOn.setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// WinXP Classic Theme will not bring though parent's background image
+			// without FORCEing the background mode
+			createOn.setBackgroundMode(SWT.INHERIT_FORCE);
+		}
 
 		button = new Button(createOn, SWT.TOGGLE);
 		isToggled = false;

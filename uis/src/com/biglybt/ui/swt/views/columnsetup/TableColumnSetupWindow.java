@@ -380,7 +380,10 @@ public class TableColumnSetupWindow
 
 
 		Composite cProficiency = new Composite(cFilterArea, SWT.NONE);
-		cProficiency.setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+			cProficiency.setBackgroundMode(SWT.INHERIT_FORCE);
+		}
 		cProficiency.setLayout(new FormLayout());
 
 		Label lblProficiency = new Label(cProficiency, SWT.NONE);

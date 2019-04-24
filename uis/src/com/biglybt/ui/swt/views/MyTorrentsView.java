@@ -839,7 +839,10 @@ public class MyTorrentsView
 				}
 			}
 
-			cCategoriesAndTags.setBackgroundMode(SWT.INHERIT_FORCE);
+			if (Constants.isWindows) {
+				// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+				cCategoriesAndTags.setBackgroundMode(SWT.INHERIT_FORCE);
+            }
 		}else if ( cCategoriesAndTags.isDisposed()){
 			return;
 		}

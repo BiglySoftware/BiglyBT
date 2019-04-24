@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.core.util.Constants;
 
 /**
  * A Label with a twistie graphic at the beginning; every time this label is clicked the
@@ -115,7 +116,10 @@ public class TwistieLabel
 	 */
 	public TwistieLabel(Composite parent, int style) {
 		super(parent, SWT.NONE);
-		setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+			setBackgroundMode(SWT.INHERIT_FORCE);
+		}
 		this.style = style;
 
 		GridLayout gLayout = new GridLayout();

@@ -34,6 +34,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.devices.Device;
 import com.biglybt.core.devices.*;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
@@ -648,7 +649,10 @@ public abstract class TranscodeChooser
 
 	private void createDeviceList(SWTSkinObjectContainer soDeviceList) {
 		Composite parent = soDeviceList.getComposite();
-		parent.setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+			parent.setBackgroundMode(SWT.INHERIT_FORCE);
+		}
 		FormLayout layout = new FormLayout();
 		layout.marginLeft = 10;
 		layout.marginHeight = 15;

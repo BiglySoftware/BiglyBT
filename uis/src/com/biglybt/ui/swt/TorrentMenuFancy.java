@@ -424,7 +424,10 @@ public class TorrentMenuFancy
 		shellLayout.marginWidth = shellLayout.marginHeight = SHELL_MARGIN;
 
 		shell.setLayout(shellLayout);
-		shell.setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+			shell.setBackgroundMode(SWT.INHERIT_FORCE);
+		}
 
 		topArea = new Composite(shell, SWT.DOUBLE_BUFFERED);
 		detailArea = new Composite(shell, SWT.DOUBLE_BUFFERED);
@@ -2512,7 +2515,11 @@ public class TorrentMenuFancy
 
 		HeaderInfo headerInfo = new HeaderInfo(id, runnable, composite);
 
-		composite.setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+			composite.setBackgroundMode(SWT.INHERIT_FORCE);
+		}
+
 		FillLayout fillLayout = new FillLayout();
 		fillLayout.marginWidth = 6;
 		fillLayout.marginHeight = 2;

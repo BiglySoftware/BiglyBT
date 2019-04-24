@@ -59,6 +59,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.ByteFormatter;
+import com.biglybt.core.util.Constants;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellAddedListener;
@@ -372,7 +373,10 @@ public class SubscriptionWizard {
 
 	private Composite createOptInComposite(Composite parent) {
 		Composite composite = new Composite(parent,SWT.NONE);
-		composite.setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+			composite.setBackgroundMode(SWT.INHERIT_FORCE);
+		}
 
 		Label description = new Label(composite,SWT.WRAP);
 		description.setFont(boldFont);

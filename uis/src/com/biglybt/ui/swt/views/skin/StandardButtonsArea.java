@@ -137,8 +137,10 @@ public abstract class StandardButtonsArea
 			// button area is supposed to be right aligned on both Windows+OSX
 
 		Composite cButtonArea = new Composite(cBottomArea, SWT.NONE);
-		// Fix button BG not right on Win7
-		cButtonArea.setBackgroundMode(SWT.INHERIT_FORCE);
+		if (Constants.isWindows) {
+			// Windows SWT Bug: button and label BGs won't draw properly without INHERIT FORCE
+			cButtonArea.setBackgroundMode(SWT.INHERIT_FORCE);
+		}
 		fd = new FormData();
 		fd.top = new FormAttachment(cCenterV, 0, SWT.CENTER);
 		fd.right = new FormAttachment(cCenterH, 0, SWT.LEFT);
