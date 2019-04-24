@@ -48,7 +48,7 @@ public interface Wiki
 
 	String FRIENDS = URL_WIKI + "w/Friends";
 
-	String FRIENDS__PUBLIC_PROFILE = URL_WIKI + "w/Friends#public-profile";
+	String FRIENDS_PUBLIC_PROFILE = URL_WIKI + "w/Friends#public-profile";
 
 	String GOOD_SETTINGS = URL_WIKI + "w/Good_settings";
 

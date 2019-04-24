@@ -220,7 +220,8 @@ BuddyPlugin
 		Properties l10n_constants = new Properties();
 		l10n_constants.put("azbuddy.classic.link.url", Wiki.FRIENDS);
 		l10n_constants.put("azbuddy.dchat.link.url", Wiki.DECENTRALIZED_CHAT);
-//	  l10n_conarNRA.put("azbuddy.profile.info.url", Wiki.FRIENDS__PUBLIC_PROFILE);
+		l10n_constants.put("azbuddy.profile.info.url", Wiki.FRIENDS_PUBLIC_PROFILE);
+		
 		lu.integrateLocalisedMessageBundle(l10n_constants);
 
 		lu.addListener(

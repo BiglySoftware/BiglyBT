@@ -4150,7 +4150,7 @@ BuddyPluginViewBetaChat
 						List<String>	values 	= new ArrayList<String>();
 						
 						names.add( "label.help" );
-						values.add(Wiki.FRIENDS__PUBLIC_PROFILE);
+						values.add(Wiki.FRIENDS_PUBLIC_PROFILE);
 						
 						names.add( "" );
 						values.add( "" );
