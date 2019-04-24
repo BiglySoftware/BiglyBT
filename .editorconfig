@@ -1,0 +1,23 @@
+root = true
+
+[*]
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.java]
+tab_width = 2
+indent_style = tab
+indent_size = 2
+continuation_indent_size = 2
+end_of_line = lf
+spaces_around_operators = true
+spaces_around_brackets = outside
+curly_bracket_next_line = false
+indent_brace_style = K&R
+quote_type = double
+
+[*.md]
+indent_style = space
+indent_size = 2
+trim_trailing_whitespace = false
