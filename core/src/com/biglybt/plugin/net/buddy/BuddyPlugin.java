@@ -694,7 +694,6 @@ BuddyPlugin
 				}
 			};
 
-		enabled_listener.parameterChanged( null );
 
 		classic_enabled_param.addListener( enabled_listener );
 		beta_enabled_param.addListener( enabled_listener );
@@ -714,6 +713,8 @@ BuddyPlugin
 				public void
 				initializationComplete()
 				{
+					enabled_listener.parameterChanged( null );
+
 					final DelayedTask dt = plugin_interface.getUtilities().createDelayedTask(new Runnable()
 						{
 							@Override
