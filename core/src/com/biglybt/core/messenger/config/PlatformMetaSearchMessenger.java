@@ -411,6 +411,11 @@ PlatformMetaSearchMessenger
 		public boolean
 		isVisible()
 		{
+			if ( name.equals( "Mininova" )){
+				
+				return( false );
+			}
+			
 			return( info.isVisible());
 		}
 
