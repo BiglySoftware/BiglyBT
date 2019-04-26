@@ -209,6 +209,14 @@ public class TorrentMenuFancy
 		public void setHasSubMenu(boolean hasSubMenu) {
 			this.hasSubMenu = hasSubMenu;
 		}
+
+		public void redraw() {
+			if (cRow == null || cRow.isDisposed()) {
+				return;
+			}
+			Rectangle bounds = cRow.getBounds();
+			cRow.redraw(0, 0, bounds.width, bounds.height, true);
+		}
 	}
 
 	private static class FancyMenuRowInfo
@@ -339,19 +347,18 @@ public class TorrentMenuFancy
 			}
 		};
 
-		listenerRow = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				Composite parent = detailArea;
-				Rectangle bounds = parent.getBounds();
-				if (event.type == SWT.MouseExit) {
-					currentRowInfo = null;
-					parent.redraw(0, 0, bounds.width, bounds.height, true);
-				} else if (event.type == SWT.MouseEnter) {
-					FancyRowInfo rowInfo = findRowInfo(event.widget);
-					currentRowInfo = rowInfo;
-					parent.redraw(0, 0, bounds.width, bounds.height, true);
-				}
+		listenerRow = event -> {
+			FancyRowInfo lastRowInfo = currentRowInfo;
+			if (event.type == SWT.MouseExit) {
+				currentRowInfo = null;
+			} else if (event.type == SWT.MouseEnter) {
+				currentRowInfo = findRowInfo(event.widget);
+			}
+			if (lastRowInfo != null) {
+				lastRowInfo.redraw();
+			}
+			if (currentRowInfo != null && currentRowInfo != lastRowInfo) {
+				currentRowInfo.redraw();
 			}
 		};
 
@@ -524,15 +531,10 @@ public class TorrentMenuFancy
 			}
 		});
 
-		shell.addKeyListener(new KeyListener() {
-
-			@Override
-			public void keyReleased(KeyEvent e) {
-			}
-
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.ARROW_DOWN) {
+		shell.addListener(SWT.KeyDown, e -> {
+			FancyRowInfo lastRowInfo = currentRowInfo;
+			switch (e.keyCode) {
+				case SWT.ARROW_DOWN:
 					if (currentRowInfo == null) {
 						currentRowInfo = listRowInfos.get(0);
 					} else {
@@ -551,9 +553,8 @@ public class TorrentMenuFancy
 							currentRowInfo = listRowInfos.get(0);
 						}
 					}
-					Rectangle bounds = detailArea.getBounds();
-					detailArea.redraw(0, 0, bounds.width, bounds.height, true);
-				} else if (e.keyCode == SWT.ARROW_UP) {
+					break;
+				case SWT.ARROW_UP:
 					if (currentRowInfo == null) {
 						currentRowInfo = listRowInfos.get(listRowInfos.size() - 1);
 					} else {
@@ -566,9 +567,8 @@ public class TorrentMenuFancy
 							previous = rowInfo;
 						}
 					}
-					Rectangle bounds = detailArea.getBounds();
-					detailArea.redraw(0, 0, bounds.width, bounds.height, true);
-				} else if (e.keyCode == SWT.ARROW_LEFT) {
+					break;
+				case SWT.ARROW_LEFT:
 					HeaderInfo previous = listHeaders.get(listHeaders.size() - 1);
 					for (HeaderInfo header : listHeaders) {
 						if (header == activatedHeader) {
@@ -577,7 +577,8 @@ public class TorrentMenuFancy
 						}
 						previous = header;
 					}
-				} else if (e.keyCode == SWT.ARROW_RIGHT) {
+					break;
+				case SWT.ARROW_RIGHT:
 					if (currentRowInfo != null && currentRowInfo.hasSubMenu()) {
 						Event event = new Event();
 						event.display = e.display;
@@ -599,7 +600,14 @@ public class TorrentMenuFancy
 							activateHeader(listHeaders.get(0));
 						}
 					}
-				}
+					break;
+			}
+
+			if (lastRowInfo != null) {
+				lastRowInfo.redraw();
+			}
+			if (currentRowInfo != null && lastRowInfo != currentRowInfo) {
+				currentRowInfo.redraw();
 			}
 		});
 
