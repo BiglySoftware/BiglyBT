@@ -284,9 +284,12 @@ UIManager
   		UIManagerListener listener );
 
 	/**
-	 *
-	 * @param listener
-	 *
+	 * Add a listener that's triggered on when core/plugins need to do an
+	 * UI-only task, such as display a message to a user, or open an URL in a
+	 * browser.
+	 * <p/>
+	 * See {@link UIManagerEvent} for types of events
+	 * 
 	 * @since 2.3.0.5
 	 */
  	public void
@@ -294,9 +297,8 @@ UIManager
   		UIManagerEventListener listener );
 
 	/**
-	 *
-	 * @param listener
-	 *
+	 * Remove previously added UIManagerEventListener
+	 * 
 	 * @since 2.3.0.5
 	 */
  	public void

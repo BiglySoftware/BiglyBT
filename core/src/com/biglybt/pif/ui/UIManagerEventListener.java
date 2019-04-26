@@ -23,9 +23,8 @@ public interface
 UIManagerEventListener
 {
 		/**
-		 * Return true if the event has been handled
 		 * @param event
-		 * @return
+		 * @return true if the event has been handled
 		 */
 
 	public boolean
