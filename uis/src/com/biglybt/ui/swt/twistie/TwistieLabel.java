@@ -115,7 +115,6 @@ public class TwistieLabel
 	 */
 	public TwistieLabel(Composite parent, int style) {
 		super(parent, SWT.NONE);
-		setBackgroundMode(SWT.INHERIT_FORCE);
 		this.style = style;
 
 		GridLayout gLayout = new GridLayout();

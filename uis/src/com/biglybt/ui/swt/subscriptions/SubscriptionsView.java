@@ -457,7 +457,6 @@ public class SubscriptionsView
 		view.initialize(viewComposite);
 
 		final Composite composite = new Composite(viewComposite,SWT.BORDER);
-		composite.setBackgroundMode(SWT.INHERIT_DEFAULT);
 		composite.setBackground(ColorCache.getColor(composite.getDisplay(), "#F1F9F8"));
 
 		Font font = composite.getFont();

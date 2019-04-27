@@ -838,8 +838,6 @@ public class MyTorrentsView
 					cTableParentPanel.setBackground( background );
 				}
 			}
-
-			cCategoriesAndTags.setBackgroundMode(SWT.INHERIT_FORCE);
 		}else if ( cCategoriesAndTags.isDisposed()){
 			return;
 		}

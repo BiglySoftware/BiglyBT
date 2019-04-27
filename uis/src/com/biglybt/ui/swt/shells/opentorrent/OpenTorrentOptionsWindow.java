@@ -5963,7 +5963,6 @@ public class OpenTorrentOptionsWindow
 		private void setupUpDownLimitOption(SWTSkinObjectContainer so) {
 			Composite parent = so.getComposite();
 
-			parent.setBackgroundMode( SWT.INHERIT_FORCE );	// win 7 classic theme shows grey background without this
 			parent.setLayout( new GridLayout(4, false));
 
 			IntSwtParameter paramMaxUploadSpeed = new IntSwtParameter(parent,
@@ -6012,7 +6011,6 @@ public class OpenTorrentOptionsWindow
 		private void setupIPFilterOption(SWTSkinObjectContainer so) {
 			Composite parent = so.getComposite();
 
-			parent.setBackgroundMode( SWT.INHERIT_FORCE );	// win 7 classic theme shows grey background without this
 			parent.setLayout( new GridLayout());
 
 			Button button = new Button(parent, SWT.CHECK | SWT.WRAP );
@@ -6033,8 +6031,6 @@ public class OpenTorrentOptionsWindow
 
 		private void setupPeerSourcesAndNetworkOptions(SWTSkinObjectContainer so) {
 			Composite parent = so.getComposite();
-			parent.setBackgroundMode( SWT.INHERIT_FORCE );	// win 7 classic theme shows grey background without this
-
 
 			Composite peer_sources_composite = new Composite(parent, SWT.NULL);
 

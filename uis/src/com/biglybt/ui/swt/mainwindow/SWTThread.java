@@ -21,28 +21,24 @@ package com.biglybt.ui.swt.mainwindow;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreRunningListener;
-import com.biglybt.ui.IUIIntializer;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.UserPrompterResultListener;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.*;
 import com.biglybt.core.util.*;
 import com.biglybt.platform.PlatformManagerFactory;
-import com.biglybt.ui.swt.UISwitcherListener;
-import com.biglybt.ui.swt.UISwitcherUtil;
-import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.*;
+import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-
-import com.biglybt.core.CoreFactory;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.ui.swt.utils.ColorCache;
 
 /**
  * The main SWT Thread, the only one that should run any GUI code.
@@ -237,6 +233,71 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 			});
 
 			MenuFactory.initSystemMenu();
+		}
+		
+		if (Constants.isWindows) {
+			/* Windows Bug: Button in a Composite with a background color set, will
+			 * result in a thin white border around button.  
+			 * Marked as WONTFIX by eclipse:
+			 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=515175
+			 * 
+			 * Our hack is to force all shells to be INHERIT_FORCE, which makes the 
+			 * buttons render properly with any parent background
+			 */
+			display.addFilter(SWT.Show, event -> {
+				if (event.widget == null || event.widget.isDisposed()) {
+					return;
+				}
+				if (event.widget instanceof Composite) {
+					boolean needsFixupBG = event.widget.getData("DidFixupBG") == null;
+					if (needsFixupBG) {
+						((Composite) event.widget).setBackgroundMode(SWT.INHERIT_FORCE);
+						event.widget.setData("DidFixupBG", "");
+					}
+				}
+			});
+			// The above hack causes Text widgets to lose inherit background, so add 
+			// an extra hack to restore it
+			try {
+				Method mDefaultBG = Text.class.getDeclaredMethod("defaultBackground");
+				mDefaultBG.setAccessible(true);
+				display.addFilter(SWT.Paint, event -> {
+					boolean needsFixupBG = event.widget.getData("DidFixupBG") == null;
+					if (!needsFixupBG) {
+						return;
+					}
+
+					if (!(event.widget instanceof Text)) {
+						event.widget.setData("DidFixupBG", "");
+						return;
+					}
+
+					// Unfortunately, we can't set DidFixupBG for Text.
+					// If some code later calls Text.setBackground(null), (aka TableViewSWT_Common#validateFilterRegex)
+					// the widget will get the background of the parent again unless we
+					// override (again)
+
+					Text text = (Text) event.widget;
+
+					Color background = text.getBackground();
+
+					try {
+						Object invoke = mDefaultBG.invoke(text);
+						int handle = ((Number) invoke).intValue();
+
+						int r = handle & 0xFF;
+						int g = (handle & 0xFF00) >> 8;
+						int b = (handle & 0xFF0000) >> 16;
+
+						if (!background.getRGB().equals(new RGB(r, g, b))) {
+							text.setBackground(ColorCache.getColor(event.display, r, g, b));
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				});
+			} catch (NoSuchMethodException ignore) {
+			}
 		}
 
 		if (app != null) {

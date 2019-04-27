@@ -63,28 +63,7 @@ public class SWTSkinObjectButton
 			createOn = (Composite) parent.getControl();
 		}
 
-		Control c = null;
-
-		if (Constants.isWindows) {
-			// Windows SWT Bug: button BG won't draw properly without INHERIT FORCE
-			// create a intermediate composite with forced inherit and put button
-			// in that.
-			createOn = new Composite(createOn, SWT.NONE);
-			createOn.setLayout(new FormLayout());
-			createOn.setBackgroundMode(SWT.INHERIT_FORCE);
-			c = createOn;
-		}
-
 		button = new Button(createOn, SWT.PUSH);
-
-
-
-
-		if (Constants.isWindows) {
-			button.setLayoutData(Utils.getFilledFormData());
-		} else {
-			c = button;
-		}
 
 		button.addSelectionListener(new SelectionListener() {
 			@Override
@@ -100,7 +79,7 @@ public class SWTSkinObjectButton
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-		setControl(c);
+		setControl(button);
 	}
 
 	// @see SWTSkinObjectBasic#switchSuffix(java.lang.String, int, boolean)

@@ -484,7 +484,6 @@ public class SWTSkin
 		this.startID = startID;
 		FormLayout layout = new FormLayout();
 		skinComposite.setLayout(layout);
-		skinComposite.setBackgroundMode(SWT.INHERIT_DEFAULT);
 
 		skinComposite.addDisposeListener(new DisposeListener() {
 			@Override

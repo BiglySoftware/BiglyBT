@@ -138,7 +138,6 @@ public abstract class StandardButtonsArea
 
 		Composite cButtonArea = new Composite(cBottomArea, SWT.NONE);
 		// Fix button BG not right on Win7
-		cButtonArea.setBackgroundMode(SWT.INHERIT_FORCE);
 		fd = new FormData();
 		fd.top = new FormAttachment(cCenterV, 0, SWT.CENTER);
 		fd.right = new FormAttachment(cCenterH, 0, SWT.LEFT);

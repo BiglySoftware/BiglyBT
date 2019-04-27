@@ -267,7 +267,6 @@ public class SubscriptionWizard {
 		});
 
 		Composite header = new Composite(shell, SWT.NONE);
-		header.setBackgroundMode(SWT.INHERIT_DEFAULT);
 		header.setBackgroundImage(imageLoader.getImage("wizard_header_bg"));
 		Label topSeparator = new Label(shell,SWT.SEPARATOR |SWT.HORIZONTAL);
 		main = new Composite(shell, SWT.NONE);
@@ -372,7 +371,6 @@ public class SubscriptionWizard {
 
 	private Composite createOptInComposite(Composite parent) {
 		Composite composite = new Composite(parent,SWT.NONE);
-		composite.setBackgroundMode(SWT.INHERIT_FORCE);
 
 		Label description = new Label(composite,SWT.WRAP);
 		description.setFont(boldFont);
@@ -746,7 +744,6 @@ public class SubscriptionWizard {
 
 		final Composite compEmpty = new Composite(composite,SWT.NONE);
 		compEmpty.setBackground(Colors.getSystemColor(display, SWT.COLOR_WHITE));
-		compEmpty.setBackgroundMode(SWT.INHERIT_DEFAULT);
 		FillLayout fl = new FillLayout();
 		fl.marginHeight = 15;
 		fl.marginWidth = 15;

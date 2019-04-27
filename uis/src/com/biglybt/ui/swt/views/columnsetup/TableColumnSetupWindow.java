@@ -380,7 +380,6 @@ public class TableColumnSetupWindow
 
 
 		Composite cProficiency = new Composite(cFilterArea, SWT.NONE);
-		cProficiency.setBackgroundMode(SWT.INHERIT_FORCE);
 		cProficiency.setLayout(new FormLayout());
 
 		Label lblProficiency = new Label(cProficiency, SWT.NONE);

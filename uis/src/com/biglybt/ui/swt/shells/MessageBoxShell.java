@@ -378,7 +378,6 @@ public class MessageBoxShell
 		if (title != null) {
 			shell.setText(title);
 		}
-		shell.setBackgroundMode(SWT.INHERIT_DEFAULT);
 
 		shell.addListener(SWT.Dispose, new Listener() {
 			@Override

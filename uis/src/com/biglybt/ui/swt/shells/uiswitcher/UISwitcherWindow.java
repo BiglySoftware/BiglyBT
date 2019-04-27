@@ -153,7 +153,6 @@ public class UISwitcherWindow
 			for (int i = 0; i < IDS.length; i++) {
 
 				final Composite c = new Composite(cCenter, SWT.NONE);
-				c.setBackgroundMode(SWT.INHERIT_DEFAULT);
 				gd = new GridData(GridData.FILL_HORIZONTAL);
 				gd.verticalIndent = 0;
 				c.setLayoutData(gd);

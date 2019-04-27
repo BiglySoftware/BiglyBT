@@ -1464,7 +1464,6 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 					curComposite = use_composite ? new Composite(group_parent, SWT.NONE)
 							: new Group(group_parent, SWT.NULL);
-					curComposite.setBackgroundMode(SWT.INHERIT_DEFAULT);
 
 					Control relatedControl = null;
 					if (!use_composite) {

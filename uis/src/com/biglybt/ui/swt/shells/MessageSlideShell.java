@@ -344,13 +344,6 @@ public class MessageSlideShell
 		if (shell == null) {
 			shell = new Shell(display, style);
 		}
-		try {
-			shell.setBackgroundMode(SWT.INHERIT_DEFAULT);
-		} catch (NoSuchMethodError e) {
-			// Ignore
-		} catch (NoSuchFieldError e2) {
-			// ignore
-		}
 		Utils.setShellIcon(shell);
 		if (popupParams.title != null) {
 			shell.setText(popupParams.title);

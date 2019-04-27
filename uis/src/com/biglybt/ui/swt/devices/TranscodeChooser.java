@@ -648,7 +648,6 @@ public abstract class TranscodeChooser
 
 	private void createDeviceList(SWTSkinObjectContainer soDeviceList) {
 		Composite parent = soDeviceList.getComposite();
-		parent.setBackgroundMode(SWT.INHERIT_FORCE);
 		FormLayout layout = new FormLayout();
 		layout.marginLeft = 10;
 		layout.marginHeight = 15;

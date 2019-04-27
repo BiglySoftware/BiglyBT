@@ -108,7 +108,6 @@ DevicesWizard
 		});
 
 		Composite header = new Composite(shell, SWT.NONE);
-		header.setBackgroundMode(SWT.INHERIT_DEFAULT);
 		header.setBackgroundImage(imageLoader.getImage("wizard_header_bg"));
 		Label topSeparator = new Label(shell,SWT.SEPARATOR |SWT.HORIZONTAL);
 		Composite main = new Composite(shell, SWT.NONE);

@@ -122,10 +122,6 @@ public class SWTSkinObjectContainer
 			}
 		}
 
-		// setting INHERIT_FORCE here would make the BG of a text box be
-		// this parent's BG (on Win7 at least)
-		//parentComposite.setBackgroundMode(SWT.INHERIT_FORCE);
-
 		parentComposite.setLayout(new FormLayout());
 
 		control = parentComposite;
