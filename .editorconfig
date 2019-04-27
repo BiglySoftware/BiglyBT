@@ -2,8 +2,6 @@ root = true
 
 [*]
 charset = utf-8
-trim_trailing_whitespace = true
-insert_final_newline = true
 
 [*.java]
 tab_width = 2
@@ -16,6 +14,8 @@ spaces_around_brackets = outside
 curly_bracket_next_line = false
 indent_brace_style = K&R
 quote_type = double
+trim_trailing_whitespace = true
+insert_final_newline = true
 
 [*.md]
 indent_style = space
