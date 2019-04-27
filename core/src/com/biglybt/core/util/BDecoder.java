@@ -65,6 +65,8 @@ public class BDecoder
 
 	private CharBuffer keyCharsBuffer; // old decoder only
 
+	private MapDecodeListener mapDecodeListener;
+
 	static{
 		byte[]	portable = null;
 
@@ -230,7 +232,7 @@ public class BDecoder
 
 		throws IOException
 	{
-		Object res = useNewDecoder 
+		Object res = useNewDecoder
 				? decodeInputStream2(data, "", 0, internKeys)
 				: decodeInputStream(data, "", 0, internKeys);
 
@@ -374,12 +376,12 @@ public class BDecoder
 					keyDecoder.decode(keyBytesBuffer,keyCharsBuffer,true);
 					keyDecoder.flush(keyCharsBuffer);
 					/* XXX Should be keyCharsBuffer.position() and not limit()
-					 * .position() is where the decode ended, 
+					 * .position() is where the decode ended,
 					 * .limit() is keyLength in bytes.
 					 * Limit may be larger than needed since some chars are built from
-					 * multiple bytes. Not changing code because limit and position are 
-					 * always (?) the same for ISO-8859-1, and for other encodings we 
-					 * use the new decoder, which handles size correctly 
+					 * multiple bytes. Not changing code because limit and position are
+					 * always (?) the same for ISO-8859-1, and for other encodings we
+					 * use the new decoder, which handles size correctly
 					 */
 					String key = new String(keyCharsBuffer.array(),0,keyCharsBuffer.limit());
 
@@ -580,7 +582,7 @@ public class BDecoder
 	 * This: Verifies map order using key in String form<br/>
 	 * Other: Verifies map order by copying bytes and comparing<br/>
 	 * <p/>
-	 * On a torrent with 100k files and set to verify map order, this method is 
+	 * On a torrent with 100k files and set to verify map order, this method is
 	 * 2.5x faster.
 	 */
 	private Object
@@ -745,6 +747,10 @@ public class BDecoder
 
 						throw( new IOException( Debug.getNestedExceptionMessage(e)));
 					}
+				}
+
+				if (mapDecodeListener != null) {
+					mapDecodeListener.mapDecoded(context, tempMap, nesting);
 				}
 
 				tempMap.compactify(-0.9f);
@@ -1514,6 +1520,14 @@ public class BDecoder
     	return( decodeFromJSONObject( j_map ));
     }
 
+	public MapDecodeListener getMapDecodeListener() {
+		return mapDecodeListener;
+	}
+
+	public void setMapDecodeListener(MapDecodeListener mapDecodeListener) {
+		this.mapDecodeListener = mapDecodeListener;
+	}
+
 
 /*
 	private interface
@@ -1746,6 +1760,18 @@ public class BDecoder
 		}
 	}
 
+	public interface MapDecodeListener {
+		/**
+		 * Triggered when a map is finished decoding.  Useful if you want to
+		 * modify the map before it's returned.  For example, removing unused
+		 * key/values that would otherwise take up memory.
+		 *
+		 * @param context root context is ""
+		 * @param map Modifying this map will affect the return value from BDecoder.decode(..)
+		 * @param nestingLevel root level is 0
+		 */
+		void mapDecoded(String context, Map<String, Object> map, int nestingLevel);
+	}
 
 	public static void
 	main(
