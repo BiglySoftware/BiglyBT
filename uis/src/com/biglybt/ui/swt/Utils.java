@@ -134,7 +134,7 @@ public class Utils
 
 	private static boolean isAZ2;
 	private static boolean isAZ3;
-	
+
 	private static AEDiagnosticsEvidenceGenerator evidenceGenerator;
 
 	private static ParameterListener configUserModeListener;
@@ -142,7 +142,7 @@ public class Utils
 	private static ParameterListener configUIListener;
 
 	private static boolean	terminated;
-	
+
 	static void initStatic() {
 		if (DEBUG_SWTEXEC) {
 			System.out.println("==== debug.swtexec=1, performance may be affected ====");
@@ -208,7 +208,7 @@ public class Utils
 	{
 		terminated	= true;
 	}
-	
+
 	public static boolean isAZ2UI() {
 		if ( configUIListener == null ){
 			Debug.out( "hmm" );
@@ -222,7 +222,7 @@ public class Utils
 		}
 		return isAZ3;
 	}
-	
+
 	public static int getUserMode() {
 		if ( configUserModeListener == null ){
 			Debug.out( "hmm" );
@@ -234,25 +234,25 @@ public class Utils
 		if (composite == null || composite.isDisposed()){
 			return;
 		}
-		
+
 		for ( Control control: composite.getChildren()){
-		
+
 			if ( control != null && !control.isDisposed()){
-				
+
 				if ( control instanceof Composite ){
-					
+
 					setEnabled((Composite) control, enabled);
-					
+
 				}else{
-					
+
 					control.setEnabled( enabled );
 				}
 			}
 		}
-		
+
 		composite.setEnabled( enabled );
 	}
-	
+
 	public static void disposeComposite(Composite composite, boolean disposeSelf) {
 		if (composite == null || composite.isDisposed())
 			return;
@@ -949,19 +949,19 @@ public class Utils
 	 *
 	 * @since 3.0.4.3
 	 */
-	
+
 		// only time the async_seq is 0 is when there is not active async_runner
-	
+
 		// this doesn't work properly if we have code running dispatch loops (e.g. TextViewer::goModal)
 		// as this blocks the async_runner and subsequent events don't get run :(
-	
+
 	static final boolean USE_ASYNC_EXEC_QUEUE = false;
-	
+
 	static AtomicInteger async_seq = new AtomicInteger();
-	
+
 	static ConcurrentLinkedQueue<Object[]>	async_exec_q = new ConcurrentLinkedQueue<>();
-	
-	
+
+
 	static Runnable async_runner =
 		new Runnable()
 		{
@@ -969,55 +969,55 @@ public class Utils
 			run()
 			{
 				int	spins = 0;
-				
+
 				Integer	last = -1;
-				
+
 				while( true ){
-					
+
 					Object[] r = async_exec_q.poll();
-					
+
 					if ( r == null ){
-						
+
 						if ( async_seq.compareAndSet( last+1, 0 )){
-							
+
 							break;
-							
+
 						}else{
-							
-								// something has been added to, or is in the process of being added to, 
+
+								// something has been added to, or is in the process of being added to,
 								// the queue between it being empty and the attempt to exit
-														
+
 							if ( ++spins >= 10 ){
-								
-								try{	
+
+								try{
 									Thread.sleep(1);
-									
+
 								}catch( Throwable e ){
 								}
 							}
-							
+
 							continue;
 						}
 					}
-					
+
 					spins = 0;
-					
+
 					try{
 						((Runnable)r[0]).run();
-						
+
 					}catch( Throwable e ){
-						
+
 						Debug.out( e );
 					}
-					
+
 					last = (Integer)r[1];
-					
+
 					//System.out.println( last + ": run" );
 				}
-			}			
+			}
 		};
-		
-	private static boolean execSWTThread(final Runnable code, final int msLater) {		
+
+	private static boolean execSWTThread(final Runnable code, final int msLater) {
 		final Display display = getDisplay(false);
 
 		if (display == null) {
@@ -1058,17 +1058,17 @@ public class Utils
 			try {
 				if (queue == null) {
 					if (msLater <= 0) {
-						
+
 						if ( USE_ASYNC_EXEC_QUEUE ){
-					
+
 							int my_seq = async_seq.getAndIncrement();
-							
+
 							async_exec_q.add( new Object[]{ code, my_seq });
-							
+
 							if ( my_seq == 0 ){
-							
+
 								display.asyncExec( async_runner );
-	
+
 							}
 						}else{
 							display.asyncExec(makeRunnableSafe(code));
@@ -1286,7 +1286,7 @@ public class Utils
 							run()
 							{
 								PlatformTorrentUtils.setHasBeenOpened( fileInfo.getDownloadManager(), fileInfo.getIndex(), true);
-								
+
 								launch(fileInfo.getFile(true).toString());
 							}
 						});
@@ -1469,7 +1469,7 @@ public class Utils
 
 					try{
 						if ( Constants.isOSX && browser_exe.endsWith( ".app" )){
-							
+
 							ProcessBuilder pb = GeneralUtils.createProcessBuilder(
 									bf.getParentFile(),
 									new String[]{
@@ -1477,13 +1477,13 @@ public class Utils
 										"-a",
 										browser_exe,
 										sFileModified
-									}, 
+									},
 									null );
-							
+
 							pb.start();
-							
+
 						}else{
-						
+
 							Process proc = Runtime.getRuntime().exec( new String[]{ bf.getAbsolutePath(), sFileModified });
 						}
 					}catch( Throwable e ){
@@ -1504,11 +1504,11 @@ public class Utils
 				return;
 			}
 		}else if ( lc_sFile.startsWith( "magnet:" )){
-			
+
 			TorrentOpener.openTorrent(sFileOriginal);
-			
+
 			return;
-			
+
 		}else if ( lc_sFile.startsWith( "azplug:?" )){
 
 			String plug_uri = sFileOriginal;
@@ -2009,7 +2009,7 @@ public class Utils
 	}
 
 	public static boolean linkShellMetricsToConfig(final Shell shell,
-			final String sConfigPrefix) 
+			final String sConfigPrefix)
 	{
 		boolean isMaximized = COConfigurationManager.getBooleanParameter(sConfigPrefix
 				+ ".maximized");
@@ -2032,9 +2032,9 @@ public class Utils
 				if (i == 4) {
 					Rectangle shellBounds = new Rectangle(values[0], values[1],
 							values[2], values[3]);
-					
+
 					if (shellBounds.width > 100 && shellBounds.height > 50) {
-				
+
 						shell.setBounds(shellBounds);
 						verifyShellRect(shell, true);
 						bDidResize = true;
@@ -2056,18 +2056,18 @@ public class Utils
 	public static boolean hasShellMetricsConfig( String sConfigPrefix )
 	{
 		if ( COConfigurationManager.doesParameterNonDefaultExist( sConfigPrefix + ".maximized")){
-			
+
 			return( true );
 		}
-		
+
 		if ( COConfigurationManager.doesParameterNonDefaultExist( sConfigPrefix + ".rectangle")){
-			
+
 			return( true );
 		}
-		
+
 		return( false );
 	}
-	
+
 	private static class ShellMetricsResizeListener
 		implements Listener
 	{
@@ -3225,7 +3225,7 @@ public class Utils
 		for ( Button button: buttons ){
 
 			if ( button != null ){
-			
+
 				width = Math.max( width, button.computeSize( SWT.DEFAULT, SWT.DEFAULT ).x );
 			}
 		}
@@ -3279,7 +3279,7 @@ public class Utils
 		button.setLayoutData(rData);
 		return button;
 	}
-	  
+
 	private static Map truncatedTextCache = new HashMap();
 
 	public static final String THREAD_NAME_OFFSWT = "GetOffSWT";
@@ -3459,13 +3459,13 @@ public class Utils
 
   				try{
 	  				browser.setUrl("about:blank");
-	
+
 	  				browser.setVisible(false);
-	
+
 	  				final boolean[]	done = {false};
-	
+
 	  				final long start = SystemTime.getMonotonousTime();
-	
+
 	  				execSWTThreadLater(
 	  					250,
 	  					new Runnable()
@@ -3475,24 +3475,24 @@ public class Utils
 	  						run()
 	  						{
 	  							synchronized( done ){
-	
+
 	  								done[0] = true;
 	  							}
 	  						}
 	  					});
-	
+
 	  				while(!event.display.isDisposed() && event.display.readAndDispatch()){
-	
+
 	  					synchronized( done ){
-	
+
 	  						if ( done[0] || SystemTime.getMonotonousTime() - start > 500 ){
-	
+
 	  							break;
 	  						}
 	  					}
 	  				}
   				}catch( Throwable e ){
-  					
+
   				}
   			}
   		});
@@ -4093,7 +4093,7 @@ public class Utils
 	{
 		return( createSash( form, SASH_WIDTH, SWT.HORIZONTAL ));
 	}
-	
+
 	public static Sash
 	createSash(
 		Composite	form,
@@ -4166,7 +4166,7 @@ public class Utils
 	}
 
 	public static final String RELAYOUT_UP_STOP_HERE	= "com.biglybt.ui.swt.Utils.RELAYOUT_UP_STOP_HERE";
-	
+
 	public static void relayoutUp(Composite c) {
 		while (c != null && !c.isDisposed()) {
 			Composite newParent = c.getParent();
@@ -4192,28 +4192,28 @@ public class Utils
 		Composite parent )
 	{
 		parent.setLayout( new GridLayout( 1, true ));
-		
+
 		ScrolledComposite scrolled_comp = new ScrolledComposite( parent , SWT.V_SCROLL );
-		
+
 		scrolled_comp.setExpandHorizontal(true);
-		
+
 		scrolled_comp.setExpandVertical(true);
-		
+
 		GridLayout layout = new GridLayout();
-		
+
 		layout.horizontalSpacing = 0;
 		layout.verticalSpacing = 0;
 		layout.marginHeight = 0;
 		layout.marginWidth = 0;
-		
+
 		scrolled_comp.setLayout(layout);
-		
+
 		GridData gridData = new GridData(GridData.FILL_BOTH );
-		
+
 		scrolled_comp.setLayoutData(gridData);
-	
+
 	    Composite result = new Composite(scrolled_comp, SWT.NULL);
-		
+
 	    scrolled_comp.setContent(result);
 		scrolled_comp.addControlListener(new ControlAdapter() {
 			@Override
@@ -4221,10 +4221,10 @@ public class Utils
 				updateScrolledComposite(scrolled_comp);
 			}
 		});
-		
+
 		return( result );
 	}
-	
+
 	public static void updateScrolledComposite(ScrolledComposite sc) {
 		Control content = sc.getContent();
 		if (content != null && !content.isDisposed()) {
@@ -4378,19 +4378,19 @@ public class Utils
 	ensureDisplayUpdated( Display display )
 	{
 		long start = SystemTime.getMonotonousTime();
-		
+
 		// make sure display is up to date
 		while (display.readAndDispatch()) {
-			
+
 			if ( SystemTime.getMonotonousTime() - start > 5000 ){
-				
+
 				// hmmm, somert wrong
-				
+
 				return;
 			}
 		}
 	}
-	
+
 	public static void
 	setPeronalShare(
 		Map<String, String> properties )
@@ -4398,21 +4398,21 @@ public class Utils
 		UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
 		if ( uif != null ){
-			
-			UIFunctionsUserPrompter prompter = 
-				uif.getUserPrompter( 
-					MessageText.getString( "personal.share.prompt.title"), 
-					MessageText.getString( "personal.share.prompt.text"), 
+
+			UIFunctionsUserPrompter prompter =
+				uif.getUserPrompter(
+					MessageText.getString( "personal.share.prompt.title"),
+					MessageText.getString( "personal.share.prompt.text"),
 					new String[] {
 							MessageText.getString("Button.ok"),
-					}, 
+					},
 					0);
-		
+
 			prompter.setRemember(
 					"personal.share.info",
 					false,
 					MessageText.getString("MessageBoxWindow.nomoreprompting"));
-			
+
 
 			prompter.setAutoCloseInMS(0);
 
@@ -4420,40 +4420,40 @@ public class Utils
 
 			prompter.waitUntilClosed();
 		}
-		
+
 		properties.put(ShareManager.PR_PERSONAL, "true");
 	}
 
-	
-	
+
+
 	private static boolean tt_enabled = false;
-	
+
 	static{
 		COConfigurationManager.addAndFireParameterListener(
 			"Disable All Tooltips",
 			new ParameterListener(){
-				
+
 				@Override
 				public void parameterChanged(String name){
 					tt_enabled = !COConfigurationManager.getBooleanParameter( name );
 				}
 			});
 	}
-	
+
 	public static boolean
 	getTTEnabled()
 	{
-		return( tt_enabled ); 
+		return( tt_enabled );
 	}
-	
+
 	public static void
 	setTT(
 		Control		c,
 		String		text )
 	{
 		c.setToolTipText( tt_enabled?text:null );
-	}	
-	
+	}
+
 	public static void
 	setTT(
 		BufferedTruncatedLabel		c,
@@ -4461,7 +4461,7 @@ public class Utils
 	{
 		c.setToolTipText( tt_enabled?text:null  );
 	}
-	
+
 	public static void
 	setTT(
 		CTabItem			c,
@@ -4469,7 +4469,7 @@ public class Utils
 	{
 		c.setToolTipText( tt_enabled?text:null  );
 	}
-	
+
 	public static void
 	setTT(
 		UISWTStatusEntry	c,
@@ -4477,7 +4477,7 @@ public class Utils
 	{
 		c.setTooltipText( tt_enabled?text:null  );
 	}
-	
+
 	public static void
 	setTT(
 		TableColumn			c,
@@ -4485,7 +4485,7 @@ public class Utils
 	{
 		c.setToolTipText( tt_enabled?text:null  );
 	}
-	
+
 	public static void
 	setTT(
 		ToolItem			c,
@@ -4493,7 +4493,7 @@ public class Utils
 	{
 		c.setToolTipText( tt_enabled?text:null  );
 	}
-	
+
 	public static void
 	setTT(
 		TrayItem			c,
@@ -4501,7 +4501,7 @@ public class Utils
 	{
 		c.setToolTipText( tt_enabled?text:null  );
 	}
-	
+
 	public static void
 	setTT(
 		TrayItemDelegate	c,
@@ -4509,7 +4509,7 @@ public class Utils
 	{
 		c.setToolTipText( tt_enabled?text:null  );
 	}
-	
+
 	public static void dispose() {
 		shellIcons = null;
 		icon128 = null;
