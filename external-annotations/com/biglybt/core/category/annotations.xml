@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.core.category.Category java.util.List&lt;com.biglybt.core.download.DownloadManager&gt; getDownloadManagers(java.util.List&lt;com.biglybt.core.download.DownloadManager&gt;)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

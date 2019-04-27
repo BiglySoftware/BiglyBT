@@ -1,0 +1,7 @@
+<root>
+    <item name='com.biglybt.ui.swt.osx.CocoaUIEnhancer void registerToolbarToggle(org.eclipse.swt.widgets.Shell)'>
+        <annotation name='java.lang.SuppressWarnings'>
+            <val val="&quot;unused&quot;"/>
+        </annotation>
+    </item>
+</root>

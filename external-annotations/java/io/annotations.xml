@@ -1,0 +1,5 @@
+<root>
+    <item name='java.io.File separator'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

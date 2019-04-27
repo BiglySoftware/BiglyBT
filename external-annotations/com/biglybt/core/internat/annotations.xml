@@ -1,0 +1,110 @@
+<root>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoder getTorrentEncoding(com.biglybt.core.torrent.TOTorrent)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoder getTorrentEncoding(com.biglybt.core.torrent.TOTorrent) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoder getTorrentEncoding(com.biglybt.core.torrent.TOTorrent, boolean, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoder getTorrentEncoding(com.biglybt.core.torrent.TOTorrent, boolean, boolean, boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoder getTorrentEncoding(com.biglybt.core.torrent.TOTorrent, boolean, boolean, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoder getTorrentEncoding(com.biglybt.core.torrent.TOTorrent, boolean, boolean, boolean, boolean)'>
+        <annotation name='org.jetbrains.annotations.Nullable'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoder getTorrentEncodingIfAvailable(com.biglybt.core.torrent.TOTorrent) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoderCandidate[] getTorrentCandidates(com.biglybt.core.torrent.TOTorrent)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil com.biglybt.core.internat.LocaleUtilDecoderCandidate[] getTorrentCandidates(com.biglybt.core.torrent.TOTorrent) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil java.lang.String getCurrentTorrentEncoding(com.biglybt.core.torrent.TOTorrent) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil java.util.List&lt;com.biglybt.core.internat.LocaleUtilDecoderCandidate&gt; getTorrentCandidates(com.biglybt.core.torrent.TOTorrent)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil java.util.List&lt;com.biglybt.core.internat.LocaleUtilDecoderCandidate&gt; getTorrentCandidates(com.biglybt.core.torrent.TOTorrent) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil void retainAll(java.util.List&lt;com.biglybt.core.internat.LocaleUtilDecoderCandidate&gt;, java.util.List&lt;com.biglybt.core.internat.LocaleUtilDecoderCandidate&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil void retainAll(java.util.List&lt;com.biglybt.core.internat.LocaleUtilDecoderCandidate&gt;, java.util.List&lt;com.biglybt.core.internat.LocaleUtilDecoderCandidate&gt;) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil void setDefaultTorrentEncoding(com.biglybt.core.torrent.TOTorrent) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil void setTorrentEncoding(com.biglybt.core.torrent.TOTorrent, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleTorrentUtil void setTorrentEncoding(com.biglybt.core.torrent.TOTorrent, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtil all_decoders'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtil com.biglybt.core.internat.LocaleUtil getSingleton()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtil com.biglybt.core.internat.LocaleUtilDecoder getFallBackDecoder()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtil com.biglybt.core.internat.LocaleUtilDecoder getSystemDecoder()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtil com.biglybt.core.internat.LocaleUtilDecoder[] getDecoders()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtil java.util.List&lt;com.biglybt.core.internat.LocaleUtilDecoder&gt; getCandidateDecoders(byte[])'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtil java.util.List&lt;com.biglybt.core.internat.LocaleUtilDecoderCandidate&gt; getCandidates(byte[])'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtilDecoder java.lang.String getName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.LocaleUtilDecoderReal LocaleUtilDecoderReal(int, java.nio.charset.CharsetDecoder) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.MessageText java.lang.String getString(java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.MessageText java.lang.String getString(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.MessageText java.lang.String getString(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.MessageText java.lang.String getString(java.lang.String, java.lang.String[])'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.MessageText java.lang.String getString(java.lang.String, java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.internat.MessageText java.util.Locale[] getLocales(boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

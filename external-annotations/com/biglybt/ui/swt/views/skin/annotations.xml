@@ -1,0 +1,23 @@
+<root>
+    <item name='com.biglybt.ui.swt.views.skin.SB_Transfers SB_Transfers(com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.skin.SB_Transfers com.biglybt.ui.mdi.MdiEntry createUnopenedEntry(com.biglybt.ui.mdi.MultipleDocumentInterface) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.skin.SB_Transfers$11 void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem, java.lang.Object) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.skin.SB_Transfers$7 void mdiEntryLoaded(com.biglybt.ui.mdi.MdiEntry) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.skin.SB_Transfers$9 void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem, java.lang.Object) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.skin.SB_Transfers.stats boolean sameAs(com.biglybt.ui.swt.views.skin.SB_Transfers.stats) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.skin.SB_Transfers.stats void copyFrom(com.biglybt.ui.swt.views.skin.SB_Transfers.stats) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

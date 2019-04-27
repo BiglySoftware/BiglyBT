@@ -1,0 +1,10 @@
+<root>
+    <item name='com.biglybt.ui.swt.shells.main.MainWindowImpl'>
+        <annotation name='java.lang.SuppressWarnings'>
+            <val val="&quot;SyntheticAccessorCall&quot;"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.shells.main.MainWindowImpl$2 void runWithDisplay(org.eclipse.swt.widgets.Display) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

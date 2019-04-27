@@ -1,0 +1,11 @@
+<root>
+    <item name='com.biglybt.core.Core com.biglybt.core.ipfilter.IpFilterManager getIpFilterManager()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.Core com.biglybt.pif.PluginManager getPluginManager()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.CoreFactory com.biglybt.core.Core getSingleton()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

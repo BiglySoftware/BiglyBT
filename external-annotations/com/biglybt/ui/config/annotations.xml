@@ -1,0 +1,158 @@
+<root>
+    <item name='com.biglybt.ui.config.BaseConfigSection com.biglybt.pif.ui.config.Parameter[] getParamArray()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.BaseConfigSection java.lang.String getConfigSectionID()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.BaseConfigSection java.lang.String getSectionNameKey()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.BaseConfigSection java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt; search(java.util.regex.Pattern)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name="com.biglybt.ui.config.ConfigDetail defaultMode">
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigDetail uiType'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigDetail void add(com.biglybt.pifimpl.local.ui.config.ParameterImpl, int) 1'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigDetail void add(com.biglybt.pifimpl.local.ui.config.ParameterImpl, int, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigDetail void add(com.biglybt.pifimpl.local.ui.config.ParameterImpl, int, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 1'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigDetail void add(com.biglybt.pifimpl.local.ui.config.ParameterImpl, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigDetail void add(java.lang.String, com.biglybt.pifimpl.local.ui.config.ParameterImpl, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...)'>
+        <annotation name='java.lang.SafeVarargs'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigDetail void add(java.lang.String, com.biglybt.pifimpl.local.ui.config.ParameterImpl, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigDetails java.util.Map&lt;java.lang.String,com.biglybt.pifimpl.local.ui.config.ParameterImpl&gt; buildBackupRestoreSection(java.lang.String, com.biglybt.ui.config.ConfigDetails.ConfigDetailsCallback)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigFileMove void createMoveOnEventGrouping(com.biglybt.pifimpl.local.PluginConfigImpl, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionBackupRestore java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionFileMove void createMoveOnEventGrouping(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionFileMove void createMoveOnEventGrouping(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionFileMove void createMoveOnEventGrouping(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionFileMove void createMoveOnEventGrouping(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionFileMove void createMoveOnEventGrouping(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String) 4'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionFileMove void createMoveOnEventGrouping(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String) 5'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl ConfigSectionImpl(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl ConfigSectionImpl(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl ConfigSectionImpl(java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl ConfigSectionImpl(java.lang.String, java.lang.String, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl ConfigSectionImpl(java.lang.String, java.lang.String, int) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl ConfigSectionImpl(java.lang.ref.WeakReference&lt;com.biglybt.pif.ui.model.BasicPluginConfigModel&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl com.biglybt.pif.ui.config.Parameter[] getParamArray()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl java.lang.String guessParamName(com.biglybt.pif.ui.config.Parameter, boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl java.lang.String guessParamName(com.biglybt.pif.ui.config.Parameter, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt; search(java.util.regex.Pattern)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl parentSectionID'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl sectionID'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void add(com.biglybt.pifimpl.local.ui.config.ParameterImpl, int, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void add(com.biglybt.pifimpl.local.ui.config.ParameterImpl, int, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 1'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void add(com.biglybt.pifimpl.local.ui.config.ParameterImpl, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void add(java.lang.String, com.biglybt.pifimpl.local.ui.config.ParameterImpl, int, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void add(java.lang.String, com.biglybt.pifimpl.local.ui.config.ParameterImpl, int, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void add(java.lang.String, com.biglybt.pifimpl.local.ui.config.ParameterImpl, int, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 2'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void add(java.lang.String, com.biglybt.pifimpl.local.ui.config.ParameterImpl, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void add(java.lang.String, com.biglybt.pifimpl.local.ui.config.ParameterImpl, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;...) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl void setDefaultUserModeForAdd(int) 0'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionImpl.ConfigDetailsCallback void run(java.util.Map&lt;java.lang.String,com.biglybt.pifimpl.local.ui.config.ParameterImpl&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionRebuildRunner void rebuildSection(com.biglybt.ui.config.BaseConfigSection) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigSectionStats statsPeriods'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.config.ConfigStartShutdown void buildOptions(com.biglybt.pifimpl.local.PluginConfigImpl, com.biglybt.platform.PlatformManager, java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt;) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

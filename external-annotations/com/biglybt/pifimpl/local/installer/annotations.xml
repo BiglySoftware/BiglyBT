@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.pifimpl.local.installer.PluginInstallerImpl void addInstallOperation(com.biglybt.pif.installer.InstallablePlugin) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

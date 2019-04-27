@@ -1,0 +1,11 @@
+<root>
+    <item name='com.biglybt.core.security.CryptoManager byte[] getSecureID()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.security.CryptoManager com.biglybt.core.security.CryptoHandler getECCHandler()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.security.CryptoManagerFactory com.biglybt.core.security.CryptoManager getSingleton()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

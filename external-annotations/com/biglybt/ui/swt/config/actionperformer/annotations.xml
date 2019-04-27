@@ -1,0 +1,14 @@
+<root>
+    <item name='com.biglybt.ui.swt.config.actionperformer.ChangeSelectionActionPerformer ChangeSelectionActionPerformer(com.biglybt.ui.swt.config.SwtParameter...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.actionperformer.ChangeSelectionActionPerformer params'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.actionperformer.ChangeSelectionActionPerformer void performAction(com.biglybt.ui.swt.config.SwtParameter) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.actionperformer.IAdditionalActionPerformer void performAction(com.biglybt.ui.swt.config.SwtParameter) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

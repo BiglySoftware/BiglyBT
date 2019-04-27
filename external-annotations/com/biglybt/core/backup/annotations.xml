@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.core.backup.BackupManagerFactory com.biglybt.core.backup.BackupManager getManager(com.biglybt.core.Core)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

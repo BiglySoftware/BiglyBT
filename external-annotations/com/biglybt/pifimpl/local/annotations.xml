@@ -1,0 +1,17 @@
+<root>
+    <item name='com.biglybt.pifimpl.local.PluginInitializer com.biglybt.pif.PluginInterface getDefaultInterface()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.PluginInterfaceImpl com.biglybt.pif.PluginConfig getPluginconfig()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.PluginInterfaceImpl java.lang.String getPluginID()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.PluginInterfaceImpl java.lang.String getPluginName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.PluginInterfaceImpl state'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

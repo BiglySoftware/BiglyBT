@@ -1,0 +1,14 @@
+<root>
+    <item name='com.biglybt.pif.ui.menus.MenuItemFillListener void menuWillBeShown(com.biglybt.pif.ui.menus.MenuItem, java.lang.Object) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(com.biglybt.pif.ui.menus.MenuContext, java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(com.biglybt.pif.ui.menus.MenuItem, java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.menus.MenuManager com.biglybt.pif.ui.menus.MenuItem addMenuItem(java.lang.String, java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

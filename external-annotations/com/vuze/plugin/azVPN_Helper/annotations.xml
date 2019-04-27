@@ -1,0 +1,26 @@
+<root>
+    <item name='com.vuze.plugin.azVPN_Helper.CheckerCommon CheckerCommon(com.biglybt.pif.PluginInterface) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.vuze.plugin.azVPN_Helper.CheckerCommon config'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.vuze.plugin.azVPN_Helper.CheckerCommon pi'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.vuze.plugin.azVPN_Helper.Checker_PIA java.lang.String decode(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.vuze.plugin.azVPN_Helper.Checker_PIA java.lang.String transform(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.vuze.plugin.azVPN_Helper.Checker_PIA java.lang.String[] getDefaultCreds(com.biglybt.pif.PluginInterface)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.vuze.plugin.azVPN_Helper.Checker_PIA java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt; setupConfigModel(com.biglybt.pif.PluginInterface, com.biglybt.pif.ui.model.BasicPluginConfigModel) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.vuze.plugin.azVPN_Helper.Checker_PIA java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt; setupConfigModel(com.biglybt.pif.PluginInterface, com.biglybt.pif.ui.model.BasicPluginConfigModel) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

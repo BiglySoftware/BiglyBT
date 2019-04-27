@@ -1,0 +1,17 @@
+<root>
+    <item name='com.biglybt.ui.common.table.impl.TableColumnImpl com.biglybt.pif.ui.tables.TableContextMenuItem addContextMenuItem(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.common.table.impl.TableColumnImpl com.biglybt.pif.ui.tables.TableContextMenuItem addContextMenuItem(java.lang.String, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.common.table.impl.TableColumnManager java.util.Map&lt;java.lang.String,com.biglybt.ui.common.table.TableColumnCore&gt; getTableColumnsAsMap(java.lang.Class, java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

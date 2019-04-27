@@ -1,0 +1,8 @@
+<root>
+    <item name='com.biglybt.core.torrent.TOTorrent com.biglybt.core.torrent.TOTorrentFile[] getFiles()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.torrent.TOTorrentFile byte[][] getPathComponents()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

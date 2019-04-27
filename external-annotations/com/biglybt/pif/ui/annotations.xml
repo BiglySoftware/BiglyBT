@@ -1,0 +1,20 @@
+<root>
+    <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.menus.MenuManager getMenuManager()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.model.BasicPluginConfigModel createBasicPluginConfigModel(java.lang.String, java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.model.BasicPluginConfigModel createBasicPluginConfigModel(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.model.BasicPluginConfigModel createBasicPluginConfigModel(java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.tables.TableManager getTableManager()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

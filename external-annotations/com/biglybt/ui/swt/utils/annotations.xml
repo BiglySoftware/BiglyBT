@@ -1,0 +1,44 @@
+<root>
+    <item name='com.biglybt.ui.swt.utils.FontUtils float getHeight(org.eclipse.swt.graphics.FontData[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils int getFontHeightInPX(org.eclipse.swt.graphics.Font) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils int getFontHeightInPX(org.eclipse.swt.graphics.FontData[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils org.eclipse.swt.graphics.Font getAnyFontBold(org.eclipse.swt.graphics.GC) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils org.eclipse.swt.graphics.Font getAnyFontBoldItalic(org.eclipse.swt.graphics.GC) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils org.eclipse.swt.graphics.Font getAnyFontItalic(org.eclipse.swt.graphics.GC) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils org.eclipse.swt.graphics.Font getFontPercentOf(org.eclipse.swt.graphics.Font, float) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils org.eclipse.swt.graphics.Font getFontWithHeight(org.eclipse.swt.graphics.Font, int, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils org.eclipse.swt.graphics.Font getFontWithHeight(org.eclipse.swt.graphics.Font, org.eclipse.swt.graphics.GC, int, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils org.eclipse.swt.graphics.Font getFontWithStyle(org.eclipse.swt.graphics.Font, int, float) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils void fontToLineHeight(org.eclipse.swt.widgets.Text) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils void setFontDataHeight(org.eclipse.swt.graphics.FontData[], float) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.FontUtils void setFontHeight(org.eclipse.swt.widgets.Control, int, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.utils.SWTRunnable void runWithDisplay(org.eclipse.swt.widgets.Display) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

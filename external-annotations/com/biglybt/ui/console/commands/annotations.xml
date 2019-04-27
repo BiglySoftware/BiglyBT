@@ -1,0 +1,28 @@
+<root>
+    <item name='com.biglybt.ui.console.commands.AddFind'>
+        <annotation name='java.lang.SuppressWarnings'>
+            <val val="&quot;Since15&quot;"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.console.commands.Config void printSection(java.io.PrintStream, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.commands.Config void printSection(java.io.PrintStream, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.commands.Config void printSections(java.io.PrintStream) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.commands.Config void search(java.io.PrintStream, java.lang.String, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.commands.Config void search(java.io.PrintStream, java.lang.String, boolean) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.commands.Config void showBox(java.io.PrintStream, java.lang.String...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.commands.Config void showBox(java.io.PrintStream, java.lang.String...) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

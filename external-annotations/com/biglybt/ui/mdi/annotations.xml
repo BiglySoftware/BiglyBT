@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.ui.mdi.MdiEntryLoadedListener void mdiEntryLoaded(com.biglybt.ui.mdi.MdiEntry) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

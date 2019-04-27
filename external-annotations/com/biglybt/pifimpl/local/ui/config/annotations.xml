@@ -1,0 +1,386 @@
+<root>
+    <item name='com.biglybt.pifimpl.local.ui.config.ActionParameterImpl ActionParameterImpl(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ActionParameterImpl ActionParameterImpl(java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ActionParameterImpl void setActionID(java.lang.String)'>
+        <annotation name='java.lang.Override'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ActionParameterImpl void setActionResource(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl BooleanParameterImpl(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl BooleanParameterImpl(java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ColorParameterImpl void setSuffixLabelKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ConfigSectionCore defaultMode'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ConfigSectionCore void setDefaultUserMode(int) 0'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository class_mon'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository getInstance()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository items'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository java.util.ArrayList&lt;com.biglybt.pif.ui.config.ConfigSection&gt; getList()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ConfigSectionRepository java.util.ArrayList&lt;com.biglybt.ui.config.BaseConfigSection&gt; getList()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl DirectoryParameterImpl(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl DirectoryParameterImpl(java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl void setDialogTitleKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl void setKeyDialogMessage(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl void setKeyDialogTitle(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.FileParameter void setDialogTitleKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.FileParameterImpl FileParameterImpl(java.lang.String, java.lang.String, java.lang.String...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.FileParameterImpl FileParameterImpl(java.lang.String, java.lang.String, java.lang.String...) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.FileParameterImpl void setHintKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.FloatParameterImpl FloatParameterImpl(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.FloatParameterImpl FloatParameterImpl(java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.FloatParameterImpl FloatParameterImpl(java.lang.String, java.lang.String, float, float, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.FloatParameterImpl FloatParameterImpl(java.lang.String, java.lang.String, float, float, int) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.HyperlinkParameterImpl HyperlinkParameterImpl(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.HyperlinkParameterImpl HyperlinkParameterImpl(java.lang.String, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.HyperlinkParameterImpl HyperlinkParameterImpl(java.lang.String, java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.HyperlinkParameterImpl java.lang.String getLinkTextKey()'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.InfoParameterImpl InfoParameterImpl(java.lang.String, java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl IntListParameterImpl(java.lang.String, java.lang.String, int[], java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl IntListParameterImpl(java.lang.String, java.lang.String, int[], java.lang.String[]) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl IntListParameterImpl(java.lang.String, java.lang.String, int[], java.lang.String[]) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl IntListParameterImpl(java.lang.String, java.lang.String, int[], java.lang.String[]) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl int[] getValues()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl java.lang.String[] getLabels()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl labels'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl listType'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.IntListParameter.TYPE_DROPDOWN, com.biglybt.pif.ui.config.IntListParameter.TYPE_RADIO_COMPACT, com.biglybt.pif.ui.config.IntListParameter.TYPE_RADIO_LIST}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl values'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntListParameterImpl void setSuffixLabelKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntParameterImpl IntParameterImpl(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntParameterImpl IntParameterImpl(java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntParameterImpl IntParameterImpl(java.lang.String, java.lang.String, int, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntParameterImpl IntParameterImpl(java.lang.String, java.lang.String, int, int) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntParameterImpl java.lang.String getSuffixLabelKey()'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.IntParameterImpl void setSuffixLabelKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.LabelParameterImpl LabelParameterImpl(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl ParameterGroupImpl(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl ParameterGroupImpl(java.lang.String, com.biglybt.pif.ui.config.Parameter...) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl ParameterGroupImpl(java.lang.String, java.util.List&lt;? extends com.biglybt.pif.ui.config.Parameter&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl ParameterGroupImpl(java.lang.String, java.util.List&lt;? extends com.biglybt.pif.ui.config.Parameter&gt;) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl setNumberOfColumns2(int)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterImpl boolean search(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterImpl int getMinimumRequiredUserMode()'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterImpl java.lang.String getConfigKeyName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterImpl java.lang.String getLabelKey()'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterImpl java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt; getDisabledOnSelectionParameters()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterImpl java.util.List&lt;com.biglybt.pif.ui.config.Parameter&gt; getEnabledOnSelectionParameters()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterImpl void setMinimumRequiredUserMode(int) 0'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.Parameter.MODE_BEGINNER, com.biglybt.pif.ui.config.Parameter.MODE_INTERMEDIATE, com.biglybt.pif.ui.config.Parameter.MODE_ADVANCED}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterWithHint void setHintKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterWithSuffix java.lang.String getSuffixLabelKey()'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.ParameterWithSuffix void setSuffixLabelKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.PasswordParameterImpl PasswordParameterImpl(java.lang.String, java.lang.String, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.PasswordParameterImpl PasswordParameterImpl(java.lang.String, java.lang.String, int) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl StringListParameterImpl(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl StringListParameterImpl(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[]) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl StringListParameterImpl(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[]) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl StringListParameterImpl(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[]) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl java.lang.String[] getLabels()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl java.lang.String[] getValues()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl labels'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl values'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringListParameterImpl void setLabels(java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringParameterImpl StringParameterImpl(java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringParameterImpl java.lang.String getSuffixLabelKey()'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringParameterImpl void setHintKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringParameterImpl void setMessageKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.StringParameterImpl void setSuffixLabelKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.UIParameterImpl UIParameterImpl(com.biglybt.pif.ui.config.UIParameterContext, java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.UIParameterImpl UIParameterImpl(com.biglybt.pif.ui.config.UIParameterContext, java.lang.String, java.lang.String) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.config.UITextAreaImpl text_area'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.core.tag.Tag java.lang.String getTagName(boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

@@ -1,0 +1,8 @@
+<root>
+    <item name='com.biglybt.ui.swt.shells.opentorrent.OpenTorrentOptionsWindow.OpenTorrentInstance com.biglybt.core.tag.Tag findOtherTag(java.util.List&lt;com.biglybt.core.tag.Tag&gt;, com.biglybt.core.tag.Tag) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.shells.opentorrent.OpenTorrentOptionsWindow.OpenTorrentInstance com.biglybt.core.tag.Tag findOtherTag(java.util.List&lt;com.biglybt.core.tag.Tag&gt;, com.biglybt.core.tag.Tag) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

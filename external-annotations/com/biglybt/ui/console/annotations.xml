@@ -1,0 +1,8 @@
+<root>
+    <item name='com.biglybt.ui.console.ConsoleConfigSections com.biglybt.ui.console.ConsoleConfigSections getInstance()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.ConsoleConfigSections java.util.List&lt;com.biglybt.ui.config.BaseConfigSection&gt; getAllConfigSections(boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

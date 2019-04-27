@@ -1,0 +1,776 @@
+<root>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter boolean resetToDefault()'>
+        <annotation name='java.lang.SuppressWarnings'>
+            <val val="&quot;UnusedReturnValue&quot;"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter org.eclipse.swt.widgets.Control createStandardLabel(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter void addAndFireChangeListener(com.biglybt.ui.swt.config.ParameterChangeListener&lt;PARAMTYPE&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter void removeChangeListener(com.biglybt.ui.swt.config.ParameterChangeListener&lt;PARAMTYPE&gt;)'>
+        <annotation name='java.lang.SuppressWarnings'>
+            <val val="&quot;unused&quot;"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter void removeValidator(com.biglybt.ui.swt.config.SwtParameterValidator&lt;PARAMTYPE,VALUETYPE&gt;)'>
+        <annotation name='java.lang.SuppressWarnings'>
+            <val val="&quot;unused&quot;"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter void setLabelKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter.IndentPaintListener IndentPaintListener(org.eclipse.swt.widgets.Control, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtParameter.IndentPaintListener control'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtStringParameter BaseSwtStringParameter(org.eclipse.swt.widgets.Composite, java.lang.String, boolean, org.eclipse.swt.widgets.Label, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;PARAMTYPE,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtStringParameter BaseSwtStringParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;PARAMTYPE,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtStringParameter inputField'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtStringParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtStringParameter void setMessageKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtStringParameter$2 org.eclipse.swt.graphics.Point computeSize(int, int, boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BaseSwtStringParameter.Textbox Textbox(org.eclipse.swt.widgets.Composite) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanParameter BooleanParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 2'>
+        <annotation name='org.jetbrains.annotations.NonNls'/>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanParameterSWT BooleanParameterSWT(com.biglybt.ui.swt.config.generic.GenericParameterAdapter, org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.IAdditionalActionPerformer) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanParameterSWT BooleanParameterSWT(com.biglybt.ui.swt.config.generic.GenericParameterAdapter, org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.IAdditionalActionPerformer) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanParameterSWT checkBox'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanParameterSWT performers'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanParameterSWT void setAdditionalActionPerformer(com.biglybt.ui.swt.config.IAdditionalActionPerformer) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(com.biglybt.ui.swt.config.generic.GenericParameterAdapter, org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(com.biglybt.ui.swt.config.generic.GenericParameterAdapter, org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.IAdditionalActionPerformer) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 2'>
+        <annotation name='PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.BooleanSwtParameter,java.lang.Boolean&gt;) 2'>
+        <annotation name='PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.IAdditionalActionPerformer) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.BooleanSwtParameter,java.lang.Boolean&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;java.lang.Boolean&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.BooleanSwtParameter,java.lang.Boolean&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter checkBox'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter void setAdditionalActionPerformer(com.biglybt.ui.swt.config.IAdditionalActionPerformer) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ButtonSwtParameter ButtonSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.ActionParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ButtonSwtParameter ButtonSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.ActionParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ButtonSwtParameter ButtonSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ButtonSwtParameter ButtonSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ButtonSwtParameter ButtonSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ButtonSwtParameter ButtonSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ButtonSwtParameter button'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ChangeSelectionActionPerformer void controlsSetEnabled(org.eclipse.swt.widgets.Control[], boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ColorSwtParameter ColorSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pif.ui.config.ColorParameter) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ColorSwtParameter ColorSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pif.ui.config.ColorParameter) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ColorSwtParameter ColorSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, int, int, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ColorSwtParameter ColorSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, int, int, int, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ColorSwtParameter ColorSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.ColorSwtParameter,int[]&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ColorSwtParameter colorChooser'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ColorSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ConfigParameterAdapter ConfigParameterAdapter(com.biglybt.ui.swt.config.Parameter, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ConfigParameterAdapter ConfigParameterAdapter(com.biglybt.ui.swt.config.SwtParameter, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ConfigParameterAdapter ConfigParameterAdapter(com.biglybt.ui.swt.config.SwtParameter, java.lang.String, java.lang.Class&lt;PARAMTYPE&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ConfigParameterAdapter ConfigParameterAdapter(com.biglybt.ui.swt.config.SwtParameter, java.lang.String, java.lang.Class&lt;PARAMTYPE&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ConfigParameterAdapter cla'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ConfigParameterAdapter owner'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name="com.biglybt.ui.swt.config.ConfigParameterAdapter valueType">
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter DirectorySwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter DirectorySwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter DirectorySwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter DirectorySwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter DirectorySwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.DirectorySwtParameter,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter DirectorySwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.DirectorySwtParameter,java.lang.String&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter controls'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DirectorySwtParameter sp'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DualChangeSelectionActionPerformer disabler'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.DualChangeSelectionActionPerformer enabler'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FileSwtParameter FileSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.FileParameter) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FileSwtParameter FileSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.FileParameter) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FileSwtParameter FileSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.FileParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FileSwtParameter FileSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.FileParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FileSwtParameter FileSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FileSwtParameter FileSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[], com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.FileSwtParameter,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FileSwtParameter FileSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter FloatSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.FloatParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter FloatSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.FloatParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter FloatSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter FloatSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, float, float, boolean, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter FloatSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, float, float, boolean, int, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.FloatSwtParameter,java.lang.Float&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter FloatSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, float, float, boolean, int, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;java.lang.Float&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter FloatSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, float, float, boolean, int, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.FloatSwtParameter,java.lang.Float&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter df'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter inputField'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter java.lang.Float validate(java.lang.Float)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.FloatSwtParameter void initialize(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.GenericActionPerformer void controlsSetEnabled(org.eclipse.swt.widgets.Control[], boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IconSwtParameter IconSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IconSwtParameter,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IconSwtParameter IconSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IconSwtParameter IconSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IconSwtParameter,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IconSwtParameter IconSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IconSwtParameter,java.lang.String&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IconSwtParameter iconChooser'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.InfoSwtParameter InfoSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.InfoParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.InfoSwtParameter InfoSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.InfoParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.InfoSwtParameter InfoSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.LabelParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.InfoSwtParameter InfoSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.LabelParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.InfoSwtParameter InfoSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.ui.swt.config.generic.ConfigParamInfo) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.InfoSwtParameter InfoSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.ui.swt.config.generic.ConfigParamInfo) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.InfoSwtParameter InfoSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.InfoSwtParameter InfoSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name="com.biglybt.ui.swt.config.InfoSwtParameter control">
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter IntListParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter IntListParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter IntListParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter int findIndex(int, int[]) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter list'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter values'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter void init(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter void init(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListParameter void init(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.IntListParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.IntListParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int[], java.lang.String[]) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int[], java.lang.String[]) 4'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int[], java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int[], java.lang.String[]) 3'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int[], java.lang.String[], com.biglybt.ui.swt.config.IntListSwtParameter.ValueProcessor) 4'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int[], java.lang.String[], com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntListSwtParameter,java.lang.Integer&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int[], java.lang.String[], com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntListSwtParameter,java.lang.Integer&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int[], java.lang.String[], com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntListSwtParameter,java.lang.Integer&gt;) 4'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int[], java.lang.String[], com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntListSwtParameter,java.lang.Integer&gt;) 5'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[], int[]) 2'>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter IntListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], int[]) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter int findIndex(int, int[]) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter int findIndex(java.lang.Integer, int[]) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter list'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntListSwtParameter values'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntParameter IntParameter(org.eclipse.swt.widgets.Composite, java.lang.String, int, int) 1'>
+        <annotation name='org.jetbrains.annotations.NonNls'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntParameter delegate'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter IntRadioListSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.IntListParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter IntRadioListSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.IntListParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter IntRadioListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int[], java.lang.String[], boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter IntRadioListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int[], java.lang.String[], boolean) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter IntRadioListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int[], java.lang.String[], boolean) 4'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter cHolder'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter radios'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntRadioListSwtParameter values'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.IntParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.IntParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntSwtParameter,java.lang.Integer&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, com.biglybt.ui.swt.config.generic.GenericParameterAdapter) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, int, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, int, int, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntSwtParameter,java.lang.Integer&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, int, int, com.biglybt.ui.swt.config.generic.GenericParameterAdapter) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntSwtParameter,java.lang.Integer&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntSwtParameter,java.lang.Integer&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntSwtParameter,java.lang.Integer&gt;) 3'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int, int, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntSwtParameter,java.lang.Integer&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int, int, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntSwtParameter,java.lang.Integer&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter IntSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, int, int, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.IntSwtParameter,java.lang.Integer&gt;) 3'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter java.lang.Integer validate(java.lang.Integer)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.IntSwtParameter spinner'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.LinkSwtParameter LinkSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.ActionParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.LinkSwtParameter LinkSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.ActionParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.LinkSwtParameter LinkSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.HyperlinkParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.LinkSwtParameter LinkSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.HyperlinkParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.LinkSwtParameter LinkSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.LinkSwtParameter LinkSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.LinkSwtParameter link_label'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.Parameter Parameter(java.lang.String, com.biglybt.ui.swt.config.generic.GenericParameterAdapter) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.Parameter paramAdapter'>
+        <annotation name='org.jetbrains.annotations.Nullable'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ParameterChangeAdapter void parameterChanged(com.biglybt.ui.swt.config.Parameter, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.ParameterChangeListener void parameterChanged(com.biglybt.ui.swt.config.Parameter, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter PasswordSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.PasswordParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter PasswordSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.PasswordParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter PasswordSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter PasswordSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter PasswordSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter PasswordSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter byte[] getByteArrayValue()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter inputField'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.PasswordSwtParameter void setUiValue(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.RadioSwtParameter RadioSwtParameter(com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.RadioSwtParameter,java.lang.Integer&gt;, org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.RadioSwtParameter RadioSwtParameter(com.biglybt.ui.swt.config.generic.GenericParameterAdapter, org.eclipse.swt.widgets.Composite, java.lang.String, int) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.RadioSwtParameter RadioSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.RadioSwtParameter RadioSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.RadioSwtParameter performers'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.RadioSwtParameter radioButton'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.RadioSwtParameter void setAdditionalActionPerformer(com.biglybt.ui.swt.config.IAdditionalActionPerformer) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringAreaSwtParameter StringAreaSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringAreaSwtParameter StringAreaSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringAreaSwtParameter StringAreaSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, int) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringAreaSwtParameter inputField'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.StringListParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.StringListParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 3'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 4'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 5'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[]) 2'>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean) 2'>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 2'>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringListSwtParameter,java.lang.String&gt;) 4'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], java.lang.String[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], java.lang.String[]) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], java.lang.String[]) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], java.lang.String[], boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], java.lang.String[], boolean) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], java.lang.String[], boolean) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.generic.GenericParameterAdapter) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter StringListSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String[], java.lang.String[], boolean, com.biglybt.ui.swt.config.generic.GenericParameterAdapter) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter int findIndex(java.lang.String, java.lang.String[]) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter list'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringListSwtParameter values'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringSwtParameter StringSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.StringParameterImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringSwtParameter StringSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.StringParameterImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringSwtParameter StringSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringSwtParameter,java.lang.String&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringSwtParameter StringSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringSwtParameter,java.lang.String&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringSwtParameter StringSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.StringSwtParameter,java.lang.String&gt;) 3'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.config.StringSwtParameter inputField'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.SwtConfigParameterValueProcessor SwtConfigParameterValueProcessor(com.biglybt.ui.swt.config.SwtParameter, java.lang.String, java.lang.Class&lt;VALUETYPE&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.SwtConfigParameterValueProcessor VALID_CLASSES'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.SwtConfigParameterValueProcessor owner'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.SwtParameter VALUETYPE validate(VALUETYPE)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.SwtParameter org.eclipse.swt.widgets.Control[] getControls()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.SwtParameter.IndentPaintListener IndentPaintListener(org.eclipse.swt.widgets.Control, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.SwtParameter.IndentPaintListener control'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.TextAreaSwtParameter TextAreaSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.UITextAreaImpl) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.TextAreaSwtParameter TextAreaSwtParameter(org.eclipse.swt.widgets.Composite, com.biglybt.pifimpl.local.ui.config.UITextAreaImpl) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.TextAreaSwtParameter text_area'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.TextAreaSwtParameter ui_text_area'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

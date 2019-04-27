@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.plugin.net.buddy.BuddyPlugin java.util.List&lt;com.biglybt.plugin.net.buddy.BuddyPluginBuddy&gt; getBuddies()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

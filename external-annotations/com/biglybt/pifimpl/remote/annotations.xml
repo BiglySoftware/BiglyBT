@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.pifimpl.remote.RPPluginInterface com.biglybt.pif.PluginConfig getPluginconfig()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

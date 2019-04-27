@@ -1,0 +1,8 @@
+<root>
+    <item name='org.eclipse.swt.custom.ScrolledComposite org.eclipse.swt.graphics.Point getOrigin()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.custom.StyledText java.lang.String getText()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

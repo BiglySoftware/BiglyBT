@@ -1,0 +1,8 @@
+<root>
+    <item name='com.biglybt.util.MapUtils java.util.List getMapList(java.util.Map, java.lang.String, java.util.List)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.util.MapUtils java.util.Map getMapMap(java.util.Map, java.lang.String, java.util.Map)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

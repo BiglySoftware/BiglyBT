@@ -1,0 +1,212 @@
+<root>
+    <item name='com.biglybt.ui.swt.views.configsections.BaseConfigSection com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.BaseConfigSection config'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.BaseConfigSection org.eclipse.swt.widgets.Composite configSectionCreate(org.eclipse.swt.widgets.Composite) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore org.eclipse.swt.widgets.Composite configSectionCreate(org.eclipse.swt.widgets.Composite) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore void doManualBackup(org.eclipse.swt.widgets.Shell, com.biglybt.core.backup.BackupManager, java.lang.Runnable) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore void doManualBackup(org.eclipse.swt.widgets.Shell, com.biglybt.core.backup.BackupManager, java.lang.Runnable) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore void runBackup(com.biglybt.core.backup.BackupManager, java.lang.String, java.lang.Runnable) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore void runBackup(com.biglybt.core.backup.BackupManager, java.lang.String, java.lang.Runnable) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore void updateInfoParams(com.biglybt.core.backup.BackupManager, java.util.Map&lt;java.lang.String,com.biglybt.pifimpl.local.ui.config.ParameterImpl&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore void updateInfoParams(com.biglybt.core.backup.BackupManager, java.util.Map&lt;java.lang.String,com.biglybt.pifimpl.local.ui.config.ParameterImpl&gt;) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore2 void updateInfoParams(com.biglybt.core.backup.BackupManager, java.util.Map&lt;java.lang.String,com.biglybt.pifimpl.local.ui.config.ParameterImpl&gt;) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore2.ManualBackupCallback shell'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestore2.RestoreCallback shell'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestoreSWT void doManualBackup(com.biglybt.core.backup.BackupManager, java.lang.Runnable) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestoreSWT void doManualBackup(com.biglybt.core.backup.BackupManager, java.lang.Runnable) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestoreSWT void runBackup(com.biglybt.core.backup.BackupManager, java.lang.String, java.lang.Runnable) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestoreSWT void runBackup(com.biglybt.core.backup.BackupManager, java.lang.String, java.lang.Runnable) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestoreSWT void updateInfoParams(com.biglybt.core.backup.BackupManager, java.util.Map&lt;java.lang.String,com.biglybt.pifimpl.local.ui.config.ParameterImpl&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionBackupRestoreSWT void updateInfoParams(com.biglybt.core.backup.BackupManager, java.util.Map&lt;java.lang.String,com.biglybt.pifimpl.local.ui.config.ParameterImpl&gt;) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnection com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnectionAdvanced com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnectionAdvanced org.eclipse.swt.widgets.Composite configSectionCreate(org.eclipse.swt.widgets.Composite) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnectionDNS com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnectionEncryption com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnectionProxy com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnectionProxy org.eclipse.swt.widgets.Composite configSectionCreate(org.eclipse.swt.widgets.Composite) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnectionProxySWT test_proxy'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionConnectionProxySWT void appendText(com.biglybt.ui.swt.TextViewerWindow, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionFile com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionFileMove com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionFilePerformance com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionFileTorrents com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionFileTorrentsDecoding com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionIPFilter com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionIPFilter.IPEditorParameter com.biglybt.core.ipfilter.IpRange[] getSortedRanges(com.biglybt.core.ipfilter.IpRange[])'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionIPFilter.IPEditorParameter com.biglybt.core.ipfilter.IpRange[] getSortedRanges(com.biglybt.core.ipfilter.IpRange[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionIPFilter.IPEditorParameter filter'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterface java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceAlerts java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceAlertsSWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceColor java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceColorSWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceDisplaySWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceLegacySWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfacePasswordSWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceSWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceStartSWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceTablesSWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionLogging com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionMode com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionPlugins com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionPlugins java.util.List rebuildPluginIFs()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionPlugins java.util.List&lt;com.biglybt.pif.PluginInterface&gt; rebuildPluginIFs()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionSecurity com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionSharing com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionStartShutdown com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionStartShutdown$1 void parameterChanged(com.biglybt.ui.swt.config.BooleanParameter, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionStartShutdown$1 void parameterChanged(com.biglybt.ui.swt.config.Parameter, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionStats com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionTrackerClient com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionTrackerSWT java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionTrackerServer com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionTransfer com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionTransferAutoSpeed com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionTransferAutoSpeedBeta com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionTransferAutoSpeedSelect com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.ConfigSectionTransferLAN com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.DelegateConfigSection com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.configsections.DelegateConfigSection config'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

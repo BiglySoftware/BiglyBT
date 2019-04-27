@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.ui.swt.imageloader.ImageLoader com.biglybt.ui.swt.imageloader.ImageLoader getInstance()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

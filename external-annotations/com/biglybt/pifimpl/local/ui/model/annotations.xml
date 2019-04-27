@@ -1,0 +1,11 @@
+<root>
+    <item name='com.biglybt.pifimpl.local.ui.model.BasicPluginConfigModelImpl BasicPluginConfigModelImpl(com.biglybt.pifimpl.local.ui.UIManagerImpl, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.model.BasicPluginConfigModelImpl configobj'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pifimpl.local.ui.model.BasicPluginConfigModelImpl ui_manager'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

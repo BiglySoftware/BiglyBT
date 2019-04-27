@@ -1,0 +1,17 @@
+<root>
+    <item name='com.biglybt.ui.swt.components.BubbleTextBox org.eclipse.swt.widgets.Composite getParent()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.components.BubbleTextBox org.eclipse.swt.widgets.Text getTextWidget()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.components.BufferedLabel java.lang.String getText()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.components.LinkLabel linkLabel'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.components.LinkLabel org.eclipse.swt.widgets.Label getlabel()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

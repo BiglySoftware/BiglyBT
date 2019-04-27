@@ -1,0 +1,56 @@
+<root>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, boolean, com.biglybt.pif.ui.config.Parameter, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, boolean, com.biglybt.pif.ui.config.Parameter, boolean) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, boolean, com.biglybt.pif.ui.config.Parameter, boolean) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, com.biglybt.pif.ui.config.Parameter, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, com.biglybt.pif.ui.config.Parameter, boolean) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, com.biglybt.pif.ui.config.Parameter, java.lang.StringBuffer, boolean, com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo, java.util.Stack&lt;com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, com.biglybt.pif.ui.config.Parameter, java.lang.StringBuffer, boolean, com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo, java.util.Stack&lt;com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo&gt;) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, com.biglybt.pif.ui.config.Parameter, java.lang.StringBuffer, boolean, com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo, java.util.Stack&lt;com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, com.biglybt.pif.ui.config.Parameter, java.lang.StringBuffer, boolean, com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo, java.util.Stack&lt;com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo&gt;) 3'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, com.biglybt.pif.ui.config.Parameter, java.lang.StringBuffer, boolean, com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo, java.util.Stack&lt;com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo&gt;) 5'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils boolean printParam(java.io.PrintStream, com.biglybt.ui.config.BaseConfigSection, com.biglybt.pif.ui.config.Parameter, java.lang.StringBuffer, boolean, com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo, java.util.Stack&lt;com.biglybt.ui.console.util.PrintUtils.ParamGroupInfo&gt;) 6'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils java.lang.String getFriendlyConfigSectionID(com.biglybt.ui.config.BaseConfigSection) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils void endGroup(java.io.PrintStream, java.lang.StringBuffer, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils void endGroup(java.io.PrintStream, java.lang.StringBuffer, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils void outDupChar(java.io.PrintStream, char, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils void print(java.io.PrintStream, java.lang.String, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils void showBox(java.io.PrintStream, java.lang.String...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.console.util.PrintUtils void showBox(java.io.PrintStream, java.lang.String...) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

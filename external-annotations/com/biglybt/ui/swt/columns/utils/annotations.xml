@@ -1,0 +1,38 @@
+<root>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3 boolean areNoneVisible(java.util.Map&lt;java.lang.String,com.biglybt.ui.common.table.TableColumnCore&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3 void setVisibility(java.util.Map&lt;java.lang.String,com.biglybt.ui.common.table.TableColumnCore&gt;, java.lang.String[], boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3 void setVisibility(java.util.Map&lt;java.lang.String,com.biglybt.ui.common.table.TableColumnCore&gt;, java.lang.String[], boolean) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3 void upgradeColumns(java.lang.String[], java.lang.String[], java.util.Map&lt;java.lang.String,com.biglybt.ui.common.table.TableColumnCore&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3 void upgradeColumns(java.lang.String[], java.lang.String[], java.util.Map&lt;java.lang.String,com.biglybt.ui.common.table.TableColumnCore&gt;) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3 void upgradeColumns(java.lang.String[], java.lang.String[], java.util.Map&lt;java.lang.String,com.biglybt.ui.common.table.TableColumnCore&gt;) 2'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3.cInfo cInfo(java.lang.Class, java.lang.Class) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3.cInfo cInfo(java.lang.Class, java.lang.Class) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3.cInfo cInfo(java.lang.Class, java.lang.Class[]) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3.cInfo cInfo(java.lang.Class, java.lang.Class[]) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3.cInfo cla'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3.cInfo forDataSourceTypes'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

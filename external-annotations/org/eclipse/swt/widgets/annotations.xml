@@ -1,0 +1,59 @@
+<root>
+    <item name='org.eclipse.swt.widgets.Button org.eclipse.swt.graphics.Color getBackground()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Composite org.eclipse.swt.widgets.Control[] getChildren()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Color getBackground()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Color getForeground()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Font getFont()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Point computeSize(int, int)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Point computeSize(int, int, boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Point getSize()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Rectangle getBounds()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Scrollable org.eclipse.swt.graphics.Rectangle getClientArea()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Spinner java.lang.String getText()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Table int[] getSelectionIndices()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Table org.eclipse.swt.widgets.TableItem[] getItems()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Table org.eclipse.swt.widgets.TableItem[] getSelection()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Text java.lang.String getText()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Tree org.eclipse.swt.widgets.TreeItem[] getItems()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Tree org.eclipse.swt.widgets.TreeItem[] getSelection()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.TreeItem org.eclipse.swt.widgets.TreeItem[] getItems()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.widgets.Widget org.eclipse.swt.widgets.Display getDisplay()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

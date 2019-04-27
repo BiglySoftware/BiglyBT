@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.core.security.impl.CryptoManagerImpl byte[] getSecureID()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

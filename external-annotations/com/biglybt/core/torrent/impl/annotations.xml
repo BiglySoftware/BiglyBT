@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.core.torrent.impl.TorrentOpenOptions java.util.List&lt;com.biglybt.core.tag.Tag&gt; getInitialTags()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

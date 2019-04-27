@@ -1,0 +1,17 @@
+<root>
+    <item name='com.biglybt.ui.swt.config.generic.ConfigParamInfo com.biglybt.ui.swt.config.generic.ConfigParamInfo set(java.lang.String, java.lang.Object)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.generic.ConfigParamInfo com.biglybt.ui.swt.config.generic.ConfigParamInfo setID(java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.generic.GenericIntParameter GenericIntParameter(com.biglybt.ui.swt.config.generic.GenericParameterAdapter, org.eclipse.swt.widgets.Composite, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.generic.GenericIntParameter GenericIntParameter(com.biglybt.ui.swt.config.generic.GenericParameterAdapter, org.eclipse.swt.widgets.Composite, java.lang.String, int, int) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.config.generic.GenericIntParameter spinner'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

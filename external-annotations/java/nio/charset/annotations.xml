@@ -1,0 +1,8 @@
+<root>
+    <item name='java.nio.charset.Charset java.nio.charset.CharsetDecoder newDecoder()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='java.nio.charset.CharsetDecoder java.nio.charset.Charset charset()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

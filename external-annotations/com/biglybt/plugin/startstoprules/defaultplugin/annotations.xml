@@ -1,0 +1,23 @@
+<root>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.StartStopConfigModel StartStopConfigModel(com.biglybt.pif.PluginInterface) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.StartStopConfigModel com.biglybt.pif.ui.config.BooleanParameter addDefaultedBooleanParam(com.biglybt.pif.ui.model.BasicPluginConfigModel, java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.StartStopConfigModel com.biglybt.pif.ui.config.FloatParameter addDefaultedFloatParam(com.biglybt.pif.ui.model.BasicPluginConfigModel, java.lang.String, java.lang.String, float, float, boolean, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.StartStopConfigModel com.biglybt.pif.ui.config.IntParameter addDefaultedIntParam(com.biglybt.pif.ui.model.BasicPluginConfigModel, java.lang.String, java.lang.String, int, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.StartStopConfigModel def'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.StartStopConfigModel pi'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.StartStopConfigModel void addDefaultedIntParam(com.biglybt.pif.ui.model.BasicPluginConfigModel, java.lang.String, java.lang.String, int, int) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

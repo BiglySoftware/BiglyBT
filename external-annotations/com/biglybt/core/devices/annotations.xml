@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.core.devices.DeviceManager com.biglybt.core.devices.TranscodeManager getTranscodeManager()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

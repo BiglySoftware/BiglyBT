@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.ui.swt.mainwindow.SWTThread com.biglybt.ui.swt.mainwindow.SWTThread getInstance()'>
+        <annotation name='org.jetbrains.annotations.Nullable'/>
+    </item>
+</root>

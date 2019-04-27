@@ -1,0 +1,88 @@
+<root>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.BooleanParameter addBooleanParameter2(java.lang.String, java.lang.String, boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.BooleanParameter addBooleanParameter2(java.lang.String, java.lang.String, boolean) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.DirectoryParameter addDirectoryParameter2(java.lang.String, java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.FloatParameter addFloatParameter2(java.lang.String, java.lang.String, float, float, float, boolean, int)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.FloatParameter addFloatParameter2(java.lang.String, java.lang.String, float, float, float, boolean, int) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.HyperlinkParameter addHyperlinkParameter2(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.InfoParameter addInfoParameter2(java.lang.String, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.IntListParameter addIntListParameter2(java.lang.String, java.lang.String, int[], java.lang.String[], int)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.IntListParameter addIntListParameter2(java.lang.String, java.lang.String, int[], java.lang.String[], int) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.IntParameter addIntParameter2(java.lang.String, java.lang.String, int) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.IntParameter addIntParameter2(java.lang.String, java.lang.String, int, int, int)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.IntParameter addIntParameter2(java.lang.String, java.lang.String, int, int, int) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.LabelParameter addLabelParameter2(java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.LabelParameter addLabelParameter2(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.ParameterGroup createGroup(java.lang.String, com.biglybt.pif.ui.config.Parameter...)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.Parameter[] getParameters()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.PasswordParameter addPasswordParameter2(java.lang.String, java.lang.String, int, byte[]) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.StringListParameter addStringListParameter2(java.lang.String, java.lang.String, java.lang.String[], java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.StringListParameter addStringListParameter2(java.lang.String, java.lang.String, java.lang.String[], java.lang.String[], java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.model.BasicPluginConfigModel com.biglybt.pif.ui.config.StringParameter addStringParameter2(java.lang.String, java.lang.String, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name='resourceBundle' val='com.biglybt.internat.MessagesBundle'/>
+        </annotation>
+    </item>
+</root>

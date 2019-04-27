@@ -1,0 +1,5 @@
+<root>
+    <item name='java.text.NumberFormat java.lang.String format(double)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

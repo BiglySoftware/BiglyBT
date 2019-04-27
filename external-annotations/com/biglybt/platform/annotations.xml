@@ -1,0 +1,8 @@
+<root>
+    <item name='com.biglybt.platform.PlatformManager java.io.File getVMOptionFile()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.platform.PlatformManagerFactory com.biglybt.platform.PlatformManager getPlatformManager()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

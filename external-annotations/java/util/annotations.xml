@@ -1,0 +1,5 @@
+<root>
+    <item name='java.util.Stack E push(E)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

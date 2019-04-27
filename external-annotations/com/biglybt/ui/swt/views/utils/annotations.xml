@@ -1,0 +1,17 @@
+<root>
+    <item name='com.biglybt.ui.swt.views.utils.CategoryUIUtils void createMenuItems(org.eclipse.swt.widgets.Menu, com.biglybt.core.category.Category) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.utils.CategoryUIUtils void createMenuItems(org.eclipse.swt.widgets.Menu, com.biglybt.core.category.Category) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.utils.CategoryUIUtils void setupCategoryMenu(org.eclipse.swt.widgets.Menu, com.biglybt.core.category.Category) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.utils.CategoryUIUtils void setupCategoryMenu(org.eclipse.swt.widgets.Menu, com.biglybt.core.category.Category) 1'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.views.utils.TrancodeUIUtils.TranscodeTarget com.biglybt.ui.swt.views.utils.TrancodeUIUtils.TranscodeProfile[] getProfiles()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

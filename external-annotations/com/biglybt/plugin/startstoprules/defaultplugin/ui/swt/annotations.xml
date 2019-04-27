@@ -1,0 +1,20 @@
+<root>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.ConfigSectionDownloading java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.ConfigSectionQueue java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.ConfigSectionSeeding java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.ConfigSectionSeedingAutoStarting java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.ConfigSectionSeedingFirstPriority java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.plugin.startstoprules.defaultplugin.ui.swt.ConfigSectionSeedingIgnore java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

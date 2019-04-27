@@ -1,0 +1,8 @@
+<root>
+    <item name='com.biglybt.core.ipfilter.IpFilter com.biglybt.core.ipfilter.IpRange[] getRanges()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.ipfilter.IpFilterManager com.biglybt.core.ipfilter.IpFilter getIPFilter()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

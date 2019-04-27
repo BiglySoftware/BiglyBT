@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.ui.swt.devices.DeviceManagerUI void showProperties(com.biglybt.core.devices.Device) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

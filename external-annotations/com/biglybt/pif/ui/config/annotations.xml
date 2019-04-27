@@ -1,0 +1,26 @@
+<root>
+    <item name='com.biglybt.pif.ui.config.DirectoryParameter void setDialogTitleKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.config.IntListParameter int getListType()'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.IntListParameter.TYPE_DROPDOWN, com.biglybt.pif.ui.config.IntListParameter.TYPE_RADIO_COMPACT, com.biglybt.pif.ui.config.IntListParameter.TYPE_RADIO_LIST}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.config.IntListParameter void setListType(int) 0'>
+        <annotation name='org.intellij.lang.annotations.MagicConstant'>
+            <val name="intValues"
+                 val="{com.biglybt.pif.ui.config.IntListParameter.TYPE_DROPDOWN, com.biglybt.pif.ui.config.IntListParameter.TYPE_RADIO_COMPACT, com.biglybt.pif.ui.config.IntListParameter.TYPE_RADIO_LIST}"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.pif.ui.config.ParameterWithSuffix void setSuffixLabelKey(java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+</root>

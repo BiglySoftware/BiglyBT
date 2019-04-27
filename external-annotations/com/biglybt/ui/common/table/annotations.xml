@@ -1,0 +1,5 @@
+<root>
+    <item name='com.biglybt.ui.common.table.TableView java.util.List&lt;java.lang.Object&gt; getSelectedDataSources()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

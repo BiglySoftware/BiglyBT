@@ -1,0 +1,8 @@
+<root>
+    <item name='com.biglybt.core.stats.CoreStats java.util.Map&lt;java.lang.String,java.lang.Object&gt; getStats(java.util.Set)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.stats.CoreStats java.util.Map&lt;java.lang.String,java.lang.Object&gt; getStatsSupport(java.util.Set)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

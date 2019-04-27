@@ -1,0 +1,14 @@
+<root>
+    <item name='org.eclipse.swt.graphics.Font org.eclipse.swt.graphics.FontData[] getFontData()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.graphics.GC org.eclipse.swt.graphics.Font getFont()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.graphics.GC org.eclipse.swt.graphics.Point textExtent(java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='org.eclipse.swt.graphics.Resource org.eclipse.swt.graphics.Device getDevice()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

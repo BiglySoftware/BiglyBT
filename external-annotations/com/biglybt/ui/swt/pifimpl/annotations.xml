@@ -1,0 +1,23 @@
+<root>
+    <item name='com.biglybt.ui.swt.pifimpl.BasicPluginConfigImpl BasicPluginConfigImpl(java.lang.ref.WeakReference&lt;com.biglybt.pif.ui.model.BasicPluginConfigModel&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.pifimpl.BasicPluginConfigImpl java.lang.String configSectionGetName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.pifimpl.BasicPluginConfigImpl model_ref'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.pifimpl.BasicPluginConfigImpl section'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.pifimpl.BasicPluginConfigImpl void setupLabelFor(org.eclipse.swt.widgets.Label, com.biglybt.ui.swt.config.Parameter, boolean) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.pifimpl.MultiParameterImplListenerSWT MultiParameterImplListenerSWT(java.util.Map&lt;com.biglybt.pifimpl.local.ui.config.ParameterImpl,com.biglybt.ui.swt.config.BaseSwtParameter&gt;) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.pifimpl.MultiParameterImplListenerSWT mapParamToSwtParam'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

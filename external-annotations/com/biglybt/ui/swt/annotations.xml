@@ -1,0 +1,44 @@
+<root>
+
+    <item name='com.biglybt.ui.swt.Messages void setLanguageText(org.eclipse.swt.widgets.Widget, java.lang.String) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.Messages void setLanguageText(org.eclipse.swt.widgets.Widget, java.lang.String) 1'>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.Messages void setLanguageText(org.eclipse.swt.widgets.Widget, java.lang.String, boolean) 1'>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.Messages void setLanguageText(org.eclipse.swt.widgets.Widget, java.lang.String, java.lang.String...) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.Messages void setLanguageText(org.eclipse.swt.widgets.Widget, java.lang.String, java.lang.String[]) 1'>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.Messages void setLanguageText(org.eclipse.swt.widgets.Widget, java.lang.String, java.lang.String[], boolean) 1'>
+        <annotation name="org.jetbrains.annotations.PropertyKey">
+            <val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.Utils java.lang.String toColorHexString(org.eclipse.swt.graphics.Color) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.Utils java.util.List&lt;org.eclipse.swt.graphics.RGB&gt; getCustomColors()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.Utils org.eclipse.swt.layout.GridData getSimpleGridData(int, int)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.Utils org.eclipse.swt.layout.GridData getWrappableLabelGridData(int, int)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.ui.swt.Utils org.eclipse.swt.layout.RowLayout getSimpleRowLayout(boolean)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

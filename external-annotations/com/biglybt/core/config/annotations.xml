@@ -1,0 +1,11 @@
+<root>
+    <item name='com.biglybt.core.config.COConfigurationManager java.lang.String getStringParameter(java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.config.COConfigurationManager java.lang.String getStringParameter(java.lang.String, java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.core.config.COConfigurationManager java.util.List&lt;java.lang.String&gt; getStringListParameter(java.lang.String)'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>

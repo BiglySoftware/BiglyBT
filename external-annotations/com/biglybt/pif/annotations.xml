@@ -1,0 +1,32 @@
+<root>
+    <item name='com.biglybt.pif.Plugin void initialize(com.biglybt.pif.PluginInterface) 0'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginConfig java.lang.String getPluginConfigKeyPrefix()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginInterface com.biglybt.pif.Plugin getPlugin()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginInterface com.biglybt.pif.PluginConfig getPluginconfig()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginInterface com.biglybt.pif.PluginState getPluginState()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginInterface com.biglybt.pif.ui.UIManager getUIManager()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginInterface com.biglybt.pif.utils.Utilities getUtilities()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginInterface java.lang.String getPluginID()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginInterface java.lang.String getPluginName()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+    <item name='com.biglybt.pif.PluginManager java.util.List&lt;com.biglybt.pif.PluginInterface&gt; getPluginsWithMethod(java.lang.String, java.lang.Class&lt;?&gt;[])'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
+</root>
