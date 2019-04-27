@@ -35,7 +35,19 @@ Getting the basics to compile from source is pretty straightforward:
 1. To the core module, add `core/lib/*`
 1. Make `uis` module depend on `core`.  `Core` should not depend on `uis`
 
-Intellij will do all these steps for you with its wizard.
+IntelliJ IDEA will do all these steps for you with its wizard.
+
+### External Annotations
+
+If you wish IntelliJ IDEA to show MessageBundle strings instead of keys, as well as reduce the number of NPE warnings, you can attach the external annotations either by:
+* Project Settings->Modules->Paths->External Annotations
+*  in `<module>/<module>.iml` add to component:
+    ```
+    <annotation-paths>
+      <root url="file://$MODULE_DIR$/../external-annotations" />
+    </annotation-paths>
+    ```
+External Annotations definitions are a WIP and not complete list of definitions.
 
 ## Running in Dev Environment
 
