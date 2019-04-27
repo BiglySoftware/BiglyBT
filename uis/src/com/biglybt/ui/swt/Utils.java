@@ -3399,6 +3399,10 @@ public class Utils
 		tp.run(r);
 	}
 
+	// Needed because plugins use it (VPNHelper)
+	public static void getOffOfSWTThread(AERunnable runnable) {
+		tp.run(runnable);
+	}
 
 	/**
 	 * Run code on SWT Thread if we are calling from non-SWT Thread.  Otherwise,
