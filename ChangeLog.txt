@@ -299,7 +299,7 @@ BUGFIX: Plug   | Fixed webplugin whitelist handling for non-specific ports [Parg
 BUGFIX: Core   | Remote Friend seeding status change not being picked up [Parg]
 BUGFIX: Core   | Fixed Friend download removal bug [Parg]
 BUGFIX: Core   | Handle download removal from tag with fp seeding [Parg]
-BUGFIX: Core   | Bring back –restart command line switch [Parg]
+BUGFIX: Core   | Bring back -restart command line switch [Parg]
 
 
 
