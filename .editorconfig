@@ -15,6 +15,7 @@ curly_bracket_next_line = false
 indent_brace_style = K&R
 quote_type = double
 # ALthough we want trailing whitepaces trimmed, this option is too aggressive and causes harder to read commits
+# IntelliJ IDEA has Settings->Editor->General->Strip trailing spaces on Save that can be set to "Modified Lines" which sometimes works properly
 #trim_trailing_whitespace = true
 insert_final_newline = true
 
