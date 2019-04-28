@@ -14,7 +14,8 @@ spaces_around_brackets = outside
 curly_bracket_next_line = false
 indent_brace_style = K&R
 quote_type = double
-trim_trailing_whitespace = true
+# ALthough we want trailing whitepaces trimmed, this option is too aggressive and causes harder to read commits
+#trim_trailing_whitespace = true
 insert_final_newline = true
 
 [*.md]
