@@ -305,7 +305,9 @@ BuddyPluginViewInstance
 		grid_data.horizontalSpan = 3;
 		info_area.setLayoutData(grid_data);
 
-		Label label = new Label( info_area, SWT.NULL );
+		Label label = new Label( info_area, SWT.WRAP );
+		grid_data = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL );
+		label.setLayoutData( grid_data);
 
 		label.setText(  lu.getLocalisedMessageText( "azbuddy.dchat.info" ));
 
@@ -481,9 +483,19 @@ BuddyPluginViewInstance
 
 		label = new Label( ui_area, SWT.NULL );
 
+
+		final Composite ui_area_checks = new Composite( ui_area, SWT.NULL );
+		layout = new GridLayout();
+		layout.marginHeight = layout.marginWidth = 0;
+		layout.numColumns = 1;
+		ui_area_checks.setLayout(layout);
+		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalSpan = 3;
+		ui_area_checks.setLayoutData(grid_data);
+
 			// hide ratings
 
-		final Button hide_ratings = new Button( ui_area, SWT.CHECK );
+		final Button hide_ratings = new Button( ui_area_checks, SWT.CHECK );
 
 		hide_ratings.setText( lu.getLocalisedMessageText( "azbuddy.dchat.ui.hide.ratings" ));
 
@@ -501,14 +513,9 @@ BuddyPluginViewInstance
 					}
 				});
 
-		label = new Label( ui_area, SWT.NULL );
-		grid_data = new GridData();
-		grid_data.horizontalSpan = 2;
-		label.setLayoutData(grid_data);
-
 			// hide search/subcriptions
 
-		final Button hide_search_subs = new Button( ui_area, SWT.CHECK );
+		final Button hide_search_subs = new Button( ui_area_checks, SWT.CHECK );
 
 		hide_search_subs.setText( lu.getLocalisedMessageText( "azbuddy.dchat.ui.hide.search_subs" ));
 
@@ -526,14 +533,9 @@ BuddyPluginViewInstance
 					}
 				});
 
-		label = new Label( ui_area, SWT.NULL );
-		grid_data = new GridData();
-		grid_data.horizontalSpan = 2;
-		label.setLayoutData(grid_data);
-
 			// standalone windows
 
-		final Button stand_alone = new Button( ui_area, SWT.CHECK );
+		final Button stand_alone = new Button( ui_area_checks, SWT.CHECK );
 
 		stand_alone.setText( lu.getLocalisedMessageText( "azbuddy.dchat.ui.standalone.windows" ));
 
@@ -551,14 +553,9 @@ BuddyPluginViewInstance
 					}
 				});
 
-		label = new Label( ui_area, SWT.NULL );
-		grid_data = new GridData();
-		grid_data.horizontalSpan = 2;
-		label.setLayoutData(grid_data);
-
 			// popout windows -> sidebar
 
-		final Button windows_to_sidebar = new Button( ui_area, SWT.CHECK );
+		final Button windows_to_sidebar = new Button( ui_area_checks, SWT.CHECK );
 
 		windows_to_sidebar.setText( lu.getLocalisedMessageText( "azbuddy.dchat.ui.windows.to.sidebar" ));
 
@@ -609,7 +606,7 @@ BuddyPluginViewInstance
 				});
 
 		final Text noti_file = new Text( noti_area, SWT.BORDER );
-		grid_data = new GridData();
+		grid_data = new GridData(GridData.FILL_HORIZONTAL);
 		grid_data.widthHint = 400;
 		noti_file.setLayoutData(grid_data);
 
@@ -729,7 +726,7 @@ BuddyPluginViewInstance
 
 		Group private_chat_area = new Group( main, SWT.NULL );
 		layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 1;
 		//layout.marginHeight = 0;
 		//layout.marginWidth = 0;
 		private_chat_area.setLayout(layout);
@@ -739,15 +736,8 @@ BuddyPluginViewInstance
 
 		private_chat_area.setText( lu.getLocalisedMessageText( "label.private.chat" ));
 
-		label = new Label( private_chat_area, SWT.NULL );
-
-		label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.pc.enable" ));
-
 		final Button private_chat_enable = new Button( private_chat_area, SWT.CHECK );
-
-		label = new Label( private_chat_area, SWT.NULL );
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		label.setLayoutData(grid_data);
+		Messages.setLanguageText(private_chat_enable, "azbuddy.dchat.pc.enable");
 
 		private_chat_enable.addSelectionListener(
 				new SelectionAdapter()
@@ -761,15 +751,8 @@ BuddyPluginViewInstance
 					}
 				});
 
-		final Label pc_pinned_only = new Label( private_chat_area, SWT.NULL );
-
-		pc_pinned_only.setText( lu.getLocalisedMessageText( "azbuddy.dchat.pc.pinned.only" ));
-
 		final Button private_chat_pinned = new Button( private_chat_area, SWT.CHECK );
-
-		label = new Label( private_chat_area, SWT.NULL );
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		label.setLayoutData(grid_data);
+		Messages.setLanguageText(private_chat_pinned, "azbuddy.dchat.pc.pinned.only");
 
 		private_chat_pinned.addSelectionListener(
 				new SelectionAdapter()
@@ -789,13 +772,12 @@ BuddyPluginViewInstance
 		private_chat_pinned.setSelection( pc_state == BuddyPluginBeta.PRIVATE_CHAT_PINNED_ONLY );
 
 		private_chat_pinned.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
-		pc_pinned_only.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
 
 			// integration
 
 		Group integ_area = new Group( main, SWT.NULL );
 		layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 1;
 		integ_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
@@ -803,15 +785,10 @@ BuddyPluginViewInstance
 
 		integ_area.setText( lu.getLocalisedMessageText( "label.integration" ));
 
-		Label lab = new Label( integ_area, SWT.NULL );
-
-		lab.setText( lu.getLocalisedMessageText( "azbuddy.dchat.send.friend.key" ));
+		Label lab;
 
 		Button integ_fk_enable = new Button( integ_area, SWT.CHECK );
-
-		label = new Label( integ_area, SWT.NULL );
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		label.setLayoutData(grid_data);
+		Messages.setLanguageText(integ_fk_enable, "azbuddy.dchat.send.friend.key");
 
 		integ_fk_enable.addSelectionListener(
 				new SelectionAdapter()
@@ -827,11 +804,10 @@ BuddyPluginViewInstance
 
 		integ_fk_enable.setSelection( plugin_beta.getPostFriendKey());
 
-		lab = new Label( integ_area, SWT.NULL );
+		lab = new Label( integ_area, SWT.WRAP );
 
 		lab.setText( lu.getLocalisedMessageText( "azbuddy.dchat.send.friend.key.info" ));
-		grid_data = new GridData(GridData.FILL_HORIZONTAL );
-		grid_data.horizontalSpan = 3;
+		grid_data = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL );
 		lab.setLayoutData(grid_data);
 
 			// import
@@ -851,7 +827,7 @@ BuddyPluginViewInstance
 		label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.import.data" ));
 
 		final Text import_data = new Text( import_area, SWT.BORDER );
-		grid_data = new GridData();
+		grid_data = new GridData(GridData.FILL_HORIZONTAL);
 		grid_data.widthHint = 400;
 		import_data.setLayoutData(grid_data);
 
@@ -931,7 +907,7 @@ BuddyPluginViewInstance
 		Group adv_area = new Group( main, SWT.NULL );
 		adv_area.setText( lu.getLocalisedMessageText( "MyTorrentsView.menu.advancedmenu" ));
 		layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 1;
 		adv_area.setLayout(layout);
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
 		grid_data.horizontalSpan = 3;
@@ -940,11 +916,8 @@ BuddyPluginViewInstance
 
 			// shared endpoint
 
-		label = new Label( adv_area, SWT.NULL );
-
-		label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.anon.share.endpoint" ));
-
 		final Button shared_endpoint = new Button( adv_area, SWT.CHECK );
+		Messages.setLanguageText(shared_endpoint, "azbuddy.dchat.anon.share.endpoint" );
 
 		shared_endpoint.addSelectionListener(
 				new SelectionAdapter()
@@ -964,6 +937,7 @@ BuddyPluginViewInstance
 		label.setText( lu.getLocalisedMessageText( "azbuddy.dchat.anon.share.endpoint.info" ));
 
 		grid_data = new GridData(GridData.FILL_HORIZONTAL );
+		grid_data.horizontalIndent = 25;
 		label.setLayoutData(grid_data);
 
 
@@ -1155,7 +1129,6 @@ BuddyPluginViewInstance
 										private_chat_enable.setSelection( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
 										private_chat_pinned.setSelection( pc_state == BuddyPluginBeta.PRIVATE_CHAT_PINNED_ONLY );
 										private_chat_pinned.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
-										pc_pinned_only.setEnabled( pc_state != BuddyPluginBeta.PRIVATE_CHAT_DISABLED );
 
 										integ_fk_enable.setSelection( plugin_beta.getPostFriendKey());
 
