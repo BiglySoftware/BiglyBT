@@ -28,6 +28,7 @@
                 <excludes>
                     <exclude>**/*.java</exclude>
                     <exclude>**/*.class</exclude>
+                    <exclude>**/.editorconfig</exclude>
                 </excludes>
             </resource>
         </resources>
