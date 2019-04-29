@@ -19,6 +19,12 @@ quote_type = double
 #trim_trailing_whitespace = true
 insert_final_newline = true
 
+[*.xml]
+tab_width = 2
+indent_style = tab
+indent_size = 2
+end_of_line = lf
+
 [*.md]
 indent_style = space
 indent_size = 2
