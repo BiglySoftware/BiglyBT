@@ -24,7 +24,14 @@ import java.util.List;
 
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.browser.*;
+import org.eclipse.swt.browser.ProgressEvent;
+import org.eclipse.swt.browser.ProgressListener;
+import org.eclipse.swt.browser.TitleEvent;
+import org.eclipse.swt.browser.TitleListener;
+import org.eclipse.swt.browser.LocationListener;
+import org.eclipse.swt.browser.LocationEvent;
+import org.eclipse.swt.browser.WindowEvent;
+import org.eclipse.swt.browser.CloseWindowListener;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
@@ -317,7 +324,7 @@ public class BrowserContext
 
 			@Override
 			public void changed(LocationEvent event) {
-				Browser browser = (Browser) event.widget;
+			
 				if (browser == null || browser.isDisposed() || browser.getShell().isDisposed()) {
 					return;
 				}
@@ -356,7 +363,7 @@ public class BrowserContext
 			@Override
 			public void changing(LocationEvent event) {
 				// event.top is always false.  changed event has it set though..
-				Browser browser = (Browser) event.widget;
+				
 				debug("browser.changing " + event.location + " from " + (browser == null ? "null" : browser.getUrl())
 						+ ";" + event.top);
 

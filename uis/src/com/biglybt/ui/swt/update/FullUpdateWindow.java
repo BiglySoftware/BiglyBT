@@ -22,7 +22,12 @@ package com.biglybt.ui.swt.update;
 
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.browser.*;
+import org.eclipse.swt.browser.TitleEvent;
+import org.eclipse.swt.browser.TitleListener;
+import org.eclipse.swt.browser.LocationListener;
+import org.eclipse.swt.browser.LocationEvent;
+import org.eclipse.swt.browser.StatusTextListener;
+import org.eclipse.swt.browser.StatusTextEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Rectangle;
