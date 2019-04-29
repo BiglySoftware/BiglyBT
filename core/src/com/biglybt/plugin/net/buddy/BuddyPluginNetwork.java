@@ -2706,14 +2706,14 @@ BuddyPluginNetwork
 		protected void
 		updateIP()
 		{
-			if ( ddb == null || !ddb.isAvailable()){
+			if ( !ddb.isAvailable()){
 
 				return;
 			}
 
-			synchronized( this ){
+			InetSocketAddress public_ip = ddb.getDHTPlugin().getConnectionOrientedEndpoint();
 
-				InetSocketAddress public_ip = ddb.getDHTPlugin().getConnectionOrientedEndpoint();
+			synchronized( this ){
 
 				if ( 	latest_publish.getIP() == null ||
 						!latest_publish.getIP().equals( public_ip )){
@@ -3020,7 +3020,7 @@ BuddyPluginNetwork
 		{
 			latest_publish = details;
 
-			if ( ddb == null || !ready_to_publish ){
+			if ( !ready_to_publish ){
 
 				return;
 			}
@@ -3462,66 +3462,63 @@ BuddyPluginNetwork
 		private void
 		closedown()
 		{
-			if ( ddb != null ){
-	
-				boolean	restarting = CoreFactory.isCoreAvailable() ? CoreFactory.getSingleton().isRestarting() : false;
-	
-				logMessage( null, "   closing buddy connections" );
-	
-				for (int i=0;i<buddies.size();i++){
-	
-					((BuddyPluginBuddy)buddies.get(i)).sendCloseRequest( restarting );
+			boolean	restarting = CoreFactory.isCoreAvailable() ? CoreFactory.getSingleton().isRestarting() : false;
+
+			logMessage( null, "   closing buddy connections" );
+
+			for (int i=0;i<buddies.size();i++){
+
+				((BuddyPluginBuddy)buddies.get(i)).sendCloseRequest( restarting );
+			}
+
+			if ( !restarting ){
+
+				logMessage( null, "   updating online status" );
+
+				List	contacts = new ArrayList();
+
+				synchronized( publish_write_contacts ){
+
+					contacts.addAll( publish_write_contacts );
 				}
-	
-				if ( !restarting ){
-	
-					logMessage( null, "   updating online status" );
-	
-					List	contacts = new ArrayList();
-	
-					synchronized( publish_write_contacts ){
-	
-						contacts.addAll( publish_write_contacts );
-					}
-	
-					byte[] key_to_remove;
-	
-					synchronized( this ){
-	
-						key_to_remove	= current_publish.getPublicKey();
-					}
-	
-					if ( contacts.size() == 0 || key_to_remove == null ){
-	
-						return;
-					}
-	
-					DistributedDatabaseContact[] contact_a = new DistributedDatabaseContact[contacts.size()];
-	
-					contacts.toArray( contact_a );
-	
-					try{
-						ddb.delete(
-							new DistributedDatabaseListener()
+
+				byte[] key_to_remove;
+
+				synchronized( this ){
+
+					key_to_remove	= current_publish.getPublicKey();
+				}
+
+				if ( contacts.size() == 0 || key_to_remove == null ){
+
+					return;
+				}
+
+				DistributedDatabaseContact[] contact_a = new DistributedDatabaseContact[contacts.size()];
+
+				contacts.toArray( contact_a );
+
+				try{
+					ddb.delete(
+						new DistributedDatabaseListener()
+						{
+							@Override
+							public void
+							event(
+								DistributedDatabaseEvent		event )
 							{
-								@Override
-								public void
-								event(
-									DistributedDatabaseEvent		event )
-								{
-									if ( event.getType() == DistributedDatabaseEvent.ET_VALUE_DELETED ){
-	
-										// System.out.println( "Deleted status from " + event.getContact().getName());
-									}
+								if ( event.getType() == DistributedDatabaseEvent.ET_VALUE_DELETED ){
+
+									// System.out.println( "Deleted status from " + event.getContact().getName());
 								}
-							},
-							getStatusKey( key_to_remove, "Friend status de-registration for closedown" ),
-							contact_a );
-	
-					}catch( Throwable e ){
-	
-						log( null, "Failed to remove existing publish", e );
-					}
+							}
+						},
+						getStatusKey( key_to_remove, "Friend status de-registration for closedown" ),
+						contact_a );
+
+				}catch( Throwable e ){
+
+					log( null, "Failed to remove existing publish", e );
 				}
 			}
 		}
