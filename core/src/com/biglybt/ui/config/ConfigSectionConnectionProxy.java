@@ -170,10 +170,13 @@ public class ConfigSectionConnectionProxy
 			add(pDataPass);
 			pDataPass.setWidthInCharacters(12);
 
-			add(new ParameterGroupImpl(
-					"!" + MessageText.getString("ConfigView.section.tracker.server") + " "
-							+ i + "!",
-					pDataHost, pDataPort, pDataUser, pDataPass), listProxyPeerServers);
+			ParameterGroupImpl pgProxyServer = new ParameterGroupImpl("", pDataHost,
+					pDataPort, pDataUser, pDataPass);
+			add(pgProxyServer, listProxyPeerServers);
+			pgProxyServer.setGroupTitle(MessageText.getString(
+					"ConfigView.section.proxy.servergroup", new String[] {
+						"" + i
+					}));
 
 			pp_params.add(pDataHost);
 			pp_params.add(pDataPort);
