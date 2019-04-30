@@ -1458,7 +1458,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 					Composite group_parent = nested ? curComposite : main_tab;
 
-					String resource_name = pg.getResourceName();
+					String resource_name = pg.getGroupTitleKey();
 
 					boolean use_composite = resource_name == null || tab_folder != null;
 
@@ -1811,7 +1811,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 			if ( tab_group != null ){
 
-				String tg_resource = tab_group.getResourceName();
+				String tg_resource = tab_group.getGroupTitleKey();
 
 				if ( tg_resource != null ){
 
@@ -1880,7 +1880,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 			CTabItem tab_item = new CTabItem(tf, SWT.NULL);
 
-			String tab_name = pg.getResourceName();
+			String tab_name = pg.getGroupTitleKey();
 
 			if ( tab_name != null ){
 

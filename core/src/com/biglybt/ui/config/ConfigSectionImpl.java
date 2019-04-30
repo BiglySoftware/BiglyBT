@@ -174,7 +174,7 @@ public abstract class ConfigSectionImpl
 				name = ((ActionParameter) param).getActionResource() + ","
 						+ param.getLabelKey();
 			} else if (param instanceof ParameterGroupImpl) {
-				name = ((ParameterGroupImpl) param).getResourceName();
+				name = ((ParameterGroupImpl) param).getGroupTitleKey();
 				if (name == null || name.isEmpty()) {
 					name = param.getLabelKey();
 					if (name == null || name.isEmpty()) {

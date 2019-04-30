@@ -89,10 +89,27 @@ ParameterGroupImpl
 		return( tab_folder );
 	}
 
+	@Override
 	public String
-	getResourceName()
+	getGroupTitleKey()
 	{
 		return( resource );
+	}
+
+	@Override
+	public void
+	setGroupTitle(String title) {
+		resource = "!" + title + "!";
+
+		refreshControl();
+	}
+
+	@Override
+	public void
+	setGroupTitleKey(String resourceKey) {
+		resource = resourceKey;
+
+		refreshControl();
 	}
 
 

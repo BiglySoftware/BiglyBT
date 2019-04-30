@@ -119,7 +119,7 @@ public class PrintUtils
 		String indent = String.format(Config.FORMAT_PARAMTYPE, ' ');
 
 		if (param instanceof ParameterGroupImpl) {
-			String rid = ((ParameterGroupImpl) param).getResourceName();
+			String rid = ((ParameterGroupImpl) param).getGroupTitleKey();
 
 			pgInfoStack.push(new ParamGroupInfo(pgInfo.numParamsLeft, pgInfo.visible,
 					pgInfo.title));

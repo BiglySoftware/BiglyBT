@@ -26,6 +26,15 @@ public interface
 ParameterGroup
 	extends Parameter
 {
+	String
+	getGroupTitleKey();
+
+	void
+	setGroupTitle(String title);
+
+	void
+	setGroupTitleKey(String resourceKey);
+
 	/**
 	 * Set number of "columns" group will have.  A column is typically one
 	 * parameter, including its label.
