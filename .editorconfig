@@ -8,7 +8,13 @@ tab_width = 2
 indent_style = tab
 indent_size = 2
 continuation_indent_size = 2
-end_of_line = lf
+#git on windows auto converts LF -> CRLF and back when committing
+#Setting `end_of_line = lf` causes IntelliJ IDEA to get confused.
+# 1) Go to existing file
+# 2) Add a new line
+# 3) Remove the new line
+# 4) When `end_of_line = lf` is set, Intellij thinks it has a commit to push.  The commit is empty
+#end_of_line = lf
 spaces_around_operators = true
 spaces_around_brackets = outside
 curly_bracket_next_line = false
