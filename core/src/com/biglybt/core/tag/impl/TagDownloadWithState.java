@@ -1466,10 +1466,37 @@ TagDownloadWithState
 
 		if ( to_action.size() > 0 ){
 
-			performOperation(
-					max_share_ratio_action == TagFeatureRateLimit.SR_ACTION_PAUSE?
-					TagFeatureRunState.RSC_PAUSE:TagFeatureRunState.RSC_STOP,
-				to_action );
+			int	operation;
+			
+			switch( max_share_ratio_action ){
+				case SR_ACTION_PAUSE:{
+					operation = TagFeatureRunState.RSC_PAUSE;
+					break;
+				}
+				case SR_ACTION_STOP:{
+					operation = TagFeatureRunState.RSC_STOP;
+					break;
+				}
+				case SR_ACTION_ARCHIVE:{
+					operation = TagFeatureRunState.RSC_ARCHIVE;
+					break;
+				}
+				case SR_ACTION_REMOVE_FROM_LIBRARY:{
+					operation = TagFeatureRunState.RSC_REMOVE_FROM_LIBRARY;
+					break;	
+				}
+				case SR_ACTION_REMOVE_FROM_COMPUTER:{
+					operation = TagFeatureRunState.RSC_REMOVE_FROM_COMPUTER;
+					break;	
+				}
+				default:{
+					Debug.out( "Invalid share ratio action" );
+					
+					return;
+				}
+			}
+			
+			performOperation( operation, to_action );
 		}
 	}
 
@@ -1827,6 +1854,52 @@ TagDownloadWithState
 							}
 						});
 				}
+			}else{
+				
+				rs_async.dispatch(
+					new AERunnable()
+					{
+						@Override
+						public void
+						runSupport()
+						{
+							int	dm_state = dm.getState();
+						
+							if ( 	dm_state != DownloadManager.STATE_STOPPED &&
+									dm_state != DownloadManager.STATE_ERROR ){
+								
+								dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+							}
+			
+							try{
+								if ( op == TagFeatureRunState.RSC_ARCHIVE ){
+	
+									Download download = PluginCoreUtils.wrap( dm );
+				
+									if ( download.canStubbify()){
+							
+											// have to remove from tag otherwise when it is restored it will no doubt get re-archived!
+
+										removeTaggable( dm );
+
+										download.stubbify();
+									}
+								}else if ( op == TagFeatureRunState.RSC_REMOVE_FROM_LIBRARY ){
+				
+									dm.getGlobalManager().removeDownloadManager( dm, false, false );
+				
+								}else if ( op == TagFeatureRunState.RSC_REMOVE_FROM_COMPUTER ){
+				
+									boolean reallyDeleteData =  !dm.getDownloadState().getFlag(	Download.FLAG_DO_NOT_DELETE_DATA_ON_REMOVE );
+				
+									dm.getGlobalManager().removeDownloadManager( dm, true, reallyDeleteData);
+								}
+							}catch( Throwable e ){
+								
+								Debug.out( e );
+							}
+						}
+					});
 			}
 		}
 	}

@@ -29,6 +29,12 @@ TagFeatureRunState
 	public static final int	RSC_RESUME	= 0x00000004;
 	public static final int	RSC_START	= 0x00000008;
 
+		// these are not fully supported yet so use at your own risk...
+	
+	public static final int	RSC_ARCHIVE					= 0x00000010;
+	public static final int	RSC_REMOVE_FROM_LIBRARY		= 0x00000020;
+	public static final int	RSC_REMOVE_FROM_COMPUTER	= 0x00000040;
+
 	public static final int	RSC_NONE	= 0x00000000;
 	public static final int	RSC_ALL		= 0xffffffff;
 

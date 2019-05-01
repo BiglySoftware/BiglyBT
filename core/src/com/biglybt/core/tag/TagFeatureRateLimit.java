@@ -24,9 +24,12 @@ public interface
 TagFeatureRateLimit
 	extends TagFeature
 {
-	public static final int SR_ACTION_QUEUE	= 0;
-	public static final int SR_ACTION_PAUSE	= 1;
-	public static final int SR_ACTION_STOP	= 2;
+	public static final int SR_ACTION_QUEUE					= 0;
+	public static final int SR_ACTION_PAUSE					= 1;
+	public static final int SR_ACTION_STOP					= 2;
+	public static final int SR_ACTION_ARCHIVE				= 3;
+	public static final int SR_ACTION_REMOVE_FROM_LIBRARY	= 4;
+	public static final int SR_ACTION_REMOVE_FROM_COMPUTER	= 5;
 
 	public static final int SR_INDIVIDUAL_ACTION_DEFAULT = SR_ACTION_QUEUE;
 	public static final int SR_AGGREGATE_ACTION_DEFAULT	 = SR_ACTION_PAUSE;

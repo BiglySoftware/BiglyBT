@@ -717,12 +717,18 @@ public class TagSettingsView
 							"" + TagFeatureRateLimit.SR_ACTION_QUEUE,
 							"" + TagFeatureRateLimit.SR_ACTION_PAUSE,
 							"" + TagFeatureRateLimit.SR_ACTION_STOP,
+							"" + TagFeatureRateLimit.SR_ACTION_ARCHIVE,
+							"" + TagFeatureRateLimit.SR_ACTION_REMOVE_FROM_LIBRARY,
+							"" + TagFeatureRateLimit.SR_ACTION_REMOVE_FROM_COMPUTER,
 					};
 
 					String[] ST_ACTION_LABELS = {
 							MessageText.getString( "ConfigView.section.queue" ),
 							MessageText.getString( "v3.MainWindow.button.pause" ),
 							MessageText.getString( "v3.MainWindow.button.stop" ),
+							MessageText.getString( "MyTorrentsView.menu.archive" ),
+							MessageText.getString( "Button.deleteContent.fromLibrary" ),
+							MessageText.getString( "Button.deleteContent.fromComputer" ),
 					};
 
 					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
