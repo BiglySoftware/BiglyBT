@@ -259,7 +259,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 			// The above hack causes Text widgets to lose inherit background, so add 
 			// an extra hack to restore it
 			try {
-				Method mDefaultBG = Text.class.getDeclaredMethod("defaultBackground");
+				Method mDefaultBG = Control.class.getDeclaredMethod("defaultBackground");
 				mDefaultBG.setAccessible(true);
 				display.addFilter(SWT.Paint, event -> {
 					boolean needsFixupBG = event.widget.getData("DidFixupBG") == null;
@@ -267,7 +267,10 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 						return;
 					}
 
-					if (!(event.widget instanceof Text)) {
+					boolean needsHack = (event.widget instanceof Text)
+							|| (event.widget instanceof Combo)
+							|| (event.widget instanceof Spinner);
+					if (!needsHack) {
 						event.widget.setData("DidFixupBG", "");
 						return;
 					}
@@ -277,12 +280,12 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 					// the widget will get the background of the parent again unless we
 					// override (again)
 
-					Text text = (Text) event.widget;
+					Control control = (Control) event.widget;
 
-					Color background = text.getBackground();
+					Color background = control.getBackground();
 
 					try {
-						Object invoke = mDefaultBG.invoke(text);
+						Object invoke = mDefaultBG.invoke(control);
 						int handle = ((Number) invoke).intValue();
 
 						int r = handle & 0xFF;
@@ -290,7 +293,8 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 						int b = (handle & 0xFF0000) >> 16;
 
 						if (!background.getRGB().equals(new RGB(r, g, b))) {
-							text.setBackground(ColorCache.getColor(event.display, r, g, b));
+							control.setBackground(
+									ColorCache.getColor(event.display, r, g, b));
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
