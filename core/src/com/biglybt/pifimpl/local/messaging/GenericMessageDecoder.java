@@ -110,7 +110,7 @@ GenericMessageDecoder
 
 					if ( size > MAX_MESSAGE_LENGTH ){
 
-						Debug.out( "Message too large for generic payload" );
+						Debug.out( "Message too large for generic payload (" + size + ")" );
 
 						throw( new IOException( "message too large" ));
 					}
