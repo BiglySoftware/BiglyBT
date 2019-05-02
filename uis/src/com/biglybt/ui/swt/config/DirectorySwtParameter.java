@@ -19,6 +19,7 @@
 
 package com.biglybt.ui.swt.config;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,8 +30,10 @@ import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.pifimpl.local.ui.config.DirectoryParameterImpl;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 /**
  * SWT Parameter representing a Directory (String) value. 
@@ -117,6 +120,28 @@ public class DirectorySwtParameter
 		}
 		list.add(browse);
 		return list.toArray(new Control[0]);
+	}
+
+	@Override
+	protected void addLabelContextMenus(Control curControl, Menu menu) {
+		super.addLabelContextMenus(curControl, menu);
+		String value = getValue();
+		if (value == null || value.isEmpty()) {
+			return;
+		}
+		File file = new File(value);
+		if (file.exists()
+				|| (file.getParentFile() != null && file.getParentFile().exists())) {
+			MenuItem itemShowInExplorer = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemShowInExplorer,
+					"MyTorrentsView.menu.explore");
+			itemShowInExplorer.addListener(SWT.Selection, event -> {
+				String curVal = getValue();
+				if (curVal != null && !curVal.isEmpty()) {
+					ManagerUtils.open(new File(curVal));
+				}
+			});
+		}
 	}
 
 	private String openDialog(Shell shell, String old_value) {

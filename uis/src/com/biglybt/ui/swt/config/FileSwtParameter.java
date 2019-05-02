@@ -19,18 +19,19 @@
 
 package com.biglybt.ui.swt.config;
 
+import java.io.File;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.pifimpl.local.ui.config.FileParameterImpl;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 /**
  * SWT Parameter representing a File (String) value. 
@@ -51,7 +52,7 @@ public class FileSwtParameter
 	private String filenameHint;
 
 	public FileSwtParameter(Composite parent, FileParameterImpl param) {
-		this(parent, param.getConfigKeyName(), param.getLabelKey(), 
+		this(parent, param.getConfigKeyName(), param.getLabelKey(),
 				param.getFileExtensions(), null);
 		setFilenameHint(param.getFileNameHint());
 		keyDialogTitle = param.getKeyDialogTitle();
@@ -106,6 +107,28 @@ public class FileSwtParameter
 				setValue(path);
 			}
 		});
+	}
+
+	@Override
+	protected void addLabelContextMenus(Control curControl, Menu menu) {
+		super.addLabelContextMenus(curControl, menu);
+		String value = getValue();
+		if (value == null || value.isEmpty()) {
+			return;
+		}
+		File file = new File(value);
+		if (file.exists()
+				|| (file.getParentFile() != null && file.getParentFile().exists())) {
+			MenuItem itemShowInExplorer = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemShowInExplorer,
+					"MyTorrentsView.menu.explore");
+			itemShowInExplorer.addListener(SWT.Selection, event -> {
+				String curVal = getValue();
+				if (curVal != null && !curVal.isEmpty()) {
+					ManagerUtils.open(new File(curVal));
+				}
+			});
+		}
 	}
 
 	public void setFilenameHint(String filenameHint) {
