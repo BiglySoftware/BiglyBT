@@ -808,6 +808,7 @@ BuddyPluginView
 	private UISWTStatusEntry	beta_status;
 	private Image				bs_chat_gray;
 	private Image				bs_chat_gray_text;
+	private Image				bs_chat_swarm_merge;
 	private Image				bs_chat_green;
 	private Image				bs_chat_red;
 
@@ -866,7 +867,8 @@ BuddyPluginView
 					bs_chat_gray_text 	= imageLoader.getImage( "dchat_gray_text" );
 					bs_chat_green 		= imageLoader.getImage( "dchat_green" );
 					bs_chat_red 		= imageLoader.getImage( "dchat_red" );
-
+					bs_chat_swarm_merge	= imageLoader.getImage( "dchat_swarm_merge" );
+							
 					setBetaStatus( bs_chat_gray );
 
 					mi_chat.setGraphic( ui_instance.createGraphic( bs_chat_gray ));
@@ -911,6 +913,8 @@ BuddyPluginView
 					{
 						List<ChatInstance>	chats = plugin.getBeta().getChats();
 
+						Map<ChatInstance,ChatMessage>	pending = new HashMap<>();
+						
 						synchronized( pending_msg_map ){
 
 							for ( ChatInstance chat: chats ){
@@ -941,7 +945,7 @@ BuddyPluginView
 
 													chat.setUserData( CHAT_LM_KEY, last_msg );
 
-													betaMessagePending( chat, null, last_msg );
+													pending.put( chat, last_msg );
 												}
 											}
 										}
@@ -949,6 +953,11 @@ BuddyPluginView
 								}
 							}
 
+							if ( !pending.isEmpty()){
+								
+								betaMessagesPending( pending );
+							}
+							
 							updateIdleTT( false );
 						}
 					}
@@ -1158,13 +1167,27 @@ BuddyPluginView
 							
 							List<ChatInstance> instances = BuddyPluginUtils.peekChatInstances( dl );
 
-							boolean	is_pending = false;
+							boolean	is_pending 	= false;
+							boolean	is_sm		= false;
 							
 							for ( ChatInstance instance: instances ){
 								
 								if ( instance.getMessageOutstanding()){
 									
 									is_pending = true;
+								
+									List<ChatMessage> messages = instance.getMessages();
+									
+									for ( ChatMessage msg: messages ){
+										
+										if ( msg.getFlagOrigin() == BuddyPluginBeta.FLAGS_MSG_ORIGIN_RATINGS ){
+											
+											if ( msg.getMessage().contains( "Swarm_Merging" )){
+												
+												is_sm = true;
+											}
+										}
+									}
 								}
 							}
 
@@ -1174,10 +1197,19 @@ BuddyPluginView
 
 							if ( is_pending ){
 								
-								graphic 	= bs_chat_gray_text;
-								tooltip		= MessageText.getString( "TableColumn.header.chat.msg.out" );
-								sort_order	= 1;
-								
+								if ( is_sm ){
+									
+									graphic 	= bs_chat_swarm_merge;
+									tooltip		= MessageText.getString( "label.swarm.merge.available" );
+									sort_order	= 2;
+									
+								}else{
+									
+									graphic 	= bs_chat_gray_text;
+									tooltip		= MessageText.getString( "TableColumn.header.chat.msg.out" );
+									sort_order	= 1;
+
+								}
 							}else{
 								
 								graphic 	= null;
@@ -1483,6 +1515,24 @@ BuddyPluginView
 		}
 	}
 
+	private void
+	betaMessagesPending(
+		Map<ChatInstance,ChatMessage>	pending )
+	{
+		synchronized( columns ){
+
+			for ( TableColumn column : columns ){
+
+				column.invalidateCells();
+			}
+		}
+
+		for ( Map.Entry<ChatInstance,ChatMessage> entry: pending.entrySet()){
+			
+			betaMessagePendingSupport( entry.getKey(), null, entry.getValue());
+		}
+	}
+	
 	protected void
 	betaMessagePending(
 		ChatInstance		chat,
@@ -1497,6 +1547,15 @@ BuddyPluginView
 			}
 		}
 		
+		betaMessagePendingSupport( chat, comp_maybe_null, pending_message );
+	}
+	
+	private void
+	betaMessagePendingSupport(
+		ChatInstance		chat,
+		Control				comp_maybe_null,
+		ChatMessage			pending_message )
+	{		
 		synchronized( pending_msg_map ){
 
 			String key = chat.getNetAndKey();
