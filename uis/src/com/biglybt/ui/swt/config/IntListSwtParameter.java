@@ -118,6 +118,9 @@ public class IntListSwtParameter
 			return;
 		}
 		for (String displayString : displayStrings) {
+			if (Utils.isGTK) {
+				displayString += " ";
+			}
 			list.add(displayString);
 		}
 

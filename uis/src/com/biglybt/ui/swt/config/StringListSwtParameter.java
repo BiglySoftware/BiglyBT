@@ -162,6 +162,9 @@ public class StringListSwtParameter
 		}
 
 		for (String displayString : displayStrings) {
+			if (Utils.isGTK) {
+				displayString += " ";
+			}
 			if (bUseCombo) {
 				((Combo) list).add(displayString);
 			} else {
