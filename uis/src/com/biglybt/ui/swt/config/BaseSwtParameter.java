@@ -453,34 +453,10 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 			if (curControl == null || curControl.isDisposed()) {
 				return;
 			}
-			boolean add_copy = curControl.getData(
-					KEY_LABEL_ADDCOPYTOCLIPMENU) != null;
-			if (valueProcessor == null && !add_copy) {
-				return;
-			}
 
 			Menu menu = new Menu(curControl);
 
-			if (valueProcessor != null) {
-				if (!valueProcessor.isDefaultValue(thisTyped)) {
-					Object defaultValue = valueProcessor.getDefaultValue(thisTyped);
-					MenuItem item = new MenuItem(menu, SWT.PUSH);
-					Messages.setLanguageText(item, "menu.config.reset.to.default");
-					if ((defaultValue instanceof String)
-							|| (defaultValue instanceof Number)) {
-						item.setToolTipText(defaultValue.toString());
-					}
-					item.addListener(SWT.Selection, event -> resetToDefault());
-				} else if (valueProcessor.getDefaultValue(thisTyped) != null) {
-					MenuItem item = new MenuItem(menu, SWT.PUSH);
-					item.setText("Currently set to default value");
-					item.setEnabled(false);
-				}
-			}
-			if (add_copy && (curControl instanceof Label)) {
-				ClipboardCopy.addCopyToClipMenu(menu,
-						() -> ((Label) curControl).getText().trim());
-			}
+			addLabelContextMenus(curControl, menu);
 
 			if (menu.getItemCount() > 0) {
 				//noinspection ConstantConditions
@@ -491,6 +467,37 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 				menu.dispose();
 			}
 		});
+	}
+
+	protected void addLabelContextMenus(Control curControl, Menu menu) {
+		if (mainControl != null && mainControl.isFocusControl()) {
+			// Force control removes focus from mainControl, ensuring any new
+			// value entered by user is processed before showing menu (which may
+			// rely on current value)
+			curControl.forceFocus();
+		}
+		boolean add_copy = curControl.getData(KEY_LABEL_ADDCOPYTOCLIPMENU) != null;
+
+		if (valueProcessor != null) {
+			if (!valueProcessor.isDefaultValue(thisTyped)) {
+				Object defaultValue = valueProcessor.getDefaultValue(thisTyped);
+				MenuItem item = new MenuItem(menu, SWT.PUSH);
+				Messages.setLanguageText(item, "menu.config.reset.to.default");
+				if ((defaultValue instanceof String)
+						|| (defaultValue instanceof Number)) {
+					item.setToolTipText(defaultValue.toString());
+				}
+				item.addListener(SWT.Selection, event -> resetToDefault());
+			} else if (valueProcessor.getDefaultValue(thisTyped) != null) {
+				MenuItem item = new MenuItem(menu, SWT.PUSH);
+				item.setText("Currently set to default value");
+				item.setEnabled(false);
+			}
+		}
+		if (add_copy && (curControl instanceof Label)) {
+			ClipboardCopy.addCopyToClipMenu(menu,
+					() -> ((Label) curControl).getText().trim());
+		}
 	}
 
 	public boolean resetToDefault() {
@@ -504,14 +511,15 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 	public boolean isDefaultValue(){
 		return( valueProcessor != null && valueProcessor.isDefaultValue(thisTyped));
 	}
-	
+
 	protected void setPluginParameter(Parameter pluginParam) {
 		this.pluginParam = pluginParam;
 		if (pluginParam == null) {
 			return;
 		}
 		if (pluginParam instanceof ParameterImpl) {
-			addValidator((p, toValue) -> ((ParameterImpl) this.pluginParam).validate(toValue));
+			addValidator(
+					(p, toValue) -> ((ParameterImpl) this.pluginParam).validate(toValue));
 		}
 	}
 
@@ -534,7 +542,7 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 	@Override
 	public void setVisible(boolean visible) {
 		if (DEBUG && !Thread.currentThread().getName().startsWith(
-			Utils.THREAD_NAME_OFFSWT)) {
+				Utils.THREAD_NAME_OFFSWT)) {
 			debug("setVisible " + visible);
 		}
 
