@@ -26,12 +26,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.ui.swt.Messages;
@@ -83,7 +81,7 @@ public class BooleanSwtParameter
 	 * @param valueProcessor null if you want to use COConfigurationManager
 	 */
 	public BooleanSwtParameter(Composite parent, String paramID, String labelKey,
-			String suffixLabelKey,
+		String suffixLabelKey,
 			SwtParameterValueProcessor<BooleanSwtParameter, Boolean> valueProcessor) {
 		super(paramID);
 
@@ -129,12 +127,15 @@ public class BooleanSwtParameter
 			if (toolong) {
 				// Checkbox and text are two separate widgets
 				checkBox = new Button(ourParent, SWT.CHECK);
-				checkBox.setLayoutData(new GridData());
+				GridData gridData = new GridData();
+				if (Constants.isUnix) {
+					gridData.horizontalIndent = 4;
+				}
+				checkBox.setLayoutData(gridData);
 
 				cbText = new Label(ourParent, SWT.WRAP);
 				Messages.setLanguageText(cbText, labelKey);
-				GridData gridData = Utils.getWrappableLabelGridData(1,
-						GridData.FILL_HORIZONTAL);
+				gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
 				gridData.horizontalIndent = 3;
 				cbText.setLayoutData(gridData);
 				cbText.addListener(SWT.MouseDown, event -> {
