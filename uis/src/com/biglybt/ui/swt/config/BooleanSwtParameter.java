@@ -136,7 +136,7 @@ public class BooleanSwtParameter
 				cbText = new Label(ourParent, SWT.WRAP);
 				Messages.setLanguageText(cbText, labelKey);
 				gridData = Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL);
-				gridData.horizontalIndent = 3;
+				gridData.horizontalIndent = Constants.isOSX ? -4 : 3;
 				cbText.setLayoutData(gridData);
 				cbText.addListener(SWT.MouseDown, event -> {
 					if (event.button == 1) {
@@ -205,7 +205,7 @@ public class BooleanSwtParameter
 			Messages.setLanguageText(lblSuffix, suffixLabelKey);
 			GridData gridData = Utils.getWrappableLabelGridData(2,
 					GridData.FILL_HORIZONTAL);
-			gridData.horizontalIndent = 40;
+			gridData.horizontalIndent = Constants.isOSX ? 45 : 40;
 			lblSuffix.setLayoutData(gridData);
 			ClipboardCopy.addCopyToClipMenu(lblSuffix);
 			indentPaintListener = new IndentPaintListener(lblSuffix, 40);
