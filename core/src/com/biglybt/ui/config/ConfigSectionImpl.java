@@ -172,7 +172,7 @@ public abstract class ConfigSectionImpl
 				}
 			} else if (param instanceof ActionParameter) {
 				name = ((ActionParameter) param).getActionResource() + ","
-						+ param.getLabelKey();
+						+ param.toString();
 			} else if (param instanceof ParameterGroupImpl) {
 				name = ((ParameterGroupImpl) param).getGroupTitleKey();
 				if (name == null || name.isEmpty()) {
