@@ -41,6 +41,8 @@ public class BaseSwtStringParameter<PARAMTYPE extends BaseSwtStringParameter<PAR
 {
 	protected final Text inputField;
 
+	private Composite ourParent;
+
 	private Label lblSuffix;
 
 	private char[] validChars;
@@ -60,7 +62,7 @@ public class BaseSwtStringParameter<PARAMTYPE extends BaseSwtStringParameter<PAR
 		if (suffixKey == null) {
 			parent = composite;
 		} else {
-			parent = new Composite(composite, SWT.NONE);
+			ourParent = parent = new Composite(composite, SWT.NONE);
 			GridLayout gridLayout = new GridLayout(2, false);
 			gridLayout.marginHeight = gridLayout.marginWidth = 0;
 			parent.setLayout(gridLayout);
@@ -189,6 +191,9 @@ public class BaseSwtStringParameter<PARAMTYPE extends BaseSwtStringParameter<PAR
 		}
 		List<Control> list = new ArrayList<>(Arrays.asList(super.getControls()));
 		list.add(lblSuffix);
+		if (ourParent != null) {
+			list.add(ourParent);
+		}
 		return list.toArray(new Control[0]);
 	}
 

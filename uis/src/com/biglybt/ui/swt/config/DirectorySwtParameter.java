@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.config;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
@@ -47,6 +48,8 @@ public class DirectorySwtParameter
 	extends BaseSwtStringParameter<DirectorySwtParameter>
 {
 	private final Button browse;
+
+	private final Composite area;
 
 	protected String keyDialogTitle = null;
 
@@ -75,7 +78,7 @@ public class DirectorySwtParameter
 		super(new Composite(composite, SWT.NULL), paramID, labelKey, null,
 				valueProcessor);
 
-		Composite area = getMainControl().getParent();
+		area = getMainControl().getParent();
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		layout.marginHeight = 0;
@@ -112,13 +115,9 @@ public class DirectorySwtParameter
 
 	@Override
 	public Control[] getControls() {
-		List<Control> list = new ArrayList<>();
-		list.add(inputField);
-		Control control = getRelatedControl();
-		if (control != inputField && control != null) {
-			list.add(control);
-		}
+		List<Control> list = new ArrayList<>(Arrays.asList(super.getControls()));
 		list.add(browse);
+		list.add(area);
 		return list.toArray(new Control[0]);
 	}
 

@@ -33,6 +33,10 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * SWT Parameter representing a File (String) value. 
  * Displays Textbox and browse button.
@@ -45,6 +49,10 @@ import com.biglybt.ui.swt.views.utils.ManagerUtils;
 public class FileSwtParameter
 	extends BaseSwtStringParameter<FileSwtParameter>
 {
+	private final Button browse;
+
+	private final Composite area;
+
 	protected String keyDialogTitle = null;
 
 	protected String[] extension_list;
@@ -79,7 +87,7 @@ public class FileSwtParameter
 				valueProcessor);
 		this.extension_list = extension_list;
 
-		Composite area = getMainControl().getParent();
+		area = getMainControl().getParent();
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 3;
 		layout.marginHeight = 0;
@@ -97,7 +105,7 @@ public class FileSwtParameter
 			inputField.setLayoutData(gridData);
 		}
 
-		Button browse = new Button(area, SWT.PUSH);
+		browse = new Button(area, SWT.PUSH);
 		ImageLoader.getInstance().setButtonImage(browse, "openFolderButton");
 		Utils.setTT(browse, MessageText.getString("Button.browse"));
 
@@ -129,6 +137,14 @@ public class FileSwtParameter
 				}
 			});
 		}
+	}
+
+	@Override
+	public Control[] getControls() {
+		List<Control> list = new ArrayList<>(Arrays.asList(super.getControls()));
+		list.add(browse);
+		list.add(area);
+		return list.toArray(new Control[0]);
 	}
 
 	public void setFilenameHint(String filenameHint) {
