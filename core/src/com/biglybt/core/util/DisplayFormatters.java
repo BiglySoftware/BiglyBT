@@ -36,6 +36,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
@@ -1696,7 +1697,130 @@ DisplayFormatters
 		}
 	}
 
+	private static int	share_ratio_progress_interval;
+	
+	static{
+		COConfigurationManager.addAndFireParameterListener(
+			"Share Ratio Progress Interval",
+			(n)->{
+				share_ratio_progress_interval = COConfigurationManager.getIntParameter(n);
+			});
+	}
+	
+	public static long[]
+	getShareRatioProgressInfo(
+		DownloadManager		dm )
+	{
+		int dm_state = dm.getState();
 
+		long	next_eta = -1;
+
+		if ( 	share_ratio_progress_interval > 0 &&
+				( dm_state == DownloadManager.STATE_DOWNLOADING || dm_state == DownloadManager.STATE_SEEDING )){
+
+			DownloadManagerStats stats = dm.getStats();
+
+			long	downloaded 	= stats.getTotalGoodDataBytesReceived();
+			long	uploaded 	= stats.getTotalDataBytesSent();
+
+			if ( downloaded <= 0 ){
+
+				next_eta = -2;
+
+			}else{
+
+				int current_sr = (int) ((1000 * uploaded) / downloaded);
+
+				int	mult = current_sr / share_ratio_progress_interval;
+
+				int	next_target_sr = (mult+1)*share_ratio_progress_interval;
+
+				long	up_speed	= stats.getDataSendRate()==0?0:stats.getSmoothedDataSendRate();
+
+				if ( up_speed <= 0 ){
+
+					next_eta = -2;
+
+				}else{
+
+					if ( dm_state == DownloadManager.STATE_SEEDING ){
+
+							// simple case
+
+						long	target_upload = ( next_target_sr * downloaded ) / 1000;
+
+						next_eta = ( target_upload - uploaded )/up_speed;
+
+					}else{
+							// more complex when downloading as we have to consider the fact that
+							// at some point the download will complete and therefore download speed will
+							// drop to 0
+
+						DiskManager disk_man = dm.getDiskManager();
+
+						if ( disk_man != null ){
+
+							long	remaining = disk_man.getRemainingExcludingDND();
+
+							long	down_speed	= (dm_state==DownloadManager.STATE_SEEDING||stats.getDataReceiveRate()==0)?0:stats.getSmoothedDataReceiveRate();
+
+							if ( down_speed <= 0 || remaining <= 0 ){
+
+									// same as if we are just seeding
+
+								long	target_upload = ( next_target_sr * downloaded ) / 1000;
+
+								next_eta = ( target_upload - uploaded )/up_speed;
+
+							}else{
+
+								/*
+								 	time T until the target share ration is met is
+
+								  		uploaded + ( T * upload_speed )
+										------------------------------          = target_sr
+										downloaded + ( T * download_speed )
+								*/
+
+								long time_to_sr = (( next_target_sr * downloaded )/1000 - uploaded ) / ( up_speed - ( down_speed * next_target_sr )/1000 );
+
+								long time_to_completion = remaining / down_speed;
+
+								if ( time_to_sr > 0 &&  time_to_sr <= time_to_completion ){
+
+									next_eta = time_to_sr;
+
+								}else{
+
+										// basic calculation shows eta is > download complete time so we need
+										// to refactor things
+
+									long uploaded_at_completion 	= uploaded + ( up_speed * time_to_completion );
+									long downloaded_at_completion 	= downloaded + ( down_speed * time_to_completion );
+
+										// usual seeding calculation for time after completion
+
+									long	target_upload = ( next_target_sr * downloaded_at_completion ) / 1000;
+
+									next_eta = time_to_completion + ( target_upload - uploaded_at_completion )/up_speed;
+								}
+							}
+						}else{
+
+							next_eta = -2;
+						}
+					}
+				}
+			}
+		}
+
+		long data = dm.getDownloadState().getLongAttribute( DownloadManagerState.AT_SHARE_RATIO_PROGRESS );
+
+		long	sr 			= (int)data;
+		long	timestamp 	= (data>>>32)*1000;
+
+		return( new long[]{ sr, timestamp, next_eta });
+	}
 
  	// Used to test fractions and displayformatter.
   	// Keep until everything works okay.

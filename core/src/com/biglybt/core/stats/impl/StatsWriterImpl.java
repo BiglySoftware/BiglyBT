@@ -28,8 +28,13 @@ package com.biglybt.core.stats.impl;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import com.biglybt.core.Core;
@@ -265,6 +270,41 @@ StatsWriterImpl
 						writeTag( "HASH_FAILS", 	dm_stats.getHashFailCount());
 						writeTag( "SHARE_RATIO", 	dm_stats.getShareRatio());
 
+						{
+							long[] share_prog_info = DisplayFormatters.getShareRatioProgressInfo(dm);
+							
+							long	sr 			= share_prog_info[0];
+							long	timestamp	= share_prog_info[1];
+							long	next_eta	= share_prog_info[2];
+	
+							String		sr_str 	= String.valueOf( sr );
+							String		eta_str;
+							
+							if ( next_eta == -1 ){
+								eta_str = "-";
+							}else if ( next_eta == -2 ){
+								eta_str = Constants.INFINITY_STRING;
+							}else{
+								eta_str = DisplayFormatters.formatETA(next_eta);
+							}
+
+							String timestamp_str = timestamp <= 0? "-": DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( new Date( timestamp ).toInstant().atZone( ZoneId.systemDefault()));
+							
+							writeTag( "SHARE_RATIO_PROGRESS", eta_str + "; " + sr_str + "; " + timestamp_str );
+						}
+						
+						{
+						    int  up_idle = dm_stats.getTimeSinceLastDataSentInSeconds();
+						  
+						    writeTag( "UP_IDLE", up_idle==-1?Constants.INFINITY_STRING:TimeFormatter.format(up_idle));
+						}
+						
+						{
+							  long only_seeding_for = dm_stats.getSecondsOnlySeeding();
+
+							  writeTag( "ONLY_SEEDING_FOR", TimeFormatter.format(only_seeding_for));
+						}
+						
 						writeTag( "TOTAL_SEEDS", dm.getNbSeeds());
 						writeTag( "TOTAL_LEECHERS", dm.getNbPeers());
 
