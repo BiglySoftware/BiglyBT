@@ -244,7 +244,13 @@ public interface GlobalManager extends CoreComponent, TaggableResolver, DataSour
 	 */
 	public boolean pauseDownload(DownloadManager dm, boolean only_if_active );
 
-	public void stopPausedDownload( DownloadManager dm );
+	/**
+	 * Don't use me, use dm.stopPausedDownload()
+	 * @param dm
+	 * @return
+	 */
+	
+	public boolean stopPausedDownload( DownloadManager dm );
 	
 	/**
 	 * Resume a previously paused DownloadManager

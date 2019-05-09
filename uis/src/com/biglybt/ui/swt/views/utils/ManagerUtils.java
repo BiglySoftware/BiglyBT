@@ -2095,7 +2095,7 @@ public class ManagerUtils {
     						new CoreRunningListener() {
     							@Override
     							public void coreRunning(Core core) {
-    								core.getGlobalManager().stopPausedDownload( dm );
+    								dm.stopPausedDownload();
     							}
     						});
     			}else{

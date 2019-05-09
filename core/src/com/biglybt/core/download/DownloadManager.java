@@ -212,6 +212,9 @@ DownloadManager
     public boolean
     isPaused();
 
+    public boolean
+    stopPausedDownload();
+    
     public void
     resume();
 

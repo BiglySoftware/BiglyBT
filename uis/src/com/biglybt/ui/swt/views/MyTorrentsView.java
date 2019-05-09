@@ -2595,21 +2595,20 @@ public class MyTorrentsView
 
 	@Override
 	public void refreshToolBarItems(Map<String, Long> list) {
-		ISelectedContent[] datasource = SelectedContentManager.getCurrentlySelectedContent();
 
 		if (!isTableFocus()) {
-  		UISWTViewCore active_view = getActiveView();
-  		if (active_view != null) {
-  			UIPluginViewToolBarListener l = active_view.getToolBarListener();
-  			if (l != null) {
-  				Map<String, Long> activeViewList = new HashMap<>();
-  				l.refreshToolBarItems(activeViewList);
-  				if (activeViewList.size() > 0) {
-  					list.putAll(activeViewList);
-  					return;
-  				}
-  			}
-  		}
+			UISWTViewCore active_view = getActiveView();
+			if (active_view != null) {
+				UIPluginViewToolBarListener l = active_view.getToolBarListener();
+				if (l != null) {
+					Map<String, Long> activeViewList = new HashMap<>();
+					l.refreshToolBarItems(activeViewList);
+					if (activeViewList.size() > 0) {
+						list.putAll(activeViewList);
+						return;
+					}
+				}
+			}
 		}
   }
 

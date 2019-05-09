@@ -2429,10 +2429,19 @@ DownloadManagerImpl
 			
 		}else{
 		
-			// we're not yet in a stopped state so indicate this with a negative value - it'll be corrected when the download stops
+			int curState = getState();
+			
+			if ( curState == STATE_STOPPED ){
+				
+				resume_time = _resume_time;
+				
+			}else{
 
-			resume_time	= -_resume_time;
+				// we're not yet in a stopped state so indicate this with a negative value - it'll be corrected when the download stops
 
+				resume_time	= -_resume_time;
+			}
+			
 			return( globalManager.pauseDownload( this, only_if_active ));
 		}
 	}
@@ -2450,6 +2459,29 @@ DownloadManagerImpl
 		long		time )
 	{
 		resume_time	= time;
+	}
+	
+	@Override
+	public boolean 
+	stopPausedDownload()
+	{
+		if ( globalManager.stopPausedDownload( this )){
+			
+			resume_time = 0;
+			  
+			setStopReason( null );
+			
+				// this is needed so that listeners get a chance to notice the change (toolbar state for stop button needs
+				// to go from enabled (when paused) to disabled (when stopped)
+			
+			listeners.dispatch( LDT_STATECHANGED, new Object[]{ this, new Integer( getState() )});
+			
+			return( true );
+			
+		}else{
+			
+			return( false );
+		}
 	}
 	
 	@Override

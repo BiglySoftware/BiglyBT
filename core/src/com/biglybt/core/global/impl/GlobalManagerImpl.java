@@ -1831,7 +1831,7 @@ public class GlobalManagerImpl
   }
 
   @Override
-  public void 
+  public boolean 
   stopPausedDownload(
 		DownloadManager dm )
   {
@@ -1847,20 +1847,18 @@ public class GlobalManagerImpl
 			  DownloadManager this_manager = getDownloadManager( hash );
 
 			  if ( this_manager == dm ){
-
-				  this_manager.setAutoResumeTime( 0 );
-				  
-				  this_manager.setStopReason( null );
 				  
 				  paused_list.remove(i);
 
-				  break;
+				  return( true );
 			  }
 		  }
 	  }finally{
 
 		  paused_list_mon.exit();
 	  }
+	  
+	  return( false );
   }
   
   @Override
