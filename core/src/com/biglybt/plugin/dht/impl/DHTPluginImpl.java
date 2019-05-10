@@ -789,6 +789,8 @@ outer:
 						diversified(
 							String		desc )
 						{
+							listener.diversified();
+							
 							return( true );
 						}
 

@@ -1137,6 +1137,8 @@ DHTControlImpl
 
 			// may be > 1 if diversification is replicating (for load balancing)
 
+		boolean	reported_div = false;
+		
 		for (final byte[] encoded_key : encoded_keys) {
 
 			HashWrapper hw = new HashWrapper(encoded_key);
@@ -1153,11 +1155,20 @@ DHTControlImpl
 				things_written.add(hw);
 			}
 
-			final String this_description =
-					Arrays.equals(encoded_key, initial_encoded_key) ?
-							description :
-							("Diversification of [" + description + "]");
+			boolean	is_non_div = Arrays.equals(encoded_key, initial_encoded_key);
+		
+			final String this_description = is_non_div?description : ("Diversification of [" + description + "]");
 
+			if ( !is_non_div ){
+				
+				if ( !reported_div ){
+					
+					reported_div = true;
+					
+					listener.diversified( this_description );
+				}
+			}
+			
 			lookup(thread_pool,
 					high_priority,
 					encoded_key,

@@ -1230,6 +1230,8 @@ DDBaseImpl
 		public boolean
 		diversified()
 		{
+			listener.event( new dbEvent( DistributedDatabaseEvent.ET_DIVERSIFIED, key ));
+			
 			return( true );
 		}
 

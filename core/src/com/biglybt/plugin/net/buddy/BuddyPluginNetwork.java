@@ -91,7 +91,9 @@ BuddyPluginNetwork
 
 	private static final int	TIMER_PERIOD = BuddyPlugin.TIMER_PERIOD;
 	
-	protected static final int	STATUS_REPUBLISH_PERIOD		= 10*60*1000;
+	protected static final int	STATUS_REPUBLISH_PERIOD						= 10*60*1000;
+	private static final int	STATUS_REPUBLISH_PERIOD_WHEN_DIVERSIFIED	= 60*60*1000;
+	
 	private static final int	STATUS_REPUBLISH_TICKS		= STATUS_REPUBLISH_PERIOD/TIMER_PERIOD;
 
 	private static final int	CHECK_YGM_PERIOD			= 5*60*1000;
@@ -2606,6 +2608,8 @@ BuddyPluginNetwork
 		private long			last_publish_start;
 		private TimerEvent		republish_delay_event;
 
+		private volatile boolean diversified;
+		
 		private List<DistributedDatabaseContact>	publish_write_contacts = new ArrayList<>();
 
 		private AsyncDispatcher	publish_dispatcher = new AsyncDispatcher();
@@ -2614,6 +2618,8 @@ BuddyPluginNetwork
 
 		private int		status_seq;
 
+		private byte[]	last_payload;
+		
 		private
 		DDBDetails(
 			DistributedDatabase		_ddb )
@@ -3001,6 +3007,8 @@ BuddyPluginNetwork
 
 				new_publish.setPublicKey( null );
 
+				last_payload = null;
+				
 				updatePublish( new_publish );
 			}
 		}
@@ -3171,6 +3179,30 @@ BuddyPluginNetwork
 
 				payload.put( "o", new Long( details.getOnlineStatus()));
 
+				synchronized( this ){
+					
+					try{
+						byte[] test = BEncoder.encode( payload );
+					
+							// remember that we republish periodically as an indicator of liveness
+						
+						if ( last_payload != null && Arrays.equals( last_payload, test )){
+							
+							long elapsed = SystemTime.getMonotonousTime() - last_publish_start;
+							
+							if ( elapsed < ( diversified?STATUS_REPUBLISH_PERIOD_WHEN_DIVERSIFIED:STATUS_REPUBLISH_PERIOD )){
+								
+								return;
+							}
+						}
+						
+						last_payload = test;
+						
+					}catch( Throwable e ){
+						
+					}
+				}
+				
 				int	next_seq = ++status_seq;
 
 				if ( next_seq == 0 ){
@@ -3183,7 +3215,7 @@ BuddyPluginNetwork
 				payload.put( "s", new Long( next_seq ));
 
 				payload.put( "v", new Long( VERSION_CURRENT ));
-
+				
 				boolean	failed_to_get_key = true;
 
 				try{
@@ -3229,6 +3261,10 @@ BuddyPluginNetwork
 
 									write_contacts.add( event.getContact());
 
+								}else if ( 	type == DistributedDatabaseEvent.ET_DIVERSIFIED ){
+									
+									diversified = true;
+									
 								}else if ( 	type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT ||
 											type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE ){
 
@@ -3299,6 +3335,11 @@ BuddyPluginNetwork
 							}
 						}
 					}
+				}
+			}else{
+				synchronized( this ){
+				
+					last_payload = null;
 				}
 			}
 		}
