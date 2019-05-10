@@ -228,7 +228,7 @@ TRNonBlockingServer
 
 			Logger.logTextResource(new LogAlert(LogAlert.UNREPEATABLE,
 					LogAlert.AT_ERROR, "Tracker.alert.listenfail"), new String[] { ""
-					+ getPort() });
+					+ getPort() + " (" + getName() + ")"});
 
 			throw( new TRTrackerServerException( "TRTrackerServer: accept fails", e ));
 

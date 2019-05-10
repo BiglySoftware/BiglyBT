@@ -157,7 +157,7 @@ TRBlockingServer
 
 					Logger.logTextResource(new LogAlert(LogAlert.UNREPEATABLE,
 							LogAlert.AT_ERROR, "Tracker.alert.listenfail"), new String[] { ""
-							+ getPort() });
+							+ getPort() + " (" + getName() + ")"});
 
 					Logger.log(new LogEvent(LOGID,
 							"TRTrackerServer: SSL listener failed on port " + getPort(), e));
@@ -229,7 +229,7 @@ TRBlockingServer
 
 					Logger.logTextResource(new LogAlert(LogAlert.UNREPEATABLE,
 							LogAlert.AT_ERROR, "Tracker.alert.listenfail"), new String[] { ""
-							+ getPort() });
+							+ getPort() + " (" + getName() +")"});
 
 					throw( new TRTrackerServerException( "TRTrackerServer: accept fails", e ));
 				}

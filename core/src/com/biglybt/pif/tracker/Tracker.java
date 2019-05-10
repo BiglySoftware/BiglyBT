@@ -71,6 +71,13 @@ Tracker
     public TrackerTorrent[]
     getTorrents();
 
+    /**
+     * @Deprecated - use {@link #createWebContext(String, int, int)}
+     * @param port
+     * @param protocol
+     * @return
+     * @throws TrackerException
+     */
     public TrackerWebContext
     createWebContext(
     	int		port,

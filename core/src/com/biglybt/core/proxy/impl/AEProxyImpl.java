@@ -160,7 +160,7 @@ AEProxyImpl
 
 			Logger.logTextResource(new LogAlert(LogAlert.UNREPEATABLE,
 					LogAlert.AT_ERROR, "Tracker.alert.listenfail"), new String[] { ""
-					+ port });
+					+ port + " (proxy)" });
 
 			if (Logger.isEnabled())
 				Logger.log(new LogEvent(LOGID, "AEProxy: listener failed on port "

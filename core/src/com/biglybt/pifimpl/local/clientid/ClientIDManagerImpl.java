@@ -267,7 +267,7 @@ ClientIDManagerImpl
 
 				Logger.logTextResource(new LogAlert(LogAlert.UNREPEATABLE,
 						LogAlert.AT_ERROR, "Tracker.alert.listenfail"), new String[] { ""
-						+ filter_port });
+						+ filter_port + " (client-id)"});
 
 				if (Logger.isEnabled())
 					Logger.log(new LogEvent(LOGID,

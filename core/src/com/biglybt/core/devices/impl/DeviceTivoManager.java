@@ -381,7 +381,7 @@ DeviceTivoManager
 					}
 				}
 
-				twc = plugin_interface.getTracker().createWebContext( last_port, Tracker.PR_HTTP );
+				twc = plugin_interface.getTracker().createWebContext( "Tivo", last_port, Tracker.PR_HTTP );
 
 				tcp_port = twc.getURLs()[0].getPort();
 
