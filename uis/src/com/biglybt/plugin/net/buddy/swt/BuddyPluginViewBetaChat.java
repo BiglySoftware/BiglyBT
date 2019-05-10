@@ -3976,8 +3976,6 @@ BuddyPluginViewBetaChat
 								widgetSelected(
 									SelectionEvent event )
 								{
-									Set<String> enabled_tags = buddy.getLocalAuthorisedRSSTagsOrCategories();
-									
 									TagManager tm = TagManagerFactory.getTagManager();
 									
 									List<Tag> all_tags = tm.getTagType( TagType.TT_DOWNLOAD_CATEGORY ).getTags();
@@ -3993,13 +3991,18 @@ BuddyPluginViewBetaChat
 									
 									List<Tag> selected_tags = new ArrayList<>();
 									
-									for ( String s: enabled_tags ){
+									Set<String> enabled_tags = buddy.getLocalAuthorisedRSSTagsOrCategories();
 									
-										Tag t = tag_map.get( s );
-											
-										if ( t != null ){
-											
-											selected_tags.add( t );
+									if ( enabled_tags != null ){
+										
+										for ( String s: enabled_tags ){
+										
+											Tag t = tag_map.get( s );
+												
+											if ( t != null ){
+												
+												selected_tags.add( t );
+											}
 										}
 									}
 									
