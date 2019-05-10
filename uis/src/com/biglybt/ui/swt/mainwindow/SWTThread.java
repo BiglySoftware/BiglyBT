@@ -269,6 +269,7 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 
 					boolean needsHack = (event.widget instanceof Text)
 							|| (event.widget instanceof Combo)
+							|| (event.widget instanceof Table)
 							|| (event.widget instanceof Spinner);
 					if (!needsHack) {
 						event.widget.setData("DidFixupBG", "");
