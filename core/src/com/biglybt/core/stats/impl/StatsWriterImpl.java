@@ -296,13 +296,13 @@ StatsWriterImpl
 						{
 						    int  up_idle = dm_stats.getTimeSinceLastDataSentInSeconds();
 						  
-						    writeTag( "UP_IDLE", up_idle==-1?Constants.INFINITY_STRING:TimeFormatter.format(up_idle));
+						    writeRawCookedElapsedTag( "UP_IDLE", up_idle );
 						}
 						
 						{
-							  long only_seeding_for = dm_stats.getSecondsOnlySeeding();
+							long only_seeding_for = dm_stats.getSecondsOnlySeeding();
 
-							  writeTag( "ONLY_SEEDING_FOR", TimeFormatter.format(only_seeding_for));
+							writeRawCookedElapsedTag( "ONLY_SEEDING_FOR", only_seeding_for);
 						}
 						
 						writeTag( "TOTAL_SEEDS", dm.getNbSeeds());
@@ -479,4 +479,27 @@ StatsWriterImpl
 
 		writeLineRaw( "</" + tag + ">");
 	}
+	
+	
+	protected void
+	writeRawCookedElapsedTag(
+		String	tag,
+		long	raw )
+	{
+		writeLineRaw( "<" + tag + ">");
+
+		try{
+			indent();
+
+			writeTag( "TEXT",	raw<0?Constants.INFINITY_STRING:TimeFormatter.format( raw ));
+			writeTag( "RAW",	raw < 0?-1:raw );
+
+		}finally{
+
+			exdent();
+		}
+
+		writeLineRaw( "</" + tag + ">");
+	}
+	
 }
