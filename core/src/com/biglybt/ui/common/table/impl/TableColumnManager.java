@@ -498,7 +498,7 @@ public class TableColumnManager {
     return (TableColumnCore)mTypes.get(sColumnName);
   }
 
-  public void ensureIntegrety(Class dataSourceType, String sTableID) {
+  public void ensureIntegrity(Class dataSourceType, String sTableID) {
     Map mTypes = (Map)items.get(sTableID);
     if (mTypes == null)
       return;

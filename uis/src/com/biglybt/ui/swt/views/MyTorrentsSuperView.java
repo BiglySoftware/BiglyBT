@@ -43,6 +43,7 @@ import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
+import com.biglybt.ui.swt.views.skin.SB_Transfers;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
@@ -100,6 +101,8 @@ public class MyTorrentsSuperView
 	private final Composite cCats;
 
 
+	private final Object initialDS;
+	
 	private Object ds;
 
 
@@ -108,9 +111,11 @@ public class MyTorrentsSuperView
 
 	private MyTorrentsView viewWhenDeactivated;
 
-  public MyTorrentsSuperView(Text txtFilter, Composite cCats) {
-  	this.txtFilter = txtFilter;
-		this.cCats = cCats;
+  public MyTorrentsSuperView(Text txtFilter, Composite cCats, Object initialDS) {
+  	this.txtFilter 	= txtFilter;
+	this.cCats 		= cCats;
+	this.initialDS	= initialDS;
+	
 		CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 			@Override
 			public void coreRunning(Core core) {
@@ -131,7 +136,7 @@ public class MyTorrentsSuperView
     return form;
   }
 
-  public void initialize(final Composite parent) {
+  public void initialize(final Composite parent, Object dataSource) {
     if (form != null) {
       return;
     }
@@ -331,7 +336,7 @@ public class MyTorrentsSuperView
     		Utils.execSWTThread(new AERunnable() {
     			@Override
     			public void runSupport() {
-    				initializeWithCore(core, parent);
+    				initializeWithCore(core, parent, dataSource);
     			}
 
     		});
@@ -340,17 +345,17 @@ public class MyTorrentsSuperView
 
   }
 
-  private void initializeWithCore(Core core, Composite parent) {
+  private void initializeWithCore(Core core, Composite parent, Object dataSource ) {
 
 	boolean split_horizontally 	= SPLIT_MODE == 0 || SPLIT_MODE == 2;
 	boolean switch_kids			= SPLIT_MODE == 2 || SPLIT_MODE == 3;
 
     torrentview = createTorrentView(core,
-				TableManager.TABLE_MYTORRENTS_INCOMPLETE, false, getIncompleteColumns(),
+				SB_Transfers.getTableIdFromDataSource( TableManager.TABLE_MYTORRENTS_INCOMPLETE, dataSource ), false, getIncompleteColumns(),
 				switch_kids?child2:child1);
 
     seedingview = createTorrentView(core,
-				TableManager.TABLE_MYTORRENTS_COMPLETE, true, getCompleteColumns(),
+    		SB_Transfers.getTableIdFromDataSource( TableManager.TABLE_MYTORRENTS_COMPLETE, dataSource) , true, getCompleteColumns(),
 				switch_kids?child1:child2);
     
     if ( split_horizontally ){
@@ -615,7 +620,7 @@ public class MyTorrentsSuperView
 	 * @return
 	 */
 	protected TableColumnCore[] getIncompleteColumns(){
-		return TableColumnCreator.createIncompleteDM(TableManager.TABLE_MYTORRENTS_INCOMPLETE);
+		return TableColumnCreator.createIncompleteDM( SB_Transfers.getTableIdFromDataSource( TableManager.TABLE_MYTORRENTS_INCOMPLETE, initialDS ));
 	}
 
 	/**
@@ -624,7 +629,7 @@ public class MyTorrentsSuperView
 	 * @return
 	 */
 	protected TableColumnCore[] getCompleteColumns(){
-		return TableColumnCreator.createCompleteDM(TableManager.TABLE_MYTORRENTS_COMPLETE);
+		return TableColumnCreator.createCompleteDM( SB_Transfers.getTableIdFromDataSource( TableManager.TABLE_MYTORRENTS_COMPLETE, initialDS ));
 	}
 
 
@@ -639,8 +644,8 @@ public class MyTorrentsSuperView
 	 */
 	protected MyTorrentsView
 	createTorrentView(
-		Core _core,
-		String 				tableID,
+		Core 				_core,
+		String				tableID,
 		boolean 			isSeedingView,
 		TableColumnCore[] 	columns,
 		Composite 			c )
@@ -710,7 +715,7 @@ public class MyTorrentsSuperView
 				break;
 
 			case UISWTViewEvent.TYPE_INITIALIZE:
-				initialize((Composite) event.getData());
+				initialize((Composite) event.getData(), event.getView().getInitialDataSource());
 				return true;
 
 			case UISWTViewEvent.TYPE_LANGUAGEUPDATE:

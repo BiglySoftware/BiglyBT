@@ -213,7 +213,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 				tableID);
 
 		// fixup order
-		tcManager.ensureIntegrety(classPluginDataSourceType, tableID);
+		tcManager.ensureIntegrity(classPluginDataSourceType, tableID);
 	}
 
 

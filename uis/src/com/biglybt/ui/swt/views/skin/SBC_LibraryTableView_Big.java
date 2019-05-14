@@ -21,7 +21,6 @@ package com.biglybt.ui.swt.views.skin;
 import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3;
 
-import com.biglybt.pif.ui.tables.TableManager;
 
 public class SBC_LibraryTableView_Big
 	extends SBC_LibraryTableView
@@ -44,26 +43,11 @@ public class SBC_LibraryTableView_Big
 
 	@Override
 	public TableColumnCore[] getColumns() {
-		TableColumnCore[] columns = null;
-		if (torrentFilterMode == SBC_LibraryView.TORRENTS_COMPLETE) {
-			columns = TableColumnCreatorV3.createCompleteDM(
-					TableManager.TABLE_MYTORRENTS_COMPLETE_BIG, true);
-
-		} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_INCOMPLETE) {
-			columns = TableColumnCreatorV3.createIncompleteDM(
-					TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG, true);
-
-		} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED) {
-			columns = TableColumnCreatorV3.createUnopenedDM(
-					TableManager.TABLE_MYTORRENTS_UNOPENED_BIG, true);
-
-		} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_ALL) {
-			columns = TableColumnCreatorV3.createAllDM(
-					TableManager.TABLE_MYTORRENTS_ALL_BIG, true);
+		String tableID = SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, initialDataSource );
+		if ( tableID != null ){
+			return( TableColumnCreatorV3.createCompleteDM( tableID, true ));
+		}else{
+			return( null );
 		}
-		if (columns == null) {
-			return null;
-		}
-		return columns;
 	}
 }

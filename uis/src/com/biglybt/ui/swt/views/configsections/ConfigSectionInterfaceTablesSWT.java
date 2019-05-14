@@ -275,6 +275,11 @@ public class ConfigSectionInterfaceTablesSWT
 
 		show_tag.addEnabledOnSelection(show_tag_comp_only, tag_inclusive);
 
+		BooleanParameterImpl col_config = new BooleanParameterImpl(
+				"Library.EnableSepColConfig",
+				"ConfigView.section.style.enableSeparateColConfig");
+		add(col_config, listLibrary);
+		
 		add(new BooleanParameterImpl("Library.ShowTabsInTorrentView",
 				"ConfigView.section.style.ShowTabsInTorrentView"), listLibrary);
 

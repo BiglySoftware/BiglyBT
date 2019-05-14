@@ -38,7 +38,7 @@ public class MyTorrentsView_Big
 	private final int torrentFilterMode;
 	private int defaultRowHeight;
 
-	public MyTorrentsView_Big(Core _core, int torrentFilterMode,
+	public MyTorrentsView_Big(Core _core, int torrentFilterMode, Object dataSource,
 	                          TableColumnCore[] basicItems, Text txtFilter, Composite cCatsTags) {
 		super( true );
 		defaultRowHeight = 40;
@@ -62,7 +62,7 @@ public class MyTorrentsView_Big
 		}
 		init(
 				_core,
-				SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true),
+				SB_Transfers.getTableIdFromFilterMode(torrentFilterMode, true, dataSource),
 				forDataSourceType, basicItems);
 		//setForceHeaderVisible(true);
 	}

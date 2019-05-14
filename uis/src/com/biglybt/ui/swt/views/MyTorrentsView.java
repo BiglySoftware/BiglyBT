@@ -3239,7 +3239,7 @@ public class MyTorrentsView
 	protected TableViewSWT<DownloadManager>
 	createTableView(
 		Class<?> 			forDataSourceType,
-		String 				tableID,
+		String	 			tableID,
 		TableColumnCore[] 	basicItems )
 	{
 		int tableExtraStyle = COConfigurationManager.getIntParameter("MyTorrentsView.table.style");

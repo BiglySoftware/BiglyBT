@@ -69,6 +69,7 @@ import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MdiSWTMenuHackListener;
@@ -79,6 +80,7 @@ import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.PeersGeneralView;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
+import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
@@ -2226,23 +2228,92 @@ public class SB_Transfers
 		}
 	}
 
-	public static String getTableIdFromFilterMode(int torrentFilterMode,
-			boolean big) {
+	private static boolean	TABLE_SUBCONFIG_ENABLE = COConfigurationManager.getBooleanParameter( "Library.EnableSepColConfig" );
+	
+	private static String
+	getTableSubID(
+		Object		ds )
+	{
+		if ( ds instanceof Tag ){
+			
+			Tag tag = (Tag)ds;
+			
+			if ( tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL ){
+			
+				return( "Tag_" + ((Tag)ds).getTagUID());
+			}
+		}
+			
+		return( null );
+	}
+	
+	public static String
+	getTableIdFromFilterMode(
+		int 		torrentFilterMode,
+		boolean 	big,
+		Object		dataSource) 
+	{
+		String	baseTableID = null;
+		
 		if (torrentFilterMode == SBC_LibraryView.TORRENTS_COMPLETE) {
-			return big ? TableManager.TABLE_MYTORRENTS_COMPLETE_BIG
+			baseTableID = big ? TableManager.TABLE_MYTORRENTS_COMPLETE_BIG
 					: TableManager.TABLE_MYTORRENTS_COMPLETE;
 		} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_INCOMPLETE) {
-			return big ? TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG
+			baseTableID =  big ? TableManager.TABLE_MYTORRENTS_INCOMPLETE_BIG
 					: TableManager.TABLE_MYTORRENTS_INCOMPLETE;
 		} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_ALL) {
-			return TableManager.TABLE_MYTORRENTS_ALL_BIG;
+			baseTableID =  TableManager.TABLE_MYTORRENTS_ALL_BIG;
 		} else if (torrentFilterMode == SBC_LibraryView.TORRENTS_UNOPENED) {
-			return big ? TableManager.TABLE_MYTORRENTS_UNOPENED_BIG
+			baseTableID =  big ? TableManager.TABLE_MYTORRENTS_UNOPENED_BIG
 					: TableManager.TABLE_MYTORRENTS_UNOPENED;
 		}
-		return null;
+	
+		if ( baseTableID == null ){
+			
+			return( null );
+			
+		}else{
+			
+			if (  TABLE_SUBCONFIG_ENABLE ){
+				
+				String sub = getTableSubID( dataSource);
+				
+				if ( sub == null ){
+					
+					return( baseTableID );
+				}else{
+					
+					return( baseTableID + "::" + sub );
+				}
+			}else{
+			
+				return( baseTableID );
+			}
+		}
 	}
-
+	
+	public static String
+	getTableIdFromDataSource(
+		String		baseTableID,
+		Object		dataSource) 
+	{
+		if (  TABLE_SUBCONFIG_ENABLE ){
+			
+			String sub = getTableSubID( dataSource);
+			
+			if ( sub == null ){
+				
+				return( baseTableID );
+			}else{
+				
+				return( baseTableID + "::" + sub );
+			}
+		}else{
+		
+			return( baseTableID );
+		}
+	}
+	
 	private void addTagManagerListeners() {
 		synchronized (tag_listener_lock) {
 			if (tagManagerListener != null) {
