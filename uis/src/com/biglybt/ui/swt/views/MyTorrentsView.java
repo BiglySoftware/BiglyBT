@@ -69,7 +69,6 @@ import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableViewImpl;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.selectedcontent.ISelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.*;
@@ -136,6 +135,8 @@ public class MyTorrentsView
 {
 	private static final LogIDs LOGID = LogIDs.GUI;
 
+	private static final AsyncDispatcher	dispatcher = new AsyncDispatcher();
+	
 	private Core core;
 
   private GlobalManager globalManager;
@@ -472,7 +473,9 @@ public class MyTorrentsView
 		}
 	}
 
-  protected void tableViewInitialized() {
+  protected void 
+  tableViewInitialized() 
+  {
   	tv.addKeyListener(this);
 
     createTabs();
@@ -483,50 +486,48 @@ public class MyTorrentsView
 
     createDragDrop();
 
-    Utils.getOffOfSWTThread(new AERunnable() {
-
-			@Override
-			public void runSupport() {
-		    COConfigurationManager.addAndFireParameterListeners(new String[] {
-					"DND Always In Incomplete",
-					"User Mode",
-					"Library.ShowCatButtons", 
-					"Library.ShowTagButtons", 
-					"Library.ShowTagButtons.CompOnly",
-					"Library.ShowTagButtons.Inclusive",
-				}, MyTorrentsView.this);
-
-
-		    synchronized( currentTagsLock ){
-			    if ( _currentTags != null ){
-			    	for (Tag tag : _currentTags) {
-			    		tag.addTagListener(MyTorrentsView.this, false);
+    dispatcher.dispatch(
+    	AERunnable.create(
+    		()->{
+			    COConfigurationManager.addAndFireParameterListeners(new String[] {
+						"DND Always In Incomplete",
+						"User Mode",
+						"Library.ShowCatButtons", 
+						"Library.ShowTagButtons", 
+						"Library.ShowTagButtons.CompOnly",
+						"Library.ShowTagButtons.Inclusive",
+					}, this);
+	
+	
+			    synchronized( currentTagsLock ){
+				    if ( _currentTags != null ){
+				    	for (Tag tag : _currentTags) {
+				    		tag.addTagListener(this, false);
 						}
+				    }
 			    }
-		    }
-		    
-		    TagManager tagManager = TagManagerFactory.getTagManager();
-		    TagType ttManual = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
-		    TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
-		    ttManual.addTagTypeListener(MyTorrentsView.this, false);
-		    ttCat.addTagTypeListener(MyTorrentsView.this, false);
-
-		    TorrentUtils.addPotentialTorrentDeletionListener( MyTorrentsView.this );
-		    globalManager.addListener(MyTorrentsView.this, false);
-		    globalManager.addEventListener( gm_event_listener );
-		    DownloadManager[] dms = globalManager.getDownloadManagers().toArray(new DownloadManager[0]);
-		    for (int i = 0; i < dms.length; i++) {
-					DownloadManager dm = dms[i];
-					dm.addListener(MyTorrentsView.this);
-					if (!isOurDownloadManager(dm)) {
-						dms[i] = null;
+			    
+			    TagManager tagManager = TagManagerFactory.getTagManager();
+			    TagType ttManual = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+			    TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
+			    ttManual.addTagTypeListener(this, false);
+			    ttCat.addTagTypeListener(this, false);
+	
+			    TorrentUtils.addPotentialTorrentDeletionListener( this );
+			    globalManager.addListener(this, false);
+			    globalManager.addEventListener( gm_event_listener );
+			    DownloadManager[] dms = globalManager.getDownloadManagers().toArray(new DownloadManager[0]);
+			    for (int i = 0; i < dms.length; i++) {
+						DownloadManager dm = dms[i];
+						dm.addListener(this);
+						if (!isOurDownloadManager(dm)) {
+							dms[i] = null;
+						}
 					}
-				}
-		    tv.addDataSources(dms);
-		    tv.processDataSourceQueue();
-			}
-		});
-
+			    tv.addDataSources(dms);
+			    tv.processDataSourceQueue();
+			}));
+	
     cTablePanel.layout();
   }
 
@@ -660,34 +661,39 @@ public class MyTorrentsView
 				}
 			}
 		});
-    Object[] dms = globalManager.getDownloadManagers().toArray();
-    for (int i = 0; i < dms.length; i++) {
-			DownloadManager dm = (DownloadManager) dms[i];
-			dm.removeListener(this);
-		}
-
-    synchronized( currentTagsLock ){
-		if (_currentTags != null) {
-			for (Tag tag : _currentTags) {
-				tag.removeTagListener(this);
-			}
-		}
-    }
-    
-    TagManager tagManager = TagManagerFactory.getTagManager();
-    TagType ttManual = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
-    TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
-    ttManual.removeTagTypeListener(MyTorrentsView.this);
-    ttCat.removeTagTypeListener(MyTorrentsView.this);
-    TorrentUtils.removePotentialTorrentDeletionListener( this );
-    globalManager.removeListener(this);
-    globalManager.removeEventListener( gm_event_listener );
-	  COConfigurationManager.removeParameterListener("DND Always In Incomplete", this);
-	  COConfigurationManager.removeParameterListener("User Mode", this);
-    COConfigurationManager.removeParameterListener("Library.ShowCatButtons", this);
-    COConfigurationManager.removeParameterListener("Library.ShowTagButtons", this);
-    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.CompOnly", this);
-    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.Inclusive", this);
+  	
+    dispatcher.dispatch(
+       	AERunnable.create(
+       		()->{
+			    Object[] dms = globalManager.getDownloadManagers().toArray();
+			    for (int i = 0; i < dms.length; i++) {
+						DownloadManager dm = (DownloadManager) dms[i];
+						dm.removeListener(this);
+					}
+			
+			    synchronized( currentTagsLock ){
+					if (_currentTags != null) {
+						for (Tag tag : _currentTags) {
+							tag.removeTagListener(this);
+						}
+					}
+			    }
+			    
+			    TagManager tagManager = TagManagerFactory.getTagManager();
+			    TagType ttManual = tagManager.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+			    TagType ttCat = tagManager.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
+			    ttManual.removeTagTypeListener(MyTorrentsView.this);
+			    ttCat.removeTagTypeListener(MyTorrentsView.this);
+			    TorrentUtils.removePotentialTorrentDeletionListener( this );
+			    globalManager.removeListener(this);
+			    globalManager.removeEventListener( gm_event_listener );
+				  COConfigurationManager.removeParameterListener("DND Always In Incomplete", this);
+				  COConfigurationManager.removeParameterListener("User Mode", this);
+			    COConfigurationManager.removeParameterListener("Library.ShowCatButtons", this);
+			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons", this);
+			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.CompOnly", this);
+			    COConfigurationManager.removeParameterListener("Library.ShowTagButtons.Inclusive", this);
+       		}));
   }
 
 

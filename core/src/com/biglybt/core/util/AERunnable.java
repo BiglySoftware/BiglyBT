@@ -43,4 +43,19 @@ AERunnable
 
 	public abstract void
 	runSupport();
+	
+	public static AERunnable
+	create(
+		Runnable	r )
+	{
+		return(
+			new AERunnable()
+			{
+				public void
+				runSupport()
+				{
+					r.run();
+				}
+			});
+	}
 }
