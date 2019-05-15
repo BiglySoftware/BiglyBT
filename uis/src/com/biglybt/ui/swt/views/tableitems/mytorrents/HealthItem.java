@@ -25,6 +25,7 @@ package com.biglybt.ui.swt.views.tableitems.mytorrents;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.utils.ColorCache;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 
@@ -153,19 +154,22 @@ public class HealthItem
 			color = "#00f";
 		} else if (health == DownloadManager.WEALTH_ERROR) {
 			color = "#800";
+		} else {
+			return;
 		}
 
-		if (color != null) {
+		Color swtColor = ColorCache.getColor(gc.getDevice(), color);
+		if (swtColor != null) {
 			Rectangle bounds = cell.getBounds();
 			int x = bounds.x;
 			int y = bounds.y;
 			int width = bounds.width;
 			int height = bounds.height;
-			
+
 			gc.setAdvanced(true);
 			gc.setAntialias(SWT.ON);
 			if (isShare) {
-				gc.setForeground(Colors.getInstance().getSlightlyFadedColor( ColorCache.getColor(gc.getDevice(), color)));
+				gc.setForeground(Colors.getInstance().getSlightlyFadedColor(swtColor));
 				if ( width < height){
 					int pad = (height-width)/2;
 					gc.fillGradientRectangle(x, y+pad, width, width, true);
@@ -173,8 +177,8 @@ public class HealthItem
 					gc.fillGradientRectangle(x, y, width, height, true);
 				}
 			} else {
-				gc.setBackground(Colors.getInstance().getSlightlyFadedColor( ColorCache.getColor(gc.getDevice(), color)));
-				
+				gc.setBackground(Colors.getInstance().getSlightlyFadedColor(swtColor));
+
 				if ( width < height){
 					int pad = (height-width)/2;
 					gc.fillOval(x, y+pad, width, width);
