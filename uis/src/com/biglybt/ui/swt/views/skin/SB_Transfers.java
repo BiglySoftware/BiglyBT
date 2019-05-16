@@ -2283,7 +2283,7 @@ public class SB_Transfers
 					return( baseTableID );
 				}else{
 					
-					return( baseTableID + "::" + sub );
+					return( Utils.createSubViewID( baseTableID, sub ));
 				}
 			}else{
 			
@@ -2306,7 +2306,7 @@ public class SB_Transfers
 				return( baseTableID );
 			}else{
 				
-				return( baseTableID + "::" + sub );
+				return( Utils.createSubViewID( baseTableID, sub ));
 			}
 		}else{
 		

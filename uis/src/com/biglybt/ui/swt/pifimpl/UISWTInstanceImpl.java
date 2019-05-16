@@ -825,6 +825,9 @@ UISWTInstanceImpl
 
 	@Override
 	public UISWTViewEventListenerHolder[] getViewListeners(String sParentID) {
+		
+		sParentID = Utils.getBaseViewID( sParentID );
+		
 		Map<String, UISWTViewEventListenerHolder> map = views.get(sParentID);
 		if (map == null) {
 			return new UISWTViewEventListenerHolder[0];

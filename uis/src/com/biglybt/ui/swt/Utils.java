@@ -4522,4 +4522,28 @@ public class Utils
 		COConfigurationManager.removeParameterListener("quick.view.maxkb",
 				pconfigQuickViewListeners);
 	}
+	
+	public static String
+	createSubViewID(
+		String		base,
+		String		sub )
+	{
+		return( base + "::" + sub );
+	}
+	
+	public static String
+	getBaseViewID(
+		String		id )
+	{
+		int	pos = id.lastIndexOf( "::" );
+		
+		if ( pos == -1 ){
+			
+			return( id );
+			
+		}else{
+			
+			return( id.substring( 0, pos ));
+		}
+	}
 }
