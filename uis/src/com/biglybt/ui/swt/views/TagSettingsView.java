@@ -107,18 +107,23 @@ public class TagSettingsView
 
 		public BooleanSwtParameter	max_aggregate_sr_priority;
 
-		public folderOption 			initalSaveFolder;
+		public folderOption 		initalSaveFolder;
 		public BooleanSwtParameter	initalSaveData;
 		public BooleanSwtParameter	initalSaveTorrent;
 
-		public folderOption 			moveOnCompleteFolder;
+		public folderOption 		moveOnCompleteFolder;
 		public BooleanSwtParameter	moveOnCompleteData;
 		public BooleanSwtParameter	moveOnCompleteTorrent;
 
 		public folderOption 			copyOnCompleteFolder;
-		public BooleanSwtParameter	copyOnCompleteData;
-		public BooleanSwtParameter	copyOnCompleteTorrent;
+		public BooleanSwtParameter		copyOnCompleteData;
+		public BooleanSwtParameter		copyOnCompleteTorrent;
 
+		public folderOption 			moveOnRemoveFolder;
+		public BooleanSwtParameter		moveOnRemoveData;
+		public BooleanSwtParameter		moveOnRemoveTorrent;
+
+		
 		public Text		 	constraints;
 		public Label		constraintError;
 		public BooleanSwtParameter 		constraintEnabled;
@@ -877,8 +882,10 @@ public class TagSettingsView
 			if (numTags == 1 && (tags[0] instanceof TagFeatureFileLocation)) {
 				final TagFeatureFileLocation fl = (TagFeatureFileLocation) tags[0];
 
-				if (fl.supportsTagCopyOnComplete() || fl.supportsTagInitialSaveFolder()
-						|| fl.supportsTagMoveOnComplete()) {
+				if (	fl.supportsTagCopyOnComplete() || 
+						fl.supportsTagInitialSaveFolder() || 
+						fl.supportsTagMoveOnComplete() ||
+						fl.supportsTagMoveOnRemove()) {
 
 					Group gFiles = new Group(cMainComposite, SWT.NONE);
 					gFiles.setText(MessageText.getString( "label.file.settings"));
@@ -1105,6 +1112,79 @@ public class TagSettingsView
 										}
 										if (fl.getTagCopyOnCompleteOptions() != flags) {
 											fl.setTagCopyOnCompleteOptions(flags);
+											return true;
+										}
+										return false;
+									}
+								});
+					}
+					
+					if ( fl.supportsTagMoveOnRemove()){
+
+						params.moveOnRemoveFolder =
+							new folderOption(gFiles,
+								"label.move.on.rem")
+							{
+								@Override
+								public void setFolder(File folder)
+								{
+									params.moveOnRemoveData.setEnabled( folder != null );
+									params.moveOnRemoveTorrent.setEnabled( folder != null );
+															fl.setTagMoveOnRemoveFolder(folder);
+								}
+
+								@Override
+								public File getFolder() {
+									File result = fl.getTagMoveOnRemoveFolder();
+									params.moveOnRemoveData.setEnabled( result != null );
+									params.moveOnRemoveTorrent.setEnabled( result != null );
+															return( result );
+								}
+							};
+
+						params.moveOnRemoveData = new BooleanSwtParameter(gFiles,
+								"tag.moveOnRemoveData", "label.move.data", null,
+								new BooleanSwtParameter.ValueProcessor() {
+									@Override
+									public Boolean getValue(BooleanSwtParameter p) {
+										return ((fl.getTagMoveOnRemoveOptions()
+												& TagFeatureFileLocation.FL_DATA) != 0);
+									}
+
+									@Override
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
+										long flags = fl.getTagMoveOnRemoveOptions();
+										if ( value ){
+											flags |= TagFeatureFileLocation.FL_DATA;
+										}else{
+											flags &= ~TagFeatureFileLocation.FL_DATA;
+										}
+										if (fl.getTagMoveOnRemoveOptions() != flags) {
+											fl.setTagMoveOnRemoveOptions(flags);
+											return true;
+										}
+										return false;
+									}
+								});
+
+						params.moveOnRemoveTorrent = new BooleanSwtParameter(gFiles,
+								"tag.moveOnRemoveTorrent", "label.move.torrent", null,
+								new BooleanSwtParameter.ValueProcessor() {
+									@Override
+									public Boolean getValue(BooleanSwtParameter p) {
+										return(( fl.getTagMoveOnRemoveOptions() & TagFeatureFileLocation.FL_TORRENT ) != 0);
+									}
+
+									@Override
+									public boolean setValue(BooleanSwtParameter p, Boolean value) {
+										long flags = fl.getTagMoveOnRemoveOptions();
+										if ( value ){
+											flags |= TagFeatureFileLocation.FL_TORRENT;
+										}else{
+											flags &= ~TagFeatureFileLocation.FL_TORRENT;
+										}
+										if (fl.getTagMoveOnRemoveOptions() != flags) {
+											fl.setTagMoveOnRemoveOptions(flags);
 											return true;
 										}
 										return false;
@@ -1640,6 +1720,9 @@ public class TagSettingsView
 		}
 		if (params.copyOnCompleteFolder != null) {
 			params.copyOnCompleteFolder.update();
+		}
+		if (params.moveOnRemoveFolder != null) {
+			params.moveOnRemoveFolder.update();
 		}
 		if (params.constraints != null ) {
 			Tag tag = tags[0];

@@ -54,19 +54,20 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 		@Override
 		public SaveLocationChange onCompletion(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
-			MovementInformation mi = getDownloadOrTagMovementInformation( dm, COMPLETION_DETAILS );
+			MovementInformation mi = getDownloadOrTagCompletionMovementInformation( dm, COMPLETION_DETAILS );
 			return determinePaths(dm, mi, for_move, false);
 		}
 		@Override
 		public SaveLocationChange testOnCompletion(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
-			MovementInformation mi = getDownloadOrTagMovementInformation( dm, COMPLETION_DETAILS );
+			MovementInformation mi = getDownloadOrTagCompletionMovementInformation( dm, COMPLETION_DETAILS );
 			return determinePaths(dm, mi, for_move, true );
 		}
 		@Override
 		public SaveLocationChange onRemoval(Download d, boolean for_move, boolean on_event) {
 			DownloadManager dm = ((DownloadImpl)d).getDownload();
-			return determinePaths(dm, REMOVAL_DETAILS, for_move, false );
+			MovementInformation mi = getDownloadOrTagRemovalMovementInformation( dm, REMOVAL_DETAILS );
+			return determinePaths(dm, mi, for_move, false );
 		}
 		@Override
 		public boolean isInDefaultSaveDir(Download d) {
@@ -184,7 +185,7 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
     }
 
     static MovementInformation
-    getDownloadOrTagMovementInformation(
+    getDownloadOrTagCompletionMovementInformation(
     	DownloadManager			dm,
     	MovementInformation		def_mi )
     {
@@ -365,6 +366,160 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 		}
     }
 
+    
+    static MovementInformation
+    getDownloadOrTagRemovalMovementInformation(
+    	DownloadManager			dm,
+    	MovementInformation		def_mi )
+    {
+		boolean	move_data 		= true;
+		boolean	move_torrent 	= false;
+		
+		String	context_str = "";
+		String	mi_str		= "";
+		
+		File move_to_target = null;
+     		
+    	List<Tag> dm_tags = TagManagerFactory.getTagManager().getTagsForTaggable( dm );
+
+    	if ( dm_tags != null ){
+
+	    	List<Tag>	applicable_tags = new ArrayList<>();
+	
+	    	for ( Tag tag: dm_tags ){
+	
+	    		if ( tag.getTagType().hasTagTypeFeature( TagFeature.TF_FILE_LOCATION )){
+	
+	    			TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
+	
+	    			if ( fl.supportsTagMoveOnRemove()){
+	
+		    			File move_to = fl.getTagMoveOnRemoveFolder();
+	
+		    			if ( move_to != null ){
+	
+		    				if ( !move_to.exists()){
+	
+		    					move_to.mkdirs();
+		    				}
+	
+		    				if ( move_to.isDirectory() && move_to.canWrite()){
+	
+		    					applicable_tags.add( tag );
+	
+		    				}else{
+	
+		    					logInfo( "Ignoring invalid tag move-to location: " + move_to, dm );
+		    				}
+		    			}
+	    			}
+	    		}
+	    	}	    	
+
+	    	if ( !applicable_tags.isEmpty()){
+	
+		    	if ( applicable_tags.size() > 1 ){
+		
+		    		Collections.sort(
+		    			applicable_tags,
+		    			new Comparator<Tag>()
+		    			{
+		    				@Override
+						    public int
+		    				compare(
+		    					Tag o1,
+		    					Tag o2)
+		    				{
+		    					return( o1.getTagID() - o2.getTagID());
+		    				}
+		    			});
+		
+		    		String str = "";
+		
+		    		for ( Tag tag: applicable_tags ){
+		
+		    			str += (str.length()==0?"":", ") + tag.getTagName( true );
+		    		}
+		
+		    		logInfo( "Multiple applicable tags found: " + str + " - selecting first", dm );
+		    	}
+		
+		    	Tag tag_target = applicable_tags.get(0);
+		
+				TagFeatureFileLocation fl = (TagFeatureFileLocation)tag_target;
+		
+				move_to_target = fl.getTagMoveOnRemoveFolder();
+				
+				long	options = fl.getTagMoveOnRemoveOptions();
+	
+				move_data 		= ( options&TagFeatureFileLocation.FL_DATA ) != 0;
+				move_torrent 	= ( options&TagFeatureFileLocation.FL_TORRENT ) != 0;
+				
+				context_str = "Tag '" + tag_target.getTagName( true ) + "' move-on-remove directory";
+				mi_str		= "Tag Move on Removal";
+	    	}
+    	}
+ 	
+
+		if ( move_to_target != null ){
+
+	    	SourceSpecification source = new SourceSpecification();
+
+	    		// we want to ignore the 'move only in def folder' constraint if the user hasn't
+	    		// enabled overall move-on-complete otherwise this is confusing
+
+	    	if ( def_mi.target.getBoolean( "enabled", false ) ){
+	    		
+	    		source.setBoolean( "default dir", "File.move.download.removed.only_in_default" );
+	    		
+	    		source.setBoolean( "default subdir", SUBDIR_PARAM );
+	    		
+	    	}else{
+	    		source.setBoolean( "default dir", false );
+	    	}
+
+			source.setBoolean( "incomplete dl", false );
+
+			TargetSpecification dest = new TargetSpecification();
+
+			if ( move_data ){
+
+				dest.setBoolean( "enabled", true );
+				
+				dest.setString( "target_raw", move_to_target.getAbsolutePath());
+
+			}else{
+
+				dest.setBoolean( "enabled", def_mi.target.getBoolean( "enabled", false ));
+			}
+
+			dest.setContext( context_str );
+
+			if ( move_torrent ){
+
+				dest.setBoolean("torrent", true );
+				
+				dest.setString("torrent_path_raw", move_to_target.getAbsolutePath());
+
+			}else{
+
+				dest.setBoolean("torrent", "File.move.download.removed.move_torrent");
+				
+				dest.setString("torrent_path", "File.move.download.removed.move_torrent_path");
+			}
+
+			TransferSpecification trans = new TransferSpecification();
+
+			MovementInformation mi = new MovementInformation(source, dest, trans, mi_str );
+
+	    	return( mi );
+	    	
+		}else{
+
+			return( def_mi );
+		}
+    }
+    
     private static interface ContextDescriptor {
     	public String getContext();
     }

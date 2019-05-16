@@ -296,6 +296,15 @@ public class TagUtils{
 					str += "\r\n    " + MessageText.getString("label.copy.on.comp") + "=" + copy_on_comp.getAbsolutePath();
 				}
 			}
+			if ( fl.supportsTagMoveOnRemove()){
+
+				File mor = fl.getTagMoveOnRemoveFolder();
+
+				if ( mor != null ){
+
+					str += "\r\n    " + MessageText.getString("label.move.on.rem") + "=" + mor.getAbsolutePath();
+				}
+			}
 		}
 
 		if ( str.startsWith( "\r\n" )){

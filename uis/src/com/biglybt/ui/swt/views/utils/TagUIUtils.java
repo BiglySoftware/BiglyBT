@@ -1483,7 +1483,10 @@ public class TagUIUtils
 
 		final TagFeatureFileLocation fl = (TagFeatureFileLocation)tag;
 
-		if ( fl.supportsTagInitialSaveFolder() || fl.supportsTagMoveOnComplete() || fl.supportsTagCopyOnComplete()){
+		if ( 	fl.supportsTagInitialSaveFolder() || 
+				fl.supportsTagMoveOnComplete() || 
+				fl.supportsTagCopyOnComplete() ||
+				fl.supportsTagMoveOnRemove()){
 
 			Menu files_menu = new Menu( menu.getShell(), SWT.DROP_DOWN);
 
@@ -1702,6 +1705,68 @@ public class TagUIUtils
 							TorrentOpener.setFilterPathData( path );
 
 							fl.setTagCopyOnCompleteFolder( new File( path ));
+						}
+					}});
+			}
+			
+			if ( fl.supportsTagMoveOnRemove()){
+
+				final Menu mor_menu = new Menu( files_menu.getShell(), SWT.DROP_DOWN);
+
+				MenuItem mor_item = new MenuItem( files_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( mor_item, "label.move.on.rem" );
+
+				mor_item.setMenu( mor_menu );
+
+				MenuItem clear_item = new MenuItem( mor_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( clear_item, "Button.clear" );
+
+				clear_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event) {
+						fl.setTagMoveOnRemoveFolder( null );
+					}});
+
+				new MenuItem( mor_menu, SWT.SEPARATOR);
+
+				File existing = fl.getTagMoveOnRemoveFolder();
+
+				if ( existing != null ){
+
+					MenuItem current_item = new MenuItem( mor_menu, SWT.RADIO );
+					current_item.setSelection( true );
+
+					current_item.setText( existing.getAbsolutePath());
+
+					new MenuItem( mor_menu, SWT.SEPARATOR);
+
+				}else{
+
+					clear_item.setEnabled( false );
+				}
+
+				MenuItem set_item = new MenuItem( mor_menu, SWT.CASCADE);
+
+				Messages.setLanguageText( set_item, "label.set" );
+
+				set_item.addListener(SWT.Selection, new Listener() {
+					@Override
+					public void handleEvent(Event event){
+						DirectoryDialog dd = new DirectoryDialog(mor_menu.getShell());
+
+						dd.setFilterPath( TorrentOpener.getFilterPathData());
+
+						dd.setText(MessageText.getString("MyTorrentsView.menu.movedata.dialog"));
+
+						String path = dd.open();
+
+						if ( path != null ){
+
+							TorrentOpener.setFilterPathData( path );
+
+							fl.setTagMoveOnRemoveFolder( new File( path ));
 						}
 					}});
 			}

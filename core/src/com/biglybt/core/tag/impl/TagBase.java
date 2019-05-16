@@ -62,6 +62,8 @@ TagBase
 	protected static final String	AT_XCODE_TARGET					= "xcode.to";
 	protected static final String	AT_FL_MOVE_COMP					= "fl.comp";
 	protected static final String	AT_FL_MOVE_COMP_OPT				= "fl.comp.o";
+	protected static final String	AT_FL_MOVE_REM					= "fl.rem";
+	protected static final String	AT_FL_MOVE_REM_OPT				= "fl.rem.o";
 	protected static final String	AT_FL_COPY_COMP					= "fl.copy";
 	protected static final String	AT_FL_COPY_COMP_OPT				= "fl.copy.o";
 	protected static final String	AT_FL_INIT_LOC					= "fl.init";
@@ -960,6 +962,86 @@ TagBase
 			}
 		}
 	}
+	
+		// move on remove
+
+	public boolean
+	supportsTagMoveOnRemove()
+	{
+		return( false );
+	}
+	
+	public File
+	getTagMoveOnRemoveFolder()
+	{
+		if ( tag_fl != null ){
+	
+			String str = readStringAttribute( AT_FL_MOVE_REM, null );
+	
+			if ( str == null ){
+	
+				return( null );
+	
+			}else{
+	
+				return( new File( str ));
+			}
+		}
+	
+		return( null );
+	}
+	
+	public void
+	setTagMoveOnRemoveFolder(
+		File		folder )
+	{
+		if ( tag_fl != null ){
+	
+			File	existing = getTagMoveOnRemoveFolder();
+	
+			if ( existing == null && folder == null ){
+	
+				return;
+	
+			}else if ( existing == null || folder == null || !existing.equals( folder )){
+	
+				boolean changed = writeStringAttribute( AT_FL_MOVE_REM, folder==null?null:folder.getAbsolutePath());
+	
+				if (changed) {
+					tag_type.fireMetadataChanged( this );
+				}
+			}
+		}
+	}
+	
+	public long
+	getTagMoveOnRemoveOptions()
+	{
+		if ( tag_fl != null ){
+	
+			return( readLongAttribute( AT_FL_MOVE_REM_OPT, TagFeatureFileLocation.FL_DEFAULT ));
+		}
+	
+		return( TagFeatureFileLocation.FL_NONE );
+	}
+	
+	public void
+	setTagMoveOnRemoveOptions(
+		long		options )
+	{
+		if ( tag_fl != null ){
+	
+			long	existing = getTagMoveOnRemoveOptions();
+	
+			if ( existing != options ){
+	
+				writeLongAttribute( AT_FL_MOVE_REM_OPT, options );
+	
+				tag_type.fireMetadataChanged( this );
+			}
+		}
+	}
+
 
 		// min ratio
 

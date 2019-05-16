@@ -2010,6 +2010,13 @@ TagDownloadWithState
 	}
 
 	@Override
+	public boolean
+	supportsTagMoveOnRemove()
+	{
+		return( supports_file_location );
+	}
+	
+	@Override
 	public TagProperty[]
 	getSupportedProperties()
 	{

@@ -87,4 +87,24 @@ TagFeatureFileLocation
 	public void
 	setTagCopyOnCompleteOptions(
 		long		opions );
+	
+		// move on remove
+	
+	public boolean
+	supportsTagMoveOnRemove();
+
+	public File
+	getTagMoveOnRemoveFolder();
+
+	public void
+	setTagMoveOnRemoveFolder(
+		File		folder );
+
+	public long
+	getTagMoveOnRemoveOptions();
+
+	public void
+	setTagMoveOnRemoveOptions(
+		long		opions );
+	
 }

@@ -452,6 +452,14 @@ public class SBC_TagsOverview
 					}
 				});
 
+		tableManager.registerColumn(Tag.class, ColumnTagMoveOnRemove.COLUMN_ID,
+				new TableColumnCreationListener() {
+					@Override
+					public void tableColumnCreated(TableColumn column) {
+						new ColumnTagMoveOnRemove(column);
+					}
+				});
+
 		tableManager.registerColumn(Tag.class, ColumnTagProperties.COLUMN_ID,
 				new TableColumnCreationListener() {
 					@Override
