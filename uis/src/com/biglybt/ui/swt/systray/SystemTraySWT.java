@@ -392,6 +392,8 @@ public class SystemTraySWT
 				UIFunctions uif = UIFunctionsManager.getUIFunctions();
 
 				if (uif != null) {
+					showMainWindow();
+					
 					uif.getMDI().showEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
 							ConfigSection.SECTION_INTERFACE);
