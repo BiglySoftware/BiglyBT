@@ -467,6 +467,29 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 				menu.dispose();
 			}
 		});
+		
+		control.addListener(
+			SWT.MouseHover,
+			(e)->{
+				if ( pluginParam != null ){
+					
+					String tt = control.getToolTipText();
+					
+					if ( tt == null ){
+						
+						String[] modeKeys = {
+								"ConfigView.section.mode.beginner",
+								"ConfigView.section.mode.intermediate",
+								"ConfigView.section.mode.advanced"
+							};
+						
+						
+						control.setToolTipText(
+							MessageText.getString( "ConfigView.section.mode" ) + ": " + 
+							MessageText.getString( modeKeys[pluginParam.getMinimumRequiredUserMode()]) );
+					}
+				}
+			});
 	}
 
 	protected void addLabelContextMenus(Control curControl, Menu menu) {
