@@ -46,6 +46,8 @@ import com.biglybt.pif.ui.config.Parameter;
 public class ConfigSectionInterfaceSWT
 	extends ConfigSectionImpl
 {
+	public static final String REFID_INTERFACE_SYSTRAY = "interface-systyray";
+	
 	private ParameterListener decisions_parameter_listener;
 
 	public ConfigSectionInterfaceSWT() {
@@ -187,9 +189,13 @@ public class ConfigSectionInterfaceSWT
 		esttt.addListener(st_enabler);
 		st_enabler.parameterChanged(null);
 
-		add("if.SysTray",
-				new ParameterGroupImpl("ConfigView.label.systray", listSysTray));
-
+		ParameterGroupImpl sysTrayPG = new ParameterGroupImpl("ConfigView.label.systray", listSysTray);
+		
+		add("if.SysTray", sysTrayPG );
+		
+		sysTrayPG.setReferenceID(REFID_INTERFACE_SYSTRAY);
+		
+		
 		// ****	Default download / upload limits available in the UI.
 
 		LabelParameterImpl paramSpeedOptionsLabel = new LabelParameterImpl(

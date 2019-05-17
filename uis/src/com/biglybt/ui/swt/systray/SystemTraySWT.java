@@ -26,6 +26,7 @@ import java.util.Locale;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.widgets.*;
+import org.json.simple.JSONObject;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
@@ -47,13 +48,15 @@ import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.updater.UIUpdatableAlways;
 import com.biglybt.ui.common.util.MenuItemManager;
+import com.biglybt.ui.config.ConfigSectionFile;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.MenuBuildUtils.MenuBuilder;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.SelectableSpeedMenu;
+import com.biglybt.ui.swt.views.configsections.ConfigSectionInterfaceSWT;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
-
+import com.biglybt.util.JSONUtils;
 import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.ui.config.ConfigSection;
 
@@ -394,9 +397,15 @@ public class SystemTraySWT
 				if (uif != null) {
 					showMainWindow();
 					
+					JSONObject args = new JSONObject();
+
+					args.put( "select", ConfigSectionInterfaceSWT.REFID_INTERFACE_SYSTRAY );
+					
+					String args_str = JSONUtils.encodeToJSON( args );
+					
 					uif.getMDI().showEntryByID(
 							MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
-							ConfigSection.SECTION_INTERFACE);
+							ConfigSection.SECTION_INTERFACE + args_str );
 				}
 			}
 		});
