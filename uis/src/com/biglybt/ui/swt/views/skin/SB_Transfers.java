@@ -2242,6 +2242,11 @@ public class SB_Transfers
 			
 				return( "Tag_" + ((Tag)ds).getTagUID());
 			}
+		}else if ( ds instanceof TagGroup ){
+			
+			TagGroup tg = (TagGroup)ds;
+			
+			return( "TagGroup_" + Base32.encode( tg.getName().getBytes( Constants.UTF_8 )));
 		}
 			
 		return( null );
