@@ -444,7 +444,7 @@ public class GeneralView
 
     label = new Label(gInfo, SWT.LEFT);
     Messages.setLanguageText(label, "GeneralView.label.status"); //$NON-NLS-1$
-    torrentStatus = new BufferedLabel(gInfo, SWT.LEFT);
+    torrentStatus = new BufferedLabel(gInfo, SWT.LEFT | SWT.DOUBLE_BUFFERED );
     gridData = new GridData(GridData.FILL_HORIZONTAL);
     torrentStatus.setLayoutData(gridData);
 

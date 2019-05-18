@@ -112,7 +112,16 @@ public class AdvRenameWindow
 				
 			}else{
 				
-				txtInput.setSelection( 0, pos );
+				String ext = str.substring( pos+1 );
+				
+				if ( ext.contains( " " )){
+					
+					txtInput.selectAll();
+					
+				}else{
+				
+					txtInput.setSelection( 0, pos );
+				}
 			}
 			
 			txtInput.setFocus();
