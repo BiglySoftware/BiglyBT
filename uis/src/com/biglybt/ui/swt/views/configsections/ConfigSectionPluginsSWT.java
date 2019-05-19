@@ -24,7 +24,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
@@ -635,13 +637,31 @@ public class ConfigSectionPluginsSWT
 		}
 
 		private List<PluginInterface> rebuildPluginIFs() {
-			List<PluginInterface> pluginIFs = Arrays.asList(
-					CoreFactory.getSingleton().getPluginManager().getPlugins());
-			for (PluginInterface pi : pluginIFs) {
-				// COConfigurationManager will not add the same listener twice
-				COConfigurationManager.addWeakParameterListener(this, false,
-						"PluginInfo." + pi.getPluginID() + ".enabled");
+			List<PluginInterface> pluginIFs = new ArrayList<>(Arrays.asList(
+					CoreFactory.getSingleton().getPluginManager().getPlugins()));
+			
+			Iterator<PluginInterface>	it = pluginIFs.iterator();
+				
+			while( it.hasNext()){
+				
+				PluginInterface pi = it.next();
+				
+				Properties props = pi.getPluginProperties();
+				
+				String configurable = props.getProperty( "plugin.is.configurable" );
+				
+				if ( configurable != null && !((String)configurable).equals( "true" )){
+					
+					it.remove();
+					
+				}else{
+				
+					// COConfigurationManager will not add the same listener twice
+					COConfigurationManager.addWeakParameterListener(this, false,
+							"PluginInfo." + pi.getPluginID() + ".enabled");
+				}
 			}
+			
 			return pluginIFs;
 		}
 
