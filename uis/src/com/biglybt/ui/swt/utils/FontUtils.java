@@ -310,7 +310,12 @@ public class FontUtils
 		GC gc = new GC(f.getDevice());
 		gc.setFont(f);
 		FontMetrics metrics = gc.getFontMetrics();
-		Double d = metrics.getAverageCharacterWidth();
+		double d;
+		try {
+			d = metrics.getAverageCharacterWidth();
+		} catch (Throwable t) {
+			d = (double) metrics.getAverageCharWidth();
+		}
 		gc.dispose();
 		return d;
 	}
