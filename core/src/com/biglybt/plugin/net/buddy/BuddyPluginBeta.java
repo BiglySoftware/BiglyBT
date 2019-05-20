@@ -59,6 +59,7 @@ import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.ui.config.BooleanParameter;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
 import com.biglybt.plugin.I2PHelpers;
+import com.biglybt.util.MapUtils;
 
 
 public class
@@ -6105,7 +6106,24 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 			nickname = pkToString( pk );
 
-			is_pinned = COConfigurationManager.getBooleanParameter( getPinKey(), false );
+			Map props 	= COConfigurationManager.getMapParameter( getPropsKey(), null );
+			
+			if ( props != null ){
+				
+				is_pinned 	= MapUtils.getMapBoolean( props, "pinned", false );
+				is_ignored 	= MapUtils.getMapBoolean( props, "ignored", false );
+			}
+			
+			String old_pinned_key = "azbuddy.chat.pinned." + ByteFormatter.encodeString( pk, 0, 16 );
+			
+			boolean was_pinned 	= COConfigurationManager.getBooleanParameter( old_pinned_key, false );
+
+			if ( was_pinned ){
+			
+				COConfigurationManager.removeParameter( old_pinned_key );
+				
+				setPinned( true );
+			}
 
 			chat.registerNick( this, null, nickname );
 		}
@@ -6459,6 +6477,8 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				is_ignored = b;
 
+				setProperty( "ignored", b );
+				
 				synchronized( chat.chat_lock ){
 
 					for ( ChatMessage message: participant_messages ){
@@ -6508,11 +6528,11 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 		}
 
 		private String
-		getPinKey()
+		getPropsKey()
 		{
-			return( "azbuddy.chat.pinned." + ByteFormatter.encodeString( pk, 0, 16 ));
+			return( "azbuddy.chat.props." + ByteFormatter.encodeString( pk, 0, 16 ));
 		}
-
+	
 		public void
 		setPinned(
 			boolean		b )
@@ -6521,21 +6541,57 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 				is_pinned = b;
 
-				String key = getPinKey();
-
-				if ( is_pinned ){
-
-					COConfigurationManager.setParameter( key, true );
-
-				}else{
-
-					COConfigurationManager.removeParameter( key );
-				}
-
-				COConfigurationManager.setDirty();
+				setProperty( "pinned", b );
 			}
 		}
 
+		private void
+		setProperty(
+			String	name,
+			boolean	value )
+		{
+			synchronized( chat.chat_lock ){
+				
+				String key =  getPropsKey();
+				
+				Map<String,Object> props 	= COConfigurationManager.getMapParameter( key, null );
+				
+				if ( props == null ){
+					
+					if ( !value ){
+						
+						return;
+					}
+					
+					props = new HashMap<>();
+					
+				}else{
+					
+					props = BEncoder.cloneMap( props );
+				}
+	
+				if ( value ){
+					
+					props.put( name, 1L );
+					
+				}else{
+					
+					props.remove( name );
+				}
+				
+				if ( props.isEmpty() ){
+	
+					COConfigurationManager.removeParameter( key );
+					
+				}else{
+					
+					COConfigurationManager.setParameter( key, props );
+				}
+	
+				COConfigurationManager.setDirty();
+			}
+		}
+		
 		public boolean
 		isNickClash()
 		{
