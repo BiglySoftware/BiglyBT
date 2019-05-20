@@ -3,12 +3,60 @@ BIGLYBT CHANGELOG
 
 2019.xx.yy | BiglyBT 1.9.0.1
 
+Up to B23
+
 FEATURE: UI    | Most config parameters now have a "Reset to Default" option on right click of their label [TuxPaper]   
 FEATURE: UI    | Console UI: Config sections and parameters now available via `config` command [TuxPaper]  
+FEATURE: UI    | Added 'move' option to 'find existing data files' [Parg]
+FEATURE: UI    | New option to hide 'torrent already added' dialogs [Parg]
+FEATURE: UI    | Added 'show download' menu option when Files View has multiple downloads [Parg]
+FEATURE: UI    | Extended torrent import start modes to match open-torrent dialog [Parg]
+FEATURE: UI    | Added 'swarm merge' into to library message icons [Parg]
+FEATURE: UI    | Added 'show in explorer' to File and Directory parameters context menu [TuxPaper]
+FEATURE: UI    | Option for separate library table configuration for Tag and Tag Group views [Parg]
+FEATURE: UI    | Added tooltip to config option labels to show minimum user mode [Parg]
+FEATURE: Core  | Added additional 'add modes' of paused, stopped+allocated, paused+allocated [Parg]
+FEATURE: Core  | Additional share-ratio related information in stats export [Parg]
+FEATURE: Tag   | Added archive, delete from library and delete from computer as tag-ratio actions [Parg]
+FEATURE: Tag   | Per-tag 'move on remove' file settings [Parg]
 
-CHANGE:  UI    | Config Sections restructured. Minor visual changes, but should mostly operate the same [TuxPaper] 
+CHANGE: UI     | Config Sections restructured. Minor visual changes, but should mostly operate the same [TuxPaper] 
+CHANGE: UI     | pt_BR: Brazilian Portuguese translation update [Havokdan]
+CHANGE: UI     | sl_SI: Slovenian translation update [upwinxp]
+CHANGE: UI     | yo_NG: Yoruba translation update [zoneboy,fatherfaith]
+CHANGE: UI     | no_NO: Norwegian translation update [lislei]
+CHANGE: UI     | sv_SE: Swedish translation update [Chessax]
+CHANGE: UI     | Revert nick to blue when all other clashes muted [Parg]
+CHANGE: UI     | Improve layout of transfer stats view [Parg]
+CHANGE: UI     | Launch on single click only if it is left button [TuxPaper]
+CHANGE: UI     | Relabel 'Set Preferred Width' to 'Size Column To Fit' [TuxPaper]
+CHANGE: UI     | Instead of warning that the donation page didn't load, open externally [TuxPaper]
+CHANGE: UI     | Remove dead search template [Parg]
+CHANGE: UI     | Force BiglyBT active when selecting Tag Options->More... in system tray [Parg]
+CHANGE: Core   | Overwrite any existing files when reverting file locations [Parg]
+CHANGE: Core   | Increase permitted unauthorised buddies to reduce retries [Parg]
+CHANGE: Core   | De-selecting files in a download that hasn't been started now sets priority as 'deleted' [Parg]
+CHANGE: Core   | Remove dependency on Log4J [TuxPaper]
+CHANGE: Core   | Back-off friend status updates when diversified [Parg]
+CHANGE: Core   | Remove client-id migration features as no longer needed [Parg]
 
-
+BUGFIX: UI     | Fix Linux combo padding [Parg]
+BUGFIX: UI     | Fix NPE when showing nick's messages on hover [Parg]
+BUGFIX: UI     | Fix download folder prefix detection [Parg]
+BUGFIX: UI     | Tidy up after drag-complete otherwise subsequent externals drops don't work [Parg]
+BUGFIX: UI     | Fix sidebar indicator outline colour inconsistency [Parg]
+BUGFIX: UI     | Fix IP filter load-now button not loading URLs [TuxPaper]
+BUGFIX: UI     | Ignore invalid webseeds in editor [Parg]
+BUGFIX: UI     | Fix flicker on Windows when switching active row [TuxPaper]
+BUGFIX: Core   | Fix download recheck after 'allocate and stop' enabled [Parg]
+BUGFIX: Core   | Fix IP-filter zip file loading [TuxPaper]
+BUGFIX: Core   | Fix TCP network listener not restarting [Parg]
+BUGFIX: Core   | Ignore non-data SOCKS proxy properties properly when disabled [Parg]
+BUGFIX: Core   | Fix webseed caching causing changes not to be picked up [Parg]
+BUGFIX: Core   | Fix 'pause-for' not resuming stopped torrents [Parg]
+BUGFIX: Core   | Ensure core lifecycle events are executed in the correct order [Parg]
+BUGFIX: Plug   | Remove potential deadlock on closedown when I2P initialisation fails [Parg]
+BUGFIX: Tag    | Tags with disabled or emptry tag constraints shouldn't be treated as 'auto' [Parg]
 
 2019.03.28 | BiglyBT 1.9.0.0
 
