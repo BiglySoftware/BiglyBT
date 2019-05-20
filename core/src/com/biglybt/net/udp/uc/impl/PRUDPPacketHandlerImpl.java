@@ -112,13 +112,13 @@ PRUDPPacketHandlerImpl
 	private long			send_queue_data_size;
 	private final List[]	send_queues		= new List[]{ new LinkedList(),new LinkedList(),new LinkedList()};
 	private AESemaphore		send_queue_sem	= new AESemaphore( "PRUDPPH:sq" );
-	private AEThread		send_thread;
+	private AEThread2		send_thread;
 
 	private AEMonitor	recv_queue_mon	= new AEMonitor( "PRUDPPH:rq" );
 	private long		recv_queue_data_size;
-	private List		recv_queue		= new ArrayList();
-	private AESemaphore	recv_queue_sem	= new AESemaphore( "PRUDPPH:rq" );
-	private AEThread	recv_thread;
+	private List<Object[]>	recv_queue		= new ArrayList();
+	private AESemaphore		recv_queue_sem	= new AESemaphore( "PRUDPPH:rq" );
+	private AEThread2		recv_thread;
 
 	private int			send_delay				= 0;
 	private int			receive_delay			= 0;
@@ -128,7 +128,6 @@ PRUDPPacketHandlerImpl
 	private long		total_requests_processed;
 	private long		total_replies;
 	private long		last_error_report;
-	private Average		request_receive_average = Average.getInstance( 1000, 10 );
 
 	private AEMonitor	bind_address_mon	= new AEMonitor( "PRUDPPH:bind" );
 
@@ -949,12 +948,14 @@ PRUDPPacketHandlerImpl
 							if ( recv_thread == null ){
 
 								recv_thread =
-									new AEThread( "PRUDPPacketHandler:receiver" )
+									new AEThread2( "PRUDPPacketHandler:receiver" )
 									{
 										@Override
 										public void
-										runSupport()
+										run()
 										{
+											Average		request_receive_average = Average.getInstance( 1000, 10 );
+
 											while( true ){
 
 												try{
@@ -966,7 +967,7 @@ PRUDPPacketHandlerImpl
 														recv_queue_mon.enter();
 
 														data = (Object[])recv_queue.remove(0);
-
+														
 														total_requests_processed++;
 
 														recv_queue_data_size -= ((Integer)data[1]).intValue();
@@ -983,7 +984,7 @@ PRUDPPacketHandlerImpl
 													PRUDPRequestHandler	handler = request_handler;
 
 													if ( handler != null ){
-
+														
 														handler.process( p );
 
 														if ( receive_delay > 0 ){
@@ -1000,12 +1001,16 @@ PRUDPPacketHandlerImpl
 
 															}else{
 
+																/* no point in this, just backs up the request queue. if we're really
+																 * overloaded then we'll hit the above condition
+																 * 
 																long	delay = ( receive_delay * request_per_sec ) / max_req_per_sec;
 
 																if ( delay >= 5 ){
 
 																	Thread.sleep( delay );
 																}
+																*/
 
 															}
 														}
@@ -1018,8 +1023,6 @@ PRUDPPacketHandlerImpl
 											}
 										}
 									};
-
-								recv_thread.setDaemon( true );
 
 								recv_thread.start();
 							}
@@ -1318,11 +1321,11 @@ PRUDPPacketHandlerImpl
 							if ( send_thread == null ){
 
 								send_thread =
-									new AEThread( "PRUDPPacketHandler:sender" )
+									new AEThread2( "PRUDPPacketHandler:sender" )
 									{
 										@Override
 										public void
-										runSupport()
+										run()
 										{
 											int[]		consecutive_sends = new int[send_queues.length];
 
@@ -1419,8 +1422,6 @@ PRUDPPacketHandlerImpl
 											}
 										}
 									};
-
-									send_thread.setDaemon( true );
 
 									send_thread.start();
 							}
