@@ -2738,8 +2738,8 @@ DownloadManagerController
 		}
 
 		@Override
-		public void setPriority(int[] toChange) {
-			delegate.setPriority(toChange);
+		public void setPriority(int[] newPriorities) {
+			delegate.setPriority(newPriorities);
 		}
 
 		@Override

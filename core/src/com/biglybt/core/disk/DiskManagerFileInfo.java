@@ -70,11 +70,24 @@ DiskManagerFileInfo
 
 		/**
 		 * Download must be stopped before calling this!
-		 * @param type	one of ST_LINEAR or ST_COMPACT
+		 * @param type	one of
+		 * {@link DiskManagerFileInfo#ST_LINEAR},
+		 * {@link DiskManagerFileInfo#ST_COMPACT},
+		 * {@link DiskManagerFileInfo#ST_REORDER},
+		 * {@link DiskManagerFileInfo#ST_REORDER_COMPACT}
 		 */
 
 	public boolean setStorageType(int type );
 
+	/**
+	 * Returns the storage type for this file
+	 * <p/>
+	 * @return
+	 * {@link DiskManagerFileInfo#ST_LINEAR},
+	 * {@link DiskManagerFileInfo#ST_COMPACT},
+	 * {@link DiskManagerFileInfo#ST_REORDER},
+	 * {@link DiskManagerFileInfo#ST_REORDER_COMPACT}
+	 */
 	public int
 	getStorageType();
 
@@ -96,8 +109,27 @@ DiskManagerFileInfo
 
 	public int getNbPieces();
 
+	/**
+	 * File Download Priority
+	 * @return
+	 * Common:<br>
+	 * <code>-1</code>: Low<br>
+	 * <code>&nbsp;0</code>: Normal<br>
+	 * <code>&nbsp;1</code>: High<br>
+	 *   <br>
+	 * Not Common:<br>
+	 * < <code>-1</code>: Lower and Lower<br>
+	 * > <code>&nbsp;0</code>: Higher and Higher
+	 */
 	public int getPriority();
 
+	/**
+	 * Skipped files don't get downloaded.
+	 * <p/>
+	 * The state of the existing data is dependent upon {@link #getStorageType()}.
+	 * States {@link #ST_COMPACT} and {@link #ST_REORDER_COMPACT} will delete (or trim) the file.
+	 * Other states will retain existing data (ie. Do Not Download).
+	 */
 	public boolean isSkipped();
 
 	public int	getIndex();

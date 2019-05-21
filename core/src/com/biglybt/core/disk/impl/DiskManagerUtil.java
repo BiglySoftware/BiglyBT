@@ -400,12 +400,12 @@ DiskManagerUtil
 					}
 
 					@Override
-					public void setPriority(int[] toChange) {
-						if(toChange.length != res.length)
+					public void setPriority(int[] newPriorities) {
+						if(newPriorities.length != res.length)
 							throw new IllegalArgumentException("array length mismatches the number of files");
 
 						for(int i=0;i<res.length;i++)
-							res[i].priority = toChange[i];
+							res[i].priority = newPriorities[i];
 
 						if ( !loading[0] ){
 
@@ -413,7 +413,7 @@ DiskManagerUtil
 						}
 
 						for(int i=0;i<res.length;i++)
-							if(toChange[i] != 0 )
+							if(newPriorities[i] != 0 )
 								listener.filePriorityChanged(res[i]);
 					}
 

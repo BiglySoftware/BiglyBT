@@ -48,8 +48,8 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 	}
 
 	@Override
-	public void setPriority(int[] toChange) {
-		if(toChange.length != files.length)
+	public void setPriority(int[] newPriorities) {
+		if(newPriorities.length != files.length)
 			throw new IllegalArgumentException("array length mismatches the number of files");
 
 		DownloadManagerState dmState = diskManager.getDownloadState();
@@ -59,8 +59,8 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 
 
 			for(int i=0;i<files.length;i++)
-				if(toChange[i] != 0){
-					files[i].setPriority(toChange[i]);
+				if(newPriorities[i] != 0){
+					files[i].setPriority(newPriorities[i]);
 				}
 		} finally {
 			dmState.suppressStateSave(false);

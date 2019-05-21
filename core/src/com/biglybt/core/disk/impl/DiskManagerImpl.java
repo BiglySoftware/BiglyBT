@@ -3671,6 +3671,15 @@ DiskManagerImpl
 
     	// Used by DownloadManagerImpl too.
 
+	/**
+	 * Returns the storage type for each file in {@link DownloadManager}.
+	 * <p/>
+	 * According to {@link DiskManagerUtil#convertDMStorageTypeFromString(String)}, String values are:<BR>
+	 * "R" {@link DiskManagerFileInfo#ST_REORDER}<br>
+	 * "L" {@link DiskManagerFileInfo#ST_LINEAR}<br>
+	 * "C" {@link DiskManagerFileInfo#ST_COMPACT}<br>
+	 * "X" {@link DiskManagerFileInfo#ST_REORDER_COMPACT}<br>
+	 */
     public static String[] getStorageTypes(DownloadManager download_manager) {
         DownloadManagerState state = download_manager.getDownloadState();
         String[] types = state.getListAttribute(DownloadManagerState.AT_FILE_STORE_TYPES);
@@ -3716,6 +3725,15 @@ DiskManagerImpl
 
     	// Used by DownloadManagerImpl too.
 
+	/**
+	 * Returns the storage type for a {@link DownloadManager}'s file at <code>fileIndex</code>.
+	 * <p/>
+	 * According to {@link DiskManagerUtil#convertDMStorageTypeFromString(String)}, values are:<BR>
+	 * "R" {@link DiskManagerFileInfo#ST_REORDER}<br>
+	 * "L" {@link DiskManagerFileInfo#ST_LINEAR}<br>
+	 * "C" {@link DiskManagerFileInfo#ST_COMPACT}<br>
+	 * "X" {@link DiskManagerFileInfo#ST_REORDER_COMPACT}<br>
+	 */
     public static String getStorageType(DownloadManager download_manager, int fileIndex) {
         DownloadManagerState state = download_manager.getDownloadState();
         String type = state.getListAttribute(DownloadManagerState.AT_FILE_STORE_TYPES,fileIndex);

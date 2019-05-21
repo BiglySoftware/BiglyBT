@@ -85,9 +85,27 @@ DiskManagerHelper
 	public TOTorrent
 	getTorrent();
 
+	/**
+	 * Returns the storage type for all files.
+	 * <p/>
+	 * According to {@link DiskManagerUtil#convertDMStorageTypeFromString(String)}, values are:<BR>
+	 * "R" {@link DiskManagerFileInfo#ST_REORDER}<br>
+	 * "L" {@link DiskManagerFileInfo#ST_LINEAR}<br>
+	 * "C" {@link DiskManagerFileInfo#ST_COMPACT}<br>
+	 * "X" {@link DiskManagerFileInfo#ST_REORDER_COMPACT}<br>
+	 */
 	public String[]
 	getStorageTypes();
 
+	/**
+	 * Returns the storage type for file at <code>fileIndex</code>.
+	 * <p/>
+	 * According to {@link DiskManagerUtil#convertDMStorageTypeFromString(String)}, values are:<BR>
+	 * "R" {@link DiskManagerFileInfo#ST_REORDER}<br>
+	 * "L" {@link DiskManagerFileInfo#ST_LINEAR}<br>
+	 * "C" {@link DiskManagerFileInfo#ST_COMPACT}<br>
+	 * "X" {@link DiskManagerFileInfo#ST_REORDER_COMPACT}<br>
+	 */
 	public String getStorageType(int fileIndex);
 
 	public void
