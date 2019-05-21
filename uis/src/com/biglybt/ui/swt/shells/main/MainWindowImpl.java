@@ -53,6 +53,8 @@ import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.torrent.TOTorrent;
 import com.biglybt.core.util.*;
 import com.biglybt.core.versioncheck.VersionCheckClient;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.ui.IUIIntializer;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
@@ -2099,9 +2101,15 @@ public class MainWindowImpl
 					if ( event.doit){
 						String expression = text.getText();
 
-						uiFunctions.doSearch( expression);
+						if ( expression.startsWith( "test://" )){
+							
+							runTest( expression.substring( 7  ));
+							
+						}else{
+							uiFunctions.doSearch( expression);
 
-						twh.addHistory( expression );
+							twh.addHistory( expression );
+						}
 					}
 				}
 			}
@@ -2144,6 +2152,39 @@ public class MainWindowImpl
 		}
 	}
 
+	private void
+	runTest(
+		String	cmd )
+	{
+		UIToolBarManager tbm = uiFunctions.getToolBarManager();
+		
+		if ( cmd.equals( "addTBI" )){
+			
+			UIToolBarItem item = tbm.createToolBarItem( "mainwin:test" );
+			
+			item.setGroupID("players");
+			
+			tbm.addToolBarItem( item );
+			
+		}else if ( cmd.equals( "removeTBI" )){
+			
+			tbm.removeToolBarItem( "mainwin:test" );
+			
+		}else if ( cmd.equals( "removeTBI2" )){
+			
+			tbm.removeToolBarItem( "251290325" );
+			
+		}else if ( cmd.equals( "listTBI" )){
+			
+			UIToolBarItem[] items = tbm.getAllToolBarItems();
+			
+			for ( UIToolBarItem item: items ){
+				
+				System.out.println( item.getGroupID() + "/" + item.getID());
+			}
+		}
+	}
+	
 	/**
 	 *
 	 */

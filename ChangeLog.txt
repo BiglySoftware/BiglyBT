@@ -17,6 +17,7 @@ FEATURE: UI    | Option for separate library table configuration for Tag and Tag
 FEATURE: UI    | Added tooltip to config option labels to show minimum user mode [Parg]
 FEATURE: Core  | Added additional 'add modes' of paused, stopped+allocated, paused+allocated [Parg]
 FEATURE: Core  | Additional share-ratio related information in stats export [Parg]
+FEATURE: Core  | Chat participant muting is now persisted [Parg]
 FEATURE: Tag   | Added archive, delete from library and delete from computer as tag-ratio actions [Parg]
 FEATURE: Tag   | Per-tag 'move on remove' file settings [Parg]
 

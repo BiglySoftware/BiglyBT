@@ -89,6 +89,8 @@ public class ToolBarView
 
 	private boolean initComplete = false;
 	private boolean rebuilding;
+	private boolean rebuild_pending;
+	private Set<String>	built_groups = new HashSet<>();
 	
 	private boolean showCalled = false;
 
@@ -161,7 +163,7 @@ public class ToolBarView
 		
 		tbm.addListener(this);
 
-		build();
+		rebuild();
 		
 		return( null );
 	}
@@ -248,6 +250,8 @@ public class ToolBarView
 			
 			if ( rebuilding ){
 				
+				rebuild_pending = true;
+				
 				return;
 			}
 			
@@ -255,37 +259,50 @@ public class ToolBarView
 		}
 		
 		Utils.execSWTThread(
-			new Runnable()
-			{
-				@Override
-				public void run(){
+			()->{
+				
+					// tear down
+				
+				synchronized( mapToolBarItemToSO ){
+					
+					rebuilding = false;
 
-					synchronized( mapToolBarItemToSO ){
-						
-						rebuilding = false;
-						
-						Set<String>	groups = new HashSet<>();
+					for ( String group: built_groups ){
+						SWTSkinObjectContainer groupSO = getGroupSO(group);
+						SWTSkinObject[] children = groupSO.getChildren();
+						for (SWTSkinObject so : children) {
+							so.dispose();
+						}
+						groupSO.dispose();
+					}
 
-						for ( ToolBarItemSO so: mapToolBarItemToSO.values()){
-	
-							groups.add( so.getBase().getGroupID());
-						}
-	
-						for ( String group: groups ){
-							SWTSkinObjectContainer groupSO = getGroupSO(group);
-							SWTSkinObject[] children = groupSO.getChildren();
-							for (SWTSkinObject so : children) {
-								so.dispose();
-							}
-							groupSO.dispose();
-						}
-	
-						mapToolBarItemToSO.clear();
+					built_groups.clear();
+					
+					mapToolBarItemToSO.clear();
+				}
+				
+				build();
+
+				Utils.relayout( soMain.getControl());
+				
+					// record built state
+				
+				synchronized( mapToolBarItemToSO ){
+					
+					for ( ToolBarItemSO so: mapToolBarItemToSO.values()){
+						
+						built_groups.add( so.getBase().getGroupID());
 					}
 					
-					build();
-
-					Utils.relayout( soMain.getControl());
+					if ( rebuild_pending ){
+						
+						rebuild_pending = false;
+						
+						Utils.getOffOfSWTThread(
+							()->{
+								rebuild();
+							});
+					}
 				}
 			});
 	}
