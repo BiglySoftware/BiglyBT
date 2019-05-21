@@ -745,7 +745,7 @@ public class BDecoder
 							throw((IOException)e);
 						}
 
-						throw( new IOException( Debug.getNestedExceptionMessage(e)));
+						throw( new IOException( Debug.getNestedExceptionMessage(e), e));
 					}
 				}
 
