@@ -28,14 +28,7 @@ import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemProperties;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.UIException;
-import com.biglybt.pif.ui.UIInstanceFactory;
-import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
-import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
@@ -53,6 +46,13 @@ import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.skin.SWTSkinUtils;
 import com.biglybt.ui.swt.views.skin.SkinViewManager;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIException;
+import com.biglybt.pif.ui.UIInstanceFactory;
+import com.biglybt.pif.ui.toolbar.UIToolBarActivationListener;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+import com.biglybt.pif.ui.toolbar.UIToolBarManager;
 
 public class MainMenuV3
 	implements IMainMenu, IMenuConstants
@@ -491,26 +491,28 @@ public class MainMenuV3
 	 */
 	private void addToolsMenu() {
 		MenuItem toolsItem = MenuFactory.createToolsMenuItem(menuBar);
-		Menu toolsMenu = toolsItem.getMenu();
+		MenuBuildUtils.addMaintenanceListenerForMenu(toolsItem.getMenu(),
+				(toolsMenu, menuEvent) -> {
+					MenuFactory.addMyTrackerMenuItem(toolsMenu);
+					MenuFactory.addMySharesMenuItem(toolsMenu);
+					MenuFactory.addConsoleMenuItem(toolsMenu);
+					MenuFactory.addStatisticsMenuItem(toolsMenu);
+					MenuFactory.addSpeedLimitsToMenu(toolsMenu);
 
-		MenuFactory.addMyTrackerMenuItem(toolsMenu);
-		MenuFactory.addMySharesMenuItem(toolsMenu);
-		MenuFactory.addConsoleMenuItem(toolsMenu);
-		MenuFactory.addStatisticsMenuItem(toolsMenu);
-		MenuFactory.addSpeedLimitsToMenu(toolsMenu);
+					MenuFactory.addTransferBarToMenu(toolsMenu);
+					MenuFactory.addAllPeersMenuItem(toolsMenu);
+					MenuFactory.addClientStatsMenuItem(toolsMenu);
+					MenuFactory.addBlockedIPsMenuItem(toolsMenu);
 
-		MenuFactory.addTransferBarToMenu(toolsMenu);
-		MenuFactory.addAllPeersMenuItem(toolsMenu);
-		MenuFactory.addClientStatsMenuItem(toolsMenu);
-		MenuFactory.addBlockedIPsMenuItem(toolsMenu);
+					PluginsMenuHelper.getInstance().buildToolsMenu(toolsMenu);
 
-		MenuFactory.addSeparatorMenuItem(toolsMenu);
-		MenuFactory.createPluginsMenuItem(toolsMenu, false);
+					MenuFactory.addSeparatorMenuItem(toolsMenu);
+					MenuFactory.createPluginsMenuItem(toolsMenu, false);
 
-		MenuFactory.addPairingMenuItem(toolsMenu);
+					MenuFactory.addPairingMenuItem(toolsMenu);
 
-		MenuFactory.addOptionsMenuItem(toolsMenu);
-
+					MenuFactory.addOptionsMenuItem(toolsMenu);
+				});
 	}
 
 	/**

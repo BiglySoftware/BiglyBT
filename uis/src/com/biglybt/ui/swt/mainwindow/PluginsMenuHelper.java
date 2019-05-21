@@ -18,34 +18,38 @@
 
 package com.biglybt.ui.swt.mainwindow;
 
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.swt.MenuBuildUtils;
+import com.biglybt.ui.swt.UIFunctionsManagerSWT;
+import com.biglybt.ui.swt.UIFunctionsSWT;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEventListener;
-import com.biglybt.ui.swt.pifimpl.*;
+import com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl;
+import com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder;
+import com.biglybt.ui.swt.pifimpl.UISWTViewImpl;
 
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
+import com.biglybt.pif.ui.menus.MenuManager;
 
 public class PluginsMenuHelper
 {
 	private static PluginsMenuHelper INSTANCE = null;
 
-	private AEMonitor plugin_helper_mon = new AEMonitor("plugin_helper_mon");
+	private final AEMonitor plugin_helper_mon = new AEMonitor("plugin_helper_mon");
 
-	private Comparator<String>	alpha_comparator = new FormattersImpl().getAlphanumericComparator( true );
+	private final Comparator<String>	alpha_comparator = new FormattersImpl().getAlphanumericComparator( true );
 
-	private Map<String, IViewInfo> plugin_view_info_map = new TreeMap<>(alpha_comparator);
+	private final Map<String, IViewInfo> plugin_view_info_map = new TreeMap<>(alpha_comparator);
 
 	private Map<String, IViewInfo> plugin_logs_view_info_map = new TreeMap<>(alpha_comparator);
 
@@ -83,20 +87,28 @@ public class PluginsMenuHelper
 	{
 		Arrays.sort(
 			plugin_items,
-			new Comparator<com.biglybt.pif.ui.menus.MenuItem>()
-			{
-				@Override
-				public int compare(com.biglybt.pif.ui.menus.MenuItem o1, com.biglybt.pif.ui.menus.MenuItem o2) {
-					return( alpha_comparator.compare( o1.getText(), o2.getText()));
-				}
-			});
+			(o1, o2) -> ( alpha_comparator.compare( o1.getText(), o2.getText())));
+	}
+
+	public boolean buildToolsMenu(Menu toolsMenu) {
+		MenuItemManager menuItemManager = MenuItemManager.getInstance();
+		com.biglybt.pif.ui.menus.MenuItem[] plugin_items = menuItemManager.getAllAsArray(
+			MenuManager.MENU_MENUBAR_TOOLS);
+		if (plugin_items.length > 0) {
+			sort( plugin_items );
+
+			MenuBuildUtils.addPluginMenuItems(plugin_items, toolsMenu, true,
+				true, MenuBuildUtils.BASIC_MENU_ITEM_CONTROLLER);
+		}
+		return false;
 	}
 
 	public boolean buildViewMenu(Menu viewMenu, Shell parent) {
 
 		int itemCount = viewMenu.getItemCount();
-		com.biglybt.pif.ui.menus.MenuItem[] plugin_items;
-		plugin_items = MenuItemManager.getInstance().getAllAsArray("mainmenu");
+		MenuItemManager menuItemManager = MenuItemManager.getInstance();
+		com.biglybt.pif.ui.menus.MenuItem[] plugin_items = menuItemManager.getAllAsArray(
+				MenuManager.MENU_MENUBAR);
 		if (plugin_items.length > 0) {
 			sort( plugin_items );
 

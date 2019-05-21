@@ -59,6 +59,11 @@ public interface MenuManager {
 	public static final String MENU_MENUBAR = "mainmenu";
 
 	/**
+	 * The "Tools" menu on the menu bar.
+	 */
+	public static final String MENU_MENUBAR_TOOLS = "tools";
+
+	/**
 	 * The "transfers bar".
 	 *
 	 * @since 3.0.1.3

@@ -27,12 +27,11 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.SystemProperties;
-import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.Utils;
-
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.MenuBuildUtils;
+import com.biglybt.ui.swt.Utils;
 
 /**
  * @author Olivier Chalouhi
@@ -81,7 +80,7 @@ public class MainMenuV2
 			/*
 			 * The Tools menu is only present on non-OSX systems
 			 */
-			addToolsMenu(parent);
+			addToolsMenu();
 		}
 
 		addPluginsMenu(parent);
@@ -239,18 +238,21 @@ public class MainMenuV2
 			//MenuFactory.addDeviceManagerMenuItem(viewMenu);
 			MenuFactory.addSubscriptionMenuItem(viewMenu);
 
-			if (PluginsMenuHelper.getInstance().buildViewMenu(viewMenu, viewMenu.getShell()) && Constants.isOSX) {
+			PluginsMenuHelper pluginsMenuHelper = PluginsMenuHelper.getInstance();
+			if (pluginsMenuHelper.buildViewMenu(viewMenu, viewMenu.getShell()) && Constants.isOSX) {
 				MenuFactory.addSeparatorMenuItem(viewMenu);
 			}
 
 			/*
-			 * These 3 menus resides on the Tools menu on non-OSX platforms;
+			 * These 4 menus resides on the Tools menu on non-OSX platforms;
 			 * since the Tools menu is not present in the OSX version these menus are added here to the View menu
 			 */
 			if (Constants.isOSX) {
 				MenuFactory.addConsoleMenuItem(viewMenu);
 				MenuFactory.addStatisticsMenuItem(viewMenu);
 				MenuFactory.addSpeedLimitsToMenu(viewMenu);
+
+				pluginsMenuHelper.buildToolsMenu(viewMenu);
 			}
 
 		} catch (Exception e) {
@@ -278,20 +280,24 @@ public class MainMenuV2
 	 * Creates the Tools menu and all its children
 	 * @param parent
 	 */
-	private void addToolsMenu(final Shell parent) {
+	private void addToolsMenu() {
 		MenuItem item = MenuFactory.createToolsMenuItem(menuBar);
-		Menu toolsMenu = item.getMenu();
+		MenuBuildUtils.addMaintenanceListenerForMenu(item.getMenu(),
+				(toolsMenu, menuEvent) -> {
 
-		MenuFactory.addBlockedIPsMenuItem(toolsMenu);
-		MenuFactory.addConsoleMenuItem(toolsMenu);
-		MenuFactory.addStatisticsMenuItem(toolsMenu);
-		MenuFactory.addSpeedLimitsToMenu(toolsMenu);
-		MenuFactory.addNatTestMenuItem(toolsMenu);
-		MenuFactory.addSpeedTestMenuItem(toolsMenu);
+					MenuFactory.addBlockedIPsMenuItem(toolsMenu);
+					MenuFactory.addConsoleMenuItem(toolsMenu);
+					MenuFactory.addStatisticsMenuItem(toolsMenu);
+					MenuFactory.addSpeedLimitsToMenu(toolsMenu);
+					MenuFactory.addNatTestMenuItem(toolsMenu);
+					MenuFactory.addSpeedTestMenuItem(toolsMenu);
 
-		MenuFactory.addSeparatorMenuItem(toolsMenu);
-		MenuFactory.addConfigWizardMenuItem(toolsMenu);
-		MenuFactory.addOptionsMenuItem(toolsMenu);
+					PluginsMenuHelper.getInstance().buildToolsMenu(toolsMenu);
+
+					MenuFactory.addSeparatorMenuItem(toolsMenu);
+					MenuFactory.addConfigWizardMenuItem(toolsMenu);
+					MenuFactory.addOptionsMenuItem(toolsMenu);
+				});
 	}
 
 	/**
