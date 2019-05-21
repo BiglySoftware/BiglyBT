@@ -68,7 +68,14 @@
     <item name='com.biglybt.ui.swt.views.ConfigView$9 com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='com.biglybt.ui.swt.views.MyTorrentsView void buildCatAndTag(java.util.List&lt;com.biglybt.core.tag.Tag&gt;) 0'>
+	<item
+		name='com.biglybt.ui.swt.views.FilesView.FilesViewNodeLeaf FilesViewNodeLeaf(java.lang.String, com.biglybt.core.disk.DiskManagerFileInfo, com.biglybt.ui.swt.views.FilesView.FilesViewNodeInner) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.FilesView.FilesViewNodeLeaf delegate'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.MyTorrentsView void buildCatAndTag(java.util.List&lt;com.biglybt.core.tag.Tag&gt;) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.biglybt.ui.swt.views.MyTorrentsView$23 void setSelection(org.eclipse.swt.widgets.Composite) 0'>

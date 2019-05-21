@@ -1,5 +1,9 @@
 <root>
-    <item name='com.biglybt.core.tag.Tag java.lang.String getTagName(boolean)'>
+	<item
+		name='com.biglybt.core.tag.Tag com.biglybt.core.tag.TagType getTagType()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.core.tag.Tag java.lang.String getTagName(boolean)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
 </root>

@@ -120,7 +120,19 @@
     <item name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.BooleanSwtParameter,java.lang.Boolean&gt;) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='com.biglybt.ui.swt.config.BooleanSwtParameter checkBox'>
+	<item
+		name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.BooleanSwtParameter,java.lang.Boolean&gt;) 2'>
+		<annotation name='org.jetbrains.annotations.PropertyKey'>
+			<val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.config.BooleanSwtParameter BooleanSwtParameter(org.eclipse.swt.widgets.Composite, java.lang.String, java.lang.String, java.lang.String, com.biglybt.ui.swt.config.SwtParameterValueProcessor&lt;com.biglybt.ui.swt.config.BooleanSwtParameter,java.lang.Boolean&gt;) 3'>
+		<annotation name='org.jetbrains.annotations.PropertyKey'>
+			<val name="resourceBundle" val="com.biglybt.internat.MessagesBundle"/>
+		</annotation>
+	</item>
+	<item name='com.biglybt.ui.swt.config.BooleanSwtParameter checkBox'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.biglybt.ui.swt.config.BooleanSwtParameter org.eclipse.swt.widgets.Control[] getControls()'>

@@ -1,4 +1,7 @@
 <root>
+    <item name='com.biglybt.core.download.DownloadManager com.biglybt.core.download.DownloadManagerState getDownloadState()'>
+        <annotation name='org.jetbrains.annotations.NotNull'/>
+    </item>
     <item name='com.biglybt.core.download.DownloadManager com.biglybt.core.download.DownloadManagerStats getStats()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>

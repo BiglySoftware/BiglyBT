@@ -1,5 +1,57 @@
 <root>
-    <item name='com.biglybt.ui.swt.mainwindow.SWTThread com.biglybt.ui.swt.mainwindow.SWTThread getInstance()'>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.Colors com.biglybt.ui.swt.mainwindow.Colors getInstance()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mainwindow.MenuFactory org.eclipse.swt.widgets.MenuItem addLabelMenuItem(org.eclipse.swt.widgets.Menu, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.mainwindow.MenuFactory org.eclipse.swt.widgets.MenuItem addMenuItem(org.eclipse.swt.widgets.Menu, int, int, java.lang.String, org.eclipse.swt.widgets.Listener) 3'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.mainwindow.MenuFactory org.eclipse.swt.widgets.MenuItem addMenuItem(org.eclipse.swt.widgets.Menu, int, java.lang.String, org.eclipse.swt.widgets.Listener) 2'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.mainwindow.MenuFactory org.eclipse.swt.widgets.MenuItem addMenuItem(org.eclipse.swt.widgets.Menu, java.lang.String, org.eclipse.swt.widgets.Listener) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.mainwindow.MenuFactory org.eclipse.swt.widgets.MenuItem addMenuItem(org.eclipse.swt.widgets.Menu, java.lang.String, org.eclipse.swt.widgets.Listener, int) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+    <item name='com.biglybt.ui.swt.mainwindow.MenuFactory org.eclipse.swt.widgets.MenuItem createTopLevelMenuItem(org.eclipse.swt.widgets.Menu, java.lang.String) 1'>
+        <annotation name='org.jetbrains.annotations.PropertyKey'>
+            <val name="resourceBundle"
+                 val="com.biglybt.internat.MessagesBundle"/>
+        </annotation>
+    </item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper boolean buildViewMenu(org.eclipse.swt.widgets.Menu, org.eclipse.swt.widgets.Shell) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper com.biglybt.ui.swt.mainwindow.PluginsMenuHelper getInstance()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void sort(com.biglybt.pif.ui.menus.MenuItem[]) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mainwindow.SWTThread com.biglybt.ui.swt.mainwindow.SWTThread getInstance()'>
         <annotation name='org.jetbrains.annotations.Nullable'/>
     </item>
 </root>
