@@ -651,7 +651,9 @@ public class MessageBoxShell
 			});
 		}
 
+		boolean needSpacer = true;
 		if (cbMessageID != null && Utils.getUserMode() >= cbMinUserMode) {
+			needSpacer = false;
 			Button cb = new Button(shell, SWT.CHECK);
 			cb.addSelectionListener(new SelectionListener() {
 
@@ -696,7 +698,7 @@ public class MessageBoxShell
 					}
 				}
 			});
-		} else {
+		} else if (needSpacer)  {
 			Button spacer = new Button(shell, SWT.CHECK);
 			spacer.setVisible(false);
 		}
@@ -1285,6 +1287,10 @@ public class MessageBoxShell
 		this.buttonVals = buttonVals;
 	}
 
+	/**
+	 * Adds a checkbox to the message box. Currently only one checkbox can be
+	 * made via this method.
+	 */
 	public void addCheckBox(String cbMessageID, int cbMinUserMode, boolean defaultOn) {
 		this.cbMessageID = cbMessageID;
 		this.cbMinUserMode = cbMinUserMode;
