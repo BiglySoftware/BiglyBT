@@ -18,13 +18,17 @@
 
 package com.biglybt.ui.swt.views.tableitems.files;
 
-import com.biglybt.core.util.DisplayFormatters;
+import java.text.NumberFormat;
+
 import com.biglybt.core.disk.DiskManagerFileInfo;
-import com.biglybt.pif.ui.tables.*;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
+
+import com.biglybt.pif.ui.tables.*;
 
 /**
  *
@@ -33,7 +37,7 @@ import com.biglybt.ui.swt.views.table.TableCellSWT;
  */
 public class SizeItem
        extends CoreTableColumnSWT
-       implements TableCellRefreshListener
+       implements TableCellRefreshListener, TableCellToolTipListener
 {
   /** Default Constructor */
   public SizeItem() {
@@ -88,4 +92,32 @@ public class SizeItem
 		}
 	}
   }
+
+	@Override
+	public void cellHover(TableCell cell) {
+		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) cell.getDataSource();
+		if (fileInfo == null) {
+			return;
+		}
+		long size = fileInfo.getLength();
+		String tooltip = NumberFormat.getInstance().format(size) + " "
+				+ MessageText.getString("DHTView.transport.bytes");
+
+		if (!fileInfo.isSkipped()) {
+			long downloaded = fileInfo.getDownloaded();
+			if (size != downloaded) {
+				tooltip += "\n"
+						+ DisplayFormatters.formatByteCountToKiBEtc(size - downloaded,
+								false, false)
+						+ " " + MessageText.getString("TableColumn.header.remaining");
+			}
+		}
+
+		cell.setToolTip(tooltip);
+	}
+
+	@Override
+	public void cellHoverComplete(TableCell cell) {
+		cell.setToolTip(null);
+	}
 }
