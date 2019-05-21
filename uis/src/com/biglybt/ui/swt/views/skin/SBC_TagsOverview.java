@@ -25,40 +25,38 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIManagerListener;
-import com.biglybt.pif.ui.tables.TableColumn;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.*;
+import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.table.impl.TableViewImpl;
+import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
+import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.columns.tag.*;
-import com.biglybt.ui.swt.mdi.MdiEntrySWT;
-import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
-import com.biglybt.ui.swt.utils.TagUIUtilsV3;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.*;
-import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.SimpleTextEntryWindow;
-import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
+import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.skin.SWTSkinButtonUtility;
+import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
+import com.biglybt.ui.swt.skin.SWTSkinObject;
+import com.biglybt.ui.swt.skin.SWTSkinObjectButton;
+import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
+import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.MyTorrentsSubView;
 import com.biglybt.ui.swt.views.TagSettingsView;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
@@ -67,17 +65,11 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
-import com.biglybt.core.tag.*;
-import com.biglybt.core.util.RegExUtil;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UserPrompterResultListener;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.swt.UIFunctionsManagerSWT;
-import com.biglybt.ui.swt.UIFunctionsSWT;
-import com.biglybt.ui.swt.skin.SWTSkinButtonUtility;
-import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.skin.SWTSkinObjectButton;
+import com.biglybt.pif.ui.*;
+import com.biglybt.pif.ui.config.Parameter;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 
 /**
  * @author TuxPaper
@@ -130,50 +122,82 @@ public class SBC_TagsOverview
 	  if ( tv == null || !tv.isVisible()){
 			return( false );
 		}
-		if (item.getID().equals("remove")) {
 
-
+		if ("remove".equals(item.getID())) {
 			Object[] datasources = tv.getSelectedDataSources().toArray();
-
-			if ( datasources.length > 0 ){
-
-				for (Object object : datasources) {
-					if (object instanceof Tag) {
-						final Tag tag = (Tag) object;
-						if (tag.getTagType().getTagType() != TagType.TT_DOWNLOAD_MANUAL) {
-							continue;
-						}
-
-						MessageBoxShell mb =
-								new MessageBoxShell(
-									MessageText.getString("message.confirm.delete.title"),
-									MessageText.getString("message.confirm.delete.text",
-											new String[] {
-												tag.getTagName(true)
-											}),
-									new String[] {
-										MessageText.getString("Button.yes"),
-										MessageText.getString("Button.no")
-									},
-									1 );
-
-							mb.open(new UserPrompterResultListener() {
-								@Override
-								public void prompterClosed(int result) {
-									if (result == 0) {
-										tag.removeTag();
-									}
-								}
-							});
-
-					}
+			List<Tag> tags = new ArrayList<>();
+			for (Object tag : datasources) {
+				if (tag instanceof Tag) {
+					tags.add((Tag) tag);
 				}
-
-				return true;
+			}
+			if (tags.size() > 0) {
+				return removeTags(tags);
 			}
 		}
 
 		return false;
+	}
+
+	private static boolean removeTags(List<Tag> tags) {
+		Tag tagToRemove = null;
+
+		while (tagToRemove == null && tags.size() > 0) {
+			tagToRemove = tags.get(0);
+			if (tagToRemove == null
+					|| tagToRemove.getTagType().getTagType() != TagType.TT_DOWNLOAD_MANUAL) {
+				tags.remove(0);
+			}
+		}
+		int numLeft = tags.size();
+		if (tagToRemove == null || numLeft == 0) {
+			return true;
+		}
+
+		MessageBoxShell mb = new MessageBoxShell(
+				MessageText.getString("message.confirm.delete.title"),
+				MessageText.getString("message.confirm.delete.tag.text", new String[] {
+					tagToRemove.getTagName(true),
+					"" + tagToRemove.getTaggedCount()
+				}), new String[] {
+					MessageText.getString("Button.yes"),
+					MessageText.getString("Button.no")
+				}, 1);
+
+		if (numLeft > 1) {
+			String sDeleteAll = MessageText.getString("v3.deleteContent.applyToAll",
+					new String[] {
+						"" + numLeft
+					});
+			mb.addCheckBox("!" + sDeleteAll + "!", Parameter.MODE_BEGINNER, false);
+		}
+		Tag finalTagToRemove = tagToRemove;
+		mb.open(result -> {
+			if (result == -1) {
+				// cancel
+				return;
+			}
+			boolean remove = result == 0;
+			boolean doAll = mb.getCheckBoxEnabled();
+			if (doAll) {
+				if (remove) {
+					for (Tag tag : tags) {
+						if (tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL) {
+							tag.removeTag();
+						}
+					}
+				}
+			} else {
+				if (remove) {
+					finalTagToRemove.removeTag();
+				}
+				// Loop with remaining tags to be removed
+				tags.remove(0);
+				removeTags(tags);
+			}
+		});
+
+		return true;
 	}
 
 	private MdiEntrySWT getActiveView() {
