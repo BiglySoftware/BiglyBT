@@ -19,6 +19,7 @@
 
 package com.biglybt.core.metasearch.impl.web;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FieldMapping
@@ -57,8 +58,9 @@ public class FieldMapping
 				&& !postFilterPattern.pattern().contains(
 						"\\\\Q" + searchQuery + "\\\\E"))) {
 			postFilterPattern = Pattern.compile(postFilterRequiresSearchQuery
-					? postFilter.replaceAll("%s", "\\\\Q" + searchQuery + "\\\\E")
-					: postFilter, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+					? postFilter.replaceAll("%s",
+							"\\\\Q" + Matcher.quoteReplacement(searchQuery) + "\\\\E")
+					: postFilter, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 		}
 		return postFilterPattern;
 	}

@@ -26,10 +26,10 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
 
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
-import org.eclipse.swt.widgets.Display;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -268,7 +268,8 @@ SearchResultsTabAreaBrowser
 	{
 		this.sq	= sq;
 
-		String url = Constants.URL_WEBSEARCH.replaceAll("%s", UrlUtils.encode(sq.term));
+		String url = Constants.URL_WEBSEARCH.replaceAll("%s",
+				Matcher.quoteReplacement(UrlUtils.encode(sq.term)));
 
 		AEProxyFactory.PluginHTTPProxy proxy = getSearchProxy( this );
 

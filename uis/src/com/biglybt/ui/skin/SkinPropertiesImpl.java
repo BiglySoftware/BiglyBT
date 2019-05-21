@@ -247,7 +247,8 @@ public class SkinPropertiesImpl
 						int i = Integer.parseInt(key);
 
 						if (i < params.length) {
-							value = value.replaceAll("\\Q{" + key + "}\\E", params[i]);
+							value = value.replaceAll("\\Q{" + key + "}\\E",
+									Matcher.quoteReplacement(params[i]));
 						} else {
 							value = value.replaceAll("\\Q{" + key + "}\\E", "");
 						}
@@ -263,7 +264,8 @@ public class SkinPropertiesImpl
 				if (text == null) {
 					text = MessageText.getString(key);
 				}
-				value = value.replaceAll("\\Q{" + key + "}\\E", text);
+				value = value.replaceAll("\\Q{" + key + "}\\E",
+						Matcher.quoteReplacement(text));
 			}
 		}
 

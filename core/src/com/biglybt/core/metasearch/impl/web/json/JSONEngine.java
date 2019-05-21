@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.biglybt.util.MapUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -38,6 +37,7 @@ import com.biglybt.core.metasearch.impl.web.WebResult;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.UrlUtils;
+import com.biglybt.util.MapUtils;
 
 public class
 JSONEngine
@@ -412,7 +412,9 @@ JSONEngine
 															String simpleReplacement = keys[keyPos];
 															keyPos++;
 
-															replaceWith = replaceWith.replaceAll(simpleReplace, simpleReplacement);
+															replaceWith = replaceWith.replaceAll(
+																	simpleReplace,
+																	Matcher.quoteReplacement(simpleReplacement));
 														} else if (command.equals("ucase")) {
 															replaceWith = replaceWith.toUpperCase();
 														} else if (command.equals("lcase")) {

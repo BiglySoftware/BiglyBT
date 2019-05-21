@@ -23,6 +23,7 @@
 package com.biglybt.ui.swt.utils;
 
 import java.lang.reflect.Field;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
@@ -173,7 +174,7 @@ SearchSubsUtils
 				Field field = Program.class.getDeclaredField("command");
 				field.setAccessible(true);
 				String command = (String) field.get(program);
-				command = command.replaceAll("%[1lL]", s);
+				command = command.replaceAll("%[1lL]", Matcher.quoteReplacement(s));
 				command = command.replace(" --", "");
 				PluginInitializer.getDefaultInterface().getUtilities().createProcess(command + " -incognito");
 			} catch (Exception e1) {

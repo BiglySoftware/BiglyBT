@@ -68,7 +68,7 @@ public class BuildMessageBundleNone {
 					}
 
 					if (text != null) {
-						value = value.replaceAll("\\Q{" + key + "}\\E", text);
+						value = value.replaceAll("\\Q{" + key + "}\\E", Matcher.quoteReplacement(text));
 					}
 				} catch (MissingResourceException e) {
 					// ignore error
