@@ -505,6 +505,8 @@ NetworkAdminImpl
 
 					if ( changed || force ){
 
+						fire_stuff = true;
+
 						boolean newV6 = false;
 						boolean newV4 = false;
 
@@ -582,44 +584,55 @@ NetworkAdminImpl
 
 						Logger.log(new LogEvent(LOGID, "NetworkAdmin: ipv4 supported: "+supportsIPv4+"; ipv6: "+supportsIPv6+"; probing v6+nio functionality"));
 
-						if(newV6){
+						if ( newV6 ){
 
-							ServerSocketChannel channel = ServerSocketChannel.open();
-
-							try
-							{
-								channel.configureBlocking(false);
-								channel.socket().bind(new InetSocketAddress(anyLocalAddressIPv6, 0));
-								Logger.log(new LogEvent(LOGID, "NetworkAdmin: testing nio + ipv6 bind successful"));
-
-								supportsIPv6withNIO = true;
-							} catch (Exception e)
-							{
-								Logger.log(new LogEvent(LOGID,LogEvent.LT_WARNING, "nio + ipv6 test failed",e));
-								supportsIPv6withNIO = false;
+							try{
+								ServerSocketChannel channel = ServerSocketChannel.open();
+	
+								try{
+									channel.configureBlocking(false);
+									channel.socket().bind(new InetSocketAddress(anyLocalAddressIPv6, 0));
+									Logger.log(new LogEvent(LOGID, "NetworkAdmin: testing nio + ipv6 bind successful"));
+	
+									supportsIPv6withNIO = true;
+									
+								}catch (Throwable e){
+									
+									Logger.log(new LogEvent(LOGID,LogEvent.LT_WARNING, "nio + ipv6 test failed",e));
+									
+									supportsIPv6withNIO = false;
+								}
+	
+								channel.close();
+								
+							}catch( Throwable e ){
+								
 							}
-
-							channel.close();
-						} else
+						}else{
+							
 							supportsIPv6withNIO = false;
-
+						}
+						
 						if ( !first_time ){
 
 							Logger.log(
 								new LogEvent(LOGID,
 										"NetworkAdmin: network interfaces have changed" ));
 						}
-
-						fire_stuff = true;
 					}
 				}
 			}
-
+			
 			if ( fire_stuff ){
 
 				interfacesChanged( first_time );
 			}
 		}catch( Throwable e ){
+			
+			if ( Constants.IS_CVS_VERSION ){
+			
+				Debug.out( e );
+			}
 		}
 
 		return( changed );
