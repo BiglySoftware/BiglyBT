@@ -1558,7 +1558,7 @@ PRUDPPacketHandlerImpl
 
 		}catch( Throwable e ){
 
-			if ( e instanceof NoRouteToHostException ){
+			if ( e instanceof NoRouteToHostException || e instanceof BindException ){
 
 			}else{
 
