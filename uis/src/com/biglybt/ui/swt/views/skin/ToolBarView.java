@@ -83,14 +83,13 @@ public class ToolBarView
 
 	private static toolbarButtonListener buttonListener;
 	
-	private Map<UIToolBarItem, ToolBarItemSO> mapToolBarItemToSO = new HashMap<>();
+	private Map<UIToolBarItem, ToolBarItemSO> itemMap = new HashMap<>();
 
 	private boolean showText = true;
 
 	private boolean initComplete = false;
 	private boolean rebuilding;
 	private boolean rebuild_pending;
-	private Set<String>	built_groups = new HashSet<>();
 	
 	private boolean showCalled = false;
 
@@ -169,8 +168,11 @@ public class ToolBarView
 	}
 	
 	private void
-	build()
+	build(
+		Map<UIToolBarItem, ToolBarItemSO>	newMap )
 	{
+		soLastGroup = null;
+		
 		boolean uiClassic = COConfigurationManager.getStringParameter("ui").equals( "az2");
 		
 		UIToolBarItem[] items = tbm.getAllToolBarItems();
@@ -209,12 +211,12 @@ public class ToolBarView
 		
 		if ( uiClassic || !COConfigurationManager.getBooleanParameter( "IconBar.enabled" )) {
 			
-			bulkSetupItems("classic", "toolbar.area.sitem");
+			bulkSetupItems( newMap, "classic", "toolbar.area.sitem");
 		}
 		
-		bulkSetupItems(UIToolBarManager.GROUP_MAIN, "toolbar.area.sitem");
+		bulkSetupItems( newMap, UIToolBarManager.GROUP_MAIN, "toolbar.area.sitem");
 		
-		bulkSetupItems("views", "toolbar.area.vitem");
+		bulkSetupItems( newMap, "views", "toolbar.area.vitem");
 
 		String[] groupIDs = tbm.getGroupIDs();
 		
@@ -227,7 +229,7 @@ public class ToolBarView
 				continue;
 			}
 			
-			bulkSetupItems(groupID, "toolbar.area.sitem");
+			bulkSetupItems( newMap, groupID, "toolbar.area.sitem");
 		}
 
 		initComplete = true;
@@ -246,7 +248,7 @@ public class ToolBarView
 	private void
 	rebuild()
 	{
-		synchronized( mapToolBarItemToSO ){
+		synchronized( itemMap ){
 			
 			if ( rebuilding ){
 				
@@ -263,37 +265,46 @@ public class ToolBarView
 				
 					// tear down
 				
-				synchronized( mapToolBarItemToSO ){
+				synchronized( itemMap ){
 					
-					rebuilding = false;
-
-					for ( String group: built_groups ){
-						SWTSkinObjectContainer groupSO = getGroupSO(group);
-						SWTSkinObject[] children = groupSO.getChildren();
-						for (SWTSkinObject so : children) {
-							so.dispose();
-						}
-						groupSO.dispose();
+					Set<String>	groups = new HashSet<>();
+					
+					for ( ToolBarItemSO so: itemMap.values()){
+						
+						groups.add( so.getBase().getGroupID());
 					}
 
-					built_groups.clear();
-					
-					mapToolBarItemToSO.clear();
+					itemMap.clear();
+
+					for ( String group: groups ){
+						
+						SWTSkinObjectContainer groupSO = getGroupSO(group);
+						
+						SWTSkinObject[] children = groupSO.getChildren();
+						
+						for (SWTSkinObject so : children) {
+							
+							so.dispose();
+						}
+						
+						groupSO.dispose();
+					}
 				}
 				
-				build();
+				Map<UIToolBarItem, ToolBarItemSO>	newMap = new HashMap<>();
+				
+				build( newMap );
 
 				Utils.relayout( soMain.getControl());
 				
 					// record built state
 				
-				synchronized( mapToolBarItemToSO ){
+				synchronized( itemMap ){
 					
-					for ( ToolBarItemSO so: mapToolBarItemToSO.values()){
-						
-						built_groups.add( so.getBase().getGroupID());
-					}
+					itemMap.putAll( newMap );
 					
+					rebuilding = false;
+
 					if ( rebuild_pending ){
 						
 						rebuild_pending = false;
@@ -1051,7 +1062,7 @@ public class ToolBarView
 		return false;
 	}
 
-	private void bulkSetupItems(String groupID, String templatePrefix) {
+	private void bulkSetupItems(Map<UIToolBarItem, ToolBarItemSO> newMap, String groupID, String templatePrefix) {
 		String[] idsByGroupAll = tbm.getToolBarIDsByGroup(groupID);
 		SWTSkinObjectContainer groupSO = peekGroupSO(groupID);
 		if ( groupSO != null ){
@@ -1096,7 +1107,7 @@ public class ToolBarView
 					} else {
 						addSeperator(groupID);
 					}
-					createItemSO((ToolBarItem) item, templatePrefix, position);
+					createItemSO(newMap,(ToolBarItem) item, templatePrefix, position);
 				}
 			}
 	
@@ -1113,15 +1124,10 @@ public class ToolBarView
 		return children[children.length - 1].getControl();
 	}
 
-	private void createItemSO(ToolBarItem item, String templatePrefix,
+	private void createItemSO(Map<UIToolBarItem, ToolBarItemSO> newMap, ToolBarItem item, String templatePrefix,
 			 int position) {
 
-		ToolBarItemSO existingItemSO;
-		
-		synchronized( mapToolBarItemToSO ){
-			
-			existingItemSO = mapToolBarItemToSO.get(item);
-		}
+		ToolBarItemSO existingItemSO = newMap.get(item);
 		
 		if (existingItemSO != null) {
 			SWTSkinObject so = existingItemSO.getSO();
@@ -1151,7 +1157,7 @@ public class ToolBarView
 				fd.left = new FormAttachment(attachToControl);
 			}
 
-			initSO(so, itemSO);
+			initSO( newMap, so, itemSO);
 
 			if (initComplete) {
 				Utils.relayout(so.getControl().getParent());
@@ -1188,7 +1194,7 @@ public class ToolBarView
 		return soGroup;
 	}
 
-	private void initSO(SWTSkinObject so, ToolBarItemSO itemSO) {
+	private void initSO(Map<UIToolBarItem, ToolBarItemSO> newMap, SWTSkinObject so, ToolBarItemSO itemSO) {
 		ToolBarItem item = itemSO.getBase();
 		itemSO.setSO(so);
 		String toolTip = item.getToolTip();
@@ -1212,11 +1218,8 @@ public class ToolBarView
 			((SWTSkinObjectText) soTitle).setTextID(item.getTextID());
 			itemSO.setSkinTitle((SWTSkinObjectText) soTitle);
 		}
-		
-		synchronized( mapToolBarItemToSO ){
-		
-			mapToolBarItemToSO.put(item, itemSO);
-		}
+				
+		newMap.put(item, itemSO);
 	}
 
 	// @see ToolBarItem.ToolBarItemListener#uiFieldChanged(ToolBarItem)
@@ -1224,9 +1227,9 @@ public class ToolBarView
 	public void uiFieldChanged(ToolBarItem item) {
 		ToolBarItemSO itemSO;
 		
-		synchronized( mapToolBarItemToSO ){
+		synchronized( itemMap ){
 			
-			itemSO = mapToolBarItemToSO.get(item);
+			itemSO = itemMap.get(item);
 		}
 		
 		if (itemSO != null) {
@@ -1346,17 +1349,7 @@ public class ToolBarView
 	@Override
 	public void toolbarItemRemoved(final UIToolBarItem toolBarItem) {
 		
-		ToolBarItemSO itemSO;
-		
-		synchronized( mapToolBarItemToSO ){
-			
-			itemSO = mapToolBarItemToSO.remove(toolBarItem);
-		}
-		
-		if ( itemSO != null) {
-	
-			rebuild();
-		}
+		rebuild();
 	}
 
 	@Override
