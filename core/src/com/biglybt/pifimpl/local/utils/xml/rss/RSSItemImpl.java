@@ -36,14 +36,17 @@ public class
 RSSItemImpl
 	implements RSSItem
 {
-	private boolean							is_atom;
-	private SimpleXMLParserDocumentNode		node;
+	final private RSSChannelImpl					channel;
+	final private boolean							is_atom;
+	final private SimpleXMLParserDocumentNode		node;
 
 	protected
 	RSSItemImpl(
+		RSSChannelImpl					_channel,
 		SimpleXMLParserDocumentNode		_node,
 		boolean							_is_atom )
 	{
+		channel	= _channel;
 		is_atom	= _is_atom;
 		node	= _node;
 	}
@@ -104,8 +107,24 @@ RSSItemImpl
 					return( null );
 				}
 
-				if (value.startsWith("//")) {
-					value = "http:" + value;
+				if ( value.startsWith( "//" )){
+					
+					value = (channel.isHTTPS()?"https:":"http:" ) + value;
+					
+				}else if ( value.startsWith( "/" )){
+					
+					// relative URL
+					
+					String base = channel.getLinkRaw();
+					
+					if ( base.endsWith( "/" )){
+						
+						value = base + value.substring( 1 );
+						
+					}else{
+						
+						value = base + value;
+					}
 				}
 
 				return( new URL( value ));

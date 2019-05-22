@@ -24,6 +24,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.utils.xml.rss.RSSChannel;
@@ -39,12 +40,14 @@ public class
 RSSChannelImpl
 	implements RSSChannel
 {
-	private SimpleXMLParserDocumentNode	node;
+	final private SimpleXMLParserDocumentNode	node;
 
-	private RSSItem[]	items;
+	final private RSSItem[]	items;
 
-	private boolean		is_atom;
+	final private boolean		is_atom;
 
+	final private boolean		is_https;
+	
 	protected
 	RSSChannelImpl(
 		SimpleXMLParserDocumentNode	_node,
@@ -63,15 +66,35 @@ RSSChannelImpl
 
 			if ( xml_item.getName().equalsIgnoreCase(is_atom?"entry":"item")){
 
-				its.add( new RSSItemImpl( xml_item, is_atom ));
+				its.add( new RSSItemImpl( this, xml_item, is_atom ));
 			}
 		}
 
 		items	= new RSSItem[ its.size()];
 
 		its.toArray( items );
+		
+		boolean	https = false;
+		
+		try{
+			String base = getLinkRaw();
+			
+			if ( base.toLowerCase( Locale.US ).startsWith( "https" )){
+				
+				https = true;
+			}
+		}catch( Throwable e ){
+		}
+		
+		is_https = https;
 	}
 
+	protected boolean
+	isHTTPS()
+	{
+		return( is_https );
+	}
+	
 	@Override
 	public String
 	getTitle()
@@ -120,6 +143,12 @@ RSSChannelImpl
 
 			return( null );
 		}
+	}
+	
+	protected String
+	getLinkRaw()
+	{
+		return( node.getChild("link").getValue());
 	}
 
 	@Override
