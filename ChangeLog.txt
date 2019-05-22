@@ -3,7 +3,7 @@ BIGLYBT CHANGELOG
 
 2019.xx.yy | BiglyBT 1.9.0.1
 
-Up to B23
+Up to B24
 
 FEATURE: UI    | Most config parameters now have a "Reset to Default" option on right click of their label [TuxPaper]   
 FEATURE: UI    | Console UI: Config sections and parameters now available via `config` command [TuxPaper]  
