@@ -1325,6 +1325,43 @@ public class SWTSkin
 		return createSkinObject(sID, sConfigID, parentSkinObject, null);
 	}
 
+	private int 	constructionDepth;
+	private Cursor	constructionCursor;
+	
+	public void
+	constructionStart()
+	{
+		if ( Constants.IS_CVS_VERSION && !Utils.isSWTThread()){
+			
+			Debug.out( "Must be SWT thread" );
+		}
+		
+		constructionDepth++;
+		
+		if ( constructionDepth == 1 ){
+			
+			constructionCursor = skinComposite.getCursor();
+			
+			skinComposite.setCursor(skinComposite.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
+		}
+	}
+	
+	public void
+	constructionEnd()
+	{
+		if ( Constants.IS_CVS_VERSION && !Utils.isSWTThread()){
+			
+			Debug.out( "Must be SWT thread" );
+		}
+		
+		constructionDepth--;
+		
+		if ( constructionDepth == 0 ){
+			
+			skinComposite.setCursor( constructionCursor );
+		}
+	}
+	
 	/**
 	 * Create a skin object based off an existing config "template"
 	 *
@@ -1337,23 +1374,39 @@ public class SWTSkin
 	public SWTSkinObject createSkinObject(String sID, String sConfigID,
 			SWTSkinObject parentSkinObject, Object datasource) {
 		SWTSkinObject skinObject = null;
-		Cursor cursor = skinComposite.getCursor();
-		try {
-			skinComposite.setCursor(skinComposite.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
-
-			skinObject = linkIDtoParent(skinProperties, sID, sConfigID,
-					parentSkinObject, true, true, datasource);
-
-			if (bLayoutComplete) {
-				layout(skinObject);
-    	}
-		} catch (Exception e) {
-			Debug.out("Trying to create " + sID + "." + sConfigID + " on "
-					+ parentSkinObject, e);
-		} finally {
-			skinComposite.setCursor(cursor);
+		
+		if ( constructionDepth == 0 ){
+			Cursor cursor = skinComposite.getCursor();
+			try {
+				skinComposite.setCursor(skinComposite.getDisplay().getSystemCursor(SWT.CURSOR_WAIT));
+	
+				skinObject = linkIDtoParent(skinProperties, sID, sConfigID,
+						parentSkinObject, true, true, datasource);
+	
+				if (bLayoutComplete) {
+					layout(skinObject);
+	    	}
+			} catch (Exception e) {
+				Debug.out("Trying to create " + sID + "." + sConfigID + " on "
+						+ parentSkinObject, e);
+			} finally {
+				skinComposite.setCursor(cursor);
+			}
+		}else{
+			try {
+	
+				skinObject = linkIDtoParent(skinProperties, sID, sConfigID,
+						parentSkinObject, true, true, datasource);
+	
+				if (bLayoutComplete) {
+					layout(skinObject);
+	    	}
+			} catch (Exception e) {
+				Debug.out("Trying to create " + sID + "." + sConfigID + " on "
+						+ parentSkinObject, e);
+			}
 		}
-
+		
 		return skinObject;
 	}
 

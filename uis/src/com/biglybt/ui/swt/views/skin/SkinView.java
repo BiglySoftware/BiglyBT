@@ -17,7 +17,6 @@
 
 package com.biglybt.ui.swt.views.skin;
 
-import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.mdi.MdiEntry;

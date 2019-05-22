@@ -278,23 +278,34 @@ public class ToolBarView
 
 					for ( String group: groups ){
 						
-						SWTSkinObjectContainer groupSO = getGroupSO(group);
+						SWTSkinObjectContainer groupSO = peekGroupSO(group);
 						
-						SWTSkinObject[] children = groupSO.getChildren();
-						
-						for (SWTSkinObject so : children) {
+						if ( groupSO != null ){
 							
-							so.dispose();
+							SWTSkinObject[] children = groupSO.getChildren();
+							
+							for (SWTSkinObject so : children) {
+								
+								so.dispose();
+							}
+							
+							groupSO.dispose();
 						}
-						
-						groupSO.dispose();
 					}
 				}
 				
 				Map<UIToolBarItem, ToolBarItemSO>	newMap = new HashMap<>();
 				
-				build( newMap );
-
+				try{
+					skin.constructionStart();
+					
+					build( newMap );
+					
+				}finally{
+					
+					skin.constructionEnd();
+				}
+				
 				Utils.relayout( soMain.getControl());
 				
 					// record built state
