@@ -1460,9 +1460,15 @@ DiskManagerImpl
     	boolean		is_new,
     	Throwable 	e )
     {
-    	errorMessage = Debug.getNestedExceptionMessage(e) + " (allocateFiles " + (is_new?"new":"existing") + ":" + file.toString() + ")";
+    	String exception_str  = Debug.getNestedExceptionMessage(e);
+    	
+    	errorMessage = exception_str + " (allocateFiles " + (is_new?"new":"existing") + ":" + file.toString() + ")";
 
-    	if (errorMessage.contains("not enough space")){
+    	String lc = exception_str.toLowerCase( Locale.US );
+    	
+    		// not enough space; no space left; insufficient space
+    	
+    	if ( lc.contains( " space")){ 	
 
     		errorType	= ET_INSUFFICIENT_SPACE;
 
