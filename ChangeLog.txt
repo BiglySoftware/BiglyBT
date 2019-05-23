@@ -1,9 +1,9 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2019.xx.yy | BiglyBT 1.9.0.1
+2019.05.yy | BiglyBT 2.0.0.0
 
-Up to B24
+Up to B25
 
 FEATURE: UI    | Most config parameters now have a "Reset to Default" option on right click of their label [TuxPaper]   
 FEATURE: UI    | Console UI: Config sections and parameters now available via `config` command [TuxPaper]  
@@ -60,6 +60,9 @@ BUGFIX: Core   | Ignore non-data SOCKS proxy properties properly when disabled [
 BUGFIX: Core   | Fix webseed caching causing changes not to be picked up [Parg]
 BUGFIX: Core   | Fix 'pause-for' not resuming stopped torrents [Parg]
 BUGFIX: Core   | Ensure core lifecycle events are executed in the correct order [Parg]
+BUGFIX: Core   | Handle relative URLs in RSS items [Parg]
+BUGFIX: Core   | Fix failure to detect network interface changes (e.g. on VPN reconnect) [Parg]
+BUGFIX: Core   | Catch more 'no more space' conditions for the 'auto resume on no space' feature [Parg]
 BUGFIX: Plug   | Remove potential deadlock on closedown when I2P initialisation fails [Parg]
 BUGFIX: Tag    | Tags with disabled or emptry tag constraints shouldn't be treated as 'auto' [Parg]
 
