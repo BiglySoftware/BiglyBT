@@ -623,6 +623,30 @@ NetworkAdminImpl
 				}
 			}
 			
+			/*
+			{
+				String str = "";
+				
+				for ( NetworkInterface ni: old_network_interfaces ){
+					
+					str += (str.isEmpty()?"":" / ") +ni.getName() + "=";
+					
+					Enumeration<InetAddress> addresses = ni.getInetAddresses();
+					
+					String a_str = "";
+					
+					while( addresses.hasMoreElements()){
+						
+						a_str += (a_str.isEmpty()?"":", ") + addresses.nextElement();
+					}
+					
+					str += a_str;
+				}
+				
+				Debug.outNoStack( "checkNetworkInterfaces: " + str + " -> " + fire_stuff );
+			}
+			*/
+			
 			if ( fire_stuff ){
 
 				interfacesChanged( first_time );
@@ -806,9 +830,11 @@ addressLoop:
 			{
 				e.printStackTrace(); // should not happen
 			}
-			if(netInterface == null)
+			
+			if (netInterface == null ){
 				continue;
-
+			}
+			
 			Enumeration interfaceAddresses = netInterface.getInetAddresses();
 			if(ifaces.length != 2)
 				while(interfaceAddresses.hasMoreElements())
@@ -1002,15 +1028,37 @@ addressLoop:
 		forceBind = enforceBind;
 
 		InetAddress[] addrs = calcBindAddresses(bind_ip, enforceBind);
+		
 		changed = !Arrays.equals(currentBindIPs, addrs);
-		if(changed){
+		
+		/*
+		{
+			String str = "";
+			
+			for ( InetAddress ia: addrs ){
+				
+				str += (str.isEmpty()?"":", ") + ia;
+			}
+			
+			Debug.outNoStack( "checkDefaultBindAddress: " + str + " -> " + changed );
+		}
+		*/
+		
+		if ( changed ){
+			
 			currentBindIPs = addrs;
+			
 			if (!first_time){
 
 				String logmsg = "NetworkAdmin: default bind ip has changed to '";
-				for(int i=0;i<addrs.length;i++)
+				
+				for(int i=0;i<addrs.length;i++){
+					
 					logmsg+=(addrs[i] == null ? "none" : addrs[i].getHostAddress()) + (i<addrs.length? ";" : "");
+				}
+				
 				logmsg+="'";
+				
 				Logger.log(new LogEvent(LOGID, logmsg));
 
 					// if the user has removed a previous bind enforcement then re-activate the maybe-vpn
@@ -1021,6 +1069,7 @@ addressLoop:
 					clearMaybeVPNs();
 				}
 			}
+			
 			firePropertyChange(NetworkAdmin.PR_DEFAULT_BIND_ADDRESS);
 		}
 	}

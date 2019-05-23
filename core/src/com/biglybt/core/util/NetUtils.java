@@ -133,10 +133,30 @@ NetUtils
 
 							synchronized( NetUtils.class ){
 
+								boolean changed = result.size() != current_interfaces.size();
+								
+								if ( !changed ){
+								
+									for ( int i=0;i<result.size();i++){
+										
+										if ( !result.get(i).equals( current_interfaces.get(i))){
+										
+											changed= true;
+											
+											break;
+										}
+									}
+								}
+								
 								check_in_progress	= false;
 								current_interfaces 	= result;
 
 								last_ni_check	= SystemTime.getMonotonousTime();
+								
+								if ( changed ){
+								
+									host_or_address_map.clear();
+								}
 							}
 
 							ni_sem.releaseForever();
@@ -259,7 +279,7 @@ NetUtils
 	{
 		Object[] entry;
 
-		synchronized( host_or_address_map ){
+		synchronized( NetUtils.class ){
 
 			entry = host_or_address_map.get( name_or_address );
 
