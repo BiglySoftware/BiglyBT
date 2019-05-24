@@ -695,7 +695,9 @@ public class ColumnThumbAndName
 		String name = null;
 		Object ds = cell.getDataSource();
 		if (ds instanceof DiskManagerFileInfo) {
-			return null;
+			DiskManagerFileInfo fileInfo = (DiskManagerFileInfo)ds;
+			
+			return( fileInfo.getFile(true).getName());
 		}
 		DownloadManager dm = (DownloadManager) ds;
 		if (dm != null)
