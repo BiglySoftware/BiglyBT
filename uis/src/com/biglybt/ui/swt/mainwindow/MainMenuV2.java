@@ -297,7 +297,7 @@ public class MainMenuV2
 					MenuFactory.addSeparatorMenuItem(toolsMenu);
 					MenuFactory.addConfigWizardMenuItem(toolsMenu);
 					MenuFactory.addOptionsMenuItem(toolsMenu);
-				});
+				}, true);
 	}
 
 	/**

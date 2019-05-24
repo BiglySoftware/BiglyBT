@@ -75,6 +75,12 @@ public class MenuBuildUtils {
 		public void buildMenu(Menu root_menu, MenuEvent menuEvent);
 	}
 
+
+	public static void addMaintenanceListenerForMenu(final Menu menu,
+		final MenuBuilder builder) {
+		addMaintenanceListenerForMenu(menu, builder, false);
+	}
+
 	/**
 	 * Creates and adds a listener object to implement regeneratable menus.
 	 *
@@ -91,34 +97,30 @@ public class MenuBuildUtils {
 	 * is required to dispose of existing menu items when the menu is hidden.
 	 */
 	public static void addMaintenanceListenerForMenu(final Menu menu,
-			final MenuBuilder builder) {
+			final MenuBuilder builder, boolean alwaysBuilt) {
 
-		if (Constants.isLinux) { // Hack for Ubuntu Unity -- Show not called when no items
-			new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
-		}
 		// Was taken from TableView.java
-		menu.addMenuListener(new MenuListener() {
+		MenuListener menuListener = new MenuListener() {
 			boolean bShown = false;
 
 			@Override
 			public void menuHidden(MenuEvent e) {
 				bShown = false;
 
-				if (Constants.isOSX)
+				if (Constants.isOSX || alwaysBuilt) {
 					return;
+				}
 
 				// Must dispose in an asyncExec, otherwise SWT.Selection doesn't
 				// get fired (async workaround provided by Eclipse Bug #87678)
 				e.widget.getDisplay().asyncExec(new AERunnable() {
 					@Override
 					public void runSupport() {
-						if (bShown || menu.isDisposed())
+						if (bShown || menu.isDisposed()) {
 							return;
-						org.eclipse.swt.widgets.MenuItem[] items = menu
-								.getItems();
-						for (int i = 0; i < items.length; i++) {
-							items[i].dispose();
 						}
+						Utils.disposeSWTObjects(menu.getItems());
+
 						if (Constants.isLinux) { // Hack for Ubuntu Unity -- Show not called when no items
 							new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
 						}
@@ -128,24 +130,29 @@ public class MenuBuildUtils {
 
 			@Override
 			public void menuShown(MenuEvent e) {
-				try{
-					org.eclipse.swt.widgets.MenuItem[] items = menu.getItems();
-					for (int i = 0; i < items.length; i++){
-						items[i].dispose();
-					}
-				}catch( Throwable f ){
-					// getting java.lang.NegativeArraySizeException sometimes on linux. ignore
-				}
+				Utils.disposeSWTObjects(menu.getItems());
 
 				bShown = true;
 				builder.buildMenu(menu, e);
+
 				if (Constants.isLinux) { // Hack for Ubuntu Unity -- Show not called when no items
 					if (menu.getItemCount() == 0) {
 						new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
 					}
 				}
 			}
-		});
+		};
+		menu.addMenuListener(menuListener);
+
+		if (alwaysBuilt) {
+			Event e = new Event();
+			e.type = SWT.Show;
+			e.display = menu.getDisplay();
+			e.widget = menu;
+			menuListener.menuShown(new MenuEvent(e));
+		} else if (Constants.isLinux) { // Hack for Ubuntu Unity -- Show not called when no items
+			new org.eclipse.swt.widgets.MenuItem(menu, SWT.SEPARATOR);
+		}
 	}
 
 	/**

@@ -512,7 +512,7 @@ public class MainMenuV3
 					MenuFactory.addPairingMenuItem(toolsMenu);
 
 					MenuFactory.addOptionsMenuItem(toolsMenu);
-				});
+				}, true);
 	}
 
 	/**
