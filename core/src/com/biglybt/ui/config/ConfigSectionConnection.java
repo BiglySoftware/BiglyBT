@@ -201,6 +201,21 @@ public class ConfigSectionConnection
 
 		paramRandEnable.addEnabledOnSelection(paramRandRange, paramRandTogether);
 
+			// public tcp peers enable
+		
+		BooleanParameterImpl paramTCPPublicEnable = new BooleanParameterImpl(
+				BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE,
+				"ConfigView.section.connection.tcp.pubic.peer.enable");
+		add(paramTCPPublicEnable, Parameter.MODE_ADVANCED);
+		
+			// public udp peers enable
+		
+		BooleanParameterImpl paramUDPPublicEnable = new BooleanParameterImpl(
+				BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE,
+				"ConfigView.section.connection.udp.pubic.peer.enable");
+		add(paramUDPPublicEnable, Parameter.MODE_ADVANCED);
+
+		
 		BooleanParameterImpl paramPreferUDP = new BooleanParameterImpl(
 				BCFG_PEERCONTROL_PREFER_UDP,
 				"ConfigView.section.connection.prefer.udp");

@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.speedmanager.impl.SpeedManagerImpl;
 import com.biglybt.core.speedmanager.impl.v2.SMConst;
@@ -151,6 +152,8 @@ public class ConfigurationDefaults {
     def.put("Listen.Port.Randomize.Enable", FALSE );
     def.put("Listen.Port.Randomize.Together", TRUE );
     def.put("Listen.Port.Randomize.Range", RandomUtils.LISTEN_PORT_MIN + "-" + RandomUtils.LISTEN_PORT_MAX );
+    def.put(ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE, TRUE );
+    def.put(ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE, TRUE );
     def.put("webseed.activation.uses.availability", TRUE );
     def.put("IPV6 Enable Support", FALSE );
     def.put("IPV6 Prefer Addresses",FALSE );

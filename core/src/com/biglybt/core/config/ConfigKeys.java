@@ -42,6 +42,8 @@ public final class ConfigKeys {
 		public static final String BCFG_LISTEN_PORT_RANDOMIZE_ENABLE = "Listen.Port.Randomize.Enable";
 		public static final String SCFG_LISTEN_PORT_RANDOMIZE_RANGE = "Listen.Port.Randomize.Range";
 		public static final String BCFG_LISTEN_PORT_RANDOMIZE_TOGETHER = "Listen.Port.Randomize.Together";
+		public static final String BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE = "peercontrol.tcp.public.enable";
+		public static final String BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE = "peercontrol.udp.public.enable";
 		public static final String BCFG_PEERCONTROL_PREFER_UDP = "peercontrol.prefer.udp";
 		public static final String BCFG_HTTP_DATA_LISTEN_PORT_ENABLE = "HTTP.Data.Listen.Port.Enable";
 		public static final String ICFG_HTTP_DATA_LISTEN_PORT = "HTTP.Data.Listen.Port";

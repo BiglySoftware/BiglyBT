@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerPiece;
@@ -322,6 +323,9 @@ implements PEPeerTransport
 
 	private static boolean enable_upload_bias;
 
+	private static boolean enable_public_tcp_peers	= true;
+	private static boolean enable_public_udp_peers	= true;
+	
 	static {
 		rnd.setSeed(SystemTime.getHighPrecisionCounter());
 		sessionSecret = new byte[20];
@@ -331,13 +335,10 @@ implements PEPeerTransport
 				new String[]{
 					"Use Lazy Bitfield",
 					"Peer.Fast.Initial.Unchoke.Enabled",
-					"Bias Upload Enable" },
-				new ParameterListener()
-				{
-					@Override
-					public final void
-					parameterChanged(
-							String ignore )
+					"Bias Upload Enable",
+					ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE,
+					ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE},
+				(ignore)->{
 					{
 						final String  prop = System.getProperty(SystemProperties.SYSPROP_LAZY_BITFIELD);
 
@@ -348,6 +349,9 @@ implements PEPeerTransport
 						fast_unchoke_new_peers 		= COConfigurationManager.getBooleanParameter( "Peer.Fast.Initial.Unchoke.Enabled" );
 
 						enable_upload_bias 			= COConfigurationManager.getBooleanParameter( "Bias Upload Enable" );
+						
+						enable_public_tcp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE );
+						enable_public_udp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE );
 					}
 				});
 	}
@@ -595,7 +599,7 @@ implements PEPeerTransport
 		}
 
 		InetSocketAddress	endpoint_address;
-		ProtocolEndpoint	pe1;
+		ProtocolEndpoint	pe1 = null;
 		ProtocolEndpoint	pe2 = null;
 
 		if ( _use_tcp ){
@@ -613,40 +617,67 @@ implements PEPeerTransport
 				endpoint_address = InetSocketAddress.createUnresolved( ip, tcp_listen_port );
 			}
 
-			if ( lan_local || !utp_available || !public_net ){
+			if ( lan_local || !public_net ){
 
 				pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_TCP, endpoint_address );
 
+			}else if ( !utp_available ){
+				
+				if ( enable_public_tcp_peers ){
+					
+					pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_TCP, endpoint_address );
+				}
 			}else if ( AERunStateHandler.isUDPNetworkOnly() && !socks_active ){
 
 				pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
 
 			}else{
 
-				pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_TCP, endpoint_address );
-
-				if ( !socks_active ){
-
-					if ( RandomUtils.nextInt(2) == 1 ){
-
-						pe2 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
+				if ( enable_public_tcp_peers ){
+					
+					pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_TCP, endpoint_address );
+	
+					if ( !socks_active ){
+	
+						if ( RandomUtils.nextInt(2) == 1 ){
+	
+							pe2 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
+						}
+					}
+				}else{
+					
+					if ( !socks_active ){
+						
+						pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UTP, endpoint_address );
 					}
 				}
 			}
 		}else{
-
+				
 			if ( public_net ){
-
+	
 				endpoint_address = new InetSocketAddress( ip, udp_listen_port );
-
+	
 			}else{
-
+	
 				endpoint_address = InetSocketAddress.createUnresolved( ip, udp_listen_port );
 			}
 
-			pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UDP, endpoint_address );
+			if ( enable_public_udp_peers ){
+
+				pe1 = ProtocolEndpointFactory.createEndpoint( ProtocolEndpoint.PROTOCOL_UDP, endpoint_address );
+			}
 		}
 
+		if ( pe1 == null ){
+			
+			closeConnectionInternally( "No enabled public peer protocols" );
+			
+			connection = null;
+			
+			return;
+		}
+		
 		ConnectionEndpoint connection_endpoint	= new ConnectionEndpoint( endpoint_address );
 
 		connection_endpoint.addProtocol( pe1 );

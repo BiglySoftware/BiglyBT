@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
@@ -32,6 +33,7 @@ import com.biglybt.core.networkmanager.ConnectionEndpoint;
 import com.biglybt.core.networkmanager.NetworkConnection;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.ProtocolEndpoint;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.IncomingConnectionManager;
 import com.biglybt.core.networkmanager.impl.TransportHelper;
 import com.biglybt.core.peer.PEPeer;
@@ -70,6 +72,23 @@ public class PeerManager implements CoreStatsProvider {
 	private static AEThread2	timer_thread;
 	static final Set	timer_targets = new HashSet();
 
+	
+	private static boolean enable_public_tcp_peers	= true;
+	private static boolean enable_public_udp_peers	= true;
+
+	static{
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE,
+				ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE},
+			(ignore)->{
+				{
+					enable_public_tcp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_TCP_PUBLIC_ENABLE );
+					enable_public_udp_peers		= COConfigurationManager.getBooleanParameter( ConfigKeys.Connection.BCFG_PEERCONTROL_UDP_PUBLIC_ENABLE );
+				}
+			});
+	}
+	
 	protected static void
 	registerForTimeouts(
 			PeerManagerRegistrationImpl		reg )
@@ -1087,6 +1106,33 @@ public class PeerManager implements CoreStatsProvider {
 				}
 			}
 
+			if ( !enable_public_tcp_peers ){
+				
+				if ( connection.getTransport().getTransportEndpoint().getProtocolEndpoint().getType() == ProtocolEndpoint.PROTOCOL_TCP ){
+					
+					boolean socks_active = NetworkAdmin.getSingleton().isSocksActive();
+					
+					boolean lan_local = connection.isLANLocal();
+					
+					if ( net_cat == AENetworkClassifier.AT_PUBLIC && !socks_active && !lan_local ){
+						
+						connection.close( "TCP public peer protocol disabled");
+
+						return;
+					}
+				}
+			}
+			
+			if ( !enable_public_udp_peers ){
+				
+				if ( connection.getTransport().getTransportEndpoint().getProtocolEndpoint().getType() == ProtocolEndpoint.PROTOCOL_UDP ){
+
+					connection.close( "UDP public peer protocol disabled");
+
+					return;
+				}
+			}
+			
 			if (Logger.isEnabled()){
 
 				Logger.log(new LogEvent(LOGID, "Incoming connection from ["
