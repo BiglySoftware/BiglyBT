@@ -1,9 +1,7 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2019.05.yy | BiglyBT 2.0.0.0
-
-Up to B25
+2019.05.27 | BiglyBT 2.0.0.0
 
 FEATURE: UI    | Most config parameters now have a "Reset to Default" option on right click of their label [TuxPaper]   
 FEATURE: UI    | Console UI: Config sections and parameters now available via `config` command [TuxPaper]  
@@ -19,6 +17,7 @@ FEATURE: UI    | Allow plugins to add to the Tools menu [TuxPaper]
 FEATURE: Core  | Added additional 'add modes' of paused, stopped+allocated, paused+allocated [Parg]
 FEATURE: Core  | Additional share-ratio related information in stats export [Parg]
 FEATURE: Core  | Chat participant muting is now persisted [Parg]
+FEATURE: Core  | Options to disable TCP/UDP peers [Parg]
 FEATURE: Tag   | Added archive, delete from library and delete from computer as tag-ratio actions [Parg]
 FEATURE: Tag   | Per-tag 'move on remove' file settings [Parg]
 
@@ -64,7 +63,7 @@ BUGFIX: Core   | Handle relative URLs in RSS items [Parg]
 BUGFIX: Core   | Fix failure to detect network interface changes (e.g. on VPN reconnect) [Parg]
 BUGFIX: Core   | Catch more 'no more space' conditions for the 'auto resume on no space' feature [Parg]
 BUGFIX: Plug   | Remove potential deadlock on closedown when I2P initialisation fails [Parg]
-BUGFIX: Tag    | Tags with disabled or emptry tag constraints shouldn't be treated as 'auto' [Parg]
+BUGFIX: Tag    | Tags with disabled or empty tag constraints shouldn't be treated as 'auto' [Parg]
 
 2019.03.28 | BiglyBT 1.9.0.0
 
