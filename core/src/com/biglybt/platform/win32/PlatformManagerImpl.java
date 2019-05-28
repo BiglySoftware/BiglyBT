@@ -536,7 +536,11 @@ PlatformManagerImpl
 	{
 		String vendor = System.getProperty( "java.vendor", "<unknown>" );
 
-		if ( !vendor.toLowerCase().startsWith( "sun " ) && !vendor.toLowerCase().startsWith( "oracle " )){
+		String lc_vendor = vendor.toLowerCase( Locale.US );
+		
+		if ( 	!lc_vendor.startsWith( "sun " ) && 
+				!lc_vendor.startsWith( "oracle " ) &&
+				!lc_vendor.contains( "openjdk" )){
 
 			throw( new PlatformManagerException(
 						MessageText.getString(
