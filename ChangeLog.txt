@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2019.xx.yy | BiglyBT 2.0.0.1
+
 2019.05.27 | BiglyBT 2.0.0.0
 
 FEATURE: UI    | Most config parameters now have a "Reset to Default" option on right click of their label [TuxPaper]   
