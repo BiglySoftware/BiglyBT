@@ -41,6 +41,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
@@ -189,6 +190,8 @@ StatsWriterImpl
 
 					DownloadManagerStats	dm_stats = dm.getStats();
 
+					DownloadManagerState	dm_state = dm.getDownloadState();
+					
 					writeLineRaw( "<DOWNLOAD>");
 
 					try{
@@ -288,7 +291,7 @@ StatsWriterImpl
 								eta_str = DisplayFormatters.formatETA(next_eta);
 							}
 
-							String timestamp_str = timestamp <= 0? "-": DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( new Date( timestamp ).toInstant().atZone( ZoneId.systemDefault()));
+							String timestamp_str = timestamp <= 0? "-": formatDate( timestamp );
 							
 							writeTag( "SHARE_RATIO_PROGRESS", eta_str + "; " + sr_str + "; " + timestamp_str );
 						}
@@ -303,6 +306,22 @@ StatsWriterImpl
 							long only_seeding_for = dm_stats.getSecondsOnlySeeding();
 
 							writeRawCookedElapsedTag( "ONLY_SEEDING_FOR", only_seeding_for);
+						}
+						
+						{
+							long last_active = dm_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME);
+							
+							if ( last_active == 0 ){
+								
+								last_active = dm_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
+							}
+							
+							if ( last_active == 0) {
+								
+								last_active = dm_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
+							}
+							
+							writeRawCookedDateTag( "LAST_ACTIVE", last_active );
 						}
 						
 						writeTag( "TOTAL_SEEDS", dm.getNbSeeds());
@@ -502,4 +521,31 @@ StatsWriterImpl
 		writeLineRaw( "</" + tag + ">");
 	}
 	
+	private String
+	formatDate(
+		long	millis )
+	{
+		return( DateTimeFormatter.ISO_LOCAL_DATE_TIME.format( new Date( millis ).toInstant().atZone( ZoneId.systemDefault())));
+	}
+	
+	protected void
+	writeRawCookedDateTag(
+		String	tag,
+		long	raw )
+	{
+		writeLineRaw( "<" + tag + ">");
+
+		try{
+			indent();
+
+			writeTag( "TEXT",	raw<0?"":formatDate( raw ));
+			writeTag( "RAW",	raw<0?-1:raw );
+
+		}finally{
+
+			exdent();
+		}
+
+		writeLineRaw( "</" + tag + ">");
+	}
 }
