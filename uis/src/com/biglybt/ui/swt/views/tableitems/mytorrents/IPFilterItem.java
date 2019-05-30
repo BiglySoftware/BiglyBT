@@ -62,8 +62,8 @@ public class IPFilterItem
 	initializeAsGraphic(POSITION_INVISIBLE, 100);
 	setMinWidth(20);
 	
-	tick_icon = new UISWTGraphicImpl(ImageLoader.getInstance().getImage("tick_mark"));
-	cross_icon = new UISWTGraphicImpl(ImageLoader.getInstance().getImage("cross_mark"));
+	tick_icon = new UISWTGraphicImpl(ImageLoader.getInstance().getImage("tick_mark_s"));
+	cross_icon = new UISWTGraphicImpl(ImageLoader.getInstance().getImage("cross_mark_s"));
 
   }
 
