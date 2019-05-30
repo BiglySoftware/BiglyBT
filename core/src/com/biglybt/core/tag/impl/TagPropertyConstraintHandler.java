@@ -1043,8 +1043,9 @@ TagPropertyConstraintHandler
 
 			char[] chars = str.toCharArray();
 
-			boolean	in_quote 	= false;
-
+			boolean	in_quote 		= false;
+			boolean prev_was_esc	= false;
+			
 			int	level 			= 0;
 			int	bracket_start 	= 0;
 
@@ -1053,15 +1054,26 @@ TagPropertyConstraintHandler
 			for ( int i=0;i<chars.length;i++){
 
 				char c = chars[i];
-
+				
+				boolean is_esc = c == '\\';
+				
+				if ( is_esc && prev_was_esc ){
+					
+					prev_was_esc = false;
+					
+					continue;
+				}
+				
 				if ( GeneralUtils.isDoubleQuote( c )){
 
-					if ( i == 0 || chars[i-1] != '\\' ){
+					if ( !prev_was_esc ){
 
 						in_quote = !in_quote;
 					}
 				}
 
+				prev_was_esc = is_esc;
+				
 				if ( !in_quote ){
 
 					if ( c == '(' ){
@@ -1080,6 +1092,8 @@ TagPropertyConstraintHandler
 
 							String bracket_text = new String( chars, bracket_start, i-bracket_start ).trim();
 
+							bracket_text = bracket_text.replaceAll( "\\Q\\\\\\E", Matcher.quoteReplacement( "\\" ));
+							
 							if ( result.length() > 0 && Character.isLetterOrDigit( result.charAt( result.length()-1 ))){
 
 									// function call
@@ -1120,14 +1134,14 @@ TagPropertyConstraintHandler
 				}
 			}
 
-			if ( level != 0 ){
-
-				throw( new RuntimeException( "Unmatched '(' in \"" + str + "\"" ));
-			}
-
 			if ( in_quote ){
 
 				throw( new RuntimeException( "Unmatched '\"' in \"" + str + "\"" ));
+			}
+
+			if ( level != 0 ){
+
+				throw( new RuntimeException( "Unmatched '(' in \"" + str + "\"" ));
 			}
 
 			return( compileBasic( result.toString(), context ));
