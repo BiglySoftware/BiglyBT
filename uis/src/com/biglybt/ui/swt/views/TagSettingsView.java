@@ -1246,6 +1246,7 @@ public class TagSettingsView
 					});
 
 					params.constraintError = new Label(gConstraint, SWT.NULL );
+					params.constraintError.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
 					params.constraintError.setForeground( Colors.colorError);
 
 					Composite cConstraintOptions = new Composite(gConstraint, SWT.NULL);
