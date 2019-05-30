@@ -38,10 +38,8 @@ import com.biglybt.core.ipfilter.IpFilter;
 import com.biglybt.core.ipfilter.IpFilterManagerFactory;
 import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
-import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
-import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
@@ -627,6 +625,11 @@ PeersViewBase
 	{
 		boolean hasSelection = (peers.length > 0);
 
+
+		final IdentityHashSet<DownloadManager>	download_managers = new IdentityHashSet<>();
+
+		Map<PEPeer,DownloadManager>	peer_dm_map = new HashMap<>();
+		
 		boolean downSpeedDisabled	= false;
 		boolean	downSpeedUnlimited	= false;
 		long	totalDownSpeed		= 0;
@@ -638,13 +641,8 @@ PeersViewBase
 		long	upSpeedSetMax		= 0;
 		long	maxUp				= 0;
 
-		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-
-		final IdentityHashSet<DownloadManager>	download_managers = new IdentityHashSet<>();
-
-		Map<PEPeer,DownloadManager>	peer_dm_map = new HashMap<>();
-		
 		if ( hasSelection ){
+			GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
 
 			for (int i = 0; i < peers.length; i++) {
 				PEPeer peer = peers[i];
@@ -705,6 +703,7 @@ PeersViewBase
 				}
 			}
 		}
+		
 
 		if (download_specific != null) {
 			final MenuItem block_item = new MenuItem(menu, SWT.CHECK);
@@ -764,21 +763,14 @@ PeersViewBase
 		if ( bp != null ){
 							
 			boolean has_pb = false;
-			
-			boolean	has_public = false;
-			
-			for ( PEPeer peer: peers ){
-				
-				if ( AENetworkClassifier.categoriseAddress( peer.getIp()) == AENetworkClassifier.AT_PUBLIC ){
-					
-					has_public = true;
-					
-					DownloadManager dm = peer_dm_map.get( peer );
-					
-					if ( dm != null && bp.isPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ))){
 						
-						has_pb = true;
-					}
+			for ( PEPeer peer: peers ){
+														
+				DownloadManager dm = peer_dm_map.get( peer );
+					
+				if ( dm != null && bp.isPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ))){
+						
+					has_pb = true;
 				}
 			}
 			
@@ -786,25 +778,87 @@ PeersViewBase
 			Messages.setLanguageText(boost_item, "PeersView.menu.boost");
 			boost_item.setSelection( has_pb );
 			
-			boost_item.setEnabled( true );//has_public );
+			boost_item.setEnabled( true );
 			
 			boost_item.addListener(SWT.Selection, new PeersRunner(peers) {
 				@Override
 				public void run(PEPeer peer) {
 					
 					boolean sel = boost_item.getSelection();
-					
-					if ( true ){//AENetworkClassifier.categoriseAddress( peer.getIp()) == AENetworkClassifier.AT_PUBLIC ){
-						
-						DownloadManager dm = peer_dm_map.get( peer );
+											
+					DownloadManager dm = peer_dm_map.get( peer );
 	
-						if ( dm != null ){
+					if ( dm != null ){
 						
-							bp.setPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ), sel );
-						}
+						bp.setPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ), sel );
 					}
 				}
 			});
+		}
+		
+		
+		{
+
+			
+			Map<String,Object> menu_properties = new HashMap<>();
+			menu_properties.put( ViewUtils.SM_PROP_PERMIT_UPLOAD_DISABLE, true );
+			menu_properties.put( ViewUtils.SM_PROP_PERMIT_DOWNLOAD_DISABLE, true );
+
+			ViewUtils.addSpeedMenu(
+					shell,
+					menu, true, true,
+					false,
+					hasSelection,
+					downSpeedDisabled,
+					downSpeedUnlimited,
+					totalDownSpeed,
+					downSpeedSetMax,
+					maxDown,
+					upSpeedDisabled,
+					upSpeedUnlimited,
+					totalUpSpeed,
+					upSpeedSetMax,
+					maxUp,
+					peers.length,
+					menu_properties,
+					new ViewUtils.SpeedAdapter()
+					{
+						@Override
+						public void
+						setDownSpeed(
+								int speed )
+						{
+							if(peers.length > 0) {
+								for (int i = 0; i < peers.length; i++) {
+									try {
+										PEPeer peer = (PEPeer)peers[i];
+										peer.getStats().setDownloadRateLimitBytesPerSecond(speed);
+									} catch (Exception e) {
+										Debug.printStackTrace( e );
+									}
+								}
+							}
+						}
+
+						@Override
+						public void
+						setUpSpeed(
+								int speed )
+						{
+
+							if(peers.length > 0) {
+								for (int i = 0; i < peers.length; i++) {
+									try {
+										PEPeer peer = (PEPeer)peers[i];
+										peer.getStats().setUploadRateLimitBytesPerSecond(speed);
+									} catch (Exception e) {
+										Debug.printStackTrace( e );
+									}
+								}
+							}
+						}
+					});
+
 		}
 		
 		final MenuItem kick_item = new MenuItem(menu, SWT.PUSH);
@@ -903,77 +957,7 @@ PeersViewBase
 				return( true );
 			}
 		});
-
-		// === advanced menu ===
-
-		final MenuItem itemAdvanced = new MenuItem(menu, SWT.CASCADE);
-		Messages.setLanguageText(itemAdvanced, "MyTorrentsView.menu.advancedmenu");
-		itemAdvanced.setEnabled(hasSelection);
-
-		final Menu menuAdvanced = new Menu(shell, SWT.DROP_DOWN);
-		itemAdvanced.setMenu(menuAdvanced);
-
-		// advanced > Download Speed Menu //
-
-		Map<String,Object> menu_properties = new HashMap<>();
-		menu_properties.put( ViewUtils.SM_PROP_PERMIT_UPLOAD_DISABLE, true );
-		menu_properties.put( ViewUtils.SM_PROP_PERMIT_DOWNLOAD_DISABLE, true );
-
-		ViewUtils.addSpeedMenu(
-				shell,
-				menuAdvanced, true, true,
-				false,
-				hasSelection,
-				downSpeedDisabled,
-				downSpeedUnlimited,
-				totalDownSpeed,
-				downSpeedSetMax,
-				maxDown,
-				upSpeedDisabled,
-				upSpeedUnlimited,
-				totalUpSpeed,
-				upSpeedSetMax,
-				maxUp,
-				peers.length,
-				menu_properties,
-				new ViewUtils.SpeedAdapter()
-				{
-					@Override
-					public void
-					setDownSpeed(
-							int speed )
-					{
-						if(peers.length > 0) {
-							for (int i = 0; i < peers.length; i++) {
-								try {
-									PEPeer peer = (PEPeer)peers[i];
-									peer.getStats().setDownloadRateLimitBytesPerSecond(speed);
-								} catch (Exception e) {
-									Debug.printStackTrace( e );
-								}
-							}
-						}
-					}
-
-					@Override
-					public void
-					setUpSpeed(
-							int speed )
-					{
-
-						if(peers.length > 0) {
-							for (int i = 0; i < peers.length; i++) {
-								try {
-									PEPeer peer = (PEPeer)peers[i];
-									peer.getStats().setUploadRateLimitBytesPerSecond(speed);
-								} catch (Exception e) {
-									Debug.printStackTrace( e );
-								}
-							}
-						}
-					}
-				});
-
+		
 		addPeersMenu( download_specific, "", menu );
 	}
 	
