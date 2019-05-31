@@ -130,8 +130,15 @@ public interface UISWTView extends UIPluginView {
 
 	/**
 	 * Gets the plugin interface associated with this view, null if none defined
+	 * <p/>
+	 * <b>Important Note</b><br>
+	 * BiglyBT 2.0.0.0 and below will only return a {@link PluginInterface}
+	 * during the {@link UISWTViewEvent#TYPE_CREATE} event. After this event is
+	 * processed, the return value will be null.
+	 * <p/>
+	 * 2.0.0.1 and later will always return a {@link PluginInterface}
 	 *
-	 * @since 4.5.1.1
+	 * @since Vuze 4.5.1.1, BiglyBT 1.0.0.0
 	 */
 	@Override
 	public PluginInterface getPluginInterface();

@@ -124,6 +124,7 @@ public class UISWTViewImpl
 	
 	private Composite masterComposite;
 	private Set<UIPluginViewToolBarListener> setToolBarEnablers = new HashSet<>(1);
+	private PluginInterface pi;
 
 	public UISWTViewImpl(String id, String parentViewID, boolean destroyOnDeactivate) {
 		this.id = id;
@@ -160,6 +161,7 @@ public class UISWTViewImpl
 				h.removeListener( this );
 				this.eventListener = delegatedEventListener;
 			}
+			pi = h.getPluginInterface();
 		}
 
 		if (eventListener instanceof IViewAlwaysInitialize) {
@@ -615,11 +617,7 @@ public class UISWTViewImpl
 	 */
 	@Override
 	public PluginInterface getPluginInterface() {
-		if (eventListener instanceof UISWTViewEventListenerHolder) {
-			return (((UISWTViewEventListenerHolder) eventListener).getPluginInterface());
-		}
-
-		return null;
+		return pi;
 	}
 
 	/* (non-Javadoc)
