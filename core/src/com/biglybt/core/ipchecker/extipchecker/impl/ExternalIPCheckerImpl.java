@@ -29,7 +29,7 @@ ExternalIPCheckerImpl
 {
 	private static final ExternalIPCheckerService[] services = {
 		new ExternalIPCheckerServiceDynDNS(),
-		new ExternalIPCheckerServiceDiscoveryVIP(),
+		// new ExternalIPCheckerServiceDiscoveryVIP(), dead? noticed 2019/06/02
 		new ExternalIPCheckerServiceNoLookup(),
 	};
 
