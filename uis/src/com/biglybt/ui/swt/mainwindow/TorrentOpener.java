@@ -679,7 +679,7 @@ public class TorrentOpener {
 							}
 						}
 						
-						if ( torrentOptions.bSequentialDownload ) {
+						if ( torrentOptions.getSequentialDownload()) {
 							
 							dms.setFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD, true );
 						}

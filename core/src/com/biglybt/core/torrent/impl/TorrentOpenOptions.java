@@ -115,7 +115,7 @@ public class TorrentOpenOptions
 
 	private int iQueueLocation;
 
-	public boolean bSequentialDownload;
+	private boolean bSequentialDownload;
 	
 	/** @todo: getter/setters */
 	public boolean isValid;
@@ -352,7 +352,12 @@ public class TorrentOpenOptions
 	setStartMode(
 		int	m )
 	{
-		iStartID = m;
+		if ( iStartID != m ){
+			
+			iStartID = m;
+		
+			startOptionsChanged();
+		}
 	}
 	
 	public int
@@ -365,9 +370,32 @@ public class TorrentOpenOptions
 	setQueueLocation(
 		int		l )
 	{
-		iQueueLocation = l;
-		
-		COConfigurationManager.setParameter( PARAM_QUEUEPOSITION, l );
+		if ( iQueueLocation != l ){
+			
+			iQueueLocation = l;
+			
+			COConfigurationManager.setParameter( PARAM_QUEUEPOSITION, l );
+			
+			startOptionsChanged();
+		}
+	}
+	
+	public boolean
+	getSequentialDownload()
+	{
+		return( bSequentialDownload );
+	}
+	
+	public void
+	setSequentialDownload(
+		boolean		b )
+	{
+		if ( b != bSequentialDownload ){
+	
+			bSequentialDownload = b;
+			
+			startOptionsChanged();
+		}
 	}
 	
 	public Map<String, Boolean>
@@ -1290,6 +1318,7 @@ public class TorrentOpenOptions
 		public void priorityChanged(TorrentOpenFileOptions torrentOpenFileOptions, int priority );
 		public void parentDirChanged();
 		public void initialTagsChanged();
+		public default void startOptionsChanged(){}
 	}
 	
 	public interface ParentDirChangedListener extends FileListener
@@ -1340,6 +1369,17 @@ public class TorrentOpenOptions
 		for ( FileListener l : fileListeners) {
 			try{
 				l.initialTagsChanged();
+			}catch( Throwable e ){
+				Debug.out( e );
+			}
+		}
+	}
+	
+	public void startOptionsChanged()
+	{
+		for ( FileListener l : fileListeners) {
+			try{
+				l.startOptionsChanged();
 			}catch( Throwable e ){
 				Debug.out( e );
 			}

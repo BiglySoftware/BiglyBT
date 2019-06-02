@@ -1656,8 +1656,12 @@ public class OpenTorrentOptionsWindow
 		implements TableViewFilterCheck<TorrentOpenFileOptions>, ParameterListener
 	{
 		final private HashWrapper						hash;
+		
 		final private TorrentOpenOptions 				torrentOptions;
 		final private List<TorrentOpenOptions>			torrentOptionsMulti;
+		
+		final private boolean							isSingleOptions;		// true -> torrentOptions is active, false -> torrentOptions is null and torrentOptionsMulti active
+		
 		final private OpenTorrentInstanceListener		changeListener;
 
 		final private Composite	parent;
@@ -1680,6 +1684,8 @@ public class OpenTorrentOptionsWindow
 
 		private Combo cmbQueueLocation;
 
+		private Button btnSequentialDownload;
+		
 		private Combo cmbStartMode;
 
 		private volatile boolean diskFreeInfoRefreshPending = false;
@@ -1732,11 +1738,15 @@ public class OpenTorrentOptionsWindow
 		{
 			hash				= _hash;
 			parent				= _parent;
+			
 			torrentOptions 		= _torrentOptions;
 			torrentOptionsMulti	= new ArrayList<>();
-			changeListener		= _changeListener;
 
 			torrentOptionsMulti.add( torrentOptions );
+
+			isSingleOptions		= true;
+			
+			changeListener		= _changeListener;
 
 			shell = parent.getShell();
 
@@ -1772,7 +1782,7 @@ public class OpenTorrentOptionsWindow
 				}
 				@Override
 				public void parentDirChanged(){
-					if ( torrentOptions != null && cmbDataDir != null ){
+					if ( isSingleOptions && cmbDataDir != null ){
 						String toText = torrentOptions.getParentDir();
 						String text = cmbDataDir.getText();
 
@@ -1787,6 +1797,17 @@ public class OpenTorrentOptionsWindow
 				public void initialTagsChanged(){
 					updateStartOptionsHeader();
 					buildTagButtonPanel();
+				}
+				
+				@Override
+				public void startOptionsChanged(){
+					if ( isSingleOptions ){
+						cmbStartMode.select(torrentOptions.getStartMode());
+						cmbQueueLocation.select(torrentOptions.getQueueLocation());
+						btnSequentialDownload.setSelection( torrentOptions.getSequentialDownload());
+						
+						updateStartOptionsHeader();
+					}
 				}
 			});
 
@@ -1870,8 +1891,12 @@ public class OpenTorrentOptionsWindow
 		{
 			hash				= null;
 			parent				= _parent;
+			
 			torrentOptions 		= null;
 			torrentOptionsMulti = new ArrayList<>( _torrentOptionsMulti );
+			
+			isSingleOptions = false;
+			
 			changeListener		= _changeListener;
 
 			shell = parent.getShell();
@@ -1904,7 +1929,7 @@ public class OpenTorrentOptionsWindow
 		@Override
 		public void 
 		parameterChanged(String parameterName){
-			if ( torrentOptions != null ){
+			if ( isSingleOptions ){
 				
 				torrentOptions.applySkipConfig();
 			}
@@ -1919,7 +1944,7 @@ public class OpenTorrentOptionsWindow
 
 			skin.initialize( parent, "expandview");
 
-			if ( torrentOptions != null ){
+			if ( isSingleOptions ){
 				SWTSkinObject so = skin.getSkinObject("filearea-table");
 				if (so instanceof SWTSkinObjectContainer) {
 					setupTVFiles((SWTSkinObjectContainer) so, (SWTSkinObjectTextbox)skin.getSkinObject("filearea-filter"));
@@ -1941,17 +1966,19 @@ public class OpenTorrentOptionsWindow
 				l.setText( "" );	// start with this to avoid UI re-layout from moving suff as user enters text etc
 			}
 
-			if ( torrentOptions != null ){
+			if ( isSingleOptions ){
 				so = skin.getSkinObject("filearea-info");
 				if (so instanceof SWTSkinObjectText) {
 					setupFileAreaInfo((SWTSkinObjectText) so);
 				}
+			}
+			
+			so = skin.getSkinObject("start-options");
+			if (so instanceof SWTSkinObjectExpandItem) {
+				setupStartOptions((SWTSkinObjectExpandItem) so);
+			}
 
-				so = skin.getSkinObject("start-options");
-				if (so instanceof SWTSkinObjectExpandItem) {
-					setupStartOptions((SWTSkinObjectExpandItem) so);
-				}
-
+			if ( isSingleOptions ){
 				so = skin.getSkinObject("peer-sources");
 				if (so instanceof SWTSkinObjectContainer) {
 					setupPeerSourcesAndNetworkOptions((SWTSkinObjectContainer) so);
@@ -1986,7 +2013,7 @@ public class OpenTorrentOptionsWindow
 			if (so instanceof SWTSkinObjectExpandItem) {
 				soExpandItemSaveTo = (SWTSkinObjectExpandItem) so;
 			}
-			if ( torrentOptions != null ){
+			if ( isSingleOptions ){
 
 				so = skin.getSkinObject("expanditem-files");
 				if (so instanceof SWTSkinObjectExpandItem) {
@@ -2001,8 +2028,9 @@ public class OpenTorrentOptionsWindow
 				*/
 
 				setupInfoSection(skin);
-
-				updateStartOptionsHeader();
+			}
+			updateStartOptionsHeader();
+			if ( isSingleOptions ){
 				cmbDataDirChanged();
 				updateSize();
 			}else{
@@ -3748,38 +3776,38 @@ public class OpenTorrentOptionsWindow
 
 
 		private void checkSeedingMode() {
-			if ( torrentOptions == null ){
-				return;
-			}
+			
+			for ( TorrentOpenOptions to: torrentOptionsMulti ){
 
-			// Check for seeding
-			boolean bTorrentValid = true;
-
-			if (torrentOptions.getStartMode() == TorrentOpenOptions.STARTMODE_SEEDING) {
-				// check if all selected files exist
-				TorrentOpenFileOptions[] files = torrentOptions.getFiles();
-				for (int j = 0; j < files.length; j++) {
-					TorrentOpenFileOptions fileInfo = files[j];
-					if (!fileInfo.isToDownload())
-						continue;
-
-					File file = fileInfo.getInitialLink();
-
-					if (file == null) {
-
-						file = fileInfo.getDestFileFullName();
-					}
-
-					if (!file.exists()) {
-						fileInfo.isValid = false;
-						bTorrentValid = false;
-					} else if (!fileInfo.isValid) {
-						fileInfo.isValid = true;
+				// Check for seeding
+				boolean bTorrentValid = true;
+	
+				if (to.getStartMode() == TorrentOpenOptions.STARTMODE_SEEDING) {
+					// check if all selected files exist
+					TorrentOpenFileOptions[] files = to.getFiles();
+					for (int j = 0; j < files.length; j++) {
+						TorrentOpenFileOptions fileInfo = files[j];
+						if (!fileInfo.isToDownload())
+							continue;
+	
+						File file = fileInfo.getInitialLink();
+	
+						if (file == null) {
+	
+							file = fileInfo.getDestFileFullName();
+						}
+	
+						if (!file.exists()) {
+							fileInfo.isValid = false;
+							bTorrentValid = false;
+						} else if (!fileInfo.isValid) {
+							fileInfo.isValid = true;
+						}
 					}
 				}
+	
+				to.isValid = bTorrentValid;
 			}
-
-			torrentOptions.isValid = bTorrentValid;
 		}
 
 		protected void cmbDataDirChanged() {
@@ -3839,13 +3867,17 @@ public class OpenTorrentOptionsWindow
 		}
 
 		protected void setSelectedQueueLocation(int iLocation) {
-			torrentOptions.setQueueLocation( iLocation );
+			for ( TorrentOpenOptions to: torrentOptionsMulti ){
+				to.setQueueLocation( iLocation );
+			}
 
 			updateStartOptionsHeader();
 		}
 		
 		protected void setSequentalDownload(boolean seq) {
-			torrentOptions.bSequentialDownload = seq;
+			for ( TorrentOpenOptions to: torrentOptionsMulti ){
+				to.setSequentialDownload( seq );
+			}
 
 			updateStartOptionsHeader();
 		}
@@ -3855,52 +3887,117 @@ public class OpenTorrentOptionsWindow
 				return;
 			}
 
-			String optionText = MessageText.getString(TorrentOpenOptions.STARTMODE_KEYS[torrentOptions.getStartMode()])
-					+ ", "
-					+ MessageText.getString(MSGKEY_QUEUELOCATIONS[torrentOptions.getQueueLocation()]);
-
-			String s = MessageText.getString("OpenTorrentOptions.header.startoptions",
-					new String[] {
-						optionText
-					});
-
-			List<Tag> initialtags = torrentOptions.getInitialTags();
-
-			String tag_str = null;
-			int numTags = 0;
-
-			if ( initialtags.size() > 0 ){
-
-				tag_str = "";
-
-				for ( Tag t: initialtags ){
-					if ((t instanceof DiscoveredTag)
-							&& ((DiscoveredTag) t).existingTag != null) {
-						continue;
+			if ( isSingleOptions ){
+								
+				String optionText = MessageText.getString(TorrentOpenOptions.STARTMODE_KEYS[torrentOptions.getStartMode()])
+						+ ", "
+						+ MessageText.getString(MSGKEY_QUEUELOCATIONS[torrentOptions.getQueueLocation()]);
+	
+				String s = MessageText.getString("OpenTorrentOptions.header.startoptions",
+						new String[] {
+							optionText
+						});
+	
+				List<Tag> initialtags = torrentOptions.getInitialTags();
+	
+				String tag_str = null;
+				int numTags = 0;
+	
+				if ( initialtags.size() > 0 ){
+	
+					tag_str = "";
+	
+					for ( Tag t: initialtags ){
+						if ((t instanceof DiscoveredTag)
+								&& ((DiscoveredTag) t).existingTag != null) {
+							continue;
+						}
+						numTags++;
+						tag_str += (tag_str==""?"":", ") + t.getTagName( true );
 					}
-					numTags++;
-					tag_str += (tag_str==""?"":", ") + t.getTagName( true );
 				}
-			}
-
-			if (numTags == 0) {
-				tag_str = MessageText.getString( "label.none" );
-			}
-
-
-			s += "        " + MessageText.getString( "OpenTorrentOptions.header.tags", new String[]{ tag_str });
-
-			if ( torrentOptions.bSequentialDownload ) {
+	
+				if (numTags == 0) {
+					tag_str = MessageText.getString( "label.none" );
+				}
+	
+	
+				s += "        " + MessageText.getString( "OpenTorrentOptions.header.tags", new String[]{ tag_str });
+	
+				if ( torrentOptions.getSequentialDownload()) {
+				
+					s += "        " + MessageText.getString( "menu.sequential.download" );
+				}
 			
-				s += "        " + MessageText.getString( "menu.sequential.download" );
-			}
+				soStartOptionsExpandItem.setText(s);
+				
+			}else{
+				
+				int		startMode 		= -1;
+				int		queueLocation	= -1;
+				int		sequential		= -1;
+				
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					
+					int sm = to.getStartMode();
+					int ql = to.getQueueLocation();
+					int s = to.getSequentialDownload()?1:0;
+					
+					if ( startMode == -1 ){
+					
+						startMode 		= sm;
+						queueLocation 	= ql;
+						sequential		= s;
+						
+					}else{
+						
+						if ( startMode != sm ){
+							startMode	= -2;
+						}
+						if ( queueLocation != ql ){
+							queueLocation = -2;
+						}
+						if (sequential != s ){
+							sequential = -2;
+						}
+					}
+				}
+				
+				String smText =	(startMode<0?"":MessageText.getString(TorrentOpenOptions.STARTMODE_KEYS[startMode]));
+				String qlText = (queueLocation<0?"":MessageText.getString(MSGKEY_QUEUELOCATIONS[queueLocation]));
+				
+				String optionText = smText;
+				
+				if ( !qlText.isEmpty()){
+				
+					if ( !optionText.isEmpty()){
+					
+						optionText += ", ";
+					}
+					
+					optionText += qlText;
+				}
+	
+				String s = MessageText.getString("OpenTorrentOptions.header.startoptions",
+						new String[] {
+							optionText
+						});
+	
+				if ( sequential == 1 ){
+					
+					s += "        " + MessageText.getString( "menu.sequential.download" );
+				}
 			
-			soStartOptionsExpandItem.setText(s);
+				soStartOptionsExpandItem.setText(s);			
+			}
 		}
 
 		protected void setSelectedStartMode(int iStartID) {
-			torrentOptions.setStartMode( iStartID );
-
+			
+			for ( TorrentOpenOptions to: torrentOptionsMulti ){
+				to.setStartMode( iStartID );
+			}
+			
 			checkSeedingMode();
 			updateStartOptionsHeader();
 		}
@@ -4381,7 +4478,7 @@ public class OpenTorrentOptionsWindow
 			
 			GridLayout more_layout;
 			
-			if ( torrentOptions != null && !torrentOptions.isSimpleTorrent()){
+			if ( isSingleOptions && !torrentOptions.isSimpleTorrent()){
 				
 				more_layout = new GridLayout(4,false);
 				
@@ -4607,24 +4704,25 @@ public class OpenTorrentOptionsWindow
 				}
 			});
 
-			Button seqDL = new Button( cTorrentModes, SWT.CHECK );
-			Messages.setLanguageText(seqDL, "menu.sequential.download");
+			btnSequentialDownload = new Button( cTorrentModes, SWT.CHECK );
+			Messages.setLanguageText(btnSequentialDownload, "menu.sequential.download");
 			gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER);
-			seqDL.setLayoutData(gridData);
+			btnSequentialDownload.setLayoutData(gridData);
 
 			if ( Constants.isWindows ){
-				seqDL.setBackground( Colors.white );
+				btnSequentialDownload.setBackground( Colors.white );
 			}
-			
-			seqDL.addSelectionListener(new SelectionAdapter() {
+			updateSequentialDownloadButton();
+			btnSequentialDownload.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					setSequentalDownload( seqDL.getSelection());
+					btnSequentialDownload.setGrayed( false );
+					setSequentalDownload( btnSequentialDownload.getSelection());
 				}
 			});
 
 			
-			if ( TagManagerFactory.getTagManager().isEnabled()){
+			if ( TagManagerFactory.getTagManager().isEnabled() && isSingleOptions ){
 
 					// tag area
 
@@ -6014,6 +6112,9 @@ public class OpenTorrentOptionsWindow
 			parent.setLayout( new GridLayout());
 
 			Button button = new Button(parent, SWT.CHECK | SWT.WRAP );
+			if ( Constants.isWindows ){
+				button.setBackground( Colors.white );
+			}
 			Messages.setLanguageText(button, "MyTorrentsView.menu.ipf_enable");
 			GridData gd = new GridData();
 			gd.verticalAlignment = SWT.CENTER;
@@ -6062,6 +6163,9 @@ public class OpenTorrentOptionsWindow
 					String msg_text = "ConfigView.section.connection.peersource." + p;
 
 					Button button = new Button(peer_sources_group, SWT.CHECK);
+					if ( Constants.isWindows ){
+						button.setBackground( Colors.white );
+					}
 					Messages.setLanguageText(button, msg_text);
 
 					button.setSelection(COConfigurationManager.getBooleanParameter(config_name));
@@ -6100,6 +6204,9 @@ public class OpenTorrentOptionsWindow
 					String msg_text = "ConfigView.section.connection.networks." + nn;
 
 					Button button = new Button(network_group, SWT.CHECK);
+					if ( Constants.isWindows ){
+						button.setBackground( Colors.white );
+					}
 					Messages.setLanguageText(button, msg_text);
 
 					network_buttons.add( button );
@@ -6205,7 +6312,52 @@ public class OpenTorrentOptionsWindow
 				sItemsText[i] = sText;
 			}
 			cmbQueueLocation.setItems(sItemsText);
-			cmbQueueLocation.select(torrentOptions.getQueueLocation());
+			if ( isSingleOptions ){
+				cmbQueueLocation.select(torrentOptions.getQueueLocation());
+			}else{
+				int queueLocation = -1;
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					int ql = to.getQueueLocation();
+					if (queueLocation == -1 ){
+						queueLocation = ql;
+					}else if ( queueLocation != ql ){
+						queueLocation = -2;
+					}
+				}
+				if ( queueLocation >= 0 ){
+					cmbQueueLocation.select( queueLocation );
+				}else{
+					cmbQueueLocation.deselectAll();
+				}
+			}
+		}
+		
+		private void updateSequentialDownloadButton(){
+			if (btnSequentialDownload == null)
+				return;
+
+		
+			if ( isSingleOptions ){
+				btnSequentialDownload.setSelection( torrentOptions.getSequentialDownload());
+			}else{
+				int	seq = -1;
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					int s = to.getSequentialDownload()?1:0;
+					if ( seq == -1 ){
+						seq = s;
+					}else if ( seq != s ){
+						seq = -2;
+					}
+				}
+				
+				if ( seq >= 0 ){
+					btnSequentialDownload.setSelection( seq==1 );
+					btnSequentialDownload.setGrayed( false );
+				}else{
+					btnSequentialDownload.setSelection( true );
+					btnSequentialDownload.setGrayed( true );
+				}
+			}
 		}
 
 		private void updateSize() {
@@ -6285,7 +6437,25 @@ public class OpenTorrentOptionsWindow
 				sItemsText[i] = sText;
 			}
 			cmbStartMode.setItems(sItemsText);
-			cmbStartMode.select(torrentOptions.getStartMode());
+			if ( isSingleOptions ){
+				cmbStartMode.select(torrentOptions.getStartMode());
+			}else{
+				int startMode = -1;
+				for ( TorrentOpenOptions to: torrentOptionsMulti ){
+					int sm = to.getStartMode();
+					if (startMode == -1 ){
+						startMode = sm;
+					}else if ( startMode != sm ){
+						startMode = -2;
+					}
+				}
+				if ( startMode >= 0 ){
+					cmbStartMode.select(startMode);
+				}else{
+					cmbStartMode.deselectAll();
+				}
+			}
+			
 			cmbStartMode.layout(true);
 		}
 
