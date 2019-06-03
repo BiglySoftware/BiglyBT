@@ -3110,9 +3110,14 @@ download_loop:
 
 									if ( file.getDownloaded() == file_length ){
 
-										already_complete++;
-
-										continue;
+											// edge case where file has been deleted but cached download info not reset yet
+										
+										if ( file.getFile( true ).exists()){
+										
+											already_complete++;
+										
+											continue;
+										}
 									}
 									
 									if ( file.isSkipped()){
@@ -3529,6 +3534,13 @@ download_loop:
 														if ( target.exists()){
 															
 															target.delete();
+														}
+														
+														File parent = target.getParentFile();
+														
+														if ( !parent.exists()){
+															
+															parent.mkdirs();
 														}
 														
 														if ( mode == 1 ){
