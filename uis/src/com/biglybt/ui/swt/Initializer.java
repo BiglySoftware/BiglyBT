@@ -372,11 +372,11 @@ public class Initializer
 		new UIMagnetHandler(core);
 
 		if (!STARTUP_UIFIRST) {
-			// Ensure colors initialized
-			Colors.getInstance();
-
 			UIConfigDefaultsSWT.initialize();
 			UIConfigDefaultsSWTv3.initialize(core);
+
+			// Ensure colors initialized
+			Colors.getInstance();
 		} else {
 			COConfigurationManager.setBooleanDefault("Show Splash", false);
 		}
