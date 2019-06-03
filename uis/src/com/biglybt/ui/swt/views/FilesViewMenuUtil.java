@@ -1244,9 +1244,14 @@ public class FilesViewMenuUtil
 						FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)file;
 							
 						outer:
-						while( node != null ){
+						while( true ){
 							
 							node = node.getParent();
+							
+							if ( node == null ){
+								
+								break;
+							}
 							
 							row = tv.getRow( node );
 							
