@@ -1468,6 +1468,9 @@ public class FilesView
 		public String
 		getName();
 		
+		public FilesViewTreeNode
+		getParent();
+		
 		public int
 		getDepth();
 		
@@ -1518,6 +1521,13 @@ public class FilesView
 			dm		= _dm;
 			name	= _name;
 			parent	= _parent;
+		}
+		
+		@Override
+		public FilesViewTreeNode 
+		getParent()
+		{
+			return( parent );
 		}
 		
 		@Override
@@ -1927,6 +1937,14 @@ public class FilesView
 		{
 			return( name );
 		}
+		
+		@Override
+		public FilesViewTreeNode 
+		getParent()
+		{
+			return( parent );
+		}
+		
 		@Override
 		public boolean 
 		isLeaf()

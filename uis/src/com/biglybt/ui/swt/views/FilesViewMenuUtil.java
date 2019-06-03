@@ -233,6 +233,9 @@ public class FilesViewMenuUtil
 		final MenuItem itemRevertFiles = new MenuItem(menu, SWT.PUSH);
 		Messages.setLanguageText(itemRevertFiles, "MyTorrentsView.menu.revertfiles");
 
+		final MenuItem itemRevertFilesCopy = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(itemRevertFilesCopy, "MyTorrentsView.menu.revertfiles.copy");
+
 
 		// locate files
 
@@ -416,6 +419,7 @@ public class FilesViewMenuUtil
 			itemRename.setEnabled(false);
 			itemRetarget.setEnabled(false);
 			itemRevertFiles.setEnabled(false);
+			itemRevertFilesCopy.dispose();
 			itemRecheckFiles.setEnabled(false);
 			itemLocateFiles.setEnabled(false);
 			itemfindMore.setEnabled(false);
@@ -621,10 +625,25 @@ public class FilesViewMenuUtil
 			@Override
 			public void handleEvent(Event event) {
 
-				revertFiles( tv, all_files );
+				revertFiles( tv, all_files, false );
 			}
 		});
-
+		
+		if ( any_relocated ){
+			
+			itemRevertFilesCopy.setEnabled( any_relocated );
+			itemRevertFilesCopy.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+	
+					revertFiles( tv, all_files, true );
+				}
+			});
+		}else{
+			
+			itemRevertFilesCopy.dispose();
+		}
+		
 		if ( itemClearLinks != null ){
 
 			itemClearLinks.setEnabled( files_with_links.size() > 0 );
@@ -1218,6 +1237,39 @@ public class FilesViewMenuUtil
 							}
 						}
 					}
+				}else{
+					
+					if ( file instanceof FilesView.FilesViewTreeNode ){
+						
+						FilesView.FilesViewTreeNode node = (FilesView.FilesViewTreeNode)file;
+							
+						outer:
+						while( node != null ){
+							
+							node = node.getParent();
+							
+							row = tv.getRow( node );
+							
+							if ( row != null ){
+								
+								TableRowCore[] subrows = row.getSubRowsWithNull();
+
+								if ( subrows != null ){
+
+									for ( TableRowCore sr: subrows ){
+
+										if ( sr.getDataSource(true) == file ){
+
+											row = sr;
+
+											break outer;
+										}
+									}
+								}
+							}
+							
+						}
+					}
 				}
 			}
 
@@ -1666,7 +1718,7 @@ public class FilesViewMenuUtil
 
 	// same code is used in tableitems.files.NameItem
 	
-	private static final AESemaphore moveFileSem = new AESemaphore( "moveFile", 1 );
+	private static final AESemaphore moveCopyFileSem = new AESemaphore( "moveCopyFile", 1 );
 	
 	private static void
 	moveFile(
@@ -1679,7 +1731,7 @@ public class FilesViewMenuUtil
 		Utils.getOffOfSWTThread(new AERunnable() {
 			@Override
 			public void runSupport(){
-				moveFileSem.reserve();
+				moveCopyFileSem.reserve();
 					
 				moveFileSupport(
 					manager, fileInfo, target, dont_delete_existing, 
@@ -1688,7 +1740,39 @@ public class FilesViewMenuUtil
 						public void 
 						run()
 						{
-							moveFileSem.release();
+							moveCopyFileSem.release();
+							
+							if ( done != null ){
+								
+								done.run();
+							}
+						};
+					});
+			}
+		});
+	}
+	
+	private static void
+	copyFile(
+		final DownloadManager 			manager,
+		final DiskManagerFileInfo 		fileInfo,
+		final File 						target,
+		boolean							dont_delete_existing,
+		final Runnable					done )
+	{
+		Utils.getOffOfSWTThread(new AERunnable() {
+			@Override
+			public void runSupport(){
+				moveCopyFileSem.reserve();
+					
+				copyFileSupport(
+					manager, fileInfo, target, dont_delete_existing, 
+					new Runnable()
+					{
+						public void 
+						run()
+						{
+							moveCopyFileSem.release();
 							
 							if ( done != null ){
 								
@@ -1781,6 +1865,94 @@ public class FilesViewMenuUtil
 		}
 	}
 
+	private static void
+	copyFileSupport(
+		final DownloadManager 			manager,
+		final DiskManagerFileInfo 		fileInfo,
+		final File 						target,
+		boolean							dont_delete_existing,
+		final Runnable					done )
+	{
+
+		// this behaviour should be put further down in the core but I'd rather not
+		// do so close to release :(
+
+		manager.setUserData("is_changing_links", true);
+
+		if ( dont_delete_existing ){
+				// I don't link this one bit, but there's a lot of things I don't like and this isn't the worst
+			manager.setUserData("set_link_dont_delete_existing", true);
+		}
+
+		try{
+
+			FileUtil.runAsTask(new CoreOperationTask() {
+				
+				@Override
+				public String getName(){
+					return fileInfo.getFile( true ).getName();
+				}
+				@Override
+				public ProgressCallback getProgressCallback() {
+					return null;
+				}
+
+				@Override
+				public void run(CoreOperation operation) {
+					boolean went_async = false;
+
+					try{
+						File source = fileInfo.getFile( true );
+						
+						if ( source.exists()){
+							
+							FileUtil.copyFile( source, target ); 
+						}
+						
+						// xxx download must be stoppped
+						boolean ok = fileInfo.setLink(target);
+
+						if (!ok){
+
+							new MessageBoxShell(
+								SWT.ICON_ERROR | SWT.OK,
+								MessageText.getString("FilesView.rename.failed.title"),
+								MessageText.getString("FilesView.rename.failed.text")).open(
+									new UserPrompterResultListener() {
+
+										@Override
+										public void prompterClosed(int result) {
+											if ( done != null ){
+												done.run();
+											}
+										}
+									});
+
+							went_async = true;
+						}
+					}finally{
+						manager.setUserData("is_changing_links", false);
+						manager.setUserData("set_link_dont_delete_existing", null);
+
+						if ( !went_async ){
+
+							if ( done != null ){
+								done.run();
+							}
+						}
+					}
+				}
+			});
+		}catch( Throwable e ){
+			manager.setUserData("is_changing_links", false);
+			manager.setUserData("set_link_dont_delete_existing", null);
+
+			if ( done != null ){
+				done.run();
+			}
+		}
+	}
+	
 	// Returns true if it was paused here.
 	private static boolean setSkipped(DownloadManager manager,
 			DiskManagerFileInfo[] infos, boolean skipped, boolean delete_action) {
@@ -1948,7 +2120,8 @@ public class FilesViewMenuUtil
 	public static void
 	revertFiles(
 		final TableView<?>		tv,
-		DownloadManager[]		dms )
+		DownloadManager[]		dms,
+		boolean					copy )
 	{
 		List<DiskManagerFileInfo>	files = new ArrayList<>();
 
@@ -1973,14 +2146,15 @@ public class FilesViewMenuUtil
 
 		if ( files.size() > 0 ){
 
-			revertFiles( tv, files );
+			revertFiles( tv, files, copy );
 		}
 	}
 
 	public static void
 	revertFiles(
 		final TableView<?>					tv,
-		List<DiskManagerFileInfo>			files )
+		List<DiskManagerFileInfo>			files,
+		boolean								copy )
 	{
 		final List<DownloadManager>	paused = new ArrayList<>();
 
@@ -2027,20 +2201,40 @@ public class FilesViewMenuUtil
 							
 							affected_files.add( file_info );
 
-							moveFile(
-								manager,
-								file_info,
-								file_nolink,
-								true,
-								new Runnable()
-								{
-									@Override
-									public void
-									run()
+							if ( copy ){
+								
+								copyFile(
+										manager,
+										file_info,
+										file_nolink,
+										true,
+										new Runnable()
+										{
+											@Override
+											public void
+											run()
+											{
+												task_sem.release();													
+											}
+										});
+								
+							}else{
+								
+								moveFile(
+									manager,
+									file_info,
+									file_nolink,
+									true,
+									new Runnable()
 									{
-										task_sem.release();													
-									}
-								});
+										@Override
+										public void
+										run()
+										{
+											task_sem.release();													
+										}
+									});
+							}
 			    		}
 			    	}
 		    	}

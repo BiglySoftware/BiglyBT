@@ -920,12 +920,25 @@ public class TorrentUtil
 			@Override
 			public void run(DownloadManager[] dms)
 			{
-				FilesViewMenuUtil.revertFiles( tv, dms );
+				FilesViewMenuUtil.revertFiles( tv, dms, false );
 			}
 		});
 
 		itemRevertFiles.setEnabled(hasRevertableFiles);
 
+		if ( hasRevertableFiles ){
+			
+			final MenuItem itemRevertFilesCopy = new MenuItem(menu, SWT.PUSH);
+			Messages.setLanguageText(itemRevertFilesCopy, "MyTorrentsView.menu.revertfiles.copy");
+			itemRevertFilesCopy.addListener(SWT.Selection, new ListenerDMTask(dms) {
+				@Override
+				public void run(DownloadManager[] dms)
+				{
+					FilesViewMenuUtil.revertFiles( tv, dms, true );
+				}
+			});
+		}
+		
 			// clear links
 
 		final MenuItem itemClearLinks = new MenuItem(menuFiles, SWT.PUSH);
