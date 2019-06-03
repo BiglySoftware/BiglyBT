@@ -17,17 +17,24 @@
  */
 package com.biglybt.ui.swt.config;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
+import com.biglybt.pifimpl.local.ui.config.StringParameterImpl;
+import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 
 /**
  * SWT widget representing a multiline String Parameter
@@ -38,6 +45,17 @@ public class StringAreaSwtParameter
 
 	private final Text inputField;
 
+	private Label lblSuffix;
+	private Label lblSuffixGap;
+
+	public StringAreaSwtParameter(Composite curComposite,
+			StringParameterImpl pluginParam) {
+		this(curComposite, pluginParam.getConfigKeyName(),
+				pluginParam.getLabelKey(), pluginParam.getSuffixLabelKey(),
+				pluginParam.getMultiLine(), null);
+		setPluginParameter(pluginParam);
+	}
+
 	/**
 	 * Make SWT components representing a String Parameter
 	 * <p/>
@@ -47,12 +65,12 @@ public class StringAreaSwtParameter
 	 * @param paramID ID of the parameter (usually config id)
 	 * @param labelKey Messagebundle key for the text shown before text box.
 	 *                 null for no label, "" to allocate blank label 
-	 * @param suffixLabelKey Messagebundle key for text shown after the text box
+	 * @param suffixKey Messagebundle key for text shown after the text box
 	 *                 null for no suffix label, "" to allocate blank suffix label 
 	 * @param valueProcessor null if you want to use COConfigurationManager
 	 */
 	public StringAreaSwtParameter(Composite composite, String configID,
-			String labelKey, int numLinesToShow,
+			String labelKey, String suffixKey, int numLinesToShow,
 			SwtParameterValueProcessor<StringAreaSwtParameter, String> valueProcessor) {
 		super(configID);
 
@@ -91,6 +109,16 @@ public class StringAreaSwtParameter
 		};
 		setMainControl(inputField);
 
+		if (suffixKey != null) {
+			lblSuffixGap = new Label(composite, SWT.NONE);
+			lblSuffix = new Label(composite, SWT.WRAP);
+			Messages.setLanguageText(lblSuffix, suffixKey);
+			lblSuffix.setLayoutData(
+				Utils.getWrappableLabelGridData(1, GridData.FILL_HORIZONTAL));
+			ClipboardCopy.addCopyToClipMenu(lblSuffix);
+		}
+		
+
 		if (doGridData(composite)) {
 			GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
 			gridData.horizontalSpan = labelKey == null ? 2 : 1;
@@ -103,7 +131,7 @@ public class StringAreaSwtParameter
 		} else if (paramID != null) {
 			setConfigValueProcessor(String.class);
 		}
-		
+
 		if (valueProcessor instanceof SwtConfigParameterValueProcessor) {
 			List verifiers = ConfigurationDefaults.getInstance().getVerifiers(
 					paramID);
@@ -139,9 +167,21 @@ public class StringAreaSwtParameter
 	}
 
 	@Override
+	public Control[] getControls() {
+		if (lblSuffix == null) {
+			return super.getControls();
+		}
+		List<Control> list = new ArrayList<>(Arrays.asList(super.getControls()));
+		list.add(lblSuffix);
+		list.add(lblSuffixGap);
+		return list.toArray(new Control[0]);
+	}
+
+	@Override
 	public void refreshControl() {
 		super.refreshControl();
 		Utils.execSWTThread(() -> {
+			refreshSuffixControl(lblSuffix);
 			String value = getValue();
 			if (value == null) {
 				return;

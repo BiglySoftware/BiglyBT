@@ -1618,8 +1618,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 
 				} else {
 
-					swt_param = new StringAreaSwtParameter(curComposite, key, label_key,
-							num_lines, null);
+					swt_param = new StringAreaSwtParameter(curComposite, s_param);
 
 				}
 			} else if (param instanceof InfoParameterImpl) {
