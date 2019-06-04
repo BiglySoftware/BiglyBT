@@ -1286,7 +1286,8 @@ public class TorrentMenuFancy
 							boolean allResumeIncomplete = true;
 							boolean	hasClearableLinks = false;
 							boolean hasRevertableFiles	= false;
-
+							boolean lrrecheck			= false;
+							
 							for (DownloadManager dm : dms) {
 								boolean stopped = ManagerUtils.isStopped(dm);
 
@@ -1321,6 +1322,9 @@ public class TorrentMenuFancy
 
 									hasRevertableFiles = true;
 								}
+								
+								lrrecheck = lrrecheck || ManagerUtils.canLowResourceRecheck(dm);
+										
 							}
 
 							boolean fileRescan = allScanSelected || allScanNotSelected;
@@ -1339,7 +1343,22 @@ public class TorrentMenuFancy
 									});
 							itemFileRescan.setSelection(allScanSelected);
 							itemFileRescan.setEnabled(fileRescan);
+						
+							// low resource recheck
 
+							final MenuItem itemLowResourceRecheck = new MenuItem(menu, SWT.PUSH);
+							Messages.setLanguageText(itemLowResourceRecheck, "MyTorrentsView.menu.lowresourcerecheck");
+							itemLowResourceRecheck.addListener(SWT.Selection, new ListenerDMTask(dms) {
+								@Override
+								public void run(DownloadManager dm) {
+									
+									ManagerUtils.lowResourceRecheck( dm );
+								}
+							});
+							
+							itemLowResourceRecheck.setEnabled(lrrecheck);
+							
+							
 								// revert
 
 							final MenuItem itemRevertFiles = new MenuItem(menu, SWT.PUSH);

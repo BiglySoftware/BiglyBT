@@ -48,13 +48,10 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
+
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.DirectoryDialog;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
@@ -62,6 +59,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Spinner;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerCheckRequest;
+import com.biglybt.core.disk.DiskManagerCheckRequestListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
@@ -108,7 +108,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.mainwindow.Colors;
+
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
@@ -4044,5 +4044,74 @@ download_loop:
 		}
 		
 		file_info.setSkipped( skipped );
+	}
+	
+	private static final Object LOW_RES_RECHECK_KEY = new Object();
+	
+	public static boolean
+	canLowResourceRecheck(
+		DownloadManager		dm )
+	{
+		if ( dm.getState() == DownloadManager.STATE_SEEDING ){
+			
+			if ( dm.getUserData( LOW_RES_RECHECK_KEY ) == null ){
+				
+				return( true );
+			}
+		}
+		
+		return( false );
+	}
+	
+	public static void
+	lowResourceRecheck(
+		DownloadManager		dm )
+	{
+		if ( dm.getState() == DownloadManager.STATE_SEEDING && dm.getUserData( LOW_RES_RECHECK_KEY ) == null ){
+						
+			DiskManager diskManager = dm.getDiskManager();
+			
+			if ( diskManager != null ){
+			
+				dm.setUserData( LOW_RES_RECHECK_KEY, "" );
+
+				DiskManagerCheckRequest req = diskManager.createCheckRequest( -1, null );
+				
+				diskManager.enqueueCompleteRecheckRequest(
+					req,
+					new DiskManagerCheckRequestListener(){
+						
+						boolean	failed = false;
+						
+						@Override
+						public void checkFailed(DiskManagerCheckRequest request, Throwable cause){
+							
+							synchronized( this ){
+								if ( failed ){
+									return;
+								}
+								failed = true;
+							}
+							
+							dm.stopIt( DownloadManager.STATE_STOPPED, false, false );
+							
+							dm.forceRecheck();
+							
+							dm.setUserData( LOW_RES_RECHECK_KEY, null );
+
+						}
+						
+						@Override
+						public void checkCompleted(DiskManagerCheckRequest request, boolean passed){
+							
+							dm.setUserData( LOW_RES_RECHECK_KEY, null );
+						}
+						
+						@Override
+						public void checkCancelled(DiskManagerCheckRequest request){
+						}
+					});
+			}
+		}
 	}
 }

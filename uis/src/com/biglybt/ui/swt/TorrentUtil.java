@@ -52,6 +52,9 @@ import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
+import com.biglybt.core.disk.DiskManager;
+import com.biglybt.core.disk.DiskManagerCheckRequest;
+import com.biglybt.core.disk.DiskManagerCheckRequestListener;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
@@ -392,10 +395,10 @@ public class TorrentUtil
 		boolean bChangeDir = hasSelection;
 
 		boolean start, stop, pause, changeUrl, barsOpened, forceStart;
-		boolean forceStartEnabled, recheck, manualUpdate, fileMove, canSetMOC, canClearMOC, fileExport, fileRescan;
+		boolean forceStartEnabled, recheck, lrrecheck, manualUpdate, fileMove, canSetMOC, canClearMOC, fileExport, fileRescan;
 
 		changeUrl = barsOpened = manualUpdate = fileMove = canSetMOC = fileExport = fileRescan = true;
-		forceStart = forceStartEnabled = recheck = start = stop = pause = canClearMOC = false;
+		forceStart = forceStartEnabled = recheck = lrrecheck = start = stop = pause = canClearMOC = false;
 
 		boolean canSetSuperSeed = false;
 		boolean superSeedAllYes = true;
@@ -457,6 +460,8 @@ public class TorrentUtil
 					Debug.printStackTrace(ex);
 				}
 
+				int state = dm.getState();
+				
 				if (barsOpened && !DownloadBar.getManager().isOpen(dm)) {
 					barsOpened = false;
 				}
@@ -468,6 +473,8 @@ public class TorrentUtil
 						
 				recheck = recheck || dm.canForceRecheck();
 
+				lrrecheck = lrrecheck || ManagerUtils.canLowResourceRecheck( dm );
+						
 				forceStartEnabled = forceStartEnabled
 						|| ManagerUtils.isForceStartable(dm);
 
@@ -491,7 +498,7 @@ public class TorrentUtil
 					}
 
 				}
-				int state = dm.getState();
+				
 				bChangeDir &= (state == DownloadManager.STATE_ERROR
 						|| state == DownloadManager.STATE_STOPPED || state == DownloadManager.STATE_QUEUED);
 				/**
@@ -899,6 +906,8 @@ public class TorrentUtil
 			}
 		});
 
+			// periodically check incomplete pieces
+		
 		final MenuItem itemFileRescan = new MenuItem(menuFiles, SWT.CHECK);
 		Messages.setLanguageText(itemFileRescan, "MyTorrentsView.menu.rescanfile");
 		itemFileRescan.addListener(SWT.Selection, new ListenerDMTask(dms) {
@@ -912,6 +921,20 @@ public class TorrentUtil
 		itemFileRescan.setSelection(allScanSelected);
 		itemFileRescan.setEnabled(fileRescan);
 
+			// low resource recheck
+
+		final MenuItem itemLowResourceRecheck = new MenuItem(menuFiles, SWT.PUSH);
+		Messages.setLanguageText(itemLowResourceRecheck, "MyTorrentsView.menu.lowresourcerecheck");
+		itemLowResourceRecheck.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager dm) {
+				
+				ManagerUtils.lowResourceRecheck( dm );
+			}
+		});
+		
+		itemLowResourceRecheck.setEnabled(lrrecheck);
+		
 			// revert
 
 		final MenuItem itemRevertFiles = new MenuItem(menu, SWT.PUSH);
