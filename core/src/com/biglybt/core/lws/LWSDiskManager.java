@@ -143,7 +143,7 @@ LWSDiskManager
 			}
 		}catch( Throwable e ){
 
-			setFailed( "start failed - " + Debug.getNestedExceptionMessage(e));
+			setFailed( "Start failed", e );
 		}
 	}
 
@@ -207,7 +207,7 @@ LWSDiskManager
 
 		}catch( Throwable e ){
 
-			setFailed( "getFiles failed - " + Debug.getNestedExceptionMessage( e ));
+			setFailed( "getFiles failed", e );
 
 			return( null );
 
@@ -715,7 +715,8 @@ LWSDiskManager
 	@Override
 	public void
 	setFailed(
-		String		reason )
+		String			reason,
+		Throwable		cause )
 	{
 		started = false;
 
@@ -727,7 +728,7 @@ LWSDiskManager
 
 	@Override
 	public void
-	setFailed(
+	setFailedAndRecheck(
 		DiskManagerFileInfo		file,
 		String					reason )
 	{

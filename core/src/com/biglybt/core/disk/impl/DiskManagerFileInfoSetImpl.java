@@ -180,7 +180,7 @@ public class DiskManagerFileInfoSetImpl implements DiskManagerFileInfoSet {
 					modified[i] = true;
 				} catch (Throwable e) {
 					Debug.printStackTrace(e);
-					diskManager.setFailed(file, "Failed to change storage type for '" + file.getFile(true) + "': " + Debug.getNestedExceptionMessage(e));
+					diskManager.setFailedAndRecheck(file, "Failed to change storage type for '" + file.getFile(true) + "': " + Debug.getNestedExceptionMessage(e));
 					break;
 				} finally {
 					types[i] = DiskManagerUtil.convertCacheStorageTypeToString( file.getCacheFile().getStorageType());

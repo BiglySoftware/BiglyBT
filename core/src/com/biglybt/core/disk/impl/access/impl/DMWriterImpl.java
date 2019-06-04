@@ -507,7 +507,7 @@ DMWriterImpl
 
 							}else{
 
-								disk_manager.setFailed( "Disk write error - " + Debug.getNestedExceptionMessage(cause));
+								disk_manager.setFailed( "Disk write error", cause );
 
 								Debug.printStackTrace( cause );
 
@@ -568,7 +568,7 @@ DMWriterImpl
 
 			request.getBuffer().returnToPool();
 
-			disk_manager.setFailed( "Disk write error - " + Debug.getNestedExceptionMessage(e));
+			disk_manager.setFailed( "Disk write error", e );
 
 			Debug.printStackTrace( e );
 

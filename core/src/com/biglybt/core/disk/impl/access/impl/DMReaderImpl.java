@@ -487,7 +487,7 @@ DMReaderImpl
 				buffer.returnToPool();
 			}
 
-			disk_manager.setFailed( "Disk read error - " + Debug.getNestedExceptionMessage(e));
+			disk_manager.setFailed( "Disk read error", e );
 
 			Debug.printStackTrace( e );
 
@@ -723,7 +723,7 @@ DMReaderImpl
 		{
 			buffer.returnToPool();
 
-			disk_manager.setFailed( "Disk read error - " + Debug.getNestedExceptionMessage(cause));
+			disk_manager.setFailed( "Disk read error", cause );
 
 			Debug.printStackTrace( cause );
 

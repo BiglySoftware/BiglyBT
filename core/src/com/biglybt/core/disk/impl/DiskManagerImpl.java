@@ -200,8 +200,8 @@ DiskManagerImpl
     boolean stopping;
 
 
-    private int state_set_via_method;
-    String 	errorMessage = "";
+    private int 	state_set_via_method;
+    private String 	errorMessage_set_via_method = "";
     private int		errorType	= 0;
 
     private int pieceLength;
@@ -334,9 +334,7 @@ DiskManagerImpl
 
         if ( torrent == null ){
 
-            errorMessage     = "Torrent not available";
-
-            setState( FAULTY );
+            setErrorState( "Torrent not available" );
 
             return;
         }
@@ -350,9 +348,7 @@ DiskManagerImpl
 
             Debug.printStackTrace( e );
 
-            errorMessage = TorrentUtils.exceptionToText(e);
-
-            setState( FAULTY );
+            setErrorState( TorrentUtils.exceptionToText(e));
 
             return;
 
@@ -360,9 +356,7 @@ DiskManagerImpl
 
             Debug.printStackTrace( e );
 
-            errorMessage = "Initialisation failed - " + Debug.getNestedExceptionMessage(e);
-
-            setState( FAULTY );
+            setErrorState( "Initialisation failed - " + Debug.getNestedExceptionMessage(e));
 
             return;
         }
@@ -376,9 +370,7 @@ DiskManagerImpl
 
             Debug.printStackTrace( e );
 
-            errorMessage = "Failed to build piece map - " + Debug.getNestedExceptionMessage(e);
-
-            setState( FAULTY );
+            setErrorState( "Failed to build piece map - " + Debug.getNestedExceptionMessage(e));
 
             return;
         }
@@ -467,11 +459,9 @@ DiskManagerImpl
 
                         }catch( Throwable e ){
 
-                            errorMessage = Debug.getNestedExceptionMessage(e) + " (start)";
-
                             Debug.printStackTrace(e);
 
-                            setState( FAULTY );
+                            setErrorState( Debug.getNestedExceptionMessage(e) + " (start)" );
 
                         }finally{
 
@@ -618,10 +608,8 @@ DiskManagerImpl
         skipped_file_set_changed = true;
         
         if ( stop_after_start[0] ){
-        	        	
-        	errorType = ET_STOP_DURING_INIT;
-        	
-        	setState( FAULTY );
+        	        	        	
+        	setErrorState( ET_STOP_DURING_INIT );
         	 
         }else{
         	
@@ -706,7 +694,7 @@ DiskManagerImpl
                     }
                 }catch ( Throwable e ){
 
-                    setFailed( "File close fails: " + Debug.getNestedExceptionMessage(e));
+                    setFailed( "File close fails", e );
                 }
             }
         }
@@ -719,7 +707,7 @@ DiskManagerImpl
 
             }catch( Exception e ){
 
-                setFailed( "Resume data save fails: " + Debug.getNestedExceptionMessage(e));
+                setFailed( "Resume data save fails", e );
             }
         }
 
@@ -835,18 +823,18 @@ DiskManagerImpl
 
                                 if ( parent.isDirectory()){
 
-                                    errorMessage = current.toString() + " not found.";
+                                    setErrorMessage( current.toString() + " not found." );
 
                                 }else{
 
-                                    errorMessage = parent.toString() + " is not a directory.";
+                                	setErrorMessage( parent.toString() + " is not a directory." );
                                 }
 
                                 return( false );
                             }
                           }
 
-                          errorMessage = data_file.toString() + " not found.";
+                          setErrorMessage( data_file.toString() + " not found." );
 
                           return false;
                     }
@@ -868,7 +856,7 @@ DiskManagerImpl
 
                         }else{
 
-                            errorMessage = "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " + data_file.getAbsolutePath();
+                        	setErrorMessage( "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " + data_file.getAbsolutePath());
 
                             return false;
                         }
@@ -882,7 +870,7 @@ DiskManagerImpl
                 }
             }catch( Throwable e ){
 
-                errorMessage = Debug.getNestedExceptionMessage(e) + " (filesExist:" + relative_file.toString() + ")";
+            	setErrorMessage( e, "filesExist:" + relative_file.toString());;
 
                 return( false );
             }
@@ -1051,9 +1039,7 @@ DiskManagerImpl
 
             	if ( stopping ){
 
-                    this.errorMessage = "File allocation interrupted - download is stopping";
-
-                    setState( FAULTY );
+                    setErrorState( "File allocation interrupted - download is stopping" );
 
                     return( fail_result );
             	}
@@ -1077,9 +1063,7 @@ DiskManagerImpl
 
                 }catch ( Exception e ){
 
-                    this.errorMessage = Debug.getNestedExceptionMessage(e) + " (allocateFiles:" + relative_data_file.toString() + ")";
-
-                    setState( FAULTY );
+                    setErrorState( Debug.getNestedExceptionMessage(e) + " (allocateFiles:" + relative_data_file.toString() + ")" );
 
                     return( fail_result );
                 }
@@ -1096,9 +1080,9 @@ DiskManagerImpl
 
                 if ( file_set.contains( file_key )){
 
-                    this.errorMessage = "File occurs more than once in download: " + data_file.toString() + ".\nRename one of the files in Files view via the right-click menu.";
+                    String msg = "File occurs more than once in download: " + data_file.toString() + ".\nRename one of the files in Files view via the right-click menu.";
 
-                    setState( FAULTY );
+                    setErrorState( msg );
 
                     return( fail_result );
                 }
@@ -1179,9 +1163,7 @@ DiskManagerImpl
 
                             }else{
 
-                                this.errorMessage = "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " + data_file.getAbsolutePath();
-
-                                setState( FAULTY );
+                                setErrorState( "Existing data file length too large [" +existing_length+ ">" +target_length+ "]: " + data_file.getAbsolutePath() );
 
                                 return( fail_result );
                             }
@@ -1202,7 +1184,7 @@ DiskManagerImpl
 
                     	fileAllocFailed( data_file, target_length, false, e );
 
-                        setState( FAULTY );
+                        setErrorState();
 
                         return( fail_result );
                     }
@@ -1216,9 +1198,7 @@ DiskManagerImpl
 
                     if ( download_manager.isDataAlreadyAllocated() ){
 
-                        this.errorMessage = "Data file missing: " + data_file.getAbsolutePath();
-
-                        setState( FAULTY );
+                        setErrorState( "Data file missing: " + data_file.getAbsolutePath() );
 
                         return( fail_result );
                     }
@@ -1237,7 +1217,7 @@ DiskManagerImpl
 
                     	fileAllocFailed( data_file, target_length, true, e );
 
-                        setState( FAULTY );
+                        setErrorState();
 
                         return( fail_result );
                     }
@@ -1432,7 +1412,7 @@ DiskManagerImpl
 
 						}
 
-						setState(FAULTY);
+						setErrorState();
 					}
 	        	}
 
@@ -1460,29 +1440,7 @@ DiskManagerImpl
     	boolean		is_new,
     	Throwable 	e )
     {
-    	String exception_str  = Debug.getNestedExceptionMessage(e);
-    	
-    	errorMessage = exception_str + " (allocateFiles " + (is_new?"new":"existing") + ":" + file.toString() + ")";
-
-    	String lc = exception_str.toLowerCase( Locale.US );
-    	
-    		// not enough space; no space left; insufficient space
-    	
-    	if ( lc.contains( " space")){ 	
-
-    		errorType	= ET_INSUFFICIENT_SPACE;
-
-    		if ( length >= 4*1024*1024*1024L ){
-
-    				// might be FAT32 limit, see if we really have run out of space
-
-    			errorMessage = MessageText.getString( "DiskManager.error.nospace_fat32" );
-
-    		}else{
-
-    			errorMessage = MessageText.getString( "DiskManager.error.nospace" );
-    		}
-    	}
+    	setErrorMessage( length, e, "allocateFiles " + (is_new?"new":"existing") + ":" + file.toString());
     }
 
     @Override
@@ -1829,7 +1787,7 @@ DiskManagerImpl
 	                    		}
 	                        }catch ( Throwable e ){
 	
-	                            setFailed("Disk access error - " +Debug.getNestedExceptionMessage(e));
+	                            setFailed("Disk access error", e );
 	
 	                            Debug.printStackTrace(e);
 	                        }
@@ -1909,7 +1867,101 @@ DiskManagerImpl
         return state_set_via_method;
     }
 
-    protected void
+    private void
+    setErrorMessage(
+    	String		str )
+    {
+    	errorMessage_set_via_method = str;
+    }
+    
+    private void
+    setErrorMessage(
+    	Throwable	e,
+    	String		str )
+    {
+    	errorMessage_set_via_method = Debug.getNestedExceptionMessage( e ) + " (" + str + ")";
+    }
+    
+    private void
+    setErrorMessage(
+    	long		file_length,
+    	Throwable	e,
+    	String		str )
+    {
+    	String exception_str  = Debug.getNestedExceptionMessage(e);
+	
+	   	errorMessage_set_via_method = exception_str + " (" + str + ")";
+	
+		String lc = exception_str.toLowerCase( Locale.US );
+		
+			// not enough space; no space left; insufficient space
+		
+		if ( lc.contains( " space")){ 	
+	
+			errorType	= ET_INSUFFICIENT_SPACE;
+	
+			if ( file_length >= 4*1024*1024*1024L ){
+	
+					// might be FAT32 limit, see if we really have run out of space
+	
+				errorMessage_set_via_method = MessageText.getString( "DiskManager.error.nospace_fat32" );
+	
+			}else{
+	
+				errorMessage_set_via_method = MessageText.getString( "DiskManager.error.nospace" );
+			}
+		}
+    }
+    
+    private void
+    setErrorState()
+    {
+     	setState( FAULTY );
+    }
+    
+    private void
+    setErrorState(
+    	String		msg )
+    {
+    	setErrorMessage( msg );
+    	
+    	setState( FAULTY );
+    }
+    
+    private void
+    setErrorState(
+    	String		msg,
+    	Throwable	cause )
+    {
+       	String exception_str  = Debug.getNestedExceptionMessage(cause);
+    	
+	   	errorMessage_set_via_method = msg + ": " + exception_str;
+	
+		String lc = exception_str.toLowerCase( Locale.US );
+		
+			// not enough space; no space left; insufficient space
+		
+		if ( lc.contains( " space")){ 	
+	
+			errorType	= ET_INSUFFICIENT_SPACE;
+		
+			errorMessage_set_via_method = MessageText.getString( "DiskManager.error.nospace" );
+		}
+    	
+    	setState( FAULTY );
+    }
+    
+    private void
+    setErrorState(
+    	int			type )
+    {
+    	errorType		= type;
+    	
+    	setState( FAULTY );
+    }
+    
+    
+    private void
     setState(
         int     _state )
     {
@@ -1957,8 +2009,10 @@ DiskManagerImpl
     }
 
     @Override
-    public String getErrorMessage() {
-        return errorMessage;
+    public String 
+    getErrorMessage() 
+    {
+        return errorMessage_set_via_method;
     }
 
 	@Override
@@ -1971,7 +2025,8 @@ DiskManagerImpl
     @Override
     public void
     setFailed(
-        final String        reason )
+        String        		reason,
+        Throwable			cause )
     {
             /**
              * need to run this on a separate thread to avoid deadlock with the stopping
@@ -1979,19 +2034,17 @@ DiskManagerImpl
              * and stopping these requires this.
              */
 
-        new AEThread("DiskManager:setFailed")
+        new AEThread2("DiskManager:setFailed")
         {
             @Override
             public void
-            runSupport()
+            run()
             {
-                errorMessage    = reason;
+            	String msg = reason + ": " + Debug.getNestedExceptionMessage( cause );
+            	
+                Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.UNREPEATABLE, LogAlert.AT_ERROR, msg));
 
-                Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.UNREPEATABLE, LogAlert.AT_ERROR,
-                            errorMessage));
-
-
-                setState( DiskManager.FAULTY );
+                setErrorState( reason, cause );
 
                 DiskManagerImpl.this.stop( false );
             }
@@ -2000,9 +2053,9 @@ DiskManagerImpl
 
     @Override
     public void
-    setFailed(
-        final DiskManagerFileInfo       file,
-        final String                    reason )
+    setFailedAndRecheck(
+        DiskManagerFileInfo       file,
+        String                    reason )
     {
             /**
              * need to run this on a separate thread to avoid deadlock with the stopping
@@ -2010,19 +2063,15 @@ DiskManagerImpl
              * and stopping these requires this.
              */
 
-        new AEThread("DiskManager:setFailed")
+        new AEThread2("DiskManager:setFailed")
         {
             @Override
             public void
-            runSupport()
+            run()
             {
-                errorMessage    = reason;
+                Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.UNREPEATABLE, LogAlert.AT_ERROR, reason));
 
-                Logger.log(new LogAlert(DiskManagerImpl.this, LogAlert.UNREPEATABLE, LogAlert.AT_ERROR,
-                        errorMessage));
-
-
-                setState( DiskManager.FAULTY );
+                setErrorState( reason );
 
                 DiskManagerImpl.this.stop( false );
 
@@ -2413,7 +2462,7 @@ DiskManagerImpl
               try{
                   saveResumeData(false);
               }catch( Throwable e ){
-                  setFailed("Resume data save fails: " + Debug.getNestedExceptionMessage(e));
+                  setFailed("Resume data save fails", e );
               }
           }
 

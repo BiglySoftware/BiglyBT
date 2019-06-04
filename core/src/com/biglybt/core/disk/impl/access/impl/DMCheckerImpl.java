@@ -940,7 +940,7 @@ DMCheckerImpl
 
 		}catch( Throwable e ){
 
-			disk_manager.setFailed( "Piece check error - " + Debug.getNestedExceptionMessage(e));
+			disk_manager.setFailed( "Piece check error", e );
 
 			Debug.printStackTrace( e );
 

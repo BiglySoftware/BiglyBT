@@ -58,10 +58,11 @@ DiskManagerHelper
 
 	public void
 	setFailed(
-		String		reason );
+		String					reason,
+		Throwable				cause );
 
 	public void
-	setFailed(
+	setFailedAndRecheck(
 		DiskManagerFileInfo	file,
 		String				reason );
 
