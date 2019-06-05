@@ -3149,6 +3149,7 @@ SpeedLimitHandler
 		result.add( "#     peer_set external=211.34.128.0/19 211.35.128.0/17" );
 		result.add( "#     peer_set Europe=EU;AD;AL;AT;BA;BE;BG;BY;CH;CS;CZ;DE;DK;EE;ES;FI;FO;FR;FX;GB;GI;GR;HR;HU;IE;IS;IT;LI;LT;LU;LV;MC;MD;MK;MT;NL;NO;PL;PT;RO;SE;SI;SJ;SK;SM;UA;VA" );
 		result.add( "#     peer_set Blorp=Europe;US" );
+		result.add( "#     peer_set BiglyBTPeers=Public;I2P;Tor,client=BiglyBT.*" );
 		result.add( "#" );
 		result.add( "# When multiple rules apply the one further down the list of rules take precedence" );
 		result.add( "# Currently peer_set limits are not schedulable" );
