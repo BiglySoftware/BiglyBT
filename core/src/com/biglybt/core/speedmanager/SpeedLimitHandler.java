@@ -22,6 +22,7 @@ package com.biglybt.core.speedmanager;
 
 import java.net.InetAddress;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.category.Category;
@@ -1004,6 +1005,8 @@ SpeedLimitHandler
 
 					Set<String>	categories_or_tags = new HashSet<>();
 
+					Pattern client_pattern	= null;
+					
 					IPSet set = null;
 
 					for ( String arg: args ){
@@ -1055,6 +1058,15 @@ SpeedLimitHandler
 										categories_or_tags.add( cat );
 									}
 								}
+							}else if ( lc_lhs.equals( "client" )){
+								
+								try{
+									client_pattern = Pattern.compile( rhs, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+									
+								}catch( Throwable e ){
+									
+									throw( new Exception( "Invalid pattern - '" + rhs + "'" ));
+								}
 							}else{
 
 								String name = lhs;
@@ -1102,7 +1114,7 @@ SpeedLimitHandler
 						throw( new Exception());
 					}
 
-					set.setParameters( inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags );
+					set.setParameters( inverse, up_lim, down_lim, peer_up_lim, peer_down_lim, categories_or_tags, client_pattern );
 
 				}catch( Throwable e ){
 
@@ -3119,7 +3131,7 @@ SpeedLimitHandler
 		result.add( "#            day_of_week: mon|tue|wed|thu|fri|sat|sun" );
 		result.add( "#        time: hh:mm - 24 hour clock; 00:00=midnight; local time" );
 		result.add( "#        extension: (start_tag|stop_tag|pause_tag|resume_tag):<tag_name> (enable_priority|disable_priority)" );
-		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>]" );
+		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>]" );
 		result.add( "#    net_limit (hourly|daily|weekly|monthly)[(:<profile>|$<tag>)] [total=<limit>] [up=<limit>] [down=<limit>]");
 		result.add( "#    priority_(up|down) <id>=<tag_name> [,<id>=<tag_name>]+ [,freq=<secs>] [,max=<limit>] [,probe=<cycles>]" );
 		result.add( "#" );
@@ -5179,6 +5191,8 @@ SpeedLimitHandler
 		private int				peer_up_lim;
 		private int				peer_down_lim;
 
+		private Pattern			client_pattern;
+		
 		private TagPeerImpl		tag_impl;
 
 		private
@@ -5197,7 +5211,7 @@ SpeedLimitHandler
 		{
 			if ( ip_set_tag_type != null ){
 
-				tag_impl	= new TagPeerImpl( tag_id );
+				tag_impl	= new TagPeerImpl( this, tag_id );
 			}
 
 			if ( !has_explicit_up_lim ){
@@ -5218,7 +5232,8 @@ SpeedLimitHandler
 			int				_down_lim,
 			int				_peer_up_lim,
 			int				_peer_down_lim,
-			Set<String>		_cats_or_tags )
+			Set<String>		_cats_or_tags,
+			Pattern			_client_pattern )
 		{
 			inverse	= _inverse;
 
@@ -5239,6 +5254,8 @@ SpeedLimitHandler
 			peer_down_lim	= _peer_down_lim;
 
 			categories_or_tags = _cats_or_tags.size()==0?null:_cats_or_tags;
+			
+			client_pattern = _client_pattern;
 		}
 
 		private int
@@ -5558,6 +5575,7 @@ SpeedLimitHandler
 			extends TagBase
 			implements TagPeer, TagFeatureExecOnAssign
 		{
+			private final IPSet		ip_set;
 			private final Object	UPLOAD_PRIORITY_ADDED_KEY = new Object();
 
 			private int upload_priority;
@@ -5567,10 +5585,13 @@ SpeedLimitHandler
 
 			private
 			TagPeerImpl(
+				IPSet	_ip_set,
 				int		tag_id )
 			{
 				super( ip_set_tag_type, tag_id, name );
 
+				ip_set	= _ip_set;
+				
 				addTag();
 
 				upload_priority = COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + getTagID() + ".uppri", 0 );
@@ -5633,15 +5654,18 @@ SpeedLimitHandler
 
 							it.remove();
 
-							added_peers.add( peer );
+							if ( canAdd( peer )){
+								
+								added_peers.add( peer );
+							
+								if ( to_add == null ){
 
-							if ( to_add == null ){
+									to_add = new ArrayList<>();
+								}
 
-								to_add = new ArrayList<>();
+								to_add.add( peer );
 							}
-
-							to_add.add( peer );
-
+							
 						}else if ( state == PEPeer.DISCONNECTED ){
 
 							it.remove();
@@ -5668,6 +5692,66 @@ SpeedLimitHandler
 				}
 			}
 
+			private boolean
+			deferEOS()
+			{
+				return( ip_set.client_pattern != null );
+			}
+			
+			private boolean
+			canAdd(
+				PEPeer		peer )
+			{
+				Pattern client_pattern = ip_set.client_pattern;
+				
+				if ( client_pattern == null ){
+					
+					return( true );
+				}
+				
+				boolean	result = false;
+				
+				String hs_name	= peer.getClientNameFromExtensionHandshake();
+				
+				if ( hs_name != null ){
+					
+					if ( client_pattern.matcher( hs_name ).find()){
+						
+						result = true;
+					}
+				}
+				
+				if ( !result ){
+					
+					String id_name	= peer.getClientNameFromPeerID();
+					
+					if ( id_name != null ){
+						
+						if ( client_pattern.matcher( id_name ).find()){
+							
+							result = true;
+						}
+					}
+				}
+				
+				if ( result ){
+					
+					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
+
+						PEPeerManager pm = peer.getManager();
+						
+						if ( pm != null ){
+						
+							pm.removePeer( peer );
+						}
+						
+						result = false;
+					}
+				}
+				
+				return( result );
+			}
+			
 			private void
 			add(
 				PeerManager		peer_manager,
@@ -5675,7 +5759,7 @@ SpeedLimitHandler
 			{
 				PEPeer peer = PluginCoreUtils.unwrap( _peer );
 
-				if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
+				if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY ) && !deferEOS()){
 
 					peer_manager.removePeer( _peer );
 
@@ -5693,8 +5777,14 @@ SpeedLimitHandler
 
 						pending_peers.remove( peer );
 
-						added_peers.add( peer );
-
+						if ( canAdd( peer )){
+							
+							added_peers.add( peer );
+							
+						}else{
+							
+							return;
+						}
 					}else{
 
 						pending_peers.add( peer );
