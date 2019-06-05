@@ -755,6 +755,29 @@ DiskManagerCheckRequestListener, IPFilterListener
 	}
 
 	@Override
+	public void 
+	removeAllPeers(
+		String		reason )
+	{
+		for ( PEPeer peer: peer_transports_cow ){
+	
+			removePeer( peer, reason );
+		}
+	
+		try{
+			peer_transports_mon.enter();
+
+			udp_reconnects.clear();
+			
+			pending_nat_traversals.clear();
+			
+		}finally{
+			
+			peer_transports_mon.exit();
+		}
+	}
+	
+	@Override
 	public int
 	getPartitionID()
 	{

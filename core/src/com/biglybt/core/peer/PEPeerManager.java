@@ -419,6 +419,10 @@ PEPeerManager
 	public int
 	getPartitionID();
 
+	public void
+	removeAllPeers(
+		String		reason );
+	
 	public boolean
 	isDestroyed();
 

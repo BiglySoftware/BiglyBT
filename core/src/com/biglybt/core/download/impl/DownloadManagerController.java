@@ -1374,15 +1374,10 @@ DownloadManagerController
 
 						if ( pm != null ){
 
-							List<PEPeer> peers = pm.getPeers();
-
 								// disconnect all peers - this is required as the new network assignment can
 								// require an alternative destination to be used for peer connections
 
-							for ( PEPeer peer: peers ){
-
-								pm.removePeer( peer, "Networks changed, reconnection required" );
-							}
+							pm.removeAllPeers( "Networks changed, reconnection required" );
 						}
 					}
 				},
