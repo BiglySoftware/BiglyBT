@@ -27,6 +27,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
@@ -43,6 +44,7 @@ import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.download.impl.DownloadManagerStatsImpl;
 import com.biglybt.core.internat.LocaleTorrentUtil;
 import com.biglybt.core.internat.LocaleUtilDecoder;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
@@ -1547,5 +1549,21 @@ DiskManagerUtil
 
 	  }
 
-
+	public static boolean
+	isNoSpaceException(
+		Throwable e )
+	{
+    	String exception_str  = Debug.getNestedExceptionMessage(e);
+    		
+		String lc = exception_str.toLowerCase( Locale.US );
+		
+			// not enough space; no space left; insufficient space
+		
+		if ( lc.contains( " space")){ 	
+	
+			return( true );
+		}
+		
+		return( false );
+	}
 }

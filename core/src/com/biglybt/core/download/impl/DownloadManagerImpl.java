@@ -1356,7 +1356,7 @@ DownloadManagerImpl
 
 				Debug.printStackTrace( e );
 
-				setFailed( e );
+				setFailed( "Failed to read torrent", e );
 
 			}finally{
 
@@ -1965,19 +1965,6 @@ DownloadManagerImpl
 	}
 
 	protected void
-	setFailed()
-	{
-		setFailed((String)null );
-	}
-
-	protected void
-	setFailed(
-		Throwable 	e )
-	{
-		setFailed( Debug.getNestedExceptionMessage(e));
-	}
-
-	protected void
 	setFailed(
 		String	str )
 	{
@@ -1985,10 +1972,18 @@ DownloadManagerImpl
 	}
 
 	protected void
-	setTorrentInvalid(
-		String	str )
+	setFailed(
+		String		str,
+		Throwable	e )
 	{
-		setFailed( str );
+		controller.setFailed( str, e );
+	}
+	
+	protected void
+	setTorrentInvalid(
+		Throwable 	cause )
+	{
+		setFailed( "Invalid torrent", cause );
 
 		torrent	= null;
 	}
@@ -2090,7 +2085,7 @@ DownloadManagerImpl
 
 			}catch( Exception e ){
 
-				setFailed( "Resume data save fails: " + Debug.getNestedExceptionMessage(e));
+				setFailed( "Resume data save fails", e );
 			}
 		}
 
@@ -2133,7 +2128,7 @@ DownloadManagerImpl
 
 		if ( torrent == null ) {
 
-			setFailed();
+			setFailed( "Failed to read torrent" );
 
 			return;
 		}
@@ -2208,7 +2203,7 @@ DownloadManagerImpl
 
 		}catch( TRTrackerAnnouncerException e ){
 
-			setFailed( e );
+			setFailed( "Tracker initialisation failed", e );
 		}
 	}
 

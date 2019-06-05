@@ -3883,7 +3883,7 @@ DownloadManagerStateImpl
 
 				if ( download_manager != null ){
 
-					download_manager.setTorrentInvalid( Debug.getNestedExceptionMessage( e ));
+					download_manager.setTorrentInvalid( e );
 
 				}else{
 

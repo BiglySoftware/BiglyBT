@@ -1887,16 +1887,8 @@ DiskManagerImpl
     	long		file_length,
     	Throwable	e,
     	String		str )
-    {
-    	String exception_str  = Debug.getNestedExceptionMessage(e);
-	
-	   	errorMessage_set_via_method = exception_str + " (" + str + ")";
-	
-		String lc = exception_str.toLowerCase( Locale.US );
-		
-			// not enough space; no space left; insufficient space
-		
-		if ( lc.contains( " space")){ 	
+    {			
+		if ( DiskManagerUtil.isNoSpaceException( e )){
 	
 			errorType	= ET_INSUFFICIENT_SPACE;
 	
@@ -1910,6 +1902,11 @@ DiskManagerImpl
 	
 				errorMessage_set_via_method = MessageText.getString( "DiskManager.error.nospace" );
 			}
+		}else{
+	
+		   	String exception_str  = Debug.getNestedExceptionMessage(e);
+			
+		   	errorMessage_set_via_method = exception_str + " (" + str + ")";
 		}
     }
     
@@ -1932,20 +1929,18 @@ DiskManagerImpl
     setErrorState(
     	String		msg,
     	Throwable	cause )
-    {
-       	String exception_str  = Debug.getNestedExceptionMessage(cause);
-    	
-	   	errorMessage_set_via_method = msg + ": " + exception_str;
-	
-		String lc = exception_str.toLowerCase( Locale.US );
-		
-			// not enough space; no space left; insufficient space
-		
-		if ( lc.contains( " space")){ 	
+    {	
+		if ( DiskManagerUtil.isNoSpaceException( cause )){
 	
 			errorType	= ET_INSUFFICIENT_SPACE;
 		
 			errorMessage_set_via_method = MessageText.getString( "DiskManager.error.nospace" );
+			
+		}else{
+			
+	       	String exception_str  = Debug.getNestedExceptionMessage(cause);
+	    	
+		   	errorMessage_set_via_method = msg + ": " + exception_str;
 		}
     	
     	setState( FAULTY );

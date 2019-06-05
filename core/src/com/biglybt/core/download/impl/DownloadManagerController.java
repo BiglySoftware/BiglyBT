@@ -29,6 +29,7 @@ import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.disk.*;
+import com.biglybt.core.disk.impl.DiskManagerUtil;
 import com.biglybt.core.download.*;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
@@ -1854,7 +1855,8 @@ DownloadManagerController
 		download_manager.informStateChanged();
 	}
 
-	void
+	
+	private void
 	setFailed(
 		DiskManager		dm )
 	{
@@ -1868,6 +1870,21 @@ DownloadManagerController
 		setFailed( DownloadManager.ET_OTHER, reason );
 	}
 
+	protected void
+	setFailed(
+		String			reason,
+		Throwable		cause )
+	{
+		if ( DiskManagerUtil.isNoSpaceException( cause )){
+			
+			setFailed( DownloadManager.ET_INSUFFICIENT_SPACE, MessageText.getString( "DiskManager.error.nospace" ) );
+			
+		}else{
+			
+			setFailed( DownloadManager.ET_OTHER, reason + ": " + Debug.getNestedExceptionMessage( cause ));
+		}
+	}
+	
 	private void
 	setFailed(
 		int			type,
@@ -1956,8 +1973,10 @@ DownloadManagerController
 							return false;
 						}
 					}
-				} catch (Exception e) {
-					setFailed(e.getMessage());
+				}catch( Throwable e ){
+					
+					setFailed( "Existance check failed", e );
+					
 					return false;
 				}
 			}
@@ -3331,8 +3350,7 @@ DownloadManagerController
 
 					} catch (Exception e) {
 
-						setFailed("Resume data save fails: "
-								+ Debug.getNestedExceptionMessage(e));
+						setFailed("Resume data save fails", e );
 					}
 				} else { // Faulty
 
