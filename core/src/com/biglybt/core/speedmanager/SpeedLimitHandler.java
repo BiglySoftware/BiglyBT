@@ -5665,6 +5665,10 @@ SpeedLimitHandler
 								}
 
 								to_add.add( peer );
+								
+							}else{
+								
+								deferredRemove( peer );
 							}
 							
 						}else if ( state == PEPeer.DISCONNECTED ){
@@ -5697,6 +5701,25 @@ SpeedLimitHandler
 			deferEOS()
 			{
 				return( ip_set.client_pattern != null );
+			}
+			
+			private void
+			deferredRemove(
+				PEPeer		peer )
+			{	
+					// shouldn't have been added but remove anyway
+				
+				if ( upload_priority > 0 ){
+					
+					peer.updateAutoUploadPriority( UPLOAD_PRIORITY_ADDED_KEY, false );
+				}
+				
+					// remove any rate-limiters
+				
+				Peer p = PluginCoreUtils.wrap( peer );
+									
+				p.removeRateLimiter( ip_set.up_limiter, true );
+				p.removeRateLimiter( ip_set.down_limiter, false );
 			}
 			
 			private boolean
@@ -5783,6 +5806,8 @@ SpeedLimitHandler
 							added_peers.add( peer );
 							
 						}else{
+							
+							deferredRemove( peer );
 							
 							return;
 						}
