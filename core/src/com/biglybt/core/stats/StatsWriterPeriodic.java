@@ -31,7 +31,7 @@ public interface
 StatsWriterPeriodic
 {
   public static final int    DEFAULT_SLEEP_PERIOD  = 30*1000;
-	public static final String		DEFAULT_STATS_FILE_NAME	= Constants.AZUREUS_NAME + "_Stats.xml";
+	public static final String		DEFAULT_STATS_FILE_NAME	= Constants.BIGLYBT_NAME + "_Stats.xml";
 
 	public void
 	start();

@@ -1086,7 +1086,7 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
     {
     	return new File(System.getProperty("user.home")
     			+ "/Library/Application Support/"
-    			+ SystemProperties.APPLICATION_NAME).getPath()
+    			+ SystemProperties.getApplicationName()).getPath()
     			+ SystemProperties.SEP;
     }
 

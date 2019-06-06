@@ -313,7 +313,7 @@ ConfigurationChecker
 
 	    String	last_version = COConfigurationManager.getStringParameter( "azureus.version", "" );
 
-	    String	this_version	= Constants.AZUREUS_VERSION;
+	    String	this_version	= Constants.BIGLYBT_VERSION;
 
 	    if ( !last_version.equals( this_version )){
 	    	if (!Constants.getBaseVersion(last_version).equals(

@@ -432,7 +432,7 @@ MetaSearchImpl
 
 		update_url += 	"az_template_uid=" + engine.getUID() +
 						"&az_template_version=" + engine.getVersion() +
-						"&az_version=" + Constants.AZUREUS_VERSION +
+						"&az_version=" + Constants.BIGLYBT_VERSION +
 					    "&az_locale=" + MessageText.getCurrentLocale().toString() +
 					    "&az_rand=" + RandomUtils.nextAbsoluteLong();
 

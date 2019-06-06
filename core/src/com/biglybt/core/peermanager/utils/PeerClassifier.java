@@ -126,7 +126,7 @@ public class PeerClassifier {
 
 			String name = IPToHostNameResolver.syncResolve( ip, 10000 );
 
-			if ( Constants.isAzureusDomain( name )){
+			if ( Constants.isAppDomain( name )){
 
 				platform_ips.add( host_address );
 

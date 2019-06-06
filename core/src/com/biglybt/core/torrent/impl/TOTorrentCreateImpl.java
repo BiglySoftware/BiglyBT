@@ -266,7 +266,7 @@ TOTorrentCreateImpl
 
 		setCreationDate( SystemTime.getCurrentTime() / 1000);
 
-		setCreatedBy( Constants.AZUREUS_NAME + "/" + Constants.AZUREUS_VERSION );
+		setCreatedBy( Constants.BIGLYBT_NAME + "/" + Constants.BIGLYBT_VERSION );
 
 		setPieceLength( _piece_length );
 

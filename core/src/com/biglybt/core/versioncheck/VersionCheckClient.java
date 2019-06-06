@@ -1444,10 +1444,10 @@ public class VersionCheckClient {
 		//always send
 		message.put( "appid",   SystemProperties.getApplicationIdentifier());
 		message.put( "appname", SystemProperties.getApplicationName());
-		message.put( "version", Constants.AZUREUS_VERSION );
+		message.put( "version", Constants.BIGLYBT_VERSION );
 		message.put( "first_version", COConfigurationManager.getStringParameter( "First Recorded Version", "" ));
 
-		String	sub_ver = Constants.AZUREUS_SUBVER;
+		String	sub_ver = Constants.SUBVERSION;
 
 		if ( sub_ver.length() > 0 ){
 			message.put( "subver", sub_ver );

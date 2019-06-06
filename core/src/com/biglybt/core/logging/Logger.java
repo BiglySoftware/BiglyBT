@@ -50,7 +50,7 @@ public class Logger {
 
 			if (loggerImpl.isEnabled()) {
 				log(new LogEvent(LOGID, "**** Logging starts: " +
-						Constants.APP_NAME + " " + Constants.AZUREUS_VERSION + " ****"));
+						Constants.APP_NAME + " " + Constants.BIGLYBT_VERSION + " ****"));
 
 				log(new LogEvent(LOGID, "java.home=" + System.getProperty("java.home")));
 

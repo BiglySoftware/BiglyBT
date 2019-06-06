@@ -700,7 +700,7 @@ TRTrackerUtils
  	{
  		String	host = tracker_url.getHost();
 
- 		if ( Constants.isAzureusDomain( host )){
+ 		if ( Constants.isAppDomain( host )){
 
  			return( true );
  		}
@@ -754,7 +754,7 @@ TRTrackerUtils
  	{
  		String	host = tracker_url.getHost();
 
- 		if ( Constants.isAzureusDomain( host )){
+ 		if ( Constants.isAppDomain( host )){
 
  			return( false );
  		}

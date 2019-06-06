@@ -49,19 +49,19 @@ TRTrackerServerProcessorTCP
 	protected static final char		FF			= '\012';
 	protected static final String	NL			= "\015\012";
 
-	private static final String	lc_azureus_name = Constants.AZUREUS_NAME.toLowerCase();
+	private static final String	lc_azureus_name = Constants.BIGLYBT_NAME.toLowerCase();
 
 	protected static final byte[]	HTTP_RESPONSE_START = (
 		"HTTP/1.1 200 OK" + NL +
 		"Content-Type: text/html" + NL +
-		"Server: " + Constants.AZUREUS_NAME + " " + Constants.AZUREUS_VERSION + NL +
+		"Server: " + Constants.BIGLYBT_NAME + " " + Constants.BIGLYBT_VERSION + NL +
 		"Connection: close" + NL +
 		"Content-Length: ").getBytes();
 
 	protected static final byte[]	HTTP_RESPONSE_XML_START = (
 			"HTTP/1.1 200 OK" + NL +
 			"Content-Type: text/xml; charset=\"utf-8\"" + NL +
-			"Server: " + Constants.AZUREUS_NAME + " " + Constants.AZUREUS_VERSION + NL +
+			"Server: " + Constants.BIGLYBT_NAME + " " + Constants.BIGLYBT_VERSION + NL +
 			"Connection: close" + NL +
 			"Content-Length: ").getBytes();
 

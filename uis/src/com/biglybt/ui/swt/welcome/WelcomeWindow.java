@@ -80,7 +80,7 @@ public class WelcomeWindow {
     else
     	monospace = new Font(shell.getDisplay(),"Courier New",8,SWT.NORMAL);
 
-    shell.setText(MessageText.getString("window.welcome.title", new String[]{ Constants.AZUREUS_VERSION }));
+    shell.setText(MessageText.getString("window.welcome.title", new String[]{ Constants.BIGLYBT_VERSION }));
 
     display = shell.getDisplay();
 

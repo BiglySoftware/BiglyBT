@@ -49,7 +49,7 @@ HTTPNetworkConnection
 
 	protected static final String	NL			= "\r\n";
 
-	private static final String	HDR_SERVER 				= "Server: " + Constants.AZUREUS_NAME + " " + Constants.AZUREUS_VERSION + NL;
+	private static final String	HDR_SERVER 				= "Server: " + Constants.BIGLYBT_NAME + " " + Constants.BIGLYBT_VERSION + NL;
 	private static final String HDR_KEEP_ALIVE_TIMEOUT 	= "Keep-Alive: timeout=30" + NL;
 	private static final String HDR_CACHE_CONTROL		= "Cache-Control: public, max-age=86400" + NL;
 

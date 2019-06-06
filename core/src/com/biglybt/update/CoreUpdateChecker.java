@@ -164,7 +164,7 @@ CoreUpdateChecker
 		final UpdateChecker	checker )
 	{
 		try{
-			String update_name = "Core " + Constants.AZUREUS_NAME + " Version";
+			String update_name = "Core " + Constants.BIGLYBT_NAME + " Version";
 
 			UpdateCheckInstance check_inst = checker.getCheckInstance();
 			
@@ -873,7 +873,7 @@ CoreUpdateChecker
 				if ( !( app_name.equals( "Vuze" ) || 
 						app_name.equals( "Azureus" ) || 
 						app_name.equals( "BiglyBT" ) || 
-						app_name.equals( Constants.AZUREUS_NAME ))){
+						app_name.equals( Constants.BIGLYBT_NAME ))){
 
 					UIManager ui_manager = StaticUtilities.getUIManager( 120*1000 );
 

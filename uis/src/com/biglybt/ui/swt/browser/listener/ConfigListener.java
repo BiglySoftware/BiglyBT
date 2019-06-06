@@ -80,7 +80,7 @@ public class ConfigListener
 				Map decodedMap = message.getDecodedMap();
 				String callback = MapUtils.getMapString(decodedMap, "callback", null);
 				if (callback != null) {
-					context.executeInBrowser(callback + "('" + Constants.AZUREUS_VERSION + "')");
+					context.executeInBrowser(callback + "('" + Constants.BIGLYBT_VERSION + "')");
 				} else {
 					message.debug("bad or no callback param");
 				}

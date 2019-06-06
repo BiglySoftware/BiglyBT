@@ -351,7 +351,7 @@ PluginInitializer
 
 	  String required_version = (String)props.get("plugin.coreapp.min_version");
 	  if (required_version == null) {return;}
-	  if (Constants.compareVersions(Constants.AZUREUS_VERSION, required_version) < 0) {
+	  if (Constants.compareVersions(Constants.BIGLYBT_VERSION, required_version) < 0) {
 		  String plugin_name_bit = name.length() > 0 ? (name+" "):"";
 		  String msg = "Plugin " + plugin_name_bit + "requires " + Constants.APP_NAME + " version " + required_version + " or higher";
 		  if (alert_on_fail) {

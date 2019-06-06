@@ -200,7 +200,7 @@ public class Main
 			}
 
 			if (DEBUG_STARTUPTIME) {
-				logTime("UIConst.set" + Constants.AZUREUS_NAME + "Core");
+				logTime("UIConst.set" + Constants.BIGLYBT_NAME + "Core");
 			}
 
 			UIConst.processArgs(commands, options, args);

@@ -193,7 +193,7 @@ SSDPCore
 	getServerName()
 	{
 		return( System.getProperty( "os.name" ) + "/" + System.getProperty("os.version") + " UPnP/1.0 " +
-				Constants.AZUREUS_NAME + "/" + Constants.AZUREUS_VERSION );
+				Constants.BIGLYBT_NAME + "/" + Constants.BIGLYBT_VERSION );
 	}
 
 	@Override
@@ -468,7 +468,7 @@ SSDPCore
 						"ST: " + st + NL +
 						"EXT:" + NL +
 						"Location: http://" + local_address.getHostAddress() + ":" + mc_group.getControlPort() + "/" + url + NL +
-						"Server: " + Constants.APP_NAME + "/" + Constants.AZUREUS_VERSION + " UPnP/1.0 " +Constants.APP_NAME + "/" + Constants.AZUREUS_VERSION + NL +
+						"Server: " + Constants.APP_NAME + "/" + Constants.BIGLYBT_VERSION + " UPnP/1.0 " +Constants.APP_NAME + "/" + Constants.BIGLYBT_VERSION + NL +
 						"Cache-Control: max-age=3600" + NL +
 						"Date: " + TimeFormatter.getHTTPDate( SystemTime.getCurrentTime()) + NL +
 						"Content-Length: 0" + NL + NL;

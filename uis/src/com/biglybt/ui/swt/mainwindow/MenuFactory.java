@@ -2371,7 +2371,7 @@ public class MenuFactory
 		return addMenuItem(menu, MENU_ID_WHATS_NEW, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				Utils.launch( Constants.PLUGINS_WEB_SITE + "changelog.php?version="	+ Constants.AZUREUS_VERSION);
+				Utils.launch( Constants.PLUGINS_WEB_SITE + "changelog.php?version="	+ Constants.BIGLYBT_VERSION);
 			}
 		});
 	}
@@ -2435,7 +2435,7 @@ public class MenuFactory
 			@Override
 			public void handleEvent(Event e) {
 				UIDebugGenerator.generate(Constants.APP_NAME + " "
-						+ Constants.AZUREUS_VERSION, "Generated via Help Menu");
+						+ Constants.BIGLYBT_VERSION, "Generated via Help Menu");
 			}
 		});
 	}

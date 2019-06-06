@@ -156,13 +156,13 @@ public class SystemProperties {
 		}
 	}
 	
-	public static String APPLICATION_NAME 		= "BiglyBT";
-  private static String APPLICATION_ID 			= AZ_APP_ID;
-  private static String APPLICATION_VERSION		= Constants.AZUREUS_VERSION;
+	private static String APPLICATION_NAME 		= "BiglyBT";
+	private static String APPLICATION_ID 			= AZ_APP_ID;
+	private static String APPLICATION_VERSION		= Constants.BIGLYBT_VERSION;
 
-  private static 		String APPLICATION_ENTRY_POINT 	= "com.biglybt.ui.Main";
+	private static 		String APPLICATION_ENTRY_POINT 	= "com.biglybt.ui.Main";
 
-  private static final boolean PORTABLE = System.getProperty(SYSPROP_PORTABLE_ROOT, "" ).length() > 0;
+	private static final boolean PORTABLE = System.getProperty(SYSPROP_PORTABLE_ROOT, "" ).length() > 0;
 
   	private static String user_path;
   	private static String app_path;

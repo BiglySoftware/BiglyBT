@@ -520,7 +520,7 @@ WebEngine
 
 			String	host = url.getHost();
 
-			if ( com.biglybt.core.util.Constants.isAzureusDomain( host )){
+			if ( com.biglybt.core.util.Constants.isAppDomain( host )){
 
 				return( true );
 			}

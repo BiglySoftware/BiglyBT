@@ -95,8 +95,8 @@ public class PlatformTorrentUtils
 	private static ArrayList<String> listPlatformHosts = new ArrayList<>();
 
 	static{
-		for (int i = 0; i < Constants.AZUREUS_DOMAINS.length; i++) {
-			listPlatformHosts.add(Constants.AZUREUS_DOMAINS[i].toLowerCase());
+		for (int i = 0; i < Constants.APP_DOMAINS.length; i++) {
+			listPlatformHosts.add(Constants.APP_DOMAINS[i].toLowerCase());
 		}
 	}
 

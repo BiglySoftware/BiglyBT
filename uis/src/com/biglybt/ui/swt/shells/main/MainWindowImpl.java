@@ -302,7 +302,7 @@ public class MainWindowImpl
 
 				Map<String, Object> map = new HashMap<>();
 				map.put("version",
-						com.biglybt.core.util.Constants.AZUREUS_VERSION);
+						com.biglybt.core.util.Constants.BIGLYBT_VERSION);
 				map.put("statsmap", mapTrackUsage);
 
 				FileUtil.writeResilientFile(new File(SystemProperties.getUserPath(),

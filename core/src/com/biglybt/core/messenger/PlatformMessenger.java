@@ -250,7 +250,7 @@ public class PlatformMessenger
 		long sequenceNo = 0;
 
 		Map<String, Object> mapPayload = new HashMap<>();
-		mapPayload.put("azv", Constants.AZUREUS_VERSION);
+		mapPayload.put("azv", Constants.BIGLYBT_VERSION);
 		//mapPayload.put("mode", FeatureUtils.getPlusMode());
 		//mapPayload.put("noadmode", FeatureUtils.getNoAdsMode());
 		mapPayload.putAll(mapExtra);

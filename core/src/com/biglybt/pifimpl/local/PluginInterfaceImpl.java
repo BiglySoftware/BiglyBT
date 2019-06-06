@@ -235,14 +235,14 @@ PluginInterfaceImpl
 	public String
 	getAzureusName()
 	{
-		return( Constants.AZUREUS_NAME );
+		return( Constants.BIGLYBT_NAME );
 	}
 
 	@Override
 	public String
 	getApplicationVersion()
 	{
-		return( Constants.AZUREUS_VERSION );
+		return( Constants.BIGLYBT_VERSION );
 	}
 
 	public void

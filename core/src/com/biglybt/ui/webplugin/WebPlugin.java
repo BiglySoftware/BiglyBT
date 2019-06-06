@@ -2913,7 +2913,7 @@ WebPlugin
 
 					String	host = target.getHost();
 
-					if ( !Constants.isAzureusDomain( host )){
+					if ( !Constants.isAppDomain( host )){
 
 						if ( !InetAddress.getByName(host).isLoopbackAddress()){
 
@@ -2971,7 +2971,7 @@ WebPlugin
 
 					String	host = target.getHost();
 
-					if ( !Constants.isAzureusDomain( host )){
+					if ( !Constants.isAppDomain( host )){
 
 						if ( !InetAddress.getByName(host).isLoopbackAddress()){
 

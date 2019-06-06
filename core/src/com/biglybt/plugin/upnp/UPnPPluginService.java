@@ -340,7 +340,7 @@ UPnPPluginService
 	{
 		if ( service_mapping.isExternal()){
 
-			log.log( "Mapping " + service_mapping.getString() + " not removed as not created by " + Constants.AZUREUS_NAME );
+			log.log( "Mapping " + service_mapping.getString() + " not removed as not created by " + Constants.BIGLYBT_NAME );
 
 		}else{
 			int	persistent	=  UPnPMapping.PT_DEFAULT;

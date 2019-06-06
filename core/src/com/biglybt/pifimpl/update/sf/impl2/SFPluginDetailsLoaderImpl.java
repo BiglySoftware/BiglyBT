@@ -89,7 +89,7 @@ SFPluginDetailsLoaderImpl
 
 	static{
 
-		base_url_params = "version=" + Constants.AZUREUS_VERSION + "&app=" + SystemProperties.getApplicationName();
+		base_url_params = "version=" + Constants.BIGLYBT_VERSION + "&app=" + SystemProperties.getApplicationName();
 
 		try{
 			base_url_params += "&os=" + URLEncoder.encode(System.getProperty( "os.name"),"UTF-8" );

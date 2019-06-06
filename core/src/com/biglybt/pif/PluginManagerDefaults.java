@@ -94,7 +94,7 @@ PluginManagerDefaults
 
 		/**
 		 * Set the name of the application, default is
-		 * {@link com.biglybt.core.util.Constants#AZUREUS_NAME}, and an identifier
+		 * {@link com.biglybt.core.util.Constants#BIGLYBT_NAME}, and an identifier
 		 * for it, default is "az"
 		 * <br/>
 		 * default for entry point is the SWT UI

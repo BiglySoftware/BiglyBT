@@ -282,7 +282,7 @@ AEDiagnosticsLogger
 				str.append( "] Log File Opened for " );
 				str.append(  Constants.APP_NAME );
 				str.append( " " );
-				str.append(  Constants.AZUREUS_VERSION );
+				str.append(  Constants.BIGLYBT_VERSION );
 				str.append( "\r\n" );
 			}
 

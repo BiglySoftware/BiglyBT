@@ -242,7 +242,7 @@ BackupManagerImpl
 
 					String last_ver = COConfigurationManager.getStringParameter( "br.backup.config.info.ver", "" );
 
-					String current_ver = Constants.AZUREUS_VERSION;
+					String current_ver = Constants.BIGLYBT_VERSION;
 
 					if ( !last_ver.equals( current_ver )){
 

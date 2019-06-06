@@ -1299,7 +1299,7 @@ implements PEPeerTransport
 			
 			peer_name 		= Constants.BIGLY_PROTOCOL_NAME;
 			
-			peer_version	= Constants.AZUREUS_VERSION;
+			peer_version	= Constants.BIGLYBT_VERSION;
 			
 		}else {
 			
@@ -2746,7 +2746,7 @@ implements PEPeerTransport
 			 * We log when a non-Azureus client claims to support extended messaging...
 			 * Obviously other Azureus clients do, so there's no point logging about them!
 			 */
-			if (Logger.isEnabled() && !client.contains("Azureus") && !client.contains(Constants.AZUREUS_NAME)) {
+			if (Logger.isEnabled() && !client.contains("Azureus") && !client.contains(Constants.BIGLYBT_NAME)) {
 				Logger.log(new LogEvent(this, LOGID, "Handshake claims extended AZ "
 						+ "messaging support... enabling AZ mode."));
 			}

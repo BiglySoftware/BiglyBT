@@ -50,7 +50,7 @@ ClientIDPlugin
 		// as PEPeerTransportProtocol depends on this
 	
 	private static final String BIGLY_NAME				= Constants.BIGLY_PROTOCOL_NAME;
-	private static final String BIGLY_VERSION			= Constants.AZUREUS_VERSION;
+	private static final String BIGLY_VERSION			= Constants.BIGLYBT_VERSION;
 	
 	private static final String BIGLYBT_CLIENT_NAME 	= BIGLY_NAME + " " + BIGLY_VERSION;
 	private static final String BIGLYBT_CLIENT_NAME_SM 	= BIGLY_NAME + " (Swarm Merging) " + BIGLY_VERSION;

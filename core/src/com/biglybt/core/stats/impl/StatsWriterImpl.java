@@ -121,7 +121,7 @@ StatsWriterImpl
 		try{
 			indent();
 
-			writeTag( "AZUREUS_VERSION", Constants.AZUREUS_VERSION );
+			writeTag( "AZUREUS_VERSION", Constants.BIGLYBT_VERSION );
 
 			writeLineRaw( "<GLOBAL>" );
 

@@ -133,14 +133,14 @@ public class PlatformManagerImpl implements PlatformManager
 	{
 		String userhome = System.getProperty("user.home");
 		String temp_user_path = userhome + SystemProperties.SEP + "."
-				+ SystemProperties.APPLICATION_NAME.toLowerCase()
+				+ SystemProperties.getApplicationName().toLowerCase()
 				+ SystemProperties.SEP;
 
 		synchronized (migrate_lock) {
 			File home = new File(temp_user_path);
 			if (!home.exists()) { //might be a fresh install or might be an old non-migrated install
 				String old_home_path = userhome + SystemProperties.SEP + "."
-						+ SystemProperties.APPLICATION_NAME + SystemProperties.SEP;
+						+ SystemProperties.getApplicationName() + SystemProperties.SEP;
 				File old_home = new File(old_home_path);
 				if (old_home.exists()) { //migrate
 					String msg = "Migrating unix user config dir [" + old_home_path

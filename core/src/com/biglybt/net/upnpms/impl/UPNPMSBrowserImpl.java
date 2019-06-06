@@ -205,7 +205,7 @@ UPNPMSBrowserImpl
 			rd.setProperty( "URL_Read_Timeout", 10*60*1000 );
 			rd.setProperty( "URL_Connect_Timeout", 5*60*1000 );
 			rd.setProperty( "URL_SOAPAction", "\"" + soap_action + "\"");
-			rd.setProperty( "URL_X-AV-Client-Info", "av=1.0; cn=\"" + Constants.AZUREUS_NAME + "\"; mn=\"" + client_name + "\"; mv=\""+ Constants.AZUREUS_VERSION + "\"" );
+			rd.setProperty( "URL_X-AV-Client-Info", "av=1.0; cn=\"" + Constants.BIGLYBT_NAME + "\"; mn=\"" + client_name + "\"; mv=\""+ Constants.BIGLYBT_VERSION + "\"" );
 			rd.setProperty( "URL_Content-Type", "text/xml; charset=\"utf-8\"" );
 
 			SimpleXMLParserDocument  doc = SimpleXMLParserDocumentFactory.create( url, rd.download());

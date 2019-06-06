@@ -313,7 +313,7 @@ DHTControlStatsImpl
 	public String
 	getVersion()
 	{
-		return( Constants.AZUREUS_VERSION );
+		return( Constants.BIGLYBT_VERSION );
 	}
 
 	@Override

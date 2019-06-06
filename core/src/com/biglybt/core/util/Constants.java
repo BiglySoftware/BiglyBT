@@ -68,7 +68,7 @@ Constants
 
 	public static final String SPEED_TEST_SERVER	= "speedtest.vuze.com";
 
-	public static final String[] AZUREUS_DOMAINS = { "azureusplatform.com", "azureus.com", "aelitis.com", "vuze.com", "biglybt.com" };
+	public static final String[] APP_DOMAINS = { "azureusplatform.com", "azureus.com", "aelitis.com", "vuze.com", "biglybt.com" };
 
 	public static final Charset UTF_8 = Charset.forName("UTF-8");
 	public static final Charset ISO_8859_1 = Charset.forName("ISO-8859-1");
@@ -137,24 +137,26 @@ Constants
 	//      2.0.8.3_CVS
 	//      2.0.8.3_Bnn       // incremental build
 
-	public static final String APP_NAME 		= System.getProperty(SystemProperties.SYSPROP_PRODUCT_NAME, "BiglyBT" );
 
-	public static final String AZUREUS_NAME	  						= "BiglyBT";
-	public static final String AZUREUS_PROTOCOL_NAME_PRE_4813	  	= "Azureus";
-	public static final String AZUREUS_PROTOCOL_NAME	  			= "Vuze";
-	public static final String DEFAULT_JAR_NAME	  					= "BiglyBT";
+	public static final String BIGLYBT_NAME	  						= "BiglyBT";
 
-	public static final String BIGLY_PROTOCOL_NAME					= "BiglyBT";
+	public static final String APP_NAME 		= System.getProperty(SystemProperties.SYSPROP_PRODUCT_NAME, BIGLYBT_NAME );
+		
+	public static final String DEFAULT_JAR_NAME	  					= BIGLYBT_NAME;
+
+	public static final String BIGLY_PROTOCOL_NAME					= BIGLYBT_NAME;
 	public static final String BIGLY_PEER_ID						= "BI";
 
-	public static final String AZUREUS_VERSION  = "2.0.0.1_B01";
-	public static final String BUILD_VERSION  = "@build.version@";   //Ant replace
-	public static final String AZUREUS_SUBVER	  = "";
+	
+	public static final String BIGLYBT_VERSION  = "2.0.0.1_B05";
+	
+	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
+	public static final String SUBVERSION		= "";
 	public static final byte[] VERSION_ID       = ("-" + BIGLY_PEER_ID + "2001" + "-").getBytes();  //MUST be 8 chars long!
 
 	private static final boolean FORCE_NON_CVS = System.getProperty( "az.force.noncvs", "0" ).equals( "1" );
 
-	public static final boolean IS_CVS_VERSION = isCVSVersion( AZUREUS_VERSION ) && !FORCE_NON_CVS;
+	public static final boolean IS_CVS_VERSION = isCVSVersion( BIGLYBT_VERSION ) && !FORCE_NON_CVS;
 
 	public static final String  OSName = System.getProperty("os.name");
 
@@ -444,7 +446,7 @@ Constants
 	public static String
 	getCurrentVersion()
 	{
-		return( AZUREUS_VERSION );
+		return( BIGLYBT_VERSION );
 	}
 	/**
 	 * Gets the current version, or if a CVS version, the one on which it is based
@@ -454,7 +456,7 @@ Constants
 	public static String
 	getBaseVersion()
 	{
-		return( getBaseVersion( AZUREUS_VERSION ));
+		return( getBaseVersion( BIGLYBT_VERSION ));
 	}
 
 	public static String
@@ -498,7 +500,7 @@ Constants
 	public static int
 	getIncrementalBuild()
 	{
-		return( getIncrementalBuild( AZUREUS_VERSION ));
+		return( getIncrementalBuild( BIGLYBT_VERSION ));
 	}
 
 	public static int
@@ -532,14 +534,14 @@ Constants
 	isCurrentVersionLT(
 			String	version )
 	{
-		return( compareVersions( AZUREUS_VERSION, version ) < 0 );
+		return( compareVersions( BIGLYBT_VERSION, version ) < 0 );
 	}
 
 	public static boolean
 	isCurrentVersionGE(
 			String	version )
 	{
-		return( compareVersions( AZUREUS_VERSION, version ) >= 0 );
+		return( compareVersions( BIGLYBT_VERSION, version ) >= 0 );
 	}
 
 	/**
@@ -637,15 +639,28 @@ Constants
 		return( true );
 	}
 
+
+	/**
+	 * @deprecated - use isAppDomain()
+	 * 06/06/19 Still used by old torhelper
+	 */
+	
 	public static boolean
 	isAzureusDomain(
+		String	host )
+	{
+		return( isAppDomain( host ));
+	}
+	
+	public static boolean
+	isAppDomain(
 			String	host )
 	{
 		host = host.toLowerCase();
 
-		for (int i=0; i<AZUREUS_DOMAINS.length; i++) {
+		for (int i=0; i<APP_DOMAINS.length; i++) {
 
-			String domain = (String) AZUREUS_DOMAINS[i];
+			String domain = (String) APP_DOMAINS[i];
 
 			if ( domain.equals( host )){
 
@@ -661,6 +676,23 @@ Constants
 		return( false );
 	}
 
+	public static final String AZUREUS_PROTOCOL_NAME_PRE_4813	  	= "Azureus";
+	public static final String AZUREUS_PROTOCOL_NAME	  			= "Vuze";
+
+	/**
+	 * @deprecated - use getCurrentVersion()
+	 * 06/06/19 Still used by some of the older plugins out there
+	 */
+	
+	public static final String AZUREUS_VERSION  = BIGLYBT_VERSION;
+
+	/**
+	 * @deprecated - use getAppName()
+	 * 06/06/19 Still used by some of the older plugins out there
+	 */
+	
+	public static final String AZUREUS_NAME	  	= BIGLYBT_NAME;
+	
 	public static void main(String[] args) {
 		System.out.println(compareVersions("3.0.0.1", "3.0.0.0"));
 		System.out.println(compareVersions("3.0.0.0_B1", "3.0.0.0"));

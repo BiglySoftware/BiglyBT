@@ -116,7 +116,7 @@ BetaWizardStart
 		gridData = new GridData(GridData.FILL_HORIZONTAL);
 		gridData.verticalIndent=10;
 		version_label.setLayoutData(gridData);
-		version_label.setText( MessageText.getString( "beta.wizard.version", new String[]{ Constants.AZUREUS_VERSION } ));
+		version_label.setText( MessageText.getString( "beta.wizard.version", new String[]{ Constants.BIGLYBT_VERSION } ));
 	}
 
 	@Override

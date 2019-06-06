@@ -187,7 +187,7 @@ public class AboutWindow {
     				+ System.getProperty("os.name") + " v"
     				+ System.getProperty("os.version") + ", "
     				+ System.getProperty("os.arch") + " (" + (Constants.isOS64Bit?64:32) + " bit)\n"
-    				+ Constants.APP_NAME.charAt(0) + Constants.getCurrentVersion() + (Constants.AZUREUS_SUBVER.length()==0?"":("-"+Constants.AZUREUS_SUBVER)) + "/" + CorePatchLevel.getCurrentPatchLevel() + " "
+    				+ Constants.APP_NAME.charAt(0) + Constants.getCurrentVersion() + (Constants.SUBVERSION.length()==0?"":("-"+Constants.SUBVERSION)) + "/" + CorePatchLevel.getCurrentPatchLevel() + " "
     				+ COConfigurationManager.getStringParameter("ui");
 
     txtSysInfo.setText( about_text );

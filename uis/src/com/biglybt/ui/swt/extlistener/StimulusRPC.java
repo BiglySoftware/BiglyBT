@@ -153,7 +153,7 @@ public class StimulusRPC
 						String version = MapUtils.getMapString(decodedMap, "version", "");
 						if (id.equals("client")) {
 							return com.biglybt.core.util.Constants.compareVersions(
-									com.biglybt.core.util.Constants.AZUREUS_VERSION,
+									com.biglybt.core.util.Constants.BIGLYBT_VERSION,
 									version) >= 0;
 						}
 					}

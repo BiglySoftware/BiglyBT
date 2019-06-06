@@ -472,7 +472,7 @@ MagnetURIHandlerImpl
 
 		}else if ( get.startsWith( "/azversion" )){
 
-			writeReply( os, "text/plain", Constants.AZUREUS_VERSION );
+			writeReply( os, "text/plain", Constants.BIGLYBT_VERSION );
 
 			return( true );
 

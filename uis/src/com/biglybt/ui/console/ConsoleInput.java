@@ -465,7 +465,7 @@ public class ConsoleInput extends Thread {
 
 	public void printwelcome()
 	{
-		out.println("Running " + Constants.APP_NAME + " " + Constants.AZUREUS_VERSION + "...");
+		out.println("Running " + Constants.APP_NAME + " " + Constants.BIGLYBT_VERSION + "...");
 		out.println("Using configuration settings from:");
 		out.println("  " + SystemProperties.getUserPath());
 	}
@@ -751,7 +751,7 @@ public class ConsoleInput extends Thread {
 			out.println("Saving aliases to: " + aliasesFile.getCanonicalPath());
 			FileOutputStream fo = new FileOutputStream(aliasesFile);
 			try{
-				aliases.store(fo, "This aliases file was automatically written by " + Constants.AZUREUS_NAME);
+				aliases.store(fo, "This aliases file was automatically written by " + Constants.BIGLYBT_NAME);
 			}finally{
 				fo.close();
 			}

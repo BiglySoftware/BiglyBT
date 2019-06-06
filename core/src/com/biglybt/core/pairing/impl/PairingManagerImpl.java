@@ -1807,7 +1807,7 @@ PairingManagerImpl
 			}
 
 			String other_params =
-				"&ver=" + UrlUtils.encode( Constants.AZUREUS_VERSION ) +
+				"&ver=" + UrlUtils.encode( Constants.BIGLYBT_VERSION ) +
 				"&app=" + UrlUtils.encode( SystemProperties.getApplicationName()) +
 				"&locale=" + UrlUtils.encode( MessageText.getCurrentLocale().toString());
 
@@ -2171,7 +2171,7 @@ PairingManagerImpl
 						listener.testStarted( TestServiceImpl.this );
 
 						String other_params =
-							"&ver=" + UrlUtils.encode( Constants.AZUREUS_VERSION ) +
+							"&ver=" + UrlUtils.encode( Constants.BIGLYBT_VERSION ) +
 							"&app=" + UrlUtils.encode( SystemProperties.getApplicationName()) +
 							"&locale=" + UrlUtils.encode( MessageText.getCurrentLocale().toString());
 

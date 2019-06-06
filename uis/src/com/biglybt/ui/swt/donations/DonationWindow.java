@@ -308,7 +308,7 @@ public class DonationWindow
 		int upHours = (int) (upTime / (60 * 60)); //secs * mins
 		final String url = Constants.URL_DONATION + "?locale="
 				+ MessageText.getCurrentLocale().toString() + "&azv="
-				+ Constants.AZUREUS_VERSION + "&count="
+				+ Constants.BIGLYBT_VERSION + "&count="
 				+ COConfigurationManager.getLongParameter("donations.count", 1)
 				+ "&uphours=" + upHours + "&sourceref="
 				+ UrlUtils.encode(sourceRef);
@@ -375,7 +375,7 @@ public class DonationWindow
 		int hours = (int) (upTime / (60 * 60)); //secs * mins
 		int nextAsk = hours + askEveryHours;
 		COConfigurationManager.setParameter("donations.nextAskHours", nextAsk);
-		COConfigurationManager.setParameter("donations.lastVersion", Constants.AZUREUS_VERSION);
+		COConfigurationManager.setParameter("donations.lastVersion", Constants.BIGLYBT_VERSION);
 		updateMinDate();
 		COConfigurationManager.save();
 	}

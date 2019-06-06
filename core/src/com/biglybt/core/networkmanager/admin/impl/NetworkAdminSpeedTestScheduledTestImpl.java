@@ -288,7 +288,7 @@ NetworkAdminSpeedTestScheduledTestImpl
 
             	if ( jar_file != null ){
 
-            		jar_version = Constants.AZUREUS_VERSION;
+            		jar_version = Constants.BIGLYBT_VERSION;
 
           			// System.out.println( "SpeedTest: using class-based challenge jar " + jar_file.getAbsolutePath() + ", version " + jar_version );
 
@@ -298,7 +298,7 @@ NetworkAdminSpeedTestScheduledTestImpl
 
             		if ( f.exists()){
 
-            			jar_version = Constants.AZUREUS_VERSION;
+            			jar_version = Constants.BIGLYBT_VERSION;
             			jar_file	= f;
 
              			// System.out.println( "SpeedTest: using config-based challenge jar " + jar_file.getAbsolutePath() + ", version " + jar_version );

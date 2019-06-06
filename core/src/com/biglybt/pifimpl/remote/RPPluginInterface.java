@@ -67,8 +67,8 @@ RPPluginInterface
 
 	// don't change these field names as they are visible on XML serialisation
 
-	public String			azureus_name		= Constants.AZUREUS_NAME;
-	public String			azureus_version		= Constants.AZUREUS_VERSION;
+	public String			azureus_name		= Constants.BIGLYBT_NAME;
+	public String			azureus_version		= Constants.BIGLYBT_VERSION;
 
 	// **** Don't try using AEMOnitor for synchronisations here as this object is serialised
 

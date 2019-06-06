@@ -1369,7 +1369,7 @@ ConfigurationManager
 		try{
 			writer.indent();
 
-			writer.println( "version=" + Constants.AZUREUS_VERSION + ", subver=" + Constants.AZUREUS_SUBVER );
+			writer.println( "version=" + Constants.BIGLYBT_VERSION + ", subver=" + Constants.SUBVERSION );
 
 			writer.println( "System Properties" );
 

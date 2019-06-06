@@ -309,7 +309,7 @@ TrackerWebPageResponseImpl
 
 			// add header fields if not already present
 
-		addHeader( "Server", Constants.AZUREUS_NAME + " " + Constants.AZUREUS_VERSION, false );
+		addHeader( "Server", Constants.BIGLYBT_NAME + " " + Constants.BIGLYBT_VERSION, false );
 
 		if ( request.canKeepAlive()){
 

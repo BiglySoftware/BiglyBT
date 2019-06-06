@@ -288,7 +288,7 @@ public class FullUpdateWindow
 
 			String final_url = url + ( url.indexOf('?')==-1?"?":"&") +
 						"locale=" + MessageText.getCurrentLocale().toString() +
-						"&azv=" + Constants.AZUREUS_VERSION;
+						"&azv=" + Constants.BIGLYBT_VERSION;
 
 			SimpleTimer.addEvent(
 				"fullupdate.pageload",
