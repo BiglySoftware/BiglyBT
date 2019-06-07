@@ -46,13 +46,13 @@ UPnPSSWANConnectionImpl
 	static{
 
 		SimpleTimer.addPeriodicEvent(
-				"UPnPSSWAN:checker",
-				10*60*1000,
-        new TimerEventPerformer() {
-          @Override
-          public void perform(TimerEvent ev ) {
-
-          	try{
+			"UPnPSSWAN:checker",
+			10*60*1000,
+			( ev )->{
+				AEThread2.createAndStartDaemon(
+					"UPnPSSWAN:checker",
+					()->{
+						try{
 							List	to_check = new ArrayList();
 
 							try{
@@ -93,10 +93,8 @@ UPnPSSWANConnectionImpl
 
 							Debug.printStackTrace(e);
 						}
-          }
-        }
-     );
-
+					});
+			});
 	}
 
 	private UPnPServiceImpl		service;

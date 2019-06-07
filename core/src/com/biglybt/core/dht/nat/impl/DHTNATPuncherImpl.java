@@ -805,7 +805,9 @@ DHTNATPuncherImpl
 						{
 							if ( !suspended ){
 
-								runRendezvousSupport();
+								AEThread2.createAndStartDaemon(
+									"DHTNAT:cp",
+									()->runRendezvousSupport());
 							}
 						}
 					});
