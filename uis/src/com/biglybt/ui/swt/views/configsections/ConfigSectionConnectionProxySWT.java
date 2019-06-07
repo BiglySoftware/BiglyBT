@@ -51,7 +51,7 @@ public class ConfigSectionConnectionProxySWT
 
 	public ConfigSectionConnectionProxySWT() {
 		super();
-		init(mapPluginParams -> proxyTest());
+		init(mapPluginParams -> Utils.execSWTThread(()->proxyTest()));
 	}
 
 	@Override
