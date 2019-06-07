@@ -196,17 +196,20 @@ DHTDBImpl
 					perform(
 						TimerEvent	event )
 					{
-						logger.log( "Republish of original mappings starts" );
-
-						long	start 	= SystemTime.getCurrentTime();
-
-						int	stats = republishOriginalMappings();
-
-						long	end 	= SystemTime.getCurrentTime();
-
-						logger.log( "Republish of original mappings completed in " + (end-start) + ": " +
-									"values = " + stats );
-
+						AEThread2.createAndStartDaemon( 
+							"DHTDB:op",
+							()->{
+								logger.log( "Republish of original mappings starts" );
+		
+								long	start 	= SystemTime.getCurrentTime();
+		
+								int	stats = republishOriginalMappings();
+		
+								long	end 	= SystemTime.getCurrentTime();
+		
+								logger.log( "Republish of original mappings completed in " + (end-start) + ": " +
+											"values = " + stats );
+							});
 					}
 				});
 		}
@@ -227,32 +230,36 @@ DHTDBImpl
 						perform(
 							TimerEvent	event )
 						{
-							logger.log( "Republish of cached mappings starts" );
-
-							long	start 	= SystemTime.getCurrentTime();
-
-							int[]	stats = republishCachedMappings();
-
-							long	end 	= SystemTime.getCurrentTime();
-
-							logger.log( "Republish of cached mappings completed in " + (end-start) + ": " +
-										"values = " + stats[0] + ", keys = " + stats[1] + ", ops = " + stats[2]);
-
-							if ( force_original_republish ){
-
-								force_original_republish	= false;
-
-								logger.log( "Force republish of original mappings due to router change starts" );
-
-								start 	= SystemTime.getCurrentTime();
-
-								int stats2 = republishOriginalMappings();
-
-								end 	= SystemTime.getCurrentTime();
-
-								logger.log( "Force republish of original mappings due to router change completed in " + (end-start) + ": " +
-											"values = " + stats2 );
-							}
+							AEThread2.createAndStartDaemon(
+								"DHTDB:cp",
+								()->{
+									logger.log( "Republish of cached mappings starts" );
+		
+									long	start 	= SystemTime.getCurrentTime();
+		
+									int[]	stats = republishCachedMappings();
+		
+									long	end 	= SystemTime.getCurrentTime();
+		
+									logger.log( "Republish of cached mappings completed in " + (end-start) + ": " +
+												"values = " + stats[0] + ", keys = " + stats[1] + ", ops = " + stats[2]);
+		
+									if ( force_original_republish ){
+		
+										force_original_republish	= false;
+		
+										logger.log( "Force republish of original mappings due to router change starts" );
+		
+										start 	= SystemTime.getCurrentTime();
+		
+										int stats2 = republishOriginalMappings();
+		
+										end 	= SystemTime.getCurrentTime();
+		
+										logger.log( "Force republish of original mappings due to router change completed in " + (end-start) + ": " +
+													"values = " + stats2 );
+									}
+								});
 						}
 					});
 		}

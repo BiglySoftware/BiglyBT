@@ -91,6 +91,22 @@ UTTimerImpl
 		timer = new Timer( "Plugin " + pi.getPluginID() + ":" + name, 1, priority );
 	}
 
+	protected
+	UTTimerImpl(
+		PluginInterface 	pi,
+		String				name,
+		int					max_threads,
+		int 				priority )
+	{
+		if (!CoreFactory.isCoreAvailable()) { // isCoreShutDown
+			System.err.println("Trying to create Timer after Core shutdown");
+			return;
+		}
+		plugin_interface	= pi;
+
+		timer = new Timer( "Plugin " + pi.getPluginID() + ":" + name, max_threads, priority );
+	}
+	
 	@Override
 	public UTTimerEvent
 	addEvent(
@@ -195,6 +211,30 @@ UTTimerImpl
 		}
 
 		return( res );
+	}
+	
+	@Override
+	public int 
+	getMaxThreads()
+	{
+		if ( timer != null ){
+			
+			return( timer.getThreadPool().getMaxThreads());
+		}
+		
+		return( 0 );
+	}
+	
+	@Override
+	public int 
+	getActiveThreads()
+	{
+		if ( timer != null ){
+			
+			return( timer.getThreadPool().getRunningCount());
+		}
+		
+		return( 0 );
 	}
 
 	@Override

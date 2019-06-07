@@ -56,6 +56,12 @@ UTTimer
 		 * Releases resources associated with this timer and renders it unusable
 		 */
 
+	public int
+	getMaxThreads();
+	
+	public int
+	getActiveThreads();
+	
 	public void
 	destroy();
 }

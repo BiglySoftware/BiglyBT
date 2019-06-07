@@ -22,7 +22,6 @@ package com.biglybt.core.util;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
 
@@ -48,6 +47,20 @@ AEThread2
 
 	private static volatile long	last_timeout_check;
 
+	public static void
+	createAndStartDaemon(
+		String			name,
+		Runnable		r )
+	{
+		new AEThread2( name, true ){
+			@Override
+			public void run(){
+				
+				r.run();
+			}
+		}.start();
+	}
+	
 	//private static AtomicLong	total_starts	= new AtomicLong();
 	//private static AtomicLong	total_creates	= new AtomicLong();
 

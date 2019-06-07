@@ -49,6 +49,8 @@ public class Timer
 	private boolean		log;
 	private int			max_events_logged;
 
+	private int			slow_event_limit;
+	
 	public
 	Timer(
 		String	name )
@@ -96,6 +98,12 @@ public class Timer
 		t.start();
 	}
 
+	public ThreadPool
+	getThreadPool()
+	{
+		return( thread_pool );
+	}
+	
 	public void
 	setIndestructable()
 	{
@@ -124,6 +132,13 @@ public class Timer
 		thread_pool.setWarnWhenFull();
 	}
 
+	public void
+	setSlowEventLimit(
+		int		millis )
+	{
+		slow_event_limit = millis;
+	}
+	
 	public void
 	setLogCPU()
 	{
@@ -227,8 +242,33 @@ public class Timer
 					if (log) {
 						System.out.println( "running: " + event_to_run.getString() );
 					}
+					
+					if ( Constants.IS_CVS_VERSION && slow_event_limit > 0 ){
+						
+						final TimerEvent event = event_to_run;
+						
+						thread_pool.run(
+							new AERunnable(){
+									
+								long queued = SystemTime.getMonotonousTime();
 
-					thread_pool.run(event_to_run.getRunnable());
+								@Override
+								public void runSupport(){
+									
+									event.getRunnable().runSupport();
+									
+									long elapsed = SystemTime.getMonotonousTime() - queued;
+									
+									if ( elapsed > slow_event_limit ){
+									
+										System.out.println( "Timer event '" + event.getName() + "' took " + elapsed );
+									}
+								}
+							});
+					}else{
+
+						thread_pool.run(event_to_run.getRunnable());
+					}
 				}
 
 			}catch( Throwable e ){

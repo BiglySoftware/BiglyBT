@@ -44,6 +44,11 @@ SimpleTimer
 
 		timer.setWarnWhenFull();
 
+		if ( Constants.IS_CVS_VERSION ){
+			
+			timer.setSlowEventLimit( 2500 );
+		}
+		
 		// timer.setLogCPU();
 
 		// timer.setLogging(true);

@@ -189,8 +189,7 @@ DHTNATPuncherImpl
 		server_mon	= plugin_interface.getUtilities().getMonitor();
 		punch_mon	= plugin_interface.getUtilities().getMonitor();
 
-		timer = plugin_interface.getUtilities().createTimer(
-						"DHTNATPuncher:refresher", true );
+		timer = plugin_interface.getUtilities().createTimer( "DHTNATPuncher:refresher", 16, Thread.NORM_PRIORITY );
 	}
 
 	@Override
@@ -1717,44 +1716,54 @@ DHTNATPuncherImpl
 
 							// ping the target a few times to try and establish a tunnel
 
-						UTTimerEvent	event =
-							timer.addPeriodicEvent(
-									3000,
-									new UTTimerEventPerformer()
-									{
-										private int	pings = 1;
-
-										@Override
-										public void
-										perform(
-											UTTimerEvent		event )
+						if ( timer.getMaxThreads() - timer.getActiveThreads() > 2 ){
+						
+							UTTimerEvent	event =
+								timer.addPeriodicEvent(
+										3000,
+										new UTTimerEventPerformer()
 										{
-											if ( pings > 3 ){
-
-												event.cancel();
-
-												return;
+											private int	pings = 1;
+	
+											@Override
+											public void
+											perform(
+												UTTimerEvent		event )
+											{
+												if ( pings > 3 ){
+	
+													event.cancel();
+	
+													return;
+												}
+	
+												pings++;
+	
+												if ( sendTunnelOutbound( target )){
+	
+													event.cancel();
+												}
 											}
-
-											pings++;
-
-											if ( sendTunnelOutbound( target )){
-
-												event.cancel();
-											}
-										}
-									});
-
-						if ( sendTunnelOutbound( target )){
-
-							event.cancel();
-						}
-
-							// give the other end a few seconds to kick off some tunnel events to us
-
-						if ( wait_sem.reserve(10000)){
-
-							event.cancel();
+										});
+	
+							if ( sendTunnelOutbound( target )){
+	
+								event.cancel();
+							}
+	
+								// give the other end a few seconds to kick off some tunnel events to us
+	
+							if ( wait_sem.reserve(10000)){
+	
+								event.cancel();
+							}
+						}else{
+							
+								// too busy to mess about
+							
+							sendTunnelOutbound( target );
+									
+							wait_sem.reserve(10000);
 						}
 					}
 

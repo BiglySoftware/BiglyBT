@@ -339,7 +339,7 @@ LocalTrackerPlugin
 		}
 
 
-		plugin_interface.getUtilities().createTimer( "LanPeerFinder:Tracker", true ).addPeriodicEvent(
+		plugin_interface.getUtilities().createTimer( "LanPeerFinder:Tracker", false ).addPeriodicEvent(
 				30*1000,
 				new UTTimerEventPerformer() {
 

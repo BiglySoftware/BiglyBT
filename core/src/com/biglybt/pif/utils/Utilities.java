@@ -172,6 +172,9 @@ Utilities
 	 */
 	public UTTimer createTimer(String name, int priority);
 
+	
+	public UTTimer createTimer(String name, int max_threads, int priority );
+	
 		/**
 		 * create and run a thread for the target. This will be a daemon thread so that
 		 * its existence doesn't interfere with Azureus closedown

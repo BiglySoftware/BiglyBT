@@ -350,6 +350,16 @@ UtilitiesImpl
 	}
 
 	@Override
+	public UTTimer
+	createTimer(
+		String		name,
+		int			max_threads,
+		int			priority )
+	{
+		return( new UTTimerImpl( pi, name, max_threads, priority ));
+	}
+	
+	@Override
 	public void
 	createThread(
 		String			name,
