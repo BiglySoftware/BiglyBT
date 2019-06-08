@@ -91,7 +91,9 @@ DHTNATPuncherImpl
 
 	private final PluginInterface		plugin_interface;
 	private final Formatters			formatters;
-	private final UTTimer				timer;
+	private final UTTimer				timer1;
+	private final UTTimer				timer2;
+	private final UTTimer				timer3;
 
 	private static final int	REPUBLISH_TIME_MIN 			= 5*60*1000;
 	private static final int	TRANSFER_TIMEOUT			= 30*1000;
@@ -189,7 +191,9 @@ DHTNATPuncherImpl
 		server_mon	= plugin_interface.getUtilities().getMonitor();
 		punch_mon	= plugin_interface.getUtilities().getMonitor();
 
-		timer = plugin_interface.getUtilities().createTimer( "DHTNATPuncher:refresher", 16, Thread.NORM_PRIORITY );
+		timer1 = plugin_interface.getUtilities().createTimer( "DHTNATPuncher:refresher1", 2, Thread.NORM_PRIORITY );
+		timer2 = plugin_interface.getUtilities().createTimer( "DHTNATPuncher:refresher2", 8, Thread.NORM_PRIORITY );
+		timer3 = plugin_interface.getUtilities().createTimer( "DHTNATPuncher:refresher3", 8, Thread.NORM_PRIORITY );
 	}
 
 	@Override
@@ -339,7 +343,7 @@ DHTNATPuncherImpl
 		        	}
 				});
 
-			timer.addPeriodicEvent(
+			timer1.addPeriodicEvent(
 				RENDEZVOUS_SERVER_TIMEOUT/2,
 				new UTTimerEventPerformer()
 				{
@@ -420,7 +424,7 @@ DHTNATPuncherImpl
 				});
 		}
 
-		timer.addPeriodicEvent(
+		timer1.addPeriodicEvent(
 			REPUBLISH_TIME_MIN,
 			new UTTimerEventPerformer()
 			{
@@ -456,7 +460,7 @@ DHTNATPuncherImpl
 
 			final DHTTransportContact current_contact = rendezvous_target;
 
-			timer.addEvent(
+			timer1.addEvent(
 				SystemTime.getCurrentTime() + 20*1000,
 				new UTTimerEventPerformer()
 				{
@@ -1718,10 +1722,10 @@ DHTNATPuncherImpl
 
 							// ping the target a few times to try and establish a tunnel
 
-						if ( timer.getMaxThreads() - timer.getActiveThreads() > 2 ){
+						if ( timer2.getMaxThreads() - timer2.getActiveThreads() > 2 ){
 						
 							UTTimerEvent	event =
-								timer.addPeriodicEvent(
+								timer2.addPeriodicEvent(
 										3000,
 										new UTTimerEventPerformer()
 										{
@@ -2022,37 +2026,43 @@ DHTNATPuncherImpl
 
 						// ping the origin a few times to try and establish a tunnel
 
-					UTTimerEvent event =
-						timer.addPeriodicEvent(
-								3000,
-								new UTTimerEventPerformer()
-								{
-									private int pings = 1;
-
-									@Override
-									public void
-									perform(
-										UTTimerEvent		ev )
+					if ( timer3.getMaxThreads() - timer3.getActiveThreads() > 2 ){
+						
+						UTTimerEvent event =
+							timer3.addPeriodicEvent(
+									3000,
+									new UTTimerEventPerformer()
 									{
-										if ( pings > 3 ){
-
-											ev.cancel();
-
-											return;
+										private int pings = 1;
+	
+										@Override
+										public void
+										perform(
+											UTTimerEvent		ev )
+										{
+											if ( pings > 3 ){
+	
+												ev.cancel();
+	
+												return;
+											}
+	
+											pings++;
+	
+											if ( sendTunnelInbound( target )){
+	
+												ev.cancel();
+											}
 										}
-
-										pings++;
-
-										if ( sendTunnelInbound( target )){
-
-											ev.cancel();
-										}
-									}
-								});
-
-					if ( sendTunnelInbound( target )){
-
-						event.cancel();
+									});				
+					
+						if ( sendTunnelInbound( target )){
+	
+							event.cancel();
+						}
+					}else{
+						
+						sendTunnelInbound( target );
 					}
 				}
 

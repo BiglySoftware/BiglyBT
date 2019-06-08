@@ -1452,14 +1452,18 @@ PairingManagerImpl
 								perform(
 									TimerEvent event )
 								{
-									tick_count++;
-
-									updateGlobals( false );
-
-									if ( tick_count % CD_REFRESH_TICKS == 0 ){
-
-										updateNeeded();
-									}
+									AEThread2.createAndStartDaemon(
+										"PM:updater",
+										()->{
+											tick_count++;
+		
+											updateGlobals( false );
+		
+											if ( tick_count % CD_REFRESH_TICKS == 0 ){
+		
+												updateNeeded();
+											}
+										});
 								}
 							});
 
