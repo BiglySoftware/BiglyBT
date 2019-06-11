@@ -14,7 +14,11 @@
     <item name='com.biglybt.pif.PluginInterface com.biglybt.pif.PluginState getPluginState()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='com.biglybt.pif.PluginInterface com.biglybt.pif.ui.UIManager getUIManager()'>
+	<item
+		name='com.biglybt.pif.PluginInterface com.biglybt.pif.logging.Logger getLogger()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.pif.PluginInterface com.biglybt.pif.ui.UIManager getUIManager()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.biglybt.pif.PluginInterface com.biglybt.pif.utils.Utilities getUtilities()'>

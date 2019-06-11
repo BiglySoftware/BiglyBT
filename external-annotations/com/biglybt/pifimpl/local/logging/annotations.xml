@@ -17,11 +17,8 @@
   -->
 
 <root>
-    <item name='com.biglybt.core.download.impl.DownloadManagerImpl com.biglybt.core.download.DownloadManagerState getDownloadState()'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
 	<item
-		name='com.biglybt.core.download.impl.DownloadManagerStateImpl.CachedStateWrapper torrent_hash_wrapper'>
+		name='com.biglybt.pifimpl.local.logging.LoggerImpl com.biglybt.pif.logging.LoggerChannel getChannel(java.lang.String)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>

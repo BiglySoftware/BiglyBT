@@ -38,29 +38,28 @@ import java.util.Map;
  *
  * This class interface contains four different variations of <tt>get</tt> and <tt>set</tt> parameter methods:
  * <ul>
- *   <li>get<i>type</i>Parameter</li>
- *   <li>getCore<i>type</i>Parameter</li>
- *   <li>getUnsafe<i>type</i>Parameter</li>
- *   <li>getPlugin<i>type</i>Parameter</li>
+ *   <li>getCore<code>&lt;type></code>Parameter</li>
+ *   <li>getUnsafe<code>&lt;type></code>Parameter</li>
+ *   <li>getPlugin<code>&lt;type></code>Parameter</li>
  * </ul>
  *
- * The first set of methods are deprecated and should not be used in general - this is because the method names were
- * ambiguous and it wasn't always obvious what data you were trying to get or set.
- * <p>
- * The second set of methods do what the first set of methods were primarily intended for - you can use these
- * methods to get or set some core parameters. You should use the parameter names defined as constants in this interface
- * (the ones labelled <tt>CORE_PARAM</tt>). These parameters will be properly supported by the client, even if the way these
- * values are stored or handled differently in the the client core itself.<br />
- * <br>
- * Attempting to set or get parameters not mentioned here should raise an error (in some cases in the past, this wasn't
- * always enforced by the first set of methods.
- * <p>
- * The third set of methods allow you to modify configuration settings which are stored directly inside the client. These
- * settings may change (without warning) between versions, so there is no guarantee that plugins that use these values
+ * The "Core" set of methods get or set some core parameters. 
+ * You should use the parameter names defined as constants in this interface
+ * (the ones labelled <tt>CORE_PARAM</tt>). 
+ * These parameters will be properly supported by the client, even if the way these
+ * values are stored or handled differently in the the client core itself.
+ * <br/>
+ * Attempting to set or get parameters not mentioned here should raise an error.
+ * <p/>
+ * The "Unsafe" set of methods allow you to modify configuration 
+ * settings which are stored directly inside the client.
+ * These settings may change (without warning) between versions, 
+ * so there is no guarantee that plugins that use these values
  * will behave properly in different versions of the client.
- * <p>
- * The last set of methods are used to store and retrieve data intended exclusively for the use of the plugin itself,
- * which is what you will be using most of the time.
+ * <p/>
+ * The "Plugin" set of methods are used to store and retrieve data intended 
+ * exclusively for the use of the plugin itself which is what you will be using 
+ * most of the time.
  */
 public interface
 PluginConfig

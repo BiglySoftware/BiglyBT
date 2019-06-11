@@ -37,6 +37,9 @@ TOTorrentFile
 	public byte[][]
 	getPathComponents();
 
+	/**
+	 * Build a relative path based on path components, using {@link java.io.File#separator}
+	 */
 	public String getRelativePath();
 
 	public int
