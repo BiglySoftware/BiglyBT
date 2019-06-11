@@ -129,17 +129,6 @@ PluginConfig
   public boolean getCoreBooleanParameter(String key);
 
   /**
-   * Returns the value of a core boolean parameter.
-   *
-   * @param key The parameter name.
-   * @param default_value The default value to return if one is not defined.
-   * @return The value of the parameter.
-   *
-   * @since 3.0.4.3
-   */
-  public boolean getCoreBooleanParameter(String key, boolean default_value);
-
-  /**
    * Returns the value of a core byte array parameter.
    *
    * @param key The parameter name.
@@ -148,17 +137,6 @@ PluginConfig
    * @since 3.0.4.3
    */
   public byte[] getCoreByteParameter(String key);
-
-  /**
-   * Returns the value of a core byte array parameter.
-   *
-   * @param key The parameter name.
-   * @param default_value The default value to return if one is not defined.
-   * @return The value of the parameter.
-   *
-   * @since 3.0.5.3
-   */
-  public byte[] getCoreByteParameter(String key, byte[] default_value);
 
   /**
    * Returns the value of a core color parameter.
@@ -182,28 +160,6 @@ PluginConfig
   public int[] getCoreColorParameter(String key);
 
   /**
-   * Returns the value of a core color parameter.
-   *
-   * <p>
-   *
-   * It will return <tt>null</tt> if no color parameter is stored, or an
-   * integer array of size 4 representing the red, green and blue values,
-   * and a flag indicating if the color is an override of the default or
-   * not (<tt>0</tt> indicates no override, <tt>1</tt> means it is overridden).
-   *
-   * <p>
-   *
-   * In many cases, the override flag can just be ignored.
-   *
-   * @param key The parameter name.
-   * @param default_value The default value to return if one is not defined.
-   * @return The value of the parameter.
-   *
-   * @since 3.0.5.3
-   */
-  public int[] getCoreColorParameter(String key, int[] default_value);
-
-  /**
    * Returns the value of a core float parameter.
    *
    * @param key The parameter name.
@@ -212,17 +168,6 @@ PluginConfig
    * @since 3.0.4.3
    */
   public float getCoreFloatParameter(String key);
-
-  /**
-   * Returns the value of a core float parameter.
-   *
-   * @param key The parameter name.
-   * @param default_value The default value to return if one is not defined.
-   * @return The value of the parameter.
-   *
-   * @since 3.0.4.3
-   */
-  public float getCoreFloatParameter(String key, float default_value);
 
   /**
    * Returns the value of a core int parameter.
@@ -235,17 +180,6 @@ PluginConfig
   public int getCoreIntParameter(String key);
 
   /**
-   * Returns the value of a core int parameter.
-   *
-   * @param key The parameter name.
-   * @param default_value The default value to return if one is not defined.
-   * @return The value of the parameter.
-   *
-   * @since 3.0.4.3
-   */
-  public int getCoreIntParameter(String key, int default_value);
-
-  /**
    * Returns the value of a core long parameter.
    *
    * @param key The parameter name.
@@ -256,17 +190,6 @@ PluginConfig
   public long getCoreLongParameter(String key);
 
   /**
-   * Returns the value of a core long parameter.
-   *
-   * @param key The parameter name.
-   * @param default_value The default value to return if one is not defined.
-   * @return The value of the parameter.
-   *
-   * @since 3.0.4.3
-   */
-  public long getCoreLongParameter(String key, long default_value);
-
-  /**
    * Returns the value of a core string parameter.
    *
    * @param key The parameter name.
@@ -275,17 +198,6 @@ PluginConfig
    * @since 3.0.4.3
    */
   public String getCoreStringParameter(String key);
-
-  /**
-   * Returns the value of a core string parameter.
-   *
-   * @param key The parameter name.
-   * @param default_value The default value to return if one is not defined.
-   * @return The value of the parameter.
-   *
-   * @since 3.0.4.3
-   */
-  public String getCoreStringParameter(String key, String default_value);
 
   /**
    * Sets the value of a core boolean parameter.

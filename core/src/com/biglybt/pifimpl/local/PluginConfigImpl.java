@@ -415,21 +415,9 @@ PluginConfigImpl
 	}
 
 	@Override
-	public boolean getCoreBooleanParameter(String name, boolean default_value) {
-		checkValidCoreParam(name);
-		return getBooleanParameter(name, default_value, true, false);
-	}
-
-	@Override
 	public byte[] getCoreByteParameter(String name) {
 		checkValidCoreParam(name);
 		return getDefaultedByteParameter(name, true);
-	}
-
-	@Override
-	public byte[] getCoreByteParameter(String name, byte[] default_value) {
-		checkValidCoreParam(name);
-		return getByteParameter(name, default_value, true, false);
 	}
 
 	@Override
@@ -439,21 +427,9 @@ PluginConfigImpl
 	}
 
 	@Override
-	public int[] getCoreColorParameter(String name, int[] default_value) {
-		checkValidCoreParam(name);
-		return getColorParameter(name, default_value, true, false);
-	}
-
-	@Override
 	public float getCoreFloatParameter(String name) {
 		checkValidCoreParam(name);
 		return getDefaultedFloatParameter(name, true);
-	}
-
-	@Override
-	public float getCoreFloatParameter(String name, float default_value) {
-		checkValidCoreParam(name);
-		return getFloatParameter(name, default_value, true, false);
 	}
 
 	@Override
@@ -463,21 +439,9 @@ PluginConfigImpl
 	}
 
 	@Override
-	public int getCoreIntParameter(String name, int default_value) {
-		checkValidCoreParam(name);
-		return getIntParameter(name, default_value, true, false);
-	}
-
-	@Override
 	public long getCoreLongParameter(String name) {
 		checkValidCoreParam(name);
 		return getDefaultedLongParameter(name, true);
-	}
-
-	@Override
-	public long getCoreLongParameter(String name, long default_value) {
-		checkValidCoreParam(name);
-		return getLongParameter(name, default_value, true, false);
 	}
 
 	@Override
@@ -485,12 +449,6 @@ PluginConfigImpl
 		checkValidCoreParam(name);
 		return getDefaultedStringParameter(name, true);
 	}
-
-    @Override
-    public String getCoreStringParameter(String name, String default_value) {
-    	checkValidCoreParam(name);
-    	return getStringParameter(name, default_value, true, false);
-    }
 
 	//
 	//

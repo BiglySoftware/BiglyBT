@@ -152,11 +152,6 @@ RPPluginConfig
 
 			return( null );
 
-		}else if ( 	method.equals( "getIntParameter[String,int]") ||
-				 	method.equals( "getParameter[String,int]")){
-
-			return( new RPReply( new Integer( delegate.getCoreIntParameter((String)params[0],((Integer)params[1]).intValue()))));
-
 		}else if ( method.equals( "setParameter[String,int]")){
 
 			delegate.setCoreIntParameter((String)params[0],((Integer)params[1]).intValue());
@@ -542,27 +537,15 @@ RPPluginConfig
 		  @Override
 		  public boolean getCoreBooleanParameter(String key) {notSupported(); return false;}
 		  @Override
-		  public boolean getCoreBooleanParameter(String key, boolean default_value) {notSupported(); return false;}
-		  @Override
-		  public byte[] getCoreByteParameter(String key, byte[] default_value) {notSupported(); return null;}
-		  @Override
 		  public byte[] getCoreByteParameter(String key) {notSupported(); return null;}
 		  @Override
 		  public float getCoreFloatParameter(String key) {notSupported(); return 0;}
 		  @Override
-		  public float getCoreFloatParameter(String key, float default_value) {notSupported(); return 0;}
-		  @Override
 		  public int getCoreIntParameter(String key) {notSupported(); return 0;}
-		  @Override
-		  public int getCoreIntParameter(String key, int default_value) {notSupported(); return 0;}
 		  @Override
 		  public String getCoreStringParameter(String key) {notSupported(); return null;}
 		  @Override
-		  public String getCoreStringParameter(String key, String default_value) {notSupported(); return null;}
-		  @Override
 		  public long getCoreLongParameter(String key) {notSupported(); return 0;}
-		  @Override
-		  public long getCoreLongParameter(String key, long default_value) {notSupported(); return 0;}
 		  @Override
 		  public void setCoreBooleanParameter(String key, boolean value) {notSupported();}
 		  @Override
@@ -579,8 +562,6 @@ RPPluginConfig
 		  @Override
 		  public int[] getCoreColorParameter(String key) {notSupported(); return null;}
 		  @Override
-		  public int[] getCoreColorParameter(String key, int[] default_value) {notSupported(); return null;}
-		  @Override
 		  public void setCoreColorParameter(String key, int[] value) {notSupported();}
 		  @Override
 		  public void setCoreColorParameter(String key, int[] value, boolean override) {notSupported();}
@@ -588,7 +569,6 @@ RPPluginConfig
 		  public int[] getPluginColorParameter(String key) {notSupported(); return null;}
 		  @Override
 		  public int[] getPluginColorParameter(String key, int[] default_value) {notSupported(); return null;}
-		  public int[] getPluginColorParameter(String key, int[] default_value, boolean override) {notSupported(); return null;}
 		  @Override
 		  public void setPluginColorParameter(String key, int[] value) {notSupported();}
 		  @Override
