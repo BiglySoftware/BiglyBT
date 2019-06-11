@@ -3,6 +3,8 @@ package com.biglybt.ui.swt.config;
 import java.io.File;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.MenuAdapter;
+import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionListener;
@@ -90,9 +92,22 @@ public class IconSwtParameter
 	    mi.addSelectionListener( SelectionListener.widgetSelectedAdapter(
 	    	(e)->{ resetToDefault();}));
 	    
-	    menu.addMenuListener( MenuListener.menuShownAdapter(
-	    	(e)->{ mi.setEnabled( !isDefaultValue());}));
+	    try{
+	    	menu.addMenuListener( MenuListener.menuShownAdapter(
+	    			(e)->{ mi.setEnabled( !isDefaultValue());}));
 	    
+		}catch( Throwable e ){
+			
+				// last win32 SWT 4757
+			
+			menu.addMenuListener(
+				new MenuAdapter(){
+					@Override
+					public void menuShown(MenuEvent e){
+						mi.setEnabled( !isDefaultValue());
+					}
+				});
+		}
 	}
 
 	private void releaseImage() {

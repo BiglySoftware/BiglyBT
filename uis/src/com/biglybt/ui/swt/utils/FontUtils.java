@@ -314,6 +314,7 @@ public class FontUtils
 		try {
 			d = metrics.getAverageCharacterWidth();
 		} catch (Throwable t) {
+				// last win32 SWT 4757
 			d = (double) metrics.getAverageCharWidth();
 		}
 		gc.dispose();
