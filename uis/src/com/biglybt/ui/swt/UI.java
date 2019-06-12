@@ -18,7 +18,6 @@ package com.biglybt.ui.swt;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +35,7 @@ import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
 import com.biglybt.core.util.AEMonitor;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.update.UpdateInstaller;
@@ -56,6 +56,14 @@ public class UI
 
 	private static boolean isFirstUI;
 
+	static{
+		
+		if ( Constants.isOSX && COConfigurationManager.getBooleanParameter( "Use System Theme" )){
+	  		
+	  		System.setProperty( "org.eclipse.swt.display.useSystemTheme", "true" );
+	  	}
+	}
+	
 	protected final AEMonitor this_mon = new AEMonitor("swt.UI");
 
 	protected List queued_torrents = new ArrayList();

@@ -34,6 +34,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.util.Constants;
+import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ColorParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterImpl;
@@ -70,11 +72,16 @@ public class ConfigSectionInterfaceColorSWT
 	public void build() {
 		setDefaultUITypesForAdd(UIInstance.UIT_SWT);
 
+		if ( Constants.isOSX && SWT.getVersion() >= 4924 ){	// 4.12RC2
+			
+			add( new BooleanParameterImpl( "Use System Theme", "ConfigView.section.style.usesystemtheme"));
+		}
+
 		ColorParameterImpl colorScheme = new ColorParameterImpl("Color Scheme",
 				"ConfigView.section.color");
 		add(colorScheme);
 		colorScheme.setSuffixLabelKey("restart.required.for.some");
-
+		
 		List<Parameter> listOverride = new ArrayList<>();
 
 		for (String s : sColorsToOverride) {
