@@ -344,10 +344,13 @@ ThreadPool
 						if (r != null)
 						{
 							String name;
-							if (r instanceof ThreadPoolTask)
+							if (r instanceof ThreadPoolTask){
 								name = ((ThreadPoolTask) r).getName();
-							else
+							}else if ( r instanceof AERunnable.AERunnableNamed ){
+								name = ((AERunnable.AERunnableNamed)r).getName();
+							}else{
 								name = r.getClass().getName();
+							}
 							task_names += (task_names.length() == 0 ? "" : ",") + name;
 						}
 					}

@@ -248,7 +248,7 @@ public class Timer
 						final TimerEvent event = event_to_run;
 						
 						thread_pool.run(
-							new AERunnable(){
+							new AERunnable.AERunnableNamed( event.getName()){
 									
 								long queued = SystemTime.getMonotonousTime();
 
