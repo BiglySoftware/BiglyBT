@@ -58,4 +58,24 @@ AERunnable
 				}
 			});
 	}
+	
+	public abstract static class
+	AERunnableNamed
+		extends AERunnable
+	{
+		final private String		name;
+		
+		public
+		AERunnableNamed(
+			String		_name )
+		{
+			name = _name;
+		}
+		
+		public String
+		getName()
+		{
+			return( name );
+		}
+	}
 }

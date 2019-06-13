@@ -26,11 +26,13 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.util.AERunnableObject;
 import com.biglybt.ui.swt.Utils;
 
 
@@ -55,6 +57,39 @@ public class ClipboardCopy {
 				}));
   }
 
+  public static String
+  copyFromClipboard()
+  {
+	  if ( Utils.isSWTThread()){
+		  Clipboard clipboard = new Clipboard(Display.getDefault());
+
+		  String text = (String)clipboard.getContents(TextTransfer.getInstance());
+
+		  clipboard.dispose();
+
+		  return( text );
+		  
+	  }else{
+		  
+		  return((String)Utils.execSWTThreadWithObject( 
+			  "copyFromClipboard",
+			  new AERunnableObject(){
+
+				  @Override
+				  public Object runSupport(){
+
+					  Clipboard clipboard = new Clipboard(Display.getDefault());
+
+					  String text = (String)clipboard.getContents(TextTransfer.getInstance());
+
+					  clipboard.dispose();
+
+					  return( text );
+				  }
+			  }, 10*1000 ));
+	  }
+  }
+  
   public static void
   addCopyToClipMenu(
 	final Control				control,
