@@ -26,10 +26,13 @@ import com.biglybt.core.tracker.client.TRTrackerScraperResponse;
 import com.biglybt.core.util.DisplayFormatters;
 
 import com.biglybt.pif.download.Download;
+import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
+import com.biglybt.ui.swt.views.table.TableCellSWT;
 
 
 
@@ -59,17 +62,24 @@ public class SeedToPeerRatioItem
   public void refresh(TableCell cell) {
     float ratio = -1;
 
-
     DownloadManager dm = (DownloadManager)cell.getDataSource();
-    if( dm != null ) {
-      TRTrackerScraperResponse response = dm.getTrackerScrapeResponse();
+
+    Download download = null;
+
+    if ( cell instanceof TableRowCore ){
+    	
+    	download = (Download)((TableRowCore)cell).getDataSource( false );
+    }
+
+    if( dm != null && download != null) {
+      DownloadScrapeResult response = download.getAggregatedScrapeResult();
       int seeds;
       int peers;
 
-      if( response != null && response.isValid() ) {
-        seeds = Math.max( dm.getNbSeeds(), response.getSeeds() );
+      if( response.getResponseType() == DownloadScrapeResult.RT_SUCCESS) {
+        seeds = Math.max( dm.getNbSeeds(), response.getSeedCount());
 
-        int trackerPeerCount = response.getPeers();
+        int trackerPeerCount = response.getNonSeedCount();
         peers = dm.getNbPeers();
         if (peers == 0 || trackerPeerCount > peers) {
         	if (trackerPeerCount <= 0) {
