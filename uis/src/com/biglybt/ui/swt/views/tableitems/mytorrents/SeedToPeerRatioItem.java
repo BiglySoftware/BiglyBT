@@ -30,6 +30,7 @@ import com.biglybt.pif.download.DownloadScrapeResult;
 import com.biglybt.pif.ui.tables.TableCell;
 import com.biglybt.pif.ui.tables.TableCellRefreshListener;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.ui.common.table.TableCellCore;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
@@ -66,9 +67,9 @@ public class SeedToPeerRatioItem
 
     Download download = null;
 
-    if ( cell instanceof TableRowCore ){
+    if ( cell instanceof TableCellCore ){
     	
-    	download = (Download)((TableRowCore)cell).getDataSource( false );
+    	download = (Download)((TableCellCore)cell).getTableRowCore().getDataSource( false );
     }
 
     if( dm != null && download != null) {
@@ -95,16 +96,17 @@ public class SeedToPeerRatioItem
       }
 
       if (peers < 0 || seeds < 0) {
-      	ratio = 0;
+    	  ratio = 0;
       } else {
-	      if (peers == 0) {
-	      	if (seeds == 0)
-	      		ratio = 0;
-	      	else
-	        	ratio = Float.POSITIVE_INFINITY;
-	      } else {
-	      	ratio = (float)seeds / peers;
-	      }
+    	  if (peers == 0) {
+    		  if (seeds == 0){
+    			  ratio = 0;
+    		  }else{
+    			  ratio = Float.POSITIVE_INFINITY;
+    		  }
+    	  } else {
+    		  ratio = (float)seeds / peers;
+    	  }
       }
     }
 
@@ -113,12 +115,12 @@ public class SeedToPeerRatioItem
     }
 
     if (ratio == -1) {
-			cell.setText("");
-		} else if (ratio == 0) {
-			cell.setText("??");
-		} else {
-			cell.setText(DisplayFormatters.formatDecimal(ratio, 3));
-		}
+    	cell.setText("");
+    } else if (ratio == 0) {
+    	cell.setText("??");
+    } else {
+    	cell.setText(DisplayFormatters.formatDecimal(ratio, 3));
+    }
   }
 
 }
