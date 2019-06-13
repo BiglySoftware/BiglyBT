@@ -28,8 +28,6 @@ package com.biglybt.core.stats.impl;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -146,7 +144,7 @@ StatsWriterImpl
 
 				indent();
 
-				List	_dms = global.getDownloadManagers();
+				List<DownloadManager>	_dms = global.getDownloadManagers();
 
 				DownloadManager[]	dms = new DownloadManager[_dms.size()];
 
@@ -156,17 +154,14 @@ StatsWriterImpl
 
 				Arrays.sort(
 					dms,
-					new Comparator()
+					new Comparator<DownloadManager>()
 					{
 						@Override
 						public int
 						compare(
-							Object o1,
-							Object o2)
+							DownloadManager d1,
+							DownloadManager d2)
 						{
-							DownloadManager	d1 = (DownloadManager)o1;
-							DownloadManager	d2 = (DownloadManager)o2;
-
 							int	d1_index 	= d1.getPosition();
 							int d2_index	= d2.getPosition();
 
@@ -303,9 +298,27 @@ StatsWriterImpl
 						}
 						
 						{
+							long downloading_for = dm_stats.getSecondsDownloading();
+
+							writeRawCookedElapsedTag( "DOWNLOADING_FOR", downloading_for);
+						}
+						
+						{
 							long only_seeding_for = dm_stats.getSecondsOnlySeeding();
 
 							writeRawCookedElapsedTag( "ONLY_SEEDING_FOR", only_seeding_for);
+						}
+						
+						{
+							long added_time = dm_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_ADDED_TIME);
+							
+							writeRawCookedDateTag( "DATE_ADDED", added_time );
+						}
+						
+						{
+							long completed_time = dm_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);
+							
+							writeRawCookedDateTag( "DATE_COMPLETED", completed_time );
 						}
 						
 						{
@@ -334,7 +347,7 @@ StatsWriterImpl
 
 								indent();
 
-								DiskManagerFileInfo[] files = dm.getDiskManagerFileInfo();
+								DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
 
 								for (int j=0;j<files.length;j++){
 
@@ -379,11 +392,7 @@ StatsWriterImpl
 
 								if ( pm != null ){
 
-									List	peers = pm.getPeers();
-
-									for (int j=0;j<peers.size();j++){
-
-										PEPeer	peer = (PEPeer)peers.get(j);
+									for (PEPeer peer: pm.getPeers()){
 
 										PEPeerStats	peer_stats = peer.getStats();
 
