@@ -2135,35 +2135,35 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		synchronized (rows_sync) {
 
 			boolean isSameColumn = newSortColumn.equals(sortColumn);
- 			if (allowOrderChange) {
-  			if (!isSameColumn) {
-  				sortColumn = newSortColumn;
+			if (allowOrderChange) {
+				if (!isSameColumn) {
+					sortColumn = newSortColumn;
 
-  				int iSortDirection = configMan.getIntParameter(CFG_SORTDIRECTION);
-  				if (iSortDirection == 0) {
-  					sortColumn.setSortAscending(true);
-  				} else if (iSortDirection == 1) {
-  					sortColumn.setSortAscending(false);
-  				} else if (iSortDirection == 2) {
-  					sortColumn.setSortAscending(!sortColumn.isSortAscending());
-  				}else{
-  					//same
-  				}
+					int iSortDirection = configMan.getIntParameter(CFG_SORTDIRECTION);
+					if (iSortDirection == 0) {
+						sortColumn.setSortAscending(true);
+					} else if (iSortDirection == 1) {
+						sortColumn.setSortAscending(false);
+					} else if (iSortDirection == 2) {
+						sortColumn.setSortAscending(!sortColumn.isSortAscending());
+					}else{
+						//same
+					}
 
-  				TableColumnManager.getInstance().setDefaultSortColumnName(tableID, sortColumn.getName(), true );
-  			} else {
-  				sortColumn.setSortAscending(!sortColumn.isSortAscending());
-  			}
+					TableColumnManager.getInstance().setDefaultSortColumnName(tableID, sortColumn.getName(), true );
+				} else {
+					sortColumn.setSortAscending(!sortColumn.isSortAscending());
+				}
 			} else {
 				sortColumn = newSortColumn;
 			}
- 			if (!isSameColumn) {
+			if (!isSameColumn) {
 				String name = sortColumn.getName();
 				for (Iterator<TableRowCore> iter = sortedRows.iterator(); iter.hasNext();) {
 					TableRowCore row = iter.next();
 					row.setSortColumn(name);
 				}
- 			}
+			}
  			uiChangeColumnIndicator();
  			resetLastSortedOn();
  			sortColumn(!isSameColumn);

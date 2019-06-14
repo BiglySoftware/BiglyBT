@@ -67,9 +67,14 @@ public class SeedToPeerRatioItem
 
     Download download = null;
 
-    if ( cell instanceof TableCellCore ){
+    if ( cell instanceof TableCellCore && dm != null ){
     	
-    	download = (Download)((TableCellCore)cell).getTableRowCore().getDataSource( false );
+    	TableRowCore row = ((TableCellCore)cell).getTableRowCore();
+    	
+    	if ( row != null ){
+    	
+    		download = (Download)row.getDataSource( false );
+    	}
     }
 
     if( dm != null && download != null) {

@@ -666,33 +666,45 @@ public class TableColumnManager {
   }
 
   public Map getTableConfigMap(String sTableID) {
-		synchronized (this) {
-			String key = "Table." + sTableID;
+	  synchronized (this) {
+		  String key = "Table." + sTableID;
 
-			Map mapTablesConfig = getTablesConfigMap();
+		  Map mapTablesConfig = getTablesConfigMap();
 
-			Map mapTableConfig = (Map) mapTablesConfig.get(key);
-			if (mapTableConfig == null) {
-				mapTableConfig = new HashMap();
-				mapTablesConfig.put("Table." + sTableID, mapTableConfig);
-			} else {
-				String resetIfLastResetBelowVersion = mapResetTable_Version.get(sTableID);
-				if (resetIfLastResetBelowVersion != null) {
-					String lastReset = MapUtils.getMapString(mapTableConfig,
-							"last.reset", "0.0.0.0");
-					if (Constants.compareVersions(lastReset, resetIfLastResetBelowVersion) < 0) {
-						mapTableConfig.clear();
-						mapTableConfig.put("last.reset", Constants.getBaseVersion());
-						saveTableConfigs();
-						mapResetTable_Version.remove(sTableID);
-					}
-				}
-			}
+		  Map mapTableConfig = (Map) mapTablesConfig.get(key);
+		  if (mapTableConfig == null) {
+			  mapTableConfig = new HashMap();
+			  mapTablesConfig.put(key, mapTableConfig);
+		  } else {
+			  String resetIfLastResetBelowVersion = mapResetTable_Version.get(sTableID);
+			  if (resetIfLastResetBelowVersion != null) {
+				  String lastReset = MapUtils.getMapString(mapTableConfig,
+						  "last.reset", "0.0.0.0");
+				  if (Constants.compareVersions(lastReset, resetIfLastResetBelowVersion) < 0) {
+					  mapTableConfig.clear();
+					  mapTableConfig.put("last.reset", Constants.getBaseVersion());
+					  saveTableConfigs();
+					  mapResetTable_Version.remove(sTableID);
+				  }
+			  }
+		  }
 
-			return mapTableConfig;
-		}
-	}
+		  return mapTableConfig;
+	  }
+  }
 
+  public void setTableConfigMap(String sTableID, Map mapTableConfig ) {
+	  synchronized (this) {
+		  String key = "Table." + sTableID;
+
+		  Map mapTablesConfig = getTablesConfigMap();
+
+		  mapTablesConfig.put(key, mapTableConfig);
+	  }
+	  
+	  saveTableConfigs();
+  }
+  
   public void setAutoHideOrder(String sTableID, String[] autoHideOrderColumnIDs) {
   	ArrayList autoHideOrderList = new ArrayList(autoHideOrderColumnIDs.length);
   	for (int i = 0; i < autoHideOrderColumnIDs.length; i++) {

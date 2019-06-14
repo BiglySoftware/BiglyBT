@@ -1135,6 +1135,24 @@ public class TableViewPainted
 			}
 		});
 	}
+	
+	@Override
+	public void sortOrderChanged(){
+		TableColumnManager tcManager = TableColumnManager.getInstance();
+
+		String sSortColumn = tcManager.getDefaultSortColumnName(tableID);
+		if (sSortColumn == null || sSortColumn.length() == 0) {
+			sSortColumn = sDefaultSortOn;
+		}
+
+		TableColumnCore[] tableColumns = getAllColumns();
+		
+		TableColumnCore tc = tcManager.getTableColumnCore(tableID, sSortColumn);
+		if (tc == null && tableColumns.length > 0) {
+			tc = tableColumns[0];
+		}
+		setSortColumn(tc, false);		
+	}
 
 	/* (non-Javadoc)
 	 * @see com.biglybt.ui.swt.views.table.TableViewSWT#addKeyListener(org.eclipse.swt.events.KeyListener)

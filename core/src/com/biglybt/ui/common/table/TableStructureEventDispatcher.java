@@ -151,4 +151,14 @@ public class TableStructureEventDispatcher implements
 				listener.columnOrderChanged(iPositions);
 			}
 	}
+	
+	@Override
+	public void sortOrderChanged(){
+
+		Iterator iter = listeners.iterator();
+		while (iter.hasNext()) {
+			TableStructureModificationListener listener = (TableStructureModificationListener) iter.next();
+			listener.sortOrderChanged();
+		}		
+	}
 }

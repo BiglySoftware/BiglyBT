@@ -91,7 +91,7 @@ public class TableColumnSetupWindow
 
 	private Composite cTableChosen;
 
-	private TableColumnCore[] columnsChosen;
+	private final TableColumnCore[] allColumns;
 
 	private final TableRow sampleRow;
 
@@ -99,7 +99,7 @@ public class TableColumnSetupWindow
 
 	private final TableStructureModificationListener<?> listener;
 
-	private TableColumnCore[] columnsOriginalOrder;
+	private final TableColumnCore[] columnsOriginalOrder;
 
 	protected boolean apply = false;
 
@@ -213,11 +213,27 @@ public class TableColumnSetupWindow
 			}
 		}
 
+		TableColumnManager tcm = TableColumnManager.getInstance();
 
+		allColumns = tcm.getAllTableColumnCoreAsArray(forDataSourceType, forTableID);
+		Arrays.sort(allColumns,TableColumnManager.getTableColumnOrderComparator());
+		
+		columnsOriginalOrder = new TableColumnCore[allColumns.length];
+		System.arraycopy(allColumns, 0, columnsOriginalOrder, 0,allColumns.length);
+		int pos = 0;
+		for (int i = 0; i < allColumns.length; i++) {
+			boolean visible = allColumns[i].isVisible();
+			mapNewVisibility.put(allColumns[i], Boolean.valueOf(visible));
+			if (visible) {
+				allColumns[i].setPositionNoShift(pos++);
+			}
+		}
+		
+		
 		shell = ShellFactory.createShell(Utils.findAnyShell(), SWT.SHELL_TRIM);
 		Utils.setShellIcon(shell);
 		FormLayout formLayout = new FormLayout();
-    shell.setText(MessageText.getString("ColumnSetup.title", new String[] {
+		shell.setText(MessageText.getString("ColumnSetup.title", new String[] {
 			tableName
 		}));
 		shell.setLayout(formLayout);
@@ -266,8 +282,6 @@ public class TableColumnSetupWindow
 
 		final Composite cFilterArea = new Composite(expandFilters, SWT.NONE);
 		cFilterArea.setLayout(new FormLayout());
-
-		final TableColumnManager tcm = TableColumnManager.getInstance();
 
 		Group cResultArea = new Group(shell, SWT.NONE);
 		Messages.setLanguageText(cResultArea, "ColumnSetup.chosencolumns");
@@ -627,8 +641,24 @@ public class TableColumnSetupWindow
 				
 				if ( tableID.equals( Utils.getBaseViewID( forTableID ))){
 					
-					// TODO!
+					tcm.setTableConfigMap(forTableID, config );
+										
+					tcm.loadTableColumnSettings( forDataSourceType, forTableID );
 					
+					listener.tableStructureChanged(true, forDataSourceType);
+					
+					listener.sortOrderChanged();
+					
+					for (int i = 0; i < allColumns.length; i++) {
+						boolean visible = allColumns[i].isVisible();
+						mapNewVisibility.put(allColumns[i], Boolean.valueOf(visible));
+					}
+					
+					fillChosen();
+					
+					fillAvail();
+					
+					setHasChanges( false );
 					
 				}else{
 					
@@ -644,7 +674,7 @@ public class TableColumnSetupWindow
 				}
 			}catch( Throwable e ){
 			
-				Debug.out( e );
+				//Debug.out( e );
 
 				MessageBoxShell mb = new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
 						MessageText.getString( "ConfigView.section.security.op.error.title"),
@@ -660,7 +690,11 @@ public class TableColumnSetupWindow
 		imageLoader.setButtonImage(btnExport, "export");
 		Messages.setLanguageTooltip(btnExport, "label.export.config.to.clip");
 		btnExport.addSelectionListener(SelectionListener.widgetSelectedAdapter(	(e)->{
-				
+			
+				// need to flush values held in columns into the tcm map
+			
+			tcm.saveTableColumns( forDataSourceType, forTableID);
+			
 			Map config = tcm.getTableConfigMap(forTableID);
 			
 			Map map = new HashMap();
@@ -701,20 +735,10 @@ public class TableColumnSetupWindow
 
 		tvChosen.initialize(cTableChosen);
 
-		columnsChosen = tcm.getAllTableColumnCoreAsArray(forDataSourceType,
-				forTableID);
-		Arrays.sort(columnsChosen,
-				TableColumnManager.getTableColumnOrderComparator());
-		columnsOriginalOrder = new TableColumnCore[columnsChosen.length];
-		System.arraycopy(columnsChosen, 0, columnsOriginalOrder, 0,
-				columnsChosen.length);
-		int pos = 0;
-		for (int i = 0; i < columnsChosen.length; i++) {
-			boolean visible = columnsChosen[i].isVisible();
-			mapNewVisibility.put(columnsChosen[i], Boolean.valueOf(visible));
+		for (int i = 0; i < allColumns.length; i++) {
+			boolean visible = allColumns[i].isVisible();
 			if (visible) {
-				columnsChosen[i].setPositionNoShift(pos++);
-				tvChosen.addDataSource(columnsChosen[i]);
+				tvChosen.addDataSource(allColumns[i]);
 			}
 		}
 		tvChosen.processDataSourceQueue();
@@ -753,18 +777,22 @@ public class TableColumnSetupWindow
 				  						if (column != null) {
 				  							defaultColumns.add(column);
 				  						}
-										}
+									}
 				  					if (defaultColumns.size() > 0) {
 				  						for (TableColumnCore tc : mapNewVisibility.keySet()) {
-												mapNewVisibility.put(tc, Boolean.FALSE);
-											}
-				  						tvChosen.removeAllTableRows();
-				  						columnsChosen = defaultColumns.toArray(new TableColumnCore[0]);
-				  						for (int i = 0; i < columnsChosen.length; i++) {
-				  							mapNewVisibility.put(columnsChosen[i], Boolean.TRUE);
-												columnsChosen[i].setPositionNoShift(i);
-												tvChosen.addDataSource(columnsChosen[i]);
+											mapNewVisibility.put(tc, Boolean.FALSE);
+										}
+				  						
+				  						for (int i = 0; i < defaultColumns.size(); i++) {
+				  							TableColumnCore col = defaultColumns.get(i);
+				  							mapNewVisibility.put(col, Boolean.TRUE);
+											col.setPositionNoShift(i);
 				  						}
+				  						
+				  						fillChosen();
+				  						
+				  						fillAvail();
+				  						
 				  						doReset = true;
 				  						
 				  						setHasChanges( true );
@@ -987,11 +1015,21 @@ public class TableColumnSetupWindow
 		btnExport.setEnabled( !hasChanges );
 	}
 	
-	/**
-	 *
-	 *
-	 * @since 4.0.0.5
-	 */
+	private void
+	fillChosen()
+	{
+		tvChosen.removeAllTableRows();
+		int pos = 0;
+		for (int i = 0; i < allColumns.length; i++) {
+			boolean visible = mapNewVisibility.get( allColumns[i]);
+			if (visible) {
+				allColumns[i].setPositionNoShift(pos++);
+				tvChosen.addDataSource(allColumns[i]);
+			}
+		}
+		tvChosen.processDataSourceQueue();
+	}
+	
 	protected void fillAvail() {
 		String selectedCat = null;
 		if (CAT_BUTTONS) {
@@ -1194,7 +1232,7 @@ public class TableColumnSetupWindow
 			boolean visible = mapNewVisibility.get(tc).booleanValue();
 			tc.setVisible(visible);
 		}
-
+		
 		tcm.saveTableColumns(forDataSourceType, forTableID);
 		listener.tableStructureChanged(true, forDataSourceType);
 		
@@ -1558,8 +1596,8 @@ public class TableColumnSetupWindow
 			row = placeAboveRow == null && !ignoreExisting ? tvChosen.getFocusedRow()
 					: placeAboveRow;
 			if (row == null || row.getDataSource() == null) {
-				if (columnsChosen.length > 0) {
-					newPosition = columnsChosen.length;
+				if (allColumns.length > 0) {
+					newPosition = allColumns.length;
 				}
 			} else {
 				newPosition = ((TableColumn) row.getDataSource()).getPosition();
@@ -1578,7 +1616,7 @@ public class TableColumnSetupWindow
 
 			for (int i=0;i<10;i++){
 				try{
-					Arrays.sort(columnsChosen, new Comparator() {
+					Arrays.sort(allColumns, new Comparator() {
 						@Override
 						public int compare(Object arg0, Object arg1) {
 							if ((arg1 instanceof TableColumn) && (arg0 instanceof TableColumn)) {
@@ -1609,9 +1647,9 @@ public class TableColumnSetupWindow
 			}
 
 			int pos = 0;
-			for (int i = 0; i < columnsChosen.length; i++) {
-				if (mapNewVisibility.get(columnsChosen[i]).booleanValue()) {
-					columnsChosen[i].setPositionNoShift(pos++);
+			for (int i = 0; i < allColumns.length; i++) {
+				if (mapNewVisibility.get(allColumns[i]).booleanValue()) {
+					allColumns[i].setPositionNoShift(pos++);
 				}
 			}
 
@@ -1639,8 +1677,7 @@ public class TableColumnSetupWindow
 				});
 			}
 
-			Arrays.sort(columnsChosen,
-					TableColumnManager.getTableColumnOrderComparator());
+			Arrays.sort(allColumns,	TableColumnManager.getTableColumnOrderComparator());
 
 			tvChosen.tableInvalidate();
 			tvChosen.refreshTable(true);

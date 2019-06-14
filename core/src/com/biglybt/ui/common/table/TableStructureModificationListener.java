@@ -38,4 +38,6 @@ public interface TableStructureModificationListener<T>
 	void columnInvalidate(TableColumnCore tableColumn);
 
 	void cellInvalidate(TableColumnCore tableColumn, T data_source);
+	
+	void sortOrderChanged();
 }
