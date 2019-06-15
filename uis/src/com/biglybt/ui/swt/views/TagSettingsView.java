@@ -596,7 +596,7 @@ public class TagSettingsView
 				if (supportsTagUploadLimit) {
 
 					params.maxUploadSpeed = new IntSwtParameter(gTransfer,
-							"tag.maxUploadSpeed", "", null, 1, Integer.MAX_VALUE,
+							"tag.maxUploadSpeed", "", null, -1, Integer.MAX_VALUE,
 							new IntSwtParameter.ValueProcessor() {
 								@Override
 								public Integer getValue(IntSwtParameter p) {
