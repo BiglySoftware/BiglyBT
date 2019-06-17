@@ -273,6 +273,28 @@ public class MainWindowImpl
 			systemTraySWT = null;
 		}
 
+		try{
+				// if we go straight from a text control (say) to the File menu (say) and select
+				// exit/restart then the text control doesn't get a focus-lost before the application closes.
+				// This can cause confusion if the control is a config option that the user has amended and hit
+				// exit/restart - the value isn't updated and therefore the change ignored. Inject an explicit traversal
+				// to pick it up
+			
+			Display display = Display.getCurrent();
+		
+			if ( display != null && !display.isDisposed()){
+				
+				Control control = display.getFocusControl();
+				
+				if ( control != null ){
+					
+					control.traverse( SWT.TRAVERSE_TAB_NEXT );
+				}
+			}
+		}catch( Throwable e ){
+			
+		}
+		
 		/**
 		 * Explicitly force the transfer bar location to be saved (if appropriate and open).
 		 *
