@@ -4229,6 +4229,11 @@ BuddyPluginViewBetaChat
 	private void
 	timerTick()
 	{
+		if ( buddy_table == null ){
+			
+			return;
+		}
+		
 		for ( TableItem ti: buddy_table.getItems()){
 			
 			ChatParticipant	participant = (ChatParticipant)ti.getData();
