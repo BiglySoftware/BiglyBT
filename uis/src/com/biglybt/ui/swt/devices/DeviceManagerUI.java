@@ -94,7 +94,6 @@ import com.biglybt.pif.utils.StaticUtilities;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.platform.PlatformManager;
 import com.biglybt.platform.PlatformManagerFactory;
-import com.biglybt.plugin.net.buddy.swt.ChatView;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
@@ -3838,7 +3837,7 @@ DeviceManagerUI
 
 			if ( stuff.startsWith( "DownloadManager\n" ) ||stuff.startsWith( "DiskManagerFileInfo\n" )){
 
-				String[]	bits =  Constants.PAT_SPLIT_SLASH_N.split(stuff);
+				String[]	bits =  RegExUtil.PAT_SPLIT_SLASH_N.split(stuff);
 
 				for (int i=1;i<bits.length;i++){
 
@@ -3876,7 +3875,7 @@ DeviceManagerUI
 				}
 			}else if ( stuff.startsWith( "TranscodeFile\n" )){
 
-				String[]	bits =  Constants.PAT_SPLIT_SLASH_N.split(stuff);
+				String[]	bits =  RegExUtil.PAT_SPLIT_SLASH_N.split(stuff);
 
 				for (int i=1;i<bits.length;i++){
 

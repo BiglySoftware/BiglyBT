@@ -35,8 +35,8 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagManager;
 import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.util.Base32;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
@@ -548,7 +548,7 @@ TranscodeFileImpl
 			return( new String[0] );
 		}
 
-		return( Constants.PAT_SPLIT_COMMA.split(cats));
+		return( RegExUtil.PAT_SPLIT_COMMA.split(cats));
 	}
 
 	@Override
@@ -590,7 +590,7 @@ TranscodeFileImpl
 			return( new String[0] );
 		}
 
-		String[] tags = Constants.PAT_SPLIT_COMMA.split(tags_str);
+		String[] tags = RegExUtil.PAT_SPLIT_COMMA.split(tags_str);
 
 		if ( localize ){
 

@@ -28,6 +28,14 @@ import java.util.regex.Pattern;
 public class
 RegExUtil
 {
+		// Common Patterns
+	
+	public static final Pattern PAT_SPLIT_COMMAWORDS = Pattern.compile("\\s*,\\s*");
+	public static final Pattern PAT_SPLIT_COMMA = Pattern.compile(",");
+	public static final Pattern PAT_SPLIT_DOT = Pattern.compile("\\.");
+	public static final Pattern PAT_SPLIT_SPACE = Pattern.compile(" ");
+	public static final Pattern PAT_SPLIT_SLASH_N = Pattern.compile("\n");
+
 	private static final ThreadLocal<Map<String,Object[]>>		tls	=
 		new ThreadLocal<Map<String,Object[]>>()
 		{

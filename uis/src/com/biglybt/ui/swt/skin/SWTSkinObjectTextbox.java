@@ -37,6 +37,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.utils.FontUtils;
@@ -73,7 +74,7 @@ public class SWTSkinObjectTextbox
 
 		String styleString = properties.getStringValue(sConfigID + ".style");
 		if (styleString != null) {
-			String[] styles = Constants.PAT_SPLIT_COMMA.split(styleString.toLowerCase());
+			String[] styles = RegExUtil.PAT_SPLIT_COMMA.split(styleString.toLowerCase());
 			Arrays.sort(styles);
 			if (Arrays.binarySearch(styles, "readonly") >= 0) {
 				style |= SWT.READ_ONLY;

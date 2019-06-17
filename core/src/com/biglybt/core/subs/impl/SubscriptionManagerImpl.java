@@ -7888,7 +7888,7 @@ SubscriptionManagerImpl
 		searchMatcher(
 			String		term )
 		{
-			bits = Constants.PAT_SPLIT_SPACE.split(term.toLowerCase() );
+			bits = RegExUtil.PAT_SPLIT_SPACE.split(term.toLowerCase() );
 
 			bit_types 		= new int[bits.length];
 			bit_patterns 	= new Pattern[bits.length];

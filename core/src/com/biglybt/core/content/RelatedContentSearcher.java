@@ -851,7 +851,7 @@ RelatedContentSearcher
 			// each bit (with prefix removed) can be "(" regexp ")"
 			// if bit isn't regexp but has "|" in it it is turned into a regexp so a|b means 'a or b'
 
-		String[]	 bits = Constants.PAT_SPLIT_SPACE.split(term.toLowerCase());
+		String[]	 bits = RegExUtil.PAT_SPLIT_SPACE.split(term.toLowerCase());
 
 		int[]		bit_types 		= new int[bits.length];
 		Pattern[]	bit_patterns 	= new Pattern[bits.length];
@@ -2287,7 +2287,7 @@ outer:
 		List<DistributedDatabaseContact>	result = new ArrayList<>();
 
 		try{
-			String[]	 bits = Constants.PAT_SPLIT_SPACE.split(term.toLowerCase());
+			String[]	 bits = RegExUtil.PAT_SPLIT_SPACE.split(term.toLowerCase());
 
 				// note that we don't need to unescape tags in this process as tags are escaped when
 				// inserted into the blooms and include the 'tag:' prefix

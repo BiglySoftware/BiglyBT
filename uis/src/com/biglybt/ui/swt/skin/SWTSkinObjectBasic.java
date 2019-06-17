@@ -21,7 +21,6 @@ package com.biglybt.ui.swt.skin;
 import java.util.*;
 import java.util.List;
 
-import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.common.updater.UIUpdater;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -663,7 +662,7 @@ public class SWTSkinObjectBasic
 					String colorStyle = properties.getStringValue(sConfigID
 							+ ".color.style" + sSuffix);
 					if (colorStyle != null) {
-						String[] split = Constants.PAT_SPLIT_COMMA.split(colorStyle);
+						String[] split = RegExUtil.PAT_SPLIT_COMMA.split(colorStyle);
 
 						if (split.length > 2) {
 							try {
@@ -718,7 +717,7 @@ public class SWTSkinObjectBasic
 				colorBorder = null;
 				colorBorderParams = null;
 				if (sBorderStyle != null) {
-					String[] split = Constants.PAT_SPLIT_COMMA.split(sBorderStyle);
+					String[] split = RegExUtil.PAT_SPLIT_COMMA.split(sBorderStyle);
 					colorBorder = ColorCache.getSchemedColor(control.getDisplay(), split[0]);
 					needPaintHook |= colorBorder != null;
 
@@ -907,7 +906,7 @@ public class SWTSkinObjectBasic
 			String initClass = properties.getStringValue(sConfigID + ".onshow.skinviewclass");
 			if (initClass != null) {
 				try {
-					String[] initClassItems = Constants.PAT_SPLIT_COMMA.split(initClass);
+					String[] initClassItems = RegExUtil.PAT_SPLIT_COMMA.split(initClass);
 					ClassLoader claLoader = this.getClass().getClassLoader();
 					if (initClassItems.length > 1) {
 						try {

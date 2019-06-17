@@ -4562,7 +4562,7 @@ BuddyPluginViewBetaChat
 
 			if ( stuff.startsWith( "DownloadManager\n" ) ||stuff.startsWith( "DiskManagerFileInfo\n" )){
 
-				String[]	bits =  Constants.PAT_SPLIT_SLASH_N.split(stuff);
+				String[]	bits =  RegExUtil.PAT_SPLIT_SLASH_N.split(stuff);
 
 				for (int i=1;i<bits.length;i++){
 
@@ -4602,7 +4602,7 @@ BuddyPluginViewBetaChat
 				}
 			}else if ( stuff.startsWith( "TranscodeFile\n" )){
 
-				String[]	bits =  Constants.PAT_SPLIT_SLASH_N.split(stuff);
+				String[]	bits =  RegExUtil.PAT_SPLIT_SLASH_N.split(stuff);
 
 				for (int i=1;i<bits.length;i++){
 

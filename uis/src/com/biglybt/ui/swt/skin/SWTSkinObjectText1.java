@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Label;
 
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 
@@ -169,7 +169,7 @@ public class SWTSkinObjectText1
 
 			String sStyle = properties.getStringValue(sPrefix + ".style" + suffix);
 			if (sStyle != null) {
-				String[] sStyles = Constants.PAT_SPLIT_COMMA.split(sStyle.toLowerCase());
+				String[] sStyles = RegExUtil.PAT_SPLIT_COMMA.split(sStyle.toLowerCase());
 				for (int i = 0; i < sStyles.length; i++) {
 					String s = sStyles[i];
 					if (s.equals("bold")) {

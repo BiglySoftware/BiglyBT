@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
@@ -439,7 +440,7 @@ public class SWTSkinObjectText2
 			String sStyle = properties.getStringValue(sPrefix + ".style" + suffix);
 			if (sStyle != null) {
 				isAllcaps = false;
-				String[] sStyles = Constants.PAT_SPLIT_COMMA.split(sStyle.toLowerCase());
+				String[] sStyles = RegExUtil.PAT_SPLIT_COMMA.split(sStyle.toLowerCase());
 				for (int i = 0; i < sStyles.length; i++) {
 					String s = sStyles[i];
 

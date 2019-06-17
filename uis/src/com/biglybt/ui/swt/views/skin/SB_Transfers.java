@@ -69,7 +69,6 @@ import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.columns.utils.TableColumnCreatorV3;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.mdi.MdiSWTMenuHackListener;
@@ -80,7 +79,6 @@ import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.PeersGeneralView;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
-import com.biglybt.ui.swt.views.table.utils.TableColumnCreator;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
@@ -1300,7 +1298,7 @@ public class SB_Transfers
 					}
 
 					String dropped = (String) payload;
-					String[] split = Constants.PAT_SPLIT_SLASH_N.split(dropped);
+					String[] split = RegExUtil.PAT_SPLIT_SLASH_N.split(dropped);
 					if (split.length > 1) {
 						String type = split[0];
 						if (type.startsWith("DownloadManager")) {
@@ -1784,7 +1782,7 @@ public class SB_Transfers
 					}
 
 					private void dropTorrentOnTag(Tag tag, String dropped) {
-						String[] split = Constants.PAT_SPLIT_SLASH_N.split(dropped);
+						String[] split = RegExUtil.PAT_SPLIT_SLASH_N.split(dropped);
 						if (split.length <= 1) {
 							return;
 						}

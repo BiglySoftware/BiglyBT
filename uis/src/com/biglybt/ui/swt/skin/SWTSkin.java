@@ -36,6 +36,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.util.AEMonitor;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory.AEShell;
 
@@ -356,7 +357,7 @@ public class SWTSkin
 				return null;
 			}
 			if (unattachedView.indexOf(',') > 0) {
-				String[] split = Constants.PAT_SPLIT_COMMA.split(unattachedView);
+				String[] split = RegExUtil.PAT_SPLIT_COMMA.split(unattachedView);
 				String parentID = split[1];
 				SWTSkinObject soParent = getSkinObjectByID(parentID, parent);
 				if (soParent != null) {

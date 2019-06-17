@@ -22,7 +22,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.widgets.Composite;
 
-import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.RegExUtil;
 
 public class SWTSkinObjectTabFolder
 	extends SWTSkinObjectContainer
@@ -58,7 +58,7 @@ public class SWTSkinObjectTabFolder
 
 		String sStyle = properties.getStringValue("style");
 		if (sStyle != null && sStyle.length() > 0) {
-			String[] styles = Constants.PAT_SPLIT_COMMA.split(sStyle);
+			String[] styles = RegExUtil.PAT_SPLIT_COMMA.split(sStyle);
 			for (String aStyle : styles) {
 				if (aStyle.equalsIgnoreCase("close")) {
 					style |= SWT.CLOSE;

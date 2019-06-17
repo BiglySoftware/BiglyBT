@@ -1298,7 +1298,7 @@ DeviceImpl
 		}
 
 		try{
-			String[]	bits = Constants.PAT_SPLIT_DOT.split(classification);
+			String[]	bits = RegExUtil.PAT_SPLIT_DOT.split(classification);
 
 				// I would like to drill all the way up to just 'generic' but unfortunately this
 				// would break the current samsung/ms_wmp support that requires the detected profile

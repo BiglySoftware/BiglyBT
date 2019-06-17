@@ -27,9 +27,9 @@ import java.net.*;
 import java.util.*;
 
 import com.biglybt.core.devices.TranscodeFile;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.IndentWriter;
+import com.biglybt.core.util.RegExUtil;
 import com.biglybt.core.xml.util.XUXmlWriter;
 import com.biglybt.pif.tracker.web.TrackerWebPageRequest;
 import com.biglybt.pif.tracker.web.TrackerWebPageResponse;
@@ -511,7 +511,7 @@ DeviceTivo
 
 				if ( sort_order != null ){
 
-					String[] keys = Constants.PAT_SPLIT_COMMA.split(sort_order);
+					String[] keys = RegExUtil.PAT_SPLIT_COMMA.split(sort_order);
 
 					final List<Comparator<ItemInfo>> 	comparators = new ArrayList<>();
 					final List<Boolean>					reverses	= new ArrayList<>();

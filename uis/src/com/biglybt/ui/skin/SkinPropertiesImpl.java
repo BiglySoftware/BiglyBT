@@ -25,6 +25,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.RegExUtil;
 
 /**
  * Implementation of SkinProperties using a IntegratedResourceBundle loaded from
@@ -125,7 +126,7 @@ public class SkinPropertiesImpl
 
 				if (sFiles != null && skinPath != null) {
 
-					String[] sFilesArray = Constants.PAT_SPLIT_COMMA.split(sFiles);
+					String[] sFilesArray = RegExUtil.PAT_SPLIT_COMMA.split(sFiles);
 					for (int i = 0; i < sFilesArray.length; i++) {
 						String sFile = (sFilesArray[i].startsWith("/")
 								? sFilesArray[i].substring(1) : skinPath + sFilesArray[i]);
@@ -361,7 +362,7 @@ public class SkinPropertiesImpl
 			return null;
 		}
 
-		String[] values = Constants.PAT_SPLIT_COMMAWORDS.split(s);
+		String[] values = RegExUtil.PAT_SPLIT_COMMAWORDS.split(s);
 		if (values == null) {
 			return new String[] {
 				s

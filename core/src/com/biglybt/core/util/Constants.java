@@ -148,7 +148,7 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "2.0.0.1_B05";
+	public static final String BIGLYBT_VERSION  = "2.0.0.1_B08";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";
@@ -183,14 +183,6 @@ Constants
 	public static final boolean isWindows7OrHigher;
 	public static final boolean isWindows8OrHigher;
 	public static final boolean isWindows10OrHigher;
-
-
-	// Common Patterns
-	public static final Pattern PAT_SPLIT_COMMAWORDS = Pattern.compile("\\s*,\\s*");
-	public static final Pattern PAT_SPLIT_COMMA = Pattern.compile(",");
-	public static final Pattern PAT_SPLIT_DOT = Pattern.compile("\\.");
-	public static final Pattern PAT_SPLIT_SPACE = Pattern.compile(" ");
-	public static final Pattern PAT_SPLIT_SLASH_N = Pattern.compile("\n");
 
 
 	public static final boolean is64Bit;
@@ -639,7 +631,12 @@ Constants
 		return( true );
 	}
 
-
+	public static String
+	getAppName()
+	{
+		return( APP_NAME );
+	}
+	
 	/**
 	 * @deprecated - use isAppDomain()
 	 * 06/06/19 Still used by old torhelper
@@ -692,12 +689,4 @@ Constants
 	 */
 	
 	public static final String AZUREUS_NAME	  	= BIGLYBT_NAME;
-	
-	public static void main(String[] args) {
-		System.out.println(compareVersions("3.0.0.1", "3.0.0.0"));
-		System.out.println(compareVersions("3.0.0.0_B1", "3.0.0.0"));
-		System.out.println(compareVersions("3.0.0.0", "3.0.0.0_B1"));
-		System.out.println(compareVersions("3.0.0.0_B1", "3.0.0.0_B4"));
-		System.out.println(compareVersions("3.0.0.0..B1", "3.0.0.0_B4"));
-	}
 }
