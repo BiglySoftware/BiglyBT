@@ -199,7 +199,11 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 				UIFunctionsSWT uif = UIFunctionsManagerSWT.getUIFunctionsSWT();
 				if (uif != null) {
 					Shell mainShell = uif.getMainShell();
-					if (mainShell == null || !mainShell.isVisible() || mainShell.getMinimized()) {
+					if (	mainShell == null || 
+							mainShell.isDisposed() ||  
+							!mainShell.isVisible() || 
+							mainShell.getMinimized()) {
+						
 						if ( !COConfigurationManager.getBooleanParameter( "Reduce Auto Activate Window" )){
 
 							uif.bringToFront(false);
