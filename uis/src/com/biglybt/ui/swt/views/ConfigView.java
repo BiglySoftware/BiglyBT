@@ -1203,8 +1203,20 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 	  save.addSelectionListener(new SelectionAdapter() {
 		  @Override
 		  public void widgetSelected(SelectionEvent event) {
-			  // force focusout on osx
+			  
+			  	// force focusout on osx
+			  
 			  save.setFocus();
+			  
+			  	// hmm, not working, let's try something else:
+			  
+			  Control fc = save.getDisplay().getFocusControl();
+			  
+			  if ( fc != null ){
+			  
+				  fc.traverse( SWT.TRAVERSE_TAB_NEXT );
+			  }
+			  
 			  save();
 		  }
 	  });
