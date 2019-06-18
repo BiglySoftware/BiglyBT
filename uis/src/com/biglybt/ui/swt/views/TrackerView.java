@@ -27,7 +27,7 @@ import com.biglybt.pif.ui.UIInstance;
 import com.biglybt.pif.ui.UIManager;
 import com.biglybt.pif.ui.UIManagerListener;
 import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.ui.UserPrompterResultListener;
+import com.biglybt.ui.common.ToolBarItem;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 
@@ -40,11 +40,15 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerTPSListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TorrentUtils;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
@@ -61,7 +65,6 @@ import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.tableitems.tracker.*;
 
-import com.biglybt.core.tracker.TrackerPeerSource;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
@@ -73,8 +76,9 @@ import com.biglybt.ui.swt.UIFunctionsSWT;
  */
 public class TrackerView
 	extends TableViewTab<TrackerPeerSource>
-	implements 	TableLifeCycleListener, TableDataSourceChangedListener,
-				DownloadManagerTPSListener, TableViewSWTMenuFillListener, TableSelectionListener
+	implements TableLifeCycleListener, TableDataSourceChangedListener,
+	DownloadManagerTPSListener, TableViewSWTMenuFillListener,
+	TableSelectionListener, UIPluginViewToolBarListener
 {
 	private static boolean registeredCoreSubViews = false;
 
@@ -137,49 +141,8 @@ public class TrackerView
 					KeyEvent e )
 				{
 					if ( e.stateMask == 0 && e.keyCode == SWT.DEL ){
-						
-						Object[] datasources = tv.getSelectedDataSources().toArray();
-							
-						List<TrackerPeerSource> pss = new ArrayList<>();
-						
-						String str = ""; 
-								
-						for ( Object object : datasources ){
 
-							TrackerPeerSource ps = (TrackerPeerSource)object;
-							
-							if ( ps.canDelete()){
-								
-								pss.add( ps );
-								
-								str += (str.isEmpty()?"":", ") + ps.getName();
-							}
-						}
-						
-						if ( !pss.isEmpty()){
-							
-							MessageBoxShell mb =
-									new MessageBoxShell(
-										MessageText.getString("message.confirm.delete.title"),
-										MessageText.getString("message.confirm.delete.text",
-												new String[] { str	}),
-										new String[] {
-											MessageText.getString("Button.yes"),
-											MessageText.getString("Button.no")
-										},
-										1 );
-
-								mb.open(new UserPrompterResultListener() {
-									@Override
-									public void prompterClosed(int result) {
-										if (result == 0) {
-											for ( TrackerPeerSource ps: pss ){
-												
-												ps.delete();
-											}
-										}
-									}});
-						}
+						removeTrackerPeerSources(tv.getSelectedDataSources().toArray());
 						
 						e.doit = false;
 					}
@@ -196,6 +159,75 @@ public class TrackerView
 		}
 
 		return tv;
+	}
+
+	private static void removeTrackerPeerSources( Object[] datasources) {
+		List<TrackerPeerSource> list = new ArrayList<>();
+		for (Object o : datasources) {
+			if ((o instanceof TrackerPeerSource)
+					&& ((TrackerPeerSource) o).canDelete()) {
+				list.add((TrackerPeerSource) o);
+			}
+		}
+		removeTrackerPeerSources(list);
+	}
+
+	private static void removeTrackerPeerSources(List<TrackerPeerSource> list) {
+		int numLeft = list.size();
+		if (numLeft == 0) {
+			return;
+		}
+
+		TrackerPeerSource toRemove = list.get(0);
+		if (toRemove == null) {
+			return;
+		}
+
+		MessageBoxShell mb = new MessageBoxShell(
+				MessageText.getString("message.confirm.delete.title"),
+				MessageText.getString("message.confirm.delete.text", new String[] {
+					toRemove.getName()
+				}), new String[] {
+					MessageText.getString("Button.yes"),
+					MessageText.getString("Button.no")
+				}, 1);
+
+		if (numLeft > 1) {
+			String sDeleteAll = MessageText.getString("v3.deleteContent.applyToAll",
+					new String[] {
+						"" + numLeft
+					});
+			mb.addCheckBox("!" + sDeleteAll + "!", Parameter.MODE_BEGINNER, false);
+		}
+
+		mb.setRememberOnlyIfButton(0);
+		mb.setRemember("removeTracker", false,
+				MessageText.getString("MessageBoxWindow.nomoreprompting"));
+
+		mb.open(result -> {
+			if (result == -1) {
+				// cancel
+				return;
+			}
+			boolean remove = result == 0;
+			boolean doAll = mb.getCheckBoxEnabled();
+			if (doAll) {
+				if (remove) {
+					for (TrackerPeerSource tps : list) {
+						if (tps.canDelete()) {
+							tps.delete();
+						}
+					}
+				}
+			} else {
+				if (remove) {
+					toRemove.delete();
+				}
+				// Loop with remaining tags to be removed
+				list.remove(0);
+				removeTrackerPeerSources(list);
+			}
+		});
 	}
 
 	private void registerPluginViews(final UISWTInstance pluginUI) {
@@ -235,6 +267,9 @@ public class TrackerView
 	fillMenu(
 		String sColumnName, Menu menu)
 	{
+		if (tv == null) {
+			return;
+		}
 		final Object[] sources = tv.getSelectedDataSources().toArray();
 
 		boolean	found_tracker		= false;
@@ -377,26 +412,7 @@ public class TrackerView
 			Messages.setLanguageText(delete_item, "Button.remove" );
 			Utils.setMenuItemImage(delete_item, "delete");
 
-			delete_item.addListener(
-				SWT.Selection,
-				new TableSelectedRowsListener(tv)
-				{
-					@Override
-					public void
-					run(
-						TableRowCore row )
-					{
-						for ( Object o: sources ){
-
-							TrackerPeerSource ps = (TrackerPeerSource)o;
-
-							if ( ps.canDelete()){
-
-								ps.delete();
-							}
-						}
-					}
-				});
+			delete_item.addListener(SWT.Selection, event -> removeTrackerPeerSources(sources));
 
 			needs_sep = true;
 		}
@@ -611,4 +627,39 @@ public class TrackerView
 	    return( super.eventOccurred(event));
 	}
 
+	@Override
+	public void refreshToolBarItems(Map<String, Long> list) {
+		if (tv == null || !tv.isVisible()) {
+			return;
+		}
+
+		boolean canEnable = false;
+		Object[] datasources = tv.getSelectedDataSources().toArray();
+
+		for (Object object : datasources) {
+			if (object instanceof TrackerPeerSource) {
+				TrackerPeerSource tps = (TrackerPeerSource) object;
+				if (tps.canDelete()) {
+					canEnable = true;
+					break;
+				}
+			}
+		}
+
+		list.put("remove", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
+	}
+
+	@Override
+	public boolean toolBarItemActivated(ToolBarItem item, long activationType,
+			Object datasource) {
+		if (tv == null || !tv.isVisible()) {
+			return false;
+		}
+
+		if ("remove".equals(item.getID())) {
+			removeTrackerPeerSources(tv.getSelectedDataSources().toArray());
+			return true;
+		}
+		return false;
+	}
 }
