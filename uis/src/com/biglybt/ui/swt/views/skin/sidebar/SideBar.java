@@ -709,7 +709,10 @@ public class SideBar
 									tree.setSelection(ti);
 								}
 
-								tree.setTopItem(topItem);
+								if ( topItem != null ){	// Seen on OSX
+									tree.setTopItem(topItem);
+								}
+								
 								tree.setRedraw(true);
 
 								event.doit = false;
