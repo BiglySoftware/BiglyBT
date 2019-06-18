@@ -1562,7 +1562,14 @@ PRUDPPacketHandlerImpl
 
 			}else{
 
-				e.printStackTrace();
+				String str = Debug.getNestedExceptionMessage( e ).toLowerCase( Locale.US );
+				
+				if ( str.contains( "unreachable" ) || str.contains( "network is down" )){
+					
+				}else{
+				
+					e.printStackTrace();
+				}
 			}
 
 			Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR, "PRUDPPacketHandler: send to " + destination_address + " failed: " + Debug.getNestedExceptionMessage(e)));
