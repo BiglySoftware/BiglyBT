@@ -1034,7 +1034,7 @@ public class MenuFactory
 										showText(
 											"MainWindow.menu.speed_limits.info.title",
 											"MainWindow.menu.speed_limits.info.curr",
-											slh.reset());
+											slh.clearCurrentLimits());
 									}
 								});
 

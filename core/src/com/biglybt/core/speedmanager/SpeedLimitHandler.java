@@ -107,6 +107,10 @@ SpeedLimitHandler
 	private static final String	NET_LAN			= "LAN";
 	private static final String	NET_WAN			= "WAN";
 
+	private static final int AS_UNKOWN		= 0;
+	private static final int AS_INACTIVE	= 1;
+	private static final int AS_ACTIVE		= 2;
+	
 	final Core core;
 	final PluginInterface 	plugin_interface;
 	final TorrentAttribute	category_attribute;
@@ -117,6 +121,8 @@ SpeedLimitHandler
 	private List<ScheduleRule>		current_rules	= new ArrayList<>();
 	private ScheduleRule			active_rule;
 
+	private boolean					preserve_inactive_limits;
+	
 	private boolean					prioritiser_enabled = true;
 	private TimerEventPeriodic		prioritiser_event;
 	private List<Prioritiser>		current_prioritisers = new ArrayList<>();
@@ -130,6 +136,8 @@ SpeedLimitHandler
 
 	private Map<Integer,List<NetLimit>>		net_limits	= new HashMap<>();
 
+	private final static String INACTIVE_PROFILE_NAME	= "preserved_limits (auto)";
+	
 	private final List<String> predefined_profile_names = new ArrayList<>();
 
 	{
@@ -144,7 +152,6 @@ SpeedLimitHandler
 	private final IPSetTagType	ip_set_tag_type = TagManagerFactory.getTagManager().isEnabled()?new IPSetTagType():null;
 
 	private final Object extensions_lock = new Object();
-
 
 	private
 	SpeedLimitHandler(
@@ -195,10 +202,22 @@ SpeedLimitHandler
 
 		loadPauseAllActive();
 
-		loadSchedule();
+		loadSchedule( true );
 	}
 
+	private int
+	getActiveState()
+	{
+		return( COConfigurationManager.getIntParameter( "speed.limit.handler.active.state" , AS_UNKOWN ));
+	}
 
+	private void
+	setActiveState(
+		int	state )
+	{
+		COConfigurationManager.setParameter( "speed.limit.handler.active.state" , state );
+	}
+	
 	public boolean
 	hasAnyProfiles() {
 		if (!COConfigurationManager.hasParameter("speed.limit.handler.state",
@@ -330,7 +349,7 @@ SpeedLimitHandler
 	}
 
 	public List<String>
-	reset()
+	clearCurrentLimits()
 	{
 		if ( net_limit_pause_all_active ){
 
@@ -931,7 +950,8 @@ SpeedLimitHandler
 	}
 
 	private synchronized List<String>
-	loadSchedule()
+	loadSchedule(
+		boolean	start_of_day )
 	{
 		List<String>	result = new ArrayList<>();
 
@@ -950,7 +970,8 @@ SpeedLimitHandler
 
 		boolean checked_lts_enabled = false;
 		boolean	lts_enabled	= false;
-
+		boolean preserve_limits = false;
+		
 		for ( String line: schedule_lines ){
 
 			line = line.trim();
@@ -970,7 +991,7 @@ SpeedLimitHandler
 
 				if ( bits.length == 2 ){
 
-					String arg = bits[1];
+					String arg = bits[1].trim();
 
 					if ( arg.equals( "yes" )){
 
@@ -987,6 +1008,32 @@ SpeedLimitHandler
 				if ( !ok ){
 
 					result.add( "'" +line + "' is invalid: use enable=(yes|no)" );
+				}
+			}else if ( lc_line.startsWith( "preserve_inactive_limits" )){
+
+				String[]	bits = lc_line.split( "=" );
+
+				boolean	ok = false;
+
+				if ( bits.length == 2 ){
+
+					String arg = bits[1].trim();
+
+					if ( arg.equals( "yes" )){
+
+						preserve_limits = true;
+						ok		= true;
+
+					}else if ( arg.equals( "no" )){
+
+						preserve_limits = false;
+						ok		= true;
+					}
+				}
+
+				if ( !ok ){
+
+					result.add( "'" +line + "' is invalid: use preserve_inactive_limits=(yes|no)" );
 				}
 			}else if ( lc_line.startsWith( "ip_set" ) || lc_line.startsWith( "peer_set" ) ){
 
@@ -1734,6 +1781,13 @@ SpeedLimitHandler
 
 		if ( enabled ){
 
+			preserve_inactive_limits = preserve_limits;
+			
+			if ( start_of_day && rules.isEmpty()){
+				
+				setActiveState( AS_INACTIVE );
+			}
+			
 			if ( new_net_limits.size() > 0 ){
 
 				schedule_has_net_limits = true;
@@ -1923,18 +1977,18 @@ SpeedLimitHandler
 							{
 								tick_count++;
 
-								checkSchedule( tick_count );
+								checkSchedule( false, tick_count );
 							}
 						});
 			}
 
 			if ( active_rule != null || rules.size() > 0 || net_limits.size() > 0 ){
 
-				checkSchedule(0);
+				checkSchedule( start_of_day, 0 );
 			}
 
 		}else{
-
+			
 			current_rules.clear();
 
 			if ( schedule_event != null ){
@@ -1948,7 +2002,7 @@ SpeedLimitHandler
 
 				active_rule	= null;
 
-				resetRules();
+				setProfileActive( null );
 			}
 
 			for( IPSet s: current_ip_sets.values()){
@@ -1973,6 +2027,13 @@ SpeedLimitHandler
 
 				StatsFactory.getLongTermStats().removeListener( this );
 			}
+			
+			setActiveState( AS_INACTIVE );
+		}
+		
+		if ( !preserve_inactive_limits && profileExists( INACTIVE_PROFILE_NAME )){
+			
+			deleteProfile( INACTIVE_PROFILE_NAME );
 		}
 
 		return( result );
@@ -2981,7 +3042,49 @@ SpeedLimitHandler
 	}
 
 	private void
+	setProfileActive(
+		String		profile_name )
+	{
+		int	active_state = getActiveState();
+				
+		if ( profile_name == null ){
+			
+			if ( active_state == AS_ACTIVE && preserve_inactive_limits && profileExists( INACTIVE_PROFILE_NAME )){
+				
+					// active -> inactive
+				
+				if ( rule_pause_all_active ){
+
+					setRulePauseAllActive( false );
+				}
+
+				loadProfile( INACTIVE_PROFILE_NAME );
+								
+			}else{
+			
+				resetRules();
+			}
+			
+			setActiveState( AS_INACTIVE );
+
+		}else{
+			
+			if ( active_state == AS_INACTIVE && preserve_inactive_limits ){
+				
+					// inactive -> active 
+				
+				saveProfile( INACTIVE_PROFILE_NAME );				
+			}
+			
+			loadProfile( profile_name );
+			
+			setActiveState( AS_ACTIVE );
+		}
+	}
+	
+	private void
 	checkSchedule(
+		boolean	start_of_day,
 		int		tick_count )
 	{
 		GlobalManager gm = core.getGlobalManager();
@@ -2998,9 +3101,9 @@ SpeedLimitHandler
 
 				active_rule = null;
 
-				if ( current_rule != null ){
+				if ( start_of_day || current_rule != null ){
 
-					resetRules();
+					setProfileActive( null );
 				}
 			}else{
 
@@ -3041,13 +3144,13 @@ SpeedLimitHandler
 
 						active_rule = latest_match;
 
-						loadProfile( profile_name );
+						setProfileActive( profile_name );
 
 					}else if ( active_rule != null ){
 
 						active_rule = null;
 
-						resetRules();
+						setProfileActive( null );
 					}
 				}else{
 
@@ -3126,6 +3229,7 @@ SpeedLimitHandler
 		result.add( "# Enter rules on separate lines below this section - see " + Wiki.SPEED_LIMIT_SCHEDULER + " for more details" );
 		result.add( "# Rules are of the following types:" );
 		result.add( "#    enable=(yes|no)   - controls whether the entire schedule is enabled or not (default=yes)" );
+		result.add( "#    preserve_inactive_limts=(yes|no) - save existing limits when activating and reinstate on deactivation (default=no)" );
 		result.add( "#    <frequency> <profile_name> from <time> to <time> [extension]*" );
 		result.add( "#        frequency: daily|weekdays|weekends|<day_of_week>" );
 		result.add( "#            day_of_week: mon|tue|wed|thu|fri|sat|sun" );
@@ -3231,7 +3335,7 @@ SpeedLimitHandler
 
 		COConfigurationManager.save();
 
-		return( loadSchedule());
+		return( loadSchedule( false ));
 	}
 
 	private List<LimitedRateGroup>
@@ -5567,7 +5671,8 @@ SpeedLimitHandler
 					", Networks=" + networks +
 					", Inverse=" + inverse +
 					", Categories/Tags=" + (categories_or_tags==null?"[]":String.valueOf(categories_or_tags)) +
-					", Peer_Up=" + format( peer_up_lim ) + ", Peer_Down=" + format( peer_down_lim ));
+					", Peer_Up=" + format( peer_up_lim ) + ", Peer_Down=" + format( peer_down_lim )) +
+					", Client=" + (client_pattern==null?"":client_pattern);
 
 		}
 
