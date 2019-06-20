@@ -1840,9 +1840,9 @@ SpeedLimitHandler
 				s.destroy();
 			}
 
-			current_ip_sets = ip_sets;
+			current_ip_sets.clear();
 
-			initialiseIPSets( current_ip_sets );
+			initialiseIPSets( ip_sets );
 
 			checkIPSets();
 
@@ -2142,9 +2142,7 @@ SpeedLimitHandler
 											set.setParameters( false, 0, 0, 0, 0, new HashSet<String>(), pattern );
 											
 											set.addCIDRorCCetc( "all" );
-											
-											current_ip_sets.put( set_name, set );
-											
+																						
 											added.put( set_name, set );
 																						
 										}catch( Throwable e ){
@@ -2220,6 +2218,8 @@ SpeedLimitHandler
 						}
 
 						s.initialise( tag_id );
+						
+						current_ip_sets.put( s.getName(), s );
 					}
 				}catch( Throwable e ){
 
@@ -5798,7 +5798,14 @@ SpeedLimitHandler
 				
 				addTag();
 
-				upload_priority = COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + getTagID() + ".uppri", 0 );
+				upload_priority = COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + tag_id + ".uppri", 0 );
+				
+				int actions = COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + tag_id + ".eos", -1 );
+				
+				if ( actions == TagFeatureExecOnAssign.ACTION_DESTROY ){
+					
+					super.setActionEnabled( actions, true );
+				}
 			}
 
 			@Override
@@ -5815,13 +5822,28 @@ SpeedLimitHandler
 				return( TagFeatureExecOnAssign.ACTION_DESTROY );
 			}
 
+			@Override
+			public void
+			setActionEnabled(
+				int			action,
+				boolean		enabled )
+			{
+				super.setActionEnabled( action, enabled );
+				
+				if ( action == TagFeatureExecOnAssign.ACTION_DESTROY  ){
+				
+					COConfigurationManager.setParameter( "speed.limit.handler.ipset_n." + getTagID() + ".eos", enabled?TagFeatureExecOnAssign.ACTION_DESTROY:-1);
+				}
+			}
+			
 			private void
 			update(
 				int		tick_count )
 			{
 				List<PEPeer> to_remove 	= null;
 				List<PEPeer> to_add		= null;
-
+				List<PEPeer> to_delete	= null;
+				
 				synchronized( this ){
 
 					if ( tick_count % 5 == 0 ){
@@ -5861,6 +5883,19 @@ SpeedLimitHandler
 							if ( can_add == 0 ){
 								
 								// defer
+								
+							}else if ( can_add == 3 ){
+								
+									// immediate remove
+								
+								it.remove();
+								
+								if ( to_delete == null ){
+									
+									to_delete = new ArrayList<>();
+								}
+								
+								to_delete.add( peer );
 								
 							}else{
 								
@@ -5906,6 +5941,19 @@ SpeedLimitHandler
 						removeTaggable( peer );
 					}
 				}
+				
+				if ( to_delete != null ){
+					
+					for ( PEPeer peer: to_delete ){
+						
+						PEPeerManager pm = peer.getManager();
+						
+						if ( pm != null ){
+						
+							pm.removePeer( peer );
+						}
+					}
+				}
 			}
 
 			private boolean
@@ -5932,6 +5980,13 @@ SpeedLimitHandler
 				p.removeRateLimiter( ip_set.up_limiter, true );
 				p.removeRateLimiter( ip_set.down_limiter, false );
 			}
+			
+			/**
+			 * 
+			 * @param peer
+			 * @return 0=defer, 1=yes, 2=no, 3=remove
+			 */
+			
 			
 			private int
 			canAdd(
@@ -6051,14 +6106,7 @@ SpeedLimitHandler
 					
 					if ( isActionEnabled( TagFeatureExecOnAssign.ACTION_DESTROY )){
 
-						PEPeerManager pm = peer.getManager();
-						
-						if ( pm != null ){
-						
-							pm.removePeer( peer );
-						}
-						
-						result = false;
+						return( 3 );
 					}
 				}
 				
@@ -6095,6 +6143,14 @@ SpeedLimitHandler
 								// defer
 							
 							pending_peers.add( peer );
+							
+							return;
+							
+						}else if ( can_add == 3 ){
+							
+								// immediate remove
+							
+							peer_manager.removePeer( _peer );
 							
 							return;
 							
