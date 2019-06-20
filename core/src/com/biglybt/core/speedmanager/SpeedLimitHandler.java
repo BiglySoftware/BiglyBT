@@ -75,6 +75,8 @@ SpeedLimitHandler
 	private static final Object	RLD_TO_BE_REMOVED_KEY = new Object();
 	private static final Object	RLU_TO_BE_REMOVED_KEY = new Object();
 
+	private static final Object PEER_LT_WAIT_START_KEY	= new Object();
+	
 	public static SpeedLimitHandler
 	getSingleton(
 		Core core )
@@ -153,6 +155,8 @@ SpeedLimitHandler
 
 	private final Object extensions_lock = new Object();
 
+	private final List<String>	auto_peer_set_queue = new ArrayList<>();
+	
 	private
 	SpeedLimitHandler(
 		Core _core )
@@ -1838,47 +1842,7 @@ SpeedLimitHandler
 
 			current_ip_sets = ip_sets;
 
-			Map<IPSet,Integer>	id_map 		= new HashMap<>();
-			int					id_max		= -1;
-
-			for ( int i=0;i<2;i++ ){
-
-				for ( IPSet s: current_ip_sets.values()){
-
-					String name = s.getName();
-
-					try{
-						String config_key = "speed.limit.handler.ipset_n." + Base32.encode( name.getBytes( "UTF-8" ));
-
-						if ( i == 0 ){
-
-							int existing = COConfigurationManager.getIntParameter( config_key, -1 );
-
-							if ( existing != -1 ){
-
-								id_map.put( s, existing );
-
-								id_max = Math.max( id_max, existing );
-							}
-						}else{
-
-							Integer tag_id = id_map.get( s );
-
-							if ( tag_id == null ){
-
-								tag_id = ++id_max;
-
-								COConfigurationManager.setParameter( config_key, tag_id );
-							}
-
-							s.initialise( tag_id );
-						}
-					}catch( Throwable e ){
-
-						Debug.out( e );
-					}
-				}
-			}
+			initialiseIPSets( current_ip_sets );
 
 			checkIPSets();
 
@@ -2125,12 +2089,146 @@ SpeedLimitHandler
 		check_ip_sets_limiter.setSingleThreaded();
 	}
 
+	private final FrequencyLimitedDispatcher auto_peer_set_checker = new FrequencyLimitedDispatcher(
+			new AERunnable() {
+				
+				AsyncDispatcher dispatcher = new AsyncDispatcher();
+				
+				@Override
+				public void runSupport(){
+					
+					dispatcher.dispatch( AERunnable.create(
+						()->{
+							List<String>	todo;
+							
+							synchronized( auto_peer_set_queue ){
+							
+								todo = new ArrayList<>( auto_peer_set_queue );
+								
+								auto_peer_set_queue.clear();
+							}
+							
+							if ( todo.isEmpty()){
+								
+								return;
+							}
+							
+							synchronized( SpeedLimitHandler.this ){
+		
+								Map<String,IPSet>	added = new HashMap<>();
+								
+								for ( String name: todo ){
+								
+									char c = name.charAt(0);
+									
+										// stupid micro lower/upper
+									
+									if ( c == '\u03bc' ){
+										
+										name = '\u00B5' + name.substring( 1 );
+									}
+
+									String set_name = "Client_" + name;
+									
+									IPSet set = current_ip_sets.get( set_name );
+									
+									if ( set == null ){
+																														
+										set = new IPSet( set_name );
+										
+										try{
+											Pattern pattern = Pattern.compile( "\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
+											
+											set.setParameters( false, 0, 0, 0, 0, new HashSet<String>(), pattern );
+											
+											set.addCIDRorCCetc( "all" );
+											
+											current_ip_sets.put( set_name, set );
+											
+											added.put( set_name, set );
+																						
+										}catch( Throwable e ){
+											
+											Debug.out( e );
+										}
+									}
+								}
+								
+								if ( !added.isEmpty()){
+									
+									initialiseIPSets( added );
+									
+									checkIPSets();
+								}
+							}
+						}));
+				}
+			}, 2000 );
+
+	
 	private void
 	checkIPSets()
 	{
 		check_ip_sets_limiter.dispatch();
 	}
 
+	private void
+	initialiseIPSets(
+		Map<String,IPSet>		sets )
+	{
+		Set<Integer>		id_allocated	= new HashSet<>();
+		Map<IPSet,Integer>	id_map 		= new HashMap<>();
+		int					id_max		= -1;
+
+		for ( int i=0;i<2;i++ ){
+
+			for ( IPSet s: i==0?current_ip_sets.values():sets.values()){
+
+				String name = s.getName();
+
+				try{
+					String config_key = "speed.limit.handler.ipset_n." + Base32.encode( name.getBytes( "UTF-8" ));
+
+					if ( i == 0 ){
+
+						int existing = COConfigurationManager.getIntParameter( config_key, -1 );
+
+						if ( existing != -1 ){
+
+							if ( id_allocated.contains( existing )){
+							
+								COConfigurationManager.removeParameter( config_key );	// clash
+								
+							}else{
+								
+								id_allocated.add( existing );
+								
+								id_map.put( s, existing );
+
+								id_max = Math.max( id_max, existing );
+							}
+						}
+					}else{
+
+						Integer tag_id = id_map.get( s );
+
+						if ( tag_id == null ){
+
+							tag_id = ++id_max;
+
+							COConfigurationManager.setParameter( config_key, tag_id );
+						}
+
+						s.initialise( tag_id );
+					}
+				}catch( Throwable e ){
+
+					Debug.out( e );
+				}
+			}
+		}
+	}
+	
 	private synchronized void
 	checkIPSetsSupport()
 	{
@@ -3235,7 +3333,7 @@ SpeedLimitHandler
 		result.add( "#            day_of_week: mon|tue|wed|thu|fri|sat|sun" );
 		result.add( "#        time: hh:mm - 24 hour clock; 00:00=midnight; local time" );
 		result.add( "#        extension: (start_tag|stop_tag|pause_tag|resume_tag):<tag_name> (enable_priority|disable_priority)" );
-		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>]" );
+		result.add( "#    peer_set <set_name>=[<CIDR_specs...>|CC list|Network List|<prior_set_name>] [,inverse=[yes|no]] [,up=<limit>] [,down=<limit>] [peer_up=<limit>] [peer_down=<limit>] [,cat=<cat names>] [,tag=<tag names>] [,client=<regular expression>|auto]" );
 		result.add( "#    net_limit (hourly|daily|weekly|monthly)[(:<profile>|$<tag>)] [total=<limit>] [up=<limit>] [down=<limit>]");
 		result.add( "#    priority_(up|down) <id>=<tag_name> [,<id>=<tag_name>]+ [,freq=<secs>] [,max=<limit>] [,probe=<cycles>]" );
 		result.add( "#" );
@@ -5758,24 +5856,32 @@ SpeedLimitHandler
 
 						if ( state == PEPeer.TRANSFERING ){
 
-							it.remove();
-
-							if ( canAdd( peer )){
-								
-								added_peers.add( peer );
+							int can_add = canAdd( peer );
 							
-								if ( to_add == null ){
-
-									to_add = new ArrayList<>();
-								}
-
-								to_add.add( peer );
+							if ( can_add == 0 ){
+								
+								// defer
 								
 							}else{
 								
-								deferredRemove( peer );
+								it.remove();
+
+								if ( can_add == 1 ){
+									
+									added_peers.add( peer );
+								
+									if ( to_add == null ){
+	
+										to_add = new ArrayList<>();
+									}
+	
+									to_add.add( peer );
+									
+								}else{
+									
+									deferredRemove( peer );
+								}
 							}
-							
 						}else if ( state == PEPeer.DISCONNECTED ){
 
 							it.remove();
@@ -5827,7 +5933,7 @@ SpeedLimitHandler
 				p.removeRateLimiter( ip_set.down_limiter, false );
 			}
 			
-			private boolean
+			private int
 			canAdd(
 				PEPeer		peer )
 			{
@@ -5835,18 +5941,67 @@ SpeedLimitHandler
 				
 				if ( client_pattern == null ){
 					
-					return( true );
+					return( 1 );
 				}
+				
+				boolean auto_client = client_pattern.pattern().equals( "auto" );
 				
 				boolean	result = false;
 				
 				String hs_name	= peer.getClientNameFromExtensionHandshake();
 				
-				if ( hs_name != null ){
+				if ( hs_name != null && !hs_name.isEmpty()){
+					
+					if ( auto_client ){
+						
+						char[] chars = hs_name.toCharArray();
+						
+						String client = hs_name;
+						
+						for ( int i=0;i<chars.length;i++){
+							
+							if ( !Character.isLetter( chars[i] )){
+								
+								client = new String( chars, 0, i );
+								
+								break;
+							}
+						}
+						
+						synchronized( auto_peer_set_queue ){
+							
+							if ( !auto_peer_set_queue.contains( client )){
+							
+								auto_peer_set_queue.add( client );
+							
+								auto_peer_set_checker.dispatch();
+							}
+						}
+						
+						return( 2 );
+					}
 					
 					if ( client_pattern.matcher( hs_name ).find()){
 						
 						result = true;
+					}
+				}else{
+						// we want to give a bit more time for the extension handshake to arrive
+					
+					
+					Long start = (Long)peer.getUserData( PEER_LT_WAIT_START_KEY );
+					
+					long now = SystemTime.getMonotonousTime();
+					
+					if ( start == null ){
+						
+						peer.setUserData( PEER_LT_WAIT_START_KEY, now );
+						
+						return( 0 );
+						
+					}else if ( now - start < 20*1000 ){
+					
+						return( 0 );
 					}
 				}
 				
@@ -5854,7 +6009,36 @@ SpeedLimitHandler
 					
 					String id_name	= peer.getClientNameFromPeerID();
 					
-					if ( id_name != null ){
+					if ( id_name != null && !id_name.isEmpty()){
+						
+						if ( auto_client ){
+							
+							char[] chars = id_name.toCharArray();
+							
+							String client = id_name;
+							
+							for ( int i=0;i<chars.length;i++){
+								
+								if ( !Character.isLetter( chars[i] )){
+									
+									client = new String( chars, 0, i );
+									
+									break;
+								}
+							}
+							
+							synchronized( auto_peer_set_queue ){
+								
+								if ( !auto_peer_set_queue.contains( client )){
+								
+									auto_peer_set_queue.add( client );
+								
+									auto_peer_set_checker.dispatch();
+								}
+							}
+							
+							return( 2 );
+						}
 						
 						if ( client_pattern.matcher( id_name ).find()){
 							
@@ -5878,7 +6062,7 @@ SpeedLimitHandler
 					}
 				}
 				
-				return( result );
+				return( result?1:2 );
 			}
 			
 			private void
@@ -5904,17 +6088,30 @@ SpeedLimitHandler
 							return;
 						}
 
-						pending_peers.remove( peer );
-
-						if ( canAdd( peer )){
+						int can_add = canAdd( peer );
+						
+						if ( can_add == 0 ){
 							
-							added_peers.add( peer );
+								// defer
 							
-						}else{
-							
-							deferredRemove( peer );
+							pending_peers.add( peer );
 							
 							return;
+							
+						}else{
+
+							pending_peers.remove( peer );
+
+							if ( can_add == 1 ){
+							
+								added_peers.add( peer );
+								
+							}else{
+								
+								deferredRemove( peer );
+								
+								return;
+							}
 						}
 					}else{
 
