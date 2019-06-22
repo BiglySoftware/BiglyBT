@@ -307,5 +307,6 @@ public class UIConfigDefaultsSWT
 			orderDef += (orderDef.isEmpty()?"":", ") + (i+1);
 		}
 		def.addParameter( "Side Bar Top Level Order", orderDef );
+		def.addParameter( "Library.TagInTabBar", 1 );
 	}
 }

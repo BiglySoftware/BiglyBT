@@ -243,18 +243,25 @@ public class ConfigSectionInterfaceTablesSWT
 				"ConfigView.section.style.ShowCatButtons"), listLibrary);
 
 		if (isAZ3) {
-
+			
 			BooleanParameterImpl show_tags = new BooleanParameterImpl(
 					"Library.TagInSideBar", "ConfigView.section.style.TagInSidebar");
 			add(show_tags, listLibrary);
-
+		
 			BooleanParameterImpl show_tag_groups = new BooleanParameterImpl(
 					"Library.TagGroupsInSideBar",
 					"ConfigView.section.style.TagGroupsInSidebar");
 			add(show_tag_groups, listLibrary);
+			
 			show_tag_groups.setIndent(1, true);
 
 			show_tags.addEnabledOnSelection(show_tag_groups);
+		}else{
+			
+			BooleanParameterImpl show_tags = new BooleanParameterImpl(
+					"Library.TagInTabBar", "ConfigView.section.style.TagInTabbar");
+			add(show_tags, listLibrary);
+
 		}
 
 		BooleanParameterImpl show_tag = new BooleanParameterImpl(

@@ -249,8 +249,8 @@ public class SB_Transfers
 	protected boolean	header_show_rates;
 	protected volatile OverallStats totalStats;
 
-	protected boolean	show_tag_groups;
-	
+	private boolean	show_tag_groups;
+	private boolean	show_tag_tab_views;
 
 	public SB_Transfers(final MultipleDocumentInterfaceSWT mdi, boolean vuze_ui ) {
 		statsNoLowNoise = new stats();
@@ -843,23 +843,40 @@ public class SB_Transfers
 		paramTagsInSidebarListener = new ParameterListener() {
 
 			@Override
-			public void parameterChanged(String parameterName) {
+			public void parameterChanged(String parameter ) {
 
-				boolean tagInSidebar = COConfigurationManager.getBooleanParameter("Library.TagInSideBar");
-
-				if (tagInSidebar) {
-
-					addTagManagerListeners();
-
-				} else {
-
-					removeTagManagerListeners(true);
+				if ( parameter == null || parameter.equals( "Library.TagInTabBar" )){
+				
+					show_tag_tab_views = COConfigurationManager.getBooleanParameter("Library.TagInTabBar");
+					
+					if ( parameter != null ){
+						
+							// this will cause us to come back through here with the tags-in-sidebar change and
+							// remove/add tag views as necessary
+						
+						COConfigurationManager.setParameter( "Library.TagInSideBar", show_tag_tab_views );
+					}
+				}
+				
+				if ( parameter == null || parameter.equals( "Library.TagInSideBar")){
+					
+					boolean tagInSidebar = COConfigurationManager.getBooleanParameter("Library.TagInSideBar");
+	
+					if (tagInSidebar) {
+	
+						addTagManagerListeners();
+	
+					} else {
+	
+						removeTagManagerListeners(true);
+					}
 				}
 			}
 
 		};
 		
-		COConfigurationManager.addAndFireParameterListener("Library.TagInSideBar", paramTagsInSidebarListener);
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{ "Library.TagInSideBar", "Library.TagInTabBar" }, paramTagsInSidebarListener);
 
 		paramTagGroupsInSidebarListener = new ParameterListener() {
 
@@ -1460,6 +1477,12 @@ public class SB_Transfers
 
 			return null;
 		}
+		
+		if ( !show_tag_tab_views ){
+			
+			return( null );
+		}
+		
 			/*
 			 * Can get hit here concurrently due to various threads interacting with tags...
 			 */
