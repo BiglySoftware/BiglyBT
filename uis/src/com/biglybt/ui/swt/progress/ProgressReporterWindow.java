@@ -450,7 +450,18 @@ public class ProgressReporterWindow
 			Utils.centerWindowRelativeTo(shell, uiFunctions.getMainShell());
 		}
 
-		shell.open();
+		if ( COConfigurationManager.getBooleanParameter( "Reduce Auto Activate Window" )){
+			
+			shell.setVisible( true );
+			
+			shell.setFocus();
+			
+		}else{
+		
+				// shell.open does a bringToFront :(
+			
+			shell.open();
+		}
 	}
 
 	private void createPanels() {
