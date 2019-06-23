@@ -38,7 +38,9 @@ If you find a reproducible bug, please file an [Issue](https://github.com/BiglyS
 
 The more you seed, the more BiglyBT will be listed in the peers list of other clients.  If you are the only person seeding, other users will take note as they impatiently wait for their full copy of the data.
 
-When you are Swarm Merging, BiglyBT's client name changes for other peers to indicate you are using that feature.  If you search for other torrents that have  the same files you have already downloaded, but no seeders, and seed them, you will be the hero of the swarm.  Please note, that in order to swarm merge with an already completed torrent in your client, you need to turn on the "Try to complete all copies of the file" in Tools->Options->Files ![Image of Options page](http://i.imgur.com/fSRFw0g.png) 
+When you are Swarm Merging, BiglyBT's client name changes for other peers to indicate you are using that feature.  If you search for other torrents that have  the same files you have already downloaded, but no seeders, and seed them, you will be the hero of the swarm.  Please note, that in order to swarm merge with an already completed torrent in your client, you need to turn on the "Try to complete all copies of the file" in Tools->Options->Files 
+
+![Image of Options page](http://i.imgur.com/fSRFw0g.png) 
 
 Finding torrents with the same file is described on our wiki page [Swarm Merging](https://wiki.biglybt.com/w/Swarm_Merging)
 
@@ -55,6 +57,22 @@ If you want to signal support for a feature that you think BiglyBT should have, 
 ## Write Wiki Pages
 
 In order to ensure the distinction that BiglyBT and Vuze are two separate, unaffiliated products, we will not directly link to wiki.vuze.com, even though the features and support documentation is virtually identical.  We are slowly writing our own wiki pages, but can always use your help.
+
+## Design Graphic Assets
+
+Let's be honest, our client's graphical assets suck for several reasons:
+
+* Inconsistent Style
+* Lack of Scaling
+* Often just plain ugly
+
+If you are interested in helping with graphical assets, here's some guidelines:
+
+* Provide either a vector image (SVG would be best) or a very large raster image, so we can generate scaled versions of the image.
+* Keep with desktop client asset standards. For example, a settings icon is usually represented by a gear. Making it a fat monkey with a pencil in its hand would be confusing to users.
+* You don't have to be a graphic artist! If you know of free graphic assets that we could use instead of the ones we have, suggest them. However, generic suggestions like "here's a site with cool icons you should use them" aren't helpful.
+* If you are going to spend more than a few hours designing assets, please tell us which assets you plan on changing before you start. Some assets might have restrictions that may ruin your plans, and it would be a shame if you spent time on something we couldn't use.
+
 
 ## Write Code
 
