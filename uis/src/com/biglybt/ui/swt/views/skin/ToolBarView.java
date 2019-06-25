@@ -1059,12 +1059,14 @@ public class ToolBarView
 		MultipleDocumentInterfaceSWT mdi = UIFunctionsManagerSWT.getUIFunctionsSWT().getMDISWT();
 		if (mdi != null) {
 			MdiEntrySWT entry = mdi.getCurrentEntrySWT();
-			UIToolBarEnablerBase[] enablers = entry.getToolbarEnablers();
-			for (UIToolBarEnablerBase enabler : enablers) {
-				if (enabler instanceof UIPluginViewToolBarListener) {
-					if (((UIPluginViewToolBarListener) enabler).toolBarItemActivated(
-							item, activationType, datasource)) {
-						return true;
+			if ( entry != null ){
+				UIToolBarEnablerBase[] enablers = entry.getToolbarEnablers();
+				for (UIToolBarEnablerBase enabler : enablers) {
+					if (enabler instanceof UIPluginViewToolBarListener) {
+						if (((UIPluginViewToolBarListener) enabler).toolBarItemActivated(
+								item, activationType, datasource)) {
+							return true;
+						}
 					}
 				}
 			}
