@@ -64,6 +64,11 @@ BuddyPluginTracker
 	private static final int	TRACK_CHECK_PERIOD		= 15*1000;
 	private static final int	TRACK_CHECK_TICKS		= TRACK_CHECK_PERIOD/ BuddyPlugin.TIMER_PERIOD;
 
+	
+	
+	private static final int	PARTIAL_PEER_CHECK_PERIOD	= 5*1000;
+	private static final int	PARTIAL_PEER_CHECK_TICKS	= PARTIAL_PEER_CHECK_PERIOD/BuddyPlugin.TIMER_PERIOD;
+	
 	private static final int	PEER_CHECK_PERIOD		= 60*1000;
 	private static final int	PEER_CHECK_TICKS		= PEER_CHECK_PERIOD/BuddyPlugin.TIMER_PERIOD;
 
@@ -240,6 +245,11 @@ BuddyPluginTracker
 			doTracking();
 		}
 
+		if ( tick_count % PARTIAL_PEER_CHECK_TICKS == 0 ){
+
+			checkPartialPeers();
+		}
+		
 		if ( tick_count % PEER_CHECK_TICKS == 0 ){
 
 			checkPeers();
@@ -795,7 +805,7 @@ outer:
 				}
 			}catch( Throwable e ){
 				
-				Debug.out( e );;
+				Debug.out( e );
 			}
 			
 			markBuddyPeer( download, peer );
@@ -1585,8 +1595,80 @@ outer:
 			updateNetworkStatus();
 		}
 	}
+	
+	private void
+	checkPartialPeers()
+	{
+		boolean lan = plugin.getPeersAreLANLocal();
+		
+		if ( lan ){
+			
+			Set<String>	pb_keys;
+			
+			synchronized( online_buddies ){
+				
+				if ( partial_buddies.isEmpty()){
+					
+					return;
+				}
+				
+				pb_keys = new HashSet<>( partial_buddies.keySet());
+			}
+			
+			// We have to monitor all downloads and automatically make them partial-buddy downloads as lan limits
+			// are applied to all peers regardless of whether or not the user has explicitly marked them as partial buddies
+			// Breaks the idea of manually marking them obviously but better than having peers being LAN boosted
+			// but not partial buddies...
+			
 
-	protected void
+			for ( Download d: plugin.getPluginInterface().getDownloadManager().getDownloads()){
+				
+				int state = d.getState();
+				
+				if ( state == Download.ST_DOWNLOADING || state == Download.ST_SEEDING ){
+					
+					PeerManager pm = d.getPeerManager();
+					
+					if ( pm != null ){
+						
+						Peer[] peers = pm.getPeers();
+						
+						for ( Peer peer: peers ){
+							
+							String key = PartialBuddy.getPartialBuddyKey( peer );
+							
+							if ( !pb_keys.contains( key )){
+								
+								continue;
+							}
+							
+							boolean add_it = false;
+							
+							synchronized( online_buddies ){
+								
+								PartialBuddyData pbd = partial_buddies.get( key );
+								
+								if ( pbd != null ){
+								
+									if ( !pbd.downloads.contains( d )){
+										
+										add_it = true;
+									}
+								}
+							}
+							
+							if ( add_it ){
+								
+								addPartialBuddy( d, peer );
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void
 	checkPeers()
 	{
 		List	to_unmark = new ArrayList();

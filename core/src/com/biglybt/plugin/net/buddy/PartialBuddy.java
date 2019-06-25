@@ -32,6 +32,13 @@ PartialBuddy
 
 	private final String 	key;
 	
+	public static String
+	getPartialBuddyKey(
+		Peer				peer )
+	{
+		return( peer.getIp() + "/" + peer.getTCPListenPort() + "/" + peer.getUDPListenPort());
+	}
+	
 	public
 	PartialBuddy(
 		BuddyPluginTracker	_tracker,

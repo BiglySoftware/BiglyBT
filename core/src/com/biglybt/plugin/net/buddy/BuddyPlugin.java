@@ -107,7 +107,7 @@ BuddyPlugin
 {
 	public static final boolean SUPPORT_ONLINE_STATUS		= true;
 
-	public static final int	TIMER_PERIOD	= 10*1000;
+	public static final int	TIMER_PERIOD	= 5*1000;
 
 	private static final int FEED_UPDATE_MIN_MILLIS	= 6*60*60*1000;
 
