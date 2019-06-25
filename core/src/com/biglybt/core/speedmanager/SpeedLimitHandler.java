@@ -47,6 +47,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.core.util.average.Average;
 import com.biglybt.core.util.average.AverageFactory;
 import com.biglybt.core.util.average.MovingImmediateAverage;
+import com.biglybt.pif.PluginAdapter;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadAttributeListener;
@@ -207,6 +208,23 @@ SpeedLimitHandler
 		loadPauseAllActive();
 
 		loadSchedule( true );
+		
+		plugin_interface.addListener(
+			new PluginAdapter()
+			{
+				@Override
+				public void closedownInitiated(){
+					
+					int active_state = getActiveState();
+					
+					if ( active_state == AS_INACTIVE && preserve_inactive_limits ){
+						
+							// save latest inactive limits 
+						
+						saveProfile( INACTIVE_PROFILE_NAME );				
+					}
+				}
+			});
 	}
 
 	private int
@@ -3147,19 +3165,22 @@ SpeedLimitHandler
 				
 		if ( profile_name == null ){
 			
-			if ( active_state == AS_ACTIVE && preserve_inactive_limits && profileExists( INACTIVE_PROFILE_NAME )){
+			if ( preserve_inactive_limits && profileExists( INACTIVE_PROFILE_NAME )){
 				
-					// active -> inactive
+				if ( active_state == AS_ACTIVE ){
 				
-				if ( rule_pause_all_active ){
-
-					setRulePauseAllActive( false );
+						// active -> inactive
+				
+					if ( rule_pause_all_active ){
+	
+						setRulePauseAllActive( false );
+					}
 				}
-
+				
 				loadProfile( INACTIVE_PROFILE_NAME );
 								
 			}else{
-			
+				
 				resetRules();
 			}
 			
