@@ -1596,6 +1596,10 @@ public class TableColumnSetupWindow
 
 			Arrays.sort(columnsCurrentOrder,	TableColumnManager.getTableColumnOrderComparator());
 
+			for ( int i=0;i<columnsCurrentOrder.length;i++){
+				columnsCurrentOrder[i].setPositionNoShift(i);
+			}
+			
 			mapNewVisibility.put(column, Boolean.TRUE);
 			
 
@@ -1604,11 +1608,16 @@ public class TableColumnSetupWindow
 				tvChosen.addDataSource(column);
 				tvChosen.processDataSourceQueueSync();
 				
-				existingRow = tvChosen.getRow(column);
+				TableRowCore thisRow = tvChosen.getRow(column);
 				
-				if ( existingRow != null ){
-					tvChosen.setSelectedRows(new TableRowCore[] { existingRow });
-					tvChosen.showRow(existingRow);
+				if ( thisRow != null ){
+					Utils.execSWTThreadLater(
+						1,
+						()->{
+							tvChosen.setSelectedRows(new TableRowCore[] { thisRow });
+							tvChosen.showRow(thisRow);
+						});
+						
 				}
 			}
 
