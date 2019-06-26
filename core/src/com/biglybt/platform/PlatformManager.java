@@ -194,6 +194,22 @@ PlatformManager
 		throws PlatformManagerException;
 
 		/**
+		 * 
+		 * @param use_it
+		 * @return if changes were made then true is returned, otherwise false
+		 * @throws PlatformManagerException
+		 */
+	
+	public default boolean
+	setUseSystemTheme(
+		boolean		use_it )
+	
+		throws PlatformManagerException
+	{
+		throw new PlatformManagerException("Unsupported capability called on platform manager");
+	}
+	
+		/**
 		 * Gives a particular platform the ability to alter the class-loading method
 		 * @param loader
 		 * @param class_name

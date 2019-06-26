@@ -40,6 +40,7 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.update.UpdateInstaller;
 import com.biglybt.pif.update.UpdateManager;
+import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.UITemplate;
@@ -58,9 +59,26 @@ public class UI
 
 	static{
 		
-		if ( Constants.isOSX && COConfigurationManager.getBooleanParameter( "Use System Theme" )){
-	  		
-	  		System.setProperty( "org.eclipse.swt.display.useSystemTheme", "true" );
+		if ( Constants.isOSX ){
+			
+			COConfigurationManager.addAndFireParameterListener(
+				"Use System Theme",
+				(n)->{
+					
+					boolean ust = COConfigurationManager.getBooleanParameter( "Use System Theme" );
+				
+					try{
+						PlatformManagerFactory.getPlatformManager().setUseSystemTheme( ust );
+						
+					}catch( Throwable e ){
+						
+						ust = false;
+						
+						Debug.out( e );
+					}
+					
+					System.setProperty( "org.eclipse.swt.display.useSystemTheme", ust?"true":"false" );
+				});
 	  	}
 	}
 	

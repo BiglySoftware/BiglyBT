@@ -187,8 +187,8 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
         try{
         	if ( new File( "/usr/bin/defaults" ).exists()){
 
-				boolean	found = false;
-
+				boolean	found_sleep_disabled = false;
+				
 				try{
 					String[] read_command = { "/usr/bin/defaults", "read", BUNDLE_ID };
 
@@ -211,9 +211,7 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
 
 							if ( line.contains( "NSAppSleepDisabled" )){
 
-								found = true;
-
-								break;
+								found_sleep_disabled = true;
 							}
 						}
 					}
@@ -222,7 +220,7 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
 					e.printStackTrace();
 				}
 
-        		if ( !found ){
+        		if ( !found_sleep_disabled ){
 
 		        	String[] write_command = {
 		        		"/usr/bin/defaults",
@@ -235,6 +233,7 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
 
 		        	Runtime.getRuntime().exec( write_command );
         		}
+        		
         	}else{
 
         		System.err.println( "/usr/bin/defaults missing" );
@@ -269,6 +268,87 @@ public class PlatformManagerImpl implements PlatformManager, AEDiagnosticsEviden
     	return OSXAccess.getVersion();
     }
 
+	@Override
+	public boolean
+	setUseSystemTheme(
+		boolean		use_it )
+	
+		throws PlatformManagerException
+	{
+        try{
+        	if ( new File( "/usr/bin/defaults" ).exists()){
+
+				Boolean requires_aqua = null;
+				
+				try{
+					String[] read_command = { "/usr/bin/defaults", "read", BUNDLE_ID };
+
+					Process p = Runtime.getRuntime().exec( read_command );
+
+					if ( p.waitFor() == 0 ){
+
+						InputStream is = p.getInputStream();
+
+						LineNumberReader lnr = new LineNumberReader( new InputStreamReader( is, "UTF-8" ));
+
+						while( true ){
+
+							String line = lnr.readLine();
+
+							if ( line == null ){
+
+								break;
+							}
+
+							if ( line.contains( "NSRequiresAquaSystemAppearance" )){
+								
+								String[] bits = line.split( "=" );
+								
+								if ( bits.length > 1 ){
+									
+									String rhs = bits[1].trim().toLowerCase( Locale.US );
+								
+									requires_aqua = rhs.contains( "1" );
+								}
+							}
+						}
+					}
+				}catch( Throwable e ){
+
+					e.printStackTrace();
+				}
+          		
+        		boolean wants_aqua = !use_it;
+        		
+        		if ( requires_aqua == null || requires_aqua != wants_aqua ){
+        			
+		        	String[] write_command = {
+			        		"/usr/bin/defaults",
+			        		"write",
+			        		BUNDLE_ID,
+			        		"NSRequiresAquaSystemAppearance",
+			        		"-bool",
+			        		(wants_aqua?"True":"False" )
+			        	};
+		        	
+		        	Runtime.getRuntime().exec( write_command );
+		        	
+		        	return( true );
+		        	
+        		}else{
+        			
+        			return( false );
+        		}
+        	}else{
+
+        		throw( new PlatformManagerException( "/usr/bin/defaults missing" ));
+        	}
+        }catch( Throwable e ){
+
+        	throw( new PlatformManagerException( "Failed to set application default", e ));
+        }
+	}
+	
 	@Override
 	public File
 	getVMOptionFile()
