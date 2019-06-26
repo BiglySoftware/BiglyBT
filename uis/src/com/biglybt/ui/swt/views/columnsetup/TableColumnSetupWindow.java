@@ -21,7 +21,6 @@
 package com.biglybt.ui.swt.views.columnsetup;
 
 import java.util.*;
-import java.util.List;
 import java.util.regex.Pattern;
 
 import com.biglybt.ui.UserPrompterResultListener;
@@ -39,7 +38,6 @@ import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.BEncoder;
 import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnInfo;
 import com.biglybt.pif.ui.tables.TableRow;
@@ -56,7 +54,6 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.core.util.RegExUtil;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.config.ConfigSectionSecurity;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
@@ -91,15 +88,14 @@ public class TableColumnSetupWindow
 
 	private Composite cTableChosen;
 
-	private final TableColumnCore[] allColumns;
+	private final TableColumnCore[] columnsCurrentOrder;
+	private final TableColumnCore[] columnsOriginalOrder;
 
 	private final TableRow sampleRow;
 
 	private DragSourceListener dragSourceListener;
 
 	private final TableStructureModificationListener<?> listener;
-
-	private final TableColumnCore[] columnsOriginalOrder;
 
 	protected boolean apply = false;
 
@@ -117,9 +113,7 @@ public class TableColumnSetupWindow
 
 	private Button btnApply;
 	private Button btnExport;
-	
-	protected boolean doReset;
-	
+		
 	public TableColumnSetupWindow(final Class<?> forDataSourceType, String _tableID,
 			TableRow sampleRow, TableStructureModificationListener<?> _listener) {
 		this.sampleRow = sampleRow;
@@ -215,18 +209,15 @@ public class TableColumnSetupWindow
 
 		TableColumnManager tcm = TableColumnManager.getInstance();
 
-		allColumns = tcm.getAllTableColumnCoreAsArray(forDataSourceType, forTableID);
-		Arrays.sort(allColumns,TableColumnManager.getTableColumnOrderComparator());
+		columnsCurrentOrder = tcm.getAllTableColumnCoreAsArray(forDataSourceType, forTableID);
+		Arrays.sort(columnsCurrentOrder,TableColumnManager.getTableColumnOrderComparator());
 		
-		columnsOriginalOrder = new TableColumnCore[allColumns.length];
-		System.arraycopy(allColumns, 0, columnsOriginalOrder, 0,allColumns.length);
-		int pos = 0;
-		for (int i = 0; i < allColumns.length; i++) {
-			boolean visible = allColumns[i].isVisible();
-			mapNewVisibility.put(allColumns[i], Boolean.valueOf(visible));
-			if (visible) {
-				allColumns[i].setPositionNoShift(pos++);
-			}
+		columnsOriginalOrder = new TableColumnCore[columnsCurrentOrder.length];
+		System.arraycopy(columnsCurrentOrder, 0, columnsOriginalOrder, 0,columnsCurrentOrder.length);
+		
+		for (int i = 0; i < columnsCurrentOrder.length; i++) {
+			boolean visible = columnsCurrentOrder[i].isVisible();
+			mapNewVisibility.put(columnsCurrentOrder[i], Boolean.valueOf(visible));
 		}
 		
 		
@@ -626,65 +617,7 @@ public class TableColumnSetupWindow
 		Button btnImport = new Button(cResultButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnImport, "import");
 		Messages.setLanguageTooltip(btnImport, "label.import.config.from.clip");
-		btnImport.addSelectionListener(SelectionListener.widgetSelectedAdapter(	(ev)->{
-				
-			String json = ClipboardCopy.copyFromClipboard();
-				
-			try{
-				Map map = BDecoder.decodeFromJSON( json );
-				
-				map = BDecoder.decodeStrings( map );
-				
-				String tableID = (String)map.get( "table-id" );
-				
-				Map config = (Map)map.get( "config" );
-				
-				if ( tableID.equals( Utils.getBaseViewID( forTableID ))){
-					
-					tcm.setTableConfigMap(forTableID, config );
-										
-					tcm.loadTableColumnSettings( forDataSourceType, forTableID );
-					
-					listener.tableStructureChanged(true, forDataSourceType);
-					
-					listener.sortOrderChanged();
-					
-					for (int i = 0; i < allColumns.length; i++) {
-						boolean visible = allColumns[i].isVisible();
-						mapNewVisibility.put(allColumns[i], Boolean.valueOf(visible));
-					}
-					
-					fillChosen();
-					
-					fillAvail();
-					
-					setHasChanges( false );
-					
-				}else{
-					
-					MessageBoxShell mb = new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
-							MessageText.getString( "ConfigView.section.security.op.error.title"),
-							MessageText.getString( "table.columns.incorrect.table", new String[]{ Utils.getBaseViewID( forTableID ) + "/" + tableID } ));
-					
-					mb.setParent(shell);
-					
-					mb.open(null);		
-					
-					
-				}
-			}catch( Throwable e ){
-			
-				//Debug.out( e );
 
-				MessageBoxShell mb = new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
-						MessageText.getString( "ConfigView.section.security.op.error.title"),
-						MessageText.getString( "label.invalid.configuration" ));
-				
-				mb.setParent(shell);
-				
-				mb.open(null);				
-			}
-		}));
 		
 		btnExport = new Button(cResultButtonArea, SWT.PUSH);
 		imageLoader.setButtonImage(btnExport, "export");
@@ -735,10 +668,10 @@ public class TableColumnSetupWindow
 
 		tvChosen.initialize(cTableChosen);
 
-		for (int i = 0; i < allColumns.length; i++) {
-			boolean visible = allColumns[i].isVisible();
+		for (int i = 0; i < columnsCurrentOrder.length; i++) {
+			boolean visible = columnsCurrentOrder[i].isVisible();
 			if (visible) {
-				tvChosen.addDataSource(allColumns[i]);
+				tvChosen.addDataSource(columnsCurrentOrder[i]);
 			}
 		}
 		tvChosen.processDataSourceQueue();
@@ -750,60 +683,6 @@ public class TableColumnSetupWindow
 		String[] defaultColumnNames = tcm.getDefaultColumnNames(forTableID);
 		
 		btnReset.setEnabled( defaultColumnNames != null );
-		if (defaultColumnNames != null) {
-	  		
-	  		btnReset.addSelectionListener(new SelectionAdapter() {
-	  			@Override
-				  public void widgetSelected(SelectionEvent e) {
-	  				MessageBoxShell mb =
-							new MessageBoxShell(
-								MessageText.getString("table.columns.reset.dialog.title"),
-								MessageText.getString("table.columns.reset.dialog.text"),
-								new String[] {
-									MessageText.getString("Button.yes"),
-									MessageText.getString("Button.no")
-								},
-								1 );
-	
-					mb.open(new UserPrompterResultListener() {
-						@Override
-						public void prompterClosed(int result) {
-							if (result == 0) {
-				  				String[] defaultColumnNames = tcm.getDefaultColumnNames(forTableID);
-				  				if (defaultColumnNames != null) {
-				  					List<TableColumnCore> defaultColumns = new ArrayList<>();
-				  					for (String name : defaultColumnNames) {
-				  						TableColumnCore column = tcm.getTableColumnCore(forTableID, name);
-				  						if (column != null) {
-				  							defaultColumns.add(column);
-				  						}
-									}
-				  					if (defaultColumns.size() > 0) {
-				  						for (TableColumnCore tc : mapNewVisibility.keySet()) {
-											mapNewVisibility.put(tc, Boolean.FALSE);
-										}
-				  						
-				  						for (int i = 0; i < defaultColumns.size(); i++) {
-				  							TableColumnCore col = defaultColumns.get(i);
-				  							mapNewVisibility.put(col, Boolean.TRUE);
-											col.setPositionNoShift(i);
-				  						}
-				  						
-				  						fillChosen();
-				  						
-				  						fillAvail();
-				  						
-				  						doReset = true;
-				  						
-				  						setHasChanges( true );
-				  					}
-				  				}
-							}
-						}
-					});
-	  			}
-	  		});
-		}
 
 		final Button btnCancel = new Button(shell, SWT.PUSH);
 		Messages.setLanguageText(btnCancel, "Button.cancel");
@@ -823,6 +702,115 @@ public class TableColumnSetupWindow
 				btnCancel.setEnabled(false);
 			}
 		});
+		
+		
+		btnImport.addSelectionListener(SelectionListener.widgetSelectedAdapter(	(ev)->{
+			
+			String json = ClipboardCopy.copyFromClipboard();
+				
+			try{
+				Map map = BDecoder.decodeFromJSON( json );
+				
+				map = BDecoder.decodeStrings( map );
+				
+				String tableID = (String)map.get( "table-id" );
+				
+				Map config = (Map)map.get( "config" );
+				
+				if ( tableID.equals( Utils.getBaseViewID( forTableID ))){
+					
+					tcm.setTableConfigMap(forTableID, config );
+										
+					tcm.loadTableColumnSettings( forDataSourceType, forTableID );
+					
+					listener.tableStructureChanged(true, forDataSourceType);
+					
+					listener.sortOrderChanged();
+					
+					Arrays.sort(columnsCurrentOrder,TableColumnManager.getTableColumnOrderComparator());
+
+					for (int i = 0; i < columnsCurrentOrder.length; i++) {
+						boolean visible = columnsCurrentOrder[i].isVisible();
+						mapNewVisibility.put(columnsCurrentOrder[i], Boolean.valueOf(visible));
+					}
+										
+					fillChosen();
+					
+					fillAvail();
+					
+					setHasChanges( false );
+					
+					btnCancel.setEnabled(false);
+					
+				}else{
+					
+					MessageBoxShell mb = new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
+							MessageText.getString( "ConfigView.section.security.op.error.title"),
+							MessageText.getString( "table.columns.incorrect.table", new String[]{ Utils.getBaseViewID( forTableID ) + "/" + tableID } ));
+					
+					mb.setParent(shell);
+					
+					mb.open(null);		
+					
+					
+				}
+			}catch( Throwable e ){
+			
+				//Debug.out( e );
+
+				MessageBoxShell mb = new MessageBoxShell(SWT.ICON_ERROR | SWT.OK,
+						MessageText.getString( "ConfigView.section.security.op.error.title"),
+						MessageText.getString( "label.invalid.configuration" ));
+				
+				mb.setParent(shell);
+				
+				mb.open(null);				
+			}
+		}));
+		
+		if (defaultColumnNames != null) {
+	  		
+	  		btnReset.addSelectionListener(new SelectionAdapter() {
+	  			@Override
+				  public void widgetSelected(SelectionEvent e) {
+	  				MessageBoxShell mb =
+							new MessageBoxShell(
+								MessageText.getString("table.columns.reset.dialog.title"),
+								MessageText.getString("table.columns.reset.dialog.text"),
+								new String[] {
+									MessageText.getString("Button.yes"),
+									MessageText.getString("Button.no")
+								},
+								1 );
+	
+					mb.open(new UserPrompterResultListener() {
+						@Override
+						public void prompterClosed(int result) {
+							if  (result == 0 ){
+				  				
+								tcm.resetColumns( forDataSourceType, forTableID);
+				  				
+								Arrays.sort(columnsCurrentOrder,TableColumnManager.getTableColumnOrderComparator());
+
+								for (int i = 0; i < columnsCurrentOrder.length; i++) {
+									boolean visible = columnsCurrentOrder[i].isVisible();
+									mapNewVisibility.put(columnsCurrentOrder[i], Boolean.valueOf(visible));
+								}
+								
+		  						fillChosen();
+		  						
+		  						fillAvail();
+		  										  						
+		  						setHasChanges( false );
+		  						
+		  						btnCancel.setEnabled(false);
+							}
+						}
+					});
+	  			}
+	  		});
+		}
+		
 		
 		fd = new FormData();
 		fd.left = new FormAttachment(0, 5);
@@ -1019,12 +1007,10 @@ public class TableColumnSetupWindow
 	fillChosen()
 	{
 		tvChosen.removeAllTableRows();
-		int pos = 0;
-		for (int i = 0; i < allColumns.length; i++) {
-			boolean visible = mapNewVisibility.get( allColumns[i]);
+		for (int i = 0; i < columnsCurrentOrder.length; i++) {
+			boolean visible = mapNewVisibility.get( columnsCurrentOrder[i]);
 			if (visible) {
-				allColumns[i].setPositionNoShift(pos++);
-				tvChosen.addDataSource(allColumns[i]);
+				tvChosen.addDataSource(columnsCurrentOrder[i]);
 			}
 		}
 		tvChosen.processDataSourceQueue();
@@ -1214,19 +1200,6 @@ public class TableColumnSetupWindow
 	 */
 	protected void apply() {
 		TableColumnManager tcm = TableColumnManager.getInstance();
-		if (doReset) {
-			TableColumnCore[] allTableColumns = tcm.getAllTableColumnCoreAsArray(
-					forDataSourceType, forTableID);
-			if (allTableColumns != null) {
-				for (TableColumnCore column : allTableColumns) {
-					if (column != null) {
-						column.reset();
-					}
-				}
-			}
-			
-			doReset = false;
-		}
 
 		for (TableColumnCore tc : mapNewVisibility.keySet()) {
 			boolean visible = mapNewVisibility.get(tc).booleanValue();
@@ -1593,91 +1566,51 @@ public class TableColumnSetupWindow
 		if (row == null || ignoreExisting) {
 			int newPosition = 0;
 
-			row = placeAboveRow == null && !ignoreExisting ? tvChosen.getFocusedRow()
-					: placeAboveRow;
-			if (row == null || row.getDataSource() == null) {
-				if (allColumns.length > 0) {
-					newPosition = allColumns.length;
+			row = placeAboveRow == null && !ignoreExisting ? tvChosen.getFocusedRow():placeAboveRow;
+			
+			if ( row == null || row.getDataSource() == null){
+				
+				if (columnsCurrentOrder.length > 0) {
+					
+					newPosition = columnsCurrentOrder.length;
 				}
-			} else {
+			}else{
+				
 				newPosition = ((TableColumn) row.getDataSource()).getPosition();
 			}
 
-			int oldPosition = column.getPosition();
-			final boolean shiftDir = oldPosition > newPosition
-					||  !mapNewVisibility.get(column).booleanValue();
-			column.setPositionNoShift(newPosition);
+			column.setPositionNoShift( newPosition );
+			
+			for ( TableColumnCore col: columnsCurrentOrder ){
+				
+				if ( col != column ){
+				
+					int pos = col.getPosition();
+					
+					if ( pos >= newPosition ){
+						
+						col.setPositionNoShift( pos+1 );
+					}
+				}
+			}
+
+			Arrays.sort(columnsCurrentOrder,	TableColumnManager.getTableColumnOrderComparator());
+
 			mapNewVisibility.put(column, Boolean.TRUE);
-
-				// seen one of these here:
-				// java.lang.IllegalArgumentException: Comparison method violates its general contract!
-				// so I guess getPosition can return different values :(
-				// hack
-
-			for (int i=0;i<10;i++){
-				try{
-					Arrays.sort(allColumns, new Comparator() {
-						@Override
-						public int compare(Object arg0, Object arg1) {
-							if ((arg1 instanceof TableColumn) && (arg0 instanceof TableColumn)) {
-								int iPositionA = ((TableColumn) arg0).getPosition();
-								if (iPositionA < 0)
-									iPositionA = 0xFFFF + iPositionA;
-								int iPositionB = ((TableColumn) arg1).getPosition();
-								if (iPositionB < 0)
-									iPositionB = 0xFFFF + iPositionB;
-
-								int i = iPositionA - iPositionB;
-								if (i == 0) {
-									if (column == arg0) {
-										return shiftDir ? -1 : 1;
-									}
-									return shiftDir ? 1 : -1;
-								}
-								return i;
-							}
-							return 0;
-						}
-					});
-
-					break;
-
-				}catch( Throwable e ){
-				}
-			}
-
-			int pos = 0;
-			for (int i = 0; i < allColumns.length; i++) {
-				if (mapNewVisibility.get(allColumns[i]).booleanValue()) {
-					allColumns[i].setPositionNoShift(pos++);
-				}
-			}
+			
 
 			TableRowCore existingRow = tvChosen.getRow(column);
 			if (existingRow == null) {
 				tvChosen.addDataSource(column);
-				tvChosen.processDataSourceQueue();
-				tvChosen.addCountChangeListener(new TableCountChangeListener() {
-
-					@Override
-					public void rowRemoved(TableRowCore row) {
-					}
-
-					@Override
-					public void rowAdded(final TableRowCore row) {
-						Utils.execSWTThreadLater(500, new AERunnable() {
-							@Override
-							public void runSupport() {
-								tvChosen.setSelectedRows(new TableRowCore[] { row });
-								tvChosen.showRow(row);
-							}
-						});
-						tvChosen.removeCountChangeListener(this);
-					}
-				});
+				tvChosen.processDataSourceQueueSync();
+				
+				existingRow = tvChosen.getRow(column);
+				
+				if ( existingRow != null ){
+					tvChosen.setSelectedRows(new TableRowCore[] { existingRow });
+					tvChosen.showRow(existingRow);
+				}
 			}
-
-			Arrays.sort(allColumns,	TableColumnManager.getTableColumnOrderComparator());
 
 			tvChosen.tableInvalidate();
 			tvChosen.refreshTable(true);
