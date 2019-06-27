@@ -1384,7 +1384,9 @@ DiskManagerImpl
 	        				        			
 	        			if ( COConfigurationManager.getBooleanParameter("Zero New Stop") || alloc_strategy == DownloadManagerState.FAS_ZERO_NEW_STOP ){
 	        			
-		        			if ( !download_manager.getDownloadState().getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+	        				DownloadManagerState dms = download_manager.getDownloadState();
+	        				
+		        			if ( !( dms.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD ) || dms.getFlag( DownloadManagerState.FLAG_DISABLE_STOP_AFTER_ALLOC ))){
 
 		        				stop_after_start[0] = true;
 		        			}

@@ -192,7 +192,14 @@ Download extends DownloadEventNotifier, DownloadStub, Taggable
      */
     
     public static final long FLAG_SEQUENTIAL_DOWNLOAD	= 0x00002000;
+    
+    /**
+     * @since BiglyBT 2.0.0.1
+     */
+    
+    public static final long FLAG_DISABLE_STOP_AFTER_ALLOC	= 0x00004000;
 
+    
     public static final Object	UD_KEY_STOP_REASON	= new Object();
     
 

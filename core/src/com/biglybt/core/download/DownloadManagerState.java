@@ -115,7 +115,10 @@ DownloadManagerState
 	public static final long FLAG_ERROR_REPORTED				  		= Download.FLAG_ERROR_REPORTED;
 	public static final long FLAG_INITIAL_NETWORKS_SET					= Download.FLAG_INITIAL_NETWORKS_SET;
 	public static final long FLAG_SEQUENTIAL_DOWNLOAD					= Download.FLAG_SEQUENTIAL_DOWNLOAD;
+	public static final long FLAG_DISABLE_STOP_AFTER_ALLOC				= Download.FLAG_DISABLE_STOP_AFTER_ALLOC;
 
+	
+	
 	public static final int	FILE_FLAG_NOT_NEW		= 0x00000001;
 	
 	

@@ -338,6 +338,8 @@ ResourceDownloaderTorrentImpl
 					}
 				}
 			}catch( Throwable e ){
+				
+				informActivity( getLogIndent() + "Failed to tidy up: " + Debug.getNestedExceptionMessage(e));
 			}
 
 			DownloadWillBeAddedListener dwbal = null;
@@ -435,6 +437,7 @@ ResourceDownloaderTorrentImpl
 				// Prevents any move-on-completion or move-on-removal behaviour happening.
 
 			download.setFlag(Download.FLAG_DISABLE_AUTO_FILE_MOVE, true);
+			download.setFlag(Download.FLAG_DISABLE_STOP_AFTER_ALLOC, true);
 
 			if ( COConfigurationManager.getBooleanParameter( "Ip Filter Disable For Updates" )){
 				
@@ -540,10 +543,18 @@ ResourceDownloaderTorrentImpl
 			t.setDaemon( true );
 
 			t.start();
+			
+			int state = download.getState();
+			
+			if ( state == Download.ST_STOPPED ){
 
-				// its possible that the d/l has already occurred and it is seeding!
+					// might have been added-stopped, start if so
+		
+				download.start();
+				
+			}else if ( state == Download.ST_SEEDING ){
 
-			if ( download.getState() == Download.ST_SEEDING ){
+					// its possible that the d/l has already occurred and it is seeding!
 
 				downloadSucceeded( download, torrent_file, data_dir );
 			}
