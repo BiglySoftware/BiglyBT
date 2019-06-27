@@ -581,12 +581,11 @@ public abstract class BaseSwtParameter<PARAMTYPE extends SwtParameter<VALUETYPE>
 			Object layoutData = con.getLayoutData();
 			if (layoutData instanceof GridData) {
 				boolean oldVisible = !((GridData) layoutData).exclude;
-				if (oldVisible == visible) {
-					continue;
+				if (oldVisible != visible) {
+					((GridData) layoutData).exclude = !visible;
+					con.setLayoutData(layoutData);
+					con.requestLayout();
 				}
-				((GridData) layoutData).exclude = !visible;
-				con.setLayoutData(layoutData);
-				con.requestLayout();
 			}
 			con.setVisible(visible);
 		}
