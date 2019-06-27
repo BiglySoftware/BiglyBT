@@ -160,18 +160,23 @@ public class Messages {
 
 	/**
 	 * Updates text only if they key is different
+	 * 
+	 * @return 
+	 * false: Text not changed (same or disposed widget<br/>
+	 * true: Text updated
 	 */
-	public static void updateLanguageKey(Widget widget, String key,
+	public static boolean updateLanguageKey(Widget widget, String key,
 			String... params) {
 		if (widget == null || widget.isDisposed()) {
-			return;
+			return false;
 		}
 		String oldKey = (String) widget.getData(RESOURCE_KEY);
 		if (StringCompareUtils.equals(key, oldKey)) {
-			return;
+			return false;
 		}
 		widget.setData(RESOURCE_KEY, key);
 		updateLanguageFromData(widget, params);
+		return true;
 	}
 
 	public static void setLanguageText(Widget widget, String key,

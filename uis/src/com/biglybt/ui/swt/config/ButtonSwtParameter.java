@@ -81,8 +81,10 @@ public class ButtonSwtParameter
 					return;
 				}
 
-				Messages.updateLanguageKey(button,
-						((ActionParameter) pluginParam).getActionResource());
+				if (Messages.updateLanguageKey(button,
+						((ActionParameter) pluginParam).getActionResource())) {
+					Utils.relayout(button);
+				}
 			});
 		}
 	}
