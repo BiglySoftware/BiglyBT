@@ -23,7 +23,6 @@ import java.lang.reflect.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.internal.cocoa.OS;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.util.Debug;
 
@@ -56,7 +55,7 @@ public class CocoaUIEnhancer
 	private static Method method_os_sAppDarkAppearance;
 	
 	static {
-		if ( OS.VERSION >= 4924 ) {
+		if ( SWT.getVersion() >= 4924 ) {
 			
 			try {
 				
