@@ -1180,7 +1180,7 @@ public class TableColumnImpl
 		if (list.length >= (pos + 1) && (list[pos] instanceof Map)) {
 			Map loadedUserData = (Map)list[pos];
 			if (userData == null || userData.size() == 0) {
-				userData = loadedUserData;
+				userData = new LightHashMap(loadedUserData);
 			} else {
 				for (Object key : loadedUserData.keySet()) {
 					userData.put(key, loadedUserData.get(key));
