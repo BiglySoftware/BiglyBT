@@ -22,6 +22,7 @@ package com.biglybt.ui.swt;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
@@ -4545,5 +4546,28 @@ public class Utils
 			
 			return( id.substring( 0, pos ));
 		}
+	}
+	
+	static Boolean is_dark_appearance;
+		
+	public static boolean
+	isDarkAppearance()
+	{
+		if ( is_dark_appearance == null ) {
+			
+			try {
+				Class<?> enhancerClass = Class.forName( "com.biglybt.ui.swt.osx.CocoaUIEnhancer" );
+				
+				Method method = enhancerClass.getMethod( "isAppDarkAppearance" );
+						
+				is_dark_appearance = (Boolean)method.invoke(null);
+			
+			}catch( Throwable e ) {
+				
+				Debug.out( e );
+			}
+		}
+		
+		return( is_dark_appearance );
 	}
 }

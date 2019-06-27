@@ -23,6 +23,7 @@ import java.lang.reflect.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.internal.cocoa.OS;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.util.Debug;
 
@@ -49,6 +50,23 @@ public class CocoaUIEnhancer
 	private static Class<?> nssizeCls = classForName(
 			"org.eclipse.swt.internal.cocoa.NSSize");
 
+	private static Class<?> osCls = classForName(
+			"org.eclipse.swt.internal.cocoa.OS");
+
+	private static Method method_os_sAppDarkAppearance;
+	
+	static {
+		if ( OS.VERSION >= 4924 ) {
+			
+			try {
+				
+				method_os_sAppDarkAppearance = osCls.getMethod( "isAppDarkAppearance" );
+				
+			}catch( Throwable e ) {
+				
+			}
+		}
+	}
 	private static Class<?> classForName(String classname) {
 		try {
 			return Class.forName(classname);
@@ -166,6 +184,20 @@ public class CocoaUIEnhancer
 		return null;
 	}
 
+	public static boolean
+	isAppDarkAppearance()
+	{
+		try {
+			if ( method_os_sAppDarkAppearance != null ) {
+				
+				return((Boolean)method_os_sAppDarkAppearance.invoke(null));
+			}
+		}catch( Throwable e ) {
+			
+		}
+		
+		return( false );
+	}
 	public static boolean isInitialized() {
 		return true;
 	}
