@@ -52,7 +52,8 @@ public class
 BuddyPluginTracker
 	implements BuddyPluginListener, DownloadManagerListener, BuddyPluginAZ2TrackerListener, DownloadPeerListener
 {
-	private  static final Object	PEER_KEY		= new Object();		// maps to Download object
+	private  static final Object	PEER_DOWNLOAD_KEY				= new Object();		// maps to { Download, isPartial }
+	private  static final Object	PEER_UPLOAD_PRIORITY_KEY		= new Object();
 
 	private static final Object	PEER_STATS_KEY	= new Object();
 
@@ -447,7 +448,7 @@ BuddyPluginTracker
 
 				Map	user_data = new LightHashMap();
 
-				user_data.put( PEER_KEY, download );
+				user_data.put( PEER_DOWNLOAD_KEY, new Object[]{ download, false });
 
 				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
 
@@ -784,7 +785,7 @@ outer:
 			try{
 				if ( plugin.getPeersAreLANLocal()){
 										
-					InetSocketAddress isa = AddressUtils.getSocketAddress( pb.ip );
+					InetSocketAddress isa = AddressUtils.getSocketAddress( pb.getIP());
 					
 					AddressUtils.addLANRateLimitAddress( isa );
 					
@@ -793,7 +794,7 @@ outer:
 						peer.resetLANLocalStatus();
 					}
 					
-					Peer[] peers = download.getPeerManager().getPeers( pb.ip );
+					Peer[] peers = download.getPeerManager().getPeers( pb.getIP());
 				
 					for ( Peer p: peers ){
 						
@@ -808,7 +809,7 @@ outer:
 				Debug.out( e );
 			}
 			
-			markBuddyPeer( download, peer );
+			markBuddyPeer( download, peer, true );
 			
 			plugin.logMessage( null, "Partial buddy added: " + download.getName() + " - " + pb );
 
@@ -821,15 +822,25 @@ outer:
 	}
 	
 	public boolean
+	isFullBuddy(
+		Peer		peer )
+	{
+		Object[] details = (Object[])peer.getUserData( PEER_DOWNLOAD_KEY );
+
+		return( details != null && !(Boolean)details[1]);
+	}
+	
+	
+	public boolean
 	isPartialBuddy(
 		Download	download,
 		Peer		peer )
 	{
-		PartialBuddy pb = new PartialBuddy( this, peer );
+		String key = PartialBuddy.getPartialBuddyKey( peer );
 		
 		synchronized( online_buddies ){
 			
-			PartialBuddyData pbd = partial_buddies.get( pb.getKey());
+			PartialBuddyData pbd = partial_buddies.get( key );
 						
 			return( pbd != null && pbd.downloads.contains( download ));
 		}		
@@ -884,7 +895,7 @@ outer:
 		try{
 			if ( do_lan ){
 				
-				InetSocketAddress isa = AddressUtils.getSocketAddress( pb.ip );
+				InetSocketAddress isa = AddressUtils.getSocketAddress( pb.getIP());
 
 				AddressUtils.removeLANRateLimitAddress( isa );
 			}
@@ -939,16 +950,27 @@ outer:
 		
 		boolean removed = false;
 		
+		boolean do_lan = plugin.getPeersAreLANLocal();
+		
 		synchronized( online_buddies ){
 			
 			PartialBuddyData pbd = partial_buddies.get( key );
 				
-			if ( pbd == null || !pbd.downloads.remove( download )){
+			if ( pbd == null ){
 				
 				return;
 			}
 		
+			pbd.downloads.remove( download );
+				
 			pb = pbd.pb;
+			
+				// changed so that single dl removal removes partial buddy
+			
+			if ( do_lan ){
+				
+				pbd.downloads.clear();
+			}
 			
 			if ( pbd.downloads.isEmpty()){
 			
@@ -961,9 +983,9 @@ outer:
 		if ( removed ){
 			
 			try{
-				if ( plugin.getPeersAreLANLocal() && peer.isLANLocal()){
+				if ( do_lan ){
 					
-					InetSocketAddress isa = AddressUtils.getSocketAddress( pb.ip );
+					InetSocketAddress isa = AddressUtils.getSocketAddress( pb.getIP());
 
 					AddressUtils.removeLANRateLimitAddress( isa );
 					
@@ -971,7 +993,7 @@ outer:
 				}
 			}catch( Throwable e ){
 				
-				Debug.out( e );;
+				Debug.out( e );
 			}
 			
 			unmarkBuddyPeer( peer );
@@ -1360,13 +1382,13 @@ outer:
 
 		if ( type == BUDDY_YES ){
 
-			markBuddyPeer( download, peer );
+			markBuddyPeer( download, peer, false );
 
 		}else if ( type == BUDDY_MAYBE ){
 
 				// mark as peer early so that we get optimistic disconnect if needed
 
-			markBuddyPeer( download, peer );
+			markBuddyPeer( download, peer, false );
 
 			PeerListener2 listener =
 				new PeerListener2()
@@ -1436,8 +1458,9 @@ outer:
 
 	protected void
 	markBuddyPeer(
-		final Download		download,
-		final Peer			peer )
+		Download		download,
+		Peer			peer,
+		boolean			is_partial )
 	{
 		boolean	state_changed 	= false;
 
@@ -1498,12 +1521,12 @@ outer:
 
 				buddy_peers.add( peer );
 
-				peer.setUserData( PEER_KEY, download );
+				peer.setUserData( PEER_DOWNLOAD_KEY, new Object[]{ download, is_partial });
 
 				peer.setPriorityConnection( true );
 
 				try{
-					PluginCoreUtils.unwrap( peer ).updateAutoUploadPriority(  PEER_KEY, true );
+					PluginCoreUtils.unwrap( peer ).updateAutoUploadPriority( PEER_UPLOAD_PRIORITY_KEY, true );
 					
 				}catch( Throwable e ){
 					
@@ -1554,9 +1577,9 @@ outer:
 
 		synchronized( buddy_peers ){
 
-			Download download = (Download)peer.getUserData( PEER_KEY );
+			Object[] details = (Object[])peer.getUserData( PEER_DOWNLOAD_KEY );
 
-			if ( download == null ){
+			if ( details == null ){
 
 				return;
 			}
@@ -1575,15 +1598,15 @@ outer:
 					}
 				}
 
-				log( download.getName() + ": removing buddy peer " + peer.getIp());
+				log( ((Download)details[0]).getName() + ": removing buddy peer " + peer.getIp());
 			}
 
-			peer.setUserData( PEER_KEY, null );
+			peer.setUserData( PEER_DOWNLOAD_KEY, null );
 
 			peer.setPriorityConnection( false );
 			
 			try{
-				PluginCoreUtils.unwrap( peer ).updateAutoUploadPriority(  PEER_KEY, false );
+				PluginCoreUtils.unwrap( peer ).updateAutoUploadPriority(  PEER_UPLOAD_PRIORITY_KEY, false );
 				
 			}catch( Throwable e ){
 				

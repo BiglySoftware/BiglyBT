@@ -104,6 +104,13 @@ ColumnCheckBox
 		Object		datasource,
 		boolean		set );
 
+	protected boolean
+	isReadOnly(
+		Object		datasource )
+	{
+		return( false );
+	}
+
 	@Override
 	public void
 	cellMouseTrigger(
@@ -128,17 +135,20 @@ ColumnCheckBox
 
 				Object datasource = cell.getDataSource();
 
-				Boolean state = getCheckBoxState( datasource );
-
-				if ( state != null ){
-
-					setCheckBoxState( datasource, !state );
-
-					cell.invalidate();
-
-					if ( cell instanceof TableCellCore){
-
-						((TableCellCore)cell).refresh( true );
+				if ( !isReadOnly( datasource )){
+					
+					Boolean state = getCheckBoxState( datasource );
+	
+					if ( state != null ){
+	
+						setCheckBoxState( datasource, !state );
+	
+						cell.invalidate();
+	
+						if ( cell instanceof TableCellCore){
+	
+							((TableCellCore)cell).refresh( true );
+						}
 					}
 				}
 			}
@@ -158,15 +168,17 @@ ColumnCheckBox
 
 		if ( state != null ){
 
+			boolean ds_read_only = read_only || isReadOnly(dataSource);
+			
 			if ( state ){
 
 				sortVal = 2;
-				icon 	= read_only?tick_ro_icon:tick_icon;
+				icon 	= ds_read_only?tick_ro_icon:tick_icon;
 
 			}else{
 
 				sortVal = 1;
-				icon 	= read_only?null:cross_icon;
+				icon 	= ds_read_only?null:cross_icon;
 			}
 		}
 

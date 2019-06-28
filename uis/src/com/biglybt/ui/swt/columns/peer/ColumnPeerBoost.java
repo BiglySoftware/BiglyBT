@@ -36,6 +36,8 @@ ColumnPeerBoost
 {
 	public static String COLUMN_ID = "boost";
 
+	private static volatile	BuddyPlugin buddy_plugin;
+
 	public
 	ColumnPeerBoost(
 		TableColumn column )
@@ -48,56 +50,88 @@ ColumnPeerBoost
 	getCheckBoxState(
 		Object datasource )
 	{
+		BuddyPlugin bp = getBuddyPlugin();
+
 		Peer peer = (Peer)datasource;
 
-		if ( peer != null ){
-			
-			BuddyPlugin bp = BuddyPluginUtils.getPlugin();
-
-			if ( bp != null ){
+		if ( peer != null && bp != null ){
 				
-				try{
-					Download download = peer.getManager().getDownload();
-					
-					if ( download != null ){
-																
-						return( bp.isPartialBuddy( download, peer ));
-					}
-				}catch( Throwable e ){
-					
-				}
+			if ( bp.isFullBuddy( peer )){
+				
+				return( true );
 			}
 			
+			try{
+				Download download = peer.getManager().getDownload();
+				
+				if ( download != null ){
+															
+					return( bp.isPartialBuddy( download, peer ));
+				}
+			}catch( Throwable e ){
+				
+			}
 		}
 
 		return( null );
 	}
 
 	@Override
+	protected boolean 
+	isReadOnly(Object datasource)
+	{
+		BuddyPlugin bp = getBuddyPlugin();
+
+		Peer peer = (Peer)datasource;
+
+		if ( peer != null && bp != null ){
+				
+			if ( peer.getState() == Peer.TRANSFERING ){
+			
+				return( bp.isFullBuddy( peer ));
+				
+			}else{
+				
+				return( true );
+			}
+		}
+		
+		return ( false );
+	}
+	
+	@Override
 	protected void
 	setCheckBoxState(
 		Object 	datasource,
 		boolean set )
 	{
+		BuddyPlugin bp = getBuddyPlugin();
+		
 		Peer peer = (Peer)datasource;
 		
-		if ( peer != null ){
-
-			BuddyPlugin bp = BuddyPluginUtils.getPlugin();
-
-			if ( bp != null ){
+		if ( peer != null && bp != null ){
 				
-				try{
-					Download download = peer.getManager().getDownload();
-					
-					if ( download != null ){
-																
-						bp.setPartialBuddy( download, peer, set );
-					}
-				}catch( Throwable e ){
-					
+			try{
+				Download download = peer.getManager().getDownload();
+				
+				if ( download != null ){
+															
+					bp.setPartialBuddy( download, peer, set );
 				}
+			}catch( Throwable e ){
+				
 			}
 		}
+	}
+	
+	private static BuddyPlugin
+	getBuddyPlugin()
+	{
+		if ( buddy_plugin == null ){
+			
+			buddy_plugin = BuddyPluginUtils.getPlugin();
+		}
+		
+		return( buddy_plugin );
 	}
 }

@@ -18,6 +18,7 @@
 
 package com.biglybt.plugin.net.buddy;
 
+import com.biglybt.core.util.AENetworkClassifier;
 import com.biglybt.pif.peers.Peer;
 import com.biglybt.plugin.net.buddy.tracker.BuddyPluginTracker;
 
@@ -26,17 +27,27 @@ PartialBuddy
 {
 	private final BuddyPluginTracker tracker;
 	
-	public final String		ip;
-	public final int		tcp_port;
-	public final int		udp_port;
+	private final String	ip;
+	private final int		tcp_port;
+	private final int		udp_port;
 
 	private final String 	key;
+	private final String	name;
 	
 	public static String
 	getPartialBuddyKey(
 		Peer				peer )
 	{
-		return( peer.getIp() + "/" + peer.getTCPListenPort() + "/" + peer.getUDPListenPort());
+		String ip = peer.getIp();
+		
+		if ( AENetworkClassifier.categoriseAddress( ip ) == AENetworkClassifier.AT_PUBLIC ){
+
+			return( ip + "/" + peer.getTCPListenPort() + "/" + peer.getUDPListenPort());
+			
+		}else{
+			
+			return( ip );
+		}
 	}
 	
 	public
@@ -49,8 +60,35 @@ PartialBuddy
 		ip			= peer.getIp();
 		tcp_port	= peer.getTCPListenPort();
 		udp_port	= peer.getUDPListenPort();
+				
+		String n = ip;
 		
-		key = ip + "/" + tcp_port + "/" + udp_port;
+		if ( AENetworkClassifier.categoriseAddress( ip ) == AENetworkClassifier.AT_PUBLIC ){
+		
+			key = ip + "/" + tcp_port + "/" + udp_port;
+
+			if ( tcp_port==0){
+				if ( udp_port!=0){
+					n += ":0/" + udp_port;
+				}
+			}else{
+				n += ":" + tcp_port;
+				if ( tcp_port != udp_port ){
+					n+= "/" + udp_port;
+				}
+			}
+		}else{
+			
+			key = ip;
+		}
+		
+		name = n;
+	}
+	
+	public String
+	getIP()
+	{
+		return( ip );
 	}
 	
 	public String
@@ -69,6 +107,12 @@ PartialBuddy
 	getKey()
 	{
 		return( key );
+	}
+	
+	public String
+	getName()
+	{
+		return( name );
 	}
 	
 	public String

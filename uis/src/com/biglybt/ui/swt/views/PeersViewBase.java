@@ -763,14 +763,23 @@ PeersViewBase
 		if ( bp != null ){
 							
 			boolean has_pb = false;
-						
+			
+			boolean has_pb_potential = false;
+			
 			for ( PEPeer peer: peers ){
 														
 				DownloadManager dm = peer_dm_map.get( peer );
+				
+				Peer p_peer = PluginCoreUtils.wrap( peer );
+				
+				if ( p_peer.getState() == Peer.TRANSFERING && !bp.isFullBuddy( p_peer )){
 					
-				if ( dm != null && bp.isPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ))){
+					has_pb_potential = true;
+					
+					if ( dm != null && bp.isPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ))){
 						
-					has_pb = true;
+						has_pb = true;
+					}
 				}
 			}
 			
@@ -778,19 +787,24 @@ PeersViewBase
 			Messages.setLanguageText(boost_item, "PeersView.menu.boost");
 			boost_item.setSelection( has_pb );
 			
-			boost_item.setEnabled( true );
+			boost_item.setEnabled( has_pb_potential );
 			
 			boost_item.addListener(SWT.Selection, new PeersRunner(peers) {
 				@Override
 				public void run(PEPeer peer) {
 					
-					boolean sel = boost_item.getSelection();
-											
-					DownloadManager dm = peer_dm_map.get( peer );
-	
-					if ( dm != null ){
+					Peer p_peer = PluginCoreUtils.wrap( peer );
+					
+					if ( !bp.isFullBuddy( p_peer )){
 						
-						bp.setPartialBuddy( PluginCoreUtils.wrap( dm ), PluginCoreUtils.wrap( peer ), sel );
+						boolean sel = boost_item.getSelection();
+												
+						DownloadManager dm = peer_dm_map.get( peer );
+		
+						if ( dm != null ){
+							
+							bp.setPartialBuddy( PluginCoreUtils.wrap( dm ), p_peer, sel );
+						}
 					}
 				}
 			});

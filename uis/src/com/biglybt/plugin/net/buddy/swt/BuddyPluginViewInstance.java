@@ -3010,7 +3010,7 @@ BuddyPluginViewInstance
 
 					PartialBuddy	buddy = partial_buddies.get(index);
 
-					item.setText(0, buddy.ip );
+					item.setText(0, buddy.getName());
 
 					item.setText(1, buddy.getDownloadsSummary());
 
@@ -3072,7 +3072,7 @@ BuddyPluginViewInstance
 								
 								PartialBuddy buddy = (PartialBuddy)selection[i].getData();
 								
-								str += (str.isEmpty()?"":", ") + buddy.ip;
+								str += (str.isEmpty()?"":", ") + buddy.getName();
 							}
 							
 							MessageBoxShell mb =
@@ -3711,7 +3711,7 @@ BuddyPluginViewInstance
 			int	res = 0;
 
 			if(field == FIELD_PEER){
-				 res = b1.ip.compareTo( b2.ip );
+				 res = b1.getName().compareTo( b2.getName());
 			}
 
 			return(( ascending ? 1 : -1) * res );

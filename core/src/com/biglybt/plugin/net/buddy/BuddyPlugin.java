@@ -1120,12 +1120,10 @@ BuddyPlugin
 
 			buddy.setLocalAuthorisedRSSTagsOrCategories( public_tags_or_categories );
 
-	   		List	 listeners_ref = listeners.getList();
-
-	   		for (int i=0;i<listeners_ref.size();i++){
+			for ( BuddyPluginListener l: listeners ){
 
 	   			try{
-	   				((BuddyPluginListener)listeners_ref.get(i)).buddyAdded( buddy );
+	   				l.buddyAdded( buddy );
 
 	   			}catch( Throwable e ){
 
@@ -1140,13 +1138,11 @@ BuddyPlugin
    		BuddyPluginBuddy		buddy )
    	{
 		if ( buddy.isAuthorised()){
-
-	   		List	 listeners_ref = listeners.getList();
-
-	   		for (int i=0;i<listeners_ref.size();i++){
+			
+			for ( BuddyPluginListener l: listeners ){
 
 	   			try{
-	   				((BuddyPluginListener)listeners_ref.get(i)).buddyRemoved( buddy );
+	   				l.buddyRemoved( buddy );
 
 	   			}catch( Throwable e ){
 
@@ -1162,12 +1158,10 @@ BuddyPlugin
    	{
 		if ( buddy.isAuthorised()){
 
-	   		List	 listeners_ref = listeners.getList();
-
-	   		for (int i=0;i<listeners_ref.size();i++){
+	   		for ( BuddyPluginListener l: listeners ){
 
 	   			try{
-	   				((BuddyPluginListener)listeners_ref.get(i)).buddyChanged( buddy );
+	   				l.buddyChanged( buddy );
 
 	   			}catch( Throwable e ){
 
@@ -1176,6 +1170,15 @@ BuddyPlugin
 	   		}
 		}
    	}
+	
+	public boolean
+	isFullBuddy(
+		Peer		peer )
+	{
+		BuddyPluginTracker tracker = getTracker();
+		
+		return( tracker.isFullBuddy( peer ));
+	}
 	
 	public boolean
 	isPartialBuddy(
