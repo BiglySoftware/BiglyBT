@@ -1625,6 +1625,11 @@ public class FilesView
 		}
 
 		@Override
+		public String getLastError(){
+			return( "Invalid operation on tree node" );
+		}
+		
+		@Override
 		public boolean
 		setLinkAtomic(File link_destination)
 		{
@@ -1980,6 +1985,11 @@ public class FilesView
 			return( delegate.setLink(link_destination));
 		}
 
+		@Override
+		public String getLastError(){
+			return( delegate.getLastError());
+		}
+		
 		@Override
 		public boolean
 		setLinkAtomic(File link_destination)

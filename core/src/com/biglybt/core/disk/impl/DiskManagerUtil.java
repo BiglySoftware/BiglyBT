@@ -216,7 +216,7 @@ DiskManagerUtil
 
 	static final AEMonitor    cache_read_mon  = new AEMonitor( "DiskManager:cacheRead" );
 
-	static boolean
+	static String
 	setFileLink(
 	    DownloadManager         	download_manager,
 	    DiskManagerFileInfo[]   	info,
@@ -239,10 +239,11 @@ DiskManagerUtil
 	        		
 		            if ( !FileUtil.renameFile( existing_file, to_link )){
 
-		                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-		                    "Failed to rename '" + existing_file.toString() + "'" ));
+		            	String error = "Failed to rename '" + existing_file.toString() + "' to '" + to_link.toString() + "'";
+		            			
+		                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR, error ));
 
-		                return( false );
+		                return( error );
 		            }
 		    	}
 		    }else{
@@ -251,11 +252,11 @@ DiskManagerUtil
 	
 			        if ( to_link.equals( info[i].getFile( true ))){
 	
-			            Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-			                            "Attempt to link to existing file '" + info[i].getFile(true)
-			                                    + "'"));
+			        	String error = "Attempt to link to existing file '" + info[i].getFile(true) + "'";
+			        	
+			            Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR, error ));
 	
-			            return( false );
+			            return( error );
 			        }
 			    }
 	
@@ -277,10 +278,11 @@ DiskManagerUtil
 				        		
 					            if ( !FileUtil.renameFile( existing_file, to_link )){
 		
-					                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-					                    "Failed to rename '" + existing_file.toString() + "'" ));
+					            	String error = "Failed to rename '" + existing_file.toString() + "' to '" + to_link.toString() + "'";
+					            	
+					                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR, error ));
 		
-					                return( false );
+					                return( error );
 					            }
 				        	}else{
 				        	
@@ -305,10 +307,11 @@ DiskManagerUtil
 			
 						            }else{
 			
-						                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-						                        "Failed to delete '" + existing_file.toString() + "'"));
+						            	String error = "Failed to delete '" + existing_file.toString() + "'";
+						            	
+						                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR, error ));
 			
-						                return( false );
+						                return( error );
 						            }
 					        	}
 				        }
@@ -319,10 +322,11 @@ DiskManagerUtil
 	
 			            if ( !FileUtil.renameFile( existing_file, to_link, pl )){
 	
-			                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR,
-			                    "Failed to rename '" + existing_file.toString() + "'" ));
+			            	String error = "Failed to rename '" + existing_file.toString() + "' to '" + to_link.toString() + "'";
+			            	
+			                Logger.log(new LogAlert(download_manager, LogAlert.REPEATABLE, LogAlert.AT_ERROR, error ));
 	
-			                return( false );
+			                return( error );
 			            }
 			        }
 			    }
@@ -335,14 +339,15 @@ DiskManagerUtil
 
 	    state.save();
 
-	    return( true );
+	    return( null );
 	}
 
 	static abstract class FileSkeleton implements DiskManagerFileInfoHelper {
 	    protected int     priority;
 	    protected boolean skipped_internal;
 		protected long    downloaded;
-
+		protected String  last_error;
+		
 		protected abstract File
 		setSkippedInternal( boolean skipped );
 	}
@@ -1056,6 +1061,8 @@ DiskManagerUtil
 	                	setLink(
 	                		File    link_destination )
 	                	{
+	                		last_error = null;
+	                		
 	                		/**
 	                		 * If we a simple torrent, then we'll redirect the call to the download and move the
 	                		 * data files that way - that'll keep everything in sync.
@@ -1066,19 +1073,30 @@ DiskManagerUtil
 	                				return true;
 	                			}
 	                			catch (DownloadManagerException e) {
-	                				// What should we do with the error?
+	                				
+	                				Debug.out( e );
+	                				
+	                				last_error = Debug.getNestedExceptionMessage( e );
+	                				
 	                				return false;
 	                			}
 	                		}
 	                		return setLinkAtomic(link_destination);
 	                	}
 
+	    				@Override
+	    				public String getLastError(){
+	    					return( last_error );
+	    				}
+	    				
 	                	@Override
 		                public boolean
 	                	setLinkAtomic(
 	                		File    link_destination )
 	                	{
-	                		return( setFileLink( download_manager, res, this, lazyGetFile(), link_destination, null ));
+	                		last_error = setFileLink( download_manager, res, this, lazyGetFile(), link_destination, null );
+	                		
+	                		return( last_error == null );
 	                	}
 
 	                	@Override
@@ -1087,7 +1105,9 @@ DiskManagerUtil
 	                		File    						link_destination,
 	                		FileUtil.ProgressListener		pl )
 	                	{
-	                		return( setFileLink( download_manager, res, this, lazyGetFile(), link_destination , pl));
+	                		last_error = setFileLink( download_manager, res, this, lazyGetFile(), link_destination , pl);
+	                		
+	                		return( last_error == null );
 	                	}
 	                	
 	                	@Override

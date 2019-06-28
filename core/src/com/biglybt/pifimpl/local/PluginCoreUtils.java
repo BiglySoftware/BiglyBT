@@ -209,6 +209,11 @@ PluginCoreUtils
 				}
 
 				@Override
+				public String getLastError(){
+					return( null );
+				}
+				
+				@Override
 				public boolean
 				setLinkAtomic(
 					File 						link_destination,

@@ -53,8 +53,9 @@ DiskManagerFileInfo
 	 * in sync). If you just want a simple relink, use setLinkAtomic.
 	 *
 	 * @param link_destination
-	 * @return
+	 * @return true - worked, false - failed, use getLastError to possibly get some extra info
 	 */
+	
 	public boolean
 	setLink(
 		File	link_destination );
@@ -170,6 +171,9 @@ DiskManagerFileInfo
 	public void
 	close();
 
+	public String
+	getLastError();
+	
 	public void
 	addListener(
 		DiskManagerFileInfoListener	listener );

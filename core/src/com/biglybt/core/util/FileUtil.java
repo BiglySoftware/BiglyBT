@@ -1210,6 +1210,10 @@ public class FileUtil {
 
     public static boolean copyFile( final File _source, final File _dest ) {
       try {
+    	File parent = _dest.getParentFile();
+    	if ( !parent.exists()){
+    		parent.mkdirs();
+    	}
         copyFile( new FileInputStream( _source ), new FileOutputStream( _dest ) );
         return true;
       }
@@ -1248,6 +1252,13 @@ public class FileUtil {
 
     	throws IOException
     {
+    	File parent = _dest.getParentFile();
+    	
+    	if ( !parent.exists()){
+    		
+    		parent.mkdirs();
+    	}
+    	
     	FileOutputStream	dest = null;
 
     	boolean	close_input = true;
@@ -1285,6 +1296,13 @@ public class FileUtil {
 
     	throws IOException
     {
+    	File parent = _dest.getParentFile();
+    	
+    	if ( !parent.exists()){
+    		
+    		parent.mkdirs();
+    	}
+    	
     	FileOutputStream	dest = null;
 
     	boolean	close_input = _close_input_stream;

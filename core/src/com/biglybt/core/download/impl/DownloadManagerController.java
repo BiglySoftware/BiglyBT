@@ -2954,6 +2954,11 @@ DownloadManagerController
 		{
 			return( delegate.setLink( link_destination ));
 		}
+		
+		@Override
+		public String getLastError(){
+			return( delegate.getLastError());
+		}
 
 		@Override
 		public boolean

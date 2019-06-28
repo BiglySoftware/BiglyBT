@@ -65,6 +65,8 @@ DiskManagerFileInfoImpl
 
   protected boolean 	skipped_internal 	= false;
 
+  private String last_error = null;
+  
   private volatile CopyOnWriteList<DiskManagerFileInfoListener>	listeners;	// save mem and allocate if needed later
 
   public
@@ -239,11 +241,18 @@ DiskManagerFileInfoImpl
 	setLink(
 		File	link_destination )
 	{
+		last_error = "download must be stopped";
+		
 		Debug.out( "setLink: download must be stopped" );
 
 		return( false );
 	}
 
+	@Override
+	public String getLastError(){
+		return( last_error );
+	}
+	
 	@Override
 	public boolean
 	setLinkAtomic(

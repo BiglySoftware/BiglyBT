@@ -1826,15 +1826,23 @@ public class FilesViewMenuUtil
 					boolean went_async = false;
 
 					try{
-						// xxx download must be stoppped
 						boolean ok = fileInfo.setLink(target);
 
 						if (!ok){
 
+							String msg = MessageText.getString("FilesView.rename.failed.text" );
+							
+							String error = fileInfo.getLastError();
+							
+							if ( error != null ){
+								
+								msg += ": " + error;
+							}
+							
 							new MessageBoxShell(
 								SWT.ICON_ERROR | SWT.OK,
 								MessageText.getString("FilesView.rename.failed.title"),
-								MessageText.getString("FilesView.rename.failed.text")).open(
+								msg ).open(
 									new UserPrompterResultListener() {
 
 										@Override
@@ -1914,15 +1922,23 @@ public class FilesViewMenuUtil
 							FileUtil.copyFile( source, target ); 
 						}
 						
-						// xxx download must be stoppped
 						boolean ok = fileInfo.setLink(target);
 
 						if (!ok){
 
+							String msg = MessageText.getString("FilesView.copy.failed.text" );
+							
+							String error = fileInfo.getLastError();
+							
+							if ( error != null ){
+								
+								msg += ": " + error;
+							}
+							
 							new MessageBoxShell(
 								SWT.ICON_ERROR | SWT.OK,
-								MessageText.getString("FilesView.rename.failed.title"),
-								MessageText.getString("FilesView.rename.failed.text")).open(
+								MessageText.getString("FilesView.copy.failed.title"),
+								msg ).open(
 									new UserPrompterResultListener() {
 
 										@Override
