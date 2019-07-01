@@ -59,10 +59,10 @@ RDResumeHandler
 		}
 	}
 
-	private static final byte		PIECE_NOT_DONE			= 0;
-	private static final byte		PIECE_DONE				= 1;
-	private static final byte		PIECE_RECHECK_REQUIRED	= 2;
-	private static final byte		PIECE_STARTED			= 3;
+	public static final byte		PIECE_NOT_DONE			= 0;
+	public static final byte		PIECE_DONE				= 1;
+	public static final byte		PIECE_RECHECK_REQUIRED	= 2;
+	public static final byte		PIECE_STARTED			= 3;
 
 	static boolean	use_fast_resume;
 	static boolean	use_fast_resume_recheck_all;

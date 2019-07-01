@@ -22,6 +22,7 @@
 
 package com.biglybt.ui.swt.views.tableitems.mytorrents;
 
+import com.biglybt.core.disk.impl.resume.RDResumeHandler;
 import com.biglybt.ui.swt.Utils;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -37,6 +38,7 @@ import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.download.DownloadTypeIncomplete;
 import com.biglybt.pif.ui.Graphic;
@@ -206,6 +208,10 @@ public class PiecesItem
 
 		DiskManagerPiece[] pieces = disk_manager == null ? null
 				: disk_manager.getPieces();
+		byte[] resume_data = pieces == null ? MapUtils.getMapByteArray(
+				MapUtils.getMapMap(infoObj.getDownloadState().getResumeData(), "data",
+						null),
+				"resume data", null) : null;
 
 		int nbPieces = infoObj.getNbPieces();
 
@@ -233,9 +239,19 @@ public class PiecesItem
 					index = imageBuffer[i - 1];
 				} else {
 					int nbAvailable = 0;
-					for (int j = a0; j < a1; j++)
-						if (pieces != null && pieces[j].isDone())
-							nbAvailable++;
+					if (pieces != null) {
+						for (int j = a0; j < a1; j++) {
+							if (pieces[j].isDone()) {
+								nbAvailable++;
+							}
+						}
+					} else if (resume_data != null) {
+						for (int j = a0; j < a1; j++) {
+							if (resume_data[j] == RDResumeHandler.PIECE_DONE) {
+								nbAvailable++;
+							}
+						}
+					}
 					nbComplete += nbAvailable;
 					index = (nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0);
 					//System.out.println("i="+i+";nbAvailable="+nbAvailable+";nbComplete="+nbComplete+";nbPieces="+nbPieces+";a0="+a0+";a1="+a1);
