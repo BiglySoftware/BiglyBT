@@ -1121,7 +1121,8 @@ public class TableViewSWT_Common
 				if (!visible) {
 					TableColumnInfo columnInfo = tcm.getColumnInfo(
 							tv.getDataSourceType(), tableID, tc.getName());
-					if (columnInfo.getProficiency() != TableColumnInfo.PROFICIENCY_BEGINNER) {
+					if (columnInfo.getProficiency() != TableColumnInfo.PROFICIENCY_BEGINNER
+							|| tc.getName().startsWith("tag.group.col.icons.")) {
 						hiddenColumnCount++;
 						continue;
 					}
