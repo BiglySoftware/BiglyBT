@@ -17,24 +17,24 @@
  */
 package com.biglybt.ui.swt.views.tableitems.files;
 
-import com.biglybt.ui.swt.Utils;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 
 import com.biglybt.core.disk.DiskManager;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.disk.DiskManagerPiece;
+import com.biglybt.core.disk.impl.resume.RDResumeHandler;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPiece;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.pifimpl.UISWTGraphicImpl;
-import com.biglybt.ui.swt.views.FilesView;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
+import com.biglybt.util.MapUtils;
 
 import com.biglybt.pif.ui.Graphic;
 import com.biglybt.pif.ui.tables.*;
@@ -101,7 +101,7 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 		private boolean	was_running		= false;
 
 		public Cell(TableCell cell) {
-			cell.setFillCell(true);
+			cell.setFillCell(false);
 			cell.addListeners(this);
 		}
 
@@ -116,15 +116,17 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 			
 			DownloadManager dm = fileInfo==null?null:fileInfo.getDownloadManager();
 			
-			final DiskManager manager = dm == null ? null : dm.getDiskManager();
+			final DiskManager diskManager = dm == null ? null : dm.getDiskManager();
 
 			int percentDone = 0;
 			int sortOrder;
-			if ( manager == null ){
+			if (diskManager == null){
 				sortOrder = -1;
 			}else{
-				if (fileInfo != null && fileInfo.getLength() != 0)
-					percentDone = (int) ((1000 * fileInfo.getDownloaded()) / fileInfo.getLength());
+				long length = fileInfo.getLength();
+				if (length != 0) {
+					percentDone = (int) ((1000 * fileInfo.getDownloaded()) / length);
+				}
 
 				sortOrder = percentDone;
 			}
@@ -139,16 +141,16 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 			int newWidth = cell.getWidth();
 			if (newWidth <= 0)
 				return;
-			final int newHeight = cell.getHeight();
+			final int newHeight = cell.getHeight() - 2;
 			final int x1 = newWidth - borderWidth - 1;
 			final int y1 = newHeight - borderWidth - 1;
 
 			if (x1 < 10 || y1 < 3)
 				return;
 
-			// we want to run through the image part once one the transition from with a disk manager (running)
-			// to without a disk manager (stopped) in order to clear the pieces view
-			boolean running = manager != null;
+			// we want to run through the image part once one the transition from with a disk diskManager (running)
+			// to without a disk diskManager (stopped) in order to clear the pieces view
+			boolean running = diskManager != null;
 			boolean hasGraphic = false;
 			Graphic graphic = cell.getGraphic();
 			if (graphic instanceof UISWTGraphic) {
@@ -170,85 +172,92 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 			if (piecesImage != null && !piecesImage.isDisposed())
 				piecesImage.dispose();
 
-			if (!running) {
-				cell.setGraphic(null);
-				return;
-			}
-
 			piecesImage = new Image(Utils.getDisplay(), newWidth, newHeight);
 			final GC gcImage = new GC(piecesImage);
-
-			// dm may be null if this is a skeleton file view
-			DownloadManager download_manager = fileInfo == null ? null : fileInfo.getDownloadManager();
-			PEPeerManager peer_manager = download_manager == null ? null : download_manager.getPeerManager();
-			PEPiece[] pe_pieces = peer_manager == null ? null : peer_manager.getPieces();
 			final long now = SystemTime.getCurrentTime();
 
-			if (fileInfo != null && manager != null)
-			{
-				if (percentDone == 1000)
-				{
-					gcImage.setForeground(Colors.blues[Colors.BLUES_DARKEST]);
-					gcImage.setBackground(Colors.blues[Colors.BLUES_DARKEST]);
-					gcImage.fillRectangle(1, 1, newWidth - 2, newHeight - 2);
-				} else
-				{
-					final int firstPiece = fileInfo.getFirstPieceNumber();
-					final int nbPieces = fileInfo.getNbPieces();
-					final DiskManagerPiece[] dm_pieces = manager.getPieces();
-					bNoRed = true;
-					for (int i = 0; i < newWidth; i++)
-					{
-						final int a0 = (i * nbPieces) / newWidth;
-						int a1 = ((i + 1) * nbPieces) / newWidth;
-						if (a1 == a0)
-							a1++;
-						if (a1 > nbPieces && nbPieces != 0)
-							a1 = nbPieces;
-						int nbAvailable = 0;
-						boolean written = false;
-						boolean partially_written = false;
-						if (firstPiece >= 0)
-							for (int j = a0; j < a1; j++)
-							{
-								final int this_index = j + firstPiece;
-								final DiskManagerPiece dm_piece = dm_pieces[this_index];
-								if (dm_piece.isDone())
-									nbAvailable++;
-								if (written)
-									continue;
-								if (pe_pieces != null)
-								{
-									PEPiece pe_piece = pe_pieces[this_index];
-									if (pe_piece != null)
-										written = written || (pe_piece.getLastDownloadTime(now) + 500) > last_draw_time;
-								}
-								if ((!written) && (!partially_written))
-								{
-									final boolean[] blocks = dm_piece.getWritten();
-									if (blocks != null)
-										for (int k = 0; k < blocks.length; k++)
-											if (blocks[k])
-											{
-												partially_written = true;
-												break;
-											}
-								}
-							} // for j
-						else
-							nbAvailable = 1;
-						gcImage.setBackground(written ? Colors.red : partially_written ? Colors.grey : Colors.blues[(nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0)]);
-						gcImage.fillRectangle(i, 1, 1, newHeight - 2);
-						if (written)
-							bNoRed = false;
-					}
-					gcImage.setForeground(Colors.grey);
-				}
-			} else
-				gcImage.setForeground(Colors.grey);
+			if (percentDone == 1000) {
+				gcImage.setForeground(Colors.blues[Colors.BLUES_DARKEST]);
+				gcImage.setBackground(Colors.blues[Colors.BLUES_DARKEST]);
+				gcImage.fillRectangle(1, 1, newWidth - 2, newHeight - 2);
+			} else if (fileInfo != null) {
+				// dm may be null if this is a skeleton file view
+				PEPeerManager peer_manager = dm == null ? null : dm.getPeerManager();
+				PEPiece[] pe_pieces = peer_manager == null ? null : peer_manager.getPieces();
 
-			if (manager != null)
+				int firstPiece = fileInfo.getFirstPieceNumber();
+				int nbPieces = fileInfo.getNbPieces();
+				DiskManagerPiece[] dm_pieces = diskManager == null ? null : diskManager.getPieces();
+				byte[] resume_data = dm_pieces == null && dm != null
+						? MapUtils.getMapByteArray(
+								MapUtils.getMapMap(dm.getDownloadState().getResumeData(),
+										"data", null),
+								"resume data", null)
+						: null;
+
+				bNoRed = true;
+				for (int i = 0; i < newWidth; i++)
+				{
+					final int a0 = (i * nbPieces) / newWidth;
+					int a1 = ((i + 1) * nbPieces) / newWidth;
+					if (a1 == a0)
+						a1++;
+					if (a1 > nbPieces && nbPieces != 0)
+						a1 = nbPieces;
+					int nbAvailable = 0;
+					boolean written = false;
+					boolean partially_written = false;
+					if (firstPiece >= 0) {
+						for (int j = a0; j < a1; j++) {
+							final int this_index = j + firstPiece;
+							if (dm_pieces != null) {
+								DiskManagerPiece dm_piece = dm_pieces[this_index];
+								if (dm_piece.isDone()) {
+									nbAvailable++;
+								}
+							} else if (resume_data != null) {
+								if (resume_data[this_index] == RDResumeHandler.PIECE_DONE) {
+									nbAvailable++;
+								}
+							}
+							if (written) {
+								continue;
+							}
+
+							if (pe_pieces != null) {
+								PEPiece pe_piece = pe_pieces[this_index];
+								if (pe_piece != null) {
+									written = (pe_piece.getLastDownloadTime(now) + 500) > last_draw_time;
+								}
+							}
+
+							if (!written && !partially_written && dm_pieces != null) {
+								boolean[] blocks = dm_pieces[this_index].getWritten();
+								if (blocks != null) {
+									for (boolean block : blocks) {
+										if (block) {
+											partially_written = true;
+											break;
+										}
+									}
+								}
+							}
+						} // for j
+					} else {
+						nbAvailable = 1;
+					}
+					gcImage.setBackground(written ? Colors.red : partially_written ? Colors.grey : Colors.blues[(nbAvailable * Colors.BLUES_DARKEST) / (a1 - a0)]);
+					gcImage.fillRectangle(i, 1, 1, newHeight - 2);
+					if (written)
+						bNoRed = false;
+				}
+			}
+
+			gcImage.setForeground(Colors.grey);
+			gcImage.drawRectangle(0, 0, newWidth - 1, newHeight - 1);
+			if (diskManager != null) {
 				gcImage.drawRectangle(0, 0, newWidth - 1, newHeight - 1);
+			}
 			gcImage.dispose();
 
 			last_draw_time = now;
