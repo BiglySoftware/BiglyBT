@@ -26,6 +26,7 @@ import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.RegExUtil;
+import com.biglybt.ui.swt.Utils;
 
 /**
  * Implementation of SkinProperties using a IntegratedResourceBundle loaded from
@@ -48,6 +49,8 @@ public class SkinPropertiesImpl
 	implements SkinProperties
 {
 	private static final LogIDs LOGID = LogIDs.UI3;
+
+	private static final boolean DARK_MODE = Utils.isDarkAppearance();
 
 	public static final String PATH_SKIN_DEFS = "com/biglybt/ui/skin/";
 
@@ -178,14 +181,28 @@ public class SkinPropertiesImpl
 			osName = name + "._solaris";
 		}
 
+		String themeSuffix = null;
+		
+		if ( DARK_MODE ){
+			themeSuffix = "._dark";
+		}
+		
 		boolean contains = false;
 		if (osName != null) {
 			// can't use containsKey on IntegratedResourceBundle :(
-			contains = rb.getString(osName, null) != null;
+			
+			if ( themeSuffix != null ){
+				contains = rb.getString(osName + themeSuffix, null) != null;
+			}
+
+			contains = contains || rb.getString(osName, null) != null;
 		}
 
 		if (!contains) {
-			contains = rb.getString(name, null) != null;
+			if ( themeSuffix != null ){
+				contains = rb.getString(name + themeSuffix, null) != null;
+			}
+			contains = contains || rb.getString(name, null) != null;
 		}
 		return contains;
 	}
@@ -215,6 +232,12 @@ public class SkinPropertiesImpl
 			return null;
 		}
 
+		String themeSuffix = null;
+		
+		if ( DARK_MODE ){
+			themeSuffix = "._dark";
+		}
+		
 		if (Constants.isWindows) {
 			osName = name + "._windows";
 		} else if (Constants.isOSX) {
@@ -230,11 +253,26 @@ public class SkinPropertiesImpl
 		}
 
 		if (osName != null) {
-			value = rb.getString(osName, null);
+			if ( themeSuffix != null ){
+				value = rb.getString(osName + themeSuffix, null);
+				
+				if ( value == null ){
+					value = rb.getString(osName, null);
+				}
+			}else{
+				value = rb.getString(osName, null);
+			}
 		}
 
 		if (value == null) {
-			value = rb.getString(name, null);
+			if ( themeSuffix != null ){
+				value = rb.getString(name + themeSuffix, null);
+				if ( value == null ){
+					value = rb.getString(name, null);
+				}
+			}else{
+				value = rb.getString(name, null);
+			}
 		}
 
 		if (expandReferences && value != null && value.indexOf('}') > 0) {

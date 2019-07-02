@@ -2022,8 +2022,10 @@ public class MainWindowImpl
 	private void attachSearchBox(SWTSkinObject skinObject) {
 		Composite cArea = (Composite) skinObject.getControl();
 
-		if (Utils.isGTK3) {
-			// TextBox on GTK3/SWT will expand box to fit it's hugeness
+		boolean DARK_MODE = Utils.isDarkAppearance();
+		
+		if (Utils.isGTK3 || DARK_MODE) {
+			// TextBox on GTK3/SWT and OSX/Dark will expand box to fit it's hugeness
 			// Workaround by creating a composite in a fixed height composite
 			// (Yes, both are needed..)
 			FormData filledFormData;
@@ -2041,7 +2043,7 @@ public class MainWindowImpl
 			cArea= c2;
 		}
 
-		final Text text = new Text(cArea, SWT.NONE);
+		final Text text = new Text(cArea, DARK_MODE?SWT.BORDER:SWT.NONE);
 		text.setMessage(MessageText.getString("v3.MainWindow.search.defaultText"));
 		FormData filledFormData = Utils.getFilledFormData();
 		text.setLayoutData(filledFormData);

@@ -244,8 +244,8 @@ public class FontUtils
 				int lineHeightPX = getFontHeightInPX(text.getFont());
 
 				int h = text.getClientArea().height - (text.getBorderWidth() * 2);
-				if (Utils.isGTK3) {
-					// GTK3 has border included in clientArea
+				if (Utils.isGTK3 || Utils.isDarkAppearance()) {
+					// GTK3 and OSX dark mode has border included in clientArea
 					h -= 6;
 				}
 				//System.out.println("h=" + h + ";lh=" + lineHeightPX + ";" + getFontHeightInPX(text.getFont()) );
