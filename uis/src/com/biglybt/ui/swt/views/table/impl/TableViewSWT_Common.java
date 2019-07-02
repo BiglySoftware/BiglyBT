@@ -41,7 +41,6 @@ import com.biglybt.pif.download.Download;
 import com.biglybt.pif.ui.menus.MenuManager;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.pifimpl.local.ui.menus.MenuItemImpl;
-import com.biglybt.plugin.net.buddy.BuddyPluginBuddy;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Messages;

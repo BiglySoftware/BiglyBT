@@ -77,6 +77,7 @@ public class ImageLoader
 	private Display display;
 
 	public static Image noImage;
+	public static Image nullImage;
 
 	private final ConcurrentHashMap<String, ImageLoaderRefInfo> _mapImages;
 
@@ -116,6 +117,10 @@ public class ImageLoader
 		if (noImage != null) {
 			noImage.dispose();
 			noImage = null;
+		}
+		if (nullImage != null) {
+			nullImage.dispose();
+			nullImage = null;
 		}
 	}
 
@@ -262,6 +267,12 @@ public class ImageLoader
 	 */
 	private Image[] parseValuesString(ClassLoader cl, String sKey,
 			String[] values, String suffix) {
+		
+		if ( values.length == 1 && values[0].equals( "null" )){
+			
+			return( new Image[]{ getNullImage() });
+		}
+		
 		Image[] images = null;
 
 		boolean scale = true;
@@ -776,7 +787,16 @@ public class ImageLoader
 
 		if ( pos == -1 ){
 
-			return( getImageSupport( sKey ));
+			Image res = getImageSupport( sKey );
+			
+			if ( res == nullImage ){
+				
+				return( null );
+				
+			}else{
+				
+				return( res );
+			}
 
 		}else{
 
@@ -1116,6 +1136,16 @@ public class ImageLoader
 			gc.dispose();
 		}
 		return noImage;
+	}
+	
+	private static Image getNullImage() {
+
+		if (nullImage == null) {
+			Display display = Display.getDefault();
+			final int SIZE = 1;
+			nullImage = new Image(display, SIZE, SIZE);
+		}
+		return nullImage;
 	}
 
 	public boolean imageExists(String name) {
