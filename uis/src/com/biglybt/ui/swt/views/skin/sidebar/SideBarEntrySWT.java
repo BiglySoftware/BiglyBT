@@ -84,6 +84,8 @@ public class SideBarEntrySWT
 	extends BaseMdiEntry
 	implements DisposeListener
 {
+	private static final boolean DARK_MODE = Utils.isDarkAppearance();
+	
 	private static final boolean PAINT_BG = !Constants.isUnix;
 
 	private static final boolean DO_OUR_OWN_TREE_INDENT = true;
@@ -1281,43 +1283,71 @@ public class SideBarEntrySWT
 				itemBounds.height);
 
 		if (drawBounds.intersects(clipping)) {
-			int style= SWT.NONE;
-  		if (!isSelectable()) {
-  			Font headerFont = sidebar.getHeaderFont();
-  			if (headerFont != null && !headerFont.isDisposed()) {
-  				gc.setFont(headerFont);
-  			}
-  			//text = text.toUpperCase();
-
-    		gc.setForeground(ColorCache.getColor(gc.getDevice(), 255, 255, 255));
-    		gc.setAlpha(100);
-    		clipping.x++;
-    		clipping.y++;
-    		//style = SWT.TOP;
-  			GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
-  					style);
-  			sp.printString();
-    		gc.setAlpha(255);
-
-    		clipping.x--;
-    		clipping.y--;
-  			gc.setForeground(fgText);
-  		} else {
-  			if ( treeItem.getItemCount() > 0 || id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )){
-  				Font headerFont = sidebar.getHeaderFont();
-  	  			if (headerFont != null && !headerFont.isDisposed()) {
-  	  				gc.setFont(headerFont);
-  	  			}
-  			}
-  			gc.setForeground(fgText);
-  		}
-			//Utils.setClipping(gc, clipping);
-
-			GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
-					style);
-			sp.printString();
-			clipping.x += sp.getCalculatedSize().x + 5;
-			//Utils.setClipping(gc, (Rectangle) null);
+			
+			if ( DARK_MODE ){
+				
+				int style= SWT.NONE;
+				if (!isSelectable()) {
+					Font headerFont = sidebar.getHeaderFont();
+					if (headerFont != null && !headerFont.isDisposed()) {
+						gc.setFont(headerFont);
+					}
+					
+				} else {
+					if ( treeItem.getItemCount() > 0 || id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )){
+						Font headerFont = sidebar.getHeaderFont();
+						if (headerFont != null && !headerFont.isDisposed()) {
+							gc.setFont(headerFont);
+						}
+					}
+				}
+				
+				gc.setForeground( Colors.white );
+				GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
+						style);
+				sp.printString();
+				clipping.x += sp.getCalculatedSize().x + 5;
+					
+					
+			}else{
+				int style= SWT.NONE;
+				if (!isSelectable()) {
+					Font headerFont = sidebar.getHeaderFont();
+					if (headerFont != null && !headerFont.isDisposed()) {
+						gc.setFont(headerFont);
+					}
+					//text = text.toUpperCase();
+	
+					gc.setForeground(ColorCache.getColor(gc.getDevice(), 255, 255, 255));
+					gc.setAlpha(100);
+					clipping.x++;
+					clipping.y++;
+					//style = SWT.TOP;
+					GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
+							style);
+					sp.printString();
+					gc.setAlpha(255);
+	
+					clipping.x--;
+					clipping.y--;
+					gc.setForeground(fgText);
+				} else {
+					if ( treeItem.getItemCount() > 0 || id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )){
+						Font headerFont = sidebar.getHeaderFont();
+						if (headerFont != null && !headerFont.isDisposed()) {
+							gc.setFont(headerFont);
+						}
+					}
+					gc.setForeground(fgText);
+				}
+				//Utils.setClipping(gc, clipping);
+	
+				GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
+						style);
+				sp.printString();
+				clipping.x += sp.getCalculatedSize().x + 5;
+				//Utils.setClipping(gc, (Rectangle) null);
+			}
 		}
 
 		// Vitality Images
