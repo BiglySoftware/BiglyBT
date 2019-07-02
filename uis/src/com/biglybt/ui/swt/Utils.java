@@ -4555,16 +4555,24 @@ public class Utils
 	{
 		if ( is_dark_appearance == null ) {
 			
-			try {
-				Class<?> enhancerClass = Class.forName( "com.biglybt.ui.swt.osx.CocoaUIEnhancer" );
+			if ( Constants.isOSX ){
 				
-				Method method = enhancerClass.getMethod( "isAppDarkAppearance" );
-						
-				is_dark_appearance = (Boolean)method.invoke(null);
-			
-			}catch( Throwable e ) {
+				try {
+					Class<?> enhancerClass = Class.forName( "com.biglybt.ui.swt.osx.CocoaUIEnhancer" );
+					
+					Method method = enhancerClass.getMethod( "isAppDarkAppearance" );
+							
+					is_dark_appearance = (Boolean)method.invoke(null);
 				
-				Debug.out( e );
+				}catch( Throwable e ) {
+					
+					Debug.out( e );
+					
+					is_dark_appearance = false;
+				}
+			}else{
+				
+				is_dark_appearance = false;
 			}
 		}
 		
