@@ -230,12 +230,8 @@ DiskManagerUtil
 		    File    existing_file = file_info.getFile( true );
 
 		    if ( to_link.equals( existing_file )){
-
-		    		// feh, on windows we get a true result here if the files just differ in case :(
 		    	
-		    	if ( 	to_link.getParent().equals( existing_file.getParent()) &&
-		    			!to_link.getName().equals( existing_file.getName()) && 
-	        			to_link.getName().equalsIgnoreCase( existing_file.getName())){
+		    	if ( !FileUtil.areFilePathsIdentical( to_link, existing_file )){
 	        		
 		            if ( !FileUtil.renameFile( existing_file, to_link )){
 

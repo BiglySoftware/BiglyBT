@@ -4683,7 +4683,8 @@ DownloadManagerImpl
 	  slc.download_name = new_name;
 
 	  File current_location = getSaveLocation();
-	  if (slc.normaliseDownloadLocation(current_location).equals(current_location)) {
+	  if ( FileUtil.areFilePathsIdentical( slc.normaliseDownloadLocation(current_location), current_location)) {
+		  
 		  return;
 	  }
 
@@ -4828,7 +4829,7 @@ DownloadManagerImpl
 					  (new_filename == null) ? old_file.getName() : new_filename
 			  );
 
-	  if (current_save_location.equals(new_save_location)) {
+	  if ( FileUtil.areFilePathsIdentical( current_save_location, new_save_location)){
 		  // null operation
 		  return;
 	  }
@@ -4849,8 +4850,16 @@ DownloadManagerImpl
 		  }
 
 		  try{
-			  new_save_location	= new_save_location.getCanonicalFile();
-
+			  	// problem with getting canonical file is that if the file exists but differs in case then this will wipe out the difference (on Win at least)
+			  
+			  if ( new_save_location.exists()){
+				  
+				  new_save_location = new File( new_save_location.getParentFile().getCanonicalFile(), new_save_location.getName());
+				  
+			  }else{
+				  
+				  new_save_location	= new_save_location.getCanonicalFile();
+			  }
 		  }catch( Throwable e ){
 
 			  Debug.printStackTrace(e);
@@ -4904,7 +4913,7 @@ DownloadManagerImpl
 			  move_progress = 0;
 			  move_subtask	= "";
 			  
-			  if ( old_file.equals( new_save_location )){
+			  if ( FileUtil.areFilePathsIdentical( old_file, new_save_location )){
 	
 				  // nothing to do
 	

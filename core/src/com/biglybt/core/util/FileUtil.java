@@ -20,37 +20,35 @@
 
 package com.biglybt.core.util;
 
- import java.io.*;
- import java.lang.reflect.Method;
- import java.net.SocketTimeoutException;
- import java.net.URI;
- import java.net.URL;
+import java.io.*;
+import java.lang.reflect.Method;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
- import java.util.regex.Matcher;
- import java.util.regex.Pattern;
- import java.util.zip.GZIPInputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
- import com.biglybt.core.Core;
- import com.biglybt.core.CoreFactory;
- import com.biglybt.core.CoreOperation;
- import com.biglybt.core.CoreOperationTask;
- import com.biglybt.core.config.COConfigurationListener;
- import com.biglybt.core.config.COConfigurationManager;
- import com.biglybt.core.logging.LogEvent;
- import com.biglybt.core.logging.LogIDs;
- import com.biglybt.core.logging.Logger;
- import com.biglybt.pif.platform.PlatformManagerException;
- import com.biglybt.platform.PlatformManager;
- import com.biglybt.platform.PlatformManagerCapabilities;
- import com.biglybt.platform.PlatformManagerFactory;
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreOperation;
+import com.biglybt.core.CoreOperationTask;
+import com.biglybt.core.config.COConfigurationListener;
+import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.logging.LogEvent;
+import com.biglybt.core.logging.LogIDs;
+import com.biglybt.core.logging.Logger;
+import com.biglybt.pif.platform.PlatformManagerException;
+import com.biglybt.platform.PlatformManager;
+import com.biglybt.platform.PlatformManagerCapabilities;
+import com.biglybt.platform.PlatformManagerFactory;
 
 /**
  * File utility class.
@@ -82,10 +80,37 @@ public class FileUtil {
 	  }
   }
 
-  public static boolean isAncestorOf(File parent, File child) {
-	  parent = canonise(parent);
-	  child = canonise(child);
-	  if (parent.equals(child)) {return true;}
+  public static boolean
+  areFilePathsIdentical(
+	  File	f1,
+	  File	f2 )
+  {
+	  if ( f1.equals( f2 )){
+		 
+		  		// on Windows we get a true if they differ in case :(
+		  
+	    	if ( 	f1.getParent().equals( f2.getParent()) &&
+	    			!f1.getName().equals( f2.getName()) && 
+	    			f1.getName().equalsIgnoreCase( f2.getName())){
+	    		
+	    		return( false );
+	    		
+	    	}else{
+	    		
+	    		return( true );
+	    	}
+	  }else{
+		  
+		  return( false );
+	  }
+  }
+  
+  public static boolean isAncestorOf(File _parent, File _child) {
+	  File parent = canonise(_parent);
+	  File child = canonise(_child);
+	  if (parent.equals(child)) {
+		  return( areFilePathsIdentical( _parent, _child ));
+	  }
 	  String parent_s = parent.getPath();
 	  String child_s = child.getPath();
 	  if (parent_s.charAt(parent_s.length()-1) != File.separatorChar) {
@@ -1648,6 +1673,20 @@ public class FileUtil {
 
     	if ( to_file_exists ) {
 
+    		if ( from_file.equals( to_file )){
+    			
+    			if ( areFilePathsIdentical( from_file, to_file )){
+    				
+    				return( true );	// nothing to do
+    				
+    			}else{
+    				
+    				if ( from_file.renameTo( to_file )){
+    					
+    					return( true );
+    				}
+    			}
+    		}
     		// on OSX (at least?) to_file.exists returns true if the existing file differs in case only - if we don't find the actual file then
     		// carry on and rename
 
