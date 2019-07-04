@@ -174,6 +174,7 @@ public final class ConfigKeys {
 		public static final String BCFG_DISKMANAGER_PERF_CACHE_TRACE = "diskmanager.perf.cache.trace";
 		public static final String BCFG_DISKMANAGER_FRIENDLY_HASHCHECKING = "diskmanager.friendly.hashchecking";
 		public static final String BCFG_DISKMANAGER_HASHCHECKING_SMALLESTFIRST = "diskmanager.hashchecking.smallestfirst";
+		public static final String BCFG_DISKMANAGER_HASHCHECKING_MAX_ACTIVE = "diskmanager.hashchecking.maxactive";
 		public static final String BCFG_DISKMANAGER_PERF_CACHE_ENABLE = "diskmanager.perf.cache.enable";
 		public static final String ICFG_DISKMANAGER_PERF_CACHE_SIZE = "diskmanager.perf.cache.size";
 		public static final String ICFG_FILE_MAX_OPEN = "File Max Open";

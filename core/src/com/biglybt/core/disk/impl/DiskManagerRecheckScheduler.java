@@ -34,7 +34,8 @@ DiskManagerRecheckScheduler
 {
 	static boolean 	friendly_hashing;
 	static boolean 	smallest_first;
-
+	static int		max_active;
+	
     static{
 
     	 ParameterListener param_listener = new ParameterListener() {
@@ -45,19 +46,25 @@ DiskManagerRecheckScheduler
     	    {
     	   	      friendly_hashing 	= COConfigurationManager.getBooleanParameter( "diskmanager.friendly.hashchecking" );
     	   	      smallest_first	= COConfigurationManager.getBooleanParameter( "diskmanager.hashchecking.smallestfirst" );
+    	   	      max_active		= COConfigurationManager.getIntParameter( "diskmanager.hashchecking.maxactive" );
+    	   	      
+    	   	      if ( max_active <= 0 ){
+    	   	    	  
+    	   	    	  max_active = Integer.MAX_VALUE;
+    	   	      }
     	    }
     	 };
 
  		COConfigurationManager.addAndFireParameterListeners(
  				new String[]{
  					"diskmanager.friendly.hashchecking",
- 					"diskmanager.hashchecking.smallestfirst" },
+ 					"diskmanager.hashchecking.smallestfirst",
+ 					"diskmanager.hashchecking.maxactive"},
  				param_listener );
     }
 
-	private final List		instances		= new ArrayList();
-	private final AEMonitor	instance_mon	= new AEMonitor( "DiskManagerRecheckScheduler" );
-
+	private final List<DiskManagerRecheckInstance>		instances		= new ArrayList<>();
+	private final AEMonitor								instance_mon	= new AEMonitor( "DiskManagerRecheckScheduler" );
 
 	public DiskManagerRecheckInstance
 	register(
@@ -80,15 +87,15 @@ DiskManagerRecheckScheduler
 
 				Collections.sort(
 						instances,
-						new Comparator()
+						new Comparator<DiskManagerRecheckInstance>()
 						{
 							@Override
 							public int
 							compare(
-								Object	o1,
-								Object	o2 )
+								DiskManagerRecheckInstance	o1,
+								DiskManagerRecheckInstance	o2 )
 							{
-								long	comp = ((DiskManagerRecheckInstance)o1).getMetric() - ((DiskManagerRecheckInstance)o2).getMetric();
+								long	comp = o1.getMetric() - o2.getMetric();
 
 								if ( comp < 0 ){
 
@@ -123,39 +130,44 @@ DiskManagerRecheckScheduler
 		try{
 			instance_mon.enter();
 
-			if ( instances.get(0) == instance ){
-
-				boolean	low_priority = instance.isLowPriority();
-
-					// defer low priority activities if we are running a real-time task
-
-				if ( low_priority && RealTimeInfo.isRealTimeTaskActive()){
-
-					result = false;
-
-				}else{
-
-		            if ( friendly_hashing ){
-
-		            	delay	= 0;	// delay introduced elsewhere
-
-		            }else if ( !low_priority ){
-
-		            	delay	= 1;	// high priority recheck, just a smidge of a delay
-
-		            }else{
-
-			            	//delay a bit normally anyway, as we don't want to kill the user's system
-			            	//during the post-completion check (10k of piece = 1ms of sleep)
-
-		            	delay = instance.getPieceLength() /1024 /10;
-
-		            	delay = Math.min( delay, 409 );
-
-		            	delay = Math.max( delay, 12 );
-	  				}
-
-		            result	= true;
+			for ( int i=0;i<Math.min( max_active, instances.size());i++){
+				
+				if ( instances.get(i) == instance ){
+	
+					boolean	low_priority = instance.isLowPriority();
+	
+						// defer low priority activities if we are running a real-time task
+	
+					if ( low_priority && RealTimeInfo.isRealTimeTaskActive()){
+	
+						result = false;
+	
+					}else{
+	
+			            if ( friendly_hashing ){
+	
+			            	delay	= 0;	// delay introduced elsewhere
+	
+			            }else if ( !low_priority ){
+	
+			            	delay	= 1;	// high priority recheck, just a smidge of a delay
+	
+			            }else{
+	
+				            	//delay a bit normally anyway, as we don't want to kill the user's system
+				            	//during the post-completion check (10k of piece = 1ms of sleep)
+	
+			            	delay = instance.getPieceLength() /1024 /10;
+	
+			            	delay = Math.min( delay, 409 );
+	
+			            	delay = Math.max( delay, 12 );
+		  				}
+	
+			            result	= true;
+					}
+					
+					break;
 				}
 			}
 		}finally{
@@ -184,6 +196,7 @@ DiskManagerRecheckScheduler
 			instance_mon.enter();
 
 			instances.remove( instance );
+			
 		}finally{
 
 			instance_mon.exit();

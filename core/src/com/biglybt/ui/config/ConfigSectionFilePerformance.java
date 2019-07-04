@@ -47,11 +47,18 @@ public class ConfigSectionFilePerformance
 		add(new BooleanParameterImpl(BCFG_DISKMANAGER_FRIENDLY_HASHCHECKING,
 				"ConfigView.section.file.friendly.hashchecking"));
 
-		// diskmanager.friendly.hashchecking
+		// smallest first
 		add(new BooleanParameterImpl(
 				BCFG_DISKMANAGER_HASHCHECKING_SMALLESTFIRST,
 				"ConfigView.section.file.hashchecking.smallestfirst"));
 
+		// max active
+		
+		IntParameterImpl recheck_max_active = new IntParameterImpl(
+				BCFG_DISKMANAGER_HASHCHECKING_MAX_ACTIVE, "ConfigView.section.file.hashchecking.maxactive");
+		add(recheck_max_active, Parameter.MODE_INTERMEDIATE);
+		recheck_max_active.setMinValue(0);
+		
 		// diskmanager.perf.cache.enable
 
 		BooleanParameterImpl disk_cache = new BooleanParameterImpl(
