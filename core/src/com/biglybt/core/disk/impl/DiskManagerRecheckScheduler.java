@@ -32,7 +32,7 @@ import com.biglybt.core.util.RealTimeInfo;
 public class
 DiskManagerRecheckScheduler
 {
-	static boolean 	friendly_hashing;
+	static int	 	strategy;
 	static boolean 	smallest_first;
 	static int		max_active;
 	
@@ -44,20 +44,20 @@ DiskManagerRecheckScheduler
 			parameterChanged(
 				String  str )
     	    {
-    	   	      friendly_hashing 	= COConfigurationManager.getBooleanParameter( "diskmanager.friendly.hashchecking" );
-    	   	      smallest_first	= COConfigurationManager.getBooleanParameter( "diskmanager.hashchecking.smallestfirst" );
-    	   	      max_active		= COConfigurationManager.getIntParameter( "diskmanager.hashchecking.maxactive" );
+    	    	strategy	 	= COConfigurationManager.getIntParameter( "diskmanager.hashchecking.strategy" );
+    	   	    smallest_first	= COConfigurationManager.getBooleanParameter( "diskmanager.hashchecking.smallestfirst" );
+    	   	    max_active		= COConfigurationManager.getIntParameter( "diskmanager.hashchecking.maxactive" );
     	   	      
-    	   	      if ( max_active <= 0 ){
+    	   	    if ( max_active <= 0 ){
     	   	    	  
-    	   	    	  max_active = Integer.MAX_VALUE;
-    	   	      }
+    	   	    	max_active = Integer.MAX_VALUE;
+    	   	    }
     	    }
     	 };
 
  		COConfigurationManager.addAndFireParameterListeners(
  				new String[]{
- 					"diskmanager.friendly.hashchecking",
+ 					"diskmanager.hashchecking.strategy",
  					"diskmanager.hashchecking.smallestfirst",
  					"diskmanager.hashchecking.maxactive"},
  				param_listener );
@@ -144,11 +144,11 @@ DiskManagerRecheckScheduler
 	
 					}else{
 	
-			            if ( friendly_hashing ){
+			            if ( strategy == 0 ){
 	
 			            	delay	= 0;	// delay introduced elsewhere
 	
-			            }else if ( !low_priority ){
+			            }else if ( strategy != 1 || !low_priority ){
 	
 			            	delay	= 1;	// high priority recheck, just a smidge of a delay
 	

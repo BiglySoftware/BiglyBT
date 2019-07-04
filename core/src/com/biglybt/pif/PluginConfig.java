@@ -90,6 +90,10 @@ PluginConfig
 	 * @since 2.3.0.5
 	 */
 	public static final String CORE_PARAM_STRING_LOCAL_BIND_IP							= "CORE_PARAM_STRING_LOCAL_BIND_IP";
+	
+	/**
+	 * @deprecated 2.0.0.1 (removed from core)
+	 */
 	public static final String CORE_PARAM_BOOLEAN_FRIENDLY_HASH_CHECKING				= "CORE_PARAM_BOOLEAN_FRIENDLY_HASH_CHECKING";
 
 	/**

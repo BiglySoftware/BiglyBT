@@ -52,12 +52,10 @@ ConcurrentHasher
 	private static boolean friendly_hashing;
 
 	static{
-		friendly_hashing = COConfigurationManager.getBooleanParameter( "diskmanager.friendly.hashchecking" );
-
-		COConfigurationManager.addParameterListener( "diskmanager.friendly.hashchecking", new ParameterListener() {
+		COConfigurationManager.addAndFireParameterListener( "diskmanager.hashchecking.strategy", new ParameterListener() {
 			@Override
 			public void parameterChanged(String  str ) {
-				friendly_hashing = COConfigurationManager.getBooleanParameter( "diskmanager.friendly.hashchecking" );
+				friendly_hashing = COConfigurationManager.getIntParameter( "diskmanager.hashchecking.strategy" ) == 0;
 			}
 		});
 	}

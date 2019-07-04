@@ -585,7 +585,7 @@ public class ConfigurationDefaults {
     def.put( "Password Confirm", null );
     def.put( "Auto Update", TRUE );
     def.put( "Alert on close", FALSE );
-    def.put( "diskmanager.friendly.hashchecking", FALSE );
+    def.put( "diskmanager.hashchecking.strategy", ONE );
     def.put( "diskmanager.hashchecking.smallestfirst", TRUE );
     def.put( "diskmanager.hashchecking.maxactive", ONE );
     def.put( "Default Start Torrents Stopped", FALSE);

@@ -880,6 +880,21 @@ ConfigurationChecker
 	    	changed = true;
 	    }
 	    
+	    if ( COConfigurationManager.doesParameterNonDefaultExist( "diskmanager.friendly.hashchecking" )){
+	    	
+	    	boolean friendly = COConfigurationManager.getBooleanParameter( "diskmanager.friendly.hashchecking" );
+	    	
+	    	COConfigurationManager.removeParameter( "diskmanager.friendly.hashchecking" );
+
+	    	if ( friendly ){
+	    	
+	    		COConfigurationManager.setParameter( "diskmanager.hashchecking.strategy", 0 );
+	    	}
+	    	
+	    	changed = true;
+	    }
+	    
+	    
 	    if(changed) {
 	      COConfigurationManager.save();
 	    }

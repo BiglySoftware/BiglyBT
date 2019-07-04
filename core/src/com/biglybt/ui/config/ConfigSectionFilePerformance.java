@@ -20,9 +20,11 @@ package com.biglybt.ui.config;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.torrent.impl.TorrentOpenOptions;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
+import com.biglybt.pifimpl.local.ui.config.IntListParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.IntParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
 
@@ -43,16 +45,31 @@ public class ConfigSectionFilePerformance
 	public void build() {
 		add(new LabelParameterImpl("ConfigView.section.file.perf.explain"));
 
-		// diskmanager.friendly.hashchecking
+			// diskmanager.hashchecking.strategy
+		
+		String[]	strategyLabels = new String[3];
+		
+		for ( int i=0;i< strategyLabels.length;i++){
+			strategyLabels[i] = MessageText.getString( "ConfigView.section.file.hashchecking.strategy." + i );
+		}
+		
+		add(new IntListParameterImpl(
+				ICFG_DISKMANAGER_HASHCHECKING_STRATEGY,
+				"ConfigView.section.file.hashchecking.strategy",
+				new int[]{0,1,2}, 
+				strategyLabels));
+		
+		/* replaced by strategy
 		add(new BooleanParameterImpl(BCFG_DISKMANAGER_FRIENDLY_HASHCHECKING,
 				"ConfigView.section.file.friendly.hashchecking"));
-
-		// smallest first
+		*/
+		
+			// diskmanager.hashchecking.smallestfirst
 		add(new BooleanParameterImpl(
 				BCFG_DISKMANAGER_HASHCHECKING_SMALLESTFIRST,
 				"ConfigView.section.file.hashchecking.smallestfirst"));
 
-		// max active
+			// diskmanager.hashchecking.maxactive
 		
 		IntParameterImpl recheck_max_active = new IntParameterImpl(
 				BCFG_DISKMANAGER_HASHCHECKING_MAX_ACTIVE, "ConfigView.section.file.hashchecking.maxactive");
