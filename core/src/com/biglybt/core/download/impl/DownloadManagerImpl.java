@@ -1033,7 +1033,7 @@ DownloadManagerImpl
 				 	try{
 				 		if ( save_dir_file.exists()){
 
-				 			save_dir_file = save_dir_file.getCanonicalFile();
+				 			save_dir_file = FileUtil.getCanonicalFileSafe( save_dir_file );
 				 		}
 				 	}catch( Throwable e ){
 
@@ -1430,13 +1430,7 @@ DownloadManagerImpl
 
 					String key = torrent_save_location.getAbsolutePath() + "\n";
 
-					try{
-						torrent_save_location = torrent_save_location.getCanonicalFile();
-
-					}catch( Throwable e ){
-
-						torrent_save_location = torrent_save_location.getAbsoluteFile();
-					}
+					torrent_save_location = FileUtil.getCanonicalFileSafe( torrent_save_location );
 
 					download_manager_state.setAttribute(
 						DownloadManagerState.AT_CANONICAL_SD_DMAP,
@@ -1739,10 +1733,9 @@ DownloadManagerImpl
 	updateFileLinks(
 		File old_save_path, File new_save_path)
 	{
-		try {old_save_path = old_save_path.getCanonicalFile();}
-		catch (IOException ioe) {old_save_path = old_save_path.getAbsoluteFile();}
-		try {new_save_path = new_save_path.getCanonicalFile();}
-		catch (IOException ioe) {new_save_path = new_save_path.getAbsoluteFile();}
+		old_save_path = FileUtil.getCanonicalFileSafe( old_save_path );
+		
+		new_save_path = FileUtil.getCanonicalFileSafe( new_save_path );
 
 		String old_path = old_save_path.getPath();
 		String new_path = new_save_path.getPath();
@@ -1772,18 +1765,12 @@ DownloadManagerImpl
 					continue;
 				}
 
-				try{
-					to = to.getCanonicalFile();
-				}catch( Throwable e ){
-				}
+				to = FileUtil.getCanonicalFileSafe( to );
 
 				int		file_index 	= entry.getIndex();
 				File	from 		= entry.getFromFile();
 
-				try{
-					from = from.getCanonicalFile();
-				}catch( Throwable e ){
-				}
+				from = FileUtil.getCanonicalFileSafe( from );
 
 				String  from_s  = from.getAbsolutePath();
 				String  to_s    = to.getAbsolutePath();
@@ -2859,13 +2846,7 @@ DownloadManagerImpl
  			res	= save_location;
  		}else{
 
- 			try{
-				res = res.getCanonicalFile();
-
-			}catch( Throwable e ){
-
-				res = res.getAbsoluteFile();
-			}
+ 			res = FileUtil.getCanonicalFileSafe( res );
  		}
 
  		cached_save_location		= save_location;
@@ -2891,7 +2872,8 @@ DownloadManagerImpl
 		File old_location = torrent_save_location;
 		File new_location = new File(new_dir, dl_name);
 
-		if (new_location.equals(old_location)){
+		if ( FileUtil.areFilePathsIdentical( new_location, old_location)){
+			
 			return;
 		}
 
@@ -2907,13 +2889,7 @@ DownloadManagerImpl
 
 		String key = torrent_save_location.getAbsolutePath() + "\n";
 
-		try{
-			torrent_save_location = torrent_save_location.getCanonicalFile();
-
-		}catch( Throwable e ){
-
-			torrent_save_location = torrent_save_location.getAbsoluteFile();
-		}
+		torrent_save_location = FileUtil.getCanonicalFileSafe( torrent_save_location );
 
 		download_manager_state.setAttribute(
 			DownloadManagerState.AT_CANONICAL_SD_DMAP,
@@ -4815,8 +4791,8 @@ DownloadManagerImpl
 	  File	old_file = getSaveLocation();
 
 	  try{
-		  old_file = old_file.getCanonicalFile();
-		  if (new_parent_dir != null) {new_parent_dir = new_parent_dir.getCanonicalFile();}
+		  old_file = FileUtil.getCanonicalFileSafe( old_file );
+		  if (new_parent_dir != null) {new_parent_dir = FileUtil.getCanonicalFileSafe( new_parent_dir);}
 
 	  }catch( Throwable e ){
 		  Debug.printStackTrace(e);
@@ -4849,21 +4825,7 @@ DownloadManagerImpl
 			  return;
 		  }
 
-		  try{
-			  	// problem with getting canonical file is that if the file exists but differs in case then this will wipe out the difference (on Win at least)
-			  
-			  if ( new_save_location.exists()){
-				  
-				  new_save_location = new File( new_save_location.getParentFile().getCanonicalFile(), new_save_location.getName());
-				  
-			  }else{
-				  
-				  new_save_location	= new_save_location.getCanonicalFile();
-			  }
-		  }catch( Throwable e ){
-
-			  Debug.printStackTrace(e);
-		  }
+		  new_save_location = FileUtil.getCanonicalFileSafe( new_save_location );
 
 		  FileUtil.ProgressListener	pl = 
 			new FileUtil.ProgressListener()
@@ -4960,8 +4922,8 @@ DownloadManagerImpl
 				  for (int i=0; i<info_files.length; i++) {
 					  File f = info_files[i].getFile(true);
 					  total_size += f.length();
-					  try {f = f.getCanonicalFile();}
-					  catch (IOException ioe) {f = f.getAbsoluteFile();}
+					  f = FileUtil.getCanonicalFileSafe(f);
+					  
 					  boolean added_entry = files_to_move.add(f);
 	
 					  /**
@@ -5064,7 +5026,7 @@ DownloadManagerImpl
 		  try{
 			  File sl_file = getSaveLocation();
 
-			  String save_location = sl_file.getCanonicalPath();
+			  String save_location = FileUtil.getCanonicalPathSafe( sl_file );
 
 			  if ( !save_location.endsWith( File.separator )){
 
@@ -5085,7 +5047,7 @@ DownloadManagerImpl
 					  File file_from = file.getFile( true );
 
 					  try{
-						  String file_path = file_from.getCanonicalPath();
+						  String file_path = FileUtil.getCanonicalPathSafe( file_from );
 
 						  if ( file_path.startsWith( save_location )){
 
@@ -5257,8 +5219,8 @@ DownloadManagerImpl
 	  File new_file = new File(new_parent_dir, new_name);
 
 	  try{
-		  old_file = old_file.getCanonicalFile();
-		  new_file = new_file.getCanonicalFile();
+		  old_file = FileUtil.getCanonicalFileSafe( old_file );
+		  new_file = FileUtil.getCanonicalFileSafe( new_file );
 
 	  }catch( Throwable e ){
 
@@ -5268,7 +5230,7 @@ DownloadManagerImpl
 	  }
 
 	  // Nothing to do.
-	  if ( new_file.equals(old_file)) {return;}
+	  if ( FileUtil.areFilePathsIdentical( new_file, old_file)) {return;}
 
 	  if (TorrentUtils.move( old_file, new_file )){
 		  setTorrentFileName( new_file.toString());
@@ -6594,12 +6556,14 @@ DownloadManagerImpl
 		String torrent_name = name;
 
 		File new_path = new File(torrent_parent, torrent_name + ".torrent");
-		if (new_path.exists()) {new_path = null;}
+		if ( FileUtil.reallyExists( new_path )) {
+			new_path = null;
+		}
 
 		for (int i=1; i<10; i++) {
 			if (new_path != null) {break;}
 			new_path = new File(torrent_parent, torrent_name + "(" + i + ").torrent");
-			if (new_path.exists()) {new_path = null;}
+			if ( FileUtil.reallyExists( new_path )) {new_path = null;}
 		}
 
 		if (new_path == null) {

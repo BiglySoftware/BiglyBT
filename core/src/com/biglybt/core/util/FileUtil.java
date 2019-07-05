@@ -105,6 +105,94 @@ public class FileUtil {
 	  }
   }
   
+  /**
+   * Verifies the case of the file.name
+   * @param file
+   * @return
+   */
+  
+  public static boolean
+  reallyExists(
+		File file )
+  {
+	if ( file.exists()){
+		
+		try{
+			return( file.getCanonicalFile().getName().equals( file.getName()));
+		
+		}catch( Throwable e ){
+			
+			return( true );
+		}
+	}else{
+		return( false );
+	}
+  }
+  
+  /**
+   * Preserves the case of the file.name when the file exists but differs in case
+   * @param file
+   * @return
+   */
+  
+  public static File
+  getCanonicalFileSafe(
+	 File		file )
+  {
+	  try{
+		  if ( file.exists()){
+			  
+			  File parent = file.getParentFile();
+			  
+			  if ( parent == null ){
+				  
+				  return( file );
+			  }
+			  
+			  return( new File( file.getParentFile().getCanonicalFile(), file.getName()));
+			  
+		  }else{
+			  
+			  return( file.getCanonicalFile());
+		  }
+	  }catch( Throwable e ){
+		  
+		  return( file.getAbsoluteFile());
+	  }
+  }
+  
+  /**
+   * Preserves the case of the file.name when the file exists but differs in case
+   * @param file
+   * @return
+   */
+  
+  public static String
+  getCanonicalPathSafe(
+	 File		file )
+  {
+	  try{
+		  if ( file.exists()){
+			  
+			  File parent = file.getParentFile();
+			  
+			  if ( parent == null ){
+				  
+				  return( file.getAbsolutePath());
+			  }
+			  
+			  return( new File( file.getParentFile().getCanonicalFile(), file.getName()).getAbsolutePath());
+			  
+		  }else{
+			  
+			  return( file.getCanonicalPath());
+		  }
+	  }catch( Throwable e ){
+		  
+		  return( file.getAbsolutePath());
+	  }
+  }
+  
   public static boolean isAncestorOf(File _parent, File _child) {
 	  File parent = canonise(_parent);
 	  File child = canonise(_child);

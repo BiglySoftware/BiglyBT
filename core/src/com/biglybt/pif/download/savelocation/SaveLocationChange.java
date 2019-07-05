@@ -19,6 +19,8 @@ package com.biglybt.pif.download.savelocation;
 
 import java.io.File;
 
+import com.biglybt.core.util.FileUtil;
+
 /**
  * Used by {@link SaveLocationManager} - you create an instance, set the
  * attributes here and return the value.
@@ -124,7 +126,7 @@ public class SaveLocationChange {
 	 */
 	public final boolean isDifferentDownloadLocation(File current_location) {
 		if (!hasDownloadChange()) {return false;}
-		return !current_location.equals(this.normaliseDownloadLocation(current_location));
+		return !FileUtil.areFilePathsIdentical( current_location,this.normaliseDownloadLocation(current_location));
 	}
 
 	/**
@@ -134,7 +136,7 @@ public class SaveLocationChange {
 	 */
 	public final boolean isDifferentTorrentLocation(File current_location) {
 		if (!hasTorrentChange()) {return false;}
-		return !current_location.equals(this.normaliseTorrentLocation(current_location));
+		return !FileUtil.areFilePathsIdentical( current_location, this.normaliseTorrentLocation(current_location));
 	}
 
 }
