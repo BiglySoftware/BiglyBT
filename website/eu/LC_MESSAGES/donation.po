@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: eu-nocc\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2019-04-16 14:38\n"
+"PO-Revision-Date: 2019-07-05 19:22\n"
 
 msgid "test"
 msgstr "Aztertu Ingeleraz"
@@ -35,13 +35,13 @@ msgid "donation_onetime_title"
 msgstr "Aldi Bakarreko Eskaintza"
 
 msgid "donation_bitcoin_title"
-msgstr "Bitcoin"
+msgstr ""
 
 msgid "donation_monthly_description"
 msgstr "Eman garatzaileei kafe bat hilero"
 
 msgid "donation_monthly_per_month"
-msgstr "/mo"
+msgstr ""
 
 msgid "donation_onetime_amount"
 msgstr "Kopurua (%1):"
@@ -54,4 +54,10 @@ msgstr "Gomendatzen dugun dirulaguntza da %1, edo %2. :)"
 
 msgid "donation_bitcoin_addresses"
 msgstr "BCH/BTC Helbidea:"
+
+msgid "donation_crypto_title"
+msgstr ""
+
+msgid "donation_crypto_description"
+msgstr ""
 
