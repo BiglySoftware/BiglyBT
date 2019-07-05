@@ -23,7 +23,7 @@ public class
 DiskManagerRecheckInstance
 {
 	private final DiskManagerRecheckScheduler	scheduler;
-	private final long						metric;
+	private final long							metric;
 	private final int							piece_length;
 	private final boolean						low_priority;
 
@@ -46,6 +46,12 @@ DiskManagerRecheckInstance
 		return( metric );
 	}
 
+	public int
+	getPieceConcurrency()
+	{
+		return( scheduler.getPieceConcurrency( this ));
+	}
+			
 	protected int
 	getPieceLength()
 	{

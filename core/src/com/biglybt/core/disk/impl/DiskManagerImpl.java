@@ -3252,7 +3252,10 @@ DiskManagerImpl
 		  }
 	  }
 
-    private void moveTorrentFile(SaveLocationChange loc_change) {
+    private void 
+    moveTorrentFile(
+    	SaveLocationChange loc_change) 
+    {
     	if (!loc_change.hasTorrentChange()) {return;}
 
 		File old_torrent_file = new File(download_manager.getTorrentFileName());
@@ -3265,8 +3268,11 @@ DiskManagerImpl
             return;
 		}
 
-    	try {download_manager.setTorrentFile(loc_change.torrent_location, loc_change.torrent_name);}
-    	catch (DownloadManagerException e) {
+    	try{
+    		
+    		download_manager.setTorrentFile(loc_change.torrent_location, loc_change.torrent_name);
+    		
+    	}catch (DownloadManagerException e) {
             String msg = "Failed to move " + old_torrent_file.toString() + " to " + new_torrent_file.toString();
 
             if (Logger.isEnabled())

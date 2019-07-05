@@ -120,6 +120,26 @@ DiskManagerRecheckScheduler
 		}
 	}
 
+	public int
+	getPieceConcurrency(
+		DiskManagerRecheckInstance	instance )
+	{
+		int piece_length = instance.getPieceLength();
+		
+		if ( strategy <= 1 ){
+		
+			return( piece_length>32*1024*1024?1:2 );
+			
+		}else{
+			
+				// limit to 32MB
+			
+			int num = 32*1024*1024/piece_length;
+			
+			return( Math.min( 8, num ));
+		}
+	}
+	
 	protected boolean
 	getPermission(
 		DiskManagerRecheckInstance	instance )
