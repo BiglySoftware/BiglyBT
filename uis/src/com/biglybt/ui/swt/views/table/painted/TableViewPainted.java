@@ -1630,10 +1630,15 @@ public class TableViewPainted
 						if (e.button != 1) {
 							return;
 						}
-						if (mouseDown && columnSizing == null) {
-							TableColumnCore column = getTableColumnByOffset(e.x);
-							if (column != null) {
-								setSortColumn(column, true);
+						if (mouseDown) {
+							if (columnSizing == null) {
+								TableColumnCore column = getTableColumnByOffset(e.x);
+								if (column != null) {
+									setSortColumn(column, true);
+								}
+							} else {
+								int diff = (e.x - columnSizingStart);
+								columnSizing.setWidthPX(columnSizing.getWidth() + diff);
 							}
 						}
 						columnSizing = null;
