@@ -28,6 +28,7 @@ import com.biglybt.core.util.UrlUtils;
 import org.gudy.bouncycastle.util.encoders.Base64;
 
 import com.biglybt.core.util.Base32;
+import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import org.json.simple.JSONArray;
 
@@ -103,7 +104,7 @@ public class MapUtils
 				return (String) o;
 			}
 			if (o instanceof byte[]) {
-				return new String((byte[]) o, "utf-8");
+				return new String((byte[]) o, Constants.UTF_8);
 			}
 			return def;
 		} catch (Throwable t) {
@@ -139,7 +140,7 @@ public class MapUtils
 		}else if ( obj instanceof byte[]){
 
 			try{
-				return new String((byte[])obj, "UTF-8");
+				return new String((byte[])obj, Constants.UTF_8);
 			}catch( Throwable e ){
 
 			}
@@ -160,7 +161,7 @@ public class MapUtils
 			if ( val == null ){
 				map.remove( key );
 			}else{
-				map.put( key, val.getBytes( "utf-8" ));
+				map.put( key, val.getBytes( Constants.UTF_8 ));
 			}
 		}catch( Throwable e ){
 			Debug.out(e);
@@ -423,13 +424,7 @@ public class MapUtils
 
 			}else if ( obj instanceof byte[] ){
 
-				try{
-					res[i] = new String((byte[])obj, "UTF-8" );
-
-				}catch( UnsupportedEncodingException e ){
-
-					e.printStackTrace();
-				}
+				res[i] = new String((byte[])obj, Constants.UTF_8 );
 			}
 		}
 
@@ -448,13 +443,7 @@ public class MapUtils
 
 		for (int i=0;i<data.length;i++){
 
-			try{
-				l.add( data[i].getBytes( "UTF-8" ));
-
-			}catch( UnsupportedEncodingException e ){
-
-				e.printStackTrace();
-			}
+			l.add( data[i].getBytes( Constants.UTF_8 ));
 		}
 	}
 

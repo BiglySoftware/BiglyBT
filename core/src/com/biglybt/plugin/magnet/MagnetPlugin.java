@@ -862,7 +862,7 @@ MagnetPlugin
 				try{
 					byte[]	hash = (byte[])map.get( "hash" );
 					
-					String args = new String((byte[])map.get( "args" ), "UTF-8" );
+					String args = MapUtils.getMapString( map, "args", "" );
 					
 					InetSocketAddress[] sources = new InetSocketAddress[0];
 					
@@ -879,7 +879,7 @@ MagnetPlugin
 								
 								if ( map.containsKey( "host" )){
 									
-									String unresolved_host = new String((byte[])map.get( "host"), "UTF-8" );
+									String unresolved_host = MapUtils.getMapString( map, "host", "" );
 									
 									l_ias.add( InetSocketAddress.createUnresolved( unresolved_host, port ));
 									
@@ -910,7 +910,7 @@ MagnetPlugin
 					
 					Map<String,Object>	other_metadata = (Map<String,Object>)map.get( "other_metadata" );
 										
-					long timeout = (Long)map.get( "timeout" );
+					long timeout = ((Number)map.get( "timeout" )).longValue();
 					
 					final InetSocketAddress[] f_sources = sources;
 					
