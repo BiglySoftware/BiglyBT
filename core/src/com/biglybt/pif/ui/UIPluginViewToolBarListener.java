@@ -39,4 +39,8 @@ public interface UIPluginViewToolBarListener
 	 * @since 4.6.0.5
 	 */
 	public void refreshToolBarItems(Map<String, Long> list);
+	
+	public default boolean isActive(){
+		return( true );
+	}
 }

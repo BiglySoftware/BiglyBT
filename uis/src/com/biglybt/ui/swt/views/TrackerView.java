@@ -545,6 +545,11 @@ public class TrackerView
 	protected void
 	updateSelectedContent()
 	{
+		if ( tv == null ){
+			
+			return;
+		}
+		
 		Object[] dataSources = tv.getSelectedDataSources(true);
 
 		if ( dataSources.length == 0 ){
@@ -627,6 +632,17 @@ public class TrackerView
 	    return( super.eventOccurred(event));
 	}
 
+	@Override
+	public boolean
+	isActive()
+	{
+		if (tv == null || !tv.isVisible()) {
+			return( false );
+		}
+
+		return( !tv.getSelectedDataSources().isEmpty());
+	}
+	
 	@Override
 	public void refreshToolBarItems(Map<String, Long> list) {
 		if (tv == null || !tv.isVisible()) {

@@ -484,7 +484,7 @@ public class MyTorrentsSuperView
 				MdiEntrySWT activeSubView = view.getTableView().getTabsCommon().getActiveSubView();
 				if (activeSubView != null) {
 					UIPluginViewToolBarListener toolBarListener = activeSubView.getToolBarListener();
-					if (toolBarListener != null) {
+					if (toolBarListener != null && toolBarListener.isActive()) {
 						return toolBarListener;
 					}
 				}
