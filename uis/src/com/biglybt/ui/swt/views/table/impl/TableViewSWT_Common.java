@@ -70,9 +70,10 @@ public class TableViewSWT_Common
 	private static final int ASYOUTYPE_UPDATEDELAY = 300;
 
 	private static final Color COLOR_FILTER_REGEX	= Colors.fadedYellow;
-	private static Font FONT_NO_REGEX;
-	private static Font FONT_REGEX;
-	private static Font FONT_REGEX_ERROR;
+	
+	private Font FONT_NO_REGEX;
+	private Font FONT_REGEX;
+	private Font FONT_REGEX_ERROR;
 
 	private List<TableViewSWTMenuFillListener> listenersMenuFill = new ArrayList<>(
 			1);
@@ -530,6 +531,7 @@ public class TableViewSWT_Common
 						filter.widget.setBackground(filter.regex?COLOR_FILTER_REGEX:null);
 						validateFilterRegex();
 						tv.refilter();
+						event.doit = false;
 						return;
 					}
 				}
@@ -677,6 +679,13 @@ public class TableViewSWT_Common
 					fd[i].setStyle(SWT.ITALIC);
 				}
 				FONT_REGEX_ERROR = new Font( filter.widget.getDisplay(), fd );
+				
+				filter.widget.addDisposeListener(
+					(e)->{
+						FONT_NO_REGEX = null;
+						FONT_REGEX.dispose();
+						FONT_REGEX_ERROR.dispose();
+					});
 			}
 			try {
 				Pattern.compile(filter.nextText, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
