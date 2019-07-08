@@ -61,7 +61,14 @@ public class ButtonSwtParameter
 
 		Messages.setLanguageText(button, buttonTextKey);
 
-		button.addListener(SWT.Selection, event -> triggerChangeListeners(true));
+		button.addListener(SWT.Selection, event -> {
+			// Force control to ensure we aren't on an un-processed parameter
+			// On OSX, button doesn't automatically get focused on click, so
+			// if the user edits a StringParameter, and clicks a button, the
+			// StringParameter will not be saved yet..
+			button.forceFocus();
+			triggerChangeListeners(true);
+		});
 	}
 
 	@Override
