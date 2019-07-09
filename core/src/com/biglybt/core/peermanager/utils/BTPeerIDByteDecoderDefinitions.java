@@ -68,6 +68,7 @@ public class BTPeerIDByteDecoderDefinitions {
 	static final String NO_VERSION = "NO_VERSION";
 	static final String VER_BYTE_UM_STYLE = "abcd -> a.b.cd";
 	static final String VER_BITLORD = "abcdef -> a.b.c-edf";
+	static final String VER_TWO_BYTE_MAINLINE = "a-bb-d";
 
 	// Used to register client information.
 	private static void addAzStyle(String id, String client) {
@@ -265,6 +266,7 @@ public class BTPeerIDByteDecoderDefinitions {
 		addAzStyle("FC", "FileCroc");
 		addAzStyle("FG", "FlashGet", VER_AZ_SKIP_FIRST_ONE_MAJ_TWO_MIN);
 		addAzStyle("FT", "FoxTorrent/RedSwoosh");
+		addAzStyle("FW", "FrostWire");
 		addAzStyle("GR", "GetRight", "1.2");
 		addAzStyle("GS", "GSTorrent"); // TODO: Format is v"abcd"
 		addAzStyle("HL", "Halite", VER_AZ_THREE_DIGITS);
@@ -466,7 +468,11 @@ public class BTPeerIDByteDecoderDefinitions {
 
 		client = addSimpleClient("BitLord", "-BL");
 		addVersionedClient(client, VER_BITLORD, 6, 3);
-		
+
+		// A2-a-bb.d-
+		client = addSimpleClient("Aria2", "A2-");
+		addVersionedClient(client, VER_TWO_BYTE_MAINLINE, 6, 3);
+
 		addAzStyle( "PI", "PicoTorrent", VER_AZ_ONE_MAJ_TWO_MIN_ONE_TRAIL);
 
 	}

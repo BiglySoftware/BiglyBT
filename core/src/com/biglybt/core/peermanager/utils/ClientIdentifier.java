@@ -242,7 +242,10 @@ public class ClientIdentifier {
 
 		if (client_type_peer.startsWith("\u8FC5\u96F7\u5728\u7EBF")
 				&& handshake_name_to_process.length() > 0
-				&& Character.isDigit(handshake_name_to_process.charAt(0))) {
+				// Not sure if [0] is a valid check, but recent versions report
+				// "-XL0".., so I added a check at [3]
+				&& (Character.isDigit(handshake_name_to_process.charAt(0))
+						|| Character.isDigit(handshake_name_to_process.charAt(3)))) {
 			return peer_id_name + " (" + handshake_name_to_process + ")";
 		}
 
