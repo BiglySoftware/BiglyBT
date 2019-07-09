@@ -348,10 +348,19 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 				dest.setString("torrent_path_raw", move_to_target.getAbsolutePath());
 
 			}else{
-
-				dest.setBoolean("torrent", "Move Torrent When Done");
 				
-				dest.setString("torrent_path", "Move Torrent When Done Directory");
+					// must pick up overall default move enable state before relying on sub-setting
+				
+				if ( def_mi.target.getBoolean( "enabled", false )){
+
+					dest.setBoolean("torrent", "Move Torrent When Done");
+					
+					dest.setString("torrent_path", "Move Torrent When Done Directory");
+					
+				}else{
+					
+					dest.setBoolean("torrent", false );
+				}
 			}
 
 			TransferSpecification trans = new TransferSpecification();
@@ -503,9 +512,19 @@ public class DownloadManagerDefaultPaths extends DownloadManagerMoveHandlerUtils
 
 			}else{
 
-				dest.setBoolean("torrent", "File.move.download.removed.move_torrent");
 				
-				dest.setString("torrent_path", "File.move.download.removed.move_torrent_path");
+					// must pick up overall default move enable state before relying on sub-setting
+				
+				if ( def_mi.target.getBoolean( "enabled", false )){
+	
+					dest.setBoolean("torrent", "File.move.download.removed.move_torrent");
+					
+					dest.setString("torrent_path", "File.move.download.removed.move_torrent_path");
+					
+				}else{
+					
+					dest.setBoolean("torrent", false );
+				}
 			}
 
 			TransferSpecification trans = new TransferSpecification();
