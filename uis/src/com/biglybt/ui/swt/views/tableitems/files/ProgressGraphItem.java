@@ -187,6 +187,9 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 
 				int firstPiece = fileInfo.getFirstPieceNumber();
 				int nbPieces = fileInfo.getNbPieces();
+				if ( nbPieces < 0 ){
+					nbPieces = 0;	// tree view root
+				}
 				DiskManagerPiece[] dm_pieces = diskManager == null ? null : diskManager.getPieces();
 				byte[] resume_data = dm_pieces == null && dm != null
 						? MapUtils.getMapByteArray(
