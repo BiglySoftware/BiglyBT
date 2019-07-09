@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -375,12 +376,16 @@ public class FilesView
 				
 				COConfigurationManager.setParameter("FilesView.use.tree", tree_view);
 				
+					// grab before column visibility as this resets the selection :(
+				
+				selection_outstanding	= tv.getSelectedDataSources();
+
 				if ( tree_view ){
 					
 					TableColumnSWTUtils.changeColumnVisiblity( tv, tv.getTableColumn( "name" ), true );
 				}
 				
-				force_refresh = true;
+				force_refresh 		= true;
 				
 				tableRefresh();
 			}
@@ -871,8 +876,10 @@ public class FilesView
 	}
 
 
-  // @see TableRefreshListener#tableRefresh()
-  private boolean force_refresh = false;
+ 
+  private boolean 		force_refresh = false;
+  private List<Object> 	selection_outstanding = null;
+  
   @Override
   public void tableRefresh() {
   	if (refreshing)
@@ -1256,13 +1263,91 @@ public class FilesView
 	private void
 	updateTable()
 	{
-		if ( !tree_view ){
+		boolean	sync = false;
+		
+		List<Object>	to_select;
+		
+		if ( selection_outstanding != null  ){
+						
+			sync = true;
 			
-			updateFlatView();
+			to_select = selection_outstanding;
+			
+			selection_outstanding = null;
 			
 		}else{
 			
-			updateTreeView();
+			to_select = null;
+		}
+		
+		if ( !tree_view ){
+			
+			updateFlatView( sync );
+			
+		}else{
+			
+			updateTreeView( sync );
+		}
+		
+		if ( to_select != null ){
+			
+			Utils.execSWTThreadLater(
+				100,
+				()->{
+					List<TableRowCore>	selected_rows = new ArrayList<>();
+					
+					TableRowCore[] tv_rows = tv.getRowsAndSubRows(false);
+					
+					Map<DiskManagerFileInfo,TableRowCore>	file_to_row_map = new HashMap<>();
+					
+					for ( TableRowCore tv_row: tv_rows ){
+						
+						DiskManagerFileInfo ds_file = (DiskManagerFileInfo)tv_row.getDataSource(true);
+						
+						if ( ds_file instanceof FilesViewNodeLeaf ){
+							
+							DiskManagerFileInfo target = ((FilesViewNodeLeaf)ds_file).getTarget();
+							
+							file_to_row_map.put( target, tv_row );
+							
+						}else if ( ds_file instanceof FilesViewNodeInner ){
+									
+						}else{
+							
+							file_to_row_map.put( ds_file, tv_row );
+						}
+					}
+					
+					for ( Object o: to_select ){
+						
+						TableRowCore row = null;
+						
+						if ( o instanceof FilesViewTreeNode ){
+							
+							if ( o instanceof FilesViewNodeLeaf ){
+								
+								row = file_to_row_map.get( ((FilesViewNodeLeaf)o).getTarget());
+							}
+						}else if ( o instanceof FilesViewNodeInner ){
+							
+						}else{
+							
+							row = file_to_row_map.get( o );
+						}
+						
+						if ( row != null ){
+					
+							selected_rows.add( row );
+						}
+					}
+					
+					if ( !selected_rows.isEmpty()){
+						
+						
+						tv.setSelectedRows( selected_rows.toArray( new TableRowCore[0]));
+					
+					}
+				});
 		}
 	}
 	
@@ -1270,7 +1355,8 @@ public class FilesView
 	private Map<TOTorrentFile,FilesViewNodeLeaf>	tree_file_map = new IdentityHashMap<>();
 	
 	private void
-	updateTreeView()
+	updateTreeView(
+		boolean		sync )
 	{
 		int	num_managers = managers.size();
 		
@@ -1280,7 +1366,14 @@ public class FilesView
 				
 				tv.removeAllTableRows();
 				
-				tv.processDataSourceQueue();
+				if ( sync ){
+					
+					tv.processDataSourceQueueSync();
+					
+				}else{
+				
+					tv.processDataSourceQueue();
+				}
 			}
 			
 			current_root = null;
@@ -1936,6 +2029,12 @@ public class FilesView
 			parent		= _parent;
 		}
 		
+		protected DiskManagerFileInfo
+		getTarget()
+		{
+			return( delegate );
+		}
+		
 		@Override
 		public String
 		getName()
@@ -2231,7 +2330,8 @@ public class FilesView
 	
 		
 	private void
-	updateFlatView()
+	updateFlatView(
+		boolean		sync )
 	{
 	    DiskManagerFileInfo files[] = getFileInfo();
 
@@ -2263,7 +2363,14 @@ public class FilesView
 			    tv.addDataSources(filesCopy);
 	    	}
 
-		    tv.processDataSourceQueue();
+	    	if ( sync ){
+	    		
+	    		tv.processDataSourceQueueSync();
+	    		
+	    	}else{
+		    
+	    		tv.processDataSourceQueue();
+	    	}
 	    }
 	}
 	
