@@ -71,13 +71,13 @@ public class LTMessageDecoder extends BTMessageDecoder {
 		// Here is where we decode the message.
 		id = ref_buff.get(DirectByteBuffer.SS_MSG);
 		switch(id) {
-			case 0:
+			case LTMessage.SUBID_LT_HANDSHAKE:
 				return MessageManager.getSingleton().createMessage(LTMessage.ID_LT_HANDSHAKE_BYTES, ref_buff, (byte)1);
-			case 1:
+			case LTMessage.SUBID_UT_PEX:
 				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_PEX_BYTES, ref_buff, (byte)1);
-			case 3:
+			case LTMessage.SUBID_UT_METADATA:
 				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_METADATA_BYTES, ref_buff, (byte)1);
-			case 4:
+			case LTMessage.SUBID_UT_UPLOAD_ONLY:
 				return MessageManager.getSingleton().createMessage(LTMessage.ID_UT_UPLOAD_ONLY_BYTES, ref_buff, (byte)1);
 			default: {
 			  byte[]	message_id;
