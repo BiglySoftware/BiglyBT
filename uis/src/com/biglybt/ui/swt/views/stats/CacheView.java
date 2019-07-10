@@ -46,7 +46,7 @@ public class CacheView
 
   public static final String MSGID_PREFIX = "CacheView";
 
-	CacheFileManagerStats stats;
+  CacheFileManagerStats stats;
 
   Composite panel;
 
@@ -70,7 +70,7 @@ public class CacheView
 
   public CacheView() {
     try {
-      this.stats = CacheFileManagerFactory.getSingleton().getStats();
+      stats = CacheFileManagerFactory.getSingleton().getStats();
       rfcGraph = SpeedGraphic.getInstance();
       wtcGraph = SpeedGraphic.getInstance();
       rffGraph = SpeedGraphic.getInstance();
@@ -383,6 +383,12 @@ public class CacheView
 
   private void refresh() {
     //General Part
+	  
+	if ( lblSize == null || lblSize.isDisposed()){
+	
+		return;
+	}
+
     lblSize.setText(DisplayFormatters.formatByteCountToKiBEtc(stats.getSize()));
     lblInUse.setText(DisplayFormatters.formatByteCountToKiBEtc(stats.getUsedSize()));
 
