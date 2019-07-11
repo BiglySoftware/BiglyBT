@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: pt-BR\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2019-07-10 10:12\n"
+"PO-Revision-Date: 2019-07-11 00:38\n"
 
 msgid "test"
 msgstr "Teste em Inglês"
@@ -60,4 +60,10 @@ msgstr "Criptomoedas"
 
 msgid "donation_crypto_description"
 msgstr "Deixe-nos saber se sua moeda ou token favoritos não está listado e adicionaremos um endereço :)"
+
+msgid "no_thanks"
+msgstr ""
+
+msgid "close"
+msgstr ""
 
