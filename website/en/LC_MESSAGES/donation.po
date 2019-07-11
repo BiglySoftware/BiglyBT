@@ -55,3 +55,9 @@ msgstr "Cryptocurrency"
 
 msgid "donation_crypto_description"		
 msgstr "Let us know if your favorite coin or token isn't listed and we'll add an address :)" 
+
+msgid "no_thanks"
+msgstr "No Thanks."
+
+msgid "close"
+msgstr "Close"
