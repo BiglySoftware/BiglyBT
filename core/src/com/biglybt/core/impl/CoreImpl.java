@@ -69,6 +69,7 @@ import com.biglybt.core.peer.PEPeerSource;
 import com.biglybt.core.peermanager.PeerManager;
 import com.biglybt.core.peermanager.nat.PeerNATTraverser;
 import com.biglybt.core.proxy.AEProxySelectorFactory;
+import com.biglybt.core.security.BGSpongy;
 import com.biglybt.core.security.CryptoManager;
 import com.biglybt.core.security.CryptoManagerFactory;
 import com.biglybt.core.security.SESecurityManager;
@@ -279,7 +280,7 @@ CoreImpl
 	
 			COConfigurationManager.setParameter( "azureus.application.directory", new File( SystemProperties.getApplicationPath()).getAbsolutePath());
 			COConfigurationManager.setParameter( "azureus.user.directory", new File( SystemProperties.getUserPath()).getAbsolutePath());
-	
+				
 			crypto_manager = CryptoManagerFactory.getSingleton();
 	
 			PlatformManagerFactory.getPlatformManager().addListener(
@@ -354,6 +355,8 @@ CoreImpl
 				logTime("Init PluginInitializer");
 			}
 	
+			BGSpongy.initialize( this );
+
 			instance_manager =
 				ClientInstanceManagerFactory.getSingleton(
 					new ClientInstanceManagerAdapter()

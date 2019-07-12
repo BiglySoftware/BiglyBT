@@ -37,6 +37,7 @@ import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.proxy.impl.AEPluginProxyHandler;
+import com.biglybt.core.security.BGSpongy;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagFeatureProperties;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
@@ -5062,6 +5063,24 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						return;
 
 
+					}else if ( message.equals( "!spongy!" )){
+						
+						BGSpongy.getDigest(
+							"SHA3-256",
+							(md)->{
+								if ( md != null ){
+									
+									byte[] hash = md.digest( new byte[10] );
+									
+									System.out.println( "hash=" + ByteFormatter.encodeString( hash ));
+									
+								}else{
+									
+									System.out.println( "digest is null" );
+								}
+							},
+							100*1000 );
+						
 					}else if ( message.equals( "!ftux!" )){
 
 						plugin.getBeta().setFTUXAccepted( false );

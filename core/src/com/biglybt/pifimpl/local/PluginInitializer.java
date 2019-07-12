@@ -234,7 +234,7 @@ PluginInitializer
 
   private ClassLoader			root_class_loader	= getClass().getClassLoader();
 
-  private List		loaded_pi_list		= new ArrayList();
+  private List<List<PluginInterface>>		loaded_pi_list		= new ArrayList<>();
 
   private static boolean	loading_builtin;
 
@@ -709,6 +709,35 @@ PluginInitializer
 			}
 		}
 
+		for ( List<PluginInterface> pis: loaded_pi_list ){
+
+			if ( pis.size() == 1 ){
+				
+				PluginInterface pi = pis.get(0);
+				
+				String init_now = pi.getPluginProperties().getProperty( "plugin.initialize.after.load" );
+				
+				if ( init_now != null && init_now.equals( "true" )){
+					
+					try{
+						if (Logger.isEnabled())
+							Logger.log(new LogEvent(LOGID, "Initializing plugin '"
+									+ pi.getPluginName() + "' (immediate)"));
+
+						initialisePlugin(pis);
+
+						if (Logger.isEnabled())
+							Logger.log(new LogEvent(LOGID, "Initialization of plugin '"
+									+ pi.getPluginName() + "' complete"));
+						
+					}catch( Throwable e ){
+					
+						// already handled
+					}
+				}
+			}
+		}
+		
 		return pluginLoaded;
   	}
 
@@ -1587,6 +1616,23 @@ PluginInitializer
 
   			final PluginInterfaceImpl	plugin_interface = (PluginInterfaceImpl)l.get(i);
 
+  			synchronized( s_plugin_interfaces ){
+  				
+  				if ( s_plugin_interfaces.contains( plugin_interface )){
+  					
+  					String init_now = plugin_interface.getPluginProperties().getProperty( "plugin.initialize.after.load" );
+  					
+  					if ( init_now != null && init_now.equals( "true" )){
+  						
+  					}else{
+  						
+  						Debug.out( "Plugin already initialized!" );
+  					}
+  					
+  					continue;
+  				}
+  			}
+  			
   			if (plugin_interface.getPluginState().isDisabled()) {
 
   				synchronized( s_plugin_interfaces ){
