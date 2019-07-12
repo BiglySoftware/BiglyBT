@@ -69,6 +69,8 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseTrackAdapter;
@@ -136,6 +138,7 @@ import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.swt.FixedURLTransfer;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.BufferedLabel;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
@@ -145,6 +148,7 @@ import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.pif.UISWTInputReceiver;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.*;
@@ -603,7 +607,7 @@ BuddyPluginViewBetaChat
 			final Composite lhs = new Composite(sash, SWT.NONE);
 	
 			layout = new GridLayout();
-			layout.numColumns = 2;
+			layout.numColumns = 3;
 			layout.marginHeight = 0;
 			layout.marginWidth = 0;
 			layout.marginTop = 4;
@@ -2315,7 +2319,7 @@ BuddyPluginViewBetaChat
 	{
 		ftux_stack = new Composite(parent, SWT.NONE);
 		GridData grid_data = new GridData(GridData.FILL_BOTH );
-		grid_data.horizontalSpan = 2;
+		grid_data.horizontalSpan = 3;
 		ftux_stack.setLayoutData(grid_data);
 
         final StackLayout stack_layout = new StackLayout();
@@ -2850,6 +2854,32 @@ BuddyPluginViewBetaChat
 		status.setLayoutData(grid_data);
 		status.setText( MessageText.getString( "PeersView.state.pending" ));
 
+		BubbleTextBox bubbleTextBox = new BubbleTextBox(component, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL | SWT.SINGLE);
+		Text bubbleTextWidget = bubbleTextBox.getTextWidget();
+		FontUtils.fontToWidgetHeight(bubbleTextWidget);
+		bubbleTextWidget.setMessage(MessageText.getString("Button.search") + "..." );
+		
+		bubbleTextWidget.addModifyListener(
+			(e)->{
+				
+				String text = bubbleTextWidget.getText();
+				
+				search( text.trim());
+			});
+		
+		bubbleTextWidget.addKeyListener(
+				KeyListener.keyPressedAdapter((e)->{
+										
+					if ( e.character == '\r' ){
+						
+						search( "\n" );
+						
+					}else if ( e.keyCode == SWT.ESC ){
+						
+						bubbleTextWidget.setText( "" );
+					}
+				}));
+		
 		Image image = ImageLoader.getInstance().getImage( "cog_down" );
 		menu_drop.setImage( image );
 		grid_data = new GridData();
@@ -3438,6 +3468,61 @@ BuddyPluginViewBetaChat
 							BuddyPluginUI.openChat( chat.getNetwork(), chat.getKey());
 						}
 					});
+		}
+	}
+	
+	private String	current_search = "";
+	private int		current_search_index;
+	
+	private void
+	search(
+		String	text )
+	{
+		if ( text.isEmpty()){
+			
+			current_search			= "";
+			current_search_index 	= 0;
+			
+			log.setSelection( log.getText().length());
+			
+		}else{
+			if ( text.equals( "\n" )){
+		
+				if ( !current_search.isEmpty()){
+					
+					current_search_index++;
+				}
+			}else{
+		
+				current_search			= text.toLowerCase();
+				current_search_index 	= 0;
+			}
+			
+			String str = log.getText().toLowerCase();
+			
+			int pos = str.indexOf( current_search );
+			
+			if ( pos == -1 ){
+				
+				log.setSelection( log.getText().length());
+				
+			}else{
+				for ( int i=1;i<=current_search_index;i++){
+					
+					int next_pos = str.indexOf( current_search, pos+1 );
+					
+					if ( next_pos == -1 ){
+						
+						break;
+						
+					}else{
+						
+						pos = next_pos;
+					}
+				}
+				
+				log.setSelection( pos, pos+ current_search.length());
+			}
 		}
 	}
 	
