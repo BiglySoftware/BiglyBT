@@ -25,6 +25,7 @@ package com.biglybt.plugin.net.buddy;
 import java.io.*;
 import java.lang.ref.WeakReference;
 import java.net.InetSocketAddress;
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -5065,21 +5066,18 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 
 					}else if ( message.equals( "!spongy!" )){
 						
-						BGSpongy.getDigest(
-							"SHA3-256",
-							(md)->{
-								if ( md != null ){
-									
-									byte[] hash = md.digest( new byte[10] );
-									
-									System.out.println( "hash=" + ByteFormatter.encodeString( hash ));
-									
-								}else{
-									
-									System.out.println( "digest is null" );
-								}
-							},
-							100*1000 );
+						MessageDigest md = BGSpongy.getDigest( "SHA3-256", 100*1000 );
+						
+						if ( md != null ){
+							
+							byte[] hash = md.digest( new byte[10] );
+							
+							System.out.println( "hash=" + ByteFormatter.encodeString( hash ));
+							
+						}else{
+							
+							System.out.println( "digest is null" );
+						}
 						
 					}else if ( message.equals( "!ftux!" )){
 

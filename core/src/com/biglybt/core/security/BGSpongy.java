@@ -153,21 +153,19 @@ BGSpongy
 	/**
 	 * 
 	 * @param algorithm digest algorithm e.g. SHA3-256
-	 * @param consumer	digest will be delivered to the consumer, or 'null' if failed (timeout or other error)
 	 * @param max_wait	<0: infinite; 0: no wait; >0: max wait millis
 	 */
 	
-	public static void
+	public static MessageDigest
 	getDigest(
 		String						algorithm,
-		Consumer<MessageDigest>		consumer,
 		long						max_wait )
 	{
 		IPCInterface ipc = getICP( max_wait );
 		
 		if ( ipc == null ){
 			
-			consumer.accept( null );
+			return( null );
 			
 		}else{
 			try{
@@ -177,13 +175,13 @@ BGSpongy
 				
 				MessageDigest digest = (MessageDigest)ipc.invoke( "getDigest", new Object[]{ args });
 				
-				consumer.accept( digest );
+				return( digest );
 				
 			}catch( Throwable e ){
 				
 				Debug.out( e );
 				
-				consumer.accept( null );
+				return( null );
 			}
 			
 		}
