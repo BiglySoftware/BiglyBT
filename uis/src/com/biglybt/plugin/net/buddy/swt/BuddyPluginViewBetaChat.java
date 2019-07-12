@@ -5850,6 +5850,8 @@ BuddyPluginViewBetaChat
 				log.setVisible( true );
 			}
 
+			log.redraw();	// needed as sometimes new styleranges are not rendered without it :(
+			
 			if ( last_message_not_ours != null ){
 
 				long last_message_not_ours_time = last_message_not_ours.getTimeStamp();
