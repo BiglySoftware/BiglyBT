@@ -4820,9 +4820,16 @@ DownloadManagerImpl
 
 			  FileUtil.mkdirs(new_save_location.getParentFile());
 
-			  setTorrentSaveDir(new_save_location.getParent().toString(), new_save_location.getName());
+			  if ( controller.getDiskManagerFileInfoSet().getFiles()[0].setLinkAtomic( new_save_location )){
+			  
+			  	setTorrentSaveDir(new_save_location.getParent().toString(), new_save_location.getName());
 
-			  return;
+			  	return;
+			  	
+			  }else{
+				  
+				  throw new DownloadManagerException( "rename operation failed");
+			  }
 		  }
 
 		  new_save_location = FileUtil.getCanonicalFileSafe( new_save_location );
@@ -4881,11 +4888,18 @@ DownloadManagerImpl
 	
 			  } else if (torrent.isSimpleTorrent()) {
 	
-				  pl.setTotalSize( controller.getDiskManagerFileInfo()[0].getFile( true ).length());
+				  DiskManagerFileInfo file = getDiskManagerFileInfoSet().getFiles()[0];
+				  
+				  pl.setTotalSize( file.getFile( true ).length());
 	
-				  if (controller.getDiskManagerFileInfo()[0].setLinkAtomic( new_save_location, pl)) {
+				  if ( file.setLinkAtomic( new_save_location, pl )){
+					  
 					  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
-				  } else {throw new DownloadManagerException( "rename operation failed");}
+					  
+				  }else{
+					  
+					  throw new DownloadManagerException( "rename operation failed");
+				  }
 	
 				  /*
 				  // Have to keep the file name in sync if we're renaming.
@@ -4914,11 +4928,15 @@ DownloadManagerImpl
 				  long	total_size = 0;
 				  
 				  // The files we move must be limited to those mentioned in the torrent.
+				  
 				  final HashSet files_to_move = new HashSet();
 	
 				  // Required for the adding of parent directories logic.
+				  
 				  files_to_move.add(null);
-				  DiskManagerFileInfo[] info_files = controller.getDiskManagerFileInfo();
+				  
+				  DiskManagerFileInfo[] info_files = getDiskManagerFileInfoSet().getFiles();
+				  
 				  for (int i=0; i<info_files.length; i++) {
 					  File f = info_files[i].getFile(true);
 					  total_size += f.length();
