@@ -470,7 +470,7 @@ public class SB_Transfers
 		
 		infoLibraryUn.setImageLeftID("image.sidebar.unopened");
 
-		addGeneralLibraryMenus(infoLibraryUn,SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
+		addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED);
 		
 		infoLibraryUn.setViewTitleInfo(new ViewTitleInfo() {
 			@Override
@@ -504,10 +504,11 @@ public class SB_Transfers
 		return infoLibraryUn;
 	}
 
-	private static void addGeneralLibraryMenus( MdiEntry entry, String id ){
+	private static void addGeneralLibraryMenus( MultipleDocumentInterface mdi, String id ){
+
 		addMenuUnwatched( id );
 		
-		addMenuCollapseAll( entry, id );
+		addMenuCollapseAll( mdi, id );
 	}
 	
 	private static void addMenuUnwatched(String id) {
@@ -541,7 +542,7 @@ public class SB_Transfers
 		});
 	}
 	
-	private static void addMenuCollapseAll( MdiEntry entry, String id ){
+	private static void addMenuCollapseAll( MultipleDocumentInterface mdi, String id ){
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
 		MenuManager menuManager = uim.getMenuManager();
@@ -554,8 +555,10 @@ public class SB_Transfers
 						new CoreRunningListener() {
 							@Override
 							public void coreRunning(Core core) {
-								Composite comp = ((MdiEntrySWT)entry).getComposite();
-								process( comp );
+								
+								MdiEntrySWT entry = (MdiEntrySWT)mdi.getEntry( id );
+																
+								process( entry.getComposite());
 							}	
 							
 							private void
@@ -617,7 +620,7 @@ public class SB_Transfers
 				titleInfoSeeding, null, false, null);
 		entry.setImageLeftID("image.sidebar.downloading");
 
-		addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY_CD);
+		addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY_CD);
 		
 		MdiEntryVitalityImage vitalityImage = entry.addVitalityImage(ID_VITALITY_ALERT);
 		vitalityImage.setVisible(false);
@@ -696,7 +699,7 @@ public class SB_Transfers
 
 		entry.setImageLeftID("image.sidebar.downloading");
 
-		addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY_DL);
+		addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY_DL);
 		
 		entry.addListener(
 			new MdiCloseListener(){
@@ -1305,7 +1308,7 @@ public class SB_Transfers
 		if (entry != null) {
 			entry.setImageLeftID("image.sidebar.library");
 
-			addGeneralLibraryMenus( entry, id );
+			addGeneralLibraryMenus( mdi, id );
 			
 			entry.addListener(new MdiEntryDropListener() {
 				@Override
@@ -1707,7 +1710,7 @@ public class SB_Transfers
 				entry = mdi.createEntryFromSkinRef(
 						parent_id, id, "library", name, viewTitleInfo, tag, closable, prev_id );
 				
-				addGeneralLibraryMenus( entry, id );
+				addGeneralLibraryMenus( mdi, id );
 				
 			}else{
 
@@ -2620,7 +2623,7 @@ public class SB_Transfers
 					"");
 			entry.setImageLeftID("image.sidebar.library");
 			
-			addGeneralLibraryMenus(entry,SideBar.SIDEBAR_SECTION_LIBRARY);
+			addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY);
 
 			return entry;
 		}
