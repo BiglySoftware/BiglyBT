@@ -23,6 +23,7 @@ package com.biglybt.ui.swt.views.skin;
 import java.io.File;
 import java.util.*;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
@@ -542,6 +543,31 @@ public class SB_Transfers
 		});
 	}
 	
+	private static void
+	collapseAll(
+		Composite	comp )
+	{
+			// don't like this but meh
+		
+		Object obj = comp.getData( "MyTorrentsView.instance" );
+		
+		if ( obj != null ){
+			
+			((MyTorrentsView)obj).collapseAll();
+		}
+		
+		Control[] kids = comp.getChildren();
+		
+		for ( Control k: kids ){
+			
+			if ( k instanceof Composite ){
+				
+				collapseAll((Composite)k);
+			}
+		}
+	}
+
+
 	private static void addMenuCollapseAll( MultipleDocumentInterface mdi, String id ){
 		PluginInterface pi = PluginInitializer.getDefaultInterface();
 		UIManager uim = pi.getUIManager();
@@ -552,41 +578,32 @@ public class SB_Transfers
 			@Override
 			public void selected(MenuItem menu, Object target) {
 				CoreWaiterSWT.waitForCore(TriggerInThread.ANY_THREAD,
-						new CoreRunningListener() {
-							@Override
-							public void coreRunning(Core core) {
-								
-								MdiEntrySWT entry = (MdiEntrySWT)mdi.getEntry( id );
-																
-								process( entry.getComposite());
-							}	
+					new CoreRunningListener() {
+						@Override
+						public void coreRunning(Core core) {
 							
-							private void
-							process(
-								Composite	comp )
-							{
-									// don't like this but meh
-								
-								Object obj = comp.getData( "MyTorrentsView.instance" );
-								
-								if ( obj != null ){
-									
-									((MyTorrentsView)obj).collapseAll();
-								}
-								
-								Control[] kids = comp.getChildren();
-								
-								for ( Control k: kids ){
-									
-									if ( k instanceof Composite ){
-										
-										process((Composite)k);
-									}
-								}
-							}
-						});
+							MdiEntrySWT entry = (MdiEntrySWT)mdi.getEntry( id );
+															
+							collapseAll( entry.getComposite());
+						}	
+				});
+							
 			}
 		});
+	}
+	
+	private static void addMenuCollapseAll( MultipleDocumentInterface mdi,  Menu menu, String group_id ){
+		org.eclipse.swt.widgets.MenuItem item = new org.eclipse.swt.widgets.MenuItem( menu, SWT.PUSH );
+		
+		item.setText( MessageText.getString( "menu.collapse.all" ));
+				
+		item.addListener( 
+			SWT.Selection,
+			(e)->{
+				MdiEntrySWT entry = (MdiEntrySWT)mdi.getEntry( group_id );
+				
+				collapseAll( entry.getComposite());
+			});
 	}
 
 	/**
@@ -1546,6 +1563,8 @@ public class SB_Transfers
 
 							List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
 							
+							List<String>	kid_ids = new ArrayList<>();
+							
 							for ( MdiEntry kid: kids ){
 								
 								String prefix = "Tag." + tag.getTagType().getTagType() + ".group.";
@@ -1553,6 +1572,8 @@ public class SB_Transfers
 								String kid_id = kid.getId();
 
 								if ( kid_id.startsWith( prefix )){
+									
+									kid_ids.add( kid_id );
 									
 									name_map.put( kid_id.substring( prefix.length()), kid_id );
 								}
@@ -1591,6 +1612,8 @@ public class SB_Transfers
 									public void menuWillBeShown(MdiEntry entry, Menu menuTree) {
 										
 										TagGroup tg = tag.getGroupContainer();
+										
+										addMenuCollapseAll( mdi, menuTree, entry.getId());
 										
 										TagUIUtils.createSideBarMenuItems(menuTree, tg );
 									}
