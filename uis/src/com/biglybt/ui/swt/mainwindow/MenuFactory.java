@@ -892,7 +892,7 @@ public class MenuFactory
 									handleEvent(
 										Event arg0 )
 									{
-										showText(
+										Utils.showText(
 											"MainWindow.menu.speed_limits.info.title",
 											"MainWindow.menu.speed_limits.info.curr",
 											slh.getCurrent());
@@ -933,7 +933,7 @@ public class MenuFactory
 											handleEvent(
 												Event arg0 )
 											{
-												showText(
+												Utils.showText(
 													"MainWindow.menu.speed_limits.info.title",
 													MessageText.getString( "MainWindow.menu.speed_limits.info.prof", new String[]{ p }),
 													slh.loadProfile( p ) );
@@ -952,7 +952,7 @@ public class MenuFactory
 											handleEvent(
 												Event arg0 )
 											{
-												showText(
+												Utils.showText(
 													"MainWindow.menu.speed_limits.info.title",
 													MessageText.getString( "MainWindow.menu.speed_limits.info.prof", new String[]{ p }),
 													slh.getProfile( p ) );
@@ -1007,7 +1007,7 @@ public class MenuFactory
 
 												if ( input.length() > 0 ){
 
-													showText(
+													Utils.showText(
 														"MainWindow.menu.speed_limits.info.title",
 														MessageText.getString( "MainWindow.menu.speed_limits.info.prof", new String[]{ input }),
 														slh.saveProfile( input ) );
@@ -1031,7 +1031,7 @@ public class MenuFactory
 									handleEvent(
 										Event arg0 )
 									{
-										showText(
+										Utils.showText(
 											"MainWindow.menu.speed_limits.info.title",
 											"MainWindow.menu.speed_limits.info.curr",
 											slh.clearCurrentLimits());
@@ -1052,65 +1052,7 @@ public class MenuFactory
 								handleEvent(
 									Event arg0 )
 								{
-									Utils.execSWTThreadLater(
-											1,
-											new Runnable()
-											{
-												@Override
-												public void
-												run()
-												{
-													java.util.List<String> lines = slh.getSchedule();
-
-													StringBuilder text = new StringBuilder( 80*lines.size());
-
-													for ( String s: lines ){
-
-														if ( text.length() > 0 ){
-
-															text.append( "\n" );
-														}
-
-														text.append( s );
-													}
-
-													final TextViewerWindow viewer =
-														new TextViewerWindow(
-															"MainWindow.menu.speed_limits.schedule.title",
-															"MainWindow.menu.speed_limits.schedule.msg",
-															text.toString(), false );
-
-													viewer.setEditable( true );
-
-													viewer.addListener(
-														new TextViewerWindow.TextViewerWindowListener()
-														{
-															@Override
-															public void
-															closed()
-															{
-																if ( viewer.getOKPressed()){
-																	
-																	String text = viewer.getText();
-	
-																	String[] lines = text.split( "\n" );
-	
-																	java.util.List<String> updated_lines = new ArrayList<>( Arrays.asList( lines ));
-	
-																	java.util.List<String> result = slh.setSchedule( updated_lines );
-	
-																	if ( result != null && result.size() > 0 ){
-	
-																		showText(
-																				"MainWindow.menu.speed_limits.schedule.title",
-																				"MainWindow.menu.speed_limits.schedule.err",
-																				result );
-																	}
-																}
-															}
-														});
-												}
-											});
+									Utils.editSpeedLimitHandlerConfig( slh );
 								}
 							});
 
@@ -2029,38 +1971,6 @@ public class MenuFactory
 				MessageText.getString( "config.changes.title" ),
 				null, content.toString(), false  );
 
-	}
-
-
-	public static void
-	showText(
-		final String					title,
-		final String					message,
-		final java.util.List<String>	lines )
-	{
-		Utils.execSWTThreadLater(
-			1,
-			new Runnable()
-			{
-				@Override
-				public void
-				run()
-				{
-					StringBuilder text = new StringBuilder( lines.size() * 80 );
-
-					for ( String s: lines ){
-
-						if ( text.length() > 0 ){
-							text.append( "\n" );
-						}
-						text.append( s );
-					}
-
-					TextViewerWindow viewer = new TextViewerWindow(title, message, text.toString(), false );
-
-					viewer.setEditable( false );
-				}
-			});
 	}
 
 	public static MenuItem addBlockedIPsMenuItem(Menu menu) {

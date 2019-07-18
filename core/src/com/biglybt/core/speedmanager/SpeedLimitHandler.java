@@ -120,6 +120,8 @@ SpeedLimitHandler
 
 	private final LoggerChannel	logger;
 
+	private boolean	is_enabled = true;
+	
 	private TimerEventPeriodic		schedule_event;
 	private List<ScheduleRule>		current_rules	= new ArrayList<>();
 	private ScheduleRule			active_rule;
@@ -130,7 +132,7 @@ SpeedLimitHandler
 	private TimerEventPeriodic		prioritiser_event;
 	private List<Prioritiser>		current_prioritisers = new ArrayList<>();
 
-	private Map<String,IPSet>		current_ip_sets 			= new HashMap<>();
+	private Map<String,PeerSet>		current_ip_sets 			= new HashMap<>();
 	private final Map<String,RateLimiter>	ip_set_rate_limiters_up 	= new HashMap<>();
 	private final Map<String,RateLimiter>	ip_set_rate_limiters_down 	= new HashMap<>();
 	private TimerEventPeriodic		ip_set_event;
@@ -412,7 +414,7 @@ SpeedLimitHandler
 		if ( current_ip_sets.size() == 0 ){
 			lines.add( "    None" );
 		}else{
-			for( Map.Entry<String,IPSet> entry: current_ip_sets.entrySet()){
+			for( Map.Entry<String,PeerSet> entry: current_ip_sets.entrySet()){
 				lines.add( "    " + entry.getValue().getDetailString());
 			}
 		}
@@ -983,7 +985,7 @@ SpeedLimitHandler
 		boolean	enabled = true;
 
 		List<ScheduleRule>	rules 	= new ArrayList<>();
-		Map<String,IPSet>	ip_sets	= new HashMap<>();
+		Map<String,PeerSet>	ip_sets	= new HashMap<>();
 
 		Map<Integer,List<NetLimit>> new_net_limits	= new HashMap<>();
 		List<NetLimit>				net_limits_list = new ArrayList<>();
@@ -1076,7 +1078,7 @@ SpeedLimitHandler
 
 					Pattern client_pattern	= null;
 					
-					IPSet set = null;
+					PeerSet set = null;
 
 					for ( String arg: args ){
 
@@ -1146,7 +1148,7 @@ SpeedLimitHandler
 
 								if ( set == null ){
 
-									set = new IPSet( name );
+									set = new PeerSet( name );
 
 									ip_sets.put( name, set );
 								}
@@ -1159,7 +1161,7 @@ SpeedLimitHandler
 
 									if ( bit.length() > 0 ){
 
-										IPSet other_set = ip_sets.get( bit );
+										PeerSet other_set = ip_sets.get( bit );
 
 										if ( other_set != null && other_set != set ){
 
@@ -1853,7 +1855,7 @@ SpeedLimitHandler
 				// need to do ip-sets early as other things (netlimits, prioritizers) can refer to ipset tag types
 				// and these are created here
 
-			for( IPSet s: current_ip_sets.values()){
+			for( PeerSet s: current_ip_sets.values()){
 
 				s.destroy();
 			}
@@ -1987,7 +1989,7 @@ SpeedLimitHandler
 				setProfileActive( null );
 			}
 
-			for( IPSet s: current_ip_sets.values()){
+			for( PeerSet s: current_ip_sets.values()){
 
 				s.destroy();
 			}
@@ -2018,6 +2020,8 @@ SpeedLimitHandler
 			deleteProfile( INACTIVE_PROFILE_NAME );
 		}
 
+		is_enabled = enabled;
+		
 		return( result );
 	}
 
@@ -2073,7 +2077,38 @@ SpeedLimitHandler
 			return( Integer.parseInt( num ) * mult );
 		}
 	}
+	
+	public boolean
+	isEnabled()
+	{
+		return ( is_enabled );
+	}
 
+	public void
+	addConfigLine(
+		String		line,
+		boolean		auto_enable )
+	{
+		List<String> lines = getSchedule();
+		
+		if ( !is_enabled && auto_enable ){
+		
+			lines.add( "enable=yes" );
+		}
+		
+		lines.add( line );
+		
+		setSchedule( lines );
+	}
+	
+	public List<PeerSet>
+	getPeerSets()
+	{
+		synchronized( SpeedLimitHandler.this ){
+			
+			return( new ArrayList<>(  current_ip_sets.values()));
+		}
+	}
 	private int
 	getMins(
 		String	str )
@@ -2133,7 +2168,7 @@ SpeedLimitHandler
 							
 							synchronized( SpeedLimitHandler.this ){
 		
-								Map<String,IPSet>	added = new HashMap<>();
+								Map<String,PeerSet>	added = new HashMap<>();
 								
 								for ( String name: todo ){
 								
@@ -2148,11 +2183,11 @@ SpeedLimitHandler
 
 									String set_name = "Client_" + name;
 									
-									IPSet set = current_ip_sets.get( set_name );
+									PeerSet set = current_ip_sets.get( set_name );
 									
 									if ( set == null ){
 																														
-										set = new IPSet( set_name );
+										set = new PeerSet( set_name );
 										
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
@@ -2190,15 +2225,15 @@ SpeedLimitHandler
 
 	private void
 	initialiseIPSets(
-		Map<String,IPSet>		sets )
+		Map<String,PeerSet>		sets )
 	{
 		Set<Integer>		id_allocated	= new HashSet<>();
-		Map<IPSet,Integer>	id_map 		= new HashMap<>();
+		Map<PeerSet,Integer>	id_map 		= new HashMap<>();
 		int					id_max		= -1;
 
 		for ( int i=0;i<2;i++ ){
 
-			for ( IPSet s: i==0?current_ip_sets.values():sets.values()){
+			for ( PeerSet s: i==0?current_ip_sets.values():sets.values()){
 
 				String name = s.getName();
 
@@ -2334,7 +2369,7 @@ SpeedLimitHandler
 
 		boolean	has_cats_or_tags = false;
 
-		for ( IPSet set: current_ip_sets.values()){
+		for ( PeerSet set: current_ip_sets.values()){
 
 			ip_set_rate_limiters_down.put( set.getName(), set.getDownLimiter());
 
@@ -2378,7 +2413,7 @@ SpeedLimitHandler
 
 								synchronized( SpeedLimitHandler.this ){
 
-									for ( IPSet set: current_ip_sets.values()){
+									for ( PeerSet set: current_ip_sets.values()){
 
 										set.updateStats( tick_count );
 									}
@@ -2642,7 +2677,7 @@ SpeedLimitHandler
 		PeerManager	peer_manager,
 		Peer[]		peers )
 	{
-		IPSet[]		sets;
+		PeerSet[]		sets;
 		long[][][]	set_ranges;
 		Set[]		set_ccs;
 		Set[]		set_nets;
@@ -2658,14 +2693,14 @@ SpeedLimitHandler
 
 			int	len = current_ip_sets.size();
 
-			sets 		= new IPSet[len];
+			sets 		= new PeerSet[len];
 			set_ranges	= new long[len][][];
 			set_ccs		= new Set[len];
 			set_nets	= new Set[len];
 
 			int	pos = 0;
 
-			for ( IPSet set: current_ip_sets.values()){
+			for ( PeerSet set: current_ip_sets.values()){
 
 				sets[pos]		= set;
 				set_ranges[pos]	= set.getRanges();
@@ -2777,7 +2812,7 @@ SpeedLimitHandler
 					peer_net = AENetworkClassifier.categoriseAddress( peer.getIp());
 				}
 
-				Set<IPSet>	added_to_sets = new HashSet<>();
+				Set<PeerSet>	added_to_sets = new HashSet<>();
 
 				if ( l_address != 0 ){
 
@@ -2790,7 +2825,7 @@ SpeedLimitHandler
 							continue;
 						}
 
-						IPSet set = sets[i];
+						PeerSet set = sets[i];
 
 						boolean is_inverse = set.isInverse();
 
@@ -2831,7 +2866,7 @@ SpeedLimitHandler
 
 					for ( int i=0;i<set_ccs.length;i++ ){
 
-						IPSet set = sets[i];
+						PeerSet set = sets[i];
 
 						if ( added_to_sets.contains( set )){
 
@@ -2891,7 +2926,7 @@ SpeedLimitHandler
 
 					for ( int i=0;i<set_nets.length;i++ ){
 
-						IPSet set = sets[i];
+						PeerSet set = sets[i];
 
 						if ( added_to_sets.contains( set )){
 
@@ -2962,7 +2997,7 @@ SpeedLimitHandler
 		PeerManager	peer_manager,
 		Peer		peer )
 	{
-		Collection<IPSet> sets;
+		Collection<PeerSet> sets;
 
 		synchronized( this ){
 
@@ -2974,7 +3009,7 @@ SpeedLimitHandler
 			sets = current_ip_sets.values();
 		}
 
-		for ( IPSet s: sets ){
+		for ( PeerSet s: sets ){
 
 			s.removePeer( peer_manager, peer );
 		}
@@ -2984,7 +3019,7 @@ SpeedLimitHandler
 	addLimiters(
 		PeerManager			peer_manager,
 		Peer				peer,
-		IPSet				set,
+		PeerSet				set,
 		List<RateLimiter>	up_to_be_removed,
 		List<RateLimiter>	down_to_be_removed )
 	{
@@ -5385,8 +5420,8 @@ SpeedLimitHandler
 		}
 	}
 
-	private class
-	IPSet
+	public class
+	PeerSet
 	{
 		private final String		name;
 
@@ -5420,7 +5455,7 @@ SpeedLimitHandler
 		private TagPeerImpl		tag_impl;
 
 		private
-		IPSet(
+		PeerSet(
 			String	_name )
 		{
 			name	= _name;
@@ -5482,6 +5517,12 @@ SpeedLimitHandler
 			client_pattern = _client_pattern;
 		}
 
+		public Pattern
+		getClientPattern()
+		{
+			return( client_pattern );
+		}
+		
 		private int
 		getPeerUpLimit()
 		{
@@ -5626,7 +5667,7 @@ SpeedLimitHandler
 
 		private void
 		addSet(
-			IPSet	other )
+			PeerSet	other )
 		{
 			long[][] new_ranges = new long[ ranges.length + other.ranges.length ][];
 
@@ -5800,7 +5841,7 @@ SpeedLimitHandler
 			extends TagBase
 			implements TagPeer, TagFeatureExecOnAssign
 		{
-			private final IPSet		ip_set;
+			private final PeerSet		ip_set;
 			private final Object	UPLOAD_PRIORITY_ADDED_KEY = new Object();
 
 			private int upload_priority;
@@ -5810,7 +5851,7 @@ SpeedLimitHandler
 
 			private
 			TagPeerImpl(
-				IPSet	_ip_set,
+				PeerSet	_ip_set,
 				int		tag_id )
 			{
 				super( ip_set_tag_type, tag_id, name );

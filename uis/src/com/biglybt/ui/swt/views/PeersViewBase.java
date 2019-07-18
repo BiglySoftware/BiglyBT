@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
@@ -40,6 +41,7 @@ import com.biglybt.core.networkmanager.NetworkManager;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
+import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.HashWrapper;
@@ -1033,68 +1035,19 @@ PeersViewBase
 					
 					ClipboardCopy.copyToClipBoard( str );
 				}
-			});
+			});	
 		
-		if ( man == null ){
+		if ( man != null && !TorrentUtils.isReallyPrivate(man.getTorrent())){
 
-			return( true );
-		}
+			PEPeerManager pm = man.getPeerManager();
 
-		PEPeerManager pm = man.getPeerManager();
-
-		if ( pm == null ){
-
-			return( true );
-		}
-
-		if ( TorrentUtils.isReallyPrivate(man.getTorrent())){
-
-			return( true );
-		}
+			if ( pm != null ){
 		
-		MenuItem copy_all_peers= new MenuItem( menu, SWT.PUSH );
-
-		Messages.setLanguageText( copy_all_peers, "menu.copy.all.peers");
-
-		copy_all_peers.addListener(
-			SWT.Selection,
-			new Listener()
-			{
-				@Override
-				public void
-				handleEvent(
-						Event event)
-				{
-					List<PEPeer> peers = pm.getPeers();
-					
-					String str = getMyPeerDetails( man );
-					
-					for ( PEPeer peer: peers ){
-						
-						int port = peer.getTCPListenPort();
-						
-						if ( port > 0 ){
-							
-							String address = peer.getIp() + ":" + port;
-							
-							str += (str.isEmpty()?"":",") + address;
-						}
-					}
-					
-					if ( str.isEmpty()){
-						
-						str = "<no usable peers>";
-					}
-					
-					ClipboardCopy.copyToClipBoard( str );
-				}
-			});
-		
-		MenuItem add_peers_item = new MenuItem( menu, SWT.PUSH );
-
-		Messages.setLanguageText( add_peers_item, "menu.add.peers");
-
-		add_peers_item.addListener(
+			MenuItem copy_all_peers= new MenuItem( menu, SWT.PUSH );
+	
+			Messages.setLanguageText( copy_all_peers, "menu.copy.all.peers");
+	
+			copy_all_peers.addListener(
 				SWT.Selection,
 				new Listener()
 				{
@@ -1103,117 +1056,201 @@ PeersViewBase
 					handleEvent(
 							Event event)
 					{
-						SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
-								"dialog.add.peers.title",
-								"dialog.add.peers.msg");
-
-						String def = COConfigurationManager.getStringParameter( "add.peers.default", "" );
-
-						entryWindow.setPreenteredText( String.valueOf( def ), false );
+						List<PEPeer> peers = pm.getPeers();
 						
-						entryWindow.addVerifyListener(
-					    		new VerifyListener(){
-									
-									@Override
-									public void verifyText(VerifyEvent e){
-										String str = e.text.replaceAll( "[\\r\\n]+", "," );
-										
-										if ( !str.equals(e.text )){
-											
-												// tidy up from multi-line flattening
-											
-											while( str.contains( ",," )){
-												str = str.replace( ",,", "," );
-											}
-											
-											str = str.trim();
-											
-											while( str.endsWith( "," )){
-												str = str.substring( 0, str.length()-1).trim();
-											}
-											
-											while ( str.startsWith( "," )){
-												str = str.substring(1).trim();
-											}
-										}
-										
-										e.text = str;
-									}
-								});
+						String str = getMyPeerDetails( man );
 						
-						entryWindow.prompt(
-								new UIInputReceiverListener()
-								{
-									@Override
-									public void
-									UIInputReceiverClosed(
-											UIInputReceiver entryWindow)
-									{
-										if ( !entryWindow.hasSubmittedInput()){
-
-											return;
-										}
-
-										String sReturn = entryWindow.getSubmittedInput();
-
-										if ( sReturn == null ){
-
-											return;
-										}
-
-										COConfigurationManager.setParameter( "add.peers.default", sReturn );
-
-										PEPeerManager pm = man.getPeerManager();
-
-										if ( pm == null ){
-
-											return;
-										}
-
-										Utils.getOffOfSWTThread(
-											new AERunnable(){
-												
-												@Override
-												public void runSupport()
-												{
-													String[] bits = sReturn.replace(';', ',' ).split( "," );
-			
-													for  ( String bit: bits ){
-			
-														bit = bit.trim();
-			
-														if ( bit.isEmpty()){
-															
-															continue;
-														}
-														
-														int	pos = bit.lastIndexOf( ':' );
-			
-														if ( pos != -1 ){
-			
-															String host = bit.substring( 0, pos ).trim();
-															String port = bit.substring( pos+1 ).trim();
-			
-															try{
-																int	i_port = Integer.parseInt( port );
-			
-																pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
-			
-															}catch( Throwable e ){
-			
-															}
-														}else{
-			
-															pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
-														}
-													}
-												}
-											});
-									}
-								});
+						for ( PEPeer peer: peers ){
+							
+							int port = peer.getTCPListenPort();
+							
+							if ( port > 0 ){
+								
+								String address = peer.getIp() + ":" + port;
+								
+								str += (str.isEmpty()?"":",") + address;
+							}
+						}
+						
+						if ( str.isEmpty()){
+							
+							str = "<no usable peers>";
+						}
+						
+						ClipboardCopy.copyToClipBoard( str );
 					}
 				});
-
+			
+			MenuItem add_peers_item = new MenuItem( menu, SWT.PUSH );
+	
+			Messages.setLanguageText( add_peers_item, "menu.add.peers");
+	
+			add_peers_item.addListener(
+					SWT.Selection,
+					new Listener()
+					{
+						@Override
+						public void
+						handleEvent(
+								Event event)
+						{
+							SimpleTextEntryWindow entryWindow = new SimpleTextEntryWindow(
+									"dialog.add.peers.title",
+									"dialog.add.peers.msg");
+	
+							String def = COConfigurationManager.getStringParameter( "add.peers.default", "" );
+	
+							entryWindow.setPreenteredText( String.valueOf( def ), false );
+							
+							entryWindow.addVerifyListener(
+						    		new VerifyListener(){
+										
+										@Override
+										public void verifyText(VerifyEvent e){
+											String str = e.text.replaceAll( "[\\r\\n]+", "," );
+											
+											if ( !str.equals(e.text )){
+												
+													// tidy up from multi-line flattening
+												
+												while( str.contains( ",," )){
+													str = str.replace( ",,", "," );
+												}
+												
+												str = str.trim();
+												
+												while( str.endsWith( "," )){
+													str = str.substring( 0, str.length()-1).trim();
+												}
+												
+												while ( str.startsWith( "," )){
+													str = str.substring(1).trim();
+												}
+											}
+											
+											e.text = str;
+										}
+									});
+							
+							entryWindow.prompt(
+									new UIInputReceiverListener()
+									{
+										@Override
+										public void
+										UIInputReceiverClosed(
+												UIInputReceiver entryWindow)
+										{
+											if ( !entryWindow.hasSubmittedInput()){
+	
+												return;
+											}
+	
+											String sReturn = entryWindow.getSubmittedInput();
+	
+											if ( sReturn == null ){
+	
+												return;
+											}
+	
+											COConfigurationManager.setParameter( "add.peers.default", sReturn );
+	
+											PEPeerManager pm = man.getPeerManager();
+	
+											if ( pm == null ){
+	
+												return;
+											}
+	
+											Utils.getOffOfSWTThread(
+												new AERunnable(){
+													
+													@Override
+													public void runSupport()
+													{
+														String[] bits = sReturn.replace(';', ',' ).split( "," );
+				
+														for  ( String bit: bits ){
+				
+															bit = bit.trim();
+				
+															if ( bit.isEmpty()){
+																
+																continue;
+															}
+															
+															int	pos = bit.lastIndexOf( ':' );
+				
+															if ( pos != -1 ){
+				
+																String host = bit.substring( 0, pos ).trim();
+																String port = bit.substring( pos+1 ).trim();
+				
+																try{
+																	int	i_port = Integer.parseInt( port );
+				
+																	pm.addPeer( host, i_port, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+				
+																}catch( Throwable e ){
+				
+																}
+															}else{
+				
+																pm.addPeer( bit, 6881, 0, NetworkManager.getCryptoRequired( NetworkManager.CRYPTO_OVERRIDE_NONE ), null );
+															}
+														}
+													}
+												});
+										}
+									});
+						}
+					});
+			}
+		}
+		
+		SpeedLimitHandler slh = SpeedLimitHandler.getSingleton(CoreFactory.getSingleton());
+		
+		List<SpeedLimitHandler.PeerSet> peer_sets = slh.getPeerSets();
+		
+		boolean	has_auto = false;
+		
+		for ( SpeedLimitHandler.PeerSet peer_set: peer_sets ){
+		
+			Pattern pattern = peer_set.getClientPattern();
+			
+			if ( pattern != null ){
+				
+				if ( pattern.pattern().equals( "auto" )){
+		
+					has_auto = true;
+				}
+			}
+		}
+		
+		if ( has_auto ){
+			
+			MenuItem edit_slh_item = new MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText( edit_slh_item, "menu.edit.peer.set.config");
+	
+			edit_slh_item.addListener(
+				SWT.Selection,
+				(e)->{
+					Utils.editSpeedLimitHandlerConfig( slh );
+				});
+			
+		}else{
+			
+			MenuItem auto_cat_item = new MenuItem( menu, SWT.PUSH );
+			
+			Messages.setLanguageText( auto_cat_item, "menu.add.auto.client.peerset");
+	
+			auto_cat_item.addListener(
+				SWT.Selection,
+				(e)->{
+					slh.addConfigLine( "peer_set Auto=all,client=auto", true );
+				});
+		}
+		
 		return( true );
 	}
 	

@@ -2001,7 +2001,7 @@ public class TorrentUtil
 					public void handleEvent(Event arg0) {
 						slh.addDownloadsToProfile(p, dm_hashes);
 
-						MenuFactory.showText("MainWindow.menu.speed_limits.info.title",
+						Utils.showText("MainWindow.menu.speed_limits.info.title",
 								MessageText.getString("MainWindow.menu.speed_limits.info.prof",
 										new String[] {
 											p
@@ -2037,7 +2037,7 @@ public class TorrentUtil
 					public void handleEvent(Event arg0) {
 						slh.removeDownloadsFromProfile(p, dm_hashes);
 
-						MenuFactory.showText("MainWindow.menu.speed_limits.info.title",
+						Utils.showText("MainWindow.menu.speed_limits.info.title",
 								MessageText.getString("MainWindow.menu.speed_limits.info.prof",
 										new String[] {
 											p

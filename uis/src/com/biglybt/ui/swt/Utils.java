@@ -56,6 +56,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogEvent;
 import com.biglybt.core.logging.LogIDs;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.speedmanager.SpeedLimitHandler;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -4577,5 +4578,101 @@ public class Utils
 		}
 		
 		return( is_dark_appearance );
+	}
+	
+	public static void
+	editSpeedLimitHandlerConfig(
+		SpeedLimitHandler		slh )
+	{
+		Utils.execSWTThreadLater(
+				1,
+				new Runnable()
+				{
+					@Override
+					public void
+					run()
+					{
+						java.util.List<String> lines = slh.getSchedule();
+
+						StringBuilder text = new StringBuilder( 80*lines.size());
+
+						for ( String s: lines ){
+
+							if ( text.length() > 0 ){
+
+								text.append( "\n" );
+							}
+
+							text.append( s );
+						}
+
+						final TextViewerWindow viewer =
+							new TextViewerWindow(
+								"MainWindow.menu.speed_limits.schedule.title",
+								"MainWindow.menu.speed_limits.schedule.msg",
+								text.toString(), false );
+
+						viewer.setEditable( true );
+
+						viewer.addListener(
+							new TextViewerWindow.TextViewerWindowListener()
+							{
+								@Override
+								public void
+								closed()
+								{
+									if ( viewer.getOKPressed()){
+										
+										String text = viewer.getText();
+
+										String[] lines = text.split( "\n" );
+
+										java.util.List<String> updated_lines = new ArrayList<>( Arrays.asList( lines ));
+
+										java.util.List<String> result = slh.setSchedule( updated_lines );
+
+										if ( result != null && result.size() > 0 ){
+
+											showText(
+													"MainWindow.menu.speed_limits.schedule.title",
+													"MainWindow.menu.speed_limits.schedule.err",
+													result );
+										}
+									}
+								}
+							});
+					}
+				});
+	}
+	
+	public static void
+	showText(
+		final String					title,
+		final String					message,
+		final java.util.List<String>	lines )
+	{
+		Utils.execSWTThreadLater(
+			1,
+			new Runnable()
+			{
+				@Override
+				public void
+				run()
+				{
+					StringBuilder text = new StringBuilder( lines.size() * 80 );
+
+					for ( String s: lines ){
+
+						if ( text.length() > 0 ){
+							text.append( "\n" );
+						}
+						text.append( s );
+					}
+
+					TextViewerWindow viewer = new TextViewerWindow(title, message, text.toString(), false );
+
+					viewer.setEditable( false );
+				}
+			});
 	}
 }
