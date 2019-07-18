@@ -3491,7 +3491,7 @@ DownloadManagerImpl
 			listeners_mon.exit();
 		}
 
-		requestAssumedCompleteMode( true );
+		requestAssumedCompleteMode( files.size() > 0 );
 	}
 
 	protected void
