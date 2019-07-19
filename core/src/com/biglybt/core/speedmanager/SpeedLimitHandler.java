@@ -2192,7 +2192,7 @@ SpeedLimitHandler
 										try{
 											Pattern pattern = Pattern.compile( "^\\Q" + name + "\\E.*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE  );
 											
-											set.setParameters( false, 0, 0, 0, 0, new HashSet<String>(), pattern );
+											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern );
 											
 											set.addCIDRorCCetc( "all" );
 																						
