@@ -43,8 +43,6 @@ public class ConfigSectionFile
 
 	public static final String REFID_TORRENT_ADD_AUTO_SKIP = "torrent-add-auto-skip";
 
-	public static final String REFID_TORRENT_ADD_AUTO_TAG = "torrent-add-auto-tag";
-
 	public ConfigSectionFile() {
 		super(ConfigSection.SECTION_FILES, ConfigSection.SECTION_ROOT);
 	}
@@ -408,80 +406,6 @@ public class ConfigSectionFile
 
 		add(new BooleanParameterImpl(BCFG_DOWNLOAD_HISTORY_ENABLED,
 				"ConfigView.label.record.dl.history"));
-
-		// auto tag group
-
-		List<Parameter> listAutoTag = new ArrayList<>();
-
-		BooleanParameterImpl auto_tag_enable = new BooleanParameterImpl(
-				BCFG_FILES_AUTO_TAG_ENABLE, "label.enable.auto.tagging");
-		add(auto_tag_enable, listAutoTag);
-
-		// filler
-		add("f0", new LabelParameterImpl(""), listAutoTag);
-
-		int num_tags = COConfigurationManager.getIntParameter(
-				ICFG_FILES_AUTO_TAG_COUNT, 1);
-
-		for (int i = 0; i < num_tags; i++) {
-
-			StringParameterImpl tagExts = new StringParameterImpl(
-					SCFG_PREFIX_FILE_AUTO_TAG_EXTS + (i == 0 ? "" : (" " + i)),
-					"ConfigView.label.file.exts");
-			add(tagExts, listAutoTag);
-
-			StringParameterImpl tagParam = new StringParameterImpl(
-					SCFG_PREFIX_FILE_AUTO_TAG_NAME + (i == 0 ? "" : (" " + i)),
-					"label.assign.to.tag");
-			add(tagParam, listAutoTag);
-			tagParam.setWidthInCharacters(15);
-		}
-
-		// select best
-
-		BooleanParameterImpl auto_tag_best = new BooleanParameterImpl(
-				BCFG_FILES_AUTO_TAG_BEST_SIZE, "ConfigView.label.auto.tag.best.size");
-		add(auto_tag_best, listAutoTag);
-
-		// filler
-		add("f1", new LabelParameterImpl(""), listAutoTag);
-
-		// default
-
-		LabelParameterImpl autoTagNoMatchInfo = new LabelParameterImpl(
-				"label.assign.to.tag.default");
-		add(autoTagNoMatchInfo, listAutoTag);
-
-		StringParameterImpl tagParam = new StringParameterImpl(
-				SCFG_FILE_AUTO_TAG_NAME_DEFAULT, "label.assign.to.tag");
-		add(tagParam, listAutoTag);
-
-		// add another tag
-
-		ActionParameterImpl addButton = new ActionParameterImpl(null,
-				"ConfigView.label.addanothertag");
-		add("addButton", addButton, listAutoTag);
-
-		addButton.addListener(param -> {
-
-			int num = COConfigurationManager.getIntParameter(
-					ICFG_FILES_AUTO_TAG_COUNT, 1);
-
-			COConfigurationManager.setParameter(ICFG_FILES_AUTO_TAG_COUNT, num + 1);
-
-			requestRebuild();
-		});
-
-		add("f2", new LabelParameterImpl(""), listAutoTag);
-
-		ParameterGroupImpl pgAutoTagging = new ParameterGroupImpl(
-				"label.auto.tagging", listAutoTag);
-		add("pgAutoTagging", pgAutoTagging);
-		pgAutoTagging.setNumberOfColumns(2);
-		pgAutoTagging.setReferenceID(REFID_TORRENT_ADD_AUTO_TAG);
-
-		auto_tag_enable.addEnabledOnSelection(
-				listAutoTag.subList(1, listAutoTag.size()).toArray(new Parameter[0]));
 
 		// ignore group
 

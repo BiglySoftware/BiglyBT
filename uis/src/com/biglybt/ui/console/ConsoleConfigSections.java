@@ -78,6 +78,7 @@ public class ConsoleConfigSections
 			new ConfigSectionFilePerformance(),
 //		  new ConfigSectionInterfaceSWT(),
 			new ConfigSectionInterfaceLanguage(),
+			new ConfigSectionInterfaceTags(),
 //			  new ConfigSectionInterfaceStartSWT(),
 //			  new ConfigSectionInterfaceDisplaySWT(),
 //			  new ConfigSectionInterfaceTablesSWT(),

@@ -72,6 +72,7 @@ import com.biglybt.ui.common.table.TableViewFilterCheck;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.config.ConfigSectionFile;
+import com.biglybt.ui.config.ConfigSectionInterfaceTags;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
@@ -106,6 +107,7 @@ import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.ipc.IPCInterface;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 
@@ -5461,13 +5463,13 @@ public class OpenTorrentOptionsWindow
 
 								JSONObject args = new JSONObject();
 
-								args.put( "select", ConfigSectionFile.REFID_TORRENT_ADD_AUTO_TAG);
+								args.put( "select", ConfigSectionInterfaceTags.REFID_TORRENT_ADD_AUTO_TAG);
 								
 								String args_str = JSONUtils.encodeToJSON( args );
 								
 								uif.getMDI().showEntryByID(
 										MultipleDocumentInterface.SIDEBAR_SECTION_CONFIG,
-										"files" + args_str );
+										ConfigSectionInterfaceTags.SECTION_ID + args_str );
 							}
 						}
 					});

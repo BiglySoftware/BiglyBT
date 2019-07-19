@@ -21,25 +21,16 @@ package com.biglybt.ui.swt.views.configsections;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pifimpl.local.ui.config.BooleanParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.ParameterGroupImpl;
-import com.biglybt.ui.config.ConfigSectionImpl;
+import com.biglybt.ui.config.ConfigSectionInterfaceTags;
 import com.biglybt.ui.swt.Utils;
 
 public class 
 ConfigSectionInterfaceTagsSWT
-	extends ConfigSectionImpl
+	extends ConfigSectionInterfaceTags
 {
-	public static final String SECTION_ID = "Tags";
-
-	public 
-	ConfigSectionInterfaceTagsSWT() 
-	{
-		super(	SECTION_ID, ConfigSection.SECTION_INTERFACE, Parameter.MODE_BEGINNER );
-	}
-
 	@Override
 	public void 
 	build() 
@@ -110,5 +101,6 @@ ConfigSectionInterfaceTagsSWT
 		add(new ParameterGroupImpl("ConfigView.section.style.library",
 				listLibrary));
 
+		super.build();
 	}
 }
