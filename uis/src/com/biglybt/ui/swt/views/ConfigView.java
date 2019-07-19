@@ -368,6 +368,7 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
                                          new ConfigSectionInterfaceLanguageSWT(),
                                          new ConfigSectionInterfaceStartSWT(),
                                          new ConfigSectionInterfaceDisplaySWT(),
+                                         new ConfigSectionInterfaceTagsSWT(),
                                          new ConfigSectionInterfaceTablesSWT(),
                                          new ConfigSectionInterfaceColorSWT(),
                                          new ConfigSectionInterfaceAlertsSWT(),

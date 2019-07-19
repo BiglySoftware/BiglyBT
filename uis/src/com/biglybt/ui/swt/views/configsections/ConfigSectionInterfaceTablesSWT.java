@@ -234,58 +234,7 @@ public class ConfigSectionInterfaceTablesSWT
 
 			add(new BooleanParameterImpl("Library.EnableSimpleView",
 					"ConfigView.section.style.EnableSimpleView"), listLibrary);
-
-			add(new BooleanParameterImpl("Library.CatInSideBar",
-					"ConfigView.section.style.CatInSidebar"), listLibrary);
 		}
-
-		add(new BooleanParameterImpl("Library.ShowCatButtons",
-				"ConfigView.section.style.ShowCatButtons"), listLibrary);
-
-		if (isAZ3) {
-			
-			BooleanParameterImpl show_tags = new BooleanParameterImpl(
-					"Library.TagInSideBar", "ConfigView.section.style.TagInSidebar");
-			add(show_tags, listLibrary);
-		
-			BooleanParameterImpl show_tag_groups = new BooleanParameterImpl(
-					"Library.TagGroupsInSideBar",
-					"ConfigView.section.style.TagGroupsInSidebar");
-			add(show_tag_groups, listLibrary);
-			
-			show_tag_groups.setIndent(1, true);
-
-			show_tags.addEnabledOnSelection(show_tag_groups);
-		}else{
-			
-			BooleanParameterImpl show_tags = new BooleanParameterImpl(
-					"Library.TagInTabBar", "ConfigView.section.style.TagInTabbar");
-			add(show_tags, listLibrary);
-
-		}
-
-		BooleanParameterImpl show_tag = new BooleanParameterImpl(
-				"Library.ShowTagButtons", "ConfigView.section.style.ShowTagButtons");
-		add(show_tag, listLibrary);
-
-		BooleanParameterImpl show_tag_comp_only = new BooleanParameterImpl(
-				"Library.ShowTagButtons.CompOnly",
-				"ConfigView.section.style.ShowTagButtons.CompOnly");
-		add(show_tag_comp_only, listLibrary);
-		show_tag_comp_only.setIndent(1, true);
-
-		BooleanParameterImpl tag_inclusive = new BooleanParameterImpl(
-				"Library.ShowTagButtons.Inclusive",
-				"ConfigView.section.style.ShowTagButtons.Inclusive");
-		add(tag_inclusive, listLibrary);
-		tag_inclusive.setIndent(1, true);
-
-		show_tag.addEnabledOnSelection(show_tag_comp_only, tag_inclusive);
-
-		BooleanParameterImpl col_config = new BooleanParameterImpl(
-				"Library.EnableSepColConfig",
-				"ConfigView.section.style.enableSeparateColConfig");
-		add(col_config, listLibrary);
 		
 		add(new BooleanParameterImpl("Library.ShowTabsInTorrentView",
 				"ConfigView.section.style.ShowTabsInTorrentView"), listLibrary);
