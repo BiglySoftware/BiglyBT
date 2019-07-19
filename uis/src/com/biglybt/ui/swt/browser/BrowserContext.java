@@ -971,7 +971,7 @@ public class BrowserContext
 				
 				for ( String h: popoutWhitelist ) {
 					
-					if ( host.endsWith( h )) {
+					if ( host.endsWith( h ) || ( h.startsWith( "." ) && host.equals( h.substring(1)))) {
 						
 						on_whitelist = true;
 						
@@ -995,7 +995,9 @@ public class BrowserContext
 				
 				for ( String h: popoutBlacklist ) {
 					
-					if ( h.equals( "*" ) || host.endsWith( h )) {
+					if ( 	h.equals( "*" ) || 
+							host.endsWith( h ) ||
+							( h.startsWith( "." ) && host.equals( h.substring(1)))) {
 						
 						on_blacklist = true;
 						
