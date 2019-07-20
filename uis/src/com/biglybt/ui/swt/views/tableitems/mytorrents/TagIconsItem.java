@@ -77,7 +77,7 @@ public class TagIconsItem
 		String sTags = null;
 		DownloadManager dm = (DownloadManager)cell.getDataSource();
 		if (dm != null) {
-			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
+			List<Tag> tags = tag_manager.getTagsForTaggable( new int[]{ TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_STATE }, dm );
 
 			if ( tags.size() > 0 ){
 
@@ -114,7 +114,7 @@ public class TagIconsItem
 
 		if (dm != null) {
 
-			List<Tag> tags = tag_manager.getTagsForTaggable( TagType.TT_DOWNLOAD_MANUAL, dm );
+			List<Tag> tags = tag_manager.getTagsForTaggable( new int[]{ TagType.TT_DOWNLOAD_MANUAL, TagType.TT_DOWNLOAD_STATE }, dm );
 
 			tags = TagUtils.sortTagIcons( tags );
 			
