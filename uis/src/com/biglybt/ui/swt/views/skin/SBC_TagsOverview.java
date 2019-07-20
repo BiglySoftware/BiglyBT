@@ -1006,8 +1006,12 @@ public class SBC_TagsOverview
 				return;
 			}
 		}
+		
 		SelectedContentManager.clearCurrentlySelectedContent();
-		SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(), null, tv);
+
+		if ( tv != null ){
+			SelectedContentManager.changeCurrentlySelectedContent(tv.getTableID(), null, tv);
+		}
 	}
 
 

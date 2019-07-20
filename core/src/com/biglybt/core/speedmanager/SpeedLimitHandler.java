@@ -32,6 +32,7 @@ import com.biglybt.core.config.impl.TransferSpeedValidator;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerStats;
+import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.networkmanager.LimitedRateGroup;
 import com.biglybt.core.peer.PEPeer;
 import com.biglybt.core.peer.PEPeerManager;
@@ -2188,7 +2189,7 @@ SpeedLimitHandler
 										}
 									}
 									
-									String set_name = "Client_" + name;
+									String set_name = MessageText.getString( "Peers.column.client" ) + "_" + name;
 									
 									PeerSet set = current_ip_sets.get( set_name );
 									
@@ -2203,7 +2204,7 @@ SpeedLimitHandler
 											
 											set.addCIDRorCCetc( "all" );
 												
-											set.setGroup( "Client_Auto" );
+											set.setGroup( MessageText.getString( "Peers.column.client" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
 											
 											added.put( set_name, set );
 																						
@@ -5494,13 +5495,21 @@ SpeedLimitHandler
 				down_limiter.setRateLimitBytesPerSecond( COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + tag_id + ".down", 0 ));
 			}
 			
+			Tag	tag = tag_impl;
+
 			if ( group != null ){
-				
-				Tag	tag = tag_impl;
-				
+					
 				if ( tag != null ){
 					
 					tag.setGroup( group );
+				}
+			}
+			
+			if ( client_pattern != null && client_pattern.pattern().equals( "auto" )){
+				
+				if ( tag != null ){
+					
+					tag.setVisible( false );
 				}
 			}
 		}
@@ -5539,7 +5548,7 @@ SpeedLimitHandler
 			
 			if ( client_pattern != null && client_pattern.pattern().equals( "auto" )){
 				
-				setGroup( "Client_Auto" );
+				setGroup( MessageText.getString( "Peers.column.client" ) + "_" + MessageText.getString( "wizard.maketorrent.auto" ));
 			}
 		}
 

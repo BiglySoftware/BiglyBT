@@ -1877,17 +1877,13 @@ public class SB_Transfers
 		List<String>	tt_matches = new ArrayList<>();
 		
 		boolean	tt_matched = false;
-		
-		System.out.println( "Inserting " + name );
-		
+				
 		for ( MdiEntry kid: kids ){
 		
 			String kid_id = kid.getId();
 			
 			String title = kid.getTitle();
-			
-			System.out.println( "    " + title );
-			
+						
 			if ( kid_id.startsWith( tt_prefix )){
 					
 				tt_matches.add( kid_id );
