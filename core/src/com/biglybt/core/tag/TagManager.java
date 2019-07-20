@@ -47,9 +47,14 @@ TagManager
 
 	public List<Tag>
 	getTagsForTaggable(
-		int			tag_types,
+		int			tag_type,
 		Taggable	taggable );
 
+	public List<Tag>
+	getTagsForTaggable(
+		int[]		tag_types,
+		Taggable	taggable );
+	
 	public List<Tag>
 	getTagsByName(
 		String		name,

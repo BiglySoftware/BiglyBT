@@ -1582,36 +1582,30 @@ public class SideBar
 		if (GAP_BETWEEN_LEVEL_1 > 0 && parentTreeItem == null
 				&& tree.getItemCount() > 0 && index != 0) {
 			for (int i=0;i<GAP_BETWEEN_LEVEL_1;i++){
-				createTreeItem(null, index);
+				createTreeItem(null,null, index);
 				if (index >= 0) {
 					index++;
 				}
 			}
 		}
-		TreeItem treeItem = createTreeItem(parentTreeItem, index);
+		TreeItem treeItem = createTreeItem( entry, parentTreeItem, index);
 		if (treeItem != null) {
-			treeItem.setData("MdiEntry", entry);
-			entry.setTreeItem(treeItem);
 
 			triggerEntryLoadedListeners(entry);
 		}
 		if (GAP_BETWEEN_LEVEL_1 > 0 && parentTreeItem == null
 				&& tree.getItemCount() > 1 && index == 0) {
 			for (int i=0;i<GAP_BETWEEN_LEVEL_1;i++){
-				createTreeItem(null, ++index);
+				createTreeItem(null,null, ++index);
 			}
 		}
 	}
 
-	private TreeItem createTreeItem(Object parentSwtItem, int index) {
+	private TreeItem createTreeItem(SideBarEntrySWT entry, TreeItem parentSwtItem, int index) {
 		TreeItem treeItem;
 
-		if (parentSwtItem == null) {
-			parentSwtItem = tree;
-		}
-
-		if (parentSwtItem instanceof Tree) {
-			Tree tree = (Tree) parentSwtItem;
+		if (parentSwtItem == null ){
+		
 			if (tree.isDisposed()) {
 				return null;
 			}
@@ -1621,16 +1615,51 @@ public class SideBar
 				treeItem = new TreeItem(tree, SWT.NONE);
 			}
 		} else {
-			if (((TreeItem) parentSwtItem).isDisposed()) {
+			if (parentSwtItem.isDisposed()) {
+				
 				return null;
 			}
-			if (index >= 0 && index < ((TreeItem) parentSwtItem).getItemCount()) {
-				treeItem = new TreeItem((TreeItem) parentSwtItem, SWT.NONE, index);
+			
+			if (index >= 0 && index < parentSwtItem.getItemCount()) {
+				treeItem = new TreeItem( parentSwtItem, SWT.NONE, index);
 			} else {
-				treeItem = new TreeItem((TreeItem) parentSwtItem, SWT.NONE);
+				treeItem = new TreeItem( parentSwtItem, SWT.NONE);
 			}
 		}
 
+		if ( entry != null ){
+			
+			treeItem.setData("MdiEntry", entry);
+			
+			entry.setTreeItem(treeItem);
+			
+			/*
+			TreeItem[] items = parentSwtItem==null?tree.getItems():parentSwtItem.getItems();
+			
+			boolean update = false;
+			
+			for ( int i=0;i<items.length;i++){
+				
+				TreeItem item = items[i];
+				
+				if ( !update ){
+					
+					update = item == treeItem;
+				}
+				
+				if ( update ){
+					
+					SideBarEntrySWT e = (SideBarEntrySWT) item.getData("MdiEntry");
+					
+					if ( e != null ){
+						
+						e.setPosition( i );
+					}
+				}
+			}
+			*/
+		}
+		
 		return treeItem;
 	}
 

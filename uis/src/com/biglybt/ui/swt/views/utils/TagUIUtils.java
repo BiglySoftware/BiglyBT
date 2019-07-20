@@ -2823,7 +2823,7 @@ public class TagUIUtils
 				
 				item_group.setText( g.getName());
 				
-				item_group.setSelection( g.equals( existing_group ));
+				item_group.setSelection( g.getName().equals( existing_group ));
 				
 				item_group.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event){

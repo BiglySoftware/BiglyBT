@@ -91,10 +91,11 @@ import com.biglybt.ui.swt.views.utils.TagUIUtils;
  */
 public class SB_Transfers
 {
-	private static final Object AUTO_CLOSE_KEY 		= new Object();
-	private static final Object TAG_DATA_KEY		= new Object();
-	private static final Object TAG_INDICATOR_KEY	= new Object();
-	private static final Object TAG_IMAGE_KEY		= new Object();
+	private static final Object AUTO_CLOSE_KEY 			= new Object();
+	private static final Object TAG_TAG_OR_GROUP_KEY	= new Object();
+	private static final Object TAG_DATA_KEY			= new Object();
+	private static final Object TAG_INDICATOR_KEY		= new Object();
+	private static final Object TAG_IMAGE_KEY			= new Object();
 
 	private static final String ID_VITALITY_ACTIVE = "image.sidebar.vitality.dl";
 
@@ -1507,9 +1508,11 @@ public class SB_Transfers
 			 * Can get hit here concurrently due to various threads interacting with tags...
 			 */
 
+		int tag_type = tag.getTagType().getTagType();
+		
 		synchronized( tag_setup_lock ){
 
-			String id = "Tag." + tag.getTagType().getTagType() + "." + tag.getTagID();
+			String id = "Tag." + tag_type + "." + tag.getTagID();
 
 			String parent_id = MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS;
 			
@@ -1521,9 +1524,9 @@ public class SB_Transfers
 				
 				if ( tag_group != null && !tag_group.isEmpty()){
 					
-					if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD ){
+					if ( tag.getTaggableTypes() == Taggable.TT_DOWNLOAD || tag.getTaggableTypes() == Taggable.TT_PEER ){
 						
-						group_id = "Tag." + tag.getTagType().getTagType() + ".group." + tag_group;
+						group_id = "Tag." + tag_type + ".group." + tag_group;
 						
 						if ( mdi.getEntry( group_id ) == null ){
 						
@@ -1557,53 +1560,14 @@ public class SB_Transfers
 									
 									// find where to locate this in the sidebar
 
-							TreeMap<String,String>	name_map = new TreeMap<>(FormattersImpl.getAlphanumericComparator2(true));
-
-							name_map.put( tag_group, group_id );
-
-							List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
-							
-							List<String>	kid_ids = new ArrayList<>();
-							
-							for ( MdiEntry kid: kids ){
-								
-								String prefix = "Tag." + tag.getTagType().getTagType() + ".group.";
-								
-								String kid_id = kid.getId();
-
-								if ( kid_id.startsWith( prefix )){
-									
-									kid_ids.add( kid_id );
-									
-									name_map.put( kid_id.substring( prefix.length()), kid_id );
-								}
-							}
-
-							String	prev_id = null;
-
-							for ( String this_id: name_map.values()){
-
-								if ( this_id == group_id ){
-
-									break;
-								}
-
-								prev_id = this_id;
-							}
-
-							if ( prev_id == null && name_map.size() > 1 ){
-
-								Iterator<String>	it = name_map.values().iterator();
-
-								it.next();
-
-								prev_id = "~" + it.next();
-							}
+							String prev_id = getPosition( mdi, parent_id, tag_type, tag_group );
 							
 							MdiEntry entry = mdi.createEntryFromSkinRef(
 									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), false, prev_id );
 							
 							setTagIcon( tag, entry, true );
+							
+							entry.setUserData( TAG_TAG_OR_GROUP_KEY, tag.getGroupContainer());
 							
 							if ( entry instanceof SideBarEntrySWT ){
 								final SideBarEntrySWT entrySWT = (SideBarEntrySWT) entry;
@@ -1633,53 +1597,9 @@ public class SB_Transfers
 
 			
 				// find where to locate this in the sidebar
-
-			TreeMap<Tag,String>	name_map = new TreeMap<>(TagUtils.getTagComparator());
-
-			name_map.put( tag, id );
-
-			for ( Tag t: tag.getTagType().getTags()){
-
-				if ( t.isVisible()){
-
-					String tid = "Tag." + tag.getTagType().getTagType() + "." + t.getTagID();
-
-					MdiEntry entry = mdi.getEntry( tid );
-					
-					if ( entry  != null ){
-
-						String this_group = t.getGroup();
-						
-						if ( 	( group_id == null && ( this_group==null || this_group.isEmpty() )) ||
-								( group_id != null && entry.getParentID().equals( group_id ))){
-						
-							name_map.put( t, tid );
-						}
-					}
-				}
-			}
-
-			String	prev_id = null;
-
-			for ( String this_id: name_map.values()){
-
-				if ( this_id == id ){
-
-					break;
-				}
-
-				prev_id = this_id;
-			}
-
-			if ( prev_id == null && name_map.size() > 1 ){
-
-				Iterator<String>	it = name_map.values().iterator();
-
-				it.next();
-
-				prev_id = "~" + it.next();
-			}
-
+			
+			String prev_id = getPosition( mdi, parent_id, tag_type, tag.getTagName( true ));
+			
 			boolean auto = tag.getTagType().isTagTypeAuto();
 
 			ViewTitleInfo viewTitleInfo =
@@ -1743,6 +1663,8 @@ public class SB_Transfers
 				entry.setViewTitleInfo( viewTitleInfo );
 			}
 
+			entry.setUserData( TAG_TAG_OR_GROUP_KEY, tag );
+			
 			if ( closable ){
 
 				entry.addListener(
@@ -1764,7 +1686,7 @@ public class SB_Transfers
 									
 									String parent_id = entry.getParentID();
 									
-									if ( parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." )){
+									if ( parent_id.startsWith( "Tag." + tag_type + ".group." )){
 										
 										if ( mdi.getChildrenOf( parent_id ).isEmpty()){
 											
@@ -1904,6 +1826,104 @@ public class SB_Transfers
 	}
 
 	private void
+	sort(
+		List<MdiEntry>	entries )
+	{
+		// due to async/swt-thread nature of tree construction we can't get an accurate list
+		// of existing tree items without forcing swt sync which messes up other crud
+		// so reconstruct the order here so we can insert new items based on this
+		
+		Comparator<String> comp = FormattersImpl.getAlphanumericComparator2(true);
+		
+		Collections.sort(
+			entries,
+			( m1, m2 )->{
+				
+				Object o1 = m1.getUserData( TAG_TAG_OR_GROUP_KEY );
+				Object o2 = m2.getUserData( TAG_TAG_OR_GROUP_KEY );
+				
+				if ( o1 == o2 ){
+					return( 0 );
+				}else if ( o1 == null ){
+					return( 1 );
+				}else if ( o2 == null ){
+					return( -1 );
+				}else{
+					String s1 = o1 instanceof Tag?((Tag)o1).getTagName( true ):((TagGroup)o1).getName();
+					String s2 = o2 instanceof Tag?((Tag)o2).getTagName( true ):((TagGroup)o2).getName();
+					
+					return( comp.compare( s1, s2 ));
+				}
+			});
+	}
+	
+	private String
+	getPosition(
+		MultipleDocumentInterfaceSWT		mdi,
+		String								parent_id,
+		int									tag_type,
+		String								name)
+	{
+		String	prev_id = null;
+
+		List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
+		
+		sort( kids );
+
+		Comparator<String> comp = FormattersImpl.getAlphanumericComparator2(true);
+		
+		String tt_prefix = "Tag." + tag_type + ".";
+				
+		List<String>	tt_matches = new ArrayList<>();
+		
+		boolean	tt_matched = false;
+		
+		System.out.println( "Inserting " + name );
+		
+		for ( MdiEntry kid: kids ){
+		
+			String kid_id = kid.getId();
+			
+			String title = kid.getTitle();
+			
+			System.out.println( "    " + title );
+			
+			if ( kid_id.startsWith( tt_prefix )){
+					
+				tt_matches.add( kid_id );
+
+				if ( comp.compare( title, name ) > 0 ){
+					
+					tt_matched = true;
+					
+					break;
+				}
+			}
+		}
+		
+		int tt_match_count = tt_matches.size();
+		
+		if ( tt_match_count == 0 ){
+			
+		}else if ( tt_matched ){
+			
+			if ( tt_match_count == 1 ){
+				
+				prev_id = "~" + tt_matches.get( 0 );
+				
+			}else{
+				
+				prev_id = tt_matches.get( tt_match_count - 2  );
+			}
+		}else{
+			
+			prev_id = tt_matches.get(  tt_match_count -1 );
+		}
+		
+		return( prev_id );
+	}
+	
+	private void
 	removeTag(
 		Tag tag ) 
 	{
@@ -1914,9 +1934,11 @@ public class SB_Transfers
 			return;
 		}
 
+		int tag_type = tag.getTagType().getTagType();
+		
 		synchronized( tag_setup_lock ){
 			
-			MdiEntry entry = mdi.getEntry("Tag." + tag.getTagType().getTagType() + "." + tag.getTagID());
+			MdiEntry entry = mdi.getEntry("Tag." + tag_type + "." + tag.getTagID());
 	
 			if (entry != null) {
 	
@@ -1928,7 +1950,7 @@ public class SB_Transfers
 				
 					String parent_id = entry.getParentID();
 					
-					if ( parent_id.startsWith( "Tag." + tag.getTagType().getTagType() + ".group." )){
+					if ( parent_id.startsWith( "Tag." + tag_type + ".group." )){
 						
 						if ( mdi.getChildrenOf( parent_id ).isEmpty()){
 							

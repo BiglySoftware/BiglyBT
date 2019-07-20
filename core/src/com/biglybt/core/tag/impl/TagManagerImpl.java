@@ -1642,14 +1642,14 @@ TagManagerImpl
 	@Override
 	public List<Tag>
 	getTagsForTaggable(
-		int			tts,
+		int			tag_type,
 		Taggable	taggable )
 	{
 		Set<Tag>	result = new HashSet<>();
 
 		for ( TagType tt: tag_types ){
 
-			if ( tt.getTagType() == tts ){
+			if ( tt.getTagType() == tag_type ){
 
 				result.addAll( tt.getTagsForTaggable( taggable ));
 			}
@@ -1658,6 +1658,32 @@ TagManagerImpl
 		return(new ArrayList<>(result));
 	}
 
+	@Override
+	public List<Tag>
+	getTagsForTaggable(
+		int[]		tts,
+		Taggable	taggable )
+	{
+		Set<Tag>	result = new HashSet<>();
+
+		Set<Integer>	tt_set = new HashSet<>();
+		
+		for ( int tt: tts ){
+			
+			tt_set.add( tt );
+		}
+		
+		for ( TagType tt: tag_types ){
+
+			if ( tt_set.contains( tt.getTagType())){
+
+				result.addAll( tt.getTagsForTaggable( taggable ));
+			}
+		}
+
+		return(new ArrayList<>(result));
+	}
+	
 	@Override
 	public List<Tag> 
 	getTagsByName(
