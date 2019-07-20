@@ -2172,15 +2172,22 @@ SpeedLimitHandler
 								
 								for ( String name: todo ){
 								
-									char c = name.charAt(0);
-									
-										// stupid micro lower/upper
-									
-									if ( c == '\u03bc' ){
+									if ( name.isEmpty()){
 										
-										name = '\u00B5' + name.substring( 1 );
+										name = "?";
+										
+									}else{
+										
+										char c = name.charAt(0);
+										
+											// stupid micro lower/upper
+										
+										if ( c == '\u03bc' ){
+											
+											name = '\u00B5' + name.substring( 1 );
+										}
 									}
-
+									
 									String set_name = "Client_" + name;
 									
 									PeerSet set = current_ip_sets.get( set_name );
@@ -2195,7 +2202,9 @@ SpeedLimitHandler
 											set.setParameters( false, -1, -1, 0, 0, new HashSet<String>(), pattern );
 											
 											set.addCIDRorCCetc( "all" );
-																						
+												
+											set.setGroup( "Client_Auto" );
+											
 											added.put( set_name, set );
 																						
 										}catch( Throwable e ){
@@ -5452,6 +5461,8 @@ SpeedLimitHandler
 
 		private Pattern			client_pattern;
 		
+		private String			group;
+		
 		private TagPeerImpl		tag_impl;
 
 		private
@@ -5481,6 +5492,16 @@ SpeedLimitHandler
 			if ( !has_explicit_down_lim ){
 
 				down_limiter.setRateLimitBytesPerSecond( COConfigurationManager.getIntParameter( "speed.limit.handler.ipset_n." + tag_id + ".down", 0 ));
+			}
+			
+			if ( group != null ){
+				
+				Tag	tag = tag_impl;
+				
+				if ( tag != null ){
+					
+					tag.setGroup( group );
+				}
 			}
 		}
 
@@ -5515,8 +5536,20 @@ SpeedLimitHandler
 			categories_or_tags = _cats_or_tags.size()==0?null:_cats_or_tags;
 			
 			client_pattern = _client_pattern;
+			
+			if ( client_pattern != null && client_pattern.pattern().equals( "auto" )){
+				
+				setGroup( "Client_Auto" );
+			}
 		}
 
+		private void
+		setGroup(
+			String	_group )
+		{
+			group = _group;
+		}
+		
 		public Pattern
 		getClientPattern()
 		{
