@@ -96,6 +96,7 @@ public class SB_Transfers
 	private static final Object TAG_DATA_KEY			= new Object();
 	private static final Object TAG_INDICATOR_KEY		= new Object();
 	private static final Object TAG_IMAGE_KEY			= new Object();
+	private static final Object CAT_KEY					= new Object();
 
 	private static final String ID_VITALITY_ACTIVE = "image.sidebar.vitality.dl";
 
@@ -1300,8 +1301,11 @@ public class SB_Transfers
 
 		String name = category.getName();
 		String id = "Cat." + Base32.encode(name.getBytes());
+		
+		String loc_name = name;
 		if (category.getType() != Category.TYPE_USER) {
 			name = "{" + name + "}";
+			loc_name = MessageText.getString( loc_name );
 		}
 
 		ViewTitleInfo viewTitleInfo = new ViewTitleInfo() {
@@ -1320,12 +1324,17 @@ public class SB_Transfers
 			}
 		};
 
+		String prev_id = getCatPosition( mdi, MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, loc_name );
+		
 		MdiEntry entry = mdi.createEntryFromSkinRef(
 				MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, id, "library",
-				name, viewTitleInfo, category, false, null);
+				name, viewTitleInfo, category, false, prev_id );
+		
 		if (entry != null) {
 			entry.setImageLeftID("image.sidebar.library");
 
+			entry.setUserData( CAT_KEY, category );
+			
 			addGeneralLibraryMenus( mdi, id );
 			
 			entry.addListener(new MdiEntryDropListener() {
@@ -1560,7 +1569,7 @@ public class SB_Transfers
 									
 									// find where to locate this in the sidebar
 
-							String prev_id = getPosition( mdi, parent_id, tag_type, tag_group );
+							String prev_id = getTagPosition( mdi, parent_id, tag_type, tag_group );
 							
 							MdiEntry entry = mdi.createEntryFromSkinRef(
 									parent_id, group_id, "library", tag_group, viewTitleInfo, tag.getGroupContainer(), false, prev_id );
@@ -1598,7 +1607,7 @@ public class SB_Transfers
 			
 				// find where to locate this in the sidebar
 			
-			String prev_id = getPosition( mdi, parent_id, tag_type, tag.getTagName( true ));
+			String prev_id = getTagPosition( mdi, parent_id, tag_type, tag.getTagName( true ));
 			
 			boolean auto = tag.getTagType().isTagTypeAuto();
 
@@ -1826,7 +1835,7 @@ public class SB_Transfers
 	}
 
 	private void
-	sort(
+	sortByTag(
 		List<MdiEntry>	entries )
 	{
 		// due to async/swt-thread nature of tree construction we can't get an accurate list
@@ -1858,7 +1867,7 @@ public class SB_Transfers
 	}
 	
 	private String
-	getPosition(
+	getTagPosition(
 		MultipleDocumentInterfaceSWT		mdi,
 		String								parent_id,
 		int									tag_type,
@@ -1868,7 +1877,7 @@ public class SB_Transfers
 
 		List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
 		
-		sort( kids );
+		sortByTag( kids );
 
 		Comparator<String> comp = FormattersImpl.getAlphanumericComparator2(true);
 		
@@ -1914,6 +1923,99 @@ public class SB_Transfers
 		}else{
 			
 			prev_id = tt_matches.get(  tt_match_count -1 );
+		}
+		
+		return( prev_id );
+	}
+	
+	private void
+	sortByCat(
+		List<MdiEntry>	entries )
+	{
+		// due to async/swt-thread nature of tree construction we can't get an accurate list
+		// of existing tree items without forcing swt sync which messes up other crud
+		// so reconstruct the order here so we can insert new items based on this
+		
+		Comparator<String> comp = FormattersImpl.getAlphanumericComparator2(true);
+		
+		Collections.sort(
+			entries,
+			( m1, m2 )->{
+				
+				Object o1 = m1.getUserData( CAT_KEY );
+				Object o2 = m2.getUserData( CAT_KEY );
+				
+				if ( o1 == o2 ){
+					return( 0 );
+				}else if ( o1 == null ){
+					return( 1 );
+				}else if ( o2 == null ){
+					return( -1 );
+				}else{
+					String s1 = m1.getTitle();
+					String s2 = m2.getTitle();
+					
+					return( comp.compare( s1, s2 ));
+				}
+			});
+	}
+	
+	private String
+	getCatPosition(
+		MultipleDocumentInterface		mdi,
+		String							parent_id,
+		String							name)
+	{
+		String	prev_id = null;
+
+		List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
+		
+		sortByCat( kids );
+
+		Comparator<String> comp = FormattersImpl.getAlphanumericComparator2(true);
+		
+		String prefix = "Cat.";
+				
+		List<String>	matches = new ArrayList<>();
+		
+		boolean	matched = false;
+				
+		for ( MdiEntry kid: kids ){
+		
+			String kid_id = kid.getId();
+			
+			String title = kid.getTitle();
+						
+			if ( kid_id.startsWith( prefix )){
+					
+				matches.add( kid_id );
+
+				if ( comp.compare( title, name ) > 0 ){
+					
+					matched = true;
+					
+					break;
+				}
+			}
+		}
+		
+		int match_count = matches.size();
+		
+		if ( match_count == 0 ){
+			
+		}else if ( matched ){
+			
+			if ( match_count == 1 ){
+				
+				prev_id = "~" + matches.get( 0 );
+				
+			}else{
+				
+				prev_id = matches.get( match_count - 2  );
+			}
+		}else{
+			
+			prev_id = matches.get(  match_count -1 );
 		}
 		
 		return( prev_id );
