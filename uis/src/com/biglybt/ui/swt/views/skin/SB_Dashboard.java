@@ -18,6 +18,7 @@
 
 package com.biglybt.ui.swt.views.skin;
 
+import java.util.List;
 import java.util.*;
 
 import org.eclipse.swt.SWT;
@@ -27,60 +28,21 @@ import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
-import org.eclipse.swt.events.MenuDetectEvent;
-import org.eclipse.swt.events.MenuDetectListener;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
-import org.eclipse.swt.events.PaintEvent;
-import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Canvas;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
-
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.BDecoder;
-import com.biglybt.core.util.BEncoder;
-import com.biglybt.core.util.CopyOnWriteList;
-import com.biglybt.core.util.Debug;
-import com.biglybt.core.util.SimpleTimer;
-import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.TimerEvent;
-import com.biglybt.core.util.TimerEventPerformer;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemFillListener;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
+import com.biglybt.core.util.*;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MdiEntryVitalityImage;
-import com.biglybt.ui.mdi.MdiEntryVitalityImageListener;
-import com.biglybt.ui.mdi.MdiListener;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.mdi.*;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
@@ -92,6 +54,17 @@ import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinObjectContainer;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
+import com.biglybt.util.MapUtils;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
+import com.biglybt.pif.ui.menus.MenuItemListener;
+import com.biglybt.pif.ui.menus.MenuManager;
 
 
 public class SB_Dashboard
@@ -332,7 +305,7 @@ public class SB_Dashboard
 	private void
 	addStartupItem()
 	{
-		String	starting_url = "https://github.com/BiglySoftware/BiglyBT/wiki/Dashboard";
+		String	starting_url = Constants.URL_WIKI + "w/Dashboard";
 		
 		Map<String,Object>	map = new HashMap<>();
 		
@@ -767,7 +740,13 @@ public class SB_Dashboard
 				// allow temporary removal of uids
 				
 				for ( Map map: item_list ) {
-					
+
+					// Hack to migrate dashboard wiki URL
+					if ("https://github.com/BiglySoftware/BiglyBT/wiki/Dashboard".equals(
+							MapUtils.getMapString(map, "data_source", ""))) {
+						map.put("data_source", Constants.URL_WIKI + "w/Dashboard");
+					}
+
 					DashboardItem item = new DashboardItem( map );
 					
 					items.add( item );
