@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: yo\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2019-07-29 23:01\n"
+"PO-Revision-Date: 2019-07-29 23:31\n"
 
 msgid "test"
 msgstr "Igbeyewo Ni Ede Geesi"
@@ -23,19 +23,19 @@ msgid "onlyEng"
 msgstr "No Ede Geesi Nikan"
 
 msgid "donation_line1"
-msgstr ""
+msgstr "Bi o ti le je pe BiglyBT je oja software ofe, o gba ohun to po lati se ati lati setoju. Ti o ba ro pe o ti je anfani nipa lilo re, jowo gbero lati se atileyin fun wa nipa okan ninu awon ona wonyi:"
 
 msgid "donation_title"
-msgstr ""
+msgstr "Se Atileyin Fun BiglyBT"
 
 msgid "donation_monthly_title"
-msgstr ""
+msgstr "O Seun Osoosu"
 
 msgid "donation_onetime_title"
-msgstr ""
+msgstr "Ore Eleyokan"
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
 msgstr ""
