@@ -559,7 +559,7 @@ public class PlatformMessenger
 		}
 
 		try{
-			PluginProxy 	plugin_proxy	= AEProxyFactory.getPluginProxy( "vuze settings", rpc_url, true );
+			PluginProxy 	plugin_proxy	= AEProxyFactory.getPluginProxy( Constants.APP_NAME + " settings", rpc_url, true );
 
 			if ( plugin_proxy == null ){
 
