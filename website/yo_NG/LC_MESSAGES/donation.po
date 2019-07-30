@@ -14,56 +14,56 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: yo\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2019-07-11 00:44\n"
+"PO-Revision-Date: 2019-07-29 23:51\n"
 
 msgid "test"
-msgstr ""
+msgstr "Igbeyewo Ni Ede Geesi"
 
 msgid "onlyEng"
-msgstr ""
+msgstr "No Ede Geesi Nikan"
 
 msgid "donation_line1"
-msgstr ""
+msgstr "Bi o ti le je pe BiglyBT je oja software ofe, o gba ohun to po lati se ati lati setoju. Ti o ba ro pe o ti je anfani nipa lilo re, jowo gbero lati se atileyin fun wa nipa okan ninu awon ona wonyi:"
 
 msgid "donation_title"
-msgstr ""
+msgstr "Se Atileyin Fun BiglyBT"
 
 msgid "donation_monthly_title"
-msgstr ""
+msgstr "O Seun Osoosu"
 
 msgid "donation_onetime_title"
-msgstr ""
+msgstr "Ore Eleyokan"
 
 msgid "donation_bitcoin_title"
-msgstr ""
+msgstr "Bitcoin"
 
 msgid "donation_monthly_description"
-msgstr ""
+msgstr "Fun awon olusekoodu ni kofi ni osoosu"
 
 msgid "donation_monthly_per_month"
-msgstr ""
+msgstr "/mo"
 
 msgid "donation_onetime_amount"
-msgstr ""
+msgstr "Iye (%1):"
 
 msgid "donation_onetime_description"
-msgstr ""
+msgstr "A moriri iye kiye :)"
 
 msgid "donation_bitcoin_description"
-msgstr ""
+msgstr "A daba itore %1, tabi %2, :)"
 
 msgid "donation_bitcoin_addresses"
-msgstr ""
+msgstr "Adiresi BCH/BTC/BSG/BSV:"
 
 msgid "donation_crypto_title"
-msgstr ""
+msgstr "Owo kiripito"
 
 msgid "donation_crypto_description"
-msgstr ""
+msgstr "Jeki a mo ti coin tabi token ti o yan laayo ko ba si ninu akojo a o se afikun Adiresi kan :)"
 
 msgid "no_thanks"
-msgstr ""
+msgstr "Rara O Se."
 
 msgid "close"
-msgstr ""
+msgstr "Pade"
 
