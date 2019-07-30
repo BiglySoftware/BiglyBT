@@ -14,13 +14,13 @@ msgstr ""
 "X-Crowdin-Project: biglybt\n"
 "X-Crowdin-Language: yo\n"
 "X-Crowdin-File: /plugins-l10n/website/en/LC_MESSAGES/donation.po\n"
-"PO-Revision-Date: 2019-07-29 23:51\n"
+"PO-Revision-Date: 2019-07-30 21:31\n"
 
 msgid "test"
 msgstr "Igbeyewo Ni Ede Geesi"
 
 msgid "onlyEng"
-msgstr "No Ede Geesi Nikan"
+msgstr "Ni Ede Geesi Nikan"
 
 msgid "donation_line1"
 msgstr "Bi o ti le je pe BiglyBT je oja software ofe, o gba ohun to po lati se ati lati setoju. Ti o ba ro pe o ti je anfani nipa lilo re, jowo gbero lati se atileyin fun wa nipa okan ninu awon ona wonyi:"
