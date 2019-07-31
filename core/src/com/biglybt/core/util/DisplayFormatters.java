@@ -888,7 +888,7 @@ DisplayFormatters
 				tmp = ManagerItem_allocating;
 				DiskManager diskManager = manager.getDiskManager();
 				if (diskManager != null){
-					tmp += ": " + formatPercentFromThousands( diskManager.getPercentDone());
+					tmp += ": " + formatPercentFromThousands( diskManager.getPercentAllocated());
 				}
 				break;
 			}

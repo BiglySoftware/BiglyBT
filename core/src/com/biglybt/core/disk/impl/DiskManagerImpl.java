@@ -196,13 +196,15 @@ DiskManagerImpl
 
     private boolean started = false;
     final AESemaphore started_sem = new AESemaphore( "DiskManager::started" );
-    boolean starting;
-    boolean stopping;
+    
+    private boolean starting;
+    
+    private volatile boolean stopping;
 
 
-    private int 	state_set_via_method;
-    private String 	errorMessage_set_via_method = "";
-    private int		errorType	= 0;
+    private volatile int 		state_set_via_method;
+    private volatile String 	errorMessage_set_via_method = "";
+    private volatile int		errorType	= 0;
 
     private int pieceLength;
     private int lastPieceLength;
@@ -211,6 +213,7 @@ DiskManagerImpl
     private long        totalLength;    // total # bytes in this torrent
     private int         percentDone;
     private long        allocated;
+    private long		allocate_not_required;
     private long        remaining;
 
     	// this used to drive end-of-download detection, careful that it is accurate at all times (there was a bug where it wasn't and caused downloads to prematurely recheck...)
@@ -1017,8 +1020,9 @@ DiskManagerImpl
 
             setState( ALLOCATING );
 
-            allocated = 0;
-
+            allocated 				= 0;
+            allocate_not_required	= 0;
+            
             int numNewFiles 		= 0;
             int notRequiredFiles	= 0;
 
@@ -1226,6 +1230,8 @@ DiskManagerImpl
 
                 }else{
 
+                	allocate_not_required += target_length;
+                	
                 	notRequiredFiles++;
                 }
             }
@@ -1483,6 +1489,14 @@ DiskManagerImpl
         return percentDone;
     }
 
+    @Override
+    public int
+    getPercentAllocated()
+    {
+        return((int) (((allocated+allocate_not_required) * 1000) / totalLength ));
+    }
+
+    
     @Override
     public void
     setPercentDone(
@@ -1963,7 +1977,7 @@ DiskManagerImpl
         int     _state )
     {
             // we never move from a faulty state
-
+    	
         if ( state_set_via_method == FAULTY ){
 
             if ( _state != FAULTY ){
@@ -3682,10 +3696,13 @@ DiskManagerImpl
   {
       if ( files != null ){
 
-        storeFileDownloaded( download_manager, files, persist );
-
-        storeFilePriorities();
-    }
+    	  if ( getState() == READY ){
+        
+    		  storeFileDownloaded( download_manager, files, persist );
+    	  }
+    	  
+    	  storeFilePriorities();
+      }
 
       checkFreePieceList( false );
   }

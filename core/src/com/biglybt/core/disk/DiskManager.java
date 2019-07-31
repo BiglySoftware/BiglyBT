@@ -231,6 +231,9 @@ DiskManager
 	public int
 	getPercentDone();
 
+	public int
+	getPercentAllocated();
+
 	public String
 	getErrorMessage();
 

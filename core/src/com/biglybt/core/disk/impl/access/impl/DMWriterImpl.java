@@ -62,7 +62,6 @@ DMWriterImpl
 	volatile boolean	stopped;
 
 	private final int			pieceLength;
-	private final long		totalLength;
 
 	private boolean	complete_recheck_in_progress;
 
@@ -76,7 +75,6 @@ DMWriterImpl
 		disk_access		= disk_manager.getDiskAccessController();
 
 		pieceLength		= disk_manager.getPieceLength();
-		totalLength		= disk_manager.getTotalLength();
 	}
 
 	@Override
@@ -194,8 +192,6 @@ DMWriterImpl
 					written		+= start_from;
 					
 					disk_manager.setAllocated( disk_manager.getAllocated() + start_from );
-
-					disk_manager.setPercentDone((int) ((disk_manager.getAllocated() * 1000) / totalLength));
 				}
 				
 		        try{
@@ -285,8 +281,6 @@ DMWriterImpl
 						remainder 	-= write_size;
 
 						disk_manager.setAllocated( disk_manager.getAllocated() + write_size );
-
-						disk_manager.setPercentDone((int) ((disk_manager.getAllocated() * 1000) / totalLength));
 					}
 		        }finally{
 

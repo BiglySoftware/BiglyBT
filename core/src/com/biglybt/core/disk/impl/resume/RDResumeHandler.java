@@ -125,11 +125,6 @@ RDResumeHandler
 	{
 		stopped_for_close	= stopped_for_close | closing;	// can get in here > once during close
 
-		if ( check_in_progress ){
-
-			check_interrupted	= true;
-		}
-
 		stopped				= true;
 	}
 
@@ -217,7 +212,7 @@ RDResumeHandler
 								// if the torrent download is complete we don't need to invalidate the
 								// resume data
 
-							if ( isTorrentResumeDataComplete( disk_manager.getDownloadManager().getDownloadState(), resume_data )){
+							if ( isTorrentResumeDataComplete( pieces.length, resume_data )){
 
 								resume_data_complete	= true;
 
@@ -306,6 +301,8 @@ RDResumeHandler
 					for (int i = 0; i < pieces.length; i++){
 
 						if ( stopped ){
+							
+							check_interrupted = true;
 							
 							break;
 						}
@@ -399,6 +396,8 @@ RDResumeHandler
 								}
 
 								if ( stopped ){
+
+									check_interrupted = true;
 
 									break;
 
@@ -555,6 +554,8 @@ RDResumeHandler
 
 						if ( stopped ){
 
+							check_interrupted = true;
+
 							break;
 						}
 
@@ -656,6 +657,8 @@ RDResumeHandler
 						}
 
 						if ( stopped ){
+
+							check_interrupted = true;
 
 							break;
 						}
@@ -858,6 +861,13 @@ RDResumeHandler
 
 		boolean	was_complete = isTorrentResumeDataComplete( disk_manager.getDownloadManager().getDownloadState());
 
+		if ( was_complete && check_interrupted ){
+		
+				// piece completion state not usable, stick with the previous state of affairs
+			
+			return;
+		}
+		
 		DiskManagerPiece[] pieces	= disk_manager.getPieces();
 
 			//build the piece byte[]
@@ -972,7 +982,7 @@ RDResumeHandler
 
 	  		// OK, we've got valid resume data and flushed the cache
 
-		boolean	is_complete = isTorrentResumeDataComplete( disk_manager.getDownloadManager().getDownloadState(), resume_data );
+		boolean	is_complete = isTorrentResumeDataComplete( pieces.length, resume_data );
 
 		if ( was_complete && is_complete ){
 
@@ -984,12 +994,24 @@ RDResumeHandler
 		}
 	}
 
-	protected Map
+	private Map
 	getResumeData()
 	{
 		return( getResumeData( disk_manager.getDownloadManager()));
 	}
 
+	private void
+	saveResumeData(
+		Map		resume_data )
+	{
+		saveResumeData( disk_manager.getDownloadManager().getDownloadState(), resume_data );
+	}
+	
+	
+	
+	
+		// STATIC METHODS
+	
 	protected static Map
 	getResumeData(
 		DownloadManager		download_manager)
@@ -1015,14 +1037,7 @@ RDResumeHandler
 		}
 	}
 
-	protected void
-	saveResumeData(
-		Map		resume_data )
-	{
-		saveResumeData( disk_manager.getDownloadManager().getDownloadState(), resume_data );
-	}
-
-	protected static void
+	private static void
 	saveResumeData(
 		DownloadManagerState		download_manager_state,
 		Map							resume_data )
@@ -1060,7 +1075,7 @@ RDResumeHandler
 		saveResumeData( download_manager_state, resume_data );
 	}
 
-	protected static int
+	private static int
 	clearResumeDataSupport(
 		DownloadManager			download_manager,
 		DiskManagerFileInfo		file,
@@ -1293,17 +1308,15 @@ RDResumeHandler
 
 		Map	resume_data = getResumeData( dms );
 
-		return( isTorrentResumeDataComplete( dms, resume_data ));
+		return( isTorrentResumeDataComplete( dms.getTorrent().getNumberOfPieces(), resume_data ));
 	}
 
-	protected static boolean
+	private static boolean
 	isTorrentResumeDataComplete(
-		DownloadManagerState		download_manager_state,
-		Map							resume_data )
+		int			piece_count,
+		Map			resume_data )
 	{
 		try{
-			int	piece_count = download_manager_state.getTorrent().getNumberOfPieces();
-
 			if ( resume_data != null ){
 
 				byte[] 	pieces 	= (byte[])resume_data.get("resume data");

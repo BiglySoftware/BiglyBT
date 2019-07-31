@@ -514,6 +514,13 @@ LWSDiskManager
 	}
 
 	@Override
+	public int
+	getPercentAllocated()
+	{
+		return( 100 );
+	}
+	
+	@Override
 	public int getPercentDoneExcludingDND() {
 		// Either this one or getPercentDone is wrong, mebbe
 		return 1000;
