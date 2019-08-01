@@ -92,15 +92,8 @@ public class Win32UIEnhancer
 
 	private static Method mOS_memmove_int;
 
-	private static boolean isUnicode;
-
 	private static Class<?> claSHFILEINFO;
-
-	private static Class<?> claSHFILEINFOA;
-
-	private static Class<?> claSHFILEINFOW;
-
-	private static Class<?> claTCHAR;
+	private static Class<?> claSHFILEINFO_Target;
 
 	private static Method mSHGetFileInfo;
 
@@ -120,33 +113,71 @@ public class Win32UIEnhancer
 		try {
 			claOS = Class.forName("org.eclipse.swt.internal.win32.OS");
 
-			isUnicode = claOS.getDeclaredField("IsUnicode").getBoolean(null);
-
+			boolean alwaysUnicode = SWT.getVersion() >= 4924;	// Removed in 4924 (64-bit) and assumed to always be true
+			
+			boolean isUnicode;
+			
+			if ( alwaysUnicode ){
+				
+				isUnicode = true;	
+				
+			}else{
+				
+				isUnicode =  claOS.getDeclaredField("IsUnicode").getBoolean(null);
+				
+			}
+			
 			claSHFILEINFO = Class.forName("org.eclipse.swt.internal.win32.SHFILEINFO");
 
 			SHFILEINFO_sizeof = claSHFILEINFO.getField("sizeof").getInt(null);
 
-			claSHFILEINFOA = Class.forName("org.eclipse.swt.internal.win32.SHFILEINFOA");
-			claSHFILEINFOW = Class.forName("org.eclipse.swt.internal.win32.SHFILEINFOW");
+			if ( isUnicode ){
+				
+				if ( alwaysUnicode ){
+					
+					claSHFILEINFO_Target = claSHFILEINFO;
+					
+				}else{
+				
+					claSHFILEINFO_Target = Class.forName("org.eclipse.swt.internal.win32.SHFILEINFOW");
+				}
+			}else{
+				
+				claSHFILEINFO_Target = Class.forName("org.eclipse.swt.internal.win32.SHFILEINFOA");
+			}
 
-			claTCHAR = Class.forName("org.eclipse.swt.internal.win32.TCHAR");
-
-			// public TCHAR (int codePage, String string, boolean terminate) {
-			constTCHAR3 = claTCHAR.getConstructor(new Class[] {
-				int.class,
-				String.class,
-				boolean.class
-			});
-
-			//public static long /*int*/ SHGetFileInfo (TCHAR pszPath, int dwFileAttributes, SHFILEINFO psfi, int cbFileInfo, int uFlags)
-			mSHGetFileInfo = claOS.getMethod("SHGetFileInfo", new Class<?>[] {
-				claTCHAR,
-				int.class,
-				claSHFILEINFO,
-				int.class,
-				int.class,
-			});
-
+			if ( alwaysUnicode ){
+				
+					//public static long /*int*/ SHGetFileInfo (char[] pszPath, int dwFileAttributes, SHFILEINFO psfi, int cbFileInfo, int uFlags)
+				
+				mSHGetFileInfo = claOS.getMethod("SHGetFileInfo", new Class<?>[] {
+					char[].class,
+					int.class,
+					claSHFILEINFO,
+					int.class,
+					int.class,
+				});
+				
+			}else{
+				
+				Class<?> claTCHAR = Class.forName("org.eclipse.swt.internal.win32.TCHAR");
+	
+				// public TCHAR (int codePage, String string, boolean terminate) {
+				constTCHAR3 = claTCHAR.getConstructor(new Class[] {
+					int.class,
+					String.class,
+					boolean.class
+				});
+	
+				//public static long /*int*/ SHGetFileInfo (TCHAR pszPath, int dwFileAttributes, SHFILEINFO psfi, int cbFileInfo, int uFlags)
+				mSHGetFileInfo = claOS.getMethod("SHGetFileInfo", new Class<?>[] {
+					claTCHAR,
+					int.class,
+					claSHFILEINFO,
+					int.class,
+					int.class,
+				});
+			}
 
 			// public Callback (Object object, String method, int argCount)
 			claCallback = Class.forName("org.eclipse.swt.internal.Callback");
@@ -260,13 +291,30 @@ public class Win32UIEnhancer
   			flags |= SHGFI_USEFILEATTRIBUTES;
   		}
   		Object shfi;
-  		if (isUnicode) {
-  			shfi = claSHFILEINFOW.newInstance();
-  		} else {
-  			shfi = claSHFILEINFOA.newInstance();
-  		}
-  		Object pszPath = constTCHAR3.newInstance(0, file.getAbsolutePath(), true);
-
+  		
+  		shfi = claSHFILEINFO_Target.newInstance();
+  		
+  		String path = file.getAbsolutePath();
+  		
+  		Object pszPath;
+  		
+  		if ( constTCHAR3 == null ){
+  		
+  			char[] temp = path.toCharArray();
+  			
+  			char[] chars = new char[temp.length+1];
+  			
+  			System.arraycopy( temp, 0, chars, 0, temp.length );
+  			
+  			chars[chars.length-1] = 0;
+  			
+  			pszPath = chars;
+  			
+		}else{
+			
+			pszPath = constTCHAR3.newInstance(0, path, true);
+		}
+		
   		mSHGetFileInfo.invoke(null, new Object[] {
   			pszPath,
   			file.isDirectory() ? 16
