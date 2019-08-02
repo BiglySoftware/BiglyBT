@@ -2025,9 +2025,36 @@ DHTPlugin
 			throw( new RuntimeException( "DHT isn't enabled" ));
 		}
 
-			// first DHT will do here
+			// try decode with dht[0] and fix up if IPv6 as the contact includes a reference to the underlying DHT
+		
+		DHTPluginContact result = dhts[0].importContact( map );
+		
+		if ( result != null ){
+			
+			try{
+				if ( result.getAddress().getAddress() instanceof Inet6Address ){
+					
+					for ( DHTPluginImpl dht: dhts ){
 
-		return( dhts[0].importContact( map ));
+						if ( dht.isIPV6()){
+							
+							DHTPluginContact temp = dht.importContact( map );
+							
+							if ( temp != null ){
+								
+								result = temp;
+								
+								break;
+							}
+						}
+					}
+					
+				}
+			}catch( Throwable e ){
+			}
+		}
+		
+		return( result );
 	}
 
 	@Override
@@ -2040,9 +2067,20 @@ DHTPlugin
 			throw( new RuntimeException( "DHT isn't enabled" ));
 		}
 
-			// first DHT will do here
+		InetAddress contact_address = address.getAddress();
 
-		return( dhts[0].importContact( address ));
+		for ( DHTPluginImpl dht: dhts ){
+
+			InetAddress dht_address = dht.getLocalAddress().getAddress().getAddress();
+
+			if ( 	( contact_address instanceof Inet4Address && dht_address instanceof Inet4Address ) ||
+					( contact_address instanceof Inet6Address && dht_address instanceof Inet6Address )){
+
+				return( dht.importContact( address ));
+			}
+		}
+
+		return( null );
 	}
 
 	@Override

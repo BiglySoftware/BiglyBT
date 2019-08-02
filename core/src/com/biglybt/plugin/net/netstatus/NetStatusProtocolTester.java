@@ -20,12 +20,15 @@
 
 package com.biglybt.plugin.net.netstatus;
 
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 
 import com.biglybt.core.dht.DHT;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.networkmanager.NetworkManager;
+import com.biglybt.core.networkmanager.admin.NetworkAdmin;
 import com.biglybt.core.networkmanager.impl.tcp.TCPNetworkManager;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.PluginInterface;
@@ -139,7 +142,18 @@ NetStatusProtocolTester
 
 				DHT	target_dht = null;
 
-				int	target_network	= Constants.isCVSVersion()?DHT.NW_AZ_CVS:DHT.NW_AZ_MAIN;
+				InetAddress bind_ip = NetworkAdmin.getSingleton().getSingleHomedServiceBindAddress();
+				
+				int	target_network;
+				
+				if ( bind_ip instanceof Inet6Address && !bind_ip.isAnyLocalAddress()){
+					
+					target_network = DHT.NW_AZ_MAIN_V6;
+					
+				}else{
+					
+					target_network = Constants.isCVSVersion()?DHT.NW_AZ_CVS:DHT.NW_AZ_MAIN;
+				}
 
 				for (int i=0;i<dhts.length;i++){
 
