@@ -134,7 +134,15 @@ ConfigurationChecker
 
 		  		  			field.setAccessible( true );
 
-		  		  			field.setBoolean( null, prefer_ipv6 );
+		  		  			try{
+		  		  				field.setBoolean( null, prefer_ipv6 );
+		  		  				
+		  		  			}catch( Throwable e ){
+		  		  				
+		  		  					// changed to an int 
+		  		  				
+		  		  				field.setInt( null, prefer_ipv6?1:0 );
+		  		  			}
 
 		  		  		}catch( Throwable e ){
 
