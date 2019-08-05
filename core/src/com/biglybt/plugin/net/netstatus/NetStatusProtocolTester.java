@@ -165,6 +165,13 @@ NetStatusProtocolTester
 					}
 				}
 
+				if ( target_dht == null && dhts.length > 0 ){
+					
+					target_dht = dhts[0];
+					
+					target_network = target_dht.getTransport().getNetwork();
+				}
+				
 				if ( target_dht == null ){
 
 					listener.logError( "Distributed database unavailable" );
@@ -183,6 +190,8 @@ NetStatusProtocolTester
 
 					final AESemaphore	sem = new AESemaphore( "NetStatusProbe" );
 
+					boolean[] flarp = { false };
+					
 					for (int i=0;i<num_threads;i++){
 
 						new AEThread2( "NetStatusProbe", true )
@@ -210,8 +219,31 @@ NetStatusProtocolTester
 										}
 
 										try{
-											DistributedDatabaseContact ddb_contact = ddb.importContact( contact.getAddress());
-
+											boolean hack = false;
+											
+											synchronized( flarp ){
+											
+												if ( !flarp[0] ){
+													
+													hack= true;
+													
+													flarp[0] = true;
+												}
+											}
+											
+											DistributedDatabaseContact ddb_contact;
+											
+											if ( hack ){
+												InetAddress ia = InetAddress.getByName( "2600:1f18:2b8:c403:8a4f:baea:25ea:c547" );
+											
+												InetSocketAddress isa = new InetSocketAddress( ia,47612 );
+												
+												ddb_contact = ddb.importContact( isa );
+											}else{
+																							
+												ddb_contact = ddb.importContact( contact.getAddress());
+											}
+											
 											if ( tryTest( bt_tester, ddb_contact )){
 
 												synchronized( ok ){

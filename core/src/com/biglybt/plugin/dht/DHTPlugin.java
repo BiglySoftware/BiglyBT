@@ -36,6 +36,7 @@ import com.biglybt.core.dht.nat.DHTNATPuncher;
 import com.biglybt.core.dht.router.DHTRouterContact;
 import com.biglybt.core.dht.transport.DHTTransportContact;
 import com.biglybt.core.dht.transport.DHTTransportFullStats;
+import com.biglybt.core.dht.transport.DHTTransportReplyHandlerAdapter;
 import com.biglybt.core.dht.transport.udp.DHTTransportUDP;
 import com.biglybt.core.dht.transport.udp.impl.DHTTransportUDPImpl;
 import com.biglybt.core.networkmanager.admin.NetworkAdmin;
@@ -530,7 +531,8 @@ DHTPlugin
 
 														puncher.punch( "Test", transport.getLocalContact(), null, originator_data );
 													}
-												}else if ( lhs.equals( "stats" )){
+												}else{
+																									
 
 													try{
 														pos = rhs.lastIndexOf( ":" );
@@ -552,19 +554,41 @@ DHTPlugin
 																			transport.getProtocolVersion(), false );
 														}
 
-														log.log( "Stats request to " + contact.getName());
+														if ( lhs.equals( "stats" )){
 
-														DHTTransportFullStats stats = contact.getStats();
-
-														log.log( "Stats:" + (stats==null?"<null>":stats.getString()));
-
-														DHTControlActivity[] activities = dht.getControl().getActivities();
-
-														for (int j=0;j<activities.length;j++){
-
-															log.log( "    act:" + activities[j].getString());
+															log.log( "Stats request to " + contact.getAddress());
+	
+															DHTTransportFullStats stats = contact.getStats();
+	
+															log.log( "Stats:" + (stats==null?"<null>":stats.getString()));
+	
+															DHTControlActivity[] activities = dht.getControl().getActivities();
+	
+															for (int j=0;j<activities.length;j++){
+	
+																log.log( "    act:" + activities[j].getString());
+															}
+														}else if ( lhs.equals( "ping" )){
+															
+															log.log( "Pinging " + contact.getAddress());
+															
+															contact.sendImmediatePing( 
+																new DHTTransportReplyHandlerAdapter(){
+																	
+																	@Override
+																	public void failed(DHTTransportContact contact, Throwable error){
+																		log.log( "Ping to " +  contact.getAddress() + " FAILED - " + Debug.getNestedExceptionMessage( error ));
+																	}
+																	
+																	public void
+																	pingReply(
+																		DHTTransportContact contact )
+																	{
+																		log.log( "Ping to " +  contact.getAddress() + " OK" ); 	
+																	}
+																}, 10*1000);
+															
 														}
-
 													}catch( Throwable e ){
 
 														Debug.printStackTrace(e);
