@@ -218,9 +218,9 @@ public class NatTestWindow {
 		        	printMessage(MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " ... ");
 
 		        	try{
-		        		selected.test(
+		        		InetAddress result = selected.test(
 		        				null,
-		        				true,
+		        				false,
 		        				true,
 		        				new NetworkAdminProgressListener()
 		        				{
@@ -233,12 +233,40 @@ public class NatTestWindow {
 		        					}
 		        				});
 
-		        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ok"));
+		        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + result.getHostAddress() + ")\n");
 
 		        	}catch( Throwable e ){
 
 		        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + ". " + Debug.getNestedExceptionMessage(e)+".\n");
 		        	}
+		        	
+			        if ( NetworkAdmin.getSingleton().hasIPV6Potential()){
+			        	
+			        	printMessage( "\n" + MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " IPv6 ... ");
+
+			        	try{
+			        		selected.test(
+			        				null,
+			        				true,
+			        				true,
+			        				new NetworkAdminProgressListener()
+			        				{
+			        					@Override
+								        public void
+			        					reportProgress(
+			        							String task )
+			        					{
+			        						printMessage( "\n    " + task );
+			        					}
+			        				});
+
+			        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ok"));
+
+			        	}catch( Throwable e ){
+
+			        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + ". " + Debug.getNestedExceptionMessage(e)+".\n");
+			        	}
+			        }
 		        }
 
 	    	}finally{
@@ -501,6 +529,7 @@ public class NatTestWindow {
         if (textResults == null || textResults.isDisposed())
           return;
         textResults.append(message);
+        textResults.setSelection( textResults.getText().length());
       }
     });
   }

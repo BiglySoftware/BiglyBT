@@ -61,6 +61,7 @@ Constants
 	public static final String NAT_TEST_TCP_SERVER		= "nettest.biglybt.com";
 	public static final String NAT_TEST_TCP_SERVER_V6	= "nettest6.biglybt.com";
 	public static final String NAT_TEST_UDP_SERVER		= "nettestudp.biglybt.com";
+	public static final String NAT_TEST_UDP_SERVER_V6	= "nettestudp6.biglybt.com";
 	public static final String NAT_TEST_SERVER_HTTP		= "http://nettest.biglybt.com/";
 	public static final String NAT_TEST_SERVER_V6_HTTP	= "http://nettest.biglybt.com/";	// nettest.biglybt.com loadbalancer both v4+v6
 

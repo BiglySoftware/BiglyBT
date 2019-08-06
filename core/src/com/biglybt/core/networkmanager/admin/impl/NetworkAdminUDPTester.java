@@ -45,8 +45,10 @@ public class
 NetworkAdminUDPTester
 	implements NetworkAdminProtocolTester
 {
-	public static final String 	UDP_SERVER_ADDRESS	= Constants.NAT_TEST_UDP_SERVER;
-	public static final int		UDP_SERVER_PORT		= 2085;
+	public static final String 	UDP_SERVER_ADDRESS		= Constants.NAT_TEST_UDP_SERVER;
+	public static final String 	UDP_SERVER_ADDRESS_V6	= Constants.NAT_TEST_UDP_SERVER_V6;
+	public static final int		UDP_SERVER_PORT_V4		= 2085;
+	public static final int		UDP_SERVER_PORT_V6		= 2086;
 
 	static{
 		NetworkAdminNATUDPCodecs.registerCodecs();
@@ -199,7 +201,7 @@ NetworkAdminUDPTester
 							(NetworkAdminNATUDPReply)packet_handler.sendAndReceive(
 									null,
 									request_packet,
-									new InetSocketAddress( UDP_SERVER_ADDRESS, UDP_SERVER_PORT ),
+									new InetSocketAddress( ipv6?UDP_SERVER_ADDRESS_V6:UDP_SERVER_ADDRESS, ipv6?UDP_SERVER_PORT_V6:UDP_SERVER_PORT_V4 ),
 									timeout,
 									PRUDPPacketHandler.PRIORITY_IMMEDIATE );
 
@@ -253,7 +255,7 @@ NetworkAdminUDPTester
 						listener.reportProgress( "Sending completion event" );
 					}
 
-					packet_handler.send( request_packet, new InetSocketAddress( UDP_SERVER_ADDRESS, UDP_SERVER_PORT ));
+					packet_handler.send( request_packet, new InetSocketAddress( ipv6?UDP_SERVER_ADDRESS_V6:UDP_SERVER_ADDRESS, ipv6?UDP_SERVER_PORT_V6:UDP_SERVER_PORT_V4 ));
 
 				}catch( Throwable e){
 				}
