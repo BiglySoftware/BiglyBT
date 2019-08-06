@@ -2,7 +2,11 @@
     <item name='com.vuze.plugin.azVPN_Helper.CheckerCommon CheckerCommon(com.biglybt.pif.PluginInterface) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='com.vuze.plugin.azVPN_Helper.CheckerCommon config'>
+	<item
+		name='com.vuze.plugin.azVPN_Helper.CheckerCommon com.vuze.plugin.azVPN_Helper.CheckerCommon.Status findBindingAddress(java.lang.StringBuilder)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.vuze.plugin.azVPN_Helper.CheckerCommon config'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.vuze.plugin.azVPN_Helper.CheckerCommon pi'>

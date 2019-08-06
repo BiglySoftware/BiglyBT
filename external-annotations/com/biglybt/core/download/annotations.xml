@@ -1,5 +1,9 @@
 <root>
-    <item name='com.biglybt.core.download.DownloadManager com.biglybt.core.download.DownloadManagerState getDownloadState()'>
+	<item
+		name='com.biglybt.core.download.DownloadManager com.biglybt.core.disk.DiskManagerFileInfoSet getDiskManagerFileInfoSet()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.core.download.DownloadManager com.biglybt.core.download.DownloadManagerState getDownloadState()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.biglybt.core.download.DownloadManager com.biglybt.core.download.DownloadManagerStats getStats()'>

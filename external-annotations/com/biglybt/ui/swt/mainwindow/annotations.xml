@@ -1,6 +1,12 @@
 <root>
+	<item name='com.biglybt.ui.swt.mainwindow.Colors blues'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 	<item
 		name='com.biglybt.ui.swt.mainwindow.Colors com.biglybt.ui.swt.mainwindow.Colors getInstance()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mainwindow.Colors faded'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item name='com.biglybt.ui.swt.mainwindow.MenuFactory org.eclipse.swt.widgets.MenuItem addLabelMenuItem(org.eclipse.swt.widgets.Menu, java.lang.String) 1'>

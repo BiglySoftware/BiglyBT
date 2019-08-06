@@ -84,4 +84,16 @@
     <item name='com.biglybt.ui.swt.views.TorrentOptionsView.downloadStateIntParameterAdapter boolean setValue(com.biglybt.ui.swt.config.IntSwtParameter, java.lang.Integer)'>
         <annotation name='java.lang.Override'/>
     </item>
+	<item
+		name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.lang.Object[]) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.util.List&lt;com.biglybt.core.tracker.TrackerPeerSource&gt;) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.util.List&lt;com.biglybt.core.tracker.TrackerPeerSource&gt;, boolean) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>

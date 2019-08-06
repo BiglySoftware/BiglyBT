@@ -9,4 +9,8 @@
 	<item name='com.biglybt.core.torrent.TOTorrentFile byte[][] getPathComponents()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item
+		name='com.biglybt.core.torrent.TOTorrentFile java.lang.String getRelativePath()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>

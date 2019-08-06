@@ -1,8 +1,31 @@
 <root>
-    <item name='com.biglybt.util.MapUtils java.util.List getMapList(java.util.Map, java.lang.String, java.util.List)'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
+	<item
+		name='com.biglybt.util.MapUtils boolean getMapBoolean(java.util.Map, java.lang.String, boolean)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;null, _, _ -&gt; param3&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.util.MapUtils byte[] getMapByteArray(java.util.Map, java.lang.String, byte[])'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_, _, !null -&gt; !null; null, _, _ -&gt; param3&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.util.MapUtils java.lang.String getMapString(java.util.Map, java.lang.String, java.lang.String)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_, _, !null -&gt; !null; null, _, _ -&gt; param3&quot;"/>
+		</annotation>
+	</item>
+	<item name='com.biglybt.util.MapUtils java.util.List getMapList(java.util.Map, java.lang.String, java.util.List)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_, _, !null -&gt; !null; null, _, _ -&gt; param3&quot;"/>
+		</annotation>
+	</item>
     <item name='com.biglybt.util.MapUtils java.util.Map getMapMap(java.util.Map, java.lang.String, java.util.Map)'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
+			<annotation name='org.jetbrains.annotations.Contract'>
+				<val
+					val="&quot;_, _, !null -&gt; !null; null, _, _ -&gt; param3&quot;"/>
+			</annotation>
+		</item>
 </root>

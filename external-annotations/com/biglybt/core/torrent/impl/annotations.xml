@@ -1,5 +1,9 @@
 <root>
-    <item name='com.biglybt.core.torrent.impl.TorrentOpenOptions java.util.List&lt;com.biglybt.core.tag.Tag&gt; getInitialTags()'>
+	<item
+		name='com.biglybt.core.torrent.impl.TOTorrentFileImpl java.lang.String getRelativePath()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.core.torrent.impl.TorrentOpenOptions java.util.List&lt;com.biglybt.core.tag.Tag&gt; getInitialTags()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
 </root>

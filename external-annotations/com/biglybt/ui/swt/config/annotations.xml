@@ -13,7 +13,15 @@
     <item name='com.biglybt.ui.swt.config.BaseSwtParameter void addAndFireChangeListener(com.biglybt.ui.swt.config.ParameterChangeListener&lt;PARAMTYPE&gt;) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='com.biglybt.ui.swt.config.BaseSwtParameter void removeChangeListener(com.biglybt.ui.swt.config.ParameterChangeListener&lt;PARAMTYPE&gt;)'>
+	<item
+		name='com.biglybt.ui.swt.config.BaseSwtParameter void addLabelContextMenus(org.eclipse.swt.widgets.Control, org.eclipse.swt.widgets.Menu) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.config.BaseSwtParameter void addLabelContextMenus(org.eclipse.swt.widgets.Control, org.eclipse.swt.widgets.Menu) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.config.BaseSwtParameter void removeChangeListener(com.biglybt.ui.swt.config.ParameterChangeListener&lt;PARAMTYPE&gt;)'>
         <annotation name='java.lang.SuppressWarnings'>
             <val val="&quot;unused&quot;"/>
         </annotation>

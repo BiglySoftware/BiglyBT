@@ -6,4 +6,8 @@
 	<item name='com.biglybt.core.tag.Tag java.lang.String getTagName(boolean)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item
+		name='com.biglybt.core.tag.TagType com.biglybt.core.tag.Tag createTag(java.lang.String, boolean)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>
