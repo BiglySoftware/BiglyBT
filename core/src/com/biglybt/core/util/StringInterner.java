@@ -38,7 +38,7 @@ StringInterner
 	 */
 
 	@SuppressWarnings("CanBeFinal")
-	public static boolean DISABLE_INTERNING = false;
+	public static boolean DISABLE_INTERNING = System.getProperty("stringinterner.disable", "0").equals("1");
 
 	private static final int SCHEDULED_CLEANUP_INTERVAL = 60*1000;
 
