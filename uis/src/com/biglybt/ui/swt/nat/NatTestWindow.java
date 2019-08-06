@@ -245,7 +245,7 @@ public class NatTestWindow {
 			        	printMessage( "\n" + MessageText.getString("configureWizard.nat.testing") + " UDP " + udp_port + " IPv6 ... ");
 
 			        	try{
-			        		selected.test(
+			        		InetAddress result = selected.test(
 			        				null,
 			        				true,
 			        				true,
@@ -260,7 +260,7 @@ public class NatTestWindow {
 			        					}
 			        				});
 
-			        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ok"));
+			        		printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + result.getHostAddress() + ")\n");
 
 			        	}catch( Throwable e ){
 
