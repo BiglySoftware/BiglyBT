@@ -31,14 +31,16 @@ NetworkAdminProtocolTester
 	public InetAddress
 	testOutbound(
 		InetAddress		bind_ip,
-		int				bind_port )
+		int				bind_port,
+		boolean			ipv6 )
 
 		throws NetworkAdminException;
 
 	public InetAddress
 	testInbound(
 		InetAddress		bind_ip,
-		int				local_port )
+		int				local_port,
+		boolean			ipv6 )
 
 		throws NetworkAdminException;
 }

@@ -50,7 +50,8 @@ NetworkAdminHTTPTester
 	public InetAddress
 	testOutbound(
 		InetAddress		bind_ip,
-		int				bind_port )
+		int				bind_port,
+		boolean			ipv6 )
 
 		throws NetworkAdminException
 	{
@@ -69,6 +70,8 @@ NetworkAdminHTTPTester
 				// fallback to something else
 
 			try{
+					// TODO: V6
+				
 				URL	url = new URL( "http://www.google.com/" );
 
 				URLConnection connection = url.openConnection();
@@ -90,11 +93,12 @@ NetworkAdminHTTPTester
 	public InetAddress
 	testInbound(
 		InetAddress		bind_ip,
-		int				local_port )
+		int				local_port,
+		boolean			ipv6 )
 
 		throws NetworkAdminException
 	{
-		NatChecker	checker = new NatChecker( core, bind_ip, local_port, true );
+		NatChecker	checker = new NatChecker( core, bind_ip, local_port, ipv6, true );
 
 		if ( checker.getResult() == NatChecker.NAT_OK ){
 

@@ -68,12 +68,13 @@ NetworkAdminUDPTester
 	public InetAddress
 	testOutbound(
 		InetAddress		bind_ip,
-		int				bind_port )
+		int				bind_port,
+		boolean			ipv6 )
 
 		throws NetworkAdminException
 	{
 		try{
-			return( VersionCheckClient.getSingleton().getExternalIpAddressUDP(bind_ip, bind_port,false));
+			return( VersionCheckClient.getSingleton().getExternalIpAddressUDP(bind_ip, bind_port,ipv6));
 
 		}catch( Throwable e ){
 
@@ -85,7 +86,8 @@ NetworkAdminUDPTester
 	public InetAddress
 	testInbound(
 		InetAddress		bind_ip,
-		int				bind_port )
+		int				bind_port,
+		boolean			ipv6 )
 
 		throws NetworkAdminException
 	{

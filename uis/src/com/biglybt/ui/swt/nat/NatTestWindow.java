@@ -24,6 +24,11 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
 import com.biglybt.ui.swt.mainwindow.Colors;
+
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
@@ -70,17 +75,85 @@ public class NatTestWindow {
     {
     	try{
 	          printMessage(MessageText.getString("configureWizard.nat.testing") + " TCP " + TCPListenPort + " ... ");
-	          NatChecker checker = new NatChecker(CoreFactory.getSingleton(), NetworkAdmin.getSingleton().getMultiHomedServiceBindAddresses(true)[0], TCPListenPort, false);
-	          switch (checker.getResult()) {
-	          case NatChecker.NAT_OK :
-	            printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + "\n" + checker.getAdditionalInfo());
-	            break;
-	          case NatChecker.NAT_KO :
-	            printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + " - " + checker.getAdditionalInfo()+".\n");
-	            break;
-	          default :
-	            printMessage( "\n" + MessageText.getString("configureWizard.nat.unable") + ". \n(" + checker.getAdditionalInfo()+").\n");
-	            break;
+	          
+	          InetAddress[] bind_ips = NetworkAdmin.getSingleton().getMultiHomedServiceBindAddresses(true);
+	          
+	          {
+	        	  	// IPv4
+	        	  
+	        	  InetAddress bind = bind_ips[0];
+	        	  
+	        	  if ( !bind.isAnyLocalAddress()){
+	        		
+	        		  for ( InetAddress a: bind_ips ){
+	        			  
+	        			  if ( a instanceof Inet4Address ){
+	        				  
+	        				  bind = a;
+
+	        				  break;
+	        			  }
+	        		  }
+	        	  }
+	        	  
+		          NatChecker checker =
+		        	 new NatChecker(
+		        		CoreFactory.getSingleton(), 
+		        		bind, 
+		        		TCPListenPort, 
+		        		false,		// ipv6  
+		        		false );
+		          
+		          switch (checker.getResult()) {
+		          case NatChecker.NAT_OK :
+		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + checker.getExternalAddress().getHostAddress() + ")\n" + checker.getAdditionalInfo());
+		            break;
+		          case NatChecker.NAT_KO :
+		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + " - " + checker.getAdditionalInfo()+".\n");
+		            break;
+		          default :
+		            printMessage( "\n" + MessageText.getString("configureWizard.nat.unable") + ". \n(" + checker.getAdditionalInfo()+").\n");
+		            break;
+		          }
+	          }
+	          
+	          if ( NetworkAdmin.getSingleton().hasIPV6Potential()){
+	        	  
+	        	  InetAddress bind = bind_ips[0];
+	        	  
+	        	  if ( !bind.isAnyLocalAddress()){
+	        		
+	        		  for ( InetAddress a: bind_ips ){
+	        			  
+	        			  if ( a instanceof Inet6Address ){
+	        				  
+	        				  bind = a;
+
+	        				  break;
+	        			  }
+	        		  }
+	        	  }
+	        	  
+	        	  printMessage("\n" + MessageText.getString("configureWizard.nat.testing") + " TCP " + TCPListenPort + " IPv6 ... ");
+		          NatChecker checker =
+		        	 new NatChecker(
+		        		CoreFactory.getSingleton(), 
+		        		bind, 
+		        		TCPListenPort, 
+		        		true,		// ipv6  
+		        		false );
+		          
+		          switch (checker.getResult()) {
+		          case NatChecker.NAT_OK :
+			            printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + " (" + checker.getExternalAddress().getHostAddress() + ")\n" + checker.getAdditionalInfo());
+		            break;
+		          case NatChecker.NAT_KO :
+		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ko") + " - " + checker.getAdditionalInfo()+".\n");
+		            break;
+		          default :
+		            printMessage( "\n" + MessageText.getString("configureWizard.nat.unable") + ". \n(" + checker.getAdditionalInfo()+").\n");
+		            break;
+		          }
 	          }
     	}finally{
           if (display.isDisposed()) {return;}
@@ -147,6 +220,7 @@ public class NatTestWindow {
 		        	try{
 		        		selected.test(
 		        				null,
+		        				true,
 		        				true,
 		        				new NetworkAdminProgressListener()
 		        				{

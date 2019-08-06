@@ -1073,6 +1073,25 @@ public class UrlUtils
 		return( host );
 	}
 
+	public static String
+	resolveIPv6Host(
+		String		url )
+	{
+		try{
+			DNSUtils.DNSUtilsIntf dns_utils = DNSUtils.getSingleton();
+
+			URL http_server_url = new URL( url );
+
+			return( setHost( http_server_url, "[" + dns_utils.getIPV6ByName( http_server_url.getHost()).getHostAddress() + "]").toExternalForm());
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+			
+			return( url );
+		}
+	}
+	
 	public static void
 	connectWithTimeout(
 		final URLConnection		connection,

@@ -41,8 +41,10 @@ import com.biglybt.core.networkmanager.admin.NetworkAdminASN;
 import com.biglybt.core.tracker.util.TRTrackerUtils;
 import com.biglybt.core.util.BDecoder;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.DNSUtils;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.RandomUtils;
+import com.biglybt.core.util.UrlUtils;
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.clientid.ClientIDException;
 import com.biglybt.pif.clientid.ClientIDGenerator;
@@ -72,6 +74,7 @@ public class NatChecker {
   	Core core,
 	InetAddress		bind_ip,
 	int 			port,
+	boolean			ipv6,
 	boolean			http_test )
   {
     String check = "azureus_rand_" + String.valueOf( RandomUtils.nextInt( 100000 ));
@@ -149,8 +152,21 @@ public class NatChecker {
     //run check
     try {
       server.start();
+      
+      String http_server;
+      
+      if ( ipv6 ){
+    	  
+    	  http_server = Constants.NAT_TEST_SERVER_V6_HTTP;
 
-      String urlStr = Constants.NAT_TEST_SERVER_HTTP + (http_test?"httptest":"nattest") + "?port=" + String.valueOf( port ) + "&check=" + check;
+    	  http_server = UrlUtils.resolveIPv6Host( http_server );
+    	  
+      }else{
+    	  
+    	  http_server = Constants.NAT_TEST_SERVER_HTTP;
+      }
+      
+      String urlStr = http_server + (http_test?"httptest":"nattest") + "?port=" + String.valueOf( port ) + "&check=" + check;
 
       if ( upnp_str != null ){
 

@@ -59,6 +59,16 @@ NetworkAdminProtocol
 
 		throws NetworkAdminException;
 
+	public InetAddress
+	test(
+		NetworkAdminNetworkInterfaceAddress	address,
+		boolean								ipv6,
+		boolean								upnp_map,
+		NetworkAdminProgressListener		listener )
+
+		throws NetworkAdminException;
+
+	
 	public String
 	getName();
 }

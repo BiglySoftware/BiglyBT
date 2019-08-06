@@ -24,7 +24,6 @@ import java.security.AccessControlException;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -60,8 +59,10 @@ Constants
 	public static final String DHT_SEED_ADDRESS_V6_TUNNEL	= "dht6tunnel.biglybt.com";
 
 	public static final String NAT_TEST_TCP_SERVER		= "nettest.biglybt.com";
+	public static final String NAT_TEST_TCP_SERVER_V6	= "nettest6.biglybt.com";
 	public static final String NAT_TEST_UDP_SERVER		= "nettestudp.biglybt.com";
 	public static final String NAT_TEST_SERVER_HTTP		= "http://nettest.biglybt.com/";
+	public static final String NAT_TEST_SERVER_V6_HTTP	= "http://nettest.biglybt.com/";	// nettest.biglybt.com loadbalancer both v4+v6
 
 	public static final String PAIRING_SERVER			= "pair.vuze.com";
 	public static final String WEB_REMOTE_SERVER		= "remote.vuze.com";
@@ -148,7 +149,7 @@ Constants
 	public static final String BIGLY_PEER_ID						= "BI";
 
 	
-	public static final String BIGLYBT_VERSION  = "2.0.0.1_B08";
+	public static final String BIGLYBT_VERSION  = "2.0.0.1_B21";
 	
 	//public static final String BUILD_VERSION  = "@build.version@";   //Ant replace - believed dead
 	public static final String SUBVERSION		= "";

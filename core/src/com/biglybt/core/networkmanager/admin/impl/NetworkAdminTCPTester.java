@@ -50,14 +50,15 @@ NetworkAdminTCPTester
 	public InetAddress
 	testOutbound(
 		InetAddress		bind_ip,
-		int				bind_port )
+		int				bind_port,
+		boolean			ipv6 )
 
 		throws NetworkAdminException
 	{
 		try{
 				// try to use our service first
 
-			return( VersionCheckClient.getSingleton().getExternalIpAddressTCP( bind_ip, bind_port, false ));
+			return( VersionCheckClient.getSingleton().getExternalIpAddressTCP( bind_ip, bind_port, ipv6 ));
 
 		}catch( Throwable e ){
 
@@ -77,6 +78,8 @@ NetworkAdminTCPTester
 
 				  socket.setSoTimeout( 10000 );
 
+				  	// TODO: v6 
+				  
 				  socket.connect( new InetSocketAddress( "www.google.com", 80 ), 10000 );
 
 				  socket.close();
@@ -94,11 +97,12 @@ NetworkAdminTCPTester
 	public InetAddress
 	testInbound(
 		InetAddress		bind_ip,
-		int				local_port )
+		int				local_port,
+		boolean			ipv6 )
 
 		throws NetworkAdminException
 	{
-		NatChecker	checker = new NatChecker( core, bind_ip, local_port, false );
+		NatChecker	checker = new NatChecker( core, bind_ip, local_port, ipv6, false );
 
 		if ( checker.getResult() == NatChecker.NAT_OK ){
 

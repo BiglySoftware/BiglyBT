@@ -85,10 +85,35 @@ NetworkAdminProtocolImpl
 		return( test( address, null ));
 	}
 
+
+	@Override
+	public InetAddress
+	test(
+		NetworkAdminNetworkInterfaceAddress	address,
+		NetworkAdminProgressListener		listener )
+
+		throws NetworkAdminException
+	{
+		return( test( address, false, listener ));
+	}
+	
 	@Override
 	public InetAddress
 	test(
 		NetworkAdminNetworkInterfaceAddress		address,
+		boolean									upnp_map,
+		NetworkAdminProgressListener			listener )
+
+		throws NetworkAdminException
+	{
+		return( test( address, false, upnp_map, listener ));
+	}
+	
+	@Override
+	public InetAddress
+	test(
+		NetworkAdminNetworkInterfaceAddress		address,
+		boolean									ipv6,
 		boolean									upnp_map,
 		NetworkAdminProgressListener			listener )
 
@@ -115,7 +140,7 @@ NetworkAdminProtocolImpl
 
 		if ( port <= 0 ){
 
-			res = tester.testOutbound( bind_ip, 0 );
+			res = tester.testOutbound( bind_ip, 0, ipv6 );
 
 		}else{
 
@@ -148,7 +173,7 @@ NetworkAdminProtocolImpl
 			}
 
 			try{
-				res = tester.testInbound( bind_ip, port );
+				res = tester.testInbound( bind_ip, port, ipv6 );
 
 			}finally{
 
@@ -160,17 +185,6 @@ NetworkAdminProtocolImpl
 		}
 
 		return( res );
-	}
-
-	@Override
-	public InetAddress
-	test(
-		NetworkAdminNetworkInterfaceAddress	address,
-		NetworkAdminProgressListener		listener )
-
-		throws NetworkAdminException
-	{
-		return( test( address, false, listener ));
 	}
 
 	@Override

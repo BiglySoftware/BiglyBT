@@ -72,7 +72,7 @@ public class NatPanel extends AbstractWizardPanel {
 	    {
 	    	try{
 		          printMessage(MessageText.getString("configureWizard.nat.testing") + " TCP " + TCPListenPort + " ... ");
-		          NatChecker checker = new NatChecker(core, NetworkAdmin.getSingleton().getMultiHomedServiceBindAddresses(true)[0], TCPListenPort, false);
+		          NatChecker checker = new NatChecker(core, NetworkAdmin.getSingleton().getMultiHomedServiceBindAddresses(true)[0], TCPListenPort, false, false);
 		          switch (checker.getResult()) {
 		          case NatChecker.NAT_OK :
 		            printMessage( "\n" + MessageText.getString("configureWizard.nat.ok") + "\n" + checker.getAdditionalInfo());
