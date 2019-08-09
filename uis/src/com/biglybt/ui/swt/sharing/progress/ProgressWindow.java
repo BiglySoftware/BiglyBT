@@ -30,6 +30,7 @@ import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
@@ -38,7 +39,6 @@ import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.swt.Utils;
-import com.biglybt.ui.swt.shells.PopupShell;
 import com.biglybt.pif.sharing.ShareException;
 import com.biglybt.pif.sharing.ShareManager;
 import com.biglybt.pif.sharing.ShareManagerListener;
@@ -94,18 +94,34 @@ ProgressWindow
 
 	private class
 	progressDialog
-		extends 	PopupShell
 	{
+		protected Shell shell;
+
 		protected
 		progressDialog(
 			Display				dialog_display )
 		{
-			super(dialog_display);
-
 			if ( dialog_display.isDisposed()){
-
 				return;
 			}
+
+			shell = new Shell(display,SWT.ON_TOP);
+
+			shell.setSize(250,150);
+			Utils.setShellIcon(shell);
+
+			FormLayout layout = new FormLayout();
+			layout.marginHeight = 0;
+			layout.marginWidth= 0;
+			try {
+				layout.spacing = 0;
+			} catch (NoSuchFieldError e) {
+				/* Ignore for Pre 3.0 SWT.. */
+			} catch (Throwable e) {
+				Debug.printStackTrace( e );
+			}
+
+			shell.setLayout(layout);
 
 			shell.setText(MessageText.getString("sharing.progress.title"));
 
@@ -158,7 +174,7 @@ ProgressWindow
 	      tasks.setLayoutData(formData);
 
 
-	      layout();
+	      shell.layout();
 
 			cancel_button.addListener(SWT.Selection,new Listener() {
 				@Override
