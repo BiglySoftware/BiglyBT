@@ -38,6 +38,9 @@ SearchSubsResultBase
 	public long
 	getSize();
 
+	public int
+	getSeedCount();
+	
 	public String
 	getSeedsPeers();
 

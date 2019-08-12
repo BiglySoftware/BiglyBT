@@ -92,7 +92,8 @@ SBC_SubscriptionResultsView
 
 	private int minSize;
 	private int maxSize;
-
+	private int minSeeds;
+	
 	private String[]	with_keywords 		= {};
 	private String[]	without_keywords 	= {};
 
@@ -266,9 +267,11 @@ SBC_SubscriptionResultsView
 
 					with_keywords 		= filters.getWithWords();
 					without_keywords	= filters.getWithoutWords();
-					
+										
 					pFilterUpdater = new Runnable()
 					{
+						boolean first = true;
+					
 						@Override
 						public void
 						run()
@@ -276,19 +279,28 @@ SBC_SubscriptionResultsView
 							long kInB = DisplayFormatters.getKinB();
 							long mInB = kInB*kInB;
 
-							long	min_size = f_filters.getMinSze()/mInB;
-							long	max_size = f_filters.getMaxSize()/mInB;
+							long	min_size = Math.max( 0,  f_filters.getMinSze()/mInB );
+							long	max_size = Math.max( 0,  f_filters.getMaxSize()/mInB );
+							long	min_seeds = Math.max( 0,  f_filters.getMinSeeds());
 
-
+							if ( first ){
+								
+								minSize = (int)min_size;
+								maxSize	= (int)max_size;
+								minSeeds = (int)min_seeds;
+							}
+							
 							pflabel.setText(
 								MessageText.getString(
 									"subs.persistent.filters",
 									new String[]{
 										getString( f_filters.getWithWords()),
 										getString( f_filters.getWithoutWords()),
-										String.valueOf(min_size<0?0:min_size ),
-										String.valueOf( max_size<0?0:max_size )
-									}));
+										String.valueOf( min_size ),
+										String.valueOf( max_size )
+									
+									}) +
+								", " + MessageText.getString( "label.min.seeds") + " = " + ( min_seeds ));
 						}
 					};
 
@@ -421,6 +433,30 @@ SBC_SubscriptionResultsView
 				}
 			});
 
+				// min seeds
+			
+			label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
+			label.setLayoutData(new RowData(-1, sepHeight));
+
+			Composite cMinSeeds = new Composite(vFilters, SWT.NONE);
+			layout = new GridLayout(2, false);
+			layout.marginWidth = 0;
+			layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
+			cMinSeeds.setLayout(layout);
+			Label lblMinSeeds = new Label(cMinSeeds, SWT.NONE);
+			lblMinSeeds.setText(MessageText.getString("label.min.seeds"));
+			Spinner spinMinSeeds = new Spinner(cMinSeeds, SWT.BORDER);
+			spinMinSeeds.setMinimum(0);
+			spinMinSeeds.setSelection(minSeeds);
+			spinMinSeeds.addListener(SWT.Selection, new Listener() {
+				@Override
+				public void handleEvent(Event event) {
+					minSeeds = ((Spinner) event.widget).getSelection();
+					refilter_dispatcher.dispatch();
+				}
+			});
+
+			
 			if ( filters != null ){
 
 				label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
@@ -441,7 +477,8 @@ SBC_SubscriptionResultsView
 
 							f_filters.update(
 								with_keywords, without_keywords,
-								minSize*mInB, maxSize*mInB );
+								minSize*mInB, maxSize*mInB,
+								minSeeds );
 
 							f_pFilterUpdater.run();
 
@@ -542,6 +579,13 @@ SBC_SubscriptionResultsView
 		long kInB = DisplayFormatters.getKinB();
 		long mInB = kInB*kInB;
 
+		int seeds = result.getSeedCount();
+		
+		if ( minSeeds > 0 && seeds < minSeeds ){
+			
+			return( false );
+		}
+		
 		boolean size_ok =
 
 			(size==-1||(size >= mInB*minSize)) &&

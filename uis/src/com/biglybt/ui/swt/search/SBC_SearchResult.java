@@ -45,6 +45,7 @@ SBC_SearchResult
 	private final int				content_type;
 	private final String			seeds_peers;
 	private final long				seeds_peers_sort;
+	private final int				seed_count;
 	private final long				votes_comments_sort;
 	private final String			votes_comments;
 
@@ -85,6 +86,9 @@ SBC_SearchResult
 		if ( super_seeds > 0 ){
 			seeds += (super_seeds*10);
 		}
+		
+		seed_count = seeds<0?0:seeds;
+		
 		seeds_peers = (seeds<0?"--":String.valueOf(seeds)) + "/" + (leechers<0?"--":String.valueOf(leechers));
 
 		if ( seeds < 0 ){
@@ -169,6 +173,13 @@ SBC_SearchResult
 		return( result.getSize());
 	}
 
+	@Override
+	public int 
+	getSeedCount()
+	{
+		return( seed_count );
+	}
+	
 	@Override
 	public String
 	getSeedsPeers()

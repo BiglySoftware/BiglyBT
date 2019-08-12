@@ -98,6 +98,13 @@ SubscriptionResultFilterImpl
 	}
 
 	@Override
+	public long 
+	getMinSeeds()
+	{
+		return( minSeeds );
+	}
+	
+	@Override
 	public String[]
 	getWithWords()
 	{
@@ -114,9 +121,11 @@ SubscriptionResultFilterImpl
 	@Override
 	public void
 	update(
-		String[] with_words,
-		String[] without_words,
-		long min_size, long max_size )
+		String[] 	with_words,
+		String[] 	without_words,
+		long		min_size, 
+		long 		max_size,
+		long		min_seeds )
 
 		throws SubscriptionException
 	{
@@ -137,8 +146,13 @@ SubscriptionResultFilterImpl
 			max_size = -1;
 		}
 
+		if ( min_seeds <= 0 ){
+			min_seeds = -1;
+		}
+		
 		filters.put( "min_size", min_size );
 		filters.put( "max_size", max_size );
+		filters.put( "min_seeds", min_seeds );
 
 		subs.setDetails( subs.getName( false ), subs.isPublic(), map.toString());
 
@@ -150,8 +164,9 @@ SubscriptionResultFilterImpl
 
 		excludeTextFilterPatterns = getPatterns( excludeTextFilters );
 
-		minSize = min_size;
-		maxSize = max_size;
+		minSize 	= min_size;
+		maxSize 	= max_size;
+		minSeeds	= min_seeds;
 	}
 
 	public String

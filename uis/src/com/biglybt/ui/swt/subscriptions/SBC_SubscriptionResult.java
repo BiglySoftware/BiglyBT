@@ -49,6 +49,7 @@ SBC_SubscriptionResult
 	private long				time;
 	private long				seeds_peers_sort;
 	private String				seeds_peers;
+	private int					seed_count;
 	private long				votes_comments_sort;
 	private String				votes_comments;
 	private int					rank;
@@ -133,6 +134,8 @@ SBC_SubscriptionResult
 		long seeds 		= (Long)properties.get( SearchResult.PR_SEED_COUNT );
 		long leechers 	= (Long)properties.get( SearchResult.PR_LEECHER_COUNT );
 
+		seed_count = (int)(seeds<0?0:seeds);
+		
 		seeds_peers = (seeds<0?"--":String.valueOf(seeds)) + "/" + (leechers<0?"--":String.valueOf(leechers));
 
 		if ( seeds < 0 ){
@@ -223,6 +226,13 @@ SBC_SubscriptionResult
 	getSize()
 	{
 		return( size );
+	}
+	
+	@Override
+	public int 
+	getSeedCount()
+	{
+		return( seed_count );
 	}
 
 	@Override

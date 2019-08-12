@@ -31,6 +31,9 @@ SubscriptionResultFilter
 	public long
 	getMaxSize();
 
+	public long
+	getMinSeeds();
+	
 	public String[]
 	getWithWords();
 
@@ -42,7 +45,8 @@ SubscriptionResultFilter
 		String[]		with_words,
 		String[]		without_words,
 		long			min_size,
-		long			max_size )
+		long			max_size,
+		long			min_seeds )
 
 		throws SubscriptionException;
 }
