@@ -4820,16 +4820,22 @@ DownloadManagerImpl
 
 			  FileUtil.mkdirs(new_save_location.getParentFile());
 
-			  if ( controller.getDiskManagerFileInfoSet().getFiles()[0].setLinkAtomic( new_save_location )){
-			  
-			  	setTorrentSaveDir(new_save_location.getParent().toString(), new_save_location.getName());
-
-			  	return;
-			  	
+			  if ( torrent.isSimpleTorrent()){
+				  
+				  if ( controller.getDiskManagerFileInfoSet().getFiles()[0].setLinkAtomic( new_save_location )){
+				  
+				  	setTorrentSaveDir(new_save_location.getParent().toString(), new_save_location.getName());
+					  	
+				  }else{
+					  
+					  throw new DownloadManagerException( "rename operation failed");
+				  }
 			  }else{
 				  
-				  throw new DownloadManagerException( "rename operation failed");
+				  setTorrentSaveDir( new_save_location.getParentFile().toString(), new_save_location.getName());
 			  }
+			  
+			  return;
 		  }
 
 		  new_save_location = FileUtil.getCanonicalFileSafe( new_save_location );
