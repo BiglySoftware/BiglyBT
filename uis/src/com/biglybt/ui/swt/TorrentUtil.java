@@ -3062,20 +3062,51 @@ public class TorrentUtil
 			for (int i = 0; i < dms.length; i++) {
 				DownloadManager dm = dms[i];
 
-				String displayName = dm.getDisplayName();
-
 				int state = dm.getState();
 				if (state != DownloadManager.STATE_ERROR) {
-					if (!dm.filesExist(true)) {
+					
+						// if download is stopped and not allocated then use the 'move' operation to avoid the subsequent recheck
+						
+					if ( state == DownloadManager.STATE_STOPPED && !dm.isDataAlreadyAllocated()){
+						
+						DiskManagerFileInfo[] files = dm.getDiskManagerFileInfoSet().getFiles();
+						
+						boolean found_file = false;
+						
+						for ( DiskManagerFileInfo info : files ){
+															
+							if ( info.getFile(true).exists()){
+								
+								found_file = true;
+							
+								break;
+							}
+						}
+						
+						if ( !found_file ){
+							
+							try{
+								dm.moveDataFilesLive( fSavePath );
+								
+							} catch (Throwable e) {
+	
+								Logger.log(new LogAlert(dms[i], LogAlert.REPEATABLE,
+										"Download data move operation failed", e));
+							}
+							
+							continue;
+						}
+					}
+					
+					if ( !dm.filesExist(true)){
+						
 						state = DownloadManager.STATE_ERROR;
 					}
 				}
 
 				if (state == DownloadManager.STATE_ERROR) {
 
-					File oldSaveLocation = dm.getSaveLocation();
 					dm.setTorrentSaveDir(sSavePath);
-
 
 					boolean found = dm.filesExist(true);
 					if (!found && dm.getTorrent() != null
