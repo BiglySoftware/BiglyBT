@@ -346,6 +346,7 @@ public class ConsoleInput extends Thread {
 		registerCommand(new CommandLogout());
 		registerCommand(new CommandQuit());
 		registerCommand(new CommandHelp());
+		registerCommand(new CommandEcho());
 		registerCommand(new Alias());
 		registerCommand(new Priority());
 		registerCommand(new Plugin());
@@ -414,6 +415,31 @@ public class ConsoleInput extends Thread {
 		}
 	}
 
+	private class CommandEcho extends IConsoleCommand
+	{
+		public CommandEcho()
+		{
+			super("echo");
+		}
+		@Override
+		public String getCommandDescriptions() {
+			return("echo [args]\t\t\t?\tEchos its arguments");
+		}
+		@Override
+		public void execute(String commandName, ConsoleInput ci, List<String> args)
+		{
+			String str = "";
+			
+			for ( String arg: args ){
+				
+				str += (str.isEmpty()?"":" " ) + args;
+			}
+			
+			ci.out.println( str );
+		}
+
+	}
+	
 	private class CommandHelp extends IConsoleCommand
 	{
 		public CommandHelp()
