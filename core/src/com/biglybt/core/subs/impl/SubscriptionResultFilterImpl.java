@@ -85,7 +85,7 @@ SubscriptionResultFilterImpl
 
 	@Override
 	public long
-	getMinSze()
+	getMinSize()
 	{
 		return( minSize );
 	}
@@ -353,7 +353,7 @@ SubscriptionResultFilterImpl
 			}
 
 			if(minSeeds > -1) {
-				if(minSeeds < result.getNbSeeds()) {
+				if(minSeeds > result.getNbSeeds()) {
 					continue;
 				}
 			}

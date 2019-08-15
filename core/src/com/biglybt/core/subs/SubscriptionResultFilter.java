@@ -26,7 +26,7 @@ public interface
 SubscriptionResultFilter
 {
 	public long
-	getMinSze();
+	getMinSize();
 
 	public long
 	getMaxSize();

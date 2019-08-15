@@ -279,7 +279,7 @@ SBC_SubscriptionResultsView
 							long kInB = DisplayFormatters.getKinB();
 							long mInB = kInB*kInB;
 
-							long	min_size = Math.max( 0,  f_filters.getMinSze()/mInB );
+							long	min_size = Math.max( 0,  f_filters.getMinSize()/mInB );
 							long	max_size = Math.max( 0,  f_filters.getMaxSize()/mInB );
 							long	min_seeds = Math.max( 0,  f_filters.getMinSeeds());
 
