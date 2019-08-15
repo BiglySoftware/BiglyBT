@@ -75,6 +75,9 @@ SubscriptionResultFilter
 		throws SubscriptionException;
 	
 	public boolean
+	isActive();
+	
+	public boolean
 	isFiltered(
 		FilterableResult	result );
 	

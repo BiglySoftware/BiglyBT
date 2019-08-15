@@ -153,6 +153,10 @@ SubscriptionDownloader
 		try{
 			filter = subs.getFilters();
 			
+			if ( !filter.isActive()){
+				
+				filter = null;
+			}
 		}catch( Throwable e ){
 			
 			filter = null;

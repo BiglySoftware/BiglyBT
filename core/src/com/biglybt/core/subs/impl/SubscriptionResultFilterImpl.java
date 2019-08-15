@@ -51,6 +51,9 @@ SubscriptionResultFilterImpl
 	private long minSize = -1;
 	private long maxSize = -1;
 	private String categoryFilter = null;
+	
+		// If you add any more filters then make sure you update isActive()... 
+	
 
 	public 
 	SubscriptionResultFilterImpl()
@@ -97,6 +100,17 @@ SubscriptionResultFilterImpl
 		}
 	}
 
+	@Override
+	public boolean 
+	isActive()
+	{
+		return( textFilters.length > 0 ||
+				excludeTextFilters.length > 0 ||
+				minSize >= 0 ||
+				maxSize >= 0 ||
+				minSeeds >= 0 ||
+				categoryFilter != null );	
+	}
 
 	@Override
 	public long
