@@ -17,8 +17,7 @@
 package com.biglybt.ui.swt.columns.searchsubs;
 
 import com.biglybt.ui.common.table.TableColumnCore;
-import com.biglybt.ui.swt.utils.SearchSubsResultBase;
-
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pif.ui.tables.*;
 

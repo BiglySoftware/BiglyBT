@@ -39,6 +39,7 @@ import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionListener;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.subs.SubscriptionResultFilter;
+import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableColumn;
@@ -75,13 +76,13 @@ import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 public class
 SBC_SubscriptionResultsView
 	extends SkinView
-	implements UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<SBC_SubscriptionResult>, SubscriptionListener
+	implements UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<SubscriptionResultFilterable>, SubscriptionListener
 {
 	public static final String TABLE_SR = "SubscriptionResults";
 
 	private static boolean columnsAdded = false;
 
-	private TableViewSWT<SBC_SubscriptionResult> tv_subs_results;
+	private TableViewSWT<SubscriptionResultFilterable> tv_subs_results;
 
 	private MdiEntry			mdi_entry;
 	private Composite			table_parent;
@@ -106,7 +107,7 @@ SBC_SubscriptionResultsView
 	private Subscription	 			ds;
 	private SubscriptionResultFilter	ds_filter = SubscriptionResultFilter.getTransientFilter();
 	
-	private List<SBC_SubscriptionResult>	last_selected_content = new ArrayList<>();
+	private List<SubscriptionResultFilterable>	last_selected_content = new ArrayList<>();
 
 	public
 	SBC_SubscriptionResultsView()
@@ -556,7 +557,7 @@ SBC_SubscriptionResultsView
 
 	private boolean
 	isOurContent(
-		SBC_SubscriptionResult result)
+		SubscriptionResultFilterable result)
 	{
 		if ( ds_filter == null ){
 			
@@ -593,7 +594,7 @@ SBC_SubscriptionResultsView
 		TableColumnManager tableManager = TableColumnManager.getInstance();
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSubResultNew.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -604,7 +605,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultType.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -615,7 +616,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultName.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -626,7 +627,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultActions.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -637,7 +638,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultSize.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -648,7 +649,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultSeedsPeers.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -659,7 +660,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultRatings.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -670,7 +671,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultAge.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -681,7 +682,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultRank.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -692,7 +693,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultCategory.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -703,7 +704,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultHash.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -714,7 +715,7 @@ SBC_SubscriptionResultsView
 				});
 
 		tableManager.registerColumn(
-			SBC_SubscriptionResult.class,
+			SubscriptionResultFilterable.class,
 			ColumnSearchSubResultExisting.COLUMN_ID,
 				new TableColumnCreationListener() {
 
@@ -811,26 +812,26 @@ SBC_SubscriptionResultsView
 
 			tv_subs_results.processDataSourceQueueSync();
 
-			List<SBC_SubscriptionResult> existing_results = tv_subs_results.getDataSources( true );
+			List<SubscriptionResultFilterable> existing_results = tv_subs_results.getDataSources( true );
 
-			Map<String,SBC_SubscriptionResult>	existing_map = new HashMap<>();
+			Map<String,SubscriptionResultFilterable>	existing_map = new HashMap<>();
 
-			for ( SBC_SubscriptionResult result: existing_results ){
+			for ( SubscriptionResultFilterable result: existing_results ){
 
 				existing_map.put( result.getID(), result );
 			}
 
 			SubscriptionResult[] current_results = ds.getResults( false );
 
-			List<SBC_SubscriptionResult> new_results	= new ArrayList<>(current_results.length);
+			List<SubscriptionResultFilterable> new_results	= new ArrayList<>(current_results.length);
 
 			for ( SubscriptionResult result: current_results ){
 
-				SBC_SubscriptionResult existing = existing_map.remove( result.getID());
+				SubscriptionResultFilterable existing = existing_map.remove( result.getID());
 
 				if ( existing == null ){
 
-					new_results.add( new SBC_SubscriptionResult( ds, result));
+					new_results.add( new SubscriptionResultFilterable( ds, result));
 
 				}else{
 
@@ -840,14 +841,14 @@ SBC_SubscriptionResultsView
 
 			if ( new_results.size() > 0 ){
 
-				tv_subs_results.addDataSources( new_results.toArray( new SBC_SubscriptionResult[ new_results.size()]));
+				tv_subs_results.addDataSources( new_results.toArray( new SubscriptionResultFilterable[ new_results.size()]));
 			}
 
 			if ( existing_map.size() > 0 ){
 
-				Collection<SBC_SubscriptionResult> to_remove = existing_map.values();
+				Collection<SubscriptionResultFilterable> to_remove = existing_map.values();
 
-				tv_subs_results.removeDataSources( to_remove.toArray( new SBC_SubscriptionResult[ to_remove.size()]));
+				tv_subs_results.removeDataSources( to_remove.toArray( new SubscriptionResultFilterable[ to_remove.size()]));
 
 			}
 		}
@@ -955,7 +956,7 @@ SBC_SubscriptionResultsView
 		Composite control )
 	{
 		tv_subs_results = TableViewFactory.createTableViewSWT(
-				SBC_SubscriptionResult.class,
+				SubscriptionResultFilterable.class,
 				TABLE_SR,
 				TABLE_SR,
 				new TableColumnCore[0],
@@ -1042,7 +1043,7 @@ SBC_SubscriptionResultsView
 			public void defaultSelected(TableRowCore[] rows, int stateMask) {
 				if ( rows.length == 1 ){
 
-					SBC_SubscriptionResult rc = (SBC_SubscriptionResult)rows[0].getDataSource();
+					SubscriptionResultFilterable rc = (SubscriptionResultFilterable)rows[0].getDataSource();
 
 					SBC_SearchResultsView.downloadAction( rc );
 				}
@@ -1059,7 +1060,7 @@ SBC_SubscriptionResultsView
 
 				for (int i=0;i<rows.length;i++){
 
-					SBC_SubscriptionResult rc = (SBC_SubscriptionResult)rows[i].getDataSource();
+					SubscriptionResultFilterable rc = (SubscriptionResultFilterable)rows[i].getDataSource();
 
 					last_selected_content.add( rc );
 
@@ -1108,7 +1109,7 @@ SBC_SubscriptionResultsView
 				{
 					Object[] _related_content = tv_subs_results.getSelectedDataSources().toArray();
 
-					final SBC_SubscriptionResult[] results = new SBC_SubscriptionResult[_related_content.length];
+					final SubscriptionResultFilterable[] results = new SubscriptionResultFilterable[_related_content.length];
 
 					System.arraycopy(_related_content, 0, results, 0, results.length);
 
@@ -1120,7 +1121,7 @@ SBC_SubscriptionResultsView
 
 							StringBuffer buffer = new StringBuffer(1024);
 
-							for ( SBC_SubscriptionResult result: results ){
+							for ( SubscriptionResultFilterable result: results ){
 
 								if ( buffer.length() > 0 ){
 									buffer.append( "\r\n" );
@@ -1197,11 +1198,11 @@ SBC_SubscriptionResultsView
 								}
 							}
 
-							SBC_SubscriptionResult[] content = new SBC_SubscriptionResult[ selected.length ];
+							SubscriptionResultFilterable[] content = new SubscriptionResultFilterable[ selected.length ];
 
 							for ( int i=0;i<content.length;i++){
 
-								content[i] = (SBC_SubscriptionResult)selected[i];
+								content[i] = (SubscriptionResultFilterable)selected[i];
 							}
 
 							userDelete( content );
@@ -1246,7 +1247,7 @@ SBC_SubscriptionResultsView
 
 	private void
 	userDelete(
-		SBC_SubscriptionResult[] results )
+		SubscriptionResultFilterable[] results )
 	{
 		TableRowCore focusedRow = tv_subs_results.getFocusedRow();
 
@@ -1264,7 +1265,7 @@ SBC_SubscriptionResultsView
 
 		// TODO: Need a mass delete option.  This one saves the Subscription History
 		// on each call..
-		for ( SBC_SubscriptionResult result: results ){
+		for ( SubscriptionResultFilterable result: results ){
 
 			result.delete();
 		}
@@ -1295,7 +1296,7 @@ SBC_SubscriptionResultsView
 	@Override
 	public boolean
 	filterCheck(
-		SBC_SubscriptionResult 		ds,
+		SubscriptionResultFilterable 		ds,
 		String 						filter,
 		boolean 					regex )
 	{
@@ -1329,7 +1330,7 @@ SBC_SubscriptionResultsView
 
 			if ( _related_content.length > 0 ){
 
-				SBC_SubscriptionResult[] related_content = new SBC_SubscriptionResult[_related_content.length];
+				SubscriptionResultFilterable[] related_content = new SubscriptionResultFilterable[_related_content.length];
 
 				System.arraycopy( _related_content, 0, related_content, 0, related_content.length );
 
@@ -1369,7 +1370,7 @@ SBC_SubscriptionResultsView
 
 	public String
 	getDownloadURI(
-		SBC_SubscriptionResult	result )
+		SubscriptionResultFilterable	result )
 	{
 		String torrent_url = (String)result.getTorrentLink();
 

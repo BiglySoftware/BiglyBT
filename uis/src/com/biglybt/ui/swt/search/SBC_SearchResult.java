@@ -31,7 +31,7 @@ import com.biglybt.core.util.LightHashMap;
 
 import com.biglybt.core.metasearch.Engine;
 import com.biglybt.core.metasearch.Result;
-import com.biglybt.ui.swt.utils.SearchSubsResultBase;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 
 public class
 SBC_SearchResult

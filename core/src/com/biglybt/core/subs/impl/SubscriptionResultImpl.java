@@ -27,6 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.SubscriptionResult;
 import com.biglybt.core.util.*;

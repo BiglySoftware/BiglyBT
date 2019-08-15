@@ -43,7 +43,6 @@ import com.biglybt.ui.swt.columns.search.ColumnSearchResultSite;
 import com.biglybt.ui.swt.columns.searchsubs.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader.ImageDownloaderListener;
 import com.biglybt.ui.swt.search.SearchResultsTabArea.SearchQuery;
-import com.biglybt.ui.swt.utils.SearchSubsResultBase;
 import com.biglybt.ui.swt.utils.SearchSubsUtils;
 import com.biglybt.ui.swt.views.skin.VuzeMessageBox;
 import com.biglybt.ui.swt.views.skin.VuzeMessageBoxListener;
@@ -88,6 +87,8 @@ import com.biglybt.core.metasearch.ResultListener;
 import com.biglybt.core.metasearch.SearchParameter;
 import com.biglybt.core.metasearch.impl.web.WebEngine;
 import com.biglybt.core.subs.Subscription;
+import com.biglybt.core.subs.util.SubscriptionResultFilterable;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.swt.skin.SWTSkin;
 import com.biglybt.ui.swt.skin.SWTSkinCheckboxListener;
@@ -99,7 +100,6 @@ import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.skin.SWTSkinObjectToggle;
 import com.biglybt.ui.swt.skin.SWTSkinProperties;
 import com.biglybt.ui.swt.skin.SWTSkinToggleListener;
-import com.biglybt.ui.swt.subscriptions.SBC_SubscriptionResult;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 
@@ -1943,9 +1943,9 @@ SBC_SearchResultsView
 						try{
 							Map headers = UrlUtils.getBrowserHeaders( referer_str );
 
-							if ( entry instanceof SBC_SubscriptionResult ){
+							if ( entry instanceof SubscriptionResultFilterable ){
 
-								SBC_SubscriptionResult sub_entry = (SBC_SubscriptionResult)entry;
+								SubscriptionResultFilterable sub_entry = (SubscriptionResultFilterable)entry;
 
 								Subscription subs = sub_entry.getSubscription();
 
@@ -2022,7 +2022,7 @@ SBC_SearchResultsView
 		SearchSubsResultBase				entry,
 		final UserPrompterResultListener 	listener )
 	{
-		if ( entry instanceof SBC_SubscriptionResult ){
+		if ( entry instanceof SubscriptionResultFilterable ){
 
 			listener.prompterClosed( 0 );
 

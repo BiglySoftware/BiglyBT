@@ -20,11 +20,10 @@
  */
 
 
-package com.biglybt.ui.swt.subscriptions;
+package com.biglybt.core.subs.util;
 
 import java.util.*;
 
-import com.biglybt.ui.swt.utils.SearchSubsResultBase;
 import com.biglybt.core.util.LightHashMap;
 import com.biglybt.pif.utils.search.SearchResult;
 import com.biglybt.core.metasearch.FilterableResult;
@@ -32,7 +31,7 @@ import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionResult;
 
 public class
-SBC_SubscriptionResult
+SubscriptionResultFilterable
 	implements SearchSubsResultBase, FilterableResult
 {
 	private final Subscription		subs;
@@ -56,8 +55,8 @@ SBC_SubscriptionResult
 
 	private LightHashMap<Object,Object>	user_data;
 
-	protected
-	SBC_SubscriptionResult(
+	public
+	SubscriptionResultFilterable(
 		Subscription		_subs,
 		SubscriptionResult	_result )
 	{
@@ -181,7 +180,7 @@ SBC_SubscriptionResult
 		rank	 	= ((Long)properties.get( SearchResult.PR_RANK )).intValue();
 	}
 
-	protected void
+	public void
 	updateFrom(
 		SubscriptionResult		other )
 	{

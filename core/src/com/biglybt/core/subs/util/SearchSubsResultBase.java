@@ -20,7 +20,7 @@
  */
 
 
-package com.biglybt.ui.swt.utils;
+package com.biglybt.core.subs.util;
 
 
 public interface

@@ -30,6 +30,8 @@ import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.metasearch.SearchLoginException;
 import com.biglybt.core.metasearch.SearchParameter;
 import com.biglybt.core.subs.SubscriptionException;
+import com.biglybt.core.subs.SubscriptionResultFilter;
+import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.Debug;
 import com.biglybt.util.JSONUtils;
 
@@ -146,6 +148,16 @@ SubscriptionDownloader
 			return;
 		}
 
+		SubscriptionResultFilter filter;
+		
+		try{
+			filter = subs.getFilters();
+			
+		}catch( Throwable e ){
+			
+			filter = null;
+		}
+		
 		for (int i=0;i<results.length;i++){
 
 			SubscriptionResultImpl	result = results[i];
@@ -155,6 +167,11 @@ SubscriptionDownloader
 				continue;
 			}
 
+			if ( filter != null && filter.isFiltered( new SubscriptionResultFilterable( subs, result ))){
+				
+				continue;
+			}
+			
 			manager.getScheduler().download( subs, result );
 		}
 	}

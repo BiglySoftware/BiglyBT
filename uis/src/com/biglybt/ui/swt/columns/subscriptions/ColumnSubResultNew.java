@@ -21,10 +21,10 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 
+import com.biglybt.core.subs.util.SubscriptionResultFilterable;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.subscriptions.SBC_SubscriptionResult;
 import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 
@@ -59,7 +59,7 @@ public class ColumnSubResultNew
 
 	@Override
 	public void cellPaint(GC gc, TableCellSWT cell) {
-		SBC_SubscriptionResult entry = (SBC_SubscriptionResult) cell.getDataSource();
+		SubscriptionResultFilterable entry = (SubscriptionResultFilterable) cell.getDataSource();
 
 		Rectangle cellBounds = cell.getBounds();
 		Image img = entry== null || entry.getRead() ? imgOld: imgNew;
@@ -85,7 +85,7 @@ public class ColumnSubResultNew
 
 	@Override
 	public void refresh(TableCell cell) {
-		SBC_SubscriptionResult entry = (SBC_SubscriptionResult)cell.getDataSource();
+		SubscriptionResultFilterable entry = (SubscriptionResultFilterable)cell.getDataSource();
 
 		if ( entry != null ){
 
@@ -102,7 +102,7 @@ public class ColumnSubResultNew
 	public void cellMouseTrigger(final TableCellMouseEvent event) {
 		if (event.eventType == TableRowMouseEvent.EVENT_MOUSEDOWN
 				&& event.button == 1) {
-			SBC_SubscriptionResult entry = (SBC_SubscriptionResult) event.cell.getDataSource();
+			SubscriptionResultFilterable entry = (SubscriptionResultFilterable) event.cell.getDataSource();
 
 			if ( entry != null ){
 

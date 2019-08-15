@@ -27,6 +27,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.Display;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.Debug;
 import com.biglybt.pif.ui.tables.*;
 import com.biglybt.ui.swt.Utils;
@@ -39,7 +40,6 @@ import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.ui.swt.search.SBC_SearchResultsView;
 import com.biglybt.ui.swt.skin.SWTSkinFactory;
 import com.biglybt.ui.swt.skin.SWTSkinProperties;
-import com.biglybt.ui.swt.utils.SearchSubsResultBase;
 
 /**
  * @author TuxPaper

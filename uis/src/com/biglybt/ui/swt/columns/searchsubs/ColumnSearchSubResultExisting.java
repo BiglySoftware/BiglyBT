@@ -22,9 +22,8 @@ import com.biglybt.ui.swt.utils.SearchSubsUtils;
 import com.biglybt.core.config.COConfigurationListener;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.pif.ui.tables.*;
-
-import com.biglybt.ui.swt.utils.SearchSubsResultBase;
 
 
 public class ColumnSearchSubResultExisting

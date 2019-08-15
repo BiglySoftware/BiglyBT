@@ -36,6 +36,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.history.DownloadHistoryManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.Base32;
 import com.biglybt.core.util.ByteFormatter;
 import com.biglybt.core.util.HashWrapper;

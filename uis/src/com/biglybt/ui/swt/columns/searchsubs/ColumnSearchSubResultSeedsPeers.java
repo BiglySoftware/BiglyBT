@@ -18,9 +18,8 @@
 package com.biglybt.ui.swt.columns.searchsubs;
 
 
+import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.pif.ui.tables.*;
-
-import com.biglybt.ui.swt.utils.SearchSubsResultBase;
 
 
 public class ColumnSearchSubResultSeedsPeers
