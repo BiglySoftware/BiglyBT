@@ -110,6 +110,8 @@ public class ConfigSectionTransferAutoSpeedV2
 				SpeedManagerAlgorithmProviderV2.SETTING_INTERVALS_BETWEEN_ADJUST,
 				"ConfigTransferAutoSpeed.adjustment.interval");
 
+		add( adjustmentInterval );
+		
 		//how much data to accumulate before making an adjustment.
 
 		BooleanParameterImpl skipAfterAdjustment = new BooleanParameterImpl(
