@@ -22,31 +22,60 @@
 
 package com.biglybt.core.subs;
 
+import com.biglybt.core.metasearch.FilterableResult;
+import com.biglybt.core.subs.impl.SubscriptionResultFilterImpl;
+
 public interface
 SubscriptionResultFilter
 {
+	public static SubscriptionResultFilter
+	getTransientFilter()
+	{
+		return( new SubscriptionResultFilterImpl());
+	}
+	
 	public long
 	getMinSize();
 
+	public void
+	setMinSize(
+		long	size );
+	
 	public long
 	getMaxSize();
 
+	public void
+	setMaxSize(
+		long	size );
+	
 	public long
 	getMinSeeds();
+	
+	public void
+	setMinSeeds(
+		long	min );
 	
 	public String[]
 	getWithWords();
 
+	public void
+	setWithWords(
+		String[]	words );
+	
 	public String[]
 	getWithoutWords();
 
 	public void
-	update(
-		String[]		with_words,
-		String[]		without_words,
-		long			min_size,
-		long			max_size,
-		long			min_seeds )
+	setWithoutWords(
+		String[]	words );
+	
+	public void
+	save()
 
 		throws SubscriptionException;
+	
+	public boolean
+	isFiltered(
+		FilterableResult	result );
+	
 }

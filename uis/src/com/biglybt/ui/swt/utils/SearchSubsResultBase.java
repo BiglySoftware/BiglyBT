@@ -39,7 +39,7 @@ SearchSubsResultBase
 	getSize();
 
 	public int
-	getSeedCount();
+	getNbSeeds();
 	
 	public String
 	getSeedsPeers();

@@ -32,7 +32,10 @@ import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.HostNameToIPResolver;
 import com.biglybt.core.util.SystemTime;
 
-public abstract class Result {
+public abstract class 
+Result
+	implements FilterableResult
+{
 	private static final String HTML_TAGS = "(\\<(/?[^\\>]+)\\>)" ;
 	private static final String DUPLICATE_SPACES = "\\s{2,}";
 

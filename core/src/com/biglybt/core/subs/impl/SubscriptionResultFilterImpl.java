@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import com.biglybt.util.MapUtils;
 import org.json.simple.JSONObject;
 
+import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionResultFilter;
@@ -51,7 +52,22 @@ SubscriptionResultFilterImpl
 	private long maxSize = -1;
 	private String categoryFilter = null;
 
-	public SubscriptionResultFilterImpl(SubscriptionImpl	_subs, Map filters) {
+	public 
+	SubscriptionResultFilterImpl()
+	{
+		subs	= null;
+		
+		textFilters					= new String[0];
+		textFilterPatterns 			= NO_PATTERNS;
+		excludeTextFilters			= new String[0];
+		excludeTextFilterPatterns	= NO_PATTERNS;
+	}
+	
+	public 
+	SubscriptionResultFilterImpl(
+		SubscriptionImpl	_subs, 
+		Map 				filters) 
+	{
 		subs	= _subs;
 
 		try {
@@ -62,8 +78,7 @@ SubscriptionResultFilterImpl
 			excludeTextFilters = importStrings(filters,"text_filter_out"," ");
 
 			excludeTextFilterPatterns = getPatterns( excludeTextFilters );
-
-
+			
 			regexFilter = MapUtils.getMapString(filters, "text_filter_regex", null);
 
 			minSize = MapUtils.importLong(filters,"min_size",-1l);
@@ -91,6 +106,18 @@ SubscriptionResultFilterImpl
 	}
 
 	@Override
+	public void 
+	setMinSize(
+		long min_size)
+	{
+		if ( min_size <= 0 ){
+			min_size = -1;
+		}
+		
+		minSize = min_size;
+	}
+	
+	@Override
 	public long
 	getMaxSize()
 	{
@@ -98,10 +125,34 @@ SubscriptionResultFilterImpl
 	}
 
 	@Override
+	public void 
+	setMaxSize(
+		long max_size)
+	{
+		if ( max_size <= 0 ){
+			max_size = -1;
+		}
+		
+		maxSize = max_size;
+	}
+	
+	@Override
 	public long 
 	getMinSeeds()
 	{
 		return( minSeeds );
+	}
+	
+	@Override
+	public void 
+	setMinSeeds(
+		long min_seeds)
+	{
+		if ( min_seeds <= 0 ){
+			min_seeds = -1;
+		}
+		
+		minSeeds = min_seeds;
 	}
 	
 	@Override
@@ -112,6 +163,16 @@ SubscriptionResultFilterImpl
 	}
 
 	@Override
+	public void 
+	setWithWords(
+		String[] with_words)
+	{
+		textFilters	= with_words;
+
+		textFilterPatterns = getPatterns( textFilters );	
+	}
+	
+	@Override
 	public String[]
 	getWithoutWords()
 	{
@@ -119,13 +180,18 @@ SubscriptionResultFilterImpl
 	}
 
 	@Override
+	public void 
+	setWithoutWords(
+		String[] without_words)
+	{
+		excludeTextFilters = without_words;
+
+		excludeTextFilterPatterns = getPatterns( excludeTextFilters );
+	}
+	
+	@Override
 	public void
-	update(
-		String[] 	with_words,
-		String[] 	without_words,
-		long		min_size, 
-		long 		max_size,
-		long		min_seeds )
+	save()
 
 		throws SubscriptionException
 	{
@@ -135,38 +201,14 @@ SubscriptionResultFilterImpl
 
 		map.put( "filters", filters );
 
-		exportStrings( filters, "text_filter", with_words );
-		exportStrings( filters, "text_filter_out", without_words );
-
-		if ( min_size <= 0 ){
-			min_size = -1;
-		}
-
-		if ( max_size <= 0 ){
-			max_size = -1;
-		}
-
-		if ( min_seeds <= 0 ){
-			min_seeds = -1;
-		}
-		
-		filters.put( "min_size", min_size );
-		filters.put( "max_size", max_size );
-		filters.put( "min_seeds", min_seeds );
+		exportStrings( filters, "text_filter", textFilters );
+		exportStrings( filters, "text_filter_out", excludeTextFilters );
+	
+		filters.put( "min_size", minSize );
+		filters.put( "max_size", maxSize );
+		filters.put( "min_seeds", minSeeds );
 
 		subs.setDetails( subs.getName( false ), subs.isPublic(), map.toString());
-
-		textFilters	= with_words;
-
-		textFilterPatterns = getPatterns( textFilters );
-
-		excludeTextFilters = without_words;
-
-		excludeTextFilterPatterns = getPatterns( excludeTextFilters );
-
-		minSize 	= min_size;
-		maxSize 	= max_size;
-		minSeeds	= min_seeds;
 	}
 
 	public String
@@ -284,95 +326,104 @@ SubscriptionResultFilterImpl
 		for(int i = 0 ; i < results.length ; i++) {
 			Result result = results[i];
 
-			String name = result.getName();
-			//Results need a name, or they are by default invalid
-			if(name == null) {
-				continue;
+			if ( !isFiltered( result )){
+
+				filteredResults.add(result);
 			}
-			name = name.toLowerCase();
-
-			boolean valid = true;
-			for(int j = 0 ; j < textFilters.length ; j++) {
-
-				//If one of the text filters do not match, let's not keep testing the others
-				// and mark the result as not valid
-				if(!name.contains(textFilters[j])) {
-
-						// double check against reg-expr if exists
-
-					Pattern p = textFilterPatterns[j];
-
-					if ( p == null  || !p.matcher( name ).find()){
-
-						valid = false;
-
-						break;
-					}
-				}
-			}
-
-			//if invalid after name check, let's get to the next result
-			if(!valid) {
-				continue;
-			}
-
-			for(int j = 0 ; j < excludeTextFilters.length ; j++) {
-
-				//If one of the text filters do not match, let's not keep testing the others
-				// and mark the result as not valid
-				if(name.contains(excludeTextFilters[j])) {
-					valid = false;
-					break;
-				}else{
-					Pattern p = excludeTextFilterPatterns[j];
-
-					if ( p != null  && p.matcher( name ).find()){
-						valid = false;
-						break;
-					}
-				}
-			}
-
-			//if invalid after name check, let's get to the next result
-			if(!valid) {
-				continue;
-			}
-
-			long size = result.getSize();
-
-			if(minSize > -1) {
-				if(minSize > size) {
-					continue;
-				}
-			}
-
-			if(maxSize > -1) {
-				if(maxSize < size) {
-					continue;
-				}
-			}
-
-			if(minSeeds > -1) {
-				if(minSeeds > result.getNbSeeds()) {
-					continue;
-				}
-			}
-
-			if(categoryFilter != null) {
-				String category = result.getCategory();
-				if(category == null || !category.equalsIgnoreCase(categoryFilter)) {
-					continue;
-				}
-			}
-
-
-			//All filters are ok, let's add the results to the filtered results
-			filteredResults.add(result);
-
 		}
 
 		Result[] fResults = (Result[]) filteredResults.toArray(new Result[filteredResults.size()]);
 
 		return fResults;
+	}
+	
+	@Override
+	public boolean 
+	isFiltered(
+		FilterableResult result )
+	{
+		String name = result.getName();
+		//Results need a name, or they are by default invalid
+		if(name == null) {
+			return( true );
+		}
+		name = name.toLowerCase();
+
+		boolean valid = true;
+		for(int j = 0 ; j < textFilters.length ; j++) {
+
+			//If one of the text filters do not match, let's not keep testing the others
+			// and mark the result as not valid
+			if(!name.contains(textFilters[j])) {
+
+					// double check against reg-expr if exists
+
+				Pattern p = textFilterPatterns[j];
+
+				if ( p == null  || !p.matcher( name ).find()){
+
+					valid = false;
+
+					break;
+				}
+			}
+		}
+
+		//if invalid after name check, let's get to the next result
+		
+		if (!valid){
+			return( true );
+		}
+
+		for(int j = 0 ; j < excludeTextFilters.length ; j++) {
+
+			//If one of the text filters do not match, let's not keep testing the others
+			// and mark the result as not valid
+			if(name.contains(excludeTextFilters[j])) {
+				valid = false;
+				break;
+			}else{
+				Pattern p = excludeTextFilterPatterns[j];
+
+				if ( p != null  && p.matcher( name ).find()){
+					valid = false;
+					break;
+				}
+			}
+		}
+
+		//if invalid after name check, let's get to the next result
+		if(!valid) {
+			return( true );
+		}
+
+		long size = result.getSize();
+
+		if(minSize > -1) {
+			if(minSize > size) {
+				return( true );
+			}
+		}
+
+		if(maxSize > -1) {
+			if(maxSize < size) {
+				return( true );
+			}
+		}
+
+		if(minSeeds > -1) {
+			if(minSeeds > result.getNbSeeds()) {
+				return( true );
+			}
+		}
+
+		if(categoryFilter != null) {
+			String category = result.getCategory();
+			if(category == null || !category.equalsIgnoreCase(categoryFilter)) {
+				return( true );
+			}
+		}
+		
+		return( false );
 	}
 }

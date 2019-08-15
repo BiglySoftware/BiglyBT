@@ -21,6 +21,7 @@ package com.biglybt.ui.swt.subscriptions;
 
 import java.util.*;
 import java.util.List;
+import java.util.function.Function;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
@@ -82,7 +83,7 @@ SBC_SubscriptionResultsView
 
 	private TableViewSWT<SBC_SubscriptionResult> tv_subs_results;
 
-	private MdiEntry mdi_entry;
+	private MdiEntry			mdi_entry;
 	private Composite			table_parent;
 
 
@@ -90,12 +91,6 @@ SBC_SubscriptionResultsView
 
 	private final Object filter_lock = new Object();
 
-	private int minSize;
-	private int maxSize;
-	private int minSeeds;
-	
-	private String[]	with_keywords 		= {};
-	private String[]	without_keywords 	= {};
 
 	private FrequencyLimitedDispatcher	refilter_dispatcher =
 			new FrequencyLimitedDispatcher(
@@ -108,8 +103,9 @@ SBC_SubscriptionResultsView
 					}
 				}, 250 );
 
-	private Subscription	 ds;
-
+	private Subscription	 			ds;
+	private SubscriptionResultFilter	ds_filter = SubscriptionResultFilter.getTransientFilter();
+	
 	private List<SBC_SubscriptionResult>	last_selected_content = new ArrayList<>();
 
 	public
@@ -242,15 +238,11 @@ SBC_SubscriptionResultsView
 
 			cFilters.setLayout( layout );
 
-			SubscriptionResultFilter filters = null;
-
 			Runnable pFilterUpdater = null;
 
 			if ( ds != null && ds.isUpdateable()){
 
 				try{
-					filters = ds.getFilters();
-
 					Composite pFilters = new Composite(cFilters, SWT.NONE);
 					pFilters.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
 
@@ -262,16 +254,9 @@ SBC_SubscriptionResultsView
 
 					final Label pflabel = new Label( pFilters, SWT.NONE );
 					pflabel.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
-
-					final SubscriptionResultFilter f_filters = filters;
-
-					with_keywords 		= filters.getWithWords();
-					without_keywords	= filters.getWithoutWords();
 										
 					pFilterUpdater = new Runnable()
 					{
-						boolean first = true;
-					
 						@Override
 						public void
 						run()
@@ -279,23 +264,16 @@ SBC_SubscriptionResultsView
 							long kInB = DisplayFormatters.getKinB();
 							long mInB = kInB*kInB;
 
-							long	min_size = Math.max( 0,  f_filters.getMinSize()/mInB );
-							long	max_size = Math.max( 0,  f_filters.getMaxSize()/mInB );
-							long	min_seeds = Math.max( 0,  f_filters.getMinSeeds());
-
-							if ( first ){
-								
-								minSize = (int)min_size;
-								maxSize	= (int)max_size;
-								minSeeds = (int)min_seeds;
-							}
+							long	min_size = Math.max( 0,  ds_filter.getMinSize()/mInB );
+							long	max_size = Math.max( 0,  ds_filter.getMaxSize()/mInB );
+							long	min_seeds = Math.max( 0,  ds_filter.getMinSeeds());
 							
 							pflabel.setText(
 								MessageText.getString(
 									"subs.persistent.filters",
 									new String[]{
-										getString( f_filters.getWithWords()),
-										getString( f_filters.getWithoutWords()),
+										getString( ds_filter.getWithWords()),
+										getString( ds_filter.getWithoutWords()),
 										String.valueOf( min_size ),
 										String.valueOf( max_size )
 									
@@ -327,6 +305,17 @@ SBC_SubscriptionResultsView
 
 			ImageLoader imageLoader = ImageLoader.getInstance();
 
+			Function<String[],String> flattener = 
+				( words ) ->{
+					String str ="";
+					
+					for ( String word: words ){
+						str += (str.isEmpty()?"":" ") + word;
+					}
+					
+					return( str );
+				};
+				
 			for ( int i=0;i<2;i++){
 
 				final boolean with = i == 0;
@@ -351,6 +340,7 @@ SBC_SubscriptionResultsView
 				textWithKW.setMessage(MessageText.getString(with?"SubscriptionResults.filter.with.words":"SubscriptionResults.filter.without.words"));
 				GridData gd = new GridData();
 				gd.widthHint = 100;
+				textWithKW.setText( flattener.apply( with?ds_filter.getWithWords():ds_filter.getWithoutWords()));
 				textWithKW.setLayoutData( gd );
 				textWithKW.addModifyListener(
 					new ModifyListener() {
@@ -373,9 +363,9 @@ SBC_SubscriptionResultsView
 							String[] words = temp.toArray( new String[temp.size()] );
 							synchronized( filter_lock ){
 								if ( with ){
-									with_keywords = words;
+									ds_filter.setWithWords( words );
 								}else{
-									without_keywords = words;
+									ds_filter.setWithoutWords( words );
 								}
 							}
 							refilter_dispatcher.dispatch();
@@ -383,7 +373,8 @@ SBC_SubscriptionResultsView
 					});
 			}
 
-			int kinb = DisplayFormatters.getKinB();
+			int kInB = DisplayFormatters.getKinB();
+			long mInB = kInB*kInB;
 			
 				// min size
 
@@ -399,12 +390,12 @@ SBC_SubscriptionResultsView
 			lblMinSize.setText(MessageText.getString("SubscriptionResults.filter.min_size"));
 			Spinner spinMinSize = new Spinner(cMinSize, SWT.BORDER);
 			spinMinSize.setMinimum(0);
-			spinMinSize.setMaximum(100*kinb*kinb);	// 100 TB should do...
-			spinMinSize.setSelection(minSize);
+			spinMinSize.setMaximum(100*kInB*kInB);	// 100 TB should do...
+			spinMinSize.setSelection(Math.max( 0,  (int)( ds_filter.getMinSize()/mInB )));
 			spinMinSize.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					minSize = ((Spinner) event.widget).getSelection();
+					ds_filter.setMinSize(((Spinner) event.widget).getSelection() * mInB);
 					refilter_dispatcher.dispatch();
 				}
 			});
@@ -423,12 +414,12 @@ SBC_SubscriptionResultsView
 			lblMaxSize.setText(MessageText.getString("SubscriptionResults.filter.max_size"));
 			Spinner spinMaxSize = new Spinner(cMaxSize, SWT.BORDER);
 			spinMaxSize.setMinimum(0);
-			spinMaxSize.setMaximum(100*kinb*kinb);	// 100 TB should do...
-			spinMaxSize.setSelection(maxSize);
+			spinMaxSize.setMaximum(100*kInB*kInB);	// 100 TB should do...
+			spinMaxSize.setSelection(Math.max( 0,  (int)( ds_filter.getMaxSize()/mInB )));
 			spinMaxSize.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					maxSize = ((Spinner) event.widget).getSelection();
+					ds_filter.setMaxSize(((Spinner) event.widget).getSelection() * mInB);
 					refilter_dispatcher.dispatch();
 				}
 			});
@@ -447,22 +438,21 @@ SBC_SubscriptionResultsView
 			lblMinSeeds.setText(MessageText.getString("label.min.seeds"));
 			Spinner spinMinSeeds = new Spinner(cMinSeeds, SWT.BORDER);
 			spinMinSeeds.setMinimum(0);
-			spinMinSeeds.setSelection(minSeeds);
+			spinMinSeeds.setSelection((int)ds_filter.getMinSeeds());
 			spinMinSeeds.addListener(SWT.Selection, new Listener() {
 				@Override
 				public void handleEvent(Event event) {
-					minSeeds = ((Spinner) event.widget).getSelection();
+					ds_filter.setMinSeeds(((Spinner) event.widget).getSelection());
 					refilter_dispatcher.dispatch();
 				}
 			});
 
 			
-			if ( filters != null ){
+			if ( ds != null && ds.isUpdateable()){
 
 				label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
 				label.setLayoutData(new RowData(-1, sepHeight));
 
-				final SubscriptionResultFilter 	f_filters 			= filters;
 				final Runnable					f_pFilterUpdater 	= pFilterUpdater;
 
 				Button save = new Button( vFilters,SWT.PUSH );
@@ -472,13 +462,7 @@ SBC_SubscriptionResultsView
 					public void handleEvent(Event event) {
 
 						try{
-							long kInB = DisplayFormatters.getKinB();
-							long mInB = kInB*kInB;
-
-							f_filters.update(
-								with_keywords, without_keywords,
-								minSize*mInB, maxSize*mInB,
-								minSeeds );
+							ds_filter.save();
 
 							f_pFilterUpdater.run();
 
@@ -574,53 +558,14 @@ SBC_SubscriptionResultsView
 	isOurContent(
 		SBC_SubscriptionResult result)
 	{
-		long	size = result.getSize();
-
-		long kInB = DisplayFormatters.getKinB();
-		long mInB = kInB*kInB;
-
-		int seeds = result.getSeedCount();
-		
-		if ( minSeeds > 0 && seeds < minSeeds ){
+		if ( ds_filter == null ){
 			
-			return( false );
-		}
+			return( true );
+			
+		}else{
 		
-		boolean size_ok =
-
-			(size==-1||(size >= mInB*minSize)) &&
-			(size==-1||(maxSize ==0 || size <= mInB*maxSize));
-
-		if ( !size_ok ){
-
-			return( false );
+			return( !ds_filter.isFiltered( result ));
 		}
-
-		if ( with_keywords.length > 0 || without_keywords.length > 0 ){
-
-			synchronized( filter_lock ){
-
-				String name = result.getName().toLowerCase( Locale.US );
-
-				for ( int i=0;i<with_keywords.length;i++){
-
-					if ( !name.contains( with_keywords[i] )){
-
-						return( false );
-					}
-				}
-
-				for ( int i=0;i<without_keywords.length;i++){
-
-					if ( name.contains( without_keywords[i] )){
-
-						return( false );
-					}
-				}
-			}
-		}
-
-		return( true );
 	}
 
 
@@ -813,6 +758,17 @@ SBC_SubscriptionResultsView
 			if ( new_ds != null ){
 
 				ds.addListener( this );
+				
+				try{
+					ds_filter = ds.getFilters();
+					
+				}catch( Throwable e ){
+					
+					ds_filter = SubscriptionResultFilter.getTransientFilter();
+				}
+			}else{
+				
+				ds_filter = SubscriptionResultFilter.getTransientFilter();
 			}
 		}
 

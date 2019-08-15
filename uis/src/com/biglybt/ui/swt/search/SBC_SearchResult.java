@@ -175,7 +175,7 @@ SBC_SearchResult
 
 	@Override
 	public int 
-	getSeedCount()
+	getNbSeeds()
 	{
 		return( seed_count );
 	}

@@ -27,13 +27,13 @@ import java.util.*;
 import com.biglybt.ui.swt.utils.SearchSubsResultBase;
 import com.biglybt.core.util.LightHashMap;
 import com.biglybt.pif.utils.search.SearchResult;
-
+import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.subs.Subscription;
 import com.biglybt.core.subs.SubscriptionResult;
 
 public class
 SBC_SubscriptionResult
-	implements SearchSubsResultBase
+	implements SearchSubsResultBase, FilterableResult
 {
 	private final Subscription		subs;
 	private final String			result_id;
@@ -230,7 +230,7 @@ SBC_SubscriptionResult
 	
 	@Override
 	public int 
-	getSeedCount()
+	getNbSeeds()
 	{
 		return( seed_count );
 	}
