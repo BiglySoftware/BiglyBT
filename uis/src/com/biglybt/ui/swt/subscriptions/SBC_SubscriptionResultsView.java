@@ -480,7 +480,9 @@ SBC_SubscriptionResultsView
 				int	val 	= spinMaxAge.getSelection();
 				int unit	= combMaxAge.getSelectionIndex();
 				
-				ds_filter.setMaxAgeSecs( TimeFormatter.TIME_SUFFIXES_2_MULT[unit] * (long)val );
+				long secs = TimeFormatter.TIME_SUFFIXES_2_MULT[unit] * (long)( val + 1 ) - 1;
+				
+				ds_filter.setMaxAgeSecs( secs );
 				
 				refilter_dispatcher.dispatch();
 			};
