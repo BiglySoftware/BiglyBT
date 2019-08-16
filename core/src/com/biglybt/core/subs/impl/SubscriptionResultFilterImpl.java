@@ -14,6 +14,7 @@ import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionResultFilter;
+import com.biglybt.core.util.SystemTime;
 import com.biglybt.util.JSONUtils;
 
 /*
@@ -50,6 +51,8 @@ SubscriptionResultFilterImpl
 	private long minSeeds = -1;
 	private long minSize = -1;
 	private long maxSize = -1;
+	private long maxAgeSecs	= -1;
+	
 	private String categoryFilter = null;
 	
 		// If you add any more filters then make sure you update isActive()... 
@@ -89,6 +92,8 @@ SubscriptionResultFilterImpl
 			maxSize = MapUtils.importLong(filters,"max_size",-1l);
 
 			minSeeds = MapUtils.importLong(filters, "min_seeds",-1l);
+			
+			maxAgeSecs = MapUtils.importLong(filters, "max_age",-1l);
 
 			String rawCategory = MapUtils.getMapString(filters,"category", null);
 			if(rawCategory != null) {
@@ -109,6 +114,7 @@ SubscriptionResultFilterImpl
 				minSize >= 0 ||
 				maxSize >= 0 ||
 				minSeeds >= 0 ||
+				maxAgeSecs >= 0 ||
 				categoryFilter != null );	
 	}
 
@@ -170,6 +176,25 @@ SubscriptionResultFilterImpl
 	}
 	
 	@Override
+	public long
+	getMaxAgeSecs()
+	{
+		return( maxAgeSecs );
+	}
+	
+	@Override
+	public void
+	setMaxAgeSecs(
+		long	max_secs )
+	{
+		if ( max_secs <= 0 ){
+			max_secs = -1;
+		}
+		
+		maxAgeSecs = max_secs;	
+	}
+	
+	@Override
 	public String[]
 	getWithWords()
 	{
@@ -221,6 +246,7 @@ SubscriptionResultFilterImpl
 		filters.put( "min_size", minSize );
 		filters.put( "max_size", maxSize );
 		filters.put( "min_seeds", minSeeds );
+		filters.put( "max_age", maxAgeSecs );
 
 		subs.setDetails( subs.getName( false ), subs.isPublic(), map.toString());
 	}
@@ -413,24 +439,41 @@ SubscriptionResultFilterImpl
 
 		long size = result.getSize();
 
-		if(minSize > -1) {
-			if(minSize > size) {
+		if ( minSize > -1 ){
+			
+			if ( size < minSize ){
+				
 				return( true );
 			}
 		}
 
-		if(maxSize > -1) {
-			if(maxSize < size) {
+		if (maxSize > -1){
+			
+			if ( size > maxSize ){
+				
 				return( true );
 			}
 		}
 
-		if(minSeeds > -1) {
-			if(minSeeds > result.getNbSeeds()) {
+		if (minSeeds > -1){
+			
+			if ( result.getNbSeeds() < minSeeds ){
+				
 				return( true );
 			}
 		}
 
+		if (maxAgeSecs > -1 ){
+			
+			long time = result.getTime();
+			
+			long age_secs = (SystemTime.getCurrentTime() - time)/1000;
+			
+			if ( age_secs > maxAgeSecs ){
+				
+				return( true );
+			}
+		}
 		if(categoryFilter != null) {
 			String category = result.getCategory();
 			if(category == null || !category.equalsIgnoreCase(categoryFilter)) {

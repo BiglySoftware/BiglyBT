@@ -32,4 +32,7 @@ FilterableResult
 	
 	public int
 	getNbSeeds();
+	
+	public long
+	getTime();
 }

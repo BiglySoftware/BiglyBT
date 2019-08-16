@@ -249,14 +249,7 @@ SBC_SearchResult
 	public long
 	getTime()
 	{
-		Date date = result.getPublishedDate();
-
-		if ( date != null ){
-
-			return( date.getTime());
-		}
-
-		return( 0 );
+		return( result.getTime());
 	}
 
 	public Image

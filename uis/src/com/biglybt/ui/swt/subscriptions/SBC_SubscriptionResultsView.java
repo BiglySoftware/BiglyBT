@@ -268,6 +268,7 @@ SBC_SubscriptionResultsView
 							long	min_size = Math.max( 0,  ds_filter.getMinSize()/mInB );
 							long	max_size = Math.max( 0,  ds_filter.getMaxSize()/mInB );
 							long	min_seeds = Math.max( 0,  ds_filter.getMinSeeds());
+							long	max_age = Math.max( 0,  ds_filter.getMaxAgeSecs());
 							
 							pflabel.setText(
 								MessageText.getString(
@@ -279,7 +280,8 @@ SBC_SubscriptionResultsView
 										String.valueOf( max_size )
 									
 									}) +
-								", " + MessageText.getString( "label.min.seeds") + " = " + ( min_seeds ));
+								", " + MessageText.getString( "label.min.seeds") + " = " + ( min_seeds ) + 
+								", " + MessageText.getString( "label.max.age") + " = " + (TimeFormatter.format3( max_age, null, true )));
 						}
 					};
 
@@ -448,6 +450,50 @@ SBC_SubscriptionResultsView
 				}
 			});
 
+			
+				// max age
+			
+			label = new Label(vFilters, SWT.VERTICAL | SWT.SEPARATOR);
+			label.setLayoutData(new RowData(-1, sepHeight));
+
+			Composite cMaxAge = new Composite(vFilters, SWT.NONE);
+			layout = new GridLayout(3, false);
+			layout.marginWidth = 0;
+			layout.marginBottom = layout.marginTop = layout.marginLeft = layout.marginRight = 0;
+			cMaxAge.setLayout(layout);
+			
+			Label lblMaxAge = new Label(cMaxAge, SWT.NONE);
+			lblMaxAge.setText(MessageText.getString("label.max.age"));
+			
+			Spinner spinMaxAge = new Spinner(cMaxAge, SWT.BORDER);
+			spinMaxAge.setMinimum(0);
+			spinMaxAge.setMaximum(Integer.MAX_VALUE);
+			
+			Combo combMaxAge = new Combo( cMaxAge, SWT.SINGLE | SWT.READ_ONLY );
+			
+			for ( String unit: TimeFormatter.TIME_SUFFIXES_2 ){
+			
+				combMaxAge.add( unit );
+			}
+			
+			Listener maxAgeListener = (e)->{
+				int	val 	= spinMaxAge.getSelection();
+				int unit	= combMaxAge.getSelectionIndex();
+				
+				ds_filter.setMaxAgeSecs( TimeFormatter.TIME_SUFFIXES_2_MULT[unit] * (long)val );
+				
+				refilter_dispatcher.dispatch();
+			};
+			
+			int[] temp = TimeFormatter.format3Support( ds_filter.getMaxAgeSecs(), null, true );
+			
+			int val = temp[0];
+			
+			spinMaxAge.setSelection( val<0?0:val );
+			combMaxAge.select( temp[1] );			
+			
+			spinMaxAge.addListener(SWT.Selection, maxAgeListener );		
+			combMaxAge.addListener(SWT.Selection, maxAgeListener );
 			
 			if ( ds != null && ds.isUpdateable()){
 

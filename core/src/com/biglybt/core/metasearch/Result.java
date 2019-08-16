@@ -386,6 +386,20 @@ Result
 		}
 	}
 
+	@Override
+	public long
+	getTime()
+	{
+		Date date = getPublishedDate();
+
+		if ( date != null ){
+
+			return( date.getTime());
+		}
+
+		return( 0 );
+	}
+
 	public static String
 	adjustLink(
 		String		link )

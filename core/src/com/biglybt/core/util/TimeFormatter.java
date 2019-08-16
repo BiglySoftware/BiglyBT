@@ -37,11 +37,15 @@ public class TimeFormatter {
 	public static final int	TS_MINUTE	= 1;
 	public static final int	TS_HOUR		= 2;
 	public static final int	TS_DAY		= 3;
-	public static final int	TS_YEAR		= 4;
+	public static final int	TS_WEEK		= 4;
+	public static final int	TS_MONTH	= 5;
+	public static final int	TS_YEAR		= 6;
 	
-	static final String[] TIME_SUFFIXES 	= { "s", "m", "h", "d", "y" };
+	public static final String[] 	TIME_SUFFIXES 	= { "s", "m", "h", "d", "y" };
 
-	static final String[] TIME_SUFFIXES_2 	= { "sec", "min", "hr", "day", "wk", "mo", "yr" };
+	public static final String[] 	TIME_SUFFIXES_2 		= { "sec", "min", "hr", "day", "wk", "mo", "yr" };
+	
+	public static final long[]		TIME_SUFFIXES_2_MULT	 = { 1, 60, 60*60, 24*60*60, 7*24*60*60, 30*24*60*60, 365L*24*60*60 };
 
 	public static String
 	getLongSuffix(
@@ -257,49 +261,142 @@ public class TimeFormatter {
 	{
 		return( format3( time_secs, null ));
 	}
-	
-	static final long[] TIME_LUMPS = { 1, 60, 60*60, 24*60*60, 7*24*60*60, 30*24*60*60, 365*24*60*60L };
-	
+		
 	public static String
 	format3(
 		long 	time_secs,
 		long[]	sort_time )
 	{
-		if (time_secs == Constants.CRAPPY_INFINITY_AS_INT || time_secs >= Constants.CRAPPY_INFINITE_AS_LONG)
+		return( format3( time_secs, sort_time, false ));
+	}
+	
+	public static String
+	format3(
+		long 		time_secs,
+		long[]		sort_time,
+		boolean		flexible )
+	{
+		int[] temp = format3Support( time_secs, sort_time, flexible );
+		
+		int val = temp[0];
+		
+		if ( val == -1 ){
+			
 			return Constants.INFINITY_STRING;
-
-		if ( time_secs < 0 ){
+			
+		}else if ( val == -2 ){
+			
 
 			return "";
 
 		}
 
-		// secs, mins, hours, days, weeks, months, years (kind of...)
-
-		int[] vals = {
-			(int) time_secs % 60,							// secs
-			(int) (time_secs / 60) % 60,					// mins
-			(int) (time_secs / ( 60*60)) % 24,				// hours
-			(int) (time_secs / ( 60*60*24)) % 7,			// days
-			(int) (time_secs / ( 60*60*24*7)) % 4,			// weeks
-			(int) (time_secs / ( 60*60*24*30)) % 12,		// months
-			(int) (time_secs / ( 60*60*24*365L))			// years
-		};
-
-		int start = vals.length - 1;
-		while (vals[start] == 0 && start > 0) {
-			start--;
-		}
-		
-		if ( sort_time != null ){
-			sort_time[0] = vals[start] * TIME_LUMPS[start];
-		}
-
-		String result = vals[start] + " " + TIME_SUFFIXES_2[start];
+		String result = val + " " + TIME_SUFFIXES_2[temp[1]];
 
 		return result;
 	}
 
+	public static int[]
+	format3Support(
+		long 		time_secs,
+		long[]		sort_time )
+	{
+		return( format3Support( time_secs, sort_time, false ));
+	}
+	
+	public static int[]
+	format3Support(
+		long 		time_secs,
+		long[]		sort_time,
+		boolean		flexible )
+	{
+		if (time_secs == Constants.CRAPPY_INFINITY_AS_INT || time_secs >= Constants.CRAPPY_INFINITE_AS_LONG)
+			return new int[]{ -1, 0 };
+
+		if ( time_secs < 0 ){
+
+			return new int[]{ -2, 0 };
+
+		}
+
+
+		int unit_index = TIME_SUFFIXES_2.length - 1;
+		int unit_val;
+		
+		if ( flexible ){
+		
+			// secs, mins, hours, days, weeks, months, years (kind of...)
+
+			int[] vals = {
+				(int) time_secs,						// secs
+				(int) (time_secs / 60),					// mins
+				(int) (time_secs / ( 60*60)),			// hours
+				(int) (time_secs / ( 60*60*24)),		// days
+				(int) (time_secs / ( 60*60*24*7)),		// weeks
+				(int) (time_secs / ( 60*60*24*30)),		// months
+				(int) (time_secs / ( 60*60*24*365L))	// years
+			};
+
+			int[] val_max = { 60, 240, 96, 90, 104, Integer.MAX_VALUE };
+			
+			while ( true ){
+				
+				long val = vals[unit_index];
+			
+				if ( val != 0 ){
+					
+					long rem = time_secs - (val * TIME_SUFFIXES_2_MULT[unit_index]);
+					
+					if ( rem == 0 ){
+						
+						break;
+						
+					}else if ( unit_index > 0 && vals[unit_index-1] >= val_max[ unit_index-1 ]){
+						
+						break;
+					}
+				}
+				
+				if ( unit_index > 0 ){
+				
+					unit_index--;
+					
+				}else{
+					
+					break;
+				}
+			}
+			
+			unit_val = vals[ unit_index ];
+			
+		}else{
+			// secs, mins, hours, days, weeks, months, years (kind of...)
+
+			int[] vals = {
+				(int) time_secs % 60,							// secs
+				(int) (time_secs / 60) % 60,					// mins
+				(int) (time_secs / ( 60*60)) % 24,				// hours
+				(int) (time_secs / ( 60*60*24)) % 7,			// days
+				(int) (time_secs / ( 60*60*24*7)) % 4,			// weeks
+				(int) (time_secs / ( 60*60*24*30)) % 12,		// months
+				(int) (time_secs / ( 60*60*24*365L))			// years
+			};
+
+			while (vals[unit_index] == 0 && unit_index > 0){
+			
+				unit_index--;
+			}
+			
+			unit_val = vals[ unit_index ];
+		}
+		
+		if ( sort_time != null ){
+			sort_time[0] = unit_val * TIME_SUFFIXES_2_MULT[unit_index];
+		}
+
+		return( new int[]{ unit_val, unit_index });
+	}
+	
 	public static String format100ths(long time_millis) {
 
 		long time_secs = time_millis / 1000;

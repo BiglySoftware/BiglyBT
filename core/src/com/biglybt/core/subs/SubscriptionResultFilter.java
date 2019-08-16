@@ -55,6 +55,13 @@ SubscriptionResultFilter
 	setMinSeeds(
 		long	min );
 	
+	public long
+	getMaxAgeSecs();
+	
+	public void
+	setMaxAgeSecs(
+		long	secs );
+	
 	public String[]
 	getWithWords();
 
