@@ -6117,7 +6117,9 @@ SpeedLimitHandler
 						
 						String client = hs_name;
 						
-						for ( int i=0;i<chars.length;i++){
+							// take at least first 2 chars (handles I2PSnark as well...)
+						
+						for ( int i=2;i<chars.length;i++){
 							
 							if ( !Character.isLetter( chars[i] )){
 								
