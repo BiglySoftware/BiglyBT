@@ -29,6 +29,7 @@ import com.biglybt.core.util.CopyOnWriteList;
 import com.biglybt.pif.disk.DiskManagerFileInfo;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.download.DownloadAttributeListener;
+import com.biglybt.pif.download.DownloadManager;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentAttribute;
 import com.biglybt.pifimpl.local.PluginCoreUtils;
@@ -45,6 +46,7 @@ PlatformContentDirectory
 	private static boolean registered = false;
 
 	private static TorrentAttribute	ta_category;
+	private final DownloadManager downloadManager;
 
 	public static synchronized void
 	register()
@@ -60,6 +62,10 @@ PlatformContentDirectory
 	}
 
 	private static CopyOnWriteList<ContentDirectoryListener>	listeners = new CopyOnWriteList<>();
+
+	public PlatformContentDirectory() {
+		downloadManager = PluginInitializer.getDefaultInterface().getDownloadManager();
+	}
 
 	@Override
 	public Content
@@ -77,7 +83,7 @@ PlatformContentDirectory
 		byte[]	hash = (byte[])attributes.get( AT_BTIH );
 
 		try{
-			final Download download = PluginInitializer.getDefaultInterface().getDownloadManager().getDownload(hash);
+			final Download download = downloadManager.getDownload(hash);
 
 			if ( download == null ){
 
@@ -119,7 +125,7 @@ PlatformContentDirectory
 
 		try{
 
-			Download download = PluginInitializer.getDefaultInterface().getDownloadManager().getDownload(hash);
+			Download download = downloadManager.getDownload(hash);
 
 			if ( download == null ){
 
