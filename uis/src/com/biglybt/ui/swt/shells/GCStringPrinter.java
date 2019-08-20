@@ -28,14 +28,18 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.layout.*;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowData;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
-
 import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.SWTThread;
+import com.biglybt.ui.swt.mainwindow.SWTThreadAlreadyInstanciatedException;
 
 /**
  * @author Olivier Chalouhi
@@ -106,6 +110,8 @@ public class GCStringPrinter
 
 	private boolean wrap;
 
+	private Rectangle drawRect;
+
 	public static class URLInfo
 	{
 		public String url;
@@ -153,6 +159,7 @@ public class GCStringPrinter
 
 		public Point outputLineExtent 			= new Point(0, 0);
 		public Point outputLinePreferredExtent 	= new Point(0, 0);
+		public int outputLineStartX;
 
 		public LineInfo(String originalLine, int relStartPos) {
 			this.originalLine = originalLine;
@@ -359,8 +366,10 @@ public class GCStringPrinter
   		}
 		}
 
-		Rectangle rectDraw = new Rectangle(printArea.x, printArea.y,
+		Rectangle lineDrawRect = new Rectangle(printArea.x, printArea.y,
 				printArea.width, printArea.height);
+		drawRect = new Rectangle(printArea.x, printArea.y,
+			printArea.width, printArea.height);
 
 		Rectangle oldClipping = null;
 		try {
@@ -539,21 +548,31 @@ public class GCStringPrinter
 				}
 
 				if ((swtFlags & (SWT.BOTTOM)) != 0) {
-					rectDraw.y = rectDraw.y + rectDraw.height - size.y;
+					lineDrawRect.y = lineDrawRect.y + lineDrawRect.height - size.y;
 				} else if ((swtFlags & SWT.TOP) == 0) {
 					// center vert
-					rectDraw.y = rectDraw.y + (rectDraw.height - size.y) / 2;
+					lineDrawRect.y = lineDrawRect.y + (lineDrawRect.height - size.y) / 2;
 				}
 
+				drawRect.y = lineDrawRect.y;
+
 				if (!noDraw || listUrlInfo != null) {
+					drawRect.x = Integer.MAX_VALUE;
 					for (LineInfo lineInfo : lines) {
 						try {
-							drawLine(gc, lineInfo, swtFlags, rectDraw, noDraw);
+							drawLine(gc, lineInfo, swtFlags, lineDrawRect, noDraw);
+							drawRect.x = Math.min(drawRect.x, lineInfo.outputLineStartX);
 						} catch (Throwable t) {
 							t.printStackTrace();
 						}
 					}
+					if (drawRect.x == Integer.MAX_VALUE) {
+						drawRect.x = printArea.x;
+					}
 				}
+
+				drawRect.height = size.y;
+				drawRect.width = size.x;
 				
 				preferredSize.y = size.y;
 			}
@@ -959,6 +978,7 @@ public class GCStringPrinter
 		} else {
 			x0 = printArea.x;
 		}
+		lineInfo.outputLineStartX = x0;
 
 		int y0 = printArea.y;
 
@@ -1190,6 +1210,12 @@ public class GCStringPrinter
 		final Display display = Display.getDefault();
 		final Shell shell = new Shell(display, SWT.SHELL_TRIM);
 
+		try {
+			SWTThread.createInstance(null);
+		} catch (SWTThreadAlreadyInstanciatedException e) {
+			e.printStackTrace();
+		}
+
 		ImageLoader imageLoader = ImageLoader.getInstance();
 
 		final Image[] images = {
@@ -1291,6 +1317,7 @@ public class GCStringPrinter
 		});
 
 		final Label lblInfo = new Label(shell, SWT.WRAP);
+		lblInfo.setLayoutData(Utils.getWrappableLabelGridData(2, 0));
 		lblInfo.setText("Welcome");
 
 
@@ -1346,7 +1373,11 @@ public class GCStringPrinter
 					}
 					boolean fit = sp.printString();
 
-					lblInfo.setText(fit ? "fit" : "no fit");
+					String info = fit ? "fit" : "no fit";
+					info += "; Calculated Size=" + sp.getCalculatedSize() + "\nDrawRect "
+							+ sp.getCalculatedDrawRect() + "\nOrig Rect " + sp.getPrintArea();
+					
+					lblInfo.setText(info);
 
 					bounds.width--;
 					bounds.height--;
@@ -1555,6 +1586,24 @@ public class GCStringPrinter
 
 	public boolean isWordCut() {
 		return isWordCut;
+	}
+
+	/**
+	 * Get the area that was drawn to.
+	 * Draw Rectangle is a subset of the original printArea that was painted on.
+	 * In cases where text was centered vertically, or bottom aligned, y may
+	 * be larger than printArea.y. <code>x</code> may be difference if text is
+	 * centered or right aligned.  Note: <code>x</code> is only adjusted if text
+	 * is drawn.
+	 * <p/>
+	 * Returned width and height are the same as {@link #getCalculatedSize()}
+	 */
+	public Rectangle getCalculatedDrawRect() {
+		return drawRect;
+	}
+
+	public Rectangle getPrintArea() {
+		return printArea;
 	}
 
 	/*
