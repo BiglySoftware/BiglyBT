@@ -165,66 +165,6 @@ public class SWTSkinObjectBasic
 			return;
 		}
 
-		resizeGradientBGListener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				if (Utils.isDisplayDisposed()) {
-					return;
-				}
-				if (bgImage != null && !bgImage.isDisposed()) {
-					bgImage.dispose();
-				}
-				Rectangle bounds = control.getBounds();
-				if (bounds.height <= 0) {
-					return;
-				}
-				bgImage = new Image(control.getDisplay(), 5, bounds.height);
-				GC gc = new GC(bgImage);
-				try {
-					try {
-						gc.setAdvanced(true);
-						gc.setInterpolation(SWT.HIGH);
-						gc.setAntialias(SWT.ON);
-					} catch (Exception ex) {
-					}
-
-					GradientInfo lastGradInfo = new GradientInfo(bgColor, 0);
-					for (GradientInfo gradInfo : listGradients) {
-						if (gradInfo.startPoint != lastGradInfo.startPoint) {
-							gc.setForeground(lastGradInfo.color);
-							gc.setBackground(gradInfo.color);
-
-							int y = (int) (bounds.height * lastGradInfo.startPoint);
-							int height = (int) (bounds.height * gradInfo.startPoint) - y;
-							gc.fillGradientRectangle(0, y, 5, height, true);
-						}
-						lastGradInfo = gradInfo;
-					}
-
-					if (lastGradInfo.startPoint < 1) {
-						gc.setForeground(lastGradInfo.color);
-						gc.setBackground(lastGradInfo.color);
-
-						int y = (int) (bounds.height * lastGradInfo.startPoint);
-						int height = bounds.height - y;
-						gc.fillGradientRectangle(0, y, 5, height, true);
-					}
-				} finally {
-					gc.dispose();
-				}
-				if (painter == null) {
-					// Use TILE_BOTH because a gradient should never set the size of the control
-					// Rather, the gradient image is made based on the control size.  If
-					// we used TILE_X, SWTBGImagePainter would force the height to the
-					// current image, thus preventing any auto-resizing
-					painter = new SWTBGImagePainter(control, null, null,
-							bgImage, SWTSkinUtils.TILE_BOTH);
-				} else {
-					painter.setImage(null, null, bgImage);
-				}
-			}
-		};
-
 		this.control = _control;
 		control.setData("ConfigID", sConfigID);
 		control.setData("SkinObject", this);
@@ -312,6 +252,69 @@ public class SWTSkinObjectBasic
 		if (parent instanceof SWTSkinObjectContainer) {
 			((SWTSkinObjectContainer)parent).childAdded(this);
 		}
+	}
+
+	private Listener getResizeGradientBGListener() {
+		if (resizeGradientBGListener != null) {
+			return resizeGradientBGListener;
+		}
+		resizeGradientBGListener = event -> {
+			if (Utils.isDisplayDisposed()) {
+				return;
+			}
+			if (bgImage != null && !bgImage.isDisposed()) {
+				bgImage.dispose();
+			}
+			Rectangle bounds = control.getBounds();
+			if (bounds.height <= 0) {
+				return;
+			}
+			bgImage = new Image(control.getDisplay(), 5, bounds.height);
+			GC gc = new GC(bgImage);
+			try {
+				try {
+					gc.setAdvanced(true);
+					gc.setInterpolation(SWT.HIGH);
+					gc.setAntialias(SWT.ON);
+				} catch (Exception ex) {
+				}
+
+				GradientInfo lastGradInfo = new GradientInfo(bgColor, 0);
+				for (GradientInfo gradInfo : listGradients) {
+					if (gradInfo.startPoint != lastGradInfo.startPoint) {
+						gc.setForeground(lastGradInfo.color);
+						gc.setBackground(gradInfo.color);
+
+						int y = (int) (bounds.height * lastGradInfo.startPoint);
+						int height = (int) (bounds.height * gradInfo.startPoint) - y;
+						gc.fillGradientRectangle(0, y, 5, height, true);
+					}
+					lastGradInfo = gradInfo;
+				}
+
+				if (lastGradInfo.startPoint < 1) {
+					gc.setForeground(lastGradInfo.color);
+					gc.setBackground(lastGradInfo.color);
+
+					int y = (int) (bounds.height * lastGradInfo.startPoint);
+					int height = bounds.height - y;
+					gc.fillGradientRectangle(0, y, 5, height, true);
+				}
+			} finally {
+				gc.dispose();
+			}
+			if (painter == null) {
+				// Use TILE_BOTH because a gradient should never set the size of the control
+				// Rather, the gradient image is made based on the control size.  If
+				// we used TILE_X, SWTBGImagePainter would force the height to the
+				// current image, thus preventing any auto-resizing
+				painter = new SWTBGImagePainter(control, null, null, bgImage,
+						SWTSkinUtils.TILE_BOTH);
+			} else {
+				painter.setImage(null, null, bgImage);
+			}
+		};
+		return resizeGradientBGListener;
 	}
 
 	/**
@@ -655,7 +658,9 @@ public class SWTSkinObjectBasic
 				boolean needPaintHook = false;
 
 				if (properties.hasKey(sConfigID + ".color" + sSuffix)) {
-					control.removeListener(SWT.Resize, resizeGradientBGListener);
+					if (resizeGradientBGListener != null) {
+						control.removeListener(SWT.Resize, resizeGradientBGListener);
+					}
 
 					Color color = properties.getColor(sConfigID + ".color" + sSuffix);
 					bgColor = color;
@@ -697,6 +702,7 @@ public class SWTSkinObjectBasic
 								listGradients.add(new GradientInfo(colorStop, posStop));
 							}
 
+							Listener resizeGradientBGListener = getResizeGradientBGListener();
 							control.addListener(SWT.Resize, resizeGradientBGListener);
 							resizeGradientBGListener.handleEvent(null);
 						}
