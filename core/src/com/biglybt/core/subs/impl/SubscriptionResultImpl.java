@@ -163,15 +163,56 @@ SubscriptionResultImpl
 
 		String my_tf 	= (String)my_json_map.remove( "tf" );
 
+		Map	other_json_map = null;
+		
 		if ( my_tf != null ){
 
-			Map	other_json_map 	= JSONUtils.decodeJSON( other_json_str );
+			other_json_map 	= JSONUtils.decodeJSON( other_json_str );
 
 			other_json_map.put( "tf", my_tf );
 
 			other_json_str = JSONUtils.encodeToJSON( other_json_map );
 		}
+		
+			// keep oldest pub date
+		
+		String my_ts = (String)my_json_map.get( "ts" );
 
+		if ( my_ts != null ){
+			
+			if ( other_json_map == null ){
+			
+				other_json_map 	= JSONUtils.decodeJSON( other_json_str );
+			}
+			
+			String other_ts = (String)other_json_map.get( "ts" );
+			
+			boolean keep = false;
+			
+			if ( other_ts == null ){
+			
+				keep = true;
+				
+			}else{
+				try{
+					
+					long l_my_ts = Long.parseLong( my_ts );
+					
+					keep = l_my_ts != 0 && l_my_ts < Long.parseLong( other_ts );
+					
+				}catch( Throwable e ){
+					
+				}
+			}
+			
+			if ( keep ){
+				
+				other_json_map.put( "ts", my_ts );
+
+				other_json_str = JSONUtils.encodeToJSON( other_json_map );
+			}
+		}
+		
 		if ( my_json_str.equals( other_json_str )){
 
 			return( false );
