@@ -236,16 +236,22 @@ public class SWTSkinObjectBasic
 		});
 
 		control.addListener(SWT.MouseHover, new Listener() {
+			String lastID = null;
 			@Override
 			public void handleEvent(Event event) {
 				String id = getTooltipID(true);
 				if (id == null) {
-					Utils.setTT(control,null);
+					// Only clear Tooltip if we set it.  Fixes cases where control's
+					// tooltip is set directly (like the close button on a CTabItem)
+					if (lastID != null) {
+						Utils.setTT(control,null);
+					}
 				} else if (id.startsWith("!") && id.endsWith("!")) {
 					Utils.setTT(control,id.substring(1, id.length() - 1));
 				} else {
 					Utils.setTT(control,MessageText.getString(id, (String) null));
 				}
+				lastID = id;
 			}
 		});
 
