@@ -161,7 +161,7 @@ SubscriptionResultImpl
 
 		Map	my_json_map 	= JSONUtils.decodeJSON( my_json_str );
 
-		String my_tf 	= (String)my_json_map.remove( "tf" );
+		String my_tf 	= (String)my_json_map.get( "tf" );
 
 		Map	other_json_map = null;
 		
@@ -196,9 +196,10 @@ SubscriptionResultImpl
 			}else{
 				try{
 					
-					long l_my_ts = Long.parseLong( my_ts );
+					long l_my_ts 	= Long.parseLong( my_ts );
+					long l_other_ts = Long.parseLong( other_ts );
 					
-					keep = l_my_ts != 0 && l_my_ts < Long.parseLong( other_ts );
+					keep = l_my_ts != 0 && ( l_other_ts == 0 || l_my_ts < l_other_ts );
 					
 				}catch( Throwable e ){
 					
