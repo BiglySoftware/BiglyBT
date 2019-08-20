@@ -822,7 +822,7 @@ public class TableColumnSetupWindow
 		fd.top = new FormAttachment(topInfo, 5);
 		fd.right = new FormAttachment(100, -3);
 		fd.bottom = new FormAttachment(btnOk, -5);
-		fd.width = 200;
+		fd.width = Constants.isWindows?200:230;
 		cResultArea.setLayoutData(fd);
 
 		fd = new FormData();
