@@ -36,7 +36,9 @@ import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 
 
-
+/**
+ * Peers based on Tags (Peer Set)
+ */
 public class
 PeersGeneralView
 	extends PeersViewBase
