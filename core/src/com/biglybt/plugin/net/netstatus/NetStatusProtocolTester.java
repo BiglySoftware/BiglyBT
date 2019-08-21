@@ -189,8 +189,6 @@ NetStatusProtocolTester
 					listener.log( "Searching " + contacts.length + " contacts for " + num_threads + " test targets", false );
 
 					final AESemaphore	sem = new AESemaphore( "NetStatusProbe" );
-
-					boolean[] flarp = { false };
 					
 					for (int i=0;i<num_threads;i++){
 
@@ -219,30 +217,7 @@ NetStatusProtocolTester
 										}
 
 										try{
-											boolean hack = false;
-											
-											synchronized( flarp ){
-											
-												if ( !flarp[0] ){
-													
-													hack= true;
-													
-													flarp[0] = true;
-												}
-											}
-											
-											DistributedDatabaseContact ddb_contact;
-											
-											if ( hack ){
-												InetAddress ia = InetAddress.getByName( "2600:1f18:2b8:c403:8a4f:baea:25ea:c547" );
-											
-												InetSocketAddress isa = new InetSocketAddress( ia,47612 );
-												
-												ddb_contact = ddb.importContact( isa );
-											}else{
-																							
-												ddb_contact = ddb.importContact( contact.getAddress());
-											}
+											DistributedDatabaseContact ddb_contact = ddb.importContact( contact.getAddress());
 											
 											if ( tryTest( bt_tester, ddb_contact )){
 
