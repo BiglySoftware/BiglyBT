@@ -34,6 +34,8 @@ import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.peer.PEPeerManager;
 import com.biglybt.core.peer.PEPeerManagerStats;
 import com.biglybt.core.torrent.TOTorrent;
+import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.IndentWriter;
 import com.biglybt.core.util.SystemTime;
 
@@ -995,6 +997,11 @@ DownloadManagerStatsImpl
 	setDownloadRateLimitBytesPerSecond(
 		int max_rate_bps )
 	{
+		if ( Constants.IS_CVS_VERSION && max_download_rate_bps == -1 && max_rate_bps != -1 ){
+			
+			Debug.out( "Download changed from disabled to " + max_rate_bps + " for " + download_manager.getDisplayName());
+		}
+		
 		max_download_rate_bps = max_rate_bps;
 	}
 
