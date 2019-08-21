@@ -3349,9 +3349,7 @@ public class MyTorrentsView
 			pluginUI.addView( id, FilesView.MSGID_PREFIX,	FilesView.class, null);
 			pluginUI.addView( id, TorrentInfoView.MSGID_PREFIX, TorrentInfoView.class, null);
 			pluginUI.addView( id, TorrentOptionsView.MSGID_PREFIX, TorrentOptionsView.class, null);
-			if (hasTags) {
-				pluginUI.addView( id, TaggingView.MSGID_PREFIX, TaggingView.class, null);
-			}
+			pluginUI.addView( id, TaggingView.MSGID_PREFIX, TaggingView.class, null);
 			pluginUI.addView( id, PrivacyView.MSGID_PREFIX, PrivacyView.class, null);
 
 			if (Logger.isEnabled()) {
@@ -3383,9 +3381,7 @@ public class MyTorrentsView
 					pluginUI.removeViews(id, FilesView.MSGID_PREFIX);
 					pluginUI.removeViews(id, TorrentInfoView.MSGID_PREFIX);
 					pluginUI.removeViews(id, TorrentOptionsView.MSGID_PREFIX);
-					if (hasTags) {
-						pluginUI.removeViews(id, TaggingView.MSGID_PREFIX);
-					}
+					pluginUI.removeViews(id, TaggingView.MSGID_PREFIX);
 					pluginUI.removeViews(id, PrivacyView.MSGID_PREFIX);
 
 					if (Logger.isEnabled()) {
