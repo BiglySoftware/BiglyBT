@@ -19,12 +19,9 @@
 package com.biglybt.ui.swt.mainwindow;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Device;
-import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.Core;
@@ -38,7 +35,6 @@ import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.*;
 import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.utils.ColorCache;
 
 /**
  * The main SWT Thread, the only one that should run any GUI code.
@@ -241,71 +237,34 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 		
 		if (Constants.isWindows) {
 			/* Windows Bug: Button in a Composite with a background color set, will
-			 * result in a thin white border around button.  
+			 * result in a thin white border around button.
 			 * Marked as WONTFIX by eclipse:
 			 * https://bugs.eclipse.org/bugs/show_bug.cgi?id=515175
-			 * 
-			 * Our hack is to force all shells to be INHERIT_FORCE, which makes the 
-			 * buttons render properly with any parent background
+			 *
+			 * Our hack is to set the Button's "state"'s PARENT_BACKGROUND (1<<10) bit.
 			 */
-			display.addFilter(SWT.Show, event -> {
-				if (event.widget == null || event.widget.isDisposed()) {
-					return;
-				}
-				if (event.widget instanceof Composite) {
-					boolean needsFixupBG = event.widget.getData("DidFixupBG") == null;
-					if (needsFixupBG) {
-						((Composite) event.widget).setBackgroundMode(SWT.INHERIT_FORCE);
-						event.widget.setData("DidFixupBG", "");
-					}
-				}
-			});
-			// The above hack causes Text widgets to lose inherit background, so add 
-			// an extra hack to restore it
 			try {
-				Method mDefaultBG = Control.class.getDeclaredMethod("defaultBackground");
-				mDefaultBG.setAccessible(true);
-				display.addFilter(SWT.Paint, event -> {
-					boolean needsFixupBG = event.widget.getData("DidFixupBG") == null;
-					if (!needsFixupBG) {
+				Field fieldState = Widget.class.getDeclaredField("state");
+				fieldState.setAccessible(true);
+				display.addListener(SWT.Skin, event -> {
+					if (event.widget == null || event.widget.isDisposed()) {
 						return;
 					}
-
-					boolean needsHack = (event.widget instanceof Text)
-							|| (event.widget instanceof Combo)
-							|| (event.widget instanceof Table)
-							|| (event.widget instanceof Spinner);
-					if (!needsHack) {
-						event.widget.setData("DidFixupBG", "");
-						return;
-					}
-
-					// Unfortunately, we can't set DidFixupBG for Text.
-					// If some code later calls Text.setBackground(null), (aka TableViewSWT_Common#validateFilterRegex)
-					// the widget will get the background of the parent again unless we
-					// override (again)
-
-					Control control = (Control) event.widget;
-
-					Color background = control.getBackground();
-
-					try {
-						Object invoke = mDefaultBG.invoke(control);
-						int handle = ((Number) invoke).intValue();
-
-						int r = handle & 0xFF;
-						int g = (handle & 0xFF00) >> 8;
-						int b = (handle & 0xFF0000) >> 16;
-
-						if (!background.getRGB().equals(new RGB(r, g, b))) {
-							control.setBackground(
-									ColorCache.getColor(event.display, r, g, b));
+					if (event.widget instanceof Shell) {
+						// Lazy way to ensure all children inherit background color
+						((Shell) event.widget).setBackgroundMode(SWT.INHERIT_DEFAULT);
+					} else if (event.widget instanceof Button
+							&& (event.widget.getStyle() & SWT.PUSH) != 0) {
+						try {
+							int stateVal = (int) fieldState.get(event.widget);
+							stateVal |= 1 << 10;
+							fieldState.set(event.widget, stateVal);
+						} catch (Throwable e) {
+							e.printStackTrace();
 						}
-					} catch (Exception e) {
-						e.printStackTrace();
 					}
 				});
-			} catch (NoSuchMethodException ignore) {
+			} catch (Throwable e) {
 			}
 		}
 
