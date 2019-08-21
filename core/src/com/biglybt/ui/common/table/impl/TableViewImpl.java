@@ -1918,7 +1918,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		return tableColumns;
 	}
 
-	protected void setColumnsOrdered(TableColumnCore[] columnsOrdered) {
+	public void setColumnsOrdered(TableColumnCore[] columnsOrdered) {
 		this.columnsOrdered = columnsOrdered;
 	}
 
@@ -2125,7 +2125,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 		}
 	}
 
-	protected boolean setSortColumn(TableColumnCore newSortColumn, boolean allowOrderChange) {
+	public boolean setSortColumn(TableColumnCore newSortColumn, boolean allowOrderChange) {
 		if (newSortColumn == null) {
 			return false;
 		}

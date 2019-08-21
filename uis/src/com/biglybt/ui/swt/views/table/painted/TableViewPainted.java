@@ -90,11 +90,15 @@ public class TableViewPainted
 	public static final boolean DIRECT_DRAW = (Constants.isOSX
 			|| Constants.isUnix) && DPIUtil.getDeviceZoom() != 100;
 
-	private static final int DEFAULT_HEADER_HEIGHT = 27;
-
 	private static final boolean DEBUG_REDRAW_CLIP = false;
 
 	private static final boolean expand_enabled_default = COConfigurationManager.getBooleanParameter("Table.useTree");
+
+	public static final String MENUKEY_IN_BLANK_AREA = "inBlankArea";
+
+	public static final String MENUKEY_IS_HEADER = "isHeader";
+
+	public static final String MENUKEY_COLUMN = "column";
 
 	private Composite cTable;
 
@@ -133,10 +137,6 @@ public class TableViewPainted
 
 	private Color colorLine;
 
-	private int headerHeight;
-
-	private Canvas cHeaderArea;
-
 	private Image canvasImage;
 
 	private final String sDefaultSortOn;
@@ -153,8 +153,6 @@ public class TableViewPainted
 
 	private Menu menu;
 
-	protected boolean isHeaderDragging;
-
 	private TableRowPainted focusedRow;
 
 	private boolean 	enableTabViews;
@@ -170,9 +168,6 @@ public class TableViewPainted
 
 	private boolean redrawTableScheduled;
 
-	private Font fontHeaderSmall;
-	private Font fontHeader;
-
 	private ScrollBar hBar;
 
 	private ScrollBar vBar;
@@ -185,7 +180,9 @@ public class TableViewPainted
 	
 	private AtomicInteger	mutationCount 	= new AtomicInteger(0);
 	private int				lastMC			= -1;
-	
+
+	private TableHeaderPainted header;
+
 	private class
 	RefreshTableRunnable
 		extends AERunnable
@@ -1027,8 +1024,9 @@ public class TableViewPainted
 			public void runSupport() {
 				if (!isDisposed()) {
 					cTable.setEnabled(enable);
-					cHeaderArea.setEnabled(enable);
-					cHeaderArea.redraw();
+					if (header != null) {
+						header.setEnabled(enable);
+					}
 				}
 			}
 		});
@@ -1058,20 +1056,9 @@ public class TableViewPainted
 	@Override
 	public void setHeaderVisible(final boolean visible) {
 		super.setHeaderVisible(visible);
-
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				if (cHeaderArea != null && !cHeaderArea.isDisposed()) {
-					cHeaderArea.setVisible(visible);
-					FormData fd = Utils.getFilledFormData();
-					fd.height = visible ? headerHeight : 1;
-					fd.bottom = null;
-					cHeaderArea.setLayoutData(fd);
-					cHeaderArea.getParent().layout(true);
-				}
-			}
-		});
+		if (header != null) {
+			header.setHeaderVisible(visible);
+		}
 	}
 
 	/* (non-Javadoc)
@@ -1105,7 +1092,9 @@ public class TableViewPainted
 
 				tableInvalidate();
 				refreshTable(true);
-				cHeaderArea.redraw();
+				if (header != null) {
+					header.redraw();
+				}
 			}
 		});
 	}
@@ -1127,8 +1116,8 @@ public class TableViewPainted
 		Utils.execSWTThread(new AERunnable() {
 			@Override
 			public void runSupport() {
-				if (cHeaderArea != null && !cHeaderArea.isDisposed()) {
-					cHeaderArea.redraw();
+				if (header != null) {
+					header.redraw();
 				}
 				swt_fixupSize();
 				redrawTable();
@@ -1336,11 +1325,7 @@ public class TableViewPainted
 			cTableComposite.setLayoutData(fd);
 		}
 
-		cHeaderArea = new Canvas(cTableComposite, SWT.DOUBLE_BUFFERED);
-
-		fontHeader = FontUtils.getFontPercentOf(cHeaderArea.getFont(), 0.9f);
-		fontHeaderSmall = FontUtils.getFontPercentOf(fontHeader, 0.8f);
-		cHeaderArea.setFont(fontHeader);
+		Canvas cHeaderArea = new Canvas(cTableComposite, SWT.DOUBLE_BUFFERED);
 
 		cTable = new Canvas(cTableComposite, SWT.NO_BACKGROUND | SWT.H_SCROLL | SWT.V_SCROLL);
 
@@ -1359,16 +1344,7 @@ public class TableViewPainted
 
 		cTable.setBackground(Colors.getSystemColor(parent.getDisplay(), SWT.COLOR_LIST_BACKGROUND));
 
-		headerHeight = configMan.getIntParameter("Table.headerHeight");
-		if (headerHeight <= 0) {
-			headerHeight = DEFAULT_HEADER_HEIGHT;
-		}
-
 		FormData fd = Utils.getFilledFormData();
-		fd.height = headerHeight;
-		fd.bottom = null;
-		cHeaderArea.setLayoutData(fd);
-		fd = Utils.getFilledFormData();
 		fd.top = new FormAttachment(cHeaderArea);
 		cTable.setLayoutData(fd);
 
@@ -1401,11 +1377,10 @@ public class TableViewPainted
 			}
 		});
 
+		header = new TableHeaderPainted(this, cHeaderArea);
+
 		menu = createMenu();
 		cTable.setMenu(menu);
-		cHeaderArea.setMenu(menu);
-
-		setupHeaderArea(cHeaderArea);
 
 		cTable.addControlListener(new ControlListener() {
 			boolean inControlResize = false;
@@ -1566,7 +1541,6 @@ public class TableViewPainted
 		configMan.addParameterListener("Graphics Update", this);
 		configMan.addParameterListener("ReOrder Delay", this);
 		configMan.addParameterListener("Table.extendedErase", this);
-		configMan.addParameterListener("Table.headerHeight", this);
 		Colors.getInstance().addColorsChangedListener(this);
 
 		// So all TableView objects of the same TableID have the same columns,
@@ -1582,242 +1556,6 @@ public class TableViewPainted
 		}
 		swt_calculateClientArea();
 		cTable.update();
-	}
-
-	private void setupHeaderArea(final Canvas cHeaderArea) {
-
-		cHeaderArea.addPaintListener(new PaintListener() {
-			@Override
-			public void paintControl(PaintEvent e) {
-				paintHeader(e);
-			}
-		});
-
-		Listener l = new Listener() {
-			boolean mouseDown = false;
-
-			TableColumnCore columnSizing;
-
-			int columnSizingStart = 0;
-
-			@Override
-			public void handleEvent(Event e) {
-				switch (e.type) {
-					case SWT.MouseDown: {
-						if (e.button != 1) {
-							return;
-						}
-						mouseDown = true;
-
-						columnSizing = null;
-						int x = -clientArea.x;
-						TableColumnCore[] visibleColumns = getVisibleColumns();
-						for (TableColumnCore column : visibleColumns) {
-							int w = column.getWidth();
-							x += w;
-
-							if (e.x >= x - 3 && e.x <= x + 3) {
-								columnSizing = column;
-								columnSizingStart = e.x;
-								break;
-							}
-						}
-
-						break;
-					}
-
-					case SWT.MouseUp: {
-						if (e.button != 1) {
-							return;
-						}
-						if (mouseDown) {
-							if (columnSizing == null) {
-								TableColumnCore column = getTableColumnByOffset(e.x);
-								if (column != null) {
-									setSortColumn(column, true);
-								}
-							} else {
-								int diff = (e.x - columnSizingStart);
-								columnSizing.setWidthPX(columnSizing.getWidth() + diff);
-							}
-						}
-						columnSizing = null;
-						mouseDown = false;
-						break;
-					}
-
-					case SWT.MouseMove: {
-						if (columnSizing != null) {
-							int diff = (e.x - columnSizingStart);
-							columnSizing.setWidthPX(columnSizing.getWidth() + diff);
-							columnSizingStart = e.x;
-						} else {
-							int cursorID = SWT.CURSOR_HAND;
-							int x = -clientArea.x;
-							TableColumnCore[] visibleColumns = getVisibleColumns();
-							for (TableColumnCore column : visibleColumns) {
-								int w = column.getWidth();
-								x += w;
-
-								if (e.x >= x - 3 && e.x <= x + 3) {
-									cursorID = SWT.CURSOR_SIZEWE;
-									break;
-								}
-							}
-							cHeaderArea.setCursor(e.display.getSystemCursor(cursorID));
-							TableColumnCore column = getTableColumnByOffset(e.x);
-
-							if (column == null || ( TableTooltips.tooltips_disabled && !column.doesAutoTooltip())){
-								Utils.setTT(cHeaderArea,null);
-							} else {
-								String info = MessageText.getString(
-										column.getTitleLanguageKey() + ".info", (String) null);
-								if (column.showOnlyImage()) {
-									String tt = MessageText.getString(
-											column.getTitleLanguageKey());
-									if (info != null) {
-										tt += "\n" + info;
-									}
-									Utils.setTT(cHeaderArea,tt);
-								} else {
-									Utils.setTT(cHeaderArea,info);
-								}
-							}
-						}
-					}
-
-				}
-			}
-		};
-
-		cHeaderArea.addListener(SWT.MouseDown, l);
-		cHeaderArea.addListener(SWT.MouseUp, l);
-		cHeaderArea.addListener(SWT.MouseMove, l);
-
-		Transfer[] types = new Transfer[] {
-			TextTransfer.getInstance()
-		};
-
-		final DragSource ds = new DragSource(cHeaderArea, DND.DROP_MOVE);
-		ds.setTransfer(types);
-		ds.addDragListener(new DragSourceListener() {
-			private String eventData;
-
-			@Override
-			public void dragStart(DragSourceEvent event) {
-				Cursor cursor = cHeaderArea.getCursor();
-				if (cursor != null
-						&& cursor.equals(event.display.getSystemCursor(SWT.CURSOR_SIZEWE))) {
-					event.doit = false;
-					return;
-				}
-
-				cHeaderArea.setCursor(null);
-				TableColumnCore tc = getTableColumnByOffset(event.x);
-				isHeaderDragging = tc != null;
-				if (isHeaderDragging) {
-					eventData = tc.getName();
-				}
-				//System.out.println("drag " + eventData);
-			}
-
-			@Override
-			public void dragSetData(DragSourceEvent event) {
-				event.data = eventData;
-			}
-
-			@Override
-			public void dragFinished(DragSourceEvent event) {
-				isHeaderDragging = false;
-				eventData = null;
-			}
-		});
-
-		final DropTarget dt = new DropTarget(cHeaderArea, DND.DROP_MOVE);
-		dt.setTransfer(types);
-		dt.addDropListener(new DropTargetListener() {
-
-			@Override
-			public void dropAccept(DropTargetEvent event) {
-			}
-
-			@Override
-			public void drop(final DropTargetEvent event) {
-				if (event.data instanceof String) {
-					TableColumn tcOrig = getTableColumn((String) event.data);
-					Point pt = cTable.toControl(event.x, event.y);
-					TableColumn tcDest = getTableColumnByOffset(pt.x);
-					if (tcDest == null) {
-						TableColumnCore[] visibleColumns = getVisibleColumns();
-						if (visibleColumns != null && visibleColumns.length > 0) {
-							tcDest = visibleColumns[visibleColumns.length - 1];
-						}
-					}
-					if (tcOrig != null && tcDest != null) {
-						int destPos = tcDest.getPosition();
-						int origPos = tcOrig.getPosition();
-						final boolean moveRight = destPos > origPos;
-						TableColumnCore[] visibleColumns = getVisibleColumns();
-						((TableColumnCore) tcOrig).setPositionNoShift(destPos);
-
-						//System.out.println("Move " + origPos + " Right? " + moveRight + " of " + destPos);
-						Arrays.sort(visibleColumns, new Comparator<TableColumnCore>() {
-							@Override
-							public int compare(TableColumnCore o1, TableColumnCore o2) {
-								if (o1 == o2) {
-									return 0;
-								}
-								int diff = o1.getPosition() - o2.getPosition();
-								if (diff == 0) {
-									int i = o1.getName().equals(event.data) ? -1 : 1;
-									if (moveRight) {
-										i *= -1;
-									}
-									return i;
-								}
-								return diff;
-							}
-						});
-
-						for (int i = 0; i < visibleColumns.length; i++) {
-							TableColumnCore tc = visibleColumns[i];
-							tc.setPositionNoShift(i);
-						}
-						setColumnsOrdered(visibleColumns);
-
-						TableStructureEventDispatcher.getInstance(tableID).tableStructureChanged(
-								false, getDataSourceType());
-					}
-				}
-			}
-
-			@Override
-			public void dragOver(DropTargetEvent event) {
-			}
-
-			@Override
-			public void dragOperationChanged(DropTargetEvent event) {
-			}
-
-			@Override
-			public void dragLeave(DropTargetEvent event) {
-			}
-
-			@Override
-			public void dragEnter(DropTargetEvent event) {
-			}
-		});
-		cHeaderArea.addDisposeListener(new DisposeListener() {
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				Utils.disposeSWTObjects(new Object[] {
-					ds,
-					dt,
-					fontHeader,
-					fontHeaderSmall
-				});
-			}
-		});
 	}
 
 	protected void
@@ -1842,8 +1580,8 @@ public class TableViewPainted
 			@Override
 			public void runSupport() {
 				TableViewPainted.super.tableStructureChanged(columnAddedOrRemoved, forPluginDataSourceType);
-				if (cHeaderArea != null && !cHeaderArea.isDisposed()) {
-					cHeaderArea.redraw();
+				if (header != null) {
+					header.redraw();
 				}
 
 				redrawTable();
@@ -1993,172 +1731,6 @@ public class TableViewPainted
 		}
 
 		return colorLine;
-	}
-
-	private void paintHeader(PaintEvent e) {
-
-		Rectangle ca = cHeaderArea.getClientArea();
-		Color c1, c2, fg;
-
-		if (cTable.isEnabled()) {
-  		c1 = Colors.getSystemColor(e.display, SWT.COLOR_LIST_BACKGROUND);
-  		c2 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_BACKGROUND);
-  		fg = Colors.getSystemColor(e.display, SWT.COLOR_LIST_FOREGROUND);
-		} else {
-			c1 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_BACKGROUND);
-			c2 = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_LIGHT_SHADOW);
-			fg = Colors.getSystemColor(e.display, SWT.COLOR_WIDGET_NORMAL_SHADOW);
-		}
-
-		Color line = c2;
-
-		Pattern patternUp = new Pattern(e.display, 0, 0, 0, ca.height, c1, c2);
-		Pattern patternDown = new Pattern(e.display, 0, -ca.height , 0, 0, c2, c1);
-		//e.gc.setBackgroundPattern(patternUp);
-		//e.gc.fillRectangle(ca);
-
-		e.gc.setForeground(line);
-		//e.gc.drawLine(0, 0, clientArea.width, 0);
-		e.gc.drawLine(0, headerHeight - 1, clientArea.width, headerHeight - 1);
-
-		TableColumnCore[] visibleColumns = getVisibleColumns();
-		GCStringPrinter sp;
-		TableColumnCore sortColumn = getSortColumn();
-		int x = -clientArea.x;
-		for (TableColumnCore column : visibleColumns) {
-			int w = column.getWidth();
-
-			//squeeze last column's text into available visible space
-			if (x + w > ca.width) {
-				w = ca.width - x;
-				if (w <= 16) {
-					break;
-				}
-			}
-
-
-			boolean isSortColumn = column.equals(sortColumn);
-
-			e.gc.setBackgroundPattern(isSortColumn ? patternDown : patternUp);
-			e.gc.fillRectangle(x, 1, w, headerHeight - 2);
-			e.gc.setForeground(line);
-			e.gc.drawLine(x + w - 1, 0, x + w - 1, headerHeight - 1);
-
-			e.gc.setForeground(fg);
-			int yOfs = 0;
-			int wText = w;
-/* Top Center
-			if (isSortColumn) {
-				int arrowY = 2;
-				int arrowHeight = 6;
-				yOfs = 8;
-				// draw sort indicator
-				int middle = w / 2;
-				int y1, y2;
-				int arrowHalfW = 4;
-				if (column.isSortAscending()) {
-					y2 = arrowY;
-					y1 = y2 + arrowHeight;
-				} else {
-					y1 = arrowY;
-					y2 = y1 + arrowHeight;
-				}
-				e.gc.setAntialias(SWT.ON);
-				e.gc.setBackground(ColorCache.getColor(e.display, 0, 0, 0));
-				e.gc.fillPolygon(new int[] {
-					x + middle - arrowHalfW,
-					y1,
-					x + middle + arrowHalfW,
-					y1,
-					x + middle,
-					y2
-				});
-			}
-*/
-			if (isSortColumn) {
-				// draw sort indicator
-				int arrowHeight = 6;
-				int arrowY = (headerHeight / 2) - (arrowHeight / 2);
-				int arrowHalfW = 4;
-				int middle = w - arrowHalfW - 4;
-				wText = w - (arrowHalfW * 2) - 5;
-				int y1, y2;
-				if (column.isSortAscending()) {
-					y2 = arrowY;
-					y1 = y2 + arrowHeight;
-				} else {
-					y1 = arrowY;
-					y2 = y1 + arrowHeight;
-				}
-				e.gc.setAntialias(SWT.ON);
-				e.gc.setBackground(fg);
-				e.gc.fillPolygon(new int[] {
-					x + middle - arrowHalfW,
-					y1,
-					x + middle + arrowHalfW,
-					y1,
-					x + middle,
-					y2
-				});
-			}
-
-			int xOfs = x + 2;
-
-			boolean onlyShowImage = column.showOnlyImage();
-			String text = "";
-			if (!onlyShowImage) {
-				text = MessageText.getString(column.getTitleLanguageKey());
-			}
-
-			int style = SWT.WRAP | SWT.CENTER;
-			Image image = null;
-			String imageID = column.getIconReference();
-			if (imageID != null) {
-				image = ImageLoader.getInstance().getImage(imageID);
-				if (ImageLoader.isRealImage(image)) {
-					if (onlyShowImage) {
-						text = null;
-						Rectangle imageBounds = image.getBounds();
-						e.gc.drawImage(image, (int) (x + (w / 2.0) - (imageBounds.width / 2.0) + 0.5),
-								(headerHeight / 2) - (imageBounds.height / 2));
-					} else {
-						text = "%0 " + text;
-					}
-				} else {
-					image = null;
-				}
-			}
-
-			if (text != null) {
-  			sp = new GCStringPrinter(e.gc, text, new Rectangle(xOfs, yOfs - 1,
-  					wText - 4, headerHeight - yOfs + 2), true, false,style);
-  			if (image != null) {
-  				sp.setImages(new Image[] { image } );
-  			}
-  			sp.calculateMetrics();
-  			if (sp.isWordCut() || sp.isCutoff()) {
-  				Font font = e.gc.getFont();
-  				e.gc.setFont(fontHeaderSmall);
-  				sp.printString();
-  				e.gc.setFont(font);
-  			} else {
-  				sp.printString();
-  			}
-			}
-
-			if (imageID != null) {
-				ImageLoader.getInstance().releaseImage(imageID);
-			}
-
-			x += w;
-		}
-
-		e.gc.setBackgroundPattern(patternUp);
-		e.gc.fillRectangle(x, 1, clientArea.width - x, headerHeight - 2);
-
-		patternUp.dispose();
-		patternDown.dispose();
-		e.gc.setBackgroundPattern(null);
 	}
 
 	/* (non-Javadoc)
@@ -2466,13 +2038,6 @@ public class TableViewPainted
 		if (parameterName == null || parameterName.equals("Table.extendedErase")) {
 			extendedErase = configMan.getBooleanParameter("Table.extendedErase");
 			invalidate = true;
-		}
-		if (parameterName == null || parameterName.equals("Table.headerHeight")) {
-			headerHeight = configMan.getIntParameter("Table.headerHeight");
-			if (headerHeight == 0) {
-				headerHeight = DEFAULT_HEADER_HEIGHT;
-			}
-			setHeaderVisible(getHeaderVisible());
 		}
 
 		if (parameterName == null || parameterName.startsWith("Color")) {
@@ -2813,7 +2378,9 @@ public class TableViewPainted
 		}
 
 		if (changedX) {
-			cHeaderArea.redraw();
+			if (header != null) {
+				header.redraw();
+			}
 		}
 
 		if (!DIRECT_DRAW) {
@@ -3089,8 +2656,8 @@ public class TableViewPainted
 
 			@Override
 			public void runSupport() {
-				if (cHeaderArea != null && !cHeaderArea.isDisposed()) {
-					cHeaderArea.redraw();
+				if (header != null) {
+					header.redraw();
 				}
 			}
 		});
@@ -3111,6 +2678,7 @@ public class TableViewPainted
 		}
 		return null;
 	}
+
 
 	// @see com.biglybt.ui.swt.views.table.TableViewSWT#getTableRow(int, int, boolean)
 	@Override
@@ -3267,11 +2835,13 @@ public class TableViewPainted
 		configMan.removeParameterListener("ReOrder Delay", this);
 		configMan.removeParameterListener("Graphics Update", this);
 		configMan.removeParameterListener("Table.extendedErase", this);
-		configMan.removeParameterListener("Table.headerHeight", this);
 		Colors colorInstance = Colors.getInstance();
 		if (colorInstance != null) {
 			colorInstance.removeColorsChangedListener(this);
 		}
+		
+		header.delete();
+		header = null;
 
 		super.delete();
 
@@ -3296,9 +2866,10 @@ public class TableViewPainted
 		cTable.addListener(SWT.MenuDetect, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
+				Composite cHeaderArea = header == null ? null : header.getHeaderArea();
 				if (event.widget == cHeaderArea) {
-					menu.setData("inBlankArea", false);
-					menu.setData("isHeader", true);
+					menu.setData(MENUKEY_IN_BLANK_AREA, false);
+					menu.setData(MENUKEY_IS_HEADER, true);
 
 				} else {
 					TableRowCore row = getTableRowWithCursor();
@@ -3310,35 +2881,29 @@ public class TableViewPainted
 						setSelectedRows(new TableRowCore[] { row });
 					}
 
-					menu.setData("inBlankArea", noRow);
-					menu.setData("isHeader", false);
+					menu.setData(MENUKEY_IN_BLANK_AREA, noRow);
+					menu.setData(MENUKEY_IS_HEADER, false);
 				}
 				Point pt = cHeaderArea.toControl(event.x, event.y);
-				menu.setData("column", getTableColumnByOffset(pt.x));
+				menu.setData(MENUKEY_COLUMN, getTableColumnByOffset(pt.x));
 			}
 		});
-		cHeaderArea.addListener(SWT.MenuDetect, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				menu.setData("inBlankArea", false);
-				menu.setData("isHeader", true);
-				Point pt = cHeaderArea.toControl(event.x, event.y);
-				menu.setData("column", getTableColumnByOffset(pt.x));
-			}
-		});
+		if (header != null) {
+			header.createMenu(menu);
+		}
 		MenuBuildUtils.addMaintenanceListenerForMenu(menu,
 				new MenuBuildUtils.MenuBuilder() {
 					@Override
 					public void buildMenu(Menu menu, MenuEvent menuEvent) {
-						Object oIsHeader = menu.getData("isHeader");
+						Object oIsHeader = menu.getData(MENUKEY_IS_HEADER);
 						boolean isHeader = (oIsHeader instanceof Boolean)
 								? ((Boolean) oIsHeader).booleanValue() : false;
 
-						Object oInBlankArea = menu.getData("inBlankArea");
+						Object oInBlankArea = menu.getData(MENUKEY_IN_BLANK_AREA);
 						boolean inBlankArea = (oInBlankArea instanceof Boolean)
 								? ((Boolean) oInBlankArea).booleanValue() : false;
 
-						TableColumnCore column = (TableColumnCore) menu.getData("column");
+						TableColumnCore column = (TableColumnCore) menu.getData(MENUKEY_COLUMN);
 
 						if (isHeader) {
 							tvSWTCommon.fillColumnMenu(menu, column, false);
@@ -3637,5 +3202,9 @@ public class TableViewPainted
 	public boolean isTableSelected() {
 		TableView tv = SelectedContentManager.getCurrentlySelectedTableView();
 		return tv == this || (tv == null && isFocused) || (tv != this && tv != null && tv.getSelectedRowsSize() == 0);
+	}
+
+	public boolean isEnabled() {
+		return cTable.isEnabled();
 	}
 }

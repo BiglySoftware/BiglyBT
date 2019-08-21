@@ -41,6 +41,8 @@ import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.config.ParameterValidator.ValidationInfo;
 
+import static com.biglybt.ui.swt.ConfigKeysSWT.ICFG_TABLE_HEADER_HEIGHT;
+
 public class ConfigSectionInterfaceTablesSWT
 	extends ConfigSectionImpl
 {
@@ -144,15 +146,15 @@ public class ConfigSectionInterfaceTablesSWT
 		////
 
 		boolean hhEnabled = COConfigurationManager.getIntParameter(
-				"Table.headerHeight") > 0;
+				ICFG_TABLE_HEADER_HEIGHT) > 0;
 
 		BooleanParameterImpl chkHeaderHeight = new BooleanParameterImpl(
 				"Table.useHeaderHeight", "ConfigView.section.style.enableHeaderHeight");
 		add(chkHeaderHeight, Parameter.MODE_INTERMEDIATE);
 		chkHeaderHeight.setValue(hhEnabled);
 
-		IntParameterImpl paramHH = new IntParameterImpl("Table.headerHeight", null,
-				0, 100);
+		IntParameterImpl paramHH = new IntParameterImpl(ICFG_TABLE_HEADER_HEIGHT,
+				null, 0, 100);
 		add(paramHH, Parameter.MODE_INTERMEDIATE);
 
 		chkHeaderHeight.addEnabledOnSelection(paramHH);
@@ -160,10 +162,10 @@ public class ConfigSectionInterfaceTablesSWT
 		// Note: If we check "Table.useHeaderHeight" before using "Table.headerHeight" we wouldn't need this listener
 		chkHeaderHeight.addListener(param -> {
 			if (chkHeaderHeight.getValue()) {
-				COConfigurationManager.setParameter("Table.headerHeight", 16);
+				COConfigurationManager.setParameter(ICFG_TABLE_HEADER_HEIGHT, 16);
 				paramHH.setEnabled(true);
 			} else {
-				COConfigurationManager.setParameter("Table.headerHeight", 0);
+				COConfigurationManager.setParameter(ICFG_TABLE_HEADER_HEIGHT, 0);
 				paramHH.setEnabled(false);
 			}
 		});
@@ -235,7 +237,7 @@ public class ConfigSectionInterfaceTablesSWT
 			add(new BooleanParameterImpl("Library.EnableSimpleView",
 					"ConfigView.section.style.EnableSimpleView"), listLibrary);
 		}
-		
+
 		add(new BooleanParameterImpl("Library.ShowTabsInTorrentView",
 				"ConfigView.section.style.ShowTabsInTorrentView"), listLibrary);
 
@@ -404,7 +406,8 @@ public class ConfigSectionInterfaceTablesSWT
 			}
 		}
 
-		add("pgLaunchHelpersInt", new ParameterGroupImpl(null, listLaunchHelpers).setNumberOfColumns2(2),
+		add("pgLaunchHelpersInt",
+				new ParameterGroupImpl(null, listLaunchHelpers).setNumberOfColumns2(2),
 				listLaunchGroup);
 
 		add(new ParameterGroupImpl("ConfigView.section.style.launch",

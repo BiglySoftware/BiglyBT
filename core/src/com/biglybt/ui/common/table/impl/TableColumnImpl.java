@@ -142,7 +142,7 @@ public class TableColumnImpl
 
 	private boolean bObfuscateData;
 
-	protected AEMonitor this_mon = new AEMonitor("TableColumn");
+	protected final AEMonitor this_mon = new AEMonitor("TableColumn");
 
 	private boolean bSortValueLive;
 
