@@ -3328,15 +3328,6 @@ public class MyTorrentsView
 				TableManager.TABLE_MYTORRENTS_COMPLETE,			// bottom part of split views (hack of course)
 		};
 
-		boolean tempHasTags = false;
-		try {
-			// gotta be a simpler way?
-			tempHasTags = TagManagerFactory.getTagManager().getTagType(TagType.TT_DOWNLOAD_MANUAL).getTags().size() > 0;
-		} catch (Throwable t) {
-			tempHasTags = false;
-		}
-		final boolean hasTags = tempHasTags;
-
 		for ( String id: views_with_tabs ){
 
 			pluginUI.addView( id, GeneralView.MSGID_PREFIX, GeneralView.class, null);
