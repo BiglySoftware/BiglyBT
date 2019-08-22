@@ -395,6 +395,10 @@ BuddyPluginTracker
 				continue;
 			}
 
+			String host = AddressUtils.getHostAddress( ip );
+			
+			String net	 = AENetworkClassifier.categoriseAddress( ip );
+			
 			int			tcp_port	= buddy.getTCPPort();
 			int			udp_port	= buddy.getUDPPort();
 
@@ -404,6 +408,13 @@ BuddyPluginTracker
 
 				Download	download = downloads.get(i);
 
+				com.biglybt.core.download.DownloadManager core_dm = PluginCoreUtils.unwrap( download );
+				
+				if ( !core_dm.getDownloadState().isNetworkEnabled( net )){
+					
+					continue;
+				}
+				
 				PeerManager pm = download.getPeerManager();
 
 				if ( pm == null ){
@@ -411,7 +422,7 @@ BuddyPluginTracker
 					continue;
 				}
 
-				Peer[] existing_peers = pm.getPeers( AddressUtils.getHostAddress( ip ));
+				Peer[] existing_peers = pm.getPeers( host );
 
 				boolean	connected = false;
 
@@ -437,12 +448,12 @@ BuddyPluginTracker
 
 				if ( connected ){
 
-					log( download.getName() + " - peer " +  AddressUtils.getHostAddress( ip ) + " already connected" );
+					log( download.getName() + " - peer " +  host + " already connected" );
 
 					continue;
 				}
 
-				log( download.getName() + " - connecting to peer " +  AddressUtils.getHostAddress( ip ));
+				log( download.getName() + " - connecting to peer " +  host );
 
 				PEPeerManager c_pm = PluginCoreUtils.unwrap( pm );
 
@@ -452,7 +463,7 @@ BuddyPluginTracker
 
 				user_data.put( Peer.PR_PRIORITY_CONNECTION, Boolean.TRUE);
 
-				c_pm.addPeer(  AddressUtils.getHostAddress( ip ), tcp_port, udp_port, true, user_data );
+				c_pm.addPeer( host, tcp_port, udp_port, true, user_data );
 			}
 		}
 	}
