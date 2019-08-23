@@ -531,7 +531,11 @@ public class TableViewSWT_Common
 						filter.widget.setBackground(filter.regex?COLOR_FILTER_REGEX:null);
 						validateFilterRegex();
 						tv.refilter();
-						event.doit = false;
+						// Not good... In the non-simple library view with incomplete and complete torrents both views
+						// share the same widget and have their own key-press listeners. If we set doit=false then the
+						// ctrl+x is only processed in one view and reg expr matching in the second view stays disabled
+						// leading to borkage...
+						//event.doit = false;
 						return;
 					}
 				}
