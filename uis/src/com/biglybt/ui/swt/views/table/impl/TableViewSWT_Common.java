@@ -525,21 +525,6 @@ public class TableViewSWT_Common
 					tv.openFilterDialog();
 					event.doit = false;
 					break;
-				case 'x': { // CTRL+X: RegEx search switch
-					if (filter != null && event.widget == filter.widget) {
-						filter.regex = !filter.regex;
-						filter.widget.setBackground(filter.regex?COLOR_FILTER_REGEX:null);
-						validateFilterRegex();
-						tv.refilter();
-						// Not good... In the non-simple library view with incomplete and complete torrents both views
-						// share the same widget and have their own key-press listeners. If we set doit=false then the
-						// ctrl+x is only processed in one view and reg expr matching in the second view stays disabled
-						// leading to borkage...
-						//event.doit = false;
-						return;
-					}
-				}
-					break;
 				case 'g':
 					System.out.println("force sort");
 					tv.resetLastSortedOn();
@@ -667,7 +652,7 @@ public class TableViewSWT_Common
 		e.doit = false;
 	}
 
-	private void
+	public void
 	validateFilterRegex()
 	{
 		TableViewSWTFilter<?> filter = tv.getSWTFilter();

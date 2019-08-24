@@ -1866,6 +1866,7 @@ public class TableViewPainted
 		if (filter != null) {
 			if (filter.widget != null && !filter.widget.isDisposed()) {
 				filter.widget.removeKeyListener(tvSWTCommon);
+				filter.widget.removeKeyListener(filter.widgetKeyListener);
 				filter.widget.removeModifyListener(filter.widgetModifyListener);
 			}
 		} else {
@@ -1882,7 +1883,31 @@ public class TableViewPainted
 				}
 			};
 			txtFilter.addModifyListener(filter.widgetModifyListener);
+			
+			final TableViewSWTFilter f_filter = filter;
+			
+			filter.widgetKeyListener = KeyListener.keyPressedAdapter(
+				(event)->{
+					int key = event.character;
+					if (key <= 26 && key > 0) {
+						key += 'a' - 1;
+					}
 
+					if (event.stateMask == SWT.MOD1) {
+						switch (key) {
+							case 'x': { // CTRL+X: RegEx search switch
+								f_filter.regex = !f_filter.regex;
+								tvSWTCommon.validateFilterRegex();
+								refilter();
+								event.doit = false;	// prevent sound from this key
+							}
+							break;
+						}
+					}
+				});
+			
+			txtFilter.addKeyListener(filter.widgetKeyListener);
+			
 			if (txtFilter.getText().length() == 0) {
 				txtFilter.setText(filter.text);
 			} else {
@@ -1922,6 +1947,7 @@ public class TableViewPainted
 
 		if (filter.widget != null && !filter.widget.isDisposed()) {
 			filter.widget.removeKeyListener(tvSWTCommon);
+			filter.widget.removeKeyListener(filter.widgetKeyListener);
 			filter.widget.removeModifyListener(filter.widgetModifyListener);
 		}
 		filter = null;
