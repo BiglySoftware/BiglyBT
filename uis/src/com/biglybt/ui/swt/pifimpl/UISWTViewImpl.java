@@ -343,8 +343,7 @@ public class UISWTViewImpl
 			if (eventListener == null || eventType != UISWTViewEvent.TYPE_REFRESH) {
 				System.out.println(System.currentTimeMillis() + "." + padRight(id, 20)
 						+ "] " + "trigger "
-						+ padRight((eventType < UISWTViewEvent.DEBUG_TYPES.length
-								? UISWTViewEvent.DEBUG_TYPES[eventType] : "" + eventType), 6)
+						+ padRight(UISWTViewEvent.getEventDebug(eventType), 6)
 						+ ", " + (eventListener == null ? "null" : "nonn") + ";data="
 						+ (data instanceof Object[] ? Arrays.toString((Object[]) data)
 								: data)
@@ -493,7 +492,7 @@ public class UISWTViewImpl
 					new UISWTViewEventImpl(parentViewID, this, eventType, data));
 		} catch (Throwable t) {
 			Debug.out("ViewID=" + id + "; EventID="
-					+ UISWTViewEvent.DEBUG_TYPES[eventType] + "; data=" + data, t);
+					+ UISWTViewEvent.getEventDebug(eventType) + "; data=" + data, t);
 			//throw (new UIRuntimeException("UISWTView.triggerEvent:: ViewID="
 			//		+ sViewID + "; EventID=" + eventType + "; data=" + data, t));
 		}
@@ -536,7 +535,7 @@ public class UISWTViewImpl
 	protected boolean triggerEventRaw(int eventType, Object data) {
 		if (eventListener == null) {
 			System.err.println(
-					"null eventListener for " + UISWTViewEvent.DEBUG_TYPES[eventType] + " " + Debug.getCompressedStackTrace());
+					"null eventListener for " + UISWTViewEvent.getEventDebug(eventType) + " " + Debug.getCompressedStackTrace());
 			return eventType == UISWTViewEvent.TYPE_CLOSE ? true : false;
 		}
 		try {

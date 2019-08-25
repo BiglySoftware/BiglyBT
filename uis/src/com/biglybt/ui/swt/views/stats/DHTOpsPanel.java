@@ -63,21 +63,34 @@ DHTOpsPanel
 	{
 		ActivityHolder	holder;
 		
+		boolean removed = type == DHTControlListener.CT_REMOVED;
+		
 		synchronized( activity_map ){
 			
-			holder = activity_map.get( activity );
-			
-			if ( holder == null ){
+			if ( removed ){
 				
-				holder = new ActivityHolder( activity );
+				holder = activity_map.remove( activity );
 				
-				activity_map.put( activity, holder );
+				activity_reverse_map.remove( holder );
 				
-				activity_reverse_map.put( holder, activity );
+			}else{
+				
+				holder = activity_map.get( activity );
+				
+				if ( holder == null ){
+					
+					holder = new ActivityHolder( activity );
+					
+					activity_map.put( activity, holder );
+					
+					activity_reverse_map.put( holder, activity );
+					
+					System.out.println( "act-map=" + activity_map.size());
+				}
 			}
 		}
 		
-		gop.activityChanged( holder, type == DHTControlListener.CT_REMOVED );
+		gop.activityChanged( holder, removed );
 	}
 
 
@@ -196,7 +209,7 @@ DHTOpsPanel
 	{
 		private final DHTControlActivity		delegate;
 		
-		private Map<DHTControlActivity.ActivityNode, NodeHolder>	node_map = new IdentityHashMap<>();
+		//private Map<DHTControlActivity.ActivityNode, NodeHolder>	node_map = new IdentityHashMap<>();
 		
 		private
 		ActivityHolder(
@@ -237,13 +250,25 @@ DHTOpsPanel
 		public State
 		getCurrentState()
 		{
-			return( new StateHolder( delegate.getCurrentState()));
+			DHTControlActivity.ActivityState state = delegate.getCurrentState();
+			
+			if ( state == null ){
+				
+					// can legitimately be null
+				
+				return( null );
+				
+			}else{
+				
+				return( new StateHolder( state ));
+			}
 		}
 
 		private Node
 		map(
 			DHTControlActivity.ActivityNode node )
 		{
+			/*
 			NodeHolder holder;
 			
 			synchronized( node_map ){
@@ -255,10 +280,15 @@ DHTOpsPanel
 					holder = new NodeHolder( node );
 					
 					node_map.put( node, holder );
+					
+					System.out.println( "node-map=" + node_map.size());
 				}
 			}
 			
 			return( holder );
+			*/
+			
+			return( new NodeHolder( node ));
 		}
 		
 		private class

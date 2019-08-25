@@ -44,6 +44,16 @@ public interface UISWTViewEvent {
 		"Obfus"
 	};
 
+	public static String
+	getEventDebug( int ev )
+	{
+		if ( ev < DEBUG_TYPES.length ){
+			return( DEBUG_TYPES[ev]);
+		}else{
+			return( "" + ev );
+		}
+	}
+	
 	/**
 	 * Triggered before view is initialize in order to allow any set up before
 	 * initialization
