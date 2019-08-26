@@ -310,6 +310,9 @@ public class TagButtonsUI
 		}
 
 		public void setImage(Image newImage, String key) {
+			if (!ImageLoader.isRealImage(image)) {
+				return;
+			}
 			if (newImage == image && StringCompareUtils.equals(key, imageID)) {
 				return;
 			}
@@ -401,17 +404,20 @@ public class TagButtonsUI
 			sp.printString();
 			if (isFocusControl()) {
 				Rectangle printArea = sp.getCalculatedDrawRect();
-				// doesn't always draw!?
-				//e.gc.drawFocus(printArea.x - 2, printArea.y - 1, printArea.width + 4,
-				//	printArea.height + 2);
-
 				e.gc.setAlpha(0xFF);
-				e.gc.setBackground(Colors.white);
-				e.gc.setForeground(Colors.black);
-				e.gc.setLineStyle(SWT.LINE_DOT);
-				e.gc.setLineWidth(1);
-				e.gc.drawRectangle(printArea.x - 2, printArea.y, printArea.width + 4,
-					printArea.height);
+
+				if (Constants.isWindows) {
+					// drawFocus doesn't always draw when it should on Windows :(
+					e.gc.setBackground(Colors.white);
+					e.gc.setForeground(Colors.black);
+					e.gc.setLineStyle(SWT.LINE_DOT);
+					e.gc.setLineWidth(1);
+					e.gc.drawRectangle(printArea.x - 2, printArea.y, printArea.width + 4,
+						printArea.height);
+				} else {
+					e.gc.drawFocus(printArea.x - 2, printArea.y - 1, printArea.width + 4,
+						printArea.height + 2);
+				}
 			}
 		}
 
