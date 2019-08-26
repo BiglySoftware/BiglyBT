@@ -30,11 +30,7 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
@@ -873,12 +869,8 @@ public class TorrentMenuFancy
 
 		// Queue
 		createActionButton(dms, cQuickCommands, "MyTorrentsView.menu.queue",
-				"start", start, new ListenerGetOffSWT() {
-					@Override
-					void handleEventOffSWT(Event event) {
-						TorrentUtil.queueDataSources(dms, true);
-					}
-				});
+				"start", start,
+				(ListenerGetOffSWT) event -> TorrentUtil.queueDataSources(dms, true));
 
 		// Force Start
 		if (userMode > 0) {
@@ -911,22 +903,13 @@ public class TorrentMenuFancy
 		// Pause
 		if (userMode > 0) {
 			createActionButton(dms, cQuickCommands, "v3.MainWindow.button.pause",
-					"pause", pause, new ListenerGetOffSWT() {
-						@Override
-						public void handleEventOffSWT(Event event) {
-							TorrentUtil.pauseDataSources(dms);
-						}
-					});
+					"pause", pause,
+					(ListenerGetOffSWT) event -> TorrentUtil.pauseDataSources(dms));
 		}
 
 		// Stop
 		createActionButton(dms, cQuickCommands, "MyTorrentsView.menu.stop", "stop",
-				stop, new ListenerGetOffSWT() {
-					@Override
-					public void handleEventOffSWT(Event event) {
-						TorrentUtil.stopDataSources(dms);
-					}
-				});
+				stop, (ListenerGetOffSWT) event -> TorrentUtil.stopDataSources(dms));
 
 		// Force Recheck
 		createActionButton(dms, cQuickCommands, "MyTorrentsView.menu.recheck",

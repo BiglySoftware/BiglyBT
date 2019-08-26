@@ -21,8 +21,6 @@ package com.biglybt.ui.swt;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 
-import com.biglybt.core.util.AERunnable;
-
 /**
  *
  * SWT {@link Listener} that invokes event handling off of the SWT Thread
@@ -31,19 +29,13 @@ import com.biglybt.core.util.AERunnable;
  * @created Jan 20, 2015
  *
  */
-public abstract class ListenerGetOffSWT
-	implements Listener
+public interface ListenerGetOffSWT
+	extends Listener
 {
-	// @see org.eclipse.swt.widgets.Listener#handleEvent(org.eclipse.swt.widgets.Event)
 	@Override
-	public void handleEvent(final Event event) {
-		Utils.getOffOfSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				handleEventOffSWT(event);
-			}
-		});
+	default void handleEvent(Event event) {
+		Utils.getOffOfSWTThread(() -> handleEventOffSWT(event));
 	}
 
-	abstract void handleEventOffSWT(Event event);
+	void handleEventOffSWT(Event event);
 }
