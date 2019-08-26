@@ -509,14 +509,44 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 
 	@Override
 	public void runForAllRows(TableGroupRowRunner runner) {
+		runForAllRows( runner, false );
+	}
+	
+	private void runForAllRows(TableGroupRowRunner runner, boolean doSubRows) {
+		
 		// put to array instead of synchronised iterator, so that runner can remove
-		TableRowCore[] rows = getRows();
-		if (runner.run(rows)) {
-			return;
-		}
+		
+		if ( doSubRows ){
+			
+				// only support per-row runner...
+			
+			TableRowCore[] rows = getRows();
 
-		for (int i = 0; i < rows.length; i++) {
-			runner.run(rows[i]);
+			for (int i = 0; i < rows.length; i++) {
+				
+				runner.run(rows[i]);
+
+				int numSubRows = rows[i].getSubItemCount();
+				if (numSubRows > 0) {
+					TableRowCore[] subRows = rows[i].getSubRowsRecursive(false);
+					for (TableRowCore subRow : subRows) {
+						if (subRow != null) {
+							runner.run(subRow);
+						}
+					}
+				}
+			}
+			
+		}else{
+			TableRowCore[] rows = getRows();
+			
+			if (runner.run(rows)) {
+				return;
+			}
+	
+			for (int i = 0; i < rows.length; i++) {
+				runner.run(rows[i]);
+			}
 		}
 	}
 
@@ -1792,7 +1822,7 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 					}
 				}
 			}
-		});
+		}, true );
 		resetLastSortedOn();
 		tableColumn.setLastSortValueChange(SystemTime.getCurrentTime());
 	}

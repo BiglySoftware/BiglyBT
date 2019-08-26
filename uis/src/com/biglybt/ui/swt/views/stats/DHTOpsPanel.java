@@ -84,8 +84,6 @@ DHTOpsPanel
 					activity_map.put( activity, holder );
 					
 					activity_reverse_map.put( holder, activity );
-					
-					System.out.println( "act-map=" + activity_map.size());
 				}
 			}
 		}
@@ -208,9 +206,7 @@ DHTOpsPanel
 		implements GeneralOpsPanel.Activity
 	{
 		private final DHTControlActivity		delegate;
-		
-		//private Map<DHTControlActivity.ActivityNode, NodeHolder>	node_map = new IdentityHashMap<>();
-		
+				
 		private
 		ActivityHolder(
 			DHTControlActivity	_delegate )
@@ -267,27 +263,7 @@ DHTOpsPanel
 		private Node
 		map(
 			DHTControlActivity.ActivityNode node )
-		{
-			/*
-			NodeHolder holder;
-			
-			synchronized( node_map ){
-				
-				holder = node_map.get( node );
-				
-				if ( holder == null ){
-					
-					holder = new NodeHolder( node );
-					
-					node_map.put( node, holder );
-					
-					System.out.println( "node-map=" + node_map.size());
-				}
-			}
-			
-			return( holder );
-			*/
-			
+		{		
 			return( new NodeHolder( node ));
 		}
 		
@@ -309,9 +285,7 @@ DHTOpsPanel
 			{
 				return( map( delegate.getRootNode()));
 			}
-			
-
-			
+				
 			public int
 			getDepth()
 			{

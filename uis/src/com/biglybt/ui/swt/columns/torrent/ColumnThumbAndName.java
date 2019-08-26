@@ -463,7 +463,7 @@ public class ColumnThumbAndName
 		Image[] imgThumbnail = { ImageRepository.getPathIcon(fileInfo.getFile(true).getPath(),
 				cellBounds.height >= 20, false) };
 
-		if (imgThumbnail != null && ImageLoader.isRealImage(imgThumbnail[0])) {
+		if ( showIcon && imgThumbnail != null && ImageLoader.isRealImage(imgThumbnail[0])) {
 			try {
 
 				if (cellBounds.height > 30) {
