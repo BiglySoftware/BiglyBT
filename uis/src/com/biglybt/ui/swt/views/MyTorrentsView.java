@@ -2801,7 +2801,7 @@ public class MyTorrentsView
 			pending_tag_changes.add( tag );
 		}
 
-		Utils.execSWTThread(new AERunnable() {
+		Utils.execSWTThreadLater(0, new AERunnable() {
 			@Override
 			public void runSupport() {
 
