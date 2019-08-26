@@ -54,6 +54,7 @@ import com.biglybt.ui.swt.views.table.TableCellSWT;
 import com.biglybt.ui.swt.views.table.TableCellSWTPaintListener;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.pif.ui.menus.MenuItem;
+import com.biglybt.pif.ui.menus.MenuItemFillListener;
 import com.biglybt.pif.ui.menus.MenuItemListener;
 import com.biglybt.pif.ui.tables.*;
 
@@ -105,11 +106,30 @@ public class NameItem extends CoreTableColumnSWT implements
 			@Override
 			public void parameterChanged(String parameterName) {
 				bShowIcon = COConfigurationManager.getBooleanParameter("NameColumn.showProgramIcon");
+				invalidateCells();
 			}
 		};
 		COConfigurationManager.addWeakParameterListener(configShowProgramIconListener, true,
 				"NameColumn.showProgramIcon");
 
+		TableContextMenuItem menuShowIcon = addContextMenuItem(
+				"ConfigView.section.style.showProgramIcon", MENU_STYLE_HEADER);
+		menuShowIcon.setStyle(TableContextMenuItem.STYLE_CHECK);
+		menuShowIcon.addFillListener(new MenuItemFillListener() {
+			@Override
+			public void menuWillBeShown(MenuItem menu, Object data) {
+				menu.setData(Boolean.valueOf(bShowIcon));
+			}
+		});
+		
+		menuShowIcon.addMultiListener(new MenuItemListener() {
+			@Override
+			public void selected(MenuItem menu, Object target) {
+				COConfigurationManager.setParameter("NameColumn.showProgramIcon",
+						((Boolean) menu.getData()).booleanValue());
+			}
+		});
+		
 		menuItem = addContextMenuItem("Files.column.name.fastRename", MENU_STYLE_HEADER);
 
 		menuItem.setStyle(MenuItem.STYLE_CHECK);
