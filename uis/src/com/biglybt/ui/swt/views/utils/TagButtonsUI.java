@@ -517,6 +517,15 @@ public class TagButtonsUI
 			}
 		}
 
+		@Override
+		public void setEnabled(boolean enabled) {
+			boolean wasEnabled = isEnabled();
+			super.setEnabled(enabled);
+			if (wasEnabled != enabled) {
+				redraw();
+			}
+		}
+
 		private void updateImage() {
 			String iconFile = tag.getImageFile();
 			if (iconFile != null) {
