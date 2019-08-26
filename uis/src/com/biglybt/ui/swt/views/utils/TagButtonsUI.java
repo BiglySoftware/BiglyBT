@@ -310,7 +310,7 @@ public class TagButtonsUI
 		}
 
 		public void setImage(Image newImage, String key) {
-			if (!ImageLoader.isRealImage(image)) {
+			if (!ImageLoader.isRealImage(newImage)) {
 				return;
 			}
 			if (newImage == image && StringCompareUtils.equals(key, imageID)) {
