@@ -35,6 +35,7 @@ import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.Constants;
+import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
@@ -404,19 +405,26 @@ public class TagButtonsUI
 			sp.printString();
 			if (isFocusControl()) {
 				Rectangle printArea = sp.getCalculatedDrawRect();
+				if (printArea == null) {
+					printArea = clientArea;
+				}
 				e.gc.setAlpha(0xFF);
 
-				if (Constants.isWindows) {
-					// drawFocus doesn't always draw when it should on Windows :(
-					e.gc.setBackground(Colors.white);
-					e.gc.setForeground(Colors.black);
-					e.gc.setLineStyle(SWT.LINE_DOT);
-					e.gc.setLineWidth(1);
-					e.gc.drawRectangle(printArea.x - 2, printArea.y, printArea.width + 4,
-						printArea.height);
-				} else {
-					e.gc.drawFocus(printArea.x - 2, printArea.y - 1, printArea.width + 4,
-						printArea.height + 2);
+				try {
+					if (Constants.isWindows) {
+						// drawFocus doesn't always draw when it should on Windows :(
+						e.gc.setBackground(Colors.white);
+						e.gc.setForeground(Colors.black);
+						e.gc.setLineStyle(SWT.LINE_DOT);
+						e.gc.setLineWidth(1);
+						e.gc.drawRectangle(printArea.x - 2, printArea.y, printArea.width + 4,
+							printArea.height);
+					} else {
+						e.gc.drawFocus(printArea.x - 2, printArea.y - 1, printArea.width + 4,
+							printArea.height + 2);
+					}
+				} catch (Throwable t) {
+					Debug.out(t);
 				}
 			}
 		}
