@@ -69,10 +69,7 @@ import com.biglybt.ui.UserPrompterResultListener;
 import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.common.util.MenuItemManager;
 import com.biglybt.ui.mdi.MultipleDocumentInterface;
-import com.biglybt.ui.swt.MenuBuildUtils;
-import com.biglybt.ui.swt.Messages;
-import com.biglybt.ui.swt.SimpleTextEntryWindow;
-import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
@@ -2507,16 +2504,14 @@ public class TagUIUtils
 		if ( invisible_count > 0 ){
 			MenuItem showAll = new MenuItem(menuShowHide[0], SWT.PUSH);
 			Messages.setLanguageText(showAll, "label.show.all");
-			showAll.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event){
-					for ( Tag t: tags ){
+			showAll.addListener(SWT.Selection, (ListenerGetOffSWT) event -> {
+				for ( Tag t: tags ){
 
-						if ( !t.isVisible()){
-							t.setVisible( true );
-						}
+					if ( !t.isVisible()){
+						t.setVisible( true );
 					}
-				}});
+				}
+			});
 
 			needs_separator_next = true;
 		}
@@ -2524,16 +2519,14 @@ public class TagUIUtils
 		if ( visible_count > 0 ){
 			MenuItem hideAll = new MenuItem(menuShowHide[0], SWT.PUSH);
 			Messages.setLanguageText(hideAll, "popup.error.hideall");
-			hideAll.addListener(SWT.Selection, new Listener() {
-				@Override
-				public void handleEvent(Event event){
-					for ( Tag t: tags ){
+			hideAll.addListener(SWT.Selection, (ListenerGetOffSWT) event -> {
+				for ( Tag t: tags ){
 
-						if ( t.isVisible()){
-							t.setVisible( false );
-						}
+					if ( t.isVisible()){
+						t.setVisible( false );
 					}
-				}});
+				}
+			});
 
 			needs_separator_next = true;
 		}
