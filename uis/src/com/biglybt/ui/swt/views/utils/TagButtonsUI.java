@@ -19,16 +19,13 @@
 package com.biglybt.ui.swt.views.utils;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.accessibility.ACC;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -42,7 +39,9 @@ import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.util.StringCompareUtils;
 
 /**
  * @author TuxPaper
@@ -50,74 +49,17 @@ import com.biglybt.ui.swt.utils.ColorCache;
  *
  */
 public class TagButtonsUI
-implements PaintListener
 {
 
-	private ArrayList<Button> buttons;
+	private static final Point MAX_IMAGE_SIZE = new Point(40, 28);
+	
+	private ArrayList<TagCanvas> tagWidgets;
 	private Composite cMainComposite;
 	private TagButtonTrigger trigger;
 	private boolean enableWhenNoTaggables;
 
 	private boolean disableAuto = true;
 	
-	@Override
-	public void paintControl(PaintEvent e) {
-		Button button;
-		Composite c = null;
-		if (e.widget instanceof Composite) {
-			c = (Composite) e.widget;
-			button = (Button) c.getChildren()[0];
-		} else {
-			button = (Button) e.widget;
-		}
-		Tag tag = (Tag) button.getData("Tag");
-		if (tag == null) {
-			return;
-		}
-
-		//ImageLoader.getInstance().getImage(? "check_yes" : "check_no");
-
-		Color color = ColorCache.getColor(e.display, tag.getColor());
-		if (c != null) {
-			boolean checked = button.getSelection();
-			Point size = c.getSize();
-			Point sizeButton = button.getSize();
-			e.gc.setAntialias(SWT.ON);
-			if (color != null) {
-				e.gc.setForeground(color);
-			}
-			int lineWidth = button.getSelection() ? 2 : 1;
-			e.gc.setLineWidth(lineWidth);
-
-			int curve = 20;
-			int width = sizeButton.x + lineWidth + 1;
-			width += Constants.isOSX ? 5 : curve / 2;
-			if (checked) {
-				e.gc.setAlpha(0x20);
-				if (color != null) {
-					e.gc.setBackground(color);
-				}
-				e.gc.fillRoundRectangle(-curve, lineWidth - 1, width + curve, size.y - lineWidth, curve, curve);
-				e.gc.setAlpha(0xff);
-			}
-			if (!checked) {
-				e.gc.setAlpha(0x80);
-			}
-			e.gc.drawRoundRectangle(-curve, lineWidth - 1, width + curve, size.y - lineWidth, curve, curve);
-			e.gc.drawLine(lineWidth - 1, lineWidth, lineWidth - 1, size.y - lineWidth);
-		} else {
-			if (!Constants.isOSX && button.getSelection()) {
-				Point size = button.getSize();
-				if (color != null) {
-					e.gc.setBackground(color);
-				}
-				e.gc.setAlpha(20);
-				e.gc.fillRectangle(0, 0, size.x, size.y);
-			}
-		}
-	}
-
-
 	public void buildTagGroup(List<Tag> tags, Composite cMainComposite,
 			boolean allowContextMenu, TagButtonTrigger trigger) {
 
@@ -126,39 +68,15 @@ implements PaintListener
 
 		cMainComposite.setLayout(new GridLayout(1, false));
 
-		buttons = new ArrayList<>();
-
-		SelectionListener selectionListener = new SelectionListener() {
-
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				Button button = (Button) e.widget;
-				Tag tag = (Tag) button.getData("Tag");
-				if (button.getGrayed()) {
-					button.setGrayed(false);
-					button.setSelection(!button.getSelection());
-					button.getParent().redraw();
-				}
-				boolean doTag = button.getSelection();
-				trigger.tagButtonTriggered(tag, doTag);
-
-				button.getParent().redraw();
-				button.getParent().update();
-			}
-
-			@Override
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
-		};
+		tagWidgets = new ArrayList<>();
 
 		Listener menuDetectListener = allowContextMenu ? event -> {
-			final Button button = (Button) event.widget;
-			Menu menu = new Menu(button);
-			button.setMenu(menu);
+			final TagCanvas tagCanvas = (TagCanvas) event.widget;
+			Menu menu = new Menu(tagCanvas);
+			tagCanvas.setMenu(menu);
 
 			MenuBuildUtils.addMaintenanceListenerForMenu(menu, (menu1, menuEvent) -> {
-				Tag tag = (Tag) button.getData("Tag");
-				TagUIUtils.createSideBarMenuItems(menu1, tag);
+				TagUIUtils.createSideBarMenuItems(menu1, tagCanvas.getTag());
 			});
 		} : null;
 
@@ -184,12 +102,13 @@ implements PaintListener
 				g.setLayout(rowLayout);
 			}
 
-			Composite p = new Composite(g, SWT.DOUBLE_BUFFERED);
+			TagCanvas p = new TagCanvas(g, tag);
 			GridLayout layout = new GridLayout(1, false);
 			layout.marginHeight = 3;
 			if (Constants.isWindows) {
-				layout.marginWidth = 6;
-				layout.marginLeft = 2;
+				layout.marginWidth = 0;
+				layout.marginLeft = 4;
+				layout.marginRight = 7;
 				layout.marginTop = 1;
 			} else {
 				layout.marginWidth = 0;
@@ -197,124 +116,32 @@ implements PaintListener
 				layout.marginRight = 11;
 			}
 			p.setLayout(layout);
-			p.addPaintListener(this);
-
-			Button button = new Button(p, SWT.CHECK);
-			buttons.add(button);
-			boolean[] auto = tag.isTagAuto();
-
-			if ( auto[0] && auto[1] && disableAuto ){
-				button.setEnabled( false );
-			}else{
-				button.addSelectionListener(selectionListener);
-			}
-			button.setData("Tag", tag);
 
 			if (allowContextMenu) {
-				button.addListener(SWT.MenuDetect, menuDetectListener);
+				p.addListener(SWT.MenuDetect, menuDetectListener);
 			}
-			button.setBackground( p.getBackground());
-			button.addPaintListener(this);
 
-			Utils.setTT(button, TagUtils.getTagTooltip(tag));
+			tagWidgets.add(p);
+
+			Utils.setTT(p, TagUtils.getTagTooltip(tag));
 			
-			String iconFile = tag.getImageFile();
-
-			if ( iconFile != null ){
-				
-				try{
-					String resource = new File( iconFile ).toURI().toURL().toExternalForm();
-												
-					ImageLoader.getInstance().getUrlImage(
-							  resource, 
-							  new Point( 20, 14 ),
-							  new ImageLoader.ImageDownloaderListener(){
-			
-								  @Override
-								  public void imageDownloaded(Image image, String key, boolean returnedImmediately){
-									  							  
-									 if ( image != null && returnedImmediately ){
-											
-										 button.setImage(image);
-										 
-										 button.addDisposeListener(
-											new DisposeListener(){
-												
-												@Override
-												public void widgetDisposed(DisposeEvent e){
-													ImageLoader.getInstance().releaseImage( key );
-												}
-											});
-										
-									 }
-								  }
-							  });
-				}catch( Throwable e ){
-				}
-			} else {
-				String id = tag.getImageID();
-				if (id != null) {
-					Image image = ImageLoader.getInstance().getImage(id);
-					if (image != null && ImageLoader.isRealImage(image)) {
-						button.setImage(image);
-
-						button.addDisposeListener(
-								new DisposeListener(){
-
-									@Override
-									public void widgetDisposed(DisposeEvent e){
-										ImageLoader.getInstance().releaseImage( id );
-									}
-								});
-					}
-				}
-			}
 		}
 	}
 
 	public void setSelectedTags( List<Tag> tags ){
 		
-		List<Control> layoutChanges = new ArrayList<>();
-		
 		Set<Tag> tag_set = new HashSet<>( tags );
 		
-		for (Button button : buttons) {
+		for (TagCanvas widget : tagWidgets) {
 
-			Tag tag = (Tag) button.getData("Tag");
+			Tag tag = widget.getTag();
 			if (tag == null) {
 				continue;
 			}
 			
-			boolean changed = false;
-			
-			String name = tag.getTagName(true);
-			
-			if ( !button.getText().equals(name)){
-			
-				button.setText(name);
-				
-				changed = true;
-			}
-			
 			boolean select = tag_set.contains( tag );
-			
-			if ( select != button.getSelection()){
-			
-				button.setSelection( select );
-			
-				changed = true;
-			}
-			
-			if ( changed ){
-				
-				layoutChanges.add(button);
-				
-				button.getParent().redraw();
-			}
-		}
-		
-		if (layoutChanges.size() > 0) {
-			cMainComposite.layout(layoutChanges.toArray(new Control[0]));
+
+			widget.setSelected(select);
 		}
 	}
 	
@@ -323,13 +150,13 @@ implements PaintListener
 	{
 		List<Tag> result = new ArrayList<>();
 		
-		for (Button button : buttons) {
+		if (tagWidgets == null || tagWidgets.isEmpty()) {
+			return result;
+		}
 
-			if ( button.getSelection()){
-				Tag tag = (Tag) button.getData("Tag");
-				if (tag != null) {
-					result.add( tag );
-				}
+		for (TagCanvas tagCanvas : tagWidgets) {
+			if (tagCanvas.isSelected()){
+				result.add(tagCanvas.getTag());
 			}
 		}
 
@@ -341,97 +168,13 @@ implements PaintListener
 			return false;
 		}
 		
-		List<Control> layoutChanges = new ArrayList<>();
-		for (Button button : buttons) {
-
-			Tag tag = (Tag) button.getData("Tag");
-			if (tag == null) {
-				continue;
-			}
-			String name = tag.getTagName(true);
-			if (!button.getText().equals(name)) {
-				button.setText(name);
-				layoutChanges.add(button);
-			}
-
-			updateButtonState(tag, button, taggables);
-
-			button.getParent().redraw();
+		for (TagCanvas tagWidget : tagWidgets) {
+			tagWidget.updateState(taggables);
 		}
 
-		if (layoutChanges.size() > 0) {
-			cMainComposite.layout(layoutChanges.toArray(new Control[0]));
-			return true;
-		}
 		return false;
 	}
 
-
-	private void
-	updateButtonState(
-		Tag			tag,
-		Button		button,
-		List<Taggable> taggables )
-	{
-		if (taggables == null) {
-			button.setEnabled(enableWhenNoTaggables);
-			if (!enableWhenNoTaggables) {
-				button.setSelection(false);
-				button.getParent().redraw();
-				return;
-			}
-		}
-
-		boolean hasTag = false;
-		boolean hasNoTag = false;
-
-		Boolean override = trigger.tagSelectedOverride(tag);
-
-		if (taggables != null && override == null) {
-			for (Taggable taggable : taggables) {
-				boolean curHasTag = tag.hasTaggable(taggable);
-				if (!hasTag && curHasTag) {
-					hasTag = true;
-					if (hasNoTag) {
-						break;
-					}
-				} else if (!hasNoTag && !curHasTag) {
-					hasNoTag = true;
-					if (hasTag) {
-						break;
-					}
-				}
-			}
-		} else if (override != null) {
-			hasNoTag = !override;
-			hasTag = override;
-		}
-
-		boolean[] auto = tag.isTagAuto();
-
-		boolean	auto_add 	= auto[0];
-		boolean auto_rem	= auto[1];
-
-		if (hasTag && hasNoTag) {
-			button.setEnabled( !auto_add );
-
-			button.setGrayed(true);
-			button.setSelection(true);
-		} else {
-
-			if ( auto_add && auto_rem ){
-
-				button.setEnabled( false );
-			}else{
-				button.setEnabled(
-					( hasTag ) ||
-					( !hasTag && !auto_add ));
-			}
-
-			button.setGrayed(false);
-			button.setSelection(hasTag);
-		}
-	}
 
 	public void
 	setDisableAuto(
@@ -450,4 +193,341 @@ implements PaintListener
 		public Boolean tagSelectedOverride(Tag tag);
 	}
 
+	private class TagCanvas
+		extends Canvas
+		implements PaintListener, Listener
+	{
+		private static final int CURVE_WIDTH = 20;
+
+		private static final int CONTENT_PADDING_Y0 = 4;
+		
+		private static final int PADDING_IMAGE_X = 5;
+
+		private static final int CONTENT_PADDING_Y1 = 4;
+
+		public static final int CONTENT_PADDING_X0 = 5;
+
+		private Image image;
+
+		private String imageID;
+
+		private boolean selected;
+
+		private Tag tag;
+
+		private String lastUsedName;
+
+		private boolean grayed;
+
+		public TagCanvas(Composite parent, Tag tag) {
+			super(parent, SWT.DOUBLE_BUFFERED);
+			this.tag = tag;
+
+			boolean[] auto = tag.isTagAuto();
+
+			if (auto[0] && auto[1] && disableAuto) {
+				setEnabled(false);
+			} else {
+				addListener(SWT.MouseDown, this);
+				addListener(SWT.MouseUp, this);
+				addListener(SWT.KeyDown, this);
+				addListener(SWT.FocusOut, this);
+				addListener(SWT.FocusIn, this);
+				addListener(SWT.Traverse, this);
+			}
+
+			updateImage();
+			addPaintListener(this);
+		}
+
+		@Override
+		public Point computeSize(int wHint, int hHint, boolean changed) {
+			if (tag == null) {
+				return super.computeSize(wHint, hHint, changed);
+			}
+
+			if (lastUsedName == null) {
+				lastUsedName = tag.getTagName(true);
+			}
+
+			GC gc = new GC(getDisplay());
+			gc.setFont(getFont());
+
+			GCStringPrinter sp = new GCStringPrinter(gc, lastUsedName,
+					new Rectangle(0, 0, 9999, 9999), false, true, SWT.LEFT);
+			sp.calculateMetrics();
+			Point size = sp.getCalculatedSize();
+			size.x += CONTENT_PADDING_X0 + (CURVE_WIDTH / 2);
+			size.y += CONTENT_PADDING_Y0 + CONTENT_PADDING_Y1;
+			gc.dispose();
+
+			if (image != null && !image.isDisposed()) {
+				Rectangle bounds = image.getBounds();
+				int imageW = (bounds.width * (size.y - CONTENT_PADDING_Y0 - CONTENT_PADDING_Y1)) / bounds.height;
+				size.x += imageW + PADDING_IMAGE_X;
+			}
+
+			return size;
+		}
+		
+
+		@Override
+		public void handleEvent(Event e) {
+			switch (e.type) {
+				case SWT.MouseDown: {
+					if (e.button != 1) {
+						return;
+					}
+					trigger.tagButtonTriggered(tag, !isSelected());
+					redraw();
+					break;
+				}
+				case SWT.MouseUp: {
+					if (e.button != 1) {
+						return;
+					}
+					getAccessible().setFocus(ACC.CHILDID_SELF);
+					break;
+				}
+				case SWT.FocusOut:
+				case SWT.FocusIn: {
+					redraw();
+					break;
+				}
+				case SWT.Traverse: {
+					switch (e.detail) {
+						case SWT.TRAVERSE_PAGE_NEXT:
+						case SWT.TRAVERSE_PAGE_PREVIOUS:
+							e.doit = false;
+							return;
+						case SWT.TRAVERSE_RETURN:
+							trigger.tagButtonTriggered(tag, !isSelected());
+							redraw();
+					}
+					e.doit = true;
+				}
+			}
+		}
+
+		public void setImage(Image newImage, String key) {
+			if (newImage == image && StringCompareUtils.equals(key, imageID)) {
+				return;
+			}
+			if (imageID != null) {
+				ImageLoader.getInstance().releaseImage(imageID);
+			}
+			this.image = newImage;
+			this.imageID = key;
+			requestLayout();
+			redraw();
+		}
+
+		public Tag getTag() {
+			return tag;
+		}
+
+		public boolean isSelected() {
+			return selected;
+		}
+
+		public void setSelected(boolean select) {
+			if (select != selected) {
+				selected = select;
+				if (grayed) {
+					grayed = false;
+				}
+				redraw();
+			}
+		}
+
+		@Override
+		public void paintControl(PaintEvent e) {
+			if (tag == null || lastUsedName == null) {
+				return;
+			}
+
+			Rectangle clientArea = getClientArea();
+			//System.out.println("paint " + lastUsedName + "; " + clientArea + "; " + e);
+
+			boolean selected = isSelected();
+			boolean enabled = isEnabled();
+
+			Color color = ColorCache.getColor(e.display, tag.getColor());
+			Point size = getSize();
+			e.gc.setAntialias(SWT.ON);
+			if (color != null) {
+				e.gc.setForeground(color);
+			}
+			int lineWidth = selected || !enabled ? 2 : 1;
+			e.gc.setLineWidth(lineWidth);
+
+			int width = size.x - lineWidth;
+			if (selected) {
+				e.gc.setAlpha(0x40);
+				if (color != null) {
+					e.gc.setBackground(color);
+				}
+				e.gc.fillRoundRectangle(-CURVE_WIDTH, lineWidth - 1,
+						width + CURVE_WIDTH, size.y - lineWidth, CURVE_WIDTH, CURVE_WIDTH);
+				e.gc.setAlpha(0xff);
+			}
+			if (!selected) {
+				e.gc.setAlpha(0x80);
+			}
+			e.gc.setLineStyle(enabled ? SWT.LINE_SOLID : SWT.LINE_DOT);
+			e.gc.drawRoundRectangle(-CURVE_WIDTH, lineWidth - 1, width + CURVE_WIDTH,
+					size.y - lineWidth, CURVE_WIDTH, CURVE_WIDTH);
+			e.gc.drawLine(lineWidth - 1, lineWidth, lineWidth - 1,
+					size.y - lineWidth);
+
+			clientArea.x += CONTENT_PADDING_X0;
+			clientArea.width = clientArea.width - CONTENT_PADDING_X0;
+			if (image != null) {
+				Rectangle bounds = image.getBounds();
+				int imageH = size.y - CONTENT_PADDING_Y0 - CONTENT_PADDING_Y1;
+				int imageW = (bounds.width * imageH) / bounds.height;
+
+				e.gc.drawImage(image, 0, 0, bounds.width, bounds.height, clientArea.x,
+						clientArea.y + CONTENT_PADDING_Y0, imageW, imageH);
+				clientArea.x += imageW + PADDING_IMAGE_X;
+				clientArea.width -= imageW - PADDING_IMAGE_X;
+			}
+			e.gc.setAlpha(grayed ? 0xA0 : 0xFF);
+			e.gc.setForeground(getForeground());
+			clientArea.y += CONTENT_PADDING_Y0;
+			clientArea.height -= (CONTENT_PADDING_Y0 + CONTENT_PADDING_Y1);
+			GCStringPrinter sp = new GCStringPrinter(e.gc, lastUsedName, clientArea, true, true,
+				SWT.LEFT);
+			sp.printString();
+			if (isFocusControl()) {
+				Rectangle printArea = sp.getCalculatedDrawRect();
+				// doesn't always draw!?
+				//e.gc.drawFocus(printArea.x - 2, printArea.y - 1, printArea.width + 4,
+				//	printArea.height + 2);
+
+				e.gc.setAlpha(0xFF);
+				e.gc.setBackground(Colors.white);
+				e.gc.setForeground(Colors.black);
+				e.gc.setLineStyle(SWT.LINE_DOT);
+				e.gc.setLineWidth(1);
+				e.gc.drawRectangle(printArea.x - 2, printArea.y, printArea.width + 4,
+					printArea.height);
+			}
+		}
+
+		@Override
+		public void dispose() {
+			super.dispose();
+			if (imageID != null) {
+				ImageLoader.getInstance().releaseImage(imageID);
+				imageID = null;
+				image = null;
+			}
+		}
+
+		public void updateName() {
+			String tagName = tag.getTagName(true);
+			if (!tagName.equals(lastUsedName)) {
+				lastUsedName = null;
+				requestLayout();
+				redraw();
+			}
+		}
+
+		public void setGrayed(boolean b) {
+			if (b == grayed) {
+				return;
+			}
+			grayed = b;
+			redraw();
+		}
+
+		public void updateState(List<Taggable> taggables) {
+			updateImage();
+			updateName();
+
+			if (taggables == null) {
+				setEnabled(enableWhenNoTaggables);
+				if (!enableWhenNoTaggables) {
+					setSelected(false);
+					return;
+				}
+			}
+
+			boolean hasTag = false;
+			boolean hasNoTag = false;
+
+			Boolean override = trigger.tagSelectedOverride(tag);
+
+			if (taggables != null && override == null) {
+				for (Taggable taggable : taggables) {
+					boolean curHasTag = tag.hasTaggable(taggable);
+					if (!hasTag && curHasTag) {
+						hasTag = true;
+						if (hasNoTag) {
+							break;
+						}
+					} else if (!hasNoTag && !curHasTag) {
+						hasNoTag = true;
+						if (hasTag) {
+							break;
+						}
+					}
+				}
+			} else if (override != null) {
+				hasNoTag = !override;
+				hasTag = override;
+			}
+
+			boolean[] auto = tag.isTagAuto();
+
+			boolean auto_add = auto[0];
+			boolean auto_rem = auto[1];
+
+			if (hasTag && hasNoTag) {
+				setEnabled(!auto_add);
+
+				setGrayed(true);
+				setSelected(true);
+			} else {
+
+				if (auto_add && auto_rem) {
+					setGrayed(!hasTag);
+					setEnabled(false);
+				} else {
+					setEnabled((hasTag) || (!hasTag && !auto_add));
+					setGrayed(false);
+				}
+
+				setSelected(hasTag);
+			}
+		}
+
+		private void updateImage() {
+			String iconFile = tag.getImageFile();
+			if (iconFile != null) {
+				try {
+					String resource = new File(iconFile).toURI().toURL().toExternalForm();
+
+					ImageLoader.getInstance().getUrlImage(resource, MAX_IMAGE_SIZE,
+							(image, key, returnedImmediately) -> {
+								if (image == null) {
+									return;
+								}
+
+								Utils.execSWTThread(() -> setImage(image, key));
+							});
+				} catch (Throwable e) {
+				}
+			} else {
+				String id = tag.getImageID();
+				if (id != null) {
+					Image image = ImageLoader.getInstance().getImage(id);
+					setImage(image, id);
+				} else {
+					setImage(null, null);
+				}
+			}
+		}
+	}
 }
