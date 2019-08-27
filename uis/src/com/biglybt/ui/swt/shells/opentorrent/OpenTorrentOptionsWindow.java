@@ -98,7 +98,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.TrackerNameItem;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
-import com.biglybt.ui.swt.views.utils.TagButtonsUI.TagButtonTrigger;
+import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
 import com.biglybt.util.JSONUtils;
 import com.biglybt.util.MapUtils;
 

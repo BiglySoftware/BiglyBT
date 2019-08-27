@@ -40,6 +40,7 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.swt.views.skin.SkinnedDialog;
 import com.biglybt.ui.swt.views.skin.StandardButtonsArea;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
+import com.biglybt.ui.swt.widgets.TagCanvas;
 
 /**
  * @author TuxPaper
@@ -236,7 +237,7 @@ public class TagUIUtilsV3
 			
 			tagButtonsUI.buildTagGroup(
 				tags, comp, false, 
-				new TagButtonsUI.TagButtonTrigger(){
+				new TagCanvas.TagButtonTrigger(){
 					
 					@Override
 					public Boolean tagSelectedOverride(Tag tag){
