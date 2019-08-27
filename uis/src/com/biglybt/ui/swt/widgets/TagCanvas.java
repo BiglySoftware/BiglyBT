@@ -53,7 +53,7 @@ public class TagCanvas
 		Boolean tagSelectedOverride(Tag tag);
 	}
 
-	private static final int DEF_CURVE_WIDTH = 20;
+	private static final int DEF_CURVE_WIDTH = 25;
 
 	private static final int COMPACT_CURVE_WIDTH = 15;
 
@@ -69,11 +69,15 @@ public class TagCanvas
 
 	private static final int COMPACT_CONTENT_PADDING_X0 = 3;
 
+	private static final int DEF_CONTENT_PADDING_X1 = 8;
+
+	private static final int COMPACT_CONTENT_PADDING_X1 = 5;
+
 	private int paddingContentY = DEF_CONTENT_PADDING_Y;
 
 	private int paddingContentX0 = DEF_CONTENT_PADDING_X0;
 
-	private int paddingContentX1 = DEF_CURVE_WIDTH / 2;
+	private int paddingContentX1 = DEF_CONTENT_PADDING_X1;
 
 	private int paddingImageX = DEF_PADDING_IMAGE_X;
 
@@ -338,8 +342,8 @@ public class TagCanvas
 					e.gc.setForeground(Colors.black);
 					e.gc.setLineStyle(SWT.LINE_DOT);
 					e.gc.setLineWidth(1);
-					e.gc.drawRectangle(printArea.x - 2, printArea.y, printArea.width + 4,
-							printArea.height);
+					e.gc.drawRoundRectangle(printArea.x - 2, printArea.y, printArea.width + 4,
+							printArea.height, 4, 4);
 				} else {
 					e.gc.drawFocus(printArea.x - 2, printArea.y - 1, printArea.width + 4,
 							printArea.height + 2);
@@ -501,14 +505,14 @@ public class TagCanvas
 			paddingImageX = COMPACT_PADDING_IMAGE_X;
 			paddingContentY = COMPACT_CONTENT_PADDING_Y;
 			paddingContentX0 = COMPACT_CONTENT_PADDING_X0;
-			paddingContentX1 = COMPACT_CURVE_WIDTH / 3;
+			paddingContentX1 = COMPACT_CONTENT_PADDING_X1;
 			curveWidth = COMPACT_CURVE_WIDTH;
 			showImage = false;
 		} else {
 			paddingImageX = DEF_PADDING_IMAGE_X;
 			paddingContentY = DEF_CONTENT_PADDING_Y;
 			paddingContentX0 = DEF_CONTENT_PADDING_X0;
-			paddingContentX1 = DEF_CURVE_WIDTH / 2;
+			paddingContentX1 = DEF_CONTENT_PADDING_X1;
 			curveWidth = DEF_CURVE_WIDTH;
 			showImage = true;
 		}
