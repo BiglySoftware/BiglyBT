@@ -47,7 +47,6 @@ import com.biglybt.core.disk.DiskManagerFileInfoSet;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerListener;
 import com.biglybt.core.download.DownloadManagerState;
-import com.biglybt.core.download.DownloadManagerStats;
 import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.global.GlobalManagerEvent;
 import com.biglybt.core.global.GlobalManagerEventListener;
@@ -91,6 +90,7 @@ import com.biglybt.ui.swt.views.table.impl.TableViewTab;
 import com.biglybt.ui.swt.views.table.painted.TableRowPainted;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
+import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.pif.PluginInterface;
@@ -232,8 +232,6 @@ public class MyTorrentsView
 	private Class<?> forDataSourceType;
 
 	private Listener buttonListener;
-
-	private Listener buttonHoverListener;
 
 	private DropTargetListener buttonDropTargetListener;
 
@@ -860,7 +858,7 @@ public class MyTorrentsView
 		rowLayout.marginBottom = 0;
 		rowLayout.marginLeft = 3;
 		rowLayout.marginRight = 3;
-		rowLayout.spacing = 0;
+		rowLayout.spacing = 3;
 		rowLayout.wrap = true;
 
 	    Menu menu = getHeaderMenu(cTableParentPanel);
@@ -922,8 +920,10 @@ public class MyTorrentsView
 
 				@Override
 				public void handleEvent(Event event) {
-					
-					Button curButton = (Button)event.widget;
+					if (!(event.widget instanceof TagCanvas)) {
+						return;
+					}
+					TagCanvas curButton = (TagCanvas) event.widget;
 
 					if (event.type == SWT.MouseDown) {
 						if (timerEvent == null) {
@@ -946,12 +946,12 @@ public class MyTorrentsView
 													public void
 													run()
 													{
-														if (tv == null || curButton == null) {
+														if (tv == null) {
 															return;
 														}
 														Object[] ds = tv.getSelectedDataSources().toArray();
 
-														Tag tag = (Tag) curButton.getData("Tag");
+														Tag tag = curButton.getTag();
 														if (tag == null) {
 															return;
 														}
@@ -1033,18 +1033,18 @@ public class MyTorrentsView
 
 					boolean add = (event.stateMask & SWT.MOD1) != 0;
 
-					boolean isEnabled = curButton.getSelection();
+					boolean isEnabled = curButton.isSelected();
 
-					Tag tag = (Tag) curButton.getData("Tag");
+					Tag tag = curButton.getTag();
 
-					if (!isEnabled) {
+					if (isEnabled) {
 						removeTagFromCurrent(tag);
 					} else {
 						if (add) {
 							Category catAll = CategoryManager.getCategory(Category.TYPE_ALL);
 
 							if (tag.equals(catAll)) {
-								setCurrentTags(new Tag[] { catAll });
+								setCurrentTags(catAll);
 							} else {
 								synchronized( currentTagsLock ){
 									Tag[] newTags = new Tag[_currentTags.length + 1];
@@ -1057,9 +1057,7 @@ public class MyTorrentsView
 								}
 							}
 						} else {
-							setCurrentTags(new Tag[] {
-								(Tag) curButton.getData("Tag")
-							});
+							setCurrentTags(curButton.getTag());
 						}
 					}
 					
@@ -1074,96 +1072,12 @@ public class MyTorrentsView
 					}
 					Control[] controls = parent.getChildren();
 					for (Control control : controls) {
-						if (!(control instanceof Button)) {
+						if (!(control instanceof TagCanvas)) {
 							continue;
 						}
-						Button b = (Button) control;
-						Tag btag = (Tag) b.getData("Tag");
-						b.setSelection(isCurrent(btag));
+						TagCanvas tagCanvas = (TagCanvas) control;
+						tagCanvas.setSelected(isCurrent(tagCanvas.getTag()));
 					}
-				}
-			};
-			buttonHoverListener = new Listener() {
-				@Override
-				public void handleEvent(Event event) {
-					Button curButton = (Button) event.widget;
-					Tag tag = (Tag) curButton.getData("Tag");
-
-					if (!(tag instanceof Category)) {
-						Utils.setTT(curButton,TagUtils.getTagTooltip(tag, true));
-						return;
-					}
-
-					Category category = (Category) tag;
-
-					List<DownloadManager> dms = category.getDownloadManagers(
-							globalManager.getDownloadManagers());
-
-					long ttlActive = 0;
-					long ttlSize = 0;
-					long ttlRSpeed = 0;
-					long ttlSSpeed = 0;
-					int count = 0;
-					for (DownloadManager dm : dms) {
-
-						if (!category.hasTaggable(dm)) {
-							continue;
-						}
-
-						count++;
-						if (dm.getState() == DownloadManager.STATE_DOWNLOADING
-								|| dm.getState() == DownloadManager.STATE_SEEDING) {
-							ttlActive++;
-						}
-						DownloadManagerStats stats = dm.getStats();
-						ttlSize += stats.getSizeExcludingDND();
-						ttlRSpeed += stats.getDataReceiveRate();
-						ttlSSpeed += stats.getDataSendRate();
-					}
-
-					String up_details = "";
-					String down_details = "";
-
-					if (category.getType() != Category.TYPE_ALL) {
-
-						String up_str = MessageText.getString(
-								"GeneralView.label.maxuploadspeed");
-						String down_str = MessageText.getString(
-								"GeneralView.label.maxdownloadspeed");
-						String unlimited_str = MessageText.getString(
-								"MyTorrentsView.menu.setSpeed.unlimited");
-
-						int up_speed = category.getUploadSpeed();
-						int down_speed = category.getDownloadSpeed();
-
-						up_details = up_str + ": " + (up_speed == 0 ? unlimited_str
-								: DisplayFormatters.formatByteCountToKiBEtc(up_speed));
-						down_details = down_str + ": " + (down_speed == 0 ? unlimited_str
-								: DisplayFormatters.formatByteCountToKiBEtc(down_speed));
-					}
-
-					if (count == 0) {
-						Utils.setTT(curButton,
-								down_details + "\n" + up_details + "\nTotal: 0");
-						return;
-					}
-
-					Utils.setTT(curButton,(up_details.length() == 0 ? ""
-							: (down_details + "\n" + up_details + "\n")) + "Total: " + count
-							+ "\n" + "Downloading/Seeding: " + ttlActive + "\n" + "\n"
-							+ "Total Speed: "
-							+ DisplayFormatters.formatByteCountToKiBEtcPerSec(ttlRSpeed)
-							+ " / "
-							+ DisplayFormatters.formatByteCountToKiBEtcPerSec(ttlSSpeed)
-							+ "\n" + "Average Speed: "
-							+ DisplayFormatters.formatByteCountToKiBEtcPerSec(
-									ttlRSpeed / (ttlActive == 0 ? 1 : ttlActive))
-							+ " / "
-							+ DisplayFormatters.formatByteCountToKiBEtcPerSec(
-									ttlSSpeed / (ttlActive == 0 ? 1 : ttlActive))
-							+ "\n" + "Size: "
-							+ DisplayFormatters.formatByteCountToKiBEtc(ttlSize));
-
 				}
 			};
 
@@ -1174,10 +1088,14 @@ public class MyTorrentsView
 					if (drag_drop_location_start >= 0) {
 						boolean doAdd = false;
 
-						Control curButton = ((DropTarget) e.widget).getControl();
-						Tag tag = (Tag) curButton.getData("Tag");
-						Object[] ds = tv.getSelectedDataSources().toArray();
+						Control dropControl = ((DropTarget) e.widget).getControl();
+						if (!(dropControl instanceof TagCanvas)) {
+							e.detail = DND.DROP_NONE;
+							return;
+						}
+						Tag tag = ((TagCanvas) dropControl).getTag();
 						if (tag != null) {
+							Object[] ds = tv.getSelectedDataSources().toArray();
   						for (Object obj : ds) {
 
   							if (obj instanceof DownloadManager) {
@@ -1209,9 +1127,12 @@ public class MyTorrentsView
 
 						Object[] ds = tv.getSelectedDataSources().toArray();
 
-						Control curButton = ((DropTarget) e.widget).getControl();
-
-						Tag tag = (Tag) curButton.getData("Tag");
+						Control dropControl = ((DropTarget) e.widget).getControl();
+						if (!(dropControl instanceof TagCanvas)) {
+							e.detail = DND.DROP_NONE;
+							return;
+						}
+						Tag tag = ((TagCanvas) dropControl).getTag();
 
 						if (tag instanceof Category) {
 							TorrentUtil.assignToCategory(ds, (Category) tag);
@@ -1254,7 +1175,8 @@ public class MyTorrentsView
 		for ( final Tag tag: tags ){
 			boolean isCat = (tag instanceof Category);
 
-			final Button button = new Button(cCategoriesAndTags, SWT.TOGGLE);
+			TagCanvas button = new TagCanvas(cCategoriesAndTags, tag, false, true);
+			button.setCompact(true);
 
 			if (isCat) {
   			if (spacer == null) {
@@ -1271,31 +1193,15 @@ public class MyTorrentsView
 			if ( fontButton == null) {
 				fontButton = FontUtils.getFontPercentOf(button.getFont(), 0.8f);
 			}
-			button.setText("|");
 			button.setFont(fontButton);
-			button.pack(true);
-			if (button.computeSize(100, SWT.DEFAULT).y > 0) {
-				RowData rd = new RowData();
-				int rd_height = button.computeSize(100, SWT.DEFAULT).y - 2 + button.getBorderWidth() * 2;
-				rd.height = rd_height;
-				max_rd_height = Math.max( max_rd_height, rd_height );
-				button.setLayoutData(rd);
-			}
 
-			String tag_name = tag.getTagName( true );
-
-			button.setText(tag_name);
-
-			button.setData("Tag", tag);
 			if (isCurrent(tag)) {
-				button.setSelection(true);
+				button.setSelected(true);
 			}
 
 			button.addListener(SWT.MouseUp, buttonListener );
 			button.addListener(SWT.MouseDown, buttonListener);
 
-
-			button.addListener(SWT.MouseHover, buttonHoverListener);
 
 			final DropTarget tabDropTarget = new DropTarget(button,
 					DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
@@ -2927,7 +2833,7 @@ public class MyTorrentsView
 		setCurrentTags( tags.toArray( new Tag[0] ));
 	}
 	
-	protected void setCurrentTags(Tag[] tags) {
+	protected void setCurrentTags(Tag... tags) {
 		synchronized( currentTagsLock ){
 			if (_currentTags != null) {
 				for (Tag tag : _currentTags) {
