@@ -315,24 +315,30 @@ public class ConfigSectionStartShutdown
 				try {
 					long cur_max_mem = decodeDisplayLong(val);
 
-					if (cur_max_mem < MIN_MAX_JVM) {
-
-						throw (new Exception("Min=" + encodeDisplayLong(MIN_MAX_JVM)));
-					}
-
 					String[] cur_options = platform.getExplicitVMOptions();
 
-					cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xmx",
-							cur_max_mem);
+					if ( cur_max_mem < MIN_MAX_JVM ){
 
-					long min_mem = AEJavaManagement.getJVMLongOption(cur_options, "-Xms");
+						if ( cur_max_mem <= 0 ){
+							
+							cur_options = AEJavaManagement.removeJVMOption( cur_options, "-Xmx" );
+							
+						}else{
+						
+							throw (new Exception("Min=" + encodeDisplayLong(MIN_MAX_JVM)));
+						}
+					}else{
 
-					if (min_mem == -1 || min_mem > cur_max_mem) {
-
-						cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xms",
-								cur_max_mem);
+						cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xmx", cur_max_mem);
+	
+						long min_mem = AEJavaManagement.getJVMLongOption(cur_options, "-Xms");
+	
+						if (min_mem == -1 || min_mem > cur_max_mem) {
+	
+							cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xms", cur_max_mem);
+						}
 					}
-
+					
 					platform.setExplicitVMOptions(cur_options);
 
 					requestRebuild();
@@ -354,7 +360,9 @@ public class ConfigSectionStartShutdown
 					} else {
 						UIFunctionsUserPrompter userPrompter = uif.getUserPrompter(
 								MessageText.getString("ConfigView.section.invalid.value.title"),
-								MessageText.getString("ConfigView.section.invalid.value"),
+								MessageText.getString(
+										"ConfigView.section.invalid.value",
+										new String[]{ val, param_name, Debug.getNestedExceptionMessage(e)}),
 								new String[] {
 									MessageText.getString("Button.ok")
 						}, 0);
@@ -388,24 +396,31 @@ public class ConfigSectionStartShutdown
 				try {
 					long cur_min_mem = decodeDisplayLong(val);
 
-					if (cur_min_mem < MIN_MIN_JVM) {
-
-						throw (new Exception("Min=" + encodeDisplayLong(MIN_MIN_JVM)));
-					}
-
 					String[] cur_options = platform.getExplicitVMOptions();
 
-					cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xms",
-							cur_min_mem);
+					if ( cur_min_mem < MIN_MIN_JVM ){
 
-					long max_mem = AEJavaManagement.getJVMLongOption(cur_options, "-Xmx");
+						if ( cur_min_mem <= 0 ){
+							
+							cur_options = AEJavaManagement.removeJVMOption( cur_options, "-Xms" );
+							
+						}else{
+						
+							throw (new Exception("Min=" + encodeDisplayLong(MIN_MIN_JVM)));
+							
+						}
+					}else{
 
-					if (max_mem == -1 || max_mem < cur_min_mem) {
+						cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xms", cur_min_mem);
 
-						cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xmx",
-								cur_min_mem);
+						long max_mem = AEJavaManagement.getJVMLongOption(cur_options, "-Xmx");
+	
+						if (max_mem == -1 || max_mem < cur_min_mem) {
+	
+							cur_options = AEJavaManagement.setJVMLongOption(cur_options, "-Xmx", cur_min_mem );
+						}
 					}
-
+					
 					platform.setExplicitVMOptions(cur_options);
 
 					requestRebuild();
@@ -427,7 +442,9 @@ public class ConfigSectionStartShutdown
 					} else {
 						UIFunctionsUserPrompter userPrompter = uif.getUserPrompter(
 								MessageText.getString("ConfigView.section.invalid.value.title"),
-								MessageText.getString("ConfigView.section.invalid.value"),
+								MessageText.getString(
+									"ConfigView.section.invalid.value",
+									new String[]{ val, param_name, Debug.getNestedExceptionMessage(e)}),
 								new String[] {
 									MessageText.getString("Button.ok")
 						}, 0);
@@ -465,15 +482,22 @@ public class ConfigSectionStartShutdown
 				try {
 					long cur_max_direct = decodeDisplayLong(val);
 
-					if (cur_max_direct < MIN_DIRECT_JVM) {
-
-						throw (new Exception("Min=" + encodeDisplayLong(MIN_DIRECT_JVM)));
-					}
-
 					String[] cur_options = platform.getExplicitVMOptions();
 
-					cur_options = AEJavaManagement.setJVMLongOption(cur_options,
-							OPTION_KEY, cur_max_direct);
+					if ( cur_max_direct < MIN_DIRECT_JVM ){
+
+						if ( cur_max_direct <= 0 ){
+							
+							cur_options = AEJavaManagement.removeJVMOption( cur_options, OPTION_KEY );
+							
+						}else{
+						
+							throw (new Exception("Min=" + encodeDisplayLong(MIN_DIRECT_JVM)));
+						}
+					}else{
+
+						cur_options = AEJavaManagement.setJVMLongOption(cur_options, OPTION_KEY, cur_max_direct);
+					}
 
 					platform.setExplicitVMOptions(cur_options);
 
@@ -496,7 +520,9 @@ public class ConfigSectionStartShutdown
 					} else {
 						UIFunctionsUserPrompter userPrompter = uif.getUserPrompter(
 								MessageText.getString("ConfigView.section.invalid.value.title"),
-								MessageText.getString("ConfigView.section.invalid.value"),
+								MessageText.getString(
+									"ConfigView.section.invalid.value",
+									new String[]{ val, param_name, Debug.getNestedExceptionMessage(e)}),
 								new String[] {
 									MessageText.getString("Button.ok")
 						}, 0);
@@ -553,10 +579,20 @@ public class ConfigSectionStartShutdown
 		return (val + " GB");
 	}
 
-	private static long decodeDisplayLong(String val)
+	private static long 
+	decodeDisplayLong(
+		String val )
 
-			throws Exception {
-		char[] chars = val.trim().toCharArray();
+		throws Exception 
+	{
+		val = val.trim();
+		
+		if ( val.isEmpty()){
+			
+			return( 0 );
+		}
+		
+		char[] chars = val.toCharArray();
 
 		String digits = "";
 		String units = "";

@@ -20,6 +20,9 @@
 
 package com.biglybt.core.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class
 AEJavaManagement
 {
@@ -108,7 +111,7 @@ AEJavaManagement
 		return( value );
 	}
 
-	public static  String[]
+	public static String[]
 	setJVMLongOption(
 		String[]	options,
 		String		prefix,
@@ -142,6 +145,33 @@ AEJavaManagement
 		return( options );
 	}
 
+	public static String[]
+	removeJVMOption(
+		String[]	options,
+		String		prefix )
+	{
+		List<String> result = new ArrayList<>();
+		
+		for (int i=0;i<options.length;i++){
+
+			String option = options[i];
+
+			if ( !option.startsWith( prefix )){
+
+				result.add( option );
+			}
+		}
+
+		if ( result.size() < options.length ){
+		
+			return( result.toArray( new String[0] ));
+			
+		}else{
+
+			return( options );
+		}
+	}
+	
 	public static  long
 	decodeJVMLong(
 		String		val )
