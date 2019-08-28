@@ -1392,18 +1392,51 @@ public class MyTorrentsView
 					}
 				}
 
-				String s = bRegexSearch ? tmpSearch : "\\Q"
-						+ tmpSearch.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
-
 				boolean	match_result = true;
 
-				if ( bRegexSearch && s.startsWith( "!" )){
-					s = s.substring(1);
+				String expr;
+				
+				if ( bRegexSearch ){
+					
+					expr = tmpSearch;
+					
+					if ( expr.startsWith( "!" )){
+						
+						expr = expr.substring(1);
 
-					match_result = false;
+						match_result = false;
+					}
+				}else{
+					
+					if ( tmpSearch.contains( " " )){
+						
+						String[] bits = tmpSearch.split( " " );
+						
+						String s = "";
+						
+							// implement 'and' for spaces - (?=.*xxx)(?=.*yyy)
+						
+						for ( String bit: bits ){
+							
+							bit = bit.trim();
+							
+							if ( !bit.isEmpty()){
+							
+								bit = "\\Q" + bit.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
+								
+								s += "(?=.*" + bit + ")";
+							}
+						}
+						
+						expr = s;
+						
+					}else{
+					
+						expr = "\\Q" + tmpSearch.replaceAll("[|;]", "\\\\E|\\\\Q") + "\\E";
+					}
 				}
 
-				Pattern pattern = RegExUtil.getCachedPattern( "tv:search", s, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+				Pattern pattern = RegExUtil.getCachedPattern( "tv:search", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
 				if ( o_name instanceof String ){
 
