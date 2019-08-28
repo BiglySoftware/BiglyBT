@@ -43,6 +43,7 @@ import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
  */
 public class TagButtonsUI
 {
+	// tagWidgets is only modified in SWT Thread, so concurrent issues should be non-existant
 	private final List<TagCanvas> tagWidgets = new ArrayList<>();
 	private Composite cMainComposite;
 	private boolean enableWhenNoTaggables;
@@ -109,6 +110,8 @@ public class TagButtonsUI
 			if (allowContextMenu) {
 				p.addListener(SWT.MenuDetect, menuDetectListener);
 			}
+			
+			p.addDisposeListener(e -> tagWidgets.remove((TagCanvas) e.widget));
 
 			tagWidgets.add(p);
 		}
@@ -136,7 +139,7 @@ public class TagButtonsUI
 	{
 		List<Tag> result = new ArrayList<>();
 		
-		if (tagWidgets == null || tagWidgets.isEmpty()) {
+		if (tagWidgets.isEmpty()) {
 			return result;
 		}
 
