@@ -37,4 +37,8 @@ implements Graphic
 	public URI getURI() {
 		return uri;
 	}
+
+	@Override
+	public void dispose() {
+	}
 }
