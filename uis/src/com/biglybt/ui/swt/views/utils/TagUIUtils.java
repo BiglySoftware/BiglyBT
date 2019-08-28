@@ -3668,7 +3668,37 @@ public class TagUIUtils
 				}
 			});
 	}
-	
+
+	public static void openRenameTagDialog(Tag tag) {
+		if (tag == null || tag.getTagType().isTagTypeAuto()) {
+			return;
+		}
+
+		UIInputReceiver entry = new SimpleTextEntryWindow();
+		String tagName = tag.getTagName(true);
+		entry.setPreenteredText(tagName, false);
+		entry.maintainWhitespace(false);
+		entry.allowEmptyInput(false);
+		entry.setLocalisedTitle(MessageText.getString("label.rename", new String[] {
+			tagName
+		}));
+		entry.prompt(result -> {
+			if (!result.hasSubmittedInput()) {
+				return;
+			}
+
+			String input = result.getSubmittedInput().trim();
+
+			if (input.length() > 0) {
+				try {
+					tag.setTagName(input);
+				} catch (Throwable e) {
+					Debug.printStackTrace(e);
+				}
+			}
+		});
+	}
+
 	public interface
 	TagSelectionListener
 	{

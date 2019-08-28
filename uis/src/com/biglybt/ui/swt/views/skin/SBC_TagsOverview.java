@@ -26,9 +26,12 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
@@ -51,11 +54,8 @@ import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
-import com.biglybt.ui.swt.skin.SWTSkinButtonUtility;
+import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
-import com.biglybt.ui.swt.skin.SWTSkinObject;
-import com.biglybt.ui.swt.skin.SWTSkinObjectButton;
-import com.biglybt.ui.swt.skin.SWTSkinObjectTextbox;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.MyTorrentsSubView;
 import com.biglybt.ui.swt.views.TagSettingsView;
@@ -78,9 +78,8 @@ import com.biglybt.pif.ui.toolbar.UIToolBarItem;
  */
 public class SBC_TagsOverview
 	extends SkinView
-	implements 	UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<Tag>, TagManagerListener, TagTypeListener,
-				TableViewSWTMenuFillListener, TableSelectionListener
-{
+	implements UIUpdatable, UIPluginViewToolBarListener, TableViewFilterCheck<Tag>, TagManagerListener, TagTypeListener,
+	TableViewSWTMenuFillListener, TableSelectionListener, KeyListener {
 
 	private static final String TABLE_TAGS = "TagsView";
 
@@ -144,8 +143,7 @@ public class SBC_TagsOverview
 
 		while (tagToRemove == null && tags.size() > 0) {
 			tagToRemove = tags.get(0);
-			if (tagToRemove == null
-					|| tagToRemove.getTagType().getTagType() != TagType.TT_DOWNLOAD_MANUAL) {
+			if (!canDeleteTag(tagToRemove)) {
 				tags.remove(0);
 			}
 		}
@@ -182,7 +180,7 @@ public class SBC_TagsOverview
 			if (doAll) {
 				if (remove) {
 					for (Tag tag : tags) {
-						if (tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL) {
+						if (canDeleteTag(tag)) {
 							tag.removeTag();
 						}
 					}
@@ -229,7 +227,7 @@ public class SBC_TagsOverview
 			for (Object object : datasources) {
 				if (object instanceof Tag) {
 					Tag tag = (Tag) object;
-					if (tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL) {
+					if (canDeleteTag(tag)) {
 						canEnable = true;
 						break;
 					}
@@ -238,6 +236,15 @@ public class SBC_TagsOverview
 		}
 
 		list.put("remove", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
+	}
+
+	private static boolean canDeleteTag(Tag tag) {
+		if (tag == null) {
+			return false;
+		}
+		return tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL
+				|| ((tag instanceof Category)
+						&& ((Category) tag).getType() == Category.TYPE_USER);
 	}
 
 	// @see UIUpdatable#updateUI()
@@ -716,6 +723,7 @@ public class SBC_TagsOverview
 
 			tv.addMenuFillListener( this );
 			tv.addSelectionListener(this, false);
+			tv.addKeyListener(this);
 
 			tv.initialize(table_parent);
 
@@ -1148,5 +1156,24 @@ public class SBC_TagsOverview
 	public Object skinObjectSelected(SWTSkinObject skinObject, Object params) {
 		updateSelectedContent();
 		return super.skinObjectSelected(skinObject, params);
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		if (e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0) {
+			Object[] selectedDataSources = tv.getSelectedDataSources(true);
+			if (selectedDataSources.length == 1 && (selectedDataSources[0] instanceof Tag)) {
+				Tag tag = (Tag) selectedDataSources[0];
+				if (!tag.getTagType().isTagTypeAuto()) {
+					TagUIUtils.openRenameTagDialog(tag);
+					e.doit = false;
+				}
+			}
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+
 	}
 }

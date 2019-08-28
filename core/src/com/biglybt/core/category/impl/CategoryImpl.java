@@ -30,6 +30,7 @@ import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryListener;
+import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.internat.MessageText;
@@ -677,7 +678,13 @@ CategoryImpl
 	  }
   }
 
-  @Override
+	@Override
+	public void removeTag() {
+		CategoryManager.removeCategory(this);
+		super.removeTag();
+	}
+
+	@Override
   public int compareTo(Object b)
   {
     boolean aTypeIsUser = type == Category.TYPE_USER;
