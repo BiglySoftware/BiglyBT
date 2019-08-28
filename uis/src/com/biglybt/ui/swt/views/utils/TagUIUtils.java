@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
+import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.download.DownloadManagerState;
@@ -750,6 +751,10 @@ public class TagUIUtils
 	createSideBarMenuItems(
 		final Menu menu, final Tag tag )
 	{
+		if (tag instanceof Category) {
+			CategoryUIUtils.createMenuItems(menu, (Category) tag);
+			return;
+		}
 	    int userMode = COConfigurationManager.getIntParameter("User Mode");
 
 		final TagType	tag_type = tag.getTagType();
