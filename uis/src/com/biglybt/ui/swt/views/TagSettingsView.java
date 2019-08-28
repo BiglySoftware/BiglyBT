@@ -736,8 +736,6 @@ public class TagSettingsView
 							MessageText.getString( "Button.deleteContent.fromComputer" ),
 					};
 
-					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					label.setLayoutData(gd);
 					params.max_sr_action = new StringListSwtParameter(gTransfer,
 							"max_sr_action", "label.when.exceeded", null, ST_ACTION_VALUES, ST_ACTION_LABELS,
 							true,
@@ -819,9 +817,6 @@ public class TagSettingsView
 
 						// aggregate has priority
 
-					// XXX Can we move the label to textKey?
-					gd = new GridData(SWT.BEGINNING, SWT.CENTER, false, false);
-					label.setLayoutData(gd);
 					params.max_aggregate_sr_priority = new BooleanSwtParameter(gTransfer,
 							"tag.max_aggregate_sr_priority", "label.aggregate.has.priority",
 							null, new BooleanSwtParameter.ValueProcessor() {
