@@ -56,6 +56,8 @@ public class TagButtonsUI
 
 		cMainComposite.setLayout(new GridLayout(1, false));
 
+		tagWidgets.clear();
+
 		Listener menuDetectListener = allowContextMenu ? event -> {
 			final TagCanvas tagCanvas = (TagCanvas) event.widget;
 			Menu menu = new Menu(tagCanvas);
