@@ -24,6 +24,7 @@ package com.biglybt.ui.swt.pifimpl;
 
 import org.eclipse.swt.graphics.Image;
 
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 
 /** An SWT image to be used in Azureus
@@ -75,4 +76,12 @@ UISWTGraphicImpl
   	}
   	return false;
   }
+
+	@Override
+	public void dispose() {
+  	if (img != null) {
+			Utils.execSWTThread(() -> Utils.disposeSWTObjects(img));
+			img = null;
+	  }
+	}
 }

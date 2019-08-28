@@ -27,4 +27,11 @@ package com.biglybt.pif.ui;
 public interface
 Graphic
 {
+	/** Disposes the image.
+	 * <p/>
+	 * For SWT, this will switch to SWT Thread to do it, if needed
+	 * 
+	 * @since BiglyBT 2.0.0.1
+	 */
+	 void dispose();
 }
