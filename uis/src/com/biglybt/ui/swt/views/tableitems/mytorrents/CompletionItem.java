@@ -29,6 +29,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.*;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.util.DisplayFormatters;
+import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.pif.UISWTGraphic;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.views.table.CoreTableColumnSWT;
@@ -109,7 +110,7 @@ public class CompletionItem
 		if (graphic instanceof UISWTGraphic) {
 			Image img = ((UISWTGraphic) graphic).getImage();
 			if (img != null && !img.isDisposed()) {
-				img.dispose();
+				Utils.execSWTThread(() -> Utils.disposeSWTObjects(img));
 			}
 		}
 	}

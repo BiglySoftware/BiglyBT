@@ -225,7 +225,7 @@ public class ColumnControls
 				if (oldImage != null && !oldImage.isDisposed()) {
 					//log(cell, "dispose");
 					cell.setGraphic(null);
-					oldImage.dispose();
+					Utils.execSWTThread(() -> Utils.disposeSWTObjects(oldImage));
 				}
 			}
 		}

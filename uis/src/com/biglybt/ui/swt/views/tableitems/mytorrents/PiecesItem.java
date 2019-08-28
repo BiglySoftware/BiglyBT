@@ -114,8 +114,9 @@ public class PiecesItem
 			return;
 
 		Image img = (Image) infoObj.getUserData("PiecesImage");
-		if (img != null && !img.isDisposed())
-			img.dispose();
+		if (img != null && !img.isDisposed()) {
+			Utils.execSWTThread(() -> Utils.disposeSWTObjects(img));
+		}
 
 		infoObj.setUserData("PiecesImageBuffer", null);
 		infoObj.setUserData("PiecesImage", null);
