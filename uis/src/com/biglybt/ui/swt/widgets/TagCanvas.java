@@ -38,6 +38,7 @@ import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.util.StringCompareUtils;
 
 public class TagCanvas
@@ -215,6 +216,14 @@ public class TagCanvas
 						}
 				}
 				e.doit = true;
+			}
+			case SWT.KeyDown: {
+				if (e.keyCode == SWT.F2 && (e.stateMask & SWT.MODIFIER_MASK) == 0) {
+					if (!tag.getTagType().isTagTypeAuto()) {
+						TagUIUtils.openRenameTagDialog(tag);
+						e.doit = false;
+					}
+				}
 			}
 		}
 	}
