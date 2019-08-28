@@ -83,7 +83,7 @@ public class ProgressGraphItem extends CoreTableColumnSWT implements TableCellAd
 		{
 			final Image img = ((UISWTGraphic) graphic).getImage();
 			if (img != null && !img.isDisposed()){
-				img.dispose();
+				Utils.execSWTThread(() -> Utils.disposeSWTObjects(img));
 
 					// see http://forum.vuze.com/thread.jspa?threadID=117243
 					// could it be that it isn't being marked as disposed after disposal and
