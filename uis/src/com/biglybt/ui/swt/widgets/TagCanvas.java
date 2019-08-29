@@ -318,8 +318,9 @@ public class TagCanvas
 		boolean focused = isFocusControl();
 
 		Color colorOrigBG = e.gc.getBackground();
-		Color colorText = selected ? Colors.getInstance().getReadableColor(
-				grayed ? colorTagFaded : colorTag) : e.gc.getForeground();
+
+		Color colorText = Colors.getInstance().getReadableColor(selected?
+						grayed ? colorTagFaded : colorTag : colorOrigBG);
 
 		Point size = getSize();
 		e.gc.setAntialias(SWT.ON);
