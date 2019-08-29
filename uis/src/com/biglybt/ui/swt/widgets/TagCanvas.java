@@ -31,13 +31,14 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
-import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.mainwindow.HSLColor;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.util.StringCompareUtils;
 
@@ -62,7 +63,11 @@ public class TagCanvas
 
 	private static final int COMPACT_PADDING_IMAGE_X = 0;
 
-	private static final int DEF_CONTENT_PADDING_Y = 4;
+	private static final int DEF_PADDING_IMAGE_Y = 2;
+
+	private static final int COMPACT_PADDING_IMAGE_Y = 1;
+
+	private static final int DEF_CONTENT_PADDING_Y = 2;
 
 	private static final int COMPACT_CONTENT_PADDING_Y = 2;
 
@@ -82,6 +87,8 @@ public class TagCanvas
 
 	private int paddingImageX = DEF_PADDING_IMAGE_X;
 
+	private int paddingImageY = DEF_PADDING_IMAGE_Y;
+
 	private int curveWidth = DEF_CURVE_WIDTH;
 
 	private Image image;
@@ -90,7 +97,9 @@ public class TagCanvas
 
 	private boolean selected;
 
-	private Tag tag;
+	private final Tag tag;
+
+	private final boolean isTagAuto;
 
 	private String lastUsedName;
 
@@ -105,6 +114,12 @@ public class TagCanvas
 	private boolean compact;
 
 	private boolean showImage = true;
+
+	private Font font = null;
+
+	private Color colorTagFaded;
+
+	private Color colorTag;
 
 	/** 
 	 * Creates a Tag Canvas.<br/>  
@@ -121,8 +136,17 @@ public class TagCanvas
 		this.tag = tag;
 		this.enableWhenNoTaggables = enableWhenNoTaggables;
 
+		boolean[] auto = tag.isTagAuto();
+		isTagAuto = auto.length >= 2 && auto[0] && auto[1];
+		if (isTagAuto) {
+			font = FontUtils.getFontWithStyle(getFont(), SWT.ITALIC, 1.0f);
+			setFont(font);
+		}
+
+		updateColors();
+
 		setDisableAuto(disableAuto);
-		
+
 		addListener(SWT.MouseDown, this);
 		addListener(SWT.MouseUp, this);
 		addListener(SWT.KeyDown, this);
@@ -138,10 +162,6 @@ public class TagCanvas
 
 	@Override
 	public Point computeSize(int wHint, int hHint, boolean changed) {
-		if (tag == null) {
-			return super.computeSize(wHint, hHint, changed);
-		}
-
 		if (lastUsedName == null) {
 			lastUsedName = tag.getTagName(true);
 		}
@@ -154,9 +174,13 @@ public class TagCanvas
 				new Rectangle(0, 0, 9999, 9999), false, true, SWT.LEFT);
 		sp.calculateMetrics();
 		Point size = sp.getCalculatedSize();
+		gc.dispose();
+
+		if (size == null) {
+			return super.computeSize(wHint, hHint, changed);
+		}
 		size.x += paddingContentX0 + paddingContentX1;
 		size.y += paddingContentY + paddingContentY;
-		gc.dispose();
 
 		if (showImage && image != null && !image.isDisposed()) {
 			Rectangle bounds = image.getBounds();
@@ -233,10 +257,8 @@ public class TagCanvas
 			return;
 		}
 		this.disableAuto = disableAuto;
-		
-		boolean[] auto = tag.isTagAuto();
-		boolean isAuto = auto.length >= 2 && auto[0] && auto[1];
-		boolean enable = !isAuto || !disableAuto;
+
+		boolean enable = !isTagAuto || !disableAuto;
 		setEnabled(enable);
 	}
 
@@ -270,9 +292,13 @@ public class TagCanvas
 	}
 
 	public void setSelected(boolean select) {
+		setSelected(select, true);
+	}
+
+	private void setSelected(boolean select, boolean unGray) {
 		if (select != selected) {
 			selected = select;
-			if (grayed) {
+			if (grayed && unGray) {
 				grayed = false;
 			}
 			redraw();
@@ -281,7 +307,7 @@ public class TagCanvas
 
 	@Override
 	public void paintControl(PaintEvent e) {
-		if (tag == null || lastUsedName == null) {
+		if (lastUsedName == null) {
 			return;
 		}
 
@@ -289,78 +315,57 @@ public class TagCanvas
 		//System.out.println("paint " + lastUsedName + "; " + clientArea + "; " + e);
 
 		boolean selected = isSelected();
-		boolean enabled = isEnabled();
+		boolean focused = isFocusControl();
 
-		Color color = ColorCache.getColor(e.display, tag.getColor());
+		Color colorOrigBG = e.gc.getBackground();
+		Color colorText = selected ? Colors.getInstance().getReadableColor(
+				grayed ? colorTagFaded : colorTag) : e.gc.getForeground();
+
 		Point size = getSize();
 		e.gc.setAntialias(SWT.ON);
-		if (color != null) {
-			e.gc.setForeground(color);
-		}
-		int lineWidth = selected || !enabled ? 2 : 1;
-		e.gc.setLineWidth(lineWidth);
 
-		int width = size.x - lineWidth;
 		if (selected) {
-			e.gc.setAlpha(0x40);
-			if (color != null) {
-				e.gc.setBackground(color);
+			e.gc.setBackground(grayed ? colorTagFaded : colorTag);
+			e.gc.fillRoundRectangle(-curveWidth, 0, size.x + curveWidth, size.y,
+					curveWidth, curveWidth);
+		}
+
+		if (focused || !selected || grayed) {
+			int lineWidth = 2;
+			int width = size.x - (lineWidth / 2);
+			e.gc.setLineWidth(lineWidth);
+			if (focused) {
+				e.gc.setForeground(selected ? colorOrigBG : colorTag);
+				e.gc.setLineStyle(SWT.LINE_DOT);
+			} else {
+				e.gc.setForeground(colorTag);
+				e.gc.setLineStyle(SWT.LINE_SOLID);
 			}
-			e.gc.fillRoundRectangle(-curveWidth, lineWidth - 1, width + curveWidth,
+			e.gc.drawRoundRectangle(-curveWidth, lineWidth - 1, width + curveWidth,
 					size.y - lineWidth, curveWidth, curveWidth);
-			e.gc.setAlpha(0xff);
+			e.gc.drawLine(lineWidth - 1, lineWidth, lineWidth - 1,
+					size.y - lineWidth);
+			e.gc.setLineWidth(1);
 		}
-		if (!selected) {
-			e.gc.setAlpha(0x80);
-		}
-		e.gc.setLineStyle(enabled ? SWT.LINE_SOLID : SWT.LINE_DOT);
-		e.gc.drawRoundRectangle(-curveWidth, lineWidth - 1, width + curveWidth,
-				size.y - lineWidth, curveWidth, curveWidth);
-		e.gc.drawLine(lineWidth - 1, lineWidth, lineWidth - 1, size.y - lineWidth);
 
 		clientArea.x += paddingContentX0;
 		clientArea.width = clientArea.width - paddingContentX0;
 		if (showImage && image != null) {
 			Rectangle bounds = image.getBounds();
-			int imageH = size.y - paddingContentY - paddingContentY;
+			int imageH = size.y - paddingImageY - paddingImageY;
 			int imageW = (bounds.width * imageH) / bounds.height;
 
 			e.gc.drawImage(image, 0, 0, bounds.width, bounds.height, clientArea.x,
-					clientArea.y + paddingContentY, imageW, imageH);
+					clientArea.y + paddingImageY, imageW, imageH);
 			clientArea.x += imageW + paddingImageX;
 			clientArea.width -= imageW - paddingImageX;
 		}
-		e.gc.setAlpha(grayed ? 0xA0 : 0xFF);
-		e.gc.setForeground(getForeground());
+		e.gc.setForeground(colorText);
 		clientArea.y += paddingContentY;
 		clientArea.height -= (paddingContentY + paddingContentY);
 		GCStringPrinter sp = new GCStringPrinter(e.gc, lastUsedName, clientArea,
 				true, true, SWT.LEFT);
 		sp.printString();
-		if (isFocusControl()) {
-			Rectangle printArea = sp.getCalculatedDrawRect();
-			if (printArea == null) {
-				printArea = clientArea;
-			}
-			e.gc.setAlpha(0xFF);
-
-			try {
-				if (Constants.isWindows) {
-					// drawFocus doesn't always draw when it should on Windows :(
-					e.gc.setBackground(Colors.white);
-					e.gc.setForeground(Colors.black);
-					e.gc.setLineStyle(SWT.LINE_DOT);
-					e.gc.setLineWidth(1);
-					e.gc.drawRoundRectangle(printArea.x - 2, printArea.y, printArea.width + 4,
-							printArea.height, 4, 4);
-				} else {
-					e.gc.drawFocus(printArea.x - 2, printArea.y - 1, printArea.width + 4,
-							printArea.height + 2);
-				}
-			} catch (Throwable t) {
-				Debug.out(t);
-			}
-		}
 	}
 
 	@Override
@@ -371,6 +376,10 @@ public class TagCanvas
 					imageID);
 			imageID = null;
 			image = null;
+		}
+		if (font != null) {
+			font.dispose();
+			font = null;
 		}
 	}
 
@@ -391,14 +400,32 @@ public class TagCanvas
 		redraw();
 	}
 
+	private void updateColors() {
+		Display display = getDisplay();
+		Color newColorTag = ColorCache.getColor(display, tag.getColor());
+		colorTag = newColorTag == null ? getForeground() : newColorTag;
+
+		HSLColor hslColor = new HSLColor();
+		hslColor.initHSLbyRGB(colorTag.getRed(), colorTag.getGreen(),
+				colorTag.getBlue());
+		Color colorWidgetBG = getBackground();
+		hslColor.blend(colorWidgetBG.getRed(), colorWidgetBG.getGreen(),
+				colorWidgetBG.getBlue(), 0.75f);
+		Color newColorTagFaded = ColorCache.getColor(display, hslColor.getRed(),
+				hslColor.getGreen(), hslColor.getBlue());
+		colorTagFaded = newColorTagFaded == null ? getForeground()
+				: newColorTagFaded;
+	}
+
 	public void updateState(List<Taggable> taggables) {
 		updateImage();
 		updateName();
+		updateColors();
 
 		if (taggables == null) {
 			setEnabled(enableWhenNoTaggables);
 			if (!enableWhenNoTaggables) {
-				setSelected(false);
+				setSelected(false, false);
 				return;
 			}
 		}
@@ -438,7 +465,7 @@ public class TagCanvas
 			setEnabled(!auto_add);
 
 			setGrayed(true);
-			setSelected(true);
+			setSelected(true, false);
 		} else {
 
 			if (auto_add && auto_rem) {
@@ -449,7 +476,7 @@ public class TagCanvas
 				setGrayed(false);
 			}
 
-			setSelected(hasTag);
+			setSelected(hasTag, false);
 		}
 	}
 
@@ -477,6 +504,7 @@ public class TagCanvas
 							Utils.execSWTThread(() -> setImage(image, key));
 						});
 			} catch (Throwable e) {
+				Debug.out(e);
 			}
 		} else {
 			String id = tag.getImageID();
@@ -512,6 +540,7 @@ public class TagCanvas
 		this.compact = compact;
 		if (compact) {
 			paddingImageX = COMPACT_PADDING_IMAGE_X;
+			paddingImageY = COMPACT_PADDING_IMAGE_Y;
 			paddingContentY = COMPACT_CONTENT_PADDING_Y;
 			paddingContentX0 = COMPACT_CONTENT_PADDING_X0;
 			paddingContentX1 = COMPACT_CONTENT_PADDING_X1;
@@ -519,6 +548,7 @@ public class TagCanvas
 			showImage = false;
 		} else {
 			paddingImageX = DEF_PADDING_IMAGE_X;
+			paddingImageY = DEF_PADDING_IMAGE_Y;
 			paddingContentY = DEF_CONTENT_PADDING_Y;
 			paddingContentX0 = DEF_CONTENT_PADDING_X0;
 			paddingContentX1 = DEF_CONTENT_PADDING_X1;
