@@ -980,6 +980,8 @@ public class SideBarEntrySWT
 		boolean selected = (event.detail & SWT.SELECTED) > 0;
 		Color fgText = swt_paintEntryBG(event.detail, gc, drawBounds);
 
+		Color entryBG = gc.getBackground();
+		
 		Tree tree = (Tree) event.widget;
 
 		Font font = tree.getFont();
@@ -1324,7 +1326,6 @@ public class SideBarEntrySWT
 	
 					clipping.x--;
 					clipping.y--;
-					gc.setForeground(fgText);
 				} else {
 					if ( treeItem.getItemCount() > 0 || id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )){
 						Font headerFont = sidebar.getHeaderFont();
@@ -1332,14 +1333,23 @@ public class SideBarEntrySWT
 							gc.setFont(headerFont);
 						}
 					}
-					gc.setForeground(fgText);
 				}
+				
+				if ( !Colors.isBlackTextReadable( entryBG )){
+					
+					fgText = Colors.white;
+				}
+				
+				gc.setForeground(fgText);
+
 				//Utils.setClipping(gc, clipping);
 	
-				GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
-						style);
+				GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,style);
+				
 				sp.printString();
+				
 				clipping.x += sp.getCalculatedSize().x + 5;
+				
 				//Utils.setClipping(gc, (Rectangle) null);
 			}
 		}
