@@ -1115,15 +1115,9 @@ public class SideBarEntrySWT
 
 				if ( color != null ){
 
-					Color bg = gc.getBackground();
+					boolean useBlack = Colors.isBlackTextReadable( gc.getBackground());
 
-					int	red 	= bg.getRed();
-					int green 	= bg.getGreen();
-					int blue	= bg.getBlue();
-
-					double brightness = Math.sqrt( red*red*0.299+green*green*0.587+blue*blue*0.114);
-
-					if ( brightness >= 130 ){
+					if ( useBlack ){
 						
 						text_color = Colors.black;
 						

@@ -604,9 +604,12 @@ public class Colors implements ParameterListener {
 		return( ColorCache.getColor(display, hslColor.getRed(),	hslColor.getGreen(), hslColor.getBlue()));
 	}
 
-	public Color getReadableColor(Color forBG) {
+	public static boolean
+	isBlackTextReadable(
+		Color	forBG )
+	{
 		if (forBG == null || forBG.isDisposed()) {
-			return black;
+			return true;
 		}
 
 		int red = forBG.getRed();
@@ -615,7 +618,12 @@ public class Colors implements ParameterListener {
 
 		double brightness = Math.sqrt(
 				red * red * 0.299 + green * green * 0.587 + blue * blue * 0.114);
-
-		return brightness >= 130 ? Colors.black : Colors.white;
+		
+		return brightness >= 130;
+	}
+	
+	public Color getReadableColor(Color forBG) {
+		
+		return isBlackTextReadable( forBG )? Colors.black : Colors.white;
 	}
 }
