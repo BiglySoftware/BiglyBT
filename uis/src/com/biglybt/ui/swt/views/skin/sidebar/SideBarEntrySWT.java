@@ -1307,6 +1307,14 @@ public class SideBarEntrySWT
 					
 			}else{
 				int style= SWT.NONE;
+				
+				boolean forceWhite = !Colors.isBlackTextReadable( entryBG );
+				
+				if ( forceWhite ){
+					
+					fgText = Colors.white;
+				}
+				
 				if (!isSelectable()) {
 					Font headerFont = sidebar.getHeaderFont();
 					if (headerFont != null && !headerFont.isDisposed()) {
@@ -1314,18 +1322,23 @@ public class SideBarEntrySWT
 					}
 					//text = text.toUpperCase();
 	
-					gc.setForeground(ColorCache.getColor(gc.getDevice(), 255, 255, 255));
-					gc.setAlpha(100);
-					clipping.x++;
-					clipping.y++;
-					//style = SWT.TOP;
-					GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
-							style);
-					sp.printString();
-					gc.setAlpha(255);
-	
-					clipping.x--;
-					clipping.y--;
+						// shadow looks crap with white
+					
+					if ( !forceWhite ){
+						
+						gc.setForeground(ColorCache.getColor(gc.getDevice(), 255, 255, 255));
+						gc.setAlpha(100);
+						clipping.x++;
+						clipping.y++;
+						//style = SWT.TOP;
+						GCStringPrinter sp = new GCStringPrinter(gc, text, clipping, true, false,
+								style);
+						sp.printString();
+						gc.setAlpha(255);
+		
+						clipping.x--;
+						clipping.y--;
+					}
 				} else {
 					if ( treeItem.getItemCount() > 0 || id.equals( MultipleDocumentInterface.SIDEBAR_HEADER_DASHBOARD )){
 						Font headerFont = sidebar.getHeaderFont();
@@ -1333,11 +1346,6 @@ public class SideBarEntrySWT
 							gc.setFont(headerFont);
 						}
 					}
-				}
-				
-				if ( !Colors.isBlackTextReadable( entryBG )){
-					
-					fgText = Colors.white;
 				}
 				
 				gc.setForeground(fgText);

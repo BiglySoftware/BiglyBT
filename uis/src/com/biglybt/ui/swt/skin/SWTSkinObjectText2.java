@@ -34,6 +34,7 @@ import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.GCStringPrinter.URLInfo;
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -76,6 +77,8 @@ public class SWTSkinObjectText2
 	private int vpadding;
 
 	private boolean relayoutOnTextChange = true;
+	
+	private boolean bgAware = false;
 
 	private boolean isItalic = false;
 
@@ -102,7 +105,7 @@ public class SWTSkinObjectText2
 			final String sConfigID, String[] typeParams, SWTSkinObject parent) {
 		super(skin, skinProperties, sID, sConfigID, "text", parent);
 
-		String sPrefix = sConfigID + ".text";
+		final String sPrefix = sConfigID + ".text";
 
 		if ( properties.getBooleanValue(sPrefix + ".wrap", true )){
 			style = SWT.WRAP;
@@ -144,8 +147,9 @@ public class SWTSkinObjectText2
 					"true")) ? SWT.ON : SWT.OFF;
 		}
 
-		relayoutOnTextChange = skinProperties.getBooleanValue(sConfigID
-				+ ".text.relayoutOnChange", true);
+		relayoutOnTextChange = skinProperties.getBooleanValue(sPrefix + ".relayoutOnChange", true);
+		
+		bgAware = skinProperties.getBooleanValue(sPrefix + ".bgaware", false);
 
 		Composite createOn;
 		if (parent == null) {
@@ -649,6 +653,15 @@ public class SWTSkinObjectText2
 		Font existingFont = (Font) canvas.getData("font");
 		Color existingColor = (Color) canvas.getData("color");
 
+		boolean doShadow = hasShadow;
+		
+		if ( bgAware ){
+			
+			if ( !Colors.isBlackTextReadable( gc.getBackground())){
+				existingColor = Colors.white;
+				doShadow = false;
+			}
+		}
 		if (existingFont != null) {
 			gc.setFont(existingFont);
 		}
@@ -668,7 +681,7 @@ public class SWTSkinObjectText2
 			}
 		}
 
-		if (hasShadow) {
+		if (doShadow) {
 			Rectangle r = new Rectangle(clientArea.x + 1, clientArea.y + 1,
 					clientArea.width, clientArea.height);
 
@@ -687,7 +700,7 @@ public class SWTSkinObjectText2
 
 		gc.setAlpha(alpha);
 		// hack to fix shadow wrapping (different widths for text drawn with alpha and text drawn without)
-		if (alpha == 255 && hasShadow && (colorShadow.color == null || colorShadow.alpha < 255)) {
+		if (alpha == 255 && doShadow && (colorShadow.color == null || colorShadow.alpha < 255)) {
 			gc.setAlpha(254);
 		}
 		lastStringPrinter = new GCStringPrinter(gc, sDisplayText, clientArea, true,
