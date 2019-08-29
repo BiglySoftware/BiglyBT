@@ -179,17 +179,7 @@ public class TabbedMDI_Ren {
 
 							if ( color != null ){
 
-								Color bg = gc.getBackground();
-
-								int	red 	= bg.getRed();
-								int green 	= bg.getGreen();
-								int blue	= bg.getBlue();
-
-								double brightness = Math.sqrt( red*red*0.299+green*green*0.587+blue*blue*0.114);
-
-								if ( brightness >= 130 ){
-									text_color = Colors.black;
-								}
+								text_color = Colors.getInstance().getReadableColor(gc.getBackground());
 
 								gc.setBackground( default_color );
 
