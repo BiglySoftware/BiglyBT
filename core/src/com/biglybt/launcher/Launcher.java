@@ -17,104 +17,42 @@
 package com.biglybt.launcher;
 
 import java.lang.reflect.Method;
-import java.net.URL;
 
-import com.biglybt.launcher.classloading.PeeringClassloader;
-import com.biglybt.launcher.classloading.PrimaryClassloader;
-import com.biglybt.launcher.classloading.SecondaryClassLoader;
-
-/**
- * This will (hopefully) become a unified launching pathway covering everything
- * from the bare core over UIs to Launchable Plugins in the future
- *
- * @author Aaron Grunthal
- * @create 28.12.2007
- */
 public class Launcher {
 
-	private final static String  OSName 		= System.getProperty("os.name");
-	private final static boolean isOSX			= OSName.toLowerCase().startsWith("mac os");
-	private final static boolean LOADER_ENABLED = System.getProperty("USE_OUR_PRIMARYCLASSLOADER", isOSX ? "0" : "1").equals("1");
-
-	/**
-	 * Bootstraps a new {@link PrimaryClassloader} from the system class loader,
-	 * creates a new thread, instantiates MainClass and invokes its main method
-	 * with the provided arguments.
-	 *
-	 *
-	 * @param MainClass
-	 *            class implementing the main() method which will be invoked
-	 * @param args
-	 *            arguments to the main method
-	 */
+	private static boolean done;
+	
 	public static void launch(Class MainClass,String[] args)
 	{
-		ClassLoader primaryloader = PrimaryClassloader.getBootstrappedLoader();
-		try
-		{
-			Method mainWrapper = primaryloader.loadClass(MainExecutor.class.getName()).getDeclaredMethod("load", new Class[] {ClassLoader.class,String.class,String[].class});
-			mainWrapper.setAccessible(true);
-			mainWrapper.invoke(null, new Object[] {primaryloader,MainClass.getName(),args});
-		} catch (Exception e)
-		{
-			System.err.println("Bootstrapping failed");
+		done = true;
+		
+		try{
+			Method main = MainClass.getDeclaredMethod( "main", String[].class );
+			
+			main.setAccessible(true);
+			
+			main.invoke(null, new Object[]{ args });
+			
+		}catch ( Exception e ){
+			
+			System.err.println("Launch failed");
+			
 			e.printStackTrace();
+			
 			System.exit(1);
 		}
 	}
 
-	/**
-	 * Checks if the current classloader is not part of the {@link PeeringClassloader} hierarchy and performs {@link #launch(Class, String[])} if so<br>
-	 * <br>
-	 *
-	 * This example shows how to implement a main class that ensures that it is
-	 * called through the primary class loader: <code><pre>
-	 * MyClass {
-	 * 	public static void main(String[] args) {
-	 * 		if(Launcher.checkAndLaunch(MyClass.class,args))
-	 * 			return;
-	 * 		... // normal main code
-	 * 	}
-	 * }
-	 * </pre></code>
-	 *
-	 *
-	 * @param MainClass
-	 * @param args
-	 * @return true if bootstrapping was necessary and the main method was
-	 *         called through a new classloader, false otherwise
-	 */
+
 	public static boolean checkAndLaunch(Class MainClass,String[] args)
 	{
-		if(isBootStrapped())
+		if( done ){
+			
 			return false;
+		}
+		
 		launch(MainClass, args);
+		
 		return true;
 	}
-
-	/**
-	 *
-	 * @return true if the current classloader is part of the {@link PeeringClassloader} hierarchy
-	 */
-	public static boolean isBootStrapped()
-	{
-		if(!LOADER_ENABLED || ClassLoaderWitness.class.getClassLoader() instanceof PeeringClassloader)
-			return true;
-		return false;
-	}
-
-	public static SecondaryClassLoader getComponentLoader(URL[] urls)
-	{
-		if(!isBootStrapped())
-			throw new IllegalStateException("Current Classloader is not part of the peering hierarchy!");
-		ClassLoader primary = ClassLoaderWitness.class.getClassLoader();
-		while(!(primary instanceof PrimaryClassloader))
-			primary = primary.getParent();
-		return new SecondaryClassLoader(urls,(PrimaryClassloader)primary);
-	}
-
-	public static void main(String[] args) {
-		// TODO unify commandline processing and GUI selection code here
-	}
-
 }

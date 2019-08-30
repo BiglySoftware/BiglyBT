@@ -1729,7 +1729,6 @@ public class VersionCheckClient {
 			 *
 			 * These things should be temporary...
 			 */
-			CoreImpl.SUPPRESS_CLASSLOADER_ERRORS = true;
 			DownloadManagerStateImpl.SUPPRESS_FIXUP_ERRORS = true;
 
 			Core core = CoreFactory.create();

@@ -92,7 +92,6 @@ import com.biglybt.core.vuzefile.VuzeFile;
 import com.biglybt.core.vuzefile.VuzeFileComponent;
 import com.biglybt.core.vuzefile.VuzeFileHandler;
 import com.biglybt.core.vuzefile.VuzeFileProcessor;
-import com.biglybt.launcher.classloading.PrimaryClassloader;
 import com.biglybt.pif.*;
 import com.biglybt.pif.torrent.Torrent;
 import com.biglybt.pif.torrent.TorrentDownloader;
@@ -229,8 +228,6 @@ CoreImpl
 
 	private final AEMonitor			this_mon		= new AEMonitor( "Core" );
 
-	public static boolean SUPPRESS_CLASSLOADER_ERRORS = true;
-
 	boolean ca_shutdown_computer_after_stop	= false;
 	long	ca_last_time_downloading 		= -1;
 	long	ca_last_time_seeding 			= -1;
@@ -246,10 +243,7 @@ CoreImpl
 		try{
 			
 			create_time = SystemTime.getCurrentTime();
-	
-			if(!SUPPRESS_CLASSLOADER_ERRORS && !(this.getClass().getClassLoader() instanceof PrimaryClassloader))
-				System.out.println("###\nWarning: Core not instantiated through a PrimaryClassloader, this can lead to restricted functionality or bugs in future versions\n###");
-	
+		
 			if (DEBUG_STARTUPTIME) {
 				lastDebugTime = System.currentTimeMillis();
 			}
