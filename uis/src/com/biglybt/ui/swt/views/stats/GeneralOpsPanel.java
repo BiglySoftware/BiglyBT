@@ -677,6 +677,7 @@ GeneralOpsPanel
 	{
 		public static final int	TYPE_1	= 1;
 		public static final int	TYPE_2	= 2;
+		public static final int	TYPE_3	= 3;
 		
 		public default String
 		getName()
@@ -899,19 +900,30 @@ GeneralOpsPanel
 								
 								int kid_type = kid.getType();
 								
+								Color fg = null;
+								
 								if ( kid_type == Node.TYPE_2 ){
+									
+									fg = Colors.black;
+									
+								}else if ( kid_type == Node.TYPE_3 ){
+									
+									fg = Colors.fadedGreen;
+								}
+								
+								if ( fg == null ){
+									
+									gc.drawText( kid_name, x_pos, y_pos );
+									
+								}else{
 									
 									Color old = gc.getForeground();
 									
-									gc.setForeground( Colors.black );
+									gc.setForeground( fg );
 									
 									gc.drawText( kid_name, x_pos, y_pos );
 									
 									gc.setForeground( old );
-									
-								}else{
-								
-									gc.drawText( kid_name, x_pos, y_pos );
 								}
 								
 								Rectangle text_area = new Rectangle( x_pos, y_pos, extent.x, extent.y );
