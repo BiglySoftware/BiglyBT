@@ -334,25 +334,23 @@ public class TagCanvas
 
 		if (selected) {
 			e.gc.setBackground(grayed ? colorTagFaded : colorTag);
-			e.gc.fillRoundRectangle(-curveWidth, 0, size.x + curveWidth, size.y,
-					curveWidth, curveWidth);
+			e.gc.fillRoundRectangle(-curveWidth, 0, size.x + curveWidth - 1,
+					size.y - 1, curveWidth, curveWidth);
 		}
 
-		if (focused || !selected || grayed) {
-			int lineWidth = 2;
-			int width = size.x - (lineWidth / 2);
+		if (!selected || grayed) {
+			int lineWidth = focused ? 2 : 2;
+			int y1 = lineWidth / 2;
+			int x1 = y1;
+			int width = size.x - lineWidth;
+			int height = size.y - lineWidth;
 			e.gc.setLineWidth(lineWidth);
-			if (focused) {
-				e.gc.setForeground(selected ? colorOrigBG : colorTag);
-				e.gc.setLineStyle(SWT.LINE_DOT);
-			} else {
-				e.gc.setForeground(colorTag);
-				e.gc.setLineStyle(SWT.LINE_SOLID);
-			}
-			e.gc.drawRoundRectangle(-curveWidth, lineWidth - 1, width + curveWidth,
-					size.y - lineWidth, curveWidth, curveWidth);
-			e.gc.drawLine(lineWidth - 1, lineWidth, lineWidth - 1,
-					size.y - lineWidth);
+			e.gc.setForeground(colorTag);
+			e.gc.setLineStyle(SWT.LINE_SOLID);
+
+			e.gc.drawRoundRectangle(-curveWidth + x1, y1, width + curveWidth,
+					height - y1 + 1, curveWidth, curveWidth);
+			e.gc.drawLine(x1, y1, x1, height - y1 + 1);
 			e.gc.setLineWidth(1);
 		}
 
@@ -374,6 +372,19 @@ public class TagCanvas
 		GCStringPrinter sp = new GCStringPrinter(e.gc, lastUsedName, clientArea,
 				true, true, SWT.LEFT);
 		sp.printString();
+		if (focused) {
+			Rectangle focusRect = sp.getCalculatedDrawRect();
+			if (focusRect == null) {
+				focusRect = sp.getPrintArea();
+			}
+			e.gc.setLineDash(new int[] {
+				2,
+				1
+			});
+			int y = focusRect.y + focusRect.height - 1;
+			e.gc.drawLine(focusRect.x, y, focusRect.x + focusRect.width - 1, y);
+			e.gc.setLineStyle(SWT.LINE_SOLID);
+		}
 	}
 
 	@Override
