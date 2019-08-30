@@ -6178,7 +6178,7 @@ SpeedLimitHandler
 							
 							String client = id_name;
 							
-							for ( int i=0;i<chars.length;i++){
+							for ( int i=2;i<chars.length;i++){
 								
 								if ( !Character.isLetter( chars[i] )){
 									
