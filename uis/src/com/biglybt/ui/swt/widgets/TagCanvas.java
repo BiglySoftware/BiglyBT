@@ -79,6 +79,8 @@ public class TagCanvas
 
 	private static final int COMPACT_CONTENT_PADDING_X1 = 5;
 
+	private static final int MIN_WIDTH = 25;
+
 	private int paddingContentY = DEF_CONTENT_PADDING_Y;
 
 	private int paddingContentX0 = DEF_CONTENT_PADDING_X0;
@@ -188,6 +190,8 @@ public class TagCanvas
 					/ bounds.height;
 			size.x += imageW + paddingImageX;
 		}
+
+		size.x = Math.max(MIN_WIDTH, size.x);
 
 		return size;
 	}
