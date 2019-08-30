@@ -296,17 +296,20 @@ public class TagCanvas
 	}
 
 	public void setSelected(boolean select) {
-		setSelected(select, true);
+		if (setSelected(select, true)) {
+			redraw();
+		}
 	}
 
-	private void setSelected(boolean select, boolean unGray) {
+	private boolean setSelected(boolean select, boolean unGray) {
 		if (select != selected) {
 			selected = select;
 			if (grayed && unGray) {
 				grayed = false;
 			}
-			redraw();
+			return true;
 		}
+		return false;
 	}
 
 	@Override
@@ -323,8 +326,8 @@ public class TagCanvas
 
 		Color colorOrigBG = e.gc.getBackground();
 
-		Color colorText = Colors.getInstance().getReadableColor(selected?
-						grayed ? colorTagFaded : colorTag : colorOrigBG);
+		Color colorText = Colors.getInstance().getReadableColor(
+				selected ? grayed ? colorTagFaded : colorTag : colorOrigBG);
 
 		Point size = getSize();
 		e.gc.setAntialias(SWT.ON);
@@ -388,27 +391,40 @@ public class TagCanvas
 		}
 	}
 
-	public void updateName() {
+	public boolean updateName() {
 		String tagName = tag.getTagName(true);
 		if (!tagName.equals(lastUsedName)) {
 			lastUsedName = null;
 			requestLayout();
+			return true;
+		}
+		return false;
+	}
+
+	public void setGrayed(boolean b) {
+		if (setGrayedNoRedraw(b)) {
 			redraw();
 		}
 	}
 
-	public void setGrayed(boolean b) {
+	private boolean setGrayedNoRedraw(boolean b) {
 		if (b == grayed) {
-			return;
+			return false;
 		}
 		grayed = b;
-		redraw();
+		return true;
 	}
 
-	private void updateColors() {
+	private boolean updateColors() {
 		Display display = getDisplay();
 		Color newColorTag = ColorCache.getColor(display, tag.getColor());
-		colorTag = newColorTag == null ? getForeground() : newColorTag;
+		if (newColorTag == null) {
+			newColorTag = getForeground();
+		}
+		if (newColorTag.equals(colorTag)) {
+			return false;
+		}
+		colorTag = newColorTag;
 
 		HSLColor hslColor = new HSLColor();
 		hslColor.initHSLbyRGB(colorTag.getRed(), colorTag.getGreen(),
@@ -420,17 +436,22 @@ public class TagCanvas
 				hslColor.getGreen(), hslColor.getBlue());
 		colorTagFaded = newColorTagFaded == null ? getForeground()
 				: newColorTagFaded;
+		return true;
 	}
 
 	public void updateState(List<Taggable> taggables) {
+		boolean needRedraw = false;
 		updateImage();
-		updateName();
-		updateColors();
+		needRedraw |= updateName();
+		needRedraw |= updateColors();
 
 		if (taggables == null) {
-			setEnabled(enableWhenNoTaggables);
+			needRedraw |= setEnabledNoRedraw(enableWhenNoTaggables);
 			if (!enableWhenNoTaggables) {
-				setSelected(false, false);
+				needRedraw |= setSelected(false, false);
+				if (needRedraw) {
+					redraw();
+				}
 				return;
 			}
 		}
@@ -467,31 +488,39 @@ public class TagCanvas
 		boolean auto_rem = auto[1];
 
 		if (hasTag && hasNoTag) {
-			setEnabled(!auto_add);
+			needRedraw |= setEnabledNoRedraw(!auto_add);
 
-			setGrayed(true);
-			setSelected(true, false);
+			needRedraw |= setGrayedNoRedraw(true);
+			needRedraw |= setSelected(true, false);
 		} else {
 
 			if (auto_add && auto_rem) {
-				setGrayed(!hasTag);
-				setEnabled(false);
+				needRedraw |= setGrayedNoRedraw(!hasTag);
+				needRedraw |= setEnabledNoRedraw(false);
 			} else {
-				setEnabled((hasTag) || (!hasTag && !auto_add));
-				setGrayed(false);
+				needRedraw |= setEnabledNoRedraw((hasTag) || (!hasTag && !auto_add));
+				needRedraw |= setGrayedNoRedraw(false);
 			}
 
 			setSelected(hasTag, false);
+		}
+
+		if (needRedraw) {
+			redraw();
 		}
 	}
 
 	@Override
 	public void setEnabled(boolean enabled) {
-		boolean wasEnabled = isEnabled();
-		super.setEnabled(enabled);
-		if (wasEnabled != enabled) {
+		if (setEnabledNoRedraw(enabled)) {
 			redraw();
 		}
+	}
+
+	private boolean setEnabledNoRedraw(boolean enabled) {
+		boolean wasEnabled = isEnabled();
+		super.setEnabled(enabled);
+		return wasEnabled != enabled;
 	}
 
 	private void updateImage() {
