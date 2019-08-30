@@ -502,7 +502,7 @@ public class TagCanvas
 				needRedraw |= setGrayedNoRedraw(false);
 			}
 
-			setSelected(hasTag, false);
+			needRedraw |= setSelected(hasTag, false);
 		}
 
 		if (needRedraw) {
