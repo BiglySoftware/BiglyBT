@@ -32,6 +32,7 @@ import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
@@ -44,6 +45,7 @@ import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.ui.swt.Utils;
 
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.views.PeersViewBase;
 
 public class
 GeneralOpsPanel
@@ -80,6 +82,8 @@ GeneralOpsPanel
 
 	private TimerEventPeriodic timeout_timer;
 
+	private Map<Node,Rectangle>	node_text_map = new HashMap<>();
+	
 	private static class Scale {
 		int width;
 		int height;
@@ -156,8 +160,85 @@ GeneralOpsPanel
 
 			@Override
 			public void mouseUp(MouseEvent event) {
+				
+				if ( mouseLeftDown ){
+					int	x = event.x;
+					int y = event.y;
+					
+					for ( Map.Entry<Node,Rectangle> entry: node_text_map.entrySet()){
+						
+						if ( entry.getValue().contains(x, y )){
+							
+							entry.getKey().eventOccurred(
+								new NodeEvent()
+								{
+									public int
+									getType()
+									{
+										return( NodeEvent.ET_CLICKED );
+									}
+									
+									public Object
+									getData()
+									{
+										return( null );
+									}
+								});
+								
+						}
+					}
+				}
+				
+				if ( mouseRightDown ){
+					
+					int	x = event.x;
+					int y = event.y;
+					
+					for ( Map.Entry<Node,Rectangle> entry: node_text_map.entrySet()){
+						
+						if ( entry.getValue().contains(x, y )){
+							
+							Menu menu = canvas.getMenu();
+
+							if ( menu != null && !menu.isDisposed()){
+
+								menu.dispose();
+							}
+
+							menu = new Menu( canvas );
+
+							final Point cursorLocation = Display.getCurrent().getCursorLocation();
+
+							menu.setLocation( cursorLocation.x, cursorLocation.y );
+
+							menu.setVisible( true );
+							
+							Menu f_menu = menu;
+							
+							entry.getKey().eventOccurred(
+								new NodeEvent()
+								{
+									public int
+									getType()
+									{
+										return( NodeEvent.ET_MENU );
+									}
+									
+									public Object
+									getData()
+									{
+										return( f_menu );
+									}
+								});
+								
+							break;
+						}
+					}
+				}	
+				
 				if(event.button == 1) mouseLeftDown = false;
 				if(event.button == 3) mouseRightDown = false;
+				
 				refresh();
 			}
 		});
@@ -500,6 +581,8 @@ GeneralOpsPanel
 
 		double slice_angle = 2*Math.PI/max_slot;
 
+		node_text_map.clear();
+		
 		for ( ActivityDetail details: activities ){
 
 			details.draw( gc, x_origin, y_origin, slice_angle );
@@ -592,17 +675,52 @@ GeneralOpsPanel
 	public interface
 	Node
 	{
+		public static final int	TYPE_1	= 1;
+		public static final int	TYPE_2	= 2;
+		
+		public default String
+		getName()
+		{
+			return( null );
+		}
+		
+		public default int
+		getType()
+		{
+			return( TYPE_1 );
+		}
+		
+		public default Object
+		eventOccurred(
+			NodeEvent	ev )
+		{
+			return( null );
+		}
+		
 		public List<Node>
 		getChildren();
 	}
 	
 	public interface
+	NodeEvent
+	{
+		public final int ET_CLICKED		= 1;
+		public final int ET_MENU		= 2;
+		
+		public int
+		getType();
+		
+		public Object
+		getData();
+	}
+	
+	public interface
 	Activity
 	{
-		public static final int	TYPE_1			= 1;	// AT_EXTERNAL_GET
-		public static final int	TYPE_2			= 2;	// AT_INTERNAL_GET
-		public static final int	TYPE_3			= 3;	// AT_EXTERNAL_PUT
-		public static final int	TYPE_DEFAULT	= 4;	// AT_INTERNAL_PUT
+		public static final int	TYPE_1			= 1;
+		public static final int	TYPE_2			= 2;
+		public static final int	TYPE_3			= 3;
+		public static final int	TYPE_DEFAULT	= 4;
 		
 		public String
 		getDescription();
@@ -742,7 +860,7 @@ GeneralOpsPanel
 
 						int seg_start_x = scale.getX(node_x, node_y);
 						int seg_start_y = scale.getY(node_x, node_y);
-
+						
 						List<Node> kids = node.getChildren();
 
 						for ( Node kid: kids ){
@@ -760,6 +878,46 @@ GeneralOpsPanel
 							gc.drawLine(seg_start_x, seg_start_y, seg_end_x, seg_end_y );
 
 							gc.drawOval( seg_end_x, seg_end_y, 1, 1 );
+							
+							String kid_name = kid.getName();
+							
+							if ( kid_name != null ){
+								
+								Point extent = gc.textExtent( kid_name );
+								
+								int	x_pos;
+								int y_pos	= seg_end_y;
+							
+								if ( seg_end_x < x_origin ){
+									
+									x_pos = seg_end_x - extent.x;
+									
+								}else{
+									
+									x_pos = seg_end_x;
+								}
+								
+								int kid_type = kid.getType();
+								
+								if ( kid_type == Node.TYPE_2 ){
+									
+									Color old = gc.getForeground();
+									
+									gc.setForeground( Colors.black );
+									
+									gc.drawText( kid_name, x_pos, y_pos );
+									
+									gc.setForeground( old );
+									
+								}else{
+								
+									gc.drawText( kid_name, x_pos, y_pos );
+								}
+								
+								Rectangle text_area = new Rectangle( x_pos, y_pos, extent.x, extent.y );
+								
+								node_text_map.put( kid, text_area );
+							}
 						}
 					}
 
