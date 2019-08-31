@@ -366,6 +366,7 @@ public class TagCanvas
 
 		Point size = getSize();
 		e.gc.setAntialias(SWT.ON);
+		e.gc.setTextAntialias(SWT.ON);
 
 		if (selected) {
 			e.gc.setBackground(grayed ? colorTagFaded : colorTag);
