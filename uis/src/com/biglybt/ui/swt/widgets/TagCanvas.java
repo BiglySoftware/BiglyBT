@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.accessibility.ACC;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.*;
@@ -31,7 +30,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
-import com.biglybt.core.util.Debug;
+import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
@@ -50,7 +49,7 @@ public class TagCanvas
 
 	public interface TagButtonTrigger
 	{
-		void tagButtonTriggered(Tag tag, boolean doTag);
+		void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask, boolean longPress);
 
 		Boolean tagSelectedOverride(Tag tag);
 	}
@@ -122,6 +121,10 @@ public class TagCanvas
 	private Color colorTagFaded;
 
 	private Color colorTag;
+	
+	private boolean mouseDown = false;
+
+	private TimerEvent timerEvent;
 
 	/** 
 	 * Creates a Tag Canvas.<br/>  
@@ -203,17 +206,47 @@ public class TagCanvas
 				if (!getEnabled() || e.button != 1) {
 					return;
 				}
-				if (trigger != null) {
-					trigger.tagButtonTriggered(tag, !isSelected());
+				if (timerEvent == null) {
+					timerEvent = SimpleTimer.addEvent("MouseHold",
+							SystemTime.getOffsetTime(1000), te -> {
+								timerEvent = null;
+
+								if (!mouseDown) {
+									return;
+								}
+								mouseDown = false;
+
+								// held
+								if (trigger != null) {
+									Utils.execSWTThread(
+											() -> trigger.tagButtonTriggered(this, tag, e.stateMask, true));
+								}
+							});
 				}
-				redraw();
+
+				mouseDown = true;
 				break;
 			}
 			case SWT.MouseUp: {
-				if (!getEnabled() || e.button != 1) {
+				if (!getEnabled() || e.button != 1 || !mouseDown) {
 					return;
 				}
-				getAccessible().setFocus(ACC.CHILDID_SELF);
+				mouseDown = false;
+
+				if (timerEvent != null) {
+					timerEvent.cancel();
+					timerEvent = null;
+				}
+
+				if (!getClientArea().contains(e.x, e.y)) {
+					return;
+				}
+
+				if (trigger != null) {
+					trigger.tagButtonTriggered(this, tag, e.stateMask, false);
+				}
+
+				System.out.println(e + ";" + getBounds() + ";" + getClientArea());
 				break;
 			}
 			case SWT.MouseHover: {
@@ -239,8 +272,7 @@ public class TagCanvas
 						return;
 					case SWT.TRAVERSE_RETURN:
 						if (trigger != null) {
-							trigger.tagButtonTriggered(tag, !isSelected());
-							redraw();
+							trigger.tagButtonTriggered(this, tag, e.stateMask, false);
 						}
 				}
 				e.doit = true;
@@ -250,6 +282,10 @@ public class TagCanvas
 					if (!tag.getTagType().isTagTypeAuto()) {
 						TagUIUtils.openRenameTagDialog(tag);
 						e.doit = false;
+					}
+				} else if (e.keyCode == SWT.SPACE) {
+					if (trigger != null) {
+						trigger.tagButtonTriggered(this, tag, e.stateMask, false);
 					}
 				}
 			}

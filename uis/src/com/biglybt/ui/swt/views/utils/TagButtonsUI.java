@@ -22,11 +22,13 @@ import java.util.List;
 import java.util.*;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
@@ -45,17 +47,28 @@ public class TagButtonsUI
 {
 	// tagWidgets is only modified in SWT Thread, so concurrent issues should be non-existant
 	private final List<TagCanvas> tagWidgets = new ArrayList<>();
+
 	private Composite cMainComposite;
+
 	private boolean enableWhenNoTaggables;
 
 	private boolean disableAuto = true;
-	
-	public void buildTagGroup(List<Tag> tags, Composite cMainComposite,
+
+	private int layoutStyle;
+
+	public TagButtonsUI() {
+		layoutStyle = COConfigurationManager.getIntParameter("TagButtons.style",
+				SWT.HORIZONTAL);
+	}
+
+	public Composite buildTagGroup(List<Tag> tags, Composite parent,
 			boolean allowContextMenu, TagButtonTrigger trigger) {
 
-		this.cMainComposite = cMainComposite;
+		cMainComposite = new Composite(parent, SWT.NONE);
 
-		cMainComposite.setLayout(new GridLayout(1, false));
+		RowLayout mainLayout = Utils.getSimpleRowLayout(false);
+		mainLayout.type = SWT.VERTICAL;
+		cMainComposite.setLayout(mainLayout);
 
 		tagWidgets.clear();
 
@@ -68,7 +81,6 @@ public class TagButtonsUI
 				TagUIUtils.createSideBarMenuItems(menu1, tagCanvas.getTag());
 			});
 		} : null;
-
 
 		tags = TagUtils.sortTags(tags);
 		Composite g = null;
@@ -84,8 +96,7 @@ public class TagButtonsUI
 				if (group != null) {
 					((Group) g).setText(group);
 				}
-				g.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-				RowLayout rowLayout = new RowLayout();
+				RowLayout rowLayout = new RowLayout(SWT.HORIZONTAL);
 				rowLayout.pack = true;
 				rowLayout.spacing = 5;
 				g.setLayout(rowLayout);
@@ -110,53 +121,55 @@ public class TagButtonsUI
 			if (allowContextMenu) {
 				p.addListener(SWT.MenuDetect, menuDetectListener);
 			}
-			
+
 			p.addDisposeListener(e -> tagWidgets.remove((TagCanvas) e.widget));
 
 			tagWidgets.add(p);
 		}
+
+		setLayoutStyle(layoutStyle);
+
+		return cMainComposite;
 	}
 
-	public void setSelectedTags( List<Tag> tags ){
-		
-		Set<Tag> tag_set = new HashSet<>( tags );
-		
+	public void setSelectedTags(List<Tag> tags) {
+
+		Set<Tag> tag_set = new HashSet<>(tags);
+
 		for (TagCanvas widget : tagWidgets) {
 
 			Tag tag = widget.getTag();
 			if (tag == null) {
 				continue;
 			}
-			
-			boolean select = tag_set.contains( tag );
+
+			boolean select = tag_set.contains(tag);
 
 			widget.setSelected(select);
 		}
 	}
-	
-	public List<Tag>
-	getSelectedTags()
-	{
+
+	public List<Tag> getSelectedTags() {
 		List<Tag> result = new ArrayList<>();
-		
+
 		if (tagWidgets.isEmpty()) {
 			return result;
 		}
 
 		for (TagCanvas tagCanvas : tagWidgets) {
-			if (tagCanvas.isSelected()){
+			if (tagCanvas.isSelected()) {
 				result.add(tagCanvas.getTag());
 			}
 		}
 
-		return( result );
+		return (result);
 	}
-	
+
 	public boolean updateFields(List<Taggable> taggables) {
-		if (cMainComposite.isDisposed()){
+		if (cMainComposite.isDisposed()) {
 			return false;
 		}
-		
+
 		for (TagCanvas tagWidget : tagWidgets) {
 			tagWidget.updateState(taggables);
 		}
@@ -164,11 +177,7 @@ public class TagButtonsUI
 		return false;
 	}
 
-
-	public void
-	setDisableAuto(
-		boolean	b )
-	{
+	public void setDisableAuto(boolean b) {
 		disableAuto = b;
 		Utils.execSWTThread(() -> {
 			for (TagCanvas tagWidget : tagWidgets) {
@@ -176,7 +185,7 @@ public class TagButtonsUI
 			}
 		});
 	}
-	
+
 	public void setEnableWhenNoTaggables(boolean enableWhenNoTaggables) {
 		this.enableWhenNoTaggables = enableWhenNoTaggables;
 		Utils.execSWTThread(() -> {
@@ -186,5 +195,63 @@ public class TagButtonsUI
 		});
 	}
 
+	public void setLayoutStyle(int layoutStyle) {
+		this.layoutStyle = layoutStyle;
+		COConfigurationManager.setParameter("TagButtons.style", layoutStyle);
 
+		if (cMainComposite == null || cMainComposite.isDisposed()) {
+			return;
+		}
+		Control[] children = cMainComposite.getChildren();
+
+		int style = this.layoutStyle & (SWT.HORIZONTAL | SWT.VERTICAL);
+		boolean compact = style == SWT.VERTICAL || (layoutStyle & SWT.FILL) > 0;
+
+		cMainComposite.setLayoutDeferred(true);
+		if (compact) {
+			RowLayout mainLayout = Utils.getSimpleRowLayout(false);
+			mainLayout.type = SWT.HORIZONTAL;
+			mainLayout.wrap = true;
+			cMainComposite.setLayout(mainLayout);
+
+			for (Control child : children) {
+				child.setLayoutData(new RowData());
+				if (child instanceof Composite) {
+					RowLayout rowLayout = new RowLayout(style);
+					rowLayout.pack = true;
+					rowLayout.spacing = 5;
+					((Composite) child).setLayout(rowLayout);
+				}
+			}
+		} else {
+			GridLayout mainLayout = new GridLayout();
+			cMainComposite.setLayout(mainLayout);
+
+			for (Control child : children) {
+				child.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+				if (child instanceof Composite) {
+					RowLayout rowLayout = new RowLayout(style);
+					rowLayout.pack = true;
+					rowLayout.spacing = 5;
+					((Composite) child).setLayout(rowLayout);
+				}
+			}
+		}
+		cMainComposite.setLayoutDeferred(false);
+		cMainComposite.requestLayout();
+		Composite c = cMainComposite;
+		while (c != null) {
+			if (c instanceof ScrolledComposite) {
+				Rectangle r = c.getClientArea();
+				Point size = ((ScrolledComposite) c).getContent().computeSize(r.width,
+						SWT.DEFAULT);
+				((ScrolledComposite) c).setMinSize(size);
+			}
+			c = c.getParent();
+		}
+	}
+
+	public int getLayoutStyle() {
+		return layoutStyle;
+	}
 }

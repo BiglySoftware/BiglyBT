@@ -40,6 +40,7 @@ import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
@@ -66,8 +67,6 @@ public class TaggingView
 
 	private UISWTView swtView;
 
-	private Composite cMainComposite;
-
 	private ScrolledComposite sc;
 
 	private List<Taggable> taggables;
@@ -76,7 +75,8 @@ public class TaggingView
 
 	private TagButtonsUI 	tagButtonsUI;
 	private Button			buttonExplain;
-	
+	private Composite mainComposite;
+
 	public TaggingView() {
 	}
 	
@@ -134,7 +134,7 @@ public class TaggingView
 				break;
 
 			case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
-				Messages.updateLanguageForControl(cMainComposite);
+				Messages.updateLanguageForControl(mainComposite);
 				swtView.setTitle(getFullTitle());
 				break;
 
@@ -237,59 +237,82 @@ public class TaggingView
 			if (parent == null || parent.isDisposed()) {
 				return;
 			}
-			sc = new ScrolledComposite(parent, SWT.V_SCROLL);
-			sc.setExpandHorizontal(true);
-			sc.setExpandVertical(true);
-			sc.getVerticalBar().setIncrement(16);
+
+			mainComposite = new Composite(parent, SWT.NONE);
+			GridLayout layout = new GridLayout();
+			layout.marginHeight = layout.marginWidth = 0;
+			mainComposite.setLayout(layout);
 			Layout parentLayout = parent.getLayout();
 			if (parentLayout instanceof GridLayout) {
 				GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-				sc.setLayoutData(gd);
+				mainComposite.setLayoutData(gd);
 			} else if (parentLayout instanceof FormLayout) {
-				sc.setLayoutData(Utils.getFilledFormData());
+				mainComposite.setLayoutData(Utils.getFilledFormData());
 			}
 
-			cMainComposite = new Composite(sc, SWT.NONE);
-
-			sc.setContent(cMainComposite);
 		} else {
-			Utils.disposeComposite(cMainComposite, false);
+			Utils.disposeComposite(mainComposite, false);
 		}
-
-		cMainComposite.setLayout(new GridLayout(1, false));
 
 		tagButtonsUI = new TagButtonsUI();
 
 		List<Tag> listAllTags = getTags();
 
-		tagButtonsUI.buildTagGroup(listAllTags, cMainComposite,
-				true, new TagButtonTrigger() {
-					@Override
-					public void tagButtonTriggered(Tag tag, boolean doTag) {
-						for (Taggable taggable : taggables) {
-							if (doTag) {
-								tag.addTaggable(taggable);
-							} else {
-								tag.removeTaggable(taggable);
-							}
-							swt_updateFields();
-						}
-					}
+		boolean hasGroup = false;
+		for (Tag tag : listAllTags) {
+			String group = tag.getGroup();
+			if (group != null && group.length() > 0) {
+				hasGroup = true;
+				break;
+			}
+		}
 
-					@Override
-					public Boolean tagSelectedOverride(Tag tag) {
-						return null;
-					}
-				});
+		/// Buttons
 
-		Composite buttonComp = new Composite( cMainComposite, SWT.NULL );
+		Composite buttonComp = new Composite(mainComposite, SWT.NULL);
 		
-		buttonComp.setLayoutData( new GridData( GridData.FILL_HORIZONTAL ));
+		buttonComp.setLayoutData(new GridData(SWT.TRAIL, SWT.CENTER, true, false));
 		
-		buttonComp.setLayout(new GridLayout(2, false));
-		
+		buttonComp.setLayout(Utils.getSimpleRowLayout(true));
+
+		if (hasGroup) {
+			int layoutStyle = tagButtonsUI.getLayoutStyle();
+
+			Button buttonRowMode = new Button(buttonComp, SWT.TOGGLE);
+			if (layoutStyle == SWT.HORIZONTAL) {
+				buttonRowMode.setSelection(true);
+			}
+			Button buttonColumnMode = new Button(buttonComp, SWT.TOGGLE);
+			if (layoutStyle == SWT.VERTICAL) {
+				buttonColumnMode.setSelection(true);
+			}
+			Button buttonRowCompactMode = new Button(buttonComp, SWT.TOGGLE);
+			if (layoutStyle == (SWT.HORIZONTAL | SWT.FILL)) {
+				buttonRowCompactMode.setSelection(true);
+			}
+
+			List<Button> listModeButtons = new ArrayList<>();
+			listModeButtons.add(buttonRowMode);
+			listModeButtons.add(buttonColumnMode);
+			listModeButtons.add(buttonRowCompactMode);
+
+			ImageLoader.getInstance().setButtonImage(buttonRowMode, "row_mode");
+			buttonRowMode.addListener(SWT.Selection,
+				event -> modeButtonClick(listModeButtons, (Button) event.widget,
+					SWT.HORIZONTAL));
+
+			ImageLoader.getInstance().setButtonImage(buttonColumnMode, "column_mode");
+			buttonColumnMode.addListener(SWT.Selection,
+				event -> modeButtonClick(listModeButtons, (Button) event.widget,
+					SWT.VERTICAL));
+
+			ImageLoader.getInstance().setButtonImage(buttonRowCompactMode, "row_compact_mode");
+			buttonRowCompactMode.addListener(SWT.Selection,
+				event -> modeButtonClick(listModeButtons, (Button) event.widget,
+					SWT.HORIZONTAL | SWT.FILL));
+		}
+
 		Button buttonAdd = new Button(buttonComp, SWT.PUSH);
-		buttonAdd.setLayoutData(new GridData(SWT.CENTER, SWT.FILL, true, false));
 		Messages.setLanguageText(buttonAdd, "label.add.tag");
 		buttonAdd.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -311,14 +334,51 @@ public class TaggingView
 		});
 
 		buttonExplain = new Button(buttonComp, SWT.PUSH);
-		buttonExplain.setLayoutData(new GridData(SWT.RIGHT, SWT.FILL, false, false));
 		Messages.setLanguageText(buttonExplain, "button.explain");
 		buttonExplain.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				explain();
 			}});
-				
+
+		///
+
+		sc = new ScrolledComposite(mainComposite, SWT.V_SCROLL);
+		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+		sc.setLayoutData(gd);
+		sc.setExpandHorizontal(true);
+		sc.setExpandVertical(true);
+		sc.getVerticalBar().setIncrement(16);
+
+		Composite cTagComposite = new Composite(sc, SWT.NONE);
+		GridLayout layout = new GridLayout(1, false);
+		layout.marginHeight = layout.marginWidth = 0;
+		cTagComposite.setLayout(layout);
+		sc.setContent(cTagComposite);
+		
+		Composite tagArea = tagButtonsUI.buildTagGroup(listAllTags, cTagComposite,
+			true, new TagButtonTrigger() {
+				@Override
+				public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask, boolean longPress) {
+					boolean doTag = !tagCanvas.isSelected();
+					for (Taggable taggable : taggables) {
+						if (doTag) {
+							tag.addTaggable(taggable);
+						} else {
+							tag.removeTaggable(taggable);
+						}
+						tagCanvas.setSelected(doTag);
+					}
+				}
+
+				@Override
+				public Boolean tagSelectedOverride(Tag tag) {
+					return null;
+				}
+			});
+		tagArea.setLayoutData(new GridData( GridData.FILL_HORIZONTAL ));
+
+		
 		sc.addControlListener(new ControlAdapter() {
 			@Override
 			public void controlResized(ControlEvent e) {
@@ -331,8 +391,22 @@ public class TaggingView
 		swt_updateFields();
 
 		Rectangle r = sc.getClientArea();
-		Point size = cMainComposite.computeSize(r.width, SWT.DEFAULT);
+		Point size = cTagComposite.computeSize(r.width, SWT.DEFAULT);
 		sc.setMinSize(size);
+	}
+
+	private void modeButtonClick(List<Button> listModeButtons, Button thisButton,
+		int style) {
+		if (!thisButton.getSelection()) {
+			thisButton.setSelection(true);
+		}
+		for (Button button : listModeButtons) {
+			if (button == thisButton) {
+				continue;
+			}
+			button.setSelection(false);
+		}
+		tagButtonsUI.setLayoutStyle(style);
 	}
 
 	private String getFullTitle() {
@@ -341,7 +415,7 @@ public class TaggingView
 
 	private void swt_updateFields() {
 
-		if (cMainComposite == null || cMainComposite.isDisposed()) {
+		if (mainComposite == null || mainComposite.isDisposed()) {
 			return;
 		}
 

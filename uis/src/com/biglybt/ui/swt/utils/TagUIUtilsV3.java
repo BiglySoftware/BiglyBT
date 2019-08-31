@@ -26,6 +26,7 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.skin.*;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -228,6 +229,7 @@ public class TagUIUtilsV3
 			main.setLayout( new GridLayout(1,true));
 			
 			Composite comp = Utils.createScrolledComposite( main );
+			comp.setLayout(new FillLayout());
 			
 			comp.setLayoutData( new GridData( GridData.FILL_BOTH ));
 			
@@ -245,8 +247,9 @@ public class TagUIUtilsV3
 					}
 					
 					@Override
-					public void tagButtonTriggered(Tag tag, boolean doTag){
-						
+					public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask, boolean longPress){
+						boolean doTag = !tagCanvas.isSelected();
+						tagCanvas.setSelected(doTag);
 					}
 				});
 			

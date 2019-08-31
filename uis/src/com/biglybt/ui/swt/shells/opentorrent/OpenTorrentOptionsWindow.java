@@ -62,10 +62,7 @@ import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.plugin.net.buddy.BuddyPluginBeta.ChatInstance;
 import com.biglybt.plugin.net.buddy.BuddyPluginUtils;
 import com.biglybt.plugin.net.buddy.BuddyPluginViewInterface;
-import com.biglybt.ui.IUIIntializer;
-import com.biglybt.ui.InitializerListener;
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.*;
 import com.biglybt.ui.common.table.TableRowCore;
 import com.biglybt.ui.common.table.TableSelectionListener;
 import com.biglybt.ui.common.table.TableViewFilterCheck;
@@ -78,10 +75,7 @@ import com.biglybt.ui.swt.*;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.config.IntSwtParameter;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.mainwindow.Colors;
-import com.biglybt.ui.swt.mainwindow.SWTThread;
-import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.mainwindow.*;
 import com.biglybt.ui.swt.maketorrent.MultiTrackerEditor;
 import com.biglybt.ui.swt.maketorrent.TrackerEditorListener;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
@@ -98,6 +92,7 @@ import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 import com.biglybt.ui.swt.views.tableitems.mytorrents.TrackerNameItem;
 import com.biglybt.ui.swt.views.utils.TagButtonsUI;
+import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
 import com.biglybt.util.JSONUtils;
 import com.biglybt.util.MapUtils;
@@ -107,7 +102,6 @@ import com.biglybt.pif.PluginManager;
 import com.biglybt.pif.ipc.IPCInterface;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 
@@ -4753,6 +4747,7 @@ public class OpenTorrentOptionsWindow
 
 
 				tagButtonsArea 	= new Composite( tagRight, SWT.DOUBLE_BUFFERED);
+				tagButtonsArea.setLayout(new FillLayout());
 				gridData = new GridData(SWT.FILL, SWT.FILL, true, true );
 				tagButtonsArea.setLayoutData( gridData);
 
@@ -4881,8 +4876,10 @@ public class OpenTorrentOptionsWindow
 
 			tagButtonsUI.buildTagGroup(tags, tagButtonsArea, false,
 					new TagButtonTrigger() {
-						public void tagButtonTriggered(Tag tag, boolean doTag) {
+						public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag,
+							int stateMask, boolean longPress) {
 							List<Tag> tags = torrentOptions.getInitialTags();
+							boolean doTag = !tagCanvas.isSelected();
 							boolean initialTagsChanged = doTag ? addInitialTag(tags, tag)
 									: removeInitialTag(tags, tag);
 							if (initialTagsChanged) {
