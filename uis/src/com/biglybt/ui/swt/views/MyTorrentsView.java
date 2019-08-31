@@ -377,7 +377,7 @@ public class MyTorrentsView
 			@Override
 			public void tableDataSourceChanged(Object newDataSource) {
 				if (newDataSource instanceof Tag[]) {
-					neverShowCatButtons = true;
+					//neverShowCatButtons = true;
 					setCurrentTags((Tag[]) newDataSource);
 					return;
 				}
@@ -400,7 +400,7 @@ public class MyTorrentsView
 				}
 
 				if ( newDataSource instanceof Tag ){
-					neverShowCatButtons = true;
+					//neverShowCatButtons = true;
 					//neverShowTagButtons = true;
 					
 					Tag[] tag = new Tag[]{ (Tag) newDataSource };
@@ -411,7 +411,7 @@ public class MyTorrentsView
 				}
 
 				if ( newDataSource instanceof TagGroup ){
-					neverShowCatButtons = true;
+					//neverShowCatButtons = true;
 					TagGroup	tg = (TagGroup)newDataSource;
 					setCurrentTagGroup( tg );
 					
