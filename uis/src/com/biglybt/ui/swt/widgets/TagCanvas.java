@@ -246,7 +246,6 @@ public class TagCanvas
 					trigger.tagButtonTriggered(this, tag, e.stateMask, false);
 				}
 
-				System.out.println(e + ";" + getBounds() + ";" + getClientArea());
 				break;
 			}
 			case SWT.MouseHover: {
