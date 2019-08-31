@@ -824,7 +824,7 @@ public class MyTorrentsView
 	private void buildHeaderArea() {
 		if (cCategoriesAndTags == null) {
 			cCategoriesAndTags = new CompositeMinSize(cTableParentPanel, SWT.NONE);
-			((CompositeMinSize) cCategoriesAndTags).setMinSize(new Point(SWT.DEFAULT, 24));
+			((CompositeMinSize) cCategoriesAndTags).setMinSize(new Point(SWT.DEFAULT, 18));
 			GridData gridData = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
 			cCategoriesAndTags.setLayoutData(gridData);
 			cCategoriesAndTags.moveAbove(null);
@@ -1138,7 +1138,7 @@ public class MyTorrentsView
 
 			button.addKeyListener(this);
 			if ( fontButton == null) {
-				fontButton = FontUtils.getFontPercentOf(button.getFont(), 0.8f);
+				fontButton = FontUtils.getFontWithStyle(button.getFont(), SWT.NONE, 0.8f);
 			}
 			button.setFont(fontButton);
 
