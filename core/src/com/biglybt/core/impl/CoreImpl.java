@@ -322,6 +322,11 @@ CoreImpl
 	
 			CustomizationManagerFactory.getSingleton().initialize();
 	
+				// NetworkManager.getSingleton() (for example) results in TCP listen being setup - in case another instance
+				// is still in the process of closing poke the 'canStart' method here to back things off if so
+			
+			canStart();
+			
 			AEProxySelectorFactory.getSelector();
 	
 			if (DEBUG_STARTUPTIME) {
@@ -1893,46 +1898,71 @@ CoreImpl
 						run()
 						{
 							try{
-								Thread.sleep(10*1000);
-
-								ThreadGroup	tg = Thread.currentThread().getThreadGroup();
-
-								Thread[]	threads = new Thread[tg.activeCount()+1024];
-
-								tg.enumerate( threads, true );
-
-								String	bad_found = "";
-
-								for (int i=0;i<threads.length;i++){
-
-									Thread	t = threads[i];
-
-									if ( t != null && t.isAlive() && !t.isDaemon() && !AEThread2.isOurThread( t )){
-
-										String	details = t.getName();
-
-										StackTraceElement[] trace = t.getStackTrace();
-
-										if ( trace.length > 0 ){
-
-											details += "[";
-
-											for ( int j=0;j<trace.length;j++ ){
-
-												details += (j==0?"":",") + trace[j];
+								int	loops = 0;
+								
+								while( true ){
+									
+									ThreadGroup	tg = Thread.currentThread().getThreadGroup();
+	
+									Thread[]	threads = new Thread[tg.activeCount()+1024];
+	
+									tg.enumerate( threads, true );
+	
+									List<String>	bad = new ArrayList<>();
+									
+									String	bad_found = "";
+	
+									for (int i=0;i<threads.length;i++){
+	
+										Thread	t = threads[i];
+	
+										if ( t != null && t.isAlive() && !t.isDaemon() && !AEThread2.isOurThread( t )){
+	
+											String	details = t.getName();
+	
+											bad.add( details );
+											
+											StackTraceElement[] trace = t.getStackTrace();
+	
+											if ( trace.length > 0 ){
+	
+												details += "[";
+	
+												for ( int j=0;j<trace.length;j++ ){
+	
+													details += (j==0?"":",") + trace[j];
+												}
+	
+												details += "]";
 											}
-
-											details += "]";
+	
+											bad_found += (bad_found.length()==0?"":", ") + details;
 										}
-
-										bad_found += (bad_found.length()==0?"":", ") + details;
+									}
+	
+									if ( bad.size() == 1 && bad.get(0).equals( "Launcher::bootstrap" )){
+										
+										Debug.outNoStack( "Only non-daemon bootstrap thread remaining, exiting..." );
+										
+										SESecurityManager.exitVM(0);
+										
+										break;
+									}
+									
+									if ( loops == 10 ){
+									
+										Debug.out( "Non-daemon thread(s) found: '" + bad_found + "' - force closing VM" );
+	
+										SESecurityManager.exitVM(0);
+										
+										break;
 									}
 								}
 
-								Debug.out( "Non-daemon thread(s) found: '" + bad_found + "' - force closing VM" );
-
-								SESecurityManager.exitVM(0);
-
+								Thread.sleep(1*1000);
+								
+								loops++;
+								
 							}catch( Throwable e ){
 
 							}

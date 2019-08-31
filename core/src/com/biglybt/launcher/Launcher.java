@@ -20,26 +20,55 @@ import java.lang.reflect.Method;
 
 public class Launcher {
 
-	private static boolean done;
+	private final static String  OSName 		= System.getProperty("os.name");
+	private final static boolean isOSX			= OSName.toLowerCase().startsWith("mac os");
+
+	private static volatile boolean done;
 	
 	public static void launch(Class MainClass,String[] args)
 	{
 		done = true;
 		
-		try{
-			Method main = MainClass.getDeclaredMethod( "main", String[].class );
+			// don't change name of this thread, it is used in CoreImpl during closedown to detect
+			// 
+		Thread.currentThread().setName( "Launcher::bootstrap" );
+		
+		Runnable runner = 
+			new Runnable()
+			{
+				public void
+				run()
+				{
 			
-			main.setAccessible(true);
+					try{
+						Method main = MainClass.getDeclaredMethod( "main", String[].class );
+						
+						main.setAccessible(true);
+						
+						main.invoke(null, new Object[]{ args });
+						
+					}catch ( Exception e ){
+						
+						System.err.println("Launch failed");
+						
+						e.printStackTrace();
+						
+						System.exit(1);
+					}
+				}
+			};
 			
-			main.invoke(null, new Object[]{ args });
+		if ( isOSX ){
 			
-		}catch ( Exception e ){
+				// have to stay on the initial thread
 			
-			System.err.println("Launch failed");
+			runner.run();
 			
-			e.printStackTrace();
+		}else{
 			
-			System.exit(1);
+				// have to get off the initial thread, at least on Win 10, due to launcher thread remaining alive
+			
+			new Thread( runner ).start();
 		}
 	}
 
