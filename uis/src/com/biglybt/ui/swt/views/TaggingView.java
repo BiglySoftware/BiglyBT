@@ -27,12 +27,8 @@ import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.FormLayout;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Layout;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.*;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
@@ -240,8 +236,11 @@ public class TaggingView
 			}
 
 			mainComposite = new Composite(parent, SWT.NONE);
+			mainComposite.setBackground(
+					parent.getDisplay().getSystemColor(SWT.COLOR_WIDGET_BACKGROUND));
+
 			GridLayout layout = new GridLayout();
-			layout.marginHeight = layout.marginWidth = 0;
+			layout.marginHeight = layout.marginWidth = layout.verticalSpacing = 0;
 			mainComposite.setLayout(layout);
 			Layout parentLayout = parent.getLayout();
 			if (parentLayout instanceof GridLayout) {
@@ -270,50 +269,19 @@ public class TaggingView
 
 		/// Buttons
 
-		Composite buttonComp = new Composite(mainComposite, SWT.NULL);
-		
-		buttonComp.setLayoutData(new GridData(SWT.TRAIL, SWT.CENTER, true, false));
-		
-		buttonComp.setLayout(Utils.getSimpleRowLayout(true));
+		Composite buttonComp = new Composite(mainComposite, SWT.NONE);
 
-		if (hasGroup) {
-			int layoutStyle = tagButtonsUI.getLayoutStyle();
+		GridData layoutData = new GridData(SWT.FILL, SWT.CENTER, true, false);
+		buttonComp.setLayoutData(layoutData);
 
-			Button buttonRowMode = new Button(buttonComp, SWT.TOGGLE);
-			if (layoutStyle == SWT.HORIZONTAL) {
-				buttonRowMode.setSelection(true);
-			}
-			Button buttonColumnMode = new Button(buttonComp, SWT.TOGGLE);
-			if (layoutStyle == SWT.VERTICAL) {
-				buttonColumnMode.setSelection(true);
-			}
-			Button buttonRowCompactMode = new Button(buttonComp, SWT.TOGGLE);
-			if (layoutStyle == (SWT.HORIZONTAL | SWT.FILL)) {
-				buttonRowCompactMode.setSelection(true);
-			}
-
-			List<Button> listModeButtons = new ArrayList<>();
-			listModeButtons.add(buttonRowMode);
-			listModeButtons.add(buttonColumnMode);
-			listModeButtons.add(buttonRowCompactMode);
-
-			ImageLoader.getInstance().setButtonImage(buttonRowMode, "row_mode");
-			buttonRowMode.addListener(SWT.Selection,
-				event -> modeButtonClick(listModeButtons, (Button) event.widget,
-					SWT.HORIZONTAL));
-
-			ImageLoader.getInstance().setButtonImage(buttonColumnMode, "column_mode");
-			buttonColumnMode.addListener(SWT.Selection,
-				event -> modeButtonClick(listModeButtons, (Button) event.widget,
-					SWT.VERTICAL));
-
-			ImageLoader.getInstance().setButtonImage(buttonRowCompactMode, "row_compact_mode");
-			buttonRowCompactMode.addListener(SWT.Selection,
-				event -> modeButtonClick(listModeButtons, (Button) event.widget,
-					SWT.HORIZONTAL | SWT.FILL));
-		}
+		GridLayout bcLayout = new GridLayout(hasGroup ? 3 : 2, false);
+		bcLayout.marginHeight = 0;
+		buttonComp.setLayout(bcLayout);
+		GridData gridData;
 
 		Button buttonAdd = new Button(buttonComp, SWT.PUSH);
+		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+		buttonAdd.setLayoutData(gridData);
 		Messages.setLanguageText(buttonAdd, "label.add.tag");
 		buttonAdd.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -335,12 +303,47 @@ public class TaggingView
 		});
 
 		buttonExplain = new Button(buttonComp, SWT.PUSH);
+		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
+		buttonExplain.setLayoutData(gridData);
 		Messages.setLanguageText(buttonExplain, "button.explain");
 		buttonExplain.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				explain();
 			}});
+
+		if (hasGroup) {
+			int layoutStyle = tagButtonsUI.getLayoutStyle();
+
+			ToolBar toolBar = new ToolBar(buttonComp, SWT.NONE);
+			gridData = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
+			toolBar.setLayoutData(gridData);
+
+			ToolItem buttonRowMode = new ToolItem(toolBar, SWT.RADIO);
+			if (layoutStyle == SWT.HORIZONTAL) {
+				buttonRowMode.setSelection(true);
+			}
+			ToolItem buttonColumnMode = new ToolItem(toolBar, SWT.RADIO);
+			if (layoutStyle == SWT.VERTICAL) {
+				buttonColumnMode.setSelection(true);
+			}
+			ToolItem buttonRowCompactMode = new ToolItem(toolBar, SWT.RADIO);
+			if (layoutStyle == (SWT.HORIZONTAL | SWT.FILL)) {
+				buttonRowCompactMode.setSelection(true);
+			}
+
+			ImageLoader.getInstance().setToolItemImage(buttonRowMode, "row_mode");
+			buttonRowMode.addListener(SWT.Selection,
+				event -> tagButtonsUI.setLayoutStyle(SWT.HORIZONTAL));
+
+			ImageLoader.getInstance().setToolItemImage(buttonColumnMode, "column_mode");
+			buttonColumnMode.addListener(SWT.Selection,
+				event -> tagButtonsUI.setLayoutStyle(SWT.VERTICAL));
+
+			ImageLoader.getInstance().setToolItemImage(buttonRowCompactMode, "row_compact_mode");
+			buttonRowCompactMode.addListener(SWT.Selection,
+				event -> tagButtonsUI.setLayoutStyle(SWT.HORIZONTAL | SWT.FILL));
+		}
 
 		///
 
@@ -394,20 +397,6 @@ public class TaggingView
 		Rectangle r = sc.getClientArea();
 		Point size = cTagComposite.computeSize(r.width, SWT.DEFAULT);
 		sc.setMinSize(size);
-	}
-
-	private void modeButtonClick(List<Button> listModeButtons, Button thisButton,
-		int style) {
-		if (!thisButton.getSelection()) {
-			thisButton.setSelection(true);
-		}
-		for (Button button : listModeButtons) {
-			if (button == thisButton) {
-				continue;
-			}
-			button.setSelection(false);
-		}
-		tagButtonsUI.setLayoutStyle(style);
 	}
 
 	private String getFullTitle() {
