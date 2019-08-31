@@ -19,12 +19,13 @@
 package com.biglybt.core.tag;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.category.Category;
+import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerStats;
+import com.biglybt.core.global.GlobalManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
@@ -193,6 +194,9 @@ public class TagUtils{
 		Tag			tag,
 		boolean		skip_name )
 	{
+		if (tag instanceof Category) {
+			return getCategoryTooltip((Category) tag, skip_name);
+		}
 		TagType tag_type = tag.getTagType();
 
 		String 	str = skip_name?"":(tag_type.getTagTypeName( true ) + ": " + tag.getTagName( true ));
@@ -313,6 +317,76 @@ public class TagUtils{
 		}
 
 		return( str );
+	}
+
+	// Originally from MyTorrentsView
+	private static String getCategoryTooltip(Category category, boolean skip_name) {
+		GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
+		List<DownloadManager> dms = category.getDownloadManagers(
+				gm.getDownloadManagers());
+
+		long ttlActive = 0;
+		long ttlSize = 0;
+		long ttlRSpeed = 0;
+		long ttlSSpeed = 0;
+		int count = 0;
+		for (DownloadManager dm : dms) {
+
+			if (!category.hasTaggable(dm)) {
+				continue;
+			}
+
+			count++;
+			if (dm.getState() == DownloadManager.STATE_DOWNLOADING
+				|| dm.getState() == DownloadManager.STATE_SEEDING) {
+				ttlActive++;
+			}
+			DownloadManagerStats stats = dm.getStats();
+			ttlSize += stats.getSizeExcludingDND();
+			ttlRSpeed += stats.getDataReceiveRate();
+			ttlSSpeed += stats.getDataSendRate();
+		}
+
+		String up_details = "";
+		String down_details = "";
+
+		if (category.getType() != Category.TYPE_ALL) {
+
+			String up_str = MessageText.getString(
+				"GeneralView.label.maxuploadspeed");
+			String down_str = MessageText.getString(
+				"GeneralView.label.maxdownloadspeed");
+			String unlimited_str = MessageText.getString(
+				"MyTorrentsView.menu.setSpeed.unlimited");
+
+			int up_speed = category.getUploadSpeed();
+			int down_speed = category.getDownloadSpeed();
+
+			up_details = up_str + ": " + (up_speed == 0 ? unlimited_str
+				: DisplayFormatters.formatByteCountToKiBEtc(up_speed));
+			down_details = down_str + ": " + (down_speed == 0 ? unlimited_str
+				: DisplayFormatters.formatByteCountToKiBEtc(down_speed));
+		}
+
+		if (count == 0) {
+			return down_details + "\n" + up_details + "\nTotal: 0";
+		}
+
+		return (up_details.length() == 0 ? ""
+			: (down_details + "\n" + up_details + "\n")) + "Total: " + count
+			+ "\n" + "Downloading/Seeding: " + ttlActive + "\n" + "\n"
+			+ "Total Speed: "
+			+ DisplayFormatters.formatByteCountToKiBEtcPerSec(ttlRSpeed)
+			+ " / "
+			+ DisplayFormatters.formatByteCountToKiBEtcPerSec(ttlSSpeed)
+			+ "\n" + "Average Speed: "
+			+ DisplayFormatters.formatByteCountToKiBEtcPerSec(
+			ttlRSpeed / (ttlActive == 0 ? 1 : ttlActive))
+			+ " / "
+			+ DisplayFormatters.formatByteCountToKiBEtcPerSec(
+			ttlSSpeed / (ttlActive == 0 ? 1 : ttlActive))
+			+ "\n" + "Size: "
+			+ DisplayFormatters.formatByteCountToKiBEtc(ttlSize);
 	}
 
 }
