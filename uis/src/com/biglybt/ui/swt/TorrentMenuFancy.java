@@ -1873,6 +1873,16 @@ public class TorrentMenuFancy
 			return;
 		}
 
+			// assign cats - generally cats come before tags in the UI
+
+		createMenuRow(detailArea, "MyTorrentsView.menu.setCategory",
+				"image.sidebar.library", new FancyMenuRowInfoListener() {
+					@Override
+					public void buildMenu(Menu menu) {
+						TorrentUtil.addCategorySubMenu(dms, menu);
+					}
+				});
+		
 			// assign tags
 
 		createMenuRow(detailArea, "label.tags", "image.sidebar.tag-overview",
@@ -1880,16 +1890,6 @@ public class TorrentMenuFancy
 					@Override
 					public void buildMenu(Menu menu) {
 						TagUIUtils.addLibraryViewTagsSubMenu(dms, menu);
-					}
-				});
-
-			// assign cats
-
-		createMenuRow(detailArea, "MyTorrentsView.menu.setCategory",
-				"image.sidebar.library", new FancyMenuRowInfoListener() {
-					@Override
-					public void buildMenu(Menu menu) {
-						TorrentUtil.addCategorySubMenu(dms, menu);
 					}
 				});
 

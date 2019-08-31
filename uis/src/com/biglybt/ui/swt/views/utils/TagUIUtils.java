@@ -3070,6 +3070,80 @@ public class TagUIUtils
 
 		final TagManager tm = TagManagerFactory.getTagManager();
 
+			// add tag
+		
+		MenuItem item_create = new MenuItem( menu_tags, SWT.PUSH);
+
+		Messages.setLanguageText(item_create, "label.add.tag");
+		item_create.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+
+				createManualTag(new UIFunctions.TagReturner() {
+					@Override
+					public void returnedTags(Tag[] tags) {
+						if ( tags != null ){
+							for (Tag new_tag : tags) {
+								for ( DownloadManager dm: dms ){
+
+									new_tag.addTaggable( dm );
+								}
+
+								COConfigurationManager.setParameter( "Library.TagInSideBar", true );
+							}
+						}
+					}
+				});
+			}
+		});
+		
+			// tagging view 
+		
+		MenuItem item_pop = new MenuItem( menu_tags, SWT.PUSH);
+
+		Messages.setLanguageText(item_pop, "menu.tagging.view");
+		item_pop.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event){
+								
+				String data = "{\"mdi\":\"tabbed\",\"event_listener\":{\"name\":\"com.biglybt.ui.swt.views.TaggingView\"},\"id\":\"TaggingView\",\"control_type\":0,\"skin_id\":\"com.biglybt.ui.skin.skin3\"}";
+				
+				Map<String,Object> map = BDecoder.decodeStrings( BDecoder.decodeFromJSON( data ));
+
+				Map<String,Object> dms_exports = DataSourceResolver.exportDataSource( dms );
+
+				map.put( "data_source", dms_exports );
+				
+				String title;
+				
+				if ( dms.length == 1 ){
+					
+					title = MessageText.getString( "authenticator.torrent" ) + " : " + dms[0].getDisplayName().replaceAll("&", "&&");
+					
+				}else{
+					String	str = "";
+
+					for (int i=0;i<Math.min( 3, dms.length ); i ++ ){
+
+						str += (i==0?"":", ") + dms[i].getDisplayName().replaceAll("&", "&&");
+					}
+
+					if ( dms.length > 3 ){
+
+						str += "...";
+					}
+
+					title = dms.length + " " + MessageText.getString( "ConfigView.section.torrents" ) + " : " + str;
+				}
+				
+				BaseMdiEntry.popoutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map, "TagUIUtils:TaggingView" );
+			}
+		});
+		
+		new MenuItem( menu_tags, SWT.SEPARATOR );
+
+			// auto tags
+		
 		Map<TagType,List<Tag>>	auto_map = new HashMap<>();
 
 		TagType manual_tt = tm.getTagType( TagType.TT_DOWNLOAD_MANUAL );
@@ -3215,74 +3289,6 @@ public class TagUIUtils
 			build( dms, menu_tags, manual_map, all_manual_t );
 
 		}
-
-		new MenuItem( menu_tags, SWT.SEPARATOR );
-
-		MenuItem item_create = new MenuItem( menu_tags, SWT.PUSH);
-
-		Messages.setLanguageText(item_create, "label.add.tag");
-		item_create.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-
-				createManualTag(new UIFunctions.TagReturner() {
-					@Override
-					public void returnedTags(Tag[] tags) {
-						if ( tags != null ){
-							for (Tag new_tag : tags) {
-								for ( DownloadManager dm: dms ){
-
-									new_tag.addTaggable( dm );
-								}
-
-								COConfigurationManager.setParameter( "Library.TagInSideBar", true );
-							}
-						}
-					}
-				});
-			}
-		});
-		
-		MenuItem item_pop = new MenuItem( menu_tags, SWT.PUSH);
-
-		Messages.setLanguageText(item_pop, "menu.tagging.view");
-		item_pop.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event){
-								
-				String data = "{\"mdi\":\"tabbed\",\"event_listener\":{\"name\":\"com.biglybt.ui.swt.views.TaggingView\"},\"id\":\"TaggingView\",\"control_type\":0,\"skin_id\":\"com.biglybt.ui.skin.skin3\"}";
-				
-				Map<String,Object> map = BDecoder.decodeStrings( BDecoder.decodeFromJSON( data ));
-
-				Map<String,Object> dms_exports = DataSourceResolver.exportDataSource( dms );
-
-				map.put( "data_source", dms_exports );
-				
-				String title;
-				
-				if ( dms.length == 1 ){
-					
-					title = MessageText.getString( "authenticator.torrent" ) + " : " + dms[0].getDisplayName().replaceAll("&", "&&");
-					
-				}else{
-					String	str = "";
-
-					for (int i=0;i<Math.min( 3, dms.length ); i ++ ){
-
-						str += (i==0?"":", ") + dms[i].getDisplayName().replaceAll("&", "&&");
-					}
-
-					if ( dms.length > 3 ){
-
-						str += "...";
-					}
-
-					title = dms.length + " " + MessageText.getString( "ConfigView.section.torrents" ) + " : " + str;
-				}
-				
-				BaseMdiEntry.popoutStandAlone( MessageText.getString( "label.tags" ) + " - " + title, map, "TagUIUtils:TaggingView" );
-			}
-		});
 	}
 
 	private static void
