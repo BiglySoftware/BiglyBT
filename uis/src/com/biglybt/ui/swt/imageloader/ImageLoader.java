@@ -1524,7 +1524,7 @@ public class ImageLoader
 		});
 	}
 
-	public Image setButtonImage(Button btn, final String key) {
+	public Image setToolItemImage(Button btn, final String key) {
 		Image bg = getImage(key);
 		btn.setImage(bg);
 		btn.addDisposeListener(new DisposeListener() {
@@ -1533,6 +1533,14 @@ public class ImageLoader
 				releaseImage(key);
 			}
 		});
+
+		return( bg );
+	}
+
+	public Image setToolItemImage(ToolItem btn, final String key) {
+		Image bg = getImage(key);
+		btn.setImage(bg);
+		btn.addDisposeListener(e -> releaseImage(key));
 
 		return( bg );
 	}
