@@ -510,26 +510,30 @@ public class ImageLoader
 		if (img == null) {
 			try {
 				if (cl != null && res != null ) {
-					InputStream is;
 					int deviceZoom = DPIUtil.getDeviceZoom();
-					// TODO: Anything Over 100 we could use 2x and scale it
-					if (deviceZoom < 200) {
-						is = cl.getResourceAsStream(res);
-					} else {
+					InputStream is = cl.getResourceAsStream(res);
+					InputStream is2 = null;
+					if (deviceZoom > 100) {
 						int i = res.lastIndexOf("/");
-						if (i < 0) {
-							is = cl.getResourceAsStream(res);
-						} else {
-							is = cl.getResourceAsStream(
-									res.substring(0, i) + "/2x" + res.substring(i));
-							if (is == null) {
-								is = cl.getResourceAsStream(res);
-							}
+						if (i >= 0) {
+							String bigRes = res.substring(0, i) + "/2x" + res.substring(i);
+							is2 = cl.getResourceAsStream(bigRes);
 						}
 					}
 					if (is != null) {
 						try{
-							img = new Image(display, is);
+							ImageData imageData = new ImageData(is);
+							if (is2 != null) {
+								ImageData imageData2 = new ImageData(is2);
+								img = new Image(display, (ImageDataProvider) zoom -> {
+									if (zoom == 100) {
+										return imageData;
+									}
+									return zoom == 200 ? imageData2 : null;
+								});
+							} else {
+								img = new Image(display, imageData);
+							}
 							//	System.out.println("Loaded image from " + res + " via " + Debug.getCompressedStackTrace());
 
 						}finally{
