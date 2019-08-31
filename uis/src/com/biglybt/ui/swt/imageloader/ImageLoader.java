@@ -1524,7 +1524,7 @@ public class ImageLoader
 		});
 	}
 
-	public Image setToolItemImage(Button btn, final String key) {
+	public Image setButtonImage(Button btn, final String key) {
 		Image bg = getImage(key);
 		btn.setImage(bg);
 		btn.addDisposeListener(new DisposeListener() {
