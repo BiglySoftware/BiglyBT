@@ -17,6 +17,7 @@
 package com.biglybt.ui.swt.imageloader;
 
 import java.io.*;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,10 +27,8 @@ import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.*;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.internal.DPIUtil;
+import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.util.*;
 import com.biglybt.ui.skin.SkinProperties;
@@ -511,7 +510,23 @@ public class ImageLoader
 		if (img == null) {
 			try {
 				if (cl != null && res != null ) {
-					InputStream is = cl.getResourceAsStream(res);
+					InputStream is;
+					int deviceZoom = DPIUtil.getDeviceZoom();
+					// TODO: Anything Over 100 we could use 2x and scale it
+					if (deviceZoom < 200) {
+						is = cl.getResourceAsStream(res);
+					} else {
+						int i = res.lastIndexOf("/");
+						if (i < 0) {
+							is = cl.getResourceAsStream(res);
+						} else {
+							is = cl.getResourceAsStream(
+									res.substring(0, i) + "/2x" + res.substring(i));
+							if (is == null) {
+								is = cl.getResourceAsStream(res);
+							}
+						}
+					}
 					if (is != null) {
 						try{
 							img = new Image(display, is);
