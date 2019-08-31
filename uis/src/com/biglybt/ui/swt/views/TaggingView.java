@@ -233,7 +233,7 @@ public class TaggingView
 	}
 
 	private void initialize() {
-		if (cMainComposite == null || cMainComposite.isDisposed()) {
+		if (mainComposite == null || mainComposite.isDisposed()) {
 			if (parent == null || parent.isDisposed()) {
 				return;
 			}
@@ -383,7 +383,7 @@ public class TaggingView
 			@Override
 			public void controlResized(ControlEvent e) {
 				Rectangle r = sc.getClientArea();
-				Point size = cMainComposite.computeSize(r.width, SWT.DEFAULT);
+				Point size = cTagComposite.computeSize(r.width, SWT.DEFAULT);
 				sc.setMinSize(size);
 			}
 		});
