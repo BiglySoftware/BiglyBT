@@ -122,10 +122,12 @@ public class TagCanvas
 	private Color colorTagFaded;
 
 	private Color colorTag;
-	
+
 	private boolean mouseDown = false;
 
 	private TimerEvent timerEvent;
+
+	private boolean needsBorderOnSelection;
 
 	/** 
 	 * Creates a Tag Canvas.<br/>  
@@ -385,10 +387,22 @@ public class TagCanvas
 			e.gc.setForeground(colorTag);
 			e.gc.setLineStyle(SWT.LINE_SOLID);
 
-			e.gc.drawRoundRectangle(-curveWidth + x1, y1, width + curveWidth,
+			e.gc.drawRoundRectangle(-curveWidth, y1, width + curveWidth,
 					height - y1 + 1, curveWidth, curveWidth);
 			e.gc.drawLine(x1, y1, x1, height - y1 + 1);
 			e.gc.setLineWidth(1);
+		}
+
+		if (selected && needsBorderOnSelection) {
+			e.gc.setLineWidth(1);
+			e.gc.setForeground(colorText);
+			e.gc.setAlpha(0x70);
+			e.gc.setLineStyle(SWT.LINE_SOLID);
+
+			e.gc.drawRoundRectangle(-curveWidth, 0, size.x + curveWidth - 1,
+					size.y - 1, curveWidth, curveWidth);
+			e.gc.drawLine(0, 0, 0, size.y - 1);
+			e.gc.setAlpha(0xFF);
 		}
 
 		clientArea.x += paddingContentX0;
@@ -484,6 +498,8 @@ public class TagCanvas
 				hslColor.getGreen(), hslColor.getBlue());
 		colorTagFaded = newColorTagFaded == null ? getForeground()
 				: newColorTagFaded;
+
+		needsBorderOnSelection = !Colors.isColorContrastOk(colorWidgetBG, colorTag);
 		return true;
 	}
 

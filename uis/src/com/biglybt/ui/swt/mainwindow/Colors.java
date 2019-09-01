@@ -626,4 +626,29 @@ public class Colors implements ParameterListener {
 		
 		return isBlackTextReadable( forBG )? Colors.black : Colors.white;
 	}
+	
+	public static boolean isColorContrastOk(Color color1, Color color2) {
+		// https://www.w3.org/TR/AERT/#color-contrast
+		// Two colors provide good color visibility if the brightness difference and the color difference between the two colors are greater than a set range.
+		// Color brightness is determined by the following formula:
+		//((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
+		//Note: This algorithm is taken from a formula for converting RGB values to YIQ values. This brightness value gives a perceived brightness for a color.
+		//
+		//Color difference is determined by the following formula:
+		//(maximum (Red value 1, Red value 2) - minimum (Red value 1, Red value 2)) + (maximum (Green value 1, Green value 2) - minimum (Green value 1, Green value 2)) + (maximum (Blue value 1, Blue value 2) - minimum (Blue value 1, Blue value 2))
+		//
+		//The rage for color brightness difference is 125. The range for color difference is 500.
+		RGB rgb1 = color1.getRGB();
+		RGB rgb2 = color2.getRGB();
+
+		int b1 = ((rgb1.red * 299) + (rgb1.green * 587) + (rgb1.blue * 114)) / 1000;
+		int b2 = ((rgb2.red * 299) + (rgb2.green * 587) + (rgb2.blue * 114)) / 1000;
+		if (Math.abs(b1 - b2) >= 125) {
+			return true;
+		}
+		int hueDiff = (Math.max(rgb2.red, rgb1.red) - Math.min(rgb2.red, rgb1.red))
+				+ (Math.max(rgb2.green, rgb1.green) - Math.min(rgb2.green, rgb1.green))
+				+ (Math.max(rgb2.blue, rgb1.blue) - Math.min(rgb2.blue, rgb1.blue));
+		return hueDiff >= 500;
+	}
 }
