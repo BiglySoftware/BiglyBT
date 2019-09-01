@@ -49,7 +49,8 @@ public class TagCanvas
 
 	public interface TagButtonTrigger
 	{
-		void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask, boolean longPress);
+		void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask,
+				boolean longPress);
 
 		Boolean tagSelectedOverride(Tag tag);
 	}
@@ -66,7 +67,7 @@ public class TagCanvas
 
 	private static final int COMPACT_PADDING_IMAGE_Y = 1;
 
-	private static final int DEF_CONTENT_PADDING_Y = 2;
+	private static final int DEF_CONTENT_PADDING_Y = 3;
 
 	private static final int COMPACT_CONTENT_PADDING_Y = 2;
 
@@ -189,8 +190,8 @@ public class TagCanvas
 
 		if (showImage && image != null && !image.isDisposed()) {
 			Rectangle bounds = image.getBounds();
-			int imageW = (bounds.width * (size.y - paddingContentY - paddingContentY))
-					/ bounds.height;
+			int imageH = size.y - paddingImageY - paddingImageY;
+			int imageW = (bounds.width * imageH) / bounds.height;
 			size.x += imageW + paddingImageX;
 		}
 
@@ -218,8 +219,8 @@ public class TagCanvas
 
 								// held
 								if (trigger != null) {
-									Utils.execSWTThread(
-											() -> trigger.tagButtonTriggered(this, tag, e.stateMask, true));
+									Utils.execSWTThread(() -> trigger.tagButtonTriggered(this,
+											tag, e.stateMask, true));
 								}
 							});
 				}
