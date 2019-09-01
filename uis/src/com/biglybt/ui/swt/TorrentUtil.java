@@ -2831,13 +2831,34 @@ public class TorrentUtil
 	}
 
 	protected static void addCategorySubMenu(final DownloadManager[] dms,
-			Menu menuCategory) {
+			Menu menuCategory)
+	{
 		MenuItem[] items = menuCategory.getItems();
 		int i;
 		for (i = 0; i < items.length; i++) {
 			items[i].dispose();
 		}
 
+			// add cat
+		
+		final MenuItem itemAddCategory = new MenuItem(menuCategory, SWT.PUSH);
+		Messages.setLanguageText(itemAddCategory,
+				"MyTorrentsView.menu.setCategory.add");
+
+		itemAddCategory.addListener(SWT.Selection, new ListenerDMTask(dms) {
+			@Override
+			public void run(DownloadManager[] dms) {
+				CategoryUIUtils.showCreateCategoryDialog(new TagReturner() {
+					@Override
+					public void returnedTags(Tag[] tags) {
+						if (tags.length == 1 && tags[0] instanceof Category) {
+							assignToCategory(dms, (Category) tags[0]);
+						}
+					}
+				});
+			}
+		});
+		
 		Category[] categories = CategoryManager.getCategories();
 		Arrays.sort(categories);
 
@@ -2856,6 +2877,9 @@ public class TorrentUtil
 		}
 
 		if (allow_category_selection) {
+			
+			new MenuItem(menuCategory, SWT.SEPARATOR);
+
 			final Category catUncat = CategoryManager.getCategory(Category.TYPE_UNCATEGORIZED);
 			if (catUncat != null) {
 				final MenuItem itemCategory = new MenuItem(menuCategory, SWT.PUSH);
@@ -2884,28 +2908,7 @@ public class TorrentUtil
 					});
 				}
 			}
-
-			new MenuItem(menuCategory, SWT.SEPARATOR);
 		}
-
-		final MenuItem itemAddCategory = new MenuItem(menuCategory, SWT.PUSH);
-		Messages.setLanguageText(itemAddCategory,
-				"MyTorrentsView.menu.setCategory.add");
-
-		itemAddCategory.addListener(SWT.Selection, new ListenerDMTask(dms) {
-			@Override
-			public void run(DownloadManager[] dms) {
-				CategoryUIUtils.showCreateCategoryDialog(new TagReturner() {
-					@Override
-					public void returnedTags(Tag[] tags) {
-						if (tags.length == 1 && tags[0] instanceof Category) {
-							assignToCategory(dms, (Category) tags[0]);
-						}
-					}
-				});
-			}
-		});
-
 	}
 	
 	private static void 
