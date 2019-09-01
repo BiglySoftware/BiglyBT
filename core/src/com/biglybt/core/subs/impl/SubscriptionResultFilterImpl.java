@@ -14,7 +14,9 @@ import com.biglybt.core.metasearch.FilterableResult;
 import com.biglybt.core.metasearch.Result;
 import com.biglybt.core.subs.SubscriptionException;
 import com.biglybt.core.subs.SubscriptionResultFilter;
+import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
+import com.biglybt.core.util.TimeFormatter;
 import com.biglybt.util.JSONUtils;
 
 /*
@@ -261,6 +263,10 @@ SubscriptionResultFilterImpl
 		res = addString( res, "regex=", regexFilter );
 
 		res = addString( res, "cat=", categoryFilter );
+		res = addString( res, "min-size=", minSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(minSize));
+		res = addString( res, "max-size=", maxSize<=0?null:DisplayFormatters.formatByteCountToKiBEtc(maxSize));
+		res = addString( res, "min-seeds=", minSeeds<=0?null:String.valueOf(minSeeds));
+		res = addString( res, "max-age=", maxAgeSecs<=0?null:TimeFormatter.format3( maxAgeSecs, null, true ) );
 
 		return( res );
 	}
