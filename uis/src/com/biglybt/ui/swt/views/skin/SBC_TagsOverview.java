@@ -31,9 +31,7 @@ import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-import com.biglybt.core.category.Category;
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.util.Constants;
 import com.biglybt.core.util.Debug;
@@ -53,7 +51,6 @@ import com.biglybt.ui.swt.mainwindow.MenuFactory;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
-import com.biglybt.ui.swt.shells.MessageBoxShell;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
@@ -66,7 +63,6 @@ import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 
 import com.biglybt.pif.ui.*;
-import com.biglybt.pif.ui.config.Parameter;
 import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableColumnCreationListener;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
@@ -131,7 +127,7 @@ public class SBC_TagsOverview
 				}
 			}
 			if (tags.size() > 0) {
-				return removeTags(tags);
+				return TagUIUtils.removeTags(tags);
 			}
 		}
 
@@ -227,7 +223,7 @@ public class SBC_TagsOverview
 			for (Object object : datasources) {
 				if (object instanceof Tag) {
 					Tag tag = (Tag) object;
-					if (canDeleteTag(tag)) {
+					if (TagUIUtils.canDeleteTag(tag)) {
 						canEnable = true;
 						break;
 					}
@@ -236,15 +232,6 @@ public class SBC_TagsOverview
 		}
 
 		list.put("remove", canEnable ? UIToolBarItem.STATE_ENABLED : 0);
-	}
-
-	private static boolean canDeleteTag(Tag tag) {
-		if (tag == null) {
-			return false;
-		}
-		return tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL
-				|| ((tag instanceof Category)
-						&& ((Category) tag).getType() == Category.TYPE_USER);
 	}
 
 	// @see UIUpdatable#updateUI()
