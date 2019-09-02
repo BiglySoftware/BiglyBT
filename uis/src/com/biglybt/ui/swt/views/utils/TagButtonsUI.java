@@ -254,4 +254,19 @@ public class TagButtonsUI
 	public int getLayoutStyle() {
 		return layoutStyle;
 	}
+
+	public boolean updateTag(Tag tag, List<Taggable> taggables) {
+		if (cMainComposite == null || cMainComposite.isDisposed()) {
+			return false;
+		}
+		
+		for (TagCanvas tagWidget : tagWidgets) {
+			if (tag.equals(tagWidget.getTag())) {
+				tagWidget.updateState(taggables);
+				return true;
+			}
+		}
+
+		return false;
+	}
 }

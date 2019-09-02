@@ -24,14 +24,20 @@ import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
-import org.eclipse.swt.events.*;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.*;
+import org.eclipse.swt.layout.FormLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
+import com.biglybt.core.tag.*;
+import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TextViewerWindow;
@@ -44,10 +50,6 @@ import com.biglybt.ui.swt.views.utils.TagButtonsUI;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
-
-import com.biglybt.core.tag.*;
-import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
-import com.biglybt.ui.UIFunctions.TagReturner;
 
 /**
  * View showing tags set on selected taggable item(s).  Sometimes easier than
@@ -141,7 +143,8 @@ public class TaggingView
 				break;
 
 			case UISWTViewEvent.TYPE_FOCUSGAINED:
-				initialize();
+				focusGained();
+				rebuildComposite();
 				if (taggables == null) {
 					dataSourceChanged(swtView.getDataSource());
 				}
@@ -159,17 +162,39 @@ public class TaggingView
 		return true;
 	}
 
-	private void delete() {
+	private void focusGained() {
+		TagManager tm = TagManagerFactory.getTagManager();
+		TagType tagType;
+		/*
+		tagType = tm.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
+		tagType.addTagTypeListener(this, false);
+		*/
+		tagType = tm.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+		tagType.addTagTypeListener(this, false);
+	}
+	
+	private void focusLost() {
+		TagManager tm = TagManagerFactory.getTagManager();
+		TagType tagType;
+		/*
+		tagType = tm.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
+		tagType.removeTagTypeListener(this);
+		*/
+		tagType = tm.getTagType(TagType.TT_DOWNLOAD_MANUAL);
+		tagType.removeTagTypeListener(this);
+
 		Utils.disposeComposite(sc);
-		dataSourceChanged(null);
+		taggables = null;
+	}
+
+	private void delete() {
+		focusLost();
 	}
 
 	private void refresh() {
 	}
 
 	private void dataSourceChanged(Object ds) {
-		boolean wasNull = taggables == null;
-
 		if (ds instanceof Taggable) {
 			taggables = new ArrayList<>();
 			taggables.add((Taggable) ds);
@@ -201,35 +226,10 @@ public class TaggingView
 			taggables = null;
 		}
 
-		boolean isNull = taggables == null;
-		if (isNull != wasNull) {
-			TagManager tm = TagManagerFactory.getTagManager();
-			TagType tagType;
-			/*
-			tagType = tm.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
-			if (isNull) {
-				tagType.removeTagTypeListener(this);
-			} else {
-				tagType.addTagTypeListener(this, false);
-			}
-			*/
-			tagType = tm.getTagType(TagType.TT_DOWNLOAD_MANUAL);
-			if (isNull) {
-				tagType.removeTagTypeListener(this);
-			} else {
-				tagType.addTagTypeListener(this, false);
-			}
-		}
-
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				swt_updateFields();
-			}
-		});
+		Utils.execSWTThread(this::swt_updateFields);
 	}
 
-	private void initialize() {
+	private void rebuildComposite() {
 		if (mainComposite == null || mainComposite.isDisposed()) {
 			if (parent == null || parent.isDisposed()) {
 				return;
@@ -283,34 +283,13 @@ public class TaggingView
 		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
 		buttonAdd.setLayoutData(gridData);
 		Messages.setLanguageText(buttonAdd, "label.add.tag");
-		buttonAdd.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				TagUIUtils.createManualTag(new TagReturner() {
-					@Override
-					public void returnedTags(Tag[] tags) {
-						if (taggables == null) {
-							return;
-						}
-						for (Tag tag : tags) {
-							for (Taggable taggable : taggables) {
-								tag.addTaggable(taggable);
-							}
-						}
-					}
-				});
-			}
-		});
+		buttonAdd.addListener(SWT.Selection, event -> askForNewTag());
 
 		buttonExplain = new Button(buttonComp, SWT.PUSH);
 		gridData = new GridData(SWT.LEFT, SWT.CENTER, false, false);
 		buttonExplain.setLayoutData(gridData);
 		Messages.setLanguageText(buttonExplain, "button.explain");
-		buttonExplain.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				explain();
-			}});
+		buttonExplain.addListener(SWT.Selection, event -> explain());
 
 		if (hasGroup) {
 			int layoutStyle = tagButtonsUI.getLayoutStyle();
@@ -364,6 +343,9 @@ public class TaggingView
 			true, new TagButtonTrigger() {
 				@Override
 				public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask, boolean longPress) {
+					if (taggables == null) {
+						return;
+					}
 					boolean doTag = !tagCanvas.isSelected();
 					for (Taggable taggable : taggables) {
 						if (doTag) {
@@ -409,7 +391,7 @@ public class TaggingView
 			return;
 		}
 
-		if (tagButtonsUI.updateFields(taggables)) {
+		if (tagButtonsUI != null && tagButtonsUI.updateFields(taggables)) {
 			parent.layout();
 		}
 		
@@ -482,30 +464,20 @@ public class TaggingView
 	}
 
 	public void tagAdded(Tag tag) {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				initialize();
-			}
-		});
+		Utils.execSWTThread(this::rebuildComposite);
 	}
 
-	public void tagChanged(final Tag changedTag) {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				swt_updateFields();
+	public void tagChanged(Tag changedTag) {
+		Utils.execSWTThread(() -> {
+			if (tagButtonsUI == null || changedTag == null) {
+				return;
 			}
-		});
+			tagButtonsUI.updateTag(changedTag, taggables);
+		} );
 	}
 
 	public void tagRemoved(Tag tag) {
-		Utils.execSWTThread(new AERunnable() {
-			@Override
-			public void runSupport() {
-				initialize();
-			}
-		});
+		Utils.execSWTThread(this::rebuildComposite);
 	}
 
 	private void
@@ -549,5 +521,18 @@ public class TaggingView
 				MessageText.getString( "label.details" ),
 				null, content.toString(), false  );
 
+	}
+
+	private void askForNewTag() {
+		TagUIUtils.createManualTag(tags -> {
+			if (taggables == null) {
+				return;
+			}
+			for (Tag tag : tags) {
+				for (Taggable taggable : taggables) {
+					tag.addTaggable(taggable);
+				}
+			}
+		});
 	}
 }
