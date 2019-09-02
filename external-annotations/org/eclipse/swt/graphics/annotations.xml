@@ -8,7 +8,15 @@
     <item name='org.eclipse.swt.graphics.GC org.eclipse.swt.graphics.Point textExtent(java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='org.eclipse.swt.graphics.Resource org.eclipse.swt.graphics.Device getDevice()'>
+	<item
+		name='org.eclipse.swt.graphics.GC org.eclipse.swt.graphics.Point textExtent(java.lang.String, int)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='org.eclipse.swt.graphics.Image org.eclipse.swt.graphics.Rectangle getBounds()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='org.eclipse.swt.graphics.Resource org.eclipse.swt.graphics.Device getDevice()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
 </root>

@@ -12,6 +12,17 @@
         </annotation>
     </item>
 	<item
+		name='com.biglybt.ui.common.table.impl.TableColumnImpl java.lang.String getTitleLanguageKey()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.common.table.impl.TableColumnImpl java.lang.String getTitleLanguageKey(boolean)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.common.table.impl.TableColumnImpl sTableID'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
 		name='com.biglybt.ui.common.table.impl.TableColumnManager com.biglybt.ui.common.table.impl.TableColumnManager getInstance()'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>

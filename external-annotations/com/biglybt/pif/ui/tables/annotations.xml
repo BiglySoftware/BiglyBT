@@ -1,5 +1,9 @@
 <root>
-    <item name='com.biglybt.pif.ui.tables.TableManager com.biglybt.pif.ui.tables.TableContextMenuItem addContextMenuItem(java.lang.String, java.lang.String)'>
+	<item
+		name='com.biglybt.pif.ui.tables.TableColumn java.lang.String getTableID()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.pif.ui.tables.TableManager com.biglybt.pif.ui.tables.TableContextMenuItem addContextMenuItem(java.lang.String, java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
 </root>

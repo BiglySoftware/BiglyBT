@@ -2,4 +2,29 @@
     <item name='com.biglybt.ui.swt.widgets.ButtonWithMinWidth ButtonWithMinWidth(org.eclipse.swt.widgets.Composite, int, int) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item
+		name='com.biglybt.ui.swt.widgets.TagCanvas TagCanvas(org.eclipse.swt.widgets.Composite, com.biglybt.core.tag.Tag) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.widgets.TagCanvas TagCanvas(org.eclipse.swt.widgets.Composite, com.biglybt.core.tag.Tag) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.widgets.TagCanvas TagCanvas(org.eclipse.swt.widgets.Composite, com.biglybt.core.tag.Tag, boolean, boolean) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.widgets.TagCanvas TagCanvas(org.eclipse.swt.widgets.Composite, com.biglybt.core.tag.Tag, boolean, boolean) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.widgets.TagCanvas colorTag'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.widgets.TagCanvas colorTagFaded'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.widgets.TagCanvas tag'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>

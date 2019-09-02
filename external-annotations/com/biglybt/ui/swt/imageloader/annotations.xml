@@ -2,4 +2,8 @@
     <item name='com.biglybt.ui.swt.imageloader.ImageLoader com.biglybt.ui.swt.imageloader.ImageLoader getInstance()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item
+		name='com.biglybt.ui.swt.imageloader.ImageLoader org.eclipse.swt.graphics.Image getImage(java.lang.String)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>

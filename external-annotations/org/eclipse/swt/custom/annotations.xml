@@ -1,5 +1,17 @@
 <root>
-    <item name='org.eclipse.swt.custom.ScrolledComposite org.eclipse.swt.graphics.Point getOrigin()'>
+	<item
+		name='org.eclipse.swt.custom.CTabFolder org.eclipse.swt.graphics.Color getSelectionForeground()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='org.eclipse.swt.custom.CTabFolderRenderer org.eclipse.swt.graphics.Point computeSize(int, int, org.eclipse.swt.graphics.GC, int, int)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='org.eclipse.swt.custom.CTabFolderRenderer org.eclipse.swt.graphics.Rectangle computeTrim(int, int, int, int, int, int)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='org.eclipse.swt.custom.ScrolledComposite org.eclipse.swt.graphics.Point getOrigin()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='org.eclipse.swt.custom.StyledText java.lang.String getText()'>

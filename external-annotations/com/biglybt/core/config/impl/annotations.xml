@@ -5,7 +5,11 @@
     <item name='com.biglybt.core.config.impl.ConfigurationDefaults java.lang.String getStringParameter(java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='com.biglybt.core.config.impl.ConfigurationManager java.util.List&lt;java.lang.String&gt; getStringListParameter(java.lang.String)'>
+	<item
+		name='com.biglybt.core.config.impl.ConfigurationManager com.biglybt.core.config.impl.ConfigurationManager getInstance()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.core.config.impl.ConfigurationManager java.util.List&lt;java.lang.String&gt; getStringListParameter(java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
 </root>

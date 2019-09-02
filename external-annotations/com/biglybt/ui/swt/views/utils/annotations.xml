@@ -11,7 +11,26 @@
     <item name='com.biglybt.ui.swt.views.utils.CategoryUIUtils void setupCategoryMenu(org.eclipse.swt.widgets.Menu, com.biglybt.core.category.Category) 1'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='com.biglybt.ui.swt.views.utils.TrancodeUIUtils.TranscodeTarget com.biglybt.ui.swt.views.utils.TrancodeUIUtils.TranscodeProfile[] getProfiles()'>
+	<item
+		name='com.biglybt.ui.swt.views.utils.TagButtonsUI boolean updateTag(com.biglybt.core.tag.Tag, java.util.List&lt;com.biglybt.core.tag.Taggable&gt;) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.utils.TagButtonsUI org.eclipse.swt.widgets.Composite buildTagGroup(java.util.List&lt;com.biglybt.core.tag.Tag&gt;, org.eclipse.swt.widgets.Composite, boolean, com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.utils.TagButtonsUI org.eclipse.swt.widgets.Composite buildTagGroup(java.util.List&lt;com.biglybt.core.tag.Tag&gt;, org.eclipse.swt.widgets.Composite, boolean, com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.utils.TagButtonsUI tagWidgets'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.utils.TagButtonsUI.TagCanvas TagCanvas(org.eclipse.swt.widgets.Composite, com.biglybt.core.tag.Tag) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.utils.TrancodeUIUtils.TranscodeTarget com.biglybt.ui.swt.views.utils.TrancodeUIUtils.TranscodeProfile[] getProfiles()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
 </root>

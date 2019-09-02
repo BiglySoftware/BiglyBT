@@ -20,4 +20,77 @@
     <item name='com.biglybt.ui.swt.pifimpl.MultiParameterImplListenerSWT mapParamToSwtParam'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl listSWTViewListeners'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl uiFunctions'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl viewHolders'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl void addView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl void registerView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.instanceWrapper delegate'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.instanceWrapper instanceWrapper(com.biglybt.pif.PluginInterface, com.biglybt.ui.swt.UIFunctionsSWT, com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.instanceWrapper instanceWrapper(com.biglybt.pif.PluginInterface, com.biglybt.ui.swt.UIFunctionsSWT, com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.instanceWrapper instanceWrapper(com.biglybt.pif.PluginInterface, com.biglybt.ui.swt.UIFunctionsSWT, com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.instanceWrapper listDisposeOnUnload'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.instanceWrapper listItems'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.instanceWrapper pi_ref'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.instanceWrapper ui_functions'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder UISWTViewEventListenerHolder(java.lang.String, com.biglybt.ui.swt.pif.UISWTViewEventListener, com.biglybt.pif.PluginInterface) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder UISWTViewEventListenerHolder(java.lang.String, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;, java.lang.Object, com.biglybt.pif.PluginInterface) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder com.biglybt.ui.swt.pif.UISWTViewEventListener create(com.biglybt.ui.swt.pif.UISWTView) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder java.lang.String getViewID()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder viewID'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder void openView(com.biglybt.ui.swt.UIFunctionsSWT) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>

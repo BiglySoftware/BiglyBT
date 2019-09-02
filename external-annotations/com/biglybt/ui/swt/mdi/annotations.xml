@@ -1,0 +1,106 @@
+<!--
+  ~ Copyright (C) Bigly Software.  All Rights Reserved.
+  ~
+  ~ This program is free software; you can redistribute it and/or
+  ~ modify it under the terms of the GNU General Public License
+  ~ as published by the Free Software Foundation; either version 2
+  ~ of the License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program; if not, write to the Free Software
+  ~ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+  -->
+
+<root>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI T[] getEntries(T[])'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI T[] getEntries(T[]) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMDI com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMDI com.biglybt.ui.swt.mdi.MdiEntrySWT[] getEntriesSWT()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMDI com.biglybt.ui.swt.mdi.MdiSWTMenuHackListener[] getMenuHackListeners()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI listLoadListeners'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI listeners'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI mapAutoOpen'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI mapIdToCreationListener'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI mapIdToCreationListener2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI mapIdToEntry'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMDI void addItem(com.biglybt.ui.mdi.MdiEntry) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMDI void removeItem(com.biglybt.ui.mdi.MdiEntry, boolean) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMDI void triggerEntryLoadedListeners(com.biglybt.ui.mdi.MdiEntry) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMdiEntry void setContentDisposed(boolean)'>
+		<annotation name='java.lang.Override'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT com.biglybt.ui.swt.mdi.MdiEntrySWT[] getEntriesSWT()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.TabbedMDI com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.TabbedMDI_Ren TabbedMDI_Ren(org.eclipse.swt.custom.CTabFolder, com.biglybt.ui.swt.mdi.TabbedMDI) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.TabbedMDI_Ren TabbedMDI_Ren(org.eclipse.swt.custom.CTabFolder, com.biglybt.ui.swt.mdi.TabbedMDI) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.TabbedMDI_Ren mdi'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.TabbedMDI_Ren tabFolder'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.TabbedMDI_Ren void setupTabFolderRenderer(com.biglybt.ui.swt.mdi.TabbedMDI, org.eclipse.swt.custom.CTabFolder) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.TabbedMDI_Ren void setupTabFolderRenderer(com.biglybt.ui.swt.mdi.TabbedMDI, org.eclipse.swt.custom.CTabFolder) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+</root>

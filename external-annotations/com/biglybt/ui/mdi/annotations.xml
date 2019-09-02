@@ -2,4 +2,8 @@
     <item name='com.biglybt.ui.mdi.MdiEntryLoadedListener void mdiEntryLoaded(com.biglybt.ui.mdi.MdiEntry) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item
+		name='com.biglybt.ui.mdi.MdiEntryVitalityImage java.lang.String getImageID()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>

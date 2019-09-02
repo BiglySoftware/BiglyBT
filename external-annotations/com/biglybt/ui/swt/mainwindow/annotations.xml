@@ -9,6 +9,14 @@
 	<item name='com.biglybt.ui.swt.mainwindow.Colors faded'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.Colors org.eclipse.swt.graphics.Color getReadableColor(org.eclipse.swt.graphics.Color)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.Colors org.eclipse.swt.graphics.Color getSystemColor(org.eclipse.swt.graphics.Device, int)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 	<item name='com.biglybt.ui.swt.mainwindow.MenuFactory org.eclipse.swt.widgets.MenuItem addLabelMenuItem(org.eclipse.swt.widgets.Menu, java.lang.String) 1'>
         <annotation name='org.jetbrains.annotations.PropertyKey'>
             <val name="resourceBundle"
@@ -54,7 +62,58 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder[] getPluginLogViewsInfo()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder[] getPluginViewsInfo()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void addPluginAddedViewListener(com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.PluginAddedViewListener) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void addPluginView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void addPluginView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void buildPluginLogsMenu(org.eclipse.swt.widgets.Menu) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void buildPluginMenu(org.eclipse.swt.widgets.Menu, boolean) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItem(org.eclipse.swt.widgets.Menu, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItem(org.eclipse.swt.widgets.Menu, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItems(org.eclipse.swt.widgets.Menu, java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder&gt;) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItems(org.eclipse.swt.widgets.Menu, java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder&gt;) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
 		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void sort(com.biglybt.pif.ui.menus.MenuItem[]) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.IViewInfo IViewInfo(com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.IViewInfo holder'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item name='com.biglybt.ui.swt.mainwindow.SWTThread com.biglybt.ui.swt.mainwindow.SWTThread getInstance()'>

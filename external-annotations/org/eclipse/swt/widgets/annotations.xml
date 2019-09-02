@@ -5,7 +5,11 @@
     <item name='org.eclipse.swt.widgets.Composite org.eclipse.swt.widgets.Control[] getChildren()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Color getBackground()'>
+	<item
+		name='org.eclipse.swt.widgets.Control org.eclipse.swt.accessibility.Accessible getAccessible()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Color getBackground()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Color getForeground()'>
@@ -23,7 +27,11 @@
     <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Point getSize()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Rectangle getBounds()'>
+	<item
+		name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Point toControl(int, int)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Rectangle getBounds()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='org.eclipse.swt.widgets.Scrollable org.eclipse.swt.graphics.Rectangle getClientArea()'>
