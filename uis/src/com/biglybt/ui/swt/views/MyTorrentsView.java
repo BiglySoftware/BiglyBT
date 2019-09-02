@@ -2690,8 +2690,10 @@ public class MyTorrentsView
 				if ( allTags != null ){
 
 					boolean create_tabs = false;
+					List<Tag> ourPendingTags = new ArrayList<>();
 
 					synchronized( pending_tag_changes ){
+						ourPendingTags.addAll(pending_tag_changes);
 
 						for ( Tag t: pending_tag_changes ){
 
@@ -2712,6 +2714,23 @@ public class MyTorrentsView
 					if ( create_tabs ){
 
 						createTabs();
+						return;
+					}
+
+					if (cCategoriesAndTags == null || cCategoriesAndTags.isDisposed()) {
+						return;
+					}
+					Control[] children = cCategoriesAndTags.getChildren();
+					for (Control child : children) {
+						if (!(child instanceof TagCanvas)) {
+							continue;
+						}
+						TagCanvas tagCanvas = (TagCanvas) child;
+						if (ourPendingTags.remove(tagCanvas.getTag())) {
+							boolean selected = tagCanvas.isSelected();
+							tagCanvas.updateState(null);
+							tagCanvas.setSelected(selected);
+						}
 					}
 				}
 			}
