@@ -79,15 +79,20 @@ public abstract class BaseMDI
 
 	private List<MdiSWTMenuHackListener> listMenuHackListners;
 
+	private Object	autoOpenLock = new Object();
+	
 	private LinkedHashMap<String, Object> mapAutoOpen = new LinkedHashMap<>();
-
-	private String[] preferredOrder;
 
 	private boolean mapAutoOpenLoaded = false;
 
+	private TimerEvent	autoOpenSaver;
+	
+	private String[] preferredOrder;
+
 	private String closeableConfigFile = "sidebarauto.config";
 
-	private volatile boolean initialized;
+	private volatile boolean 	initialized;
+	private volatile boolean	closed;
 	
 	@Override
 	public void addListener(MdiListener l) {
@@ -360,24 +365,26 @@ public abstract class BaseMDI
 	}
 
 	private boolean createIfAutoOpen(String id) {
-		Object o = mapAutoOpen.get(id);
-		if (o instanceof Map<?, ?>) {
-			Map<?, ?> autoOpenMap = (Map<?, ?>) o;
-
-			return createEntryByCreationListener(id, autoOpenMap.get("datasource"),
-					autoOpenMap) != null;
-		}
-
-		boolean created = false;
-		String[] autoOpenIDs = mapAutoOpen.keySet().toArray(new String[0]);
-		for (String autoOpenID : autoOpenIDs) {
-			if (Pattern.matches(id, autoOpenID)) {
-				Map<?, ?> autoOpenMap = (Map<?, ?>) mapAutoOpen.get(autoOpenID);
-				created |= createEntryByCreationListener(autoOpenID,
-						autoOpenMap.get("datasource"), autoOpenMap) != null;
+		synchronized( autoOpenLock ){
+			Object o = mapAutoOpen.get(id);
+			if (o instanceof Map<?, ?>) {
+				Map<?, ?> autoOpenMap = (Map<?, ?>) o;
+	
+				return createEntryByCreationListener(id, autoOpenMap.get("datasource"),
+						autoOpenMap) != null;
 			}
+	
+			boolean created = false;
+			String[] autoOpenIDs = mapAutoOpen.keySet().toArray(new String[0]);
+			for (String autoOpenID : autoOpenIDs) {
+				if (Pattern.matches(id, autoOpenID)) {
+					Map<?, ?> autoOpenMap = (Map<?, ?>) mapAutoOpen.get(autoOpenID);
+					created |= createEntryByCreationListener(autoOpenID,
+							autoOpenMap.get("datasource"), autoOpenMap) != null;
+				}
+			}
+			return created;
 		}
-		return created;
 	}
 
 	protected MdiEntry
@@ -613,20 +620,56 @@ public abstract class BaseMDI
 	// @see MultipleDocumentInterface#setEntryAutoOpen(java.lang.String, java.lang.Object)
 	@Override
 	public void setEntryAutoOpen(String id, Object datasource) {
-		Map<String, Object> map = (Map<String, Object>) mapAutoOpen.get(id);
-		if (map == null) {
-			map = new LightHashMap<>(1);
+		synchronized( autoOpenLock ){
+			Map<String, Object> map = (Map<String, Object>) mapAutoOpen.get(id);
+			if (map == null) {
+				map = new LightHashMap<>(1);
+			}
+			map.put("datasource", datasource);
+			mapAutoOpen.put(id, map);
+			autoOpenUpdated();
 		}
-		map.put("datasource", datasource);
-		mapAutoOpen.put(id, map);
 	}
 
 	// @see MultipleDocumentInterface#removeEntryAutoOpen(java.lang.String)
 	@Override
 	public void removeEntryAutoOpen(String id) {
-		mapAutoOpen.remove(id);
+		synchronized( autoOpenLock ){
+			mapAutoOpen.remove(id);
+			autoOpenUpdated();
+		}
 	}
 
+	private void
+	autoOpenUpdated()
+	{
+		if ( closed || !initialized ){
+			
+			return;
+		}
+		
+		synchronized( autoOpenLock ){
+			
+			if ( autoOpenSaver != null ){
+				
+				return;	
+			}
+			
+			autoOpenSaver = SimpleTimer.addEvent(
+				"autoopensaver",
+				SystemTime.getOffsetTime( 60*1000 ),
+				(ev)->{
+					
+					synchronized( autoOpenLock ){
+						
+						autoOpenSaver = null;
+					}					
+					
+					saveCloseables( true );
+				});
+		}
+	}
+	
 	protected void setupPluginViews() {
 
 		// When a new Plugin View is added, check out auto-open list to see if
@@ -637,7 +680,12 @@ public abstract class BaseMDI
 					@Override
 					public void pluginViewAdded(IViewInfo viewInfo) {
 						//System.out.println("PluginView Added: " + viewInfo.viewID);
-						Object o = mapAutoOpen.get(viewInfo.viewID);
+						Object o;
+						
+						synchronized( autoOpenLock ){
+							o = mapAutoOpen.get(viewInfo.viewID);
+						}
+						
 						if (o instanceof Map<?, ?>) {
 							processAutoOpenMap(viewInfo.viewID, (Map<?, ?>) o, viewInfo);
 						}
@@ -647,113 +695,145 @@ public abstract class BaseMDI
 
 	@Override
 	public void informAutoOpenSet(MdiEntry entry, Map<String, Object> autoOpenInfo) {
-		mapAutoOpen.put(entry.getId(), autoOpenInfo);
+		synchronized( autoOpenLock ){
+		
+			mapAutoOpen.put(entry.getId(), autoOpenInfo);
+			autoOpenUpdated();
+		}
 	}
 
 	public void loadCloseables() {
 		if (closeableConfigFile == null) {
 			return;
 		}
-		try{
-			Map<?,?> loadedMap = FileUtil.readResilientConfigFile(closeableConfigFile , true);
-			if (loadedMap.isEmpty()) {
-				return;
-			}
-			BDecoder.decodeStrings(loadedMap);
-
-			List<Map> orderedEntries = (List<Map>)loadedMap.get( "_entries_" );
-
-			if ( orderedEntries == null ){
-					// migrate old format
-				for (Iterator<?> iter = loadedMap.keySet().iterator(); iter.hasNext();) {
-					String id = (String) iter.next();
-					Object o = loadedMap.get(id);
-
-					if (o instanceof Map<?, ?>) {
-						if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
-							mapAutoOpen.put(id, o);
+		synchronized( autoOpenLock ){
+			try{
+				Map<?,?> loadedMap = FileUtil.readResilientConfigFile(closeableConfigFile , true);
+				if (loadedMap.isEmpty()) {
+					return;
+				}
+				BDecoder.decodeStrings(loadedMap);
+	
+				List<Map> orderedEntries = (List<Map>)loadedMap.get( "_entries_" );
+	
+				if ( orderedEntries == null ){
+						// migrate old format
+					for (Iterator<?> iter = loadedMap.keySet().iterator(); iter.hasNext();) {
+						String id = (String) iter.next();
+						Object o = loadedMap.get(id);
+	
+						if (o instanceof Map<?, ?>) {
+							if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
+								mapAutoOpen.put(id, o);
+							}
+						}
+					}
+				}else{
+					for (Map map: orderedEntries){
+						String id = (String)map.get( "id" );
+	
+						//System.out.println( "loaded " + id );
+						Object o = map.get( "value" );
+						if (o instanceof Map<?, ?>) {
+							if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
+								mapAutoOpen.put(id, o);
+							}
 						}
 					}
 				}
-			}else{
-				for (Map map: orderedEntries){
-					String id = (String)map.get( "id" );
-
-					//System.out.println( "loaded " + id );
-					Object o = map.get( "value" );
-					if (o instanceof Map<?, ?>) {
-						if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
-							mapAutoOpen.put(id, o);
-						}
-					}
-				}
+			}catch( Throwable e ){
+	
+				Debug.out( e );
+	
+			}finally{
+	
+				mapAutoOpenLoaded  = true;
 			}
-		}catch( Throwable e ){
-
-			Debug.out( e );
-
-		}finally{
-
-			mapAutoOpenLoaded  = true;
 		}
 	}
 
+	public void saveCloseables(){
+		saveCloseables( false );
+	}
+	
 	@SuppressWarnings({
 		"unchecked",
 		"rawtypes"
 	})
-	public void saveCloseables() {
-		if (!mapAutoOpenLoaded) {
-			return;
-		}
+	private void saveCloseables( boolean interim ) {
 		if (closeableConfigFile == null) {
 			return;
 		}
 
-		try{
-			// update auto open info
-			for (Iterator<String> iter = new ArrayList<>(mapAutoOpen.keySet()).iterator(); iter.hasNext();) {
-				String id = (String) iter.next();
-
-				MdiEntry entry = getEntry(id);
-
-					// entries that are 'dispose-on-focus-lost' will report as 'not added' if this has occurred
+		synchronized( autoOpenLock ){
+			if (!mapAutoOpenLoaded) {
+				return;
+			}
 				
-				if ( entry != null && ( entry.isAdded() || !entry.isReallyDisposed())){
-
-					mapAutoOpen.put(id, entry.getAutoOpenInfo());
-
+			if ( !initialized ){
+				
+				return;
+			}
+			
+			try{
+								
+				if ( interim ){
+					
+					if ( closed ){
+						
+						return;
+					}
 				}else{
-
-					mapAutoOpen.remove(id);
+					
+					closed = true;
+					
+						// update auto open info for closedown
+					
+					for (Iterator<String> iter = new ArrayList<>(mapAutoOpen.keySet()).iterator(); iter.hasNext();) {
+						
+						String id = (String) iter.next();
+		
+						MdiEntry entry = getEntry(id);
+		
+							// entries that are 'dispose-on-focus-lost' will report as 'not added' if this has occurred
+						
+						if ( entry != null && ( entry.isAdded() || !entry.isReallyDisposed())){
+		
+							mapAutoOpen.put(id, entry.getAutoOpenInfo());
+		
+						}else{
+		
+							mapAutoOpen.remove(id);
+						}
+					}
 				}
+				
+				Map map = new HashMap();
+	
+				List<Map> list = new ArrayList<>(mapAutoOpen.size());
+	
+				map.put( "_entries_", list );
+	
+				for ( Map.Entry<String,Object> entry: mapAutoOpen.entrySet()){
+	
+					Map m = new HashMap();
+	
+					list.add( m );
+	
+					String id = entry.getKey();
+	
+					m.put( "id", id );
+					m.put( "value", entry.getValue());
+	
+					//System.out.println( "saved " + id );
+				}
+	
+				FileUtil.writeResilientConfigFile(closeableConfigFile, map );
+	
+			}catch( Throwable e ){
+	
+				Debug.out( e );
 			}
-
-			Map map = new HashMap();
-
-			List<Map> list = new ArrayList<>(mapAutoOpen.size());
-
-			map.put( "_entries_", list );
-
-			for ( Map.Entry<String,Object> entry: mapAutoOpen.entrySet()){
-
-				Map m = new HashMap();
-
-				list.add( m );
-
-				String id = entry.getKey();
-
-				m.put( "id", id );
-				m.put( "value", entry.getValue());
-
-				//System.out.println( "saved " + id );
-			}
-
-			FileUtil.writeResilientConfigFile(closeableConfigFile, map );
-
-		}catch( Throwable e ){
-
-			Debug.out( e );
 		}
 	}
 
