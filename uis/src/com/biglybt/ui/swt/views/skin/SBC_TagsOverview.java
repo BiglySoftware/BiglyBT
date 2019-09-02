@@ -134,66 +134,6 @@ public class SBC_TagsOverview
 		return false;
 	}
 
-	private static boolean removeTags(List<Tag> tags) {
-		Tag tagToRemove = null;
-
-		while (tagToRemove == null && tags.size() > 0) {
-			tagToRemove = tags.get(0);
-			if (!canDeleteTag(tagToRemove)) {
-				tags.remove(0);
-			}
-		}
-		int numLeft = tags.size();
-		if (tagToRemove == null || numLeft == 0) {
-			return true;
-		}
-
-		MessageBoxShell mb = new MessageBoxShell(
-				MessageText.getString("message.confirm.delete.title"),
-				MessageText.getString("message.confirm.delete.tag.text", new String[] {
-					tagToRemove.getTagName(true),
-					"" + tagToRemove.getTaggedCount()
-				}), new String[] {
-					MessageText.getString("Button.yes"),
-					MessageText.getString("Button.no")
-				}, 1);
-
-		if (numLeft > 1) {
-			String sDeleteAll = MessageText.getString("v3.deleteContent.applyToAll",
-					new String[] {
-						"" + numLeft
-					});
-			mb.addCheckBox("!" + sDeleteAll + "!", Parameter.MODE_BEGINNER, false);
-		}
-		Tag finalTagToRemove = tagToRemove;
-		mb.open(result -> {
-			if (result == -1) {
-				// cancel
-				return;
-			}
-			boolean remove = result == 0;
-			boolean doAll = mb.getCheckBoxEnabled();
-			if (doAll) {
-				if (remove) {
-					for (Tag tag : tags) {
-						if (canDeleteTag(tag)) {
-							tag.removeTag();
-						}
-					}
-				}
-			} else {
-				if (remove) {
-					finalTagToRemove.removeTag();
-				}
-				// Loop with remaining tags to be removed
-				tags.remove(0);
-				removeTags(tags);
-			}
-		});
-
-		return true;
-	}
-
 	private MdiEntrySWT getActiveView() {
 		TableViewSWT_TabsCommon tabsCommon = tv.getTabsCommon();
 		if (tabsCommon != null) {
