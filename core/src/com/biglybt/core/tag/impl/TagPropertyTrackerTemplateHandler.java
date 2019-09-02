@@ -27,6 +27,7 @@ import java.util.Set;
 
 import com.biglybt.core.Core;
 import com.biglybt.core.download.DownloadManager;
+import com.biglybt.core.download.DownloadManagerState;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
 import com.biglybt.core.torrent.TOTorrent;
@@ -155,7 +156,17 @@ TagPropertyTrackerTemplateHandler
 							
 						}catch( Throwable e ){
 							
-							Debug.out( e );
+							try{
+								DownloadManagerState dms = dm.getDownloadState();
+								
+									// might have already been removed if metadata download
+								
+								if ( !dms.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){
+	
+									Debug.out( e );
+								}
+							}catch( Throwable f ){
+							}
 						}
 					}
 				}
