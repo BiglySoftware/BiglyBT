@@ -32,15 +32,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
-import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.custom.SashForm;
-import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.custom.*;
 import org.eclipse.swt.dnd.*;
-import org.eclipse.swt.events.ControlAdapter;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.program.Program;
@@ -512,76 +506,6 @@ public class Utils
 		}
 	}
 
-	public static void createTorrentDropTarget(Composite composite,
-			boolean bAllowShareAdd) {
-		try {
-			createDropTarget(composite, bAllowShareAdd, null);
-		} catch (Exception e) {
-			Debug.out(e);
-		}
-	}
-
-	/**
-	 * @param composite the control (usually a Shell) to add the DropTarget
-	 * @param url the Text control where to set the link text
-	 *
-	 * @author Rene Leonhardt
-	 */
-	public static void createURLDropTarget(Composite composite, Text url) {
-		try {
-			createDropTarget(composite, false, url);
-		} catch (Exception e) {
-			Debug.out(e);
-		}
-	}
-
-	private static void createDropTarget(Composite composite,
-			final boolean bAllowShareAdd, final Text url,
-			DropTargetListener dropTargetListener) {
-
-		Transfer[] transferList = new Transfer[] {
-			FixedHTMLTransfer.getInstance(),
-			FixedURLTransfer.getInstance(),
-			FileTransfer.getInstance(),
-			TextTransfer.getInstance()
-		};
-
-		final DropTarget dropTarget = new DropTarget(composite, DND.DROP_DEFAULT
-				| DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK | DND.DROP_TARGET_MOVE);
-		dropTarget.setTransfer(transferList);
-		dropTarget.addDropListener(dropTargetListener);
-		// Note: DropTarget will dipose when the parent it's on diposes
-
-		// On Windows, dropping on children moves up to parent
-		// On OSX, each child needs it's own drop.
-		if (Constants.isWindows)
-			return;
-
-		Control[] children = composite.getChildren();
-		for (int i = 0; i < children.length; i++) {
-			Control control = children[i];
-			if (!control.isDisposed()) {
-				if (control instanceof Composite) {
-					createDropTarget((Composite) control, bAllowShareAdd, url,
-							dropTargetListener);
-				} else {
-					final DropTarget dropTarget2 = new DropTarget(control,
-							DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK
-									| DND.DROP_TARGET_MOVE);
-					dropTarget2.setTransfer(transferList);
-					dropTarget2.addDropListener(dropTargetListener);
-				}
-			}
-		}
-	}
-
-	private static void createDropTarget(Composite composite,
-			boolean bAllowShareAdd, Text url) {
-
-		URLDropTarget target = new URLDropTarget(url, bAllowShareAdd);
-		createDropTarget(composite, bAllowShareAdd, url, target);
-	}
-
 
 	public static boolean isDisplayDisposed() {
 		SWTThread swt = SWTThread.getInstance();
@@ -598,58 +522,6 @@ public class Utils
 		rowLayout.marginLeft = rowLayout.marginRight = rowLayout.marginTop = rowLayout.marginBottom = 0;
 		rowLayout.fill = fill;
 		return rowLayout;
-	}
-
-	private static class URLDropTarget
-		extends DropTargetAdapter
-	{
-		private final Text url;
-
-		private final boolean bAllowShareAdd;
-
-		public URLDropTarget(Text url, boolean bAllowShareAdd) {
-			this.url = url;
-			this.bAllowShareAdd = bAllowShareAdd;
-		}
-
-		@Override
-		public void dropAccept(DropTargetEvent event) {
-			event.currentDataType = FixedURLTransfer.pickBestType(event.dataTypes,
-					event.currentDataType);
-		}
-
-		@Override
-		public void dragOver(DropTargetEvent event) {
-			// skip setting detail if user is forcing a drop type (ex. via the
-			// ctrl key), providing that the operation is valid
-			if (event.detail != DND.DROP_DEFAULT
-					&& ((event.operations & event.detail) > 0))
-				return;
-
-			if ((event.operations & DND.DROP_LINK) > 0)
-				event.detail = DND.DROP_LINK;
-			else if ((event.operations & DND.DROP_DEFAULT) > 0)
-				event.detail = DND.DROP_DEFAULT;
-			else if ((event.operations & DND.DROP_COPY) > 0)
-				event.detail = DND.DROP_COPY;
-		}
-
-		@Override
-		public void drop(DropTargetEvent event) {
-			if (url == null || url.isDisposed()) {
-				TorrentOpener.openDroppedTorrents(event, bAllowShareAdd);
-			} else {
-				if (event.data instanceof FixedURLTransfer.URLType) {
-					if (((FixedURLTransfer.URLType) event.data).linkURL != null)
-						url.setText(((FixedURLTransfer.URLType) event.data).linkURL);
-				} else if (event.data instanceof String) {
-					String sURL = UrlUtils.parseTextForURL((String) event.data, true);
-					if (sURL != null) {
-						url.setText(sURL);
-					}
-				}
-			}
-		}
 	}
 
 	public static void alternateRowBackground(TableItem item) {

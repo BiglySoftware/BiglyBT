@@ -39,6 +39,7 @@ import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.Colors;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 
 public class
 BuddyPluginViewChat
@@ -253,7 +254,7 @@ BuddyPluginViewChat
 		chat.addListener( this );
 
 	    shell.pack();
-	    Utils.createURLDropTarget(shell, text);
+	    DragDropUtils.createURLDropTarget(shell, text);
 	    Utils.centreWindow(shell);
 	    shell.open();
 	}

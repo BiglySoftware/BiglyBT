@@ -39,6 +39,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
 import com.biglybt.ui.swt.mainwindow.ListenerNeedingCoreRunning;
 import com.biglybt.ui.swt.mainwindow.MenuFactory;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.views.utils.ManagerUtils;
 
 import com.biglybt.core.CoreFactory;
@@ -200,7 +201,7 @@ public class TrayWindow
       }
     });
 
-    Utils.createTorrentDropTarget(minimized, false);
+    DragDropUtils.createTorrentDropTarget(minimized, false);
     try {
     	CoreFactory.addCoreRunningListener(new CoreRunningListener() {
 

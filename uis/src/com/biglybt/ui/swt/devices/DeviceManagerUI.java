@@ -113,6 +113,7 @@ import com.biglybt.ui.swt.pif.*;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.views.skin.SkinView;
 import com.biglybt.ui.swt.views.skin.SkinViewManager;
 import com.biglybt.ui.swt.views.skin.SkinViewManager.SkinViewManagerListener;
@@ -4617,7 +4618,7 @@ DeviceManagerUI
 						private	UPNPMSItem dragging_item;
 
 						{
-							final DragSource drag_source = new DragSource(info, DND.DROP_MOVE | DND.DROP_COPY);
+							final DragSource drag_source = DragDropUtils.createDragSource(info, DND.DROP_MOVE | DND.DROP_COPY);
 
 							drag_source.setTransfer( new Transfer[] { TextTransfer.getInstance() });
 

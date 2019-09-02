@@ -22,28 +22,33 @@ import java.io.File;
 import java.util.List;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
 
+import com.biglybt.core.category.Category;
+import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.tag.Tag;
 import com.biglybt.core.tag.TagUtils;
 import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.*;
+import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.HSLColor;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.utils.ColorCache;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.util.StringCompareUtils;
 
 public class TagCanvas
 	extends Canvas
-	implements PaintListener, Listener
+	implements PaintListener, Listener, DropTargetListener
 {
 	private static final Point MAX_IMAGE_SIZE = new Point(40, 28);
 
@@ -92,6 +97,8 @@ public class TagCanvas
 	private int paddingImageY = DEF_PADDING_IMAGE_Y;
 
 	private int curveWidth = DEF_CURVE_WIDTH;
+
+	private final DropTarget dropTarget;
 
 	private Image image;
 
@@ -163,6 +170,14 @@ public class TagCanvas
 		addListener(SWT.Traverse, this);
 		addListener(SWT.MouseHover, this);
 		addListener(SWT.MouseExit, this);
+
+		dropTarget = new DropTarget(this,
+			DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
+		Transfer[] types = new Transfer[] {
+			TextTransfer.getInstance()
+		};
+		dropTarget.setTransfer(types);
+		dropTarget.addDropListener(this);
 
 		updateImage();
 		addPaintListener(this);
@@ -451,6 +466,7 @@ public class TagCanvas
 			font.dispose();
 			font = null;
 		}
+		dropTarget.dispose();
 	}
 
 	public boolean updateName() {
@@ -574,6 +590,7 @@ public class TagCanvas
 		}
 	}
 
+	@SuppressWarnings("MethodDoesntCallSuperMethod")
 	@Override
 	public void setEnabled(boolean enabled) {
 		if (setEnabledNoRedraw(enabled)) {
@@ -658,5 +675,102 @@ public class TagCanvas
 
 	public boolean isCompact() {
 		return compact;
+	}
+
+	private static List<DownloadManager> handleDropTargetEvent(DropTargetEvent e) {
+		Object data = e.data == null ? DragDropUtils.getLastDraggedObject()
+			: e.data;
+		List<DownloadManager> dms = DragDropUtils.getDownloadsFromDropData(data,
+			false);
+
+		if (dms.isEmpty()) {
+			e.detail = DND.DROP_NONE;
+			return dms;
+		}
+		boolean doAdd = false;
+
+		Control dropControl = ((DropTarget) e.widget).getControl();
+		if (!(dropControl instanceof TagCanvas)) {
+			e.detail = DND.DROP_NONE;
+			return dms;
+		}
+
+		Tag tag = ((TagCanvas) dropControl).getTag();
+		for (DownloadManager dm : dms) {
+			if (!tag.hasTaggable(dm)) {
+				doAdd = true;
+				break;
+			}
+		}
+
+		boolean[] auto = tag.isTagAuto();
+		if (auto.length < 2 || (doAdd && auto[0])
+			|| (!doAdd && auto[0] && auto[1])) {
+			e.detail = DND.DROP_NONE;
+			return dms;
+		}
+
+		e.detail = doAdd ? DND.DROP_COPY : DND.DROP_MOVE;
+		return dms;
+	}
+
+	@Override
+	public void dragEnter(DropTargetEvent event) {
+		handleDropTargetEvent(event);
+	}
+
+	@Override
+	public void dragLeave(DropTargetEvent event) {
+
+	}
+
+	@Override
+	public void dragOperationChanged(DropTargetEvent event) {
+
+	}
+
+	@Override
+	public void dropAccept(DropTargetEvent event) {
+		handleDropTargetEvent(event);
+	}
+
+	@Override
+	public void dragOver(DropTargetEvent e) {
+		handleDropTargetEvent(e);
+	}
+
+	@Override
+	public void drop(DropTargetEvent e) {
+		List<DownloadManager> dms = handleDropTargetEvent(e);
+		
+		if (dms.isEmpty()) {
+			return;
+		}
+
+		Control dropControl = ((DropTarget) e.widget).getControl();
+		if (!(dropControl instanceof TagCanvas)) {
+			return;
+		}
+
+		Tag tag = ((TagCanvas) dropControl).getTag();
+
+		if (tag instanceof Category) {
+			TorrentUtil.assignToCategory(dms.toArray(), (Category) tag);
+			return;
+		}
+
+		boolean doAdd = e.detail == DND.DROP_COPY;
+
+		Utils.getOffOfSWTThread(() -> {
+			// handleDropTargetEvent set e.detail based on doAdd and checked if tag
+			// can be assigned/unassigned
+			for (DownloadManager dm : dms) {
+				if (doAdd) {
+					tag.addTaggable(dm);
+				} else {
+					tag.removeTaggable(dm);
+				}
+			}
+		});
 	}
 }

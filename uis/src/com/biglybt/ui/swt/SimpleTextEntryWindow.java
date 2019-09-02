@@ -38,6 +38,7 @@ import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.UrlUtils;
 import com.biglybt.ui.swt.components.LinkLabel;
 import com.biglybt.ui.swt.pifimpl.AbstractUISWTInputReceiver;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 
 import com.biglybt.pif.ui.UIInputValidator;
 
@@ -403,7 +404,7 @@ public class SimpleTextEntryWindow extends AbstractUISWTInputReceiver {
 
 	    shell.pack();
 	    if (text_entry_text != null)
-	    	Utils.createURLDropTarget(shell, text_entry_text);
+	    	DragDropUtils.createURLDropTarget(shell, text_entry_text);
 
 	    	// don't shrink this control otherwise the manual speed entry for up/down speed on
 	    	// the transfers bar doesn't work as parent shell small...

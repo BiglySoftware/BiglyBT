@@ -31,6 +31,7 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tracker.client.TRTrackerAnnouncer;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 
 /**
  * @author Olivier
@@ -153,7 +154,7 @@ public class TrackerChangerWindow {
 
     shell.pack();
 	Utils.centreWindow( shell );
-    Utils.createURLDropTarget(shell, url);
+	DragDropUtils.createURLDropTarget(shell, url);
     shell.open();
   }
 }

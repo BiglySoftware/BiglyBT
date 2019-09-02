@@ -38,7 +38,6 @@ import com.biglybt.core.internat.MessageText.MessageTextListener;
 import com.biglybt.core.util.*;
 import com.biglybt.pif.ui.UIInputReceiver;
 import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.tables.TableColumn;
 import com.biglybt.pif.ui.tables.TableRowMouseEvent;
 import com.biglybt.pif.ui.tables.TableRowMouseListener;
 import com.biglybt.ui.common.table.*;
@@ -53,16 +52,12 @@ import com.biglybt.ui.swt.SimpleTextEntryWindow;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.debug.ObfuscateImage;
 import com.biglybt.ui.swt.debug.UIDebugGenerator;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.mainwindow.HSLColor;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.pif.UISWTView;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
-import com.biglybt.ui.swt.shells.GCStringPrinter;
-import com.biglybt.ui.swt.utils.ColorCache;
-import com.biglybt.ui.swt.utils.FontUtils;
-import com.biglybt.ui.swt.utils.SWTRunnable;
+import com.biglybt.ui.swt.utils.*;
 import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableTooltips;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_Common;
@@ -1192,7 +1187,7 @@ public class TableViewPainted
 	 */
 	@Override
 	public DragSource createDragSource(int style) {
-		final DragSource dragSource = new DragSource(cTable, style);
+		final DragSource dragSource = DragDropUtils.createDragSource(cTable, style);
 		dragSource.addDragListener(new DragSourceAdapter() {
 			@Override
 			public void dragStart(DragSourceEvent event) {

@@ -37,6 +37,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.views.table.impl.TableTooltips;
 
@@ -103,7 +104,7 @@ public class TableHeaderPainted
 			TextTransfer.getInstance()
 		};
 
-		final DragSource ds = new DragSource(cHeaderArea, DND.DROP_MOVE);
+		final DragSource ds = DragDropUtils.createDragSource(cHeaderArea, DND.DROP_MOVE);
 		ds.setTransfer(types);
 		ds.addDragListener(new HeaderDragSourceListener());
 

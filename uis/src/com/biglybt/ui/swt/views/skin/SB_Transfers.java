@@ -33,10 +33,7 @@ import org.eclipse.swt.widgets.Menu;
 import com.biglybt.core.Core;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.CoreRunningListener;
-import com.biglybt.core.category.Category;
-import com.biglybt.core.category.CategoryListener;
-import com.biglybt.core.category.CategoryManager;
-import com.biglybt.core.category.CategoryManagerListener;
+import com.biglybt.core.category.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.download.DownloadManager;
@@ -51,14 +48,6 @@ import com.biglybt.core.tag.*;
 import com.biglybt.core.torrent.HasBeenOpenedListener;
 import com.biglybt.core.torrent.PlatformTorrentUtils;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.PluginInterface;
-import com.biglybt.pif.ui.UIInstance;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.menus.MenuItem;
-import com.biglybt.pif.ui.menus.MenuItemFillListener;
-import com.biglybt.pif.ui.menus.MenuItemListener;
-import com.biglybt.pif.ui.menus.MenuManager;
-import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.pifimpl.local.utils.FormattersImpl;
 import com.biglybt.ui.UIFunctions;
@@ -66,7 +55,6 @@ import com.biglybt.ui.UIFunctionsManager;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo;
 import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfoManager;
 import com.biglybt.ui.mdi.*;
-import com.biglybt.ui.mdi.MdiEntry;
 import com.biglybt.ui.swt.TorrentUtil;
 import com.biglybt.ui.swt.UIFunctionsManagerSWT;
 import com.biglybt.ui.swt.Utils;
@@ -76,12 +64,19 @@ import com.biglybt.ui.swt.mdi.MdiSWTMenuHackListener;
 import com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT;
 import com.biglybt.ui.swt.shells.CoreWaiterSWT.TriggerInThread;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.views.MyTorrentsView;
 import com.biglybt.ui.swt.views.PeersGeneralView;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
+
+import com.biglybt.pif.PluginInterface;
+import com.biglybt.pif.ui.UIInstance;
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.menus.*;
+import com.biglybt.pif.ui.tables.TableManager;
 
 /**
  * Transfers Sidebar aka "My Torrents" aka "Files"
@@ -1762,60 +1757,30 @@ public class SB_Transfers
 					}
 
 					private void dropTorrentOnTag(Tag tag, String dropped) {
-						String[] split = RegExUtil.PAT_SPLIT_SLASH_N.split(dropped);
-						if (split.length <= 1) {
+						List<DownloadManager> dms = DragDropUtils.getDownloadsFromDropData(
+								dropped, true);
+						if (dms.isEmpty()) {
 							return;
 						}
-
-						String type = split[0];
-						if (!type.startsWith("DownloadManager") && !type.startsWith( "DiskManagerFileInfo" )) {
-							return;
-						}
-						GlobalManager gm = CoreFactory.getSingleton().getGlobalManager();
-						List<DownloadManager> listDMs = new ArrayList<>();
 						boolean doAdd = false;
-						for (int i = 1; i < split.length; i++) {
-							String hash = split[i];
-
-							int sep = hash.indexOf( ";" );	// for files
-
-							if ( sep != -1 ){
-
-								hash = hash.substring( 0, sep );
+						for (DownloadManager dm : dms) {
+							if (!tag.hasTaggable(dm)) {
+								doAdd = true;
+								break;
 							}
+						}
 
-							try {
-								DownloadManager dm = gm.getDownloadManager(new HashWrapper(
-										Base32.decode(hash)));
+						boolean[] auto = tag.isTagAuto();
+						if (auto.length < 2 || (doAdd && auto[0])
+							|| (!doAdd && auto[0] && auto[1])) {
+							return;
+						}
 
-								if ( dm != null ){
-
-									listDMs.add(dm);
-
-									if (!doAdd && !tag.hasTaggable(dm)) {
-										doAdd = true;
-									}
-								}
-							}catch ( Throwable t ){
-
-							}
-
-							boolean	auto[] = tag.isTagAuto();
-
-							for (DownloadManager dm : listDMs) {
-								if ( doAdd ){
-
-									if ( !auto[0] ){
-
-										tag.addTaggable( dm );
-									}
-								}else{
-
-									if ( !( auto[0] && auto[1] )){
-
-										tag.removeTaggable( dm );
-									}
-								}
+						for (DownloadManager dm : dms) {
+							if ( doAdd ){
+								tag.addTaggable( dm );
+							}else{
+								tag.removeTaggable( dm );
 							}
 						}
 					}

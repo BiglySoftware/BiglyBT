@@ -228,8 +228,6 @@ public class MyTorrentsView
 
 	private TagButtonTrigger buttonListener;
 
-	private DropTargetListener buttonDropTargetListener;
-
 	protected boolean isEmptyListOnNullDS;
 
 	private final Map<String,String>	removed_while_selected =
@@ -1027,95 +1025,6 @@ public class MyTorrentsView
 					return null;
 				}
 			};
-
-			buttonDropTargetListener = new DropTargetAdapter() {
-				@Override
-				public void dragOver(DropTargetEvent e) {
-
-					if (drag_drop_location_start >= 0) {
-						boolean doAdd = false;
-
-						Control dropControl = ((DropTarget) e.widget).getControl();
-						if (!(dropControl instanceof TagCanvas)) {
-							e.detail = DND.DROP_NONE;
-							return;
-						}
-						Tag tag = ((TagCanvas) dropControl).getTag();
-						if (tag != null) {
-							Object[] ds = tv.getSelectedDataSources().toArray();
-  						for (Object obj : ds) {
-
-  							if (obj instanceof DownloadManager) {
-
-  								DownloadManager dm = (DownloadManager) obj;
-
-  								if (!tag.hasTaggable(dm)) {
-  									doAdd = true;
-  									break;
-  								}
-  							}
-  						}
-						}
-
-						e.detail = doAdd ? DND.DROP_COPY : DND.DROP_MOVE;
-
-					} else {
-						e.detail = DND.DROP_NONE;
-					}
-				}
-
-				@Override
-				public void drop(DropTargetEvent e) {
-					e.detail = DND.DROP_NONE;
-
-					if (drag_drop_location_start >= 0) {
-						drag_drop_location_start = -1;
-						drag_drop_rows = null;
-
-						Object[] ds = tv.getSelectedDataSources().toArray();
-
-						Control dropControl = ((DropTarget) e.widget).getControl();
-						if (!(dropControl instanceof TagCanvas)) {
-							e.detail = DND.DROP_NONE;
-							return;
-						}
-						Tag tag = ((TagCanvas) dropControl).getTag();
-
-						if (tag instanceof Category) {
-							TorrentUtil.assignToCategory(ds, (Category) tag);
-							return;
-						}
-
-						boolean doAdd = false;
-						for (Object obj : ds) {
-
-							if (obj instanceof DownloadManager) {
-
-								DownloadManager dm = (DownloadManager) obj;
-
-								if (!tag.hasTaggable(dm)) {
-									doAdd = true;
-									break;
-								}
-							}
-						}
-
-						for (Object obj : ds) {
-
-							if (obj instanceof DownloadManager) {
-
-								DownloadManager dm = (DownloadManager) obj;
-
-								if (doAdd) {
-									tag.addTaggable(dm);
-								} else {
-									tag.removeTaggable(dm);
-								}
-							}
-						}
-					}
-				}
-			};
 		}
 
 		for ( final Tag tag: tags ){
@@ -1145,23 +1054,6 @@ public class MyTorrentsView
 			if (isCurrent(tag)) {
 				button.setSelected(true);
 			}
-
-			final DropTarget tabDropTarget = new DropTarget(button,
-					DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
-			Transfer[] types = new Transfer[] {
-				TextTransfer.getInstance()
-			};
-			tabDropTarget.setTransfer(types);
-			tabDropTarget.addDropListener(buttonDropTargetListener);
-
-			button.addDisposeListener(new DisposeListener() {
-				@Override
-				public void widgetDisposed(DisposeEvent e) {
-					if (!tabDropTarget.isDisposed()) {
-						tabDropTarget.dispose();
-					}
-				}
-			});
 
 			Menu menu = new Menu( button );
 

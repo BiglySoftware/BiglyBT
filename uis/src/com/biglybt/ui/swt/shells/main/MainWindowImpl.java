@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.List;
 
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import com.biglybt.util.NavigationHelper.navigationListener;
 import org.eclipse.swt.SWT;
@@ -553,7 +554,7 @@ public class MainWindowImpl
 			//startTime = SystemTime.getCurrentTime();
 
 			try {
-				Utils.createTorrentDropTarget(shell, false);
+				DragDropUtils.createTorrentDropTarget(shell, false);
 			} catch (Throwable e) {
 				Logger.log(new LogEvent(LOGID, "Drag and Drop not available", e));
 			}
