@@ -95,6 +95,23 @@ public class TagButtonsUI
 						: new Group(cMainComposite, SWT.DOUBLE_BUFFERED);
 				if (group != null) {
 					((Group) g).setText(group);
+					Menu menu = new Menu(g);
+					g.setMenu(menu);
+					MenuBuildUtils.addMaintenanceListenerForMenu(menu,
+							(root_menu, menuEvent) -> {
+								TagUIUtils.createSideBarMenuItems(root_menu,
+										tag.getGroupContainer());
+							});
+					// Limit menu to top area (label) of group, otherwise the menu
+					// shows when right clicking next to a tag, which is confusing
+					g.addMenuDetectListener(e -> {
+						Group thisGroup = (Group) e.widget;
+						Point point = thisGroup.toControl(e.x, e.y);
+						Rectangle clientArea = thisGroup.getClientArea();
+						if (point.y > clientArea.y) {
+							e.doit = false;
+						}
+					});
 				}
 				RowLayout rowLayout = new RowLayout(SWT.HORIZONTAL);
 				rowLayout.pack = true;

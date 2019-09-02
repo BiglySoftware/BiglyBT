@@ -31,6 +31,7 @@ import org.eclipse.swt.events.MenuEvent;
 import org.eclipse.swt.events.MenuListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.*;
 
@@ -739,6 +740,52 @@ public class TagUIUtils
 			(e)->{
 				tag_group.setExclusive(exclusive_item.getSelection());
 			});
+		
+		MenuItem itemSetColor = new MenuItem(menu, SWT.PUSH);
+		Messages.setLanguageText(itemSetColor, "TagGroup.menu.setcolor");
+		itemSetColor.addListener(SWT.Selection, event -> {
+			ColorDialog cd = new ColorDialog(menu.getShell());
+
+			List<RGB> customColors = Utils.getCustomColors();
+			List<Tag> tags = tag_group.getTags();
+			Map<RGB, Long> mapDupCount = new HashMap<>();
+			for (Tag tag : tags) {
+				int[] color = tag.getColor();
+				if (color != null) {
+					RGB rgb = new RGB(color[0], color[1], color[2]);
+					if (!customColors.contains(rgb)) {
+						customColors.add(0, rgb);
+					} else {
+						Long count = mapDupCount.get(rgb);
+						mapDupCount.put(rgb, count == null ? 1 : count + 1);
+					}
+				}
+			}
+			
+			long maxCount = 0;
+			RGB selectRGB = null;
+			for (RGB rgb : mapDupCount.keySet()) {
+				Long count = mapDupCount.get(rgb);
+				if (count != null && count > maxCount) {
+					maxCount = count;
+					selectRGB = rgb;
+				}
+			}
+			
+			cd.setRGBs(customColors.toArray(new RGB[0]));
+			if (selectRGB != null) {
+				cd.setRGB(selectRGB);
+			}
+
+			RGB rgbChosen = cd.open();
+			if (rgbChosen == null) {
+				return;
+			}
+			for (Tag tag : tags) {
+				tag.setColor(new int[] { rgbChosen.red, rgbChosen.green, rgbChosen.blue});
+			}
+
+		});
 	}
 	
 	public static void
