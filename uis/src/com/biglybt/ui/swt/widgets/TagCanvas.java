@@ -108,8 +108,6 @@ public class TagCanvas
 
 	private final Tag tag;
 
-	private final boolean isTagAuto;
-
 	private String lastUsedName;
 
 	private boolean grayed;
@@ -152,8 +150,8 @@ public class TagCanvas
 		this.enableWhenNoTaggables = enableWhenNoTaggables;
 
 		boolean[] auto = tag.isTagAuto();
-		isTagAuto = auto.length >= 2 && auto[0] && auto[1];
-		if (isTagAuto) {
+		
+		if (auto.length >= 2 && auto[0] && auto[1]) {
 			font = FontUtils.getFontWithStyle(getFont(), SWT.ITALIC, 1.0f);
 			setFont(font);
 		}
@@ -194,11 +192,14 @@ public class TagCanvas
 			lastUsedName = tag.getTagName(true);
 		}
 
+		if ( lastUsedName.isEmpty()){
+			System.out.println( "" );
+		}
 		GC gc = new GC(getDisplay());
 		gc.setFont(getFont());
 
 		gc.setTextAntialias(SWT.ON);
-		GCStringPrinter sp = new GCStringPrinter(gc, lastUsedName,
+		GCStringPrinter sp = new GCStringPrinter(gc, lastUsedName.isEmpty()?"\u200b":lastUsedName,
 				new Rectangle(0, 0, 9999, 9999), false, true, SWT.LEFT);
 		sp.calculateMetrics();
 		Point size = sp.getCalculatedSize();
@@ -332,7 +333,21 @@ public class TagCanvas
 		}
 		this.disableAuto = disableAuto;
 
-		boolean enable = !isTagAuto || !disableAuto;
+		boolean enable;
+		
+		if ( disableAuto ){
+			
+			boolean[] auto = tag.isTagAuto();
+		
+			boolean isTagAuto= auto.length >= 2 && auto[0] && auto[1];
+			
+			enable = !isTagAuto;
+			
+		}else{
+			
+			enable = true;
+		}
+		
 		setEnabled(enable);
 	}
 
@@ -465,6 +480,10 @@ public class TagCanvas
 				1
 			});
 			int y = focusRect.y + focusRect.height - 1;
+			
+			if ( lastUsedName.isEmpty()){
+				focusRect.width = MIN_WIDTH - curveWidth;
+			}
 			e.gc.drawLine(focusRect.x, y, focusRect.x + focusRect.width - 1, y);
 			e.gc.setLineStyle(SWT.LINE_SOLID);
 		}
@@ -584,8 +603,10 @@ public class TagCanvas
 		boolean auto_add = auto[0];
 		boolean auto_rem = auto[1];
 
+		boolean	newEnableState;
+		
 		if (hasTag && hasNoTag) {
-			needRedraw |= setEnabledNoRedraw(!auto_add);
+			newEnableState = !auto_add;
 
 			needRedraw |= setGrayedNoRedraw(true);
 			needRedraw |= setSelected(true, false);
@@ -593,15 +614,19 @@ public class TagCanvas
 
 			if (auto_add && auto_rem) {
 				needRedraw |= setGrayedNoRedraw(!hasTag);
-				needRedraw |= setEnabledNoRedraw(false);
+				newEnableState = false;
 			} else {
-				needRedraw |= setEnabledNoRedraw((hasTag) || (!hasTag && !auto_add));
+				newEnableState = (hasTag) || (!hasTag && !auto_add);
 				needRedraw |= setGrayedNoRedraw(false);
 			}
 
 			needRedraw |= setSelected(hasTag, false);
 		}
 
+		if ( disableAuto ){
+			needRedraw |= setEnabledNoRedraw(newEnableState);
+		}
+		
 		if (needRedraw) {
 			redraw();
 		}
