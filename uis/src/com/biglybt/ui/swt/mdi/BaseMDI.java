@@ -83,7 +83,7 @@ public abstract class BaseMDI
 	
 	private LinkedHashMap<String, Object> mapAutoOpen = new LinkedHashMap<>();
 
-	private boolean mapAutoOpenLoaded = false;
+	private volatile boolean mapAutoOpenLoaded = false;
 
 	private TimerEvent	autoOpenSaver;
 	
@@ -365,26 +365,40 @@ public abstract class BaseMDI
 	}
 
 	private boolean createIfAutoOpen(String id) {
+		
+		
+			// carefull with scope of locking on autoOpenLock - make it larger and you'll
+			// get deadlocks...
+		
+		Object o;
+		
 		synchronized( autoOpenLock ){
-			Object o = mapAutoOpen.get(id);
-			if (o instanceof Map<?, ?>) {
-				Map<?, ?> autoOpenMap = (Map<?, ?>) o;
-	
-				return createEntryByCreationListener(id, autoOpenMap.get("datasource"),
-						autoOpenMap) != null;
-			}
-	
-			boolean created = false;
-			String[] autoOpenIDs = mapAutoOpen.keySet().toArray(new String[0]);
-			for (String autoOpenID : autoOpenIDs) {
-				if (Pattern.matches(id, autoOpenID)) {
-					Map<?, ?> autoOpenMap = (Map<?, ?>) mapAutoOpen.get(autoOpenID);
-					created |= createEntryByCreationListener(autoOpenID,
-							autoOpenMap.get("datasource"), autoOpenMap) != null;
-				}
-			}
-			return created;
+			o= mapAutoOpen.get(id);
 		}
+		if (o instanceof Map<?, ?>) {
+			Map<?, ?> autoOpenMap = (Map<?, ?>) o;
+
+			return createEntryByCreationListener(id, autoOpenMap.get("datasource"),
+					autoOpenMap) != null;
+		}
+
+		boolean created = false;
+		String[] autoOpenIDs;
+		synchronized( autoOpenLock ){
+			autoOpenIDs = mapAutoOpen.keySet().toArray(new String[0]);
+		}
+		for (String autoOpenID : autoOpenIDs) {
+			if (Pattern.matches(id, autoOpenID)) {
+				Map<?, ?> autoOpenMap;
+				synchronized( autoOpenLock ){
+					autoOpenMap = (Map<?, ?>) mapAutoOpen.get(autoOpenID);
+				}
+				created |= createEntryByCreationListener(autoOpenID,
+						autoOpenMap.get("datasource"), autoOpenMap) != null;
+			}
+		}
+		return created;
+		
 	}
 
 	protected MdiEntry
@@ -706,49 +720,51 @@ public abstract class BaseMDI
 		if (closeableConfigFile == null) {
 			return;
 		}
-		synchronized( autoOpenLock ){
-			try{
-				Map<?,?> loadedMap = FileUtil.readResilientConfigFile(closeableConfigFile , true);
-				if (loadedMap.isEmpty()) {
-					return;
-				}
-				BDecoder.decodeStrings(loadedMap);
-	
-				List<Map> orderedEntries = (List<Map>)loadedMap.get( "_entries_" );
-	
-				if ( orderedEntries == null ){
-						// migrate old format
-					for (Iterator<?> iter = loadedMap.keySet().iterator(); iter.hasNext();) {
-						String id = (String) iter.next();
-						Object o = loadedMap.get(id);
-	
-						if (o instanceof Map<?, ?>) {
-							if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
-								mapAutoOpen.put(id, o);
-							}
-						}
-					}
-				}else{
-					for (Map map: orderedEntries){
-						String id = (String)map.get( "id" );
-	
-						//System.out.println( "loaded " + id );
-						Object o = map.get( "value" );
-						if (o instanceof Map<?, ?>) {
-							if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
-								mapAutoOpen.put(id, o);
-							}
-						}
-					}
-				}
-			}catch( Throwable e ){
-	
-				Debug.out( e );
-	
-			}finally{
-	
-				mapAutoOpenLoaded  = true;
+		try{
+			Map<?,?> loadedMap = FileUtil.readResilientConfigFile(closeableConfigFile , true);
+			if (loadedMap.isEmpty()) {
+				return;
 			}
+			BDecoder.decodeStrings(loadedMap);
+
+			List<Map> orderedEntries = (List<Map>)loadedMap.get( "_entries_" );
+
+			if ( orderedEntries == null ){
+					// migrate old format
+				for (Iterator<?> iter = loadedMap.keySet().iterator(); iter.hasNext();) {
+					String id = (String) iter.next();
+					Object o = loadedMap.get(id);
+
+					if (o instanceof Map<?, ?>) {
+						if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
+							synchronized( autoOpenLock ){
+								mapAutoOpen.put(id, o);
+							}
+						}
+					}
+				}
+			}else{
+				for (Map map: orderedEntries){
+					String id = (String)map.get( "id" );
+
+					//System.out.println( "loaded " + id );
+					Object o = map.get( "value" );
+					if (o instanceof Map<?, ?>) {
+						if (!processAutoOpenMap(id, (Map<?, ?>) o, null)) {
+							synchronized( autoOpenLock ){
+								mapAutoOpen.put(id, o);
+							}
+						}
+					}
+				}
+			}
+		}catch( Throwable e ){
+
+			Debug.out( e );
+
+		}finally{
+
+			mapAutoOpenLoaded  = true;
 		}
 	}
 
