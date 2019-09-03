@@ -313,11 +313,14 @@ public class TagButtonsUI
 		for (TagCanvas tagWidget : tagWidgets) {
 			if (tag.equals(tagWidget.getTag())) {
 				Composite parent = tagWidget.getParent();
-				if (parent instanceof Group) {
-					String groupName = ((Group) parent).getText();
-					if (!groupName.equals(tagWidget.getTag().getGroup())) {
-						return UPDATETAG_REQUIRES_REBUILD;
-					}
+				String oldGroup = (parent instanceof Group) ? ((Group) parent).getText()
+						: "";
+				String newGroup = tagWidget.getTag().getGroup();
+				if (newGroup == null) {
+					newGroup = "";
+				}
+				if (!oldGroup.equals(newGroup)) {
+					return UPDATETAG_REQUIRES_REBUILD;
 				}
 				tagWidget.updateState(taggables);
 				return UPDATETAG_SUCCESS;
