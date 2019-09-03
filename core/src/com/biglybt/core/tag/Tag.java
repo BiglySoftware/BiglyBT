@@ -86,7 +86,11 @@ Tag
 		boolean	pub );
 
 	/**
-	 * @return [auto_add,auto_remove]
+	 * @return [ 
+	 *     auto_add, 
+	 *     auto_remove, 
+	 *     auto_new_download_only (tag constraint)
+	 * ]
 	 */
 
 	public boolean[]
