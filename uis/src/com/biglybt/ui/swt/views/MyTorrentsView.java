@@ -821,20 +821,10 @@ public class MyTorrentsView
 
 	private void buildHeaderArea() {
 		if (cCategoriesAndTags == null) {
-			cCategoriesAndTags = new CompositeMinSize(cTableParentPanel, SWT.NONE);
-			((CompositeMinSize) cCategoriesAndTags).setMinSize(new Point(SWT.DEFAULT, 18));
+			cCategoriesAndTags = new Composite(cTableParentPanel, SWT.NONE);
 			GridData gridData = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
 			cCategoriesAndTags.setLayoutData(gridData);
 			cCategoriesAndTags.moveAbove(null);
-
-			if ( filterParent != null ){
-					// inherit the background of the search filter - best that can be done to make things look ok
-				Color background = filterParent.getBackground();
-				if ( background != null ){
-					cCategoriesAndTags.setBackground( background );
-					cTableParentPanel.setBackground( background );
-				}
-			}
 		}else if ( cCategoriesAndTags.isDisposed()){
 			return;
 		}
@@ -847,8 +837,8 @@ public class MyTorrentsView
 	      rowLayout = new RowLayout();
 	      cCategoriesAndTags.setLayout(rowLayout);
 		}
-		rowLayout.marginTop = 0;
-		rowLayout.marginBottom = 0;
+		rowLayout.marginTop = 2;
+		rowLayout.marginBottom = 1;
 		rowLayout.marginLeft = 3;
 		rowLayout.marginRight = 3;
 		rowLayout.spacing = 3;
