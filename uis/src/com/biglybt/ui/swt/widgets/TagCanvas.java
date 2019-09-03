@@ -192,9 +192,6 @@ public class TagCanvas
 			lastUsedName = tag.getTagName(true);
 		}
 
-		if ( lastUsedName.isEmpty()){
-			System.out.println( "" );
-		}
 		GC gc = new GC(getDisplay());
 		gc.setFont(getFont());
 
