@@ -65,7 +65,6 @@ import com.biglybt.ui.mdi.MultipleDocumentInterface;
 import com.biglybt.ui.selectedcontent.SelectedContent;
 import com.biglybt.ui.selectedcontent.SelectedContentManager;
 import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.components.CompositeMinSize;
 import com.biglybt.ui.swt.mainwindow.TorrentOpener;
 import com.biglybt.ui.swt.mdi.MdiEntrySWT;
 import com.biglybt.ui.swt.minibar.DownloadBar;
@@ -779,31 +778,36 @@ public class MyTorrentsView
     	}
     }
 
-    if ( !tagButtonsDisabled ){
-    
-		ArrayList<Tag> tagsManual = new ArrayList<>(
-				TagManagerFactory.getTagManager().getTagType(
-						TagType.TT_DOWNLOAD_MANUAL).getTags());
-		for (Tag tag : tagsManual) {
-			if (tag.isVisible()) {
-				if ( !hiddenTags.contains( tag )){
-					tags_to_show.add(tag);
+	  boolean showAll = Utils.isAZ2UI();
+		if (!tagButtonsDisabled) {
+
+			ArrayList<Tag> tagsManual = new ArrayList<>(
+					TagManagerFactory.getTagManager().getTagType(
+							TagType.TT_DOWNLOAD_MANUAL).getTags());
+			for (Tag tag : tagsManual) {
+				if (showAll || tag.isVisible()) {
+					if (!hiddenTags.contains(tag)) {
+						tags_to_show.add(tag);
+					}
 				}
 			}
 		}
-    }
 
-    if (!catButtonsDisabled) {
-    	
-		ArrayList<Tag> tagsCat = new ArrayList<>(
-				TagManagerFactory.getTagManager().getTagType(
-						TagType.TT_DOWNLOAD_CATEGORY).getTags());
-		for (Tag tag : tagsCat) {
-			if (tag.isVisible()) {
-				tags_to_show.add(tag);
+		if (!catButtonsDisabled) {
+
+			ArrayList<Tag> tagsCat = new ArrayList<>(
+					TagManagerFactory.getTagManager().getTagType(
+							TagType.TT_DOWNLOAD_CATEGORY).getTags());
+			if (showAll) {
+				tags_to_show.addAll(tagsCat);
+			} else {
+				for (Tag tag : tagsCat) {
+					if (tag.isVisible()) {
+						tags_to_show.add(tag);
+					}
+				}
 			}
 		}
-    }
 
     tags_to_show = TagUtils.sortTags( tags_to_show );
 
