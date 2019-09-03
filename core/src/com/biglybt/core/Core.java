@@ -50,7 +50,8 @@ Core
 	getCreateTime();
 
 	public boolean
-	canStart();
+	canStart(
+		int	max_wait_secs );
 
 	public void
 	start()

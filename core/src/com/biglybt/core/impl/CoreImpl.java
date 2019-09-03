@@ -325,7 +325,7 @@ CoreImpl
 				// NetworkManager.getSingleton() (for example) results in TCP listen being setup - in case another instance
 				// is still in the process of closing poke the 'canStart' method here to back things off if so
 			
-			canStart();
+			canStart( 15 );
 			
 			AEProxySelectorFactory.getSelector();
 	
@@ -887,9 +887,12 @@ CoreImpl
 
 	private FileLock file_lock;
 
+	long start = SystemTime.getMonotonousTime();
+	
 	@Override
 	public boolean
-	canStart()
+	canStart(
+		int	max_wait_secs )
 	{
 		if ( System.getProperty(SystemProperties.SYSPROP_INSTANCE_LOCK_DISABLE, "0" ).equals( "1" )){
 
@@ -910,7 +913,7 @@ CoreImpl
 
 				FileChannel channel = raf.getChannel();
 
-				for ( int i=0;i<15;i++ ){
+				for ( int i=0;i<max_wait_secs;i++ ){
 
 					file_lock = channel.tryLock();
 
@@ -938,7 +941,7 @@ CoreImpl
 
 		throws CoreException
 	{
-		if ( !canStart()){
+		if ( !canStart( 15 )){
 
 			throw( new CoreException( "Core: already started (alternative process)" ));
 		}

@@ -493,111 +493,180 @@ public class Initializer
 	  		}
 		}
 
-		if ( core.canStart()){
-
-			// Other UIs could start the core before us
-			if (!core.isStarted()) {
-				core.start();
-			} else {
-				handleCoreStarted(core);
-			}
-
-			reportPercent(50);
-
-			System.out.println("Core Initializing took "
-					+ (SystemTime.getCurrentTime() - startTime) + "ms");
-			startTime = SystemTime.getCurrentTime();
-
-			reportCurrentTaskByKey("splash.initializeUIElements");
-
-			// Ensure colors initialized
-			Colors.getInstance();
-
-			reportPercent(curPercent + 1);
-			Alerts.init();
-
-			reportPercent(curPercent + 1);
-			ProgressWindow.register(core);
-
-			reportPercent(curPercent + 1);
-			new SWTNetworkSelection();
-
-			reportPercent(curPercent + 1);
-			new AuthenticatorWindow();
-			new CryptoWindow();
-
-			reportPercent(curPercent + 1);
-			new CertificateTrustWindow();
-
-			core.getPluginManager().getPluginInstaller().addListener(
-					new PluginInstallerListener() {
-						@Override
-						public boolean installRequest(final String reason,
-								final InstallablePlugin plugin)
-
-								throws PluginException {
-							if (plugin instanceof StandardPlugin) {
-
-								Map<Integer, Object> properties = new HashMap<>();
-
-								properties.put(UpdateCheckInstance.PT_UI_EXTRA_MESSAGE,
-										reason);
-
-								plugin.install(false, false, false, properties);
-
-								return (true);
-							} else {
-
-								return (false);
-							}
-						}
-					});
-
-		}else{
-
-			CoreWaiterSWT.startupAbandoned();
+		int					wait		= 15;
+		MessageBoxShell[]	wait_shell 	= { null };
+		boolean[]			abandon		= { false };
+		
+		while( !core.canStart( wait )){
 			
-			final AESemaphore sem = new AESemaphore( "waiter" );
+			synchronized( abandon ){
+				
+				if ( abandon[0] ){
+					
+					CoreWaiterSWT.startupAbandoned();
+					
+					final AESemaphore sem = new AESemaphore( "waiter" );
+	
+					Utils.execSWTThread(
+						new Runnable()
+						{
+							@Override
+							public void
+							run()
+							{
+								MessageBoxShell mb =
+									new MessageBoxShell(
+										MessageText.getString( "msgbox.force.close.title" ),
+										MessageText.getString(
+											"msgbox.force.close.text",
+											new String[]{ core.getLockFile().getAbsolutePath() }),
+										new String[]{ MessageText.getString("Button.ok") },
+										0 );
+	
+								mb.setIconResource( "error" );
+	
+								mb.setModal( true );
+	
+								mb.open(
+									new UserPrompterResultListener()
+									{
+	
+										@Override
+										public void
+										prompterClosed(
+											int 	result )
+										{
+											sem.releaseForever();
+										}
+									});
+							}
+						});
+	
+					sem.reserve();
+	
+					SESecurityManager.exitVM( 1 );
+				}
+			}
+			
+			wait = 3;
+			
+			boolean show_wait = false;
+			
+			synchronized( wait_shell ){
+				
+				show_wait = wait_shell[0] == null;
+			}
+			
+			if ( show_wait ){
+					
+				AESemaphore sem = new AESemaphore( "wait" );
+				
+				Utils.execSWTThread(
+					()->{
+						MessageBoxShell mb;
+						
+						try{
+							mb =
+								new MessageBoxShell(
+									MessageText.getString( "msgbox.startup.stall.title" ),
+									MessageText.getString( "msgbox.startup.stall.text" ),
+									new String[]{ MessageText.getString("Button.abort") },
+									0 );
 
-			Utils.execSWTThread(
-				new Runnable()
-				{
-					@Override
-					public void
-					run()
-					{
-						MessageBoxShell mb =
-							new MessageBoxShell(
-								MessageText.getString( "msgbox.force.close.title" ),
-								MessageText.getString(
-									"msgbox.force.close.text",
-									new String[]{ core.getLockFile().getAbsolutePath() }),
-								new String[]{ MessageText.getString("Button.ok") },
-								0 );
-
-						mb.setIconResource( "error" );
+							synchronized( wait_shell ){
+								
+								wait_shell[0] = mb;
+							}
+						}finally{
+							
+							sem.release();
+						}
+							
+						mb.setIconResource( "warning" );
 
 						mb.setModal( true );
 
-						mb.open(
-							new UserPrompterResultListener()
-							{
-
-								@Override
-								public void
-								prompterClosed(
-									int 	result )
-								{
-									sem.releaseForever();
+						mb.open((result)->{
+						
+								synchronized( abandon ){
+									
+									abandon[0] = true;
 								}
 							});
+					});
+				
+				sem.reserve();
+			}
+		}
+		
+		synchronized( wait_shell ){
+			
+			if ( wait_shell[0] != null ){
+				
+				Utils.execSWTThread(
+					()->{
+						wait_shell[0].close();
+					});
+			}
+		}
+
+		// Other UIs could start the core before us
+		if (!core.isStarted()) {
+			core.start();
+		} else {
+			handleCoreStarted(core);
+		}
+
+		reportPercent(50);
+
+		System.out.println("Core Initializing took "
+				+ (SystemTime.getCurrentTime() - startTime) + "ms");
+		startTime = SystemTime.getCurrentTime();
+
+		reportCurrentTaskByKey("splash.initializeUIElements");
+
+		// Ensure colors initialized
+		Colors.getInstance();
+
+		reportPercent(curPercent + 1);
+		Alerts.init();
+
+		reportPercent(curPercent + 1);
+		ProgressWindow.register(core);
+
+		reportPercent(curPercent + 1);
+		new SWTNetworkSelection();
+
+		reportPercent(curPercent + 1);
+		new AuthenticatorWindow();
+		new CryptoWindow();
+
+		reportPercent(curPercent + 1);
+		new CertificateTrustWindow();
+
+		core.getPluginManager().getPluginInstaller().addListener(
+				new PluginInstallerListener() {
+					@Override
+					public boolean installRequest(final String reason,
+							final InstallablePlugin plugin)
+
+							throws PluginException {
+						if (plugin instanceof StandardPlugin) {
+
+							Map<Integer, Object> properties = new HashMap<>();
+
+							properties.put(UpdateCheckInstance.PT_UI_EXTRA_MESSAGE,
+									reason);
+
+							plugin.install(false, false, false, properties);
+
+							return (true);
+						} else {
+
+							return (false);
+						}
 					}
 				});
-
-			sem.reserve();
-
-			SESecurityManager.exitVM( 1 );
-		}
 	}
 
 	void handleCoreStarted(Core core) {
