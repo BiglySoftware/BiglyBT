@@ -38,7 +38,6 @@ import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.tag.*;
 import com.biglybt.core.tag.TagFeatureProperties.TagProperty;
-import com.biglybt.core.util.AERunnable;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.TextViewerWindow;
 import com.biglybt.ui.swt.Utils;
@@ -343,7 +342,7 @@ public class TaggingView
 			true, new TagButtonTrigger() {
 				@Override
 				public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag, int stateMask, boolean longPress) {
-					if (taggables == null) {
+					if (taggables == null || longPress) {
 						return;
 					}
 					boolean doTag = !tagCanvas.isSelected();
@@ -472,7 +471,10 @@ public class TaggingView
 			if (tagButtonsUI == null || changedTag == null) {
 				return;
 			}
-			tagButtonsUI.updateTag(changedTag, taggables);
+			if (tagButtonsUI.updateTag(changedTag,
+					taggables) == TagButtonsUI.UPDATETAG_REQUIRES_REBUILD) {
+				rebuildComposite();
+			}
 		} );
 	}
 

@@ -48,7 +48,7 @@ import com.biglybt.util.StringCompareUtils;
 
 public class TagCanvas
 	extends Canvas
-	implements PaintListener, Listener, DropTargetListener
+	implements PaintListener, Listener, DropTargetListener, DragSourceListener
 {
 	private static final Point MAX_IMAGE_SIZE = new Point(40, 28);
 
@@ -172,12 +172,17 @@ public class TagCanvas
 		addListener(SWT.MouseExit, this);
 
 		dropTarget = new DropTarget(this,
-			DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
+				DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
 		Transfer[] types = new Transfer[] {
 			TextTransfer.getInstance()
 		};
 		dropTarget.setTransfer(types);
 		dropTarget.addDropListener(this);
+
+		DragSource dragSource = DragDropUtils.createDragSource(this,
+				DND.DROP_COPY | DND.DROP_MOVE);
+		dragSource.setTransfer(TextTransfer.getInstance());
+		dragSource.addDragListener(this);
 
 		updateImage();
 		addPaintListener(this);
@@ -228,17 +233,29 @@ public class TagCanvas
 					timerEvent = SimpleTimer.addEvent("MouseHold",
 							SystemTime.getOffsetTime(1000), te -> {
 								timerEvent = null;
-
 								if (!mouseDown) {
 									return;
 								}
-								mouseDown = false;
 
 								// held
-								if (trigger != null) {
-									Utils.execSWTThread(() -> trigger.tagButtonTriggered(this,
-											tag, e.stateMask, true));
+								if (trigger == null) {
+									mouseDown = false;
+									return;
 								}
+
+								Utils.execSWTThread(() -> {
+									if (!mouseDown) {
+										return;
+									}
+
+									if (e.display.getCursorControl() != TagCanvas.this) {
+										return;
+									}
+
+									mouseDown = false;
+
+									trigger.tagButtonTriggered(this, tag, e.stateMask, true);
+								});
 							});
 				}
 
@@ -677,11 +694,12 @@ public class TagCanvas
 		return compact;
 	}
 
-	private static List<DownloadManager> handleDropTargetEvent(DropTargetEvent e) {
+	private static List<DownloadManager> handleDropTargetEvent(
+			DropTargetEvent e) {
 		Object data = e.data == null ? DragDropUtils.getLastDraggedObject()
-			: e.data;
+				: e.data;
 		List<DownloadManager> dms = DragDropUtils.getDownloadsFromDropData(data,
-			false);
+				false);
 
 		if (dms.isEmpty()) {
 			e.detail = DND.DROP_NONE;
@@ -705,7 +723,7 @@ public class TagCanvas
 
 		boolean[] auto = tag.isTagAuto();
 		if (auto.length < 2 || (doAdd && auto[0])
-			|| (!doAdd && auto[0] && auto[1])) {
+				|| (!doAdd && auto[0] && auto[1])) {
 			e.detail = DND.DROP_NONE;
 			return dms;
 		}
@@ -742,7 +760,7 @@ public class TagCanvas
 	@Override
 	public void drop(DropTargetEvent e) {
 		List<DownloadManager> dms = handleDropTargetEvent(e);
-		
+
 		if (dms.isEmpty()) {
 			return;
 		}
@@ -772,5 +790,22 @@ public class TagCanvas
 				}
 			}
 		});
+	}
+
+	@Override
+	public void dragStart(DragSourceEvent event) {
+		if (isDisposed()) {
+			return;
+		}
+	}
+
+	@Override
+	public void dragSetData(DragSourceEvent event) {
+		event.data = DragDropUtils.DROPDATA_PREFIX_TAG_UID + "\n" + tag.getTagUID();
+	}
+
+	@Override
+	public void dragFinished(DragSourceEvent event) {
+
 	}
 }

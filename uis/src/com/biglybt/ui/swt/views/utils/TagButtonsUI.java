@@ -23,6 +23,7 @@ import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
@@ -35,6 +36,7 @@ import com.biglybt.core.tag.Taggable;
 import com.biglybt.core.util.Constants;
 import com.biglybt.ui.swt.MenuBuildUtils;
 import com.biglybt.ui.swt.Utils;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.widgets.TagCanvas;
 import com.biglybt.ui.swt.widgets.TagCanvas.TagButtonTrigger;
 
@@ -94,7 +96,8 @@ public class TagButtonsUI
 				g = group == null ? new Composite(cMainComposite, SWT.DOUBLE_BUFFERED)
 						: new Group(cMainComposite, SWT.DOUBLE_BUFFERED);
 				if (group != null) {
-					((Group) g).setText(group);
+					Group groupControl = (Group) g;
+					groupControl.setText(group);
 					Menu menu = new Menu(g);
 					g.setMenu(menu);
 					MenuBuildUtils.addMaintenanceListenerForMenu(menu,
@@ -110,6 +113,33 @@ public class TagButtonsUI
 						Rectangle clientArea = thisGroup.getClientArea();
 						if (point.y > clientArea.y) {
 							e.doit = false;
+						}
+					});
+
+					DropTarget dropTarget = new DropTarget(groupControl, DND.DROP_MOVE);
+					dropTarget.setTransfer(TextTransfer.getInstance());
+					dropTarget.addDropListener(new DropTargetAdapter() {
+						@Override
+						public void dragEnter(DropTargetEvent event) {
+							Object data = event.data == null ? DragDropUtils.getLastDraggedObject() : event.data;
+							List<Tag> droppedTags = DragDropUtils.getTagsFromDroppedData(data);
+							if (droppedTags.isEmpty()) {
+								event.detail = DND.DROP_NONE;
+							}
+						}
+
+						@Override
+						public void drop(DropTargetEvent event) {
+							Object data = event.data == null ? DragDropUtils.getLastDraggedObject() : event.data;
+							List<Tag> droppedTags = DragDropUtils.getTagsFromDroppedData(data);
+							if (droppedTags.isEmpty()) {
+								event.detail = DND.DROP_NONE;
+								return;
+							}
+
+							for (Tag droppedTag : droppedTags) {
+								droppedTag.setGroup(groupControl.getText());
+							}
 						}
 					});
 				}
@@ -272,18 +302,28 @@ public class TagButtonsUI
 		return layoutStyle;
 	}
 
-	public boolean updateTag(Tag tag, List<Taggable> taggables) {
+	public static final int UPDATETAG_REQUIRES_REBUILD = 1;
+	public static final int UPDATETAG_SUCCESS = 0;
+	public static final int UPDATETAG_NOCHANGE = -1;
+	public int updateTag(Tag tag, List<Taggable> taggables) {
 		if (cMainComposite == null || cMainComposite.isDisposed()) {
-			return false;
+			return UPDATETAG_NOCHANGE;
 		}
 		
 		for (TagCanvas tagWidget : tagWidgets) {
 			if (tag.equals(tagWidget.getTag())) {
+				Composite parent = tagWidget.getParent();
+				if (parent instanceof Group) {
+					String groupName = ((Group) parent).getText();
+					if (!groupName.equals(tagWidget.getTag().getGroup())) {
+						return UPDATETAG_REQUIRES_REBUILD;
+					}
+				}
 				tagWidget.updateState(taggables);
-				return true;
+				return UPDATETAG_SUCCESS;
 			}
 		}
 
-		return false;
+		return UPDATETAG_SUCCESS;
 	}
 }

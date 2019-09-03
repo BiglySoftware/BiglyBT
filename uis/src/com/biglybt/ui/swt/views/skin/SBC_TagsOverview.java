@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.layout.GridLayout;
@@ -53,6 +54,7 @@ import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.skin.*;
 import com.biglybt.ui.swt.skin.SWTSkinButtonUtility.ButtonListenerAdapter;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.TagUIUtilsV3;
 import com.biglybt.ui.swt.views.MyTorrentsSubView;
 import com.biglybt.ui.swt.views.TagSettingsView;
@@ -667,6 +669,49 @@ public class SBC_TagsOverview
 					}
 				}
 			});
+
+			DragSource dragSource = tv.createDragSource(DND.DROP_COPY | DND.DROP_MOVE);
+			if (dragSource != null) {
+				dragSource.setTransfer(TextTransfer.getInstance());
+				dragSource.addDragListener(new DragSourceListener() {
+					@Override
+					public void dragStart(DragSourceEvent event) {
+						List<Object> dataSources = tv.getSelectedDataSources();
+						for (Object dataSource : dataSources) {
+							if ((dataSource instanceof Tag)
+									&& (((Tag) dataSource).getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL)) {
+								return;
+							}
+						}
+						event.doit = false;
+						event.detail = DND.DROP_NONE;
+					}
+
+					@Override
+					public void dragSetData(DragSourceEvent event) {
+						StringBuilder sb = new StringBuilder(DragDropUtils.DROPDATA_PREFIX_TAG_UID);
+						boolean hasTags = false;
+						List<Object> dataSources = tv.getSelectedDataSources();
+						for (Object dataSource : dataSources) {
+							if ((dataSource instanceof Tag)
+									&& (((Tag) dataSource).getTagType().getTagType() == TagType.TT_DOWNLOAD_MANUAL)) {
+								hasTags = true;
+								sb.append('\n');
+								sb.append(((Tag) dataSource).getTagUID());
+							}
+						}
+						
+						if (hasTags) {
+							event.data = sb.toString();
+						}
+					}
+
+					@Override
+					public void dragFinished(DragSourceEvent event) {
+
+					}
+				});
+			}
 		}
 
 		control.layout(true);

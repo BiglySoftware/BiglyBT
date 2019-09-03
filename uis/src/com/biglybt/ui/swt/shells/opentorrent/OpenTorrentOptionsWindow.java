@@ -4878,6 +4878,9 @@ public class OpenTorrentOptionsWindow
 					new TagButtonTrigger() {
 						public void tagButtonTriggered(TagCanvas tagCanvas, Tag tag,
 							int stateMask, boolean longPress) {
+							if (longPress) {
+								return;
+							}
 							List<Tag> tags = torrentOptions.getInitialTags();
 							boolean doTag = !tagCanvas.isSelected();
 							boolean initialTagsChanged = doTag ? addInitialTag(tags, tag)

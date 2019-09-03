@@ -28,6 +28,9 @@ import org.eclipse.swt.widgets.Text;
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.global.GlobalManager;
+import com.biglybt.core.tag.Tag;
+import com.biglybt.core.tag.TagManager;
+import com.biglybt.core.tag.TagManagerFactory;
 import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.FixedHTMLTransfer;
 import com.biglybt.ui.swt.FixedURLTransfer;
@@ -40,6 +43,8 @@ import com.biglybt.ui.swt.mainwindow.TorrentOpener;
  */
 public class DragDropUtils
 {
+	public static final String DROPDATA_PREFIX_TAG_UID = "TagUID";
+
 	private static Object lastDraggedObject;
 
 	public static DragSource createDragSource(Control control, int style) {
@@ -104,16 +109,35 @@ public class DragDropUtils
 		return listDMs;
 	}
 
-	public static boolean isDMDrag(Object dropData, boolean includeFileDrops) {
+	public static List<Tag> getTagsFromDroppedData(Object dropData) {
+		List<Tag> listTags = new ArrayList<>();
 		if (!(dropData instanceof String)) {
-			return false;
+			return listTags;
+		}
+		String[] split = RegExUtil.PAT_SPLIT_SLASH_N.split((String) dropData);
+		if (split.length <= 1) {
+			return listTags;
 		}
 
-		String dropText = (String) dropData;
-		return includeFileDrops
-				? dropText.startsWith("DownloadManager\n")
-						|| dropText.startsWith("DiskManagerFileInfo\n")
-				: dropText.startsWith("DownloadManager\n");
+		String type = split[0];
+		if (!type.equals(DROPDATA_PREFIX_TAG_UID)) {
+			return listTags;
+		}
+
+		TagManager tagManager = TagManagerFactory.getTagManager();
+		for (int i = 1; i < split.length; i++) {
+			String tagUID = split[i];
+			try {
+				long l = Long.parseLong(tagUID);
+				Tag tag = tagManager.lookupTagByUID(l);
+				if (tag != null) {
+					listTags.add(tag);
+				}
+			} catch (Throwable ignore) {
+			}
+		}
+
+		return listTags;
 	}
 
 	private static void createDropTarget(Composite composite,
@@ -261,6 +285,17 @@ public class DragDropUtils
 			this.bAllowShareAdd = bAllowShareAdd;
 		}
 
+		private static boolean isOurDrag(Object dropData) {
+			if (!(dropData instanceof String)) {
+				return false;
+			}
+
+			String dropText = (String) dropData;
+			return dropText.startsWith("DownloadManager\n")
+					|| dropText.startsWith("DiskManagerFileInfo\n")
+					|| dropText.startsWith(DROPDATA_PREFIX_TAG_UID);
+		}
+
 		@Override
 		public void dropAccept(DropTargetEvent event) {
 			event.currentDataType = FixedURLTransfer.pickBestType(event.dataTypes,
@@ -269,16 +304,14 @@ public class DragDropUtils
 
 		@Override
 		public void dragEnter(DropTargetEvent event) {
-			if (isDMDrag(event.data == null ? getLastDraggedObject() : event.data,
-					true)) {
+			if (isOurDrag(event.data == null ? getLastDraggedObject() : event.data)) {
 				event.detail = DND.DROP_NONE;
 			}
 		}
 
 		@Override
 		public void dragOver(DropTargetEvent event) {
-			if (isDMDrag(event.data == null ? getLastDraggedObject() : event.data,
-					true)) {
+			if (isOurDrag(event.data == null ? getLastDraggedObject() : event.data)) {
 				event.detail = DND.DROP_NONE;
 				return;
 			}

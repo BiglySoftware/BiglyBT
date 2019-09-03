@@ -79,7 +79,13 @@ import com.biglybt.pif.ui.menus.*;
 import com.biglybt.pif.ui.tables.TableManager;
 
 /**
- * Transfers Sidebar aka "My Torrents" aka "Files"
+ * Transfers Sidebar aka "My Torrents" aka "Files"<br/>
+ * Includes SideBar entries like:<br/>
+ * <li>Per-Tag Sidebar Entry</li>
+ * <li>Per-Tag Group Sidebar Entry</li>
+ * <li>Category Sidebar Entries</li>
+ * <li>Various Library (Downloading, Seeding, Unopened) Sidebar entries</li>
+ * 
  * @author TuxPaper
  * @created Oct 21, 2010
  *
@@ -1573,8 +1579,22 @@ public class SB_Transfers
 							
 							entry.setUserData( TAG_TAG_OR_GROUP_KEY, tag.getGroupContainer());
 							
-							if ( entry instanceof SideBarEntrySWT ){
-								final SideBarEntrySWT entrySWT = (SideBarEntrySWT) entry;
+							
+							if ( entry instanceof MdiEntrySWT ){
+								final MdiEntrySWT entrySWT = (MdiEntrySWT) entry;
+								
+								entry.addListener((entry1, droppedObject) -> {
+									List<Tag> tags = DragDropUtils.getTagsFromDroppedData(droppedObject);
+									if (tags.isEmpty()) {
+										return false;
+									}
+									String groupName = tag.getGroupContainer().getName();
+									for (Tag droppedTag : tags) {
+										droppedTag.setGroup(groupName);
+									}
+									return false;
+								});
+								
 								entrySWT.addListener(new MdiSWTMenuHackListener() {
 									@Override
 									public void menuWillBeShown(MdiEntry entry, Menu menuTree) {
