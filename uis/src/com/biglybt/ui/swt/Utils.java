@@ -4114,6 +4114,11 @@ public class Utils
 				Utils.execSWTThreadLater(
 						1,
 						()->{
+							if ( mega_parent.isDisposed()){
+								
+								return;
+							}
+							
 							Rectangle mp = mega_parent.getBounds();
 							
 							Point sc_size = scrolled_comp.computeSize( SWT.DEFAULT, SWT.DEFAULT );
@@ -4143,22 +4148,29 @@ public class Utils
 								
 								sc_size.y = req_h;
 							}
-																
-							scrolled_comp.setSize( sc_size );
+								
+							Point existing = scrolled_comp.getSize();
 							
-							updateScrolledComposite(scrolled_comp);
+							if ( !existing.equals( sc_size )){
+							
+								scrolled_comp.setSize( sc_size );
+							}
 						});
 			};
 			
-			mega_parent.getShell().addListener(
-				SWT.Show,
-				(ev)->{
-					Utils.execSWTThreadLater(
-							1000,
-							()->{
-								hack.run();
-							});
-				});
+			Utils.execSWTThreadLater(
+				1000,
+				new Runnable(){
+					public void
+					run()
+					{
+						hack.run();
+								
+						if ( !mega_parent.isDisposed()){
+									
+							Utils.execSWTThreadLater( 1000, this );
+						}
+					}});
 			
 			mega_parent.addControlListener(new ControlAdapter() {
 				@Override
