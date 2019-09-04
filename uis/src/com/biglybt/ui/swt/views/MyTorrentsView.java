@@ -829,6 +829,15 @@ public class MyTorrentsView
 			GridData gridData = new GridData(SWT.RIGHT, SWT.CENTER, true, false);
 			cCategoriesAndTags.setLayoutData(gridData);
 			cCategoriesAndTags.moveAbove(null);
+
+			if ( filterParent != null ){
+					// inherit the background of the search filter - best that can be done to make things look ok
+				Color background = filterParent.getBackground();
+				if ( background != null ){
+					cCategoriesAndTags.setBackground( background );
+					cTableParentPanel.setBackground( background );
+				}
+			}
 		}else if ( cCategoriesAndTags.isDisposed()){
 			return;
 		}
