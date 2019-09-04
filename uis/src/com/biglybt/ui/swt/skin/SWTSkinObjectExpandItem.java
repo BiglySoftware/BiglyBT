@@ -177,8 +177,16 @@ public class SWTSkinObjectExpandItem
 				}
 			}
 			//System.out.println("tot=" + h + ";" + Debug.getCompressedStackTrace());
-
+			
 			newHeight = clientArea.height - h;
+
+			int min = properties.getIntValue(sConfigID + ".fillheightmin", 0 );
+
+			if ( min > 0 ){
+				if (  newHeight < min ){
+					newHeight = min;
+				}
+			}
 			//System.out.println("fill " + clientArea + ";h=" + h + " to " + newHeight);
 		} else {
 			newHeight = composite.computeSize(clientArea.width, SWT.DEFAULT, true).y;

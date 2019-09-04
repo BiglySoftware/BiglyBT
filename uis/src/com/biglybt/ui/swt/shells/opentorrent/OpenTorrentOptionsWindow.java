@@ -4745,14 +4745,21 @@ public class OpenTorrentOptionsWindow
 				gridData = new GridData(GridData.VERTICAL_ALIGN_CENTER);
 				Messages.setLanguageText(label, "label.initial_tags");
 
+				Composite sc = Utils.createScrolledComposite( tagRight, so.getExpandItem().getParent().getParent());
 
-				tagButtonsArea 	= new Composite( tagRight, SWT.DOUBLE_BUFFERED);
+				layout = new GridLayout();
+				layout.numColumns = 1;
+				layout.marginWidth  = 0;
+				layout.marginHeight = 0;
+				sc.setLayout(layout);
+				
+				tagButtonsArea 	= new Composite( sc, SWT.DOUBLE_BUFFERED);
+						
 				tagButtonsArea.setLayout(new FillLayout());
 				gridData = new GridData(SWT.FILL, SWT.FILL, true, true );
 				tagButtonsArea.setLayoutData( gridData);
 
 				buildTagButtonPanel();
-
 
 				Button addTag = new Button( tagLeft, SWT.NULL );
 				addTag.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_CENTER ));
@@ -4915,6 +4922,10 @@ public class OpenTorrentOptionsWindow
 			tagButtonsUI.updateFields(null);
 			
 			tagButtonsArea.getParent().layout( true, true );
+			
+				// without this the expando sometimes get stuck with the wrong height and therefore a truncated view
+			
+			soStartOptionsExpandItem.getExpandItem().setHeight( soStartOptionsExpandItem.getComposite().computeSize( SWT.DEFAULT,  SWT.DEFAULT).y );
 		}
 
 		private boolean removeInitialTag(List<Tag> tags, Tag tag) {

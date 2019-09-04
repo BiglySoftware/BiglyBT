@@ -4065,6 +4065,14 @@ public class Utils
 	createScrolledComposite(
 		Composite parent )
 	{
+		return( createScrolledComposite( parent, null ));
+	}
+	
+	public static Composite
+	createScrolledComposite(
+		Composite 	parent,
+		Control		mega_parent )
+	{
 		parent.setLayout( new GridLayout( 1, true ));
 
 		ScrolledComposite scrolled_comp = new ScrolledComposite( parent , SWT.V_SCROLL );
@@ -4096,6 +4104,71 @@ public class Utils
 			}
 		});
 
+		if ( mega_parent != null ){
+			
+				// all this hacking is required for the expando item crap used by open-torrent-options
+				// it doesn't send resize events to items that are truncated in the view so we pick up
+				// truncation and manually resize the component to cause scroll behaviour :(
+			
+			Runnable hack = ()->{
+				Utils.execSWTThreadLater(
+						1,
+						()->{
+							Rectangle mp = mega_parent.getBounds();
+							
+							Point sc_size = scrolled_comp.computeSize( SWT.DEFAULT, SWT.DEFAULT );
+		
+							Rectangle sc = scrolled_comp.getBounds();
+							
+							int mp_y = mega_parent.toDisplay( mp.x, mp.y ).y;
+							int sc_y = scrolled_comp.toDisplay( sc.x, sc.y ).y;
+							
+							int	req_h = -1;
+							
+							if ( sc_y >= mp_y && sc_y < mp_y + mp.height ){
+								
+								if ( sc_y + sc_size.y < mp_y + mp.height ){
+									
+									// fits
+								
+								}else{
+									
+									req_h = mp_y + mp.height - sc_y;
+								}
+							}
+												
+							sc_size.x = sc.width;
+		
+							if ( req_h >= 0 ){
+								
+								sc_size.y = req_h;
+							}
+																
+							scrolled_comp.setSize( sc_size );
+							
+							updateScrolledComposite(scrolled_comp);
+						});
+			};
+			
+			mega_parent.getShell().addListener(
+				SWT.Show,
+				(ev)->{
+					Utils.execSWTThreadLater(
+							1000,
+							()->{
+								hack.run();
+							});
+				});
+			
+			mega_parent.addControlListener(new ControlAdapter() {
+				@Override
+				public void controlResized(ControlEvent e) {
+					
+					hack.run();
+				}
+			});
+		}
+		
 		return( result );
 	}
 
@@ -4103,7 +4176,8 @@ public class Utils
 		Control content = sc.getContent();
 		if (content != null && !content.isDisposed()) {
 			Rectangle r = sc.getClientArea();
-			sc.setMinSize(content.computeSize(r.width, SWT.DEFAULT ));
+			Point min = content.computeSize(r.width, SWT.DEFAULT );
+			sc.setMinSize(min);
 		}
 	}
 
