@@ -44,6 +44,7 @@ import com.biglybt.ui.swt.utils.ColorCache;
 
 public class
 GeneralOpsPanel
+	extends BasePanel
 {
 	private static final int ALPHA_FOCUS = 255;
 	private static final int ALPHA_NOFOCUS = 150;
@@ -78,31 +79,6 @@ GeneralOpsPanel
 	private TimerEventPeriodic timeout_timer;
 
 	private Map<Node,Rectangle>	node_text_map = new HashMap<>();
-	
-	private static class Scale {
-		int width;
-		int height;
-
-		float minX = -1000;
-		float maxX = 1000;
-		float minY = -1000;
-		float maxY = 1000;
-		double rotation = 0;
-
-		float saveMinX;
-		float saveMaxX;
-		float saveMinY;
-		float saveMaxY;
-		double saveRotation;
-
-		public int getX(float x,float y) {
-			return (int) (((x * Math.cos(rotation) + y * Math.sin(rotation))-minX)/(maxX - minX) * width);
-		}
-
-		public int getY(float x,float y) {
-			return (int) (((y * Math.cos(rotation) - x * Math.sin(rotation))-minY)/(maxY-minY) * height);
-		}
-	}
 
 	public GeneralOpsPanel(Composite parent) {
 		this.parent = parent;
@@ -234,6 +210,12 @@ GeneralOpsPanel
 				if(event.button == 1) mouseLeftDown = false;
 				if(event.button == 3) mouseRightDown = false;
 				
+				refresh();
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent e) {
+				scale.reset();
 				refresh();
 			}
 		});

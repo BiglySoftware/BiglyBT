@@ -41,9 +41,7 @@ import org.eclipse.swt.widgets.*;
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.global.GlobalManagerStats.AggregateStats;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.AERunnable;
 import com.biglybt.core.util.DisplayFormatters;
-import com.biglybt.core.util.FrequencyLimitedDispatcher;
 
 
 import com.biglybt.ui.swt.utils.ColorCache;
@@ -51,6 +49,7 @@ import com.biglybt.ui.swt.utils.ColorCache;
 
 public class
 XferStatsPanel
+	extends BasePanel
 {
 	private static final int ALPHA_FOCUS = 255;
 	private static final int ALPHA_NOFOCUS = 150;
@@ -89,77 +88,7 @@ XferStatsPanel
 	private Node			hover_node;
 	private float			tp_ratio;
 	
-	static float def_minX = -1000;
-	static float def_maxX = 1000;
-	static float def_minY = -1000;
-	static float def_maxY = 1000;
-	static double def_rotation = 0;
-	
-	private static class Scale {
-		int width;
-		int height;
-		float minX;
-		float maxX;
-		float minY;
-		float maxY;
-		double rotation;
-		
-		float saveMinX;
-		float saveMaxX;
-		float saveMinY;
-		float saveMaxY;
-		double saveRotation;
 
-		{
-			init();
-		}
-		
-		private void
-		init()
-		{
-			minX = def_minX;
-			maxX = def_maxX;
-			minY = def_minY;
-			maxY = def_maxY;
-			rotation = def_rotation;
-			
-			saveMinX	= 0;
-			saveMaxX	= 0;
-			saveMinY	= 0;
-			saveMaxY	= 0;
-			saveRotation	= 0;
-		}
-		
-		public int getX(float x,float y) {
-			return (int) (((x * Math.cos(rotation) + y * Math.sin(rotation))-minX)/(maxX - minX) * width);
-		}
-
-		public int getY(float x,float y) {
-			return (int) (((y * Math.cos(rotation) - x * Math.sin(rotation))-minY)/(maxY-minY) * height);
-		}
-		
-		public int[] getXY( float x, float y ){
-			return( new int[]{getX(x,y), getY( x,y)});
-		}
-		
-		/*
-		public int getWidth( float w ){
-			return( (int)(w/(maxX-minX)* width));
-		}		
-		
-		public int getHeight( float w ){	
-			return( (int)(w/(maxY-minY)* height));
-		}
-		*/
-		
-		public int getReverseWidth( float w ){
-			return( (int)((w/width)* (maxX-minX)));
-		}	
-		
-		public int getReverseHeight( float h ){
-			return( (int)((h/height)* (maxY-minY)));
-		}	
-	}
 
 	public 
 	XferStatsPanel(
@@ -301,7 +230,7 @@ XferStatsPanel
 			}
 			@Override
 			public void mouseDoubleClick(MouseEvent e) {
-				scale.init();
+				scale.reset();
 				refresh();
 			}
 		});

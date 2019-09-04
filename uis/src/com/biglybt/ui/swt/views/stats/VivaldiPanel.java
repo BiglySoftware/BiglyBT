@@ -41,7 +41,7 @@ import com.biglybt.core.dht.netcoords.vivaldi.ver1.*;
 import com.biglybt.core.dht.netcoords.vivaldi.ver1.impl.*;
 import com.biglybt.ui.swt.utils.ColorCache;
 
-public class VivaldiPanel {
+public class VivaldiPanel extends BasePanel {
   private static final int ALPHA_FOCUS = 255;
   private static final int ALPHA_NOFOCUS = 150;
 
@@ -56,8 +56,6 @@ public class VivaldiPanel {
   private int xDown;
   private int yDown;
 
-  private boolean  	disableAutoScale 	= false;
-  private long		lastAutoScale		= 0;
 
   private boolean antiAliasingAvailable = true;
 	private List<DHTControlContact> lastContacts;
@@ -70,50 +68,6 @@ public class VivaldiPanel {
   private boolean autoAlpha = false;
 
   private List<Object[]>	currentPositions = new ArrayList<>();
-
-  private class Scale {
-    int width;
-    int height;
-
-    float minX;
-    float maxX;
-    float minY;
-    float maxY;
-    double rotation;
-
-    float saveMinX;
-    float saveMaxX;
-    float saveMinY;
-    float saveMaxY;
-    double saveRotation;
-
-    public
-    Scale()
-    {
-    	reset();
-    }
-
-    public int getX(float x,float y) {
-      return (int) (((x * Math.cos(rotation) + y * Math.sin(rotation))-minX)/(maxX - minX) * width);
-    }
-
-    public int getY(float x,float y) {
-      return (int) (((y * Math.cos(rotation) - x * Math.sin(rotation))-minY)/(maxY-minY) * height);
-    }
-
-    public void
-    reset()
-    {
-    	minX = -1000;
-        maxX = 1000;
-        minY = -1000;
-        maxY = 1000;
-        rotation = 0;
-
-        disableAutoScale 	= false;
-        lastAutoScale		= 0;
-     }
-  }
 
   public VivaldiPanel(Composite parent) {
     this.parent = parent;
@@ -172,6 +126,7 @@ public class VivaldiPanel {
       @Override
     	public void mouseDoubleClick(MouseEvent e) {
     		scale.reset();
+    		refreshContacts(lastContacts, lastSelf);
     	}
     });
 
@@ -274,7 +229,7 @@ public class VivaldiPanel {
         scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
         scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
 
-        disableAutoScale = true;
+        scale.disableAutoScale = true;
         refreshContacts(lastContacts, lastSelf);
 			}
 		});
@@ -295,7 +250,7 @@ public class VivaldiPanel {
           scale.maxX = scale.saveMaxX - realDeltaX;
           scale.minY = scale.saveMinY - realDeltaY;
           scale.maxY = scale.saveMaxY - realDeltaY;
-          disableAutoScale = true;
+          scale.disableAutoScale = true;
           refreshContacts(lastContacts, lastSelf);
         }
         if(mouseRightDown || (mouseLeftDown && (event.stateMask & SWT.MOD4) > 0)) {
@@ -337,7 +292,7 @@ public class VivaldiPanel {
           float centerY = (scale.saveMinY + scale.saveMaxY)/2 + yOfs;
           scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
           scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
-          disableAutoScale = true;
+          scale.disableAutoScale = true;
           refreshContacts(lastContacts, lastSelf);
         }
       }
@@ -490,7 +445,7 @@ public class VivaldiPanel {
 
 	    boolean	skip_redraw = false;
 
-	    if ( !disableAutoScale ){
+	    if ( !scale.disableAutoScale ){
 
 	    	int num_pos = currentPositions.size();
 
@@ -498,9 +453,9 @@ public class VivaldiPanel {
 
 	        	long now = SystemTime.getMonotonousTime();
 
-	        	if ( now - lastAutoScale >= 5*1000 ){
+	        	if ( now - scale.lastAutoScale >= 5*1000 ){
 
-	        		lastAutoScale = now;
+	        		scale.lastAutoScale = now;
 
 		    		float	min_x = Float.MAX_VALUE;
 		    		float	min_y = Float.MAX_VALUE;
