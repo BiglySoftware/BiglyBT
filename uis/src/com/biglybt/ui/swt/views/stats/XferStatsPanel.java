@@ -80,24 +80,6 @@ XferStatsPanel
 
 	private long	latest_sequence	= Long.MAX_VALUE;
 	
-	private FrequencyLimitedDispatcher	refresh_dispatcher = 
-		new FrequencyLimitedDispatcher(
-			new AERunnable(){
-				
-				@Override
-				public void runSupport(){
-					Utils.execSWTThread(
-						new Runnable(){
-							
-							@Override
-							public void run(){
-								refresh();
-							}
-						});
-				}
-			},
-			250 );
-
 	int flag_width;
 	int flag_height;
 	int	text_height;
@@ -339,7 +321,7 @@ XferStatsPanel
 				scale.saveMinY = scale.minY;
 				scale.saveMaxY = scale.maxY;
 
-				int deltaY = event.count * 5;
+				int deltaY = event.count * -5;
 				// scaleFactor>1 means zoom in, this happens when
 				// deltaY<0 which happens when the mouse is moved up.
 				float scaleFactor = 1 - (float) deltaY / 300;
@@ -348,11 +330,19 @@ XferStatsPanel
 				// Scalefactor of e.g. 3 makes elements 3 times larger
 				float moveFactor = 1 - 1/scaleFactor;
 
-				float centerX = (scale.saveMinX + scale.saveMaxX)/2;
+				Canvas canvas = ((Canvas) event.widget);
+				Point canvasSize = canvas.getSize();
+				// event.x, event.y are relative to control
+				float mouseXpct = (event.x + 1) / (float) canvasSize.x;
+				float mouseYpct = (event.y + 1) / (float) canvasSize.y;
+				float xOfs = (mouseXpct - 0.5f) * (scale.saveMaxX - scale.saveMinX);
+				float yOfs = (mouseYpct - 0.5f) * (scale.saveMaxY - scale.saveMinY);
+
+				float centerX = ((scale.saveMinX + scale.saveMaxX)/2) + xOfs;
 				scale.minX = scale.saveMinX + moveFactor * (centerX - scale.saveMinX);
 				scale.maxX = scale.saveMaxX - moveFactor * (scale.saveMaxX - centerX);
 
-				float centerY = (scale.saveMinY + scale.saveMaxY)/2;
+				float centerY = (scale.saveMinY + scale.saveMaxY)/2 + yOfs;
 				scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
 				scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
 				refresh();
@@ -380,9 +370,20 @@ XferStatsPanel
 				}
 				if(mouseRightDown || (mouseLeftDown && (event.stateMask & SWT.MOD4) > 0)) {
 					int deltaX = event.x - xDown;
+					int deltaY = event.y - yDown;
+					int diffX = Math.abs(deltaX);
+					int diffY = Math.abs(deltaY);
+					// Don't start rotating until a few px movement.  Helps when
+					// user just wants to zoom (move up/down) or rotate (move left/right) 
+					// and doesn't have steady hand
+					if (diffY > diffX && diffX <= 3) {
+						deltaX = 0;
+					}
+					if (diffY > diffX && diffY <= 3) {
+						deltaY = 0;
+					}
 					scale.rotation = scale.saveRotation - (float) deltaX / 100;
 
-					int deltaY = event.y - yDown;
 					// scaleFactor>1 means zoom in, this happens when
 					// deltaY<0 which happens when the mouse is moved up.
 					float scaleFactor = 1 - (float) deltaY / 300;
@@ -391,11 +392,19 @@ XferStatsPanel
 					// Scalefactor of e.g. 3 makes elements 3 times larger
 					float moveFactor = 1 - 1/scaleFactor;
 
-					float centerX = (scale.saveMinX + scale.saveMaxX)/2;
+					Canvas canvas = ((Canvas) event.widget);
+					Point canvasSize = canvas.getSize();
+					// event.x, event.y are relative to control
+					float mouseXpct = (xDown + 1) / (float) canvasSize.x;
+					float mouseYpct = (yDown + 1) / (float) canvasSize.y;
+					float xOfs = (mouseXpct - 0.5f) * (scale.saveMaxX - scale.saveMinX);
+					float yOfs = (mouseYpct - 0.5f) * (scale.saveMaxY - scale.saveMinY);
+
+					float centerX = (scale.saveMinX + scale.saveMaxX)/2 + xOfs;
 					scale.minX = scale.saveMinX + moveFactor * (centerX - scale.saveMinX);
 					scale.maxX = scale.saveMaxX - moveFactor * (scale.saveMaxX - centerX);
 
-					float centerY = (scale.saveMinY + scale.saveMaxY)/2;
+					float centerY = (scale.saveMinY + scale.saveMaxY)/2 + yOfs;
 					scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
 					scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
 					requestRefresh();
@@ -518,10 +527,18 @@ XferStatsPanel
 		}
 	}
 
+	private boolean isRefreshQueued = false;
 	public void
 	requestRefresh()
 	{
-		refresh_dispatcher.dispatch();
+		if (isRefreshQueued) {
+			return;
+		}
+		isRefreshQueued = true;
+		Utils.execSWTThreadLater(20, () -> {
+			isRefreshQueued = false;
+			refresh();
+		});
 	}
 	
 	public void
@@ -532,7 +549,8 @@ XferStatsPanel
 			return;
 		}
 
-		Rectangle size = canvas.getBounds();
+		Point canvasSize = canvas.getSize();
+		Rectangle size = new Rectangle(0, 0, canvasSize.x, canvasSize.y);
 
 		if ( size.width <= 0 || size.height <= 0 ){
 
@@ -542,12 +560,14 @@ XferStatsPanel
 		scale.width 	= size.width;
 		scale.height 	= size.height;
 
-		if (img != null && !img.isDisposed()){
-
-			img.dispose();
+		boolean needNewImage = img == null || img.isDisposed();
+		if (!needNewImage) {
+			Rectangle bounds = img.getBounds();
+			needNewImage = bounds.width != size.width || bounds.height != size.height;
 		}
-
-		img = new Image(display,size);
+		if (needNewImage) {
+			img = new Image(display,size);
+		}
 
 		GC gc = new GC(img);
 

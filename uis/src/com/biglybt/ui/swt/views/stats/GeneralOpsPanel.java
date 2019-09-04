@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.biglybt.core.util.*;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
@@ -37,15 +38,9 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.*;
 
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.SimpleTimer;
-import com.biglybt.core.util.SystemTime;
-import com.biglybt.core.util.TimerEvent;
-import com.biglybt.core.util.TimerEventPerformer;
-import com.biglybt.core.util.TimerEventPeriodic;
 import com.biglybt.ui.swt.Utils;
 
 import com.biglybt.ui.swt.utils.ColorCache;
-import com.biglybt.ui.swt.views.PeersViewBase;
 
 public class
 GeneralOpsPanel
@@ -258,7 +253,7 @@ GeneralOpsPanel
 				scale.saveMinY = scale.minY;
 				scale.saveMaxY = scale.maxY;
 
-				int deltaY = event.count * 5;
+				int deltaY = event.count * -5;
 				// scaleFactor>1 means zoom in, this happens when
 				// deltaY<0 which happens when the mouse is moved up.
 				float scaleFactor = 1 - (float) deltaY / 300;
@@ -267,11 +262,19 @@ GeneralOpsPanel
 				// Scalefactor of e.g. 3 makes elements 3 times larger
 				float moveFactor = 1 - 1/scaleFactor;
 
-				float centerX = (scale.saveMinX + scale.saveMaxX)/2;
+				Canvas canvas = ((Canvas) event.widget);
+				Point canvasSize = canvas.getSize();
+				// event.x, event.y are relative to control
+				float mouseXpct = (event.x + 1) / (float) canvasSize.x;
+				float mouseYpct = (event.y + 1) / (float) canvasSize.y;
+				float xOfs = (mouseXpct - 0.5f) * (scale.saveMaxX - scale.saveMinX);
+				float yOfs = (mouseYpct - 0.5f) * (scale.saveMaxY - scale.saveMinY);
+
+				float centerX = ((scale.saveMinX + scale.saveMaxX)/2) + xOfs;
 				scale.minX = scale.saveMinX + moveFactor * (centerX - scale.saveMinX);
 				scale.maxX = scale.saveMaxX - moveFactor * (scale.saveMaxX - centerX);
 
-				float centerY = (scale.saveMinY + scale.saveMaxY)/2;
+				float centerY = ((scale.saveMinY + scale.saveMaxY)/2) + yOfs;
 				scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
 				scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
 				refresh();
@@ -279,7 +282,6 @@ GeneralOpsPanel
 		});
 
 		canvas.addMouseMoveListener(new MouseMoveListener() {
-			private long last_refresh;
 			@Override
 			public void mouseMove(MouseEvent event) {
 				boolean	do_refresh = false;
@@ -300,9 +302,20 @@ GeneralOpsPanel
 				}
 				if(mouseRightDown || (mouseLeftDown && (event.stateMask & SWT.MOD4) > 0)) {
 					int deltaX = event.x - xDown;
+					int deltaY = event.y - yDown;
+					int diffX = Math.abs(deltaX);
+					int diffY = Math.abs(deltaY);
+					// Don't start rotating until a few px movement.  Helps when
+					// user just wants to zoom (move up/down) or rotate (move left/right) 
+					// and doesn't have steady hand
+					if (diffY > diffX && diffX <= 3) {
+						deltaX = 0;
+					}
+					if (diffY > diffX && diffY <= 3) {
+						deltaY = 0;
+					}
 					scale.rotation = scale.saveRotation - (float) deltaX / 100;
 
-					int deltaY = event.y - yDown;
 					// scaleFactor>1 means zoom in, this happens when
 					// deltaY<0 which happens when the mouse is moved up.
 					float scaleFactor = 1 - (float) deltaY / 300;
@@ -311,11 +324,19 @@ GeneralOpsPanel
 					// Scalefactor of e.g. 3 makes elements 3 times larger
 					float moveFactor = 1 - 1/scaleFactor;
 
-					float centerX = (scale.saveMinX + scale.saveMaxX)/2;
+					Canvas canvas = ((Canvas) event.widget);
+					Point canvasSize = canvas.getSize();
+					// event.x, event.y are relative to control
+					float mouseXpct = (xDown + 1) / (float) canvasSize.x;
+					float mouseYpct = (yDown + 1) / (float) canvasSize.y;
+					float xOfs = (mouseXpct - 0.5f) * (scale.saveMaxX - scale.saveMinX);
+					float yOfs = (mouseYpct - 0.5f) * (scale.saveMaxY - scale.saveMinY);
+
+					float centerX = (scale.saveMinX + scale.saveMaxX)/2 + xOfs;
 					scale.minX = scale.saveMinX + moveFactor * (centerX - scale.saveMinX);
 					scale.maxX = scale.saveMaxX - moveFactor * (scale.saveMaxX - centerX);
 
-					float centerY = (scale.saveMinY + scale.saveMaxY)/2;
+					float centerY = (scale.saveMinY + scale.saveMaxY)/2 + yOfs;
 					scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
 					scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
 					do_refresh = true;
@@ -323,14 +344,7 @@ GeneralOpsPanel
 
 				if ( do_refresh ){
 
-					long now = SystemTime.getMonotonousTime();
-
-					if ( now - last_refresh >= 250 ){
-
-						last_refresh = now;
-
 						refresh();
-					}
 				}
 			}
 		});
@@ -485,15 +499,28 @@ GeneralOpsPanel
 		scale.rotation 	= rot;
 	}
 
-	public void
-	refresh()
+	private boolean isRefreshQueued = false;
+	public void refresh() {
+		if (isRefreshQueued) {
+			return;
+		}
+		isRefreshQueued = true;
+		Utils.execSWTThreadLater(20, () -> {
+			isRefreshQueued = false;
+			_refresh();
+		});
+	}
+
+	private void
+	_refresh()
 	{
 		if ( canvas.isDisposed()){
 
 			return;
 		}
 
-		Rectangle size = canvas.getBounds();
+		Point canvasSize = canvas.getSize();
+		Rectangle size = new Rectangle(0, 0, canvasSize.x, canvasSize.y);
 
 		if ( size.width <= 0 || size.height <= 0 ){
 
@@ -503,12 +530,14 @@ GeneralOpsPanel
 		scale.width = size.width;
 		scale.height = size.height;
 
-		if (img != null && !img.isDisposed()){
-
-			img.dispose();
+		boolean needNewImage = img == null || img.isDisposed();
+		if (!needNewImage) {
+			Rectangle bounds = img.getBounds();
+			needNewImage = bounds.width != size.width || bounds.height != size.height;
 		}
-
-		img = new Image(display,size);
+		if (needNewImage) {
+			img = new Image(display,size);
+		}
 
 		GC gc = new GC(img);
 

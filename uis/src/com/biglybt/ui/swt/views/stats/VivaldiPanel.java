@@ -27,10 +27,7 @@ import java.util.List;
 import com.biglybt.ui.swt.mainwindow.Colors;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.*;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.GC;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.graphics.*;
 import org.eclipse.swt.widgets.*;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.peer.util.PeerUtils;
@@ -252,7 +249,7 @@ public class VivaldiPanel {
         scale.saveMinY = scale.minY;
         scale.saveMaxY = scale.maxY;
 
-        int deltaY = event.count * 5;
+        int deltaY = event.count * -5;
         // scaleFactor>1 means zoom in, this happens when
         // deltaY<0 which happens when the mouse is moved up.
         float scaleFactor = 1 - (float) deltaY / 300;
@@ -261,11 +258,19 @@ public class VivaldiPanel {
         // Scalefactor of e.g. 3 makes elements 3 times larger
         float moveFactor = 1 - 1/scaleFactor;
 
-        float centerX = (scale.saveMinX + scale.saveMaxX)/2;
+				Canvas canvas = ((Canvas) event.widget);
+				Point canvasSize = canvas.getSize();
+				// event.x, event.y are relative to control
+				float mouseXpct = (event.x + 1) / (float) canvasSize.x;
+				float mouseYpct = (event.y + 1) / (float) canvasSize.y;
+				float xOfs = (mouseXpct - 0.5f) * (scale.saveMaxX - scale.saveMinX);
+				float yOfs = (mouseYpct - 0.5f) * (scale.saveMaxY - scale.saveMinY);
+
+				float centerX = ((scale.saveMinX + scale.saveMaxX)/2) + xOfs;
         scale.minX = scale.saveMinX + moveFactor * (centerX - scale.saveMinX);
         scale.maxX = scale.saveMaxX - moveFactor * (scale.saveMaxX - centerX);
 
-        float centerY = (scale.saveMinY + scale.saveMaxY)/2;
+        float centerY = (scale.saveMinY + scale.saveMaxY)/2 + yOfs;
         scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
         scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
 
@@ -295,9 +300,20 @@ public class VivaldiPanel {
         }
         if(mouseRightDown || (mouseLeftDown && (event.stateMask & SWT.MOD4) > 0)) {
           int deltaX = event.x - xDown;
+	        int deltaY = event.y - yDown;
+	        int diffX = Math.abs(deltaX);
+	        int diffY = Math.abs(deltaY);
+	        // Don't start rotating until a few px movement.  Helps when
+	        // user just wants to zoom (move up/down) or rotate (move left/right) 
+	        // and doesn't have steady hand
+          if (diffY > diffX && diffX <= 3) {
+          	deltaX = 0;
+          }
+	        if (diffY > diffX && diffY <= 3) {
+		        deltaY = 0;
+	        }
           scale.rotation = scale.saveRotation - (float) deltaX / 100;
 
-          int deltaY = event.y - yDown;
           // scaleFactor>1 means zoom in, this happens when
           // deltaY<0 which happens when the mouse is moved up.
           float scaleFactor = 1 - (float) deltaY / 300;
@@ -306,11 +322,19 @@ public class VivaldiPanel {
           // Scalefactor of e.g. 3 makes elements 3 times larger
           float moveFactor = 1 - 1/scaleFactor;
 
-          float centerX = (scale.saveMinX + scale.saveMaxX)/2;
+	        Canvas canvas = ((Canvas) event.widget);
+	        Point canvasSize = canvas.getSize();
+	        // event.x, event.y are relative to control
+	        float mouseXpct = (xDown + 1) / (float) canvasSize.x;
+	        float mouseYpct = (yDown + 1) / (float) canvasSize.y;
+	        float xOfs = (mouseXpct - 0.5f) * (scale.saveMaxX - scale.saveMinX);
+	        float yOfs = (mouseYpct - 0.5f) * (scale.saveMaxY - scale.saveMinY);
+
+	        float centerX = (scale.saveMinX + scale.saveMaxX)/2 + xOfs;
           scale.minX = scale.saveMinX + moveFactor * (centerX - scale.saveMinX);
           scale.maxX = scale.saveMaxX - moveFactor * (scale.saveMaxX - centerX);
 
-          float centerY = (scale.saveMinY + scale.saveMaxY)/2;
+          float centerY = (scale.saveMinY + scale.saveMaxY)/2 + yOfs;
           scale.minY = scale.saveMinY + moveFactor * (centerY - scale.saveMinY);
           scale.maxY = scale.saveMaxY - moveFactor * (scale.saveMaxY - centerY);
           disableAutoScale = true;
@@ -344,19 +368,37 @@ public class VivaldiPanel {
     canvas.setLayoutData(data);
   }
 
-	public void
-	refreshContacts(
+	private boolean isRefreshQueued = false;
+	public void refreshContacts(
 		List<DHTControlContact> contacts,
-		DHTTransportContact self )
+		DHTTransportContact self) {
+		if (contacts == null || self == null) {
+			return;
+		}
+		// always called in SWT Thread, so lastXxx won't be changing mid-build
+		lastContacts = contacts;
+		lastSelf = self;
+
+		if (isRefreshQueued) {
+			return;
+		}
+		isRefreshQueued = true;
+		Utils.execSWTThreadLater(20, () -> {
+			isRefreshQueued = false;
+			_refreshContacts();
+		});
+	}
+
+	public void
+	_refreshContacts()
 	{
-	  	if (contacts == null || self == null) {
+	  	if (lastContacts == null || lastSelf == null) {
 	  		return;
 	  	}
-	    lastContacts = contacts;
-	    lastSelf = self;
 
 	    if(canvas.isDisposed()) return;
-	    Rectangle size = canvas.getBounds();
+			Point canvasSize = canvas.getSize();
+			Rectangle size = new Rectangle(0, 0, canvasSize.x, canvasSize.y);
 
 	    if (size.isEmpty()) {
 	    	return;
@@ -368,11 +410,14 @@ public class VivaldiPanel {
 	    Color white = ColorCache.getColor(display,255,255,255);
 	    Color blue = ColorCache.getColor(display,66,87,104);
 
-	    if (img != null && !img.isDisposed()) {
-	    	img.dispose();
-	    }
-
-	    img = new Image(display,size);
+			boolean needNewImage = img == null || img.isDisposed();
+			if (!needNewImage) {
+				Rectangle bounds = img.getBounds();
+				needNewImage = bounds.width != size.width || bounds.height != size.height;
+			}
+			if (needNewImage) {
+				img = new Image(display,size);
+			}
 
 	    GC gc = new GC(img);
 
@@ -394,7 +439,7 @@ public class VivaldiPanel {
 	    gc.setForeground(blue);
 	    gc.setBackground(white);
 
-	    DHTNetworkPosition _ownPosition = self.getNetworkPosition(DHTNetworkPosition.POSITION_TYPE_VIVALDI_V1);
+	    DHTNetworkPosition _ownPosition = lastSelf.getNetworkPosition(DHTNetworkPosition.POSITION_TYPE_VIVALDI_V1);
 
 	    if ( _ownPosition == null ){
 
@@ -419,7 +464,7 @@ public class VivaldiPanel {
 
 	    long	total_distance 	= 0;
 
-	    for (DHTControlContact contact : contacts) {
+	    for (DHTControlContact contact : lastContacts) {
 	      DHTNetworkPosition _position = contact.getTransportContact().getNetworkPosition(DHTNetworkPosition.POSITION_TYPE_VIVALDI_V1);
 	      if ( _position == null ){
 	    	  continue;
@@ -503,7 +548,7 @@ public class VivaldiPanel {
 
 					//System.out.println(scale.minX+","+ scale.maxX+","+scale.minY+","+scale.maxY+" -> " + new_min_x + "," +new_max_x+","+new_min_y+","+new_max_y);
 
-					refreshContacts( contacts, self );
+					_refreshContacts();
 
 					skip_redraw = true;
 	        	}
