@@ -1652,7 +1652,45 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 	
 				pw.println(	"<pubDate>" + TimeFormatter.getHTTPDate( last_modified ) + "</pubDate>" );
 	
-				for ( ChatMessage message: messages ){
+					// There is a bug I can't nail down that causes message time stamps to sometime move forward in time
+					// The message order given to us by the Chat uses internal linkage determination to sort, rather than
+					// timestamp, and is pretty resilient. We want to ensure that at least the RSS pubdate order tries
+					// to maintain some consistency in the face of this bug...
+				
+				int	message_num = messages.size();
+				
+				long[]	message_times = new long[message_num];
+				
+				if ( message_num > 0 ){
+					
+					long	max = messages.get(message_num-1).getTimeStamp()+1;
+					
+					for ( int i=message_num-1;i>=0;i--){
+						
+						long time = messages.get(i).getTimeStamp();
+						
+						if ( time > max ){
+							
+							time = max;
+							
+						}else if ( time == max ){
+							
+							max--;
+							
+							time = max;
+							
+						}else{
+							
+							max = time;
+						}
+						
+						message_times[i] = time;
+					}
+				}
+				
+				for ( int i=0;i<message_num;i++){
+					
+					ChatMessage message = messages.get( i );
 	
 					List<Map<String,Object>>	message_links = extractLinks( message.getMessage());
 	
@@ -1661,7 +1699,9 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 						continue;
 					}
 	
-					String item_date = TimeFormatter.getHTTPDate( message.getTimeStamp());
+					long message_time = message_times[i];
+					
+					String item_date = TimeFormatter.getHTTPDate( message_time );
 	
 					for ( Map<String,Object> message_link: message_links ){
 	
@@ -1713,7 +1753,30 @@ BuddyPluginBeta implements DataSourceImporter, AEDiagnosticsEvidenceGenerator {
 							Long	seeds 		= (Long)magnet.get( "seeds" );
 							Long	leechers 	= (Long)magnet.get( "leechers" );
 							Long	date	 	= (Long)magnet.get( "date" );
-	
+								
+							if ( date != null ){
+								
+									// make sure within range for this item
+								
+								if ( date < message_time ){
+								
+									date = null;
+									
+								}else{
+									
+									if ( i < message_num -1 ){
+										
+										if ( date >= message_times[ i+1 ] ){
+											
+											date = null;
+										}
+									}else{
+										
+										date = null;
+									}
+								}
+							}
+							
 							String enclosure =
 									"<enclosure " +
 										"type=\"application/x-bittorrent\" " +
