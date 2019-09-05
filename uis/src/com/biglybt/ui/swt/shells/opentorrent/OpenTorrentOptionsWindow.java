@@ -4747,6 +4747,11 @@ public class OpenTorrentOptionsWindow
 
 				Composite sc = Utils.createScrolledComposite( tagRight, so.getExpandItem().getParent().getParent());
 
+				if ( Constants.isWindows ){
+					sc.setBackground( Colors.white );
+					sc.setBackgroundMode( SWT.INHERIT_DEFAULT );
+				}
+				
 				layout = new GridLayout();
 				layout.numColumns = 1;
 				layout.marginWidth  = 0;
