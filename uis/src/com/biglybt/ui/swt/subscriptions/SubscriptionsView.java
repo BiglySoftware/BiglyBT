@@ -247,6 +247,9 @@ public class SubscriptionsView
 
 
 	private void delete() {
+		if ( view != null && !view.isDisposed()){
+			view.delete();
+		}
 		if (viewComposite != null && !viewComposite.isDisposed()) {
 			viewComposite.dispose();
 		}
@@ -276,11 +279,12 @@ public class SubscriptionsView
 				new ColumnSubscriptionName(TABLE_ID),
 				new ColumnSubscriptionNbNewResults(TABLE_ID),
 				new ColumnSubscriptionNbResults(TABLE_ID),
+				new ColumnSubscriptionAutoDownload(TABLE_ID),
+
 				new ColumnSubscriptionMaxResults(TABLE_ID),
 				new ColumnSubscriptionLastChecked(TABLE_ID),
 				new ColumnSubscriptionSubscribers(TABLE_ID),
 				new ColumnSubscriptionEnabled(TABLE_ID),
-				new ColumnSubscriptionAutoDownload(TABLE_ID),
 				new ColumnSubscriptionCategory(TABLE_ID),
 				new ColumnSubscriptionTag(TABLE_ID),
 				new ColumnSubscriptionParent(TABLE_ID),
@@ -289,14 +293,9 @@ public class SubscriptionsView
 		};
 
 		TableColumnManager tcm = TableColumnManager.getInstance();
-		tcm.setDefaultColumnNames(TABLE_ID, new String[] {
-			ColumnSubscriptionNew.COLUMN_ID,
-			ColumnSubscriptionName.COLUMN_ID,
-			ColumnSubscriptionNbNewResults.COLUMN_ID,
-			ColumnSubscriptionNbResults.COLUMN_ID,
-			ColumnSubscriptionAutoDownload.COLUMN_ID,
-		});
 
+		tcm.setDefaultSortColumnName(TABLE_ID, "name");
+				
 		view = TableViewFactory.createTableViewSWT(Subscription.class, TABLE_ID, TABLE_ID,
 				columns, "name", SWT.MULTI | SWT.FULL_SELECTION | SWT.VIRTUAL);
 

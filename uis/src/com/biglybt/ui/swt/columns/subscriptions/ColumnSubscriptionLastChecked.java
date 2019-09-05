@@ -52,6 +52,7 @@ ColumnSubscriptionLastChecked
 		super(Subscription.class, COLUMN_ID, TableColumnCreator.DATE_COLUMN_WIDTH,
 				sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
+		setPosition( POSITION_INVISIBLE );
 		setMinWidth(100);
 
 		setMultiline( false );

@@ -36,12 +36,12 @@ public class ColumnSubscriptionError
 		info.addCategories(new String[] {
 			CAT_ESSENTIAL,
 		});
-		info.setProficiency(TableColumnInfo.PROFICIENCY_INTERMEDIATE);
+		info.setProficiency(TableColumnInfo.PROFICIENCY_BEGINNER);
 	}
 
 	/** Default Constructor */
 	public ColumnSubscriptionError(String sTableID) {
-		super(COLUMN_ID, POSITION_LAST, 300, sTableID);
+		super(COLUMN_ID, POSITION_INVISIBLE, 300, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
 		setAlignment(ALIGN_LEAD);
 	}
