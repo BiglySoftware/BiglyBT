@@ -3009,7 +3009,7 @@ TagPropertyConstraintHandler
 
 					if ( GeneralUtils.startsWithDoubleQuote( arg ) && GeneralUtils.endsWithDoubleQuote( arg )){
 
-						args[index] = arg.substring( 1, arg.length() - 1 );
+						args[index] = arg.substring( 1, arg.length() - 1 ).replace("\\\"", "\"");
 
 						return( true );
 					}
@@ -3141,7 +3141,7 @@ TagPropertyConstraintHandler
 				
 				if ( GeneralUtils.startsWithDoubleQuote( str ) && GeneralUtils.endsWithDoubleQuote( str )){
 
-					return( new String[]{ str.substring( 1, str.length() - 1 )});
+					return( new String[]{ str.substring( 1, str.length() - 1 ).replace("\\\"", "\"")});
 
 				}else if ( str.equals( "name" )){
 
@@ -3783,6 +3783,6 @@ TagPropertyConstraintHandler
 		TagPropertyConstraintHandler handler = new TagPropertyConstraintHandler();
 
 		//System.out.println( handler.compileConstraint( "!(hasTag(\"bil\") && (hasTag( \"fred\" ))) || hasTag(\"toot\")" ).getString());
-		System.out.println( handler.compileConstraint( "hasTag(  �Seeding Only� ) && seeding_for > h2s(10) || hasTag(\"sdsd\") " ).getString());
+		System.out.println( handler.compileConstraint( "hasTag(  Seeding Only ) && seeding_for > h2s(10) || hasTag(\"sdsd\") " ).getString());
 	}
 }
