@@ -1092,7 +1092,8 @@ TagPropertyConstraintHandler
 
 							String bracket_text = new String( chars, bracket_start, i-bracket_start ).trim();
 
-							bracket_text = bracket_text.replaceAll( "\\Q\\\\\\E", Matcher.quoteReplacement( "\\" ));
+							//This appears to be written for a purpose, but we can't find a use case, so it's removed until someone complains we broke something
+							//bracket_text = bracket_text.replaceAll( "\\Q\\\\\\E", Matcher.quoteReplacement( "\\" ));
 							
 							if ( result.length() > 0 && Character.isLetterOrDigit( result.charAt( result.length()-1 ))){
 
@@ -3782,6 +3783,6 @@ TagPropertyConstraintHandler
 		TagPropertyConstraintHandler handler = new TagPropertyConstraintHandler();
 
 		//System.out.println( handler.compileConstraint( "!(hasTag(\"bil\") && (hasTag( \"fred\" ))) || hasTag(\"toot\")" ).getString());
-		System.out.println( handler.compileConstraint( "hasTag(  “Seeding Only” ) && seeding_for > h2s(10) || hasTag(\"sdsd\") " ).getString());
+		System.out.println( handler.compileConstraint( "hasTag(  ï¿½Seeding Onlyï¿½ ) && seeding_for > h2s(10) || hasTag(\"sdsd\") " ).getString());
 	}
 }
