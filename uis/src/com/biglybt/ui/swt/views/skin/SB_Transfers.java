@@ -841,7 +841,6 @@ public class SB_Transfers
 					CategoryManager.addCategoryManagerListener(categoryManagerListener);
 					if (categories.length > 2) {
 						for (Category category : categories) {
-							category.addCategoryListener(categoryListener);
 							setupCategory(category);
 						}
 					}
@@ -853,7 +852,6 @@ public class SB_Transfers
 						categoryManagerListener = null;
 					}
 					for (Category category : categories) {
-						category.removeCategoryListener(categoryListener);
 						removeCategory(category);
 					}
 				}
@@ -1278,6 +1276,7 @@ public class SB_Transfers
 		// category stuff
 
 	private void RefreshCategorySideBar(Category category) {
+		
 		MultipleDocumentInterface mdi = UIFunctionsManager.getUIFunctions().getMDI();
 		if (mdi == null) {
 			return;
@@ -1302,6 +1301,14 @@ public class SB_Transfers
 
 		String name = category.getName();
 		String id = "Cat." + Base32.encode(name.getBytes());
+		
+		MdiEntry existing = mdi.getEntry( id );
+
+		if ( existing != null ){
+			return;
+		}
+		
+		category.addCategoryListener( categoryListener );
 		
 		String loc_name = name;
 		if (category.getType() != Category.TYPE_USER) {
@@ -1394,10 +1401,12 @@ public class SB_Transfers
 			return;
 		}
 
-		MdiEntry entry = mdi.getEntry("Cat."
-				+ Base32.encode(category.getName().getBytes()));
+		MdiEntry entry = mdi.getEntry("Cat." + Base32.encode(category.getName().getBytes()));
 
 		if (entry != null) {
+			
+			category.removeCategoryListener(categoryListener);
+			
 			entry.close(true);
 		}
 	}
