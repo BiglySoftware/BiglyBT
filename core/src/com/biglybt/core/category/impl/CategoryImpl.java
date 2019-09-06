@@ -188,6 +188,15 @@ CategoryImpl
   }
   
   @Override
+  public boolean[] isTagAuto(){
+	  if ( getType() == Category.TYPE_USER ){
+		  return( new boolean[]{ false, false, false });
+	  }else{
+		  return( new boolean[]{ true, true, false });
+	  }
+  }
+  
+  @Override
   public List<DownloadManager> getDownloadManagers(List<DownloadManager> all_dms) {
 	  if ( type == Category.TYPE_USER ){
 		  return managers;
@@ -224,27 +233,33 @@ CategoryImpl
     	return;
     }
 
-    addTaggable( manager );
-
-    if (!managers.contains(manager)) {
+    boolean do_add = !managers.contains(manager);
+    
+    if ( do_add ){
     	if (type == Category.TYPE_USER) {
     		managers.add(manager);
     	}
+    	
+        manager.addRateLimiter( upload_limiter, true );
+        manager.addRateLimiter( download_limiter, false );
 
-      manager.addRateLimiter( upload_limiter, true );
-      manager.addRateLimiter( download_limiter, false );
+        int pri = getIntAttribute( AT_UPLOAD_PRIORITY, -1 );
 
-      int pri = getIntAttribute( AT_UPLOAD_PRIORITY, -1 );
+        if ( pri > 0 ){
 
-      if ( pri > 0 ){
+      	  	// another call-during-construction issue to avoid here
 
-    	  	// another call-during-construction issue to avoid here
+      	  if ( manager.getDownloadState() != null ){
 
-    	  if ( manager.getDownloadState() != null ){
+      		  manager.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, true );
+      	  }
+        }
+    }
+    
+    super.addTaggable( manager );
 
-    		  manager.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, true );
-    	  }
-      }
+    if ( do_add ) {
+  
 
       category_listeners.dispatch(LDT_CATEGORY_DMADDED, manager);
     }
@@ -264,30 +279,57 @@ CategoryImpl
     	return;
     }
 
-    removeTaggable( manager );
+    boolean do_remove = type != Category.TYPE_USER || managers.contains(manager);
+    
+    if ( do_remove ){
+    	
+        managers.remove(manager);
 
-    if (type != Category.TYPE_USER || managers.contains(manager)) {
-      managers.remove(manager);
+        manager.removeRateLimiter( upload_limiter, true );
+        manager.removeRateLimiter( download_limiter, false );
 
-      manager.removeRateLimiter( upload_limiter, true );
-      manager.removeRateLimiter( download_limiter, false );
+        int pri = getIntAttribute( AT_UPLOAD_PRIORITY, -1 );
 
-      int pri = getIntAttribute( AT_UPLOAD_PRIORITY, -1 );
+        if ( pri > 0 ){
 
-      if ( pri > 0 ){
+      	  	// another call-during-construction issue to avoid here
 
-    	  	// another call-during-construction issue to avoid here
+      	  if ( manager.getDownloadState() != null ){
 
-    	  if ( manager.getDownloadState() != null ){
+      		  manager.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, false );
+      	  }
+        }
+    }
+    
+    super.removeTaggable( manager );
 
-    		  manager.updateAutoUploadPriority( UPLOAD_PRIORITY_KEY, false );
-    	  }
-      }
-
+    if ( do_remove ) {
+    	
       category_listeners.dispatch( LDT_CATEGORY_DMREMOVED, manager );
     }
   }
 
+  
+	@Override
+	public void
+	addTaggable(
+		Taggable	t )
+	{
+		DownloadManager dm = (DownloadManager)t;
+		
+		addManager( dm.getDownloadState());
+	}
+
+	@Override
+	public void
+	removeTaggable(
+		Taggable	t )
+	{
+		DownloadManager dm = (DownloadManager)t;
+		
+		removeManager( dm.getDownloadState());
+	}
+	
   @Override
   public void
   setDownloadSpeed(

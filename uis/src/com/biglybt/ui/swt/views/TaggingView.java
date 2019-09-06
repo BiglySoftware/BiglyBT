@@ -164,10 +164,10 @@ public class TaggingView
 	private void focusGained() {
 		TagManager tm = TagManagerFactory.getTagManager();
 		TagType tagType;
-		/*
+		
 		tagType = tm.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
 		tagType.addTagTypeListener(this, false);
-		*/
+		
 		tagType = tm.getTagType(TagType.TT_DOWNLOAD_MANUAL);
 		tagType.addTagTypeListener(this, false);
 	}
@@ -175,10 +175,10 @@ public class TaggingView
 	private void focusLost() {
 		TagManager tm = TagManagerFactory.getTagManager();
 		TagType tagType;
-		/*
+		
 		tagType = tm.getTagType(TagType.TT_DOWNLOAD_CATEGORY);
 		tagType.removeTagTypeListener(this);
-		*/
+		
 		tagType = tm.getTagType(TagType.TT_DOWNLOAD_MANUAL);
 		tagType.removeTagTypeListener(this);
 
@@ -404,17 +404,22 @@ public class TaggingView
 				
 				TagFeatureProperties	tfp = (TagFeatureProperties)tag;
 				
-				String[] constraint = tfp.getProperty( TagFeatureProperties.PR_CONSTRAINT ).getStringList();
+				TagProperty tfp_constraint = tfp.getProperty( TagFeatureProperties.PR_CONSTRAINT );
 				
-				if ( constraint != null && constraint.length > 0 ){
+				if ( tfp_constraint != null ){
 					
-					String s = constraint[0];
+					String[] constraint = tfp_constraint.getStringList();
 					
-					if ( s.length() > 0 ){
+					if ( constraint != null && constraint.length > 0 ){
 						
-						has_constraint = true;
+						String s = constraint[0];
 						
-						break;
+						if ( s.length() > 0 ){
+							
+							has_constraint = true;
+							
+							break;
+						}
 					}
 				}
 			}
@@ -430,7 +435,7 @@ public class TaggingView
 		
 		int[] tagTypesWanted = {
 			TagType.TT_DOWNLOAD_MANUAL,
-			//TagType.TT_DOWNLOAD_CATEGORY
+			TagType.TT_DOWNLOAD_CATEGORY
 		};
 		
 		List<Tag> listAllTags = new ArrayList<>();
@@ -501,17 +506,20 @@ public class TaggingView
 				
 				TagProperty tfp_constraint = tfp.getProperty( TagFeatureProperties.PR_CONSTRAINT );
 				
-				String[] constraint = tfp_constraint.getStringList();
-				
-				if ( constraint != null && constraint.length > 0 ){
+				if ( tfp_constraint != null ){
 					
-					String s = constraint[0];
+					String[] constraint = tfp_constraint.getStringList();
 					
-					if ( s.length() > 0 ){
-
-						String details = tfp_constraint.explainTaggable( t );
+					if ( constraint != null && constraint.length > 0 ){
 						
-						content.append( tag.getTagName(true) + " -> " + details + "\n" );
+						String s = constraint[0];
+						
+						if ( s.length() > 0 ){
+	
+							String details = tfp_constraint.explainTaggable( t );
+							
+							content.append( tag.getTagName(true) + " -> " + details + "\n" );
+						}
 					}
 				}
 			}
