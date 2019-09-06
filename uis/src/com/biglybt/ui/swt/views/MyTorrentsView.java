@@ -795,15 +795,28 @@ public class MyTorrentsView
 
 		if (!catButtonsDisabled) {
 
-			ArrayList<Tag> tagsCat = new ArrayList<>(
-					TagManagerFactory.getTagManager().getTagType(
-							TagType.TT_DOWNLOAD_CATEGORY).getTags());
-			if (showAll) {
-				tags_to_show.addAll(tagsCat);
-			} else {
-				for (Tag tag : tagsCat) {
-					if (tag.isVisible()) {
-						tags_to_show.add(tag);
+				// no point in showing any cat buttons if we're in a category library view as they are
+				// exclusive and selecting any other cat button is pointless
+			
+			boolean hideAllCats = false;
+			
+			for ( Tag t: hiddenTags ){
+				if ( t.getTagType().getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
+					hideAllCats = true;
+				}
+			}
+			
+			if ( !hideAllCats ){
+				ArrayList<Tag> tagsCat = new ArrayList<>(
+						TagManagerFactory.getTagManager().getTagType(
+								TagType.TT_DOWNLOAD_CATEGORY).getTags());
+				if (showAll) {
+					tags_to_show.addAll(tagsCat);
+				} else {
+					for (Tag tag : tagsCat) {
+						if (tag.isVisible()) {
+							tags_to_show.add(tag);
+						}
 					}
 				}
 			}
