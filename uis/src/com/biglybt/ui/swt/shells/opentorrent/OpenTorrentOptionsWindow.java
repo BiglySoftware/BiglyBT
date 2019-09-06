@@ -4918,7 +4918,7 @@ public class OpenTorrentOptionsWindow
 									
 									if ( tg.isExclusive() || tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
 										
-										for ( Tag t: tags ){
+										for ( Tag t: tags.toArray( new Tag[0] )){
 											
 											if ( t.getGroupContainer() == tg ){
 												
