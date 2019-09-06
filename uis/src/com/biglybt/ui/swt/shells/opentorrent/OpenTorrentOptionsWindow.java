@@ -4905,14 +4905,37 @@ public class OpenTorrentOptionsWindow
 								return;
 							}
 							List<Tag> tags = torrentOptions.getInitialTags();
-							boolean doTag = !tagCanvas.isSelected();
-							boolean initialTagsChanged = doTag ? addInitialTag(tags, tag)
-									: removeInitialTag(tags, tag);
+							
+							boolean tagSelected = !tagCanvas.isSelected();
+							
+							boolean initialTagsChanged = tagSelected ? addInitialTag(tags, tag)	: removeInitialTag(tags, tag);
+							
+							if ( initialTagsChanged && tagSelected ){
+								
+								TagGroup tg = tag.getGroupContainer();
+								
+								if ( tg != null ){
+									
+									if ( tg.isExclusive() || tag.getTagType().getTagType() == TagType.TT_DOWNLOAD_CATEGORY ){
+										
+										for ( Tag t: tags ){
+											
+											if ( t.getGroupContainer() == tg ){
+												
+												if ( t != tag ){
+													
+													removeInitialTag( tags, t );
+												}
+											}
+										}
+									}
+								}
+							}
 							if (initialTagsChanged) {
 
 								Tag otherTag = findOtherTag(tag);
 								if (otherTag != null) {
-									if (doTag) {
+									if (tagSelected) {
 										addInitialTag(tags, otherTag);
 									} else {
 										removeInitialTag(tags, otherTag);

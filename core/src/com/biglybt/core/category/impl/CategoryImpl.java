@@ -144,6 +144,9 @@ CategoryImpl
 
     this.sName = sName;
     this.type = Category.TYPE_USER;
+   
+    setGroup( MessageText.getString( "TableColumn.header.category" ));
+    
     upload_speed	= maxup;
     download_speed	= maxdown;
     attributes = _attributes;
@@ -155,6 +158,9 @@ CategoryImpl
 
     this.sName = sName;
     this.type = type;
+    
+    setGroup( MessageText.getString( "TableColumn.header.category" ));
+
     attributes = _attributes;
   }
 
@@ -178,13 +184,6 @@ CategoryImpl
   @Override
   public int getType() {
     return type;
-  }
-
-  @Override
-  public String
-  getGroup()
-  {
-	  return( MessageText.getString( "TableColumn.header.category" ));
   }
   
   @Override
