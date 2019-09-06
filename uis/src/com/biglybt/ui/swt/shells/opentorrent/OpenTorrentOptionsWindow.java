@@ -4811,9 +4811,12 @@ public class OpenTorrentOptionsWindow
 
 				return;
 			}
+			
+			TagManager tm = TagManagerFactory.getTagManager();
 
-			TagType tt = TagManagerFactory.getTagManager().getTagType(
-					TagType.TT_DOWNLOAD_MANUAL);
+			TagType[] tts = {
+					tm.getTagType( TagType.TT_DOWNLOAD_MANUAL),
+					tm.getTagType( TagType.TT_DOWNLOAD_CATEGORY) };
 
 			boolean is_rebuild = tagButtonsArea.getData(SP_KEY) != null;
 
@@ -4864,12 +4867,20 @@ public class OpenTorrentOptionsWindow
 						buildTagButtonPanel();
 					}
 				};
-				tt.addTagTypeListener(tagTypeListener, false);
-				tagButtonsArea.addDisposeListener(
-						e -> tt.removeTagTypeListener(tagTypeListener));
+				
+				for ( TagType tt: tts ){
+					tt.addTagTypeListener(tagTypeListener, false);
+					tagButtonsArea.addDisposeListener(
+							e -> tt.removeTagTypeListener(tagTypeListener));
+				}
 			}
 
-			List<Tag> tags = new ArrayList(tt.getTags());
+			List<Tag> tags = new ArrayList<>();
+			
+			for ( TagType tt: tts ){
+				tags.addAll(tt.getTags());
+			}
+			
 			for (Iterator<Tag> iter = tags.iterator(); iter.hasNext();) {
 				Tag next = iter.next();
 				boolean[] auto = next.isTagAuto();
