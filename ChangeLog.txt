@@ -1,7 +1,27 @@
 BIGLYBT CHANGELOG
 -----------------
 
-2019.xx.yy | BiglyBT 2.0.0.1
+2019.09.yy | BiglyBT 2.0.0.1
+
+FEATURE: Plug  | We now have a uTorrent/BitTorrent client migration plugin [TuxPaper]
+FEATURE: Tag   | Three tag view modes in tagging view with groups: Row, Column, Row-Compact [TuxPaper]
+FEATURE: Tag   | Drag of Tags or to Tags or to Tag Groups now supported in most places [TuxPaper]
+FEATURE: Tag   | F2 to rename tag when it has focus [TuxPaper]
+
+CHANGE: UI     | Vivaldi/XferStats/Swarm Explore: Make more Google Maps-like -> Fix mouse-scroll-to-zoom direction; Zoom to cursor [TuxPaper]
+CHANGE: UI     | Sources (Trackers) View: Deleting via keyboard, toolbar, & content menu now use same prompt [TuxPaper]
+CHANGE: UI     | Torrent and file piece graphic column now shown when torrent isn't running [TuxPaper]
+CHANGE: UI     | Added Drag and Drop indicator when moving table columns around [TuxPaper]
+CHANGE: Tag    | Tag Visuals Overhaul. No more checkbox; Solid selected tags, unselected are border-only [TuxPaper]
+CHANGE: Tag    | Library header tags are no longer buttons [TuxPaper]
+CHANGE: Tag    | Better handling of tag coloring (text color vs tag color, tag color on similar bg color) [TuxPaper] 
+
+BUGFIX: UI     | Progress, Actions (Search Results) columns using wrong color when "Start UI before Core Initialization" is OFF [TuxPaper]
+BUGFIX: UI     | Fix Tag Settings preventing max UL speed to be 0/unlimited, -1/disabled [TuxPaper]
+BUGFIX: Core   | Rechecking a completed torrent no longer updates completion date [TuxPaper]
+BUGFIX: Tag    | Fixed Tag contraint strings with escaped quotes like contains(name, "\""), hasTag("Foo\"Bar") [TuxPaper]
+
+
 
 2019.05.27 | BiglyBT 2.0.0.0
 
@@ -66,6 +86,8 @@ BUGFIX: Core   | Fix failure to detect network interface changes (e.g. on VPN re
 BUGFIX: Core   | Catch more 'no more space' conditions for the 'auto resume on no space' feature [Parg]
 BUGFIX: Plug   | Remove potential deadlock on closedown when I2P initialisation fails [Parg]
 BUGFIX: Tag    | Tags with disabled or empty tag constraints shouldn't be treated as 'auto' [Parg]
+
+
 
 2019.03.28 | BiglyBT 1.9.0.0
 
