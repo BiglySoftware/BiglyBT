@@ -270,6 +270,7 @@ public class DragDropUtils
 		@Override
 		public void dispose() {
 			mapToDelegates.clear();
+			super.dispose();
 		}
 	}
 
