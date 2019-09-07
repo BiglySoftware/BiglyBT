@@ -22,18 +22,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.biglybt.core.config.COConfigurationManager;
-import com.biglybt.core.config.impl.ConfigurationDefaults;
-import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.Constants;
-import com.biglybt.core.util.SystemProperties;
+
 import com.biglybt.pifimpl.local.ui.config.*;
-import com.biglybt.platform.PlatformManager;
-import com.biglybt.platform.PlatformManagerCapabilities;
-import com.biglybt.platform.PlatformManagerFactory;
+
 
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
-import com.biglybt.pif.ui.config.ParameterListener;
+
 
 import static com.biglybt.core.config.ConfigKeys.File.*;
 
@@ -119,6 +114,10 @@ public class ConfigSectionInterfaceTags
 
 		add("f2", new LabelParameterImpl(""), listAutoTag);
 
+		BooleanParameterImpl auto_tag_mod = new BooleanParameterImpl(
+				BCFG_FILES_AUTO_TAG_ALLOW_MOD, "ConfigView.label.auto.tag.allow.mod");
+		add(auto_tag_mod, listAutoTag);
+
 		ParameterGroupImpl pgExtensionTagging = new ParameterGroupImpl(
 				"ConfigView.label.lh.ext", listAutoTag);
 		add("pgAutoTagging", pgExtensionTagging);
@@ -136,6 +135,7 @@ public class ConfigSectionInterfaceTags
 				"ConfigView.section.files", listFiles);
 		add("pgFiles", pgFiles);
 		pgFiles.setNumberOfColumns(1);
+
 
 	}
 }

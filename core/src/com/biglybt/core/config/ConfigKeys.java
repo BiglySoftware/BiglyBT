@@ -143,6 +143,7 @@ public final class ConfigKeys {
 		public static final String ICFG_FILES_AUTO_TAG_COUNT = "Files Auto Tag Count";
 		public static final String SCFG_FILE_AUTO_TAG_NAME_DEFAULT = "File Auto Tag Name Default";
 		public static final String BCFG_FILES_AUTO_TAG_BEST_SIZE = "Files Auto Tag Best Size";
+		public static final String BCFG_FILES_AUTO_TAG_ALLOW_MOD = "Files Auto Tag Mod Enable";
 		public static final String SCFG_FILE_TORRENT_AUTO_SKIP_EXTENSIONS = "File.Torrent.AutoSkipExtensions";
 		public static final String SCFG_FILE_TORRENT_AUTO_SKIP_FILES = "File.Torrent.AutoSkipFiles";
 		public static final String BCFG_FILE_TORRENT_AUTO_SKIP_FILES_REG_EXP = "File.Torrent.AutoSkipFiles.RegExp";

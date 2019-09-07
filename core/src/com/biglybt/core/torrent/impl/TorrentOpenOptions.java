@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 
 import com.biglybt.core.CoreFactory;
 import com.biglybt.core.config.COConfigurationManager;
+import com.biglybt.core.config.ConfigKeys;
 import com.biglybt.core.config.impl.ConfigurationDefaults;
 import com.biglybt.core.config.impl.ConfigurationParameterNotFoundException;
 import com.biglybt.core.download.DownloadManager;
@@ -141,6 +142,8 @@ public class TorrentOpenOptions
 	
 	private List<Tag>			initialTags = new ArrayList<>();
 	private Set<Tag>			autoTags	= new HashSet<>();
+	
+	private boolean				autoTaggingApplied;
 	
 	private Map<String,Object>	initialMetadata;
 	
@@ -775,6 +778,16 @@ public class TorrentOpenOptions
 			return;
 		}
 	
+		if ( COConfigurationManager.getBooleanParameter( ConfigKeys.File.BCFG_FILES_AUTO_TAG_ALLOW_MOD )){
+		
+			if ( autoTaggingApplied ){
+				
+				return;
+			}
+		}
+		
+		autoTaggingApplied = true;
+		
 		Map<String,long[]>	ext_map = new HashMap<>();
 		
 		TorrentOpenFileOptions[] files = getFiles();

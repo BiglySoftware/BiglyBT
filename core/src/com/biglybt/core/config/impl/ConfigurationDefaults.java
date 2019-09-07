@@ -422,6 +422,7 @@ public class ConfigurationDefaults {
     def.put( "Files Auto Tag Enable", FALSE );
     def.put( "Files Auto Tag Count", ONE );		
     def.put( "Files Auto Tag Best Size", FALSE);
+    def.put( ConfigKeys.File.BCFG_FILES_AUTO_TAG_ALLOW_MOD, FALSE );
     
     def.put( "Insufficient Space Download Restart Enable", FALSE );
     def.put( "Insufficient Space Download Restart Period", 10 );
