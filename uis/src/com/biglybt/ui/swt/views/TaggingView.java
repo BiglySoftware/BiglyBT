@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.biglybt.core.category.Category;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.ControlAdapter;
@@ -444,7 +445,16 @@ public class TaggingView
 
 			TagType tt = tm.getTagType(tagType);
 			List<Tag> tags = tt.getTags();
-			listAllTags.addAll(tags);
+			if (tagType == TagType.TT_DOWNLOAD_CATEGORY) {
+				for (Tag tag : tags) {
+					if (((Category)tag).getType() == Category.TYPE_USER) {
+						listAllTags.addAll(tags);
+						break;
+					}
+				}
+			} else {
+				listAllTags.addAll(tags);
+			}
 		}
 		
 		return( listAllTags );
