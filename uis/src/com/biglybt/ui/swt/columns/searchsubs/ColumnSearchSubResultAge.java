@@ -16,12 +16,15 @@
 
 package com.biglybt.ui.swt.columns.searchsubs;
 
-import com.biglybt.ui.common.table.TableColumnCore;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
 import com.biglybt.core.util.DisplayFormatters;
 import com.biglybt.core.util.SystemTime;
 import com.biglybt.core.util.TimeFormatter;
-import com.biglybt.pif.ui.tables.*;
+import com.biglybt.ui.common.table.TableColumnCore;
+
+import com.biglybt.pif.ui.tables.TableCell;
+import com.biglybt.pif.ui.tables.TableCellRefreshListener;
+import com.biglybt.pif.ui.tables.TableColumn;
 
 public class ColumnSearchSubResultAge
 	implements TableCellRefreshListener
@@ -59,7 +62,8 @@ public class ColumnSearchSubResultAge
 			if ( time <= 0 ){
 				cell.setText( "--" );
 			}else{
-				cell.setToolTip(time <= 0?"--":DisplayFormatters.formatCustomDateOnly( time ));
+				cell.setToolTip(time <= 0 ? "--" : TimeFormatter.format2(age_secs, false)
+						+ "\n" + DisplayFormatters.formatCustomDateOnly(time));
 				cell.setText( age_secs < 0?"--":TimeFormatter.format3( age_secs ));
 			}
 		}
