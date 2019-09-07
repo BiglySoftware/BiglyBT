@@ -54,6 +54,19 @@ public class TagUtils{
 					}
 				}
 			}
+			if (o1 instanceof Category && o2 instanceof Category) {
+				int type1 = ((Category) o1).getType();
+				int type2 = ((Category) o2).getType();
+				if (type1 != type2) {
+					if (type1 == Category.TYPE_ALL) {
+						return -1; 
+					}
+					if (type1 == Category.TYPE_UNCATEGORIZED) {
+						return 1;
+					}
+					return type2 == Category.TYPE_ALL ? 1 : -1;
+				}
+			}
 			return( comp.compare( o1.getTagName(true), o2.getTagName(true)));
 		};
 		
