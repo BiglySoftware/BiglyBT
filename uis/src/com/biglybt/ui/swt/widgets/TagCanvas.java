@@ -134,6 +134,8 @@ public class TagCanvas
 
 	private boolean needsBorderOnSelection;
 
+	private boolean isEnabled = true;
+
 	/** 
 	 * Creates a Tag Canvas.<br/>  
 	 * Auto Tags will be disabled.<br/>
@@ -224,7 +226,7 @@ public class TagCanvas
 	public void handleEvent(Event e) {
 		switch (e.type) {
 			case SWT.MouseDown: {
-				if (!getEnabled() || e.button != 1) {
+				if (!isEnabled() || e.button != 1) {
 					return;
 				}
 				if (timerEvent == null) {
@@ -261,7 +263,7 @@ public class TagCanvas
 				break;
 			}
 			case SWT.MouseUp: {
-				if (!getEnabled() || e.button != 1 || !mouseDown) {
+				if (!isEnabled() || e.button != 1 || !mouseDown) {
 					return;
 				}
 				mouseDown = false;
@@ -294,7 +296,7 @@ public class TagCanvas
 				break;
 			}
 			case SWT.Traverse: {
-				if (!getEnabled()) {
+				if (!isEnabled()) {
 					return;
 				}
 				switch (e.detail) {
@@ -638,9 +640,20 @@ public class TagCanvas
 	}
 
 	private boolean setEnabledNoRedraw(boolean enabled) {
-		boolean wasEnabled = isEnabled();
-		super.setEnabled(enabled);
+		checkWidget();
+		boolean wasEnabled = isEnabled;
+		isEnabled = enabled;
 		return wasEnabled != enabled;
+	}
+
+	@Override
+	public boolean getEnabled() {
+		return isEnabled;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return isEnabled && super.isEnabled();
 	}
 
 	private void updateImage() {
