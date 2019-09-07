@@ -71,6 +71,7 @@ import com.biglybt.ui.swt.minibar.DownloadBar;
 import com.biglybt.ui.swt.pif.UISWTInstance;
 import com.biglybt.ui.swt.pif.UISWTViewEvent;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
+import com.biglybt.ui.swt.utils.DragDropUtils;
 import com.biglybt.ui.swt.utils.FontUtils;
 import com.biglybt.ui.swt.utils.SWTRunnable;
 import com.biglybt.ui.swt.views.piece.PieceInfoView;
@@ -1859,7 +1860,6 @@ public class MyTorrentsView
 						lastScrollTime = 0;
 						
 						if (drag_drop_location_start < 0) {
-						
 							if (event.detail != DND.DROP_COPY) {
 								if ((event.operations & DND.DROP_LINK) > 0)
 									event.detail = DND.DROP_LINK;
@@ -1976,6 +1976,29 @@ public class MyTorrentsView
 							event.feedback = // DND.FEEDBACK_SCROLL |
 									 ((enterPoint != null && enterPoint.y > event.y)
 											? DND.FEEDBACK_INSERT_BEFORE : DND.FEEDBACK_INSERT_AFTER);
+							return;
+						}
+
+						List<Tag> tags = DragDropUtils.getTagsFromDroppedData(DragDropUtils.getLastDraggedObject());
+						if (tags.size() > 0) {
+							TableRowCore row = tv.getTableRowWithCursor();
+							if (row == null) {
+								return;
+							}
+							if (row.getParentRowCore() != null) {
+								row = row.getParentRowCore();
+							}
+
+							DownloadManager dm = (DownloadManager) row.getDataSource(true);
+							boolean hasUntagged = false;
+							for (Tag tag : tags) {
+								if (!tag.hasTaggable(dm)) {
+									hasUntagged = true;
+									break;
+								}
+							}
+							
+							event.detail = hasUntagged ? DND.DROP_COPY : DND.DROP_DEFAULT;
 						}
 					}
 
@@ -1989,8 +2012,40 @@ public class MyTorrentsView
 						if (data.startsWith("DiskManagerFileInfo\n")) {
 							return;
 						}
-						if (!data.startsWith("DownloadManager\n")) {
+						List<Tag> tags = DragDropUtils.getTagsFromDroppedData(data);
+
+						if (!data.startsWith("DownloadManager\n") && tags.size() == 0) {
 							TorrentOpener.openDroppedTorrents(event, true);
+							return;
+						}
+
+						TableRowCore row = tv.getRow(event);
+						if (row == null)
+							return;
+						if (row.getParentRowCore() != null) {
+							row = row.getParentRowCore();
+						}
+
+						if (tags.size() > 0) {
+							DownloadManager dm = (DownloadManager) row.getDataSource(true);
+							boolean hasUntagged = false;
+							for (Tag tag : tags) {
+								if (!tag.hasTaggable(dm)) {
+									hasUntagged = true;
+									break;
+								}
+							}
+							
+							boolean toTag = hasUntagged;
+
+							for (Tag tag : tags) {
+								if (toTag) {
+									tag.addTaggable(dm);
+								} else {
+									tag.removeTaggable(dm);
+								}
+							}
+
 							return;
 						}
 
@@ -1998,12 +2053,6 @@ public class MyTorrentsView
 						// Torrent file from shell dropped
 						if (drag_drop_location_start >= 0) { // event.data == null
 							event.detail = DND.DROP_NONE;
-							TableRowCore row = tv.getRow(event);
-							if (row == null)
-								return;
-							if (row.getParentRowCore() != null) {
-								row = row.getParentRowCore();
-							}
 							long end_location = getRowLocation( row );
 							if (end_location >> 32  != drag_drop_location_start >> 32 ) {
 								DownloadManager dm = (DownloadManager) row.getDataSource(true);
