@@ -22,15 +22,12 @@ package com.biglybt.ui.swt.devices;
 
 import java.io.File;
 import java.net.URL;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.*;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
@@ -44,18 +41,8 @@ import com.biglybt.core.devices.*;
 import com.biglybt.core.disk.DiskManagerFileInfo;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManager;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
-import com.biglybt.core.tag.TagUtils;
+import com.biglybt.core.tag.*;
 import com.biglybt.core.util.Debug;
-import com.biglybt.pif.ui.UIManager;
-import com.biglybt.pif.ui.UIPluginViewToolBarListener;
-import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.pif.ui.tables.TableColumnCreationListener;
-import com.biglybt.pif.ui.tables.TableManager;
-import com.biglybt.pif.ui.toolbar.UIToolBarItem;
 import com.biglybt.pifimpl.local.PluginInitializer;
 import com.biglybt.ui.UIFunctions;
 import com.biglybt.ui.UIFunctions.TagReturner;
@@ -90,6 +77,13 @@ import com.biglybt.ui.swt.views.utils.ManagerUtils;
 import com.biglybt.ui.swt.views.utils.TagUIUtils;
 import com.biglybt.util.PlayUtils;
 
+import com.biglybt.pif.ui.UIManager;
+import com.biglybt.pif.ui.UIPluginViewToolBarListener;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnCreationListener;
+import com.biglybt.pif.ui.tables.TableManager;
+import com.biglybt.pif.ui.toolbar.UIToolBarItem;
+
 /**
  * @author TuxPaper
  * @created Feb 24, 2009
@@ -115,8 +109,6 @@ public class SBC_DevicesView
 	private TranscodeQueue transcode_queue;
 
 	private TableViewSWT<?> 	tvDevices;
-	private DragSource 			dragSource;
-	private DropTarget 			dropTarget;
 	private int					drag_drop_line_start = -1;
 	private TableRowCore[]		drag_drop_rows;
 
@@ -505,11 +497,7 @@ public class SBC_DevicesView
 				tvFiles = null;
 			}
 		}
-		Utils.disposeSWTObjects(new Object[] {
-			tableJobsParent,
-			dropTarget,
-			dragSource,
-		});
+		Utils.disposeSWTObjects(tableJobsParent);
 		if (tvDevices != null) {
 			tvDevices.delete();
 			tvDevices = null;
@@ -1889,15 +1877,8 @@ public class SBC_DevicesView
 
 			Transfer[] types = new Transfer[] { TextTransfer.getInstance() };
 
-			if (dragSource != null && !dragSource.isDisposed()) {
-				dragSource.dispose();
-			}
-
-			if (dropTarget != null && !dropTarget.isDisposed()) {
-				dropTarget.dispose();
-			}
-
-			dragSource = table.createDragSource(DND.DROP_MOVE | DND.DROP_COPY);
+			DragSource dragSource = table.createDragSource(
+					DND.DROP_MOVE | DND.DROP_COPY);
 			if (dragSource != null) {
 				dragSource.setTransfer(types);
 				dragSource.addDragListener(new DragSourceAdapter() {
@@ -1948,8 +1929,9 @@ public class SBC_DevicesView
 				});
 			}
 
-			dropTarget = table.createDropTarget(DND.DROP_DEFAULT | DND.DROP_MOVE
-					| DND.DROP_COPY | DND.DROP_LINK | DND.DROP_TARGET_MOVE);
+			DropTarget dropTarget = table.createDropTarget(
+					DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK
+							| DND.DROP_TARGET_MOVE);
 			if (dropTarget != null) {
 				dropTarget.setTransfer(new Transfer[] { FixedHTMLTransfer.getInstance(),
 						FixedURLTransfer.getInstance(), FileTransfer.getInstance(),

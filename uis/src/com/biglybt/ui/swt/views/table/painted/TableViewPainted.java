@@ -18,8 +18,8 @@
 
 package com.biglybt.ui.swt.views.table.painted;
 
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -36,10 +36,6 @@ import com.biglybt.core.config.ParameterListener;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.internat.MessageText.MessageTextListener;
 import com.biglybt.core.util.*;
-import com.biglybt.pif.ui.UIInputReceiver;
-import com.biglybt.pif.ui.UIInputReceiverListener;
-import com.biglybt.pif.ui.tables.TableRowMouseEvent;
-import com.biglybt.pif.ui.tables.TableRowMouseListener;
 import com.biglybt.ui.common.table.*;
 import com.biglybt.ui.common.table.impl.TableColumnManager;
 import com.biglybt.ui.common.table.impl.TableRowCoreSorter;
@@ -62,6 +58,11 @@ import com.biglybt.ui.swt.views.table.*;
 import com.biglybt.ui.swt.views.table.impl.TableTooltips;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_Common;
 import com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon;
+
+import com.biglybt.pif.ui.UIInputReceiver;
+import com.biglybt.pif.ui.UIInputReceiverListener;
+import com.biglybt.pif.ui.tables.TableRowMouseEvent;
+import com.biglybt.pif.ui.tables.TableRowMouseListener;
 
 /**
  * A TableView implemented by painting on a canvas
@@ -177,6 +178,9 @@ public class TableViewPainted
 	private int				lastMC			= -1;
 
 	private TableHeaderPainted header;
+
+	private DragSource dragSource;
+	private DropTarget dropTarget;
 
 	private class
 	RefreshTableRunnable
@@ -1187,7 +1191,12 @@ public class TableViewPainted
 	 */
 	@Override
 	public DragSource createDragSource(int style) {
-		final DragSource dragSource = DragDropUtils.createDragSource(cTable, style);
+		if (dragSource != null && !dragSource.isDisposed()) {
+			dragSource.dispose();
+		}
+
+		// dragSource will auto-dispose when cTable disposes
+		dragSource = DragDropUtils.createDragSource(cTable, style);
 		dragSource.addDragListener(new DragSourceAdapter() {
 			@Override
 			public void dragStart(DragSourceEvent event) {
@@ -1204,15 +1213,6 @@ public class TableViewPainted
 				isDragging = false;
 			}
 		});
-		cTable.addDisposeListener(new DisposeListener() {
-			// @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				if (!dragSource.isDisposed()) {
-					dragSource.dispose();
-				}
-			}
-		});
 		return dragSource;
 	}
 
@@ -1221,16 +1221,12 @@ public class TableViewPainted
 	 */
 	@Override
 	public DropTarget createDropTarget(int style) {
-		final DropTarget dropTarget = new DropTarget(cTable, style);
-		cTable.addDisposeListener(new DisposeListener() {
-			// @see org.eclipse.swt.events.DisposeListener#widgetDisposed(org.eclipse.swt.events.DisposeEvent)
-			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				if (!dropTarget.isDisposed()) {
-					dropTarget.dispose();
-				}
-			}
-		});
+		if (dropTarget != null && !dropTarget.isDisposed()) {
+			dropTarget.dispose();
+		}
+
+		// dropTarget will auto-dispose when cTable disposes
+		dropTarget = new DropTarget(cTable, style);
 		return dropTarget;
 	}
 
@@ -2823,6 +2819,22 @@ public class TableViewPainted
 				}
 			}
 		});
+	}
+
+	@Override
+	protected void triggerLifeCycleListener(int eventType) {
+		super.triggerLifeCycleListener(eventType);
+
+		if (eventType == TableLifeCycleListener.EVENT_TABLELIFECYCLE_DESTROYED) {
+			Utils.execSWTThread(new SWTRunnable() {
+				@Override
+				public void runWithDisplay(Display display) {
+					Utils.disposeSWTObjects(dragSource, dropTarget);
+					dragSource = null;
+					dropTarget = null;
+				}
+			});
+		}
 	}
 
 	@Override

@@ -189,8 +189,6 @@ public class MyTorrentsView
   private Composite cTablePanel;
   private Font fontButton = null;
   protected Composite cCategoriesAndTags;
-  private DragSource dragSource = null;
-  private DropTarget dropTarget = null;
   protected Text txtFilter = null;
   private Menu	tableHeaderMenu = null;
   private TimerEventPeriodic	txtFilterUpdateEvent;
@@ -634,21 +632,9 @@ public class MyTorrentsView
   	Utils.execSWTThread(new SWTRunnable() {
 			@Override
 			public void runWithDisplay(Display display) {
-				try {
-					Utils.disposeSWTObjects(new Object[] {
-						dragSource,
-						dropTarget,
-						fontButton,
-						tableHeaderMenu
-					});
-					dragSource 		= null;
-					dropTarget 		= null;
-					fontButton		= null;
-					tableHeaderMenu = null;
-
-				} catch (Exception e) {
-					Debug.out(e);
-				}
+				Utils.disposeSWTObjects(fontButton, tableHeaderMenu);
+				fontButton		= null;
+				tableHeaderMenu = null;
 			}
 		});
   	
@@ -1766,15 +1752,7 @@ public class MyTorrentsView
 
 			Transfer[] types = new Transfer[] { TextTransfer.getInstance() };
 
-			if (dragSource != null && !dragSource.isDisposed()) {
-				dragSource.dispose();
-			}
-
-			if (dropTarget != null && !dropTarget.isDisposed()) {
-				dropTarget.dispose();
-			}
-
-			dragSource = tv.createDragSource(DND.DROP_MOVE | DND.DROP_COPY);
+			DragSource dragSource = tv.createDragSource(DND.DROP_MOVE | DND.DROP_COPY);
 			if (dragSource != null) {
 				dragSource.setTransfer(types);
 				dragSource.addDragListener(new DragSourceAdapter() {
@@ -1851,8 +1829,8 @@ public class MyTorrentsView
 				});
 			}
 
-			dropTarget = tv.createDropTarget(DND.DROP_DEFAULT | DND.DROP_MOVE
-					| DND.DROP_COPY | DND.DROP_LINK | DND.DROP_TARGET_MOVE);
+			DropTarget dropTarget = tv.createDropTarget(DND.DROP_DEFAULT | DND.DROP_MOVE
+				| DND.DROP_COPY | DND.DROP_LINK | DND.DROP_TARGET_MOVE);
 			if (dropTarget != null) {
 				dropTarget.setTransfer(new Transfer[] {
 					FixedHTMLTransfer.getInstance(),

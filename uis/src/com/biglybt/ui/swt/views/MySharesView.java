@@ -24,34 +24,50 @@
 package com.biglybt.ui.swt.views;
 
 import java.io.File;
-import java.util.*;
 import java.util.List;
-
-import com.biglybt.core.Core;
-import com.biglybt.core.CoreFactory;
-import com.biglybt.core.CoreRunningListener;
-import com.biglybt.core.tag.Tag;
-import com.biglybt.core.tag.TagManager;
-import com.biglybt.core.tag.TagManagerFactory;
-import com.biglybt.core.tag.TagType;
-import com.biglybt.ui.UIFunctions.TagReturner;
-import com.biglybt.ui.common.table.*;
-import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
-import com.biglybt.ui.swt.views.utils.TagUIUtils;
+import java.util.*;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.widgets.*;
+
+import com.biglybt.core.Core;
+import com.biglybt.core.CoreFactory;
+import com.biglybt.core.CoreRunningListener;
 import com.biglybt.core.category.Category;
 import com.biglybt.core.category.CategoryManager;
 import com.biglybt.core.download.DownloadManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.logging.LogAlert;
 import com.biglybt.core.logging.Logger;
+import com.biglybt.core.tag.*;
 import com.biglybt.core.util.Debug;
 import com.biglybt.core.util.TorrentUtils;
+import com.biglybt.pifimpl.local.PluginInitializer;
+import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
+import com.biglybt.ui.UIFunctions;
+import com.biglybt.ui.UIFunctions.TagReturner;
+import com.biglybt.ui.UIFunctionsManager;
+import com.biglybt.ui.common.ToolBarItem;
+import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
+import com.biglybt.ui.mdi.MdiEntry;
+import com.biglybt.ui.mdi.MdiEntryDropListener;
+import com.biglybt.ui.mdi.MultipleDocumentInterface;
+import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.mainwindow.TorrentOpener;
+import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
+import com.biglybt.ui.swt.sharing.ShareUtils;
+import com.biglybt.ui.swt.utils.TagUIUtilsV3;
+import com.biglybt.ui.swt.views.table.TableViewSWT;
+import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
+import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
+import com.biglybt.ui.swt.views.table.impl.TableViewTab;
+import com.biglybt.ui.swt.views.tableitems.myshares.*;
+import com.biglybt.ui.swt.views.utils.CategoryUIUtils;
+import com.biglybt.ui.swt.views.utils.TagUIUtils;
+
 import com.biglybt.pif.PluginInterface;
 import com.biglybt.pif.download.Download;
 import com.biglybt.pif.sharing.*;
@@ -62,29 +78,6 @@ import com.biglybt.pif.tracker.TrackerTorrent;
 import com.biglybt.pif.ui.UIPluginViewToolBarListener;
 import com.biglybt.pif.ui.tables.TableManager;
 import com.biglybt.pif.ui.toolbar.UIToolBarItem;
-import com.biglybt.pifimpl.local.PluginInitializer;
-import com.biglybt.pifimpl.local.torrent.TorrentManagerImpl;
-import com.biglybt.ui.swt.mainwindow.TorrentOpener;
-import com.biglybt.ui.swt.pifimpl.UISWTViewCoreEventListenerEx;
-import com.biglybt.ui.swt.sharing.ShareUtils;
-import com.biglybt.ui.swt.utils.TagUIUtilsV3;
-import com.biglybt.ui.swt.views.table.TableViewSWT;
-import com.biglybt.ui.swt.views.table.TableViewSWTMenuFillListener;
-import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
-import com.biglybt.ui.swt.views.table.impl.TableViewTab;
-import com.biglybt.ui.swt.views.tableitems.myshares.CategoryItem;
-import com.biglybt.ui.swt.views.tableitems.myshares.NameItem;
-import com.biglybt.ui.swt.views.tableitems.myshares.PersistentItem;
-import com.biglybt.ui.swt.views.tableitems.myshares.TagsItem;
-import com.biglybt.ui.swt.views.tableitems.myshares.TypeItem;
-
-import com.biglybt.ui.UIFunctions;
-import com.biglybt.ui.UIFunctionsManager;
-import com.biglybt.ui.common.ToolBarItem;
-import com.biglybt.ui.common.viewtitleinfo.ViewTitleInfo2;
-import com.biglybt.ui.mdi.MdiEntry;
-import com.biglybt.ui.mdi.MdiEntryDropListener;
-import com.biglybt.ui.mdi.MultipleDocumentInterface;
 
 /**
  * @author parg
@@ -119,8 +112,6 @@ implements ShareManagerListener,
 	//private Menu			menuCategory;
 
 	private TableViewSWT<ShareResource> tv;
-
-	private DropTarget dropTarget;
 
 	public
 	MySharesView()
@@ -244,23 +235,21 @@ implements ShareManagerListener,
 			}
 		});
 
-		if ( dropTarget == null ){
-			dropTarget = tv.createDropTarget(DND.DROP_DEFAULT | DND.DROP_MOVE
-					| DND.DROP_COPY | DND.DROP_LINK | DND.DROP_TARGET_MOVE);
-			if (dropTarget != null) {
-				dropTarget.setTransfer(new Transfer[] { FixedHTMLTransfer.getInstance(),
-						FixedURLTransfer.getInstance(), FileTransfer.getInstance(),
-						TextTransfer.getInstance() });
+		DropTarget dropTarget = tv.createDropTarget(DND.DROP_DEFAULT | DND.DROP_MOVE
+			| DND.DROP_COPY | DND.DROP_LINK | DND.DROP_TARGET_MOVE);
+		if (dropTarget != null) {
+			dropTarget.setTransfer(FixedHTMLTransfer.getInstance(),
+					FixedURLTransfer.getInstance(), FileTransfer.getInstance(),
+					TextTransfer.getInstance());
 
-				dropTarget.addDropListener(new DropTargetAdapter() {
-					@Override
-					public void drop(DropTargetEvent event) {
-						if (!share(event.data)) {
-							TorrentOpener.openDroppedTorrents(event, true);
-						}
+			dropTarget.addDropListener(new DropTargetAdapter() {
+				@Override
+				public void drop(DropTargetEvent event) {
+					if (!share(event.data)) {
+						TorrentOpener.openDroppedTorrents(event, true);
 					}
-				});
-			}
+				}
+			});
 		}
 	}
 

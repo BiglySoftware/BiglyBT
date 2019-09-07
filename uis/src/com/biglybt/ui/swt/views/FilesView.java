@@ -122,7 +122,6 @@ public class FilesView
 {
 	private static boolean registeredCoreSubViews = false;
 	boolean refreshing = false;
-  DragSource dragSource = null;
 
   private static TableColumnCore[] basicItems = {
     new NameItem(),
@@ -987,19 +986,6 @@ public class FilesView
 			case EVENT_TABLELIFECYCLE_DESTROYED: {
 				COConfigurationManager.removeParameterListener("FilesView.hide.dnd",
 						this);
-				Utils.execSWTThread(new AERunnable() {
-					@Override
-					public void runSupport() {
-						try {
-							Utils.disposeSWTObjects(new Object[] {
-								dragSource,
-							});
-							dragSource = null;
-						} catch (Exception e) {
-							Debug.out(e);
-						}
-					}
-				});
 
 				for (DownloadManager manager : managers) {
 					manager.getDownloadState().removeListener(this,
@@ -1036,11 +1022,8 @@ public class FilesView
 
 			Transfer[] types = new Transfer[] { TextTransfer.getInstance(), FileTransfer.getInstance() };
 
-			if (dragSource != null && !dragSource.isDisposed()) {
-				dragSource.dispose();
-			}
-
-			dragSource = tv.createDragSource(DND.DROP_COPY | DND.DROP_MOVE);
+			DragSource dragSource = tv.createDragSource(
+					DND.DROP_COPY | DND.DROP_MOVE);
 			if (dragSource != null) {
 				dragSource.setTransfer(types);
 				dragSource.addDragListener(new DragSourceAdapter() {

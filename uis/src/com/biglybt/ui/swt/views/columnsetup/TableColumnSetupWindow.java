@@ -23,8 +23,6 @@ package com.biglybt.ui.swt.views.columnsetup;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import com.biglybt.ui.UserPrompterResultListener;
-import com.biglybt.ui.common.table.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.*;
 import org.eclipse.swt.events.*;
@@ -32,31 +30,30 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.*;
 import org.eclipse.swt.widgets.*;
+
 import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
-import com.biglybt.core.util.AERunnable;
-import com.biglybt.core.util.BDecoder;
-import com.biglybt.core.util.BEncoder;
-import com.biglybt.core.util.Constants;
-import com.biglybt.pif.ui.tables.TableColumn;
-import com.biglybt.pif.ui.tables.TableColumnInfo;
-import com.biglybt.pif.ui.tables.TableRow;
+import com.biglybt.core.util.*;
+import com.biglybt.ui.UserPrompterResultListener;
+import com.biglybt.ui.common.table.*;
+import com.biglybt.ui.common.table.impl.TableColumnManager;
+import com.biglybt.ui.common.updater.UIUpdatable;
 import com.biglybt.ui.swt.Messages;
 import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.components.BubbleTextBox;
 import com.biglybt.ui.swt.components.shell.ShellFactory;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
+import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 import com.biglybt.ui.swt.shells.GCStringPrinter;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
+import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
 import com.biglybt.ui.swt.views.table.TableRowSWT;
 import com.biglybt.ui.swt.views.table.TableViewSWT;
 import com.biglybt.ui.swt.views.table.impl.TableViewFactory;
 
-import com.biglybt.core.util.RegExUtil;
-import com.biglybt.ui.common.table.impl.TableColumnManager;
-import com.biglybt.ui.common.updater.UIUpdatable;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
-import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
-import com.biglybt.ui.swt.uiupdater.UIUpdaterSWT;
+import com.biglybt.pif.ui.tables.TableColumn;
+import com.biglybt.pif.ui.tables.TableColumnInfo;
+import com.biglybt.pif.ui.tables.TableRow;
 
 /**
  * @author TuxPaper
@@ -1242,43 +1239,25 @@ public class TableColumnSetupWindow
 		//tvChosen.setRowDefaultHeight(16);
 
 		tvChosen.addLifeCycleListener(new TableLifeCycleListener() {
-			private DragSource dragSource;
-			private DropTarget dropTarget;
-
 			@Override
 			public void tableLifeCycleEventOccurred(TableView tv, int eventType, Map<String, Object> data) {
-				switch (eventType) {
-					case EVENT_TABLELIFECYCLE_INITIALIZED:
-						tableViewInitialized();
-						break;
-					case EVENT_TABLELIFECYCLE_DESTROYED:
-						tableViewDestroyed();
-						break;
+				if (eventType == EVENT_TABLELIFECYCLE_INITIALIZED) {
+					tableViewInitialized();
 				}
 			}
 
 			private void tableViewInitialized() {
-				dragSource = tvChosen.createDragSource(DND.DROP_MOVE | DND.DROP_COPY
-						| DND.DROP_LINK);
-				dragSource.setTransfer(new Transfer[] {
-					TextTransfer.getInstance()
-				});
+				DragSource dragSource = tvChosen.createDragSource(DND.DROP_MOVE | DND.DROP_COPY
+					| DND.DROP_LINK);
+				dragSource.setTransfer(TextTransfer.getInstance());
 				dragSource.setData("tv", tvChosen);
 				dragSource.addDragListener(dragSourceListener);
 
-				dropTarget = tvChosen.createDropTarget(DND.DROP_DEFAULT
-						| DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK
-						| DND.DROP_TARGET_MOVE);
-				dropTarget.setTransfer(new Transfer[] {
-					TextTransfer.getInstance()
-				});
-				dropTarget.addDropListener(new DropTargetListener() {
-
-					@Override
-					public void dropAccept(DropTargetEvent event) {
-						// TODO Auto-generated method stub
-
-					}
+				DropTarget dropTarget = tvChosen.createDropTarget(DND.DROP_DEFAULT
+					| DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK
+					| DND.DROP_TARGET_MOVE);
+				dropTarget.setTransfer(TextTransfer.getInstance());
+				dropTarget.addDropListener(new DropTargetAdapter() {
 
 					@Override
 					public void drop(DropTargetEvent event) {
@@ -1288,51 +1267,19 @@ public class TableColumnSetupWindow
 						TableView<?> tv = id.equals("c") ? tvChosen : tvAvail;
 
 						Object[] dataSources = tv.getSelectedDataSources().toArray();
-						for (int i = 0; i < dataSources.length; i++) {
-							TableColumnCore column = (TableColumnCore) dataSources[i];
-							if (column != null) {
-								chooseColumn(column, destRow, true);
-								TableRowCore row = tvAvail.getRow(column);
-								if (row != null) {
-									row.redraw();
-								}
+						for (Object dataSource : dataSources) {
+							if (!(dataSource instanceof TableColumnCore)) {
+								continue;
+							}
+							TableColumnCore column = (TableColumnCore) dataSource;
+							chooseColumn(column, destRow, true);
+							TableRowCore row = tvAvail.getRow(column);
+							if (row != null) {
+								row.redraw();
 							}
 						}
 					}
-
-					@Override
-					public void dragOver(DropTargetEvent event) {
-						// TODO Auto-generated method stub
-
-					}
-
-					@Override
-					public void dragOperationChanged(DropTargetEvent event) {
-						// TODO Auto-generated method stub
-
-					}
-
-					@Override
-					public void dragLeave(DropTargetEvent event) {
-						// TODO Auto-generated method stub
-
-					}
-
-					@Override
-					public void dragEnter(DropTargetEvent event) {
-						// TODO Auto-generated method stub
-
-					}
 				});
-			}
-
-			private void tableViewDestroyed() {
-				if (dragSource != null && !dragSource.isDisposed()) {
-					dragSource.dispose();
-				}
-				if (dropTarget != null && !dropTarget.isDisposed()) {
-					dropTarget.dispose();
-				}
 			}
 		});
 
@@ -1404,37 +1351,25 @@ public class TableColumnSetupWindow
 		tvAvail.setRowDefaultHeightEM(5);
 
 		tvAvail.addLifeCycleListener(new TableLifeCycleListener() {
-			private DragSource dragSource;
-			private DropTarget dropTarget;
-
 			@Override
 			public void tableLifeCycleEventOccurred(TableView tv, int eventType, Map<String, Object> data) {
-				switch (eventType) {
-					case EVENT_TABLELIFECYCLE_INITIALIZED:
-						tableViewInitialized();
-						break;
-					case EVENT_TABLELIFECYCLE_DESTROYED:
-						tableViewDestroyed();
-						break;
+				if (eventType == EVENT_TABLELIFECYCLE_INITIALIZED) {
+					tableViewInitialized();
 				}
 			}
 
 			private void tableViewInitialized() {
-				dragSource = tvAvail.createDragSource(DND.DROP_MOVE | DND.DROP_COPY
-						| DND.DROP_LINK);
-				dragSource.setTransfer(new Transfer[] {
-					TextTransfer.getInstance()
-				});
+				DragSource dragSource = tvAvail.createDragSource(
+						DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK);
+				dragSource.setTransfer(TextTransfer.getInstance());
 				dragSource.setData("tv", tvAvail);
 				dragSource.addDragListener(dragSourceListener);
 
 
-				dropTarget = tvAvail.createDropTarget(DND.DROP_DEFAULT
-						| DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK
-						| DND.DROP_TARGET_MOVE);
-				dropTarget.setTransfer(new Transfer[] {
-					TextTransfer.getInstance()
-				});
+				DropTarget dropTarget = tvAvail.createDropTarget(
+						DND.DROP_DEFAULT | DND.DROP_MOVE | DND.DROP_COPY | DND.DROP_LINK
+								| DND.DROP_TARGET_MOVE);
+				dropTarget.setTransfer(TextTransfer.getInstance());
 				dropTarget.addDropListener(new DropTargetAdapter() {
 					@Override
 					public void drop(DropTargetEvent event) {
@@ -1450,14 +1385,6 @@ public class TableColumnSetupWindow
 
 			}
 
-			private void tableViewDestroyed() {
-				if (dragSource != null && !dragSource.isDisposed()) {
-					dragSource.dispose();
-				}
-				if (dropTarget != null && !dropTarget.isDisposed()) {
-					dropTarget.dispose();
-				}
-			}
 		});
 
 		tvAvail.addSelectionListener(new TableSelectionAdapter() {

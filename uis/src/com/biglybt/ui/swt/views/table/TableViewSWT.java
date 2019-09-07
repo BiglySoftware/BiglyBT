@@ -44,8 +44,18 @@ public interface TableViewSWT<DATASOURCETYPE>
 
 	public void addMenuFillListener(TableViewSWTMenuFillListener l);
 
+	/**
+	 * Set a Drag Source and handle its disposal.
+	 * <br/>
+	 * Should be called on {@link TableLifeCycleListener#EVENT_TABLELIFECYCLE_INITIALIZED} event trigger
+	 */
 	DragSource createDragSource(int style);
 
+	/**
+	 * Set a Drop Target and handle its disposal
+	 * <br/>
+	 * Should be called on {@link TableLifeCycleListener#EVENT_TABLELIFECYCLE_INITIALIZED} event trigger
+	 */
 	DropTarget createDropTarget(int style);
 
 	public Composite getComposite();
