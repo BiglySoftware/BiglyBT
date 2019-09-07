@@ -373,12 +373,12 @@ public class TimeFormatter {
 			// secs, mins, hours, days, weeks, months, years (kind of...)
 
 			int[] vals = {
-				(int) time_secs % 60,							// secs
-				(int) (time_secs / 60) % 60,					// mins
-				(int) (time_secs / ( 60*60)) % 24,				// hours
-				(int) (time_secs / ( 60*60*24)) % 7,			// days
-				(int) (time_secs / ( 60*60*24*7)) % 4,			// weeks
-				(int) (time_secs / ( 60*60*24*30)) % 12,		// months
+				(int) time_secs,							// secs
+				(int) (time_secs / 60),					// mins
+				(int) (time_secs / ( 60*60)),				// hours
+				(int) (time_secs / ( 60*60*24)),			// days
+				(int) (time_secs / ( 60*60*24*7)),			// weeks
+				(int) (time_secs / ( 60*60*24*30)),		// months
 				(int) (time_secs / ( 60*60*24*365L))			// years
 			};
 
