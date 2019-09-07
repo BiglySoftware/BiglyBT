@@ -470,7 +470,7 @@ public class SB_Transfers
 				SideBar.SIDEBAR_HEADER_TRANSFERS,
 				SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED, "library",
 				"{sidebar.LibraryUnopened}", null, null, true,
-				SideBar.SIDEBAR_SECTION_LIBRARY);
+				getSectionPosition( mdi, SideBar.SIDEBAR_SECTION_LIBRARY_UNOPENED ));
 		
 		infoLibraryUn.setImageLeftID("image.sidebar.unopened");
 
@@ -637,7 +637,7 @@ public class SB_Transfers
 		MdiEntry entry = mdi.createEntryFromSkinRef(
 				SideBar.SIDEBAR_HEADER_TRANSFERS, SideBar.SIDEBAR_SECTION_LIBRARY_CD,
 				"library", "{sidebar.LibraryDL}",
-				titleInfoSeeding, null, false, null);
+				titleInfoSeeding, null, false, getSectionPosition( mdi, SideBar.SIDEBAR_SECTION_LIBRARY_CD ));
 		entry.setImageLeftID("image.sidebar.downloading");
 
 		addGeneralLibraryMenus(mdi,SideBar.SIDEBAR_SECTION_LIBRARY_CD);
@@ -713,7 +713,7 @@ public class SB_Transfers
 		MdiEntry entry = mdi.createEntryFromSkinRef(
 				SideBar.SIDEBAR_HEADER_TRANSFERS, SideBar.SIDEBAR_SECTION_LIBRARY_DL,
 				"library", "{sidebar.LibraryDL}",
-				titleInfoDownloading, null, true, null);
+				titleInfoDownloading, null, true, getSectionPosition( mdi, SideBar.SIDEBAR_SECTION_LIBRARY_DL ));
 
 		entry_holder[0] = entry;
 
@@ -1828,7 +1828,82 @@ public class SB_Transfers
 		}
 	}
 
-	private void
+	public static String
+	getSectionPosition(
+		MultipleDocumentInterface		mdi,
+		String							section )
+	{
+		final String[] order = MultipleDocumentInterface.SIDEBAR_TRANSFERS_SECTION_ORDER;
+		
+		for ( int i=0;i<order.length;i++){
+			
+			if ( order[i] == section ){
+				
+				for ( int j=i-1;j>=0;j-- ){
+					
+					String s = order[j];
+					
+					if ( mdi.getEntry( s ) != null ){
+						
+						return( order[j] );
+					}
+					
+					if ( s == MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_TAG_INSTANCES ){
+						
+						List<MdiEntry> kids = mdi.getChildrenOf( SideBar.SIDEBAR_HEADER_TRANSFERS );
+
+						int existing = sortByTag( kids );
+
+						if ( existing > 0 ){
+							
+							String tag = null;
+							
+							for ( MdiEntry e: kids ){
+								
+								if ( e.getUserData( TAG_TAG_OR_GROUP_KEY ) != null ){
+									
+									tag = e.getId();
+								}
+							}
+							
+							if ( tag != null ){
+								
+								return( tag );
+							}
+						}
+					}else if ( s == MultipleDocumentInterface.SIDEBAR_SECTION_LIBRARY_CAT_INSTANCES ){
+						
+						List<MdiEntry> kids = mdi.getChildrenOf( SideBar.SIDEBAR_HEADER_TRANSFERS );
+
+						int existing = sortByCat( kids );
+
+						if ( existing > 0 ){
+							
+							String cat = null;
+							
+							for ( MdiEntry e: kids ){
+								
+								if ( e.getUserData( CAT_KEY ) != null ){
+									
+									cat = e.getId();
+								}
+							}
+							
+							if ( cat != null ){
+								
+								return( cat );
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return( order[0]);
+	}
+	
+	
+	private static int
 	sortByTag(
 		List<MdiEntry>	entries )
 	{
@@ -1858,9 +1933,19 @@ public class SB_Transfers
 					return( comp.compare( s1, s2 ));
 				}
 			});
+		
+		int	num_tags = 0;
+		
+		for ( MdiEntry e: entries ){
+			if ( e.getUserData(TAG_TAG_OR_GROUP_KEY) != null ){
+				num_tags++;
+			}
+		}
+		
+		return( num_tags );
 	}
 	
-	private String
+	private static String
 	getTagPosition(
 		MultipleDocumentInterfaceSWT		mdi,
 		String								parent_id,
@@ -1871,8 +1956,33 @@ public class SB_Transfers
 
 		List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
 		
-		sortByTag( kids );
+		int existing = sortByTag( kids );
 
+		if ( existing == 0 ){
+			
+			int cats = sortByCat( kids );
+			
+			if ( cats == 0 ){
+				
+				return( getSectionPosition(mdi, SideBar.SIDEBAR_SECTION_LIBRARY_TAG_INSTANCES ));
+				
+			}else{
+								
+				for ( MdiEntry e: kids ){
+					
+					if ( e.getUserData( CAT_KEY ) != null ){
+						
+						prev_id = e.getId();
+					}
+				}
+				
+				if ( prev_id != null ){
+					
+					return( prev_id );
+				}
+			}
+		}
+		
 		Comparator<String> comp = FormattersImpl.getAlphanumericComparator2(true);
 		
 		String tt_prefix = "Tag." + tag_type + ".";
@@ -1922,7 +2032,7 @@ public class SB_Transfers
 		return( prev_id );
 	}
 	
-	private void
+	private static int
 	sortByCat(
 		List<MdiEntry>	entries )
 	{
@@ -1952,9 +2062,19 @@ public class SB_Transfers
 					return( comp.compare( s1, s2 ));
 				}
 			});
+		
+		int	num_cats = 0;
+		
+		for ( MdiEntry e: entries ){
+			if ( e.getUserData(CAT_KEY) != null ){
+				num_cats++;
+			}
+		}
+		
+		return( num_cats );
 	}
 	
-	private String
+	private static String
 	getCatPosition(
 		MultipleDocumentInterface		mdi,
 		String							parent_id,
@@ -1964,8 +2084,13 @@ public class SB_Transfers
 
 		List<MdiEntry> kids = mdi.getChildrenOf( parent_id );
 		
-		sortByCat( kids );
+		int num_cats = sortByCat( kids );
 
+		if ( num_cats == 0 ){
+			
+			return( getSectionPosition(mdi, SideBar.SIDEBAR_SECTION_LIBRARY_CAT_INSTANCES ));
+		}
+		
 		Comparator<String> comp = FormattersImpl.getAlphanumericComparator2(true);
 		
 		String prefix = "Cat.";

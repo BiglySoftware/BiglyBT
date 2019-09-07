@@ -40,7 +40,7 @@ public interface MultipleDocumentInterface
 	public static final String SIDEBAR_HEADER_PLUGINS = "header.plugins";
 
 	
-	public static final String[] SIDEBAR_HEADER_ORDER_DEFAULT = new String[] {
+	public static final String[] SIDEBAR_HEADER_ORDER_DEFAULT = {
 			SIDEBAR_HEADER_DASHBOARD,
 			SIDEBAR_HEADER_TRANSFERS,
 			SIDEBAR_HEADER_VUZE,
@@ -100,6 +100,28 @@ public interface MultipleDocumentInterface
 	
 	public static final String SIDEBAR_SECTION_ALL_TRACKERS = "AllTrackers";
 
+	public static final String SIDEBAR_SECTION_LIBRARY_CAT_INSTANCES	= "Cat.";
+	public static final String SIDEBAR_SECTION_LIBRARY_TAG_INSTANCES	= "Tag.";
+	
+	public static final String[] SIDEBAR_TRANSFERS_SECTION_ORDER = {
+			SIDEBAR_SECTION_LIBRARY,
+			SIDEBAR_SECTION_LIBRARY_DL,
+			SIDEBAR_SECTION_LIBRARY_CD,
+			SIDEBAR_SECTION_LIBRARY_UNOPENED,
+			SIDEBAR_SECTION_LIBRARY_CAT_INSTANCES,
+			SIDEBAR_SECTION_LIBRARY_TAG_INSTANCES,
+			SIDEBAR_SECTION_TAGS,
+			SIDEBAR_SECTION_ALL_TRACKERS,
+			SIDEBAR_SECTION_ALLPEERS,
+			SIDEBAR_SECTION_MY_TRACKER,
+			SIDEBAR_SECTION_MY_SHARES,
+			SIDEBAR_SECTION_ARCHIVED_DOWNLOADS,
+			SIDEBAR_SECTION_DOWNLOAD_HISTORY,
+			SIDEBAR_SECTION_TORRENT_OPTIONS,
+			SIDEBAR_SECTION_TORRENT_DETAILS,
+	};
+	
+	
 	public boolean showEntryByID(String id);
 
 	public boolean showEntryByID(String id, Object datasource);

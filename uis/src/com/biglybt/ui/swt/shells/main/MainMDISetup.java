@@ -247,7 +247,8 @@ public class MainMDISetup
 					public MdiEntry createMDiEntry(String id) {
 						MdiEntry entry = mdi.createEntryFromEventListener(
 								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
-								new PeersSuperView(), id, true, null, null);
+								new PeersSuperView(), id, true, null, 
+								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_ALLPEERS));
 						entry.setImageLeftID("image.sidebar.allpeers");
 						return entry;
 					}
@@ -270,7 +271,8 @@ public class MainMDISetup
 					public MdiEntry createMDiEntry(String id) {
 						MdiEntry entry = mdi.createEntryFromSkinRef(
 								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS, id,
-								"tagsview", "{tags.view.heading}", null, null, true, null);
+								"tagsview", "{tags.view.heading}", null, null, true, 
+								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_TAGS));
 						entry.setImageLeftID("image.sidebar.tag-overview");
 						entry.setDefaultExpanded(true);
 						return entry;
@@ -438,7 +440,8 @@ public class MainMDISetup
 								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 								MultipleDocumentInterface.SIDEBAR_SECTION_ARCHIVED_DOWNLOADS, "archivedlsview",
 								"{mdi.entry.archiveddownloadsview}",
-								title_info, null, true, null);
+								title_info, null, true, 
+								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_ARCHIVED_DOWNLOADS));
 
 						entry.setImageLeftID( "image.sidebar.archive" );
 
@@ -605,7 +608,8 @@ public class MainMDISetup
 								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 								MultipleDocumentInterface.SIDEBAR_SECTION_DOWNLOAD_HISTORY, "downloadhistoryview",
 								"{mdi.entry.downloadhistoryview}",
-								title_info, null, true, null);
+								title_info, null, true, 
+								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_DOWNLOAD_HISTORY));
 
 						entry.setImageLeftID("image.sidebar.logview");
 
@@ -672,7 +676,8 @@ public class MainMDISetup
 							MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 							MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS, "alltrackersview",
 							"{mdi.entry.alltrackersview}",
-							title_info, null, true, null);
+							title_info, null, true, 
+							SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_ALL_TRACKERS));
 
 					entry.setImageLeftID("image.sidebar.alltrackers");
 
@@ -717,7 +722,8 @@ public class MainMDISetup
 								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 								TorrentOptionsView.class,
 								MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS, true,
-								null, null);
+								null,
+								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_TORRENT_OPTIONS));
 
 						entry.setImageLeftID( "image.sidebar.torrentoptions" );
 
@@ -733,7 +739,8 @@ public class MainMDISetup
 								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 								MySharesView.class,
 								MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES, true,
-								null, null);
+								null, 
+								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_MY_SHARES));
 
 						entry.setImageLeftID( "image.sidebar.myshares" );
 
@@ -749,7 +756,8 @@ public class MainMDISetup
 								MultipleDocumentInterface.SIDEBAR_HEADER_TRANSFERS,
 								MyTrackerView.class,
 								MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER, true,
-								null, null);
+								null, 
+								SB_Transfers.getSectionPosition(mdi, MultipleDocumentInterface.SIDEBAR_SECTION_MY_TRACKER));
 
 						entry.setImageLeftID( "image.sidebar.mytracker" );
 
