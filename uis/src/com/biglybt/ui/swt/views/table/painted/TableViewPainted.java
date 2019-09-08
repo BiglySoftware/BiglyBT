@@ -1877,8 +1877,8 @@ public class TableViewPainted
 			
 			final TableViewSWTFilter f_filter = filter;
 			
-			filter.widgetKeyListener = KeyListener.keyPressedAdapter(
-				(event)->{
+			filter.widgetKeyListener = new KeyAdapter(){
+				public void keyPressed(KeyEvent event){
 					int key = event.character;
 					if (key <= 26 && key > 0) {
 						key += 'a' - 1;
@@ -1895,7 +1895,7 @@ public class TableViewPainted
 							break;
 						}
 					}
-				});
+				}};
 			
 			txtFilter.addKeyListener(filter.widgetKeyListener);
 			
