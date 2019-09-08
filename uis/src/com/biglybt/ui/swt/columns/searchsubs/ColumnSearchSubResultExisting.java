@@ -18,11 +18,10 @@
 package com.biglybt.ui.swt.columns.searchsubs;
 
 
-import com.biglybt.ui.swt.utils.SearchSubsUtils;
-import com.biglybt.core.config.COConfigurationListener;
-import com.biglybt.core.config.COConfigurationManager;
 import com.biglybt.core.internat.MessageText;
 import com.biglybt.core.subs.util.SearchSubsResultBase;
+import com.biglybt.ui.swt.utils.SearchSubsUtils;
+
 import com.biglybt.pif.ui.tables.*;
 
 
@@ -31,23 +30,18 @@ public class ColumnSearchSubResultExisting
 {
 	public static String COLUMN_ID = "in";
 
-	private static final String[] messages = new String[5];
+	private static final String[] messages = new String[6];
 
 	static{
-	   	COConfigurationManager.addAndFireListener(
-    		new COConfigurationListener()
-    		{
-    			@Override
-			    public void
-    			configurationSaved()
-    			{
-    				messages[0]	= "";
-       				messages[1]	= MessageText.getString( "label.library" );
-       				messages[2]	= MessageText.getString( "label.archive" );
-       				messages[3]	= MessageText.getString( "label.history" );
-       				messages[4] = "?";
-    			}
-    		});
+		MessageText.addAndFireListener((old_locale, new_locale) -> {
+			messages[0] = "";
+			messages[1] = MessageText.getString("label.library");
+			messages[2] = MessageText.getString("label.archive");
+			messages[3] = MessageText.getString("label.history");
+			messages[4] = "?";
+			messages[5] = MessageText.getString(
+					"OpenTorrentWindow.mb.notTorrent.retry");
+		});
 	}
 
 	@Override

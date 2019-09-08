@@ -260,6 +260,7 @@ SearchSubsUtils
 	public static final int HS_ARCHIVE		= 2;
 	public static final int HS_HISTORY		= 3;
 	public static final int HS_UNKNOWN		= 4;
+	public static final int HS_FETCHING		= 5;
 
 	private static GlobalManager 			gm;
 	private static DownloadManager			dm;
@@ -309,9 +310,13 @@ SearchSubsUtils
 
 		int hs_result;
 
-		if ( gm.getDownloadManager( new HashWrapper( hash )) != null ){
+		com.biglybt.core.download.DownloadManager dl = gm.getDownloadManager(new HashWrapper(hash));
+		if ( dl != null ){
 
-			hs_result = HS_LIBRARY;
+			DownloadManagerState downloadState = dl.getDownloadState();
+			hs_result = downloadState != null
+					&& downloadState.getFlag(DownloadManagerState.FLAG_METADATA_DOWNLOAD)
+							? HS_FETCHING : HS_LIBRARY;
 
 		}else if (dm.lookupDownloadStub( hash ) != null ){
 
