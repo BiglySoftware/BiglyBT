@@ -294,6 +294,7 @@ public class SubscriptionsView
 
 		TableColumnManager tcm = TableColumnManager.getInstance();
 
+		tcm.setDefaultColumnNames(TABLE_ID, columns);
 		tcm.setDefaultSortColumnName(TABLE_ID, "name");
 				
 		view = TableViewFactory.createTableViewSWT(Subscription.class, TABLE_ID, TABLE_ID,
