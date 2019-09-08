@@ -64,7 +64,7 @@ public class MessageBoxShell
 
 	private final static int MIN_SIZE_Y_DEFAULT = 120;
 
-	private final static int MAX_SIZE_X_DEFAULT = 500;
+	private final static int MAX_SIZE_X_DEFAULT = 600;
 
 	private static final int MIN_BUTTON_SIZE = 70;
 
