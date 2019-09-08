@@ -1927,10 +1927,40 @@ public class SB_Transfers
 				}else if ( o2 == null ){
 					return( -1 );
 				}else{
-					String s1 = o1 instanceof Tag?((Tag)o1).getTagName( true ):((TagGroup)o1).getName();
-					String s2 = o2 instanceof Tag?((Tag)o2).getTagName( true ):((TagGroup)o2).getName();
+					TagType tt1;
+					TagType tt2;
 					
-					return( comp.compare( s1, s2 ));
+					String n1;
+					String n2;
+					
+					if ( o1 instanceof Tag ){
+						Tag t  	= (Tag)o1;
+						tt1 	= t.getTagType();
+						n1 		= t.getTagName( true );
+					}else{
+						TagGroup tg = (TagGroup)o1;
+						tt1 		= tg.getTagType();
+						n1 			= tg.getName();
+					}
+					
+					if ( o2 instanceof Tag ){
+						Tag t  	= (Tag)o2;
+						tt2 	= t.getTagType();
+						n2 		= t.getTagName( true );
+					}else{
+						TagGroup tg = (TagGroup)o2;
+						tt2			= tg.getTagType();
+						n2 			= tg.getName();
+					}
+					
+					if ( tt1 == tt2 ){
+
+						return( comp.compare( n1, n2 ));
+						
+					}else{
+						
+						return( tt1.getTagType() - tt2.getTagType());
+					}
 				}
 			});
 		
@@ -1944,7 +1974,7 @@ public class SB_Transfers
 		
 		return( num_tags );
 	}
-	
+		
 	private static String
 	getTagPosition(
 		MultipleDocumentInterfaceSWT		mdi,
@@ -2014,6 +2044,27 @@ public class SB_Transfers
 		
 		if ( tt_match_count == 0 ){
 			
+				// none of this tag type, place after last of lesser tag-group
+			
+			for ( MdiEntry kid: kids ){
+				
+				Object o = kid.getUserData( TAG_TAG_OR_GROUP_KEY );
+				
+				if ( o != null ){
+					
+					int tt = o instanceof Tag?((Tag)o).getTagType().getTagType():((TagGroup)o).getTagType().getTagType();
+					
+					if ( tt <= tag_type ){
+					
+						prev_id = kid.getId();
+					}
+				}
+			}
+			
+			if ( prev_id == null ){
+				
+				prev_id = getSectionPosition(mdi, SideBar.SIDEBAR_SECTION_LIBRARY_TAG_INSTANCES );
+			}
 		}else if ( tt_matched ){
 			
 			if ( tt_match_count == 1 ){

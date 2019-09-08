@@ -765,6 +765,13 @@ TagTypeBase
  			}
  		}
  		
+ 		@Override
+ 		public TagType 
+ 		getTagType()
+ 		{
+ 			return( TagTypeBase.this );
+ 		}
+ 		
  		public List<Tag>
  		getTags()
  		{

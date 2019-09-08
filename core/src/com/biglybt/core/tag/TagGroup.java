@@ -15,6 +15,9 @@ TagGroup
 	setExclusive(
 		boolean		b );
 	
+	public TagType
+	getTagType();
+	
 	public List<Tag>
 	getTags();
 	
