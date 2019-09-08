@@ -49,6 +49,7 @@ import com.biglybt.ui.swt.Utils;
 import com.biglybt.ui.swt.mainwindow.ClipboardCopy;
 
 import com.biglybt.core.CoreFactory;
+import com.biglybt.core.download.DownloadManagerState;
 
 public class
 SearchSubsUtils
