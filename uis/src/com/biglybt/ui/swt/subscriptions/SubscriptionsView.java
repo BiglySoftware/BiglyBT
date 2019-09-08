@@ -289,6 +289,7 @@ public class SubscriptionsView
 				new ColumnSubscriptionTag(TABLE_ID),
 				new ColumnSubscriptionParent(TABLE_ID),
 				new ColumnSubscriptionError(TABLE_ID),
+				new ColumnSubscriptionNewestDate(TABLE_ID),
 
 		};
 
