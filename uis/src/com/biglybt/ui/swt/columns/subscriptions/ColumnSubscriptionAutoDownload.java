@@ -49,8 +49,6 @@ public class ColumnSubscriptionAutoDownload
 	public ColumnSubscriptionAutoDownload(String sTableID) {
 		super(COLUMN_ID, ALIGN_CENTER, POSITION_LAST, 100, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
-		setMinWidth(100);
-		setMaxWidth(100);
 	}
 
 	@Override
