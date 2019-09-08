@@ -49,8 +49,6 @@ public class ColumnSubscriptionEnabled
 	public ColumnSubscriptionEnabled(String sTableID) {
 		super(COLUMN_ID, ALIGN_CENTER, POSITION_INVISIBLE, 100, sTableID);
 		setRefreshInterval(INTERVAL_LIVE);
-		setMinWidth(100);
-		setMaxWidth(100);
 	}
 
 	@Override
