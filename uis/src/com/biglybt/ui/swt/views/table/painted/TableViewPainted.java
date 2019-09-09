@@ -2334,15 +2334,17 @@ public class TableViewPainted
 									Rectangle bounds = canvasImage.getBounds();
 									//System.out.println("moving y " + yDiff + ";cah=" + clientArea.height);
 									if (yDiff > 0) {
+										// User Scrolled up, Move Image Down
 										if (Utils.isGTK3) {
-											//copyArea cheese on GTK3 SWT 4528/4608
-											gc.drawImage(canvasImage, 0, yDiff);
+											// Can't copyArea(x, y, w, h, dx, dy, paint) or drawImage(Image, x, y) downward without cheese
+											gc.copyArea(canvasImage, 0, -yDiff);
 										} else {
 											gc.copyArea(0, 0, bounds.width, bounds.height, 0, yDiff, false);
 										}
 										swt_paintCanvasImage(gc, new Rectangle(0, 0, 9999, yDiff));
 										Utils.setClipping(gc, (Rectangle) null);
 									} else {
+										// User scrolled down, move image up
 										if (Utils.isGTK3) {
 											//copyArea cheese on GTK3 SWT 4528/4608
 											gc.drawImage(canvasImage, 0, yDiff);
@@ -2362,12 +2364,7 @@ public class TableViewPainted
 									gc.dispose();
 								}
 					  		if ( DEBUG_WITH_SHELL ){
-						  		if (sCanvasImage != null) {
-						  			Point size = sCanvasImage.getShell().computeSize(canvasImage.getBounds().width, canvasImage.getBounds().height);
-						  			sCanvasImage.getShell().setSize(size);
-						  			sCanvasImage.redraw();
-						  			sCanvasImage.update();
-						  		}
+					  			forceDebugShellRefresh(null);
 					  		}
 
 							}catch( Throwable e ){
@@ -2481,6 +2478,24 @@ public class TableViewPainted
 		}
 	}
 
+	private void forceDebugShellRefresh(Rectangle bounds) {
+		if (sCanvasImage == null) {
+			return;
+		}
+		Point size = sCanvasImage.getShell().computeSize(
+			canvasImage.getBounds().width, canvasImage.getBounds().height);
+		sCanvasImage.getShell().setSize(size);
+		if (bounds == null) {
+			sCanvasImage.redraw();
+		} else {
+			sCanvasImage.redraw(bounds.x, bounds.y, bounds.width, bounds.height,
+				true);
+		}
+		sCanvasImage.update();
+		while (sCanvasImage.getDisplay().readAndDispatch()) {
+		}
+	}
+
 	public void swt_updateCanvasImage(boolean immediateRedraw) {
 		if (canvasImage != null && !canvasImage.isDisposed()) {
 			swt_updateCanvasImage(canvasImage.getBounds(), immediateRedraw);
@@ -2516,14 +2531,7 @@ public class TableViewPainted
 				gc.dispose();
 
 				if (DEBUG_WITH_SHELL) {
-					if (sCanvasImage != null) {
-						Point size = sCanvasImage.getShell().computeSize(
-								canvasImage.getBounds().width, canvasImage.getBounds().height);
-						sCanvasImage.getShell().setSize(size);
-						sCanvasImage.redraw(bounds.x, bounds.y, bounds.width, bounds.height,
-								true);
-						sCanvasImage.update();
-					}
+					forceDebugShellRefresh(bounds);
 				}
 				x = bounds.x - clientArea.x;
 			} else {
