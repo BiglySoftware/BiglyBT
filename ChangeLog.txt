@@ -1,6 +1,8 @@
 BIGLYBT CHANGELOG
 -----------------
 
+2019.xx.yy | BiglyBT 2.1.0.1
+
 2019.09.09 | BiglyBT 2.1.0.0
 
 FEATURE: Plug  | We now have a uTorrent/BitTorrent client migration plugin [TuxPaper]
