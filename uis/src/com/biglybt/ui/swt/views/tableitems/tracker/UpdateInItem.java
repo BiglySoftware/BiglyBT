@@ -68,9 +68,7 @@ UpdateInItem
 
 			int	state = ps.getStatus();
 
-			if ( 	( 	state == TrackerPeerSource.ST_ONLINE ||
-						state == TrackerPeerSource.ST_ERROR ) &&
-					!ps.isUpdating()){
+			if ( 	state != TrackerPeerSource.ST_DISABLED &&  !ps.isUpdating()){
 
 				secs = ps.getSecondsToUpdate();
 

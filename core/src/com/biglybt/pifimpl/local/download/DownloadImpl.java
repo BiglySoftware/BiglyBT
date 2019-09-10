@@ -1418,9 +1418,7 @@ DownloadImpl
 							long	now = SystemTime.getCurrentTime();
 		
 							if ( now - fixup > 1000 ){
-		
-								boolean	force_calc = false;
-								
+										
 								if ( !download_manager.getDownloadState().isPeerSourceEnabled( PEPeerSource.PS_PLUGIN )){
 		
 									state = ST_DISABLED;
@@ -1436,48 +1434,65 @@ DownloadImpl
 									}else{
 		
 										state = ST_STOPPED;
-										
-										force_calc = s == ST_QUEUED;
 									}
 								}
 		
-								if ( state == ST_ONLINE || force_calc ){
-		
-									try{
-										peer_listeners_mon.enter();
-		
-													
-										int[] data =  announce_response_map.get(name);
-		
-										if ( data != null ){
+								try{
+									peer_listeners_mon.enter();
 	
-											seeds		= data[0];
-											leechers	= data[1];
-											peers		= data[2];
+												
+									int[] data =  announce_response_map.get(name);
 	
-											details = name + " " +seeds + "/" + leechers + "/" + peers;
-	
+									if ( data != null ){
+
+										seeds		= data[0];
+										leechers	= data[1];
+										peers		= data[2];
+
+										if ( peers == -1 ){
 											
-											time 		= data[3];
-											next_time	= data[4];
+												// scrape if valid
 											
+											if ( seeds >= 0 ){
+												
+												details = name + " " +seeds + "/" + leechers;
+												
+											}else{
+												
+												details = name;
+											}
+
 										}else{
-										
-											details 	=  name;
-			
-											seeds		= -1;
-											leechers	= -1;
-											peers		= -1;
-											time		= -1;
-											next_time	= -1;
+											
+												// announce if valid
+											
+											if ( seeds >= 0 ){
+												
+												details = name + " " +seeds + "/" + leechers + "/" + peers;
+												
+											}else{
+												
+												details = name;
+											}
 										}
-									}finally{
+
+										
+										time 		= data[3];
+										next_time	= data[4];
+										
+									}else{
+									
+										details 	=  name;
 		
-										peer_listeners_mon.exit();
+										seeds		= -1;
+										leechers	= -1;
+										peers		= -1;
+										time		= -1;
+										next_time	= -1;
 									}
-								}else{
-		
-									details = name;
+								}finally{
+	
+									peer_listeners_mon.exit();
 								}
 		
 								fixup = now;
@@ -1544,7 +1559,6 @@ DownloadImpl
 							return( time );
 						}
 						
-						/* not working well as DHTs not reporting sensible values...
 						@Override
 						public int 
 						getSecondsToUpdate()
@@ -1569,7 +1583,6 @@ DownloadImpl
 								}
 							}
 						}
-						*/
 					};
 			}
 		
@@ -1718,6 +1731,8 @@ DownloadImpl
 
 					data = new int[5];
 
+					data[2] = -1;	// peers, no data from a scrape
+					
 					announce_response_map.put( class_name, data );
 					
 					new_entry = true;
@@ -1725,7 +1740,12 @@ DownloadImpl
 
 				data[0]	= seeds;
 				data[1]	= leechers;
-				data[3] = (int)(SystemTime.getCurrentTime()/1000);
+				
+				if ( result.getScrapeStartTime() <= 0 ){
+					data[3] = -1;
+				}else{
+					data[3] = (int)(SystemTime.getCurrentTime()/1000);
+				}
 				data[4] = (int)(result.getNextScrapeStartTime()/1000);
 			}finally{
 
