@@ -6,6 +6,7 @@ BIGLYBT CHANGELOG
 2019.09.09 | BiglyBT 2.1.0.0
 
 FEATURE: Plug  | We now have a uTorrent/BitTorrent client migration plugin [TuxPaper]
+FEATURE: Plug  | New Swarm Discoveries 'explore' mode [Parg]
 FEATURE: Tag   | Three tag view modes in tagging view with groups: Row, Column, Row-Compact [TuxPaper]
 FEATURE: Tag   | Drag of Tags or to Tags or to Tag Groups now supported in most places [TuxPaper]
 FEATURE: Tag   | F2 to rename tag when it has focus [TuxPaper]
