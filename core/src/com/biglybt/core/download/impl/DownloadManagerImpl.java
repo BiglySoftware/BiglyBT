@@ -5389,7 +5389,7 @@ DownloadManagerImpl
   }
 
   	@Override
-	  public List<TrackerPeerSource>
+	public List<TrackerPeerSource>
   	getTrackerPeerSources()
   	{
   		try{
@@ -5414,38 +5414,9 @@ DownloadManagerImpl
 						{
 							if ( type == TOTorrentListener.CT_ANNOUNCE_URLS ){
 
-								List<DownloadManagerTPSListener>	to_inform = null;
+					  			torrent.removeListener( this );
 
-						 		try{
-						  			this_mon.enter();
-
-						  			torrent.removeListener( this );
-
-						  			setUserData( TPS_Key, null );
-
-						  			if ( tps_listeners != null ){
-
-						  				to_inform = new ArrayList<>(tps_listeners);
-						  			}
-						  		}finally{
-
-						  			this_mon.exit();
-						  		}
-
-						  		if ( to_inform != null ){
-
-						  			for ( DownloadManagerTPSListener l: to_inform ){
-
-						  				try{
-
-						  					l.trackerPeerSourcesChanged();
-
-						  				}catch( Throwable e ){
-
-						  					Debug.out(e);
-						  				}
-						  			}
-						  		}
+					  			informTPSChanged();
 							}
 						}
 					};
@@ -6026,7 +5997,7 @@ DownloadManagerImpl
 
 				try{
 
-					tps.add(((DownloadImpl)plugin_download).getTrackerPeerSource());
+					tps.addAll(Arrays.asList(((DownloadImpl)plugin_download).getTrackerPeerSources()));
 
 				}catch( Throwable e ){
 
@@ -6287,6 +6258,42 @@ DownloadManagerImpl
 
     		this_mon.exit();
     	}
+    }
+    
+    @Override
+    public void
+    informTPSChanged()
+    {
+		List<DownloadManagerTPSListener>	to_inform = null;
+
+ 		try{
+  			this_mon.enter();
+
+  			setUserData( TPS_Key, null );
+
+  			if ( tps_listeners != null ){
+
+  				to_inform = new ArrayList<>(tps_listeners);
+  			}
+  		}finally{
+
+  			this_mon.exit();
+  		}
+
+  		if ( to_inform != null ){
+
+  			for ( DownloadManagerTPSListener l: to_inform ){
+
+  				try{
+
+  					l.trackerPeerSourcesChanged();
+
+  				}catch( Throwable e ){
+
+  					Debug.out(e);
+  				}
+  			}
+  		}
     }
 
   private byte[]

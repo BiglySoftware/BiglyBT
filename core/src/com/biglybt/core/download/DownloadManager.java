@@ -764,6 +764,9 @@ DownloadManager
     	DownloadManagerTPSListener		listener );
 
     public void
+    informTPSChanged();
+    
+    public void
     removeTPSListener(
     	DownloadManagerTPSListener		listener );
 

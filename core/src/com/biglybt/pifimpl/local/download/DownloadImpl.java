@@ -1371,172 +1371,210 @@ DownloadImpl
 		}
 	}
 
-	public TrackerPeerSource
-	getTrackerPeerSource()
+	public TrackerPeerSource[]
+	getTrackerPeerSources()
 	{
-		return(
-			new TrackerPeerSourceAdapter()
-			{
-				private long	fixup;
-				private int		state;
-				private String 	details = "";
-				private int		seeds;
-				private int		leechers;
-				private int		peers;
+		List<String> names = null;
+		
+		try{
+			peer_listeners_mon.enter();
+		
+			if ( announce_response_map != null ){
+			
+				names = new ArrayList<>( announce_response_map.keySet());
+			}
+		}finally{
 
-				private void
-				fixup()
-				{
-					long	now = SystemTime.getCurrentTime();
-
-					if ( now - fixup > 1000 ){
-
-						if ( !download_manager.getDownloadState().isPeerSourceEnabled( PEPeerSource.PS_PLUGIN )){
-
-							state = ST_DISABLED;
-
-						}else{
-
-							int s = getState();
-
-							if ( s == ST_DOWNLOADING || s == ST_SEEDING ){
-
-								state = ST_ONLINE;
-
-							}else{
-
-								state = ST_STOPPED;
-							}
-						}
-
-						if ( state == ST_ONLINE ){
-
-							try{
-								peer_listeners_mon.enter();
-
-								int	s	= 0;
-								int	l	= 0;
-								int p 	= 0;
-
-								String	str = "";
-
-								if ( announce_response_map != null ){
-
-									for (Map.Entry<String, int[]> entry: announce_response_map.entrySet()){
-
-										String 	cn 		= entry.getKey();
-										int[]	data 	= entry.getValue();
-
-										str += (str.length()==0?"":", ") + cn;
-
-										str += " " + data[0] + "/" + data[1] + "/" + data[2];
-
-										s += data[0];
-										l += data[1];
-										p += data[2];
+			peer_listeners_mon.exit();
+		}
+		
+		if ( names == null || names.size() == 0 ){
+			
+			return( new TrackerPeerSource[0] );
+			
+		}else{
+		
+			TrackerPeerSourceAdapter[] result = new TrackerPeerSourceAdapter[names.size()];
+			
+			for ( int i=0;i<result.length;i++){
+				
+				String name = names.get(i);
+				
+				result[i] =
+					new TrackerPeerSourceAdapter()
+					{
+						private long	fixup;
+						private int		state;
+						private String 	details 	= "";
+						private int		seeds		= -1;
+						private int		leechers	= -1;
+						private int		peers		= -1;
+						private int		time		= -1;
+						private int		next_time	= -1;
+		
+						private void
+						fixup()
+						{
+							long	now = SystemTime.getCurrentTime();
+		
+							if ( now - fixup > 1000 ){
+		
+								boolean	force_calc = false;
+								
+								if ( !download_manager.getDownloadState().isPeerSourceEnabled( PEPeerSource.PS_PLUGIN )){
+		
+									state = ST_DISABLED;
+		
+								}else{
+		
+									int s = getState();
+		
+									if ( s == ST_DOWNLOADING || s == ST_SEEDING ){
+		
+										state = ST_ONLINE;
+		
+									}else{
+		
+										state = ST_STOPPED;
+										
+										force_calc = s == ST_QUEUED;
 									}
 								}
-
-								details 	= str;
-
-								if ( str.length() == 0 ){
-
-									seeds		= -1;
-									leechers	= -1;
-									peers		= -1;
-
+		
+								if ( state == ST_ONLINE || force_calc ){
+		
+									try{
+										peer_listeners_mon.enter();
+		
+													
+										int[] data =  announce_response_map.get(name);
+		
+										if ( data != null ){
+	
+											seeds		= data[0];
+											leechers	= data[1];
+											peers		= data[2];
+	
+											details = name + " " +seeds + "/" + leechers + "/" + peers;
+	
+											
+											time 		= data[3];
+											next_time	= data[4];
+											
+										}else{
+										
+											details 	=  name;
+			
+											seeds		= -1;
+											leechers	= -1;
+											peers		= -1;
+											time		= -1;
+											next_time	= -1;
+										}
+									}finally{
+		
+										peer_listeners_mon.exit();
+									}
 								}else{
-
-									seeds		= s;
-									leechers	= l;
-									peers		= p;
+		
+									details = name;
 								}
-
-							}finally{
-
-								peer_listeners_mon.exit();
+		
+								fixup = now;
 							}
-						}else{
-
-							details = "";
 						}
+		
+						@Override
+						public int
+						getType()
+						{
+							return( TP_PLUGIN );
+						}
+		
+						@Override
+						public int
+						getStatus()
+						{
+							fixup();
+		
+							return( state );
+						}
+		
+						@Override
+						public String
+						getName()
+						{
+							fixup();
+				
+							return( details );
+						}
+		
+						@Override
+						public int
+						getSeedCount()
+						{
+							fixup();
+				
+							return( seeds );
 
-						fixup = now;
-					}
-				}
-
-				@Override
-				public int
-				getType()
-				{
-					return( TP_PLUGIN );
-				}
-
-				@Override
-				public int
-				getStatus()
-				{
-					fixup();
-
-					return( state );
-				}
-
-				@Override
-				public String
-				getName()
-				{
-					fixup();
-
-					if ( state == ST_ONLINE ){
-
-						return( details );
-					}
-
-					return( "" );
-				}
-
-				@Override
-				public int
-				getSeedCount()
-				{
-					fixup();
-
-					if ( state == ST_ONLINE ){
-
-						return( seeds );
-					}
-
-					return( -1 );
-				}
-
-				@Override
-				public int
-				getLeecherCount()
-				{
-					fixup();
-
-					if ( state == ST_ONLINE ){
-
-						return( leechers );
-					}
-
-					return( -1 );
-				}
-
-				@Override
-				public int
-				getPeers()
-				{
-					fixup();
-
-					if ( state == ST_ONLINE ){
-
-						return( peers );
-					}
-
-					return( -1 );
-				}
-			});
+						}
+		
+						@Override
+						public int
+						getLeecherCount()
+						{
+							fixup();
+				
+							return( leechers );
+						}
+		
+						@Override
+						public int
+						getPeers()
+						{
+							fixup();
+				
+							return( peers );
+						}
+						
+						@Override
+						public int 
+						getLastUpdate()
+						{
+							return( time );
+						}
+						
+						/* not working well as DHTs not reporting sensible values...
+						@Override
+						public int 
+						getSecondsToUpdate()
+						{
+							if ( next_time == 0 ){
+								
+								return( -1 );
+								
+							}else{
+								
+								int	now_secs = (int)(SystemTime.getCurrentTime()/1000);
+								
+								int	rem = next_time - now_secs;
+								
+								if ( rem < 0 ){
+									
+									return( 0 );
+									
+								}else{
+									
+									return( rem );
+								}
+							}
+						}
+						*/
+					};
+			}
+		
+			return( result );
+		}
 	}
 
 	private String
@@ -1570,7 +1608,7 @@ DownloadImpl
 
 			name = name.substring( 0, pos );
 
-		}else if ( name.equals( "DHTAnnounceResult")){
+		}else if ( name.equals( "DHTAnnounceResult") || name.equals( "DHTScrapeResult")){
 
 			name = "mlDHT";
 		}
@@ -1585,6 +1623,8 @@ DownloadImpl
 	{
 		String class_name = getTrackingName( result );
 
+		boolean new_entry = false;
+		
 		if ( class_name != null ){
 
 			int	seeds 		= result.getSeedCount();
@@ -1615,16 +1655,18 @@ DownloadImpl
 
 				if ( data == null ){
 
-					data = new int[4];
+					data = new int[5];
 
 					announce_response_map.put( class_name, data );
+					
+					new_entry = true;
 				}
 
 				data[0]	= seeds;
 				data[1]	= leechers;
 				data[2]	= peer_count;
 				data[3] = (int)(SystemTime.getCurrentTime()/1000);
-
+				data[4] = (int)(SystemTime.getCurrentTime()/1000 + result.getTimeToWait());
 			}finally{
 
 				peer_listeners_mon.exit();
@@ -1632,6 +1674,11 @@ DownloadImpl
 		}
 
 		download_manager.setAnnounceResult( result );
+		
+		if ( new_entry ){
+			
+			download_manager.informTPSChanged();
+		}
 	}
 
 	@Override
@@ -1640,6 +1687,8 @@ DownloadImpl
 		DownloadScrapeResult	result )
 	{
 		String class_name = getTrackingName( result );
+
+		boolean new_entry = false;
 
 		if ( class_name != null ){
 
@@ -1667,14 +1716,17 @@ DownloadImpl
 
 				if ( data == null ){
 
-					data = new int[4];
+					data = new int[5];
 
 					announce_response_map.put( class_name, data );
+					
+					new_entry = true;
 				}
 
 				data[0]	= seeds;
 				data[1]	= leechers;
 				data[3] = (int)(SystemTime.getCurrentTime()/1000);
+				data[4] = (int)(result.getNextScrapeStartTime()/1000);
 			}finally{
 
 				peer_listeners_mon.exit();
@@ -1682,6 +1734,11 @@ DownloadImpl
 		}
 
 		download_manager.setScrapeResult( result );
+		
+		if ( new_entry ){
+			
+			download_manager.informTPSChanged();
+		}
 	}
 
 	public void
