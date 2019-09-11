@@ -799,8 +799,6 @@ public class FilesView
 		int								action,
 		boolean							test_only )
 	{
-		boolean result = false;
-		
 		TableRowCore[] tv_rows = tv.getRowsAndSubRows(true);
 		
 		Map<FilesViewNodeInner,TableRowCore>	node_to_row_map = new HashMap<>();
@@ -819,11 +817,14 @@ public class FilesView
 			
 			if ( doTreeAction( node_to_row_map, node, action, true, test_only )){
 				
-				result = true;
+				if ( test_only ){
+					
+					return( true );
+				}
 			}
 		}
 		
-		return( result );
+		return( false );
 	}
 	
 	private boolean
@@ -834,18 +835,18 @@ public class FilesView
 		boolean									recursive,
 		boolean									test_only )
 	{
-		boolean	result = false;
-		
 		TableRowCore row = node_to_row_map.get( node );
 		
 		if ( !node.isExpanded()){
 			
 			if ( action == 0 ){
+								
+				if ( test_only ){
 				
-				result = true;
-				
-				if ( !test_only ){
-				
+					return( true );
+					
+				}else{
+					
 					row.setExpanded( true );
 				}
 			}
@@ -861,7 +862,10 @@ public class FilesView
 			
 					if ( doTreeAction(node_to_row_map, (FilesView.FilesViewNodeInner)kid, action, recursive, test_only )){
 						
-						result = true;
+						if ( test_only ){
+							
+							return( true );
+						}
 					}
 				}
 			}
@@ -872,17 +876,44 @@ public class FilesView
 		if ( node.isExpanded()){
 			
 			if ( action == 1 ){
+								
+				if ( test_only ){
 				
-				result = true;
-				
-				if ( !test_only ){
-				
+					return( true );
+					
+				}else{
+					
+						// must ensure all parents are expanded before collapsing 
+					
+					FilesViewNodeInner n = node.getParent();
+					
+					List<FilesViewNodeInner> path = new ArrayList<>();
+						
+					while( n != null ){
+						
+						path.add( n );
+						
+						n = n.getParent();
+					}
+					
+					for ( int i=path.size()-1;i>=0;i--){
+						
+						n = path.get(i);
+						
+						if ( !n.isExpanded()){
+							
+							TableRowCore r = node_to_row_map.get( n );
+							
+							r.setExpanded( true );
+						}
+					}
+					
 					row.setExpanded( false );
 				}
 			}
 		}
 		
-		return( result );
+		return( false );
 	}
 	
 	// @see com.biglybt.ui.swt.views.TableViewSWTMenuFillListener#fillMenu(org.eclipse.swt.widgets.Menu)
@@ -1669,7 +1700,7 @@ public class FilesView
 		public String
 		getName();
 		
-		public FilesViewTreeNode
+		public FilesViewNodeInner
 		getParent();
 		
 		public List<FilesViewTreeNode>
@@ -1728,7 +1759,7 @@ public class FilesView
 		}
 		
 		@Override
-		public FilesViewTreeNode 
+		public FilesViewNodeInner 
 		getParent()
 		{
 			return( parent );
@@ -2161,7 +2192,7 @@ public class FilesView
 		}
 		
 		@Override
-		public FilesViewTreeNode 
+		public FilesViewNodeInner 
 		getParent()
 		{
 			return( parent );
