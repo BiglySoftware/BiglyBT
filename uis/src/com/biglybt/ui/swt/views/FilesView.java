@@ -793,6 +793,98 @@ public class FilesView
 		}
 	}
 
+	private boolean
+	doTreeAction(
+		List<FilesViewNodeInner>		nodes,
+		int								action,
+		boolean							test_only )
+	{
+		boolean result = false;
+		
+		TableRowCore[] tv_rows = tv.getRowsAndSubRows(true);
+		
+		Map<FilesViewNodeInner,TableRowCore>	node_to_row_map = new HashMap<>();
+		
+		for ( TableRowCore tv_row: tv_rows ){
+			
+			DiskManagerFileInfo ds_file = (DiskManagerFileInfo)tv_row.getDataSource(true);
+			
+			if ( ds_file instanceof FilesViewNodeInner ){
+								
+				node_to_row_map.put((FilesViewNodeInner)ds_file, tv_row );	
+			}
+		}
+		
+		for ( FilesViewNodeInner node: nodes ){
+			
+			if ( doTreeAction( node_to_row_map, node, action, true, test_only )){
+				
+				result = true;
+			}
+		}
+		
+		return( result );
+	}
+	
+	private boolean
+	doTreeAction(
+		Map<FilesViewNodeInner,TableRowCore>	node_to_row_map,
+		FilesViewNodeInner						node,
+		int										action,
+		boolean									recursive,
+		boolean									test_only )
+	{
+		boolean	result = false;
+		
+		TableRowCore row = node_to_row_map.get( node );
+		
+		if ( !node.isExpanded()){
+			
+			if ( action == 0 ){
+				
+				result = true;
+				
+				if ( !test_only ){
+				
+					row.setExpanded( true );
+				}
+			}
+		}
+		
+		if ( recursive ){
+			
+			List<FilesView.FilesViewTreeNode> kids = node.getKids();
+			
+			for ( FilesView.FilesViewTreeNode kid: kids ){
+				
+				if ( kid instanceof FilesView.FilesViewNodeInner ){
+			
+					if ( doTreeAction(node_to_row_map, (FilesView.FilesViewNodeInner)kid, action, recursive, test_only )){
+						
+						result = true;
+					}
+				}
+			}
+		}
+		
+			// must collapse all children first before this one otherwise the tree view height logic goes mental
+		
+		if ( node.isExpanded()){
+			
+			if ( action == 1 ){
+				
+				result = true;
+				
+				if ( !test_only ){
+				
+					row.setExpanded( false );
+				}
+			}
+		}
+		
+		return( result );
+	}
+	
 	// @see com.biglybt.ui.swt.views.TableViewSWTMenuFillListener#fillMenu(org.eclipse.swt.widgets.Menu)
 	@Override
 	public void fillMenu(String sColumnName, final Menu menu) {
@@ -805,14 +897,19 @@ public class FilesView
 
 			List<DiskManagerFileInfo> files = new ArrayList<>();
 
+			List<FilesView.FilesViewNodeInner>	inners = new ArrayList<>();
+			
 			for ( int i=0;i<data_sources.length;i++ ){
 				DiskManagerFileInfo file = (DiskManagerFileInfo)data_sources[i];
 				
 				if ( file instanceof FilesView.FilesViewNodeInner ){
-					continue;
-				}
+					
+					inners.add((FilesView.FilesViewNodeInner )file);
+					
+				}else{
 				
-				files.add( file );
+					files.add( file );
+				}
 			}
 
 			if ( !files.isEmpty()){
@@ -824,6 +921,34 @@ public class FilesView
 					new DownloadManager[]{ managers.get(0) },
 					new DiskManagerFileInfo[][]{ files.toArray(new DiskManagerFileInfo[files.size()]) },
 					false );
+				
+			}else if ( !inners.isEmpty()){
+								
+				MenuItem mi = new MenuItem( menu, SWT.PUSH );
+				
+				mi.setText( MessageText.getString( "label.expand.all" ));
+				
+				mi.addListener(
+					SWT.Selection,
+					e->{
+						doTreeAction( inners, 0, false );
+					});
+				
+				mi.setEnabled( doTreeAction( inners, 0, true ));
+				
+				mi = new MenuItem( menu, SWT.PUSH );
+				
+				mi.setText( MessageText.getString( "menu.collapse.all" ));
+				
+				mi.addListener(
+					SWT.Selection,
+					e->{
+						doTreeAction( inners, 1, false );
+					});
+				
+				mi.setEnabled( doTreeAction( inners, 1, true ));
+				
+				new MenuItem( menu, SWT.SEPARATOR );
 			}
 		}else{
 
@@ -1547,6 +1672,9 @@ public class FilesView
 		public FilesViewTreeNode
 		getParent();
 		
+		public List<FilesViewTreeNode>
+		getKids();
+		
 		public int
 		getDepth();
 		
@@ -1604,6 +1732,13 @@ public class FilesView
 		getParent()
 		{
 			return( parent );
+		}
+		
+		@Override
+		public List<FilesViewTreeNode>
+		getKids()
+		{
+			return( new ArrayList<>( kids.values()));
 		}
 		
 		@Override
@@ -2030,6 +2165,13 @@ public class FilesView
 		getParent()
 		{
 			return( parent );
+		}
+		
+		@Override
+		public List<FilesViewTreeNode>
+		getKids()
+		{
+			return( Collections.emptyList());
 		}
 		
 		@Override
