@@ -706,8 +706,30 @@ public class FilesView
 	public void defaultSelected(TableRowCore[] rows, int stateMask, int origin ) {
 		DiskManagerFileInfo fileInfo = (DiskManagerFileInfo) tv.getFirstSelectedDataSource();
 
-		if ( fileInfo == null || fileInfo.getIndex() == -1 ){
+		if ( fileInfo == null ){
+			
+			return;
+		}
 
+		if ( fileInfo instanceof FilesViewNodeInner ){
+			
+			FilesViewNodeInner node = (FilesViewNodeInner)fileInfo;
+			
+			List<FilesViewNodeInner>	nodes = Arrays.asList( node );
+			
+			if ( node.isExpanded()){
+								
+				doTreeAction(nodes, 1, false );
+				
+			}else{
+									
+				doTreeAction(nodes, 0, false );
+			}
+			
+			return;
+			
+		}else if ( fileInfo.getIndex() == -1 ){
+			
 			return;
 		}
 
