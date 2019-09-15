@@ -125,7 +125,7 @@ public class Debug {
     }
 
     diagLoggerLogAndOut(header+className+(methodName)+lineNumber+":", true);
-    if (_debug_msg.length() > 0) {
+    if (_debug_msg != null && _debug_msg.length() > 0) {
     	diagLoggerLogAndOut("  " + _debug_msg, true);
     }
     if ( trace_trace_tail != null ){
