@@ -158,6 +158,8 @@ SBC_SearchResultsView
 	private Object 			search_lock	= new Object();
 	private SearchInstance	current_search;
 
+	private List<String> loadedImageIDs = new ArrayList<>();
+
 	protected
 	SBC_SearchResultsView(
 		SearchResultsTabArea		_parent )
@@ -176,7 +178,6 @@ SBC_SearchResultsView
 	skinObjectInitialShow(
 		SWTSkinObject skinObject, Object params )
 	{
-		image_loader = new ImageLoader( null, null );
 		CoreFactory.addCoreRunningListener(
 			new CoreRunningListener()
 			{
@@ -382,10 +383,11 @@ SBC_SearchResultsView
 	}
 
 	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
-		if (image_loader != null) {
-			image_loader.dispose();
-			image_loader = null;
+		ImageLoader instance = ImageLoader.getInstance();
+		for (String loadedImageID : loadedImageIDs) {
+			instance.releaseImage(loadedImageID);
 		}
+		loadedImageIDs.clear();
 
 		return null;
 	}
@@ -1458,10 +1460,6 @@ SBC_SearchResultsView
 		return( uri );
 	}
 
-	private ImageLoader	image_loader;
-
-	private static Map<String,Object[]>	image_map = new HashMap<>();
-
 	public Image
 	getIcon(
 		final SBC_SearchResult		result )
@@ -1474,21 +1472,7 @@ SBC_SearchResultsView
 		Engine					engine,
 		ImageLoadListener		result )
 	{
-		Image x = getIconSupport( engine, result );
-		
-		if ( x != null && x.isDisposed()){
-		
-			String icon = engine.getIcon();
-			
-			if ( icon != null ){
-				
-				image_map.remove( icon );
-				
-				x = getIconSupport( engine, result );
-			}
-		}
-		
-		return( x );
+		return getIconSupport( engine, result );
 	}
 	
 	private Image
@@ -1497,68 +1481,22 @@ SBC_SearchResultsView
 		ImageLoadListener		result )
 	{
 		String icon = engine.getIcon();
-
-		Image img = null;
-
-		if ( icon != null ){
-
-			Object[] x = image_map.get( icon );
-
-			if ( x == null ){
-
-				Set<ImageLoadListener>	waiters = new HashSet<>();
-
-				final Object[] f_x = new Object[]{ null, waiters, SystemTime.getMonotonousTime() };
-
-				waiters.add( result );
-
-				image_map.put( icon, f_x );
-
-				image_loader.getUrlImage(
-					icon,
-					new Point(0, 16),
-					new ImageDownloaderListener() {
-
-						@Override
-						public void imageDownloaded(Image image, String key, boolean returnedImmediately) {
-
-							f_x[0]	= image;
-
-							Set<ImageLoadListener> set = (Set<ImageLoadListener>)f_x[1];
-
-							for ( ImageLoadListener result: set ){
-
-								result.imageLoaded( image );
-							}
-
-							f_x[1] = null;
-						}
-					});
-
-				img = (Image)f_x[0];	// in case synchronously set
-
-			}else{
-
-				if ( x[1] instanceof Set ){
-
-					((Set<ImageLoadListener>)x[1]).add( result );
-
-				}else{
-
-					img = (Image)x[0];
-
-					if ( img == null ){
-
-						if ( SystemTime.getMonotonousTime() - (Long)x[2] > 120*1000 ){
-
-							image_map.remove( icon );
-						}
-					}
-				}
-			}
+		if ( icon == null ){
+			return null;
 		}
 
-		return( img );
+		return ImageLoader.getInstance().getUrlImage(
+			icon,
+			new Point(0, 16),
+			(image, key, returnedImmediately) -> {
+				loadedImageIDs.add(key);
+
+				if (returnedImmediately) {
+					return;
+				}
+
+				result.imageLoaded( image );
+			});
 	}
 
 	@Override
