@@ -1168,6 +1168,15 @@ public class ImageLoader
 	}
 
 	public boolean imageExists(String name) {
+		// Do a quick check first which doesn't need releasing
+		ImageLoaderRefInfo refInfoFromImageMap = getRefInfoFromImageMap(name);
+		if (refInfoFromImageMap != null) {
+			Image[] images = refInfoFromImageMap.getImages();
+			if (images != null && images.length > 0 && isRealImage(images[0])) {
+				return true;
+			}
+		}
+
 		boolean exists = isRealImage(getImage(name));
 		//if (exists) {	// getImage prety much always adds a ref for the 'name' so make sure
 						// we do the corresponding unref here
