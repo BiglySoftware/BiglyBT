@@ -220,8 +220,6 @@ public class SWTSkinObjectImage
 		String propImageID = properties.getStringValue(sConfigID + ".imageid");
 		if (propImageID != null) {
 			currentImageID = customImageID = propImageID;
-		} else {
-			currentImageID = sConfigID;
 		}
 		int style = SWT.WRAP | SWT.DOUBLE_BUFFERED;
 
