@@ -25,6 +25,7 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 
 import com.biglybt.core.util.Debug;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 
 public class CompositeMinSize
 	extends Composite
@@ -49,7 +50,8 @@ public class CompositeMinSize
 		} catch (Throwable t) {
 			if ( !( t instanceof NullPointerException )){
 				// getting NPEs in CTabFolder.computeTrim :(
-				Debug.out(t);
+				String details = ImageLoader.getBadDisposalDetails(t, this);
+				Debug.out(details, t);
 			}
 			return new Point(wHint == -1 ? 10 : wHint, hHint == -1 ? 10
 					: hHint);

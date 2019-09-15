@@ -34,6 +34,7 @@ import com.biglybt.core.util.*;
 import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.*;
 import com.biglybt.ui.swt.*;
+import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 
 /**
@@ -303,10 +304,16 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
   						// "cause of"'s stack trace in SWT < 3119
   						if (SWT.getVersion() < 3119)
   							e.printStackTrace();
-  						if (Constants.isCVSVersion()) {
-  							Logger.log(new LogAlert(LogAlert.UNREPEATABLE,MessageText.getString("SWT.alert.erroringuithread"),e));
+
+  						String details = ImageLoader.getBadDisposalDetails(e, null);
+
+							if (Constants.isCVSVersion()) {
+								LogAlert alert = new LogAlert(LogAlert.UNREPEATABLE, MessageText.getString("SWT.alert.erroringuithread"), e);
+								alert.details = details;
+								Logger.log(alert);
   						} else {
-  							Debug.out(MessageText.getString("SWT.alert.erroringuithread"), e);
+								Debug.out(MessageText.getString("SWT.alert.erroringuithread")
+										+ (details == null ? "" : "\n" + details), e);
   						}
 						}
 

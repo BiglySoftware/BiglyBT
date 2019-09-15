@@ -1092,9 +1092,10 @@ public class ImageLoader
 		ImageLoaderRefInfo	info,
 		boolean				inc )
 	{
-		if ( true ){
+		if (info.isNonDisposable()) {
 			return;
 		}
+
 		if ( inc ){
 			System.out.println("ImageLoader: ++ refcount to "
 					+ info.getRefCount() + " for " + key + " via "
@@ -1569,4 +1570,83 @@ public class ImageLoader
 		return skinProperties.toArray(new SkinProperties[0]);
 	}
 
+	public String findImageID(Image imageToFind) {
+		String id = null;
+		for (String key : _mapImages.keySet()) {
+			Image[] images = _mapImages.get(key).getImages();
+			if (images == null) {
+				continue;
+			}
+			for (Image image : images) {
+				if (image == imageToFind) {
+					if (id == null) {
+						id = key;
+					} else {
+						id += ", " + key;
+					}
+				}
+			}
+		}
+		return id;
+	}
+	
+	public static Object[] findWidgetWithDisposedImage(Composite c) {
+		if (c == null) {
+			return null;
+		}
+		Image img = c.getBackgroundImage();
+		if (img != null && img.isDisposed()) {
+			return new Object[] { c, img };
+		}
+		Control[] children = c.getChildren();
+		for (Control child : children) {
+			if (child instanceof Composite) {
+				Object[] findMore = findWidgetWithDisposedImage((Composite) child);
+				if (findMore != null) {
+					return findMore;
+				}
+			}
+			img = child.getBackgroundImage();
+			if (img != null && img.isDisposed()) {
+				return new Object[] { child, img };
+			}
+			if (child instanceof Button) {
+				img = ((Button) child).getImage();
+				if (img != null && img.isDisposed()) {
+					return new Object[] { child, img };
+				}
+			} else if (child instanceof Label) {
+				img = ((Label) child).getImage();
+				if (img != null && img.isDisposed()) {
+					return new Object[] { child, img };
+				}
+			}
+			// TODO: Other types
+			
+		}
+		return null;
+	}
+
+
+	public static String getBadDisposalDetails(Throwable e, Composite startAt) {
+		try {
+			if ((e instanceof SWTException)
+				&& e.getMessage().equals("Graphic is disposed")) {
+				if (startAt == null) {
+					startAt = Utils.findAnyShell();
+				}
+				Object[] badBoys = ImageLoader.findWidgetWithDisposedImage(startAt);
+				if (badBoys != null) {
+					// breakpoint here to see if badBoys[1] has any getData to id the widget
+					String imageID = ImageLoader.getInstance().findImageID((Image) badBoys[1]);
+					return "Disposed Graphic id is "
+						+ (imageID == null ? "(not found)" : imageID)
+							+ ", parent is " + badBoys[0] + "; firstData="
+							+ ((Widget) badBoys[0]).getData();
+				}
+			}
+		} catch (Throwable ignore) {
+		}
+		return null;
+	}
 }
