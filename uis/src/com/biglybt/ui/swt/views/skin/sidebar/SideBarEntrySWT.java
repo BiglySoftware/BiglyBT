@@ -1251,7 +1251,6 @@ public class SideBarEntrySWT
   			ImageLoader.getInstance().releaseImage(imageLeftID + "-gray");
 			}
 
-			releaseImageLeft(suffix);
 			Utils.setClipping(gc, clipping);
 			//			0, 0, bounds.width, bounds.height,
 			//					x0IndicatorOfs, itemBounds.y
