@@ -954,6 +954,9 @@ public abstract class BaseMdiEntry
 		redraw();
 	}
 
+	/**
+	 * Don't forget to {@link #releaseImageLeft(String)}
+	 */
 	public Image getImageLeft(String suffix) {
 		if (imageLeft != null) {
 			return imageLeft;
@@ -975,7 +978,8 @@ public abstract class BaseMdiEntry
 	}
 
 	public void releaseImageLeft(String suffix) {
-		if (imageLeft != null) {
+		// Still potential case where we could getImageLeft, setImageLeft/ID, then releaseImageLeft, resulting in no/wrong release
+		if (imageLeftID != null) {
 			ImageLoader.getInstance().releaseImage(
 					imageLeftID + (suffix == null ? "" : suffix));
 		}
