@@ -87,10 +87,14 @@ SESecurityManagerImpl
 	}
 
 	private static boolean	auto_install_certs;
+	private static boolean	auto_decline_certs;
 
 	static{
-		COConfigurationManager.addAndFireParameterListener(
-			"security.cert.auto.install",
+		COConfigurationManager.addAndFireParameterListeners(
+			new String[]{
+				"security.cert.auto.install",
+				"security.cert.auto.decline"
+			},
 			new ParameterListener()
 			{
 				@Override
@@ -98,7 +102,8 @@ SESecurityManagerImpl
 				parameterChanged(
 					String parameter_name )
 				{
-					auto_install_certs = COConfigurationManager.getBooleanParameter( parameter_name );
+					auto_install_certs = COConfigurationManager.getBooleanParameter( "security.cert.auto.install" );
+					auto_decline_certs = COConfigurationManager.getBooleanParameter( "security.cert.auto.decline" );
 				}
 			});
 	}
@@ -1284,19 +1289,22 @@ SESecurityManagerImpl
 
 					}else{
 
-						if ( handler != null ){
-
-							if (((SECertificateListener)handler[0]).trustCertificate( resource, x509_cert )){
-
-								result = addCertToTrustStore( alias, cert, true );
+						if ( !auto_decline_certs ){
+							
+							if ( handler != null ){
+	
+								if (((SECertificateListener)handler[0]).trustCertificate( resource, x509_cert )){
+	
+									result = addCertToTrustStore( alias, cert, true );
+								}
 							}
-						}
-
-						for (SECertificateListener listener: certificate_listeners ){
-
-							if ( listener.trustCertificate( resource, x509_cert )){
-
-								result = addCertToTrustStore( alias, cert, true );
+	
+							for (SECertificateListener listener: certificate_listeners ){
+	
+								if ( listener.trustCertificate( resource, x509_cert )){
+	
+									result = addCertToTrustStore( alias, cert, true );
+								}
 							}
 						}
 					}

@@ -124,28 +124,28 @@ public abstract class ConfigSectionImpl
 	}
 
 	@SafeVarargs
-	protected final void add(ParameterImpl param, List<Parameter>... otherLists) {
-		add(param, defaultMode, otherLists);
+	protected final <T extends ParameterImpl> T add( T param, List<Parameter>... otherLists) {
+		return(add(param, defaultMode, otherLists));
 	}
 
 	@SafeVarargs
-	protected final void add(ParameterImpl param, int minMode,
+	protected final <T extends ParameterImpl> T add(T param, int minMode,
 			List<Parameter>... otherLists) {
-		add(guessParamName(param, true), param, minMode, otherLists);
+		return(add(guessParamName(param, true), param, minMode, otherLists));
 	}
 
 	@SafeVarargs
-	protected final void add(String key, ParameterImpl param,
+	protected final <T extends ParameterImpl> T add(String key, T param,
 			List<Parameter>... otherLists) {
-		add(key, param, defaultMode, otherLists);
+		return( add(key, param, defaultMode, otherLists));
 	}
 
 	@SafeVarargs
-	protected final void add(String key, ParameterImpl param, int minMode,
+	protected final <T extends ParameterImpl> T add(String key, T param, int minMode,
 			List<Parameter>... otherLists) {
 		if (isBuilt) {
 			Debug.out(getConfigSectionID() + "] can't add " + key + " after build()");
-			return;
+			return( param );
 		}
 		if (otherLists != null) {
 			for (List<Parameter> list : otherLists) {
@@ -160,6 +160,8 @@ public abstract class ConfigSectionImpl
 		}
 
 		mapPluginParams.put(key, param);
+		
+		return( param );
 	}
 
 	protected String guessParamName(Parameter param, boolean warnExists) {

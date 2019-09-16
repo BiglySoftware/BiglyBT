@@ -34,6 +34,7 @@ import com.biglybt.ui.UIFunctionsUserPrompter;
 import com.biglybt.pif.ui.config.ActionParameter;
 import com.biglybt.pif.ui.config.ConfigSection;
 import com.biglybt.pif.ui.config.Parameter;
+import com.biglybt.pif.ui.config.ParameterListener;
 
 import static com.biglybt.core.config.ConfigKeys.Security.*;
 
@@ -157,9 +158,36 @@ public class ConfigSectionSecurity
 
 		// row
 
-		add(new BooleanParameterImpl(BCFG_SECURITY_CERT_AUTO_INSTALL,
-				"security.cert.auto.install"));
+		BooleanParameterImpl auto_install = add(new BooleanParameterImpl(BCFG_SECURITY_CERT_AUTO_INSTALL, "security.cert.auto.install"));
 
+		// row
+
+		BooleanParameterImpl auto_decline =  add(new BooleanParameterImpl(BCFG_SECURITY_CERT_AUTO_DECLINE, "security.cert.auto.decline"));
+		
+		ParameterListener pl = (n)->{
+			
+			if ( auto_install.getValue() && auto_decline.getValue()){
+					// shouldn't have both set...
+				auto_decline.setValue( false );
+			}
+			if (auto_install.getValue()){
+				auto_decline.setEnabled(false);
+			}else{
+				auto_decline.setEnabled(true);
+			}
+			
+			if (auto_decline.getValue()){
+				auto_install.setEnabled(false);
+			}else{
+				auto_install.setEnabled(true);
+			}
+		};
+		
+		pl.parameterChanged( null );
+		
+		auto_install.addListener( pl );
+		auto_decline.addListener( pl );
+		
 		// row
 
 		add(new LabelParameterImpl("ConfigView.section.security.toolsinfo"));

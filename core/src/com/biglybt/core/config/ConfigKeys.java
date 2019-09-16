@@ -233,6 +233,7 @@ public final class ConfigKeys {
 
 	public static class Security {
 		public static final String BCFG_SECURITY_CERT_AUTO_INSTALL = "security.cert.auto.install";
+		public static final String BCFG_SECURITY_CERT_AUTO_DECLINE = "security.cert.auto.decline";
 		public static final String SCFG_SECURITY_JAR_TOOLS_DIR = "Security.JAR.tools.dir";
 	}
 

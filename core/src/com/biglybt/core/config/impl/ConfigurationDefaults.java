@@ -633,6 +633,7 @@ public class ConfigurationDefaults {
     def.put( "Ignore.peer.ports", "0" );
     def.put( "Security.JAR.tools.dir", "" );
     def.put( "security.cert.auto.install", TRUE );
+    def.put( "security.cert.auto.decline", FALSE );
 
     boolean	tcp_half_open_limited = Constants.isWindows && !(Constants.isWindowsVistaSP2OrHigher || Constants.isWindows7OrHigher );
 
