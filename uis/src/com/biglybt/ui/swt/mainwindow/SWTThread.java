@@ -34,7 +34,6 @@ import com.biglybt.core.util.*;
 import com.biglybt.platform.PlatformManagerFactory;
 import com.biglybt.ui.*;
 import com.biglybt.ui.swt.*;
-import com.biglybt.ui.swt.imageloader.ImageLoader;
 import com.biglybt.ui.swt.shells.MessageBoxShell;
 
 /**
@@ -74,25 +73,41 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
   {
 
     this.initializer = app;
-		instance = this;
+    
+	instance = this;
+	
     Display.setAppName(Constants.APP_NAME);
 
-    try {
-      display = Display.getCurrent();
-	  if ( display == null ){
-		  if (System.getProperty("SWT.Device.DEBUG", "0").equals("1")) {
-		  	Device.DEBUG = true;
-		  }
-		  display = new Display();
-	      sleak = false;
-	  }else{
-		  sleak = true;
-	  }
-    } catch(Exception e) {
-      display = new Display();
-      sleak = false;
-    } catch (UnsatisfiedLinkError ue) {
-    	String sMin = "3.4";
+	if ( false ){
+		/* Hack to run Sleak - drop Sleak.java into this package
+	    DeviceData data = new DeviceData();
+	
+	    data.tracking = true;
+	
+	    display = new Display(data);
+	
+	    Sleak sleakView = new Sleak();
+	
+	    sleakView.open();
+	    */
+	}else{
+    
+		try {
+			display = Display.getCurrent();
+			if ( display == null ){
+				if (System.getProperty("SWT.Device.DEBUG", "0").equals("1")) {
+					Device.DEBUG = true;
+				}
+				display = new Display();
+				sleak = false;
+			}else{
+				sleak = false;
+			}
+		} catch(Exception e) {
+			display = new Display();
+			sleak = false;
+		} catch (UnsatisfiedLinkError ue) {
+			String sMin = "3.4";
 			try {
 				sMin = "" +  (((int)(SWT.getVersion() / 100)) / 10.0);
 			} catch (Throwable t) {
@@ -120,6 +135,8 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
 			}
 			return;
 		}
+	}
+    
     Thread.currentThread().setName("SWT Thread");
 
 	Utils.initialize( display );
@@ -304,16 +321,10 @@ public class SWTThread implements AEDiagnosticsEvidenceGenerator {
   						// "cause of"'s stack trace in SWT < 3119
   						if (SWT.getVersion() < 3119)
   							e.printStackTrace();
-
-  						String details = ImageLoader.getBadDisposalDetails(e, null);
-
-							if (Constants.isCVSVersion()) {
-								LogAlert alert = new LogAlert(LogAlert.UNREPEATABLE, MessageText.getString("SWT.alert.erroringuithread"), e);
-								alert.details = details;
-								Logger.log(alert);
+  						if (Constants.isCVSVersion()) {
+  							Logger.log(new LogAlert(LogAlert.UNREPEATABLE,MessageText.getString("SWT.alert.erroringuithread"),e));
   						} else {
-								Debug.out(MessageText.getString("SWT.alert.erroringuithread")
-										+ (details == null ? "" : "\n" + details), e);
+  							Debug.out(MessageText.getString("SWT.alert.erroringuithread"), e);
   						}
 						}
 
