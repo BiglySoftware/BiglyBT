@@ -515,15 +515,29 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
     	}
     }
 
-    TreeItem selection = getLatestSelection();
-
-    TreeItem[] items = { selection };
-
-    tree.setSelection( items );
-
-    	// setSelection doesn't trigger a SelectionListener, so..
-
-    showSection( selection, false, null );
+    Runnable r = ()->{
+	    TreeItem selection = getLatestSelection();
+	
+	    TreeItem[] items = { selection };
+	
+	    tree.setSelection( items );
+	
+	    	// setSelection doesn't trigger a SelectionListener, so..
+	
+	    showSection( selection, false, null );
+    };
+    
+    if ( Constants.isOSX ){
+    	
+    		// Catalina (public beta at least) bug whereby scrollbar is borked if we
+    		// synchronously attempt to set the visible section
+    	
+    	Utils.execSWTThreadLater( 250, r );
+    	
+    }else{
+    	
+    	r.run();
+    }
   }
 
 
