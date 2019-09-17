@@ -58,6 +58,7 @@ import com.biglybt.ui.swt.pif.UISWTViewEventListener;
 import com.biglybt.ui.swt.pifimpl.UISWTViewCore;
 import com.biglybt.ui.swt.skin.SWTSkinObject;
 import com.biglybt.ui.swt.views.skin.SkinView;
+import com.biglybt.ui.swt.views.skin.sidebar.SideBar;
 import com.biglybt.ui.swt.views.skin.sidebar.SideBarEntrySWT;
 import com.biglybt.util.MapUtils;
 
@@ -534,14 +535,17 @@ public abstract class BaseMDI
 	// @see SkinView#skinObjectDestroyed(SWTSkinObject, java.lang.Object)
 	@Override
 	public Object skinObjectDestroyed(SWTSkinObject skinObject, Object params) {
-		MdiEntry entry = getCurrentEntry();
-		if (entry != null) {
-  		COConfigurationManager.setParameter("v3.StartTab",
-  				entry.getId());
-  		String ds = entry.getExportableDatasource();
-  		COConfigurationManager.setParameter("v3.StartTab.ds", ds == null ? null : ds.toString());
+		if ( closeableConfigFile != null ){
+				// only persist this for the main MDI, not subtabs
+			MdiEntry entry = getCurrentEntry();
+			if (entry != null) {
+				COConfigurationManager.setParameter("v3.StartTab",
+						entry.getId());
+				String ds = entry.getExportableDatasource();
+				COConfigurationManager.setParameter("v3.StartTab.ds", ds == null ? null : ds.toString());
+			}
 		}
-
+		
 		super.skinObjectDestroyed(skinObject, params);
 
 
@@ -630,7 +634,26 @@ public abstract class BaseMDI
 			return entry.isAdded();
 		}
 	}
+	
+	private volatile boolean	initialEntrySet;
+	
 
+	@Override
+	public void setInitialEntry(String id, Object datasource, String def){
+		if ( id != null ){
+			if (!loadEntryByID( id, true, false, datasource)) {
+				showEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY);
+			}	
+		}
+		initialEntrySet = true;
+	}
+	
+	@Override
+	public boolean isInitialEntrySet(){
+	
+		return( initialEntrySet );
+	}
+	
 	// @see MultipleDocumentInterface#setEntryAutoOpen(java.lang.String, java.lang.Object)
 	@Override
 	public void setEntryAutoOpen(String id, Object datasource) {

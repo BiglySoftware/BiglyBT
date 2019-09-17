@@ -208,6 +208,10 @@ public interface MultipleDocumentInterface
 
 	public boolean isInitialized();
 	
+	public void setInitialEntry( String id, Object datasource, String def );
+	
+	public boolean isInitialEntrySet();
+
 	public boolean isDisposed();
 
 }

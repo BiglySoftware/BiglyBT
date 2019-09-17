@@ -168,45 +168,44 @@ public class MainMDISetup
 								this);
 
 						MdiEntry currentEntry = mdi.getCurrentEntry();
+						
+						String startTab		= null;
+						String datasource 	= null;
+
 						if (currentEntry != null) {
+
 							// User or another plugin selected an entry
-							return;
-						}
-
-						final String CFG_STARTTAB = "v3.StartTab";
-						final String CFG_STARTTAB_DS = "v3.StartTab.ds";
-						String startTab;
-						String datasource = null;
-						boolean showWelcome = false;
-
-						/** We don't have a welcoming welcome yet
-						boolean showWelcome = COConfigurationManager.getBooleanParameter("v3.Show Welcome");
-						if (ConfigurationChecker.isNewVersion()) {
-							showWelcome = true;
-						}
-						**/
-
-						if (showWelcome) {
-							startTab = SideBar.SIDEBAR_SECTION_WELCOME;
-						} else {
-							if (!COConfigurationManager.hasParameter(CFG_STARTTAB, true)) {
-								COConfigurationManager.setParameter(CFG_STARTTAB,
-										SideBar.SIDEBAR_SECTION_LIBRARY);
+							
+						}else{
+							
+							final String CFG_STARTTAB = "v3.StartTab";
+							final String CFG_STARTTAB_DS = "v3.StartTab.ds";
+							boolean showWelcome = false;
+	
+							/** We don't have a welcoming welcome yet
+							boolean showWelcome = COConfigurationManager.getBooleanParameter("v3.Show Welcome");
+							if (ConfigurationChecker.isNewVersion()) {
+								showWelcome = true;
 							}
-							startTab = COConfigurationManager.getStringParameter(CFG_STARTTAB);
-							datasource = COConfigurationManager.getStringParameter(
-									CFG_STARTTAB_DS, null);
+							**/
+	
+							if (showWelcome) {
+								startTab = SideBar.SIDEBAR_SECTION_WELCOME;
+							} else {
+								if (!COConfigurationManager.hasParameter(CFG_STARTTAB, true)) {
+									COConfigurationManager.setParameter(CFG_STARTTAB,
+											SideBar.SIDEBAR_SECTION_LIBRARY);
+								}
+								startTab = COConfigurationManager.getStringParameter(CFG_STARTTAB);
+								datasource = COConfigurationManager.getStringParameter(
+										CFG_STARTTAB_DS, null);
+							}
 						}
-						/*
-						if (startTab.equals(MultipleDocumentInterface.SIDEBAR_SECTION_PLUS)) {
-
-						}
-						*/
-
-						if (!mdi.loadEntryByID(startTab, true, false, datasource)) {
-							mdi.showEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY);
-						}
-						if (l != null) {
+						
+						mdi.setInitialEntry( startTab, datasource, SideBar.SIDEBAR_SECTION_LIBRARY );
+						
+						if (l != null){
+							
 							mdi.addListener(l);
 						}
 					}

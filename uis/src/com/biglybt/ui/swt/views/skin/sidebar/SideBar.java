@@ -2001,6 +2001,14 @@ public class SideBar
 
 				stack.remove( entry );
 
+				if ( current == null && !entry.getMDI().isInitialEntrySet()){
+					
+						// during startup we can get here early - if we set an explicit current entry
+						// entry then this can override the 'startup entry' waiting to be set
+					
+					return;
+				}
+				
 				if ( 	current == null ||
 						current == entry ){
 
