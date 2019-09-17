@@ -106,7 +106,7 @@ public class SWTUpdateChecker implements UpdatableComponent
 					checker.addUpdate(
 							update_name,
 							update_desc,
-							"" + versionGetter.getCurrentVersion(),
+							versionGetter.getCurrentVersionAndRevision(),
 							"explicit",
 							rd,
 							Update.RESTART_REQUIRED_YES
@@ -142,7 +142,8 @@ public class SWTUpdateChecker implements UpdatableComponent
 	
 		    if ( update_required ){
 	
-		       	int	update_prevented_version = COConfigurationManager.getIntParameter( "swt.update.prevented.version", -1 );
+		       	int	update_prevented_version 	= COConfigurationManager.getIntParameter( "swt.update.prevented.version", -1 );
+		       	int	update_prevented_revision 	= COConfigurationManager.getIntParameter( "swt.update.prevented.revision", -1 );
 	
 		    	try{
 			        URL	swt_url = SWT.class.getClassLoader().getResource("org/eclipse/swt/SWT.class");
@@ -184,8 +185,10 @@ public class SWTUpdateChecker implements UpdatableComponent
 			        	    		if ( update_prevented_version != -1 ){
 	
 			        	    			update_prevented_version	= -1;
-	
+			        	    			update_prevented_revision	= -1;
+			        	    			
 				        	    		COConfigurationManager.setParameter( "swt.update.prevented.version", update_prevented_version );
+				        	    		COConfigurationManager.setParameter( "swt.update.prevented.revision", update_prevented_revision );
 			        	    		}
 			        	    	}else{
 	
@@ -196,8 +199,8 @@ public class SWTUpdateChecker implements UpdatableComponent
 			        	    			MessageText.getString(
 			        	    					"swt.alert.cant.update",
 			        	    					new String[]{
-				        	    					String.valueOf( versionGetter.getCurrentVersion()),
-				        	    					String.valueOf( versionGetter.getLatestVersion()),
+				        	    					versionGetter.getCurrentVersionAndRevision(),
+				        	    					versionGetter.getLatestVersionAndRevision(),
 			        	    						jar_file_dir.toString(),
 			        	    						expected_dir.toString()});
 	
@@ -213,13 +216,18 @@ public class SWTUpdateChecker implements UpdatableComponent
 			        	    			force = true;
 			        	    		}
 	
-			        		    	if ( force || update_prevented_version != versionGetter.getCurrentVersion()){
+			        		    	if ( 	force || 
+			        		    			update_prevented_version != versionGetter.getCurrentVersion() ||
+			        		    			(	update_prevented_version == versionGetter.getCurrentVersion() &&
+			        		    				update_prevented_revision != versionGetter.getCurrentRevision())){
 	
 				        	     		Logger.log(	new LogAlert(LogAlert.REPEATABLE, LogEvent.LT_ERROR, alert ));
 	
-				        	     		update_prevented_version = versionGetter.getCurrentVersion();
+				        	     		update_prevented_version 	= versionGetter.getCurrentVersion();
+				        	     		update_prevented_revision 	= versionGetter.getCurrentRevision();
 	
 				        	    		COConfigurationManager.setParameter( "swt.update.prevented.version", update_prevented_version );
+				        	    		COConfigurationManager.setParameter( "swt.update.prevented.revision", update_prevented_revision );
 				        	    		COConfigurationManager.setParameter( "swt.update.prevented.version.time", now );
 			        		    	}
 			        	    	}
@@ -231,7 +239,8 @@ public class SWTUpdateChecker implements UpdatableComponent
 			    	Debug.printStackTrace(e);
 		    	}
 	
-			    if ( update_prevented_version == versionGetter.getCurrentVersion()){
+			    if ( 	update_prevented_version == versionGetter.getCurrentVersion() &&
+			    		update_prevented_revision == versionGetter.getCurrentRevision()){
 	
 			    	Logger.log(new LogEvent(LOGID, LogEvent.LT_ERROR, "SWT update aborted due to previously reported issues regarding its install location" ));
 	
@@ -286,8 +295,8 @@ public class SWTUpdateChecker implements UpdatableComponent
 		    	  checker.addUpdate(
 	    			  update_name,
 	    			  update_desc,
-	    			  "" + versionGetter.getCurrentVersion(),
-	    			  "" + versionGetter.getLatestVersion(),
+	    			  versionGetter.getCurrentVersionAndRevision(),
+	    			  versionGetter.getLatestVersionAndRevision(),
 	    			  swtDownloader,
 	    			  Update.RESTART_REQUIRED_YES
 		          );

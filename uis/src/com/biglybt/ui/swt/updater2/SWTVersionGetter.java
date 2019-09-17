@@ -31,6 +31,7 @@ import com.biglybt.core.util.Constants;
 import com.biglybt.core.versioncheck.VersionCheckClient;
 
 import com.biglybt.pif.update.UpdateChecker;
+import com.biglybt.ui.swt.Utils;
 
 
 /**
@@ -42,7 +43,10 @@ public class SWTVersionGetter {
 
   private String platform;
   private int currentVersion;
+  private int currentRevision;
   private int latestVersion;
+  private int latestRevision;
+  
   private UpdateChecker	checker;
 
   private String[] mirrors;
@@ -53,11 +57,14 @@ public class SWTVersionGetter {
   SWTVersionGetter(
   		UpdateChecker	_checker )
   {
-   	this.platform = SWT.getPlatform();
-    this.currentVersion = SWT.getVersion();
+   	platform 			= Utils.getSWTPlatform();
+    currentVersion 		= Utils.getSWTVersion();
+    currentRevision 	= Utils.getSWTRevision();
 
 
-    this.latestVersion = 0;
+    latestVersion = 0;
+    latestRevision = 0;
+    
     checker	= _checker;
   }
 
@@ -65,14 +72,27 @@ public class SWTVersionGetter {
     try {
       downloadLatestVersion();
 
-      String msg = "SWT: current version = " + currentVersion + ", latest version = " + latestVersion;
-
+      String msg = 
+    		  "SWT: current version = " + currentVersion + (currentRevision==0?"":("r" + currentRevision)) + 
+    		  ", latest version = " + latestVersion + (latestRevision==0?"":("r" + latestRevision));
+      
       checker.reportProgress( msg );
 
       if (Logger.isEnabled())
 				Logger.log(new LogEvent(LOGID, msg));
 
-      return latestVersion > currentVersion;
+      if ( latestVersion > currentVersion ){
+    	  
+    	  return( true );
+    	  
+      }else if ( latestVersion == currentVersion && latestRevision > currentRevision ){
+    	  
+    	  return( true );
+    
+      }else{
+    	  
+    	  return( false );
+      }
     } catch(Exception e) {
       e.printStackTrace();
       return false;
@@ -100,6 +120,15 @@ public class SWTVersionGetter {
 
 	    	msg += " version=" + latestVersion;
 
+		    byte[] revision_bytes = (byte[])reply.get( "swt_revision_cocoa" );
+		    
+		    if ( revision_bytes != null ) {
+		    	
+		      latestRevision = Integer.parseInt( new String( revision_bytes ) );
+		      
+		      msg += "r" + latestRevision;
+		    }
+	    	
     		byte[] url_bytes = (byte[])reply.get( "swt_url_cocoa" );
 
     		if ( url_bytes != null ){
@@ -121,6 +150,12 @@ public class SWTVersionGetter {
 	      msg += " version=" + latestVersion;
 	    }
 
+	    byte[] revision_bytes = (byte[])reply.get( "swt_revision" );
+	    if( revision_bytes != null ) {
+	      latestRevision = Integer.parseInt( new String( revision_bytes ) );
+	      msg += "r" + latestRevision;
+	    }
+	    
 	    byte[] url_bytes = (byte[])reply.get( "swt_url" );
 	    if( url_bytes != null ) {
 	      mirrors = new String[] { new String( url_bytes ) };
@@ -163,19 +198,26 @@ public class SWTVersionGetter {
 			Logger.log(new LogEvent(LOGID, msg));
   }
 
-
-
-
-  /**
-   * @return Returns the latestVersion.
-   */
-  public int getLatestVersion() {
-    return latestVersion;
+  public String
+  getLatestVersionAndRevision()
+  {
+	  return( latestVersion + (latestRevision==0?"":("r" + latestRevision)));
   }
-
+  
   public int getCurrentVersion() {
 	    return currentVersion;
   }
+  
+  public int getCurrentRevision() {
+	    return currentRevision;
+}
+  
+  public String
+  getCurrentVersionAndRevision()
+  {
+	  return( currentVersion + (currentRevision==0?"":("r" + currentRevision)));
+  }
+  
   /**
    * @return Returns the platform.
    */

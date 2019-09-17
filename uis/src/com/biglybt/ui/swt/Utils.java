@@ -139,7 +139,36 @@ public class Utils
 
 	private static boolean	terminated;
 
+	private static final int SWT_VERSION;
+	private static final int SWT_REVISION;
+	private static final String SWT_PLATFORM;
+	
+	static{
+		SWT_VERSION = SWT.getVersion();
+		
+		SWT_PLATFORM = SWT.getPlatform();
+		
+		int rev = 0;
+		
+		try{
+			Class<?> lib = Class.forName("org.eclipse.swt.internal.Library");
+			
+			Field f_rev = lib.getDeclaredField( "REVISION" );
+			
+			if ( f_rev != null ){
+				
+				f_rev.setAccessible( true );
+				
+				rev = f_rev.getInt( null );
+			}
+		}catch( Throwable e ){
+		}
+		
+		SWT_REVISION = rev;
+	}
+	
 	static void initStatic() {
+		
 		if (DEBUG_SWTEXEC) {
 			System.out.println("==== debug.swtexec=1, performance may be affected ====");
 			queue = new ArrayList<>();
@@ -199,6 +228,31 @@ public class Utils
 				"2").startsWith("3");
 	}
 
+		// these are used by VersionCheckClient by the way
+	
+	public static int
+	getSWTVersion()
+	{
+		return( SWT_VERSION );
+	}
+	
+	public static int
+	getSWTRevision()
+	{
+		return( SWT_REVISION );
+	}
+	public static String
+	getSWTPlatform()
+	{
+		return( SWT_PLATFORM );
+	}
+	
+	public static String
+	getSWTVersionAndRevision()
+	{
+		return( SWT_REVISION==0?String.valueOf( SWT_VERSION):SWT_VERSION + "r" + SWT_REVISION );	
+	}
+	
 	public static void
 	setTerminated()
 	{

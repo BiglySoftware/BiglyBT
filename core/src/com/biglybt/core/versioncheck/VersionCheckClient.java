@@ -1471,14 +1471,19 @@ public class VersionCheckClient {
 
 		//swt stuff
 		try {
-			Class c = Class.forName( "org.eclipse.swt.SWT" );
+			Class c = Class.forName( "com.biglybt.ui.swt.Utils" );
 
-			String swt_platform = (String)c.getMethod( "getPlatform", new Class[]{} ).invoke( null, new Object[]{} );
+			
+			String swt_platform = (String)c.getMethod( "getSWTPlatform", new Class[]{} ).invoke( null, new Object[]{} );
 			message.put( "swt_platform", swt_platform );
 
-			Integer swt_version = (Integer)c.getMethod( "getVersion", new Class[]{} ).invoke( null, new Object[]{} );
+			Integer swt_version = (Integer)c.getMethod( "getSWTVersion", new Class[]{} ).invoke( null, new Object[]{} );
 			message.put( "swt_version", new Long( swt_version.longValue() ) );
+			
+			Integer swt_revision = (Integer)c.getMethod( "getSWTRevision", new Class[]{} ).invoke( null, new Object[]{} );
+			message.put( "swt_revision", new Long( swt_revision.longValue() ) );
 		}
+		
 		catch( ClassNotFoundException e ) {  /* ignore */ }
 		catch( NoClassDefFoundError er ) {  /* ignore */ }
 		catch( InvocationTargetException err ) {  /* ignore */ }

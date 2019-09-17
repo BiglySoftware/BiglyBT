@@ -183,7 +183,7 @@ public class AboutWindow {
     		"Java " + System.getProperty("java.version") + " (" + (Constants.is64Bit?64:32) + " bit)\n  "
     				+ System.getProperty("java.vendor") + "\n"
     				+ System.getProperty("java.home") + "\n\n"
-    				+ "SWT v" + SWT.getVersion() + ", " + SWT.getPlatform() + swt + "\n"
+    				+ "SWT v" + Utils.getSWTVersionAndRevision() + ", " + SWT.getPlatform() + swt + "\n"
     				+ System.getProperty("os.name") + " v"
     				+ System.getProperty("os.version") + ", "
     				+ System.getProperty("os.arch") + " (" + (Constants.isOS64Bit?64:32) + " bit)\n"
