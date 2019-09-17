@@ -2607,6 +2607,7 @@ BuddyPluginNetwork
 		private PublishDetails	latest_publish;
 		private long			last_publish_start;
 		private TimerEvent		republish_delay_event;
+		private TimerEvent		update_ip_retry_event;
 
 		private volatile boolean diversified;
 		
@@ -2717,6 +2718,31 @@ BuddyPluginNetwork
 				return;
 			}
 
+			if ( !ddb.isInitialized()){
+			
+				synchronized( this ){
+					
+					if ( update_ip_retry_event == null ){
+						
+						update_ip_retry_event = 
+							SimpleTimer.addEvent(
+								"updateIP",
+								SystemTime.getOffsetTime( 60*1000 ),
+								(ev)->{
+									
+									synchronized( DDBDetails.this ){
+										
+										update_ip_retry_event = null;
+									}
+									
+									updateIP();
+								});
+					}
+				}
+				
+				return;
+			}
+			
 			InetSocketAddress public_ip = ddb.getDHTPlugin().getConnectionOrientedEndpoint();
 
 			synchronized( this ){
@@ -3131,7 +3157,7 @@ BuddyPluginNetwork
 					// ensure we have a sensible ip
 
 				InetSocketAddress 	isa = details.getIP();
-				InetAddress			ia	= isa.getAddress();
+				InetAddress			ia	= isa==null?null:isa.getAddress();
 				
 				if ( ia != null && ( ia.isLoopbackAddress() || ia.isLinkLocalAddress() || ia.isSiteLocalAddress())){
 
