@@ -634,15 +634,23 @@ public abstract class BaseMDI
 			return entry.isAdded();
 		}
 	}
+		
+	private volatile boolean		initialEntrySet;
 	
-	private volatile boolean	initialEntrySet;
+	private volatile String		initialID;
+	private volatile String		initialDef;
+	private volatile long		initialEntrySetFailTime;
 	
-
 	@Override
 	public void setInitialEntry(String id, Object datasource, String def){
 		if ( id != null ){
-			if (!loadEntryByID( id, true, false, datasource)) {
-				showEntryByID(SideBar.SIDEBAR_SECTION_LIBRARY);
+			if (!loadEntryByID( id, true, false, datasource)){
+				
+				initialID = id;
+				initialDef = def;
+				initialEntrySetFailTime = SystemTime.getMonotonousTime();
+				
+				showEntryByID( def );
 			}	
 		}
 		initialEntrySet = true;
@@ -958,8 +966,41 @@ public abstract class BaseMDI
 
 	public void addItem(MdiEntry entry) {
 		String id = entry.getId();
+
 		synchronized (mapIdToEntry) {
-			mapIdToEntry.put(id,entry);
+			MdiEntry old = mapIdToEntry.put(id,entry);
+			if ( old != null && old != entry ){
+				Debug.out( "MDI entry " + id + " already added" );
+			}
+		}
+		
+		if ( initialEntrySetFailTime > 0 ){
+			
+			if ( SystemTime.getMonotonousTime() - initialEntrySetFailTime > 10*1000 ){
+				
+				initialEntrySetFailTime = 0;
+				
+			}else{
+				
+				boolean show = false;
+													
+				if ( id.equals( initialID )){
+					
+					initialEntrySetFailTime = 0;
+					
+					MdiEntry current = getCurrentEntry();
+
+					if ( current == null || current.getId().equals( initialDef )){
+						
+						show = true;
+					}
+				}
+				
+				if ( show ){
+					
+					showEntry( entry );
+				}
+			}
 		}
 	}
 
