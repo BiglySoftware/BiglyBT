@@ -1482,6 +1482,11 @@ public class MenuFactory
 				
 				if ( name.startsWith( "core_" )){
 					
+					if ( name.endsWith( ".zip" )){
+						
+						throw( new Exception( "Full updates can't be installed manually, please auto-update or download the installer from the website" ));
+					}
+					
 					Utils.getOffOfSWTThread(
 							new AERunnable()
 							{
