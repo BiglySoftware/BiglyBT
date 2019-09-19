@@ -2187,8 +2187,8 @@ DownloadManagerStateImpl
 
 					try{
 						int		index 	= Integer.parseInt( bits[0].trim());
-						File	source	= new File(bits[1].trim());
-						File	target	= bits.length<3?null:new File(bits[2].trim());
+						File	source	= new File(bits[1]);
+						File	target	= bits.length<3?null:new File(bits[2]);
 
 						if( index >= 0 ){
 
