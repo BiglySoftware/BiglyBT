@@ -2043,6 +2043,7 @@ TagPropertyConstraintHandler
 		private static final int FT_LOWERCASE		= 29;		
 		private static final int FT_SET_COLOURS		= 30;		
 		private static final int FT_IS_NEW			= 31;		
+		private static final int FT_IS_SUPER_SEEDING	= 32;		
 		
 		private static final int	DEP_STATIC		= 0;
 		private static final int	DEP_RUNNING		= 1;
@@ -2262,6 +2263,14 @@ TagPropertyConstraintHandler
 				}else if ( func_name.equals( "isForceStart" )){
 
 					fn_type = FT_IS_FORCE_START;
+
+					depends_on_download_state = true;
+
+					params_ok = num_params == 0;
+					
+				}else if ( func_name.equals( "isSuperSeeding" )){
+
+					fn_type = FT_IS_SUPER_SEEDING;
 
 					depends_on_download_state = true;
 
@@ -2688,6 +2697,17 @@ TagPropertyConstraintHandler
 							}
 						}
 
+						return( false );
+					}
+					case FT_IS_SUPER_SEEDING:{
+						
+						PEPeerManager pm = dm.getPeerManager();
+						
+						if ( pm != null ){
+							
+							return( pm.isSuperSeedMode());
+						}
+						
 						return( false );
 					}
 					case FT_IS_COMPLETE:{
