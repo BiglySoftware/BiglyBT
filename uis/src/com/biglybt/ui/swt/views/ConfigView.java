@@ -674,6 +674,14 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 						return true;
 					}
 				}
+			}else if (child instanceof Text) {
+				if (((Text) child).getText().toLowerCase().contains(text)) {
+					return( true );
+				}
+			}else if (child instanceof Spinner) {
+				if (((Spinner) child).getText().toLowerCase().contains(text)) {
+					return( true );
+				}
 			}
 
 			if (child instanceof Composite) {
@@ -839,8 +847,15 @@ public class ConfigView implements UISWTViewCoreEventListenerEx {
 						break;
 					}
 				}
+			}else if (child instanceof Text) {
+				if (((Text) child).getText().toLowerCase().contains(text)) {
+					hilightControl(child,text,true);
+				}
+			}else if (child instanceof Spinner) {
+				if (((Spinner) child).getText().toLowerCase().contains(text)) {
+					hilightControl(child,text,true);
+				}
 			}
-
 		}
 	}
 	
