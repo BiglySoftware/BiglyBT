@@ -680,4 +680,27 @@ AddressUtils
 
 		return( address );
 	}
+	
+	public static boolean
+	isPotentialLiteralOrHostAddress(
+		String		str )
+	{
+			// pretty lame test to be honest but sufficient to remove a few options we want to avoid attempting to resolve
+		
+		if ( str.indexOf('.') != -1 || str.indexOf(':') != -1 ){
+			
+				// host name or IPv4/6 possible
+			
+			if ( str.startsWith( "(" )){
+				
+				return( false );
+			}
+			
+			return( true );
+			
+		}else{
+			
+			return( false );
+		}
+	}
 }

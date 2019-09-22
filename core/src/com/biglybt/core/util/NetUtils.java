@@ -24,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import com.biglybt.pifimpl.local.utils.UtilitiesImpl.runnableWithException;
 
@@ -352,7 +353,60 @@ NetUtils
 			try{
 				if ( name_or_address instanceof String ){
 
-					result = NetworkInterface.getByName((String)name_or_address );
+					String name = (String)name_or_address;
+					
+					if ( name.startsWith( "(") && name.endsWith( ")")){
+					
+							// regexpr for display name matching
+						
+						List<NetworkInterface> ifs = getNetworkInterfaces();
+						
+						String expr = name.substring( 1, name.length() - 1 );
+						
+						boolean failed = false;
+						
+						try{
+							Pattern p = RegExUtil.getCachedPattern( "NetUtils:display", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
+						
+							for ( NetworkInterface x: ifs ){
+								
+								String dn = x.getDisplayName();
+								
+								if ( dn != null ){
+																		
+									if ( p.matcher( dn ).find()){
+										
+										if ( result == null ){
+										
+											result = x;
+											
+										}else{
+											
+											result = null;
+											
+											Debug.out( "Multiple network interface matches for regex " + expr );
+											
+											failed = true;
+											
+											break;
+										}
+									}
+								}
+							}
+						}catch( Throwable e ){
+							
+							Debug.out( "Invalid network interface pattern: " +expr, e );
+							
+							failed = true;
+						}
+						
+						if ( result == null && !failed ){
+							
+						}
+					}else{
+					
+						result = NetworkInterface.getByName( name  );
+					}
 
 				}else{
 

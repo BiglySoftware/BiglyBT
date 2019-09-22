@@ -797,8 +797,9 @@ addressLoop:
 
 			try
 			{ // literal ipv4 or ipv6 address
-				if(currentAddress.indexOf('.') != -1 || currentAddress.indexOf(':') != -1)
+				if( AddressUtils.isPotentialLiteralOrHostAddress( currentAddress )){
 					parsedAddress = InetAddress.getByName(currentAddress);
+				}
 			} catch (Exception e)
 			{ // ignore, could be an interface name containing a ':'
 			}
@@ -916,7 +917,7 @@ addressLoop:
 			InetAddress parsedAddress = null;
 
 			try{
-				if ( currentAddress.indexOf('.') != -1 || currentAddress.indexOf(':') != -1 ){
+				if ( AddressUtils.isPotentialLiteralOrHostAddress( currentAddress )){
 
 					parsedAddress = InetAddress.getByName(currentAddress);
 				}
