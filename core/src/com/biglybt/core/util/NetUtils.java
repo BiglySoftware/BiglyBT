@@ -358,9 +358,7 @@ NetUtils
 					if ( name.startsWith( "(") && name.endsWith( ")")){
 					
 							// regexpr for display name matching
-						
-						List<NetworkInterface> ifs = getNetworkInterfaces();
-						
+												
 						String expr = name.substring( 1, name.length() - 1 );
 						
 						boolean failed = false;
@@ -368,27 +366,32 @@ NetUtils
 						try{
 							Pattern p = RegExUtil.getCachedPattern( "NetUtils:display", expr, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE );
 						
-							for ( NetworkInterface x: ifs ){
+							List<NetworkInterface> ifs = current_interfaces;
+
+							if ( ifs != null ){
 								
-								String dn = x.getDisplayName();
-								
-								if ( dn != null ){
-																		
-									if ( p.matcher( dn ).find()){
-										
-										if ( result == null ){
-										
-											result = x;
+								for ( NetworkInterface x: ifs ){
+									
+									String dn = x.getDisplayName();
+									
+									if ( dn != null ){
+																			
+										if ( p.matcher( dn ).find()){
 											
-										}else{
+											if ( result == null ){
 											
-											result = null;
-											
-											Debug.out( "Multiple network interface matches for regex " + expr );
-											
-											failed = true;
-											
-											break;
+												result = x;
+												
+											}else{
+												
+												result = null;
+												
+												Debug.out( "Multiple network interface matches for regex " + expr );
+												
+												failed = true;
+												
+												break;
+											}
 										}
 									}
 								}
