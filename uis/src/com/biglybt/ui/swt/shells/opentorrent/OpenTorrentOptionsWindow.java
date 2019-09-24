@@ -573,45 +573,55 @@ public class OpenTorrentOptionsWindow
 
 				dlg.open("otow",false);
 
-				synchronized( active_windows ){
+				boolean	separate_dialogs = COConfigurationManager.getBooleanParameter( ConfigurationDefaults.CFG_TORRENTADD_OPENOPTIONS_SEP );
 
-					int	num_active_windows = active_windows.size();
-
-					Shell shell = dlg.getShell();
-
-					if ( num_active_windows > 1 ){
-
-						int	max_x = 0;
-						int max_y = 0;
-
-						for ( OpenTorrentOptionsWindow window: active_windows.values()){
-
-							if ( window == this || !window.isInitialised()){
-
-								continue;
+				if ( separate_dialogs ){
+					
+						// don't want them appearing on top of each other
+					
+					synchronized( active_windows ){
+	
+						int	num_active_windows = active_windows.size();
+	
+						Shell shell = dlg.getShell();
+	
+						if ( num_active_windows > 1 ){
+	
+							int	max_x = Integer.MIN_VALUE;
+							int max_y = Integer.MIN_VALUE;
+	
+							for ( OpenTorrentOptionsWindow window: active_windows.values()){
+	
+								if ( window == this || !window.isInitialised()){
+	
+									continue;
+								}
+	
+								Rectangle rect = window.getBounds();
+	
+								max_x = Math.max( max_x, rect.x );
+								max_y = Math.max( max_y, rect.y );
 							}
-
-							Rectangle rect = window.getBounds();
-
-							max_x = Math.max( max_x, rect.x );
-							max_y = Math.max( max_y, rect.y );
+	
+							if ( max_x > Integer.MIN_VALUE ){
+								
+								Rectangle rect = shell.getBounds();
+		
+								rect.x = max_x + 16;
+								rect.y = max_y + 16;
+		
+								shell.setBounds( rect );
+							}
 						}
-
-						Rectangle rect = shell.getBounds();
-
-						rect.x = max_x + 16;
-						rect.y = max_y + 16;
-
-						shell.setBounds( rect );
+	
+						//String before = "disp="+shell.getDisplay().getBounds()+",shell=" + shell.getBounds();
+	
+						Utils.verifyShellRect( shell, true );
+	
+						//Debug.outNoStack( "Opening torrent options dialog: " + before + " -> " + shell.getBounds());
 					}
-
-					//String before = "disp="+shell.getDisplay().getBounds()+",shell=" + shell.getBounds();
-
-					Utils.verifyShellRect( shell, true );
-
-					//Debug.outNoStack( "Opening torrent options dialog: " + before + " -> " + shell.getBounds());
 				}
-
+				
 				dlg.addCloseListener(new SkinnedDialog.SkinnedDialogClosedListener() {
 					@Override
 					public void skinDialogClosed(SkinnedDialog dialog) {
@@ -1578,7 +1588,7 @@ public class OpenTorrentOptionsWindow
 
 		if ( !shell.isDisposed()){
 
-			Utils.dump( shell );
+			//Utils.dump( shell );
 
 			if ( !shell.isVisible()){
 
@@ -1590,13 +1600,16 @@ public class OpenTorrentOptionsWindow
 				// trying to debug some weird hidden dialog issue - on second opening revalidate
 				// everything to see if this fixes things
 
+				// parg 24/09/19 - dunno if this is still an issue, reduced debug and commented out centreWindow as this obviously
+				// repositions things which isn't great 
+			
 			shell.layout( true,  true );
 
 			Utils.verifyShellRect( shell, true );
 
-			Utils.centreWindow( shell );
+			//Utils.centreWindow( shell );
 
-			Utils.dump( shell );
+			//Utils.dump( shell );
 		}
 	}
 
