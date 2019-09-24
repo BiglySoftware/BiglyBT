@@ -30,6 +30,9 @@ public interface UIUpdater
 
 	public void removeUpdater(UIUpdatable updateable );
 
+	/**
+	 * Trigger {@link UIUpdatable#updateUI()} every second
+	 */
 	public void addPeriodicUpdater(UIUpdatable updateable );
 
 	public void removePeriodicUpdater(UIUpdatable updateable );
