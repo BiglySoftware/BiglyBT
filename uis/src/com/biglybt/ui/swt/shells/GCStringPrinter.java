@@ -475,6 +475,12 @@ public class GCStringPrinter
 								}
 							}
 							*/
+							LineInfo prev = lines.get( lines.size()-1);
+							String str = prev.lineOutputed;
+							if ( str.length() > 2 ){
+								str = str.substring( 0, str.length()-2);
+							}
+							prev.lineOutputed = str + ELLIPSIS;
 							cutoff = true;
 							if (DEBUG) {
 								System.out.println("set cutoff");
