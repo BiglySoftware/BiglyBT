@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
@@ -4686,5 +4687,151 @@ public class Utils
 					viewer.setEditable( false );
 				}
 			});
+	}
+	
+	private static java.util.regex.Pattern a_pattern;
+	private static java.util.regex.Pattern href_pattern;
+	
+	static{
+		try{
+			a_pattern 		= java.util.regex.Pattern.compile( "(?i)<a([^>]+)>(.+?)</a>" );
+			href_pattern 	= java.util.regex.Pattern.compile( "(?i)href\\s*=\\s*(\"([^\"]*\")|'[^']*'|([^'\">\\s]+))" );
+			
+		}catch( Throwable e ){
+			
+			Debug.out( e );
+		}
+	}
+	
+	public static void
+	setTextWithURLs(
+		StyledText	text,
+		String		value )
+	{
+		Listener	old_listener = (Listener)text.getData( "Utils.setTextWithURLs" );
+		
+		if ( old_listener != null ){
+			
+			text.removeListener( SWT.MouseMove, old_listener );
+			text.removeListener( SWT.MouseHover, old_listener );
+			text.removeListener( SWT.MouseUp, old_listener );
+		}
+		
+		Matcher 	a_matcher = a_pattern.matcher( value );
+		
+		StringBuffer 	result = new StringBuffer(value.length());
+		
+		int	pos = 0;
+		
+		List<StyleRange>	ranges = new ArrayList<>();
+		
+		while( a_matcher.find()){
+			
+			int p = a_matcher.start();
+			
+			if ( p > pos ){
+				
+				result.append( value.substring( pos, p ));
+			}
+			
+			String a = a_matcher.group( 1 );
+
+			Matcher href_matcher = href_pattern.matcher( a );
+			
+			if ( href_matcher.find()){
+				
+				String	url = href_matcher.group(1);
+				
+				if ( url.startsWith( "\"" ) || url.startsWith( "'" )){
+					
+					url = url.substring( 1, url.length() - 1 );
+				}
+				
+				String	t 	= a_matcher.group( 2 );
+								
+				StyleRange range = new StyleRange();
+				
+				range.start 		= result.length();
+				range.length		= t.length();
+				range.foreground	= Colors.blue;
+				range.data			= url;
+				
+				ranges.add( range );
+				
+				result.append( t );
+			}
+			
+			pos = a_matcher.end();
+		}
+		
+		if ( pos < value.length() ){
+			
+			result.append( value.substring( pos ));
+		}
+		
+		StyleRange[] styles = ranges.toArray( new StyleRange[0]);
+				
+		Listener listener = 
+			(event)->{
+	           
+				String		url = null;
+				
+				try {
+					int offset = text.getOffsetAtPoint(new Point(event.x, event.y));
+
+					if ( offset >= 0 ){
+
+						for ( int i=0;i<styles.length;i++){
+
+							StyleRange sr = styles[i];
+
+							Object data = sr.data;
+
+							if ( data != null && offset >= sr.start && offset < sr.start + sr.length ){
+
+								url = (String)data;
+							}
+						}
+					}
+
+				}catch( Throwable e ){
+				}
+
+				 
+				switch( event.type ){
+				
+					case SWT.MouseMove:{
+						
+						text.setCursor( url==null?null:text.getDisplay().getSystemCursor(SWT.CURSOR_HAND) );
+						
+						break;
+					}
+					case SWT.MouseHover:{
+						
+						 Utils.setTT( text, url );
+						 
+						 break;
+					}
+					case SWT.MouseUp:{
+						
+						 if ( url != null ){
+							 
+							 Utils.launch( url );
+						 }
+						 
+						 break;
+					}
+
+				}
+	    	};
+	    	
+		text.addListener( SWT.MouseMove, listener );
+		text.addListener( SWT.MouseHover, listener );
+		text.addListener( SWT.MouseUp, listener );
+		
+		text.setData( "Utils.setTextWithURLs", listener );
+		
+		text.setText( result.toString());
+		text.setStyleRanges( styles );
 	}
 }

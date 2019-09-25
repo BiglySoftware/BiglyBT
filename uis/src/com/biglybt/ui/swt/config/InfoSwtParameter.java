@@ -17,7 +17,10 @@
  */
 package com.biglybt.ui.swt.config;
 
+import java.util.Locale;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
@@ -27,7 +30,7 @@ import com.biglybt.core.internat.MessageText;
 import com.biglybt.pifimpl.local.ui.config.InfoParameterImpl;
 import com.biglybt.pifimpl.local.ui.config.LabelParameterImpl;
 import com.biglybt.ui.swt.Utils;
-
+import com.biglybt.ui.swt.mainwindow.Colors;
 import com.biglybt.pif.ui.config.InfoParameter;
 import com.biglybt.pif.ui.config.LabelParameter;
 
@@ -82,11 +85,19 @@ public class InfoSwtParameter
 		}
 
 		if (isSelectable) {
-			Text textWidget = new Text(parent, SWT.READ_ONLY | SWT.MULTI);
-			control = textWidget;
-			textWidget.setTabs(8);
+			if (infoVal != null && infoVal.toLowerCase( Locale.US ).contains("<a ")) {
+				StyledText textWidget = new StyledText(parent, SWT.READ_ONLY | SWT.MULTI);
+				control = textWidget;
+				textWidget.setTabs(8);
+				textWidget.setEditable( false );
+				textWidget.setBackground( parent.getBackground());
+			}else{
+				Text textWidget = new Text(parent, SWT.READ_ONLY | SWT.MULTI);
+				control = textWidget;
+				textWidget.setTabs(8);
+			}
 		} else {
-			if (infoVal != null && infoVal.contains("<a ")) {
+			if (infoVal != null && infoVal.toLowerCase( Locale.US ).contains("<a ")) {
 				Link link = new Link(parent, SWT.WRAP);
 				control = link;
 				link.addListener(SWT.Selection, event -> Utils.launch(event.text));
@@ -146,6 +157,9 @@ public class InfoSwtParameter
 				((Link) control).setText(value);
 			} else if (control instanceof Text) {
 				((Text) control).setText(value);
+			} else if (control instanceof StyledText) {
+				
+				Utils.setTextWithURLs((StyledText)control, value );
 			}
 
 			if (value.contains("\n") && !(control instanceof Text)) {

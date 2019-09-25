@@ -77,6 +77,8 @@ public interface Wiki
 
 	String PUBLISHING_FILES = URL_WIKI + "w/PublishingFiles";
 
+	String REGULAR_EXPRESSIONS = URL_WIKI + "w/RegularExpressions";
+	
 	String RESTARTING_ISSUES = URL_WIKI + "w/Restarting_Issues";
 
 	String SECURE_REMOTE_PASSWORD = URL_WIKI + "w/Secure_Remote_Password";
