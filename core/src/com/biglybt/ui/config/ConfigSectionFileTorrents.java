@@ -219,5 +219,12 @@ public class ConfigSectionFileTorrents
 		pgWatch.setIndent(1, false);
 
 		watchFolder.addEnabledOnSelection(pgWatch, pgWatchDirs);
+		
+			// monitor clipboard
+		
+		add(new BooleanParameterImpl(BCFG_TORRENT_MONITOR_CLIPBOARD,
+				"label.monitor.clipboard"));
+
+		
 	}
 }
