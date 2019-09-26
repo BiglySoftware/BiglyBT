@@ -208,7 +208,7 @@ public class ColumnUnopened
 					sortVal = hasBeenOpened ? 1 : 0;
 				}
 			} else {
-				sortVal = isSortAscending()?2:-1;
+				sortVal = 2; // isSortAscending()?2:-1;
 			}
 	
 			if (!cell.setSortValue(sortVal) && cell.isValid()) {
