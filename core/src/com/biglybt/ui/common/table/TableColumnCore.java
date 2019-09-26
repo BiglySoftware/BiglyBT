@@ -32,7 +32,7 @@ import com.biglybt.pif.ui.tables.*;
  * @see com.biglybt.ui.common.table.impl.TableColumnManager
  */
 public interface TableColumnCore
-	extends TableColumn, Comparator
+	extends TableColumn, Comparator<TableRowCore>
 {
 	/**
 	 * Set the internal flag specifying whether the column has been added to the

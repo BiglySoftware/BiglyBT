@@ -203,6 +203,10 @@ public interface TableRowCore extends TableRow
 
 	public TableCellCore getSortColumnCell(String hint);
 	
+	public boolean
+	sortSubRows( 
+		TableColumnCore col );
+	
 	/**
 	 * forces the cell to be refreshed/repainted onto an off-screen area so that any side-effects of the process
 	 * (e.g. preferred width) can be updated

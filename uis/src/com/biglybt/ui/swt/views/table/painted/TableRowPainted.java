@@ -19,6 +19,8 @@
 package com.biglybt.ui.swt.views.table.painted;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -1466,6 +1468,61 @@ public class TableRowPainted
 			} else {
 				cellSort = mTableCells.get(columnID);
 			}
+		}
+		
+		synchronized (subRows_sync) {
+			
+			if ( subRows != null ){
+				
+				for ( TableRowCore r: subRows ){
+					
+					r.setSortColumn(columnID);
+				}
+			}
+		}
+	}
+	
+	@Override
+	public boolean sortSubRows(TableColumnCore col){
+		synchronized (subRows_sync) {
+			if ( subRows == null ){
+				return( false );
+			}
+			
+			boolean changed = false;
+			boolean	sorted	= true;
+					
+			TableRowCore prev = null;
+			
+			for ( TableRowCore r: subRows ){
+				
+				if ( sorted ){
+					
+					if ( prev != null ){
+					
+						if ( col.compare( prev,  r ) > 0 ){
+							
+							sorted = false;
+						}
+					}
+					
+					prev = r;
+				}
+				
+				if ( r.sortSubRows(col)){
+					
+					changed = true;
+				}
+			}
+			
+			if ( !sorted ){
+			
+				Arrays.sort( subRows, col );
+				
+				changed = true;
+			}
+
+			return( changed );
 		}
 	}
 }

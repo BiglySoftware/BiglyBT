@@ -216,6 +216,7 @@ public class ColumnThumbAndName
 					row.getParentRowCore().removeSubRow(ds);
 				}
 			}
+			cell.setSortValue( getDisplayName( fileInfo ));
 			return;
 		}
 		DownloadManager dm = (DownloadManager) ds;
@@ -568,8 +569,32 @@ public class ColumnThumbAndName
 			}
 		}
 
+		String s = getDisplayName( fileInfo );
 
+		cellBounds.width -= (textX - cellBounds.x);
+		cellBounds.x = textX;
 
+		GCStringPrinter sp = new GCStringPrinter(gc, s, cellBounds, true, false,
+				SWT.LEFT | SWT.WRAP);
+		
+		boolean over = sp.printString();
+		
+		Point p = sp.getCalculatedPreferredSize();
+		
+		int pref = ( textX - originalBoundxsX ) +  p.x + 10;
+		
+		TableColumn tableColumn = cell.getTableColumn();
+		if (tableColumn != null && tableColumn.getPreferredWidth() < pref) {
+			tableColumn.setPreferredWidth(pref);
+		}
+		
+		cell.setToolTip(over ? null : s);
+	}
+
+	private String
+	getDisplayName(
+		DiskManagerFileInfo fileInfo )
+	{
 		String prefix = fileInfo.getDownloadManager().getSaveLocation().toString() + File.separator;
 		String s = fileInfo.getFile(true).toString();
 		if (s.startsWith(prefix)) {
@@ -596,27 +621,10 @@ public class ColumnThumbAndName
 	    		}
 	    	}
 		}
-
-		cellBounds.width -= (textX - cellBounds.x);
-		cellBounds.x = textX;
-
-		GCStringPrinter sp = new GCStringPrinter(gc, s, cellBounds, true, false,
-				SWT.LEFT | SWT.WRAP);
 		
-		boolean over = sp.printString();
-		
-		Point p = sp.getCalculatedPreferredSize();
-		
-		int pref = ( textX - originalBoundxsX ) +  p.x + 10;
-		
-		TableColumn tableColumn = cell.getTableColumn();
-		if (tableColumn != null && tableColumn.getPreferredWidth() < pref) {
-			tableColumn.setPreferredWidth(pref);
-		}
-		
-		cell.setToolTip(over ? null : s);
+		return( s );
 	}
-
+	
 	private void cellPaintName(TableCell cell, GC gc, Rectangle cellBounds,
 			int textX, int originalBoundxsX ) {
 		String name = null;

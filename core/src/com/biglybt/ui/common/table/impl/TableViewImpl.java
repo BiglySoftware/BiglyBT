@@ -1538,6 +1538,14 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 						if (cell != null) {
 							cell.refresh(true);
 						}
+						TableRowCore[] subs = row.getSubRowsRecursive( true );
+						
+						for ( TableRowCore sr: subs ){
+							cell = sr.getSortColumnCell(sColumnID);
+							if (cell != null) {
+								cell.refresh(true);
+							}
+						}
 					}
 				}
 
@@ -1546,6 +1554,14 @@ public abstract class TableViewImpl<DATASOURCETYPE>
 							&& sortColumn.getLastSortValueChange() >= lLastSortedOn) {
 						lLastSortedOn = SystemTime.getCurrentTime();
 						Collections.sort(sortedRows, sortColumn);
+						
+						for ( TableRowCore r: sortedRows ){
+							if ( r.sortSubRows(sortColumn )){
+								needsUpdate = true;
+								orderChanged = true;
+							}
+						}
+						
 						if (DEBUG_SORTER) {
 							long lTimeDiff = (System.currentTimeMillis() - lTimeStart);
 							if (lTimeDiff >= 0) {

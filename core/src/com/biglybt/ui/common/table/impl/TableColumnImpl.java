@@ -1461,9 +1461,9 @@ public class TableColumnImpl
 
 	// @see java.util.Comparator#compare(T, T)
 	@Override
-	public int compare(Object arg0, Object arg1) {
-		TableCellCore cell0 = ((TableRowCore) arg0).getTableCellCore(sName);
-		TableCellCore cell1 = ((TableRowCore) arg1).getTableCellCore(sName);
+	public int compare(TableRowCore arg0, TableRowCore arg1) {
+		TableCellCore cell0 = arg0.getTableCellCore(sName);
+		TableCellCore cell1 = arg1.getTableCellCore(sName);
 
 		Comparable c0 = (cell0 == null) ? "" : cell0.getSortValue();
 		Comparable c1 = (cell1 == null) ? "" : cell1.getSortValue();
