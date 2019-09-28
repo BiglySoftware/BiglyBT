@@ -462,7 +462,7 @@ public class SWTSkinObjectBasic
 
 	// @see java.lang.Object#toString()
 	public String toString() {
-		String s = "SWTSkinObjectBasic {" + sID;
+		String s = getClass().getSimpleName() + " {" + sID;
 
 		if (!sID.equals(sConfigID)) {
 			s += "/" + sConfigID;
@@ -876,7 +876,7 @@ public class SWTSkinObjectBasic
 	public void triggerListeners(final int eventType, final Object params) {
 		if (SWTSkin.DEBUG_VISIBILITIES) {
 			if (eventType == SWTSkinObjectListener.EVENT_SHOW) {
-				System.out.println("Show " + this + " via " + Debug.getCompressedStackTrace());
+				System.out.println(this + " Show " + this + " via " + Debug.getCompressedStackTrace());
 			}
 		}
 		// delay show and hide events while not initialized
@@ -889,12 +889,12 @@ public class SWTSkinObjectBasic
 
 			if (eventType == SWTSkinObjectListener.EVENT_SHOW && !isVisible()) {
 				if (SWTSkin.DEBUG_VISIBILITIES) {
-					System.out.println("Warning: Show Event when not visible " + this + " via " + Debug.getCompressedStackTrace());
+					System.out.println(this + " Warning: Show Event when not visible " + this + " via " + Debug.getCompressedStackTrace());
 				}
 				return;
 			} else if (eventType == SWTSkinObjectListener.EVENT_HIDE && isVisible()) {
 				if (SWTSkin.DEBUG_VISIBILITIES) {
-					System.out.println("Warning: Hide Event when visible " + this + " via " + Debug.getCompressedStackTrace());
+					System.out.println(this + " Warning: Hide Event when visible " + this + " via " + Debug.getCompressedStackTrace());
 				}
 				return;
 			}
