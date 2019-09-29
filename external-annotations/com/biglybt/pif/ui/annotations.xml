@@ -23,4 +23,7 @@
     <item name='com.biglybt.pif.ui.UIManager com.biglybt.pif.ui.tables.TableManager getTableManager()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item name='com.biglybt.pif.ui.UIPluginView java.lang.String getViewID()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>

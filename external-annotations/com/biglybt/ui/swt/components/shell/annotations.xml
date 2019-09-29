@@ -17,19 +17,24 @@
   -->
 
 <root>
-	<item name='com.biglybt.ui.swt.views.skin.sidebar.SideBar pluginViews'>
+	<item
+		name='com.biglybt.ui.swt.components.shell.ShellFactory org.eclipse.swt.widgets.Shell createShell(int)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBar void addSideBarView(com.biglybt.ui.swt.pifimpl.UISWTViewImpl, org.eclipse.swt.widgets.Composite) 0'>
+		name='com.biglybt.ui.swt.components.shell.ShellFactory org.eclipse.swt.widgets.Shell createShell(org.eclipse.swt.widgets.Display)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBarVitalityImageSWT imageID'>
+		name='com.biglybt.ui.swt.components.shell.ShellFactory org.eclipse.swt.widgets.Shell createShell(org.eclipse.swt.widgets.Display, int)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBarVitalityImageSWT java.lang.String getImageID()'>
+		name='com.biglybt.ui.swt.components.shell.ShellFactory org.eclipse.swt.widgets.Shell createShell(org.eclipse.swt.widgets.Shell)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.components.shell.ShellFactory org.eclipse.swt.widgets.Shell createShell(org.eclipse.swt.widgets.Shell, int)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>

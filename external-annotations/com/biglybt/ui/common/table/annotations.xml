@@ -4,6 +4,10 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
+		name='com.biglybt.ui.common.table.TableLifeCycleListener void tableLifeCycleEventOccurred(com.biglybt.ui.common.table.TableView, int, java.util.Map&lt;java.lang.String,java.lang.Object&gt;) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
 		name='com.biglybt.ui.common.table.TableView java.lang.Object[] getSelectedDataSources(boolean)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>

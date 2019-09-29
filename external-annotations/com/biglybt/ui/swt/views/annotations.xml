@@ -1,99 +1,185 @@
 <root>
-    <item name='com.biglybt.ui.swt.views.ConfigView boolean compositeHasText(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView boolean compositeHasText(org.eclipse.swt.widgets.Composite, java.lang.String) 1'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView filterText'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView java.lang.String getFullTitle()'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView org.eclipse.swt.widgets.Composite buildUnavailableSection(org.eclipse.swt.widgets.Composite, int, int) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView org.eclipse.swt.widgets.Control hilightText2(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView org.eclipse.swt.widgets.Control hilightText2(org.eclipse.swt.widgets.Composite, java.lang.String) 1'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void _initialize(org.eclipse.swt.widgets.Composite) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void buildScreen(org.eclipse.swt.widgets.Composite, com.biglybt.pif.ui.config.Parameter[], java.util.Map&lt;com.biglybt.pifimpl.local.ui.config.ParameterImpl,com.biglybt.ui.swt.config.BaseSwtParameter&gt;, com.biglybt.pifimpl.local.ui.config.ParameterImplListener) 1'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void buildScreen(org.eclipse.swt.widgets.Composite, com.biglybt.pif.ui.config.Parameter[], java.util.Map&lt;com.biglybt.pifimpl.local.ui.config.ParameterImpl,com.biglybt.ui.swt.config.BaseSwtParameter&gt;, com.biglybt.pifimpl.local.ui.config.ParameterImplListener) 2'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void buildUnavailableSection(org.eclipse.swt.widgets.Composite, int, int) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void ensureExpandedTo(org.eclipse.swt.widgets.TreeItem) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void filterTree(java.lang.String) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void filterTree(org.eclipse.swt.widgets.TreeItem[], java.lang.String, java.util.ArrayList&lt;org.eclipse.swt.widgets.TreeItem&gt;) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void filterTree(org.eclipse.swt.widgets.TreeItem[], java.lang.String, java.util.ArrayList&lt;org.eclipse.swt.widgets.TreeItem&gt;) 1'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void filterTree(org.eclipse.swt.widgets.TreeItem[], java.lang.String, java.util.ArrayList&lt;org.eclipse.swt.widgets.TreeItem&gt;) 2'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void hilightControl(org.eclipse.swt.widgets.Control, java.lang.String, boolean) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void hilightControl(org.eclipse.swt.widgets.Control, java.lang.String, boolean) 1'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void hilightText(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void hilightText(org.eclipse.swt.widgets.Composite, java.lang.String) 1'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void initialize(org.eclipse.swt.widgets.Composite) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView void showSection(org.eclipse.swt.widgets.TreeItem, boolean, java.util.Map) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.ConfigView$9 com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-	<item
-		name='com.biglybt.ui.swt.views.FilesView.FilesViewNodeLeaf FilesViewNodeLeaf(java.lang.String, com.biglybt.core.disk.DiskManagerFileInfo, com.biglybt.ui.swt.views.FilesView.FilesViewNodeInner) 1'>
-		<annotation name='org.jetbrains.annotations.NotNull'/>
+	<item name='com.biglybt.ui.swt.views.ConfigView boolean compositeHasText(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView boolean compositeHasText(org.eclipse.swt.widgets.Composite, java.lang.String) 1'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView filterText'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView java.lang.String getFullTitle()'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView org.eclipse.swt.widgets.Composite buildUnavailableSection(org.eclipse.swt.widgets.Composite, int, int) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView org.eclipse.swt.widgets.Control hilightText2(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView org.eclipse.swt.widgets.Control hilightText2(org.eclipse.swt.widgets.Composite, java.lang.String) 1'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void _initialize(org.eclipse.swt.widgets.Composite) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void buildScreen(org.eclipse.swt.widgets.Composite, com.biglybt.pif.ui.config.Parameter[], java.util.Map&lt;com.biglybt.pifimpl.local.ui.config.ParameterImpl,com.biglybt.ui.swt.config.BaseSwtParameter&gt;, com.biglybt.pifimpl.local.ui.config.ParameterImplListener) 1'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void buildScreen(org.eclipse.swt.widgets.Composite, com.biglybt.pif.ui.config.Parameter[], java.util.Map&lt;com.biglybt.pifimpl.local.ui.config.ParameterImpl,com.biglybt.ui.swt.config.BaseSwtParameter&gt;, com.biglybt.pifimpl.local.ui.config.ParameterImplListener) 2'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void buildUnavailableSection(org.eclipse.swt.widgets.Composite, int, int) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void ensureExpandedTo(org.eclipse.swt.widgets.TreeItem) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void filterTree(java.lang.String) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void filterTree(org.eclipse.swt.widgets.TreeItem[], java.lang.String, java.util.ArrayList&lt;org.eclipse.swt.widgets.TreeItem&gt;) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void filterTree(org.eclipse.swt.widgets.TreeItem[], java.lang.String, java.util.ArrayList&lt;org.eclipse.swt.widgets.TreeItem&gt;) 1'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void filterTree(org.eclipse.swt.widgets.TreeItem[], java.lang.String, java.util.ArrayList&lt;org.eclipse.swt.widgets.TreeItem&gt;) 2'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void hilightControl(org.eclipse.swt.widgets.Control, java.lang.String, boolean) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void hilightControl(org.eclipse.swt.widgets.Control, java.lang.String, boolean) 1'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void hilightText(org.eclipse.swt.widgets.Composite, java.lang.String) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void hilightText(org.eclipse.swt.widgets.Composite, java.lang.String) 1'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void initialize(org.eclipse.swt.widgets.Composite) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView void showSection(org.eclipse.swt.widgets.TreeItem, boolean, java.util.Map) 0'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.ConfigView$9 com.biglybt.ui.config.ConfigDetail createConfigDetail()'>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.FilesView managers'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+	name='com.biglybt.ui.swt.views.FilesView.FilesViewNodeLeaf FilesViewNodeLeaf(java.lang.String, com.biglybt.core.disk.DiskManagerFileInfo, com.biglybt.ui.swt.views.FilesView.FilesViewNodeInner) 1'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
 	<item name='com.biglybt.ui.swt.views.FilesView.FilesViewNodeLeaf delegate'>
-		<annotation name='org.jetbrains.annotations.NotNull'/>
-	</item>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
 	<item name='com.biglybt.ui.swt.views.MyTorrentsView void buildCatAndTag(java.util.List&lt;com.biglybt.core.tag.Tag&gt;) 0'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.MyTorrentsView$23 void setSelection(org.eclipse.swt.widgets.Composite) 0'>
-        <annotation name='org.jetbrains.annotations.Nullable'/>
-    </item>
-    <item name='com.biglybt.ui.swt.views.TorrentOptionsView.downloadStateIntParameterAdapter boolean setValue(com.biglybt.ui.swt.config.IntSwtParameter, java.lang.Integer)'>
-        <annotation name='java.lang.Override'/>
-    </item>
+			<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.views.MyTorrentsView$23 void setSelection(org.eclipse.swt.widgets.Composite) 0'>
+			<annotation name='org.jetbrains.annotations.Nullable'/>
+	</item>
 	<item
-		name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.lang.Object[]) 0'>
+	name='com.biglybt.ui.swt.views.PeersViewBase com.biglybt.ui.swt.views.table.TableViewSWT&lt;com.biglybt.core.peer.PEPeer&gt; initYourTableView(java.lang.String)'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item name='com.biglybt.ui.swt.views.TorrentOptionsView.downloadStateIntParameterAdapter boolean setValue(com.biglybt.ui.swt.config.IntSwtParameter, java.lang.Integer)'>
+			<annotation name='java.lang.Override'/>
+	</item>
+	<item
+	name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.lang.Object[]) 0'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+	name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.util.List&lt;com.biglybt.core.tracker.TrackerPeerSource&gt;) 0'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+	name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.util.List&lt;com.biglybt.core.tracker.TrackerPeerSource&gt;, boolean) 0'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item name='com.biglybt.ui.swt.views.ViewManagerSWT class_mon'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+	name='com.biglybt.ui.swt.views.ViewManagerSWT com.biglybt.ui.swt.views.ViewManagerSWT getInstance()'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+		name='com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilders(java.lang.Class)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.util.List&lt;com.biglybt.core.tracker.TrackerPeerSource&gt;) 0'>
+	name="com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilders(java.lang.Class, boolean)">
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+		name='com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilders(java.lang.Object)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.views.TrackerView void removeTrackerPeerSources(java.util.List&lt;com.biglybt.core.tracker.TrackerPeerSource&gt;, boolean) 0'>
+		name='com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilders(java.lang.Object, boolean)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
+	<item
+	name="com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilders(java.lang.String)">
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+	name="com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilders(java.lang.String, boolean)">
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+		name="com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilders(java.lang.String, java.lang.Class)">
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuildersOfClass(java.lang.Object, java.lang.Class&lt;com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl&gt;)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.views.ViewManagerSWT java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuildersOfClass(java.lang.Object, java.lang.Class&lt;com.biglybt.ui.swt.pifimpl.BasicPluginViewImpl&gt;) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+	name="com.biglybt.ui.swt.views.ViewManagerSWT java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilderMap(java.lang.Class)">
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+		name='com.biglybt.ui.swt.views.ViewManagerSWT java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilderMap(java.lang.Object)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+	name="com.biglybt.ui.swt.views.ViewManagerSWT java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt; getBuilderMap(java.lang.String)">
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+		name='com.biglybt.ui.swt.views.ViewManagerSWT void addSWTViewListener(com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl.SWTViewListener) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+	name='com.biglybt.ui.swt.views.ViewManagerSWT void registerView(java.lang.Class, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 1'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+		name='com.biglybt.ui.swt.views.ViewManagerSWT void registerView(java.lang.Object, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+	name='com.biglybt.ui.swt.views.ViewManagerSWT void registerView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 1'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
+	<item
+		name='com.biglybt.ui.swt.views.ViewManagerSWT void sortBuilders(java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt;) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+	name='com.biglybt.ui.swt.views.ViewManagerSWT void sortPluginList(java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt;) 0'>
+	<annotation name='org.jetbrains.annotations.NotNull'/>
+</item>
 </root>

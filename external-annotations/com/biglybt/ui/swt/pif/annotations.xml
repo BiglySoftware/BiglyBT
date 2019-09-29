@@ -2,4 +2,58 @@
     <item name='com.biglybt.ui.swt.pif.UISWTConfigSection org.eclipse.swt.widgets.Composite configSectionCreate(org.eclipse.swt.widgets.Composite) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTInstance com.biglybt.ui.swt.pif.UISWTViewBuilder createViewBuilder(java.lang.String)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTInstance com.biglybt.ui.swt.pif.UISWTViewBuilder createViewBuilder(java.lang.String, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTViewBuilder com.biglybt.ui.swt.pif.UISWTViewBuilder setInitialDatasource(java.lang.Object)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTViewBuilder com.biglybt.ui.swt.pif.UISWTViewBuilder setInitialTitle(java.lang.String)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTViewBuilder com.biglybt.ui.swt.pif.UISWTViewBuilder setListenerClass(java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTViewBuilder com.biglybt.ui.swt.pif.UISWTViewBuilder setListenerInstantiator(boolean, com.biglybt.ui.swt.pif.UISWTViewBuilder.UISWTViewEventListenerInstantiator)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_, _ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTViewBuilder com.biglybt.ui.swt.pif.UISWTViewBuilder setListenerInstantiator(com.biglybt.ui.swt.pif.UISWTViewBuilder.UISWTViewEventListenerInstantiator)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTViewBuilder com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore setListenerClass(java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name="com.biglybt.ui.swt.pif.UISWTViewBuilder com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore setParentEntryID(java.lang.String)">
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pif.UISWTViewEvent com.biglybt.ui.swt.pif.UISWTView getView()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 </root>

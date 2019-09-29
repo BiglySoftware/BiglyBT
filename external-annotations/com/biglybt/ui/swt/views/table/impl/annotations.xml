@@ -17,19 +17,16 @@
   -->
 
 <root>
-	<item name='com.biglybt.ui.swt.views.skin.sidebar.SideBar pluginViews'>
+	<item
+		name='com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon void generate(com.biglybt.core.util.IndentWriter) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBar void addSideBarView(com.biglybt.ui.swt.pifimpl.UISWTViewImpl, org.eclipse.swt.widgets.Composite) 0'>
+		name='com.biglybt.ui.swt.views.table.impl.TableViewSWT_TabsCommon void triggerTabViewsDataSourceChanged(com.biglybt.ui.common.table.TableView&lt;?&gt;) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBarVitalityImageSWT imageID'>
-		<annotation name='org.jetbrains.annotations.NotNull'/>
-	</item>
-	<item
-		name='com.biglybt.ui.swt.views.skin.sidebar.SideBarVitalityImageSWT java.lang.String getImageID()'>
+		name='com.biglybt.ui.swt.views.table.impl.TableViewTab com.biglybt.ui.swt.views.table.TableViewSWT&lt;DATASOURCETYPE&gt; initYourTableView()'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>

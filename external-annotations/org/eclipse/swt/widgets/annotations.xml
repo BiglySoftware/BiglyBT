@@ -34,7 +34,11 @@
 	<item name='org.eclipse.swt.widgets.Control org.eclipse.swt.graphics.Rectangle getBounds()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='org.eclipse.swt.widgets.Scrollable org.eclipse.swt.graphics.Rectangle getClientArea()'>
+	<item
+		name='org.eclipse.swt.widgets.Control org.eclipse.swt.widgets.Monitor getMonitor()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='org.eclipse.swt.widgets.Scrollable org.eclipse.swt.graphics.Rectangle getClientArea()'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='org.eclipse.swt.widgets.Spinner java.lang.String getText()'>

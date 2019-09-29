@@ -54,6 +54,10 @@
         </annotation>
     </item>
 	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper boolean buildViewMenu(org.eclipse.swt.widgets.Menu) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
 		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper boolean buildViewMenu(org.eclipse.swt.widgets.Menu, org.eclipse.swt.widgets.Shell) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
@@ -62,11 +66,11 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder[] getPluginLogViewsInfo()'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore[] getPluginLogViewsInfo()'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder[] getPluginViewsInfo()'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore[] getPluginViewsInfo()'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
@@ -74,11 +78,15 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void addPluginView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 0'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void addPluginView(com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void addPluginView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 1'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void addPluginView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void addPluginView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 1'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
@@ -90,19 +98,27 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItem(org.eclipse.swt.widgets.Menu, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 0'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItem(org.eclipse.swt.widgets.Menu, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItem(org.eclipse.swt.widgets.Menu, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 1'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItem(org.eclipse.swt.widgets.Menu, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 1'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItems(org.eclipse.swt.widgets.Menu, java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder&gt;) 0'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItems(org.eclipse.swt.widgets.Menu, java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt;) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItems(org.eclipse.swt.widgets.Menu, java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder&gt;) 1'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItems(org.eclipse.swt.widgets.Menu, java.util.List&lt;com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt;) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItems(org.eclipse.swt.widgets.Menu, java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt;) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper void createViewInfoMenuItems(org.eclipse.swt.widgets.Menu, java.util.Map&lt;java.lang.String,com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore&gt;) 1'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
@@ -110,7 +126,7 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.IViewInfo IViewInfo(com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 0'>
+		name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.IViewInfo IViewInfo(com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item name='com.biglybt.ui.swt.mainwindow.PluginsMenuHelper.IViewInfo holder'>

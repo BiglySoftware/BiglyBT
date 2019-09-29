@@ -2,10 +2,13 @@
     <item name='com.biglybt.core.config.COConfigurationManager java.lang.String getStringParameter(java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
-    <item name='com.biglybt.core.config.COConfigurationManager java.lang.String getStringParameter(java.lang.String, java.lang.String)'>
-        <annotation name='org.jetbrains.annotations.NotNull'/>
-    </item>
-    <item name='com.biglybt.core.config.COConfigurationManager java.util.List&lt;java.lang.String&gt; getStringListParameter(java.lang.String)'>
+	<item
+		name='com.biglybt.core.config.COConfigurationManager java.lang.String getStringParameter(java.lang.String, java.lang.String)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_, !null -&gt; !null&quot;"/>
+		</annotation>
+	</item>
+	<item name='com.biglybt.core.config.COConfigurationManager java.util.List&lt;java.lang.String&gt; getStringListParameter(java.lang.String)'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
 </root>

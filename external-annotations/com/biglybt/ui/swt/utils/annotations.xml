@@ -1,5 +1,45 @@
 <root>
-    <item name='com.biglybt.ui.swt.utils.FontUtils float getHeight(org.eclipse.swt.graphics.FontData[]) 0'>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils org.eclipse.swt.dnd.DragSource createDragSource(org.eclipse.swt.widgets.Control, int) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils void createDropTarget(org.eclipse.swt.widgets.Composite, boolean, org.eclipse.swt.widgets.Text) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils void createDropTarget(org.eclipse.swt.widgets.Composite, boolean, org.eclipse.swt.widgets.Text, org.eclipse.swt.dnd.DropTargetListener) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils void createDropTarget(org.eclipse.swt.widgets.Composite, org.eclipse.swt.dnd.DropTargetListener) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils void createDropTarget(org.eclipse.swt.widgets.Composite, org.eclipse.swt.dnd.DropTargetListener) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils void createTorrentDropTarget(org.eclipse.swt.widgets.Composite, boolean) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils void createURLDropTarget(org.eclipse.swt.widgets.Composite, org.eclipse.swt.widgets.Text) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils.DragSourceListenerDelegate DragSourceListenerDelegate(org.eclipse.swt.dnd.DragSourceListener) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils.DragSourceListenerDelegate delegate'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.utils.DragDropUtils.DragSourceMonitored DragSourceMonitored(org.eclipse.swt.widgets.Control, int) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.utils.FontUtils float getHeight(org.eclipse.swt.graphics.FontData[]) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
     <item name='com.biglybt.ui.swt.utils.FontUtils int getFontHeightInPX(org.eclipse.swt.graphics.Font) 0'>

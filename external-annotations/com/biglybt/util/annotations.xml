@@ -1,5 +1,9 @@
 <root>
 	<item
+		name='com.biglybt.util.DataSourceUtils com.biglybt.core.tag.Tag[] getTags(java.lang.Object)'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
 		name='com.biglybt.util.MapUtils boolean getMapBoolean(java.util.Map, java.lang.String, boolean)'>
 		<annotation name='org.jetbrains.annotations.Contract'>
 			<val val="&quot;null, _, _ -&gt; param3&quot;"/>

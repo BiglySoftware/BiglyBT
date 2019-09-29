@@ -31,11 +31,11 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl void addView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 1'>
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl void addView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 1'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl void registerView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder) 1'>
+		name='com.biglybt.ui.swt.pifimpl.UISWTInstanceImpl void registerView(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 1'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
@@ -71,26 +71,133 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder UISWTViewEventListenerHolder(java.lang.String, com.biglybt.ui.swt.pif.UISWTViewEventListener, com.biglybt.pif.PluginInterface) 0'>
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewBuilderCore(java.lang.String, com.biglybt.pif.PluginInterface) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder UISWTViewEventListenerHolder(java.lang.String, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;, java.lang.Object, com.biglybt.pif.PluginInterface) 0'>
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewBuilderCore(java.lang.String, com.biglybt.pif.PluginInterface, com.biglybt.ui.swt.pif.UISWTViewEventListener) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder com.biglybt.ui.swt.pif.UISWTViewEventListener create(com.biglybt.ui.swt.pif.UISWTView) 0'>
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewBuilderCore(java.lang.String, com.biglybt.pif.PluginInterface, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder java.lang.String getViewID()'>
-		<annotation name='org.jetbrains.annotations.NotNull'/>
-	</item>
-	<item name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder viewID'>
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.pif.PluginInterface) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder void openView(com.biglybt.ui.swt.UIFunctionsSWT) 0'>
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.pif.PluginInterface, com.biglybt.ui.swt.pif.UISWTViewEventListener) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.pif.PluginInterface, com.biglybt.ui.swt.pif.UISWTViewEventListener) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.pif.PluginInterface, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.pif.PluginInterface, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;, java.lang.Object...) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.pif.PluginInterface, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;, java.lang.Object...) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.pif.PluginInterface, java.lang.String, java.lang.Object...) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.pif.PluginInterface, java.lang.String, java.lang.Object...) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, com.biglybt.ui.swt.pif.UISWTViewEventListener, com.biglybt.pif.PluginInterface) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;, com.biglybt.pif.PluginInterface) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore UISWTViewEventListenerHolder(java.lang.String, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;, java.lang.Object, com.biglybt.pif.PluginInterface) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore com.biglybt.ui.swt.pif.UISWTViewEventListener create(com.biglybt.ui.swt.pif.UISWTView) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name="com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore cloneBuilder()">
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore setInitialDatasource(java.lang.Object)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore setInitialTitle(java.lang.String)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name="com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore setParentEntryID(java.lang.String)">
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore setPreferredAfterID(java.lang.String)'>
+		<annotation name='org.jetbrains.annotations.Contract'>
+			<val val="&quot;_ -&gt; this&quot;"/>
+		</annotation>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore java.lang.String getViewID()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore viewID'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore void openView(com.biglybt.ui.swt.UIFunctionsSWT) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore void openView(com.biglybt.ui.swt.UIFunctionsSWT, java.lang.String) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewImpl UISWTViewImpl(com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore, boolean) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewImpl UISWTViewImpl(java.lang.String) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewImpl UISWTViewImpl(java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore, boolean) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewImpl com.biglybt.pif.ui.toolbar.UIToolBarEnablerBase[] getToolbarEnablers()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewImpl com.biglybt.ui.swt.skin.SWTSkinObjectContainer buildStandAlone(com.biglybt.ui.swt.skin.SWTSkinObjectContainer) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.pifimpl.UISWTViewImpl com.biglybt.ui.swt.skin.SWTSkinObjectContainer buildStandAlone(com.biglybt.ui.swt.skin.SWTSkinObjectContainer, com.biglybt.ui.swt.skin.SWTSkin, java.lang.String, java.lang.Object, int, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 1'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.pifimpl.UISWTViewImpl id'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>

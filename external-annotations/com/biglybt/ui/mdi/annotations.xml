@@ -1,9 +1,21 @@
 <root>
-    <item name='com.biglybt.ui.mdi.MdiEntryLoadedListener void mdiEntryLoaded(com.biglybt.ui.mdi.MdiEntry) 0'>
+	<item
+		name='com.biglybt.ui.mdi.MdiEntry java.util.List&lt;com.biglybt.ui.mdi.MdiEntryVitalityImage&gt; getVitalityImages()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.mdi.MdiEntryLoadedListener void mdiEntryLoaded(com.biglybt.ui.mdi.MdiEntry) 0'>
         <annotation name='org.jetbrains.annotations.NotNull'/>
     </item>
 	<item
 		name='com.biglybt.ui.mdi.MdiEntryVitalityImage java.lang.String getImageID()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.mdi.MultipleDocumentInterface com.biglybt.ui.mdi.MdiEntry[] getEntries()'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.mdi.MultipleDocumentInterface java.util.List&lt;com.biglybt.ui.mdi.MdiEntry&gt; getChildrenOf(java.lang.String)'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 </root>

@@ -23,8 +23,15 @@
 	<item name='com.biglybt.ui.swt.mdi.BaseMDI T[] getEntries(T[]) 0'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMDI autoOpenLock'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 	<item
-		name='com.biglybt.ui.swt.mdi.BaseMDI com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
+		name='com.biglybt.ui.swt.mdi.BaseMDI com.biglybt.ui.mdi.MdiEntry createEntryFromEventListener(java.lang.String, java.lang.Class&lt;? extends com.biglybt.ui.swt.pif.UISWTViewEventListener&gt;, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMDI com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
@@ -66,11 +73,34 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
+		name='com.biglybt.ui.swt.mdi.BaseMdiEntry com.biglybt.ui.swt.skin.SWTSkinObjectContainer buildStandAlone(com.biglybt.ui.swt.skin.SWTSkinObjectContainer) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMdiEntry com.biglybt.ui.swt.skin.SWTSkinObjectContainer buildStandAlone(com.biglybt.ui.swt.skin.SWTSkinObjectContainer, java.lang.String, com.biglybt.ui.swt.skin.SWTSkin, java.lang.String, java.lang.String, java.lang.Object, int, com.biglybt.ui.swt.pif.UISWTViewEventListener, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore, boolean) 8'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMdiEntry com.biglybt.ui.swt.skin.SWTSkinObjectContainer buildStandAlone(com.biglybt.ui.swt.skin.SWTSkinObjectContainer, java.lang.String, com.biglybt.ui.swt.skin.SWTSkin, java.lang.String, java.lang.String, java.lang.Object, int, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMdiEntry com.biglybt.ui.swt.skin.SWTSkinObjectContainer buildStandAlone(com.biglybt.ui.swt.skin.SWTSkinObjectContainer, java.lang.String, com.biglybt.ui.swt.skin.SWTSkin, java.lang.String, java.lang.String, java.lang.Object, int, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore) 2'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.mdi.BaseMdiEntry com.biglybt.ui.swt.skin.SWTSkinObjectContainer importStandAlone(com.biglybt.ui.swt.skin.SWTSkinObjectContainer, java.util.Map&lt;java.lang.String,java.lang.Object&gt;, java.lang.Runnable) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item name='com.biglybt.ui.swt.mdi.BaseMdiEntry listVitalityImages'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
 		name='com.biglybt.ui.swt.mdi.BaseMdiEntry void setContentDisposed(boolean)'>
 		<annotation name='java.lang.Override'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
+		name='com.biglybt.ui.swt.mdi.MultipleDocumentInterfaceSWT com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
@@ -78,7 +108,7 @@
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item
-		name='com.biglybt.ui.swt.mdi.TabbedMDI com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewEventListenerHolder, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
+		name='com.biglybt.ui.swt.mdi.TabbedMDI com.biglybt.ui.mdi.MdiEntry createEntryFromHolder(java.lang.String, java.lang.String, com.biglybt.ui.swt.pifimpl.UISWTViewBuilderCore, java.lang.String, boolean, java.lang.Object, java.lang.String) 2'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
 	<item

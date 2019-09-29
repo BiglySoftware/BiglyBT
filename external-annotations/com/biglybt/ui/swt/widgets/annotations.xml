@@ -24,6 +24,13 @@
 	<item name='com.biglybt.ui.swt.widgets.TagCanvas colorTagFaded'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
+	<item name='com.biglybt.ui.swt.widgets.TagCanvas dropTarget'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
+	<item
+		name='com.biglybt.ui.swt.widgets.TagCanvas java.util.List&lt;com.biglybt.core.download.DownloadManager&gt; handleDropTargetEvent(org.eclipse.swt.dnd.DropTargetEvent) 0'>
+		<annotation name='org.jetbrains.annotations.NotNull'/>
+	</item>
 	<item name='com.biglybt.ui.swt.widgets.TagCanvas tag'>
 		<annotation name='org.jetbrains.annotations.NotNull'/>
 	</item>
