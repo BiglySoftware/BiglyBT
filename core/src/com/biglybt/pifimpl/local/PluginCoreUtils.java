@@ -432,6 +432,11 @@ PluginCoreUtils
 	{
 		if (datasource instanceof Object[]) {
 			Object[] array = (Object[]) datasource;
+			if (array.length == 0) {
+				// 3DView plugin assumes if there is an array, it has at least one entry
+				// Hack so we return null when array is empty
+				return null;
+			}
 			Object[] newArray = new Object[array.length];
 			for (int i = 0; i < array.length; i++) {
 				Object o = array[i];
