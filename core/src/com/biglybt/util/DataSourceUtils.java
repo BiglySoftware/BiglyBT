@@ -369,4 +369,9 @@ public class DataSourceUtils
 		}
 		return ds0 == ds1;
 	}
+
+	public static String toDebugString(Object data) {
+		return data instanceof Object[] ? Arrays.toString((Object[]) data)
+			: "" + data;
+	}
 }

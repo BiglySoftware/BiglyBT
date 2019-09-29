@@ -336,11 +336,9 @@ public class UISWTViewImpl
 						+ "] " + "trigger "
 						+ padRight(UISWTViewEvent.getEventDebug(eventType), 6)
 						+ ", " + (eventListener == null ? "null" : "nonn") + ";data="
-						+ (data instanceof Object[] ? Arrays.toString((Object[]) data)
-								: data)
+						+ DataSourceUtils.toDebugString(data)
 						+ "/ds="
-						+ (datasource instanceof Object[]
-								? Arrays.toString((Object[]) datasource) : datasource)
+						+ DataSourceUtils.toDebugString(datasource)
 						+ ";" + titleID + ";" + Debug.getCompressedStackTrace());
 			}
 		}
@@ -449,7 +447,8 @@ public class UISWTViewImpl
 					new UISWTViewEventImpl(this, eventType, data));
 		} catch (Throwable t) {
 			Debug.out("ViewID=" + id + "; EventID="
-					+ UISWTViewEvent.getEventDebug(eventType) + "; data=" + data, t);
+					+ UISWTViewEvent.getEventDebug(eventType) + "; data="
+					+ DataSourceUtils.toDebugString(data), t);
 			//throw (new UIRuntimeException("UISWTView.triggerEvent:: ViewID="
 			//		+ sViewID + "; EventID=" + eventType + "; data=" + data, t));
 		}
@@ -492,8 +491,10 @@ public class UISWTViewImpl
 			return eventListener.eventOccurred(
 					new UISWTViewEventImpl(this, eventType, data));
 		} catch (Throwable t) {
-			throw (new UIRuntimeException("UISWTView.triggerEvent:: ViewID=" + id
-					+ "; EventID=" + eventType + "; data=" + data, t));
+			throw (new UIRuntimeException(
+					"UISWTView.triggerEvent:: ViewID=" + id + "; EventID=" + eventType
+							+ "; data=" + DataSourceUtils.toDebugString(data),
+					t));
 		}
 	}
 
